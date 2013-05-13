@@ -1,0 +1,729 @@
+Changes in Arasan 15.5:
+ 1) Fix bug that can cause illegal move from pondering.
+ 2) Check for checkmate before returning 50-move draw.
+ 3) Send Winboard variants in feature line (only "normal" is supported).
+
+Changes in Arasan 15.4 (Apr. 2013):
+ 1) Internal time accouting is now in millseconds, not centiseconds.
+ 2) Fix time management to reduce losses on time in very fast games.
+ 3) Native GUI now recognizes "offer draw" command (fixes bug in draw
+    detection). Also though engine now reverts to using result command
+    in cases of draw by rule before a move is made.
+ 4) Remove extra quote from response to "protover" command in Winboard
+    (so myname feature works).
+ 5) Modify how book selectivity setting works. Selectivity has to be lower
+    now to select very rare moves.
+ 6) A few more code portability fixes.
+ 7) Fix UCI protocol bugs leading to occasional loss on time with ponder on.
+ 8) Fix strength option scaling so play is stronger at high values.
+
+Changes in Arasan 15.3 (Apr. 2013):
+ 1) Fix a bug in king cover calculation.
+ 2) Modify root LMR logic.
+ 3) Reduce memory usage for "makebook" utility by shrinking/packing structures.
+ 4) Fix "makebook" so it works on Linux. 
+ 5) Improve makebook speed by optimizing Board::reset.
+ 6) Some tweaks to trade down scoring, especially to discourage trading down
+    from a possibly winnable to a drawish endgame.
+ 7) Change hashtable replacement policy so exact hash code matches always
+    replace existing entries.
+ 8) Main search probes q-search cache for a pv move if the main hash table
+    does not provide one.
+ 9) Improved ordering of evasion moves.
+ 10) Add extra time to search if resolving a fail-high at the root.
+ 11) Thread limit raised to 64.
+ 12) Thread split depth is dynamic based on number of threads.
+ 13) Some code portability fixes, in particular fixing big-endian support.
+
+Changes in Arasan 15.2 (Feb. 2013):
+ 1) Some speed improvements especially when multithreaded.
+ 2) Code cleanup and bug fixes related to draw handling (could lose on 
+    time in server games, in rare cases, due to problems in this area).
+ 3) Some more code conversion to C++ style intead of C. Use STL pair template.
+ 4) Minimum search time changed to 10ms to better support very fast test
+    games.
+ 5) Bug fix in code for checks in qsearch: ensure checking moves do not
+    place own king in check.
+ 6) Some weights changed in scoring module based on CLOP.
+ 7) Simplified razoring code.
+ 8) Qsearch forward pruning changes. We use only pre-selection of captures
+    now, not traditional forward pruning. Margins for this adjusted.
+ 9) Linux-specific bug fix for occasional crashes when >2 threads in use.
+ 10) Fix in aspiration window code for rare overflow condition when
+    failing low with a mate score.
+ 11) Fix bug setting hash sizes > 2GB through Winboard/UCI.
+ 12) Somewhat more general Rook pawn vs wrong color Bishop draw detection.
+
+Changes in Arasan 15.1 (Nov. 2012):
+ 1) Correctly parse Winboard "level" command that includes a fractional
+    part in the time increment.
+ 2) Fix bug in result learning code: incorrect learn value when drawing
+    a high-rated opponent as Black.
+ 3) Fixes to eval for potential passed pawns. Small increase in castling
+    scores.
+ 4) Changes to "trade down" material scoring.
+ 5) Remove a redundant check for moving a pinned piece when searching
+    checks in q-search.
+ 6) Fix UCI multipv output when there are fewer legal moves than the
+    specified multipv count.
+ 7) Change max hash table size for GUI.
+
+Changes in Arasan 15.0 (Sept. 2012):
+ 1) Increase static null pruning threshold at low depths.
+ 2) Scoring fixes/improvements: king cover, potential passed pawns,
+    bad bishop.
+ 3) Fix code that tracks node count per ply 0 move, for move ordering.
+ 4) Changes to LMR reduction amounts and ply 0 reduction threshold. 
+ 5) Avoid null move if hash table info indicates it would fail to
+    generate cutoff.
+ 6) Losing checks are no longer extended, in any case. Threat extension
+    is now done differently, similar to Stockfish.
+ 7) Re-work of SMP code to increase thread usage by supporting the
+    "helpful master" algorithm.
+ 8) Fix a bug in communicating with the Fritz interface, specifically
+    the "process testsuite" command.
+ 9) Fix UCI and console score output so upperbound & lowerbound status
+    displayed when appropriate.
+ 10) Fix setting Strength option from native GUI.
+ 11) Some GNU Makefile fixes for MingW support. clang is also supported
+     now.
+
+Changes in Arasan 14.3 (July 2012):
+ 1) King safety is scaled by the opponent's material value (fixing a bug).
+ 2) Adjustments and fixes to strength reduction feature.
+ 3) Fix to material scoring for R vs 2 minors.
+ 4) Do not terminate search after forced move if in analysis mode.
+
+Changes in Arasan14.2a (June 2012):
+ 1) Another fix for "ping" handing in engine to cure hang problems in Arasan
+    GUI.
+ 2) Strength reduction operates during pondering.
+
+Changes in Arasan 14.2 (June 2012):
+ 1) The chess engine handled input from the the UI in several places
+    and had duplicate code for scanning input and breaking it into lines.
+    This is now centralized and simplifed.
+ 2) Some other code cleanup, especially conversion from C-style string
+    handling to C++.
+ 3) Simplified code for lazy eval. Partial (lazy) scores are no longer
+    cached in the scoring module (such scores were seldom used anyway).
+ 4) Outpost scores reduced.
+ 5) Tweaked threshold values for history pruning and late move pruning (due
+    to a bug, 14.1 actually did only late move pruning above depth = 1 ply).
+ 6) Reduced thresholds for static null pruning.
+ 7) Some changes to LMR and root move reduction logic.
+ 8) Bug fix: ensure final stage of ply 0 search window widening sets a
+    correct upper/lower bound.
+ 9) Improvement to logic for searching checks in q-search.
+ 10) Fix material eval adjustment for Q vs 2R.
+ 11) Support is added for varying the engine strength via UCI or Winboard
+    options (Arasan GUI supports this too).
+ 12) GUI bug fix: search could hang when a "Go" command is issued when it
+    is the user's turn to move, and the user then makes a manual move before
+    the search completes.
+ 13) Winboard driver fixes: pings could be processed out of order in some
+    cases. Also, an extra move could be sent after Winboard has send a
+    "resign" or "result" command.
+
+Changes in Arasan 14.1 (Apr. 2012):
+ 1) Fix (again) UCI promotion move formatting bug.
+ 2) Fix Winboard "memory" command.
+ 3) Support added for MingW environment (use Linux Makefile for this)
+ 4) Q-search selectively generates only moves that will likely reach
+    futility threshold.
+ 5) Fix icc Makefile (on Windows).
+ 6) Fix bug in PV display in Windows GUI.
+
+Changes in Arasan 14.0.1 (Mar. 2012):
+ 1) Fix for UCI promotion move formatting bug.
+
+Changes in Arasan 14.0 (Mar. 2012):
+ 1) Board::wouldCheck function handles promotions.
+ 2) Much simplifed time management, functions better in particular under very
+    short time controls.
+ 3) LMR is performed at root node (formerly was not).
+ 4) Null move uses R=3 with verification.
+ 5) Simplified hash table implementation.
+ 6) Move generator defers SEE test on captures until the move is used (this
+    was done previously in the qsearch but not elsewhere). 
+ 7) Better sort algorithm in move generator.
+ 8) Fixes to learning code. Hash table (w/ learn info) was being cleared
+    at each new game, now learn info is retained.
+ 10) Some code cleanup, esp. conversion from char * to C++ string usage.
+ 11) Arasan uses Gaviota tablebases. Fix tb probing when en passant
+     capture possible. Tablebase hits now are cached in the hash table.
+ 12) Additional UCI & winboard options supported. GUI now uses the standard
+     winboard options command to send options to the engine.
+ 13) Fix bug involving mate scores in UCI analysis mode.
+ 14) Makebook program can directly consume PGN.
+ 15) Arasan engine source is released under the MIT license (same license used
+     by the Gaviota tablebase code).
+
+Changes in Arasan 13.4:
+ 1) Fixes to UCI analysis mode.
+ 2) Fix handling of UCI Threads option.
+ 3) Arasan GUI allows changing thread count for search.
+ 4) Support "cores," "memory" and "egt" features in Winboard. Note: Arasan
+    command-line switches take precedence over Winboard settings.
+ 5) Memory for the evaluation cache is now dynamically allocated and
+    is sized relative to the main hash table.
+ 6) Some changes to pruning and lazy eval logic.
+ 7) Fixed faulty bitbase data. Fixed "eval" command to handle bitbase
+    and tablebase probes properly.
+ 8) Improve UCI time management for very short time controls.
+
+Changes in Arasan 13.3:
+ 1) In Winboard mode, Arasan still accepts but does not rely on the
+    deprecated "white" and "black" commands to keep track of the
+    computer's side of the game.
+ 2) Winboard "level" command accepts time of form mm:ss and allows decimal
+    times.
+ 3) More general code for trapped bishop.
+ 4) Static null pruning is implemented.
+ 5) Dynamic null reduction based on score (aka "smooth scaling").
+ 6) Changes to razor & futility margins and related code.
+ 7) Fixes to history pruning. History table is global now, not per-thread.
+
+Changes in Arasan 13.2:
+ 1) Fix in search to eliminate some unnecessary re-searches.
+ 2) Fixes to material scoring for unbalanced material positions.
+ 3) Simplified bonus code for Bishop in endgames with pawns on both sides.
+ 4) Revised bonus for trading material when ahead.
+ 5) Misc. scoring fixes, esp. for connected rook on 7th.
+ 6) Utility programs such as makebook now do not create a log file.
+ 7) Another/better fix for UCI output after a quick mate.
+
+Changes in Arasan 13.1:
+ 1) KPK bitbases are now internal to the program, not stored in files.
+ 2) Minor change to checks in qsearch conditions.
+ 3) Fix bug in see pruning affecting stalemate detection.
+ 4) Fix bug where UCI PV output was omitted in case search terminated
+    very rapidly (for example, in cases of a forced mate).
+ 5) Handle DOS-style CR/LF from chess interfaces such as SCID.
+ 6) Some book additions/fixes.
+
+Changes in Arasan 13.0:
+ 1) History pruning and see pruning are implemented.
+ 2) Fixes to history code.
+ 3) Code cleanup and parameter tweaking in evaluation, especially to
+    isolated pawns, pawn center scores, passed pawns, mobility, king safety.
+ 4) Fixed bug in adjacent passer code.
+ 5) Potential passer code is more accurate.
+ 6) Material scoring changes: queen value is higher, re-introduced some
+    special case adjustments for bad trades.
+ 7) Check extensions have been reduced to 3/4 ply.
+ 8) Hash table code cleanup & bug fixes.
+ 9) Intel C++ supported under Windows.
+ 10) GUI edit menu allows paste of PGN and FEN from the clipboard into the GUI.
+ 11) fix GUI memory leak.
+ 12) By default, Arasan will play a somewhat wider variety of openings (the
+ book selectivity option can be used to change this).
+
+Changes in Arasan 12.3:
+ 1) Changes to move ordering in qsearch - formerly we used to call see()
+    in the initial move sorting phase but now it is deferred until we
+    are ready to use a move - this is how most programs do it.
+ 2) Linux version uses an ASM routine (if USE_ASM is defined) for
+    bit extraction - this is much faster (on CPUs that support it).
+ 3) Small fix to pin detection.
+ 4) Bug fixes in scoring: specifically in adjustMaterialScoreNoPawns,
+    outpost scoring, potential passer scoring, passer piece block.
+ 5) Reduce penalty for open files around king (was excessive)
+ 6) Qsearch futility prune margin increased back to 1 1/4 pawn. Changes
+    to LMR reduction depth and thresholds.
+ 7) Endgame capture extension is made in more cases but is decreased to
+    1/2 ply extra depth
+ 8) Several UCI protocol fixes.
+
+Changes in Arasan 12.2 (Nov. 2010):
+ 1) Somewhat complex trade scoring has been removed - in favor of just
+    adjusting piece values.
+ 2) More aggressive futility pruning, margin is adjusted at 1/2 ply increments.
+ 3) Changes to extension/pruning logic. LMR now done after futility. Extra
+    LMR is done at high depths/move counts.
+ 4) King safety scoring changed - open files are now scored separately,
+    score is based on opposing Rook + Queen count.
+ 5) Bishop pair score reduced (but increases in endgame).
+ 6) Changes to pawn scoring: outside pawn & doubled pawn scores reduced.
+ 7) Outside pawn calc is done via a table, like Crafty does.
+ 8) Penalty for own pieces ahead of passer; somewhat reduced bonus for rook
+    behind passer.
+ 9) EGTB values are no longer hashed (seemed to cause problems).
+ 10) Minor GUI fix: remove trailing junk after game description.
+
+Changes in Arasan 12.1 (Aug. 2010):
+ 1) Remove extra "quit" output on program termination
+ 2) Decrease thread wait time on exit
+ 3) Fix UCI tablebase support - enable tablebases when path is set
+ 4) Fix to outside passed pawn scoring
+ 5) Increase king attack scores
+
+Changes in Arasan 12.0 (Aug. 2010):
+ 1) Eval code is changed to split eval terms more explicitly into 
+    opening, middlegame and endgame terms and these are merged via
+    a weighting function based on material. 
+ 2) Some eval changes to king safety, bishop pair, etc.
+ 3) King safety cache was also used for opponent pawn proximity - but 
+    the hashing didn't account for opponent pawns. This is fixed by
+    not storing proximity in the cache.
+ 4) Material score adjustment added for Q vs R + Pawns, and R vs pawns. 
+ 5) Some new "trade down" bonus code is present to encourage exchanging
+    when ahead - there was some code for this earlier but less correct.
+ 6) Fix to futility pruning margin calculation.
+ 7) Fixed a Winboard/xboard driver bug where some "ping" commands from
+    ICC were being ignored.
+ 8) Fix a rarely occurring bug in qsearch: generating a check
+    that involves moving a pinned piece.
+ 9) Fix bug in razoring code that could cause array overflow at very
+    large search depths (as in endgame).
+ 10) Fix display in GUI game list dialog & main window to include year of game
+
+Changes in Arasan 11.7 (Feb. 2010):
+
+ 1) Fix in PGN parser for rare cases where moves need rank + file for
+disambiguation.
+ 2) Changes to LMR and other pruning logic.
+ 3) Fix time measurement bug in Linux version.
+ 4) Fix thread deadlock problems on Linux.
+ 5) Convert to POSIX unnamed semaphores for Linux, to ensure semaphore
+    cleanup on program exit.
+ 6) Multiple other code fixes and warning removal for Linux/Mac compiles. 
+ 7) Bug fix in Board::wouldCheck.
+ 8) Increased scores for bishop pair, Rook on 7th
+ 9) Fix UCI mate score output.
+10) Fix crash bug in UCI mode on Vista, Windows 7
+
+Changes in Arasan 11.6 (Nov. 2009):
+ 1) Several speed improvements:
+    a. Greater use of lazy eval + partial evals are now cached.
+    b. Best move and score in eval cache can be independently updated.
+    c. Eval cache is shared across threads.
+    d. better alignment/sizing of structures
+ 2) Scoring changes:
+    a. Bishop pair bonus decreased a bit
+    b. Mobility scores tweaked
+    c. Outpost scoring tweaked
+    d. Some king safety changes esp. for enemy pawns near King
+ 3) Search changes:
+    a. Now using variable reduction null move again.
+    b. Allow reduce/prune on moves regardless of history, except the
+       two moves with best history are exempt.
+
+Changes in Arasan 11.5 (Sept. 2009):
+ 1) King safety scores are tapered off so they don't reach extreme values.
+ 2) Mobility calculation improvements.
+ 3) Changes to razoring logic.
+ 4) Profile Guided Optimization (PGO) build uses deeper search on
+    fewer positions.
+
+Changes in Arasan 11.4 (June 2009):
+ 1) Fix to KBP draw code.
+ 2) Fix Winboard/xboard driver to send "O-O" not "o-o" for castling.
+ 3) Fix time calculation in tournament mode.
+ 4) Scoring changes, fixes for Rook mobility & rooks on open files.
+ 5) Scoring change in king safety: don't count Bishops more highly
+    than Knights in evaluating king attacks.
+ 6) The usual book fixes/additions.
+
+Changes in Arasan 11.3 (March 2009):
+ 1) Fix bug that caused occasional early search termination.
+ 2) Fix Winboard communication to use a thread for greater reliablity.
+ 3) Keep game file open - fixes some occasional failures to save games.
+ 4) Fix Makefile to build "pgn2book" utility (some code fixes in this too).
+ 5) Some search changes: Lessen futility margin. Enable additional extensions at ply 0. Enable a version of razoring.
+ 6) Improved move ordering based on node counts.
+ 7) Bug fix in outpost scoring.
+ 8) Passed pawn scores increased.
+ 9) Bug fix in GUI: bad PV display at high search depths.
+ 10) Larger opening book.
+
+Changes in Arasan 11.2 (Dec. 2008):
+ 1) Fix square colors in mono mode in GUI display.
+ 2) More Linux compile fixes.
+ 3) Fixes for compilation on MacOS.
+ 4) Bug fixes in scoring module (array overrun).
+ 5) Some pawn race code added (ported from version 10.4).
+ 6) Fixes to contempt factor based on ICC rating.
+ 7) Bug fix in book learning.
+
+Changes in Arasan 11.1 (Dec. 2008):
+ 1) Fix mono mode in GUI display.
+ 2) Fix compile problem with 32-bit Linux
+ 3) Fix deadlock problem under Linux.
+ 4) Some bug fixes in search.
+ 5) Fix bug - contempt factor based on rating diff (when on a chess server)
+    was not being set.
+ 6) Uninstaller removes .lrn file.
+
+Changes in Arasan 11.0 (Nov. 2008):
+ 1) Re-work to use "magic" bitboard logic instead of rotated bitboards. About
+    20-25% speedup from this.
+ 2) Eval re-written to use bitboard attack functions for king safety, mobility.
+ 3) Some changes and fixes to search (especially LMR).
+ 4) Check extensions are done at ply=0 now.
+ 5) Substantial code cleanup, more consistent variable/function naming,
+    remove obsolete or redundant code. 
+ 6) g++ 3.2 and earlier are no longer supported.
+ 7) Various scoring changes, including fixes to outside passed pawn scoring.
+ 8) Remove unsafe optimization for q-search when in check.
+ 9) Remove lock on main hash table - speeds up multi-threaded searches (thanks
+    to Bob Hyatt).
+ 10) New position learning system - keeps learn data in a text file vs a
+    book file. Learn data is loaded into the main hash table (simpler and
+    avoids locking). Fixes to position learn code. 
+ 11) Fixes for loss on time with very short time controls.
+
+Changes in Arasan 10.4 (June 2008):
+ 1) Speedup illegal move detection in search.
+ 2) Speedups in move generation.
+ 3) Improved move ordering for check evasions.
+ 4) Use IID more sparingly.
+ 5) Several scoring changes, esp. fixes/improvements to material scoring.
+ 6) Fix to "bk" command (to list opening book moves).
+ 7) Time usage fixes/improvements.
+ 8) A couple of locking fixes for more stable SMP operation.
+ 9) Fix for invalid moves propagated to pv list
+ 10) Clear history data before each search in testsuite mode.
+
+Changes in Arasan 10.3 (Mar. 2008):
+ 1) Fix bad search bug which caused different behavior in SMP and single
+    thread search code and unstable searches with 1 cpu.
+ 2) Another search bug fix - caused problems in statemate detection.
+ 3) Couple of scoring fixes.
+ 4) Support Threads option in UCI mode.
+
+Changes in Arasan 10.2 (Feb. 2008):
+ 1) Fix possible crash bug: check for previous illegal move before hash
+    cutoff.
+ 2) Forced move extension in q-search removed - caused some searches to
+    blow up (excessive nodes searched).
+ 3) Limited razoring removed - in its place, wider use of LMR. Consolidate
+    reduction + pruning code. Disable recapture extension by default.
+ 4) Some pawn scoring changes. Fixed asymmetric king center score in endgame.
+ 5) Bug fixes in bad trade scoring. 
+ 6) Greater use of R=3 in null move.
+ 7) Linux bug fix: free semaphores on exit.
+
+Changes in Arasan 10.1:
+ 1) Substantially more efficient SMP support, keeps threads more active.
+ 2) Some bug fixes in scoring and checking move generation, thanks to
+    Keiichiro Tashiro.
+ 3) King safety and endgame scoring changes & fixes.
+ 4) Fixed bug that could cause failure to move when there is a single
+    legal move from the tablebases.
+ 5) Fix bug that could lead to illegal moves in pv display.
+ 6) Fix long-existing move sorting bug.
+ 7) Use narrower bounds on re-search (Negascout algorithm). Reduce re-search
+    frequency by setting flag when score is exact.
+ 8) Fix bad search bug involving illegal move detection - in some cases a
+    valid score was returned after a previous illegal move. One symptom
+    was problems with stalemate detection.
+
+Changes in Arasan 10.0:
+ 1) Fix to pawn scoring: a doubled pawn behind a passed pawn is no longer
+    counted as passed also.
+ 2) Changes to king safety and mobility scoring. Bishop and queen attacks
+    and mobility are now checked in all directions (was formerly only the
+    "forward" direction).
+ 3) Other scoring changes, including adjustments to piece trade scoring.
+ 4) Multi-core/multi-procesor (SMP) support is now working, using the YBWC
+    algorithm. However the "helpful master" concept is not yet implemented.
+ 5) Now supports 6-man tablebases. Some fixes added to better tolerate
+    incomplete 6-man tb sets.
+ 6) Checks in q-search are on by default now. Checking moves are generated
+    for 1st two plies of q-search (configurable), but can be extended in
+    some cases.
+ 7) Forced move extension tweaked - move generator marks move as forced
+    when a singular check evasion that is not a winning capture exists.
+ 8) Some changes also to late move reduction and recapture extension code.
+ 9) Null move verification search was broken - it works now.
+ 10) Another fix for draw scoring - avoid draw when opponent is lower rated  
+ 11) Arasan outputs more information to UCI clients during a search.
+ 12) UCI time management fixes.
+
+Changes in Arasan 9.5:
+ 1) Fix bad mate scores from EGTB hit.
+ 2) Numerous UCI fixes:
+    a) Fix notation for pv
+    b) Fix multipv output under Chessbase GUI.
+    c) Fix UCI pv output during ponder.
+    d) Fixes for hang under Shredder UI
+ 3) Some additonal book fixes
+
+Changes in Arasan 9.4:
+ 1) Some speed enhancements. For example, check evasion is incremental now.
+ 2) Q-search has special code for check evasion. Checking move generation
+    can be enabled in the q-search (off by default).
+ 3) Scoring changes: king safety, passed pawn, piece placement, bad trade.
+ 4) Engine will kibitz if on ICC and opponent is a computer.
+ 5) Fix for PV display under Arena with UCI: use O-O, O-O-O for castling.
+ 6) Fix result learning information in arasan.log.
+ 7) Fix draw accept logic - was erroneously accepting draws from lower
+    ranked players on ICC in some situations.
+ 8) Fix tablebase probe logic - probes in more cases now.
+ 9) The usual book additions/fixes.
+
+Changes in Arasan 9.3:
+ 1) Another KBP vs K draw fix.
+ 2) Bug fixed in pawn race scoring.
+ 3) Passed pawn scoring changes.
+ 4) King safety changes.
+ 5) Some search changes. Reductions now not done in pv.
+ 6) GUI fix: Fix Edit|Copy Game to Cliboard.
+ 7) GUI fix: "Hint" command shows book moves.
+ 8) GUI fix: Auto-saved games show computer side correctly.
+ 9) Some Linux and Windows x64 specific fixes.
+ 10) Larger opening book, book fixes.
+
+Changes in Arasan 9.2:
+ 1) Fix illegal move after promotion under UCI.
+
+Changes in Arasan 9.1:
+ 1) UCI protocol fixes
+ 2) Fix tablebase/hashtable interaction problem
+ 3) Some book additions/fixes
+
+Changes in Arasan 9.0:
+ 1) New king safety scoring routine.
+ 2) Increased bonus for mobility in scoring module. 
+ 3) Disabled buggy code for wrong bishop draw (still recognizes
+    some simple cases).
+ 4) A couple of rare crash bugs fixed. 
+ 5) Extension after repetition added.
+ 6) "History pruning" added.
+ 7) There is experimenal support for multi-threading, not
+    enabled in the compiled binaries.
+ 8) The Linux version now compiles with gcc 4.0 and above.
+ 9) Improved, larger opening book. Book selection logic has
+    been changed, so that Arasan will play a somewhat wider
+    selection of openings.
+10) UCI protocol support.
+11) GUI fixes to work on 120DPI displays. Also some fixes put in for
+    GUI occasionally getting out of sync with engine.
+
+Changes in Arasan 8.4:
+ 1) Bug fixes in pin detection
+ 2) Scoring changes
+ 3) Better lazy eval in scoring module.
+ 4) Improved pawn race scoring, handles more cases.
+ 5) More liberal use of null move in endgames (but less aggressive use
+    of R=3).
+ 6) "make install" target added to Linux Makefile.
+ 7) use feature done=0/done=1 to bracket tablebase initialization.
+
+Changes in Arasan 8.3:
+ 1) Small king safety change in eval
+ 2) Fix for crash on make move after "undo" in UI.
+ 3) Some misc. code cleanup. 
+
+Changes in Arasan 8.2:
+ 1) Fixes to draw by repetition detection.
+ 2) Several endgame scoring and bug fixes. Pawn race code is more accurate.
+ 3) Remove losing moves (leading to mate) from move list - was supposed
+    to do this before but it works now.
+ 4) KPK endgame is now computed using bitbases.
+ 5) Some speed improvements in check evasion code.
+
+Changes in Arasan 8.1 (Sept. 2004):
+ 1) Fixed bad bug related to pawn promotions, giving unstable score with
+    promotion moves.
+ 2) Some asymmetric eval added to avoid "locked" pawn positions
+ 3) Pawn scoring changes.
+ 4) Killer move phase now uses killers at ply-2.
+ 5) GUI fix: "Think When Idle" option didn't work properly.
+
+Changes in Arasan 8.0 (Aug. 2004):
+ 1) Extended futility pruning is implemented now. Futility pruning and
+    razoring can be combined.
+ 2) Passed pawns are scored higher.
+ 3) "Capture" extension is now disabled by default.
+ 4) Fixed some bugs in king-pawn hash table code
+ 5) Minor changes to hash probe code. 
+ 6) Default tablebases cache size increased, changes to tablebase probe
+    logic. Generally this version does fewer probes.
+ 7) New egtb code from Eugene Nalimov & Andrew Kadatch.
+ 8) Significant changes to evaluation. Evaluation is simpler and 
+    faster. A small evaluation cache is used.
+ 9) Various speed enhancements, in move generator and elsewhere.
+ 10) Some fixes to 50-move draw handling.
+ 11) "makebook" program can now filter moves so that only moves
+     occurring with a minimum frequency will be included. New book
+     uses minimum frequency of 6 from a large PGN game collection.
+ 12) a few minor GUI fixes.
+
+Changes in Arasan 7.4:
+ 1) King safety and knight centrality scoring fixes (knight centrality
+    was actually backwards - White table was used for Black).
+ 2) Speed improvement: routine wouldCheck handles more cases, allowing
+    more cases of forward pruning before doMove.
+ 3) Fix GUI bug re "hint" being given for the wrong side.
+ 4) Fix GUI bug: next/previous game could crash if engine reply comes
+    after the command.
+ 5) Fix GUI bug: takeback while engine is searching could sometimes 
+    result in pieces changing color and other strange behavior.
+ 6) GUI: Fix some BoundsChecker errors/warnings.
+ 7) A new "options.book_enabled" flag is in arasan.rc: setting this
+    false disables the opening book.
+ 8) Fix Linux spec file so it can build a binary RPM correctly.
+ 9) Linux version installs to /usr/local/bin, not /usr/bin
+
+Changes in Arasan 7.3:
+ 1) Fixes to KB+rook P draw detection (w/o tablebases).
+ 2) Fix to "bad trade" scoring (Q vs N/B+R)
+ 3) Some other small evaluation fixes.
+ 4) Fix GUI bug - clock display problems after Takeback/Forward.
+ 5) Fix GUI bug - problem loading PGN file with non-standard starting
+    position (FEN tag).
+ 6) Fix behavior when draw detected at root node.
+ 7) Some time management fixes.
+ 8) Fix bug involving wrong result claim after being mated, with
+    tablebases enabled (thanks to Volker Pittlik for reporting this).
+ 9) Fixes in Linux version to support a wider range of GCC versions.
+
+Changes in Arasan 7.2:
+ 1) Fixed a couple GUI/engine bugs that could cause crashes when
+browsing a game or switching from browsing to playing.
+ 2) Fix for faster/more reliable termination when Arasan is checkmated
+or stalemated.
+ 3) Move ordering improvements
+ 4) Null move R=3 is used somewhat more frequently.
+ 5) Pawn scoring changes
+ 6) Fix bug in handling resign threshold option.
+
+Changes in Arasan 7.1:
+ 1) Fixed GUI bug where player info was not displayed correctly after
+    loading a new game from a file.
+ 2) Fixed GUI bug re "think when idle" setting not being passed to
+    engine.
+ 3) Incomplete games were not saved with an incomplete ("*") result - 
+    this is fixed.
+ 4) Removed "Custom" option in installer - caused problems.
+ 5) Some minor search improvements.
+ 6) Some opening book fixes.
+
+Changes in Arasan 7.0:
+
+ 1) Fixed a bug in handling of the "en passant target" square when
+    loading a FEN position file.
+ 2) Numerous speed improvements in the engine. Move generation is
+    incremental now.
+ 3) Razoring has been modified.
+ 4) Fixes and ehancements have been made to tablebase use in the
+    endgame. Tablebase hits are now cached, for faster speed.
+ 5) Several endgame scoring fixes and improvements have been made.
+ 6) Mate scores in the winboard driver are normalized to 100.
+ 7) GUI can set board colors now, like Arasan 5.4.
+ 8) GUI repaint has been optimized for faster speed.
+ 9) Misc. other GUI fixes.
+
+Changes in Arasan 6.3:
+
+ 1) More changes to king safety
+ 2) Fixes to tablebase support, to work better with 5-man tablebases.
+ 3) Some move ordering improvements and speedups.
+ 4) GUI now ignores engine moves received when in "force" mode -
+    fixes problems with takeback command while the engine is
+    searching.
+ 5) Sometimes Arasan could hang on ICC when it receives a move
+    without a carriage return. There was code to fix this, but
+    it had to be updated now that Winboard can use SAN for moves.
+ 6) Windows installer now uses InstallShield Express version 4.
+
+Changes in Arasan 6.2:
+
+ 1) More fixes to time management.
+ 2) Several positional scoring changes have been made. King safety
+    is somewhat different in this version. Lazy evaluation in the
+    scoring module has been made more efficient.
+ 3) Some recoding has been done in the quiescence search for
+    faster speed. A somewhat different forward pruning technique
+    is used in the q-search.
+ 4) This verison does "adaptive null pruning" similar to that
+    described by Ernst Heinz.
+ 5) The "bad trade" scoring is now tapered off as material drops -
+    this fixes some bad behavior at the threshold of bad trade scoring.
+ 6) There were problems with the GUI only partially initializing
+    before trying to read a file specified on the command line.
+    This is fixed. 
+ 7) Some fixes were made in Winboard analysis mode. In particular,
+    Arasan would go into a tight loop when it hit a mate score.
+    Now it stops analyzing and waits for a command.
+ 8) Some GUI and engine fixes were made to fix bugs with switching
+    sides using "Computer Plays White" menu item.
+
+Changes in Arasan 6.1:
+
+ 1) Some speed improvements were made in several areas.
+ 2) Some opening book additions and corrections were made.
+ 3) The GUI showed the letter coordinates backwards when
+    the board was turned - this is fixed.
+ 4) GUI display of mate scores was incorrect - this is fixed.
+ 5) In the GUI, loading a new PGN file after one has already 
+    been loaded left the engine in an incorrect state - this
+    is fixed.
+ 6) Game results could be shown backwards (e.g. a White win
+    instead of Black) in some circumstances. This is fixed.
+ 7) Some king safety scoring improvements and fixes were made.
+ 8) Arasan 6.0 could lose on time, especially in short
+    time control games with pondering enabled. Some fixes
+    have been made to make this less likely to happen.
+
+Changes in Arasan 6.0.1:
+
+Patch to fix problem with initializing tablebases (Windows only).
+
+Changes in Arasan 6.0:
+
+ 1) A Linux version is now available. 
+ 2) The king safety routine has been rewritten for greater
+speed and accuracy.
+ 3) The search routine has been recoded. Futility
+pruning as described by Ernst Heinz is implemented. Razoring
+is now done in the main search routine and not in a separate
+one as in 5.4. Extensions have been changed.
+ 4) More elaborate lazy evaluation is done in the scoring
+module and more aggressive forward pruning in the quiescence
+search.
+ 5) Passed pawn scores have been increased, as have bonuses
+for king centrality in the endgame (plus king near pawns,
+if the pawns are on one side of the board).
+ 6) Lots of fixes in the Winboard/xboard driver (arasanx.cpp),
+for greater reliability and to get it to work under Linux using
+xboard. One bug fix is that pondering took place
+without the global move list being updated: this broke
+3-time repetition detection and could result in the program
+playing into a draw when it shouldn't.
+ 7) A bad bug was fixed in the opening book code - an integer
+overflow in the frequency field of a book entry. This caused
+problems, but only in multi-megabyte sized books. Note: the
+book format has changed for this version. Older binary book
+files will not work with version 6.0. 
+ 8) A rare but annoying bug was fixed - sometimes the castling
+status was set incorrectly after a rook move. 
+ 9) In version 5.4, after loading a position from a file (e.g.
+from the xboard -lpf command), the opening book could fail to
+work because the castling status was incorrect. A fix for this
+has been made in bhash.cpp.
+10) A smaller hand-tuned book is provided with this version.
+11) Book learning based on game results is implemented. Some fixes
+and enhancements were also made to positional learning.
+12) An "arasan.rc" file can be used to tweak many program
+parameters.
+13) Winboard/xboard analyze mode is supported.
+14) This version has been tested with Winboard 4.2.6. The "new"
+Winboard protocol is supported.
+15) Arasan can use compressed Nalimov tablebases. 
+Eugene Nalimov and Andrew Kadatch retain copyright to the
+portions of the code that implement tablebase handling and
+decompression. It is included in the Arasan source 
+distribution with permission.
+16) The Windows version has a new simplified GUI that runs
+the chess engine as a separate process, like Winboard.
+TrueType fonts are now used instead of bitmaps for the
+pieces.
+
+
+
+
+
+
