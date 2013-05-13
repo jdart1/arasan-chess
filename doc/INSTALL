@@ -1,0 +1,51 @@
+If you want tablebase support, you must download and install the tablebase
+code (available separately) and edit the Makefile to select the type(s)
+of tablebase support you want and to point to the necessary sources.
+
+gcc 4.2 or above is recommended for building Arasan on Linux. It has
+also been verified to compile with Intel C++ 11.1 and 12.0.
+
+On MacOS, you need to install XCode 3.1 or above to get a compatible gcc.
+If you are on MacOS Leopard, you then probably need to set something like:
+
+export CC=g++-4.2
+export LDFLAGS=-L/Developer/usr/lib/i686-apple-darwin9/gcc-4.2.1
+
+to select the right compiler and libraries.
+
+There is a makefile in the src directory. Just typing "make" should
+automatically select the correct target architecture and OS. By
+default it builds all executables. All binaries are placed in the
+"bin" subdirectory.
+
+To select the Intel compiler instead of gcc, define the variable CC with
+this command:
+
+export CC=icc
+
+"clang" is also supported (set CC=clang to use).
+
+If you have a processor that supports the amd64 POPCNT hardware
+instruction, you can build a version of Arasan that uses that by
+typing "make popcnt" (works only on a 64-bit OS).
+
+If you want to use PGO to build the arasan engine (arasanx), do:
+
+make clean PASS=1 profile profile-run
+make PASS=2 profile
+
+(use profile-popcnt instead of profile for a POPCNT enabled build).
+
+The Arasan engine binary is named "arasanx-32", "arasanx-64", or
+"arasanx-64-popcnt", depending on the architecture and build flags
+used.
+
+Limited testing has been done on architectures other than x32 and amd64.
+However, the code is believed to be portable. Two non-Intel targets are
+defined in the Makefile: sparc-solaris and arm-linux.
+
+"make release" will build the release tarball and place it in the
+release subdirectory.
+
+"make install" will install Arasan binaries into /usr/local/bin/arasan-15.5.0.
+(You will need to be root, or use sudo, to execute "make install"). 

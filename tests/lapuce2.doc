@@ -1,0 +1,273 @@
+*******************************************************************************
+
+		The Louguet Chess Test II (LCT II) FAQ 
+		Version 1.21, April 02, 1996
+
+*******************************************************************************
+
+
+This FAQ is intended to give readers informations on the LCT II Chess Computer
+Test, in 10 questions and answers (at least for this version).
+
+1) What is the LCT II Chess Test ?
+It is a set of 35 chess positions designed to evaluate the strength of Chess
+Programs and Chess Computers. It gives a good approximation of the
+International Elo rating of a program.
+
+The test is available via a ZIP file, LCTII121.ZIP, which you can download
+from Mads Brevik chess page (http://knoll.kih.no:8001/stud/mads2/chess.htm)
+or I can send it directly to you, just drop me a word about it in my mail.
+
+LCTII121.ZIP contains the following files :
+
+* README.TXT : General information, history, instructions for PC chess programs.
+* RATINGS.TXT : Some results on Pentium 90 and Pentium Pro 200
+* SUBSCRIB.TXT : How to subscribe to "La Puce Echiqueenne"
+* HOWTO.TXT : How to run the tests
+* DIAGRAMS.TXT : Solutions of the tests and comments
+* LCTII.XLS : Excel file with detailed results for PC programs (P90 & PP200).
+* LCT2LIST.TXT : The complete LCT II rating list on various hardware.
+* LCT2FAQ.TXT : Questions and answers about the LCT II (this file).
+
+The 35 positions are provided in their native formats for :
+- Chess Genius 1, 2, 3 and 4
+- Hiarcs 2, 3 and 4
+- Zarkov 2.5, 2.6, 3.0
+- Socrates 3
+- Fritz 1, 2, 3 and 4
+- Chessmaster 4000
+- M Chess Pro 3.5, 4 and 5
+- W Chess 1.0
+- Kallisto 1.83
+- Gideon Pro 1.0
+- Rebel 6 and 7
+- Virtua Chess 1.0 and Virtual Chess for Windows 95
+- Crafty
+
+
+2) Who is the author of the LCT II ?
+Me. Ah, ah.
+Well, my name is Frederic Louguet, born in Boulogne, France, in 1963.
+I am a freelance journalist, writing articles and books about computer hardware 
+and software, especially on Computer Graphics and 3D Image Synthesis.
+And, of course, I love Chess, and computers. That's why I created this test,
+which is published every three months by "La Puce Echiqueenne", Paris, France.
+
+
+3) What is "La Puce Echiqueenne" ?
+This is the french magazine of reference on Computer Chess. Reviews, technical 
+informations, games, analysis, databases, etc. It is published by ACTIV-ECHECS, 
+Paris, France. If you want to subscribe, please send :
+
+France : 120 FF - CEE 160 FF - USA / Canada 200 FF by money order to :
+
+ACTIV-ECHECS
+101, AVENUE DU GENERAL LECLERC
+75014 PARIS, FRANCE
+TEL. AND FAX : 33-1-45.47.80.83
+OR
+VIA INTERNET
+E-MAIL : ORELLANA@DIALUP.FRANCENET.FR
+
+
+4) What is the main idea behind the LCT II ?
+
+Yes, there is an idea ! I strongly believe that, in a lot of well-known tests,
+too much importance is given to tactical positions. Tactics are important, but 
+not THAT important. After all, combinations appear only when there are 
+positional weaknesses in a position, allowing tactical moves to be effective.
+But if you look at the whole game, you can see that positional moves are much
+more frequent than tactical moves.
+
+So the idea behind the LCT II is to give positional play the place it deserves.
+There are 35 positions in the test : 14 of them are positional, 12 are tactics
+and 9 are endgames. So 40% of the overall rating can be obtained by doing a
+perfect score on positional tests.
+
+
+5) What were my goals in creating the LCT II ?
+
+The test must :
+
+* Give a good approximation of the International Elo rating of a program, by
+correctly balancing relative importance of positional play, tactics and endgames.
+
+* Be available to everybody who wants to test his own chess computer or program.
+However, it must be strong, because the test is only valid for Elo greater
+than 1900.
+
+* Be simple to use. No coefficients, no complicated formulas. The program get
+points each time it solves a position in a certain amount of time (see question
+7 for the details). You just add all the points to 1900, and you get an
+approximation of the International Elo rating.
+
+* Have a good number of positions, but not too much. It must be run in a few
+hours, so it is possible to test a program on different hardware, with different
+hash-table sizes, with different styles. It can provide a lot of useful
+information.
+
+
+6) Was there an LCT I test ?
+
+Yes. The first version of this test was created in July, 1992, for the first
+issue of La Puce Echiqueenne. It was a bit more complicated than it is now,
+but it worked OK. Of course, the LCT II is much better, and was introduced in
+issue #8 (November 1994).
+
+
+7) How do I run the test ?
+First, you must have a Chess computer or a Chess program on a PC or a
+Workstation. Then you have to follow this procedure :
+
+* The program tested must be configured to level : Infinite.
+
+* Permanent brain must be disabled. Some programs begin their analysis in setup
+mode, so it is very important to disable this option.
+
+* Learning tables must be disabled (or moved elsewhere on the disk during the
+tests).
+
+* The program must run each test during 10 minutes (600 seconds). At 10:01
+(601th second), you must stop the analysis.
+
+* The time to keep is the time when the program finds the best move and does
+not change his mind until the ten minutes are over. For example : the best move
+(A) is found in 32 seconds, but the program change his mind at 1'56 and now
+prefers (B). Later, he again considers (A) as the best move after 7'16, and 
+does not change anymore until 10:01. So 7'16 is the time to put in the results.
+
+* It is very important to let the program "think" 10 minutes, and particularly
+for positional tests, since some programs change their mind frequently.
+For tactical tests, it is of course not necessary.
+
+* Points attributed : 
+
+30 points if move found between 0 and 9 seconds (included)
+25 points if move found between 10 and 29 seconds        
+20 points if move found between 30 and 89 seconds     (30" - 1'29)
+15 points if move found between 90 and 179 seconds    (1'30 - 2'59)
+10 points if move found between 180 and 389 seconds   (3' - 6'29)
+5 points if move found between 390 and 600 seconds    (6'30 - 10')
+0 points if move not found in 10 minutes
+
+The lower limit is 1900 Elo points.
+For example, if a program gets 105 points (positional), 200 (tactical) and
+70 (endgame), its rating will be 1900 + 105 + 200 + 70 = 2275.
+The upper limit is 1900 + (30 points * 35 tests) = 2950 points.
+That is 40 % for positional moves, 34 % for combinations and 26 % for endgame.
+
+You can see from these figures that it is useless to test entry-level programs 
+or Chess computers with the LCT II test. It is clearly intended for strong ones.
+
+
+8) Can the LCT II Elo be compared with the Swedish Rating List Elo ?
+
+It was not intended to be compared with the SSDF List in the first place, but
+it is inevitable that such comparisons occur. In fact, I have found that the
+LCT II correlation with the Swedish Rating List is quite high. Here are a few
+examples, taken from the 1995/10/31 list. In these examples, all programs were
+tested on Pentium 90, but you can find similar figures on slower hardware :
+
+Program		LCT II		SSDF
+
+Genius 3.0	2425		2447
+Rebel 6.0	2405		2430
+Hiarcs 3.0	2440		2420
+MChess Pro 4	2360		2377
+Fritz 3		2380		2371
+
+It seems good enough, doesn't it ? More interesting, in some cases the LCT II
+predicted these scores before the SSDF. For example, the rating of M Chess Pro
+4.0 was 2396 in the 1995/09/08 version of the SSDF list, and it has now come
+down 19 points, to be only 17 points more than the LCT II rating.
+
+Of course, 35 positions can not replace thousands of games, but it can give a
+good indication of the strength of a new program, only days after it is
+available to the public, not months. Do not forget another thing : the SSDF
+list is based on Computer against Computer matches, and it is clear that some
+programs perform better against humans than against other computers. So I think
+that the SSDF List is a very useful tool, but that there is also a need to have
+a good general purpose test.
+
+ 
+9) Where can I send my test results ?
+
+You can send your LCT II results by fax or E-Mail to ACTIV-ECHECS
+(see question 3) or directly to my E-Mail, which is : louguet@worldnet.net.
+Please don't forget to mention your configuration (PC or Workstation, CPU, RAM,
+cache, hash-tables).
+
+If you have comment or suggestions, I will be pleased to hear them. Suggestions 
+for a future LCT III will also be considered.
+
+
+10) An LCT III test ?
+ 
+Well, there will definitely be a LCT III test. Why ? because I have already a
+few ideas to make the test even better. When, I don't know, because I have a
+lot of other things to do before ! And I can assure you that the conception
+of the LCT II took a LARGE amount of time...
+
+So the answer is probably : not before 1997. Nevertheless, I will be
+collecting material in the meantime. So if you have good positions that are
+difficult and interesting enough, please send them to my E-Mail (see 9).
+Maybe they will be included in the LCT III.
+
+Thanks for reading this FAQ.
+
+
+
+-----------------------------
+Frederic Louguet, 04/02, 1996
+
+E-Mail : louguet@worldnet.net
+-----------------------------
+*******************************************************************************
+
+LCT II test (c) Frederic Louguet & La Puce Echiqueenne
+v 1.21 - 04/02, 1996
+
+*******************************************************************************
+
+
+How to use the 35 LCT II tests
+------------------------------ 
+
+Each program tested must be configured to level : Infinite.
+
+- Permanent brain must be disabled. Some programs begin their analysis in 
+setup mode, so it is very important to disable this option.
+
+- Learning tables must be disabled (or moved elsewhere on the disk during
+the tests).
+
+- The program must run each test during 10 minutes (600 seconds). 
+At 10:01 (601th second), you must stop the analysis. 
+
+- The time to keep is the time when the program finds the best move
+and does not change his mind until the ten minutes are over.
+For example : the best move (A) is found in 32 seconds, but the program
+change his mind at 1'56 and now prefers (B). Later, he again considers (A) as
+the best move after 7'16, and does not change anymore until 10:01. So 7'16
+is the time to put in the results. 
+
+- It is very important to let the program "think" 10 minutes, and particularly 
+for positional tests, since some programs change their mind frequently. For
+tactical tests, it is of course not necessary.
+
+- Points : 
+
+	30 points if move found between 0 and 9 seconds  
+	25 points if move found between 10 and 29 seconds        
+	20 points if move found between 30 and 89 seconds     (30" - 1'29)
+	15 points if move found between 90 and 179 seconds    (1'30 - 2'59)
+	10 points if move found between 180 and 389 seconds   (3' - 6'29)
+	5 points if move found between 390 and 600 seconds    (6'30 - 10')
+	0 points if move not found in 10 minutes
+
+The lower limit is 1900 Elo points.
+For example, if a program gets 105 points (positional), 200 (tactical) and 
+70 (endgame), its rating will be 1900 + 105 + 200 + 70 = 2275. 
+The upper limit is 1900 + (30 points * 35 tests) = 2950 points.
+That is 40 % for positional moves, 34 % for combinations and 26 % for endgame. 
+

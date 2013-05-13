@@ -1,0 +1,13 @@
+Test results, Intel Q9550 @ 2.8Ghz (4 cores), 512MB hash, 5-man tablebases:
+
+test          time limit    result
+arasan16      60 seconds    80/250
+ecmgcp	      10 seconds    154/183
+iq4	      10 seconds    168/183
+wacnew	      10 seconds    298/300
+pet	      60 seconds    38/48
+eet	      60 seconds    69/100
+bt2630	      900 seconds   30/30	rating = 2630
+lapuce2	30/35 600 seconds   31/35       rating = 2830
+
+

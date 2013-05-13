@@ -1,0 +1,99 @@
+# Arasan runtime configuration file
+#
+# True to keep a log file, false for no logging.
+log.enabled=true
+#
+# Location of the log file. The default is "arasan.log", kept in the
+# same directory as the Arasan executable. Note: under Linux, the
+# log directory must have write permission.
+#log.pathname= 
+#
+# True to append to the log file (if it already exists), rather than
+# overwriting it.
+log.append=true
+#
+# True to store all games played to a file (in PGN format). Not supported
+# under UCI.
+store_games=true
+#
+# If set, game_pathname is the full path to the file in which games
+# are stored. If not set, games are stored to "games.pgn" in the
+# same directory where arasanx is located. Note: under Linux, the
+# directory must have write permission.
+#game_pathname=
+#
+# Set this option false to disable the opening book
+book.book_enabled=true
+#
+# Book selectivity. Generally move selection is based on learning, 
+# frequency, and win/loss info, plus some random selection among
+# moves. Lower selectivity numbers will result in more randomness
+# in move selection. Selectivity=0 is the most random setting,
+# selectivity=100 is the most selective setting.
+book.selectivity=50
+#
+# Book random option. Values:
+# 0 = Arasan will not select moves that have zero weight or only
+# lead to losses.
+# 1 = Arasan will allow moves to be selected that have zero
+# weight or only losing games.
+book.random=0
+#
+# Learning
+#
+# true to enable book learning based on score out of book, false to disable
+# (Not available in UCI mode)
+learning.score_learning=true
+#
+# True to enable use of book learning info based on game results
+# (Not available in UCI mode)
+learning.result_learning=true
+#
+# True to enable storage & use of position values, false to disable
+# (Not available in UCI mode)
+learning.position_learning=true
+#
+# Search parameters
+#
+# True to allow computer to resign, false if you want it to never resign.
+# Note: under UCI the GUI is in charge of this.
+search.can_resign=true
+#
+# Resignation threshold (units of 1 pawn=100)
+search.resign_threshold=-500
+#
+# Hash table size in bytes (can be overridden with -H)
+# Can use: K for kilobytes, M for megabytes, G for gigabytes.
+# Note: for Winboard can use the /defaultHashSize option or common
+# engine options to set. But command-line switches to Arasan take
+# precedence over Winboard settings. In UCI mode, this is commonly
+# set from the GUI.
+search.hash_table_size=64M
+#
+# Max threads to use during search
+# Can be overridden with -c command-line option.
+# Note: for Winboard can use the /smpCores option or common
+# engine options to set. But command-line switches to Arasan take
+# precedence over Winboard settings. In UCI mode, this is commonly
+# set from the GUI.
+search.ncpus=1
+#
+# True to enable use of tablebases, false to disable
+search.use_tablebases=true
+#
+# Tablebase type - supported values are "Gaviota", "Nalimov".
+# Both may be installed, but only one type is active at any given time.
+search.tablebase_type=Gaviota
+#
+# Tablebase cache size.
+# can use: K for kilobytes, M for megabytes, G for gigabytes
+search.gtb_cache_size=8M
+search.nalimov_cache_size=8M
+#
+# Tablebase location. By default, this option is not set and 
+# the tablebases are assumed to be in a directory under the
+# directory where Arasan is installed ("gtb" for Gaviota, "TB" for
+# Nalimov).
+#search.gtb_path=c:\chess\gtb
+#search.nalimov_path=c:\chess\tb
+#
