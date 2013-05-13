@@ -2963,6 +2963,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
                split->ply = ply;
                split->depth = depth;
                split->mg = mg;
+               split->moveIndex = node->num_try;
                split->splitNode = node;
                split->ply0nodeCount = ply0nodeCount;
                // save master's current state
