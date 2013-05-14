@@ -281,7 +281,9 @@ Move BookReader::pick( const Board &b, const BookLocation &loc,
          cout << "index = " << (int)tmp.index << " weight = " << w << " move index = " << (int)be.move_index <<
          " is_basic = " << be.is_basic() << endl;
 #endif
-         if (w>max_weight) max_weight=w;
+         if (w > max_weight) {
+            max_weight = w;
+         }
          total_weight += w;
          if (w > 0) {
             candidate_weights[candidate_count] = w;
@@ -295,25 +297,14 @@ Move BookReader::pick( const Board &b, const BookLocation &loc,
    }
 #ifdef _TRACE
    cout << "candidate_count = " << candidate_count << endl;
-#endif   
+#endif
 
-   // modify the weights for the non-best move based on selectivity setting
-   for (int i = 0; i < candidate_count; i++) {
-      int w  = candidate_weights[i];
-      if (w != max_weight) {
-#ifdef _TRACE
-          cout << "orig weight = " << w << endl;
-#endif
-          w = int(w*(1.0 + 0.0125*(50-options.book.selectivity)));
-          int factor = 25-options.book.selectivity;
-          if (w !=0 && factor > 0) {
-              w += max_weight*(factor*factor)/625;
-          }
-          w = Util::Min(max_weight,w);
-          candidate_weights[i] = w;
-#ifdef _TRACE
-          cout << "modified weight = " << w << endl;
-#endif
+   // Normalize weights
+   int new_max_weight = 0;
+   for (int i=0; i<candidate_count; i++) {
+      candidate_weights[i] = (100*candidate_weights[i])/max_weight;
+      if (candidate_weights[i] > new_max_weight) {
+         new_max_weight = candidate_weights[i];
       }
    }
 
@@ -321,14 +312,23 @@ Move BookReader::pick( const Board &b, const BookLocation &loc,
    // from the candidate list.
    int candidate_count2 = 0;
    // compute minimum weight we will accept
-   int min_weight = (options.book.selectivity*max_weight)/400;
+   int min_weight = options.book.selectivity/4;
 #ifdef _TRACE
-   cout << "min_weight = " << min_weight << endl;
+   cout << "selectivity=" << options.book.selectivity << " min_weight = " << min_weight << endl;
 #endif
    int i;
    total_weight = 0;
    for (i = 0; i < candidate_count; i++) {
       int w  = candidate_weights[i];
+      if (w && w != new_max_weight) {
+         if (options.book.selectivity < 50) {
+            // boost weight of low-rated moves
+            w = Util::Min(new_max_weight,w + Util::Max(0,(25-options.book.selectivity)) + (w*(50-options.book.selectivity))/75);
+         } else {
+            // reduce weight of low-rated moves
+            w = (w*(100-options.book.selectivity))/50;
+         }
+      }
 #ifdef _TRACE
       cout << " w = " << w << " index=" << (int)candidates[i].move_index << endl;
 #endif
