@@ -483,6 +483,15 @@ static int do_pgn(ifstream &infile, const string &book_name)
       side = White;
       ResultType last_result = UnknownResult;
       hdrs.removeAll();
+      int c;
+      // skip to start of next header (handles cases where
+      // comment follows end of previous game).
+      while (infile.good() && (c = infile.get()) != EOF) {
+         if (c=='[') {
+            infile.putback(c);
+            break;
+         }
+      }
       ChessIO::collect_headers(infile,hdrs,first);
       ++games;
       int ply = 0;
