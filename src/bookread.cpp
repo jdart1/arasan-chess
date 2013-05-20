@@ -190,11 +190,6 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
       return 0;
    }
    int w = be.get_winloss();
-   // Moves that have led to nothing but losses get zero weight,
-   // unless the "random" option is on:
-   if (w == -100 && !options.book.random) {
-      return 0;
-   }
    int freq = be.get_frequency();
    // If strength reduction is enabled, "dumb down" the opening book
    // by pruning away infrequent moves.
@@ -202,12 +197,22 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
        1<<((100-options.search.strength)/10)) {
        return 0;
    }
-   int freqWeight = (int)((100*freq)/total_freq);
-   // at low selectivity settings, boost frequency for moves, so they do not get 0 weight
-   // due to rarity
-   int s = (25-options.book.selectivity);
-   if (freq && !freqWeight && s > 0 && freq > options.book.selectivity) freqWeight += s/5;
+   // Early in the opening some moves will have respectable frequency
+   // but still a low percentage of play. 
+   // At low selectivity settings, boost frequency for these moves, so they
+   // do not get 0 weight due to rarity.
+   int s = (50-options.book.selectivity)/2;
+   int onepct = total_freq/100;
+   if (freq >= 50 && s > 0 && freq < 10*onepct) {
+      freq = Util::Min((s*onepct)/5,freq*s);
+   }
+   int freqWeight = (100*freq)/total_freq;
    int winWeight = (w+100)/2;
+   // If "random" option is on, do not give moves zero weight due to
+   // a bad win percentage. But still somewhat favor moves with better scores.
+   if (options.book.random) {
+      winWeight = Util::Max(winWeight,5+Util::Max(0,25-options.book.selectivity/2));
+   }
 
 #ifdef _TRACE
      cout << " freqWeight=" << freqWeight << " winWeight=" << winWeight << endl;
@@ -218,15 +223,15 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
      if (w2 < 0) w2 = Util::Max(w2,-20);
      if (w2 > 0) w2 = Util::Min(w2,20);
      winWeight = (winWeight + (w2*8));
+     if (winWeight < 0) winWeight = 0;
+     if (winWeight > 100) winWeight = 100;
    }
-   if (winWeight < 0) winWeight = 0;
-   if (winWeight > 100) winWeight = 100;
    int base;
    // Favor more frequent moves and moves that win
    if (rec != 50)
       base = rec;
    else
-      base = (freqWeight*winWeight)/40;
+      base = (freqWeight*winWeight)/50;
    base = Util::Min(100,base);
    if (base == 0) return 0;
    // Factor in score-based learning
@@ -325,7 +330,7 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
 #ifdef _TRACE
       cout << " w = " << w << " index=" << (int)candidates[i].move_index << endl;
 #endif
-      if (w >= min_weight) {
+      if (w && w >= min_weight) {
          total_weight += w;
          scores[candidate_count2] = w;
          moves[candidate_count2] = candidates[i];
@@ -418,7 +423,6 @@ int BookReader::book_moves(const Board &b, Move *moves, int *scores, const unsig
    BookLocation locs[100];
    int book_move_count = getBookMoves(b,loc,entries,locs,scores,100);
 
-   BookEntry target(b.hashCode(),0,0,0);
    Move move_list[Constants::MaxMoves];
    MoveGenerator mg( b, NULL, 0, NullMove, 0);
    (void)mg.generateAllMoves(move_list,1 /* repeatable */); 
