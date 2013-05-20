@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 15.5
+# Gnu Makefile for Arasan 15.6
 #
-VERSION = 15.5.0
+VERSION = 15.6.0
 
 # paths, modify as needed:
 
@@ -197,33 +197,8 @@ endif
 
 release:
 	mkdir -p ../release
-	cd ../.. && \
-	tar czf arasan-$(VERSION)/release/arasan-$(VERSION).tar.gz \
-	arasan-$(VERSION)/src/*.h arasan-$(VERSION)/src/*.cpp \
-        arasan-$(VERSION)/src/arasan.rc \
-	arasan-$(VERSION)/src/Makefile \
-	arasan-$(VERSION)/tests/wacnew.epd \
-	arasan-$(VERSION)/tests/ecmgcp.epd \
-	arasan-$(VERSION)/tests/iq4.epd \
-	arasan-$(VERSION)/tests/lapuce2.epd \
-	arasan-$(VERSION)/tests/bt2630.epd \
-	arasan-$(VERSION)/tests/arasan16.epd \
-	arasan-$(VERSION)/tests/prof.epd \
-	arasan-$(VERSION)/tests/pet.epd \
-	arasan-$(VERSION)/tests/eet.epd \
-	arasan-$(VERSION)/tests/tests.pl arasan-$(VERSION)/tests/RESULTS \
-	arasan-$(VERSION)/tests/rating.txt \
-	arasan-$(VERSION)/tests/eet.txt \
-	arasan-$(VERSION)/tests/lapuce2.doc \
-	arasan-$(VERSION)/tests/prof \
-	arasan-$(VERSION)/tests/tests \
-	arasan-$(VERSION)/doc/README arasan-$(VERSION)/doc/CHANGES \
-        arasan-$(VERSION)/doc/INSTALL \
-        arasan-$(VERSION)/doc/programr.txt \
-        arasan-$(VERSION)/doc/license.txt \
-        arasan-$(VERSION)/doc/gtb-licenses.txt \
-        arasan-$(VERSION)/book/basic.bk \
-        arasan-$(VERSION)/book/eco 
+	cd .. && git archive --format tar --prefix arasan-$(VERSION)/ -o release/arasan-$(VERSION).tar v$(VERSION)
+	gzip ../release/arasan-$(VERSION).tar
 
 install: all
 	mkdir -p $(INSTALL)/arasan-$(VERSION) 

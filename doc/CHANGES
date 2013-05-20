@@ -1,4 +1,12 @@
-Changes in Arasan 15.5:
+Changes in Arasan 15.6 (May 2013):
+ 1) Bug fix in search (affects multi-core searching only).
+ 2) Book selectivity logic changed (50 setting is a bit more selective now).
+ 3) book.random option is fixed (was not working).
+ 4) Book move kibitz for ICS is fixed so that weights are shown normalized
+    and the book selectivity rules are applied.
+ 5) Fix "makebook" program to handle comments after PGN result.
+
+Changes in Arasan 15.5 (Apr. 2013):
  1) Fix bug that can cause illegal move from pondering.
  2) Check for checkmate before returning 50-move draw.
  3) Send Winboard variants in feature line (only "normal" is supported).

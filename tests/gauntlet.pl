@@ -29,7 +29,7 @@ if (@ARGV) {
         }
         if ($key eq "Result") {
           if ($value ne "\*") {
-            if ($white =~ m/Arasan 15.3/) {
+            if ($white =~ m/Arasan 15.6/) {
                 $opponent = $black;
 	    }
             else {
@@ -40,14 +40,13 @@ if (@ARGV) {
         }
         if ($opponent ne $last_opponent) {
           print $last_opponent . "\t : ";
-          $pct_win = sprintf("%.2f", 100.0*($win - $tmp_win + (($draw-$tmp_draw)/2))/($win+$loss+$draw-$tmp_win-$tmp_loss-$tmp_draw));
-          print "\+" . ($win-$tmp_win) . " \-" . ($loss-$tmp_loss) . " \=" . ($draw-$tmp_draw) . " " . ($win+$loss+$draw-$tmp_win-$tmp_loss-$tmp_draw) . " total\t" . $pct_win . "%\n";
+          print "\+" . ($win-$tmp_win) . " \-" . ($loss-$tmp_loss) . " \=" . ($draw-$tmp_draw) . " " . ($win+$loss+$draw-$tmp_win-$tmp_loss-$tmp_draw) . " total\t" . 100.0*($win - $tmp_win + (($draw-$tmp_draw)/2))/($win+$loss+$draw-$tmp_win-$tmp_loss-$tmp_draw) . "%\n";
           $tmp_win = $win; $tmp_loss = $loss; $tmp_draw = $draw;
           $last_opponent = $opponent;
         } 
         if ($key eq "Result") {
           if ($value ne "\*") {
-            if ($white =~ m/Arasan 15.3/) {
+            if ($white =~ m/Arasan 15.6/) {
 		if ($value eq "1-0") {
 		    $win++;
 		}
@@ -75,6 +74,5 @@ if (@ARGV) {
      }
   }
   print $last_opponent . "\t : ";
-  $pct_win = sprintf("%.2f", 100.0*($win-$tmp_win + (($draw-$tmp_draw)/2))/($win-$tmp_win+$loss-$tmp_loss+$draw-$tmp_draw));
-  print "\+" . ($win-$tmp_win) . " \-" . ($loss-$tmp_loss) . " \=" . ($draw-$tmp_draw) . " " . ($win+$loss+$draw-$tmp_win-$tmp_loss-$tmp_draw) . " total\t" . $pct_win . "%\n";
+  print "\+" . ($win-$tmp_win) . " \-" . ($loss-$tmp_loss) . " \=" . ($draw-$tmp_draw) . " " . ($win+$loss+$draw-$tmp_win-$tmp_loss-$tmp_draw) . " total\t" . 100.0*($win-$tmp_win + (($draw-$tmp_draw)/2))/($win-$tmp_win+$loss-$tmp_loss+$draw-$tmp_draw) . "%\n";
 }
