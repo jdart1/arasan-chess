@@ -1,4 +1,4 @@
-// Copyright 1992, 1995 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1995, 2013 by Jon Dart.  All Rights Reserved.
 
 #ifndef _BOOK_READER_H
 #define _BOOK_READER_H
@@ -61,8 +61,10 @@ class BookReader
 
        Move pickRandom(const Board &b, BookEntry * candidates,
           int * candidate_weights,
-          int candidate_count,int total_weight,
+          int candidate_count,
           BookLocation *locs,BookInfo &info);
+
+       int minWeight() const;
 
        FILE_HANDLE book_file;
        void *pBook;
@@ -75,6 +77,7 @@ class BookReader
        private:
            
        void fetch_page(int page);
+       int getBookMoves(const Board &b, const BookLocation &loc, BookEntry *moves, BookLocation *locs, int *scores, int limit);
        BookUtil bu;
 };
 

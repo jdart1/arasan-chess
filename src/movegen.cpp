@@ -22,7 +22,6 @@ static FORCEINLINE void swap( Move moves[], int i, int j)
    moves[i] = tmp;
 }
 
-
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
    Move tmp = moves[j];
@@ -36,7 +35,7 @@ static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 void MoveGenerator::sortMoves(Move moves[], int scores[], int n) {
     if (n == 2) {
         if (scores[1] > scores[0]) {
-            swap(moves,0,1);
+           swap(moves,scores,0,1);
         }
     } else if (n>1) {
        // insertion sort

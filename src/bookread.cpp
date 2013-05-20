@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012, 2013 by Jon Dart.d
+// Copyright 1993-1999, 2005, 2009, 2012, 2013 by Jon Dart.
 // All Rights Reserved.
 #ifdef _MSC_VER
 #pragma optimize("g", off)
@@ -192,17 +192,23 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
    int w = be.get_winloss();
    // Moves that have led to nothing but losses get zero weight,
    // unless the "random" option is on:
-   if (w == -100 && !options.book.random)
+   if (w == -100 && !options.book.random) {
       return 0;
-   const int freq = be.get_frequency();
+   }
+   int freq = be.get_frequency();
    // If strength reduction is enabled, "dumb down" the opening book
    // by pruning away infrequent moves.
    if (options.search.strength < 100 && freq <
        1<<((100-options.search.strength)/10)) {
        return 0;
    }
-   int freqWeight = (int)((100L*freq)/total_freq);
+   int freqWeight = (int)((100*freq)/total_freq);
+   // at low selectivity settings, boost frequency for moves, so they do not get 0 weight
+   // due to rarity
+   int s = (25-options.book.selectivity);
+   if (freq && !freqWeight && s > 0 && freq > options.book.selectivity) freqWeight += s/5;
    int winWeight = (w+100)/2;
+
 #ifdef _TRACE
      cout << " freqWeight=" << freqWeight << " winWeight=" << winWeight << endl;
 #endif
@@ -235,25 +241,16 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
      return base;
 }
 
-Move BookReader::pick( const Board &b, const BookLocation &loc,
-                        BookInfo &info )
-{
-#ifdef _TRACE
-  cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
-#endif
-   BookLocation tmp = loc;
-   BookLocation locs[100];
+int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry *moves, BookLocation *locs, int *scores, int limit) {
    int total_freq = 0;
-   int count = 0;
    // get the total move frequency (needed for computing weights)
+   BookLocation tmp = loc;
    while (tmp.index != INVALID) {
       BookInfo be;
       fetch(tmp, be);
-      if (be.hash_code() == b.hashCode())
-      {
+      if (be.hash_code() == b.hashCode()) {
           if (be.get_recommend() != 0) {
              total_freq += be.get_frequency();
-             ++count;
           }
       }
       if (be.is_last())
@@ -265,17 +262,17 @@ Move BookReader::pick( const Board &b, const BookLocation &loc,
    // Determine the total weights of moves for this position,
    // and build a list of candidate moves.
    //
-   BookEntry candidates[100], candidates2[100];
-   int candidate_weights[100], candidate_weights2[100];
+   BookEntry candidates[100];
+   int candidate_weights[100];
    int candidate_count = 0; 
    unsigned total_weight = 0;
    int max_weight = 0;
+
    while (tmp.index != INVALID) {
       BookInfo be;
       fetch(tmp, be);
 
-      if (b.hashCode() == be.hash_code())
-      {
+      if (b.hashCode() == be.hash_code()) {
          int w  = get_weight(be,total_freq,b.sideToMove());
 #ifdef _TRACE
          cout << "index = " << (int)tmp.index << " weight = " << w << " move index = " << (int)be.move_index <<
@@ -302,54 +299,73 @@ Move BookReader::pick( const Board &b, const BookLocation &loc,
    // Normalize weights
    int new_max_weight = 0;
    for (int i=0; i<candidate_count; i++) {
-      candidate_weights[i] = (100*candidate_weights[i])/max_weight;
+      candidate_weights[i] = int((100.0*candidate_weights[i])/total_weight + 0.5);
       if (candidate_weights[i] > new_max_weight) {
          new_max_weight = candidate_weights[i];
       }
    }
 
-   // Depending on the selectivity value selected, remove moves
-   // from the candidate list.
-   int candidate_count2 = 0;
-   // compute minimum weight we will accept
-   int min_weight = options.book.selectivity/4;
 #ifdef _TRACE
    cout << "selectivity=" << options.book.selectivity << " min_weight = " << min_weight << endl;
 #endif
    int i;
    total_weight = 0;
+   const int min_weight = minWeight();
+   int candidate_count2 = 0;
+   // Depending on the selectivity value, remove moves from the
+   // candidate list.
    for (i = 0; i < candidate_count; i++) {
       int w  = candidate_weights[i];
       if (w && w != new_max_weight) {
-         if (options.book.selectivity < 50) {
-            // boost weight of low-rated moves
-            w = Util::Min(new_max_weight,w + Util::Max(0,(25-options.book.selectivity)) + (w*(50-options.book.selectivity))/75);
-         } else {
-            // reduce weight of low-rated moves
-            w = (w*(100-options.book.selectivity))/50;
-         }
+         // boost weight of low-rated moves
+         w = Util::Min(new_max_weight,w + w*(125-options.book.selectivity)/200 + 
+                          Util::Max(0,new_max_weight*(25-options.book.selectivity)/100));
+         w = Util::Max(0,w);
       }
 #ifdef _TRACE
       cout << " w = " << w << " index=" << (int)candidates[i].move_index << endl;
 #endif
       if (w >= min_weight) {
          total_weight += w;
-         candidate_weights2[candidate_count2] = w;
-         candidates2[candidate_count2] = candidates[i];
+         scores[candidate_count2] = w;
+         moves[candidate_count2] = candidates[i];
          locs[candidate_count2++] = tmp;
       }
    }
-#ifdef _TRACE
-   cout << "candidate_count2 = " << candidate_count2 << " total_weight = " << total_weight << endl;
-#endif   
-   return pickRandom(b,candidates2,candidate_weights2,candidate_count2,total_weight,locs,info);
+
+   // renormalize after selectivity rules applied
+   for (int i=0; i<candidate_count2; i++) {
+      scores[i] = int((100.0*scores[i])/total_weight + 0.5);
+   }
+
+   return candidate_count2;
 }
 
+Move BookReader::pick( const Board &b, const BookLocation &loc,
+                        BookInfo &info )
+{
+#ifdef _TRACE
+  cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
+#endif
+   BookLocation locs[100];
+   BookEntry moves[100];
+   int scores[100];
+   int n = getBookMoves(b,loc,moves,locs,scores,100);
+   return pickRandom(b,moves,scores,n,locs,info);
+}
+
+
+
 Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candidate_weights,
-  int candidate_count,int total_weight,BookLocation *locs,BookInfo &info)
+  int candidate_count,BookLocation *locs,BookInfo &info)
 {
    // If total_weight is 0, no moves have non-zero weights.
+   int total_weight = 0;
+   for (int i = 0; i < candidate_count; i++) total_weight += candidate_weights[i];
    if (total_weight == 0) return NullMove;
+#ifdef _TRACE
+   cout << "pickRandom: count = " << n << " total_weight = " << total_weight << endl;
+#endif   
 
    const unsigned nRand = rand() % total_weight;
    // Randomly pick from the available moves.  Prefer moves
@@ -396,70 +412,24 @@ Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candida
 
 int BookReader::book_moves(const Board &b, Move *moves, int *scores, const unsigned limit)
 {
-   BookLocation tmp;
-   head(b,tmp);
-   BookEntry target(b.hashCode(),0,0,0);
-   int num_moves = 0;
-   int total_freq = 0;
-   Move *tmp_moves = new Move[Constants::MaxMoves];
-   MoveGenerator mg( b, NULL, 0, NullMove, 0);
-   int n = mg.generateAllMoves(tmp_moves,1 /* repeatable */); 
-   // get the total move frequency
-   while (tmp.index != INVALID)
-   {
-      BookInfo be;
-      fetch(tmp,be);
-      if (target == be && be.get_recommend())
-      {
-         num_moves++;
-         total_freq += be.get_frequency();
-      }
-      if (be.is_last())
-         break;
-      else
-         tmp.index++;
-   }
-   if (num_moves == 0)
-      return 0;
-   Move * tmp_moves2 = new Move[num_moves];
    BookLocation loc;
    head(b,loc);
-   num_moves = 0;
-   tmp = loc;
-   while (tmp.index != INVALID)
-   {
-      BookInfo be;
-      fetch(tmp,be);
-      int w;
-      if (target == be && (w = get_weight(be,total_freq,b.sideToMove())) != 0)
-      {
-         assert(be.move_index < n);
-         tmp_moves2[num_moves] = tmp_moves[be.move_index];
-         scores[num_moves++] = w;
-      }
-#ifdef _TRACE
-      if (target == be) {
-	MoveImage(tmp_moves[be.get_move_index()],cout);
-        cout << " index = " << (int)be.get_move_index() <<
-	" winloss = " << (int)be.get_winloss() <<
-        " freq = " << (int)be.get_frequency()  <<
-	  " recommend = " << (int)be.get_recommend() << " is_basic=" << be.is_basic() << 
-          " weight = " << get_weight(be,total_freq,b.sideToMove()) << 
-          endl; 
-      }
-#endif
-      if (be.is_last())
-         break;
-      else
-         tmp.index++;
+   BookEntry entries[100];
+   BookLocation locs[100];
+   int book_move_count = getBookMoves(b,loc,entries,locs,scores,100);
+
+   BookEntry target(b.hashCode(),0,0,0);
+   Move move_list[Constants::MaxMoves];
+   MoveGenerator mg( b, NULL, 0, NullMove, 0);
+   (void)mg.generateAllMoves(move_list,1 /* repeatable */); 
+
+   // convert move indexes to moves
+   for (int i = 0; i < book_move_count; i++) {
+      moves[i] = move_list[entries[i].move_index];
    }
-   MoveGenerator::sortMoves(tmp_moves2,scores,num_moves);
-   unsigned ret_val = Util::Min(num_moves,limit);
-   for (unsigned i = 0; i < ret_val; i++)
-      moves[i] = tmp_moves2[i];
-   delete [] tmp_moves;
-   delete [] tmp_moves2;
-   return ret_val;
+
+   MoveGenerator::sortMoves(moves,scores,book_move_count);
+   return book_move_count;
 }
 
 int BookReader::book_move_count(hash_t hashcode) {
@@ -533,4 +503,9 @@ void BookReader::fetch_page(int page)
       pPage = (byte*)pBook;
    }
    current_page = page;
+}
+
+int BookReader::minWeight() const {
+   int sel = options.book.selectivity;
+   return (sel*sel)/400;
 }
