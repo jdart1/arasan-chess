@@ -1,4 +1,4 @@
-// Copyright 1993 by Jon Dart. All Rights Reserved.
+// Copyright 1993, 2013 by Jon Dart. All Rights Reserved.
 
 #ifndef _BOOK_ENTRY_H
 #define _BOOK_ENTRY_H
@@ -10,17 +10,17 @@ class BookEntry {
 
 public:
 
+     static const int NO_RECOMMEND;
+
      BookEntry()
        :my_hash_code(0),frequency(0),move_index(0),flags(0),
-        winloss(0),learn_score(0.0)
+        winloss(0),learn_score(0.0),flags2(0),weight(0)
      {
      }
 
      BookEntry( hash_t hc, byte rec, byte mv_indx,
 	         int last = 0);
 
-     void init( hash_t hc, uint16 freq, byte flags, byte mv_indx);
- 
      hash_t hash_code() const
      {
         return my_hash_code;
@@ -32,7 +32,7 @@ public:
      
      byte get_move_index() const
      { 
-	return move_index;
+	    return move_index;
      }
      
      int get_winloss() const
@@ -59,7 +59,7 @@ public:
 
      int is_basic() const;
 
-     int get_learned_result()  const;
+     int get_learned_result() const;
 
      void update_learned_result(int diff);
 
@@ -77,6 +77,8 @@ public:
      signed char winloss;
      float learn_score;
      byte flags2;
+     // manual tuned weight, if any 0-100
+     byte weight;
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
@@ -85,5 +87,7 @@ public:
 __attribute__((__packed__))
 #endif
 ;
+
+#define Entry_Size sizeof(BookEntry)
 
 #endif

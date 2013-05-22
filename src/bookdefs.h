@@ -10,8 +10,7 @@
 
 #define INVALID (uint16)0xffff
 
-#define Entry_Size 17
-#define BookVersion 11
+#define BookVersion 12
 
 // Header of the opening book.
 struct BookHeader

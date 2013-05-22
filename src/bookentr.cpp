@@ -1,22 +1,15 @@
-// Copyright 1993-1995, 2001, 2006 by Jon Dart.  All Rights Reserved.
+// Copyright 1993-1995, 2001, 2006, 2013 by Jon Dart.  All Rights Reserved.
 
 #include "bookentr.h"
+
+const int BookEntry::NO_RECOMMEND = 101;
 
 BookEntry::BookEntry( hash_t hc, byte rec, byte mv_indx, 
    int last )
   : my_hash_code(hc), 
-  move_index(mv_indx), flags(rec/5 + (last ? 0x80 : 0)), winloss(0), flags2(0)
+    move_index(mv_indx), flags(last ? 0x80 : 0), winloss(0), 
+    learn_score(0.0), flags2(0), weight(rec)
 {
-}
-
-void BookEntry::init( hash_t hc, uint16 freq, byte rec, byte mv_indx)
-{
-  my_hash_code = hc;
-  flags = rec;
-  frequency = (int)freq;
-  winloss = 0;
-  flags2 = 0;
-  move_index = mv_indx;
 }
 
 int BookEntry::is_last() const
@@ -76,7 +69,7 @@ void BookEntry::set_last(int b)
 
 unsigned BookEntry::get_recommend() const
 {
-   return 5*(unsigned)(flags & 0x1f);
+   return (unsigned)weight;
 }
 
 void BookEntry::set_basic(int b) {

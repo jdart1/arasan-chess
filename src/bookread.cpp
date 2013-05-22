@@ -135,21 +135,20 @@ void BookReader::fetch( const BookLocation &loc, BookInfo &book_info )
 
    byte *entry = pPage + Header_Size + hdr.hash_table_size*2 + ((int)loc.index)*Entry_Size;
    hash_t hc;
-   byte freq, indx;
 
    // We assume here that the compiler doesn't reorder structures
 
    hc = swapEndian64(entry);
-   freq = entry[8];
-   indx = entry[9];
-
-   byte flags = entry[10];
-   book_info.init(hc,freq,flags,indx);
+   book_info.my_hash_code = hc;
+   book_info.frequency = entry[8];
+   book_info.move_index = entry[9];
+   book_info.flags = entry[10];
    book_info.winloss = entry[11];
    book_info.setLocation(loc);
    // convert float byte order if necessary
    book_info.learn_score = swapEndianFloat(entry+12);
    book_info.flags2 = entry[16];
+   book_info.weight = entry[17];
 }
 
 void BookReader::update(const BookLocation &loc, float learn_factor)
@@ -228,10 +227,12 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
    }
    int base;
    // Favor more frequent moves and moves that win
-   if (rec != 50)
+   if (rec != BookEntry::NO_RECOMMEND) {
       base = rec;
-   else
-      base = (freqWeight*winWeight)/50;
+   }
+   else {
+      base = (freqWeight*winWeight)/40;
+   }
    base = Util::Min(100,base);
    if (base == 0) return 0;
    // Factor in score-based learning

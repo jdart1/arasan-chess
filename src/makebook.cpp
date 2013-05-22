@@ -24,7 +24,7 @@
 // array the first book entry for the position.
 
 // The book entries themselves are structures defined in bookentr.h.
-// Each one is 17 bytes and contains the full hash code, the move
+// Each one is 18 bytes and contains the full hash code, the move
 // index, win/loss info for the move, a weight indicating how
 // often the computer should play the move, and some learning information.
 // Hash entries for each chain in the hash table are stored contiguously
@@ -368,36 +368,30 @@ static int get_move_indx(const Board &board, Move move) {
 
 static int do_bk(ifstream &infile)
 {
-   char buf[256];
-   char movebuf[20];
    unsigned line = 0;
-   char *q;
    Board board;
    Board tmpboard;
-   int recommend;
 
    ResultType last_result = UnknownResult;
 
+   string buf;
    while (!infile.eof() && infile.good()) {
-      recommend = 50;
-      infile.getline(buf, 256);
+      std::getline(infile,buf);
 #ifdef _TRACE
       cout << buf << endl;
 #endif
       line++;
-      char *p = buf;
-      while (isspace(*p))
-         p++;
-      switch (*p) {
-         case '\0':
-            continue;
+      if (buf.size() == 0) continue;
+      char c = buf[0];
+      switch (c) {
          case ';':
          {
-            if (strstr(p,"1/2-1/2"))
+            // comment, ignore except for result, if any
+            if (buf.find("1/2-1/2") != string::npos)
                last_result = DrawResult;
-            else if (strstr(p,"0-1") || strstr(p,"0:1"))
+            else if (buf.find("0-1") != string::npos)
                last_result = Black_Win;
-            else if (strstr(p,"1-0") || strstr(p,"1:0"))
+            else if (buf.find("1-0") != string::npos)
                last_result = White_Win;
             else
                last_result = UnknownResult;
@@ -417,19 +411,17 @@ static int do_bk(ifstream &infile)
             break;
          default:
          {
-            while (*p) {
-               while (isspace(*p))
-                  p++;
-               if (*p == '\0')
-                  break;
-               q = movebuf;
-               int count = 0;
-               while (!isspace(*p) && *p && count < 19) {
-                  *q++ = *p++;
-                  ++count;
+            stringstream s(buf);
+            while (!s.eof()) {
+               string movebuf;
+               // read next space-delimited token
+               s >> movebuf;
+               // ignore blanks due to trailing whitespace:
+               if (movebuf.find_first_not_of(' ') == string::npos) {
+                   break;
                }
-               *q = '\0';
-               Move move = Notation::value(board, board.sideToMove(), movebuf);
+               // try to parse as a move 
+               Move move = Notation::value(board, board.sideToMove(), movebuf.c_str());
                if (IsNull(move)) {
                   cerr << endl << "Illegal move in file, line " <<
                      line << " (" << movebuf << ")" << endl;
@@ -446,13 +438,14 @@ static int do_bk(ifstream &infile)
                   infile.close();
                   return -1;
                }
-               recommend = 50;
-               while (isspace(*p))
-                  p++;
-               if (*p) {
-                  if ((*p >= '0') && (*p <= '9')) {
-                     recommend = 10*(*p - '0');
-                     p++;
+               int recommend = BookEntry::NO_RECOMMEND;
+               char c = '\0';
+               if (!s.eof()) {
+                  // move may be followed by a weight (0-100)
+                  s >> c;
+                  s.putback(c);
+                  if (isdigit(c)) {
+                     s >> recommend;
                   }
                }
                add_move(board, move_indx, recommend, true, last_result);
@@ -560,7 +553,7 @@ static int do_pgn(ifstream &infile, const string &book_name)
          vector<MoveListEntry>::iterator it = moves.begin();
          while (it != moves.end()) {
              const MoveListEntry &m = *it++;
-             add_move(board, m.index, 50, false, last_result);
+             add_move(board, m.index, BookEntry::NO_RECOMMEND, false, last_result);
              board.doMove(m.move);
          }
       }   
