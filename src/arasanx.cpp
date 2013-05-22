@@ -474,7 +474,7 @@ static bool accept_draw(Board &board) {
       cout << "# checking draw score .." << endl;
    ColorType tmp = board.sideToMove();
    board.setSideToMove(side);
-   int draw_score = searcher->drawScore(board);
+   int draw_score = searcher->root()->drawScore(board);
    board.setSideToMove(tmp);
    int threshold = (3*PAWN_VALUE)/4 -(PAWN_VALUE*rating_diff)/200;
    if (rating_diff > 0)

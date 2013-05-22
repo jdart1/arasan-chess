@@ -10,6 +10,9 @@
 
 lock_t ThreadPool::poolLock;
 
+uint64 ThreadPool::activeMask = 0ULL;
+uint64 ThreadPool::availableMask = 0ULL;
+
 #ifdef _THREAD_TRACE
 static lock_t io_lock;
 
@@ -40,6 +43,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
       Lock(poolLock);
       if (ti->wouldWait()) {
         ti->state = ThreadInfo::Idle; // mark thread available again
+        activeMask &= ~(1ULL << ti->index);
         Unlock(poolLock);
         int result;
         if ((result = ti->wait()) != 0) {
@@ -79,12 +83,6 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
               log("helpful master exiting idle loop -  thread #",ti->index);
 #endif
               ASSERT(ti->state == ThreadInfo::Working);
-              /*
-              if (ti->state == ThreadInfo::Idle) {
-                  // mark as busy
-                  ti->state = ThreadInfo::Working;
-              }
-              */
               Unlock(split->master->work->splitLock);
               // This thread exits the thread pool and returns to what it
               // was previously doing.
@@ -200,6 +198,7 @@ ThreadPool::ThreadPool(SearchController *controller,int n) {
   LockInit(io_lock);
 #endif
    LockInit(poolLock);
+   nThreads = n;
    for (int i = 0; i < n; i++) {
       ThreadInfo *p = new ThreadInfo(i);
       p->pool = this;
@@ -210,8 +209,11 @@ ThreadPool::ThreadPool(SearchController *controller,int n) {
          p->work = new Search(controller,p);
       }
       p->work->ti = p;
-      data.push_back(p);
+      data[i] = p;
    }
+   activeMask = 1ULL;
+   availableMask = (n == 64) ? 0xffffffffffffffffULL :
+      (1ULL << n)-1;
 }
 
 ThreadPool::~ThreadPool() {
@@ -223,11 +225,10 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::shutDown() {
     Lock(poolLock);
-    vector<ThreadInfo*>::iterator it = data.end()-1;
     ThreadInfo *p;
     // note: do not terminate thread 0 (main thread) in this loop
-    while (it != data.begin()) {
-        p = *it;
+    for (unsigned i = 1; i < nThreads; i++) {
+        p = data[i];
         // All threads should be idle when this function is called.
         if (p->state == ThreadInfo::Idle) {
           // Set the thread to the terminating state that will force thread
@@ -243,14 +244,11 @@ void ThreadPool::shutDown() {
        void *value_ptr;
        pthread_join(p->thread_id,&value_ptr);
 #endif
-       data.erase(it--);
        // Free thread data 
        delete p;
     }
-    // now remove & free main thread data
-    p = data.front();
-    data.erase(data.begin(),data.begin()+1);
-    delete p; // main thread structure
+    // now free main thread data
+    delete data[0]; // main thread structure
     Unlock(poolLock);
 }
 
@@ -260,26 +258,30 @@ ThreadInfo * ThreadPool::checkOut(Search *parent, NodeInfo *forNode,
     Lock(poolLock);
     // and aginst changes to the split stack in the parent
     Lock(parent->splitLock);
-    for (vector<ThreadInfo*>::const_iterator it = data.begin(); it != data.end(); it++) { 
-       ThreadInfo *p = *it;
-       if (p->index != parent->ti->index && p->state == ThreadInfo::Idle) {
-         // If this is a "master" thread it is not sufficient to just be
-         // idle - assign it only to one of its slave threads at the
-         // current top of the search stack.
-         Search *child = p->work;
-         // lock the split stack in the child for the following test
-         Lock(child->splitLock);
-         if (!child->activeSplitPoints /* not master of a split point */ ||
-             (child->splitStack[child->activeSplitPoints-1].slaves.exists(parent->ti))) {
-           // We're working now - ensure we will not be allocated again
-           p->state = ThreadInfo::Working; 
-           Unlock(child->splitLock);
-           Unlock(parent->splitLock);
-           Unlock(poolLock);
-           return p;
-         }
+    // only loop over available threads
+    Bitboard b(~activeMask & availableMask);
+    b.clear(parent->ti->index);
+    int i;
+    while (b.iterate(i)) {
+       ThreadInfo *p = data[i];
+       ASSERT(p->state == ThreadInfo::Idle);
+       // If this is a "master" thread it is not sufficient to just be
+       // idle - assign it only to one of its slave threads at the
+       // current top of the search stack.
+       Search *child = p->work;
+       // lock the split stack in the child for the following test
+       Lock(child->splitLock);
+       if (!child->activeSplitPoints /* not master of a split point */ ||
+           child->splitStack[child->activeSplitPoints-1].slaves.exists(parent->ti)) {
+         // We're working now - ensure we will not be allocated again
+         p->state = ThreadInfo::Working; 
+         activeMask |= (1ULL << p->index);
          Unlock(child->splitLock);
+         Unlock(parent->splitLock);
+         Unlock(poolLock);
+         return p;
        }
+       Unlock(child->splitLock);
     }
     // no luck, no free threads
     Unlock(parent->splitLock);
@@ -287,25 +289,22 @@ ThreadInfo * ThreadPool::checkOut(Search *parent, NodeInfo *forNode,
     return NULL;
 }
 
-void ThreadPool::resize(int n, SearchController *controller) {
-    if (n >= 1 && n < Constants::MaxCPUs && n != data.size()) {
+void ThreadPool::resize(unsigned n, SearchController *controller) {
+    if (n >= 1 && n < Constants::MaxCPUs && n != nThreads) {
         Lock(poolLock);
-        int nthreads = data.size();
-        if (n>nthreads) {
+        if (n>nThreads) {
             // growing
-            while (n > nthreads) {
-                ThreadInfo *p = new ThreadInfo(nthreads);
+            while (n > nThreads) {
+                ThreadInfo *p = new ThreadInfo(nThreads);
                 p->work = new Search(controller,p);
                 p->pool = this;
-                data.push_back(p);
-                ++nthreads;
+                data[nThreads++] = p;
             }
         }
         else {
             // shrinking
-            vector<ThreadInfo*>::iterator it = data.end()-1;
-            while (n < nthreads) {
-                ThreadInfo *p = *it;
+            while (n < nThreads) {
+                ThreadInfo *p = data[nThreads-1];
                 p->state = ThreadInfo::Terminating;
                 if (p->state == ThreadInfo::Idle) {
                     p->signal(); // unblock thread & exit thread proc
@@ -317,13 +316,16 @@ void ThreadPool::resize(int n, SearchController *controller) {
                     pthread_join(p->thread_id,&value_ptr);
 #endif
                 }
-                data.erase(it--);
                 delete p;
-                --nthreads;
+                data[nThreads] = NULL;
+                --nThreads;
             }
         }
         Unlock(poolLock);
     }
+    ASSERT(nThreads == n);
+    availableMask = (n == 64) ? 0xffffffffffffffffULL :
+       (1ULL << n)-1;
 }
 
 void ThreadPool::checkIn(ThreadInfo *ti) {
@@ -375,6 +377,7 @@ void ThreadPool::checkIn(ThreadInfo *ti) {
         // Set parent state to Working before it even wakes up. This
         // ensures it will not be allocated to another split point.
         parent->state = ThreadInfo::Working;
+        activeMask |= (1ULL << parent->index);
 #ifdef _THREAD_TRACE
         std::ostringstream s;
         s << "thread " << ti->index <<  
@@ -395,51 +398,7 @@ void ThreadPool::checkIn(ThreadInfo *ti) {
     Unlock(poolLock);
 }
 
-int ThreadPool::activeCount() {
-    int count = 0;
-    for (vector<ThreadInfo*>::const_iterator it = data.begin();
-         it != data.end();
-         it++) {
-        if ((*it)->state == ThreadInfo::Working) ++count;
-    }
-    return count;
+int ThreadPool::activeCount() const {
+   return Bitboard(activeMask & availableMask).bitCount();
 }
 
-void ThreadPool::clearHashTables() {
-    for (vector<ThreadInfo*>::const_iterator it = data.begin();
-         it != data.end();
-         it++) {
-        (*it)->work->clearHashTables();
-    }
-}
-
-void ThreadPool::stopAllThreads() {
-    Lock(poolLock);
-    for (vector<ThreadInfo*>::const_iterator it = data.begin();
-         it != data.end();
-         it++) {
-        (*it)->work->stop();
-    }
-    Unlock(poolLock);
-}
-
-void ThreadPool::clearStopFlags() {
-    Lock(poolLock);
-    for (vector<ThreadInfo*>::const_iterator it = data.begin();
-         it != data.end();
-         it++) {
-        (*it)->work->clearStopFlag();
-    }
-    Unlock(poolLock);
-}
-
-void ThreadPool::updateSearchOptions() {
-    // update each search thread's local copy of the options:
-    Lock(poolLock);
-    for (vector<ThreadInfo *>::const_iterator it = data.begin();
-         it != data.end();
-         it++) {
-        (*it)->work->setSearchOptions(options.search);
-    }
-    Unlock(poolLock);
-}

@@ -5,8 +5,9 @@
 
 #include "types.h"
 #include "threadc.h"
+#include "constant.h"
 
-#include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -54,12 +55,7 @@ public:
 
    // Do a quick check for thread availability (w/o locking)
    int checkAvailable() {
-       for (vector<ThreadInfo*>::const_iterator it = data.begin();
-            it != data.end();
-            it++) {
-           if ((*it)->state == ThreadInfo::Idle) return 1;
-      }
-      return 0;
+      return (activeMask & availableMask) != availableMask;
    }
 
    // Threads that are waiting for work execute this function
@@ -68,25 +64,31 @@ public:
    // return a thread to the pool
    void checkIn(ThreadInfo *);
 
-   int activeCount();
-
-   void clearHashTables();
+   int activeCount() const;
 
    // resize the thread pool
-   void resize(int n, SearchController *);
+   void resize(unsigned n, SearchController *);
 
-   void stopAllThreads();
-
-   void clearStopFlags();
-
-   void updateSearchOptions();
+   template <void (Search::*fn)()>
+      void forEachSearch() {
+      Lock(poolLock);
+      for (unsigned i = 0; i < nThreads; i++) {
+          std::mem_fun<void,Search>(fn)(data[i]->work);
+      }
+      Unlock(poolLock);
+   }
 
 private:
    void shutDown();
 
    // lock for the class. Static so idle_loop can access.
    static LockDefine(poolLock);
-   vector<ThreadInfo*> data;
+   ThreadInfo * data[Constants::MaxCPUs];
+   unsigned nThreads;
+
+   // mask of thread status - 0 if idle, 1 if active
+   static uint64 activeMask;
+   static uint64 availableMask;
 };
 
 #ifdef _THREAD_TRACE

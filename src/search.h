@@ -34,8 +34,6 @@ struct SplitPoint {
     NodeInfo *splitNode;
     // move index at which split occurred
     int moveIndex;
-    // pointer to ply 0 node count for the parent.
-    uint64 *ply0nodeCount;
     // parent of this split point. When all searchers at
     // this split point are finished, the master node
     // will revert to the parent split point.
@@ -168,12 +166,16 @@ class SearchController {
       return talkLevel;
     }
 
-    void setTalkLevel(TalkLevel t) {
-      talkLevel = t;
-    }
+    void setTalkLevel(TalkLevel t);
 
     void clearHashTables();
+
+    void stopAllThreads();
+
+    void clearStopFlags();
      
+    void updateSearchOptions();
+
     void setBackground(int b) {
       background = b;
     }
@@ -184,12 +186,11 @@ class SearchController {
       xtra_time = xtra;
     }
 
-    int drawScore(const Board &board) const;
-
     int wasTerminated() const;
 
     void setRatingDiff(int diff);
 
+    // Note: should not call this while searching
     void setThreadCount(int threads);
 
     int getIterationDepth() const;
@@ -220,7 +221,7 @@ class SearchController {
         stopped = status;
     }
 
-    void updateSearchOptions();
+    void setThreadSplitDepth(int depth);
 
  private:
 
@@ -255,6 +256,11 @@ class SearchController {
     // next time check interval:
     bool stopped;
     SearchType typeOfSearch;
+    int time_check_counter;
+#ifdef SMP_STATS
+    int sample_counter;
+#endif
+    int threadSplitDepth;
     Statistics *stats;
     ColorType computerSide;
     int ratingDiff, ratingFactor;
@@ -267,6 +273,7 @@ class SearchController {
 class Search : public ThreadControl {
 
   friend class ThreadPool;
+  friend class SearchController;
 
  public:
 
@@ -327,8 +334,11 @@ class Search : public ThreadControl {
     }
 
    // We maintain a local copy of the search options, to reduce
-   // the need for each thread to query global memory
-   void setSearchOptions(Options::SearchOptions opts);
+   // the need for each thread to query global memory. This
+   // forces a reload of that cache from the global options:
+   void setSearchOptions();
+
+   int drawScore(const Board &board) const;
 
  protected:
 
@@ -365,10 +375,6 @@ class Search : public ThreadControl {
    void showStatus(const Board &board, Move best,int faillow,
             int failhigh,int complete);
 
-   int drawScore(const Board &board) const {
-     return controller->drawScore(board);
-   }
-
    FORCEINLINE void PUSH(int alpha,int beta,int flags,
                           int ply, int depth) {
        ++node; 
@@ -404,14 +410,32 @@ class Search : public ThreadControl {
       return controller->rootSearch;
     }
 
-    int threadSplitDepth(const Board &) const; 
+    void setVariablesFromController() {
+       computerSide = controller->computerSide;
+       talkLevel = controller->talkLevel;
+       ratingDiff = controller->ratingDiff;
+       ratingFactor = controller->ratingFactor;
+    }
+
+    void setRatingVariablesFromController() {
+       ratingDiff = controller->ratingDiff;
+       ratingFactor = controller->ratingFactor;
+    }
+
+    void setTalkLevelFromController() {
+       talkLevel = controller->talkLevel;
+    }
+
+    void setSplitDepthFromController() {
+       threadSplitDepth = controller->threadSplitDepth;
+    }
 
     SearchController *controller;
     Board board;
     SearchContext context;
     int terminate;
-    uint64 *ply0nodeCount;
     uint64 nodeCount;
+    int nodeAccumulator;
     NodeInfo *node; // pointer into NodeStack array (external to class)
     // lock for the split stack
     LockDefine(splitLock);
@@ -422,9 +446,15 @@ class Search : public ThreadControl {
     SplitPoint *split; 
     Scoring scoring;
     ThreadInfo *ti; // thread now running this search
-    int threadSplitBaseDepth;
-    // local copy from controller:
+    int threadSplitDepth;
+    // The following variables are maintained as local copies of 
+    // state from the controller. Placing them in each thread instance
+    // helps avoid global variable contention.
     Options::SearchOptions srcOpts;
+    ColorType computerSide;
+    int ratingDiff;
+    int ratingFactor;
+    TalkLevel talkLevel;
 };
 
 class RootSearch : public Search {
@@ -455,6 +485,8 @@ class RootSearch : public Search {
   int getWaitTime() const {
       return waitTime;
   }
+
+  static const int EASY_PLIES;
 
  protected:
 

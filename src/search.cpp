@@ -50,10 +50,10 @@ static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
-static const int EASY_PLIES = 3;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
+const int RootSearch::EASY_PLIES = 3;
 
 static const int FUTILITY_MARGIN_BASE[16] =
     {(int)(1.5*PAWN_VALUE),
@@ -84,15 +84,13 @@ struct HistoryPruneParams {
 };
 static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
 
-static int time_check_counter = 0;
+// global vars are updated only once this many nodes (to minimize
+// thread contention for global memory):
+static const int NODE_ACCUM_THRESHOLD = 16;
 
-// Because it involves global variable access, don't increment the time
-// check counter every node
-static const int NODES_PER_TIME_CHECK_COUNT = 8;
+static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 
-static const int DEFAULT_TIME_CHECK_INTERVAL = 10000/NODES_PER_TIME_CHECK_COUNT;
-
-static int Time_Check_Interval = DEFAULT_TIME_CHECK_INTERVAL;
+static int Time_Check_Interval;
 
 static unsigned last_time = 0;
 
@@ -130,6 +128,9 @@ SearchController::SearchController()
     ratingFactor(0),
     active(false) {
 
+#ifdef SMP_STATS
+    sample_counter = SAMPLE_INTERVAL;
+#endif
 #ifdef _WIN32
     HANDLE inh = GetStdHandle(STD_INPUT_HANDLE);
     DWORD dw;
@@ -198,7 +199,7 @@ SearchController::~SearchController() {
 void SearchController::terminateNow() {
     if (talkLevel == Trace)
         cout << "# terminating search (controller)" << endl;
-    pool->stopAllThreads();
+    stopAllThreads();
 }
 
 Move SearchController::findBestMove(
@@ -250,8 +251,23 @@ Move SearchController::findBestMove(
     this->uci = isUCI;
     this->talkLevel = t;
     this->stats = &stat_buf;
-    Time_Check_Interval = DEFAULT_TIME_CHECK_INTERVAL;
+
+    // set initial thread split depth based on number of CPUS and material
+    threadSplitDepth = 6*DEPTH_INCREMENT + (options.search.ncpus/8)*DEPTH_INCREMENT/2;
+    int mat = board.getMaterial(board.sideToMove()).materialLevel();
+    if (mat < 16) threadSplitDepth += DEPTH_INCREMENT/2;
+    if (mat < 12) threadSplitDepth += DEPTH_INCREMENT;
+
+    Time_Check_Interval = 5000/NODE_ACCUM_THRESHOLD;
+    // reduce time check interval if time limit is very short (<1 sec)
+    if (srcType == TimeLimit && time_limit < 1000) {
+       Time_Check_Interval = 2500/NODE_ACCUM_THRESHOLD;
+    }
     computerSide = board.sideToMove();
+
+    // propagate controller variables to searches
+    pool->forEachSearch<&Search::setVariablesFromController>();
+
     stats->clear();
     explicit_excludes = 0;
     num_exclude = Util::Min(MAX_PV,num_exclude);
@@ -264,7 +280,7 @@ Move SearchController::findBestMove(
     age = (age + 1) % 256;
 
     // reset terminate flag on all threads
-    pool->clearStopFlags();
+    clearStopFlags();
 
     NodeStack rootStack;
     rootSearch->init(board,rootStack);
@@ -287,21 +303,8 @@ void SearchController::setRatingDiff(int rdiff)
         if (ratingDiff > 400)
           ratingFactor += (ratingDiff-400)*PAWN_VALUE/1000;
     }
-}
-
-int SearchController::drawScore(const Board & board) const {
-    int score = 0;
-
-    // if we know the opponent's rating (which will be the case if playing
-    // on ICC), factor that into the draw score - a draw against a high-rated
-    // opponent is good; a draw against a lower-rated one is bad.
-    if (ratingDiff != 0) {
-        if (board.sideToMove() == computerSide)
-           score += ratingFactor;
-        else
-           score -= ratingFactor;
-    }
-    return score;
+    // propagate rating diff to searches
+    pool->forEachSearch<&Search::setRatingVariablesFromController>();
 }
 
 int SearchController::wasTerminated() const {
@@ -317,8 +320,9 @@ int SearchController::getIterationDepth() const {
 }
 
 
-void SearchController::updateSearchOptions() {
-    pool->updateSearchOptions();
+void SearchController::setThreadSplitDepth(int depth) {
+   threadSplitDepth = depth;
+   pool->forEachSearch<&Search::setSplitDepthFromController>();
 }
 
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
@@ -424,8 +428,28 @@ int score, int alpha, int beta)
 void SearchController::clearHashTables()
 {
     age = 0;
-    pool->clearHashTables();
+    pool->forEachSearch<&Search::clearHashTables>();
     Hash::clearHash();
+}
+
+void SearchController::stopAllThreads() {
+    pool->forEachSearch<&Search::stop>();
+}
+
+void SearchController::clearStopFlags() {
+    pool->forEachSearch<&Search::clearStopFlag>();
+}
+
+void SearchController::updateSearchOptions() {
+    // pool size is part of search options and may have changed,
+    // so adjust that first:
+    pool->resize(options.search.ncpus,this);
+    // update each search thread's local copy of the options:
+    pool->forEachSearch<&Search::setSearchOptions>();
+}
+
+void SearchController::setTalkLevel(TalkLevel t) {
+    pool->forEachSearch<&Search::setTalkLevelFromController>();
 }
 
 void SearchController::uciSendInfos(Move move, int move_index, int depth) {
@@ -449,18 +473,11 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     :controller(c),terminate(0),
      activeSplitPoints(0),split(NULL),ti(threadInfo) {
     LockInit(splitLock);
-    setSearchOptions(options.search);
+    setSearchOptions();
 }
 
 Search::~Search() {
     LockDestroy(splitLock);
-}
-
-void Search::setSearchOptions(Options::SearchOptions opts) {
-    srcOpts = opts;
-    // Set thread split depth based on # of threads. This is probably not optimal.
-    threadSplitBaseDepth = int(6.0*DEPTH_INCREMENT);
-    if (srcOpts.ncpus>4) threadSplitBaseDepth += Util::Min(2*DEPTH_INCREMENT,srcOpts.ncpus*DEPTH_INCREMENT/8);
 }
 
 int Search::checkTime(const Board &board,int ply) {
@@ -468,20 +485,36 @@ int Search::checkTime(const Board &board,int ply) {
         controller->terminateNow();
     }
     if (terminate) {
-       if (controller->talkLevel==Trace) cout << "# check time, already terminated" << endl;
+       if (talkLevel==Trace) cout << "# check time, already terminated" << endl;
        return 1; // already stopped search
     }
 
-    Statistics *stats = controller->stats;
-#if defined(SMP_STATS)
-    stats->samples++;
-    stats->threads += controller->pool->activeCount();
-#endif
     unsigned current_time = getTimeMillisec();
+    Statistics *stats = controller->stats;
+    stats->elapsed_time = current_time - controller->startTime;
+    // dynamically change the thread split depth based on # of splits
+    if (srcOpts.ncpus >1 && stats->elapsed_time > 100) {
+        if (current_time-stats->last_split_time > 50 &&
+            stats->splits-stats->last_split_sample > 0) {
+           int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/int(current_time-stats->last_split_time);
+            int target = srcOpts.ncpus*120;
+            if (splitsPerSec > 3*target/2) {
+               controller->setThreadSplitDepth(
+                   Util::Min(14*DEPTH_INCREMENT,
+                             controller->threadSplitDepth + DEPTH_INCREMENT/2));
+            } else if (splitsPerSec < target/2) {
+               controller->setThreadSplitDepth(
+                    Util::Max(5*DEPTH_INCREMENT,
+                              controller->threadSplitDepth - DEPTH_INCREMENT/2));
+            }
+            stats->last_split_sample = stats->splits;
+            stats->last_split_time = current_time;
+        }
+    }
+
     if (controller->typeOfSearch != FixedDepth) {
         // update at least the part of the stats structure that
         // is displayed in analysis mode.
-        stats->elapsed_time = current_time - controller->startTime;
         if (controller->typeOfSearch == FixedTime) {
             return stats->elapsed_time >= (unsigned)controller->time_target;
         }
@@ -500,7 +533,7 @@ int Search::checkTime(const Board &board,int ply) {
                    (stats->value < (*theLog)[n-2].score() - PAWN_VALUE/3)) {
                    // search more time because our score is dropping
                    controller->time_added++;
-                   if (controller->talkLevel == Trace) {
+                   if (talkLevel == Trace) {
                        cout << "# adding time due to low score, new target=" << controller->getTimeLimit() << endl;
                    }
                }
@@ -510,7 +543,7 @@ int Search::checkTime(const Board &board,int ply) {
                 root()->fail_high_root) {
                 // root move is failing high, extend time
                 controller->time_added++;
-                if (controller->talkLevel == Trace) {
+                if (talkLevel == Trace) {
                     cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
                 }
                 // Set flag that we extended time.
@@ -524,13 +557,13 @@ int Search::checkTime(const Board &board,int ply) {
             // the search.
             controller->time_added = false;
             root()->fail_high_root_extend = false;
-            if (controller->talkLevel == Trace) {
+            if (talkLevel == Trace) {
                 cout << "# resetting time_added - fail high is resolved" << endl;
             }
         }
         // check time limit after any time extensions have been made
         if (stats->elapsed_time > controller->getTimeLimit()) {
-            if (controller->talkLevel == Trace) {
+            if (talkLevel == Trace) {
                 cout << "# terminating, time up" << endl;
             }
             return 1;
@@ -556,7 +589,7 @@ int failhigh,int complete)
     stats->failhigh = failhigh;
     int ply = stats->depth;
     stats->complete = complete;
-    if (controller->talkLevel == Debug) {
+    if (talkLevel == Debug) {
         // This is the output for the "test" command in verbose mode
         cout.setf(ios::fixed);
         cout << setprecision(2);
@@ -581,10 +614,28 @@ int failhigh,int complete)
     }
 }
 
+int Search::drawScore(const Board & board) const {
+    int score = 0;
+
+    // if we know the opponent's rating (which will be the case if playing
+    // on ICC), factor that into the draw score - a draw against a high-rated
+    // opponent is good; a draw against a lower-rated one is bad.
+    if (ratingDiff != 0) {
+        if (board.sideToMove() == computerSide)
+           score += ratingFactor;
+        else
+           score -= ratingFactor;
+    }
+    return score;
+}
+
 void RootSearch::init(const Board &board, NodeStack &stack) {
   this->board = initialBoard = board;
   node = stack;
   context.clearKiller();
+  nodeAccumulator = 0;
+  // local copy:
+  threadSplitDepth = controller->threadSplitDepth;
 }
 
 Move RootSearch::ply0_search(
@@ -606,13 +657,13 @@ Move *excludes, int num_excludes)
    }
    // Generate the ply 0 moves here:
    RootMoveGenerator mg(board,&context,NullMove,
-      controller->talkLevel == Trace);
+      talkLevel == Trace);
    if (controller->uci) {
        controller->stats->multipv_limit = Util::Min(mg.moveCount(),options.search.multipv);
    }
    controller->stats->num_moves += mg.moveCount();
 
-   time_check_counter = 0;
+   controller->time_check_counter = Time_Check_Interval;
    last_time = 0;
 
    int tb_hit = 0, tb_pieces = 0;
@@ -638,7 +689,7 @@ Move *excludes, int num_excludes)
          if (tb_hit) {
             value = tb_score;
             controller->stats->tb_hits++;
-            if (controller->talkLevel == Trace) {
+            if (talkLevel == Trace) {
                cout << "# tb hit, score=";
                Scoring::printScore(value,cout);
                cout << endl;
@@ -660,7 +711,7 @@ Move *excludes, int num_excludes)
            const int max = int(0.3F*controller->time_target/mgCount);
            // wait time is in milliseconds
            waitTime = int((max*factor)/100.0F);
-           if (controller->talkLevel == Trace) {
+           if (talkLevel == Trace) {
                cout << "# waitTime=" << waitTime << endl;
            }
            // adjust time check interval since we are lowering nps
@@ -671,7 +722,7 @@ Move *excludes, int num_excludes)
                                               9,10,12,14,16};
                controller->ply_limit = Util::Min(limits[options.search.strength/4],
                                                  controller->ply_limit);
-               if (controller->talkLevel == Trace) {
+               if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;
                }
            }
@@ -707,7 +758,7 @@ Move *excludes, int num_excludes)
                lo_window = Util::Max(-Constants::MATE,value - aspirationWindow/2);
                hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
            }
-           if (controller->talkLevel == Trace && controller->background) {
+           if (talkLevel == Trace && controller->background) {
                cout << "# " << iteration_depth << ". move=";
                MoveImage(node->best,cout); cout << " score=" << node->best_score
                                                 << " terminate=" << terminate << endl;
@@ -738,7 +789,7 @@ Move *excludes, int num_excludes)
                    controller->updateStats(node,iteration_depth,
                                            value,lo_window,hi_window);
                    if (iteration_depth == 0 && scoring.isLegalDraw(board)) {
-                       if (controller->talkLevel == Trace)
+                       if (talkLevel == Trace)
                            cout << "# draw, terminating" << endl;
                        controller->terminateNow();
                    }
@@ -754,34 +805,37 @@ Move *excludes, int num_excludes)
                             (!options.search.can_resign ||
                              (controller->stats->display_value >
                               options.search.resign_threshold))) {
-                       if (controller->talkLevel == Trace)
+                       if (talkLevel == Trace)
                            cout << "# single legal move, terminating" << endl;
                        controller->terminateNow();
                    }
                    Statistics *stats = controller->stats;
                    StateType &state = stats->state;
                    if (!terminate && (state == Checkmate || state == Stalemate)) {
-                       if (controller->talkLevel == Trace)
+                       if (talkLevel == Trace)
                            cout << "# terminating due to checkmate or statemate, state="
                                 << (int)state << endl;
                        controller->terminateNow();
                        break;
                    }
-                   if (stats->elapsed_time > 100) {
-                       Time_Check_Interval = int((50L*stats->num_nodes)/(stats->elapsed_time*NODES_PER_TIME_CHECK_COUNT));
-                       if (controller->talkLevel == Trace) {
+                   if (stats->elapsed_time > 200) {
+                       Time_Check_Interval = int((20L*stats->num_nodes)/(stats->elapsed_time*NODE_ACCUM_THRESHOLD));
+                       if ((int)controller->time_limit - (int)stats->elapsed_time < 100) {
+                          Time_Check_Interval /= 2;
+                       }
+                       if (talkLevel == Trace) {
                            cout << "# time check interval=" << Time_Check_Interval << " elapsed_time=" << stats->elapsed_time << " target=" << controller->getTimeLimit() << endl;
                        }
                    }
                    if (!terminate) {
                        if (checkTime(board,0)) {
-                           if (controller->talkLevel == Trace)
+                           if (talkLevel == Trace)
                                cout << "# time up" << endl;
                            controller->terminateNow();
                        }
                        else if (controller->terminate_function &&
                                 controller->terminate_function(*stats)) {
-                           if (controller->talkLevel == Trace)
+                           if (talkLevel == Trace)
                                cout << "# terminating due to program or user input" << endl;
                            controller->terminateNow();
                        }
@@ -847,7 +901,7 @@ Move *excludes, int num_excludes)
                // search deeper those nodes that don't produce a tb hit).
                //
                if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0])) {
-                   if (controller->talkLevel == Trace)
+                   if (talkLevel == Trace)
                        cout << "# terminating, tablebase hit" << endl;
 #ifdef _TRACE
                    cout << "terminating, tablebase hit" << endl;
@@ -864,7 +918,7 @@ Move *excludes, int num_excludes)
                         (controller->stats->elapsed_time >
                          (unsigned)controller->time_target/3)) {
                    easy_adjust = true;
-                   if (controller->talkLevel == Trace) {
+                   if (talkLevel == Trace) {
                        cout << "# easy move, adjusting time lower" << endl;
                    }
                    controller->time_target /= 3;
@@ -872,7 +926,7 @@ Move *excludes, int num_excludes)
                if (value <= iteration_depth - Constants::MATE) {
                    // We're either checkmated or we certainly will be, so
                    // quit searching.
-                   if (controller->talkLevel == Trace)
+                   if (talkLevel == Trace)
                        cout << "# terminating, low score" << endl;
 #ifdef _TRACE
                    cout << "terminating, low score" << endl;
@@ -883,7 +937,7 @@ Move *excludes, int num_excludes)
                else if (value >= Constants::MATE - iteration_depth - 1) {
                    // found a forced mate, terminate
                    if (iteration_depth>=2) {
-                       if (controller->talkLevel == Trace)
+                       if (talkLevel == Trace)
                            cout << "# terminating, mate score" << endl;
 #ifdef _TRACE
                        cout << "terminating, mate score" << endl;
@@ -921,7 +975,7 @@ Move *excludes, int num_excludes)
       }
    }
 
-   if (controller->talkLevel == Debug) {
+   if (talkLevel == Debug) {
       cout.setf(ios::fixed);
       cout << setprecision(2);
       if (stats->elapsed_time > 0) {
@@ -993,9 +1047,8 @@ int depth, Move exclude [], int num_exclude)
     // implements alpha/beta search for the top most ply.  We use
     // the negascout algorithm.
 
-    time_check_counter++;
-
-    controller->stats->num_nodes++;
+    --controller->time_check_counter;
+    nodeAccumulator++;
 
     int in_pv = 1;
     int in_check = 0;
@@ -1008,7 +1061,7 @@ int depth, Move exclude [], int num_exclude)
     int try_score = alpha;
     //
     // re-sort the ply 0 moves.
-    mg.reorder(node->best,controller->getIterationDepth());
+    if (controller->getIterationDepth() > 1) mg.reorder(node->best,controller->getIterationDepth());
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude,num_exclude);
 
@@ -1016,7 +1069,7 @@ int depth, Move exclude [], int num_exclude)
         vector<MoveEntry> &list = mg.getMoveList();
         if (list.size() > 1 && list[0].score >= list[1].score + EASY_THRESHOLD) {
             easyMove = node->best;
-            if (controller->talkLevel == Trace) {
+            if (talkLevel == Trace) {
                 cout << "#easy move: ";
                 MoveImage(easyMove,cout);
                 cout << endl;
@@ -1048,8 +1101,6 @@ int depth, Move exclude [], int num_exclude)
 
     int move_index = 0;
     int hibound = beta;
-    const int canSplit = options.search.ncpus>1 &&
-      depth >= threadSplitDepth(board);
     fail_high_root = 0;
     while (!node->cutoff && !terminate) {
         Move move;
@@ -1082,8 +1133,6 @@ int depth, Move exclude [], int num_exclude)
             node->fpruned_moves++;
             continue;
         }
-        ply0nodeCount = mg.getNodeCount(move);
-        nodeCount = 0ULL;
         board.doMove(move);
         setCheckStatus(board,in_check_after_move);
         node->num_try++;
@@ -1138,7 +1187,7 @@ int depth, Move exclude [], int num_exclude)
 #endif
         }
         board.undoMove(move,save_state);
-        (*ply0nodeCount) += nodeCount;
+        if (wide) mg.setScore(move,try_score);
         if (try_score > node->best_score && !terminate) {
             if (updateRootMove(board,node,node,move,try_score,move_index)) {
                 // beta cutoff
@@ -1156,7 +1205,8 @@ int depth, Move exclude [], int num_exclude)
         }
         hibound = node->best_score + 1;  // zero-width window
         in_pv = 0;
-        if (canSplit && maybeSplit(board, node, &mg, 0, depth)) {
+        if (srcOpts.ncpus>1 && depth >= threadSplitDepth &&
+            maybeSplit(board, node, &mg, 0, depth)) {
             // remaining moves are searched by searchSMP
             break;
         }
@@ -1190,6 +1240,8 @@ int depth, Move exclude [], int num_exclude)
     }
 #endif
     ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
+    controller->stats->num_nodes += nodeAccumulator;
+    nodeAccumulator = 0;
     return node->best_score;
 }
 
@@ -1198,15 +1250,29 @@ int Search::quiesce(int ply,int depth)
     // recursive function, implements quiescence search.
     //
     ASSERT(ply < Constants::MaxPly);
-    nodeCount++;
+    if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
+        controller->stats->num_nodes += nodeAccumulator;
+        nodeAccumulator = 0;
+        --controller->time_check_counter;
+#ifdef SMP_STATS
+	--controller->sample_counter;
+#endif
+        if (--controller->time_check_counter <= 0) {
+            controller->time_check_counter = Time_Check_Interval;
+            if (checkTime(board,ply)) {
+               if (talkLevel == Trace) {
+                  cout << "# terminating, time up" << endl;
+                }
+                controller->terminateNow();   // signal all searches to end
+            }
+        }
+    }
 #ifdef SEARCH_STATS
     controller->stats->num_qnodes++;
 #endif
-    if (++controller->stats->num_nodes % NODES_PER_TIME_CHECK_COUNT == 0) {
-       ++time_check_counter;
-    }
     int rep_count;
-    if (ply >= Constants::MaxPly-1) {
+    if (terminate) return node->alpha;
+    else if (ply >= Constants::MaxPly-1) {
         return scoring.evalu8(board,node->alpha,node->beta);
     }
     else if (Scoring::isDraw(board,rep_count,ply)) {
@@ -1304,7 +1370,7 @@ int Search::qsearch_no_check(int ply, int depth)
 
     int move_index = 0;
     int try_score;
-    BoardState state = board.state;
+    BoardState state(board.state);
     if (!IsNull(pv)) {
 #ifdef _TRACE
         if (master()) {
@@ -1865,20 +1931,29 @@ int Search::search()
 #endif
     int ply = node->ply;
     int depth = node->depth;
-    if (++controller->stats->num_nodes % NODES_PER_TIME_CHECK_COUNT == 0) {
-       time_check_counter++;
-       if (time_check_counter >= Time_Check_Interval) {
-          time_check_counter = 0;
-          if (checkTime(board,ply)) {
-             if (controller->talkLevel == Trace) {
-                cout << "# terminating, time up" << endl;
-             }
-             controller->terminateNow();   // signal all searches to end
-          }
-       }
-    }
     ASSERT(ply < Constants::MaxPly);
-    nodeCount++;
+    if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
+        controller->stats->num_nodes += nodeAccumulator;
+        nodeAccumulator = 0;
+#if defined(SMP_STATS)
+        // sample thread usage
+        Statistics *stats = controller->stats;
+        if (--controller->sample_counter <=0) {
+           stats->samples++;
+           stats->threads += controller->pool->activeCount();
+           controller->sample_counter = SAMPLE_INTERVAL;
+        }
+#endif
+        if (--controller->time_check_counter <= 0) {
+            controller->time_check_counter = Time_Check_Interval;
+            if (checkTime(board,ply)) {
+               if (talkLevel == Trace) {
+                  cout << "# terminating, time up" << endl;
+                }
+                controller->terminateNow();   // signal all searches to end
+            }
+        }
+    }
     if (terminate) {
         return node->alpha;
     }
@@ -2305,8 +2380,8 @@ int Search::search()
 
         // we do not split if in check because generally there will
         // be few moves to search there.
-        const int canSplit = options.search.ncpus>1 && !in_check &&
-          depth >= threadSplitDepth(board);
+        const int canSplit = srcOpts.ncpus>1 && !in_check &&
+            depth >= threadSplitDepth;
         //
         // Now we are ready to loop through the moves from this position
         //
@@ -2324,6 +2399,8 @@ int Search::search()
             if (Capture(move)==King) {
                 return -Illegal;                  // previous move was illegal
             }
+            ASSERT(DestSquare(move) != InvalidSquare);
+            ASSERT(StartSquare(move) != InvalidSquare);
             move_count++;
 #ifdef SEARCH_STATS
             controller->stats->num_moves++;
@@ -2566,6 +2643,8 @@ int Search::search()
 #ifdef SEARCH_STATS
     controller->stats->futility_pruning += node->fpruned_moves;
 #endif
+    controller->stats->num_nodes += nodeAccumulator;
+    nodeAccumulator = 0;
     int score = node->best_score;
     ASSERT(score >= -Constants::MATE && score <= Constants::MATE);
     return score;
@@ -2635,6 +2714,7 @@ void Search::searchSMP(ThreadInfo *ti)
     BoardState state(board.state);
     const int &ply = node->ply;
     const int &depth = node->depth;
+
     // Count moves from the point where the parent was split.
     // This is used for pruning and reduction. Note this will
     // generally under-estimate the actual number of moves 
@@ -2657,10 +2737,8 @@ void Search::searchSMP(ThreadInfo *ti)
         if (IsNull(move)) break;
         if (IsUsed(move)) continue;
         if (ply == 0) {
-            ply0nodeCount = ((RootMoveGenerator*)mg)->getNodeCount(move);
             fhr = false;
         }
-        nodeCount = 0ULL;
 #ifdef _TRACE
         if (master() || ply==0) {
             indent(ply); cout << "trying " << ply << ". ";
@@ -2772,6 +2850,7 @@ void Search::searchSMP(ThreadInfo *ti)
         else
            split->unlock();
         board.undoMove(move,state);
+        if (ply == 0 && controller->getIterationDepth()<=RootSearch::EASY_PLIES) ((RootMoveGenerator*)mg)->setScore(move,try_score);
 #ifdef _TRACE
         if (master() || ply==0) {
             indent(ply);
@@ -2810,7 +2889,6 @@ void Search::searchSMP(ThreadInfo *ti)
             }
             if (try_score >= Constants::MATE-1-ply) {
                 parentNode->cutoff++;
-                (*ply0nodeCount) += nodeCount;
                 break;                            // mating move found
             }
         }
@@ -2818,7 +2896,6 @@ void Search::searchSMP(ThreadInfo *ti)
             fhr = false;
             root()->fail_high_root--;
         }
-        (*ply0nodeCount) += nodeCount;
         if (ply == 0 && root()->getWaitTime()) {
             sleep(root()->getWaitTime());
         }
@@ -2965,7 +3042,6 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
                split->mg = mg;
                split->moveIndex = node->num_try;
                split->splitNode = node;
-               split->ply0nodeCount = ply0nodeCount;
                // save master's current state
                split->savedBoard = board;
 #ifndef _WIN32
@@ -3108,12 +3184,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     // The split variable holds the split point to which this Search
     // instance is attached
     split = s;    
-    // Inherit the parent node count so we can keep track of how many
-    // nodes have been searched at ply 0 in all threads (for move
-    // ordering). (If this child is at ply 0 though we will update this
-    // pointer during the search).
-    ply0nodeCount = split->ply0nodeCount;
-    nodeCount = 0ULL; // count of nodes searched in this thread
+    nodeAccumulator = 0;
     ti = slave_ti;
     // Copy a little info from the parent node to the child.
     // Note: we do not copy all of it, since the child will
@@ -3134,14 +3205,12 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
 }
 
 void Search::clearHashTables() {
-  scoring.clearHashTables();
+   scoring.clearHashTables();
 }
 
-int Search::threadSplitDepth(const Board &board) const {
-  const int level = board.getMaterial(board.sideToMove()).materialLevel();
-  if (level < 10) return (threadSplitBaseDepth+2*DEPTH_INCREMENT);
-  else if (level < 21) return (threadSplitBaseDepth+DEPTH_INCREMENT);
-  else return threadSplitBaseDepth;
+void Search::setSearchOptions() {
+   srcOpts = options.search;
 }
+
 
 

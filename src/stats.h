@@ -40,8 +40,10 @@ struct Statistics
    uint64 check_extensions, recap_extensions,
      pawn_extensions, forced_extensions;
    uint64 hash_hits, hash_searches;
-#ifdef SMP_STATS
    uint64 splits;
+   uint64 last_split_sample;
+   uint64 last_split_time;
+#ifdef SMP_STATS
    uint64 samples, threads;
 #endif
 #ifdef MOVE_ORDER_STATS
