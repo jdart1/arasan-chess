@@ -12,6 +12,7 @@
 #include "util.h"
 #include "debug.h"
 #include <string.h>
+#include <math.h>
 #include <iostream> // for debugging
 #include <assert.h>
 #ifdef _WIN32
@@ -311,12 +312,12 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
       }
    }
 
-#ifdef _TRACE
-   cout << "selectivity=" << options.book.selectivity << " min_weight = " << min_weight << endl;
-#endif
    int i;
    total_weight = 0;
    const int min_weight = minWeight();
+#ifdef _TRACE
+   cout << "selectivity=" << options.book.selectivity << " min_weight = " << min_weight << endl;
+#endif
    int candidate_count2 = 0;
    // Depending on the selectivity value, remove moves from the
    // candidate list.
@@ -324,8 +325,9 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
       int w  = candidate_weights[i];
       if (w && w != new_max_weight) {
          // boost weight of low-rated moves
-         w = Util::Min(new_max_weight,w + w*(125-options.book.selectivity)/200 + 
-                          Util::Max(0,new_max_weight*(25-options.book.selectivity)/100));
+         w = Util::Min(new_max_weight,w + 
+                       w*(50-options.book.selectivity)/150 + 
+                       Util::Max(0,new_max_weight*(25-options.book.selectivity)/100));
          w = Util::Max(0,w);
       }
 #ifdef _TRACE
@@ -512,5 +514,5 @@ void BookReader::fetch_page(int page)
 
 int BookReader::minWeight() const {
    int sel = options.book.selectivity;
-   return (sel*sel)/400;
+   return int(0.022F*pow((float)sel,1.5F));
 }
