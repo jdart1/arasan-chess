@@ -171,7 +171,6 @@ class MoveGenerator
 struct MoveEntry
 {
    Move move;
-   uint64 nodes;
    int score;
 };
 
@@ -204,7 +203,7 @@ class RootMoveGenerator : public MoveGenerator
       using MoveGenerator::nextEvasion;
       virtual int generateAllMoves(NodeInfo *, SplitPoint *);
 
-      void reorder(Move pvMove,int depth);
+      void reorder(Move pvMove, int depth);
 
       void reorderByScore();
 
@@ -218,17 +217,6 @@ class RootMoveGenerator : public MoveGenerator
 
       Move first() const {
          return moveList[0].move;
-      }
-
-      uint64 *getNodeCount(Move m) {
-         for (int i=index-1;i>=0;i--) {
-            // make sure we have the right move slot (when SMP enabled)
-            if (MovesEqual(m,moveList[i].move)) {
-               return &moveList[i].nodes;
-            }
-         }
-         ASSERT(0);
-         return NULL;
       }
 
    protected:

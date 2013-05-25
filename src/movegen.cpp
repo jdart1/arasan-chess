@@ -1,4 +1,4 @@
-// Copyright 1994-2012 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2013 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -14,13 +14,6 @@
 using namespace std;
 
 extern const int Direction[2];
-
-static FORCEINLINE void swap( Move moves[], int i, int j)
-{
-   Move tmp = moves[j];
-   moves[j] = moves[i];
-   moves[i] = tmp;
-}
 
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
@@ -71,7 +64,6 @@ int trace)
 #endif
      MoveEntry me;
      me.move = batch[i];
-     me.nodes = 0ULL;
      me.score = 0;
      moveList.push_back(me);
    }
@@ -118,10 +110,6 @@ int RootMoveGenerator::generateAllMoves(NodeInfo *, SplitPoint *)
    return batch_count-index;
 }
 
-static bool compareNodes(const MoveEntry &a, const MoveEntry &b) {
-  return (a.nodes > b.nodes) ;
-}
-
 static bool compareScores(const MoveEntry &a, const MoveEntry &b) {
   return a.score > b.score;
 }
@@ -130,26 +118,34 @@ void RootMoveGenerator::reorder(Move pvMove,int depth)
 {
    index = 0;  // reset so we will fetch moves again
    phase = START_PHASE;
-   int i; int j = 0;
-   for (i = 0; i < batch_count; i++) {
+   for (unsigned i = 0; i < moveList.size(); i++) {
       ClearUsed(moveList[i].move);
       if (MovesEqual(moveList[i].move,pvMove)) {
-         // move PV move to front
-         MoveEntry tmp = moveList[i];
-         moveList[i] = moveList[0];
-         moveList[0] = tmp;
+         if (i) {
+             MoveEntry pvEntry = moveList[i];
+             // move all current entries down to make room
+             // at top of list:
+             for (int j=i; j>0; j--) {
+               moveList[j] = moveList[j-1];
+             }
+             // put PV entry at the top:
+             moveList[0] = pvEntry;
+         }
          SetPhase(moveList[0].move,HASH_MOVE_PHASE);
-         ++j;
-      } else if (CaptureOrPromotion(moveList[i].move) &&
-                 see(board,moveList[i].move) >= 0) {
-          SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
+      } else if (CaptureOrPromotion(moveList[i].move)) {
+         if (see(board,moveList[i].move) >= 0) {
+            SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
+         } else {
+            SetPhase(moveList[i].move,LOSERS_PHASE);
+         }
       } else {
           SetPhase(moveList[i].move,HISTORY_PHASE);
       }
    }
-   if (depth>=4 && batch_count > 1) {
-     // re-order based on the cumulative node counts
-     std::sort(moveList.begin()+j,moveList.end(),compareNodes);
+   if (depth <= RootSearch::EASY_PLIES && moveList.size() > 2) {
+       // we are in the "wide window" part of the search, so
+       // reorder non-PV moves by search scores
+       std::sort(moveList.begin()+1,moveList.end(),compareScores);
    }
 }
 
@@ -187,6 +183,7 @@ void RootMoveGenerator::reorderByScore() {
    }
    std::sort(moveList.begin(),moveList.end(),compareScores);
 }
+
 
 int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
    if (captures > 1) {
