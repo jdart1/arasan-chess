@@ -1119,7 +1119,7 @@ static int isDraw(const Board &board, Statistics &last_stats, string &reason) {
        return 1;
    }
    else if (last_stats.value < Constants::MATE-1 &&
-            board.state.moveCount > 100) {
+            board.state.moveCount >= 100) {
        // Note: do not count as draw if we have checkmated opponent!
        if (doTrace) cout << "# 50 move draw" << endl;
        reason = "50 move draw";
