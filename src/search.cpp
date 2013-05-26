@@ -739,8 +739,6 @@ Move *excludes, int num_excludes)
    int depth_at_pv_change = 0;
    // search the first few iterations with a wide window - for easy
    // move detection.
-   wideWindowDepth = EASY_PLIES;
-   wideWindow = EASY_THRESHOLD;
    for (iteration_depth = 1;
         iteration_depth <= controller->ply_limit && !terminate;
         iteration_depth++) {
@@ -1053,7 +1051,7 @@ int depth, Move exclude [], int num_exclude)
     int in_pv = 1;
     int in_check = 0;
 
-    const bool wide = iteration_depth <= wideWindowDepth;
+    const bool wide = iteration_depth <= EASY_PLIES;
 
     in_check = (board.checkStatus() == InCheck);
     BoardState save_state = board.state;

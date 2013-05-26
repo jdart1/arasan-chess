@@ -501,7 +501,6 @@ class RootSearch : public Search {
   bool easy_adjust, fail_high_root_extend;
   int fail_high_root;
   int last_score;
-  int wideWindowDepth, wideWindow;
   int waitTime;
   
 };
