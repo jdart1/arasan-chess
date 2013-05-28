@@ -1772,13 +1772,13 @@ int Search::calcExtensions(const Board &board,
       }
    }
    if (in_check_after_move == InCheck) { // move is a checking move
-       // do not extend checks that lose > 1 pawn
-      if (see(board,move) >= -PAWN_VALUE) {
+      // extend if near qsearch or if check does not lose > 1 pawn
+      if (depth <= DEPTH_INCREMENT || see(board,move) >= -PAWN_VALUE) {
           node->extensions |= CHECK;
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
-          extend += node->PV() ? CHECK_EXTENSION : DEPTH_INCREMENT/2;
+          extend += CHECK_EXTENSION;
       }
       pruneOk = 0;
    }
