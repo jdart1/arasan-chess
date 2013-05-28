@@ -44,7 +44,8 @@ static const int ASPIRATION_WINDOW_STEPS = 5;
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static const int CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
+static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
+static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
@@ -1782,7 +1783,7 @@ int Search::calcExtensions(const Board &board,
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
-          extend += CHECK_EXTENSION;
+          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
       pruneOk = 0;
    }
