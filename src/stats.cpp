@@ -1,4 +1,4 @@
-// Copyright 1994-2008, 2012 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2012, 2013 by Jon Dart. All Rights Reserved.
 
 #include "stats.h"
 #include <iomanip>
@@ -6,6 +6,12 @@
 Statistics::Statistics()
 {
    clear();
+   LockInit(split_calc_lock);
+}
+
+Statistics::~Statistics()
+{
+   LockDestroy(split_calc_lock);
 }
 
 void Statistics::clear()

@@ -43,6 +43,7 @@ struct Statistics
    uint64 splits;
    uint64 last_split_sample;
    uint64 last_split_time;
+   LockDefine(split_calc_lock);
 #ifdef SMP_STATS
    uint64 samples, threads;
 #endif
@@ -52,6 +53,7 @@ struct Statistics
 #endif
    int end_of_game;
    Statistics();
+   virtual ~Statistics();
    void clear();
    void printNPS(ostream &);
 };

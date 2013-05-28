@@ -494,9 +494,12 @@ int Search::checkTime(const Board &board,int ply) {
     stats->elapsed_time = current_time - controller->startTime;
     // dynamically change the thread split depth based on # of splits
     if (srcOpts.ncpus >1 && stats->elapsed_time > 100) {
+        // Lock the stats structure since other threads may try to
+        // modify it
+        Lock(stats->split_calc_lock);
         if (current_time-stats->last_split_time > 50 &&
             stats->splits-stats->last_split_sample > 0) {
-           int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/int(current_time-stats->last_split_time);
+            int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/int(current_time-stats->last_split_time);
             int target = srcOpts.ncpus*120;
             if (splitsPerSec > 3*target/2) {
                controller->setThreadSplitDepth(
@@ -510,6 +513,7 @@ int Search::checkTime(const Board &board,int ply) {
             stats->last_split_sample = stats->splits;
             stats->last_split_time = current_time;
         }
+        Unlock(stats->split_calc_lock);
     }
 
     if (controller->typeOfSearch != FixedDepth) {
