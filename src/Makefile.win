@@ -3,7 +3,7 @@
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 15.6
+VERSION = 16.0
 
 #TRACE=/D_TRACE 
 #DEBUG=/Zi -D_DEBUG 
