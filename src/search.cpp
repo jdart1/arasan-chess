@@ -1162,7 +1162,6 @@ int depth, Move exclude [], int num_exclude)
         if (in_pv) cout << " (pv)";
         cout << endl;
 #endif
-        fail_high_root = 0;
         if (!in_pv && try_score > node->best_score && !((node+1)->flags & EXACT) && !terminate) {
            // We failed to get a cutoff and must re-search
            // Set flag if we may be getting a new best move:
@@ -1197,11 +1196,13 @@ int depth, Move exclude [], int num_exclude)
                 // ensure we send UCI output .. even in case of quick
                 // termination due to checkmate or whatever
                 controller->uciSendInfos(move, move_index, controller->getIterationDepth());
-
+                // don't reset this until after the PV update, in case
+                // it causes us to terminate:
+                fail_high_root = 0;
                 break;
             }
         }
-        fail_high_root--;
+        fail_high_root = 0;
         if (waitTime) {
             // we are in reduced strength mode, waste some time
             sleep(waitTime);
@@ -2885,7 +2886,7 @@ void Search::searchSMP(ThreadInfo *ti)
                 else
                     split->master->work->updateMove(board,parentNode,node,move,try_score,ply,depth);
                 best_score = parentNode->best_score;
-                if (fhr && ply == 0) {
+                if (fhr) {
                     fhr = false;
                     root()->fail_high_root--;
                 }
@@ -2895,7 +2896,7 @@ void Search::searchSMP(ThreadInfo *ti)
                 break;                            // mating move found
             }
         }
-        if (fhr && ply == 0) {
+        if (fhr) {
             fhr = false;
             root()->fail_high_root--;
         }
