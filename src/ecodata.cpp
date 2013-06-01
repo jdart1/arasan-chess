@@ -322,6 +322,7 @@ const struct ECOData eco_codes[] =
 {"B76", 0xdb7347a36932ea95ULL ,"Sicilian Defense, Dragon Variation"},
 {"B77", 0xd61ee63fc6c58715ULL ,"Sicilian Dragon, Yugoslav Attack"},
 {"B77", 0xb498d112f8865886ULL ,"Sicilian Dragon, Yugoslav Attack"},
+{"B77", 0xd6ce9bc44cbf8fe4ULL ,"Sicilian Dragon, Yugoslav Attack"},
 {"B78", 0xabee04be38f36733ULL ,"Sicilian Dragon, Yugoslav Attack"},
 {"B78", 0xe50e4335af29243cULL ,"Sicilian Dragon, Soltis Variation"},
 {"B78", 0x854a0e01c558125cULL ,"Sicilian, Chinese Dragon"},
