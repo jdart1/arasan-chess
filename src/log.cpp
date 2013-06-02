@@ -19,11 +19,10 @@ using namespace std;
 #define LOG_FILE_NAME "arasan.log"
 
 LogEntry::LogEntry(const BoardState &state, const Move &move,
-const string &move_image, uint64 move_count, int score,int depth)
+const string &move_image, int score,int depth)
 : my_state(state),
 my_move(move),
 my_image(move_image),
-my_move_count(move_count),
 my_score(score),
 my_depth(depth),
 my_result(""),
@@ -103,7 +102,6 @@ int toFile)
 
    LogEntry entry(
       state, emove, move_image,
-      stats ? stats->num_moves : 0,
       stats ? stats->display_value : 0,
       stats ? stats->depth : 0);
    if (info) {
@@ -128,8 +126,9 @@ int toFile)
    s << (num_moves()-1)/2 + 1 << ". " << move_image;
    for (int len = (int)s.tellp(); len<15; len++) s << ' ';
    if (stats) {
-      if (stats->num_moves == 0)
+      if (stats->num_nodes == 0ULL) {
          s << " (book)";
+      }
       else {
          s << '\t';
          time_image(stats->elapsed_time,s);

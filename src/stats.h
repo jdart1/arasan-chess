@@ -1,4 +1,4 @@
-// Copyright 1994-2009, 2012 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2009, 2012, 2013 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
@@ -25,25 +25,25 @@ struct Statistics
    int failhigh, faillow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   unsigned elapsed_time; // in centiseconds
+   unsigned elapsed_time; // in milliseconds
    unsigned depth;
-   uint64 num_moves;
-   uint64 num_nodes;
-   uint64 num_qnodes;
    int mvtot; // total root moves 
    int mvleft; // moves left to analyze at current depth
    uint64 tb_probes; // tablebase probes
    uint64 tb_hits;   // tablebase hits
+#ifdef SEARCH_STATS
+   uint64 num_qnodes;
    uint64 futility_pruning;
    uint64 num_null_cuts;
    uint64 num_razored;
    uint64 check_extensions, recap_extensions,
      pawn_extensions, forced_extensions;
    uint64 hash_hits, hash_searches;
+#endif
+   uint64 num_nodes;
    uint64 splits;
    uint64 last_split_sample;
    uint64 last_split_time;
-   LockDefine(split_calc_lock);
 #ifdef SMP_STATS
    uint64 samples, threads;
 #endif

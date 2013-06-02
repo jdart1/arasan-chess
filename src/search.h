@@ -268,6 +268,7 @@ class SearchController {
     RootSearch *rootSearch;
     ThreadPool *pool;
     bool active;
+    LockDefine(split_calc_lock);
 };
 
 class Search : public ThreadControl {

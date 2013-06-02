@@ -141,7 +141,7 @@ SearchController::SearchController()
             ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
     }
 #endif
-
+    LockInit(split_calc_lock);
     pool = new ThreadPool(this,options.search.ncpus);
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
@@ -195,6 +195,7 @@ SearchController::SearchController()
 
 SearchController::~SearchController() {
    delete pool;
+   LockDestroy(split_calc_lock);
 }
 
 void SearchController::terminateNow() {
@@ -497,7 +498,7 @@ int Search::checkTime(const Board &board,int ply) {
     if (srcOpts.ncpus >1 && stats->elapsed_time > 100) {
         // Lock the stats structure since other threads may try to
         // modify it
-        Lock(stats->split_calc_lock);
+        Lock(controller->split_calc_lock);
         if (current_time-stats->last_split_time > 50 &&
             stats->splits-stats->last_split_sample > 0) {
             int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/int(current_time-stats->last_split_time);
@@ -514,7 +515,7 @@ int Search::checkTime(const Board &board,int ply) {
             stats->last_split_sample = stats->splits;
             stats->last_split_time = current_time;
         }
-        Unlock(stats->split_calc_lock);
+        Unlock(controller->split_calc_lock);
     }
 
     if (controller->typeOfSearch != FixedDepth) {
@@ -666,8 +667,6 @@ Move *excludes, int num_excludes)
    if (controller->uci) {
        controller->stats->multipv_limit = Util::Min(mg.moveCount(),options.search.multipv);
    }
-   controller->stats->num_moves += mg.moveCount();
-
    controller->time_check_counter = Time_Check_Interval;
    last_time = 0;
 
@@ -1338,7 +1337,7 @@ int Search::qsearch_no_check(int ply, int depth)
     int bitscore;
     if (board.getMaterial(White).materialLevel()==0 &&
         board.getMaterial(Black).materialLevel()==0 &&
-    ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
+        ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
         stand_pat_score = bitscore;
     }
     else {
@@ -1445,9 +1444,6 @@ int Search::qsearch_no_check(int ply, int depth)
         }
         // generate all the capture moves
         int move_count = mg.generateCaptures(moves,targets);
-#ifdef SEARCH_STATS
-        controller->stats->num_moves += move_count;
-#endif
         mg.initialSortCaptures(moves, move_count);
         while (move_index < move_count) {
             Move move = moves[move_index++];
@@ -2406,9 +2402,6 @@ int Search::search()
             ASSERT(DestSquare(move) != InvalidSquare);
             ASSERT(StartSquare(move) != InvalidSquare);
             move_count++;
-#ifdef SEARCH_STATS
-            controller->stats->num_moves++;
-#endif
 #ifdef _TRACE
             if (master()) {
                 indent(ply);

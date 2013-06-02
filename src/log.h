@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2009 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2009, 2013 by Jon Dart.  All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
@@ -27,7 +27,6 @@ class LogEntry
      LogEntry(const BoardState &state,
                const Move &move,
                const string &move_image,
-               uint64 move_count,
                int score,
                int depth);
              
@@ -67,11 +66,6 @@ class LogEntry
          return my_score;
      }
      
-     uint64 moveCount() const
-     {
-         return my_move_count;
-     }
-     
      const BookInfo &getBookInfo() const
      {
          return bi;
@@ -101,7 +95,6 @@ class LogEntry
      BoardState my_state;
      Move my_move;
      string my_image;
-     uint64 my_move_count;
      int my_score;
      int my_depth;
      string my_result;
