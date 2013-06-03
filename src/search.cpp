@@ -54,8 +54,6 @@ static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-const int RootSearch::EASY_PLIES = 3;
-
 static const int FUTILITY_MARGIN_BASE[16] =
     {(int)(1.5*PAWN_VALUE),
      (int)(1.5*PAWN_VALUE),
@@ -753,7 +751,7 @@ Move *excludes, int num_excludes)
            if (iteration_depth <= 1) {
                lo_window = -Constants::MATE;
                hi_window = Constants::MATE;
-           } else if (iteration_depth <= EASY_PLIES) {
+           } else if (iteration_depth <= MoveGenerator::EASY_PLIES) {
                lo_window = Util::Max(-Constants::MATE,value - EASY_THRESHOLD);
                hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
            } else {
@@ -914,7 +912,7 @@ Move *excludes, int num_excludes)
                else if (!controller->background &&
                         !controller->time_added &&
                         !easy_adjust && 
-                        depth_at_pv_change <= EASY_PLIES &&
+                        depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
                         MovesEqual(easyMove,node->best) &&
                         !faillows &&
                         (controller->stats->elapsed_time >
@@ -961,18 +959,9 @@ Move *excludes, int num_excludes)
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
    if (!controller->uci && !stats->end_of_game && options.search.can_resign) {
-      if (stats->depth >= 2) {
-         // Use the display value - i.e. do not use score if
-         // we are failing low
-         if (stats->display_value <= 8-(int)Constants::MATE) {
-            // TBD we can sometimes get -10000 as a score!
-            // this is bogus, we should not resign.
-            if (stats->display_value != -(int)Constants::MATE)
-               state = Resigns;
-         }
-         else if ((100*stats->display_value)/PAWN_VALUE <= options.search.resign_threshold) {
-            state = Resigns;
-         }
+      if (stats->display_value != Scoring::INVALID_SCORE &&
+         (100*stats->display_value)/PAWN_VALUE <= options.search.resign_threshold) {
+         state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
       }
    }
@@ -1055,7 +1044,7 @@ int depth, Move exclude [], int num_exclude)
     int in_pv = 1;
     int in_check = 0;
 
-    const bool wide = iteration_depth <= EASY_PLIES;
+    const bool wide = iteration_depth <= MoveGenerator::EASY_PLIES;
 
     in_check = (board.checkStatus() == InCheck);
     BoardState save_state = board.state;
@@ -1067,7 +1056,7 @@ int depth, Move exclude [], int num_exclude)
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude,num_exclude);
 
-    if (controller->getIterationDepth() == EASY_PLIES+1) {
+    if (controller->getIterationDepth() == MoveGenerator::EASY_PLIES+1) {
         vector<MoveEntry> &list = mg.getMoveList();
         if (list.size() > 1 && list[0].score >= list[1].score + EASY_THRESHOLD) {
             easyMove = node->best;
@@ -2847,7 +2836,7 @@ void Search::searchSMP(ThreadInfo *ti)
         else
            split->unlock();
         board.undoMove(move,state);
-        if (ply == 0 && controller->getIterationDepth()<=RootSearch::EASY_PLIES) ((RootMoveGenerator*)mg)->setScore(move,try_score);
+        if (ply == 0 && controller->getIterationDepth()<=MoveGenerator::EASY_PLIES) ((RootMoveGenerator*)mg)->setScore(move,try_score);
 #ifdef _TRACE
         if (master() || ply==0) {
             indent(ply);

@@ -487,8 +487,6 @@ class RootSearch : public Search {
       return waitTime;
   }
 
-  static const int EASY_PLIES;
-
  protected:
 
   int ply0_search(RootMoveGenerator &, int alpha, int beta,

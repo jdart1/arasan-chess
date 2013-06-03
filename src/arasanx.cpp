@@ -724,6 +724,9 @@ static void uciOut(const Statistics &stats) {
 static void CDECL post_output(const Statistics &stats) {
    last_score = stats.value;
    int score = stats.display_value;
+   if (score == Scoring::INVALID_SCORE) {
+      return; // no valid score yet
+   }
    if (verbose) {
       if (uci) {
          if (stats.elapsed_time) {

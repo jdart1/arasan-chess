@@ -1,6 +1,7 @@
 // Copyright 1994-2008, 2012, 2013 by Jon Dart. All Rights Reserved.
 
 #include "stats.h"
+#include "scoring.h"
 #include <iomanip>
 
 Statistics::Statistics()
@@ -26,6 +27,7 @@ void Statistics::clear()
    failhigh = faillow = 0;
    depth = 0;
    num_nodes = (uint64)0;
+   display_value = Scoring::INVALID_SCORE;
 #ifdef SEARCH_STATS
    num_qnodes = (uint64)0;
    hash_hits = hash_searches = (uint64)0;

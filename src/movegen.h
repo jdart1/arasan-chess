@@ -137,6 +137,8 @@ class MoveGenerator
 
       int initialSortCaptures(Move *moves, int captures);
 
+      static const int EASY_PLIES;
+
    protected:
 
       int getBatch(Move *&batch,int &index);
