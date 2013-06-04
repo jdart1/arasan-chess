@@ -1232,7 +1232,7 @@ static void send_move(Board &board, Move &move, Statistics
         ucilog << "warning : move is null" << endl;
 #endif
     }
-    if (ics && time_target >= 3000) {
+    if (ics && time_target >= 3000 && stats.display_value != Scoring::INVALID_SCORE) {
         if (computer)
             cout << "tellics kibitz ";
         else
