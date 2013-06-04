@@ -611,6 +611,7 @@ const struct ECOData eco_codes[] =
 {"D13", 0x80bb84e24e7c4402ULL ,"Slav Defense, Exchange Variation"},
 {"D13", 0x83d9c3720e3a3d4dULL ,"Slav Defense, Exchange Variation"},
 {"D14", 0xfcd1da35c483903cULL ,"Slav Defense, Exchange Variation"},
+{"D14", 0xacfa9d2c41b3dd73ULL ,"Slav Defense, Exchange Variation"},
 {"D15", 0xd2f5fa29d95bab4dULL ,"Slav Defense"},
 {"D15", 0xedb6a3a25b66117fULL ,"Slav Defense, Geller Gambit"},
 {"D16", 0xa08ebcbfbbd24c8fULL ,"Slav Defense"},

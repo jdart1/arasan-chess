@@ -660,6 +660,7 @@ D12     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. e3 Bf5 "Slav Defense"
 D13     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. cd5 cd5 "Slav Defense, Exchange Variation"
 D13     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. cd5 cd5 5. Nc3 "Slav Defense, Exchange Variation"
 D14     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. cd5 cd5 5. Bf4 Bf5 "Slav Defense, Exchange Variation"
+D14     1. d4 d5 2. c4 c6 3. cxd5 cxd5 4. Nc3 Nf6 5. Bf4 Nc6 6. e3 Bf5 7. Qb3  "Slav Defense, Exchange Variation"
 
 D15     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 "Slav Defense"
 D15     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. e4 "Slav Defense, Geller Gambit"
