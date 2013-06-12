@@ -2536,13 +2536,21 @@ h4 10 h5 Bd3 Bxd3 Qxd3 Qb6
 r
 g4 100 Bg6 Nge2 c5 h4 h5 Nf4
 m
+; Hellrigl-Zoister, Austria 2012 (1/2-1/2)
+cxd4 80 Nxg6 fxg6 Qxd4 Nc6 Bb5 Nge7 Bg5
+r
 ; Isaev-Escobedo Tinajero, Turin 2006 (analysis, =)
-Nc6 30 Nxg6 fxg6 Ne2 cxd4 Nxd4 Qc7
+Nc6 0 Nxg6 fxg6 Ne2 cxd4 Nxd4 Qc7
 r
 ; (1-0)
 Nc6 Nxg6 fxg6 Ne2 Qb6 0 Nf4 cxd4 Bh3
 r
-Bh7 Nxh5 Nc6 dxc5 Bxc5
+Bh7 Nxh5 
+m
+; Hiarcs 14 (=)
+cxd4 Nb5 Be4 f3 Bg6 Bg5 Qa5+ 100
+r
+Nc6 60 dxc5 Bxc5
 m
 ; Naiditsch-Galkin, Moscow 2006 (analysis, =)
 Bb5 Qc7 Bxc6+ Qxc6 Qf3 Kf8 Bg5 Rc8 O-O d4 Qxc6 Rxc6 Rad1 Ne7
@@ -2657,7 +2665,26 @@ Qb3 b6 Rd1+ Ke7
 -
 ; B14
 e4 c6 d4 d5 exd5 cxd5 c4 Nf6 Nc3 e6 Nf3 Bb4 Bd3 dxc4 Bxc4 O-O O-O b6
-Bg5 Bb7 Re1 Nbd7 Rc1 Rc8
+m
+; Topalov-Aronian, Sandnes 2013
+Qe2 Bb7 Rd1 Nbd7 75 d5 Bxc3 dxe6 Bxf3 gxf3 fxe6 bxc3 Qc7 Bxe6+ Kh8 Qc4
+Qb7 Bxd7 Nxd7 Qd5 Qxd5 Rxd5 Nc5 Be3
+r
+Qe2 Bb7 Rd1 Bxc3 bxc3 Qc7 Bd2 75
+r
+; Edouard-Naiditsch, Wijk aan Zee 2013 (1/2-1/2)
+Qe2 Bb7 Rd1 Bxc3 bxc3 Qc7 Bd3 Nbd7 c4 Rfe8 Bb2 Rac8 Rac1 Qf4 Qe3
+r
+; Timofeev-Shomoev, Khanty Mansiysk 2012 (1/2-1/2)
+Qe2 Bb7 Rd1 Bxc3 bxc3 Qc7 Bd3 Qxc3 0 Bb2 Qc7 100 d5 Bxd5 Bxf6 gxf6 Qe3
+Kg7 Rac1 Qd6 100
+r
+Qe2 Bb7 Rd1 Bxc3 bxc3 Qc7 Bd3 Qxc3 0 Bb2 Qa5 0 d5 100
+r
+; Radjabov-Kramnik, Wch Candidates London 2013 (1/2-1/2)
+Qe2 Bb7 Bg5 Bxc3 bxc3 Nbd7 Rac1 Qc7 Bd3 Ng4 Be4 Bxe4 Qxe4 Ngf6 Qe2 Rac8 c4 h6
+r
+Bg5 80 Bb7 Re1 Nbd7 Rc1 Rc8
 m
 ; Aleksandrov-Perunovic, Vrnjacka Banja 2005
 Qb3 Be7 100 Bxf6 Bxf6 Nb5 Bxf3 Qxf3
@@ -2698,13 +2725,17 @@ r
 ; Crafty plays this
 Nc3 10
 m
-; Flyingfatman-Enchanter, playchess.com 2008 (analysis)
 g6 Bd3 Bg7 O-O c5
+r
+g6 Bd3 Bg7 O-O Nb6
 r
 Nb6 20 Be2 Bf5
 r
-e6 0 Bd3
+e6 Bd3
 m
+; Hiarcs 14 (=)
+Qc7 O-O Bd6 Qe2 b6 a4 a5 Ne4 Nxe4 Qxe4
+r
 ; Tal-Shamkovich, 1972 (anal. by Houdini 1.5a)
 c5 Qe2 cxd4 Nxd4 Nc5
 r
@@ -3179,10 +3210,10 @@ r
 ; Parma-Eliskases (=)
 Nf3 d6 Bc4 e6 O-O Be7 Qe2 a6 Rd1 Bd7
 r
-; Martinovsky-De Foltis, 18th World op 19100 (0-1)
-Nf3 d6 Bc4 a6 80 O-O Nf6 Qe2 Bg4 Rd1 e6
+; Martinovsky-De Foltis, 18th World op 1990 (0-1)
+Nf3 d6 Bc4 a6 25 O-O Nf6 Qe2 Bg4 Rd1 e6
 r
-Nf3 d6 Bc4 a6 80 O-O Nf6 b4 e6 100
+Nf3 d6 Bc4 a6 O-O Nf6 b4 e6 100
 r
 ; Simic-Gouat, email 1999 (1/2-1/2)
 Nf3 e6 Bc4 Qc7 O-O Nf6 Nb5 Qb8 e5 a6 100 exf6 axb5 fxg7 Bxg7 Bxb5
@@ -3193,6 +3224,9 @@ r
 Nf3 e6 Bc4 Qc7 O-O Nf6 Qe2 Ng4 h3 0 Nd4
 r
 Nf3 e6 Bc4 Qc7 O-O Nf6 Qe2 Ng4 Nb5 Qb8 h3 h5
+r
+; Maric-Trifunovic, Sarajevo 1958 (1/2-1/2)
+Nf3 d6 Bc4 e6 O-O Nf6 Qe2 Be7 80
 r
 Bc4
 m
@@ -3418,6 +3452,11 @@ Bb5 10 Bd7 d4 cxd4 Nxd4 Nf6 Bg5 e6
 ; B30
 e4 c5 Nf3 Nc6 Bb5 20
 m
+e5 O-O Bd6 c3 a6 75
+r
+; Solak-Jobava, EU-ch Legnica 2013 (1/2-1/2)
+e5 O-O Bd6 c3 Nge7 d4 cxd4 cxd4 exd4 Nxd4
+r
 a6 0 Bxc6 dxc6 d3
 r
 Qc7 0 O-O 100 a6 Bxc6
