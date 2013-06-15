@@ -663,8 +663,8 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
 #endif
     const int opponentPieceValue = (oppmat.value()-oppmat.pawnCount()*PAWN_VALUE);
     const int pieceDiff = ourmat.value()-ourmat.pawnCount()*PAWN_VALUE - opponentPieceValue;
-    static const int NEAR_DRAW_CONFIGURATION[4] =
-       {-75, -40, -15, 0 };
+    static const int NEAR_DRAW_CONFIGURATION[3] =
+       {-75, -40, -15 };
     // If we have a material advantage but a configuration that would be a likely draw
     // w/o pawns, give no bonus for the extra material but discourage trade or loss
     // of remaining pawns
@@ -672,13 +672,13 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
         const uint32 pieces = ourmat.pieceBits();
         if (pieces == Material::KN || pieces == Material::KB ||
             pieces == Material::KNN) {
-            score += NEAR_DRAW_CONFIGURATION[Util::Min(3,ourmat.pawnCount())];
+            score += NEAR_DRAW_CONFIGURATION[Util::Min(2,ourmat.pawnCount())];
             return score;
         } else {
             EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
             for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
                 if (DRAW_PATTERN[i] == pattern) {
-                    score += NEAR_DRAW_CONFIGURATION[Util::Min(3,ourmat.pawnCount())];
+                    score += NEAR_DRAW_CONFIGURATION[Util::Min(2,ourmat.pawnCount())];
                     return score;
                 }
             }
@@ -728,11 +728,19 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
 #ifdef EVAL_DEBUG
     tmp = score;
 #endif
-    static const int PAWN_TRADE_SCORE[4] =
-       {-45, -25, -10, 0 };
-    const int mdiff = ourmat.value() - oppmat.value(); 
-    if (mdiff >= 3*PAWN_VALUE && oppmat.materialLevel() <= 12) {
-       score += mdiff*(12-oppmat.materialLevel())/80 + PAWN_TRADE_SCORE[Util::Min(3,ourmat.pawnCount())];
+    static const int PAWN_TRADE_SCORE[3] =
+       {-45, -25, -10 };
+    const int mdiff = ourmat.value() - oppmat.value();
+    if (mdiff >= 3*PAWN_VALUE) {
+       // Encourage trading pieces when we are ahead in material.
+       if (oppmat.materialLevel() < 16) {
+          score += mdiff*(16-oppmat.materialLevel())/96;
+       }
+       // Discourage trading pawns when our own material is low (because
+       // harder to win).
+       if (ourmat.materialLevel() < 16 && ourmat.pawnCount() < 3) {
+          score += PAWN_TRADE_SCORE[ourmat.pawnCount()];
+       }
     }
 #ifdef EVAL_DEBUG
     if (score-tmp) {
@@ -1349,7 +1357,7 @@ PawnHashEntry::PawnData &entr)
             cout << " doubled";
 #endif
             passed = 0; // if our own pawn is ahead of us, don't count as passed
-            if (doubles.bitCount()) {
+            if (doubles) {
                 entr.midgame_score += DOUBLED_PAWNS[Midgame][file-1];
                 entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1];
             }
@@ -1709,7 +1717,7 @@ const PawnHashEntry::PawnData &pawnData, Scores &scores)
        }
        if (TEST_MASK(board.rook_bits[side],Attacks::file_mask[file-1])) {
            atcks &= board.rook_bits[side];
-           if (!atcks.is_clear()) {
+           if (atcks) {
              if (side == White) {
               if (atcks & Attacks::file_mask_down[sq]) {
                  scores.mid += ROOK_BEHIND_PP[Midgame];
@@ -1784,6 +1792,7 @@ void Scoring::scoreEndgame(const Board &board,
         }
         // keep the kings close
         scores.end += 10-distance1(board.kingSquare(White),board.kingSquare(Black));
+        return;
   }
   if (TEST_MASK(board.allPawns(),abcd_mask) &&
       TEST_MASK(board.allPawns(),efgh_mask)) {
@@ -2265,50 +2274,24 @@ int Scoring::tryBitbase(const Board &board)
     if ((unsigned)wMat.infobits() == Material::KP &&
     bMat.kingOnly()) {
         Square passer = board.pawn_bits[White].firstOne();
-        Square kp = board.kingSquare(White);
         if (lookupBitbase(board.kingSquare(White),passer,
             board.kingSquare(Black),White,board.sideToMove())) {
             score += BITBASE_WIN;
-         }
-         else {
-            return 0;
-         }
-        int rank = Rank(passer,White);
-        score += PASSED_PAWN[Endgame][rank];
-        int file_dist = Util::Abs(File(passer) - File(kp));
-        int rank_dist = Rank(kp,White)-rank;
-        // strongly encourage putting the king ahead of the
-        // pawn
-        if (rank_dist > 0 && file_dist <= 1)
-            score += KING_AHEAD_OF_PAWN;
-        else if (rank_dist<=0)                    // king behind pawn
-            score += 8-rank*2;
-        //also encourage staying near pawn
-        score += DISTANCE_FROM_PAWN*distance1(kp,passer);
-        return board.sideToMove() == White ? score : -score;
+        }
+        else {
+           return 0;
+        }
     }
     else if ((unsigned)bMat.infobits() == Material::KP &&
     wMat.kingOnly()) {
         Square passer = board.pawn_bits[Black].firstOne();
-        Square kp = board.kingSquare(Black);
         if (lookupBitbase(board.kingSquare(Black),passer,
-            board.kingSquare(White),Black,board.sideToMove()))
+            board.kingSquare(White),Black,board.sideToMove())) {
             score -= BITBASE_WIN;
-        else
+        }
+        else {
             return 0;
-        int rank = Rank(passer,Black);
-        score -= PASSED_PAWN[Endgame][rank];
-        int file_dist = Util::Abs(File(passer) - File(kp));
-        int rank_dist = Rank(kp,Black)-rank;
-        // strongly encourage putting the king ahead of the
-        // pawn
-        if (rank_dist > 0 && file_dist <= 1)
-            score -= KING_AHEAD_OF_PAWN;
-        else if (rank_dist<=0)                    // king behind pawn
-            score -= 8-rank*2;
-        //also encourage staying near pawn
-        score -= DISTANCE_FROM_PAWN*distance1(kp,passer);
-        return board.sideToMove() == White ? score : -score;
+        }
     }
     return INVALID_SCORE;
 }
@@ -2323,7 +2306,7 @@ void Scoring::calcEndgame(const Board &board, PawnHashEntry *pawnEntry,
     // pawns are all on one side) being near pawns.
     // Similar to how Crafty does it.
     Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
-    if (!all_pawns.is_clear()) {
+    if (all_pawns) {
        k_pos += KingEndgameScoresW[kp];
        if (!TEST_MASK(abcd_mask,all_pawns)) {
            if (File(kp)>DFILE)
