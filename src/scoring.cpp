@@ -50,16 +50,16 @@ static const int MIDGAME_MATERIAL_THRESHOLD = 12;
 static const int ENDGAME_MATERIAL_THRESHOLD = 23;
 
 static const CACHE_ALIGN int KnightScores[64] =
-{
-  -18, -13, -13, -13, -13, -13, -13, -18,
-    -8, 0, 4, 4, 4, 4, 0, -8,
-    -8, 4, 8, 4, 4, 8, 4, -8,
-    -8, 4, 4, 8, 8, 4, 4, -8,
-    -8, 6, 6, 12, 12, 6, 6, -8,
-    -6, 6, 10, 6, 6, 10, 6, -6,
-    -8, 0, 4, 4, 4, 4, 0, -8,
-    -8, 0, 0, 0, 0, 0, 0, -8
-};
+   {
+      -20,-11,-11,-11,-11,-11,-11,-20,
+      -9,0,10,10,10,10,0,-9,
+      -9,10,20,10,10,20,10,-9,
+      -9,10,10,12,12,10,10,-9,
+      -9,10,10,12,12,10,10,-9,
+      -9,10,20,10,10,20,10,-9,
+      -9,0,10,10,10,10,0,-9,
+      -9,0,0,0,0,0,0,-9
+   };
 
 static const CACHE_ALIGN int BishopScores[64] =
 {
@@ -220,9 +220,10 @@ static const int ROOK_BEHIND_PP[2] = {5,10};
 static const int PASSER_OWN_PIECE_BLOCK[2] = {-2, -5};
 static const int SIDE_PROTECTED_PAWN = -10;
 
-static const int KNIGHT_MOBILITY[9]={-15,-6,-2,0,2,4,6,8,10};
-static const int ROOK_MOBILITY[16] = 
-{-20,-11,-7,-3,0,3,6, 9, 11, 13, 15, 17, 19, 20, 21, 22};
+static const int KNIGHT_MOBILITY[9]={-18,-7,-2,0,2,5,7,10,12};
+static const int ROOK_MOBILITY[2][16] = 
+   {{-22,-12,-8,-3,0,3,7,10,12,14,17,19,21,23,24},
+    {-30,-17,-11,-5,0,5,9,14,17,20,23,26,29,31,32,34}};
 static const int BISHOP_MOBILITY[16] = {-20,-11,-7,-3,0,3,6,9,
                                      9, 9, 9, 9, 9, 9, 9, 9};
 static const int QUEEN_MOBILITY = 2;
@@ -788,6 +789,14 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side )
         else if (oppmat.infobits() == Material::KN) {
             score -= (ROOK_VALUE-KNIGHT_VALUE)-PAWN_VALUE/4;
         }
+        else if (oppmat.infobits() == Material::KRB) {
+           // even
+           score += BISHOP_VALUE;
+        }
+        else if (oppmat.infobits() == Material::KRN) { 
+           // even
+           score += KNIGHT_VALUE;
+        }
     }
     else if (ourmat.infobits() == Material::KRR) {
         if (oppmat.infobits() == Material::KRB) { // even
@@ -1000,10 +1009,9 @@ void Scoring::pieceScore(const Board &board,
         switch(TypeOfPiece(board[sq])) {
             case Knight:
             {
-                scores.mid += KnightScores[scoreSq];
-                scores.end += KnightScores[scoreSq]/2;
+                scores.any += KnightScores[scoreSq];
                 const Bitboard &knattacks = Attacks::knight_attacks[sq];
-                int mobl = KNIGHT_MOBILITY[Bitboard(knattacks &
+                const int mobl = KNIGHT_MOBILITY[Bitboard(knattacks &
                   ~board.allOccupied &
                   ~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
@@ -1057,7 +1065,7 @@ void Scoring::pieceScore(const Board &board,
                        break;
                     }
                 }
-                int mobl = BISHOP_MOBILITY[
+                const int mobl = BISHOP_MOBILITY[
                   Bitboard(battacks & ~board.allOccupied
                   & ~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
@@ -1078,11 +1086,10 @@ void Scoring::pieceScore(const Board &board,
                 if (rattacks2 & oppPawnData.weak_pawns) {
                    scores.any += ROOK_ATTACKS_WEAK_PAWN;
                 }
-                int mobl = ROOK_MOBILITY[Bitboard(rattacks2 & ~board.allOccupied
-                  & ~ourPawnData.opponent_pawn_attacks).bitCount()];
-                // penalize low Rook mobility
-                scores.mid += mobl;
-                scores.end += mobl + mobl/2;
+                const int mobl = Bitboard(rattacks2 & ~board.allOccupied
+                  & ~ourPawnData.opponent_pawn_attacks).bitCount();
+                scores.mid += ROOK_MOBILITY[Midgame][mobl];
+                scores.end += ROOK_MOBILITY[Endgame][mobl];
 #ifdef EVAL_DEBUG
                 cout << "rook mobility: " << mobl << endl;
 #endif
@@ -2403,3 +2410,4 @@ void Scoring::clearHashTables() {
     memset(endgameHashTable,'\0',ENDGAME_HASH_SIZE*sizeof(EndgameHashEntry));
     memset(kingCoverHashTable,'\0',2*KING_COVER_HASH_SIZE*sizeof(KingCoverHashEntry));
 }
+
