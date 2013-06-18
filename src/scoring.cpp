@@ -201,9 +201,9 @@ static const int CONNECTED_PASSERS[2][8] =
 static const int ADJACENT_PASSERS[2] = {12,12};
 // by file:
 static const int DOUBLED_PAWNS[2][8] = 
-  {{-8, -10, -12, -12, -12, -12, -10, -8},
-   {-12, -15, -18, -18, -18, -18, -15, -12}};
-static const int ISOLATED_PAWN[2] = {-15,-20};
+  {{-6, -8, -10, -10, -10, -10, -8, -6},
+   {-13, -17, -21, -21, -21, -21, -17, -13}};
+static const int ISOLATED_PAWN[2] = {-8,-12};
 static const int WEAK = -6;
 static const int WEAK2 = -6;
 static const int WEAK_ON_OPEN_FILE = -10;
@@ -245,6 +245,7 @@ static Bitboard adjacent_passers[64];
 static Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
 static Bitboard abcd_mask,efgh_mask;
 static Bitboard left_side_mask[8], right_side_mask[8];
+static Bitboard isolated_file_mask[8];
 static Bitboard center;
 static byte is_outside[256][256];
 
@@ -559,6 +560,12 @@ static void initBitboards()
         }
         for (int j=i-1;j>=0;j--) {
             left_mask[i] |= 1<<j;
+        }
+        if (i != 7) {
+           isolated_file_mask[i] |= Attacks::file_mask[i+1];
+        }
+        if (i != 0) {
+           isolated_file_mask[i] |= Attacks::file_mask[i-1];
         }
     }
     // outside passed pawn table (like Crafty). first index is
@@ -1349,17 +1356,8 @@ PawnHashEntry::PawnData &entr)
 #ifdef PAWN_DEBUG
         if (backward) cout << " backward";
 #endif
-        if (file == AFILE) {
-            isolated = !OnFile(board.pawn_bits[side],BFILE);
-        }
-        else if (file == HFILE) {
-            isolated = !OnFile(board.pawn_bits[side],GFILE);
-        }
-        else {
-            isolated = !OnFile(board.pawn_bits[side],file-1) &&
-                !OnFile(board.pawn_bits[side],file+1);
-        }
-        if (!doubles.is_clear()) {
+        isolated = !TEST_MASK(isolated_file_mask[file-1],board.pawn_bits[side]);
+        if (doubles) {
 #ifdef PAWN_DEBUG
             cout << " doubled";
 #endif
