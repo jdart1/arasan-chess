@@ -99,26 +99,16 @@ static const int BishopOutpostScores[64] =
     0, 0, 0, 0, 0, 0, 0, 0
 };
 
-static const int KingEndgameScoresW[64] = {
--38, -34, -30, -29, -29, -30, -34, -38,
--29, -24, -21, -19, -19, -21, -24, -29,
--19, -14, -11, -10, -10, -11, -14, -19,
- -10, -5, -2, 0, 0, -2, -5, -10,
-  0, 5, 6, 10, 10, 6, 5, 0,
-  10, 14, 16, 19, 19, 16, 14, 10,
-  14, 19, 21, 24, 24, 21, 19, 14,
-  14, 19, 21, 24, 24, 21, 19, 14
+static const int KingEndgameScores[64] = {
+   -28, -23, -18, -13, -13, -18, -23, -28, 
+   -22, -17, -12, -7, -7, -12, -17, -22, 
+   -16, -11, -6, -1, -1, -6, -11, -16, 
+   -10, -5, 0, 5, 5, 0, -5, -10, 
+   -4, 1, 6, 11, 11, 6, 1, -4, 
+   2, 7, 12, 17, 17, 12, 7, 2, 
+   8, 13, 18, 23, 23, 18, 13, 8, 
+   8, 13, 18, 23, 23, 18, 13, 8
 };
-
-static const int KingEndgameScoresB[64] = {
-  14, 19, 21, 24, 24, 21, 19, 14,
-  14, 19, 21, 24, 24, 21, 19, 14,
-  10, 14, 16, 19, 19, 16, 14, 10,
-  0, 5, 6, 10, 10, 6, 5, 0,
- -10, -5, -2, 0, 0, -2, -5, -10,
--19, -14, -11, -10, -10, -11, -14, -19,
--29, -24, -21, -19, -19, -21, -24, -29,
--38, -34, -30, -29, -29, -30, -34, -38};
 
 static const int KBNKScores[64] =
 {
@@ -138,7 +128,7 @@ struct BishopTrapPattern {
 
 static const int BISHOP_TRAPPED = -160;       // bishop trapped by pawn
 static const int BISHOP_PAIR[2] = {37,55};
-static const int BISHOP_ENDGAME_BONUS = 15;
+static const int BISHOP_ENDGAME_BONUS = 18;
 static const int BAD_BISHOP = -4;
 
 static const int RB_ADJUST[9] = {
@@ -229,9 +219,11 @@ static const int BISHOP_MOBILITY[16] = {-20,-11,-7,-3,0,3,6,9,
 static const int QUEEN_MOBILITY = 2;
 
 // endgame terms
-static const int UNCATCHABLE_PAWN = 12;
+static const int PAWN_SIDE_BONUS = 28;
+static const int UNCATCHABLE_PAWN1 = 11;
+static const int UNCATCHABLE_PAWN2 = 21;
 static const int BITBASE_WIN=500;
-static const int KING_AHEAD_OF_PAWN = 3;
+static const int KING_AHEAD_OF_PAWN = 10;
 static const int DISTANCE_FROM_PAWN = -4;
 static const int SUPPORTED_PASSER6 = 38;
 static const int SUPPORTED_PASSER7 = 76;
@@ -1811,20 +1803,20 @@ void Scoring::scoreEndgame(const Board &board,
   while (passers2.iterate(passer)) {
       // Encourage escorting a passer with the King, ideally with King in
       // front
-      if (Util::Abs(File(board.kingSquare(side))-File(passer))<=1 && Rank(board.kingSquare(side),side)>=Rank(passer,side)) scores.end += KING_AHEAD_OF_PAWN*Rank(passer,side);
+      if (Util::Abs(File(board.kingSquare(side))-File(passer))<=1 && Rank(board.kingSquare(side),side)>=Rank(passer,side)) scores.end += KING_AHEAD_OF_PAWN;
   }
   if (uncatchables) {
      int pcount = board.getMaterial(OppositeColor(side)).pieceCount();
-     int bonus = 0;
      if ((ourMaterial.infobits() == Material::KP) &&
         oppMaterial.kingOnly()) {
         scores.end += BITBASE_WIN;
      }
+     /*
      else if (pcount == 0)
-        scores.end += uncatchables*UNCATCHABLE_PAWN*2;
+        scores.end += uncatchables*UNCATCHABLE_PAWN1;
      else if (pcount <=2)
-        scores.end += uncatchables*UNCATCHABLE_PAWN;
-     scores.end += bonus;
+        scores.end += uncatchables*UNCATCHABLE_PAWN2;
+     */
   }
   Bitboard rooks(board.rook_bits[side]);
   Square rooksq;
@@ -2303,50 +2295,48 @@ int Scoring::tryBitbase(const Board &board)
 
 void Scoring::calcEndgame(const Board &board, PawnHashEntry *pawnEntry,
                           EndgameHashEntry *endgameEntry) {
+    // calculate & cache endgame score based on interaction of king & pawns
     const PawnHashEntry::PawnData &wPawnData = pawnEntry->wPawnData;
     const PawnHashEntry::PawnData &bPawnData = pawnEntry->bPawnData;
     endgameEntry->wScore = endgameEntry->bScore = 0;
-    int k_pos = 0; Square kp = board.kingSquare(White);
-    // evaluate king position. Big bonus for centralizing king or (if
-    // pawns are all on one side) being near pawns.
-    // Similar to how Crafty does it.
-    Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
-    if (all_pawns) {
-       k_pos += KingEndgameScoresW[kp];
-       if (!TEST_MASK(abcd_mask,all_pawns)) {
-           if (File(kp)>DFILE)
-             k_pos += PAWN_VALUE/8;
-           else
-             k_pos -= PAWN_VALUE/8;
-       }
-       else if (!TEST_MASK(efgh_mask,all_pawns)) {
-           if (File(kp)<=DFILE)
-             k_pos += PAWN_VALUE/8;
-           else
-             k_pos -= PAWN_VALUE/8;
-       }
-    }
-    endgameEntry->white_king_position  = k_pos;
-    k_pos = 0; kp = board.kingSquare(Black);
-    if (!all_pawns.is_clear()) {
-       k_pos += KingEndgameScoresB[kp];
-       if (!TEST_MASK(abcd_mask,all_pawns)) {
-           if (File(kp)>DFILE)
-             k_pos += PAWN_VALUE/8;
-           else
-             k_pos -= PAWN_VALUE/8;
-       }
-       else if (!TEST_MASK(efgh_mask,all_pawns)) {
-           if (File(kp)<=DFILE)
-             k_pos += PAWN_VALUE/8;
-           else
-             k_pos -= PAWN_VALUE/8;
-       }
-    }
-    endgameEntry->black_king_position = k_pos;
     endgameEntry->white_endgame_pawn_proximity =
         endgameEntry->black_endgame_pawn_proximity = (byte)0;
     endgameEntry->w_uncatchable = endgameEntry->b_uncatchable = (byte)0;
+    Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
+    if (!all_pawns) return;
+    int k_pos = 0; Square kp = board.kingSquare(White);
+    // Evaluate king position. Big bonus for centralizing king or (if
+    // pawns are all on one side) being near pawns.
+    // Similar to how Crafty does it.
+    k_pos = KingEndgameScores[kp];
+    if (!TEST_MASK(abcd_mask,all_pawns)) {
+       if (File(kp)>DFILE)
+          k_pos += PAWN_SIDE_BONUS;
+       else
+          k_pos -= PAWN_SIDE_BONUS;
+    }
+    else if (!TEST_MASK(efgh_mask,all_pawns)) {
+       if (File(kp)<=DFILE)
+          k_pos += PAWN_SIDE_BONUS;
+       else
+          k_pos -= PAWN_SIDE_BONUS;
+    }
+    endgameEntry->white_king_position  = k_pos;
+    kp = board.kingSquare(Black);
+    k_pos = KingEndgameScores[63-kp];
+    if (!TEST_MASK(abcd_mask,all_pawns)) {
+       if (File(kp)>DFILE)
+          k_pos += PAWN_SIDE_BONUS;
+       else
+          k_pos -= PAWN_SIDE_BONUS;
+    }
+    else if (!TEST_MASK(efgh_mask,all_pawns)) {
+       if (File(kp)<=DFILE)
+          k_pos += PAWN_SIDE_BONUS;
+       else
+          k_pos -= PAWN_SIDE_BONUS;
+    }
+    endgameEntry->black_king_position = k_pos;
     if (!TEST_MASK(all_pawns,left_side_mask[4]) ||
         !TEST_MASK(all_pawns,right_side_mask[3])) {
         // bonus for king near pawns
