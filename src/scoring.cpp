@@ -1354,9 +1354,12 @@ PawnHashEntry::PawnData &entr)
             cout << " doubled";
 #endif
             passed = 0; // if our own pawn is ahead of us, don't count as passed
-            if (doubles) {
-                entr.midgame_score += DOUBLED_PAWNS[Midgame][file-1];
-                entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1];
+            entr.midgame_score += DOUBLED_PAWNS[Midgame][file-1];
+            entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1];
+            if (doubles.bitCountOpt() > 1) {
+               // tripled pawns
+               entr.midgame_score += DOUBLED_PAWNS[Midgame][file-1]/2;
+               entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1]/2;
             }
             doubled++;
         }
