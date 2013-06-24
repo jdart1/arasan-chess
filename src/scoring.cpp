@@ -38,7 +38,7 @@ static const int ATTACK_COUNT_SCALE[24] = {
        141, 153, 165, 177, 189, 201, 213, 222, 228, 234};
 static const int KING_OFF_BACK_RANK[9] =
        {0, 0, 5, 15, 25, 40, 40, 40, 40};
-static const int PIN_MULTIPLIER = 15;
+static const int PIN_MULTIPLIER[2] = {20,30};
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 25;
 
@@ -129,7 +129,7 @@ struct BishopTrapPattern {
 static const int BISHOP_TRAPPED = -160;       // bishop trapped by pawn
 static const int BISHOP_PAIR[2] = {37,55};
 static const int BISHOP_ENDGAME_BONUS = 18;
-static const int BAD_BISHOP = -4;
+static const int BAD_BISHOP[2] = {-4,-6};
 
 static const int RB_ADJUST[9] = {
    0,
@@ -220,8 +220,6 @@ static const int QUEEN_MOBILITY = 2;
 
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
-static const int UNCATCHABLE_PAWN1 = 11;
-static const int UNCATCHABLE_PAWN2 = 21;
 static const int BITBASE_WIN=500;
 static const int KING_AHEAD_OF_PAWN = 10;
 static const int DISTANCE_FROM_PAWN = -4;
@@ -1213,32 +1211,36 @@ void Scoring::pieceScore(const Board &board,
     }
     const int bishopCount = board.getMaterial(side).bishopCount();
     if (bishopCount == 1) {
-        if (TEST_MASK(Board::white_squares,board.bishop_bits[side])) {
-        int whitePawns = ourPawnData.w_square_pawns;
-        int blackPawns = ourPawnData.b_square_pawns;
-        if ((whitePawns + blackPawns > 4) && (whitePawns > blackPawns+2)) {
-           int badBishopScore = BAD_BISHOP*(whitePawns - blackPawns);
-           scores.mid += badBishopScore;
-           scores.end += badBishopScore + badBishopScore/2;
+       if (TEST_MASK(Board::white_squares,board.bishop_bits[side])) {
+          int whitePawns = ourPawnData.w_square_pawns;
+          int blackPawns = ourPawnData.b_square_pawns;
+          if ((whitePawns + blackPawns > 4) && (whitePawns > blackPawns+2)) {
 #ifdef EVAL_DEBUG
-       cout << "bad bishop (" << ColorImage(side) << "): (" << 
-           badBishopScore << "," << 3*badBishopScore/2 << ")" << endl;
+             Scores tmp = scores;
 #endif
-        }
-      }
-      else {
-        int whitePawns = ourPawnData.w_square_pawns;
-        int blackPawns = ourPawnData.b_square_pawns;
-        if ((whitePawns + blackPawns > 4) && (blackPawns > whitePawns+2)) {
-           int badBishopScore = BAD_BISHOP*(blackPawns - whitePawns);
-           scores.mid += badBishopScore;
-           scores.end += badBishopScore + badBishopScore/2; 
+             scores.mid += BAD_BISHOP[Midgame]*(whitePawns - blackPawns);
+             scores.end += BAD_BISHOP[Endgame]*(whitePawns - blackPawns);
 #ifdef EVAL_DEBUG
-       cout << "bad bishop (" << ColorImage(side) << "): (" << 
-           badBishopScore << "," << 3*badBishopScore/2 << ")" << endl;
+             cout << "bad bishop (" << ColorImage(side) << "): (" << 
+                scores.mid-tmp.mid << "," << scores.end-tmp.end << ")" << endl;
 #endif
-        }
-      }
+          }
+       }
+       else {
+          int whitePawns = ourPawnData.w_square_pawns;
+          int blackPawns = ourPawnData.b_square_pawns;
+          if ((whitePawns + blackPawns > 4) && (blackPawns > whitePawns+2)) {
+#ifdef EVAL_DEBUG
+             Scores tmp = scores;
+#endif
+             scores.mid += BAD_BISHOP[Midgame]*(blackPawns - whitePawns);
+             scores.end += BAD_BISHOP[Endgame]*(blackPawns - whitePawns);
+#ifdef EVAL_DEBUG
+             cout << "bad bishop (" << ColorImage(side) << "): (" << 
+                scores.mid-tmp.mid << "," << scores.end-tmp.end << ")" << endl;
+#endif
+          }
+       }
     } else if (bishopCount >= 2) {
        // Bishop pair bounus, higher bonus in endgame
        scores.mid += BISHOP_PAIR[Midgame];
@@ -1252,9 +1254,7 @@ void Scoring::pieceScore(const Board &board,
        int proximity = Bitboard(kingPawnProximity[oside][okp] & 
                                 board.pawn_bits[side]).bitCount();
        attack_count += proximity;
-       if (attack_count) {
-          attack_count = Util::Min(attack_count,23);
-       }
+       attack_count = Util::Min(attack_count,23);
 #ifdef EVAL_DEBUG
        cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
        cout << " cover= " << cover << endl;
@@ -1263,7 +1263,7 @@ void Scoring::pieceScore(const Board &board,
        cout << " pin_count=" << pin_count << endl;
 #endif
        int attack = ATTACK_COUNT_SCALE[attack_count];
-       if (pin_count) attack += PIN_MULTIPLIER*pin_count;
+       if (pin_count) attack += PIN_MULTIPLIER[Midgame]*pin_count;
        int kattack = attack;
 #ifdef BOOST
 #ifdef EVAL_DEBUG
@@ -1288,7 +1288,7 @@ void Scoring::pieceScore(const Board &board,
        // scale king attacks by this side's material level.
        opp_scores.mid -= kattack;
     }
-    if (pin_count) scores.end += PIN_MULTIPLIER*pin_count;
+    if (pin_count) scores.end += PIN_MULTIPLIER[Endgame]*pin_count;
 }
 
 
@@ -1809,17 +1809,10 @@ void Scoring::scoreEndgame(const Board &board,
       if (Util::Abs(File(board.kingSquare(side))-File(passer))<=1 && Rank(board.kingSquare(side),side)>=Rank(passer,side)) scores.end += KING_AHEAD_OF_PAWN;
   }
   if (uncatchables) {
-     int pcount = board.getMaterial(OppositeColor(side)).pieceCount();
      if ((ourMaterial.infobits() == Material::KP) &&
         oppMaterial.kingOnly()) {
         scores.end += BITBASE_WIN;
      }
-     /*
-     else if (pcount == 0)
-        scores.end += uncatchables*UNCATCHABLE_PAWN1;
-     else if (pcount <=2)
-        scores.end += uncatchables*UNCATCHABLE_PAWN2;
-     */
   }
   Bitboard rooks(board.rook_bits[side]);
   Square rooksq;
@@ -1928,7 +1921,7 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
 
     // calculate king cover
     int w_cover=0, b_cover=0;
-    if (b_materialLevel >= 12) {
+    if (b_materialLevel >= MIDGAME_MATERIAL_THRESHOLD) {
        hash_t kcHash = BoardHash::kingCoverHash(board,White);
        KingCoverHashEntry *kingCoverEntryW =
             &kingCoverHashTable[White][kcHash % KING_COVER_HASH_SIZE];
@@ -1942,7 +1935,7 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
 #endif
        wScores.mid += w_cover - KING_OFF_BACK_RANK[Rank(board.kingSquare(White),White)];
     }
-    if (w_materialLevel >= 12) {
+    if (w_materialLevel >= MIDGAME_MATERIAL_THRESHOLD) {
        hash_t kcHash = BoardHash::kingCoverHash(board,Black);
        KingCoverHashEntry *kingCoverEntryB =
             &kingCoverHashTable[Black][kcHash % KING_COVER_HASH_SIZE];
@@ -2027,29 +2020,32 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
                       pawnEntry->wPawnData,w_cover,bScores,wScores,
                       b_materialLevel < MIDGAME_MATERIAL_THRESHOLD);
 
-    hash_t hc = BoardHash::kingPawnHash(board);
-    EndgameHashEntry *endgameEntry = &endgameHashTable[hc % ENDGAME_HASH_SIZE];
-    if (endgameEntry->hc != hc) {
-       calcEndgame(board,pawnEntry,endgameEntry);
-       endgameEntry->hc = hc;
-    }
-    if (w_materialLevel <= ENDGAME_MATERIAL_THRESHOLD) {
+    if (b_materialLevel <= ENDGAME_MATERIAL_THRESHOLD ||
+        w_materialLevel <= ENDGAME_MATERIAL_THRESHOLD) {
+       hash_t hc = BoardHash::kingPawnHash(board);
+       EndgameHashEntry *endgameEntry = &endgameHashTable[hc % ENDGAME_HASH_SIZE];
+       if (endgameEntry->hc != hc) {
+          calcEndgame(board,pawnEntry,endgameEntry);
+          endgameEntry->hc = hc;
+       }
+       if (w_materialLevel <= ENDGAME_MATERIAL_THRESHOLD) {
 #ifdef EVAL_DEBUG
-        int tmp = wScores.end;
+          int tmp = wScores.end;
 #endif
-        scoreEndgame(board,endgameEntry,pawnEntry->wPawnData,White,wScores);
+          scoreEndgame(board,endgameEntry,pawnEntry->wPawnData,White,wScores);
 #ifdef EVAL_DEBUG
-        cout << "endgame score (White)=" << wScores.end-tmp << endl;
+          cout << "endgame score (White)=" << wScores.end-tmp << endl;
 #endif
-    }
-    if (b_materialLevel <= ENDGAME_MATERIAL_THRESHOLD) {
+       }
+       if (b_materialLevel <= ENDGAME_MATERIAL_THRESHOLD) {
 #ifdef EVAL_DEBUG
-        int tmp = bScores.end;
+          int tmp = bScores.end;
 #endif
-        scoreEndgame(board,endgameEntry,pawnEntry->bPawnData,Black,bScores);
+          scoreEndgame(board,endgameEntry,pawnEntry->bPawnData,Black,bScores);
 #ifdef EVAL_DEBUG
-        cout << "endgame score (Black)=" << bScores.end-tmp << endl;
+          cout << "endgame score (Black)=" << bScores.end-tmp << endl;
 #endif
+       }
     }
 
 #ifdef EVAL_DEBUG
