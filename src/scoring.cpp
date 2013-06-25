@@ -2303,7 +2303,8 @@ void Scoring::calcEndgame(const Board &board, PawnHashEntry *pawnEntry,
     endgameEntry->w_uncatchable = endgameEntry->b_uncatchable = (byte)0;
     Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
     if (!all_pawns) return;
-    int k_pos = 0; Square kp = board.kingSquare(White);
+    int k_pos = 0;
+    Square kp = board.kingSquare(White);
     // Evaluate king position. Big bonus for centralizing king or (if
     // pawns are all on one side) being near pawns.
     // Similar to how Crafty does it.
@@ -2336,23 +2337,19 @@ void Scoring::calcEndgame(const Board &board, PawnHashEntry *pawnEntry,
           k_pos -= PAWN_SIDE_BONUS;
     }
     endgameEntry->black_king_position = k_pos;
-    if (!TEST_MASK(all_pawns,left_side_mask[4]) ||
-        !TEST_MASK(all_pawns,right_side_mask[3])) {
-        // bonus for king near pawns
-        Bitboard it(all_pawns);
-        Square sq;
-        while (it.iterate(sq)) {
-            endgameEntry->white_endgame_pawn_proximity += (4-distance1(board.kingSquare(White),sq));
-            endgameEntry->black_endgame_pawn_proximity += (4-distance1(board.kingSquare(Black),sq));
-        }
-#ifdef EVAL_DEBUG
-        cout << "king/pawn proximity (endgame) = " <<
-            endgameEntry->white_endgame_pawn_proximity -
-            endgameEntry->black_endgame_pawn_proximity << endl;
-#endif
-    }
-    Bitboard passers2(wPawnData.passers);
+    // bonus for king near pawns
+    Bitboard it(all_pawns);
     Square sq;
+    while (it.iterate(sq)) {
+       endgameEntry->white_endgame_pawn_proximity += (4-distance1(board.kingSquare(White),sq));
+       endgameEntry->black_endgame_pawn_proximity += (4-distance1(board.kingSquare(Black),sq));
+    }
+#ifdef EVAL_DEBUG
+    cout << "king/pawn proximity (endgame) = " <<
+       endgameEntry->white_endgame_pawn_proximity -
+       endgameEntry->black_endgame_pawn_proximity << endl;
+#endif
+    Bitboard passers2(wPawnData.passers);
     while (passers2.iterate(sq)) {
       if (lookupBitbase(board.kingSquare(White),sq,
         board.kingSquare(Black),White,board.sideToMove())) {
