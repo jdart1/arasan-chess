@@ -17,12 +17,13 @@ extern "C"
 #include <stddef.h>
 };
 
-HashEntry *Hash::hashTable = NULL;
-size_t Hash::hashSize = 0;
-size_t Hash::hashFree = 0;
-int Hash::refCount = 0;
-int Hash::hash_init_done = 0;
-
+Hash::Hash() {
+   hashTable = NULL;
+   hashSize = 0;
+   hashFree = 0;
+   refCount = 0;
+   hash_init_done = 0;
+}
 
 void Hash::initHash(size_t bytes)
 {
@@ -32,13 +33,12 @@ void Hash::initHash(size_t bytes)
       ALIGNED_MALLOC(hashTable,
          HashEntry,
          sizeof(HashEntry)*hashSizePlus,128);
-      Scoring::initEvalCache(bytes/4);
+      initEvalCache(bytes/4);
       clearHash();
       hash_init_done++;
       ++refCount;
    }
 }
-
 
 void Hash::resizeHash(size_t bytes)
 {
@@ -51,7 +51,7 @@ void Hash::freeHash()
 {
    if (--refCount == 0) {
       ALIGNED_FREE(hashTable);
-      Scoring::freeEvalCache();
+      freeEvalCache();
       hash_init_done = 0;
    }
 }
@@ -62,7 +62,7 @@ void Hash::clearHash()
    size_t hashSizePlus = hashSize + MaxRehash;
    hashFree = hashSize;
    memset(hashTable,'\0',sizeof(HashEntry)*hashSizePlus);
-   Scoring::clearEvalCache();
+   clearEvalCache();
    if (options.learning.position_learning) {
       loadLearnInfo();
     }
@@ -94,4 +94,32 @@ void Hash::loadLearnInfo()
    }
 }
 
+
+void Hash::initEvalCache(size_t bytes) {
+    evalCacheSize = (int)(bytes/sizeof(EvalCacheEntry));
+    int evalCachePower;
+    for (evalCachePower = 1; evalCachePower < 32; evalCachePower++) {
+        if (1 << evalCachePower > evalCacheSize) {
+            evalCachePower--;
+            break;
+        }
+    }
+    evalCacheSize = 1 << evalCachePower;
+    evalCacheMask = (uint64)(evalCacheSize-1);
+    ALIGNED_MALLOC(evalCache,EvalCacheEntry,
+                   sizeof(EvalCacheEntry)*evalCacheSize, 128);
+    clearEvalCache();
+}
+
+void Hash::freeEvalCache() {
+    ALIGNED_FREE(evalCache);
+}
+
+void Hash::clearEvalCache() {
+    for (int i = 0; i < evalCacheSize; i++) {
+        evalCache[i].score_key = evalCache[i].move_key = (hash_t)0;
+        evalCache[i].score = Scoring::INVALID_SCORE;
+        evalCache[i].best = NullMove;
+    }
+}
 

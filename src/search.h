@@ -170,6 +170,8 @@ class SearchController {
 
     void clearHashTables();
 
+    void resizeHash(size_t newSize);
+
     void stopAllThreads();
 
     void clearStopFlags();
@@ -222,6 +224,8 @@ class SearchController {
     }
 
     void setThreadSplitDepth(int depth);
+
+    Hash hashTable;
 
  private:
 

@@ -189,6 +189,7 @@ SearchController::SearchController()
             FUTILITY_MARGIN[i][j] = fmargin;
         }
     }
+    hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
 SearchController::~SearchController() {
@@ -393,7 +394,7 @@ int score, int alpha, int beta)
             // (for pondering)
             PositionInfo entry;
             PositionInfo::ValueType result =
-                Hash::searchHash(board_copy,board_copy.hashCode(rep_count),
+                hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
                            0,0,0,age,
                            iteration_depth,entry);
             if (result != PositionInfo::NoHit) {
@@ -429,7 +430,7 @@ void SearchController::clearHashTables()
 {
     age = 0;
     pool->forEachSearch<&Search::clearHashTables>();
-    Hash::clearHash();
+    hashTable.clearHash();
 }
 
 void SearchController::stopAllThreads() {
@@ -469,9 +470,13 @@ void SearchController::uciSendInfos(Move move, int move_index, int depth) {
    }
 } 
 
+void SearchController::resizeHash(size_t newSize) {
+   hashTable.resizeHash(newSize);
+}
+
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
-    :controller(c),terminate(0),
-     activeSplitPoints(0),split(NULL),ti(threadInfo) {
+   :controller(c),scoring(&c->hashTable),terminate(0),
+    activeSplitPoints(0),split(NULL),ti(threadInfo) {
     LockInit(splitLock);
     setSearchOptions();
 }
@@ -577,7 +582,7 @@ int Search::checkTime(const Board &board,int ply) {
         cout << "info";
         if (stats->elapsed_time>300) cout << " nps " <<
                 (long)((1000L*stats->num_nodes)/stats->elapsed_time);
-        cout << " nodes " << stats->num_nodes << " hashfull " << Hash::pctFull() << endl;
+        cout << " nodes " << stats->num_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
         last_time = current_time;
     }
     return 0;
@@ -984,7 +989,7 @@ Move *excludes, int num_excludes)
             " percent).";
       cout << endl;
       cout << "hash table is " << setprecision(2) <<
-          1.0F*Hash::pctFull()/10.0F << "% full." << endl;
+          1.0F*controller->hashTable.pctFull()/10.0F << "% full." << endl;
 #endif
 #ifdef MOVE_ORDER_STATS
       cout << "move ordering: ";
@@ -1358,7 +1363,7 @@ int Search::qsearch_no_check(int ply, int depth)
         node->best_score = stand_pat_score;
         (node+1)->pv_length=0;
     }
-    Move pv = Scoring::getBestMove(board);
+    Move pv = controller->hashTable.getBestMove(board);
 
     int move_index = 0;
     int try_score;
@@ -1589,7 +1594,7 @@ int Search::qsearch_no_check(int ply, int depth)
       MoveImage(node->best,cout);
       cout << endl;
 #endif
-      Scoring::cacheBestMove(board,node->best);
+      controller->hashTable.cacheBestMove(board,node->best);
     }
     if (node->inBounds(node->best_score)) {
         if (!IsNull(node->best)) {
@@ -1603,7 +1608,7 @@ int Search::qsearch_no_check(int ply, int depth)
 int Search::qsearch_check(int ply, int depth)
 {
     int try_score;
-    Move pvmove = Scoring::getBestMove(board);
+    Move pvmove = controller->hashTable.getBestMove(board);
     if (!IsNull(pvmove)) {
 #ifdef _TRACE
        indent(ply); cout << "qsearch cache hit: ";
@@ -1676,7 +1681,7 @@ int Search::qsearch_check(int ply, int depth)
          MoveImage(node->best,cout);
          cout << endl;
 #endif
-         Scoring::cacheBestMove(board,node->last_move);
+         controller->hashTable.cacheBestMove(board,node->last_move);
 #ifdef _TRACE
         if (master()) {
             indent(ply);
@@ -1702,7 +1707,7 @@ int Search::qsearch_check(int ply, int depth)
        MoveImage(node->best,cout);
        cout << endl;
 #endif
-       Scoring::cacheBestMove(board,node->best);
+       controller->hashTable.cacheBestMove(board,node->best);
     }
     if (node->inBounds(node->best_score)) {
        if (!IsNull(node->best)) {
@@ -1978,7 +1983,7 @@ int Search::search()
     // be cached.
     // Note: we copy the hash entry .. so mods by another thread do not
     // alter the copy
-    result = Hash::searchHash(board,board.hashCode(rep_count),
+    result = controller->hashTable.searchHash(board,board.hashCode(rep_count),
                               node->alpha,node->beta,ply,depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
     controller->stats->hash_searches++;
@@ -2075,7 +2080,7 @@ int Search::search()
     }
     if (IsNull(hash_move)) {
         // try the qsearch cache for a move
-        hash_move = scoring.getBestMove(board);
+        hash_move = controller->hashTable.getBestMove(board);
     }
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     if (using_tb && rep_count==0) {
@@ -2116,7 +2121,7 @@ int Search::search()
             // Put it in with a large depth so we will not
             // overwrite - this entry is "exact" at all
             // search depths, so effectively its depth is infinite.
-            Hash::storeHash(board.hashCode(rep_count),
+            controller->hashTable.storeHash(board.hashCode(rep_count),
                 (Constants::MaxPly-1)*DEPTH_INCREMENT,
                 controller->age,
                 PositionInfo::Valid,
@@ -2606,7 +2611,7 @@ int Search::search()
         }
 #endif
         hash_t hash = board.hashCode(rep_count);
-        Hash::storeHash(hash, depth,
+        controller->hashTable.storeHash(hash, depth,
             controller->age,
             val_type,
             node->best_score, 

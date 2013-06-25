@@ -4,6 +4,7 @@
 #define _SCORING_H
 
 #include "board.h"
+#include "hash.h"
 
 #include <iostream>
 using namespace std;
@@ -20,7 +21,7 @@ class Scoring
 
     static void cleanup();
 
-    Scoring();
+    Scoring(Hash *ht);
 
     ~Scoring();
         
@@ -78,31 +79,6 @@ class Scoring
 
     void clearHashTables();
 
-    static void initEvalCache(size_t bytes);
-
-    static void freeEvalCache();
-
-    static void clearEvalCache();
-
-    static inline Move getBestMove(const Board &board) {
-        const EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
-        hash_t key = entry.move_key;
-        Move best = entry.best;
-        key ^= (hash_t)best;
-        if (board.hashCode() == key) {
-            return best;
-        }
-        else
-            return NullMove;
-    }
-
-    static inline void cacheBestMove(const Board &board, Move best) {
-        EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
-        entry.move_key = board.hashCode() ^ (hash_t)best;
-        entry.best = best;
-    }
-
-
  private:
 
     static const int PAWN_HASH_SIZE = 16384;
@@ -147,17 +123,8 @@ class Scoring
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
 
-    // Evaluation cache, used in qsearch
-    enum EvalCacheType {Exact, Lower, Upper};
-    struct CACHE_ALIGN EvalCacheEntry {
-         hash_t score_key, move_key;
-         int score;
-         Move best;
-    };
-
-    static EvalCacheEntry *evalCache;
-    static int evalCacheSize;
-    static uint64 evalCacheMask;
+    // pointer to hash table (contains eval cache)
+    Hash *hashTable;
 
     // The scores for opening, middlegame and endgame
     struct Scores {

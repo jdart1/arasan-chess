@@ -184,20 +184,23 @@ unsigned long hash_code(const HashEntry &p);
 
 class Hash {
 
+  friend class Scoring;
  public:
-    static void initHash(size_t bytes);
+    Hash();
 
-    static void resizeHash(size_t bytes);
+    void initHash(size_t bytes);
 
-    static void freeHash();
+    void resizeHash(size_t bytes);
 
-    static void clearHash();
+    void freeHash();
+
+    void clearHash();
 
     // put info from the external permanent hash table into the
     // in-memory hash table
-    static void loadLearnInfo();
+    void loadLearnInfo();
 
-    static PositionInfo::ValueType searchHash(const Board& b,hash_t hashCode,
+    PositionInfo::ValueType searchHash(const Board& b,hash_t hashCode,
                                               int alpha, int beta, int ply,
                                               int depth, int age,
                                               PositionInfo &pi
@@ -237,7 +240,7 @@ class Hash {
         return pi.type();
     }
 
-    static void storeHash(hash_t hashCode, const int depth,
+    void storeHash(hash_t hashCode, const int depth,
                           int age,
                           PositionInfo::ValueType type,
                           int value,
@@ -287,28 +290,62 @@ class Hash {
         }
     }
 
-    static size_t getHashSize() {
+    size_t getHashSize() const {
         return hashSize;
     }
 
     // Percent full (percentage x 10)
-    static int pctFull() {
+    int pctFull() const {
         if (hashSize == 0)
             return 0;
         else
             return (int)(1000.0*(hashSize-hashFree)/(double)hashSize);
     }
 
+    // Evaluation cache, used in qsearch
+    struct CACHE_ALIGN EvalCacheEntry {
+         hash_t score_key, move_key;
+         int score;
+         Move best;
+    };
+
+    void initEvalCache(size_t bytes);
+
+    void freeEvalCache();
+
+    void clearEvalCache();
+
+    inline Move getBestMove(const Board &board) {
+        const EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
+        hash_t key = entry.move_key;
+        Move best = entry.best;
+        key ^= (hash_t)best;
+        if (board.hashCode() == key) {
+            return best;
+        }
+        else
+            return NullMove;
+    }
+
+    inline void cacheBestMove(const Board &board, Move best) {
+        EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
+        entry.move_key = board.hashCode() ^ (hash_t)best;
+        entry.best = best;
+    }
+
  private:
-    static int replaceScore(const HashEntry &pos, int age) {
+    int replaceScore(const HashEntry &pos, int age) {
         return (Util::Abs(pos.age()-age)<<12) - pos.depth();
     }
 
-    static HashEntry *hashTable;
-    static size_t hashSize, hashFree;
+    HashEntry *hashTable;
+    size_t hashSize, hashFree;
     static const int MaxRehash = 4;
-    static int refCount;
-    static int hash_init_done;
+    int refCount;
+    int hash_init_done;
+    EvalCacheEntry *evalCache;
+    int evalCacheSize;
+    uint64 evalCacheMask;
 
 };
 

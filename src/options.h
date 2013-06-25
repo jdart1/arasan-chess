@@ -49,7 +49,7 @@ class Options
    int strength; // 0 .. 100
    int multipv; // for UCI only
    int ncpus;
- 
+   int mod;
   } search;
 
    struct LearningOptions {
