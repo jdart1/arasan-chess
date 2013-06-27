@@ -28,7 +28,7 @@ static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-static const int CENTER_PAWN_BLOCK=-8;
+static const int CENTER_PAWN_BLOCK = -12;
 
 // king cover scores, by rank of Pawn - rank of King
 static const int KING_COVER[5] = {22, 31, 12, 3, 2};
