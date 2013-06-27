@@ -28,7 +28,7 @@ static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-static const int CENTER_PAWN_BLOCK=-8;
+static const int CENTER_PAWN_BLOCK = -12;
 
 // king cover scores, by rank of Pawn - rank of King
 static const int KING_COVER[5] = {22, 31, 12, 3, 2};
@@ -1632,7 +1632,7 @@ const PawnHashEntry::PawnData &pawnData, Scores &scores)
         board.queen_bits[OppositeColor(side)]) {
         scores.any += (int)pawnData.weakopen*WEAK_ON_OPEN_FILE;
     }
-    // interaction of passed pawns and pieces
+    // interaction of pawns and pieces
     if (side == White) {
        if (board[D2] == WhitePawn && board[D3] > WhitePawn &&
                                       board[D3] < BlackPawn) {
@@ -1916,7 +1916,7 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
 #ifdef EVAL_DEBUG
        cout << "unscaled cover score (Black) = " << b_cover << endl;
 #endif
-       bScores.mid += b_cover - KING_OFF_BACK_RANK[Rank(board.kingSquare(Black),Black)];;
+       bScores.mid += b_cover - KING_OFF_BACK_RANK[Rank(board.kingSquare(Black),Black)];
     }
 
 #ifdef EVAL_DEBUG
