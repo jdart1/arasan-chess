@@ -51,7 +51,9 @@ using namespace std;
 
 static int verbose = 0, post = 0;
 static SearchController *searcher = NULL;
+#ifdef SELFPLAY
 static SearchController *mod_searcher = NULL;
+#endif
 
 static Move last_move;
 static string last_move_image;
@@ -101,17 +103,19 @@ static bool uci_limit_strength = false;
 static int movestogo = 0;
 static int ponderhit = 0;
 static int testing = 0;
+// set true if waiting for "ponderhit" or "stop"
+static int uciWaitState = 0;
+static string test_file;
+static int cpusSet = 0; // true if cmd line specifies -c
+static int memorySet = 0; // true if cmd line specifies -H
+#ifdef SELFPLAY
 static int selfplay = 0;
 static int selfplay_wins = 0, selfplay_losses = 0, selfplay_draws = 0;
 static int selfplay_round = -1;
 static MoveArray selfplay_moves;
 static string selfplay_openings;
 static int selfplay_games;
-// set true if waiting for "ponderhit" or "stop"
-static int uciWaitState = 0;
-static string test_file;
-static int cpusSet = 0; // true if cmd line specifies -c
-static int memorySet = 0; // true if cmd line specifies -H
+#endif
 
 #ifdef UCI_LOG
 extern fstream ucilog;
@@ -586,11 +590,13 @@ static void save_game() {
          if (computer_rating)
             headers.append(ChessIO::Header("BlackElo",crating));
       }
+#ifdef SELFPLAY
       if (selfplay_round != -1) {
          stringstream rnd;
          rnd << selfplay_round;
          headers.append(ChessIO::Header("Round",rnd.str()));
       }
+#endif
       if (start_fen.size()) {
          // we had a non-standard starting position for the game
           headers.append(ChessIO::Header("FEN",start_fen));
@@ -603,6 +609,7 @@ static void save_game() {
       headers.append(ChessIO::Header("TimeControl",timec.str()));
       string result;
       theLog->getResultAsString(result);
+#ifdef SELFPLAY
       if (selfplay) {
           if (result == "1-0") {
               if (computer_plays_white) selfplay_losses++;
@@ -619,6 +626,7 @@ static void save_game() {
               setprecision(4) <<
               (100.0F*selfplay_wins + 50.0F*selfplay_draws)/(selfplay_wins + selfplay_losses + selfplay_draws) << '%' << endl;
       }
+#endif
       ChessIO::store_pgn(*game_file, *gameMoves,
          computer_plays_white ? White : Black,
          result.c_str(),
@@ -2252,6 +2260,7 @@ static void loadgame(Board &board,ifstream &file) {
     }
 }
 
+#ifdef SELFPLAY
 static void selfplay_game(int count) {
     selfplay_round = count+1;
     for (;;) {
@@ -2355,6 +2364,7 @@ static void do_selfplay()
    save_game(); 
    delete mod_searcher;
 }
+#endif
 
 // Execute a command, return false if program should terminate.
 static bool do_command(const string &cmd, Board &board) {
@@ -3413,6 +3423,7 @@ int CDECL main(int argc, char **argv) {
                 //++arg;
                 doTrace = true;
                 break;
+#ifdef SELFPLAY
             case 's':
                 ++selfplay;
                 ++arg;
@@ -3420,6 +3431,7 @@ int CDECL main(int argc, char **argv) {
                 ++arg;
                 selfplay_games = atoi(argv[arg]);
                 break;
+#endif
             default:
                 cerr << "Warning: unknown option: " << argv[arg]+1 <<
                     endl;
@@ -3461,8 +3473,10 @@ int CDECL main(int argc, char **argv) {
 
     if (testing) {
         do_test(test_file);
+#ifdef SELFPLAY 
     } else if (selfplay) {
         do_selfplay();
+#endif
     }
     else {
         searcher->registerPostFunction(post_output);
