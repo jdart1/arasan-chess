@@ -1947,7 +1947,7 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
 #ifdef EVAL_DEBUG
        cout << "unscaled cover score (Black) = " << b_cover << endl;
 #endif
-       bScores.mid += b_cover - KING_OFF_BACK_RANK[Rank(board.kingSquare(Black),Black)];;
+       bScores.mid += b_cover - KING_OFF_BACK_RANK[Rank(board.kingSquare(Black),Black)];
     }
 
 #ifdef EVAL_DEBUG
