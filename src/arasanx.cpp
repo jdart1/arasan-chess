@@ -51,6 +51,9 @@ using namespace std;
 
 static int verbose = 0, post = 0;
 static SearchController *searcher = NULL;
+#ifdef SELFPLAY
+static SearchController *mod_searcher = NULL;
+#endif
 
 static Move last_move;
 static string last_move_image;
@@ -105,6 +108,14 @@ static int uciWaitState = 0;
 static string test_file;
 static int cpusSet = 0; // true if cmd line specifies -c
 static int memorySet = 0; // true if cmd line specifies -H
+#ifdef SELFPLAY
+static int selfplay = 0;
+static int selfplay_wins = 0, selfplay_losses = 0, selfplay_draws = 0;
+static int selfplay_round = -1;
+static MoveArray selfplay_moves;
+static string selfplay_openings;
+static int selfplay_games;
+#endif
 
 #ifdef UCI_LOG
 extern fstream ucilog;
@@ -579,6 +590,13 @@ static void save_game() {
          if (computer_rating)
             headers.append(ChessIO::Header("BlackElo",crating));
       }
+#ifdef SELFPLAY
+      if (selfplay_round != -1) {
+         stringstream rnd;
+         rnd << selfplay_round;
+         headers.append(ChessIO::Header("Round",rnd.str()));
+      }
+#endif
       if (start_fen.size()) {
          // we had a non-standard starting position for the game
           headers.append(ChessIO::Header("FEN",start_fen));
@@ -586,11 +604,29 @@ static void save_game() {
       stringstream timec;
       timec << minutes*60;
       if (incr) {
-         timec << '+' << setprecision(2) << incr/1000.0F; 
+          timec << '+' << setprecision(2) << incr/1000.0F; 
       }
       headers.append(ChessIO::Header("TimeControl",timec.str()));
       string result;
       theLog->getResultAsString(result);
+#ifdef SELFPLAY
+      if (selfplay) {
+          if (result == "1-0") {
+              if (computer_plays_white) selfplay_losses++;
+              else selfplay_wins++;
+          } else if (result == "0-1") {
+              if (computer_plays_white) selfplay_wins++;
+              else selfplay_losses++;
+          } else {
+              selfplay_draws++;
+          }
+          // results reported are for the "mod" side (vs. base version)
+          cout << "+" << selfplay_wins << " -" <<
+              selfplay_losses << " =" << selfplay_draws << " " <<
+              setprecision(4) <<
+              (100.0F*selfplay_wins + 50.0F*selfplay_draws)/(selfplay_wins + selfplay_losses + selfplay_draws) << '%' << endl;
+      }
+#endif
       ChessIO::store_pgn(*game_file, *gameMoves,
          computer_plays_white ? White : Black,
          result.c_str(),
@@ -699,7 +735,7 @@ uint64 nodes, uint64 tb_hits, const string &best_line_image, int multipv) {
    if (tb_hits) {
       s << " tbhits " << tb_hits;
    }
-   s << " hashfull " << Hash::pctFull();
+   s << " hashfull " << searcher->hashTable.pctFull();
    if (best_line_image.length()) {
       s << " pv ";
       s << best_line_image;
@@ -2183,6 +2219,153 @@ static void do_test(string test_file)
    options.book.book_enabled = tmp;
 }
 
+static void loadgame(Board &board,ifstream &file) {
+    ArasanVector<ChessIO::Header> hdrs(20);
+    long first;
+    ChessIO::collect_headers(file,hdrs,first);
+    ColorType side = White;
+    for (;;) {
+        static char buf[256];
+        static char num[20];
+        ChessIO::Token tok = ChessIO::get_next_token(file,buf,256);
+        if (tok == ChessIO::Eof)
+            break;
+        else if (tok == ChessIO::Number) {
+            strncpy(num,buf,20);
+        }
+        else if (tok == ChessIO::GameMove) {
+            // parse the move
+            Move m = Notation::value(board,side,buf);
+            if (IsNull(m) ||
+                !legalMove(board,StartSquare(m),
+                           DestSquare(m))) {
+                cerr << "Illegal move" << endl;
+                break;
+            }
+            else {
+                BoardState previous_state = board.state;
+                string image;
+                // Don't use the current move string as the input
+                // parser is forgiving and will accept incorrect
+                // SAN. Convert it here to the correct form:
+                Notation::image(board,m,image);
+                gameMoves->add_move(board,previous_state,m,image.c_str(),false);
+                board.doMove(m);
+            }
+            side = OppositeColor(side);
+        }
+        else if (tok == ChessIO::Result) {
+            break;
+        }
+    }
+}
+
+#ifdef SELFPLAY
+static void selfplay_game(int count) {
+    selfplay_round = count+1;
+    for (;;) {
+        int time1 = getTimeMillisec();
+        SearchController *s;
+        if ((computer_plays_white && main_board->sideToMove()==White) ||
+            (!computer_plays_white && main_board->sideToMove()==Black)) {
+           options.search.mod = 0;
+           s = searcher;
+        } else {
+           options.search.mod = 1;
+           s = mod_searcher;
+        }
+        Move m = search(s,*main_board,stats,false);
+        int time2 = getTimeMillisec();
+        if (computer_plays_white) {
+            time_left -= (time2-time1);
+            time_left += incr;
+        } else {
+            opp_time -= (time2-time1);
+            opp_time += incr;
+        }
+        if (IsNull(m)) {
+            // no move
+            if (stats.state == Stalemate || stats.state == Draw) {
+                theLog->setResult("1/2-1/2");
+            }
+            else if (stats.state == Checkmate) {
+                // we are checkmated
+               if (main_board->sideToMove() == White) {
+                  theLog->setResult("0-1");
+               } else {
+                   theLog->setResult("1-0");
+               }
+            }
+            break;
+        }
+        BoardState previous_state = main_board->state;
+        stringstream image;
+        Notation::image(*main_board,m,image);
+        gameMoves->add_move(*main_board,previous_state,m,image.str(),false);
+        last_move_image = image.str();
+        theLog->add_move(*main_board,m,last_move_image,&stats,NULL,true);
+        main_board->doMove(m);
+        if (stats.display_value >= 7*PAWN_VALUE) {
+            // note winning side is not the side to move, since we did doMove
+           if (main_board->sideToMove() == White) {
+               theLog->setResult("0-1");
+           } else {
+                theLog->setResult("1-0");
+           }
+           break;
+        }
+    }
+}
+
+static void do_selfplay()
+{
+   delayedInitIfNeeded();
+   options.book.book_enabled = 0;
+   options.learning.position_learning = 0;
+   options.learning.score_learning = 0;
+   options.learning.result_learning = 0;
+   ifstream file(selfplay_openings.c_str(),ios::in);
+   mod_searcher = new SearchController();
+   for (int g = 0; g < selfplay_games; g++) {
+       // reset vars & save previous game:
+       do_command("new",*main_board);
+       opponent_name = "mod";
+       cout << "starting game " << g+1 << endl;
+       if (g % 2 == 0) {
+           // load next opening from file
+           loadgame(*main_board,file);
+           computer_plays_white = true;
+           // save moves
+           selfplay_moves.removeAll();
+           for (int i = 0; i < gameMoves->length(); i++) {
+               selfplay_moves.append((*gameMoves)[i]);
+           }
+       } else {
+           computer_plays_white = false;
+           // replay moves into global gameMove array
+           for (int i = 0; i < selfplay_moves.length(); i++) {
+               BoardState previous_state = main_board->state;
+               Move m = (*gameMoves)[i].move();
+               string image;
+               Notation::image(*main_board,m,image);
+               gameMoves->add_move(*main_board,previous_state,m,image.c_str(),false);
+               main_board->doMove(m);
+           }
+       }
+       // time control (fixed for now)
+       time_left = 5000;
+       opp_time = 5000;
+       incr = 100;
+       moves = 0;
+       minutes = float(5)/60;
+       selfplay_game(g);
+   }
+   // save last game
+   save_game(); 
+   delete mod_searcher;
+}
+#endif
+
 // Execute a command, return false if program should terminate.
 static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
@@ -2279,7 +2462,7 @@ static bool do_command(const string &cmd, Board &board) {
             buf >> size;
             options.search.hash_table_size = (size_t)size*1024L*1024L;
             if (old != options.search.hash_table_size) {
-                Hash::resizeHash(options.search.hash_table_size);
+                searcher->resizeHash(options.search.hash_table_size);
             }
         }
         else if (name == "Ponder") {
@@ -2549,7 +2732,7 @@ static bool do_command(const string &cmd, Board &board) {
                 SearchController c;
                 if (Scoring::isDraw(board))
                     cout << "position evaluates to draw (statically)" << endl;
-                Scoring *s = new Scoring();
+                Scoring *s = new Scoring(&c.hashTable);
                 s->init();
                 cout << board << endl;
                 Scoring::printScore(s->evalu8(board),cout);
@@ -2898,41 +3081,7 @@ static bool do_command(const string &cmd, Board &board) {
     else if (cmd_word == "loadgame") {
         string filename = cmd_args;
         ifstream file(filename.c_str(),ios::in);
-        ArasanVector<ChessIO::Header> hdrs(20);
-        long first;
-        ChessIO::collect_headers(file,hdrs,first);
-        ColorType side = White;
-        for (;;) {
-            static char buf[256];
-            static char num[20];
-            ChessIO::Token tok = ChessIO::get_next_token(file,buf,256);
-            if (tok == ChessIO::Eof)
-                break;
-            if (tok == ChessIO::Number) {
-                strncpy(num,buf,20);
-            }
-            else if (tok == ChessIO::GameMove) {
-                // parse the move
-                Move m = Notation::value(board,side,buf);
-                if (IsNull(m) ||
-                    !legalMove(board,StartSquare(m),
-                               DestSquare(m))) {
-                    cerr << "Illegal move" << endl;
-                    break;
-                }
-                else {
-                    BoardState previous_state = board.state;
-                    string image;
-                    // Don't use the current move string as the input
-                    // parser is forgiving and will accept incorrect
-                    // SAN. Convert it here to the correct form:
-                    Notation::image(board,m,image);
-                    gameMoves->add_move(board,previous_state,m,image.c_str(),false);
-                    board.doMove(m);
-                }
-                side = OppositeColor(side);
-            }
-        }
+        loadgame(board,file);
     }
     else if (cmd == "edit") {
         edit_board(cin,board);
@@ -3018,8 +3167,7 @@ static bool do_command(const string &cmd, Board &board) {
                cerr << "invalid value following 'memory'" << endl; 
            } else {
                options.search.hash_table_size = (size_t)(mbs*1024L*1024L);
-               Hash::freeHash();
-               Hash::initHash(options.search.hash_table_size);
+               searcher->resizeHash(options.search.hash_table_size);
            }
         }
     } 
@@ -3275,6 +3423,15 @@ int CDECL main(int argc, char **argv) {
                 //++arg;
                 doTrace = true;
                 break;
+#ifdef SELFPLAY
+            case 's':
+                ++selfplay;
+                ++arg;
+                selfplay_openings = argv[arg];
+                ++arg;
+                selfplay_games = atoi(argv[arg]);
+                break;
+#endif
             default:
                 cerr << "Warning: unknown option: " << argv[arg]+1 <<
                     endl;
@@ -3311,12 +3468,15 @@ int CDECL main(int argc, char **argv) {
             game_file = NULL;
         }
     }
-    Hash::initHash((size_t)(options.search.hash_table_size));
 
     searcher = new SearchController();
 
     if (testing) {
         do_test(test_file);
+#ifdef SELFPLAY 
+    } else if (selfplay) {
+        do_selfplay();
+#endif
     }
     else {
         searcher->registerPostFunction(post_output);

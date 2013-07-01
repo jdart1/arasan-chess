@@ -273,9 +273,6 @@ static const EndgamePattern DRAW_PATTERN[] = {
                    EndgamePattern(Material::KQ, Material::KRB)
 };
 
-int Scoring::evalCacheSize = 0;
-uint64 Scoring::evalCacheMask = 0;
-Scoring::EvalCacheEntry *Scoring::evalCache = NULL;
 #ifdef EVAL_STATS
 static uint64 evalCacheProbes = (uint64)0;
 static uint64 evalCacheHits = (uint64)0;
@@ -321,34 +318,6 @@ static FORCEINLINE Bitboard pawn_attacks( const Board &board, Square sq, ColorTy
     return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
 
-
-void Scoring::initEvalCache(size_t bytes) {
-    evalCacheSize = (int)(bytes/sizeof(EvalCacheEntry));
-    int evalCachePower;
-    for (evalCachePower = 1; evalCachePower < 32; evalCachePower++) {
-        if (1 << evalCachePower > evalCacheSize) {
-            evalCachePower--;
-            break;
-        }
-    }
-    evalCacheSize = 1 << evalCachePower;
-    evalCacheMask = (uint64)(evalCacheSize-1);
-    ALIGNED_MALLOC(evalCache,EvalCacheEntry,
-                   sizeof(EvalCacheEntry)*evalCacheSize, 128);
-    clearEvalCache();
-}
-
-void Scoring::freeEvalCache() {
-    ALIGNED_FREE(evalCache);
-}
-
-void Scoring::clearEvalCache() {
-    for (int i = 0; i < evalCacheSize; i++) {
-        evalCache[i].score_key = evalCache[i].move_key = (hash_t)0;
-        evalCache[i].score = Scoring::INVALID_SCORE;
-        evalCache[i].best = NullMove;
-    }
-}
 
 static void initBitboards()
 {
@@ -641,8 +610,8 @@ void Scoring::init()
 void Scoring::cleanup() {
 }
 
-Scoring::Scoring()
-{
+Scoring::Scoring(Hash *ht)
+   :hashTable(ht) {
     clearHashTables();
 }
 
@@ -688,7 +657,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
         if (ourmat.minorCount() == oppmat.minorCount() + 1) {
             // Knight or Bishop vs. pawns
             // Bonus for piece. Note: we do not have KN or KB alone - those are special
-            // case handled above.
+            // cases handled above.
             score += PAWN_VALUE/4;
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
@@ -1663,7 +1632,7 @@ const PawnHashEntry::PawnData &pawnData, Scores &scores)
         board.queen_bits[OppositeColor(side)]) {
         scores.any += (int)pawnData.weakopen*WEAK_ON_OPEN_FILE;
     }
-    // interaction of passed pawns and pieces
+    // interaction of pawns and pieces
     if (side == White) {
        if (board[D2] == WhitePawn && board[D3] > WhitePawn &&
                                       board[D3] < BlackPawn) {
@@ -1734,15 +1703,15 @@ const PawnHashEntry::PawnData &pawnData, Scores &scores)
           if (rank == 7 && file<8 && TEST_MASK(board.rook_bits[side],Attacks::file_mask[file])) {
              Bitboard atcks(board.fileAttacks(sq+1) & board.rook_bits[side]);
              if (!atcks.is_clear() || board.rook_bits[side].isSet(sq+1)) {
-                 scores.mid += ROOK_BEHIND_PP[Midgame];
-                 scores.end += ROOK_BEHIND_PP[Endgame];
+                scores.mid += ROOK_BEHIND_PP[Midgame];
+                scores.end += ROOK_BEHIND_PP[Endgame];
              }
           }
           if (rank == 7 && file>1 && TEST_MASK(board.rook_bits[side],Attacks::file_mask[file-2])) {
              Bitboard atcks(board.fileAttacks(sq-1) & board.rook_bits[side]);
              if (!atcks.is_clear() || board.rook_bits[side].isSet(sq-1)) {
-                 scores.mid += ROOK_BEHIND_PP[Midgame];
-                 scores.end += ROOK_BEHIND_PP[Endgame];
+                scores.mid += ROOK_BEHIND_PP[Midgame];
+                scores.end += ROOK_BEHIND_PP[Endgame];
              }
           }
        }
@@ -1844,7 +1813,7 @@ Scoring::PawnHashEntry *Scoring::pawnEntry(const Board &board)  {
 
 int Scoring::positionalScore( const Board &board, int alpha, int beta)
 {
-    EvalCacheEntry &cacheEntry = evalCache[board.hashCode() & evalCacheMask];
+    Hash::EvalCacheEntry &cacheEntry = hashTable->evalCache[board.hashCode() & hashTable->evalCacheMask];
     // copy from the cache
     hash_t key = cacheEntry.score_key;
     int score = cacheEntry.score;
