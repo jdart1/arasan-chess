@@ -359,13 +359,13 @@ static void initBitboards()
               kingProximity[White][i].set(MakeSquare(File(kp),r+2,White));
               kingProximity[White][i].set(MakeSquare(File(kp)+1,r+2,White));
             }
-	        kingPawnProximity[White][i] = kingProximity[White][i];
-	        Square sq;
-	        Bitboard tmp(kingProximity[White][i]);
-	        while (tmp.iterate(sq)) {
-	           kingPawnProximity[White][i].set(sq);
-	           kingPawnProximity[White][i] |= Attacks::pawn_attacks[sq][Black];
-	        }
+            kingPawnProximity[White][i] = kingProximity[White][i];
+            Square sq;
+            Bitboard tmp(kingProximity[White][i]);
+            while (tmp.iterate(sq)) {
+               kingPawnProximity[White][i].set(sq);
+               kingPawnProximity[White][i] |= Attacks::pawn_attacks[sq][Black];
+            }
             kingProximity[Black][i] = Attacks::king_attacks[kp];
             kingProximity[Black][i].set(i);
             kingProximity[Black][i].set(kp);
@@ -375,12 +375,12 @@ static void initBitboards()
               kingProximity[Black][i].set(MakeSquare(File(kp),r+2,Black));
               kingProximity[Black][i].set(MakeSquare(File(kp)+1,r+2,Black));
             }
-	    kingPawnProximity[Black][i] = kingProximity[Black][i];
-	    tmp = kingPawnProximity[Black][i];
-	    while (tmp.iterate(sq)) {
+            kingPawnProximity[Black][i] = kingProximity[Black][i];
+            tmp = kingPawnProximity[Black][i];
+            while (tmp.iterate(sq)) {
               kingPawnProximity[Black][i].set(sq);
-	      kingPawnProximity[Black][i] |= Attacks::pawn_attacks[sq][White];
-	    }
+              kingPawnProximity[Black][i] |= Attacks::pawn_attacks[sq][White];
+            }
         }
 
         for (int j = 0; j < 64; j++) {
