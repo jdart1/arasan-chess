@@ -1793,9 +1793,6 @@ int Search::calcExtensions(const Board &board,
       extend += CAPTURE_EXTENSION;
    }
    if (extend || !pruneOk) {
-      if (ply > 2*root()->getIterationDepth()) {
-         extend /= 2;
-      }
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
