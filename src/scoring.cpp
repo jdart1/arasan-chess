@@ -130,6 +130,7 @@ static const int BISHOP_TRAPPED = -160;       // bishop trapped by pawn
 static const int BISHOP_PAIR[2] = {37,55};
 static const int BISHOP_ENDGAME_BONUS = 18;
 static const int BAD_BISHOP[2] = {-4,-6};
+static const int BISHOP_PAWN_PLACEMENT[2] = {-10,-18};
 
 static const int RB_ADJUST[9] = {
    0,
@@ -1180,6 +1181,7 @@ void Scoring::pieceScore(const Board &board,
     }
     const int bishopCount = board.getMaterial(side).bishopCount();
     if (bishopCount == 1) {
+       const int opp_pawns = oppPawnData.b_square_pawns + oppPawnData.w_square_pawns;
        if (TEST_MASK(Board::white_squares,board.bishop_bits[side])) {
           int whitePawns = ourPawnData.w_square_pawns;
           int blackPawns = ourPawnData.b_square_pawns;
@@ -1193,6 +1195,11 @@ void Scoring::pieceScore(const Board &board,
              cout << "bad bishop (" << ColorImage(side) << "): (" << 
                 scores.mid-tmp.mid << "," << scores.end-tmp.end << ")" << endl;
 #endif
+          }
+          if (opp_pawns) {
+             // penalize pawns on same color square as opposing single Bishop
+             //opp_scores.mid += oppPawnData.w_square_pawns*BISHOP_PAWN_PLACEMENT[Midgame]/opp_pawns;
+             opp_scores.end += oppPawnData.w_square_pawns*BISHOP_PAWN_PLACEMENT[Endgame]/opp_pawns;
           }
        }
        else {
@@ -1208,6 +1215,11 @@ void Scoring::pieceScore(const Board &board,
              cout << "bad bishop (" << ColorImage(side) << "): (" << 
                 scores.mid-tmp.mid << "," << scores.end-tmp.end << ")" << endl;
 #endif
+          }
+          if (opp_pawns) {
+             // penalize pawns on same color square as opposing single Bishop
+             //opp_scores.mid += oppPawnData.b_square_pawns*BISHOP_PAWN_PLACEMENT[Midgame]/opp_pawns;
+             opp_scores.end += oppPawnData.b_square_pawns*BISHOP_PAWN_PLACEMENT[Endgame]/opp_pawns;
           }
        }
     } else if (bishopCount >= 2) {
