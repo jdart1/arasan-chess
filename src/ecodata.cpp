@@ -551,6 +551,7 @@ const struct ECOData eco_codes[] =
 {"C83", 0xb8032db4fc33b39aULL ,""},
 {"C84", 0xd5ac67e00dbb7546ULL ,""},
 {"C84", 0xa4c02631e7a1fe3fULL ,"Ruy Lopez, Center Attack"},
+{"C84", 0x883cea91b790062dULL ,"Ruy Lopez"},
 {"C85", 0xd17a58c51a68a776ULL ,"Ruy Lopez, Delayed Exchange"},
 {"C86", 0xde135b494f01e655ULL ,"Ruy Lopez, Worrall Attack"},
 {"C87", 0xa289110e8073e2e6ULL ,"Ruy Lopez, Closed"},

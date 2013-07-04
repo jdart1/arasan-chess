@@ -595,6 +595,7 @@ C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8
 C83     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Be7
 C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 
 C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. d4 "Ruy Lopez, Center Attack"
+C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. d4 "Ruy Lopez"
 
 C85     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Bc6 dc6 "Ruy Lopez, Delayed Exchange"
 C86     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Qe2 "Ruy Lopez, Worrall Attack"
