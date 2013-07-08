@@ -30,12 +30,13 @@ extern fstream ucilog;
 #endif
 
 static const int ASPIRATION_WINDOW[] =
-    {(int)(0.75*PAWN_VALUE), 
-     (int)(1.5*PAWN_VALUE),
-      3*PAWN_VALUE, 
-      PAWN_VALUE*6,
+    {(int)(0.375*PAWN_VALUE), 
+     (int)(0.75*PAWN_VALUE),
+     (int)(1.5*PAWN_VALUE), 
+     (int)(3.0*PAWN_VALUE),
+     (int)(6.0*PAWN_VALUE),
       Constants::MATE};
-static const int ASPIRATION_WINDOW_STEPS = 5;
+static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define VERIFY_NULL_SEARCH
 #define STATIC_NULL_PRUNING
@@ -855,10 +856,12 @@ Move *excludes, int num_excludes)
                        showStatus(board, node->best, failLow, failHigh, 0);
                        ASSERT(fails+1<ASPIRATION_WINDOW_STEPS);
                        aspirationWindow = ASPIRATION_WINDOW[++fails];
-
                        if (aspirationWindow == Constants::MATE) {
                            hi_window = Constants::MATE-iteration_depth-1;
                        } else {
+                           if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+                               aspirationWindow += EASY_THRESHOLD;
+                           }
                            hi_window = Util::Min(Constants::MATE-iteration_depth-1,
                                              lo_window + aspirationWindow);
                        }
@@ -874,11 +877,23 @@ Move *excludes, int num_excludes)
                    faillows++;
 
                    // continue loop with lower bound
-                   ASSERT(fails+1 < ASPIRATION_WINDOW_STEPS);
-                   aspirationWindow = ASPIRATION_WINDOW[++fails];
+                   if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
+                      // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
+                      // search to continue, but set the lower bound to the bottom of the range.
+                      if (talkLevel == Trace) {
+                         cout << "# warning, too many aspiration window steps" << endl;
+                      }
+                      aspirationWindow = Constants::MATE;
+                   }
+                   else {
+                      aspirationWindow = ASPIRATION_WINDOW[++fails];
+                   }
                    if (aspirationWindow == Constants::MATE) {
                        lo_window = iteration_depth-Constants::MATE-1;
                    } else {
+                       if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+                           aspirationWindow += EASY_THRESHOLD;
+                       }
                        lo_window = Util::Max(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
                    }
                }
