@@ -1763,6 +1763,7 @@ int Search::calcExtensions(const Board &board,
    node->extensions = 0;
    int extend = 0;
    int pruneOk = 1;
+   int swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
       pruneOk = 0;
       if (IsForced(move)) {
@@ -1784,12 +1785,22 @@ int Search::calcExtensions(const Board &board,
    }
    if (in_check_after_move == InCheck) { // move is a checking move
       // extend if near qsearch or if check does not lose > 1 pawn
-      if (depth <= DEPTH_INCREMENT || see(board,move) >= -PAWN_VALUE) {
+      if (depth <= DEPTH_INCREMENT) {
           node->extensions |= CHECK;
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
           extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+      }
+      else {
+         if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
+         if (swap >= -PAWN_VALUE) {
+            node->extensions |= CHECK;
+#ifdef SEARCH_STATS
+            controller->stats->check_extensions++;
+#endif
+            extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+         }
       }
       pruneOk = 0;
    }
@@ -1803,9 +1814,18 @@ int Search::calcExtensions(const Board &board,
    else if (Capture(move) != Empty && Capture(move) != Pawn &&
             PieceValue(Capture(move)) == PieceValue(PieceMoved(move)) &&
             board.getMaterial(board.sideToMove()).pieceCount() <= 2) {
-      // recapture when there are few pieces
-      node->extensions |= CAPTURE;
-      extend += CAPTURE_EXTENSION;
+      // recapture of piece in endgame when there are few pieces left
+      // only extend safe captures
+      if (MVV_LVA(move) > 0) {
+         node->extensions |= CAPTURE;
+         extend += CAPTURE_EXTENSION;
+      } else {
+         if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
+         if (swap >=0) {
+            node->extensions |= CAPTURE;
+            extend += CAPTURE_EXTENSION;
+         }
+      }
    }
    if (extend || !pruneOk) {
       return Util::Min(extend,DEPTH_INCREMENT);
@@ -1828,9 +1848,12 @@ int Search::calcExtensions(const Board &board,
             } else if (Sliding(board[StartSquare(threat)])) {
                 Bitboard btwn;
                 board.between(StartSquare(threat),DestSquare(threat),btwn);
-                if (btwn.isSet(DestSquare(move)) && see(board,move) >= 0) {
-                    // interposition
-                    pruneOk = 0;
+                if (btwn.isSet(DestSquare(move))) {
+                   if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
+                   if (swap >= 0) { 
+                      // safe interposition
+                      pruneOk = 0;
+                   }
                 }
             }
             if (pruneOk) {
@@ -1886,7 +1909,7 @@ int Search::calcExtensions(const Board &board,
     // are pruned at low depths.
     if (!node->PV() && depth <= DEPTH_INCREMENT && 
          GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-         see(board,move) < 0) {
+        (swap == Scoring::INVALID_SCORE ? see(board,move) : swap) < 0) {
          return PRUNE;
     }
     // See if we do late move reduction. Moves in the history phase of move
