@@ -646,7 +646,7 @@ static int calc_extra_time(const ColorType side) {
       return 0;
    if ((inc == 0 && time_left > time_target*10) ||
       (inc > 0 && time_left > time_target*6))
-      return time_target;
+      return time_target*2;
    else
       return 0;
 }
