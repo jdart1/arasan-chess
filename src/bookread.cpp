@@ -514,5 +514,5 @@ void BookReader::fetch_page(int page)
 
 int BookReader::minWeight() const {
    int sel = options.book.selectivity;
-   return int(0.022F*pow((float)sel,1.5F));
+   return int(0.0275F*pow((float)sel,1.5F));
 }
