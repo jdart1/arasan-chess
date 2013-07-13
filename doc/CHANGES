@@ -8,6 +8,12 @@ Changes in Arasan 16.0:
  done by move score, then subsequently PV moves are moved to the front
  each iteration, keeping other moves in the same order.
  6) Check extensions are more limited now.
+ 7) Search time can be extended more in case of fail-low or resolving a
+    fail-high.
+ 8) Aspiration window changes. Fix bug that can cause array overflow in
+    aspiration window code.
+ 9) Somewhat experimental self-play code added for testing (not enabled
+    in release builds by default).
 
 Changes in Arasan 15.6 (May 2013):
  1) Bug fix in search (affects multi-core searching only).
