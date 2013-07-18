@@ -1,5 +1,5 @@
 				   
-  	      Arasan Programmer's Guide - version 15.4
+  	      Arasan Programmer's Guide - version 16.0
 
                           by Jon Dart
 
@@ -50,7 +50,7 @@ makeeco  - builds ecodata.cpp from from "eco" text file
 Following is a sketch of the Arasan source directory tree:
 
 arasan
-  15.4
+  16.0
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -399,6 +399,47 @@ file "test-summary" in the test subdirectory.
 Note that "run-tests" takes a long time to complete (over 8 hours)!
 
 "score-tests" requires that Perl be installed and be on the path.
+
+
+Selfplay feature
+
+A somewhat experimental selfplay feature has been added to version 16.0.
+
+If compiled with -DSELFPLAY, the Arasan engine can run a series of matches
+using internally two different instances of the search code. One instance
+will run with the global variable options.search.mod = 0 and one with this
+variable set to 1. Therefore it is necessary to modify the code so that the
+code you want to test uses this variable to select a "base" version (with
+the variable set to 0) and a "modified" version with the variable set to 1.
+
+To run a selfplay match, pass the "-s" switch on the command line. The -s
+switch takes two parameters. One is the location of an opening book in
+PGN format. Openings will be selected from this book sequentially
+with each side playing one game as White and one as Black for each
+opening line.
+
+The second parameter is the number of games to play.
+
+Time control is currently fixed and is very fast (game in 5 sec. +
+100 ms. increment/move). 
+
+An example command line:
+
+arasanx-64 -H 100M -s /home/jdart/chess/book/book.pgn 10000
+
+This will play 10,000 games from the specified opening book file. 
+
+Note: each search instance has an independent hash table, so the
+actual memory usage is double what the command line specifies - in
+this case, each search instance gets 100 MB hash, and the total
+memory usage is 200 MB (approximately).
+
+The games from a selfplay match are stored in the file "games.pgn" in
+the engine binary's directory. The modified version has player name
+"mod" in the games file. If this version scores better than the base
+version, then that is an indication that the change being tested is a
+good one (but you should use something like BayesELO to test for
+significance).
 
 
 Algorithms and data structures

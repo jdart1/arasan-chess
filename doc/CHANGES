@@ -1,19 +1,25 @@
 Changes in Arasan 16.0:
  1) Improvements to multi-core and multi-processor performance: limit
- global memory usage, do dynamic adjustment of split depth.
- 2) Change book format, book weights are 0..100 not 0..10 now. 
+    global memory usage, do dynamic adjustment of split depth.
+ 2) Change book format, book weights are 0..100 not 0..10 now. New
+    larger opening book is included with Arasan binaries.
  3) Book selectivity logic changed (again).
  4) Fix bug in 50-move draw detection.
  5) Move sorting no longer uses node counts; now an initial sort is
- done by move score, then subsequently PV moves are moved to the front
- each iteration, keeping other moves in the same order.
- 6) Check extensions are more limited now.
+    done by move score, then subsequently PV moves are moved to the front
+    each iteration, keeping other moves in the same order.
+ 6) Check extensions are more limited now. Overall limit on extensions
+    at high ply counts from root is removed.
  7) Search time can be extended more in case of fail-low or resolving a
     fail-high.
  8) Aspiration window changes. Fix bug that can cause array overflow in
     aspiration window code.
  9) Somewhat experimental self-play code added for testing (not enabled
     in release builds by default).
+ 10) Numerous adjustments to evaluation weights.
+ 11) Score pawnless KRB vs KR and KRN vs KR as draws.
+ 12) Bug fix: allow resignation when in fixed depth search and depth<=1.
+ 13) Fix bug in handling of fail_high_root flag.
 
 Changes in Arasan 15.6 (May 2013):
  1) Bug fix in search (affects multi-core searching only).
