@@ -158,18 +158,13 @@ profile-popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
 profile-popcnt: ARASANX := $(ARASANX)-popcnt
 profile-popcnt: profile
 
-sparc-solaris: CC=g++
-sparc-solaris: SSE=
-sparc-solaris: CFLAGS := $(CFLAGS)
-sparc-solaris: OPT=-O2
-sparc-solaris: LIBS := $(LIBS) -lrt
-sparc-solaris: all
+# Solaris target: note only GCC is supported
+sparc-solaris: 
+	@$(MAKE) CC=g++ OPT=-O2 SSE= LIBS='$(LIBS) -lrt' all
 
-arm-linux: CC=g++
-arm-linux: SSE=
-arm-linux: CFLAGS := $(CFLAGS)
-arm-linux: OPT=-O2 -finline-functions
-arm-linux: all
+# Arm target on Arm host with GCC
+arm-linux:
+	@$(MAKE) CC=g++ OPT='-O2 -finline-functions' SSE= all
  
 clean: dirs
 	rm -f $(BUILD)/*.o
