@@ -3482,34 +3482,34 @@ int CDECL main(int argc, char **argv) {
         searcher->registerPostFunction(post_output);
 
         while(!polling_terminated) {
-            if (inputSem.wait()) {
+           if (inputSem.wait()) {
 #ifdef UCI_LOG
-                ucilog << "wait interrupted" << endl << (flush);
+              cout << "wait interrupted" << endl << (flush);
 #endif
-                break;
-            }
-            while (!pending.empty()) {
-                Lock(input_lock);
-                string cmd (pending.front());
-                pending.pop_front();
+              break;
+           }
+           while (!pending.empty()) {
+              Lock(input_lock);
+              string cmd (pending.front());
+              pending.pop_front();
 #ifdef UCI_LOG
-                ucilog << "got cmd (main): " << cmd << endl;
+              cout << "got cmd (main): " << cmd << endl;
 #endif
-                if (doTrace) {
-                    cout << "# got cmd (main): "  << cmd << endl;
-                    cout << "# pending size = " << pending.size() << endl;
-                }
-                Unlock(input_lock);
+              if (doTrace) {
+                 cout << "# got cmd (main): "  << cmd << endl;
+                 cout << "# pending size = " << pending.size() << endl;
+              }
+              Unlock(input_lock);
 #ifdef UCI_LOG
-                ucilog << "calling do_command(main):" << cmd << (flush) << endl;
+              ucilog << "calling do_command(main):" << cmd << (flush) << endl;
 #endif
-                if (doTrace) cout << "# calling do_command(main):" << cmd << (flush) << endl;
-                if (!do_command(cmd,board)) {
-                    if (doTrace) cout << "#terminating .. " << endl;
-                    polling_terminated++;
-                    break;
-                }
-            }
+              if (doTrace) cout << "# calling do_command(main):" << cmd << (flush) << endl;
+              if (!do_command(cmd,board)) {
+                 if (doTrace) cout << "#terminating .. " << endl;
+                 polling_terminated++;
+                 break;
+              }
+           }
         }
         // handle termination.
         save_game();
