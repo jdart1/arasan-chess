@@ -1,4 +1,4 @@
-// Copyright 2005-2007, 2012 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2007, 2012, 2013 by Jon Dart. All Rights Reserved.
 #ifndef _THREAD_C_H
 #define _THREAD_C_H
 
@@ -24,10 +24,10 @@ class ThreadControl {
  private:
 #ifdef _WIN32
    HANDLE hEvent1;
-#elif defined(_MAC)
-   int sem;
 #else
-   sem_t sem;  // semaphore
+   pthread_mutex_t mutex;
+   pthread_cond_t cond;
+   unsigned state;
 #endif
 
 };
