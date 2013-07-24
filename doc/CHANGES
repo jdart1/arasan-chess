@@ -20,6 +20,11 @@ Changes in Arasan 16.0:
  11) Score pawnless KRB vs KR and KRN vs KR as draws.
  12) Bug fix: allow resignation when in fixed depth search and depth<=1.
  13) Fix bug in handling of fail_high_root flag.
+ 14) Convert to conditional variables for thread synchronizaton on Linux
+     + Mac (fixes Mac OS problem where semaphores may not be cleaned up
+     on exit).
+ 15) Fix stack size for threads on Mac OS (avoids bus error crash in deep
+     searches).
 
 Changes in Arasan 15.6 (May 2013):
  1) Bug fix in search (affects multi-core searching only).
