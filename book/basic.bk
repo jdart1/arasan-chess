@@ -14804,7 +14804,17 @@ c5 d5 O-O-O O-O b4 Na4 Qb5 a3 100 Nb8 axb4 cxb4 Qd4 0
 r
 O-O-O O-O 
 m
-c5 d5 b4
+; Garcia Roman-Savchenko, Palma de Mallorca 2008 (analysis, -=)
+c5 d5 b4 Na4 Qb5 a3 exd5 10 axb4 cxb4 Be3 Nc5 Nxc5 Bxc5 Qg4+ Rd7 Qg7 0 Rhd8 Bxc5
+Qxc5 Bh3 Kc7 Bxd7 Rxd7 Qg5 Kb6 Rfe1 d4 Qxc5+ Kxc5 Re5+
+r
+; Lounek-Tinture, ICCF 2010 (1/2-1/2)
+c5 d5 b4 Na4 Qb5 a3 exd5 10 axb4 cxb4 Be3 Nc5 Nxc5 Bxc5 Bxc5 100 Qxc5 Re1 Rhe8
+Qh5 Qd6 100 Qxf7 Rf8 Qe7 Rxf6 Qg7 Rg6
+r
+; Fagerstroem-Efremov, ICCF 2011 (1/2-1/2)
+c5 d5 b4 Na4 Qb5 a3 Nb8 80 axb4 cxb4 Qg4 Bxd5 Rfc1 Nc6 Bxd5 Rxd5 Rxc4
+Rxg5 Qd4 Kb8 Rxc6 Rxg3+ fxg3 Qxc6 Rd1 Qc7 b3 Kc8 Qe3 Kb8 Qd4
 r
 Bh6 0 Bxh6 Rxh6 
 m
