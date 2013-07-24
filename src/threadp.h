@@ -19,8 +19,9 @@ struct SplitPoint;
 class ThreadPool;
 
 struct ThreadInfo : public ThreadControl {
+ 
    enum State { Idle, Working, Terminating };
-   ThreadInfo(int i);
+   ThreadInfo(ThreadPool *,int i);
    virtual ~ThreadInfo();
    void start();
    volatile State state;
@@ -38,6 +39,7 @@ struct ThreadInfo : public ThreadControl {
 
 class ThreadPool {
     friend class SearchController;
+    friend class ThreadInfo;
 public:
 
    // create a thread pool with n threads
@@ -89,6 +91,10 @@ private:
    // mask of thread status - 0 if idle, 1 if active
    static uint64 activeMask;
    static uint64 availableMask;
+
+#ifndef _WIN32
+   pthread_attr_t stackSizeAttrib;
+#endif
 };
 
 #ifdef _THREAD_TRACE

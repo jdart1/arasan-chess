@@ -13,6 +13,10 @@ lock_t ThreadPool::poolLock;
 uint64 ThreadPool::activeMask = 0ULL;
 uint64 ThreadPool::availableMask = 0ULL;
 
+#ifndef _WIN32
+static const size_t THREAD_STACK_SIZE = 8*1024*1024;
+#endif
+
 #ifdef _THREAD_TRACE
 static lock_t io_lock;
 
@@ -158,7 +162,7 @@ void ThreadInfo::start() {
     signal();
 }
 
-ThreadInfo::ThreadInfo(int i) 
+ThreadInfo::ThreadInfo(ThreadPool *p, int i) 
  : state(Idle),
 #ifdef _WIN32
    thread_id(NULL),
@@ -166,6 +170,7 @@ ThreadInfo::ThreadInfo(int i)
 #else
    work(NULL),
 #endif
+   pool(p),
    index(i)
 {
 #ifdef _THREAD_TRACE
@@ -186,22 +191,37 @@ ThreadInfo::ThreadInfo(int i)
          thread_id = pthread_self();
       }
       else {
-        if (pthread_create(&thread_id, NULL, parkingLot, this)) {
-           perror("thread creation failed");
-        }
+	if (pthread_create(&thread_id, &(pool->stackSizeAttrib), parkingLot, this)) {
+            perror("thread creation failed");
+         }
       }
 #endif
 }
 
 ThreadPool::ThreadPool(SearchController *controller,int n) {
+#ifndef _WIN32
+   if (pthread_attr_init (&stackSizeAttrib)) {
+      perror("pthread_attr_init");
+      return;
+   }
+   size_t stackSize;
+   if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
+        perror("pthread_attr_getstacksize");
+        return;
+   }
+   if (stackSize < THREAD_STACK_SIZE) {
+      if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
+         perror("error setting thread stack size");
+      }
+   }
+#endif
 #ifdef _THREAD_TRACE
   LockInit(io_lock);
 #endif
    LockInit(poolLock);
    nThreads = n;
    for (int i = 0; i < n; i++) {
-      ThreadInfo *p = new ThreadInfo(i);
-      p->pool = this;
+      ThreadInfo *p = new ThreadInfo(this,i);
       if (i==0) {
          p->work = new RootSearch(controller,p);
       }
@@ -220,6 +240,11 @@ ThreadPool::~ThreadPool() {
     shutDown();
 #ifdef _THREAD_TRACE
   LockDestroy(io_lock);
+#endif
+#ifndef _WIN32
+  if (pthread_attr_destroy(&stackSizeAttrib)) {
+     perror("pthread_attr_destroy");
+  }
 #endif
 }
 
@@ -295,7 +320,7 @@ void ThreadPool::resize(unsigned n, SearchController *controller) {
         if (n>nThreads) {
             // growing
             while (n > nThreads) {
-                ThreadInfo *p = new ThreadInfo(nThreads);
+               ThreadInfo *p = new ThreadInfo(this,nThreads);
                 p->work = new Search(controller,p);
                 p->pool = this;
                 data[nThreads++] = p;
