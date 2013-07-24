@@ -39,7 +39,7 @@ struct ThreadInfo : public ThreadControl {
 
 class ThreadPool {
     friend class SearchController;
-    friend class ThreadInfo;
+    friend struct ThreadInfo;
 public:
 
    // create a thread pool with n threads
