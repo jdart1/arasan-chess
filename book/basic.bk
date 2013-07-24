@@ -6649,6 +6649,19 @@ r
 Rc8 Qe2 Be7
 -
 ; B92
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be2 e5 Nb3 Be7 O-O O-O Be3 Be6 
+m
+f4 0 exf4 90
+r
+a4 0
+r
+Qd3 50 Nbd7
+r
+Qd2 50 Nbd7
+r
+Nd5 50 Nbd7
+-
+; B92
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be2 e5 Nb3 Be7
 m
 ; Hiarcs 14 (=)
@@ -11639,10 +11652,19 @@ r
 dxc6 dxe5 Nf5 Qxd8+ Kxd8 Nc3
 m
 ; Ponomariov-Aleksandrov, Kramatorsk 2001 (=)
-Ke8 100 h3 10 a5 Ne2 30 Ne7 Ng3 a4 a3 c5 Re1 h6 Nh5 Bf5 c3
+Ke8 100 h3 a5 Ne2 30 Ne7 Ng3 a4 a3 c5 Re1 h6 Nh5 Bf5 c3
+r
+; Smeets-Iuldachev, Al Ain 2012 (1/2-1/2)
+Ke8 h3 h5 Rd1 Be7 Bf4 Be6
 r
 ; Peng Xiaomin-Almasi, FIDE-Wch k.o. 1997 (1/2-1/2)
 Ke8 100 Rd1 50 Ne7 Nd4 Ng6 Ne4 Be7 f4
+r
+; Kanovsky-Hermansson, Pardubice 2006 (=)
+Ke8 Rd1 Ne7 h3 Ng6 b3 Be7 Ne2 a5 50 a4
+r
+; Inarkiev-Jakovenko, Novosibirsk 2012 (1/2-1/2)
+Ke8 Rd1 Ne7 h3 Ng6 b3 Be7 Ne2 Bd7 70 Bb2
 r
 Bd7 h3 h6 b3 Kc8 Bb2 Ne7 Rad1 b6 Nd4 c5 Nde2 Nc6 0 Nd5
 r
