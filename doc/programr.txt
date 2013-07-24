@@ -175,16 +175,17 @@ standard algebraic notation, but in some cases "Informant-style"
 notation is used (e.g. knight takes bishop might be written Nb2, not
 Nxb2). The parser recognizes both forms. 
 
-A move may optionally be followed by a number from 0 to 9. The number,
-if given, is the "weight" assigned to the move. A weight of 0 means
-that the computer will never play the move, but will respond to it if
-it is played by its opponent. The higher the weight, the more often
-the computer will choose the move compared to the other alternatives
-in the book.  By default, if no weight is specified, a weight of 5 is
-assigned.
+A move may optionally be followed by a number from 0 to 100. The
+number, if given, is the "weight" assigned to the move. A weight of 0
+means that the computer will never play the move, but will respond to
+it if it is played by its opponent. The higher the weight, the more
+often the computer will choose the move compared to the other
+alternatives in the book.  By default, if no weight is specified,
+moves get a weight computed from the overall frequency and win/loss
+ratio for each move.
 
 If the same position occurs later in the book, any weight given for
-it is ignored. Only the first weight given is significant.
+it is ignored. Only the first explicit weight given is significant.
 
 Comments are allowed in a .bk file and begin with a semicolon (;).
 The comments are mostly used to identify the source of an opening
@@ -210,7 +211,7 @@ should be reset to the starting position.
 Arasan comes with a modest-sized book that was built from a
 combination of a small hand-tuned book (basic.bk) and a fairly large
 collection of high-quality human and computer games. There are over
-200,000 moves in the book. 
+400,000 moves in the book. 
 
 You can make your own book file using the makebook utility.
 Typical usage would be like this:
@@ -731,8 +732,9 @@ However, some moves are searched to a greater depth than normal. There
 are several cases in which this occurs:
 
 a. If the move checks the opponent, the search is extended (but only
-if it has a score from the static exchange evaluator (SEE) that is
-no worse that a loss of one pawn).
+if the depth is near the quiescence search, or if the move has a
+score from the static exchange evaluator (SEE) that is no worse
+that a loss of one pawn).
     
 b. If the side to move is in check, and there is only a single move
 available to escape check, the search is extended. If two evasion
@@ -741,7 +743,8 @@ moves are available, a lesser extension is done.
 c. Pushing a pawn to the 7th rank causes the search to be extended,
 on the theory that this pawn may soon promote.
 
-d. If the last piece is captured in the endgame, the search is extended.
+d. If a safe recapture is done and few pieces remain on the board,
+the search is extended.
 
 Note that since Arasan 5.0, most extensions can be a fraction of a full
 ply. Search "depth" is normally decremented by the constant
@@ -836,6 +839,20 @@ evaluated. Generally, "quiesce" will only generate and search capture
 moves that appear to gain material, promotions of pawns, and moves
 that escape from a check.
 
+If in check all moves are generated are searched. If not in check,
+a pre-selection pass is done in which captures that would apparently
+not bring the score for the side to move up to the value of "alpha"
+are dropped (they are not even generated). 
+
+The quiescence search for positions not in check also does forward
+pruning on moves, dropping any that appear to lose material based
+on the static exchange evaluator.
+
+Generally, forward pruning costs time (especially if the static
+exchange evaluator, "see", needs to be called), and involves some risk
+of dropping valuable capture moves. But, on the plus side, it
+significantly trims the size of the search tree.
+
 The quiescence search terminates when no more moves of an appropriate
 type are available. The search may also terminate early if the side to
 move is not in check, and the current evaluation of the position is
@@ -844,33 +861,20 @@ choose to not capture any further. If the current evaluation is good
 enough to cause cutoff, there is no need to try captures and
 promotions to get a better score.
 
-So-called forward pruning is applied in the quiescence search. We drop
-capture moves that do not appear good enough to bring the score up to
-the level of the curent best score (either the alpha value or the
-static score for the position, whichever is higher). The quiescence
-search also drops moves that appear to lose material, based on the
-see() function.
+In version 10.0 and later, for nodes where it is not in check, if no
+cutoff has occurred so far, the quiescence search will generate and
+search moves that give check, at least in the first couple of
+quiescence search plies. But checks that appear to lose material are
+pruned.
 
-Generally, forward pruning costs time (especially if the static
-exchange evaluator, "see", needs to be called), and involves some risk
-of dropping valuable capture moves. But, on the plus side, it
-significantly trims the size of the search tree.
-
-In version 10.0 and later, a "smart qsearch" is used. If the program
-is in check, it will not allow it to "stand pat," but will search the
-check evasion moves and pick the one with the best score. In addition,
-for nodes where it is not in check, it will generate and search moves
-that give check, at least in the first couple of quiescence search
-plies. But checks that appear to lose material are pruned.
-
-A small hash table is used in the quiescence search to store the
+A separate hash table is used in the quiescence search to store the
 positional score and, if the position was actually searched, the
 best move that was found. Since search is iterative, we will often
 visit the same node multiple times in fairly short order and this
 hash table ensures that a re-visit will be much faster than the
 initial visit, if the position is found in the hash table. This 
-table is allocated on a per-thread basis so there is no need to
-lock it. 
+table is global and is allocated to be a fixed fraction of the main
+hash table size.
 
 
 7. The hash table
