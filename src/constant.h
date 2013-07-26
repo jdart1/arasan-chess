@@ -14,7 +14,6 @@ enum {MATE_RANGE = 10000-256 };
 enum {MaxMoves = 200};		
 enum {MaxCPUs = 64};		
 enum {HISTORY_MAX =32768};
-enum {CMD_BUF_SIZE = 16384};
 
 };
 
