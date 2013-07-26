@@ -1265,7 +1265,6 @@ int Search::quiesce(int ply,int depth)
     if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
         controller->stats->num_nodes += nodeAccumulator;
         nodeAccumulator = 0;
-        --controller->time_check_counter;
 #ifdef SMP_STATS
 	--controller->sample_counter;
 #endif
