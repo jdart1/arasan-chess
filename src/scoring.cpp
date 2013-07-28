@@ -183,6 +183,8 @@ static const int PASSED_PAWN_BLOCK[2][8] =
 
 static const int OUTSIDE_PP[2] = {12, 25};
 
+static const int ENDGAME_PAWN_BONUS = 12;
+
 static const int Midgame = 0;
 static const int Endgame = 1;
 
@@ -708,6 +710,14 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
        // harder to win).
        if (ourmat.materialLevel() < 16 && ourmat.pawnCount() < 3) {
           score += PAWN_TRADE_SCORE[ourmat.pawnCount()];
+       }
+    }
+    // Also give bonus for having more pawns in endgame (assuming
+    // we have not traded pieces for pawns).
+    if (mdiff>=0 && pieceDiff>=0 && ourmat.materialLevel() <= ENDGAME_MATERIAL_THRESHOLD) {
+       const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
+       if (pawnDiff > 0) {
+          score += pawnDiff*ENDGAME_PAWN_BONUS*(128-Scores::MATERIAL_SCALE[ourmat.materialLevel()])/128;
        }
     }
 #ifdef EVAL_DEBUG
@@ -1334,7 +1344,16 @@ PawnHashEntry::PawnData &entr)
 #ifdef PAWN_DEBUG
             cout << " doubled";
 #endif
-            passed = 0; // if our own pawn is ahead of us, don't count as passed
+            if (passed) {
+#ifdef PAWN_DEBUG
+                cout << " passed";
+#endif
+                // Doubled but potentially passed pawn.
+                // Don't score as passed but give "potential passer" bonus
+                entr.midgame_score += POTENTIAL_PASSER[Midgame][rank];
+                entr.endgame_score += POTENTIAL_PASSER[Endgame][rank];
+                passed = 0;
+            }
             entr.midgame_score += DOUBLED_PAWNS[Midgame][file-1];
             entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1];
             if (doubles.bitCountOpt() > 1) {
