@@ -1262,11 +1262,15 @@ static void send_move(Board &board, Move &move, Statistics
             cout << (flush);
         }
     }
-    else {
-        cout << "# warning : move is null" << endl;
+    else if (uci) {
 #ifdef UCI_LOG
-        ucilog << "warning : move is null" << endl;
+        ucilog << "bestmove 0000" << endl;
 #endif
+        // must always send a "bestmove" command even if no move is available, to
+        // acknolwedge the previous "stop" command.
+        cout << "bestmove 0000" << endl;
+    } else {
+        if (doTrace) cout << "# warning : move is null" << endl;
     }
     if (ics && time_target >= 3000 && stats.display_value != Scoring::INVALID_SCORE) {
         if (computer)
