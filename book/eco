@@ -169,6 +169,7 @@ A86     1. d4 f5 2. c4 Nf6 3. g3 "Dutch Defense"
 A86     1. d4 f5 2. c4 Nf6 3. g3 g6 "Dutch Defense, Leningrad"
 A87     1. d4 f5 2. c4 Nf6 3. g3 g6 4. Bg2 Bg7 5. Nf3 "Dutch Defense, Leningrad"
 A87     1. d4 f5 2. c4 Nf6 3. g3 g6 4. Bg2 Bg7 5. Nf3 O-O 6. O-O d6 "Dutch Defense, Leningrad"
+A87	1. d4 f5 2. c4 Nf6 3. g3 g6 4. Bg2 Bg7 5. Nf3 O-O 6. O-O d6 7. Nc3 e6 "Dutch Defense, Leningrad"
 A88     1. d4 f5 2. c4 Nf6 3. g3 g6 4. Bg2 Bg7 5. Nf3 O-O 6. O-O d6 7. Nc3 c6 "Dutch Defense, Leningrad"
 A89     1. d4 f5 2. c4 Nf6 3. g3 g6 4. Bg2 Bg7 5. Nf3 O-O 6. O-O d6 7. Nc3 Nc6 "Dutch Defense, Leningrad"
 

@@ -160,6 +160,7 @@ const struct ECOData eco_codes[] =
 {"A86", 0xda35da7d0f7704a6ULL ,"Dutch Defense, Leningrad"},
 {"A87", 0xfa19b41b6d5f9651ULL ,"Dutch Defense, Leningrad"},
 {"A87", 0xa9c72270f40ffec6ULL ,"Dutch Defense, Leningrad"},
+{"A87", 0xe5506e2d76b46750ULL ,"Dutch Defense, Leningrad"},
 {"A88", 0xd7f1661078e53f80ULL ,"Dutch Defense, Leningrad"},
 {"A89", 0xa920686ea77c5912ULL ,"Dutch Defense, Leningrad"},
 {"A90", 0xe42bfa9c6d31cc55ULL ,"Dutch Defense"},
