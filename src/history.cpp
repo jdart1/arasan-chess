@@ -36,7 +36,7 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
                   }
                }
 	    }
-            h.order += depth*depth/4;
+            h.order += (4*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT);
             if (h.order > Constants::HISTORY_MAX) {
                for (int i = 0; i < 16; i++) {
                   for (int j = 0; j < 64; j++) {

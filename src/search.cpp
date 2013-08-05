@@ -2221,7 +2221,7 @@ int Search::search()
 #ifdef SEARCH_STATS
                 controller->stats->num_razored++;
 #endif
-                goto hash_insert;
+                return v;
             }
         }
     }
