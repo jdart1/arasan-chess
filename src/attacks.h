@@ -24,8 +24,10 @@ class Attacks
      static const CACHE_ALIGN Bitboard file_mask[8];
      static const CACHE_ALIGN Bitboard rank_mask[8];
      static CACHE_ALIGN Bitboard rank7mask[2];
+     static const CACHE_ALIGN Bitboard rank_file_mask[64];
      static const CACHE_ALIGN Bitboard file_mask_down[64],file_mask_up[64];
      static const CACHE_ALIGN Bitboard rank_mask_right[64],rank_mask_left[64];
+     static const CACHE_ALIGN Bitboard diag_mask[64];
      static const CACHE_ALIGN Bitboard diag_a1_lower_mask[64];
      static const CACHE_ALIGN Bitboard diag_a1_upper_mask[64];
      static const CACHE_ALIGN Bitboard diag_a8_lower_mask[64];

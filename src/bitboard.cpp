@@ -115,7 +115,7 @@ void Bitboard::cleanup()
                                    
 ostream & operator << (ostream &o, const Bitboard &b)
 {
-   o << (hex) << b.hivalue() << b.lovalue() << (dec);
+   o << (hex) << b.data << (dec);
    return o;
 }
 
