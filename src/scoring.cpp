@@ -1015,14 +1015,12 @@ void Scoring::pieceScore(const Board &board,
                 //scores.end += BishopScores[scoreSq]/2;
                 const Bitboard battacks(board.bishopAttacks(sq));
                 if (!endgame) {
-                   if (battacks & board.queen_bits[side]) {
+                   if (battacks & nearKing) {
+                         attack_count += ATTACK_FACTOR[Bishop];
+                   }
+                   else if (battacks & board.queen_bits[side]) {
                       // possible stacked attackers
                       if (board.bishopAttacks(sq,side) & nearKing) {
-                         attack_count += ATTACK_FACTOR[Bishop];
-                      }
-                   }
-                   else {
-                      if (battacks & nearKing) {
                          attack_count += ATTACK_FACTOR[Bishop];
                       }
                    }
@@ -1033,14 +1031,20 @@ void Scoring::pieceScore(const Board &board,
                                          oppPawnData);
                 }
 
-                Bitboard bpins(battacks &
-                            (board.knight_bits[oside] | board.rook_bits[oside]));
-                Square pinned;
-                while (bpins.iterate(pinned)) {
-                   if (board.isPinned(oside,sq,pinned,okp)) {
-                       pin_count++;
-                       break;
-                    }
+                if (Attacks::diag_mask[sq].isSet(okp)) {
+
+                   // might be a pin
+                   Bitboard kr(board.knight_bits[oside] | board.rook_bits[oside]);
+                   if (battacks & kr) {
+                      Bitboard btwn;
+                      board.between(sq,okp,btwn);
+                      Bitboard pin(btwn & kr);
+                      if (pin.bitCountOpt() == 1) {
+                         if ((btwn & board.allOccupied) == pin) {
+                            pin_count++;
+                         }
+                      }
+                   }
                 }
                 const int mobl = BISHOP_MOBILITY[
                   Bitboard(battacks & ~board.allOccupied
@@ -1087,13 +1091,17 @@ void Scoring::pieceScore(const Board &board,
                       }
                    }
                 }
-                Bitboard rpins(rattacks &
-                           (board.bishop_bits[oside] | board.knight_bits[oside]));
-                Square pinned;
-                while (rpins.iterate(pinned)) {
-                   if (board.isPinned(oside,sq,pinned,okp)) {
-                      pin_count++;
-                      break;
+                if (Attacks::rank_file_mask[sq].isSet(okp)) {
+                   Bitboard btwn;
+                   Bitboard kb(board.knight_bits[oside] | board.bishop_bits[oside]);
+                   if (rattacks & kb) {
+                      board.between(sq,okp,btwn);
+                      Bitboard pin(btwn & kb);
+                      if (pin.bitCountOpt() == 1) {
+                         if ((btwn & board.allOccupied) == pin) {
+                            pin_count++;
+                         }
+                      }
                    }
                 }
                 break;
@@ -1111,14 +1119,19 @@ void Scoring::pieceScore(const Board &board,
                      kattacks = board.bishopAttacks(sq,side) & nearKing;
                    }
                 }
-                Bitboard qpins(battacks &
-                            (board.knight_bits[oside] | board.rook_bits[oside]));
-                Square pinned;
-                while (qpins.iterate(pinned)) {
-                    if (board.isPinned(oside,sq,pinned,okp)) {
-                        pin_count++;
-                        break;
-                    }
+                if (Attacks::diag_mask[sq].isSet(okp)) {
+                   // might be a pin
+                   Bitboard kr(board.knight_bits[oside] | board.rook_bits[oside]);
+                   if (battacks & kr) {
+                      Bitboard btwn;
+                      board.between(sq,okp,btwn);
+                      Bitboard pin(btwn & kr);
+                      if (pin.bitCountOpt() == 1) {
+                         if ((btwn & board.allOccupied) == pin) {
+                            pin_count++;
+                         }
+                      }
+                   }
                 }
                 Bitboard rattacks = board.rookAttacks(sq);
                 qmobility |= rattacks;
@@ -1168,11 +1181,17 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
                 cout << "queen mobility=" << QUEEN_MOBILITY*(Util::Min(14,qmobl)-7) << endl;
 #endif
-                qpins = (rattacks & (board.knight_bits[oside] | board.bishop_bits[oside]));
-                while (qpins.iterate(pinned)) {
-                   if (board.isPinned(oside,sq,pinned,okp)) {
-                       pin_count++;
-                       break;
+                if (Attacks::rank_file_mask[sq].isSet(okp)) {
+                   Bitboard kb(board.knight_bits[oside] | board.bishop_bits[oside]);
+                   if (rattacks & kb) {
+                      Bitboard btwn;
+                      board.between(sq,okp,btwn);
+                      Bitboard pin(btwn & (board.knight_bits[oside] | board.bishop_bits[oside]));
+                      if (pin.bitCountOpt() == 1) {
+                         if ((btwn & board.allOccupied) == pin) {
+                            pin_count++;
+                         }
+                      }
                    }
                 }
             }
