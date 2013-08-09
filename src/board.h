@@ -286,17 +286,50 @@ public:
    // check)
    int wasLegal(Move lastMove) const;
 
-   int isPinned(ColorType kingColor, Piece p, Square source,Square dest) const;
+   // Return true if moving a piece from "source" to "dest" would be
+   // prohibited due to a pin
+   int isPinned(ColorType kingColor, Piece p, Square source, Square dest) const;
 
    int isPinned(ColorType kingColor, Move m) const {
      return isPinned(kingColor,contents[StartSquare(m)],StartSquare(m),DestSquare(m));
    }
 
-   FORCEINLINE int isPinned(ColorType kingColor, Square source, Square pinned,
-		 Square kingSquare) const {
-      int dir = Attacks::directions[source][pinned];
-      if (dir == 0 || dir != Attacks::directions[pinned][kingSquare]) return 0;
-      return clear(pinned,kingSquare);
+   // True if the Rook or Queen on "sq" pins a Knight or Bishop to the opposing
+   // king. okp is the opposining king square, oside is the opposing color.
+   int pinOnRankOrFile(Square sq, Square okp, ColorType oside) const {
+     if (Attacks::rank_mask[Rank<White>(sq)-1].isSet(okp)) {
+        Bitboard kb(knight_bits[oside] | bishop_bits[oside]);
+        if (Attacks::rank_mask[Rank<White>(sq)-1] & kb) {
+          return pinCheck(sq,okp,kb);
+        }
+      }
+     else if (Attacks::file_mask[File(sq)-1].isSet(okp)) {
+        Bitboard kb(knight_bits[oside] | bishop_bits[oside]);
+        if (Attacks::file_mask[File(sq)-1] & kb) {
+          return pinCheck(sq,okp,kb);
+        }
+      }
+      return 0;
+   }
+
+   // True if the Bishop or Queen on "sq" pins a Knight or Rook to the opposing
+   // king. okp is the opposining king square, oside is the opposing color.
+   int pinOnDiag(Square sq, Square okp, ColorType oside) const {
+      if (Attacks::diag_a1_mask[sq].isSet(okp)) {
+         // might be a pin
+         Bitboard kr(knight_bits[oside] | rook_bits[oside]);
+         if (Attacks::diag_a1_mask[sq] & kr) {
+           return pinCheck(sq,okp,kr);
+         }
+      }
+      else if (Attacks::diag_a8_mask[sq].isSet(okp)) {
+         // might be a pin
+         Bitboard kr(knight_bits[oside] | rook_bits[oside]);
+         if (Attacks::diag_a8_mask[sq] & kr) {
+           return pinCheck(sq,okp,kr);
+         }
+      }
+      return 0;
    }
 
    // Get repetition count, stop if "target" count reached
@@ -364,6 +397,17 @@ private:
      occupied[color].clear(sq);
    } 
            
+   int pinCheck(Square pinner, Square okp, const Bitboard &mask) const {
+     Bitboard btwn;
+     between(pinner,okp,btwn);
+     Bitboard pin(btwn & mask);
+     if (pin.bitCountOpt() == 1) {
+       if ((btwn & allOccupied) == pin) {
+         return 1;
+       }
+     }
+     return 0;
+   }
 };
 
 #endif
