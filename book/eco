@@ -196,6 +196,8 @@ A99     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d6 7. Nc3 Qe8 8
 B00     1. e4 "King Pawn"
 B00     1. e4 Nc6 "Nimzowitsch Defense"
 B01     1. e4 d5 "Scandinavian Defense"
+B01     1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 "Scandinavian Defense"
+B01     1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. d4 Nf6 5. Nf3 "Scandinavian Defense"
 B02     1. e4 Nf6 "Alekhine's Defense"
 B03     1. e4 Nf6 2. e5 Nd5 3. c4 Nb6 4. d4 d6 5. f4 "Alekhine's Defense, Four Pawns' Attack"
 B02     1. e4 Nf6 2. e5 Nd5 3. c4 Nb6 4. c5 "Alekhine's Defense, Two Pawns' Attack"

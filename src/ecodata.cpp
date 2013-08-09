@@ -184,6 +184,8 @@ const struct ECOData eco_codes[] =
 {"B00", 0xb5cdb3c841f44417ULL ,"King Pawn"},
 {"B00", 0xb648be4652c19a8cULL ,"Nimzowitsch Defense"},
 {"B01", 0x99eaadeb969d3aa2ULL ,"Scandinavian Defense"},
+{"B01", 0xf049977a9d7dcef0ULL ,"Scandinavian Defense"},
+{"B01", 0xf93ec63cbbef4b91ULL ,"Scandinavian Defense"},
 {"B02", 0xbc7ea3011863b4baULL ,"Alekhine's Defense"},
 {"B03", 0xba8efde26d775137ULL ,"Alekhine's Defense, Four Pawns' Attack"},
 {"B02", 0x8a5b96e320570c2bULL ,"Alekhine's Defense, Two Pawns' Attack"},
