@@ -1071,8 +1071,8 @@ int depth, Move exclude [], int num_exclude)
 
     int try_score = alpha;
     //
-    // re-sort the ply 0 moves.
-    if (controller->getIterationDepth() > 1) mg.reorder(node->best,controller->getIterationDepth());
+    // Re-sort the ply 0 moves and re-init move generator.
+    mg.reorder(node->best,controller->getIterationDepth());
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude,num_exclude);
 
