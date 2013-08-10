@@ -1,4 +1,13 @@
-Changes in Arasan 16.0:
+Changes in Arasan 16.1:
+ 1) Fix UCI protocol bug that could cause engine to hang in cases where
+    ponder is on and game is terminating due to a draw by repetition
+    or rule.
+ 2) Some speed optimizations for pin detection.
+ 3) Bug fix in razoring code (return razor value from search).
+ 4) Fix time & nps display for UCI (was off by factor of 10)
+ 5) Some pawn scoring changes.
+
+Changes in Arasan 16.0 (July 2013):
  1) Improvements to multi-core and multi-processor performance: limit
     global memory usage, do dynamic adjustment of split depth.
  2) Change book format, book weights are 0..100 not 0..10 now. New
