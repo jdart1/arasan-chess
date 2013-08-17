@@ -1761,10 +1761,10 @@ int Search::calcExtensions(const Board &board,
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
-   int pruneOk = 1;
+   int pruneOk = 1, reduceOk = 1;
    int swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
-      pruneOk = 0;
+      pruneOk = reduceOk = 0;
       if (IsForced(move)) {
          // one single reply to check
          extend += FORCED_EXTENSION;
@@ -1801,7 +1801,6 @@ int Search::calcExtensions(const Board &board,
             extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
          }
       }
-      pruneOk = 0;
    }
    if (passedPawnPush(board,move)) {
       node->extensions |= PAWN_PUSH;
@@ -1826,11 +1825,11 @@ int Search::calcExtensions(const Board &board,
          }
       }
    }
-   if (extend || !pruneOk) {
+   if (extend) {
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
-    pruneOk &= moveIndex &&
+   pruneOk &= moveIndex &&
        Capture(move) == Empty &&
        TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5) &&
@@ -1913,7 +1912,8 @@ int Search::calcExtensions(const Board &board,
     }
     // See if we do late move reduction. Moves in the history phase of move
     // generation or later can be searched with reduced depth.
-    if (depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() && GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
+    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
+        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
         !passedPawnMove(board,move,6)) {
         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
         node->extensions |= LMR;
