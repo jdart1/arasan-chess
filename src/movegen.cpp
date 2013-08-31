@@ -1032,7 +1032,7 @@ int MoveGenerator::generateChecks(Move * moves)
             Bitboard dests(board.bishopAttacks(loc) & ~board.allOccupied);
             Bitboard dests2(board.bishopAttacks(kp) & ~board.allOccupied);
             dests &= dests2;
-                    Square dest;
+            Square dest;
             while (dests.iterate(dest)) {
                 moves[numMoves++] =
                    CreateMove(loc,dest,Bishop);
