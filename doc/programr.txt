@@ -1,5 +1,5 @@
 				   
-  	      Arasan Programmer's Guide - version 16.0
+  	      Arasan Programmer's Guide - version 16.1
 
                           by Jon Dart
 
@@ -17,13 +17,12 @@ UCI-compatible interface programs such as Arena and Shredder. In
 addition, a Windows-only user interface program for Arasan is
 available; it communicates with the chess engine using a pipe.
 
-Arasan is written in C++. Versions before 6.0 ran only on
-Windows. Versions 6.0 and higher support both Windows (32- or 64-bit
-versions) and Linux, but the Linux version has no integrated UI and
-must be used with xboard (the Linux equivalent of Winboard), if you
-want to be able to view the chessboard.
-
-You can get Winboard or xboard from http://www.tim-mann.org/chess.html
+Arasan is written in C++. Versions before 6.0 ran only on Windows. In
+version 6.0 and higher, the Arasan chess engine supports both Windows
+(32- or 64-bit versions) and other platforms such as Linux, but the
+Arasan GUI is still Windows-only. If you are not on Windows, you need
+to use a program such as xboard to view the chessboard and play games
+with Arasan. You can get xboard from http://www.tim-mann.org/chess.html
 and many other locations.
 
 Arasan has mostly been tested on Intel & AMD processors but the code
@@ -50,7 +49,7 @@ makeeco  - builds ecodata.cpp from from "eco" text file
 Following is a sketch of the Arasan source directory tree:
 
 arasan
-  16.0
+  16.1
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
