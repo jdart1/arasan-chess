@@ -24,6 +24,9 @@ extern "C"
 {
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 }
 #include "book.h"
 #ifdef GAVIOTA_TBS
@@ -245,14 +248,26 @@ static DWORD WINAPI inputPoll(void *x) {
    if (doTrace) cout << "# starting poll thread" << endl;
    char buf[1024];
    while (!polling_terminated) {
+      BOOL bSuccess;
       DWORD dwRead;
-      BOOL bSuccess = ReadFile(hStdin, buf, 1024, &dwRead, NULL);
-      if (! bSuccess || dwRead == 0) {
-         if (doTrace) cout << "# read error from input pipe" << endl;
+      if (_isatty(_fileno(stdin))) {
+         // we are reading direct from the console, enable echo & control-char
+         // processing
+         if (!SetConsoleMode(hStdin, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT |
+                         ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT)) {
+            cerr << "SetConsoleMode failed" << endl;
+         }
+         bSuccess = ReadConsole(hStdin, buf, 1024, &dwRead, NULL);
+      }
+      else {
+         bSuccess = ReadFile(hStdin, buf, 1024, &dwRead, NULL);
+         if (! bSuccess || dwRead == 0) {
+            if (doTrace) cout << "# read error from input pipe" << endl;
 #ifdef UCI_LOG
-         ucilog << "read error from input pipe" << endl << (flush);
+            ucilog << "read error from input pipe" << endl << (flush);
 #endif
-         break;
+            break;
+	 }
       }
       processCmdChars(buf,(int)dwRead);
    }
@@ -537,7 +552,7 @@ static void do_help() {
    cout << "time <int>:      set computer time remaining (in centiseconds)" << endl;
    cout << "undo:            back up a half move" << endl;
    cout << "white:           set computer to play White" << endl;
-   cout << "test <file> <seconds> <early exit> <# moves> <-v> <outfile>: "<< endl;
+   cout << "test <file> <-t seconds> <-x # moves> <-v> <-o outfile>: "<< endl;
    cout << "   - run an EPD testsuite" << endl;
    cout << "eval <file>:     evaluate a FEN position." << endl;
 }
@@ -2221,6 +2236,7 @@ static void do_test(string test_file)
          cout << avg << "time to solution  : " << (float)(time_to_find_total)/(1000.0*total_correct) << " sec." << endl;
    }
    options.book.book_enabled = tmp;
+   testing = 0;
 }
 
 static void loadgame(Board &board,ifstream &file) {
@@ -2662,11 +2678,20 @@ static bool do_command(const string &cmd, Board &board) {
                             it++;
                         }
                     }
-                    else {
-                        out_file = new ofstream(it->c_str(), ios::out | ios::trunc);
-                        // redirect stdout
-                        cout.rdbuf(out_file->rdbuf());
-                        break;
+                    else if (*it == "-o") {
+                        if (++it == eos) {
+                            cerr << "Expected filename after -o" << endl;
+                        } else {
+                           out_file = new ofstream((*it).c_str(), ios::out | ios::trunc);
+                           // redirect stdout
+                           cout.rdbuf(out_file->rdbuf());
+                           break;
+                        }
+                    } else if ((*it)[0] == '-') {
+                        cerr << "unexpected switch: " << *it << endl;
+                        it++;
+                    } else {
+                        break;   
                     }
                 }
                 do_command("new",board);
@@ -3475,14 +3500,13 @@ int CDECL main(int argc, char **argv) {
 
     searcher = new SearchController();
 
-    if (testing) {
-        do_test(test_file);
 #ifdef SELFPLAY 
-    } else if (selfplay) {
+    if (selfplay) {
         do_selfplay();
-#endif
     }
-    else {
+    else
+#endif
+    {
         searcher->registerPostFunction(post_output);
 
         while(!polling_terminated) {
