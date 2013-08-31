@@ -11,6 +11,8 @@ Changes in Arasan 16.1:
  8) Allow LMR for checking moves and recaptures if they do not
     meet the extension conditions (still disable LMR if side
     to move is in check).
+ 9) Fix console input handling in Windows.
+ 10) Add -o (output file) option to "test" command.
 
 Changes in Arasan 16.0 (July 2013):
  1) Improvements to multi-core and multi-processor performance: limit
