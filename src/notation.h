@@ -15,7 +15,7 @@ class Notation
 	// and from standard algebraic notation.
 	
 public:
-        // Create a Move from a SAN string
+        // Create a Move from a long algebraic notation string
         static Move moveValue( const Board &board, const string &str, ColorType color );
 
 	// Writes a human-readable (SAN) string image of a move to "result".
