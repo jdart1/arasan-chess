@@ -338,6 +338,7 @@ filename:
 -t <seconds> searches for the specified number of seconds per position
 -x <count> can terminate the search early if the correct move is found
  and held for "count" plies.
+-o <file> stores test output in "file".
 
 If the search module is compiled with -D_TRACE, arasanx will print
 out copious information about the search process when it is run. See
