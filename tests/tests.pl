@@ -22,8 +22,8 @@ if (@ARGV) {
      if (/^\"/)
      {
         if ($tests) {
-           split;
-           $id = @_[0];
+           my @vals = split;
+           $id = @vals[0];
            while (($key,$value) = each(%names)) {
              if ($id =~ /$key/) {
    		$test_name = $value;
@@ -34,9 +34,9 @@ if (@ARGV) {
        }
      }
      elsif (m/correct :/) {
-	split;
+	my @vals = split;
         $tests = 1;
-	print $test_name . "\t" . @_[2];
+	print $test_name . "\t" . @vals[2];
 	if ($test_name eq "bt2630") {
          print "\trating = " . (2630 - ((900*(30-$num_correct)) + $total_time)/30);
 	}
