@@ -303,6 +303,7 @@ B44     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 "Sicilian Defense, Taimanov Vari
 B45     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 "Sicilian Defense"
 B45     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 Nf6 "Sicilian Defense, Four Knights Variation"
 B46     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 a6 "Sicilian Defense, Taimanov Variation"
+B46     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 a6 6. g3 "Sicilian Defense, Taimanov Variation"
 B47     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 Qc7 "Sicilian Defense, Taimanov Variation"
 B47     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 Qc7 6. Be2 a6 "Sicilian Defense, Taimanov Variation"
 B48     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 Qc7 6. Be3 "Sicilian Defense, Taimanov Variation"
@@ -402,6 +403,7 @@ B97     1. e4 c5 2. Nf3 d6 3. d4 cd4 4. Nd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Qb6 8.
 B98     1. e4 c5 2. Nf3 d6 3. d4 cd4 4. Nd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 "Sicilian Defense, Najdorf Variation"
 B98     1. e4 c5 2. Nf3 d6 3. d4 cd4 4. Nd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 8. Qf3 "Sicilian Defense, Najdorf Variation"
 B99     1. e4 c5 2. Nf3 d6 3. d4 cd4 4. Nd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 8. Qf3 Qc7 9. O-O-O Nbd7 "Sicilian Defense, Najdorf Variation"
+B99     1. e4 c5 2. Nf3 d6 3. d4 cd4 4. Nd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 8. Qf3 Qc7 9. O-O-O Nbd7 10. Qg3 h6 11. Bh4 "Sicilian Defense, Najdorf Variation"
 
 C00     1. e4 e6 "French Defense"
 C00     1. e4 e6 2. d3 "French, King's Indian Attack"
