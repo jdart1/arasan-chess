@@ -6,6 +6,11 @@ Changes in Arasan 16.1:
  3) Bug fix in razoring code (return razor value from search).
  4) Fix time & nps display for UCI (was off by factor of 10)
  5) Some pawn scoring changes.
+ 6) Bug fix: correct some of the constants in Attacks class. 
+ 7) Fix problem in UCI multi-PV analysis mode.
+ 8) Allow LMR for checking moves and recaptures if they do not
+    meet the extension conditions (still disable LMR if side
+    to move is in check).
 
 Changes in Arasan 16.0 (July 2013):
  1) Improvements to multi-core and multi-processor performance: limit
