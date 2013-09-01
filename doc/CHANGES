@@ -1,5 +1,4 @@
 Changes in Arasan 16.1:
-Changes in Arasan 16.1:
  1) Fix UCI protocol bug that could cause engine to hang in cases where
     ponder is on and game is terminating due to a draw by repetition
     or rule.
