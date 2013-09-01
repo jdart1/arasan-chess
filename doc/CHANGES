@@ -1,4 +1,5 @@
 Changes in Arasan 16.1:
+Changes in Arasan 16.1:
  1) Fix UCI protocol bug that could cause engine to hang in cases where
     ponder is on and game is terminating due to a draw by repetition
     or rule.
@@ -12,7 +13,8 @@ Changes in Arasan 16.1:
     meet the extension conditions (still disable LMR if side
     to move is in check).
  9) Fix console input handling in Windows.
- 10) Add -o (output file) option to "test" command.
+ 10) Add -o (output file) option to engine "test" command.
+ 11) GUI uses .chm help file format, for compatibility with Windows Vista, 7, 8.
 
 Changes in Arasan 16.0 (July 2013):
  1) Improvements to multi-core and multi-processor performance: limit
