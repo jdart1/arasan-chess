@@ -3798,7 +3798,13 @@ e4 c5 c3 Nf6 e5 Nd5 d4 Nc6 Nf3 cxd4 cxd4 d6 Bc4 dxe5 Nxe5 e6 O-O Be7 Nf3 O-O
 Nc3 Nxc3 bxc3 b6 Re1 Bb7 Bd3 Rc8
 -
 ; B22
-e4 c5 c3 Nf6 e5 Nd5 d4 cxd4 Nf3 Nc6 Bc4 Nb6 Bb3 d5 exd6 Qxd6 Na3 10 dxc3
+e4 c5 c3 Nf6 e5 Nd5 d4 cxd4 Nf3 Nc6 Bc4 Nb6 Bb3 d5 exd6 Qxd6 
+m
+O-O Be6 Na3 25 dxc3 Qe2 Bxb3 Nb5 Qb8 axb3 e6 bxc3 Be7
+r
+O-O Be6 Na3 25 dxc3 Qe2 Bxb3 Nb5 Qb8 axb3 e5 75
+r
+Na3 10 dxc3
 m
 ; Biro-Motylev, Predeal 2007 (0-1)
 Qxd6 exd6 Nb5 Rb8 bxc3 a6 Be3 axb5 Bxb6 Be6 O-O-O
@@ -16132,7 +16138,12 @@ r
 Rd8
 -
 ; D85
-d4 Nf6 c4 g6 Nc3 d5 cxd5 Nxd5 e4 Nxc3 bxc3 Bg7 Nf3 c5 Be3 Qa5 
+d4 Nf6 c4 g6 Nc3 d5 cxd5 Nxd5 e4 Nxc3 bxc3 Bg7 Nf3 c5 Be3 
+m
+; TwistedLogic-Arasan, FICS 2013 (1-0)
+O-O 0 Be2 cxd4 cxd4 Qa5+ Nd2 80 Rd8 O-O Nc6 d5 100
+r
+Qa5 
 m
 Nd2 0 Nd7 100
 r
@@ -16167,8 +16178,7 @@ r
 ; Vera Gonzalez-Garcia, Bayamo 1989 (1/2-1/2)
 Bb5+ Nc6 O-O O-O 70 Be3 Bg4 100
 r
-Be3
-Bg4 Rc1 Qa5 Qd2 Nc6 70 d5
+Be3 Bg4 Rc1 Qa5 Qd2 Nc6 70 d5
 m
 Rd8
 r
