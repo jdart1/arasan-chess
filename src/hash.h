@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011, 2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011, 2012, 2013 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -10,7 +10,7 @@ extern const hash_t rep_codes[3];
 
 class HashEntry;
 
-class PositionInfo
+class HashEntry
 {
    public:
 
@@ -30,23 +30,30 @@ class PositionInfo
       // a hash match.
       enum ValueType { Valid, UpperBound, LowerBound, Invalid, NoHit };
 
-      PositionInfo() {
+      HashEntry() {
       }
 
-      PositionInfo(int value, int depth,
-         ValueType type, int age, int flags = 0,
-      Move bestMove = NullMove) {
+      HashEntry( hash_t hash, const int depth,
+         int age,
+         ValueType type,
+         int value,
+         int score, 
+         byte flags = 0,
+         Move bestMove = NullMove) {
          contents.value = value;
-         contents.depth = depth;
+         ASSERT(depth+2<=256);
+         contents.depth = depth+2; // make non-negative
          contents.age = age;
          contents.flags = type | flags;
          contents.start = StartSquare(bestMove);
          contents.dest = DestSquare(bestMove);
          contents.promotion = PromoteTo(bestMove);
+         this->score = score;
+         hc = val ^ hash ^ (uint64)score;
       }
 
       int depth() const {
-         return contents.depth;
+         return (int)contents.depth - 2;
       }
 
       int value() const {
@@ -94,6 +101,10 @@ class PositionInfo
          return (int)((contents.flags & TB_MASK) != 0);
       }
 
+      int staticValue() const {
+         return (int)score; 
+      }
+
       byte flags() const {
           return contents.flags;
       }
@@ -121,6 +132,18 @@ class PositionInfo
               value() < beta;
       }
 
+      hash_t hashCode() const {
+         return hc;
+      }
+
+      hash_t getEffectiveHash() const {
+         return val ^ hc ^ (uint64)score;
+      }
+
+      void setEffectiveHash(hash_t hash) {
+         hc = hash ^ val ^ (uint64)score;
+      }
+
    protected:
       union
       {
@@ -143,41 +166,9 @@ class PositionInfo
 #ifndef _MSC_VER
       __attribute__((packed))
 #endif
-      ;
-
-};
-
-class HashEntry : public PositionInfo
-{
-
-   // this class represents one entry in the hash table.
-   public:
-
-      HashEntry( hash_t hash, const int depth,
-         int age,
-         PositionInfo::ValueType type,
-         int value,
-         byte flags,
-         Move best_move)
-         : PositionInfo(value, depth, type, age, flags,
-                        best_move) {
-         hc = val ^ hash;
-      }
-
-      hash_t hashCode() const {
-         return hc;
-      }
-
-      hash_t getEffectiveHash() const {
-         return val ^ hc;
-      }
-
-      void setEffectiveHash(hash_t hash) {
-         hc = hash ^ val;
-      }
-
-   protected:
-      hash_t hc;
+        ;
+      int16 score;
+      uint64 hc; 
 };
 
 unsigned long hash_code(const HashEntry &p);
@@ -200,13 +191,13 @@ class Hash {
     // in-memory hash table
     void loadLearnInfo();
 
-    PositionInfo::ValueType searchHash(const Board& b,hash_t hashCode,
+    HashEntry::ValueType searchHash(const Board& b,hash_t hashCode,
                                               int alpha, int beta, int ply,
                                               int depth, int age,
-                                              PositionInfo &pi
+                                              HashEntry &pi
                                               ) {
         int i;
-        if (!hashSize) return PositionInfo::NoHit;
+        if (!hashSize) return HashEntry::NoHit;
         int probe = (int)(hashCode % hashSize);
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = NULL;
@@ -234,16 +225,17 @@ class Hash {
             p++;
         }
         // If we got a hash hit but insufficient depth return here:
-        if (hit) return PositionInfo::Invalid;
-        return PositionInfo::NoHit;
+        if (hit) return HashEntry::Invalid;
+        return HashEntry::NoHit;
     hash_hit:
         return pi.type();
     }
 
     void storeHash(hash_t hashCode, const int depth,
                           int age,
-                          PositionInfo::ValueType type,
+                          HashEntry::ValueType type,
                           int value,
+                          int score, 
                           byte flags,
                           Move best_move) {
 
@@ -270,7 +262,7 @@ class Hash {
                 break;
             }
             else if (!(q.flags() & 
-                       (PositionInfo::LEARNED_MASK | PositionInfo::TB_MASK)) && 
+                       (HashEntry::LEARNED_MASK | HashEntry::TB_MASK)) && 
                      (q.depth() <= depth || q.age() != age)) {
                 // candidate for replacement
                 int score = replaceScore(q,age);
@@ -285,7 +277,7 @@ class Hash {
             if (best->hashCode() == (hash_t)0x0ULL) {
                hashFree--;
             }
-            HashEntry newPos(hashCode, depth, age, type, value, flags, best_move);
+            HashEntry newPos(hashCode, depth, age, type, value, score, flags, best_move);
             *best = newPos;
         }
     }
@@ -315,24 +307,6 @@ class Hash {
 
     void clearEvalCache();
 
-    inline Move getBestMove(const Board &board) {
-        const EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
-        hash_t key = entry.move_key;
-        Move best = entry.best;
-        key ^= (hash_t)best;
-        if (board.hashCode() == key) {
-            return best;
-        }
-        else
-            return NullMove;
-    }
-
-    inline void cacheBestMove(const Board &board, Move best) {
-        EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
-        entry.move_key = board.hashCode() ^ (hash_t)best;
-        entry.best = best;
-    }
-
  private:
     int replaceScore(const HashEntry &pos, int age) {
         return (Util::Abs(pos.age()-age)<<12) - pos.depth();
@@ -343,10 +317,6 @@ class Hash {
     static const int MaxRehash = 4;
     int refCount;
     int hash_init_done;
-    EvalCacheEntry *evalCache;
-    int evalCacheSize;
-    uint64 evalCacheMask;
-
 };
 
 #endif

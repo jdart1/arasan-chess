@@ -277,16 +277,11 @@ static const EndgamePattern DRAW_PATTERN[] = {
 };
 
 #ifdef EVAL_STATS
-static uint64 evalCacheProbes = (uint64)0;
-static uint64 evalCacheHits = (uint64)0;
 
 void Scoring::clearStats() {
-    evalCacheProbes = evalCacheHits = (uint64)0;
 }
 
 void Scoring::showStats(ostream &out) {
-    out << setprecision(2) << "eval cache hits: " <<
-        (float)100*evalevalCacheHits)/evalCacheProbes << "%" << endl;
 }
 #endif
 
@@ -1819,26 +1814,7 @@ Scoring::PawnHashEntry *Scoring::pawnEntry(const Board &board)  {
 
 int Scoring::positionalScore( const Board &board, int alpha, int beta)
 {
-    Hash::EvalCacheEntry &cacheEntry = hashTable->evalCache[board.hashCode() & hashTable->evalCacheMask];
-    // copy from the cache
-    hash_t key = cacheEntry.score_key;
-    int score = cacheEntry.score;
-    // xor key with values (trick from crafty) so when we retrieve we
-    // will not fetch a value that does not have the score/best move
-    // initially stored (which can happen as multiple threads write the cache).
-    key ^= (hash_t)score;
-#ifdef EVAL_STATS
-    evalCacheProbes++;
-#endif
-    if (key == board.hashCode() && score != INVALID_SCORE) {
-#ifdef EVAL_STATS
-        evalCacheHits++;
-#endif
-        return score;
-    }
-
-    // Position was not in cache, must evaluate it
-    score = 0;
+    int score = 0;
     int w_materialLevel = board.getMaterial(White).materialLevel();
     int b_materialLevel = board.getMaterial(Black).materialLevel();
 
@@ -2068,10 +2044,6 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
         cout << board << endl;
     }
 #endif
-    // xor key with values (trick from crafty)
-    cacheEntry.score_key = board.hashCode() ^ (hash_t)score;
-    cacheEntry.score = score;
-
     return score;
 }
 

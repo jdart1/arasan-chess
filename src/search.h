@@ -70,6 +70,7 @@ struct NodeInfo {
     volatile Move best;
     Move last_move;
     int extensions; // mask of extensions
+    int eval;
     int futilityEval;
     volatile Move pv[Constants::MaxPly];
     volatile int pv_length;
@@ -303,6 +304,8 @@ class Search : public ThreadControl {
        return POP(quiesce(ply,depth));
     }
 
+    void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
+
     int quiesce(int ply,int depth);
 
     int wasTerminated() const {
@@ -360,9 +363,9 @@ class Search : public ThreadControl {
                        int moveIndex,
                        Move move);
 
-    int qsearch_no_check(int ply, int depth);
+    int qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_depth);
 
-    int qsearch_check(int ply, int depth);
+    int qsearch_check(int ply, int depth, Move pv, hash_t hash, int tt_depth);
 
     int updateRootMove(const Board &board, NodeInfo *parentNode, 
                        NodeInfo *node, Move move, int score, int move_index);

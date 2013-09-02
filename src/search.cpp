@@ -393,12 +393,12 @@ int score, int alpha, int beta)
         if (node->pv_length < 2) {
             // get the next move from the hash table, if possible
             // (for pondering)
-            PositionInfo entry;
-            PositionInfo::ValueType result =
+            HashEntry entry;
+            HashEntry::ValueType result =
                 hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
-                           0,0,0,age,
-                           iteration_depth,entry);
-            if (result != PositionInfo::NoHit) {
+                                     0,0,0,iteration_depth,age,
+                                     entry);
+            if (result != HashEntry::NoHit) {
                 Move hashMove = entry.bestMove(board_copy);
                 if (!IsNull(hashMove)) {
                     stats->best_line[i] = hashMove;
@@ -1301,6 +1301,111 @@ int Search::quiesce(int ply,int depth)
             << node->beta << "]" << endl;
     }
 #endif
+    // Like Stockfish, only distinguish depths with checks vs depth without
+    int tt_depth;
+    if (board.checkStatus() == InCheck ||
+        depth >= 1-options.search.checks_in_qsearch) {
+        tt_depth = -1;
+    }
+    else {
+        tt_depth = -2;
+    }
+    Move pv = NullMove;
+    int value;
+    HashEntry::ValueType result;
+    HashEntry hashEntry;
+    const hash_t hash = board.hashCode(rep_count);
+    result = controller->hashTable.searchHash(board,hash,
+                              node->alpha,node->beta,ply,depth,controller->age,hashEntry);
+#ifdef SEARCH_STATS
+    controller->stats->hash_searches++;
+#endif
+    bool hit = result != HashEntry::NoHit;
+    if (hit) {
+#ifdef SEARCH_STATS
+        controller->stats->hash_hits++;
+#endif
+        value = hashEntry.value();
+        // If this is a mate score, adjust it to reflect the
+        // current ply depth.
+        //
+        if (value >= Constants::MATE_RANGE) {
+           value -= ply;
+        }
+        else if (value <= -Constants::MATE_RANGE) {
+           value += ply;
+        }
+        switch (result) {
+           case HashEntry::Valid:
+#ifdef _TRACE
+            if (master()) {
+                indent(ply);
+                cout << "hash cutoff, type = E" <<
+                    " alpha = " << node->alpha <<
+                    " beta = " << node->beta <<
+                    " value = " << value << endl;
+            }
+#endif
+            if (node->inBounds(value)) {
+                // parent node will consider this a new best line
+                Move hash_move = hashEntry.bestMove(board);
+                if (!IsNull(hash_move)) {
+                    node->pv[ply] = hash_move;
+                    node->pv_length = 1;
+                }
+#ifdef _TRACE
+                if (master()) {
+                    indent(ply); cout << "best line[ply][ply] = ";
+                    MoveImage(hash_move,cout);
+                    cout << endl;
+                }
+#endif
+            }
+            return value;
+            case HashEntry::UpperBound:
+#ifdef _TRACE
+             if (master()) {
+                indent(ply);
+                cout << "hash cutoff, type = U" <<
+                    " alpha = " << node->alpha <<
+                    " beta = " << node->beta <<
+                    " value = " << value << endl;
+             }
+#endif
+             if (value <= node->alpha) {
+                return value; // cutoff
+             }
+             break;
+           case HashEntry::LowerBound:
+#ifdef _TRACE
+             if (master()) {
+                indent(ply);
+                cout << "hash cutoff, type = L" <<
+                    " alpha = " << node->alpha <<
+                    " beta = " << node->beta <<
+                    " value = " << value << endl;
+             }
+#endif
+             if (value >= node->beta) {
+               return value; // cutoff
+             }
+             break;
+            default:
+              break;
+        } // end switch
+        // Note: hash move & flags may be usable even if score is not usable
+        pv = hashEntry.bestMove(board);
+        if (tt_depth == -2 && !(board.checkStatus() == InCheck || CaptureOrPromotion(pv))) {
+           // don't fetch a non-capture/promotion checking move from the hash table if
+           // we aren't at a depth where checks are allowed.
+           pv = NullMove;
+        }
+        // Entries from the learn file or from a TB hit do not have check status
+        if (!hashEntry.tb() && !hashEntry.learned()) {
+           board.setCheckStatus(hashEntry.inCheck() ? InCheck : NotInCheck);
+        }
+    }
+
     if (board.checkStatus((node-1)->last_move)==InCheck) {
         // If last move was a checking move, ensure that in making it we did
         // not move a pinned piece or move the king into check (normally we
@@ -1314,11 +1419,11 @@ int Search::quiesce(int ply,int depth)
 #ifdef _TRACE
           indent(ply); cout << "in_check=1" << endl;
 #endif
-           return qsearch_check(ply,depth);
+          return qsearch_check(ply,depth,pv,hash,tt_depth);
         }
     }
     else {
-        return qsearch_no_check(ply,depth);
+        return qsearch_no_check(ply,depth,pv,hash,tt_depth);
     }
 }
 
@@ -1336,7 +1441,7 @@ static inline void swap( Move moves[], int i, int j)
    moves[i] = tmp;
 }
 
-int Search::qsearch_no_check(int ply, int depth)
+int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_depth)
 {
     int stand_pat_score;
     // Establish a default score.  This score is returned if no
@@ -1377,12 +1482,11 @@ int Search::qsearch_no_check(int ply, int depth)
         node->best_score = stand_pat_score;
         (node+1)->pv_length=0;
     }
-    Move pv = controller->hashTable.getBestMove(board);
 
     int move_index = 0;
     int try_score;
     BoardState state(board.state);
-    if (!IsNull(pv)) {
+    if (!IsNull(pv) && validMove(board,pv)) {
 #ifdef _TRACE
         if (master()) {
             indent(ply);
@@ -1602,13 +1706,13 @@ int Search::qsearch_no_check(int ply, int depth)
         }
     }
     search_end:
+    storeHash(board,hash,pv,tt_depth);
     if (!IsNull(node->best)) {
 #ifdef _TRACE
       indent(ply); cout << "storing best move ";
       MoveImage(node->best,cout);
       cout << endl;
 #endif
-      controller->hashTable.cacheBestMove(board,node->best);
     }
     if (node->inBounds(node->best_score)) {
         if (!IsNull(node->best)) {
@@ -1619,19 +1723,19 @@ int Search::qsearch_no_check(int ply, int depth)
 }
 
 
-int Search::qsearch_check(int ply, int depth)
+int Search::qsearch_check(int ply, int depth, Move pv, hash_t hash, int tt_depth)
 {
     int try_score;
-    Move pvmove = controller->hashTable.getBestMove(board);
-    if (!IsNull(pvmove)) {
+    // TBD
+    if (!IsNull(pv)) {
 #ifdef _TRACE
        indent(ply); cout << "qsearch cache hit: ";
-       MoveImage(pvmove,cout);
+       MoveImage(pv,cout);
        cout << endl;
 #endif
-      ASSERT(legalMove(board,pvmove));
+      ASSERT(legalMove(board,pv));
     }
-    MoveGenerator mg(board, &context, ply, pvmove, master());
+    MoveGenerator mg(board, &context, ply, pv, master());
 
     Move move;
     BoardState state = board.state;
@@ -1695,7 +1799,7 @@ int Search::qsearch_check(int ply, int depth)
          MoveImage(node->best,cout);
          cout << endl;
 #endif
-         controller->hashTable.cacheBestMove(board,node->last_move);
+         // TBD controller->hashTable.cacheBestMove(board,node->last_move);
 #ifdef _TRACE
         if (master()) {
             indent(ply);
@@ -1721,14 +1825,74 @@ int Search::qsearch_check(int ply, int depth)
        MoveImage(node->best,cout);
        cout << endl;
 #endif
-       controller->hashTable.cacheBestMove(board,node->best);
+       // TBD controller->hashTable.cacheBestMove(board,node->best);
     }
+    storeHash(board,hash,node->best,tt_depth);
     if (node->inBounds(node->best_score)) {
        if (!IsNull(node->best)) {
           updatePV(board,node->best,ply);
        }
     }
     return node->best_score;
+}
+
+void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int depth) {
+    // don't insert into the hash table if we are terminating - we may
+    // not have an accurate score.
+    if (options.search.hash_table_size && !terminate) {
+        if (node->best == NullMove) node->best = hash_move;
+        // store the position in the hash table, if there's room
+        int value = node->best_score;
+        HashEntry::ValueType val_type;
+        // Adjust mate scores to reflect current ply.
+        if (value <= -Constants::MATE_RANGE) {
+             value -= node->ply;
+             val_type = HashEntry::Valid;
+        }
+        else if (value >= Constants::MATE_RANGE) {
+             value += node->ply;
+             val_type = HashEntry::Valid;
+        }
+        else {
+            if (value <= node->alpha) {
+                val_type = HashEntry::UpperBound;
+                // We don't have a "best" move, because all moves
+                // caused alpha cutoff.  But if there was a hash
+                // move or an initial move produced by internal
+                // interative deepening, save it in the hash table
+                // so it will be tried first next time around.
+                node->best = hash_move;
+            }
+            else if (value >= node->beta) {
+                val_type = HashEntry::LowerBound;
+            }
+            else {
+                val_type = HashEntry::Valid;
+            }
+        }
+#ifdef _TRACE
+        static const char type_chars[5] =
+            { 'E', 'U', 'L', 'X', 'X' };
+        if (master()) {
+            indent(node->ply);
+            cout << "storing type=" << type_chars[val_type] <<
+                " ply=" << node->ply << " depth=" << depth << " value=" << value <<
+                " move=";
+            MoveImage(node->best,cout);
+            cout << endl;
+        }
+#endif
+        controller->hashTable.storeHash(hash, depth,
+            controller->age,
+            val_type,
+            node->best_score, 
+            node->eval,
+            (node->PV() ? HashEntry::FULL_MASK : 0) |
+            (board.checkStatus() == InCheck ? HashEntry::CHECK_MASK : 0) |
+            (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
+            (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
+            node->best);
+    }
 }
 
 static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
@@ -2000,8 +2164,8 @@ int Search::search()
         using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) && (depth >= egtbDepth || ply <= 2);
     }
 #endif
-    PositionInfo hashEntry;
-    PositionInfo::ValueType result;
+    HashEntry hashEntry;
+    HashEntry::ValueType result;
     // Search the hash table to see if we have hit this
     // position before.
     // Note: query the hash table before the tablebases, since TB info may
@@ -2013,7 +2177,7 @@ int Search::search()
 #ifdef SEARCH_STATS
     controller->stats->hash_searches++;
 #endif
-    bool hit = result != PositionInfo::NoHit;
+    bool hit = result != HashEntry::NoHit;
     if (hit) {
 #ifdef SEARCH_STATS
         controller->stats->hash_hits++;
@@ -2024,12 +2188,12 @@ int Search::search()
             // the hashtable. Also do not allow hash based cutoff of a PV
             // node.
             if (using_tb || node->PV()) {
-               result = PositionInfo::Invalid;
+               result = HashEntry::Invalid;
             }
         }
         int value = hashEntry.value();
         switch (result) {
-            case PositionInfo::Valid:
+            case HashEntry::Valid:
 #ifdef _TRACE
                 if (master()) {
                     indent(ply);
@@ -2065,7 +2229,7 @@ int Search::search()
                 }
                 node->flags |= EXACT;
                 return value;
-            case PositionInfo::UpperBound:
+            case HashEntry::UpperBound:
 #ifdef _TRACE
                 if (master()) {
                     indent(ply);
@@ -2079,7 +2243,7 @@ int Search::search()
                     return value;                     // cutoff
                 }
                 break;
-            case PositionInfo::LowerBound:
+            case HashEntry::LowerBound:
 #ifdef _TRACE
                 if (master()) {
                     indent(ply);
@@ -2102,10 +2266,6 @@ int Search::search()
         if (!hashEntry.tb() && !hashEntry.learned()) {
             board.setCheckStatus(hashEntry.inCheck() ? InCheck : NotInCheck);
         }
-    }
-    if (IsNull(hash_move)) {
-        // try the qsearch cache for a move
-        hash_move = controller->hashTable.getBestMove(board);
     }
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     if (using_tb && rep_count==0) {
@@ -2149,9 +2309,9 @@ int Search::search()
             controller->hashTable.storeHash(board.hashCode(rep_count),
                 (Constants::MaxPly-1)*DEPTH_INCREMENT,
                 controller->age,
-                PositionInfo::Valid,
-                score,
-                PositionInfo::FULL_MASK | PositionInfo::TB_MASK,
+                HashEntry::Valid,
+                score, Scoring::INVALID_SCORE,
+                HashEntry::FULL_MASK | HashEntry::TB_MASK,
                 NullMove);
             node->best_score = tb_score;               // unadjusted score
             node->flags |= EXACT;
@@ -2587,7 +2747,7 @@ int Search::search()
         if (node->best == NullMove) node->best = hash_move;
         // store the position in the hash table, if there's room
         int value = node->best_score;
-        PositionInfo::ValueType val_type;
+        HashEntry::ValueType val_type;
         // Adjust mate scores to reflect current ply. But only
         // if the score is in bounds.
         if (value > node->alpha && value < node->beta) {
@@ -2602,7 +2762,7 @@ int Search::search()
         char typeChar;
 #endif
         if (value <= node->alpha) {
-            val_type = PositionInfo::UpperBound;
+            val_type = HashEntry::UpperBound;
 #ifdef _TRACE
             typeChar = 'U';
 #endif
@@ -2614,13 +2774,13 @@ int Search::search()
             node->best = hash_move;
         }
         else if (value >= node->beta) {
-            val_type = PositionInfo::LowerBound;
+            val_type = HashEntry::LowerBound;
 #ifdef _TRACE
             typeChar = 'L';
 #endif
         }
         else {
-            val_type = node->fpruned_moves ? PositionInfo::Invalid : PositionInfo::Valid;
+            val_type = node->fpruned_moves ? HashEntry::Invalid : HashEntry::Valid;
 #ifdef _TRACE
             typeChar = 'E';
 #endif
@@ -2640,10 +2800,11 @@ int Search::search()
             controller->age,
             val_type,
             node->best_score, 
-            (node->PV() ? PositionInfo::FULL_MASK : 0) |
-            (board.checkStatus() == InCheck ? PositionInfo::CHECK_MASK : 0) |
-            (IsForced(node->best) ? PositionInfo::FORCED_MASK : 0) |
-            (IsForced2(node->best) ? PositionInfo::FORCED2_MASK : 0),
+            node->eval,                                        
+            (node->PV() ? HashEntry::FULL_MASK : 0) |
+            (board.checkStatus() == InCheck ? HashEntry::CHECK_MASK : 0) |
+            (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
+            (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
             node->best);
     }
     search_end2:
