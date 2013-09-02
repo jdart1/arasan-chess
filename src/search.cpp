@@ -1783,23 +1783,14 @@ int Search::calcExtensions(const Board &board,
       }
    }
    if (in_check_after_move == InCheck) { // move is a checking move
-      // extend if near qsearch or if check does not lose > 1 pawn
-      if (depth <= DEPTH_INCREMENT) {
-          node->extensions |= CHECK;
+      // extend only if check does not lose > 1 pawn
+      if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
+      if (swap >= -PAWN_VALUE) {
+         node->extensions |= CHECK;
 #ifdef SEARCH_STATS
-          controller->stats->check_extensions++;
+         controller->stats->check_extensions++;
 #endif
-          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-      }
-      else {
-         if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
-         if (swap >= -PAWN_VALUE) {
-            node->extensions |= CHECK;
-#ifdef SEARCH_STATS
-            controller->stats->check_extensions++;
-#endif
-            extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-         }
+         extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
    }
    if (passedPawnPush(board,move)) {
