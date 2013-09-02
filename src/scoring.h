@@ -84,7 +84,6 @@ class Scoring
     static const int PAWN_HASH_SIZE = 16384;
     static const int KING_COVER_HASH_SIZE = 8192;
     static const int ENDGAME_HASH_SIZE = 32768;
-    static const int EVAL_CACHE_SIZE = 131072;
 
     struct CACHE_ALIGN PawnHashEntry {
 
