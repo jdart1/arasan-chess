@@ -1099,13 +1099,13 @@ int depth, Move exclude [], int num_exclude)
     node->alpha = alpha;
     node->beta = beta;
     node->best_score = node->alpha;
+    node->eval = Scoring::INVALID_SCORE;
 #ifdef MOVE_ORDER_STATS
     node->best_count = 0;
 #endif
     node->fpruned_moves = 0;
     node->ply = 0;
     node->depth = depth;
-    node->futilityEval = Scoring::INVALID_SCORE;
     node->threatMove = NullMove;
     // clear split point stack:
     activeSplitPoints = 0;
@@ -1336,62 +1336,62 @@ int Search::quiesce(int ply,int depth)
            value += ply;
         }
         switch (result) {
-           case HashEntry::Valid:
+        case HashEntry::Valid:
 #ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << "hash cutoff, type = E" <<
-                    " alpha = " << node->alpha <<
-                    " beta = " << node->beta <<
-                    " value = " << value << endl;
-            }
+           if (master()) {
+              indent(ply);
+              cout << "hash cutoff, type = E" <<
+                 " alpha = " << node->alpha <<
+                 " beta = " << node->beta <<
+                 " value = " << value << endl;
+           }
 #endif
-            if (node->inBounds(value)) {
-                // parent node will consider this a new best line
-                Move hash_move = hashEntry.bestMove(board);
-                if (!IsNull(hash_move)) {
-                    node->pv[ply] = hash_move;
-                    node->pv_length = 1;
-                }
+           if (node->inBounds(value)) {
+              // parent node will consider this a new best line
+              Move hash_move = hashEntry.bestMove(board);
+              if (!IsNull(hash_move)) {
+                 node->pv[ply] = hash_move;
+                 node->pv_length = 1;
+              }
 #ifdef _TRACE
-                if (master()) {
-                    indent(ply); cout << "best line[ply][ply] = ";
-                    MoveImage(hash_move,cout);
-                    cout << endl;
-                }
+              if (master()) {
+                 indent(ply); cout << "best line[ply][ply] = ";
+                 MoveImage(hash_move,cout);
+                 cout << endl;
+              }
 #endif
-            }
-            return value;
-            case HashEntry::UpperBound:
+           }
+           return value;
+        case HashEntry::UpperBound:
 #ifdef _TRACE
-             if (master()) {
-                indent(ply);
-                cout << "hash cutoff, type = U" <<
-                    " alpha = " << node->alpha <<
-                    " beta = " << node->beta <<
-                    " value = " << value << endl;
-             }
+           if (master()) {
+              indent(ply);
+              cout << "hash cutoff, type = U" <<
+                 " alpha = " << node->alpha <<
+                 " beta = " << node->beta <<
+                 " value = " << value << endl;
+           }
 #endif
-             if (value <= node->alpha) {
-                return value; // cutoff
-             }
-             break;
-           case HashEntry::LowerBound:
+           if (value <= node->alpha) {
+              return value; // cutoff
+           }
+           break;
+        case HashEntry::LowerBound:
 #ifdef _TRACE
-             if (master()) {
-                indent(ply);
-                cout << "hash cutoff, type = L" <<
-                    " alpha = " << node->alpha <<
-                    " beta = " << node->beta <<
-                    " value = " << value << endl;
-             }
+           if (master()) {
+              indent(ply);
+              cout << "hash cutoff, type = L" <<
+                 " alpha = " << node->alpha <<
+                 " beta = " << node->beta <<
+                 " value = " << value << endl;
+           }
 #endif
-             if (value >= node->beta) {
-               return value; // cutoff
-             }
-             break;
-            default:
-              break;
+           if (value >= node->beta) {
+              return value; // cutoff
+           }
+           break;
+        default:
+           break;
         } // end switch
         // Note: hash move & flags may be usable even if score is not usable
         pv = hashEntry.bestMove(board);
@@ -1404,6 +1404,7 @@ int Search::quiesce(int ply,int depth)
         if (!hashEntry.tb() && !hashEntry.learned()) {
            board.setCheckStatus(hashEntry.inCheck() ? InCheck : NotInCheck);
         }
+        node->eval = hashEntry.staticValue();
     }
 
     if (board.checkStatus((node-1)->last_move)==InCheck) {
@@ -1448,13 +1449,28 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
     // captures are generated, or if no captures generate a better
     // score (since we generally can choose whether or not to capture).
     int bitscore;
+    int didEval = 0;
     if (board.getMaterial(White).materialLevel()==0 &&
         board.getMaterial(Black).materialLevel()==0 &&
         ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
         stand_pat_score = bitscore;
     }
     else {
-        stand_pat_score = scoring.evalu8(board,node->alpha,node->beta);
+       if (node->eval != Scoring::INVALID_SCORE) {
+          // use hashed value
+          stand_pat_score = node->eval;
+       } else {
+          // try to cut off based on material alone
+          int mat_score = scoring.materialScore(board);
+          if (mat_score - Scoring::MATERIAL_LAZY_MARGIN >= node->beta) {
+             stand_pat_score = mat_score;
+          } else {
+             // do full eval
+             node->eval = stand_pat_score =
+                mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
+             didEval++;
+          }
+       }
     }
 #ifdef _TRACE
     if (master()) {
@@ -1476,8 +1492,14 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
                ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
                return -Illegal;
             }
-            else
+            else {
+               if (didEval) {
+                  node->best_score = stand_pat_score;
+                  // store score in hash
+                  storeHash(board,hash,pv,tt_depth);
+               }
                return stand_pat_score;
+            }
         }
         node->best_score = stand_pat_score;
         (node+1)->pv_length=0;
@@ -1793,21 +1815,13 @@ int Search::qsearch_check(int ply, int depth, Move pv, hash_t hash, int tt_depth
 #endif
     }
     if (node->best_score >= node->beta) {
-      if (!IsNull(node->best)) {
-#ifdef _TRACE
-         indent(ply); cout << "storing best move ";
-         MoveImage(node->best,cout);
-         cout << endl;
-#endif
-         // TBD controller->hashTable.cacheBestMove(board,node->last_move);
 #ifdef _TRACE
         if (master()) {
             indent(ply);
             cout << "**CUTOFF**" << endl;
         }
 #endif
-      }
-      return node->best_score;
+        goto search_end; 
     }
     if (node->num_try == 0) { // no legal evasions, so this is checkmate
 #ifdef _TRACE
@@ -1827,7 +1841,8 @@ int Search::qsearch_check(int ply, int depth, Move pv, hash_t hash, int tt_depth
 #endif
        // TBD controller->hashTable.cacheBestMove(board,node->best);
     }
-    storeHash(board,hash,node->best,tt_depth);
+ search_end:
+    storeHash(board,hash,pv,tt_depth);
     if (node->inBounds(node->best_score)) {
        if (!IsNull(node->best)) {
           updatePV(board,node->best,ply);
@@ -2028,13 +2043,7 @@ int Search::calcExtensions(const Board &board,
           // threshold increases with move index
           int fmargin = FUTILITY_MARGIN[(depth*4)/DEPTH_INCREMENT][Util::Min(moveIndex,63)];
           int threshold = parentNode->beta - fmargin;
-          int eval;
-          if (parentNode->futilityEval != Scoring::INVALID_SCORE) {
-              eval = parentNode->futilityEval;
-          } else {
-              eval = parentNode->futilityEval = scoring.evalu8(board,threshold-1,threshold);
-          }
-          if (eval < threshold) {
+          if (getEval(parentNode,board) < threshold) {
 #ifdef SEARCH_STATS
               controller->stats->futility_pruning++;
 #endif
@@ -2172,7 +2181,8 @@ int Search::search()
     // be cached.
     // Note: we copy the hash entry .. so mods by another thread do not
     // alter the copy
-    result = controller->hashTable.searchHash(board,board.hashCode(rep_count),
+    const hash_t hash = board.hashCode(rep_count);
+    result = controller->hashTable.searchHash(board,hash,
                               node->alpha,node->beta,ply,depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
     controller->stats->hash_searches++;
@@ -2193,72 +2203,72 @@ int Search::search()
         }
         int value = hashEntry.value();
         switch (result) {
-            case HashEntry::Valid:
+        case HashEntry::Valid:
 #ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "hash cutoff, type = E" <<
-                        " alpha = " << node->alpha <<
-                        " beta = " << node->beta <<
-                        " value = " << value << endl;
-                }
+           if (master()) {
+              indent(ply);
+              cout << "hash cutoff, type = E" <<
+                 " alpha = " << node->alpha <<
+                 " beta = " << node->beta <<
+                 " value = " << value << endl;
+           }
 #endif
-                // If this is a mate score, adjust it to reflect the
-                // current ply depth.
-                //
-                if (value >= Constants::MATE_RANGE) {
-                    value -= ply;
-                }
-                else if (value <= -Constants::MATE_RANGE) {
-                    value += ply;
-                }
-                if (node->inBounds(value)) {
-                    // parent node will consider this a new best line
-                    hash_move = hashEntry.bestMove(board);
-                    if (!IsNull(hash_move)) {
-                        node->pv[ply] = hash_move;
-                        node->pv_length = 1;
-                    }
+           // If this is a mate score, adjust it to reflect the
+           // current ply depth.
+           //
+           if (value >= Constants::MATE_RANGE) {
+              value -= ply;
+           }
+           else if (value <= -Constants::MATE_RANGE) {
+              value += ply;
+           }
+           if (node->inBounds(value)) {
+              // parent node will consider this a new best line
+              hash_move = hashEntry.bestMove(board);
+              if (!IsNull(hash_move)) {
+                 node->pv[ply] = hash_move;
+                 node->pv_length = 1;
+              }
 #ifdef _TRACE
-                    if (master()) {
-                        indent(ply); cout << "best line[ply][ply] = ";
-                        MoveImage(hash_move,cout);
-                        cout << endl;
-                    }
+              if (master()) {
+                 indent(ply); cout << "best line[ply][ply] = ";
+                 MoveImage(hash_move,cout);
+                 cout << endl;
+              }
 #endif
-                }
-                node->flags |= EXACT;
-                return value;
-            case HashEntry::UpperBound:
+           }
+           node->flags |= EXACT;
+           return value;
+        case HashEntry::UpperBound:
 #ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "hash cutoff, type = U" <<
-                        " alpha = " << node->alpha <<
-                        " beta = " << node->beta <<
-                        " value = " << value << endl;
-                }
+           if (master()) {
+              indent(ply);
+              cout << "hash cutoff, type = U" <<
+                 " alpha = " << node->alpha <<
+                 " beta = " << node->beta <<
+                 " value = " << value << endl;
+           }
 #endif
-                if (value <= node->alpha) {
-                    return value;                     // cutoff
-                }
-                break;
-            case HashEntry::LowerBound:
+           if (value <= node->alpha) {
+              return value;                     // cutoff
+           }
+           break;
+        case HashEntry::LowerBound:
 #ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "hash cutoff, type = L" <<
-                        " alpha = " << node->alpha <<
-                        " beta = " << node->beta <<
-                        " value = " << value << endl;
-                }
+           if (master()) {
+              indent(ply);
+              cout << "hash cutoff, type = L" <<
+                 " alpha = " << node->alpha <<
+                 " beta = " << node->beta <<
+                 " value = " << value << endl;
+           }
 #endif
-                if (value >= node->beta) {
-                    return value;                     // cutoff
-                }
-                break;
-            default:
-                break;
+           if (value >= node->beta) {
+              return value;                     // cutoff
+           }
+           break;
+         default:
+           break;
         } // end switch
         // Note: hash move & flags may be usable even if score is not usable
         hash_move = hashEntry.bestMove(board);
@@ -2266,6 +2276,7 @@ int Search::search()
         if (!hashEntry.tb() && !hashEntry.learned()) {
             board.setCheckStatus(hashEntry.inCheck() ? InCheck : NotInCheck);
         }
+        node->eval = hashEntry.staticValue();
     }
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     if (using_tb && rep_count==0) {
@@ -2334,7 +2345,6 @@ int Search::search()
 #ifdef _TRACE
     if (master() && in_check) { indent(ply); cout << "in_check=" << in_check << endl;}
 #endif
-    node->futilityEval = Scoring::INVALID_SCORE;
     node->fpruned_moves = 0;
     move_count = 0;
 
@@ -2351,7 +2361,19 @@ int Search::search()
     if (doNull && depth <= 3*DEPTH_INCREMENT) {
         const int margin = FUTILITY_MARGIN_BASE[depth]/2;
         int threshold = node->beta+margin;
-        int eval = scoring.evalu8(board,threshold-1,threshold);
+        int eval;
+        if (node->eval != Scoring::INVALID_SCORE) {
+           // hashed value available
+           eval = node->eval;
+        } else {
+           // try to cut off just based on material
+           int mat_score = scoring.materialScore(board);
+           if (mat_score - Scoring::MATERIAL_LAZY_MARGIN > threshold) {
+              eval = mat_score;
+           } else {
+              eval = mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
+           }
+        } 
         if (eval > threshold) {
             return eval - margin;
         }
@@ -2363,7 +2385,20 @@ int Search::search()
     if (doNull && depth <= DEPTH_INCREMENT &&
         IsNull(hash_move)) {
         const int threshold = node->beta - int(2.5*PAWN_VALUE);
-        if (scoring.evalu8(board,threshold-1,threshold) < threshold) {
+        int eval;
+        if (node->eval != Scoring::INVALID_SCORE) {
+           // hashed value available
+           eval = node->eval;
+        } else {
+           // try to do razoring test just based on material
+           int mat_score = scoring.materialScore(board);
+           if (mat_score + Scoring::MATERIAL_LAZY_MARGIN < threshold) {
+              eval = mat_score;
+           } else {
+              eval = mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
+           }
+        } 
+        if (eval < threshold) {
             int v = quiesce(node->beta-1,node->beta,ply+1,0);
             if(v < node->beta) {
 #ifdef _TRACE
@@ -2391,7 +2426,7 @@ int Search::search()
         int threshold = node->beta + PAWN_VALUE;
         int eval;
         if (depth > 6*DEPTH_INCREMENT &&
-            (eval = scoring.evalu8(board,threshold,node->beta+(5*PAWN_VALUE/2))) > threshold) {
+            (eval = getEval(node,board) > threshold)) {
             nu_depth -= Util::Min(DEPTH_INCREMENT,DEPTH_INCREMENT*(eval-node->beta-(PAWN_VALUE/2))/(2*PAWN_VALUE));
             nu_depth = Util::Max(nu_depth,DEPTH_INCREMENT);
         }

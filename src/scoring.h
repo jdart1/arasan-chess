@@ -17,6 +17,8 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
+    static const int MATERIAL_LAZY_MARGIN;
+
     static void init();
 
     static void cleanup();

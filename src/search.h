@@ -71,7 +71,6 @@ struct NodeInfo {
     Move last_move;
     int extensions; // mask of extensions
     int eval;
-    int futilityEval;
     volatile Move pv[Constants::MaxPly];
     volatile int pv_length;
     volatile Move done[Constants::MaxMoves];
@@ -88,6 +87,7 @@ struct NodeInfo {
     int inBounds(int score) const {
       return score > alpha && score < beta;
     }
+
     int newBest(int score) const {
       return score > best_score && score < beta;
     }
@@ -383,6 +383,13 @@ class Search : public ThreadControl {
    void showStatus(const Board &board, Move best,int faillow,
             int failhigh,int complete);
 
+   int getEval(NodeInfo *node, const Board &board) {
+       if (node->eval == Scoring::INVALID_SCORE) {
+         node->eval = scoring.evalu8(board);
+       }
+       return node->eval;
+    }
+
    FORCEINLINE void PUSH(int alpha,int beta,int flags,
                           int ply, int depth) {
        ++node; 
@@ -394,6 +401,7 @@ class Search : public ThreadControl {
        node->ply = ply;
        node->depth = depth;
        node->cutoff = 0; 
+       node->eval = Scoring::INVALID_SCORE;
        node->pv[ply] = NullMove;
        node->pv_length = 0;
     }
@@ -404,6 +412,7 @@ class Search : public ThreadControl {
        node->alpha = node->best_score = alpha; 
        node->beta = beta; 
        node->best = NullMove; 
+       node->eval = Scoring::INVALID_SCORE;
        node->pv[ply] = NullMove;
        node->pv_length = 0;
     }

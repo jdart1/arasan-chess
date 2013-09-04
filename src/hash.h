@@ -144,6 +144,10 @@ class HashEntry
          hc = hash ^ val ^ (uint64)score;
       }
 
+      int unused() const {
+         return hc == 0;
+      }
+
    protected:
       union
       {
@@ -216,7 +220,7 @@ class Hash {
                 hit = &entry;
                 if (entry.depth() >= depth) {
                     // usable depth
-                    goto hash_hit;
+                    return pi.type();
                 }
                 else {
                     break;
@@ -227,8 +231,6 @@ class Hash {
         // If we got a hash hit but insufficient depth return here:
         if (hit) return HashEntry::Invalid;
         return HashEntry::NoHit;
-    hash_hit:
-        return pi.type();
     }
 
     void storeHash(hash_t hashCode, const int depth,
@@ -251,7 +253,7 @@ class Hash {
         for (int i = MaxRehash; i != 0; --i) {
             HashEntry &q = *p;
 
-            if (q.hashCode() == (hash_t)0) {
+            if (q.unused()) {
                 // empty hash entry, available for use
                 best = &q;
                 break;
@@ -274,7 +276,7 @@ class Hash {
             p++;
         }
         if (best != NULL) {
-            if (best->hashCode() == (hash_t)0x0ULL) {
+            if (best->unused()) {
                hashFree--;
             }
             HashEntry newPos(hashCode, depth, age, type, value, score, flags, best_move);
@@ -293,19 +295,6 @@ class Hash {
         else
             return (int)(1000.0*(hashSize-hashFree)/(double)hashSize);
     }
-
-    // Evaluation cache, used in qsearch
-    struct CACHE_ALIGN EvalCacheEntry {
-         hash_t score_key, move_key;
-         int score;
-         Move best;
-    };
-
-    void initEvalCache(size_t bytes);
-
-    void freeEvalCache();
-
-    void clearEvalCache();
 
  private:
     int replaceScore(const HashEntry &pos, int age) {

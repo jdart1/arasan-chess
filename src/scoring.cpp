@@ -16,12 +16,10 @@ extern "C" {
 
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
-//#define LAZY_DEBUG
 
 extern const int Direction[2];
 
-static const int LAZY_MARGIN = int(3.75F*PAWN_VALUE);
-static const int MATERIAL_LAZY_MARGIN = int(4.25F*PAWN_VALUE);
+const int Scoring::MATERIAL_LAZY_MARGIN = int(4.25F*PAWN_VALUE);
 
 static CACHE_ALIGN Bitboard w_pawn_attacks[64], b_pawn_attacks[64];
 static CACHE_ALIGN Bitboard kingProximity[2][64];
@@ -1940,27 +1938,6 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
     score -= bScores.blend(w_materialLevel);
 
     int score1 = (board.sideToMove() == White) ? score : -score;
-#ifdef LAZY_DEBUG
-    int lazyHi = 0, lazyLo = 0;
-#endif
-    if (board.getMaterial(White).infobits() != Material::KP &&
-        board.getMaterial(Black).infobits() != Material::KP) {
-#ifdef LAZY_DEBUG
-        if (score1 > beta + LAZY_MARGIN) {
-            lazyHi++;
-        }
-        else if (score1 < alpha - LAZY_MARGIN) {
-            lazyLo++;
-        }
-#else
-        if (score1 > beta + LAZY_MARGIN) {
-            return score;
-        }
-        else if (score1 < alpha - LAZY_MARGIN) {
-            return score;
-        }
-#endif
-    }
 
     pieceScore<White>(board,
         pawnEntry->wPawnData,
@@ -2034,16 +2011,6 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
     // so we will not change the selected move over a trivial difference.
     score = (score/4)*4;
 
-#ifdef LAZY_DEBUG
-    if (lazyLo) {
-      if (score > alpha)
-        cout << board << endl;
-    }
-    else if (lazyHi) {
-      if (score < beta)
-        cout << board << endl;
-    }
-#endif
     return score;
 }
 
