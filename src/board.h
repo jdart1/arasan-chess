@@ -137,31 +137,34 @@ public:
         return kingPos[side];           
    }
            
-   hash_t hashCode() const
-   {
+   hash_t hashCode() const {
        return state.hashCode;
    }
    
    // returns a hash code factoring in the position repetition count
-   hash_t hashCode(int rep_count) const
-   {
+   hash_t hashCode(int rep_count) const {
        return state.hashCode ^ rep_codes[rep_count];
    }
    
    // returns what hash code will be after move
    hash_t hashCode( Move m ) const;
 
-   int operator == ( const Board &b )
-   {
+   int operator == ( const Board &b ) {
        return state.hashCode == b.hashCode();
    }
    
    // set a bitmap of squares that lie in a straight line between
    // sq1 and sq2
-   void between( Square sq1, Square sq2, Bitboard &) const;
+   void between( Square sq1, Square sq2, Bitboard &result) const {
+      result = Attacks::betweenSquares[sq1][sq2];
+   }
    
    // returns "true" if there is a clear path between sq1 and sq2
-   int clear( Square sq1, Square sq2 ) const;
+   int clear( Square sq1, Square sq2 ) const {
+      return Attacks::directions[sq1][sq2] &&
+         Bitboard(allOccupied & Attacks::betweenSquares[sq1][sq2]).is_clear();
+   }
+
 
    // makes a move
    void doMove(Move m);
