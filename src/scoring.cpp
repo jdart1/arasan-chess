@@ -1937,8 +1937,6 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
     score += wScores.blend(b_materialLevel);
     score -= bScores.blend(w_materialLevel);
 
-    int score1 = (board.sideToMove() == White) ? score : -score;
-
     pieceScore<White>(board,
         pawnEntry->wPawnData,
                       pawnEntry->bPawnData,b_cover,wScores,bScores,

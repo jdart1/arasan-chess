@@ -8,7 +8,7 @@ class Constants
 
 public:	
 
-enum {MaxPly = 64};
+enum {MaxPly = 62};
 enum {MATE = 10000 };
 enum {MATE_RANGE = 10000-256 };
 enum {MaxMoves = 200};		

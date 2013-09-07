@@ -202,7 +202,7 @@ class Hash {
                                               ) {
         int i;
         if (!hashSize) return HashEntry::NoHit;
-        int probe = (int)(hashCode % hashSize);
+        int probe = (int)(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = NULL;
         for (i = MaxRehash; i != 0; --i) {
@@ -242,7 +242,7 @@ class Hash {
                           Move best_move) {
 
         if (!hashSize) return;
-        int probe = (int)(hashCode % hashSize);
+        int probe = (int)(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = NULL;
@@ -290,10 +290,10 @@ class Hash {
 
     // Percent full (percentage x 10)
     int pctFull() const {
-        if (hashSize == 0)
+        if (hashSlots == 0)
             return 0;
         else
-            return (int)(1000.0*(hashSize-hashFree)/(double)hashSize);
+            return (int)(1000.0*(hashSlots-hashFree)/(double)hashSlots);
     }
 
  private:
@@ -302,7 +302,9 @@ class Hash {
     }
 
     HashEntry *hashTable;
-    size_t hashSize, hashFree;
+    size_t hashSlots, hashSlotsPlus, hashFree;
+    size_t hashSize; // in bytes
+    uint64 hashMask; 
     static const int MaxRehash = 4;
     int refCount;
     int hash_init_done;

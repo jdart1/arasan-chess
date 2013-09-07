@@ -19,7 +19,7 @@ extern "C"
 
 Hash::Hash() {
    hashTable = NULL;
-   hashSize = 0;
+   hashSlots = 0;
    hashFree = 0;
    refCount = 0;
    hash_init_done = 0;
@@ -28,11 +28,24 @@ Hash::Hash() {
 void Hash::initHash(size_t bytes)
 {
    if (!hash_init_done) {
-      hashSize = (int)(bytes/sizeof(HashEntry));
-      size_t hashSizePlus = hashSize + MaxRehash;
+      hashSlots = (int)(bytes/sizeof(HashEntry));
+      
+      int hashPower;
+      // Size hashtable to the nearest power of 2 that does
+      // not exceed the specified memory usage in bytes
+      for (hashPower = 1; hashPower < 64; hashPower++) {
+         if (1 << hashPower > hashSlots) {
+            hashPower--;
+            break;
+         }
+      }
+      hashSlots = 1 << hashPower;
+      hashSlotsPlus = hashSlots+MaxRehash;
+      hashSize = sizeof(HashEntry)*hashSlotsPlus;
+      hashMask = (uint64)(hashSlots-1);
       ALIGNED_MALLOC(hashTable,
          HashEntry,
-         sizeof(HashEntry)*hashSizePlus,128);
+         hashSize,128);
       clearHash();
       hash_init_done++;
       ++refCount;
@@ -57,9 +70,8 @@ void Hash::freeHash()
 
 void Hash::clearHash()
 {
-   size_t hashSizePlus = hashSize + MaxRehash;
-   hashFree = hashSize;
-   memset(hashTable,'\0',sizeof(HashEntry)*hashSizePlus);
+   hashFree = hashSlots;
+   memset(hashTable,'\0',hashSize);
    if (options.learning.position_learning) {
       loadLearnInfo();
     }
