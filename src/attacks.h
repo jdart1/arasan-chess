@@ -1,4 +1,4 @@
-// Copyright 1992, 1997-2000, 2008-2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1997-2000, 2008-2013 by Jon Dart.  All Rights Reserved.
 
 #ifndef _ATTACK_H
 #define _ATTACK_H
@@ -16,7 +16,9 @@ class Attacks
      // if the two square indices are in a straight or diagonal line
      // then directions[a][b] is the increment that is needed to 
      // move one square at a time from a to b.
-     static int CACHE_ALIGN directions[64][64];
+     static const CACHE_ALIGN int directions[64][64];
+
+     static const CACHE_ALIGN Bitboard betweenSquares[64][64];
 
      static const CACHE_ALIGN Bitboard knight_attacks[64];
      static const CACHE_ALIGN Bitboard pawn_attacks[64][2];

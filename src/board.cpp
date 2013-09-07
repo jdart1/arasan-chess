@@ -227,40 +227,6 @@ static inline CastleType UpdateCastleStatusB(CastleType cs, Square sq)
    return cs;
 }
 
-// set a bitmap of squares that lie in a straight line between
-// sq1 and sq2. 
-void Board::between( Square sq1, Square sq2, Bitboard &result) const {
-   result.clear();
-   int offset = (int)Attacks::directions[sq1][sq2];
-   if (offset == 0) return;
-   Square sq = sq1; 
-   for (;;)
-   {
-      sq += offset;
-      if (sq == sq2)
-         break;
-      ASSERT(OnBoard(sq));
-      result.set(sq);
-   }
-}
-
-int Board::clear( Square sq1, Square sq2 ) const
-{
-   int offset = (int)Attacks::directions[sq1][sq2];
-   if (offset == 0) return 0;
-   Square sq = sq1;
-   for (;;)
-   {
-      sq += offset;
-      if (sq == sq2)
-         break;
-      ASSERT(OnBoard(sq));
-      if (contents[sq] != EmptyPiece)
-         return 0;
-   }
-   return 1;
-}
-
 #define Xor(h,sq,piece) h ^= hash_codes[sq][(int)piece]
 
 void Board::doNull()
