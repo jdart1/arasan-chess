@@ -4391,6 +4391,9 @@ const CACHE_ALIGN  Bitboard Attacks::rank_mask[8] = {
   Bitboard(0xff00000000000000ULL)
 };
 
+const CACHE_ALIGN Bitboard Attacks::rank7mask[2] = {Bitboard(0xff000000000000ULL),
+                                                   Bitboard(0xff00ULL)};
+
 const CACHE_ALIGN Bitboard Attacks::rank_file_mask[64] = {
 Bitboard(0x1010101010101ffULL),
 Bitboard(0x2020202020202ffULL),
@@ -5199,8 +5202,6 @@ const Bitboard Attacks::ep_mask[8][2] =
 {Bitboard(0x40000000ULL), Bitboard(0x4000000000ULL)}
 };
 
-Bitboard Attacks::rank7mask[2];
-
 #ifdef _64BIT
 const CACHE_ALIGN unsigned Attacks::r_shift[64]=
 {
@@ -5567,8 +5568,6 @@ void Attacks::initMagicData() {
 
 
 void Attacks::init() {
-  rank7mask[White] = rank_mask[6];
-  rank7mask[Black] = rank_mask[1];
   initMagicData();
 }
 
