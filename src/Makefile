@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 16.1
+# Gnu Makefile for Arasan 16.2
 #
-VERSION = 16.1.0
+VERSION = 16.2.0
 
 # paths, modify as needed:
 
@@ -29,8 +29,8 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 
 #define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS = 1
-#NALIMOV_TBS = 1
+GAVIOTA_TBS = 1
+NALIMOV_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
