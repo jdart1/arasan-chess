@@ -76,6 +76,8 @@ static const int FUTILITY_MARGIN_BASE[16] =
 
 static int FUTILITY_MARGIN[16][64];
 
+//#define LAZY_DEBUG
+
 static const int HISTORY_PRUNE_DEPTH = 12;
 struct HistoryPruneParams {
   int historyMinMoveCount;
@@ -1461,6 +1463,15 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
           stand_pat_score = node->eval;
        } else {
           // try to cut off based on material alone
+#ifdef LAZY_DEBUG
+          const int mat_score = scoring.materialScore(board);
+          node->eval = stand_pat_score =
+              mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
+          didEval++;
+          if (node->eval < node->beta && mat_score - Scoring::MATERIAL_LAZY_MARGIN >= node->beta) {
+             cout << "error: " << board << endl; 
+          }
+#else
           int mat_score = scoring.materialScore(board);
           if (mat_score - Scoring::MATERIAL_LAZY_MARGIN >= node->beta) {
              stand_pat_score = mat_score;
@@ -1470,6 +1481,7 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
                 mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
              didEval++;
           }
+#endif
        }
     }
 #ifdef _TRACE
