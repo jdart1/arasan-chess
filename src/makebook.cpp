@@ -212,7 +212,7 @@ add_move(BookEntry2 *new_entry)
       cout << "inserting pg:" << page << " probe:" << probe <<
          " h:" << (hex) << Bitboard(new_entry->hash_code()).hivalue() <<
          Bitboard(new_entry->hash_code()).lovalue() <<
-`         (dec) << " i:" <<
+         (dec) << " i:" <<
          (int)new_entry->get_move_index() << " slot:" << next <<
          " w:" << new_entry->get_recommend() << endl;
 #endif
