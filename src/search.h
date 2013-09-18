@@ -355,6 +355,8 @@ class Search : public ThreadControl {
 
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4 };
 
+    enum { QS_CHECK_DEPTH = -1, QS_NOCHECK_DEPTH = 2};
+
     int movesRelated( Move lastMove, Move threatMove) const;
 
     int calcExtensions(const Board &board,
@@ -363,7 +365,7 @@ class Search : public ThreadControl {
                        int moveIndex,
                        Move move);
 
-    int qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_depth);
+    int qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_depth, int hash_depth);
 
     int qsearch_check(int ply, int depth, Move pv, hash_t hash, int tt_depth);
 

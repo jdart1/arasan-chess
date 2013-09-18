@@ -264,7 +264,10 @@ Move SearchController::findBestMove(
 
     Time_Check_Interval = 5000/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
-    if (srcType == TimeLimit && time_limit < 1000) {
+    if (srcType == TimeLimit && time_limit < 100) {
+       Time_Check_Interval = 1250/NODE_ACCUM_THRESHOLD;
+    }
+    else if (srcType == TimeLimit && time_limit < 1000) {
        Time_Check_Interval = 2500/NODE_ACCUM_THRESHOLD;
     }
     computerSide = board.sideToMove();
@@ -1307,10 +1310,10 @@ int Search::quiesce(int ply,int depth)
     int tt_depth;
     if (board.checkStatus() == InCheck ||
         depth >= 1-options.search.checks_in_qsearch) {
-        tt_depth = -1;
+        tt_depth = QS_CHECK_DEPTH;
     }
     else {
-        tt_depth = -2;
+        tt_depth = QS_NOCHECK_DEPTH;
     }
     Move pv = NullMove;
     int value;
@@ -1327,16 +1330,9 @@ int Search::quiesce(int ply,int depth)
 #ifdef SEARCH_STATS
         controller->stats->hash_hits++;
 #endif
-        value = hashEntry.value();
         // If this is a mate score, adjust it to reflect the
         // current ply depth.
-        //
-        if (value >= Constants::MATE_RANGE) {
-           value -= ply;
-        }
-        else if (value <= -Constants::MATE_RANGE) {
-           value += ply;
-        }
+        value = Hash::scoreFromHash(hashEntry.value(),ply);
         switch (result) {
         case HashEntry::Valid:
 #ifdef _TRACE
@@ -1397,11 +1393,6 @@ int Search::quiesce(int ply,int depth)
         } // end switch
         // Note: hash move & flags may be usable even if score is not usable
         pv = hashEntry.bestMove(board);
-        if (tt_depth == -2 && !(board.checkStatus() == InCheck || CaptureOrPromotion(pv))) {
-           // don't fetch a non-capture/promotion checking move from the hash table if
-           // we aren't at a depth where checks are allowed.
-           pv = NullMove;
-        }
         // Entries from the learn file or from a TB hit do not have check status
         if (!hashEntry.tb() && !hashEntry.learned()) {
            board.setCheckStatus(hashEntry.inCheck() ? InCheck : NotInCheck);
@@ -1426,7 +1417,7 @@ int Search::quiesce(int ply,int depth)
         }
     }
     else {
-        return qsearch_no_check(ply,depth,pv,hash,tt_depth);
+        return qsearch_no_check(ply,depth,pv,hash,tt_depth,hashEntry.depth());
     }
 }
 
@@ -1444,7 +1435,7 @@ static inline void swap( Move moves[], int i, int j)
    moves[i] = tmp;
 }
 
-int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_depth)
+int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_depth, int hash_depth)
 {
     int stand_pat_score;
     // Establish a default score.  This score is returned if no
@@ -1467,7 +1458,6 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
           const int mat_score = scoring.materialScore(board);
           node->eval = stand_pat_score =
               mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
-          didEval++;
           if (node->eval < node->beta && mat_score - Scoring::MATERIAL_LAZY_MARGIN >= node->beta) {
              cout << "error: " << board << endl; 
           }
@@ -1519,6 +1509,16 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
 
     int move_index = 0;
     int try_score;
+    // validate hash move (if any) is usable
+    if (!IsNull(pv)) {
+        if (tt_depth == QS_NOCHECK_DEPTH && hash_depth != QS_NOCHECK_DEPTH && !CaptureOrPromotion(pv)) {
+           // don't fetch a non-capture/promotion checking move from the hash table if
+           // we aren't at a depth where checks are allowed.
+           pv = NullMove;
+        } else if (tt_depth == QS_CHECK_DEPTH && hash_depth >= 0 && !(board.checkStatus() == InCheck || CaptureOrPromotion(pv) || board.wouldCheck(pv))) {
+           pv = NullMove;
+        }
+    }
     BoardState state(board.state);
     if (!IsNull(pv) && validMove(board,pv)) {
 #ifdef _TRACE
@@ -1741,13 +1741,6 @@ int Search::qsearch_no_check(int ply, int depth, Move pv, hash_t hash, int tt_de
     }
     search_end:
     storeHash(board,hash,pv,tt_depth);
-    if (!IsNull(node->best)) {
-#ifdef _TRACE
-      indent(ply); cout << "storing best move ";
-      MoveImage(node->best,cout);
-      cout << endl;
-#endif
-    }
     if (node->inBounds(node->best_score)) {
         if (!IsNull(node->best)) {
             updatePV(board,node->best,ply);
@@ -1845,14 +1838,6 @@ int Search::qsearch_check(int ply, int depth, Move pv, hash_t hash, int tt_depth
         (node+1)->pv_length=0; // no PV from this point
         node->flags |= EXACT;
     }
-    if (node->best != NullMove) {
-#ifdef _TRACE
-       indent(ply); cout << "storing best move ";
-       MoveImage(node->best,cout);
-       cout << endl;
-#endif
-       // TBD controller->hashTable.cacheBestMove(board,node->best);
-    }
  search_end:
     storeHash(board,hash,pv,tt_depth);
     if (node->inBounds(node->best_score)) {
@@ -1871,31 +1856,20 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         // store the position in the hash table, if there's room
         int value = node->best_score;
         HashEntry::ValueType val_type;
-        // Adjust mate scores to reflect current ply.
-        if (value <= -Constants::MATE_RANGE) {
-             value -= node->ply;
-             val_type = HashEntry::Valid;
+        if (value <= node->alpha) {
+           val_type = HashEntry::UpperBound;
+           // We don't have a "best" move, because all moves
+           // caused alpha cutoff.  But if there was a hash
+           // move or an initial move produced by internal
+           // interative deepening, save it in the hash table
+           // so it will be tried first next time around.
+           node->best = hash_move;
         }
-        else if (value >= Constants::MATE_RANGE) {
-             value += node->ply;
-             val_type = HashEntry::Valid;
+        else if (value >= node->beta) {
+           val_type = HashEntry::LowerBound;
         }
         else {
-            if (value <= node->alpha) {
-                val_type = HashEntry::UpperBound;
-                // We don't have a "best" move, because all moves
-                // caused alpha cutoff.  But if there was a hash
-                // move or an initial move produced by internal
-                // interative deepening, save it in the hash table
-                // so it will be tried first next time around.
-                node->best = hash_move;
-            }
-            else if (value >= node->beta) {
-                val_type = HashEntry::LowerBound;
-            }
-            else {
-                val_type = HashEntry::Valid;
-            }
+           val_type = HashEntry::Valid;
         }
 #ifdef _TRACE
         static const char type_chars[5] =
@@ -1903,7 +1877,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         if (master()) {
             indent(node->ply);
             cout << "storing type=" << type_chars[val_type] <<
-                " ply=" << node->ply << " depth=" << depth << " value=" << value <<
+                " ply=" << node->ply << " depth=" << depth << " score=" << score <<
                 " move=";
             MoveImage(node->best,cout);
             cout << endl;
@@ -1912,7 +1886,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         controller->hashTable.storeHash(hash, depth,
             controller->age,
             val_type,
-            node->best_score, 
+            Hash::scoreToHash(value,node->ply),
             node->eval,
             (node->PV() ? HashEntry::FULL_MASK : 0) |
             (board.checkStatus() == InCheck ? HashEntry::CHECK_MASK : 0) |
@@ -2213,7 +2187,10 @@ int Search::search()
                result = HashEntry::Invalid;
             }
         }
-        int value = hashEntry.value();
+        // adjust mate scores based on the current ply:
+        int value = Hash::scoreFromHash(hashEntry.value(),ply);
+        // do not accept a non-PV score in the PV
+        if (node->PV() && !hashEntry.isFull()) result = HashEntry::Invalid;
         switch (result) {
         case HashEntry::Valid:
 #ifdef _TRACE
@@ -2225,15 +2202,6 @@ int Search::search()
                  " value = " << value << endl;
            }
 #endif
-           // If this is a mate score, adjust it to reflect the
-           // current ply depth.
-           //
-           if (value >= Constants::MATE_RANGE) {
-              value -= ply;
-           }
-           else if (value <= -Constants::MATE_RANGE) {
-              value += ply;
-           }
            if (node->inBounds(value)) {
               // parent node will consider this a new best line
               hash_move = hashEntry.bestMove(board);
@@ -2315,17 +2283,6 @@ int Search::search()
 #endif
             int score = tb_score;
             // insert TB info in hash table.
-            if (score <= -Constants::MATE_RANGE) {
-                score -= ply;
-            }
-            else if (score >= Constants::MATE_RANGE) {
-                score += ply;
-            }
-#ifdef _TRACE
-            if (master() && tb_score != score) {
-                indent(ply); cout << "adjusted score " << score << endl;
-            }
-#endif
             // Put it in with a large depth so we will not
             // overwrite - this entry is "exact" at all
             // search depths, so effectively its depth is infinite.
@@ -2333,7 +2290,8 @@ int Search::search()
                 (Constants::MaxPly-1)*DEPTH_INCREMENT,
                 controller->age,
                 HashEntry::Valid,
-                score, Scoring::INVALID_SCORE,
+                Hash::scoreToHash(score,ply),
+                Scoring::INVALID_SCORE,
                 HashEntry::FULL_MASK | HashEntry::TB_MASK,
                 NullMove);
             node->best_score = tb_score;               // unadjusted score
@@ -2380,10 +2338,9 @@ int Search::search()
         } else {
            // try to cut off just based on material
            int mat_score = scoring.materialScore(board);
-           if (mat_score - Scoring::MATERIAL_LAZY_MARGIN > threshold) {
-              eval = mat_score;
-           } else {
-              eval = mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
+           eval = mat_score - Scoring::MATERIAL_LAZY_MARGIN;
+           if (eval <= threshold) {
+              eval = mat_score + scoring.positionalScore(board,-Constants::   MATE,Constants::MATE);
            }
         } 
         if (eval > threshold) {
@@ -2404,9 +2361,8 @@ int Search::search()
         } else {
            // try to do razoring test just based on material
            int mat_score = scoring.materialScore(board);
-           if (mat_score + Scoring::MATERIAL_LAZY_MARGIN < threshold) {
-              eval = mat_score;
-           } else {
+           eval = mat_score + Scoring::MATERIAL_LAZY_MARGIN;
+           if (eval >= threshold) {
               eval = mat_score + scoring.positionalScore(board,-Constants::MATE,Constants::MATE);
            }
         } 
@@ -2795,16 +2751,6 @@ int Search::search()
         // store the position in the hash table, if there's room
         int value = node->best_score;
         HashEntry::ValueType val_type;
-        // Adjust mate scores to reflect current ply. But only
-        // if the score is in bounds.
-        if (value > node->alpha && value < node->beta) {
-            if (value < -Constants::MATE_RANGE) {
-                value -= ply;
-            }
-            else if (value > Constants::MATE_RANGE) {
-                value += ply;
-            }
-        }
 #ifdef _TRACE
         char typeChar;
 #endif
@@ -2818,7 +2764,7 @@ int Search::search()
             // move or an initial move produced by internal
             // interative deepening, save it in the hash table
             // so it will be tried first next time around.
-            node->best = hash_move;
+            // TBD node->best = hash_move;
         }
         else if (value >= node->beta) {
             val_type = HashEntry::LowerBound;
@@ -2827,7 +2773,8 @@ int Search::search()
 #endif
         }
         else {
-            val_type = node->fpruned_moves ? HashEntry::Invalid : HashEntry::Valid;
+           //val_type = node->fpruned_moves ? HashEntry::Invalid : HashEntry::Valid;
+            val_type = HashEntry::Valid;
 #ifdef _TRACE
             typeChar = 'E';
 #endif
@@ -2846,7 +2793,7 @@ int Search::search()
         controller->hashTable.storeHash(hash, depth,
             controller->age,
             val_type,
-            node->best_score, 
+            Hash::scoreToHash(node->best_score,ply),
             node->eval,                                        
             (node->PV() ? HashEntry::FULL_MASK : 0) |
             (board.checkStatus() == InCheck ? HashEntry::CHECK_MASK : 0) |

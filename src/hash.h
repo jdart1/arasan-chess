@@ -208,14 +208,12 @@ class Hash {
         for (i = MaxRehash; i != 0; --i) {
             HashEntry &entry = *p;
             if (entry.getEffectiveHash() == hashCode) {
-                /*
                 // we got a hit on this entry in the current search,
                 // so update the age to discourage replacement:
-                if (entry.age() && (entry.age() != age)) {
-                entry.setAge(age);
-                entry.setEffectiveHash(hashCode);
+                if (entry.age() != age) {
+                   entry.setAge(age);
+                   entry.setEffectiveHash(hashCode);
                 }
-                */
                 pi = entry;
                 hit = &entry;
                 if (entry.depth() >= depth) {
@@ -296,6 +294,25 @@ class Hash {
             return (int)(1000.0*(hashSlots-hashFree)/(double)hashSlots);
     }
 
+    static int scoreToHash(int value, int ply) {
+       if (value >= Constants::MATE_RANGE) {
+          value -= ply;
+       }
+       else if (value <= -Constants::MATE_RANGE) {
+          value += ply;
+       }
+       return value;
+    }
+
+    static int scoreFromHash(int value, int ply) {
+        if (value < -Constants::MATE_RANGE) {
+            value -= ply;
+        }
+        else if (value > Constants::MATE_RANGE) {
+            value += ply;
+        }
+        return value;
+    }
  private:
     int replaceScore(const HashEntry &pos, int age) {
         return (Util::Abs(pos.age()-age)<<12) - pos.depth();
