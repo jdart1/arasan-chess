@@ -1977,11 +1977,11 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
             lazyLo++;
         }
 #else
-        if (score1 > beta + LAZY_MARGIN) {
-            return score;
+        if (score1 >= beta + LAZY_MARGIN) {
+            return score1 - LAZY_MARGIN;
         }
         else if (score1 < alpha - LAZY_MARGIN) {
-            return score;
+            return score1 + LAZY_MARGIN;
         }
 #endif
     }
