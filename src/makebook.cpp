@@ -327,7 +327,7 @@ static void write_page(int page,ofstream &book_file)
    }
    if (index)
       book_file.write((const char*)write_buffer, index);
-   long bookSize = book_file.tellp();
+   std::streamoff bookSize = book_file.tellp();
    while (bookSize % pageSize != 0L) {
       book_file.put('\0');
       bookSize++;

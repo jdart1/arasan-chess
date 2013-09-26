@@ -1,4 +1,4 @@
-// Copyright 1995, 2007, 2008, 2012 by Jon Dart
+// Copyright 1995, 2007, 2008, 2012, 2013 by Jon Dart
 // Stand-alone console executable to build "ecodata.cpp" file
 // from "eco" text file.
 
@@ -28,7 +28,7 @@ void charout(unsigned char c)
     {
         cout << '\\';
 	cout.fill('0');
-	int oldwidth = cout.width();
+        std::streamsize oldwidth = cout.width();
 	cout.width(3);
 	cout << (oct) << (unsigned)c;
 	cout.width(oldwidth);
