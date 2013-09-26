@@ -2354,7 +2354,6 @@ int Search::search()
         // current search, just reduced depth + the IID flag set.
         node->flags |= IID;
         int alpha = node->alpha;
-        node->num_try = 0;
         node->depth = d;
         int iid_score = -search();
         node->flags &= ~IID;
@@ -2821,8 +2820,6 @@ void Search::searchSMP(ThreadInfo *ti)
             board.undoMove(move,state);
             continue;
         }
-        // keep count in parent of legal moves searched
-        parentNode->num_try++;
         moveIndex++;
 #ifdef _TRACE
         if (master() || ply==0) {
