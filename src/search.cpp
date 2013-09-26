@@ -2628,7 +2628,7 @@ int Search::search()
 #endif
         }
         else {
-            val_type = node->fpruned_moves ? PositionInfo::Invalid : PositionInfo::Valid;
+            val_type = PositionInfo::Valid;
 #ifdef _TRACE
             typeChar = 'E';
 #endif
