@@ -601,13 +601,17 @@ C78     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O b5 6. Bb3 Bb7 "Ruy Lopez
 C79     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O d6 "Ruy Lopez"
 
 C80     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 "Ruy Lopez, Open"
-C81     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. Qe2
-C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3
-C83     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Be7
-C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 
+C81     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. Qe2 "Ruy Lopez, Open, Howell Attack"
+C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 "Ruy Lopez, Open"
+C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Bc5 "Ruy Lopez, Open"
+C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Bc5 10. Nbd2 "Ruy Lopez, Open"
+C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Bc5 10. Nbd2 O-O 11. Bc2 Nxf2 "Ruy Lopez, Open, Dilworth Variation"
+C83     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Be7 "Ruy Lopez, Open"
+C83     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Be7 10. Be3 "Ruy Lopez, Open"
+C83     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Be7 10. Nbd2 "Ruy Lopez, Open"
+C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 "Ruy Lopez, Closed"
 C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. d4 "Ruy Lopez, Center Attack"
-C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. d4 "Ruy Lopez"
-
+C84     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. d4 "Ruy Lopez, Center Attack"
 C85     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Bc6 dc6 "Ruy Lopez, Delayed Exchange"
 C86     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Qe2 "Ruy Lopez, Worrall Attack"
 C87     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 d6 "Ruy Lopez, Closed"
