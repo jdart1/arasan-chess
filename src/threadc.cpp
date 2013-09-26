@@ -113,7 +113,7 @@ int ThreadControl::wouldWait() {
 
 int ThreadControl::sleep(time_t t) {
 #ifdef _WIN32
-   return (WaitForSingleObject(hEvent1,t) != WAIT_OBJECT_0);
+   return (WaitForSingleObject(hEvent1,(DWORD)t) != WAIT_OBJECT_0);
 #else
    // Mac OS or Linux
    struct timespec ts, ts_remaining;

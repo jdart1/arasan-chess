@@ -1,8 +1,8 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2012 by Jon Dart. All Rights Reserved.
 #
-TARGET = win32
-#TARGET = win64
+#TARGET = win32
+TARGET = win64
 VERSION = 16.2
 
 # directory defines - objects
@@ -12,6 +12,7 @@ PROFDATA = ..\$(TARGET)\profdata
 #TRACE=/D_TRACE 
 #DEBUG=/Zi -D_DEBUG 
 #LDDEBUG=/DEBUG /PDB:arasanx.pdb
+BUILD_ROOT=..
 
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
@@ -35,8 +36,11 @@ BUILD_TYPE=debug
 !Else
 BUILD_TYPE=release
 !Endif
-BUILD = ..\$(TARGET)\$(BUILD_TYPE)
-PGO_BUILD = ..\$(TARGET)\pgo_build
+BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
+PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
+PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
+PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
+POPCNT_BUILD = $(BUILD_ROOT)\$(TARGET)\popcnt
 RELEASE = $(BUILD_ROOT)\release
 # relative to root:
 SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
@@ -81,6 +85,8 @@ PROF_USE_FLAGS = /Qprof_use $(IPO) /Qprof_dir$(PROFDATA)
 
 TB_FLAGS = $(CFLAGS) $(SMP) /Gr /O1 /GS- /I$(TB) /I.
 TB_PROFILE_FLAGS = $(TB_FLAGS) $(PROF_USE_FLAGS)
+
+POPCNT_FLAGS = -DUSE_POPCNT /arch:AVX
 
 default: dirs $(BUILD)\arasanx.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
@@ -234,6 +240,20 @@ $(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
 $(TB_OBJS) 
 
+ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
+$(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
+$(POPCNT_BUILD)\board.obj $(POPCNT_BUILD)\boardio.obj $(POPCNT_BUILD)\options.obj \
+$(POPCNT_BUILD)\chess.obj $(POPCNT_BUILD)\material.obj $(POPCNT_BUILD)\movegen.obj \
+$(POPCNT_BUILD)\scoring.obj $(POPCNT_BUILD)\searchc.obj \
+$(POPCNT_BUILD)\see.obj $(POPCNT_BUILD)\globals.obj $(POPCNT_BUILD)\search.obj \
+$(POPCNT_BUILD)\notation.obj $(POPCNT_BUILD)\hash.obj $(POPCNT_BUILD)\stats.obj \
+$(POPCNT_BUILD)\bitprobe.obj $(POPCNT_BUILD)\epdrec.obj $(POPCNT_BUILD)\chessio.obj \
+$(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj $(POPCNT_BUILD)\book.obj \
+$(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookutil.obj $(POPCNT_BUILD)\bookentr.obj \
+$(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
+$(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
+$(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj $(TB_OBJS)
+
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
@@ -283,6 +303,9 @@ $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 {}.cpp{$(PGO_BUILD)}.obj:
     $(CL) $(CFLAGS) $(PROF_USE_FLAGS) $(OPT) $(SSE) /c /Fo$@ $<
 
+{}.cpp{$(POPCNT_BUILD)}.obj:
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) /c /Fo$@ $<
+
 default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
 profile: dirs $(PROFILE)\arasanx.exe
@@ -311,6 +334,9 @@ profile-run: dirs
 
 profile-optimized: dirs $(ARASANX_PGO_OBJS)
     $(LD) $(LDFLAGS) $(ARASANX_PGO_OBJS) /out:$(PGO_BUILD)\arasanx.exe
+
+popcnt: dirs $(ARASANX_POPCNT_OBJS)
+    $(LD) $(ARASANX_POPCNT_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX)-popcnt.exe
 
 run-tests:
     $(BUILD)\$(ARASANX) -H 256M -c 2 <$(TESTS)\tests >$(TESTS)\test-results.txt
@@ -348,5 +374,6 @@ clean: dirs
 	del $(PROFILE)\*.exe
 	del /q $(RELEASE)\*.*
 	del /q $(PGO_BUILD)\*.*
+	del /q $(POPCNT_BUILD)\*.*
 
-dirs: $(BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(RELEASE)
+dirs: $(BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(POPCNT_BUILD) $(RELEASE)

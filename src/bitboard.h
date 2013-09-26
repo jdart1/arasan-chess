@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2010-2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2008, 2010-2013 by Jon Dart.  All Rights Reserved.
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
@@ -254,7 +254,7 @@ class Bitboard
 #if defined(__INTEL_COMPILER) && defined(USE_INTRINSICS)
 #ifdef _64BIT
 #ifdef USE_POPCNT
-      return _mm_popcnt_u64(data);
+      return (unsigned int)_mm_popcnt_u64(data);
 #else
       return _popcnt64(data);
 #endif
