@@ -372,7 +372,7 @@ Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candida
    for (int i = 0; i < candidate_count; i++) total_weight += candidate_weights[i];
    if (total_weight == 0) return NullMove;
 #ifdef _TRACE
-   cout << "pickRandom: count = " << n << " total_weight = " << total_weight << endl;
+   cout << "pickRandom: candidate count = " << candidate_count << " total_weight = " << total_weight << endl;
 #endif   
 
    const unsigned nRand = rand() % total_weight;
