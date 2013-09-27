@@ -1517,7 +1517,7 @@ int Search::qsearch_no_check(int ply, int depth)
         }
         // Do checks in qsearch
         if ((stand_pat_score >= node->alpha - 2*PAWN_VALUE) &&
-            (depth >= 1-options.search.checks_in_qsearch)) {
+            (depth >= 1-srcOpts.checks_in_qsearch)) {
             MoveGenerator mg(board, &context, ply, NullMove, master());
             move_count = mg.generateChecks(moves);
             move_index = 0;
@@ -1761,7 +1761,9 @@ int Search::calcExtensions(const Board &board,
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
-   int pruneOk = 1, reduceOk = 1;
+   // Do not prune until at least one legal move has been searched
+   // (to avoid problems in stalemate detection).
+   int pruneOk = (parentNode->num_try>0), reduceOk = 1;
    int swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
       pruneOk = reduceOk = 0;
@@ -2002,7 +2004,7 @@ int Search::search()
     using_tb = 0;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     int egtbDepth = Constants::MaxPly*DEPTH_INCREMENT;
-    if (options.search.use_tablebases) {
+    if (srcOpts.use_tablebases) {
         const Material &wMat = board.getMaterial(White);
         const Material &bMat = board.getMaterial(Black);
         egtbDepth = 3*DEPTH_INCREMENT*root()->getIterationDepth()/4;
@@ -2122,12 +2124,12 @@ int Search::search()
         controller->stats->tb_probes++;
         int tb_score;
 #ifdef NALIMOV_TBS
-         if (options.search.tablebase_type == Options::NALIMOV_TYPE) {
+         if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
              tb_hit = NalimovTb::probe_tb(board, tb_score, ply);
          }
 #endif
 #ifdef GAVIOTA_TBS
-         if (options.search.tablebase_type == Options::GAVIOTA_TYPE) {
+         if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
              // TBD: use soft probing at lower depths
              tb_hit = GaviotaTb::probe_tb(board, tb_score, ply, true);
          }
@@ -3029,7 +3031,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
     if (!terminate && mg->more() &&
         activeSplitPoints < SPLIT_STACK_MAX_DEPTH &&
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
-        (!options.search.use_tablebases ||
+        (!srcOpts.use_tablebases ||
         board.getMaterial(White).men() +
         board.getMaterial(Black).men() > EGTBMenCount) &&
 #endif
