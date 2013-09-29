@@ -172,14 +172,14 @@ static const int CASTLING_SCORES[6] =
 
 // scores by game phase and rank
 static const int PASSED_PAWN[2][8] =
-  {{0, 0, 7, 12, 20, 29, 60, 119},
-   {0, 0, 10, 18, 30, 45, 90, 151}};
+   {{0, 0, 6, 11, 18, 27, 56, 111}, 
+    {0, 0, 9, 16, 28, 42, 84, 141}}; 
 static const int POTENTIAL_PASSER[2][8] =
-  {{0, 0, 7/2, 12/2, 20/2, 29/2, 60/2, 0 },
-   {0, 0, 10/2, 18/2, 30/2, 45/2, 90/2, 0 }};
+   {{0, 0, 2, 4, 6, 9, 20, 0},
+    {0, 0, 3, 6, 10, 15, 30, 0}};
 static const int PASSED_PAWN_BLOCK[2][8] =
-  {{0, 0, 7/3, 12/3, 20/3, 29/4, 60/4, 100/5 },
-   {0, 0, 10/3, 18/3, 30/3, 45/4, 90/4, 150/5 }};
+   {{19, 19, 22, 25, 29, 34, 50, 81}, 
+    {14, 14, 16, 18, 21, 25, 37, 60}};
 
 static const int OUTSIDE_PP[2] = {12, 25};
 
@@ -189,9 +189,12 @@ static const int Midgame = 0;
 static const int Endgame = 1;
 
 static const int CONNECTED_PASSERS[2][8] =
-  {{0, 0, 7, 8, 11, 16, 27, 51 },
-   {0, 0, 10, 12, 15, 25, 40, 75 }};
-static const int ADJACENT_PASSERS[2] = {12,12};
+   {{0, 0, 2, 2, 3, 5, 8, 15},
+    {0, 0, 3, 3, 4, 7, 12, 23}};
+static const int ADJACENT_PASSERS[2][8] =
+   {{0, 1, 2, 3, 4, 6, 8, 11},
+    {0, 1, 2, 4, 6, 8, 11, 14}};
+
 // by file:
 static const int DOUBLED_PAWNS[2][8] = 
   {{-6, -8, -10, -10, -10, -10, -8, -6},
@@ -457,9 +460,16 @@ static void initBitboards()
             connected_passers[i][White].set(i+1);
             connected_passers[i][Black].set(i+1);
             adjacent_passers[i] |= Attacks::file_mask[file];
+            adjacent_passers[i].clear(MakeSquare(file+1,rank,Black));
+            if (rank>1) adjacent_passers[i].clear(MakeSquare(file+1,rank-1,Black));
+            if (rank<8) adjacent_passers[i].clear(MakeSquare(file+1,rank+1,Black));
         }
         if (file != 1) {
             weakB[i].clear(MakeSquare(file-1,rank,Black));
+            adjacent_passers[i] |= Attacks::file_mask[file-2];
+            adjacent_passers[i].clear(MakeSquare(file-1,rank,Black));
+            if (rank>1) adjacent_passers[i].clear(MakeSquare(file-1,rank-1,Black));
+            if (rank<8) adjacent_passers[i].clear(MakeSquare(file-1,rank+1,Black));
         }
         connected_passers[i][Black] |= Attacks::pawn_attacks[i][Black];
         connected_passers[i][White] |= Attacks::pawn_attacks[i][White];
@@ -1378,22 +1388,14 @@ PawnHashEntry::PawnData &entr)
             }
         }
         if (passed) {
-            if (doubled) {
+           // note: doubled passed pawns were scored earlier, are not
+           // considered passed. 
 #ifdef PAWN_DEBUG
-                cout << " potential passer";
+           cout << " passed";
 #endif
-                // blocked by own pawn, count as potential passer
-                entr.midgame_score += POTENTIAL_PASSER[Midgame][rank];
-                entr.endgame_score += POTENTIAL_PASSER[Endgame][rank];
-                passed = 0;
-            } else {
-#ifdef PAWN_DEBUG
-                cout << " passed";
-#endif
-                entr.midgame_score += PASSED_PAWN[Midgame][rank];
-                entr.endgame_score += PASSED_PAWN[Endgame][rank];
-                entr.passers.set(sq);
-            }
+           entr.midgame_score += PASSED_PAWN[Midgame][rank];
+           entr.endgame_score += PASSED_PAWN[Endgame][rank];
+           entr.passers.set(sq);
         }
         else {
           int potential = 0;
@@ -1508,10 +1510,10 @@ PawnHashEntry::PawnData &entr)
                  // Two potential passers share the same blocker(s).
                  // Score according to the most advanced one.
                  if (rank > rankdup) {
-                    entr.midgame_score += POTENTIAL_PASSER[Midgame][rank]
-                     -POTENTIAL_PASSER[Midgame][rankdup];
-                    entr.endgame_score += POTENTIAL_PASSER[Endgame][rank]
-                     -POTENTIAL_PASSER[Endgame][rankdup];
+                    entr.midgame_score += (POTENTIAL_PASSER[Midgame][rank]
+                                          -POTENTIAL_PASSER[Midgame][rankdup]);
+                    entr.endgame_score += (POTENTIAL_PASSER[Endgame][rank]
+                                          -POTENTIAL_PASSER[Endgame][rankdup]);
                  }
              } else {
                 entr.midgame_score += POTENTIAL_PASSER[Midgame][rank];
@@ -1554,13 +1556,13 @@ PawnHashEntry::PawnData &entr)
 #endif
        }
        else if (TEST_MASK(adjacent_passers[sq],entr.passers)) {
-          entr.midgame_score += ADJACENT_PASSERS[Midgame];
-          entr.endgame_score += ADJACENT_PASSERS[Endgame];
+          entr.midgame_score += ADJACENT_PASSERS[Midgame][Rank(sq,side)];
+          entr.endgame_score += ADJACENT_PASSERS[Endgame][Rank(sq,side)];
 #ifdef PAWN_DEBUG
           cout << "adjacent passer score (";
           cout << ColorImage(side);
-          cout << ") : (" << ADJACENT_PASSERS[Midgame] << ", " <<
-                            ADJACENT_PASSERS[Endgame];
+          cout << ") : (" << ADJACENT_PASSERS[Midgame][Rank(sq,side)] << ", " <<
+                            ADJACENT_PASSERS[Endgame][Rank(sq,side)];
           cout << ")" << endl;
 #endif
        }
@@ -2096,10 +2098,12 @@ template <ColorType side> static int KBPDraw(const Board &board) {
                 board.pawn_bits[side].firstOne();
             ASSERT(pawn != InvalidSquare);
             // This does not cover all drawing cases but many of them:
-            return okp == qsq || Attacks::king_attacks[qsq].isSet(okp) ||
+            if (kingNearProximity[qsq].isSet(okp) ||
                 (Util::Abs(File(okp)-pfile)<=1 &&
-                 Rank<side>(okp) > Rank<side>(pawn) &&
-                 Rank<side>(okp) > Rank<side>(kp));
+                 Rank(okp,side) > Rank(pawn,side) &&
+                 Rank(okp,side) > Rank(kp,side))) {
+                return 1; // draw
+            }
         }
     }
     return 0;
