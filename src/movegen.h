@@ -183,9 +183,9 @@ class RootMoveGenerator : public MoveGenerator
 
    public:
       RootMoveGenerator(const Board &board,
-         SearchContext *context,
-         Move pvMove,
-         int trace);
+         SearchContext *context = NULL,
+         Move pvMove = NullMove,
+         int trace = 0);
 
       // Generate the next move, in sorted order, NullMove if none left
       virtual Move nextMove() {
