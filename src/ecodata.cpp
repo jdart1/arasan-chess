@@ -378,6 +378,7 @@ const struct ECOData eco_codes[] =
 {"B98", 0xae2cdd7db451486fULL ,"Sicilian Defense, Najdorf Variation"},
 {"B99", 0x917e5645b8417ed2ULL ,"Sicilian Defense, Najdorf Variation"},
 {"B99", 0xca275766bd8de1a7ULL ,"Sicilian Defense, Najdorf Variation"},
+{"B99", 0xdde3124e50e0afd5ULL ,"Sicilian Defense, Najdorf Variation"},
 {"C00", 0xfa38b8058309a4ceULL ,"French Defense"},
 {"C00", 0xe864d807f054912bULL ,"French, King's Indian Attack"},
 {"C00", 0xf18784acc1b337ddULL ,"French, Chigorin Variation"},
