@@ -1556,15 +1556,23 @@ PawnHashEntry::PawnData &entr)
 #endif
        }
        else if (TEST_MASK(adjacent_passers[sq],entr.passers)) {
-          entr.midgame_score += ADJACENT_PASSERS[Midgame][Rank(sq,side)];
-          entr.endgame_score += ADJACENT_PASSERS[Endgame][Rank(sq,side)];
+          Bitboard adj(adjacent_passers[sq] & entr.passers);
+          Square farthest = (side==White) ? adj.lastOne() :
+               adj.firstOne();
+          // score only if current passer being evaluated is ahead (avoids
+          // dual counting of adjacent passer bonus)
+          if (Rank(sq,side) > Rank(farthest,side)) {
+              int midrank = (Rank(farthest,side) + Rank(sq,side))/2; 
+              entr.midgame_score += ADJACENT_PASSERS[Midgame][midrank];
+              entr.endgame_score += ADJACENT_PASSERS[Endgame][midrank];
 #ifdef PAWN_DEBUG
-          cout << "adjacent passer score (";
-          cout << ColorImage(side);
-          cout << ") : (" << ADJACENT_PASSERS[Midgame][Rank(sq,side)] << ", " <<
-                            ADJACENT_PASSERS[Endgame][Rank(sq,side)];
-          cout << ")" << endl;
+              cout << "adjacent passer score (";
+              cout << ColorImage(side);
+              cout << ") : (" << ADJACENT_PASSERS[Midgame][midrank] << ", " <<
+                  ADJACENT_PASSERS[Endgame][midrank];
+              cout << ")" << endl;
 #endif
+          }
        }
     }
     Bitboard centerCalc(center & board.pawn_bits[side]);
