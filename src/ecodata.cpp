@@ -701,6 +701,7 @@ const struct ECOData eco_codes[] =
 {"D45", 0xfff374a4bc6c5d0eULL ,"Semi-Slav Defense, Anti-Meran"},
 {"D45", 0xa2ecc8d72287b9f7ULL ,"Semi-Slav Defense, Anti-Meran"},
 {"D46", 0x8635f4fcb844d617ULL ,"Semi-Slav Defense"},
+{"D46", 0x9b5314e997123328ULL ,"Semi-Slav Defense"},
 {"D46", 0xd70ba148fd264c11ULL ,"Semi-Slav Defense"},
 {"D46", 0x8bc15066e19576cdULL ,"Semi-Slav Defense"},
 {"D46", 0x843308b5d6c9b6ffULL ,"Semi-Slav Defense"},
