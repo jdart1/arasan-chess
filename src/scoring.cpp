@@ -206,8 +206,8 @@ static const int WEAK_ON_OPEN_FILE = -10;
 static const int SPACE=2;
 static const int PAWN_CENTER_SCORE = 3;
 
-static const int ROOK_ON_7TH_RANK = 30;
-static const int TWO_ROOKS_ON_7TH_RANK = 100;
+static const int ROOK_ON_7TH_RANK[2] = {26, 26};
+static const int TWO_ROOKS_ON_7TH_RANK[2] = {57, 66};
 // rook on open file or file with weak pawn:
 static const int ROOK_ON_OPEN_FILE = 20;
 static const int ROOK_ATTACKS_WEAK_PAWN = 10;
@@ -234,7 +234,6 @@ static const int SUPPORTED_PASSER7 = 76;
 
 static Bitboard backwardW[64],backwardB[64];
 CACHE_ALIGN Bitboard passedW[64],passedB[64];       // not static because needed by search module
-static Bitboard weakW[64],weakB[64];
 static Bitboard outpostW[64],outpostB[64];
 static Bitboard connected_passers[64][2];
 static Bitboard adjacent_passers[64];
@@ -411,7 +410,7 @@ static void initBitboards()
         }
 
         int rank = Rank(i,White);
-        for (r = rank; r > 1; r--) {
+        for (r = rank-1; r > 1; r--) {
             Square sq2 = MakeSquare(file,r,White);
             if (file != 8) {
                 sq2 = MakeSquare(file+1,r,White);
@@ -422,12 +421,6 @@ static void initBitboards()
                 backwardW[i].set((int)sq2);
             }
         }
-        weakW[i] = backwardW[i];
-        if (file != 8) {
-            weakW[i].clear(MakeSquare(file+1,rank,White));
-        }
-        if (file != 1)
-            weakW[i].clear(MakeSquare(file-1,rank,White));
         for (r = rank + 1; r < 8; r++) {
             Square sq2 = MakeSquare(file,r,White);
             passedW[i].set(sq2);
@@ -443,7 +436,7 @@ static void initBitboards()
             }
         }
         rank = Rank(i,Black);
-        for (r = rank; r > 1; r--) {
+        for (r = rank-1; r > 1; r--) {
             Square sq2 = MakeSquare(file,r,Black);
             if (file != 8) {
                 sq2 = MakeSquare(file+1,r,Black);
@@ -454,9 +447,7 @@ static void initBitboards()
                 backwardB[i].set(sq2);
             }
         }
-        weakB[i] = backwardB[i];
         if (file != 8) {
-            weakB[i].clear(MakeSquare(file+1,rank,Black));
             connected_passers[i][White].set(i+1);
             connected_passers[i][Black].set(i+1);
             adjacent_passers[i] |= Attacks::file_mask[file];
@@ -465,7 +456,6 @@ static void initBitboards()
             if (rank<8) adjacent_passers[i].clear(MakeSquare(file+1,rank+1,Black));
         }
         if (file != 1) {
-            weakB[i].clear(MakeSquare(file-1,rank,Black));
             adjacent_passers[i] |= Attacks::file_mask[file-2];
             adjacent_passers[i].clear(MakeSquare(file-1,rank,Black));
             if (rank>1) adjacent_passers[i].clear(MakeSquare(file-1,rank-1,Black));
@@ -1311,6 +1301,10 @@ PawnHashEntry::PawnData &entr)
         int doubled = 0;
         int isolated;
         Bitboard doubles;
+        // Note: "backward" here means that the pawn in its current location
+        // cannot be protected by a pawn of the same color. I.e. it has
+        // no friendly pawn on an adjacent file and earlier rank. This is
+        // not though the customary definition of backwardness.
         if (side == White) {
             backward = !TEST_MASK(board.pawn_bits[side],backwardW[sq]);
             passed = !TEST_MASK(board.pawn_bits[oside],passedW[sq]);
@@ -1321,9 +1315,6 @@ PawnHashEntry::PawnData &entr)
             passed = !TEST_MASK(board.pawn_bits[oside],passedB[sq]);
             doubles = (board.pawn_bits[side] & Attacks::file_mask_down[sq]);
         }
-#ifdef PAWN_DEBUG
-        if (backward) cout << " backward";
-#endif
         isolated = !TEST_MASK(isolated_file_mask[file-1],board.pawn_bits[side]);
         if (doubles) {
 #ifdef PAWN_DEBUG
@@ -1343,6 +1334,9 @@ PawnHashEntry::PawnData &entr)
             entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1];
             if (doubles.bitCountOpt() > 1) {
                // tripled pawns
+#ifdef PAWN_DEBUG
+                cout << " tripled";
+#endif
                entr.midgame_score += DOUBLED_PAWNS[Midgame][file-1]/2;
                entr.endgame_score += DOUBLED_PAWNS[Endgame][file-1]/2;
             }
@@ -1355,30 +1349,28 @@ PawnHashEntry::PawnData &entr)
             cout << " isolated";
 #endif
         }
-        else if (rank<6) {
-            int defenders = pawn_attacks(board,sq,side).bitCount();
-            if (board[sq+incr] != enemy_pawn) {
-                if (defenders == 0) {
-                    Square sq2(sq + incr);
-                    int patcks = pawn_attacks(board,sq2,oside).bitCount() -
-                        pawn_attacks(board,sq2,side).bitCount();
-                    if (patcks > 0) {
+        else if (rank<6 && backward && board[sq+incr] != enemy_pawn) {
+            // Pawn is not, and cannot be, protected by a pawn of
+            // the same color. See if it is also blocked from advancing
+            // by adjacent pawns.
+            Square sq2(sq + incr);
+            int patcks = pawn_attacks(board,sq2,oside).bitCountOpt() -
+                 pawn_attacks(board,sq2,side).bitCountOpt();
+            if (patcks > 0) {
 #ifdef PAWN_DEBUG
-                        cout << " weak";
+               cout << " weak";
 #endif
-                        score += WEAK;
-                        weak++;
-                    }
-                    if (patcks > 1) {             // "extra weak" pawn
-                        score += WEAK2;
+               score += WEAK;
+               weak++;
+            }
+            if (patcks > 1) {             // "extra weak" pawn
+               score += WEAK2;
 #ifdef PAWN_DEBUG
-                        cout << " extra weak";
+               cout << " extra weak";
 #endif
-                    }
-                }
             }
         }
-        if (!passed && (weak || backward || isolated)) {
+        if (!passed && (weak || isolated)) {
             entr.weak_pawns.set(sq);
             if (!OnFile(board.pawn_bits[oside],file)) {
                 entr.weakopen++;
@@ -1942,11 +1934,13 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
     if (r7 && (Rank<Black>(board.kingSquare(Black))==1 || TEST_MASK(Attacks::rank7mask[White],board.pawn_bits[Black]))) {
         Square r;
         while (r7.iterate(r)) {
-            wScores.any += ROOK_ON_7TH_RANK;
+            wScores.mid += ROOK_ON_7TH_RANK[Midgame];
+            wScores.end += ROOK_ON_7TH_RANK[Endgame];
             Bitboard right(Attacks::rank_mask_right[r] & board.occupied[White]);
             if (right && board[right.firstOne()] == WhiteRook) {
                  // 2 connected rooks on 7th
-                 wScores.any += TWO_ROOKS_ON_7TH_RANK;
+                 wScores.mid += TWO_ROOKS_ON_7TH_RANK[Midgame];
+                 wScores.end += TWO_ROOKS_ON_7TH_RANK[Endgame];
             }
         }
     }
@@ -1958,11 +1952,13 @@ int Scoring::positionalScore( const Board &board, int alpha, int beta)
     if (r7 && (Rank<White>(board.kingSquare(White))==1 || TEST_MASK(Attacks::rank7mask[Black],board.pawn_bits[White]))) {
         Square r;
         while (r7.iterate(r)) {
-            bScores.any += ROOK_ON_7TH_RANK;
+            bScores.mid += ROOK_ON_7TH_RANK[Midgame];
+            bScores.end += ROOK_ON_7TH_RANK[Endgame];
             Bitboard right(Attacks::rank_mask_right[r] & board.occupied[Black]);
             if (right && board[right.firstOne()] == BlackRook) {
                  // 2 connected rooks on 7th
-                 bScores.any += TWO_ROOKS_ON_7TH_RANK;
+                 bScores.mid += TWO_ROOKS_ON_7TH_RANK[Midgame];
+                 bScores.end += TWO_ROOKS_ON_7TH_RANK[Endgame];
             }
         }
     }
