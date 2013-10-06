@@ -84,6 +84,24 @@ struct HistoryPruneParams {
 };
 static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
 
+static const int STATIC_NULL_MARGIN[16] =
+   {(int)1.37*PAWN_VALUE,
+    (int)1.37*PAWN_VALUE,
+    (int)1.43*PAWN_VALUE,
+    (int)1.72*PAWN_VALUE,
+    (int)2.02*PAWN_VALUE,
+    (int)2.31*PAWN_VALUE,
+    (int)2.60*PAWN_VALUE,
+    (int)2.89*PAWN_VALUE,
+    (int)3.19*PAWN_VALUE,
+    (int)3.69*PAWN_VALUE,
+    (int)4.20*PAWN_VALUE,
+    (int)4.70*PAWN_VALUE,
+    (int)5.21*PAWN_VALUE,
+    (int)9.54*PAWN_VALUE,
+    (int)9.62*PAWN_VALUE,
+    (int)9.70*PAWN_VALUE};
+
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
 static const int NODE_ACCUM_THRESHOLD = 16;
@@ -2199,8 +2217,8 @@ int Search::search()
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, as in Stockfish, Protector, etc.
     if (doNull && depth <= 3*DEPTH_INCREMENT) {
-        const int margin = FUTILITY_MARGIN_BASE[depth]/2;
-        int threshold = node->beta+margin;
+        const int margin = STATIC_NULL_MARGIN[depth*4/DEPTH_INCREMENT];
+        const int threshold = node->beta+margin;
         int eval = scoring.evalu8(board,threshold-1,threshold);
         if (eval > threshold) {
             return eval - margin;
