@@ -936,10 +936,11 @@ void Scoring::calcCover(const Board &board,KingCoverHashEntry &coverEntry) {
     }
 }
 
+template <ColorType side>
 int Scoring::
-outpost(const Board &board, ColorType side,
+outpost(const Board &board,
         Square sq, Square scoreSq, const int scores[64],
-       const PawnHashEntry::PawnData &oppPawnData) {
+        const PawnHashEntry::PawnData &oppPawnData) {
    int outpost = 0;
    if (side == White ) {
      if (!TEST_MASK(outpostW[sq],board.pawn_bits[Black])) {
@@ -951,16 +952,12 @@ outpost(const Board &board, ColorType side,
         outpost = scores[scoreSq];
       }
    }
-   if (outpost) {
-      int outpostScore = outpost;
-      if (!oppPawnData.opponent_pawn_attacks.isSet(sq)) {
-         // not defended by pawns
-         outpostScore /=2;
-      }
-      return outpostScore;
+   if (outpost && oppPawnData.opponent_pawn_attacks.isSet(sq)) {
+      return outpost;
    }
-   else
+   else {
      return 0;
+   }
 }
 
 template <ColorType side>
@@ -996,7 +993,7 @@ void Scoring::pieceScore(const Board &board,
 #endif
                 scores.any += mobl;
                 if (KnightOutpostScores[scoreSq]) {
-                    int outpost_score = outpost(board,side,sq,scoreSq,
+                    int outpost_score = outpost<side>(board,sq,scoreSq,
                                           KnightOutpostScores,
                                           oppPawnData);
 #ifdef EVAL_DEBUG
@@ -1026,9 +1023,9 @@ void Scoring::pieceScore(const Board &board,
                    }
                 }
                 if (BishopOutpostScores[scoreSq]) {
-                   scores.any += outpost(board,side,sq,scoreSq,
+                    scores.any += outpost<side>(board,sq,scoreSq,
                                         BishopOutpostScores,
-                                         oppPawnData);
+                                        oppPawnData);
                 }
                 if (board.pinOnDiag(sq,okp,oside)) {
                    pin_count++;
