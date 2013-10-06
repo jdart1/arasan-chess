@@ -1518,7 +1518,6 @@ int Search::qsearch_no_check(int ply, int depth)
         // Do checks in qsearch
         if ((stand_pat_score >= node->alpha - 2*PAWN_VALUE) &&
             (depth >= 1-srcOpts.checks_in_qsearch)) {
-            MoveGenerator mg(board, &context, ply, NullMove, master());
             move_count = mg.generateChecks(moves);
             move_index = 0;
 #ifdef _TRACE
