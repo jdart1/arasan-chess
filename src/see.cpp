@@ -1,10 +1,12 @@
-// Copyright 1996, 1997, 2000, 2008 by Jon Dart.  All Rights Reserved.
+// Copyright 1996, 1997, 2000, 2008, 2013 by Jon Dart.  All Rights Reserved.
 
 #include "see.h"
 #include "see.h"
 #include "util.h"
 #include "constant.h"
 #include "debug.h"
+
+#include <algorithm>
 
 //#define ATTACK_TRACE
 
@@ -19,43 +21,30 @@ int see( const Board &board, Move move )
    ColorType my_side = PieceColor(board[StartSquare(move)]);
    ColorType side = my_side;
    ColorType oside = OppositeColor(side);
-   Square square = (TypeOfMove(move) == EnPassant) ?
-                   board.enPassantSq() : DestSquare(move);
+   Square square = DestSquare(move);
    Square attack_square = StartSquare(move);
    Piece attacker = board[attack_square];
-   Piece on_square = board[square];
+   Piece on_square = (TypeOfMove(move) == EnPassant) ? 
+       MakePiece(Pawn,oside) : board[square];
    Bitboard opp_attacks(board.calcAttacks(square,oside));
-   if (opp_attacks.is_clear()) // piece is undefended
-   {
-      if (TypeOfMove(move) == Promotion) {
+   if (opp_attacks.is_clear()) {
+       // piece is undefended
 #ifdef ATTACK_TRACE
-	cout << "returning " << PieceValue(on_square) + PieceValues[PromoteTo(move)] - PAWN_VALUE << endl;
+       cout << "undefended, returning " << Gain(move) << endl;
 #endif
-         return PieceValue(on_square) + PieceValues[PromoteTo(move)] - PAWN_VALUE;
-      }
-      else {
-#ifdef ATTACK_TRACE
-	cout << "returning " << PieceValue(on_square) << endl;
-#endif
-         return PieceValue(on_square);
-      }
+       return Gain(move);
    }
-   else if (PieceType(attacker) != Pawn && TEST_MASK(opp_attacks,board.pawn_bits[oside])) {
-      // defended by a pawn, return pessimistic estimate
-      return (int)PieceValue(on_square)-(int)PieceValue(attacker);
-   }
-   int score_count = 0;
    int score_list[20];
    int swap_score = 0;
    int gain;
-
-   Bitboard my_attacks(board.calcAttacks(square,side));
-   my_attacks.clear(attack_square); // remove attacking piece
-   if (TypeOfPiece(attacker) != Knight)
-      my_attacks |= board.getXRay(attack_square,square,side);
+   Bitboard attacks[2]; 
+   Square last_attack_sq[2] = {InvalidSquare, InvalidSquare};
+   attacks[side] = board.calcAttacks(square,side);
+   attacks[oside] = opp_attacks;
    int count = 0;
-   for (;;)
-   {
+
+   for (;;) {
+      last_attack_sq[side] = attack_square; 
       attacker = board[attack_square];
 #ifdef ATTACK_TRACE
       cout << " " << PieceImage(TypeOfPiece(attacker))
@@ -67,62 +56,58 @@ int see( const Board &board, Move move )
 #endif
       gain = PieceValue(on_square);
       if (TypeOfPiece(attacker) == Pawn &&
-          Rank(square,side) == 8)
-      {
-         if (count == 0) // initial capture is a promotion too
-         {
-            gain += (PieceValues[PromoteTo(move)] - PAWN_VALUE);
-            on_square = MakePiece(PromoteTo(move),side);
-         }
-         else
-         {
-            gain += QUEEN_VALUE-PAWN_VALUE;
-            on_square = MakePiece(Queen,side);
-         }
+          Rank(square,side) == 8) {
+          if (count == 0) {
+             // initial capture is a promotion (could be under-promotion)
+             gain += (PieceValues[PromoteTo(move)] - PAWN_VALUE);
+             on_square = MakePiece(PromoteTo(move),side);
+          }
+          else {
+             // assume Queen promotion
+             gain += QUEEN_VALUE-PAWN_VALUE;
+             on_square = MakePiece(Queen,side);
+          }
       }
-      else
-         on_square = attacker;
+      else {
+          on_square = attacker;
+      }
       if (side == my_side)
-         swap_score += gain;
+          swap_score += gain;
       else
-         swap_score -= gain;
+          swap_score -= gain;
 
-      ASSERT(score_count < 20);
-      score_list[score_count++] = swap_score;
+      ASSERT(count < 20);
+      score_list[count++] = swap_score;
+      // remove piece we used from attacks
+      attacks[side].clear(attack_square);
+      // switch sides
       side = OppositeColor(side);
-      if (side == my_side)
-      {
-         if (my_attacks.is_clear())
-            break;
-         attack_square = board.minAttacker(my_attacks,side);
-         ASSERT(!IsInvalid(attack_square));
-         my_attacks.clear(attack_square);
-	 my_attacks |= board.getXRay(attack_square,square,side);
+      if (last_attack_sq[side] != InvalidSquare &&
+          TypeOfPiece(board[last_attack_sq[side]]) != Knight) {
+          // add in x-ray attacks if any
+          attacks[side] |= board.getXRay(last_attack_sq[side],square,side);
       }
-      else
-      {
-         if (opp_attacks.is_clear())
-            break;
-         attack_square = board.minAttacker(opp_attacks,side);
-         ASSERT(!IsInvalid(attack_square));
-         opp_attacks.clear(attack_square);
-	 opp_attacks |= board.getXRay(attack_square,square,side);
+      if (attacks[side]) {
+          // get next opponent attacker
+          attack_square = board.minAttacker(attacks[side],side);
+      } else {
+          // no more attackers (including x-rays)
+          break;
       }
-      ++count;
    }
-   if (score_count > 1 && score_count % 2 == 0)
-   {
-      // last capture is by other side, can't avoid it
-      score_list[score_count-2] = score_list[score_count-1];
-      --score_count; 
+   ASSERT(count >= 1);
+   if (count % 2 == 0) {
+       // opponent went last, cannot avoid this capture
+      score_list[count-2] = score_list[count-1];
+      --count;
    }
-   int i = score_count;
-   while (i >= 3)
-   {
-      int max_score = Util::Max(score_list[i-1],score_list[i-2]);
-      if (max_score < score_list[i-3])
-         score_list[i-3] = max_score;
-      i -= 2;
+   // minimax over the score list 
+   for (int i = count-1; i > 0; --i) {
+       if (i % 2 == 0) {
+           score_list[i-1] = max(score_list[i],score_list[i-1]);
+       } else {
+           score_list[i-1] = min(score_list[i],score_list[i-1]);
+       }
    }
 #ifdef ATTACK_TRACE
    cout << "returning " << score_list[0] << endl;
