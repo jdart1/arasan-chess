@@ -56,35 +56,6 @@ static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
 static const int FUTILITY_MARGIN_BASE[16] =
-    {(int)(1.5*PAWN_VALUE),
-     (int)(1.5*PAWN_VALUE),
-     (int)(1.5*PAWN_VALUE),
-     (int)(1.75*PAWN_VALUE),
-     (int)(2.0*PAWN_VALUE),
-     (int)(2.25*PAWN_VALUE),
-     (int)(2.5*PAWN_VALUE),
-     (int)(2.75*PAWN_VALUE),
-     (int)(3.0*PAWN_VALUE),
-     (int)(3.5*PAWN_VALUE),
-     (int)(4.0*PAWN_VALUE),
-     (int)(4.5*PAWN_VALUE),
-     (int)(5.0*PAWN_VALUE),
-     (int)(10.0*PAWN_VALUE),
-     (int)(10.0*PAWN_VALUE),
-     (int)(10.0*PAWN_VALUE)
-};
-
-static int FUTILITY_MARGIN[16][64];
-
-static const int HISTORY_PRUNE_DEPTH = 12;
-struct HistoryPruneParams {
-  int historyMinMoveCount;
-  int evalThreshold;
-  int pruningMinMoveCount;
-};
-static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
-
-static const int STATIC_NULL_MARGIN[16] =
    {(int)1.37*PAWN_VALUE,
     (int)1.37*PAWN_VALUE,
     (int)1.43*PAWN_VALUE,
@@ -101,6 +72,16 @@ static const int STATIC_NULL_MARGIN[16] =
     (int)9.54*PAWN_VALUE,
     (int)9.62*PAWN_VALUE,
     (int)9.70*PAWN_VALUE};
+
+static int FUTILITY_MARGIN[16][64];
+
+static const int HISTORY_PRUNE_DEPTH = 12;
+struct HistoryPruneParams {
+  int historyMinMoveCount;
+  int evalThreshold;
+  int pruningMinMoveCount;
+};
+static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -2217,7 +2198,7 @@ int Search::search()
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, as in Stockfish, Protector, etc.
     if (doNull && depth <= 3*DEPTH_INCREMENT) {
-        const int margin = STATIC_NULL_MARGIN[depth*4/DEPTH_INCREMENT];
+        const int margin = FUTILITY_MARGIN_BASE[depth*4/DEPTH_INCREMENT];
         const int threshold = node->beta+margin;
         int eval = scoring.evalu8(board,threshold-1,threshold);
         if (eval > threshold) {
