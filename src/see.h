@@ -10,5 +10,9 @@
 // "board".
 int see( const Board &board, Move move );
 
+// return 0 if SEE value is below threshold, 1 if SEE value
+// is >= threshold
+int seeSign( const Board &board, Move move, int threshold);
+
 #endif
 

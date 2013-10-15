@@ -1464,7 +1464,7 @@ int Search::qsearch_no_check(int ply, int depth)
 #endif
                 return -Illegal;
             }
-            if (calcGain(board,move) - PieceValue(PieceMoved(move)) < 0 && see(board,move) < 0) {
+            if (calcGain(board,move) - PieceValue(PieceMoved(move)) < 0 && !seeSign(board,move,0)) {
               // This appears to be a losing capture
               continue;
             }
@@ -1539,7 +1539,7 @@ int Search::qsearch_no_check(int ply, int depth)
                 }
 #endif
                 // prune checks that cause loss of the checking piece
-                if (see(board,move) < 0) {
+                if (!seeSign(board,move,0)) {
 #ifdef _TRACE
                     if (master()) {
                         indent(ply); cout << "pruned" << endl;
@@ -1792,8 +1792,7 @@ int Search::calcExtensions(const Board &board,
           extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
       else {
-         if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
-         if (swap >= -PAWN_VALUE) {
+         if (seeSign(board,move,-PAWN_VALUE)) {
             node->extensions |= CHECK;
 #ifdef SEARCH_STATS
             controller->stats->check_extensions++;
@@ -1818,8 +1817,8 @@ int Search::calcExtensions(const Board &board,
          node->extensions |= CAPTURE;
          extend += CAPTURE_EXTENSION;
       } else {
-         if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
-         if (swap >=0) {
+         if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+         if (swap) {
             node->extensions |= CAPTURE;
             extend += CAPTURE_EXTENSION;
          }
@@ -1847,8 +1846,8 @@ int Search::calcExtensions(const Board &board,
                 Bitboard btwn;
                 board.between(StartSquare(threat),DestSquare(threat),btwn);
                 if (btwn.isSet(DestSquare(move))) {
-                   if (swap == Scoring::INVALID_SCORE) swap = see(board,move);
-                   if (swap >= 0) { 
+                   if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+                   if (swap) { 
                       // safe interposition
                       pruneOk = 0;
                    }
@@ -1907,7 +1906,7 @@ int Search::calcExtensions(const Board &board,
     // are pruned at low depths.
     if (!node->PV() && depth <= DEPTH_INCREMENT && 
          GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-        (swap == Scoring::INVALID_SCORE ? see(board,move) : swap) < 0) {
+         (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
          return PRUNE;
     }
     // See if we do late move reduction. Moves in the history phase of move
