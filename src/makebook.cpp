@@ -66,7 +66,7 @@ static unsigned pageSize = 65536;
 // Default is 1/15th the number of entries in a page
 static unsigned int hashSize;
 // max ply depth processed for PGN games
-static int maxPly = 60; 
+static int maxPly = 70; 
 static bool verbose = false;
 
 static string output_name;
