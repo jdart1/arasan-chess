@@ -2050,91 +2050,79 @@ int Board::wasLegal(Move lastMove) const {
     return 1;
 }
 
-int Board::isPinned(ColorType kingColor, Piece p,Square source,Square dest) const
+int Board::isPinned(ColorType kingColor, Piece p, Square source, Square dest) const
 {
    if (p == EmptyPiece || (TypeOfPiece(p) == King && PieceColor(p) == kingColor))
       return 0;
-   int dir = Attacks::directions[source][kingPos[kingColor]];
+   const Square ks = kingSquare(kingColor);
+   int dir = Attacks::directions[source][ks];
    if (dir == 0) return 0;
 
-   int attackerFound = 0;
+   Bitboard attacker;
    const ColorType oside = OppositeColor(kingColor);
    switch (dir)
    {
    case 1:
       // Find attacks on the rank
       {
-         attackerFound = TEST_MASK(rankAttacksLeft(source),
-                                   (rook_bits[oside] | queen_bits[oside]));
+         attacker = Bitboard(rankAttacksLeft(source) &
+                     (rook_bits[oside] | queen_bits[oside]));
       }
       break;
    case -1:
       {
-         attackerFound = TEST_MASK(rankAttacksRight(source),
+         attacker = Bitboard(rankAttacksRight(source) &
                                    (rook_bits[oside] | queen_bits[oside]));
       }
       break;
    case 8:
       {
-        attackerFound = TEST_MASK(fileAttacksDown(source),
+        attacker = Bitboard(fileAttacksDown(source) &
                                    (rook_bits[oside] | queen_bits[oside]));
       }
       break;
    case -8:
       {
-        attackerFound = TEST_MASK(fileAttacksUp(source),
+        attacker = Bitboard(fileAttacksUp(source) &
                                    (rook_bits[oside] | queen_bits[oside]));
       }
       break;
    case 7:
       {
-        attackerFound = TEST_MASK(diagAttacksA8Lower(source),
+        attacker = Bitboard(diagAttacksA8Lower(source) &
                                    (bishop_bits[oside] | queen_bits[oside]));
       }
       break;
    case -7:
       {
-        attackerFound = TEST_MASK(diagAttacksA8Upper(source),
+        attacker = Bitboard(diagAttacksA8Upper(source) &
                                    (bishop_bits[oside] | queen_bits[oside]));
       }
       break;
    case 9:
       {
-        attackerFound = TEST_MASK(diagAttacksA1Lower(source),
+        attacker = Bitboard(diagAttacksA1Lower(source) &
                                    (bishop_bits[oside] | queen_bits[oside]));
       }
       break;
    case -9:
       {
-        attackerFound = TEST_MASK(diagAttacksA1Upper(source),
+        attacker = Bitboard(diagAttacksA1Upper(source) &
                                    (bishop_bits[oside] | queen_bits[oside]));
       }
       break;
    default:  
       break;
    }
-   if (attackerFound)
-   {
-      Square ks = kingSquare(kingColor);
-      // see if the path is clear to the king
-      Square sq(source);
-      do
-      {
-         sq += dir;
-         if (!OnBoard(sq) || ((sq != ks) && contents[sq] != EmptyPiece)) {
-            return 0;
-         }
-      } while (sq != ks);
-      // This code checks for moves in the direction of the pin,
-      // which are ok:
-      int dir1 = Util::Abs((int) source - (int) dest);
-      int dir2 = Util::Abs(dir);
-      if (dir2 == 1 && Rank<White>(source) != Rank<White>(dest))
-         return 1;
-      else if (dir2 == 8 && File(source) != File(dest))
-         return 1;
-      else if (dir1 % dir2)
-         return 1;
+   if (attacker) {
+      Square attackSq = attacker.firstOne();
+      ASSERT(attackSq != InvalidSquare);
+      Bitboard btwn(Attacks::betweenSquares[attackSq][ks]);
+      btwn.clear(source);
+      // pinned if path is clear to the King and the dest square is not in
+      // the set of "between" squares (this excludes moves in the direction
+      // of the pin)
+      return !(btwn & allOccupied) && !btwn.isSet(dest);
    }
    return 0;
 }
