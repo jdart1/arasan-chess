@@ -1713,7 +1713,7 @@ int Search::qsearch_check(int ply, int depth)
         (node+1)->pv_length=0; // no PV from this point
         node->flags |= EXACT;
     }
-    if (node->best != NullMove) {
+    else if (node->best != NullMove) {
 #ifdef _TRACE
        indent(ply); cout << "storing best move ";
        MoveImage(node->best,cout);

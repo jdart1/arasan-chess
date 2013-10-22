@@ -42,7 +42,7 @@ class MoveGenerator
              while (index < batch_count) {
                  Move &move = batch[index];
                  if (MVV_LVA(move)<=0) {
-                     if (see(board,move)>=0) {
+                    if (seeSign(board,move,0)) {
                          index++;
                          SetPhase(move,WINNING_CAPTURE_PHASE);
                          return move;
@@ -242,7 +242,7 @@ class RootMoveGenerator : public MoveGenerator
 
 inline MoveGenerator::Phase operator++(MoveGenerator::Phase &phase)
 {
-   return (MoveGenerator::Phase)((int)phase + 1);
+   return phase = (MoveGenerator::Phase)((int)phase + 1);
 }
 
 

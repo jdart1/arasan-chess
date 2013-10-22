@@ -202,6 +202,11 @@ int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
 
 Move MoveGenerator::nextEvasion() {
    if (batch_count==0) {
+     if (phase == START_PHASE) {      
+        ++phase;
+        if (!IsNull(hashMove)) return hashMove;
+        ++phase;
+     } 
      batch_count = generateEvasions(moves);
      if (batch_count == 0) {
         return NullMove;
@@ -212,11 +217,24 @@ Move MoveGenerator::nextEvasion() {
        const int flag = (batch_count == 2);
        int poscaps = 0, negcaps = 0;
        for (int i = 0; i < batch_count; i++) {
+          if (MovesEqual(moves[i],hashMove)) {
+             // make this the 1st move
+             scores[i] = Constants::MATE;
+             if (i) swap(moves,scores,0,i);   
+             ++poscaps;
+             // bump index so we will skip this move
+             ++index;
+             continue;
+          }
           if (CaptureOrPromotion(moves[i])) {
-             scores[i] = see(board,moves[i]);
-             if (scores[i] > 0) {
+             scores[i] = MVV_LVA(moves[i]);
+             if (scores[i] > 0 || (scores[i] = see(board,moves[i])) >= 0) {
                 ++poscaps;
-             } else if (scores[i] < 0) {
+                if (i > poscaps) {
+                   // move positive captures to front of list
+                   swap(moves,scores,i,poscaps);
+                }
+             } else {
                 ++negcaps;
              }
           } else {
@@ -229,6 +247,10 @@ Move MoveGenerator::nextEvasion() {
        } else if (negcaps) {
           sortMoves(moves,scores,batch_count);
        }
+     }
+     else if (MovesEqual(moves[0],hashMove)) {
+        // sole evasion move is the hash move
+        index++;
      }
      else {
        SetForced(moves[0]);
