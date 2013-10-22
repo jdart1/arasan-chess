@@ -1,5 +1,5 @@
-				   
-  	      Arasan Programmer's Guide - version 16.1
+
+  	      Arasan Programmer's Guide - version 16.2
 
                           by Jon Dart
 
@@ -49,7 +49,7 @@ makeeco  - builds ecodata.cpp from from "eco" text file
 Following is a sketch of the Arasan source directory tree:
 
 arasan
-  16.1
+  16.2
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -126,9 +126,11 @@ the 64-bit compiler switches and run the same commands (you must be
 building on a 64-bit OS to do the profiling step). 
 
 If you have a processor that has the POPCNT instruction (found in SSE 4.1)
-then you can add -DUSE_POPCNT to the compilation flags and produce a build
-that uses that instruction (but it will only run on SSE4.1 capable
-processors). This only works for a 64-bit target.
+then you can use "nmake popcnt" to produce a build that uses that
+instruction (but it will only run on SSE4.1 capable processors). This
+only works for a 64-bit target. The executable will be named
+"arasanx-64-popcnt.exe" and will be placed in the release or debug 
+directory (depending on build type)
 
 To build the Arasan native Windows GUI, use the Visual C++ solution file
 in the "gui" subdirectory. (The command-line Makefile does not build the
@@ -136,7 +138,8 @@ GUI).
 
 Note: you cannot compile the Arasan GUI with the Express edition of
 Visual C++ or with the Windows SDK because those do not include the
-MFC libraries. You will need the full edition of Visual C++.
+MFC libraries. You will need the full edition of Visual C++ (2005 or
+later).
 
 
 Building Under Linux or Mac OS
@@ -225,7 +228,7 @@ will waste space by creating a bigger book.bin than is required.
 You can also specific the "-m" parameter to makebook with a number,
 to set a minimum number of times that a move must be played in a
 game collection to be included in the book. The default book shipped
-with arasan was built with "-m 5". Other options include:
+with arasan was built with "-m 4". Other options include:
 
 -p <number> - sets maximum ply depth for moves extracted from a PGN file
 -P <number> - sets size of "pages" in the opening book 
@@ -402,6 +405,14 @@ Note that "run-tests" takes a long time to complete (over 8 hours)!
 "score-tests" requires that Perl be installed and be on the path.
 
 
+Perft
+
+A built-in command in the engine can be used to run the "perft" command
+for testing. See http://chessprogramming.wikispaces.com/Perft. "Perft"
+should be followed by a number indicating the ply depth for the
+computation.
+
+
 Selfplay feature
 
 A somewhat experimental selfplay feature has been added to version 16.0.
@@ -572,7 +583,10 @@ If the side to move is in check, a special function (generateEvasions)
 is called that strictly checks moves for legality. It is very important
 to know whether any legal moves are possible when in check: if there
 are none, the side to move is checkmated. Also, some search extensions
-depend on the existence of a forced move (one single legal move).
+depend on the existence of a forced move (one single legal move). Currently
+evasions are generated in two phases: first the hash move is tried, if
+there is one, and then only if that fails to produce cutoff is the full
+set of evasion moves generated.
 
 Move ordering at the root node is done somewhat differently. The first
 time moves are generated at ply 0, a rough sorting by score is
