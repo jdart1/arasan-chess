@@ -127,7 +127,8 @@ A59     1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 d6 7. e4 "Benko
 A59     1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bxa6 7. e4 Bxf1 8. Kxf1 d6 "Benko Gambit"
 A59     1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 Bxa6 6. Nc3 d6 7. Nf3 g6 8. g3 Bg7 9. e4 "Benko Gambit"
 
-A60     1. d4 Nf6 2. c4 c5 3. d5 e6 "Benoni" 
+A60     1. d4 Nf6 2. c4 c5 3. d5 e6 "Benoni"
+A60     1. d4 Nf6 2. c4 e6 3. g3 c5 4. d5 exd5 5. cxd5 b5 "Benoni"
 A61     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cxd5 d6 6. Nf3 g6 "Benoni"
 A62     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cxd5 d6 6. Nf3 g6 7. g3 Bg7 8. Bg2 O-O "Benoni"
 A63     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cxd5 d6 6. Nf3 g6 7. g3 Bg7 8. Bg2 O-O 9. O-O Nbd7 "Benoni"
@@ -881,6 +882,7 @@ E13     1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. Nc3 Bb7 5. Bg5 h6 6. Bh4 Bb4 "Queen's In
 E14     1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. e3 "Queen's Indian Defense"
 E14     1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. e3 Bb7 "Queen's Indian Defense"
 E14     1. d4 Nf6 2. c4 e6 3. Nf3 Bb4 4. Nbd2 b6 5. e3 "Queen's Indian Defense"
+E14     1. d4 Nf6 2. Nf3 e6 3. e3 b6 4. Bd3 Bb7 5. O-O Be7 6. c4 O-O 7. Nc3 "Queen's Indian Defense"
 E15     1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 "Queen's Indian Defense"
 E15     1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Ba6  "Queen's Indian, Classical Variation"
 E16     1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7 5. Bg2 Bb4 "Queen's Indian Defense"
