@@ -668,16 +668,6 @@ static int calc_extra_time(const ColorType side) {
 }
 
 
-// handle ^C interrupts (sent by winboard)
-static void CDECL sigHandler(int) {
-   cout << "got ^C" << endl;
-   if (searcher) {
-      searcher->terminateNow();
-   }
-   signal(SIGINT,sigHandler);
-}
-
-
 // Produce a text string representing the move, in a form
 // the GUI understands
 static void move_image(const Board &board, Move m, ostream &buf, int uci) {
