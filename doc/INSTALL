@@ -4,8 +4,9 @@ If you want tablebase support, you must download and install the tablebase
 code (available separately) and edit the Makefile to select the type(s)
 of tablebase support you want and to point to the necessary sources.
 
-gcc 4.2 or above is recommended for building Arasan on Linux. It has
-also been verified to compile with Intel C++ 11.1 and 12.0.
+gcc 4.2 or above is recommended for building Arasan. There is some
+support for older gcc versions (not very tested). It has also been
+verified to compile with Intel C++ 11.1 and 12.0.
 
 On MacOS, you need to install XCode 3.1 or above to get a compatible gcc.
 If you are on MacOS Leopard, you then probably need to set something like:
@@ -15,10 +16,10 @@ export LDFLAGS=-L/Developer/usr/lib/i686-apple-darwin9/gcc-4.2.1
 
 to select the right compiler and libraries.
 
-There is a makefile in the src directory. Just typing "make" should
-automatically select the correct target architecture and OS. By
-default it builds all executables. All binaries are placed in the
-"bin" subdirectory.
+There is a makefile in the src directory. In most cases, just typing
+"make" should automatically select the correct target architecture and
+OS (note: assumes target and host are the same). By default it builds
+all executables. All binaries are placed in the "bin" subdirectory.
 
 To select the Intel compiler instead of gcc, define the variable CC with
 this command:
@@ -44,7 +45,8 @@ used.
 
 Limited testing has been done on architectures other than x32 and amd64.
 However, the code is believed to be portable. Two non-Intel targets are
-defined in the Makefile: sparc-solaris and arm-linux.
+defined in the Makefile: sparc-solaris (with gcc as compiler) and
+arm-linux.
 
 "make release" will build the release tarball and place it in the
 release subdirectory.

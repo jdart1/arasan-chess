@@ -126,16 +126,25 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+GCCOLD  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \< 40)
 GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 46)
+
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.6 or higher:
+CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
 GTB_OPT := -Ofast -finline-functions $(SSE)
 else
+ifeq "$(GCCOLD)" "0"
 # pre-4.6 gcc options:
-OPT     = -O3 -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
+CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+OPT	 = -O3 -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
+else
+# really old gcc
+CFLAGS  := -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+OPT	 = -O2
+endif
 endif
 
 endif
@@ -160,11 +169,11 @@ profile-popcnt: profile
 
 # Solaris target: note only GCC is supported
 sparc-solaris: 
-	@$(MAKE) CC=g++ OPT=-O2 SSE= LIBS='$(LIBS) -lrt' all
+	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS) -lrt' CFLAGS='$(CFLAGS)' all
 
 # Arm target on Arm host with GCC
 arm-linux:
-	@$(MAKE) CC=g++ OPT='-O2 -finline-functions' SSE= all
+	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= CFLAGS='$(CFLAGS)' all
  
 clean: dirs
 	rm -f $(BUILD)/*.o
