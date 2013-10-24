@@ -350,6 +350,9 @@ $(PROFDATA):
 $(PGO_BUILD):
 	md $(PGO_BUILD)
 
+$(POPCNT_BUILD):
+	md $(POPCNT_BUILD)
+
 $(RELEASE):
 	md $(RELEASE)
 

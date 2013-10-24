@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
-# Copyright 2004-2012 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2013 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
@@ -359,6 +359,9 @@ $(BUILD):
 
 $(PGO_BUILD):
 	md $(PGO_BUILD)
+
+$(POPCNT_BUILD):
+	md $(POPCNT_BUILD)
 
 $(RELEASE):
 	md $(RELEASE)
