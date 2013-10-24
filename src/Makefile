@@ -81,7 +81,7 @@ endif
 else
 LBITS := $(shell getconf LONG_BIT)
 BOOKUTIL = bookutll
-LIBS = -lc
+LIBS = -lc -lm
 endif
 
 ifeq ($(LBITS),64)
