@@ -328,9 +328,21 @@ arrays past their boundaries, as well as some other sanity checks. If
 any of these checks fail, an error box will be displayed with the
 assertion that failed.
 
+At runtime, adding the "-t" (trace) flag to the arasanx executable will
+cause it to output trace messages (beginning with '#') detailing its
+internal operations. This is mostly for Winboard/xboard. These messages
+will show up in the Winboard debug log if Winboard is started with the
+"-debugMode true" flag.
+
+If the source is compiled with /DUCI_LOG, then a similar log file 
+named "ucilog" is produced on disk when running in UCI mode. This however
+doesn't have exactly the same information shown by "-t".
+
 The chess engine supports a couple of commands to aid with testing. 
 The "eval" command followed by a filename will read the file (assumed
 to be in FEN format) and output the static evaluation of the position.
+If the EVAL_DEBUG and/or PAWN_DEBUG defines are uncommented in
+scoring.cpp, then you can see detailed output of the scoring components.
 
 The "test" command followed by the name of a test suite file in EPD
 format will do a search on each position in the file and output the
