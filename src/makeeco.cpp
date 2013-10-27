@@ -123,7 +123,7 @@ void do_eco(ifstream &eco_file)
        	  break;
        movebuf[i] = '\0';
        // parse the move
-       Move m = Notation::value(board,side,movebuf);
+       Move m = Notation::value(board,side,Notation::SAN_IN,movebuf);
        if (IsNull(m) ||
        	   !legalMove(board,StartSquare(m),DestSquare(m)))
        {

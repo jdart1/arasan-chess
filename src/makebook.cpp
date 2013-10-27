@@ -421,7 +421,7 @@ static int do_bk(ifstream &infile)
                    break;
                }
                // try to parse as a move 
-               Move move = Notation::value(board, board.sideToMove(), movebuf.c_str());
+               Move move = Notation::value(board, board.sideToMove(),Notation::SAN_IN,movebuf.c_str());
                if (IsNull(move)) {
                   cerr << endl << "Illegal move in file, line " <<
                      line << " (" << movebuf << ")" << endl;
@@ -500,7 +500,7 @@ static int do_pgn(ifstream &infile, const string &book_name)
          }
          else if (tok == ChessIO::GameMove) {
             // parse the move
-            Move move = Notation::value(board,side,buf);
+            Move move = Notation::value(board,side,Notation::SAN_IN,buf);
             if (IsNull(move)) {
                 cerr << "Illegal move: " << buf << 
                    " in game " << games << ", file " <<

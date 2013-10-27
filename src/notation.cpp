@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2008, 2009, 2013 by Jon Dart.  All Rights Reserved.
 
 #include "notation.h"
 #include "board.h"
@@ -7,62 +7,7 @@
 #include "util.h"
 #include <algorithm>
 
-Move Notation::moveValue( const Board &board, const string &str, ColorType color )
-{
-   Square source, dest;
-
-   if (str == "O-O") {
-      if (color == White)
-         return CreateMove(E1,G1,King,Empty,Empty,KCastle);
-      else
-         return CreateMove(E8,G8,King,Empty,Empty,KCastle);
-   }
-   else if (str == "O-O-O") {
-      if (color == White)
-         return CreateMove(E1,C1,King,Empty,Empty,QCastle);
-      else
-         return CreateMove(E8,C8,King,Empty,Empty,QCastle);
-   }
-
-   string::const_iterator it = str.begin();
-   while (isspace(*it)) it++;
-   string sourceStr;
-   sourceStr += *it++;
-   sourceStr += *it++;
-   source = SquareValue(sourceStr);
-   if (*it == '-' || *it == 'x') it++;
-   string destStr;
-   destStr += *it++;
-   destStr += *it++;
-   dest = SquareValue(destStr);
-   if ((source == InvalidSquare) || (dest == InvalidSquare))
-      return NullMove;
-   else {
-      it++;
-      PieceType promotion = Empty;
-      if (*it == '=') {
-         // promotion
-         it++;
-         promotion = PieceCharValue(*it);
-         // check for promotion to valid piece:
-         switch (promotion) {
-            case Empty:
-            case Pawn:
-               return NullMove;
-            case Knight:
-            case Bishop:
-            case Rook:
-            case Queen:
-               break;
-            case King:
-               return NullMove;
-         }
-      }
-      return CreateMove(board,source,dest,promotion);
-   }
-}
-
-void Notation::UCIMoveImage(const Move &move, ostream &image) {
+static void UCIMoveImage(const Move &move, ostream &image) {
     if (IsNull(move)) {
         image << "NULL";
     } else {
@@ -77,13 +22,36 @@ void Notation::UCIMoveImage(const Move &move, ostream &image) {
     }
 }
 
-void Notation::image(const Board &b, const Move &m, string &result ) {
+void Notation::image(const Board &b, const Move &m, OutputFormat format, string &result ) {
     stringstream buf;
-    image(b, m, buf);
+    image(b, m, format, buf);
     result = buf.str();
 }
 
-void Notation::image(const Board & b, const Move & m, ostream &image) {
+void Notation::image(const Board & b, const Move & m, OutputFormat format, ostream &image) {
+   if (format == UCI) {
+      return UCIMoveImage(m,image);
+   }
+   else if (format == WB_OUT) {
+      if (TypeOfMove(m) == KCastle) {
+          image << "O-O";
+      }
+      else if (TypeOfMove(m) == QCastle) {
+          image << "O-O-O";
+      }
+      else {
+         image << FileImage(StartSquare(m));
+         image << RankImage(StartSquare(m));
+         image << FileImage(DestSquare(m));
+         image << RankImage(DestSquare(m));
+         if (TypeOfMove(m) == Promotion) {
+            // N.b. ICS requires lower case.
+            image << (char)tolower((int)PieceImage(PromoteTo(m)));
+         }
+      }
+      return;
+   }
+   // format is SAN
    if (IsNull(m)) {
        image << "(null)";
       return;
@@ -161,7 +129,6 @@ void Notation::image(const Board & b, const Move & m, ostream &image) {
       }
    }
    Board board_copy(b);
-   //ASSERT(legalMove(board_copy,m));
    board_copy.doMove(m);
    if (board_copy.checkStatus() == InCheck) {
       Move moves[Constants::MaxMoves];
@@ -174,7 +141,7 @@ void Notation::image(const Board & b, const Move & m, ostream &image) {
 }
 
 
-Move Notation::value(const Board & board, ColorType side, const char *image) 
+Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image) 
 {
    const char *p;
    int rank = 0;
@@ -185,20 +152,14 @@ Move Notation::value(const Board & board, ColorType side, const char *image)
    Square dest, start = InvalidSquare;
    int capture = 0;
 
-   for (p = image; isspace(*p); ++p);
+   // TBD: should really convert the following code
+   // to use C++ iterators instead of pointers.
+   for (p = image.c_str(); isspace(*p); ++p);
    if (!isalpha(*p) && *p != '0')
       return NullMove;
    if (toupper(*p) == 'O' || *p == '0') {
       // castling, we presume
-      string castle(p);
-      // repair brain-dead variants of castling like "O-O-0"
-      replace(castle.begin(), castle.end(), '0', 'O');
-      size_t check = castle.find('+');
-      if (check != string::npos) castle.erase(check,1);
-      size_t mate = castle.find('#');
-      if (mate != string::npos) castle.erase(mate,1);
-      transform(castle.begin(), castle.end(), castle.begin(), ::toupper);
-      return moveValue(board, castle.c_str(), side);
+      return parseCastling(board, side, p);
    }
    int have_start = 0;
    if (isupper(*p)) {
@@ -208,6 +169,7 @@ Move Notation::value(const Board & board, ColorType side, const char *image)
    else {
       piece = Pawn;
       file = *p - 'a' + 1;
+      if (file < 1 || file > 8) return NullMove;
       // allow "dc4" as in Informant, instead of dxc4
       if (*(p+1) == 'x' || isalpha(*(p+1))) {
          capture = 1;
@@ -219,6 +181,7 @@ Move Notation::value(const Board & board, ColorType side, const char *image)
             // long algebraic notation
             have_start++;
             start = SquareValue(p);
+            if (start == InvalidSquare) return NullMove;
             p = q;
          }
       }
@@ -231,20 +194,24 @@ Move Notation::value(const Board & board, ColorType side, const char *image)
          (isalpha(p[2]) || p[2] == '-')) {
          // long algebraic notation, or a SAN move like Qd1d3
          start = SquareValue(p);
+         if (start == InvalidSquare) return NullMove;
          p+=2;
          have_start++;
       }
       // also look for disambiguating file, e.g. '2' in "N2e4".
       else if (isdigit(*p)) {
          rank = *p - '0';
+         if (rank < 1 || rank > 8) return NullMove;
          ++p;
 	 if (isdigit(*p)) {
 	   file = *p - 'a' + 1;
+           if (file < 1 || file > 8) return NullMove;
 	   ++p;
 	 }
       }
       else if (*p != 'x' && isalpha(*p) && isalpha(*(p + 1))) {
          file = *p - 'a' + 1;
+         if (file < 1 || file > 8) return NullMove;
          ++p;
       }
    }
@@ -345,4 +312,30 @@ Move Notation::value(const Board & board, ColorType side, const char *image)
    }
    else                                           // ambiguous move
       return NullMove;
+}
+
+Move Notation::parseCastling( const Board &b,
+                              ColorType color, const string &moveStr) {
+   // repair brain-dead variants of castling like "O-O-0"
+   string castle(moveStr);
+   replace(castle.begin(), castle.end(), '0', 'O');
+   size_t check = castle.find('+');
+   if (check != string::npos) castle.erase(check,1);
+   size_t mate = castle.find('#');
+   if (mate != string::npos) castle.erase(mate,1);
+   transform(castle.begin(), castle.end(), castle.begin(), ::toupper);
+   if (castle == "O-O") {
+      if (color == White)
+         return CreateMove(E1,G1,King,Empty,Empty,KCastle);
+      else
+         return CreateMove(E8,G8,King,Empty,Empty,KCastle);
+   }
+   else if (castle == "O-O-O") {
+      if (color == White)
+         return CreateMove(E1,C1,King,Empty,Empty,QCastle);
+      else
+         return CreateMove(E8,C8,King,Empty,Empty,QCastle);
+   } else {
+      return NullMove;
+   }
 }

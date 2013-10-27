@@ -205,7 +205,7 @@ class SearchController {
         return computerSide;
     }
 
-    void uciSendInfos(Move move, int move_index, int depth);
+    void uciSendInfos(const Board &, Move move, int move_index, int depth);
 
     bool isActive() const {
         return active;

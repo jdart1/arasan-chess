@@ -370,14 +370,8 @@ int score, int alpha, int beta)
 #endif
         ASSERT(legalMove(board_copy,stats->best_line[i]));
         if (i!=0) best_line_image << ' ';
-        if (uci) {
-            // UCI format for moves
-            Notation::UCIMoveImage(stats->best_line[i],best_line_image);
-        }
-        else {
-            // use SAN
-            Notation::image(board_copy,stats->best_line[i],best_line_image);
-        }
+        Notation::image(board_copy,stats->best_line[i],
+               uci ? Notation::UCI : Notation::SAN_OUT,best_line_image);
         int len = (int)best_line_image.tellg();
         // limit the length
         if (len > 250) {
@@ -402,14 +396,8 @@ int score, int alpha, int beta)
                 if (!IsNull(hashMove)) {
                     stats->best_line[i] = hashMove;
                     if (i!=0) best_line_image << ' ';
-                    if (uci) {
-                        // UCI format for moves
-                        Notation::UCIMoveImage(hashMove,best_line_image);
-                    }
-                    else {
-                        // use SAN
-                        Notation::image(board_copy,hashMove,best_line_image);
-                    }
+                    Notation::image(board_copy,hashMove,
+                        uci ? Notation::UCI : Notation::SAN_OUT,best_line_image);
                     ++i;
                 }
                 break;
@@ -453,17 +441,17 @@ void SearchController::setTalkLevel(TalkLevel t) {
     pool->forEachSearch<&Search::setTalkLevelFromController>();
 }
 
-void SearchController::uciSendInfos(Move move, int move_index, int depth) {
+void SearchController::uciSendInfos(const Board &board, Move move, int move_index, int depth) {
    if (uci) {
       cout << "info depth " << depth;
       cout << " currmove ";
-      Notation::UCIMoveImage(move,cout);
+      Notation::image(board,move,Notation::UCI,cout);
       cout << " currmovenumber " << move_index;
       cout << endl << (flush);
 #ifdef UCI_LOG
       ucilog << "info depth " << depth;
       ucilog << " currmove ";
-      Notation::UCIMoveImage(move,ucilog);
+      Notation::image(board,move,Notation::UCI,ucilog);
       ucilog << " currmovenumber " << move_index;
       ucilog << endl << (flush);
 #endif
@@ -608,7 +596,7 @@ int failhigh,int complete)
             cout << " --";
         }
         else if (best != NullMove) {
-            Notation::image(board, best, cout);
+            Notation::image(board, best, Notation::SAN_OUT,cout);
             if (failhigh) cout << '!';
         }
         cout << '\t';
@@ -1122,7 +1110,7 @@ int depth, Move exclude [], int num_exclude)
         node->last_move = move;
         controller->stats->mvleft = controller->stats->mvtot-move_index;
         if (controller->uci && controller->stats->elapsed_time > 300) {
-            controller->uciSendInfos(move, move_index, controller->getIterationDepth());
+            controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
         }
 #ifdef _TRACE
         cout << "trying 0. ";
@@ -1202,7 +1190,7 @@ int depth, Move exclude [], int num_exclude)
                 // beta cutoff
                 // ensure we send UCI output .. even in case of quick
                 // termination due to checkmate or whatever
-                controller->uciSendInfos(move, move_index, controller->getIterationDepth());
+                controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
                 // don't reset this until after the PV update, in case
                 // it causes us to terminate:
                 fail_high_root = 0;

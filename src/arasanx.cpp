@@ -345,60 +345,18 @@ static void parseLevel(const string &cmd) {
   incr = int(1000*floatincr);
 }
 
-
-// See if the command is synatically a move (may not mean it is legal)
-static bool is_move(const Board &b, const string &cmd) {
-   if (cmd.length() >= 4 &&isalpha(cmd[0]) && isdigit(cmd[1]) &&
-      isalpha(cmd[2]) && isdigit(cmd[3]))
-      return true;
-   else if (cmd == "o-o" || cmd == "O-O" ||
-      cmd == "o-o-o" || cmd == "O-O-O")
-      return true;
-   else {
-      return Notation::value(b,b.sideToMove(),cmd.c_str()) != NullMove;
-   }
-}
-
-
 static Move text_to_move(const Board &board, const string &input) {
-   Move move;
-
-   // Winboard/xboard 4.2 and above support SAN. First try to
-   // decode the move as a SAN string.
-   //
-   move = Notation::value(board,board.sideToMove(),input.c_str());
-   if (!IsNull(move)) return move;              // success
-
-   // Now try "old" coordinate-style notation, used in Winboard/
-   // xboard before 4.2
-   //
-   string moveStr(input);
-
-   if (moveStr == "o-o" ||
-      moveStr == "o-o-o" ||
-      moveStr == "O-O" ||
-      moveStr == "O-O-O") {
-      string::iterator it;
-      for ( it=moveStr.begin() ; it != moveStr.end(); it++ ) {
-         (*it) = toupper(*it);
-      }
-      move = Notation::moveValue(board,moveStr.c_str(),board.sideToMove());
-   }
-   else if (input.length() >= 4) {
-      Square start = SquareValue(input.substr(0,2));
-      Square dest = SquareValue(input.substr(2,2));
-      if (input.length() > 4) {
-         PieceType promotion =
-            PieceCharValue(toupper(input[4]));
-         move = CreateMove(board,start,dest,
-            promotion);
-      }
-      else
-         move = CreateMove(board,start,dest,Empty);
+   // Try SAN
+   Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,input);
+   if (!IsNull(m)) return m;
+   if (input.length() >= 4 && isalpha(input[0]) && isdigit(input[1]) &&
+       isalpha(input[2]) && isdigit(input[3])) {
+      // This appears to be "old" coordinate style notation, used in
+      // Winboard before 4.2
+      return Notation::value(board,board.sideToMove(),Notation::WB_IN,input);
    } else {
-       return NullMove;
+      return NullMove;
    }
-   return move;
 }
 
 static int getIncrUCI(const ColorType side) {
@@ -671,27 +629,7 @@ static int calc_extra_time(const ColorType side) {
 // Produce a text string representing the move, in a form
 // the GUI understands
 static void move_image(const Board &board, Move m, ostream &buf, int uci) {
-   if (uci) {
-      Notation::UCIMoveImage(m,buf);
-   }
-   else {
-      if (TypeOfMove(m) == KCastle) {
-          buf << "O-O";
-      }
-      else if (TypeOfMove(m) == QCastle) {
-          buf << "O-O-O";
-      }
-      else {
-         buf << FileImage(StartSquare(m));
-         buf << RankImage(StartSquare(m));
-         buf << FileImage(DestSquare(m));
-         buf << RankImage(DestSquare(m));
-         if (TypeOfMove(m) == Promotion) {
-            // N.b. ICS requires lower case.
-            buf << (char)tolower((int)PieceImage(PromoteTo(m)));
-         }
-      }
-   }
+   Notation::image(board,m,uci ? Notation::UCI : Notation::WB_OUT,buf);
 }
 
 
@@ -1138,14 +1076,14 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
             else
                 s << "tellics whisper book moves: (";
             for (int i=0;i<moveCount;i++) {
-                Notation::image(board,choices[i],s);
+                Notation::image(board,choices[i],Notation::SAN_OUT,s);
                 s << ' ';
                 s << scores[i];
                 if (i < moveCount-1)
                     s << ", ";
             }
             s << "), choosing ";
-            Notation::image(board,move,s);
+            Notation::image(board,move,Notation::SAN_OUT,s);
             cout << s.str() << endl;
         }
         stats.clear();
@@ -1215,7 +1153,7 @@ static void send_move(Board &board, Move &move, Statistics
     }
     if (!IsNull(move)) {
         stringstream img;
-        Notation::image(board,last_move,img);
+        Notation::image(board,last_move,Notation::SAN_OUT,img);
         last_move_image = img.str();
         theLog->add_move(board,last_move,last_move_image,&last_stats,&book_inf,true);
         // Perform book and/or position learning (if enabled):
@@ -1424,7 +1362,7 @@ static void doHint() {
         else
             cout << "Book moves: ";
         for (unsigned i = 0; i<count; i++) {
-            Notation::image(*main_board,moves[i],cout);
+            Notation::image(*main_board,moves[i],Notation::SAN_OUT,cout);
             if (i<count-1) cout << ' ';
         }
         cout << endl;
@@ -1464,7 +1402,7 @@ static void doHint() {
         (doTrace) ? Trace : Silent);
     if (!IsNull(move)) {
         cout << "Hint: ";
-        Notation::image(*main_board,move,cout);
+        Notation::image(*main_board,move,Notation::SAN_OUT,cout);
         cout << endl;
     }
 }
@@ -1527,7 +1465,7 @@ static int check_pending(Board &board) {
                 retVal = 1;                                // game end
                 break;
         }
-        else if (cmd_word == "usermove" || is_move(board,cmd)) {
+        else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
             if (doTrace) cout << "# move in pending stack" << endl;
             retVal = 2;
             break;
@@ -1623,7 +1561,7 @@ static void execute_move(Board &board,Move m)
     }
     last_move = m;
     stringstream img;
-    Notation::image(board,m,img);
+    Notation::image(board,m,Notation::SAN_OUT,img);
     last_move_image = img.str();
     theLog->add_move(board,m,last_move_image,NULL,NULL,true);
     BoardState previous_state = board.state;
@@ -1903,8 +1841,8 @@ static void check_command(const string &cmd, int &terminate)
         if (doTrace) {
             cout << "# move text = " << move << endl;
         }
-        if (is_move(*main_board,move)) {
-            Move rmove = text_to_move(*main_board,move);
+        Move rmove = text_to_move(*main_board,move);
+        if (!IsNull(rmove)) {
             last_move = rmove;
             if (doTrace) {
                 cout << "# predicted move = ";
@@ -1970,21 +1908,21 @@ static void check_command(const string &cmd, int &terminate)
 static const char *get_move(const char *buf,const Board &board, Move &m)
 {
    const char *p = buf;
-      m = NullMove;
+   m = NullMove;
    if (*p) {
       while (isspace(*p) && *p != '\0') ++p;
-         if (*p == '\0')
+      if (*p == '\0')
          return NULL;
-         char tmp[10];
-         int i = 0;
-         char *q = tmp;
+      char tmp[10];
+      int i = 0;
+      char *q = tmp;
       while (!isspace(*p) && *p != '+' && *p != '\0' && i < 10) {
          *q++ = *p++;
-            ++i;
+         ++i;
       }
       *q = '\0';
-         m = Notation::value(board,board.sideToMove(),tmp);
-         if (*p == '+') ++p;
+      m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,tmp);
+      if (*p == '+') ++p;
    }
    return p;
 }
@@ -2009,7 +1947,7 @@ Move excludes [], int num_excludes) {
    else
       cout << "result:";
    cout << '\t';
-   Notation::image(board,move,cout);
+   Notation::image(board,move,Notation::SAN_OUT,cout);
    cout << "\tscore: ";
    Scoring::printScore(stats.display_value,cout);
    cout <<  '\t';
@@ -2109,14 +2047,14 @@ static void do_test(string test_file)
          if (comment.length()) cout << comment << ' ';
          if (avoid) {
             cout << "am ";
-            Notation::image(board,solution_moves[0],cout);
+            Notation::image(board,solution_moves[0],Notation::SAN_OUT,cout);
             cout << endl;
          }
          else {
             cout << "bm";
             for (int i = 0; i < solution_move_count; i++) {
                cout << ' ';
-               Notation::image(board,solution_moves[i],cout);
+               Notation::image(board,solution_moves[i],Notation::SAN_OUT,cout);
             }
             cout << endl;
          }
@@ -2266,7 +2204,7 @@ static void loadgame(Board &board,ifstream &file) {
         }
         else if (tok == ChessIO::GameMove) {
             // parse the move
-            Move m = Notation::value(board,side,buf);
+            Move m = Notation::value(board,side,Notation::SAN_IN,buf);
             if (IsNull(m) ||
                 !legalMove(board,StartSquare(m),
                            DestSquare(m))) {
@@ -2279,7 +2217,7 @@ static void loadgame(Board &board,ifstream &file) {
                 // Don't use the current move string as the input
                 // parser is forgiving and will accept incorrect
                 // SAN. Convert it here to the correct form:
-                Notation::image(board,m,image);
+                Notation::image(board,m,Notation::SAN_OUT,image);
                 gameMoves->add_move(board,previous_state,m,image.c_str(),false);
                 board.doMove(m);
             }
@@ -2331,7 +2269,7 @@ static void selfplay_game(int count) {
         }
         BoardState previous_state = main_board->state;
         stringstream image;
-        Notation::image(*main_board,m,image);
+        Notation::image(*main_board,m,Notation::SAN_OUT,image);
         gameMoves->add_move(*main_board,previous_state,m,image.str(),false);
         last_move_image = image.str();
         theLog->add_move(*main_board,m,last_move_image,&stats,NULL,true);
@@ -2378,7 +2316,7 @@ static void do_selfplay()
                BoardState previous_state = main_board->state;
                Move m = (*gameMoves)[i].move();
                string image;
-               Notation::image(*main_board,m,image);
+               Notation::image(*main_board,m,Notation::SAN_OUT,image);
                gameMoves->add_move(*main_board,previous_state,m,image.c_str(),false);
                main_board->doMove(m);
            }
@@ -2892,7 +2830,7 @@ static bool do_command(const string &cmd, Board &board) {
             // UI we received the stop.
 #ifdef UCI_LOG
             ucilog << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
-            Notation::image(board,ponder_move,ucilog);
+            Notation::image(board,ponder_move,Notation::SAN_OUT,ucilog);
             ucilog << (flush) << endl;
 #endif  
             if (ponderhit || searcher->wasStopped()) {
@@ -3051,7 +2989,7 @@ static bool do_command(const string &cmd, Board &board) {
             cout << " book moves:" << endl;
             for (int i = 0; i<count; i++) {
                 cout << '\t';
-                Notation::image(*main_board,moves[i],cout);
+                Notation::image(*main_board,moves[i],Notation::SAN_OUT,cout);
                 cout << endl;
             }
             cout << endl;
@@ -3279,7 +3217,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
         Move move;
 process_move:
-        if (is_move(board,movetext)) {
+        if ((move = text_to_move(board,movetext)) != NullMove) {
             if (game_end) {
                 if (forceMode)
                     game_end = 0;
@@ -3291,115 +3229,112 @@ process_move:
             if (doTrace) {
                 cout << "# got move: " << movetext << endl;
             }
-            move = text_to_move(board,movetext);
-            if (!IsNull(move)) {
-                // make the move on the board
-                execute_move(board,move);
-                if (analyzeMode) {
-                    // re-enter analysis loop
-                    analyze(board);
-                }
-                Move reply;
-                if (!forceMode && !analyzeMode) {
-                    // determine what to do with the pondering result, if
-                    // there is one.
-                    if (MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
-                        // We completed pondering already and we got a reply to
-                        // this move (e.g. might be a forced reply).
-                        if (doTrace) cout << "# pondering complete already" << endl;
-                        if (doTrace) {
-                            cout << "# sending ponder move ";
-                            MoveImage(ponder_move,cout);
-                            cout << endl << (flush);
-                        }
-                        reply = ponder_move;
-                        stats = ponder_stats;
-                        post_output(stats);
-                        game_end |= stats.end_of_game;
-                        if (doTrace) cout << "# game_end = " << game_end << endl;
-                        predicted_move = ponder_move = NullMove;
-                    }
-                    else {
-                        predicted_move = ponder_move = NullMove;
-                        reply = search(searcher,board,stats,false);
-                        // Note: we may know the game has ended here before
-                        // we get confirmation from Winboard. So be sure
-                        // we set the global game_end flag here so that we won't
-                        // start pondering after the game is over.
-                        game_end |= stats.end_of_game;
-                        if (doTrace) {
-                            cout << "# state = " << stats.state << endl;
-                            cout << "# game_end = " << game_end  << endl;
-                        }
-                    }
-                    // Check for game end conditions like resign, draw acceptance, etc:
-                    if (check_pending(board)==1) {
-                        game_end = true;
-                    } else if (!forceMode) {
-                       // call send_move even if game_end = true because we
-                       // handle resignation, etc. there.
-                       send_move(board,reply,stats);
-                    }
-                }
-                while (!forceMode && !analyzeMode && !game_end && !easy && time_target >= 100 /* 0.1 second */) {
-                    // check pending commands again before pondering in case
-                    // we have a resign or draw, or a move has come in (no
-                    // good pondering if the opponent has replied already).
-                    ponder_move_ok = false;
-                    int result;
-                    if ((result = check_pending(board)) == 0) {
-                        ponder(board,reply,stats.best_line[1],uci);
-                        if (check_pending(board)==1) {
-                            return 1;                       // game end signal seen
-                        }
-                    }
-                    else if (result == 1)  {               // game end
-                        return 1;
-                    }
-                    // We are done pondering. If we got a ponder hit
-                    // (opponent made our predicted move), then we are ready
-                    // to move now.
-                    if (ponder_move_ok && !IsNull(ponder_move) && !game_end
-                        && !forceMode && !analyzeMode) {
-                            // we got a reply from pondering
-                            if (doTrace) {
-                                cout << "# sending ponder move" << endl;
-                            }
-                            stats = ponder_stats;
-                            send_move(board,ponder_move,stats);
-                            post_output(stats);
-                            reply = ponder_move;
-                            predicted_move = ponder_move = NullMove;
-                    }
-                    else if (check_pending(board)==2) {
-                        if (doTrace) cout << "# ponder failed, move in stack" << endl;
-                        ponder_move = NullMove;
-                        Lock(input_lock);
-                        // process commands until we find a move
-                        while (!pending.empty()) {
-                            const string cmd = pending.front();
-                            pending.pop_front();
-                            if (cmd.substr(0,8) == "usermove") {
-                                movetext = cmd.substr(9);
-                            }
-                            else {
-                                movetext = cmd;
-                            }
-                            if (is_move(board,movetext)) {
-                                Unlock(input_lock);
-                                goto process_move;
-                            } else {
-                                if (!do_command(cmd,board)) {
-                                    Unlock(input_lock);
-                                    return false;
-                                }
-                            }
-                        }
+            // make the move on the board
+            execute_move(board,move);
+            if (analyzeMode) {
+               // re-enter analysis loop
+               analyze(board);
+            }
+            Move reply;
+            if (!forceMode && !analyzeMode) {
+               // determine what to do with the pondering result, if
+               // there is one.
+               if (MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
+                  // We completed pondering already and we got a reply to
+                  // this move (e.g. might be a forced reply).
+                  if (doTrace) cout << "# pondering complete already" << endl;
+                  if (doTrace) {
+                     cout << "# sending ponder move ";
+                     MoveImage(ponder_move,cout);
+                     cout << endl << (flush);
+                  }
+                  reply = ponder_move;
+                  stats = ponder_stats;
+                  post_output(stats);
+                  game_end |= stats.end_of_game;
+                  if (doTrace) cout << "# game_end = " << game_end << endl;
+                  predicted_move = ponder_move = NullMove;
+               }
+               else {
+                  predicted_move = ponder_move = NullMove;
+                  reply = search(searcher,board,stats,false);
+                  // Note: we may know the game has ended here before
+                  // we get confirmation from Winboard. So be sure
+                  // we set the global game_end flag here so that we won't
+                  // start pondering after the game is over.
+                  game_end |= stats.end_of_game;
+                  if (doTrace) {
+                     cout << "# state = " << stats.state << endl;
+                     cout << "# game_end = " << game_end  << endl;
+                  }
+               }
+               // Check for game end conditions like resign, draw acceptance, etc:
+               if (check_pending(board)==1) {
+                  game_end = true;
+               } else if (!forceMode) {
+                  // call send_move even if game_end = true because we
+                  // handle resignation, etc. there.
+                  send_move(board,reply,stats);
+               }
+            }
+            while (!forceMode && !analyzeMode && !game_end && !easy && time_target >= 100 /* 0.1 second */) {
+               // check pending commands again before pondering in case
+               // we have a resign or draw, or a move has come in (no
+               // good pondering if the opponent has replied already).
+               ponder_move_ok = false;
+               int result;
+               if ((result = check_pending(board)) == 0) {
+                  ponder(board,reply,stats.best_line[1],uci);
+                  if (check_pending(board)==1) {
+                     return 1;                       // game end signal seen
+                  }
+               }
+               else if (result == 1)  {               // game end
+                  return 1;
+               }
+               // We are done pondering. If we got a ponder hit
+               // (opponent made our predicted move), then we are ready
+               // to move now.
+               if (ponder_move_ok && !IsNull(ponder_move) && !game_end
+                   && !forceMode && !analyzeMode) {
+                  // we got a reply from pondering
+                  if (doTrace) {
+                     cout << "# sending ponder move" << endl;
+                  }
+                  stats = ponder_stats;
+                  send_move(board,ponder_move,stats);
+                  post_output(stats);
+                  reply = ponder_move;
+                  predicted_move = ponder_move = NullMove;
+               }
+               else if (check_pending(board)==2) {
+                  if (doTrace) cout << "# ponder failed, move in stack" << endl;
+                  ponder_move = NullMove;
+                  Lock(input_lock);
+                  // process commands until we find a move
+                  while (!pending.empty()) {
+                     const string cmd = pending.front();
+                     pending.pop_front();
+                     if (cmd.substr(0,8) == "usermove") {
+                        movetext = cmd.substr(9);
+                     }
+                     else {
+                        movetext = cmd;
+                     }
+                     if (text_to_move(board,movetext) != NullMove) {
                         Unlock(input_lock);
-                    }
-                    // ponder failed, leave ponder loop
-                    break;
-                }
+                        goto process_move;
+                     } else {
+                        if (!do_command(cmd,board)) {
+                           Unlock(input_lock);
+                           return false;
+                        }
+                     }
+                  }
+                  Unlock(input_lock);
+               }
+               // ponder failed, leave ponder loop
+               break;
             }
         }
     }
