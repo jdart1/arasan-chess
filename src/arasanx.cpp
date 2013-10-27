@@ -1645,7 +1645,6 @@ static void check_command(const string &cmd, int &terminate)
         // limit.
         ++ponderhit;
         ponder_move_ok = true;
-        ASSERT(pondering);
         // continue the search in non-ponder mode
         if (srctype != FixedDepth) {
             // Compute how much longer we must search
