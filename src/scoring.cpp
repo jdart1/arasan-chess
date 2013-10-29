@@ -1274,9 +1274,6 @@ PawnHashEntry::PawnData &entr)
     Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
     Bitboard potentialPlus, potentialMinus;
     Square sq;
-#ifdef PAWN_DEBUG
-    int total_space = 0;
-#endif
     while (bi.iterate(sq)) {
 #ifdef PAWN_DEBUG
         int tmp = score;
@@ -1350,21 +1347,22 @@ PawnHashEntry::PawnData &entr)
             // Pawn is not, and cannot be, protected by a pawn of
             // the same color. See if it is also blocked from advancing
             // by adjacent pawns.
-            Square sq2(sq + incr);
-            int patcks = pawn_attacks(board,sq2,oside).bitCountOpt() -
-                 pawn_attacks(board,sq2,side).bitCountOpt();
-            if (patcks > 0) {
+            for (Square sq2 = sq+incr; !weak && OnBoard(sq2); sq2+=incr) {
+               int patcks = pawn_attacks(board,sq2,oside).bitCountOpt() -
+                  pawn_attacks(board,sq2,side).bitCountOpt();
+               if (patcks > 0) {
 #ifdef PAWN_DEBUG
-               cout << " weak";
+                  cout << " weak";
 #endif
-               score += WEAK;
-               weak++;
-            }
-            if (patcks > 1) {             // "extra weak" pawn
-               score += WEAK2;
+                  score += WEAK;
+                  weak++;
+               }
+               if (patcks > 1) {             // "extra weak" pawn
+                  score += WEAK2;
 #ifdef PAWN_DEBUG
-               cout << " extra weak";
+                  cout << " extra weak";
 #endif
+               }
             }
         }
         if (!passed && (weak || isolated)) {
