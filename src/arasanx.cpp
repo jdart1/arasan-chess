@@ -3511,6 +3511,9 @@ int CDECL main(int argc, char **argv) {
 #ifdef _WIN32
     polling_terminated++;
     WaitForSingleObject(pollingThreadHandle,1000);
+#else
+    void *value_ptr;
+    pthread_join(pollingThreadHandle,&value_ptr);
 #endif
     delete game_file;
     return 0;

@@ -269,10 +269,13 @@ void ThreadPool::shutDown() {
        void *value_ptr;
        pthread_join(p->thread_id,&value_ptr);
 #endif
+       // Free Search instance
+       delete p->work;
        // Free thread data 
        delete p;
     }
     // now free main thread data
+    delete data[0]->work;
     delete data[0]; // main thread structure
     Unlock(poolLock);
 }
