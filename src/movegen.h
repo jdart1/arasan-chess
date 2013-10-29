@@ -40,19 +40,20 @@ class MoveGenerator
              // We previously only checked MVV_LVA, now also check see() if
              // necessary to see if the move is really winning
              while (index < batch_count) {
-                 Move &move = batch[index];
+                 Move &move = batch[index++];
+                 if (MovesEqual(move,hashMove)) {
+                     // already did this one
+                     continue;
+                 }
                  if (MVV_LVA(move)<=0) {
                     if (seeSign(board,move,0)) {
-                         index++;
                          SetPhase(move,WINNING_CAPTURE_PHASE);
                          return move;
                      } else {
                          SetPhase(move,LOSERS_PHASE);
                          losers[losers_count++] = move;
-                         index++;
                      }
                  } else {
-                     index++;
                      SetPhase(move,WINNING_CAPTURE_PHASE);
                      return move;
                  }

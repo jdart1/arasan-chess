@@ -331,7 +331,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
             if (!IsNull(killer2) && !MovesEqual(hashMove,killer2) &&
             (ply<2||!MovesEqual(killer2,killer3))) {
                if (validMove(board,killer2)) {
-                  SetPhase(killer2,KILLER1_PHASE);
+                  SetPhase(killer2,KILLER2_PHASE);
                   moves[numMoves++] = killer2;
                   index = 0;
                }
@@ -341,7 +341,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                !MovesEqual(killer1,killer4) &&
                !MovesEqual(killer2,killer4)) {
                if (validMove(board,killer4)) {
-                  SetPhase(killer4,KILLER1_PHASE);
+                  SetPhase(killer4,KILLER2_PHASE);
                   moves[numMoves++] = killer4;
                   index = 0;
                }
