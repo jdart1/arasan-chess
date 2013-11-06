@@ -1904,29 +1904,6 @@ static void check_command(const string &cmd, int &terminate)
 }
 
 
-static const char *get_move(const char *buf,const Board &board, Move &m)
-{
-   const char *p = buf;
-   m = NullMove;
-   if (*p) {
-      while (isspace(*p) && *p != '\0') ++p;
-      if (*p == '\0')
-         return NULL;
-      char tmp[10];
-      int i = 0;
-      char *q = tmp;
-      while (!isspace(*p) && *p != '+' && *p != '\0' && i < 10) {
-         *q++ = *p++;
-         ++i;
-      }
-      *q = '\0';
-      m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,tmp);
-      if (*p == '+') ++p;
-   }
-   return p;
-}
-
-
 // for support of the "test" command
 static Move search(Board &board, int ply_limit,
 int time_limit, Statistics &stats,
@@ -1976,12 +1953,12 @@ static void do_test(string test_file)
       cout << "Failed to open EPD file." << endl;
          return;
    }
-   char buf[512];
+   string buf;
    while (!pos_file.eof()) {
-      pos_file.getline(buf,511);
+      std::getline(pos_file,buf);
       if (!pos_file) {
          cout << "Error reading EPD file." << endl;
-            return;
+         return;
       }
       // Try to parse this line as an EPD command.
       stringstream stream(buf);
@@ -2005,9 +1982,13 @@ static void do_test(string test_file)
             epd_rec.getData(i,key,val);
             if (key == "bm" || key == "am") {
                Move m;
-               const char *p = val.c_str();
-               while (*p) {
-                  p = get_move(p,board,m);
+               stringstream s(val);
+               while (!s.eof()) {
+                  string moveStr;
+                  // skips spaces
+                  s >> moveStr;
+                  if (!moveStr.length()) break;
+                  m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
                   if (IsNull(m)) {
                      ++illegal;
                   }
