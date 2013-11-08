@@ -1780,8 +1780,10 @@ CheckStatusType Board::checkStatus(Move lastMove) const
 
 CheckStatusType Board::wouldCheck(Move lastMove) const {
    Square kp = kingPos[oppositeSide()];
-   Square checker = DestSquare(lastMove);
-   int d = (int)Attacks::directions[checker][kp];
+   const Square checker = DestSquare(lastMove);
+   const int d = (int)Attacks::directions[checker][kp];
+   // check for discovered check first
+   if (isPinned(oppositeSide(),lastMove)) return InCheck;
    switch(PieceMoved(lastMove)) {
       case Pawn: {
           switch (TypeOfMove(lastMove)) {
@@ -1791,7 +1793,6 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
              }
              return CheckUnknown;             
           case Promotion:
-             if (isPinned(oppositeSide(),lastMove)) return InCheck;
              // see if the promoted to piece would check the King:
              switch(PromoteTo(lastMove)) {
              case Knight:
@@ -1835,15 +1836,8 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
           case Normal: {
              if (Attacks::pawn_attacks[kp][sideToMove()].isSet(checker)) {
                  return InCheck;
-             }
-             else {
-               if (Attacks::directions[kp][StartSquare(lastMove)] == 0) {
+             } else {
                  return NotInCheck;
-               }
-               else {
-                 return isPinned(oppositeSide(),lastMove)
-                    ? InCheck : NotInCheck;
-               }
              }
           }
           case KCastle:
@@ -1852,31 +1846,18 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
           }
        }
        case Knight:
-        if (Attacks::knight_attacks[checker].isSet(kp))
-        {
+        if (Attacks::knight_attacks[checker].isSet(kp)) {
            return InCheck;
-        }
-        else {
-            if (Attacks::directions[kp][StartSquare(lastMove)] == 0) {
-               return NotInCheck;
-            }
-            else {
-               return isPinned(oppositeSide(),lastMove)
-                      ? InCheck : NotInCheck;
-            }
+        } else {
+           return NotInCheck;
         }
       case King: {
           if (TypeOfMove(lastMove) != Normal) {
              return CheckUnknown;
           } else if (Attacks::king_attacks[DestSquare(lastMove)].isSet(kp)) {
              return InCheck;
-          }
-          else if (Attacks::directions[StartSquare(lastMove)][kp] == 0) {
+          } else {
              return NotInCheck;
-          }
-          else {
-             return isPinned(oppositeSide(),lastMove)
-                    ? InCheck : NotInCheck;
           }
        }
        case Bishop:
@@ -1903,14 +1884,6 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
             default:
               break;
           }
-          // see if move could generate a discovered check
-          d = Util::Abs((int)Attacks::directions[kp][StartSquare(lastMove)]);
-          if (d == 0 || d == 7 || d == 9) {
-               return NotInCheck;
-          }
-          else
-             return isPinned(oppositeSide(),lastMove)
-                    ? InCheck : NotInCheck;
           break;
        case Rook:
           switch(d) {
@@ -1936,15 +1909,6 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
                 break;
             default:
               break;
-          }
-          // see if move could generate a discovered check
-          d = Util::Abs((int)Attacks::directions[kp][StartSquare(lastMove)]);
-          if (d == 0 || d == 8 || d == 1) {
-                return NotInCheck;
-          }
-          else {
-             return isPinned(oppositeSide(),lastMove)
-                    ? InCheck : NotInCheck;
           }
           break;
         case Queen: 
@@ -1990,20 +1954,11 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
             default:
               break;
           }
-          // see if move could generate a discovered check
-          {
-          int d2 = Attacks::directions[kp][StartSquare(lastMove)];
-          if (d == 0 && d2==0) {
-                return NotInCheck;
-          }
-          else
-             return isPinned(oppositeSide(),lastMove)
-                    ? InCheck : NotInCheck;
-          }
+          return NotInCheck;
         default:
             break;
    }
-   return CheckUnknown;
+   return NotInCheck;
 }
    
 int Board::wasLegal(Move lastMove) const {
@@ -2055,8 +2010,12 @@ int Board::isPinned(ColorType kingColor, Piece p, Square source, Square dest) co
    if (p == EmptyPiece || (TypeOfPiece(p) == King && PieceColor(p) == kingColor))
       return 0;
    const Square ks = kingSquare(kingColor);
-   int dir = Attacks::directions[source][ks];
+   const int dir = Attacks::directions[source][ks];
+   // check that source is in a line to the King
    if (dir == 0) return 0;
+   const int dir2 =  Attacks::directions[dest][ks];
+   // check for movement in direction of possible pin
+   if (Util::Abs(dir) == Util::Abs(dir2)) return 0;
 
    Bitboard attacker;
    const ColorType oside = OppositeColor(kingColor);
@@ -2119,10 +2078,8 @@ int Board::isPinned(ColorType kingColor, Piece p, Square source, Square dest) co
       ASSERT(attackSq != InvalidSquare);
       Bitboard btwn(Attacks::betweenSquares[attackSq][ks]);
       btwn.clear(source);
-      // pinned if path is clear to the King and the dest square is not in
-      // the set of "between" squares (this excludes moves in the direction
-      // of the pin)
-      return !(btwn & allOccupied) && !btwn.isSet(dest);
+      // pinned if path is clear to the King
+      return !(btwn & allOccupied);
    }
    return 0;
 }
@@ -2152,6 +2109,28 @@ int Board::repCount(int target) const
       }
    }
    return count;
+}
+
+Bitboard Board::getPinned(Square ksq, ColorType side) const {
+    // Same algorithm as Stockfish: get potential pinners then
+    // determine which are actually pinning.
+    Bitboard pinners( ((rook_bits[side] | queen_bits[side]) &
+                 Attacks::rank_file_mask[ksq]) |
+                ((bishop_bits[side] | queen_bits[side]) &
+                 Attacks::diag_mask[ksq]));
+    Square pinner;
+    Bitboard result;
+    while (pinners.iterate(pinner)) {
+        Bitboard b;
+        between(ksq, pinner, b);
+        b &= allOccupied;
+        if (b.bitCountOpt() == 1) {
+            // Only one piece between "pinner" and King. See if it is
+            // the correct color.
+            result |= b & occupied[side];
+        }
+    }
+    return result;
 }
 
 int Board::materialDraw() const {

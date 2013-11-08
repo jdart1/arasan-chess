@@ -1505,7 +1505,9 @@ int Search::qsearch_no_check(int ply, int depth)
         // Do checks in qsearch
         if ((stand_pat_score >= node->alpha - 2*PAWN_VALUE) &&
             (depth >= 1-srcOpts.checks_in_qsearch)) {
-            move_count = mg.generateChecks(moves);
+            Bitboard disc = board.getPinned(board.kingSquare(board.oppositeSide()),
+                                            board.sideToMove());
+            move_count = mg.generateChecks(moves,disc);
             move_index = 0;
 #ifdef _TRACE
             if (master()) {

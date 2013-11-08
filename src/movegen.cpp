@@ -1024,16 +1024,74 @@ const Bitboard &mask)
 }
 
 
-int MoveGenerator::generateChecks(Move * moves)
-{
-   // Note: doesn't at present generate castling moves that check, or
-   // discovered checks
+int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckCandidates) {
+   // Note: doesn't at present generate castling moves that check
+   ASSERT(board.checkStatus() == NotInCheck);
    const Square kp = board.kingSquare(board.oppositeSide());
-   Bitboard pieces(board.occupied[board.sideToMove()]);
-   pieces &= ~board.pawn_bits[board.sideToMove()];
    Square loc;
    int numMoves = 0;
-   while (pieces.iterate(loc)) {
+
+   // Discovered checks first.
+   Bitboard disc(discoveredCheckCandidates);
+   while (disc.iterate(loc)) {
+      switch(TypeOfPiece(board[loc])) {
+         case Pawn: {
+            const int dir = Attacks::directions[loc][kp];
+            ASSERT(dir);
+            if (Util::Abs(dir) != 8) {
+               // Pawn does not move in direction of pin
+               const int step = (board.sideToMove() == White) ? 8 : -8;
+               if (board[loc+step] == EmptyPiece && Rank(loc,board.sideToMove()) < 7) {
+                  moves[numMoves++] = CreateMove(loc,loc+step,Pawn);
+                  if (Rank(loc,board.sideToMove()) == 2 && board[loc+2*step] == EmptyPiece) {
+                     moves[numMoves++] = CreateMove(loc,loc+2*step,Pawn);
+                  }
+               }
+            }
+            break;
+         }
+         case Knight:
+         {
+            Bitboard dests(Attacks::knight_attacks[loc] & ~board.allOccupied);
+            Square sq;
+            while (dests.iterate(sq)) {
+               moves[numMoves++] =
+                  CreateMove(loc,sq,Knight);
+            }
+            break;
+         }
+         case Bishop: {
+            Bitboard dests(board.bishopAttacks(loc) & ~board.allOccupied);
+            Square sq;
+             while (dests.iterate(sq)) {
+                 moves[numMoves++] =
+                     CreateMove(loc,sq,Bishop);
+             }
+             break;
+         }
+         case Rook: {
+            Bitboard dests(board.rookAttacks(loc) & ~board.allOccupied);
+            Square sq;
+             while (dests.iterate(sq)) {
+                 moves[numMoves++] =
+                      CreateMove(loc,sq,Rook);
+             }
+             break;
+         }
+         case Queen: {
+             // Queen can't actually be pinned w/o currently giving
+             // check
+             break;
+         }
+      default:
+          break;
+      }
+   }
+
+   // Now non-discovered checks
+   Bitboard pieces(board.occupied[board.sideToMove()]);
+   pieces &= ~board.pawn_bits[board.sideToMove()];
+   while (pieces.iterate(loc) && !discoveredCheckCandidates.isSet(loc)) {
       switch(TypeOfPiece(board[loc])) {
          case Knight:
          {

@@ -106,7 +106,7 @@ class MoveGenerator
       int generateEvasions(Move * moves);
 
       // Generate non-capturing checking moves
-      int generateChecks(Move * moves);
+      int generateChecks(Move * moves, const Bitboard &discoveredCheckCandidates);
 
       unsigned movesGenerated() const
       {
