@@ -75,6 +75,8 @@ static const int FUTILITY_MARGIN_BASE[16] =
 
 static int FUTILITY_MARGIN[16][64];
 
+static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(1.5*PAWN_VALUE);
+
 static const int HISTORY_PRUNE_DEPTH = 12;
 struct HistoryPruneParams {
   int historyMinMoveCount;
@@ -1395,7 +1397,8 @@ int Search::qsearch_no_check(int ply, int depth)
             cout << endl;
         }
 #endif
-        // we do not do SEE on the pv move because it already
+        // Omit futility pruning on hash move.
+        // Also, we do not do SEE on the pv move because it already
         // passed that test - or it would have been pruned
         board.doMove(pv);
         try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
@@ -1424,21 +1427,9 @@ int Search::qsearch_no_check(int ply, int depth)
                          NullMove, master());
         Move *moves = (Move*)node->done;
         const ColorType oside = board.oppositeSide();
-        Bitboard targets(board.occupied[oside]);
-        // Pre-select the piece(s) whose capture will be considered.
-        // Pieces whose capture is unlikely to reach the futility threshold
-        // will not be included in move generation.
-        if (node->alpha - int(1.6*PAWN_VALUE) > stand_pat_score) {
-            targets &= ~(board.pawn_bits[oside] & ~Attacks::rank7mask[oside]);
-            if (node->alpha - int(1.6*KNIGHT_VALUE) > stand_pat_score) {
-               targets &= ~(board.knight_bits[oside] | board.bishop_bits[oside]);
-               if (node->alpha - int(1.6*ROOK_VALUE) > stand_pat_score) {
-                  targets &= ~board.rook_bits[oside];
-               }
-            }
-        }
+        Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
         // generate all the capture moves
-        int move_count = mg.generateCaptures(moves,targets);
+        int move_count = mg.generateCaptures(moves,board.occupied[oside]);
         mg.initialSortCaptures(moves, move_count);
         while (move_index < move_count) {
             Move move = moves[move_index++];
@@ -1452,10 +1443,29 @@ int Search::qsearch_no_check(int ply, int depth)
 #endif
                 return -Illegal;
             }
-            if (calcGain(board,move) - PieceValue(PieceMoved(move)) < 0 && !seeSign(board,move,0)) {
-              // This appears to be a losing capture
-              continue;
+            // Futility pruning
+            if (!node->PV() && !disc.isSet(StartSquare(move))) {
+               const int gain = calcGain(board,move);
+               const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + stand_pat_score;
+               if (optScore < node->alpha) {
+                  node->best_score = Util::Max(node->best_score, optScore);
+                  continue;
+               }
+               // See pruning
+               if (gain - PieceValue(PieceMoved(move)) < 0 && !seeSign(board,move,
+                                                                       Util::Max(0,node->beta - stand_pat_score - QSEARCH_FORWARD_PRUNE_MARGIN))) {
+                  // This appears to be a losing capture, or one that can't bring us above alpha
+                  continue;
+               }
             }
+#ifdef _TRACE
+            if (master()) {
+                indent(ply);
+                cout << "trying " << ply << ". ";
+                MoveImage(move,cout);
+                cout << endl;
+            }
+#endif
 #ifdef _TRACE
             if (master()) {
                 indent(ply);
@@ -1528,8 +1538,9 @@ int Search::qsearch_no_check(int ply, int depth)
                     cout << endl;
                 }
 #endif
-                // prune checks that cause loss of the checking piece
-                if (!seeSign(board,move,0)) {
+                // prune checks that cause loss of the checking piece (but not
+                // discovered checks)
+                if (!disc.isSet(StartSquare(move)) && !seeSign(board,move,0)) {
 #ifdef _TRACE
                     if (master()) {
                         indent(ply); cout << "pruned" << endl;
