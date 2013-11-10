@@ -1338,7 +1338,7 @@ int Search::qsearch_no_check(int ply, int depth)
         stand_pat_score = bitscore;
     }
     else {
-        stand_pat_score = scoring.evalu8(board,node->alpha,node->beta);
+        stand_pat_score = scoring.evalu8(board,-Constants::MATE,node->beta);
     }
 #ifdef _TRACE
     if (master()) {
@@ -1444,18 +1444,18 @@ int Search::qsearch_no_check(int ply, int depth)
                 return -Illegal;
             }
             // Futility pruning
-            if (!node->PV() && !disc.isSet(StartSquare(move))) {
+            if (!disc.isSet(StartSquare(move)) && 
+                (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
                const int gain = calcGain(board,move);
                const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + stand_pat_score;
                if (optScore < node->alpha) {
-                  node->best_score = Util::Max(node->best_score, optScore);
                   continue;
                }
                // See pruning
-               if (gain - PieceValue(PieceMoved(move)) < 0 && !seeSign(board,move,
-                                                                       Util::Max(0,node->beta - stand_pat_score - QSEARCH_FORWARD_PRUNE_MARGIN))) {
+               if (gain - PieceValue(PieceMoved(move)) <= 0 && !seeSign(board,move,
+                   Util::Max(0,node->beta - stand_pat_score - QSEARCH_FORWARD_PRUNE_MARGIN))) {
                   // This appears to be a losing capture, or one that can't bring us above alpha
-                  continue;
+                   continue;
                }
             }
 #ifdef _TRACE
@@ -1515,8 +1515,6 @@ int Search::qsearch_no_check(int ply, int depth)
         // Do checks in qsearch
         if ((stand_pat_score >= node->alpha - 2*PAWN_VALUE) &&
             (depth >= 1-srcOpts.checks_in_qsearch)) {
-            Bitboard disc = board.getPinned(board.kingSquare(board.oppositeSide()),
-                                            board.sideToMove());
             move_count = mg.generateChecks(moves,disc);
             move_index = 0;
 #ifdef _TRACE
@@ -1635,6 +1633,7 @@ int Search::qsearch_check(int ply, int depth)
     Move move;
     BoardState state = board.state;
     node->num_try = 0;
+    int noncaps = 0;
     while ((move = mg.nextEvasion()) != NullMove) {
         ASSERT(OnBoard(StartSquare(move)));
         if (Capture(move) == King) {
@@ -1654,6 +1653,16 @@ int Search::qsearch_check(int ply, int depth)
             cout << endl;
         }
 #endif
+        if (!node->PV() &&
+            noncaps > Util::Max(2+depth,0) && 
+            !Scoring::mateScore(node->beta) &&
+            !IsForced(move) && !IsForced2(move) &&
+            Capture(move) == Empty &&
+            board.wouldCheck(move) == NotInCheck) {
+            // We have searched one or more legal non-capture evasions
+            // and failed to cutoff. So don't search any more.
+            continue;
+        }
         node->last_move = move;
         board.doMove(move);
         ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
@@ -1677,6 +1686,7 @@ int Search::qsearch_check(int ply, int depth)
                 if (node->best_score >= Constants::MATE-1-ply)
                     break;                        // mating move found
             }
+            if (!CaptureOrPromotion(move)) noncaps++;
         }
 #ifdef _TRACE
         else if (master()) {
