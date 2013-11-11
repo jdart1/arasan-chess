@@ -301,6 +301,14 @@ class Bitboard
 #endif        
     }
 
+    FORCEINLINE unsigned int singleBitSet() const {
+#ifdef USE_POPCNT
+       return bitCount() == 1;
+#else
+       return data && ((data & (data-1)) == (uint64)0);
+#endif
+    }
+
     FORCEINLINE Square firstOne() const {
 #ifdef _64BIT
 #if defined(USE_ASM) && defined(__x86_64__) 

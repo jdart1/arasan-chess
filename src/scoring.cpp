@@ -952,8 +952,13 @@ outpost(const Board &board,
         outpost = scores[scoreSq];
       }
    }
-   if (outpost && oppPawnData.opponent_pawn_attacks.isSet(sq)) {
-      return outpost;
+   if (outpost) { 
+      if (oppPawnData.opponent_pawn_attacks.isSet(sq)) {
+         return outpost;
+      } else {
+         // not defended by pawn
+         return 2*outpost/3;
+      }
    }
    else {
      return 0;
