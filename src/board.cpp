@@ -2124,7 +2124,7 @@ Bitboard Board::getPinned(Square ksq, ColorType side) const {
         Bitboard b;
         between(ksq, pinner, b);
         b &= allOccupied;
-        if (b.bitCountOpt() == 1) {
+        if (b.singleBitSet()) {
             // Only one piece between "pinner" and King. See if it is
             // the correct color.
             result |= b & occupied[side];

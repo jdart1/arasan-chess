@@ -411,7 +411,7 @@ private:
      Bitboard btwn;
      between(pinner,okp,btwn);
      Bitboard pin(btwn & mask);
-     if (pin.bitCountOpt() == 1) {
+     if (pin.singleBitSet()) {
        if ((btwn & allOccupied) == pin) {
          return 1;
        }
