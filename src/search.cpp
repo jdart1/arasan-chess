@@ -1295,8 +1295,8 @@ int Search::quiesce(int ply,int depth)
         // not move a pinned piece or move the king into check (normally we
         // would detect this by finding the King can be captured, but if in
         // check we only generate evasions and will not find this).
+        ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
         if (!board.wasLegal((node-1)->last_move)) {
-          ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
            return -Illegal;
         }
         else {
@@ -1458,14 +1458,6 @@ int Search::qsearch_no_check(int ply, int depth)
                    continue;
                }
             }
-#ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << "trying " << ply << ". ";
-                MoveImage(move,cout);
-                cout << endl;
-            }
-#endif
 #ifdef _TRACE
             if (master()) {
                 indent(ply);
