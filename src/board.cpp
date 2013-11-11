@@ -1426,7 +1426,7 @@ Square Board::minAttacker(Bitboard atcks, ColorType side) const
    }    
 }
 
-Bitboard Board::getXRay(Square attack_square, Square square,ColorType side) const {
+Bitboard Board::getXRay(Square attack_square, Square square, ColorType side) const {
    int dir = Attacks::directions[attack_square][square];
    if (dir == 0)
       return Bitboard(0);
@@ -1545,11 +1545,10 @@ CheckStatusType Board::getCheckStatus() const
 }
 
 // This variant of CheckStatus sees if the last move made
-// delivered check. It is generally faster than CheckStatus
+// delivered check. It is generally faster than checkStatus
 // with no param, because we can use the last move information
 // to avoid calling anyAttacks, in many cases.
-CheckStatusType Board::checkStatus(Move lastMove) const
-{
+CheckStatusType Board::checkStatus(Move lastMove) const {
    if (state.checkStatus != CheckUnknown)
    {
       return state.checkStatus;
@@ -1561,227 +1560,118 @@ CheckStatusType Board::checkStatus(Move lastMove) const
    int d = Attacks::directions[checker][kp];
    Board &b = (Board&)*this;
    switch(PieceMoved(lastMove)) {
-      case Pawn: {
-          if (TypeOfMove(lastMove) != Normal)
-             return checkStatus();
-          if (Attacks::pawn_attacks[kp][oppositeSide()].isSet(checker)) {
-              b.state.checkStatus = InCheck;
-          }
-          else if (Attacks::directions[kp][StartSquare(lastMove)] == 0) {
-              b.state.checkStatus = NotInCheck;
-          }
-          if (state.checkStatus == CheckUnknown)
-              return checkStatus();
-          else
-              return state.checkStatus;
-       }
-       case Rook:
-        switch(d) {
-          case 1:
-              if (rankAttacksRight(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -1:
-              if (rankAttacksLeft(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case 8:
-              if (fileAttacksUp(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -8:
-              if (fileAttacksDown(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-          default:
-            break;
-        }
-        if (state.checkStatus == CheckUnknown) {
-          // see if move could generate a discovered check
-            d = Util::Abs(Attacks::directions[kp][StartSquare(lastMove)]);
-            switch(d) {
-            case 0:
-            case 1:
-            case 8:
-                 b.state.checkStatus = NotInCheck;
-                 return NotInCheck;
-            case 7: {
-              Bitboard attacks = diagAttacksA8(StartSquare(lastMove));
-              if (attacks.isSet(kp) && TEST_MASK(attacks,
-                                                 (bishop_bits[oppositeSide()] | queen_bits[oppositeSide()])))
-                  b.state.checkStatus = InCheck;
-              else
-                  b.state.checkStatus = NotInCheck;
-              
-            }
-              break;
-            case 9: {
-              Bitboard attacks = diagAttacksA1(StartSquare(lastMove));
-              if (attacks.isSet(kp) && TEST_MASK(attacks,
-                                                 (bishop_bits[oppositeSide()] | queen_bits[oppositeSide()])))
-                  b.state.checkStatus = InCheck;
-              else
-                  b.state.checkStatus = NotInCheck;
-              
-            }
-              break;
-            default:
-              break;
-                        } // end switch
-            }
-        else
-            return state.checkStatus;
+   case Pawn: {
+      if (TypeOfMove(lastMove) != Normal)
+         return checkStatus();
+      if (Attacks::pawn_attacks[kp][oppositeSide()].isSet(checker)) {
+         b.state.checkStatus = InCheck;
+      }
+      else if (Attacks::directions[kp][StartSquare(lastMove)] == 0) {
+         b.state.checkStatus = NotInCheck;
+      }
+      if (state.checkStatus == CheckUnknown)
+         return checkStatus();
+      else
+         return state.checkStatus;
+   }
+   case Rook:
+      switch(d) {
+      case 1:
+      case -1:
+      case 8:
+      case -8:
+         if (clear(checker,kp)) {
+            b.state.checkStatus = InCheck;
+         }
+      default:
+         break;
+      }
+      if (state.checkStatus == CheckUnknown) {
+         // check for discovered attack
+         if (discAttackDiag(StartSquare(lastMove),kp,oppositeSide())) {
+            b.state.checkStatus = InCheck;
+         }
+         else {
+            b.state.checkStatus = NotInCheck;
+         }
+      }
+      break;
    case Bishop: 
-        switch(d) {
-          case 7:
-              if (diagAttacksA8Upper(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -7:
-              if (diagAttacksA8Lower(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case 9:
-              if (diagAttacksA1Upper(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -9:
-              if (diagAttacksA1Lower(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-          default:
-            break;
-        }
-        if (state.checkStatus == CheckUnknown) {
-          // see if move could generate a discovered check
-            d = Util::Abs(Attacks::directions[kp][StartSquare(lastMove)]);
-            switch(d) {
-            case 0:
-            case 7:
-            case 9: {
-                 b.state.checkStatus = NotInCheck;
-                 return NotInCheck;
+      switch(d) {
+      case 7:
+      case -7:
+      case 9:
+      case -9:
+         if (clear(checker,kp)) {
+            b.state.checkStatus = InCheck;
+         }
+      default:
+         break;
+      }
+      if (state.checkStatus == CheckUnknown) {
+         // check for discovered attack
+         if (discAttackRankFile(StartSquare(lastMove),kp,oppositeSide())) {
+            b.state.checkStatus = InCheck;
+         }
+         else {
+            b.state.checkStatus = NotInCheck;
+         }
+      }
+      break;
+   case Knight:
+      if (Attacks::knight_attacks[checker].isSet(kp))
+      {
+         b.state.checkStatus = InCheck;
+      }
+      else {    
+         if (state.checkStatus == CheckUnknown) {
+            // check for discovered attack
+            if (discAttack(StartSquare(lastMove),kp,oppositeSide())) {
+               b.state.checkStatus = InCheck;
             }
-              break;
-            case 8:{
-              Bitboard attacks(fileAttacks(StartSquare(lastMove)));
-              if (attacks.isSet(kp) && TEST_MASK(attacks,
-                                                 (rook_bits[oppositeSide()] | queen_bits[oppositeSide()])))
-                  b.state.checkStatus = InCheck;
-              else
-                  b.state.checkStatus = NotInCheck;
-              
-            }
-             break;
-            case 1: {
-              Bitboard attacks(rankAttacks(StartSquare(lastMove)));
-              if (attacks.isSet(kp) && TEST_MASK(attacks,
-                                                 (rook_bits[oppositeSide()] | queen_bits[oppositeSide()])))
-                  b.state.checkStatus = InCheck;
-              else
-                  b.state.checkStatus = NotInCheck;
-              
-            }
-              break;
-            default:
-                return checkStatus();
-            } // end switch
-        }
-        else
-            return state.checkStatus;
-        break;
-      case Knight:
-        if (Attacks::knight_attacks[checker].isSet(kp))
-        {
-           b.state.checkStatus = InCheck;
-        }
-        else {
-            d = Util::Abs(Attacks::directions[kp][StartSquare(lastMove)]);
-            if (d == 0)
-            {
+            else {
                b.state.checkStatus = NotInCheck;
             }
-            else
-               return checkStatus();
-        }
-        break;
-        case Queen: {
-          b.state.checkStatus = NotInCheck;     
-         switch(d) {
-         case 0: 
-            break;
-          case 1:
-              if (rankAttacksRight(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -1:
-              if (rankAttacksLeft(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case 8:
-              if (fileAttacksUp(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -8:
-              if (fileAttacksDown(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-          case 7:
-              if (diagAttacksA8Upper(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -7:
-              if (diagAttacksA8Lower(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case 9:
-              if (diagAttacksA1Upper(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-              break;
-          case -9:
-              if (diagAttacksA1Lower(checker).isSet(kp)) {
-                 b.state.checkStatus = InCheck;
-              }
-          default:
-            break;
-          }
-        }
-        break;
-      case King: 
-          if (TypeOfMove(lastMove) != Normal) /* castling */
-              return checkStatus();
-          if (Attacks::king_attacks[checker].isSet(kp)) {
-            b.state.checkStatus = InCheck;
-            return InCheck;
-          }
-          else if (Attacks::directions[StartSquare(lastMove)][kp] == 0) {
-            b.state.checkStatus = NotInCheck;
-            return NotInCheck;
-          }
-          else
-            return checkStatus();
-      default:
-          break;
-   }
-   return checkStatus();
+         }
+      }
+      break;
+   case Queen: 
+      if (d && clear(checker,kp)) {
+         b.state.checkStatus = InCheck;
+      } else {
+         b.state.checkStatus = NotInCheck;
+      }
+      break;
+ case King: 
+    if (TypeOfMove(lastMove) != Normal) /* castling */
+       return checkStatus();
+    if (Attacks::king_attacks[checker].isSet(kp)) {
+       b.state.checkStatus = InCheck;
+       return InCheck;
+    }
+    else if (Attacks::directions[StartSquare(lastMove)][kp] == 0) {
+       b.state.checkStatus = NotInCheck;
+       return NotInCheck;
+    }
+    else {
+       if (discAttack(StartSquare(lastMove),kp,oppositeSide())) {
+          b.state.checkStatus = InCheck;
+       }
+       else {
+          b.state.checkStatus = NotInCheck;
+       }
+     }
+    break;
+   default:
+       break;
+    } // end switch
+    return checkStatus();
 }
+
 
 CheckStatusType Board::wouldCheck(Move lastMove) const {
    Square kp = kingPos[oppositeSide()];
    const Square checker = DestSquare(lastMove);
-   const int d = (int)Attacks::directions[checker][kp];
    // check for discovered check first
    if (isPinned(oppositeSide(),lastMove)) return InCheck;
    switch(PieceMoved(lastMove)) {
@@ -1798,7 +1688,8 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
              case Knight:
                  return Attacks::knight_attacks[checker].isSet(kp) ?
                  InCheck : NotInCheck;
-             case Bishop:
+             case Bishop: {
+                 const int d = (int)Attacks::directions[checker][kp];
                  if (Util::Abs(d) == 7 || Util::Abs(d) == 9) {
                      Board &b = (Board&)*this;
                      b.allOccupied.clear(StartSquare(lastMove));
@@ -1808,7 +1699,9 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
                  } else {
                      return NotInCheck;
                  }
-             case Rook:
+             }
+             case Rook: {
+                 const int d = (int)Attacks::directions[checker][kp];
                  if (Util::Abs(d) == 1 || Util::Abs(d) == 8) {
                      Board &b = (Board&)*this;
                      b.allOccupied.clear(StartSquare(lastMove));
@@ -1819,7 +1712,9 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
                  else {
                      return NotInCheck;
                  }
-             case Queen:
+             }
+             case Queen: {
+                 const int d = (int)Attacks::directions[checker][kp];
                  if (d) {
                      Board &b = (Board&)*this;
                      b.allOccupied.clear(StartSquare(lastMove));
@@ -1829,7 +1724,7 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
                  } else {
                      return NotInCheck;
                  }
-
+             }
              default:
               break;
              }
@@ -1860,103 +1755,37 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
              return NotInCheck;
           }
        }
-       case Bishop:
+       case Bishop: {
+          const int d = (int)Attacks::directions[checker][kp];
           switch(d) {
             case 7:
-                if (diagAttacksA8Upper(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
             case -7:
-                if (diagAttacksA8Lower(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case 9:
-                if (diagAttacksA1Upper(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case -9:
-                if (diagAttacksA1Lower(checker).isSet(kp)) {
-                   return InCheck;
-                }
+            case 9:   
+            case -9:   
+               return ((Attacks::betweenSquares[checker][kp] & allOccupied) ? NotInCheck : InCheck);
             default:
               break;
           }
           break;
-       case Rook:
+       }
+       case Rook: {
+          const int d = (int)Attacks::directions[checker][kp];
           switch(d) {
             case 1:
-                if (rankAttacksRight(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
             case -1:
-                if (rankAttacksLeft(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
             case 8:
-                if (fileAttacksUp(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
             case -8:
-                if (fileAttacksDown(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
+            return ((Attacks::betweenSquares[checker][kp] & allOccupied) ? NotInCheck : InCheck);
+
             default:
               break;
           }
           break;
+        }
         case Queen: 
-          switch(d) {
-            case 7:
-                if (diagAttacksA8Upper(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case -7:
-                if (diagAttacksA8Lower(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case 9:
-                if (diagAttacksA1Upper(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case -9:
-                if (diagAttacksA1Lower(checker).isSet(kp)) {
-                   return InCheck;
-                }
-            case 1:
-                if (rankAttacksRight(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case -1:
-                if (rankAttacksLeft(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case 8:
-                if (fileAttacksUp(checker).isSet(kp)) {
-                   return InCheck;
-                }
-                break;
-            case -8:
-                if (fileAttacksDown(checker).isSet(kp)) {
-                   return InCheck;
-                }
-            default:
-              break;
-          }
-          return NotInCheck;
+          return clear(checker,kp) ? InCheck : NotInCheck;
         default:
-            break;
+         break;
    }
    return NotInCheck;
 }
@@ -2222,3 +2051,40 @@ ostream & operator << (ostream &o, const Board &board)
    return o;
 }
 
+int Board::discAttackDiag(Square sq, Square ksq, ColorType side) const {
+    Bitboard pinners((bishop_bits[side] | queen_bits[side]) &
+                 Attacks::diag_mask[ksq]);
+    Square pinner;
+    while (pinners.iterate(pinner)) {
+        if (clear(pinner,ksq)) {
+           return 1;
+        }
+    }
+    return 0;
+}
+
+int Board::discAttackRankFile(Square sq, Square ksq, ColorType side) const {
+    Bitboard pinners((rook_bits[side] | queen_bits[side]) &
+       Attacks::rank_file_mask[ksq]);
+    Square pinner;
+    while (pinners.iterate(pinner)) {
+        if (clear(pinner,ksq)) {
+           return 1;
+        }
+    }
+    return 0;
+}
+
+int Board::discAttack(Square sq, Square ksq, ColorType side) const {
+    Bitboard pinners( ((rook_bits[side] | queen_bits[side]) &
+                 Attacks::rank_file_mask[ksq]) |
+                ((bishop_bits[side] | queen_bits[side]) &
+                 Attacks::diag_mask[ksq]));
+    Square pinner;
+    while (pinners.iterate(pinner)) {
+        if (clear(pinner,ksq)) {
+           return 1;
+        }
+    }
+    return 0;
+}

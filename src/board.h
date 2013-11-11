@@ -123,6 +123,8 @@ public:
      }
     }
    
+   // returns InCheck if the previous move caused check to the opponent
+   // (call after the move is made).
    CheckStatusType checkStatus(Move lastMove) const;
 
    // returns InCheck if the move could cause check to the opponent
@@ -317,7 +319,7 @@ public:
    }
 
    // True if the Bishop or Queen on "sq" pins a Knight or Rook to the opposing
-   // king. okp is the opposining king square, oside is the opposing color.
+   // king. okp is the opposing king square, oside is the opposing color.
    int pinOnDiag(Square sq, Square okp, ColorType oside) const {
       if (Attacks::diag_a1_mask[sq].isSet(okp)) {
          // might be a pin
@@ -418,6 +420,13 @@ private:
      }
      return 0;
    }
+
+   int discAttackDiag(Square sq, Square ksq, ColorType side) const;
+
+   int discAttackRankFile(Square sq, Square ksq, ColorType side) const;
+
+   int discAttack(Square sq, Square ksq, ColorType side) const;
+
 };
 
 #endif
