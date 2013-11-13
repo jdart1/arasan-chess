@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2000, 2004, 2005, 2013 by Jon Dart.  All Rights Reserved.
 
 #include "types.h"
 #include "chess.h"
@@ -164,7 +164,7 @@ public:
    // returns "true" if there is a clear path between sq1 and sq2
    int clear( Square sq1, Square sq2 ) const {
       return Attacks::directions[sq1][sq2] &&
-         Bitboard(allOccupied & Attacks::betweenSquares[sq1][sq2]).is_clear();
+         Bitboard(allOccupied & Attacks::betweenSquares[sq1][sq2]).isClear();
    }
 
 
@@ -207,14 +207,10 @@ public:
    // unoccupied "sq".
    Bitboard calcBlocks(Square sq, ColorType side) const;
    
-   // Return the location of least-valued piece of color "side"
-   // out of the bitmap.
-   Square minAttacker(Bitboard, ColorType side) const;
+   // Return location of a piece of color "side" that attacks "square" in
+   // direction "dir" (InvalidSquare if no such piece).
+   Square getDirectionalAttack(Square sq, int dir, ColorType side) const; 
    
-   // Return all attackers of color "side" behind "attack_square" that
-   // (indirectly) attack "square"
-   Bitboard getXRay(Square attack_square, Square square,ColorType side) const;
-
    // Return all squares attacked by pawns of color "side".
    Bitboard allPawnAttacks(ColorType side) const;
 
@@ -293,11 +289,11 @@ public:
 
    // Return true if moving a piece from "source" to "dest" would be
    // prohibited due to a pin
-   int isPinned(ColorType kingColor, Piece p, Square source, Square dest) const;
+   int isPinned(ColorType kingColor, Square source, Square dest) const;
 
    // Return true if Move is illegal due to a pin
    int isPinned(ColorType kingColor, Move m) const {
-     return isPinned(kingColor,contents[StartSquare(m)],StartSquare(m),DestSquare(m));
+     return isPinned(kingColor,StartSquare(m),DestSquare(m));
    }
 
    // True if the Rook or Queen on "sq" pins a Knight or Bishop to the opposing

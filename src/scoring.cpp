@@ -1398,8 +1398,8 @@ PawnHashEntry::PawnData &entr)
           if (side == White) {
              Bitboard ahead(board.pawn_bits[Black] & passedW[sq]);
              if (!(ahead & Attacks::file_mask[file-1])) {
-               int blocker1 = file == 1 ? 0 : !Bitboard(ahead & Attacks::file_mask[file-2]).is_clear();
-               int blocker2 = file == 8 ? 0 : !Bitboard(ahead & Attacks::file_mask[file]).is_clear();
+               int blocker1 = file == 1 ? 0 : !Bitboard(ahead & Attacks::file_mask[file-2]).isClear();
+               int blocker2 = file == 8 ? 0 : !Bitboard(ahead & Attacks::file_mask[file]).isClear();
                if ((blocker1 ^ blocker2) == 1) {
                   // We are blocked by one or more pawns on an adjacent file
                   diff = blocker1 ? -1 : 1;
@@ -1411,7 +1411,7 @@ PawnHashEntry::PawnData &entr)
                        file += diff) {
                      Bitboard pawns(allPawns &
                                      Attacks::file_mask[file-1]);
-                     if (pawns.is_clear()) break; // no pawns on file
+                     if (pawns.isClear()) break; // no pawns on file
                      Square pawn;
                      int wFilePawns = 0, bFilePawns = 0;
                      while ((pawn = pawns.lastOne()) != InvalidSquare) {
@@ -1443,8 +1443,8 @@ PawnHashEntry::PawnData &entr)
           else {
              Bitboard ahead(board.pawn_bits[White] & passedB[sq]);
              if (!(ahead & Attacks::file_mask[file-1])) {
-               int blocker1 = file == 1 ? 0 : !Bitboard(ahead & Attacks::file_mask[file-2]).is_clear();
-               int blocker2 = file == 8 ? 0 : !Bitboard(ahead & Attacks::file_mask[file]).is_clear();
+               int blocker1 = file == 1 ? 0 : !Bitboard(ahead & Attacks::file_mask[file-2]).isClear();
+               int blocker2 = file == 8 ? 0 : !Bitboard(ahead & Attacks::file_mask[file]).isClear();
                if ((blocker1 ^ blocker2) == 1) {
                   // We are blocked by one or more pawns on an adjacent file
                   diff = blocker1 ? -1 : 1;
@@ -1456,7 +1456,7 @@ PawnHashEntry::PawnData &entr)
                        file += diff) {
                      Bitboard pawns(allPawns &
                                      Attacks::file_mask[file-1]);
-                     if (pawns.is_clear()) break; // no pawns on file
+                     if (pawns.isClear()) break; // no pawns on file
                      Square pawn;
                      int wFilePawns = 0, bFilePawns = 0;
                      while ((pawn = pawns.firstOne()) != InvalidSquare) {
@@ -1710,14 +1710,14 @@ const PawnHashEntry::PawnData &pawnData, Scores &scores)
           // Rook adjacent to pawn on 7th is good too
           if (rank == 7 && file<8 && TEST_MASK(board.rook_bits[side],Attacks::file_mask[file])) {
              Bitboard atcks(board.fileAttacks(sq+1) & board.rook_bits[side]);
-             if (!atcks.is_clear() || board.rook_bits[side].isSet(sq+1)) {
+             if (!atcks.isClear() || board.rook_bits[side].isSet(sq+1)) {
                 scores.mid += ROOK_BEHIND_PP[Midgame];
                 scores.end += ROOK_BEHIND_PP[Endgame];
              }
           }
           if (rank == 7 && file>1 && TEST_MASK(board.rook_bits[side],Attacks::file_mask[file-2])) {
              Bitboard atcks(board.fileAttacks(sq-1) & board.rook_bits[side]);
-             if (!atcks.is_clear() || board.rook_bits[side].isSet(sq-1)) {
+             if (!atcks.isClear() || board.rook_bits[side].isSet(sq-1)) {
                 scores.mid += ROOK_BEHIND_PP[Midgame];
                 scores.end += ROOK_BEHIND_PP[Endgame];
              }

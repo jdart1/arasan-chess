@@ -151,7 +151,7 @@ class Bitboard
         return ((data & mask[n]) != (uint64)0);
 #endif
     }
-    int FORCEINLINE is_clear()const {
+    int FORCEINLINE isClear()const {
         return (data == (uint64)0);
     }
     Bitboard &operator = (const Bitboard &b) {

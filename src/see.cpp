@@ -10,6 +10,53 @@
 
 //#define ATTACK_TRACE
 
+static Square minAttacker(const Board &board, Bitboard atcks, ColorType side) {
+   if (side == White)
+   {
+      Bitboard retval(atcks & board.pawn_bits[White]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.knight_bits[White]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.bishop_bits[White]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.rook_bits[White]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.queen_bits[White]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      if (atcks.isSet(board.kingSquare(White)))
+        return board.kingSquare(White);
+      else
+        return InvalidSquare;
+   }
+   else
+   {
+      Bitboard retval(atcks & board.pawn_bits[Black]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.knight_bits[Black]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.bishop_bits[Black]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.rook_bits[Black]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      retval = (atcks & board.queen_bits[Black]);
+      if (!retval.isClear())
+         return retval.firstOne();
+      if (atcks.isSet(board.kingSquare(Black)))
+        return board.kingSquare(Black);
+      else
+        return InvalidSquare;
+   }    
+}
+
 int see( const Board &board, Move move ) {
    ASSERT(!IsNull(move));
 #ifdef ATTACK_TRACE
@@ -26,7 +73,7 @@ int see( const Board &board, Move move ) {
    Piece on_square = (TypeOfMove(move) == EnPassant) ? 
        MakePiece(Pawn,oside) : board[square];
    Bitboard opp_attacks(board.calcAttacks(square,oside));
-   if (opp_attacks.is_clear()) {
+   if (opp_attacks.isClear()) {
        // piece is undefended
 #ifdef ATTACK_TRACE
        cout << "undefended, returning " << Gain(move) << endl;
@@ -80,14 +127,20 @@ int see( const Board &board, Move move ) {
       attacks[side].clear(attack_square);
       // switch sides
       side = OppositeColor(side);
-      if (last_attack_sq[side] != InvalidSquare &&
-          TypeOfPiece(board[last_attack_sq[side]]) != Knight) {
+      const Square atk = last_attack_sq[side];
+      if (atk != InvalidSquare &&
+          TypeOfPiece(board[atk]) != Knight) {
           // add in x-ray attacks if any
-          attacks[side] |= board.getXRay(last_attack_sq[side],square,side);
+          Square xray = board.getDirectionalAttack(atk,
+                                                   -Attacks::directions[atk][square],
+                                                   side);
+          if (xray != InvalidSquare) {
+             attacks[side].set(xray);
+          }
       }
       if (attacks[side]) {
           // get next opponent attacker
-          attack_square = board.minAttacker(attacks[side],side);
+          attack_square = minAttacker(board,attacks[side],side);
       } else {
           // no more attackers (including x-rays)
           break;
@@ -124,7 +177,7 @@ int seeSign( const Board &board, Move move, int threshold ) {
    Piece on_square = (TypeOfMove(move) == EnPassant) ? 
        MakePiece(Pawn,oside) : board[square];
    Bitboard opp_attacks(board.calcAttacks(square,oside));
-   if (opp_attacks.is_clear()) {
+   if (opp_attacks.isClear()) {
        // piece is undefended
 #ifdef ATTACK_TRACE
        cout << "undefended, returning " << (Gain(move) >= threshold) << endl;
@@ -209,14 +262,20 @@ int seeSign( const Board &board, Move move, int threshold ) {
               return 1;
           }
       }
-      if (last_attack_sq[side] != InvalidSquare &&
-          TypeOfPiece(board[last_attack_sq[side]]) != Knight) {
+      const Square atk = last_attack_sq[side];
+      if (atk != InvalidSquare &&
+          TypeOfPiece(board[atk]) != Knight) {
           // add in x-ray attacks if any
-          attacks[side] |= board.getXRay(last_attack_sq[side],square,side);
+          Square xray = board.getDirectionalAttack(atk,
+                                                   -Attacks::directions[atk][square],
+                                                   side);
+          if (xray != InvalidSquare) {
+             attacks[side].set(xray);
+          }
       }
       if (attacks[side]) {
           // get next opponent attacker
-          attack_square = board.minAttacker(attacks[side],side);
+          attack_square = minAttacker(board,attacks[side],side);
       } else {
           // no more attackers (including x-rays)
           break;

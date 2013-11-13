@@ -758,7 +758,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
       if (Sliding(board[source])) {
          Bitboard btwn_squares;
          board.between(source,kp,btwn_squares);
-         if (!btwn_squares.is_clear()) {
+         if (!btwn_squares.isClear()) {
             // blocking pawn moves
             if (board.sideToMove() == White) {
                Bitboard pawns(board.pawn_bits[White]);
@@ -768,7 +768,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                pawns &= btwn_squares;
                Square sq;
                while (pawns.iterate(sq)) {
-                  if (!board.isPinned(board.sideToMove(), WhitePawn, sq-8, sq)) {
+                  if (!board.isPinned(board.sideToMove(), sq-8, sq)) {
                      if (Rank<White>(sq) == 8) {
                         // interposition is a promotion
                         moves[num_moves++] = CreateMove(
@@ -786,12 +786,12 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                   }
                }
                pawns1 &= Attacks::rank_mask[2];
-               if (!pawns1.is_clear()) {
+               if (!pawns1.isClear()) {
                   pawns1.shl8();
                   pawns1 &= ~board.allOccupied;
                   pawns1 &= btwn_squares;
                   while (pawns1.iterate(sq)) {
-                     if (!board.isPinned(White, WhitePawn, sq-16, sq))
+                     if (!board.isPinned(White, sq-16, sq))
                         moves[num_moves++] = CreateMove(sq-16,sq,Pawn,Empty);
                   }
                }
@@ -804,7 +804,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                pawns &= btwn_squares;
                Square sq;
                while (pawns.iterate(sq)) {
-                  if (!board.isPinned(Black, BlackPawn, sq+8, sq)) {
+                  if (!board.isPinned(Black, sq+8, sq)) {
                      if (Rank<Black>(sq) == 8) {
                         // interposition is a promotion
                         moves[num_moves++] = CreateMove(
@@ -822,12 +822,12 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                   }
                }
                pawns1 &= Attacks::rank_mask[5];
-               if (!pawns1.is_clear()) {
+               if (!pawns1.isClear()) {
                   pawns1.shr8();
                   pawns1 &= ~board.allOccupied;
                   pawns1 &= btwn_squares;
                   while (pawns1.iterate(sq)) {
-                     if (!board.isPinned(board.sideToMove(), BlackPawn, sq+16, sq))
+                     if (!board.isPinned(board.sideToMove(), sq+16, sq))
                         moves[num_moves++] = CreateMove(sq+16,sq,Pawn,Empty);
                   }
                }
@@ -846,7 +846,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                     Bitboard dests(Attacks::knight_attacks[loc] & btwn_squares);
                      Square sq;
                      while (dests.iterate(sq)) {
-                        if (!board.isPinned(board.sideToMove(), board[loc], loc, sq))
+                        if (!board.isPinned(board.sideToMove(), loc, sq))
                            moves[num_moves++] =
                               CreateMove(loc,sq,Knight,TypeOfPiece(board[sq]));
                      }
@@ -858,7 +858,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                      Bitboard dests(board.bishopAttacks(loc) & btwn_squares);
                      while (dests.iterate(dest)) {
                         if (board.clear(loc,dest) &&
-                           !board.isPinned(board.sideToMove(), board[loc], loc, dest))
+                           !board.isPinned(board.sideToMove(), loc, dest))
                            moves[num_moves++] =
                               CreateMove(loc,dest,Bishop,TypeOfPiece(board[dest]));
                      }
@@ -869,7 +869,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                      Square dest;
                      Bitboard dests(board.rookAttacks(loc) & btwn_squares);
                      while (dests.iterate(dest)) {
-                        if (board.clear(loc,dest) && !board.isPinned(board.sideToMove(), board[loc], loc, dest)) {
+                        if (board.clear(loc,dest) && !board.isPinned(board.sideToMove(), loc, dest)) {
                            moves[num_moves++] =
                               CreateMove(loc,dest,Rook,TypeOfPiece(board[dest]));
                         }
@@ -883,7 +883,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
                      dests &= btwn_squares;
                      while (dests.iterate(dest)) {
                         if (board.clear(loc,dest) &&
-                           !board.isPinned(board.sideToMove(), board[loc], loc, dest))
+                           !board.isPinned(board.sideToMove(), loc, dest))
                            moves[num_moves++] =
                               CreateMove(loc,dest,Queen,TypeOfPiece(board[dest]));
                      }
@@ -907,7 +907,7 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
    int num_moves = 0;
    const Square kp = board.kingSquare(board.sideToMove());
    king_attacks = board.calcAttacks(kp, board.oppositeSide());
-   if (king_attacks.is_clear()) {
+   if (king_attacks.isClear()) {
      cout << board << endl;
          ASSERT(0);
    }
@@ -933,7 +933,7 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
             }
          }
          else {
-            if (!board.isPinned(board.sideToMove(), board[sq], sq, source)) {
+            if (!board.isPinned(board.sideToMove(), sq, source)) {
                if (capturingPiece == Pawn &&
                    Rank(source,board.sideToMove()) == 8) {
                   moves[num_moves++] = CreateMove(
@@ -960,7 +960,7 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
             Piece tmp = board[source];
             Piece &place = (Piece &)board[source];
             place = EmptyPiece;                   // imagine me gone
-            if (!board.isPinned(board.sideToMove(), board[source+1], source + 1, dest))
+            if (!board.isPinned(board.sideToMove(), source + 1, dest))
                moves[num_moves++] = CreateMove(source + 1, dest, Pawn,
                   Pawn, Empty, EnPassant);
             place = tmp;
@@ -969,7 +969,7 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
             Piece tmp = board[source];
             Piece &place = (Piece &)board[source];
             place = EmptyPiece;                   // imagine me gone
-            if (!board.isPinned(board.sideToMove(), board[source-1], source - 1, dest))
+            if (!board.isPinned(board.sideToMove(), source - 1, dest))
                moves[num_moves++] = CreateMove(source - 1, dest, Pawn, Pawn,
                   Empty, EnPassant);
             place = tmp;

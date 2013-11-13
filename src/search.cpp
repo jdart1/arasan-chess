@@ -1742,10 +1742,10 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
   extern CACHE_ALIGN Bitboard passedB[64];
   if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) >= rank) {
     if (board.sideToMove() == White) {
-        return Bitboard(board.pawn_bits[Black] & passedW[DestSquare(move)]).is_clear();
+        return Bitboard(board.pawn_bits[Black] & passedW[DestSquare(move)]).isClear();
     }
     else {
-        return Bitboard(board.pawn_bits[White] & passedB[DestSquare(move)]).is_clear();
+        return Bitboard(board.pawn_bits[White] & passedB[DestSquare(move)]).isClear();
     }
   }
   else
