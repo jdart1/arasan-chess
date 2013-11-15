@@ -1541,7 +1541,7 @@ int Search::qsearch_no_check(int ply, int depth)
                 else if (board.isPinned(board.sideToMove(),move)) {
                     // Move generator only produces pseudo-legal checking
                     // moves, and in the next ply we will only consider
-                    // evasions. So need to ensure here that in make a
+                    // evasions. So need to ensure here that in making a
                     // check we do not expose our own King to check.
                     continue;
                 }
