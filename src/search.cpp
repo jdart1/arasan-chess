@@ -1646,10 +1646,10 @@ int Search::qsearch_check(int ply, int depth)
         }
 #endif
         if (!node->PV() &&
-            noncaps > Util::Max(2+depth,0) && 
+            noncaps > Util::Max(1+depth,0) && 
             !Scoring::mateScore(node->beta) &&
             !IsForced(move) && !IsForced2(move) &&
-            Capture(move) == Empty &&
+            !CaptureOrPromotion(move) &&
             board.wouldCheck(move) == NotInCheck) {
             // We have searched one or more legal non-capture evasions
             // and failed to cutoff. So don't search any more.
