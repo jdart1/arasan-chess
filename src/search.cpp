@@ -1449,12 +1449,18 @@ int Search::qsearch_no_check(int ply, int depth)
                const int gain = calcGain(board,move);
                const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + stand_pat_score;
                if (optScore < node->alpha) {
+#ifdef _TRACE
+                  indent(ply); cout << "pruned (futility)" << endl;
+#endif
                   continue;
                }
                // See pruning
                if (gain - PieceValue(PieceMoved(move)) <= 0 && !seeSign(board,move,
                    Util::Max(0,node->beta - stand_pat_score - QSEARCH_FORWARD_PRUNE_MARGIN))) {
                   // This appears to be a losing capture, or one that can't bring us above alpha
+#ifdef _TRACE
+                  indent(ply); cout << "pruned (SEE)" << endl;
+#endif
                    continue;
                }
             }
@@ -1653,6 +1659,9 @@ int Search::qsearch_check(int ply, int depth)
             board.wouldCheck(move) == NotInCheck) {
             // We have searched one or more legal non-capture evasions
             // and failed to cutoff. So don't search any more.
+#ifdef _TRACE
+            indent(ply); cout << "pruned" << endl;
+#endif
             continue;
         }
         node->last_move = move;
