@@ -1945,12 +1945,10 @@ int Search::movesRelated( Move lastMove, Move threatMove) const {
          return 1;
       }
    }
-/*
    if (board.wouldAttack(lastMove,DestSquare(threatMove))) {
-      // last move defends dest square of threat
+      // last move defends or attacks dest square of threat
       return 1;
    }
-*/
    return 0;
 }
 
@@ -2332,9 +2330,10 @@ int Search::search()
                 // Null move failed low. Remember what the opponent move was
                 // that refuted the null move.
                 node->threatMove = (node+1)->best;
-                // Extend previously reduced move if threat move related to that
-                // move (idea from Stockfish)
-                if (ply > 0 && ((node-1)->extensions & LMR) &
+                // Extend previously reduced move if threat move related to
+                // that move (idea from Stockfish)
+                if (!IsNull(node->threatMove) &&
+                    ply > 0 && ((node-1)->extensions & LMR) &
                     movesRelated( (node-1)->last_move, node->threatMove)) {
                     // return a fail-low score (fail high in parent node),
                     // forcing a full width search
