@@ -1917,9 +1917,10 @@ int Search::calcExtensions(const Board &board,
     // See pruning. Losing captures and moves that put pieces en prise
     // are pruned at low depths.
     if (!node->PV() && depth <= DEPTH_INCREMENT && 
-         GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-         (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
-         return PRUNE;
+        parentNode->num_try &&
+        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+        (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+        return PRUNE;
     }
     // See if we do late move reduction. Moves in the history phase of move
     // generation or later can be searched with reduced depth.
