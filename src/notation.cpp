@@ -140,103 +140,119 @@ void Notation::image(const Board & b, const Move & m, OutputFormat format, ostre
    }
 }
 
+static int is_file(char c) {
+    return c >= 'a' && c <= 'h';
+}
+
 
 Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image) 
 {
-   const char *p;
    int rank = 0;
    int file = 0;
 
    PieceType piece = Empty;
    PieceType promotion = Empty;
-   Square dest, start = InvalidSquare;
+   Square dest = InvalidSquare, start = InvalidSquare;
    int capture = 0;
 
-   // TBD: should really convert the following code
-   // to use C++ iterators instead of pointers.
-   for (p = image.c_str(); isspace(*p); ++p);
-   if (!isalpha(*p) && *p != '0')
-      return NullMove;
-   if (toupper(*p) == 'O' || *p == '0') {
+   stringstream s(image);
+   string::const_iterator it = image.begin();
+   int i = 0;
+   while (it != image.end() && isspace(*it)) {
+       it++;
+       i++;
+   }
+   if (it == image.end() || !isalpha(*it)) return NullMove;
+   string img(image,i); // string w/o leading spaces
+   ASSERT(img.length());
+   it = img.begin();
+   if (*it == 'O' || *it == '0') {
       // castling, we presume
-      return parseCastling(board, side, p);
+      return parseCastling(board, side, img);
    }
    int have_start = 0;
-   if (isupper(*p)) {
-      piece = PieceCharValue(*p);
-      ++p;
+   if (isupper(*it)) {
+      piece = PieceCharValue(*it);
+      it++;
    }
    else {
       piece = Pawn;
-      file = *p - 'a' + 1;
-      if (file < 1 || file > 8) return NullMove;
-      // allow "dc4" as in Informant, instead of dxc4
-      if (*(p+1) == 'x' || isalpha(*(p+1))) {
-         capture = 1;
-         ++p;
-      }
-      else if (isdigit(*(p+1))) {
-         const char *q = p+2;
-         if (*q == 'x' || *q == '-') {
-            // long algebraic notation
-            have_start++;
-            start = SquareValue(p);
-            if (start == InvalidSquare) return NullMove;
-            p = q;
-         }
+      if ((it+1) != img.end()) {
+          char next = *it;
+    	  file = next-'a'+1;
+		  if (file < 1 || file > 8) return NullMove;
+          char next2 = *(it+1);
+          if (next2 == 'x' || is_file(next2)) {
+             // allow "dc4" as in Informant, instead of dxc4
+			 it++;
+             capture = 1;
+          }
+          else if (isdigit(next2) && img.length()>2) {
+             char next3 = *(it+2);
+             if ((next3 == 'x' || next3 == '-') && img.length()>=5) {
+                  // long algebraic notation
+                  have_start++;
+                  start = SquareValue(next,next2);
+                  if (start == InvalidSquare) return NullMove;
+                  it+=3; // point to dest
+                  piece = TypeOfPiece(board[start]);
+              }
+          }
       }
    }
    if (piece == Empty) {
       return NullMove;
    }
-   if (piece != Pawn) {
-     if (isalpha(*p) && isdigit(*(p+1)) && 
-         (isalpha(p[2]) || p[2] == '-')) {
+   if (piece != Pawn && !have_start && it != img.end()) {
+     char next = *it;
+     char next2 = '\0';
+     if (it + 1 != img.end()) next2 = *(it+1);
+     if (is_file(next) && isdigit(next2) && img.length()>=5) {
          // long algebraic notation, or a SAN move like Qd1d3
-         start = SquareValue(p);
-         if (start == InvalidSquare) return NullMove;
-         p+=2;
+         start = SquareValue(next,next2);
+         if (IsInvalid(start)) return NullMove;
+         it+=2;
          have_start++;
-      }
-      // also look for disambiguating file, e.g. '2' in "N2e4".
-      else if (isdigit(*p)) {
-         rank = *p - '0';
+     }
+     // also look for disambiguating rank, e.g. '2' in "N2e4".
+     else if (isdigit(next)) {
+         rank = next - '0';
          if (rank < 1 || rank > 8) return NullMove;
-         ++p;
-	 if (isdigit(*p)) {
-	   file = *p - 'a' + 1;
-           if (file < 1 || file > 8) return NullMove;
-	   ++p;
-	 }
+         it++;
       }
-      else if (*p != 'x' && isalpha(*p) && isalpha(*(p + 1))) {
-         file = *p - 'a' + 1;
+      else if (is_file(next) && isalpha(next2)) {
+         file = next - 'a' + 1;
          if (file < 1 || file > 8) return NullMove;
-         ++p;
+         it++;
       }
    }
 
-   if (*p == 'x') {
-      capture = 1;
-      ++p;
+   if (it != img.end() && *it == 'x') {
+	   capture = 1;
+	   it++;
    }
-   else if (*p == '-') { // allow long algebraic notation
-      ++p;
+   if (it != img.end() && (it+1) != img.end()) {
+       // remainder of move should be a square identifier, e.g. "g7"
+       dest = SquareValue(*it,*(it+1));
+	   it += 2;
    }
-   // remainder of move should be a square identifier, e.g. "g7"
-   dest = SquareValue(p);
    if (IsInvalid(dest)) {
       return NullMove;
    }
-   p += 2;
-   if (*p == '=') {
-      promotion = PieceCharValue(*(p + 1));
-      if (piece != Pawn || promotion == Empty)
-         return NullMove;
+   if (it != img.end() && *it == '=') {
+      it++;
+      if (it == img.end()) {
+          return NullMove;
+      } else {
+          promotion = PieceCharValue(*it);
+          if (piece != Pawn || promotion == Empty)
+              return NullMove;
+		  it++;
+      }
    }
-   else if (piece == Pawn && isupper(*p)) {
+   else if (piece == Pawn && it != img.end() && isupper(*it)) {
       // Quite a few "PGN" files have a8Q instead of a8=Q.
-      promotion = PieceCharValue(*p);
+      promotion = PieceCharValue(*it);
       if (promotion == Empty || Rank(dest,side) != 8)
          return NullMove;
    } else if (piece == Pawn && Rank(dest,side) == 8) {

@@ -145,6 +145,12 @@ Square SquareValue(const string &str)
     return MakeSquare(file,rank,White);
 }
 
+Square SquareValue(char file, char rank) {
+   if (file<'a' || file >'h') return InvalidSquare;
+   if (rank<'1' || rank >'8') return InvalidSquare;
+   return MakeSquare(file-'a'+1,rank-'1'+1,White);
+}
+
 char FileImage(Square sq)
 {
     return 'a' + File(sq) - 1;

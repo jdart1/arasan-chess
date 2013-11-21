@@ -66,6 +66,7 @@ static FORCEINLINE int Rank(Square square, ColorType side) {
 // return a corresponding Square type.
 extern Square SquareValue(const char *p);
 extern Square SquareValue(const string &s);
+extern Square SquareValue(char file, char rank);
     
 extern char FileImage(Square sq);
 
