@@ -245,7 +245,6 @@ static Bitboard center;
 static byte is_outside[256][256];
 
 int distances[64][64];
-static int opposition[64][64];
 
 class EndgamePattern {
 public:
@@ -394,15 +393,6 @@ static void initBitboards()
             Square oppkp = j;
             file_distance=Util::Abs(File(kp)-File(oppkp));
             rank_distance=Util::Abs(Rank(kp,Black)-Rank(oppkp,Black));
-            if (file_distance == 0 && rank_distance == 2) {
-                opposition[i][j] = 2;             // direct opposition
-            }
-            else if (file_distance == 0 && rank_distance % 2 == 0)
-                opposition[i][j] = 1;             // remote opposition
-            else if ((file_distance == 2) && (rank_distance == 2))
-                opposition[i][j] = 1;
-            else
-                opposition[i][j] = 0;
             if (file_distance > rank_distance)
                 distances[i][j] = file_distance;
             else
