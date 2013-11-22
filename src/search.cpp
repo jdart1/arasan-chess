@@ -1338,7 +1338,7 @@ int Search::qsearch_no_check(int ply, int depth)
         stand_pat_score = bitscore;
     }
     else {
-        stand_pat_score = scoring.evalu8(board,-Constants::MATE,node->beta);
+        stand_pat_score = scoring.evalu8(board,node->alpha-QUEEN_VALUE,node->beta);
     }
 #ifdef _TRACE
     if (master()) {
@@ -1429,7 +1429,20 @@ int Search::qsearch_no_check(int ply, int depth)
         const ColorType oside = board.oppositeSide();
         Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
         // generate all the capture moves
-        int move_count = mg.generateCaptures(moves,board.occupied[oside]);
+        Bitboard targets(board.occupied[oside]);
+        // Pre-select the piece(s) whose capture will be considered.
+        // Pieces whose capture is unlikely to reach the futility threshold
+        // will not be included in move generation.
+        if (node->alpha - int(1.6*PAWN_VALUE) > stand_pat_score) {
+            targets &= ~(board.pawn_bits[oside] & ~Attacks::rank7mask[oside]);
+            if (node->alpha - int(1.6*KNIGHT_VALUE) > stand_pat_score) {
+               targets &= ~(board.knight_bits[oside] | board.bishop_bits[oside]);
+               if (node->alpha - int(1.6*ROOK_VALUE) > stand_pat_score) {
+                  targets &= ~board.rook_bits[oside];
+               }
+            }
+        }
+        int move_count = mg.generateCaptures(moves,targets);
         mg.initialSortCaptures(moves, move_count);
         while (move_index < move_count) {
             Move move = moves[move_index++];
