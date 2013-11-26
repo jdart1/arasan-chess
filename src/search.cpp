@@ -1784,12 +1784,10 @@ int Search::calcExtensions(const Board &board,
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
-   // Do not prune until at least one legal move has been searched
-   // (to avoid problems in stalemate detection).
-   int pruneOk = (parentNode->num_try>0), reduceOk = 1;
+   int pruneOk = 1, reduceOk = 1;
    int swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
-      pruneOk = reduceOk = 0;
+      pruneOk = 0;
       if (IsForced(move)) {
          // one single reply to check
          extend += FORCED_EXTENSION;
@@ -1808,23 +1806,15 @@ int Search::calcExtensions(const Board &board,
       }
    }
    if (in_check_after_move == InCheck) { // move is a checking move
-      // extend if near qsearch or if check does not lose > 1 pawn
-      if (depth <= DEPTH_INCREMENT) {
+      // extend if check does not lose > 1 pawn
+      if (seeSign(board,move,-PAWN_VALUE)) {
           node->extensions |= CHECK;
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
           extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-      }
-      else {
-         if (seeSign(board,move,-PAWN_VALUE)) {
-            node->extensions |= CHECK;
-#ifdef SEARCH_STATS
-            controller->stats->check_extensions++;
-#endif
-            extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-         }
-      }
+      } 
+      // Note: bad checks can be reduced
    }
    if (passedPawnPush(board,move)) {
       node->extensions |= PAWN_PUSH;
@@ -1833,21 +1823,25 @@ int Search::calcExtensions(const Board &board,
       controller->stats->pawn_extensions++;
 #endif
    }
-   else if (Capture(move) != Empty && Capture(move) != Pawn &&
-            PieceValue(Capture(move)) == PieceValue(PieceMoved(move)) &&
-            board.getMaterial(board.sideToMove()).pieceCount() <= 2) {
-      // recapture of piece in endgame when there are few pieces left
-      // only extend safe captures
-      if (MVV_LVA(move) > 0) {
-         node->extensions |= CAPTURE;
-         extend += CAPTURE_EXTENSION;
-      } else {
-         if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-         if (swap) {
+   else if (TypeOfMove(move) == Normal &&
+            Capture(move) != Empty && Capture(move) != Pawn &&
+            board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
+            board.getMaterial(board.sideToMove()).pieceCount() <= 1) {
+      // Capture of last piece in endgame.
+      // Only extend safe captures, and only in PV.
+      if (node->PV()) {
+         if (MVV_LVA(move) > 0) {
             node->extensions |= CAPTURE;
             extend += CAPTURE_EXTENSION;
+         } else {
+            if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+            if (swap) {
+               node->extensions |= CAPTURE;
+               extend += CAPTURE_EXTENSION;
+            }
          }
       }
+      reduceOk = 0;
    }
    if (extend) {
       return Util::Min(extend,DEPTH_INCREMENT);
