@@ -2213,7 +2213,7 @@ static void loadgame(Board &board,ifstream &file) {
 static void selfplay_game(int count) {
     selfplay_round = count+1;
     for (;;) {
-        int time1 = getTimeMillisec();
+        CLOCK_TYPE time1 = getCurrentTime();
         SearchController *s;
         if ((computer_plays_white && main_board->sideToMove()==White) ||
             (!computer_plays_white && main_board->sideToMove()==Black)) {
@@ -2224,12 +2224,12 @@ static void selfplay_game(int count) {
            s = mod_searcher;
         }
         Move m = search(s,*main_board,stats,false);
-        int time2 = getTimeMillisec();
+        unsigned time_used = getElapsedTime(time1,getCurrentTime());
         if (computer_plays_white) {
-            time_left -= (time2-time1);
+            time_left -= time_used;
             time_left += incr;
         } else {
-            opp_time -= (time2-time1);
+            opp_time -= time_used;
             opp_time += incr;
         }
         if (IsNull(m)) {
@@ -2833,12 +2833,12 @@ static bool do_command(const string &cmd, Board &board) {
         }
         else {
 #ifdef UCI_LOG
-            ucilog << "starting search, time=" << getTime() << (flush) << endl;
+            ucilog << "starting search, time=" << getCurrentTime() << (flush) << endl;
 #endif  
             best_move = search(searcher,board,stats,infinite);
 
 #ifdef UCI_LOG
-            ucilog << "done searching, time=" << getTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
+            ucilog << "done searching, time=" << getCurrentTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
 #endif  
             if (options.search.multipv == 1) {
                uciOut(stats);

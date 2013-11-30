@@ -29,6 +29,8 @@ extern "C" {
 #include <iostream>
 using namespace std;
 
+typedef unsigned CLOCK_TYPE;
+
 // Define this here since Bitboard class depends on it
 typedef int Square;
 
@@ -88,22 +90,21 @@ extern "C" {
 
 #include <sstream>
 
-inline int getTimeMillisec()
-{
+inline CLOCK_TYPE getCurrentTime() {
 #if defined(_MSC_VER) || defined(__MINGW32__)
-  return GetTickCount();
+  return (CLOCK_TYPE)GetTickCount();
 #else
-  struct timeval timeval;
-  struct timezone timezone;
-  gettimeofday(&timeval, &timezone);
-  return (timeval.tv_sec * 1000 + (timeval.tv_usec / 1000));
+  struct timespec timeval;
+  if (clock_gettime(CLOCK_REALTIME,&timeval)) {
+    perror("clock_gettime");
+  }
+  return (CLOCK_TYPE)(timeval.tv_sec * 1000 + (timeval.tv_nsec / 1000000));
 #endif
 }
 
-// return elapsed time in centiseconds
-inline int getTime()
-{
-   return getTimeMillisec()/10;
+// get elapsed time in milliseconds
+inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
+  return end - start;
 }
 
 #ifdef _WIN32

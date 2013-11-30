@@ -81,7 +81,7 @@ endif
 else
 LBITS := $(shell getconf LONG_BIT)
 BOOKUTIL = bookutll
-LIBS = -lc -lm
+LIBS = -lc -lm -lrt
 endif
 
 ifeq ($(LBITS),64)
@@ -169,7 +169,7 @@ profile-popcnt: profile
 
 # Solaris target: note only GCC is supported
 sparc-solaris: 
-	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS) -lrt' CFLAGS='$(CFLAGS)' all
+	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS)' CFLAGS='$(CFLAGS)' all
 
 # Arm target on Arm host with GCC
 arm-linux:

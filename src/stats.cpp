@@ -45,7 +45,7 @@ void Statistics::clear()
 #ifdef SMP_STATS
    splits = samples = threads = 0L;
    last_split_sample = 0ULL;
-   last_split_time = getTimeMillisec();
+   last_split_time = getCurrentTime();
 #endif
 }
 

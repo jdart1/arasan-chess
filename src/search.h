@@ -268,7 +268,7 @@ class SearchController {
     Statistics *stats;
     ColorType computerSide;
     int ratingDiff, ratingFactor;
-    unsigned startTime;
+    CLOCK_TYPE startTime;
     RootSearch *rootSearch;
     ThreadPool *pool;
     bool active;

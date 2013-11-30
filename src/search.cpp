@@ -287,7 +287,7 @@ Move SearchController::findBestMove(
 
     NodeStack rootStack;
     rootSearch->init(board,rootStack);
-    startTime = getTimeMillisec();
+    startTime = getCurrentTime();
 
     return rootSearch->ply0_search(exclude,num_exclude);
 }
@@ -331,8 +331,7 @@ void SearchController::setThreadSplitDepth(int depth) {
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
 int score, int alpha, int beta)
 {
-    unsigned end_time = getTimeMillisec();
-    stats->elapsed_time = end_time - startTime;
+    stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
     stats->multipv_count = rootSearch->multipv_count;
     ASSERT(stats->multipv_count >= 0 && stats->multipv_count < MAX_PV);
     stats->value = score;
@@ -484,9 +483,9 @@ int Search::checkTime(const Board &board,int ply) {
        return 1; // already stopped search
     }
 
-    unsigned current_time = getTimeMillisec();
     Statistics *stats = controller->stats;
-    stats->elapsed_time = current_time - controller->startTime;
+    CLOCK_TYPE current_time = getCurrentTime();
+    stats->elapsed_time = getElapsedTime(controller->startTime,current_time);
     // dynamically change the thread split depth based on # of splits
     if (srcOpts.ncpus >1 && stats->elapsed_time > 100) {
         // Lock the stats structure since other threads may try to
