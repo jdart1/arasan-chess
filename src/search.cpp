@@ -261,10 +261,16 @@ Move SearchController::findBestMove(
     if (mat < 16) threadSplitDepth += DEPTH_INCREMENT/2;
     if (mat < 12) threadSplitDepth += DEPTH_INCREMENT;
 
-    Time_Check_Interval = 5000/NODE_ACCUM_THRESHOLD;
+    Time_Check_Interval = 4096/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
-    if (srcType == TimeLimit && time_limit < 1000) {
-       Time_Check_Interval = 2500/NODE_ACCUM_THRESHOLD;
+    if (srcType == TimeLimit) {
+       if (time_limit < 10) {
+          Time_Check_Interval = 256/NODE_ACCUM_THRESHOLD;
+       } else if (time_limit < 100) {
+          Time_Check_Interval = 1024/NODE_ACCUM_THRESHOLD;
+       } else if (time_limit < 1000) {
+          Time_Check_Interval = 2048/NODE_ACCUM_THRESHOLD;
+       }
     }
     computerSide = board.sideToMove();
 
@@ -711,7 +717,7 @@ Move *excludes, int num_excludes)
                cout << "# waitTime=" << waitTime << endl;
            }
            // adjust time check interval since we are lowering nps
-           Time_Check_Interval /= (1+8*int(factor));
+           Time_Check_Interval = Util::Max(1,Time_Check_Interval / (1+8*int(factor)));
            if (options.search.strength <= 90) {
                static const int limits[25] = {1,1,1,1,1,1,1,1,
                                               2,2,2,2,3,3,4,5,6,7,8,
