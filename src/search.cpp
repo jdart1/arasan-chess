@@ -264,9 +264,7 @@ Move SearchController::findBestMove(
     Time_Check_Interval = 4096/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
     if (srcType == TimeLimit) {
-       if (time_limit < 10) {
-          Time_Check_Interval = 256/NODE_ACCUM_THRESHOLD;
-       } else if (time_limit < 100) {
+       if (time_limit < 100) {
           Time_Check_Interval = 1024/NODE_ACCUM_THRESHOLD;
        } else if (time_limit < 1000) {
           Time_Check_Interval = 2048/NODE_ACCUM_THRESHOLD;

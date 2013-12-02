@@ -13,6 +13,7 @@ extern "C" {
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef _WIN32
+#include <windows.h>
 #include <malloc.h>
 #else
 #include <pthread.h>
@@ -29,7 +30,11 @@ extern "C" {
 #include <iostream>
 using namespace std;
 
-typedef unsigned CLOCK_TYPE;
+#ifdef _WIN32
+typedef DWORD CLOCK_TYPE;
+#else
+typedef unsigned long CLOCK_TYPE;
+#endif
 
 // Define this here since Bitboard class depends on it
 typedef int Square;
@@ -51,17 +56,13 @@ typedef int int32;
 typedef unsigned int uint32;
 typedef short int16;
 typedef unsigned short uint16;
+
 #ifdef _WIN32
-#if defined (_MSC_VER) || defined(__MINGW32__)
-extern "C" {
-  #include <windows.h>
-};
-#endif
 #ifdef _MSC_VER
   typedef unsigned __int64 hash_t;
   typedef _int64 int64;
   typedef unsigned __int64 uint64;
-#else //GCC
+#else // GCC
   typedef unsigned long long hash_t;
   typedef long long int64;
   typedef unsigned long long uint64;
@@ -92,7 +93,7 @@ extern "C" {
 
 inline CLOCK_TYPE getCurrentTime() {
 #if defined(_MSC_VER) || defined(__MINGW32__)
-  return (CLOCK_TYPE)GetTickCount();
+  return (CLOCK_TYPE)timeGetTime();
 #else
   struct timespec timeval;
   if (clock_gettime(CLOCK_REALTIME,&timeval)) {
