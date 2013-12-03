@@ -80,7 +80,7 @@ class Options
 
    // Constructor, sets default options
    Options() :
-     log_enabled(1),
+     log_enabled(0),
      log_append(0),
      store_games(1)
    {

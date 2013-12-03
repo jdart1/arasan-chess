@@ -1,7 +1,7 @@
 # Arasan runtime configuration file
 #
 # True to keep a log file, false for no logging.
-log.enabled=true
+log.enabled=false
 #
 # Location of the log file. The default is "arasan.log", kept in the
 # same directory as the Arasan executable. Note: under Linux, the
