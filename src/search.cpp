@@ -261,10 +261,14 @@ Move SearchController::findBestMove(
     if (mat < 16) threadSplitDepth += DEPTH_INCREMENT/2;
     if (mat < 12) threadSplitDepth += DEPTH_INCREMENT;
 
-    Time_Check_Interval = 5000/NODE_ACCUM_THRESHOLD;
+    Time_Check_Interval = 4096/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
-    if (srcType == TimeLimit && time_limit < 1000) {
-       Time_Check_Interval = 2500/NODE_ACCUM_THRESHOLD;
+    if (srcType == TimeLimit) {
+       if (time_limit < 100) {
+          Time_Check_Interval = 1024/NODE_ACCUM_THRESHOLD;
+       } else if (time_limit < 1000) {
+          Time_Check_Interval = 2048/NODE_ACCUM_THRESHOLD;
+       }
     }
     computerSide = board.sideToMove();
 
@@ -287,7 +291,7 @@ Move SearchController::findBestMove(
 
     NodeStack rootStack;
     rootSearch->init(board,rootStack);
-    startTime = getTimeMillisec();
+    startTime = getCurrentTime();
 
     return rootSearch->ply0_search(exclude,num_exclude);
 }
@@ -331,8 +335,7 @@ void SearchController::setThreadSplitDepth(int depth) {
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
 int score, int alpha, int beta)
 {
-    unsigned end_time = getTimeMillisec();
-    stats->elapsed_time = end_time - startTime;
+    stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
     stats->multipv_count = rootSearch->multipv_count;
     ASSERT(stats->multipv_count >= 0 && stats->multipv_count < MAX_PV);
     stats->value = score;
@@ -484,9 +487,9 @@ int Search::checkTime(const Board &board,int ply) {
        return 1; // already stopped search
     }
 
-    unsigned current_time = getTimeMillisec();
     Statistics *stats = controller->stats;
-    stats->elapsed_time = current_time - controller->startTime;
+    CLOCK_TYPE current_time = getCurrentTime();
+    stats->elapsed_time = getElapsedTime(controller->startTime,current_time);
     // dynamically change the thread split depth based on # of splits
     if (srcOpts.ncpus >1 && stats->elapsed_time > 100) {
         // Lock the stats structure since other threads may try to
@@ -712,7 +715,7 @@ Move *excludes, int num_excludes)
                cout << "# waitTime=" << waitTime << endl;
            }
            // adjust time check interval since we are lowering nps
-           Time_Check_Interval /= (1+8*int(factor));
+           Time_Check_Interval = Util::Max(1,Time_Check_Interval / (1+8*int(factor)));
            if (options.search.strength <= 90) {
                static const int limits[25] = {1,1,1,1,1,1,1,1,
                                               2,2,2,2,3,3,4,5,6,7,8,

@@ -13,6 +13,7 @@ extern "C" {
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef _WIN32
+#include <windows.h>
 #include <malloc.h>
 #else
 #include <pthread.h>
@@ -28,6 +29,12 @@ extern "C" {
 
 #include <iostream>
 using namespace std;
+
+#ifdef _WIN32
+typedef DWORD CLOCK_TYPE;
+#else
+typedef unsigned long CLOCK_TYPE;
+#endif
 
 // Define this here since Bitboard class depends on it
 typedef int Square;
@@ -49,17 +56,13 @@ typedef int int32;
 typedef unsigned int uint32;
 typedef short int16;
 typedef unsigned short uint16;
+
 #ifdef _WIN32
-#if defined (_MSC_VER) || defined(__MINGW32__)
-extern "C" {
-  #include <windows.h>
-};
-#endif
 #ifdef _MSC_VER
   typedef unsigned __int64 hash_t;
   typedef _int64 int64;
   typedef unsigned __int64 uint64;
-#else //GCC
+#else // GCC
   typedef unsigned long long hash_t;
   typedef long long int64;
   typedef unsigned long long uint64;
@@ -88,22 +91,21 @@ extern "C" {
 
 #include <sstream>
 
-inline int getTimeMillisec()
-{
+inline CLOCK_TYPE getCurrentTime() {
 #if defined(_MSC_VER) || defined(__MINGW32__)
-  return GetTickCount();
+  return (CLOCK_TYPE)timeGetTime();
 #else
-  struct timeval timeval;
-  struct timezone timezone;
-  gettimeofday(&timeval, &timezone);
-  return (timeval.tv_sec * 1000 + (timeval.tv_usec / 1000));
+  struct timespec timeval;
+  if (clock_gettime(CLOCK_REALTIME,&timeval)) {
+    perror("clock_gettime");
+  }
+  return (CLOCK_TYPE)(timeval.tv_sec * 1000 + (timeval.tv_nsec / 1000000));
 #endif
 }
 
-// return elapsed time in centiseconds
-inline int getTime()
-{
-   return getTimeMillisec()/10;
+// get elapsed time in milliseconds
+inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
+  return end - start;
 }
 
 #ifdef _WIN32
