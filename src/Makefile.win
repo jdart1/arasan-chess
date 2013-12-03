@@ -201,7 +201,7 @@ $(GTB_LIBDIR):
 !Endif
 
 # Linker flags
-LDFLAGS  = kernel32.lib user32.lib $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
+LDFLAGS  = kernel32.lib user32.lib winmm.lib $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
  
 ARASANX_OBJS = $(BUILD)\arasanx.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
