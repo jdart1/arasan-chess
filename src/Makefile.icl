@@ -345,7 +345,9 @@ score-tests:
     date /t >$(TESTS)\test-summary.txt
     perl $(TESTS)\tests.pl >>$(TESTS)\test-summary.txt
 
-release: $(RELEASE)
+release: $(RELEASE) $(SOURCE_ARCHIVE)
+
+$(SOURCE_ARCHIVE):
 	call release.bat $(SOURCE_ARCHIVE)
 
 $(PROFILE):
