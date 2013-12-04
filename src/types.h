@@ -14,6 +14,7 @@ extern "C" {
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
+#include <mmsystem.h>
 #include <malloc.h>
 #else
 #include <pthread.h>
