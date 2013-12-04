@@ -177,7 +177,7 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
 	  if (!OnBoard(dest)) return NullMove;
 	  PieceType promotion = Empty;
 	  if (img.length() > 4) {
-	     promotion = PieceCharValue(toupper(img[5]));
+	     promotion = PieceCharValue(toupper(img[4]));
 	  }
 	  return CreateMove(board,start,dest,promotion);
    }

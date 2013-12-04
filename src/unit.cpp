@@ -185,6 +185,27 @@ static int testNotation() {
            ++errs;
         }
     } 
+    Board board;
+    string fenStr = "4Qnk1/pp1P1p2/6rp/8/3P4/r5BK/8/8 w - -";
+    if (!BoardIO::readFEN(board, fenStr.c_str())) {
+        cerr << "error in FEN: " << fenStr << endl;
+        return ++errs;
+    }
+    Move m = Notation::value(board,White,Notation::WB_IN,"e7e8q");
+    if (m == NullMove || StartSquare(m) != E7 || DestSquare(m) != E8 || PromoteTo(m) != Queen) {
+       cout << "notation: error in case 15" << endl;
+       ++errs;
+    }
+    fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
+    if (!BoardIO::readFEN(board, fenStr.c_str())) {
+        cerr << "error in FEN: " << fenStr << endl;
+        return ++errs;
+    }
+    m = Notation::value(board,White,Notation::WB_IN,"e2e4");
+    if (m == NullMove || StartSquare(m) != E2 || DestSquare(m) != E4 || PromoteTo(m) != Empty) {
+       cout << "notation: error in case 16" << endl;
+       ++errs;
+    }
     return errs;
 }
 
