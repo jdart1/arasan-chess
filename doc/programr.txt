@@ -1,5 +1,5 @@
 
-  	      Arasan Programmer's Guide - version 16.2
+  	      Arasan Programmer's Guide - version 16.3
 
                           by Jon Dart
 
@@ -49,7 +49,7 @@ makeeco  - builds ecodata.cpp from from "eco" text file
 Following is a sketch of the Arasan source directory tree:
 
 arasan
-  16.2
+  16.3
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -337,6 +337,10 @@ will show up in the Winboard debug log if Winboard is started with the
 If the source is compiled with /DUCI_LOG, then a similar log file 
 named "ucilog" is produced on disk when running in UCI mode. This however
 doesn't have exactly the same information shown by "-t".
+
+If the source is compiled with /DUNIT_TESTS, then some simple unit tests
+are run on program startup. The results are displayed on the console.
+This build flag is off by default.
 
 The chess engine supports a couple of commands to aid with testing. 
 The "eval" command followed by a filename will read the file (assumed

@@ -20,6 +20,9 @@
 #include "boardio.h"
 #include "legal.h"
 #include "bitprobe.h"
+#ifdef UNIT_TESTS
+#include "unit.h"
+#endif
 extern "C"
 {
 #include <string.h>
@@ -3438,6 +3441,11 @@ int CDECL main(int argc, char **argv) {
             game_file = NULL;
         }
     }
+
+#ifdef UNIT_TESTS
+    int errs = doUnit();
+    cout << "Unit tests ran: " << errs << " error(s)" << endl; 
+#endif
 
     searcher = new SearchController();
 

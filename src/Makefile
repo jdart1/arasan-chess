@@ -29,8 +29,8 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 
 #define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS = 1
-#NALIMOV_TBS = 1
+GAVIOTA_TBS = 1
+NALIMOV_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
@@ -268,7 +268,7 @@ book.cpp bookread.cpp bookentr.cpp $(BOOKUTIL).cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp
+stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \

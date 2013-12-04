@@ -223,7 +223,8 @@ $(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
-$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) 
+$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
+$(BUILD)\unit.obj $(TB_OBJS) 
 
 ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
@@ -238,7 +239,7 @@ $(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookutil.obj $(PGO_BUILD)\bookentr.obj \
 $(PGO_BUILD)\calctime.obj $(PGO_BUILD)\legal.obj $(PGO_BUILD)\eco.obj \
 $(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
-$(TB_OBJS) 
+$(PGO_BUILD)\unit.obj $(TB_OBJS) 
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
@@ -252,7 +253,8 @@ $(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj $(POPCNT_BUILD)\book.obj \
 $(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookutil.obj $(POPCNT_BUILD)\bookentr.obj \
 $(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
 $(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
-$(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj $(TB_OBJS)
+$(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
+$(POPCNT_BUILD)\unit.obj $(TB_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
