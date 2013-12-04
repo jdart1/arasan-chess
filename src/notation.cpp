@@ -169,6 +169,17 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
    if (*it == 'O' || *it == '0') {
       // castling, we presume
       return parseCastling(board, side, img);
+   } else if (format == WB_IN) {
+	  if (img.length() < 4) return NullMove;
+	  Square start = SquareValue(img.substr(0,2));
+	  if (!OnBoard(start)) return NullMove;
+	  Square dest = SquareValue(img.substr(2,2));
+	  if (!OnBoard(dest)) return NullMove;
+	  PieceType promotion = Empty;
+	  if (img.length() > 4) {
+	     promotion = PieceCharValue(toupper(img[5]));
+	  }
+	  return CreateMove(board,start,dest,promotion);
    }
    int have_start = 0;
    if (isupper(*it)) {
