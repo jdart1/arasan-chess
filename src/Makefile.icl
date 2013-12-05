@@ -66,13 +66,13 @@ INTEL64 = /Wp64
 INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
-CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) $(CFLAGS)
+CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Else
 # Intel C++ 12.0 defs, release build (IA32)
 CL       = icl
 LD       = xilink
-CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) $(CFLAGS)
+CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /Oy- /Gr /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Endif
 
@@ -88,7 +88,7 @@ TB_PROFILE_FLAGS = $(TB_FLAGS) $(PROF_USE_FLAGS)
 
 POPCNT_FLAGS = -DUSE_POPCNT /arch:AVX
 
-default: dirs $(BUILD)\arasanx.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
+default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
 !IfDef NALIMOV_TBS
 TB_OBJS = $(BUILD)\tbprobe.obj
@@ -307,8 +307,6 @@ $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 
 {}.cpp{$(POPCNT_BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) /c /Fo$@ $<
-
-default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
 profile: dirs $(PROFILE)\arasanx.exe
 
