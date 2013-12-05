@@ -58,7 +58,7 @@ LD=link
 CL=cl
 
 # Visual Studio 2005 defs (works for 2008, 2010, 2012 too)
-CFLAGS = $(ARCH) /GA /GF /EHs /EHc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG)
+CFLAGS = $(ARCH) /GA /GF /EHs /EHc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT /arch:AVX
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
@@ -304,9 +304,6 @@ $(BUILD)\makeeco.exe:  $(MAKEECO_OBJS)
 
 $(BUILD)\$(ARASANX).exe:  dirs $(ARASANX_OBJS)
         $(LD) $(ARASANX_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX).exe
-
-$(BUILD)\ecocoder.exe:  dirs $(ECOCODER_OBJS)
-        $(LD) $(ECOCODER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\ecocoder.exe
 
 $(BUILD)\tbprobe.obj: tbprobe.cpp
     $(CL) $(TB_FLAGS) /c /Fo$@ tbprobe.cpp

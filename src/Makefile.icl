@@ -66,13 +66,13 @@ INTEL64 = /Wp64
 INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
-CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64)
+CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) $(CFLAGS)
 OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Else
 # Intel C++ 12.0 defs, release build (IA32)
 CL       = icl
 LD       = xilink
-CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64)
+CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) $(CFLAGS)
 OPT = /O3 /Ob2 /Oy- /Gr /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Endif
 
