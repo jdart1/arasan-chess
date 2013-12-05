@@ -81,7 +81,7 @@ endif
 else
 LBITS := $(shell getconf LONG_BIT)
 BOOKUTIL = bookutll
-LIBS = -lc -lm -lrt
+LIBS = -lc -lm
 endif
 
 ifeq ($(LBITS),64)
@@ -153,6 +153,8 @@ endif
 ifeq ("darwin","$(findstring darwin,$(OSTYPE))")
 CFLAGS := -D_MAC $(CFLAGS) 
 LDFLAGS := $(LDFLAGS) 
+else
+LIBS := $(LIBS) -lrt
 endif
 
 all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco

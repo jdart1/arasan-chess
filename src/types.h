@@ -95,6 +95,10 @@ extern "C" {
 inline CLOCK_TYPE getCurrentTime() {
 #if defined(_MSC_VER) || defined(__MINGW32__)
   return (CLOCK_TYPE)timeGetTime();
+#elif defined(_MAC)
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec*1000 + tv.tv_usec/1000;
 #else
   struct timespec timeval;
   if (clock_gettime(CLOCK_REALTIME,&timeval)) {
