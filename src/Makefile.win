@@ -11,8 +11,8 @@ VERSION = 16.3
 BUILD_ROOT=..
 
 #define the appropriate macro for the type(s) of tablebase supported
-GAVIOTA_TBS=1
-NALIMOV_TBS=1
+#GAVIOTA_TBS=1
+#NALIMOV_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
@@ -337,7 +337,9 @@ score-tests:
     date /t >$(TESTS)\test-summary.txt
     perl $(TESTS)\tests.pl >>$(TESTS)\test-summary.txt
 
-release: $(RELEASE)
+release: $(RELEASE) $(SOURCE_ARCHIVE)
+
+$(SOURCE_ARCHIVE):
 	call release.bat $(SOURCE_ARCHIVE)
 
 $(PROFILE):
