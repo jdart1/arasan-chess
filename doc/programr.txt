@@ -761,10 +761,9 @@ will be entered (see below).
 However, some moves are searched to a greater depth than normal. There
 are several cases in which this occurs:
 
-a. If the move checks the opponent, the search is extended (but only
-if the depth is near the quiescence search, or if the move has a
-score from the static exchange evaluator (SEE) that is no worse
-that a loss of one pawn).
+a. If the move checks the opponent, the search is extended, provided
+the score from the static exchange evaluator (SEE) is no worse
+than a loss of one pawn.
     
 b. If the side to move is in check, and there is only a single move
 available to escape check, the search is extended. If two evasion
@@ -773,8 +772,8 @@ moves are available, a lesser extension is done.
 c. Pushing a pawn to the 7th rank causes the search to be extended,
 on the theory that this pawn may soon promote.
 
-d. If a safe recapture is done and few pieces remain on the board,
-the search is extended.
+d. Only at PV nodes: if a safe capture is done and the last opponent
+piece has been captured, the search is extended.
 
 Note that since Arasan 5.0, most extensions can be a fraction of a full
 ply. Search "depth" is normally decremented by the constant
@@ -821,7 +820,7 @@ for the program Dark Thought. It allows some moves to not be searched,
 if it determined that the side to move is behind in material and the
 move to be made is not likely to gain enough material to be worth
 considering. Futility pruning is applied at relatively low search
-depths before the quiescence search.
+depths before the quiescence search and during the quiescence search.
 
 Several tests are made on each move and if the move was extended for
 any reason, if looks like the move defends against a threat, or if it
@@ -829,13 +828,12 @@ is a capture, special move (like castling) or advance of a passed
 pawn, then futility pruning is not done.
 
 Arasan now has "late move reductions." After the first few moves have
-been searched, including any killer moves, if the move is not a
-capture, check, promotion, castling, or move of a pawn to an advanced
-square, and if no extensions have been triggered, then the search
-depth is reduced. This can occur even at high depths in the search
-tree. If the reduced depth move returns a score above alpha, it is
-re-searched with normal depth. This technique became popular due to
-its use in Fabien Letouzey's program "Fruit".
+been searched, including any killer moves, if the move is not
+extended, and if it is not considered potentially dangerous or
+advantageous, then the search depth is reduced. This can occur even at
+high depths in the search tree. If the reduced depth move returns a
+score above alpha, it is re-searched with normal depth. This technique
+became popular due to its use in Fabien Letouzey's program "Fruit".
 
 Arasan 12.2 adds in the enhancement that at high search depths, and
 at moves late in the search process, a reduction of more than one ply
@@ -846,6 +844,15 @@ low enough, and it is not extended, and it meets the futility pruning
 conditions, it can be pruned (i.e., not searched). Arasan 13.1
 also does see pruning - moves that have negative scores from the
 static exchange evaluator ("see") can be pruned at low depths.
+
+In addition at depths just before the quiescence search, moves that
+appear to lose material based on a static exchange analysis are
+pruned.
+
+Note that it is necessary to search at least one legal move before any
+pruning is done, because we need to distinguish nodes at which no
+moves are searched due to stalemate from those at which all nodes
+would cause pruning.
 
 The final part of search() checks to see if checkmate or stalemate
 occurred, updates the hash table, and maintains the best variation.
@@ -876,7 +883,8 @@ are dropped (they are not even generated).
 
 The quiescence search for positions not in check also does forward
 pruning on moves, dropping any that appear to lose material based
-on the static exchange evaluator.
+on the static exchange evaluator and those that fail a futility
+test.
 
 Generally, forward pruning costs time (especially if the static
 exchange evaluator, "see", needs to be called), and involves some risk

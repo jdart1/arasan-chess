@@ -2,17 +2,23 @@ Changes in Arasan 16.3:
  1) Generate/search discovered checks in qsearch.
  2) Changes to forward pruning in qsearch: re-introduce futility +
     SEE pruning in addition to filtering capture targets in movegen.
+    But do not prune discovered check candidates.
  3) Prune some non-capture evasions in qsearch.
- 4) Refine extension logic when null move search shows there is
+ 4) Changes to check and capture extensions.
+ 5) Refine extension logic when null move search shows there is
     a threat related to a previous move that was reduced. 
- 5) Defer SEE pruning until a legal move has been found/searched
+ 6) Defer SEE pruning until a legal move has been found/searched
     (fixes bugs in mate + stalemate detection).
- 6) Speed enhancements in SEE, pin detection, and check status
+ 7) Speed enhancements in SEE, pin detection, and check status
     computation.
- 7) Changes to weak pawn and outpost scoring.
- 8) Cleanup code and add some extra checks in the Notation class.
- 9) Fix in move generator: do not repeat hash move in winning
-    capture phase. 
+ 8) Changes to weak pawn and outpost scoring.
+ 9) Cleanup code and add some extra checks in the Notation class.
+ 10) Fix in move generator: do not repeat hash move in winning
+     capture phase. 
+ 11) Use shorter time check interval for very short time controls.
+     Convert timing code to use high-resolution timer.
+ 12) Change formula for computing min book weight from selectivity
+     setting, to play a wider variety of opening moves.
 
 Changes in Arasan 16.2 (Oct. 2013):
  1) Fix adjacent passed pawn code so bonus for this is independent of
