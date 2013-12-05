@@ -16,7 +16,7 @@ d6 0
 r
 d5 80
 -
-e4 d5 10
+e4 d5 12
 -
 e4 e5 70 Nf3 90
 m
@@ -30,7 +30,7 @@ e4 e6 40
 -
 e4 c6 25
 -
-e4 Nf6 8
+e4 Nf6 10
 -
 ; avoid Keres Attack
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6 10
@@ -187,6 +187,10 @@ c6 60
 -
 ; Larsen's Opening
 b3 2
+m
+d5 60
+r
+e5 40
 -
 Nh3 0
 -
@@ -269,8 +273,27 @@ Bxf3 0
 r
 Bh5
 -
+e3 g6 Nf3 Bg7 d4 Nf6
+m
+; trans to E61
+Be2 O-O O-O d6 c4 Nbd7 Nc3
+r
+; trans. to D94
+c4 O-O Nc3 d5 75
+-
+e3 e5 d4 exd4 exd4 
+m
+; trans. to C01
+Nf6 100 Nf3 d5
+r
+d5 Nf3 
+m
+Nf6 100
+r
+Bd6 0
+-
 ; A02
-f4
+f4 8
 m
 ; (0-1)
 Nf6 20 b3 0 g6 Bb2 Bg7 Nf3 O-O
@@ -1104,6 +1127,12 @@ r
 ; Gashimov-Gelfand, Amber blindfold 2011 (1-0)
 Rb1 20 a5 d3 Be6 Be3 O-O Bxb6 cxb6 Qa4
 r
+; Vaganian-Petursson, Reykjavik 1990 (1/2-1/2)
+d3 O-O Be3 Be6 a3 f5 Rc1 Kh8 b4 a6 100
+r
+; Arasan-Crafty, ICC 2013 (analysis)
+d3 O-O Be3 Be6 a3 f5 Rc1 Kh8 b4 f4 0 Bd2 100
+r
 a3 100
 m
 ; Romanov-Chuchelov, Germany 2010 (1/2-1/2) [A29]
@@ -1236,6 +1265,10 @@ Nxe4 Nxe4
 r
 ; Fritz 13
 O-O-O+ 0 Bd7 Nd6 Kc7 Nxf7 Rg8
+-
+; Eisenberger-Luther, Austria 2012 (1/2-1/2) [A33]
+Nf3 Nf6 c4 c5 Nc3 Nc6 d4 cxd4 Nxd4 e6 e4 Bb4 Nxc6 dxc6 Qxd8+ Kxd8 e5 Nd7 
+Bf4 Bxc3+ bxc3 b6 h4 Ke7
 -
 ; A30
 Nf3 Nf6 c4 e6 Nc3 c5 g3 b6 Bg2 Bb7 O-O Be7 
@@ -1557,13 +1590,17 @@ m
 c5 dxc5 dxc5 Bc4 Nc6 O-O Qc7 Qe2 h6 0 Bxf6 100 exf6 Nh4 Ne7 f4
 r
 ; Girya-Nyzynyk, Warsaw 2012 (1/2-1/2)
-c5 dxc5 dxc5 Bc4 Nc6 O-O Qc7 Qe2 Na5 Bd3 Be6
+c5 60 dxc5 dxc5 Bc4 Nc6 O-O Qc7 Qe2 Na5 Bd3 Be6
 r
 ; Arasan-Gaviota, test game 2013 (0-1)
 c5 dxc5 dxc5 Bc4 Nc6 O-O Qc7 Re1 0 h6 Bh4 Nh5 Qc2 Rd8
 r
 ; Kacheishvili-Shankland, Philadelphia 2012 (0-1)
 c5 dxc5 dxc5 Bc4 Nc6 O-O Na5 Be2 Be6 Bf4 h6 100
+r
+h6 Bh4 Nc6 0
+r
+h6 Bh4 Qe8
 r
 Nc6 0
 m
@@ -1636,12 +1673,17 @@ O-O 100
 ; A58
 d4 Nf6 c4 c5 d5 b5 cxb5 a6 bxa6 Bxa6 Nc3 d6 g3 g6 Bg2 Bg7 Nf3 O-O
 m
-Rb1 30 Nbd7 O-O Ne8 90 Qc2 Nc7
+Rb1 25 Nbd7 O-O Ne8 90 Qc2 Nc7
 r
-O-O
+O-O 100 Nbd7 Rb1 100
 -
 ; A58
-d4 Nf6 c4 c5 d5 b5 cxb5 a6 bxa6 g6 Nc3 Bxa6 g3 d6 Bg2 Bg7 Nf3 Nbd7 
+d4 Nf6 c4 c5 d5 b5 cxb5 a6 bxa6 g6 Nc3 Bxa6 g3 d6 Bg2 Bg7 Nf3 
+m
+; Grigore-Jianu, 2010 (1/2-1/2)
+Nfd7 O-O Nb6 Bf4 50 N8d7 Nd2
+r
+Nbd7 
 m
 a4 O-O
 r
@@ -1938,6 +1980,11 @@ r
 ; SiliconC(Crafty)-Arasan, FICS 2013 (analysis)
 Qc1 Ne4 Ba3 Nd7 Bxd6 Qxd6 a4 a5
 -
+; A85
+; Zsinka-Timoscenko, Budapest 1989 (=)
+d4 f5 c4 Nf6 Nc3 g6 h4 10 d6 h5 Nxh5 Rxh5 gxh5 e4 fxe4 Qxh5+ Kd7 Qh3+ 
+e6 Nxe4 Be7
+-
 ; A86
 c4 f5 g3 Nf6 Bg2 g6 Nc3 Bg7
 m
@@ -1999,10 +2046,14 @@ m
 ; Rachels-Denker, Los Angeles 1991 (1-0)
 Nc3 Qd8 8 d4 e6 10 Nf3 Nf6 Bc4 Be7 Bg5 O-O Qe2
 r
-Nc3 Qd8 8 d4 Nf6 100 Nf3 Bf5
+Nc3 Qd8 8 d4 Nf6 75 Nf3 Bf5
 r
 ; Kovacevic-Georgiev, Belgrade 1997 (0-1)
-Nc3 Qd8 8 d4 Nf6 100 Nf3 Bg4 h3 Bxf3 Qxf3 c6
+Nc3 Qd8 8 d4 Nf6 Nf3 Bg4 h3 Bxf3 Qxf3 c6
+r
+; De Coninck-Kemp, W-ch25 sf02 email 2001 (=)
+Nc3 Qd8 d4 c6 Bc4 Nf6 Nf3 Bf5 Ne5 e6 g4 Bg6 h4 Bb4 Rh3 Nbd7 Qe2 Nb6 h5 Be4 
+Bf4 Nxc4 Nxc4 Bg2 Rg3 Bd5
 r
 c4 0 Qa5 Nc3 Nc6
 -
@@ -2064,7 +2115,12 @@ r
 ; Rigo-Fries Nielsen, Wuppertal-B 1986 (=)
 Nxd5 c4 Nb6 Nc3 0 e5 Qe2 100 Qxd4 Nf3 Qc5 Be3 Qa5 c5 Bxc5
 r
-Bg4 30 Nf3 Qxd5 Be2 Nc6
+Bg4 30 
+m
+; Ingoc-Arasan, FICS 2013 (1-0)
+f3 Bf5 g4 60 Bg6 c4 e6 Qb3 exd5 g5 Ng8 Nc3
+r
+Nf3 Qxd5 Be2 Nc6
 m
 ; Leitao-Cubas, Sao Paulo-ch fin 2002 (1/2-1/2)
 h3 60 Bxf3 100 Bxf3 Qe6+ Be3 O-O-O
@@ -2087,6 +2143,9 @@ e4 d5 exd5 Nf6 Bb5+
 m
 ; Popovic-Stojkovic, Obrenovac 2010 (1-0)
 Nbd7 0 Nf3 80 Nxd5 d4 e6 O-O
+r
+; Zakharov-Varavin, Sochi 2012 (analysis) (1-0)
+Nbd7 Nf3 Nxd5 d4 e6 O-O a6 Be2 Bd6 c4
 r
 Bd7 
 m
@@ -2124,6 +2183,8 @@ m
 ; Maze-Benkovic, Biel 2008 (1-0)
 c6 0 Nf3 Bg4 h3 50 Bxf3 Qxf3 Qxd4 Be3 Qd8 Rd1
 r
+c6 0 Nf3 Bg4 h3 50 Bh5 g4
+r
 Nf6 Nf3 c6 30
 m
 ; Glek-Tiviakov, Benidorm 2009 (analysis)
@@ -2144,7 +2205,15 @@ m
 ; Savic-Sedlak, Cetinje 2009 (1/2-1/2)
 Bc4 10 b5 Bd3 Bb7 Qe2 e6 O-O Nbd7
 r
-g3 Bg4 h3
+g3 Bg4 
+m
+Bg2 Nc6 O-O O-O-O d5 Ne5 80 Bf4 Nxf3 100
+r
+; Houdini 3 analysis (+=)
+Bg2 Nc6 O-O O-O-O d5 Nb4 0 h3 Bh5 Bf4 Qc5 Be3 Qd6 Qe2 e5 dxe6
+Qxe6 g4 Bg6 100 Nd4 Rxd4 Bxd4 Nxc2 Rad1
+r
+h3
 m
 ; Thinker-Arasan, FICS 2011 (1-0)
 Bxf3 0 Qxf3 c6 Qd3
@@ -2172,6 +2241,9 @@ m
 ; Equinox 1.70-Rybka 4.1, G. Banks 2013 (1/2-1/2)
 g3 10 Nf6 Bg2 g6 Nf3 Bg7 O-O O-O d3 Nc6 h3 Qh5
 r
+; Fedorchuk-Reinderman, Warsaw 2005 (=)
+d4 c6 Nf3 Bf5 Bd2 30 e6 Bc4 Nf6 Nd5 Qd8 Nxf6+ Qxf6 Qe2 Nd7 O-O-O Nb6
+r
 Nf3 20 Nf6
 m
 ; Short-Rogers, Tilburg Rapid 1992 (1-0)
@@ -2187,6 +2259,8 @@ m
 c6 100 Bc4 e6 O-O Nbd7 Re1 Bd6 Bxe6 fxe6 Rxe6+ Be7 Qe2 Qd8 Bg5
 Nf8 Re3 Ng6 Nh4 Kf7 Re1
 r
+c6 100 Bc4 e6 O-O Bd6
+r
 ; Trkulja-Saric, Zenica 2010 (1/2-1/2)
 Nc6 10 Bd2 a6 Bc4 Qh5 Ne5 Bg4 Nxg4 Qxg4 Qxg4 Nxd4 h3
 r
@@ -2198,19 +2272,18 @@ r
 Bg4 40 h3 Bh5 g4 Bg6 Ne5
 m
 ; Khachiyan-Liu, Irvine 2010 (1-0)
-Nbd7 20 Nc4 Qa6 Bf4
+Nbd7 0 Nc4 Qa6 Bf4
 r
-e6
+e6 h4 Bb4 Bd2 
 m
-Bg2
+Nbd7 75
 r
-h4
-r
-Nc4 Qa6
+Qb6
 m
-Ne5
+Bg2 75
 r
-h4
+; Arasan-EXchess, ICC 2013 (=)
+h5 25 Be4 Nxe4 Nxe4 c3 Nxd2 Qxd2 Be7 100
 -
 e4 d5 exd5 Qxd5 Nc3 Qa5 d4 100 c6 80
 m
@@ -2247,7 +2320,14 @@ r
 h5 g5 a5 a4
 -
 ; B01
-e4 d5 exd5 Qxd5 Nc3 Qa5 d4 Nf6 Nf3 Bg4 20 h3 Bh5 g4 Bg6 Ne5
+e4 d5 exd5 Qxd5 Nc3 Qa5 d4 Nf6 
+m
+; Sever-Sen, ICCF 2007 (1-0)
+Bd2 Qb6 Nf3 Bf5 Bc4 c6 Qe2 Bxc2 0 O-O Bg6
+r
+Bd2 Bg4 75 f3 75
+r
+Nf3 Bg4 20 h3 Bh5 g4 Bg6 Ne5
 m
 Nbd7 20
 r
@@ -2452,6 +2532,11 @@ r
 ; Hellers-Baburin, Skei 1993 (1-0)
 g6 Bc4 c6 exd6 Qxd6 O-O Bg7 Re1 Bg4 h3 100 Bxf3 Qxf3 e6 0 c3
 r
+g6 c4 Nb6 exd6 cxd6 Be2 Bg7 a4 0 a5
+r
+; Romanov-Shomoev, Vladivastok Russian Cup 2012 (1-0)
+g6 c4 Nb6 exd6 cxd6 Be2 Bg7 h3 O-O O-O 
+r
 ; Bubalovic-Grunberg, Harkany 1997 (0-1)
 Nb6 10 a4 a5 Bb5+ c6 Bd3 Bg4 exd6 20 Qxd6 Nbd2 e6
 r
@@ -2486,7 +2571,7 @@ r
 c6 O-O Bxf3 Bxf3 dxe5 dxe5 e6 Nd2 Nd7 Re1 Qc7 Nc4 Be7 Nd6 Bd6 exd6
 -
 ; B08
-e4 g6 0 d4 c6 Nc3 Bg7 h3 d6
+e4 g6 8 d4 c6 Nc3 Bg7 h3 d6
 m
 Be3 50
 r
@@ -2494,6 +2579,44 @@ r
 Nf3 20 Nf6 a4 O-O Be3 Qc7 Be2 e5 dxe5 dxe5 O-O
 r
 a4 20
+-
+; B08
+d4 d6 e4 Nf6 Nc3 c6 a4 g6 Nf3 Bg7 Be2 O-O O-O Nbd7 h3 e5 dxe5 dxe5 Be3 Qe7 Qd3
+m
+Nc5 75 Qc4
+r
+Nh5 Rfd1 Nf4 Qd6 Nxe2+ Nxe2 Qxd6 Rxd6 
+m
+; Bui Vinh (2488)-Mahjoob,M (2510) Kolkata 2009 (1/2-1/2)
+Re8 Rad1
+r
+; Nun,J (2405)-Ftacnik,L (2515) Prague 1986 (1-0)
+f5 Rad1
+-
+; B08
+e4 g6 d4 Bg7 Nf3 d6 Nc3 Nf6 Be2 O-O O-O 
+m
+; Fenwick-Serner, WS/GMN/028 ICCF 2011 (1/2-1/2)
+Bg4 50 Be3 Nc6 d5 Nb8 a4 a5 Nd2 Bxe2 Qxe2 c6 Nc4 Nbd7 Rad1 Qc7
+r
+Nc6 50
+r
+c6 50 h3 Qc7 a4 
+m
+Nbd7 Be3
+r
+e5 0 dxe5 dxe5
+m
+Qd2 0 Rd8 100 Qe3 Nh5
+r
+; Baratosi-Khalifman, EU-ch Plovdiv 2012 (1/2-1/2)
+Be3 Nh5 100 Bc4 Nf4 Qb1 Qe7
+r
+Bc4 Nh5 100
+m
+Re1
+r
+Qd2
 -
 ; CK Fantasy Var.
 e4 c6 d4 d5 f3 10
@@ -2600,6 +2723,14 @@ r
 e6 Bd3 Nf6 O-O dxe4 Nxe4 Nxe4 Bxe4 Nd7 h3 Bh5
 -
 ; B12
+e4 c6 d4 d5 e5 Bf5 Be3 e6 Nd2 Nd7 Be2 Qb6 Nb3 a5 a4 Bb4+ c3 Be7 Nf3
+m
+; Fedorov-Malakhatko, Dubai 2010 (1/2-1/2)
+Bg6 O-O Nh6
+r
+h5 0 O-O Nh6 Re1 75
+-
+; B12
 e4 c6 d4 d5 e5 Bf5 Nc3
 m
 a6 10 Be3 Qc7 0 Bd3 100 Bxd3 Qxd3
@@ -2608,7 +2739,11 @@ a6 Be3 e6 100
 r
 a6 Bd3 0 Bxd3 Qxd3 e6
 r
-e6 90 g4 Bg6 Nge2 c5 h4 h5 Nf4 Bh7 Nxh5 Nc6 dxc5 Bxc5
+e6 90 g4 Bg6 Nge2 
+m
+f6 0 Nf4 Bf7
+r
+c5 100 h4 h5 Nf4 Bh7 Nxh5 Nc6 dxc5 Bxc5
 m
 Bb5 75 Qc7
 r
@@ -2747,14 +2882,34 @@ r
 Bg6 Nbd2 Ne7 0 Nh4 100 Nf5 Nxg6 hxg6 Nf3
 r
 ; Smirin-Anand, Munich SKA 1992 (0-1)
-Ne7 30 Nh4 c5 100 c3 Be4 Nd2 Nc6 Nxe4 dxe4 g3 Be7 Ng2
+Ne7 25 Nh4 c5 100 c3 Be4 Nd2 Nc6 Nxe4 dxe4 g3 Be7 Ng2
+r
+Ne7 Nbd2 Nb6 60 Nb3 Bg4 Be3
+r
+Ne7 Nbd2 Nb6 60 Nb3 Bg4 h3
+r
+; Sebag-Kallai, France 2009 (1/2-1/2)
+Ne7 Nbd2 30 h6 Nb3 Nc8 a4 Be7 a5 O-O Be3 a6 c4 Na7
+r
+Ne7 Nbd2 30 Bg6 50 Nh4 c5 c3 Nc6
+r
+Ne7 Nbd2 30 Bg6 50 Nh4 c5 c3 Nf5
 r
 h5 0 c4
 r
-h6 100 
+h6 75
 m
-; Karjakin-Kamsky, Beijing blindfold 2012 (analysis)
-a4 10 Ne7 a5 a6 b4
+; Langweiser-Simotuwe, Schwaebisch Gmuend 2009 (+=)
+a4 20 Ne7 0 a5 a6 b4 100 Qc7
+r
+; Houdini 3 analysis (+=)
+a4 Bb4 Nbd2 Ne7 Nb3
+r
+; Houdini 3 analysis (=)
+a4 a5 80 Nbd2 Ne7
+r
+; Houdini 3 analysis (=)
+a4 a5 80 c3 Ne7
 r
 Nbd2 Ne7 Nb3 Bh7 a4 Rc8 100
 r
@@ -2793,8 +2948,15 @@ r
 c3 60 Ne7 100 
 m
 ; Hiarcs 14 (=)
-Nbd2 Qc7 Re1 O-O-O a4 g5 Nf1 Kb8 Ng3 Bh7 a5 a6 Be3 Nf5 Nxf5 Bxf5 Qb3 Ka8 c4
-f6 exf6 Nxf6 Ne5 dxc4 Nxc4 Nd5 Nb6+ Ka7 Bc4
+Nbd2 10 Qc7 10 Re1 O-O-O a4 g5 Nf1 Kb8 Ng3 Bh7 a5 a6 Be3 Nf5 Nxf5 Bxf5
+Qb3 Ka8 c4 f6 exf6 Nxf6 Ne5 dxc4 Nxc4 Nd5 Nb6+ Ka7 Bc4
+r
+; Hiarcs 14 (=)
+Nbd2 10 Qc7 10 Re1 a6 Nf1 Bg6 80
+r
+Nbd2 10 Bh7 60
+r
+Nbd2 10 c5 60
 r
 ; Zvjaginsev-Bareev, Moscow 2005 (1/2-1/2)
 Nbd2 a6 10 Nb3 Rc8 h3 Be4 Nbd2 Bxf3 Nxf3 c5 Bd3
@@ -2803,7 +2965,9 @@ r
 Nbd2 a6 Re1 Bh7 b4 Nc8 a4 a5 Ba3 Be7 bxa5 Bxa3 Rxa3 Qxa5 Qb3 Qc7 100 c4 Ne7
 a5 c5
 r
-Na3
+a4 50
+r
+Na3 50
 m
 ; Hiarcs 14 (=)
 Qc7 Nc2 O-O-O a4 g5 Ne3 Bh7 a5 a6 Re1 Rg8
@@ -3122,11 +3286,33 @@ r
 ; Antal-Groszpeter, Kecskemet 2011 (1/2-1/2)
 e6
 -
+; B13
+e4 c6 d4 d5 exd5 cxd5 c4 Nf6 Nc3 Nc6 Bg5 
+m
+; Hiarcs 14 (=)
+Be6 a3 g6 Bxf6 exf6 cxd5 Bxd5 Qe2+ Ne7 Nxd5 Qxd5 Qb5+ Kd8 Qxd5+ Nxd5 g3 Nb6
+r
+e6 75
+-
 ; B14
+e4 c6 d4 d5 exd5 cxd5 c4 Nf6 Nc3 e6 Nf3 Bb4 cxd5 Nxd5 
+m
 ; Kasimdzhanov-Macieja, Germany 2008 (1/2-1/2)
-e4 c6 d4 d5 exd5 cxd5 c4 Nf6 Nc3 e6 Nf3 Bb4 cxd5 Nxd5 Qc2 Nc6 a3
-Ba5 Bd3 Nxc3 bxc3 Nxd4 Nxd4 Qxd4 Bb5+ Bd7 O-O Qd5 c4 Qf5 Bxd7+ Kxd7
-Qb3 b6 Rd1+ Ke7
+Qc2 Nc6 a3 Ba5 Bd3 Nxc3 bxc3 Nxd4 Nxd4 Qxd4 Bb5+ Bd7 O-O Qd5 c4 Qf5
+Bxd7+ Kxd7 Qb3 b6 Rd1+ Ke7
+r
+Bd2 Nc6 Bd3 O-O O-O Be7
+m
+Re1 75
+r
+Qe2 Nf6 Ne4 
+m
+Bd7 0 a3 50
+r
+Bd7 0 Rad1 75
+r
+; Raykin-Perevertkin, ICCF 2005 (1/2-1/2)
+Qb6 a3 Bd7 Rfd1 Rfd8 b4
 -
 ; B14
 e4 c6 d4 d5 exd5 cxd5 c4 Nf6 Nc3 e6 Nf3 Bb4 Bd3 dxc4 Bxc4 O-O O-O b6
@@ -3186,6 +3372,12 @@ Bf5 10
 r
 Qd5 60 Be3
 -
+e4 c6 Nc3 d5 Nf3 dxe4 Nxe4 Nf6 Nxf6+ 
+m
+exf6 100
+r
+gxf6 10 d4 100
+-
 ; B06
 d4 g6 e4 d6 Nc3 a6 Nf3 Bg7 Be2
 m
@@ -3232,6 +3424,15 @@ Nd7 e5 e6 O-O Ne7 Qe1 Bb7 a4 b4 Ne4
 r
 ; Gaviota-Arasan, test game 2013 (1-0)
 Bb7 O-O Nd7 e5 c5 Be4 Bxe4 Nxe4 cxd4 exd6 Qb6 a4
+-
+; B06
+e4 g6 d4 Bg7 Nf3 d6 Bc4 c6 Bb3 Nf6 Qe2 O-O O-O
+m
+d5 100
+r
+a5 0 a4
+r
+Bg4 Rd1
 -
 ; B07
 ; Smeets-Beliavsky, Amsterdam 2009 (=)
@@ -3685,6 +3886,13 @@ r
 Ne4 O-O Kb1 c5 Nxf6+ Nxf6 g4 Nxg4 Rhg1 Nxf2 Qe2 Nxd1 Bxh6 Kh7 Bxg7 Rg8 Qe4 f5
 Qxe6 Rxg7
 r
+; Edwards-Rogetzer, WC35/sf10 ICCF 2011 (1/2-1/2)
+Ne4 Nxe4 Qxe4 Nf6 Qd3 O-O g4 10 Nxg4 Rhg1 Nxf2 Qe2 Nxd1 Bxh6 Bf6 Bxg7
+Bxg7 h6 Qf6 Qh2 Qxf3 hxg7 Qe3+ Kb1 Nc3+ bxc3 Qxg1+ Qxg1
+Rfe8 Qg5 f5 c4 Rad8
+r
+Ne4 Nxe4 Qxe4 Nf6 Qd3 O-O Kb1 100
+r
 Qe2 O-O Nf1
 m
 Nb6 100
@@ -3794,7 +4002,15 @@ m
 ; Savic-Pap, Senta 2006 (0-1)
 Na3 e5 100
 r
-d4 Nc6 10 Nf3 Bg4 Be2 cxd4 cxd4 e6 Nc3 Qa5 h3 Bh5 d5
+d4 Nc6 10 Nf3 Bg4
+m
+dxc5 Qxd1+ Kxd1 Nf6 b4 0 a5
+r
+dxc5 Qxd1+ Kxd1 Nf6 h3 100
+r
+dxc5 Qxc5+ 90 Be3 Qa5
+r
+Be2 cxd4 cxd4 e6 Nc3 Qa5 h3 Bh5 d5
 m
 O-O-O 0 Bd2 exd5 O-O
 r
@@ -3829,7 +4045,7 @@ m
 ; Manca-Wohl, Arco 2005 (1/2-1/2)
 e5 0 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ Bd7 Qa4 a6 Bxd7 Nxd7
 r
-Nf6 e5 Nd5 Nf3 e6 20 Bc4
+Nf6 e5 Nd5 Nf3 e6 10 Bc4
 m
 d6 70 d4 cxd4 100 cxd4 Nc6 O-O Be7
 r
@@ -3857,19 +4073,60 @@ d6 O-O dxe5 Nxe5 N8d7 Nf3
 ; B22
 e4 c5 c3 Nf6 e5 Nd5 d4 cxd4 Nf3 e6 cxd4
 m
-b6 40 Bg5 10 Be7 Bxe7 Qxe7
-r
 ; Vajda-Sukandar, Syndey op 2012 (1-0)
 d6 80 Bc4 Nc6 O-O Be7 Qe2 O-O Nc3 dxe5 dxe5 Nxc3 bxc3 Qa5 Bd2 Rd8 Rfe1 Bd7
 Bb3 Be8 Qe4
+r
+; DesertCat-Arasan, ICC 2013 (1-0)
+b6 Bc4 Bb7 O-O d6 Bxd5 Bxd5 Nc3 Bxf3 Qxf3 d5 Be3 Nc6
+Rac1 Rc8 Qg3
+r
+Nc6 Bc4 d6 75
 -
 ; B22
 e4 c5 c3 Nf6 e5 Nd5 Nf3 Nc6 d4 cxd4 Bc4
 m
 e6 cxd4 d6
 r
+Nb6 Bb3 
+m
 ; Hoffmann-Lutz, Germany 2001 (0-1) [B22]
-Nb6 Bb3 d5 exd6 Qxd6 Na3 dxc3 70 Qe2 cxb2 Bxb2 Qb4+ Kf1 Bf5 Rd1 Rd8
+d5 70 exd6 Qxd6 Na3 dxc3 70 Qe2 cxb2 Bxb2 Qb4+ Kf1 Bf5 Rd1 Rd8
+r
+; Pedersen-Matthiesen, Denmark 2009 (+=)
+g6 Ng5 d5 exd6 e6 Qf3 Ne5 Qg3 Nec4 Ne4 Bxd6 Qd3 Ne5 Qxd4 Bc7
+r
+d6 20 exd6 Qxd6 O-O Be6
+m
+Na3 dxc3
+r
+Bxe6 Qxe6 Nxd4 Nxd4 
+m
+cxd4 40
+r
+Qxd4 Rd8
+m
+; Arasan-Fruit, test game 2013
+Qh4 Qe2 Bd2 0 e6 Re1 Qb5 b3 Qf5
+r
+; Kharchenko-Vovk, Evpatoria 2006 (1/2-1/2)
+Qh4 Qe2 Bd2 e6 Re1 Qb5 b3 Be7
+r
+; Houdini 3 analysis (-=)
+Qh4 Qe2 Bd2 e6 Re1 Qb5 Bc1 Be7 Qg4 O-O Na3
+r
+; Granja Velha-Spaghetti Chess, playchess.com 2007 (1/2-1/2)
+Qh4 Qe2 Nd2 100 e5 Ne4 Rd1
+r
+; Hildebrand-Strehlau, ICCF 2012 (1/2-1/2)
+Qe3 15 Qxe3 Bxe3 Nc4 Bxa7 Nxb2 Na3 e6 Nb5
+r
+Qf4 g6 Be3 Bg7
+m
+; Slogodjan-Nielsen, Germany 2008 (analysis) (0-1)
+Qb4 0 Nd5 100
+r
+Nd2
 -
 e4 c5 c3 Nf6 e5 Nd5 Nf3 Nc6 Bc4 Nb6 Bb3 c4 90 Bc2 
 m
@@ -4021,6 +4278,20 @@ r
 ; Gashimov-Cheparinov, Porto Carras 2011 (1/2-1/2)
 Nxd4 cxd4 
 -
+; B23 (0-1)
+e4 c5 Nc3 d6 f4 Nc6 Nf3 g6 Bc4 Bg7 d3 e6 O-O Nge7 Qe1 O-O f5
+m
+; Macieja,B (2615)-Dominguez Perez,L (2608) Bled 2002 (1/2-1/2)
+gxf5 75 Qg3 fxe4 dxe4 Ng6 h4 Nce5 Bg5 f6 
+r
+; Mortensen-Muck, JUB/E/final ICCF 2009 (0-1)
+gxf5 75 Qg3 fxe4 dxe4 Ng6 Bg5 Qb6 Rab1 Nd4 
+r
+exf5 0
+r
+; Dianov,A (2210)-Pakhomov,D (2062) Krasnoyarsk 2008 (0-1)
+d5 25 Bb3 dxe4 dxe4 exf5 Bg5 c4 Bxc4 Qb6+ Kh1 Qxb2 e5 Qb4 Bb3 Be6
+-
 ; B30
 e4 c5 Nf3 Nc6 b4 0 
 m
@@ -4106,7 +4377,18 @@ Nc3 O-O 100
 r
 Bxc6 bxc6 O-O Bg7 Re1 Nh6 70
 r
-O-O Bg7 Re1 Nf6 e5 Nd5 Nc3 Nc7 Bxc6 dxc6 Ne4 Ne6 d3 O-O Be3 b6 Qd2
+O-O Bg7 Re1 
+m
+; Ivanov-Popov, St. Petersburg 2010
+e5 c3 Nge7 d4 cxd4 cxd4 exd4 0 Bf4 a6 Ba4 b5
+r
+e5 c3 Nge7 d4 cxd4 cxd4 Nxd4
+r
+e5 c3 Nge7 d4 exd4 0 cxd4 Nxd4
+r
+e5 c3 Nge7 b4 25
+r
+Nf6 100 e5 Nd5 Nc3 Nc7 Bxc6 dxc6 Ne4 Ne6 d3 O-O Be3 b6 Qd2
 m
 ; =
 Nd4 Nxd4 cxd4 Bh6 c5 Qf4 Bb7
@@ -4134,9 +4416,22 @@ r
 ; (0-1)
 Nf6 Nc3 Qc7 O-O Nd4 Nxd4 0 cxd4 Nd5 Nxd5 exd5 Qc5 c4 a6
 r
-e6 Bxc6 bxc6 d3 Ne7
+e6 Bxc6 bxc6 d3 
 m
-Qe2 Qc7 h4 Ng6
+Qc7 60
+r
+Ne7
+m
+Qe2 Qc7 Ng5 0 e5 100
+r
+Qe2 d5 h4 75 h5
+r
+Qe2 d5 b3 50 Ng6
+r
+Qe2 d5 O-O 0 Ng6 e5 0 Be7
+r
+; Pridorozhni,A (2512)-Moiseenko,A (2711) Khanty-Mansiysk 2013 (1/2-1/2)
+Qe2 d5 O-O 0 Ng6 Nc3 Be7 Na4 O-O
 r
 O-O 10 Ng6 Ng5
 m
@@ -4258,7 +4553,12 @@ Kf1 Rg6 Qe3 Bh6 Qd3 Nd2+ Kg2 Nxe4 Qxe4 Rc8
 -
 ; B33
 e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 e5 Ndb5 d6 Bg5 a6 Na3 b5 Bxf6 gxf6 Nd5
-f5 Bd3 Be6 O-O 60 Bxd5 exd5 Ne7 Nxb5 Bg7 Nc3 e4
+f5 Bd3 Be6 O-O 60 Bxd5 exd5 Ne7 
+m
+; anal. by Houdini 3 (1-0)
+Re1 75 Bg7 c3 100 O-O Nc2 f4 a4 f5 axb5
+r
+Nxb5 0 Bg7 Nc3 e4
 m
 ; Macak-Tregubov, Kallithea 2008 (0-1)
 Be2 Qa5
@@ -4272,7 +4572,7 @@ r
 ; Scorpio-Arasan, OICS 2013 (analysis by Stockfish 4) (1-0)
 Bc4 Qc7 0 Qe2 Bxc3 bxc3 O-O Rab1
 r
-Bc4 Ng6 
+Bc4 Ng6 0
 m
 Qd2
 r
@@ -4286,7 +4586,12 @@ m
 ; acertaste-Arasan, ICC 2013
 Rg8 0 Rae1
 r
-Ke7 Rae1 Rhg8 Kh1 
+Ke7 
+m
+; Fruit-Arasan, test game 2013 (1-0)
+Kh1 20
+r
+Rae1 Rhg8 Kh1 
 m
 ; Lanzani-Humeau, Grosseto 2009 (1/2-1/2)
 a5 100 a4 Qf6 f3 Nh4 Qxf6+ Kxf6 fxe4 Rxg2 Rxf5+ Nxf5
@@ -4312,9 +4617,20 @@ r
 Bg5 Nc2 O-O a4 bxa4 Rxa4 a5 Bc4 Rb8 Ra2 Kh8 Nce3 Bxe3 Nxe3 Ne7 O-O f5 exf5 Nxf5
 Nd5 Bb7
 r
+; Nisipeanu-Van Wely, 2006 (Stockfish 4 analysis, +=)
+Bg5 Nc2 O-O a4 bxa4 Nce3 Bxe3 Nxe3 Rb8 Qxa4 Ne7 O-O-O Qc7 Rd2
+r
 ; Ali-Moiseenko, Istanbul 2012 (anal by Houdini 1.5a) (1-0)
 Bg5 Nc2 O-O a4 bxa4 Rxa4 a5 Bc4 Rb8 Ra2 Kh8 Nce3 g6 0 h4 Bxh4 g3 Bg5 f4
 exf4 gxf4 Bh4+ Kf1 f5 b4 fxe4 Rah2
+r
+; Wunnink-Ansell, Amsterdam ACT op 2006 (1/2-1/2)
+Bg5 Nc2 Rb8 a4 bxa4 Ncb4 Nxb4 Nxb4 Bd7 Bxa6 O-O O-O Qb6 Bd3 Ra8 
+Bc2 a3 100 Rxa3 Rxa3 bxa3 Qc5 Ba4
+r
+; Nowak,I (2298)-Leiner,R (2335) ICCF 2013 (1/2-1/2)
+Bg5 Nc2 Rb8 a4 bxa4 Ncb4 Nxb4 Nxb4 Bd7 Bxa6 O-O O-O Qb6 Bd3 Ra8 
+Ra3 d5 Qh5 h6 exd5 f5 Qe2 e4 Bc4 Kh8 Nc6 Bxc6 dxc6 Rad8 Qc2
 r
 Bg5 Nc2 Ne7 60 h4 Bh6 a4
 r
@@ -4385,11 +4701,22 @@ Ra2 Kh8 Nce3 Ne7 O-O Nxd5 Nxd5 f5 exf5 Bxf5 Qe2 Bd7
 r
 b3 Kh8 Nce3
 m
+g6 
+m
+; anal. by Stockfish 4
+O-O f5 exf5 0 gxf5 Qh5 e4
+r
+O-O f5 Qd3
+r
+O-O f5 Qf3
+r
 ; Karjakin-Ivanchuk, Nalchik 2009 (1/2-1/2)
-g6 h4 Bxh4 g3 Bg5 f4 exf4 gxf4 Bh4+ Kd2 20 Ne7 Qg1 Nxd5 Nxd5 Be6 Qh2 g5
+h4 Bxh4 g3 Bg5 f4 exf4 gxf4 Bh4+ Kd2 20 Ne7 
+m
+Qg1 Nxd5 Nxd5 Be6 Qh2 g5
 r
 ; Jakovenko-Shirov, Foros UKR 2007
-g6 h4 Bxh4 g3 Bg5 f4 exf4 gxf4 Bh4+ Kd2 Ne7 Kc1 Nxd5 Nxd5 Be6 Qd4+ Kg8 Kb1
+Kc1 Nxd5 Nxd5 Be6 Qd4+ Kg8 Kb1
 -
 e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 e5 Ndb5 d6 Bg5 a6 Na3 b5
 Nd5 Be7 Bxf6 Bxf6 c4 10 b4 Nc2
@@ -4495,9 +4822,9 @@ r
 d5 80 cxd5 fxe4 Bxe4 Rb8 Rfd1 Qd7 100 d6 Rb6 Qd3 Rd8 Rac1 Bf8 Rc7 Qxc7
 Bxh7+ Kg7 dxc7 Rxd3 Bxd3 Bxa3 bxa3 Rc6 Be4 Rxc7 Bd5 Rc3 h4 Rxa3
 r
-d5 80 cxd5 fxe4 Bxe4 Rb8 Rad1 0 Rb6 Qd3 Qd7 Bxh7+
-r
-d5 80 cxd5 fxe4 Bxe4 Rb8 Rad1 0 Rb6 Rc1
+; Serafim-Shulman, Lev Abramov mem ICCF 2006 (1/2-1/2)
+d5 cxd5 fxe4 Bxe4 Rb8 Rad1 Rb6 Qd3 Qd7 Bxh7+ Kh8 Qe3 Rh6 Bc2 Qd6 Nb1
+e4 g3 Bg4 Bxe4 f5 Bg2 f4
 r
 ; Varadi-Berczes, Budapest 2005 (0-1)
 d5 80 cxd5 fxe4 Bxe4 Rb8 Qb3 Kh8 100
@@ -5165,7 +5492,16 @@ r
 ; Gara-Rajlich, Istanbul 2012 (1/2-1/2)
 c4 Be7 Nc3 Rd8 100
 r
-Nxc6 bxc6 Nb6 Rb8 Nxc8 Rfxc8 Bxa6 Rf8 Bd3 Bd6 g3 Be5 a4 Bxb2 Ra2
+Nxc6 bxc6 
+m
+f4 d5 e5 Ne4 100 Bd3 f5
+r
+f4 d5 e5 Nd7 0 c4
+r
+; Tukmakov-Furman, URS-chT Moscow 1972 (1/2-1/2)
+f4 Rb8 Bf3 Be7
+r
+Nb6 Rb8 Nxc8 Rfxc8 Bxa6 Rf8 Bd3 Bd6 g3 Be5 a4 Bxb2 Ra2
 m
 ; Kamsky-Ehlvest, Linares 1991 (1-0)
 d5 0 exd5 Nxd5 Bd2
@@ -5205,6 +5541,10 @@ Nbd7 Bd3 b6 O-O Bb7 Re1 Qc7 Bc2 Rc8
 r
 ; Spragget-Topalov, 1999 (0-1)
 g6 Bd3 Bg7 Bc2 e5 100 d3 O-O
+-
+; B50
+; =
+e4 c5 Nf3 d6 Nc3 Nf6 e5 dxe5 Nxe5 a6 Be2 Qc7 80 d4 80 e6 100 Be3
 -
 ; B51
 e4 c5 Nf3 d6 Bb5+
@@ -5376,8 +5716,26 @@ e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 d6 Bg5 e6 Qd2
 m
 a6 100
 r
+Qb6 10 
+m
+; trans. to B64
+f4 80
+r
+Nb3 Be7 O-O-O 
+m
 ; Kamsky-Gulko, Buenos Aires, 2005 (1-0) [B63]
-Qb6 10 Nb3 Be7 O-O-O O-O f3 Rd8 Kb1 Qc7 Bf4 a6 g4 Ne5 g5 Nfd7 Qg2 b5 h4 Nb6 h5
+O-O f3 Rd8 Kb1 Qc7 Bf4 a6 g4 Ne5 g5 Nfd7 Qg2 b5 h4 Nb6 h5
+r
+a6 f3 O-O h4 Rd8 Be3 Qc7 Qf2 Nd7 
+m
+h5 20
+r
+g4 b5 Kb1 
+m
+; Antoniewski-Meszaros, CZE-chT 2008 (1-0) (better for White)
+Bb7 0 g5 Nce5 a3
+r
+Nce5 100
 -
 ; Safarli-Babaev, Baku 2009 (0-1) [B64]
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6 Bg5 e6 Qd2 Be7 O-O-O O-O Nb3 Qb6 f3
@@ -5422,6 +5780,11 @@ Be3 50 Be7 60 f3 Nxd4 Bxd4 b5 Kb1 Rb8 Ba7 Rb7 Be3 Qa5
 r
 ; Berg-Von Bahr, Stockholm 2003 (1-0)
 Be3 50 Be7 60 f3 Nxd4 Bxd4 b5 Kb1 Rb8 g4 b4 Ne2 e5 Ba7 Rb7 Be3 Be6 Nc1
+r
+; Hiarcs 14 (+=)
+Be3 50 Be7 60 f3 Nxd4 Qxd4 Qc7 0 h4 b5 g4 e5 Qd3 Be6 Kb1 Rd8 Nd5 Nxd5 exd5
+r
+Be3 50 Be7 60 f3 Nxd4 Qxd4 b5 100
 r
 ; Paehtz-Gara, Vienna 1996 (1-0)
 Be3 Bd7 50 f3 Be7 0 g4 b5 h4 b4 Nce2
@@ -5609,8 +5972,7 @@ r
 Be2 b5
 -
 ; B67
-e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6 Bg5 e6 Qd2 a6 O-O-O Bd7 f4 b5 60
-Bxf6 gxf6
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6 Bg5 e6 Qd2 a6 O-O-O Bd7 f4 b5 Bxf6 gxf6
 m
 ; Lindberg-Brynell, Rilton Cup 2002 (1-0)
 Nxc6 Bxc6 Qe1 b4 Nd5 a5 f5 Bxd5 exd5 e5 Bb5+
@@ -5636,6 +5998,19 @@ Nxc6 Bxc6
 m
 ; Minasian-Alekseev, EU-ch Istanbul 2003 (1-0)
 Qe1 Be7 f5 Qc5 Bd3 a5 Ne2 e5 Ng3
+r
+; Fruit-Arasan, test game 2013 (1-0)
+Qe1 Be7 f5 Qc5 Bd3 h5 0 Qg3 O-O-O Qg7 Rdf8 fxe6
+r
+Qe1 Be7 f5 Qc5 Bd3 h5 0 Qg3 Kd7 Rhf1 100
+r
+Qe1 Be7 f5 Qc5 Bd3 h5 0 Qg3 Kf8 Qh4 100
+r
+; Nijboer-Acs, 2003
+Qe1 Be7 f5 Qc5 Bd3 b4 Ne2 a5 fxe6 fxe6 Nf4 Qe5 Rf1 a4
+r
+; Molina-Gupta, Albena 2013
+Qe1 Be7 f5 Qc5 Bd3 b4 Ne2 e5 Ng3 h5 Qe2 h4 Nf1 a5
 r
 ; Perunovic-Damljanovic, Valjevo 2000 (1/2-1/2)
 Qe1 Be7 Bd3 h5 f5 b4 Ne2 e5 Ng3 h4
@@ -5733,7 +6108,7 @@ m
 ; Sax-Cao Sang, Hungary 1998 (1/2-1/2)
 Qc7 10 Nf3 0 h6 Bh4 Rc8
 r
-Be7 20 Nf3 b5 Bxf6 gxf6 
+Be7 Nf3 b5 Bxf6 gxf6 
 m
 f5 Qb6 Kb1
 r
@@ -5931,9 +6306,15 @@ f4 Nc4 Qd3 b5 e5 Ng4 Ne4 Rd5 Nxd6 Ngxe5 fxe5 Nxe5 Qg3 100
 r
 Kb1
 m
-Re8 80
+; Radjabov-Carlsen, Baku 2008 (0-1)
+Re8 g4 0 hxg4 h5 Nxh5 Rxh5 gxh5 Qh2 Ng6 Qxh5 Qa5 f4 Rxg5 fxg5 e6
 r
-b5 40
+; Kaiumov-Galakhov, Tashkent 1984 (-=)
+Re8 g4 0 hxg4 h5 Nxh5 f4 Nc4 Qd3 b5 f5 Qb6 Bc1 e6 fxe6 fxe6
+r
+Re8 Bh6 100 Nc4 Bxc4 Rxc4 Bxg7 Kxg7
+r
+b5
 m
 ; anal. by Rybka (=)
 Rhe1 a5 f4 Nc4 Bxc4 Rxc4 e5 b4 Ncb5 dxe5 fxe5 Nd5 e6 Bxb5 exf7+
@@ -6037,12 +6418,18 @@ r
 g5 Nh5 Ka1 Bh3
 -
 ; B79
--
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6 Be3 Bg7 f3 Nc6 Qd2 O-O Bc4 Bd7 Bb3 Rc8
 O-O-O Qa5 0
 -
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6 Be3 Bg7 f3 O-O Qd2 Nc6 Bc4 Bd7 O-O-O
-Qa5 0 Bb3 Rfc8 h4 Ne5
+Qa5 0 
+m
+h4 0
+r
+; Fedorchuk-Dgebuadze, Gent Taminco op 2010 (1-0)
+Kb1 10 Rfc8 Bb3 Ne5 Bg5 100
+r
+Bb3 100 Rfc8 h4 Ne5
 m
 h5 0 Rxc3 Qxc3 Qxc3 bxc3 Nxh5
 r
@@ -6584,6 +6971,15 @@ a6 Qh5
 r
 Nb6 Qh5
 -
+; B81 (1-0)
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6 g4 a6 g5 Nfd7 Be3 Nc6 h4 Be7
+m
+; Kobalia-Vitiugov, RUS-chT Togliatti 2003 (1-0)
+Qh5 0 O-O O-O-O Nxd4 Bxd4 b5 f4 100 b4 Ne2
+r
+; Smeets,J (2647)-Terzic,I (2224) Sarajevo 2011 (1-0)
+Qd2 100 Qc7 O-O-O b5 Nxc6 Qxc6 Qd4 O-O h5 f6 Rg1 Ne5 Be2
+-
 ; Anand-Svidler, Amber rapid 2004 (1/2-1/2) [B82]
 e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 e6 Nc3 d6 Be3 Nf6 Qd2 Be7 f4 e5 Nf3 Ng4
 O-O-O Nxe3 Qxe3 exf4 Qxf4 O-O Kb1 Be6 Nd5 Rc8 h4 Bxd5 Rxd5 Qb6 Bc4 Na5
@@ -6598,6 +6994,28 @@ m
 d5 0 g5
 r
 Qa5 g5
+-
+; B84
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be2 e6 O-O Be7 f4 Qc7 Qe1 O-O Be3 Nc6
+Kh1 Nxd4 Bxd4 b5
+m
+Qg3 75
+r
+a3 
+m
+; Gopal-Negi, 2009 (1/2-1/2)
+Nd7 30 Bf3 Bb7
+r
+Bb7 Qg3 Rad8 Rae1 
+m
+Rd7
+r
+Bc6 0 Bd3 Qb7 Qh3 g6 f5 e5 Be3
+m
+Rfe8
+r
+; (1-0)
+d5 0 exd5 Bxd5 Bg5 e4 Nxd5 Nxd5 Bxe7 Qxe7 Rxe4
 -
 ; B85
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 e6 Be2 Be7 O-O O-O f4 a6 Be3 Qc7
@@ -6630,7 +7048,7 @@ Qh3 Nf6
 -
 ; B85
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e6 Be2 Be7 O-O Qc7 f4 Nc6 a4 O-O Kh1
-Re8 
+Re8 75
 m
 ; Carlsson-Jakahishvili, Campillos 2005 (1/2-1/2)
 a5 10 Nxa5 e5 dxe5 fxe5 Qxe5 Bf4 Qc5 Na4 Qa7 Be3 Rd8 100 Bd3 b6
@@ -6657,6 +7075,25 @@ b4 Nd1 bxa3 bxa3 Rac8 Nf2 Nh5 Qf3
 r
 ; (1-0)
 Rad8 0 Qh3 g6 f5 e5 Be3
+-
+; B85
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e6 Be2 Be7 O-O Qc7 f4 Nc6 a4 O-O Kh1
+Bd7 Nb3 b6 Bf3 
+m
+; Nega-Satyapragyan, Paris 2009 (1-0)
+Rab8 g4 Bc8 g5 Nd7 Bg2 Re8 Qh5 g6 Qh3 Bf8 f5 Nde5 Rf4
+r
+Bc8 20 g4 Nd7 75 g5 Re8
+r
+; (1-0)
+Rfe8 g4 Bc8 g5 Nd7 Bg2 Bb7 Rf3 
+m
+; Harikrishna,P (2698)-Van Wely,L (2679) Wijk aan Zee 2013 (1-0)
+Bf8 Rh3 g6 Qe1 Bg7 Qh4 Nf8 Qf2 Nd7 Rf1 Nb4 Bd4 Bxd4 Nxd4 Nc6 f5 Nce5
+Qh4 h5 Nde2 exf5 Nf4 Kg7 Ncd5 Bxd5 Nxd5
+r
+; Fruit-Arasan, test game 2013 (1-0) (better for White)
+Nb4 Rh3 g6 Qd2 Bf8 Qf2 Bg7 Rf1 Rac8 f5
 -
 ; B85
 e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nf6 Nc3 d6 Be2 a6 O-O Nc6 Be3 Be7 f4 O-O Kh1
@@ -6711,10 +7148,24 @@ Qh5 0 Rfc8
 r
 Rg3 Rfc8
 -
-; B89 (=)
+; B89
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 Nc6 Bc4 e6 Be3 a6 Qe2 Qc7 O-O-O Be7
-Bb3 O-O Rhg1 Nd7 g4 Nc5 Nf5 b5 Bd5 Bb7 g5 Rfc8 Rg3 100 Bf8 Qh5 g6 Nh6+
-Kh8 Qh4 b4 Rh3 100 bxc3 Ng4 f5 Nf6
+Bb3 O-O Rhg1 Nd7 g4 Nc5 
+m
+Kb1 0 b5
+r
+Kb1 0 Nxd4 Bxd4 b5
+r
+; Jenal-Forresdal, NOR-SUI ICCF 2010 (0-1)
+g5 Bd7 Rg3 g6
+r
+Nf5 
+m
+; Shadrina-Kochetkova, St. Petersburg 2005 (1-0)
+exf5 0 gxf5 Nxb3+ axb3 Kh8 Nd5
+r
+; = 
+b5 Bd5 Bb7 g5 Rfc8 Rg3 100 Bf8 Qh5 g6 Nh6+ Kh8 Qh4 b4 Rh3 100 bxc3 Ng4 f5 Nf6
 m
 h6 Qxh6+ Bxh6 Rxh6+ Kg7
 r
@@ -7151,8 +7602,16 @@ g6 0 Nf3 Bg7 e5 Ng4 h3 Nh6 Bc4 O-O g4 Nc6 Be3 dxe5 fxe5
 r
 e5 Nf3
 m
-; NCO
-Nbd7 a4 Be7 Bd3 O-O O-O
+; Sokolov-Gharamian, Cappelle la Grande 2007 (1/2-1/2)
+Nbd7 a4 Be7 Bd3 O-O O-O Nc5 Kh1 exf4 Bxf4 Bg4 Qe1 70 Rc8 100
+r
+Nbd7 a4 Be7 Bd3 O-O O-O Nc5 Kh1 exf4 Bxf4 Bg4 Qd2 Rc8 100
+r
+; Hou-Giri, Hoogeveen 2012 (analysis, =)
+Nbd7 a4 Be7 Bd3 O-O O-O Qc7 Kh1 Nc5 Qe2 Bd7 Be3 100
+r
+; Smirin-Molner, Philadelphia 2012 (1-0)
+Nbd7 a4 Be7 Bc4 40 O-O Qe2
 r
 ; Smirin-Onischuk, UKR-ch sf Alushta 2005 (1/2-1/2)
 Qc7 Bd3 Nbd7 O-O Be7 Kh1 O-O Qe1 b5 fxe5 dxe5 Nh4 b4 Nf5 Nc5 Nxe7+
@@ -7192,6 +7651,16 @@ Qb6 Qd2 100 Qxb2 0 Rb1 Qa3 Bxf6 gxf6 Nd5 Rb8 Rb3 Qxa2 Qb4 100 a5 Qc3 e6 Bb5
 r
 ; Dijon-Williamson, EU/TC9/sf3 ICCF 2011 (1/2-1/2)
 Qb6 Qd2 100 e5 Nf5 Qxb2 Rb1 Qa3 Be2 h6 Bh4 exf4 O-O
+r
+; Canamas Soler,J (2191)-Triay Moll,L (2333) ICCF 2011 (1/2-1/2)
+Qb6 Qd2 Qxb2 Rb1 Qa3 Bxf6 Nxf6 e5 Nd7 Nd5 Rb8 e6 Nc5 exf7+ Kxf7 
+Nc3 e6 f5 Be7 fxe6+ Ke8 Nc6 Bh4+ g3 Bg5 Qxg5 Qxc3+ Qd2 Qxd2+ 
+Kxd2 Ra8 Nd4 Rf8 Bc4 b5 Bd5 Bb7 Bxb7 Nxb7 a4 Nc5 axb5 axb5 
+Rxb5 Ke7 Re1 Rf2+ Kc3
+r
+; Smith,B (2468)-Laznicka,V (2636) Philadelphia 2010 (0-1)
+Qb6 Qd2 Qxb2 Rb1 Qa3 Bxf6 Nxf6 e5 dxe5 fxe5 Ng4 Nd5 Qc5 Nb3 Qc6 Na5 0
+Qd7 Nc4 e6 Ncb6 Qc6 Nxa8 exd5 Be2 b5
 r
 ; Kearthikeyan-Arun Prasad, Kolkata 2012 (1-0) (better for White)
 h6 Bxf6 Nxf6 e5 dxe5 fxe5 Ng4 e6 Bxe6 Nxe6 Qxd1+ Rxd1 fxe6
@@ -7396,14 +7865,19 @@ hxg3 hxg3 Qc5+ Kg2 e4 Qh8 a5 Rf7
 -
 ; B97
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Bg5 e6 f4 Qb6 Qd2 Qxb2 Rb1 Qa3 f5
-Nc6 fxe6 fxe6 Nxc6 bxc6 Be2 30 Be7 O-O O-O Rb3 Qc5+
-Be3 Qe5 Bf4 Qc5+
+Nc6 fxe6 fxe6 Nxc6 bxc6 Be2 30 Be7 O-O 
+m
+; =
+Qa5 Bf3 100 Bd7 Rb7 Rf8
+r
+O-O Rb3 Qc5+ Be3 Qe5 Bf4 Qc5+
 m
 ; avoid draw by repetition
 Be3 0
 r
 ; Ivanchuk-Grischuk, Nice 2010 (analysis, =) [B97]
 Kh1 Ng4 100 h3 e5 Na4 Qa7 hxg4 exf4 Nb6 Be6 Nxa8 Bxb3 axb3 Qxa8 Ra1 c5
+r
 -
 ; Rodriguez Cespedes-Ernst, Subotica 1987 (analysis) (1-0) [B97]
 e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Bg5 e6 f4 Qb6 Qd2 Qxb2 Rb1 Qa3 f5
@@ -7451,7 +7925,16 @@ Bd3 Rg8 Qf2 Kd7 Rd1 Qa5 Bh7+ Kc7 Bxg8 Bc5 Re3 Bd7 Kg2 Rf8
 Qe2 Rxg8 Rxe5 hxg3 hxg3 Qb6 Qd2 Rd8
 -
 ; B97
-e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Bg5 e6 f4 Qb6 Qd2 Qxb2 Rb1 Qa3 e5 20
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Bg5 e6 f4 Qb6 Qd2 Qxb2 Rb1 Qa3 f5
+e5 Bxf6 gxf6
+m
+; =
+Nd5 0 exd4 Nc7+ Kd8 Nxa8 Qxa2 Rd1 Nd7 Be2 Qa4 c3 dxc3 Qxc3 Qc6
+r
+Nb3 Be7
+-
+; B97
+e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Bg5 e6 f4 Qb6 Qd2 Qxb2 Rb1 Qa3 e5
 m
 ; Keres-Fuderer, Goteborg izt 1955 (1-0)
 Nfd7 0 f5 Nxe5 fxe6 fxe6 Be2 Nbc6 Nxc6 bxc6 Ne4 d5 O-O Qa4 Bh5+ Kd7 Rxf8
@@ -8038,7 +8521,56 @@ r
 Nc6 Nc3 Nge7 Be3 Nf5
 -
 ; C02
-e4 e6 d4 d5 e5 c5 c3 Nc6 60 Nf3 Bd7 60 Be2 
+e4 e6 d4 d5 e5 c5 c3 Qb6 30 Nf3 Nc6 a3 
+m
+Nh6 50
+r
+Bd7 50 b4 cxd4 cxd4 Rc8 100
+r
+c4 10 Nbd2 Na5
+m
+Be2
+r
+Rb1
+r
+g3 0 Bd7
+m
+; Lobron-Hjartarson, 1990 (0-1)
+Bh3 Ne7 O-O
+r
+h4 O-O-O 100 Bh3 f5 100 exf6 gxf6 O-O
+m
+; Nakamura-Hillarp Persson, 2005 (1-0)
+h5 Re1 Nh6 Nh2
+r
+; Vysochin-Ljukin, 2004 (analysis) (0-1) (better for Black)
+Nh6 Re1 Rg8 Rb1 e5 Bxd7+ Rxd7 Nf1 e4 N3h2 Nf5
+-
+; French Advance (C02)
+e4 e6 d4 d5 e5 c5 c3 Qb6 30 Nf3 Bd7
+m
+a3 60
+r
+; Zaitsev-Shasin, 1963
+Nbd2 0 Nc6 60 Nb3 cxd4
+r
+Nbd2 cxd4 Nxd4 Ne7 Bd3 Nbc6
+r
+Be2 cxd4 cxd4 Bb5 O-O Bxe2 Qxe2
+m
+; Socko-Hoang Tranh Trang, Nalchik 2008 (1/2-1/2)
+Qa6 Qd1 Ne7 Nc3
+r
+; Movsesian-Huzman, Panormo 2002
+Nc6 Nc3 Nge7 Be3 Nf5
+-
+; C02
+e4 e6 d4 d5 e5 c5 c3 Nc6 60 Nf3 Bd7 60
+m
+; trans. to Milner-Barry
+Bd3 0 cxd4 cxd4 Qb6 
+r
+Be2 
 m
 ; Hiarcs 14 (1-0)
 f6 30 O-O cxd4 0 cxd4 fxe5 Nxe5 Nxe5 dxe5 Bc5 Nc3 100 Ne7 Na4
@@ -8092,6 +8624,25 @@ r
 ; Stevic-Dizdar, CRO-ch Vukovar 2005 (1/2-1/2)
 exf6 gxf6 Bd3 Nxe3 fxe3 Bh6 Qe2 O-O Nc3 Ne7 O-O Bd7 Kh1 Rac8 Nd1 Ng6
 -
+; Milner-Barry Gambit (0-1)
+e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Bd7 Bd3 cxd4 cxd4 Qb6 
+O-O Nxd4 Nbd2 
+m
+; Baron Rodriguez-Fernandez Romero, ESP-chB Lorca 2005 (=)
+Nc6 Nb3 Nge7 Be3 Qc7 Rc1 Ng6 Nc5 Bxc5 100 Bxc5 Ngxe5 Nxe5 Nxe5
+r
+Bc5 75
+m
+; anal. by Watson (0-1)
+b4 Nxf3+ Nxf3 Qxb4 Ng5 Qa4 Qh5 Nh6 Nxh7 Bb5 100
+r
+; Majer-Thomas, 4NCL 2009 (0-1)
+Nxd4 Bxd4 Nf3 Bc5 b4 Qxb4 Rb1 Qa4 Qxa4 Bxa4 Rxb7 Ne7
+-
+; Haugsdal-Santos Izquierdo, Canarias en Red prel 4th, playchess.com 2004 (0-1)
+e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Qb6 Bd3 cxd4 cxd4 Bd7 Nc3 Nxd4 Nxd4 Qxd4 O-O
+a6 Qe2 Ne7 Kh1 Nc6 f4 Bc5 a3 Na5 Bd2 Nb3 Rad1 Nxd2 Rxd2 Qe3 Qd1 Ba7 Rf3 Qb6 
+-
 ; C03
 e4 e6 d4 d5 Nd2
 m
@@ -8143,7 +8694,7 @@ r
 Rc1 Qa5 Qe3 b6 cxb6 Bd8
 -
 ; C03
-e4 e6 d4 d5 Nd2 Be7 Ngf3 Nf6 e5 Nfd7 Bd3 c5 c3 Nc6 O-O g5 dxc5 g4
+e4 e6 d4 d5 Nd2 Be7 75 Ngf3 Nf6 e5 Nfd7 Bd3 c5 c3 Nc6 O-O g5 dxc5 g4
 Nd4 Ndxe5 Bb5 Bd7 N2b3 h5
 m
 Re1
@@ -8155,7 +8706,8 @@ e4 e6 d4 d5 Nd2 dxe4 Nxe4
 m
 Nd7 70 Bd3 80
 r
-Bd7 20
+; Fort Knox (avoid)
+Bd7 0
 r
 Nf6 0 Nxf6 100
 -
@@ -8182,13 +8734,17 @@ r
 Bd6 30 Bd3 b6
 -
 ; French Tarrasch, Guimard C04
-e4 e6 d4 d5 Nd2 Nc6 Ngf3 Nf6 e5 
+e4 e6 d4 d5 Nd2 Nc6 Ngf3 Nf6 10 e5 
 m
 Ne4 0 c3
 r
 Nd7 
 m
-Nb3 60
+Bb5 80 a6 Bxc6 bxc6 Nb3
+r
+Nb3 60 f6 Bb5 Be7 0 O-O
+r
+Nb3 60 f6 Bb5 a6 100
 r
 Be2 50 
 m
@@ -8197,7 +8753,7 @@ r
 f6 30 exf6
 m
 ; Short-Vaganian, Naestved 1985 (1-0)
-Nxf6 0 O-O Bd6 c4 100 O-O c5 100 Bf4 Bb5 Bd7 Re1 Qe8 Bxc6 Bxc6 Nf1 ne4 Bxf4 Rxf4
+Nxf6 0 O-O Bd6 c4 100 O-O c5 100 Bf4 Bb5 Bd7 Re1 Qe8 Bxc6 Bxc6 Nf1 Ne4 Bxf4 Rxf4
 r
 Qxf6 
 m
@@ -8220,14 +8776,15 @@ c3 Nf6
 ; C05-C06
 e4 e6 d4 d5 Nd2 Nf6 e5 Nfd7 Bd3 c5 c3
 m
-b6 10 Ne2 Ba6 Bxa6 Nxa6 O-O Nc7 100 Nf4 g6
-r
-b6 10 Ne2 Ba6 Bxa6 Nxa6 O-O Nc7 100 Nf4 Be7
+b6 10 Ne2 Ba6 Bxa6 Nxa6 O-O Nc7 100 Nf4 g6 0 Re1 100
 r
 ; Womacka-Socko, Germany 2010 (1/2-1/2)
 b6 10 Ne2 Ba6 Bxa6 Nxa6 O-O Nc7 100 Nf4 c4 10 Qg4 b5 Nf3 g6 h4 h6
 r
-b6 Ne2 Ba6 Bxa6 Nxa6 O-O Be7 0
+; Razuvaev-Bagirov, Tbilisi 1973 (1-0)
+b6 10 Ne2 Ba6 Bxa6 Nxa6 O-O Nc7 Nf4 Be7 Qg4 g6 Re1
+r
+b6 Ne2 Ba6 Bxa6 Nxa6 O-O Be7 0 Nf4 100
 r
 b6 Ne2 Ba6 Bxa6 Nxa6 O-O b5 0
 r
@@ -8248,9 +8805,22 @@ r
 Ne2 cxd4 100 cxd4 f6 exf6 Nxf6 O-O Bd6 Nf3 O-O Bg5 Qc7 Rc1 h6 Bh4 Nh5
 Bg6 Rxf3 100 gxf3 Bxh2+ Kg2 Nf4+ Nxf4 Bxf4 Bg3
 r
+Ne2 cxd4 100 cxd4 f6 exf6 Nxf6 O-O Bd6 Nf3 O-O Bf4 70 Bxf4 Nxf4 Ne4 Qd2 0
+r
 ; Foe-Hammer-Arasan, ICC 2013 (1-0)
 Ne2 cxd4 100 cxd4 f6 exf6 Nxf6 O-O Bd6 Nf3 O-O Bf4 70 Bxf4 Nxf4 Ne4 Qc1 Ng5
 Nxg5 Qxg5 Bxh7+ Kxh7 Nxe6 Qf5 Nxf8+ Qxf8 Qg5 Bf5 Rfe1 Rd8 Re3 Rd6 Rf3
+r
+; Ivanchuk-Ruzele, URS-chT U20 Kramatorsk 1989 (1-0)
+Ne2 cxd4 cxd4 f6 exf6 Nxf6 Nf3 Bd6 O-O O-O Bf4 Bxf4 Nxf4 Ne4 Qc1 Qf6 0
+Ne2 e5 dxe5 Nxe5 Nxe5 Qxe5 f3 Nf6 Qc3 Re8 Qxe5 Rxe5 Nd4 Bd7 Rac1 Kf8
+Rc7 Rb8 Rfc1 Re7 g4 g6 h4 Ke8 h5 gxh5 g5 Ng8 R7c5 h6 gxh6 Nxh6
+r
+Ne2 cxd4 cxd4 f6 exf6 Nxf6 Nf3 Bd6 O-O O-O Bf4 Bxf4 Nxf4 Ne4 Qc1 Qd6 Ne2
+r
+; Aagaard-Brynell, Denmark 2013 (=)
+Ne2 cxd4 cxd4 f6 exf6 Nxf6 Nf3 Bd6 O-O O-O Bf4 Nh5 Bxd6 Qxd6 Qc2
+Nf6 Rac1 Bd7 Qc5 Qxc5 Rxc5
 r
 Ne2 cxd4 100 cxd4 f6 exf6 Nxf6 O-O Bd6 Nf3 Qc7 Nc3 70 a6 Bg5 O-O Bh4 Nh5 Rc1
 g6 Na4 b5 100
@@ -8275,17 +8845,6 @@ r
 ; Godena-Soffer, Biel 1988 (1-0)
 Ne2 cxd4 100 cxd4 f6 exf6 Nxf6 O-O Bd6 Nf3 Qc7 Bg5 O-O Rc1 Ng4 0 Ng3
 g6 Nh4 e5 Be2 Nf6 dxe5 Bxe5 Qd2
-r
-; Ivanchuk-Ruzele, URS-chT U20 Kramatorsk 1989 (1-0)
-Ne2 cxd4 cxd4 f6 exf6 Nxf6 Nf3 Bd6 O-O O-O Bf4 Bxf4 Nxf4 Ne4 Qc1 Qf6 0
-Ne2 e5 dxe5 Nxe5 Nxe5 Qxe5 f3 Nf6 Qc3 Re8 Qxe5 Rxe5 Nd4 Bd7 Rac1 Kf8
-Rc7 Rb8 Rfc1 Re7 g4 g6 h4 Ke8 h5 gxh5 g5 Ng8 R7c5 h6 gxh6 Nxh6
-r
-Ne2 cxd4 cxd4 f6 exf6 Nxf6 Nf3 Bd6 O-O O-O Bf4 Bxf4 Nxf4 Ne4 Qc1 Qd6 Ne2
-r
-; Aagaard-Brynell, Denmark 2013 (=)
-Ne2 cxd4 cxd4 f6 exf6 Nxf6 Nf3 Bd6 O-O O-O Bf4 Nh5 Bxd6 Qxd6 Qc2
-Nf6 Rac1 Bd7 Qc5 Qxc5 Rxc5
 r
 ; (0-1)
 Ne2 cxd4 100 cxd4 f6 exf6 Nxf6 O-O Bd6 Nf3 O-O Nc3 Bd7 Re1 Ng4 100
@@ -8655,7 +9214,12 @@ Neg5 0 Nd7 0 Nxf7 Kxf7 Ng5+ Ke8 Bc4 Bxg2 Rg1 Bd5 Nxe6
 r
 Neg5 Be7 Bd3 Nd7
 r
-Bd3 Nd7 O-O 
+Bd3 Nd7 
+m
+; Schneider-Hollstein, CFriend Superturnier email 2007 (0-1)
+c3 Ngf6 Nxf6+ Nxf6 O-O Bd6 Re1 Bxf3 Qxf3 c6
+r
+O-O 
 m
 ; Berg-Akesson, Sweden 2002 (1-0)
 Bxe4 Bxe4 c6 c4 75 Ngf6 Bc2 Be7 b3
@@ -8906,25 +9470,28 @@ r
 ; Mainka-Lalic, 1988 (0-1)
 a6 Qd2 b5 dxc5 Bxc5 Bxc5 Nxc5 Qf2 Qb6 Bd3 b4 80 Ne2 a5
 r
-Qb6 20 Na4 Qa5+ 
+Qb6 10 Na4 Qa5+ 
 m
 ; Mironiv-CHerniuk, Salekhard 2007 (=)
 Nc3 0 cxd4 Nxd4 Bb4 Qd2 Nc5 Bd3 O-O O-O Nxd3
 r
 c3 100
 m
-b6 100 Bd2 c4 b4
+; Movsesian-Zatonskih, Caleta 2012 (1-0)
+b6 0 Bd2 c4 b4 Nxb4 cxb4 Bxb4 Qc2 Bxd2+ Nxd2 b5 Nc3 b4 Nd1 Qb6 Nf3 a5 Be2
 r
 ; Anand-Dreev, Candidates (m/7) 1991 (analysis) (1-0)
-cxd4 0 b4 Nxb4 cxb4 Bxb4+ Bd2 Bxd2+ Nxd2 g5 Rb1
+cxd4 b4 Nxb4 cxb4 Bxb4+ Bd2 Bxd2+ Nxd2 g5 Rb1
 r
-c4 b4 Qc7 Be2 Be7 O-O
+cxd4 b4 Nxb4 cxb4 Bxb4+ Bd2 Bxd2+ Nxd2 O-O Bd3 b5
+r
+c4 0 b4 Qc7 Be2 Be7 O-O
 m
 ; Almasi-Volkov, Nakhchivan 2011 (1-0)
 f5 20 Bf2
 r
-; Papp-Horvath, 2011 (1/2-1/2)
-O-O 80 Qd2
+; Caruana-Ivanchuk, Paris 2013 (1-0)
+O-O 80 Qc2
 -
 ; C12
 e4 e6 d4 d5 Nc3 Nf6 Bg5 Bb4 exd5 Qxd5 Bxf6 Bxc3+ bxc3 gxf6
@@ -8942,6 +9509,19 @@ c5 Nf3 Nc6 Be2 Rg8
 r
 ; Magem Badals-Legky, FRA 1998
 Qa5 Ne2 b6 Nc1 Bb7
+-
+; C11
+e4 e6 d4 d5 Nc3 Nf6 e5 Nfd7 f4 c5 Nf3 Nc6 Be3 a6 Qd2 b5 a3 Qb6 Ne2 Qc7
+Ng3 Be7 Bd3 h5 h4 cxd4 Nxd4 Nc5 Nf3 b4 O-O bxa3 bxa3 g6 Qf2 Na5 Rab1
+m
+; =
+Ra7 80 Ng5 Rb7 Rxb7 Ncxb7 Bxa6 Nc4
+r
+Bd7 Ng5 Rc8 Kh1 Qc6 Bd2
+m
+Qa4
+r
+Nxd3 cxd3
 -
 ; C12
 e4 e6 d4 d5 Nc3 Nf6 Bg5 Bb4 e5 h6
@@ -9218,7 +9798,7 @@ Nc6 100
 ; C15
 e4 e6 d4 d5 Nc3 Bb4 a3 0 Bxc3+ bxc3 dxe4
 m
-f3 c5 Be2 Nf6
+f3 c5 80 Be2 Nf6
 r
 ; Moser-Jurek, Donau op 1999 (0-1)
 f3 c5 Qd2 Nf6 Bb2 Nbd7
@@ -9250,8 +9830,16 @@ Ng3 Bd7 c4 Ba4
 ; C16
 e4 e6 d4 d5 Nc3 Bb4 e5 100 Ne7
 m
+; trans. to C18
+a3 100 Bxc3+ bxc3 c5 80
+r
 ; Almasi-Kristjansson, FSGM Feb 2005 (1-0)
-a3 100 Bxc3+ bxc3 b6 Qg4 Ng6 h4 h5 Qd1 Ba6 Bxa6 Nxa6 Bg5
+a3 100 Bxc3+ bxc3 b6 10 Qg4 Ng6 h4 h5 Qd1 Ba6 0 Bxa6 Nxa6 Bg5
+r
+; Dominguez Perez-Rodriguez Vila, Campinas 2013 (1-0)
+a3 100 Bxc3+ bxc3 b6 10 Qg4 Ng6 h4 h5 Qd1 c5 25 Bb5+ Kf8 Bd3
+r
+a3 100 Bxc3+ bxc3 b6 10 Qg4 Ng6 h4 h5 Qd1 Qd7 
 r
 ; Milliet-Medic, Rijeka 2009 (0-1)
 a3 Bxc3+ bxc3 b6 Qg4 Ng6 h4 h5 Qg3 40 Ba6 Bxa6 Nxa6 Ne2 Qd7 a4 c5
@@ -9367,6 +9955,33 @@ r
 ; Wedberg-Berg, Sweden 2002 (analysis, 0-1)
 O-O 0 c4 Be2 O-O-O h4 Nb6
 -
+; C18
+e4 e6 d4 d5 Nc3 Bb4 e5 c5 a3 Bxc3+ bxc3 Qa5 Bd2 
+m
+; anal. by Houdini 3
+c4 0 Qg4 Kf8 Nh3
+r
+Qa4 Qb1 c4 h4 Nc6 h5 h6 g3
+m
+Bd7 75
+r
+Nge7 
+m
+; Siikalouoma-Gleichmann, ICCF WC31/ct02 2011 (1/2-1/2)
+Bh3 Bd7 Ne2 O-O-O Nf4 Kb8
+r
+; anal. by Houdini
+Nf3 20 b6
+r
+Nf3 20 Bd7
+r
+Ne2
+m
+; Kosteniuk-Hoang Thanh Trang, EU-ch (Women) Tbilisi 2011 (1/2-1/2)
+Bd7
+r
+b6
+-
 ; C18 Winawer
 e4 e6 d4 d5 Nc3 Bb4 e5 c5 a3 Bxc3+ bxc3 Ne7 Qg4
 m
@@ -9472,7 +10087,8 @@ r
 Nf5 Rb1 O-O-O Rg1 d4 Qd3 Na5 Rb4 a6 g4 Ne3 Bxe3 Bb5 Qd2 dxe3 Qxe3
 Qxc2 Qc3+ Qxc3+ Nxc3 Bxf1 Kxf1 b5
 r
-Nf5 Rb1 O-O-O Rg1 d4 Qd3 Na5 g4 75 Ba4
+; Hjartarson-Nogueiras Santiago, Belfort 1988 (=)
+Nf5 Rb1 O-O-O Rg1 d4 Qd3 Na5 g4 75 Ba4 c3 Bc2 100 Qxc2 d3 Qa2
 r
 Nf5 h3 0 Qd8
 r
@@ -9588,12 +10204,27 @@ r
 Nbc6 60 Nf3 f5 exf6 Rxf6 Bg5 Rf7 Qh4 100 h6 Bxe7 Qxe7 Qxe7 Rxe7 dxc5 e5 Nd2
 e4 Bb5
 r
-; Ernst-Berg, SWE-ch Gothenburg 2005 (1/2-1/2)
-Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 Bd7 h4 Rf5 h5 
-gxh5 Rxh5 100 Rxh5 Qxh5 Be8 Qh3 Nd8 Bg5
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 15 Bxg6 fxg6 Qg4 Bd7 h4 Rf5 h5 gxh5 Rxh5 Raf8 0
 r
-Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 Bd7 h4 Rf5 h5 
-gxh5 Rxh5 100 Rxh5 Qxh5 Be8 Qh3 Nd8 Kd2 Bg6
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 Bd7 h4 Rf5 h5 gxh5 Rxh5 100
+Rxh5 Qxh5 Be8 Qh3 Nd8 Kd2 Bg6
+r
+; Rasmussen-Franzen, ICCF 2009 (=)
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 Bd7 h4 Rf5 h5 gxh5 Rxh5 Rxh5
+Qxh5 Be8 Qh3 Nd8 Bg5 Bf7 Kd2 Qd7
+r
+; Hiarcs 14 (=)
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 Qf7 Ng5 Qe8 h4 Ne7 a4 Bd7
+O-O Nf5 a5 h6 Nh3
+r
+; Koskela-Hansen, ICCF 2012 (1/2-1/2)
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 Qf7 Ng5 Qe8 h4 Ne7 a4 a5 100
+O-O 100 Bd7 Rfb1 Rb8
+r
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 c4 Bxg6 fxg6 Qg4 a5 60
+r
+; Szabo-Ramirez Alvirez, Cappelle op 2012 (1/2-1/2)
+Nbc6 Qh5 Ng6 Nf3 Qc7 Be3 Nce7 60 h4 f6 exf6 Rxf6
 r
 f5 exf6 Rxf6 Bg5 Rf7 Qh5 g6 Qd1
 m
@@ -9812,8 +10443,13 @@ r
 Bd7 Bb5 Qc7 O-O b6 10 Be3 c4
 r
 ; Jirku-Volek, CZE-ch sf01 email 2005 (analysis, =)
-Qa5 40 Bd2 Bd7 a4 Nbc6 Bb5 Qc7 O-O b6 Re1 h6 Bd3 O-O Qc1 c4 Bf1 f6 g3 Ng6
+Qa5 40 Bd2 Bd7 0 a4 Nbc6 Bb5 Qc7 O-O b6 Re1 h6 Bd3 O-O Qc1 c4 Bf1 f6 g3 Ng6
 exf6 Rxf6
+r
+; Alves-Hanauer, ICCF email 2000 (1-0)
+Qa5 40 Bd2 Bd7 c4 Qxc7 cxd5 Nxd5 c3
+r
+Qa5 40 Bd2 Nbc6 100 Be2 100
 r
 Nbc6 
 m
@@ -9882,7 +10518,7 @@ r
 a5
 -
 ; King's Gambit
-e4 e5 f4 0
+e4 e5 f4 10
 -
 ; Danish Gambit [C21]
 e4 e5 d4 0 exd4 c3
@@ -9905,18 +10541,31 @@ r
 ; Hector-Schlusser, Malmo 1988 (0-1)
 Nc3 Be7 Qe2 Nxd5 Nxd5 c6 Ne7 Qe7 Bxg7 Rg8 Bb2 Rxg2
 -
-; Bishops Opening, Urusov Gambit
+; Bishops Opening, Urusov Gambit (C24)
 e4 e5 Bc4 0 Nf6 d4 0 exd4 Nf3
 m
 ; trans. to C56
 Nc6 100 Ng5 d5 exd5 Qe7+ 100 Kf1 h6 100
 r
-Nxe4 30 Qxd4 Nf6
+; Steinitz-Langleben, 1896 (1/2-1/2)
+Nc6 100 Ng5 Ne5 Bb3 h6 f4 hxg5 fxe5 Nxe4 Qxd4 Nc5 Nc3 d6
+r
+Nxe4 10 Qxd4 Nf6
 m
 ; Junior 5.0-Genius 6.5, Debrecen 2000
 Nc3 Nc6 Qh4 Bb4 100 O-O Bxc3 bxc3 O-O
 r
-Nc3 Be7 0 Bg5 c6 O-O-O d5 Rhe1 Be6 Qh4 Nbd7 Bd3 Nc5 Nd4 Kd7
+; Estrin-Bykhovsky, Moscow 1964 (0-1)
+Nc3 Be7 0 Bg5 c6 O-O-O d5 Rhe1 Be6 Qh4 Nbd7 Bd3 Nc5 Nd4 Ng8
+r
+; Schuermans-Bergez, Charleroi 2003
+Nc3 Be7 0 Bg5 c6 O-O-O d5 Rhe1 Be6 Qh4 Nbd7 Bd3 Qa5
+r
+; Rheinwalt-Abu Rab, Herxheim 1993 (1/2-1/2)
+Nc3 Be7 0 Bg5 c6 O-O-O d5 Rhe1 Be6 Qh4 Nbd7 Bd3 Nc5 Nd4 Ng8 f4 100
+Bxg5 fxg5 Ne7
+r
+Nc3 c6 0 Bg5 Be7
 r
 Bg5 Be7 Nc3 Nc6 Qh4
 m
@@ -9963,7 +10612,7 @@ m
 c6 Nxe5 d5 O-O Bd6 Bd3
 r
 ; Krjnovsek-Pavasovic, SLO 1993 (0-1)
-f6 100 Nh4 g6 f4 Qe7 f5 Qg7 fxg6 hxg6 Qg4 Kd8 Qg3 g5
+f6 100 Nh4 g6 f4 Qe7 100 f5 Qg7 fxg6 hxg6 Qg4 Kd8 Qg3 g5
 -
 ; C27
 e4 e5 Nc3 Nf6 Bc4 Nxe4 Qh5 Nd6 Qxe5+ 20 Qe7 Qxe7+ Bxe7 Bb3
@@ -9982,7 +10631,8 @@ m
 ; Narciso Dublan-Rizouk, Vilafranca de Bonany 2009 (1-0)
 h5 0 h3 h4 g4 Bc5 Nf3 Nge7 Na4 Bd6 d4
 r
-Bc5
+; =
+Bc5 Bg2 h5 h3 h4 g4 Nge7 Nge2 Ng6
 -
 ; Vienna, C25
 ; Barle-Portisch, Portoroz/Ljubljana 1975 (0-1) (ECO)
@@ -10050,29 +10700,31 @@ Be7
 r
 Bc5
 -
-; KGA C34
-e4 e5 f4 exf4
-m
-Qf3 0 Nc6 c3 Nf6 d4 d5
-r
-Nc3 0 Qh4+ Ke2
-m
-Ne7
-r
-d5
--
 ; C33
 e4 e5 f4 exf4 
 m
 ; Pham Minh Hoang-Tu Hoang Thong, Hanoi 2002 (0-1)
 g3 0 d5 d3 fxg3
 r
-Bc4 10
+Qg4 0 d5 100 Qxf4 Bd6
+r
+Bc4 8
 m
 ; Shyam-Karthikeyan, New Delhi 2010
 d5 Bxd5 Qh4+ Kf1 Nf6 Nf3 Qh6 Nc3 Bb4
 r
-Nf6 70 Nc3 c6 d4 Bb4
+Nf6 70 Nc3 c6 
+m
+; Hiarcs 14 (-=)
+Bb3 d5 exd5 cxd5 d4 Bd6 Nge2 O-O Bxf4 Bxf4 Nxf4 Re8+ Nfe2 b5
+r
+; David-Tkachiev, Cannes 2000 (0-1)
+Bb3 d5 exd5 cxd5 d4 Bd6 Nge2 O-O O-O g5 Nxd5 Nxd5 Bxd5 Nc6
+r
+; Mista-Stefansson, Czech Rep. 2008 (1-0)
+Bb3 d5 exd5 cxd5 d4 Bb4 Nf3 Qe7+ Ne5
+r
+d4 Bb4
 m
 ; Westerinen-Hector, Ostersund 1992 (1/2-1/2)
 e5 Ne4 Qh5 g6 Qf3 Qh4+ Kf1 d5 exd6
@@ -10085,7 +10737,11 @@ r
 d5 Bxd5 Qxd5 Nxf4
 -
 ; C33
-e4 e5 f4 exf4 Bc4 10 Qh4+ 10 Kf1
+e4 e5 f4 exf4 Bc4 10 
+m
+Nc6 100
+r
+Qh4+ 10 Kf1
 m
 ; ECO (Kholmov, =)
 c6 d4 g5 Qf3 Nf6 g3 Qh5 Qxh5 Nxh5
@@ -10101,28 +10757,75 @@ Qh6
 r
 d5
 -
-e4 e5 f4 exf4 Nf3
+; KGA C34
+e4 e5 f4 exf4
 m
-Nc6 0 d4 g5 h4
+Qf3 0 Nc6 c3 Nf6 d4 d5
+r
+Nc3 0 Qh4+ Ke2
+m
+Ne7
+r
+d5
+-
+; C34
+e4 e5 f4 exf4 Nf3 Nc6 0 d4
+m
+g5 h4
 r
 ; Fier-Souza, Brazil 2010 (1-0)
-Nc6 0 d4 d5 exd5 Qxd5 Bxf4 Bg4 c3
-r
-Ne7 20 d4 
+d5 exd5 Qxd5 Bxf4 Bg4 c3
+-
+; C34
+e4 e5 f4 exf4 Nf3 Ne7 25 d4
 m
-; Short-Giri, Amsterdam 2010 (1/2-1/2) [C34]
-d5 Nc3 dxe4 Nxe4 Nd5 Bd3 Be7
+Ng6 0 h4 h5 Nc3 Be7 Nd5
 r
-Ng6 0 h4 100 h5 Nc3
+d5 
+m
+; analysis by John Shaw (-=)
+Qe2 dxe4 100 Qxe4 Nbc6 Bc4 Bf5 Qxf4 f6 100
+r
+; anal. by Shaw
+Nc3 dxe4 Nxe4 Nd5 Bd3 Be7 c4 Bb4+ 100 Kf1
+r
+Nc3 dxe4 Nxe4 Nd5 Bd3 Be7 O-O O-O c4 Ne3
+r
+; Short-Giri, Amsterdam 2010 (1/2-1/2)
+Nc3 dxe4 Nxe4 Nd5 Bd3 Be7 O-O O-O Nc3 Ne3
+r
+; Kulaots-Sepp, Keres mem Tallinn 1998 (1/2-1/2)
+Nc3 dxe4 Nxe4 Nd5 Bd3 Nc6 30 O-O Bg4 c3 Be7
+r
+; Jakubiec-Smejkal, CZE-chT 9900 1999 (anal. by Shaw, =)
+Nc3 dxe4 Nxe4 Nd5 Bc4 Be7 O-O O-O Ne5 Be6 Bb3 Nd7 Nd3 N7f6 Nxf6+ Bxf6 c3
+Ne3 Bxe3 
+m
+Bxb3 0
+r
+fxe3
 -
 ; KGA Schallop Defense [C34]
-e4 e5 f4 exf4 Nf3 Nf6 10 e5 Nh5 d4 d5 Be2
+e4 e5 f4 exf4 Nf3 Nf6 10 e5 Nh5 
+m
+; trans. to line below
+Be2 d5 O-O Bg4 d4
+r
+; avoid because of .. d6 (Shaw)
+d4 0
+m
+d6 75
+r
+d5 Be2
 m
 ; Hector-Sanz Alonso, La Coruna 1995 (1-0)
 Rg8 O-O g5 c4 Be6 Nc3 c6
 r
 ; Przedmojski-Grabarczyk, MK Cafe op-A 1997 (1/2-1/2)
 Bg4 O-O Nc6
+-
+; Zvjaginsev-Akopian, Mainz Ordix op 2009 (0-1) [C34]
+e4 e5 f4 exf4 Nf3 d6 d4 g5 g3 g4 Nh4 f3 Nc3 Nc6 Be3 Be7 Qd2 h6 Bc4 Bg5
 -
 ; C34
 e4 e5 f4 exf4 Nf3 d6 Bc4 20 h6
@@ -10144,7 +10847,8 @@ c3 Nc6 O-O g4 Ne1 Qxh4 Bxf4 Nf6 e5 dxe5 dxe5
 r
 Nc3 80 Nc6 Ne2
 -
-e4 e5 f4 exf4 Nf3 g5 Bc4 10
+; KGA
+e4 e5 f4 exf4 Nf3 g5 Bc4 5
 m
 ; prefer Philidor/Hanstein
 ; Kortchoi/Zak (0-1)
@@ -10162,7 +10866,12 @@ m
 Bxf7+ 0 Kxf7 Ne5+ Ke8 Qxg4 Nf6 Qxf4 d6 Nf3 Qe7
 r
 ; KGA Muzio
-O-O gxf3 Qxf3 Qf6 e5 Qxe5
+O-O gxf3 Qxf3 Qf6 
+m
+; (0-1)
+d3 d6 Nc3 c6 100
+r
+e5 Qxe5
 m
 ; =
 d3 Bh6 Nc3 Ne7 Bd2 c6 Rae1 Qc5+ Kh1 d5 Qh5 Qd6 Bxd5 O-O Rxe7 cxd5 Nxd5
@@ -10187,7 +10896,12 @@ r
 ; (0-1)
 Qf5 g4 0 Qg6 Bxf4 Nf6 Be5 Be7 Bxf6 Bxf6 Nc3 Kg7
 r
-Qxd4+ 0 Be3 Qf6
+Qxd4+ Be3 
+m
+; (0-1)
+Qg7 Bxf4 Nf6 Nc3
+r
+Qf6 0
 m
 ; Yoos-Kirton, Saskatoon 1994 (1-0)
 Bxf4 Ne7 Nc3 Nf5 Be5 Qxe5 Qh5+ Kg8 Rxf5 Qe6 Rxf8+
@@ -10201,6 +10915,12 @@ m
 Nc6 50 d4 Bg7 c3 h6 O-O d6
 r
 Bg7 50 d4 d6 O-O Nc6 c3 h6 Qa4 Bd7 Qb3 Na5 100
+r
+; Savchenko-Szabo, Moscow 2012 (0-1)
+Bg7 50 d4 d6 g3 0 g4 Nh4 f3 Nc3 Ne7
+r
+; Baron Rodriguez-Adla, Pamplona 2002
+Bg7 50 d4 d6 g3 0 g4 Nh4 f3 O-O Nc6
 r
 g4 Ne5 0 Qh4+ Kf1 
 m
@@ -10230,18 +10950,27 @@ e4 e5 f4 exf4 Nf3 Be7 10
 m
 Be2 Nf6 Nc3 d5 exd5 Nxd5 Nxd5 Qxd5 d4
 r
-Bc4 Bh4+ 10 Kf1 d5 Bxd5 Nf6
+Bc4 Bh4+ 0 Kf1 100 d5 Bxd5 Nf6
 m
 ; scrig-Arasanx, freechess.org 2012 (1-0)
-Nxh4 Nxd5 exd5 Qxh4 Qe2+ 100
+Nxh4 100 Nxd5 exd5 Qxh4 Qe2+ 100
 r
+Bb3 Bg4
+m
+Bxf7+ 0 Kxf7 Ne5+ Ke7 Nxg4 Qd4
+r
+d3 
+m
 ; Short-Kasparov, London rapid theme (2) 1993 (1/2-1/2)
-Bb3 Bg4 d3 O-O Qd2 Nh5 Nc3 Nc6 Nxh4 Qxh4 Qf2 Qd8 Bxf4
+O-O Qd2 Nh5 Nc3 Nc6 Nxh4 Qxh4 Qf2 Qd8 Bxf4
+r
+; Shulman-Hector, Gothenburg 1999
+g5 Bd2 Nc6 Bc3 Qe7 Nbd2 O-O Rg1
 -
 ; C35
 e4 e5 f4 exf4 Nf3 Be7 Bc4 Nf6
 m
-e5 Ng4
+e5 Ng4 d4 d5 exd6 Bxd6 Qe2+ Kf8 Nc3 Nc6
 r
 ; Budrich-Neikirkh, BUL-DDF m Sofia 1953
 Nc3 0 Nxe4 Nxe4 d5 Bd3 dxe4 Bxe4 f5
@@ -10265,13 +10994,38 @@ h6 O-O d6
 r
 d6 O-O h6
 -
+; trans. to Rosentreter
+e4 e5 f4 exf4 Nf3 g5 Nc3 d6 d4 
+m
+Nc6 0 d5 100
+r
+g4 Bxf4 gxf3 Qxf3
+-
 ; C36
 e4 e5 f4 exf4 Nf3 d5 exd5 Nf6 
 m
 ; Nakamura-Adams, London Classic 2011
 Bc4 Nxd5 O-O Be6 90 Bb3 c5
 r
-Bb5+ c6 dxc6 Nxc6 d4
+; Heinke-Mayer, EU-ch M/025 email 2004 (anal by Shaw) (1-0)
+Bc4 Nxd5 O-O Be7 d4 g5 Re1 Nb6 Bb3 O-O a4 a5 Qd3 Nc6 c3 Bd6 h4 100
+r
+; Beaumont-Jansen, email 2005 (0-1)
+Bc4 Nxd5 O-O Be7 d4 Be6 Bb3 0 O-O c4 Ne3 Bxe3 fxe3 Nc3 Bg4 Nd5 Nc6 Qd3
+Bf6
+r
+Bc4 Nxd5 O-O Be7 d4 Be6 Bxd5 Bxd5 Bxf4 O-O Nc3
+r
+; Genocchio-Godena, ITA-ch 2007 (=)
+Bc4 Nxd5 O-O Be7 d4 c6 0 Nc3 O-O Nxd5 cxd5
+r
+Bb5+ c6 dxc6 
+m
+bxc6 0 Bc4 Bd6 Qe2+ Qe7 Qxe7+ Kxe7 O-O Be6
+r
+bxc6 0 Bc4 Bd6 Qe2+ Kf8 d4
+r
+Nxc6 d4
 m
 ; Zvaginsev-Kunte, Khanty-Mansiysk 2007 (1/2-1/2)
 Qa5+ Nc3 Bb4 O-O O-O Bd3 Bd6
@@ -10289,13 +11043,24 @@ r
 ; Anderssen-Kieseritzky, London 1851
 h5 0 Bc4 Rh7 d4 d6 Nxf7 Rxf7 Bxf7+ Kxf7 Bxf4
 r
-; (1-0)
-Nc6 0 d4 Nxe5 dxe5
+; Caro-Schiffers, Berlin 1897
+d5 0 d4 Nf6 Bxf4
 r
 Qe7 10 d4 d6 Nxg4 Qxe4+ Qe2 Qe7
+r
+Nc6 10 d4 
+m
+Nxe5 dxe5 d6 Bxf4 Bg7 Nc3
+r
+; anal. by John Shaw (=)
+Qf6 Nc3 Nxe5 dxe5 Qxe5 Qxg4 Bb4
 -
 ; KGA Kieseritsky, .. d6
-e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 d6 Nxg4 Nf6 Nxf6+ Qxf6 Nc3
+e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 d6 Nxg4 Nf6 
+m
+Nf2 0 Rg8 80 d4 Bh6 Nc3 Nc6
+r
+Nxf6+ Qxf6 Nc3
 m
 ; Nunn-Timman, Amsterdam Donner mem 1995 (0-1)
 c6 Qf3 Rg8 Qf2 Bg4 d3 Bh6 Ne2 Nd7 Nxf4 O-O-O g3 Qe5 Bg2 f5
@@ -10308,8 +11073,15 @@ Be6 Qe2 Nd7 Qf2 Bh6 d4 Rg8 Bd2
 r
 Nc6
 m
-; Jensen (YB 67)
-Bb5 Kd8 100 Bxc6 bxc6 Qf3 Rg8 d3 Bh6 Qf2 Rb8
+; Fedorov-Carlsen, Dubai op 2004 (1/2-1/2)
+Bb5 Kd8 100 Bxc6 bxc6 d3 Rg8 Qf3 Bh6 Qf2 Rb8 Ne2 Rxb2 Bxb2 Qxb2 O-O
+Qxc2 Nxf4 Qxf2+
+r
+; trans. to line above
+Bb5 Kd8 Bxc6 bxc6 Qf3 Rg8 d3
+r
+; Hector-P.H. Nielsen, Copenhagen 1995 (analysis)
+d4 Qxd4 Qf3 Bh6 Nd5 Nb4 Nxb4 Qxb4+ c3 Qa5 100
 r
 d4 Qxd4 Bxf4 Bg7 100 Qxd4 Nxd4 Bd3 Ne6 Be3 c6
 r
@@ -10320,29 +11092,101 @@ Qg6 d3 Qg3+ Kd2 Ne7
 r
 Qg7 0 d3 Qg3+ Kd2
 -
-; Kieseritsky .. Nf6
-e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 Nf6 d4 d6 Nd3 Nxe4 Bxf4 Bg7
+; Kieseritsky 4. .. Nf6 5. d4 (avoid)
+e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 Nf6 d4 0 d6 Nd3 Nxe4 Bxf4 
+m
+; Fedorov-Ivanchuk, Wijk aan Zee 2001 (0-1) (by transposition)
+Nc6 c3 d5 Nd2 Bd6 Ne5
+r
+Bg7
 m
 Qe2 0 O-O
 r
-c3 O-O Nd2 Re8 Nxe4 Rxe4+
-m
-Kf2 0 c5
+; Spassky-Fischer, 1960 (0-1)
+Nc3 0 Nxc3 bxc3
 r
-; Deep Thought I-Zarkov, Cape May,NJ ACM 1994 (1-0)
-Be2 Qe8 Kd2
+c3 
+m
+Qe7 75
+r
+O-O Nd2 Re8 Nxe4 Rxe4+
+m
+Kf2 c5
+r
+Be2
+m
+Qe8 0 Qd2
+r
+; Casella-Sherzer, Philadelphia 1996 (0-1)
+Nc6
+-
+; C39, Kieseritzsky, 4. .. Nf6 5. Bc4
+e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 Nf6 Bc4 d5 exd5 Bd6 d4 
+m
+Nh5 O-O 0 O-O Rxf4 100
+r
+Nh5 O-O O-O Nxg4 0 Qxh4
+r
+Nh5 Bb5+ 0 c6 100
+r
+; Flude line (Buecker, Shaw)
+Nh5 Nc3 O-O Ne4 100 f5 Ng5 100
+r
+O-O 
+m
+O-O 0 Nh5
+r
+Bxf4 Nh5 g3 f6 100 Nxg4 Qe8+
+m
+;  Niewiadomski-Bauer, ICCF 2007 (0-1)
+Kd2 0 Nxf4 gxf4 Qe4 Kc3 b5 Bxb5 Kh8
+r
+Kf2 Kh8 Nc3
+-
+; Hromadka-Opcensky, Baden 1914 (analysis) (1-0) [C30]
+e4 e5 f4 Bc5 Nf3 d6 Nc3 Nf6 Bc4 Nc6 d3 O-O f5 Nd4 Bg5 c6 a3 b5 Ba2 a5 
+Ne2 Nxf3+ gxf3 Qb6 Bxf6 gxf6 d4 100
+-
+; C30 (1-0)
+e4 e5 f4 Bc5 Nf3 d6 Nc3 Nf6 Bc4 Nc6 d3 Bg4 Na4 O-O Nxc5 dxc5 O-O Qd6
+Qd2 Bxf3 gxf3 
+m
+; Aagaard-Antonsen, DEN-ch Hillerod 2010 (analysis) (1-0)
+Rad8 Kh1 Nh5 fxe5 Nxe5 Qg5 Nxc4 Qxh5 Ne5 f4 Nc6 f5 Rfe8 Bf4 100
+r
+; Tricomi,M (2374)-Cerrato,R (2417) ICCF 2011 (1-0)
+exf4 Qxf4 Ne5 Bb3 b5 Be3 Qe7 Qg5 h6 Qg2 c4 dxc4 bxc4 Ba4 Kh8 Kh1 Rad8 Rg1
+-
+; Polak-Kozma, CSR-ch Army Prague 1955 (=) [C30]
+e4 e5 f4 Bc5 Nf3 d6 c3 f5 d4 exd4 cxd4 fxe4 dxc5 exf3 Qxf3 Nf6 cxd6 Qxd6
 -
 ; Falkbeer C31
 e4 e5 f4 d5 exd5
 m
 ; Modern var.
-c6 100 Nc3 exf4 Nf3 Bd6 d4 Ne7
+c6 Nc3 exf4 Nf3 Bd6 d4 Ne7
 r
-; Spielmann-Nimzowitsch, Munich 11006 (0-1)
+; Spielmann-Nimzowitsch, Munich 1906 (0-1)
 c6 Qf3 0 exf4 dxc6 Nxc6 Bb5 Nf6
 r
 ; acertaste-Arasan, ICC 2013 (analysis, =)
 c6 Qe2 cxd5 fxe5 Nc6 Nf3 Bg4 Qf2 Bxf3 Qxf3 Qe7
+r
+; trans. to modern variation
+; Yakunin-Kopylov, Novosibirsk 2007 (0-1)
+exf4 Nf3 Nf6 Bc4 20 c6 75 dxc6 Nxc6 d4 Bg4
+r
+; Grabarczyk-Walter, Griesheim 2007 (1/2-1/2)
+exf4 Nf3 Nf6 Bc4 20 c6 75 Nc3 cxd5 Bb3 Be6 d4 Bd6 O-O
+r
+exf4 Nf3 Nf6 Bc4 Bd6 Qe2+ Qe7 Qxe7+ Kxe7 100
+r
+exf4 Nf3 Nf6 Bc4 Nxd5 O-O Be6 100
+r
+; Gaal-Vass, Hungary 2000 (1-0)
+exf4 Nf3 Nf6 Bb5+ 60 c6 dxc6 Nxc6 d4 Bd6 O-O O-O c3 Bg4 Nbd2
+r
+exf4 d3 100
 r
 e4
 m
@@ -10592,15 +11436,18 @@ m
 d4 100 Be7 0 Bd3 d5 100 O-O Nc6
 r
 ; Bologan-Perez Garcia, Sanxenxo 2003 (1-0)
-Nc3 30 Nxc3 dxc3 Be7 Bf4 O-O Qd2 Re8 0 O-O-O Nd7 Bc4 Nb6 Bd3 Be6 h4
+Nc3 20 Nxc3 100 dxc3 Be7 Bf4 O-O Qd2 Re8 0 O-O-O Nd7 Bc4 Nb6 Bd3 Be6 h4
 r
 ; =
-Nc3 30 Nxc3 dxc3 Be7 Bf4 O-O Qd2 Nc6 10 O-O-O Be6 Bd3 a5 Kb1
+Nc3 Nxc3 dxc3 Be7 Bf4 O-O Qd2 Nc6 10 O-O-O Be6 Bd3 a5 Kb1
 r
 ; Golubev-Diulger, Bucharest 2002 (1-0)
-Nc3 30 Nxc3 dxc3 Be7 Bf4 O-O Qd2 Nc6 10 O-O-O Be6 Bd3 Bf6 Rhe1
+Nc3 Nxc3 dxc3 Be7 Bf4 O-O Qd2 Nc6 10 O-O-O Be6 Bd3 Bf6 Rhe1
 r
-Nc3 30 Nxc3 dxc3 Be7 Bf4 Nc6 70 Qd2 Be6 100
+Nc3 Nxc3 dxc3 Be7 Bf4 Nc6 70 Qd2 Be6 100
+r
+; Karjakin-Wang Hao, Wijk aan Zee 2013 (1-0)
+Nc3 Nf6 10 d4 Be7 Bd3 O-O O-O 75 Re8 Ne2 Nbd7 Ng3 Nf8 c4
 r
 Qe2 0 Qe7
 m
@@ -10802,9 +11649,18 @@ m
 ; Anand-Barua, New Delhi 1990 (0-1)
 Bg4 h3 100 Bxf3 Qxf3 f5
 r
-Re8 Nc3 100 Nxc3 bxc3 Rxe1+ Qxe1 h6
+Re8 30 Nc3 100 Nxc3 bxc3 
+m
+Bg4 15 Bg5 Rxe1+ Qxe1 Qc8 c5 Bf8 Qb1 g6 0
 r
-Bf5
+; Socko,B (2554)-Rozentalis,E (2597) Bydgoszcz 2001 (1/2-1/2)
+Bg4 15 Bg5 Rxe1+ Qxe1 Qc8 c5 Bf8 Qb1 h6 Ne5 Be6 Bf4 Nd7 Qb2 b5 cxb6
+Nxb6 a4 Nc4 Qe2 Nxe5 Qxe5 c5 Rb1
+r
+Rxe1+ 75 Qxe1 h6
+-
+; C42
+e4 e5 Nf3 Nf6 Nxe5 d6 Nf3 Nxe4 d4 d5 Bd3 Bd6 O-O O-O c4 c6 Re1 20 Bf5 90
 m
 ; Luminarydebris-Icy45, playchess.com 2012 (1/2-1/2)
 Qb3 Na6 cxd5 Nac5 dxc5 Nxc5 Bxf5 Nxb3 axb3
@@ -11057,9 +11913,10 @@ Bb5 0 dxe4 Nxe5 Qg5
 r
 Qa4
 m
-Bd7
+; =
+Bd7 exd5 Nd4 Qd1 Nxf3+ Qxf3 Nf6 Bc4 b5 100
 r
-f6
+f6 Bb5 Nge7
 r
 ; Bauer-Bacrot, Pau 2008 (1/2-1/2)
 Qd6 80 Bb5 Bd7 exd5 Qxd5 d3 Nf6 O-O Be7
@@ -11101,7 +11958,7 @@ Be7 0 Nxc6 bxc6 Bc4 Nf6 e5 Nd5 O-O Nb6 Bb3
 ; Scotch, Schmid variation [C45]
 e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Nf6 Nxc6 bxc6 Bd3 d5
 m
-; Alekhine-Rosanov, 11007
+; Alekhine-Rosanov, 1907
 exd5 cxd5 O-O Be7 100 Nc3 O-O Bg5 c6
 r
 Nd2
@@ -11119,9 +11976,26 @@ m
 ; Danin-Lastin, Taganrog 2011 (1-0)
 Nb6 Nd2 10 Bb7 b3 a5 Bb2 a4 Rb1 100 axb3 axb3 c5 f3 Qe6 g3
 r
-Nb6 Nc3 80
+; Karjakin-Kramnik, Dortmund 2012 (1/2-1/2)
+Nb6 Nc3 80 Ba6 b3 O-O-O Bb2 Re8 f4 f6 O-O-O fxe5 fxe5 Qxe5 Qxe5 Rxe5 
+Bd3 Re8 Rhf1 d5 cxd5 Bxd3 Rxd3 Nxd5 Nxd5 cxd5 Rxd5 Bd6 Bxg7 Rhg8 Rf7
+Re2 Rd2 Rxg7 Rxg7 Bf4 Rgd7 Rxg2 Kc2 Bxd2 Rxd2 Rg4 
 r
-Ba6 b3 O-O-O g3
+Ba6 80 
+m
+; Ponomariov-Leko, Dortmund 2010 (=)
+Nd2 75 g6 Nf3 Qb4+ Kd1 Rb8 70 Qc2
+r
+b3 
+m
+; Jones-Lund, Klaksvik 2010 (1-0)
+Qh4 a3 Bc5 0 g3 100 Bxf2+ Qxf2 Qe4+ Kd1 Qxh1 Nd2 f6 e6 dxe6 Kc2
+r
+Qh4 a3 Bc5 Bb2 0 Ne3 100
+r
+Qh4 a3 Nf4 75
+r
+O-O-O g3
 m
 ; Ragger-Ponkratov, Budva 2003 (1/2-1/2)
 Re8 Bb2 f6 Qd2 100 Nb6 a4 Qb4 a5 Nd5 Be2 Qxd2+ Kxd2
@@ -11271,7 +12145,7 @@ r
 ; Spielmann-Bogoljubow, Stockholm 1919 (1-0)
 Qe7 Qd3 80 Nxe5 dxe5 Qxe5 Bd2
 r
-; Nimzowitsch-Leonhardt, Ostend 11007 (=)
+; Nimzowitsch-Leonhardt, Ostend 1907 (=)
 Bxc3 bxc3 Qe7 Nxc6 Qxe4+ Be2 Qxc6 O-O Qxc3 Rb1 O-O d5 Qe5 c4 Re8
 r
 ; Stoynov-Janachkov, Albena 2011 (=)
@@ -11283,7 +12157,7 @@ m
 ; Almere-Arasan, ICC 2010 (1-0)
 Qd4 0 Qe7 f3 d5 0 Bg5 c5 Bb5+ Kf8 Qd3
 r
-; Lowey-Reti, Vienna 11009 (1/2-1/2)
+; Lowey-Reti, Vienna 1909 (1/2-1/2)
 Qd4 0 Qe7 f3 Bc5 100 Qd3 O-O Be3
 r
 Bd3 d5 exd5 cxd5 
@@ -11341,7 +12215,7 @@ m
 Bb4 10 Nxe5 Nxe4 Qg4 Nxc3 Qxg7 Rf8 a3 Ba5 Nxc6 dxc6 Qe5+ Qe7 Qxe7+ Kxe7 Bd2
 Bf5 bxc3 Bxc2
 r
-; Nimzowitsch-Leonhardt, Ostend 11007 (1-0) [C47]
+; Nimzowitsch-Leonhardt, Ostend 1907 (1-0) [C47]
 Bb4 10 Nxe5 Bxc3+ bxc3 Qe7 Nxc6 Qxe4+ Be2 Qxc6 O-O Qxc3 Rb1 O-O d5
 r
 Bb4 d5 0 Ne7 Nxe5 d6
@@ -11535,6 +12409,16 @@ r
 ; Morozevich-Adams, Corus Wijk aan Zee 2001 (0-1)
 Ba5 d4 exd4 O-O Nge7 Ng5 d5 exd5 Ne5 Bb3 O-O cxd4 Ng4 Qf3 Nf6 Ba3 h6
 r
+; Golubev-Panchenko, UKR Young Masters-ch Kharkov 1984 (analysis) (0-1)
+Ba5 d4 exd4 O-O Nf6 e5 d5 exf6 dxc4 fxg7 Rg8 Bg5 f6 100 Nxd4 Nxd4
+r
+; Pavlov-Levitsky-Steinitz, Moscow 1896 (=)
+Ba5 O-O d6 d4 exd4 cxd4 Nf6 0 Qa4 Bd7 d5 Ne5 Qxa5 Nxc4 Qb4 Nb6
+r
+Ba5 O-O d6 d4 exd4 cxd4 Nf6 0 d5
+r
+Ba5 O-O d6 d4 exd4 cxd4 Bb6
+r
 ; Anderssen-Paulsen, London m1 (3) 1862 (0-1)
 Bc5 O-O d6 d4 exd4 cxd4 Bb6 d5 Na5 Bb2 Ne7 Bd3 O-O 80 Nc3 Ng6 80
 r
@@ -11576,7 +12460,7 @@ d6 70 d4 Bb6 dxe5 dxe5 Qb3
 r
 Nf6 d4 O-O
 m
-; Alapin-Chigorin, 11005 (1/2-1/2)
+; Alapin-Chigorin, 1905 (1/2-1/2)
 Nxe5 Nxe4
 r
 ; MacConnell-Morphy, 1852 (0-1)
@@ -11644,7 +12528,11 @@ Nxe4 Bd5 Nf6 Bxc6 dxc6 Nxe5 O-O d4
 ; Giuoco Piano, Moeller Attack, C54
 e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6
 m
-b4 10 Bb6 d3 d6
+; Jobava-Eljanov, Kharkov 2010 (=)
+b4 10 Bb6 d3 d6 a4 a6 Nbd2 O-O O-O h6 Bb3 Ne7 80 Nc4 Ba7 Be3 Bxe3 Nxe3
+r
+; Lutz-Lautier, Cap D'Agde 1994
+b4 10 Bb6 d3 d6 a4 a6 Nbd2 O-O O-O h6 Bb3 Be6 20 Bxe6 fxe6 Nc4 Ba7
 r
 ; Bologan-Kraidman, Gausdal 1991 (1-0)
 b4 10 Be7 0 d3 O-O Qb3 d6 a4
@@ -11909,6 +12797,9 @@ r
 ; Crafty-Arasan, testgame 2010 (1-0)
 Ng4 O-O d6 exd6 Qxd6 0 Re1+
 r
+; Auzins-Schroeder, ICCF 2012 (=)
+Ng4 O-O Be7 75 Re1 d6 exd6 cxd6 Nxd4
+r
 ; Davies
 Ne4 Qe2 Nc5 O-O Ne6 Rd1 d5 Bb5
 r
@@ -11952,6 +12843,9 @@ m
 cxd4 Qxg5 Bxb5+ Kd8 Qf3 Bb7 O-O Rb8 100 dxe5 Ne3 Qh3 Qxg2+ Qxg2 Nxg2 d4 Be7
 f4 Nh4
 r
+; Pirrot,D (2414)-Daeubler,H (2130) Bad Woerishofen (1-0)
+cxd4 Qxg5 Bxb5+ Kd8 O-O Bb7 Qf3 Rb8 dxe5 Ne3 Qh3 Qxg2+ Qxg2 Nxg2 d4 Be7 Be2
+r
 h4 h6 Ne4 Ne6 Bxb5+ Bd7 Qa4
 r
 Ne4
@@ -11984,6 +12878,17 @@ e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 0
 m
 ; Valgardsson-Jahannesson, Reykjavik op 2000 (1/2-1/2)
 Nxf7 20 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 c3 Bg4 Qa4+ Nd7 Kxf2 Qh4+ g3
+r
+; (0-1)
+Nxf7 20 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 h3 Bh4 d6 0 Qxd6 Nf7 Qc5 Na3 Ne4
+Nd6+ cxd6 Qh5+ g6 Qxh4 Nf5 Bb5+ Bd7 Bxd7+ Kxd7 Qxh7+ Kd8 100
+r
+; Estrin-Jezek, corr 1964
+Nxf7 20 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 h3 Bh4 c3 Nf5
+r
+; John Jerzes (=)
+Nxf7 20 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 d6 100 Qxd6 Nf7 Qe7 c3 Bg4 Qa4+ Nd7
+Kxf2 Qh4+
 r
 ; Schneider-Horak, IECG TE.2000.F.00401 email 2003 (1-0)
 Nxf7 Bxf2+ Kxf2 Nxe4+ Kg1 Qh4 g3 Nxg3 Nxh8 d5 Qe1 Qd4+ Qe3 Nxh1 Bb5
@@ -12145,8 +13050,6 @@ Bd3 g4 Qe2 Kf8 Nc3 c5 Bb5 e4
 e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 50 d5 exd5
 m
 b5 0 Bf1 Nd4 c3
-r
-Nd4 10 c3 b5 Bf1 Nxd5 Ne4 Ne6 Bxb5+ Bd7 Bxd7+ Qxd7
 r
 Na5 Bb5+ c6 dxc6 bxc6
 m
@@ -12453,6 +13356,10 @@ Bd7 h3 h6 b3 Kc8 Bb2 Ne7 Rad1 b6 Nd4 c5 Nde2 a5
 r
 Bd7 h3 h6 b3 Kc8 Bb2 Ne7 Rad1 b6 Nd4 c5 Nde2 Bf5
 r
+; Shirov-Kotronias, FIDE World Cup 2005 (1-0)
+Bd7 h3 Ne7 0 Ne4 Ng6 Nfg5 Ke8 f4 h6 Nf3 h5 Re1 Bf5 Nd4
+Bxe4 Rxe4 Bc5 Be3 Ne7 Nf3 Bxe3+ Rxe3
+r
 Bd7 b3 50 Be7 80 Bb2
 r
 ; Ivanchuk-Hammer, Peristeri 2010 (analysis, =)
@@ -12747,22 +13654,6 @@ r
 ; Sokolov-Yusupov, Interpolis 1987 (1/2-1/2)
 c3 10 Bc5 Qd3 O-O Nbd2 f5 exf6 Nxf6 a4 Bf7 Ng5 Ne5 Qg3 Qd6 Nxf7 Nxf7 Nf3
 -
-; RL Open
-e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Nxe4 d4 b5 Bb3 d5 dxe5 Be6 c3 0
-Bc5
-m
-; Dilworth Variation
-Nbd2 0 O-O Bc2 Nxf2 Rxf2 f6 exf6 Bxf2+ Kxf2 Qxf6 Nf1 Ne5
-r
-Nbd2 O-O Bc2 Bf5
-r
-Qd3 O-O Be3
-m
-Bxe3 Qxe3
-r
-; NCO
-f6 exf6 Qxf6 Nbd2 Bxe3 Qxe3 Nxd2 Qxd2
--
 ; C72
 e4 e5 Nf3 Nc6 Bb5 a6 Ba4 d6 5
 m
@@ -12992,8 +13883,12 @@ r
 Be7 Bc2 Bg4 Re1 O-O Nb3 Ne6 Qd3 g6 Bh6 Re8 Qe3 Rc8 h3 Bxf3
 Qxf3 Bf8 Bxf8 Rxf8
 r
+; Halwick-Schneider, IECG email 2007 (1/2-1/2)
+Bg4 10 Bc2 Be7 Re1 Qd7 Nb3 Ne6 Qd3 Bh5 Nfd4 Bg6 Nf5 O-O Qh3 Rad8 100
+r
 ; Lutz-Shredder, Paderborn 1999 (analysis)
-Be7 Bc2 Bg4 Re1 Qd7 Nf1 O-O Ne3 Bxf3 Qxf3 Nxe5 Qxd5 Qxd5 Nxd5 Bd6 Bf4 Rfe8 Red1
+Be7 Bc2 Bg4 Re1 Qd7 Nf1 80 O-O Ne3 Bxf3 Qxf3 Nxe5 Qxd5 Qxd5 Nxd5 Bd6 Bf4
+Rfe8 Red1
 r
 d4 Bxe6 Nxe6 cxd4 Ncxd4 a4 
 m
@@ -13127,9 +14022,20 @@ r
 e5 40 Ne4
 m
 ; Lasker-Chigorin, St. Petersburg 1895 (1/2-1/2)
-Re1 0 Nc5 Bxc6 dxc6 Nxd4 O-O Nc3 Re8 Bf4 0
+Re1 Nc5 Bxc6 dxc6 Nxd4 O-O Nc3 Re8 Bf4 0
 r
-Nxd4 Nxd4 Qxd4 Nc5 Nc3
+Re1 Nc5 Bxc6 dxc6 Nxd4 O-O Nc3 Re8 Be3
+r
+; Paulik-Dedina, CZE/SC11 corr 2011 (1/2-1/2)
+Re1 Nc5 Bxc6 dxc6 Nxd4 O-O Nc3 f5 Nce2 Ne6 Qd3
+r
+Nxd4 80 Nxd4 Qxd4 Nc5 Nc3 O-O Bb3 d6 
+m
+; Blagidze-Keres, Tbilisi 1946 (0-1)
+Bf4 dxe5 Qxe5 Bd6 Qd4 Nxb3 100
+r
+; Radovici-Lengyel, 1965 (1/2-1/2)
+exd6 Qxd6
 -
 ; anti-Marshall, C88
 e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3
@@ -13150,6 +14056,15 @@ r
 ; Svidler-Leko, FIDE World Ch (3) 2006 (analysis, =)
 O-O h3 Bb7 d3 Re8 a4 h6 Nc3 b4 Nd5 Na5 Ba2 Bc5 Bd2 Bxd5 100 Bxd5 Nxd5
 exd5 Qf6 c3 Qb6 100
+r
+O-O h3 Bb7 d3 d5 exd5 Nxd5 Nxe5 Nd4 Nd2 c5 a4 Re8 0
+r
+O-O h3 Bb7 d3 d5 exd5 Nxd5 Nxe5 Nd4 Nd2 c5 a4 Bd6
+r
+; Leupold-Ivanovic, EU/C68/sf03 ICCF 2009 (1/2-1/2)
+O-O h3 Bb7 d3 d5 exd5 Nxd5 Nxe5 Nd4 Nd2 c5 a4 Nf4 25 Bxf7+ Rxf7 Nxf7 Qd5
+Nh6+ gxh6 Ne4 Nxg2 Kxg2 Kh8 Bf4 Rg8+ Bg3 Bh4 Re3 Nf5 Qe1 Qd4 Kh2 Nxe3
+Qxe3 Bxg3+ Nxg3 Qxb2 Rd1 bxa4 d4 Qxc2 Rd2 Qg6 dxc5 Qg7
 r
 d6 70
 r
@@ -13324,7 +14239,12 @@ m
 ; Kec-Arasan, freechess.org 2011 (1-0)
 Bd1 20 Qg6 Re1 Bf5 Nd2
 r
-Nd2 Bf5 f3 Rae8 80
+Nd2 Bf5 f3 
+m
+; Deep Sjeng-Arasan, FICS 2013 (Stockfish 4 analysis) (+=)
+Nf6 a4 Nxe4 Nxe4 Qg6 Nxd6 Qxd6 Bxg5 Qg6 Bf4 Rfe8 Qf2 Bd3 Bd1 Bc4 Kg2
+r
+Rae8
 m
 Qf2
 r
@@ -13538,10 +14458,19 @@ Bg6
 ; D02
 d4 d5 Bf4 Nf6 Nf3 c5 e3 e6 c3 Nc6
 m
-Nbd2 100
-r
 ; Mamedjarova-Pitam, Elista 1998 (analysis, =)
 Bd3 0 Qb6 Qb3 c4 100 Qxb6 axb6 Be2
+r
+Nbd2 100 Bd6 Bg3 O-O Bd3 b6 Ne5 Bb7 f4 Ne7 Qf3 Nf5 Bf2 Be7
+m
+g4 75
+r
+O-O 0
+m
+Qc7
+r
+; Burghoff-Galanov, ICCF 2011 (1/2-1/2)
+Nd6 Qh3 c4 Bc2 Nfe4 Rfc1 Rc8 Be1 g6 Nxe4 dxe4 b3
 -
 ; D03
 d4 d5 Nf3 Nf6 Bg5 10 Ne4 
@@ -13585,7 +14514,7 @@ d4 d5 c4 e5 dxe5 d4 Nf3 Nc6
 m
 Nbd2 70 Nge7 Nb3 Nf5 e4 80 dxe3 Qxd8+
 r
-; Marshall-Showalter, 11009 (1-0)
+; Marshall-Showalter, 1909 (1-0)
 Nbd2 Bg4 Qb3 Bb4 a3 Bxd2+ Bxd2
 r
 ; Lasker-Alekhine, St. Petersburg 1914 (1-0)
@@ -13652,7 +14581,12 @@ Qc7 0
 -
 ; C91
 e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O d4 Bg4 Be3 exd4
-cxd4 d5 e5 Ne4 Nc3 Nxc3 bxc3 Na5 Bc2
+cxd4 
+m
+; Svilponis-Tomson, EST-ch41 ICCF 2009 (1/2-1/2)
+Na5 Nbd2 Nxb3 axb3 c5 h3 Bh5 g4 Bg6 Nh4 Re8
+r
+d5 e5 Ne4 Nc3 Nxc3 bxc3 Na5 Bc2
 m
 Nc4 Qd3 g6 Qe2
 r
@@ -13680,9 +14614,16 @@ r
 ; stockfishbot-Arasan, FICS 2013 (1-0)
 a3 h6 Bc2 Nb8 b4 Nbd7 Bb2 g6 a4 Nb6 dxe5 dxe5 axb5 axb5 Qe2
 r
+; Nakamura-Svidler, Amsterdam 2010 (1/2-1/2)
+Ng5 Re7 d5 Na5 Bc2 c6 b4 Nc4 dxc6 Bxc6 Nxc4 bxc4 Nf3 h6 Qe2 Rc8 a4
+r
+; Rookie-Arasan, Variant-ICS 2013 (analysis, =)
+Ng5 Re7 d5 Na5 Bc2 c6 b4 Nc4 dxc6 Bxc6 Nxc4 bxc4 Nf3 h6 Qe2 Rc8 Bb2
+Bb7
+r
 a4 h6 
 m
-d5 Ne7 0 Nh2 Nd7 Ng4 Ng6 Nf1 Nc5 100        
+d5 100 Ne7 0 Nh2 Nd7 Ng4 Ng6 Nf1 Nc5 100        
 r
 ; ChessPapaRazzi-Albitexm, PAL/CSS Freestyle playchess.com 2007 (1/2-1/2)
 d5 Nb8 100 c4 bxc4 100 Bxc4 c6
@@ -13694,7 +14635,9 @@ c4 100 axb5 100 axb5 Nd4 Qb6 Nf5 Ne5 Rg3 g6 Nf3 Ned3 Be3
 r
 c4 100 axb5 100 axb5 Nd4 Rxa3 bxa3 Nd3 Bxd3 cxd3 Re3
 r
-c4 100 axb5 100 axb5 Nd4 Ne5 0 Rxa8 Qxa8 Nxb5 Rc8 
+; Anand-Kamsky, Las Palmas 1995 (1/2-1/2)
+c4 100 axb5 100 axb5 Nd4 Ne5 0 Rxa8 Qxa8 Nxb5 Qa5 Na3 Ba6 Re3 Qc5 Rc3
+Ned3
 r
 f5
 m
@@ -13785,14 +14728,28 @@ e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Nb8 d4 Nbd7
 Nbd2
 m
 ; Szabo-Filippov, Bucharest 2008
-c5 10 Nf1 Bb7 Ng3 Re8
+c5 Nf1 Bb7 Ng3 Re8
 r
 Bb7 Bc2
 m
 ; Kosintseva-Zhao Xue, Sochi 2009 (0-1)
-c5 30 d5 c4 b3 cxb3 axb3 Qc7
+c5 d5 c4 b3 cxb3 axb3 Qc7
 r
-Re8 Nf1 Bf8 Ng3 g6 b3 80
+Re8 Nf1 Bf8 Ng3 g6 
+m
+; Kavalek-Spassky, Montreal 1979 (1/2-1/2)
+a4 75 c5 d5 c4 Bg5 Be7 50 Qd2 Nc5 Bh6 Nfd7 Nh2
+r
+; Noble-Moll, ICCF email 2008 (1/2-1/2)
+a4 75 c5 d5 c4 Bg5 h6 Be3 Nc5 Qd2 h5 Bxc5 dxc5 Nf1 Qc7 Qg5 Bg7 Red1
+Qd6 Rab1
+r
+; Hannibal-Arasan, test game 2013 (1-0)
+a4 75 c5 d5 c4 Bg5 h6 Be3 Nc5 Qd2 h5 Bxc5 dxc5 Nf1 Qc7 Qg5 Nd7 0 Ne3
+r
+Bg5 50
+r
+b3 25
 m
 ; Sjugirov-Navara, GRE-chT 2010 (1/2-1/2)
 Bg7 60 d5 Rc8 c4 c6
@@ -13800,16 +14757,21 @@ r
 ; Motylev-Carlsen, Biel 2007 (=)
 Bg7 a4 10 c6 Ba3 d5 dxe5 Nxe5 Nxe5 Rxe5 f4 Re8 e5 Nd7
 r
-c6 30 Bg5
+c6 10 Bg5
 m
+Qc7 80
+r
 h6 Be3 Qc7
 r
-Bg7 Qd2
+Bg7 0 Qd2
 m
-Qc7
+Nf8 100 b4
+r
+; Carlsen-Shirov, 2006 (1-0)
+Qc7 a4 100
 r
 ; Carlsen-Pruijssers, EU-Cup 2007 (1-0)
-Qe7 10 a4 Qf8 Rad1
+Qe7 a4 Qf8 Rad1
 -
 ; C95
 e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Nb8 d4 Nbd7
@@ -13900,6 +14862,18 @@ r
 ; Istratescu-Flear, Hastings 2012 (=)
 Bb7 Nxe5 Nxe5 f4 Ng6 Nf3 Re8 g3 Bf6 Ra3 Qd7 Kg2 Rad8
 -
+; C97
+e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 
+Bc2 c5 d4 Qc7 Nbd2 
+m
+; analysis by Houdini 3 (+=)
+Bd7 0 Nf1 Rfe8 b3 Rac8 d5 100 c4 b4
+r
+cxd4 80
+r
+; Shirov-Kasimdzhanov, EU-CUp 2006 (1/2-1/2)
+Rd8 20 Nf1 100 cxd4 cxd4 exd4 Ng3 Nc6
+-
 ; C98
 e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 O-O c3 d6 h3 Na5 Bc2 c5
 d4 Qc7 Nbd2 Nc6 10 d5
@@ -13976,20 +14950,41 @@ r
 Bh5 0 Nf4 Bg6 Nxg6 hxg6 Be2 100
 -
 ; D10
-d4 d5 c4 c6 cxd5 10 cxd5 Nc3 Nf6 Bf4 
+d4 d5 c4 c6 cxd5 cxd5 Nc3 Nf6 Bf4 
 m
-; Danelian-Girya, Bubaneswar 2010 (1/2-1/2)
-Nc6 e3 Bf5 Rc1 50 e6 Qb3 Bb4 a3 Bxc3+ Rxc3 Qd7
-r
-Nc6 e3 Bf5 Rc1 50 a6 60 Nf3 Rc8 Be2
-r
-Qb6 0
-m
-; Shomoev-Matsenko, Khanty-Mansiysk 2012 (1-0)
-Rc1 Bd7 e3 Qxb2 Bd3 a6 Nge2 Qa3 O-O Bc6 Rb1
+; Prohaszka-Predorjevic, Hungary 2012 (analysis) (+=)
+Qb6 0 e3 Qxb2 Bb5+ Nc6 Nge2 Qa3 O-O e6 Ba4 a6 Bxc6+
 r
 ; Morozevich-Mamedyarov, Tashkent 2012 (1/2-1/2)
-e3 Qxb2 Bb5+ Bd7 Bxd7+ Nbxd7 Nge2 Qa3 Rb1 b6 O-O
+Qb6 0 e3 Qxb2 Bb5+ Bd7 Bxd7+ Nbxd7 Nge2 Qa3 Rb1 b6 O-O
+r
+Nc6 e3 
+m
+; Danelian-Girya, Bubaneswar 2010 (1/2-1/2)
+Bf5 Rc1 50 e6 Qb3 Bb4 a3 Bxc3+ Rxc3 Qd7
+r
+Bf5 Rc1 50 a6 60 Nf3 Rc8 Be2
+r
+a6 Bd3 Bg4 Nge2 e6 Rc1
+m
+Bd6 60 f3 Bh5 O-O 100
+r
+Be7 
+m
+a3 75 O-O O-O
+r
+O-O O-O
+m
+; Ponomariov-Dahlstrom, 8th Baltic Sea ICCF 2008 (1/2-1/2)
+a3 75 Bh5 100 Na4 100 Rc8
+r
+Na4
+m
+; Stockfish 4 analysis (+=)
+Rc8 a3 Nd7 b4 Re8 h3 Bh5
+r
+; Roselli Mailhe-Granara Barreto, Montevideo 2006 (1/2-1/2) 
+Nd7 f3 Bh5 Qb3 Ra7 Rfd1 Bg6 Bxg6 hxg6 e4
 -
 ; D11
 d4 d5 c4 c6 Nf3 80 Nf6 e3
@@ -14214,7 +15209,12 @@ r
 e6 Bg2 c5
 -
 ; D15
-d4 d5 c4 c6 Nc3 Nf6 Nf3 a6 a4 50 e6 
+d4 d5 c4 c6 Nc3 Nf6 Nf3 a6 a4 50 
+m
+; Kasimdzhanov-Morozevich, Cannes 2001 (1-0)
+dxc4 0 e4 100 Bg4 Bxc4 e6 Be3
+r
+e6 100
 m
 Bf4 Be7 0 e3 O-O 
 r
@@ -14375,7 +15375,12 @@ r
 Kxf7 fxe6+ Ke8 Rb1 a6 Rxb7 Nc6 Ba3 Be5 Rd1
 -
 ; D17
-d4 d5 c4 c6 Nc3 Nf6 Nf3 dxc4 a4 Bf5 Ne5 e6 f3 Bb4 80 e4 Bxe4 fxe4 Nxe4
+d4 d5 c4 c6 Nc3 Nf6 Nf3 dxc4 a4 Bf5 Ne5 e6 f3 Bb4 80 
+m
+; Arasan-Fruit, test game 2013 (0-1)
+Bg5 0 h6 Bh4 c5 dxc5 Qxd1+ Kxd1 Bxc5
+r
+e4 Bxe4 fxe4 Nxe4
 m
 ; draw line - avoid
 Qf3 0 Qxd4 Qxf7+ Kd8 Bg5+ Nxg5 Qxg7 Bxc3+ bxc3 Qxc3+ Ke2 Qc2+
@@ -14574,11 +15579,18 @@ r
 ; Khenkin-De Vreught, Hoogeveen 2004 (1/2-1/2)
 Re8 Kh1 Qb6 Bd2 a6
 -
+; Cheparinov-Le Quang, Khanty-Mansiysk 2013 (1/2-1/2) [D18]
+d4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4 a4 Bf5 e3 e6 Bxc4 Bb4 O-O O-O Nh4 Nbd7
+h3 Bg6 Nxg6 hxg6 Qc2 a5 75 Rd1 Qe7 e4 e5 d5 Rac8
+-
 ; D19
 d4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4 a4 Bf5 e3 e6 Bxc4 Bb4 O-O O-O Qe2
 m
 ; Izeta Txabarri-Iruzubieta Villaluenga, Elgoibar 1993 (1-0)
-Nbd7 80 e4 80 Bg6 Bd3 Bh5 60 Bf4 Re8 e5 Nd5 Nxd5 exd5 Bf5 Nf8 g4 100 Bg6 Bg3
+Nbd7 80 e4 80 Bg6 Bd3 Bh5 Bf4 Re8 e5 Nd5 Nxd5 exd5 Bf5 Nf8 g4 100 Bg6 Bg3
+r
+; Bromberger-Ribli, Austria 2012 (1/2-1/2)
+Nbd7 80 e4 80 Bg6 Bd3 h6 Rd1 Re8 Bf4 a6 
 r
 ; Mozny-Mokry, Prague 1985 (1/2-1/2)
 Nbd7 e4 Bg6 Bd3 Bh5 Bf4 Qe7 e5 Nd5 Nxd5 exd5 Rfc1 Nb8 Qe3
@@ -14845,6 +15857,42 @@ r
 Rc1 60 Re8
 r
 a3
+-
+; D20
+d4 d5 c4 dxc4 e4 Nf6 e5 Nd5 Bxc4 Nb6 Bd3 Nc6 Ne2 Bg4 f3
+m
+; Cheparinov-Harikrishna, Wijk aan Zee 2008
+Bh5 Nbc3 e6 Be3 Bg6 Be4
+r
+Be6 Nbc3 
+m
+; Bareev-Mikhalchishin, Plovdiv 2003 (1-0)
+Bd5 Nxd5 Qxd5 Be4 Qd7 e6 fxe6 Bxc6 Qxc6 Bf4 Nd5 Rc1 Qb6 Be5 Rg8
+r
+Bd5 Nxd5 Qxd5 Be4 Qd7 e6 fxe6 Bxc6 Qxc6 Bf4 Nd5 Rc1 Qb6 Be5 Qxb2 O-O
+r
+; Shulman,B (2409)--Korosec,S (2366) ICCF email 2008 (1/2-1/2)
+Bd5 Nxd5 Nxd5 O-O e6 Be4 Qd7 Nc3 Nb6 Be3 O-O-O Qc1 Kb8 Rd1 Nb4
+r
+; Dao Thein Hai-Filippov, Cebu 2007 (1/2-1/2)
+Bc4 Bxc4 Nxc4 Qb3 Nb6 Be3 e6 O-O Nb4
+r
+Bc4 Bxc4 Nxc4 O-O e6 Qb3 Nb6 Be3 
+r
+; Kasimdzhanov-Ismagambetov, Tashkent 2011 (analysis, =)
+Bc4 Bxc4 Nxc4 Qb3 Nb6 Be3 e6 O-O Qd7 Rad1 Nb4 Nf4 O-O-O 100
+r
+Qd7 Ne4 Bd5 Nc5 Qc8 a3 e6 Qc2 Bxc5 
+m
+; Dreev-Salov, Elista 1998 (=)
+dxc5 Nd7 f4 Bxg2 Rg1 Bf3 Rxg7 Qd8 Be3 Qh4+ Rg3 O-O-O
+r
+Qxc5 Qxd7
+m
+b4 0 a6
+r
+; Vyzmanavin,A (2585)-Meister,J (2415) Cheliabinsk 1990 (=)
+O-O a6 Qc3 Ne7 100 b3 Bc6 a4
 -
 ; D23
 d4 d5 Nf3 Nf6 c4 dxc4 Qa4+ Nbd7 Nc3 e6
@@ -15352,9 +16400,19 @@ Na5
 ; D37
 d4 d5 c4 e6 Nf3 Nf6 Nc3 dxc4 10 e4 Bb4 Bg5 c5
 -
+d4 Nf6 c4 e6 Nf3 d5 Nc3 Be7 Bf4 O-O e3 Nbd7 
+m
+a3 dxc4 0 Bxc4 Nb6 Bd3 Nbd5 Be5 Nxc3 bxc3
+r
+a3 c5 cxd5 Nxd5 Nxd5 exd5
+r
+cxd5 Nxd5 Nxd5 exd5 a3 c5 dxc5 Nxc5 Be5 Bf6 100 
+m
 ; Bookbuilder-Arasan, ICC 2013 (1-0) [D37]
-d4 Nf6 c4 e6 Nf3 d5 Nc3 Be7 Bf4 O-O e3 Nbd7 cxd5 Nxd5 Nxd5 exd5 a3 c5
-dxc5 Nxc5 Be5 Bf6 Bxf6 Qxf6 Qd4 Qe7 Qxd5 75
+Bxf6 Qxf6 Qd4 Qe7 Qxd5 75
+r
+; Dreev-Vaganian, Sochi 2004
+Be2 Bxe5 Nxe5 Be6
 -
 ; D31
 d4 d5 c4 e6 Nc3 Be7 cxd5 exd5 Bf4 Nf6 e3 Bf5 Nge2
@@ -15365,8 +16423,7 @@ r
 O-O
 -
 ; D31
-d4 d5 c4 e6 Nc3 Be7 Nf3 Nf6 Bf4 
-c5 dxc5 Bxc5 e3 Nc6 a3 O-O
+d4 d5 c4 e6 Nc3 Be7 Nf3 Nf6 Bf4 c5 dxc5 Bxc5 e3 Nc6 a3 O-O
 m
 Qd2 60
 r
@@ -15394,9 +16451,24 @@ r
 ; Nielsen-Kaidanov, Bled olm 2002 (0-1)
 Nxe5 0 Bxe5 c5 a4 f4 Bxc3+ Rxc3 e5 Bxf6 Qxf6 fxe5 Qh4+ g3 Qe4 Rhg1 Bg4
 -
+; D31
+d4 d5 c4 e6 Nc3 Be7 cxd5 exd5 Bf4 c6 Qc2 
+m
+Nf6 75
+r
 ; Gustafsson-Baramidze, Pulvermehle 2004 (1-0) [D31]
-d4 d5 c4 e6 Nc3 Be7 cxd5 exd5 Bf4 c6 Qc2 Bd6 Bxd6 Qxd6 e3 Nf6 Bd3 O-O Nf3
-Nbd7 O-O Re8 h3 75
+Bd6 Bxd6 Qxd6 e3 Nf6 Bd3 O-O Nf3 Nbd7 O-O Re8 h3 75
+r
+g6 10 e3 Bf5 Qd2
+m
+; Kacheishvili-Goldin, Orlando 2011 (1-0)
+Nf6 0 f3 h5 Bd3 Bxd3 Qxd3 Nbd7 Nge2
+r
+; Belov-Isajevsky, Samara 2004 (1/2-1/2)
+Bd6 Nge2 Nf6 f3
+r
+; Dzagnidze-Khotenashvili, Dilijan 2013 (1-0)
+Nd7 f3 Ngf6 g4 Be6 Nge2
 -
 ; Semi-Tarrasch, D41
 d4 d5 Nf3 Nf6 c4 dxc4 e3 e6 Bxc4
@@ -15462,7 +16534,7 @@ m
 ; Ehlvest-Rohonyan, Virginia Beach 2007 (1-0)
 Nc6 0 e3 Be6 Bb5 Rc8 O-O
 r
-; Schlechter-Maroczy, 11007
+; Schlechter-Maroczy, 1907
 Be6 0 e4 dxe4 Nxe4 cxd4 Bb5+
 r
 ; Goldin-Shabalov, Philadelphia 1999 (1/2-1/2)
@@ -15505,6 +16577,19 @@ r
 ; Ibrahimov-Bocharov, Dubai 2009 (0-1)
 Qc2 60 O-O Rad1 Qe7 Rfe1 Rd8 a3 a6
 r
+; Deep Sjeng-Arasan, FICS 2013 (1-0)
+Qc2 O-O Ne4 Qe7 Bb3 e5 Ng3 Kh8 Rac1 f5 Ne2 Kh7 25 e4
+r
+Qc2 O-O Ne4 Qe7 Bb3 e5 Ng3 Kh8 Rac1 f5 Ne2 e4 75
+r
+Qb3 Qe7 Bd3 O-O Rac1 b6 50
+r
+Qb3 Qe7 Bd3 O-O Rac1 Rd8 50
+r
+; Onischuk,A (2664)-Gelfand,B (2723), Dagomys 2008 (1/2-1/2)
+b4 30 O-O a4 Qe7 Qb3 b6 a5 Rb8 Rfb1 Bb7 axb6 axb6 Ra7 c5 Rxb7 Rxb7 
+bxc5 Rc7 Nb5 Rc6 Na7 Rc7
+r
 ; bookbuilder-Arasan, ICC 2013 (1-0)
 a4 10 O-O 0 Qe2
 r
@@ -15543,6 +16628,10 @@ Qe7 e4 O-O e5 c5 Re1 100 Nb6 Ne4 cxd4 Bb3 Rd8
 r
 O-O 100
 m
+; Crafty plays this
+; Makovsky-Starke, IECG WC.2006.T.00001 2006 (1/2-1/2)
+Bd3 e5 100 Re1 Qd8 Qc2 exd4 exd4 Nb6 Re3 Bg4 Ne5 Bh5
+r
 ; Svidler-Gelfand, Nalchik FIDE GP 2009 (1/2-1/2)
 Bb3 Qe7 Na4 e5 d5 e4 Nd4 cxd5 Nc3 Nf6 Nxd5 Nxd5 Bxd5 Bh3 Bxe4 Qxe4 gxh3 Rad8
 r
@@ -15555,6 +16644,9 @@ h5
 r
 ; Kaputtze-Flying Saucers, playchess.com 2007 (1/2-1/2)
 Rd8 h3 Nb6 Bb3
+r
+; Maack-Valinova, ICCF 2013 (1/2-1/2)
+Rd8 dxc6 70 bxc6 Qc2 Nf8 Na4 Ne6 Rfd1 Rxd1+ Rxd1 Nf4
 r
 ; Zakharevich-Yagupov, Tula 2007 (1/2-1/2)
 Nb6 dxc6 bxc6 Be2 Rd8 Qc2 Bg4 Nd1 Be6 Ne3 Rac8
@@ -15721,14 +16813,25 @@ Bxc3 bxc3 Qxc3 Qb1 O-O a4 Qa5
 ; D39
 d4 d5 c4 e6 Nc3 Nf6 Nf3 Bb4 Bg5 dxc4 60
 -
-; Obodchuk-Sorokin, Nizhnij Tagil RUS 2007 (1/2-1/2) [D39]
+; D39
 d4 Nf6 c4 e6 Nf3 d5 Nc3 dxc4 e4 Bb4 Bg5 c5 Bxc4 cxd4 Nxd4 Bxc3+
-bxc3 Qa5 Bxf6 Qxc3+ Kf1 gxf6 Rc1 Qa5 h4 Ke7 Rh3 Rd8 Rd3 Nc6 Nxc6+ bxc6
+bxc3 Qa5 
+m
+; Obodchuk-Sorokin, Nizhnij Tagil RUS 2007 (1/2-1/2) [D39]
+Bxf6 Qxc3+ Kf1 gxf6 Rc1 Qa5 h4 Ke7 Rh3 Rd8 Rd3 Nc6 Nxc6+ bxc6
 Rxd8 Qxd8
+r
+Nb5 10 Nxe4 Qd4 O-O Qxe4 a6
+m
+; Hiarcs 14 (=)
+Bd3 f5 Qe2 axb5 O-O Nc6
+r
+; Kempinski-Macieja, Achaea 2012 (1/2-1/2)
+Be7 0 axb5 Bb4 Qc7 Bxf8 Kxf8 Bb3 Qxc3+ Ke2 Qb2+ Kf3 Qc3+
 -
 ; D39
 d4 Nf6 c4 e6 Nf3 d5 Nc3 dxc4 e4 Bb4 Bg5 c5 Bxc4 cxd4 Nxd4 Bxc3+ bxc3 Qa5
-Bb5+ 60 Bd7 Bxf6 gxf6
+Bb5+ 80 Bd7 Bxf6 gxf6
 m
 ; Kramnik-Anand, Dortmund 2003 (1/2-1/2) [D39]
 Bxd7+ 40 Nxd7 O-O a6 Rb1 Qc7 Qg4 10 h5 Qh3 Ke7 f4 h4 Qf3 Rac8
@@ -15811,6 +16914,22 @@ c3 bxc3 bxc3 Bf4 Nd2 Bxd2 cxd2
 r
 ; (1-0)
 Bd6 0 Qc2 Nxg3 fxg3 Bxe5 dxe5 Qd4+ Kh2 Nd7 Bxc4 Nxe5 Bb3 Ba6 Rad1
+-
+; D43
+d4 d5 c4 c6 Nc3 Nf6 Nf3 e6 Bg5 h6 Bh4 dxc4 e4 g5 Bg3 b5 Be2 Bb7 h4 g4 Ne5 Nbd7 
+m
+Nxg4 75
+r
+Nxd7 Qxd7 Be5 Qe7
+m
+; Grischuk-Aronian, Ohrid 2009 (0-1)
+O-O Rg8 b3 Nd7 Bg3 b4 Na4 c3 Qd3 h5 a3 a5 axb4 axb4
+r
+Bxg4 Rg8 Bf3 O-O-O Qe2 Nd7 Bg3 e5 
+m
+O-O-O Bg7 d5 Nc5
+r
+d5 0 
 -
 ; D43, 9. Be2
 d4 d5 c4 c6 Nf3 Nf6 Nc3 e6 Bg5 h6 Bh4 dxc4 e4 g5 Bg3 b5 Be2 100
@@ -16114,7 +17233,16 @@ d4 d5 c4 c6 Nf3 Nf6 Nc3 e6 e3
 m
 Nbd7 100
 r
-a6 10
+; trans. to D94
+g6 5 Bd3 Bg7 O-O O-O e4
+r
+; Kotov-Smyslov, Venice 1950 (1/2-1/2)
+g6 Bd3 Bg7 O-O Nbd7 b3 50 O-O 60 Ba3 Re8
+r
+; EXchess-Arasan, ICC 2013 (1-0) (better for White)
+g6 Bd3 Bg7 O-O Nbd7 b3 50 dxc4 Bxc4 75
+r
+a6 20
 m
 ; Crafty-Arasan, ICC 2013 (1-0)
 b3 c5 0 cxd5 exd5 Bb2 Nc6 Rc1
@@ -16138,6 +17266,10 @@ r
 ; Ftacnik-Navara, Aix-les-Bains 2011 (1/2-1/2)
 b3 Bb4 100 Bd2 Nbd7 Bd3 O-O O-O Bd6 Rc1 Re8 h3 e5 dxe5 Nxe5 Nxe5 Bxe5 cxd5
 Nxd5 Nxd5 Qxd5
+r
+; Bu Xiangzhi-Zhou Weiqi, Xinghua Jiangsu 2009 (1/2-1/2)
+b3 Bb4 100 Bd2 Nbd7 Bd3 O-O O-O Bd6 Rc1 e5 cxd5 cxd5 dxe5 Nxe5 Nxe5 Bxe5
+Ne2 Ne4 Bxe4 dxe4 Bc3 Bg4 Bxe5 Qxd1 Rfxd1 Bxe2 Rd7 Rac8
 r
 ; Riazantsev-Eljanov, RUS ch-T 2012 (1/2-1/2)
 b3 Bb4 100 Bd2 Nbd7 Bd3 O-O O-O Qe7 25 Ne5 Nxe5 dxe5 Nd7 f4 g6 Qc2 b5
@@ -16175,13 +17307,31 @@ d4 d5 c4 c6 Nc3 Nf6 e3 e6 Nf3 Nbd7 Qc2 Bd6 Bd3 O-O O-O e5 20 cxd5 cxd5 e4
 dxe4 Nxe4 Nxe4 Bxe4 h6 Be3 exd4 Bh7+ Kh8 Bxd4 Nf6 Bf5 Qa5 Bxc8 Rfxc8
 Qb3 Qd5 Bxf6 Qxb3 Bxg7+ Kxg7 axb3 Be7 100
 -
+; D45
+; Hiarcs 14 (=)
+d4 d5 c4 c6 Nc3 Nf6 Nf3 e6 e3 Nbd7 Qc2 Bd6 Be2 O-O O-O dxc4 Bxc4 b5 Bd3
+Bb7 Ng5 Bxh2+ Kxh2 Ng4+ Kg1 Qxg5 f3 Ngf6 e4 Qh4 Ne2 e5 a4
+-
 ; D46
 d4 d5 c4 e6 Nf3 c6 e3 Nf6 Nc3 Nbd7 Qc2 Bd6 Bd3 O-O 60 O-O 
 m
 ; Hiarcs 14 (=)
 Qe7 c5 Bc7 e4 dxe4 Nxe4 Nxe4 Bxe4 h6 Bh7+ Kh8 Bd3 b6 100 cxb6 Nxb6 100
 r
-dxc4 Bxc4 b5
+dxc4 Bxc4 
+m
+; Dimitrov-Davidov, ICCF 2009 (1/2-1/2)
+a6 Rd1 c5 20 a4 cxd4 exd4 Qc7 Qe2 Re8
+r
+a6 Rd1 c5 dxc5 Bxc5 Be2 60
+r
+; Kovalenko-Morozov, Moscow 2012 (1-0)
+a6 Rd1 c5 dxc5 Bxc5 Bd3 Qe7 Bd2 h6
+r
+; Belozerov-Sjugirov, Moscow op-A 2010 (1/2-1/2)
+a6 Rd1 b5 Bd3 Bb7 Ng5 h6 Nge4 Be7
+r
+b5
 m
 ; Khalifman-Inarkiev, St. Petersburg 2011 (=)
 Be2 Bb7 Rd1 Qc7 e4 e5 dxe5 Nxe5 Nd4 Neg4 Bxg4 Bxh2+
@@ -16570,6 +17720,10 @@ r
 ; Sriram-Sasikiran, Mumbai 2000 (1/2-1/2)
 O-O 50 Qd5 Qe2 Ba6 Bg5 Be7 f4 O-O Rf3 Bb7 Rg3 g6 h4 Bd8 Bh6
 r
+; Arasan-Gaviota, test game 2013 (1-0)
+O-O 50 Qd5 Qe2 Ba6 Bg5 Be7 f4 O-O Rf3 Bb7 Rg3 g6 h4 Rxa2 0 Rxa2 Qxa2
+h5 Rc8 hxg6
+r
 Qf3 10 Bb4+ Ke2 Rb8
 m
 Qg3
@@ -16774,7 +17928,7 @@ d4 d5 c4 e6 Nc3 Nf6 Bg5 Be7 e3 Nbd7 Nf3 O-O Qc2 c5 cxd5 Nxd5 Bxe7 Qxe7 Nxd5
 exd5 Bd3 cxd4 Nxd4 Qb4+ Qd2 Ne5 Be2 Qxd2+ Kxd2 Bd7 Rac1 Rfc8 b3 Kf8 f4 Nc6
 -
 ; D63-D65
-d4 d5 c4 e6 Nc3 Be7 Nf3 Nf6 Bg5 O-O e3 Nbd7 Rc1
+d4 d5 c4 e6 Nc3 Be7 Nf3 Nf6 Bg5 O-O e3 Nbd7 Rc1 10
 m
 ; Petrosian-Spassky, Wch (m/14) 1969
 b6 0 cxd5 exd5 Bd3 Bb7 O-O c5 Bf5 Re8
@@ -16791,6 +17945,21 @@ r
 ; Houdini 3 analysis (=)
 Bd3 10 h6 Bh4 Nbd5 Nxd5 Nxd5
 -
+; D66
+d4 d5 c4 e6 Nc3 Nf6 Bg5 c6 e3 Nbd7 Nf3 Be7
+m
+; Hiarcs 14 (=)
+Rc1 10 O-O Bd3 h6 Bh4 dxc4 Bxc4 b5 Bd3 a6 a4 Bb7 O-O b4 Bxf6 Nxf6
+Ne4 Nd7 Bb1 Rc8 100 Ne5 
+r
+Bd3 80
+r
+Qc2 40 h6
+m
+Bh4
+r
+Bf4 25 Nh5 Be5
+-
 ; D71
 d4 Nf6 c4 g6 g3 Bg7 Bg2 d5 cxd5 Nxd5 e4 Nb4 d5 c6 a3 Qa5 Nc3 cxd5 Be3 
 m
@@ -16799,8 +17968,32 @@ r
 ; Gnucheese-Arasan, FICS 2013 (1-0)
 Nc2+ 0 Qxc2 d4 b4 Qc7 Bxd4 Bxd4
 -
+; Raetsky-Glek, Zurich op 2001 (=) [D73]
+d4 Nf6 g3 d5 Bg2 c6 Nf3 g6 O-O Bg7 c4 dxc4 Ne5 Ng4 Nf3
+m
+Nd7 0
+r
+O-O 100
+-
 ; D76
-Nf3 d5 d4 Nf6 c4 g6 cxd5 Nxd5 g3 Bg7 Bg2 O-O O-O Nb6 Nc3 Nc6 d5 Na5 Qc2 70
+Nf3 d5 d4 Nf6 c4 g6 cxd5 Nxd5 g3 Bg7 Bg2 O-O O-O Nb6 Nc3 Nc6 d5 Na5 Nd4
+Bd7 e4 c6
+m
+Nb3 10 Nxb3 axb3
+r
+Nb3 Nac4
+r
+; Petrov-Rogulj, Bol 2013 (=)
+b3 25 cxd5 exd5 Rc8 Bb2
+r
+Re1 cxd5 exd5 Qc8 100
+m
+Rb1
+r
+Bf4
+-
+; D76
+Nf3 d5 d4 Nf6 c4 g6 cxd5 Nxd5 g3 Bg7 Bg2 O-O O-O Nb6 Nc3 Nc6 d5 Na5 Qc2
 m
 ; Jurka-Daniliuk, Pardubice op 1994 (1/2-1/2)
 Nxd5 20 Rd1 c6 Ne1 Bd7 Nxd5 cxd5 Rxd5 e6 Rd6
@@ -17094,6 +18287,8 @@ r
 ; VoidChessICC-Necromant, playchess.com 2006 (1/2-1/2)
 Qa5 10 O-O Qxa2 Bg5 Qe6 Qd3 b6 Qe3 Ba6 d5 Qd6 Bxa6 Nxa6
 r
+Qa5 10 O-O Qxa2 Bg5 
+r
 Nc6 30 d5 Ne5 Nxe5 Bxe5 Qc2 20 Qd6
 r
 ; Jelen-Borisek, SLO-ch Bled 2003 (1/2-1/2)
@@ -17131,13 +18326,15 @@ r
 Bg5 80 h6
 m
 ; =
-Bh4 20 g5 Bg3 Nc6 d5 Rad8 Rxb7 e6 Bxc7 Bxf3 Bxf3 Rd7 d6
+Bh4 10 g5 Bg3 Nc6 d5 Rad8 Rxb7 e6 Bxc7 Bxf3 Bxf3 Rd7 d6
 r
 ; Kramnik-Anand, Moscow Tal mem 2009 (1/2-1/2)
-Bh4 20 g5 Bg3 Nc6 d5 Rad8 Rxb7 e6 Bxc7 Bxf3 Bxf3 Rd7 dxc6 Rxd1 Rxd1 Qc2
+Bh4 10 g5 Bg3 Nc6 d5 Rad8 Rxb7 e6 Bxc7 Bxf3 Bxf3 Rd7 dxc6 Rxd1 Rxd1 Qc2
 Bd6 g4 Bxg4 Qxc6 Rc7 Qb6 Rd7
 r
-Be3 60 Nc6 d5
+Bh4 10 g5 Bg3 Nc6 d5 Rad8 Rxb7 f5 10 Rc7 
+r
+Be3 100 Nc6 d5
 m
 ; Pelletier-Howell, Cap d'Agde 2007 (1-0) (better for White)
 Ne5 0 Rxb7 e6 d6 Rfe8 Re1 Bxf3 gxf3 Qa5 100 Rf1 Bf8 d7 Qa2 Bb5 a6 Ba4
@@ -17151,6 +18348,10 @@ r
 Ne5 Rxb7 e6 d6 Rfd8 Re1 Bxf3 gxf3 Qa3 f4 Rxd6 Qc1 Qxc1 Rxc1 Nc6
 e5 Nd4 Rcc7 Nxe2+ Kf1
 r
+; Peralta-Mekhtarian, Wijk aan Zee 2013 (1/2-1/2)
+Ne5 Rxb7 a5 Rxe7 a4 Bd4 Nxf3+ Bxf3 Bxf3 gxf3 Bxd4 Qxd4 a3 Kg2 Qb2 Qxb2 axb2
+Rb7 Rfb8 Rxb8+ Rxb8 Rb1 Kf8 f4 Ke7 e5 Rb3
+r
 Na5 0 Bc5
 r
 Bxf3 60
@@ -17158,8 +18359,8 @@ m
 ; Thinker-Arasan, freechess.org 2012 (analysis)
 Bxf3 Ne5 Rxb7 a5 Be2 80 Nc4 Bf4 g5 Bc1 Rfe8
 r
-; Martinovic-Kuljasevic, Pula 2010 (1/2-1/2)
-Bxf3 Ne5 Rxb7 a5 Rxe7 a4 Bd4 Nxf3+ gxf3 a3 d6 Bxd4 Qxd4
+; Fruit-Arasan, test game 2013 (1-0)
+Bxf3 Ne5 Rxb7 a5 Rxe7 a4 Bd4 Nxf3+ gxf3 a3 0 Bxg7 100 Kxg7
 r
 ; Van Wely-Svidler, Biel 2000 (1/2-1/2)
 Bxf3 Ne5 Rxb7 a5 Bc5 a4 Bxe7 Rfb8 Rxb8+ Rxb8 d6 Qe6 Qxa4
@@ -17172,8 +18373,12 @@ r
 ; Crafty-Arasan, ICC 2010 (1-0)
 Bxf3 Ne5 Rxb7 e6 0 Qe2 Nxf3+ Qxf3 exd5 exd5 a5 d6
 r
-; Lekic-Djukic, Bar 2010 (1/2-1/2)
-gxf3 60 Nd4 Bd3 a5
+gxf3 Nd4 Bd3 a5 f4 
+m
+Rfd8 60
+r
+; Tsygankov-Kain, ICCF 2012 (1/2-1/2)
+b5 Bxd4 Bxd4 Bxb5 Bc3 Qf3 Rac8 Bc6 Bb4
 -
 ; D85
 ; Gruenfeld 8. Rb1
@@ -17528,6 +18733,11 @@ r
 ; Jussupow-Ruck, EU-ch Ohrid 2001 (1/2-1/2)
 Bb3 10 Qb4 b6 Bg5 f6 Bh4 Qd6 Qxd6 exd6 d5 Rfc8
 -
+; D90
+; Moranda-Georgiev, Legnica 2013 (1/2-1/2)
+d4 Nf6 c4 g6 Nc3 d5 Nf3 Bg7 Qa4+ Bd7 Qb3 dxc4 Qxc4 O-O Bf4 Na6 e4 c5 e5 Nh5
+Be3 cxd4 Qxd4 Bc6 Be2 Qa5 O-O Nb4 Qc5 Qxc5 Bxc5 Nd5 Nxd5 Bxd5 g3 Rfe8
+-
 ; D91
 d4 Nf6 c4 g6 Nc3 d5 Nf3 Bg7 Bg5 0 
 m
@@ -17607,12 +18817,17 @@ r
 ; Jobava-Areshenko, Burgas 2012 (1/2-1/2)
 Bg5 Nxg5 Nxg5 Qd8 h4 h6 g4 Bd7 Ne4 Qxh4 f3 Kh8
 -
-; Slav, Schechter [D94]
-d4 d5 c4 c6 Nc3 Nf6 e3 g6 20 Nf3 Bg7
+; D94
+c4 c6 Nf3 d5 e3 g6 d4 Bg7 Bd3 60 Nf6 O-O O-O Nc3 Bg4 h3 Bxf3 Qxf3 e6 Rd1
+Nbd7
 m
-Bd3 60
+Bd2 100
 r
-Be2 80 O-O O-O
+; =
+Bf1 Re8 Qe2 Qe7 100
+-
+; Slav, Schechter [D94]
+d4 d5 c4 c6 Nc3 Nf6 e3 g6 20 Nf3 Bg7 Be2 80 O-O O-O
 m
 a6 60 a4 a5 cxd5 60 cxd5 Qb3 Nc6 Bd2
 r
@@ -17825,16 +19040,40 @@ m
 ; Schneider-Werle, Germany 2010 (1/2-1/2)
 c5 30 dxc5 Bxc5 Qa4+ Bd7 Qxc4
 r
-a5 Qc2 Bxd2+ 
+a5 Qc2 Bxd2+ 100
 m
 ; Korneev-Landa, Krasnoyarsk 2007 (1/2-1/2)
 Qxd2 70 c6 Ne5 b5
+r
+; Hammer-Carlsen, Sandnes 2013 (0-1)
+Qxd2 70 c6 a4 100 Ne4 Qc2 Nd6 Nbd2 Na6
 r
 Nbxd2 b5 a4 c6 b3 cxb3 Nxb3 O-O
 m
 Ne5 0 Nd5
 r
 O-O Ba6
+-
+; E04
+d4 e6 c4 d5 Nf3 Nf6 g3 dxc4 Bg2 Bb4+ 20 Bd2 a5 Qc2 Nc6 30 Qxc4 Qd5 Qd3 
+m
+; Perez Fernandez-Brodt, ICCF 2012 (1/2-1/2)
+Qf5 70 Qxf5 exf5 a3 Bd6 Nc3 O-O
+r
+Qe4 Qxe4 Nxe4
+m
+Bxb4 75 axb4 Nbd2 75
+r
+a3 
+m
+; Sasikiran-Zhang Zhong, Zaozhuang 2012 (1/2-1/2)
+Nxd2 Nbxd2 Be7 Rc1
+r
+Bd6 10
+m
+Be3 Bd7
+r
+Bf4
 -
 ; E04
 Nf3 Nf6 c4 e6 d4 d5 g3 dxc4 Bg2
@@ -17953,6 +19192,27 @@ r
 ; trans. to Catalan
 d4 100
 -
+; E05
+d4 Nf6 c4 e6 g3 d5 Bg2 Be7 Nf3 O-O O-O dxc4 Qc2 a6 a4 Bd7 Qxc4 Bc6 Bg5 a5
+Nc3 Na6 
+m
+Rfd1 75
+r
+Bxf6 Bxf6 e4 Nb4 Rfd1 b6 Ne1 
+m
+Bb7 0
+r
+; Gleizerov,E (2589) -Naumkin,I (2416) Cappelle la Grande 2004 (analysis, =)
+Be7 Nb5 Qd7 Rac1 Rfd8
+-
+; E06
+d4 Nf6 c4 e6 g3 d5 Bg2 dxc4 Nf3 b5 a4 c6 axb5 cxb5 Ne5 Nd5 Nc3
+m
+f6 100
+r
+; Gnucheese-Arasan, FICS 2013 (analysis, =)
+Bb4 O-O Bxc3 e4 Bxb2 exd5 Bxa1 Ba3 a5 100 dxe6 Bxe6 Qxa1 b4 100 Bxa8 O-O
+-
 d4 Nf6 c4 e6 Nf3 d5 g3 Be7 Bg2 O-O O-O dxc4 Qc2
 m
 ; Petursson-McCambridge, Neskaupstad 1984 (1-0) [E06]
@@ -18020,8 +19280,19 @@ r
 ; Delchev-Saric, Zadar 2007 (1-0)
 bxa4 Bxf6 Qxf6 Qxa4+
 -
+; E11
+d4 Nf6 c4 e6 Nf3 Bb4+ Bd2 a5 g3 d6 Bg2 Nbd7 O-O e5 
+m
 ; Beliavsky-Christiansen, Brussels 1992 (=) [E11]
-d4 Nf6 c4 e6 Nf3 Bb4+ Bd2 a5 g3 d6 Bg2 Nbd7 O-O e5 Bc3 O-O
+Bc3 O-O
+r
+Nc3 
+m
+c6 0 a3 Bxc3 Bxc3 Ne4e
+r
+c6 0 a3 Bxc3 Bxc3 e4
+r
+O-O 100
 -
 ; E11
 d4 Nf6 c4 e6 Nf3 Bb4+ Bd2 Bxd2+ Qxd2 O-O Nc3 d5 e3 Qe7 a3
@@ -18041,6 +19312,10 @@ Bg2 Bxd2+ Nbxd2 d6 O-O a5 e4 e5 d5 Nb8 Ne1 O-O Nd3 Na6 Qc2 c6 0 Rfd1 c5 a3
 r
 Nc3
 m
+; Huebner,R (2615)-Maherramzade,J (2433) Istanbul 2000 (=)
+Bxc3 Bxc3 Ne4 Qc2 Nxc3 Qxc3 Qb4 Rc1 Qxc3+ Rxc3 d6 Bg2 a5 60
+O-O Bd7
+r
 ; Romanishin-Drasko, Sarajevo 1984 (1/2-1/2)
 d5 10 cxd5 exd5 Bg2 O-O O-O Re8 Re1
 r
@@ -18227,7 +19502,24 @@ r
 b5 e4 Nbd7
 -
 ; E12
-d4 Nf6 c4 e6 Nf3 b6 20 a3 Ba6 Qc2 Bb7 Nc3 Be7 0 e4
+d4 Nf6 c4 e6 Nf3 b6 20 a3 Ba6 Qc2 Bb7 Nc3 
+m
+Be7 0 e4
+r
+; Stockfish analysis (-=)
+c5 e4 cxd4 Nxd4 Bc5 Nb3 Nc6 Bd3 O-O O-O d6 75 Bg5 h6 Bh4 g5 Bg3 Nh5
+-
+; E12
+d4 e6 Nf3 Nf6 c4 b6 Nc3 Bb7 Bg5 5 h6 Bh4 Be7 Qc2
+m
+c5
+r
+d5 0 
+m
+cxd5 80
+r
+; Halkias-Rozentalis, Athens 2005 (1/2-1/2)
+Bxf6 Bxf6 cxd5 exd5 e3 O-O O-O-O c5 g4 75 cxd4 exd4
 -
 ; E13
 d4 Nf6 c4 e6 Nc3 Bb4 Nf3 b6 Bg5 Bb7 e3 h6 Bh4 g5 Bg3 Bxc3+ 10 bxc3 d6 Nd2
@@ -18289,6 +19581,13 @@ m
 Qa4 Bb7 Bg2 c5 dxc5 80
 r
 Qa4 Bb7 Bg2 c5 O-O 20 cxd4 Nxd4 Bxg2 Kxg2 Be7 50 Nc3 O-O
+r
+; (0-1)
+Qb3 Nc6 Nbd2 Bb7 e4 d5 cxd5 exd5 e5 Ne4 Bd3 Bb4 O-O Bxd2 100
+r
+; Aleshin-Xu Yuhua, 2005 (1-0)
+Qb3 Nc6 Nbd2 Bb7 e4 d5 cxd5 exd5 e5 Ne4 Bd3 Bb4 O-O O-O Rd1 Bxd2 Bxd2 Kh8 0
+Rac1 100
 r
 b3
 m
@@ -18452,6 +19751,16 @@ r
 ; Banikas-Tomashevsky, WchT Bursa 2010 (1-0)
 b5 0 cxd5 b4 Nf5
 -
+; E17
+d4 Nf6 c4 e6 Nf3 b6 g3 Bb7 Bg2 Be7 O-O O-O Re1 75
+m
+; Kramnik,V (2790)-Ponomariov,R (2734) Dortmund 2010 (1/2-1/2) [E17]
+a5 a3 Na6 Nc3 Ne4 Qc2 Nxc3 Qxc3 f5 Bf4 Bf6 Rad1 Nc5 Be5 Ne4 Qc2 d6 Nd2
+Bg5 Bf4 Bxf4 gxf4 Qh4 Nxe4 Bxe4 Bxe4 fxe4 Qxe4
+r
+; Matlakov-Levin, Petersburg Summer rapid 2013 (1/2-1/2)
+c5 d5 exd5 Nh4 Ne4 cxd5 Bxh4 Bxe4 Bf6 Nc3 d6 Bf4 Qe7 Qc2 h6
+-
 ; E19
 d4 Nf6 c4 e6 Nf3 b6 g3 Bb7 Bg2 Be7 O-O O-O Nc3 Ne4 Qc2 Nxc3 Qxc3
 m
@@ -18483,9 +19792,21 @@ r
 e3 a5
 -
 ; E18
-d4 Nf6 Nf3 e6 c4 b6 g3 Bb7 20 Bg2 Be7 Nc3 O-O O-O Ne4 Bd2 20 f5
+d4 Nf6 Nf3 e6 c4 b6 g3 Bb7 20 Bg2 Be7 Nc3 
 m
-Qc2 60
+; Karason-Polakovic, ICCF 2009 (1-0)
+Ne4 30 Bd2 Bf6 O-O O-O Rc1 c5 d5 exd5 cxd5 Nxd2 Nxd2 d6 Nde4 Be5 f4 80
+Bd4+ Kh1 Ba6 Rf3
+r
+O-O O-O Ne4 Bd2 
+m
+; Pytel-Prandstetter, 1984 (=)
+Bf6 Rc1 Nxd2 Qxd2 d6 e4
+r
+f5
+m
+; Derbenv-Ajrapetian, 2006 (0-1)
+Qc2 60 Nxc3 40 Bxc3 Be4 Qd2 d5
 r
 d5 Bf6
 m
@@ -18577,7 +19898,7 @@ r
 Ba6 10 Qf3 Nc6 e3 Bb7 Rc1 h6 h4
 r
 ; Hiarcs 14 (+=)
-Ba6 10 Qf3 Nc6 e3 Bb7 Rd1 h6 Bxf6 Qxf6 Ne2 Ne7
+Ba6 10 Qf3 Nc6 e3 Bb7 Rd1 h6 Bxf6 Qxf6 Qxf6 gxf6 Ne2
 r
 ; Tochacek-Schulz, ICCF GMN/016 email 2009 (1/2-1/2)
 Ba6 Qf3 Nc6 e3 Na5 h4 h6 Rc1 c5 Be2 Rc8 d5 Re8 Bxf6 Qxf6 Qxf6 gxf6 
@@ -18591,6 +19912,18 @@ Rd2 Bb3 Ng4 Nxg4 fxg4 Rab8 cxd5 exd5
 r
 ; Lazarev-Vehi Bach, Elgoibar 2001 (=)
 e3 d6 f3 Nbd7 Nh3 c5 dxc5 bxc5 Be2 a5 O-O a4 Rfd1 Ra6 Rd2 h6
+r
+e3 d6 f3 Nbd7 Bd3 c5 Ne2 Rc8 Qd2 cxd4 0
+r
+; Kveinys-Timman, Mallorca 2004 (1/2-1/2)
+e3 d6 f3 Nbd7 Bd3 c5 Ne2 Rc8 Qd2 Ba6 Rc1 Re8
+r
+; Rajlich-Goldbar, playchess.com 2006 (1/2-1/2)
+e3 d6 f3 h6 0 Bh4 Nbd7 Bd3 e5 Ne2 e4 fxe4 g5 e5 dxe5 Bf2 Bxg2 Rg1 exd4
+exd4
+r
+; Brenninkmeijer-Van der Wiel, NED-chT 2000 (1/2-1/2)
+e3 d6 f3 h6 0 Bh4 Nbd7 Bd3 e5 dxe5 75 Nxe5
 r
 e3 d6 Ne2 60 Nbd7 Qc2 c5 Rd1 Qc7 Nc3 a6 Be2 0 h6 
 r
@@ -18641,29 +19974,6 @@ r
 ; Sokolov-Adams, Preston 1989 (1/2-1/2)
 Qb3 d5 cxd5 Bxd5 Qa4 cxd4 exd4 Bc6 Qd1
 -
-; E35
-d4 Nf6 c4 e6 Nc3 Bb4 Qc2 d5 cxd5 exd5 Bg5
-m
-h6 30
-r
-c5
-m
-; Flear-Emms, Oakham 1994 (1/2-1/2)
-Nf3 h6 Bxf6 Qxf6 e3 O-O Be2 cxd4 Nxd4 Nc6
-r
-dxc5 h6 Bh4 g5 Bg3 Ne4 e3
-m
-; Adla-Fressinet, 2010 (1/2-1/2)
-Qf6 10 Rc1 Bf5
-r
-Qa5
-m
-; Lastin-Landa, RUS-chT Sochi 2005 (1/2-1/2)
-Nge2 Bf5 Bxb8 Rxb8 Nd4 Bd7 Bd3
-r
-; Kasparov-Short, PCA Wch 1993 (1/2-1/2)
-Be5 20 O-O Bd3 Nc6 Bxe4 Nxe5 Bxd5 Bg4 Nf3 Bxf3 Bxf3 Nf3+ gxf3 Rac8 O-O
--
 ; E32
 d4 Nf6 c4 e6 Nc3 Bb4 Qc2 O-O a3 Bxc3+ Qxc3 
 m
@@ -18698,6 +20008,41 @@ m
 Qc2 0 h6 Bh4 Nbd7
 r
 Qa4
+-
+; E35
+d4 Nf6 c4 e6 Nc3 Bb4 Qc2 d5 cxd5 exd5 Bg5
+m
+h6 30
+r
+c5
+m
+; Flear-Emms, Oakham 1994 (1/2-1/2)
+Nf3 h6 Bxf6 Qxf6 e3 O-O Be2 cxd4 Nxd4 Nc6
+r
+dxc5 h6 Bh4 g5 Bg3 Ne4 e3
+m
+; Adla-Fressinet, 2010 (1/2-1/2)
+Qf6 10 Rc1 Bf5
+r
+Qa5
+m
+; Lastin-Landa, RUS-chT Sochi 2005 (1/2-1/2)
+Nge2 Bf5 Bxb8 Rxb8 Nd4 Bd7 Bd3
+r
+; Kasparov-Short, PCA Wch 1993 (1/2-1/2)
+Be5 20 O-O Bd3 Nc6 Bxe4 Nxe5 Bxd5 Bg4 Nf3 Bxf3 Bxf3 Nf3+ gxf3 Rac8 O-O
+-
+; E36
+d4 Nf6 c4 e6 Nc3 Bb4 Qc2 d5 a3 Bxc3+ Qxc3 dxc4 Qxc4 
+m
+O-O 0 Bg5 100
+r
+b6
+m
+Bf4 O-O Nf3
+r
+; Gurevich-Adams, Khanty-Mansiysk 2007 (1/2-1/2)
+Nf3 O-O Bf4 Ba6 Qc2 Nbd7 100 Rd1 100
 -
 ; E38
 d4 Nf6 c4 e6 Nc3 Bb4 Qc2 c5 dxc5
@@ -18907,16 +20252,26 @@ m
 a3 20 cxd4 axb4 dxc3 bxc3 Qc7 Be2 Qxc3 Ba3 Nd5 Qb1 Qf6 Bd3 h6 b5 Rd8 Bb2
 Qe7 Ra4 Nc5 Bh7+ Kh8 Rc4
 r
-; Kuljasevic-Gareev, Brownsville 2010 (1/2-1/2)
-Qe2 b6 20 Rd1 cxd4 exd4 Bb7 d5 exd5 Nxd5 Re8
+Qb3 a6 a4
+r
+Qe2
+m
+; Arasan test game 2013 (=) 
+a6 a3 Ba5 Bd3 b5 b4 cxd4 Nxb5 axb5 bxa5 Nc5 exd4 Nxd3 Qxd3
 r
 ; Graf-Gashimov, Sanxenxo ESP 2007 (1/2-1/2)
-Qe2 cxd4 exd4 Nb6 Bb3 Bd7
+cxd4 exd4 Nb6 Bb3 Bd7
 r
-; Arasan test game 2013 (=) 
-Qe2 a6 20 a3 Ba5 Bd3 b5 b4 cxd4 Nxb5 axb5 bxa5 Nc5 exd4 Nxd3 Qxd3
+b6 Rd1 cxd4 exd4 Bb7 d5 
+m
+; Aronian-Karjakin, Bilbao 2009 (analysis, =)
+Bxc3 dxe6 Bxf3 gxf3 fxe6 bxc3 Qc7 Ba3 Nc5 Rd4 Rae8 100
 r
-Qb3 a6 a4
+exd5 Nxd5 Re8 Qc2 Nxd5 Bxd5 Bxd5 Rxd5 Qe7 Bg5 
+m
+f6 0
+r
+Nf6 Re5 Qb7 Bxf6 gxf6 Rxe8+ Rxe8 a3 Bc5 100
 -
 ; E59
 d4 Nf6 c4 e6 Nc3 Bb4 e3 O-O Bd3 d5 Nf3 c5 O-O Nc6 a3 Bxc3+ bxc3 dxc4 Bxc4 Qc7
@@ -19166,10 +20521,22 @@ bxc6 0 Nxd4 exd4 Bxd4
 r
 Nxc6 Nd5 b5 Nec3
 -
-; Karpov-Kindermann, Baden-Baden 1992 (=) [E84]
+; E84
 d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3 O-O Be3 Nc6 Qd2 a6 Nge2 Rb8 h4 h5 Nc1 e5 d5
-Nd4 Nb3 c5 dxc6 bxc6 Nxd4 exd4 Bxd4 Re8 Be2 d5 cxd5 cxd5 e5 Nd7 f4 Bh6
-Qe3 Rxb2 Rd1 Nf6 O-O Ng4 Qg3 Be6
+Nd4 Nb3 c5 dxc6 bxc6 Nxd4 exd4 Bxd4 Re8 Be2 d5 cxd5 
+m
+; Karpov-Kindermann, Baden-Baden 1992 (=) [E84]
+cxd5 e5 Nd7 f4 Bh6 Qe3 Rxb2 Rd1 Nf6 O-O Ng4 Qg3 Be6
+r
+Rb4
+m
+Bc5
+r
+Bxf6 0 Bxf6 O-O-O 
+m
+Bxh4 0
+r
+Qa5 a3 Rb8
 -
 ; E90
 d4 Nf6 c4 g6 Nf3 Bg7 Nc3 O-O e4 d6 h3 e5 
@@ -19264,6 +20631,23 @@ m
 Nf5 100 gxf5 gxf5 d5 cxd5 cxd5 e5 
 r
 g5 10 Nh7 Qd2 Qe7
+-
+; E92
+d4 Nf6 c4 g6 Nf3 Bg7 Nc3 O-O e4 d6 Be2 e5 Be3 Ng4 Bg5 f6 Bh4 g5 Bg3 Nh6 
+dxe5 dxe5 Qd5+
+m
+Kh8 80
+r
+Nf7 15
+m
+; Perelshteyn-Becerra Rivero, Philadelphia 2011 (Stockfish 4 analysis)
+Qxd8 Rxd8 h4 g4 Nh2 Nh6
+r
+O-O-O 
+m
+Qe7 Qa5 c6 h4 Na6 100
+r
+c6 Qxd8 Rxd8
 -
 ; E97
 d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2 e5 O-O Nc6 d5
