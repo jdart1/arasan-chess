@@ -144,11 +144,18 @@ static DWORD WINAPI parkingLot(void *x)
 static void * CDECL parkingLot(void *x)
 #endif
 {
-  ThreadPool::idle_loop((ThreadInfo*)x);
+   ThreadInfo *ti = (ThreadInfo*)x;
+   if (ti->index) {
+      ti->work = new Search(ti->pool->getController(),ti);
+   }
+   ThreadPool::idle_loop(ti);
+   // Free Search instance
+   ti->work;
+   ti->work = NULL;
 #ifdef _THREAD_TRACE
-  log("terminated, thread ",((ThreadInfo*)x)->index);
+   log("terminated, thread ",(ti->index);
 #endif
-  return 0;
+   return 0;
 }
 
 ThreadInfo::~ThreadInfo() {
@@ -198,7 +205,8 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 #endif
 }
 
-ThreadPool::ThreadPool(SearchController *controller,int n) {
+ ThreadPool::ThreadPool(SearchController *ctrl, int n) :
+    controller(ctrl) {
 #ifndef _WIN32
    if (pthread_attr_init (&stackSizeAttrib)) {
       perror("pthread_attr_init");
@@ -224,11 +232,12 @@ ThreadPool::ThreadPool(SearchController *controller,int n) {
       ThreadInfo *p = new ThreadInfo(this,i);
       if (i==0) {
          p->work = new RootSearch(controller,p);
+         p->work->ti = p;
       }
       else {
-         p->work = new Search(controller,p);
+         // defer search creation until thread starts
+         //p->work = new Search(controller,p);
       }
-      p->work->ti = p;
       data[i] = p;
    }
    activeMask = 1ULL;
@@ -269,8 +278,6 @@ void ThreadPool::shutDown() {
        void *value_ptr;
        pthread_join(p->thread_id,&value_ptr);
 #endif
-       // Free Search instance
-       delete p->work;
        // Free thread data 
        delete p;
     }
@@ -323,10 +330,7 @@ void ThreadPool::resize(unsigned n, SearchController *controller) {
         if (n>nThreads) {
             // growing
             while (n > nThreads) {
-               ThreadInfo *p = new ThreadInfo(this,nThreads);
-                p->work = new Search(controller,p);
-                p->pool = this;
-                data[nThreads++] = p;
+               data[nThreads++] = new ThreadInfo(this,nThreads);
             }
         }
         else {

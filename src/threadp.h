@@ -80,6 +80,10 @@ public:
       Unlock(poolLock);
    }
 
+   SearchController *getController() const {
+     return controller;
+   }
+
 private:
    void shutDown();
 
@@ -95,6 +99,8 @@ private:
 #ifndef _WIN32
    pthread_attr_t stackSizeAttrib;
 #endif
+
+   SearchController *controller;
 };
 
 #ifdef _THREAD_TRACE
