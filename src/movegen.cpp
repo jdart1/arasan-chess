@@ -712,7 +712,7 @@ int MoveGenerator::generateCaptures(Move * moves, const Bitboard &targets)
       }
    }
    start = board.kingSquare(side);
-   Bitboard dests(Attacks::king_attacks[start] & targets);
+   Bitboard dests(Attacks::king_attacks[start] & targets & ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())]);
    while (dests.iterate(dest)) {
       moves[numMoves++] =
          CreateMove(start,dest,King,TypeOfPiece(board[dest]));

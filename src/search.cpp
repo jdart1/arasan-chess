@@ -1273,6 +1273,17 @@ int Search::quiesce(int ply,int depth)
 #ifdef SEARCH_STATS
     controller->stats->num_qnodes++;
 #endif
+    int inCheck = (board.checkStatus((node-1)->last_move)==InCheck);
+    if (inCheck) {
+        // If last move was a checking move, ensure that in making it we did
+        // not move a pinned piece or move the king into check (normally we
+        // would detect this by finding the King can be captured, but if in
+        // check we only generate evasions and will not find this).
+        ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
+        if (!board.wasLegal((node-1)->last_move)) {
+           return -Illegal;
+        }
+    }
     int rep_count;
     if (terminate) return node->alpha;
     else if (ply >= Constants::MaxPly-1) {
@@ -1293,21 +1304,11 @@ int Search::quiesce(int ply,int depth)
             << node->beta << "]" << endl;
     }
 #endif
-    if (board.checkStatus((node-1)->last_move)==InCheck) {
-        // If last move was a checking move, ensure that in making it we did
-        // not move a pinned piece or move the king into check (normally we
-        // would detect this by finding the King can be captured, but if in
-        // check we only generate evasions and will not find this).
-        ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
-        if (!board.wasLegal((node-1)->last_move)) {
-           return -Illegal;
-        }
-        else {
+    if (inCheck) {
 #ifdef _TRACE
           indent(ply); cout << "in_check=1" << endl;
 #endif
-           return qsearch_check(ply,depth);
-        }
+        return qsearch_check(ply,depth);
     }
     else {
         return qsearch_no_check(ply,depth);
@@ -3029,7 +3030,7 @@ void Search::updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move 
 #ifdef _DEBUG
     Board board_copy(board);
     for (int i = ply; i < node->pv_length+ply; i++) {
-                ASSERT(i<Constants::MaxPly);
+        ASSERT(i<Constants::MaxPly);
 #ifdef _TRACE
         if (master()) {
             MoveImage(node->pv[i],cout); cout << " " << (flush);
