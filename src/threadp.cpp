@@ -150,7 +150,7 @@ static void * CDECL parkingLot(void *x)
    }
    ThreadPool::idle_loop(ti);
    // Free Search instance
-   ti->work;
+   delete ti->work;
    ti->work = NULL;
 #ifdef _THREAD_TRACE
    log("terminated, thread ",(ti->index);
@@ -330,7 +330,8 @@ void ThreadPool::resize(unsigned n, SearchController *controller) {
         if (n>nThreads) {
             // growing
             while (n > nThreads) {
-               data[nThreads++] = new ThreadInfo(this,nThreads);
+               data[nThreads] = new ThreadInfo(this,nThreads);
+               nThreads++;
             }
         }
         else {
