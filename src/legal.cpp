@@ -9,8 +9,9 @@ int validMove(const Board &board, Move move)
    static const int incr[2] = {-8,8};
    PieceType pieceMoved = PieceMoved(move);
    Square start = StartSquare(move); Square dest = DestSquare(move);
-   if ((TypeOfPiece(board[start]) != pieceMoved) ||
-   (PieceColor(board[start]) != board.sideToMove())) {
+   if (!OnBoard(start) || !OnBoard(dest) ||
+       (TypeOfPiece(board[start]) != pieceMoved) ||
+       (PieceColor(board[start]) != board.sideToMove())) {
       return 0;
    }
    else if (TypeOfMove(move) == EnPassant) {
