@@ -908,8 +908,8 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
    const Square kp = board.kingSquare(board.sideToMove());
    king_attacks = board.calcAttacks(kp, board.oppositeSide());
    if (king_attacks.isClear()) {
-     cout << board << endl;
-         ASSERT(0);
+      cout << board << endl;
+      ASSERT(0);
    }
    num_attacks = king_attacks.bitCountOpt();
    if (num_attacks == 1) {
