@@ -1,10 +1,13 @@
-// Copyright 1992, 1999, 2011, 2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2013 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
 
 #include "chess.h"
 #include "board.h"
+#ifdef _DEBUG
+#include "legal.h"
+#endif
 
 extern const hash_t rep_codes[3];
 
@@ -35,7 +38,7 @@ class PositionInfo
 
       PositionInfo(int value, int depth,
          ValueType type, int age, int flags = 0,
-      Move bestMove = NullMove) {
+         Move bestMove = NullMove) {
          contents.value = value;
          contents.depth = depth;
          contents.age = age;
@@ -109,7 +112,7 @@ class PositionInfo
          else {
             Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
                (PieceType)contents.promotion);
-            //if (!validMove(b,m)) m = NullMove;
+            //if (!validMove(b,m)) return NullMove;
             if (forced()) SetForced(m);
             if (forced2()) SetForced2(m);
             return m;
@@ -211,18 +214,21 @@ class Hash {
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = NULL;
         for (i = MaxRehash; i != 0; --i) {
-            HashEntry &entry = *p;
+            // Copy hashtable entry before hash test below (avoids
+            // race where entry is validated, then changed).
+            HashEntry entry(*p);
             if (entry.getEffectiveHash() == hashCode) {
                 /*
                 // we got a hit on this entry in the current search,
                 // so update the age to discourage replacement:
                 if (entry.age() && (entry.age() != age)) {
-                entry.setAge(age);
-                entry.setEffectiveHash(hashCode);
+                   entry.setAge(age);
+                   entry.setEffectiveHash(hashCode);
+                   *p = entry;
                 }
                 */
-                pi = entry;
                 hit = &entry;
+                pi = entry;
                 if (entry.depth() >= depth) {
                     // usable depth
                     goto hash_hit;
