@@ -500,7 +500,7 @@ Bitboard to hold rook locations). Since there is only one king
 location, though, this is kept in an integer variable.
 
 Besides the bit boards, there is some other information in the Board
-structre. The enPassantSq array holds the square position at which an
+structure. The enPassantSq variable holds the square position at which an
 en passant capture is possible (if none is possible, it has the value
 IllegalSquare). The castleStatus array holds an enum for each side
 indicating whether castling has occurred. Also, if the king or a rook
