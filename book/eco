@@ -221,7 +221,9 @@ B07     1. d4 d6 2. e4 Nf6 3. Nc3 g6 "Pirc Defense"
 B07     1. e4 d6 2. d4 Nf6 3. Nc3 e5 4. dxe5 "Pirc Defense"
 B08     1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Nf3 Bg7 "Pirc Defense, Classical Variation"
 B08     1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Nf3 Bg7 5. Be2 O-O "Pirc Defense, Classical Variation"
-B09     1. e4 d6 2. d4 Nf6 "Pirc Defense"
+B08     1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Nf3 Bg7 5. Be2 O-O 6. O-O c6 "Pirc Defense, Classical Variation"
+B08     1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Nf3 Bg7 5. Be2 O-O 6. O-O Bg4 "Pirc Defense, Classical Variation"
+B08     1. e4 d6 2. d4 g6 3. Nc3 Bg7 4. Be3 Nf6 5. Nf3 O-O 6. Be2 Nbd7 7. O-O c6 8. a4 Qc7 "Pirc Defense, Classical Variation"
 B09     1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. f4 "Pirc Defense, Austrian Attack"
 B09     1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. f4 Bg7 "Pirc Defense, Austrian Attack"
 
@@ -714,6 +716,7 @@ D25     1. d4 d5 2. c4 dc4 3. Nf3 Nf6 4. e3 "Queen's Gambit Accepted"
 D25     1. d4 d5 2. c4 dc4 3. Nc3 g6 4. Nf3 Nf6 5. e3 Bg7 6. Bxc4 O-O 7. O-O "Queen's Gambit Accepted"
 D26     1. d4 d5 2. c4 dc4 3. Nf3 Nf6 4. e3 e6 "Queen's Gambit Accepted"
 D26     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 dxc4 5. e3 c5 6. Bxc4 cxd4 7. exd4 Be7 8. O-O O-O 9. Qe2 "Queen's Gambit Accepted"
+D27     1. d4 d5 2. c4 dc4 3. Nf3 Nf6 4. e3 e6 5. Bc4 a6 6. O-O 
 D27     1. d4 d5 2. c4 dc4 3. Nf3 Nf6 4. e3 e6 5. Bc4 c5 6. O-O a6
 D28     1. d4 d5 2. c4 dc4 3. Nf3 Nf6 4. e3 e6 5. Bc4 c5 6. O-O a6 7. Qe2
 D29     1. d4 d5 2. c4 dc4 3. Nf3 Nf6 4. e3 e6 5. Bc4 c5 6. O-O a6 7. Qe2 b5 8. Bb3 Bb7
@@ -816,6 +819,7 @@ D74     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cd5 Nd5 7. O-O "Gru
 
 D75     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cd5 Nd5 7. O-O c5 "Gruenfeld Defense, Fianchetto Variation"
 D76     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cd5 Nd5 7. O-O Nb6 "Gruenfeld Defense, Fianchetto Variation"
+D76     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cd5 Nd5 7. O-O Nb6 8. Nc3 Nc6 "Gruenfeld Defense, Fianchetto Variation"
 D76     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cd5 Nd5 7. O-O Nb6 8. Nc3 Nc6 9. e3 Re8 "Gruenfeld Defense, Fianchetto Variation"
 D77     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. O-O "Gruenfeld Defense, Fianchetto Variation"
 D78     1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. O-O c6 "Gruenfeld Defense, Fianchetto Variation"
