@@ -2126,12 +2126,8 @@ int Search::search()
             default:
                 break;
         } // end switch
-        // Note: hash move & flags may be usable even if score is not usable
+        // Note: hash move may be usable even if score is not usable
         hash_move = hashEntry.bestMove(board);
-        // Entries from the learn file or from a TB hit do not have check status
-        if (!hashEntry.tb() && !hashEntry.learned()) {
-            board.setCheckStatus(hashEntry.inCheck() ? InCheck : NotInCheck);
-        }
     }
     if (IsNull(hash_move)) {
         // try the qsearch cache for a move
@@ -2671,7 +2667,6 @@ int Search::search()
             val_type,
             node->best_score, 
             (node->PV() ? PositionInfo::FULL_MASK : 0) |
-            (board.checkStatus() == InCheck ? PositionInfo::CHECK_MASK : 0) |
             (IsForced(node->best) ? PositionInfo::FORCED_MASK : 0) |
             (IsForced2(node->best) ? PositionInfo::FORCED2_MASK : 0),
             node->best);

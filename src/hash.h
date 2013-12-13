@@ -22,7 +22,6 @@ class PositionInfo
          TYPE_MASK = 0x3,
          TB_MASK = 0x04,
          LEARNED_MASK = 0x08,
-         CHECK_MASK = 0x10,
          FULL_MASK = 0x20,
          FORCED_MASK = 0x40,
          FORCED2_MASK = 0x80
@@ -71,10 +70,6 @@ class PositionInfo
 
       void setAge(int age) {
          contents.age = age;
-      }
-
-      int inCheck() const {
-         return (int)((contents.flags & CHECK_MASK) != 0);
       }
 
       int forced() const {

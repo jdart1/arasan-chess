@@ -85,7 +85,6 @@ void Hash::loadLearnInfo()
                PositionInfo::Valid,
                rec.score,
                       PositionInfo::FULL_MASK | PositionInfo::LEARNED_MASK |
-                      (rec.in_check ? PositionInfo::CHECK_MASK : 0) |
                       (IsForced(best) ? PositionInfo::FORCED_MASK : 0) |
                       (IsForced2(best) ? PositionInfo::FORCED2_MASK : 0),
                best);
