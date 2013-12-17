@@ -2684,8 +2684,6 @@ int Search::search()
 #ifdef SEARCH_STATS
     controller->stats->futility_pruning += node->fpruned_moves;
 #endif
-    controller->stats->num_nodes += nodeAccumulator;
-    nodeAccumulator = 0;
     int score = node->best_score;
     ASSERT(score >= -Constants::MATE && score <= Constants::MATE);
     return score;
