@@ -132,15 +132,6 @@ SearchController::SearchController()
 #ifdef SMP_STATS
     sample_counter = SAMPLE_INTERVAL;
 #endif
-#ifdef _WIN32
-    HANDLE inh = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD dw;
-    pipe = !GetConsoleMode(inh, &dw);
-    if (!pipe) {
-        SetConsoleMode(inh, dw & ~(ENABLE_LINE_INPUT |
-            ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
-    }
-#endif
     LockInit(split_calc_lock);
     pool = new ThreadPool(this,options.search.ncpus);
     ThreadInfo *ti = pool->mainThread();
@@ -472,6 +463,10 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     activeSplitPoints(0),split(NULL),scoring(&c->hashTable),ti(threadInfo) {
     LockInit(splitLock);
     setSearchOptions();
+    // Ensure the thread creating this Search instance is the
+    // first to touch the local hash memory (important for NUMA
+    // systems).
+    clearHashTables();
 }
 
 Search::~Search() {

@@ -241,9 +241,6 @@ class SearchController {
     void updateStats(NodeInfo *node,int iteration_depth,
 		     int score, int alpha, int beta);
 
-#ifdef _WIN32
-    int pipe;
-#endif
     int uci;
     int age;
     int explicit_excludes;
