@@ -2177,17 +2177,16 @@ static void loadgame(Board &board,ifstream &file) {
     ChessIO::collect_headers(file,hdrs,first);
     ColorType side = White;
     for (;;) {
-        static char buf[256];
-        static char num[20];
-        ChessIO::Token tok = ChessIO::get_next_token(file,buf,256);
-        if (tok == ChessIO::Eof)
+        static string num;
+        ChessIO::Token tok = ChessIO::get_next_token(file);
+        if (tok.type == ChessIO::Eof)
             break;
-        else if (tok == ChessIO::Number) {
-            strncpy(num,buf,20);
+        else if (tok.type == ChessIO::Number) {
+            num = tok.val;
         }
-        else if (tok == ChessIO::GameMove) {
+        else if (tok.type == ChessIO::GameMove) {
             // parse the move
-            Move m = Notation::value(board,side,Notation::SAN_IN,buf);
+            Move m = Notation::value(board,side,Notation::SAN_IN,tok.val);
             if (IsNull(m) ||
                 !legalMove(board,StartSquare(m),
                            DestSquare(m))) {
@@ -2206,7 +2205,7 @@ static void loadgame(Board &board,ifstream &file) {
             }
             side = OppositeColor(side);
         }
-        else if (tok == ChessIO::Result) {
+        else if (tok.type == ChessIO::Result) {
             break;
         }
     }

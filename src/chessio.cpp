@@ -433,125 +433,115 @@ void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, lon
         }
 }
 
-ChessIO::Token ChessIO::get_next_token(istream &game_file, char *buf, int limit)
-{
-    Token tok = Unknown;
-    int count = 0;
+ChessIO::Token ChessIO::get_next_token(istream &game_file) {
+    TokenType tok = Unknown;
     int c = EOF;
+    string value;
     while (!game_file.eof()) {
       c = game_file.get();
       if (!isspace(c)) break;
     }
-    if (c == EOF)
-       return Eof;
-    else if (c=='{')
-    {
-        *buf++ = c;
-        ++count;
-        while (game_file.good() && c != '}')
-        {
-            c = game_file.get();
-            if (count < limit-1)
-            {
-               *buf++ = c;
-               ++count;
-            }
-        }
-        if (c=='}' && count < limit-1)
-        {
-            *buf++ = c;
-        }
-        *buf = '\0';
-        return Comment;
-        //c = game_file.get();
+    if (c == EOF) {
+      return Token(Eof,value);
     }
-    if (isdigit(c))
-    {
+    else if (c=='{') {
+        value += c;
+        while (game_file.good() && c != '}') {
+            c = game_file.get();
+            if (c == EOF) break;
+            value += c;
+        }
+        if (c=='}') {
+            value += c;
+        }
+        return Token(Comment,value);
+    }
+    else if (c == '(') {
+        value += '(';
+        return Token(OpenVar,value);
+    }
+    else if (c == ')') {
+        value += ')';
+        return Token(CloseVar,value);
+    } else if (c == '$') {
+        value += c;
+        while (game_file.good()) {
+            c = game_file.get();
+            if (!isdigit(c)) {
+                break;
+            }
+            value += c;
+        }
+        return Token(NAG,value);
+    }
+    if (isdigit(c)) {
+        // peek at next char.
         int nextc = game_file.get();
-        if (c == '0')
-        {
-           // peek at next char.
+        if (c == '0') {
            if (nextc == '-')
            {
                // some so-called PGN files have 0-0 or 0-0-0 for
                // castling.  To handle this, we need to peek ahead
                // one more character.
                int nextc2 = game_file.peek();
-               if (toupper(nextc2) == 'O' || nextc2 == '0')
-               {            
+               if (toupper(nextc2) == 'O' || nextc2 == '0') {            
                   // castling, we presume
-                  buf[count++] = c;
+                  value += c;
                   c = nextc;
                   while (game_file.good() && (c == '-' ||
-                    c == '0' || toupper(c) == 'O' || c == '+'))
-                  {
-                     if (count < limit-1)
-                        buf[count++] = c;
-                     c = game_file.get();
+                    c == '0' || toupper(c) == 'O' || c == '+')) {
+                      value += c;
+                      c = game_file.get();
                   }
-                  buf[count] = '\0';
                   game_file.putback(c);
-                  return GameMove;
+                  return Token(GameMove,value);
                }
            }
         }
-        if (nextc == '-' || nextc == '/') // assume result
-        {
-            buf[count++] = c;
+        if (nextc == '-' || nextc == '/') { // assume result
+            value += c;
             c = nextc;
-            while (!game_file.eof() && game_file.good() && !isspace(c))
-            {
-                if (count < limit-1)
-                    buf[count++] = c;
+            while (!game_file.eof() && game_file.good() && !isspace(c)) {
+                value += c;
                 c = game_file.get();
             }
             tok = Result;
         }
-        else
-        {
+        else {
             // Assume we have a move number.
-            buf[count++] = c;
+            value += c;
             c = nextc;
             while (game_file.good() && (isdigit(c) || c == '.'))
             {
-               if (count < limit-1)
-                  buf[count++] = c;
+               value += c;
                c = game_file.get();
             }
             game_file.putback(c);
-            return Number;
+            tok = Number;
        }
-       buf[count] = '\0';
    }           
-   else if (isalpha(c))
-   {
+   else if (isalpha(c)) {
        while (game_file.good() && (isalnum(c) 
-              || c == '-' || c == '=' || (c == '+')))
-       {
-           if (count < limit-1)
-               buf[count++] = c;
+              || c == '-' || c == '=' || (c == '+'))) {
+           value += c;
            c = game_file.get();
        }
-       buf[count] = '\0';
        game_file.putback(c);
-       return GameMove;
+       tok = GameMove;
    }
-   else if (c == '#') // "Checkmate"
-   {
-       *buf = c; *(buf+1) = '\0';
+   else if (c == '#') { // "Checkmate"
+       value += c;
        tok = Ignore;
    }
-   else if (c == '*')
-   {
-       *buf = c; *(buf+1) = '\0';
+   else if (c == '*') {
+       value += c;
        tok = Result;
    }
-   else
-   {
-       *buf = c; *(buf+1) = '\0';
+   else {
+       value += c;
        tok = Unknown;
    }
-   return tok;
+   return Token(tok,value);
 } 
 
 

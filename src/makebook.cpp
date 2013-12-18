@@ -489,20 +489,27 @@ static int do_pgn(ifstream &infile, const string &book_name)
       ++games;
       int ply = 0;
       // process a game
+      int var = 0;
       for (;;) {
-         static char buf[2048];
-         static char num[20];
-         ChessIO::Token tok = ChessIO::get_next_token(infile,buf,2048);
-         if (tok == ChessIO::Eof)
+         string num;
+         ChessIO::Token tok = ChessIO::get_next_token(infile);
+         if (tok.type == ChessIO::Eof)
             break;
-         else if (tok == ChessIO::Number) {
-            strncpy(num,buf,10);
+         else if (var && tok.type == ChessIO::CloseVar) {
+             --var;
          }
-         else if (tok == ChessIO::GameMove) {
+         else if (tok.type == ChessIO::OpenVar) {
+             ++var;
+         }
+         if (var) continue; // ignore variations for now
+         if (tok.type == ChessIO::Number) {
+            num = tok.val;
+         }
+         else if (tok.type == ChessIO::GameMove) {
             // parse the move
-            Move move = Notation::value(board,side,Notation::SAN_IN,buf);
+            Move move = Notation::value(board,side,Notation::SAN_IN,tok.val);
             if (IsNull(move)) {
-                cerr << "Illegal move: " << buf << 
+                cerr << "Illegal move: " << tok.val << 
                    " in game " << games << ", file " <<
                    book_name << endl;
                 return -1;
@@ -511,7 +518,7 @@ static int do_pgn(ifstream &infile, const string &book_name)
                 if (ply++ <= maxPly) {
                     int move_indx = get_move_indx(board,move);
                     if (move_indx == -1) {
-                        cerr << "Illegal move: " << buf << 
+                        cerr << "Illegal move: " << tok.val << 
                          " in game " << games << ", file " <<
                           book_name << endl;
                          return -1;
@@ -526,20 +533,20 @@ static int do_pgn(ifstream &infile, const string &book_name)
             }
             side = OppositeColor(side);
          }
-         else if (tok == ChessIO::Unknown) {
- 	    cerr << "Unrecognized text: " << buf << 
+         else if (tok.type == ChessIO::Unknown) {
+ 	    cerr << "Unrecognized text: " << tok.val << 
                          " in game " << games << ", file " <<
                           book_name << endl;
          }
-         else if (tok == ChessIO::Comment) {
+         else if (tok.type == ChessIO::Comment) {
             // ignored for now
          }
-         else if (tok == ChessIO::Result) {
-            if (strstr(buf,"1/2-1/2"))
+         else if (tok.type == ChessIO::Result) {
+            if (tok.val == "1/2-1/2")
                last_result = DrawResult;
-            else if (strstr(buf,"0-1") || strstr(buf,"0:1"))
+            else if (tok.val=="0-1" || tok.val=="0:1")
                last_result = Black_Win;
-            else if (strstr(buf,"1-0") || strstr(buf,"1:0"))
+            else if (tok.val == "1-0" || tok.val == "1:0")
                last_result = White_Win;
             else
                 last_result = UnknownResult;

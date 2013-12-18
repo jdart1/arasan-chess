@@ -10,7 +10,6 @@
 #include "movearr.h"
 #include "notation.h"
 #include "chessio.h"
-#include "chessio.h"
 
 #include <iostream>
 
@@ -209,11 +208,78 @@ static int testNotation() {
     return errs;
 }
 
+int testPGN() { 
+static const string pgn_test = "[Event \"?\"]"
+"[Site \"chessclub.com\"]"
+"[Date \"2013.12.16\"]"
+"[Round \"?\"]"
+"[White \"?\"]"
+"[Black \"?\"]"
+"[Result \"*\"]"
+"[ECO \"B08\"]"
+"[WhiteElo \"2527\"]"
+"[BlackElo \"2558\"]"
+""
+"1. d4 g6 2. e4 Bg7 3. Nc3 c6 4. Nf3 d6 5. Be2 Nf6 6. O-O O-O 7. a4 a5 (7..."
+"Nbd7 $1 8. h3 e5 9. dxe5 dxe5 10. Qd6 Re8 11. Bc4 Bf8 12. Qd3 h6 13. Rd1 Qc7"
+"14. Qe3 Nc5 15. b3 b6 16. Ba3 Kg7 17. b4 Ne6 18. Rdb1 Bb7 19. a5 b5 20. Bxe6"
+"Rxe6 21. Bc1 Kg8 22. a6 Bc8 23. Ne1 Re8 24. Qf3 Nd7 25. Nd3 Nb8 26. Nc5 Nd7 27."
+"Nd3 Nb8 28. Nc5 Nd7 29. Nd3 {1/2-1/2 (29) Saglione,E (2547)-Ludgate,A (2515)"
+"ICCF 2010}) 8. h3 Na6 9. Bf4 *";
+
+      stringstream infile(pgn_test);
+      int errs = 0;
+      int var = 0;
+      int seen = 0;
+      for (;;) {
+         string num;
+         ChessIO::Token tok = ChessIO::get_next_token(infile);
+         if (tok.type == ChessIO::OpenVar) {
+             seen |= 1;
+             ++var;
+         } else if (tok.type == ChessIO::CloseVar) {
+             seen |= 2;
+             --var;
+         } else if (tok.type == ChessIO::NAG) {
+             seen |= 4;
+             if (tok.val != "$1") {
+                 ++errs;
+                 cout << "PGN test: NAG error" << endl;
+             }
+         } else if (tok.type == ChessIO::Comment) {
+             seen |= 8;
+             if (tok.val.substr(0,9) != "{1/2-1/2 ") {
+                 ++errs;
+                 cout << "PGN test: comment error" << endl;
+             }
+         }
+         else if (tok.type == ChessIO::Result) {
+             seen |= 16;
+             if (tok.val != "*") {
+                 ++errs;
+                 cout << "PGN test: result error" << endl;
+             }
+         }
+         if (tok.type == ChessIO::Eof)
+            break;
+      }
+      if (var) {
+          ++errs;
+          cout << "PGN test: variation not closed" << endl;
+      }
+      if (seen != 0x1f) {
+          ++errs;
+          cout << "PGN test: missing tokens" << endl;
+      }
+      return errs;
+}
+
 int doUnit() {
 
    int errs = 0;
    errs += testNotation();
    errs += testIsPinned();
    errs += testSee();
+   errs += testPGN();
    return errs;
 }

@@ -64,10 +64,25 @@ public:
     // read an EPD file, return 1 if ok, 0 if EOF
     static int readEPDRecord(istream &ifs, Board &board, EPDRecord &out);
     
-    enum Token { Number, GameMove, Result, Comment, Unknown, Ignore, Eof };
+    enum TokenType { Number, GameMove, Result, 
+                     OpenVar,
+                     CloseVar,
+                     NAG,
+                     Comment, Unknown, Ignore, Eof };
+
+    struct Token {
+        TokenType type;
+        string val;
+        Token() :
+        type(Unknown),val("") {
+        }
+        Token(TokenType t, string v) :
+        type(t),val(v) {
+        }
+    };
 
     // read the next token from the "body" of a PGN game.
-    static Token get_next_token(istream &game_file, char *buf, int limit);
+    static Token get_next_token(istream &game_file);
 
     // return (in descr) a single-line description of a game, based on
     // its PGN headers (for game list display).
