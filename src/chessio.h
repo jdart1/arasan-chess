@@ -68,6 +68,7 @@ public:
                      OpenVar,
                      CloseVar,
                      NAG,
+                     BlackMove,
                      Comment, Unknown, Ignore, Eof };
 
     struct Token {

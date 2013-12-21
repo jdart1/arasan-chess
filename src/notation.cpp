@@ -147,198 +147,200 @@ static int is_file(char c) {
 
 Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image) 
 {
-   int rank = 0;
-   int file = 0;
+    int rank = 0;
+    int file = 0;
 
-   PieceType piece = Empty;
-   PieceType promotion = Empty;
-   Square dest = InvalidSquare, start = InvalidSquare;
-   int capture = 0;
+    PieceType piece = Empty;
+    PieceType promotion = Empty;
+    Square dest = InvalidSquare, start = InvalidSquare;
+    int capture = 0;
 
-   stringstream s(image);
-   string::const_iterator it = image.begin();
-   int i = 0;
-   while (it != image.end() && isspace(*it)) {
+    stringstream s(image);
+    string::const_iterator it = image.begin();
+    int i = 0;
+    while (it != image.end() && isspace(*it)) {
+        it++;
+        i++;
+    }
+    if (it == image.end() || !isalpha(*it)) return NullMove;
+    string img(image,i); // string w/o leading spaces
+    ASSERT(img.length());
+    it = img.begin();
+    if (*it == 'O' || *it == '0') {
+       // castling, we presume
+       return parseCastling(board, side, img);
+    } else if (format == WB_IN) {
+       if (img.length() < 4) return NullMove;
+       Square start = SquareValue(img.substr(0,2));
+       if (!OnBoard(start)) return NullMove;
+       Square dest = SquareValue(img.substr(2,2));
+       if (!OnBoard(dest)) return NullMove;
+       PieceType promotion = Empty;
+       if (img.length() > 4) {
+          promotion = PieceCharValue(toupper(img[4]));
+       }
+       return CreateMove(board,start,dest,promotion);
+    }
+    int have_start = 0;
+    if (isupper(*it)) {
+       piece = PieceCharValue(*it);
        it++;
-       i++;
-   }
-   if (it == image.end() || !isalpha(*it)) return NullMove;
-   string img(image,i); // string w/o leading spaces
-   ASSERT(img.length());
-   it = img.begin();
-   if (*it == 'O' || *it == '0') {
-      // castling, we presume
-      return parseCastling(board, side, img);
-   } else if (format == WB_IN) {
-	  if (img.length() < 4) return NullMove;
-	  Square start = SquareValue(img.substr(0,2));
-	  if (!OnBoard(start)) return NullMove;
-	  Square dest = SquareValue(img.substr(2,2));
-	  if (!OnBoard(dest)) return NullMove;
-	  PieceType promotion = Empty;
-	  if (img.length() > 4) {
-	     promotion = PieceCharValue(toupper(img[4]));
-	  }
-	  return CreateMove(board,start,dest,promotion);
-   }
-   int have_start = 0;
-   if (isupper(*it)) {
-      piece = PieceCharValue(*it);
-      it++;
-   }
-   else {
-      piece = Pawn;
-      if ((it+1) != img.end()) {
+    }
+    else {
+       piece = Pawn;
+       if ((it+1) != img.end()) {
           char next = *it;
-    	  file = next-'a'+1;
-		  if (file < 1 || file > 8) return NullMove;
+          file = next-'a'+1;
+          if (file < 1 || file > 8) return NullMove;
           char next2 = *(it+1);
           if (next2 == 'x' || is_file(next2)) {
              // allow "dc4" as in Informant, instead of dxc4
-			 it++;
+             it++;
              capture = 1;
           }
           else if (isdigit(next2) && img.length()>2) {
              char next3 = *(it+2);
              if ((next3 == 'x' || next3 == '-') && img.length()>=5) {
-                  // long algebraic notation
-                  have_start++;
-                  start = SquareValue(next,next2);
-                  if (start == InvalidSquare) return NullMove;
-                  it+=3; // point to dest
-                  piece = TypeOfPiece(board[start]);
-              }
+                // long algebraic notation
+                have_start++;
+                start = SquareValue(next,next2);
+                if (start == InvalidSquare) return NullMove;
+                it+=3; // point to dest
+                piece = TypeOfPiece(board[start]);
+             }
           }
-      }
-   }
-   if (piece == Empty) {
-      return NullMove;
-   }
-   if (piece != Pawn && !have_start && it != img.end()) {
-     char next = *it;
-     char next2 = '\0';
-     if (it + 1 != img.end()) next2 = *(it+1);
-     if (is_file(next) && isdigit(next2) && img.length()>=5) {
-         // long algebraic notation, or a SAN move like Qd1d3
-         start = SquareValue(next,next2);
-         if (IsInvalid(start)) return NullMove;
-         it+=2;
-         have_start++;
-     }
-     // also look for disambiguating rank, e.g. '2' in "N2e4".
-     else if (isdigit(next)) {
-         rank = next - '0';
-         if (rank < 1 || rank > 8) return NullMove;
-         it++;
-      }
-      else if (is_file(next) && isalpha(next2)) {
-         file = next - 'a' + 1;
-         if (file < 1 || file > 8) return NullMove;
-         it++;
-      }
-   }
+       }
+    }
+    if (piece == Empty) {
+       return NullMove;
+    }
+    if (piece != Pawn && !have_start && it != img.end()) {
+       char next = *it;
+       char next2 = '\0';
+       if (it + 1 != img.end()) next2 = *(it+1);
+       if (is_file(next) && isdigit(next2) && img.length()>=5) {
+          // long algebraic notation, or a SAN move like Qd1d3
+          start = SquareValue(next,next2);
+          if (IsInvalid(start)) return NullMove;
+          it+=2;
+          have_start++;
+       }
+       // also look for disambiguating rank, e.g. '2' in "N2e4".
+       else if (isdigit(next)) {
+          rank = next - '0';
+          if (rank < 1 || rank > 8) return NullMove;
+          it++;
+       }
+       else if (is_file(next) && isalpha(next2)) {
+          // disamiguating rank, e.g. "Rfd1"
+          file = next - 'a' + 1;
+          if (file < 1 || file > 8) return NullMove;
+          it++;
+       }
+    }
 
-   if (it != img.end() && *it == 'x') {
-	   capture = 1;
-	   it++;
-   }
-   if (it != img.end() && (it+1) != img.end()) {
+    if (it != img.end() && *it == 'x') {
+       capture = 1;
+       it++;
+    }
+    if (it != img.end() && (it+1) != img.end()) {
        // remainder of move should be a square identifier, e.g. "g7"
        dest = SquareValue(*it,*(it+1));
-	   it += 2;
-   }
-   if (IsInvalid(dest)) {
-      return NullMove;
-   }
-   if (it != img.end() && *it == '=') {
-      it++;
-      if (it == img.end()) {
+       it += 2;
+    }
+    if (IsInvalid(dest)) {
+       return NullMove;
+    }
+    if (it != img.end() && *it == '=') {
+       it++;
+       if (it == img.end()) {
           return NullMove;
-      } else {
+       } else {
           promotion = PieceCharValue(*it);
           if (piece != Pawn || promotion == Empty)
-              return NullMove;
-		  it++;
-      }
-   }
-   else if (piece == Pawn && it != img.end() && isupper(*it)) {
-      // Quite a few "PGN" files have a8Q instead of a8=Q.
-      promotion = PieceCharValue(*it);
-      if (promotion == Empty || Rank(dest,side) != 8)
-         return NullMove;
-   } else if (piece == Pawn && Rank(dest,side) == 8) {
+             return NullMove;
+          it++;
+       }
+    }
+    else if (piece == Pawn && it != img.end() && isupper(*it)) {
+       // Quite a few "PGN" files have a8Q instead of a8=Q.
+       promotion = PieceCharValue(*it);
+       if (promotion == Empty || Rank(dest,side) != 8)
+          return NullMove;
+    } else if (piece == Pawn && Rank(dest,side) == 8) {
        // promotion but no piece specified, treat as error
        return NullMove;
-   }
+    }
 
-   // Informant does not use "x" for captures.  Assume that if the destination
-   // is occupied, this is a capture move.
-   if (board[dest] != EmptyPiece) {
-      capture = 1;
-   }
-   // Do a sanity check on capture moves:
-   if (capture && !IsEmptyPiece(board[dest]) && PieceColor(board[dest]) == board.sideToMove())
-      return NullMove;
+    // Informant does not use "x" for captures.  Assume that if the destination
+    // is occupied, this is a capture move.
+    if (board[dest] != EmptyPiece) {
+       capture = 1;
+    }
+    // Do a sanity check on capture moves:
+    if (capture && !IsEmptyPiece(board[dest]) && PieceColor(board[dest]) == board.sideToMove()) {
+       return NullMove;
+    }
 
-   // Ok, now we need to figure out where the start square is. For pawn
-   // moves this is implicit.
+    // Ok, now we need to figure out where the start square is. For pawn
+    // moves this is implicit.
 
-   int dups = 0;
+    int dups = 0;
 
-   if (!have_start) {
-      if (capture && piece == Pawn && IsEmptyPiece(board[dest]) &&
-      Rank(dest,board.sideToMove()) != 8) {
-         // en passant capture, special case
-         int start_rank = (board.sideToMove() == White) ?
-            Rank(dest,White) - 1 :
-         Rank(dest,White) + 1;
+    if (!have_start) {
+       if (capture && piece == Pawn && IsEmptyPiece(board[dest]) &&
+           Rank(dest,board.sideToMove()) != 8) {
+          // en passant capture, special case
+          int start_rank = (board.sideToMove() == White) ?
+             Rank(dest,White) - 1 :
+             Rank(dest,White) + 1;
 
-         start = MakeSquare(file, start_rank, White);
-         dups = 1;
-      }
-      else if (piece == Pawn && board[dest] == EmptyPiece) {
-         start = MakeSquare(file,Rank(dest,board.sideToMove())-1,board.sideToMove());
-         if (board[start] == EmptyPiece && Rank(dest,board.sideToMove())==4) {
-            start = MakeSquare(file,Rank(dest,board.sideToMove())-2,board.sideToMove());
-         }
-         if (board[start] == EmptyPiece) return NullMove;
-         dups = 1;
-      }
-      else {
-         Bitboard attacks = board.calcAttacks(dest,side);
-         Square maybe;
-         while (attacks.iterate(maybe)) {
-            if (TypeOfPiece(board[maybe]) == piece &&
-            PieceColor(board[maybe]) == board.sideToMove()) {
-               if (file && File(maybe) != file)
-                  continue;
-               if (rank && Rank(maybe,White) != rank)
-                  continue;
-               if (PieceColor(board[maybe]) == board.sideToMove()) {
-                  // Possible move to this square.  Make sure it is legal.
-                  Board board_copy(board);
-                  Move emove = CreateMove(board,maybe,dest,
-                     promotion);
-                  board_copy.doMove(emove);
-                  if (!board_copy.anyAttacks(
-                     board_copy.kingSquare(board_copy.oppositeSide()),
-                  board_copy.sideToMove())) {
-                     ++dups;
-                     start = maybe;
-                  }
-               }
-            }
-         }
-      }
-   }
-   if (dups == 1 || have_start) {
-      if (start == InvalidSquare || board[start] == EmptyPiece)
-         return NullMove;
-      else
-         return CreateMove(board, start, dest, promotion);
-   }
-   else                                           // ambiguous move
-      return NullMove;
+          start = MakeSquare(file, start_rank, White);
+          dups = 1;
+       }
+       else if (piece == Pawn && board[dest] == EmptyPiece) {
+          start = MakeSquare(file,Rank(dest,board.sideToMove())-1,board.sideToMove());
+          if (board[start] == EmptyPiece && Rank(dest,board.sideToMove())==4) {
+             start = MakeSquare(file,Rank(dest,board.sideToMove())-2,board.sideToMove());
+          }
+          if (board[start] == EmptyPiece) return NullMove;
+          dups = 1;
+       }
+       else {
+          Bitboard attacks = board.calcAttacks(dest,side);
+          Square maybe;
+          while (attacks.iterate(maybe)) {
+             if (TypeOfPiece(board[maybe]) == piece &&
+                 PieceColor(board[maybe]) == board.sideToMove()) {
+                if (file && File(maybe) != file)
+                   continue;
+                if (rank && Rank(maybe,White) != rank)
+                   continue;
+                if (PieceColor(board[maybe]) == board.sideToMove()) {
+                   // Possible move to this square.  Make sure it is legal.
+                   Board board_copy(board);
+                   Move emove = CreateMove(board,maybe,dest,
+                                           promotion);
+                   board_copy.doMove(emove);
+                   if (!board_copy.anyAttacks(
+                          board_copy.kingSquare(board_copy.oppositeSide()),
+                          board_copy.sideToMove())) {
+                      ++dups;
+                      start = maybe;
+                   }
+                }
+             }
+          }
+       }
+    }
+    if (dups == 1 || have_start) {
+       if (start == InvalidSquare || board[start] == EmptyPiece)
+          return NullMove;
+       else
+          return CreateMove(board, start, dest, promotion);
+    }
+    else                                           // ambiguous move
+       return NullMove;
 }
 
 Move Notation::parseCastling( const Board &b,

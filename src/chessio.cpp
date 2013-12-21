@@ -451,9 +451,6 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
             if (c == EOF) break;
             value += c;
         }
-        if (c=='}') {
-            value += c;
-        }
         return Token(Comment,value);
     }
     else if (c == '(') {
@@ -463,18 +460,35 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
     else if (c == ')') {
         value += ')';
         return Token(CloseVar,value);
-    } else if (c == '$') {
+    } 
+    else if (c == '$') {
         value += c;
         while (game_file.good()) {
             c = game_file.get();
-            if (!isdigit(c)) {
+            if (!game_file.good()) {
+                break;
+            }
+            else if (!isdigit(c)) {
+                game_file.putback(c);
                 break;
             }
             value += c;
         }
         return Token(NAG,value);
     }
-    if (isdigit(c)) {
+    else if (c == '.') {
+        value += c;
+        if (!game_file.eof() && game_file.good()) {
+             c = game_file.get();
+             if (c == '.') {
+                 value += c;
+                 tok = BlackMove;
+             } else {
+                 game_file.putback(c);
+             }
+        }
+    }
+    else if (isdigit(c)) {
         // peek at next char.
         int nextc = game_file.get();
         if (c == '0') {
@@ -511,14 +525,18 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
             // Assume we have a move number.
             value += c;
             c = nextc;
-            while (game_file.good() && (isdigit(c) || c == '.'))
+            while (game_file.good() && isdigit(c))
             {
                value += c;
                c = game_file.get();
             }
-            game_file.putback(c);
+            if (game_file.good() && c == '.') {
+                value+=c;
+            } else {
+                game_file.putback(c);
+            }
             tok = Number;
-       }
+        }
    }           
    else if (isalpha(c)) {
        while (game_file.good() && (isalnum(c) 

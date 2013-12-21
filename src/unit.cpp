@@ -170,11 +170,12 @@ static int testNotation() {
         NotationData("r2q2k1/3bbppp/3pn3/1p2pN2/4P2n/2P2N1P/1PB1QPP1/2BR2K1 w - -","N3xh4"),
         NotationData("2r2rk1/6pp/2pqr3/p4pB1/1b1P4/1Q2QPP1/1P2P1BP/2R2RK1 w - -","Qexe6"),
         NotationData("r4k2/3b1p1p/3n1npN/4p3/1Q2P3/7P/1Pq2PP1/2BR1NK1 b - -","Nxe4"),
-        NotationData("8/3b2kp/4p1p1/pr1n4/2N1N2P/1P4P1/1K3P2/3R4 w - -","Ned6")
+        NotationData("8/3b2kp/4p1p1/pr1n4/2N1N2P/1P4P1/1K3P2/3R4 w - -","Ned6"),
+        NotationData("r1r3k1/2n1ppbp/npp5/p2pP2p/P2P1N2/1PP5/3B1PPN/2Rb1RK1 w - -","Rfxd1")
     };
 
     int errs = 0;
-    for (int i = 0; i < 14; i++) {
+    for (int i = 0; i < 15; i++) {
         Move m = Notation::value(notationData[i].board,
                                  notationData[i].board.sideToMove(),
                                  Notation::SAN_IN,
@@ -190,9 +191,9 @@ static int testNotation() {
         cerr << "error in FEN: " << fenStr << endl;
         return ++errs;
     }
-    Move m = Notation::value(board,White,Notation::WB_IN,"e7e8q");
-    if (m == NullMove || StartSquare(m) != E7 || DestSquare(m) != E8 || PromoteTo(m) != Queen) {
-       cout << "notation: error in case 15" << endl;
+    Move m = Notation::value(board,White,Notation::WB_IN,"d7d8q");
+    if (m == NullMove || StartSquare(m) != D7 || DestSquare(m) != D8 || PromoteTo(m) != Queen) {
+       cout << "notation: error in case 16" << endl;
        ++errs;
     }
     fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
@@ -202,7 +203,7 @@ static int testNotation() {
     }
     m = Notation::value(board,White,Notation::WB_IN,"e2e4");
     if (m == NullMove || StartSquare(m) != E2 || DestSquare(m) != E4 || PromoteTo(m) != Empty) {
-       cout << "notation: error in case 16" << endl;
+       cout << "notation: error in case 17" << endl;
        ++errs;
     }
     return errs;
