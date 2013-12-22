@@ -51,5 +51,5 @@ arm-linux.
 "make release" will build the release tarball and place it in the
 release subdirectory.
 
-"make install" will install Arasan binaries into /usr/local/bin/arasan-16.3.0.
+"make install" will install Arasan binaries into /usr/local/bin/arasan-16.4.0.
 (You will need to be root, or use sudo, to execute "make install"). 
