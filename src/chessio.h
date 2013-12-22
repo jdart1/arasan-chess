@@ -1,4 +1,4 @@
-// Copyright 1996-2008 by Jon Dart. All Rights Reserved
+// Copyright 1996-2008, 2013 by Jon Dart. All Rights Reserved
 #ifndef __CHESSIO_H__
 #define __CHESSIO_H__
 
