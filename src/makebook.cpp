@@ -269,8 +269,7 @@ static void computeWeights(BookEntry2 &be)
             // to modify high-frequency moves, because the basic book
             // is incomplete and there will be branches between those
             // moves and the eval point.
-            const int eval = (*it)->eval;
-            // evals from NAGs are -4..4
+            // Note: ev is range -4..4
             const int ev = (int)(*it)->eval-(int)EQUAL_POSITION-1;
             const int div = 1 + (*it)->count/10;
             if (black_to_move) {
