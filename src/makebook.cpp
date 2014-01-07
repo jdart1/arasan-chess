@@ -239,7 +239,7 @@ static void computeWeights(BookEntry2 &be)
          w = ((*it)->relativeFreq*winWeight)/50;
          if ((*it)->first && (*it)->count < minFrequency) {
              // This move is in the first annotated book file but
-             // occurs elsewhere with low frequency. If we have
+             // occurs elsewhere with very low frequency. If we have
              // information about it from an annotation, start
              // it with a neutral eval and modify that based on
              // the annotation (even if it has 0 winning results).
@@ -258,20 +258,25 @@ static void computeWeights(BookEntry2 &be)
          if ((*it)->moveEval != NO_MOVE_EVAL) {
             // if there is an eval (from a NAG) for the move, use that
             // to modify the weight
-            int ev = (int)(*it)->moveEval-(int)NEUTRAL_EVAL-1;
+            const int ev = (int)(*it)->moveEval-(int)NEUTRAL_EVAL-1;
             // move evals are -1..2
             w = w*(100-25*ev)/100;
          }
-         PositionEval eval = (*it)->eval;
-         if (eval != NO_POSITION_EVAL) {
+         else if ((*it)->eval != NO_POSITION_EVAL) {
             // if there is an eval (from a NAG) for the position, use
-            // that to modify the weight
-            int ev = (int)eval-(int)EQUAL_POSITION-1;
-            // evals are -4..4
+            // that to modify the weight. Note though position evals
+            // are generally at the end of a line, and we do not want
+            // to modify high-frequency moves, because the basic book
+            // is incomplete and there will be branches between those
+            // moves and the eval point.
+            const int eval = (*it)->eval;
+            // evals from NAGs are -4..4
+            const int ev = (int)(*it)->eval-(int)EQUAL_POSITION-1;
+            const int div = 1 + (*it)->count/10;
             if (black_to_move) {
-               w = w*(100-25*ev)/100;
+                w = w*(100-25*ev/div)/100;
             } else {
-               w = w*(100+25*ev)/100;
+                w = w*(100+25*ev/div)/100;
             }
          }
 #ifdef _TRACE
