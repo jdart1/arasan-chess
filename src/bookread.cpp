@@ -1,8 +1,5 @@
-// Copyright 1993-1999, 2005, 2009, 2012, 2013 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014 by Jon Dart.
 // All Rights Reserved.
-#ifdef _MSC_VER
-#pragma optimize("g", off)
-#endif
 
 #include "bookread.h"
 #include "constant.h"
@@ -11,8 +8,10 @@
 #include "globals.h"
 #include "util.h"
 #include "debug.h"
+extern "C" {
 #include <string.h>
 #include <math.h>
+};
 #include <iostream> // for debugging
 #include <assert.h>
 #ifdef _WIN32
@@ -141,15 +140,12 @@ void BookReader::fetch( const BookLocation &loc, BookInfo &book_info )
 
    hc = swapEndian64(entry);
    book_info.my_hash_code = hc;
-   book_info.frequency = entry[8];
-   book_info.move_index = entry[9];
-   book_info.flags = entry[10];
-   book_info.winloss = entry[11];
+   book_info.learn_score = swapEndianFloat(entry+8);
+   book_info.move_index = entry[12];
+   book_info.learned_result = entry[13];
+   book_info.weight = swapEndian16(entry+14);
    book_info.setLocation(loc);
-   // convert float byte order if necessary
-   book_info.learn_score = swapEndianFloat(entry+12);
-   book_info.flags2 = entry[16];
-   book_info.weight = entry[17];
+
 }
 
 void BookReader::update(const BookLocation &loc, float learn_factor)
@@ -157,11 +153,11 @@ void BookReader::update(const BookLocation &loc, float learn_factor)
    fetch_page(loc.page);
    byte *entry = pPage + Header_Size + hdr.hash_table_size*2 + ((int)loc.index)*Entry_Size;
    // get the existing learn factor
-   float old_factor = swapEndianFloat(entry+12);
+   float old_factor = swapEndianFloat(entry+8);
    // update it
    learn_factor += old_factor;
    // write to book image in memory
-   float *e = (float*)(entry+12);
+   float *e = (float*)(entry+8);
    *e = swapEndianFloat((byte*)&learn_factor);
    syncCurrentPage();
 }
@@ -169,7 +165,7 @@ void BookReader::update(const BookLocation &loc, float learn_factor)
 void BookReader::update(const BookLocation &loc,BookEntry *newEntry) {
    fetch_page(loc.page);
    byte *entry = pPage + Header_Size + hdr.hash_table_size*2 + ((int)loc.index)*Entry_Size;
-   entry[16] = newEntry->flags2;
+   entry[13] = newEntry->learned_result;
    syncCurrentPage();
 }
 
@@ -177,70 +173,29 @@ void BookReader::update(const BookLocation &loc,BookEntry *newEntry) {
 // Determine the weighting a book move will receive. Moves with higher weights
 // will be played more often.
 //
-static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
-{
-   int rec = be.get_recommend();
+static int get_weight(const BookInfo &be) {
+   int rec = be.getWeight();
 #ifdef _TRACE
-   cout << "index = " << (int)be.get_move_index() << " rec= " << rec;
+   cout << "index = " << (int)be.get_move_index() << " rec= " << rec << endl;
 #endif
    if (rec == 0 && !options.book.random) {
-#ifdef _TRACE
-      cout << endl;
-#endif
       return 0;
    }
-   int w = be.get_winloss();
-   int freq = be.get_frequency();
-   // If strength reduction is enabled, "dumb down" the opening book
-   // by pruning away infrequent moves.
-   if (options.search.strength < 100 && freq <
-       1<<((100-options.search.strength)/10)) {
-       return 0;
-   }
-   // Early in the opening some moves will have respectable frequency
-   // but still a low percentage of play. 
-   // At low selectivity settings, boost frequency for these moves, so they
-   // do not get 0 weight due to rarity.
-   int s = (50-options.book.selectivity)/2;
-   int onepct = total_freq/100;
-   if (freq >= 50 && s > 0 && freq < 10*onepct) {
-      freq = Util::Min((s*onepct)/5,freq*s);
-   }
-   int freqWeight = (100*freq)/total_freq;
-   int winWeight = (w+100)/2;
-   // If "random" option is on, do not give moves zero weight due to
-   // a bad win percentage. But still somewhat favor moves with better scores.
-   if (options.book.random) {
-      winWeight = Util::Max(winWeight,5+Util::Max(0,25-options.book.selectivity/2));
-   }
-
-#ifdef _TRACE
-     cout << " freqWeight=" << freqWeight << " winWeight=" << winWeight << endl;
-#endif
+   
    // fold in result learning. 
    if (options.learning.result_learning) {
      int w2 = be.get_learned_result();
      if (w2 < 0) w2 = Util::Max(w2,-20);
      if (w2 > 0) w2 = Util::Min(w2,20);
-     winWeight = (winWeight + (w2*8));
-     if (winWeight < 0) winWeight = 0;
-     if (winWeight > 100) winWeight = 100;
+     rec = rec*(100+w2)/100;
    }
-   int base;
-   // Favor more frequent moves and moves that win
-   if (rec != BookEntry::NO_RECOMMEND) {
-      base = rec;
-   }
-   else {
-      base = (freqWeight*winWeight)/40;
-   }
-   base = Util::Min(100,base);
+   int base = Util::Min(BookEntry::MAX_WEIGHT,rec);
    if (base == 0) return 0;
    // Factor in score-based learning
    if (options.learning.score_learning) {
-     int score = (int)be.learn_score;
+      int score = (int)be.learn_score;
       if (score >= 0)
-         return Util::Min(100,(base*(10+score))/10);
+         return Util::Min(BookEntry::MAX_WEIGHT,(base*(10+score))/10);
       else
          return Util::Max(0,(base*(10+score))/10);
    }
@@ -249,46 +204,23 @@ static int get_weight(const BookInfo &be,int total_freq,const ColorType side)
 }
 
 int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry *moves, BookLocation *locs, int *scores, int limit) {
-   int total_freq = 0;
-   // get the total move frequency (needed for computing weights)
-   BookLocation tmp = loc;
-   while (tmp.index != INVALID) {
-      BookInfo be;
-      fetch(tmp, be);
-      if (be.hash_code() == b.hashCode()) {
-          if (be.get_recommend() != 0) {
-             total_freq += be.get_frequency();
-          }
-      }
-      if (be.is_last())
-         break;
-      else
-         tmp.index++;
-   }
-   tmp = loc;
-   // Determine the total weights of moves for this position,
-   // and build a list of candidate moves.
+   //
+   // Build a list of candidate moves.
    //
    BookEntry candidates[100];
    int candidate_weights[100];
    int candidate_count = 0; 
-   unsigned total_weight = 0;
-   int max_weight = 0;
 
+   BookLocation tmp = loc;
    while (tmp.index != INVALID) {
       BookInfo be;
       fetch(tmp, be);
 
-      if (b.hashCode() == be.hash_code()) {
-         int w  = get_weight(be,total_freq,b.sideToMove());
+      if (b.hashCode() == be.hashCode()) {
+         int w = get_weight(be);
 #ifdef _TRACE
-         cout << "index = " << (int)tmp.index << " weight = " << w << " move index = " << (int)be.move_index <<
-         " is_basic = " << be.is_basic() << endl;
+         cout << "index = " << (int)tmp.index << " weight = " << w << " move index = " << (int)be.move_index << endl;
 #endif
-         if (w > max_weight) {
-            max_weight = w;
-         }
-         total_weight += w;
          if (w > 0) {
             candidate_weights[candidate_count] = w;
             candidates[candidate_count++] = be;
@@ -303,49 +235,63 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
    cout << "candidate_count = " << candidate_count << endl;
 #endif
 
-   // Normalize weights
-   int new_max_weight = 0;
-   for (int i=0; i<candidate_count; i++) {
-      candidate_weights[i] = int((100.0*candidate_weights[i])/total_weight + 0.5);
-      if (candidate_weights[i] > new_max_weight) {
-         new_max_weight = candidate_weights[i];
+   // Sort by weights
+   for (int i=1; i<candidate_count; i++) {
+      int key = candidate_weights[i];
+      BookInfo tmp = candidates[i];
+      BookLocation loc = locs[i];
+      int j = i-1;
+      for (; j >= 0 && candidate_weights[j] < key; j--) {
+         candidates[j+1] = candidates[j];
+         candidate_weights[j+1] = candidate_weights[j];
+         locs[j+1] = locs[j];
       }
+      candidates[j+1] = tmp;
+      candidate_weights[j+1] = key;
+      locs[j+1] = loc;
    }
 
-   int i;
-   total_weight = 0;
-   const int min_weight = minWeight();
+   int total_weight = 0;
+   for (int i=0; i<candidate_count; i++) {
+      if (i && candidate_weights[i] && options.book.selectivity < 50) {
+         // At low selectivity settings, boost values of low ranked moves
+         candidate_weights[i] = Util::Min(candidate_weights[0],
+                                          candidate_weights[i]+
+                                          candidate_weights[i]*(50-options.book.selectivity)/100);
+      }
+      total_weight += candidate_weights[i];
 #ifdef _TRACE
-   cout << "selectivity=" << options.book.selectivity << " min_weight = " << min_weight << endl;
+      cout << " weight=" << candidate_weights[i] << endl;
+#endif      
+   }
+
+#ifdef _TRACE
+   cout << "selectivity=" << options.book.selectivity << endl;
 #endif
    int candidate_count2 = 0;
    // Depending on the selectivity value, remove moves from the
    // candidate list.
-   for (i = 0; i < candidate_count; i++) {
-      int w  = candidate_weights[i];
-      if (w && w != new_max_weight) {
-         // boost weight of low-rated moves
-         w = Util::Min(new_max_weight,w + 
-                       w*(50-options.book.selectivity)/150 + 
-                       Util::Max(0,new_max_weight*(25-options.book.selectivity)/100));
-         w = Util::Max(0,w);
-      }
+   int tot = 0;
+   // Stop selecting when accumulated move weight reaches "target". 
+   // "target" is lower for higher selectivity values.
+   int target = (int)(BookEntry::MAX_WEIGHT*(100.0-45.0*(2.0-log10(104-options.book.selectivity)))/100);
 #ifdef _TRACE
-      cout << " w = " << w << " index=" << (int)candidates[i].move_index << endl;
+   cout << "target weight=" << target << endl;
 #endif
-      if (w && w >= min_weight) {
-         total_weight += w;
-         scores[candidate_count2] = w;
-         moves[candidate_count2] = candidates[i];
-         locs[candidate_count2++] = tmp;
+   for (int i = 0; i < candidate_count; i++) {
+      int w  = candidate_weights[i];
+      tot += w;
+      scores[candidate_count2] = w;
+      moves[candidate_count2++] = candidates[i];
+      if (tot > target) {
+         break;
       }
    }
 
    // renormalize after selectivity rules applied
    for (int i=0; i<candidate_count2; i++) {
-      scores[i] = int((100.0*scores[i])/total_weight + 0.5);
+      scores[i] = int((BookEntry::MAX_WEIGHT*scores[i])/total_weight + 0.5);
    }
-
    return candidate_count2;
 }
 
@@ -409,7 +355,7 @@ Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candida
          info.setMove(moves[candidates[i].move_index]);
          info.setTotalMoves(candidate_count);
          info.setLocation(locs[i]);
-	 info.set_hash_code(candidates[i].hash_code());
+	 info.setHashCode(candidates[i].hashCode());
          return moves[candidates[i].move_index];
       }
    }
@@ -440,44 +386,20 @@ int BookReader::book_moves(const Board &b, Move *moves, int *scores, const unsig
 }
 
 int BookReader::book_move_count(hash_t hashcode) {
+   int num_moves = 0;
    BookLocation tmp;
    head(hashcode,tmp);
    BookEntry target(hashcode,0,0,0);
-   int num_moves = 0;
-   int total_freq = 0;
-   // get the total move frequency
-   while (tmp.index != INVALID)
-   {
-      BookInfo be;
-      fetch(tmp,be);
-      if (target == be && be.get_recommend())
-      {
-         num_moves++;
-         total_freq += be.get_frequency();
-      }
-      if (be.is_last())
-         break;
-      else
-         tmp.index++;
-   }
-   if (num_moves == 0)
-      return 0;
    BookLocation loc;
    head(hashcode,loc);
-   num_moves = 0;
    tmp = loc;
-   ColorType side;
-   if (hashcode & (hash_t)1)
-     side = Black;
-   else
-     side = White;
    while (tmp.index != INVALID)
    {
       BookInfo be;
       fetch(tmp,be);
       int w;
              
-      if (target == be && (w = get_weight(be,total_freq,side)) != 0)
+      if (target == be && (w = get_weight(be)) != 0)
       {
 	num_moves++;
       }
@@ -512,7 +434,3 @@ void BookReader::fetch_page(int page)
    current_page = page;
 }
 
-int BookReader::minWeight() const {
-   int sel = options.book.selectivity;
-   return int(0.015F*pow((float)sel,1.5F));
-}

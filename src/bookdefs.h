@@ -1,4 +1,4 @@
-// Copyright 1996 by Jon Dart.  All Rights Reserved
+// Copyright 1996-2013 by Jon Dart.  All Rights Reserved
 #ifndef __BOOKDEFS_H__
 #define __BOOKDEFS_H__
 
@@ -10,7 +10,7 @@
 
 #define INVALID (uint16)0xffff
 
-#define BookVersion 12
+#define BookVersion 13
 
 // Header of the opening book.
 struct BookHeader

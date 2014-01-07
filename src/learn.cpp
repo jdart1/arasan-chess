@@ -164,7 +164,7 @@ void learnResult(ColorType computerSide, Log::GameResult result, int ratingDiff)
      theLog->write(str.str());
 
      // see if there's an alternative book move at this position
-     if (openingBook->reader->book_move_count(book_info.hash_code())> 1)
+     if (openingBook->reader->book_move_count(book_info.hashCode())> 1)
        return; // all done
      i-=2;
    }

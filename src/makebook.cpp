@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2014 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // a text file.
@@ -24,11 +24,8 @@
 // array the first book entry for the position.
 
 // The book entries themselves are structures defined in bookentr.h.
-// Each one is 18 bytes and contains the full hash code, the move
-// index, win/loss info for the move, a weight indicating how
-// often the computer should play the move, and some learning information.
 // Hash entries for each chain in the hash table are stored contiguously
-// in the book, and the weight byte for the last entry in each chain has
+// in the book, and the weight for the last entry in each chain has
 // its hi bit set.
 
 #include "board.h"
@@ -48,6 +45,7 @@
 #include <iostream>
 #include <algorithm>
 #include <map>
+#include <stack>
 #include <vector>
 using namespace std;
 
@@ -69,9 +67,57 @@ static unsigned int hashSize;
 static int maxPly = 70; 
 static bool verbose = false;
 
+enum MoveEval {NO_MOVE_EVAL,
+               BLUNDER_MOVE,POOR_MOVE,QUESTIONABLE_MOVE,NEUTRAL_EVAL,
+               INTERESTING_MOVE,GOOD_MOVE,VERY_GOOD_MOVE};
+enum PositionEval {NO_POSITION_EVAL,
+                   BLACK_WINNING_ADVANTAGE,
+                   BLACK_STRONG_ADVANTAGE,
+                   BLACK_MODERATE_ADVANTAGE,
+                   BLACK_ADVANTAGE,
+                   EQUAL_POSITION,
+                   WHITE_ADVANTAGE,
+                   WHITE_MODERATE_ADVANTAGE,
+                   WHITE_STRONG_ADVANTAGE,
+                   WHITE_WINNING_ADVANTAGE};
+static map<string, MoveEval> moveEvals;
+static map<string, PositionEval> positionEvals;
+
 static string output_name;
 
 class BookEntry2;
+
+struct MoveListEntry {
+    Move move;
+    int index;
+    unsigned rec;
+    MoveEval moveEval;
+    // store state so moves are undoable
+    BoardState state;
+    MoveListEntry(): move(NullMove),
+                     index(0),
+                     rec(BookEntry::NO_RECOMMEND),
+                     moveEval(NO_MOVE_EVAL) {
+    }
+};
+
+struct Variation {
+    Board save;
+    vector<MoveListEntry> moves;
+    ResultType result;
+    PositionEval eval;
+    Variation() {
+       eval = NO_POSITION_EVAL;
+       result = UnknownResult;
+    }
+    Variation(const Board &b) : save(b) {
+       eval = NO_POSITION_EVAL;
+       result = UnknownResult;
+    }
+    Move lastMove() const {
+        return moves.size() == 0 ? NullMove : moves[moves.size()-1].move;
+    }
+};
 
 struct book_info
 {
@@ -80,30 +126,48 @@ struct book_info
    BookEntry2 **book_moves;                       // array of BookEntry2 *
 };
 
-static unsigned int minFrequency = 0;
+static int minFrequency = 0;
 
 // During opening book construction, we add some extra members to
 // each book entry type.
 class BookEntry2  : public BookEntry
 {
    public:
-      BookEntry2( hash_t hc, byte rec, byte mv_indx,
-         BookEntry2 *nxt, bool from_bk, bool last = false);
+   BookEntry2( hash_t hc, unsigned rec, PositionEval ev, 
+               MoveEval mev, ResultType result,
+               byte mv_indx,
+               BookEntry2 *nxt, bool first, bool last = false);
 
     BookEntry2 *next;
-    bool from_bk;
-    unsigned int count;                         // number of times position has occurred
-    int white_win_loss;                         // wins - losses for White
+    bool first;
+    int count;  // number of times position has occurred
+    int white_win_loss;  // wins - losses for White
+    PositionEval eval;
+    MoveEval moveEval;
+    unsigned rec; // explicit weight if any
+    int relativeFreq;
     unsigned int next_index;
 };
 
 
-BookEntry2::BookEntry2( hash_t hc, byte rec, byte mv_indx,
-BookEntry2 *nxt, bool bk, bool last)
-:BookEntry(hc,rec,mv_indx,last),next(nxt),from_bk(bk)
+BookEntry2::BookEntry2( hash_t hc, unsigned r, PositionEval ev,
+                        MoveEval mev,
+                        ResultType result, byte mv_indx,
+                        BookEntry2 *nxt, bool bk, bool last)
+:BookEntry(hc,r,mv_indx,last),next(nxt),first(bk)
 {
-   white_win_loss = 0;
+   rec = r;
+   eval = ev;
+   moveEval = mev;
    count = 1;
+   weight = 0;
+   white_win_loss = 0;
+   if (result == White_Win) {
+      white_win_loss++;
+   }
+   else if (result == Black_Win) {
+      white_win_loss--;
+   }
 }
 
 
@@ -111,11 +175,136 @@ static map <uint64, BookEntry2 *>* hashTable = NULL;
 
 static book_info *book_data;
 
-static void
-add_move(const Board & board, int move_index, int recommend, bool is_bk_file,
-         ResultType last_result)
+// Compute a recommended relative weight for a set of book
+// moves from a given position
+static void computeWeights(BookEntry2 &be) 
 {
-    map<uint64,BookEntry2 *>::const_iterator it =
+
+   vector<BookEntry2*> moves;
+   BookEntry2 *p = &be;
+   // collect all related moves into a vector and compute their
+   // relative frequencies
+   int total = 0;
+   while (p) {
+      if ((p->count >= minFrequency) || p->first) {
+          total += p->count;
+          moves.push_back(p);
+      }
+      p=p->next;
+   }
+   ASSERT(total);
+   for (vector<BookEntry2*>::iterator it = moves.begin();
+        it != moves.end();
+        it++) {
+        (*it)->relativeFreq = BookEntry::MAX_WEIGHT*((*it)->count)/total;
+   }
+   const int black_to_move = (be.hashCode() & (hash_t)1);
+   // Now compute the weights
+   int totalWeight = 0;
+   for (vector<BookEntry2*>::iterator it = moves.begin();
+        it != moves.end();
+        it++) {
+      int w;
+      if ((*it)->rec != BookEntry::NO_RECOMMEND) {
+         w = (*it)->rec*BookEntry::MAX_WEIGHT/100;
+#ifdef _TRACE
+         cout << "explicit weight: " << w << endl;
+#endif
+      }
+      else if ((*it)->moveEval == BLUNDER_MOVE ||
+               (*it)->moveEval == POOR_MOVE) {
+         // don't play these moves
+         w = 0;
+#ifdef _TRACE
+         cout << "avoid move: " << w << endl;
+#endif
+      }
+      else if ((*it)->moveEval == VERY_GOOD_MOVE) {
+         w = BookEntry::MAX_WEIGHT;
+#ifdef _TRACE
+         cout << "best move: " << w << endl;
+#endif
+      }
+      else {
+         int winloss;
+         if (black_to_move) {
+            winloss = (-(*it)->white_win_loss*100)/(*it)->count;
+         }
+         else {
+            // white is on move
+            winloss = ((*it)->white_win_loss*100)/(*it)->count;
+         }
+         int winWeight = (winloss+100)/2;
+
+         w = ((*it)->relativeFreq*winWeight)/50;
+         if ((*it)->first && (*it)->count < minFrequency) {
+             // This move is in the first annotated book file but
+             // occurs elsewhere with low frequency. If we have
+             // information about it from an annotation, start
+             // it with a neutral eval and modify that based on
+             // the annotation (even if it has 0 winning results).
+             // If however there is no NAG associated with the move,
+             // use the win/loss frequency to set the weight as usual.
+             if ((*it)->moveEval != NO_MOVE_EVAL ||
+                 (*it)->eval != NO_POSITION_EVAL) {
+                 w = BookEntry::MAX_WEIGHT/2;
+             }
+         }
+#ifdef _TRACE
+         cout << "winWeight = " << winWeight << " relativeFreq=" <<
+            (*it)->relativeFreq << " computed weight=" << w << endl;
+         int w1 = w;
+#endif 
+         if ((*it)->moveEval != NO_MOVE_EVAL) {
+            // if there is an eval (from a NAG) for the move, use that
+            // to modify the weight
+            int ev = (int)(*it)->moveEval-(int)NEUTRAL_EVAL-1;
+            // move evals are -1..2
+            w = w*(100-25*ev)/100;
+         }
+         PositionEval eval = (*it)->eval;
+         if (eval != NO_POSITION_EVAL) {
+            // if there is an eval (from a NAG) for the position, use
+            // that to modify the weight
+            int ev = (int)eval-(int)EQUAL_POSITION-1;
+            // evals are -4..4
+            if (black_to_move) {
+               w = w*(100-25*ev)/100;
+            } else {
+               w = w*(100+25*ev)/100;
+            }
+         }
+#ifdef _TRACE
+         if (w1 != w) cout << "adjusted weight: " << w << endl;
+#endif 
+      }
+      // This weight is not normalized yet, so allow it to exceed max weight
+      w = Util::Min(w,2*BookEntry::MAX_WEIGHT);
+      (*it)->setWeight(w);
+      totalWeight += w;
+   }
+   // last pass: normalize the weights
+   for (vector<BookEntry2*>::iterator it = moves.begin();
+        it != moves.end();
+        it++) {
+      if (totalWeight) {
+         (*it)->setWeight((*it)->getWeight()*BookEntry::MAX_WEIGHT/totalWeight);
+      }
+      else {
+         // no moves have non-zero weight
+         (*it)->setWeight(0);
+      }
+   }
+}
+
+
+static void
+add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
+         const Variation &var)
+{
+   const int move_index = m.index;
+   const int recommend = m.rec;
+   map<uint64,BookEntry2 *>::const_iterator it =
       hashTable->find(board.hashCode());
    BookEntry2 *be;
    if (it == hashTable->end())
@@ -126,7 +315,8 @@ add_move(const Board & board, int move_index, int recommend, bool is_bk_file,
        BookEntry2 *new_entry;
        try {
           new_entry = new BookEntry2(board.hashCode(), recommend,
-            move_index, NULL, is_bk_file, false);
+                                     var.eval, m.moveEval, var.result,
+                                     move_index, NULL, is_first_file, false);
        } catch(std::bad_alloc) {
           cerr << "out of memory!" << endl;
           exit(-1);
@@ -136,11 +326,12 @@ add_move(const Board & board, int move_index, int recommend, bool is_bk_file,
       cout << "inserting: " <<
          " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
          Bitboard(board.hashCode()).lovalue() << (dec) <<
-         " index = " << (int)move_index << " from bk = " << (int)is_bk_file <<
+         " index = " << (int)move_index << " from bk = " << (int)is_first_file <<
          " recommend=" << (int)recommend << endl;
 #endif
    }
    else {
+      // update existing entry
       BookEntry2 *p = be;
       int found = 0;
       while (p && !found) {
@@ -150,39 +341,52 @@ add_move(const Board & board, int move_index, int recommend, bool is_bk_file,
          p = p->next;
       }
       if (found) {
+         // Move already in hash table
          p->count++; 
-         if (last_result == White_Win) {
+         if (var.result == White_Win) {
             p->white_win_loss++;
          }
-         else if (last_result == Black_Win) {
+         else if (var.result == Black_Win) {
             p->white_win_loss--;
+         }
+         if (m.rec != BookEntry::NO_RECOMMEND &&
+             p->rec == BookEntry::NO_RECOMMEND) {
+            // set explicit weight if not set already
+            p->rec = m.rec;
+         }
+         if (m.moveEval != NO_MOVE_EVAL && p->moveEval == NO_MOVE_EVAL) {
+            // set move eval if not set already
+            p->moveEval = m.moveEval;
          }
 #ifdef _TRACE
          cout << "updating: " <<
             " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
             Bitboard(board.hashCode()).lovalue() << (dec) <<
-            " index = " << (int)move_index << " from bk = " << (int)is_bk_file <<
+            " index = " << (int)move_index << 
+            " first = " << (int)is_first_file <<
             " winloss=" << p->white_win_loss <<
+            " rec=" << p->rec <<
             " count=" << p->count << endl;
 #endif
       }
       else {
+         // Position is in hashtable, but not with this move.
 #ifdef _TRACE
          cout << "inserting: " <<
             " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
             Bitboard(board.hashCode()).lovalue() << (dec) <<
-            " index = " << (int)move_index << " from bk = " << (int)is_bk_file <<
+            " index = " << (int)move_index << " from bk = " << (int)is_first_file <<
             " recommend=" << (int)recommend << endl;
 #endif
          BookEntry2 *new_entry;
          try {
             new_entry = new BookEntry2(board.hashCode(), recommend,
-            move_index, p, is_bk_file, false);
+                                       var.eval, m.moveEval, var.result,
+                                       move_index, be, is_first_file, false);
          } catch(std::bad_alloc) {
             cerr << "out of memory!" << endl;
             exit(-1);
          }
-         new_entry->next = (*hashTable)[board.hashCode()];
          (*hashTable)[board.hashCode()] = new_entry;
       }
    }
@@ -192,34 +396,31 @@ add_move(const Board & board, int move_index, int recommend, bool is_bk_file,
 static void
 add_move(BookEntry2 *new_entry)
 {
-   hash_t hc = new_entry->hash_code();
+   hash_t hc = new_entry->hashCode();
    unsigned page = (unsigned)(hc % bookPages);
    // use the high order bits of the hash code as the table probe
    unsigned probe = (unsigned) (hc>>32) % hashSize;
    unsigned hit = book_data[page].hash_table[probe];
    new_entry->next_index = hit;
-   {
-      if (book_data[page].next_free >= max_moves) {
-         cerr << "\nError - Too many moves in book " <<
-            "(page " << page << ")" << endl;
-         exit(-1);
-      }
-      unsigned next = book_data[page].next_free;
-      book_data[page].book_moves[next] = new_entry;
-      book_data[page].hash_table[probe] = next;
+   if (book_data[page].next_free >= max_moves) {
+      cerr << "\nError - Too many moves in book " <<
+         "(page " << page << ")" << endl;
+      exit(-1);
+   }
+   unsigned next = book_data[page].next_free;
+   book_data[page].book_moves[next] = new_entry;
+   book_data[page].hash_table[probe] = next;
 
 #ifdef _TRACE
-      cout << "inserting pg:" << page << " probe:" << probe <<
-         " h:" << (hex) << Bitboard(new_entry->hash_code()).hivalue() <<
-         Bitboard(new_entry->hash_code()).lovalue() <<
-         (dec) << " i:" <<
-         (int)new_entry->get_move_index() << " slot:" << next <<
-         " w:" << new_entry->get_recommend() << endl;
+   cout << "inserting pg:" << page << " probe:" << probe <<
+      " h:" << (hex) << Bitboard(new_entry->hashCode()).hivalue() <<
+      Bitboard(new_entry->hashCode()).lovalue() <<
+      (dec) << " i:" <<
+      (int)new_entry->get_move_index() << " slot:" << next <<
+      " w:" << new_entry->getWeight() << endl;
 #endif
-      book_data[page].next_free++;
-   }
+   book_data[page].next_free++;
 }
-
 
 static void write_page(int page,ofstream &book_file)
 {
@@ -265,31 +466,18 @@ static void write_page(int page,ofstream &book_file)
       else {
          book_file.put((char)(running_count % 256));
          book_file.put((char)(running_count / 256));
-#ifdef _TRACE
-         //         cout << "slot " << i << " writing hash entry " << running_count << endl;
-#endif
-
          unsigned indx = ht_entry;
          BookEntry2 *entry = NULL;
          while (indx != INVALID) {
             entry = book_data[page].book_moves[indx];
-            //cout  << "Hash = " << (hex) << Bitboard(entry->hash_code()).hivalue() <<
-            //Bitboard(entry->hash_code()).lovalue() <<
-            //" white winloss = " << entry->white_win_loss << endl;
-            if (entry->hash_code() & (hash_t)1) {
-                entry->set_winloss((-entry->white_win_loss*100)/(int)entry->count);
-            }
-            else {
-               // white is on move
-               entry->set_winloss((entry->white_win_loss*100)/(int)entry->count);
-            }
-            entry->set_frequency(entry->count);
             entry->learn_score = 0.0F;
             indx = entry->next_index;
             ++running_count;
          }
-         if (entry)
+         if (entry) {
             entry->set_last();
+         }
+         
       }
    }
 
@@ -305,6 +493,7 @@ static void write_page(int page,ofstream &book_file)
          // fix multi-byte values for endian-ness:
          new_entry.my_hash_code = swapEndian64((byte*)&(book_entr->my_hash_code));
          new_entry.learn_score = (float)swapEndian32((byte*)&(book_entr->learn_score));
+         new_entry.weight = (uint16)swapEndian16((byte*)&(book_entr->weight));
          if (index + (unsigned)Entry_Size <= (unsigned)Buffer_Size) {
             memcpy(write_buffer + index,
                &new_entry, Entry_Size);
@@ -366,113 +555,33 @@ static int get_move_indx(const Board &board, Move move) {
     return move_indx;
 }
 
-static int do_bk(ifstream &infile)
-{
-   unsigned line = 0;
-   Board board;
-   Board tmpboard;
-
-   ResultType last_result = UnknownResult;
-
-   string buf;
-   while (!infile.eof() && infile.good()) {
-      std::getline(infile,buf);
+static void processVar(const Variation &var, bool first) {
+    // Game has been processed, now add moves to book (we do this
+    // only after seeing the whole variation, because we want the
+    // end of line eval or result, if any).
 #ifdef _TRACE
-      cout << buf << endl;
+    cout << "process var: board=" << var.save << " hash=" << (hex) << var.save.hashCode() << (dec) << " eval=" << 
+        (var.eval == NO_MOVE_EVAL ? "none" : 
+         (int)(var.eval)-(int)NEUTRAL_EVAL-1) << endl;
 #endif
-      line++;
-      if (buf.size() == 0) continue;
-      char c = buf[0];
-      switch (c) {
-         case ';':
-         {
-            // comment, ignore except for result, if any
-            if (buf.find("1/2-1/2") != string::npos)
-               last_result = DrawResult;
-            else if (buf.find("0-1") != string::npos)
-               last_result = Black_Win;
-            else if (buf.find("1-0") != string::npos)
-               last_result = White_Win;
-            else
-               last_result = UnknownResult;
-            continue;
-         }
-         case 'm':
-            tmpboard = board;
-            tmp_result = last_result;
-            continue;
-         case 'r':
-            last_result = tmp_result;
-            board = tmpboard;
-            continue;
-         case '-':
-            last_result = UnknownResult;
-            board.reset();
-            break;
-         default:
-         {
-            stringstream s(buf);
-            while (!s.eof()) {
-               string movebuf;
-               // read next space-delimited token
-               s >> movebuf;
-               // ignore blanks due to trailing whitespace:
-               if (movebuf.find_first_not_of(' ') == string::npos) {
-                   break;
-               }
-               // try to parse as a move 
-               Move move = Notation::value(board, board.sideToMove(),Notation::SAN_IN,movebuf.c_str());
-               if (IsNull(move)) {
-                  cerr << endl << "Illegal move in file, line " <<
-                     line << " (" << movebuf << ")" << endl;
-                  infile.close();
-                  return -1;
-               }
-#ifdef _TRACE
-               cout << movebuf << endl;
-#endif
-               int move_indx = get_move_indx(board,move);
-               if (move_indx == -1) {
-                  cerr << endl << "Illegal move in file, line " << line << " ("
-                     << movebuf << ")" << endl;
-                  infile.close();
-                  return -1;
-               }
-               int recommend = BookEntry::NO_RECOMMEND;
-               char c = '\0';
-               if (!s.eof()) {
-                  // move may be followed by a weight (0-100)
-                  s >> c;
-                  s.putback(c);
-                  if (isdigit(c)) {
-                     s >> recommend;
-                  }
-               }
-               add_move(board, move_indx, recommend, true, last_result);
-               board.doMove(move);
-            }
-         }
-      }
-   }
-   return 0;
+    if (var.moves.size()) {
+        Board board(var.save);
+        vector<MoveListEntry>::const_iterator it = var.moves.begin();
+        while (it != var.moves.end()) {
+            const MoveListEntry &m = *it++;
+            add_move(board, m, first, var);
+            board.doMove(m.move);
+        }
+    }   
 }
 
-struct MoveListEntry {
-    Move move;
-    int index;
-};
-
-static int do_pgn(ifstream &infile, const string &book_name)
+static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
 {
    ArasanVector<ChessIO::Header> hdrs;
-   Board board;
    long games = 0L;
    ColorType side = White;
-   vector<MoveListEntry> moves;
    while (!infile.eof() && infile.good()) {
       long first;
-      board.reset();
-      moves.clear();
       side = White;
       ResultType last_result = UnknownResult;
       hdrs.removeAll();
@@ -487,23 +596,125 @@ static int do_pgn(ifstream &infile, const string &book_name)
       }
       ChessIO::collect_headers(infile,hdrs,first);
       ++games;
-      int ply = 0;
+#ifdef _TRACE
+      cout << "game " << games << endl;
+#endif
+      int move_num = 0;
       // process a game
+      Board board;
       int var = 0;
+      const int MAX_VAR = 20;
+      Variation varStack[MAX_VAR];
+      varStack[var++] = Variation(board);
+      Variation &topVar = varStack[0];
+      
+
+      Board p1,p2;
       for (;;) {
          string num;
          ChessIO::Token tok = ChessIO::get_next_token(infile);
+//         cout << "token: " << tok.val << endl;
          if (tok.type == ChessIO::Eof)
             break;
-         else if (var && tok.type == ChessIO::CloseVar) {
-             --var;
-         }
          else if (tok.type == ChessIO::OpenVar) {
-             ++var;
+             if (var >= MAX_VAR-1) {
+                 cerr << "error: variation nesting limit reached" << endl;
+                 continue;
+             }
+             // New variation is starting. Its start position is the current
+             // board, -1 halfmove
+             Move lastMove = varStack[var-1].lastMove();
+             board.undoMove(lastMove,varStack[var-1].moves[
+                                                           varStack[var-1].moves.size()-1].state);
+
+             Variation newVar(board); // start of variation
+             varStack[var++] = newVar;
+             varStack[var-1] = varStack[var-1]; // new top of stack
+             side = OppositeColor(side);
          }
-         if (var) continue; // ignore variations for now
-         if (tok.type == ChessIO::Number) {
-            num = tok.val;
+         else if (var && tok.type == ChessIO::CloseVar) {
+             const Variation &branchPoint = varStack[var-1];
+             processVar(branchPoint,firstFile);
+             if (var >= 2) {
+                 Variation &parent = varStack[var-2];
+                 // minimax child variation evals back to parent
+                 if (parent.save.sideToMove() == branchPoint.save.sideToMove()) {
+                     // maximize
+                     parent.eval = (PositionEval)Util::Max(
+                                                           (int)parent.eval,
+                                                           (int)branchPoint.eval);
+                 } else {
+                     // minimize
+                     parent.eval = (PositionEval)Util::Min(
+                                                           (int)parent.eval,
+                                                           (int)branchPoint.eval);
+                 }
+             }
+             // reset board to start of variation
+             board = branchPoint.save;
+             --var;
+             // now reapply last move from the parent variation
+             // (main line move)
+             ASSERT(var);
+             Move mainLine = varStack[var-1].moves[varStack[var-1].moves.size()\
+-1].move;
+             board.doMove(mainLine);
+             side = board.sideToMove();
+         }
+         else if (tok.type == ChessIO::NAG &&
+                  move_num*2 <= maxPly) {
+             // applies to the previous move or line
+             map<string,MoveEval>::const_iterator it =
+                 moveEvals.find(tok.val);
+             if (it != moveEvals.end()) {
+                 // get last move and set its eval
+                 varStack[var-1].moves[varStack[var-1].moves.size()-1].moveEval = (*it).second;
+             }
+             //check for position eval 
+             map<string,PositionEval>::const_iterator it2 =
+                 positionEvals.find(tok.val);
+             if (it2 != positionEvals.end()) {
+                 // associate it with the current variation
+                 varStack[var-1].eval = (PositionEval)((*it2).second);
+             }
+         }
+         else if (tok.type == ChessIO::Comment) {
+            if (tok.val.substr(0,8) == "{weight:") {
+               stringstream s(tok.val.substr(8));
+               int num;
+               s >> num;
+               if (s.good()) {
+                  // get last move and set its recommendation
+                  if (num >=0 && num <=100) {
+                      if (varStack[var-1].moves.size()) {
+                          varStack[var-1].moves[varStack[var-1].moves.size()-1].rec = num;
+#ifdef _TRACE
+                          cout << "got move weight: " << num << endl;
+#endif
+                      }
+                      else {
+                          cerr << "warning: misplaced weight comment, ignored" << endl;
+                      }
+                  }
+                  else {
+                     cerr << "Warning: invalid move weight: " << num << ", ignored" << endl;
+                  }
+               }
+            }
+            else if (tok.val.substr(0,8) == "{1/2-1/2") {
+               varStack[var-1].result = DrawResult;
+            }
+            else if (tok.val.substr(0,4) == "{1-0") {
+               varStack[var-1].result = White_Win;
+            }
+            else if (tok.val.substr(0,4) == "{0-1") {
+               varStack[var-1].result = Black_Win;
+            }
+         }
+         else if (tok.type == ChessIO::Number) {
+             num = tok.val;
+             stringstream s(tok.val);
+             s >> move_num;
          }
          else if (tok.type == ChessIO::GameMove) {
             // parse the move
@@ -515,7 +726,7 @@ static int do_pgn(ifstream &infile, const string &book_name)
                 return -1;
             }
             else {
-                if (ply++ <= maxPly) {
+                if (move_num*2 <= maxPly) {
                     int move_indx = get_move_indx(board,move);
                     if (move_indx == -1) {
                         cerr << "Illegal move: " << tok.val << 
@@ -526,20 +737,29 @@ static int do_pgn(ifstream &infile, const string &book_name)
                         MoveListEntry m;
                         m.move = move;
                         m.index = move_indx;
-                        moves.push_back(m);
+                        m.state = board.state;
+#ifdef _TRACE
+                        cout << "adding to stack " << var-1 << " ";
+                        MoveImage(move,cout);
+                        cout << endl;
+#endif                        
+                        varStack[var-1].moves.push_back(m);
+#ifdef _TRACE
+                        cout << " size=" << varStack[var-1].moves.size() << endl;
+                        
+#endif
                     }
                 }
+                p2 = p1;
+                p1 = board;
                 board.doMove(move);
             }
             side = OppositeColor(side);
          }
          else if (tok.type == ChessIO::Unknown) {
- 	    cerr << "Unrecognized text: " << tok.val << 
+            cerr << "Unrecognized text: " << tok.val << 
                          " in game " << games << ", file " <<
                           book_name << endl;
-         }
-         else if (tok.type == ChessIO::Comment) {
-            // ignored for now
          }
          else if (tok.type == ChessIO::Result) {
             if (tok.val == "1/2-1/2")
@@ -550,20 +770,13 @@ static int do_pgn(ifstream &infile, const string &book_name)
                last_result = White_Win;
             else
                 last_result = UnknownResult;
+            topVar.result = last_result;
             break;
          }
       }
-      // game has been processed, now add moves to book (we do this
-      // only now because we needed to see the result first)
-      if (moves.size()) {
-         board.reset();
-         vector<MoveListEntry>::iterator it = moves.begin();
-         while (it != moves.end()) {
-             const MoveListEntry &m = *it++;
-             add_move(board, m.index, BookEntry::NO_RECOMMEND, false, last_result);
-             board.doMove(m.move);
-         }
-      }   
+      processVar(topVar,firstFile);
+      --var;
+      ASSERT(var == 0);
    }
    return 0;
 }
@@ -584,6 +797,24 @@ int CDECL main(int argc, char **argv)
    atexit(cleanupGlobals);
 
    hashTable =  new map< uint64, BookEntry2*>;
+   moveEvals.insert(std::pair<string,MoveEval>("$1",GOOD_MOVE));
+   moveEvals.insert(std::pair<string,MoveEval>("$2",POOR_MOVE));
+   moveEvals.insert(std::pair<string,MoveEval>("$3",VERY_GOOD_MOVE));
+   moveEvals.insert(std::pair<string,MoveEval>("$4",BLUNDER_MOVE));
+   moveEvals.insert(std::pair<string,MoveEval>("$5",INTERESTING_MOVE));
+   moveEvals.insert(std::pair<string,MoveEval>("$6",QUESTIONABLE_MOVE));
+
+   positionEvals.insert(std::pair<string,PositionEval>("$21",BLACK_WINNING_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$19",BLACK_STRONG_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$17",BLACK_MODERATE_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$15",BLACK_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$10",EQUAL_POSITION));
+   positionEvals.insert(std::pair<string,PositionEval>("$11",EQUAL_POSITION));
+   positionEvals.insert(std::pair<string,PositionEval>("$12",EQUAL_POSITION));
+   positionEvals.insert(std::pair<string,PositionEval>("$14",WHITE_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$16",WHITE_MODERATE_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$18",WHITE_STRONG_ADVANTAGE));
+   positionEvals.insert(std::pair<string,PositionEval>("$20",WHITE_WINNING_ADVANTAGE));
 
    output_name = "";
    int arg = 1;
@@ -691,6 +922,7 @@ int CDECL main(int argc, char **argv)
        return -1;
    }
 
+   bool first = true;
    while (arg < argc) {
       book_name = argv[arg++];
       ifstream infile;
@@ -700,39 +932,23 @@ int CDECL main(int argc, char **argv)
          cerr << "Can't open book file: " << book_name << endl;
          return -1;
       }
-      size_t extpos = book_name.find_last_of('.');
-      if (extpos == string::npos) {
-         cerr << "book file " << book_name << " lacks extension - cannot determine file type" << endl;
-         return -1;
-      }
-      string ext = book_name.substr(extpos+1);
-      std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-      int result;
-      if (ext == "pgn") {
-         if (verbose) cout << "processing " << book_name << endl;
-         result = do_pgn(infile, book_name);
-      }
-      else if (ext == "bk") {
-         if (verbose) cout << "processing " << book_name << endl;
-         result = do_bk(infile);
-         if (result) return -1;
-      }
-      else {
-         cerr << "unknown book file extension: " << ext << endl;
-         return -1;
-      }
+      if (verbose) cout << "processing " << book_name << endl;
+      int result = do_pgn(infile, book_name, first);
+      first = false;
       infile.close();
       if (result == -1) break;
    }
 
    // Iterate through the hash table, picking out moves that meet
-   // the "minFrequency" test
+   // the "minFrequency" test. Also at this stage we compute move
+   // weights.
 
    map< uint64, BookEntry2 *>::const_iterator it = hashTable->begin();
    while (it != hashTable->end()) {
       BookEntry2* be = (*it).second;
+      computeWeights(*be);
       while (be) {
-         if ((be->count >= minFrequency) || be->from_bk) {
+         if ((be->count >= minFrequency) || be->first) {
             add_move(be);
          }
          be = be->next;

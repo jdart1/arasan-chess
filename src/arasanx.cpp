@@ -1081,7 +1081,7 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
             for (int i=0;i<moveCount;i++) {
                 Notation::image(board,choices[i],Notation::SAN_OUT,s);
                 s << ' ';
-                s << scores[i];
+                s << (int)(100.0*scores[i]/(float)BookEntry::MAX_WEIGHT + 0.5F);
                 if (i < moveCount-1)
                     s << ", ";
             }
