@@ -207,7 +207,7 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
    //
    // Build a list of candidate moves.
    //
-   BookEntry candidates[100];
+   BookInfo candidates[100];
    int candidate_weights[100];
    int candidate_count = 0; 
 
@@ -235,20 +235,17 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
    cout << "candidate_count = " << candidate_count << endl;
 #endif
 
-   // Sort by weights
+   // Sort by descending weights
    for (int i=1; i<candidate_count; i++) {
       int key = candidate_weights[i];
       BookInfo tmp = candidates[i];
-      BookLocation loc = locs[i];
       int j = i-1;
       for (; j >= 0 && candidate_weights[j] < key; j--) {
          candidates[j+1] = candidates[j];
          candidate_weights[j+1] = candidate_weights[j];
-         locs[j+1] = locs[j];
       }
       candidates[j+1] = tmp;
       candidate_weights[j+1] = key;
-      locs[j+1] = loc;
    }
 
    int total_weight = 0;
@@ -282,6 +279,7 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
       int w  = candidate_weights[i];
       tot += w;
       scores[candidate_count2] = w;
+      candidates[i].getLocation(locs[candidate_count2]);
       moves[candidate_count2++] = candidates[i];
       if (tot > target) {
          break;
@@ -290,7 +288,7 @@ int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry 
 
    // renormalize after selectivity rules applied
    for (int i=0; i<candidate_count2; i++) {
-      scores[i] = int((BookEntry::MAX_WEIGHT*scores[i])/total_weight + 0.5);
+      scores[i] = int((BookEntry::MAX_WEIGHT*scores[i])/tot + 0.5);
    }
    return candidate_count2;
 }
