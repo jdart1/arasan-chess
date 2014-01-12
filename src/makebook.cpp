@@ -564,9 +564,13 @@ static void processVar(const Variation &var, bool first) {
     // only after seeing the whole variation, because we want the
     // end of line eval or result, if any).
 #ifdef _TRACE
-    cout << "process var: board=" << var.save << " hash=" << (hex) << var.save.hashCode() << (dec) << " eval=" << 
-        (var.eval == NO_MOVE_EVAL ? "none" : 
-         (int)(var.eval)-(int)NEUTRAL_EVAL-1) << endl;
+    cout << "process var: board=" << var.save << " hash=" << (hex) << var.save.hashCode() << (dec) << " eval=";
+    if (var.eval == NO_MOVE_EVAL) {
+        cout << "none";
+    } else {
+        cout << (int)var.eval-(int)NEUTRAL_EVAL-1;
+    }
+    cout << endl;
 #endif
     if (var.moves.size()) {
         Board board(var.save);
