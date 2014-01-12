@@ -742,7 +742,7 @@ static void CDECL post_output(const Statistics &stats) {
 #endif
          stats.depth,' ',
          score,
-         (long)stats.elapsed_time,
+         (long)stats.elapsed_time/10, // time in centiseconds
          stats.num_nodes,
          stats.best_line_image.c_str());
          fflush(stdout);
