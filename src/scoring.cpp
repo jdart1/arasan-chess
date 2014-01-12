@@ -2092,7 +2092,7 @@ template <ColorType side> static int KBPDraw(const Board &board) {
                 board.pawn_bits[side].firstOne();
             ASSERT(pawn != InvalidSquare);
             // This does not cover all drawing cases but many of them:
-            if (kingNearProximity[qsq].isSet(okp) ||
+            if (Attacks::king_attacks[qsq].isSet(okp) ||
                 (Util::Abs(File(okp)-pfile)<=1 &&
                  Rank(okp,side) > Rank(pawn,side) &&
                  Rank(okp,side) > Rank(kp,side))) {
