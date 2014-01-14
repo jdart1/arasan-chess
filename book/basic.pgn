@@ -5844,6 +5844,32 @@ dxe5 $1 dxe5 9. Nd5 Nxd5 10. cxd5 c6 11. Bc4 Nd7 $2 (11... cxd5 12. Bxd5 Na6
 email 2006}) 12. O-O Nb6 13. Bb3 cxd5 14. exd5 h6 15. Be3 Qd8 $2 {1-0 (32)
 Svidler,P (2746)-Radjabov,T (2733) Tromso 2013} (15... e4 $14) *
 
+[Event "Gibraltar Masters 11th"]
+[Site "Caleta"]
+[Date "2013.01.28"]
+[Round "7"]
+[White "Fridman, Daniel"]
+[Black "Ju, Wenjun"]
+[Result "1-0"]
+[WhiteElo "2667"]
+[BlackElo "2505"]
+[ECO "E74"]
+[Annotator "Dart, J."]
+[EventDate "2013.01.22"]
+[PlyCount "46"]
+[EventType "swiss"]
+[EventRounds "10"]
+[EventCountry "ENG"]
+[Source "ChessBase"]
+[SourceDate "2013.03.14"]
+
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Be2 O-O 6. Bg5 c5 (6... Na6 $3) (
+6... a6 7. Nf3 (7. Qd2 c5 8. d5 Qa5 (8... Re8 $2) 9. a4 (9. f3) (9. Nf3 $2
+b5 $3)) 7... Bg4 { E73 }) 7. d5 h6 8. Be3 e6 9. Qd2 exd5 10. exd5 Kh7 11.
+h3 Re8 12. Nf3 Bf5 13. O-O Nbd7 14. Rae1 Ne4 15. Nxe4 Bxe4 16. b3 $1 b5 17.
+cxb5 Nb6 18. Bc4 Bxf3 19. gxf3 Qh4 20. Bf4 Bc3 21. Qxc3 Qxf4 22. Re4 Qg5+
+$2 (22... Rxe4 23. fxe4 Qxe4 $11) 23. Rg4 Qf5 $2 1-0
+
 [Event "-"]
 [Site "-"]
 [Date "2014.01.09"]
