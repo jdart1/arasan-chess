@@ -145,7 +145,7 @@ class BookEntry2  : public BookEntry
     PositionEval eval;
     MoveEval moveEval;
     unsigned rec; // explicit weight if any
-    int relativeFreq;
+    int relativeFreq, winWeight;
     unsigned int next_index;
 };
 
@@ -193,12 +193,23 @@ static void computeWeights(BookEntry2 &be)
       p=p->next;
    }
    ASSERT(total);
+   int bestWinWeight = -1;
+   const int black_to_move = (be.hashCode() & (hash_t)1);
    for (vector<BookEntry2*>::iterator it = moves.begin();
         it != moves.end();
         it++) {
         (*it)->relativeFreq = BookEntry::MAX_WEIGHT*((*it)->count)/total;
+         int winloss;
+         if (black_to_move) {
+             winloss = (-(*it)->white_win_loss*100)/(*it)->count;
+         }
+         else {
+            // white is on move
+            winloss = ((*it)->white_win_loss*100)/(*it)->count;
+         }
+         (*it)->winWeight = (winloss+100)/2;
+         if ((*it)->winWeight > bestWinWeight) bestWinWeight = (*it)->winWeight;
    }
-   const int black_to_move = (be.hashCode() & (hash_t)1);
    // Now compute the weights
    int totalWeight = 0;
    for (vector<BookEntry2*>::iterator it = moves.begin();
@@ -226,17 +237,23 @@ static void computeWeights(BookEntry2 &be)
 #endif
       }
       else {
-         int winloss;
-         if (black_to_move) {
-            winloss = (-(*it)->white_win_loss*100)/(*it)->count;
+         if (bestWinWeight == 0) {
+             w = 0;
+         } else {
+             int winWeight = (*it)->winWeight;
+             // moves that are distintly worse than the best move
+             // get bumped a little lower in weight
+             if (100*winWeight/bestWinWeight < 75) {
+                 winWeight -= winWeight/4;
+             }
+             if (100*winWeight/bestWinWeight < 50) {
+                 winWeight -= winWeight/3;
+             }
+             if (100*winWeight/bestWinWeight < 25) {
+                 winWeight /= 2;
+             }
+             w = ((*it)->relativeFreq*winWeight)/50;
          }
-         else {
-            // white is on move
-            winloss = ((*it)->white_win_loss*100)/(*it)->count;
-         }
-         int winWeight = (winloss+100)/2;
-
-         w = ((*it)->relativeFreq*winWeight)/50;
          if ((*it)->first && (*it)->count < minFrequency) {
              // This move is in the first annotated book file but
              // occurs elsewhere with very low frequency. If we have
