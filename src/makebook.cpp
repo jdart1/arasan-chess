@@ -726,7 +726,8 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
                   }
                }
             }
-            else if (tok.val.substr(0,8) == "{1/2-1/2") {
+            else if (tok.val.substr(0,8) == "1/2-1/2" ||
+                     tok.val.substr(0,3) == "\xBD-\xBD") {
                varStack[var-1].result = DrawResult;
             }
             else if (tok.val.substr(0,4) == "{1-0") {
