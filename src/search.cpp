@@ -1,4 +1,4 @@
-// Copyright 1987-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2014 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -1003,23 +1003,21 @@ Move *excludes, int num_excludes)
       cout << endl;
 #endif
 #ifdef SEARCH_STATS
-      cout <<  "null cutoffs: " << stats->num_null_cuts;
-      if (stats->num_nodes) {
-         cout << " (" <<
-            (int)((100.0*(float)stats->num_null_cuts)/((float)stats->num_nodes)) <<
-            "%)";
-      }
-      cout << endl;
-      cout << "pruning: " <<
-         stats->futility_pruning << " moves (futility)";
-      cout << ", ";
-      cout << stats->num_razored << " nodes razored";
-      cout << endl;
+      cout << "pre-search pruning: " << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->razored/stats->reg_nodes << "% razoring" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "% static null pruning" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "% null cuts" << endl;
+      cout << "search pruning: " << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "% futility" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "% history" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "% lmp" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "% SEE" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "% reduced" << endl;
       cout << "extensions: " <<
-         stats->check_extensions << " check, " <<
-         stats->recap_extensions << " recapture, " <<
-         stats->pawn_extensions << " pawn, " <<
-         stats->forced_extensions << " forced move." << endl;
+         100.0*stats->check_extensions/stats->moves_searched << "% check, " <<
+         100.0*stats->evasion_extensions/stats->moves_searched << "% evasions, " <<
+         100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
+         100.0*stats->pawn_extensions/stats->moves_searched << "% pawn" << endl;
 #endif
       cout << stats->tb_probes << " tablebase probes, " <<
          stats->tb_hits << " tablebase hits" << endl;
@@ -1231,10 +1229,10 @@ int depth, Move exclude [], int num_exclude)
         }
     }
 #ifdef MOVE_ORDER_STATS
-    if (rootNode->num_try && rootNode->best_score > rootNode->alpha) {
-        stats->move_order_count++;
-        if (rootNode->best_count<4) {
-            stats->move_order[rootNode->best_count]++;
+    if (node->num_try && node->best_score > node->alpha) {
+        controller->stats->move_order_count++;
+        if (node->best_count<4) {
+            controller->stats->move_order[node->best_count]++;
         }
     }
 #endif
@@ -1792,7 +1790,7 @@ int Search::calcExtensions(const Board &board,
          extend += FORCED_EXTENSION;
          node->extensions |= FORCED;
 #ifdef SEARCH_STATS
-         controller->stats->forced_extensions++;
+         controller->stats->evasion_extensions++;
 #endif
       }
       else if (IsForced2(move)) {
@@ -1800,7 +1798,7 @@ int Search::calcExtensions(const Board &board,
          extend += FORCED_EXTENSION / 2;
          node->extensions |= FORCED;
 #ifdef SEARCH_STATS
-         controller->stats->forced_extensions++;
+         controller->stats->evasion_extensions++;
 #endif
       }
    }
@@ -1832,11 +1830,17 @@ int Search::calcExtensions(const Board &board,
          if (MVV_LVA(move) > 0) {
             node->extensions |= CAPTURE;
             extend += CAPTURE_EXTENSION;
+#ifdef SEARCH_STATS
+            ++controller->stats->capture_extensions;
+#endif
          } else {
             if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
             if (swap) {
                node->extensions |= CAPTURE;
                extend += CAPTURE_EXTENSION;
+#ifdef SEARCH_STATS
+            ++controller->stats->capture_extensions;
+#endif
             }
          }
       }
@@ -1909,12 +1913,18 @@ int Search::calcExtensions(const Board &board,
            // in the move order (regardless of history score).
            if (moveIndex >= p.pruningMinMoveCount &&
                GetPhase(move) == MoveGenerator::HISTORY_PHASE) {
+#ifdef SEARCH_STATS
+               ++controller->stats->lmp;
+#endif
                return PRUNE;
            }
 #ifdef HISTORY_PRUNING
            else if (moveIndex >= p.historyMinMoveCount &&
                     History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
                // History pruning. Prune moves with low history scores.
+#ifdef SEARCH_STATS
+               ++controller->stats->history_pruning;
+#endif
                return PRUNE;
            }
 #endif
@@ -1926,6 +1936,9 @@ int Search::calcExtensions(const Board &board,
         parentNode->num_try &&
         GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
         (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+#ifdef SEARCH_STATS
+        ++controller->stats->see_pruning;
+#endif
         return PRUNE;
     }
     // See if we do late move reduction. Moves in the history phase of move
@@ -1935,6 +1948,9 @@ int Search::calcExtensions(const Board &board,
         !passedPawnMove(board,move,6)) {
         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
         node->extensions |= LMR;
+#ifdef SEARCH_STATS
+        ++controller->stats->reduced;
+#endif
     }
     return extend;
 }
@@ -1972,6 +1988,9 @@ int Search::search()
     int move_count;
 #ifdef MOVE_ORDER_STATS
     node->best_count = 0;
+#endif
+#ifdef SEARCH_STATS
+    ++controller->stats->reg_nodes;
 #endif
     int ply = node->ply;
     int depth = node->depth;
@@ -2214,6 +2233,9 @@ int Search::search()
         const int threshold = node->beta+margin;
         int eval = scoring.evalu8(board,threshold-1,threshold);
         if (eval > threshold) {
+#ifdef SEARCH_STATS
+            ++controller->stats->static_null_pruning;
+#endif
             return eval - margin;
         }
     }
@@ -2231,7 +2253,7 @@ int Search::search()
                 indent(ply); cout << "razored node, score=" << v << endl;
 #endif
 #ifdef SEARCH_STATS
-                controller->stats->num_razored++;
+                controller->stats->razored++;
 #endif
                 return v;
             }
@@ -2321,7 +2343,7 @@ int Search::search()
                         }
 #endif
 #ifdef SEARCH_STATS
-                        controller->stats->num_null_cuts++;
+                        controller->stats->null_cuts++;
 #endif
                         // Do not return a mate score from the null move search.
                         node->best_score = nscore >= Constants::MATE-ply ? node->beta :
@@ -2436,6 +2458,9 @@ int Search::search()
             move = in_check ? mg.nextEvasion() : mg.nextMove();
             if (IsNull(move)) break;
             if (IsUsed(move)) continue;
+#ifdef SEARCH_STATS
+            ++controller->stats->moves_searched;
+#endif
             if (Capture(move)==King) {
                 return -Illegal;                  // previous move was illegal
             }
@@ -2668,7 +2693,7 @@ int Search::search()
     }
     search_end2:
 #ifdef MOVE_ORDER_STATS
-    if (node->num_try && node->best_score != initial_alpha) {
+    if (node->num_try && node->best_score != node->alpha) {
         controller->stats->move_order_count++;
         ASSERT(node->best_count>=0);
         if (node->best_count<4) {
@@ -2677,7 +2702,8 @@ int Search::search()
     }
 #endif
 #ifdef SEARCH_STATS
-    controller->stats->futility_pruning += node->fpruned_moves;
+    // don't count qsearch pruning
+    //    controller->stats->futility_pruning += node->fpruned_moves;
 #endif
     int score = node->best_score;
     ASSERT(score >= -Constants::MATE && score <= Constants::MATE);
@@ -2770,6 +2796,9 @@ void Search::searchSMP(ThreadInfo *ti)
             mg->nextMove(split);
         if (IsNull(move)) break;
         if (IsUsed(move)) continue;
+#ifdef SEARCH_STATS
+        ++controller->stats->moves_searched;
+#endif
         if (ply == 0) {
             fhr = false;
         }

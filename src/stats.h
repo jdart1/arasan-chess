@@ -33,11 +33,18 @@ struct Statistics
    uint64 tb_hits;   // tablebase hits
 #ifdef SEARCH_STATS
    uint64 num_qnodes;
+   uint64 reg_nodes;
+   uint64 moves_searched; // in regular search
    uint64 futility_pruning;
-   uint64 num_null_cuts;
-   uint64 num_razored;
-   uint64 check_extensions, recap_extensions,
-     pawn_extensions, forced_extensions;
+   uint64 static_null_pruning;
+   uint64 null_cuts;
+   uint64 razored;
+   uint64 check_extensions, capture_extensions,
+     pawn_extensions, evasion_extensions;
+   uint64 reduced;
+   uint64 lmp;
+   uint64 history_pruning;
+   uint64 see_pruning;
    uint64 hash_hits, hash_searches;
 #endif
    uint64 num_nodes;

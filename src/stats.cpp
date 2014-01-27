@@ -29,11 +29,12 @@ void Statistics::clear()
    num_nodes = (uint64)0;
    display_value = Scoring::INVALID_SCORE;
 #ifdef SEARCH_STATS
-   num_qnodes = (uint64)0;
-   hash_hits = hash_searches = (uint64)0;
-   futility_pruning = num_null_cuts = num_razored = 0L;
-   check_extensions = recap_extensions =
-     pawn_extensions = forced_extensions = 0L;
+   num_qnodes = reg_nodes = moves_searched = static_null_pruning =
+       razored = (uint64)0;
+   hash_hits = hash_searches = futility_pruning = null_cuts = lmp = (uint64)0;
+   history_pruning = lmp = see_pruning = (uint64)0;
+   check_extensions = capture_extensions =
+     pawn_extensions = evasion_extensions = 0L;
 #endif
    end_of_game = 0;
    mvleft = mvtot = 0;
