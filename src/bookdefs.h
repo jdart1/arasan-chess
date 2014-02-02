@@ -38,7 +38,5 @@ struct BookLocation
 #define Header_Size sizeof(BookHeader)
 #define MAIN_BOOK_NAME "book.bin"
 #define MAIN_MAPPING_NAME "Arasan opening book"
-#define POSITION_BOOK_NAME "position.bin"
-#define POSITION_MAPPING_NAME "Arasan learning book"
 
 #endif
