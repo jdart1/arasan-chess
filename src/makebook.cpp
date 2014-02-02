@@ -268,8 +268,7 @@ static void computeWeights(BookEntry2 &be)
              }
          }
 #ifdef _TRACE
-         cout << "winWeight = " << winWeight << " relativeFreq=" <<
-            (*it)->relativeFreq << " computed weight=" << w << endl;
+         cout << " computed weight=" << w << endl;
          int w1 = w;
 #endif 
          if ((*it)->moveEval != NO_MOVE_EVAL) {
