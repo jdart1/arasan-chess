@@ -1,4 +1,4 @@
-// Copyright 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 2013, 2014 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -10,6 +10,8 @@
 #include "movearr.h"
 #include "notation.h"
 #include "chessio.h"
+#include "scoring.h"
+#include "search.h"
 
 #include <iostream>
 
@@ -209,7 +211,7 @@ static int testNotation() {
     return errs;
 }
 
-int testPGN() { 
+static int testPGN() { 
 static const string pgn_test = "[Event \"?\"]"
 "[Site \"chessclub.com\"]"
 "[Date \"2013.12.16\"]"
@@ -275,6 +277,47 @@ static const string pgn_test = "[Event \"?\"]"
       return errs;
 }
 
+static int testEval() {
+    // verify eval results are symmetrical (White/Black, right/left)
+    const int CASES = 8;
+    static const string fens[CASES] = {
+        "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
+        "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
+        "8/4K3/8/1r6/6B1/4k2N/8/8 w - -",
+        "3b4/1n3n2/1pk3Np/p7/P4P1p/1P6/5BK1/3R4 b - -",
+        "8/3r1ppk/8/P6P/3n4/2K5/R2B4/8 b - -",
+        "1rb1r1k1/2q2pb1/pp1p4/2n1pPPQ/Pn1BP3/1NN4R/1PP4P/R5K1 b - -",
+        "6k1/1b4p1/5p1p/pq3P2/1p1BP3/1P2QR1P/P1r3PK/8 w - -",
+        "8/5pk1/7p/3p1R2/p1p3P1/2P2K1P/1P1r4/8 w - -"
+    };
+    int errs = 0;
+    SearchController c;
+    for (int i = 0; i < CASES; i++) {
+        Board board;
+        if (!BoardIO::readFEN(board, fens[i].c_str())) {
+            cerr << "testEval case " << i << " error in FEN: " << fens[i] << endl;
+            ++errs;
+            continue;
+        }
+        Scoring *s = new Scoring(&c.hashTable);
+        int eval1 = s->evalu8(board);
+        board.flip();
+        int eval2 = s->evalu8(board);
+        if (eval1 != eval2) {
+            ++errs;
+            cerr << "testEval case " << i << " eval mismatch" << endl;
+        }
+        board.flip2();
+        int eval3 = s->evalu8(board);
+        if (eval1 != eval3) {
+            ++errs;
+            cerr << "testEval case " << i << " eval mismatch" << endl;
+        }
+		delete s;
+    }
+    return errs;
+}
+
 int doUnit() {
 
    int errs = 0;
@@ -282,5 +325,6 @@ int doUnit() {
    errs += testIsPinned();
    errs += testSee();
    errs += testPGN();
+   errs += testEval();
    return errs;
 }
