@@ -1,4 +1,4 @@
-// Copyright 1992-2012 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -28,16 +28,6 @@ class Scoring
     // evaluate "board" from the perspective of the side to move.
     int evalu8( const Board &board );
 
-    // evaluate "board" from the perspective of the side to move.
-    int evalu8( const Board &board, int alpha, int beta );
-
-    // return a positional score
-    int positionalScore( const Board &board, 
-			int alpha, int beta);
-
-    // return a material score
-    int materialScore( const Board &board );
-		
     // checks for legal draws plus certain other theoretically
     // draw positions
     static int isDraw(const Board &board);
@@ -128,7 +118,7 @@ class Scoring
     // The scores for opening, middlegame and endgame
     struct Scores {
       Scores()
-        :mid(0), end(0),any(0)
+        :mid(0), end(0), any(0)
       {
       }
       int mid, end, any; 
@@ -137,10 +127,31 @@ class Scoring
              end*(128-MATERIAL_SCALE[materialLevel])/128;
       }
       static const int MATERIAL_SCALE[32];
+      Scores & operator += (const Scores &s) {
+          mid += s.mid;
+          end += s.end;
+          any += s.any;
+          return *this;
+      }
+      const Scores operator + (const Scores &s) const {
+          Scores result = *this;
+          result += s;
+          return result;
+      }
     };
 
-    int adjustMaterialScore( const Board &board, ColorType side);
-    int adjustMaterialScoreNoPawns( const Board &board, ColorType side);
+    template <ColorType side>
+     void  positionalScore( const Board &board,
+                            const PawnHashEntry &pawnEntry,
+                            Scores &scores,
+                            Scores &oppScores);
+
+    // return a material score vector
+    Scores materialScore( const Board &board );
+
+    int adjustMaterialScore(const Board &board, ColorType side);
+
+    int adjustMaterialScoreNoPawns(const Board &board, ColorType side);
 
     template <ColorType side>
     void pieceScore(const Board &board,
@@ -155,24 +166,26 @@ class Scoring
     template <ColorType side>
     static int calcCover(const Board &board, int file, int rank);
 
-    // return a pawn structure entry
     template <ColorType side>
     void calcCover(const Board &board, KingCoverHashEntry &cover);
 
-    PawnHashEntry *pawnEntry(const Board &board);
+    template <ColorType side>
+        int kingCover(const Board &board);
+
+    PawnHashEntry &pawnEntry(const Board &board);
 
     int calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);
 
     void evalOutsidePassers(const Board &board,
-			   PawnHashEntry *pawnEntry);
+			    PawnHashEntry &pawnEntry);
 
-    void calcPawnEntry(const Board &board, PawnHashEntry *pawnEntry);
+    void calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry);
 
     void pawnScore(const Board &board, ColorType side,
 		  const PawnHashEntry::PawnData &oppPawnData, Scores &);
 
-    void calcEndgame(const Board &board, PawnHashEntry *pawnEntry,
+    void calcEndgame(const Board &board, const PawnHashEntry &pawnEntry,
 		     EndgameHashEntry *endgameEntry);
 
     void scoreEndgame(const Board &, EndgameHashEntry *endgameEntry,

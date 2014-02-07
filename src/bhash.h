@@ -1,3 +1,5 @@
+// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+
 #ifndef _BOARDHASH_H_
 #define _BOARDHASH_H_
 
@@ -28,11 +30,20 @@ class BoardHash
            hash_t h = b.pawnHashCodeB;
            h ^= b.pawnHashCodeW;
            h = Xor(Xor(h,b.kingSquare(White), WhiteKing), b.kingSquare(Black), BlackKing);
-           if (b.sideToMove() == Black)
-	      h |= 1;
-           else
-	      h &= ~1;
+           if (b.sideToMove() == Black) {
+               h &= 0x7ffffffffffffffULL;
+           } else {
+               h |= 0x800000000000000ULL;
+           }
            return h;
+        }
+
+        static hash_t setSideToMove(hash_t input, ColorType side) {
+            if (side == Black) {
+                return input & 0x7fffffffffffffffULL;
+            } else {
+                return input | 0x8000000000000000ULL;
+            }
         }
 
         static hash_t kingCoverHash(const Board &board, ColorType side) {
@@ -41,7 +52,6 @@ class BoardHash
           else
             return board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing];
 	}
-
 };
 
 #endif

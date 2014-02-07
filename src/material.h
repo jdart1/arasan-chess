@@ -1,4 +1,4 @@
-// Copyright 1994 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _MATERIAL_H
 #define _MATERIAL_H
@@ -65,7 +65,7 @@ class Material
     }
 
     // return the total material value:
-    uint32 value() const {
+    int32 value() const {
         return total;
     }
 	
@@ -143,6 +143,14 @@ class Material
         return 2*queenCount() + rookCount();
     }
 
+    int hasMinor() const {
+        return (info & 0xff0) != 0;
+    }
+
+    int hasMajor() const {
+        return (info & 0xff000) != 0;
+    }
+
     // True if only king and pawns:
     bool noPieces() const
     {
@@ -172,14 +180,14 @@ class Material
     int materialLevel() const {
         return (level > 31) ? 31 : level;
     }
-	
+
  private:
     void clear() {
         info = total = level = count = 0;
     }
 
     int32 info;
-    uint32 total;
+    int32 total;
     int32 level;
     int count;
     static const int32 masks[8];

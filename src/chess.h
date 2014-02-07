@@ -1,4 +1,4 @@
-// Copyright 1994-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -173,12 +173,8 @@ enum Piece {
 
 enum PieceType { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
 
-#define PAWN_VALUE 100
-#define BISHOP_VALUE (int)(3.25*PAWN_VALUE)
-#define KNIGHT_VALUE (int)(3.25*PAWN_VALUE)
-#define ROOK_VALUE 5*PAWN_VALUE
-#define QUEEN_VALUE (int)(9.75*PAWN_VALUE)
-#define KING_VALUE 32*PAWN_VALUE
+extern const int PAWN_VALUE, BISHOP_VALUE, KNIGHT_VALUE, ROOK_VALUE,
+    QUEEN_VALUE, KING_VALUE;
 
 extern const int PieceValues[8];
 extern const int _sliders[16];

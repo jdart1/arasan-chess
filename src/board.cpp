@@ -240,10 +240,7 @@ void Board::doNull()
    }
    state.enPassantSq = InvalidSquare;
    side = oppositeSide();
-   if (sideToMove() == Black)
-       state.hashCode |= (hash_t)1;
-   else
-       state.hashCode &= (hash_t)~1;
+   state.hashCode = BoardHash::setSideToMove(state.hashCode,side);
    *repListHead++ = state.hashCode;
    ASSERT(repListHead-repList < (int)RepListSize);
    ASSERT(state.hashCode == BoardHash::hashCode(*this));
@@ -736,10 +733,8 @@ void Board::doMove( Move move )
       }
    }
 
-   if (sideToMove() == White)
-      state.hashCode |= (hash_t)1;
-   else
-      state.hashCode &= (hash_t)~1;
+   // changing side to move so flip those bits
+   state.hashCode = BoardHash::setSideToMove(state.hashCode,oppositeSide());
    *repListHead++ = state.hashCode;
    //ASSERT(pawn_hash(White) == BoardHash::pawnHash(*this),White);
    ASSERT(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());

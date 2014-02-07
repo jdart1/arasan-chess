@@ -1,4 +1,4 @@
-// Copyright 1994-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -70,7 +70,7 @@ struct NodeInfo {
     volatile Move best;
     Move last_move;
     int extensions; // mask of extensions
-    int futilityEval;
+    int eval, staticEval;
     volatile Move pv[Constants::MaxPly];
     volatile int pv_length;
     volatile Move done[Constants::MaxMoves];
@@ -357,9 +357,7 @@ class Search : public ThreadControl {
                        int moveIndex,
                        Move move);
 
-    int qsearch_no_check(int ply, int depth);
-
-    int qsearch_check(int ply, int depth);
+    void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
 
     int updateRootMove(const Board &board, NodeInfo *parentNode, 
                        NodeInfo *node, Move move, int score, int move_index);

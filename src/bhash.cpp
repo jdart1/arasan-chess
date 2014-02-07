@@ -1,3 +1,5 @@
+// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+
 #include "bhash.h"
 #include "bitboard.h"
 
@@ -370,10 +372,7 @@ hash_t BoardHash::hashCode( const Board &board)
       h ^= ep_codes[epsq];
     h ^= w_castle_status[(int)board.castleStatus(White)];
     h ^= b_castle_status[(int)board.castleStatus(Black)];
-    if (board.side == Black)
-           h |= 1;
-    else
-           h &= ~1;
+    h = BoardHash::setSideToMove(h,board.side);
     return h;
 }
         
@@ -388,5 +387,3 @@ hash_t BoardHash::pawnHash( const Board &board, ColorType side)
     return h;
 }
         
-
-

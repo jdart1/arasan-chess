@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -11,56 +11,71 @@
 
 extern const hash_t rep_codes[3];
 
-class HashEntry;
+class HashEntry {
 
-class PositionInfo
-{
    public:
 
       // Contents of the flag field
       enum {
-         TYPE_MASK = 0x3,
-         TB_MASK = 0x04,
-         LEARNED_MASK = 0x08,
-         FULL_MASK = 0x20,
-         FORCED_MASK = 0x40,
-         FORCED2_MASK = 0x80
+         TYPE_MASK = 0x7,
+         TB_MASK = 0x08,
+         LEARNED_MASK = 0x10,
+         FORCED_MASK = 0x20,
+         FORCED2_MASK = 0x40
       };
 
-      // Only the first 3 values are actually stored - Invalid indicates
+      static const hash_t HASH_MASK = 0xffffffffffff0000ULL;
+      static const hash_t STATIC_VALUE_MASK = 0x000000000000ffffULL;
+
+      static const int QSEARCH_CHECK_DEPTH = -1;
+      static const int QSEARCH_NO_CHECK_DEPTH = -2;
+
+      // Only the first 4 values are actually stored - Invalid indicates
       // a hash hit with inadequate depth; NoHit indicates failure to find
       // a hash match.
-      enum ValueType { Valid, UpperBound, LowerBound, Invalid, NoHit };
+      enum ValueType { Valid, UpperBound, LowerBound, Eval, Invalid, NoHit };
 
-      PositionInfo() {
+      HashEntry() {
       }
 
-      PositionInfo(int value, int depth,
+      HashEntry(hash_t hash, int value, int staticValue, int depth,
          ValueType type, int age, int flags = 0,
          Move bestMove = NullMove) {
          contents.value = value;
-         contents.depth = depth;
+         ASSERT(depth+2 >= 0 && depth+2 < 256);
+         contents.depth = (byte)(depth+2);
          contents.age = age;
          contents.flags = type | flags;
          contents.start = StartSquare(bestMove);
          contents.dest = DestSquare(bestMove);
          contents.promotion = PromoteTo(bestMove);
+         // Low order bits of val1 encode static value.
+         // Make non-negative:
+         val1 = (unsigned)(staticValue+Constants::MATE+1);
+         setEffectiveHash(hash);
+      }
+
+      int empty() const {
+         return val1 == 0x0ULL;
       }
 
       int depth() const {
-         return contents.depth;
+          return (int)contents.depth - 2;
       }
 
       int value() const {
          return (int)contents.value;
       }
 
+      int staticValue() const {
+          return (int)(val1 & STATIC_VALUE_MASK) - Constants::MATE - 1;
+      }
+
       void setValue(int value) {
          contents.value = (int16)value;
       }
 
-      ValueType type() const
-      {
+      ValueType type() const {
          return (ValueType)(contents.flags & TYPE_MASK);
       }
 
@@ -80,10 +95,6 @@ class PositionInfo
          return (int)((contents.flags & FORCED2_MASK) != 0);
       }
 
-      int isFull() const {
-         return (int)((contents.flags & FULL_MASK) != 0);
-      }
-
       int learned() const {
          return (int)((contents.flags & LEARNED_MASK) != 0);
       }
@@ -94,11 +105,6 @@ class PositionInfo
 
       byte flags() const {
           return contents.flags;
-      }
-
-      void setFull(int b) {
-         if (b) contents.flags |= FULL_MASK;
-         else contents.flags &= ~FULL_MASK;
       }
 
       Move bestMove(const Board &b) const {
@@ -119,7 +125,27 @@ class PositionInfo
               value() < beta;
       }
 
+      int operator == (const hash_t hash) const {
+          return getEffectiveHash() == (hash & HASH_MASK);
+      }
+
+      int operator != (const hash_t hash) const {
+          return getEffectiveHash() != (hash & HASH_MASK);
+      }
+
    protected:
+
+      hash_t getEffectiveHash() const {
+         return (val1 ^ val2) & HASH_MASK;
+      }
+
+      void setEffectiveHash(hash_t hash) {
+         val1 &= ~HASH_MASK;
+         val1 |= (hash ^ val2) & HASH_MASK;
+	 ASSERT(*this == hash);
+      }
+
+      uint64 val1;
       union
       {
 #ifdef _MSC_VER
@@ -136,49 +162,13 @@ class PositionInfo
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
-         uint64 val;
+         uint64 val2;
       }
 #ifndef _MSC_VER
       __attribute__((packed))
 #endif
       ;
-
 };
-
-class HashEntry : public PositionInfo
-{
-
-   // this class represents one entry in the hash table.
-   public:
-
-      HashEntry( hash_t hash, const int depth,
-         int age,
-         PositionInfo::ValueType type,
-         int value,
-         byte flags,
-         Move best_move)
-         : PositionInfo(value, depth, type, age, flags,
-                        best_move) {
-         hc = val ^ hash;
-      }
-
-      hash_t hashCode() const {
-         return hc;
-      }
-
-      hash_t getEffectiveHash() const {
-         return val ^ hc;
-      }
-
-      void setEffectiveHash(hash_t hash) {
-         hc = hash ^ val;
-      }
-
-   protected:
-      hash_t hc;
-};
-
-unsigned long hash_code(const HashEntry &p);
 
 class Hash {
 
@@ -198,21 +188,21 @@ class Hash {
     // in-memory hash table
     void loadLearnInfo();
 
-    PositionInfo::ValueType searchHash(const Board& b,hash_t hashCode,
-                                              int alpha, int beta, int ply,
+    HashEntry::ValueType searchHash(const Board& b,hash_t hashCode,
+                                              int ply,
                                               int depth, int age,
-                                              PositionInfo &pi
+                                              HashEntry &he
                                               ) {
         int i;
-        if (!hashSize) return PositionInfo::NoHit;
-        int probe = (int)(hashCode % hashSize);
+        if (!hashSize) return HashEntry::NoHit;
+        int probe = (int)(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = NULL;
         for (i = MaxRehash; i != 0; --i) {
             // Copy hashtable entry before hash test below (avoids
             // race where entry is validated, then changed).
             HashEntry entry(*p);
-            if (entry.getEffectiveHash() == hashCode) {
+            if (entry == hashCode) {
                 /*
                 // we got a hit on this entry in the current search,
                 // so update the age to discourage replacement:
@@ -223,10 +213,10 @@ class Hash {
                 }
                 */
                 hit = &entry;
-                pi = entry;
+                he = entry;
                 if (entry.depth() >= depth) {
                     // usable depth
-                    goto hash_hit;
+                    return he.type();
                 }
                 else {
                     break;
@@ -234,22 +224,24 @@ class Hash {
             }
             p++;
         }
-        // If we got a hash hit but insufficient depth return here:
-        if (hit) return PositionInfo::Invalid;
-        return PositionInfo::NoHit;
-    hash_hit:
-        return pi.type();
+        if (hit) {
+          // hash hit, but with insufficient depth:
+          return HashEntry::Invalid;
+        } else {
+          return HashEntry::NoHit;
+        }
     }
 
     void storeHash(hash_t hashCode, const int depth,
                           int age,
-                          PositionInfo::ValueType type,
+                          HashEntry::ValueType type,
                           int value,
+                          int staticValue,
                           byte flags,
                           Move best_move) {
 
         if (!hashSize) return;
-        int probe = (int)(hashCode % hashSize);
+        int probe = (int)(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = NULL;
@@ -260,18 +252,18 @@ class Hash {
         for (int i = MaxRehash; i != 0; --i) {
             HashEntry &q = *p;
 
-            if (q.hashCode() == (hash_t)0) {
+            if (q.empty()) {
                 // empty hash entry, available for use
                 best = &q;
                 break;
             }
-            else if (q.getEffectiveHash() == hashCode) {
+            else if (q == hashCode) {
                 // same position, always replace
                 best = &q;
                 break;
             }
             else if (!(q.flags() & 
-                       (PositionInfo::LEARNED_MASK | PositionInfo::TB_MASK)) && 
+                       (HashEntry::LEARNED_MASK | HashEntry::TB_MASK)) && 
                      (q.depth() <= depth || q.age() != age)) {
                 // candidate for replacement
                 int score = replaceScore(q,age);
@@ -283,12 +275,12 @@ class Hash {
             p++;
         }
         if (best != NULL) {
-            if (best->hashCode() == (hash_t)0x0ULL) {
+            if (best->empty()) {
                hashFree--;
             }
-            HashEntry newPos(hashCode, depth, age, type, value, flags, best_move);
-            *best = newPos;
-        }
+            *best = HashEntry(hashCode, value, 
+                              staticValue, depth, type, age, flags, best_move);
+       }
     }
 
     size_t getHashSize() const {
@@ -303,51 +295,17 @@ class Hash {
             return (int)(1000.0*(hashSize-hashFree)/(double)hashSize);
     }
 
-    // Evaluation cache, used in qsearch
-    struct CACHE_ALIGN EvalCacheEntry {
-         hash_t score_key, move_key;
-         int score;
-         Move best;
-    };
-
-    void initEvalCache(size_t bytes);
-
-    void freeEvalCache();
-
-    void clearEvalCache();
-
-    inline Move getBestMove(const Board &board) {
-        const EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
-        hash_t key = entry.move_key;
-        Move best = entry.best;
-        key ^= (hash_t)best;
-        if (board.hashCode() == key) {
-            return best;
-        }
-        else
-            return NullMove;
-    }
-
-    inline void cacheBestMove(const Board &board, Move best) {
-        EvalCacheEntry &entry = evalCache[board.hashCode() & evalCacheMask];
-        entry.move_key = board.hashCode() ^ (hash_t)best;
-        entry.best = best;
-    }
-
- private:
+private:
     int replaceScore(const HashEntry &pos, int age) {
         return (Util::Abs(pos.age()-age)<<12) - pos.depth();
     }
 
     HashEntry *hashTable;
     size_t hashSize, hashFree;
+    hash_t hashMask;
     static const int MaxRehash = 4;
     int refCount;
     int hash_init_done;
-    EvalCacheEntry *evalCache;
-    int evalCacheSize;
-    uint64 evalCacheMask;
-
 };
 
 #endif

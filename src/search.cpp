@@ -382,12 +382,12 @@ int score, int alpha, int beta)
         if (node->pv_length < 2) {
             // get the next move from the hash table, if possible
             // (for pondering)
-            PositionInfo entry;
-            PositionInfo::ValueType result =
+            HashEntry entry;
+            HashEntry::ValueType result =
                 hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
-                           0,0,0,age,
+                           0,age,
                            iteration_depth,entry);
-            if (result != PositionInfo::NoHit) {
+            if (result != HashEntry::NoHit) {
                 Move hashMove = entry.bestMove(board_copy);
                 if (!IsNull(hashMove)) {
                     stats->best_line[i] = hashMove;
@@ -1090,7 +1090,7 @@ int depth, Move exclude [], int num_exclude)
     node->fpruned_moves = 0;
     node->ply = 0;
     node->depth = depth;
-    node->futilityEval = Scoring::INVALID_SCORE;
+    node->eval = Scoring::INVALID_SCORE;
     node->threatMove = NullMove;
     // clear split point stack:
     activeSplitPoints = 0;
@@ -1244,68 +1244,579 @@ int depth, Move exclude [], int num_exclude)
 
 int Search::quiesce(int ply,int depth)
 {
-    // recursive function, implements quiescence search.
-    //
-    ASSERT(ply < Constants::MaxPly);
-    if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
-        controller->stats->num_nodes += nodeAccumulator;
-        nodeAccumulator = 0;
+   // recursive function, implements quiescence search.
+   //
+   ASSERT(ply < Constants::MaxPly);
+   if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
+      controller->stats->num_nodes += nodeAccumulator;
+      nodeAccumulator = 0;
 #ifdef SMP_STATS
-	--controller->sample_counter;
+      --controller->sample_counter;
 #endif
-        if (--controller->time_check_counter <= 0) {
-            controller->time_check_counter = Time_Check_Interval;
-            if (checkTime(board,ply)) {
-               if (talkLevel == Trace) {
-                  cout << "# terminating, time up" << endl;
-                }
-                controller->terminateNow();   // signal all searches to end
+      if (--controller->time_check_counter <= 0) {
+         controller->time_check_counter = Time_Check_Interval;
+         if (checkTime(board,ply)) {
+            if (talkLevel == Trace) {
+               cout << "# terminating, time up" << endl;
             }
-        }
-    }
+            controller->terminateNow();   // signal all searches to end
+         }
+      }
+   }
 #ifdef SEARCH_STATS
-    controller->stats->num_qnodes++;
+   controller->stats->num_qnodes++;
 #endif
-    int inCheck = (board.checkStatus((node-1)->last_move)==InCheck);
-    if (inCheck) {
-        // If last move was a checking move, ensure that in making it we did
-        // not move a pinned piece or move the king into check (normally we
-        // would detect this by finding the King can be captured, but if in
-        // check we only generate evasions and will not find this).
-        ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
-        if (!board.wasLegal((node-1)->last_move)) {
-           return -Illegal;
-        }
-    }
-    int rep_count;
-    if (terminate) return node->alpha;
-    else if (ply >= Constants::MaxPly-1) {
-        return scoring.evalu8(board,node->alpha,node->beta);
-    }
-    else if (Scoring::isDraw(board,rep_count,ply)) {
+   int rep_count;
+   if (terminate) return node->alpha;
+   else if (ply >= Constants::MaxPly-1) {
+      return scoring.evalu8(board);
+   }
+   else if (Scoring::isDraw(board,rep_count,ply)) {
 #ifdef _TRACE
-        if (master()) {
-            indent(ply); cout << "draw!" << endl;
-        }
+      if (master()) {
+         indent(ply); cout << "draw!" << endl;
+      }
 #endif
-        node->flags |= EXACT;
-        return drawScore(board);
-    }
+      node->flags |= EXACT;
+      return drawScore(board);
+   }
 #ifdef _TRACE
-    if (master()) {
-        indent(ply); cout << "window [" << node->alpha << ","
-            << node->beta << "]" << endl;
-    }
+   if (master()) {
+      indent(ply); cout << "window [" << node->alpha << ","
+                        << node->beta << "]" << endl;
+   }
 #endif
-    if (inCheck) {
+   node->eval = node->staticEval = Scoring::INVALID_SCORE;
+   const hash_t hash = board.hashCode(rep_count);
+   // Like Stockfish, only distinguish depths with checks vs depth without
+   int tt_depth;
+   const int inCheck = board.checkStatus((node-1)->last_move)==InCheck;
+   if (inCheck || depth >= 1-options.search.checks_in_qsearch) {
+      tt_depth = HashEntry::QSEARCH_CHECK_DEPTH;
+   }
+   else {
+      tt_depth = HashEntry::QSEARCH_NO_CHECK_DEPTH;
+   }
+   Move pv = NullMove;
+   int value;
+   HashEntry::ValueType result = HashEntry::NoHit;
+   HashEntry hashEntry;
+   if (options.search.hash_table_size) {
+      // Note: we copy the hash entry .. so mods by another thread do not
+      // alter the copy
+      result = controller->hashTable.searchHash(board,hash,
+                                                ply,tt_depth,controller->age,hashEntry);
+#ifdef SEARCH_STATS
+      controller->stats->hash_searches++;
+#endif
+   }
+   bool hit = (result != HashEntry::NoHit);
+   if (hit) {
+      // a valid hashtable entry was found
+#ifdef SEARCH_STATS
+      controller->stats->hash_hits++;
+#endif
+      node->staticEval = hashEntry.staticValue();
+      value = hashEntry.value();
+      // If this is a mate score, adjust it to reflect the
+      // current ply depth.
+      //
+      if (value >= Constants::MATE_RANGE) {
+         value -= ply;
+      }
+      else if (value <= -Constants::MATE_RANGE) {
+         value += ply;
+      }
+      // do not allow cutoff in PV nodes:
+      if (!node->PV()) {
+         switch (result) {
+         case HashEntry::Valid:
 #ifdef _TRACE
-          indent(ply); cout << "in_check=1" << endl;
+            if (master()) {
+               indent(ply);
+               cout << "hash cutoff, type = E" <<
+                  " alpha = " << node->alpha <<
+                  " beta = " << node->beta <<
+                  " value = " << value << endl;
+            }
 #endif
-        return qsearch_check(ply,depth);
-    }
-    else {
-        return qsearch_no_check(ply,depth);
-    }
+            if (node->inBounds(value)) {
+               // parent node will consider this a new best line
+               pv = hashEntry.bestMove(board);
+               if (!IsNull(pv)) {
+                  node->pv[ply] = pv;
+                  node->pv_length = 1;
+               }
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply); cout << "best line[ply][ply] = ";
+                  MoveImage(hash_move,cout);
+                  cout << endl;
+               }
+#endif
+            }
+            return value;
+         case HashEntry::UpperBound:
+            if (value <= node->alpha) {
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply);
+                  cout << "hash cutoff, type = U" <<
+                     " alpha = " << node->alpha <<
+                     " beta = " << node->beta <<
+                     " value = " << value << endl;
+               }
+#endif
+               return value;                     // cutoff
+            }
+            break;
+         case HashEntry::LowerBound:
+            if (value >= node->beta) {
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply);
+                  cout << "hash cutoff, type = L" <<
+                     " alpha = " << node->alpha <<
+                     " beta = " << node->beta <<
+                     " value = " << value << endl;
+               }
+#endif
+               return value;                     // cutoff
+            }
+            break;
+         default:
+            break;
+         } // end switch
+      }
+      // Note: hash move may be usable even if score is not usable
+      pv = hashEntry.bestMove(board);
+   }
+   if (tt_depth == HashEntry::QSEARCH_NO_CHECK_DEPTH && !(inCheck || CaptureOrPromotion(pv))) {
+      // don't fetch a non-capture/promotion checking move from the
+      // hash table if we aren't at a depth where checks are allowed.
+      pv = NullMove;
+   }
+   if (inCheck) {
+#ifdef _TRACE
+      indent(ply); cout << "in_check=1" << endl;
+#endif
+      // If last move was a checking move, ensure that in making it we did
+      // not move a pinned piece or move the king into check (normally we
+      // would detect this by finding the King can be captured, but if in
+      // check we only generate evasions and will not find this).
+      ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
+      if (!board.wasLegal((node-1)->last_move)) {
+         return -Illegal;
+      }
+      int try_score;
+      MoveGenerator mg(board, &context, ply, pv, master());
+      Move move;
+      BoardState state = board.state;
+      node->num_try = 0;
+      int noncaps = 0;
+      while ((move = mg.nextEvasion()) != NullMove) {
+         ASSERT(OnBoard(StartSquare(move)));
+         if (Capture(move) == King) {
+#ifdef _TRACE
+            if (master()) {
+               indent(ply);
+               cout << "previous move illegal, exiting qsearch" << endl;
+            }
+#endif
+            return -Illegal;
+         }
+#ifdef _TRACE
+         if (master()) {
+            indent(ply);
+            cout << "trying " << ply << ". ";
+            MoveImage(move,cout);
+            cout << endl;
+         }
+#endif
+         if (!node->PV() &&
+             noncaps > Util::Max(1+depth,0) && 
+             !Scoring::mateScore(node->beta) &&
+             !IsForced(move) && !IsForced2(move) &&
+             !CaptureOrPromotion(move) &&
+             board.wouldCheck(move) == NotInCheck) {
+            // We have searched one or more legal non-capture evasions
+            // and failed to cutoff. So don't search any more.
+#ifdef _TRACE
+            indent(ply); cout << "pruned" << endl;
+#endif
+            continue;
+         }
+         node->last_move = move;
+         board.doMove(move);
+         ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
+         try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
+         board.undoMove(move,state);
+         if (try_score != Illegal) {
+#ifdef _TRACE
+            if (master()) {
+               indent(ply);
+               cout << ply << ". ";
+               MoveImage(move,cout);
+               cout << ' ' << try_score << endl;
+            }
+#endif
+            node->num_try++;
+            if (try_score > node->best_score) {
+               node->best_score = try_score;
+               node->best = move;
+               if (try_score >= node->beta)
+                  break;
+               if (node->best_score >= Constants::MATE-1-ply)
+                  break;                        // mating move found
+            }
+            if (!CaptureOrPromotion(move)) noncaps++;
+         }
+#ifdef _TRACE
+         else if (master()) {
+            indent(ply);
+            cout << ply << ". ";
+            MoveImage(move,cout);
+            cout << " (illegal)" << endl;
+         }
+#endif
+      }
+      if (node->best_score >= node->beta) {
+#ifdef _TRACE
+         if (master()) {
+            indent(ply);
+            cout << "**CUTOFF**" << endl;
+         }
+#endif
+         return node->best_score;
+      }
+      if (node->num_try == 0) { // no legal evasions, so this is checkmate
+#ifdef _TRACE
+         if (master()) {
+            indent(ply); cout << "checkmate!" << endl;
+         }
+#endif
+         node->best_score = -(Constants::MATE - ply);
+         (node+1)->pv_length=0; // no PV from this point
+         node->flags |= EXACT;
+      }
+      storeHash(board,hash,node->best,tt_depth);
+      if (node->inBounds(node->best_score)) {
+         if (!IsNull(node->best)) {
+            updatePV(board,node->best,ply);
+         }
+      }
+      return node->best_score;
+   }
+   else {
+      // not in check
+      bool had_eval = false;
+      // Establish a default score.  This score is returned if no
+      // captures are generated, or if no captures generate a better
+      // score (since we generally can choose whether or not to capture).
+      int bitscore;
+      if (board.getMaterial(White).materialLevel()==0 &&
+          board.getMaterial(Black).materialLevel()==0 &&
+          ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
+         node->eval = bitscore;
+      }
+      else {
+         had_eval = node->staticEval != Scoring::INVALID_SCORE;
+         if (had_eval) {
+            node->eval = node->staticEval;
+         }
+         if (node->eval == Scoring::INVALID_SCORE) {
+            node->eval = node->staticEval = scoring.evalu8(board);
+         }
+         if (hit) {
+            const int hashValue = hashEntry.value();
+            // Use the transposition table entry to provide a better score
+            // for pruning decisions, if possible
+            if (result == (hashValue > node->eval ? HashEntry::LowerBound :
+                           HashEntry::UpperBound)) {
+               node->eval = hashValue;
+            }
+         }
+      }
+      ASSERT(node->eval != Scoring::INVALID_SCORE);
+#ifdef _TRACE
+      if (master()) {
+         indent(ply);
+         cout << "stand pat score = " << node->eval << endl;
+      }
+#endif
+      node->best_score = node->alpha;
+      if (node->eval > node->best_score) {
+         node->best_score = node->eval;
+         (node+1)->pv_length=0;
+         if (node->eval >= node->beta) {
+#ifdef _TRACE
+            if (master()) {
+               indent(ply); cout << "**CUTOFF**" << endl;
+            }
+#endif
+            // check legality of prev move but not at depth == 0 (because
+            // regular search checked already)
+            if (depth < 0 && !board.wasLegal((node-1)->last_move)) {
+               ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
+               return -Illegal;
+            }
+            // store eval in hash table if not already fetched from there
+            if (!had_eval) {
+               controller->hashTable.storeHash(hash, tt_depth,
+                                               controller->age,
+                                               HashEntry::Eval,
+                                               node->best_score, 
+                                               node->staticEval,
+                                               0,
+                                               node->best);
+            }
+            return node->eval;
+         }
+      }
+      int move_index = 0;
+      int try_score;
+      BoardState state(board.state);
+      if (!IsNull(pv)) {
+         if (Capture(pv) == King) {
+#ifdef _TRACE
+            if (master()) {
+               indent(ply);
+               cout << "previous move illegal, exiting qsearch" << endl;
+            }
+#endif
+            return -Illegal;
+         }
+         node->last_move = pv;
+#ifdef _TRACE
+         if (master()) {
+            indent(ply);
+            cout << "trying " << ply << ". ";
+            MoveImage(pv,cout);
+            cout << endl;
+         }
+#endif
+         // Omit futility pruning on hash move.
+         // Also, we do not do SEE on the pv move because it already
+         // passed that test - or it would have been pruned
+         ASSERT(validMove(board,pv));
+         board.doMove(pv);
+         try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
+         board.undoMove(pv,state);
+         if (try_score != Illegal) {
+#ifdef _TRACE
+            if (master()) {
+               indent(ply);
+               cout << ply << ". ";
+               MoveImage(pv,cout);
+               cout << "(pv) " << try_score << endl;
+            }
+#endif
+            if (try_score > node->best_score) {
+               node->best_score = try_score;
+               node->best = pv;
+               if (try_score >= node->beta)
+                  goto search_end;
+               if (node->best_score >= Constants::MATE-1-ply)
+                  goto search_end;              // mating move found
+            }
+         }
+      }
+      {
+         MoveGenerator mg(board, &context, ply,
+                          NullMove, master());
+         Move *moves = (Move*)node->done;
+         const ColorType oside = board.oppositeSide();
+         Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
+         // generate all the capture moves
+         Bitboard targets(board.occupied[oside]);
+         // Pre-select the piece(s) whose capture will be considered.
+         // Pieces whose capture is unlikely to reach the futility threshold
+         // will not be included in move generation.
+         if (node->alpha - int(1.6*PAWN_VALUE) > node->eval) {
+            targets &= ~(board.pawn_bits[oside] & ~Attacks::rank7mask[oside]);
+            if (node->alpha - int(1.6*KNIGHT_VALUE) > node->eval) {
+               targets &= ~(board.knight_bits[oside] | board.bishop_bits[oside]);
+               if (node->alpha - int(1.6*ROOK_VALUE) > node->eval) {
+                  targets &= ~board.rook_bits[oside];
+               }
+            }
+         }
+         int move_count = mg.generateCaptures(moves,targets);
+         mg.initialSortCaptures(moves, move_count);
+         while (move_index < move_count) {
+            Move move = moves[move_index++];
+            if (MovesEqual(move,pv)) continue;  // already did this one
+            if (Capture(move) == King) {
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply);
+                  cout << "previous move illegal, exiting qsearch" << endl;
+               }
+#endif
+               return -Illegal;
+            }
+#ifdef _TRACE
+            if (master()) {
+               indent(ply);
+               cout << "trying " << ply << ". ";
+               MoveImage(move,cout);
+               cout << endl;
+            }
+#endif
+            // Futility pruning
+            if (!disc.isSet(StartSquare(move)) && 
+                (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
+               const int gain = calcGain(board,move);
+               const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+               if (optScore < node->alpha) {
+#ifdef _TRACE
+                  indent(ply); cout << "pruned (futility)" << endl;
+#endif
+                  continue;
+               }
+               // See pruning
+               if (gain - PieceValue(PieceMoved(move)) <= 0 && !seeSign(board,move,
+                                                                        Util::Max(0,node->beta - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
+                  // This appears to be a losing capture, or one that can't bring us above alpha
+#ifdef _TRACE
+                  indent(ply); cout << "pruned (SEE)" << endl;
+#endif
+                  continue;
+               }
+            }
+            node->last_move = move;
+            board.doMove(move);
+            try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
+            board.undoMove(move,state);
+            if (try_score != Illegal) {
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply);
+                  cout << ply << ". ";
+                  MoveImage(move,cout);
+                  cout << ' ' << try_score << endl;
+               }
+#endif
+               if (try_score > node->best_score) {
+                  node->best_score = try_score;
+                  node->best = move;
+                  if (try_score >= node->beta) {
+#ifdef _TRACE
+                     if (master()) {
+                        indent(ply);
+                        cout << "**CUTOFF**" << endl;
+                     }
+#endif
+                     goto search_end;
+                  }
+                  if (node->best_score >= Constants::MATE-1-ply)
+                     goto search_end;          // mating move found
+               }
+            }
+#ifdef _TRACE
+            else if (master()) {
+               indent(ply);
+               cout << ply << ". ";
+               MoveImage(move,cout);
+               cout << " (illegal)" << endl;
+            }
+#endif
+         }
+         // Do checks in qsearch
+         if ((node->eval >= node->alpha - 2*PAWN_VALUE) &&
+             (depth >= 1-srcOpts.checks_in_qsearch)) {
+            move_count = mg.generateChecks(moves,disc);
+            move_index = 0;
+#ifdef _TRACE
+            if (master()) {
+               if (move_count) {
+                  indent(ply);
+                  cout << move_count << " checks generated" << endl;;
+               }
+            }
+#endif
+            while (move_index < move_count) {
+               Move move = moves[move_index++];
+               if (MovesEqual(move,pv)) continue;
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply);
+                  cout << "trying " << ply << ". ";
+                  MoveImage(move,cout);
+                  cout << endl;
+               }
+#endif
+               // prune checks that cause loss of the checking piece (but not
+               // discovered checks)
+               if (!disc.isSet(StartSquare(move)) && !seeSign(board,move,0)) {
+#ifdef _TRACE
+                  if (master()) {
+                     indent(ply); cout << "pruned" << endl;
+                  }
+#endif
+                  continue;
+               }
+               else if (board.isPinned(board.sideToMove(),move)) {
+                  // Move generator only produces pseudo-legal checking
+                  // moves, and in the next ply we will only consider
+                  // evasions. So need to ensure here that in making a
+                  // check we do not expose our own King to check.
+                  continue;
+               }
+               node->last_move = move;
+               board.doMove(move);
+               // verify opposite side in check:
+               ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
+               // and verify quick check confirms it
+               ASSERT(board.checkStatus(move)==InCheck);
+               // We know the check status so set it, so it does not
+               // have to be computed
+               board.setCheckStatus(InCheck);
+               try_score = -quiesce(-node->beta,-node->best_score,
+                                    ply+1,depth-1);
+               board.undoMove(move,state);
+               if (try_score != Illegal) {
+#ifdef _TRACE
+                  if (master()) {
+                     indent(ply);
+                     cout << ply << ". ";
+                     MoveImage(move,cout);
+                     cout << ' ' << try_score << endl;
+                  }
+#endif
+                  if (try_score > node->best_score) {
+                     node->best_score = try_score;
+                     node->best = move;
+                     if (try_score >= node->beta) {
+#ifdef _TRACE
+                        indent(ply); cout << "**CUTOFF**" << endl;
+#endif
+                        goto search_end;
+                     }
+                     if (node->best_score >= Constants::MATE-1-ply)
+                        goto search_end;      // mating move found
+                  }
+               }
+#ifdef _TRACE
+               else if (master()) {
+                  indent(ply);
+                  cout << ply << ". ";
+                  MoveImage(move,cout);
+                  cout << " (illegal)" << endl;
+               }
+#endif
+            }
+         }
+      }
+   search_end:
+      storeHash(board,hash,pv,tt_depth);
+      if (node->inBounds(node->best_score)) {
+         if (!IsNull(node->best)) {
+            updatePV(board,node->best,ply);
+         }
+      }
+      return node->best_score;
+   }
 }
 
 void RootSearch::clearHashTables() {
@@ -1320,435 +1831,6 @@ static inline void swap( Move moves[], int i, int j)
    Move tmp = moves[j];
    moves[j] = moves[i];
    moves[i] = tmp;
-}
-
-int Search::qsearch_no_check(int ply, int depth)
-{
-    int stand_pat_score;
-    // Establish a default score.  This score is returned if no
-    // captures are generated, or if no captures generate a better
-    // score (since we generally can choose whether or not to capture).
-    int bitscore;
-    if (board.getMaterial(White).materialLevel()==0 &&
-        board.getMaterial(Black).materialLevel()==0 &&
-        ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
-        stand_pat_score = bitscore;
-    }
-    else {
-        stand_pat_score = scoring.evalu8(board,node->alpha-QUEEN_VALUE,node->beta);
-    }
-#ifdef _TRACE
-    if (master()) {
-        indent(ply);
-        cout << "stand pat score = " << stand_pat_score << endl;
-    }
-#endif
-    node->best_score = node->alpha;
-    if (stand_pat_score > node->best_score) {
-        if (stand_pat_score >= node->beta) {
-#ifdef _TRACE
-            if (master()) {
-                indent(ply); cout << "**CUTOFF**" << endl;
-            }
-#endif
-            // check legality of prev move but not at depth == 0 (because
-            // regular search checked already)
-            if (depth < 0 && !board.wasLegal((node-1)->last_move)) {
-               ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
-               return -Illegal;
-            }
-            else
-               return stand_pat_score;
-        }
-        node->best_score = stand_pat_score;
-        (node+1)->pv_length=0;
-    }
-    Move pv = controller->hashTable.getBestMove(board);
-
-    int move_index = 0;
-    int try_score;
-    BoardState state(board.state);
-    if (!IsNull(pv)) {
-#ifdef _TRACE
-        if (master()) {
-            indent(ply);
-            cout << "qsearch cache hit: "; MoveImage(pv,cout);
-            cout << endl;
-        }
-#endif
-        if (Capture(pv) == King) {
-#ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << "previous move illegal, exiting qsearch" << endl;
-            }
-#endif
-            return -Illegal;
-        }
-        node->last_move = pv;
-#ifdef _TRACE
-        if (master()) {
-            indent(ply);
-            cout << "trying " << ply << ". ";
-            MoveImage(pv,cout);
-            cout << endl;
-        }
-#endif
-        // Omit futility pruning on hash move.
-        // Also, we do not do SEE on the pv move because it already
-        // passed that test - or it would have been pruned
-        board.doMove(pv);
-        try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
-        board.undoMove(pv,state);
-        if (try_score != Illegal) {
-#ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << ply << ". ";
-                MoveImage(pv,cout);
-                cout << "(pv) " << try_score << endl;
-            }
-#endif
-            if (try_score > node->best_score) {
-                node->best_score = try_score;
-                node->best = pv;
-                if (try_score >= node->beta)
-                    goto search_end;
-                if (node->best_score >= Constants::MATE-1-ply)
-                    goto search_end;              // mating move found
-            }
-        }
-    }
-    {
-        MoveGenerator mg(board, &context, ply,
-                         NullMove, master());
-        Move *moves = (Move*)node->done;
-        const ColorType oside = board.oppositeSide();
-        Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
-        // generate all the capture moves
-        Bitboard targets(board.occupied[oside]);
-        // Pre-select the piece(s) whose capture will be considered.
-        // Pieces whose capture is unlikely to reach the futility threshold
-        // will not be included in move generation.
-        if (node->alpha - int(1.6*PAWN_VALUE) > stand_pat_score) {
-            targets &= ~(board.pawn_bits[oside] & ~Attacks::rank7mask[oside]);
-            if (node->alpha - int(1.6*KNIGHT_VALUE) > stand_pat_score) {
-               targets &= ~(board.knight_bits[oside] | board.bishop_bits[oside]);
-               if (node->alpha - int(1.6*ROOK_VALUE) > stand_pat_score) {
-                  targets &= ~board.rook_bits[oside];
-               }
-            }
-        }
-        int move_count = mg.generateCaptures(moves,targets);
-        mg.initialSortCaptures(moves, move_count);
-        while (move_index < move_count) {
-            Move move = moves[move_index++];
-            if (MovesEqual(move,pv)) continue;  // already did this one
-            if (Capture(move) == King) {
-#ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "previous move illegal, exiting qsearch" << endl;
-                }
-#endif
-                return -Illegal;
-            }
-            // Futility pruning
-            if (!disc.isSet(StartSquare(move)) && 
-                (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-               const int gain = calcGain(board,move);
-               const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + stand_pat_score;
-               if (optScore < node->alpha) {
-#ifdef _TRACE
-                  indent(ply); cout << "pruned (futility)" << endl;
-#endif
-                  continue;
-               }
-               // See pruning
-               if (gain - PieceValue(PieceMoved(move)) <= 0 && !seeSign(board,move,
-                   Util::Max(0,node->beta - stand_pat_score - QSEARCH_FORWARD_PRUNE_MARGIN))) {
-                  // This appears to be a losing capture, or one that can't bring us above alpha
-#ifdef _TRACE
-                  indent(ply); cout << "pruned (SEE)" << endl;
-#endif
-                   continue;
-               }
-            }
-#ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << "trying " << ply << ". ";
-                MoveImage(move,cout);
-                cout << endl;
-            }
-#endif
-            node->last_move = move;
-            board.doMove(move);
-            try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
-            board.undoMove(move,state);
-            if (try_score != Illegal) {
-#ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << ply << ". ";
-                    MoveImage(move,cout);
-                    cout << ' ' << try_score << endl;
-                }
-#endif
-                if (try_score > node->best_score) {
-                    node->best_score = try_score;
-                    node->best = move;
-                    if (try_score >= node->beta) {
-#ifdef _TRACE
-                       if (master()) {
-                          indent(ply);
-                          cout << "**CUTOFF**" << endl;
-                        }
-#endif
-                        goto search_end;
-                    }
-                    if (node->best_score >= Constants::MATE-1-ply)
-                        goto search_end;          // mating move found
-                }
-            }
-#ifdef _TRACE
-            else if (master()) {
-                indent(ply);
-                cout << ply << ". ";
-                MoveImage(move,cout);
-                cout << " (illegal)" << endl;
-            }
-#endif
-        }
-        // Do checks in qsearch
-        if ((stand_pat_score >= node->alpha - 2*PAWN_VALUE) &&
-            (depth >= 1-srcOpts.checks_in_qsearch)) {
-            move_count = mg.generateChecks(moves,disc);
-            move_index = 0;
-#ifdef _TRACE
-            if (master()) {
-                if (move_count) {
-                    indent(ply);
-                    cout << move_count << " checks generated" << endl;;
-                }
-            }
-#endif
-            while (move_index < move_count) {
-                Move move = moves[move_index++];
-                if (MovesEqual(move,pv)) continue;
-#ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "trying " << ply << ". ";
-                    MoveImage(move,cout);
-                    cout << endl;
-                }
-#endif
-                // prune checks that cause loss of the checking piece (but not
-                // discovered checks)
-                if (!disc.isSet(StartSquare(move)) && !seeSign(board,move,0)) {
-#ifdef _TRACE
-                    if (master()) {
-                        indent(ply); cout << "pruned" << endl;
-                    }
-#endif
-                    continue;
-                }
-                else if (board.isPinned(board.sideToMove(),move)) {
-                    // Move generator only produces pseudo-legal checking
-                    // moves, and in the next ply we will only consider
-                    // evasions. So need to ensure here that in making a
-                    // check we do not expose our own King to check.
-                    continue;
-                }
-                node->last_move = move;
-                board.doMove(move);
-                // verify opposite side in check:
-                ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
-                // and verify quick check confirms it
-                ASSERT(board.checkStatus(move)==InCheck);
-                // We know the check status so set it, so it does not
-                // have to be computed
-                board.setCheckStatus(InCheck);
-                try_score = -quiesce(-node->beta,-node->best_score,
-                                     ply+1,depth-1);
-                board.undoMove(move,state);
-                if (try_score != Illegal) {
-#ifdef _TRACE
-                    if (master()) {
-                        indent(ply);
-                        cout << ply << ". ";
-                        MoveImage(move,cout);
-                        cout << ' ' << try_score << endl;
-                    }
-#endif
-                    if (try_score > node->best_score) {
-                        node->best_score = try_score;
-                        node->best = move;
-                        if (try_score >= node->beta) {
-#ifdef _TRACE
-                            indent(ply); cout << "**CUTOFF**" << endl;
-#endif
-                            goto search_end;
-                        }
-                        if (node->best_score >= Constants::MATE-1-ply)
-                            goto search_end;      // mating move found
-                    }
-                }
-#ifdef _TRACE
-                else if (master()) {
-                    indent(ply);
-                    cout << ply << ". ";
-                    MoveImage(move,cout);
-                    cout << " (illegal)" << endl;
-                }
-#endif
-            }
-        }
-    }
-    search_end:
-    if (!IsNull(node->best)) {
-#ifdef _TRACE
-      indent(ply); cout << "storing best move ";
-      MoveImage(node->best,cout);
-      cout << endl;
-#endif
-      controller->hashTable.cacheBestMove(board,node->best);
-    }
-    if (node->inBounds(node->best_score)) {
-        if (!IsNull(node->best)) {
-            updatePV(board,node->best,ply);
-        }
-    }
-    return node->best_score;
-}
-
-
-int Search::qsearch_check(int ply, int depth)
-{
-    int try_score;
-    Move pvmove = controller->hashTable.getBestMove(board);
-    if (!IsNull(pvmove)) {
-#ifdef _TRACE
-       indent(ply); cout << "qsearch cache hit: ";
-       MoveImage(pvmove,cout);
-       cout << endl;
-#endif
-      ASSERT(legalMove(board,pvmove));
-    }
-    MoveGenerator mg(board, &context, ply, pvmove, master());
-
-    Move move;
-    BoardState state = board.state;
-    node->num_try = 0;
-    int noncaps = 0;
-    while ((move = mg.nextEvasion()) != NullMove) {
-        ASSERT(OnBoard(StartSquare(move)));
-        if (Capture(move) == King) {
-#ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << "previous move illegal, exiting qsearch" << endl;
-            }
-#endif
-            return -Illegal;
-        }
-#ifdef _TRACE
-        if (master()) {
-            indent(ply);
-            cout << "trying " << ply << ". ";
-            MoveImage(move,cout);
-            cout << endl;
-        }
-#endif
-        if (!node->PV() &&
-            noncaps > Util::Max(1+depth,0) && 
-            !Scoring::mateScore(node->beta) &&
-            !IsForced(move) && !IsForced2(move) &&
-            !CaptureOrPromotion(move) &&
-            board.wouldCheck(move) == NotInCheck) {
-            // We have searched one or more legal non-capture evasions
-            // and failed to cutoff. So don't search any more.
-#ifdef _TRACE
-            indent(ply); cout << "pruned" << endl;
-#endif
-            continue;
-        }
-        node->last_move = move;
-        board.doMove(move);
-        ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
-        try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
-        board.undoMove(move,state);
-        if (try_score != Illegal) {
-#ifdef _TRACE
-            if (master()) {
-                indent(ply);
-                cout << ply << ". ";
-                MoveImage(move,cout);
-                cout << ' ' << try_score << endl;
-            }
-#endif
-            node->num_try++;
-            if (try_score > node->best_score) {
-                node->best_score = try_score;
-                node->best = move;
-                if (try_score >= node->beta)
-                    break;
-                if (node->best_score >= Constants::MATE-1-ply)
-                    break;                        // mating move found
-            }
-            if (!CaptureOrPromotion(move)) noncaps++;
-        }
-#ifdef _TRACE
-        else if (master()) {
-            indent(ply);
-            cout << ply << ". ";
-            MoveImage(move,cout);
-            cout << " (illegal)" << endl;
-        }
-#endif
-    }
-    if (node->best_score >= node->beta) {
-      if (!IsNull(node->best)) {
-#ifdef _TRACE
-         indent(ply); cout << "storing best move ";
-         MoveImage(node->best,cout);
-         cout << endl;
-#endif
-         controller->hashTable.cacheBestMove(board,node->last_move);
-#ifdef _TRACE
-        if (master()) {
-            indent(ply);
-            cout << "**CUTOFF**" << endl;
-        }
-#endif
-      }
-      return node->best_score;
-    }
-    if (node->num_try == 0) { // no legal evasions, so this is checkmate
-#ifdef _TRACE
-        if (master()) {
-          indent(ply); cout << "checkmate!" << endl;
-        }
-#endif
-        node->best_score = -(Constants::MATE - ply);
-        (node+1)->pv_length=0; // no PV from this point
-        node->flags |= EXACT;
-    }
-    else if (node->best != NullMove) {
-#ifdef _TRACE
-       indent(ply); cout << "storing best move ";
-       MoveImage(node->best,cout);
-       cout << endl;
-#endif
-       controller->hashTable.cacheBestMove(board,node->best);
-    }
-    if (node->inBounds(node->best_score)) {
-       if (!IsNull(node->best)) {
-          updatePV(board,node->best,ply);
-       }
-    }
-    return node->best_score;
 }
 
 static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
@@ -1769,6 +1851,61 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
   }
   else
     return 0;
+}
+
+void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int depth) {
+    // don't insert into the hash table if we are terminating - we may
+    // not have an accurate score.
+    if (options.search.hash_table_size && !terminate) {
+        // store the position in the hash table, if there's room
+        int value = node->best_score;
+        HashEntry::ValueType val_type;
+        // Adjust mate scores to reflect current ply.
+        if (value <= -Constants::MATE_RANGE) {
+             value -= node->ply;
+             val_type = HashEntry::Valid;
+        }
+        else if (value >= Constants::MATE_RANGE) {
+             value += node->ply;
+             val_type = HashEntry::Valid;
+        }
+        else {
+            if (value <= node->alpha) {
+                val_type = HashEntry::UpperBound;
+                // We don't have a "best" move, because all moves
+                // caused alpha cutoff.  But if there was a hash
+                // move or an initial move produced by internal
+                // interative deepening, save it in the hash table
+                // so it will be tried first next time around.
+                node->best = hash_move;
+            }
+            else if (value >= node->beta) {
+                val_type = HashEntry::LowerBound;
+            }
+            else {
+                val_type = HashEntry::Valid;
+            }
+        }
+#ifdef _TRACE
+        static const char type_chars[5] =
+            { 'E', 'U', 'L', 'X', 'X' };
+        if (master()) {
+            indent(node->ply);
+            cout << "storing type=" << type_chars[val_type] <<
+                " ply=" << node->ply << " depth=" << depth << " value=" << value <<
+                " move=";
+            MoveImage(node->best,cout);
+            cout << endl;
+        }
+#endif
+        controller->hashTable.storeHash(hash, depth,
+            controller->age,
+            val_type,
+            node->best_score, node->staticEval,
+            (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
+            (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
+            node->best);
+    }
 }
 
 int Search::calcExtensions(const Board &board,
@@ -1894,13 +2031,10 @@ int Search::calcExtensions(const Board &board,
           // threshold increases with move index
           int fmargin = FUTILITY_MARGIN[(depth*4)/DEPTH_INCREMENT][Util::Min(moveIndex,63)];
           int threshold = parentNode->beta - fmargin;
-          int eval;
-          if (parentNode->futilityEval != Scoring::INVALID_SCORE) {
-              eval = parentNode->futilityEval;
-          } else {
-              eval = parentNode->futilityEval = scoring.evalu8(board,threshold-1,threshold);
+          if (node->eval == Scoring::INVALID_SCORE) {
+             node->eval = node->staticEval = scoring.evalu8(board);
           }
-          if (eval < threshold) {
+          if (node->eval < threshold) {
 #ifdef SEARCH_STATS
               controller->stats->futility_pruning++;
 #endif
@@ -2021,7 +2155,7 @@ int Search::search()
         return node->alpha;
     }
     else if (ply >= Constants::MaxPly-1) {
-        return scoring.evalu8(board,node->alpha,node->beta);
+        return scoring.evalu8(board);
     }
 
     if (Scoring::isDraw(board,rep_count,ply)) {
@@ -2044,8 +2178,8 @@ int Search::search()
         using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) && (depth >= egtbDepth || ply <= 2);
     }
 #endif
-    PositionInfo hashEntry;
-    PositionInfo::ValueType result;
+    HashEntry hashEntry;
+    HashEntry::ValueType result;
     // Search the hash table to see if we have hit this
     // position before.
     // Note: query the hash table before the tablebases, since TB info may
@@ -2053,27 +2187,27 @@ int Search::search()
     // Note: we copy the hash entry .. so mods by another thread do not
     // alter the copy
     result = controller->hashTable.searchHash(board,board.hashCode(rep_count),
-                              node->alpha,node->beta,ply,depth,controller->age,hashEntry);
+                              ply,depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
     controller->stats->hash_searches++;
 #endif
-    bool hit = result != PositionInfo::NoHit;
+    bool hit = result != HashEntry::NoHit;
     if (hit) {
 #ifdef SEARCH_STATS
         controller->stats->hash_hits++;
 #endif
          // always accept a full-depth entry (cached tb hit)
-         if (depth != (Constants::MaxPly-1)*DEPTH_INCREMENT) {
+         if (!hashEntry.tb()) {
             // if using TBs at this ply, do not pull a non-TB entry out of
             // the hashtable. Also do not allow hash based cutoff of a PV
             // node.
             if (using_tb || node->PV()) {
-               result = PositionInfo::Invalid;
+               result = HashEntry::Invalid;
             }
         }
         int value = hashEntry.value();
         switch (result) {
-            case PositionInfo::Valid:
+            case HashEntry::Valid:
 #ifdef _TRACE
                 if (master()) {
                     indent(ply);
@@ -2109,31 +2243,31 @@ int Search::search()
                 }
                 node->flags |= EXACT;
                 return value;
-            case PositionInfo::UpperBound:
-#ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "hash cutoff, type = U" <<
-                        " alpha = " << node->alpha <<
-                        " beta = " << node->beta <<
-                        " value = " << value << endl;
-                }
-#endif
+            case HashEntry::UpperBound:
                 if (value <= node->alpha) {
+#ifdef _TRACE
+                    if (master()) {
+                        indent(ply);
+                        cout << "hash cutoff, type = U" <<
+                            " alpha = " << node->alpha <<
+                            " beta = " << node->beta <<
+                            " value = " << value << endl;
+                    }
+#endif
                     return value;                     // cutoff
                 }
                 break;
-            case PositionInfo::LowerBound:
-#ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "hash cutoff, type = L" <<
-                        " alpha = " << node->alpha <<
-                        " beta = " << node->beta <<
-                        " value = " << value << endl;
-                }
-#endif
+            case HashEntry::LowerBound:
                 if (value >= node->beta) {
+#ifdef _TRACE
+                    if (master()) {
+                        indent(ply);
+                        cout << "hash cutoff, type = L" <<
+                            " alpha = " << node->alpha <<
+                            " beta = " << node->beta <<
+                            " value = " << value << endl;
+                    }
+#endif
                     return value;                     // cutoff
                 }
                 break;
@@ -2142,10 +2276,6 @@ int Search::search()
         } // end switch
         // Note: hash move may be usable even if score is not usable
         hash_move = hashEntry.bestMove(board);
-    }
-    if (IsNull(hash_move)) {
-        // try the qsearch cache for a move
-        hash_move = controller->hashTable.getBestMove(board);
     }
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     if (using_tb && rep_count==0) {
@@ -2189,9 +2319,10 @@ int Search::search()
             controller->hashTable.storeHash(board.hashCode(rep_count),
                 (Constants::MaxPly-1)*DEPTH_INCREMENT,
                 controller->age,
-                PositionInfo::Valid,
+                HashEntry::Valid,
                 score,
-                PositionInfo::FULL_MASK | PositionInfo::TB_MASK,
+                Scoring::INVALID_SCORE,
+                HashEntry::TB_MASK,
                 NullMove);
             node->best_score = tb_score;               // unadjusted score
             node->flags |= EXACT;
@@ -2214,9 +2345,25 @@ int Search::search()
 #ifdef _TRACE
     if (master() && in_check) { indent(ply); cout << "in_check=" << in_check << endl;}
 #endif
-    node->futilityEval = Scoring::INVALID_SCORE;
     node->fpruned_moves = 0;
     move_count = 0;
+    node->eval = node->staticEval = Scoring::INVALID_SCORE;
+    if (hit) {
+        // Use the cached static value if possible
+        node->eval = node->staticEval = hashEntry.staticValue();
+    }
+    if (node->eval == Scoring::INVALID_SCORE) {
+        node->eval = node->staticEval = scoring.evalu8(board);
+    }
+    if (hit) {
+        const int hashValue = hashEntry.value();
+        // Use the transposition table entry to provide a better score
+        // for pruning decisions, if possible
+        if (result == (hashValue > node->eval ? HashEntry::LowerBound :
+                       HashEntry::UpperBound)) {
+            node->eval = hashValue;
+        }
+    }
 
     bool doNull = !in_check &&
         !node->PV() &&
@@ -2231,12 +2378,12 @@ int Search::search()
     if (doNull && depth <= 3*DEPTH_INCREMENT) {
         const int margin = FUTILITY_MARGIN_BASE[depth*4/DEPTH_INCREMENT];
         const int threshold = node->beta+margin;
-        int eval = scoring.evalu8(board,threshold-1,threshold);
-        if (eval > threshold) {
+        ASSERT(node->eval != Scoring::INVALID_SCORE);
+        if (node->eval > threshold) {
 #ifdef SEARCH_STATS
             ++controller->stats->static_null_pruning;
 #endif
-            return eval - margin;
+            return node->eval - margin;
         }
     }
 #endif
@@ -2246,7 +2393,8 @@ int Search::search()
     if (doNull && depth <= DEPTH_INCREMENT &&
         IsNull(hash_move)) {
         const int threshold = node->beta - int(2.5*PAWN_VALUE);
-        if (scoring.evalu8(board,threshold-1,threshold) < threshold) {
+        ASSERT(node->eval != Scoring::INVALID_SCORE);
+        if (node->eval < threshold) {
             int v = quiesce(node->beta-1,node->beta,ply+1,0);
             if(v < node->beta) {
 #ifdef _TRACE
@@ -2274,7 +2422,7 @@ int Search::search()
         int threshold = node->beta + PAWN_VALUE;
         int eval;
         if (depth > 6*DEPTH_INCREMENT &&
-            (eval = scoring.evalu8(board,threshold,node->beta+(5*PAWN_VALUE/2))) > threshold) {
+            (eval = node->eval) > threshold) {
             nu_depth -= Util::Min(DEPTH_INCREMENT,DEPTH_INCREMENT*(eval-node->beta-(PAWN_VALUE/2))/(2*PAWN_VALUE));
             nu_depth = Util::Max(nu_depth,DEPTH_INCREMENT);
         }
@@ -2633,7 +2781,7 @@ int Search::search()
         if (node->best == NullMove) node->best = hash_move;
         // store the position in the hash table, if there's room
         int value = node->best_score;
-        PositionInfo::ValueType val_type;
+        HashEntry::ValueType val_type;
         // Adjust mate scores to reflect current ply. But only
         // if the score is in bounds.
         if (value > node->alpha && value < node->beta) {
@@ -2648,7 +2796,7 @@ int Search::search()
         char typeChar;
 #endif
         if (value <= node->alpha) {
-            val_type = PositionInfo::UpperBound;
+            val_type = HashEntry::UpperBound;
 #ifdef _TRACE
             typeChar = 'U';
 #endif
@@ -2660,13 +2808,13 @@ int Search::search()
             node->best = hash_move;
         }
         else if (value >= node->beta) {
-            val_type = PositionInfo::LowerBound;
+            val_type = HashEntry::LowerBound;
 #ifdef _TRACE
             typeChar = 'L';
 #endif
         }
         else {
-            val_type = PositionInfo::Valid;
+            val_type = HashEntry::Valid;
 #ifdef _TRACE
             typeChar = 'E';
 #endif
@@ -2681,15 +2829,15 @@ int Search::search()
             cout << endl;
         }
 #endif
-        hash_t hash = board.hashCode(rep_count);
-        controller->hashTable.storeHash(hash, depth,
-            controller->age,
-            val_type,
-            node->best_score, 
-            (node->PV() ? PositionInfo::FULL_MASK : 0) |
-            (IsForced(node->best) ? PositionInfo::FORCED_MASK : 0) |
-            (IsForced2(node->best) ? PositionInfo::FORCED2_MASK : 0),
-            node->best);
+        const hash_t hashCode = board.hashCode(rep_count);
+        controller->hashTable.storeHash(hashCode, depth,
+                                        controller->age,
+                                        val_type,
+                                        node->best_score, 
+                                        node->staticEval,
+                                        (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
+                                        (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
+                                        node->best);
     }
     search_end2:
 #ifdef MOVE_ORDER_STATS
