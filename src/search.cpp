@@ -75,7 +75,7 @@ static const int FUTILITY_MARGIN_BASE[16] =
 
 static int FUTILITY_MARGIN[16][64];
 
-static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(1.5*PAWN_VALUE);
+static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
 
 static const int HISTORY_PRUNE_DEPTH = 12;
 struct HistoryPruneParams {
@@ -1628,20 +1628,7 @@ int Search::quiesce(int ply,int depth)
          const ColorType oside = board.oppositeSide();
          Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
          // generate all the capture moves
-         Bitboard targets(board.occupied[oside]);
-         // Pre-select the piece(s) whose capture will be considered.
-         // Pieces whose capture is unlikely to reach the futility threshold
-         // will not be included in move generation.
-         if (node->alpha - int(1.6*PAWN_VALUE) > node->eval) {
-            targets &= ~(board.pawn_bits[oside] & ~Attacks::rank7mask[oside]);
-            if (node->alpha - int(1.6*KNIGHT_VALUE) > node->eval) {
-               targets &= ~(board.knight_bits[oside] | board.bishop_bits[oside]);
-               if (node->alpha - int(1.6*ROOK_VALUE) > node->eval) {
-                  targets &= ~board.rook_bits[oside];
-               }
-            }
-         }
-         int move_count = mg.generateCaptures(moves,targets);
+         int move_count = mg.generateCaptures(moves,board.occupied[oside]);
          mg.initialSortCaptures(moves, move_count);
          while (move_index < move_count) {
             Move move = moves[move_index++];
