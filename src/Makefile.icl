@@ -219,8 +219,8 @@ $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
@@ -234,8 +234,8 @@ $(PGO_BUILD)\scoring.obj $(PGO_BUILD)\searchc.obj \
 $(PGO_BUILD)\see.obj $(PGO_BUILD)\globals.obj $(PGO_BUILD)\search.obj \
 $(PGO_BUILD)\notation.obj $(PGO_BUILD)\hash.obj $(PGO_BUILD)\stats.obj \
 $(PGO_BUILD)\bitprobe.obj $(PGO_BUILD)\epdrec.obj $(PGO_BUILD)\chessio.obj \
-$(PGO_BUILD)\movearr.obj $(PGO_BUILD)\log.obj $(PGO_BUILD)\book.obj \
-$(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookutil.obj $(PGO_BUILD)\bookentr.obj \
+$(PGO_BUILD)\movearr.obj $(PGO_BUILD)\log.obj \
+$(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookwrit.obj \
 $(PGO_BUILD)\calctime.obj $(PGO_BUILD)\legal.obj $(PGO_BUILD)\eco.obj \
 $(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
@@ -249,8 +249,8 @@ $(POPCNT_BUILD)\scoring.obj $(POPCNT_BUILD)\searchc.obj \
 $(POPCNT_BUILD)\see.obj $(POPCNT_BUILD)\globals.obj $(POPCNT_BUILD)\search.obj \
 $(POPCNT_BUILD)\notation.obj $(POPCNT_BUILD)\hash.obj $(POPCNT_BUILD)\stats.obj \
 $(POPCNT_BUILD)\bitprobe.obj $(POPCNT_BUILD)\epdrec.obj $(POPCNT_BUILD)\chessio.obj \
-$(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj $(POPCNT_BUILD)\book.obj \
-$(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookutil.obj $(POPCNT_BUILD)\bookentr.obj \
+$(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj \
+$(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookwrit.obj \
 $(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
 $(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
 $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
@@ -264,8 +264,8 @@ $(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
 $(PROFILE)\see.obj $(PROFILE)\globals.obj $(PROFILE)\search.obj \
 $(PROFILE)\notation.obj $(PROFILE)\hash.obj $(PROFILE)\stats.obj \
 $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
-$(PROFILE)\movearr.obj $(PROFILE)\log.obj $(PROFILE)\book.obj \
-$(PROFILE)\bookread.obj $(PROFILE)\bookutil.obj $(PROFILE)\bookentr.obj \
+$(PROFILE)\movearr.obj $(PROFILE)\log.obj \
+$(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(BUILD)\history.obj \
 $(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(TB_PROFILE_OBJS) 
@@ -278,8 +278,8 @@ $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\legal.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 
@@ -291,8 +291,8 @@ $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 

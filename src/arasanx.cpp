@@ -1,6 +1,6 @@
 // Main driver module for Arasan chess engine.
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2013 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2014 by Jon Dart. All Rights Reserved.
 //
 #include "board.h"
 #include "movegen.h"
@@ -31,7 +31,6 @@ extern "C"
 #include <io.h>
 #endif
 }
-#include "book.h"
 #ifdef GAVIOTA_TBS
 #include "gtb.h"
 #endif
@@ -95,7 +94,6 @@ static bool doTrace = false;
 static bool easy = false;
 static int game_end = 0;
 static int32 last_score = Constants::MATE;
-static BookInfo book_inf;
 static ECO *ecoCoder = NULL;
 static string hostname;
 static int xboard42 = 0;
@@ -527,12 +525,6 @@ static void save_game() {
    if (gameMoves->num_moves() == 0 || !options.store_games) {
       if (doTrace) cout << "# out of save_game" << endl;
       return;
-   }
-   if (options.learning.result_learning) {
-      const Log::GameResult result = theLog->getResult();
-      if (result != Log::Incomplete)
-         learnResult(computer_plays_white ? White: Black,
-         result,opponent_rating-computer_rating);
    }
    if (game_file) {
       ArasanVector<ChessIO::Header> headers;
@@ -999,13 +991,14 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
 {
     last_stats.clear();
     last_score = Constants::MATE;
-    book_inf.clear();
     ponder_move = NullMove;
     if (doTrace) cout << "# in search()" << endl;
 
     Move move = NullMove;
-    if (!infinite && options.book.book_enabled && !testing && openingBook) {
-        move = openingBook->book_move(board,book_inf);
+    stats.fromBook = false;
+    if (!infinite && options.book.book_enabled && !testing) {
+        move = openingBook.pick(board);
+        if (!IsNull(move)) stats.fromBook = true;
     }
 
     if (IsNull(move)) {
@@ -1065,11 +1058,10 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
     }
     else {
         if (ics || uci) {
-            Move choices[20];
-            int scores[20];
+		    vector< pair<Move,int> > choices;
             int moveCount = 0;
-            if (options.book.book_enabled && openingBook) {
-                moveCount = openingBook->book_moves(board,choices,scores,20);
+            if (options.book.book_enabled) {
+                moveCount = openingBook.book_moves(board,choices);
             }
             stringstream s;
             if (uci)
@@ -1079,9 +1071,9 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
             else
                 s << "tellics whisper book moves: (";
             for (int i=0;i<moveCount;i++) {
-                Notation::image(board,choices[i],Notation::SAN_OUT,s);
+                Notation::image(board,choices[i].first,Notation::SAN_OUT,s);
                 s << ' ';
-                s << (int)(100.0*scores[i]/(float)BookEntry::MAX_WEIGHT + 0.5F);
+                s << (int)(100.0*choices[i].second/(float)book::MAX_WEIGHT + 0.5F);
                 if (i < moveCount-1)
                     s << ", ";
             }
@@ -1158,8 +1150,8 @@ static void send_move(Board &board, Move &move, Statistics
         stringstream img;
         Notation::image(board,last_move,Notation::SAN_OUT,img);
         last_move_image = img.str();
-        theLog->add_move(board,last_move,last_move_image,&last_stats,&book_inf,true);
-        // Perform book and/or position learning (if enabled):
+        theLog->add_move(board,last_move,last_move_image,&last_stats,true);
+        // Perform learning (if enabled):
         learn(board,board.repCount());
         stringstream movebuf;
         move_image(board,last_move,movebuf,uci);
@@ -1354,18 +1346,18 @@ static Move analyze(SearchController &searcher, Board &board, Statistics &stats)
 
 static void doHint() {
     // try book move first
-    Move moves[20];
-    int scores[20];
+    vector < pair<Move,int> > moves;
     unsigned count = 0;
-    if (options.book.book_enabled && openingBook)
-        count = openingBook->book_moves(*main_board,moves,scores,20);
+    if (options.book.book_enabled) {
+        count = openingBook.book_moves(*main_board,moves);
+    }
     if (count > 0) {
         if (count == 1)
             cout << "Book move: " ;
         else
             cout << "Book moves: ";
         for (unsigned i = 0; i<count; i++) {
-            Notation::image(*main_board,moves[i],Notation::SAN_OUT,cout);
+            Notation::image(*main_board,moves[i].first,Notation::SAN_OUT,cout);
             if (i<count-1) cout << ' ';
         }
         cout << endl;
@@ -1566,7 +1558,7 @@ static void execute_move(Board &board,Move m)
     stringstream img;
     Notation::image(board,m,Notation::SAN_OUT,img);
     last_move_image = img.str();
-    theLog->add_move(board,m,last_move_image,NULL,NULL,true);
+    theLog->add_move(board,m,last_move_image,NULL,true);
     BoardState previous_state = board.state;
     board.doMove(m);
     // If our last move added was the pondering move, replace it
@@ -1599,10 +1591,6 @@ static void processWinboardOptions(const string &args) {
         Options::setOption<int>(value,options.book.selectivity);
     } else if (name == "Can resign") {
         setCheckOption(value,options.search.can_resign);
-    } else if (name == "Score learning") {
-        setCheckOption(value,options.learning.score_learning);
-    } else if (name == "Result learning") {
-        setCheckOption(value,options.learning.result_learning);
     } else if (name == "Position learning") {
         setCheckOption(value,options.learning.position_learning);
     } else if (name == "Strength") {
@@ -2254,7 +2242,7 @@ static void selfplay_game(int count) {
         Notation::image(*main_board,m,Notation::SAN_OUT,image);
         gameMoves->add_move(*main_board,previous_state,m,image.str(),false);
         last_move_image = image.str();
-        theLog->add_move(*main_board,m,last_move_image,&stats,NULL,true);
+        theLog->add_move(*main_board,m,last_move_image,&stats,true);
         main_board->doMove(m);
         if (stats.display_value >= 7*PAWN_VALUE) {
             // note winning side is not the side to move, since we did doMove
@@ -2273,8 +2261,6 @@ static void do_selfplay()
    delayedInitIfNeeded();
    options.book.book_enabled = 0;
    options.learning.position_learning = 0;
-   options.learning.score_learning = 0;
-   options.learning.result_learning = 0;
    ifstream file(selfplay_openings.c_str(),ios::in);
    mod_searcher = new SearchController();
    for (int g = 0; g < selfplay_games; g++) {
@@ -2339,7 +2325,7 @@ static bool do_command(const string &cmd, Board &board) {
         uci = 1;
         verbose = 1;                       // TBD: fixed for now
         // Learning is disabled because we don't have full game history w/ scores
-        options.learning.score_learning = options.learning.position_learning = 0;
+        options.learning.position_learning = 0;
         cout << "id name " << "Arasan " << Arasan_Version;
         cout << endl;
         cout << "id author Jon Dart" << endl;
@@ -2631,8 +2617,6 @@ static bool do_command(const string &cmd, Board &board) {
                 Options tmp = options;
                 options.book.book_enabled = 0;
                 options.learning.position_learning = 0;
-                options.learning.score_learning = 0;
-                options.learning.result_learning = 0;
                 do_test(filename);
                 if (out_file) {
                     out_file->close();
@@ -2920,12 +2904,8 @@ static bool do_command(const string &cmd, Board &board) {
             options.book.selectivity << " 1 100\"";
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
-        cout << " option=\"Result learning -check " <<
-            options.learning.result_learning << "\"";
         cout << " option=\"Position learning -check " <<
             options.learning.position_learning << "\"";
-        cout << " option=\"Score learning -check " <<
-            options.learning.score_learning << "\"";
         // strength option (new for 14.2)
         cout << " option=\"Strength -spin " << options.search.strength << " 0 100\"";
         cout << " myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
@@ -2956,12 +2936,11 @@ static bool do_command(const string &cmd, Board &board) {
     }
     else if (cmd == "bk") {
         // list book moves
-        Move moves[20];
-        int scores[20];
+	vector < pair<Move,int> > moves;
         int count = 0;
         delayedInitIfNeeded(); // to allow "bk" before "new"
-        if (options.book.book_enabled && openingBook) {
-            count = openingBook->book_moves(*main_board,moves,scores,20);
+        if (options.book.book_enabled) {
+            count = openingBook.book_moves(*main_board,moves);
         }
         if (count == 0) {
             cout << '\t' << "No book moves for this position." << endl
@@ -2971,7 +2950,7 @@ static bool do_command(const string &cmd, Board &board) {
             cout << " book moves:" << endl;
             for (int i = 0; i<count; i++) {
                 cout << '\t';
-                Notation::image(*main_board,moves[i],Notation::SAN_OUT,cout);
+                Notation::image(*main_board,moves[i].first,Notation::SAN_OUT,cout);
                 cout << endl;
             }
             cout << endl;

@@ -1,18 +1,18 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2013 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2014 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
 VERSION = 16.4
 
 #TRACE=/D_TRACE 
-#DEBUG=/Zi -D_DEBUG 
-#LDDEBUG=/DEBUG /PDB:arasanx.pdb
+DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
+LDDEBUG=/DEBUG
 BUILD_ROOT=..
 
 #define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS=1
-#NALIMOV_TBS=1
+GAVIOTA_TBS=1
+NALIMOV_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
@@ -211,8 +211,8 @@ $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
@@ -226,8 +226,8 @@ $(POPCNT_BUILD)\scoring.obj $(POPCNT_BUILD)\searchc.obj \
 $(POPCNT_BUILD)\see.obj $(POPCNT_BUILD)\globals.obj $(POPCNT_BUILD)\search.obj \
 $(POPCNT_BUILD)\notation.obj $(POPCNT_BUILD)\hash.obj $(POPCNT_BUILD)\stats.obj \
 $(POPCNT_BUILD)\bitprobe.obj $(POPCNT_BUILD)\epdrec.obj $(POPCNT_BUILD)\chessio.obj \
-$(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj $(POPCNT_BUILD)\book.obj \
-$(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookutil.obj $(POPCNT_BUILD)\bookentr.obj \
+$(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj \
+$(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookwrit.obj \
 $(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
 $(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
 $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
@@ -241,8 +241,8 @@ $(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
 $(PROFILE)\see.obj $(PROFILE)\globals.obj $(PROFILE)\search.obj \
 $(PROFILE)\notation.obj $(PROFILE)\hash.obj $(PROFILE)\stats.obj \
 $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
-$(PROFILE)\movearr.obj $(PROFILE)\log.obj $(PROFILE)\book.obj \
-$(PROFILE)\bookread.obj $(PROFILE)\bookutil.obj $(PROFILE)\bookentr.obj \
+$(PROFILE)\movearr.obj $(PROFILE)\log.obj \
+$(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(BUILD)\history.obj \
 $(PROFILE)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\unit.obj $(TB_PROFILE_OBJS)
@@ -253,10 +253,10 @@ $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
 $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
@@ -269,8 +269,8 @@ $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\legal.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 
@@ -282,8 +282,8 @@ $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\book.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookutil.obj $(BUILD)\bookentr.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
 $(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 
@@ -297,7 +297,7 @@ $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) /c /Fo$@ $<
 
 $(BUILD)\makebook.exe:  $(MAKEBOOK_OBJS)
-        $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\makebook.exe
+        $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\makebook.exe
 
 $(BUILD)\makeeco.exe:  $(MAKEECO_OBJS)
         $(LD) $(MAKEECO_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\makeeco.exe

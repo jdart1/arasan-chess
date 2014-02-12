@@ -1,11 +1,10 @@
-// Copyright 1994, 1995, 2000, 2009, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
 
 #include "board.h"
 #include "search.h"
-#include "bookinfo.h"
 #include <fstream>
 #include <string>
 using namespace std;
@@ -27,6 +26,7 @@ class LogEntry
      LogEntry(const BoardState &state,
                const Move &move,
                const string &move_image,
+               bool fromBook,
                int score,
                int depth);
              
@@ -66,19 +66,13 @@ class LogEntry
          return my_score;
      }
      
-     const BookInfo &getBookInfo() const
-     {
-         return bi;
-     }
-     
-     void setBookInfo(const BookInfo &book_inf)
-     {
-         bi = book_inf;
-     }
-     
      int depth() const
      {
          return my_depth;
+     }
+
+     bool fromBook() const {
+         return my_fromBook;
      }
     
      int operator == ( const LogEntry &l ) const;
@@ -95,10 +89,10 @@ class LogEntry
      BoardState my_state;
      Move my_move;
      string my_image;
+     bool my_fromBook;
      int my_score;
      int my_depth;
      string my_result;
-     BookInfo bi;
 };
 
 class Log : public ArasanVector<LogEntry>
@@ -126,7 +120,6 @@ class Log : public ArasanVector<LogEntry>
                     const Move &emove,
                     const string &move_image,
                     const Statistics *stats,
-                    BookInfo *book_inf,
                     int toFile);
              
      // remove the most recently added move to the log.

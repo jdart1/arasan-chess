@@ -524,7 +524,7 @@ int Search::checkTime(const Board &board,int ply) {
             if (stats->elapsed_time > (unsigned)controller->time_target/3) {
                // see if our score has dropped a lot since our
                // last search
-               if (n >= 2 && !(*theLog)[n-2].getBookInfo().isValid() &&
+               if (n >= 2 && !(*theLog)[n-2].fromBook() &&
                    (stats->value < 5*PAWN_VALUE) &&
                    (stats->value > -PAWN_VALUE*5) &&
                    (stats->value < (*theLog)[n-2].score() - PAWN_VALUE/3)) {

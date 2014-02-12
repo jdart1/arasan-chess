@@ -21,6 +21,6 @@ const int INFINITE_TIME = 9999999;
 
 #define DEPTH_INCREMENT 4
 #define Arasan_Version "16.4"
-#define Arasan_Copyright "Copyright 1994-2013 by Jon Dart. All Rights Reserved."
+#define Arasan_Copyright "Copyright 1994-2014 by Jon Dart. All Rights Reserved."
 
 #endif

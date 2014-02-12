@@ -1,4 +1,4 @@
-// Copyright 1993-2009, 2012, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1993-2009, 2012-2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _TYPES_H
 #define _TYPES_H
@@ -289,4 +289,19 @@ FORCEINLINE float swapEndianFloat(const byte *input) {
 #define swapEndian16(x) *((uint16*)(x))
 #define swapEndianFloat(x) *((float*)(x))
 #endif
+
+#ifdef _MSC_VER
+#define BEGIN_PACKED_STRUCT \
+{ \
+__pragma(pack(push,1))
+#define END_PACKED_STRUCT \
+__pragma(pack(pop)) \
+};
+#else
+#define BEGIN_PACKED_STRUCT { 
+#define END_PACKED_STRUCT \
+} \
+__attribute__((__packed__));
+#endif
+
 #endif

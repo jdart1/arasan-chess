@@ -1,4 +1,4 @@
-// Copyright 1994-2009, 2012, 2013 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2009, 2012-2014 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
@@ -19,6 +19,7 @@ struct Statistics
    StateType state;
    int value;
    int display_value;
+   bool fromBook;
    int complete; // if at end of iteration
    int multipv_count; // only for UCI
    int multipv_limit; // only for UCI

@@ -1,4 +1,4 @@
-// Copyright 1996-2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2012, 2014 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -16,12 +16,14 @@
 int EGTBMenCount = 0;
 MoveArray *gameMoves;
 Options options;
-Book *openingBook = NULL;
+BookReader openingBook;
 Log *theLog = NULL;
 string learnFileName;
 LockDefine(input_lock);
 
-#define LEARN_FILE_NAME "arasan.lrn"
+static const char * LEARN_FILE_NAME = "arasan.lrn";
+
+static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 #ifdef UCI_LOG
 fstream ucilog;
@@ -66,7 +68,7 @@ int initGlobals(const char *pathName, bool initLog) {
 }
 
 void CDECL cleanupGlobals(void) {
-   delete openingBook;
+   openingBook.close();
    delete gameMoves;
    delete theLog;
    LockDestroy(input_lock);
@@ -126,6 +128,6 @@ void delayedInit() {
 #endif
     // also initialize the book here
     if (options.book.book_enabled) {
-       openingBook = new Book();
+        openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str());
     }
 }

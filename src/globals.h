@@ -1,4 +1,4 @@
-// Copyright 1994-2005 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2005, 2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _GLOBALS_H
 #define _GLOBALS_H
@@ -8,7 +8,7 @@
 #include "types.h"
 #include "options.h"
 #include "log.h"
-#include "book.h"
+#include "bookread.h"
 #include "movearr.h"
 
 extern Options options;
@@ -17,7 +17,7 @@ extern MoveArray *gameMoves;
 extern string learnFileName;
 extern string programPath;
 extern int EGTBMenCount;
-extern Book *openingBook;
+extern BookReader openingBook;
 extern Log *theLog;
 extern lock_t input_lock;
 

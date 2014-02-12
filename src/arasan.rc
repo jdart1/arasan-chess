@@ -41,14 +41,6 @@ book.random=0
 #
 # Learning
 #
-# true to enable book learning based on score out of book, false to disable
-# (Not available in UCI mode)
-learning.score_learning=true
-#
-# True to enable use of book learning info based on game results
-# (Not available in UCI mode)
-learning.result_learning=true
-#
 # True to enable storage & use of position values, false to disable
 # (Not available in UCI mode)
 learning.position_learning=true

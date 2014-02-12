@@ -46,6 +46,10 @@ class BoardHash
             }
         }
 
+        static ColorType sideToMove(hash_t input) {
+            return (input & 0x8000000000000000ULL) ? White : Black;
+        }
+
         static hash_t kingCoverHash(const Board &board, ColorType side) {
           if (side == White) 
             return board.pawnHashCodeW ^ hash_codes[board.kingSquare(White)][WhiteKing];

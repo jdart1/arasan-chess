@@ -1,8 +1,7 @@
-// Copyright 1994-2002, 2004, 2008-2009 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2002, 2004, 2008-2009, 2014 by Jon Dart.  All Rights Reserved.
 
 #include "learn.h"
 #include "globals.h"
-#include "book.h"
 #include "util.h"
 #include "scoring.h"
 #include <sstream>
@@ -12,7 +11,7 @@
 
 void learn(const Board &board, int rep_count)
 {
-   // First, do position learning. If our score has dropped or
+   // Do position learning. If our score has dropped or
    // jumped recently, append an entry to the position learning file.
 
    if (theLog->current() == 0) return;
@@ -20,15 +19,12 @@ void learn(const Board &board, int rep_count)
    
    int last_score = last_entry.score();
    int last_depth = last_entry.depth();
-   const BookInfo &book_info = last_entry.getBookInfo();
-   if (options.learning.position_learning && !book_info.isValid() && theLog->current() >= 3)
-   {
+   if (options.learning.position_learning && !last_entry.fromBook() && theLog->current() >= 3) {
       int i = theLog->current()-1;
       int out_of_book = 0;
       while (i>=0) {
          const LogEntry &prev = (*theLog)[i];
-         const BookInfo &book_info = prev.getBookInfo();
-	 if (book_info.isValid()) break;
+	 if (prev.fromBook()) break;
 	 ++out_of_book;
 	 i-=2;
       }
@@ -39,8 +35,7 @@ void learn(const Board &board, int rep_count)
          diff1 = Util::Abs(last_score - prev.score());
          if (theLog->current()>=5) {
             const LogEntry &prev = (*theLog)[theLog->current()-5];
-            const BookInfo &book_info = prev.getBookInfo();
-	    if (!book_info.isValid()) {
+	    if (!prev.fromBook()) {
                diff2 = Util::Abs(last_score - prev.score());
 	    }
          }
@@ -66,107 +61,6 @@ void learn(const Board &board, int rep_count)
             theLog->write(str.str());
          }
       }
-   }
-
-   // If we are a few moves out of the opening book, and if 
-   // our score is considerably off zero, update the book to
-   // avoid or steer towards this position in the future.
-   //
-   if (!options.learning.score_learning) return;
-   int count = options.learning.score_learning_horizon;
-   int last_book_move = -1;
-   int min_score = Constants::MATE, max_score = -Constants::MATE;
-   int i;
-   for (i = theLog->current()-1; i>=0 && count>=0; i-=2,--count)
-   {
-      const LogEntry &entry = (*theLog)[i];
-      const BookInfo &book_info = entry.getBookInfo();
-      if (book_info.isValid()) // it was a book move
-      {
-         if (count > 0) return; // not at learning threshold
-         last_book_move = i;
-         break;
-      }
-      else
-      {
-         if (entry.score() < min_score)
-            min_score = entry.score();
-         if (entry.score() > max_score)
-            max_score = entry.score();
-      }
-   }
-   if (last_book_move < 0) return;
-   if ((last_depth < options.learning.score_learning_minDepth) ||
-       (Util::Abs(last_score) < options.learning.score_learning_threshold))
-   {
-      return; // we don't have an accurate score, or the
-              // most recent score is close to even
-   }
-   theLog->write("learning"); theLog->write_eol();
-   float learn_factor = (last_score*1.0F)/64.0F;
-   int first = 1;
-   for (i = last_book_move; i >= 0; i-=2)
-   {
-      const LogEntry &entry = (*theLog)[i];
-      const BookInfo &book_info = entry.getBookInfo();
-      if (book_info.isValid())
-      {
-         if (!first)
-         {
-            learn_factor /= 1.0F*book_info.getTotalMoves();
-         }
-         openingBook->update(book_info,learn_factor);
-         first = 0;
-      }
-   }
-}
-
-void learnResult(ColorType computerSide, Log::GameResult result, int ratingDiff)
-{
-   int last_book_move = -1;
-   int i;
-   for (i = theLog->current()-1; i>=0; i--)
-   {
-      const LogEntry &entry = (*theLog)[i];
-      const BookInfo &book_info = entry.getBookInfo();
-      if (book_info.isValid()) // it was a book move
-      {
-         last_book_move = i;
-         break;
-      }
-   }
-   if (last_book_move < 0) return;
-   int diff = 0;
-   // don't learn from low-rated opponents
-   if (ratingDiff < -250) return;
-   if (result == Log::DrawResult) {
-     if (ratingDiff>100) 
-       diff = 1; // draw from hi-rated opponent
-     else
-       return; // regular draw
-   } else {
-      diff = (result == Log::WhiteWin) ? 1 : -1;
-      if (computerSide == Black) diff = -diff;
-   }
-   BookLocation loc;
-   while (i>0) {
-     const LogEntry &entry = (*theLog)[i];
-     BookInfo &book_info = (BookInfo&)entry.getBookInfo();
-     book_info.getLocation(loc);
-     int before = book_info.get_learned_result();
-     book_info.update_learned_result(diff);      
-     int after = book_info.get_learned_result();
-     openingBook->update(&book_info);
-
-     stringstream str;
-     str << "Learning result .. page = " << (int)loc.page << " index = " <<
-       (int)loc.index << " current value = " << before << " new value = " << after << '\n';
-     theLog->write(str.str());
-
-     // see if there's an alternative book move at this position
-     if (openingBook->reader->book_move_count(book_info.hashCode())> 1)
-       return; // all done
-     i-=2;
    }
 }
 

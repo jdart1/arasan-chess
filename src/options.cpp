@@ -1,4 +1,4 @@
-// Copyright 2002-2013 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
@@ -121,23 +121,6 @@ void Options::set_option(const string &name, const string &value) {
   }
   else if (name == "book.random") {
      setOption<int>(name,value,book.random);
-  }
-  else if (name == "learning.score_learning") {
-     set_boolean_option(name,value,learning.score_learning);
-  }
-  else if (name == "learning.score_learning.horizon") {
-    setOption<int>(name,value,learning.score_learning_horizon);
-  }
-  else if (name == "learning.score_learning.threshold") {
-    int tmp;
-    setOption<int>(name,value,tmp);
-    learning.score_learning_threshold = (64*tmp)/100;
-  }
-  else if (name == "learning.score_learning.minDepth") {
-     setOption<int>(name,value,learning.score_learning_minDepth);
-  }
-  else if (name == "learning.result_learning") {
-    set_boolean_option(name,value,learning.result_learning);
   }
   else if (name == "learning.position_learning") {
     set_boolean_option(name,value,learning.position_learning);

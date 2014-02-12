@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2008-2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2008-2014 by Jon Dart.  All Rights Reserved.
 #if defined(_WIN32) && !defined(__INTEL_COMPILER)
 #pragma optimize("g",off)
 #endif
@@ -19,14 +19,14 @@ using namespace std;
 #define LOG_FILE_NAME "arasan.log"
 
 LogEntry::LogEntry(const BoardState &state, const Move &move,
-const string &move_image, int score,int depth)
+                   const string &move_image, bool fromBook, int score, int depth)
 : my_state(state),
 my_move(move),
 my_image(move_image),
+my_fromBook(fromBook),
 my_score(score),
 my_depth(depth),
-my_result(""),
-bi()
+my_result("")
 {
 }
 
@@ -91,9 +91,8 @@ Log::~Log()
 
 
 void Log::add_move( Board &board, const Move &emove,
-const string &move_image, const Statistics *stats,
-BookInfo *info,
-int toFile)
+                    const string &move_image, const Statistics *stats,
+                    int toFile)
 {
    // adding a move clears the "result" field
    setResult("");
@@ -102,11 +101,9 @@ int toFile)
 
    LogEntry entry(
       state, emove, move_image,
+      stats ? stats->fromBook : false,
       stats ? stats->display_value : 0,
       stats ? stats->depth : 0);
-   if (info) {
-      entry.setBookInfo(*info);
-   }
 
    // moves are always added at the "current" position.
 

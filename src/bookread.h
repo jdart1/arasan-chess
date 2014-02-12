@@ -1,84 +1,58 @@
-// Copyright 1992, 1995, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1995, 2013, 2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _BOOK_READER_H
 #define _BOOK_READER_H
 
 #include "bookdefs.h"
-#include "bookinfo.h"
 #include "board.h"
 #include "hash.h"
-#include "bookutil.h"
+#include <fstream>
+#include <vector>
+
+using namespace std;
 
 class BookReader
 {
-        // provides access to the opening book.
+    // provides read access to the opening book.
 
-        public:
+ public:
 
-        BookReader(const char* fileName, const char* mappingName,
-          bool create = false);
-        // opens book file
+    BookReader();
+
+    ~BookReader();
                 
-        ~BookReader();
-        // closes book file
+    // opens the book. Returns 0 if success
+    int open(const char* pathName);
+
+    // closes the book file.
+    void close();
+
+    bool is_open() const {
+        return book_file.is_open();
+    }
                 
-        bool is_open() const {
-           return open;
-        }
-                
-        // Set "loc" to the location of the head of the hash chain
-        // for the board position.  If style is non-zero, selects moves
-        // matching a particular style.
-        void head( const Board &b, BookLocation &loc);
+    // Randomly pick a move for board position "b". 
+    Move pick( const Board &b);
 
-        // Fetches the book entry from the file. "loc" is the location.
-        // Reads need not be sequential.
-        void fetch( const BookLocation &loc, BookInfo &book_entry );
-        
-        // Updates a book position with a new weight.
-        void update(const BookLocation &loc, float learn_factor);
-        
-        // Updates a book position with a new learn value (used for
-        // game result learning)
-        void update(const BookLocation &loc,BookEntry *newEntry);
+    // Return a vector of all book moves and associated scores,
+    // for a given position.
+    // Returns number of moves found.
+    int book_moves(const Board &b, vector< pair<Move,int> > &results);
 
-        // Randomly pick a move for board position "b". "loc" is
-        // the starting location, obtained from the head function.
-        // "info" is filled in with information on the move chosen.
-        Move pick( const Board &b, const BookLocation &loc,
-          BookInfo &info);
-
-       void syncCurrentPage();
-        
-       int book_moves(const Board &b, Move *moves, int *scores,  const unsigned
-       limit);
-
-       int book_move_count(hash_t hashcode);
-       
-       protected:
+protected:
                
-       void head( hash_t hashcode, BookLocation &loc);
+    // Return the move data structures for a given board position.
+    // Return value is # of entries retrieved, -1 if error.
+    int lookup(const Board &board, vector<book::DataEntry> &results);
 
-       Move pickRandom(const Board &b, BookEntry * candidates,
-          int * candidate_weights,
-          int candidate_count,
-          BookLocation *locs,BookInfo &info);
+    int filterAndNormalize(const Board &board,
+                           vector<book::DataEntry> &rawMoves,
+                           vector< pair<Move,int> > &moves);
 
-       int minWeight() const;
+    Move pickRandom(const Board &b, const vector< pair<Move,int> > &moves);
 
-       FILE_HANDLE book_file;
-       void *pBook;
-       byte *pPage;
-       MEM_HANDLE hFileMapping;
-       bool open;
-       int current_page;
-       BookHeader hdr;
-       
-       private:
-           
-       void fetch_page(int page);
-       int getBookMoves(const Board &b, const BookLocation &loc, BookEntry *moves, BookLocation *locs, int *scores, int limit);
-       BookUtil bu;
+    ifstream book_file;
+    book::BookHeader hdr;
 };
 
 #endif

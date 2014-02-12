@@ -67,7 +67,6 @@ endif
 
 ifeq ("mingw","$(findstring mingw,$(UNAME))")
 # MingW
-BOOKUTIL = bookutil
 LIBS = -lmsvcrt -lwinmm
 SMPLIB := -mthreads $(SMPLIB)
 #set MINGW for gtb code
@@ -80,7 +79,6 @@ LBITS = 64
 endif
 else
 LBITS := $(shell getconf LONG_BIT)
-BOOKUTIL = bookutll
 LIBS = -lc -lm
 endif
 
@@ -266,7 +264,7 @@ chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-book.cpp bookread.cpp bookentr.cpp $(BOOKUTIL).cpp \
+bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
@@ -278,7 +276,7 @@ chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-book.cpp bookread.cpp bookentr.cpp $(BOOKUTIL).cpp \
+bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
@@ -289,7 +287,7 @@ chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-book.cpp bookread.cpp bookentr.cpp $(BOOKUTIL).cpp \
+bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp

@@ -1,4 +1,4 @@
-// Copyright 2000-2013 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -59,22 +59,12 @@ class Options
      : position_learning(1),
        position_learning_threshold(33),
        position_learning_horizon(5),
-       position_learning_minDepth(7),
-       score_learning(1),
-       score_learning_horizon(5),
-       score_learning_threshold(33),
-       score_learning_minDepth(7),
-       result_learning(1)
+       position_learning_minDepth(7)
      {}
     int position_learning;
     int position_learning_threshold;
     int position_learning_horizon;
     int position_learning_minDepth;
-    int score_learning;
-    int score_learning_horizon;
-    int score_learning_threshold;
-    int score_learning_minDepth;
-    int result_learning;
    } learning;
 
 

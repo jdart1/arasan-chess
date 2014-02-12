@@ -18,307 +18,155 @@ extern "C" {
   #include <windows.h>
 #endif
 
-BookReader::BookReader(const char* fileName, const char* mappingName,
- bool create)
-: book_file(NULL),
-pBook(NULL),
-pPage(NULL),
-hFileMapping(NULL),
-open(0),
-current_page(-1)
+BookReader::BookReader()
 {                 
-   string book_path = derivePath(fileName);
-   book_file = bu.openFile(book_path.c_str(),false);
-   if (book_file == NULL) {
-      cerr << "Warning: could not open book file" << endl;
-      return;
-   }
-   if (book_file != NULL) {
-      hFileMapping = bu.createMap(book_file,false);
-      if (hFileMapping == NULL) {
-#ifdef _WIN32
-         ::MessageBox(NULL,"Error: could not create file mapping for opening book","Error",MB_OK | MB_ICONEXCLAMATION);
-#else
-	 cerr << "warning: file mapping failed for opening book" << endl;
-#endif
-      }
-   }
-   if (hFileMapping) {
-      pBook = bu.map(hFileMapping,0,4096,false);
-      if (pBook == NULL) {
-#ifdef _WIN32
-         ::MessageBox(NULL,"Error: file mapping failed for opening book","Error",MB_OK | MB_ICONEXCLAMATION);
-#else 
-	 cerr << "warning: file mapping failed for opening book" << endl;
-#endif
-      }
-   }
-
-   open = pBook != NULL;
-   if (!open)
-      return;
-   cout << "Using book file " << fileName << endl;
-
-   char *p = (char*)pBook;
-   hdr.version = (byte)(*p);
-   hdr.num_pages = (byte)p[1];
-   // book file is little endian, convert if needed;
-   hdr.page_capacity = swapEndian32((const byte*)(p+2));
-   hdr.hash_table_size = swapEndian32((const byte*)(p+6));
-
-   if (hdr.version != (byte)BookVersion)
-   {
-      char msg[128];
-      sprintf(msg,"Expected book version %d, got %d instead",
-              (int)BookVersion,(int)hdr.version);
-#ifdef _WIN32
-      MessageBox(NULL,msg,"Warning",MB_OK | MB_ICONEXCLAMATION);
-#else
-      fprintf(stderr,"Warning: %s\n",msg);
-#endif
-      bu.unmap(pBook,hdr.page_capacity);
-      bu.closeMap(hFileMapping);
-      bu.closeFile(book_file);
-      open = 0;
-      return;
-   }
-   bu.unmap(pBook,4096);
-   pBook = NULL;
 }
 
 BookReader::~BookReader()
 {
-   if (pBook)
-      bu.unmap(pBook,hdr.page_capacity);
-   if (hFileMapping)
-      bu.closeMap(hFileMapping);
-   if (book_file)
-      bu.closeFile(book_file);
+    close();
 }
 
-void BookReader::syncCurrentPage() {
-    bu.sync(pBook,hdr.page_capacity);
+int BookReader::open(const char *pathName) {
+    if (book_file.is_open()) return 0;
+    book_file.open(pathName, ios_base::in | ios_base::binary);
+    if (book_file.fail()) {
+        return -1;
+    } else {
+        // read the header
+        book_file.read((char*)&hdr,sizeof(book::BookHeader));
+        if (book_file.fail()) {
+            return -1;
+        }
+        // correct header for endian-ness
+        hdr.num_index_pages = swapEndian16((byte*)&hdr.num_index_pages);
+        // verify book version is correct
+        if (hdr.version != book::BOOK_VERSION) {
+            cerr << "expected book version " << book::BOOK_VERSION << ", got " << (unsigned)hdr.version << endl;
+			close();
+            return -1;
+        } else {
+            return 0;
+        }
+    }
 }
 
-void BookReader::head( const Board & b, BookLocation &loc)
-{
-   loc.page = (int)(b.hashCode() % hdr.num_pages);
-   loc.index = INVALID;
-   // Don't return a book move if we have repeated this position
-   // before .. make the program to search to see if the repetition
-   // is desirable or not.
-   if (b.repCount() > 0) {
-     return;
-   }
-   fetch_page(loc.page);
-   unsigned probe = (unsigned)((b.hashCode()>>32) % hdr.hash_table_size);
-
-   // Copy the index from the book
-   loc.index = swapEndian16(pPage+Header_Size+sizeof(uint16)*probe);
+void BookReader::close() {
+    if (book_file.is_open()) {
+       book_file.close();
+    }
 }
-
-void BookReader::head( hash_t hashcode,
-                       BookLocation &loc)
-{
-   loc.page = (int)(hashcode % hdr.num_pages);
-   loc.index = INVALID;
-   fetch_page(loc.page);
-   unsigned probe = (unsigned)((hashcode>>32) % hdr.hash_table_size);
-
-   // Copy the index from the book
-   loc.index = swapEndian16(pPage+Header_Size+sizeof(uint16)*probe);
-}
-
-void BookReader::fetch( const BookLocation &loc, BookInfo &book_info )
-{
-   assert(pPage);
-
-   byte *entry = pPage + Header_Size + hdr.hash_table_size*2 + ((int)loc.index)*Entry_Size;
-   hash_t hc;
-
-   // We assume here that the compiler doesn't reorder structures
-
-   hc = swapEndian64(entry);
-   book_info.my_hash_code = hc;
-   book_info.learn_score = swapEndianFloat(entry+8);
-   book_info.move_index = entry[12];
-   book_info.learned_result = entry[13];
-   book_info.weight = swapEndian16(entry+14);
-   book_info.setLocation(loc);
-
-}
-
-void BookReader::update(const BookLocation &loc, float learn_factor)
-{
-   fetch_page(loc.page);
-   byte *entry = pPage + Header_Size + hdr.hash_table_size*2 + ((int)loc.index)*Entry_Size;
-   // get the existing learn factor
-   float old_factor = swapEndianFloat(entry+8);
-   // update it
-   learn_factor += old_factor;
-   // write to book image in memory
-   float *e = (float*)(entry+8);
-   *e = swapEndianFloat((byte*)&learn_factor);
-   syncCurrentPage();
-}
-
-void BookReader::update(const BookLocation &loc,BookEntry *newEntry) {
-   fetch_page(loc.page);
-   byte *entry = pPage + Header_Size + hdr.hash_table_size*2 + ((int)loc.index)*Entry_Size;
-   entry[13] = newEntry->learned_result;
-   syncCurrentPage();
-}
-
 
 // Determine the weighting a book move will receive. Moves with higher weights
 // will be played more often.
 //
-static int get_weight(const BookInfo &be) {
-   int rec = be.getWeight();
-#ifdef _TRACE
-   cout << "index = " << (int)be.get_move_index() << " rec= " << rec << endl;
-#endif
-   if (rec == 0 && !options.book.random) {
-      return 0;
+static int getWeight(const book::DataEntry &data) {
+   // If strength reduction is enabled, "dumb down" the opening book
+   // by pruning away infrequent moves.
+   if (options.search.strength < 100 && data.count <
+       (uint32)1<<((100-options.search.strength)/10)) {
+       return 0;
    }
-   
-   // fold in result learning. 
-   if (options.learning.result_learning) {
-     int w2 = be.get_learned_result();
-     if (w2 < 0) w2 = Util::Max(w2,-20);
-     if (w2 > 0) w2 = Util::Min(w2,20);
-     rec = rec*(100+w2)/100;
-   }
-   int base = Util::Min(BookEntry::MAX_WEIGHT,rec);
-   if (base == 0) return 0;
-   // Factor in score-based learning
-   if (options.learning.score_learning) {
-      int score = (int)be.learn_score;
-      if (score >= 0)
-         return Util::Min(BookEntry::MAX_WEIGHT,(base*(10+score))/10);
-      else
-         return Util::Max(0,(base*(10+score))/10);
-   }
-   else
-     return base;
+   return data.weight;
 }
 
-int BookReader::getBookMoves(const Board &b, const BookLocation &loc, BookEntry *moves, BookLocation *locs, int *scores, int limit) {
+int BookReader::filterAndNormalize(const Board &board,
+                                   vector<book::DataEntry> &rawMoves,
+                                   vector< pair<Move,int> > &moves) {
    //
    // Build a list of candidate moves.
    //
-   BookInfo candidates[100];
-   int candidate_weights[100];
-   int candidate_count = 0; 
-
-   BookLocation tmp = loc;
-   while (tmp.index != INVALID) {
-      BookInfo be;
-      fetch(tmp, be);
-
-      if (b.hashCode() == be.hashCode()) {
-         int w = get_weight(be);
-#ifdef _TRACE
-         cout << "index = " << (int)tmp.index << " weight = " << w << " move index = " << (int)be.move_index << endl;
-#endif
-         if (w > 0) {
-            candidate_weights[candidate_count] = w;
-            candidates[candidate_count++] = be;
-	 }
+   vector< pair<book::DataEntry,int> > candidates;
+   for (unsigned i = 0; i < rawMoves.size(); i++) {
+       int score = getWeight(rawMoves[i]);
+       if (score > 0) {
+           candidates.push_back(pair<book::DataEntry,int>(
+                                                          rawMoves[i],score));
        }
-       if (be.is_last())
-          break;
-       else
-         tmp.index++;
    }
 #ifdef _TRACE
-   cout << "candidate_count = " << candidate_count << endl;
+   cout << "candidate_count = " << candidates.size() << endl;
 #endif
 
    // Sort by descending weights
-   for (int i=1; i<candidate_count; i++) {
-      int key = candidate_weights[i];
-      BookInfo tmp = candidates[i];
+   for (unsigned i=1; i<candidates.size(); i++) {
+      const int key = candidates[i].second;
+      pair<book::DataEntry,int> tmp = candidates[i];
       int j = i-1;
-      for (; j >= 0 && candidate_weights[j] < key; j--) {
+      for (; j >= 0 && candidates[j].second < key; j--) {
          candidates[j+1] = candidates[j];
-         candidate_weights[j+1] = candidate_weights[j];
       }
       candidates[j+1] = tmp;
-      candidate_weights[j+1] = key;
    }
 
    int total_weight = 0;
-   for (int i=0; i<candidate_count; i++) {
-      if (i && candidate_weights[i] && options.book.selectivity < 50) {
+   for (unsigned i=0; i<candidates.size(); i++) {
+      if (i && candidates[i].second && options.book.selectivity < 50) {
          // At low selectivity settings, boost values of low ranked moves
-         candidate_weights[i] = Util::Min(candidate_weights[0],
-                                          candidate_weights[i]+
-                                          candidate_weights[i]*(50-options.book.selectivity)/100);
+         candidates[i].second = Util::Min(candidates[0].second,
+                                          candidates[i].second +
+                                          candidates[i].second*(50-options.book.selectivity)/100);
       }
-      total_weight += candidate_weights[i];
+      total_weight += candidates[i].second;
 #ifdef _TRACE
-      cout << " weight=" << candidate_weights[i] << endl;
+      cout << " weight=" << candidates[i].second << endl;
 #endif      
    }
 
 #ifdef _TRACE
    cout << "selectivity=" << options.book.selectivity << endl;
 #endif
-   int candidate_count2 = 0;
    // Depending on the selectivity value, remove moves from the
    // candidate list.
    int tot = 0;
+   vector< pair<book::DataEntry,int> > candidates2;
    // Stop selecting when accumulated move weight reaches "target". 
    // "target" is lower for higher selectivity values.
-   int target = (int)(BookEntry::MAX_WEIGHT*(100.0-45.0*(2.0-log10(104-options.book.selectivity)))/100);
+   const int target = (int)(book::MAX_WEIGHT*(100.0-45.0*(2.0-log10(104-options.book.selectivity)))/100);
 #ifdef _TRACE
    cout << "target weight=" << target << endl;
 #endif
-   for (int i = 0; i < candidate_count; i++) {
-      int w  = candidate_weights[i];
-      tot += w;
-      scores[candidate_count2] = w;
-      candidates[i].getLocation(locs[candidate_count2]);
-      moves[candidate_count2++] = candidates[i];
+   for (unsigned i = 0; i < candidates.size(); i++) {
+      tot += candidates[i].second;
+      candidates2.push_back(candidates[i]);
       if (tot > target) {
          break;
       }
    }
 
+   Move move_list[Constants::MaxMoves];
+   MoveGenerator mg(board, NULL, 0, NullMove, 0);
+   (void)mg.generateAllMoves(move_list,1 /* repeatable */); 
+
    // renormalize after selectivity rules applied
-   for (int i=0; i<candidate_count2; i++) {
-      scores[i] = int((BookEntry::MAX_WEIGHT*scores[i])/tot + 0.5);
+   // + convert move indexes to moves
+   for (unsigned i=0; i<candidates2.size(); i++) {
+        moves.push_back( pair<Move,int> (
+   	move_list[candidates2[i].first.index],
+        int((book::MAX_WEIGHT*candidates2[i].second)/tot + 0.5)));
    }
-   return candidate_count2;
+   return (int)candidates2.size();
 }
 
-Move BookReader::pick( const Board &b, const BookLocation &loc,
-                        BookInfo &info )
-{
+Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
-  cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
+   cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
 #endif
-   BookLocation locs[100];
-   BookEntry moves[100];
-   int scores[100];
-   int n = getBookMoves(b,loc,moves,locs,scores,100);
-   return pickRandom(b,moves,scores,n,locs,info);
+   vector < pair<Move,int> > results;
+   if (book_moves(b, results) <= 0)
+      return NullMove;
+   else
+     return pickRandom(b,results);
 }
 
-
-
-Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candidate_weights,
-  int candidate_count,BookLocation *locs,BookInfo &info)
+Move BookReader::pickRandom(const Board &b, 
+                            const vector< pair<Move,int> > &moves)
 {
-   // If total_weight is 0, no moves have non-zero weights.
    int total_weight = 0;
-   for (int i = 0; i < candidate_count; i++) total_weight += candidate_weights[i];
+   const int n = (int)moves.size();
+   for (int i = 0; i < n; i++) total_weight += moves[i].second;
+   // If total_weight is 0, no moves have non-zero weights.
    if (total_weight == 0) return NullMove;
-#ifdef _TRACE
-   cout << "pickRandom: candidate count = " << candidate_count << " total_weight = " << total_weight << endl;
-#endif   
-
    const unsigned nRand = rand() % total_weight;
    // Randomly pick from the available moves.  Prefer moves
    // with high weights.
@@ -326,35 +174,18 @@ Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candida
    cout << "nRand = " << nRand << endl; 
 #endif
    unsigned weight = 0;
-   for (int i=0; i < candidate_count; i++) 
+   for (int i=0; i < n; i++) 
    {
-      int w = candidate_weights[i];
+      int w = moves[i].second;
       weight += w;
       if (nRand <= weight)
       {
-         // We have selected a move. The book contains
-         // only the move index, not the move itself.
-         // We must call the move generator to obtain the
-         // move.
 #ifdef _TRACE
-        cout << "selecting " << (int) candidates[i].move_index << endl;
+         cout << "selecting ";
+         MoveImage(moves[i].first,cout);
+         cout << endl;
 #endif
-         Move moves[Constants::MaxMoves];
-         MoveGenerator mg(b);
-         int n = mg.generateAllMoves(moves,1 /*repeatable*/); 
-#ifdef _TRACE
-	 cout << " index=" << (int)candidates[i].move_index << 
-	   " n=" << n << endl;
-	 MoveImage(moves[candidates[i].move_index],cout); cout << endl;
-#endif
-         assert(candidates[i].move_index < n);
-         // Copy selected book entry into info param - this is used
-         // if we need to update the entry due to book learning.
-         info.setMove(moves[candidates[i].move_index]);
-         info.setTotalMoves(candidate_count);
-         info.setLocation(locs[i]);
-	 info.setHashCode(candidates[i].hashCode());
-         return moves[candidates[i].move_index];
+         return moves[i].first;
       }
    }
    // should never get here
@@ -362,73 +193,68 @@ Move BookReader::pickRandom(const Board &b, BookEntry * candidates,int * candida
    return NullMove;
 }
 
-int BookReader::book_moves(const Board &b, Move *moves, int *scores, const unsigned limit)
-{
-   BookLocation loc;
-   head(b,loc);
-   BookEntry entries[100];
-   BookLocation locs[100];
-   int book_move_count = getBookMoves(b,loc,entries,locs,scores,100);
-
-   Move move_list[Constants::MaxMoves];
-   MoveGenerator mg( b, NULL, 0, NullMove, 0);
-   (void)mg.generateAllMoves(move_list,1 /* repeatable */); 
-
-   // convert move indexes to moves
-   for (int i = 0; i < book_move_count; i++) {
-      moves[i] = move_list[entries[i].move_index];
+int BookReader::book_moves(const Board &b, vector< pair<Move,int> > &moves) {
+   vector <book::DataEntry> results;
+   // Don't return a book move if we have repeated this position
+   // before .. make the program to search to see if the repetition
+   // is desirable or not.
+   int n;
+   if (b.repCount() > 0) {
+      return 0;
    }
-
-   MoveGenerator::sortMoves(moves,scores,book_move_count);
-   return book_move_count;
+   else if ((n=lookup(b,results)) <= 0) {
+      return 0;
+   }
+   else {
+       return filterAndNormalize(b,results,moves);
+   }
 }
 
-int BookReader::book_move_count(hash_t hashcode) {
-   int num_moves = 0;
-   BookLocation tmp;
-   head(hashcode,tmp);
-   BookEntry target(hashcode,0,0,0);
-   BookLocation loc;
-   head(hashcode,loc);
-   tmp = loc;
-   while (tmp.index != INVALID)
-   {
-      BookInfo be;
-      fetch(tmp,be);
-      int w;
-             
-      if (target == be && (w = get_weight(be)) != 0)
-      {
-	num_moves++;
-      }
-      if (be.is_last())
-         break;
-      else
-         tmp.index++;
-   }
-   return num_moves;
-}
 
-void BookReader::fetch_page(int page)
-{
-   if (current_page != page)
-   {
-      if (pBook)
-      {
-         bu.unmap(pBook,hdr.page_capacity);
+int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
+   // fetch the index page
+   if (!is_open()) return -1;
+   int probe = (int)(board.hashCode() % hdr.num_index_pages);
+   // seek to index
+   book_file.seekg(sizeof(book::BookHeader)+probe*sizeof(book::IndexPage));
+   if (book_file.fail()) return -1;
+   book::IndexPage index;
+   book_file.read((char*)&index,sizeof(book::IndexPage));
+   if (book_file.fail()) return -1;
+   // correct for endianness
+   index.next_free = (uint16)(swapEndian16((byte*)&index.next_free));
+   book::BookLocation loc(0,book::INVALID_INDEX);
+   for (unsigned i = 0; i < index.next_free; i++) {
+      // correct for endianness
+      uint64 indexHashCode = (uint64)(swapEndian64((byte*)&index.index[i].hashCode));
+      if (indexHashCode == board.hashCode()) {
+         // correct for endianness
+         index.index[i].page = (uint16)(swapEndian16((byte*)&index.index[i].page));
+         index.index[i].index = (uint16)(swapEndian16((byte*)&index.index[i].index));
+         loc = index.index[i];
+	     break;
       }
-      pBook = bu.map(hFileMapping,
-                      page*hdr.page_capacity,hdr.page_capacity,false);
-      if (!pBook)
-      {
-#ifdef _WIN32
-         MessageBox( NULL, "File mapping failed for opening book", "Error", MB_ICONEXCLAMATION);
-#endif
-         pPage = NULL;
-         return;
-      }
-      pPage = (byte*)pBook;
    }
-   current_page = page;
+   if (!loc.isValid()) {
+       // no book moves found
+       return 0;
+   }
+   book_file.seekg(sizeof(book::BookHeader)+
+                   hdr.num_index_pages*sizeof(book::IndexPage)+
+                   loc.page*sizeof(book::DataPage));
+   if (book_file.fail()) return -1;
+   book::DataPage data;
+   book_file.read((char*)&data,sizeof(book::DataPage));
+   if (book_file.fail()) return -1;
+   while(loc.index != book::NO_NEXT) {
+       ASSERT(loc.index < book::DATA_PAGE_SIZE);
+       book::DataEntry &bookEntry = data.data[loc.index];
+       bookEntry.next = swapEndian16((byte*)&bookEntry.next);
+       bookEntry.weight = swapEndian16((byte*)&bookEntry.weight);
+       bookEntry.count = swapEndian32((byte*)&bookEntry.count);
+       results.push_back(bookEntry);
+       loc.index = bookEntry.next;
+   }
+   return (int)results.size();
 }
 
