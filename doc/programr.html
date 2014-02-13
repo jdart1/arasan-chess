@@ -1,55 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Arasan Programmer's Guide - version 17.0</title>
+<meta name="description" content="technical information about the Arasan chess program, for programmers"/>
+<link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+<h1>Arasan Programmer's Guide - version 17.0</h1>
+<p>by Jon Dart</p>
+<br/>
+<p>Arasan is a chess program.</p>
 
-  	      Arasan Programmer's Guide - version 16.3
+<p>This archive contains the source code for Arasan. It does not contain
+executables for the chess program.</p>
 
-                          by Jon Dart
+<p>Usage of the source code is governed by the MIT license: see license.txt
+for details.</p>
 
-Arasan is a chess program. 
-
-This archive contains the source code for Arasan. It does not contain
-executables for the chess program.
-
-Usage of the source code is governed by the MIT license: see license.txt
-for details.
-
-Arasan includes a console-based chess engine that be used with
+<p>Arasan includes a console-based chess engine that be used with
 Winboard, a separately available interface for chess programs, or with
 UCI-compatible interface programs such as Arena and Shredder. In
 addition, a Windows-only user interface program for Arasan is
-available; it communicates with the chess engine using a pipe.
+available; it communicates with the chess engine using a pipe.</p>
 
-Arasan is written in C++. Versions before 6.0 ran only on Windows. In
+<p>Arasan is written in C++. Versions before 6.0 ran only on Windows. In
 version 6.0 and higher, the Arasan chess engine supports both Windows
 (32- or 64-bit versions) and other platforms such as Linux, but the
 Arasan GUI is still Windows-only. If you are not on Windows, you need
 to use a program such as xboard to view the chessboard and play games
-with Arasan. You can get xboard from http://www.tim-mann.org/chess.html
-and many other locations.
+with Arasan. You can get xboard from <href="http://savannah.gnu.org/projects/xboard">http://savannah.gnu.org/projects/xboard</a> and many other locations.</p>
 
-Arasan has mostly been tested on Intel & AMD processors but the code
+<p>Arasan has mostly been tested on Intel & AMD processors but the code
 is designed to be portable to other processors (there is some assembly
 code in bitboard.h, but that is not used unless you compile with
--DUSE_ASM).
+-DUSE_ASM).</p>
 
-The remainder of this file contains information for use by programmers
+<p>The remainder of this file contains information for use by programmers
 reading or working on Arasan source code. I assume that you have a
 working familiarity with C++. Also, if you have no background in
 computer chess, you should probably start by reading some of the
-reference material mentioned at the end of this document.
+reference material mentioned at the end of this document.</p>
 
+<h2>Building Arasan</h2>
 
-Building Arasan
-
-The source distribution for Arasan includes sources and makefiles for
+<p>The source distribution for Arasan includes sources and makefiles for
 building the chess program (arasanx), and also source for the
-following other console programs:
-
-makebook - builds binary opening book files from text files
-makeeco  - builds ecodata.cpp from from "eco" text file
-
-Following is a sketch of the Arasan source directory tree:
-
+following other console programs:</p>
+<p>makebook - builds binary opening book files from text files</p>
+<p>makeeco  - builds ecodata.cpp from from "eco" text file</p>
+<p>Following is a sketch of the Arasan source directory tree:</p>
+<br/>
+<pre>
 arasan
-  16.3
+  17.0
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -57,258 +61,215 @@ arasan
     doc     - documentation
     tests   - test files and documentation
     prj     - Visual C++ project file and build directories (Windows)
+</pre>
+<p>Note: the source codes for Windows and Linux are identical, except
+that there are different format Makefiles, one for Windows nmake and
+one for GNU make.</p>
 
-Note: the source codes for Windows and Linux are identical, except
-that there are different format Makefiles, and there are two versions
-of the class BookUtil. bookutlw.cpp contains the version for Windows,
-and bookutll.cpp contains the version for Linux/Mac OS. The makefiles
-automatically select the right version.
+<h2>Building Under Windows</h2>
 
-
-Building Under Windows
-
-The release binaries for Arasan were built with Visual C++ 2005.
+<p>The release binaries for Arasan were built with Visual C++ 2005 (32-bit)
+and Visual C++ 2012 (64-bit version).
 The chess engine was compiled with Profile Guided Optimization
-(PGO).
+(PGO).</p>
 
-You have several choices for building the chess engine:
-
-1. The Windows source distribution includes Visual C++ 2005 solution
+<p>You have several choices for building the chess engine:<br/>
+<ol>
+<li>The Windows source distribution includes Visual C++ 2005 solution
 files for the chess engine and tools and GUI in directories "prj"
-and "gui", respectively. These also work with Visual C++ 2008.
+and "gui", respectively. These also work with Visual C++ 2008 and up.</li>
 
-2. If you prefer to use command-line tools, there is a Makefile for
-use with Visual C++ 2005 or 2008.  If you don't have Visual C++, you
-can use the Windows SDK, which is a free download (see
-http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx), with this
-Makefile.
-
-3. You can use Visual C++ Express Edition also (but this will not
+<li>If you prefer to use command-line tools, there is a Makefile for
+use with Windows nmake. If you don't have Visual C++, you
+can use the <a href="http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx">Windows SDK</a>, which is a free download from Microsoft.
+.</li>
+<li>You can use Visual C++ Express Edition also (but this will not
 produce as good an executable because it lacks PGO). If using Express
 Edition, you will have to install in addition the Windows SDK, since
 this has some required libraries (see
-http://blogs.msdn.com/windowssdk/archive/2008/02/22/using-visual-c-2008-express-with-the-windows-sdk-short-version.aspx for info on integrating these
-two products).
+<a href="http://blogs.msdn.com/windowssdk/archive/2008/02/22/using-visual-c-2008-express-with-the-windows-sdk-short-version.aspx">this article<a/> for info on integrating these
+two products).</li>
+</ol>
 
-4. You can use the Intel C++ compiler, version 9.0 or above. There is a
+<p>You can use the Intel C++ compiler, version 9.0 or above. There is a
 separate Makefile (Makefile.icl) for this. To build a PGO executable
-with Intel C++, use the following command:
+with Intel C++, use the following command:</p>
 
 nmake -f Makefile.icl clean profile profile-run profile-optimized
 
-The resulting arasanx.exe will be in the ..\win32\pro_build directory,
-relative to the src directory.
+<p>The resulting arasanx.exe will be in the ..\win32\pro_build directory,
+relative to the src directory.</p>
 
-5. Arasan can be built using the Cygwin development tools, which simulate
-a Linux environment under Windows, or the MingW tools (http://www.mingw.org/),
+<p>Arasan can be built using the Cygwin development tools, which simulate
+a Linux environment under Windows, or the <a href="http://www.mingw.org">MingW</a> tools,
 which use the Gnu C++ compiler with support for the Windows native API. Use
-the Linux source package for building with Cygwin or MingW.
+the Linux source package for building with Cygwin or MingW.</p>
 
-Compilation under Visual C++ 6.0 or earlier is no longer supported. 
+<p>Compilation under Visual C++ 6.0 or earlier is no longer supported.</p>
 
-If you want tablebase support, you should download and install the
+<p>If you want tablebase support, you should download and install the
 tablebase support code (available separately) and edit the makefile to
 select the type(s) of tablebases used and to point to the tablebase
-source.
+source.</p>
 
-To build the chess engine with VC++ 2005 and PGO, the easiest way
-is to use the command line and execute:
+<p>To build the chess engine with VC++ and PGO, the easiest way
+is to use the command line and execute:</p>
 
 nmake clean profile profile-run profile-optimized
 
-A standard build places release version object and binaries in the
+<p>A standard build places release version object and binaries in the
 "<target>\Release" directory, where <target> is "win32" or "win64",
 while the debug objects and binaries are put into "<target>\Debug".
-A PGO build produces a binary in the <target>\pgo_build directory.
+A PGO build produces a binary in the <target>\pgo_build directory.</p>
 
-To build a 64-bit executable for Windows, edit the Makefile to select
+<p>To build a 64-bit executable for Windows, edit the Makefile to select
 the 64-bit compiler switches and run the same commands (you must be
-building on a 64-bit OS to do the profiling step). 
+building on a 64-bit OS to do the profiling step). </p>
 
-If you have a processor that has the POPCNT instruction (found in SSE 4.1)
+<p>If you have a processor that has the POPCNT instruction (found in SSE 4.1)
 then you can use "nmake popcnt" to produce a build that uses that
 instruction (but it will only run on SSE4.1 capable processors). This
 only works for a 64-bit target. The executable will be named
 "arasanx-64-popcnt.exe" and will be placed in the release or debug 
-directory (depending on build type)
+directory (depending on build type)</p>
 
-To build the Arasan native Windows GUI, use the Visual C++ solution file
+<p>To build the Arasan native Windows GUI, use the Visual C++ solution file
 in the "gui" subdirectory. (The command-line Makefile does not build the
-GUI).
+GUI).</p>
 
-Note: you cannot compile the Arasan GUI with the Express edition of
+<p>Note: you cannot compile the Arasan GUI with the Express edition of
 Visual C++ or with the Windows SDK because those do not include the
 MFC libraries. You will need the full edition of Visual C++ (2005 or
-later).
+later).</p>
 
+<h2>Building Under Linux or Mac OS</h2>
 
-Building Under Linux or Mac OS
+<p>See the INSTALL file in the doc subdirectory of the Linux/Mac distribution
+for current build instructions.</p>
 
-See the INSTALL file in the doc subdirectory of the Linux/Mac distribution
-for current build instructions.
+<h2>Opening book</h2>
 
+Arasan stores the opening book in a binary file (book.bin). </p>
 
-Opening book
-
-Arasan stores the opening book in a binary file (book.bin). 
-
-Since book.bin is supplied with the Arasan program distribution, you
+<p>Since book.bin is supplied with the Arasan program distribution, you
 do not need to build this file in order to build Arasan. However, if
 you want to modify the contents of the opening book, you will need to
 edit the ASCII source for the openings and rebuild book.bin, and for
 this you will need to build the "makebook" program that is part of the
 source distribution. Following is further information on creating a
-book file. 
+book file. </p>
 
-The book for Arasan is converted from text files to the binary book
-by the console program makebook.exe. 
+<p>The book for Arasan is converted from text files to the binary book
+by the console program makebook.exe.</p>
 
-The input files used to generate the opening book can be of two
-types: book files (with extension .bk) or standard PGN game files. 
+<p>The input files used to generate the opening book are in Portable
+Game Notation (PGN) format. More than one PGN file can be specified
+as input.
+</p>
 
-Book files with the extension ".bk", such as the "basic.bk" file in
-the Arasan "book" directory, have hand-tuned opening lines and are
-typically used together with one or more larger PGN files to build the
-opening book. But in a pinch, or if you want a smaller book file, you
-could use basic.bk by itself to build the book.
+<p>When multiple files are used, makebook treats the first one specially.
+The first file is used for manual tuning of the opening book weights.
+This file can be annotated using standard PGN comments and Numeric
+Annotation Glyphs (NAGs). A file with such annotations is supplied
+with the Arasan source and is named "basic.pgn".</p>
 
-In .bk files, moves are listed one or more per line.  Most are in
-standard algebraic notation, but in some cases "Informant-style"
-notation is used (e.g. knight takes bishop might be written Nb2, not
-Nxb2). The parser recognizes both forms. 
-
-A move may optionally be followed by a number from 0 to 100. The
-number, if given, is the "weight" assigned to the move. A weight of 0
+<p>In annotated PGN file, an explict weight can be specified by 
+putting a comment with the string "weight: " followed by a numeric value
+after a move. Weights are between 0 and 100. A weight of 0
 means that the computer will never play the move, but will respond to
 it if it is played by its opponent. The higher the weight, the more
 often the computer will choose the move compared to the other
-alternatives in the book.  By default, if no weight is specified,
+alternatives in the book. By default, if no weight is specified,
 moves get a weight computed from the overall frequency and win/loss
-ratio for each move.
+ratio for each move.</p>
 
-If the same position occurs later in the book, any weight given for
-it is ignored. Only the first explicit weight given is significant.
+<p>PGN files can also have numeric annotation glyphs (best to use
+an editing program such as ChessBase to insert these). If present these
+have the following meaning in the context of "makebook:"</p>
 
-Comments are allowed in a .bk file and begin with a semicolon (;).
-The comments are mostly used to identify the source of an opening
-line, for example:
+<br/>!! - a very good move, give it the maximum possible weight.
+<br/>! - a good move, weight it 50% higher than normal.
+<br/>!? - a worthwhile move, weight it 25% higher than normal
+<br/>? - a dubious move, do not play it
+<br/>?? - a blunder, do not play it.<br/>
 
-; Smejkal, Jan-Taimanov, Mark Prague (4) 1993 (0-1) [D16]
+<p>The "normal" weighting is computed from the move's frequency plus
+win/loss percentage, except that if a move is in the first annotated
+file but rarely occurs elsewhere it is given a neutral default
+weight that can be further modified by annotations.</p>
 
-"makebook" recognizes lines of this form when it parses the file and
-will store the game result (0-1, or won for Black in this case)
-into the book file.  Moves that lead to a winning result are
-favored over moves that lead to a loss or draw when Arasan
-selects moves from the book at runtime.
+<p>Glyphs can also be used to assign an evaluation to the end of an
+opening line and if so this evaluation modifies the weighting of
+moves along that line.</p>
 
-Some special non-move commands are allowed in the .bk file:
-
-'-' at the start of a line means a game or line is finished and the board
-should be reset to the starting position.
-
-'m' at the start of a line "marks" the current position for later retrieval.
-
-'r' at the start of a line "retrieves" the most recently "marked" position.
-
-Arasan comes with a modest-sized book that was built from a
-combination of a small hand-tuned book (basic.bk) and a fairly large
+<p>Arasan comes with a modest-sized book that was built from a
+combination of a small hand-tuned book file (basic.pgn) and a fairly large
 collection of high-quality human and computer games. There are over
-400,000 moves in the book. 
+400,000 moves in the book. </p>
 
-You can make your own book file using the makebook utility.
-Typical usage would be like this:
-
-makebook -n 100 -o book.bin basic.bk big.pgn
-
-The -n parameter to makebook specifies how many 64k "pages" are in the
+<p>You can make your own book file using the makebook utility.
+Typical usage would be like this:</p>
+<br/>
+<pre>
+makebook -n 100 -o book.bin basic.pgn big.pgn
+</pre>
+<p>The -n parameter to makebook specifies how many "index pages" are in the
 binary book file. You may have to experiment with this parameter. Too
 small a value will cause an error building the book. Too large a value
-will waste space by creating a bigger book.bin than is required. 
+will waste space by creating a bigger book.bin than is required.</p>
 
-You can also specific the "-m" parameter to makebook with a number,
+<p>You can also specific the "-m" parameter to makebook with a number,
 to set a minimum number of times that a move must be played in a
 game collection to be included in the book. The default book shipped
-with arasan was built with "-m 4". Other options include:
-
+with arasan was built with "-m 4". Other options include:</p>
+<br/>
+<pre>
 -p <number> - sets maximum ply depth for moves extracted from a PGN file
--P <number> - sets size of "pages" in the opening book 
--h <number> - set size of internal hash table in book
+
 -o <filename> - sets output file name (default book.bin)
+
 -v - show more verbose output.
+</pre>
+<p>See bookdefs.h for some documentation about the data layout within
+the book.bin file.</p>
 
-See makebook.cpp for some documentation about the data layout within
-the book.bin file.
 
+<h2>Learning</h2>
 
-Book Learning
-
-Arasan has two forms of book learning. 
-
-One form is called "score learning". If enabled, this feature will
-look at the score several moves after Arasan has gone "out of book".
-If it is significantly high and rising, or low and falling, then
-Arasan will update the book with a learning value (it also backs up to
-previous book nodes that lead to this position and updates those as
-well. How much adjustment is done depends on the number of book
-alternatives available).
-
-With score learning, Arasan will tend to play moves that lead to a
-position either more often (if the score is high) or less often (if
-the score is low). This facility is somewhat crude at present but it
-will at least steer the program away from obviously "busted" book
-lines.
-
-Crafty uses a form of learning similar to Arasan's score learning.
-
-Arasan also has "result learning". When it wins or loses a game,
-or manages to draw against a higher-rated opponent, it will update
-a counter in the book file. Then it looks to see if there are
-alternative book moves at the same position. If not, it backs up
-one move and also updates the counter at that position, and so
-on.
-
-Book moves that repeatedly lead to losses will gradually be played
-less often, while those that win will be played more often. 
-
-Result learning is not available when playing under the UCI
-interface, because UCI does not make the game result available
-to the program.
-
-Arasan also has positional learning (a.k.a "permanent brain"). It is
+<p>Arasan has positional learning (a.k.a "permanent brain"). It is
 basically a persisent hashtable. If a search returns an unexpectedly
 high or low score, the position and its score are stored in a text file
 called arasan.lrn, which is located in the same directory as the
 Arasan executable. When the next game is started, stored positions
 from this file are read into memory and stored in the hash table,
 enabling the program to detect danger or opportunity sooner
-than it did previously.
+than it did previously.</p>
 
-Arasan learning does not work in UCI mode at present, for several
-reasons. For example, UCI does not send the program the game result,
-so result learning is made difficult.
+<p>Arasan learning does not work in UCI mode at present, for several
+reasons.</p>
 
 
-ECO Recognizer
+<h2>ECO Recognizer</h2>
 
-Arasan can produce an ECO (Encylopedia of Chess Openings) code for a
+<p>Arasan can produce an ECO (Encylopedia of Chess Openings) code for a
 given game. As with the opening book, the mapping of chess positions to
 ECO codes is contained in a text file. The file is called "eco" and is
 in the "misc" directory. It contains a series of lines, each starting
 with an ECO code, followed by a series of chess moves, and ending with a
-quoted string that contains the English name of the opening. 
+quoted string that contains the English name of the opening.</p>
 
-The "makeeco" program reads the "eco" data file and outputs to stdout
+<p>The "makeeco" program reads the "eco" data file and outputs to stdout
 a C++ file that is then compiled into Arasan. The generated file is
-called "ecodata.cpp" and contains a single large C data structure.  
+called "ecodata.cpp" and contains a single large C data structure.</p>
 
-Because Visual C++ makefiles don't handle generated source files like
+<p>Because Visual C++ makefiles don't handle generated source files like
 this one, you need to run "makeeco" manually whenever you change the
-"eco" data file. 
+"eco" data file.</p>
 
-makeeco takes a single argument: the location of the eco file. It
-writes the generated ecodata.cpp file to stdout.
+<p>makeeco takes a single argument: the location of the eco file. It
+writes the generated ecodata.cpp file to stdout.</p>
 
-Note: the ECO recognizer is pretty crude right now, because only the
+<p>Note: the ECO recognizer is pretty crude right now, because only the
 main ECO lines are stored in the data file, not sublines like "ECO
 C18/3". Therefore transpositions that wind up in an ECO subline like
 C18/3 but skip the position that is stored for C18 will not be
@@ -317,197 +278,202 @@ since the ECO classification scheme is ambiguous in some cases, but
 recognition could be improved by expanding the number of positions in
 the eco file. If the number becomes large enough, however, the
 current method of building a data structure and compiling it into
-Arasan might have to be changed.
+Arasan might have to be changed.</p>
 
 
-Testing support
+<h2>Testing support</h2>
 
-Arasan includes several features to aid debugging. If you compile the
+<p>Arasan includes several features to aid debugging. If you compile the
 source for debugging (with -D_DEBUG), checks are inserted for accessing
 arrays past their boundaries, as well as some other sanity checks. If
 any of these checks fail, an error box will be displayed with the
-assertion that failed.
+assertion that failed.</p>
 
-At runtime, adding the "-t" (trace) flag to the arasanx executable will
+<p>At runtime, adding the "-t" (trace) flag to the arasanx executable will
 cause it to output trace messages (beginning with '#') detailing its
 internal operations. This is mostly for Winboard/xboard. These messages
 will show up in the Winboard debug log if Winboard is started with the
-"-debugMode true" flag.
+"-debugMode true" flag.</p>
 
-If the source is compiled with /DUCI_LOG, then a similar log file 
+<p>If the source is compiled with /DUCI_LOG, then a similar log file 
 named "ucilog" is produced on disk when running in UCI mode. This however
-doesn't have exactly the same information shown by "-t".
+doesn't have exactly the same information shown by "-t".</p>
 
-If the source is compiled with /DUNIT_TESTS, then some simple unit tests
+<p>If the source is compiled with /DUNIT_TESTS, then some simple unit tests
 are run on program startup. The results are displayed on the console.
-This build flag is off by default.
+This build flag is off by default.</p>
 
-The chess engine supports a couple of commands to aid with testing. 
+<p>The chess engine supports a couple of commands to aid with testing. 
 The "eval" command followed by a filename will read the file (assumed
 to be in FEN format) and output the static evaluation of the position.
 If the EVAL_DEBUG and/or PAWN_DEBUG defines are uncommented in
-scoring.cpp, then you can see detailed output of the scoring components.
+scoring.cpp, then you can see detailed output of the scoring components.</p>
 
-The "test" command followed by the name of a test suite file in EPD
+<p>The "test" command followed by the name of a test suite file in EPD
 format will do a search on each position in the file and output the
 results to stdout.  Additional switches can be added after the
-filename:
+filename:</p>
 
 -v - prints more verbose output
+
 -t <seconds> searches for the specified number of seconds per position
+
 -x <count> can terminate the search early if the correct move is found
  and held for "count" plies.
+
 -o <file> stores test output in "file".
 
-If the search module is compiled with -D_TRACE, arasanx will print
+<p>If the search module is compiled with -D_TRACE, arasanx will print
 out copious information about the search process when it is run. See
-search.cpp to see what information is output and where it comes from.
+search.cpp to see what information is output and where it comes from.</p>
 
-The following test suites are provided with the source code (see the
-"tests" directory):
+<h3>Test Suites</h3>
 
-1. wacnew.epd contains the 300 problems from Reinfeld's "Win At Chess"
+<p>The following test suites are provided with the source code (see the
+"tests" directory):</p>
+<ol>
+<li>wacnew.epd contains the 300 problems from Reinfeld's "Win At Chess"
 book. These are mostly easy tactical problems (a few are hard). This
 test suite is widely used by computer chess programmers. "wacnew" is
 a revised version with a number of corrections and additions to
-Reinfeld's oroginal solutions.
-
-2. ecmgcp.epd contains a subset of test positions from the Encyclopedia
-of Chess Middlegames, selected and corrected by Gian-Carlo Pascutto.
-
-3. bt2630.epd is a set of 30 chess problems, with a range of
+Reinfeld's oroginal solutions.</li>
+<li>ecmgcp.epd contains a subset of test positions from the Encyclopedia
+of Chess Middlegames, selected and corrected by Gian-Carlo Pascutto.</li>
+<li>
+bt2630.epd is a set of 30 chess problems, with a range of
 difficulty.  This is used to determine an approximate rating for the
 program. Standard procedure is to allow 15 minutes for each
 problem. Add the time needed to find the correct answer (900 for
 problems that are not solved), divide by 30, and subtract from
-2630.
-
-4. lapuce2.epd is a set of 35 tests from the French chess magazine
+2630.</li>
+<li>
+lapuce2.epd is a set of 35 tests from the French chess magazine
 La Puce Echiquenne. This is another test that purports to estimate
 a program's rating. Standard procedure is to allow 10 minutes for
-each problem. See lapuce2.doc for the scoring procedure. 
-
-5. arasan16.epd is a set of test positions from Arasan games, plus some
+each problem. See lapuce2.doc for the scoring procedure.</li>
+<li>
+arasan16.epd is a set of test positions from Arasan games, plus some
 from other sources. They range in difficulty, but most are non-trivial
 and some are quite hard. This is the latest version of the test
 suite. Some positions in this file are "avoid move" positions where
-there is a bad but superficially tempting move.
-
-6. iq4.epd is a set of positions from the book "Test Your Chess IQ".
+there is a bad but superficially tempting move.</li>
+<li>
+iq4.epd is a set of positions from the book "Test Your Chess IQ".
 Jim Monaghan selected and corrected some tests from this book.
 I have made some further modifications to the test and this version,
 which I use, is in the file "iq4.epd". These tests are run at 10
-seconds per position.
-
-7. pet.epd is a set of endgame tests from Peter MacKenzie, the author
+seconds per position.</li>
+<li>
+pet.epd is a set of endgame tests from Peter MacKenzie, the author
 of the freeware chess program "Lampchop". I have applied a few
-corrections to Peter's original test suite.
-
-8. eet.epd is a set of endgame tests from Walter Eigenmann. See
-http://www.beepworld.de/members38/eigenmann/e_e_t.htm.
-
+corrections to Peter's original test suite.</li>
+<li>
+eet.epd is a set of endgame tests from Walter Eigenmann. See
+<a href="http://www.beepworld.de/members38/eigenmann/e_e_t.htm">http://www.beepworld.de/members38/eigenmann/e_e_t.htm</a>.</li>
+</ol>
+<p>
 The results file in the tests subdirectory summarizes Arasan's
 performance on these test suites. There are two targets in
-the Makefile that faciltate running tests with arasanx:
+the Makefile that faciltate running tests with arasanx:</p>
+<br/><pre>
+run-tests  - runs all tests, put test results in file "test-results"
+in the test subdirectory
 
-1. run-tests  - runs all tests, put test results in file "test-results"
-in the test subdirectory.
-
-2. score-tests - writes a test summary based on "test-results" into
+score-tests - writes a test summary based on "test-results" into
 file "test-summary" in the test subdirectory.
+</pre>
+<p>
+Note that "run-tests" takes a long time to complete (over 8 hours)!</p>
+<p>
+"score-tests" requires that Perl be installed and be on the path.</p>
 
-Note that "run-tests" takes a long time to complete (over 8 hours)!
+<h3>Perft</h3>
 
-"score-tests" requires that Perl be installed and be on the path.
-
-
-Perft
-
-A built-in command in the engine can be used to run the "perft" command
-for testing. See http://chessprogramming.wikispaces.com/Perft. "Perft"
+<p>A built-in command in the engine can be used to run the <a href="http://chessprogramming.wikispaces.com/Perft">"perft"<a/> command
+for testing. The command "perft"
 should be followed by a number indicating the ply depth for the
-computation.
+computation.</p>
 
 
-Selfplay feature
+<h3>Selfplay feature</h3>
 
-A somewhat experimental selfplay feature has been added to version 16.0.
+<p>A somewhat experimental selfplay feature has been added to version 16.0.</p>
 
-If compiled with -DSELFPLAY, the Arasan engine can run a series of matches
+<p>If compiled with -DSELFPLAY, the Arasan engine can run a series of matches
 using internally two different instances of the search code. One instance
 will run with the global variable options.search.mod = 0 and one with this
 variable set to 1. Therefore it is necessary to modify the code so that the
 code you want to test uses this variable to select a "base" version (with
-the variable set to 0) and a "modified" version with the variable set to 1.
+the variable set to 0) and a "modified" version with the variable set to 1.</p>
 
-To run a selfplay match, pass the "-s" switch on the command line. The -s
+<p>To run a selfplay match, pass the "-s" switch on the command line. The -s
 switch takes two parameters. One is the location of an opening book in
 PGN format. Openings will be selected from this book sequentially
 with each side playing one game as White and one as Black for each
-opening line.
+opening line.</p>
 
-The second parameter is the number of games to play.
+<p>The second parameter is the number of games to play.</p>
 
-Time control is currently fixed and is very fast (game in 5 sec. +
-100 ms. increment/move). 
+<p>Time control is currently fixed and is very fast (game in 5 sec. +
+100 ms. increment/move).</p>
 
-An example command line:
+<p>An example command line:</p>
 
-arasanx-64 -H 100M -s /home/jdart/chess/book/book.pgn 10000
+<p>arasanx-64 -H 100M -s /home/jdart/chess/book/book.pgn 10000</p>
 
-This will play 10,000 games from the specified opening book file. 
+<p>This will play 10,000 games from the specified opening book file.</p>
 
-Note: each search instance has an independent hash table, so the
-actual memory usage is double what the command line specifies - in
+<p>Note: each search instance has an independent hash table, so the
+actual memory usage is double what the command line specifies: in
 this case, each search instance gets 100 MB hash, and the total
-memory usage is 200 MB (approximately).
+memory usage is 200 MB (approximately).</p>
 
-The games from a selfplay match are stored in the file "games.pgn" in
+<p>The games from a selfplay match are stored in the file "games.pgn" in
 the engine binary's directory. The modified version has player name
 "mod" in the games file. If this version scores better than the base
 version, then that is an indication that the change being tested is a
 good one (but you should use something like BayesELO to test for
-significance).
+significance).</p>
 
 
-Algorithms and data structures
+<h2>Algorithms and data structures</h2>
 
-1. The chess board
+<h3>The chess board</h3>
 
-Following is some information about the algorithms and data structures
+<p>Following is some information about the algorithms and data structures
 used by Arasan. If you are new to computer chess programming, I suggest
 first reading a general work on the subject such as Frey (1983) or
-Marsland and Schaeffer (1990).
+Marsland and Schaeffer (1990).</p>
 
-The chess board in Arasan is represented by an array of 64 squares,
+<p>The chess board in Arasan is represented by an array of 64 squares,
 laid out so that square a1 has the value 0 and square h8 has the
-value 63 (Note: versions before 11.0 had a different layout with a8=0).
+value 63 (Note: versions before 11.0 had a different layout with a8=0).</p>
 
-Each square contains 0 if it is empty, or a piece identifier if it is
+<p>Each square contains 0 if it is empty, or a piece identifier if it is
 occupied.  Black pieces have identifier values between 1 and 6, while
 White pieces have values between 9 and 15.  A special value (127) is
-used to represent a square that is uninitialized or invalid. 
+used to represent a square that is uninitialized or invalid.</p>
 
-The Board class also maintains several "bit boards" or quantities that
+<p>The Board class also maintains several "bit boards" or quantities that
 that hold 64 bits. The Bitboard class in the source encapsulates a
 bit board. For example, the occupied bit board has one bit set
 for every piece that is on the board (there are actually two such
-bit boards, one for Black and one for White).
+bit boards, one for Black and one for White).</p>
 
-Each type of piece has its own bit board that has one bit set for
+<p>Each type of piece has its own bit board that has one bit set for
 each piece of that type (for example, there is a rook_bits
 Bitboard to hold rook locations). Since there is only one king
-location, though, this is kept in an integer variable.
+location, though, this is kept in an integer variable.</p>
 
-Besides the bit boards, there is some other information in the Board
+<p>Besides the bit boards, there is some other information in the Board
 structure. The enPassantSq variable holds the square position at which an
 en passant capture is possible (if none is possible, it has the value
 IllegalSquare). The castleStatus array holds an enum for each side
 indicating whether castling has occurred. Also, if the king or a rook
 has been moved, making castling on one side or another impossible,
-castleStatus is set to an appropriate value.
+castleStatus is set to an appropriate value.</p>
 
-Each board position also has a hash code associated with it. The
+<p>Each board position also has a hash code associated with it. The
 hash code is 64 bits and is computed by fetching, for each piece and
 square combination, a unique 64-bit code from a table of random
 numbers, and computing the exclusive or of these codes. (This hashing
@@ -516,113 +482,118 @@ low-order bit of the hash code is then set to identify whether White
 or Black is to move. Castling status and en passant status are also
 folded into the hash code, because positions with the same piece
 layout but different castling rights or possible en-passant captures
-must be kept distinct.
+must be kept distinct.</p>
 
-
-2. Moves
-
+<h3>Moves</h3>
+<p>
 Arasan uses a 64-bit word to store move information. Each move
 contains a start square, destination square, promotion value, the type
 of piece being moved, the type of piece being captured (if any), and the
-type of move (normal, castling, en passant, etc).
+type of move (normal, castling, en passant, etc).</p>
 
+</h3>Attack Generation</h3>
 
-3. Attack Generation
-
-Earlier versions of Arasan used rotated bitboards for computation of
+<p>Earlier versions of Arasan used rotated bitboards for computation of
 attack information. The rotated bitboards allow computing which pieces
 attack a square without using any loops in the code, just shift and
 mask operations. Starting with version 11.0, a different approach is
 used: it produces much the same benefits but is faster. This approach
 uses a technique called "magic bitboards", which basically computes a
 hash code that looks up attack information, in a way that ensures there
-are no invalid hash collisions.
+are no invalid hash collisions.</p>
 
-There are several ways to do this, but the algorithms and data structures
+<p>There are several ways to do this, but the algorithms and data structures
 used in Arasan follow an approach initially published by Pradyumna Kannan.
 The constants for the 64-bit version were constructed by generation code
-posted by Tord Romstad.
+posted by Tord Romstad.</p>
 
-The magic bitboard code is primarily in file attacks.cpp. There
+<p>The magic bitboard code is primarily in file attacks.cpp. There
 are two versions of the code: one uses 64-bit multiplication and
 is best suited to running on a 64-bit architecture. The other
 uses only 32-bit multiplications. One or the other is automatically
-selected at compile time based on the target processor architecture.
+selected at compile time based on the target processor architecture.</p>
 
 
+<h3>Move Generator</h3>
 
-4. Move Generator
+<p>The move generation logic is mostly contained in the
+MoveGenerator class and uses the magic bitboard attack functions.</p>
 
-The move generation logic is mostly contained in the
-MoveGenerator class and uses the magic bitboard attack functions.
-
-The MoveGenerator class has separate routines to find all moves
+<p>The MoveGenerator class has separate routines to find all moves
 and to find just capture moves - the latter is all that is required
 in the quiescence search. Move generation is done incrementally,
 because if a move is found that causes cutoff, there is then no
 need to generate the rest of the moves for that position. Specifically,
 Arasan uses the "Fancy Magic Bitboards" technique described in the
 Chess Programming Wiki (see References), which was invented by
-Pradu Kannan.
+Pradu Kannan.</p>
 
-Move generation occurs in this order (this is for positions where
+<p>Move generation occurs in this order (this is for positions where
 the side to move is not in check, and in the regular search, not
-the quiescence search):
+the quiescence search):</p>
+<ol>
+<li>
+The principal variation move if one is available (see description
+of Search module).</li>
 
-1. The principal variation move if one is available (see description
-of Search module).
-
-2. Capture moves and pawn promotions are generated, and sorted. In
+<li>Capture moves and pawn promotions are generated, and sorted. In
 this phase only apparently winning captures and promotions are included.
 The move generator initially sorts captures by MVV/LVA (most valuable
 victim/least valuable aggressor). Then, when moves are being actually
 selected for search, a static exchange evaluation is done on those
 moves with non-positive MVV/LVA score. Moves that have a negative SEE
 score are deferred to the losing capture phase. This approach minimizes
-calls to SEE, which is expensive.
+calls to SEE, which is expensive.</li>
 
-3. "Killer moves" are returned if available. A killer move is a
+<li>"Killer moves" are returned if available. A killer move is a
 non-capture that previously caused beta cutoff. Arasan tries to use
 killer moves at the current ply and then, if available, killer
-moves stored at ply-2.
+moves stored at ply-2.</li>
 
-4. Moves from the history table are returned, in sorted order by
-history score.
+<li>Moves from the history table are returned, in sorted order by
+history score.</li>
 
-5. Losing captures are searched.
-
-Normally, the move generation process includes moves that are illegal
+<li>Losing captures are searched.</li>
+</ol>
+<p>Normally, the move generation process includes moves that are illegal
 because they place the side to move into check - these are weeded
-out in the search routine.
+out in the search routine.</p>
 
-If the side to move is in check, a special function (generateEvasions)
+<p>If the side to move is in check, a special function (generateEvasions)
 is called that strictly checks moves for legality. It is very important
 to know whether any legal moves are possible when in check: if there
 are none, the side to move is checkmated. Also, some search extensions
 depend on the existence of a forced move (one single legal move). Currently
 evasions are generated in two phases: first the hash move is tried, if
 there is one, and then only if that fails to produce cutoff is the full
-set of evasion moves generated.
+set of evasion moves generated.</p>
 
-Move ordering at the root node is done somewhat differently. The first
+<p>Move ordering at the root node is done somewhat differently. The first
 time moves are generated at ply 0, a rough sorting by score is
-done. After a few plies have been searched, Arasan starts to sort the
-ply 0 moves so that the principal variation from the last iteration is
-used first, followed by the rest of the moves sorted by cumulative
-node count (so that moves that have caused more/deeper searching are
-searched first). This technique is also used in Crafty.
+done. The next few plies are searched with a wide window, partly to
+facilitate "easy move" detection (a move that appears to be much better
+than alternatives may be selected after a shorter than usual search,
+so for example the program does not waste time on an obvious recapture).
+But another side-effect of the wide window is that we obtain scores for
+all moves and Arasan will sort the moves for the next iteration based
+on these scores.</p>
+<p>After the "wide window" part of the search is over, the next iteration
+is searched putting the best move from the last iteration first. If 
+another move then becomes best, it replaces the previous best move
+and all other moves are shifted down, so that 
+their ordering from the previous iteration is retained in
+the next iteration.</p>
 
+<h3>Searching</h3>
 
-5. Searching
-
-Arasan uses an alpha-beta search algorithm with a variety of search
+<p>Arasan uses an alpha-beta search algorithm with a variety of search
 extensions. The search class is the largest single module in the
 program, and is necessarily rather complicated, but I have tried to
 structure it and comment it so that it is understandable. I will
 assume that the reader knows the basics of the alpha-beta algorithm,
-and will concentrate on describing this implementation of it. 
+and will concentrate on describing this implementation of it.<p>
 
-In general, the search routine tries to terminate a search tree, or
+<p>In general, the search routine tries to terminate a search tree, or
 some portion of one, as soon as possible, and will defer as much work
 as possible until it is certain that no earlier and quicker
 termination can be done. The techniques for doing this are mostly
@@ -633,9 +604,9 @@ extending it into unprofitable and very unlikely lines of play. The
 precise nature of this balance depends not only on the search
 algorithms used, but also the relative efficiency of operations such
 as move generation, position evaluation and move ordering. Each
-program therefore strikes this balance in a somewhat different way.
+program therefore strikes this balance in a somewhat different way.</p>
 
-The entry point for a search is a routine called findBestMove. This
+<p>The entry point for a search is a routine called findBestMove. This
 function does some initialization, and then calls ply0_search, which
 implements the alpha-beta search algorithm. The search proceeds one
 ply (half move, i.e. move by one side) at a time. That is, first a
@@ -644,32 +615,32 @@ either the maximum ply limit has been reached or the time control has
 been exceeded. Each search uses the results of the preceeding search. 
 The variable "iterationDepth" holds the current nominal ply depth for
 the search. However, the presence of search extensions means that
-some nodes may be searched to a greater depth than this. 
+some nodes may be searched to a greater depth than this.</p>
 
-In the first few iterations of the ply0 search, Arasan now uses wider
+<p>In the first few iterations of the ply0 search, Arasan now uses wider
 than usual search bounds, so that each move gets a preliminary score.
 The scores are used to order the moves for deeper searching, and for
 "easy move" detection: if one move is found to have a significantly
 higher score than all others, and if subsequent searching still
-selects this move, then the search may be terminated early.
+selects this move, then the search may be terminated early.</p>
 
-ply0_search does some other special processing and bookkeeping because
+<p>ply0_search does some other special processing and bookkeeping because
 it is at the top of the search tree. This function then calls search()
-to recursively process lower-depth nodes.
+to recursively process lower-depth nodes.</p>
 
-The first step in search() is to check if the current board position
+<p>The first step in search() is to check if the current board position
 is drawn, due to insufficient material, a 3-fold repetition of
-moves, or the 50-move rule.
+moves, or the 50-move rule.</p>
 
-If the position is drawn, move_search calls the function drawScore.
+<p>If the position is drawn, move_search calls the function drawScore.
 Usually a draw is given a score of 0, but when playing on a chess server,
 the relative rating of the opponent is also factored in, so that
-draws against a lower-rated opponent are penalized.
+draws against a lower-rated opponent are penalized.</p>
 
-Arasan will also terminate the search immediately if the absolute
-maximum ply depth (currently 64) is reached. This is quite unlikely.
+<p>Arasan will also terminate the search immediately if the absolute
+maximum ply depth is reached. This is quite unlikely.</p>
 
-If no draw is present and the maximum depth hasn't been reached, the
+<p>If no draw is present and the maximum depth hasn't been reached, the
 next step is to look in the hash table (further described in the next
 section), in order to see if an identical position has been visited
 before. This may happen due to a transposition of moves that lead to
@@ -679,24 +650,24 @@ contains a valid value (i.e. one that did not cause cutoff), then that
 value is returned immediately and no further searching from that node
 occurs. In other cases, the hash table may not contain an exact value,
 but may hold an upper or lower bound that can be used to narrow the
-alpha-beta window. 
+alpha-beta window.</p>
 
-If the hash table lookup didn't produce an exact value or narrow the
+<p>If the hash table lookup didn't produce an exact value or narrow the
 bounds enough to cause cutoff, then we may also try the endgame 
 tablebases, if they are installed and enabled, and if material is
-reduced enough that they can give an exact score. 
+reduced enough that they can give an exact score.</p>
 
-If a position is eligible for null pruning (see below) then Arasan
-first tries a couple of simpler and less expensive pruning techniques.
+<p>If a position is eligible for null pruning (see below) then Arasan
+first tries a couple of simpler and less expensive pruning techniques.</p>
 
-The first of these is "static null pruning", which cuts off search for
-nodes that have very high scores. 
+<p>The first of these is "static null pruning", which cuts off search for
+nodes that have very high scores.</p>
 
-Arasan may then try "razoring". Razoring takes place when the static
+<p>Arasan may then try "razoring". Razoring takes place when the static
 score is very low. In this case a quiesence search is done and the
-search terminates if that also produces a low score (alpha or below).
+search terminates if that also produces a low score (alpha or below).</p>
 
-If still no cutoff has occured, we then try a further trick to get a
+<p>If still no cutoff has occured, we then try a further trick to get a
 fast termination of the search. The side to move is changed without
 altering the board position and the opposing side is then allowed to
 move. Of course, this could not occur in a game - a player is not
@@ -704,93 +675,94 @@ allowed to "pass," but must move. However, the theory is that if the
 null move causes cutoff, then the side to move must have a good
 position, since in effect giving the opponent a free move still
 produces a high value for the side to move. In this case, beta cutoff
-is allowed to occur and no more searching is done from this node. 
+is allowed to occur and no more searching is done from this node.</p>
 
-Starting in Arasan 2.0, null move pruning is applied in subtrees that
+<p>Starting in Arasan 2.0, null move pruning is applied in subtrees that
 are themselves part of a null move search, provided that two null
 moves are not tried in a row. This is known as the "deep null"
 algorithm. See Donninger's article in ICCA for more information on
-this algorithm.
+this algorithm.</p>
 
-A null move is searched to a depth less than that used for regular
-moves. 
+<p>A null move is searched to a depth less than that used for regular
+moves.</p>
 
-Arasan uses a so-called R=3 depth reduction for the null move search:
+<p>Arasan uses a so-called R=3 depth reduction for the null move search:
 in other words, a search is done with the regular 1-ply reduction in
 depth plus three extra plies. Some extra null reduction can
-be done if the static score is high.
+be done if the static score is high.</p>
 
-After a null move produces a beta cutoff, Arasan does an extra
+<p>After a null move produces a beta cutoff, Arasan does an extra
 reduced-depth verification search to ensure that the null move cutoff is
 actually valid. The verification search uses reduced depth, but doesn't
-insert the null move first.
+insert the null move first.</p>
 
-If the null move fails low, and the previous move was reduced, and the
+<p>If the null move fails low, and the previous move was reduced, and the
 move refuting the null move appears related to the previous move, then
 the search returns a score of alpha, which will force a full-width
-re-search in the parent (idea from Stockfish).
+re-search in the parent (idea from Stockfish).</p>
 
-If the null move search doesn't cause cutoff, then we must actually do
-some searching from the current node.
+<p>If the null move search doesn't cause cutoff, then we must actually do
+some searching from the current node.</p>
 
-The first move searched is called the "principal variation" move. In
+<p>The first move searched is called the "principal variation" move. In
 the case of an initial search (e.g. a one-ply search), the principal
 variation move is just the first move returned by the move generator.
 Otherwise, at ply 0, it is the highest-scoring move from the previous
 search iteration. At deeper plies, the hash table is queried and if a
 best move has been stored for the position, that move is tried first
-and is considered the principal variation.
+and is considered the principal variation.</p>
 
-In cases where there is no hash move, we do a shallow search to obtain a
+<p>In cases where there is no hash move, we do a shallow search to obtain a
 suitable move to try first. This is called "internal iterative
 deepening" and has been used in Hitech (see Ebeling's book) and also Bob
-Hyatt's program Crafty.
+Hyatt's program Crafty.</p>
 
-Now (in most cases) we should have an initial move to try (if not we
+<p>Now (in most cases) we should have an initial move to try (if not we
 generate all moves and take the first one). We make the move, then
 query the attack info for the board to see if the side to move is in
 check (remember, the move generator typically does not exclude moves
 into check). If a move into check is found, the special value Illegal
 is returned and the next move is tried. If the move passes the legality
-check, then move_search is called again (i.e., it is recursive). 
+check, then move_search is called again (i.e., it is recursive).</p>
 
-Normally each move searched reduces the "depth" variable by a constant
+<p>Normally each move searched reduces the "depth" variable by a constant
 (DEPTH_INCREMENT). When depth reaches zero, the quiescence search
-will be entered (see below).
+will be entered (see below).</p>
 
-However, some moves are searched to a greater depth than normal. There
-are several cases in which this occurs:
-
-a. If the move checks the opponent, the search is extended, provided
+<p>However, some moves are searched to a greater depth than normal. There
+are several cases in which this occurs:</p>
+<ol>
+<li>
+If the move checks the opponent, the search is extended, provided
 the score from the static exchange evaluator (SEE) is no worse
-than a loss of one pawn.
-    
-b. If the side to move is in check, and there is only a single move
+than a loss of one pawn.</li>
+<li>If the side to move is in check, and there is only a single move
 available to escape check, the search is extended. If two evasion
-moves are available, a lesser extension is done.
-
-c. Pushing a pawn to the 7th rank causes the search to be extended,
-on the theory that this pawn may soon promote.
-
-d. Only at PV nodes: if a safe capture is done and the last opponent
-piece has been captured, the search is extended.
-
+moves are available, a lesser extension is done.</li>
+<li>
+Pushing a pawn to the 7th rank causes the search to be extended,
+on the theory that this pawn may soon promote.</li>
+</li>
+Only at PV nodes: if a safe capture is done and the last opponent
+piece has been captured, the search is extended.</li>
+</ol>
+<p>
 Note that since Arasan 5.0, most extensions can be a fraction of a full
 ply. Search "depth" is normally decremented by the constant
 DEPTH_INCREMENT every time a new ply is begun; however, extensions can
 decrement it faster, typically an additional amount between 1/2 of a
-full ply and a full ply.
-
+full ply and a full ply.</p>
+<p>
 Individual extensions can be combined, but at any given ply, the total
 depth reduction from extensions cannot exceed DEPTH_INCREMENT, the
-equivalent of one extra ply. 
-
+equivalent of one extra ply.</p>
+<p>
 The principal variation phase of the search is over when we have found
 a legal move and searched its descendants (including quiesence nodes)
 so that we have a value for it. It is possible that this value will
 be greater than beta, which means that we have set the initial search
-window wrong and must repeat the search with a different window.
-
+window wrong and must repeat the search with a different window.</p>
+<p>
 Assuming the principal variation move does not cause cutoff or mate,
 then the search function proceeds to search the remainder of the
 moves. These moves are searched with a zero-width alpha-beta window
@@ -799,125 +771,112 @@ cutoff. If the value returned by the search is between alpha and the
 original beta, then the search is repeated with a wider search window
 to determine the correct score. It is generally faster to get a fast
 cutoff and then re-search with a wider (but not infinite) window than
-to do a single search with unlimited bounds.
-
+to do a single search with unlimited bounds.</p>
+<p>
 Note that since the principal variation move is usually obtained from
 the hash table or the root move array, it may be the case that the
 move generator has never had to be called during the principal
-variation search. If so, we call it before doing the non-p.v. moves.
-
+variation search. If so, we call it before doing the non-p.v. moves.</p>
+<p>
 Arasan now optimizes things further by only generating part of the
 moves at a time. That way, if cutoff occurs, the remainder of the
-move generation can be skipped.
-
+move generation can be skipped.</p>
+<p>
 Arasan also performs several types of pruning and depth reduction.
 These are the opposite of extensions: instead of searching deeper,
 Arasan either cuts off the search prematurely (pruning) or reduces
-the search depth.
-
+the search depth.</p>
+<p>
 Futility pruning in Arasan is similar to that described by Ernst Heinz
 for the program Dark Thought. It allows some moves to not be searched,
 if it determined that the side to move is behind in material and the
 move to be made is not likely to gain enough material to be worth
 considering. Futility pruning is applied at relatively low search
-depths before the quiescence search and during the quiescence search.
-
+depths before the quiescence search and during the quiescence search.</p>
+<p>
 Several tests are made on each move and if the move was extended for
 any reason, if looks like the move defends against a threat, or if it
 is a capture, special move (like castling) or advance of a passed
-pawn, then futility pruning is not done.
-
+pawn, then futility pruning is not done.</p>
+<p>
 Arasan now has "late move reductions." After the first few moves have
 been searched, including any killer moves, if the move is not
 extended, and if it is not considered potentially dangerous or
 advantageous, then the search depth is reduced. This can occur even at
 high depths in the search tree. If the reduced depth move returns a
 score above alpha, it is re-searched with normal depth. This technique
-became popular due to its use in Fabien Letouzey's program "Fruit".
-
+became popular due to its use in Fabien Letouzey's program "Fruit".</p>
+<p>
 Arasan 12.2 adds in the enhancement that at high search depths, and
 at moves late in the search process, a reduction of more than one ply
-can be done.
-
+can be done.</p>
+<p>
 Arasan 13.1 adds history pruning. If a move's history score is
 low enough, and it is not extended, and it meets the futility pruning
 conditions, it can be pruned (i.e., not searched). Arasan 13.1
 also does see pruning - moves that have negative scores from the
-static exchange evaluator ("see") can be pruned at low depths.
-
+static exchange evaluator ("see") can be pruned at low depths.</p>
+<p>
 In addition at depths just before the quiescence search, moves that
 appear to lose material based on a static exchange analysis are
-pruned.
-
+pruned.</p>
+<p>
 Note that it is necessary to search at least one legal move before any
 pruning is done, because we need to distinguish nodes at which no
 moves are searched due to stalemate from those at which all nodes
-would cause pruning.
-
+would cause pruning.</p>
+<p>
 The final part of search() checks to see if checkmate or stalemate
-occurred, updates the hash table, and maintains the best variation.
-
+occurred, updates the hash table, and maintains the best variation.</p>
+<p>
 When the search terminates at ply 0, it updates the "Statistics"
 structure with the time and other information about the search
 (key parts of this structure are also updated during the search
-when the p.v. changes, so the UI and test suite code can monitor it).
+when the p.v. changes, so the UI and test suite code can monitor it).</p>
 
+<h3>Quiescence search</h3>
 
-6. Quiescence search
-
-As noted above, each recursive call to move_search decrements the
+<p>As noted above, each recursive call to move_search decrements the
 "depth" parameter by a constant (DEPTH_INCREMENT). When "depth" drops
 below zero, Arasan enters the quiescence search by calling function
-quiesce(). Like search(), this is also a recursive search routine.
+quiesce(). Like search(), this is also a recursive search routine.</p>
 
-As the name implies, the goal of the quiescence search is to reach a
+<p>As the name implies, the goal of the quiescence search is to reach a
 relatively "quiet" position that can be more or less accurately
 evaluated. Generally, "quiesce" will only generate and search capture
 moves that appear to gain material, promotions of pawns, and moves
-that escape from a check.
+that escape from a check.</p>
 
-If in check all moves are generated are searched. If not in check,
-a pre-selection pass is done in which captures that would apparently
-not bring the score for the side to move up to the value of "alpha"
-are dropped (they are not even generated). 
+<p>If in check, all evasion moves are generated although some
+"quiet" evasions may be pruned and not searched.</p>
 
-The quiescence search for positions not in check also does forward
+<p>The quiescence search for positions not in check also does forward
 pruning on moves, dropping any that appear to lose material based
 on the static exchange evaluator and those that fail a futility
-test.
+test.</p>
 
-Generally, forward pruning costs time (especially if the static
+<p>Generally, forward pruning costs time (especially if the static
 exchange evaluator, "see", needs to be called), and involves some risk
 of dropping valuable capture moves. But, on the plus side, it
-significantly trims the size of the search tree.
+significantly trims the size of the search tree.</p>
 
-The quiescence search terminates when no more moves of an appropriate
+<p>The quiescence search terminates when no more moves of an appropriate
 type are available. The search may also terminate early if the side to
 move is not in check, and the current evaluation of the position is
 enough to cause cutoff. The theory here is that the side to move can
 choose to not capture any further. If the current evaluation is good
 enough to cause cutoff, there is no need to try captures and
-promotions to get a better score.
+promotions to get a better score.</p>
 
-In version 10.0 and later, for nodes where it is not in check, if no
+<p>In version 10.0 and later, for nodes where it is not in check, if no
 cutoff has occurred so far, the quiescence search will generate and
 search moves that give check, at least in the first couple of
 quiescence search plies. But checks that appear to lose material are
-pruned.
+pruned.</p>
 
-A separate hash table is used in the quiescence search to store the
-positional score and, if the position was actually searched, the
-best move that was found. Since search is iterative, we will often
-visit the same node multiple times in fairly short order and this
-hash table ensures that a re-visit will be much faster than the
-initial visit, if the position is found in the hash table. This 
-table is global and is allocated to be a fixed fraction of the main
-hash table size.
+<h3>The hash table</h3>
 
-
-7. The hash table
-
-The search routine uses a hash table for storing the results of
+<p>The search routine uses a hash table for storing the results of
 evaluating previously visited positions. This table is implemented in
 several static functions defined in hash.cpp. The hash table is
 basically an array of lists. Each list contains a series of nodes, each
@@ -926,322 +885,307 @@ of type Position_Info) and a pointer to the next node. Each list holds
 entries that hash, modulo the hash table size, to the same value. Each
 node contains the whole hash code, so that finding a given node to match
 a given hash code consists of indexing into the hash table, then
-following the list until the full 64-bit hash codes match. 
+following the list until the full 64-bit hash codes match.</p>
 
-Besides the hash code, each hash entry also contains the score for
+<p>Besides the hash code, each hash entry also contains the score for
 the node, a set of flags indicating whether the value is exact, an
 upper bound or a lower bound, the depth of search used to evaluate
 the node, a word holding the castling status and en passant square,
-and the best move for the position.
+and the best move for the position.</p>
 
-The hash table is limited in size and may fill up during a long
+<p>The hash table is limited in size and may fill up during a long
 search. In this case, we have a choice: when a new position is
 encountered, we can overwite an existing entry in the hashtable with
 the new position, or we can discard the information for the new
-position and not put it into the hashtable.
+position and not put it into the hashtable.</p>
 
-Arasan will generally only replace entries that have greater depth
+<p>Arasan will generally only replace entries that have greater depth
 than existing entries, or entries that came from an earlier search
-(i.e. whose "age" field does not match the current search).
+(i.e. whose "age" field does not match the current search).</p>
 
-The main hash table is used only during the regular seach, not in the
-quiescence search (but as described in section 5, the quiescence
-search has its own, more limited hash table). The hash table is not
+<p>The hash table is not
 cleared after each search: instead, it is kept full, but old entries
-(from the previous search) are considered candidates for replacement.
+(from the previous search) are considered candidates for replacement.</p>
 
-The size of the main hashtable defaults to 64 Megabytes, but can
+<p>The size of the main hashtable defaults to 64 Megabytes, but can
 be overridden with -H switch, followed by a size (such as '256M'), or
 by modifying the arasan.rc parameter file. Standard Winboard or
 UCI option commands can also be used to alter the hash table size at
-runtime.
+runtime.</p>
 
-Because multiple threads can be reading and writing the hash table,
+<p>Because multiple threads can be reading and writing the hash table,
 a "lockless hashing" technique is used to prevent conflicts (as done
 in Crafty). When a hash key is stored it is xored with the data value.
 When retrieving, the current data contents for a hash table entry are
 xored again with the stored hash key and this is used to match the
 hash key for the position. If another thread has overwritten or is
 overwriting the data field, then the comparison will fail and a match
-will not be returned.
+will not be returned.</p>
 
-A part of the memory allocated for the main hash table is
-used to maintain a separate hash table used in the quiescence search.
-This serves as an evaluation cache, so that if a position that has 
-had a full evaluation done before, its score can be fetched from the
-cache. It can also retrieve the best move from a previous search.
+<p>Besides the main hash table, some smaller hash tables are used by
+the Scoring module to store the results of pawn structure scoring and
+king cover calculation. These are relatively small in size and are
+allocated on a per-thread basis (each thread has its own tables).</p>
 
-The other hash tables used in the scoring module are fixed in size and
-are relatively small.
+<h3>Position Scoring</h3>
 
+<p>There are rougly five main components to the positional score used by Arasan:</p>
+<ol>
+<li>Pawn structure</li>
+<li>Development</li>
+<li>Castling</li>
+<li>King safety</li>
+<li>Endgame</li>
+</ol>
 
-8. Position Scoring
+<p>The positional score is typically within the range of plus or minus
+the value of a pawn (100), but can be greater in some circumstances.</p>
 
-There are rougly five main components to the positional score used by Arasan:
-
-a. Pawn structure
-b. Development
-c. Castling
-d. King safety
-e. Endgame
-
-The positional score is typically within the range of plus or minus
-the value of a pawn (100), but can be greater in some circumstances.
-
-Pawn structure scoring is done in two stages. First, the pawn hash
+<p>Pawn structure scoring is done in two stages. First, the pawn hash
 table is probed to get the score for the position. If the position
 is not found in the hash table, then the pawn_structure_score
 routine is called. This routine only computes scoring parameters
 that depend only on the position of pawns. It also calculates several
-items that are useful in the rest of the evaluation.
+items that are useful in the rest of the evaluation.</p>
 
-The second-stage pawn scoring takes into account the relation between
-pawns and pieces.
+<p>The second-stage pawn scoring takes into account the relation between
+pawns and pieces.</p>
 
-The pawn structure score penalizes isolated, backward, weak, and
+<p>The pawn structure score penalizes isolated, backward, weak, and
 doubled pawns. An increased penalty is given if there are multiple such
-defects in the pawn structure.
+defects in the pawn structure.</p>
 
-A bonus is given for passed pawns. If a passed pawn exists,
+<p>A bonus is given for passed pawns. If a passed pawn exists,
 its value depends on its rank and also on whether squares ahead of it
 are occupied or controlled by the opposing side. A bonus is given
 for a rook behind a passed pawn. Blocked passed pawns and passed
-pawns on the rook file are given a penalty.
+pawns on the rook file are given a penalty.</p>
 
-In the opening and middlegame, the pawn structure score includes a
+<p>In the opening and middlegame, the pawn structure score includes a
 center control component that gives bonuses for occupation or
-control of the center by pawns.
+control of the center by pawns.</p>
 
-Arasan uses a pawn hash table, maintained in the Scoring class,
+<p>Arasan uses a pawn hash table, maintained in the Scoring class,
 which holds information on pawn structure and a score that evaluates
 how good or bad that structure is. This table is accessed via a hash
 key that depends only on the position of pawns. There are separate
 tables for the white and black sides. Entries in the pawn tables are
 always allowed to be replaced. This technique has been used in Cray
 Blitz and Crafty. It significantly speeds up the scoring routine by
-avoiding computation of the pawn structure score in most cases.
+avoiding computation of the pawn structure score in most cases.</p>
 
-The development score encourages the program to move its pieces from
+<p>The development score encourages the program to move its pieces from
 the back rank, but discourages premature development of the Queen. A
 measure of piece mobility is also calculated for Bishops, Knights, and
 Queens. Bonuses are awarded for a Rook on the 7th rank, and also for
-a rook on an open or half-open file, and for doubled Rooks.
+a rook on an open or half-open file, and for doubled Rooks.</p>
 
-The castling score penalizes the program until it has castled.
+<p>The castling score penalizes the program until it has castled.</p>
 
-Arasan calculates king safety using a "cover" score that measures how
+<p>Arasan calculates king safety using a "cover" score that measures how
 protected a king is by pawns, combined with a "proximity" score that
 measures the closeness of enemy pieces to the king. The "cover" score
-is calculated and hashed for fast lookup.
+is calculated and hashed for fast lookup.</p>
 
-King "cover" is considered worse if pawns are missing near the king or
-if the king is near an open or half-open file.
+<p>King "cover" is considered worse if pawns are missing near the king or
+if the king is near an open or half-open file.</p>
 
-"Proximity" includes several measures based on the proximity of enemy
+<p>"Proximity" includes several measures based on the proximity of enemy
 pieces, advancing pawns (indicating a "pawn storm"), Rooks on open
 files near the king, and Queens or Bishops bearing on diagonals near
-the king.
+the king.</p>
 
-If both proximity and cover scores are high (indicating that the king
-is both exposed and attacked) an additional "bonus" penalty is given.
+<p>If both proximity and cover scores are high (indicating that the king
+is both exposed and attacked) an additional "bonus" penalty is given.</p>
 
-The king safety score is scaled according to the amount of material
+<p>The king safety score is scaled according to the amount of material
 the opponent has. The more material the opponent has, the more
-dangerous an uncovered and/or attacked king position is.
+dangerous an uncovered and/or attacked king position is.</p>
 
-Arasan does "lazy evaluation," which involves seeing at an early point
-in the position evaluation process if the score is likely to be
-outside the alpha-beta window. If so, it skips the rest of the
-evaluation. This is actually done twice. First a test is done to see
-if cutoff is possible using material value alone. Later, after part
-of the scoring is done (including the pawn score and castling scores),
-a second test is done to see if the rest of the eval can be skipped.
-
-In the endgame, passed pawns are evaluated to see if they can safely
+<p>In the endgame, passed pawns are evaluated to see if they can safely
 queen without being intercepted by the opposing king. Arasan versions
 5.0 and higher also have code that gives a bonus for an "outside"
 passed pawn, and that helps to evaluate pawn "races," where both sides
-are likely to promote.
+are likely to promote.</p>
 
-In the endgame, the king is encouraged to move towards the center or
+<p>In the endgame, the king is encouraged to move towards the center or
 opposite side of the board, and to stay near pawns. This code is not
-very effective in producing good play, but it is better than nothing.
+very effective in producing good play, but it is better than nothing.</p>
 
-Prior to version 6.0, endgame and king saftey scoring were never
+<p>Prior to version 6.0, endgame and king saftey scoring were never
 applied together, but now they can be: if the position is in the
 process of transition to an endgame, it will be evaluated for both
-king safety and endgame positional factors.
+king safety and endgame positional factors.</p>
 
-A lookup table is used to speed up endgame calculations by storing
+<p>A lookup table is used to speed up endgame calculations by storing
 information based on the position of king and pawns (for both
 sides). Once computed, this information is put into a hash table for
 later retrieval and use by any position that shares the same king +
-pawn configuration.
+pawn configuration.</p>
 
-Arasan is aided in the endgame by the use of "bitbases" for the KPK
+<p>Arasan is aided in the endgame by the use of "bitbases" for the KPK
 endgame. Bitbases record for each position of the two kings and pawn
 whether the position is won for the stronger side, or only a draw.
 Unlike tablebases, bitbases do not record the number of moves to mate.
 Bitbases can be employed throughout the search tree since they are in
 memory. Arasan uses the KPK bitbases not only when there are only
 kings and one pawn left, but also as an aid to computing endgame
-scoring for more complex endgames.
+scoring for more complex endgames.</p>
 
-Arasan also has some special-case code for other endgames including
+<p>Arasan also has some special-case code for other endgames including
 KNBK, KRK and KQK, which enables the program to play these fairly
-well, even without tablebases.
+well, even without tablebases.</p>
 
 
+<h2>Multi-threading</h2>
 
-9. Multi-threading
-
-Arasan 9 and above have support for using more than one thread during
+<p>Arasan version 9 and above have support for using more than one
+thread during
 searching, enabling it to make use of multi-processor machines and
-multi-core CPUs. Version 10.0 is the first version to have this fully
-working.
+multi-core CPUs. Version 10.0 was the first version to have this fully
+working.</p>
 
-A pre-requisite for implementing multi-threading is that global
+<p>A pre-requisite for implementing multi-threading is that global
 data structures that are accessed for read & write be made safe
 for parallel access. This is done by using critical sections (under
-Windows) and spinlocks (under Linux). 
+Windows) and spinlocks (under Linux).</p>
 
-However, locking has a performance overhead and is generally
+<p>However, locking has a performance overhead and is generally
 infeasible to do on a per-node basis. Arasan now does not lock the
 main hash table, to avoid this penalty, but uses a lockless hashing
 mechanism as described earlier. Other less frequently used data
-structures are locked, however.
+structures are locked, however.</p>
 
-My first attempt at implementing multi-threading used the ABDADA
+<p>My first attempt at implementing multi-threading used the ABDADA
 algorithm (see Weill's article). This is simple to implement since it
 uses the hash table as a single point of synchronization and control,
 but it did not perform well, because this usage of the hash table
 interferes with its normal usage as storage for scores and best moves
 from previously visited nodes. Consequently, the hash hit rate
-was reduced and multi processors did not achieve much of a speedup.
+was reduced and multi processors did not achieve much of a speedup.</p>
 
-The current implementation in Arasan uses what is called the Young
+<p>The current implementation in Arasan uses what is called the Young
 Brothers Wait concept (YBWC). This algorithm was described in Feldmann's
 Ph.D. thesis (see References) and several related publications in the
-early 1990s.
+early 1990s.</p>
 
-Arasan's implementation is based on a thread pool that is created at
+<p>Arasan's implementation is based on a thread pool that is created at
 program start. This pool controls n threads, where n is the number of
 processors or cores available. These threads run continuously, saving
 the overhead of having to create and destroy threads during the
 search. However, a thread may or may not be assigned to a node in the
 search tree. If it is not assigned, its state is set to "Idle" and it
 is blocked on a synchronization object (an Event object under Windows;
-a semaphore under Linux).
+a semaphore under Linux).</p>
 
-There are three primitive operations available on the thread pool:
+<p>There are three primitive operations available on the thread pool:
 "checkOut" obtains a thread if possible and sets its state to
 "Working". "start" then assigns work to a thread - this work is to
 search a given node of the search tree. "checkIn" makes the thread
 "Idle" again and de-associates it from the node, making it available
-to do another search.
+to do another search.</p>
 
-Multiple threads are used only after the principal variation has been
+<p>Multiple threads are used only after the principal variation has been
 searched, since the search bounds are not well known until the p.v.
-has been completed.
+has been completed.</p>
 
-After the p.v. is done, the search function checks if one or more
+<p>After the p.v. is done, the search function checks if one or more
 threads are available. If there is an available thread, the board
 state and other essential information are cloned and the cloned state
 is given to function Search::searchSMP, which will perform the search
-in parallel.
+in parallel.</p>
 
-A NodeInfo structure in the search routine keeps track of which
+<p>A NodeInfo structure in the search routine keeps track of which
 threads are actively searching nodes below the current node. In
 addition, there is an array of SplitPoint structures in each Search
 class instance - this has all the points in the search history
-where a split has occurred from the current thread.
+where a split has occurred from the current thread.</p>
 
-After conclusion of a parallel search, searchSMP will return, and
+<p>After conclusion of a parallel search, searchSMP will return, and
 will free up the Search class instance and associated thread to
-search another node.
+search another node.</p>
 
-It is possible that the main search completes before its dependent
+<p>It is possible that the main search completes before its dependent
 searches in other threads. In that case, the main search thread will
 make itself available to slave threads that it has started, assisting
 their work until all slave threads complete (this is known as
-the "helpful master" concept).
+the "helpful master" concept).</p>
 
-It is also possible that a cutoff will occur during the search, in
+<p>It is also possible that a cutoff will occur during the search, in
 which case all dependent threads need to be terminated - their values
 do not matter to the search result. In this case, we tell the threads
 to stop first and then wait for them to actually stop.  Thus in any
 case, when the search routine exits, no threads that it starts are
-active anymore.
+active anymore.</p>
 
 
-10. Windows user interface
+<h2>Windows user interface</h2>
 
-The Windows user interface was re-written for version 6.0, although
+<p>The Windows user interface was re-written for version 6.0, although
 some code from earlier versions is still in use. The main difference
 from earlier versions is that the chess engine is now run as a
 separate process that communicates with the user interface through a
 socket, exactly like Winboard does. This is done to eliminate some
 problems that occured when using threads to manage the engine/UI
-communication in earlier versions.
+communication in earlier versions.</p>
 
-Compared to Winboard, the Arasan UI lacks some features: for example,
+<p>Compared to Winboard, the Arasan UI lacks some features: for example,
 it cannot be used to communicate with a chess server, and has no
-facility for editing positions.
+facility for editing positions.</p>
 
-The Arasan user interface is a pretty standard MFC program. It uses
+<p>The Arasan user interface is a pretty standard MFC program. It uses
 the single document interface (SDI) model, so there is only one
-document class instance and one view instance active. 
+document class instance and one view instance active.</p>
 
-Earlier versions of the Arasan UI used bitmaps for display. The new
+<p>Earlier versions of the Arasan UI used bitmaps for display. The new
 version uses TrueType fonts. Several chess fonts are included in the
 program distribution. The original font archives, which include
 copyright and usage information, can be found in the fonts subdirectory
-of the Arasan source distribution.
+of the Arasan source distribution.</p>
 
 
-Support
+<h2>Support</h2>
 
-I have been working on computer chess programming since about 1987, and
+<p>I have been working on computer chess programming since about 1987, and
 this is the second complete chess program I have written. It is still
 very much imperfect - but I have decided to release it in its present
 form, both so that others can enjoy playing with it and so that
 programmers can study it, learn from it, and maybe improve it. I don't
 guarantee any support for this program. However, if you do find bugs in
-it, or discover a way to improve it, I would like to hear from you.
+it, or discover a way to improve it, I would like to hear from you.</p>
 
-Contact information and additional information about Arasan can be
-found at http://www.arasanchess.org.
+<p>Contact information and additional information about Arasan can be
+found at <a href="http://www.arasanchess.org">arasanchess.org</a></p>
 
 
-References
+<h2>References</h2>
 
-Chess Programming Wiki, topic "Magic Bitboards". http://chessprogramming.wikispaces.com/Magic+Bitboards.
-
-Crafty source code, ftp.cis.uab.edu, directory /pub/hyatt.
-
-Donninger, Ch. (1993). "Null Move and Deep Search" ICCA Journal,
+<p>Chess Programming Wiki, topic <a href="http://chessprogramming.wikispaces.com/Magic+Bitboards">Magic Bitboards</a>.
+</p>
+<p>Crafty source code, ftp.cis.uab.edu, directory /pub/hyatt.
+</p>
+<p>Donninger, Ch. (1993). "Null Move and Deep Search" ICCA Journal,
 v. 16 no. 3.
-
-Ebeling, Carl. (1987). All The Right Moves: A VLSI Architecture for Chess.
+</p>
+<p>Ebeling, Carl. (1987). All The Right Moves: A VLSI Architecture for Chess.
 MIT Press.
-
-Feldmann, Rainer. Game Tree Search on Massively Parallel Systems (1993). Ph.D.
-Thesis, University of Paderborn. (see also
-http://wwwcs.uni-paderborn.de/cs/ag-monien/PERSONAL/OBELIX/publications.html
-for related publications).
-
-Frey, Peter W. (ed.) (1983). Chess Skill in Man and Machine.
+</p>
+<p>Feldmann, Rainer. Game Tree Search on Massively Parallel Systems (1993). Ph.D. Thesis, University of Paderborn. (see also
+<a href="http://wwwcs.uni-paderborn.de/cs/ag-monien/PERSONAL/OBELIX/publications.html">related publications</a>.)
+</p>
+<p>Frey, Peter W. (ed.) (1983). Chess Skill in Man and Machine.
 New York: Springer-Verlag.
-
-Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
-
-Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
+</p>
+<p>Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
+</p>
+<p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.
-
-Weill, Jean-Christophe (1996). "The ABDADA Distributed Search Algorithm"
+</p>
+<p>Weill, Jean-Christophe (1996). "The ABDADA Distributed Search Algorithm"
 Proceedings of the 1996 ACM 24th annual conference on Computer science, pp.
 131-138.
-
-Zobrist, A. L. (1970). "A new hashing method with applications for game
+</p>
+<p>Zobrist, A. L. (1970). "A new hashing method with applications for game
 playing," Technical report 88, Computer Science Department, University
 of Wisconsin.
+</body>

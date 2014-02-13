@@ -1,4 +1,21 @@
-Changes in Arasan 16.3:
+Changes in Arasan 17.0:
+ 1) A common hashtable is now used in both quiescence and non-
+    quiescence search, instead of using a separate q-search eval
+    cache (hashtable stores static evals so also serves as an
+    eval cache).
+ 2) Scoring module no longer does lazy eval.
+ 3) Opening book format has changed. Manual tuned book file is
+    now annotated PGN instead of a custom text format. Book code
+    is simplified.
+ 4) Opening book is no longer modified at runtime by result and
+    score learning. Only position learning (aka permanent brain)
+    is supported now.
+ 5) Qsearch no longer does pre-selection of capture targets. 
+    Qsearch forward pruning margin changed.
+ 6) Fix time field of "post" output for Winboard/xboard (was off
+    by factor of 10).
+
+Changes in Arasan 16.3 (Dec. 2013):
  1) Generate/search discovered checks in qsearch.
  2) Changes to forward pruning in qsearch: re-introduce futility +
     SEE pruning in addition to filtering capture targets in movegen.
