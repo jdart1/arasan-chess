@@ -75,7 +75,9 @@ public:
       void forEachSearch() {
       Lock(poolLock);
       for (unsigned i = 0; i < nThreads; i++) {
-          std::mem_fun<void,Search>(fn)(data[i]->work);
+          if (data[i] && data[i]->work) {
+              std::mem_fun<void,Search>(fn)(data[i]->work);
+          }
       }
       Unlock(poolLock);
    }
