@@ -6,13 +6,13 @@ TARGET = win64
 VERSION = 17.0
 
 #TRACE=/D_TRACE 
-DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
-LDDEBUG=/DEBUG
+#DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
+#LDDEBUG=/DEBUG
 BUILD_ROOT=..
 
 #define the appropriate macro for the type(s) of tablebase supported
-GAVIOTA_TBS=1
-NALIMOV_TBS=1
+#GAVIOTA_TBS=1
+#NALIMOV_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
@@ -20,11 +20,13 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code
 TB=tb
 
+!Ifndef ARASANX
 !If "$(TARGET)" == "win64"
 ARCH = /D_WIN64
 ARASANX = arasanx-64
 !Else
 ARASANX = arasanx
+!Endif
 !Endif
 
 !Ifdef DEBUG
@@ -37,7 +39,6 @@ BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
 PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
 PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
 PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
-POPCNT_BUILD = $(BUILD_ROOT)\$(TARGET)\popcnt
 RELEASE = $(BUILD_ROOT)\release
 # relative to root:
 SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
@@ -59,7 +60,7 @@ CL=cl
 
 # Visual Studio 2005 defs (works for 2008, 2010, 2012 too)
 CFLAGS = $(ARCH) /GA /GF /EHs /EHc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
-POPCNT_FLAGS = -DUSE_POPCNT /arch:AVX
+POPCNT_FLAGS = -DUSE_POPCNT
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 OPT  = /Ox /Gr /Gy /Oi /GS- /GL /DUSE_INTRINSICS
@@ -218,21 +219,6 @@ $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(BUILD)\unit.obj $(TB_OBJS)
 
-ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
-$(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
-$(POPCNT_BUILD)\board.obj $(POPCNT_BUILD)\boardio.obj $(POPCNT_BUILD)\options.obj \
-$(POPCNT_BUILD)\chess.obj $(POPCNT_BUILD)\material.obj $(POPCNT_BUILD)\movegen.obj \
-$(POPCNT_BUILD)\scoring.obj $(POPCNT_BUILD)\searchc.obj \
-$(POPCNT_BUILD)\see.obj $(POPCNT_BUILD)\globals.obj $(POPCNT_BUILD)\search.obj \
-$(POPCNT_BUILD)\notation.obj $(POPCNT_BUILD)\hash.obj $(POPCNT_BUILD)\stats.obj \
-$(POPCNT_BUILD)\bitprobe.obj $(POPCNT_BUILD)\epdrec.obj $(POPCNT_BUILD)\chessio.obj \
-$(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj \
-$(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookwrit.obj \
-$(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
-$(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
-$(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
-$(POPCNT_BUILD)\unit.obj $(TB_OBJS)
-
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
@@ -293,9 +279,6 @@ $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 {}.cpp{$(PROFILE)}.obj:
     $(CL) $(PROF_GEN_FLAGS) /c /Fo$@ $<
 
-{}.cpp{$(POPCNT_BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) /c /Fo$@ $<
-
 $(BUILD)\makebook.exe:  $(MAKEBOOK_OBJS)
         $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\makebook.exe
 
@@ -322,10 +305,21 @@ profile-optimized: $(ARASANX_PROFILE_OBJS)
     copy /y $(PROFILE)\*.pgc $(PGO_BUILD)
     copy /y $(PROFILE)\*.pgd $(PGO_BUILD)
     copy /y $(PROFILE)\*.obj $(PGO_BUILD)
-    $(LD) /ltcg:pgo /pgd:$(PGO_BUILD)\arasanx.pgd $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PGO_BUILD)\$(ARASANX).exe
+    $(LD) /ltcg:pgo /pgd:$(PGO_BUILD)\arasanx.pgd $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(BUILD)\$(ARASANX).exe
 
-popcnt: dirs $(ARASANX_POPCNT_OBJS)
-    $(LD) $(ARASANX_POPCNT_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX)-popcnt.exe
+profile-build: dirs profile profile-run profile-optimized 
+
+popcnt: dirs
+	SET CFLAGS=$(POPCNT_FLAGS)
+	set ARASANX=$(ARASANX)-popcnt
+	nmake
+
+profiled: profile-build
+
+popcnt-profiled:
+	SET CFLAGS=$(POPCNT_FLAGS)
+	SET ARASANX=$(ARASANX)-popcnt
+	nmake profile-build
 
 run-tests:
     $(BUILD)\$(ARASANX) -H 256M -c 2 <$(TESTS)\tests >$(TESTS)\test-results.txt
@@ -351,9 +345,6 @@ $(PROFDATA):
 $(PGO_BUILD):
 	md $(PGO_BUILD)
 
-$(POPCNT_BUILD):
-	md $(POPCNT_BUILD)
-
 $(RELEASE):
 	md $(RELEASE)
 
@@ -368,9 +359,8 @@ clean: dirs
 	del $(PROFILE)\*.exe
 	del /q $(RELEASE)\*.*
 	del /q $(PGO_BUILD)\*.*
-	del /q $(POPCNT_BUILD)\*.*
 
-dirs: $(BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(POPCNT_BUILD) $(RELEASE)
+dirs: $(BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(RELEASE)
 
 
 

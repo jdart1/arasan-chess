@@ -24,11 +24,13 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code
 TB=tb
 
+!Ifndef ARASANX
 !If "$(TARGET)" == "win64"
 ARCH = /D_WIN64
 ARASANX = arasanx-64
 !Else
 ARASANX = arasanx
+!Endif
 !Endif
 
 !Ifdef DEBUG
@@ -57,9 +59,6 @@ SMP=/MT /DSMP /DSMP_STATS
 !Endif
 PROF_RUN_SMP=-c 2
 
-LD=link
-CL=cl
-
 # Intel C++ 12.0 defs, release build (intel64)
 !If "$(TARGET)" == "win64"
 INTEL64 = /Wp64
@@ -86,7 +85,7 @@ PROF_USE_FLAGS = /Qprof_use $(IPO) /Qprof_dir$(PROFDATA)
 TB_FLAGS = $(CFLAGS) $(SMP) /Gr /O1 /GS- /I$(TB) /I.
 TB_PROFILE_FLAGS = $(TB_FLAGS) $(PROF_USE_FLAGS)
 
-POPCNT_FLAGS = -DUSE_POPCNT /arch:AVX
+POPCNT_FLAGS = -DUSE_POPCNT /QxSSE4.2
 
 default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
@@ -333,10 +332,26 @@ profile-run: dirs
     $(PROFILE)\arasanx $(PROF_RUN_FLAGS) <..\tests\prof
 
 profile-optimized: dirs $(ARASANX_PGO_OBJS)
-    $(LD) $(LDFLAGS) $(ARASANX_PGO_OBJS) /out:$(PGO_BUILD)\arasanx.exe
+    $(LD) $(LDFLAGS) $(ARASANX_PGO_OBJS) /out:$(BUILD)\$(ARASANX).exe
 
-popcnt: dirs $(ARASANX_POPCNT_OBJS)
-    $(LD) $(ARASANX_POPCNT_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX)-popcnt.exe
+popcnt: dirs
+	SET CFLAGS=$(POPCNT_FLAGS)
+	set ARASANX=$(ARASANX)-popcnt
+	nmake -f Makefile.icl
+
+profile-build: dirs profile profile-run profile-optimized 
+
+popcnt: dirs
+	SET CFLAGS=$(POPCNT_FLAGS)
+	set ARASANX=$(ARASANX)-popcnt
+	nmake -f Makefile.icl
+
+profiled: profile-build
+
+popcnt-profiled:
+	SET CFLAGS=$(POPCNT_FLAGS)
+	SET ARASANX=$(ARASANX)-popcnt
+	nmake -f Makefile.icl profile-build
 
 run-tests:
     $(BUILD)\$(ARASANX) -H 256M -c 2 <$(TESTS)\tests >$(TESTS)\test-results.txt

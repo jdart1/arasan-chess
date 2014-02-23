@@ -122,7 +122,7 @@ int BookReader::filterAndNormalize(const Board &board,
    vector< pair<book::DataEntry,int> > candidates2;
    // Stop selecting when accumulated move weight reaches "target". 
    // "target" is lower for higher selectivity values.
-   const int target = (int)(book::MAX_WEIGHT*(100.0-45.0*(2.0-log10(104-options.book.selectivity)))/100);
+   const int target = (int)(book::MAX_WEIGHT*(100.0-45.0*(2.0-log10((float)(104-options.book.selectivity))))/100);
 #ifdef _TRACE
    cout << "target weight=" << target << endl;
 #endif

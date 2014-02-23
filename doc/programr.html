@@ -92,13 +92,7 @@ two products).</li>
 </ol>
 
 <p>You can use the Intel C++ compiler, version 9.0 or above. There is a
-separate Makefile (Makefile.icl) for this. To build a PGO executable
-with Intel C++, use the following command:</p>
-
-nmake -f Makefile.icl clean profile profile-run profile-optimized
-
-<p>The resulting arasanx.exe will be in the ..\win32\pro_build directory,
-relative to the src directory.</p>
+separate Makefile (Makefile.icl) for this.</p>
 
 <p>Arasan can be built using the Cygwin development tools, which simulate
 a Linux environment under Windows, or the <a href="http://www.mingw.org">MingW</a> tools,
@@ -114,25 +108,32 @@ source.</p>
 
 <p>To build the chess engine with VC++ and PGO, the easiest way
 is to use the command line and execute:</p>
+<br/>
+<pre>
+nmake clean profiled
+</pre>
+<p>Release binaries from a build are placed in the
+"&lt;target&gt;\Release" directory, where &lt;target&gt; is "win32" or "win64",
+while the debug objects and binaries are put into "&lt;target&gt;\Debug".</p>
 
-nmake clean profile profile-run profile-optimized
+<p>The default target is 64-bit Windows. For a 32-bit build, edit the
+Makefile to select TARGET=win32 and run the same build commands.</p>
 
-<p>A standard build places release version object and binaries in the
-"<target>\Release" directory, where <target> is "win32" or "win64",
-while the debug objects and binaries are put into "<target>\Debug".
-A PGO build produces a binary in the <target>\pgo_build directory.</p>
-
-<p>To build a 64-bit executable for Windows, edit the Makefile to select
-the 64-bit compiler switches and run the same commands (you must be
-building on a 64-bit OS to do the profiling step). </p>
-
-<p>If you have a processor that has the POPCNT instruction (found in SSE 4.1)
+<p>If you have a processor that has the POPCNT instruction
+(introduced with SSE 4.2)
 then you can use "nmake popcnt" to produce a build that uses that
-instruction (but it will only run on SSE4.1 capable processors). This
+instruction (but it will only run on SSE4.2 capable processors). This
 only works for a 64-bit target. The executable will be named
 "arasanx-64-popcnt.exe" and will be placed in the release or debug 
-directory (depending on build type)</p>
+directory (depending on build type). To build with both POPCNT support
+and PGO, use "nmake popcnt-profiled".</p>
 
+<p>Remember to use the alternate Makefile if your compiler is Intel C++,
+like this:</p>
+<br/>
+<pre>
+nmake -f Makefile.icl popcnt-profiled
+</pre>
 <p>To build the Arasan native Windows GUI, use the Visual C++ solution file
 in the "gui" subdirectory. (The command-line Makefile does not build the
 GUI).</p>
