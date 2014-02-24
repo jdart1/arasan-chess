@@ -29,8 +29,8 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 
 #define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS = 1
-#NALIMOV_TBS = 1
+GAVIOTA_TBS = 1
+NALIMOV_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
@@ -110,7 +110,7 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
 OPT     = -O3 -fno-rtti -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
 
@@ -161,11 +161,6 @@ popcnt: SSE = -msse4.2
 popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
 popcnt: ARASANX := $(ARASANX)-popcnt
 popcnt: all
-
-profile-popcnt: SSE = -msse4.2
-profile-popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
-profile-popcnt: ARASANX := $(ARASANX)-popcnt
-profile-popcnt: profile
 
 # Solaris target: note only GCC is supported
 sparc-solaris: 
@@ -223,6 +218,14 @@ ifeq ($(PASS),1)
 else
 	$(CPP) $(PROF_USE) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
+
+profiled:
+	@$(MAKE) PASS=1 profile profile-run
+	@$(MAKE) PASS=2 profile
+
+popcnt-profiled:
+	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile profile-run
+	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile
 
 # sources for tablebase support.
 ifdef GAVIOTA_TBS

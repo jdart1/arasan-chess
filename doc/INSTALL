@@ -34,10 +34,10 @@ typing "make popcnt" (works only on a 64-bit OS).
 
 If you want to use PGO to build the arasan engine (arasanx), do:
 
-make clean PASS=1 profile profile-run
-make PASS=2 profile
+make clean profiled
 
-(use profile-popcnt instead of profile for a POPCNT enabled build).
+(use popcnt-profiled instead of profile as the target for a POPCNT
+enabled build).
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64", or
 "arasanx-64-popcnt", depending on the architecture and build flags
