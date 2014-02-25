@@ -1659,11 +1659,12 @@ int Search::quiesce(int ply,int depth)
 #ifdef _TRACE
                   indent(ply); cout << "pruned (futility)" << endl;
 #endif
+                  node->best_score = Util::Max(node->best_score,optScore);
                   continue;
                }
                // See pruning
                if (gain - PieceValue(PieceMoved(move)) <= 0 && !seeSign(board,move,
-                                                                        Util::Max(0,node->beta - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
+                   Util::Max(0,node->alpha - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
                   // This appears to be a losing capture, or one that can't bring us above alpha
 #ifdef _TRACE
                   indent(ply); cout << "pruned (SEE)" << endl;
