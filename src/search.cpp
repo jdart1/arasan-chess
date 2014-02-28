@@ -2029,12 +2029,12 @@ int Search::calcExtensions(const Board &board,
               return PRUNE;
           }
        }
-       if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT) {
+       if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT &&
+          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
            const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
            // Late move pruning (LMP). Prune quiet moves that are late
            // in the move order (regardless of history score).
-           if (moveIndex >= p.pruningMinMoveCount &&
-               GetPhase(move) == MoveGenerator::HISTORY_PHASE) {
+           if (moveIndex >= p.pruningMinMoveCount) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
 #endif
