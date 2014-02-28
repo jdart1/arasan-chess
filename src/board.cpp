@@ -1917,20 +1917,19 @@ void Board::flip2() {
 istream & operator >> (istream &i, Board &board)
 {
    // read in a board position in Forsythe-Edwards (FEN) notation.
-   static char buf[128];
-
-   char *bp = buf;
+   string buf;
+   
    int c;
    int fields = 0; int count = 0;
-   while (i.good() && fields < 4 && (c = i.get()) != '\n' && 
-          c != -1 && 
+   while (i.good() && fields < 4 && 
+          (c = i.get()) != EOF && 
+          c != '\n' &&
           ++count < 128)
    {
-      *bp++ = c;
+      buf += c;
       if (isspace(c))
          fields++;
    }
-   *bp = '\0';
    if (!i)
       return i;
    if (!BoardIO::readFEN(board, buf))

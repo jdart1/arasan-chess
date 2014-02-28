@@ -2508,7 +2508,7 @@ static bool do_command(const string &cmd, Board &board) {
             int valid = 0;
             if (cmd_args.length() > 3) {
                 fen = cmd_args.substr(3);
-                valid = BoardIO::readFEN(board, fen.c_str());
+                valid = BoardIO::readFEN(board, fen);
             }
             if (!valid) {
                 if (doTrace) cout << "# warning: invalid fen!" << endl;

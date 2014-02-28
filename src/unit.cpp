@@ -27,7 +27,7 @@ static int testIsPinned() {
        int result;
        IsPinnedData(const char *fenStr, Square s, Square d, int res) {
           fen = fenStr; 
-          if (!BoardIO::readFEN(board, fenStr)) {
+          if (!BoardIO::readFEN(board, string(fenStr))) {
              cerr << "error in FEN: " << fenStr << endl;
              return;
           }

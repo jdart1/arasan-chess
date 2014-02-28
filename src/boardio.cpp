@@ -4,7 +4,7 @@
 #include "attacks.h"
 #include "bhash.h"
 
-int BoardIO::readFEN(Board &board, const char *buf)
+int BoardIO::readFEN(Board &board, const string &buf)
 {
    board.reset();
    for (int i = 0; i < 64; i++)
@@ -12,9 +12,12 @@ int BoardIO::readFEN(Board &board, const char *buf)
       board.contents[i] = EmptyPiece;
    }
 
-   const char *bp = buf;
    char c;
-   while (isspace(*bp)) bp++;
+   string::const_iterator bp = buf.begin();
+   size_t first = buf.find_first_not_of(" \t");
+   if (first != string::npos) {
+      bp += first;
+   }
    for (int line = 0; line < 8; line++)
    {
       int sqval = 56-line*8;
@@ -72,7 +75,8 @@ int BoardIO::readFEN(Board &board, const char *buf)
       }
       if (c=='/') ++bp;  // skip delimiter
    }
-   while (isspace(*bp)) bp++;
+   while (bp != buf.end() && isspace(*bp)) bp++;
+   if (bp == buf.end()) return 0;
    if (toupper(*bp) == 'W')
       board.side = White;
    else if (toupper(*bp) == 'B')
@@ -82,7 +86,8 @@ int BoardIO::readFEN(Board &board, const char *buf)
      return 0;
    }
    bp++;
-   while (isspace(*bp)) bp++;
+   while (bp != buf.end() && isspace(*bp)) bp++;
+   if (bp == buf.end()) return 0;
    c = *bp;
    if (c == '-')
    {
@@ -94,7 +99,7 @@ int BoardIO::readFEN(Board &board, const char *buf)
    else
    {
       int k = 0;
-      for (; !isspace(*bp); bp++)
+      for (; bp != buf.end() && !isspace(*bp); bp++)
       {
          if (*bp == 'K')
             k += 1;
@@ -109,7 +114,7 @@ int BoardIO::readFEN(Board &board, const char *buf)
 	   return 0;
          }
       }
-      static CastleType vals[4] = 
+      static const CastleType vals[4] = 
       { CantCastleEitherSide, CanCastleKSide,
          CanCastleQSide, CanCastleEitherSide};
       board.state.castleStatus[White] = vals[k % 4];
@@ -117,6 +122,7 @@ int BoardIO::readFEN(Board &board, const char *buf)
    }
    board.setSecondaryVars();
    while (isspace(*bp)) bp++;
+   if (bp == buf.end()) return 0;
    c = *bp;
    if (c == '-')
    {
@@ -126,6 +132,7 @@ int BoardIO::readFEN(Board &board, const char *buf)
    {
       char sqbuf[2];
       sqbuf[0] = *bp++;
+      if (bp == buf.end()) return 0;
       sqbuf[1] = *bp++;
       Square epsq = SquareValue(sqbuf);
       if (epsq == InvalidSquare)
