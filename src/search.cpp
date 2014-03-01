@@ -187,6 +187,7 @@ SearchController::SearchController()
 
 SearchController::~SearchController() {
    delete pool;
+   hashTable.freeHash();
    LockDestroy(split_calc_lock);
 }
 
