@@ -842,8 +842,15 @@ Move *excludes, int num_excludes)
                        cout << " fails=" << fails << endl;
 #endif
                        showStatus(board, node->best, failLow, failHigh, 0);
-                       ASSERT(fails+1<ASPIRATION_WINDOW_STEPS);
-                       aspirationWindow = ASPIRATION_WINDOW[++fails];
+					   if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
+						  if (talkLevel == Trace) {
+							 cout << "# warning, too many aspiration window steps" << endl;
+						  }
+						  aspirationWindow = Constants::MATE;
+					   }
+					   else {
+						   aspirationWindow = ASPIRATION_WINDOW[++fails];
+					   }
                        if (aspirationWindow == Constants::MATE) {
                            hi_window = Constants::MATE-iteration_depth-1;
                        } else {
@@ -1270,9 +1277,16 @@ int Search::quiesce(int ply,int depth)
    int rep_count;
    if (terminate) return node->alpha;
    else if (ply >= Constants::MaxPly-1) {
+      if (!board.wasLegal((node-1)->last_move)) {
+         return -Illegal;
+      }
       return scoring.evalu8(board);
    }
    else if (Scoring::isDraw(board,rep_count,ply)) {
+	  // Verify previous move was legal
+      if (!board.wasLegal((node-1)->last_move)) {
+         return -Illegal;
+      }
 #ifdef _TRACE
       if (master()) {
          indent(ply); cout << "draw!" << endl;
@@ -2144,16 +2158,22 @@ int Search::search()
         return node->alpha;
     }
     else if (ply >= Constants::MaxPly-1) {
-        return scoring.evalu8(board);
+       if (!board.wasLegal((node-1)->last_move)) {
+          return -Illegal;
+       }
+       return scoring.evalu8(board);
     }
 
     if (Scoring::isDraw(board,rep_count,ply)) {
+        node->flags |= EXACT;
+        if (!board.wasLegal((node-1)->last_move)) {
+           return -Illegal;
+        }
 #ifdef _TRACE
         if (master()) {
             indent(ply); cout << "draw!" << endl;
         }
 #endif
-        node->flags |= EXACT;
         return drawScore(board);
     }
     Move hash_move = NullMove;
