@@ -2121,14 +2121,10 @@ static int KBPDraw(const Board &board) {
          ASSERT(pawn != InvalidSquare);
 
          // This does not cover all drawing cases but many of them:
-         if
-         (
-            Attacks::king_attacks[qsq].isSet(okp)
-         || (
-               Util::Abs(File(okp) - pfile) <= 1 && Rank(okp, side) > Rank(pawn, side) && Rank(okp, side) > Rank(kp,
-                                                                                                                 side)
-            )
-         ) {
+         if (Attacks::king_attacks[qsq].isSet(okp)
+             || (Util::Abs(File(okp) - pfile) <= 1 && 
+                 Rank(okp, side) > Rank(pawn, side) &&
+                 Rank(okp, side) > Rank(kp,side))) {
             return 1;   // draw
          }
       }
@@ -2162,10 +2158,10 @@ int Scoring::theoreticalDraw(const Board &board) {
 
    // Check for wrong bishop + rook pawn(s) vs king.  Not very common but
    // we don't want to get it wrong.
-   else if (mat1.pieceBits() == Material::KB && mat2.kingOnly()) {
+   else if (mat1.infobits() == Material::KBP && mat2.kingOnly()) {
       return KBPDraw<White> (board);
    }
-   else if (mat2.pieceBits() == Material::KB && mat1.kingOnly()) {
+   else if (mat2.infobits() == Material::KBP && mat1.kingOnly()) {
       return KBPDraw<Black> (board);
    }
 

@@ -12,6 +12,7 @@
 #include "chessio.h"
 #include "scoring.h"
 #include "search.h"
+#include "globals.h"
 
 #include <iostream>
 
@@ -27,7 +28,7 @@ static int testIsPinned() {
        int result;
        IsPinnedData(const char *fenStr, Square s, Square d, int res) {
           fen = fenStr; 
-          if (!BoardIO::readFEN(board, string(fenStr))) {
+          if (!BoardIO::readFEN(board, fenStr)) {
              cerr << "error in FEN: " << fenStr << endl;
              return;
           }
@@ -318,6 +319,68 @@ static int testEval() {
     return errs;
 }
 
+static int testDrawEval() {
+    // verify detection of KBP and other draw situations
+    const int DRAW_CASES = 11;
+    static const string draw_fens[DRAW_CASES] = {
+        "k7/8/P7/B7/1K6/8/8/8 w - - 0 1", // KBP draw
+        "8/8/8/1k6/b7/p7/8/K7 b - - 0 1", // KBP draw
+        "8/8/8/8/7b/4k2p/8/6K1 b - - 0 1", // KBP draw
+        "8/7k/4B3/8/6KP/8/8/8 b - - 0 3", // KBP draw
+        "8/8/2KN3k/8/3N4/8/8/8 w - - 0 1", // KNN draw
+        "8/8/2KN3k/8/3N4/8/8/8 w - - 0 1", // KNN draw
+        "8/8/8/3n4/8/2kn3K/8/8 b - - 0 1", // KNN draw
+        "8/8/2K4k/8/3N4/8/8/8 w - - 0 1", // KN draw
+        "8/8/8/3n4/8/2k4K/8/8 b - - 0 1", // KN draw
+        "8/8/8/8/8/2k4K/8/8 b - - 0 1", // KK draw
+        "8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1" // KB vs KB draw (same color)
+        // technically these are draws but not recognized yet:
+        //"8/8/8/1k6/b7/p7/8/2K5 b - - 0 1", // KBP draw
+        // 8/5k2/8/5B2/8/6KP/8/8 w - - 0 1 // KBP draw
+    };
+
+    const int NON_DRAW_CASES = 3;
+    static const string nondraw_fens[NON_DRAW_CASES] = {
+        "8/7k/8/6B1/6KP/8/8/8 w - - 0 3", // KBP right-color pawn
+        "8/3k3B/8/8/5K2/7P/8/8 b - - 0 1", // KBP opp king too far
+        "6K1/8/6b1/6k1/8/6B1/8/8 w - - 0 1" // opp color bishops
+    };
+    int errs = 0;
+    int tmp = options.search.use_tablebases;
+    options.search.use_tablebases = 0;
+    SearchController c;
+    for (int i = 0; i < DRAW_CASES; i++) {
+        Board board;
+        if (!BoardIO::readFEN(board, draw_fens[i].c_str())) {
+            cerr << "testDrawEval draw case " << i << " error in FEN: " << draw_fens[i] << endl;
+            ++errs;
+            continue;
+        }
+        Scoring *s = new Scoring(&c.hashTable);
+        if (!s->isDraw(board)) {
+            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_fens[i] << endl;
+            ++errs;
+        }
+	delete s;
+    }
+    for (int i = 0; i < NON_DRAW_CASES; i++) {
+        Board board;
+        if (!BoardIO::readFEN(board, nondraw_fens[i].c_str())) {
+            cerr << "testDrawEval non-draw case " << i << " error in FEN: " << nondraw_fens[i] << endl;
+            ++errs;
+            continue;
+        }
+        Scoring *s = new Scoring(&c.hashTable);
+        if (s->isDraw(board)) {
+            cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
+            ++errs;
+        }
+	delete s;
+    }
+    options.search.use_tablebases = tmp;
+    return errs;
+}
+
 int doUnit() {
 
    int errs = 0;
@@ -326,5 +389,6 @@ int doUnit() {
    errs += testSee();
    errs += testPGN();
    errs += testEval();
+   errs += testDrawEval();
    return errs;
 }
