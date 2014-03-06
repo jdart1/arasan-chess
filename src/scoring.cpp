@@ -128,12 +128,11 @@ struct BishopTrapPattern
 } BISHOP_TRAP_PATTERN[2][4];
 
 // bishop trapped by pawn(s)
-static const int BISHOP_TRAPPED = -160;
+static const int BISHOP_TRAPPED = -147;
 
-static const int BISHOP_PAIR[2] = { 37, 55 };
-static const int BISHOP_ENDGAME_BONUS = 18;
+static const int BISHOP_PAIR[2] = { 42, 55 };
 static const int BAD_BISHOP[2] = { -4, -6 };
-static const int BISHOP_PAWN_PLACEMENT[2] = { -10, -18 };
+static const int BISHOP_PAWN_PLACEMENT[2] = { -10, -16 };
 
 // material terms and trade bonus/penalties
 static const int RB_ADJUST[9] = {
@@ -1991,10 +1990,6 @@ void Scoring::scoreEndgame
       // keep the kings close
       scores.end += 10 - distance1(board.kingSquare(White), board.kingSquare(Black));
       return;
-   }
-
-   if (TEST_MASK(board.allPawns(), abcd_mask) && TEST_MASK(board.allPawns(), efgh_mask)) {
-      scores.end += BISHOP_ENDGAME_BONUS * ourMaterial.bishopCount();
    }
 
    // King/Pawn interactions
