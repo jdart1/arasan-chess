@@ -346,8 +346,10 @@ static int testDrawEval() {
         "6K1/8/6b1/6k1/8/6B1/8/8 w - - 0 1" // opp color bishops
     };
     int errs = 0;
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
     int tmp = options.search.use_tablebases;
     options.search.use_tablebases = 0;
+#endif
     SearchController c;
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
@@ -377,7 +379,9 @@ static int testDrawEval() {
         }
 	delete s;
     }
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
     options.search.use_tablebases = tmp;
+#endif
     return errs;
 }
 
