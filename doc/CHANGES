@@ -10,12 +10,25 @@ Changes in Arasan 17.0:
  4) Opening book is no longer modified at runtime by result and
     score learning. Only position learning (aka permanent brain)
     is supported now.
- 5) Qsearch no longer does pre-selection of capture targets. 
+ 5) Improvements to opening book and ECO classifier.
+ 6) Qsearch no longer does pre-selection of capture targets. 
     Qsearch forward pruning margin changed.
- 6) Fix time field of "post" output for Winboard/xboard (was off
-    by factor of 10).
- 7) Bug fix: declare on startup for UCI that the tablebase type
+ 7) Bug Fix: correct time field of "post" output for Winboard/xboard
+    (was off by factor of 10).
+ 8) Bug fix: declare on startup for UCI that the tablebase type
     option is "Tablebase type", not "TablebaseType".
+ 9) Bug fix: check for previous move legal before returning draw
+    score.
+ 10) Bug fix: Don't apply history pruning to moves before the
+    history phase of move generation.
+ 11) Bug fix to KP + wrong Bishop vs. K draw detection. 
+ 12) Bug fixes to lockless hashing. But also: restore validity
+     check for moves fetched from hash, since lockless hashing
+     is not 100% reliable. 
+ 13) A few evaluation changes.
+ 14) Improved debug output when -DSEARCH_STATS enabled.
+ 15) Performance fix: remove unneeded update of node count at end
+     of search function.
 
 Changes in Arasan 16.3 (Dec. 2013):
  1) Generate/search discovered checks in qsearch.
