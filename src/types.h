@@ -220,25 +220,25 @@ static inline void Unlock(lock_t &x) {
 #endif
 
 #ifdef __BIG_ENDIAN__
-typedef union endian_convert64
+union endian_convert64
 {
     uint64 data;
     byte bytes[8];
 };
 
-typedef union endian_convert32
+union endian_convert32
 {
     uint32 data;
     byte bytes[4];
 };
 
-typedef union endian_convert16
+union endian_convert16
 {
     uint16 data;
     byte bytes[2];
 };
 
-typedef union endian_convert_float
+union endian_convert_float
 {
     float data;
     byte bytes[4];
