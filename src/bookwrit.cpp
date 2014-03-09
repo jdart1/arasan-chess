@@ -141,7 +141,8 @@ int BookWriter::write(const char* pathName) {
    ofstream book_file(pathName, ios::out | ios::trunc | ios::binary);
    book::BookHeader header;
    header.version = book::BOOK_VERSION;
-   header.num_index_pages = (uint16)swapEndian16((byte*)&index_pages);
+   uint16 pages = (uint16)index_pages;
+   header.num_index_pages = (uint16)swapEndian16((byte*)&pages);
    book_file.write((char*)&header, sizeof(book::BookHeader));
    if (book_file.fail()) return -1;
 
