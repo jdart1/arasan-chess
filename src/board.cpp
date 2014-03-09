@@ -338,9 +338,9 @@ void Board::doMove( Move move )
       {
          ASSERT(contents[start] != EmptyPiece);
          const Bitboard bits(Bitboard::mask[start] |
-                           Bitboard::mask[dest]);
+                             Bitboard::mask[dest]);
          Square target = dest; // where we captured
-                 Piece capture = contents[dest]; // what we captured
+         Piece capture = contents[dest]; // what we captured
          switch (TypeOfPiece(contents[StartSquare(move)])) {
          case Empty: break;  
          case Pawn:
@@ -353,9 +353,9 @@ void Board::doMove( Move move )
                Xor(state.hashCode, dest, WhitePawn);
                Xor(pawnHashCodeW, start, WhitePawn);
                Xor(pawnHashCodeW, dest, WhitePawn);
-                   ASSERT(dest - 8 == old_epsq);
+               ASSERT(dest - 8 == old_epsq);
                target = old_epsq;
-                           capture = BlackPawn;
+               capture = BlackPawn;
                contents[dest] = WhitePawn;
                pawn_bits[White].set(dest);
                break;
@@ -583,9 +583,9 @@ void Board::doMove( Move move )
                Xor(state.hashCode, dest, BlackPawn);
                Xor(pawnHashCodeB, start, BlackPawn);
                Xor(pawnHashCodeB, dest, BlackPawn);
-                   ASSERT(dest + 8 == old_epsq);
+               ASSERT(dest + 8 == old_epsq);
                target = old_epsq;
-                           capture = WhitePawn;
+               capture = WhitePawn;
                contents[dest] = BlackPawn;
                pawn_bits[Black].set(dest);
                break;
@@ -1892,6 +1892,11 @@ void Board::flip() {
         tmp2 = MakePiece(TypeOfPiece(tmp2),OppositeColor(PieceColor(tmp2)));
         contents[i*8+j] = tmp2;
         contents[(7-i)*8+j] = tmp;
+        if (i*8+j == state.enPassantSq) {
+            state.enPassantSq = (7-i)*8+j;
+        } else if ((7-i)*8+j == state.enPassantSq) {
+            state.enPassantSq = i*8+j;
+        }
      }
    }
    CastleType tmp = state.castleStatus[White];
@@ -1909,6 +1914,11 @@ void Board::flip2() {
        Piece tmp = contents[sq];
        contents[sq] = contents[sq2];
        contents[sq2] = tmp;
+       if (sq == state.enPassantSq) {
+           state.enPassantSq = sq2;
+       } else if (sq2 == state.enPassantSq) {
+           state.enPassantSq = sq;
+       }
      }
    }
    setSecondaryVars();
@@ -1917,19 +1927,20 @@ void Board::flip2() {
 istream & operator >> (istream &i, Board &board)
 {
    // read in a board position in Forsythe-Edwards (FEN) notation.
-   string buf;
-   
+   char buf[128];
+
+   char *bp = buf;
    int c;
    int fields = 0; int count = 0;
-   while (i.good() && fields < 4 && 
-          (c = i.get()) != EOF && 
-          c != '\n' &&
+   while (i.good() && fields < 4 && (c = i.get()) != '\n' && 
+          c != -1 && 
           ++count < 128)
    {
-      buf += c;
+      *bp++ = c;
       if (isspace(c))
          fields++;
    }
+   *bp = '\0';
    if (!i)
       return i;
    if (!BoardIO::readFEN(board, buf))
