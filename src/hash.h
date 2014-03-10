@@ -133,8 +133,6 @@ class HashEntry {
           return getEffectiveHash() != (hash & HASH_MASK);
       }
 
-   protected:
-
       hash_t getEffectiveHash() const {
          return (val1 ^ val2) & HASH_MASK;
       }
@@ -144,6 +142,8 @@ class HashEntry {
          val1 |= (hash ^ val2) & HASH_MASK;
 	 ASSERT(*this == hash);
       }
+
+   protected:
 
       uint64 val1;
       union
@@ -203,7 +203,6 @@ class Hash {
             // race where entry is validated, then changed).
             HashEntry entry(*p);
             if (entry == hashCode) {
-                /*
                 // we got a hit on this entry in the current search,
                 // so update the age to discourage replacement:
                 if (entry.age() && (entry.age() != age)) {
@@ -211,7 +210,6 @@ class Hash {
                    entry.setEffectiveHash(hashCode);
                    *p = entry;
                 }
-                */
                 hit = &entry;
                 he = entry;
                 if (entry.depth() >= depth) {
