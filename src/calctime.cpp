@@ -3,7 +3,7 @@
 #include "globals.h"
 #include "util.h"
 
-static const int DEFAULT_MOVES_TO_TC = 40;
+static const int DEFAULT_MOVES_TO_TC = 35;
 static const float PONDER_FACTOR = 1.3F;
 static const int GAME_TIME_RESERVE = 75; // try to keep this amt of time in reserve
 
@@ -29,21 +29,11 @@ int time_left, int opp_time, bool ponderHit, int trace)
    if (movestogo == 0) movestogo = DEFAULT_MOVES_TO_TC;
    time_left = Util::Max(time_left-GAME_TIME_RESERVE,0);
    int time_target = (time_left/movestogo);
+   time_target += 9*incr/10;
+
    if (ponderHit && movestogo > 4) {
        time_target = (int)(PONDER_FACTOR*time_target);
    }
-
-/*
-   if (movestogo > 4 && time_target < time_left/2 && time_left > 5000 && 
-       opp_time > (time_left*5)/4) {
-       // opponent is moving much slower, adjust our time
-       time_target = int(time_target*1.1F);
-       if (opp_time > time_left*3/2) {
-           time_target = int(time_target*1.1F);
-       }
-   }
-*/
-   time_target += 9*incr/10;
 
    // ensure we never allocate more time than is left
    if (time_target >= time_left + incr) {

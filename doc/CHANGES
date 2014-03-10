@@ -29,6 +29,8 @@ Changes in Arasan 17.0:
  14) Improved debug output when -DSEARCH_STATS enabled.
  15) Performance fix: remove unneeded update of node count at end
      of search function.
+ 16) Change to time usage: generally uses more time in early phase
+     of games.
 
 Changes in Arasan 16.3 (Dec. 2013):
  1) Generate/search discovered checks in qsearch.
