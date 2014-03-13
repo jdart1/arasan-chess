@@ -35,6 +35,27 @@ Bb2 Re8 (8... Ba5 9. d3 Bc7 10. Nbd2 $11 {0-1 (24) Mamonova,Y (2020)-Ponomarev,
 D (2365) Poltavskaya 2010}) 9. d3 Qe7 10. Nbd2 d4 $17 {0-1 (31) Agrest,R (2161)
 -Vocaturo,D (2450) Arvier 2007} *
 
+[Event "chessclub.com"]
+[Site "chessclub.com"]
+[Date "2014.03.04"]
+[Round "?"]
+[White "BountyHunter"]
+[Black "Arasan 17.0"]
+[Result "1-0"]
+[ECO "A00"]
+[WhiteElo "2971"]
+[BlackElo "2692"]
+[Annotator "Dart, J."]
+[PlyCount "15"]
+[EventDate "2014.??.??"]
+[TimeControl "300"]
+
+1. g3 e5 2. Bg2 d5 3. c4 (3. d3 $1 Nf6 4. Nf3 Bd6 5. O-O O-O 6. c4 $1 dxc4 $2 (
+6... d4) 7. dxc4 h6 8. Nc3 Nc6 9. Qc2 Nd4 $2 (9... Be6 10. b3 $11 {Stockfish})
+10. Nxd4 exd4 11. Nb5 $14 {1-0 (49) Svidler,P (2758)-Kramnik,V (2793) London
+2013}) 3... dxc4 4. Qa4+ Bd7 (4... Nc6) (4... c6 $1 5. Qxc4 Be6 6. Qc2 $11) 5.
+Qxc4 Bc6 $2 (5... Nc6 $11) 6. Nf3 Nd7 7. Nc3 Bd6 8. O-O $14 1-0
+
 [Event "?"]
 [Site "?"]
 [Date "2014.01.05"]
@@ -45,7 +66,7 @@ D (2365) Poltavskaya 2010}) 9. d3 Qe7 10. Nbd2 d4 $17 {0-1 (31) Agrest,R (2161)
 [ECO "A02"]
 [Annotator "Dart, J."]
 [PlyCount "12"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. f4 e5 {weight:10} 2. fxe5 d6 3. exd6 Bxd6 4. Nf3 Nf6 $1 (4... g5 $2 5. g3 g4
 6. Nh4 Ne7 7. d4 Nbc6 8. c3 Ng6 9. Nxg6 hxg6 10. Qd3 Bf5 11. e4 Qe7 12. Bg2
@@ -63,7 +84,7 @@ O-O-O $14 {0-1 (37) Rendle,T (2370)-Kotronias,V (2585) Caleta 2005}) 5. e3 Ng4
 [ECO "A03"]
 [Annotator "Dart, J."]
 [PlyCount "15"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. f4 d5 2. Nf3 g6 (2... Nf6 3. g3 Bf5 $2 (3... g6)) 3. g3 $1 (3. c4 c6 (3...
 d4 4. b4 Bg7 5. Bb2 Nh6 6. e3 c5 7. bxc5 Nc6 $11 {1-0 (36) Vavra,P (2393)
@@ -114,7 +135,7 @@ Bf5 12. Qc6+ Bd7 13. Qe4 Bf5 14. Qe3 Bh3 15. Rf3 Bg4 $2 (15... Nh6 16. fxe5 Ng4
 [ECO "A11"]
 [Annotator "Dart, J."]
 [PlyCount "23"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. c4 c6 2. Nf3 d5 3. e3 Nf6 4. Nc3 a6 5. b3 Bg4 (5... Bf5 6. Be2 (6. Bb2 h6 $3
 (6... e6 $2 7. Nh4) 7. d4 (7. Be2 e6 8. O-O $1) 7... e6 8. Bd3) 6... h6 $3 7.
@@ -208,7 +229,7 @@ Ne5 Bxc4 16. Nxc4 Qc7 17. dxc5 Nxc5 18. Nxc5 1/2-1/2
 [ECO "A14"]
 [Annotator "Dart, J."]
 [PlyCount "28"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "300+3"]
 
 1. c4 Nf6 2. Nf3 e6 3. g3 d5 4. Bg2 Be7 5. O-O O-O 6. b3 c5 7. Bb2 Nc6 8. e3 b6
@@ -291,7 +312,7 @@ ICCF 2013}) 15... Rad8 0-1
 [ECO "A21"]
 [Annotator "Dart, J."]
 [PlyCount "8"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 d6 2. c4 e5 3. Nf3 e4 4. Ng5 f5 $3 (4... Nf6 5. Nc3 Qe7 $3 (5... Bf5 $2
 6. g4 $3)) *
@@ -324,7 +345,7 @@ Nc5 13. Qa5 Nd3+ (13... f5 14. O-O e4 15. Nb5 $14 {1-0 (29) King,D (2560)
 [Result "*"]
 [ECO "A25"]
 [PlyCount "27"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. c4 e5 2. g3 Nc6 3. Nc3 f5 {weight:20} 4. Bg2 Nf6 5. e3 d5 6. Nxd5 (6. cxd5
@@ -373,7 +394,7 @@ Johansen,D (2446)-Bogut,Z (2464) Dresden 2008}) 11. gxf3 (11. axb4 Nxb4 12. Ra4
 [ECO "A29"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. c4 e5 2. Nc3 Nf6 3. Nf3 Nc6 4. g3 d5 5. cxd5 Nxd5 6. Bg2 Nb6 7. O-O Be7 8.
@@ -414,7 +435,7 @@ $11 0-1
 [ECO "A30"]
 [Annotator "Dart, J."]
 [PlyCount "31"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. c4 c5 2. Nf3 Nf6 3. Nc3 e6 4. g3 b6 5. Bg2 Bb7 6. O-O Be7 (6... d6 $1 7. d4
@@ -454,7 +475,7 @@ Carlsen,M (2835)-Gashimov,V (2761) Wijk aan Zee NED 2012} *
 [ECO "A30"]
 [Annotator "Dart, J."]
 [PlyCount "31"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "10"]
 
 1. c4 c5 2. Nf3 Nf6 3. Nc3 e6 4. g3 b6 5. Bg2 Bb7 6. O-O a6 7. Re1 d6 8. e4 Be7
@@ -481,7 +502,7 @@ Athens 2006}) 15. fxe6 fxe6 16. Bh3 $16 1-0
 [ECO "A30"]
 [Annotator "Dart, J."]
 [PlyCount "65"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. Nf3 Nf6 2. c4 b6 3. g3 c5 4. Bg2 Bb7 5. O-O g6 6. d4 cxd4 7. Qxd4 (7. Nxd4
@@ -533,7 +554,7 @@ Nogueiras Santiago,J (2559)-Bruzon Batista,L (2608) Havana 2008} 1-0
 [ECO "A36"]
 [Annotator "Dart, J."]
 [PlyCount "27"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. c4 c5 2. Nc3 g6 3. g3 Bg7 4. Bg2 Nc6 5. a3 d6 6. Rb1 a5 7. Nf3 e5 8. O-O
@@ -605,7 +626,7 @@ $11 {Houdini 4}) 7. Ng5 Nh6 $2 (7... d6) 8. h4 f6 9. Nge4 Nf7 10. h5 $16 1-0
 [Result "1-0"]
 [ECO "A45"]
 [PlyCount "21"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. Bg5 e6 3. Nd2 h6 4. Bh4 c5 5. e4 cxd4 (5... d5 6. e5 g5 7. Bg3
@@ -630,7 +651,7 @@ gxh4 $2 (8... Qb6 $3) 9. Rxh4 Nc6 10. Ngf3 Be7 $2 (10... Rg8 11. Rh3 d6 {1/2-1/
 [ECO "A46"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. Nf3 e6 3. g3 (3. Bf4 c5 4. c3 (4. e3 b6 $2 (4... Qb6) 5. Nc3 cxd4
@@ -659,7 +680,7 @@ Nd4 {1/2-1/2 (44) Burmakin,V (2623)-Ponkratov,P (2558) Moscow 2009}) 10... O-O
 [ECO "A50"]
 [Annotator "Dart, J."]
 [PlyCount "17"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 Nf6 2. c4 b6 $2 3. f3 (3. Nc3 Bb7 4. Qc2 $1 (4. f3 d5 $3 (4... e6 $2 5.
 e4 d6 6. Be3 $1) 5. cxd5 Nxd5 6. e4 Nxc3 7. bxc3 e6 $1 8. Be3 $1 (8. Bb5+ c6 9.
@@ -723,7 +744,7 @@ Nxe4 $2 11. Nxe4 $14)) 10. Be3 b4 11. Nce4 f5 12. g4 fxg4 13. h3 g3 (13... Nf6
 [ECO "A65"]
 [Annotator "Dart, J."]
 [PlyCount "44"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 c5 {weight:3} 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 (6. Nf3 g6
@@ -773,7 +794,7 @@ Qxh6 14. Qxh6 Bxh6 15. Nxd6 Nd7 16. Bh3 f5 17. f4 Nb6 18. Nxc8 Re8+ 19. Kf2
 [ECO "A67"]
 [Annotator "Dart, J."]
 [PlyCount "40"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 Nf6 2. c4 e6 3. Nc3 c5 $2 4. d5 exd5 5. cxd5 d6 6. e4 g6 (6... Be7 $2 7.
 Nf3 O-O 8. h3 $3) 7. f4 (7. Bb5+ $2 Nbd7) 7... Bg7 8. Bb5+ Nfd7 $3 (8... Nbd7 {
@@ -843,7 +864,7 @@ Bd6 7. b3 $1) 5... c6 6. b3 Bd6 7. Nh3 O-O 8. O-O Bd7 9. Bf4 $14 *
 [ECO "A96"]
 [Annotator "Dart, J."]
 [PlyCount "46"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 e6 2. c4 f5 $2 3. g3 Nf6 4. Bg2 Be7 5. Nf3 d6 6. O-O O-O 7. Nc3 a5 (7...
@@ -886,7 +907,7 @@ Banja 2010} *
 [ECO "B01"]
 [Annotator "Dart, J."]
 [PlyCount "26"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 d5 2. exd5 Qxd5 3. Nc3 (3. c4 $2 Qa5 4. Nc3 Nc6) 3... Qa5 (3... Qd8 {
 weight:5} 4. Nf3 $1 (4. d4 g6 $2 (4... e6 $2) 5. Bf4 $3 Bg7 6. Qd2 Nf6 7. Nf3
@@ -911,7 +932,7 @@ P (2562)-Megaranto,S (2533) Jakarta 2011} *
 [ECO "B04"]
 [Annotator "Dart, J."]
 [PlyCount "23"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 dxe5 5. Nxe5 Nd7 {weight:10} 6. Nxf7 $6 (6.
@@ -957,7 +978,7 @@ Qd2 e4 21. fxg4 Bxg4 1-0
 [ECO "B05"]
 [Annotator "Dart, J."]
 [PlyCount "24"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 Bg4 (4... g6 5. Bc4 Nb6 6. Bb3 Bg7 7. Ng5
 e6 8. Qf3 Qe7 (8... O-O $2 9. Qh3) 9. Ne4 dxe5 (9... h6 $2) 10. Bg5 Qb4+ 11. c3
@@ -970,6 +991,26 @@ Ke6 34. Rh5 h6 35. Kh2 Ra6 36. c6 Rxc6 37. Ra5 a6 38. Kg3 Kf6 39. Kf3 Rc3+ 40.
 Kf2 Rc2+ {½-½ (40) Spassky,B (2660)-Fischer,R (2785) Reykjavik 1972}) 13...
 b6 (13... Nc6 $2 14. b3 N4a5 15. Rc1 $1) 14. b3 Na5 15. b4 $1 Nc4 16. Rc1 c6 {
 ½-½ (63) Tukhaev,A (2534)-Biriukov,N (2325) Alushta 2010}) 12... Nc8 *
+
+[Event "-"]
+[Site "-"]
+[Date "2014.03.05"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "B07"]
+[Annotator "Dart, J."]
+[PlyCount "21"]
+[EventDate "2014.??.??"]
+[TimeControl "240+1"]
+
+1. d4 d6 2. e4 Nf6 3. Nc3 e5 4. dxe5 dxe5 5. Qxd8+ Kxd8 6. Bg5 Bd6 $2 7. O-O-O
+Nbd7 8. Nf3 Ke8 (8... Ke7 $2 9. Nh4 $3 Kf8 $2 (9... Nb6) 10. Nf5 {1-0 (16)
+Reefat,B (2451)-Murshed,N (2435) Dhaka 2003}) 9. Nb5 Ke7 (9... a6 10. Nxd6+
+cxd6 11. Nd2 b5 {1-0 (30) Nevostrujev,V (2510)-Zablotsky,S (2410) Tomsk 2003})
+10. Nd2 h6 11. Bh4 $14 {1/2-1/2 (81) Dvoirys,S (2590)-Spasov,V (2540) Biel 1993
+} *
 
 [Event "chessclub.com"]
 [Site "chessclub.com"]
@@ -1114,6 +1155,26 @@ f5 16. O-O-O Kf7 17. Kc2 Be7 18. Nf3 Qc6 19. Qxc6 Nxc6 20. Rd7 Nh6 21. Rc7 Rhc8
 Kf8 35. Ba6 {1/2-1/2 (35) Bubir,S (2586)-Brodda,W (2608) ICCF 2012}) 8... Nxe5
 9. Be2 Nc6 $3 $11 {[%emt 0:00:04] Houdini} *
 
+[Event "Computer chess game"]
+[Site "BLUELIGHT"]
+[Date "2014.03.08"]
+[Round "?"]
+[White "Arasan 17.0"]
+[Black "Komodo-tcecr-64bit"]
+[Result "0-1"]
+[ECO "B12"]
+[WhiteElo "2200"]
+[BlackElo "2200"]
+[PlyCount "30"]
+[EventDate "2014.??.??"]
+
+1. e4 c6 2. d4 d5 3. e5 Bf5 4. Be3 (4. h4 h5 $1 5. c4 e6 6. Nc3 Ne7 $3 7. Bg5 (
+7. Nf3 $2 Nd7) (7. Nge2) 7... Qb6 $3 8. Qd2 Nd7 9. Nf3 {1/2-1/2 (25) Popov,I 
+(2644)-Pantsulaia,L (2605) Kolkata 2013}) 4... e6 5. Nd2 Nd7 6. Ngf3 Ne7 7. Be2
+c5 8. dxc5 Nc6 9. Nb3 Bg4 10. O-O Bxf3 11. Bxf3 Ncxe5 (11... Ndxe5 12. Be2 Be7
+13. c3 O-O {1/2-1/2 (32) Cheparinov,I (2669)-Mchedlishvili,M (2618) Baku 2011})
+{Houdini 4 x64:} 12. Bd4 Be7 13. c4 Nxc4 14. Bxg7 Rg8 15. Bd4 Bf6 $11 0-1
+
 [Event "?"]
 [Site "?"]
 [Date "2014.01.07"]
@@ -1123,7 +1184,7 @@ Kf8 35. Ba6 {1/2-1/2 (35) Bubir,S (2586)-Brodda,W (2608) ICCF 2012}) 8... Nxe5
 [Result "1/2-1/2"]
 [ECO "B12"]
 [PlyCount "23"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c6 2. d4 d5 3. e5 Bf5 4. c3 e6 5. Bd3 Ne7 6. Ne2 Nd7 (6... c5 $1 $11) 7.
@@ -1222,7 +1283,7 @@ gxh5 $2 (11... Ne7 $11) 12. Rg1 1-0
 [ECO "B12"]
 [Annotator "Dart, J."]
 [PlyCount "18"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c6 2. d4 d5 3. e5 Bf5 4. Nc3 a6 {weight:6} (4... h5 $2 5. Bd3 $3 Bxd3 6.
@@ -1273,7 +1334,7 @@ hxg5 26. fxg5 Qb6 27. c5 Qb5 28. Bf4 Rh4 29. Be5 Rg4+ 30. Kh1 Rxg5 $14 1-0
 [ECO "B13"]
 [Annotator "Dart, J."]
 [PlyCount "12"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c6 2. Nf3 $6 d5 3. exd5 cxd5 4. d4 Nc6 $1 (4... Nf6 5. Bf4 Nc6 6. c3 Bf5
 (6... g6) 7. Nbd2 $1 e6 8. Qb3 Qc8 9. Nh4 Be4 $3 (9... Bg6 10. Nxg6 hxg6 11.
@@ -1313,7 +1374,7 @@ O-O) (12. Nxd5 exd5 $11) 12... Nxd4 13. Nxb6 Nxb3 14. axb3 Nxb6 $17 0-1
 [ECO "B17"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Nd7 5. Nf3 Ngf6 6. Ng3 c5 {weight:5} (
@@ -1333,7 +1394,7 @@ Bc4 $3 (7. dxc5 e6 8. b4 a5 (8... b6 $2 9. Bb5) 9. c3 axb4 10. cxb4 b6 $11)
 [ECO "B17"]
 [Annotator "Dart, J."]
 [PlyCount "57"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c6 2. d4 d5 3. Nd2 dxe4 4. Nxe4 Nd7 5. Nf3 Ngf6 6. Nc3 e6 (6... Nb6 7.
 Be2 Bg4 8. O-O e6 9. h3 Bf5 (9... Bh5) 10. Nh4 Bg6 11. Bf3 Bd6 12. Qe2 {1/2-1/
@@ -1356,7 +1417,7 @@ f4 24. g5 Kf8 25. Rxf4 Bxf4 26. Qh6+ Ke7 27. Qf6+ Kf8 28. g6 Bh6 29. Rf1 {1-0
 [ECO "B17"]
 [Annotator "Dart, J."]
 [PlyCount "47"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c6 2. d4 d5 3. Nd2 dxe4 4. Nxe4 Nd7 5. Ng5 Ngf6 6. Bd3 e6 7. N1f3 Bd6 8.
 Qe2 (8. O-O $6 h6 9. Ne4 Nxe4 10. Bxe4 Qc7 $3) 8... h6 9. Ne4 Nxe4 10. Qxe4 Qc7
@@ -1386,7 +1447,7 @@ Qg4 Rg8 19. Qf3 Rd8 20. Rad1 c5 21. Be4 Bxe5 $2 (21... Bxe4 $11) 22. dxe5 Rxd1
 [ECO "B18"]
 [Annotator "Dart, J."]
 [PlyCount "13"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c6 2. d4 d5 3. Nd2 dxe4 4. Nxe4 Bf5 5. Nc5 {weight:10} b6 $3 (5... Qc8 $2
 6. Nf3 Nf6 $14) (5... Qc7 $2 6. Bd3 Bg6 7. Nf3 e6 8. O-O Nf6 9. Re1 $14 {1-0 
@@ -1406,7 +1467,7 @@ Nb3 e6 7. Nf3 *
 [ECO "B18"]
 [Annotator "Dart, J."]
 [PlyCount "20"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c6 2. d4 d5 3. Nd2 dxe4 4. Nxe4 Bf5 5. Nc5 {weight:10} b6 $1 (5... Qc7 $2
 6. Bd3 Bg6 7. Nf3 e6 8. O-O $3 Nf6 9. Re1 Bxc5 10. dxc5 Bxd3 11. Qxd3 Na6 12.
@@ -1455,7 +1516,7 @@ Bf4 Qa5+ 9. c3 Ngf6 10. Bxg6 hxg6 11. O-O Be7 $1 $11 0-1
 [ECO "B19"]
 [Annotator "Dart, J."]
 [PlyCount "38"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Bf5 5. Ng3 Bg6 6. h4 h6 7. Nf3 Nd7 8. h5
 Bh7 9. Bd3 Bxd3 10. Qxd3 e6 11. Bf4 (11. Bd2 Ngf6 12. O-O-O Be7 13. Kb1 (13.
@@ -1539,7 +1600,7 @@ Rfc8 $2) 20. Qxd1 Qxa2 21. Nd2 Qa1+ 22. Nb1 Qa5 $11 {Stockfish DD 64 SSE4.2}
 [ECO "B21"]
 [Annotator "Dart, J."]
 [PlyCount "15"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. d4 $6 cxd4 3. c3 (3. Nf3 {weight:60} Nc6 4. Nxd4) (3. Qxd4 $2 Nc6)
 3... dxc3 (3... d3 $6 4. Bxd3 Nc6 (4... d6 5. c4 $1) 5. Nf3 (5. c4 $1 g6 6. Nf3
@@ -1656,7 +1717,7 @@ Nxd4 {0-1 (50) Lehner,M-Mueller,T Greifswald 2000}) 8. Ne2 $14 1-0
 [ECO "B30"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 Nc6 3. Nc3 (3. Bb5 e6 4. Bxc6 bxc6 5. O-O Ne7 6. d3 Ng6 7. Ng5
@@ -1716,7 +1777,7 @@ Qc4+ Qb5+ 86. Qxb5+ Kxb5 87. Ke6 Rxf6+ *
 [ECO "B33"]
 [Annotator "Dart, J."]
 [PlyCount "31"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 Nc6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e5 6. Ndb5 d6 7. Bg5 a6 8.
 Na3 b5 9. Bxf6 gxf6 10. Nd5 f5 (10... Bg7 11. Bd3 (11. c3 f5 (11... Ne7 $2 12.
@@ -1890,7 +1951,7 @@ com INT 2006}) 15. h3 $16 *
 [ECO "B44"]
 [Annotator "Dart, J."]
 [PlyCount "24"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "300"]
 
 1. e4 c5 2. Nf3 e6 3. d4 cxd4 4. Nxd4 Nc6 5. Nb5 d6 6. c4 Nf6 7. N1c3 a6 8. Nd4
@@ -1911,7 +1972,7 @@ Nxd4 13. Qxd4 Qa5 14. Qd2 Qc7 15. Rfd1 $11 {0-1 (35) Illescas Cordoba,M (2505)
 [ECO "B46"]
 [Annotator "Dart, J."]
 [PlyCount "24"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 Nc6 3. d4 cxd4 4. Nxd4 e6 5. Nc3 a6 6. Nxc6 bxc6 7. Bd3 d5 8.
@@ -1957,7 +2018,7 @@ Rxd7 Bxh1 22. gxh7+ Kxh7 23. Bd3+ Kg8 24. Rxe7 Nf6 1/2-1/2
 [ECO "B49"]
 [Annotator "Dart, J."]
 [PlyCount "25"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 e6 3. d4 cxd4 4. Nxd4 Nc6 5. Nc3 Qc7 6. Be2 Nf6 7. O-O a6 8.
@@ -1975,7 +2036,7 @@ $14 *
 [ECO "B51"]
 [Annotator "Dart, J."]
 [PlyCount "40"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 Nc6 3. Bb5 d6 $6 (3... e6) 4. O-O Bd7 5. Re1 Nf6 6. c3 a6 7.
@@ -1998,7 +2059,7 @@ g5 Re8 {1-0 (59) Kasparov,G (2812)-Vachier Lagrave,M (2715) Clichy 2011} *
 [ECO "B56"]
 [Annotator "Dart, J."]
 [PlyCount "46"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 Nc6 6. f3 {weight:4} (6. Be3
@@ -2207,63 +2268,63 @@ Kb1 Bb7 14. h4 Nd7 15. Bd4 $5 Rc8 $11 {1-0 (15) Arasan 16.3-Arasan 17.0 - 2014}
 ) 10. g4 (10. Be3 O-O 11. g4 Nxd4 12. Bxd4 Bc6 13. g5 Nd7 14. h4 b5 15. Kb1 b4
 16. Ne2 Ne5 17. Rh3 a5 18. Nf4 Qc7 19. Nh5 Rfc8 {0-1 (38) Brkic,A (2564)
 -Jankovic,A (2541) Otocac 2010} 20. Re1 Bb7 $11 {Houdini 4}) 10... h5 11. gxh5
-Nxh5 12. Bxe7 Qxe7 13. Nde2 (13. Rg1 Rd8 14. Qf2 Nxd4 15. Qxd4 Bc6 $11 {14
-Hiarcs}) 13... g5 14. Rg1 Ne5 15. Qe3 $11 {0-1 (27) Lane,G (2446)-Wells,P 
-(2479) Torquay ENG 2002}) 9... b5 (9... Qc7 $2 10. Be2 Be7 11. Nb3 b5 12. a3 $3
-{1-0 Nightmare-Arasan, ICC 2013}) (9... h6 10. Bh4 g5 $2 (10... b5 {weight:10}
-11. Bxf6 gxf6 12. Kb1 Qb6 13. Nce2 h5 14. Qd3 Ne7 15. g3 (15. h4 $146 Bh6 (
-15... e5 {Houdini 4 x64:} 16. Nb3 Bg4 17. g3 Rg8 18. Bh3 Bxe2 19. Qxe2 Rxg3 20.
-Qxh5 $14) {Houdini 4 x64:} 16. g3 e5 17. Nb3 Rd8 18. Qxd6 Bc6 19. Qxd8+ Qxd8
-20. Rxd8+ Kxd8 21. Nc5 Nf5 22. Bg2 Bf8 23. Nd3 Bd6 24. Re1 Rg8 25. Bh1 Ne3 $11)
-15... h4 $6 (15... Rd8 16. Bg2 b4 {1/2-1/2 (44) Eryomenko,V (2512) -Tikhiy,S 
-(2427) Azov 2010} (16... h4 17. g4 a5 18. Rhf1 b4 19. Qf3 Bg7 {1/2-1/2 (39)
-Wolfrum,R (2471)-Sochor,F (2460) ICCF email 2011})) 16. g4 $5 $16 (16. Bh3 Rc8
-$11 {Data-Arasan, ICC 2010 (analysis)})) (10... Nxe4 $2 11. Qe1 (11. Nxe4 $2)
-11... Nf6 12. Nf5 Qa5 13. Nxd6+ Bxd6 14. Rxd6 O-O-O 15. Rd1 $1 (15. Bxf6 $2
-gxf6 16. Qh4 Ne7 (16... Qc5 $2) 17. Rd2 $14) 15... Qc7 16. Kb1 Ne7 17. Bd3 Bc6
-$14 {0-1 (62) Kogan,S-Averbakh,Y Moscow 1952}) (10... Be7 11. Nf3 Qc7) 11. fxg5
-Ng4 12. Nf3 $1 (12. Nxc6 Bxc6 13. Be2 Ne5 14. g3 Ng6 15. Rhf1 (15. Kb1 Qa5 (
-15... h5 $2 16. Qd4 (16. Rhf1) 16... Rh7 $16 {1/2-1/2 (34) Bajarani,U (2425)
--Yasseen,A (2280) Al Ain 2012})) 15... Nxh4 16. gxh4 hxg5 17. hxg5 Be7 18. Qd4
-$1 $14 {1-0 (33) Zude,A (2461) -Tillmann,M (2192) Bad Wiessee 2009 (analysis)})
-(12. Be2 Nge5 13. Nf3 Be7 14. Bf2 (14. Rhg1 b5 15. Kb1 $1 $14 (15. Rdf1 $2 b4))
-14... hxg5 15. Na4 Nxf3 16. gxf3 Qa5 17. Qxa5 Nxa5 18. Nb6 Rd8 $11 {1-0 (44)
-Kotronias,V (2587)-Acs,P (2522) Hungary 2007}) 12... hxg5 13. Bg3 (13. Bxg5 $2)
-13... Be7 14. Be2 (14. Bxd6 $2 Bxd6 {Â½-Â½ (44) Navara,D (2697)-Sanikidze, T 
-(2549) Haguenau 2013}) 14... Nge5 15. Kb1 $1 b5 16. Rdf1 Rc8 17. Nxe5 Nxe5 18.
-Rf2 f6 19. Rhf1 Bc6 20. a3 Bb7 21. h3 Nc4 22. Bxc4 Rxc4 23. Qd3 e5 24. Re2 Qc8
-25. Rf5 Rxc3 26. bxc3 Qe6 27. Kb2 Kd7 28. Rf1 Qc4 29. Qxc4 bxc4 30. Ka2 Bc6 31.
-Rb1 Bd8 32. Rb8 Re8 33. Bf2 Ba5 34. Rxe8 Kxe8 35. Kb2 Kf7 36. Ba7 Ke6 37. g4
-Bd8 38. Kc1 Be7 39. Re3 d5 40. exd5+ Kxd5 41. Kb2 Ke6 42. Bb6 Bd6 43. h4 gxh4
-44. Rh3 e4 45. Rxh4 Bf4 46. Rh3 Bg5 47. Bd4 a5 48. Rh2 a4 49. Rh1 Bd7 50. Rh2
-Kd5 51. Rh5 {Â½-Â½ (51) Short,N (2655)-Kasparov, G (2805) London 1993}) 10.
-Bxf6 gxf6 11. Kb1 $3 (11. Nxc6 Bxc6 12. Bd3 b4 $3 (12... Qb6 $2 13. Rhe1 (13.
-Kb1 $2 b4 $3 (13... h5 14. Qe1 $1 (14. Rhe1)) 14. Ne2 h5 $1 15. f5 Bh6 16. Qe1
-e5 17. Ng3 h4 18. Nf1 Ke7 19. Bc4 Qc5 20. Bd3 a5 21. Nd2 a4 22. Nc4 Bf4 23. Qf1
-b3 24. cxb3 axb3 25. a3 Ra4 26. g3 hxg3 27. hxg3 Rxh1 28. Qxh1 Rxc4 29. gxf4
-Rc2 30. Ka1 Rf2 31. fxe5 Qxe5 32. Rb1 Rd2 33. Qf1 Qd4 34. Qc1 Qxd3 35. Qxc6 Rd1
-36. Rc1 Qc2 {0-1 (36) Kryvoruchko,Y (2678)-Ivanchuk,V (2731) Tromso 2013})) 13.
-Ne2 Qb6) 11... Qb6 12. Nxc6 Bxc6 13. f5 (13. Qe1 Ra7 $2 (13... Be7 14. Bd3 Qc5
-$1 (14... b4 15. Ne2 a5 16. f5 e5 17. Ng3 a4 18. Bc4 {1/2-1/2 (67) Ruan,L 
-(2480)-Kosteniuk,A (2507) Antakya 2010}) 15. f5 b4 16. Ne2 a5 $3 17. fxe6 fxe6
-18. Nf4 Qe5 $11 {0-1 (35) Motylev,A (2676)-Nijboer,F (2560) Budva 2009}) 14.
-Bd3 (14. f5 $1) 14... h5 $2 (14... Qc5 15. Qh4 $14) 15. Qh4 Be7 16. f5 $1 $14 {
-1-0 (16) Arasan 16.3-Arasan 17.0 - 2014}) 13... b4 (13... Qc5 14. Bd3 h5 $3 (
-14... b4 15. Ne2 e5 $2 (15... h5 16. fxe6 fxe6 17. Rhf1 Bh6 18. Qe1 Ke7 19. Nf4
-Bxf4 20. Rxf4 a5 $11 {1-0 (36) Jansa,V (2490)-Suradiradja,H (2435) Stip 1976}))
-) 14. Ne2 e5 15. Ng3 Qc5 16. Nh5 $1 (16. Bd3 h5 (16... Rg8 $2 17. Qe2 a5 18.
-Bc4 a4 19. b3 Rg5 20. Rd3 $14 {1-0 (33) khadem (2749)-Arasan 16.4 (2507)
-freechess.org 2014}) 17. h4 Bh6 18. Qe2 Qe3 19. Nxh5 Ke7 20. Qf1 Bxe4 21. Rh3
-Bxd3 22. Rxd3 Qc1+ 23. Qxc1 Bxc1 24. g4 Bh6 25. a3 Rag8 26. Nxf6 Kxf6 27. Rxd6+
-Kg7 28. g5 Bxg5 29. Rg3 Rxh4 30. Rxg5+ Kh7 31. Rxg8 Kxg8 32. axb4 Rxb4 33. Rxa6
-Kg7 34. b3 Rf4 35. Kb2 Rxf5 36. b4 e4 37. c4 e3 38. Ra1 Re5 39. b5 e2 40. b6 {
-1/2-1/2 (40) Sferle,M (2528)-Bubir,A (2555) ICCF 2012}) 16... Be7 (16... Ke7
-17. Bd3 Rg8 18. h4 (18. Rhg1 a5 $2 (18... Rg5) 19. g4 a4 20. h4 a3 21. g5 fxg5
-22. hxg5 axb2 23. Bc4 $16 {1-0 (23) Jernjoffen,S (2595)-JML26,H (2543) Engine
-Room 2013}) 18... a5 19. Qe2 a4 20. Bc4 Bh6 21. Rhe1 Bf4 22. g4 h6 23. Ka1 Ra5
-24. Kb1 Raa8 25. Ka1 Ra5 26. Kb1 {1/2-1/2 (26) Pavoni,F (2315)-SÃ¡nchez RÃ³denas,
-A (2320) ICCF 2012}) 17. Bd3 O-O-O 18. Qe2 d5 19. Ng3 a5 {1/2-1/2 (19)
-Chukanov,I (2315)-YlÃ¶nen,O (2455) ICCF 2012} *
+Nxh5 12. Bxe7 Qxe7 13. Nde2 (13. Rg1 Rd8 14. Qf2 Nxd4 15. Qxd4 Bc6 $11 {[%emt
+0:00:14] Hiarcs}) 13... g5 14. Rg1 Ne5 15. Qe3 $11 {0-1 (27) Lane,G (2446)
+-Wells,P (2479) Torquay ENG 2002}) 9... b5 (9... Qc7 $2 10. Be2 Be7 11. Nb3 b5
+12. a3 $3 {1-0 Nightmare-Arasan, ICC 2013}) (9... h6 10. Bh4 g5 $2 (10... b5 {
+weight:10} 11. Bxf6 gxf6 12. Kb1 Qb6 13. Nce2 h5 14. Qd3 Ne7 15. g3 (15. h4
+$146 Bh6 (15... e5 {Houdini 4 x64:} 16. Nb3 Bg4 17. g3 Rg8 18. Bh3 Bxe2 19.
+Qxe2 Rxg3 20. Qxh5 $14) {Houdini 4 x64:} 16. g3 e5 17. Nb3 Rd8 18. Qxd6 Bc6 19.
+Qxd8+ Qxd8 20. Rxd8+ Kxd8 21. Nc5 Nf5 22. Bg2 Bf8 23. Nd3 Bd6 24. Re1 Rg8 25.
+Bh1 Ne3 $11) 15... h4 $6 (15... Rd8 16. Bg2 b4 {1/2-1/2 (44) Eryomenko,V (2512)
+-Tikhiy,S (2427) Azov 2010} (16... h4 17. g4 a5 18. Rhf1 b4 19. Qf3 Bg7 {1/2-1/
+2 (39) Wolfrum,R (2471)-Sochor,F (2460) ICCF email 2011})) 16. g4 $5 $16 (16.
+Bh3 Rc8 $11 {Data-Arasan, ICC 2010 (analysis)})) (10... Nxe4 $2 11. Qe1 (11.
+Nxe4 $2) 11... Nf6 12. Nf5 Qa5 13. Nxd6+ Bxd6 14. Rxd6 O-O-O 15. Rd1 $1 (15.
+Bxf6 $2 gxf6 16. Qh4 Ne7 (16... Qc5 $2) 17. Rd2 $14) 15... Qc7 16. Kb1 Ne7 17.
+Bd3 Bc6 $14 {0-1 (62) Kogan,S-Averbakh,Y Moscow 1952}) (10... Be7 11. Nf3 Qc7)
+11. fxg5 Ng4 12. Nf3 $1 (12. Nxc6 Bxc6 13. Be2 Ne5 14. g3 Ng6 15. Rhf1 (15. Kb1
+Qa5 (15... h5 $2 16. Qd4 (16. Rhf1) 16... Rh7 $16 {1/2-1/2 (34) Bajarani,U 
+(2425)-Yasseen,A (2280) Al Ain 2012})) 15... Nxh4 16. gxh4 hxg5 17. hxg5 Be7
+18. Qd4 $1 $14 {1-0 (33) Zude,A (2461) -Tillmann,M (2192) Bad Wiessee 2009 
+(analysis)}) (12. Be2 Nge5 13. Nf3 Be7 14. Bf2 (14. Rhg1 b5 15. Kb1 $1 $14 (15.
+Rdf1 $2 b4)) 14... hxg5 15. Na4 Nxf3 16. gxf3 Qa5 17. Qxa5 Nxa5 18. Nb6 Rd8 $11
+{1-0 (44) Kotronias,V (2587)-Acs,P (2522) Hungary 2007}) 12... hxg5 13. Bg3 (
+13. Bxg5 $2) 13... Be7 14. Be2 (14. Bxd6 $2 Bxd6 {½-½ (44) Navara,D (2697)
+-Sanikidze, T (2549) Haguenau 2013}) 14... Nge5 15. Kb1 $1 b5 16. Rdf1 Rc8 17.
+Nxe5 Nxe5 18. Rf2 f6 19. Rhf1 Bc6 20. a3 Bb7 21. h3 Nc4 22. Bxc4 Rxc4 23. Qd3
+e5 24. Re2 Qc8 25. Rf5 Rxc3 26. bxc3 Qe6 27. Kb2 Kd7 28. Rf1 Qc4 29. Qxc4 bxc4
+30. Ka2 Bc6 31. Rb1 Bd8 32. Rb8 Re8 33. Bf2 Ba5 34. Rxe8 Kxe8 35. Kb2 Kf7 36.
+Ba7 Ke6 37. g4 Bd8 38. Kc1 Be7 39. Re3 d5 40. exd5+ Kxd5 41. Kb2 Ke6 42. Bb6
+Bd6 43. h4 gxh4 44. Rh3 e4 45. Rxh4 Bf4 46. Rh3 Bg5 47. Bd4 a5 48. Rh2 a4 49.
+Rh1 Bd7 50. Rh2 Kd5 51. Rh5 {½-½ (51) Short,N (2655)-Kasparov, G (2805)
+London 1993}) 10. Bxf6 gxf6 11. Kb1 $3 (11. Nxc6 Bxc6 12. Bd3 b4 $3 (12... Qb6
+$2 13. Rhe1 (13. Kb1 $2 b4 $3 (13... h5 14. Qe1 $1 (14. Rhe1)) 14. Ne2 h5 $1
+15. f5 Bh6 16. Qe1 e5 17. Ng3 h4 18. Nf1 Ke7 19. Bc4 Qc5 20. Bd3 a5 21. Nd2 a4
+22. Nc4 Bf4 23. Qf1 b3 24. cxb3 axb3 25. a3 Ra4 26. g3 hxg3 27. hxg3 Rxh1 28.
+Qxh1 Rxc4 29. gxf4 Rc2 30. Ka1 Rf2 31. fxe5 Qxe5 32. Rb1 Rd2 33. Qf1 Qd4 34.
+Qc1 Qxd3 35. Qxc6 Rd1 36. Rc1 Qc2 {0-1 (36) Kryvoruchko,Y (2678)-Ivanchuk,V 
+(2731) Tromso 2013})) 13. Ne2 Qb6) 11... Qb6 12. Nxc6 Bxc6 13. f5 (13. Qe1 Ra7
+$2 (13... Be7 14. Bd3 Qc5 $1 (14... b4 15. Ne2 a5 16. f5 e5 17. Ng3 a4 18. Bc4
+{1/2-1/2 (67) Ruan,L (2480)-Kosteniuk,A (2507) Antakya 2010}) 15. f5 b4 16. Ne2
+a5 $3 17. fxe6 fxe6 18. Nf4 Qe5 $11 {0-1 (35) Motylev,A (2676)-Nijboer,F (2560)
+Budva 2009}) 14. Bd3 (14. f5 $1) 14... h5 $2 (14... Qc5 15. Qh4 $14) 15. Qh4
+Be7 16. f5 $1 $14 {1-0 (16) Arasan 16.3-Arasan 17.0 - 2014}) 13... b4 (13...
+Qc5 14. Bd3 h5 $3 (14... b4 15. Ne2 e5 $2 (15... h5 16. fxe6 fxe6 17. Rhf1 Bh6
+18. Qe1 Ke7 19. Nf4 Bxf4 20. Rxf4 a5 $11 {1-0 (36) Jansa,V (2490)-Suradiradja,
+H (2435) Stip 1976}))) 14. Ne2 e5 15. Ng3 Qc5 16. Nh5 $1 (16. Bd3 h5 (16... Rg8
+$2 17. Qe2 a5 18. Bc4 a4 19. b3 Rg5 20. Rd3 $14 {1-0 (33) khadem (2749)-Arasan
+16.4 (2507) freechess.org 2014}) 17. h4 Bh6 18. Qe2 Qe3 19. Nxh5 Ke7 20. Qf1
+Bxe4 21. Rh3 Bxd3 22. Rxd3 Qc1+ 23. Qxc1 Bxc1 24. g4 Bh6 25. a3 Rag8 26. Nxf6
+Kxf6 27. Rxd6+ Kg7 28. g5 Bxg5 29. Rg3 Rxh4 30. Rxg5+ Kh7 31. Rxg8 Kxg8 32.
+axb4 Rxb4 33. Rxa6 Kg7 34. b3 Rf4 35. Kb2 Rxf5 36. b4 e4 37. c4 e3 38. Ra1 Re5
+39. b5 e2 40. b6 {1/2-1/2 (40) Sferle,M (2528)-Bubir,A (2555) ICCF 2012}) 16...
+Be7 (16... Ke7 17. Bd3 Rg8 18. h4 (18. Rhg1 a5 $2 (18... Rg5) 19. g4 a4 20. h4
+a3 21. g5 fxg5 22. hxg5 axb2 23. Bc4 $16 {1-0 (23) Jernjoffen,S (2595)-JML26,H
+(2543) Engine Room 2013}) 18... a5 19. Qe2 a4 20. Bc4 Bh6 21. Rhe1 Bf4 22. g4
+h6 23. Ka1 Ra5 24. Kb1 Raa8 25. Ka1 Ra5 26. Kb1 {1/2-1/2 (26) Pavoni,F (2315)
+-Sánchez Ródenas,A (2320) ICCF 2012}) 17. Bd3 O-O-O 18. Qe2 d5 19. Ng3 a5 {1/
+2-1/2 (19) Chukanov,I (2315)-Ylönen,O (2455) ICCF 2012} *
 
 [Event "?"]
 [Site "?"]
@@ -2361,7 +2422,7 @@ Bxe5 16. Nxe5 Nxe5 17. Rhe1 f6 18. Qe4 O-O-O {0-1 (84) Hernandez Fernandez,R
 [ECO "B76"]
 [Annotator "Dart, J."]
 [PlyCount "49"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 g6 6. Be3 Bg7 7. f3 Nc6 8. Qd2
 O-O 9. O-O-O d5 (9... Nxd4 10. Bxd4 Be6 11. Kb1 Rc8 12. h4 h5 13. Be2 a6 14. g4
@@ -2384,7 +2445,7 @@ Ne4 {1-0 (25) Karjakin,S (2780)-Van Wely,L (2679) Wijk aan Zee 2013} *
 [ECO "B77"]
 [Annotator "Dart, J."]
 [PlyCount "37"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nc3 Nc6 3. Nge2 g6 4. d4 cxd4 5. Nxd4 Bg7 6. Be3 Nf6 7. Bc4 O-O 8.
 Bb3 d6 9. f3 Bd7 (9... Na5 $1) 10. Qd2 Nxd4 11. Bxd4 b5 12. a4 {weight:75} (12.
@@ -2422,7 +2483,7 @@ Anand,V (2790)-Carlsen,M (2810) Wijk aan Zee 2010 ½-½} *
 [ECO "B78"]
 [Annotator "Dart, J."]
 [PlyCount "34"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 g6 6. Be3 Bg7 7. f3 O-O 8. Qd2
 Nc6 9. Bc4 Bd7 10. O-O-O Rc8 (10... Rb8 11. Bb3 (11. Kb1 Ne5 $3 (11... b5 12.
@@ -2472,8 +2533,31 @@ Kxg7 $11 *
 [Result "*"]
 [ECO "B80"]
 [Annotator "Dart, J."]
+[PlyCount "33"]
+[EventDate "2014.03.03"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e6 6. Be3 Nc6 7. f3 Be7 8. Qd2
+O-O 9. O-O-O a6 10. g4 Nxd4 11. Bxd4 b5 12. g5 Nd7 13. h4 b4 (13... Qc7 $6 14.
+a3 (14. Kb1 b4 15. Na4 Bb7 16. Qxb4 (16. b3 d5 17. g6 $1 (17. h5 $5) 17... fxg6
+(17... Ne5 18. Qh2 $3 $16) 18. h5 g5 19. h6 g6 20. Bh3 Qd6 {1/2-1/2 (70) Najer,
+E (2614)-Grigoriants,S (2562) Kazan 2005} 21. Bg7 $1 $14 {[%emt 0:00:04]
+Houdini}) 16... Bc6 17. Nc3 Rfb8 $2 (17... Rfc8) 18. Qc4 Ne5 19. Qe2 Qa5 $14 {
+1-0 (45) Anand,V (2766)-Akopian,V (2693) Wijk aan Zee 2004}) 14... Ne5 15. Qg2
+$11 {1-0 (44) Robson,R (2628)-Gerzhoy,L (2478) St Louis 2013}) 14. Ne2 a5 $3
+15. f4 Bb7 16. Ng3 Qc7 17. Kb1 $11 {1-0 (59) Anand,V (2786)-Andreikin,D (2713)
+Moscow 2013} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.05"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "B80"]
+[Annotator "Dart, J."]
 [PlyCount "60"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e6 6. Be3 a6 7. f3 b5 8. g4 (
 8. Qd2 Nbd7 9. g4 b4 10. Na4 h6 11. O-O-O Ne5 12. Qxb4 Bd7 13. Bf4 g5 14. Bd2
@@ -2510,29 +2594,6 @@ Kxd7 25. Bxe5 Bxa5 26. Bxb8 Rxb8 27. Kb2 Bd2 28. Be2 Kc6 29. Rd1 Bf4 30. Bd3 b4
 
 [Event "?"]
 [Site "?"]
-[Date "2014.01.05"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "B80"]
-[Annotator "Dart, J."]
-[PlyCount "33"]
-[EventDate "2014.??.??"]
-
-1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e6 6. Be3 Nc6 7. f3 Be7 8. Qd2
-O-O 9. O-O-O a6 10. g4 Nxd4 11. Bxd4 b5 12. g5 Nd7 13. h4 b4 (13... Qc7 $6 14.
-a3 (14. Kb1 b4 15. Na4 Bb7 16. Qxb4 (16. b3 d5 17. g6 $1 (17. h5 $5) 17... fxg6
-(17... Ne5 18. Qh2 $3 $16) 18. h5 g5 19. h6 g6 20. Bh3 Qd6 {1/2-1/2 (70) Najer,
-E (2614)-Grigoriants,S (2562) Kazan 2005} 21. Bg7 $1 $14 {[%emt 0:00:04]
-Houdini}) 16... Bc6 17. Nc3 Rfb8 $2 (17... Rfc8) 18. Qc4 Ne5 19. Qe2 Qa5 $14 {
-1-0 (45) Anand,V (2766)-Akopian,V (2693) Wijk aan Zee 2004}) 14... Ne5 15. Qg2
-$11 {1-0 (44) Robson,R (2628)-Gerzhoy,L (2478) St Louis 2013}) 14. Ne2 a5 $3
-15. f4 Bb7 16. Ng3 Qc7 17. Kb1 $11 {1-0 (59) Anand,V (2786)-Andreikin,D (2713)
-Moscow 2013} *
-
-[Event "?"]
-[Site "?"]
 [Date "2013.12.30"]
 [Round "?"]
 [White "?"]
@@ -2560,7 +2621,7 @@ Slovakia 2013} (14. Kb1 $5) *
 [ECO "B80"]
 [Annotator "Dart, J."]
 [PlyCount "28"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. f3 e6 7. Be3 b5 8. Qd2
@@ -2629,7 +2690,7 @@ Qc2 Nd7 22. Qf2 Nf6 23. Qc2 Nd7 1/2-1/2
 [ECO "B80"]
 [Annotator "Dart, J."]
 [PlyCount "33"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e6 7. Qd2 b5 8. f3
@@ -2656,8 +2717,36 @@ Kd4 34. Nf8 Ke5 35. Ng6+ Kd4 36. Nf8 {[%eval 0,25]}) 16. Bxf3 Nfd5 17. g6 $16
 [Result "*"]
 [ECO "B81"]
 [Annotator "Dart, J."]
+[PlyCount "52"]
+[EventDate "2014.03.03"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 (5... e6 {1/2-1/2 (48)
+Motylev,A (2655)-Shomoev,A (2565) Yekaterinburg 2013}) 6. h3 e6 7. g4 d5 (7...
+b5 8. g5 Nfd7 9. a3 Bb7 10. Be3 Nb6 (10... Be7 11. h4 (11. Qd2 Nb6 12. O-O-O
+N8d7 $11) 11... O-O $3) 11. Qg4 N8d7 12. O-O-O g6 $2 (12... Ne5) 13. h4 Rc8 14.
+h5 Ne5 15. Qh3 Rxc3 16. bxc3 Bxe4 17. hxg6 Bxg6 18. f4 $18 {1-0 (32) Shirov,A 
+(2708)-Al Sayed,M (2507) Caleta 2013}) (7... h6 8. Bg2 g5 9. b3 (9. Be3 Nbd7
+10. Qe2 Ne5 (10... Qc7 $2) 11. O-O-O Nfd7 12. f4 gxf4 13. Bxf4 b5 14. Qf2 Bb7
+15. Rhf1 {1/2-1/2 (22) Balogh,C (2662)-Bischoff,K (2547) Germany 2011}) 9...
+Nbd7 10. Bb2 Ne5 11. Qd2 b5 (11... Nfd7 {0-1 (28) Heimann,A (2435)-Sandipan,C 
+(2585) Zuerich 2009}) 12. O-O-O Bb7 {1/2-1/2 (29) Predojevic,B (2624)
+-Volokitin,A (2661) Vrnjacka Banja 2010}) 8. exd5 Nxd5 9. Nde2 Bb4 10. Bg2 O-O
+11. O-O Nxc3 12. Nxc3 Qc7 13. Qd4 Nc6 14. Bxc6 Bxc3 15. Qxc3 bxc6 16. Be3 e5
+17. Rae1 f6 18. f4 Be6 19. Bc5 Rf7 20. fxe5 fxe5 21. Rxf7 Bxf7 22. Rxe5 Rd8 23.
+b3 h5 24. Bf2 hxg4 25. hxg4 Rd1+ 26. Re1 Qf4 {1/2-1/2 (26) Kryvoruchko,Y (2659)
+-Korobov,A (2715) Kiev 2013} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.05"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "B81"]
+[Annotator "Dart, J."]
 [PlyCount "25"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e6 6. g4 $3 h6 (6... Nc6 7. g5
 Nd7 8. Be3 Be7 9. Rg1 Nb6 $2 (9... O-O) 10. Qd2 $1 O-O 11. O-O-O {1-0 (11)
@@ -2687,34 +2776,6 @@ Nxd5 exd5 12. Be3 Qxh4 $2 (12... Be7 13. Qe2 Nxd4 14. Bxd7+ Qxd7 15. Bxd4 O-O
 16. O-O-O Qe6 17. Qd2 Bxh4 18. f4 Rfe8 19. Rh1 Bg3 20. Rhg1 Bh4 21. Rh1 Bg3 22.
 Rhg1 Bh4 {1/2-1/2 (22) Harikrishna,P (2705)-Andreikin,D (2727) Havana 2013})
 13. Qe2 $14 *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.05"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "B81"]
-[Annotator "Dart, J."]
-[PlyCount "52"]
-[EventDate "2014.??.??"]
-
-1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 (5... e6 {1/2-1/2 (48)
-Motylev,A (2655)-Shomoev,A (2565) Yekaterinburg 2013}) 6. h3 e6 7. g4 d5 (7...
-b5 8. g5 Nfd7 9. a3 Bb7 10. Be3 Nb6 (10... Be7 11. h4 (11. Qd2 Nb6 12. O-O-O
-N8d7 $11) 11... O-O $3) 11. Qg4 N8d7 12. O-O-O g6 $2 (12... Ne5) 13. h4 Rc8 14.
-h5 Ne5 15. Qh3 Rxc3 16. bxc3 Bxe4 17. hxg6 Bxg6 18. f4 $18 {1-0 (32) Shirov,A 
-(2708)-Al Sayed,M (2507) Caleta 2013}) (7... h6 8. Bg2 g5 9. b3 (9. Be3 Nbd7
-10. Qe2 Ne5 (10... Qc7 $2) 11. O-O-O Nfd7 12. f4 gxf4 13. Bxf4 b5 14. Qf2 Bb7
-15. Rhf1 {1/2-1/2 (22) Balogh,C (2662)-Bischoff,K (2547) Germany 2011}) 9...
-Nbd7 10. Bb2 Ne5 11. Qd2 b5 (11... Nfd7 {0-1 (28) Heimann,A (2435)-Sandipan,C 
-(2585) Zuerich 2009}) 12. O-O-O Bb7 {1/2-1/2 (29) Predojevic,B (2624)
--Volokitin,A (2661) Vrnjacka Banja 2010}) 8. exd5 Nxd5 9. Nde2 Bb4 10. Bg2 O-O
-11. O-O Nxc3 12. Nxc3 Qc7 13. Qd4 Nc6 14. Bxc6 Bxc3 15. Qxc3 bxc6 16. Be3 e5
-17. Rae1 f6 18. f4 Be6 19. Bc5 Rf7 20. fxe5 fxe5 21. Rxf7 Bxf7 22. Rxe5 Rd8 23.
-b3 h5 24. Bf2 hxg4 25. hxg4 Rd1+ 26. Re1 Qf4 {1/2-1/2 (26) Kryvoruchko,Y (2659)
--Korobov,A (2715) Kiev 2013} *
 
 [Event "EU-chT (Men) 16th"]
 [Site "Heraklio"]
@@ -2747,6 +2808,22 @@ b4 Bg7 23. b5 Ne7 24. Nxe7 Kxe7 25. Bb4 Ng5 26. Rd5 Nf7 27. Rhd1 Rh8 28. R5d3
 Kd7 29. Ra3 Kc7 30. Ba5+ Kb8 31. Rc3 Rc8 32. Rcd3 Rh8 33. Bb4 Bf8 34. a4 Be7
 35. a5 Rg5 36. c4 b6 37. Ra3 Rc8 38. Rc3 Rh5 39. Kb2 bxa5 40. Bxa5 Ng5 41. Bb4
 Ne4 42. Rc2 Rxh3 43. Re1 1/2-1/2
+
+[Event "?"]
+[Site "?"]
+[Date "2014.02.28"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "B82"]
+[PlyCount "25"]
+[EventDate "2014.03.03"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 Nc6 6. Be3 $2 (6. Bb5 $2) 6...
+Ng4 (6... e5) (6... e6 $2) 7. Bg5 (7. Bb5 Nxe3 8. fxe3 Bd7 9. O-O e6 $15) 7...
+h6 8. Bc1 Qb6 9. Bb5 Bd7 10. O-O Qxd4 11. Bxc6 Qxd1 12. Bxd7+ Kxd7 13. Rxd1 $11
+{Houdini 4} *
 
 [Event "-"]
 [Site "-"]
@@ -2811,33 +2888,38 @@ O-O $11) 13... Qxf3 14. Nxf3 Nc6 $15 *
 Bd7 11. Nb3 Na5 12. e5 Ne8 13. Nxa5 Qxa5 14. Ne4 $2 (14. Qd2 Qc7 (14... Rc8))
 14... Qc7 15. a5 d5 $3 16. Bb6 Qc8 17. Ng5 g6 18. Nf3 Ng7 19. Kh1 Bc5 20. Bxc5
 Qxc5 21. Nd4 Bb5 22. c3 Bxe2 23. Qxe2 Qe7 24. Rf3 h5 25. Re3 Rac8 {1/2-1/2 (25)
-De Firmian,N (2560)-Izoria,Z (2647) Las Vegas 2006}) 11. Kh1 Re8 $3 (11... Bd7
-$2 12. Qe1 Nxd4 $2 (12... Nb4 13. Qg3 Kh8 14. Bd3 Nxd3 15. cxd3 Qa5 16. f5 Qb4
-17. Ra2 Rac8 18. a5 exf5 19. exf5 Rfe8 20. h3 Bd8 {1/2-1/2 (24) Karthikeyan,M 
-(2472)-Vaibhav,S (2547) New Delhi 2014} 21. Nc2 Qb3 22. Nd4 Qb4 23. Nc2 Qb3 24.
-Nd4 Qb4 {1/2-1/2 (24) Karthikeyan,M (2472)-Vaibhav,S (2547) New Delhi 2014}) (
-12... Rac8 13. Qg3 Kh8 14. Nxc6 Bxc6 15. Bd4 Qa5 16. Bd3 Rfd8 {1/2-1/2 (63)
-Kolarik,J (2590)-Nimtz,M (2625) ICCF email 2005}) 13. Bxd4 Bc6 14. Qg3 g6 $2 (
-14... b5 15. axb5 axb5 16. Nxb5 $1 $14 (16. Rxa8 $2)) 15. f5 $1 e5 16. Be3 Nxe4
-17. Nxe4 Bxe4 18. Bd3 Bxd3 19. cxd3 Bf6 20. Bh6 $3 Qd7 (20... Bg7 21. Bxg7 Kxg7
-22. f6+ $16) 21. fxg6 fxg6 22. Bxf8 Rxf8 $14 {1-0 (22) GnuCheese (2519)-Arasan
-16.4 (2494) freechess.org 2014}) 12. Bf3 Rb8 (12... Na5 13. g4 (13. Bf2 Nd7 (
-13... Bd7) 14. Qe1 b6 15. f5 $146 Ne5 $13) 13... Nd7 14. Bg2 Bf8 15. Qe1 b6 16.
-Rd1 Bb7 17. Qh4 Nc6 18. Nde2 Nb4 19. Rd2 d5 $1 (19... Qd8 $2 20. g5 f6 21. Nd4
-fxg5 22. fxg5 $16 {1-0 (38) Anand,V (2735)-Topalov,V (2750) Dortmund 1996}) 20.
-e5 Bc5 21. Nd4 Nc6 $15 {0-1 (75) Lagerborg,K (2402)-Romanov,S (2535) ICCF
-email 2000}) 13. g4 Nxd4 $6 (13... d5 $5 {weight:15}) 14. Bxd4 e5 15. fxe5 dxe5
-16. Ba7 Ra8 17. g5 Rd8 18. Qe2 Ne8 19. Be3 Be6 20. Nd5 (20. Bg4 Nd6 21. Bxe6
-fxe6 22. g6 hxg6 23. Qg4 Qc4 24. Qxg6 Rf8 25. Rg1 Rf7 26. Rg3 Raf8 27. Rag1 Ne8
-28. Rh3 Rf1 29. Qh7+ Kf7 30. Qg6+ Kg8 31. b3 Rxg1+ 32. Bxg1 Qc6 33. Qh7+ Kf7
-34. Qh5+ Kg8 35. Qh7+ Kf7 36. Qh5+ Kg8 37. Qh7+ {1/2-1/2 (37) Petrosian,T 
-(2649)-Rublevsky,S (2681) Rogaska Slatina 2011}) 20... Bxd5 21. exd5 Nd6 22. b3
-$1 (22. a5 Rac8 $2 (22... Re8 $14 {[%emt 0:00:04] Houdini}) 23. Bb6 Qxc2 24.
-Bxd8 Qxe2 25. Bxe7 Qxb2 26. Bxd6 Rc2 27. Ba3 $2 {0-1 (55) Ganguly, S (2626)
--Maletin,P (2571) Moscow 2013} (27. Rab1 $16)) 22... b5 $2 (22... g6 $1 {[%emt
-0:00:14] Hiarcs}) 23. Bc1 bxa4 24. Rxa4 Re8 25. c4 Bf8 26. Qc2 Qc5 27. Re1 g6
-28. Bg2 a5 29. Be3 Qc8 30. c5 Nf5 31. Rc4 Rb8 32. d6 Qd7 33. Bg1 Bg7 34. Qa2
-Qd8 35. Qa4 Rf8 36. d7 Nd4 37. c6 Qc7 38. Ra1 Ra8 39. Rc5 Ne6 40. Rxa5 Rxa5 41.
+De Firmian,N (2560)-Izoria,Z (2647) Las Vegas 2006}) 11. Kh1 $1 (11. Qd2 Na5
+12. Nb3 (12. Qd3 Bd7) 12... Nc4 13. Bxc4 Qxc4 14. e5 (14. Bd4 $5) 14... dxe5
+15. fxe5 Nd5 16. Nxd5 exd5 17. Nd4 Be6 {1/2-1/2 (91) Sjeng WC2008 x64
+6c-Stockfish 260214 x64 6c SCCT 2014}) 11... Re8 $3 (11... Bd7 $2 12. Qe1 Nxd4
+$2 (12... Nb4 13. Qg3 Kh8 14. Bd3 Nxd3 15. cxd3 Qa5 16. f5 Qb4 17. Ra2 Rac8 18.
+a5 exf5 19. exf5 Rfe8 20. h3 Bd8 {1/2-1/2 (24) Karthikeyan,M (2472)-Vaibhav,S 
+(2547) New Delhi 2014} 21. Nc2 Qb3 22. Nd4 Qb4 23. Nc2 Qb3 24. Nd4 Qb4 {1/2-1/
+2 (24) Karthikeyan,M (2472)-Vaibhav,S (2547) New Delhi 2014}) (12... Rac8 13.
+Qg3 Kh8 14. Nxc6 Bxc6 15. Bd4 Qa5 16. Bd3 Rfd8 {1/2-1/2 (63) Kolarik,J (2590)
+-Nimtz,M (2625) ICCF email 2005}) 13. Bxd4 Bc6 14. Qg3 g6 $2 (14... b5 15. axb5
+axb5 16. Nxb5 $1 $14 (16. Rxa8 $2)) 15. f5 $1 e5 16. Be3 Nxe4 17. Nxe4 Bxe4 18.
+Bd3 Bxd3 19. cxd3 Bf6 20. Bh6 $3 Qd7 (20... Bg7 21. Bxg7 Kxg7 22. f6+ $16) 21.
+fxg6 fxg6 22. Bxf8 Rxf8 $14 {1-0 (22) GnuCheese (2519)-Arasan 16.4 (2494)
+freechess.org 2014}) (11... Nxd4 12. Qxd4 $1 (12. Bxd4 e5 13. Be3 exf4) 12...
+Bd7 (12... e5 $2 13. Qd3) (12... Nd7 $2 13. Rad1) 13. e5 Ne8 14. Bd3 Bc6 $11 {
+1-0 (40) Andresen,T (2415)-Pitters,P (2295) corr 1997}) 12. Bf3 Rb8 (12... Na5
+13. g4 (13. Bf2 Nd7 (13... Bd7) 14. Qe1 b6 15. f5 $146 Ne5 $13) 13... Nd7 14.
+Bg2 Bf8 15. Qe1 b6 16. Rd1 Bb7 17. Qh4 Nc6 18. Nde2 Nb4 19. Rd2 d5 $1 (19...
+Qd8 $2 20. g5 f6 21. Nd4 fxg5 22. fxg5 $16 {1-0 (38) Anand,V (2735)-Topalov,V 
+(2750) Dortmund 1996}) 20. e5 Bc5 21. Nd4 Nc6 $15 {0-1 (75) Lagerborg,K (2402)
+-Romanov,S (2535) ICCF email 2000}) 13. g4 Nxd4 $6 (13... d5 $5 {weight:15})
+14. Bxd4 e5 15. fxe5 dxe5 16. Ba7 Ra8 17. g5 Rd8 18. Qe2 Ne8 19. Be3 Be6 20.
+Nd5 (20. Bg4 Nd6 21. Bxe6 fxe6 22. g6 hxg6 23. Qg4 Qc4 24. Qxg6 Rf8 25. Rg1 Rf7
+26. Rg3 Raf8 27. Rag1 Ne8 28. Rh3 Rf1 29. Qh7+ Kf7 30. Qg6+ Kg8 31. b3 Rxg1+
+32. Bxg1 Qc6 33. Qh7+ Kf7 34. Qh5+ Kg8 35. Qh7+ Kf7 36. Qh5+ Kg8 37. Qh7+ {1/
+2-1/2 (37) Petrosian,T (2649)-Rublevsky,S (2681) Rogaska Slatina 2011}) 20...
+Bxd5 21. exd5 Nd6 22. b3 $1 (22. a5 Rac8 $2 (22... Re8 $14 {4 Houdini}) 23. Bb6
+Qxc2 24. Bxd8 Qxe2 25. Bxe7 Qxb2 26. Bxd6 Rc2 27. Ba3 $2 {0-1 (55) Ganguly, S 
+(2626) -Maletin,P (2571) Moscow 2013} (27. Rab1 $16)) 22... b5 $2 (22... g6 $1
+{14 Hiarcs}) 23. Bc1 bxa4 24. Rxa4 Re8 25. c4 Bf8 26. Qc2 Qc5 27. Re1 g6 28.
+Bg2 a5 29. Be3 Qc8 30. c5 Nf5 31. Rc4 Rb8 32. d6 Qd7 33. Bg1 Bg7 34. Qa2 Qd8
+35. Qa4 Rf8 36. d7 Nd4 37. c6 Qc7 38. Ra1 Ra8 39. Rc5 Ne6 40. Rxa5 Rxa5 41.
 Qxa5 Qd6 1-0
 
 [Event "-"]
@@ -2878,7 +2960,7 @@ Bxe6 $2 (14. Bd5 $11) 14... Ne5 15. fxe5 fxe6 $15 {Arasan-Komodo, test game
 [ECO "B89"]
 [Annotator "Dart, J."]
 [PlyCount "29"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bc4 e6 7. Bb3 (7. O-O $1
@@ -2926,7 +3008,7 @@ Ubeda 1997}) {Houdini 4 x64:} 14. Nf5 b5 15. Nxe7+ Nxe7 $11 *
 [ECO "B90"]
 [Annotator "Dart, J."]
 [PlyCount "91"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be6 8. f3
@@ -2965,8 +3047,45 @@ Bd4 {1-0 (46) Busemann,D (2606)-Papenin,N (2729) ICCF 2012} 1/2-1/2
 [Result "*"]
 [ECO "B90"]
 [Annotator "Dart, J."]
+[PlyCount "39"]
+[EventDate "2014.03.03"]
+[TimeControl "240+1"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 (6... Ng4 $6 7.
+Bg5 h6 8. Bh4 g5 9. Bg3 Bg7 10. h3 $3) 7. Nb3 Be6 8. f3 Nbd7 (8... Be7 9. Qd2
+O-O 10. O-O-O Nbd7 11. g4 b5 12. g5 b4 13. Ne2 Ne8 14. f4 a5 15. f5 a4 16. fxe6
+(16. Nbd4 $1) 16... axb3 17. cxb3 fxe6 18. Bh3 (18. Kb1 $2) 18... Rxa2 19.
+Bxe6+ Kh8 20. Ng3 Nc7 21. Bc4 Qa8 22. Qe2 $2 (22. Rhf1 Rxf1 23. Rxf1 Ra1+ 24.
+Kc2 Rxf1 25. Bxf1 d5 26. Qf2 g6 27. h4 Kg7 28. h5 Qf8 29. Qh2 {1/2-1/2 (29)
+Noble,M (2502)-Gorokhovsky,B (2532) ICCF 2013}) 22... Rc8 $1 23. Nf5 Bf8 24.
+Qd3 (24. Qg4 d5 $16)) 9. g4 (9. Qd2 h5 10. Nd5 Nxd5 11. exd5 Bf5 12. Be2 Qh4+
+13. Bf2 (13. g3 Qf6) 13... Qf6 14. Bd3 Be7 15. O-O O-O 16. c4 $11 b6 17. Rae1
+Rfe8 {1/2-1/2 (43) Casabona,D (2598)-Manso Gil,Á (2453) ICCF 2011}) 9... b5 (
+9... Nb6 10. g5 Nh5 11. Qd2 Be7 12. O-O-O O-O 13. Rg1 Rc8 14. Kb1 Qc7 15. Qf2
+Bd8 16. Qd2 Be7 17. Qf2 Nc4 18. Bxc4 Qxc4 19. Nd5 Bxd5 20. Rxd5 f5 21. gxf6
+Nxf6 22. Rd3 Qe6 23. Qg2 Rf7 {1/2-1/2 (36) Perez Garcia,R (2420)-Kurnosov,I 
+(2535) Solsones 2004}) 10. g5 b4 11. Ne2 Nh5 $2 (11... Ng8 $11) 12. Qd2 Be7 $2
+(12... a5 13. Ng3 Nxg3 14. hxg3 a4 15. Nc1 Qa5 16. f4 g6 (16... exf4 $2) 17.
+Nd3 $1 Bg7 18. f5 gxf5 19. exf5 Bxf5 20. Nxb4 a3 21. b3 Nc5 22. O-O-O Rc8 $2 {
+1-0 (44) Karjakin,S (2732)-Efimenko,Z (2660) Dagomys 2008} (22... Ne4 $11)) 13.
+Ng3 Nf4 14. h4 h6 (14... O-O $2) 15. Bxf4 exf4 16. Nh5 Bxb3 17. axb3 g6 18.
+Nxf4 hxg5 19. Nd5 Ne5 (19... g4 20. Bb5 gxf3 21. Bxd7+ Qxd7 22. O-O-O Rxh4 23.
+Rxh4 Bxh4 24. Qf4 Qd8 25. Qxf3 Kf8 26. Kb1 Kg7 27. Rf1 Ra7 28. Rh1 Bg5 29. Qh3
+Qg8 30. Qg3 Be7 31. Qe3 {1-0 (31) Arizmendi Martinez,J (2510)-Ni,H (2545) Bled
+2002}) 20. Be2 $1 $16 {1/2-1/2 (65) Fedorov,A (2659)-Topalov,V (2690) Batumi
+1999} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.07"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "B90"]
+[Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. f3 e5 7. Nb3 Be6 8. Be3
@@ -3006,43 +3125,6 @@ Qf4 30. Rf1 Be5 31. Rf2 Kg7 32. Qc7 Qe3 33. Qc2 Qf4 34. Qc7 Qe3 {1/2-1/2 (34)
 Castro Salguero,R (2402)-Pálsson,J (2452) ICCF 2012}) 14. h4 Qc7 15. Kb1 Rfc8
 $146 (15... e4 16. c4 Ne5 17. Rc1 Qd7 18. Ka1 Rfe8 19. Bg5 b5 20. c5 dxc5 21.
 Nxc5 Qxd5 22. Qxd5 Nxd5 23. Nxe4 {1/2-1/2 (81)}) 16. Rc1 a5 $11 *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.07"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "B90"]
-[Annotator "Dart, J."]
-[PlyCount "39"]
-[EventDate "2014.??.??"]
-[TimeControl "240+1"]
-
-1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 (6... Ng4 $6 7.
-Bg5 h6 8. Bh4 g5 9. Bg3 Bg7 10. h3 $3) 7. Nb3 Be6 8. f3 Nbd7 (8... Be7 9. Qd2
-O-O 10. O-O-O Nbd7 11. g4 b5 12. g5 b4 13. Ne2 Ne8 14. f4 a5 15. f5 a4 16. fxe6
-(16. Nbd4 $1) 16... axb3 17. cxb3 fxe6 18. Bh3 (18. Kb1 $2) 18... Rxa2 19.
-Bxe6+ Kh8 20. Ng3 Nc7 21. Bc4 Qa8 22. Qe2 $2 (22. Rhf1 Rxf1 23. Rxf1 Ra1+ 24.
-Kc2 Rxf1 25. Bxf1 d5 26. Qf2 g6 27. h4 Kg7 28. h5 Qf8 29. Qh2 {1/2-1/2 (29)
-Noble,M (2502)-Gorokhovsky,B (2532) ICCF 2013}) 22... Rc8 $1 23. Nf5 Bf8 24.
-Qd3 (24. Qg4 d5 $16)) 9. g4 (9. Qd2 h5 10. Nd5 Nxd5 11. exd5 Bf5 12. Be2 Qh4+
-13. Bf2 (13. g3 Qf6) 13... Qf6 14. Bd3 Be7 15. O-O O-O 16. c4 $11 b6 17. Rae1
-Rfe8 {1/2-1/2 (43) Casabona,D (2598)-Manso Gil,Á (2453) ICCF 2011}) 9... b5 (
-9... Nb6 10. g5 Nh5 11. Qd2 Be7 12. O-O-O O-O 13. Rg1 Rc8 14. Kb1 Qc7 15. Qf2
-Bd8 16. Qd2 Be7 17. Qf2 Nc4 18. Bxc4 Qxc4 19. Nd5 Bxd5 20. Rxd5 f5 21. gxf6
-Nxf6 22. Rd3 Qe6 23. Qg2 Rf7 {1/2-1/2 (36) Perez Garcia,R (2420)-Kurnosov,I 
-(2535) Solsones 2004}) 10. g5 b4 11. Ne2 Nh5 $2 (11... Ng8 $11) 12. Qd2 Be7 $2
-(12... a5 13. Ng3 Nxg3 14. hxg3 a4 15. Nc1 Qa5 16. f4 g6 (16... exf4 $2) 17.
-Nd3 $1 Bg7 18. f5 gxf5 19. exf5 Bxf5 20. Nxb4 a3 21. b3 Nc5 22. O-O-O Rc8 $2 {
-1-0 (44) Karjakin,S (2732)-Efimenko,Z (2660) Dagomys 2008} (22... Ne4 $11)) 13.
-Ng3 Nf4 14. h4 h6 (14... O-O $2) 15. Bxf4 exf4 16. Nh5 Bxb3 17. axb3 g6 18.
-Nxf4 hxg5 19. Nd5 Ne5 (19... g4 20. Bb5 gxf3 21. Bxd7+ Qxd7 22. O-O-O Rxh4 23.
-Rxh4 Bxh4 24. Qf4 Qd8 25. Qxf3 Kf8 26. Kb1 Kg7 27. Rf1 Ra7 28. Rh1 Bg5 29. Qh3
-Qg8 30. Qg3 Be7 31. Qe3 {1-0 (31) Arizmendi Martinez,J (2510)-Ni,H (2545) Bled
-2002}) 20. Be2 $1 $16 {1/2-1/2 (65) Fedorov,A (2659)-Topalov,V (2690) Batumi
-1999} *
 
 [Event "?"]
 [Site "?"]
@@ -3115,7 +3197,7 @@ Ra6 {1/2-1/2 (38) Montella,S (2374)-Fabri,L (2335) ICCF 2012} 1-0
 [ECO "B90"]
 [Annotator "Dart, J."]
 [PlyCount "29"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be6 8. h3
@@ -3132,7 +3214,7 @@ O-O-O Qc7 13. g4 Rfe8 14. g5 Nd7 15. h4 $14 1/2-1/2
 [ECO "B92"]
 [Annotator "Dart, J."]
 [PlyCount "31"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be6 8. Be2
@@ -3209,7 +3291,7 @@ Nf3 $2 (9. Qd2) 9... Qc7 $11 *
 [ECO "B97"]
 [Annotator "Dart, J."]
 [PlyCount "54"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Qb6 8. Qd3
 (8. Nb3 $2 Nbd7 9. Qf3 Qc7 10. a4 b6 $2 (10... Be7) 11. Bd3 {1-0 (42) Hutnik 
@@ -3321,7 +3403,7 @@ Rxg4 21. hxg4 b5 {0-1 (21) Arasan 16.4-Komodo-tcecr-64bit - 2014}) 20... Qxf6
 [ECO "B99"]
 [Annotator "Dart, J."]
 [PlyCount "36"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 8. Qf3
 Qc7 9. O-O-O Nbd7 10. g4 b5 11. Bxf6 Nxf6 12. g5 Nd7 13. f5 Nc5 14. f6 (14. h4
@@ -3346,7 +3428,7 @@ Pannullo,U (2405)-De Filippis,F (2438) ICCF 2012} *
 [ECO "B99"]
 [Annotator "Dart, J."]
 [PlyCount "49"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 8. Qf3
 Qc7 9. O-O-O Nbd7 10. g4 b5 11. Bxf6 Nxf6 $1 (11... Bxf6 12. Bxb5 $3 Rb8 13.
@@ -3411,7 +3493,7 @@ Bf3 e5 14. fxe5 dxe5 15. Nf5 Bxf5 16. exf5 Rad8 17. Kb1 Rxd1+ 18. Rxd1 $11 {1/
 [ECO "C00"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 c5 2. Nf3 e6 3. d3 Nc6 4. g3 Nf6 5. Bg2 d5 (5... Be7 $1) 6. Qe2 $3 Be7 7.
@@ -3467,8 +3549,34 @@ Bxc5 8. Nc3 {1/2-1/2 (25) Mestrovic,Z (2315)-Martinovic,S (2350) Bibinje 2006})
 [Result "*"]
 [ECO "C02"]
 [Annotator "Dart, J."]
+[PlyCount "22"]
+[EventDate "2014.03.03"]
+
+1. e4 e6 2. d4 d5 3. e5 c5 4. c3 Qb6 5. Nf3 Bd7 (5... Nc6 6. Be2 (6. a3 $1)
+6... cxd4 7. cxd4 Nh6 8. Bd3 Bd7 9. Bc2 Nb4 $2 (9... Nf5 10. Bxf5 exf5 11. O-O
+{1/2-1/2 (74) Kabanov,N (2522)-Mokshanov,A (2385) Moscow 2012}) 10. Bxh6 gxh6
+11. O-O $14 {½-½ (44) Socko,M (2434)-Berg,E (2623) Warsaw 2008}) 6. Bd3 (6.
+Nbd2 $6 cxd4 7. Nxd4 Nc6 8. N2f3 Nxd4 9. Nxd4 Bc5 10. Qg4 Ne7 11. Bd3 {½-½ 
+(60) Bareev,E (2726) -Eingorn,V (2604) Kallithea 2002}) (6. Be2 cxd4 7. cxd4
+Bb5 8. O-O Bxe2 9. Qxe2 Nc6 10. Nc3 Nge7 11. Be3 (11. Qd3 $5) 11... Nf5 $11 {
+1-0 (59) Movsesian,S (2651)-Huzman,A (2595) Panormo 2002}) 6... Bb5 7. dxc5 $3
+(7. Bxb5+ $2 Qxb5 8. a4 Qb6 $2 (8... Qd7 9. O-O Nc6) 9. a5 Qc7 $14 {1-0
+Rookie-Arasan, FICS 2013}) 7... Bxc5 8. b4 Bxd3 9. Qxd3 Bf8 10. O-O Ne7 (10...
+Nd7 $2 11. Na3 a6 $2 (11... Ne7) 12. c4 Ne7 13. Bd2 g6 14. Rfe1 h6 15. Rac1 Bg7
+16. cxd5 exd5 17. Be3 Qxb4 18. Bd2 Qg4 19. Rc7 O-O 20. e6 {1-0 (20) Shabalov,A
+(2605)-Privman,B (2275) Washington DC USA 2004}) 11. Na3 a6 $11 *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.01"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C02"]
+[Annotator "Dart, J."]
 [PlyCount "16"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e6 2. d4 d5 3. e5 c5 4. c3 Nc6 {weight:60} 5. Nf3 Bd7 6. Be2 (6. Bd3 $2
 cxd4 7. cxd4 Qb6 {trans. to Milner-Barry Gambit}) 6... Nge7 (6... f6 {weight:30
@@ -3490,7 +3598,7 @@ D (2439)-Oprisor,R (2422) ICCF 2012}) 8... Be7 (8... f6 9. exf6 $1 Qxf6) *
 [ECO "C02"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e6 2. d4 d5 3. e5 c5 4. c3 Nc6 5. Nf3 Bd7 6. Bd3 cxd4 (6... Rc8 $3 7.
 dxc5 Bxc5 8. O-O Nge7 9. Bf4 h6 10. h4 O-O 11. h5 $2 (11. Nbd2) 11... f6 $1 {
@@ -3518,34 +3626,8 @@ $15 {Watson}) 10... Bxd4 11. Nf3 Ne7 {1/2-1/2 (22) Smerdon,D (2526)-Akopian,V
 [Result "*"]
 [ECO "C02"]
 [Annotator "Dart, J."]
-[PlyCount "22"]
-[EventDate "2014.??.??"]
-
-1. e4 e6 2. d4 d5 3. e5 c5 4. c3 Qb6 5. Nf3 Bd7 (5... Nc6 6. Be2 (6. a3 $1)
-6... cxd4 7. cxd4 Nh6 8. Bd3 Bd7 9. Bc2 Nb4 $2 (9... Nf5 10. Bxf5 exf5 11. O-O
-{1/2-1/2 (74) Kabanov,N (2522)-Mokshanov,A (2385) Moscow 2012}) 10. Bxh6 gxh6
-11. O-O $14 {½-½ (44) Socko,M (2434)-Berg,E (2623) Warsaw 2008}) 6. Bd3 (6.
-Nbd2 $6 cxd4 7. Nxd4 Nc6 8. N2f3 Nxd4 9. Nxd4 Bc5 10. Qg4 Ne7 11. Bd3 {½-½ 
-(60) Bareev,E (2726) -Eingorn,V (2604) Kallithea 2002}) (6. Be2 cxd4 7. cxd4
-Bb5 8. O-O Bxe2 9. Qxe2 Nc6 10. Nc3 Nge7 11. Be3 (11. Qd3 $5) 11... Nf5 $11 {
-1-0 (59) Movsesian,S (2651)-Huzman,A (2595) Panormo 2002}) 6... Bb5 7. dxc5 $3
-(7. Bxb5+ $2 Qxb5 8. a4 Qb6 $2 (8... Qd7 9. O-O Nc6) 9. a5 Qc7 $14 {1-0
-Rookie-Arasan, FICS 2013}) 7... Bxc5 8. b4 Bxd3 9. Qxd3 Bf8 10. O-O Ne7 (10...
-Nd7 $2 11. Na3 a6 $2 (11... Ne7) 12. c4 Ne7 13. Bd2 g6 14. Rfe1 h6 15. Rac1 Bg7
-16. cxd5 exd5 17. Be3 Qxb4 18. Bd2 Qg4 19. Rc7 O-O 20. e6 {1-0 (20) Shabalov,A
-(2605)-Privman,B (2275) Washington DC USA 2004}) 11. Na3 a6 $11 *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.01"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "C02"]
-[Annotator "Dart, J."]
 [PlyCount "16"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e6 2. d4 d5 3. e5 c5 4. c3 Nc6 {weight:60} 5. Nf3 Bd7 (5... Qb6 6. a3 (6.
 Be2 {weight:20} cxd4 (6... Nh6 $2 7. Bxh6 gxh6 8. Qd2 Bd7 9. O-O Bg7 (9...
@@ -3646,7 +3728,7 @@ Rd8 $2 (22... Rc8 $14) 1-0
 [ECO "C07"]
 [Annotator "Dart, J."]
 [PlyCount "33"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e6 2. d4 d5 3. Nd2 c5 4. exd5 Qxd5 5. Ngf3 cxd4 6. Bc4 Qd6 7. O-O Nf6 8.
@@ -3696,7 +3778,7 @@ $14 1-0
 [ECO "C10"]
 [Annotator "Dart, J."]
 [PlyCount "21"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e6 2. d4 d5 3. Nd2 dxe4 4. Nxe4 Bd7 $2 (4... Nd7 5. Nf3 (5. Bd3 Ngf6 6.
 Qe2 c5 7. Nxf6+ Nxf6 8. dxc5 Bxc5 9. Bd2 O-O 10. O-O-O e5 11. Qxe5 (11. Nf3 e4
@@ -3706,23 +3788,27 @@ Qe2 c5 7. Nxf6+ Nxf6 8. dxc5 Bxc5 9. Bd2 O-O 10. O-O-O e5 11. Qxe5 (11. Nf3 e4
 (2770) Moscow 2001}) 11... Bd4 $3 12. Qa5 Qxa5 13. Bxa5 Bxf2 14. Nf3 Be6 15.
 Rhf1 Be3+ 16. Bd2 Bxd2+ 17. Rxd2 Bd5 18. Ne5 Rfe8 19. Re2 Re6 20. c4 Rae8 21.
 Rf5 {½-½ (21) Petrovic,D (2591)-Neven,K (2361) LSS email 2008}) 5... Ngf6 6.
-Bd3 c5 7. O-O Nxe4 8. Bxe4 Nf6 9. Bg5 cxd4 10. Nxd4 Be7 11. Bf3 O-O 12. Qd3 Qc7
-13. Rfe1 Rd8 14. Rad1 a6 15. Qe3 h6 (15... Bd7 $2) 16. Bf4 Bd6 17. Nb3 Bxf4 18.
-Rxd8+ Qxd8 19. Qxf4 Qb6 20. Qe3 Qc7 21. Qc5 Qxc5 22. Nxc5 Rb8 23. Re3 Kf8 24.
-Rb3 b5 25. Ra3 Rb6 26. Rc3 {1/2-1/2 (44) Kurnosov,I (2676)-Meier,G (2656)
-Austria 2011}) 5. Nf3 Bc6 6. Bd3 (6. Neg5 Nd7 $2 (6... Be7 7. Bd3 $1 Nd7 8. Qe2
-) (6... Bd6 7. Bd3 h6 8. Ne4 Nf6 9. Nxd6+ Qxd6 10. O-O Nbd7 $11 {0-1 (28) Negi,
-P (2636)-Lafuente,P (2587) Delhi 2010}) 7. Nxf7 Kxf7 8. Ng5+ Ke8 9. Bc4 (9. Bd3
-$5) 9... Bxg2 10. Rg1 Bd5 11. Nxe6 Bxe6 12. Bxe6 Qh4 13. Qf3 Ngf6 14. Bf4 g6
-15. Kf1 (15. Qxb7 $2 Qxf4 16. Qxa8+ Ke7 17. Qc6 Qxd4 18. Bxd7 Qxd7 19. Qxd7+
-Kxd7 20. Rg5 Bd6 21. h3 Rf8 22. Ra5 Bb4+ {0-1 (22) Sorensen,J (2399)-Hillarp
-Persson,T (2549) Denmark 2000}) 15... Bd6 16. Bxd6 cxd6 17. Rg4 Qh5 18. Qxb7
-$14 {[%eval 33,0] Houdini 4 x64}) 6... Nd7 7. O-O Ngf6 (7... Bxe4 8. Bxe4 c6 9.
-c4 $1 Ngf6 10. Bc2 Be7 11. b3 $1 {1-0 (53) Berg,E (2516)-Akesson,R (2451)
-Sweden 2002}) 8. Ng3 $1 (8. Neg5 {weight:10} Bd6 9. Re1 h6 10. Nh3 Bxf3 11.
-Qxf3 c6 12. Nf4 Qa5 13. c3 O-O $11 (13... O-O-O $2 {Rotstein-Lalic, Olot 1993})
-) (8. Qe2 Bxe4 (8... Be7 $2 9. Ng3 $3) 9. Bxe4 Nxe4 10. Qxe4 c6) 8... Be7 9.
-Re1 O-O 10. c3 Re8 11. Bc2 (11. Bf4) *
+Bd3 (6. Nxf6+ Nxf6 7. Bd3 c5 8. Be3 $1 Qc7 (8... Nd5 $2 9. Ne5 Bd6 10. Qh5 $3 {
+1-0 (41) Kamsky,G (2720)-Akobian,V (2612) Saint Louis 2009}) 9. Qe2 Be7 10. O-O
+O-O 11. dxc5 Bxc5 12. Bxc5 Qxc5 13. Qe5 b6 14. Qxc5 bxc5 15. Ne5 Rb8 $11 {1-0 
+(15) paj (3221)-Arasan 17.0 (2700) chessclub.com 2014}) 6... c5 7. O-O Nxe4 8.
+Bxe4 Nf6 9. Bg5 cxd4 10. Nxd4 Be7 11. Bf3 O-O 12. Qd3 Qc7 13. Rfe1 Rd8 14. Rad1
+a6 15. Qe3 h6 (15... Bd7 $2) 16. Bf4 Bd6 17. Nb3 Bxf4 18. Rxd8+ Qxd8 19. Qxf4
+Qb6 20. Qe3 Qc7 21. Qc5 Qxc5 22. Nxc5 Rb8 23. Re3 Kf8 24. Rb3 b5 25. Ra3 Rb6
+26. Rc3 {1/2-1/2 (44) Kurnosov,I (2676)-Meier,G (2656) Austria 2011}) 5. Nf3
+Bc6 6. Bd3 (6. Neg5 Nd7 $2 (6... Be7 7. Bd3 $1 Nd7 8. Qe2) (6... Bd6 7. Bd3 h6
+8. Ne4 Nf6 9. Nxd6+ Qxd6 10. O-O Nbd7 $11 {0-1 (28) Negi,P (2636)-Lafuente,P 
+(2587) Delhi 2010}) 7. Nxf7 Kxf7 8. Ng5+ Ke8 9. Bc4 (9. Bd3 $5) 9... Bxg2 10.
+Rg1 Bd5 11. Nxe6 Bxe6 12. Bxe6 Qh4 13. Qf3 Ngf6 14. Bf4 g6 15. Kf1 (15. Qxb7 $2
+Qxf4 16. Qxa8+ Ke7 17. Qc6 Qxd4 18. Bxd7 Qxd7 19. Qxd7+ Kxd7 20. Rg5 Bd6 21. h3
+Rf8 22. Ra5 Bb4+ {0-1 (22) Sorensen,J (2399)-Hillarp Persson,T (2549) Denmark
+2000}) 15... Bd6 16. Bxd6 cxd6 17. Rg4 Qh5 18. Qxb7 $14 {[%eval 33,0] Houdini
+4 x64}) 6... Nd7 7. O-O Ngf6 (7... Bxe4 8. Bxe4 c6 9. c4 $1 Ngf6 10. Bc2 Be7
+11. b3 $1 {1-0 (53) Berg,E (2516)-Akesson,R (2451) Sweden 2002}) 8. Ng3 $1 (8.
+Neg5 {weight:10} Bd6 9. Re1 h6 10. Nh3 Bxf3 11. Qxf3 c6 12. Nf4 Qa5 13. c3 O-O
+$11 (13... O-O-O $2 {Rotstein-Lalic, Olot 1993})) (8. Qe2 Bxe4 (8... Be7 $2 9.
+Ng3 $3) 9. Bxe4 Nxe4 10. Qxe4 c6) 8... Be7 9. Re1 O-O 10. c3 Re8 11. Bc2 (11.
+Bf4) *
 
 [Event "?"]
 [Site "?"]
@@ -3734,7 +3820,7 @@ Re1 O-O 10. c3 Re8 11. Bc2 (11. Bf4) *
 [ECO "C10"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Nf6 {weight:5} 5. Nxf6+ Qxf6 6. Nf3 h6 7.
@@ -3851,7 +3937,7 @@ Nxe7 {1/2-1/2 (45) Grabarczyk,B (2439)-Skrzypnik,M (2275) Polanica Zdroj 2001})
 [ECO "C13"]
 [Annotator "Dart, J."]
 [PlyCount "55"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e6 2. d4 d5 3. Nc3 Nf6 4. Bg5 dxe4 5. Nxe4 Nbd7 6. Nxf6+ Nxf6 7. Nf3 h6
@@ -3923,71 +4009,8 @@ cxd4 $2 (8... c4 $1) 9. Ne2 dxc3 10. Qxg7 Rg8 11. Qxh7 Nbc6 12. Bf4 (12. f4 $2)
 [Result "*"]
 [ECO "C18"]
 [Annotator "Dart, J."]
-[PlyCount "49"]
-[EventDate "2014.??.??"]
-
-1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ (5... Ba5 $2) 6. bxc3 Ne7 7.
-Qg4 O-O 8. Bd3 Nbc6 9. Qh5 (9. Nf3 f5 10. exf6 (10. Qg3 {weight:30} Qa5) 10...
-Rxf6 11. Bg5 e5 12. Qh4 e4 13. Bxf6 gxf6 14. Qxf6 exd3 15. cxd3 cxd4 16. Nxd4
-Nxd4 17. Qxd4 Nc6 18. Qe3 d4 19. cxd4 Bf5 $11 {Hiarcs 14}) 9... Ng6 10. Nf3 Qc7
-(10... Nce7 11. h4 (11. dxc5 b6 12. c6 Qc7 13. O-O Qxc6 $11 {1-0 (26)
-Rodriguez Guerrero,E (2500)-Vilar Lopez,M (2145) Andorra 2003}) 11... Qc7 $2 (
-11... Qa5 12. Bd2 c4 13. Be2 Nc6 14. Qg4 Nge7 15. h5 h6 $11 {Houdini 4}) 12.
-O-O (12. Bd2 {1-0 (17) L'Ami,E (2541)-Lopez Martinez,J (2505) Stepanakert 2005}
-) 12... c4 13. Be2 f6 14. Qg4 fxe5 15. h5 Nf4 16. Nxe5 Nxe2+ 17. Qxe2 Nc6 18.
-Nxc6 bxc6 19. h6 $14 {1-0 (19) MindSucker (2803)-Arasan 16.4 (2739) chessclub.
-com 2014}) 11. Be3 c4 12. Bxg6 fxg6 13. Qg4 Bd7 (13... Qf7 $1) 14. h4 Rf5 15.
-h5 gxh5 16. Rxh5 Rxh5 (16... Raf8 17. Rh3 $1 (17. Kd2 Be8 18. Rxf5 exf5 19. Qg3
-Nd8 20. Ng5 Bg6 21. Rh1 Qc6 22. Qh4 f4 23. Nxh7 Qa4 24. Nxf8 Qxc2+ 25. Ke1 Qb1+
-26. Ke2 Qd3+ 27. Kf3 Qe4+ 28. Ke2 Qd3+ {1/2-1/2 (28) Carlsen,M (2567)
--Ostenstad,B (2482) Oslo 2004})) 17. Qxh5 Rf8 $2 (17... Be8) 18. Kd2 $1 Be8 19.
-Qh3 Nd8 20. Ng5 h6 21. Nxe6 Nxe6 22. Qxe6+ Bf7 23. Qh3 Bg6 24. a4 Qc6 25. g4
-$16 {1-0 (25) Komodo-tcecr-64bit-Arasan 16.3 - 2014} *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.03"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "C18"]
-[Annotator "Dart, J."]
-[PlyCount "78"]
-[EventDate "2014.??.??"]
-
-1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ (5... Ba5 $2) 6. bxc3 Ne7 7.
-Qg4 O-O 8. Bd3 f5 9. exf6 Rxf6 10. Bg5 Rf7 11. Qh5 g6 12. Qd1 Nbc6 13. Nf3 Qf8
-(13... Qa5 14. Qd2 Nf5 15. Ne5 Nxe5 16. dxe5 Bd7 (16... Ng7) 17. h4 c4 (17...
-Ng7 $5) 18. Bxf5 Rxf5 19. f4 h5 20. Ke2 {1/2-1/2 (41) Robson,R (2613)
--Naiditsch,A (2727) Antalya 2013}) 14. O-O c4 15. Be2 h6 16. Bc1 Bd7 (16... Nf5
-) 17. a4 (17. Ne1 Nf5 18. g3 Nd6 19. Ng2 b5 20. f4 a5 21. Bf3 Qg7 22. Be3 Ne7
-23. g4 Raf8 24. Qe1 g5 25. Qg3 Ne4 26. Bxe4 dxe4 27. d5 gxf4 28. Nxf4 Nxd5 29.
-Nxd5 exd5 30. g5 hxg5 31. Rxf7 {1/2-1/2 (31) Naiditsch,A (2698)-Apicella,M 
-(2548) Belfort 2012}) (17. Qd2 $2 {Komodo TCECr 64-bit 2 threads:} Kh7 18. h4 (
-18. a4 g5 19. Rb1 b6 20. a5 bxa5 21. Ba3 Qg7 22. h3 Ng6 $11) 18... Nf5 $11 {
-1-0 (18) Komodo-tcecr-64bit-Arasan 16.4 - 2014 (analysis)}) 17... Rd8 18. Qd2
-Kh7 19. Ba3 g5 $1 (19... Bc8 $2 20. Rfe1 $1 (20. Ne5 Nxe5 21. dxe5 Qe8 22. f4
-Qc6 23. Bxe7 Rxe7 24. Qd4 Rc7 25. Rfb1 Qc5 26. a5 Kg7 27. g3 Rf8 28. Bg4 Rff7
-29. Qxc5 Rxc5 30. Kf2 Rc6 31. Ke3 Kf8 32. Kd4 Ke7 33. h4 h5 34. Be2 Rf8 35. Rb5
-{1/2-1/2 (35) Quesada Perez,Y (2567)-Malakhatko,V (2621) Paris 2008}) 20... Qg7
-{1-0 (58) Saric,I (2576)-Deslandes,P (2307) Pula 2009} 21. Bd1 $14 {1-0 (21)})
-20. Rab1 b6 21. h3 Qg7 22. Nh2 Ng6 23. Bh5 Rf5 24. Rfe1 Nf4 25. Bg4 Rf6 26. Bd6
-Bc8 27. Bxf4 gxf4 28. Nf3 Rg8 29. Ne5 Nxe5 30. Rxe5 Qd7 31. Ra1 a5 32. Qe2 Rg7
-33. Qf3 Qd6 34. Kh2 Bd7 35. Rae1 Rgg6 36. h4 Rg8 37. Ra1 Qc6 38. Rb1 Kg7 39.
-Bh3 Re8 {1/2-1/2 (39) Andriuschenko,N (2450)-Schuster,P (2473) ICCF 2012} *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.03"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "C18"]
-[Annotator "Dart, J."]
 [PlyCount "30"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ (5... Ba5 $2) 6. bxc3 Ne7 $1
 7. Qg4 Qc7 8. Qxg7 Rg8 9. Qxh7 cxd4 10. Ne2 Nbc6 11. f4 Bd7 {weight:20} 12. Qd3
@@ -4031,8 +4054,71 @@ Rc2 44. Ke3 Rc3+ 45. Kd4 {Volokitin,A (2671)-Hou,Y (2571) Wijk aan Zee 2009 1-0
 [Result "*"]
 [ECO "C18"]
 [Annotator "Dart, J."]
+[PlyCount "49"]
+[EventDate "2014.03.03"]
+
+1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ (5... Ba5 $2) 6. bxc3 Ne7 7.
+Qg4 O-O 8. Bd3 Nbc6 9. Qh5 (9. Nf3 f5 10. exf6 (10. Qg3 {weight:30} Qa5) 10...
+Rxf6 11. Bg5 e5 12. Qh4 e4 13. Bxf6 gxf6 14. Qxf6 exd3 15. cxd3 cxd4 16. Nxd4
+Nxd4 17. Qxd4 Nc6 18. Qe3 d4 19. cxd4 Bf5 $11 {Hiarcs 14}) 9... Ng6 10. Nf3 Qc7
+(10... Nce7 11. h4 (11. dxc5 b6 12. c6 Qc7 13. O-O Qxc6 $11 {1-0 (26)
+Rodriguez Guerrero,E (2500)-Vilar Lopez,M (2145) Andorra 2003}) 11... Qc7 $2 (
+11... Qa5 12. Bd2 c4 13. Be2 Nc6 14. Qg4 Nge7 15. h5 h6 $11 {Houdini 4}) 12.
+O-O (12. Bd2 {1-0 (17) L'Ami,E (2541)-Lopez Martinez,J (2505) Stepanakert 2005}
+) 12... c4 13. Be2 f6 14. Qg4 fxe5 15. h5 Nf4 16. Nxe5 Nxe2+ 17. Qxe2 Nc6 18.
+Nxc6 bxc6 19. h6 $14 {1-0 (19) MindSucker (2803)-Arasan 16.4 (2739) chessclub.
+com 2014}) 11. Be3 c4 12. Bxg6 fxg6 13. Qg4 Bd7 (13... Qf7 $1) 14. h4 Rf5 15.
+h5 gxh5 16. Rxh5 Rxh5 (16... Raf8 17. Rh3 $1 (17. Kd2 Be8 18. Rxf5 exf5 19. Qg3
+Nd8 20. Ng5 Bg6 21. Rh1 Qc6 22. Qh4 f4 23. Nxh7 Qa4 24. Nxf8 Qxc2+ 25. Ke1 Qb1+
+26. Ke2 Qd3+ 27. Kf3 Qe4+ 28. Ke2 Qd3+ {1/2-1/2 (28) Carlsen,M (2567)
+-Ostenstad,B (2482) Oslo 2004})) 17. Qxh5 Rf8 $2 (17... Be8) 18. Kd2 $1 Be8 19.
+Qh3 Nd8 20. Ng5 h6 21. Nxe6 Nxe6 22. Qxe6+ Bf7 23. Qh3 Bg6 24. a4 Qc6 25. g4
+$16 {1-0 (25) Komodo-tcecr-64bit-Arasan 16.3 - 2014} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.03"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C18"]
+[Annotator "Dart, J."]
+[PlyCount "78"]
+[EventDate "2014.03.03"]
+
+1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ (5... Ba5 $2) 6. bxc3 Ne7 7.
+Qg4 O-O 8. Bd3 f5 9. exf6 Rxf6 10. Bg5 Rf7 11. Qh5 g6 12. Qd1 Nbc6 13. Nf3 Qf8
+(13... Qa5 14. Qd2 Nf5 15. Ne5 Nxe5 16. dxe5 Bd7 (16... Ng7) 17. h4 c4 (17...
+Ng7 $5) 18. Bxf5 Rxf5 19. f4 h5 20. Ke2 {1/2-1/2 (41) Robson,R (2613)
+-Naiditsch,A (2727) Antalya 2013}) 14. O-O c4 15. Be2 h6 16. Bc1 Bd7 (16... Nf5
+) 17. a4 (17. Ne1 Nf5 18. g3 Nd6 19. Ng2 b5 20. f4 a5 21. Bf3 Qg7 22. Be3 Ne7
+23. g4 Raf8 24. Qe1 g5 25. Qg3 Ne4 26. Bxe4 dxe4 27. d5 gxf4 28. Nxf4 Nxd5 29.
+Nxd5 exd5 30. g5 hxg5 31. Rxf7 {1/2-1/2 (31) Naiditsch,A (2698)-Apicella,M 
+(2548) Belfort 2012}) (17. Qd2 $2 {Komodo TCECr 64-bit 2 threads:} Kh7 18. h4 (
+18. a4 g5 19. Rb1 b6 20. a5 bxa5 21. Ba3 Qg7 22. h3 Ng6 $11) 18... Nf5 $11 {
+1-0 (18) Komodo-tcecr-64bit-Arasan 16.4 - 2014 (analysis)}) 17... Rd8 18. Qd2
+Kh7 19. Ba3 g5 $1 (19... Bc8 $2 20. Rfe1 $1 (20. Ne5 Nxe5 21. dxe5 Qe8 22. f4
+Qc6 23. Bxe7 Rxe7 24. Qd4 Rc7 25. Rfb1 Qc5 26. a5 Kg7 27. g3 Rf8 28. Bg4 Rff7
+29. Qxc5 Rxc5 30. Kf2 Rc6 31. Ke3 Kf8 32. Kd4 Ke7 33. h4 h5 34. Be2 Rf8 35. Rb5
+{1/2-1/2 (35) Quesada Perez,Y (2567)-Malakhatko,V (2621) Paris 2008}) 20... Qg7
+{1-0 (58) Saric,I (2576)-Deslandes,P (2307) Pula 2009} 21. Bd1 $14 {1-0 (21)})
+20. Rab1 b6 21. h3 Qg7 22. Nh2 Ng6 23. Bh5 Rf5 24. Rfe1 Nf4 25. Bg4 Rf6 26. Bd6
+Bc8 27. Bxf4 gxf4 28. Nf3 Rg8 29. Ne5 Nxe5 30. Rxe5 Qd7 31. Ra1 a5 32. Qe2 Rg7
+33. Qf3 Qd6 34. Kh2 Bd7 35. Rae1 Rgg6 36. h4 Rg8 37. Ra1 Qc6 38. Rb1 Kg7 39.
+Bh3 Re8 {1/2-1/2 (39) Andriuschenko,N (2450)-Schuster,P (2473) ICCF 2012} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.03"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C18"]
+[Annotator "Dart, J."]
 [PlyCount "58"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ (5... Ba5 $2) 6. bxc3 Ne7 $1
 7. Qg4 Qc7 8. Qxg7 Rg8 9. Qxh7 cxd4 10. Ne2 Nbc6 (10... dxc3) 11. f4 dxc3 $1 (
@@ -4239,7 +4325,7 @@ Bd7 14. Rb1 Qc7 15. Bg5 $14 0-1
 [ECO "C21"]
 [Annotator "Dart, J."]
 [PlyCount "11"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. d4 exd4 3. c3 $6 d5 $3 (3... dxc3 4. Nxc3 Nc6 5. Nf3 Bb4 (5... d6
 $1) 6. Bc4 Nf6 $6 (6... Bxc3+ 7. bxc3 d6 (7... Qe7 $2 8. O-O) 8. Ng5 Ne5) (6...
@@ -4264,7 +4350,7 @@ cxd4 Nc6 6. Nf3 {C44} *
 [ECO "C25"]
 [Annotator "Dart, J."]
 [PlyCount "17"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nc3 Nc6 3. f4 $2 exf4 4. Nf3 g5 5. h4 (5. d4 $2 {Pierce Gambit} g4
 6. Bc4 gxf3 7. O-O (7. Qxf3 Qh4+ 8. g3 Nxd4 $17) 7... Nxd4 8. Bxf4 Bg7 9. e5 d5
@@ -4805,59 +4891,6 @@ Bb5+ c6 6. Ba4 1-0
 5. Nxe4 d5 6. Nxe5 dxe4 7. Qh5+ g6 8. Nxg6 Nf6 9. Qe5+ Kf7 10. Bc4+ Kg7 11.
 Bh6+ Kxh6 12. Nxh8 $16 {ECO} *
 
-[Event "?"]
-[Site "?"]
-[Date "2014.01.07"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "1-0"]
-[ECO "C42"]
-[Annotator "Dart, J."]
-[PlyCount "34"]
-[EventDate "2014.??.??"]
-[TimeControl "300+4"]
-
-1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. d4 d5 6. Bd3 Nc6 7. O-O Be7 8. c4
-(8. Re1 Bg4 9. c4 Nf6 10. cxd5 Nxd5 (10... Bxf3 $3 11. Qxf3 Qxd5 12. Qxd5 Nxd5
-13. Nc3 O-O-O {1/2-1/2 (22) Aseev,K (2390)-Razuvaev,Y (2500) Tashkent 1984})
-11. Nc3 O-O 12. Be4 (12. Nxd5 Qxd5 13. Be4 Qd6 14. Be3 $11) 12... Be6 13. Qd3
-h6 14. a3 Qd7 15. Ne5 Nxe5 16. dxe5 Nxc3 17. Qxd7 Bxd7 18. bxc3 {1/2-1/2 (37)
-Akwei,L (2295)-Esnaola San Sebastian,J (2352) ICCF email 2008 1/2-1/2 (18)
-DeepSjeng (2779)-Arasan 16.4 (2569) freechess.org 2014}) 8... Nb4 9. Be2 O-O
-10. Nc3 Be6 {weight:10} (10... Bf5 $3) 11. cxd5 (11. Ne5 c5 12. Nxe4 dxe4 13.
-d5 Bc8 14. a3 Na6 15. Qc2 f6 16. Ng4 f5 17. Ne5 {1/2-1/2 (35) Cinca,D (2477)
--Lins,T (2454) ICCF 2012}) 11... Nxc3 12. bxc3 Nxd5 13. Bd2 $1 Nb6 14. Qc2 $3
-Bf6 15. Rab1 $11 Qd5 $2 16. Bd3 g6 17. a4 Qa2 $2 {1-0 (56) Kryvoruchko,Y (2652)
--Ipatov,A (2562) Paleochora 2011} 1-0
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.07"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "C42"]
-[Annotator "Dart, J."]
-[PlyCount "40"]
-[EventDate "2014.??.??"]
-[TimeControl "240+1"]
-
-1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. d4 d5 6. Bd3 Nc6 7. O-O Be7 8.
-Re1 Bg4 9. c4 Nf6 10. Nc3 $1 Bxf3 11. Qxf3 Nxd4 12. Qd1 Ne6 13. Bf5 c6 (13...
-dxc4 14. Qa4+ c6 15. Bxe6 fxe6 16. Qxc4 O-O 17. Rxe6 Nd5 18. Be3 Bf6 19. Bc5
-Re8 20. Rxe8+ Qxe8 21. Nxd5 cxd5 22. Qxd5+ Qf7 23. Qd2 Rd8 24. Qb4 Qxa2 25. Re1
-b6 26. Be7 Re8 27. Bxf6 Rxe1+ 28. Qxe1 gxf6 29. Qb4 a5 {1/2-1/2 (29)
-Morozevich,A (2755)-Ivanchuk,V (2787) Moscow 2007}) 14. cxd5 Nxd5 15. Qg4 $1
-O-O (15... Nxc3 $2 16. bxc3 O-O 17. Rb1 Qc7 18. Bh6 Bd6 19. Qh3 Rfe8 20. Bxg7
-Bxh2+ 21. Kf1 Kxg7 22. Qxh7+ Kf6 23. Bxe6 Bf4 24. Qf5+ Kg7 25. Rb4 Rxe6 26.
-Rxe6 fxe6 27. Qg4+ Kh8 28. Rxf4 Qh7 29. Qxe6 Qh1+ 30. Ke2 Qh5+ 31. g4 Qb5+ 32.
-Kf3 Qd3+ 33. Kg2 Qd5+ 34. Qxd5 cxd5 35. Rf7 b5 36. Rd7 a6 37. f4 Rc8 38. f5 {
-1-0 (38) Radjabov,T (2740)-Gelfand,B (2741) Medias ROU 2010}) 16. Nxd5 cxd5 17.
-Bxe6 fxe6 18. Qxe6+ Rf7 19. Be3 Bf6 20. Rad1 Bxb2 $2 {1/2-1/2 (44) De Firmian,
-N (2567)-Schandorff,L (2520) Copenhagen 2000} (20... d4) *
-
 [Event "-"]
 [Site "-"]
 [Date "2014.01.07"]
@@ -4884,6 +4917,59 @@ Adams,M (2712)-Smeets,J (2601) Wijk aan Zee 2009} 1/2-1/2
 
 [Event "?"]
 [Site "?"]
+[Date "2014.01.07"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "1-0"]
+[ECO "C42"]
+[Annotator "Dart, J."]
+[PlyCount "34"]
+[EventDate "2014.03.03"]
+[TimeControl "300+4"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. d4 d5 6. Bd3 Nc6 7. O-O Be7 8. c4
+(8. Re1 Bg4 9. c4 Nf6 10. cxd5 Nxd5 (10... Bxf3 $3 11. Qxf3 Qxd5 12. Qxd5 Nxd5
+13. Nc3 O-O-O {1/2-1/2 (22) Aseev,K (2390)-Razuvaev,Y (2500) Tashkent 1984})
+11. Nc3 O-O 12. Be4 (12. Nxd5 Qxd5 13. Be4 Qd6 14. Be3 $11) 12... Be6 13. Qd3
+h6 14. a3 Qd7 15. Ne5 Nxe5 16. dxe5 Nxc3 17. Qxd7 Bxd7 18. bxc3 {1/2-1/2 (37)
+Akwei,L (2295)-Esnaola San Sebastian,J (2352) ICCF email 2008 1/2-1/2 (18)
+DeepSjeng (2779)-Arasan 16.4 (2569) freechess.org 2014}) 8... Nb4 9. Be2 O-O
+10. Nc3 Be6 {weight:10} (10... Bf5 $3) 11. cxd5 (11. Ne5 c5 12. Nxe4 dxe4 13.
+d5 Bc8 14. a3 Na6 15. Qc2 f6 16. Ng4 f5 17. Ne5 {1/2-1/2 (35) Cinca,D (2477)
+-Lins,T (2454) ICCF 2012}) 11... Nxc3 12. bxc3 Nxd5 13. Bd2 $1 Nb6 14. Qc2 $3
+Bf6 15. Rab1 $11 Qd5 $2 16. Bd3 g6 17. a4 Qa2 $2 {1-0 (56) Kryvoruchko,Y (2652)
+-Ipatov,A (2562) Paleochora 2011} 1-0
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.07"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C42"]
+[Annotator "Dart, J."]
+[PlyCount "40"]
+[EventDate "2014.03.03"]
+[TimeControl "240+1"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. d4 d5 6. Bd3 Nc6 7. O-O Be7 8.
+Re1 Bg4 9. c4 Nf6 10. Nc3 $1 Bxf3 11. Qxf3 Nxd4 12. Qd1 Ne6 13. Bf5 c6 (13...
+dxc4 14. Qa4+ c6 15. Bxe6 fxe6 16. Qxc4 O-O 17. Rxe6 Nd5 18. Be3 Bf6 19. Bc5
+Re8 20. Rxe8+ Qxe8 21. Nxd5 cxd5 22. Qxd5+ Qf7 23. Qd2 Rd8 24. Qb4 Qxa2 25. Re1
+b6 26. Be7 Re8 27. Bxf6 Rxe1+ 28. Qxe1 gxf6 29. Qb4 a5 {1/2-1/2 (29)
+Morozevich,A (2755)-Ivanchuk,V (2787) Moscow 2007}) 14. cxd5 Nxd5 15. Qg4 $1
+O-O (15... Nxc3 $2 16. bxc3 O-O 17. Rb1 Qc7 18. Bh6 Bd6 19. Qh3 Rfe8 20. Bxg7
+Bxh2+ 21. Kf1 Kxg7 22. Qxh7+ Kf6 23. Bxe6 Bf4 24. Qf5+ Kg7 25. Rb4 Rxe6 26.
+Rxe6 fxe6 27. Qg4+ Kh8 28. Rxf4 Qh7 29. Qxe6 Qh1+ 30. Ke2 Qh5+ 31. g4 Qb5+ 32.
+Kf3 Qd3+ 33. Kg2 Qd5+ 34. Qxd5 cxd5 35. Rf7 b5 36. Rd7 a6 37. f4 Rc8 38. f5 {
+1-0 (38) Radjabov,T (2740)-Gelfand,B (2741) Medias ROU 2010}) 16. Nxd5 cxd5 17.
+Bxe6 fxe6 18. Qxe6+ Rf7 19. Be3 Bf6 20. Rad1 Bxb2 $2 {1/2-1/2 (44) De Firmian,
+N (2567)-Schandorff,L (2520) Copenhagen 2000} (20... d4) *
+
+[Event "?"]
+[Site "?"]
 [Date "2014.01.01"]
 [Round "?"]
 [White "?"]
@@ -4892,7 +4978,7 @@ Adams,M (2712)-Smeets,J (2601) Wijk aan Zee 2009} 1/2-1/2
 [ECO "C42"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nxf7 $2 {Cochrane Gambit} Kxf7 5. d4 (5. Nc3
 {weight:10} Be7 (5... c5 6. Bc4+ Be6 7. Bxe6+ Kxe6 8. d4 Kf7 $3 9. dxc5 Nc6 10.
@@ -4966,6 +5052,29 @@ Re1 Nc6 9. Nc3 Nxc3 10. bxc3 Bxd3 11. Qxd3 O-O 12. c4 (12. Rb1 Na5 13. Bf4 Bf6
 14. h3 c6 15. Nh2 {1/2-1/2 (38) Naiditsch,A (2710)-Giri,A (2737) Linares 2013})
 12... Re8 $1 13. cxd5 (13. Bd2 $5) 13... Qxd5 14. c4 Qd7 15. Be3 Bf6 16. Rad1
 1/2-1/2
+
+[Event "?"]
+[Site "chessclub.com"]
+[Date "2014.03.11"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C42"]
+[Annotator "Dart, J."]
+[PlyCount "24"]
+[EventDate "2014.??.??"]
+[TimeControl "900+3"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. Nc3 {weight:10} Nxc3 6. dxc3 Be7
+7. Be3 Nc6 8. Qd2 O-O 9. O-O-O Ne5 10. Nd4 $2 (10. Kb1 $1 Re8 11. Nxe5 dxe5 12.
+Bd3 c6 13. Qe2 Qc7 14. f3 Be6 {1/2-1/2 (47) Giri,A (2734)-Ivanchuk,V (2753)
+Leon 2013}) (10. h4 c6 $1 (10... Bg4 11. Be2 Qc8 12. Nxe5 Bxe2 13. Ng6 fxg6 14.
+Qxe2 Qe6 $11 {Houdini 4}) (10... Re8 $2 11. h5 Bf6 12. Kb1 $1 $11 {1-0 (48)
+Svidler,P (2740)-Kramnik,V (2739) Moscow 2005}) 11. Kb1 {1/2-1/2 (40) Caruana,
+F (2757)-Fridman,D (2667) Baden-Baden 2013}) 10... c5 $3 11. Nb5 Be6 12. Nxd6 (
+12. c4 Qb6 $15) 12... Qb6 $15 {0-1 (53) Landa,K (2574)-Kosyrev,V (2539)
+playchess.com INT 2005} *
 
 [Event "-"]
 [Site "-"]
@@ -5127,7 +5236,7 @@ Ohtake,S (2441)-Walter,G (2410) ICCF 2013} *
 [ECO "C47"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. d4 {Belgrade Gambit} exd4 (4... Bb4 5. Nxe5 (
 5. d5 $6 Ne7 6. Nxe5 d6 7. Bb5+ Kf8 8. Nf3 Nxe4 9. Bd2 Bxc3 10. Bxc3 Nxc3 11.
@@ -5169,7 +5278,7 @@ $17 *
 [ECO "C51"]
 [Annotator "Dart, J."]
 [PlyCount "27"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4 Bb6 {weight:10} 5. a4 (5. b5 {weight:10}
 Na5 6. Nxe5 Nh6 (6... Nxc4 $2 7. Nxc4) (6... Qf6 7. Bxf7+ Kf8 8. d4 d6 9. Bxg8
@@ -5192,7 +5301,7 @@ Nunn,J (2435)-Hecht,H (2480) Buenos Aires 1978}) *
 [ECO "C52"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4 Bxb4 5. c3 (5. O-O $2 Nf6 6. c3 Be7 7. d4
 d6 {0-1 (41) Jaroch,K (2242)-Maiorov,N (2511) Warsaw 2009}) 5... Ba5 {weight:70
@@ -5233,7 +5342,7 @@ d5 9. exd5 Nxd5 10. Ba3 Be6 11. Nbd2 (11. Bb5 Bb4 $11) 11... Bb4 $11 *
 [ECO "C54"]
 [Annotator "Dart, J."]
 [PlyCount "35"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "300+1"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. e5 (6. cxd4 $2 Bb4+ (
@@ -5292,7 +5401,7 @@ Nxd5 9. b5 $2 Na5 10. Bxd5 Qxd5 11. c4 Qd7 $3 (11... Qd8 $2 12. Bd2) 12. Bd2 e4
 [Result "1-0"]
 [ECO "C55"]
 [PlyCount "25"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e5 2. Bc4 Nf6 3. d3 Nc6 4. Nf3 h6 $6 5. O-O d6 6. c3 g6 7. d4 $3 Qe7 8.
@@ -5399,7 +5508,7 @@ $1 19. b3 Rb6 20. Bd3 Rg6+ $3 21. Bxg6 hxg6 $16 {Pinski}) 11. Bc6 Nf4 $11 *
 [ECO "C58"]
 [Annotator "Dart, J."]
 [PlyCount "22"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5 Na5 6. Bb5+ c6 7. dxc6 bxc6 8.
 Qf3 {weight:10} Rb8 (8... Bb7 $2 9. Ba4) (8... Be7 $3 9. Nc3 (9. Bd3 $1 O-O (
@@ -5408,21 +5517,29 @@ Rxe5 Bb7 16. Nc3 c5 17. Nge4 Nc6 18. Rxe7 Qxe7 19. Qe3 Nd4 20. Qxh6 Rfe8 21. b3
 Rad8 22. Bb2 Ba6 23. h4 Bxd3 24. f3 Qe5 25. Qg5 Qxg5 26. hxg5 Re5 27. Re1 Kf8
 28. Kf2 Nc2 29. Rh1 Ke7 30. Na4 Rxe4 31. Bf6+ Kd6 32. fxe4 Re8 33. e5+ Kd5 34.
 Rh7 Nb4 35. Rxf7 Nxa2 36. Rd7+ Ke4 37. Nxc5+ Kf5 38. Rxd3 {1-0 (38) Short,N 
-(2692)-Sepp,O (2446) Puhajarve 2012})) 9... Bg4 {weight:70} 10. Bxc6+ Kf8 11.
-Bxa8 Bxf3 12. Bxf3 h6 13. Nge4 Nc6 $11 (13... Nxe4 14. Bxe4 $11 {0-1 (36)
-Badmatsyrenov,A (2298)-Khruschiov,A (2422) Ulan Ude 2011})) 9. Bd3 $1 Be7 (9...
-h6 $2 10. Ne4 Nd5 11. b3 $3 {1-0 Crafty-Arasan, ICC 2010}) (9... Bd6 10. Bf5 (
-10. h3 O-O 11. Nc3 {1/2-1/2 (34) Jones,G (2526)-Estremera Panos,S (2375) Porto
-San Giorgio 2007}) 10... h6 11. Bxc8 (11. Ne4 Nxe4 12. Bxe4 O-O 13. Bf5 e4 14.
-Qh3 Bxf5 15. Qxf5 Re8 16. Nc3 c5 17. Nd1 Nc6 18. Ne3 Be5 19. O-O Nd4 20. Qh5 g6
-21. Qh3 h5 22. Kh1 Ne2 23. Nc4 Bg7 24. d3 exd3 25. Qxd3 Qxd3 26. cxd3 Nxc1 27.
-Raxc1 Bxb2 28. Rc2 Bd4 29. g3 Re6 30. Kg2 Rbe8 {1/2-1/2 (30) Aravindh,C (2276)
--Ghosh,D (2415) Kolkata 2012}) 11... hxg5 12. Bf5 g6 13. Be4 (13. Bd3 g4 14.
-Qe2 Kf8 $11 {Hiarcs} (14... Qb6 $2) (14... Nd5 15. Qxg4 Rb4 16. Qe2 Rbh4 17. h3
-$14 {1-0 (43) Mercky,G (2528)-Cruzado Duenas,C (2482) ICCF email 2008})) 13...
-g4 14. Qe2 Nxe4 15. Qxe4 f5 16. Qe2 $6 (16. Qe3 $11) 16... Rb7 17. d4 $4 {0-1 
-(26) Owczarzak,J (2389)-Malaniuk,V (2522) Police 2007} (17. d3)) 10. Nc3 O-O
-11. O-O Rb4 {1/2-1/2 (56) Vorobiov,E (2591) -Kabanov,N (2502) Moscow 2009} *
+(2692)-Sepp,O (2446) Puhajarve 2012})) (9. Bxc6+ $2 Nxc6 10. Qxc6+ Bd7 11. Qf3
+$1 (11. Qc4 $2 O-O 12. Nc3 Rc8 13. Qe2 (13. Qd3 h6 14. Nge4 Nxe4 15. Nxe4 Bc6
+16. Qxd8 Rfxd8 {0-1 (44) Utegaliev,A (2288)-Iuldachev,S (2497) Tashkent 2009})
+13... h6 14. Nf3 e4 15. Ne5 Bf5 {0-1 (38) Sakharov,Y-Bakhmatov,E Kiev 1960 1-0
+(15)} (15... Be6 $5)) 11... O-O 12. Nc3 Rc8 13. d3 Bc6 14. Qh3 Bd7 15. Qg3 Nh5
+16. Qxe5 Bf6 17. Qd5 Rxc3 18. Ne4 Rxc2 19. Qxh5 Bxb2 20. Bxb2 Rxb2 21. O-O Be6
+22. Qe5 Rxa2 23. Rxa2 Bxa2 24. Qa1 Qxd3 25. Qxa2 Qxe4 26. Qxa7 {1/2-1/2 (26)
+Mamedyarov,S (2724)-Tomashevsky,E (2664) Moscow 2009}) 9... Bg4 {weight:70} 10.
+Bxc6+ Kf8 11. Bxa8 Bxf3 12. Bxf3 h6 13. Nge4 Nc6 $11 (13... Nxe4 14. Bxe4 $11 {
+0-1 (36) Badmatsyrenov,A (2298)-Khruschiov,A (2422) Ulan Ude 2011})) 9. Bd3 $1
+Be7 (9... h6 $2 10. Ne4 Nd5 11. b3 $3 {1-0 Crafty-Arasan, ICC 2010}) (9... Bd6
+10. Bf5 (10. h3 O-O 11. Nc3 {1/2-1/2 (34) Jones,G (2526)-Estremera Panos,S 
+(2375) Porto San Giorgio 2007}) 10... h6 11. Bxc8 (11. Ne4 Nxe4 12. Bxe4 O-O
+13. Bf5 e4 14. Qh3 Bxf5 15. Qxf5 Re8 16. Nc3 c5 17. Nd1 Nc6 18. Ne3 Be5 19. O-O
+Nd4 20. Qh5 g6 21. Qh3 h5 22. Kh1 Ne2 23. Nc4 Bg7 24. d3 exd3 25. Qxd3 Qxd3 26.
+cxd3 Nxc1 27. Raxc1 Bxb2 28. Rc2 Bd4 29. g3 Re6 30. Kg2 Rbe8 {1/2-1/2 (30)
+Aravindh,C (2276)-Ghosh,D (2415) Kolkata 2012}) 11... hxg5 12. Bf5 g6 13. Be4 (
+13. Bd3 g4 14. Qe2 Kf8 $11 {Hiarcs} (14... Qb6 $2) (14... Nd5 15. Qxg4 Rb4 16.
+Qe2 Rbh4 17. h3 $14 {1-0 (43) Mercky,G (2528)-Cruzado Duenas,C (2482) ICCF
+email 2008})) 13... g4 14. Qe2 Nxe4 15. Qxe4 f5 16. Qe2 $6 (16. Qe3 $11) 16...
+Rb7 17. d4 $4 {0-1 (26) Owczarzak,J (2389)-Malaniuk,V (2522) Police 2007} (17.
+d3)) 10. Nc3 O-O 11. O-O Rb4 {1/2-1/2 (56) Vorobiov,E (2591) -Kabanov,N (2502)
+Moscow 2009} *
 
 [Event "Maastricht Complete Chess m"]
 [Site "Maastricht"]
@@ -5468,7 +5585,7 @@ Qc8+ 1/2-1/2
 [ECO "C59"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5 Na5 6. Bb5+ c6 7. dxc6 bxc6 8.
 Be2 (8. Ba4 $2) 8... h6 9. Nf3 (9. Nh3 {weight:20} Bc5 $1 (9... g5 10. d3 Bg7
@@ -5591,9 +5708,11 @@ Germany 2011} (13... h4 $2)) 11. Bg5 (11. Bf4) 1-0
 5. O-O f6 (5... Be7 $2 6. d3 $3) (5... Bg4 6. h3 h5 7. d3 Qf6 8. Nbd2 Ne7 9.
 Re1 Ng6 10. d4 (10. hxg4 $2) 10... Bd6 $1 11. hxg4 (11. dxe5 $2) 11... hxg4 12.
 Nh2 Rxh2 13. Qxg4) (5... Qd6 6. Na3 (6. d4 $2 exd4 7. Nxd4 Bd7 (7... c5 $2) 8.
-Be3 O-O-O 9. Nd2) 6... b5 (6... Be6 7. Qe2 f6 8. Rd1 Bg4 9. Nc4 Qe6 10. Ne3 Bh5
-$11 (10... Bxf3 $2)) 7. c3 c5 8. Nc2 Ne7 9. a4 Bb7 (9... Rb8 $2) (9... b4 $2))
-*
+Be3 O-O-O 9. Nd2) (6. d3 Ne7 7. Nbd2 Ng6 8. Nc4 Qf6 9. Qe1 {weight:10} Bg4 10.
+Bg5 Qe6 $11 {1-0 (10) denteca (2175)-Arasan 17.0 (2481) freechess.org 2014 
+(anal by Houdini 4)}) 6... b5 (6... Be6 7. Qe2 f6 8. Rd1 Bg4 9. Nc4 Qe6 10. Ne3
+Bh5 $11 (10... Bxf3 $2)) 7. c3 c5 8. Nc2 Ne7 9. a4 Bb7 (9... Rb8 $2) (9... b4
+$2)) *
 
 [Event "WS/MN/081"]
 [Site "ICCF"]
@@ -5688,7 +5807,7 @@ d6 9. a4 (9. a3) 9... b4 (9... Na5 $2) 10. Ne2 $1) 8. Re1 (8. Nc3 O-O 9. Be3 d6
 10. Nd5 Na5 11. Nxe7+ Qxe7 12. Nh4 Bc8 $11 {1-0 (12) paj (3106)-Arasan 17.0 
 (2747) chessclub.com 2014 (analysis)}) 8... d6 9. a4 O-O 10. Nbd2 Nd7 (10...
 Na5 11. Ba2 c5 12. Nf1 b4 (12... Bc8) (12... Qc7 $2) (12... Re8 $2) (12... Nc6
-$2)) 11. c3 $1 Nc5 12. axb5 $3 axb5 13. Rxa8 Bxa8 14. Bc2 Ne6 15. Nf1 {Â½-Â½ 
+$2)) 11. c3 $1 Nc5 12. axb5 $3 axb5 13. Rxa8 Bxa8 14. Bc2 Ne6 15. Nf1 {½-½ 
 (46) Kasimdzhanov,R (2674)-Khalifman,A (2698) Moscow 2002}) 7... Bc5 8. c3 d6 (
 8... Bb6 9. d4 d6) (8... O-O 9. d4 Bb6 (9... exd4 $2) 10. Bg5 h6 $3 11. Bh4 d6
 12. a4 exd4 $3 (12... g5 $2 13. Nxg5 hxg5 14. Bxg5 exd4 15. Bd5 Kg7 16. cxd4
@@ -5715,7 +5834,7 @@ g5 12. Bg3 Qe7 $2 (12... O-O 13. a4 Re8 $11 {1-0 (30) Zapata, A (2520)
 [ECO "C82"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Nxe4 6. d4 b5 7. Bb3 d5 8. dxe5
 Be6 9. c3 (9. Be3 Be7 $3) (9. Nbd2 $3 Nc5 10. c3 d4 11. Ng5 {Kortchnoi Gambit}
@@ -5760,7 +5879,7 @@ Germany 2012}) 12. Qxd2 Qd7 13. Bc2 Rfb8 (13... Na5 14. Qd3 $14) 14. h3 $14 1-0
 [Result "1-0"]
 [ECO "C84"]
 [PlyCount "27"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. d3 b5 7. Bb3 d6 8. a4 $1
@@ -5774,6 +5893,30 @@ b4 9. Nbd2 O-O (9... Na5 $1 10. Ba2 O-O 11. c3 bxc3 12. bxc3 c5 13. d4 exd4 (
 24. Bd2 Ra8 25. Ba5 Rb8 26. Re1 Rb3 27. Ra1 Kf7 28. Kf1 {0-1 (76) Hou,Y (2527)
 -Bacrot,E (2700) Wijk aan Zee 2008}) 14. h3 1-0
 
+[Event "chessclub.com"]
+[Site "chessclub.com"]
+[Date "2014.03.13"]
+[Round "?"]
+[White "Rookie"]
+[Black "Arasan 17.0"]
+[Result "*"]
+[ECO "C84"]
+[WhiteElo "2307"]
+[BlackElo "2484"]
+[Annotator "Dart, J."]
+[PlyCount "38"]
+[EventDate "2014.??.??"]
+[TimeControl "900+3"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. d4 exd4 6. O-O Be7 7. e5 Ne4 8.
+Nxd4 O-O 9. Re1 Nxd4 10. Qxd4 $2 (10. Rxe4 $1 Ne6 11. Nc3 Nc5 12. Rd4 f6 13.
+Bxd7 Bxd7 14. e6 Nxe6 15. Rxd7 Qe8 16. Rd3 Bd6 17. Be3 Qc6 18. Qd2 f5 19. f3
+Rae8 20. Nd5 Qc4 $2 (20... Nc5 21. Rc3 Qb5 22. b3 $11) 21. Bf2 {1-0 (33)
+Botvinnik,M-Ragozin,V Moscow 1946}) 10... Nc5 11. Nc3 d6 12. Bf4 Ne6 13. Qd2
+Nxf4 14. Qxf4 d5 (14... dxe5 15. Qxe5 Bd6 16. Qh5 g6 17. Qh6 Bf5 18. Rad1 Qf6
+19. Nd5 Qg7 20. Qg5 h6 {1/2-1/2 (20) Blatny,F-Stulik,V Podebrady 1956}) 15. Bb3
+c6 16. Rad1 a5 17. a4 Qb6 18. Re3 Be6 (18... h6 $1) 19. Ne2 h6 $15 *
+
 [Event "?"]
 [Site "?"]
 [Date "2014.01.12"]
@@ -5784,7 +5927,7 @@ b4 9. Nbd2 O-O (9... Na5 $1 10. Ba2 O-O 11. c3 bxc3 12. bxc3 c5 13. d4 exd4 (
 [ECO "C88"]
 [Annotator "Dart, J."]
 [PlyCount "53"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "10"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. h3
@@ -5814,7 +5957,7 @@ Nc5 Qe7 24. Ne4 f5 25. Ng3 g6 26. Kg2 Bd6 27. Qd2 $14 1-0
 [ECO "C89"]
 [Annotator "Dart, J."]
 [PlyCount "38"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
@@ -5836,49 +5979,8 @@ bxc4 19. Qxc4 f4 $4 {1-0 (48) Azarov,S (2583)-Kosintseva,T (2474) Moscow 2007}
 [Result "*"]
 [ECO "C89"]
 [Annotator "Dart, J."]
-[PlyCount "45"]
-[EventDate "2014.??.??"]
-
-1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
-d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d4 (12. Bxd5 $2 cxd5 13. d4 Bd6
-14. Re3 Qh4 15. h3 Qf4 16. Re5 Qf6 17. Re1 (17. Re3 Qf4 18. Re5 Qf6 19. Re1)
-17... Qg6 18. Qf3 Be6 {1/2-1/2 (53) Tal,M-Spassky,B Tbilisi 1965}) 12... Bd6
-13. Re1 Qh4 14. g3 Qh3 15. Re4 g5 16. Qf1 (16. a4 $2 f5) 16... Qh5 17. Nd2 (17.
-Bd1 Qg6 18. Re1 (18. Nd2 Bf5 19. Re1) 18... Bf5 19. Nd2 {1-0 Kec-Arasan,
-freechess.org 2011} Rae8 20. Nf3 {1/2-1/2 (56) Svoboda,A (1800)-Borosova,Z 
-(2300) Stare Mesto 2009}) 17... Bf5 (17... f5 $2 18. Bd1 $3 (18. Re1 $2)) 18.
-f3 Rae8 $1 (18... Nf6 19. a4 (19. Qg2 Qg6 20. Re3 Rae8 (20... Nd5 21. Re1 Rae8
-22. Ne4 g4 23. Bc2 h5 24. Bd2 Bc7 25. fxg4 hxg4 26. Bd3 Re6 27. Re2 Rfe8 28.
-Rae1 a5 29. Kh1 a4 {½-½ (29) Kubicki,T (2467)-Boreika,V (2242) ICCF email
-2009}) 21. Ne4 Nxe4 22. g4 Ng3 23. hxg3 Bd3 24. Qd2 Rxe3 25. Qxe3 h6 26. Kg2 a5
-27. a3 Bc4 28. Bxc4 bxc4 29. Qe2 Kg7 30. Be3 f5 31. gxf5 Qxf5 32. g4 Qd5 33.
-Rh1 a4 34. Bc1 Rf7 35. Re1 h5 36. Qe4 Re7 37. Qxd5 cxd5 38. Rxe7+ Bxe7 39. f4 {
-1/2-1/2 (39) Kubicki,T (2429)-Jasinski,M (2394) ICCF 2013}) 19... Nxe4 20. Nxe4
-Qg6 21. Nxd6 Qxd6 22. Bxg5 Qg6 23. Qc1 Bd3 (23... Rfe8 24. Bf4 Be6 {1/2-1/2 
-(24) Moura,A (2432) -Harding,T (2381) ICCF email 2006}) 24. axb5 axb5 25. Rxa8
-Rxa8 26. Kf2 Bc4 27. Bxc4 bxc4 28. g4 Re8 29. Bf4 Qd3 30. Kg3 Qe2 31. Qb1 Qe1+
-32. Qxe1 Rxe1 33. Bd6 Rg1+ 34. Kf2 Rb1 35. Ba3 Kg7 36. Kg3 Kg6 37. h3 h5 38.
-Kh4 Rg1 39. Bc5 Rg2 40. Ba3 f6 41. gxh5+ Kf5 42. f4 Rg8 43. Bd6 Ke6 44. h6 Kxd6
-45. Kh5 f5 46. h7 Rh8 47. Kg6 Ke7 48. Kg7 Ke8 49. Kg6 Kf8 50. h4 Ke7 51. Kg7
-Ke8 52. Kg6 Kf8 53. h5 Ke7 54. Kg7 Ke8 55. Kg6 Kf8 56. h6 Ke8 57. Kf6 Rxh7 58.
-Kg6 Rf7 {0-1 (58) Shirov,A (2720)-Aronian,L (2741) Moscow 2006}) 19. a4 (19.
-Rxe8 Rxe8 20. Ne4 Bxe4 21. fxe4 Rxe4 22. Bd1 g4 23. Qf2 Re6 24. Bd2 Nf6 25. Bb3
-Ne4 26. Qg2 Nxd2 27. Qxd2 Rf6 28. Re1 c5 29. Bc2 cxd4 30. cxd4 Kg7 31. Re4 {
-½-½ (31) Vachier Lagrave,M (2721)-Adams,M (2728) Khanty Mansiysk RUS 2010})
-19... Bxe4 20. fxe4 f5 21. e5 f4 22. Qd1 f3 23. Nxf3 {1/2-1/2 (23) So,W (2710)
--Tomashevsky,E (2706) Tromso 2013} *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.06"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "C89"]
-[Annotator "Dart, J."]
 [PlyCount "59"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
 d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d4 Bd6 13. Re1 Qh4 (13... Qc7 $2
@@ -5934,23 +6036,69 @@ ICCF corr 1999} *
 [Result "*"]
 [ECO "C89"]
 [Annotator "Dart, J."]
+[PlyCount "45"]
+[EventDate "2014.03.03"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
+d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d4 (12. Bxd5 $2 cxd5 13. d4 Bd6
+14. Re3 Qh4 15. h3 Qf4 16. Re5 Qf6 17. Re1 (17. Re3 Qf4 18. Re5 Qf6 19. Re1)
+17... Qg6 18. Qf3 Be6 {1/2-1/2 (53) Tal,M-Spassky,B Tbilisi 1965}) 12... Bd6
+13. Re1 Qh4 14. g3 Qh3 15. Re4 g5 16. Qf1 (16. a4 $2 f5) 16... Qh5 17. Nd2 (17.
+Bd1 Qg6 18. Re1 (18. Nd2 Bf5 19. Re1) 18... Bf5 19. Nd2 {1-0 Kec-Arasan,
+freechess.org 2011} Rae8 20. Nf3 {1/2-1/2 (56) Svoboda,A (1800)-Borosova,Z 
+(2300) Stare Mesto 2009}) 17... Bf5 (17... f5 $2 18. Bd1 $3 (18. Re1 $2)) 18.
+f3 Rae8 $1 (18... Nf6 19. a4 (19. Qg2 Qg6 20. Re3 Rae8 (20... Nd5 21. Re1 Rae8
+22. Ne4 g4 23. Bc2 h5 24. Bd2 Bc7 25. fxg4 hxg4 26. Bd3 Re6 27. Re2 Rfe8 28.
+Rae1 a5 29. Kh1 a4 {½-½ (29) Kubicki,T (2467)-Boreika,V (2242) ICCF email
+2009}) 21. Ne4 Nxe4 22. g4 Ng3 23. hxg3 Bd3 24. Qd2 Rxe3 25. Qxe3 h6 26. Kg2 a5
+27. a3 Bc4 28. Bxc4 bxc4 29. Qe2 Kg7 30. Be3 f5 31. gxf5 Qxf5 32. g4 Qd5 33.
+Rh1 a4 34. Bc1 Rf7 35. Re1 h5 36. Qe4 Re7 37. Qxd5 cxd5 38. Rxe7+ Bxe7 39. f4 {
+1/2-1/2 (39) Kubicki,T (2429)-Jasinski,M (2394) ICCF 2013}) 19... Nxe4 20. Nxe4
+Qg6 21. Nxd6 Qxd6 22. Bxg5 Qg6 23. Qc1 Bd3 (23... Rfe8 24. Bf4 Be6 {1/2-1/2 
+(24) Moura,A (2432) -Harding,T (2381) ICCF email 2006}) 24. axb5 axb5 25. Rxa8
+Rxa8 26. Kf2 Bc4 27. Bxc4 bxc4 28. g4 Re8 29. Bf4 Qd3 30. Kg3 Qe2 31. Qb1 Qe1+
+32. Qxe1 Rxe1 33. Bd6 Rg1+ 34. Kf2 Rb1 35. Ba3 Kg7 36. Kg3 Kg6 37. h3 h5 38.
+Kh4 Rg1 39. Bc5 Rg2 40. Ba3 f6 41. gxh5+ Kf5 42. f4 Rg8 43. Bd6 Ke6 44. h6 Kxd6
+45. Kh5 f5 46. h7 Rh8 47. Kg6 Ke7 48. Kg7 Ke8 49. Kg6 Kf8 50. h4 Ke7 51. Kg7
+Ke8 52. Kg6 Kf8 53. h5 Ke7 54. Kg7 Ke8 55. Kg6 Kf8 56. h6 Ke8 57. Kf6 Rxh7 58.
+Kg6 Rf7 {0-1 (58) Shirov,A (2720)-Aronian,L (2741) Moscow 2006}) 19. a4 (19.
+Rxe8 Rxe8 20. Ne4 Bxe4 21. fxe4 Rxe4 22. Bd1 g4 23. Qf2 Re6 24. Bd2 Nf6 25. Bb3
+Ne4 26. Qg2 Nxd2 27. Qxd2 Rf6 28. Re1 c5 29. Bc2 cxd4 30. cxd4 Kg7 31. Re4 {
+½-½ (31) Vachier Lagrave,M (2721)-Adams,M (2728) Khanty Mansiysk RUS 2010})
+19... Bxe4 20. fxe4 f5 21. e5 f4 22. Qd1 f3 23. Nxf3 {1/2-1/2 (23) So,W (2710)
+-Tomashevsky,E (2706) Tromso 2013} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.06"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C89"]
+[Annotator "Dart, J."]
 [PlyCount "113"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
 d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d3 {weight:10} Bd6 13. Re1 Bf5 {
 weight:70} (13... Qh4 14. g3 Qh3 15. Re4 Qf5 $3 (15... Qd7 $2 16. Nd2 Bb7 17.
-Re1 (17. Qf1 $2)) 16. Nd2 Qg6 17. Re1 $3 f5 18. f4 Bxf4 19. Qf3 Bb8 20. Bxd5+
-cxd5 21. Nb3 Qf7 22. Nd4 Ba7 23. Bf4 Bd7 24. Re5 b4 25. Rae1 Rae8 26. Kf1 bxc3
-{½-½ (26) Leko,P (2694)-Adams,M (2716) Linares 1999}) 14. Qf3 Qh4 15. g3 Qh3
-16. Nd2 $1 (16. Bxd5 cxd5 17. Qxd5 Rad8) 16... Rae8 17. Ne4 Bg4 18. Qg2 Qxg2+
-19. Kxg2 f5 20. h3 Bh5 21. Bf4 Bxf4 22. gxf4 fxe4 23. dxe4 Bf3+ 24. Kxf3 Rxf4+
-25. Kg3 Rfxe4 26. Rxe4 Rxe4 27. f3 Re5 28. c4 bxc4 29. Bxc4 a5 30. Rc1 Rg5+ 31.
-Kf2 Kf8 32. Bf1 Ne7 33. Rc4 Rd5 34. Ra4 Ke8 35. Bc4 Rd2+ 36. Ke3 Rxb2 37. Rxa5
-Kd7 38. f4 Kd6 39. f5 Rh2 40. Bf1 Nd5+ 41. Kf3 Rc2 42. a4 Rc3+ 43. Kf2 Rc2+ 44.
-Kf3 Rc3+ 45. Kf2 Ne7 46. f6 gxf6 47. Rh5 Rc2+ 48. Kf3 Ra2 49. a5 c5 50. a6 Nc6
-51. Ke3 Nb4 52. Bc4 Ra3+ 53. Ke4 Nxa6 54. Rh6 Ra4 55. Rxf6+ Ke7 56. Rxa6 Rxc4+
-57. Kd5 {1/2-1/2 (57) Polgar,J (2707)-Aronian,L (2739) Wijk aan Zee 2008} *
+Re1 (17. Qf1 $2)) 16. Nd2 Qg6 17. Re1 $3 f5 18. f4 (18. c4 f4 19. Ne4 fxg3 20.
+fxg3 Bg4 21. Qc2 bxc4 22. Qxc4 (22. Bxc4 Be5 23. Be3 Rab8 $14 {Houdini 4}) (22.
+dxc4 $2 Rae8 23. cxd5 Bf3 24. dxc6+ Kh8 $15) 22... Bc7 23. Qc2 Kh8 24. Bxd5
+cxd5 25. Nf2 $2 {1/2-1/2 (30) Hellers,F (2490)-Wahls,M (2460) Adelaide 1988} ({
+Komodo TCECr 64-bit 2 threads:} 25. Qxc7 dxe4 26. dxe4 Rac8 27. Qe7 $11)) 18...
+Bxf4 19. Qf3 Bb8 20. Bxd5+ cxd5 21. Nb3 Qf7 22. Nd4 Ba7 23. Bf4 Bd7 24. Re5 b4
+25. Rae1 Rae8 26. Kf1 bxc3 {½-½ (26) Leko,P (2694)-Adams,M (2716) Linares
+1999}) 14. Qf3 Qh4 15. g3 Qh3 16. Nd2 $1 (16. Bxd5 cxd5 17. Qxd5 Rad8) 16...
+Rae8 17. Ne4 Bg4 18. Qg2 Qxg2+ 19. Kxg2 f5 20. h3 Bh5 21. Bf4 Bxf4 22. gxf4
+fxe4 23. dxe4 Bf3+ 24. Kxf3 Rxf4+ 25. Kg3 Rfxe4 26. Rxe4 Rxe4 27. f3 Re5 28. c4
+bxc4 29. Bxc4 a5 30. Rc1 Rg5+ 31. Kf2 Kf8 32. Bf1 Ne7 33. Rc4 Rd5 34. Ra4 Ke8
+35. Bc4 Rd2+ 36. Ke3 Rxb2 37. Rxa5 Kd7 38. f4 Kd6 39. f5 Rh2 40. Bf1 Nd5+ 41.
+Kf3 Rc2 42. a4 Rc3+ 43. Kf2 Rc2+ 44. Kf3 Rc3+ 45. Kf2 Ne7 46. f6 gxf6 47. Rh5
+Rc2+ 48. Kf3 Ra2 49. a5 c5 50. a6 Nc6 51. Ke3 Nb4 52. Bc4 Ra3+ 53. Ke4 Nxa6 54.
+Rh6 Ra4 55. Rxf6+ Ke7 56. Rxa6 Rxc4+ 57. Kd5 {1/2-1/2 (57) Polgar,J (2707)
+-Aronian,L (2739) Wijk aan Zee 2008} *
 
 [Event "Corus-B"]
 [Site "Wijk aan Zee"]
@@ -5990,7 +6138,7 @@ Rxe8 17. Nf1 Bg4 18. f3 Bh3 $1 *
 [ECO "C92"]
 [Annotator "Dart, J."]
 [PlyCount "42"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O b5 6. Bb3 Be7 7. Re1 d6 8. c3
@@ -6178,8 +6326,12 @@ $11 *
 [WhiteTeamCountry "GER"]
 [BlackTeamCountry "GER"]
 
-1. d4 Nf6 2. Bg5 d5 3. Bxf6 exf6 4. e3 Bd6 5. g3 c6 $1 6. Bg2 (6. Nd2) 6... h5
-$3 7. Nd2 h4 8. c4 dxc4 9. Nxc4 Bb4+ (9... Be6 $1 $11) 10. Nd2 $11 0-1
+1. d4 Nf6 2. Bg5 d5 3. Bxf6 exf6 (3... gxf6 4. e3 c5 5. dxc5 e6 6. Nc3 Bxc5 7.
+Qg4 (7. Qh5 $1 f5 (7... Nd7 8. O-O-O f5 {1/2-1/2 (34) Hoang,T (2501)-Ruck,R 
+(2548) Hungary 2010})) 7... Nc6 8. O-O-O Bd7 9. Qg7 Ke7 10. Qh6 Ne5 {1/2-1/2 
+(14) Alvarez Ibarra,R (2421)-Rodriguez Cespedes,A (2482) Sanxenxo 2003} 11.
+Nge2 $11) 4. e3 Bd6 5. g3 c6 $1 6. Bg2 (6. Nd2) 6... h5 $3 7. Nd2 h4 8. c4 dxc4
+9. Nxc4 Bb4+ (9... Be6 $1 $11) 10. Nd2 $11 0-1
 
 [Event "TOP 16 GpB"]
 [Site "Chalons en Champagne FRA"]
@@ -6296,7 +6448,7 @@ Rh3 Ne4 35. h5 {1-0 (35) Malakhov,V (2709)-Starostits,I (2470) Jurmala 2013})
 [ECO "D15"]
 [Annotator "Dart, J."]
 [PlyCount "26"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 d5 2. c4 c6 3. Nc3 Nf6 4. Nf3 a6 5. cxd5 cxd5 6. Bg5 Ne4 7. Bh4 Qa5 8.
@@ -6391,7 +6543,7 @@ Rh1 40. R3e4 Rh3+ 41. Kc4 Rg3 42. Rh6 a6 43. Rxh7 Rg5 44. Rb7 Rh5 45. Re6 Rh4+
 [ECO "D17"]
 [Annotator "Dart, J."]
 [PlyCount "31"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. Ne5 Nbd7 7. Nxc4 Qc7 8.
@@ -6408,7 +6560,7 @@ fxg3 15. hxg3 h5 $2 (15... Nf6 16. O-O h5 17. Rfd1 Bc5 18. e3 a5 19. Rac1 {1/
 [Result "*"]
 [ECO "D17"]
 [PlyCount "23"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "10"]
 
 1. c4 c6 2. d4 d5 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. Nh4 Bc8 {weight:10} (6...
@@ -6469,7 +6621,7 @@ a5) 16... h6 17. a5 a6 {1-0 (38) Oll,L (2590)-Wojtkiewicz,A (2555) New York
 [ECO "D19"]
 [Annotator "Dart, J."]
 [PlyCount "37"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. e3 e6 7. Bxc4 Bb4 8. O-O
 O-O 9. Qe2 Bg6 (9... Ne4 $6 10. Bd3 Bxc3 11. Bxe4 $3 (11. bxc3 Nxc3 12. Qc2
@@ -6506,7 +6658,7 @@ exd5 16. Bxd5 Nxd5 17. Nxd5 Bxe1 18. Rxe1 $11 {Hiarcs 14}) 13... e5
 [ECO "D20"]
 [Annotator "Dart, J."]
 [PlyCount "34"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 d5 2. c4 dxc4 3. e4 Nf6 4. e5 Nd5 5. Bxc4 Nb6 6. Bb3 Nc6 7. Ne2 Bf5 8.
@@ -6515,13 +6667,16 @@ Nbc3 e6 9. O-O (9. a3 Qd7 $3 (9... Be7 $2) 10. O-O O-O-O 11. Be3) 9... Qd7 (
 12. Ba2 Nac4 13. Ng3 Bg6 14. Qe2 Nxe3 15. Qxe3 O-O-O 16. Rfd1 Kb8 17. b4 $11 {
 1-0 (61) Granda Zuniga,J (2620)-Kortschnoj,V (2635) Wijk aan Zee 1997}) 12. Qc1
 Kb8 13. Rd1 f6 14. Ng3 Bg6 {½-½ (24) Van Wely,L (2570)-Anand,V (2725) Wijk
-aan Zee 1996}) 10. Be3 O-O-O 11. a3 f6 (11... Be7 12. Qc1 (12. Rc1 $2)) (11...
-h5 12. Qc1 h4 13. h3 {1/2-1/2 (55) Varga,P (2491)-Drasko,M (2509) Eupen 1999})
-12. exf6 gxf6 13. Ng3 Bg6 $2 (13... Nxd4 14. Bxd4 Qxd4 15. Nxf5 exf5 16. Nb5
-Qxd1 17. Raxd1 Bc5 18. Nxa7+ Kb8 19. Nb5 c6 20. Nc3 f4 21. Rfe1 Bd4 22. Kf1 Be5
-23. Rxd8+ Rxd8 24. Rd1 Re8 {½-½ (24) Onischuk,A (2661)-Karpov,A (2693)
-Kansas 2003}) 14. Qf3 Be7 15. Rad1 Na5 16. Ba2 Bc2 17. Rc1 Bb3 {1-0 (46)
-Shabalov,A (2585)-Kaidanov,G (2577) Saint Louis 2010} *
+aan Zee 1996}) 10. Be3 O-O-O 11. a3 (11. Bc2 Bxc2 12. Qxc2 h5 (12... f5 $1 {1/
+2-1/2 (44) Kuljasevic,D (2555)-Doric,D (2471) Sibenik 2010}) 13. Rfd1 (13. a3)
+13... h4 14. h3 {1-0 (53) Kortschnoj,V (2634)-Markowski,T (2549) Warsaw 2002})
+11... f6 (11... Be7 12. Qc1 (12. Rc1 $2)) (11... h5 12. Qc1 h4 13. h3 {1/2-1/2
+(55) Varga,P (2491)-Drasko,M (2509) Eupen 1999}) 12. exf6 gxf6 13. Ng3 Bg6 $2 (
+13... Nxd4 14. Bxd4 Qxd4 15. Nxf5 exf5 16. Nb5 Qxd1 17. Raxd1 Bc5 18. Nxa7+ Kb8
+19. Nb5 c6 20. Nc3 f4 21. Rfe1 Bd4 22. Kf1 Be5 23. Rxd8+ Rxd8 24. Rd1 Re8 {
+½-½ (24) Onischuk,A (2661)-Karpov,A (2693) Kansas 2003}) 14. Qf3 Be7 15. Rad1
+Na5 16. Ba2 Bc2 17. Rc1 Bb3 {1-0 (46) Shabalov,A (2585)-Kaidanov,G (2577)
+Saint Louis 2010} *
 
 [Event "?"]
 [Site "?"]
@@ -6533,7 +6688,7 @@ Shabalov,A (2585)-Kaidanov,G (2577) Saint Louis 2010} *
 [ECO "D23"]
 [Annotator "Dart, J."]
 [PlyCount "25"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. Nf3 e6 3. c4 d5 4. Nc3 dxc4 5. Qa4+ Nbd7 (5... c6 $3 6. Qxc4 b5) (
@@ -6634,7 +6789,7 @@ Bg5 $14 1-0
 [Result "1-0"]
 [ECO "D28"]
 [PlyCount "25"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3 e6 5. Bxc4 c5 6. Qe2 a6 7. dxc5 Bxc5 8.
@@ -6822,7 +6977,7 @@ a1=Q 47. f8=Q Qa2+ 48. Kxh7 1/2-1/2
 [ECO "D38"]
 [Annotator "Dart, J."]
 [PlyCount "32"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nf3 d5 4. Bg5 Bb4+ 5. Nc3 Nbd7 (5... h6 6. Bxf6 Qxf6 7.
@@ -6930,7 +7085,7 @@ dxc5 Qxd1+ 17. Bxd1 Bxe4 18. O-O Nc6 19. Be2 Bd5 $1 20. Rfc1 $11 1/2-1/2
 [ECO "D44"]
 [Annotator "Dart, J."]
 [PlyCount "109"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 e6 5. Bg5 dxc4 6. e4 b5 7. e5 (7. Be2 Bb7 (
 7... Nbd7 $2 8. e5 $1) (7... Be7) (7... h6) 8. O-O h6 9. Bxf6 (9. Bh4 Nbd7 10.
@@ -7005,7 +7160,7 @@ Bh2 Qh1 55. Rc7+ {½-½ (55) Sykora,J (2322)-Dedina,M (2366) ICCF email 2008} *
 [ECO "D45"]
 [Annotator "Dart, J."]
 [PlyCount "28"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 d5 2. c4 c6 3. e3 Nf6 4. Nc3 e6 5. Nf3 Nbd7 6. Qc2 Bd6 7. g4 {weight:5
 Shabalov-Shirov Gambit} dxc4 (7... h6 8. h3 O-O 9. Bd2 dxc4 10. Bxc4 b5 11. Be2
@@ -7048,7 +7203,7 @@ Mogi das Cruzes 2013} 1-0
 [ECO "D45"]
 [Annotator "Dart, J."]
 [PlyCount "36"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 e6 5. e3 Nbd7 6. Qc2 Bd6 7. b3 O-O 8. Be2
@@ -7119,7 +7274,7 @@ $15 0-1
 [Result "0-1"]
 [ECO "D46"]
 [PlyCount "42"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 d5 2. Nf3 c6 3. c4 Nf6 4. Nc3 e6 5. e3 Nbd7 6. Bd3 (6. Qc2 Bd6 7. Bd3
@@ -7205,7 +7360,7 @@ Kd7 21. Qxa6 b4 $11) 18... Qxf4 19. g3 Qg4 20. e5 Nd5 21. Ne4 Nd7 (21... Nf4
 [ECO "D48"]
 [Annotator "Dart, J."]
 [PlyCount "31"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 e6 5. e3 Nbd7 6. Bd3 dxc4 7. Bxc4 b5 8. Bd3
 a6 (8... Bb7 9. e4 b4 10. Na4 c5 11. e5 Nd5 12. O-O cxd4 13. Re1 g6 14. Bg5 Qa5
@@ -7221,10 +7376,12 @@ Ng5 $1 Nb6 15. a4 O-O 16. a5 $1 $14 (16. axb5 $2 Bxh2+ 17. Kh1 Bf4 18. Nf3 Ng4
 25. Qd2 Nb6 {1/2-1/2 (25) Solar,J (2371)-Strnad,J (2253) ICCF email 2009}))
 14... Nb6 15. Kh1 Bd7 $2 (15... Bc5 16. f4 O-O (16... Qd7 $2 17. Be3 Bb7 18.
 Qe2 $3) 17. e5 $11) 16. f4 e5 17. Nf3 Bg4 18. a4 exf4 19. axb5 $16 {1-0 (45)
-Furman,S (2560)-Bronstein,D (2590) Yerevan 1975}) 14. Ne2 $1 Bd6 15. Ned4 Nc5
-16. b4 Ncxe4 (16... cxb3 $2 17. axb3 $14 {1-0 (40) Gaviota-0.86-Arasan 16.4}))
-11... Bb7 (11... c4 12. dxe6 (12. Bc2) 12... fxe6 13. Bc2 Bb7) 12. dxe6 fxe6
-13. Bc2 Bd6 14. Ng5 Nf8 15. f4 O-O-O 16. Qe1 $11 *
+Furman,S (2560)-Bronstein,D (2590) Yerevan 1975}) 14. Ne2 $1 (14. Ng5 Nc5 15.
+e5 Qxe5 16. Re1 Qd6 17. Qxd6 (17. b4 {weight:10} cxb3 18. axb3 Qc6 $2 (18...
+Qxd1 19. Bxd1 $11) 19. f3 {1-0 (19) Gaviota 0.86-Arasan 17.0 - 2014})) 14...
+Bd6 15. Ned4 Nc5 16. b4 Ncxe4 (16... cxb3 $2 17. axb3 $14 {1-0 (40) Gaviota-0.
+86-Arasan 16.4})) 11... Bb7 (11... c4 12. dxe6 (12. Bc2) 12... fxe6 13. Bc2 Bb7
+) 12. dxe6 fxe6 13. Bc2 Bd6 14. Ng5 Nf8 15. f4 O-O-O 16. Qe1 $11 *
 
 [Event "?"]
 [Site "?"]
@@ -7296,7 +7453,7 @@ Bf8 19. Bf3 c4 $1 20. Qc2 Ne5 21. Be2 Qb6 22. Nd4 Nc6 23. Nxc6 Bxc6 24. Bf3 Bc5
 [ECO "D76"]
 [Annotator "Dart, J."]
 [PlyCount "44"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. Nf3 Nf6 2. c4 g6 3. g3 Bg7 4. Bg2 O-O 5. O-O d5 6. cxd5 Nxd5 7. d4 Nb6 8.
@@ -7339,8 +7496,8 @@ a5 8. cxd5 cxd5 9. Bf4 $14) (7... dxc4 $3 8. Qxc4 Bf5 (8... Nbd7 $2 9. O-O Nb6
 10. Qd3)) 8. O-O Bb7 9. Rd1 (9. Bf4 $14) 9... e6 10. Bg5 $1 Nbd7 11. e4 $14 {
 1-0 (33) Vaganian,R (2623)-Heinatz,T (2332) Germany 2004} *
 
-[Event "?"]
-[Site "?"]
+[Event "-"]
+[Site "-"]
 [Date "2011.07.18"]
 [Round "?"]
 [White "?"]
@@ -7362,11 +7519,13 @@ Nf6 16. gxf5 exf5 17. e5 Ng4 18. d5 cxd5 19. O-O-O d4 20. Nb5 Qd5 21. Qh3 Rfc8+
 Nc7 Rh8 29. Qxh8 Bxh8 30. Ne8 Nxh1 31. Nxf6 Ng3 {½-½ (31) Svidler,P (2747)
 -Gelfand,B (2740) London 2013}) (5. Nf3 $2 Bg7) (5. Qb3 $2 Nxc3 6. bxc3 Bg7 7.
 Ba3 O-O $1 8. Nf3 b6 9. e3 {1/2-1/2 (39) Mah,K (2415)-Hawkins,J (2511) England
-2013}) 5... Nxc3 6. bxc3 Bg7 7. Nf3 c5 8. Rb1 (8. Be2 $2 O-O 9. O-O b6 $3) 8...
-O-O 9. Be2 cxd4 (9... Qa5 $6 10. O-O Qxa2 (10... cxd4 11. cxd4 Qxa2 12. Bg5 $14
-) (10... Qxc3 $6 11. Bd2 Qa3 12. Qc2 Bd7 13. dxc5 (13. Rxb7 cxd4 14. Rc1 {1-0 
-(23) Beliavsky,A (2640)-Sokolov,I (2625) Groningen 1994 Houdini 4 x64:} a5 15.
-Bf1 $14) 13... Bc6 14. Bb5 Na6 15. Rfc1 $16 {1/2-1/2 (40) Beliavsky,A (2570)
+2013}) 5... Nxc3 6. bxc3 Bg7 7. Nf3 (7. Qa4+ Qd7 8. Qb3 O-O 9. Nf3 c5 10. Be3
+cxd4 11. cxd4 Nc6 12. Rd1 Qd6 {1/2-1/2 (12) Moiseenko,A (2706)-Nepomniachtchi,
+I (2717) Riga 2013}) 7... c5 8. Rb1 (8. Be2 $2 O-O 9. O-O b6 $3) 8... O-O 9.
+Be2 cxd4 (9... Qa5 $6 10. O-O Qxa2 (10... cxd4 11. cxd4 Qxa2 12. Bg5 $14) (
+10... Qxc3 $6 11. Bd2 Qa3 12. Qc2 Bd7 13. dxc5 (13. Rxb7 cxd4 14. Rc1 {1-0 (23)
+Beliavsky,A (2640)-Sokolov,I (2625) Groningen 1994 Houdini 4 x64:} a5 15. Bf1
+$14) 13... Bc6 14. Bb5 Na6 15. Rfc1 $16 {1/2-1/2 (40) Beliavsky,A (2570)
 -Tukmakov,V (2580) Moscow 1983}) 11. Bg5 Qe6 12. Re1 (12. Qd3 $2 b6) 12... h6
 13. Bh4 $14 {1/2-1/2 (34) Lelenko, A (2438)-Peschke,U (2459) ICCF 2011}) (9...
 b6 10. O-O Bb7 11. d5 Bxc3 12. Bc4 Bg7 13. Qd3 $2 (13. Qe2 Qc8 14. Bg5 Re8 15.
@@ -7604,7 +7763,7 @@ bxc6 16. gxf4 Rb8 17. e3 Rb6 18. Ne4 Bd6 (18... Nd5 $5 $14) 19. Nd2 $14 1-0
 [ECO "E09"]
 [Annotator "Dart, J."]
 [PlyCount "45"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nf3 d5 4. g3 Bb4+ 5. Bd2 Be7 6. Bg2 O-O 7. O-O c6 8. Qc2
@@ -7746,7 +7905,7 @@ Rc8 {1/2-1/2 (21) Machelett,H (2428)-Brodsky,M (2564) Germany 2006} *
 [ECO "E14"]
 [Annotator "Dart, J."]
 [PlyCount "24"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. e3 Bb7 5. Bd3 Bb4+ $6 (5... d5 $3) 6. Nbd2 c5
@@ -7767,7 +7926,7 @@ bxc5 11. Bc3 f6 12. Nd2 Bg6 *
 [ECO "E15"]
 [Annotator "Dart, J."]
 [PlyCount "29"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Ba6 5. b3 Bb7 (5... d5 6. cxd5 (6. Bg2 Bb4+
@@ -7784,32 +7943,32 @@ Rc8 $11) 9. Qxd2 O-O 10. O-O Re8 11. Ne5 (11. Re1 Nbd7 $11 {0-1 (48) Farago,I
 Be7 7. Bg2 c6 8. Bc3 d5 9. Nbd2 Nbd7 10. O-O O-O 11. Re1 c5 12. e4 dxc4 (12...
 Nxe4 13. Nxe4 dxe4 14. Rxe4 Bb7 15. Re3 (15. Re2) 15... Bf6 {1/2-1/2 (24)
 Nikolic,P (2330)-Csom,I (2510) La Valetta 1980}) 13. Nxc4 cxd4 14. Nxd4 Rc8 15.
-e5 Nd5 16. Bb2 $2 {-0.24/20 11} (16. Bxd5 $1 exd5 17. Nf5 dxc4 18. Qg4 Bg5 19.
-e6 fxe6 20. Nxg7 Nc5 21. Rad1 Nd3 22. Nxe6 Nxf2 23. Rxd8 Nxg4 24. Rxf8+ Rxf8
-25. Nxg5 cxb3 26. axb3 h6 27. Ne4 Rf3 28. b4 Bb7 29. Bd2 Nxh2 30. Kxh2 Bxe4 31.
-Bxh6 Rf2+ 32. Kh3 Bg2+ 33. Kh4 Kf7 {1/2-1/2 (33) Horvath,J (2551)-Solozhenkin,
-E (2512) Helsinki 2001}) 16... Bb4 $11 {ArasanX (2651)-Tinker (2484) chessclub.
-com 2014 [16. -0.24]}) 6. Bg2 Bb4+ 7. Bd2 a5 (7... c5 8. O-O O-O 9. Bc3 Na6 10.
-Bb2 (10. a3 Bxc3 11. Nxc3 cxd4 12. Nxd4 Bxg2 13. Kxg2 Nc5 14. Rc1 Qc7 15. b4
-Nb7 16. Ncb5 Qb8 17. Qd3 Rc8 18. Rfd1 h6 19. f3 a6 20. Nc3 Nd6 21. Nb1 Nde8 22.
-Nd2 Qb7 23. c5 bxc5 24. bxc5 Qa7 25. N2b3 Nd5 26. c6 dxc6 27. e4 Ne7 28. Nc5
-Nf6 29. Ndb3 Ng6 30. Qc3 Nf8 31. Na5 Rab8 32. a4 Kh8 33. Rb1 Rb6 34. Rxb6 Qxb6
-35. Nab7 Rb8 36. Nd6 Kg8 37. Rd2 a5 38. Nd3 N8d7 39. Nc4 Qa6 40. Rc2 c5 41. Rb2
-Rb7 42. Rxb7 Qxb7 43. Qb2 Qa6 44. Qb5 Qxb5 45. axb5 a4 46. Ndb2 Nb6 47. Kf2
-Nfd7 48. Ke3 Kf8 49. f4 f5 50. exf5 exf5 51. Kd3 Ke7 52. Na3 Nf6 53. Nbc4 Nxc4
-54. Nxc4 Ne4 55. Ne5 Kd8 56. g4 fxg4 57. Nxg4 Nd6 58. b6 Kc8 59. Ne3 Kb7 60.
-Nd5 Kc6 {0-1 (60) Wang,H (2739)-Carlsen,M (2837) Biel 2012}) 10... cxd4 11.
-Qxd4 $1 (11. Nxd4 Bxg2 12. Kxg2 Qc7 13. Nf3 Be7 14. Nc3 Nc5 15. Qd4 Qb7 16.
-Rfd1 Rfd8 17. Rac1 Rac8 18. Kg1 d6 19. Qe3 a6 20. Nd4 Bf8 21. Qf3 Qxf3 22. Nxf3
-Rb8 23. Nd4 Rdc8 24. f3 g6 25. Kf2 Bh6 26. e3 Bg7 27. Ke2 Kf8 28. Rd2 Ne8 29.
-Rcd1 Be5 30. g4 Rb7 31. g5 Bg7 32. Ba3 Kg8 33. h4 h5 34. Rc1 Rbc7 35. Rcd1 Rb7
-36. Rc1 Rbc7 37. Rcd1 {1/2-1/2 (37) Aronian,L (2808) -Carlsen,M (2815) Monte
-Carlo 2011}) 11... Be7 12. Nc3 Nc5 13. Rad1 Qc8 $11 {0-1 (36) Horvath,C (2495)
--Salov,V (2685) Hilversum 1993}) 8. O-O O-O 9. Qc2 d6 (9... Re8 10. Nc3 d6 11.
-Rfe1 Bxc3 12. Bxc3 Be4 13. Qd2 Nbd7 14. Qe3 {1/2-1/2 (14) Markus,R (2599)
--Timman,J (2575) Helsingor 2012}) 10. Bg5 $1 a4 11. Nc3 Bxc3 12. Qxc3 Nbd7 13.
-b4 Ne4 14. Qc2 Qc8 15. Be3 $11 {1/2-1/2 (29) Zhu,C (2538)-Maric,A (2446)
-Shanghai 2001} *
+e5 Nd5 16. Bb2 $2 {[%eval -24,20] [%emt 0:00:11]} (16. Bxd5 $1 exd5 17. Nf5
+dxc4 18. Qg4 Bg5 19. e6 fxe6 20. Nxg7 Nc5 21. Rad1 Nd3 22. Nxe6 Nxf2 23. Rxd8
+Nxg4 24. Rxf8+ Rxf8 25. Nxg5 cxb3 26. axb3 h6 27. Ne4 Rf3 28. b4 Bb7 29. Bd2
+Nxh2 30. Kxh2 Bxe4 31. Bxh6 Rf2+ 32. Kh3 Bg2+ 33. Kh4 Kf7 {1/2-1/2 (33)
+Horvath,J (2551)-Solozhenkin,E (2512) Helsinki 2001}) 16... Bb4 $11 {ArasanX 
+(2651)-Tinker (2484) chessclub.com 2014 [16. -0.24]}) 6. Bg2 Bb4+ 7. Bd2 a5 (
+7... c5 8. O-O O-O 9. Bc3 Na6 10. Bb2 (10. a3 Bxc3 11. Nxc3 cxd4 12. Nxd4 Bxg2
+13. Kxg2 Nc5 14. Rc1 Qc7 15. b4 Nb7 16. Ncb5 Qb8 17. Qd3 Rc8 18. Rfd1 h6 19. f3
+a6 20. Nc3 Nd6 21. Nb1 Nde8 22. Nd2 Qb7 23. c5 bxc5 24. bxc5 Qa7 25. N2b3 Nd5
+26. c6 dxc6 27. e4 Ne7 28. Nc5 Nf6 29. Ndb3 Ng6 30. Qc3 Nf8 31. Na5 Rab8 32. a4
+Kh8 33. Rb1 Rb6 34. Rxb6 Qxb6 35. Nab7 Rb8 36. Nd6 Kg8 37. Rd2 a5 38. Nd3 N8d7
+39. Nc4 Qa6 40. Rc2 c5 41. Rb2 Rb7 42. Rxb7 Qxb7 43. Qb2 Qa6 44. Qb5 Qxb5 45.
+axb5 a4 46. Ndb2 Nb6 47. Kf2 Nfd7 48. Ke3 Kf8 49. f4 f5 50. exf5 exf5 51. Kd3
+Ke7 52. Na3 Nf6 53. Nbc4 Nxc4 54. Nxc4 Ne4 55. Ne5 Kd8 56. g4 fxg4 57. Nxg4 Nd6
+58. b6 Kc8 59. Ne3 Kb7 60. Nd5 Kc6 {0-1 (60) Wang,H (2739)-Carlsen,M (2837)
+Biel 2012}) 10... cxd4 11. Qxd4 $1 (11. Nxd4 Bxg2 12. Kxg2 Qc7 13. Nf3 Be7 14.
+Nc3 Nc5 15. Qd4 Qb7 16. Rfd1 Rfd8 17. Rac1 Rac8 18. Kg1 d6 19. Qe3 a6 20. Nd4
+Bf8 21. Qf3 Qxf3 22. Nxf3 Rb8 23. Nd4 Rdc8 24. f3 g6 25. Kf2 Bh6 26. e3 Bg7 27.
+Ke2 Kf8 28. Rd2 Ne8 29. Rcd1 Be5 30. g4 Rb7 31. g5 Bg7 32. Ba3 Kg8 33. h4 h5
+34. Rc1 Rbc7 35. Rcd1 Rb7 36. Rc1 Rbc7 37. Rcd1 {1/2-1/2 (37) Aronian,L (2808)
+-Carlsen,M (2815) Monte Carlo 2011}) 11... Be7 12. Nc3 Nc5 13. Rad1 Qc8 $11 {
+0-1 (36) Horvath,C (2495)-Salov,V (2685) Hilversum 1993}) 8. O-O O-O 9. Qc2 d6
+(9... Re8 10. Nc3 d6 11. Rfe1 Bxc3 12. Bxc3 Be4 13. Qd2 Nbd7 14. Qe3 {1/2-1/2 
+(14) Markus,R (2599)-Timman,J (2575) Helsingor 2012}) 10. Bg5 $1 a4 11. Nc3
+Bxc3 12. Qxc3 Nbd7 13. b4 Ne4 14. Qc2 Qc8 15. Be3 $11 {1/2-1/2 (29) Zhu,C 
+(2538)-Maric,A (2446) Shanghai 2001} *
 
 [Event "Sparkassen Chess Meeting"]
 [Site "Dormund GER"]
@@ -7857,7 +8016,7 @@ Bxd6 28. exd6 Nd4 29. Rxd4 Rxe1+ 30. Bxe1 cxd4 31. Qxf7+ Kh8 32. d7 Qc5 33. Bb4
 [ECO "E18"]
 [Annotator "Dart, J."]
 [PlyCount "28"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7 5. Bg2 Be7 6. O-O O-O 7. Nc3 Ne4 8. Bd2
@@ -7905,7 +8064,7 @@ Rd1 d6 (10... Bf6 11. Qc2 Nc6 12. dxc5 bxc5 13. Bf4 Re8 (13... Qc8 $2 14. Bd6)
 [ECO "E20"]
 [Annotator "Dart, J."]
 [PlyCount "26"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Nf3 c5 5. g3 Nc6 6. Bg2 Ne4 7. Bd2 Nxd2 8.
@@ -8054,7 +8213,7 @@ Bxg2 17. Kxg2) 17. Qxd4 Bxg2 18. Kxg2 $14 1-0
 [ECO "E39"]
 [Annotator "Dart, J."]
 [PlyCount "28"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 c5 5. dxc5 O-O 6. a3 Bxc5 7. Nf3 b6 8. Bg5
@@ -8100,7 +8259,7 @@ Rg3 Bxe2 *
 [BlackElo "2735"]
 [Annotator "Dart, J."]
 [PlyCount "40"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "300+3"]
 
 1. c4 Nf6 2. Nc3 e6 3. d4 Bb4 4. e3 O-O 5. Bd3 c5 6. Nf3 d5 7. O-O dxc4 8. Bxc4
@@ -8153,7 +8312,7 @@ Re6 $11) 20... Nb3 1/2-1/2
 [ECO "E61"]
 [Annotator "Dart, J."]
 [PlyCount "21"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 [TimeControl "240+1"]
 
 1. d4 Nf6 2. c4 g6 3. Nf3 Bg7 4. Nc3 O-O 5. Bf4 d6 6. e3 Nh5 $2 (6... c5 $1) 7.
@@ -8281,8 +8440,6 @@ fxe4 Qxe4 $11) 23. Rg4 Qf5 $2 1-0
 [EventType "swiss"]
 [EventRounds "9"]
 [EventCountry "ESP"]
-[Source "ChessBase"]
-[SourceDate "1996.11.15"]
 
 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 e5 $2 6. d5 (6. Nge2 $1 O-O 7. Be3
 ) 6... Nh5 7. Be3 f5 (7... O-O 8. Qd2 Qh4+ $2 (8... Nd7) 9. g3 (9. Bf2 Qe7 10.
@@ -8433,32 +8590,8 @@ Bc5 66. Bf1 Ke5 67. Rb5 Kxd5 68. Rxa5 {1-0 (68) Almiron,L (2574)-Patrici,N
 [Result "*"]
 [ECO "E99"]
 [Annotator "Dart, J."]
-[PlyCount "55"]
-[EventDate "2014.??.??"]
-
-1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6 8. d5
-Ne7 9. Ne1 Ne8 $6 10. Nd3 (10. Bg5 {weight:10} f5 11. f3) 10... f5 11. Bd2 (11.
-f3) 11... Nf6 (11... c5 $2 12. Rb1 Nf6 13. f3 f4 14. b4 b6 15. bxc5 bxc5 16.
-Qa4 g5 17. Nf2 h5 18. h3 Rf7 {0-1 (34) Mekhitarian,K (2528)-Ding,L (2628)
-Moscow 2011} 19. Rb2 $16) 12. f3 f4 13. c5 g5 14. Rc1 $1 Ng6 15. Nb5 $1 (15.
-cxd6 cxd6 16. Nb5 Rf7 17. Qc2 Ne8 18. a4 h5 19. Nf2 Bf8 20. h3 Rg7 21. a5 (21.
-Qb3 $2 Nh4 {0-1 (48) Nitsche,W (2375)-Papenin,N (2630) ICCF 2010}) 21... Nh4
-$14) 15... Rf7 16. Ba5 b6 17. cxd6 cxd6 18. Be1 a6 19. Nc3 a5 20. Nb5 Bf8 21.
-Rc3 g4 22. Qc2 $2 gxf3 23. Bxf3 Ng4 24. Bf2 Nh4 25. Bxg4 Bxg4 26. Bxh4 Qxh4 27.
-Ne1 Qh5 28. Nf3 {1/2-1/2 (28) Banikas,H (2620)-Radjabov,T (2781) Porto Carras
-2011} *
-
-[Event "?"]
-[Site "?"]
-[Date "2014.01.08"]
-[Round "?"]
-[White "?"]
-[Black "?"]
-[Result "*"]
-[ECO "E99"]
-[Annotator "Dart, J."]
 [PlyCount "35"]
-[EventDate "2014.??.??"]
+[EventDate "2014.03.03"]
 
 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6 8. d5
 Ne7 9. Ne1 Nd7 10. Be3 (10. Nd3 f5 11. Bd2 Nf6 12. f3 f4 (12... Kh8 $2 13. Rc1
@@ -8473,4 +8606,28 @@ Qf2 Rd7+ 41. Kc2 Qb5 42. Qg3 Qa4+ 43. Rb3 Qxc6+ 44. Bc3 Qg6 {0-1 (44) Persson,
 C (2605)-Dothan,Y (2624) ICCF email 2008 1-0 (44) Crafty-23.5-Arasan 16.4})
 13... Ng6 $2 (13... a5) 14. a5 Rf7 15. b4 $3 Nf6 16. c5 Bf8 17. cxd6 Bxd6 18.
 Nd3 {1-0 (50) Kortschnoj,V (2630)-Nunn,J (2610) Amsterdam 1990} *
+
+[Event "?"]
+[Site "?"]
+[Date "2014.01.08"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "E99"]
+[Annotator "Dart, J."]
+[PlyCount "55"]
+[EventDate "2014.03.03"]
+
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6 8. d5
+Ne7 9. Ne1 Ne8 $6 10. Nd3 (10. Bg5 {weight:10} f5 11. f3) 10... f5 11. Bd2 (11.
+f3) 11... Nf6 (11... c5 $2 12. Rb1 Nf6 13. f3 f4 14. b4 b6 15. bxc5 bxc5 16.
+Qa4 g5 17. Nf2 h5 18. h3 Rf7 {0-1 (34) Mekhitarian,K (2528)-Ding,L (2628)
+Moscow 2011} 19. Rb2 $16) 12. f3 f4 13. c5 g5 14. Rc1 $1 Ng6 15. Nb5 $1 (15.
+cxd6 cxd6 16. Nb5 Rf7 17. Qc2 Ne8 18. a4 h5 19. Nf2 Bf8 20. h3 Rg7 21. a5 (21.
+Qb3 $2 Nh4 {0-1 (48) Nitsche,W (2375)-Papenin,N (2630) ICCF 2010}) 21... Nh4
+$14) 15... Rf7 16. Ba5 b6 17. cxd6 cxd6 18. Be1 a6 19. Nc3 a5 20. Nb5 Bf8 21.
+Rc3 g4 22. Qc2 $2 gxf3 23. Bxf3 Ng4 24. Bf2 Nh4 25. Bxg4 Bxg4 26. Bxh4 Qxh4 27.
+Ne1 Qh5 28. Nf3 {1/2-1/2 (28) Banikas,H (2620)-Radjabov,T (2781) Porto Carras
+2011} *
 
