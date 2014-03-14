@@ -1591,7 +1591,9 @@ int Search::quiesce(int ply,int depth)
       int move_index = 0;
       int try_score;
       BoardState state(board.state);
-      if (!IsNull(pv)) {
+      const ColorType oside = board.oppositeSide();
+      Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
+      while (!IsNull(pv)) {
          if (Capture(pv) == King) {
 #ifdef _TRACE
             if (master()) {
@@ -1610,9 +1612,21 @@ int Search::quiesce(int ply,int depth)
             cout << endl;
          }
 #endif
-         // Omit futility pruning on hash move.
-         // Also, we do not do SEE on the pv move because it already
-         // passed that test - or it would have been pruned
+         if (!node->PV() && !disc.isSet(StartSquare(pv)) && 
+             (Capture(pv) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
+            const int gain = calcGain(board,pv);
+            const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+            if (optScore < node->alpha) {
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply); cout << "pruned (futility)" << endl;
+               }
+#endif
+               node->best_score = Util::Max(node->best_score,optScore);
+               break;
+            }
+         }
+
          ASSERT(validMove(board,pv));
          board.doMove(pv);
          try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
@@ -1635,13 +1649,12 @@ int Search::quiesce(int ply,int depth)
                   goto search_end;              // mating move found
             }
          }
+         break;
       }
       {
          MoveGenerator mg(board, &context, ply,
                           NullMove, master());
          Move *moves = (Move*)node->done;
-         const ColorType oside = board.oppositeSide();
-         Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
          // generate all the capture moves
          int move_count = mg.generateCaptures(moves,board.occupied[oside]);
          mg.initialSortCaptures(moves, move_count);
@@ -1672,7 +1685,9 @@ int Search::quiesce(int ply,int depth)
                const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
                if (optScore < node->alpha) {
 #ifdef _TRACE
-                  indent(ply); cout << "pruned (futility)" << endl;
+                  if (master()) {
+                     indent(ply); cout << "pruned (futility)" << endl;
+                  }
 #endif
                   node->best_score = Util::Max(node->best_score,optScore);
                   continue;
@@ -1682,7 +1697,10 @@ int Search::quiesce(int ply,int depth)
                    Util::Max(0,node->alpha - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
                   // This appears to be a losing capture, or one that can't bring us above alpha
 #ifdef _TRACE
-                  indent(ply); cout << "pruned (SEE)" << endl;
+                  if (master()) {
+                     indent(ply); cout << "pruned (SEE)" << endl;
+                  }
+                  
 #endif
                   continue;
                }
@@ -1792,7 +1810,10 @@ int Search::quiesce(int ply,int depth)
                      node->best = move;
                      if (try_score >= node->beta) {
 #ifdef _TRACE
-                        indent(ply); cout << "**CUTOFF**" << endl;
+                        if (master()) {
+                           indent(ply); cout << "**CUTOFF**" << endl;
+                        }
+                        
 #endif
                         goto search_end;
                      }
