@@ -20,6 +20,7 @@ extern "C" {
 
 BookReader::BookReader()
 {                 
+   srand((unsigned)(getCurrentTime() % (1<<31)));
 }
 
 BookReader::~BookReader()
