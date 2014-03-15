@@ -174,7 +174,7 @@ This file can be annotated using standard PGN comments and Numeric
 Annotation Glyphs (NAGs). A file with such annotations is supplied
 with the Arasan source and is named "basic.pgn".</p>
 
-<p>In annotated PGN file, an explict weight can be specified by 
+<p>In the annotated PGN file, an explict weight can be specified by 
 putting a comment with the string "weight: " followed by a numeric value
 after a move. Weights are between 0 and 100. A weight of 0
 means that the computer will never play the move, but will respond to
@@ -325,7 +325,8 @@ filename:</p>
 -o <file> stores test output in "file".
 
 <p>If the search module is compiled with -D_TRACE, arasanx will print
-out copious information about the search process when it is run. See
+out copious information about the search process when it is run (if
+running multi-threaded, only the main thread is traced). See
 search.cpp to see what information is output and where it comes from.</p>
 
 <h3>Test Suites</h3>
@@ -1147,12 +1148,8 @@ of the Arasan source distribution.</p>
 
 <h2>Support</h2>
 
-<p>I have been working on computer chess programming since about 1987, and
-this is the second complete chess program I have written. It is still
-very much imperfect - but I have decided to release it in its present
-form, both so that others can enjoy playing with it and so that
-programmers can study it, learn from it, and maybe improve it. I don't
-guarantee any support for this program. However, if you do find bugs in
+<p>While no formal support is offered
+for this software, if you do find bugs in
 it, or discover a way to improve it, I would like to hear from you.</p>
 
 <p>Contact information and additional information about Arasan can be
