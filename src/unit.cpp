@@ -174,39 +174,72 @@ static int testNotation() {
         NotationData("2r2rk1/6pp/2pqr3/p4pB1/1b1P4/1Q2QPP1/1P2P1BP/2R2RK1 w - -","Qexe6"),
         NotationData("r4k2/3b1p1p/3n1npN/4p3/1Q2P3/7P/1Pq2PP1/2BR1NK1 b - -","Nxe4"),
         NotationData("8/3b2kp/4p1p1/pr1n4/2N1N2P/1P4P1/1K3P2/3R4 w - -","Ned6"),
-        NotationData("r1r3k1/2n1ppbp/npp5/p2pP2p/P2P1N2/1PP5/3B1PPN/2Rb1RK1 w - -","Rfxd1")
+        NotationData("r1r3k1/2n1ppbp/npp5/p2pP2p/P2P1N2/1PP5/3B1PPN/2Rb1RK1 w - -","Rfxd1"),
+        NotationData("1r6/k1q3pp/p2r1p2/Ppp1pP1B/1nPpP3/R2P2P1/2PQ2KP/R7 w - b6 0 1","axb6"),
+        NotationData("8/3k2p1/5bK1/p7/P2P1PPp/4P3/7P/8 b - g3 0 1","hxg3")
     };
 
     int errs = 0;
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 17; i++) {
         Move m = Notation::value(notationData[i].board,
                                  notationData[i].board.sideToMove(),
                                  Notation::SAN_IN,
                                  notationData[i].moveStr);
-        if (m == NullMove) {
+        if (m == NullMove || !legalMove(notationData[i].board,m)) {
            cout << "notation: error in case " << i << endl;
            ++errs;
         }
     } 
+    // Verify e.p. square is set correctly
     Board board;
+    stringstream s(notationData[15].fen);
+    s >> board;
+    if (board.enPassantSq() != B5) {
+        cerr << "notation: error in case 17" << endl;
+        ++errs;
+    }
+    stringstream s2;
+    s2 << board;
+    if (s2.str() != notationData[15].fen) {
+        cerr << "notation: error in case 18" << endl;
+        ++errs;
+    }
+    stringstream s3(notationData[16].fen);
+    s3 >> board;
+    if (board.enPassantSq() != G4) {
+        cerr << "notation: error in case 19" << endl;
+        ++errs;
+    }
+    stringstream s4;
+    s4 << board;
+    if (s4.str() != notationData[16].fen) {
+        cerr << "notation: error in case 20" << endl;
+        ++errs;
+    }
+    // verify flip() sets e.p. square correctly
+    board.flip();
+    if (board.enPassantSq() != G5) {
+        cout << "notation: error in case 21" << endl;
+    }
     string fenStr = "4Qnk1/pp1P1p2/6rp/8/3P4/r5BK/8/8 w - -";
     if (!BoardIO::readFEN(board, fenStr.c_str())) {
         cerr << "error in FEN: " << fenStr << endl;
         return ++errs;
     }
+    // Test WB_IN format
     Move m = Notation::value(board,White,Notation::WB_IN,"d7d8q");
     if (m == NullMove || StartSquare(m) != D7 || DestSquare(m) != D8 || PromoteTo(m) != Queen) {
-       cout << "notation: error in case 16" << endl;
+       cout << "notation: error in case 22" << endl;
        ++errs;
     }
     fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
     if (!BoardIO::readFEN(board, fenStr.c_str())) {
-        cerr << "error in FEN: " << fenStr << endl;
+        cerr << "notation: error in FEN: " << fenStr << endl;
         return ++errs;
     }
     m = Notation::value(board,White,Notation::WB_IN,"e2e4");
     if (m == NullMove || StartSquare(m) != E2 || DestSquare(m) != E4 || PromoteTo(m) != Empty) {
-       cout << "notation: error in case 17" << endl;
+       cout << "notation: error in case 23" << endl;
        ++errs;
     }
     return errs;
