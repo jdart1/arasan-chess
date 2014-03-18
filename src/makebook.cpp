@@ -383,10 +383,10 @@ static void processVar(const Variation &var, bool first) {
     // end of line eval or result, if any).
 #ifdef _TRACE
     cout << "process var: board=" << var.save << " hash=" << (hex) << var.save.hashCode() << (dec) << " eval=";
-    if (var.eval == NO_MOVE_EVAL) {
+    if (var.eval == NO_POSITION_EVAL) {
         cout << "none";
     } else {
-        cout << (int)var.eval-(int)NEUTRAL_EVAL-1;
+        cout << (int)var.eval-(int)EQUAL_POSITION;
     }
     cout << endl;
 #endif
