@@ -1494,15 +1494,6 @@ int Search::quiesce(int ply,int depth)
          }
 #endif
       }
-      if (node->best_score >= node->beta) {
-#ifdef _TRACE
-         if (master()) {
-            indent(ply);
-            cout << "**CUTOFF**" << endl;
-         }
-#endif
-         return node->best_score;
-      }
       if (node->num_try == 0) { // no legal evasions, so this is checkmate
 #ifdef _TRACE
          if (master()) {
@@ -1571,9 +1562,9 @@ int Search::quiesce(int ply,int depth)
             // check legality of prev move but not at depth == 0 (because
             // regular search checked already)
             if (depth < 0 && !board.wasLegal((node-1)->last_move)) {
-               ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
                return -Illegal;
             }
+            ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
             // store eval in hash table if not already fetched from there
             if (!had_eval) {
                controller->hashTable.storeHash(hash, tt_depth,
@@ -1832,7 +1823,7 @@ int Search::quiesce(int ply,int depth)
          }
       }
    search_end:
-      storeHash(board,hash,pv,tt_depth);
+      storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
             updatePV(board,node->best,ply);
