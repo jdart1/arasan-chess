@@ -738,231 +738,230 @@ Move *excludes, int num_excludes)
    for (iteration_depth = 1;
         iteration_depth <= controller->ply_limit && !terminate;
         iteration_depth++) {
-       if (!controller->explicit_excludes) num_excludes = 0;
-       for (multipv_count=0; multipv_count < options.search.multipv && !terminate; multipv_count++) {
-           int lo_window, hi_window;
-           int aspirationWindow = ASPIRATION_WINDOW[0];
-           if (iteration_depth <= 1) {
-               lo_window = -Constants::MATE;
-               hi_window = Constants::MATE;
-           } else if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-               lo_window = Util::Max(-Constants::MATE,value - EASY_THRESHOLD);
-               hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
-           } else {
-               lo_window = Util::Max(-Constants::MATE,value - aspirationWindow/2);
-               hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
-           }
-           if (talkLevel == Trace && controller->background) {
-               cout << "# " << iteration_depth << ". move=";
-               MoveImage(node->best,cout); cout << " score=" << node->best_score
-                                                << " terminate=" << terminate << endl;
-           }
-           bool failLow = true;
-           int fails = 0;
-           int faillows = 0;
-           controller->stats->faillow = 0;
-           controller->stats->failhigh = 0;
-           while (!terminate && failLow) {          // fail low loop
-
-               failLow = false;
-               bool failHigh = true;
-
-               while (!terminate && failHigh) {      // fail high loop
-                   failHigh = false;
+      if (!controller->explicit_excludes) num_excludes = 0;
+      for (multipv_count=0; multipv_count < options.search.multipv && !terminate; multipv_count++) {
+         int lo_window, hi_window;
+         int aspirationWindow = ASPIRATION_WINDOW[0];
+         if (iteration_depth <= 1) {
+            lo_window = -Constants::MATE;
+            hi_window = Constants::MATE;
+         } else if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+            lo_window = Util::Max(-Constants::MATE,value - EASY_THRESHOLD);
+            hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
+         } else {
+            lo_window = Util::Max(-Constants::MATE,value - aspirationWindow/2);
+            hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
+         }
+         if (talkLevel == Trace && controller->background) {
+            cout << "# " << iteration_depth << ". move=";
+            MoveImage(node->best,cout); cout << " score=" << node->best_score
+                                             << " terminate=" << terminate << endl;
+         }
+         bool failLow = true;
+         bool failHigh = true;
+         int fails = 0;
+         int faillows = 0;
+         controller->stats->faillow = 0;
+         controller->stats->failhigh = 0;
+         while (!terminate && (failLow || failHigh)) {
+            failHigh = failLow = false;
 #ifdef _TRACE
-                   cout << "iteration " << iteration_depth << " window = [" <<
-                       lo_window << "," << hi_window << "]" << endl;
+            cout << "iteration " << iteration_depth << " window = [" <<
+               lo_window << "," << hi_window << "]" << endl;
 #endif
-                   value = ply0_search(mg, lo_window, hi_window, iteration_depth,
-                                       DEPTH_INCREMENT*iteration_depth,
-                                       excludes,num_excludes);
+            value = ply0_search(mg, lo_window, hi_window, iteration_depth,
+                                DEPTH_INCREMENT*iteration_depth,
+                                excludes,num_excludes);
 #ifdef _TRACE
-                   cout << "iteration " << iteration_depth << " result: " <<
-                       value << endl;
+            cout << "iteration " << iteration_depth << " result: " <<
+               value << endl;
 #endif
-                   controller->updateStats(node,iteration_depth,
-                                           value,lo_window,hi_window);
-                   if (iteration_depth == 0 && scoring.isLegalDraw(board)) {
-                       if (talkLevel == Trace)
-                           cout << "# draw, terminating" << endl;
-                       controller->terminateNow();
-                   }
-                   // check for forced move, but only at depth 2
-                   // (so we get a ponder move if possible). But exit immediately
-                   // if a tb hit because deeper search will hit the q-search and
-                   // the score will be inaccurate. Do not terminate here if a
-                   // resign score is returned (search deeper to get an accurate
-                   // score). Do not exit in analysis mode.
-                   else if (!(controller->background || controller->time_target == INFINITE_TIME) &&
-                            mg.moveCount() == 1 &&
-                            (iteration_depth >= 2) &&
-                            (!options.search.can_resign ||
-                             (controller->stats->display_value >
-                              options.search.resign_threshold))) {
-                       if (talkLevel == Trace)
-                           cout << "# single legal move, terminating" << endl;
-                       controller->terminateNow();
-                   }
-                   Statistics *stats = controller->stats;
-                   StateType &state = stats->state;
-                   if (!terminate && (state == Checkmate || state == Stalemate)) {
-                       if (talkLevel == Trace)
-                           cout << "# terminating due to checkmate or statemate, state="
-                                << (int)state << endl;
-                       controller->terminateNow();
-                       break;
-                   }
-                   if (stats->elapsed_time > 200) {
-                       Time_Check_Interval = int((20L*stats->num_nodes)/(stats->elapsed_time*NODE_ACCUM_THRESHOLD));
-                       if ((int)controller->time_limit - (int)stats->elapsed_time < 100) {
-                          Time_Check_Interval /= 2;
-                       }
-                       if (talkLevel == Trace) {
-                           cout << "# time check interval=" << Time_Check_Interval << " elapsed_time=" << stats->elapsed_time << " target=" << controller->getTimeLimit() << endl;
-                       }
-                   }
-                   if (!terminate) {
-                       if (checkTime(board,0)) {
-                           if (talkLevel == Trace)
-                               cout << "# time up" << endl;
-                           controller->terminateNow();
-                       }
-                       else if (controller->terminate_function &&
-                                controller->terminate_function(*stats)) {
-                           if (talkLevel == Trace)
-                               cout << "# terminating due to program or user input" << endl;
-                           controller->terminateNow();
-                       }
-                   }
-                   failHigh = value >= hi_window && (hi_window < Constants::MATE-iteration_depth-1);
-                   if (failHigh && !terminate) {
-#ifdef _TRACE
-                       cout << "ply 0 high cutoff, re-searching ... value=";
-                       Scoring::printScore(value,cout);
-                       cout << " fails=" << fails << endl;
-#endif
-                       showStatus(board, node->best, failLow, failHigh, 0);
-					   if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
-						  if (talkLevel == Trace) {
-							 cout << "# warning, too many aspiration window steps" << endl;
-						  }
-						  aspirationWindow = Constants::MATE;
-					   }
-					   else {
-						   aspirationWindow = ASPIRATION_WINDOW[++fails];
-					   }
-                       if (aspirationWindow == Constants::MATE) {
-                           hi_window = Constants::MATE-iteration_depth-1;
-                       } else {
-                           if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-                               aspirationWindow += EASY_THRESHOLD;
-                           }
-                           hi_window = Util::Min(Constants::MATE-iteration_depth-1,
-                                             lo_window + aspirationWindow);
-                       }
-                   }
-               }                                     // fail high loop
-               failLow = value <= lo_window && (value > iteration_depth-Constants::MATE);
-               if (failLow && !terminate) {
-#ifdef _TRACE
-                   cout << "ply 0 fail low, re-searching ..." << endl;
-                   cout << "fails = " << fails << endl;
-#endif
-                   showStatus(board, node->best, failLow, failHigh, 0);
-                   faillows++;
-
-                   // continue loop with lower bound
-                   if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
-                      // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
-                      // search to continue, but set the lower bound to the bottom of the range.
-                      if (talkLevel == Trace) {
-                         cout << "# warning, too many aspiration window steps" << endl;
-                      }
-                      aspirationWindow = Constants::MATE;
-                   }
-                   else {
-                      aspirationWindow = ASPIRATION_WINDOW[++fails];
-                   }
-                   if (aspirationWindow == Constants::MATE) {
-                       lo_window = iteration_depth-Constants::MATE-1;
-                   } else {
-                       if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-                           aspirationWindow += EASY_THRESHOLD;
-                       }
-                       lo_window = Util::Max(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
-                   }
+            controller->updateStats(node,iteration_depth,
+                                    value,lo_window,hi_window);
+            if (iteration_depth == 0 && scoring.isLegalDraw(board)) {
+               if (talkLevel == Trace)
+                  cout << "# draw, terminating" << endl;
+               controller->terminateNow();
+            }
+            // check for forced move, but only at depth 2
+            // (so we get a ponder move if possible). But exit immediately
+            // if a tb hit because deeper search will hit the q-search and
+            // the score will be inaccurate. Do not terminate here if a
+            // resign score is returned (search deeper to get an accurate
+            // score). Do not exit in analysis mode.
+            else if (!(controller->background || controller->time_target == INFINITE_TIME) &&
+                     mg.moveCount() == 1 &&
+                     (iteration_depth >= 2) &&
+                     (!options.search.can_resign ||
+                      (controller->stats->display_value >
+                       options.search.resign_threshold))) {
+               if (talkLevel == Trace)
+                  cout << "# single legal move, terminating" << endl;
+               controller->terminateNow();
+            }
+            Statistics *stats = controller->stats;
+            StateType &state = stats->state;
+            if (!terminate && (state == Checkmate || state == Stalemate)) {
+               if (talkLevel == Trace)
+                  cout << "# terminating due to checkmate or statemate, state="
+                       << (int)state << endl;
+               controller->terminateNow();
+               break;
+            }
+            if (stats->elapsed_time > 200) {
+               Time_Check_Interval = int((20L*stats->num_nodes)/(stats->elapsed_time*NODE_ACCUM_THRESHOLD));
+               if ((int)controller->time_limit - (int)stats->elapsed_time < 100) {
+                  Time_Check_Interval /= 2;
                }
-           }
-           if (!terminate) showStatus(board, node->best, 0, 0, 0);
-           if (!MovesEqual(node->best,easyMove)) {
-               depth_at_pv_change = iteration_depth;
-           }
-#ifdef _TRACE
-           cout << iteration_depth << " ply search result: ";
-           MoveImage(node->best,cout);
-           cout << " value = ";
-           Scoring::printScore(value,cout);
-           cout << endl;
-#endif
-           last_score = value;
-           if (options.search.multipv > 1) {
-               ASSERT(num_excludes<Constants::MaxMoves);
-               excludes[num_excludes++] = node->pv[0];
-           }
-           else if (!(controller->uci && controller->time_limit == INFINITE_TIME)) {
-               // Allow early termination on a tablebase position, but not
-               // if we have >=6 man tbs in use (because tb set may be
-               // incomplete - in that case it is better to allow us to
-               // search deeper those nodes that don't produce a tb hit).
-               //
-               if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0])) {
-                   if (talkLevel == Trace)
-                       cout << "# terminating, tablebase hit" << endl;
-#ifdef _TRACE
-                   cout << "terminating, tablebase hit" << endl;
-#endif
-                   controller->terminateNow();
-                   break;
+               if (talkLevel == Trace) {
+                  cout << "# time check interval=" << Time_Check_Interval << " elapsed_time=" << stats->elapsed_time << " target=" << controller->getTimeLimit() << endl;
                }
-               else if (!controller->background &&
-                        !controller->time_added &&
-                        !easy_adjust && 
-                        depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
-                        MovesEqual(easyMove,node->best) &&
-                        !faillows &&
-                        (controller->stats->elapsed_time >
-                         (unsigned)controller->time_target/3)) {
-                   easy_adjust = true;
-                   if (talkLevel == Trace) {
-                       cout << "# easy move, adjusting time lower" << endl;
-                   }
-                   controller->time_target /= 3;
+            }
+            if (terminate) {
+               break;
+            }
+            else {
+               if (checkTime(board,0)) {
+                  if (talkLevel == Trace)
+                     cout << "# time up" << endl;
+                  controller->terminateNow();
                }
-               if (value <= iteration_depth - Constants::MATE) {
-                   // We're either checkmated or we certainly will be, so
-                   // quit searching.
-                   if (talkLevel == Trace)
-                       cout << "# terminating, low score" << endl;
+               else if (controller->terminate_function &&
+                        controller->terminate_function(*stats)) {
+                  if (talkLevel == Trace)
+                     cout << "# terminating due to program or user input" << endl;
+                  controller->terminateNow();
+               }
+            }
+            failHigh = value >= hi_window && (hi_window < Constants::MATE-iteration_depth-1);
+            failLow = value <= lo_window  && (lo_window > iteration_depth-Constants::MATE);
+            if (failHigh) {
+               showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
-                   cout << "terminating, low score" << endl;
+               cout << "ply 0 high cutoff, re-searching ... value=";
+               Scoring::printScore(value,cout);
+               cout << " fails=" << fails+1 << endl;
 #endif
-                   controller->terminateNow();
-                   break;
+               if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
+                  if (talkLevel == Trace) {
+                     cout << "# warning, too many aspiration window steps" << endl;
+                  }
+                  aspirationWindow = Constants::MATE;
                }
-               else if (value >= Constants::MATE - iteration_depth - 1) {
-                   // found a forced mate, terminate
-                   if (iteration_depth>=2) {
-                       if (talkLevel == Trace)
-                           cout << "# terminating, mate score" << endl;
+               else {
+                  aspirationWindow = ASPIRATION_WINDOW[++fails];
+               }
+               if (aspirationWindow == Constants::MATE) {
+                  hi_window = Constants::MATE-iteration_depth-1;
+               } else {
+                  if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+                     aspirationWindow += EASY_THRESHOLD;
+                  }
+                  hi_window = Util::Min(Constants::MATE-iteration_depth-1,
+                                        lo_window + aspirationWindow);
+               }
+            }
+            else if (failLow) {
+               showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
-                       cout << "terminating, mate score" << endl;
+               cout << "ply 0 fail low, re-searching ... value=";
+               Scoring::printScore(value,cout);
+               cout << " fails=" << fails+1 << endl;
 #endif
-                       controller->terminateNow();
-                       break;
-                   }
+               faillows++;
+               // continue loop with lower bound
+               if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
+                  // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
+                  // search to continue, but set the lower bound to the bottom of the range.
+                  if (talkLevel == Trace) {
+                     cout << "# warning, too many aspiration window steps" << endl;
+                  }
+                  aspirationWindow = Constants::MATE;
                }
-           }
-       }
+               else {
+                  aspirationWindow = ASPIRATION_WINDOW[++fails];
+               }
+               if (aspirationWindow == Constants::MATE) {
+                  lo_window = iteration_depth-Constants::MATE-1;
+               } else {
+                  if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+                     aspirationWindow += EASY_THRESHOLD;
+                  }
+                  lo_window = Util::Max(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
+               }
+            }
+         }
+         // search value should now be in bounds (unless we are terminating)
+         if (!terminate) showStatus(board, node->best, 0, 0, 0);
+         if (!MovesEqual(node->best,easyMove)) {
+            depth_at_pv_change = iteration_depth;
+         }
+#ifdef _TRACE
+         cout << iteration_depth << " ply search result: ";
+         MoveImage(node->best,cout);
+         cout << " value = ";
+         Scoring::printScore(value,cout);
+         cout << endl;
+#endif
+         last_score = value;
+         if (options.search.multipv > 1) {
+            ASSERT(num_excludes<Constants::MaxMoves);
+            excludes[num_excludes++] = node->pv[0];
+         }
+         else if (!(controller->uci && controller->time_limit == INFINITE_TIME)) {
+            // Allow early termination on a tablebase position, but not
+            // if we have >=6 man tbs in use (because tb set may be
+            // incomplete - in that case it is better to allow us to
+            // search deeper those nodes that don't produce a tb hit).
+            //
+            if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0])) {
+               if (talkLevel == Trace)
+                  cout << "# terminating, tablebase hit" << endl;
+#ifdef _TRACE
+               cout << "terminating, tablebase hit" << endl;
+#endif
+               controller->terminateNow();
+               break;
+            }
+            else if (!controller->background &&
+                     !controller->time_added &&
+                     !easy_adjust && 
+                     depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
+                     MovesEqual(easyMove,node->best) &&
+                     !faillows &&
+                     (controller->stats->elapsed_time >
+                      (unsigned)controller->time_target/3)) {
+               easy_adjust = true;
+               if (talkLevel == Trace) {
+                  cout << "# easy move, adjusting time lower" << endl;
+               }
+               controller->time_target /= 3;
+            }
+            if (value <= iteration_depth - Constants::MATE) {
+               // We're either checkmated or we certainly will be, so
+               // quit searching.
+               if (talkLevel == Trace)
+                  cout << "# terminating, low score" << endl;
+#ifdef _TRACE
+               cout << "terminating, low score" << endl;
+#endif
+               controller->terminateNow();
+               break;
+            }
+            else if (value >= Constants::MATE - iteration_depth - 1) {
+               // found a forced mate, terminate
+               if (iteration_depth>=2) {
+                  if (talkLevel == Trace)
+                     cout << "# terminating, mate score" << endl;
+#ifdef _TRACE
+                  cout << "terminating, mate score" << endl;
+#endif
+                  controller->terminateNow();
+                  break;
+               }
+            }
+         }
+      }
    }
 
 #ifdef UCI_LOG
