@@ -2410,13 +2410,15 @@ int Search::search()
 
 #ifdef RAZORING
     // razoring as in Glaurung & Toga
-    if (doNull && depth <= DEPTH_INCREMENT &&
+    if (doNull && depth <= 3*DEPTH_INCREMENT &&
         IsNull(hash_move)) {
-        const int threshold = node->beta - int(2.5*PAWN_VALUE);
+       const int threshold = node->beta - (depth <= DEPTH_INCREMENT ? int(1.0*PAWN_VALUE) : int(2.5*PAWN_VALUE));
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
-            int v = quiesce(node->beta-1,node->beta,ply+1,0);
-            if(v < node->beta) {
+            // Note: use threshold as the bounds here, not beta, as
+            // was done in Toga 3.0:
+            int v = quiesce(threshold-1,threshold,ply+1,0);
+            if(v < threshold) {
 #ifdef _TRACE
                 indent(ply); cout << "razored node, score=" << v << endl;
 #endif
