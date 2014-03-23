@@ -313,7 +313,7 @@ static const string pgn_test = "[Event \"?\"]"
 
 static int testEval() {
     // verify eval results are symmetrical (White/Black, right/left)
-    const int CASES = 8;
+    const int CASES = 9;
     static const string fens[CASES] = {
         "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
         "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
@@ -322,7 +322,8 @@ static int testEval() {
         "8/3r1ppk/8/P6P/3n4/2K5/R2B4/8 b - -",
         "1rb1r1k1/2q2pb1/pp1p4/2n1pPPQ/Pn1BP3/1NN4R/1PP4P/R5K1 b - -",
         "6k1/1b4p1/5p1p/pq3P2/1p1BP3/1P2QR1P/P1r3PK/8 w - -",
-        "8/5pk1/7p/3p1R2/p1p3P1/2P2K1P/1P1r4/8 w - -"
+        "8/5pk1/7p/3p1R2/p1p3P1/2P2K1P/1P1r4/8 w - -",
+        "6k1/p3pp2/6p1/7P/R7/b1q2P2/B1P1K2P/7R b - -"
     };
     int errs = 0;
     SearchController c;
