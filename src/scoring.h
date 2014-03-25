@@ -121,6 +121,9 @@ class Scoring
         :mid(0), end(0), any(0)
       {
       }
+      Scores(const Scores &s)
+      :mid(s.mid),end(s.end),any(s.any) {
+      }
       int mid, end, any; 
       int blend(int materialLevel ) {
           return any + mid*MATERIAL_SCALE[materialLevel]/128 +
@@ -137,6 +140,12 @@ class Scoring
           Scores result = *this;
           result += s;
           return result;
+      }
+      int operator == (const Scores &s) const {
+        return s.mid == mid && s.end == end && s.any == any;
+      }
+      int operator != (const Scores &s) const {
+        return s.mid != mid || s.end != end || s.any != any;
       }
     };
 
