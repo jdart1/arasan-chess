@@ -29,8 +29,8 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 
 #define the appropriate macro for the type(s) of tablebase supported
-GAVIOTA_TBS = 1
-NALIMOV_TBS = 1
+#GAVIOTA_TBS = 1
+#NALIMOV_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
@@ -51,7 +51,7 @@ SMPLIB   = -lpthread
 PGO_RUN_FLAGS = -H 64M
 
 #PROF     = -pg
-#DEBUG   = -g -D_DEBUG=1
+#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
