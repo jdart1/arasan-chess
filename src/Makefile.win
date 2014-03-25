@@ -25,7 +25,7 @@ TB=tb
 ARCH = /D_WIN64
 ARASANX = arasanx-64
 !Else
-ARASANX = arasanx
+ARASANX = arasanx-32
 !Endif
 !Endif
 
@@ -230,22 +230,8 @@ $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
 $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
-$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(BUILD)\history.obj \
-$(PROFILE)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\unit.obj $(TB_PROFILE_OBJS)
-
-ECOCODER_OBJS = $(BUILD)\ecocoder.obj \
-$(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
-$(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
-$(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
-$(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
-$(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
-$(BUILD)\learn.obj $(BUILD)\history.obj \
-$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\unit.obj $(TB_PROFILE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \

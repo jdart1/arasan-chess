@@ -29,7 +29,7 @@ TB=tb
 ARCH = /D_WIN64
 ARASANX = arasanx-64
 !Else
-ARASANX = arasanx
+ARASANX = arasanx-32
 !Endif
 !Endif
 
@@ -266,7 +266,7 @@ $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
 $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
-$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(BUILD)\history.obj \
+$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
 $(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(TB_PROFILE_OBJS) 
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
