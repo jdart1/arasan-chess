@@ -32,9 +32,9 @@ http://savannah.gnu.org/projects/xboard.  Arasan is designed to work
 with xboard version 4.2.2 or higher. Other versions of xboard may work
 but this is not guaranteed.
 
-Mac users can obtain an xboard installer from
-http://www.mediafire.com/?ka71vb78l2f5l7g (this is not an official
-release).
+Mac users should see
+http://www.open-aurec.com/wbforum/viewtopic.php?f=19&t=52964 for
+information about xboard on Mac OS.
 
 If you're planning to use xboard to connect to a chess server, or
 to connect to another machine on the local network, you should
