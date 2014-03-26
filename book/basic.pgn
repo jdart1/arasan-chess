@@ -8689,11 +8689,16 @@ Re6 $11) 20... Nb3 1/2-1/2
 Khusnutdinov,R (2500)-Aitbayev,A (2380) Astana 2012}) 8... a6 9. O-O b5 10. e4
 (10. Rfd1 $1 bxc4 11. Bxc4) 10... b4 $2 {-0.56/21 63 crafty (2473)-ArasanX 
 (2556) chessclub.com 2014 [10... -0.56]} (10... bxc4 11. Bxc4)) (6... Bf5 $2 7.
-Bd3) 7. Bh4) 5... d6 6. e3 Nh5 $2 (6... c5 $1) 7. Bg5 h6 8. Bh4 g5 $1 (8... Bf6
-$2 9. Bxf6 Nxf6 $14) (8... f5 $2 9. Nd2 Nc6 10. Be2 Nf6 11. f4 e5 12. d5 $2 {
-1/2-1/2 (33) Roselli Mailhe,B (2449)-Mecking,H (2604) Campinas 2013} (12. fxe5
-dxe5 13. d5 $14)) (8... Nd7 9. Be2 c5 $1 $11) 9. Nd2 Nf6 (9... gxh4 $2 10. Qxh5
-) 10. Bg3 c5 (10... Bf5 11. h4 g4) 11. d5 $14 1-0
+Bd3) 7. Bh4 Nbd7 $2 (7... c5 8. d5 $1 Qb6 $1) (7... b6 $5) 8. Qc2 e5 $2 (8...
+c5) (8... g5 9. Bg3 Nh5 10. Bd3 e6 $2 {1-0 (58) Plaskett,J (2471)-Lalic,B 
+(2549) West Bromwich 2003} (10... Ndf6 $11)) 9. dxe5 Nxe5 10. Nxe5 dxe5 11. Rd1
+Qe8 12. Be2 c6 13. O-O Qe7 14. Rd2 Be6 15. Rfd1 $14 {1-0 (15) crafty (2476)
+-Arasan 17.0 (2570) chessclub.com 2014}) 5... d6 6. e3 Nh5 $2 (6... c5 $1) 7.
+Bg5 h6 8. Bh4 g5 $1 (8... Bf6 $2 9. Bxf6 Nxf6 $14) (8... f5 $2 9. Nd2 Nc6 10.
+Be2 Nf6 11. f4 e5 12. d5 $2 {1/2-1/2 (33) Roselli Mailhe,B (2449)-Mecking,H 
+(2604) Campinas 2013} (12. fxe5 dxe5 13. d5 $14)) (8... Nd7 9. Be2 c5 $1 $11)
+9. Nd2 Nf6 (9... gxh4 $2 10. Qxh5) 10. Bg3 c5 (10... Bf5 11. h4 g4) 11. d5 $14
+1-0
 
 [Event "Valjevo"]
 [Site "Valjevo"]
@@ -8725,6 +8730,24 @@ h3) 9... dxe5 10. Qe2 (10. Qc2 Be6 $1 $11) (10. h3 $1) 10... Bg4 11. h3 Bxf3
 Bg4 9. Rb1 Nfd7 (9... Nbd7 $2 10. Be3 $1) 10. Be3 c5 11. dxc5 dxc5 12. Nd5 Qd8
 13. Qb3 b6 14. Nd2 Nc6 15. h3 Be6 16. f4 Nd4 17. Qd1 b5 18. b3 Nb6 19. Rf2 f5
 20. Nc3 bxc4 21. e5 1/2-1/2
+
+[Event "?"]
+[Site "?"]
+[Date "2014.03.26"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "E65"]
+[Annotator "Dart, J."]
+[PlyCount "13"]
+
+1. c4 c5 2. Nf3 Nf6 3. g3 g6 4. Bg2 Bg7 5. d4 O-O $1 (5... cxd4 $6 {weight:10}
+6. Nxd4 O-O 7. Nc3 d6 $2 (7... Qc7 8. b3 d5 9. Ndb5 (9. O-O) 9... Qa5 10. Bd2
+dxc4 11. bxc4 Qd8 12. O-O a6 13. Na3 Nc6 14. Nc2 (14. Rb1 $5) 14... Be6 15. Rb1
+Rc8 16. Ne3 Na5 17. Bxb7 Nxb7 18. Rxb7 {1/2-1/2 (61) Nakamura,H (2789)-Caruana,
+F (2782) Wijk aan Zee 2014} Qd4 $5) (7... Nc6 $3 8. O-O {A38/A39}) 8. O-O a6 9.
+b3) 6. Nc3 cxd4 7. Nxd4 *
 
 [Event "NED-ch31"]
 [Site "Leeuwarden"]
