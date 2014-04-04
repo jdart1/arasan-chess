@@ -17,12 +17,90 @@ extern "C"
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
 
+enum {
+   PARAM_BISHOP_PAIR_MIDGAME,
+   PARAM_BISHOP_PAIR_ENDGAME,
+   PARAM_CENTER_PAWN_BLOCK,
+   PARAM_ENDGAME_PAWN_BONUS,
+   PARAM_PASSED_PAWN_BASE,
+   PARAM_PASSED_PAWN_SLOPE,
+   PARAM_PASSED_PAWN_SLOPE2,
+   PARAM_PASSED_PAWN_POW,
+   PARAM_PASSED_PAWN_ENDGAME_RATIO,
+   PARAM_PASSED_PAWN_BLOCK_BASE, 
+   PARAM_PASSED_PAWN_BLOCK_SLOPE,
+   PARAM_PASSED_PAWN_BLOCK_SLOPE2,
+   PARAM_PASSED_PAWN_BLOCK_POW,
+   PARAM_PASSED_PAWN_BLOCK_ENDGAME_RATIO,
+   PARAM_PASSED_PAWN_OWN_BLOCK_BASE, 
+   PARAM_PASSED_PAWN_OWN_BLOCK_SLOPE,
+   PARAM_PASSED_PAWN_OWN_BLOCK_SLOPE2,
+   PARAM_PASSED_PAWN_OWN_BLOCK_POW,
+   PARAM_PASSED_PAWN_OWN_BLOCK_ENDGAME_RATIO,
+   PARAM_POTENTIAL_PASSER_BASE,
+   PARAM_POTENTIAL_PASSER_SLOPE,
+   PARAM_POTENTIAL_PASSER_SLOPE2,
+   PARAM_POTENTIAL_PASSER_POW,
+   PARAM_POTENTIAL_PASSER_ENDGAME_RATIO,
+   PARAM_CONNECTED_PASSER_BASE,
+   PARAM_CONNECTED_PASSER_SLOPE,
+   PARAM_CONNECTED_PASSER_SLOPE2,
+   PARAM_CONNECTED_PASSER_POW,
+   PARAM_CONNECTED_PASSER_ENDGAME_RATIO,
+   PARAM_ADJACENT_PASSER_BASE,
+   PARAM_ADJACENT_PASSER_SLOPE,
+   PARAM_ADJACENT_PASSER_SLOPE2,
+   PARAM_ADJACENT_PASSER_POW,
+   PARAM_ADJACENT_PASSER_ENDGAME_RATIO 
+};
+   
+
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] =
+{
+   Scoring::TuneParam(0,"bishop_pair_midgame",42,10,100),
+   Scoring::TuneParam(1,"bishop_pair_endgame",55,10,100),
+   Scoring::TuneParam(2,"center_pawn_block",-25,-50,0),
+   Scoring::TuneParam(3,"endgame_pawn_bonus",19,0,60),
+   Scoring::TuneParam(4,"passed_pawn_base",16,0,25),
+   Scoring::TuneParam(5,"passed_pawn_slope",38,0,250),
+   Scoring::TuneParam(6,"passed_pawn_slope2",38,0,128),
+   Scoring::TuneParam(7,"passed_pawn_pow",48,32,96),
+   Scoring::TuneParam(8,"passed_pawn_endgame_ratio",35,32,64),
+   Scoring::TuneParam(9,"passed_pawn_block_base",26,0,50),
+   Scoring::TuneParam(10,"passed_pawn_block_slope",7,-100,350),
+   Scoring::TuneParam(11,"passed_pawn_block_slope2",26,-20,32),
+   Scoring::TuneParam(12,"passed_pawn_block_pow",39,32,96),
+   Scoring::TuneParam(13,"passed_pawn_block_endgame_ratio",20,0,64),
+   Scoring::TuneParam(14,"passed_pawn_own_block_base",45,0,50),
+   Scoring::TuneParam(15,"passed_pawn_own_block_slope",106,-100,250),
+   Scoring::TuneParam(16,"passed_pawn_own_block_slope2",38,-20,64),
+   Scoring::TuneParam(17,"passed_pawn_own_block_pow",58,32,96),
+   Scoring::TuneParam(18,"passed_pawn_own_block_endgame_ratio",28,0,64),
+   Scoring::TuneParam(19,"potential_passer",15,0,50),
+   Scoring::TuneParam(20,"potential_passer_slope",146,0,250),
+   Scoring::TuneParam(21,"potential_passer_slope2",16,-20,20),
+   Scoring::TuneParam(22,"potential_passer_pow",39,32,96),
+   Scoring::TuneParam(23,"potential_passer_endgame_ratio",5,0,64),
+   Scoring::TuneParam(24,"connected_passer",55,0,80),
+   Scoring::TuneParam(25,"connected_passer_slope",69,0,250),
+   Scoring::TuneParam(26,"connected_passer_slope2",10,-20,20),
+   Scoring::TuneParam(27,"connected_passer_pow",74,32,96),
+   Scoring::TuneParam(28,"connected_passer_endgame_ratio",8,0,64),
+   Scoring::TuneParam(29,"adjacent_passer",5,0,50),
+   Scoring::TuneParam(30,"adjacent_passer_slope",2,0,250),
+   Scoring::TuneParam(31,"adjacent_passer_slope2",-16,-20,20),
+   Scoring::TuneParam(32,"adjacent_passer_pow",52,32,96),
+   Scoring::TuneParam(33,"adjacent_passer_endgame_ratio",30,0,64)
+};
+
+#define PARAM(x) params[x].current
+
 static CACHE_ALIGN Bitboard w_pawn_attacks[64], b_pawn_attacks[64];
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-static const int CENTER_PAWN_BLOCK = -12;
+static int CENTER_PAWN_BLOCK = -12;
 
 // king cover scores, by rank of Pawn - rank of King
 static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
@@ -130,7 +208,7 @@ struct BishopTrapPattern
 // bishop trapped by pawn(s)
 static const int BISHOP_TRAPPED = -147;
 
-static const int BISHOP_PAIR[2] = { 42, 55 };
+static int BISHOP_PAIR[2] = { 42, 55 };
 static const int BAD_BISHOP[2] = { -4, -6 };
 static const int BISHOP_PAWN_PLACEMENT[2] = { -10, -16 };
 
@@ -168,22 +246,26 @@ static const int QR_ADJUST[9] = {
   (int)(0.5*PAWN_VALUE), 
   (int)(0.5*PAWN_VALUE)};
 
-static const int ENDGAME_PAWN_BONUS = 12;
+static int ENDGAME_PAWN_BONUS = 12;
 
 static const int CASTLING_SCORES[6] = { 0, -7, -10, 28, 20, -28 };
 
 // scores by game phase and rank
-static const int PASSED_PAWN[2][8] = {
+static int PASSED_PAWN[2][8] = {
    { 0, 0, 6, 11, 18, 27, 56, 111 },
    { 0, 0, 9, 16, 28, 42, 84, 141 }
 };
-static const int POTENTIAL_PASSER[2][8] = {
+static int POTENTIAL_PASSER[2][8] = {
    { 0, 0, 2, 4, 6, 9, 20, 0 },
    { 0, 0, 3, 6, 10, 15, 30, 0 }
 };
-static const int PASSED_PAWN_BLOCK[2][8] = {
-   { 19, 19, 22, 25, 29, 34, 50, 81 },
-   { 14, 14, 16, 18, 21, 25, 37, 60 }
+static int PASSED_PAWN_BLOCK[2][8] = {
+   { 0, 0, 22, 25, 29, 34, 50, 81 },
+   { 0, 0, 16, 18, 21, 25, 37, 60 }
+};
+static int PASSED_PAWN_OWN_BLOCK[2][8] = {
+   { 0, 0, 22, 25, 29, 34, 50, 81 },
+   { 0, 0, 16, 18, 21, 25, 37, 60 }
 };
 
 static const int OUTSIDE_PP[2] = { 12, 25 };
@@ -191,11 +273,11 @@ static const int OUTSIDE_PP[2] = { 12, 25 };
 static const int Midgame = 0;
 static const int Endgame = 1;
 
-static const int CONNECTED_PASSERS[2][8] = {
+static int CONNECTED_PASSERS[2][8] = {
    { 0, 0, 2, 2, 3, 5, 8, 15 },
    { 0, 0, 3, 3, 4, 7, 12, 23 }
 };
-static const int ADJACENT_PASSERS[2][8] = {
+static int ADJACENT_PASSERS[2][8] = {
    { 0, 1, 2, 3, 4, 6, 8, 11 },
    { 0, 1, 2, 4, 6, 8, 11, 14 }
 };
@@ -221,7 +303,6 @@ static const int ROOK_ON_OPEN_FILE = 20;
 static const int ROOK_ATTACKS_WEAK_PAWN = 10;
 static const int QUEEN_OUT = -6;
 static const int ROOK_BEHIND_PP[2] = { 5, 10 };
-static const int PASSER_OWN_PIECE_BLOCK[2] = { -2, -5 };
 static const int SIDE_PROTECTED_PAWN = -10;
 
 static const int KNIGHT_MOBILITY[9] = { -18, -7, -2, 0, 2, 5, 7, 10, 12 };
@@ -607,12 +688,64 @@ void Scoring::init() {
 
 }
 
+void Scoring::initParams() 
+{
+   BISHOP_PAIR[Midgame] = PARAM(PARAM_BISHOP_PAIR_MIDGAME);
+   BISHOP_PAIR[Endgame] = PARAM(PARAM_BISHOP_PAIR_ENDGAME);
+   CENTER_PAWN_BLOCK = PARAM(PARAM_CENTER_PAWN_BLOCK);
+   ENDGAME_PAWN_BONUS = PARAM(PARAM_ENDGAME_PAWN_BONUS);
+   
+   for (int i = 1; i < 8; i++) {
+      PASSED_PAWN[Midgame][i] = PARAM(PARAM_PASSED_PAWN_BASE) +
+         PARAM(PARAM_PASSED_PAWN_SLOPE)*(i-1)/32 +
+         int(PARAM(PARAM_PASSED_PAWN_SLOPE2)*pow((float)i-1,
+                                                 PARAM(PARAM_PASSED_PAWN_POW)/32.0)/32.0);
+      PASSED_PAWN[Endgame][i] = PASSED_PAWN[Midgame][i]*PARAM(PARAM_PASSED_PAWN_ENDGAME_RATIO)/32;
+//      cout << "passed: " << PASSED_PAWN[Midgame][i] << " " << PASSED_PAWN[Endgame][i] << endl;
+
+      PASSED_PAWN_BLOCK[Midgame][i] = PARAM(PARAM_PASSED_PAWN_BLOCK_BASE) +
+         PARAM(PARAM_PASSED_PAWN_BLOCK_SLOPE)*(i-1)/32 +
+         int(PARAM(PARAM_PASSED_PAWN_BLOCK_SLOPE2)*pow((float)i-1,
+                                                 PARAM(PARAM_PASSED_PAWN_BLOCK_POW)/32.0)/32.0);
+      PASSED_PAWN_BLOCK[Endgame][i] = PASSED_PAWN_BLOCK[Midgame][i]*PARAM(PARAM_PASSED_PAWN_BLOCK_ENDGAME_RATIO)/32;
+//      cout << "blocker: " << PASSED_PAWN_BLOCK[Midgame][i] << " " << PASSED_PAWN_BLOCK[Endgame][i] << endl;
+      PASSED_PAWN_OWN_BLOCK[Midgame][i] = PARAM(PARAM_PASSED_PAWN_OWN_BLOCK_BASE) +
+         PARAM(PARAM_PASSED_PAWN_OWN_BLOCK_SLOPE)*(i-1)/32 +
+         int(PARAM(PARAM_PASSED_PAWN_OWN_BLOCK_SLOPE2)*pow((float)i-1,
+                                                 PARAM(PARAM_PASSED_PAWN_OWN_BLOCK_POW)/32.0)/32.0);
+      PASSED_PAWN_OWN_BLOCK[Endgame][i] = PASSED_PAWN_OWN_BLOCK[Midgame][i]*PARAM(PARAM_PASSED_PAWN_OWN_BLOCK_ENDGAME_RATIO)/32;
+//      cout << "own blocker: " << PASSED_PAWN_OWN_BLOCK[Midgame][i] << " " << PASSED_PAWN_OWN_BLOCK[Endgame][i] << endl;
+      POTENTIAL_PASSER[Midgame][i] = PARAM(PARAM_POTENTIAL_PASSER_BASE) +
+         PARAM(PARAM_POTENTIAL_PASSER_SLOPE)*(i-1)/32 +
+         int(PARAM(PARAM_POTENTIAL_PASSER_SLOPE2)*pow((float)i-1,
+                                                 PARAM(PARAM_POTENTIAL_PASSER_POW)/32.0)/32.0);
+      POTENTIAL_PASSER[Endgame][i] = POTENTIAL_PASSER[Midgame][i]*PARAM(PARAM_POTENTIAL_PASSER_ENDGAME_RATIO)/32;
+//      cout << "potential: " << POTENTIAL_PASSER[Midgame][i] << " " << POTENTIAL_PASSER[Endgame][i] << endl;
+      CONNECTED_PASSERS[Midgame][i] = PARAM(PARAM_CONNECTED_PASSER_BASE) +
+         PARAM(PARAM_CONNECTED_PASSER_SLOPE)*(i-1)/32 +
+         int(PARAM(PARAM_CONNECTED_PASSER_SLOPE2)*pow((float)i-1,
+                                                 PARAM(PARAM_CONNECTED_PASSER_POW)/32.0)/32.0);
+      CONNECTED_PASSERS[Endgame][i] = CONNECTED_PASSERS[Midgame][i]*PARAM(PARAM_CONNECTED_PASSER_ENDGAME_RATIO)/32;
+//      cout << "connected: " << CONNECTED_PASSERS[Midgame][i] << " " << CONNECTED_PASSERS[Endgame][i] << endl;
+      ADJACENT_PASSERS[Midgame][i] = PARAM(PARAM_ADJACENT_PASSER_BASE) +
+         PARAM(PARAM_ADJACENT_PASSER_SLOPE)*(i-1)/32 +
+         int(PARAM(PARAM_ADJACENT_PASSER_SLOPE2)*pow((float)i-1,
+                                                 PARAM(PARAM_ADJACENT_PASSER_POW)/32.0)/32.0);
+      ADJACENT_PASSERS[Endgame][i] = ADJACENT_PASSERS[Midgame][i]*PARAM(PARAM_ADJACENT_PASSER_ENDGAME_RATIO)/32;
+//      cout << "adjacent: " << ADJACENT_PASSERS[Midgame][i] << " " << ADJACENT_PASSERS[Endgame][i] << endl;
+
+   }
+   
+}
+
 void Scoring::cleanup() {
 }
 
 Scoring::Scoring(Hash *ht) :
    hashTable(ht) {
    clearHashTables();
+   initParams();
+   
 }
 
 Scoring::~Scoring() {
@@ -1866,58 +1999,51 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
       int rank = Rank(sq, side);
       int file = File(sq);
-      Square sq2;
-      if (side == White)
-         sq2 = sq + 8;
-      else
-         sq2 = sq - 8;
-      if (!IsEmptyPiece(board[sq2]) && PieceColor(board[sq2]) == oside) {
+
+      Bitboard blockers;
+      Square blocker;
+      if (side == White) {
+         blockers = Attacks::file_mask_up[sq] & board.occupied[side];
+         blocker = sq+8;
+      }
+      else {
+         blockers = Attacks::file_mask_down[sq] & board.occupied[side];
+         blocker = sq-8;
+      }
+      
+#ifdef EVAL_DEBUG
+      Scores tmp(scores);
+#endif
+      if (board[blocker] != EmptyPiece && PieceColor(board[blocker]) == oside) {
+         // square immediately ahead of pawn is blocked
          scores.mid -= PASSED_PAWN_BLOCK[Midgame][rank];
          scores.end -= PASSED_PAWN_BLOCK[Endgame][rank];
-#ifdef PAWN_DEBUG
-         cout <<
-            ColorImage(side) <<
-            " passed pawn on " <<
-            SquareImage(sq) <<
-            " blocked, score= (" <<
-            -PASSED_PAWN_BLOCK[Midgame][rank] <<
-            ", " <<
-            -PASSED_PAWN_BLOCK[Endgame][rank] <<
-            ")" <<
-            endl;
-#endif
       }
-
-      Bitboard atcks(board.fileAttacks(sq));
-      if (atcks) {
-         if (side == White) {
-            if (atcks & Attacks::file_mask_up[sq] & board.occupied[White]) {
-               scores.mid += (Rank(sq, White) - 1) * PASSER_OWN_PIECE_BLOCK[Midgame];
-               scores.end += (Rank(sq, White) - 1) * PASSER_OWN_PIECE_BLOCK[Endgame];
-            }
-         }
-         else {
-            if (atcks & Attacks::file_mask_down[sq] & board.occupied[Black]) {
-               scores.mid += (Rank(sq, Black) - 1) * PASSER_OWN_PIECE_BLOCK[Midgame];
-               scores.end += (Rank(sq, Black) - 1) * PASSER_OWN_PIECE_BLOCK[Endgame];
-            }
-         }
+      
+#ifdef EVAL_DEBUG
+      if (tmp != scores) {
+         cout << "passed pawn block, square " << SquareImage(sq) << ": (" <<
+            scores.mid - tmp.mid << ", " << scores.end - tmp.end << endl;
+      }
+#endif      
+      if (blockers) {
+         scores.mid -= PASSED_PAWN_OWN_BLOCK[Midgame][rank];
+         scores.end -= PASSED_PAWN_OWN_BLOCK[Endgame][rank];
       }
 
       if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
+         Bitboard atcks(side == White ? 
+                        board.fileAttacksDown(sq) :
+                        board.fileAttacksUp(sq));
          atcks &= board.rook_bits[side];
          if (atcks) {
             if (side == White) {
-               if (atcks & Attacks::file_mask_down[sq]) {
-                  scores.mid += ROOK_BEHIND_PP[Midgame];
-                  scores.end += ROOK_BEHIND_PP[Endgame];
-               }
+               scores.mid += ROOK_BEHIND_PP[Midgame];
+               scores.end += ROOK_BEHIND_PP[Endgame];
             }
             else {
-               if (atcks & Attacks::file_mask_up[sq]) {
-                  scores.mid += ROOK_BEHIND_PP[Midgame];
-                  scores.end += ROOK_BEHIND_PP[Endgame];
-               }
+               scores.mid += ROOK_BEHIND_PP[Midgame];
+               scores.end += ROOK_BEHIND_PP[Endgame];
             }
          }
 

@@ -8,14 +8,13 @@
 #include "search.h"
 #include "legal.h"
 #include "history.h"
+#include "globals.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 using namespace std;
 
 extern const int Direction[2];
-
-const int MoveGenerator::EASY_PLIES = 3;
 
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
@@ -144,7 +143,7 @@ void RootMoveGenerator::reorder(Move pvMove,int depth)
           SetPhase(moveList[i].move,HISTORY_PHASE);
       }
    }
-   if (depth <= EASY_PLIES && moveList.size() > 2) {
+   if (depth <= options.search.easy_plies && moveList.size() > 2) {
        // we are in the "wide window" part of the search, so
        // reorder non-PV moves by search scores
        std::sort(moveList.begin()+1,moveList.end(),compareScores);

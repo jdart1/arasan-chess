@@ -1596,6 +1596,17 @@ static void processWinboardOptions(const string &args) {
     } else if (name == "Strength") {
         Options::setOption<int>(value,options.search.strength);
     } 
+    else {
+       // check for options from the Scoring module
+       for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
+          if (name == Scoring::params[i].name) {
+             Options::setOption<int>(value,Scoring::params[i].current);
+             Scoring::initParams();
+             break;
+          }
+       }
+    }
+    
     searcher->updateSearchOptions();
 }
 

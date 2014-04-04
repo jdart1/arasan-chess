@@ -155,7 +155,7 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
+all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tune
 
 popcnt: SSE = -msse4.2
 popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
@@ -295,8 +295,21 @@ log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
+TUNE_SOURCES = tune.cpp globals.cpp  \
+board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
+movegen.cpp history.cpp \
+hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
+stats.cpp threadp.cpp threadc.cpp unit.cpp
+
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
+TUNE_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TUNE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 
@@ -305,6 +318,9 @@ $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
+
+$(EXPORT)/tune:  $(TUNE_OBJS) 
+	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_OBJS) $(DEBUG) -o $(EXPORT)/tune -lstdc++ $(LIBS) $(SMPLIB)	
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx

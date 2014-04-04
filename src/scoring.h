@@ -24,7 +24,22 @@ class Scoring
     Scoring(Hash *ht);
 
     ~Scoring();
+
+    static const int NUM_PARAMS = 34;
+
+    static void initParams();
         
+    struct TuneParam {
+      int index;
+      string name;
+      int current;
+      int minvalue, maxvalue;
+      TuneParam(int i, const char *nam, int n, int m1, int m2) :
+      index(i),name(nam),current(n),minvalue(m1),maxvalue(m2) {
+      }
+    };
+    static TuneParam params [NUM_PARAMS];
+
     // evaluate "board" from the perspective of the side to move.
     int evalu8( const Board &board );
 
@@ -121,9 +136,6 @@ class Scoring
         :mid(0), end(0), any(0)
       {
       }
-      Scores(const Scores &s)
-      :mid(s.mid),end(s.end),any(s.any) {
-      }
       int mid, end, any; 
       int blend(int materialLevel ) {
           return any + mid*MATERIAL_SCALE[materialLevel]/128 +
@@ -140,12 +152,6 @@ class Scoring
           Scores result = *this;
           result += s;
           return result;
-      }
-      int operator == (const Scores &s) const {
-        return s.mid == mid && s.end == end && s.any == any;
-      }
-      int operator != (const Scores &s) const {
-        return s.mid != mid || s.end != end || s.any != any;
       }
     };
 
