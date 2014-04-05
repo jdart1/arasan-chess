@@ -39,6 +39,8 @@ ifdef NALIMOV_TBS
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
 
+CFLAGS := $(CFLAGS) -I$(NOMAD_HOME)/src
+
 # Build the GTB sources into a separate object dir.
 GTB_BUILD	= ../build/gtb
 # GTB is built as a separate library due to problems with PGO
@@ -81,6 +83,8 @@ else
 LBITS := $(shell getconf LONG_BIT)
 LIBS = -lc -lm
 endif
+
+LIBS := $(LIBS) $(NOMAD_HOME)/lib/nomad.a
 
 ifeq ($(LBITS),64)
    CFLAGS := $(CFLAGS) -D_64BIT
