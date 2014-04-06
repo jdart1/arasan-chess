@@ -230,6 +230,8 @@ public:
          Scoring::initParams();
          double quality = computeLsqError();
          x.set_bb_output  ( 0 , quality  ); // objective value
+         x.set_bb_output  ( 1 , 0); // objective value
+         x.set_bb_output  ( 2 , 0); // objective value
 
          count_eval = true; // count a black-box evaluation
  
