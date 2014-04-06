@@ -39,6 +39,7 @@ const struct ECOData eco_codes[] =
 {"A10", 0x993f12ca44a91dfULL ,"English Opening"},
 {"A11", 0xf4c7f2dc68e629d7ULL ,"English Opening"},
 {"A11", 0xd671eb809bc8c05fULL ,"English Opening"},
+{"A11", 0x4399c65b44aed5ceULL ,"English Opening"},
 {"A12", 0x3ad4898a65e6514fULL ,"English Opening"},
 {"A13", 0xc666fae166b77107ULL ,"English Opening"},
 {"A13", 0x5e21c24f2550eaa1ULL ,"Reti Opening, Neo-Catalan"},
