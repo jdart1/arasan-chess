@@ -46,14 +46,6 @@ struct ThreadData {
     THREAD thread_id;
 } threadDatas[MAX_THREADS];
 
-struct TuneHistory {
-    int initialValue;
-    int finalValue;
-    double slope;
-    bool slope_set;
-    int lastAdjust;
-};
-
 #ifndef _WIN32
 static sem_t semaphore;
 static pthread_attr_t stackSizeAttrib;
@@ -230,8 +222,8 @@ public:
          Scoring::initParams();
          double quality = computeLsqError();
          x.set_bb_output  ( 0 , quality  ); // objective value
-         x.set_bb_output  ( 1 , 0); // objective value
-         x.set_bb_output  ( 2 , 0); // objective value
+         x.set_bb_output  ( 1 , 0); // constraint 1
+         x.set_bb_output  ( 2 , 0); // constraint 2
 
          count_eval = true; // count a black-box evaluation
  
@@ -252,23 +244,6 @@ public:
       }
 
 };
-
-static void printResult(const string &solved, float runtime,
-                        float runlength, double quality, int seed) 
-{
-   cout << "Result for ParamILS: " << solved << ", " <<
-      runtime << ", " <<
-      runlength << ", " << 
-      quality << ", " <<
-      seed << endl;
-}
-
-
-static void printAbort() 
-{
-   printResult("ABORT",0,0,0,0);
-}
-
 
 int CDECL main(int argc, char **argv)
 {
@@ -309,12 +284,14 @@ int CDECL main(int argc, char **argv)
         NOMAD::Parameters p(out);
         cout << "reading parameters" << endl;
         p.read(paramFile);
+        // parameters validation:
+        p.check();
+        cout << "parameter check passed" << endl;
 
         cout << "reading training file" << endl;
         ifstream fen_file(tuneFile.c_str(), ios::in);
         if (!fen_file.good()) {
            cerr << "could not open file " << tuneFile << endl;
-           printAbort();
            exit(-1);
         }
         else {
@@ -337,8 +314,6 @@ int CDECL main(int argc, char **argv)
            fen_file.close();
            cout << "position file read: " << lines << " lines" << endl;
         }
-        // parameters validation:
-        p.check();
 
         // custom evaluator creation:
         My_Evaluator ev   ( p );
