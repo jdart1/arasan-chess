@@ -29,7 +29,7 @@ std::vector<PosInfo> fens;
 
 static bool eval = false;
 
-static int cores = 1;
+static int cores = 8;
 
 static int plies = 1;
 
@@ -116,6 +116,7 @@ static void * CDECL threadp(void *x)
 {
     ThreadData *td = (ThreadData*)x;
     td->searcher = new SearchController();
+//    cout << "thread " << td->index << " starting" << endl;
     errors[td->index] = computeError(td->searcher,td->index);
     Lock(activeLock);
     threadsActive--;
@@ -151,6 +152,7 @@ static double computeLsqError() {
       perror("sem_init");
       return 0.0;
    }
+//   cout << "initialized" << endl;
 #endif
    Lock(activeLock);
    threadsActive = cores;
@@ -175,6 +177,7 @@ static double computeLsqError() {
             perror("thread creation failed");
         }
 #endif
+//        cout << "thread " << i << " created." << endl;
     }
     // Wait for threads to complete
 #ifdef _WIN32
@@ -197,7 +200,7 @@ static double computeLsqError() {
     for (int i = 0; i < cores; i++) {
         total += errors[i];
     }
-    cout << "result: " << setprecision(8) << total/fens.size() << endl;
+//    cout << "result: " << setprecision(8) << total/fens.size() << endl;
     return total/fens.size();
 }
 
@@ -221,9 +224,11 @@ public:
          }
          Scoring::initParams();
          double quality = computeLsqError();
-         x.set_bb_output  ( 0 , quality  ); // objective value
-         x.set_bb_output  ( 1 , 0); // constraint 1
-         x.set_bb_output  ( 2 , 0); // constraint 2
+//         cout << "quality= " << quality << endl;
+         
+         NOMAD::Double q = quality;
+         
+         x.set_bb_output  ( 0 , q  ); // objective value
 
          count_eval = true; // count a black-box evaluation
  
@@ -287,6 +292,13 @@ int CDECL main(int argc, char **argv)
         // parameters validation:
         p.check();
         cout << "parameter check passed" << endl;
+        const vector<NOMAD::Point * > x0s = p.get_x0s();
+        for (vector<NOMAD::Point *>::const_iterator it =  x0s.begin();
+             it != x0s.end();
+             it++) {
+           cout << *(*it) << endl;
+        }
+        
 
         cout << "reading training file" << endl;
         ifstream fen_file(tuneFile.c_str(), ios::in);

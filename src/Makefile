@@ -133,9 +133,10 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 46)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.6 or higher:
-CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
-GTB_OPT := -Ofast -finline-functions $(SSE)
+#CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+#OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
+#GTB_OPT := -Ofast -finline-functions $(SSE)
+CFLAGS := $(CFLAGS) -O2 -ansi
 else
 ifeq "$(GCCOLD)" "0"
 # pre-4.6 gcc options:

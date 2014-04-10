@@ -18,8 +18,8 @@ extern "C"
 //#define EVAL_DEBUG
 
 enum {
-   PARAM_BISHOP_PAIR_MIDGAME,
-   PARAM_BISHOP_PAIR_ENDGAME,
+//   PARAM_BISHOP_PAIR_MIDGAME,
+//   PARAM_BISHOP_PAIR_ENDGAME,
    PARAM_CENTER_PAWN_BLOCK,
    PARAM_ENDGAME_PAWN_BONUS,
    PARAM_PASSED_PAWN_BASE,
@@ -57,40 +57,40 @@ enum {
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] =
 {
-   Scoring::TuneParam(0,"bishop_pair_midgame",42,10,100),
-   Scoring::TuneParam(1,"bishop_pair_endgame",55,10,100),
-   Scoring::TuneParam(2,"center_pawn_block",-25,-50,0),
-   Scoring::TuneParam(3,"endgame_pawn_bonus",19,0,60),
-   Scoring::TuneParam(4,"passed_pawn_base",16,0,25),
-   Scoring::TuneParam(5,"passed_pawn_slope",38,0,250),
-   Scoring::TuneParam(6,"passed_pawn_slope2",38,0,128),
-   Scoring::TuneParam(7,"passed_pawn_pow",48,32,96),
-   Scoring::TuneParam(8,"passed_pawn_endgame_ratio",35,32,64),
-   Scoring::TuneParam(9,"passed_pawn_block_base",26,0,50),
-   Scoring::TuneParam(10,"passed_pawn_block_slope",7,-100,350),
-   Scoring::TuneParam(11,"passed_pawn_block_slope2",26,-20,32),
-   Scoring::TuneParam(12,"passed_pawn_block_pow",39,32,96),
-   Scoring::TuneParam(13,"passed_pawn_block_endgame_ratio",20,0,64),
-   Scoring::TuneParam(14,"passed_pawn_own_block_base",45,0,50),
-   Scoring::TuneParam(15,"passed_pawn_own_block_slope",106,-100,250),
-   Scoring::TuneParam(16,"passed_pawn_own_block_slope2",38,-20,64),
-   Scoring::TuneParam(17,"passed_pawn_own_block_pow",58,32,96),
-   Scoring::TuneParam(18,"passed_pawn_own_block_endgame_ratio",28,0,64),
-   Scoring::TuneParam(19,"potential_passer",15,0,50),
-   Scoring::TuneParam(20,"potential_passer_slope",146,0,250),
-   Scoring::TuneParam(21,"potential_passer_slope2",16,-20,20),
-   Scoring::TuneParam(22,"potential_passer_pow",39,32,96),
-   Scoring::TuneParam(23,"potential_passer_endgame_ratio",5,0,64),
-   Scoring::TuneParam(24,"connected_passer",55,0,80),
-   Scoring::TuneParam(25,"connected_passer_slope",69,0,250),
-   Scoring::TuneParam(26,"connected_passer_slope2",10,-20,20),
-   Scoring::TuneParam(27,"connected_passer_pow",74,32,96),
-   Scoring::TuneParam(28,"connected_passer_endgame_ratio",8,0,64),
-   Scoring::TuneParam(29,"adjacent_passer",5,0,50),
-   Scoring::TuneParam(30,"adjacent_passer_slope",2,0,250),
-   Scoring::TuneParam(31,"adjacent_passer_slope2",-16,-20,20),
-   Scoring::TuneParam(32,"adjacent_passer_pow",52,32,96),
-   Scoring::TuneParam(33,"adjacent_passer_endgame_ratio",30,0,64)
+//   Scoring::TuneParam(0,"bishop_pair_midgame",42,10,100),
+//   Scoring::TuneParam(1,"bishop_pair_endgame",55,10,100),
+   Scoring::TuneParam(2,"center_pawn_block",-2,-50,0),
+   Scoring::TuneParam(3,"endgame_pawn_bonus",0,0,60),
+   Scoring::TuneParam(4,"passed_pawn_base",10,0,25),
+   Scoring::TuneParam(5,"passed_pawn_slope",100,0,250),
+   Scoring::TuneParam(6,"passed_pawn_slope2",74,0,128),
+   Scoring::TuneParam(7,"passed_pawn_pow",64,32,96),
+   Scoring::TuneParam(8,"passed_pawn_endgame_ratio",42,32,64),
+   Scoring::TuneParam(9,"passed_pawn_block_base",50,0,50),
+   Scoring::TuneParam(10,"passed_pawn_block_slope",1,-100,350),
+   Scoring::TuneParam(11,"passed_pawn_block_slope2",20,-20,32),
+   Scoring::TuneParam(12,"passed_pawn_block_pow",64,32,96),
+   Scoring::TuneParam(13,"passed_pawn_block_endgame_ratio",40,0,64),
+   Scoring::TuneParam(14,"passed_pawn_own_block_base",20,0,50),
+   Scoring::TuneParam(15,"passed_pawn_own_block_slope",220,-100,250),
+   Scoring::TuneParam(16,"passed_pawn_own_block_slope2",10,-20,64),
+   Scoring::TuneParam(17,"passed_pawn_own_block_pow",64,32,96),
+   Scoring::TuneParam(18,"passed_pawn_own_block_endgame_ratio",40,0,64),
+   Scoring::TuneParam(19,"potential_passer",1,0,50),
+   Scoring::TuneParam(20,"potential_passer_slope",50,0,250),
+   Scoring::TuneParam(21,"potential_passer_slope2",0,-20,20),
+   Scoring::TuneParam(22,"potential_passer_pow",94,32,96),
+   Scoring::TuneParam(23,"potential_passer_endgame_ratio",40,0,64),
+   Scoring::TuneParam(24,"connected_passer",0,0,80),
+   Scoring::TuneParam(25,"connected_passer_slope",50,0,250),
+   Scoring::TuneParam(26,"connected_passer_slope2",0,-20,20),
+   Scoring::TuneParam(27,"connected_passer_pow",64,32,96),
+   Scoring::TuneParam(28,"connected_passer_endgame_ratio",40,0,64),
+   Scoring::TuneParam(29,"adjacent_passer",50,0,50),
+   Scoring::TuneParam(30,"adjacent_passer_slope",150,0,250),
+   Scoring::TuneParam(31,"adjacent_passer_slope2",1,-20,20),
+   Scoring::TuneParam(32,"adjacent_passer_pow",76,32,96),
+   Scoring::TuneParam(33,"adjacent_passer_endgame_ratio",0,0,64)
 };
 
 #define PARAM(x) params[x].current
@@ -690,8 +690,8 @@ void Scoring::init() {
 
 void Scoring::initParams() 
 {
-   BISHOP_PAIR[Midgame] = PARAM(PARAM_BISHOP_PAIR_MIDGAME);
-   BISHOP_PAIR[Endgame] = PARAM(PARAM_BISHOP_PAIR_ENDGAME);
+//   BISHOP_PAIR[Midgame] = PARAM(PARAM_BISHOP_PAIR_MIDGAME);
+//   BISHOP_PAIR[Endgame] = PARAM(PARAM_BISHOP_PAIR_ENDGAME);
    CENTER_PAWN_BLOCK = PARAM(PARAM_CENTER_PAWN_BLOCK);
    ENDGAME_PAWN_BONUS = PARAM(PARAM_ENDGAME_PAWN_BONUS);
    
