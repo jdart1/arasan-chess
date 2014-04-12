@@ -258,12 +258,6 @@ const struct ECOData eco_codes[] =
 {"B22", 0x4fbac82ef2c40431ULL ,"Sicilian Defense, Alapin Variation"},
 {"B22", 0xc0aeaf6b7727567aULL ,"Sicilian Defense, Alapin Variation"},
 {"B22", 0xde21f921f9c4b8b4ULL ,"Sicilian Defense, Alapin Variation"},
-{"B22", Illegal or invalid move: Nc6
-0x2b75f5b0a54ed24bULL ,""},
-{"Sicilian", Illegal or invalid move: Defense,
-0xae2ff225d5d007cfULL ,""},
-{"Alapin", Illegal or invalid move: Variation"
-0xae2ff225d5d007cfULL ,""},
 {"B23", 0xbcecc12018368ULL ,"Sicilian Defense, Closed"},
 {"B24", 0x7ff08ecefac7762bULL ,"Sicilan Defense, Closed"},
 {"B25", 0xf2d2b70bf800953fULL ,"Sicilan Defense, Closed"},
