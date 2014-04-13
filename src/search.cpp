@@ -1364,7 +1364,7 @@ int Search::quiesce(int ply,int depth)
 #ifdef _TRACE
                if (master()) {
                   indent(ply); cout << "best line[ply][ply] = ";
-                  MoveImage(hash_move,cout);
+                  MoveImage(pv,cout);
                   cout << endl;
                }
 #endif
