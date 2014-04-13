@@ -122,6 +122,18 @@ static const int KBNKScores[64] =
     40, 30, 15, 5, -5, -15, -30, -40
 };
 
+static const int KRScores[64] =
+{
+   -16, -16, -16, -16, 16, -16, -16, -16,
+   -16,  0, 0, 0, 0, 0, 0, -16,
+   -16,  0, 8, 8, 8,  8, 0, -16,
+   -16,  0, 8, 16, 16, 8, 0, -16,
+   -16,  0, 8, 16, 16, 8, 0, -16,
+   -16,  0,  8, 8, 8, 8, 0, -16,
+   -16,  0, 0, 0, 0, 0, 0, -16,
+   -16, -16, -16, -16, -16, -16, -16, -16
+};
+
 struct BishopTrapPattern
 {
    Bitboard bishopMask, pawnMask;
@@ -1958,6 +1970,80 @@ void Scoring::scoreEndgame
                Scores &scores
             ) {
    const ColorType oside = OppositeColor(side);
+
+   const Material &ourMaterial = board.getMaterial(side);
+   const Material &oppMaterial = board.getMaterial(oside);
+
+   if (oppMaterial.kingOnly()) {
+      if (ourMaterial.infobits() == Material::KBN) {
+         // KBNK endgame, special case.
+         Square oppkp = board.kingSquare(oside);
+         Bitboard bishops(board.bishop_bits[side]);
+         Square sq = bishops.firstOne();
+
+         // try to force king to a corner where mate is possible.
+         if (SquareColor(sq) == Black) {
+            scores.end += KBNKScores[Flip[oppkp]];
+         }
+         else {
+            scores.end += KBNKScores[oppkp];
+         }
+
+         // keep the kings close
+         scores.end += 32 - 8*distance1(board.kingSquare(White), board.kingSquare(Black));
+         return;
+      } else if (ourMaterial.infobits() == Material::KR) {
+         int kingDistance = distance1(board.kingSquare(side),board.kingSquare(oside));
+         // keep the kings close
+         scores.end += 32 - 8*kingDistance;
+         Square oppkp = board.kingSquare(oside);
+         // drive opposing king to the edge
+         scores.end -= KRScores[oppkp];
+         Square rookSq = board.rook_bits[side].firstOne();
+         int krank = Rank(oppkp,White);
+         int rrank = Rank(rookSq,White);
+         // Place the Rook so as to restrict the opposing King
+         if (krank >= 4) {
+             if (rrank == krank - 1) scores.end += 10+(4-krank);
+         } else {
+             if (rrank == krank + 1) scores.end += 10+(krank-4);
+         }
+         int kfile = File(oppkp);
+         int rfile = File(rookSq);
+         if (kfile >= 4) {
+             if (rfile == kfile-1) scores.end += 10+(4-kfile);
+         } else {
+             if (rfile == kfile+1) scores.end += 10+(kfile-4);
+         }
+         return;
+      } else if (ourMaterial.infobits() == Material::KQ) {
+         int kingDistance = distance1(board.kingSquare(side),board.kingSquare(oside));
+         // keep the kings close
+         scores.end += 32 - 8*kingDistance;
+         Square oppkp = board.kingSquare(oside);
+         Square ourkp = board.kingSquare(side);
+         int krank = Rank(oppkp,White);
+         int kfile = File(oppkp);
+         if (InCorner(oppkp) && kingDistance == 2) {
+             scores.end += 10;
+         } else if (OnEdge(oppkp)) {
+             // position King appropriately
+             if (kfile == AFILE) {
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp + 1)) scores.end += 10;
+             } else if (kfile == HFILE) {
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp - 1)) scores.end += 10;
+             } else if (krank == 1) {
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp+8)) scores.end += 10;
+             } else if (krank == 8) {
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp-8)) scores.end += 10;
+             }
+         }
+         // drive opposing king to the edge
+         scores.end -= KRScores[oppkp];
+         return;
+      }
+   }
+
    if (side == White) {
       scores.end += endgameEntry->wScore +
          (int) endgameEntry->white_endgame_pawn_proximity +
@@ -1967,29 +2053,6 @@ void Scoring::scoreEndgame
       scores.end += endgameEntry->bScore +
          (int) endgameEntry->black_endgame_pawn_proximity +
          (int) endgameEntry->black_king_position;
-   }
-
-   const Material &ourMaterial = board.getMaterial(side);
-   const Material &oppMaterial = board.getMaterial(oside);
-
-   if ((ourMaterial.infobits() == Material::KBN) && oppMaterial.kingOnly()) {
-
-      // KBNK endgame, special case.
-      Square oppkp = board.kingSquare(oside);
-      Bitboard bishops(board.bishop_bits[side]);
-      Square sq = bishops.firstOne();
-
-      // try to force king to a corner where mate is possible.
-      if (SquareColor(sq) == Black) {
-         scores.end += KBNKScores[Flip[oppkp]];
-      }
-      else {
-         scores.end += KBNKScores[oppkp];
-      }
-
-      // keep the kings close
-      scores.end += 10 - distance1(board.kingSquare(White), board.kingSquare(Black));
-      return;
    }
 
    // King/Pawn interactions
