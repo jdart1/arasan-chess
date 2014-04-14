@@ -718,6 +718,13 @@ Move *excludes, int num_excludes)
                                               9,10,12,14,16};
                controller->ply_limit = Util::Min(limits[options.search.strength/4],
                                                  controller->ply_limit);
+               if (board.getMaterial(White).men() +
+                   board.getMaterial(Black).men() < 6 &&
+                   options.search.strength > 10) {
+                   // increase ply limit in simple endgames (so for example
+                   // elementary mates can be made)
+                   controller->ply_limit++;
+               }
                if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;
                }
