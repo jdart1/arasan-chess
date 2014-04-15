@@ -204,12 +204,8 @@ static const int Midgame = 0;
 static const int Endgame = 1;
 
 static const int CONNECTED_PASSERS[2][8] = {
-   { 0, 0, 2, 2, 3, 5, 8, 15 },
-   { 0, 0, 3, 3, 4, 7, 12, 23 }
-};
-static const int ADJACENT_PASSERS[2][8] = {
-   { 0, 1, 2, 3, 4, 6, 8, 11 },
-   { 0, 1, 2, 4, 6, 8, 11, 14 }
+   { 0, 0, 0, 0, 0, 0, 19, 13 },
+   { 0, 0, 0, 0, 0, 0, 38, 26 }
 };
 
 // by file:
@@ -257,7 +253,6 @@ static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
 static Bitboard outpostW[64], outpostB[64];
 static Bitboard connected_passers[64][2];
-static Bitboard adjacent_passers[64];
 static Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
 static Bitboard abcd_mask, efgh_mask;
 static Bitboard left_side_mask[8], right_side_mask[8];
@@ -450,17 +445,6 @@ static void initBitboards() {
       if (file != 8) {
          connected_passers[i][White].set(i + 1);
          connected_passers[i][Black].set(i + 1);
-         adjacent_passers[i] |= Attacks::file_mask[file];
-         adjacent_passers[i].clear(MakeSquare(file + 1, rank, Black));
-         if (rank > 1) adjacent_passers[i].clear(MakeSquare(file + 1, rank - 1, Black));
-         if (rank < 8) adjacent_passers[i].clear(MakeSquare(file + 1, rank + 1, Black));
-      }
-
-      if (file != 1) {
-         adjacent_passers[i] |= Attacks::file_mask[file - 2];
-         adjacent_passers[i].clear(MakeSquare(file - 1, rank, Black));
-         if (rank > 1) adjacent_passers[i].clear(MakeSquare(file - 1, rank - 1, Black));
-         if (rank < 8) adjacent_passers[i].clear(MakeSquare(file - 1, rank + 1, Black));
       }
 
       connected_passers[i][Black] |= Attacks::pawn_attacks[i][Black];
@@ -1649,24 +1633,6 @@ int Scoring::calcPawnData(const Board &board,
                                                                                                                   side)];
          cout << ")" << endl;
 #endif
-      }
-      else if (TEST_MASK(adjacent_passers[sq], entr.passers)) {
-         Bitboard adj(adjacent_passers[sq] & entr.passers);
-         Square farthest = (side == White) ? adj.lastOne() : adj.firstOne();
-
-         // score only if current passer being evaluated is ahead (avoids
-         // dual counting of adjacent passer bonus)
-         if (Rank(sq, side) > Rank(farthest, side)) {
-            int midrank = (Rank(farthest, side) + Rank(sq, side)) / 2;
-            entr.midgame_score += ADJACENT_PASSERS[Midgame][midrank];
-            entr.endgame_score += ADJACENT_PASSERS[Endgame][midrank];
-#ifdef PAWN_DEBUG
-            cout << "adjacent passer score (";
-            cout << ColorImage(side);
-            cout << ") : (" << ADJACENT_PASSERS[Midgame][midrank] << ", " << ADJACENT_PASSERS[Endgame][midrank];
-            cout << ")" << endl;
-#endif
-         }
       }
    }
 
