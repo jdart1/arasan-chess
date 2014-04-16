@@ -45,7 +45,6 @@ struct ThreadData {
 } threadDatas[MAX_THREADS];
 
 #ifndef _WIN32
-static sem_t semaphore;
 static pthread_attr_t stackSizeAttrib;
 #endif
 
@@ -58,9 +57,6 @@ static double sigmoid(double val) {
     if (s > 1.0) return 1.0;
     return s;
 }
-
-static int threadsActive = 0;
-LockDefine(activeLock);
 
 static double computeError(SearchController *searcher, int index) {
     double err = 0.0;
@@ -117,20 +113,11 @@ static void * CDECL threadp(void *x)
     td->searcher = new SearchController();
 //    cout << "thread " << td->index << " starting" << endl;
     errors[td->index] = computeError(td->searcher,td->index);
-    Lock(activeLock);
-    threadsActive--;
-    if (!threadsActive) {
-       if (sem_post(&semaphore)) {
-          perror("sem_post");
-       }
-    }
-    Unlock(activeLock);
     return 0;
 }
 
 static double computeLsqError() {
     // prepare threads
-   LockInit(activeLock);
 #ifndef _WIN32
    if (pthread_attr_init (&stackSizeAttrib)) {
       perror("pthread_attr_init");
@@ -147,19 +134,11 @@ static double computeLsqError() {
          return 0.0;
       }
    }
-   if (sem_init(&semaphore, 0, 0)) {
-      perror("sem_init");
-      return 0.0;
-   }
 //   cout << "initialized" << endl;
 #endif
-   Lock(activeLock);
-   threadsActive = cores;
-   Unlock(activeLock);
    
     for (int i = 0; i < cores; i++) {
         THREAD thread_id;
-        threadDatas[i].thread_id = thread_id;
         threadDatas[i].index = i;
 #ifdef _WIN32
         DWORD id;
@@ -172,7 +151,7 @@ static double computeLsqError() {
             cerr << "thread creation failed" << endl;
         }
 #else
-        if (pthread_create(&thread_id, &stackSizeAttrib, threadp, (void*)(threadDatas+i))) {
+        if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)(threadDatas+i))) {
             perror("thread creation failed");
         }
 #endif
@@ -186,10 +165,12 @@ static double computeLsqError() {
     }
     WaitForMultipleObjects(cores,handles,TRUE,INFINITE);
 #else
-    if (sem_wait(&semaphore)) {
-        perror("sem_wait");
+    for (int i = 0; i < cores; i++) {
+       void *status;
+       if (pthread_join(threadDatas[i].thread_id,&status)) {
+          perror("pthread_join");
+       }
     }
-    sem_destroy(&semaphore);
     if (pthread_attr_destroy(&stackSizeAttrib)) {
        perror("pthread_attr_destroy");
     }
