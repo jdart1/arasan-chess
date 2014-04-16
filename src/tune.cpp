@@ -27,8 +27,6 @@ struct PosInfo {
 
 std::vector<PosInfo> fens;
 
-static bool eval = false;
-
 static int cores = 8;
 
 static int plies = 1;
@@ -67,7 +65,8 @@ LockDefine(activeLock);
 static double computeError(SearchController *searcher, int index) {
     double err = 0.0;
 	// This is a large object so put it on the heap:
-    Scoring *scoring = new Scoring(&(searcher->hashTable));
+    Scoring *scoring = NULL;
+    if (plies < 0) scoring = new Scoring(&(searcher->hashTable));
     size_t lines = 0;
     
     for (size_t i = index; i < fens.size(); i += cores) {
@@ -81,7 +80,7 @@ static double computeError(SearchController *searcher, int index) {
             continue;
         }
         int value;
-        if (eval) {
+        if (plies < 0) {
             value = scoring->evalu8(b);
         } else {
             options.search.easy_plies = 0;
@@ -274,8 +273,23 @@ int CDECL main(int argc, char **argv)
     }
     else {
         Statistics stats;
-        string paramFile = argv[1];
-        string tuneFile = argv[2];
+        int arg = 1;
+        while (arg < argc && argv[arg][0] == '-') {
+           if (strcmp(argv[arg],"-c")==0) {
+              ++arg;
+              cores = atoi(argv[arg]);
+              ++arg;
+           }
+           else if (strcmp(argv[arg],"-p")==0) {
+              ++arg;
+              plies = atoi(argv[arg]);
+              ++arg;
+           }
+        }
+        
+        
+        string paramFile = argv[arg++];
+        string tuneFile = argv[arg];
 
         try {
            
@@ -297,8 +311,7 @@ int CDECL main(int argc, char **argv)
              it != x0s.end();
              it++) {
            cout << *(*it) << endl;
-        }
-        
+        }       
 
         cout << "reading training file" << endl;
         ifstream fen_file(tuneFile.c_str(), ios::in);
