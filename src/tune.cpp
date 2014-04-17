@@ -96,7 +96,7 @@ static double computeError(SearchController *searcher, int index) {
         double predict = sigmoid(val);
         err += ((double)fens[i].result - predict)*((double)fens[i].result - predict);
     }
-    delete scoring;
+    if (plies < 0) delete scoring;
 //    cout << "thread " << index << " done" << endl;
     
     return err;
@@ -110,7 +110,7 @@ static void * CDECL threadp(void *x)
 #endif
 {
     ThreadData *td = (ThreadData*)x;
-    td->searcher = new SearchController();
+    if (!td->searcher) td->searcher = new SearchController();
 //    cout << "thread " << td->index << " starting" << endl;
     errors[td->index] = computeError(td->searcher,td->index);
     return 0;
@@ -268,6 +268,9 @@ int CDECL main(int argc, char **argv)
            }
         }
         
+        for (int i = 0; i < cores; i++) {
+           threadDatas[i].searcher = NULL;
+        }
         
         string paramFile = argv[arg++];
         string tuneFile = argv[arg];
@@ -336,6 +339,5 @@ int CDECL main(int argc, char **argv)
     for (int i = 0; i < cores; i++) {
         delete threadDatas[i].searcher;
     }
-
     return 0;
 }
