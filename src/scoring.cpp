@@ -1298,13 +1298,9 @@ void Scoring::pieceScore(const Board &board,
 #endif
    }
 
-   allAttacks |= ourPawnData.opponent_pawn_attacks;
-   allAttacks |= Attacks::king_attacks[okp];
-   const int nearSquaresAttacked =  Bitboard(allAttacks & kingNearProximity[kp]).bitCount();
-   const int squaresAttacked =  Bitboard(allAttacks & kingProximity[oside][kp]).bitCount();
-   const int escapes = 
-      Bitboard(allAttacks & kingNearProximity[kp] &
-               ~board.occupied[side]).bitCount();
+   allAttacks |= oppPawnData.opponent_pawn_attacks;
+   allAttacks |= Attacks::king_attacks[kp];
+   const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
    if (!endgame) {
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
