@@ -28,16 +28,11 @@ static const int CENTER_PAWN_BLOCK = -12;
 static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
 static const int KING_FILE_OPEN = -15;
 
-static const int ATTACK_COUNT_SCALE[24] =
-{
-   0, 6, 12, 18, 24, 33, 45, 57, 69, 81, 93, 105, 117, 129, 141, 153, 165,
-   177, 189, 201, 213, 222, 228, 234
-};
-
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 5, 15, 25, 40, 40, 40, 40 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
 #define BOOST
-static const int KING_ATTACK_BOOST_THRESHOLD = 25;
+static const int KING_ATTACK_BOOST_THRESHOLD = 75;
+static const int KING_ATTACK_BOOST_DIVISOR = 88;
 
 const int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
@@ -965,12 +960,16 @@ void Scoring::pieceScore(const Board &board,
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
-   int attack_count = 0;
    static const int ATTACK_FACTOR[6] = { 0, 1, 2, 2, 3, 4 };
    int pin_count = 0;
+   Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
    Square okp = board.kingSquare(oside);
    const Bitboard &nearKing = kingProximity[oside][okp];
+   Bitboard allAttacks;
+   int attackWeight = 0;
+   int attackCount = 0;
+   
    Square sq;
    while(b.iterate(sq))
    {
@@ -997,9 +996,11 @@ void Scoring::pieceScore(const Board &board,
 #endif
                scores.any += outpost_score;
             }
+            allAttacks |= knattacks;
 
             if (knattacks & nearKing) {
-               attack_count += ATTACK_FACTOR[Knight];
+               attackWeight += ATTACK_FACTOR[Knight];
+               attackCount++;
             }
             break;
          }
@@ -1010,15 +1011,17 @@ void Scoring::pieceScore(const Board &board,
 
             //scores.end += BishopScores[scoreSq]/2;
             const Bitboard battacks(board.bishopAttacks(sq));
+            allAttacks |= battacks;
             if (!endgame) {
                if (battacks & nearKing) {
-                  attack_count += ATTACK_FACTOR[Bishop];
+                  attackWeight += ATTACK_FACTOR[Bishop];
+                  attackCount++;
                }
                else if (battacks & board.queen_bits[side]) {
-
                   // possible stacked attackers
                   if (board.bishopAttacks(sq, side) & nearKing) {
-                     attack_count += ATTACK_FACTOR[Bishop];
+                     attackWeight += ATTACK_FACTOR[Bishop];
+                     attackCount++;
                   }
                }
             }
@@ -1057,6 +1060,7 @@ void Scoring::pieceScore(const Board &board,
 
             const int file = File(sq);
             const Bitboard rattacks(board.rookAttacks(sq));
+            allAttacks |= rattacks;
             if (FileOpen(board, file)) {
                scores.any += ROOK_ON_OPEN_FILE;
             }
@@ -1075,7 +1079,7 @@ void Scoring::pieceScore(const Board &board,
             if (!endgame) {
                Bitboard attacks(rattacks2 &nearKing);
                if (attacks) {
-                  attack_count += ATTACK_FACTOR[Rook];
+                  attackWeight += ATTACK_FACTOR[Rook];
 
                   Bitboard attacks2(attacks &kingNearProximity[okp]);
                   if (attacks2) {
@@ -1083,7 +1087,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attack_count++;
+                        attackWeight++;
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1103,8 +1107,10 @@ void Scoring::pieceScore(const Board &board,
             int qmobl = 0;
 
             Bitboard battacks(board.bishopAttacks(sq));
-            Bitboard qmobility(battacks);                   // all squares to which Q can move
+            allAttacks |= battacks;
+            Bitboard qmobility(battacks);
             Bitboard kattacks;
+            
             if (!endgame) {
                kattacks = battacks & nearKing;
                if (!kattacks) {
@@ -1118,6 +1124,7 @@ void Scoring::pieceScore(const Board &board,
 
             Bitboard rattacks = board.rookAttacks(sq);
             qmobility |= rattacks;
+            allAttacks |= qmobility;
             if (!endgame) {
                int rank = Rank(sq, side);
                if (rank > 3) {
@@ -1140,26 +1147,25 @@ void Scoring::pieceScore(const Board &board,
                }
 
                if (kattacks) {
-                  attack_count += ATTACK_FACTOR[Queen];
+                  attackWeight += ATTACK_FACTOR[Queen];
 #ifdef EVAL_DEBUG
-                  int tmp = attack_count;
+                  int tmp = attackWeight;
 #endif
-
                   // bonus if Queen attacks multiple squares near King:
                   Bitboard nearAttacks(kattacks &kingNearProximity[okp]);
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attack_count++;
+                        attackWeight++;
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attack_count++;
+                           attackWeight++;
                         }
                      }
                   }
 
 #ifdef EVAL_DEBUG
-                  if (attack_count - tmp) cout << "queen attack boost= " << attack_count - tmp << endl;
+                  if (attackWeight - tmp) cout << "queen attack boost= " << attackWeight - tmp << endl;
 #endif
                }
             }
@@ -1203,17 +1209,9 @@ void Scoring::pieceScore(const Board &board,
             scores.mid += BAD_BISHOP[Midgame] * (whitePawns - blackPawns);
             scores.end += BAD_BISHOP[Endgame] * (whitePawns - blackPawns);
 #ifdef EVAL_DEBUG
-            cout <<
-               "bad bishop (" <<
-               ColorImage(side) <<
-               "): (" <<
-               scores.mid -
-               tmp.mid <<
-               "," <<
-               scores.end -
-               tmp.end <<
-               ")" <<
-               endl;
+            cout << "bad bishop (" << ColorImage(side) << "): (" <<
+               scores.mid - tmp.mid << "," << scores.end - tmp.end <<
+               ")" << endl;
 #endif
          }
 
@@ -1235,17 +1233,9 @@ void Scoring::pieceScore(const Board &board,
             scores.mid += BAD_BISHOP[Midgame] * (blackPawns - whitePawns);
             scores.end += BAD_BISHOP[Endgame] * (blackPawns - whitePawns);
 #ifdef EVAL_DEBUG
-            cout <<
-               "bad bishop (" <<
-               ColorImage(side) <<
-               "): (" <<
-               scores.mid -
-               tmp.mid <<
-               "," <<
-               scores.end -
-               tmp.end <<
-               ")" <<
-               endl;
+            cout << "bad bishop (" << ColorImage(side) << "): (" <<
+               scores.mid - tmp.mid << "," << scores.end - tmp.end <<
+               ")" << endl;
 #endif
          }
 
@@ -1257,8 +1247,7 @@ void Scoring::pieceScore(const Board &board,
       }
    }
    else if (bishopCount >= 2) {
-
-      // Bishop pair bounus, higher bonus in endgame
+      // Bishop pair bonus, higher bonus in endgame
       scores.mid += BISHOP_PAIR[Midgame];
       scores.end += BISHOP_PAIR[Endgame];
 #ifdef EVAL_DEBUG
@@ -1266,21 +1255,28 @@ void Scoring::pieceScore(const Board &board,
 #endif
    }
 
+   allAttacks |= oppPawnData.opponent_pawn_attacks;
+   allAttacks |= Attacks::king_attacks[kp];
+   const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
    if (!endgame) {
 
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      attack_count += proximity;
-      attack_count = Util::Min(attack_count, 23);
+      attackWeight += proximity;
 #ifdef EVAL_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
       cout << " pawn proximity=" << proximity << endl;
-      cout << " attack_count=" << attack_count << endl;
+      cout << " attackCount=" << attackCount << endl;
+      cout << " attackWeight=" << attackWeight << endl;
+      cout << " squaresAttacked=" << squaresAttacked << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
 
-      int attack = ATTACK_COUNT_SCALE[attack_count];
+      int scale =
+         (26*attackWeight + 13*attackWeight*attackCount +
+         29*squaresAttacked)/32;
+      int attack = 10*Util::Min(scale, 31);
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
 
       int kattack = attack;
@@ -1289,7 +1285,7 @@ void Scoring::pieceScore(const Board &board,
       int kattack_tmp = kattack;
 #endif
       if (kattack && cover < -KING_ATTACK_BOOST_THRESHOLD) {
-         kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / 120);
+         kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif
