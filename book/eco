@@ -769,6 +769,7 @@ D36 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. cxd5 exd5 5. Bg5 c6 6. Qc2 "QGD, Exchange Va
 D36 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. cxd5 exd5 5. Bg5 c6 6. Qc2 Nbd7 "QGD, Exchange Variation"
 D36 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. cxd5 exd5 5. Bg5 c6 6. Qc2 Nbd7 7. Nf3 "QGD, Exchange Variation"
 D36 1. d4 d5 2. c4 e6 2. Nf3 Nf6 4. Nc3 c6 5. Bg5 Nbd7 6. cxd5 exd5 7. e3 Be7 8. Qc2 "QGD, Exchange Variation"
+D36 1. d4 e6 2. Nf3 Nf6 3. c4 d5 4. Nc3 Nbd7 5. cxd5 exd5 6. Bg5 c6 7. e3 Be7 8. Bd3 O-O 9. O-O Re8 10. Qc2 Nf8 "QGD, Exchange Variation"
 D37 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 "Queen's Gambit Declined"
 D37 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 Be7 5. Bf4 O-O "Queen's Gambit Declined"
 D37 1. d4 d5 2. c4 e6 3. Nc3 Be7 4. cxd5 exd5 5. Bf4 Nf6 6. e3 O-O 7. Nf3 c5 "QGD, Exchange Variation"
@@ -810,11 +811,11 @@ D49     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3 Nbd7 6. Bd3 dc4 7. Bc4 b5 8
 
 D50     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 "Queen's Gambit Declined"
 D51     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7 "Queen's Gambit Declined"
+D51     1. d4 Nf6 2. c4 e6 3. Nf3 d5 4. Nc3 c6 5. Bg5 Nbd7 6. cxd5 cxd5 "Queen's Gambit Declined"
 D52     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7 5. e3 c6 6. Nf3 "QGD, Cambridge Springs Variation"
 D53     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 "Queen's Gambit Declined"
 D53     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. Nf3 "Queen's Gambit Declined"
 D54     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Rc1 "Queen's Gambit Declined"
-
 D55     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 "Queen's Gambit Declined"
 D55     1. d4 d5 2. c4 e6 3. Nc3 Be7 4. Nf3 Nf6 5. Bg5 h6 6. Bxf6 Bxf6 7. e3 O-O 8. Rc1 c6 "Queen's Gambit Declined"
 D55     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 h6 "QGD, Tartakover Variation"
