@@ -88,6 +88,7 @@ int BookReader::filterAndNormalize(const Board &board,
 #ifdef _TRACE
    cout << "candidate_count = " << candidates.size() << endl;
 #endif
+   if (candidates.size() == 0) return 0;
 
    // Sort by descending weights
    for (unsigned i=1; i<candidates.size(); i++) {
@@ -100,53 +101,49 @@ int BookReader::filterAndNormalize(const Board &board,
       candidates[j+1] = tmp;
    }
 
+   const int maxWeight = candidates[0].second;
    int total_weight = 0;
    for (unsigned i=0; i<candidates.size(); i++) {
-      if (i && candidates[i].second && options.book.selectivity < 50) {
-         // At low selectivity settings, boost values of low ranked moves
-         candidates[i].second = Util::Min(candidates[0].second,
-                                          candidates[i].second +
-                                          candidates[i].second*(50-options.book.selectivity)/100);
+      int weight = candidates[i].second;
+      // apply selectivity value. If selectivity > 50, decrease
+      // weights of moves besides the best move(s). If selectivity <
+      // 50, increase weights of moves besides the best move(s).
+#ifdef _TRACE
+      cout << " orig weight=" << candidates[i].second;
+#endif      
+      if (maxWeight != weight) {
+         if (options.book.selectivity > 50) {
+            weight = int(weight*(1.0 - 2.0*double(options.book.selectivity-50)/100.0));
+         } else if (options.book.selectivity < 50) {
+            weight = Util::Min(maxWeight,int(weight*(1.0 + double(50-options.book.selectivity)/12.0)));
+         }
       }
+      // based on selectivity value, drop very low scoring moves
+      if (weight < options.book.selectivity*maxWeight/1000) {
+         weight = 0;
+      }
+      candidates[i].second = weight;
       total_weight += candidates[i].second;
 #ifdef _TRACE
-      cout << " weight=" << candidates[i].second << endl;
+      cout << " adjusted weight=" << candidates[i].second << endl;
 #endif      
-   }
-
-#ifdef _TRACE
-   cout << "selectivity=" << options.book.selectivity << endl;
-#endif
-   // Depending on the selectivity value, remove moves from the
-   // candidate list.
-   int tot = 0;
-   vector< pair<book::DataEntry,int> > candidates2;
-   // Stop selecting when accumulated move weight reaches "target". 
-   // "target" is lower for higher selectivity values.
-   const int target = (int)(book::MAX_WEIGHT*(100.0-45.0*(2.0-log10((float)(104-options.book.selectivity))))/100);
-#ifdef _TRACE
-   cout << "target weight=" << target << endl;
-#endif
-   for (unsigned i = 0; i < candidates.size(); i++) {
-      tot += candidates[i].second;
-      candidates2.push_back(candidates[i]);
-      if (tot > target) {
-         break;
-      }
    }
 
    Move move_list[Constants::MaxMoves];
    MoveGenerator mg(board, NULL, 0, NullMove, 0);
    (void)mg.generateAllMoves(move_list,1 /* repeatable */); 
 
-   // renormalize after selectivity rules applied
-   // + convert move indexes to moves
-   for (unsigned i=0; i<candidates2.size(); i++) {
-        moves.push_back( pair<Move,int> (
-   	move_list[candidates2[i].first.index],
-        int((book::MAX_WEIGHT*candidates2[i].second)/tot + 0.5)));
+   // Convert move indexes to moves and normalize weight values.
+   // Remove 0-weighted moves.
+   for (unsigned i=0; i<candidates.size(); i++) {
+       const int normalizedWeight = (book::MAX_WEIGHT*candidates[i].second)/total_weight;
+       if (normalizedWeight) {
+           moves.push_back( pair<Move,int> (
+                                            move_list[candidates[i].first.index],
+                                            normalizedWeight));
+       }
    }
-   return (int)candidates2.size();
+   return (int)moves.size();
 }
 
 Move BookReader::pick(const Board &b) {
@@ -168,13 +165,10 @@ Move BookReader::pickRandom(const Board &b,
    for (int i = 0; i < n; i++) total_weight += moves[i].second;
    // If total_weight is 0, no moves have non-zero weights.
    if (total_weight == 0) return NullMove;
-   const unsigned nRand = rand() % total_weight;
+   unsigned nRand = rand() % total_weight;
+   unsigned weight = 0;
    // Randomly pick from the available moves.  Prefer moves
    // with high weights.
-#ifdef _TRACE
-   cout << "nRand = " << nRand << endl; 
-#endif
-   unsigned weight = 0;
    for (int i=0; i < n; i++) 
    {
       int w = moves[i].second;
