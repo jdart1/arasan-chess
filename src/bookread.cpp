@@ -113,14 +113,14 @@ int BookReader::filterAndNormalize(const Board &board,
 #endif      
       if (maxWeight != weight) {
          if (options.book.selectivity > 50) {
-            weight = int(weight*(1.0 - 2.0*double(options.book.selectivity-50)/100.0));
+            weight = int(weight*(1.0 - 2.0*double(options.book.selectivity-50)/100));
          } else if (options.book.selectivity < 50) {
             weight = Util::Min(maxWeight,int(weight*(1.0 + double(50-options.book.selectivity)/12.0)));
          }
-      }
-      // based on selectivity value, drop very low scoring moves
-      if (weight < options.book.selectivity*maxWeight/1000) {
-         weight = 0;
+         // based on selectivity value, drop very low scoring moves
+         if (weight < options.book.selectivity*maxWeight/1000) {
+             weight = 0;
+         }
       }
       candidates[i].second = weight;
       total_weight += candidates[i].second;
