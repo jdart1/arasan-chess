@@ -1590,7 +1590,9 @@ int Search::quiesce(int ply,int depth)
       BoardState state(board.state);
       const ColorType oside = board.oppositeSide();
       Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
-      while (!IsNull(pv)) {
+      // Isn't really a loop: but we code this way so can use
+      // break to exit the following block.
+      while (!IsNull(pv) && validMove(board,pv)) {
          if (Capture(pv) == King) {
 #ifdef _TRACE
             if (master()) {
