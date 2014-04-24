@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 17.0
+# Gnu Makefile for Arasan 17.1
 #
-VERSION = 17.0.0
+VERSION = 17.1.0
 
 # paths, modify as needed:
 
