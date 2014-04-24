@@ -1779,9 +1779,11 @@ int Scoring::evalu8(const Board &board) {
       score = score * Util::Max(10, options.search.strength) / 100;
       if (options.search.strength <= 75) {
          // somewhat randomize the scores
-         int max = int(PAWN_VALUE * (100 - 1.33F * options.search.strength) / 100);
-         if ((rand() % 100) < (75 - options.search.strength)) {
-            max *= 3;
+         int max = int(PAWN_VALUE * (100 - 1.33F * options.search.strength) / 100) + 
+             Util::Max(0,(50-options.search.strength)*PAWN_VALUE/50) +
+             Util::Max(0,(25-options.search.strength)*PAWN_VALUE/25);
+         if ((rand() % 100) < (50 - options.search.strength)) {
+            max *= 2;
          }
          if (max) score += -max / 2 + (rand() % max);
       }

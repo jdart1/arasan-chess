@@ -1112,6 +1112,7 @@ int depth, Move exclude [], int num_exclude)
     int move_index = 0;
     int hibound = beta;
     fail_high_root = 0;
+    bool skipped = false;
     while (!node->cutoff && !terminate) {
         Move move;
         if ((move  = mg.nextMove(split))==NullMove) break;
@@ -1198,7 +1199,15 @@ int depth, Move exclude [], int num_exclude)
         board.undoMove(move,save_state);
         if (wide) mg.setScore(move,try_score);
         if (try_score > node->best_score && !terminate) {
-            if (updateRootMove(board,node,node,move,try_score,move_index)) {
+            bool skip = false;
+            if (options.search.strength < 100 && mg.moveCount() > 1 &&
+                !skipped) {
+                    if (rand() % 1024 < int(500.0/pow(2.0,(double)options.search.strength/10.0))) {
+                        // sometimes miss the "best" move
+                        skip = skipped = true;
+                }
+            }
+            if (!skip && updateRootMove(board,node,node,move,try_score,move_index)) {
                 // beta cutoff
                 // ensure we send UCI output .. even in case of quick
                 // termination due to checkmate or whatever
