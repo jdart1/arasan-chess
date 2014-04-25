@@ -280,7 +280,8 @@ Move CreateMove(const Board &board, Square start, Square dest, PieceType promoti
    }
    MoveType type = get_move_type(board,start,dest);
    PieceType piece_moved = TypeOfPiece(board[start]);
-   ASSERT(piece_moved != Empty);
+   // Hash moves get validity checked later
+   //   ASSERT(piece_moved != Empty);
    PieceType capture;
    if (type == EnPassant)
      capture = Pawn;
