@@ -1404,12 +1404,13 @@ int Scoring::calcPawnData(const Board &board,
          cout << " isolated";
 #endif
       }
-      else if (rank < 6 && backward && board[sq + incr] != enemy_pawn) {
-
+      else if (rank < 6 && backward) {
          // Pawn is not, and cannot be, protected by a pawn of
          // the same color. See if it is also blocked from advancing
          // by adjacent pawns.
-         for(Square sq2 = sq + incr; !weak && OnBoard(sq2); sq2 += incr) {
+         for(Square sq2 = sq + incr;
+             !weak && OnBoard(sq2) && board[sq2] != enemy_pawn;
+             sq2 += incr) {
             int patcks = pawn_attacks(board, sq2, oside).bitCountOpt() - pawn_attacks(board, sq2, side).bitCountOpt();
             if (patcks > 0) {
 #ifdef PAWN_DEBUG
@@ -1419,7 +1420,6 @@ int Scoring::calcPawnData(const Board &board,
                weak++;
             }
             if (patcks > 1) {
-
                // "extra weak" pawn
                score += WEAK2;
 #ifdef PAWN_DEBUG
