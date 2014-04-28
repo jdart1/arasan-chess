@@ -209,7 +209,6 @@ class Scoring
 
     template <ColorType side>
     int outpost(const Board &board, Square sq, Square scoreSq, 
-                const int scores[64],
                 const PawnHashEntry::PawnData &oppPawnData);
 
 

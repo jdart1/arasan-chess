@@ -3437,6 +3437,7 @@ int CDECL main(int argc, char **argv) {
 #endif
 
     searcher = new SearchController();
+    Scoring::initParams();
 
 #ifdef SELFPLAY 
     if (selfplay) {
