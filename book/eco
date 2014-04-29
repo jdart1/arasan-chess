@@ -721,6 +721,7 @@ D16     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dc4 5. a4 "Slav Defense"
 D17     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dc4 5. a4 Bf5 "Slav Defense"
 D18     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dc4 5. a4 Bf5 6. e3 "Slav Defense"
 D19     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dc4 5. a4 Bf5 6. e3 e6 7. Bc4 Bb4 8. O-O O-O 9. Qe2 "Slav Defense"
+D19     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dc4 5. a4 Bf5 6. e3 e6 7. Bc4 Bb4 8. O-O Nbd7 9. Qe2 Bg6 10. e4 O-O "Slav Defense"
 
 D20     1. d4 d5 2. c4 dc4 "Queen's Gambit Accepted"
 D21     1. d4 d5 2. c4 dc4 3. Nf3 "Queen's Gambit Accepted"
