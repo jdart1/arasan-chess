@@ -43,17 +43,15 @@ const int Scoring::Scores:: MATERIAL_SCALE[32] =
 static const int MIDGAME_MATERIAL_THRESHOLD = 12;
 static const int ENDGAME_MATERIAL_THRESHOLD = 23;
 
-static const CACHE_ALIGN int KnightScores[64] =
-{
-   -20, -11, -11, -11, -11, -11, -11, -20,
-    -9, 0, 10, 10, 10, 10, 0, -9,
-    -9, 10, 20, 10, 10, 20, 10, -9,
-    -9, 10, 10, 12, 12, 10, 10, -9,
-    -9, 10, 10, 12, 12, 10, 10, -9,
-    -9, 10, 20, 10, 10, 20, 10, -9,
-    -9, 0, 10, 10, 10, 10, 0, -9,
-    -9, 0, 0, 0, 0, 0, 0, -9
-};
+static const CACHE_ALIGN int KnightScores[64][2] = { 
+   { -22,-23},{-14,-19},{-11,-16},{-10,-15},{-10,-15},{-11,-16},{-14,-19},{-22,-23},
+   {-15,-13},{-6,-9},{-4,-5},{-3,-4},{-3,-4},{-4,-5},{-6,-9},{-15,-13},
+   {-12,-9},{-4,-5},{-1,-2},{0,-1},{0,-1},{-1,-2},{-4,-5},{-12,-9},
+   {-11,-8},{-3,-4},{0,-1},{3,0},{3,0},{0,-1},{-3,-4},{-11,-8},
+   {-11,-8},{-3,-3},{0,0},{3,1},{3,1},{0,0},{-3,-3},{-11,-8},
+   {-12,-9},{-4,-4},{-1,0},{0,0},{0,0},{-1,0},{-4,-4},{-12,-9},
+   {-15,-13},{-6,-7},{-4,-4},{-3,-3},{-3,-3},{-4,-4},{-6,-7},{-15,-13},
+   {-18,-17},{-9,-13},{-7,-9} ,{-6,-8} ,{-6,-8} ,{-7,-9} ,{-9,-13},{-18,-17} };
 
 static const CACHE_ALIGN int BishopScores[64] =
 {
@@ -981,7 +979,8 @@ void Scoring::pieceScore(const Board &board,
       {
       case Knight:
          {
-            scores.any += KnightScores[scoreSq];
+            scores.mid += KnightScores[scoreSq][Midgame];
+            scores.end += KnightScores[scoreSq][Endgame];
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
             const int mobl = KNIGHT_MOBILITY[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
