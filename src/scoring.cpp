@@ -22,44 +22,44 @@ static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-enum {
-   PARAM_CENTRALITY_BASE,
-   PARAM_CENTRALITY_LINEAR,
-   PARAM_CENTRALITY_SQUARED,
-   PARAM_KNIGHT_CENTRALITY_MIDGAME,
-   PARAM_KNIGHT_CENTRALITY_ENDGAME,
-   PARAM_KNIGHT_FORWARD_MIDGAME,
-   PARAM_KNIGHT_FORWARD_ENDGAME,
-   PARAM_KNIGHT_BACK_MIDGAME,
-   PARAM_KNIGHT_BACK_ENDGAME,
-   PARAM_KNIGHT_RIM_MIDGAME,
-   PARAM_KNIGHT_RIM_ENDGAME,
-//   PARAM_KNIGHT_OUTPOST1_MIDGAME,
-//   PARAM_KNIGHT_OUTPOST1_ENDGAME,
-//   PARAM_KNIGHT_OUTPOST2_MIDGAME,
-//   PARAM_KNIGHT_OUTPOST2_ENDGAME
-};
 
 #define PARAM(x) params[x].current
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-Scoring::TuneParam(0,"centrality_base",0,0,20),
-Scoring::TuneParam(0,"centrality_linear",6,0,16), //* 4
-Scoring::TuneParam(0,"centrality_squared",6,0,16),// *4
-Scoring::TuneParam(0,"knight_centrality_midgame",12,0,40), //*8
-Scoring::TuneParam(0,"knight_centrality_endgame",12,0,40),
-Scoring::TuneParam(0,"knight_forward_midgame",0,0,4),
-Scoring::TuneParam(0,"knight_forward_endgame",4,0,4),
-Scoring::TuneParam(0,"knight_back_midgame",-16,-20,0),
-Scoring::TuneParam(0,"knight_back_endgame",-20,-20,0),
-Scoring::TuneParam(0,"knight_rim_midgame",-20,-20,0),
-Scoring::TuneParam(0,"knight_rim_endgame",0,-20,0)
-//Scoring::TuneParam(0,"knight_outpost1_midgame",8,0,12),
-//Scoring::TuneParam(0,"knight_outpost1_endgame",8,0,12),
-//Scoring::TuneParam(0,"knight_outpost2_midgame",6,0,12),
-//Scoring::TuneParam(0,"knight_outpost2_endgame",6,0,12)
-};
- 
+Scoring::TuneParam(0,"bishop_a1",-40,-40,10),
+Scoring::TuneParam(0,"bishop_a2",0,-35,10),
+Scoring::TuneParam(0,"bishop_a3",0,-35,10),
+Scoring::TuneParam(0,"bishop_a4",-35,-35,10),
+Scoring::TuneParam(0,"bishop_b1",-35,-35,35),
+Scoring::TuneParam(0,"bishop_b2",-35,-35,35),
+Scoring::TuneParam(0,"bishop_b3",21,-35,35),
+Scoring::TuneParam(0,"bishop_b4",-35,-35,35),
+Scoring::TuneParam(0,"bishop_c1",-21,-35,35),
+Scoring::TuneParam(0,"bishop_c2",35,-35,35),
+Scoring::TuneParam(0,"bishop_c3",-21,-35,35),
+Scoring::TuneParam(0,"bishop_c4",35,-35,35),
+Scoring::TuneParam(0,"bishop_d1",35,-35,35),
+Scoring::TuneParam(0,"bishop_d2",-35,-35,35),
+Scoring::TuneParam(0,"bishop_d3",-7,-35,35),
+Scoring::TuneParam(0,"bishop_d4",28,-35,35),
+Scoring::TuneParam(0,"bishop_e1",35,-35,35),
+Scoring::TuneParam(0,"bishop_e2",21,-35,35),
+Scoring::TuneParam(0,"bishop_e3",-35,-35,35),
+Scoring::TuneParam(0,"bishop_e4",-7,-35,35),
+Scoring::TuneParam(0,"bishop_f1",35,-35,35),
+Scoring::TuneParam(0,"bishop_f2",35,-35,35),
+Scoring::TuneParam(0,"bishop_f3",35,-35,35),
+Scoring::TuneParam(0,"bishop_f4",35,-35,35),
+Scoring::TuneParam(0,"bishop_g1",-35,-35,35),
+Scoring::TuneParam(0,"bishop_g2",-35,-35,35),
+Scoring::TuneParam(0,"bishop_g3",-35,-35,35),
+Scoring::TuneParam(0,"bishop_g4",-35,-35,35),
+Scoring::TuneParam(0,"bishop_h1",-35,-35,35),
+Scoring::TuneParam(0,"bishop_h2",-35,-35,35),
+Scoring::TuneParam(0,"bishop_h3",-35,-35,35),
+Scoring::TuneParam(0,"bishop_h4",-35,-35,35)};
+
+
 static const int CENTER_PAWN_BLOCK = -12;
 
 // king cover scores, by rank of Pawn - rank of King
@@ -81,9 +81,17 @@ const int Scoring::Scores:: MATERIAL_SCALE[32] =
 static const int MIDGAME_MATERIAL_THRESHOLD = 12;
 static const int ENDGAME_MATERIAL_THRESHOLD = 23;
 
-static CACHE_ALIGN int KnightScores[2][64];
+static const CACHE_ALIGN int KnightScores[64][2] = { 
+   { -22,-23},{-14,-19},{-11,-16},{-10,-15},{-10,-15},{-11,-16},{-14,-19},{-22,-23},
+   {-15,-13},{-6,-9},{-4,-5},{-3,-4},{-3,-4},{-4,-5},{-6,-9},{-15,-13},
+   {-12,-9},{-4,-5},{-1,-2},{0,-1},{0,-1},{-1,-2},{-4,-5},{-12,-9},
+   {-11,-8},{-3,-4},{0,-1},{3,0},{3,0},{0,-1},{-3,-4},{-11,-8},
+   {-11,-8},{-3,-3},{0,0},{3,1},{3,1},{0,0},{-3,-3},{-11,-8},
+   {-12,-9},{-4,-4},{-1,0},{0,0},{0,0},{-1,0},{-4,-4},{-12,-9},
+   {-15,-13},{-6,-7},{-4,-4},{-3,-3},{-3,-3},{-4,-4},{-6,-7},{-15,-13},
+   {-18,-17},{-9,-13},{-7,-9} ,{-6,-8} ,{-6,-8} ,{-7,-9} ,{-9,-13},{-18,-17} };
 
-static const CACHE_ALIGN int BishopScores[64] =
+static int CACHE_ALIGN BishopScores[64] =
 {
    -12, -12, -12, -12, -12, -12, -12, -12,
      0, 8, 0, 6, 6, 0, 8, 0,
@@ -337,46 +345,6 @@ static inline int FileOpen(const Board &board, int file) {
 // Return all squares attacked by a pawn of color "side" at square "sq".
 static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorType side) {
    return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
-}
-
-void Scoring::initParams() {
-   int centrality[8];
-   for (int i = 0; i < 8; i++) {
-      centrality[i] = PARAM(PARAM_CENTRALITY_BASE);
-      int dist = 0;
-      if (i>4) dist = i-4;
-      if (i<3) dist = 3-i;
-      centrality[i] -= dist*PARAM(PARAM_CENTRALITY_LINEAR)/4;
-      centrality[i] -= dist*dist*PARAM(PARAM_CENTRALITY_SQUARED)/4;
-   }
-   
-   for (int i = 0; i < 64; i++) {
-      const int centr = centrality[Rank(i,White)-1] +
-      centrality[File(i)-1];
-      KnightScores[0][i] = centr*PARAM(PARAM_KNIGHT_CENTRALITY_MIDGAME)/8;
-      KnightScores[1][i] = centr*PARAM(PARAM_KNIGHT_CENTRALITY_ENDGAME)/8;
-      if (Rank(i,White)==1) {
-         KnightScores[0][i] += PARAM(PARAM_KNIGHT_BACK_MIDGAME);
-         KnightScores[1][i] += PARAM(PARAM_KNIGHT_BACK_ENDGAME);
-      }
-      int r = Rank(i,White);
-      int f = File(i);
-      if (r>=5 && r <= 7 && (f>1) && (f<8)) {
-         KnightScores[0][i] += PARAM(PARAM_KNIGHT_FORWARD_MIDGAME);
-         KnightScores[1][i] += PARAM(PARAM_KNIGHT_FORWARD_ENDGAME);
-      }
-      if (f == 1 || f == 8) {
-         KnightScores[0][i] += PARAM(PARAM_KNIGHT_RIM_MIDGAME);
-         KnightScores[1][i] += PARAM(PARAM_KNIGHT_RIM_ENDGAME);
-      }
-   }
-
-     for (int i = 0; i < 64; i++) {
-        if (i%8==0) cout << endl;
-        cout << "{" << KnightScores[0][i] << "," <<
-           KnightScores[1][i] << "},";
-     }
-
 }
 
 static void initBitboards() {
@@ -659,6 +627,27 @@ static void initBitboards() {
    BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(B4);
    BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(C3);
    BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(D2);
+}
+
+void Scoring::initParams() {
+     int p = 0;
+     for (int i = 0; i < 8; i++ ) {
+       for (int j = 0; j < 4; j++) {
+         BishopScores[8*i+j] = PARAM(p);
+         BishopScores[8*i+(7-j)] = PARAM(p);
+         ++p;
+       }
+     }
+     for (int i = 0; i < 8; i++) {
+        cout << endl;
+        for (int j = 0; j <8; j++) {
+           int x = i*8 + j;
+           cout << 2*(int)BishopScores[x]/3 << ",";
+        }
+     }
+     cout << endl;
+     
+     
 }
 
 void Scoring::init() {
@@ -989,26 +978,27 @@ template<ColorType side>
 int Scoring::outpost(const Board &board,
                Square sq,
                Square scoreSq,
+               const int scores[64],
                const PawnHashEntry::PawnData &oppPawnData) {
    int outpost = 0;
    if (side == White) {
       if (!TEST_MASK(outpostW[sq], board.pawn_bits[Black])) {
-         outpost++;
+         outpost = scores[scoreSq];
       }
    }
    else {
       if (!TEST_MASK(outpostB[sq], board.pawn_bits[White])) {
-         outpost++;
+         outpost = scores[scoreSq];
       }
    }
 
    if (outpost) {
       if (oppPawnData.opponent_pawn_attacks.isSet(sq)) {
-         return 1;
+         return outpost;
       }
       else {
          // not defended by pawn
-         return 2;
+         return 2 * outpost / 3;
       }
    }
    else {
@@ -1048,31 +1038,22 @@ void Scoring::pieceScore(const Board &board,
       {
       case Knight:
          {
-            scores.mid += KnightScores[Midgame][scoreSq];
-            scores.end += KnightScores[Endgame][scoreSq];
+            scores.mid += KnightScores[scoreSq][Midgame];
+            scores.end += KnightScores[scoreSq][Endgame];
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
-/*
             const int mobl = KNIGHT_MOBILITY[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
             cout << "knight moblility =" << mobl << endl;
 #endif
             scores.any += mobl;
-*/
-/*
             if (KnightOutpostScores[scoreSq]) {
-               int outpostType = outpost<side> (board, sq, scoreSq, oppPawnData);
-               int score = KnightOutpostScores[scoreSq];
-               if (outpostType == 1) {
-                  scores.mid += score*PARAM(PARAM_KNIGHT_OUTPOST1_MIDGAME)/8;
-                  scores.end += score*PARAM(PARAM_KNIGHT_OUTPOST1_ENDGAME)/8;
-                  
-               } else if (outpostType == 2) {
-                  scores.mid += score*PARAM(PARAM_KNIGHT_OUTPOST2_MIDGAME)/8;
-                  scores.end += score*PARAM(PARAM_KNIGHT_OUTPOST2_ENDGAME)/8;
-               }
+               int outpost_score = outpost<side> (board, sq, scoreSq, KnightOutpostScores, oppPawnData);
+#ifdef EVAL_DEBUG
+               cout << "knight outpost =" << outpost_score << endl;
+#endif
+               scores.any += outpost_score;
             }
-*/
             allAttacks |= knattacks;
 
             if (knattacks & nearKing) {
@@ -1103,22 +1084,21 @@ void Scoring::pieceScore(const Board &board,
                }
             }
 
-            int outpostType = outpost<side> (board, sq, scoreSq, oppPawnData);
-            if (outpostType == 1) {
-               scores.any += BishopOutpostScores[scoreSq];
-            } else if (outpostType == 2) {
-               scores.any += 2*BishopOutpostScores[scoreSq]/3;
+/*
+            if (BishopOutpostScores[scoreSq]) {
+               scores.any += outpost<side> (board, sq, scoreSq, BishopOutpostScores, oppPawnData);
             }
-
+*/
             if (board.pinOnDiag(sq, okp, oside)) {
                pin_count++;
             }
-
+/*
             const int mobl = BISHOP_MOBILITY[Bitboard(battacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
             cout << "bishop mobility (" << SquareImage(sq) << "): " << mobl << endl;
 #endif
             scores.any += mobl;
+*/
             break;
          }
 

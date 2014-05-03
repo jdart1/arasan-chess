@@ -1,18 +1,18 @@
-DIMENSION 11
+DIMENSION 32
 
 BB_INPUT_TYPE * I  # all are type integer
 
 BB_OUTPUT_TYPE OBJ
 
-X0 ( 0 4 4 8 8 2 0 -10 -10 -10 -10 )
+X0 ( -25 -25 -25 -25 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 )
 
-LOWER_BOUND ( 0 0 0 0 0 0 0 -20 -20 -20 -20 )
+LOWER_BOUND ( -40 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 -35 )
 
-UPPER_BOUND ( 20 6 6 12 12 4 4 0 0 0 0 )
+UPPER_BOUND ( 0 0 0 0 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 )
 
-MAX_BB_EVAL     225
+MAX_BB_EVAL     1000
 
-MAX_TIME  12500
+MAX_TIME  25000
 
 DISPLAY_STATS BBE ( SOL ) OBJ # Display the number of evaluation (BBE), 
 							  # the current solution ( SOL ) and the objective

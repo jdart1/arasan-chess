@@ -25,7 +25,7 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 11;
+    static const int NUM_PARAMS = 32;
 
     static void initParams();
         
@@ -207,10 +207,12 @@ class Scoring
 		     const PawnHashEntry::PawnData &pawnData, ColorType side,
 		     Scores &);
 
-    template <ColorType side>
-    int outpost(const Board &board, Square sq, Square scoreSq, 
-                const PawnHashEntry::PawnData &oppPawnData);
-
+    template<ColorType side>
+      int outpost(const Board &board,
+               Square sq,
+               Square scoreSq,
+               const int scores[64],
+               const PawnHashEntry::PawnData &oppPawnData);
 
 };
 
