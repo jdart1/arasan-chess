@@ -1,6 +1,6 @@
 Changes in Arasan 17.1 (April 2014):
- 1) Scoring changes: simplify and tune connected passer code, new
-    king safety scoring.
+ 1) Scoring changes: connected passer code, knight and bishop 
+    piece square tables, new king safety scoring.
  2) Add special-case eval code for K vs K+R and K vs K+Q endgames.
  3) Bug fix: validate hash move in q-search before using it.
  4) Changes to handling of book selectivity option.
@@ -12,6 +12,8 @@ Changes in Arasan 17.1 (April 2014):
     problems with playing into stalemate.
  7) GUI fix: initialize all engine options at start of game. Fixes
     problem with resignation setting not being obeyed.
+ 8) GUI fix: clear any previous game result and other details after
+    loading a position file.
 
 Changes in Arasan 17.0b (Apr. 2014):
  1) GUI fix: PGN reading was not working. Also fixed PGN reader to
