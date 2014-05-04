@@ -990,9 +990,10 @@ E52     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 b6 "Nimzo-India
 E52     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Nf3 b6 5. e3 Bb7 6. Bd3 O-O 7. O-O d5 "Nimzo-Indian, Rubinstein Variation"
 E53     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 "Nimzo-Indian, Rubinstein Variation"
 E53     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O "Nimzo-Indian, Rubinstein Variation"
-E54     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O dc4 8. Bc4 "Nimzo-Indian, Rubinstein Variation"
-
-E55     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O dc4 8. Bc4 Nbd7 "Nimzo-Indian, Rubinstein Variation"
+E54     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O dc4 8. Bc4 "Nimzo-Indian, Gligoric System"
+E54     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 c5 5. Nf3 cxd4 6. exd4 d5 7. Bd3 dc4 8. Bc4 O-O 9. O-O Nbd7 "Nimzo-Indian, Gligoric System"
+E55     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O dc4 8. Bc4 Nbd7 "Nimzo-Indian, Gligoric, Bronstein var."
+E55     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Bd3 c5 6. Nf3 d5 7. O-O dxc4 8. Bxc4 Nbd7 9. Qb3 cxd4 10. exd4 "Nimzo-Indian, Gligoric, Bronstein var."
 E56     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6 "Nimzo-Indian, Rubinstein Variation"
 E57     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6 8. a3 dc4 9. Bc4 cd4 "Nimzo-Indian, Rubinstein Variation"
 E58     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6 8. a3 Bc3 9. bc3 "Nimzo-Indian, Rubinstein Variation"
