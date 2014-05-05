@@ -1,4 +1,4 @@
-Changes in Arasan 17.1 (April 2014):
+Changes in Arasan 17.1 (May 2014):
  1) Scoring changes: connected passer code, knight and bishop 
     piece square tables, new king safety scoring.
  2) Add special-case eval code for K vs K+R and K vs K+Q endgames.
