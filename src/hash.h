@@ -302,7 +302,6 @@ private:
     size_t hashSize, hashFree;
     hash_t hashMask;
     static const int MaxRehash = 4;
-    int refCount;
     int hash_init_done;
 };
 
