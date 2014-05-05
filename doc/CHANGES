@@ -1,4 +1,30 @@
-Changes in Arasan 17.0:
+Changes in Arasan 17.1 (April 2014):
+ 1) Scoring changes: connected passer code, knight and bishop 
+    piece square tables, new king safety scoring.
+ 2) Add special-case eval code for K vs K+R and K vs K+Q endgames.
+ 3) Bug fix: validate hash move in q-search before using it.
+ 4) Changes to handling of book selectivity option.
+ 5) Adjust variable strength option so bottom end of strength scale
+    is lower (will blunder sometimes).
+ 6) Increase ply depth in reduced strength mode for very low material
+    endgames (engine was having difficulty mating in these cases
+    even at moderate strength settings). This also fixes some
+    problems with playing into stalemate.
+ 7) Better handling of out-of-memory errors when allocating hashtable.
+ 8) GUI fix: initialize all engine options at start of game. Fixes
+    problem with resignation setting not being obeyed.
+ 9) GUI fix: clear any previous game result and other details after
+    loading a position file.
+
+Changes in Arasan 17.0b (Apr. 2014):
+ 1) GUI fix: PGN reading was not working. Also fixed PGN reader to
+ skip variations (if present).
+
+Changes in Arasan 17.0a (Apr. 2014):
+ 1) GUI fix: takeback was not working properly.
+ 2) GUI fix: changing strength during a game was not working.
+
+Changes in Arasan 17.0 (March 2013):
  1) A common hashtable is now used in both quiescence and non-
     quiescence search, instead of using a separate q-search eval
     cache (hashtable stores static evals so also serves as an

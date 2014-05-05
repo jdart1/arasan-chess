@@ -22,7 +22,6 @@ Hash::Hash() {
    hashSize = 0;
    hashMask = 0x0ULL;
    hashFree = 0;
-   refCount = 0;
    hash_init_done = 0;
 }
 
@@ -43,9 +42,12 @@ void Hash::initHash(size_t bytes)
       ALIGNED_MALLOC(hashTable,
          HashEntry,
          sizeof(HashEntry)*hashSizePlus,128);
+      if (hashTable == NULL) {
+          cerr << "hash table allocation failed!" << endl;
+          hashSize = 0;
+      }
       clearHash();
       hash_init_done++;
-      ++refCount;
    }
 }
 
@@ -58,15 +60,14 @@ void Hash::resizeHash(size_t bytes)
 
 void Hash::freeHash()
 {
-   if (--refCount == 0) {
-      ALIGNED_FREE(hashTable);
-      hash_init_done = 0;
-   }
+   ALIGNED_FREE(hashTable);
+   hash_init_done = 0;
 }
 
 
 void Hash::clearHash()
 {
+   if (hashSize == 0) return;
    size_t hashSizePlus = hashSize + MaxRehash;
    hashFree = hashSize;
    memset(hashTable,'\0',sizeof(HashEntry)*hashSizePlus);
@@ -78,7 +79,7 @@ void Hash::clearHash()
 
 void Hash::loadLearnInfo()
 {
-   if (options.learning.position_learning) {
+   if (hashSize && options.learning.position_learning) {
       ifstream plog;
       plog.open(learnFileName.c_str(),ios_base::in);
       while (plog.good() && !plog.eof()) {
