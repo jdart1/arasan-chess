@@ -9979,7 +9979,10 @@ Qc2 $2 h6 $3 10. Be2 dxc4 11. Bxc4 Bb7 12. O-O $11 {0-1 (62) Jaracz,P (2530)
 [EventDate "2014.??.??"]
 [TimeControl "240+1"]
 
-1. d4 Nf6 2. Nf3 e6 3. c4 b6 4. a3 Bb7 5. Nc3 d5 6. Qc2 (6. Bg5 Be7 7. Qa4+ (7.
+1. d4 Nf6 2. Nf3 e6 3. c4 b6 4. a3 Bb7 5. Nc3 d5 (5... Be7 $2 6. d5 O-O 7. e4
+d6 8. Bd3 (8. Be2 $1 Nbd7 $1 9. O-O) 8... c6 9. O-O exd5 10. exd5 cxd5 11. cxd5
+g6 12. Re1 a6 13. Bc2 $2 {0-1 (20) Arasan 17.1 (2765)-DesertCat (3033)
+chessclub.com 2014} (13. Nd4 $16)) (5... Ne4) 6. Qc2 (6. Bg5 Be7 7. Qa4+ (7.
 cxd5 Nxd5 8. Bxe7 Qxe7 9. Nxd5 Bxd5 10. Qc2 $5 O-O 11. e4 Bb7 12. Bd3 c5 13.
 dxc5 Rc8 14. O-O Nd7 15. b4 bxc5 16. Qb3 {1/2-1/2 (16) OzsO (2446)-Arasan 17.0
 (2687) chessclub.com 2014} (16. Qd2)) 7... Bc6 $3 (7... c6 8. Bxf6 Bxf6 9. cxd5
@@ -9989,11 +9992,11 @@ g6 14. Rac1 Bg7 15. e3 Qe7 16. Ne1 Nf6 17. Nd3 {1/2-1/2 (65) Lutz,C (2565)
 -Zude,A (2410) Dudweiler 1996}) (7... Qd7 $1 8. Qc2 (8. Qxd7+ Nbxd7 9. Nb5 Bd8
 10. cxd5 Nxd5 11. e4 N5f6 12. Rc1 {1/2-1/2 (12) Dreev,A (2676)-Anand,V (2770)
 Moscow 2001}) 8... dxc4 9. e3 Nd5 10. Ne5 Qd8 11. Bxe7 Qxe7 12. Bxc4 Nxc3 13.
-Qxc3 O-O 14. O-O Nd7 15. Nxd7 Qxd7 16. Rfd1 Rfd8 {½-½ (46) Anand,V (2772)
+Qxc3 O-O 14. O-O Nd7 15. Nxd7 Qxd7 16. Rfd1 Rfd8 {Â½-Â½ (46) Anand,V (2772)
 -Karjakin,S (2780) Wijk aan Zee 2013}) 8. Qb3 dxc4 9. Qxc4 O-O 10. e3 Bb7 11.
 Be2 Nbd7 12. Rd1 h6 13. Bh4 Qc8 14. O-O c5 15. Qa2 a6 $146 16. Rc1 Qe8 17. Rfd1
 Rc8 18. dxc5 Nxc5 19. Nd4 Nd5 20. Bxe7 Nxc3 21. Rxc3 Qxe7 22. Rdc1 Bd5 23. Qb1
-Be4 24. Qa2 Bd5 25. Qb1 Be4 26. Qa2 {½-½ (26) Korotylev,A (2596)-Kasparov,G 
+Be4 24. Qa2 Bd5 25. Qb1 Be4 26. Qa2 {Â½-Â½ (26) Korotylev,A (2596)-Kasparov,G 
 (2813) Moscow 2004}) (6. cxd5 Nxd5 7. Qc2 Nxc3 8. bxc3 Be7 9. e4 O-O 10. Bd3 c5
 11. O-O Qc7 12. Qe2 Nd7 13. Bb2 (13. e5 $1 Rfd8 14. Be3 Rac8 15. Ng5 h6 (15...
 Nf8 $11) 16. Ne4 $11) 13... c4 $2 (13... Rfd8 $3 14. Nd2 Ne5 15. Bb1 Nc6 16.
