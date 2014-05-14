@@ -25,40 +25,34 @@ static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
 #define PARAM(x) params[x].current
 
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-Scoring::TuneParam(0,"bishop_a1",-40,-40,10),
-Scoring::TuneParam(0,"bishop_a2",0,-35,10),
-Scoring::TuneParam(0,"bishop_a3",0,-35,10),
-Scoring::TuneParam(0,"bishop_a4",-35,-35,10),
-Scoring::TuneParam(0,"bishop_b1",-35,-35,35),
-Scoring::TuneParam(0,"bishop_b2",-35,-35,35),
-Scoring::TuneParam(0,"bishop_b3",21,-35,35),
-Scoring::TuneParam(0,"bishop_b4",-35,-35,35),
-Scoring::TuneParam(0,"bishop_c1",-21,-35,35),
-Scoring::TuneParam(0,"bishop_c2",35,-35,35),
-Scoring::TuneParam(0,"bishop_c3",-21,-35,35),
-Scoring::TuneParam(0,"bishop_c4",35,-35,35),
-Scoring::TuneParam(0,"bishop_d1",35,-35,35),
-Scoring::TuneParam(0,"bishop_d2",-35,-35,35),
-Scoring::TuneParam(0,"bishop_d3",-7,-35,35),
-Scoring::TuneParam(0,"bishop_d4",28,-35,35),
-Scoring::TuneParam(0,"bishop_e1",35,-35,35),
-Scoring::TuneParam(0,"bishop_e2",21,-35,35),
-Scoring::TuneParam(0,"bishop_e3",-35,-35,35),
-Scoring::TuneParam(0,"bishop_e4",-7,-35,35),
-Scoring::TuneParam(0,"bishop_f1",35,-35,35),
-Scoring::TuneParam(0,"bishop_f2",35,-35,35),
-Scoring::TuneParam(0,"bishop_f3",35,-35,35),
-Scoring::TuneParam(0,"bishop_f4",35,-35,35),
-Scoring::TuneParam(0,"bishop_g1",-35,-35,35),
-Scoring::TuneParam(0,"bishop_g2",-35,-35,35),
-Scoring::TuneParam(0,"bishop_g3",-35,-35,35),
-Scoring::TuneParam(0,"bishop_g4",-35,-35,35),
-Scoring::TuneParam(0,"bishop_h1",-35,-35,35),
-Scoring::TuneParam(0,"bishop_h2",-35,-35,35),
-Scoring::TuneParam(0,"bishop_h3",-35,-35,35),
-Scoring::TuneParam(0,"bishop_h4",-35,-35,35)};
+enum {
+   KING_ATTACK_SIGMOID_WEIGHT,
+   KING_ATTACK_LINEAR_WEIGHT,
+   KING_ATTACK_BOOST_THRESHOLD,
+   KING_ATTACK_BOOST_DIVISOR,
+   PARAM_KING_1,
+   PARAM_KING_2,
+   PARAM_KING_3,
+   KING_ATTACK_SIGMOID_POW,
+   KING_OFF_BACK2,
+   KING_OFF_BACK3,
+   KING_OFF_BACK4
+};
 
+
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
+   Scoring::TuneParam(0,"king_attack_scale_sigmoid_weight",100,70,150),
+   Scoring::TuneParam(0,"king_attack_scale_linear",410,300,500),
+   Scoring::TuneParam(0,"boost_threshold",48,35,100),
+   Scoring::TuneParam(0,"boost_divisor",50,20,120),
+   Scoring::TuneParam(0,"king_1",16,0,52),
+   Scoring::TuneParam(0,"king_2",4,0,30),
+   Scoring::TuneParam(0,"king_3",13,0,58),
+   Scoring::TuneParam(0,"king_attack_scale_sigmoid_pow",27,0,50),
+   Scoring::TuneParam(0,"king_off_back2",0,0,10),
+   Scoring::TuneParam(0,"king_off_back3",6,0,30),
+   Scoring::TuneParam(0,"king_off_back4",30,0,40)
+};
 
 static const int CENTER_PAWN_BLOCK = -12;
 
@@ -66,11 +60,9 @@ static const int CENTER_PAWN_BLOCK = -12;
 static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
 static const int KING_FILE_OPEN = -15;
 
-static const int KING_OFF_BACK_RANK[9] = { 0, 0, 5, 15, 25, 40, 40, 40, 40 };
+static int KING_OFF_BACK_RANK[9] = { 0, 0, 5, 15, 25, 40, 40, 40, 40 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
 #define BOOST
-static const int KING_ATTACK_BOOST_THRESHOLD = 75;
-static const int KING_ATTACK_BOOST_DIVISOR = 88;
 
 const int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
@@ -91,16 +83,16 @@ static const CACHE_ALIGN int KnightScores[64][2] = {
    {-15,-13},{-6,-7},{-4,-4},{-3,-3},{-3,-3},{-4,-4},{-6,-7},{-15,-13},
    {-18,-17},{-9,-13},{-7,-9} ,{-6,-8} ,{-6,-8} ,{-7,-9} ,{-9,-13},{-18,-17} };
 
-static int CACHE_ALIGN BishopScores[64] =
+static const CACHE_ALIGN int BishopScores[64] =
 {
-   -12, -12, -12, -12, -12, -12, -12, -12,
-     0, 8, 0, 6, 6, 0, 8, 0,
-     0, 0, 6, 6, 6, 6, 0, 0,
-     0, 0, 6, 6, 6, 6, 0, 0,
+   -18, -12, -12, -15, -15, -12, -12, -18,
+    -10, 8, 0, 6, 6, 0, 8, -10,
+    -10, 0, 6, 8, 8, 6, 0, -10,
+     0, 0, 6, 10, 10, 6, 0, 0,
      0, 6, 6, 6, 6, 6, 6, 0,
-     0, 0, 6, 6, 6, 6, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0
+     10, 10, 10, 10, 10, 10, 10, 10,
+    -10, -10, -10, -10, -10, -10, -10, 10,
+    -10, -10, -10, -10, -10, -10, -10, 10
 };
 
 // scores for White pieces
@@ -630,24 +622,22 @@ static void initBitboards() {
 }
 
 void Scoring::initParams() {
-     int p = 0;
-     for (int i = 0; i < 8; i++ ) {
-       for (int j = 0; j < 4; j++) {
-         BishopScores[8*i+j] = PARAM(p);
-         BishopScores[8*i+(7-j)] = PARAM(p);
-         ++p;
-       }
-     }
-     for (int i = 0; i < 8; i++) {
-        cout << endl;
-        for (int j = 0; j <8; j++) {
-           int x = i*8 + j;
-           cout << 2*(int)BishopScores[x]/3 << ",";
-        }
-     }
-     cout << endl;
-     
-     
+   KING_OFF_BACK_RANK[2] = PARAM(KING_OFF_BACK2);
+   KING_OFF_BACK_RANK[3] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3);
+   KING_OFF_BACK_RANK[4] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
+   KING_OFF_BACK_RANK[5] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
+   KING_OFF_BACK_RANK[6] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
+   KING_OFF_BACK_RANK[7] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
+   KING_OFF_BACK_RANK[8] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
+/*
+   for (int i = 0; i < 100; i++) {
+      
+      float sigmoid = 1.0/(1.0+pow(10.0,-PARAM(KING_ATTACK_SIGMOID_POW)*i/100.0));
+      int attack = int((PARAM(KING_ATTACK_LINEAR_WEIGHT)*i +
+                        PARAM(KING_ATTACK_SIGMOID_WEIGHT)*sigmoid)/32.0);
+      cout << attack << endl;
+   }
+*/
 }
 
 void Scoring::init() {
@@ -1140,7 +1130,7 @@ void Scoring::pieceScore(const Board &board,
                Bitboard attacks(rattacks2 &nearKing);
                if (attacks) {
                   attackWeight += ATTACK_FACTOR[Rook];
-
+                  attackCount++;
                   Bitboard attacks2(attacks &kingNearProximity[okp]);
                   if (attacks2) {
                      attacks2 &= (attacks2 - 1);
@@ -1207,6 +1197,7 @@ void Scoring::pieceScore(const Board &board,
                }
 
                if (kattacks) {
+                  attackCount++;
                   attackWeight += ATTACK_FACTOR[Queen];
 #ifdef EVAL_DEBUG
                   int tmp = attackWeight;
@@ -1333,19 +1324,22 @@ void Scoring::pieceScore(const Board &board,
       cout << " pin_count=" << pin_count << endl;
 #endif
 
-      int scale =
-         (26*attackWeight + 13*attackWeight*attackCount +
-         29*squaresAttacked)/32;
-      int attack = 10*Util::Min(scale, 31);
+      float scale =
+        (PARAM(PARAM_KING_1)*attackWeight + PARAM(PARAM_KING_2)*attackWeight*attackCount +
+       PARAM(PARAM_KING_3)*squaresAttacked)/32.0F;
+      float sigmoid = 1.0/(1.0+pow(10.0,-PARAM(KING_ATTACK_SIGMOID_POW)*scale/100.0));
+      if (scale > 31.0) scale = 31.0;
+      int attack = int(PARAM(KING_ATTACK_LINEAR_WEIGHT)*scale/32.0F +
+         PARAM(KING_ATTACK_SIGMOID_WEIGHT)*sigmoid/32.0F);
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
-
       int kattack = attack;
 #ifdef BOOST
 #ifdef EVAL_DEBUG
       int kattack_tmp = kattack;
 #endif
-      if (kattack && cover < -KING_ATTACK_BOOST_THRESHOLD) {
-         kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
+      if (kattack && cover < -PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
+         kattack += Util::Min(kattack / 2, (-(cover + 
+                                              PARAM(KING_ATTACK_BOOST_THRESHOLD)) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif

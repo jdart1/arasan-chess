@@ -25,7 +25,7 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 32;
+    static const int NUM_PARAMS = 11;
 
     static void initParams();
         
