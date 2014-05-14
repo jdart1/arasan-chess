@@ -28,13 +28,25 @@ static const int CENTER_PAWN_BLOCK = -12;
 static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
 static const int KING_FILE_OPEN = -15;
 
-static const int KING_OFF_BACK_RANK[9] = { 0, 0, 5, 15, 25, 40, 40, 40, 40 };
+static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
+// tuned, 13-May-2014
+static const int KING_ATTACK_PARAM1 = 16;
+static const int KING_ATTACK_PARAM2 = 4;
+static const int KING_ATTACK_PARAM3 = 13;
+static const CACHE_ALIGN int KING_ATTACK_SCALE[64] = {
+0, 8, 14, 21, 28, 34, 41, 47, 54, 60, 67, 73, 79, 86, 92, 99, 105,
+112, 118, 124, 131, 137, 144, 150, 156, 163, 169, 176, 182, 188, 195,
+201, 208, 214, 220, 227, 233, 240, 246, 252, 259, 265, 272, 278, 285,
+291, 297, 304, 310, 317, 323, 329, 336, 342, 349, 355, 361, 368, 374,
+381, 387, 393, 400, 406
+};
+   
 #define BOOST
-static const int KING_ATTACK_BOOST_THRESHOLD = 75;
-static const int KING_ATTACK_BOOST_DIVISOR = 88;
+static const int KING_ATTACK_BOOST_THRESHOLD = 48;
+static const int KING_ATTACK_BOOST_DIVISOR = 50;
 
-const int Scoring::Scores:: MATERIAL_SCALE[32] =
+const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
    108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
@@ -1273,9 +1285,8 @@ void Scoring::pieceScore(const Board &board,
 #endif
 
       int scale =
-         (26*attackWeight + 13*attackWeight*attackCount +
-         29*squaresAttacked)/32;
-      int attack = 10*Util::Min(scale, 31);
+         (KING_ATTACK_PARAM1*attackWeight + KING_ATTACK_PARAM2*attackWeight*attackCount + KING_ATTACK_PARAM3*squaresAttacked)/16;
+      int attack = KING_ATTACK_SCALE[Util::Min(scale, 63)];
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
 
       int kattack = attack;
