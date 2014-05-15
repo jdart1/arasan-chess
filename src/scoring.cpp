@@ -26,13 +26,13 @@ static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 #define PARAM(x) params[x].current
 
 enum {
-   KING_ATTACK_SIGMOID_WEIGHT,
-   KING_ATTACK_LINEAR_WEIGHT,
    KING_ATTACK_BOOST_THRESHOLD,
    KING_ATTACK_BOOST_DIVISOR,
    PARAM_KING_1,
    PARAM_KING_2,
    PARAM_KING_3,
+   KING_ATTACK_SIGMOID_WEIGHT,
+   KING_ATTACK_LINEAR_WEIGHT,
    KING_ATTACK_SIGMOID_POW,
    KING_OFF_BACK2,
    KING_OFF_BACK3,
@@ -41,13 +41,13 @@ enum {
 
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"king_attack_scale_sigmoid_weight",100,70,150),
-   Scoring::TuneParam(0,"king_attack_scale_linear",410,300,500),
    Scoring::TuneParam(0,"boost_threshold",48,35,100),
    Scoring::TuneParam(0,"boost_divisor",50,20,120),
-   Scoring::TuneParam(0,"king_1",16,0,52),
-   Scoring::TuneParam(0,"king_2",4,0,30),
-   Scoring::TuneParam(0,"king_3",13,0,58),
+   Scoring::TuneParam(0,"king_1",16,0,32),
+   Scoring::TuneParam(0,"king_2",4,0,32),
+   Scoring::TuneParam(0,"king_3",13,0,32),
+   Scoring::TuneParam(0,"king_attack_scale_sigmoid_weight",100,70,150),
+   Scoring::TuneParam(0,"king_attack_scale_linear",410,300,500),
    Scoring::TuneParam(0,"king_attack_scale_sigmoid_pow",27,0,50),
    Scoring::TuneParam(0,"king_off_back2",0,0,10),
    Scoring::TuneParam(0,"king_off_back3",6,0,30),
@@ -60,8 +60,15 @@ static const int CENTER_PAWN_BLOCK = -12;
 static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
 static const int KING_FILE_OPEN = -15;
 
-static int KING_OFF_BACK_RANK[9] = { 0, 0, 5, 15, 25, 40, 40, 40, 40 };
+static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
+static const CACHE_ALIGN int KING_ATTACK_SCALE[64] = {
+0, 8, 14, 21, 28, 34, 41, 47, 54, 60, 67, 73, 79, 86, 92, 99, 105,
+112, 118, 124, 131, 137, 144, 150, 156, 163, 169, 176, 182, 188, 195,
+201, 208, 214, 220, 227, 233, 240, 246, 252, 259, 265, 272, 278, 285,
+291, 297, 304, 310, 317, 323, 329, 336, 342, 349, 355, 361, 368, 374,
+381, 387, 393, 400, 406
+};
 #define BOOST
 
 const int Scoring::Scores:: MATERIAL_SCALE[32] =
@@ -622,22 +629,6 @@ static void initBitboards() {
 }
 
 void Scoring::initParams() {
-   KING_OFF_BACK_RANK[2] = PARAM(KING_OFF_BACK2);
-   KING_OFF_BACK_RANK[3] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3);
-   KING_OFF_BACK_RANK[4] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
-   KING_OFF_BACK_RANK[5] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
-   KING_OFF_BACK_RANK[6] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
-   KING_OFF_BACK_RANK[7] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
-   KING_OFF_BACK_RANK[8] = PARAM(KING_OFF_BACK2)+PARAM(KING_OFF_BACK3)+PARAM(KING_OFF_BACK4);
-/*
-   for (int i = 0; i < 100; i++) {
-      
-      float sigmoid = 1.0/(1.0+pow(10.0,-PARAM(KING_ATTACK_SIGMOID_POW)*i/100.0));
-      int attack = int((PARAM(KING_ATTACK_LINEAR_WEIGHT)*i +
-                        PARAM(KING_ATTACK_SIGMOID_WEIGHT)*sigmoid)/32.0);
-      cout << attack << endl;
-   }
-*/
 }
 
 void Scoring::init() {
@@ -1324,13 +1315,10 @@ void Scoring::pieceScore(const Board &board,
       cout << " pin_count=" << pin_count << endl;
 #endif
 
-      float scale =
+      int scale =
         (PARAM(PARAM_KING_1)*attackWeight + PARAM(PARAM_KING_2)*attackWeight*attackCount +
-       PARAM(PARAM_KING_3)*squaresAttacked)/32.0F;
-      float sigmoid = 1.0/(1.0+pow(10.0,-PARAM(KING_ATTACK_SIGMOID_POW)*scale/100.0));
-      if (scale > 31.0) scale = 31.0;
-      int attack = int(PARAM(KING_ATTACK_LINEAR_WEIGHT)*scale/32.0F +
-         PARAM(KING_ATTACK_SIGMOID_WEIGHT)*sigmoid/32.0F);
+         PARAM(PARAM_KING_3)*squaresAttacked)/16;
+      int attack = KING_ATTACK_SCALE[Util::Min(63,scale)];
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
       int kattack = attack;
 #ifdef BOOST
