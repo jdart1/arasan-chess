@@ -346,6 +346,20 @@ static void parseLevel(const string &cmd) {
   incr = int(1000*floatincr);
 }
 
+static void process_st_command(const string &cmd_args) 
+{
+   stringstream s(cmd_args);
+   float time_limit_sec;
+   s >> time_limit_sec;
+   if (s.bad() || time_limit_sec <= 0.0) {
+      cout << "# illegal value for st command: " << cmd_args << endl;
+   } else {
+      srctype = FixedTime;
+   }
+   // convert to ms. and subtract a buffer to prevent losses on time
+   time_limit = int(time_limit_sec * 1000 - Util::Min(int(time_limit_sec*100),100));
+}
+
 static Move text_to_move(const Board &board, const string &input) {
    // Try SAN
    Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,input);
@@ -507,7 +521,7 @@ static void do_help() {
    cout << "result <string>: set the game result (0-1, 1/2-1/2 or 1-0)" << endl;
    cout << "sd <x>:          limit thinking to depth x" << endl;
    cout << "setboard <FEN>:  set board to a specified FEN string" << endl;
-   cout << "st <x>:          limit thinking to x centiseconds" << endl;
+   cout << "st <x>:          limit thinking to x seconds" << endl;
    cout << "time <int>:      set computer time remaining (in centiseconds)" << endl;
    cout << "undo:            back up a half move" << endl;
    cout << "white:           set computer to play White" << endl;
@@ -1710,9 +1724,9 @@ static void check_command(const string &cmd, int &terminate)
         srctype = TimeLimit;
     }
     else if (cmd_word == "st") {
-        stringstream s(cmd_args);
-        s >> time_limit;
-        srctype = FixedTime;
+       // Note: Winboard does not send this during a search but
+       // it is possible other interaces might.
+       process_st_command(cmd_args);
     }
     else if (cmd_word == "sd") {
         stringstream s(cmd_args);
@@ -2963,9 +2977,7 @@ static bool do_command(const string &cmd, Board &board) {
         srctype = TimeLimit;
     }
     else if (cmd_word == "st") {
-        stringstream s(cmd_args);
-        s >> time_limit;
-        srctype = FixedTime;
+        process_st_command(cmd_args);
     }
     else if (cmd_word == "sd") {
         stringstream s(cmd_args);
