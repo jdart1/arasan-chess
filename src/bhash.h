@@ -26,18 +26,6 @@ class BoardHash
            return h ^ hash_codes[sq][(int)piece];
         }
 
-        static hash_t kingPawnHash(const Board &b) {
-           hash_t h = b.pawnHashCodeB;
-           h ^= b.pawnHashCodeW;
-           h = Xor(Xor(h,b.kingSquare(White), WhiteKing), b.kingSquare(Black), BlackKing);
-           if (b.sideToMove() == Black) {
-               h &= 0x7ffffffffffffffULL;
-           } else {
-               h |= 0x800000000000000ULL;
-           }
-           return h;
-        }
-
         static hash_t setSideToMove(hash_t input, ColorType side) {
             if (side == Black) {
                 return input & 0x7fffffffffffffffULL;
@@ -48,6 +36,13 @@ class BoardHash
 
         static ColorType sideToMove(hash_t input) {
             return (input & 0x8000000000000000ULL) ? White : Black;
+        }
+
+        static hash_t kingPawnHash(const Board &b) {
+           hash_t h = b.pawnHashCodeB;
+           h ^= b.pawnHashCodeW;
+           h = Xor(Xor(h,b.kingSquare(White), WhiteKing), b.kingSquare(Black), BlackKing);
+           return setSideToMove(h,b.sideToMove());
         }
 
         static hash_t kingCoverHash(const Board &board, ColorType side) {
