@@ -350,6 +350,7 @@ static void process_st_command(const string &cmd_args)
 {
    stringstream s(cmd_args);
    float time_limit_sec;
+   // we allow fractional seconds although UI may not support it
    s >> time_limit_sec;
    if (s.bad() || time_limit_sec <= 0.0) {
       cout << "# illegal value for st command: " << cmd_args << endl;
