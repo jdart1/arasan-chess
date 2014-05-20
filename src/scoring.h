@@ -129,7 +129,7 @@ class Scoring
           return any + mid*MATERIAL_SCALE[materialLevel]/128 +
              end*(128-MATERIAL_SCALE[materialLevel])/128;
       }
-      static const int MATERIAL_SCALE[32];
+      static const CACHE_ALIGN int MATERIAL_SCALE[32];
       Scores & operator += (const Scores &s) {
           mid += s.mid;
           end += s.end;
