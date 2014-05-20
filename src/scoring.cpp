@@ -788,28 +788,22 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side )
 
 template<ColorType side>
 int Scoring::calcCover(const Board &board, int file, int rank) {
+   Square sq, pawn;
    int cover = -KING_COVER[1];
    if (side == White) {
-      Square wsq = MakeSquare(file, Util::Max(1, rank - 1), White);
-      Square pawn = Bitboard(Attacks::file_mask_up[wsq] & board.pawn_bits[White]).firstOne();
-      if (pawn == InvalidSquare) {
-         cover += KING_FILE_OPEN;
-      }
-      else {
-         cover += KING_COVER[Util::Min(4, Rank<White> (pawn) - rank)];
-      }
+      sq = MakeSquare(file, Util::Max(1, rank - 1), White);
+      pawn = Bitboard(Attacks::file_mask_up[sq] & board.pawn_bits[White]).firstOne();
    }
    else {
-      Square bsq = MakeSquare(file, Util::Max(1, rank - 1), Black);
-      Square pawn = Bitboard(Attacks::file_mask_down[bsq] & board.pawn_bits[Black]).lastOne();
-      if (pawn == InvalidSquare) {
-         cover += KING_FILE_OPEN;
-      }
-      else {
-         cover += KING_COVER[Util::Min(4, Rank<Black> (pawn) - rank)];
-      }
+      sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
+      pawn = Bitboard(Attacks::file_mask_down[sq] & board.pawn_bits[Black]).lastOne();
    }
-
+   if (pawn == InvalidSquare) {
+      if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+   }
+   else {
+      cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
+   }
    return cover;
 }
 
