@@ -17,7 +17,6 @@ extern "C"
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
 
-static CACHE_ALIGN Bitboard w_pawn_attacks[64], b_pawn_attacks[64];
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
@@ -219,20 +218,19 @@ static const int DOUBLED_PAWNS[2][8] =
    { -13, -17, -21, -21, -21, -21, -17, -13 }
 };
 static const int ISOLATED_PAWN[2] = { -8, -12 };
-static const int WEAK = -6;
-static const int WEAK2 = -6;
+static const int WEAK[2] = { -8, 0 };
 static const int WEAK_ON_OPEN_FILE = -10;
 static const int SPACE = 2;
 static const int PAWN_CENTER_SCORE = 3;
 
 static const int ROOK_ON_7TH_RANK[2] = { 26, 26 };
 static const int TWO_ROOKS_ON_7TH_RANK[2] = { 57, 66 };
-
-// rook on open file or file with weak pawn:
 static const int ROOK_ON_OPEN_FILE = 20;
 static const int ROOK_ATTACKS_WEAK_PAWN = 10;
-static const int QUEEN_OUT = -6;
 static const int ROOK_BEHIND_PP[2] = { 5, 10 };
+
+static const int QUEEN_OUT = -6;
+
 static const int PASSER_OWN_PIECE_BLOCK[2] = { -2, -5 };
 static const int SIDE_PROTECTED_PAWN = -10;
 
@@ -325,30 +323,10 @@ static void initBitboards() {
 
    for(i = 0; i < 64; i++) {
       int file = File(i);
-      int rankw = WhiteRank(i);
       int fmin = Util::Max(1, file - 2);
       int fmax = Util::Min(8, file + 2);
       for(int f = fmin; f <= fmax; f++) {
          int r;
-         if (Util::Abs(f - file) < 2) {
-            for(r = rankw; r <= Util::Min(rankw + 3, 8); r++) {
-               w_pawn_attacks[i].set(MakeSquare(f, r, White));
-            }
-
-            for(r = rankw; r >= Util::Max(rankw - 3, 1); r--) {
-               b_pawn_attacks[i].set(MakeSquare(f, r, White));
-            }
-         }
-         else {
-            for(r = rankw; r <= Util::Min(rankw + 3, 8); r++) {
-               w_pawn_attacks[i].set(MakeSquare(f, r, White));
-            }
-
-            for(r = rankw; r >= Util::Max(rankw - 3, 1); r--) {
-               b_pawn_attacks[i].set(MakeSquare(f, r, White));
-            }
-         }
-
          Square kp = i;
          if (File(i) == 8) kp -= 1;
          if (File(i) == 1) kp += 1;
@@ -1373,8 +1351,7 @@ int Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
          cout << " doubled";
 #endif
-         if (passed)
-         {
+         if (passed) {
 #ifdef PAWN_DEBUG
             cout << " passed";
 #endif
@@ -1408,38 +1385,62 @@ int Scoring::calcPawnData(const Board &board,
 #endif
       }
       else if (rank < 6 && backward) {
-         // Pawn is not, and cannot be, protected by a pawn of
-         // the same color. See if it is also blocked from advancing
-         // by adjacent pawns.
-         for(Square sq2 = sq + incr;
-             !weak && OnBoard(sq2) && board[sq2] != enemy_pawn;
-             sq2 += incr) {
-            int patcks = pawn_attacks(board, sq2, oside).bitCountOpt() - pawn_attacks(board, sq2, side).bitCountOpt();
-            if (patcks > 0) {
+          // Pawn is not, and cannot be, protected by a pawn of
+          // the same color. See if it is also blocked from advancing
+          // by adjacent pawns.
+          int i = 0;
+          const int limit = (rank == 2 ? 3 : 2);
+          for(Square sq2 = sq + incr;
+              ++i < limit && !weak && OnBoard(sq2) && TypeOfPiece(board[sq2]) != Pawn;
+              sq2 += incr) {
+              int defenders = 0;
+              int attackers = 0;
+              // count own pawns that are defending, or could defend, the pawn
+              // on sq2
+              if (file != 1) {
+                  Piece attacker = board[(side == White) ? sq2 + 7 : sq2 - 9];
+                  if (attacker == enemy_pawn) attackers++;
+                  for (int r = Rank(sq2,side)-1; r >=2 ; r--) {
+                      Piece defender = board[MakeSquare(file-1,r,side)];
+                      if (defender == enemy_pawn) break;
+                      if (defender == our_pawn) {
+                          defenders++;
+                          break;
+                      }
+                  }
+              }
+              if (file != 8) {
+                  Piece attacker = board[(side == White) ? sq2 + 9 : sq2 - 7];
+                  if (attacker == enemy_pawn) attackers++;
+                  for (int r = Rank(sq2,side)-1; r >=2 ; r--) {
+                      Piece defender = board[MakeSquare(file+1,r,side)];
+                      if (defender == enemy_pawn) break;
+                      if (defender == our_pawn) {
+                          defenders++;
+                          break;
+                      }
+                  }
+              }
+              int patcks = (attackers - defenders);
+              if (patcks > 0) {
 #ifdef PAWN_DEBUG
-               cout << " weak";
+                  cout << " weak";
 #endif
-               score += WEAK;
-               weak++;
-            }
-            if (patcks > 1) {
-               // "extra weak" pawn
-               score += WEAK2;
-#ifdef PAWN_DEBUG
-               cout << " extra weak";
-#endif
-            }
-         }
+                  entr.midgame_score += WEAK[Midgame];
+                  entr.endgame_score += WEAK[Midgame];
+                  weak++;
+              }
+          }
       }
 
       if (!passed && (weak || isolated)) {
-         entr.weak_pawns.set(sq);
-         if (!OnFile(board.pawn_bits[oside], file)) {
-            entr.weakopen++;
+          entr.weak_pawns.set(sq);
+          if (!OnFile(board.pawn_bits[oside], file)) {
+              entr.weakopen++;
 #ifdef PAWN_DEBUG
-            cout << " weak/open";
+              cout << " weak/open";
 #endif
-         }
+          }
       }
 
       if (passed) {
@@ -1602,20 +1603,10 @@ int Scoring::calcPawnData(const Board &board,
          cout << " space=" << space;
 #endif
       }
-
 #ifdef PAWN_DEBUG
-      cout <<
-         " total = (" <<
-         entr.midgame_score -
-         mid_tmp +
-         score -
-         tmp <<
-         ", " <<
-         entr.endgame_score -
-         end_tmp +
-         score -
-         tmp <<
-         ")" <<
+      cout << " total = (" <<
+         entr.midgame_score - mid_tmp + score - tmp << ", " <<
+         entr.endgame_score - end_tmp + score - tmp << ")" <<
          endl;
 #endif
    }
@@ -1661,6 +1652,8 @@ int Scoring::calcPawnData(const Board &board,
 #endif
    return score;
 }
+
+
 
 void Scoring::evalOutsidePassers(const Board &board, 
                                  PawnHashEntry &pawnEntry) {
