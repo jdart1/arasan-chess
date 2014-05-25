@@ -24,34 +24,40 @@ static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 #define PARAM(x) params[x].current
 
 enum {
-   PIECES_NEAR_KING,
-   ROOK_OUTPOST,
-   BAD_BISHOP_MIDGAME,
-   BAD_BISHOP_ENDGAME,
-   BISHOP_PAWN_PLACEMENT_MIDGAME,
-   BISHOP_PAWN_PLACEMENT_ENDGAME,
-   BAD_BISHOP_THRESHOLD,
-   OUTPOST_NOT_DEFENDED,
-   WEAK,
-   WEAK2,
-   WEAK_ON_OPEN_FILE,
-   ROOK_ATTACKS_WEAK_PAWN
+   WEAK_MIDGAME1,
+   WEAK_ENDGAME1,
+   WEAK2_MIDGAME1,
+   WEAK2_ENDGAME1,
+   WEAK_MIDGAME2,
+   WEAK_ENDGAME2,
+   WEAK2_MIDGAME2,
+   WEAK2_ENDGAME2,
+   WEAK_LIMIT,
+   WEAK_ON_OPEN_FILE_MIDGAME,
+   WEAK_ON_OPEN_FILE_ENDGAME,
+   ROOK_ATTACKS_WEAK_PAWN_MIDGAME,
+   ROOK_ATTACKS_WEAK_PAWN_ENDGAME,
+   ROOK_OPEN_FILE_MIDGAME,
+   ROOK_OPEN_FILE_ENDGAME
 };
 
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"pieces_near_king",0,0,8),
-   Scoring::TuneParam(0,"rook_outpost",0,0,6),
-   Scoring::TuneParam(0,"bad_bishop_midgame",4,0,10),
-   Scoring::TuneParam(0,"bad_bishop_endgame",6,0,10),
-   Scoring::TuneParam(0,"bishop_pawn_placement_midgame",0,-20,0),
-   Scoring::TuneParam(0,"bishop_pawn_placement_endgame",-16,-24,0),
-   Scoring::TuneParam(0,"bad_bishop_threshold",2,0,4),
-   Scoring::TuneParam(0,"outpost_not_defended",12,0,16),
-   Scoring::TuneParam(0,"weak",-6,-15,0),
-   Scoring::TuneParam(0,"weak2",-6,-15,0),
-   Scoring::TuneParam(0,"weak_on_open_file",-10,-20,0),
-   Scoring::TuneParam(0,"rook_attacks_weak_pawn",10,0,20)
+   Scoring::TuneParam(0,"weak_midgame1",-6,-20,0),
+   Scoring::TuneParam(0,"weak_endgame1",-6,-20,0),
+   Scoring::TuneParam(0,"weak2_midgame1",-6,-20,0),
+   Scoring::TuneParam(0,"weak2_endgame1",-6,-20,0),
+   Scoring::TuneParam(0,"weak_midgame2",-6,-20,0),
+   Scoring::TuneParam(0,"weak_endgame2",-6,-20,0),
+   Scoring::TuneParam(0,"weak2_midgame2",-6,-20,0),
+   Scoring::TuneParam(0,"weak2_endgame2",-6,-20,0),
+   Scoring::TuneParam(0,"weak_limit",0,0,1),
+   Scoring::TuneParam(0,"weak_on_open_file_midgame",-20,-25,0),
+   Scoring::TuneParam(0,"weak_on_open_file_endgame",-20,-25,0),
+   Scoring::TuneParam(0,"rook_attacks_weak_pawn_midgame",20,0,25),
+   Scoring::TuneParam(0,"rook_attacks_weak_pawn_endgame",20,0,25),
+   Scoring::TuneParam(0,"rook_attacks_weak_pawn_midgame",10,0,25),
+   Scoring::TuneParam(0,"rook_attacks_weak_pawn_endgame",10,0,25)
 };
 
 static const int CENTER_PAWN_BLOCK = -12;
@@ -179,6 +185,11 @@ struct BishopTrapPattern
 static const int BISHOP_TRAPPED = -147;
 
 static const int BISHOP_PAIR[2] = { 42, 55 };
+static const int BAD_BISHOP[2] = { -4, -6 
+}
+   ;
+
+   
 static const int BISHOP_PAWN_PLACEMENT[2] = { -10, -16 };
 
 // material terms and trade bonus/penalties
@@ -257,7 +268,7 @@ static const int ROOK_ON_7TH_RANK[2] = { 26, 26 };
 static const int TWO_ROOKS_ON_7TH_RANK[2] = { 57, 66 };
 
 // rook on open file or file with weak pawn:
-static const int ROOK_ON_OPEN_FILE = 20;
+static const int ROOK_OPEN_FILE = 20;
 static const int QUEEN_OUT = -6;
 static const int ROOK_BEHIND_PP[2] = { 5, 10 };
 static const int PASSER_OWN_PIECE_BLOCK[2] = { -2, -5 };
@@ -956,7 +967,7 @@ int Scoring::outpost(const Board &board,
       }
       else {
          // not defended by pawn
-         return PARAM(OUTPOST_NOT_DEFENDED)*outpost/16;
+         return 2*outpost/3;
       }
    }
    else {
@@ -1078,12 +1089,14 @@ void Scoring::pieceScore(const Board &board,
             const Bitboard rattacks(board.rookAttacks(sq));
             allAttacks |= rattacks;
             if (FileOpen(board, file)) {
-               scores.any += ROOK_ON_OPEN_FILE;
+               scores.mid += PARAM(ROOK_OPEN_FILE_MIDGAME);
+               scores.end += PARAM(ROOK_OPEN_FILE_ENDGAME);
             }
 
             Bitboard rattacks2(board.rookAttacks(sq, side));
             if (rattacks2 & oppPawnData.weak_pawns) {
-               scores.any += PARAM(ROOK_ATTACKS_WEAK_PAWN);
+               scores.mid += PARAM(ROOK_ATTACKS_WEAK_PAWN_MIDGAME);
+               scores.end += PARAM(ROOK_ATTACKS_WEAK_PAWN_ENDGAME);
             }
 
             const int mobl = Bitboard(rattacks2 &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
@@ -1116,7 +1129,7 @@ void Scoring::pieceScore(const Board &board,
                pin_count++;
             }
             if (KnightOutpostScores[scoreSq]) {
-               scores.any += outpost<side> (board, sq, scoreSq, KnightOutpostScores, oppPawnData)*PARAM(ROOK_OUTPOST)/4;
+               scores.any += outpost<side> (board, sq, scoreSq, KnightOutpostScores, oppPawnData)*3/2;
             }
 
             break;
@@ -1222,13 +1235,13 @@ void Scoring::pieceScore(const Board &board,
       const int blackPawns = ourPawnData.b_square_pawns;
       const int totalPawns = whitePawns + blackPawns;
       if (TEST_MASK(Board::white_squares, board.bishop_bits[side])) {
-         if ((whitePawns + blackPawns > 4) && (whitePawns > blackPawns + PARAM(BAD_BISHOP_THRESHOLD)))
+         if ((whitePawns + blackPawns > 4) && (whitePawns > blackPawns + 2))
          {
 #ifdef EVAL_DEBUG
             Scores tmp = scores;
 #endif
-            scores.mid += PARAM(BAD_BISHOP_MIDGAME) * (whitePawns - blackPawns);
-            scores.end += PARAM(BAD_BISHOP_ENDGAME) * (whitePawns - blackPawns);
+            scores.mid += BAD_BISHOP[Midgame] * (whitePawns - blackPawns);
+            scores.end += BAD_BISHOP[Endgame] * (whitePawns - blackPawns);
 #ifdef EVAL_DEBUG
             cout << "bad bishop (" << ColorImage(side) << "): (" <<
                scores.mid - tmp.mid << "," << scores.end - tmp.end <<
@@ -1238,18 +1251,18 @@ void Scoring::pieceScore(const Board &board,
 
          if (opp_pawns) {
             // penalize pawns on same color square as opposing single Bishop
-            opp_scores.mid += oppPawnData.w_square_pawns*PARAM(BISHOP_PAWN_PLACEMENT_MIDGAME)/opp_pawns;
-            opp_scores.end += oppPawnData.w_square_pawns*PARAM(BISHOP_PAWN_PLACEMENT_ENDGAME)/ opp_pawns;
+            opp_scores.mid += oppPawnData.w_square_pawns*BISHOP_PAWN_PLACEMENT[Midgame]/opp_pawns;
+            opp_scores.end += oppPawnData.w_square_pawns*BISHOP_PAWN_PLACEMENT[Endgame]/opp_pawns;
          }
       }
       else {
-         if ((whitePawns + blackPawns > 4) && (blackPawns > whitePawns + PARAM(BAD_BISHOP_THRESHOLD)))
+         if ((whitePawns + blackPawns > 4) && (blackPawns > whitePawns + 2))
          {
 #ifdef EVAL_DEBUG
             Scores tmp = scores;
 #endif
-            scores.mid += PARAM(BAD_BISHOP_MIDGAME) * (whitePawns - blackPawns);
-            scores.end += PARAM(BAD_BISHOP_ENDGAME) * (whitePawns - blackPawns);
+            scores.mid += BAD_BISHOP[Midgame] * (whitePawns - blackPawns);
+            scores.end += BAD_BISHOP[Endgame] * (whitePawns - blackPawns);
 #ifdef EVAL_DEBUG
             cout << "bad bishop (" << ColorImage(side) << "): (" <<
                scores.mid - tmp.mid << "," << scores.end - tmp.end <<
@@ -1258,8 +1271,8 @@ void Scoring::pieceScore(const Board &board,
          }
          if (opp_pawns) {
            // penalize pawns on same color square as opposing single Bishop
-           opp_scores.mid += oppPawnData.b_square_pawns*PARAM(BISHOP_PAWN_PLACEMENT_MIDGAME)/ opp_pawns;
-           opp_scores.end += oppPawnData.b_square_pawns*PARAM(BISHOP_PAWN_PLACEMENT_ENDGAME)/opp_pawns;
+           opp_scores.mid += oppPawnData.b_square_pawns*BISHOP_PAWN_PLACEMENT[Midgame]/opp_pawns;
+           opp_scores.end += oppPawnData.b_square_pawns*BISHOP_PAWN_PLACEMENT[Endgame]/opp_pawns;
          }
       }
    }
@@ -1301,11 +1314,8 @@ void Scoring::pieceScore(const Board &board,
       int kattack_tmp = kattack;
 #endif
       if (kattack) {
-         int adjusted_cover = cover + PARAM(PIECES_NEAR_KING)*
-            Bitboard(Attacks::king_attacks[okp] & 
-            (board.occupied[oside] & ~board.pawn_bits[oside])).bitCountOpt();
-         if (adjusted_cover < -KING_ATTACK_BOOST_THRESHOLD) {
-            kattack += Util::Min(kattack / 2, (-(adjusted_cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
+         if (cover < -KING_ATTACK_BOOST_THRESHOLD) {
+            kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
 #ifdef EVAL_DEBUG
             cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif
@@ -1429,8 +1439,9 @@ int Scoring::calcPawnData(const Board &board,
           // the same color. See if it is also blocked from advancing
           // by adjacent pawns.
           int i = 0;
+          int limit = PARAM(WEAK_LIMIT) ? 3 : (rank == 2 ? 3 : 2);
           for(Square sq2 = sq + incr;
-              ++i < 3 && !weak && OnBoard(sq2) && TypeOfPiece(board[sq2]) != Pawn;
+              ++i < limit && !weak && OnBoard(sq2) && TypeOfPiece(board[sq2]) != Pawn;
               sq2 += incr) {
               int defenders = 0;
               int attackers = 0;
@@ -1465,15 +1476,31 @@ int Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
                   cout << " weak";
 #endif
-                  score += PARAM(WEAK);
+                  if (i == 1) {
+                     entr.midgame_score += PARAM(WEAK_MIDGAME1);
+                     entr.endgame_score += PARAM(WEAK_ENDGAME1);
+                  }
+                  else
+                  {
+                     entr.midgame_score += PARAM(WEAK_MIDGAME2);
+                     entr.endgame_score += PARAM(WEAK_ENDGAME2);
+                  }
                   weak++;
               }
               if (patcks > 1) {
                   // "extra weak" pawn
-                  score += PARAM(WEAK2);
+                 if (i == 1) {
+                    entr.midgame_score += PARAM(WEAK2_MIDGAME1);
+                    entr.endgame_score += PARAM(WEAK2_ENDGAME1);
 #ifdef PAWN_DEBUG
-                  cout << " extra weak";
+                    cout << " extra weak";
 #endif
+                 }
+                 else {
+                    entr.midgame_score += PARAM(WEAK2_MIDGAME2);
+                    entr.endgame_score += PARAM(WEAK2_ENDGAME2);
+                 }
+                 
               }
           }
       }
@@ -1852,7 +1879,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    scores.end += pawnData.endgame_score;
 
    if (board.rook_bits[OppositeColor(side)] | board.queen_bits[OppositeColor(side)]) {
-      scores.any += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE);
+      scores.mid += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE_MIDGAME);
+      scores.end += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE_ENDGAME);
    }
 
    // interaction of pawns and pieces

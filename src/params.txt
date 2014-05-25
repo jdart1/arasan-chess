@@ -1,14 +1,14 @@
-DIMENSION 12
+DIMENSION 15
 
 BB_INPUT_TYPE * I  # all are type integer
 
 BB_OUTPUT_TYPE OBJ
 
-X0 ( 0 0 4 6 0 -16 2 12 -6 -6 -10 10 )
+X0 ( -6 -6 -6 -6 -6 -6 -6 -6 0 -20 -20 20 20 10 10 )
 
-LOWER_BOUND ( 0 0 0 0 -20 -24 0 0 -15 -15 -20 0 )
+LOWER_BOUND ( -20 -20 -20 -20 -20 -20 -20 -20 0 -25 -25 0 0 0 0 )
 
-UPPER_BOUND ( 8 6 10 10 0 0 4 16 0 0 0 20 )
+UPPER_BOUND ( 0 0 0 0 0 0 0 0 1 0 0 25 25 25 25 )
 
 MAX_BB_EVAL     350
 
