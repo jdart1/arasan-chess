@@ -218,7 +218,7 @@ static const int DOUBLED_PAWNS[2][8] =
    { -13, -17, -21, -21, -21, -21, -17, -13 }
 };
 static const int ISOLATED_PAWN[2] = { -8, -12 };
-static const int WEAK[2] = { -8, 0 };
+static const int WEAK[2] = { -8, -8 };
 static const int WEAK_ON_OPEN_FILE = -10;
 static const int SPACE = 2;
 static const int PAWN_CENTER_SCORE = 3;
@@ -1427,7 +1427,7 @@ int Scoring::calcPawnData(const Board &board,
                   cout << " weak";
 #endif
                   entr.midgame_score += WEAK[Midgame];
-                  entr.endgame_score += WEAK[Midgame];
+                  entr.endgame_score += WEAK[Endgame];
                   weak++;
               }
           }
