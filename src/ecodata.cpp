@@ -85,6 +85,7 @@ const struct ECOData eco_codes[] =
 {"A34", 0xfefde43f28b75884ULL ,"English, Symmetrical"},
 {"A34", 0x9383f6d5aab974c6ULL ,"English, Rubinstein Variation"},
 {"A34", 0xee89782d64cfc6a0ULL ,"English, Rubinstein Variation"},
+{"A34", 0x9d6bb93654391756ULL ,"English, Symmetrical"},
 {"A35", 0xbfd081a6e48a883bULL ,"English, Symmetrical"},
 {"A36", 0x43aecc2a1f79a3e3ULL ,"English, Symmetrical"},
 {"A36", 0xd3c4f2a8eb002759ULL ,"English, Symmetrical"},
