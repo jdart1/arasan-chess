@@ -1,2 +1,2 @@
-test ..\tests\prof.epd 20
+test ../tests/prof.epd 20
 quit
