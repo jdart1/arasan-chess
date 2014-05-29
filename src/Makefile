@@ -219,11 +219,11 @@ else
 	$(CPP) $(PROF_USE) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
-profiled:
+profiled: dirs
 	@$(MAKE) PASS=1 profile profile-run
 	@$(MAKE) PASS=2 profile
 
-popcnt-profiled:
+popcnt-profiled: dirs
 	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile profile-run
 	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile
 
