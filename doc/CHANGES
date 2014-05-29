@@ -1,3 +1,7 @@
+Changes in Arasan 17.2 (May 2014):
+ 1) Fix "st" command in Winboard protocol to interpret time as seconds
+ 2) Scoring changes: king safety, king cover, weak pawns
+
 Changes in Arasan 17.1 (May 2014):
  1) Scoring changes: connected passer code, knight and bishop 
     piece square tables, new king safety scoring.

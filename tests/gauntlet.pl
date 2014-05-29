@@ -1,4 +1,6 @@
 # scoring script for PGN files
+# prints summary statistics given a game file (one opponent
+# is Arasan).
 if (@ARGV) {
   open(DATA,@ARGV[0]) || die "Can't open file " . $_;
   $last_opponent = "";
@@ -29,7 +31,7 @@ if (@ARGV) {
         }
         if ($key eq "Result") {
           if ($value ne "\*") {
-            if ($white =~ m/Arasan 17.1/) {
+            if ($white =~ m/Arasan 17.2/) {
                 $opponent = $black;
 	    }
             else {
@@ -46,7 +48,7 @@ if (@ARGV) {
         } 
         if ($key eq "Result") {
           if ($value ne "\*") {
-            if ($white =~ m/Arasan 17.1/) {
+            if ($white =~ m/Arasan 17.2/) {
 		if ($value eq "1-0") {
 		    $win++;
 		}
