@@ -65,6 +65,7 @@ A23     1. c4 e5 2. Nc3 Nf6 3. g3 c6
 A24     1. c4 e5 2. Nc3 Nf6 3. g3 g6 
 
 A25     1. c4 e5 2. Nc3 Nc6 "English Opening"
+A25     1. c4 e5 2. Nc3 Nc6 3. g3 g6 4. Bg2 Bg7 5. e3 d6 6. d3 "Engish Opening"
 A26     1. c4 e5 2. Nc3 Nc6 3. g3 g6 4. Bg2 Bg7 5. d3 d6 "English Opening"
 A27     1. c4 e5 2. Nc3 Nc6 3. Nf3 "English Opening"
 A28     1. c4 e5 2. Nc3 Nc6 3. Nf3 Nf6 "English, Four Knights"
@@ -103,6 +104,7 @@ A41     1. d4 d6
 A42     1. d4 d6 2. c4 g6 3. Nc3 Bg7 4. e4 "Modern Defense"
 A43     1. d4 c5 "Old Benoni"
 A43     1. d4 Nf6 2. Nf3 c5 3. d5 b5 4. Bg5 "Indian Game: Pseudo-Benko"
+A43     1. d4 Nf6 2. Nf3 c5 3. d5 g6 4. Nc3 Bg7 5. e4 "Old Benoni"
 A44     1. d4 c5 2. d5 e5 "Old Benoni"
 
 A45     1. d4 Nf6 
