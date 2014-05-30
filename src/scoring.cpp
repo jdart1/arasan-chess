@@ -215,7 +215,7 @@ static const int CONNECTED_PASSERS[2][8] = {
 static const int DOUBLED_PAWNS[2][8] =
 {
    { -6, -8, -10, -10, -10, -10, -8, -6 },
-   { -13, -17, -21, -21, -21, -21, -17, -13 }
+   { -10, -13, -17, -17, -17, -17, -13, -10 }
 };
 static const int ISOLATED_PAWN[2] = { -8, -12 };
 static const int WEAK[2] = { -8, -8 };
