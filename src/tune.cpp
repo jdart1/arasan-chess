@@ -72,7 +72,7 @@ static double computeError(SearchController *searcher, int index) {
         stringstream s(fen);
         s >> b;
         if (s.fail()) {
-            cerr << "error on FEN string: " << fen << endl;
+//            cerr << "error on FEN string: " << fen << endl;
             continue;
         }
         int value;
@@ -236,7 +236,7 @@ int CDECL main(int argc, char **argv)
     initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
-    options.search.hash_table_size = 64*1024*1024;
+    options.search.hash_table_size = 0;
     if (!initGlobals(argv[0], false)) {
         cleanupGlobals();
         exit(-1);
@@ -282,7 +282,8 @@ int CDECL main(int argc, char **argv)
 
         NOMAD::begin ( argc-2 , argv+2 );
 
-        NOMAD::RNG::set_seed(12345);
+        srand((unsigned)(getCurrentTime() % (1<<31)));
+        NOMAD::RNG::set_seed(rand() % 12345);
 
         NOMAD::Parameters p(out);
         cout << "reading parameters" << endl;
