@@ -65,7 +65,9 @@ A23     1. c4 e5 2. Nc3 Nf6 3. g3 c6
 A24     1. c4 e5 2. Nc3 Nf6 3. g3 g6 
 
 A25     1. c4 e5 2. Nc3 Nc6 "English Opening"
+A25     1. c4 e5 2. g3 Nc6 3. Bg2 Nf6 4. Nc3 Bc5 5. e3 d5 "English Opening"
 A25     1. c4 e5 2. Nc3 Nc6 3. g3 g6 4. Bg2 Bg7 5. e3 d6 6. d3 "Engish Opening"
+A25     1. c4 e5 2. Nc3 d6 3. g3 Be6 4. Bg2 Nc6 5. d3 Qd7 6. Rb1 g6 7. b4 "English Opening"
 A26     1. c4 e5 2. Nc3 Nc6 3. g3 g6 4. Bg2 Bg7 5. d3 d6 "English Opening"
 A27     1. c4 e5 2. Nc3 Nc6 3. Nf3 "English Opening"
 A28     1. c4 e5 2. Nc3 Nc6 3. Nf3 Nf6 "English, Four Knights"
@@ -176,7 +178,7 @@ A84     1. d4 f5 2. c4 e6 "Dutch Defense"
 A84     1. d4 f5 2. c4 e6 3. Nf3 "Dutch Defense"
 A84     1. d4 f5 2. c4 e6 3. Nf3 Nf6 "Dutch Defense"
 A84     1. d4 d5 2. c4 e6 3. Nc3 c6 4. e3 Bd6 5. Bd3 f5 "Dutch Defense"
-
+A84     1. d4 d5 2. c4 e6 3. Nc3 c6 4. e3 f5 5. g4 "Dutch Defense"
 A85     1. d4 f5 2. c4 Nf6 3. Nc3 "Dutch Defense"
 A85     1. d4 f5 2. Nf3 Nf6 3. c4 g6 4. Nc3 d6 5. e3 Bg7 "Dutch Defense"
 A86     1. d4 f5 2. c4 Nf6 3. g3 "Dutch Defense"
@@ -638,10 +640,12 @@ C78     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O b5 6. Bb3 Bb7 "Ruy Lopez
 C79     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O d6 "Ruy Lopez"
 
 C80     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 "Ruy Lopez, Open"
+C80     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Nxe4 6. d4 b5 7. Bb3 d5 8. dxe5 Be6 9. Nbd2 Nc5 10. c3 Bg4 11. Bc2 d4 "Ruy Lopez, Open"
 C81     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. Qe2 "Ruy Lopez, Open, Howell Attack"
 C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 "Ruy Lopez, Open"
 C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Bc5 "Ruy Lopez, Open"
 C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Bc5 10. Nbd2 "Ruy Lopez, Open"
+C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Nxe4 6. d4 b5 7. Bb3 d5 8. dxe5 Be6 9. Nbd2 Nc5 10. c3 Bg4 11. Bc2 "Ruy Lopez, Open"
 C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Bc5 10. Nbd2 O-O 11. Bc2 Nxf2 "Ruy Lopez, Open, Dilworth Variation"
 C82     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Nxe4 6. d4 b5 7. Bb3 d5 8. dxe5 Be6 9. Nbd2 Nc5 10. c3 Be7 11. Bc2 Bg4 "Ruy Lopez, Open"
 C83     1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Ne4 6. d4 b5 7. Bb3 d5 8. de5 Be6 9. c3 Be7 "Ruy Lopez, Open"
