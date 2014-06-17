@@ -2345,7 +2345,12 @@ static bool do_command(const string &cmd, Board &board) {
         cout << endl;
         cout << "id author Jon Dart" << endl;
         cout << "option name Hash type spin default " <<
-            options.search.hash_table_size/(1024L*1024L) << " min 4 max 1000" << endl;
+            options.search.hash_table_size/(1024L*1024L) << " min 4 max " <<
+#ifdef _64BIT
+            "64000" << endl;
+#else
+            "2000" << endl;
+#endif
         cout << "option name Ponder type check default true" << endl;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
         cout << "option name Use tablebases type check default ";
@@ -2407,14 +2412,21 @@ static bool do_command(const string &cmd, Board &board) {
             }
         }
         if (name == "Hash") {
-            size_t old = options.search.hash_table_size;
-            // size is in megabytes
-            istringstream buf(value);
-            int size;
-            buf >> size;
-            options.search.hash_table_size = (size_t)size*1024L*1024L;
-            if (old != options.search.hash_table_size) {
-                searcher->resizeHash(options.search.hash_table_size);
+            if (!memorySet) {
+                size_t old = options.search.hash_table_size;
+                // size is in megabytes
+                stringstream buf(value);
+                int size;
+                buf >> size;
+                if (buf.bad()) {
+                    cout << "info problem setting hash size to " << buf.str() << endl;
+                }
+                else {
+                    options.search.hash_table_size = (size_t)size*1024L*1024L;
+                    if (old != options.search.hash_table_size) {
+                       searcher->resizeHash(options.search.hash_table_size);
+                    }
+                } 
             }
         }
         else if (name == "Ponder") {
