@@ -588,8 +588,7 @@ void Scoring::init() {
 void Scoring::cleanup() {
 }
 
-Scoring::Scoring(Hash *ht) :
-   hashTable(ht) {
+Scoring::Scoring() {
    clearHashTables();
 }
 

@@ -461,7 +461,7 @@ void SearchController::resizeHash(size_t newSize) {
 
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),terminate(0),
-    activeSplitPoints(0),split(NULL),scoring(&c->hashTable),ti(threadInfo) {
+    activeSplitPoints(0),split(NULL),ti(threadInfo) {
     LockInit(splitLock);
     setSearchOptions();
     // Ensure the thread creating this Search instance is the

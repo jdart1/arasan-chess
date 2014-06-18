@@ -21,7 +21,7 @@ class Scoring
 
     static void cleanup();
 
-    Scoring(Hash *ht);
+    Scoring();
 
     ~Scoring();
         
@@ -111,9 +111,6 @@ class Scoring
         byte w_uncatchable, b_uncatchable;
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
-
-    // pointer to hash table (contains eval cache)
-    Hash *hashTable;
 
     // The scores for opening, middlegame and endgame
     struct Scores {

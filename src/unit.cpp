@@ -326,7 +326,6 @@ static int testEval() {
         "6k1/p3pp2/6p1/7P/R7/b1q2P2/B1P1K2P/7R b - -"
     };
     int errs = 0;
-    SearchController c;
     for (int i = 0; i < CASES; i++) {
         Board board;
         if (!BoardIO::readFEN(board, fens[i].c_str())) {
@@ -334,7 +333,7 @@ static int testEval() {
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring(&c.hashTable);
+        Scoring *s = new Scoring();
         int eval1 = s->evalu8(board);
         board.flip();
         int eval2 = s->evalu8(board);
@@ -348,7 +347,7 @@ static int testEval() {
             ++errs;
             cerr << "testEval case " << i << " eval mismatch" << endl;
         }
-		delete s;
+        delete s;
     }
     return errs;
 }
@@ -384,7 +383,6 @@ static int testDrawEval() {
     int tmp = options.search.use_tablebases;
     options.search.use_tablebases = 0;
 #endif
-    SearchController c;
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
         if (!BoardIO::readFEN(board, draw_fens[i].c_str())) {
@@ -392,7 +390,7 @@ static int testDrawEval() {
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring(&c.hashTable);
+        Scoring *s = new Scoring();
         if (!s->isDraw(board)) {
             cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_fens[i] << endl;
             ++errs;
@@ -406,7 +404,7 @@ static int testDrawEval() {
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring(&c.hashTable);
+        Scoring *s = new Scoring();
         if (s->isDraw(board)) {
             cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
             ++errs;
