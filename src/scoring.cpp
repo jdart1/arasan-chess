@@ -76,29 +76,29 @@ static const CACHE_ALIGN int BishopScores[64] =
 };
 
 // scores for White pieces
-static const int KnightOutpostScores[64] =
+static const CACHE_ALIGN int KnightOutpostScores[64] =
 {
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
-   0, 4, 7, 7, 7, 7, 4, 0,
-   0, 5, 10, 15, 15, 10, 5, 0,
-   0, 5, 10, 15, 15, 10, 5, 0,
-   0, 0, 7, 7, 7, 7, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0
+   1, 3, 3, 6, 6, 6, 3, 1,
+   1, 4, 9, 14, 14, 9, 4, 1,
+   1, 4, 9, 14, 14, 9, 4, 1,
+   1, 1, 6, 6, 6, 6, 1, 1,
+   1, 1, 1, 1, 1, 1, 1, 1
 };
 
 // scores for White pieces
-static const int BishopOutpostScores[64] =
+static const CACHE_ALIGN int BishopOutpostScores[64] =
 {
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
-   0, 3, 6, 6, 6, 6, 3, 0,
-   0, 4, 8, 12, 12, 8, 4, 0,
-   0, 4, 8, 12, 12, 8, 4, 0,
-   0, 0, 6, 6, 6, 6, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0
+   1, 2, 5, 5, 5, 5, 2, 1,
+   1, 3, 7, 11, 11, 7, 3, 1,
+   1, 3, 7, 11, 11, 7, 3, 1,
+   1, 1, 5, 5, 5, 5, 1, 1,
+   1, 1, 1, 1, 1, 1, 1, 1
 };
 
 static const int KingEndgameScores[64] =
