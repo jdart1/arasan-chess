@@ -334,7 +334,7 @@ static int testEval() {
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring(&c.hashTable);
+        Scoring *s = new Scoring();
         int eval1 = s->evalu8(board);
         board.flip();
         int eval2 = s->evalu8(board);
@@ -392,7 +392,7 @@ static int testDrawEval() {
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring(&c.hashTable);
+        Scoring *s = new Scoring();
         if (!s->isDraw(board)) {
             cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_fens[i] << endl;
             ++errs;
@@ -406,7 +406,7 @@ static int testDrawEval() {
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring(&c.hashTable);
+        Scoring *s = new Scoring();
         if (s->isDraw(board)) {
             cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
             ++errs;

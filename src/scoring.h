@@ -21,11 +21,11 @@ class Scoring
 
     static void cleanup();
 
-    Scoring(Hash *ht);
+    Scoring();
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 16;
+    static const int NUM_PARAMS = 7;
 
     static void initParams();
         

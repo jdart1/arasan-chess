@@ -48,13 +48,15 @@ struct ThreadData {
 static pthread_attr_t stackSizeAttrib;
 #endif
 
-double PARAM1 = 1.6;
-double PARAM2 = 0.28;
+const double PARAM1 = 1.6;
+const double PARAM2 = 0.28;
 
 static double sigmoid(double val) {
     double s = -PARAM1*(-0.5+1.0/(1.0+pow(10.0,PARAM2*val)));
+/*
     if (s < -1.0) return -1.0;
     if (s > 1.0) return 1.0;
+*/
     return s;
 }
 
@@ -62,7 +64,7 @@ static double computeError(SearchController *searcher, int index) {
     double err = 0.0;
 	// This is a large object so put it on the heap:
     Scoring *scoring = NULL;
-    if (plies < 0) scoring = new Scoring(&(searcher->hashTable));
+    if (plies < 0) scoring = new Scoring();
     size_t lines = 0;
     
     for (size_t i = index; i < fens.size(); i += cores) {
@@ -316,7 +318,16 @@ int CDECL main(int argc, char **argv)
                  PosInfo pos;
                  pos.fen = line.substr(0,split);
                  string result = line.substr(split+1);
-                 pos.result = atoi(result.c_str());
+                 std::size_t last  = result.find_last_not_of(" \n");
+                 result = result.substr(0,last);
+                 if (result == "0-1")
+                    pos.result = -1;
+                 else if (result == "1-0")
+                    pos.result = 1;
+                 else if (result == "1/2-1/2")
+                    pos.result = 0;
+                 else
+                    continue;
                  ++lines;
                  fens.push_back(pos);
               }

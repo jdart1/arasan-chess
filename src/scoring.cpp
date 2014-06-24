@@ -20,43 +20,23 @@ extern "C"
 #define PARAM(x) params[x].current
 
 enum {
-   WEAK_MID,
-   WEAK_END,
-   BISHOP_BACK_RANK_ADJUST_MID,
-   BISHOP_BACK_RANK_ADJUST_END,
-   BISHOP_FRONT_RANK_ADJUST_MID,
-   BISHOP_FRONT_RANK_ADJUST_END,
-   BISHOP_RANK4_ADJUST_MID,
-   BISHOP_RANK4_ADJUST_END,
-   BISHOP_RANK5_ADJUST_MID,
-   BISHOP_RANK5_ADJUST_END,
-   BISHOP_RANK6_ADJUST_MID,
-   BISHOP_RANK6_ADJUST_END,
-   BISHOP_A4_MID,
-   BISHOP_A4_END,
-   BISHOP_A5_MID,
-   BISHOP_A5_END
+   PIN_MULT_MIDGAME,
+   PIN_MULT_ENDGAME,
+   KING_ATTACK_PARAM1,
+   KING_ATTACK_PARAM2,
+   KING_ATTACK_PARAM3,
+   KING_SAFETY_MULT,
+   KING_FILE_OPEN
 };
 
-
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"weak_mid",-12,-12,0),
-   Scoring::TuneParam(0,"weak_end",-12,-12,0),
-   Scoring::TuneParam(0,"bishop_back_rank_adjust_mid",9,-15,15),
-   Scoring::TuneParam(0,"bishop_back_rank_adjust_end",-9,-15,15),
-   Scoring::TuneParam(0,"bishop_front_rank_adjust_mid",15,-15,15),
-   Scoring::TuneParam(0,"bishop_front_rank_adjust_end",15,-15,15),
-   Scoring::TuneParam(0,"bishop_rank4_adjust_mid",15,-15,15),
-   Scoring::TuneParam(0,"bishop_rank4_adjust_end",9,-15,15),
-   Scoring::TuneParam(0,"bishop_rank5_adjust_mid",0,-15,15),
-   Scoring::TuneParam(0,"bishop_rank5_adjust_end",15,-15,15),
-   Scoring::TuneParam(0,"bishop_rank6_adjust_mid",15,-15,15),
-   Scoring::TuneParam(0,"bishop_rank6_adjust_end",9,-15,15),
-   Scoring::TuneParam(0,"bishop_a4_mid",15,-15,15),
-   Scoring::TuneParam(0,"bishop_a4_end",15,-15,15),
-   Scoring::TuneParam(0,"bishop_a5_mid",-15,-15,15),
-   Scoring::TuneParam(0,"bishop_a5_end",15,-15,15)
-
+   Scoring::TuneParam(0,"pin_mid",17,0,40),
+   Scoring::TuneParam(0,"pin_end",30,0,40),
+   Scoring::TuneParam(0,"king_attack_param1",40,0,80),
+   Scoring::TuneParam(0,"king_attack_param2",9,0,30),
+   Scoring::TuneParam(0,"king_attack_param3",9,0,50),
+   Scoring::TuneParam(0,"king_safety_mult",32,16,64),
+   Scoring::TuneParam(0,"king_file_open",-15,-25,-7)
 };
    
 
@@ -67,15 +47,11 @@ static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 static const int CENTER_PAWN_BLOCK = -12;
 
 // king cover scores, by rank of Pawn - rank of King
-static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
-static const int KING_FILE_OPEN = -15;
+static const int KING_COVER[5] = // { 18, 24, 10, 2, 2 };
+{ 22, 31, 12, 3, 2 };
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
-static const int PIN_MULTIPLIER[2] = { 20, 30 };
-// tuned, 13-May-2014
-static const int KING_ATTACK_PARAM1 = 16;
-static const int KING_ATTACK_PARAM2 = 4;
-static const int KING_ATTACK_PARAM3 = 13;
+// tuned, 20-Jun-2014
 static const CACHE_ALIGN int KING_ATTACK_SCALE[64] = {
 0, 7, 13, 19, 25, 31, 37, 42, 49, 54, 60, 66, 71, 77, 83, 89, 95, 101,
 106, 112, 118, 123, 130, 135, 140, 147, 152, 158, 164, 169, 176, 181,
@@ -84,8 +60,8 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[64] = {
 348, 354, 360, 365};
    
 #define BOOST
-static const int KING_ATTACK_BOOST_THRESHOLD = 48;
-static const int KING_ATTACK_BOOST_DIVISOR = 50;
+static const int KING_ATTACK_BOOST_THRESHOLD = 68;
+static const int KING_ATTACK_BOOST_DIVISOR = 93;
 
 const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
@@ -106,54 +82,42 @@ static const CACHE_ALIGN int KnightScores[64][2] = {
    {-15,-13},{-6,-7},{-4,-4},{-3,-3},{-3,-3},{-4,-4},{-6,-7},{-15,-13},
    {-18,-17},{-9,-13},{-7,-9} ,{-6,-8} ,{-6,-8} ,{-7,-9} ,{-9,-13},{-18,-17} };
 
-static const CACHE_ALIGN int BishopScoresBase[64][2] =
+static const CACHE_ALIGN int BishopScores[64] =
 {
-   {-18, -18}, {-12, -12}, {-12, -12}, {-15, -15}, {-15, -15}, {-12, -12}, {-12, -12}, {-18, -18},
-   {-10, -10}, {8, 8}, {0, 0}, {6, 6}, {6, 6}, {0, 0}, {8, 8}, {-10, -10},
-   {-10, -10}, {0, 0}, {6, 6}, {8, 8}, {8, 8}, {6, 6}, {0, 0}, {-10, -10},
-   {0, 0}, {0, 0}, {6, 6}, {10, 10}, {10, 10}, {6, 6}, {0, 0}, {0, 0},
-   {0, 0}, {6, 6}, {6, 6}, {6, 6}, {6, 6}, {6, 6}, {6, 6}, {0, 0},
-   {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10},
-   {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {10, 10},
-   {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, { 10,10 }
-};
-
-static CACHE_ALIGN int BishopScores[64][2] =
-{
-   {-18, -18}, {-12, -12}, {-12, -12}, {-15, -15}, {-15, -15}, {-12, -12}, {-12, -12}, {-18, -18},
-   {-10, -10}, {8, 8}, {0, 0}, {6, 6}, {6, 6}, {0, 0}, {8, 8}, {-10, -10},
-   {-10, -10}, {0, 0}, {6, 6}, {8, 8}, {8, 8}, {6, 6}, {0, 0}, {-10, -10},
-   {0, 0}, {0, 0}, {6, 6}, {10, 10}, {10, 10}, {6, 6}, {0, 0}, {0, 0},
-   {0, 0}, {6, 6}, {6, 6}, {6, 6}, {6, 6}, {6, 6}, {6, 6}, {0, 0},
-   {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10},
-   {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {10, 10},
-   {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, {-10, -10}, { 10,10 }
+   -18, -12, -12, -15, -15, -12, -12, -18,
+    -10, 8, 0, 6, 6, 0, 8, -10,
+    -10, 0, 6, 8, 8, 6, 0, -10,
+     0, 0, 6, 10, 10, 6, 0, 0,
+     0, 6, 6, 6, 6, 6, 6, 0,
+     10, 10, 10, 10, 10, 10, 10, 10,
+    -10, -10, -10, -10, -10, -10, -10, 10,
+    -10, -10, -10, -10, -10, -10, -10, 10
 };
 
 // scores for White pieces
-static const int KnightOutpostScores[64] =
+static const CACHE_ALIGN int KnightOutpostScores[64] =
 {
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
-   0, 4, 7, 7, 7, 7, 4, 0,
-   0, 5, 10, 15, 15, 10, 5, 0,
-   0, 5, 10, 15, 15, 10, 5, 0,
-   0, 0, 7, 7, 7, 7, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0
+   1, 3, 3, 6, 6, 6, 3, 1,
+   1, 4, 9, 14, 14, 9, 4, 1,
+   1, 4, 9, 14, 14, 9, 4, 1,
+   1, 1, 6, 6, 6, 6, 1, 1,
+   1, 1, 1, 1, 1, 1, 1, 1
 };
 
 // scores for White pieces
-static const int BishopOutpostScores[64] =
+static const CACHE_ALIGN int BishopOutpostScores[64] =
 {
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
-   0, 3, 6, 6, 6, 6, 3, 0,
-   0, 4, 8, 12, 12, 8, 4, 0,
-   0, 4, 8, 12, 12, 8, 4, 0,
-   0, 0, 6, 6, 6, 6, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0
+   1, 2, 5, 5, 5, 5, 2, 1,
+   1, 3, 7, 11, 11, 7, 3, 1,
+   1, 3, 7, 11, 11, 7, 3, 1,
+   1, 1, 5, 5, 5, 5, 1, 1,
+   1, 1, 1, 1, 1, 1, 1, 1
 };
 
 static const int KingEndgameScores[64] =
@@ -270,10 +234,10 @@ static const int CONNECTED_PASSERS[2][8] = {
 static const int DOUBLED_PAWNS[2][8] =
 {
    { -6, -8, -10, -10, -10, -10, -8, -6 },
-   { -13, -17, -21, -21, -21, -21, -17, -13 }
+   { -10, -13, -17, -17, -17, -17, -13, -10 }
 };
 static const int ISOLATED_PAWN[2] = { -8, -12 };
-static const int WEAK[2] = { -8, 0 };
+static const int WEAK[2] = { -8, -8 };
 static const int WEAK_ON_OPEN_FILE = -10;
 static const int SPACE = 2;
 static const int PAWN_CENTER_SCORE = 3;
@@ -372,6 +336,12 @@ static inline int FileOpen(const Board &board, int file) {
 static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorType side) {
    return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
+
+void Scoring::initParams() 
+{
+   
+}
+
 
 static void initBitboards() {
    int i, r;
@@ -635,53 +605,6 @@ static void initBitboards() {
    BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(D2);
 }
 
-void Scoring::initParams() 
-{
-   for (int i = 0; i < 64; i++) {
-      int b;
-      b = BishopScores[i][Midgame] = BishopScoresBase[i][Midgame];
-      if (i == A4 || i == H4)
-         b = PARAM(BISHOP_A4_MID);
-      else if (i == A5 || i == H5) 
-         b = PARAM(BISHOP_A5_MID);
-      if (WhiteRank(i) == 1) {
-         b += PARAM(BISHOP_BACK_RANK_ADJUST_MID);
-      } else if (WhiteRank(i) == 7 || WhiteRank(i) == 8) {
-         b += PARAM(BISHOP_FRONT_RANK_ADJUST_MID);
-      } else if (WhiteRank(i) == 4) {
-         b += PARAM(BISHOP_RANK4_ADJUST_MID);
-      } else if (WhiteRank(i) == 5) {
-         b += PARAM(BISHOP_RANK5_ADJUST_MID);
-      } else if (WhiteRank(i) == 6) {
-         b += PARAM(BISHOP_RANK6_ADJUST_MID);
-      }
-      BishopScores[i][Midgame] = b;
-
-      b = BishopScores[i][Endgame] = BishopScoresBase[i][Endgame];
-      if (i == A4 || i == H4)
-         b = PARAM(BISHOP_A4_END);
-      else if (i == A5 || i == H5) 
-         b = PARAM(BISHOP_A5_END);
-      if (WhiteRank(i) == 1) {
-         b += PARAM(BISHOP_BACK_RANK_ADJUST_END);
-      } else if (WhiteRank(i) == 7 || WhiteRank(i) == 8) {
-         b += PARAM(BISHOP_FRONT_RANK_ADJUST_END);
-      } else if (WhiteRank(i) == 4) {
-         b += PARAM(BISHOP_RANK4_ADJUST_END);
-      } else if (WhiteRank(i) == 5) {
-         b += PARAM(BISHOP_RANK5_ADJUST_END);
-      } else if (WhiteRank(i) == 6) {
-         b += PARAM(BISHOP_RANK6_ADJUST_END);
-      }
-      BishopScores[i][Endgame] = b;
-      cout << "{" << BishopScores[i][Midgame] << "," <<
-         BishopScores[i][Endgame] << "},";
-      if (i+1 % 8 == 0) cout << endl;
-      
-   }
-}
-
-
 void Scoring::init() {
    initBitboards();
 
@@ -690,8 +613,7 @@ void Scoring::init() {
 void Scoring::cleanup() {
 }
 
-Scoring::Scoring(Hash *ht) :
-   hashTable(ht) {
+Scoring::Scoring() {
    clearHashTables();
 }
 
@@ -879,12 +801,12 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       pawn = Bitboard(Attacks::file_mask_down[sq] & board.pawn_bits[Black]).lastOne();
    }
    if (pawn == InvalidSquare) {
-      if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+      if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
    }
    else {
       cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
    }
-   return cover;
+   return cover*PARAM(KING_SAFETY_MULT)/32;
 }
 
 // Calculate a king cover score
@@ -955,26 +877,26 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
       {
          int k_cover = calcCover<side> (board, side == White ? G1 : G8);
          int q_cover = calcCover<side> (board, side == White ? B1 : B8);
-         coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
+         coverEntry.cover = 3*cover/4 + Util::Min(k_cover, q_cover) / 4;
          break;
       }
 
    case CanCastleKSide:
       {
          int k_cover = calcCover<side> (board, side == White ? G1 : G8);
-         coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
+         coverEntry.cover = 3*cover/4 + k_cover / 4;
          break;
       }
 
    case CanCastleQSide:
       {
          int q_cover = calcCover<side> (board, side == White ? B1 : B8);
-         coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
+         coverEntry.cover = 3*cover/4 + q_cover / 4;
          break;
       }
 
    default:
-      coverEntry.cover = cover;
+      coverEntry.cover = (cover*7)/10;
       break;
    }
 }
@@ -985,10 +907,10 @@ int Scoring::kingCover(const Board &board) {
    if (oppMaterialLevel >= MIDGAME_MATERIAL_THRESHOLD) {
       hash_t kcHash = BoardHash::kingCoverHash(board, side);
       KingCoverHashEntry *kingCoverEntry = &kingCoverHashTable[side][kcHash % KING_COVER_HASH_SIZE];
-      if (kingCoverEntry->hc != (uint32) (kcHash >> 32)) {
+//      if (kingCoverEntry->hc != (uint32) (kcHash >> 32)) {
          calcCover<side> (board, *kingCoverEntry);
          kingCoverEntry->hc = (uint32) (kcHash >> 32);
-      }
+//      }
 
 #ifdef EVAL_DEBUG
       cout << "unscaled cover score " << ColorImage(side) << " = " << kingCoverEntry->cover << endl;
@@ -1043,7 +965,9 @@ void Scoring::pieceScore(const Board &board,
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
-   static const int ATTACK_FACTOR[6] = { 0, 1, 2, 2, 3, 4 };
+   static const int ATTACK_FACTOR[6] = { 0, 19, 121, 121, 166, 352 };
+   static const int ROOK_BOOST = 55;
+   static const int QUEEN_BOOST = 101;
    int pin_count = 0;
    Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
@@ -1091,8 +1015,9 @@ void Scoring::pieceScore(const Board &board,
 
       case Bishop:
          {
-            scores.mid += BishopScores[scoreSq][Midgame];
-            scores.end += BishopScores[scoreSq][Endgame];
+            scores.mid += BishopScores[scoreSq];
+
+            //scores.end += BishopScores[scoreSq]/2;
             const Bitboard battacks(board.bishopAttacks(sq));
             allAttacks |= battacks;
             if (!endgame) {
@@ -1163,14 +1088,14 @@ void Scoring::pieceScore(const Board &board,
                Bitboard attacks(rattacks2 &nearKing);
                if (attacks) {
                   attackWeight += ATTACK_FACTOR[Rook];
-
+                  attackCount++;
                   Bitboard attacks2(attacks &kingNearProximity[okp]);
                   if (attacks2) {
                      attacks2 &= (attacks2 - 1);
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight++;
+                        attackWeight += ROOK_BOOST;
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1231,6 +1156,7 @@ void Scoring::pieceScore(const Board &board,
 
                if (kattacks) {
                   attackWeight += ATTACK_FACTOR[Queen];
+                  attackCount++;
 #ifdef EVAL_DEBUG
                   int tmp = attackWeight;
 #endif
@@ -1239,10 +1165,10 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight++;
+                        attackWeight += QUEEN_BOOST;
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight++;
+                           attackWeight += QUEEN_BOOST;
                         }
                      }
                   }
@@ -1340,26 +1266,24 @@ void Scoring::pieceScore(const Board &board,
 
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
-   const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
+   //   const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
    if (!endgame) {
 
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      attackWeight += proximity;
+      attackWeight += ATTACK_FACTOR[Pawn]*proximity + (attackWeight >= ATTACK_FACTOR[Rook] ? 32*proximity : 0);
 #ifdef EVAL_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
       cout << " pawn proximity=" << proximity << endl;
       cout << " attackCount=" << attackCount << endl;
       cout << " attackWeight=" << attackWeight << endl;
-      cout << " squaresAttacked=" << squaresAttacked << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
-
-      int scale =
-         (KING_ATTACK_PARAM1*attackWeight + KING_ATTACK_PARAM2*attackWeight*attackCount + KING_ATTACK_PARAM3*squaresAttacked)/16;
-      int attack = KING_ATTACK_SCALE[Util::Min(scale, 63)];
-      if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
+      int p2 = attackWeight*Util::Max(0,attackCount-1);
+      int attack =
+         (PARAM(KING_ATTACK_PARAM1)*attackWeight/64 + PARAM(KING_ATTACK_PARAM2)*p2/64 + PARAM(KING_ATTACK_PARAM3)*attackCount)/8;
+      if (pin_count) attack += PARAM(PIN_MULT_MIDGAME) * pin_count;
 
       int kattack = attack;
 #ifdef BOOST
@@ -1384,7 +1308,7 @@ void Scoring::pieceScore(const Board &board,
       opp_scores.mid -= kattack;
    }
 
-   if (pin_count) scores.end += PIN_MULTIPLIER[Endgame] * pin_count;
+   if (pin_count) scores.end += PARAM(PIN_MULT_ENDGAME)* pin_count;
 }
 
 int Scoring::calcPawnData(const Board &board,
@@ -1527,9 +1451,8 @@ int Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
                   cout << " weak";
 #endif
-                  entr.midgame_score += PARAM(WEAK_MID);
-                  entr.endgame_score += PARAM(WEAK_END);
-                  
+                  entr.midgame_score += WEAK[Midgame];
+                  entr.endgame_score += WEAK[Endgame];
                   weak++;
               }
           }

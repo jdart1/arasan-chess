@@ -2701,10 +2701,9 @@ static bool do_command(const string &cmd, Board &board) {
                 Scoring::init();
                 Scoring::initParams();
                 
-                SearchController c;
                 if (Scoring::isDraw(board))
                     cout << "position evaluates to draw (statically)" << endl;
-                Scoring *s = new Scoring(&c.hashTable);
+                Scoring *s = new Scoring();
                 s->init();
                 cout << board << endl;
                 Scoring::printScore(s->evalu8(board),cout);
