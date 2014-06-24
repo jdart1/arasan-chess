@@ -1073,7 +1073,7 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
     }
     else {
         if (ics || uci) {
-		    vector< pair<Move,int> > choices;
+            vector< pair<Move,int> > choices;
             int moveCount = 0;
             if (options.book.book_enabled) {
                 moveCount = openingBook.book_moves(board,choices);
