@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2012, 2013  by Jon Dart.
+// Copyright 1994, 1995, 2008, 2012-2014  by Jon Dart. All Rights Reserved.
 
 #include "chessio.h"
 #include "epdrec.h"
@@ -279,7 +279,6 @@ int ChessIO::store_pgn(ostream &ofile, MoveArray &moves,const string &result,
     }
     ofile << buf.str() << endl;
     if (!ofile) {
-        cerr << "warning: error saving game" << endl;
         return 0;
     }
     return 1;
@@ -381,15 +380,13 @@ void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, lon
                 if (first == -1)
                     first = (long)game_file.tellg()-1;
                 int t = 0;
-                c = skip_space(game_file);
                 while (!game_file.eof())
                 {
-                    if (!isspace(c) && c != '[' &&
-                        c != '"' && t < MAX_TAG)
+                    c = game_file.get();
+                    if (!isspace(c) && c != '"' && t < MAX_TAG)
                         tag[t++] = c;
                     else
                         break;
-                    c = game_file.get();
                 } 
                 tag[t] = '\0';
                 if (firstTag)
@@ -402,15 +399,12 @@ void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, lon
                        // So we get a partial tag. This is a workaround.
                        strcpy(tag,"Event");
                     }
-                    else if (strcmp(tag,"Event") != 0)
-                    {
-                       if (c == '[') game_file.putback(c);
-                       continue;
-                    }
                 }
                 firstTag = false;
-                if (isspace(c))
+                if (isspace(c)) {
                     c = skip_space(game_file);
+                }
+                val[0] = '\0';
                 if (c=='"')
                 {
                     int v = 0;
@@ -422,10 +416,8 @@ void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, lon
                         else
                             break;
                     }
-                    val[v] = '\0';
+                    val[v] = '\0'; 
                 }
-                //else
-                //    cerr << "bad tag" << endl;
                 hdrs.append(Header(tag,val));
                 while (!game_file.eof() && c != ']')
                     c = game_file.get();
@@ -443,6 +435,12 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
     }
     if (c == EOF) {
       return Token(Eof,value);
+    }
+    else if (c=='[') {
+       // Not expected within a game since we should have already
+       // read the headers. Probably the start of the next game.
+       game_file.putback(c);
+       return Token(Eof,value);
     }
     else if (c=='{') {
         value += c;
