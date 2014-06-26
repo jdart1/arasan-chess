@@ -31,9 +31,13 @@ static int cores = 8;
 
 static int plies = 1;
 
+static const char * MATCH_PATH="/home/jdart/tools/match.py";
+
 static const int MAX_THREADS = 64;
 
 static const int THREAD_STACK_SIZE = 8*1024*1024;
+
+static const int games=250;
 
 // results from the threads
 static double errors[MAX_THREADS];
@@ -48,17 +52,39 @@ struct ThreadData {
 static pthread_attr_t stackSizeAttrib;
 #endif
 
-const double PARAM1 = 1.6;
-const double PARAM2 = 0.28;
+const double PARAM1 = 2.0;
+const double PARAM2 = 0.38;
 
 static double sigmoid(double val) {
     double s = -PARAM1*(-0.5+1.0/(1.0+pow(10.0,PARAM2*val)));
-/*
     if (s < -1.0) return -1.0;
     if (s > 1.0) return 1.0;
-*/
     return s;
 }
+
+static int exec(const char* cmd) {
+   
+   cout << "executing " << cmd << endl;
+
+   FILE* pipe = popen(cmd, "r");
+   if (!pipe) {
+      cerr << "perror failed" << endl;
+      return -1;
+   }
+   char buffer[128];
+   int result = -1;
+   while(!feof(pipe)) {
+      if(fgets(buffer, 128, pipe) != NULL) {
+         cout << buffer << endl;
+         if (strlen(buffer)>7 && strncmp(buffer,"rating=",7)==0) {
+            result = atoi(buffer+7);
+         }
+      }
+   }
+   pclose(pipe);
+   return result;
+}
+
 
 static double computeError(SearchController *searcher, int index) {
     double err = 0.0;
@@ -99,7 +125,7 @@ static double computeError(SearchController *searcher, int index) {
         err += ((double)fens[i].result - predict)*((double)fens[i].result - predict);
     }
     if (plies < 0) delete scoring;
-//    cout << "thread " << index << " done" << endl;
+    cout << "thread " << index << " done" << endl;
     
     return err;
 
@@ -119,71 +145,18 @@ static void * CDECL threadp(void *x)
 }
 
 static double computeLsqError() {
-    // prepare threads
-#ifndef _WIN32
-   if (pthread_attr_init (&stackSizeAttrib)) {
-      perror("pthread_attr_init");
-      return 0.0;
-   }
-   size_t stackSize;
-   if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
-        perror("pthread_attr_getstacksize");
-        return 0.0;
-   }
-   if (stackSize < THREAD_STACK_SIZE) {
-      if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
-         perror("error setting thread stack size");
-         return 0.0;
-      }
-   }
-//   cout << "initialized" << endl;
-#endif
-   
-    for (int i = 0; i < cores; i++) {
-        THREAD thread_id;
-        threadDatas[i].index = i;
-#ifdef _WIN32
-        DWORD id;
-        thread_id = CreateThread(NULL,8*1024*1024,
-                                 threadp,threadDatas+i,
-                                 0,
-                                 &id);
 
-        if (thread_id == NULL) {
-            cerr << "thread creation failed" << endl;
-        }
-#else
-        if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)(threadDatas+i))) {
-            perror("thread creation failed");
-        }
-#endif
-//        cout << "thread " << i << " created." << endl;
-    }
-    // Wait for threads to complete
-#ifdef _WIN32
-    HANDLE handles[MAX_THREADS];
-    for (int i = 0; i<cores; i++) {
-        handles[i] = threadDatas[i].thread_id;
-    }
-    WaitForMultipleObjects(cores,handles,TRUE,INFINITE);
-#else
-    for (int i = 0; i < cores; i++) {
-       void *status;
-       if (pthread_join(threadDatas[i].thread_id,&status)) {
-          perror("pthread_join");
-       }
-    }
-    if (pthread_attr_destroy(&stackSizeAttrib)) {
-       perror("pthread_attr_destroy");
-    }
-#endif        
-    // total errors from the threads
-    double total = 0;
-    for (int i = 0; i < cores; i++) {
-        total += errors[i];
-    }
-//    cout << "result: " << setprecision(8) << total/fens.size() << endl;
-    return total/fens.size();
+   stringstream s;
+   s << MATCH_PATH;
+   s << ' ';
+   s << games;
+   for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
+      s << ' ' << Scoring::params[i].name << ' ';
+      s << Scoring::params[i].current;
+   }
+   s << '\0';
+   string cmd = s.str();
+   return double(5000-exec(cmd.c_str()));
 }
 
 /*----------------------------------------*/
@@ -257,6 +230,7 @@ int CDECL main(int argc, char **argv)
     else {
         Statistics stats;
         int arg = 1;
+/*
         while (arg < argc && argv[arg][0] == '-') {
            if (strcmp(argv[arg],"-c")==0) {
               ++arg;
@@ -273,9 +247,9 @@ int CDECL main(int argc, char **argv)
         for (int i = 0; i < cores; i++) {
            threadDatas[i].searcher = NULL;
         }
-        
+*/        
         string paramFile = argv[arg++];
-        string tuneFile = argv[arg];
+        //string tuneFile = argv[arg];
 
         try {
            
@@ -299,6 +273,7 @@ int CDECL main(int argc, char **argv)
              it++) {
            cout << *(*it) << endl;
         }       
+/*
 
         cout << "reading training file" << endl;
         ifstream fen_file(tuneFile.c_str(), ios::in);
@@ -318,8 +293,10 @@ int CDECL main(int argc, char **argv)
                  PosInfo pos;
                  pos.fen = line.substr(0,split);
                  string result = line.substr(split+1);
-                 std::size_t last  = result.find_last_not_of(" \n");
-                 result = result.substr(0,last);
+                 std::size_t last  = result.find_last_of(" \n");
+                 if (last != string::npos) {
+                    result = result.substr(0,last);
+                 }
                  if (result == "0-1")
                     pos.result = -1;
                  else if (result == "1-0")
@@ -335,6 +312,17 @@ int CDECL main(int argc, char **argv)
            fen_file.close();
            cout << "position file read: " << lines << " lines" << endl;
         }
+        int err = 10000;
+        for (double p = 0.1; p < 0.4; p+=0.02) {
+           PARAM2 = p;
+           double err2 = computeLsqError();
+           if (err2 < err) {
+              err = err;
+           } else {
+              break;
+           }
+        }
+        cout << "optimal param2 = " << PARAM2 << endl;*/
 
         // custom evaluator creation:
         My_Evaluator ev   ( p );
