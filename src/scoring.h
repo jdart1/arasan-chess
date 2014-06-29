@@ -25,10 +25,25 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 7;
+    static const int NUM_PARAMS = 12;
 
     static void initParams();
         
+    enum {
+      PIN_ATTACK,
+      PIN_MULT_MIDGAME,
+      PIN_MULT_ENDGAME,
+      KING_ATTACK_MULT,
+      ATTACK_COUNT_CONST,
+      ATTACK_COUNT_SLOPE,
+      ATTACK_COUNT_PARAM1,
+      ATTACK_COUNT_PARAM2,
+      KING_COVER_MULT,
+      KING_FILE_OPEN,
+      KING_ATTACK_BOOST_THRESHOLD,
+      KING_ATTACK_BOOST_DIVISOR
+    };
+
     struct TuneParam {
       int index;
       string name;
