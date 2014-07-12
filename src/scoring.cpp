@@ -21,12 +21,12 @@ extern "C"
 
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"pin_attack",0,0,40),
-   Scoring::TuneParam(0,"pin_mult_midgame",0,0,40),
+   Scoring::TuneParam(0,"pin_attack",20,0,40),
+   Scoring::TuneParam(0,"pin_mult_midgame",20,0,40),
    Scoring::TuneParam(0,"pin_mult_endgame",30,15,40),
    Scoring::TuneParam(0,"king_attack_mult",50,0,100),
    Scoring::TuneParam(0,"attack_count_const",0,0,25),
-   Scoring::TuneParam(0,"attack_count_slope",0,10,30),
+   Scoring::TuneParam(0,"attack_count_slope",0,0,30),
    Scoring::TuneParam(0,"attack_count_param1",64,0,128),
    Scoring::TuneParam(0,"attack_count_param2",64,32,96),
    Scoring::TuneParam(0,"king_cover_mult",64,32,96),
