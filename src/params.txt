@@ -4,7 +4,7 @@ BB_INPUT_TYPE * I  # all are type integer
 
 BB_OUTPUT_TYPE OBJ
 
-X0 ( 20 20 30 50 0 0 64 64 64 -15 6 10 )
+X0 ( 50 0 0 64 64 64 24 24 30 -15 6 10 )
 
 LOWER_BOUND ( 0 0 15 0 0 0 0 32 32 -25 5 5  )
 

@@ -21,14 +21,14 @@ extern "C"
 
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"pin_attack",20,0,40),
-   Scoring::TuneParam(0,"pin_mult_midgame",20,0,40),
-   Scoring::TuneParam(0,"pin_mult_endgame",30,15,40),
    Scoring::TuneParam(0,"king_attack_mult",50,0,100),
    Scoring::TuneParam(0,"attack_count_const",0,0,25),
    Scoring::TuneParam(0,"attack_count_slope",0,0,30),
    Scoring::TuneParam(0,"attack_count_param1",64,0,128),
    Scoring::TuneParam(0,"attack_count_param2",64,32,96),
+   Scoring::TuneParam(0,"pin_attack",20,0,40),
+   Scoring::TuneParam(0,"pin_mult_midgame",20,0,40),
+   Scoring::TuneParam(0,"pin_mult_endgame",30,15,40),
    Scoring::TuneParam(0,"king_cover_mult",64,32,96),
    Scoring::TuneParam(0,"king_file_open",-15,-25,-7),
    Scoring::TuneParam(0,"king_attack_boost_threshold",6,5,13), //*8
@@ -49,16 +49,8 @@ static const int KING_COVER[5] = // { 18, 24, 10, 2, 2 };
 { 22, 31, 12, 3, 2 };
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
-// tuned, 20-Jun-2014
-static const CACHE_ALIGN int KING_ATTACK_SCALE[64] = {
-0, 7, 13, 19, 25, 31, 37, 42, 49, 54, 60, 66, 71, 77, 83, 89, 95, 101,
-106, 112, 118, 123, 130, 135, 140, 147, 152, 158, 164, 169, 176, 181,
-187, 193, 198, 204, 210, 216, 221, 227, 233, 239, 245, 250, 257, 262,
-267, 274, 279, 285, 291, 296, 302, 308, 314, 320, 325, 331, 337, 343,
-348, 354, 360, 365};
    
 #define BOOST
-static int ATTACK_COUNT_FACTOR[8];
 static const int PIN_MULTIPLIER[2] = {30,30};
 
 const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
@@ -344,9 +336,9 @@ void Scoring::initParams()
          PARAM(ATTACK_COUNT_PARAM1)*int(128.0-128.0/(1.0 + PARAM(ATTACK_COUNT_PARAM2)*i/64))/64;
       if (factor > 100) factor = 100;
       ATTACK_COUNT_FACTOR[i] = factor;
-//      cout << factor << endl;
+//      cout << factor << ',';
    }
-   
+//   cout << endl;
 }
 
 
@@ -1309,7 +1301,7 @@ void Scoring::pieceScore(const Board &board,
       int p2 = attackWeight*Util::Max(0,attackCount-1);
       int attack =
        (PARAM(KING_ATTACK_MULT) * attackWeight *
-                    KING_COUNT_FACTOR[Util::Min(7,attackCount)])/(512*64);
+                    ATTACK_COUNT_FACTOR[Util::Min(7,attackCount)])/(512*64);
       if (pin_count) {
          attack += PARAM(PIN_ATTACK) * pin_count;
          opp_scores.mid -= PARAM(PIN_MULT_MIDGAME)*pin_count;
