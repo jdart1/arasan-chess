@@ -15,26 +15,17 @@ extern "C"
 #include <iomanip>
 
 //#define PAWN_DEBUG
-//#define EVAL_DEBUG
-
-#define PARAM(x) params[x].current
-
+#define EVAL_DEBUG
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"king_attack_mult",50,0,100),
-   Scoring::TuneParam(0,"attack_count_const",0,0,25),
-   Scoring::TuneParam(0,"attack_count_slope",0,0,30),
-   Scoring::TuneParam(0,"attack_count_param1",64,0,128),
-   Scoring::TuneParam(0,"attack_count_param2",64,32,96),
-   Scoring::TuneParam(0,"pin_attack",20,0,40),
-   Scoring::TuneParam(0,"pin_mult_midgame",20,0,40),
-   Scoring::TuneParam(0,"pin_mult_endgame",30,15,40),
-   Scoring::TuneParam(0,"king_cover_mult",64,32,96),
-   Scoring::TuneParam(0,"king_file_open",-15,-25,-7),
-   Scoring::TuneParam(0,"king_attack_boost_threshold",6,5,13), //*8
-   Scoring::TuneParam(0,"king_attack_boost_divisor",10,5,15) //*8
+   Scoring::TuneParam(0,"king_attack_linear",50,0,200),
+   Scoring::TuneParam(0,"king_attack_sigmoid_mid",50,20,80),
+   Scoring::TuneParam(0,"king_attack_sigmoid_exp",100,50,500),
+   Scoring::TuneParam(0,"king_attack_sigmoid",50,0,200),
+   Scoring::TuneParam(0,"king_attack_div",20,10,50)
 };
-   
+
+#define PARAM(x) params[x].current
 
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
@@ -42,16 +33,18 @@ static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
 static const int CENTER_PAWN_BLOCK = -12;
 
-static int KING_COUNT_FACTOR[8] = {0,53,75,87,94,100,103,106};
-
 // king cover scores, by rank of Pawn - rank of King
-static const int KING_COVER[5] = // { 18, 24, 10, 2, 2 };
-{ 22, 31, 12, 3, 2 };
+static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
+static const int KING_FILE_OPEN = -15;
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
-   
+static const int PIN_MULTIPLIER[2] = { 20, 30 };
+static const int KING_ATTACK_MULT = 50;
+static int KING_ATTACK_SCALE[512];
+
 #define BOOST
-static const int PIN_MULTIPLIER[2] = {30,30};
+static const int KING_ATTACK_BOOST_THRESHOLD = 48;
+static const int KING_ATTACK_BOOST_DIVISOR = 50;
 
 const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
@@ -329,18 +322,14 @@ static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorTyp
 
 void Scoring::initParams() 
 {
-   for (int i = 0; i < 8; i++) {
-      int factor =
-         (i == 0 ? 0 : PARAM(ATTACK_COUNT_CONST)) +
-         PARAM(ATTACK_COUNT_SLOPE)*i +
-         PARAM(ATTACK_COUNT_PARAM1)*int(128.0-128.0/(1.0 + PARAM(ATTACK_COUNT_PARAM2)*i/64))/64;
-      if (factor > 100) factor = 100;
-      ATTACK_COUNT_FACTOR[i] = factor;
-//      cout << factor << ',';
+   for (int i = 0; i < 512; i++) {
+      double p = i/512.0;
+      double sig = exp(-p*PARAM(KING_ATTACK_SIGMOID_EXP)*fabs(p-PARAM(KING_ATTACK_SIGMOID_MID))/10000.0);
+      KING_ATTACK_SCALE[i] = int(PARAM(KING_ATTACK_SIGMOID)*(sig*p*512.0)/100.0 + PARAM(KING_ATTACK_LINEAR)*i/100.0);
+      cout << i << ' ' << KING_ATTACK_SCALE[i] << endl;
    }
 //   cout << endl;
 }
-
 
 static void initBitboards() {
    int i, r;
@@ -606,7 +595,7 @@ static void initBitboards() {
 
 void Scoring::init() {
    initBitboards();
-   initParams();
+
 }
 
 void Scoring::cleanup() {
@@ -799,9 +788,8 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
       pawn = Bitboard(Attacks::file_mask_down[sq] & board.pawn_bits[Black]).lastOne();
    }
-   cover = cover*PARAM(KING_COVER_MULT)/64;
    if (pawn == InvalidSquare) {
-      if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
+      if (FileOpen(board, file)) cover += KING_FILE_OPEN;
    }
    else {
       cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
@@ -877,26 +865,26 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
       {
          int k_cover = calcCover<side> (board, side == White ? G1 : G8);
          int q_cover = calcCover<side> (board, side == White ? B1 : B8);
-         coverEntry.cover = 3*cover/4 + Util::Min(k_cover, q_cover) / 4;
+         coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
          break;
       }
 
    case CanCastleKSide:
       {
          int k_cover = calcCover<side> (board, side == White ? G1 : G8);
-         coverEntry.cover = 3*cover/4 + k_cover / 4;
+         coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
          break;
       }
 
    case CanCastleQSide:
       {
          int q_cover = calcCover<side> (board, side == White ? B1 : B8);
-         coverEntry.cover = 3*cover/4 + q_cover / 4;
+         coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
          break;
       }
 
    default:
-      coverEntry.cover = (cover*7)/10;
+      coverEntry.cover = cover;
       break;
    }
 }
@@ -907,10 +895,10 @@ int Scoring::kingCover(const Board &board) {
    if (oppMaterialLevel >= MIDGAME_MATERIAL_THRESHOLD) {
       hash_t kcHash = BoardHash::kingCoverHash(board, side);
       KingCoverHashEntry *kingCoverEntry = &kingCoverHashTable[side][kcHash % KING_COVER_HASH_SIZE];
-//      if (kingCoverEntry->hc != (uint32) (kcHash >> 32)) {
+      if (kingCoverEntry->hc != (uint32) (kcHash >> 32)) {
          calcCover<side> (board, *kingCoverEntry);
          kingCoverEntry->hc = (uint32) (kcHash >> 32);
-//      }
+      }
 
 #ifdef EVAL_DEBUG
       cout << "unscaled cover score " << ColorImage(side) << " = " << kingCoverEntry->cover << endl;
@@ -965,18 +953,15 @@ void Scoring::pieceScore(const Board &board,
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
-   static const int ATTACK_FACTOR[6] = { 0, 19, 121, 121, 166, 352 };
-   static const int ROOK_BOOST = 55;
-   static const int QUEEN_BOOST = 101;
+   static const int ATTACK_FACTOR[6] = { 0, 60, 121, 121, 166, 352 };
+   
    int pin_count = 0;
    Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
    Square okp = board.kingSquare(oside);
    const Bitboard &nearKing = kingProximity[oside][okp];
-   Bitboard allAttacks;
    int attackWeight = 0;
    int attackCount = 0;
-   Square pinned;
    
    Square sq;
    while(b.iterate(sq))
@@ -1005,7 +990,6 @@ void Scoring::pieceScore(const Board &board,
 #endif
                scores.any += outpost_score;
             }
-            allAttacks |= knattacks;
 
             if (knattacks & nearKing) {
                attackWeight += ATTACK_FACTOR[Knight];
@@ -1020,7 +1004,6 @@ void Scoring::pieceScore(const Board &board,
 
             //scores.end += BishopScores[scoreSq]/2;
             const Bitboard battacks(board.bishopAttacks(sq));
-            allAttacks |= battacks;
             if (!endgame) {
                if (battacks & nearKing) {
                   attackWeight += ATTACK_FACTOR[Bishop];
@@ -1039,12 +1022,7 @@ void Scoring::pieceScore(const Board &board,
                scores.any += outpost<side> (board, sq, scoreSq, BishopOutpostScores, oppPawnData);
             }
 
-            if ((pinned=board.pinOnDiag(sq, okp, oside))!=InvalidSquare) {
-               if (!nearKing.isSet(pinned)) {
-                  attackWeight += ATTACK_FACTOR[Bishop];
-                  attackCount++;
-               }
-               //if (board[pinned] == MakePiece(Rook,oside)) pin_count++;
+            if (board.pinOnDiag(sq, okp, oside)) {
                pin_count++;
             }
 
@@ -1074,7 +1052,6 @@ void Scoring::pieceScore(const Board &board,
 
             const int file = File(sq);
             const Bitboard rattacks(board.rookAttacks(sq));
-            allAttacks |= rattacks;
             if (FileOpen(board, file)) {
                scores.any += ROOK_ON_OPEN_FILE;
             }
@@ -1101,7 +1078,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight += ROOK_BOOST;
+                        attackWeight++;
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1110,11 +1087,7 @@ void Scoring::pieceScore(const Board &board,
                }
             }
 
-            if ((pinned=board.pinOnRankOrFile(sq, okp, oside))!=InvalidSquare) {
-               if (!nearKing.isSet(pinned)) {
-                  attackWeight += ATTACK_FACTOR[Rook];
-                  attackCount++;
-               }
+            if (board.pinOnRankOrFile(sq, okp, oside)) {
                pin_count++;
             }
             break;
@@ -1125,7 +1098,6 @@ void Scoring::pieceScore(const Board &board,
             int qmobl = 0;
 
             Bitboard battacks(board.bishopAttacks(sq));
-            allAttacks |= battacks;
             Bitboard qmobility(battacks);
             Bitboard kattacks;
             
@@ -1136,17 +1108,12 @@ void Scoring::pieceScore(const Board &board,
                }
             }
 
-            if ((pinned=board.pinOnDiag(sq, okp, oside))!=InvalidSquare) {
-               if (!nearKing.isSet(pinned)) {
-                  attackWeight += ATTACK_FACTOR[Queen];
-                  attackCount++;
-               }
+            if (board.pinOnDiag(sq, okp, oside)) {
                pin_count++;
             }
 
             Bitboard rattacks = board.rookAttacks(sq);
             qmobility |= rattacks;
-            allAttacks |= qmobility;
             if (!endgame) {
                int rank = Rank(sq, side);
                if (rank > 3) {
@@ -1179,10 +1146,10 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight += QUEEN_BOOST;
+                        attackWeight++;
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight += QUEEN_BOOST;
+                           attackWeight++;
                         }
                      }
                   }
@@ -1198,11 +1165,7 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
             cout << "queen mobility=" << QUEEN_MOBILITY * (Util::Min(14, qmobl) - 7) << endl;
 #endif
-            if ((pinned=board.pinOnRankOrFile(sq, okp, oside))!=InvalidSquare) {
-               if (!nearKing.isSet(pinned)) {
-                  attackWeight += ATTACK_FACTOR[Queen];
-                  attackCount++;
-               }
+            if (board.pinOnRankOrFile(sq, okp, oside)) {
                pin_count++;
             }
          }
@@ -1282,14 +1245,11 @@ void Scoring::pieceScore(const Board &board,
 #endif
    }
 
-   allAttacks |= oppPawnData.opponent_pawn_attacks;
-   allAttacks |= Attacks::king_attacks[kp];
-   //   const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
    if (!endgame) {
 
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      attackWeight += ATTACK_FACTOR[Pawn]*proximity + (attackWeight >= ATTACK_FACTOR[Rook] ? 32*proximity : 0);
+      attackWeight += ATTACK_FACTOR[Pawn]*proximity;
 #ifdef EVAL_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
@@ -1298,22 +1258,16 @@ void Scoring::pieceScore(const Board &board,
       cout << " attackWeight=" << attackWeight << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
-      int p2 = attackWeight*Util::Max(0,attackCount-1);
-      int attack =
-       (PARAM(KING_ATTACK_MULT) * attackWeight *
-                    ATTACK_COUNT_FACTOR[Util::Min(7,attackCount)])/(512*64);
-      if (pin_count) {
-         attack += PARAM(PIN_ATTACK) * pin_count;
-         opp_scores.mid -= PARAM(PIN_MULT_MIDGAME)*pin_count;
-      }
+      int attack = KING_ATTACK_SCALE[Util::Min(511,attackWeight/PARAM(KING_ATTACK_DIV))];
+      if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
 
       int kattack = attack;
 #ifdef BOOST
 #ifdef EVAL_DEBUG
       int kattack_tmp = kattack;
 #endif
-      if (kattack && cover < -PARAM(KING_ATTACK_BOOST_THRESHOLD)*8) {
-         kattack += Util::Min(kattack / 2, (-(cover + PARAM(KING_ATTACK_BOOST_THRESHOLD)*8) * kattack) / (8*KING_ATTACK_BOOST_DIVISOR));
+      if (kattack && cover < -KING_ATTACK_BOOST_THRESHOLD) {
+         kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif
@@ -1330,7 +1284,7 @@ void Scoring::pieceScore(const Board &board,
       opp_scores.mid -= kattack;
    }
 
-   if (pin_count) opp_scores.end -= PARAM(PIN_MULT_ENDGAME) * pin_count;
+   if (pin_count) scores.end += PIN_MULTIPLIER[Endgame] * pin_count;
 }
 
 int Scoring::calcPawnData(const Board &board,
