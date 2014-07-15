@@ -296,10 +296,9 @@ public:
      return isPinned(kingColor,StartSquare(m),DestSquare(m));
    }
 
-   // If the Rook or Queen on "sq" pins a Knight or Bishop to the opposing
-   // king, return the square of the pinned piece (otherwise InvalidSqare).
-   // okp is the opposining king square, oside is the opposing color.
-   Square pinOnRankOrFile(Square sq, Square okp, ColorType oside) const {
+   // True if the Rook or Queen on "sq" pins a Knight or Bishop to the opposing
+   // king. okp is the opposining king square, oside is the opposing color.
+   int pinOnRankOrFile(Square sq, Square okp, ColorType oside) const {
      if (Attacks::rank_mask[Rank<White>(sq)-1].isSet(okp)) {
         Bitboard kb(knight_bits[oside] | bishop_bits[oside]);
         if (Attacks::rank_mask[Rank<White>(sq)-1] & kb) {
@@ -312,13 +311,12 @@ public:
           return pinCheck(sq,okp,kb);
         }
       }
-      return InvalidSquare;
+      return 0;
    }
 
-   // If the Bishop or Queen on "sq" pins a Knight or Rook to the opposing
-   // king, return the square of the pinned piece, otherwise InvalidSquare.
-   // okp is the opposing king square, oside is the opposing color.
-   Square pinOnDiag(Square sq, Square okp, ColorType oside) const {
+   // True if the Bishop or Queen on "sq" pins a Knight or Rook to the opposing
+   // king. okp is the opposing king square, oside is the opposing color.
+   int pinOnDiag(Square sq, Square okp, ColorType oside) const {
       if (Attacks::diag_a1_mask[sq].isSet(okp)) {
          // might be a pin
          Bitboard kr(knight_bits[oside] | rook_bits[oside]);
@@ -333,7 +331,7 @@ public:
            return pinCheck(sq,okp,kr);
          }
       }
-      return InvalidSquare;
+      return 0;
    }
 
    // Return a bitboard of all pieces that are pinned (have attacker
@@ -407,16 +405,16 @@ private:
      occupied[color].clear(sq);
    } 
            
-   Square pinCheck(Square pinner, Square okp, const Bitboard &mask) const {
+   int pinCheck(Square pinner, Square okp, const Bitboard &mask) const {
      Bitboard btwn;
      between(pinner,okp,btwn);
      Bitboard pin(btwn & mask);
      if (pin.singleBitSet()) {
        if ((btwn & allOccupied) == pin) {
-         return pin.firstOne();
+         return 1;
        }
      }
-     return InvalidSquare;
+     return 0;
    }
 
    int discAttackDiag(Square sq, Square ksq, ColorType side) const;

@@ -15,14 +15,16 @@ extern "C"
 #include <iomanip>
 
 //#define PAWN_DEBUG
-#define EVAL_DEBUG
+//#define EVAL_DEBUG
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
    Scoring::TuneParam(0,"king_attack_linear",50,0,200),
    Scoring::TuneParam(0,"king_attack_sigmoid_mid",50,20,80),
    Scoring::TuneParam(0,"king_attack_sigmoid_exp",100,50,500),
    Scoring::TuneParam(0,"king_attack_sigmoid",50,0,200),
-   Scoring::TuneParam(0,"king_attack_div",20,10,50)
+   Scoring::TuneParam(0,"king_attack_div",20,10,50),
+   Scoring::TuneParam(0,"rook_attack_boost",150,0,300),
+   Scoring::TuneParam(0,"queen_attack_boost",250,0,500)
 };
 
 #define PARAM(x) params[x].current
@@ -39,7 +41,6 @@ static const int KING_FILE_OPEN = -15;
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
-static const int KING_ATTACK_MULT = 50;
 static int KING_ATTACK_SCALE[512];
 
 #define BOOST
@@ -326,7 +327,7 @@ void Scoring::initParams()
       double p = i/512.0;
       double sig = exp(-p*PARAM(KING_ATTACK_SIGMOID_EXP)*fabs(p-PARAM(KING_ATTACK_SIGMOID_MID))/10000.0);
       KING_ATTACK_SCALE[i] = int(PARAM(KING_ATTACK_SIGMOID)*(sig*p*512.0)/100.0 + PARAM(KING_ATTACK_LINEAR)*i/100.0);
-      cout << i << ' ' << KING_ATTACK_SCALE[i] << endl;
+//      cout << i << ' ' << KING_ATTACK_SCALE[i] << endl;
    }
 //   cout << endl;
 }
@@ -1078,7 +1079,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight++;
+                        attackWeight += PARAM(ROOK_ATTACK_BOOST);
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1146,10 +1147,10 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight++;
+                        attackWeight += PARAM(QUEEN_ATTACK_BOOST);
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight++;
+                           attackWeight += PARAM(QUEEN_ATTACK_BOOST);
                         }
                      }
                   }

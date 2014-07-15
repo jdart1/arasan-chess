@@ -25,7 +25,7 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 5;
+    static const int NUM_PARAMS = 7;
 
     static void initParams();
         
@@ -34,7 +34,9 @@ class Scoring
       KING_ATTACK_SIGMOID_MID,
       KING_ATTACK_SIGMOID_EXP,
       KING_ATTACK_SIGMOID,
-      KING_ATTACK_DIV
+      KING_ATTACK_DIV,
+      ROOK_ATTACK_BOOST,
+      QUEEN_ATTACK_BOOST
     };
 
     struct TuneParam {
