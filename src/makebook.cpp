@@ -76,11 +76,13 @@ struct Variation {
     vector<MoveListEntry> moves;
     ResultType result;
     PositionEval eval;
+    int move_num; // at start of variation
     Variation() {
        eval = NO_POSITION_EVAL;
        result = UnknownResult;
+       move_num = 0;
     }
-    Variation(const Board &b) : save(b) {
+    Variation(const Board &b, int n) : save(b), move_num(n) {
        eval = NO_POSITION_EVAL;
        result = UnknownResult;
     }
@@ -393,9 +395,13 @@ static void processVar(const Variation &var, bool first) {
     if (var.moves.size()) {
         Board board(var.save);
         vector<MoveListEntry>::const_iterator it = var.moves.begin();
+        int ply = var.move_num*2;
         while (it != var.moves.end()) {
             const MoveListEntry &m = *it++;
-            add_move(board, m, first, var);
+            if (ply < maxPly || first) {
+                add_move(board, m, first, var);
+            }
+            ++ply;
             board.doMove(m.move);
         }
     }   
@@ -431,7 +437,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
       int var = 0;
       const int MAX_VAR = 20;
       Variation varStack[MAX_VAR];
-      varStack[var++] = Variation(board);
+      varStack[var++] = Variation(board,0);
       Variation &topVar = varStack[0];
       
 
@@ -452,7 +458,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
              board.undoMove(lastMove,varStack[var-1].moves[
                                                            varStack[var-1].moves.size()-1].state);
 
-             Variation newVar(board); // start of variation
+             Variation newVar(board,move_num); // start of variation
              varStack[var++] = newVar;
              varStack[var-1] = varStack[var-1]; // new top of stack
              side = OppositeColor(side);
@@ -486,8 +492,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
              board.doMove(mainLine);
              side = board.sideToMove();
          }
-         else if (tok.type == ChessIO::NAG &&
-                  move_num*2 <= maxPly) {
+         else if (tok.type == ChessIO::NAG) {
              // applies to the previous move or line
              map<string,MoveEval>::const_iterator it =
                  moveEvals.find(tok.val);
@@ -549,34 +554,32 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
                 return -1;
             }
             else {
-                if (move_num*2 <= maxPly) {
-                    int move_indx = get_move_indx(board,move);
-                    if (move_indx == -1) {
-                        cerr << "Illegal move: " << tok.val << 
-                         " in game " << games << ", file " <<
-                          book_name << endl;
-                         return -1;
-                    } else {
-                        MoveListEntry m;
-                        m.move = move;
-                        m.index = move_indx;
-                        m.state = board.state;
+                int move_indx = get_move_indx(board,move);
+                if (move_indx == -1) {
+                    cerr << "Illegal move: " << tok.val << 
+                        " in game " << games << ", file " <<
+                        book_name << endl;
+                    return -1;
+                } else {
+                    MoveListEntry m;
+                    m.move = move;
+                    m.index = move_indx;
+                    m.state = board.state;
 #ifdef _TRACE
-                        cout << "adding to stack " << var-1 << " ";
-                        MoveImage(move,cout);
-                        cout << endl;
+                    cout << "adding to stack " << var-1 << " ";
+                    MoveImage(move,cout);
+                    cout << endl;
 #endif                        
-                        varStack[var-1].moves.push_back(m);
+                    varStack[var-1].moves.push_back(m);
 #ifdef _TRACE
-                        cout << " size=" << varStack[var-1].moves.size() << endl;
+                    cout << " size=" << varStack[var-1].moves.size() << endl;
                         
 #endif
-                    }
                 }
-                p2 = p1;
-                p1 = board;
-                board.doMove(move);
             }
+            p2 = p1;
+            p1 = board;
+            board.doMove(move);
             side = OppositeColor(side);
          }
          else if (tok.type == ChessIO::Unknown) {
