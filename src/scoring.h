@@ -25,18 +25,19 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 7;
+    static const int NUM_PARAMS = 8;
 
     static void initParams();
         
     enum {
-      KING_ATTACK_LINEAR,
-      KING_ATTACK_SIGMOID_MID,
-      KING_ATTACK_SIGMOID_EXP,
-      KING_ATTACK_SIGMOID,
-      KING_ATTACK_DIV,
+      KING_ATTACK_MULT,
       ROOK_ATTACK_BOOST,
-      QUEEN_ATTACK_BOOST
+      QUEEN_ATTACK_BOOST,
+      BEND1,
+      BEND2,
+      COUNT_0_ADJUST,
+      COUNT_1_ADJUST,
+      COUNT_ADJUST
     };
 
     struct TuneParam {

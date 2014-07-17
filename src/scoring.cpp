@@ -17,23 +17,27 @@ extern "C"
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
 
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"king_attack_linear",50,0,200),
-   Scoring::TuneParam(0,"king_attack_sigmoid_mid",50,20,80),
-   Scoring::TuneParam(0,"king_attack_sigmoid_exp",100,50,500),
-   Scoring::TuneParam(0,"king_attack_sigmoid",50,0,200),
-   Scoring::TuneParam(0,"king_attack_div",20,10,50),
-   Scoring::TuneParam(0,"rook_attack_boost",150,0,300),
-   Scoring::TuneParam(0,"queen_attack_boost",250,0,500)
-};
-
-#define PARAM(x) params[x].current
-
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
 static const int CENTER_PAWN_BLOCK = -12;
+
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
+   Scoring::TuneParam(0,"attack_mult",100,75,250),
+   Scoring::TuneParam(0,"rook_attack_boost",83,70,166),
+   Scoring::TuneParam(0,"queen_attack_boost",175,150,352),
+   Scoring::TuneParam(0,"bend1",30,0,90),
+   Scoring::TuneParam(0,"bend2",200,150,350),
+   Scoring::TuneParam(0,"count_0_adjust",-10,-15,0),
+   Scoring::TuneParam(0,"count_1_adjust",0,-15,0),
+   Scoring::TuneParam(0,"count_adjust",8,0,15)
+};
+
+#define PARAM(x) params[x].current
+
+static int ATTACK_COUNT_SCALE[5];
+static int ATTACK_WEIGHT_SCALE[512];
 
 // king cover scores, by rank of Pawn - rank of King
 static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
@@ -41,8 +45,11 @@ static const int KING_FILE_OPEN = -15;
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
-static int KING_ATTACK_SCALE[512];
 
+static const int KING_ATTACK_DIV = 10;
+static const int ATTACK_FACTOR[6] = { 0, 60, 121, 121, 166, 352 };
+static CACHE_ALIGN int KING_ATTACK_SCALE[512];
+   
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
@@ -323,14 +330,48 @@ static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorTyp
 
 void Scoring::initParams() 
 {
-   for (int i = 0; i < 512; i++) {
-      double p = i/512.0;
-      double sig = exp(-p*PARAM(KING_ATTACK_SIGMOID_EXP)*fabs(p-PARAM(KING_ATTACK_SIGMOID_MID))/10000.0);
-      KING_ATTACK_SCALE[i] = int(PARAM(KING_ATTACK_SIGMOID)*(sig*p*512.0)/100.0 + PARAM(KING_ATTACK_LINEAR)*i/100.0);
-//      cout << i << ' ' << KING_ATTACK_SCALE[i] << endl;
+   ATTACK_COUNT_SCALE[0] = 128+128*PARAM(COUNT_0_ADJUST)/100;
+   ATTACK_COUNT_SCALE[1] = 128+128*PARAM(COUNT_1_ADJUST)/100;
+   int adj = 0;
+   for (int i = 2; i < 5; i++) {
+      ATTACK_COUNT_SCALE[i] = 128+adj*128/100;
+      adj += PARAM(COUNT_ADJUST);
    }
-//   cout << endl;
+   double total = 0.0;
+   double slope = 1.0, mid_slope = -1.0;
+   for (int i = 0; i < 512; i++) {
+      if (i < PARAM(BEND1)/2) {
+         slope = 0.5;
+      } else if (i < PARAM(BEND1)) {
+        slope = 0.75;
+      } else if (i < PARAM(BEND1)*5/4) {
+        slope = 1.0;
+      } else if (i > PARAM(BEND2)*3/4) {
+        slope = 1.0;
+      } else if (i > PARAM(BEND2)*3/2) {
+        slope = 0.5;
+      } else if (i > PARAM(BEND2)) {
+        slope = 0.75;
+      } else {
+        int mid = (5*PARAM(BEND2)/4 + 3*PARAM(BEND1)/4)/2;
+        if (mid_slope < 0.0) {
+           mid_slope = ((double)mid-total)/(mid-i);
+           slope = mid_slope;
+//           cout << "i = " << i << " " << "total = " << int(total) << endl;
+//           cout << "mid_slope = " << mid_slope << endl;
+        }
+      }
+      ATTACK_WEIGHT_SCALE[i] = int(total);
+      total += slope;
+   }
+   
+/*
+   for (int i = 0; i < 5; i++)
+      cout << ATTACK_COUNT_SCALE[i] << ' ';
+   cout << endl;
+*/
 }
+      
 
 static void initBitboards() {
    int i, r;
@@ -954,15 +995,15 @@ void Scoring::pieceScore(const Board &board,
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
-   static const int ATTACK_FACTOR[6] = { 0, 60, 121, 121, 166, 352 };
-   
+   static const int ATTACK_FACTOR[6] = { 0, 40, 121, 121, 166, 352 };
+
    int pin_count = 0;
-   Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
    Square okp = board.kingSquare(oside);
    const Bitboard &nearKing = kingProximity[oside][okp];
    int attackWeight = 0;
    int attackCount = 0;
+   int majorCount = 0;
    
    Square sq;
    while(b.iterate(sq))
@@ -1069,10 +1110,11 @@ void Scoring::pieceScore(const Board &board,
             cout << "rook mobility: " << mobl << endl;
 #endif
             if (!endgame) {
-               Bitboard attacks(rattacks2 &nearKing);
+               Bitboard attacks(rattacks2 & nearKing);
                if (attacks) {
                   attackWeight += ATTACK_FACTOR[Rook];
                   attackCount++;
+                  majorCount++;
                   Bitboard attacks2(attacks &kingNearProximity[okp]);
                   if (attacks2) {
                      attacks2 &= (attacks2 - 1);
@@ -1139,6 +1181,7 @@ void Scoring::pieceScore(const Board &board,
                if (kattacks) {
                   attackWeight += ATTACK_FACTOR[Queen];
                   attackCount++;
+                  majorCount++;
 #ifdef EVAL_DEBUG
                   int tmp = attackWeight;
 #endif
@@ -1250,16 +1293,22 @@ void Scoring::pieceScore(const Board &board,
 
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      attackWeight += ATTACK_FACTOR[Pawn]*proximity;
+      attackWeight += proximity*ATTACK_FACTOR[Pawn];
 #ifdef EVAL_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
       cout << " pawn proximity=" << proximity << endl;
-      cout << " attackCount=" << attackCount << endl;
       cout << " attackWeight=" << attackWeight << endl;
+      cout << " attackCount=" << attackCount << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
-      int attack = KING_ATTACK_SCALE[Util::Min(511,attackWeight/PARAM(KING_ATTACK_DIV))];
+      int attack = PARAM(KING_ATTACK_MULT)*ATTACK_WEIGHT_SCALE[attackWeight]/(100*KING_ATTACK_DIV);
+      if (attack < 2 && !majorCount) {
+         attack = (attack*ATTACK_COUNT_SCALE[Util::Min(4,attackCount)])/128;
+      } else if (attack >=2 && majorCount) {
+         attack = (attack*ATTACK_COUNT_SCALE[Util::Min(4,attackCount)])/128;
+      }
+      
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
 
       int kattack = attack;
