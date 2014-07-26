@@ -32,13 +32,13 @@ static const int PIN_MULTIPLIER[2] = { 20, 30 };
 static int ATTACK_FACTOR[6];
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"pawn_factor",32,0,50),
+   Scoring::TuneParam(0,"bend",275,200,511),
    Scoring::TuneParam(0,"minor_factor",20,15,40),
    Scoring::TuneParam(0,"rook_factor",20,15,40),
    Scoring::TuneParam(0,"queen_factor",20,15,64),
+   Scoring::TuneParam(0,"pawn_factor",32,0,50),
    Scoring::TuneParam(0,"rook_boost",30,0,60),
    Scoring::TuneParam(0,"queen_boost",30,0,60),
-   Scoring::TuneParam(0,"bend",275,200,511),
    Scoring::TuneParam(0,"king_attack_param1",96,50,150),
    Scoring::TuneParam(0,"king_attack_param2",24,10,50),
    Scoring::TuneParam(0,"king_attack_param3",78,0,175)

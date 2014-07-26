@@ -30,13 +30,13 @@ class Scoring
     static void initParams();
         
     enum {
-      PAWN_FACTOR,
+      BEND,
       MINOR_FACTOR,
       ROOK_FACTOR,
       QUEEN_FACTOR,
+      PAWN_FACTOR,
       ROOK_BOOST,
       QUEEN_BOOST,
-      BEND,
       KING_ATTACK_PARAM1,
       KING_ATTACK_PARAM2,
       KING_ATTACK_PARAM3

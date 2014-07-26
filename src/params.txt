@@ -4,15 +4,15 @@ BB_INPUT_TYPE * I  # all are type integer
 
 BB_OUTPUT_TYPE OBJ
 
-X0 ( 32 32 32 32 60 60 300 70 32 150 ) 
+X0 ( 300 40 32 32 37 48 60 70 32 150 )
 
-LOWER_BOUND ( 0 10 10 10 0 0 200 50 10 0 )
+LOWER_BOUND ( 200 10 10 10 0 0 0 50 10 0 )
 
-UPPER_BOUND ( 50 40 40 64 60 60 511 150 50 175 )
+UPPER_BOUND ( 511 40 40 64 64 60 60 150 50 175 )
 
 MAX_BB_EVAL     500
 
-MAX_TIME  90000
+MAX_TIME  900000
 
 DISPLAY_STATS BBE ( SOL ) OBJ # Display the number of evaluation (BBE), 
 							  # the current solution ( SOL ) and the objective
