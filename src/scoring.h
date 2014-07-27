@@ -25,21 +25,16 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 10;
+    static const int NUM_PARAMS = 5;
 
     static void initParams();
         
     enum {
-      BEND,
-      MINOR_FACTOR,
-      ROOK_FACTOR,
-      QUEEN_FACTOR,
-      PAWN_FACTOR,
-      ROOK_BOOST,
-      QUEEN_BOOST,
       KING_ATTACK_PARAM1,
       KING_ATTACK_PARAM2,
-      KING_ATTACK_PARAM3
+      KING_ATTACK_PARAM3,
+      KING_ATTACK_BOOST_THRESHOLD,
+      KING_ATTACK_BOOST_DIVISOR
     };
 
     struct TuneParam {
