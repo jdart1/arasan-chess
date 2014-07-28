@@ -37,7 +37,7 @@ static const int MAX_THREADS = 64;
 
 static const int THREAD_STACK_SIZE = 8*1024*1024;
 
-static const int games=10;
+static const int games=250;
 
 // results from the threads
 static double errors[MAX_THREADS];
@@ -71,10 +71,10 @@ static int exec(const char* cmd) {
       cerr << "perror failed" << endl;
       return -1;
    }
-   char buffer[128];
+   char buffer[2048];
    int result = -1;
    while(!feof(pipe)) {
-      if(fgets(buffer, 128, pipe) != NULL) {
+      if(fgets(buffer, 2048, pipe) != NULL) {
          cout << buffer << endl;
          if (strlen(buffer)>7 && strncmp(buffer,"rating=",7)==0) {
             result = atoi(buffer+7);
