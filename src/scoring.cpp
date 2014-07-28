@@ -980,7 +980,6 @@ void Scoring::pieceScore(const Board &board,
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
-   static const int ATTACK_FACTOR[6] = { 0, 1, 2, 2, 3, 4 };
    int pin_count = 0;
    Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
