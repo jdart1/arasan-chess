@@ -29,7 +29,7 @@ static const int KING_FILE_OPEN = -15;
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
-// tuned, 13-May-2014
+// tuned, July 2014
 static const int KING_ATTACK_PARAM1 = 50;
 static const int KING_ATTACK_PARAM2 = 32;
 static const int KING_ATTACK_PARAM3 = 150;
