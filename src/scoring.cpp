@@ -33,6 +33,10 @@ static const int PIN_MULTIPLIER[2] = { 20, 30 };
 static const int KING_ATTACK_PARAM1 = 50;
 static const int KING_ATTACK_PARAM2 = 32;
 static const int KING_ATTACK_PARAM3 = 150;
+static const int ATTACK_FACTOR[6] = { 0, 1*4, 2*4, 2*4, 3*4, 3*4 };
+static const int ROOK_ATTACK_BOOST = 5;
+static const int QUEEN_ATTACK_BOOST1 = 4;
+static const int QUEEN_ATTACK_BOOST2 = 4;
 static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
    16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -967,7 +971,6 @@ void Scoring::pieceScore(const Board &board,
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
-   static const int ATTACK_FACTOR[6] = { 0, 1, 2, 2, 3, 4 };
    int pin_count = 0;
    Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
@@ -1096,7 +1099,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight++;
+                        attackWeight += ROOK_ATTACK_BOOST;
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1167,10 +1170,10 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight++;
+                        attackWeight += QUEEN_ATTACK_BOOST1;
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight++;
+                           attackWeight += QUEEN_ATTACK_BOOST2;
                         }
                      }
                   }
@@ -1273,7 +1276,7 @@ void Scoring::pieceScore(const Board &board,
 
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      attackWeight += proximity;
+      attackWeight += proximity*ATTACK_FACTOR[Pawn];
 #ifdef EVAL_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
@@ -1288,8 +1291,8 @@ void Scoring::pieceScore(const Board &board,
       }
       attackCount = Util::Min(4,attackCount);
       int scale =
-         (KING_ATTACK_PARAM1*attackWeight + 
-          KING_ATTACK_PARAM2*attackWeight*attackCount + KING_ATTACK_PARAM3*squaresAttacked)/16;
+         (KING_ATTACK_PARAM1*attackWeight/4 + 
+          KING_ATTACK_PARAM2*attackWeight*attackCount/4 + KING_ATTACK_PARAM3*squaresAttacked)/16;
 #ifdef EVAL_DEBUG
       cout << " scale=" << scale << endl;
 #endif
