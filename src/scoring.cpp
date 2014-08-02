@@ -21,16 +21,6 @@ static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(0,"king_attack_param1",96,50,150),
-   Scoring::TuneParam(0,"king_attack_param2",24,10,50),
-   Scoring::TuneParam(0,"king_attack_param3",78,0,175),
-   Scoring::TuneParam(0,"king_attack_boost_threshold",48,0,100),
-   Scoring::TuneParam(0,"king_attack_boost_divisor",50,30,175),
-};
-
-#define PARAM(x) params[x].current
-
 static const int CENTER_PAWN_BLOCK = -12;
 
 // king cover scores, by rank of Pawn - rank of King
@@ -39,44 +29,59 @@ static const int KING_FILE_OPEN = -15;
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
-// tuned, 26-Jul-2014:
-static const int ATTACK_FACTOR[6] = { 0, 37, 37+40, 37+40, 37+40+32, 37+40+32+32 
-};
-static const int ROOK_ATTACK_BOOST = 48;
-static const int QUEEN_ATTACK_BOOST = 60;
-
+// tuned, July 2014
+static const int KING_ATTACK_PARAM1 = 50;
+static const int KING_ATTACK_PARAM2 = 32;
+static const int KING_ATTACK_PARAM3 = 150;
+static int ATTACK_FACTOR[6] = { 0, 1*4, 2*4, 2*4, 3*4, 4*4 };
 static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
-   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,
-   20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,
-   40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,
-   60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
-   80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,
-   100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,
-   120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,
-   140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
-   160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,
-   180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,
-   200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,
-   220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
-   240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,
-   260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,
-   280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,
-   300,301,301,302,303,304,304,305,306,307,307,308,309,310,310,311,312,313,313,314,
-   315,316,316,317,318,319,319,320,321,322,322,323,324,325,325,326,327,328,328,329,
-   330,331,331,332,333,334,334,335,336,337,337,338,339,340,340,341,342,343,343,344,
-   345,346,346,347,348,349,349,350,351,352,352,353,354,355,355,356,357,357,358,358,
-   359,359,360,360,361,361,362,362,363,363,364,364,365,365,366,366,367,367,368,368,
-   369,369,370,370,371,371,372,372,373,373,374,374,375,375,376,376,377,377,378,378,
-   379,379,380,380,381,381,382,382,383,383,384,384,385,385,386,386,387,387,388,388,
-   389,389,390,390,391,391,392,392,393,393,394,394,395,395,395,395,396,396,396,396,
-   397,397,397,397,398,398,398,398,399,399,399,399,400,400,400,400,401,401,401,401,
-   402,402,402,402,403,403,403,403,404,404,404,404,405,405,405,405,406,406,406,406,
-   407,407,407,407,408,408,408,408,409,409,409,409
+   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+   16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
+   32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,
+   48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,
+   64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+   80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,
+   96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,
+   112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,
+   128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
+   144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
+   160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
+   176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
+   192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
+   208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
+   224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
+   240,241,242,243,244,245,246,247,248,249,250,251,251,252,253,254,
+   254,255,256,257,257,258,259,260,260,261,262,263,263,264,265,266,
+   266,267,268,269,269,270,271,272,272,273,274,275,275,276,277,278,
+   278,279,280,281,281,282,283,284,284,285,286,287,287,288,289,289,
+   290,290,291,291,292,292,293,293,294,294,295,295,296,296,297,297,
+   298,298,299,299,300,300,301,301,302,302,303,303,304,304,305,305,
+   306,306,307,307,308,308,309,309,310,310,311,311,312,312,313,313,
+   313,314,314,314,314,315,315,315,315,316,316,316,316,317,317,317,
+   317,318,318,318,318,319,319,319,319,320,320,320,320,321,321,321,
+   321,322,322,322,322,323,323,323,323,324,324,324,324,325,325,325,
+   325,326,326,326,326,327,327,327,327,328,328,328,328,329,329,329,
+   329,330,330,330,330,331,331,331,331,332,332,332,332,333,333,333,
+   333,334,334,334,334,335,335,335,335,336,336,336,336,337,337,337,
+   337,338,338,338,338,339,339,339,339,340,340,340,340,341,341,341,
+   341,342,342,342,342,343,343,343,343,344,344,344,344,345,345,345,
+   345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
+   349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
+
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] =
+{ Scoring::TuneParam("rook_attack_val",12,10,14),
+  Scoring::TuneParam("queen_attack_val",12,10,18),
+  Scoring::TuneParam("kattack_mult",128,100,144),
+  Scoring::TuneParam("queen_attack_boost1",4,3,5),
+  Scoring::TuneParam("queen_attack_boost2",4,3,8),
+  Scoring::TuneParam("rook_attack_boost",5,3,8)
 };
 
-   
-   
+#define PARAM(x) params[x].current
+
 #define BOOST
+static const int KING_ATTACK_BOOST_THRESHOLD = 48;
+static const int KING_ATTACK_BOOST_DIVISOR = 50;
 
 const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
@@ -354,7 +359,8 @@ static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorTyp
 
 void Scoring::initParams() 
 {
-   
+   ATTACK_FACTOR[Rook] = PARAM(ROOK_ATTACK_VAL);
+   ATTACK_FACTOR[Queen] = PARAM(QUEEN_ATTACK_VAL);
 }
 
 
@@ -1108,7 +1114,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight += ROOK_ATTACK_BOOST;
+                        attackWeight += PARAM(ROOK_ATTACK_BOOST);
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1179,10 +1185,10 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight += QUEEN_ATTACK_BOOST;
+                        attackWeight += PARAM(QUEEN_ATTACK_BOOST1);
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight += QUEEN_ATTACK_BOOST;
+                           attackWeight += PARAM(QUEEN_ATTACK_BOOST2);
                         }
                      }
                   }
@@ -1300,12 +1306,12 @@ void Scoring::pieceScore(const Board &board,
       }
       attackCount = Util::Min(4,attackCount);
       int scale =
-         (PARAM(KING_ATTACK_PARAM1)*attackWeight/32 + 
-          PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/32 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
+         ((KING_ATTACK_PARAM1*attackWeight)/4 + 
+          (KING_ATTACK_PARAM2*attackWeight*attackCount)/4 + KING_ATTACK_PARAM3*squaresAttacked)/16;
 #ifdef EVAL_DEBUG
       cout << " scale=" << scale << endl;
 #endif
-      int attack = KING_ATTACK_SCALE[Util::Min(scale, 511)];
+      int attack = PARAM(KATTACK_MULT)*KING_ATTACK_SCALE[Util::Min(scale, 511)]/128;
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
 
       int kattack = attack;
@@ -1313,8 +1319,8 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
       int kattack_tmp = kattack;
 #endif
-      if (kattack && cover < -PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
-         kattack += Util::Min(kattack / 2, (-(cover + PARAM(KING_ATTACK_BOOST_THRESHOLD)) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
+      if (kattack && cover < -KING_ATTACK_BOOST_THRESHOLD) {
+         kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif
