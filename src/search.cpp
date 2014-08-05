@@ -44,12 +44,27 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define HELPFUL_MASTER
 
+Search::TuneParam Search::params[Search::NUM_PARAMS] =
+{
+   Search::TuneParam("check_extension_loss",-1,-1,0),
+   Search::TuneParam("pv_check_extension",3,0,4),
+   Search::TuneParam("nonpv_check_extension",2,0,4),
+   Search::TuneParam("pawn_push_extension",1,0,1),
+   Search::TuneParam("cap_extension_restrict_to_pv",1,0,1),
+   Search::TuneParam("capture_extension",2,0,4),
+   Search::TuneParam("cap_extension_reducible",0,0,1),
+};
+
+#define PARAM(x) Search::params[x].current
+   
+
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
-static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
+
+//static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
+//static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
-static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
-static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
+//static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
+//static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
@@ -1956,21 +1971,25 @@ int Search::calcExtensions(const Board &board,
    }
    if (in_check_after_move == InCheck) { // move is a checking move
       // extend if check does not lose > 1 pawn
-      if (seeSign(board,move,-PAWN_VALUE)) {
+      if (seeSign(board,move,-PARAM(CHECK_EXTENSION_LOSS)*PAWN_VALUE)) {
           node->extensions |= CHECK;
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
-          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+          extend += node->PV() ? PARAM(PV_CHECK_EXTENSION) : PARAM(NONPV_CHECK_EXTENSION);
       } 
       // Note: bad checks can be reduced
    }
    if (passedPawnPush(board,move)) {
       node->extensions |= PAWN_PUSH;
-      extend += PAWN_PUSH_EXTENSION;
+      if (PARAM(PAWN_PUSH_EXTENSION)) {
+         extend += DEPTH_INCREMENT;
 #ifdef SEARCH_STATS
-      controller->stats->pawn_extensions++;
+        controller->stats->pawn_extensions++;
 #endif
+      }
+      else
+         reduceOk = false;
    }
    else if (TypeOfMove(move) == Normal &&
             Capture(move) != Empty && Capture(move) != Pawn &&
@@ -1978,10 +1997,10 @@ int Search::calcExtensions(const Board &board,
             board.getMaterial(board.sideToMove()).pieceCount() <= 1) {
       // Capture of last piece in endgame.
       // Only extend safe captures, and only in PV.
-      if (node->PV()) {
+      if (!PARAM(CAP_EXTENSION_RESTRICT_TO_PV) || node->PV()) {
          if (MVV_LVA(move) > 0) {
             node->extensions |= CAPTURE;
-            extend += CAPTURE_EXTENSION;
+            extend += PARAM(CAPTURE_EXTENSION);
 #ifdef SEARCH_STATS
             ++controller->stats->capture_extensions;
 #endif
@@ -1989,14 +2008,16 @@ int Search::calcExtensions(const Board &board,
             if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
             if (swap) {
                node->extensions |= CAPTURE;
-               extend += CAPTURE_EXTENSION;
+               extend += PARAM(CAPTURE_EXTENSION);
 #ifdef SEARCH_STATS
             ++controller->stats->capture_extensions;
 #endif
             }
          }
       }
-      reduceOk = 0;
+      if (!PARAM(CAP_EXTENSION_REDUCIBLE)) {
+         reduceOk = 0;
+      }
    }
    if (extend) {
       return Util::Min(extend,DEPTH_INCREMENT);
@@ -2102,6 +2123,10 @@ int Search::calcExtensions(const Board &board,
 #endif
     }
     return extend;
+}
+
+void Search::initParams() 
+{
 }
 
 int Search::movesRelated( Move lastMove, Move threatMove) const {

@@ -1597,11 +1597,11 @@ static void processWinboardOptions(const string &args) {
         Options::setOption<int>(value,options.search.strength);
     } 
     else {
-       // check for options from the Scoring module
-       for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
-          if (name == Scoring::params[i].name) {
-             Options::setOption<int>(value,Scoring::params[i].current);
-             Scoring::initParams();
+       // check for options from the Search module
+       for (int i = 0; i < Search::NUM_PARAMS; i++) {
+          if (name == Search::params[i].name) {
+             Options::setOption<int>(value,Search::params[i].current);
+             Search::initParams();
              break;
           }
        }
@@ -2699,7 +2699,7 @@ static bool do_command(const string &cmd, Board &board) {
                     cout << endl;
                 }
                 Scoring::init();
-                Scoring::initParams();
+                Search::initParams();
                 
                 if (Scoring::isDraw(board))
                     cout << "position evaluates to draw (statically)" << endl;
@@ -3438,7 +3438,7 @@ int CDECL main(int argc, char **argv) {
 #endif
 
     searcher = new SearchController();
-    Scoring::initParams();
+    Search::initParams();
 
 #ifdef SELFPLAY 
     if (selfplay) {

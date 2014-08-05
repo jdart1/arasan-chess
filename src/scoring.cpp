@@ -33,7 +33,10 @@ static const int PIN_MULTIPLIER[2] = { 20, 30 };
 static const int KING_ATTACK_PARAM1 = 50;
 static const int KING_ATTACK_PARAM2 = 32;
 static const int KING_ATTACK_PARAM3 = 150;
-static int ATTACK_FACTOR[6] = { 0, 1*4, 2*4, 2*4, 3*4, 4*4 };
+static const int ATTACK_FACTOR[6] = { 0, 1*4, 2*4, 2*4, 3*4, 3*4 };
+static const int ROOK_ATTACK_BOOST = 5;
+static const int QUEEN_ATTACK_BOOST1 = 4;
+static const int QUEEN_ATTACK_BOOST2 = 4;
 static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
    16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -67,18 +70,7 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    341,342,342,342,342,343,343,343,343,344,344,344,344,345,345,345,
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
-
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] =
-{ Scoring::TuneParam("rook_attack_val",12,10,14),
-  Scoring::TuneParam("queen_attack_val",12,10,18),
-  Scoring::TuneParam("kattack_mult",128,100,144),
-  Scoring::TuneParam("queen_attack_boost1",4,3,5),
-  Scoring::TuneParam("queen_attack_boost2",4,3,8),
-  Scoring::TuneParam("rook_attack_boost",5,3,8)
-};
-
-#define PARAM(x) params[x].current
-
+   
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
@@ -356,13 +348,6 @@ static inline int FileOpen(const Board &board, int file) {
 static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorType side) {
    return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
-
-void Scoring::initParams() 
-{
-   ATTACK_FACTOR[Rook] = PARAM(ROOK_ATTACK_VAL);
-   ATTACK_FACTOR[Queen] = PARAM(QUEEN_ATTACK_VAL);
-}
-
 
 static void initBitboards() {
    int i, r;
@@ -1114,7 +1099,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight += PARAM(ROOK_ATTACK_BOOST);
+                        attackWeight += ROOK_ATTACK_BOOST;
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1185,10 +1170,10 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight += PARAM(QUEEN_ATTACK_BOOST1);
+                        attackWeight += QUEEN_ATTACK_BOOST1;
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight += PARAM(QUEEN_ATTACK_BOOST2);
+                           attackWeight += QUEEN_ATTACK_BOOST2;
                         }
                      }
                   }
@@ -1306,12 +1291,12 @@ void Scoring::pieceScore(const Board &board,
       }
       attackCount = Util::Min(4,attackCount);
       int scale =
-         ((KING_ATTACK_PARAM1*attackWeight)/4 + 
-          (KING_ATTACK_PARAM2*attackWeight*attackCount)/4 + KING_ATTACK_PARAM3*squaresAttacked)/16;
+         (KING_ATTACK_PARAM1*attackWeight/4 + 
+          KING_ATTACK_PARAM2*attackWeight*attackCount/4 + KING_ATTACK_PARAM3*squaresAttacked)/16;
 #ifdef EVAL_DEBUG
       cout << " scale=" << scale << endl;
 #endif
-      int attack = PARAM(KATTACK_MULT)*KING_ATTACK_SCALE[Util::Min(scale, 511)]/128;
+      int attack = KING_ATTACK_SCALE[Util::Min(scale, 511)];
       if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
 
       int kattack = attack;

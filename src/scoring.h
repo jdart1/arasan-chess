@@ -25,29 +25,6 @@ class Scoring
 
     ~Scoring();
 
-    static const int NUM_PARAMS = 6;
-
-    static void initParams();
-        
-    enum {
-      ROOK_ATTACK_VAL,
-      QUEEN_ATTACK_VAL,
-      KATTACK_MULT,
-      QUEEN_ATTACK_BOOST1,
-      QUEEN_ATTACK_BOOST2,
-      ROOK_ATTACK_BOOST
-    };
-
-    struct TuneParam {
-      string name;
-      int current;
-      int minvalue, maxvalue;
-      TuneParam(const char *nam, int n, int m1, int m2) :
-      name(nam),current(n),minvalue(m1),maxvalue(m2) {
-      }
-    };
-    static TuneParam params [NUM_PARAMS];
-
     // evaluate "board" from the perspective of the side to move.
     int evalu8( const Board &board );
 
