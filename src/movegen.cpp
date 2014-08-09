@@ -16,6 +16,8 @@ using namespace std;
 
 extern const int Direction[2];
 
+const int MoveGenerator::EASY_PLIES = 0;
+
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
    Move tmp = moves[j];

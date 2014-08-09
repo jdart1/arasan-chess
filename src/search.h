@@ -279,6 +279,29 @@ class Search : public ThreadControl {
 
  public:
 
+  static const int NUM_PARAMS = 6;
+
+  enum {
+    STOCKFISH_THREAT_PRUNING,
+    FUTILITY_MARGIN_MOVE_ADJUST,
+    FUTILITY0,
+    FUTILITY1,
+    FUTILITY2,
+    FUTILITY3
+  };
+
+  static struct TuneParam {
+    string name;
+    int current;
+    int minValue;
+    int maxValue;
+    TuneParam(const string &n, int x1, int x2, int x3):
+    name(n),current(x1),minValue(x2),maxValue(x3) {
+    }
+  } params[NUM_PARAMS];
+
+  static void initParams();
+
   Search(SearchController *c, ThreadInfo *ti);
 
   virtual ~Search();
