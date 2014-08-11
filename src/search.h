@@ -282,12 +282,12 @@ class Search : public ThreadControl {
   static const int NUM_PARAMS = 6;
 
   enum {
-    STOCKFISH_THREAT_PRUNING,
-    FUTILITY_MARGIN_MOVE_ADJUST,
-    FUTILITY0,
-    FUTILITY1,
-    FUTILITY2,
-    FUTILITY3
+    STATIC_NULL_DEPTH4,
+    FUTILITY_DEPTH4,
+    STATIC_NULL_0,
+    STATIC_NULL_1,
+    STATIC_NULL_2,
+    STATIC_NULL_3
   };
 
   static struct TuneParam {

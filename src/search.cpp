@@ -46,17 +46,18 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 Search::TuneParam Search::params[Search::NUM_PARAMS] =
 {
-   Search::TuneParam("stockfish_threat_pruning",1,0,1),
-   Search::TuneParam("futility_margin_move_adjust",1,0,1),
-   Search::TuneParam("futility0",137,60,150),
-   Search::TuneParam("futility1",100,70,200),
-   Search::TuneParam("futility2",150,100,300),
-   Search::TuneParam("futility3",200,100,500),
+   Search::TuneParam("static_null_depth4",0,0,1),
+   Search::TuneParam("futility_depth4",0,0,1),
+   Search::TuneParam("static_null_0",137,60,150),
+   Search::TuneParam("static_null_1",100,70,200),
+   Search::TuneParam("static_null_2",150,100,300),
+   Search::TuneParam("static_null_3",200,100,500),
 };
 
 #define PARAM(x) Search::params[x].current
-   
-static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
+
+static int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
+static int STATIC_NULL_DEPTH = 3*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
@@ -67,8 +68,18 @@ static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-static const int FUTILITY_MARGIN_BASE[16] =
-   {(int)1.37*PAWN_VALUE,
+static const int FUTILITY_MARGIN[4] =
+   {(int)1.46*PAWN_VALUE,
+    (int)2.46*PAWN_VALUE,
+    (int)3.96*PAWN_VALUE,
+    (int)5.96*PAWN_VALUE
+   };
+
+static int STATIC_NULL_MARGIN[4];
+
+/*
+static const int STATIC_NULL_MARGIN[16] = {
+    (int)1.37*PAWN_VALUE,
     (int)1.37*PAWN_VALUE,
     (int)1.43*PAWN_VALUE,
     (int)1.72*PAWN_VALUE,
@@ -84,9 +95,7 @@ static const int FUTILITY_MARGIN_BASE[16] =
     (int)9.54*PAWN_VALUE,
     (int)9.62*PAWN_VALUE,
     (int)9.70*PAWN_VALUE};
-
-static int FUTILITY_MARGIN[16][64];
-
+*/
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
 
 static const int HISTORY_PRUNE_DEPTH = 12;
@@ -2026,13 +2035,13 @@ int Search::calcExtensions(const Board &board,
       Capture(move) == Empty &&
       TypeOfMove(move) == Normal &&
       !passedPawnMove(board,move,5) &&
-      parentNode->alpha > -Constants::MATE_RANGE &&
+      !Scoring::mateScore(parentNode->alpha) &&
       (board.getMaterial(White).men() +
        board.getMaterial(Black).men() > 6);
 
    if (!node->PV() && ply > 0 && pruneOk) {
       const Move &threat = parentNode->threatMove;
-      if (!IsNull(threat) && PARAM(STOCKFISH_THREAT_PRUNING)) {
+      if (!IsNull(threat)) {
          if (StartSquare(move) == DestSquare(threat)) {
             // threatened piece is being moved, don't prune
             pruneOk = 0;
@@ -2062,7 +2071,7 @@ int Search::calcExtensions(const Board &board,
          // futility pruning, enabled at low depths
          if (depth <= FUTILITY_DEPTH) {
             // threshold increases with move index
-            int fmargin = FUTILITY_MARGIN[(depth*4)/DEPTH_INCREMENT][Util::Min(moveIndex,63)];
+            int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
             int threshold = parentNode->beta - fmargin;
             if (node->eval == Scoring::INVALID_SCORE) {
                node->eval = node->staticEval = scoring.evalu8(board);
@@ -2097,27 +2106,28 @@ int Search::calcExtensions(const Board &board,
 #endif
          }
       }
+        
    }
    // See pruning. Losing captures and moves that put pieces en prise
    // are pruned at low depths.
    if (!node->PV() && depth <= DEPTH_INCREMENT && 
-        parentNode->num_try &&
-        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-        (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+       parentNode->num_try &&
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+       (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
 #ifdef SEARCH_STATS
-        ++controller->stats->see_pruning;
+      ++controller->stats->see_pruning;
 #endif
-        return PRUNE;
+      return PRUNE;
    }
-   // See if we do late move reduction. Moves in the history phase of move
-   // generation or later can be searched with reduced depth.
-   if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
-       GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
-       !passedPawnMove(board,move,6)) {
-       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-       node->extensions |= LMR;
+    // See if we do late move reduction. Moves in the history phase of move
+    // generation or later can be searched with reduced depth.
+    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
+        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
+        !passedPawnMove(board,move,6)) {
+        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+        node->extensions |= LMR;
 #ifdef SEARCH_STATS
-       ++controller->stats->reduced;
+        ++controller->stats->reduced;
 #endif
     }
     return extend;
@@ -2415,8 +2425,8 @@ int Search::search()
 
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, as in Stockfish, Protector, etc.
-    if (doNull && depth <= 3*DEPTH_INCREMENT) {
-        const int margin = FUTILITY_MARGIN_BASE[depth*4/DEPTH_INCREMENT];
+    if (doNull && depth <= STATIC_NULL_DEPTH) {
+        const int margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
         const int threshold = node->beta+margin;
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval > threshold) {
@@ -3424,28 +3434,22 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
     return splits;
 }
 
-
 void Search::initParams() 
 {
-   int margins[5];
-   margins[0] = PARAM(FUTILITY0);
-   margins[1] = PARAM(FUTILITY1)+margins[0];
-   margins[2] = PARAM(FUTILITY2)+margins[1];
-   margins[3] = PARAM(FUTILITY3)+margins[2];
-    
-   for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 64; j++) {
-            int fmargin = margins[i/4]*PAWN_VALUE/100;
-            if (PARAM(FUTILITY_MARGIN_MOVE_ADJUST)) {
-               if (j > 8 && i >= 4) {
-                  fmargin -= Util::Min(fmargin/4,fmargin*(j-8)/128);
-               }
-            }
-            FUTILITY_MARGIN[i][j] = fmargin;
-        }
+   int margins[4];
+   margins[0] = PARAM(STATIC_NULL_0);
+   margins[1] = PARAM(STATIC_NULL_1)+margins[0];
+   margins[2] = PARAM(STATIC_NULL_2)+margins[1];
+   margins[3] = PARAM(STATIC_NULL_3)+margins[2];
+   for (int i = 0; i < 4; i++) {
+      STATIC_NULL_MARGIN[i] = margins[i]*PAWN_VALUE/100;
    }
+   
+   if (PARAM(STATIC_NULL_DEPTH4)) STATIC_NULL_DEPTH = 4*DEPTH_INCREMENT-1;
+   else STATIC_NULL_DEPTH = 3*DEPTH_INCREMENT;
+   if (PARAM(FUTILITY_DEPTH4)) FUTILITY_DEPTH = 4*DEPTH_INCREMENT-1;
+   else FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
 }
-
 
 // Initialize a Search instance to prepare it for searching at a split point.
 // This is called from the thread in which the search will execute.

@@ -10,6 +10,7 @@
 #include "nomad.hpp"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <map>
 extern "C" {
@@ -37,7 +38,7 @@ static const int MAX_THREADS = 64;
 
 static const int THREAD_STACK_SIZE = 8*1024*1024;
 
-static const int games=300;
+static int games=200;
 
 // results from the threads
 static double errors[MAX_THREADS];
@@ -175,8 +176,14 @@ int CDECL main(int argc, char **argv)
         return -1;
     }
     else {
-        Statistics stats;
         int arg = 1;
+        if (string(argv[1]) == "-games") {
+           stringstream s(argv[2]);
+           s >> games;
+           cout << "games=" << games << endl;
+           arg += 2;
+        }
+        
         string paramFile = argv[arg++];
         //string tuneFile = argv[arg];
 
@@ -185,7 +192,7 @@ int CDECL main(int argc, char **argv)
         NOMAD::Display out ( std::cout );
         out.precision ( NOMAD::DISPLAY_PRECISION_STD );
 
-        NOMAD::begin ( argc-2 , argv+2 );
+        NOMAD::begin ( argc-arg+1 , argv+arg-1 );
 
         srand((unsigned)(getCurrentTime() % (1<<31)));
         NOMAD::RNG::set_seed(rand() % 12345);
