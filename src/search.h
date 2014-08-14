@@ -279,15 +279,19 @@ class Search : public ThreadControl {
 
  public:
 
-  static const int NUM_PARAMS = 6;
+  static const int NUM_PARAMS = 10;
 
   enum {
-    STATIC_NULL_DEPTH4,
-    FUTILITY_DEPTH4,
-    STATIC_NULL_0,
-    STATIC_NULL_1,
-    STATIC_NULL_2,
-    STATIC_NULL_3
+    LMR_MIN_DEPTH,
+    PV_LMR_MIN_MOVE,
+    NONPV_LMR_MIN_MOVE,
+    LMR_CHECK_HISTORY,
+    LMR_LOG_MULT_PV,
+    LMR_LOG_MULT_NONPV,
+    LMR_DEPTH_MULT_PV,
+    LMR_DEPTH_MULT_NONPV,
+    LMR_EXTRA_LMR_MOVE_PV,
+    LMR_EXTRA_LMR_MOVE_NONPV
   };
 
   static struct TuneParam {

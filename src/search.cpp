@@ -36,6 +36,7 @@ static const int ASPIRATION_WINDOW[] =
      (int)(3.0*PAWN_VALUE),
      (int)(6.0*PAWN_VALUE),
       Constants::MATE};
+
 static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define VERIFY_NULL_SEARCH
@@ -46,24 +47,28 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 Search::TuneParam Search::params[Search::NUM_PARAMS] =
 {
-   Search::TuneParam("static_null_depth4",0,0,1),
-   Search::TuneParam("futility_depth4",0,0,1),
-   Search::TuneParam("static_null_0",137,60,150),
-   Search::TuneParam("static_null_1",100,70,200),
-   Search::TuneParam("static_null_2",150,100,300),
-   Search::TuneParam("static_null_3",200,100,500),
+   Search::TuneParam("lmr_min_depth",12,9,12),
+   Search::TuneParam("pv_lmr_min_move",3,1,6),
+   Search::TuneParam("nonpv_lmr_min_move",3,1,6),
+   Search::TuneParam("lmr_check_history",1,0,1),
+   Search::TuneParam("lmr_log_mult_pv",6,4,15),
+   Search::TuneParam("lmr_log_mult_nonpv",6,4,15),
+   Search::TuneParam("lmr_depth_mult_pv",5,4,15),
+   Search::TuneParam("lmr_depth_mult_nonpv",5,4,15),
+   Search::TuneParam("lmr_extra_lmr_move_pv",8,4,15),
+   Search::TuneParam("lmr_extra_lmr_move_nonpv",8,4,15)
 };
 
 #define PARAM(x) Search::params[x].current
 
-static int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static int STATIC_NULL_DEPTH = 3*DEPTH_INCREMENT;
+
+static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
+//static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
@@ -75,9 +80,6 @@ static const int FUTILITY_MARGIN[4] =
     (int)5.96*PAWN_VALUE
    };
 
-static int STATIC_NULL_MARGIN[4];
-
-/*
 static const int STATIC_NULL_MARGIN[16] = {
     (int)1.37*PAWN_VALUE,
     (int)1.37*PAWN_VALUE,
@@ -95,7 +97,7 @@ static const int STATIC_NULL_MARGIN[16] = {
     (int)9.54*PAWN_VALUE,
     (int)9.62*PAWN_VALUE,
     (int)9.70*PAWN_VALUE};
-*/
+
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
 
 static const int HISTORY_PRUNE_DEPTH = 12;
@@ -158,20 +160,6 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
-    for (int d = 0; d < 64; d++) {
-      for (int moves= 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] = 
-            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
-        Bitboard b1(moves);
-        Bitboard b2(d);
-        int extra_lmr = 0;
-        if (moves && d>2) {
-            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
-        }
-        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
-        LMR_REDUCTION[0][d][moves] += extra_lmr;
-      }
-    }
 /*
     for (int i = 0; i < 64; i++) {
       cout << "--- i=" << i << endl;
@@ -1952,6 +1940,15 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
     }
 }
 
+static int checkHist(const Move &move) 
+{
+   if (PARAM(Search::LMR_CHECK_HISTORY))
+      return GetPhase(move) == MoveGenerator::HISTORY_PHASE;
+   else
+      return !CaptureOrPromotion(move);
+}
+
+
 int Search::calcExtensions(const Board &board,
                            NodeInfo *node, NodeInfo *parentNode,
                            CheckStatusType in_check_after_move,
@@ -1962,7 +1959,7 @@ int Search::calcExtensions(const Board &board,
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
-   int pruneOk = 1, reduceOk = 1;
+   int pruneOk = 1;
    int swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
       pruneOk = 0;
@@ -2025,104 +2022,105 @@ int Search::calcExtensions(const Board &board,
             }
          }
       }
-      reduceOk = 0;
    }
    if (extend) {
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
    pruneOk &= moveIndex &&
-      Capture(move) == Empty &&
-      TypeOfMove(move) == Normal &&
-      !passedPawnMove(board,move,5) &&
-      !Scoring::mateScore(parentNode->alpha) &&
-      (board.getMaterial(White).men() +
-       board.getMaterial(Black).men() > 6);
+       Capture(move) == Empty &&
+       TypeOfMove(move) == Normal &&
+       !passedPawnMove(board,move,5) &&
+       !Scoring::mateScore(parentNode->alpha) &&
+       (board.getMaterial(White).men() +
+        board.getMaterial(Black).men() > 6);
 
-   if (!node->PV() && ply > 0 && pruneOk) {
-      const Move &threat = parentNode->threatMove;
-      if (!IsNull(threat)) {
-         if (StartSquare(move) == DestSquare(threat)) {
-            // threatened piece is being moved, don't prune
-            pruneOk = 0;
-         } else if (Sliding(board[StartSquare(threat)])) {
-            Bitboard btwn;
-            board.between(StartSquare(threat),DestSquare(threat),btwn);
-            if (btwn.isSet(DestSquare(move))) {
-               if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-               if (swap) { 
-                  // safe interposition
-                  pruneOk = 0;
-               }
+    if (pruneOk) {
+        const Move &threat = parentNode->threatMove;
+        if (!IsNull(threat)) {
+            if (StartSquare(move) == DestSquare(threat)) {
+                // threatened piece is being moved, don't prune
+                pruneOk = 0;
+            } else if (Sliding(board[StartSquare(threat)])) {
+                Bitboard btwn;
+                board.between(StartSquare(threat),DestSquare(threat),btwn);
+                if (btwn.isSet(DestSquare(move))) {
+                   if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+                   if (swap) { 
+                      // safe interposition
+                      pruneOk = 0;
+                   }
+                }
             }
-         }
-         if (pruneOk) {
-            // check for move defending threatened piece (idea from Stockfish)
-            PieceType cap = Capture(threat);
-            PieceType pm = PieceMoved(threat);
-            if (cap != Empty &&
-                (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
-                board.wouldAttack(move,DestSquare(threat))) {
-               pruneOk = 0; // don't prune
+            if (pruneOk) {
+                // check for move defending threatened piece (idea from Stockfish)
+                PieceType cap = Capture(threat);
+                PieceType pm = PieceMoved(threat);
+                if (cap != Empty &&
+                    (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
+                    board.wouldAttack(move,DestSquare(threat))) {
+                    pruneOk = 0; // don't prune
+                }
             }
-         }
-      }
-      if (pruneOk) {
-         // futility pruning, enabled at low depths
-         if (depth <= FUTILITY_DEPTH) {
-            // threshold increases with move index
-            int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
-            int threshold = parentNode->beta - fmargin;
-            if (node->eval == Scoring::INVALID_SCORE) {
-               node->eval = node->staticEval = scoring.evalu8(board);
-            }
-            if (node->eval < threshold) {
+        }
+    }
+
+    if (!node->PV() && ply > 0 && pruneOk) {
+       // futility pruning, enabled at low depths
+       if (depth <= FUTILITY_DEPTH) {
+          // threshold increases with move index
+          int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
+          int threshold = parentNode->beta - fmargin;
+          if (node->eval == Scoring::INVALID_SCORE) {
+             node->eval = node->staticEval = scoring.evalu8(board);
+          }
+          if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-               controller->stats->futility_pruning++;
+              controller->stats->futility_pruning++;
 #endif
-               return PRUNE;
-            }
-         }
-         if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT &&
-            GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-            const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-            // Late move pruning (LMP). Prune quiet moves that are late
-            // in the move order (regardless of history score).
-            if (moveIndex >= p.pruningMinMoveCount) {
+              return PRUNE;
+          }
+       }
+       if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT &&
+          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+           const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
+           // Late move pruning (LMP). Prune quiet moves that are late
+           // in the move order (regardless of history score).
+           if (moveIndex >= p.pruningMinMoveCount) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
 #endif
                return PRUNE;
-            }
+           }
 #ifdef HISTORY_PRUNING
-            else if (moveIndex >= p.historyMinMoveCount &&
-                     History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
+           else if (moveIndex >= p.historyMinMoveCount &&
+                    History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
                // History pruning. Prune moves with low history scores.
 #ifdef SEARCH_STATS
                ++controller->stats->history_pruning;
 #endif
                return PRUNE;
-            }
+           }
 #endif
-         }
-      }
-        
-   }
-   // See pruning. Losing captures and moves that put pieces en prise
-   // are pruned at low depths.
-   if (!node->PV() && depth <= DEPTH_INCREMENT && 
-       parentNode->num_try &&
-       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-       (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+       }
+    }
+    // See pruning. Losing captures and moves that put pieces en prise
+    // are pruned at low depths.
+    if (!node->PV() && depth <= DEPTH_INCREMENT && 
+        parentNode->num_try &&
+        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+        (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
 #ifdef SEARCH_STATS
-      ++controller->stats->see_pruning;
+        ++controller->stats->see_pruning;
 #endif
-      return PRUNE;
-   }
+        return PRUNE;
+    }
     // See if we do late move reduction. Moves in the history phase of move
     // generation or later can be searched with reduced depth.
-    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
-        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
+    int moveMin = node->PV() ? PARAM(PV_LMR_MIN_MOVE) : PARAM(NONPV_LMR_MIN_MOVE);
+    if (depth >= PARAM(LMR_MIN_DEPTH) && moveIndex >= moveMin &&
+        checkHist(move) &&
+        TypeOfMove(move) == Normal &&
         !passedPawnMove(board,move,6)) {
         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
         node->extensions |= LMR;
@@ -2425,8 +2423,8 @@ int Search::search()
 
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, as in Stockfish, Protector, etc.
-    if (doNull && depth <= STATIC_NULL_DEPTH) {
-        const int margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
+    if (doNull && depth <= 3*DEPTH_INCREMENT) {
+        const int margin = STATIC_NULL_MARGIN[depth*4/DEPTH_INCREMENT];
         const int threshold = node->beta+margin;
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval > threshold) {
@@ -3436,20 +3434,70 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
 
 void Search::initParams() 
 {
-   int margins[4];
-   margins[0] = PARAM(STATIC_NULL_0);
-   margins[1] = PARAM(STATIC_NULL_1)+margins[0];
-   margins[2] = PARAM(STATIC_NULL_2)+margins[1];
-   margins[3] = PARAM(STATIC_NULL_3)+margins[2];
-   for (int i = 0; i < 4; i++) {
-      STATIC_NULL_MARGIN[i] = margins[i]*PAWN_VALUE/100;
-   }
-   
-   if (PARAM(STATIC_NULL_DEPTH4)) STATIC_NULL_DEPTH = 4*DEPTH_INCREMENT-1;
-   else STATIC_NULL_DEPTH = 3*DEPTH_INCREMENT;
-   if (PARAM(FUTILITY_DEPTH4)) FUTILITY_DEPTH = 4*DEPTH_INCREMENT-1;
-   else FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
+    for (int d = 0; d < 64; d++) {
+      for (int moves= 0; moves < 64; moves++) {
+        LMR_REDUCTION[0][d][moves] = 
+           LMR_REDUCTION[1][d][moves] = 0;
+        Bitboard b1(moves);
+        Bitboard b2(d);
+        if (d >= PARAM(LMR_MIN_DEPTH)/DEPTH_INCREMENT) {
+           LMR_REDUCTION[0][d][moves] = 
+              LMR_REDUCTION[1][d][moves] = DEPTH_INCREMENT;
+           if (moves>= PARAM(LMR_EXTRA_LMR_MOVE_PV) ) {
+              int m1 = moves - PARAM(LMR_EXTRA_LMR_MOVE_PV) + 1;
+              double f = log10(PARAM(LMR_LOG_MULT_PV)*m1/10.0)*PARAM(LMR_DEPTH_MULT_PV)*d/16.0;
+              
+              LMR_REDUCTION[1][d][moves] += Util::Max(0,int((f*4+0.5)/4));
+              if (LMR_REDUCTION[1][d][moves] > d*DEPTH_INCREMENT/3) {
+                 LMR_REDUCTION[1][d][moves] = d*DEPTH_INCREMENT/3;
+              }
+           }
+           if (moves>= PARAM(LMR_EXTRA_LMR_MOVE_NONPV) ) {
+              int m1 = moves - PARAM(LMR_EXTRA_LMR_MOVE_NONPV) + 1;
+              double f = log10(PARAM(LMR_LOG_MULT_NONPV)*m1/10.0)*PARAM(LMR_DEPTH_MULT_NONPV)*d/16.0;
+              LMR_REDUCTION[0][d][moves] += Util::Max(0,int((f*4+0.5)/4));
+              if (LMR_REDUCTION[0][d][moves] > d*DEPTH_INCREMENT/3) {
+                 LMR_REDUCTION[0][d][moves] = d*DEPTH_INCREMENT/3;
+              }
+           }
+        }
+        
+/* Toga version
+           double pvReduction =
+              log((double) (i)) * log((double) (j)) / 3.0;
+           
+            double nonPvReduction =
+               0.33 + log((double) (i)) * log((double) (j)) / 2.25;
+            
+            quietPvMoveReduction[i][j] =
+               (int) (pvReduction >= 1.0 ?
+                      floor(pvReduction) : 0);
+            
+            quietMoveReduction[i][j] =
+               (int) (nonPvReduction >= 1.0 ?
+                      floor(nonPvReduction) : 0);
+            
+           }
+        }
+*/        
+/*
+  
+        if (moves && d>2) {
+            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+        }
+*/
+      }
+    }
+/*
+    for (int i = 0; i < 64; i++) {
+      cout << "--- i=" << i << endl;
+      for (int m=0; m<64; m++) {
+      cout << m << " " << LMR_REDUCTION[0][i][m] << ' ' << LMR_REDUCTION[1][i][m] << endl;
+      }
+    }
+*/
 }
+
 
 // Initialize a Search instance to prepare it for searching at a split point.
 // This is called from the thread in which the search will execute.
