@@ -279,33 +279,6 @@ class Search : public ThreadControl {
 
  public:
 
-  static const int NUM_PARAMS = 10;
-
-  enum {
-    LMR_MIN_DEPTH,
-    PV_LMR_MIN_MOVE,
-    NONPV_LMR_MIN_MOVE,
-    LMR_CHECK_HISTORY,
-    LMR_LOG_MULT_PV,
-    LMR_LOG_MULT_NONPV,
-    LMR_DEPTH_MULT_PV,
-    LMR_DEPTH_MULT_NONPV,
-    LMR_EXTRA_LMR_MOVE_PV,
-    LMR_EXTRA_LMR_MOVE_NONPV
-  };
-
-  static struct TuneParam {
-    string name;
-    int current;
-    int minValue;
-    int maxValue;
-    TuneParam(const string &n, int x1, int x2, int x3):
-    name(n),current(x1),minValue(x2),maxValue(x3) {
-    }
-  } params[NUM_PARAMS];
-
-  static void initParams();
-
   Search(SearchController *c, ThreadInfo *ti);
 
   virtual ~Search();

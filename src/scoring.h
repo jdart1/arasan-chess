@@ -58,6 +58,25 @@ class Scoring
       return score>=Constants::MATE_RANGE || score<=-Constants::MATE_RANGE;
     }
 
+    static const int NUM_PARAMS =3;
+
+    static void initParams();
+
+    enum {
+      UNCATCHABLE_NO_PAWN,
+      UNCATCHABLE_MINOR,
+      UNCATCHABLE_MINOR_PLUS
+    };
+
+    static struct TuneParam {
+      string name;
+      int current, min, max;
+      TuneParam(const string &n, int x1, int x2, int x3) :
+      name(n),current(x1),min(x2),max(x3) {
+      }
+
+    } params[NUM_PARAMS];
+
 #ifdef EVAL_STATS
     static void clearStats();
 

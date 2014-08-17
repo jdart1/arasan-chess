@@ -36,7 +36,6 @@ static const int ASPIRATION_WINDOW[] =
      (int)(3.0*PAWN_VALUE),
      (int)(6.0*PAWN_VALUE),
       Constants::MATE};
-
 static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define VERIFY_NULL_SEARCH
@@ -45,30 +44,13 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define HELPFUL_MASTER
 
-Search::TuneParam Search::params[Search::NUM_PARAMS] =
-{
-   Search::TuneParam("lmr_min_depth",12,9,12),
-   Search::TuneParam("pv_lmr_min_move",3,1,6),
-   Search::TuneParam("nonpv_lmr_min_move",3,1,6),
-   Search::TuneParam("lmr_check_history",1,0,1),
-   Search::TuneParam("lmr_log_mult_pv",6,4,15),
-   Search::TuneParam("lmr_log_mult_nonpv",6,4,15),
-   Search::TuneParam("lmr_depth_mult_pv",5,4,15),
-   Search::TuneParam("lmr_depth_mult_nonpv",5,4,15),
-   Search::TuneParam("lmr_extra_lmr_move_pv",8,4,15),
-   Search::TuneParam("lmr_extra_lmr_move_nonpv",8,4,15)
-};
-
-#define PARAM(x) Search::params[x].current
-
-
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-//static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
+static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
@@ -160,6 +142,20 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
+    for (int d = 0; d < 64; d++) {
+      for (int moves= 0; moves < 64; moves++) {
+        LMR_REDUCTION[0][d][moves] = 
+            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
+        Bitboard b1(moves);
+        Bitboard b2(d);
+        int extra_lmr = 0;
+        if (moves && d>2) {
+            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+        }
+        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
+        LMR_REDUCTION[0][d][moves] += extra_lmr;
+      }
+    }
 /*
     for (int i = 0; i < 64; i++) {
       cout << "--- i=" << i << endl;
@@ -1940,15 +1936,6 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
     }
 }
 
-static int checkHist(const Move &move) 
-{
-   if (PARAM(Search::LMR_CHECK_HISTORY))
-      return GetPhase(move) == MoveGenerator::HISTORY_PHASE;
-   else
-      return !CaptureOrPromotion(move);
-}
-
-
 int Search::calcExtensions(const Board &board,
                            NodeInfo *node, NodeInfo *parentNode,
                            CheckStatusType in_check_after_move,
@@ -1959,7 +1946,7 @@ int Search::calcExtensions(const Board &board,
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
-   int pruneOk = 1;
+   int pruneOk = 1, reduceOk = 1;
    int swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
       pruneOk = 0;
@@ -2022,6 +2009,7 @@ int Search::calcExtensions(const Board &board,
             }
          }
       }
+      reduceOk = 0;
    }
    if (extend) {
       return Util::Min(extend,DEPTH_INCREMENT);
@@ -2117,10 +2105,8 @@ int Search::calcExtensions(const Board &board,
     }
     // See if we do late move reduction. Moves in the history phase of move
     // generation or later can be searched with reduced depth.
-    int moveMin = node->PV() ? PARAM(PV_LMR_MIN_MOVE) : PARAM(NONPV_LMR_MIN_MOVE);
-    if (depth >= PARAM(LMR_MIN_DEPTH) && moveIndex >= moveMin &&
-        checkHist(move) &&
-        TypeOfMove(move) == Normal &&
+    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
+        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
         !passedPawnMove(board,move,6)) {
         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
         node->extensions |= LMR;
@@ -3430,72 +3416,6 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
         Unlock(splitLock);
     }
     return splits;
-}
-
-void Search::initParams() 
-{
-    for (int d = 0; d < 64; d++) {
-      for (int moves= 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] = 
-           LMR_REDUCTION[1][d][moves] = 0;
-        Bitboard b1(moves);
-        Bitboard b2(d);
-        if (d >= PARAM(LMR_MIN_DEPTH)/DEPTH_INCREMENT) {
-           LMR_REDUCTION[0][d][moves] = 
-              LMR_REDUCTION[1][d][moves] = DEPTH_INCREMENT;
-           if (moves>= PARAM(LMR_EXTRA_LMR_MOVE_PV) ) {
-              int m1 = moves - PARAM(LMR_EXTRA_LMR_MOVE_PV) + 1;
-              double f = log10(PARAM(LMR_LOG_MULT_PV)*m1/10.0)*PARAM(LMR_DEPTH_MULT_PV)*d/16.0;
-              
-              LMR_REDUCTION[1][d][moves] += Util::Max(0,int((f*4+0.5)/4));
-              if (LMR_REDUCTION[1][d][moves] > d*DEPTH_INCREMENT/3) {
-                 LMR_REDUCTION[1][d][moves] = d*DEPTH_INCREMENT/3;
-              }
-           }
-           if (moves>= PARAM(LMR_EXTRA_LMR_MOVE_NONPV) ) {
-              int m1 = moves - PARAM(LMR_EXTRA_LMR_MOVE_NONPV) + 1;
-              double f = log10(PARAM(LMR_LOG_MULT_NONPV)*m1/10.0)*PARAM(LMR_DEPTH_MULT_NONPV)*d/16.0;
-              LMR_REDUCTION[0][d][moves] += Util::Max(0,int((f*4+0.5)/4));
-              if (LMR_REDUCTION[0][d][moves] > d*DEPTH_INCREMENT/3) {
-                 LMR_REDUCTION[0][d][moves] = d*DEPTH_INCREMENT/3;
-              }
-           }
-        }
-        
-/* Toga version
-           double pvReduction =
-              log((double) (i)) * log((double) (j)) / 3.0;
-           
-            double nonPvReduction =
-               0.33 + log((double) (i)) * log((double) (j)) / 2.25;
-            
-            quietPvMoveReduction[i][j] =
-               (int) (pvReduction >= 1.0 ?
-                      floor(pvReduction) : 0);
-            
-            quietMoveReduction[i][j] =
-               (int) (nonPvReduction >= 1.0 ?
-                      floor(nonPvReduction) : 0);
-            
-           }
-        }
-*/        
-/*
-  
-        if (moves && d>2) {
-            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
-        }
-*/
-      }
-    }
-/*
-    for (int i = 0; i < 64; i++) {
-      cout << "--- i=" << i << endl;
-      for (int m=0; m<64; m++) {
-      cout << m << " " << LMR_REDUCTION[0][i][m] << ' ' << LMR_REDUCTION[1][i][m] << endl;
-      }
-    }
-*/
 }
 
 

@@ -98,9 +98,9 @@ static double computeLsqError() {
    s << ' ';
 */
    s << games;
-   for (int i = 0; i < Search::NUM_PARAMS; i++) {
-      s << ' ' << Search::params[i].name << ' ';
-      s << Search::params[i].current;
+   for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
+      s << ' ' << Scoring::params[i].name << ' ';
+      s << Scoring::params[i].current;
    }
    s << '\0';
    string cmd = s.str();
@@ -121,11 +121,11 @@ public:
                  const NOMAD::Double & h_max      ,
                  bool                & count_eval   ) const 
       {
-         for ( int i = 0 ; i < Search::NUM_PARAMS ; i++ ) 
+         for ( int i = 0 ; i < Scoring::NUM_PARAMS ; i++ ) 
          {
-            Search::params[i].current = x[i].round();
+            Scoring::params[i].current = x[i].round();
          }
-         Search::initParams();
+         Scoring::initParams();
          double quality = computeLsqError();
 //         cout << "quality= " << quality << endl;
          
