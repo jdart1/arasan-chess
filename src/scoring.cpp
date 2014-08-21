@@ -71,15 +71,6 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
    
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] =
-{
-   Scoring::TuneParam("uncatchable_no_pawn",0,0,25),
-   Scoring::TuneParam("uncatchable_minor",100,0,100),
-   Scoring::TuneParam("uncatchable_minor_plus",100,0,100)
-};
-
-#define PARAM(x) params[x].current
-
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
@@ -624,11 +615,6 @@ void Scoring::init() {
    initBitboards();
 
 }
-
-void Scoring::initParams() 
-{
-}
-
 
 void Scoring::cleanup() {
 }
@@ -2086,12 +2072,6 @@ void Scoring::scoreEndgame
    if (uncatchables) {
       if ((ourMaterial.infobits() == Material::KP) && oppMaterial.kingOnly()) {
          scores.end += BITBASE_WIN;
-      } else if (oppMaterial.pieceCount() == 0) {
-         scores.end += PARAM(UNCATCHABLE_NO_PAWN)*(int)uncatchables;
-      } else if (oppMaterial.pieceCount() == 1 && oppMaterial.minorCount() == 1) {
-         scores.end += PARAM(UNCATCHABLE_NO_PAWN)*PARAM(UNCATCHABLE_MINOR)*(int)uncatchables/100;
-      } else {
-         scores.end += PARAM(UNCATCHABLE_NO_PAWN)*PARAM(UNCATCHABLE_MINOR_PLUS)*(int)uncatchables/100;
       }
    }
 

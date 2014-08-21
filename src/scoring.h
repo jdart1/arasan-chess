@@ -24,7 +24,7 @@ class Scoring
     Scoring();
 
     ~Scoring();
-
+        
     // evaluate "board" from the perspective of the side to move.
     int evalu8( const Board &board );
 
@@ -57,25 +57,6 @@ class Scoring
     static bool mateScore(int score) {
       return score>=Constants::MATE_RANGE || score<=-Constants::MATE_RANGE;
     }
-
-    static const int NUM_PARAMS =3;
-
-    static void initParams();
-
-    enum {
-      UNCATCHABLE_NO_PAWN,
-      UNCATCHABLE_MINOR,
-      UNCATCHABLE_MINOR_PLUS
-    };
-
-    static struct TuneParam {
-      string name;
-      int current, min, max;
-      TuneParam(const string &n, int x1, int x2, int x3) :
-      name(n),current(x1),min(x2),max(x3) {
-      }
-
-    } params[NUM_PARAMS];
 
 #ifdef EVAL_STATS
     static void clearStats();
@@ -131,21 +112,21 @@ class Scoring
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
 
-    // pointer to hash table (contains eval cache)
-    Hash *hashTable;
-
     // The scores for opening, middlegame and endgame
     struct Scores {
       Scores()
         :mid(0), end(0), any(0)
       {
       }
+      Scores(const Scores &s)
+      :mid(s.mid),end(s.end),any(s.any) {
+      }
       int mid, end, any; 
       int blend(int materialLevel ) {
           return any + mid*MATERIAL_SCALE[materialLevel]/128 +
              end*(128-MATERIAL_SCALE[materialLevel])/128;
       }
-      static const int MATERIAL_SCALE[32];
+      static const CACHE_ALIGN int MATERIAL_SCALE[32];
       Scores & operator += (const Scores &s) {
           mid += s.mid;
           end += s.end;
@@ -156,6 +137,12 @@ class Scoring
           Scores result = *this;
           result += s;
           return result;
+      }
+      int operator == (const Scores &s) const {
+        return s.mid == mid && s.end == end && s.any == any;
+      }
+      int operator != (const Scores &s) const {
+        return s.mid != mid || s.end != end || s.any != any;
       }
     };
 
@@ -211,12 +198,11 @@ class Scoring
 		     const PawnHashEntry::PawnData &pawnData, ColorType side,
 		     Scores &);
 
-    template<ColorType side>
-      int outpost(const Board &board,
-               Square sq,
-               Square scoreSq,
-               const int scores[64],
-               const PawnHashEntry::PawnData &oppPawnData);
+    template <ColorType side>
+    int outpost(const Board &board, Square sq, Square scoreSq, 
+                const int scores[64],
+                const PawnHashEntry::PawnData &oppPawnData);
+
 
 };
 

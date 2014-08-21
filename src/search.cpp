@@ -44,6 +44,23 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define HELPFUL_MASTER
 
+Search::TuneParam Search::params[Search::NUM_PARAMS] =
+{
+   Search::TuneParam("history_prune_depth",12,0,12),
+   Search::TuneParam("pruning_min_move_count_const",3,0,10),
+   Search::TuneParam("pruning_min_move_count_sq",5,0,10),
+   Search::TuneParam("pruning_min_move_count_linear",0,0,10),
+   Search::TuneParam("history_prune_depth2",12,0,12),
+   Search::TuneParam("history_min_move_count",1,0,5),
+   Search::TuneParam("history_prune_factor",14,0,18),
+   Search::TuneParam("see_pruning_depth",1,0,4),
+   Search::TuneParam("extra_lmr_depth",8,1,10),
+   Search::TuneParam("lmr_div",10,8,20),
+   Search::TuneParam("lmr_pv_factor",8,4,16)
+};
+
+#define PARAM(x) params[x].current
+
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
@@ -82,13 +99,13 @@ static const int STATIC_NULL_MARGIN[16] = {
 
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
 
-static const int HISTORY_PRUNE_DEPTH = 12;
+static const int MAX_HISTORY_PRUNE_DEPTH = 12;
 struct HistoryPruneParams {
   int historyMinMoveCount;
   int evalThreshold;
   int pruningMinMoveCount;
 };
-static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
+static HistoryPruneParams HISTORY_PRUNE_PARAMS[MAX_HISTORY_PRUNE_DEPTH];
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -142,20 +159,6 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
-    for (int d = 0; d < 64; d++) {
-      for (int moves= 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] = 
-            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
-        Bitboard b1(moves);
-        Bitboard b2(d);
-        int extra_lmr = 0;
-        if (moves && d>2) {
-            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
-        }
-        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
-        LMR_REDUCTION[0][d][moves] += extra_lmr;
-      }
-    }
 /*
     for (int i = 0; i < 64; i++) {
       cout << "--- i=" << i << endl;
@@ -164,20 +167,6 @@ SearchController::SearchController()
       }
     }
 */
-    for (int depth = 0; depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT; depth++) {
-        HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-        p.pruningMinMoveCount = 3 + int((0.5F*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT));
-        p.historyMinMoveCount = 1 + depth/DEPTH_INCREMENT;
-        const float depthDivisor = log(2+pow((float)depth/DEPTH_INCREMENT,2.0F));
-        p.evalThreshold = (depth <= DEPTH_INCREMENT) ? 
-            (int)(0.7F*Constants::HISTORY_MAX) : (int)((0.7F / pow((float)depthDivisor,1.25F))*Constants::HISTORY_MAX);
-        /*
-        if (depth % DEPTH_INCREMENT == 0) cout << "-- ply " << depth/DEPTH_INCREMENT << endl;
-        cout << p.pruningMinMoveCount << ' ' << 
-            p.historyMinMoveCount << ' ' <<
-            p.evalThreshold << endl;
-        */
-    }
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -469,6 +458,67 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
 Search::~Search() {
     LockDestroy(splitLock);
 }
+
+void Search::initParams() 
+{
+    for (int depth = 0; depth < MAX_HISTORY_PRUNE_DEPTH; depth++) {
+        HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
+        p.pruningMinMoveCount = PARAM(PRUNING_MIN_MOVE_COUNT_CONST) + depth*depth*PARAM(PRUNING_MIN_MOVE_COUNT_SQ)/10 + depth*PARAM(PRUNING_MIN_MOVE_COUNT_LINEAR)/10;
+        p.historyMinMoveCount = 1 + PARAM(HISTORY_MIN_MOVE_COUNT)*depth;
+        const float depthDivisor = log(2+pow((float)depth,2.0F));
+        float factor = PARAM(HISTORY_PRUNE_FACTOR)/20.0;
+        p.evalThreshold = (depth <= 1) ? 
+            (int)(factor*Constants::HISTORY_MAX) : (int)((factor / pow((float)depthDivisor,1.25F))*Constants::HISTORY_MAX);
+/*
+        if (depth % DEPTH_INCREMENT == 0) cout << "-- ply " << depth/DEPTH_INCREMENT << endl;
+        cout << p.pruningMinMoveCount << ' ' << 
+            p.historyMinMoveCount << ' ' <<
+            p.evalThreshold << endl;
+*/
+    }
+    for (int d = 0; d < 64; d++) {
+      for (int moves= 0; moves < 64; moves++) {
+        LMR_REDUCTION[0][d][moves] = 
+            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
+/*
+        Bitboard b1(moves);
+        Bitboard b2(d);
+        int extra_lmr = 0;
+        if (moves && d>2) {
+            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+        }
+        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
+        LMR_REDUCTION[0][d][moves] += extra_lmr;
+      }
+*/
+        Bitboard b1(moves);
+        
+        Bitboard b2(d);
+        
+        int extra_lmr = 0;
+        
+        if (moves && d>PARAM(EXTRA_LMR_DEPTH)) {
+           extra_lmr = (d*DEPTH_INCREMENT)/PARAM(LMR_DIV);
+        }
+        LMR_REDUCTION[1][d][moves] += (PARAM(LMR_PV_FACTOR)*extra_lmr)/16;
+        LMR_REDUCTION[0][d][moves] += extra_lmr;
+      }
+    }
+/*
+    for (int d = 1; d < 64; d++) {
+    cout << "--- d=" << d << endl;
+      for (int m=0; m<64; m++) {
+      cout << m << " " << setprecision(4) <<
+      LMR_REDUCTION[0][d][m]/4.0 << 
+      " (" << 100.0*LMR_REDUCTION[0][d][m]/(d*DEPTH_INCREMENT) <<
+      "%) " << LMR_REDUCTION[1][d][m]/4.0 << " (" <<
+      100.0*LMR_REDUCTION[1][d][m]/(d*DEPTH_INCREMENT) << "%)" <<
+    endl;
+      }
+    }
+*/
+}
+
 
 int Search::checkTime(const Board &board,int ply) {
     if (controller->stopped) {
@@ -2023,7 +2073,7 @@ int Search::calcExtensions(const Board &board,
        (board.getMaterial(White).men() +
         board.getMaterial(Black).men() > 6);
 
-    if (pruneOk) {
+   if (!node->PV() && ply > 0 && pruneOk && depth/DEPTH_INCREMENT < PARAM(HISTORY_PRUNE_DEPTH))  {
         const Move &threat = parentNode->threatMove;
         if (!IsNull(threat)) {
             if (StartSquare(move) == DestSquare(threat)) {
@@ -2051,50 +2101,52 @@ int Search::calcExtensions(const Board &board,
                 }
             }
         }
-    }
-
-    if (!node->PV() && ply > 0 && pruneOk) {
-       // futility pruning, enabled at low depths
-       if (depth <= FUTILITY_DEPTH) {
-          // threshold increases with move index
-          int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
-          int threshold = parentNode->beta - fmargin;
-          if (node->eval == Scoring::INVALID_SCORE) {
-             node->eval = node->staticEval = scoring.evalu8(board);
-          }
-          if (node->eval < threshold) {
+        if (pruneOk) {
+           // futility pruning, enabled at low depths
+           if (depth <= FUTILITY_DEPTH) {
+              int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
+              int threshold = parentNode->beta - fmargin;
+              if (node->eval == Scoring::INVALID_SCORE) {
+                 node->eval = node->staticEval = scoring.evalu8(board);
+              }
+              if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-              controller->stats->futility_pruning++;
+                 controller->stats->futility_pruning++;
 #endif
-              return PRUNE;
-          }
-       }
-       if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT &&
-          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-           const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-           // Late move pruning (LMP). Prune quiet moves that are late
-           // in the move order (regardless of history score).
-           if (moveIndex >= p.pruningMinMoveCount) {
-#ifdef SEARCH_STATS
-               ++controller->stats->lmp;
-#endif
-               return PRUNE;
+                 return PRUNE;
+              }
            }
+           if(depth/DEPTH_INCREMENT < PARAM(HISTORY_PRUNE_DEPTH) &&
+              GetPhase(move) == MoveGenerator::HISTORY_PHASE) {
+              const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth/DEPTH_INCREMENT];
+              // Late move pruning (LMP). Prune quiet moves that are late
+              // in the move order (regardless of history score).
+              if (moveIndex >= p.pruningMinMoveCount) {
+#ifdef SEARCH_STATS
+                 ++controller->stats->lmp;
+#endif
+                 return PRUNE;
+              }
 #ifdef HISTORY_PRUNING
-           else if (moveIndex >= p.historyMinMoveCount &&
-                    History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
-               // History pruning. Prune moves with low history scores.
-#ifdef SEARCH_STATS
-               ++controller->stats->history_pruning;
-#endif
-               return PRUNE;
            }
+           else if(depth/DEPTH_INCREMENT < PARAM(HISTORY_PRUNE_DEPTH2) &&
+                   GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+              const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth/DEPTH_INCREMENT];
+              if (moveIndex >= p.historyMinMoveCount &&
+                  History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
+                 // History pruning. Prune moves with low history scores.
+#ifdef SEARCH_STATS
+                 ++controller->stats->history_pruning;
 #endif
-       }
+                 return PRUNE;
+              }
+#endif
+           }
+        }
     }
     // See pruning. Losing captures and moves that put pieces en prise
     // are pruned at low depths.
-    if (!node->PV() && depth <= DEPTH_INCREMENT && 
+    if (!node->PV() && depth <= PARAM(SEE_PRUNING_DEPTH)*DEPTH_INCREMENT && 
         parentNode->num_try &&
         GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
         (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
