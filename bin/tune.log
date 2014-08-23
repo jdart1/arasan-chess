@@ -5,13 +5,13 @@ warning: unrecognized option name: search.nalimov_cache_size
 warning: unrecognized option name: search.nalimov_path
 reading parameters
 parameter check passed
-12  3  5  0 12  1 14  1  8 10  0  6  0  8
+ 1 12  1 10 20  0  9
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 3 pruning_min_move_count_sq 5 pruning_min_move_count_linear 0 history_prune_depth2 12 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 8 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 6 extra_lmr_move_linear 0 lmr_pv_factor 8
+executing /home/jdart/tools/match.py 200 see_pruning_depth 1 history_prune_depth 12 lmp_min_move_count_const 1 lmp_count_sq 10 lmp_count_linear 20 min_reduction_depth 0 lmr_depth 9
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -19,32 +19,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2321
+rating=2339
 
-	  1	(	12 3 5 0 12 1 14 1 8 10 0 6 0 8 )	2679.0000000000
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 4 pruning_min_move_count_sq 5 pruning_min_move_count_linear 0 history_prune_depth2 12 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 8 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 6 extra_lmr_move_linear 0 lmr_pv_factor 8
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2321
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 3 pruning_min_move_count_sq 6 pruning_min_move_count_linear 0 history_prune_depth2 12 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 8 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 6 extra_lmr_move_linear 0 lmr_pv_factor 8
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2322
-
-	  3	(	12 3 6 0 12 1 14 1 8 10 0 6 0 8 )	2678.0000000000
-iterations = 1, black box evals = 3
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 3 pruning_min_move_count_sq 9 pruning_min_move_count_linear 0 history_prune_depth2 12 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 8 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 6 extra_lmr_move_linear 0 lmr_pv_factor 8
+	  1	(	1 12 1 10 20 0 9 )	2661.0000000000
+executing /home/jdart/tools/match.py 200 see_pruning_depth 2 history_prune_depth 12 lmp_min_move_count_const 1 lmp_count_sq 10 lmp_count_linear 20 min_reduction_depth 0 lmr_depth 9
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -52,112 +30,32 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2325
+rating=2342
 
-	  4	(	12 3 9 0 12 1 14 1 8 10 0 6 0 8 )	2675.0000000000
-iterations = 2, black box evals = 4
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 3 pruning_min_move_count_sq 10 pruning_min_move_count_linear 0 history_prune_depth2 12 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 8 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 6 extra_lmr_move_linear 0 lmr_pv_factor 8
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2326
-
-	  5	(	12 3 10 0 12 1 14 1 8 10 0 6 0 8 )	2674.0000000000
-iterations = 3, black box evals = 5
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 4 pruning_min_move_count_sq 9 pruning_min_move_count_linear 0 history_prune_depth2 12 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 8 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 6 extra_lmr_move_linear 0 lmr_pv_factor 8
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2324
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 5 pruning_min_move_count_sq 10 pruning_min_move_count_linear 0 history_prune_depth2 10 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 4 extra_lmr_move_linear 0 lmr_pv_factor 6
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2319
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 10 pruning_min_move_count_const 0 pruning_min_move_count_sq 10 pruning_min_move_count_linear 0 history_prune_depth2 10 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 4 extra_lmr_move_linear 0 lmr_pv_factor 6
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2334
-
-	  8	(	10 0 10 0 10 1 14 1 10 10 0 4 0 6 )	2666.0000000000
-iterations = 4, black box evals = 8
-executing /home/jdart/tools/match.py 200 history_prune_depth 4 pruning_min_move_count_const 0 pruning_min_move_count_sq 10 pruning_min_move_count_linear 0 history_prune_depth2 4 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 0 extra_lmr_move_linear 0 lmr_pv_factor 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2327
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 6 pruning_min_move_count_const 1 pruning_min_move_count_sq 9 pruning_min_move_count_linear 0 history_prune_depth2 10 history_min_move_count 1 history_prune_factor 14 see_pruning_depth 1 extra_lmr_depth 9 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 5 extra_lmr_move_linear 0 lmr_pv_factor 7
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2326
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 0 pruning_min_move_count_const 0 pruning_min_move_count_sq 8 pruning_min_move_count_linear 0 history_prune_depth2 8 history_min_move_count 1 history_prune_factor 18 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 2 extra_lmr_move_linear 0 lmr_pv_factor 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2300
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 0 pruning_min_move_count_sq 10 pruning_min_move_count_linear 0 history_prune_depth2 8 history_min_move_count 1 history_prune_factor 18 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 2 extra_lmr_move_linear 0 lmr_pv_factor 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2327
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 0 pruning_min_move_count_sq 8 pruning_min_move_count_linear 0 history_prune_depth2 8 history_min_move_count 1 history_prune_factor 18 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 2 extra_lmr_move_linear 8 lmr_pv_factor 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2330
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 0 pruning_min_move_count_sq 8 pruning_min_move_count_linear 0 history_prune_depth2 8 history_min_move_count 1 history_prune_factor 0 see_pruning_depth 1 extra_lmr_depth 10 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 2 extra_lmr_move_linear 0 lmr_pv_factor 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2329
-
-executing /home/jdart/tools/match.py 200 history_prune_depth 12 pruning_min_move_count_const 0 pruning_min_move_count_sq 6 pruning_min_move_count_linear 0 history_prune_depth2 6 history_min_move_count 1 history_prune_factor 18 see_pruning_depth 1 extra_lmr_depth 3 extra_lmr_linear 10 extra_lmr_log 0 extra_lmr_min_moves 0 extra_lmr_move_linear 0 lmr_pv_factor 4
+	  2	(	2 12 1 10 20 0 9 )	2658.0000000000
+iterations = 1, black box evals = 2
+executing /home/jdart/tools/match.py 200 see_pruning_depth 4 history_prune_depth 12 lmp_min_move_count_const 1 lmp_count_sq 10 lmp_count_linear 20 min_reduction_depth 0 lmr_depth 9
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
