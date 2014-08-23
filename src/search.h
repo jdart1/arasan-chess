@@ -283,7 +283,7 @@ class Search : public ThreadControl {
 
   virtual ~Search();
 
-    static const int NUM_PARAMS = 11;
+    static const int NUM_PARAMS = 14;
 
     static void initParams();
 
@@ -297,7 +297,10 @@ class Search : public ThreadControl {
       HISTORY_PRUNE_FACTOR,
       SEE_PRUNING_DEPTH,
       EXTRA_LMR_DEPTH,
-      LMR_DIV,
+      EXTRA_LMR_LINEAR,
+      EXTRA_LMR_LOG,
+      EXTRA_LMR_MIN_MOVES,
+      EXTRA_LMR_MOVE_LINEAR,
       LMR_PV_FACTOR
     };
 

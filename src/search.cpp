@@ -55,7 +55,10 @@ Search::TuneParam Search::params[Search::NUM_PARAMS] =
    Search::TuneParam("history_prune_factor",14,0,18),
    Search::TuneParam("see_pruning_depth",1,0,4),
    Search::TuneParam("extra_lmr_depth",8,1,10),
-   Search::TuneParam("lmr_div",10,8,20),
+   Search::TuneParam("extra_lmr_linear",10,0,30),
+   Search::TuneParam("extra_lmr_log",0,0,16),
+   Search::TuneParam("extra_lmr_min_moves",6,0,10),
+   Search::TuneParam("extra_lmr_move_linear",0,0,8),
    Search::TuneParam("lmr_pv_factor",8,4,16)
 };
 
@@ -498,7 +501,11 @@ void Search::initParams()
         int extra_lmr = 0;
         
         if (moves && d>PARAM(EXTRA_LMR_DEPTH)) {
-           extra_lmr = (d*DEPTH_INCREMENT)/PARAM(LMR_DIV);
+              DEPTH_INCREMENT*(b1.lastOne())*PARAM(EXTRA_LMR_LOG)/20.0;
+
+           extra_lmr = (PARAM(EXTRA_LMR_LINEAR)*d*DEPTH_INCREMENT)/100 +
+              DEPTH_INCREMENT*(b2.lastOne())*PARAM(EXTRA_LMR_LOG)/20;
+           extra_lmr += DEPTH_INCREMENT*(moves-PARAM(EXTRA_LMR_MIN_MOVES))*PARAM(EXTRA_LMR_MOVE_LINEAR)/256;
         }
         LMR_REDUCTION[1][d][moves] += (PARAM(LMR_PV_FACTOR)*extra_lmr)/16;
         LMR_REDUCTION[0][d][moves] += extra_lmr;
