@@ -46,13 +46,13 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 Search::TuneParam Search::params[Search::NUM_PARAMS] =
 {
-   Search::TuneParam("see_pruning_depth",1,0,4),
-   Search::TuneParam("history_prune_depth",12,8,12),
    Search::TuneParam("lmp_min_move_count_const",1,1,4),
    Search::TuneParam("lmp_count_sq",10,0,40),
+   Search::TuneParam("lmp_pow",20,15,25),
    Search::TuneParam("lmp_count_linear",20,0,60),
-   Search::TuneParam("min_reduction_depth",0,0,4), // unscaled by DEPTH_INCR
-   Search::TuneParam("lmr_depth",9,8,12) // unscaled by DEPTH_INCR
+   Search::TuneParam("lmr_depth",9,8,12), // unscaled by DEPTH_INCR
+   Search::TuneParam("history_prune_depth",12,8,12),
+   Search::TuneParam("min_reduction_depth",0,0,5)
 };
 
 #define PARAM(x) Search::params[x].current
@@ -63,6 +63,8 @@ static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
+static const int SEE_PRUNING_DEPTH = int(1.5*DEPTH_INCREMENT);
+//static const int MIN_REDUCTION_DEPTH = 0;
 //static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
@@ -186,7 +188,7 @@ void Search::initParams()
 {
    for (int depth = 0; depth < PARAM(HISTORY_PRUNE_DEPTH); depth++) {
         HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-        p.pruningMinMoveCount = PARAM(LMP_MIN_MOVE_COUNT_CONST) + depth*depth*PARAM(LMP_COUNT_SQ)/10 + depth*PARAM(LMP_COUNT_LINEAR)/10;
+        p.pruningMinMoveCount = PARAM(LMP_MIN_MOVE_COUNT_CONST) + int(pow(depth,PARAM(LMP_POW)/10.0)*PARAM(LMP_COUNT_SQ)/10.0) + depth*PARAM(LMP_COUNT_LINEAR)/10;
         p.historyMinMoveCount = 1 + depth/DEPTH_INCREMENT;
         const float depthDivisor = log(2+pow((float)depth/DEPTH_INCREMENT,2.0F));
         p.evalThreshold = (depth <= DEPTH_INCREMENT) ? 
@@ -2116,7 +2118,7 @@ int Search::calcExtensions(const Board &board,
    }
    // See pruning. Losing captures and moves that put pieces en prise
    // are pruned at low depths.
-   if (!node->PV() && depth <= PARAM(SEE_PRUNING_DEPTH) && 
+   if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
        parentNode->num_try &&
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
        (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
@@ -2132,7 +2134,8 @@ int Search::calcExtensions(const Board &board,
        !passedPawnMove(board,move,6)) {
       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
       if (depth + extend < PARAM(MIN_REDUCTION_DEPTH)) {
-         depth = PARAM(MIN_REDUCTION_DEPTH);
+         extend = PARAM(MIN_REDUCTION_DEPTH)-depth;
+         if (extend > -DEPTH_INCREMENT) extend = 0;
       }
       node->extensions |= LMR;
 #ifdef SEARCH_STATS

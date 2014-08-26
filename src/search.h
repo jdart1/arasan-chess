@@ -288,13 +288,13 @@ class Search : public ThreadControl {
     static void initParams();
 
     enum {
-      SEE_PRUNING_DEPTH,
-      HISTORY_PRUNE_DEPTH,
       LMP_MIN_MOVE_COUNT_CONST,
       LMP_COUNT_SQ,
+      LMP_POW,
       LMP_COUNT_LINEAR,
-      MIN_REDUCTION_DEPTH,
-      LMR_DEPTH
+      LMR_DEPTH,
+      HISTORY_PRUNE_DEPTH,
+      MIN_REDUCTION_DEPTH
     };
 
     static struct TuneParam {
