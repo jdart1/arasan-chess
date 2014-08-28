@@ -26,6 +26,9 @@ public:
     static void updateHistory(const Board &,
        NodeInfo *parentNode, Move best, int depth, ColorType side);
 
+    static void updateHistoryMove(const Board &,
+       Move best, int depth, ColorType side);
+
  private:
     static struct CACHE_ALIGN HistoryEntry {
       int successCount, failureCount, order, total;

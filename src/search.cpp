@@ -40,7 +40,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define VERIFY_NULL_SEARCH
 #define STATIC_NULL_PRUNING
-#define HISTORY_PRUNING
+//#define HISTORY_PRUNING
 #define RAZORING
 #define HELPFUL_MASTER
 
@@ -2302,6 +2302,9 @@ int Search::search()
                             " value = " << value << endl;
                     }
 #endif
+                    History::updateHistoryMove(board,hashEntry.bestMove(board),
+                                               node->depth, board.sideToMove());
+                    
                     return value;                     // cutoff
                 }
                 break;
@@ -2804,7 +2807,7 @@ int Search::search()
         }
     }
     if (node->num_try && (node->best_score >= node->beta) &&
-        TypeOfMove(node->best) == Normal && Capture(node->best) == Empty) {
+        !CaptureOrPromotion(node->best)) {
         History::updateHistory(board,node,node->best,
             depth,
             board.sideToMove());
