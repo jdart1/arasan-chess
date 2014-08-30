@@ -1073,7 +1073,13 @@ int depth, Move exclude [], int num_exclude)
 
     if (controller->getIterationDepth() == MoveGenerator::EASY_PLIES+1) {
         vector<MoveEntry> &list = mg.getMoveList();
-        if (list.size() > 1 && list[0].score >= list[1].score + EASY_THRESHOLD) {
+        // Note: do not do "easy move" if capturing the last piece in
+        // the endgame .. this can be tricky as the resulting pawn
+        // endgame may be lost.
+        if (list.size() > 1 && list[0].score >= list[1].score + EASY_THRESHOLD         && !(TypeOfMove(node->best) == Normal &&
+            Capture(node->best) != Empty && Capture(node->best) != Pawn &&
+            board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
+            board.getMaterial(board.sideToMove()).pieceCount() <= 1)) {
             easyMove = node->best;
             if (talkLevel == Trace) {
                 cout << "#easy move: ";
@@ -1988,28 +1994,13 @@ int Search::calcExtensions(const Board &board,
    else if (TypeOfMove(move) == Normal &&
             Capture(move) != Empty && Capture(move) != Pawn &&
             board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-            board.getMaterial(board.sideToMove()).pieceCount() <= 1) {
+            board.getMaterial(board.sideToMove()).pieceCount() == 0) {
       // Capture of last piece in endgame.
-      // Only extend safe captures, and only in PV.
-      if (node->PV()) {
-         if (MVV_LVA(move) > 0) {
-            node->extensions |= CAPTURE;
-            extend += CAPTURE_EXTENSION;
+      node->extensions |= CAPTURE;
+      extend += CAPTURE_EXTENSION;
 #ifdef SEARCH_STATS
-            ++controller->stats->capture_extensions;
+      ++controller->stats->capture_extensions;
 #endif
-         } else {
-            if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-            if (swap) {
-               node->extensions |= CAPTURE;
-               extend += CAPTURE_EXTENSION;
-#ifdef SEARCH_STATS
-            ++controller->stats->capture_extensions;
-#endif
-            }
-         }
-      }
-      reduceOk = 0;
    }
    if (extend) {
       return Util::Min(extend,DEPTH_INCREMENT);
