@@ -45,6 +45,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
+static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT/2;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
@@ -2085,7 +2086,7 @@ int Search::calcExtensions(const Board &board,
     }
     // See pruning. Losing captures and moves that put pieces en prise
     // are pruned at low depths.
-    if (!node->PV() && depth <= DEPTH_INCREMENT && 
+    if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
         parentNode->num_try &&
         GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
         (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
