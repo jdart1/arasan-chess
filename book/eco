@@ -160,6 +160,7 @@ A68     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8.
 A69     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Nf3 O-O 9. Be2 Re8 "Benoni"
 
 A70     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 "Benoni"
+A70     1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 d6 5. Nc3 exd5 6. cxd5 g6 7. h3 Bg7 8. e4 O-O "Benoni"
 A71     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 "Benoni"
 A72     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O "Benoni"
 A73     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O "Benoni"
@@ -201,6 +202,7 @@ A91     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 "Dutch Defense"
 A92     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O "Dutch Defense"
 A92     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 "Dutch Defense, Stonewall"
 A93     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. b3 "Dutch Defense, Stonewall"
+A93     1. d4 f5 2. g3 Nf6 3. Bg2 e6 4. c4 Be7 5. Nf3 O-O 6. O-O d5 7. b3 Nbd7 8. Qc2 Ne4 9. Bb2 c6 "Dutch Defense, Stonewall"
 A94     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. b3 c6 8. Ba3 "Dutch Defense, Stonewall"
 
 A95     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. Nc3 c6 "Dutch Defense, Stonewall"
@@ -913,6 +915,7 @@ D99     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3 dc4 6. Qc4 O-O 7. e4 Bg4 
 
 E00     1. d4 Nf6 2. c4 e6 3. g3 "Catalan"
 E01     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 "Catalan"
+E01     1. d4 Nf6 2. c4 e6 3. Nf3 d5 4. g3 c6 5. Qc2 Bd6 6. Bg2 "Catalan"
 E02     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dc4 "Catalan, Open Varation"
 E02     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dc4 5. Qa4 "Catalan, Open Variation"
 E02     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dc4 5. Qa4 Nbd7 6. Nf3 "Catalan, Open Variation"
@@ -929,7 +932,11 @@ E06     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. Nc3 "Catalan, Close
 E06     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. Nbd2 "Catalan, Closed Variation"
 E07     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7 "Catalan, Closed Variation"
 E08     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7 7. Qc2 "Catalan, Closed Variation"
+E08     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7 7. Qc2 c6 8. Rd1 c5 "Catalan, Closed Variation"
+E08     1. c4 e6 2. g3 d5 3. Bg2 Nf6 4. Nf3 Be7 5. O-O O-O 6. b3 c6 7. d4 Nbd7 8. Qc2 b6 9. Rd1 a5 10. Nc3 "Catalan, Closed Variation"
 E09     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7 7. Qc2 c6 8. Nbd2 "Catalan, Closed Variation"
+E09     1. d4 Nf6 2. Nf3 e6 3. c4 b6 4. g3 Ba6 5. b3 d5 6. Bg2 c6 7. O-O Nbd7 8. Nbd2 Be7 9. Qc2 O-O 10. Bb2 "Catalan, Closed Variation"
+
 
 E10     1. d4 Nf6 2. c4 e6 3. Nf3
 E10     1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 b5 "Blumenfeld Counter Gambit"
