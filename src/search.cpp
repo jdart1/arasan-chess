@@ -1254,6 +1254,12 @@ int depth, Move exclude [], int num_exclude)
             node->best_score = drawScore(board);
         }
     }
+    else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
+             board.checkStatus() != InCheck) { 
+        context.setKiller((const Move)node->best, node->ply);
+        History::updateHistory(board, node, node->best, 0, 
+                               board.sideToMove());
+    }
 #ifdef MOVE_ORDER_STATS
     if (node->num_try && node->best_score > node->alpha) {
         controller->stats->move_order_count++;
@@ -2798,8 +2804,9 @@ int Search::search()
             }
         }
     }
-    if (node->num_try && (node->best_score >= node->beta) &&
-        !CaptureOrPromotion(node->best)) {
+    if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
+        board.checkStatus() != InCheck) {
+        context.setKiller((const Move)node->best, node->ply);
         History::updateHistory(board,node,node->best,
             depth,
             board.sideToMove());
@@ -2901,9 +2908,6 @@ int Search::updateRootMove(const Board &board,
    }
    if (score > parentNode->best_score)  {
       parentNode->best = move;
-      if (!CaptureOrPromotion(node->last_move)) {
-         context.setKiller(node->last_move, 0);
-      }
       parentNode->best_score = score;
 #ifdef MOVE_ORDER_STATS
       parentNode->best_count = node->num_try-1;
@@ -3157,11 +3161,6 @@ int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node,
     if (score > parentNode->best_score) {
        parentNode->best_score = score;
        parentNode->best = move;
-       if (Capture(move) == Empty && PromoteTo(move) == Empty) {
-           if (node->best_score >= parentNode->beta) {
-               context.setKiller(move, ply);
-           }
-       }
 #ifdef MOVE_ORDER_STATS
        parentNode->best_count = node->num_try-1;
 #endif
