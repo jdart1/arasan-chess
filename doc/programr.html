@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 17.0</title>
+<title>Arasan Programmer's Guide - version 17.3</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 17.0</h1>
+<h1>Arasan Programmer's Guide - version 17.3</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -53,7 +53,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  17.0
+  17.3
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -789,6 +789,26 @@ These are the opposite of extensions: instead of searching deeper,
 Arasan either cuts off the search prematurely (pruning) or reduces
 the search depth.</p>
 <p>
+Arasan uses "late move reductions." After the first few moves have
+been searched, including any killer moves, if the move is not
+extended, and if it is not considered potentially dangerous or
+advantageous, then the search depth is reduced. This can occur even at
+high depths in the search tree. If the reduced depth move returns a
+score above alpha, it is re-searched with normal depth. This technique
+became popular due to its use in Fabien Letouzey's program "Fruit".
+</p>
+<p>
+Arasan also does several different kinds of pruning.
+Several tests are made on each move and if the move was extended for
+any reason, if looks like the move defends against a threat, or if it
+is a capture, special move (like castling) or advance of a passed
+pawn, then it is not pruned.</p>
+<p>
+Note that it is necessary to search at least one legal move before any
+pruning is done, because we need to distinguish nodes at which no
+moves are searched due to stalemate from those at which all nodes
+would cause pruning.</p>
+<p>
 Futility pruning in Arasan is similar to that described by Ernst Heinz
 for the program Dark Thought. It allows some moves to not be searched,
 if it determined that the side to move is behind in material and the
@@ -796,37 +816,16 @@ move to be made is not likely to gain enough material to be worth
 considering. Futility pruning is applied at relatively low search
 depths before the quiescence search and during the quiescence search.</p>
 <p>
-Several tests are made on each move and if the move was extended for
-any reason, if looks like the move defends against a threat, or if it
-is a capture, special move (like castling) or advance of a passed
-pawn, then futility pruning is not done.</p>
-<p>
-Arasan now has "late move reductions." After the first few moves have
-been searched, including any killer moves, if the move is not
-extended, and if it is not considered potentially dangerous or
-advantageous, then the search depth is reduced. This can occur even at
-high depths in the search tree. If the reduced depth move returns a
-score above alpha, it is re-searched with normal depth. This technique
-became popular due to its use in Fabien Letouzey's program "Fruit".</p>
-<p>
-Arasan 12.2 adds in the enhancement that at high search depths, and
-at moves late in the search process, a reduction of more than one ply
-can be done.</p>
-<p>
-Arasan 13.1 adds history pruning. If a move's history score is
-low enough, and it is not extended, and it meets the futility pruning
-conditions, it can be pruned (i.e., not searched). Arasan 13.1
-also does see pruning - moves that have negative scores from the
-static exchange evaluator ("see") can be pruned at low depths.</p>
+Arasan also does "late move pruning." Quiet moves that are in the history
+phase of move generation (after the pv move, winning captures, and
+killer moves) and are relatively late in the move order can be pruned
+away. The theory is that if we have not already achieved a cutoff
+searching more moves is not likely to produce one.</p>
 <p>
 In addition at depths just before the quiescence search, moves that
 appear to lose material based on a static exchange analysis are
-pruned.</p>
-<p>
-Note that it is necessary to search at least one legal move before any
-pruning is done, because we need to distinguish nodes at which no
-moves are searched due to stalemate from those at which all nodes
-would cause pruning.</p>
+pruned. This is done with more liberal pruning conditions than other
+types of pruning.</p>
 <p>
 The final part of search() checks to see if checkmate or stalemate
 occurred, updates the hash table, and maintains the best variation.</p>
