@@ -1,12 +1,12 @@
-Arasan 17.2 test results, 64-bit popcnt build
+Arasan 17.3 test results, 64-bit popcnt build
 Hardware: i5-2500k (4 cores), 2GB hash, Windows 7 x64
 
-arasan17  60 seconds/move	115/250
-ecmgcp	  10 seconds/move       164/183
-iq4       10 seconds/move       169/183
-wacnew    10 seconds/move       298/300
-pet       60 seconds/move       42/48
+arasan17  60 seconds/move	114/250
+ecmgcp	  10 seconds/move       166/183
+iq4       10 seconds/move       168/183
+wacnew    10 seconds/move       299/300
+pet       60 seconds/move       41/48
 eet       60 seconds/move       81/100
-bt2630	  900 seconds/move      30/30	rating = 2630
-lapuce2   600 seconds/move      30/35	rating = 2800
+bt2630	  900 seconds/move      29/30	rating = 2600
+lapuce2   600 seconds/move      32/35	rating = 2860
 
