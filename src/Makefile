@@ -340,3 +340,6 @@ score-tests:
 	perl $(TESTS)/tests.pl $(TESTS)/test-results >>$(TESTS)/test-summary
 
 .PHONY: all clean dirs profile profile-run install release run-tests score-tests
+
+.EXPORT_ALL_VARIABLES:
+
