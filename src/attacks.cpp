@@ -5511,7 +5511,6 @@ void Attacks::initMagicData() {
     int b_index = 0;
     Square sq;
     Bitboard edges;
-    Bitboard all_edges(file_mask[0] | file_mask[7] | rank_mask[7] | file_mask[7]);
     edges = file_mask[0] | file_mask[7] | rank_mask[0] | rank_mask[7];
     for(sq=0;sq<64;sq++)  {
         // This is the set of possible squares reachable by a Bishop
