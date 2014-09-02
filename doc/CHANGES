@@ -1,8 +1,8 @@
-Changes in Arasan 17.3 (Aug. 2014):
+Changes in Arasan 17.3 (Sept. 2014):
  1) Reduce doubled pawn score in endgame.
  2) Fix some bugs involving hash size settings for UCI.
  3) Minor changes to outpost scores.
- 4) Fix a couple bugs in "makebook" programs.
+ 4) Fix a couple bugs in "makebook" program.
  5) Some king safety enhancements.
  6) Tuning of futility pruning parameters.
  7) History pruning disabled.
