@@ -7,7 +7,7 @@ Changes in Arasan 17.3 (Sept. 2014):
  6) Tuning of futility pruning parameters.
  7) History pruning disabled.
  8) Fixes to history and killer move handling.
- 9) Simplify capture extension code and disable "easy nove" if
+ 9) Simplify capture extension code and disable "easy move" if
     capturing the last piece.
  10) Increase see pruning depth to 1.5 ply.
 
