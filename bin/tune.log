@@ -5,13 +5,13 @@ warning: unrecognized option name: search.nalimov_cache_size
 warning: unrecognized option name: search.nalimov_path
 reading parameters
 parameter check passed
- 1 10 20 20  9 12  0
+ 2 36 10  5
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 1 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 0
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 2 lmr_div 36 lmr_max 10 lmr_pv_factor 5
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -19,10 +19,22 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2335
+rating=2360
 
-	  1	(	1 10 20 20 9 12 0 )	2665.0000000000
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 0
+	  1	(	2 36 10 5 )	2640.0000000000
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 3 lmr_div 36 lmr_max 10 lmr_pv_factor 5
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8590 game(s) loaded, 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.14000 game(s) loaded, 0 game(s) with unknown result ignored.15000 game(s) loaded, 0 game(s) with unknown result ignored.16000 game(s) loaded, 0 game(s) with unknown result ignored.17000 game(s) loaded, 0 game(s) with unknown result ignored.17190 game(s) loaded, 0 game(s) with unknown result ignored.
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2363
+
+	  3	(	2 40 10 5 )	2637.0000000000
+iterations = 1, black box evals = 3
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 2 lmr_div 52 lmr_max 10 lmr_pv_factor 5
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -30,33 +42,11 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2338
+rating=2365
 
-	  2	(	2 10 20 20 9 12 0 )	2662.0000000000
-iterations = 1, black box evals = 2
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 4 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2331
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2342
-
-	  4	(	2 10 20 20 9 12 2 )	2658.0000000000
+	  4	(	2 52 10 5 )	2635.0000000000
 iterations = 2, black box evals = 4
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 5
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 2 lmr_div 60 lmr_max 10 lmr_pv_factor 5
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -64,39 +54,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2340
+rating=2358
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2339
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 1 lmp_count_sq 10 lmp_pow 22 lmp_count_linear 8 lmr_depth 9 history_prune_depth 12 min_reduction_depth 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2336
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 1 lmp_count_sq 10 lmp_pow 18 lmp_count_linear 32 lmr_depth 9 history_prune_depth 12 min_reduction_depth 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2339
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 4 lmp_count_sq 10 lmp_pow 18 lmp_count_linear 8 lmr_depth 9 history_prune_depth 12 min_reduction_depth 4
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 3 lmr_div 48 lmr_max 10 lmr_pv_factor 5
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -104,120 +64,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2335
+rating=2357
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 4 lmp_count_sq 10 lmp_pow 22 lmp_count_linear 32 lmr_depth 9 history_prune_depth 12 min_reduction_depth 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2336
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 26 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2335
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 12 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2339
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 8 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2334
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 6 lmp_pow 20 lmp_count_linear 20 lmr_depth 8 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2338
-
-iterations = 3, black box evals = 14
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 19 lmp_count_linear 26 lmr_depth 10 history_prune_depth 11 min_reduction_depth 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2336
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 32 lmr_depth 9 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2338
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 18 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2336
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 22 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2334
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 4 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2332
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 11 history_prune_depth 12 min_reduction_depth 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2339
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 20 lmp_count_linear 20 lmr_depth 9 history_prune_depth 10 min_reduction_depth 2
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 1 lmr_div 60 lmr_max 10 lmr_pv_factor 6
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -225,9 +74,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2337
+rating=2357
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 8 lmp_pow 15 lmp_count_linear 12 lmr_depth 9 history_prune_depth 12 min_reduction_depth 0
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 3 lmr_div 60 lmr_max 10 lmr_pv_factor 3
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -235,32 +84,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2336
+rating=2356
 
-iterations = 4, black box evals = 22
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 19 lmp_count_linear 14 lmr_depth 9 history_prune_depth 11 min_reduction_depth 1
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2343
-
-	 23	(	2 10 19 14 9 11 1 )	2657.0000000000
-iterations = 5, black box evals = 23
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 16 lmp_count_linear 0 lmr_depth 9 history_prune_depth 8 min_reduction_depth 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2330
-
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 17 lmp_count_linear 8 lmr_depth 9 history_prune_depth 11 min_reduction_depth 4
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 4 lmr_div 56 lmr_max 10 lmr_pv_factor 7
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -268,9 +94,40 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2340
+rating=2358
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 10 lmp_pow 19 lmp_count_linear 14 lmr_depth 9 history_prune_depth 11 min_reduction_depth 3
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 2 lmr_div 52 lmr_max 13 lmr_pv_factor 5
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2361
+
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 1 lmr_div 51 lmr_max 7 lmr_pv_factor 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2352
+
+iterations = 3, black box evals = 11
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 3 lmr_div 40 lmr_max 8 lmr_pv_factor 6
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2359
+
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 4 lmr_div 52 lmr_max 10 lmr_pv_factor 5
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -278,9 +135,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2338
+rating=2358
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 4 lmp_count_sq 10 lmp_pow 19 lmp_count_linear 14 lmr_depth 9 history_prune_depth 11 min_reduction_depth 1
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 2 lmr_div 52 lmr_max 12 lmr_pv_factor 5
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
 waiting for local process completion
 
@@ -288,9 +145,19 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2337
+rating=2363
 
-executing /home/jdart/tools/match.py 200 lmp_min_move_count_const 2 lmp_count_sq 18 lmp_pow 19 lmp_count_linear 14 lmr_depth 9 history_prune_depth 11 min_reduction_depth 1
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 2 lmr_div 52 lmr_max 10 lmr_pv_factor 7
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2360
+
+executing /home/jdart/tools/match.py 200 extra_lmr_depth 1 lmr_div 52 lmr_max 10 lmr_pv_factor 3
 Terminated
 Terminated
 Terminated
@@ -315,14 +182,3 @@ Terminated
 Terminated
 Terminated
 Terminated
-cat: /tmp/games*.pgn: No such file or directory
-cat: /tmp/games*.pgn: No such file or directory
-Traceback (most recent call last):
-  File "/home/jdart/tools/match.py", line 207, in <module>
-    sys.exit(main())
-  File "/home/jdart/tools/match.py", line 190, in main
-    with open(fname) as infile:
-IOError: [Errno 2] No such file or directory: '/tmp/games21.pgn'
-close failed in file object destructor:
-sys.excepthook is missing
-lost sys.stderr

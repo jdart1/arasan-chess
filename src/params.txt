@@ -1,18 +1,18 @@
-DIMENSION 7
+DIMENSION 4
 
 BB_INPUT_TYPE * I  # all are type integer
 
 BB_OUTPUT_TYPE OBJ
 
-X0 ( 1 10 20 20 9 12 0 )
+X0 ( 2 36 10 5 )
 
-LOWER_BOUND ( 1 0 15 0 8 8 0 )
+LOWER_BOUND ( 1 25 6 0 )
 
-UPPER_BOUND ( 4 40 25 60 12 12 5 )
+UPPER_BOUND ( 4 60 15 10 )
 
 MAX_BB_EVAL     250
 
-MAX_TIME  1250000
+MAX_TIME  2500000
 
 DISPLAY_STATS BBE ( SOL ) OBJ # Display the number of evaluation (BBE), 
 							  # the current solution ( SOL ) and the objective

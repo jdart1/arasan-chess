@@ -283,18 +283,15 @@ class Search : public ThreadControl {
 
   virtual ~Search();
 
-    static const int NUM_PARAMS = 7;
+    static const int NUM_PARAMS = 4;
 
     static void initParams();
 
     enum {
-      LMP_MIN_MOVE_COUNT_CONST,
-      LMP_COUNT_SQ,
-      LMP_POW,
-      LMP_COUNT_LINEAR,
-      LMR_DEPTH,
-      HISTORY_PRUNE_DEPTH,
-      MIN_REDUCTION_DEPTH
+      EXTRA_LMR_DEPTH,
+      LMR_DIV,
+      LMR_MAX,
+      LMR_PV_FACTOR
     };
 
     static struct TuneParam {
