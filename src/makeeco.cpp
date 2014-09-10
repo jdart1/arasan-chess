@@ -1,4 +1,4 @@
-// Copyright 1995, 2007, 2008, 2012, 2013 by Jon Dart
+// Copyright 1995, 2007, 2008, 2012-2014 by Jon Dart
 // Stand-alone console executable to build "ecodata.cpp" file
 // from "eco" text file.
 
@@ -55,81 +55,58 @@ static int skip_space(ifstream &eco_file)
     return c;
 }
 
-void do_eco(ifstream &eco_file)
+int do_eco(const string &eco_line)
 {
     ColorType side = White;
     Board board;
     int movecount = 0;
-    char c;
-    // Collect the ECO code
-    c = skip_space(eco_file);
-    static char code[20];
-    int i = 0;
-    if (isalpha(c) && isupper(c))
-    {
-        while (!eco_file.eof() && !isspace(c) && i < 19)
-	{
-           code[i++] = c;
-	   c = eco_file.get();
-	}
-    }
-    code[i] = '\0';
-    if (i == 0)
-        return;
-    cout << '{' << '"' << code << '"' << ", ";
-    static char name[255];
-    char *name_ptr = name;
-    *name_ptr = '\0';
+    stringstream s(eco_line);
+    const string &str = s.str();
+    string::const_iterator it = str.begin();
+
     // Follow the opening line
-    while (eco_file.good() && !eco_file.eof())
-    {
-       // skip to next move
-       while (!eco_file.eof())
-       {
-	  if (c == '\n' || c == '"')
-	      break;
-	  else if (isalpha(c))
-	  {
-	     break;
-	  }
-          c = eco_file.get();
+    string token;
+    string code;
+    string name;
+    int first_token = 1;
+    while (it != str.end()) {
+       // skip spaces
+       while (isspace(*it) && it != str.end()) it++;
+       if (it == str.end()) break;
+       // extract text
+       string text;
+       int first = 1;
+       int quoted = 0;
+       while (it != str.end() && (quoted ? (*it != '"') : !isspace(*it))) {
+           if (first && *it == '"') {
+               quoted++;
+               it++;
+               first = 0;
+               continue;
+           }
+           text += *it++;
        }
-       if (c == '"')
-       {
-          while (!eco_file.eof())
-          {
-	     c = eco_file.get();
-	     if (c == '"')
-                 break;
-             else
-                 *name_ptr++ = c;
-          }
-	  *name_ptr = '\0';
-          while (!eco_file.eof() && c != '\n')
-             c = eco_file.get();
+       if (first_token) {
+           code = text;
+           first_token = 0;
+           continue;
        }
-       if (c == '\n')
-          break;
-       // collect the move text
-       char movebuf[20];
-       int i = 0;
-       while (i < 19 && !eco_file.eof() && 
-       	      !isspace(c) && (c != '\n'))
-       {
-          movebuf[i] = c; ++i;
-	  c = eco_file.get();
+       else if (quoted) {
+           name = text;
+           break;
+       } else if (text.length() == 0) {
+           break;
        }
-       if (i == 0)
-       	  break;
-       movebuf[i] = '\0';
+       // skip numbers
+       if (isdigit(text[0])) continue;
+       if (!isalpha(text[0])) return -1;
        // parse the move
-       Move m = Notation::value(board,side,Notation::SAN_IN,movebuf);
+       Move m = Notation::value(board,side,Notation::SAN_IN,text);
        if (IsNull(m) ||
        	   !legalMove(board,StartSquare(m),DestSquare(m)))
        {
-           cerr << "Illegal or invalid move: " << movebuf << endl;
-           cout << "Illegal or invalid move: " << movebuf << endl;
-	   break;
+           cerr << "Illegal or invalid move: " << text << endl;
+	   return -1;
        }
        else
        {
@@ -138,14 +115,18 @@ void do_eco(ifstream &eco_file)
        }
        side = OppositeColor(side);
     }
-    write_64(board.hashCode(),cout);
-    cout << " ,";
-    if (*name)
-       cout << '"' << name << '"';
-    else
-       cout << '"' << '"';
-    cout << "},";
-    cout << endl;
+    if (code.length()) {
+        cout << '{' << '"' << code << '"' << ", ";
+        write_64(board.hashCode(),cout);
+        cout << " ,";
+        if (name.length())
+            cout << '"' << name << '"';
+        else
+            cout << '"' << '"';
+        cout << "},";
+        cout << endl;
+    }
+    return 0;
 }
 
 int CDECL main(int argc, char **argv)
@@ -179,9 +160,15 @@ int CDECL main(int argc, char **argv)
    cout << "{{" << '"' << "A00" << '"' << ", ";
    write_64(b.hashCode(),cout);
    cout << ", " << '"' << '"' << "}," << endl;
+   int lines = 1;
    while (eco_file.good() && !eco_file.eof())
    {
-       do_eco(eco_file);
+       string eco_line;
+       getline(eco_file,eco_line);
+       if (do_eco(eco_line)) {
+           cerr << "error in ECO file, line " << lines << endl;
+       }
+       ++lines;
    }
    cout << "{0,0," << '"' << '"' << "}};" << endl;
    return 0;
