@@ -40,7 +40,6 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define VERIFY_NULL_SEARCH
 #define STATIC_NULL_PRUNING
-//#define HISTORY_PRUNING
 #define RAZORING
 #define HELPFUL_MASTER
 
@@ -55,6 +54,11 @@ static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
+
+static const int LMP_DEPTH=10;
+
+static const int LMP_MOVE_COUNT[11] = {1, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
+};
 
 static const int FUTILITY_MARGIN[4] =
    {(int)1.46*PAWN_VALUE,
@@ -82,14 +86,6 @@ static const int STATIC_NULL_MARGIN[16] = {
     (int)9.70*PAWN_VALUE};
 
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
-
-static const int HISTORY_PRUNE_DEPTH = 12;
-struct HistoryPruneParams {
-  int historyMinMoveCount;
-  int evalThreshold;
-  int pruningMinMoveCount;
-};
-static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -165,20 +161,6 @@ SearchController::SearchController()
       }
     }
 */
-    for (int depth = 0; depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT; depth++) {
-        HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-        p.pruningMinMoveCount = 3 + int((0.5F*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT));
-        p.historyMinMoveCount = 1 + depth/DEPTH_INCREMENT;
-        const float depthDivisor = log(2+pow((float)depth/DEPTH_INCREMENT,2.0F));
-        p.evalThreshold = (depth <= DEPTH_INCREMENT) ? 
-            (int)(0.7F*Constants::HISTORY_MAX) : (int)((0.7F / pow((float)depthDivisor,1.25F))*Constants::HISTORY_MAX);
-        /*
-        if (depth % DEPTH_INCREMENT == 0) cout << "-- ply " << depth/DEPTH_INCREMENT << endl;
-        cout << p.pruningMinMoveCount << ' ' << 
-            p.historyMinMoveCount << ' ' <<
-            p.evalThreshold << endl;
-        */
-    }
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -2067,27 +2049,14 @@ int Search::calcExtensions(const Board &board,
               return PRUNE;
           }
        }
-       if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT &&
+       if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
           GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-           const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-           // Late move pruning (LMP). Prune quiet moves that are late
-           // in the move order (regardless of history score).
-           if (moveIndex >= p.pruningMinMoveCount) {
+          if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
 #endif
                return PRUNE;
            }
-#ifdef HISTORY_PRUNING
-           else if (moveIndex >= p.historyMinMoveCount &&
-                    History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
-               // History pruning. Prune moves with low history scores.
-#ifdef SEARCH_STATS
-               ++controller->stats->history_pruning;
-#endif
-               return PRUNE;
-           }
-#endif
        }
     }
     // See pruning. Losing captures and moves that put pieces en prise
