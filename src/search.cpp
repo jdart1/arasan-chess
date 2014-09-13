@@ -2003,85 +2003,87 @@ int Search::calcExtensions(const Board &board,
        (board.getMaterial(White).men() +
         board.getMaterial(Black).men() > 6);
 
-    if (pruneOk) {
-        const Move &threat = parentNode->threatMove;
-        if (!IsNull(threat)) {
-            if (StartSquare(move) == DestSquare(threat)) {
-                // threatened piece is being moved, don't prune
-                pruneOk = 0;
-            } else if (Sliding(board[StartSquare(threat)])) {
-                Bitboard btwn;
-                board.between(StartSquare(threat),DestSquare(threat),btwn);
-                if (btwn.isSet(DestSquare(move))) {
-                   if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-                   if (swap) { 
-                      // safe interposition
-                      pruneOk = 0;
-                   }
-                }
+   if (!node->PV() && ply > 0 && pruneOk) {
+      const Move &threat = parentNode->threatMove;
+      if (!IsNull(threat)) {
+         if (StartSquare(move) == DestSquare(threat) ||
+             DestSquare(move) == DestSquare(threat)) {
+            // We are moving a threatened piece, or we are 
+            // blocking the dest square of the threat
+            pruneOk = 0;
+         } else if (Sliding(board[StartSquare(threat)])) {
+            Bitboard btwn;
+            board.between(StartSquare(threat),DestSquare(threat),btwn);
+            if (btwn.isSet(DestSquare(move))) {
+               if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+               if (swap) { 
+                  // safe interposition
+                  pruneOk = 0;
+               }
             }
-            if (pruneOk) {
-                // check for move defending threatened piece (idea from Stockfish)
-                PieceType cap = Capture(threat);
-                PieceType pm = PieceMoved(threat);
-                if (cap != Empty &&
-                    (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
-                    board.wouldAttack(move,DestSquare(threat))) {
-                    pruneOk = 0; // don't prune
-                }
+         }
+         if (pruneOk) {
+            // check for move defending dest square, if threat is a
+            // capture or promotion
+            PieceType cap = Capture(threat);
+            PieceType pm = PieceMoved(threat);
+            if (TypeOfMove(threat)==Promotion || ((cap != Empty) &&
+                                                  (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
+                                                  board.wouldAttack(move,DestSquare(threat)))) {
+               pruneOk = 0; // don't prune
             }
-        }
-    }
-
-    if (!node->PV() && ply > 0 && pruneOk) {
-       // futility pruning, enabled at low depths
-       if (depth <= FUTILITY_DEPTH) {
-          // threshold increases with move index
-          int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
-          int threshold = parentNode->beta - fmargin;
-          if (node->eval == Scoring::INVALID_SCORE) {
-             node->eval = node->staticEval = scoring.evalu8(board);
-          }
-          if (node->eval < threshold) {
+         }
+      }
+      if (pruneOk) {
+         // futility pruning, enabled at low depths
+         if (depth <= FUTILITY_DEPTH) {
+            // threshold increases with move index
+            int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
+            int threshold = parentNode->beta - fmargin;
+            if (node->eval == Scoring::INVALID_SCORE) {
+               node->eval = node->staticEval = scoring.evalu8(board);
+            }
+            if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-              controller->stats->futility_pruning++;
+               controller->stats->futility_pruning++;
 #endif
-              return PRUNE;
-          }
-       }
-       if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
-          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-          if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
+               return PRUNE;
+            }
+         }
+         if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
+            GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+            if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
 #endif
                return PRUNE;
-           }
-       }
-    }
-    // See pruning. Losing captures and moves that put pieces en prise
-    // are pruned at low depths.
-    if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
-        parentNode->num_try &&
-        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-        (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+            }
+         }
+      }
+   }
+   // See pruning. Losing captures and moves that put pieces en prise
+   // are pruned at low depths.
+   if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
+       parentNode->num_try &&
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+       (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
 #ifdef SEARCH_STATS
-        ++controller->stats->see_pruning;
+      ++controller->stats->see_pruning;
 #endif
-        return PRUNE;
-    }
-    // See if we do late move reduction. Moves in the history phase of move
-    // generation or later can be searched with reduced depth.
-    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
-        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
-        !passedPawnMove(board,move,6)) {
-        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-        node->extensions |= LMR;
+      return PRUNE;
+   }
+   // See if we do late move reduction. Moves in the history phase of move
+   // generation or later can be searched with reduced depth.
+   if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
+       GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
+       !passedPawnMove(board,move,6)) {
+      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+      node->extensions |= LMR;
 #ifdef SEARCH_STATS
-        ++controller->stats->reduced;
+      ++controller->stats->reduced;
 #endif
-    }
-    return extend;
+   }
+   return extend;
 }
 
 int Search::movesRelated( Move lastMove, Move threatMove) const {
