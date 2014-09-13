@@ -17,6 +17,25 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
+    static const int NUM_PARAMS = 4;
+
+    static void initParams();
+
+    enum {
+      ROOK_MOB_MULT,
+      ROOK_MOB_ENDGAME,
+      ROOK_MOB_TRANSPARENT,
+      ROOK_MOB_EXCEPTIONS
+    };
+
+    static struct TuneParam {
+      string name;
+      int current, min, max;
+      TuneParam(const string &n, int x1, int x2, int x3) :
+      name(n),current(x1),min(x2),max(x3) {
+      }
+    } params[NUM_PARAMS];
+
     static void init();
 
     static void cleanup();

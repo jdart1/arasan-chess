@@ -43,23 +43,6 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define HELPFUL_MASTER
 
-
-Search::TuneParam Search::params[Search::NUM_PARAMS] =
-{
-   Search::TuneParam("extra_lmr_depth",2,1,4),
-   Search::TuneParam("lmr_div",36,30,60),
-   Search::TuneParam("lmr_max",10,6,15),
-   Search::TuneParam("lmr_pv_factor",5,0,10)
-};
-
-#define PARAM(x) Search::params[x].current
-
-static const int LMP_DEPTH=10;
-
-static const int LMP_MOVE_COUNT[11] = {1, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93 
-};
-
-   
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT/2;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
@@ -69,7 +52,13 @@ static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
+static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
+
+static const int LMP_DEPTH=10;
+
+static const int LMP_MOVE_COUNT[11] = {1, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
+};
 
 static const int FUTILITY_MARGIN[4] =
    {(int)1.46*PAWN_VALUE,
@@ -150,6 +139,28 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
+    for (int d = 0; d < 64; d++) {
+      for (int moves= 0; moves < 64; moves++) {
+        LMR_REDUCTION[0][d][moves] = 
+            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
+        Bitboard b1(moves);
+        Bitboard b2(d);
+        int extra_lmr = 0;
+        if (moves && d>2) {
+            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+        }
+        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
+        LMR_REDUCTION[0][d][moves] += extra_lmr;
+      }
+    }
+/*
+    for (int i = 0; i < 64; i++) {
+      cout << "--- i=" << i << endl;
+      for (int m=0; m<64; m++) {
+      cout << m << " " << LMR_REDUCTION[0][i][m] << ' ' << LMR_REDUCTION[1][i][m] << endl;
+      }
+    }
+*/
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -2040,7 +2051,7 @@ int Search::calcExtensions(const Board &board,
        }
        if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
           GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-           if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
+          if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
 #endif
@@ -3368,33 +3379,6 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
         Unlock(splitLock);
     }
     return splits;
-}
-
-
-void Search::initParams() 
-{
-   for (int d = 0; d < 64; d++) {
-      for (int moves = 0; moves < 64; moves++) {
-         int extra_lmr = 0;
-         LMR_REDUCTION[0][d][moves] =
-            LMR_REDUCTION[1][d][moves] = DEPTH_INCREMENT;
-         if (moves && d>PARAM(EXTRA_LMR_DEPTH)) {
-            extra_lmr = int(DEPTH_INCREMENT*log(d)*16.0/PARAM(LMR_DIV)); //36
-            Bitboard b1(moves+4);
-            extra_lmr += Util::Max(0,b1.lastOne()-2)*DEPTH_INCREMENT/4;
-         }
-         LMR_REDUCTION[1][d][moves] += PARAM(LMR_PV_FACTOR)*extra_lmr/10; //5
-         LMR_REDUCTION[0][d][moves] += extra_lmr;
-   
-         int max = (d*DEPTH_INCREMENT)*PARAM(LMR_MAX)/30; // 10
-   
-         if (LMR_REDUCTION[0][d][moves] > max)
-            LMR_REDUCTION[0][d][moves] = max < DEPTH_INCREMENT ? 0 : max;
-   
-         if (LMR_REDUCTION[1][d][moves] > max)
-            LMR_REDUCTION[1][d][moves] = max < DEPTH_INCREMENT ? 0 : max;
-      }
-   }
 }
 
 

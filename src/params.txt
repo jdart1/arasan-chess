@@ -4,11 +4,11 @@ BB_INPUT_TYPE * I  # all are type integer
 
 BB_OUTPUT_TYPE OBJ
 
-X0 ( 2 36 10 5 )
+X0 ( 32 16 1 32 )
 
-LOWER_BOUND ( 1 25 6 0 )
+LOWER_BOUND ( 0 8 0 0 )
 
-UPPER_BOUND ( 4 60 15 10 )
+UPPER_BOUND ( 64 40 1 32 )
 
 MAX_BB_EVAL     250
 
