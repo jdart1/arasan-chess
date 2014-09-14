@@ -265,7 +265,24 @@ static const string pgn_test = "[Event \"?\"]"
 "ICCF 2010}) 8. h3 Na6 9. Bf4 *";
 
       stringstream infile(pgn_test);
+      long first;
+      ArasanVector <ChessIO::Header>hdrs;
+      ChessIO::collect_headers(infile,hdrs,first);
       int errs = 0;
+      if (hdrs.length() != 10) {
+         ++errs;
+         cerr << "error in PGN test: header count" << endl;
+      }
+      ChessIO::Header firstHdr = hdrs[0];
+      if (firstHdr.tag() != "Event") {
+         ++errs;
+         cerr << "error in PGN test: bad tag" << endl;
+      }
+      if (firstHdr.value() != "?") {
+         ++errs;
+         cerr << "error in PGN test: bad value" << endl;
+      }
+      
       int var = 0;
       int seen = 0;
       for (;;) {
@@ -417,9 +434,50 @@ static int testDrawEval() {
     return errs;
 }
 
+static int testWouldAttack() {
+   static const struct TestCase 
+   {
+      string fen;
+      Square start, dest;
+      Square target;
+      int result;
+      TestCase(const string &s, Square st, Square d, Square t,int r) :
+         fen(s),start(st), dest(d), target(t), result(r)
+         {
+         }
+   } cases[10] = {TestCase("2r1k2r/1p1b2p1/pBq2p2/3p1n1p/5P2/1Q4P1/PP5P/1K1R1BR1 w k -",F1,D3,F5,1),
+                TestCase("2rqr1k1/1p1b1ppp/1b1n1n2/p2p4/P2N4/2P3PP/1P2NPBK/R2QBR2 b - -",D1,B3,F7,0),
+                TestCase("2rqr1k1/1p1b1ppp/1b1n1n2/p2p4/P2N4/2P3PP/1P2NPBK/R2QBR2 b - -",D1,B3,D5,1),
+                TestCase("2rqr1k1/1p1b1ppp/1b1n1n2/p2p4/P2N4/2P3PP/1P2NPBK/R2QBR2 b - -",D1,B3,B6,1),
+                TestCase("2kr3r/ppqnn3/2p2b2/P2p2pp/1B1Pp3/1N6/1PP1BPPP/R2Q1RK1 w - -",C2,C4,D5,1),
+                TestCase("2kr3r/ppqnn3/2p2b2/P2p2pp/1B1Pp3/1N6/1PP1BPPP/R2Q1RK1 w - -",B3,C5,D7,1),
+                TestCase("k3r2r/p6q/Pp1Q1n2/3PP3/4p1p1/6pP/1P2BP2/2R1R1K1 b - -",G3,F2,G1,1),
+                TestCase("2rr2k1/p4pp1/1p5p/7P/4PP2/1R2B1P1/P3R3/2b2K2 b - -",D8,D1,F1,1),
+                TestCase("2r1r3/5Qpk/5p2/2B4p/3pqP2/P3n1P1/1P5P/K1R3R1 b - -",H7,H6,H5,1),
+                TestCase("2r2rk1/1p1b2p1/pBq2p2/3p1n1p/5P2/1Q1B2P1/PP5P/1K1R2R1 w - -",D1,C1,C8,0)
+   };
+   int errs = 0;
+   for (int i = 0; i < 10; i++) {
+      const TestCase &acase = cases[i];
+        Board board;
+        if (!BoardIO::readFEN(board, acase.fen.c_str())) {
+            cerr << "wouldAttack: error in test case " << i << " error in FEN: " << acase.fen << endl;
+            ++errs;
+            continue;
+        }
+        Move m = CreateMove(acase.start,acase.dest,TypeOfPiece(board[acase.start]),TypeOfPiece(board[acase.dest]));
+        if ((board.wouldAttack(m,acase.target) != 0) != acase.result) {
+           cerr << "wouldAttack: error in test case " << i << endl;
+           ++errs;
+        }
+   }
+   return errs;
+}
+
 int doUnit() {
 
    int errs = 0;
+   errs += testWouldAttack();
    errs += testNotation();
    errs += testIsPinned();
    errs += testSee();
