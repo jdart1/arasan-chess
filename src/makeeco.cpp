@@ -41,20 +41,6 @@ static void write_64(hash_t h, ostream &out)
   out << "0x" << (hex) << h << "ULL";
 }
 
-static int skip_space(ifstream &eco_file)
-{
-    char c = EOF;
-    while (!eco_file.eof())
-    {
-       c = eco_file.get();
-       if (!isspace(c) && (c!='\n'))
-       {
-	   break;
-       }
-    }
-    return c;
-}
-
 int do_eco(const string &eco_line)
 {
     ColorType side = White;
