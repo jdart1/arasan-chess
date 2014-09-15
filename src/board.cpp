@@ -1283,7 +1283,7 @@ int Board::wouldAttack(Move m,Square target) const {
   switch(PieceMoved(m)) {
   case Empty: break;
   case Pawn:
-    attacks = Attacks::pawn_attacks[sq][side];
+    attacks = Attacks::pawn_attacks[sq][OppositeColor(side)];
     break;
   case Knight:
     attacks = Attacks::knight_attacks[sq];

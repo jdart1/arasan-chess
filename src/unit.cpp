@@ -445,7 +445,7 @@ static int testWouldAttack() {
          fen(s),start(st), dest(d), target(t), result(r)
          {
          }
-   } cases[10] = {TestCase("2r1k2r/1p1b2p1/pBq2p2/3p1n1p/5P2/1Q4P1/PP5P/1K1R1BR1 w k -",F1,D3,F5,1),
+   } cases[11] = {TestCase("2r1k2r/1p1b2p1/pBq2p2/3p1n1p/5P2/1Q4P1/PP5P/1K1R1BR1 w k -",F1,D3,F5,1),
                 TestCase("2rqr1k1/1p1b1ppp/1b1n1n2/p2p4/P2N4/2P3PP/1P2NPBK/R2QBR2 b - -",D1,B3,F7,0),
                 TestCase("2rqr1k1/1p1b1ppp/1b1n1n2/p2p4/P2N4/2P3PP/1P2NPBK/R2QBR2 b - -",D1,B3,D5,1),
                 TestCase("2rqr1k1/1p1b1ppp/1b1n1n2/p2p4/P2N4/2P3PP/1P2NPBK/R2QBR2 b - -",D1,B3,B6,1),
@@ -454,10 +454,11 @@ static int testWouldAttack() {
                 TestCase("k3r2r/p6q/Pp1Q1n2/3PP3/4p1p1/6pP/1P2BP2/2R1R1K1 b - -",G3,F2,G1,1),
                 TestCase("2rr2k1/p4pp1/1p5p/7P/4PP2/1R2B1P1/P3R3/2b2K2 b - -",D8,D1,F1,1),
                 TestCase("2r1r3/5Qpk/5p2/2B4p/3pqP2/P3n1P1/1P5P/K1R3R1 b - -",H7,H6,H5,1),
-                TestCase("2r2rk1/1p1b2p1/pBq2p2/3p1n1p/5P2/1Q1B2P1/PP5P/1K1R2R1 w - -",D1,C1,C8,0)
+                TestCase("2r2rk1/1p1b2p1/pBq2p2/3p1n1p/5P2/1Q1B2P1/PP5P/1K1R2R1 w - -",D1,C1,C8,0),
+                TestCase("5r2/2p2k2/4N1p1/2p1p1Pp/2P1Pp1P/5P2/3K4/8 b - -",F8,D8,D2,1)
    };
    int errs = 0;
-   for (int i = 0; i < 10; i++) {
+   for (int i = 0; i < 11; i++) {
       const TestCase &acase = cases[i];
         Board board;
         if (!BoardIO::readFEN(board, acase.fen.c_str())) {
