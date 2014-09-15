@@ -474,6 +474,82 @@ static int testWouldAttack() {
    return errs;
 }
 
+static int testPerft()
+{
+   // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
+   static const struct TestCase 
+   {
+      string fen;
+      int depth;
+      uint64 result;
+      TestCase(const string &s, int d, uint64 r) :
+         fen(s),depth(d),result(r)
+         {
+         }
+   } cases[28] = {
+      // avoid illegal ep (thanks to Steve Maughan):
+      TestCase("3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1",6,1134888),
+      TestCase("8/8/8/8/k1p4R/8/3P4/3K4 w - - 0 1",6,1134888),
+      // avoid illegal ep #2
+      TestCase("8/8/4k3/8/2p5/8/B2P2K1/8 w - - 0 1",6,1015133),
+      TestCase("8/b2p2k1/8/2P5/8/4K3/8/8 b - - 0 1",6,1015133),
+      //en passant capture checks opponent:
+      TestCase("8/8/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1",6,1440467),
+      TestCase("8/5k2/8/2Pp4/2B5/1K6/8/8 w - d6 0 1",6,1440467),
+      // short castling gives check:
+      TestCase("5k2/8/8/8/8/8/8/4K2R w K - 0 1",6,661072),
+      TestCase("4k2r/8/8/8/8/8/8/5K2 b k - 0 1",6,661072),
+      // long castling gives check:
+      TestCase("3k4/8/8/8/8/8/8/R3K3 w Q - 0 1",6,803711),
+      TestCase("r3k3/8/8/8/8/8/8/3K4 b q - 0 1",6,803711),
+      // castling (including losing cr due to rook capture):
+      TestCase("r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1",4,1274206),
+      TestCase("r3k2r/7b/8/8/8/8/1B4BQ/R3K2R b KQkq - 0 1",4,1274206),
+      // castling prevented:
+      TestCase("r3k2r/8/3Q4/8/8/5q2/8/R3K2R b KQkq - 0 1",4,1720476),
+      TestCase("r3k2r/8/5Q2/8/8/3q4/8/R3K2R w KQkq - 0 1",4,1720476),
+      // promote out of check:
+      TestCase("2K2r2/4P3/8/8/8/8/8/3k4 w - - 0 1",6,3821001),
+      TestCase("3K4/8/8/8/8/8/4p3/2k2R2 b - - 0 1",6,3821001),
+      // discovered check:
+      TestCase("8/8/1P2K3/8/2n5/1q6/8/5k2 b - - 0 1",5,1004658),
+      TestCase("5K2/8/1Q6/2N5/8/1p2k3/8/8 w - - 0 1",5,1004658),
+      // promote to give check:
+      TestCase("4k3/1P6/8/8/8/8/K7/8 w - - 0 1",6,217342),
+      TestCase("8/k7/8/8/8/8/1p6/4K3 b - - 0 1",6,217342),
+      // underpromote to check:
+      TestCase("8/P1k5/K7/8/8/8/8/8 w - - 0 1",6,92683),
+      TestCase("8/8/8/8/8/k7/p1K5/8 b - - 0 1",6,92683),
+      // self stalemate:
+      TestCase("K1k5/8/P7/8/8/8/8/8 w - - 0 1",6,2217),
+      TestCase("8/8/8/8/8/p7/8/k1K5 b - - 0 1",6,2217),
+      // stalemate/checkmate:
+      TestCase("8/k1P5/8/1K6/8/8/8/8 w - - 0 1",7,567584),
+      TestCase("8/8/8/8/1k6/8/K1p5/8 b - - 0 1",7,567584),
+      // double check:
+      TestCase("8/8/2k5/5q2/5n2/8/5K2/8 b - - 0 1",4,23527),
+      TestCase("8/5k2/8/5N2/5Q2/2K5/8/8 w - - 0 1",4,23527)    
+   };
+   int errs = 0;
+   for (int i = 0; i<28; i++) {
+      const TestCase &acase = cases[i];
+      Board board;
+
+      if (!BoardIO::readFEN(board, acase.fen.c_str())) {
+         cerr << "testPerft: error in test case " << i << " error in FEN: " << acase.fen << endl;
+         ++errs;
+         continue;
+      }
+      uint64 result;
+      if ((result = RootMoveGenerator::perft(board,acase.depth)) != acase.result) {
+         cerr << "testPerft: error in test case " << i << " wrong result: " << result << endl;
+         ++errs;
+      }
+   }
+   return errs;
+}
+
+
 int doUnit() {
 
    int errs = 0;
@@ -484,5 +560,6 @@ int doUnit() {
    errs += testPGN();
    errs += testEval();
    errs += testDrawEval();
+   errs += testPerft();
    return errs;
 }

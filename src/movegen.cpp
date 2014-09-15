@@ -1273,3 +1273,23 @@ Move MoveGenerator::nextEvasion(SplitPoint *s)
       return nextEvasion();
 }
 
+uint64 RootMoveGenerator::perft(Board &b, int depth) {
+   if (depth == 0) return 1;
+
+   uint64 nodes = 0ULL;
+   Move m;
+   RootMoveGenerator mg(b);
+   BoardState state = b.state;
+   while ((m = mg.nextMove()) != NullMove) {
+      if (depth > 1) {
+         b.doMove(m);
+         nodes += perft(b,depth-1);
+         b.undoMove(m,state);
+      } else {
+         // skip do/undo
+         nodes++;
+      }
+   }
+   return nodes;
+}
+

@@ -2154,26 +2154,6 @@ static void do_test(string test_file)
    testing = 0;
 }
 
-static uint64 perft(Board &board, int depth) {
-   if (depth == 0) return 1;
-
-   uint64 nodes = 0ULL;
-   RootMoveGenerator mg(board);
-   Move m;
-   BoardState state = board.state;
-   while ((m = mg.nextMove()) != NullMove) {
-      if (depth > 1) {
-         board.doMove(m);
-         nodes += perft(board,depth-1);
-         board.undoMove(m,state);
-      } else {
-         // skip do/undo
-         nodes++;
-      }
-   }
-   return nodes;
-}
-
 static void loadgame(Board &board,ifstream &file) {
     ArasanVector<ChessIO::Header> hdrs(20);
     long first;
@@ -2668,8 +2648,7 @@ static bool do_command(const string &cmd, Board &board) {
           if ((ss >> depth).fail()) {
              cerr << "usage: perft <depth>" << endl;
           } else {
-             Board b;
-             cout << "perft " << depth << " = " << perft(b,depth) << endl;
+             cout << "perft " << depth << " = " << RootMoveGenerator::perft(board,depth) << endl;
           }
        }
        else {
@@ -3445,6 +3424,7 @@ int CDECL main(int argc, char **argv) {
     }
 
 #ifdef UNIT_TESTS
+    cout << "Running unit tests.." << endl;
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
