@@ -1931,9 +1931,10 @@ istream & operator >> (istream &i, Board &board)
 
    char *bp = buf;
    int c;
-   int fields = 0; int count = 0;
+   int fields = 1;
+   int count = 0;
    while (i.good() && fields < 4 && (c = i.get()) != '\n' && 
-          c != -1 && 
+          c != EOF && 
           ++count < 128)
    {
       *bp++ = c;
@@ -1941,7 +1942,7 @@ istream & operator >> (istream &i, Board &board)
          fields++;
    }
    *bp = '\0';
-   if (!i)
+   if (i.fail())
       return i;
    if (!BoardIO::readFEN(board, buf))
       set_bad(i);
