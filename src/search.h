@@ -283,6 +283,27 @@ class Search : public ThreadControl {
 
   virtual ~Search();
 
+  static const int NUM_PARAMS = 6;
+
+  static void initParams();
+
+  enum {
+    SEE_PRUNING_MIN_DEPTH,
+    SEE_PRUNING_MAX_DEPTH,
+    LMR_BASE,
+    LMR_PV,
+    LMR_NON_PV,
+    LMR_DEPTH
+  };
+
+  static struct TuneParam {
+    string name;
+    int current, min, max;
+  TuneParam(const string &n, int x1, int x2, int x3) :
+    name(n),current(x1),min(x2),max(x3) {
+    }
+  } params[NUM_PARAMS];
+
   void init(NodeStack &ns, ThreadInfo *child_ti);
 
     int search(int alpha, int beta,
