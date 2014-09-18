@@ -1534,7 +1534,7 @@ static void analyze(Board &board)
     if (doTrace) cout << "# entering analysis mode" << endl;
     while (analyzeMode) {
         Board previous(board);
-        Move reply = analyze(*searcher,board,stats);
+        analyze(*searcher,board,stats);
         if (doTrace) cout << "# analysis mode: out of search" << endl;
         // If we did "quit" while searching, exit analysis mode now
         // Process commands received while searching; exit loop
@@ -1686,7 +1686,6 @@ static void check_command(const string &cmd, int &terminate)
     if (doTrace)
         cout << "# check_command: " << cmd << endl;
     terminate = 0;
-    size_t space = cmd.find(' ');
     string cmd_word, cmd_args;
     // extract first word of command:
     split_cmd(cmd,cmd_word,cmd_args);
