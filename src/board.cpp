@@ -1931,7 +1931,7 @@ istream & operator >> (istream &i, Board &board)
 
    char *bp = buf;
    int c;
-   int fields = 1;
+   int fields = 0;
    int count = 0;
    while (i.good() && fields < 4 && (c = i.get()) != '\n' && 
           c != EOF && 
