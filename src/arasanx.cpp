@@ -162,11 +162,53 @@ static ThreadControl inputSem;
 static bool do_command(const string &, Board &board);
 static void check_command(const string &, int &);
 
-void add_pending(const string &cmd) {
+static void add_pending(const string &cmd) {
     if (doTrace) cout << "# adding to pending list " << cmd << ", list size=" << pending.size() << endl;
     Lock(input_lock);
     pending.push_back(cmd);
     Unlock(input_lock);
+}
+
+static void split_cmd(const string &cmd, string &cmd_word, string &cmd_args) {
+   size_t space = cmd.find_first_of(' ');
+   cmd_word = cmd.substr(0,space);
+   cmd_args = cmd.substr(cmd_word.length());
+   size_t start = cmd_args.find_first_not_of(' ');
+   if (start != string::npos) {
+      cmd_args.erase(0,start);
+   }
+}
+
+static Move text_to_move(const Board &board, const string &input) {
+   // Try SAN
+   Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,input);
+   if (!IsNull(m)) return m;
+   if (input.length() >= 4 && isalpha(input[0]) && isdigit(input[1]) &&
+       isalpha(input[2]) && isdigit(input[3])) {
+      // This appears to be "old" coordinate style notation, used in
+      // Winboard before 4.2
+      return Notation::value(board,board.sideToMove(),Notation::WB_IN,input);
+   } else {
+      return NullMove;
+   }
+}
+
+static Move get_move(const string &cmd_word, const string &cmd_args) {
+    string move;
+    if (cmd_word == "usermove") {
+        // new for Winboard 4.2
+        move = cmd_args;
+    } else {
+        move = cmd_word;
+    }
+    // see if it could be a move
+    string::iterator it = move.begin();
+    while (it != move.end() && !isalpha(*it)) it++;
+    move.erase(move.begin(),it);
+    if (doTrace) {
+        cout << "# move text = " << move << endl;
+    }
+    return text_to_move(*main_board,move);
 }
 
 // forward declaration
@@ -359,20 +401,6 @@ static void process_st_command(const string &cmd_args)
    }
    // convert to ms. and subtract a buffer to prevent losses on time
    time_limit = int(time_limit_sec * 1000 - Util::Min(int(time_limit_sec*100),100));
-}
-
-static Move text_to_move(const Board &board, const string &input) {
-   // Try SAN
-   Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,input);
-   if (!IsNull(m)) return m;
-   if (input.length() >= 4 && isalpha(input[0]) && isdigit(input[1]) &&
-       isalpha(input[2]) && isdigit(input[3])) {
-      // This appears to be "old" coordinate style notation, used in
-      // Winboard before 4.2
-      return Notation::value(board,board.sideToMove(),Notation::WB_IN,input);
-   } else {
-      return NullMove;
-   }
 }
 
 static int getIncrUCI(const ColorType side) {
@@ -1460,13 +1488,8 @@ static int check_pending(Board &board) {
     Lock(input_lock);
     while (!pending.empty()) {
         const string cmd = pending.front();
-        size_t space = cmd.find_first_of(' ');
-        string cmd_word = cmd.substr(0,space);
-        string cmd_args(cmd.substr(cmd_word.length()));
-        size_t start = cmd_args.find_first_not_of(' ');
-        if (start != string::npos) {
-            cmd_args.erase(0,start);
-        }
+        string cmd_word, cmd_args;
+        split_cmd(cmd,cmd_word,cmd_args);
         if (cmd == "result" ||
             cmd == "new" ||
             cmd == "quit" ||
@@ -1498,36 +1521,75 @@ static int check_pending(Board &board) {
     return retVal;
 }
 
-static void analyze(Board &board)
-{
-    while (analyzeMode) {
-        Move reply = analyze(*searcher,board,stats);
-        if (check_pending(board)) {
-            // user move, do the command then come back to this loop
-            if (doTrace) cout << "# exiting analysis loop" << endl;
-            break;
-        }
-        if (do_all_pending(board)==2) return;
-        if (reply && !IsNull(reply) && !game_end && analyzeMode) {
-            // we got a reply
-            if (doTrace) {
-                cout << "# analyze result: ";
-                MoveImage(reply,cout);
-                cout << endl;
-            }
-            post_output(stats);
-            if (Util::Abs(stats.value) >= Constants::MATE-200) {
-                // We have a mate score. There is no point analyzing further.
-                break;
-            }
-        }
-        else {                                      // no analysis move
-            if (doTrace) cout << "# no move returned from analyze" << endl;
-            break;
-        }
-    }
+static void analyze_output(const Statistics &stats) {
+    // output search status
+    cout << "stat01: " <<
+        stats.elapsed_time << " " << stats.num_nodes << " " <<
+        stats.depth << " " <<
+        stats.mvleft << " " << stats.mvtot << endl;
 }
 
+static void analyze(Board &board)
+{
+    if (doTrace) cout << "# entering analysis mode" << endl;
+    while (analyzeMode) {
+        Board previous(board);
+        Move reply = analyze(*searcher,board,stats);
+        if (doTrace) cout << "# analysis mode: out of search" << endl;
+        // If we did "quit" while searching, exit analysis mode now
+        // Process commands received while searching; exit loop
+        // if "quit" seen.
+        if (do_all_pending(board)==2) break;
+        while (board == previous && analyzeMode) {
+            // The user has given us no new position to search. We probably
+            // got here because the search has terminated early, due to
+            // forced move, forced mate, tablebase hit, or hitting the max
+            // ply depth. Wait here for more input.
+            if (doTrace) cout << "# analysis mode: wait for input" << endl;
+            if (inputSem.wait()) {
+#ifdef UCI_LOG
+                cout << "wait interrupted" << endl << (flush);
+#endif
+                break;
+            }
+            while (!pending.empty()) {
+                Lock(input_lock);
+                string cmd (pending.front());
+                pending.pop_front();
+                Unlock(input_lock);
+                string cmd_word, cmd_arg;
+                split_cmd(cmd,cmd_word,cmd_arg);
+#ifdef _TRACE
+                cout << "# processing cmd in analysis mode: " << cmd << endl;
+#endif
+                if (cmd == "undo" || cmd == "setboard") {
+                    do_command(cmd,board);
+                }
+                // Technically "quit" is not supposed to be the way
+                // to exit analysis mode but we allow it.
+                else if (cmd == "exit" || cmd == "quit") {
+                    analyzeMode = 0;
+                }
+                else if (cmd == "bk") {
+                    do_command(cmd,board);
+                }
+                else if (cmd == "hint") {
+                    do_command(cmd,board);
+                }
+                else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
+                    Move m = get_move(cmd_word, cmd_arg);
+                    if (!IsNull(m)) {
+                        board.doMove(m);
+                    }
+                }
+                else if (cmd == ".") {
+                    analyze_output(stats);
+                }
+            }
+        }
+    }
+    if (doTrace) cout << "# exiting analysis mode" << endl;
+}
 
 static void undo( Board &board)
 {
@@ -1623,75 +1685,98 @@ static void check_command(const string &cmd, int &terminate)
 {
     if (doTrace)
         cout << "# check_command: " << cmd << endl;
-    if (doTrace && uci) {
-        theLog->write("check_command: "); 
-        theLog->write(cmd.c_str());
-        theLog->write_eol();
-    }
-#ifdef UCI_LOG
-    ucilog << "gui: in check_command: " << cmd << (flush) << endl;
-#endif
     terminate = 0;
     size_t space = cmd.find(' ');
+    string cmd_word, cmd_args;
     // extract first word of command:
-    string cmd_word = cmd.substr(0,space);
-    string cmd_args(cmd.substr(cmd_word.length()));
-    size_t start = cmd_args.find_first_not_of(' ');
-    if (start != string::npos) {
-       cmd_args.erase(0,start);
-    }
-    if (uci && cmd == "quit") {
-        add_pending(cmd);
-        terminate++;
+    split_cmd(cmd,cmd_word,cmd_args);
+    if (uci) {
+        if (doTrace) {
+            theLog->write("check_command: "); 
+            theLog->write(cmd.c_str());
+            theLog->write_eol();
+        }
+#ifdef UCI_LOG
+        ucilog << "gui: in check_command: " << cmd << (flush) << endl;
+#endif
+        if (cmd == "quit") {
+            add_pending(cmd);
+            terminate++;
+            return;
+        }
+        else if (cmd == "ponderhit") {
+            // We predicted the opponent's move, so we need to
+            // continue doing the ponder search but adjust the time
+            // limit.
+            ++ponderhit;
+            ponder_move_ok = true;
+            // continue the search in non-ponder mode
+            if (srctype != FixedDepth) {
+                // Compute how much longer we must search
+                ColorType side = searcher->getComputerSide();
+                time_target =
+                    (srctype == FixedTime) ? time_limit :
+                    calcTimeLimit(movestogo, 
+                                  side == White ? winc : binc,
+                                  time_left, opp_time, !easy, doTrace);
+                if (doTrace) {
+                    stringstream s;
+                    s << "time_left=" << time_left << " opp_time=" << opp_time << " time_target=" <<
+                        time_target << '\0';
+                    theLog->write(s.str().c_str()); theLog->write_eol();
+                    cout << "# time_target = " << time_target << endl;
+                }
+                searcher->setTimeLimit(time_target,calc_extra_time(side));
+            }
+            searcher->setTalkLevel(Whisper);
+            searcher->setBackground(false);
+            pondering = false;
+            // Since we have shifted to foreground mode, show the current
+            // search statistics:
+            post_output(ponder_stats);
+        }
+        else if ((cmd_word == "position" ||
+                  cmd == "ucinewgame")) {
+            terminate = 1; // stop this search in order to start a new one
+            add_pending(cmd);
+        } else {
+            // Most other commands do not terminate the search. Execute them
+            // now. (technically, according the UCI spec, setoption is not
+            // allowed during search: but UIs such as ChessBase assume it is).
+            Board &board = pondering ? *ponder_board : *main_board;
+            if (!do_command(cmd,board)) {
+                terminate = 1; // search is terminating
+            }
+        }
         return;
     }
-    else if (uci && cmd == "ponderhit") {
-        // We predicted the opponent's move, so we need to
-        // continue doing the ponder search but adjust the time
-        // limit.
-        ++ponderhit;
-        ponder_move_ok = true;
-        // continue the search in non-ponder mode
-        if (srctype != FixedDepth) {
-            // Compute how much longer we must search
-            ColorType side = searcher->getComputerSide();
-            time_target =
-                (srctype == FixedTime) ? time_limit :
-                calcTimeLimit(movestogo, 
-                              side == White ? winc : binc,
-                              time_left, opp_time, !easy, doTrace);
-            if (doTrace) {
-               stringstream s;
-               s << "time_left=" << time_left << " opp_time=" << opp_time << " time_target=" <<
-                 time_target << '\0';
-               theLog->write(s.str().c_str()); theLog->write_eol();
-               cout << "# time_target = " << time_target << endl;
-            }
-            searcher->setTimeLimit(time_target,calc_extra_time(side));
+    else if (analyzeMode) {
+        if (cmd == "undo" || cmd == "setboard") {
+            add_pending(cmd);
+            terminate = true;
         }
-        searcher->setTalkLevel(Whisper);
-        searcher->setBackground(false);
-        pondering = false;
-        // Since we have shifted to foreground mode, show the current
-        // search statistics:
-        post_output(ponder_stats);
-    }
-    else if (uci && (cmd_word == "position" ||
-                     cmd == "ucinewgame")) {
-        terminate = 1; // stop this search in order to start a new one
-        add_pending(cmd);
-    } else if (uci) {
-        // Most other commands do not terminate the search. Execute them now.
-        // (technically, according the UCI spec, setoption is not allowed
-        // during search: but UIs such as ChessBase assume it is).
-        Board &board = pondering ? *ponder_board : *main_board;
-        if (!do_command(cmd,board)) {
-            terminate = 1; // search is terminating
+        else if (cmd == "exit") {
+            analyzeMode = 0;
+            terminate = true;
         }
+        else if (cmd == "bk") {
+            do_command(cmd, *main_board);
+        }
+        else if (cmd == "hint") {
+            //do_command(cmd);
+        }
+        else if (cmd == ".") {
+            analyze_output(stats);
+        }
+        else if (cmd_word == "usermove" || text_to_move(*main_board,cmd) != NullMove) {
+            add_pending(cmd);
+            terminate = true;
+        }
+        // all other commands are ignored
+        return;
     }
     else if (cmd == "quit" || cmd == "end" || cmd_word == "test") {
         add_pending(cmd);
-        analyzeMode = 0;
         terminate = 1;
     }
     else if (cmd == "new") {
@@ -1792,13 +1877,6 @@ static void check_command(const string &cmd, int &terminate)
         add_pending(cmd);
         terminate = true;
     }
-    else if (cmd == ".") {
-        // for analysis mode
-        cout << "stat01: " <<
-            stats.elapsed_time << " " << stats.num_nodes << " " <<
-            stats.depth << " " <<
-            stats.mvleft << " " << stats.mvtot << endl;
-    }
     else if (cmd == "bk") {
         // not supported while searching
     }
@@ -1832,21 +1910,7 @@ static void check_command(const string &cmd, int &terminate)
         add_pending(cmd);
     }
     else {
-        string move;
-        if (cmd_word == "usermove") {
-            // new for Winboard 4.2
-            move = cmd_args;
-        } else {
-            move = cmd;
-        }
-        // see if it could be a move
-        string::iterator it = move.begin();
-        while (it != move.end() && !isalpha(*it)) it++;
-        move.erase(move.begin(),it);
-        if (doTrace) {
-            cout << "# move text = " << move << endl;
-        }
-        Move rmove = text_to_move(*main_board,move);
+        Move rmove = get_move(cmd_word, cmd_args);
         if (!IsNull(rmove)) {
             last_move = rmove;
             if (doTrace) {
@@ -2154,6 +2218,26 @@ static void do_test(string test_file)
    testing = 0;
 }
 
+static uint64 perft(Board &board, int depth) {
+   if (depth == 0) return 1;
+
+   uint64 nodes = 0ULL;
+   RootMoveGenerator mg(board);
+   Move m;
+   BoardState state = board.state;
+   while ((m = mg.nextMove()) != NullMove) {
+      if (depth > 1) {
+         board.doMove(m);
+         nodes += perft(board,depth-1);
+         board.undoMove(m,state);
+      } else {
+         // skip do/undo
+         nodes++;
+      }
+   }
+   return nodes;
+}
+
 static void loadgame(Board &board,ifstream &file) {
     ArasanVector<ChessIO::Header> hdrs(20);
     long first;
@@ -2309,13 +2393,8 @@ static bool do_command(const string &cmd, Board &board) {
     if (doTrace && uci) {
         theLog->write(cmd.c_str()); theLog->write_eol();
     }
-    size_t space = cmd.find_first_of(' ');
-    string cmd_word = cmd.substr(0,space);
-    string cmd_args(cmd.substr(cmd_word.length()));
-    size_t start = cmd_args.find_first_not_of(' ');
-    if (start != string::npos) {
-         cmd_args.erase(0,start);
-    }
+    string cmd_word, cmd_args;
+    split_cmd(cmd, cmd_word, cmd_args);
     if (cmd == "uci") {
         uci = 1;
         verbose = 1;                       // TBD: fixed for now
@@ -2648,7 +2727,8 @@ static bool do_command(const string &cmd, Board &board) {
           if ((ss >> depth).fail()) {
              cerr << "usage: perft <depth>" << endl;
           } else {
-             cout << "perft " << depth << " = " << RootMoveGenerator::perft(board,depth) << endl;
+             Board b;
+             cout << "perft " << depth << " = " << perft(b,depth) << endl;
           }
        }
        else {
@@ -2862,7 +2942,7 @@ static bool do_command(const string &cmd, Board &board) {
         return false;
     }
     else if (cmd == "new") {
-        save_game();
+        if (!analyzeMode) save_game();
         board.reset();
         theLog->clear();
         if (!uci) theLog->write_header();
@@ -2886,8 +2966,8 @@ static bool do_command(const string &cmd, Board &board) {
         searcher->registerPostFunction(post_output);
         delayedInitIfNeeded();
         searcher->clearHashTables();
-        if (ics) {
-            cout << "kib Hello from Arasan " << Arasan_Version << endl;
+        if (!analyzeMode && ics) {
+           cout << "kib Hello from Arasan " << Arasan_Version << endl;
         }
         if (doTrace) cout << "# finished 'new' processing" << endl;
     }
@@ -3051,7 +3131,7 @@ static bool do_command(const string &cmd, Board &board) {
         if (analyzeMode) analyzeMode = 0;
     }
     else if (cmd == ".") {
-        // for analysis mode: not supported presently
+        analyze_output(stats);
     }
     else if (cmd == "go") {
         forceMode = 0;
@@ -3424,7 +3504,6 @@ int CDECL main(int argc, char **argv) {
     }
 
 #ifdef UNIT_TESTS
-    cout << "Running unit tests.." << endl;
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
