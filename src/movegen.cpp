@@ -8,7 +8,6 @@
 #include "search.h"
 #include "legal.h"
 #include "history.h"
-#include "globals.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -16,7 +15,7 @@ using namespace std;
 
 extern const int Direction[2];
 
-const int MoveGenerator::EASY_PLIES = 0;
+const int MoveGenerator::EASY_PLIES = 3;
 
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
@@ -145,7 +144,7 @@ void RootMoveGenerator::reorder(Move pvMove,int depth)
           SetPhase(moveList[i].move,HISTORY_PHASE);
       }
    }
-   if (depth <= options.search.easy_plies && moveList.size() > 2) {
+   if (depth <= EASY_PLIES && moveList.size() > 2) {
        // we are in the "wide window" part of the search, so
        // reorder non-PV moves by search scores
        std::sort(moveList.begin()+1,moveList.end(),compareScores);
@@ -1272,5 +1271,25 @@ Move MoveGenerator::nextEvasion(SplitPoint *s)
    }
    else
       return nextEvasion();
+}
+
+uint64 RootMoveGenerator::perft(Board &b, int depth) {
+   if (depth == 0) return 1;
+
+   uint64 nodes = 0ULL;
+   Move m;
+   RootMoveGenerator mg(b);
+   BoardState state = b.state;
+   while ((m = mg.nextMove()) != NullMove) {
+      if (depth > 1) {
+         b.doMove(m);
+         nodes += perft(b,depth-1);
+         b.undoMove(m,state);
+      } else {
+         // skip do/undo
+         nodes++;
+      }
+   }
+   return nodes;
 }
 

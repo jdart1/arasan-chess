@@ -222,6 +222,9 @@ class RootMoveGenerator : public MoveGenerator
          return moveList[0].move;
       }
 
+      // enumerate the nodes for a "depth" ply search (for testing).
+      static uint64 perft(Board &, int depth);
+
    protected:
 
       vector <MoveEntry> &getMoveList() {

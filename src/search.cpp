@@ -44,13 +44,13 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT/2;
+//static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT/2;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
+//static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
@@ -87,6 +87,17 @@ static const int STATIC_NULL_MARGIN[16] = {
 
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
 
+Search::TuneParam Search::params[Search::NUM_PARAMS] = {
+   Search::TuneParam("see_pruning_min_depth",0,0,8),
+   Search::TuneParam("see_pruning_max_depth",4,4,24),
+   Search::TuneParam("lmr_base",5,0,10),
+   Search::TuneParam("lmr_pv",58,25,100),
+   Search::TuneParam("lmr_non_pv",29,15,100),
+   Search::TuneParam("lmr_depth",10,8,12)
+};
+
+#define PARAM(x) Search::params[x].current
+   
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
 static const int NODE_ACCUM_THRESHOLD = 16;
@@ -139,20 +150,6 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
-    for (int d = 0; d < 64; d++) {
-      for (int moves= 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] = 
-            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
-        Bitboard b1(moves);
-        Bitboard b2(d);
-        int extra_lmr = 0;
-        if (moves && d>2) {
-            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
-        }
-        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
-        LMR_REDUCTION[0][d][moves] += extra_lmr;
-      }
-    }
 /*
     for (int i = 0; i < 64; i++) {
       cout << "--- i=" << i << endl;
@@ -451,6 +448,38 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
 
 Search::~Search() {
     LockDestroy(splitLock);
+}
+
+void Search::initParams() 
+{
+    for (int d = 0; d < 64; d++) {
+      for (int moves= 0; moves < 64; moves++) {
+        LMR_REDUCTION[0][d][moves] = 
+           LMR_REDUCTION[1][d][moves] = 0;
+        if (d > 0 && moves > 0) {
+           double f = PARAM(LMR_BASE)/10.0 + log((double) (d)) * log((double) (moves));
+           double pvReduction = f*10.0/PARAM(LMR_PV);
+           double nonPvReduction = f*10.0/PARAM(LMR_NON_PV);
+           LMR_REDUCTION[1][d][moves] = 
+               (int) (pvReduction >= 1.0 ?
+                      floor(pvReduction * DEPTH_INCREMENT) : 0);
+           LMR_REDUCTION[0][d][moves] = 
+               (int) (nonPvReduction >= 1.0 ?
+                      floor(nonPvReduction * DEPTH_INCREMENT) : 0);
+        }
+/*
+        Bitboard b1(moves);
+        Bitboard b2(d);
+        int extra_lmr = 0;
+        if (moves && d>2) {
+            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+        }
+        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
+        LMR_REDUCTION[0][d][moves] += extra_lmr;
+      }
+*/
+      }
+    }
 }
 
 int Search::checkTime(const Board &board,int ply) {
@@ -2061,7 +2090,9 @@ int Search::calcExtensions(const Board &board,
     }
     // See pruning. Losing captures and moves that put pieces en prise
     // are pruned at low depths.
-    if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
+    if (!node->PV() && depth <= PARAM(SEE_PRUNING_MIN_DEPTH)+PARAM(SEE_PRUNING_MAX_DEPTH) && 
+        depth >= PARAM(SEE_PRUNING_MIN_DEPTH) &&
+        board.checkStatus() == NotInCheck &&
         parentNode->num_try &&
         GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
         (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
@@ -2072,7 +2103,7 @@ int Search::calcExtensions(const Board &board,
     }
     // See if we do late move reduction. Moves in the history phase of move
     // generation or later can be searched with reduced depth.
-    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
+    if (reduceOk && depth >= PARAM(LMR_DEPTH) && moveIndex > 1+2*node->PV() &&
         GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
         !passedPawnMove(board,move,6)) {
         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
