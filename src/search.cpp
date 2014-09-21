@@ -44,15 +44,18 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT/2;
+static const int SEE_PRUNING_DEPTH = DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
+static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
-static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
+static const double LMR_BASE = 0.3;
+static const double LMR_PV = 4.2;
+static const double LMR_NON_PV = 1.5;
+
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
 static const int LMP_DEPTH=10;
@@ -142,15 +145,17 @@ SearchController::SearchController()
     for (int d = 0; d < 64; d++) {
       for (int moves= 0; moves < 64; moves++) {
         LMR_REDUCTION[0][d][moves] = 
-            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
-        Bitboard b1(moves);
-        Bitboard b2(d);
-        int extra_lmr = 0;
-        if (moves && d>2) {
-            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+           LMR_REDUCTION[1][d][moves] = 0;
+        if (d > 0 && moves > 0) {
+           // Formula similar to Protector & Toga. Tuned Sept. 2014.
+           double f = LMR_BASE + log((double)d) * log((double)moves);
+           double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
+           for (int i = 0; i < 2; i++) {
+              double r = reduction[i];
+              LMR_REDUCTION[i][d][moves] = (int) (r >= 1.0 ? 
+                                                  floor(r * DEPTH_INCREMENT) : 0);
+           }
         }
-        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
-        LMR_REDUCTION[0][d][moves] += extra_lmr;
       }
     }
 /*
