@@ -483,6 +483,7 @@ const struct ECOData eco_codes[] =
 {"C18", 0x8e5e536ccd59cc92ULL ,"French Defense, Winawer Variation"},
 {"C19", 0x2bccf85b3865e38ULL ,"French Defense, Winawer Variation"},
 {"C19", 0x9312b923ab576ed4ULL ,"French Defense, Winawer Variation"},
+{"C19", 0x9488d014e842903dULL ,"French Defense, Winawer Variation"},
 {"C20", 0xf6679192acee3b87ULL ,""},
 {"C21", 0xe8079e1c51994810ULL ,"Center Game"},
 {"C21", 0x486b9fea458afc20ULL ,"Danish Gambit"},
