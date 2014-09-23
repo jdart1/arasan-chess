@@ -44,7 +44,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static const int SEE_PRUNING_DEPTH = DEPTH_INCREMENT;
+static const int SEE_PRUNING_DEPTH = int(1.5*DEPTH_INCREMENT);
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
@@ -152,6 +152,10 @@ SearchController::SearchController()
            double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
            for (int i = 0; i < 2; i++) {
               double r = reduction[i];
+              // do not reduce into the q-search
+              if (r >= (double)d) {
+                 r = (double)d - ((double)d)/DEPTH_INCREMENT;
+              }
               LMR_REDUCTION[i][d][moves] = (int) (r >= 1.0 ? 
                                                   floor(r * DEPTH_INCREMENT) : 0);
            }
