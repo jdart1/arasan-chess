@@ -70,15 +70,6 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    341,342,342,342,342,343,343,343,343,344,344,344,344,345,345,345,
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
-
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("rook_mob_mult",32,0,64),
-   Scoring::TuneParam("rook_mob_endgame",16,8,40),
-   Scoring::TuneParam("rook_mob_transparent",1,0,0),
-   Scoring::TuneParam("rook_mob_exceptions",32,0,32)
-};
-
-#define PARAM(x) Scoring::params[x].current
    
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
@@ -275,10 +266,11 @@ static const int PASSER_OWN_PIECE_BLOCK[2] = { -2, -5 };
 static const int SIDE_PROTECTED_PAWN = -10;
 
 static const int KNIGHT_MOBILITY[9] = { -18, -7, -2, 0, 2, 5, 7, 10, 12 };
-static const int ROOK_MOBILITY_BASE[16] =
-   { -15, -9, -6, -3, -1, 0, 2, 5, 8, 9, 10, 11, 12, 13, 14, 15 };
-static int ROOK_MOBILITY[2][16];
-
+static const int ROOK_MOBILITY[2][16] =
+{
+   { -22, -12, -8, -3, 0, 3, 7, 10, 12, 14, 17, 19, 21, 23, 24 },
+   { -30, -17, -11, -5, 0, 5, 9, 14, 17, 20, 23, 26, 29, 31, 32, 34 }
+};
 static const int BISHOP_MOBILITY[16] = { -20, -11, -7, -3, 0, 3, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
 static const int QUEEN_MOBILITY = 2;
 
@@ -357,14 +349,6 @@ static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorTyp
    return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
 
-void Scoring::initParams() 
-{
-   for (int i = 0; i < 16; i++)  {
-      ROOK_MOBILITY[Midgame][i] = ROOK_MOBILITY_BASE[i]*PARAM(ROOK_MOB_MULT)/32;
-      ROOK_MOBILITY[Endgame][i] = ROOK_MOBILITY[Midgame][i]*PARAM(ROOK_MOB_ENDGAME)/32;
-   }
-}
-   
 static void initBitboards() {
    int i, r;
 
@@ -1072,9 +1056,7 @@ void Scoring::pieceScore(const Board &board,
       case Rook:
          {
             const int r = Rank(sq, side);
-            int except = 0;
             if (r == 7) {
-               except++;
                scores.mid += ROOK_ON_7TH_RANK[Midgame];
                scores.end += ROOK_ON_7TH_RANK[Endgame];
 
@@ -1092,31 +1074,18 @@ void Scoring::pieceScore(const Board &board,
             allAttacks |= rattacks;
             if (FileOpen(board, file)) {
                scores.any += ROOK_ON_OPEN_FILE;
-               except++;
             }
 
             Bitboard rattacks2(board.rookAttacks(sq, side));
             if (rattacks2 & oppPawnData.weak_pawns) {
-               except++;
                scores.any += ROOK_ATTACKS_WEAK_PAWN;
             }
 
-            int mobl;
-            if (PARAM(ROOK_MOB_TRANSPARENT))
-                mobl = Bitboard(rattacks2 & ~board.allOccupied & ~ourPawnData.opponent_pawn_attacks).bitCount();
-            else
-               mobl = Bitboard(rattacks & ~board.allOccupied & ~ourPawnData.opponent_pawn_attacks).bitCount();
-            
-            int mobl_mid =  ROOK_MOBILITY[Midgame][mobl];
-            int mobl_end = ROOK_MOBILITY[Endgame][mobl];
-            if (except && PARAM(ROOK_MOB_EXCEPTIONS)) {
-               mobl_mid = mobl_mid*PARAM(ROOK_MOB_EXCEPTIONS)/32;
-               mobl_end = mobl_end*PARAM(ROOK_MOB_EXCEPTIONS)/32;
-            }
-            scores.mid += mobl_mid;
-            scores.end += mobl_end;
+            const int mobl = Bitboard(rattacks2 &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
+            scores.mid += ROOK_MOBILITY[Midgame][mobl];
+            scores.end += ROOK_MOBILITY[Endgame][mobl];
 #ifdef EVAL_DEBUG
-            cout << "rook mobility: (" << mobl_mid << ',' << mobl_end << ')' << endl;
+            cout << "rook mobility: " << mobl << endl;
 #endif
             if (!endgame) {
                Bitboard attacks(rattacks2 &nearKing);
