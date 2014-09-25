@@ -1,12 +1,14 @@
+Initialized tablebases
 reading parameters
 parameter check passed
- 4  4  5 58 29 10
+12 100 100 100 100  3
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 4 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 100 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -109,10 +111,11 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2338
+rating=2373
 
-	  1	(	4 4 5 58 29 10 )	2662.0000000000
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 5 see_pruning_max_depth 4 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+	  1	(	12 100 100 100 100 3 )	2627.0000000000
+executing /home/jdart/tools/match.py 200 razor_depth 13 razor_margin1 100 razor_margin2 100 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -215,9 +218,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2336
+rating=2371
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 6 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 108 razor_margin2 100 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -320,11 +324,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2339
+rating=2366
 
-	  3	(	4 6 5 58 29 10 )	2661.0000000000
-iterations = 1, black box evals = 3
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 12 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 110 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -427,9 +430,12 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2333
+rating=2374
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 10 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+	  4	(	12 100 110 100 100 3 )	2626.0000000000
+iterations = 1, black box evals = 4
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 140 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -532,9 +538,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2333
+rating=2371
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 6 see_pruning_max_depth 6 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -637,9 +644,12 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2333
+rating=2378
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 6 lmr_base 7 lmr_pv 58 lmr_non_pv 29 lmr_depth 10
+	  6	(	12 100 120 100 100 3 )	2622.0000000000
+iterations = 2, black box evals = 6
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 150 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -742,9 +752,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2339
+rating=2372
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 6 lmr_base 5 lmr_pv 58 lmr_non_pv 29 lmr_depth 8
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 84 razor_margin2 140 razor_margin3 60 razor_margin4 100 razor_reduction 2
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -847,9 +858,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2336
+rating=2372
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 6 lmr_base 5 lmr_pv 58 lmr_non_pv 47 lmr_depth 10
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 84 razor_margin2 140 razor_margin3 140 razor_margin4 100 razor_reduction 4
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -952,9 +964,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2317
+rating=2370
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 6 lmr_base 5 lmr_pv 42 lmr_non_pv 29 lmr_depth 10
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 116 razor_margin2 140 razor_margin3 140 razor_margin4 100 razor_reduction 2
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1057,9 +1070,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2338
+rating=2372
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 5 lmr_pv 58 lmr_non_pv 15 lmr_depth 12
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 116 razor_margin2 140 razor_margin3 60 razor_margin4 100 razor_reduction 4
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1162,11 +1176,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2347
+rating=2376
 
-	 11	(	0 4 5 58 15 12 )	2653.0000000000
-iterations = 2, black box evals = 11
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 2 see_pruning_max_depth 6 lmr_base 6 lmr_pv 42 lmr_non_pv 24 lmr_depth 9
+executing /home/jdart/tools/match.py 200 razor_depth 15 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1269,9 +1282,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2335
+rating=2370
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 3 lmr_pv 74 lmr_non_pv 15 lmr_depth 12
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 180 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1374,9 +1388,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2335
+rating=2366
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 7 lmr_pv 42 lmr_non_pv 15 lmr_depth 12
+executing /home/jdart/tools/match.py 200 razor_depth 8 razor_margin1 75 razor_margin2 59 razor_margin3 120 razor_margin4 96 razor_reduction 2
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1479,9 +1494,11 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2346
+rating=2373
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 3 lmr_pv 42 lmr_non_pv 15 lmr_depth 10
+iterations = 3, black box evals = 14
+executing /home/jdart/tools/match.py 200 razor_depth 13 razor_margin1 92 razor_margin2 110 razor_margin3 120 razor_margin4 120 razor_reduction 2
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1584,11 +1601,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2355
+rating=2372
 
-	 15	(	0 4 3 42 15 10 )	2645.0000000000
-iterations = 3, black box evals = 15
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 0 lmr_pv 25 lmr_non_pv 15 lmr_depth 8
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 116 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1691,9 +1707,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2352
+rating=2370
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 2 see_pruning_max_depth 6 lmr_base 2 lmr_pv 34 lmr_non_pv 24 lmr_depth 11
+executing /home/jdart/tools/match.py 200 razor_depth 14 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1796,9 +1813,10 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2345
+rating=2370
 
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 1 lmr_pv 26 lmr_non_pv 15 lmr_depth 12
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 140 razor_margin4 100 razor_reduction 3
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1901,847 +1919,26 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2347
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 4 see_pruning_max_depth 4 lmr_base 5 lmr_pv 25 lmr_non_pv 15 lmr_depth 12
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2349
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 8 lmr_pv 26 lmr_non_pv 15 lmr_depth 8
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2349
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 18 lmr_base 3 lmr_pv 42 lmr_non_pv 15 lmr_depth 10
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2354
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 3 lmr_pv 42 lmr_non_pv 78 lmr_depth 10
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2309
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 8 see_pruning_max_depth 4 lmr_base 10 lmr_pv 50 lmr_non_pv 15 lmr_depth 8
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2347
-
-iterations = 4, black box evals = 23
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 6 see_pruning_max_depth 14 lmr_base 3 lmr_pv 58 lmr_non_pv 33 lmr_depth 11
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2332
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 3 lmr_pv 26 lmr_non_pv 15 lmr_depth 10
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2353
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 3 lmr_pv 42 lmr_non_pv 15 lmr_depth 8
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2347
-
-executing /home/jdart/tools/match.py 200 see_pruning_min_depth 0 see_pruning_max_depth 4 lmr_base 1 lmr_pv 42 lmr_non_pv 15 lmr_depth 10
+rating=2378
+
+executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 140 razor_reduction 3
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
