@@ -26,6 +26,8 @@ struct BookHeader
 BEGIN_PACKED_STRUCT
    byte version;
    uint16 num_index_pages;
+   BookHeader() : version(0), num_index_pages(0) {
+   }
 END_PACKED_STRUCT
 
 // Information needed to specify the location
