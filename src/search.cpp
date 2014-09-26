@@ -88,7 +88,7 @@ static const int STATIC_NULL_MARGIN[16] = {
     (int)9.62*PAWN_VALUE,
     (int)9.70*PAWN_VALUE};
 
-static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
+static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
