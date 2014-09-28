@@ -1480,7 +1480,8 @@ static int do_all_pending(Board &board)
 
 //
 // Check for user move, resign or result in pending stack.
-// If found, return and do not dequeue command.
+// If found, return (1 if user move, 2 if game end command)
+// and do not dequeue command. Otherwise return 0.
 //
 static int check_pending(Board &board) {
     if (doTrace) cout << "# in check_pending" << endl;
@@ -3259,7 +3260,6 @@ static bool do_command(const string &cmd, Board &board) {
             cout << "# move text = " << movetext << endl;
         }
         Move move;
-process_move:
         if ((move = text_to_move(board,movetext)) != NullMove) {
             if (game_end) {
                 if (forceMode)
@@ -3321,19 +3321,19 @@ process_move:
                }
             }
             while (!forceMode && !analyzeMode && !game_end && !easy && time_target >= 100 /* 0.1 second */) {
+               ponder_move_ok = false;
+               int result;
                // check pending commands again before pondering in case
                // we have a resign or draw, or a move has come in (no
                // good pondering if the opponent has replied already).
-               ponder_move_ok = false;
-               int result;
-               if ((result = check_pending(board)) == 0) {
-                  ponder(board,reply,stats.best_line[1],uci);
-                  if (check_pending(board)==1) {
-                     return 1;                       // game end signal seen
-                  }
+               if ((result = check_pending(board)) != 0) {
+                   return result == 1;
                }
-               else if (result == 1)  {               // game end
-                  return 1;
+               ponder(board,reply,stats.best_line[1],uci);
+               // check again for game-ending commands before we process
+               // ponder result
+               if (check_pending(board)==1) {
+                  return 1;                       // game end signal seen
                }
                // We are done pondering. If we got a ponder hit
                // (opponent made our predicted move), then we are ready
@@ -3349,35 +3349,18 @@ process_move:
                   post_output(stats);
                   reply = ponder_move;
                   predicted_move = ponder_move = NullMove;
+                  // Continue pondering now with the new predicted
+                  // move from "stats".
                }
-               else if (check_pending(board)==2) {
-                  if (doTrace) cout << "# ponder failed, move in stack" << endl;
+               else {
+                  if (doTrace) cout << "# ponder failed, exiting ponder loop" << endl;
                   ponder_move = NullMove;
-                  Lock(input_lock);
-                  // process commands until we find a move
-                  while (!pending.empty()) {
-                     const string cmd = pending.front();
-                     pending.pop_front();
-                     if (cmd.substr(0,8) == "usermove") {
-                        movetext = cmd.substr(9);
-                     }
-                     else {
-                        movetext = cmd;
-                     }
-                     if (text_to_move(board,movetext) != NullMove) {
-                        Unlock(input_lock);
-                        goto process_move;
-                     } else {
-                        if (!do_command(cmd,board)) {
-                           Unlock(input_lock);
-                           return false;
-                        }
-                     }
-                  }
-                  Unlock(input_lock);
+                  // Leave ponder loop. If we were interrupted by
+                  // "usermove" we will ponder again immediately;
+                  // otherwise we completed pondering early and
+                  // will wait for the next opponent move.
+                  break;
                }
-               // ponder failed, leave ponder loop
-               break;
             }
         }
     }
@@ -3525,7 +3508,7 @@ int CDECL main(int argc, char **argv) {
 #endif
               break;
            }
-           while (!pending.empty()) {
+           while (!pending.empty() && !polling_terminated) {
               Lock(input_lock);
               string cmd (pending.front());
               pending.pop_front();
@@ -3534,7 +3517,7 @@ int CDECL main(int argc, char **argv) {
 #endif
               if (doTrace) {
                  cout << "# got cmd (main): "  << cmd << endl;
-                 cout << "# pending size = " << pending.size() << endl;
+                 //cout << "# pending size = " << pending.size() << endl;
               }
               Unlock(input_lock);
 #ifdef UCI_LOG
@@ -3544,7 +3527,6 @@ int CDECL main(int argc, char **argv) {
               if (!do_command(cmd,board)) {
                  if (doTrace) cout << "#terminating .. " << endl;
                  polling_terminated++;
-                 break;
               }
            }
         }
