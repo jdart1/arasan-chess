@@ -828,6 +828,8 @@ const struct ECOData eco_codes[] =
 {"D78", 0xe1493f998a2447bdULL ,"Gruenfeld Defense, Fianchetto Variation"},
 {"D78", 0x25b853e95f0f7a6eULL ,"Gruenfeld Defense, Fianchetto Variation"},
 {"D78", 0x72d55ab2c552bf24ULL ,"Gruenfeld Defense, Fianchetto Variation"},
+{"D78", 0x554d3f22a1d5b7d0ULL ,"Gruenfeld Defense, Fianchetto Variation"},
+{"D78", 0x6dad7e1684d45ee9ULL ,"Gruenfeld Defense, Fianchetto Variation"},
 {"D79", 0xb06506c25d45d1bcULL ,"Gruenfeld Defense, Fianchetto Variation"},
 {"D80", 0x9fe7a93d83a60508ULL ,"Gruenfeld Defense"},
 {"D80", 0x3bcd9ee146e6d2c4ULL ,"Gruenfeld Defense"},
