@@ -1,14 +1,97 @@
 Initialized tablebases
 reading parameters
 parameter check passed
-12 100 100 100 100  3
+ 1 60 45
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 100 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 60 lmr_non_pv 45
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.501000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.11200 game(s) loaded, 0 game(s) with unknown result ignored.
+close failed in file object destructor:
+sys.excepthook is missing
+lost sys.stderr
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2370
+
+	  1	(	1 60 45 )	2630.0000000000
+executing /home/jdart/tools/match.py 200 lmr_reserve 2 lmr_pv 60 lmr_non_pv 45
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.14000 game(s) loaded, 0 game(s) with unknown result ignored.15000 game(s) loaded, 0 game(s) with unknown result ignored.16000 game(s) loaded, 0 game(s) with unknown result ignored.17000 game(s) loaded, 0 game(s) with unknown result ignored.17600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -111,10 +194,223 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2373
+rating=2369
 
-	  1	(	12 100 100 100 100 3 )	2627.0000000000
-executing /home/jdart/tools/match.py 200 razor_depth 13 razor_margin1 100 razor_margin2 100 razor_margin3 100 razor_margin4 100 razor_reduction 3
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 70 lmr_non_pv 45
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2375
+
+	  3	(	1 70 45 )	2625.0000000000
+iterations = 1, black box evals = 3
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 100 lmr_non_pv 45
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2369
+
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 80 lmr_non_pv 45
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -220,7 +516,7 @@ All remote processes completed.
 
 rating=2371
 
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 108 razor_margin2 100 razor_margin3 100 razor_margin4 100 razor_reduction 3
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 90 lmr_non_pv 45
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -324,223 +620,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2366
+rating=2368
 
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 110 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2374
-
-	  4	(	12 100 110 100 100 3 )	2626.0000000000
-iterations = 1, black box evals = 4
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 140 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2371
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
+executing /home/jdart/tools/match.py 200 lmr_reserve 3 lmr_pv 70 lmr_non_pv 45
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -644,117 +726,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2378
+rating=2375
 
-	  6	(	12 100 120 100 100 3 )	2622.0000000000
-iterations = 2, black box evals = 6
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 150 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2372
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 84 razor_margin2 140 razor_margin3 60 razor_margin4 100 razor_reduction 2
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 70 lmr_non_pv 30
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -860,7 +834,220 @@ All remote processes completed.
 
 rating=2372
 
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 84 razor_margin2 140 razor_margin3 140 razor_margin4 100 razor_reduction 4
+executing /home/jdart/tools/match.py 200 lmr_reserve 0 lmr_pv 68 lmr_non_pv 45
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2372
+
+iterations = 2, black box evals = 9
+executing /home/jdart/tools/match.py 200 lmr_reserve 2 lmr_pv 80 lmr_non_pv 45
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2369
+
+executing /home/jdart/tools/match.py 200 lmr_reserve 2 lmr_pv 70 lmr_non_pv 45
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -964,9 +1151,115 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2370
+rating=2367
 
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 116 razor_margin2 140 razor_margin3 140 razor_margin4 100 razor_reduction 2
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 70 lmr_non_pv 33
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with Gaviota-1.0 on puppy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with EXchess-7.26 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Crafty-23.8 on sassy
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with Discocheck-5.2 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with MinkoChess-1.3 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+executing match with Fruit-2.3.1 on localhost
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2368
+
+executing /home/jdart/tools/match.py 200 lmr_reserve 0 lmr_pv 70 lmr_non_pv 57
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -1070,858 +1363,14 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2372
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 116 razor_margin2 140 razor_margin3 60 razor_margin4 100 razor_reduction 4
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2376
-
-executing /home/jdart/tools/match.py 200 razor_depth 15 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2370
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 180 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2366
-
-executing /home/jdart/tools/match.py 200 razor_depth 8 razor_margin1 75 razor_margin2 59 razor_margin3 120 razor_margin4 96 razor_reduction 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2373
-
-iterations = 3, black box evals = 14
-executing /home/jdart/tools/match.py 200 razor_depth 13 razor_margin1 92 razor_margin2 110 razor_margin3 120 razor_margin4 120 razor_reduction 2
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2372
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 116 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2370
-
-executing /home/jdart/tools/match.py 200 razor_depth 14 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2370
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 140 razor_margin4 100 razor_reduction 3
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with Gaviota-1.0 on puppy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with EXchess-7.26 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Crafty-23.8 on sassy
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with Discocheck-5.2 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with MinkoChess-1.3 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-executing match with Fruit-2.3.1 on localhost
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2378
-
-executing /home/jdart/tools/match.py 200 razor_depth 12 razor_margin1 100 razor_margin2 120 razor_margin3 100 razor_margin4 140 razor_reduction 3
+rating=2363
+
+iterations = 3, black box evals = 13
+executing /home/jdart/tools/match.py 200 lmr_reserve 1 lmr_pv 73 lmr_non_pv 42
+Terminated
+Terminated
+Terminated
+Terminated
 Terminated
 Terminated
 Terminated

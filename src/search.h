@@ -283,17 +283,14 @@ class Search : public ThreadControl {
 
   virtual ~Search();
 
-    static const int NUM_PARAMS = 6;
+    static const int NUM_PARAMS = 3;
 
     static void initParams();
 
     enum {
-      RAZOR_DEPTH,
-      RAZOR_MARGIN1,
-      RAZOR_MARGIN2,
-      RAZOR_MARGIN3,
-      RAZOR_MARGIN4,
-      RAZOR_REDUCTION
+      LMR_RESERVE,
+      LMR_PV,
+      LMR_NON_PV
     };
 
     static struct TuneParam {
