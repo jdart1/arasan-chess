@@ -53,8 +53,9 @@ static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const double LMR_BASE = 0.3;
-static const double LMR_PV = 4.2;
-static const double LMR_NON_PV = 1.5;
+static const double LMR_NON_PV = 2.0;
+static const double LMR_PV = 3.5;
+static const int LMR_RESERVE = 1;
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
@@ -146,18 +147,18 @@ SearchController::SearchController()
       for (int moves= 0; moves < 64; moves++) {
         LMR_REDUCTION[0][d][moves] = 
            LMR_REDUCTION[1][d][moves] = 0;
-        if (d > 0 && moves > 0) {
+        if (d >= 2 && moves > 0) {
            // Formula similar to Protector & Toga. Tuned Sept. 2014.
            double f = LMR_BASE + log((double)d) * log((double)moves);
            double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
            for (int i = 0; i < 2; i++) {
-              double r = reduction[i];
+              int r = int(reduction[i]*DEPTH_INCREMENT + 0.5);
               // do not reduce into the q-search
-              if (r >= (double)d) {
-                 r = (double)d - ((double)d)/DEPTH_INCREMENT;
+              if (r > (d*DEPTH_INCREMENT-LMR_RESERVE)) {
+                 r = (d*DEPTH_INCREMENT-LMR_RESERVE);
               }
-              LMR_REDUCTION[i][d][moves] = (int) (r >= 1.0 ? 
-                                                  floor(r * DEPTH_INCREMENT) : 0);
+              if (r < DEPTH_INCREMENT) r = 0;
+              LMR_REDUCTION[i][d][moves] = r;
            }
         }
       }
