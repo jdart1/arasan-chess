@@ -1,3 +1,20 @@
+Changes in Arasan 17.4:
+ 1) Deeper LMR (and different reduction formula). After a LMR search
+    fails high, first re-search with no reduction but zero width bounds,
+    then only do a full-width, full-depth search.
+ 2) Reduce q-search pruning margin.
+ 3) Bug fix for pondering in Winboard mode. Engine could fail to ponder
+    again after a successful ponder.
+ 4) Bug fixes to Winboard analysis mode.
+ 5) Bug fix in Board::wouldAttack.
+ 6) Widen somewhat the range of conditions that will prevent
+    a move from being pruned, based on the null-move threat (if
+    there is one).
+ 7) Simpify & tune late-move pruning code and remove vestiges of history
+    pruning.
+ 8) Add .EXPORT_ALL_VARIABLES target to Linux Makefile, to make build
+    targets work that depend on redefining CC etc.
+
 Changes in Arasan 17.3 (Sept. 2014):
  1) Reduce doubled pawn score in endgame.
  2) Fix some bugs involving hash size settings for UCI.
