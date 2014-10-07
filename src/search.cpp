@@ -1175,10 +1175,23 @@ int depth, Move exclude [], int num_exclude)
             cout << "score = " << try_score << " - no cutoff, researching .." << endl;
 #endif
             if (extend < 0) {
-                extend = 0;
-                node->extensions = 0;
+               extend = 0;
+               node->extensions = 0;
+               if (hibound == lobound+1) {
+                  // first try a non-reduced zero-width search
+                  if (depth+extend-DEPTH_INCREMENT > 0)
+                     try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
+                  else
+                     try_score=-quiesce(-hibound,-lobound,1,0);
+#ifdef _TRACE
+                  cout << "0. ";
+                  MoveImage(move,cout);
+                  cout << ' ' << try_score;
+                  cout << endl;
+#endif
+               }
             }
-            if (try_score > node->best_score) {
+            if (try_score > node->best_score && !terminate) {
               if (depth+extend-DEPTH_INCREMENT > 0)
                 try_score=-search(-node->beta,-lobound,1,depth+extend-DEPTH_INCREMENT);
               else
@@ -2702,19 +2715,34 @@ int Search::search()
                if (extend < 0) {
                  extend = 0;
                  node->extensions = 0;
-               }
-               if (depth+extend-DEPTH_INCREMENT > 0)
-                    try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-                else
-                    try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
+                 // try zero-width but non-reduced search
+                 if (depth+extend-DEPTH_INCREMENT > 0)
+                    try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                 else
+                    try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
 #ifdef _TRACE
-               if (master()) {
-                   indent(ply);
-                   cout << ply << ". ";
-                   MoveImage(move,cout);
-                   cout << ' ' << try_score << endl;
-               }
+                 if (master()) {
+                    indent(ply);
+                    cout << ply << ". ";
+                    MoveImage(move,cout);
+                    cout << ' ' << try_score << endl;
+                 }
 #endif
+               }
+               if (try_score > node->best_score && !terminate) {
+                  if (depth+extend-DEPTH_INCREMENT > 0)
+                     try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                  else
+                     try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
+#ifdef _TRACE
+                  if (master()) {
+                     indent(ply);
+                     cout << ply << ". ";
+                     MoveImage(move,cout);
+                     cout << ' ' << try_score << endl;
+                  }
+#endif
+               }
             }
             board.undoMove(move,state);
             if (terminate) {
@@ -3062,15 +3090,27 @@ void Search::searchSMP(ThreadInfo *ti)
             if (extend < 0) {
                 node->extensions = 0;
                 extend = 0;
+                if (ply == 0) {
+                   fhr = true;
+                   root()->fail_high_root++;
+                }
+                // first try a zero-width but non-reduced search
+                if (depth+extend-DEPTH_INCREMENT > 0)
+                   try_score=-search(-best_score-1,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                else
+                   try_score=-quiesce(-best_score-1,-best_score,ply+1,0);
+
             }
-            if (ply == 0) {
-                fhr = true;
-                root()->fail_high_root++;
+            if (try_score > parentNode->best_score && !terminate) {
+               if (ply == 0) {
+                  fhr = true;
+                  root()->fail_high_root++;
+               }
+               if (depth+extend-DEPTH_INCREMENT > 0)
+                  try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+               else
+                  try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
             }
-            if (depth+extend-DEPTH_INCREMENT > 0)
-                try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-            else
-                try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
         }
         else
            split->unlock();
