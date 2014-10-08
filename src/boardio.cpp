@@ -121,7 +121,7 @@ int BoardIO::readFEN(Board &board, const string &buf)
       board.state.castleStatus[Black] = vals[k / 4];
    }
    board.setSecondaryVars();
-   while (isspace(*bp)) bp++;
+   while (bp != buf.end() && isspace(*bp)) bp++;
    if (bp == buf.end()) return 0;
    c = *bp;
    if (c == '-')

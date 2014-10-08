@@ -18,7 +18,7 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
 {
     // sanity checks
     ASSERT(!IsNull(best));
-    ASSERT(OnBoard(StartSquare(best)) && !OnBoard(DestSquare(best)));
+    ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
     const Piece pieceMoved = MakePiece(PieceMoved(best),side);
     HistoryEntry &h = history[pieceMoved][DestSquare(best)];
     for (int i=0; i<parentNode->num_try; i++) {

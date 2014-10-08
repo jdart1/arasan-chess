@@ -40,21 +40,29 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define VERIFY_NULL_SEARCH
 #define STATIC_NULL_PRUNING
-//#define HISTORY_PRUNING
 #define RAZORING
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
-static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT/2;
+static const int SEE_PRUNING_DEPTH = int(1.5*DEPTH_INCREMENT);
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const int LMR_DEPTH = int(2.25F*DEPTH_INCREMENT);
+static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
-static const int BASE_LMR_REDUCTION = DEPTH_INCREMENT;
+static const double LMR_BASE = 0.3;
+static const double LMR_NON_PV = 2.0;
+static const double LMR_PV = 3.5;
+static const int LMR_RESERVE = 1;
+
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
+
+static const int LMP_DEPTH=10;
+
+static const int LMP_MOVE_COUNT[11] = {1, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
+};
 
 static const int FUTILITY_MARGIN[4] =
    {(int)1.46*PAWN_VALUE,
@@ -81,15 +89,7 @@ static const int STATIC_NULL_MARGIN[16] = {
     (int)9.62*PAWN_VALUE,
     (int)9.70*PAWN_VALUE};
 
-static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.75*PAWN_VALUE);
-
-static const int HISTORY_PRUNE_DEPTH = 12;
-struct HistoryPruneParams {
-  int historyMinMoveCount;
-  int evalThreshold;
-  int pruningMinMoveCount;
-};
-static HistoryPruneParams HISTORY_PRUNE_PARAMS[HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT];
+static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -146,15 +146,21 @@ SearchController::SearchController()
     for (int d = 0; d < 64; d++) {
       for (int moves= 0; moves < 64; moves++) {
         LMR_REDUCTION[0][d][moves] = 
-            LMR_REDUCTION[1][d][moves] = BASE_LMR_REDUCTION;
-        Bitboard b1(moves);
-        Bitboard b2(d);
-        int extra_lmr = 0;
-        if (moves && d>2) {
-            extra_lmr = DEPTH_INCREMENT*Util::Max(0,b1.lastOne()+b2.lastOne()-2)/4;
+           LMR_REDUCTION[1][d][moves] = 0;
+        if (d >= 2 && moves > 0) {
+           // Formula similar to Protector & Toga. Tuned Sept. 2014.
+           double f = LMR_BASE + log((double)d) * log((double)moves);
+           double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
+           for (int i = 0; i < 2; i++) {
+              int r = int(reduction[i]*DEPTH_INCREMENT + 0.5);
+              // do not reduce into the q-search
+              if (r > (d*DEPTH_INCREMENT-LMR_RESERVE)) {
+                 r = (d*DEPTH_INCREMENT-LMR_RESERVE);
+              }
+              if (r < DEPTH_INCREMENT) r = 0;
+              LMR_REDUCTION[i][d][moves] = r;
+           }
         }
-        LMR_REDUCTION[1][d][moves] += extra_lmr/2;
-        LMR_REDUCTION[0][d][moves] += extra_lmr;
       }
     }
 /*
@@ -165,20 +171,6 @@ SearchController::SearchController()
       }
     }
 */
-    for (int depth = 0; depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT; depth++) {
-        HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-        p.pruningMinMoveCount = 3 + int((0.5F*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT));
-        p.historyMinMoveCount = 1 + depth/DEPTH_INCREMENT;
-        const float depthDivisor = log(2+pow((float)depth/DEPTH_INCREMENT,2.0F));
-        p.evalThreshold = (depth <= DEPTH_INCREMENT) ? 
-            (int)(0.7F*Constants::HISTORY_MAX) : (int)((0.7F / pow((float)depthDivisor,1.25F))*Constants::HISTORY_MAX);
-        /*
-        if (depth % DEPTH_INCREMENT == 0) cout << "-- ply " << depth/DEPTH_INCREMENT << endl;
-        cout << p.pruningMinMoveCount << ' ' << 
-            p.historyMinMoveCount << ' ' <<
-            p.evalThreshold << endl;
-        */
-    }
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -1183,10 +1175,23 @@ int depth, Move exclude [], int num_exclude)
             cout << "score = " << try_score << " - no cutoff, researching .." << endl;
 #endif
             if (extend < 0) {
-                extend = 0;
-                node->extensions = 0;
+               extend = 0;
+               node->extensions = 0;
+               if (hibound == lobound+1) {
+                  // first try a non-reduced zero-width search
+                  if (depth+extend-DEPTH_INCREMENT > 0)
+                     try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
+                  else
+                     try_score=-quiesce(-hibound,-lobound,1,0);
+#ifdef _TRACE
+                  cout << "0. ";
+                  MoveImage(move,cout);
+                  cout << ' ' << try_score;
+                  cout << endl;
+#endif
+               }
             }
-            if (try_score > node->best_score) {
+            if (try_score > node->best_score && !terminate) {
               if (depth+extend-DEPTH_INCREMENT > 0)
                 try_score=-search(-node->beta,-lobound,1,depth+extend-DEPTH_INCREMENT);
               else
@@ -2021,98 +2026,87 @@ int Search::calcExtensions(const Board &board,
        (board.getMaterial(White).men() +
         board.getMaterial(Black).men() > 6);
 
-    if (pruneOk) {
-        const Move &threat = parentNode->threatMove;
-        if (!IsNull(threat)) {
-            if (StartSquare(move) == DestSquare(threat)) {
-                // threatened piece is being moved, don't prune
-                pruneOk = 0;
-            } else if (Sliding(board[StartSquare(threat)])) {
-                Bitboard btwn;
-                board.between(StartSquare(threat),DestSquare(threat),btwn);
-                if (btwn.isSet(DestSquare(move))) {
-                   if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-                   if (swap) { 
-                      // safe interposition
-                      pruneOk = 0;
-                   }
-                }
+   if (!node->PV() && ply > 0 && pruneOk) {
+      const Move &threat = parentNode->threatMove;
+      if (!IsNull(threat)) {
+         if (StartSquare(move) == DestSquare(threat) ||
+             DestSquare(move) == DestSquare(threat)) {
+            // We are moving a threatened piece, or we are 
+            // blocking the dest square of the threat
+            pruneOk = 0;
+         } else if (Sliding(board[StartSquare(threat)])) {
+            Bitboard btwn;
+            board.between(StartSquare(threat),DestSquare(threat),btwn);
+            if (btwn.isSet(DestSquare(move))) {
+               if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+               if (swap) { 
+                  // safe interposition
+                  pruneOk = 0;
+               }
             }
-            if (pruneOk) {
-                // check for move defending threatened piece (idea from Stockfish)
-                PieceType cap = Capture(threat);
-                PieceType pm = PieceMoved(threat);
-                if (cap != Empty &&
-                    (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
-                    board.wouldAttack(move,DestSquare(threat))) {
-                    pruneOk = 0; // don't prune
-                }
+         }
+         if (pruneOk) {
+            // check for move defending dest square, if threat is a
+            // capture or promotion
+            PieceType cap = Capture(threat);
+            PieceType pm = PieceMoved(threat);
+            if (TypeOfMove(threat)==Promotion || ((cap != Empty) &&
+                                                  (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
+                                                  board.wouldAttack(move,DestSquare(threat)))) {
+               pruneOk = 0; // don't prune
             }
-        }
-    }
-
-    if (!node->PV() && ply > 0 && pruneOk) {
-       // futility pruning, enabled at low depths
-       if (depth <= FUTILITY_DEPTH) {
-          // threshold increases with move index
-          int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
-          int threshold = parentNode->beta - fmargin;
-          if (node->eval == Scoring::INVALID_SCORE) {
-             node->eval = node->staticEval = scoring.evalu8(board);
-          }
-          if (node->eval < threshold) {
+         }
+      }
+      if (pruneOk) {
+         // futility pruning, enabled at low depths
+         if (depth <= FUTILITY_DEPTH) {
+            // threshold increases with move index
+            int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
+            int threshold = parentNode->beta - fmargin;
+            if (node->eval == Scoring::INVALID_SCORE) {
+               node->eval = node->staticEval = scoring.evalu8(board);
+            }
+            if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-              controller->stats->futility_pruning++;
+               controller->stats->futility_pruning++;
 #endif
-              return PRUNE;
-          }
-       }
-       if(depth < HISTORY_PRUNE_DEPTH*DEPTH_INCREMENT &&
-          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-           const HistoryPruneParams &p = HISTORY_PRUNE_PARAMS[depth];
-           // Late move pruning (LMP). Prune quiet moves that are late
-           // in the move order (regardless of history score).
-           if (moveIndex >= p.pruningMinMoveCount) {
+               return PRUNE;
+            }
+         }
+         if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
+            GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+            if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
 #endif
                return PRUNE;
-           }
-#ifdef HISTORY_PRUNING
-           else if (moveIndex >= p.historyMinMoveCount &&
-                    History::scoreForPruning(move,board.sideToMove()) < p.evalThreshold) {
-               // History pruning. Prune moves with low history scores.
+            }
+         }
+      }
+   }
+   // See pruning. Losing captures and moves that put pieces en prise
+   // are pruned at low depths.
+   if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
+       parentNode->num_try &&
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+       (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
 #ifdef SEARCH_STATS
-               ++controller->stats->history_pruning;
+      ++controller->stats->see_pruning;
 #endif
-               return PRUNE;
-           }
-#endif
-       }
-    }
-    // See pruning. Losing captures and moves that put pieces en prise
-    // are pruned at low depths.
-    if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
-        parentNode->num_try &&
-        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-        (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+      return PRUNE;
+   }
+   // See if we do late move reduction. Moves in the history phase of move
+   // generation or later can be searched with reduced depth.
+   if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
+       GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
+       !passedPawnMove(board,move,6)) {
+      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+      node->extensions |= LMR;
 #ifdef SEARCH_STATS
-        ++controller->stats->see_pruning;
+      ++controller->stats->reduced;
 #endif
-        return PRUNE;
-    }
-    // See if we do late move reduction. Moves in the history phase of move
-    // generation or later can be searched with reduced depth.
-    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
-        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
-        !passedPawnMove(board,move,6)) {
-        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-        node->extensions |= LMR;
-#ifdef SEARCH_STATS
-        ++controller->stats->reduced;
-#endif
-    }
-    return extend;
+   }
+   return extend;
 }
 
 int Search::movesRelated( Move lastMove, Move threatMove) const {
@@ -2721,19 +2715,34 @@ int Search::search()
                if (extend < 0) {
                  extend = 0;
                  node->extensions = 0;
-               }
-               if (depth+extend-DEPTH_INCREMENT > 0)
-                    try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-                else
-                    try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
+                 // try zero-width but non-reduced search
+                 if (depth+extend-DEPTH_INCREMENT > 0)
+                    try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                 else
+                    try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
 #ifdef _TRACE
-               if (master()) {
-                   indent(ply);
-                   cout << ply << ". ";
-                   MoveImage(move,cout);
-                   cout << ' ' << try_score << endl;
-               }
+                 if (master()) {
+                    indent(ply);
+                    cout << ply << ". ";
+                    MoveImage(move,cout);
+                    cout << ' ' << try_score << endl;
+                 }
 #endif
+               }
+               if (try_score > node->best_score && !terminate) {
+                  if (depth+extend-DEPTH_INCREMENT > 0)
+                     try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                  else
+                     try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
+#ifdef _TRACE
+                  if (master()) {
+                     indent(ply);
+                     cout << ply << ". ";
+                     MoveImage(move,cout);
+                     cout << ' ' << try_score << endl;
+                  }
+#endif
+               }
             }
             board.undoMove(move,state);
             if (terminate) {
@@ -3081,15 +3090,27 @@ void Search::searchSMP(ThreadInfo *ti)
             if (extend < 0) {
                 node->extensions = 0;
                 extend = 0;
+                if (ply == 0) {
+                   fhr = true;
+                   root()->fail_high_root++;
+                }
+                // first try a zero-width but non-reduced search
+                if (depth+extend-DEPTH_INCREMENT > 0)
+                   try_score=-search(-best_score-1,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                else
+                   try_score=-quiesce(-best_score-1,-best_score,ply+1,0);
+
             }
-            if (ply == 0) {
-                fhr = true;
-                root()->fail_high_root++;
+            if (try_score > parentNode->best_score && !terminate) {
+               if (ply == 0) {
+                  fhr = true;
+                  root()->fail_high_root++;
+               }
+               if (depth+extend-DEPTH_INCREMENT > 0)
+                  try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+               else
+                  try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
             }
-            if (depth+extend-DEPTH_INCREMENT > 0)
-                try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-            else
-                try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
         }
         else
            split->unlock();

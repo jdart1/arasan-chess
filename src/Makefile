@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 17.3
+# Gnu Makefile for Arasan 17.4
 #
-VERSION = 17.3.0
+VERSION = 17.4.0
 
 # paths, modify as needed:
 
@@ -340,3 +340,6 @@ score-tests:
 	perl $(TESTS)/tests.pl $(TESTS)/test-results >>$(TESTS)/test-summary
 
 .PHONY: all clean dirs profile profile-run install release run-tests score-tests
+
+.EXPORT_ALL_VARIABLES:
+

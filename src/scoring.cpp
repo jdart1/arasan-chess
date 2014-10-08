@@ -1343,7 +1343,6 @@ int Scoring::calcPawnData(const Board &board,
    Piece enemy_pawn = MakePiece(Pawn, oside);
    Piece our_pawn = MakePiece(Pawn, side);
    Bitboard bi(board.pawn_bits[side]);
-   Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
    Bitboard potentialPlus, potentialMinus;
    Square sq;
    while(bi.iterate(sq))

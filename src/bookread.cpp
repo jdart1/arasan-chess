@@ -31,12 +31,14 @@ BookReader::~BookReader()
 int BookReader::open(const char *pathName) {
     if (book_file.is_open()) return 0;
     book_file.open(pathName, ios_base::in | ios_base::binary);
-    if (book_file.fail()) {
+    if (!book_file.is_open()) {
+        cerr <<"failed to open " << pathName << endl;
         return -1;
     } else {
         // read the header
         book_file.read((char*)&hdr,sizeof(book::BookHeader));
-        if (book_file.fail()) {
+        if (book_file.bad()) {
+            cerr <<"failed to read header" << endl;
             return -1;
         }
         // correct header for endian-ness
@@ -211,7 +213,7 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    if (!is_open()) return -1;
    int probe = (int)(board.hashCode() % hdr.num_index_pages);
    // seek to index
-   book_file.seekg(sizeof(book::BookHeader)+probe*sizeof(book::IndexPage));
+   book_file.seekg((std::ios::off_type)(sizeof(book::BookHeader)+probe*sizeof(book::IndexPage)), std::ios_base::beg);
    if (book_file.fail()) return -1;
    book::IndexPage index;
    book_file.read((char*)&index,sizeof(book::IndexPage));
@@ -227,7 +229,7 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
          index.index[i].page = (uint16)(swapEndian16((byte*)&index.index[i].page));
          index.index[i].index = (uint16)(swapEndian16((byte*)&index.index[i].index));
          loc = index.index[i];
-	     break;
+         break;
       }
    }
    if (!loc.isValid()) {
