@@ -3,7 +3,7 @@
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 17.3
+VERSION = 17.4
 
 # directory defines - objects
 PROFILE = ..\$(TARGET)\profile
