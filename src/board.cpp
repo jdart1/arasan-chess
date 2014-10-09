@@ -1906,24 +1906,6 @@ void Board::flip() {
    setSecondaryVars();
 }
 
-void Board::flip2() {
-   for (int i=1;i<=4;i++) {
-     for (int j=1;j<=8;j++) {
-       Square sq = MakeSquare(i,j,White);
-       Square sq2 = MakeSquare(9-i,j,White);
-       Piece tmp = contents[sq];
-       contents[sq] = contents[sq2];
-       contents[sq2] = tmp;
-       if (sq == state.enPassantSq) {
-           state.enPassantSq = sq2;
-       } else if (sq2 == state.enPassantSq) {
-           state.enPassantSq = sq;
-       }
-     }
-   }
-   setSecondaryVars();
-}
-
 istream & operator >> (istream &i, Board &board)
 {
    // read in a board position in Forsythe-Edwards (FEN) notation.

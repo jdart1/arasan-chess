@@ -351,9 +351,6 @@ public:
    // flip the board position up/down and change side to move
    void flip();
 
-   // flip board position right/left
-   void flip2();
-
    friend istream & operator >> (istream &i, Board &board);
    friend ostream & operator << (ostream &o, const Board &board);
 
