@@ -21,6 +21,24 @@ class Scoring
 
     static void cleanup();
 
+    static const int NUM_PARAMS = 3;
+
+    enum {
+      KING_COVER_SCALE_DIV,
+      KING_COVER_SCALE_OFF,
+      KING_COVER_SCALE_LIN
+    };
+
+    static struct TuneParam {
+      string name;
+      int current, min, max;
+      TuneParam(const string &n, int x1, int x2, int x3) :
+      name(n),current(x1),min(x2),max(x3) {
+      }
+    } params[NUM_PARAMS];
+    
+    static void initParams();
+
     Scoring();
 
     ~Scoring();

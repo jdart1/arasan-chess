@@ -70,7 +70,18 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    341,342,342,342,342,343,343,343,343,344,344,344,344,345,345,345,
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
+
+static int KING_COVER_SCALE[100];
    
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
+   Scoring::TuneParam("king_cover_div",125,25,250),
+   Scoring::TuneParam("king_cover_off",35,20,60),
+   Scoring::TuneParam("king_cover_scale_lin",40,0,100)
+};
+
+#define PARAM(x) Scoring::params[x].current
+   
+
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
@@ -616,6 +627,29 @@ void Scoring::init() {
 
 }
 
+static float sigmoid1(int x, int off, int div) 
+{
+   float f = float(x-off);
+   return (f/sqrt(1+(f*f)/div));
+}
+
+
+void Scoring::initParams() {
+   const int div = PARAM(KING_COVER_SCALE_DIV);
+   const int off = PARAM(KING_COVER_SCALE_OFF);
+   const float c0 = sigmoid1(0,off,div);
+   const float c99 = sigmoid1(99,off,div);
+   float mult = 99/(c99-c0);
+   float correct = -mult*c0;
+   for (int i = 0; i < 100; i++) {
+      int sigmoid = int(mult*sigmoid1(i,off,div)+correct);
+      KING_COVER_SCALE[i] = (PARAM(KING_COVER_SCALE_LIN)*i +
+                             (100-PARAM(KING_COVER_SCALE_LIN))*sigmoid)/100;
+      cout << KING_COVER_SCALE[i] << ",";
+   }
+   cout << endl;
+}
+
 void Scoring::cleanup() {
 }
 
@@ -905,6 +939,7 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
       coverEntry.cover = cover;
       break;
    }
+   coverEntry.cover = -KING_COVER_SCALE[Util::Min(99,-coverEntry.cover)];
 }
 
 template<ColorType side>

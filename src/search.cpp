@@ -50,9 +50,12 @@ static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const int LMR_DEPTH = 2*DEPTH_INCREMENT;
+static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
 static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const double LMR_BASE = 0.3;
+static const double LMR_NON_PV = 2.0;
+static const double LMR_PV = 3.5;
+static const int LMR_RESERVE = 1;
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
@@ -88,14 +91,6 @@ static const int STATIC_NULL_MARGIN[16] = {
 
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 
-Search::TuneParam Search::params[Search::NUM_PARAMS] = {
-   Search::TuneParam("lmr_reserve",1,0,6),
-   Search::TuneParam("lmr_pv",60,50,150),
-   Search::TuneParam("lmr_non_pv",45,25,150)
-};
-
-#define PARAM(x) Search::params[x].current
-   
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
 static const int NODE_ACCUM_THRESHOLD = 16;
@@ -148,6 +143,34 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
+    for (int d = 0; d < 64; d++) {
+      for (int moves= 0; moves < 64; moves++) {
+        LMR_REDUCTION[0][d][moves] = 
+           LMR_REDUCTION[1][d][moves] = 0;
+        if (d >= 2 && moves > 0) {
+           // Formula similar to Protector & Toga. Tuned Sept. 2014.
+           double f = LMR_BASE + log((double)d) * log((double)moves);
+           double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
+           for (int i = 0; i < 2; i++) {
+              int r = int(reduction[i]*DEPTH_INCREMENT + 0.5);
+              // do not reduce into the q-search
+              if (r > (d*DEPTH_INCREMENT-LMR_RESERVE)) {
+                 r = (d*DEPTH_INCREMENT-LMR_RESERVE);
+              }
+              if (r < DEPTH_INCREMENT) r = 0;
+              LMR_REDUCTION[i][d][moves] = r;
+           }
+        }
+      }
+    }
+/*
+    for (int i = 0; i < 64; i++) {
+      cout << "--- i=" << i << endl;
+      for (int m=0; m<64; m++) {
+      cout << m << " " << LMR_REDUCTION[0][i][m] << ' ' << LMR_REDUCTION[1][i][m] << endl;
+      }
+    }
+*/
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -1152,10 +1175,23 @@ int depth, Move exclude [], int num_exclude)
             cout << "score = " << try_score << " - no cutoff, researching .." << endl;
 #endif
             if (extend < 0) {
-                extend = 0;
-                node->extensions = 0;
+               extend = 0;
+               node->extensions = 0;
+               if (hibound == lobound+1) {
+                  // first try a non-reduced zero-width search
+                  if (depth+extend-DEPTH_INCREMENT > 0)
+                     try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
+                  else
+                     try_score=-quiesce(-hibound,-lobound,1,0);
+#ifdef _TRACE
+                  cout << "0. ";
+                  MoveImage(move,cout);
+                  cout << ' ' << try_score;
+                  cout << endl;
+#endif
+               }
             }
-            if (try_score > node->best_score) {
+            if (try_score > node->best_score && !terminate) {
               if (depth+extend-DEPTH_INCREMENT > 0)
                 try_score=-search(-node->beta,-lobound,1,depth+extend-DEPTH_INCREMENT);
               else
@@ -2679,19 +2715,34 @@ int Search::search()
                if (extend < 0) {
                  extend = 0;
                  node->extensions = 0;
-               }
-               if (depth+extend-DEPTH_INCREMENT > 0)
-                    try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-                else
-                    try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
+                 // try zero-width but non-reduced search
+                 if (depth+extend-DEPTH_INCREMENT > 0)
+                    try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                 else
+                    try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
 #ifdef _TRACE
-               if (master()) {
-                   indent(ply);
-                   cout << ply << ". ";
-                   MoveImage(move,cout);
-                   cout << ' ' << try_score << endl;
-               }
+                 if (master()) {
+                    indent(ply);
+                    cout << ply << ". ";
+                    MoveImage(move,cout);
+                    cout << ' ' << try_score << endl;
+                 }
 #endif
+               }
+               if (try_score > node->best_score && !terminate) {
+                  if (depth+extend-DEPTH_INCREMENT > 0)
+                     try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                  else
+                     try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
+#ifdef _TRACE
+                  if (master()) {
+                     indent(ply);
+                     cout << ply << ". ";
+                     MoveImage(move,cout);
+                     cout << ' ' << try_score << endl;
+                  }
+#endif
+               }
             }
             board.undoMove(move,state);
             if (terminate) {
@@ -3039,15 +3090,27 @@ void Search::searchSMP(ThreadInfo *ti)
             if (extend < 0) {
                 node->extensions = 0;
                 extend = 0;
+                if (ply == 0) {
+                   fhr = true;
+                   root()->fail_high_root++;
+                }
+                // first try a zero-width but non-reduced search
+                if (depth+extend-DEPTH_INCREMENT > 0)
+                   try_score=-search(-best_score-1,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+                else
+                   try_score=-quiesce(-best_score-1,-best_score,ply+1,0);
+
             }
-            if (ply == 0) {
-                fhr = true;
-                root()->fail_high_root++;
+            if (try_score > parentNode->best_score && !terminate) {
+               if (ply == 0) {
+                  fhr = true;
+                  root()->fail_high_root++;
+               }
+               if (depth+extend-DEPTH_INCREMENT > 0)
+                  try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+               else
+                  try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
             }
-            if (depth+extend-DEPTH_INCREMENT > 0)
-                try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-            else
-                try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
         }
         else
            split->unlock();
@@ -3399,37 +3462,6 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     // clear killer since the side to move may have been different
     // in the previous use of this class.
     context.clearKiller();
-}
-
-void Search::initParams() {
-    for (int d = 0; d < 64; d++) {
-      for (int moves= 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] = 
-           LMR_REDUCTION[1][d][moves] = 0;
-        if (d >= 2 && moves > 0) {
-           // Formula similar to Protector & Toga. Tuned Sept. 2014.
-           double f = LMR_BASE + log((double)d) * log((double)moves);
-           double reduction[2] = {(f*20)/PARAM(LMR_NON_PV), (f*20)/PARAM(LMR_PV)};
-           for (int i = 0; i < 2; i++) {
-              int r = int(reduction[i]*DEPTH_INCREMENT + 0.5);
-              // do not reduce into the q-search
-              if (r > (d*DEPTH_INCREMENT-PARAM(LMR_RESERVE))) {
-                 r = (d*DEPTH_INCREMENT-PARAM(LMR_RESERVE));
-              }
-              if (r < DEPTH_INCREMENT) r = 0;
-              LMR_REDUCTION[i][d][moves] = r;
-           }
-        }
-      }
-    }
-/*
-    for (int i = 0; i <= 8; i++) {
-      cout << "--- i=" << i << endl;
-      for (int m=0; m<64; m++) {
-      cout << m << " " << LMR_REDUCTION[0][i][m]/4.0 << ' ' << LMR_REDUCTION[1][i][m]/4.0 << endl;
-      }
-    }
-*/
 }
 
 void Search::clearHashTables() {
