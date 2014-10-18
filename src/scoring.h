@@ -21,12 +21,17 @@ class Scoring
 
     static void cleanup();
 
-    static const int NUM_PARAMS = 3;
+    static const int NUM_PARAMS = 8;
 
     enum {
-      KING_COVER_SCALE_DIV,
-      KING_COVER_SCALE_OFF,
-      KING_COVER_SCALE_LIN
+      CONNECTED_PASSER7_1,
+      CONNECTED_PASSER6_1_FACTOR,
+      CONNECTED_PASSER5_1_FACTOR,
+      CONNECTED_PASSER_1_ENDGAME_FACTOR,
+      CONNECTED_PASSER7_2,
+      CONNECTED_PASSER6_2_FACTOR,
+      CONNECTED_PASSER5_2_FACTOR,
+      CONNECTED_PASSER_2_ENDGAME_FACTOR
     };
 
     static struct TuneParam {

@@ -71,12 +71,18 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
 
-static int KING_COVER_SCALE[100];
-   
+static int CONNECTED_PASSER[2][3]; // same rank
+static int CONNECTED_PASSER2[2][3]; // adjacent rank
+
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("king_cover_div",125,25,250),
-   Scoring::TuneParam("king_cover_off",35,20,60),
-   Scoring::TuneParam("king_cover_scale_lin",40,0,100)
+   Scoring::TuneParam("connected_passer7_1",75,0,200),
+   Scoring::TuneParam("connected_passer6_1_factor",50,0,80),
+   Scoring::TuneParam("connected_passer5_1_factor",50,0,80),
+   Scoring::TuneParam("connected_passer_1_endgame_factor",100,50,150),
+   Scoring::TuneParam("connected_passer7_2",50,0,150),
+   Scoring::TuneParam("connected_passer6_2_factor",50,0,80),
+   Scoring::TuneParam("connected_passer7_2_factor",50,0,80),
+   Scoring::TuneParam("connected_passer_2_endgame_factor",50,0,125)
 };
 
 #define PARAM(x) Scoring::params[x].current
@@ -248,10 +254,6 @@ static const int OUTSIDE_PP[2] = { 12, 25 };
 static const int Midgame = 0;
 static const int Endgame = 1;
 
-static const int CONNECTED_PASSERS[2][8] = {
-   { 0, 0, 0, 0, 0, 0, 19, 13 },
-   { 0, 0, 0, 0, 0, 0, 38, 26 }
-};
 
 // by file:
 static const int DOUBLED_PAWNS[2][8] =
@@ -297,6 +299,7 @@ static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
 static Bitboard outpostW[64], outpostB[64];
 static Bitboard connected_passers[64][2];
+static Bitboard connected_passers2[64][2];
 static Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
 static Bitboard abcd_mask, efgh_mask;
 static Bitboard left_side_mask[8], right_side_mask[8];
@@ -471,8 +474,8 @@ static void initBitboards() {
          connected_passers[i][Black].set(i + 1);
       }
 
-      connected_passers[i][Black] |= Attacks::pawn_attacks[i][Black];
-      connected_passers[i][White] |= Attacks::pawn_attacks[i][White];
+      connected_passers2[i][Black] |= Attacks::pawn_attacks[i][Black];
+      connected_passers2[i][White] |= Attacks::pawn_attacks[i][White];
       for(r = rank + 1; r < 8; r++) {
          Square sq2 = MakeSquare(file, r, Black);
          passedB[i].set((int) sq2);
@@ -635,19 +638,16 @@ static float sigmoid1(int x, int off, int div)
 
 
 void Scoring::initParams() {
-   const int div = PARAM(KING_COVER_SCALE_DIV);
-   const int off = PARAM(KING_COVER_SCALE_OFF);
-   const float c0 = sigmoid1(0,off,div);
-   const float c99 = sigmoid1(99,off,div);
-   float mult = 99/(c99-c0);
-   float correct = -mult*c0;
-   for (int i = 0; i < 100; i++) {
-      int sigmoid = int(mult*sigmoid1(i,off,div)+correct);
-      KING_COVER_SCALE[i] = (PARAM(KING_COVER_SCALE_LIN)*i +
-                             (100-PARAM(KING_COVER_SCALE_LIN))*sigmoid)/100;
-      cout << KING_COVER_SCALE[i] << ",";
+   CONNECTED_PASSER[Midgame][2] = PARAM(CONNECTED_PASSER7_1);
+   CONNECTED_PASSER[Midgame][1] = PARAM(CONNECTED_PASSER7_1)*PARAM(CONNECTED_PASSER6_1_FACTOR)/100;
+   CONNECTED_PASSER[Midgame][0] = CONNECTED_PASSER[Midgame][1]*PARAM(CONNECTED_PASSER5_1_FACTOR)/100;
+   CONNECTED_PASSER2[Midgame][2] = PARAM(CONNECTED_PASSER7_2);
+   CONNECTED_PASSER2[Midgame][1] = PARAM(CONNECTED_PASSER7_2)*PARAM(CONNECTED_PASSER6_2_FACTOR)/100;
+   CONNECTED_PASSER2[Midgame][0] = CONNECTED_PASSER[Midgame][1]*PARAM(CONNECTED_PASSER5_2_FACTOR)/100;
+   for (int i = 0; i < 3; i++) {
+      CONNECTED_PASSER[Endgame][i] = CONNECTED_PASSER[Midgame][i]*PARAM(CONNECTED_PASSER_1_ENDGAME_FACTOR)/100;
+      CONNECTED_PASSER2[Endgame][i] = CONNECTED_PASSER2[Midgame][i]*PARAM(CONNECTED_PASSER_2_ENDGAME_FACTOR)/100;
    }
-   cout << endl;
 }
 
 void Scoring::cleanup() {
@@ -939,7 +939,6 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
       coverEntry.cover = cover;
       break;
    }
-   coverEntry.cover = -KING_COVER_SCALE[Util::Min(99,-coverEntry.cover)];
 }
 
 template<ColorType side>
@@ -1686,14 +1685,23 @@ int Scoring::calcPawnData(const Board &board,
 
    Bitboard passers2(entr.passers);
    while(passers2.iterate(sq)) {
-      if (TEST_MASK(connected_passers[sq][side], entr.passers)) {
-         entr.midgame_score += CONNECTED_PASSERS[Midgame][Rank(sq, side)];
-         entr.endgame_score += CONNECTED_PASSERS[Endgame][Rank(sq, side)];
+      if (Rank(sq,side) >= 5 && TEST_MASK(connected_passers[sq][side], entr.passers)) {
+         entr.midgame_score += CONNECTED_PASSER[Midgame][Rank(sq, side)-5];
+         entr.endgame_score += CONNECTED_PASSER[Endgame][Rank(sq, side)-5];
 #ifdef PAWN_DEBUG
          cout << "connected passer score, " << SquareImage(sq) << " (";
          cout << ColorImage(side);
-         cout << ") : (" << CONNECTED_PASSERS[Midgame][Rank(sq, side)] << ", " << CONNECTED_PASSERS[Endgame][Rank(sq,
-                                                                                                                  side)];
+         cout << ") : (" << CONNECTED_PASSER[Midgame][Rank(sq, side)-5] << ", " << CONNECTED_PASSER[Endgame][Rank(sq,side)-5];
+         cout << ")" << endl;
+#endif
+      }
+      if (Rank(sq,side) >= 5 && TEST_MASK(connected_passers2[sq][side], entr.passers)) {
+         entr.midgame_score += CONNECTED_PASSER2[Midgame][Rank(sq, side)-5];
+         entr.endgame_score += CONNECTED_PASSER2[Endgame][Rank(sq, side)-5];
+#ifdef PAWN_DEBUG
+         cout << "connected passer score, " << SquareImage(sq) << " (";
+         cout << ColorImage(side);
+         cout << ") : (" << CONNECTED_PASSER2[Midgame][Rank(sq, side)-5] << ", " << CONNECTED_PASSER[Endgame][Rank(sq,side)-5];
          cout << ")" << endl;
 #endif
       }
