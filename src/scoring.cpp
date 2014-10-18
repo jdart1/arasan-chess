@@ -237,10 +237,12 @@ static const int OUTSIDE_PP[2] = { 12, 25 };
 static const int Midgame = 0;
 static const int Endgame = 1;
 
-static const int CONNECTED_PASSERS[2][8] = {
-   { 0, 0, 0, 0, 0, 0, 19, 13 },
-   { 0, 0, 0, 0, 0, 0, 38, 26 }
-};
+// same rank
+static const int CONNECTED_PASSERS[8] = 
+{ 0, 0, 0, 0, 0, 29, 57, 115 };
+// adjacent rank
+static const int CONNECTED_PASSERS2[8] =
+{ 0, 0, 0, 0, 0, 22, 44, 75 };
 
 // by file:
 static const int DOUBLED_PAWNS[2][8] =
@@ -453,11 +455,6 @@ static void initBitboards() {
             sq2 = MakeSquare(file - 1, r, Black);
             backwardB[i].set(sq2);
          }
-      }
-
-      if (file != 8) {
-         connected_passers[i][White].set(i + 1);
-         connected_passers[i][Black].set(i + 1);
       }
 
       connected_passers[i][Black] |= Attacks::pawn_attacks[i][Black];
@@ -1649,21 +1646,26 @@ int Scoring::calcPawnData(const Board &board,
 #endif
    }
 
-   Bitboard passers2(entr.passers);
-   while(passers2.iterate(sq)) {
-      if (TEST_MASK(connected_passers[sq][side], entr.passers)) {
-         entr.midgame_score += CONNECTED_PASSERS[Midgame][Rank(sq, side)];
-         entr.endgame_score += CONNECTED_PASSERS[Endgame][Rank(sq, side)];
-#ifdef PAWN_DEBUG
-         cout << "connected passer score, " << SquareImage(sq) << " (";
-         cout << ColorImage(side);
-         cout << ") : (" << CONNECTED_PASSERS[Midgame][Rank(sq, side)] << ", " << CONNECTED_PASSERS[Endgame][Rank(sq,
-                                                                                                                  side)];
-         cout << ")" << endl;
-#endif
+   Bitboard passers(entr.passers);
+   int cp_score = 0;
+   while(passers.iterate(sq)) {
+      if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
+        cp_score = CONNECTED_PASSERS[Rank(sq, side)];
+      }
+      else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
+        cp_score = CONNECTED_PASSERS2[Rank(sq, side)];
       }
    }
-
+   if (cp_score) {
+     entr.midgame_score += cp_score;
+     entr.endgame_score += cp_score;
+#ifdef EVAL_DEBUG
+     cout << "connected passer score, square ";
+     SquareImage(sq,cout);
+     cout << " = " << cp_score << endl;
+#endif   
+   }
+   
    Bitboard centerCalc(center & board.pawn_bits[side]);
 #ifdef PAWN_DEBUG
    int tmp = entr.midgame_score;
