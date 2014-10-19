@@ -287,7 +287,6 @@ static const int SUPPORTED_PASSER7 = 76;
 static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
 static Bitboard outpostW[64], outpostB[64];
-static Bitboard connected_passers[64][2];
 static Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
 static Bitboard abcd_mask, efgh_mask;
 static Bitboard left_side_mask[8], right_side_mask[8];
@@ -457,8 +456,6 @@ static void initBitboards() {
          }
       }
 
-      connected_passers[i][Black] |= Attacks::pawn_attacks[i][Black];
-      connected_passers[i][White] |= Attacks::pawn_attacks[i][White];
       for(r = rank + 1; r < 8; r++) {
          Square sq2 = MakeSquare(file, r, Black);
          passedB[i].set((int) sq2);
