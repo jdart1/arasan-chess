@@ -70,24 +70,21 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    341,342,342,342,342,343,343,343,343,344,344,344,344,345,345,345,
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
-
-static int CONNECTED_PASSER[2][3]; // same rank
-static int CONNECTED_PASSER2[2][3]; // adjacent rank
-
+   
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("connected_passer7_1",75,0,200),
-   Scoring::TuneParam("connected_passer6_1_factor",50,0,80),
-   Scoring::TuneParam("connected_passer5_1_factor",50,0,80),
-   Scoring::TuneParam("connected_passer_1_endgame_factor",100,50,150),
-   Scoring::TuneParam("connected_passer7_2",50,0,150),
-   Scoring::TuneParam("connected_passer6_2_factor",50,0,80),
-   Scoring::TuneParam("connected_passer7_2_factor",50,0,80),
-   Scoring::TuneParam("connected_passer_2_endgame_factor",50,0,125)
+   Scoring::TuneParam("endgame_pawn_value",100,64,128),
+   Scoring::TuneParam("midgame_knight_value",325,275,375),
+   Scoring::TuneParam("endgame_knight_value",325,275,375),
+   Scoring::TuneParam("midgame_bishop_value",325,275,375),
+   Scoring::TuneParam("endgame_bishop_value",325,275,375),
+   Scoring::TuneParam("midgame_rook_value",500,450,550),
+   Scoring::TuneParam("endgame_rook_value",500,450,550),
+   Scoring::TuneParam("midgame_queen_value",975,925,1050),
+   Scoring::TuneParam("endgame_queen_value",975,925,1050)
 };
 
 #define PARAM(x) Scoring::params[x].current
    
-
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
@@ -254,6 +251,12 @@ static const int OUTSIDE_PP[2] = { 12, 25 };
 static const int Midgame = 0;
 static const int Endgame = 1;
 
+// same rank
+static const int CONNECTED_PASSERS[8] = 
+{ 0, 0, 0, 0, 0, 29, 57, 115 };
+// adjacent rank
+static const int CONNECTED_PASSERS2[8] =
+{ 0, 0, 0, 0, 0, 22, 44, 75 };
 
 // by file:
 static const int DOUBLED_PAWNS[2][8] =
@@ -298,8 +301,6 @@ static const int SUPPORTED_PASSER7 = 76;
 static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
 static Bitboard outpostW[64], outpostB[64];
-static Bitboard connected_passers[64][2];
-static Bitboard connected_passers2[64][2];
 static Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
 static Bitboard abcd_mask, efgh_mask;
 static Bitboard left_side_mask[8], right_side_mask[8];
@@ -469,13 +470,6 @@ static void initBitboards() {
          }
       }
 
-      if (file != 8) {
-         connected_passers[i][White].set(i + 1);
-         connected_passers[i][Black].set(i + 1);
-      }
-
-      connected_passers2[i][Black] |= Attacks::pawn_attacks[i][Black];
-      connected_passers2[i][White] |= Attacks::pawn_attacks[i][White];
       for(r = rank + 1; r < 8; r++) {
          Square sq2 = MakeSquare(file, r, Black);
          passedB[i].set((int) sq2);
@@ -628,26 +622,6 @@ static void initBitboards() {
 void Scoring::init() {
    initBitboards();
 
-}
-
-static float sigmoid1(int x, int off, int div) 
-{
-   float f = float(x-off);
-   return (f/sqrt(1+(f*f)/div));
-}
-
-
-void Scoring::initParams() {
-   CONNECTED_PASSER[Midgame][2] = PARAM(CONNECTED_PASSER7_1);
-   CONNECTED_PASSER[Midgame][1] = PARAM(CONNECTED_PASSER7_1)*PARAM(CONNECTED_PASSER6_1_FACTOR)/100;
-   CONNECTED_PASSER[Midgame][0] = CONNECTED_PASSER[Midgame][1]*PARAM(CONNECTED_PASSER5_1_FACTOR)/100;
-   CONNECTED_PASSER2[Midgame][2] = PARAM(CONNECTED_PASSER7_2);
-   CONNECTED_PASSER2[Midgame][1] = PARAM(CONNECTED_PASSER7_2)*PARAM(CONNECTED_PASSER6_2_FACTOR)/100;
-   CONNECTED_PASSER2[Midgame][0] = CONNECTED_PASSER[Midgame][1]*PARAM(CONNECTED_PASSER5_2_FACTOR)/100;
-   for (int i = 0; i < 3; i++) {
-      CONNECTED_PASSER[Endgame][i] = CONNECTED_PASSER[Midgame][i]*PARAM(CONNECTED_PASSER_1_ENDGAME_FACTOR)/100;
-      CONNECTED_PASSER2[Endgame][i] = CONNECTED_PASSER2[Midgame][i]*PARAM(CONNECTED_PASSER_2_ENDGAME_FACTOR)/100;
-   }
 }
 
 void Scoring::cleanup() {
@@ -1683,30 +1657,26 @@ int Scoring::calcPawnData(const Board &board,
 #endif
    }
 
-   Bitboard passers2(entr.passers);
-   while(passers2.iterate(sq)) {
-      if (Rank(sq,side) >= 5 && TEST_MASK(connected_passers[sq][side], entr.passers)) {
-         entr.midgame_score += CONNECTED_PASSER[Midgame][Rank(sq, side)-5];
-         entr.endgame_score += CONNECTED_PASSER[Endgame][Rank(sq, side)-5];
-#ifdef PAWN_DEBUG
-         cout << "connected passer score, " << SquareImage(sq) << " (";
-         cout << ColorImage(side);
-         cout << ") : (" << CONNECTED_PASSER[Midgame][Rank(sq, side)-5] << ", " << CONNECTED_PASSER[Endgame][Rank(sq,side)-5];
-         cout << ")" << endl;
-#endif
+   Bitboard passers(entr.passers);
+   int cp_score = 0;
+   while(passers.iterate(sq)) {
+      if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
+        cp_score = CONNECTED_PASSERS[Rank(sq, side)];
       }
-      if (Rank(sq,side) >= 5 && TEST_MASK(connected_passers2[sq][side], entr.passers)) {
-         entr.midgame_score += CONNECTED_PASSER2[Midgame][Rank(sq, side)-5];
-         entr.endgame_score += CONNECTED_PASSER2[Endgame][Rank(sq, side)-5];
-#ifdef PAWN_DEBUG
-         cout << "connected passer score, " << SquareImage(sq) << " (";
-         cout << ColorImage(side);
-         cout << ") : (" << CONNECTED_PASSER2[Midgame][Rank(sq, side)-5] << ", " << CONNECTED_PASSER[Endgame][Rank(sq,side)-5];
-         cout << ")" << endl;
-#endif
+      else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
+        cp_score = CONNECTED_PASSERS2[Rank(sq, side)];
       }
    }
-
+   if (cp_score) {
+     entr.midgame_score += cp_score;
+     entr.endgame_score += cp_score;
+#ifdef EVAL_DEBUG
+     cout << "connected passer score, square ";
+     SquareImage(sq,cout);
+     cout << " = " << cp_score << endl;
+#endif   
+   }
+   
    Bitboard centerCalc(center & board.pawn_bits[side]);
 #ifdef PAWN_DEBUG
    int tmp = entr.midgame_score;
@@ -1762,11 +1732,13 @@ int Scoring::evalu8(const Board &board) {
     const int opp_pieces = oppmat.pieceBits();
     // check for bishop endgame - drawish
     int adjust = 0;
+/*
     if (our_pieces == Material::KB && opp_pieces == Material::KB) {
         // Bishop endgame: drawish
         if (Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4)
             adjust -= mdiff/4;
     }
+*/
     if (ourmat.pieceBits() != oppmat.pieceBits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
             adjust += adjustMaterialScoreNoPawns(board,side) -
@@ -1795,6 +1767,9 @@ int Scoring::evalu8(const Board &board) {
    }
 
    Scores wScores, bScores;
+
+   materialScore<White>(board,wScores);
+   materialScore<Black>(board,bScores);
 
    // compute positional scores
    positionalScore<White> (board, pawnEntry, wScores, bScores);
@@ -2141,6 +2116,20 @@ Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board) {
       calcPawnEntry(board, pawnEntry);
    }
    return pawnEntry;
+}
+
+template<ColorType side>
+void Scoring::materialScore(const Board &board, Scores &scores) 
+{
+   const Material &mat = board.getMaterial(side);
+   scores.mid += PAWN_VALUE*mat.pawnCount() +
+      PARAM(MIDGAME_KNIGHT_VALUE)*mat.knightCount() +
+      PARAM(MIDGAME_BISHOP_VALUE)*mat.bishopCount() +
+      PARAM(MIDGAME_QUEEN_VALUE)*mat.queenCount();
+   scores.end += PARAM(ENDGAME_PAWN_VALUE)*mat.pawnCount() +
+      PARAM(ENDGAME_KNIGHT_VALUE)*mat.knightCount() +
+      PARAM(ENDGAME_BISHOP_VALUE)*mat.bishopCount() +
+      PARAM(ENDGAME_QUEEN_VALUE)*mat.queenCount();
 }
 
 template<ColorType side>

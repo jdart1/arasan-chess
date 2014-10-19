@@ -21,18 +21,18 @@ class Scoring
 
     static void cleanup();
 
-    static const int NUM_PARAMS = 8;
+    static const int NUM_PARAMS = 9;
 
     enum {
-      CONNECTED_PASSER7_1,
-      CONNECTED_PASSER6_1_FACTOR,
-      CONNECTED_PASSER5_1_FACTOR,
-      CONNECTED_PASSER_1_ENDGAME_FACTOR,
-      CONNECTED_PASSER7_2,
-      CONNECTED_PASSER6_2_FACTOR,
-      CONNECTED_PASSER5_2_FACTOR,
-      CONNECTED_PASSER_2_ENDGAME_FACTOR
-    };
+      ENDGAME_PAWN_VALUE,
+      MIDGAME_KNIGHT_VALUE,
+      ENDGAME_KNIGHT_VALUE,
+      MIDGAME_BISHOP_VALUE,
+      ENDGAME_BISHOP_VALUE,
+      MIDGAME_ROOK_VALUE,
+      ENDGAME_ROOK_VALUE,
+      MIDGAME_QUEEN_VALUE,
+      ENDGAME_QUEEN_VALUE };
 
     static struct TuneParam {
       string name;
@@ -170,13 +170,13 @@ class Scoring
     };
 
     template <ColorType side>
-     void  positionalScore( const Board &board,
+     void positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
                             Scores &scores,
                             Scores &oppScores);
 
-    // return a material score vector
-    Scores materialScore( const Board &board );
+    template <ColorType side>
+      void materialScore( const Board &board, Scores &scores);
 
     int adjustMaterialScore(const Board &board, ColorType side);
 
