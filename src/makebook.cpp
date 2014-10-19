@@ -194,7 +194,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
           cout << "count=" << p->count << " moveEval=" <<
               (int)p->moveEval << " posEval=" << (int)p->eval << endl;
 #endif
-          if (p->first && p->count < Util::Max(2,minFrequency) && 
+          if (p->first && p->count < (unsigned)Util::Max(2,minFrequency) && 
               (p->moveEval != NO_MOVE_EVAL || p->eval != NO_POSITION_EVAL)) {
              // This move is in the first annotated book file but
              // occurs elsewhere with very low frequency. If we have
