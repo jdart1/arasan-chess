@@ -71,24 +71,28 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
    
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("endgame_pawn_value",100,64,128),
-   Scoring::TuneParam("midgame_knight_value",325,275,375),
-   Scoring::TuneParam("endgame_knight_value",325,275,375),
-   Scoring::TuneParam("midgame_bishop_value",325,275,375),
-   Scoring::TuneParam("endgame_bishop_value",325,275,375),
-   Scoring::TuneParam("midgame_rook_value",500,450,550),
-   Scoring::TuneParam("endgame_rook_value",500,450,550),
-   Scoring::TuneParam("midgame_queen_value",975,925,1050),
-   Scoring::TuneParam("endgame_queen_value",975,925,1050)
-};
-
-#define PARAM(x) Scoring::params[x].current
-   
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
 
+
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
+   TuneParam("knight_mobility_zero",3,2,5),
+   TuneParam("knight_mobility_base",6,0,20),
+   TuneParam("knight_mobility_mult",20,0,40),
+   TuneParam("knight_mobility_endgame_factor",12,6,18),
+   TuneParam("bishop_mobility_zero",6,2,8),
+   TuneParam("bishop_mobility_base",6,0,20),
+   TuneParam("bishop_mobility_mult",20,0,40),
+   TuneParam("bishop_mobility_endgame_factor",12,6,18),
+   TuneParam("rook_mobility_zero",5,2,8),
+   TuneParam("rook_mobility_base",6,0,20),
+   TuneParam("rook_mobility_mult",20,0,40),
+   TuneParam("rook_mobility_endgame_factor",12,6,18)
+};
+
+#define PARAM(x) Scoring::params[x].current
+   
 const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
@@ -281,13 +285,12 @@ static const int QUEEN_OUT = -6;
 static const int PASSER_OWN_PIECE_BLOCK[2] = { -2, -5 };
 static const int SIDE_PROTECTED_PAWN = -10;
 
-static const int KNIGHT_MOBILITY[9] = { -18, -7, -2, 0, 2, 5, 7, 10, 12 };
-static const int ROOK_MOBILITY[2][16] =
-{
-   { -22, -12, -8, -3, 0, 3, 7, 10, 12, 14, 17, 19, 21, 23, 24 },
-   { -30, -17, -11, -5, 0, 5, 9, 14, 17, 20, 23, 26, 29, 31, 32, 34 }
-};
-static const int BISHOP_MOBILITY[16] = { -20, -11, -7, -3, 0, 3, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
+static int KNIGHT_MOBILITY[2][9];
+
+static int BISHOP_MOBILITY[2][16];
+
+static int ROOK_MOBILITY[2][16];
+
 static const int QUEEN_MOBILITY = 2;
 
 // endgame terms
@@ -623,6 +626,27 @@ void Scoring::init() {
    initBitboards();
 
 }
+
+void Scoring::initParams() 
+{
+   for (int i = 0; i<=8; i++) {
+      double f = log(double(PARAM(KNIGHT_MOBILITY_BASE))/20 + double(i)/PARAM(KNIGHT_MOBILITY_ZERO));
+      KNIGHT_MOBILITY[Midgame][i] = int(PARAM(KNIGHT_MOBILITY_MULT)*f);
+      KNIGHT_MOBILITY[Endgame][i] = PARAM(KNIGHT_MOBILITY_ENDGAME_FACTOR)*KNIGHT_MOBILITY[Midgame][i]/20;
+   }
+ 
+   for (int i = 0; i<=14; i++) {
+      double f = log(double(PARAM(BISHOP_MOBILITY_BASE))/20 + double(i)/PARAM(BISHOP_MOBILITY_ZERO));
+      BISHOP_MOBILITY[Midgame][i] = int(PARAM(BISHOP_MOBILITY_MULT)*f);
+      BISHOP_MOBILITY[Endgame][i] = PARAM(BISHOP_MOBILITY_ENDGAME_FACTOR)*BISHOP_MOBILITY[Midgame][i]/20;
+   }
+   for (int i = 0; i<=14; i++) {
+      double f = log(double(PARAM(ROOK_MOBILITY_BASE))/20 + double(i)/PARAM(ROOK_MOBILITY_ZERO));
+      ROOK_MOBILITY[Midgame][i] = int(PARAM(ROOK_MOBILITY_MULT)*f);
+      ROOK_MOBILITY[Endgame][i] = PARAM(ROOK_MOBILITY_ENDGAME_FACTOR)*ROOK_MOBILITY[Midgame][i]/20;
+   }
+}
+
 
 void Scoring::cleanup() {
 }
@@ -1003,11 +1027,13 @@ void Scoring::pieceScore(const Board &board,
             scores.end += KnightScores[scoreSq][Endgame];
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
-            const int mobl = KNIGHT_MOBILITY[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
+            const int mobl = Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
 #ifdef EVAL_DEBUG
             cout << "knight moblility =" << mobl << endl;
 #endif
-            scores.any += mobl;
+            scores.mid += KNIGHT_MOBILITY[Midgame][mobl];
+            scores.end += KNIGHT_MOBILITY[Endgame][mobl];
+            
             if (KnightOutpostScores[scoreSq]) {
                int outpost_score = outpost<side> (board, sq, scoreSq, KnightOutpostScores, oppPawnData);
 #ifdef EVAL_DEBUG
@@ -1053,11 +1079,13 @@ void Scoring::pieceScore(const Board &board,
                pin_count++;
             }
 
-            const int mobl = BISHOP_MOBILITY[Bitboard(battacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
+            const int mobl = Bitboard(battacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
 #ifdef EVAL_DEBUG
             cout << "bishop mobility (" << SquareImage(sq) << "): " << mobl << endl;
 #endif
-            scores.any += mobl;
+            scores.mid += KNIGHT_MOBILITY[Midgame][mobl];
+            scores.end += KNIGHT_MOBILITY[Endgame][mobl];
+
             break;
          }
 
@@ -1732,13 +1760,11 @@ int Scoring::evalu8(const Board &board) {
     const int opp_pieces = oppmat.pieceBits();
     // check for bishop endgame - drawish
     int adjust = 0;
-/*
     if (our_pieces == Material::KB && opp_pieces == Material::KB) {
         // Bishop endgame: drawish
         if (Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4)
             adjust -= mdiff/4;
     }
-*/
     if (ourmat.pieceBits() != oppmat.pieceBits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
             adjust += adjustMaterialScoreNoPawns(board,side) -
@@ -1767,9 +1793,6 @@ int Scoring::evalu8(const Board &board) {
    }
 
    Scores wScores, bScores;
-
-   materialScore<White>(board,wScores);
-   materialScore<Black>(board,bScores);
 
    // compute positional scores
    positionalScore<White> (board, pawnEntry, wScores, bScores);
@@ -2116,20 +2139,6 @@ Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board) {
       calcPawnEntry(board, pawnEntry);
    }
    return pawnEntry;
-}
-
-template<ColorType side>
-void Scoring::materialScore(const Board &board, Scores &scores) 
-{
-   const Material &mat = board.getMaterial(side);
-   scores.mid += PAWN_VALUE*mat.pawnCount() +
-      PARAM(MIDGAME_KNIGHT_VALUE)*mat.knightCount() +
-      PARAM(MIDGAME_BISHOP_VALUE)*mat.bishopCount() +
-      PARAM(MIDGAME_QUEEN_VALUE)*mat.queenCount();
-   scores.end += PARAM(ENDGAME_PAWN_VALUE)*mat.pawnCount() +
-      PARAM(ENDGAME_KNIGHT_VALUE)*mat.knightCount() +
-      PARAM(ENDGAME_BISHOP_VALUE)*mat.bishopCount() +
-      PARAM(ENDGAME_QUEEN_VALUE)*mat.queenCount();
 }
 
 template<ColorType side>
