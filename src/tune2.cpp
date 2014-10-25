@@ -27,7 +27,7 @@ struct PosInfo {
 
 std::vector<PosInfo> fens;
 
-static int cores = 8;
+static int cores = 1;
 
 static int plies = 1;
 
@@ -83,8 +83,6 @@ static double computeError(SearchController *searcher, int index) {
         int value;
         if (plies < 0) {
             value = scoring->evalu8(b);
-        } else if (plies == 0) {
-           value = searcher->quiesce(-Constants::MATE,Constants::MATE,0,0);
         } else {
             options.search.easy_plies = 0;
             options.learning.position_learning = 0;
@@ -104,7 +102,7 @@ static double computeError(SearchController *searcher, int index) {
         err += ((double)fens[i].result - predict)*((double)fens[i].result - predict);
     }
     if (plies < 0) delete scoring;
-//    cout << "thread " << index << " done" << endl;
+    cout << "thread " << index << " done" << endl;
     
     return err;
 
@@ -187,7 +185,7 @@ static double computeLsqError() {
     for (int i = 0; i < cores; i++) {
         total += errors[i];
     }
-//    cout << "result: " << setprecision(8) << total/fens.size() << endl;
+    cout << "result: " << setprecision(8) << total/fens.size() << endl;
     return total/fens.size();
 }
 
@@ -267,34 +265,36 @@ int CDECL main(int argc, char **argv)
            if (strcmp(argv[arg],"-c")==0) {
               ++arg;
               cores = atoi(argv[arg]);
-              ++arg;
            }
            else if (strcmp(argv[arg],"-p")==0) {
               ++arg;
               plies = atoi(argv[arg]);
-              ++arg;
            }
+           ++arg;
         }
         
         for (int i = 0; i < cores; i++) {
            threadDatas[i].searcher = NULL;
         }
         
-        string paramFile = argv[arg++];
-        string tuneFile = argv[arg];
+        string tuneFile = argv[arg++];
+        string paramFile = argv[arg];
+
+        cout << "plies=" << plies << " cores=" << cores << " param file=" << paramFile << " tune file=" << tuneFile << (flush) << endl;
+        
 
         try {
            
         NOMAD::Display out ( std::cout );
         out.precision ( NOMAD::DISPLAY_PRECISION_STD );
 
-        NOMAD::begin ( argc-2 , argv+2 );
+        NOMAD::begin ( argc-arg+1 , argv+arg-1 );
 
         srand((unsigned)(getCurrentTime() % (1<<31)));
         NOMAD::RNG::set_seed(rand() % 12345);
 
         NOMAD::Parameters p(out);
-        cout << "reading parameters" << endl;
+        cout << "reading parameter file " << paramFile << endl;
         p.read(paramFile);
         // parameters validation:
         p.check();

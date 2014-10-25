@@ -274,7 +274,11 @@ Move SearchController::findBestMove(
     rootSearch->init(board,rootStack);
     startTime = getCurrentTime();
 
-    return rootSearch->ply0_search(exclude,num_exclude);
+    if (ply_limit == 0)
+       return rootSearch->quiesce(-Constants::MATE,Constants::MATE,
+                                  0,0);
+    else
+       return rootSearch->ply0_search(exclude,num_exclude);
 }
 
 void SearchController::setRatingDiff(int rdiff)
