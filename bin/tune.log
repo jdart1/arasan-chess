@@ -1,364 +1,177 @@
 Initialized tablebases
-reading parameters
+plies=0 cores=1 param file=../src/params.txt tune file=/home/jdart/chess/tests/tune.fen
+reading parameter file ../src/params.txt
 parameter check passed
- 3  6 20 12  5  6 20 12  5  6 20 12
+ 3  6 20 12  6  6 20 12  5  6 20 12
+reading training file
+position file read: 2004454 lines
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 5 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2378
-
-	  1	(	3 6 20 12 5 6 20 12 5 6 20 12 )	2622.0000000000
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 4 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 5 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2374
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 8 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 5 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2372
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 24 knight_mobility_endgame_factor 12 bishop_mobility_zero 5 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2377
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 13 bishop_mobility_zero 5 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2377
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2382
-
-	  6	(	3 6 20 12 6 6 20 12 5 6 20 12 )	2618.0000000000
-iterations = 1, black box evals = 6
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 8 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2376
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 5 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2378
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 10 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2375
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 28 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2377
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 14 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2372
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 10 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2377
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 28 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2375
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 10
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2376
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 7 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2376
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 10 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2375
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 12 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 28 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2378
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 3 knight_mobility_base 6 knight_mobility_mult 20 knight_mobility_endgame_factor 12 bishop_mobility_zero 6 bishop_mobility_base 6 bishop_mobility_mult 20 bishop_mobility_endgame_factor 10 rook_mobility_zero 5 rook_mobility_base 6 rook_mobility_mult 20 rook_mobility_endgame_factor 12
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2373
-
-executing /home/jdart/tools/match.py 200 knight_mobility_zero 2 knight_mobility_base 0 knight_mobility_mult 18 knight_mobility_endgame_factor 10 bishop_mobility_zero 6 bishop_mobility_base 2 bishop_mobility_mult 12 bishop_mobility_endgame_factor 14 rook_mobility_zero 3 rook_mobility_base 2 rook_mobility_mult 11 rook_mobility_endgame_factor 14
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.5766 game(s) loaded, 0 game(s) with unknown result ignored.
-close failed in file object destructor:
-sys.excepthook is missing
-lost sys.stderr
+computing
+thread 0 done
+result: 0.55374884
+quality= 0.55374884
+	  1	(	3 6 20 12 6 6 20 12 5 6 20 12 )	0.5537488393
+computing
+thread 0 done
+result: 0.55381528
+quality= 0.55381528
+computing
+thread 0 done
+result: 0.5538694
+quality= 0.5538694
+computing
+thread 0 done
+result: 0.553437
+quality= 0.553437
+	  4	(	3 6 24 12 6 6 20 12 5 6 20 12 )	0.5534370021
+iterations = 1, black box evals = 4
+computing
+thread 0 done
+result: 0.55275206
+quality= 0.55275206
+	  5	(	3 6 36 12 6 6 20 12 5 6 20 12 )	0.5527520624
+iterations = 2, black box evals = 5
+computing
+thread 0 done
+result: 0.55265394
+quality= 0.55265394
+	  6	(	3 6 40 12 6 6 20 12 5 6 20 12 )	0.5526539361
+iterations = 3, black box evals = 6
+computing
+thread 0 done
+result: 0.55236244
+quality= 0.55236244
+	  7	(	5 6 40 12 6 6 20 12 5 6 20 12 )	0.5523624361
+iterations = 4, black box evals = 7
+computing
+thread 0 done
+result: 0.55257221
+quality= 0.55257221
+computing
+thread 0 done
+result: 0.55280128
+quality= 0.55280128
+computing
+thread 0 done
+result: 0.55531626
+quality= 0.55531626
+computing
+thread 0 done
+result: 0.55687037
+quality= 0.55687037
+computing
+thread 0 done
+result: 0.55279917
+quality= 0.55279917
+computing
+thread 0 done
+result: 0.55236247
+quality= 0.55236247
+computing
+thread 0 done
+result: 0.55427641
+quality= 0.55427641
+computing
+thread 0 done
+result: 0.55232597
+quality= 0.55232597
+	 15	(	5 2 40 14 6 0 40 10 7 2 12 10 )	0.5523259720
+iterations = 5, black box evals = 15
+computing
+thread 0 done
+result: 0.55464532
+quality= 0.55464532
+computing
+thread 0 done
+result: 0.55436753
+quality= 0.55436753
+computing
+thread 0 done
+result: 0.55514037
+quality= 0.55514037
+computing
+thread 0 done
+result: 0.55323371
+quality= 0.55323371
+computing
+thread 0 done
+result: 0.5540404
+quality= 0.5540404
+computing
+thread 0 done
+result: 0.55514046
+quality= 0.55514046
+computing
+thread 0 done
+result: 0.55494053
+quality= 0.55494053
+computing
+thread 0 done
+result: 0.55721456
+quality= 0.55721456
+computing
+thread 0 done
+result: 0.55534276
+quality= 0.55534276
+computing
+thread 0 done
+result: 0.55730782
+quality= 0.55730782
+computing
+thread 0 done
+result: 0.55709902
+quality= 0.55709902
+computing
+thread 0 done
+result: 0.5570992
+quality= 0.5570992
+computing
+thread 0 done
+result: 0.5552253
+quality= 0.5552253
+computing
+thread 0 done
+result: 0.5570994
+quality= 0.5570994
+computing
+thread 0 done
+result: 0.5552849
+quality= 0.5552849
+iterations = 6, black box evals = 30
+computing
+thread 0 done
+result: 0.55343232
+quality= 0.55343232
+computing
+thread 0 done
+result: 0.55436372
+quality= 0.55436372
+computing
+thread 0 done
+result: 0.5540525
+quality= 0.5540525
+computing
+thread 0 done
+result: 0.55458127
+quality= 0.55458127
+computing
+thread 0 done
+result: 0.55432814
+quality= 0.55432814
+computing
+thread 0 done
+result: 0.55237853
+quality= 0.55237853
+computing
+thread 0 done
+result: 0.55513276
+quality= 0.55513276
+computing
+thread 0 done
+result: 0.55458125
+quality= 0.55458125
+computing
