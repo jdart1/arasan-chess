@@ -1849,7 +1849,7 @@ Bitboard Board::getPinned(Square ksq, ColorType side) const {
         if (b.singleBitSet()) {
             // Only one piece between "pinner" and King. See if it is
             // the correct color.
-            result |= b & occupied[side];
+            result |= (b & occupied[side]);
         }
     }
     return result;
