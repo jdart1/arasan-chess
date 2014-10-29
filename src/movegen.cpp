@@ -1,4 +1,4 @@
-// Copyright 1994-2013 by Jon Dart. All Rights Reserved.
+// 1994-2013 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -17,6 +17,8 @@ extern const int Direction[2];
 
 const int MoveGenerator::EASY_PLIES = 3;
 
+#define PARAM(x) Scoring::params[x].current
+   
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
    Move tmp = moves[j];
@@ -351,34 +353,56 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          case HISTORY_PHASE:
          {
             numMoves = generateNonCaptures(moves);
-            if (numMoves) {
-               int scores[Constants::MaxMoves];
-               for (int i = 0; i < numMoves; i++) {
-                  if (MovesEqual(hashMove,moves[i])) {
-                     SetUsed(moves[i]);
-                     scores[i] = 0;
-                     continue;
-                  }
-                  else if (MovesEqual(killer1,moves[i]) ||
-                  MovesEqual(killer2,moves[i])) {
-                     SetUsed(moves[i]);
-                     scores[i] = 0;
-                     continue;
-                  }
-                  else if ((MovesEqual(killer3,moves[i]) ||
-                  MovesEqual(killer4,moves[i]))) {
-                     SetUsed(moves[i]);
-                     scores[i] = 0;
-                     continue;
-                  }
-                  SetPhase(moves[i],HISTORY_PHASE);
-                  if (context) {
-                      scores[i] = History::scoreForOrdering(moves[i],board.sideToMove());
+            int scores[Constants::MaxMoves];
+            for (int i = 0; i < numMoves; i++) {
+               if (MovesEqual(hashMove,moves[i])) {
+                  SetUsed(moves[i]);
+                  scores[i] = 0;
+                  continue;
+               }
+               else if (MovesEqual(killer1,moves[i]) ||
+                        MovesEqual(killer2,moves[i])) {
+                  SetUsed(moves[i]);
+                  scores[i] = 0;
+                  continue;
+               }
+               else if ((MovesEqual(killer3,moves[i]) ||
+                         MovesEqual(killer4,moves[i]))) {
+                  SetUsed(moves[i]);
+                  scores[i] = 0;
+                  continue;
+               }
+               SetPhase(moves[i],HISTORY_PHASE);
+               if (context) {
+                  scores[i] = History::scoreForOrdering(moves[i],board.sideToMove());
+               }
+               extern CACHE_ALIGN Bitboard passedW[64], passedB[64];           
+               const Square dest = DestSquare(moves[i]);
+               // passed pawn moves get higher score
+               if (PieceMoved(moves[i]) == Pawn) {
+                  if (board.sideToMove() == White) {
+                     if (!TEST_MASK(board.pawn_bits[Black],passedW[dest])) {
+                        scores[i] += PARAM(Scoring::PASSER_LINEAR)*Util::Max(0,Rank(dest,White)-PARAM(Scoring::PASSER_MIN_RANK)+1)+PARAM(Scoring::PASSER_CONST);
+                     }
+                  } else {
+                        scores[i] += PARAM(Scoring::PASSER_LINEAR)*Util::Max(0,Rank(dest,Black)-PARAM(Scoring::PASSER_MIN_RANK)+1)+PARAM(Scoring::PASSER_CONST);
                   }
                }
-               if (numMoves > 1) {
-                  sortMoves(moves,scores,numMoves);
+               else if (TypeOfMove(moves[i]) == KCastle ||
+                        TypeOfMove(moves[i]) == QCastle) {
+                  scores[i] += PARAM(Scoring::CASTLING);
                }
+               else if (PieceMoved(moves[i])==Knight) {
+                  Square scoreSq = (board.sideToMove() == White) ? dest : 63 - dest;
+                  scores[i] += Scoring::KnightScores[scoreSq][0]*PARAM(Scoring::KNIGHT_PST)/16;
+               }
+               else if (PieceMoved(moves[i])==Bishop) {
+                  scores[i] += Scoring::BishopScores[dest]*PARAM(Scoring::BISHOP_PST)/16;
+               }
+               
+            }
+            if (numMoves > 1) {
+               sortMoves(moves,scores,numMoves);
             }
             index = 0;
             break;

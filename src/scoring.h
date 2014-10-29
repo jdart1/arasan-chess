@@ -21,22 +21,19 @@ class Scoring
 
     static void cleanup();
 
-    static const int NUM_PARAMS = 12;
+    static const int NUM_PARAMS = 6;
 
     enum {
-      KNIGHT_MOBILITY_ZERO,
-      KNIGHT_MOBILITY_BASE,
-      KNIGHT_MOBILITY_MULT,
-      KNIGHT_MOBILITY_ENDGAME_FACTOR,
-      BISHOP_MOBILITY_ZERO,
-      BISHOP_MOBILITY_BASE,
-      BISHOP_MOBILITY_MULT,
-      BISHOP_MOBILITY_ENDGAME_FACTOR,
-      ROOK_MOBILITY_ZERO,
-      ROOK_MOBILITY_BASE,
-      ROOK_MOBILITY_MULT,
-      ROOK_MOBILITY_ENDGAME_FACTOR
+      PASSER_CONST,
+      PASSER_LINEAR,
+      PASSER_MIN_RANK,
+      CASTLING,
+      KNIGHT_PST,
+      BISHOP_PST
     };
+
+    const static CACHE_ALIGN int KnightScores[64][2];
+    const static CACHE_ALIGN int BishopScores[64];
 
     static struct TuneParam {
       string name;
