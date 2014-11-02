@@ -121,7 +121,7 @@ public:
                  const NOMAD::Double & h_max      ,
                  bool                & count_eval   ) const 
       {
-         for ( int i = 0 ; i < Scoring::NUM_PARAMS ; i++ ) 
+         for ( int i = 0 ; i < Scoring::NUM_PARAMS-3 ; i++ ) 
          {
             Scoring::params[i].current = x[i].round();
          }

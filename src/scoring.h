@@ -21,15 +21,20 @@ class Scoring
 
     static void cleanup();
 
-    static const int NUM_PARAMS = 6;
+    static const int NUM_PARAMS = 11;
 
     enum {
-      PASSER_CONST,
-      PASSER_LINEAR,
-      PASSER_MIN_RANK,
-      CASTLING,
-      KNIGHT_PST,
-      BISHOP_PST
+      BASE_RANK,
+      BLOCK_FACTOR_SQ,
+      BLOCK_FACTOR_LIN,
+      NO_BLOCK_MIDGAME_BOOST,
+      NO_BLOCK_ENDGAME_BOOST,
+      PASSED_PAWN_BLOCK_MIDGAME,
+      PASSED_PAWN_BLOCK_ENDGAME,
+      BLOCK_RANK,
+      PASSED_PAWN_CONTROL_MIDGAME,
+      PASSED_PAWN_CONTROL_ENDGAME,
+      CONTROL_RANK
     };
 
     const static CACHE_ALIGN int KnightScores[64][2];

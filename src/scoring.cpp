@@ -72,13 +72,20 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
    
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("passer_const",10,0,50),
-   Scoring::TuneParam("passer_linear",5,0,50),
-   Scoring::TuneParam("passer_min_rank",5,1,7),
-   Scoring::TuneParam("castling",25,0,100),
-   Scoring::TuneParam("knight_pst",16,0,80), // * 16
-   Scoring::TuneParam("bishop_pst",16,0,80),
+   Scoring::TuneParam("base_rank",5,2,6),
+   Scoring::TuneParam("block_factor_sq",16,0,32),
+   Scoring::TuneParam("block_factor_lin",2,0,10),
+   Scoring::TuneParam("no_block_midgame_boost",64,0,128),
+   Scoring::TuneParam("no_block_endgame_boost",64,0,128),
+   Scoring::TuneParam("passed_pawn_block_midgame",12,0,32),
+   Scoring::TuneParam("passed_pawn_block_endgame",18,0,32),
+   Scoring::TuneParam("block_rank",12,8,12),
+   Scoring::TuneParam("passed_pawn_control_midgame",12,0,32),
+   Scoring::TuneParam("passed_pawn_control_endgame",18,0,32),
+   Scoring::TuneParam("control_rank",10,8,12)
 };
+
+#define PARAM(x) params[x].current
 
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
@@ -121,7 +128,7 @@ static const CACHE_ALIGN int KnightOutpostScores[64] =
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
-   1, 3, 3, 6, 6, 6, 3, 1,
+   1, 3, 3, 6, 6, 3, 3, 1,
    1, 4, 9, 14, 14, 9, 4, 1,
    1, 4, 9, 14, 14, 9, 4, 1,
    1, 1, 6, 6, 6, 6, 1, 1,
@@ -1886,28 +1893,61 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
       int rank = Rank(sq, side);
       int file = File(sq);
-      Square sq2;
-      if (side == White)
-         sq2 = sq + 8;
-      else
-         sq2 = sq - 8;
-      if (!IsEmptyPiece(board[sq2]) && PieceColor(board[sq2]) == oside) {
-         scores.mid -= PASSED_PAWN_BLOCK[Midgame][rank];
-         scores.end -= PASSED_PAWN_BLOCK[Endgame][rank];
+      int block_rank = -1;
+      int control_rank = -1;
+      const int base_rank = PARAM(BASE_RANK);
+      const int factor = PARAM(BLOCK_FACTOR_SQ)*rank*rank/32 + PARAM(BLOCK_FACTOR_LIN)*(rank-1)/32;  // 64
+      if (rank >= base_rank) {
+         Square dest;
+         dest = MakeSquare(File(sq),rank,side);
+         for (int r = rank+1; r <= 8; r++) {
+            if (!IsEmptyPiece(board[dest])) {
+               if (PieceColor(board[dest]) == oside) {
+                  block_rank = r;
+                  break;
+               }
+            } /*else {
+               Move m = CreateMove(sq,dest,Pawn,(r==8) ? Queen : Empty);
+               if (!seeSign(board,m,0)) {
+                  // square to which we want to advance is not safe
+                  control_rank = r;
+                  break;
+               }
+            } */
+         }
+      }
 #ifdef PAWN_DEBUG
+      int tmp_mid = scores.mid;
+      int tmp_end = scores.end;
+#endif
+      if (block_rank < 0 && control_rank < 0) {
+         // bonus : passed pawn is not blocked & path not attacked
+         scores.end += PARAM(NO_BLOCK_ENDGAME_BOOST)*factor/32;
+         scores.mid += PARAM(NO_BLOCK_MIDGAME_BOOST)*factor/32;
+      }
+      else if (block_rank > 0) {
+         scores.mid -= PARAM(PASSED_PAWN_BLOCK_MIDGAME)*factor*(PARAM(BLOCK_RANK)-block_rank)/4;
+         scores.end -= PARAM(PASSED_PAWN_BLOCK_ENDGAME)*factor*(PARAM(BLOCK_RANK)-block_rank)/4;
+      }
+/*
+      else if (control_rank > 0) {
+         scores.mid -= PARAM(PASSED_PAWN_CONTROL_MIDGAME)*factor*(PARAM(CONTROL_RANK)-control_rank)/4;
+         scores.end -= PARAM(PASSED_PAWN_CONTROL_ENDGAME)*factor*(PARAM(CONTROL_RANK)-control_rank)/4;
+         } */
+#ifdef PAWN_DEBUG
+      if (tmp_mid - scores.mid) {
          cout <<
             ColorImage(side) <<
             " passed pawn on " <<
             SquareImage(sq) <<
             " blocked, score= (" <<
-            -PASSED_PAWN_BLOCK[Midgame][rank] <<
+            scores.mid - tmp_mid <<
             ", " <<
-            -PASSED_PAWN_BLOCK[Endgame][rank] <<
+            scores.end - tmp_end <<
             ")" <<
             endl;
-#endif
       }
-
+#endif
       Bitboard atcks(board.fileAttacks(sq));
       if (atcks) {
          if (side == White) {

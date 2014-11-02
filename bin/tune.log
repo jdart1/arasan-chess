@@ -1,50 +1,13 @@
 Initialized tablebases
 reading parameters
 parameter check passed
-10  5  5 25 16 16
+ 5 16  2  0  0 12 18 10
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 passer_const 10 passer_linear 5 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2374
-
-	 1	(	10 5 5 25 16 16 )	2626.0000000000
-executing /home/jdart/tools/match.py 200 passer_const 15 passer_linear 5 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2371
-
-executing /home/jdart/tools/match.py 200 passer_const 10 passer_linear 10 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
+executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 16 block_factor_lin 2 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -60,11 +23,28 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2376
+rating=2363
 
-	 3	(	10 10 5 25 16 16 )	2624.0000000000
-iterations = 1, black box evals = 3
-executing /home/jdart/tools/match.py 200 passer_const 10 passer_linear 25 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
+	 1	(	5 16 2 0 0 12 18 10 )	2637.0000000000
+executing /home/jdart/tools/match.py 200 base_rank 6 block_factor_sq 16 block_factor_lin 2 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2360
+
+executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 19 block_factor_lin 2 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -80,9 +60,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2373
+rating=2360
 
-executing /home/jdart/tools/match.py 200 passer_const 10 passer_linear 15 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
+executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 16 block_factor_lin 3 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -98,24 +78,33 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2373
+rating=2360
 
-executing /home/jdart/tools/match.py 200 passer_const 10 passer_linear 20 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2371
-
-executing /home/jdart/tools/match.py 200 passer_const 20 passer_linear 10 passer_min_rank 5 castling 25 knight_pst 16 bishop_pst 16
+executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 16 block_factor_lin 2 no_block_midgame_boost 13 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+Terminated
+1000 game(s) loaded, 0 game(s) with unknown result ignored.1339 game(s) loaded, 0 game(s) with unknown result ignored.
+close failed in file object destructor:
+sys.excepthook is missing
+lost sys.stderr
