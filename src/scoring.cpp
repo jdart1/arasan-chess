@@ -274,7 +274,10 @@ static const int ROOK_MOBILITY[2][16] =
    { -30, -17, -11, -5, 0, 5, 9, 14, 17, 20, 23, 26, 29, 31, 32, 34 }
 };
 static const int BISHOP_MOBILITY[16] = { -20, -11, -7, -3, 0, 3, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
-static const int QUEEN_MOBILITY = 2;
+static const int CACHE_ALIGN QUEEN_MOBILITY[2][29] = {
+   {-10,-5,-1,1,4,7,9,11,13,14,16,17,19,20,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21},
+   {-12,-6,-1,1,5,8,11,13,16,17,20,21,23,25,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26}
+};
 
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
@@ -1179,7 +1182,8 @@ void Scoring::pieceScore(const Board &board,
             }
 
             qmobl += Bitboard(qmobility &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
-            scores.any += QUEEN_MOBILITY * (Util::Min(14, qmobl) - 7);
+            scores.mid += QUEEN_MOBILITY[Midgame][qmobl];
+            scores.end += QUEEN_MOBILITY[Endgame][qmobl];
 #ifdef EVAL_DEBUG
             cout << "queen mobility=" << QUEEN_MOBILITY * (Util::Min(14, qmobl) - 7) << endl;
 #endif
