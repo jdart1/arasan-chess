@@ -1549,7 +1549,7 @@ static void analyze(Board &board)
             if (doTrace) cout << "# analysis mode: wait for input" << endl;
             if (inputSem.wait()) {
 #ifdef UCI_LOG
-                cout << "wait interrupted" << endl << (flush);
+                ucilog << "wait interrupted" << endl << (flush);
 #endif
                 break;
             }
@@ -3504,7 +3504,7 @@ int CDECL main(int argc, char **argv) {
         while(!polling_terminated) {
            if (inputSem.wait()) {
 #ifdef UCI_LOG
-              cout << "wait interrupted" << endl << (flush);
+              ucilog << "wait interrupted" << endl << (flush);
 #endif
               break;
            }
@@ -3513,7 +3513,7 @@ int CDECL main(int argc, char **argv) {
               string cmd (pending.front());
               pending.pop_front();
 #ifdef UCI_LOG
-              cout << "got cmd (main): " << cmd << endl;
+              ucilog << "got cmd (main): " << cmd << endl;
 #endif
               if (doTrace) {
                  cout << "# got cmd (main): "  << cmd << endl;
