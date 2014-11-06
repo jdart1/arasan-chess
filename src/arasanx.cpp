@@ -3540,9 +3540,9 @@ int CDECL main(int argc, char **argv) {
     delete searcher;
     delete ecoCoder;
 #ifdef _WIN32
-    polling_terminated++;
-    WaitForSingleObject(pollingThreadHandle,1000);
+    TerminateThread(pollingThreadHandle,0);
 #else
+    polling_terminated++;
     void *value_ptr;
     pthread_join(pollingThreadHandle,&value_ptr);
 #endif
