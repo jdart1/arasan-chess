@@ -163,7 +163,9 @@ class Scoring
     void pieceScore(const Board &board,
                    const PawnHashEntry::PawnData &ourPawnData,
 		   const PawnHashEntry::PawnData &oppPawnData,
-                    int cover, Scores &, Scores &opp_scores, bool endgame);
+                    int cover, Scores &, Scores &opp_scores,
+                    bool early_endgame,
+                    bool deep_endgame);
 
     // compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>

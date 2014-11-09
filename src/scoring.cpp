@@ -278,6 +278,8 @@ static const int CACHE_ALIGN QUEEN_MOBILITY[2][29] = {
    {-10,-5,-1,1,4,7,9,11,13,14,16,17,19,20,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21},
    {-12,-6,-1,1,5,8,11,13,16,17,20,21,23,25,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26}
 };
+static const int KING_ENDGAME_MOBILITY[9] =
+{ -20, -12, -6, 0, 1, 2, 3, 3, 3 };
 
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
@@ -964,7 +966,8 @@ void Scoring::pieceScore(const Board &board,
                int cover,
                Scores &scores,
                Scores &opp_scores,
-               bool endgame) {
+               bool early_endgame,
+               bool deep_endgame) {
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
 
@@ -1020,7 +1023,7 @@ void Scoring::pieceScore(const Board &board,
             //scores.end += BishopScores[scoreSq]/2;
             const Bitboard battacks(board.bishopAttacks(sq));
             allAttacks |= battacks;
-            if (!endgame) {
+            if (!deep_endgame) {
                if (battacks & nearKing) {
                   attackWeight += ATTACK_FACTOR[Bishop];
                   attackCount++;
@@ -1084,7 +1087,7 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
             cout << "rook mobility: " << mobl << endl;
 #endif
-            if (!endgame) {
+            if (!deep_endgame) {
                Bitboard attacks(rattacks2 &nearKing);
                if (attacks) {
                   attackWeight += ATTACK_FACTOR[Rook];
@@ -1120,7 +1123,7 @@ void Scoring::pieceScore(const Board &board,
             Bitboard qmobility(battacks);
             Bitboard kattacks;
             
-            if (!endgame) {
+            if (!deep_endgame) {
                kattacks = battacks & nearKing;
                if (!kattacks) {
                   kattacks = board.bishopAttacks(sq, side) & nearKing;
@@ -1134,7 +1137,7 @@ void Scoring::pieceScore(const Board &board,
             Bitboard rattacks = board.rookAttacks(sq);
             qmobility |= rattacks;
             allAttacks |= qmobility;
-            if (!endgame) {
+            if (!deep_endgame) {
                int rank = Rank(sq, side);
                if (rank > 3) {
                   Bitboard back
@@ -1185,7 +1188,9 @@ void Scoring::pieceScore(const Board &board,
             scores.mid += QUEEN_MOBILITY[Midgame][qmobl];
             scores.end += QUEEN_MOBILITY[Endgame][qmobl];
 #ifdef EVAL_DEBUG
-            cout << "queen mobility=" << QUEEN_MOBILITY * (Util::Min(14, qmobl) - 7) << endl;
+            cout << "queen mobility (" <<
+               QUEEN_MOBILITY[Midgame][qmobl] << ", " <<
+               QUEEN_MOBILITY[Endgame][qmobl] << ")" << endl;
 #endif
             if (board.pinOnRankOrFile(sq, okp, oside)) {
                pin_count++;
@@ -1270,8 +1275,15 @@ void Scoring::pieceScore(const Board &board,
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
    const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
-   if (!endgame) {
-
+   if (early_endgame) {
+      int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
+                  ~allAttacks).bitCount();
+      opp_scores.end += KING_ENDGAME_MOBILITY[mobl];
+#ifdef EVAL_DEBUG
+      cout << ColorImage(oside) << " king mobility: " << KING_ENDGAME_MOBILITY[mobl] << endl;
+#endif
+   }
+   if (!deep_endgame) {
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
       attackWeight += proximity*ATTACK_FACTOR[Pawn];
@@ -1661,8 +1673,7 @@ int Scoring::calcPawnData(const Board &board,
      entr.midgame_score += cp_score;
      entr.endgame_score += cp_score;
 #ifdef EVAL_DEBUG
-     cout << "connected passer score, square ";
-     SquareImage(sq,cout);
+     cout << "connected passer score, square " << SquareImage(sq);
      cout << " = " << cp_score << endl;
 #endif   
    }
@@ -2152,6 +2163,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    scores.mid += ourCover - KING_OFF_BACK_RANK[Rank(board.kingSquare(side), side)];
    pieceScore<side> (board, pawnEntry.pawnData(side), 
                      pawnEntry.pawnData(oside), oppCover, scores, oppScores, 
+                     board.getMaterial(side).materialLevel() < ENDGAME_MATERIAL_THRESHOLD,
                      board.getMaterial(side).materialLevel() < MIDGAME_MATERIAL_THRESHOLD);
 }
 
