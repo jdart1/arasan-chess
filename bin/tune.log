@@ -1,13 +1,12 @@
-Initialized tablebases
 reading parameters
 parameter check passed
- 5 16  2  0  0 12 18 10
+25 -20 -5 -15
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 16 block_factor_lin 2 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+executing /home/jdart/tools/match.py 200 rb_adjust0 25 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -23,10 +22,30 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2363
+rating=2380
 
-	 1	(	5 16 2 0 0 12 18 10 )	2637.0000000000
-executing /home/jdart/tools/match.py 200 base_rank 6 block_factor_sq 16 block_factor_lin 2 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+	 1	(	25 -20 -5 -15 )	2620.0000000000
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2381
+
+	 2	(	30 -20 -5 -15 )	2619.0000000000
+iterations = 1, black box evals = 2
+executing /home/jdart/tools/match.py 200 rb_adjust0 45 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -42,9 +61,27 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2360
+rating=2376
 
-executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 19 block_factor_lin 2 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+executing /home/jdart/tools/match.py 200 rb_adjust0 40 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2379
+
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -60,9 +97,65 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2360
+rating=2379
 
-executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 16 block_factor_lin 3 no_block_midgame_boost 0 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2384
+
+	 6	(	30 -20 0 -15 )	2616.0000000000
+iterations = 2, black box evals = 6
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2379
+
+executing /home/jdart/tools/match.py 200 rb_adjust0 45 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2376
+
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -78,9 +171,45 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2360
+rating=2381
 
-executing /home/jdart/tools/match.py 200 base_rank 5 block_factor_sq 16 block_factor_lin 2 no_block_midgame_boost 13 no_block_endgame_boost 0 passed_pawn_block_midgame 12 passed_pawn_block_endgame 18 block_rank 10 passed_pawn_control_midgame 12 passed_pawn_control_endgame 18 control_rank 10
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2377
+
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2378
+
+executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
 Terminated
 Terminated
 Terminated
@@ -104,7 +233,3 @@ Terminated
 Terminated
 Terminated
 Terminated
-1000 game(s) loaded, 0 game(s) with unknown result ignored.1339 game(s) loaded, 0 game(s) with unknown result ignored.
-close failed in file object destructor:
-sys.excepthook is missing
-lost sys.stderr

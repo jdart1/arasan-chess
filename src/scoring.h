@@ -21,24 +21,14 @@ class Scoring
 
     static void cleanup();
 
-    static const int NUM_PARAMS = 11;
+    static const int NUM_PARAMS = 4;
 
     enum {
-      BASE_RANK,
-      BLOCK_FACTOR_SQ,
-      BLOCK_FACTOR_LIN,
-      NO_BLOCK_MIDGAME_BOOST,
-      NO_BLOCK_ENDGAME_BOOST,
-      PASSED_PAWN_BLOCK_MIDGAME,
-      PASSED_PAWN_BLOCK_ENDGAME,
-      BLOCK_RANK,
-      PASSED_PAWN_CONTROL_MIDGAME,
-      PASSED_PAWN_CONTROL_ENDGAME,
-      CONTROL_RANK
+      RB_ADJUST_0,
+      RB_ADJUST_1,
+      RB_ADJUST_2,
+      RB_ADJUST_3
     };
-
-    const static CACHE_ALIGN int KnightScores[64][2];
-    const static CACHE_ALIGN int BishopScores[64];
 
     static struct TuneParam {
       string name;
@@ -192,7 +182,7 @@ class Scoring
     void pieceScore(const Board &board,
                    const PawnHashEntry::PawnData &ourPawnData,
 		   const PawnHashEntry::PawnData &oppPawnData,
-                    int cover, Scores &, Scores &opp_scores, bool endgame);
+                    int cover, Scores &, Scores &opp_scores, bool early_endgame, bool deep_endgame);
 
     // compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
