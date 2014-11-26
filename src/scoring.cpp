@@ -239,10 +239,10 @@ static const int Endgame = 1;
 
 // same rank
 static const int CONNECTED_PASSERS[8] = 
-{ 0, 0, 0, 0, 0, 29, 57, 115 };
+{ 0, 0, 0, 0, 25, 29, 57, 115 };
 // adjacent rank
 static const int CONNECTED_PASSERS2[8] =
-{ 0, 0, 0, 0, 0, 22, 44, 75 };
+{ 0, 0, 0, 0, 18, 22, 44, 75 };
 
 // by file:
 static const int DOUBLED_PAWNS[2][8] =
@@ -1663,10 +1663,10 @@ int Scoring::calcPawnData(const Board &board,
    int cp_score = 0;
    while(passers.iterate(sq)) {
       if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
-        cp_score = CONNECTED_PASSERS[Rank(sq, side)];
+        cp_score += CONNECTED_PASSERS[Rank(sq, side)];
       }
       else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
-        cp_score = CONNECTED_PASSERS2[Rank(sq, side)];
+        cp_score += CONNECTED_PASSERS2[Rank(sq, side)];
       }
    }
    if (cp_score) {
