@@ -1,13 +1,108 @@
+Initialized tablebases
 reading parameters
 parameter check passed
-25 -20 -5 -15
+25 18 128 56 111
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 rb_adjust0 25 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 56 connected2 111
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2381
+
+	 1	(	25 18 128 56 111 )	2619.0000000000
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 20 connected_endgame 128 connected 56 connected2 111
+ssh: connect to host sassy port 22: Connection timed out
+ssh: connect to host sassy port 22: Connection timed out
+ssh: connect to host puppy port 22: Connection timed out
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.6400 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2367
+
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 135 connected 56 connected2 111
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2376
+
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 67 connected2 111
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2375
+
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 56 connected2 100
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2378
+
+executing /home/jdart/tools/match.py 200 connected_4 22 connected2_4 16 connected_endgame 121 connected 45 connected2 122
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -24,28 +119,8 @@ All remote processes completed.
 
 rating=2380
 
-	 1	(	25 -20 -5 -15 )	2620.0000000000
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2381
-
-	 2	(	30 -20 -5 -15 )	2619.0000000000
-iterations = 1, black box evals = 2
-executing /home/jdart/tools/match.py 200 rb_adjust0 45 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+iterations = 1, black box evals = 6
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 17 connected_endgame 125 connected 51 connected2 117
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -61,137 +136,9 @@ All local processes completed.
 
 All remote processes completed.
 
-rating=2376
+rating=2378
 
-executing /home/jdart/tools/match.py 200 rb_adjust0 40 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2379
-
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2379
-
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2384
-
-	 6	(	30 -20 0 -15 )	2616.0000000000
-iterations = 2, black box evals = 6
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2379
-
-executing /home/jdart/tools/match.py 200 rb_adjust0 45 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2376
-
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2381
-
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-rating=2377
-
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 56 connected2 105
 1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
@@ -209,7 +156,81 @@ All remote processes completed.
 
 rating=2378
 
-executing /home/jdart/tools/match.py 200 rb_adjust0 30 rb_adjust1 -20 rb_adjust2 -5 rb_adjust3 -15
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 132 connected 56 connected2 111
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2380
+
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 62 connected2 111
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2384
+
+	10	(	25 18 128 62 111 )	2616.0000000000
+iterations = 2, black box evals = 10
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 80 connected2 111
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2381
+
+executing /home/jdart/tools/match.py 200 connected_4 22 connected2_4 18 connected_endgame 135 connected 51 connected2 122
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
+
+did remote_stop
+
+calling remote_stop
+
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+rating=2384
+
+executing /home/jdart/tools/match.py 200 connected_4 25 connected2_4 18 connected_endgame 128 connected 73 connected2 111
 Terminated
 Terminated
 Terminated
@@ -232,4 +253,7 @@ Terminated
 Terminated
 Terminated
 Terminated
-Terminated
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.2285 game(s) loaded, 0 game(s) with unknown result ignored.
+close failed in file object destructor:
+sys.excepthook is missing
+lost sys.stderr
