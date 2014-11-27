@@ -21,14 +21,15 @@ class Scoring
 
     static void cleanup();
 
-    static const int NUM_PARAMS = 5;
+    static const int NUM_PARAMS = 6;
 
     enum {
-      CONNECTED_4,
-      CONNECTED2_4,
-      CONNECTED_ENDGAME,
       CONNECTED,
       CONNECTED2,
+      NEAR_KING_BASE,
+      NEAR_KING_MULT,
+      OPP_KING_BASE,
+      OPP_KING_MULT
     };
 
     static struct TuneParam {

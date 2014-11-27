@@ -72,11 +72,12 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
    
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("connected_4",10,0,25),
-   Scoring::TuneParam("connected2_4",10,0,20),
-   Scoring::TuneParam("connected_endgame",128,95,160),
-   Scoring::TuneParam("connected",100,20,150),
-   Scoring::TuneParam("connected2",100,20,150),
+   Scoring::TuneParam("connected",100,0,200),
+   Scoring::TuneParam("connected2",100,0,200),
+   Scoring::TuneParam("near_king_base",4,0,8),
+   Scoring::TuneParam("near_king_mult",20,0,40),
+   Scoring::TuneParam("opp_king_base",4,0,8),
+   Scoring::TuneParam("opp_king_mult",-28,-56,0)
 };
 
 #define PARAM(x) params[x].current
@@ -243,22 +244,20 @@ static const int PASSED_PAWN_BLOCK[2][8] = {
    { 14, 14, 16, 18, 21, 25, 37, 60 }
 };
 
+static const int KING_NEAR_PASSER = 20;
+static const int OPP_KING_NEAR_PASSER = -28;
+
 static const int OUTSIDE_PP[2] = { 12, 25 };
 
 static const int Midgame = 0;
 static const int Endgame = 1;
 
 // same rank
-static int CONNECTED_PASSERS_CONST[8] = 
-{ 0, 0, 0, 0, 0, 29, 57, 115 };
+static const int CONNECTED_PASSERS[8] =
+{ 0, 0, 0, 10, 19, 24, 48, 83 };
 // adjacent rank
-static int CONNECTED_PASSERS2_CONST[8] =
-{ 0, 0, 0, 0, 0, 22, 44, 75 };
-
-static int CONNECTED_PASSERS[8];
-static int CONNECTED_PASSERS2[8];
-
-
+static const int CONNECTED_PASSERS2[8] = 
+{ 0, 0, 0, 8, 15, 17, 34, 70 };
 
 // by file:
 static const int DOUBLED_PAWNS[2][8] =
@@ -300,7 +299,6 @@ static const int KING_ENDGAME_MOBILITY[9] =
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
 static const int BITBASE_WIN = 500;
-static const int KING_AHEAD_OF_PAWN = 10;
 static const int DISTANCE_FROM_PAWN = -4;
 static const int SUPPORTED_PASSER6 = 38;
 static const int SUPPORTED_PASSER7 = 76;
@@ -370,17 +368,6 @@ static inline int FileOpen(const Board &board, int file) {
 static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorType side) {
    return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
-
-void Scoring::initParams() 
-{
-   for (int i = 0; i < 8; i++) {
-      CONNECTED_PASSERS[i] = CONNECTED_PASSERS_CONST[i]*PARAM(CONNECTED)/100;
-      CONNECTED_PASSERS2[i] = CONNECTED_PASSERS2_CONST[i]*PARAM(CONNECTED2)/100;
-   }
-   CONNECTED_PASSERS[4] = PARAM(CONNECTED_4)*PARAM(CONNECTED)/100;
-   CONNECTED_PASSERS2[4] = PARAM(CONNECTED2_4)*PARAM(CONNECTED2)/100;
-}
-
 
 static void initBitboards() {
    int i, r;
@@ -636,6 +623,11 @@ static void initBitboards() {
    BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(C3);
    BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(D2);
 }
+
+void Scoring::initParams() 
+{
+}
+
 
 void Scoring::init() {
    initBitboards();
@@ -1690,15 +1682,15 @@ int Scoring::calcPawnData(const Board &board,
    int cp_score = 0;
    while(passers.iterate(sq)) {
       if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
-         cp_score += CONNECTED_PASSERS[Rank(sq, side)];
+        cp_score += PARAM(CONNECTED)*CONNECTED_PASSERS[Rank(sq, side)]/100;
       }
       else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
-        cp_score += CONNECTED_PASSERS2[Rank(sq, side)];
+        cp_score += PARAM(CONNECTED2)*CONNECTED_PASSERS2[Rank(sq, side)]/100;
       }
    }
    if (cp_score) {
      entr.midgame_score += cp_score;
-     entr.endgame_score += PARAM(CONNECTED_ENDGAME)*cp_score/128;
+     entr.endgame_score += cp_score;
 #ifdef EVAL_DEBUG
      cout << "connected passer score, square " << SquareImage(sq);
      cout << " = " << cp_score << endl;
@@ -2102,11 +2094,9 @@ void Scoring::scoreEndgame
 
       // Encourage escorting a passer with the King, ideally with King in
       // front
-      if
-      (
-         Util::Abs(File(board.kingSquare(side)) - File(passer)) <= 1
-      && Rank(board.kingSquare(side), side) >= Rank(passer, side)
-      ) scores.end += KING_AHEAD_OF_PAWN;
+      Square ahead = (side == White ? passer + 8 : passer - 8);
+      scores.end += (PARAM(NEAR_KING_BASE)-distance1(ahead,board.kingSquare(side)))*PARAM(NEAR_KING_MULT)/16 +
+         (PARAM(OPP_KING_BASE)-distance1(ahead,board.kingSquare(oside)))*PARAM(OPP_KING_MULT)/16;
    }
 
    if (uncatchables) {
