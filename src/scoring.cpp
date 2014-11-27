@@ -232,17 +232,20 @@ static const int PASSED_PAWN_BLOCK[2][8] = {
    { 14, 14, 16, 18, 21, 25, 37, 60 }
 };
 
+static const int KING_NEAR_PASSER = 20;
+static const int OPP_KING_NEAR_PASSER = -28;
+
 static const int OUTSIDE_PP[2] = { 12, 25 };
 
 static const int Midgame = 0;
 static const int Endgame = 1;
 
 // same rank
-static const int CONNECTED_PASSERS[8] = 
-{ 0, 0, 0, 0, 25, 29, 57, 115 };
+static const int CONNECTED_PASSERS[8] =
+{ 0, 0, 0, 10, 19, 24, 48, 83 };
 // adjacent rank
-static const int CONNECTED_PASSERS2[8] =
-{ 0, 0, 0, 0, 18, 22, 44, 75 };
+static const int CONNECTED_PASSERS2[8] = 
+{ 0, 0, 0, 8, 15, 17, 34, 70 };
 
 // by file:
 static const int DOUBLED_PAWNS[2][8] =
@@ -284,7 +287,6 @@ static const int KING_ENDGAME_MOBILITY[9] =
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
 static const int BITBASE_WIN = 500;
-static const int KING_AHEAD_OF_PAWN = 10;
 static const int DISTANCE_FROM_PAWN = -4;
 static const int SUPPORTED_PASSER6 = 38;
 static const int SUPPORTED_PASSER7 = 76;
@@ -2075,11 +2077,9 @@ void Scoring::scoreEndgame
 
       // Encourage escorting a passer with the King, ideally with King in
       // front
-      if
-      (
-         Util::Abs(File(board.kingSquare(side)) - File(passer)) <= 1
-      && Rank(board.kingSquare(side), side) >= Rank(passer, side)
-      ) scores.end += KING_AHEAD_OF_PAWN;
+      Square ahead = (side == White ? passer + 8 : passer - 8);
+      scores.end += (8-distance1(ahead,board.kingSquare(side)))*KING_NEAR_PASSER/16 +
+         (8-distance1(ahead,board.kingSquare(oside)))*OPP_KING_NEAR_PASSER/16;
    }
 
    if (uncatchables) {
