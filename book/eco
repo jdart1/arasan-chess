@@ -514,6 +514,7 @@ C18     1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bc3 6. bc3 Ne7 7. Qg4 cxd4 8
 C19     1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bc3 6. bc3 Ne7 7. Nf3 "French Defense, Winawer Variation"
 C19     1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bc3 6. bc3 Ne7 7. a4 Nbc6 8. Nf3 Qa5 "French Defense, Winawer Variation"
 C19     1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 Ne7 5. a3 Bxc3+ 6. bxc3 c5 7. a4 Nbc6 8. Nf3 Bd7 "French Defense, Winawer Variation"
+C19     1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ 6. bxc3 Qc7 7. Nf3 Ne7 8. a4 b6 9. Bb5+ "French Defense, Winawer Variation"
 C20     1. e4 e5
 C21     1. e4 e5 2. d4 ed4 "Center Game"
 C21     1. e4 e5 2. d4 ed4 4. c3 "Danish Gambit"
