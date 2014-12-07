@@ -17,30 +17,46 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
-    static void init();
-
-    static void cleanup();
-
-    static const int NUM_PARAMS = 6;
+    static const int NUM_PARAMS = 21;
 
     enum {
-      CONNECTED,
-      CONNECTED2,
-      NEAR_KING_BASE,
-      NEAR_KING_MULT,
-      OPP_KING_BASE,
-      OPP_KING_MULT
+      QUEEN_VALUE_ADJUST,
+      BISHOP_PAWN_PLACEMENT2,
+      NEAR_DRAW1,
+      NEAR_DRAW2,
+      NEAR_DRAW3,
+      MINOR_BONUS,
+      PAWN_TRADE_SCORE0,
+      PAWN_TRADE_SCORE1,      
+      PAWN_TRADE_SCORE2,
+      ENDGAME_PAWN_BONUS,
+      RB_ADJUST1,
+      RB_ADJUST2,
+      RB_ADJUST3,
+      RB_ADJUST4,
+      RBN_ADJUST1,
+      RBN_ADJUST2,
+      RBN_ADJUST3,
+      RBN_ADJUST4,
+      QR_ADJUST0,
+      QR_ADJUST1,
+      QR_ADJUST2
     };
 
     static struct TuneParam {
       string name;
       int current, min, max;
-      TuneParam(const string &n, int x1, int x2, int x3) :
+    TuneParam(const string &n, int x1, int x2, int x3) :
       name(n),current(x1),min(x2),max(x3) {
       }
     } params[NUM_PARAMS];
-    
+
+
+    static void init();
+
     static void initParams();
+
+    static void cleanup();
 
     Scoring();
 
@@ -168,13 +184,13 @@ class Scoring
     };
 
     template <ColorType side>
-     void positionalScore( const Board &board,
+     void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
                             Scores &scores,
                             Scores &oppScores);
 
-    template <ColorType side>
-      void materialScore( const Board &board, Scores &scores);
+    // return a material score vector
+    Scores materialScore( const Board &board );
 
     int adjustMaterialScore(const Board &board, ColorType side);
 
@@ -184,7 +200,9 @@ class Scoring
     void pieceScore(const Board &board,
                    const PawnHashEntry::PawnData &ourPawnData,
 		   const PawnHashEntry::PawnData &oppPawnData,
-                    int cover, Scores &, Scores &opp_scores, bool early_endgame, bool deep_endgame);
+                    int cover, Scores &, Scores &opp_scores,
+                    bool early_endgame,
+                    bool deep_endgame);
 
     // compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
