@@ -749,7 +749,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side )
         }
                                                   // close to even
         else if (oppmat.infobits() == Material::KRN) {
-            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)+PAWN_VALUE/4;
+            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)-PAWN_VALUE/4;
         }
         else if (oppmat.infobits() == Material::KB ||
                  oppmat.infobits() == Material::KN ||
