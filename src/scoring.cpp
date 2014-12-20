@@ -71,35 +71,26 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
    
-static int PAWN_TRADE_SCORE[3] =
-       {-45, -25, -10 };
-
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("queen_value_adjust",0,-50,75),
-   Scoring::TuneParam("bishop_pawn_placement2",-5,-8,0),
-   Scoring::TuneParam("near_draw1",50,0,100),
-   Scoring::TuneParam("near_draw2",50,0,100),
-   Scoring::TuneParam("near_draw3",25,0,75),
-   Scoring::TuneParam("minor_bonus",25,0,35),
-   Scoring::TuneParam("pawn_trade_score0",-45,-75,0),
-   Scoring::TuneParam("pawn_trade_score1",-25,-50,0),
-   Scoring::TuneParam("pawn_trade_score2",-10,-25,0),
-   Scoring::TuneParam("endgame_pawn_bonus",12,0,25),
-   Scoring::TuneParam("rb_adjust1",25,0,40),
-   Scoring::TuneParam("rb_adjust2",7,0,20),
-   Scoring::TuneParam("rb_adjust3",-7,-20,0),
-   Scoring::TuneParam("rb_adjust4",-25,-40,0),
-   Scoring::TuneParam("rbn_adjust1",50,0,75),
-   Scoring::TuneParam("rbn_adjust2",62,0,95),
-   Scoring::TuneParam("rbn_adjust3",84,0,125),
-   Scoring::TuneParam("rbn_adjust4",100,0,150),
-   Scoring::TuneParam("qr_adjust0",-50,-75,20),
-   Scoring::TuneParam("qr_adjust1",0,-25,25),
-   Scoring::TuneParam("qr_adjust2",50,0,100)
+   Scoring::TuneParam("queen_value_adjust",0,-50,250),
+   Scoring::TuneParam("rook_value_adjust",0,-50,100),
+   Scoring::TuneParam("kn_vs_pawns1",-20,-40,25),
+   Scoring::TuneParam("kn_vs_pawns2",-40,-60,25),
+   Scoring::TuneParam("q_vs_rm_with_rook",25,-25,100),
+   Scoring::TuneParam("q_vs_rm_wo_rook",25,-25,50),
+   Scoring::TuneParam("rb_bonus",25,0,50),
 };
 
 #define PARAM(x) params[x].current
 
+static int KN_VS_PAWNS_ADJUST[3];
+
+void Scoring::initParams() 
+{
+   KN_VS_PAWNS_ADJUST[1] = PARAM(KN_VS_PAWNS1);
+   KN_VS_PAWNS_ADJUST[2] = PARAM(KN_VS_PAWNS2);
+}
+      
 
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
@@ -208,9 +199,10 @@ static const int BISHOP_TRAPPED = -147;
 
 static const int BISHOP_PAIR[2] = { 42, 55 };
 static const int BAD_BISHOP[2] = { -4, -6 };
+static const int BISHOP_PAWN_PLACEMENT[2] = { -10, -16 };
 
 // material terms and trade bonus/penalties
-static int RB_ADJUST[9] = {
+static const int RB_ADJUST[9] = {
    0,
   (int)(0.25*PAWN_VALUE),
   (int)(0.075*PAWN_VALUE),
@@ -221,7 +213,7 @@ static int RB_ADJUST[9] = {
   (int)(-0.25*PAWN_VALUE),
   (int)(-0.25*PAWN_VALUE)};
 
-static int RBN_ADJUST[9] = {
+static const int RBN_ADJUST[9] = {
    0,
   (int)(0.75*PAWN_VALUE - 0.25*PAWN_VALUE),
   (int)(0.75*PAWN_VALUE - 0.075*PAWN_VALUE),
@@ -232,7 +224,7 @@ static int RBN_ADJUST[9] = {
   (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE),
   (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE)};
 
-static int QR_ADJUST[9] = {
+static const int QR_ADJUST[9] = {
   (int)(-0.5*PAWN_VALUE),
   (int)(0*PAWN_VALUE),
   (int)(0.5*PAWN_VALUE),
@@ -242,6 +234,8 @@ static int QR_ADJUST[9] = {
   (int)(0.5*PAWN_VALUE), 
   (int)(0.5*PAWN_VALUE), 
   (int)(0.5*PAWN_VALUE)};
+
+static const int ENDGAME_PAWN_BONUS = 8;
 
 static const int CASTLING_SCORES[6] = { 0, -7, -10, 28, 20, -28 };
 
@@ -351,13 +345,9 @@ private:
     int64 key;
 };
 
-static const int DRAW_PATTERN_COUNT = 8;
+static const int DRAW_PATTERN_COUNT = 5;
 
 static const EndgamePattern DRAW_PATTERN[] = {
-                   EndgamePattern(Material::KN, Material::K),
-                   EndgamePattern(Material::KB, Material::K),
-                   EndgamePattern(Material::KNN, Material::K),
-                   EndgamePattern(Material::KB, Material::K),
                    EndgamePattern(Material::KRN, Material::KR),
                    EndgamePattern(Material::KRB, Material::KR),
                    EndgamePattern(Material::KBB, Material::KB),
@@ -645,29 +635,8 @@ static void initBitboards() {
 
 void Scoring::init() {
    initBitboards();
-}
 
-void Scoring::initParams() 
-{
-   PAWN_TRADE_SCORE[0] = PARAM(PAWN_TRADE_SCORE0);
-   PAWN_TRADE_SCORE[1] = PARAM(PAWN_TRADE_SCORE1);
-   PAWN_TRADE_SCORE[2] = PARAM(PAWN_TRADE_SCORE2);
-   RB_ADJUST[1] = PARAM(RB_ADJUST1);
-   RB_ADJUST[2] = PARAM(RB_ADJUST2);
-   RB_ADJUST[3] = PARAM(RB_ADJUST3);
-   for (int i = 4; i < 9; i++)
-      RB_ADJUST[i] = PARAM(RB_ADJUST4);
-   RBN_ADJUST[1] = PARAM(RBN_ADJUST1);
-   RBN_ADJUST[2] = PARAM(RBN_ADJUST2);
-   RBN_ADJUST[3] = PARAM(RBN_ADJUST3);
-   for (int i = 4; i < 9; i++)
-      RBN_ADJUST[i] = PARAM(RBN_ADJUST4);
-   QR_ADJUST[0] = PARAM(QR_ADJUST0);
-   QR_ADJUST[1] = PARAM(QR_ADJUST1);
-   for (int i = 2; i < 9; i++)
-      QR_ADJUST[i] = PARAM(QR_ADJUST2);
 }
-
 
 void Scoring::cleanup() {
 }
@@ -689,76 +658,97 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
 #endif
     const int opponentPieceValue = (oppmat.value()-oppmat.pawnCount()*PAWN_VALUE);
     const int pieceDiff = ourmat.value()-ourmat.pawnCount()*PAWN_VALUE - opponentPieceValue;
-
+    static const int NEAR_DRAW_CONFIGURATION[3] =
+       {-75, -40, -15 };
+    // If we have a material advantage but a configuration that would
+    // be a likely draw w/o pawns, give no bonus for the extra
+    // material but discourage trade or loss of remaining pawns.
+    if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
+        const uint32 pieces = ourmat.pieceBits();
+        if (pieces == Material::KN || pieces == Material::KB ||
+            pieces == Material::KNN) {
+           // Knight, Bishop or NN vs pawns
+           if (ourmat.pawnCount() == 0) {
+              // no mating material. We can't be better but if
+              // opponent has 1-2 pawns we are not so bad
+              static const int KN_VS_PAWN_ADJUST[5] = {0,-KNIGHT_VALUE,
+                                                       -int(1.5*PAWN_VALUE),
+                                                       -PAWN_VALUE/4,
+                                                       0};
+              score += KN_VS_PAWN_ADJUST[Util::Min(4,oppmat.pawnCount())];
+           } else {
+              int diff = ourmat.pawnCount() - oppmat.pawnCount();
+              // a small pawn advantage is worth less than usual
+              if (diff > 0) {
+                 score -= KN_VS_PAWNS_ADJUST[diff];
+              }
+              else if (diff < 0) {
+                 score += KN_VS_PAWNS_ADJUST[-diff];
+              }
+           }
+           return score;
+        } else {
+            EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
+            for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
+                if (DRAW_PATTERN[i] == pattern) {
+                    score += NEAR_DRAW_CONFIGURATION[Util::Min(2,ourmat.pawnCount())];
+                    return score;
+                }
+            }
+        }
+    }
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
     case 0: {
-       if (ourmat.minorCount() == oppmat.minorCount() + 1) {
-          // Knight or Bishop vs. pawns
-          // Bonus for piece but not if only 1 minor.
-          if (ourmat.materialLevel() > 3) {
-             score += PARAM(MINOR_BONUS);
-          }
-       }
-       else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
-                 ourmat.rookCount() == oppmat.rookCount() - 2) {
-          // Queen vs. Rooks
-          // Queen is better with minors on board (per Kaufman)
-          score += QR_ADJUST[ourmat.minorCount()];
-       }
-       break;
+        if (ourmat.minorCount() == oppmat.minorCount() + 1) {
+            // Knight or Bishop vs. pawns
+            // Bonus for piece. Note: we do not have KN or KB alone - those are special
+            // cases handled above.
+            score += PAWN_VALUE/4;
+        }
+        else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
+             ourmat.rookCount() == oppmat.rookCount() - 2) {
+            // Queen vs. Rooks
+            // Queen is better with minors on board (per Kaufman)
+            score += QR_ADJUST[ourmat.minorCount()];
+        }
+        break;
     } 
     case 1: {
-       if (ourmat.rookCount() == oppmat.rookCount()+1) {
-          if (ourmat.minorCount() == oppmat.minorCount()) {
-             // Rook vs. pawns. Usually the Rook is better.
-             int pawnDiff = oppmat.pawnCount() - ourmat.pawnCount();
-             score += PAWN_VALUE/3 - 4*Util::Max(0,pawnDiff-5);
-          }
-          else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
-             // Rook vs. minor
-             // not as bad w. fewer pieces
-             score += RB_ADJUST[ourmat.majorCount()];
-          }
-          else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
-             // bad trade - Rook for two minors, but not as bad w. fewer pieces
-             score -= RBN_ADJUST[oppmat.majorCount()];
-          }
-       }
-       // Q vs RB or RN is already dealt with by piece values
-       break;
+        if (ourmat.rookCount() == oppmat.rookCount()+1) {
+            if (ourmat.minorCount() == oppmat.minorCount()) {
+                // Rook vs. pawns. Usually the Rook is better.
+                int pawnDiff = oppmat.pawnCount() - ourmat.pawnCount();
+                score += PAWN_VALUE/3 - 4*Util::Max(0,pawnDiff-5);
+            }
+            else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
+                // Rook vs. minor
+                // not as bad w. fewer pieces
+                score += RB_ADJUST[ourmat.majorCount()];
+            }
+            else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
+                // bad trade - Rook for two minors, but not as bad w. fewer pieces
+                score -= RBN_ADJUST[oppmat.majorCount()];
+            }
+        }
+        else if (ourmat.queenCount() == oppmat.queenCount()+1 &&
+            ourmat.rookCount() == ourmat.rookCount()-1 &&
+            ourmat.minorCount() == oppmat.minorCount()-1) {
+           //Q vs R + minor
+           score += (ourmat.rookCount()) ? PARAM(Q_VS_RM_WITH_ROOK) :
+              PARAM(Q_VS_RM_WO_ROOK);
+        }
+        break;
     }
     default:
-       break;
-    }
-    score += ourmat.queenCount()*PARAM(QUEEN_VALUE_ADJUST);
-    // If we have a material advantage but a configuration that
-    //would be a likely draw w/o pawns, give no bonus for the extra
-    // material but discourage trade or loss of remaining pawns
-    if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
-        const uint32 pieces = ourmat.pieceBits();
-        EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
-        for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
-           if (DRAW_PATTERN[i] == pattern) {
-             int pawnDiff = ourmat.pawnCount()-oppmat.pawnCount();
-             // With few pawns move score towards draw
-             if (pawnDiff == 1) {
-                score -= PARAM(NEAR_DRAW1);
-             }
-             else if (pawnDiff == -1) {
-                score += PARAM(NEAR_DRAW2);
-             }
-             else if (pawnDiff == -2) {
-                score += PARAM(NEAR_DRAW3);
-             }
-             return score;
-           }
-        }
+        break;
     }
     // Encourage trading pieces (but not pawns) when we are ahead in material.
 #ifdef EVAL_DEBUG
     tmp = score;
 #endif
+    static const int PAWN_TRADE_SCORE[3] =
+       {-45, -25, -10 };
     const int mdiff = ourmat.value() - oppmat.value();
     if (mdiff >= 3*PAWN_VALUE) {
        // Encourage trading pieces when we are ahead in material.
@@ -776,7 +766,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
     if (mdiff>=0 && pieceDiff>=0 && ourmat.materialLevel() <= ENDGAME_MATERIAL_THRESHOLD) {
        const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
        if (pawnDiff > 0) {
-          score += pawnDiff*PARAM(ENDGAME_PAWN_BONUS)*(128-Scores::MATERIAL_SCALE[ourmat.materialLevel()])/128;
+          score += pawnDiff*ENDGAME_PAWN_BONUS*(128-Scores::MATERIAL_SCALE[ourmat.materialLevel()])/128;
        }
     }
 #ifdef EVAL_DEBUG
@@ -804,7 +794,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side )
         }
                                                   // close to even
         else if (oppmat.infobits() == Material::KRN) {
-            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)+PAWN_VALUE/4;
+            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)-PAWN_VALUE/4;
         }
         else if (oppmat.infobits() == Material::KB ||
                  oppmat.infobits() == Material::KN ||
@@ -1293,7 +1283,7 @@ void Scoring::pieceScore(const Board &board,
 
             // penalize pawns on same color square as opposing single Bishop
             //opp_scores.mid += oppPawnData.w_square_pawns*BISHOP_PAWN_PLACEMENT[Midgame]/opp_pawns;
-            opp_scores.end += PARAM(BISHOP_PAWN_PLACEMENT2)*oppPawnData.w_square_pawns;
+            opp_scores.end += oppPawnData.w_square_pawns * BISHOP_PAWN_PLACEMENT[Endgame] / opp_pawns;
          }
       }
       else {
@@ -1316,7 +1306,7 @@ void Scoring::pieceScore(const Board &board,
          if (opp_pawns) {
             // penalize pawns on same color square as opposing single Bishop
             //opp_scores.mid += oppPawnData.b_square_pawns*BISHOP_PAWN_PLACEMENT[Midgame]/opp_pawns;
-            opp_scores.end += oppPawnData.b_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT2);
+            opp_scores.end += oppPawnData.b_square_pawns * BISHOP_PAWN_PLACEMENT[Endgame] / opp_pawns;
          }
       }
    }
@@ -1795,6 +1785,17 @@ int Scoring::evalu8(const Board &board) {
         if (Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4)
             adjust -= mdiff/4;
     }
+    adjust += ourmat.queenCount()*PARAM(QUEEN_VALUE_ADJUST);
+    adjust += ourmat.rookCount()*PARAM(ROOK_VALUE_ADJUST);
+    if (ourmat.hasRook() && ourmat.hasBishop()){
+       adjust += PARAM(RB_BONUS);
+    }
+    adjust -= oppmat.queenCount()*PARAM(QUEEN_VALUE_ADJUST);
+    adjust -= oppmat.rookCount()*PARAM(ROOK_VALUE_ADJUST);
+    if (oppmat.hasRook() && oppmat.hasBishop()){
+       adjust -= PARAM(RB_BONUS);
+    }
+    
     if (ourmat.pieceBits() != oppmat.pieceBits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
             adjust += adjustMaterialScoreNoPawns(board,side) -
@@ -2444,6 +2445,10 @@ void Scoring::calcEndgame(const Board &board,
    }
 
    endgameEntry->white_king_position = k_pos;
+#ifdef EVAL_DEBUG
+   cout << "endgame king position (White): " <<
+      k_pos << endl;;
+#endif
    kp = board.kingSquare(Black);
    k_pos = KingEndgameScores[63 - kp];
    if (!TEST_MASK(abcd_mask, all_pawns)) {
@@ -2458,7 +2463,10 @@ void Scoring::calcEndgame(const Board &board,
       else
          k_pos -= PAWN_SIDE_BONUS;
    }
-
+#ifdef EVAL_DEBUG
+   cout << "endgame king position (Black): " <<
+      k_pos << endl;
+#endif
    endgameEntry->black_king_position = k_pos;
 
    // bonus for king near pawns

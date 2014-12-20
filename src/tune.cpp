@@ -38,7 +38,7 @@ static const int MAX_THREADS = 64;
 
 static const int THREAD_STACK_SIZE = 8*1024*1024;
 
-static int games=200;
+static int games=300;
 
 // results from the threads
 static double errors[MAX_THREADS];

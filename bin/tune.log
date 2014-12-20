@@ -1,14 +1,14 @@
 Initialized tablebases
 reading parameters
 parameter check passed
-75 -2 50 30 25 25  0 -25 -16 18 ...  7 -15 -33 50 62 84 100 -75  0 90
+30  0 -20 -40 25 25 25
 
 MADS run {
 
 	BBE	(	SOL	)	OBJ
 
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -23,443 +23,17 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2545   14   14  1600   72%  2378   19% 
-
-   2 Gaviota-1.0     2461   13   13  1600   62%  2378   26% 
-
-   3 Arasan-17.3     2378    7    6  8400   46%  2409   24% 
-
-rating=2378
-
-   4 Crafty-23.8     2377   18   18   800   50%  2378   29% 
-
-   5 MinkoChess-1.3  2358   13   13  1600   47%  2378   25% 
-
-   6 EXchess-7.26    2352   15   15  1200   46%  2378   26% 
-
-   7 Fruit-2.3.1     2328   13   13  1600   43%  2378   24% 
-
-ResultSet-EloRating>ResultSet>
-
-	  1	(	75 -2 50 30 25 25 0 -25 -16 18 25 7 -15 -33 50 62 84 100 -75 0 90 )	2622.0000000000
-executing /home/jdart/tools/match.py 200 queen_value_adjust 85 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2553   14   14  1600   73%  2378   19% 
-
-   2 Gaviota-1.0     2444   13   13  1600   60%  2378   28% 
-
-   3 Crafty-23.8     2396   15   15  1200   53%  2378   28% 
-
-   4 Arasan-17.3     2378    6    6  8800   46%  2407   25% 
-
-rating=2378
-
-   5 MinkoChess-1.3  2355   13   13  1600   47%  2378   26% 
-
-   6 EXchess-7.26    2347   15   15  1200   46%  2378   24% 
-
-   7 Fruit-2.3.1     2327   13   13  1600   43%  2378   26% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -1 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2538   14   14  1600   71%  2377   20% 
-
-   2 Gaviota-1.0     2445   13   13  1600   60%  2377   27% 
-
-   3 Crafty-23.8     2390   15   15  1200   52%  2377   25% 
-
-   4 Arasan-17.3     2377    6    6  8800   46%  2407   24% 
-
-rating=2377
-
-   5 MinkoChess-1.3  2364   13   13  1600   48%  2377   25% 
-
-   6 EXchess-7.26    2348   15   15  1200   46%  2377   25% 
-
-   7 Fruit-2.3.1     2338   13   13  1600   45%  2377   24% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 60 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2540   14   14  1600   72%  2376   21% 
-
-   2 Gaviota-1.0     2450   13   13  1600   60%  2376   26% 
-
-   3 Crafty-23.8     2386   18   18   800   51%  2376   29% 
-
-   4 Arasan-17.3     2376    6    6  8400   46%  2408   25% 
-
-rating=2376
-
-   5 EXchess-7.26    2365   15   15  1200   48%  2376   25% 
-
-   6 MinkoChess-1.3  2353   13   13  1600   47%  2376   26% 
-
-   7 Fruit-2.3.1     2330   13   13  1600   44%  2376   23% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 40 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2531   14   14  1600   71%  2375   20% 
-
-   2 Gaviota-1.0     2454   13   13  1600   61%  2375   27% 
-
-   3 Crafty-23.8     2394   16   16  1000   53%  2375   28% 
-
-   4 Arasan-17.3     2375    6    6  8600   46%  2407   25% 
-
-rating=2375
-
-   5 EXchess-7.26    2355   15   15  1200   47%  2375   22% 
-
-   6 MinkoChess-1.3  2353   13   13  1600   47%  2375   26% 
-
-   7 Fruit-2.3.1     2336   13   13  1600   44%  2375   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 33 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2551   14   14  1600   73%  2374   19% 
-
-   2 Gaviota-1.0     2448   13   13  1600   60%  2374   27% 
-
-   3 Arasan-17.3     2374    6    7  8400   45%  2409   24% 
-
-rating=2374
-
-   4 Crafty-23.8     2373   18   18   800   50%  2374   28% 
-
-   5 MinkoChess-1.3  2361   13   13  1600   48%  2374   24% 
-
-   6 EXchess-7.26    2360   15   15  1200   48%  2374   24% 
-
-   7 Fruit-2.3.1     2333   13   13  1600   44%  2374   24% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 29 pawn_trade_score0 0 pawn_trade_score1 -25 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2545   14   14  1600   72%  2378   20% 
-
-   2 Gaviota-1.0     2444   13   13  1600   60%  2378   28% 
-
-   3 Crafty-23.8     2397   15   15  1200   53%  2378   27% 
-
-   4 Arasan-17.3     2378    6    6  8800   46%  2407   25% 
-
-rating=2378
-
-   5 MinkoChess-1.3  2361   13   13  1600   48%  2378   27% 
-
-   6 EXchess-7.26    2346   15   15  1200   45%  2378   25% 
-
-   7 Fruit-2.3.1     2329   13   13  1600   43%  2378   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2539   14   14  1600   71%  2379   20% 
-
-   2 Gaviota-1.0     2449   13   13  1600   60%  2379   27% 
-
-   3 Crafty-23.8     2394   16   16  1000   52%  2379   26% 
-
-   4 Arasan-17.3     2379    6    6  8600   46%  2406   25% 
+   4 Arasan-17.3     2379    5    6 13200   46%  2406   24% 
 
 rating=2379
 
-   5 EXchess-7.26    2357   15   15  1200   47%  2379   26% 
-
-   6 MinkoChess-1.3  2357   13   13  1600   47%  2379   27% 
-
-   7 Fruit-2.3.1     2325   13   13  1600   42%  2379   24% 
-
-ResultSet-EloRating>ResultSet>
-
-	  8	(	75 -2 50 30 25 25 0 -20 -16 18 25 7 -15 -33 50 62 84 100 -75 0 90 )	2621.0000000000
-iterations = 1, black box evals = 8
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -5 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+	  1	(	30 0 -20 -40 25 25 25 )	2621.0000000000
+executing /home/jdart/tools/match.py 300 queen_value_adjust 60 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
+ssh: connect to host sassy port 22: Connection timed out
+ssh: connect to host sassy port 22: Connection timed out
+ssh: connect to host puppy port 22: Connection timed out
+ssh: connect to host puppy port 22: Connection timed out
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.14000 game(s) loaded, 0 game(s) with unknown result ignored.14306 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -474,48 +48,12 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
+   2 Arasan-17.3     2374    5    5 14306   46%  2408   23% 
 
-compiled Mar 25 2012 10:40:41.
+rating=2374
 
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2537   14   14  1600   72%  2376   22% 
-
-   2 Gaviota-1.0     2450   13   13  1600   61%  2376   25% 
-
-   3 Crafty-23.8     2383   15   15  1200   51%  2376   28% 
-
-   4 Arasan-17.3     2376    6    6  8800   46%  2407   25% 
-
-rating=2376
-
-   5 MinkoChess-1.3  2372   13   13  1600   50%  2376   26% 
-
-   6 EXchess-7.26    2359   15   15  1200   48%  2376   26% 
-
-   7 Fruit-2.3.1     2323   13   13  1600   43%  2376   26% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 85 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 29 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 15 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -530,48 +68,52 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
+   4 Arasan-17.3     2374    6    6 13200   46%  2407   24% 
 
-compiled Mar 25 2012 10:40:41.
+rating=2374
 
-This program comes with ABSOLUTELY NO WARRANTY.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -13 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12900 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
 
-This is free software, and you are welcome to redistribute it
+did remote_stop
 
-under the terms and conditions of the GNU General Public License.
+calling remote_stop
 
-See http://www.gnu.org/copyleft/gpl.html for details.
+did remote_stop
 
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
+waiting for local process completion
 
-ResultSet-EloRating>2400
+All local processes completed.
 
-ResultSet-EloRating>0 left    
+All remote processes completed.
 
-00:00:00,00              
+   4 Arasan-17.3     2374    6    5 12900   46%  2407   25% 
 
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
+rating=2374
 
-   1 Discocheck-5.2  2533   14   14  1600   71%  2377   20% 
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -31 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12900 game(s) loaded, 0 game(s) with unknown result ignored.
+calling remote_stop
 
-   2 Gaviota-1.0     2447   13   13  1600   60%  2377   29% 
+did remote_stop
 
-   3 Crafty-23.8     2390   16   16  1000   52%  2377   26% 
+calling remote_stop
 
-   4 Arasan-17.3     2377    6    7  8600   46%  2407   25% 
+did remote_stop
+
+waiting for local process completion
+
+All local processes completed.
+
+All remote processes completed.
+
+   4 Arasan-17.3     2377    6    5 12900   46%  2407   25% 
 
 rating=2377
 
-   5 EXchess-7.26    2365   15   15  1200   48%  2377   23% 
-
-   6 MinkoChess-1.3  2361   13   13  1600   48%  2377   27% 
-
-   7 Fruit-2.3.1     2328   13   13  1600   43%  2377   24% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 38 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -586,218 +128,14 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2547   14   14  1600   73%  2373   20% 
-
-   2 Gaviota-1.0     2448   13   13  1600   61%  2373   26% 
-
-   3 Crafty-23.8     2387   16   16  1000   52%  2373   28% 
-
-   4 Arasan-17.3     2373    6    6  8600   45%  2408   24% 
-
-rating=2373
-
-   5 MinkoChess-1.3  2361   13   13  1600   48%  2373   25% 
-
-   6 EXchess-7.26    2356   15   15  1200   48%  2373   23% 
-
-   7 Fruit-2.3.1     2328   13   13  1600   44%  2373   26% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 95 bishop_pawn_placement2 -2 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2550   14   14  1600   73%  2374   20% 
-
-   2 Gaviota-1.0     2438   13   13  1600   59%  2374   27% 
-
-   3 Crafty-23.8     2392   15   15  1200   53%  2374   26% 
-
-   4 Arasan-17.3     2374    6    6  8800   46%  2407   25% 
-
-rating=2374
-
-   5 MinkoChess-1.3  2361   13   13  1600   48%  2374   27% 
-
-   6 EXchess-7.26    2349   15   15  1200   47%  2374   25% 
-
-   7 Fruit-2.3.1     2336   13   13  1600   45%  2374   26% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 0 near_draw1 50 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2537   14   14  1600   72%  2374   23% 
-
-   2 Gaviota-1.0     2448   13   13  1600   61%  2374   27% 
-
-   3 Crafty-23.8     2379   15   15  1200   51%  2374   25% 
-
-   4 Arasan-17.3     2374    6    6  8800   45%  2407   25% 
-
-rating=2374
-
-   5 EXchess-7.26    2362   15   15  1200   48%  2374   24% 
-
-   6 MinkoChess-1.3  2361   13   13  1600   48%  2374   28% 
-
-   7 Fruit-2.3.1     2339   13   13  1600   45%  2374   26% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 70 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2541   14   14  1600   72%  2380   22% 
-
-   2 Gaviota-1.0     2445   13   13  1600   59%  2380   27% 
-
-   3 Crafty-23.8     2404   18   18   800   54%  2380   29% 
-
-   4 Arasan-17.3     2380    6    7  8400   46%  2406   25% 
+   4 Arasan-17.3     2380    6    6 12600   46%  2407   25% 
 
 rating=2380
 
-   5 MinkoChess-1.3  2354   13   13  1600   46%  2380   25% 
-
-   6 EXchess-7.26    2343   15   15  1200   45%  2380   25% 
-
-   7 Fruit-2.3.1     2332   13   13  1600   43%  2380   24% 
-
-ResultSet-EloRating>ResultSet>
-
-	 14	(	75 -2 70 30 25 25 0 -20 -16 18 25 7 -15 -33 50 62 84 100 -75 0 90 )	2620.0000000000
-iterations = 2, black box evals = 14
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 100 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+	  6	(	30 0 -20 -40 38 25 25 )	2620.0000000000
+iterations = 1, black box evals = 6
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 77 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -812,216 +150,12 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2532   14   14  1600   71%  2375   22% 
-
-   2 Gaviota-1.0     2447   13   13  1600   60%  2375   27% 
-
-   3 Crafty-23.8     2395   15   15  1200   53%  2375   24% 
-
-   4 Arasan-17.3     2375    6    6  8800   46%  2407   25% 
-
-rating=2375
-
-   5 MinkoChess-1.3  2359   13   13  1600   48%  2375   26% 
-
-   6 EXchess-7.26    2353   15   15  1200   47%  2375   24% 
-
-   7 Fruit-2.3.1     2340   13   13  1600   45%  2375   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 85 bishop_pawn_placement2 -1 near_draw1 90 near_draw2 30 near_draw3 25 minor_bonus 29 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2535   14   14  1600   71%  2380   20% 
-
-   2 Gaviota-1.0     2442   13   13  1600   59%  2380   26% 
-
-   3 Crafty-23.8     2385   18   18   800   51%  2380   26% 
-
-   4 Arasan-17.3     2380    6    7  8400   46%  2407   24% 
-
-rating=2380
-
-   5 EXchess-7.26    2371   15   15  1200   49%  2380   25% 
-
-   6 MinkoChess-1.3  2359   13   13  1600   47%  2380   25% 
-
-   7 Fruit-2.3.1     2327   13   13  1600   43%  2380   23% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 90 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 11 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2546   14   14  1600   73%  2373   20% 
-
-   2 Gaviota-1.0     2439   13   13  1600   59%  2373   27% 
-
-   3 Crafty-23.8     2389   16   16  1000   52%  2373   27% 
-
-   4 Arasan-17.3     2373    7    6  8600   45%  2407   24% 
-
-rating=2373
-
-   5 EXchess-7.26    2367   15   15  1200   49%  2373   24% 
-
-   6 MinkoChess-1.3  2351   13   13  1600   47%  2373   25% 
-
-   7 Fruit-2.3.1     2335   13   13  1600   45%  2373   24% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 90 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -30 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 3 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2536   14   14  1600   71%  2378   21% 
-
-   2 Gaviota-1.0     2447   13   13  1600   60%  2378   27% 
-
-   3 Crafty-23.8     2390   16   16  1000   52%  2378   27% 
-
-   4 Arasan-17.3     2378    6    6  8600   46%  2407   25% 
+   4 Arasan-17.3     2378    5    5 13200   46%  2406   24% 
 
 rating=2378
 
-   5 EXchess-7.26    2362   15   15  1200   48%  2378   25% 
-
-   6 MinkoChess-1.3  2360   13   13  1600   48%  2378   27% 
-
-   7 Fruit-2.3.1     2328   13   13  1600   43%  2378   22% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 90 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 3 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8200 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 51 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1036,48 +170,12 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2536   14   14  1600   71%  2379   22% 
-
-   2 Gaviota-1.0     2445   13   13  1600   59%  2379   27% 
-
-   3 Crafty-23.8     2397   21   21   600   53%  2379   27% 
-
-   4 Arasan-17.3     2379    7    6  8200   46%  2406   24% 
+   4 Arasan-17.3     2379    5    6 13200   46%  2406   25% 
 
 rating=2379
 
-   5 MinkoChess-1.3  2361   13   13  1600   48%  2379   25% 
-
-   6 EXchess-7.26    2360   15   15  1200   47%  2379   24% 
-
-   7 Fruit-2.3.1     2322   13   13  1600   42%  2379   23% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 -2 near_draw1 90 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -30 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 11 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 64 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12900 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1092,330 +190,12 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2547   14   14  1600   72%  2377   19% 
-
-   2 Gaviota-1.0     2457   13   13  1600   61%  2377   27% 
-
-   3 Crafty-23.8     2385   15   15  1200   51%  2377   29% 
-
-   4 Arasan-17.3     2377    6    6  8800   46%  2407   25% 
-
-rating=2377
-
-   5 EXchess-7.26    2358   15   15  1200   47%  2377   24% 
-
-   6 MinkoChess-1.3  2348   13   13  1600   46%  2377   25% 
-
-   7 Fruit-2.3.1     2328   13   13  1600   43%  2377   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 100 bishop_pawn_placement2 -2 near_draw1 70 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2530   14   14  1600   70%  2378   21% 
-
-   2 Gaviota-1.0     2446   13   13  1600   60%  2378   27% 
-
-   3 Crafty-23.8     2396   18   18   800   53%  2378   27% 
-
-   4 MinkoChess-1.3  2382   13   13  1600   51%  2378   25% 
-
-   5 Arasan-17.3     2378    7    6  8400   46%  2407   25% 
-
-rating=2378
-
-   6 EXchess-7.26    2348   15   15  1200   46%  2378   25% 
-
-   7 Fruit-2.3.1     2319   13   13  1600   42%  2378   26% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 0 near_draw1 70 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8400 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2544   14   14  1600   72%  2381   20% 
-
-   2 Gaviota-1.0     2444   13   13  1600   59%  2381   28% 
-
-   3 Crafty-23.8     2386   18   18   800   51%  2381   29% 
-
-   4 Arasan-17.3     2381    7    6  8400   47%  2406   25% 
-
-rating=2381
-
-   5 EXchess-7.26    2369   15   15  1200   48%  2381   22% 
-
-   6 MinkoChess-1.3  2359   13   13  1600   47%  2381   26% 
-
-   7 Fruit-2.3.1     2316   13   13  1600   41%  2381   25% 
-
-ResultSet-EloRating>ResultSet>
-
-	 22	(	75 0 70 30 25 25 0 -20 -16 18 25 7 -15 -33 50 62 84 100 -75 0 90 )	2619.0000000000
-iterations = 3, black box evals = 22
-executing /home/jdart/tools/match.py 200 queen_value_adjust 85 bishop_pawn_placement2 -2 near_draw1 60 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 5 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2534   14   14  1600   71%  2377   23% 
-
-   2 Gaviota-1.0     2442   13   13  1600   59%  2377   28% 
-
-   3 Crafty-23.8     2384   15   15  1200   51%  2377   27% 
-
-   4 Arasan-17.3     2377    6    6  8800   46%  2407   26% 
-
-rating=2377
-
-   5 MinkoChess-1.3  2374   13   13  1600   50%  2377   27% 
-
-   6 EXchess-7.26    2351   15   15  1200   46%  2377   23% 
-
-   7 Fruit-2.3.1     2339   13   13  1600   45%  2377   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 100 bishop_pawn_placement2 0 near_draw1 70 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2534   14   14  1600   70%  2379   20% 
-
-   2 Gaviota-1.0     2447   13   13  1600   60%  2379   27% 
-
-   3 Crafty-23.8     2379   16   16  1000   50%  2379   29% 
-
-   4 Arasan-17.3     2379    6    6  8600   46%  2407   25% 
-
-rating=2379
-
-   5 MinkoChess-1.3  2364   13   13  1600   48%  2379   24% 
-
-   6 EXchess-7.26    2360   15   15  1200   47%  2379   25% 
-
-   7 Fruit-2.3.1     2337   13   13  1600   44%  2379   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 0 near_draw1 100 near_draw2 30 near_draw3 25 minor_bonus 25 pawn_trade_score0 0 pawn_trade_score1 -20 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 7 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -75 qr_adjust1 0
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
-
-compiled Mar 25 2012 10:40:41.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2547   14   14  1600   73%  2375   19% 
-
-   2 Gaviota-1.0     2447   13   13  1600   60%  2375   27% 
-
-   3 Crafty-23.8     2390   16   16  1000   52%  2375   25% 
-
-   4 Arasan-17.3     2375    6    6  8600   46%  2408   24% 
+   4 Arasan-17.3     2375    5    5 12900   46%  2407   25% 
 
 rating=2375
 
-   5 MinkoChess-1.3  2371   13   13  1600   49%  2375   26% 
-
-   6 EXchess-7.26    2349   15   15  1200   46%  2375   25% 
-
-   7 Fruit-2.3.1     2321   13   13  1600   42%  2375   23% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 0 near_draw1 70 near_draw2 90 near_draw3 9 minor_bonus 17 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 11 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -55 qr_adjust1 10
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.8800 game(s) loaded, 0 game(s) with unknown result ignored.
+executing /home/jdart/tools/match.py 300 queen_value_adjust 90 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 38 q_vs_rm_wo_rook 25 rb_bonus 25
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12600 game(s) loaded, 0 game(s) with unknown result ignored.
 calling remote_stop
 
 did remote_stop
@@ -1430,47 +210,11 @@ All local processes completed.
 
 All remote processes completed.
 
-version 0057, Copyright (C) 1997-2010 Remi Coulom.
+   4 Arasan-17.3     2377    6    6 12600   46%  2407   25% 
 
-compiled Mar 25 2012 10:40:41.
+rating=2377
 
-This program comes with ABSOLUTELY NO WARRANTY.
-
-This is free software, and you are welcome to redistribute it
-
-under the terms and conditions of the GNU General Public License.
-
-See http://www.gnu.org/copyleft/gpl.html for details.
-
-ResultSet>ResultSet>ResultSet-EloRating>00:00:00,00
-
-ResultSet-EloRating>2400
-
-ResultSet-EloRating>0 left    
-
-00:00:00,00              
-
-ResultSet-EloRating>Rank Name             Elo    +    - games score oppo. draws 
-
-   1 Discocheck-5.2  2539   14   14  1600   72%  2375   21% 
-
-   2 Gaviota-1.0     2456   13   13  1600   62%  2375   27% 
-
-   3 Crafty-23.8     2397   15   15  1200   53%  2375   27% 
-
-   4 Arasan-17.3     2375    6    6  8800   46%  2407   25% 
-
-rating=2375
-
-   5 MinkoChess-1.3  2363   13   13  1600   48%  2375   25% 
-
-   6 EXchess-7.26    2339   15   15  1200   45%  2375   24% 
-
-   7 Fruit-2.3.1     2331   13   13  1600   44%  2375   25% 
-
-ResultSet-EloRating>ResultSet>
-
-executing /home/jdart/tools/match.py 200 queen_value_adjust 75 bishop_pawn_placement2 0 near_draw1 70 near_draw2 10 near_draw3 73 minor_bonus 17 pawn_trade_score0 0 pawn_trade_score1 -10 pawn_trade_score2 -16 endgame_pawn_bonus 18 rb_adjust1 25 rb_adjust2 11 rb_adjust3 -15 rb_adjust4 -33 rbn_adjust1 50 rbn_adjust2 62 rbn_adjust3 84 rbn_adjust4 100 qr_adjust0 -55 qr_adjust1 10
+executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 38 q_vs_rm_wo_rook 25 rb_bonus 15
 Terminated
 Terminated
 Terminated
@@ -1493,4 +237,7 @@ Terminated
 Terminated
 Terminated
 Terminated
-Terminated
+1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.4929 game(s) loaded, 0 game(s) with unknown result ignored.
+close failed in file object destructor:
+sys.excepthook is missing
+lost sys.stderr

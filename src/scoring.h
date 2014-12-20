@@ -15,32 +15,16 @@ class Scoring
 
     public:
 		
-    enum { INVALID_SCORE = -Constants::MATE-1 };
-
-    static const int NUM_PARAMS = 21;
+    static const int NUM_PARAMS = 7;
 
     enum {
       QUEEN_VALUE_ADJUST,
-      BISHOP_PAWN_PLACEMENT2,
-      NEAR_DRAW1,
-      NEAR_DRAW2,
-      NEAR_DRAW3,
-      MINOR_BONUS,
-      PAWN_TRADE_SCORE0,
-      PAWN_TRADE_SCORE1,      
-      PAWN_TRADE_SCORE2,
-      ENDGAME_PAWN_BONUS,
-      RB_ADJUST1,
-      RB_ADJUST2,
-      RB_ADJUST3,
-      RB_ADJUST4,
-      RBN_ADJUST1,
-      RBN_ADJUST2,
-      RBN_ADJUST3,
-      RBN_ADJUST4,
-      QR_ADJUST0,
-      QR_ADJUST1,
-      QR_ADJUST2
+      ROOK_VALUE_ADJUST,
+      KN_VS_PAWNS1,
+      KN_VS_PAWNS2,
+      Q_VS_RM_WITH_ROOK,
+      Q_VS_RM_WO_ROOK,
+      RB_BONUS
     };
 
     static struct TuneParam {
@@ -51,6 +35,8 @@ class Scoring
       }
     } params[NUM_PARAMS];
 
+
+    enum { INVALID_SCORE = -Constants::MATE-1 };
 
     static void init();
 
