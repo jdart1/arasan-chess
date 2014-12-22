@@ -16,6 +16,7 @@ class Material
 	{
 	}
 	
+    enum {K  = 0x100000};
     enum {KP = 0x100001};
     enum {KBP = 0x100101};
     enum {KBN = 0x100110};

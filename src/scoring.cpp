@@ -324,13 +324,19 @@ private:
     int64 key;
 };
 
-static const int DRAW_PATTERN_COUNT = 5;
+static const int DRAW_PATTERN_COUNT = 11;
 
 static const EndgamePattern DRAW_PATTERN[] = {
+                   EndgamePattern(Material::KNN, Material::K),
+                   EndgamePattern(Material::KNN, Material::KR),
+                   EndgamePattern(Material::KNN, Material::KB),
+                   EndgamePattern(Material::KNN, Material::KN),
                    EndgamePattern(Material::KRN, Material::KR),
                    EndgamePattern(Material::KRB, Material::KR),
                    EndgamePattern(Material::KBB, Material::KB),
+                   EndgamePattern(Material::KBB, Material::KR),
                    EndgamePattern(Material::KBN, Material::KR),
+                   EndgamePattern(Material::KBN, Material::KN),
                    EndgamePattern(Material::KQ, Material::KRB)
 };
 
@@ -627,6 +633,30 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
+// adjust material score when both sides have pawn(s)
+static const int near_draw_adjust(const Material &ourmat,
+                                  const Material &oppmat,
+                                  int pawndiff) 
+{
+   int score = 0;
+   
+   if (pawndiff == 0) {
+      // stronger side's piece advantage is worth less, esp. with few pawns
+      score += -int(0.6*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.1*PAWN_VALUE);
+   }
+   else if (pawndiff == 1) {
+      score += -int(0.4*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.05*PAWN_VALUE);
+   }
+   else if (pawndiff == -1 || pawndiff == -2) {
+      // add bonus for our side (thus, penalizing the other side for
+      // having only 1-2 pawns advantage). Less bonus if more
+      // oppponent pawns.
+      score += int(0.4*PAWN_VALUE)-(4-Util::Min(4,oppmat.pawnCount()))*int(0.1*PAWN_VALUE);
+   }
+   return score;
+             
+}
+
 int Scoring::adjustMaterialScore(const Board &board, ColorType side)
 {
     const Material &ourmat = board.getMaterial(side);
@@ -637,26 +667,41 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
 #endif
     const int opponentPieceValue = (oppmat.value()-oppmat.pawnCount()*PAWN_VALUE);
     const int pieceDiff = ourmat.value()-ourmat.pawnCount()*PAWN_VALUE - opponentPieceValue;
-    static const int NEAR_DRAW_CONFIGURATION[3] =
-       {-75, -40, -15 };
-    // If we have a material advantage but a configuration that would be a likely draw
-    // w/o pawns, give no bonus for the extra material but discourage trade or loss
-    // of remaining pawns
+    const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
+    // If we have a material advantage but few pawns and a
+    // configuration that would be a likely draw w/o pawns, move
+    // the score towards a draw, and discourage trade or loss
+    // of remaining pawns.
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
-        const uint32 pieces = ourmat.pieceBits();
-        if (pieces == Material::KN || pieces == Material::KB ||
-            pieces == Material::KNN) {
-            score += NEAR_DRAW_CONFIGURATION[Util::Min(2,ourmat.pawnCount())];
-            return score;
-        } else {
-            EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
-            for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
-                if (DRAW_PATTERN[i] == pattern) {
-                    score += NEAR_DRAW_CONFIGURATION[Util::Min(2,ourmat.pawnCount())];
-                    return score;
-                }
-            }
-        }
+       const uint32 pieces = ourmat.pieceBits();
+       if (pieces == Material::KN || pieces == Material::KB) {
+          // Knight or Bishop vs pawns
+          if (ourmat.pawnCount() == 0) {
+             // no mating material. We can't be better but if
+             // opponent has 1-2 pawns we are not so bad
+             static const int KN_VS_PAWN_ADJUST[4] = {0,-int(2.4*PAWN_VALUE),
+                                                      -int(1.5*PAWN_VALUE),
+                                                      0};
+             score += KN_VS_PAWN_ADJUST[Util::Min(2,oppmat.pawnCount())];
+          } else if (oppmat.pawnCount() == 0) {
+             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
+                // KNP vs K is a draw, generally
+                score -= KNIGHT_VALUE;
+             }
+          }
+          else {
+             // both sides have pawns
+             score = near_draw_adjust(ourmat,oppmat,pawnDiff);
+          }
+          return score;
+       } else {
+          EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
+          for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
+             if (DRAW_PATTERN[i] == pattern) {
+                return near_draw_adjust(ourmat,oppmat,pawnDiff);
+             }
+          }
+       }
     }
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
@@ -791,6 +836,30 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side )
         else if (oppmat.infobits() == Material::KRBN) {
             score += (KNIGHT_VALUE+BISHOP_VALUE-ROOK_VALUE)-PAWN_VALUE/4;
         }
+    }
+    else if (ourmat.infobits() == Material::KBB) {
+       const int mdiff = ourmat.value() - oppmat.value();
+       if (oppmat.infobits() == Material::KB ||
+           oppmat.infobits() == Material::KR) {
+          // about 85% draw
+          score -= (mdiff-int(0.35*PAWN_VALUE));
+       }
+       else if (oppmat.infobits() == Material::KN) {
+          // about 50% draw, 50% won for Bishops
+          score -= int(1.5*PAWN_VALUE);
+       }
+    } else if (ourmat.infobits() == Material::KBN &&
+               (oppmat.infobits() == Material::KN ||
+                oppmat.infobits() == Material::KB ||
+                oppmat.infobits() == Material::KR)) {
+       // about 75% draw, a little less if opponent has Bishop
+       score -= (BISHOP_VALUE - int(0.6*PAWN_VALUE) - (oppmat.hasBishop() ? int(0.15*PAWN_VALUE) : 0));
+    } else if (ourmat.infobits() == Material::KNN &&
+               (oppmat.infobits() == Material::KN ||
+                oppmat.infobits() == Material::KB ||
+                oppmat.infobits() == Material::KR)) {
+       // draw
+       score -= ourmat.value()-oppmat.value();
     }
     return score;
 }
