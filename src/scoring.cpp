@@ -657,7 +657,7 @@ static const int near_draw_adjust(const Material &ourmat,
              
 }
 
-int Scoring::adjustMaterialScore(const Board &board, ColorType side)
+int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 {
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
@@ -778,7 +778,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side)
 }
 
 
-int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side )
+int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) const
 {
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
@@ -1795,13 +1795,14 @@ void Scoring::calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry) {
    pawnEntry.hc = board.pawnHash();
 }
 
-int Scoring::evalu8(const Board &board) {
+int Scoring::materialScore(const Board &board) const {
     const ColorType side = board.sideToMove();
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
     const int mdiff =  (int)(ourmat.value() - oppmat.value());
     const int our_pieces = ourmat.pieceBits();
     const int opp_pieces = oppmat.pieceBits();
+
     // check for bishop endgame - drawish
     int adjust = 0;
     if (our_pieces == Material::KB && opp_pieces == Material::KB) {
@@ -1826,6 +1827,12 @@ int Scoring::evalu8(const Board &board) {
 #ifdef EVAL_DEBUG
     cout << "adjusted material score = " << matScore << endl;
 #endif
+    return matScore;
+}
+
+      
+int Scoring::evalu8(const Board &board) {
+   const int matScore = materialScore(board);
 
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
 
@@ -1909,7 +1916,7 @@ int Scoring::evalu8(const Board &board) {
    }
 
    // add material score, which is from the perspective of the side to move
-   if (side == White)
+   if (board.sideToMove() == White)
       score += matScore;
    else
       score -= matScore;

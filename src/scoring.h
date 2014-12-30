@@ -69,6 +69,9 @@ class Scoring
 
     void clearHashTables();
 
+    // return a material score
+    int materialScore( const Board &board ) const;
+
  private:
 
     static const int PAWN_HASH_SIZE = 16384;
@@ -152,12 +155,9 @@ class Scoring
                             Scores &scores,
                             Scores &oppScores);
 
-    // return a material score vector
-    Scores materialScore( const Board &board );
+    int adjustMaterialScore(const Board &board, ColorType side) const;
 
-    int adjustMaterialScore(const Board &board, ColorType side);
-
-    int adjustMaterialScoreNoPawns(const Board &board, ColorType side);
+    int adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
 
     template <ColorType side>
     void pieceScore(const Board &board,
