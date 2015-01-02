@@ -2134,13 +2134,16 @@ void Scoring::scoreEndgame
       }
    }
 
+   int k_pos = 0;
    if (side == White) {
-      scores.end += endgameEntry->wScore +
+      scores.end += endgameEntry->wScore;
+      k_pos = 
          (int) endgameEntry->white_endgame_pawn_proximity +
          (int) endgameEntry->white_king_position;
    }
    else {
-      scores.end += endgameEntry->bScore +
+      scores.end += endgameEntry->bScore;
+      k_pos =
          (int) endgameEntry->black_endgame_pawn_proximity +
          (int) endgameEntry->black_king_position;
    }
@@ -2154,10 +2157,18 @@ void Scoring::scoreEndgame
       // Encourage escorting a passer with the King, ideally with King in
       // front
       Square ahead = (side == White ? passer + 8 : passer - 8);
-      scores.end += (8-distance1(ahead,board.kingSquare(side)))*KING_NEAR_PASSER/16 +
+      k_pos += (8-distance1(ahead,board.kingSquare(side)))*KING_NEAR_PASSER/16 +
          (8-distance1(ahead,board.kingSquare(oside)))*OPP_KING_NEAR_PASSER/16;
    }
 
+   // King position is even more important with reduced
+   // material. Apply scaling here.
+   const int opp_pieces = board.getMaterial(oside).pieceCount();
+   if (opp_pieces < 2) {
+      k_pos = (150-10*opp_pieces)*k_pos/128;
+   }
+   scores.end += k_pos;
+   
    if (uncatchables) {
       if ((ourMaterial.infobits() == Material::KP) && oppMaterial.kingOnly()) {
          scores.end += BITBASE_WIN;
