@@ -28,6 +28,10 @@
 #include <vector>
 using namespace std;
 
+extern "C"{
+#include <math.h>
+};
+
 enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
 
@@ -215,16 +219,10 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
              w = 0;
          } else {
              int winWeight = p->winWeight;
-             // moves that are distintly worse than the best move
-             // get bumped a little lower in weight
-             if (100*winWeight/bestWinWeight < 75) {
-                 winWeight -= winWeight/4;
-             }
-             if (100*winWeight/bestWinWeight < 50) {
-                 winWeight -= winWeight/3;
-             }
-             if (100*winWeight/bestWinWeight < 25) {
-                 winWeight /= 2;
+             if (winWeight <= 9*bestWinWeight/10) {
+                // moves that are relatively worse than the best move
+                // get bumped lower in weight
+                winWeight = winWeight*winWeight/bestWinWeight;
              }
              w = (p->relativeFreq*winWeight)/50;
          }
