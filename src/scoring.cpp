@@ -227,10 +227,6 @@ static const int POTENTIAL_PASSER[2][8] = {
    { 0, 0, 2, 4, 6, 9, 20, 0 },
    { 0, 0, 3, 6, 10, 15, 30, 0 }
 };
-static const int PASSED_PAWN_BLOCK[2][8] = {
-   { 19, 19, 22, 25, 29, 34, 50, 81 },
-   { 14, 14, 16, 18, 21, 25, 37, 60 }
-};
 
 static const int KING_NEAR_PASSER = 20;
 static const int OPP_KING_NEAR_PASSER = -28;
@@ -1969,22 +1965,50 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       int rank = Rank(sq, side);
       int file = File(sq);
       Square sq2;
-      if (side == White)
+      Bitboard blockers;
+      if (side == White) {
+         blockers = Attacks::file_mask_up[sq] & board.occupied[oside];
          sq2 = sq + 8;
-      else
+      }
+      else {
+         blockers = Attacks::file_mask_down[sq] & board.occupied[oside];
          sq2 = sq - 8;
+      }
+      if (blockers) {
+#ifdef PAWN_DEBUG
+         Scores tmp(scores);
+#endif
+         // Tuned, Jan. 2015
+         if (blockers.isSet(sq2)) {
+            scores.mid -= 14 + 9*PASSED_PAWN[Midgame][rank]/32;
+            scores.end -= 14 + 4*PASSED_PAWN[Endgame][rank]/32; 
+         }
+         else {
+            scores.mid -= 6 + 4*PASSED_PAWN[Midgame][rank]/32;
+            scores.end -= 5 + 4*PASSED_PAWN[Endgame][rank]/32; 
+         }
+#ifdef PAWN_DEBUG
+         cout <<
+            ColorImage(side) <<
+            " passed pawn on " <<
+            SquareImage(sq) <<
+            " blocked, score= (" << scores.mid - tmp.mid << ", " << 
+            scores.end - tmp.end << ")" << endl;
+#endif
+      }
+
       if (!IsEmptyPiece(board[sq2]) && PieceColor(board[sq2]) == oside) {
-         scores.mid -= PASSED_PAWN_BLOCK[Midgame][rank];
-         scores.end -= PASSED_PAWN_BLOCK[Endgame][rank];
+         scores.mid -= PASSED_PAWN[Midgame][rank]/2;
+         scores.end -= PASSED_PAWN[Endgame][rank]/2;
 #ifdef PAWN_DEBUG
          cout <<
             ColorImage(side) <<
             " passed pawn on " <<
             SquareImage(sq) <<
             " blocked, score= (" <<
-            -PASSED_PAWN_BLOCK[Midgame][rank] <<
+            -PASSED_PAWN[Midgame][rank]/2 <<
             ", " <<
-            -PASSED_PAWN_BLOCK[Endgame][rank] <<
+            -PASSED_PAWN[Endgame][rank]/2 <<
             ")" <<
             endl;
 #endif
