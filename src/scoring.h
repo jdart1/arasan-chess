@@ -15,16 +15,17 @@ class Scoring
 
     public:
 		
-    static const int NUM_PARAMS = 7;
+    static const int NUM_PARAMS = 8;
 
     enum {
-      QUEEN_VALUE_ADJUST,
-      ROOK_VALUE_ADJUST,
-      KN_VS_PAWNS1,
-      KN_VS_PAWNS2,
-      Q_VS_RM_WITH_ROOK,
-      Q_VS_RM_WO_ROOK,
-      RB_BONUS
+      BLOCK_MID_BASE,
+      BLOCK_MID_MULT,
+      BLOCK_END_BASE,
+      BLOCK_END_MULT,
+      BLOCK_MID_BASE2,
+      BLOCK_MID_MULT2,
+      BLOCK_END_BASE2,
+      BLOCK_END_MULT2
     };
 
     static struct TuneParam {
@@ -175,12 +176,11 @@ class Scoring
                             Scores &scores,
                             Scores &oppScores);
 
-    // return a material score vector
-    Scores materialScore( const Board &board );
+    int materialScore( const Board &board ) const;
 
-    int adjustMaterialScore(const Board &board, ColorType side);
+    int adjustMaterialScore(const Board &board, ColorType side) const;
 
-    int adjustMaterialScoreNoPawns(const Board &board, ColorType side);
+    int adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
 
     template <ColorType side>
     void pieceScore(const Board &board,
