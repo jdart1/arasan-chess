@@ -254,7 +254,8 @@ class Bitboard
 #if defined(__INTEL_COMPILER) && defined(USE_INTRINSICS)
 #ifdef _64BIT
 #ifdef USE_POPCNT
-      return (unsigned int)_mm_popcnt_u64(data);
+      // workaround ICC bug
+      return data == 0ULL ? 0 : (unsigned int)_mm_popcnt_u64(data);
 #else
       return _popcnt64(data);
 #endif
