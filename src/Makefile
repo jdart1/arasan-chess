@@ -92,9 +92,9 @@ ifeq ("$(CC)","icc")
 CPP     = icc
 LD      = icc
 AR      = xiar
-CFLAGS  := -no-vec -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT     = -O3 -fno-rtti -finline-functions $(SSE)
-GTB_OPT := -O3 -finline-functions $(SSE) -ipo
+CFLAGS  := -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+OPT     = -O3 -fno-rtti $(SSE)
+GTB_OPT := -O3 -fno-rtti $(SSE)
 
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
