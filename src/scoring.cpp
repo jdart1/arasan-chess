@@ -1,4 +1,4 @@
-// Copyright 1994-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2015 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "util.h"
@@ -283,7 +283,6 @@ static const int KING_ENDGAME_MOBILITY[9] =
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
 static const int BITBASE_WIN = 500;
-static const int DISTANCE_FROM_PAWN = -4;
 static const int SUPPORTED_PASSER6 = 38;
 static const int SUPPORTED_PASSER7 = 76;
 
@@ -346,17 +345,8 @@ static inline int OnFile(const Bitboard &b, int file) {
    return TEST_MASK(b, Attacks::file_mask[file - 1]);
 }
 
-static inline int FileOpen(const Board &board, int file, ColorType side) {
-   return !TEST_MASK(board.pawn_bits[side], Attacks::file_mask[file - 1]);
-}
-
 static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
-}
-
-// Return all squares attacked by a pawn of color "side" at square "sq".
-static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorType side) {
-   return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
 
 static void initBitboards() {
