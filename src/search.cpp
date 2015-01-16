@@ -1,4 +1,4 @@
-// Copyright 1987-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2015 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -2049,10 +2049,9 @@ int Search::calcExtensions(const Board &board,
    if (!node->PV() && ply > 0 && pruneOk) {
       const Move &threat = parentNode->threatMove;
       if (!IsNull(threat)) {
-         if (StartSquare(move) == DestSquare(threat) ||
-             DestSquare(move) == DestSquare(threat)) {
-            // We are moving a threatened piece, or we are 
-            // blocking the dest square of the threat
+          if (DestSquare(move) == StartSquare(threat) ||
+              StartSquare(move) == DestSquare(threat)) {
+            // capturing the threatening piece, or moving a threatened piece
             pruneOk = 0;
          } else if (Sliding(board[StartSquare(threat)])) {
             Bitboard btwn;
@@ -2071,9 +2070,14 @@ int Search::calcExtensions(const Board &board,
             PieceType cap = Capture(threat);
             PieceType pm = PieceMoved(threat);
             if (TypeOfMove(threat)==Promotion || ((cap != Empty) &&
-                                                  (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
-                                                  board.wouldAttack(move,DestSquare(threat)))) {
-               pruneOk = 0; // don't prune
+                                                  (PieceValue(cap) >= PieceValue(pm) || pm == King))) {
+                if (board.wouldAttack(move,DestSquare(threat) ||
+                                      board.discoversAttack(StartSquare(move),
+                                                            DestSquare(move),
+                                                            DestSquare(threat),
+                                                            board.sideToMove()))) {
+                    return 0;
+                }
             }
          }
       }
@@ -2131,7 +2135,7 @@ int Search::calcExtensions(const Board &board,
 
 int Search::movesRelated( Move lastMove, Move threatMove) const {
    if (DestSquare(lastMove) == StartSquare(threatMove) ||
-       StartSquare(lastMove) == DestSquare(threatMove)) {
+       (StartSquare(lastMove) == DestSquare(threatMove))) {
       return 1;
    }
    if (Sliding(PieceMoved(threatMove))) {

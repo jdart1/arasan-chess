@@ -1,4 +1,4 @@
-// Copyright 1994-2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -1784,26 +1784,35 @@ int Board::wasLegal(Move lastMove) const {
     }
 }
 
-int Board::isPinned(ColorType kingColor, Square source, Square dest) const
+
+// True if moving from 'source' to 'dest' uncovers an attack by 'side' on
+// 'target'
+int Board::discoversAttack(Square source, Square dest, Square target, ColorType side) const
 {
-   const Square ks = kingSquare(kingColor);
-   const int dir = Attacks::directions[source][ks];
+   const int dir = Attacks::directions[source][target];
    // check that source is in a line to the King
    if (dir == 0) return 0;
-   const int dir2 =  Attacks::directions[dest][ks];
+   const int dir2 =  Attacks::directions[dest][target];
    // check for movement in direction of possible pin. Also exit
    // here if path is not clear to the King
    if (Util::Abs(dir) == Util::Abs(dir2) || 
-       (Attacks::betweenSquares[source][ks] & allOccupied)) return 0;
+       (Attacks::betweenSquares[source][target] & allOccupied)) return 0;
 
-   const ColorType oside = OppositeColor(kingColor);
-   Square attackSq = getDirectionalAttack(source,-dir,oside);
+   // Return 0 if the source piece was already attacking 'target'.
+   if (ColorOfPiece(contents[source]) == side) return 0;
+
+   Square attackSq = getDirectionalAttack(source,-dir,side);
    if (attackSq != InvalidSquare ) {
       // pinned if path is clear from attackSq to source
       return Bitboard(Attacks::betweenSquares[attackSq][source] & allOccupied).isClear();
    } else {
       return 0;
    }
+}
+
+int Board::isPinned(ColorType kingColor, Square source, Square dest) const
+{
+   return discoversAttack(source,dest,kingSquare(kingColor),OppositeColor(kingColor));
 }
 
 static void set_bad( istream &i )
