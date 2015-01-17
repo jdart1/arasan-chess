@@ -486,6 +486,67 @@ static int testWouldAttack() {
    return errs;
 }
 
+static int testCheckStatus() {
+   static const struct TestCase 
+   {
+      string fen;
+      string move;
+      CheckStatusType result;
+       TestCase(const string &str, const string &m, CheckStatusType r):
+           fen(str),move(m),result(r)
+         {
+         }
+   } cases[16] = {
+       TestCase("5r1k/pp4pp/2p5/2b1P3/4P3/1PB1p3/P5PP/3N1QK1 b - -","e2+",InCheck),
+       TestCase("8/1n3ppk/7p/3n1P1P/kP4K1/1r6/2N5/3B4 w - -","Ne3",NotInCheck),
+       TestCase("8/5ppb/3k3p/1p3P1P/1PrN1PK1/3R4/8/8 w - -","Nf3+",InCheck),
+       TestCase("8/5ppb/3k3p/1p1r1P1P/1P1N2K1/3R4/8/8 w - -","Nxb5+",InCheck),
+       TestCase("8/5ppb/7p/5P1P/k2BR1K1/8/8/8 w - -","Bxg7+",InCheck),
+       TestCase("7R/5kp1/4n1pp/2r1p3/4P1P1/3R3P/r4P2/5BK1 w - -","Rd7+",InCheck),
+       TestCase("7R/4nkp1/6pp/2r1p3/4P1P1/3R3P/r4P2/5BK1 w - -","Rd7",NotInCheck),
+       TestCase("r1bq1bkr/ppn2p2/2n4p/2p1p3/4B2p/2NP2P1/PP1NPP1P/R1B3QK w - -","gxh4+",InCheck),
+	   TestCase("4B3/1n3ppb/2P4p/5P1P/kPrN2K1/3R4/8/8 w - -","cxb7+",InCheck),
+       TestCase("8/4kp2/6pp/3P4/5P1n/P2R3P/7r/5K2 w - -","d6+",InCheck),
+       TestCase("7k/1p4p1/pPp4p/P1P1b2q/4Q1n1/2N3P1/5BK1/7R b - -","Qh1+",InCheck),
+       TestCase("7k/1p4p1/pPp4p/P1P1b2q/4Q1n1/2N2KP1/5BR1/8 b - -","Qh1",NotInCheck),
+       TestCase("8/5ppb/7p/5P1P/3B1RK1/8/4k3/8 w - -","Re4+",InCheck),
+       TestCase("5k2/5ppb/7p/7P/3BrP2/8/2K5/8 b - -","Rd4+",InCheck),
+       TestCase("6k1/5ppb/7p/7P/4rP2/3B4/2K5/8 b - -","Rd4",NotInCheck),
+       TestCase("8/1R3P1k/8/5r2/2P1p1pP/8/1p5K/8 w - -","f8=Q",InCheck),
+   };
+   int errs = 0;
+   for (int i = 0; i<16; i++) {
+      const TestCase &acase = cases[i];
+      Board board;
+      if (!BoardIO::readFEN(board, acase.fen.c_str())) {
+          cerr << "testCheckStatus: error in test case " << i << " error in FEN" << endl;
+          ++errs;
+          continue;
+      }
+      Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,acase.move);
+	  if (IsNull(m)) {
+		  cerr << "testCheckStatus: error in test case " << i << " bad move" << endl;
+		  ++errs;
+		  continue;
+	  }
+      CheckStatusType wouldCheckResult = board.wouldCheck(m);
+      board.doMove(m);
+      if (board.checkStatus(m) != acase.result) {
+          cerr << "testCheckStatus: error in test case " << i << " bad result" << endl;
+          ++errs;
+      }
+      if (board.checkStatus() != wouldCheckResult) {
+          cerr << "testCheckStatus: error in test case " << i << " wouldCheck result" << endl;
+          ++errs;
+      }
+      if (board.checkStatus() != acase.result) {
+          cerr << "testCheckStatus: error in test case " << i << " result mismatch" << endl;
+          ++errs;
+      }
+   }
+   return errs;
+}
+
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
@@ -572,6 +633,7 @@ int doUnit() {
    errs += testPGN();
    errs += testEval();
    errs += testDrawEval();
+   errs += testCheckStatus();
    errs += testPerft();
    return errs;
 }

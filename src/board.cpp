@@ -1798,9 +1798,6 @@ int Board::discoversAttack(Square source, Square dest, Square target, ColorType 
    if (Util::Abs(dir) == Util::Abs(dir2) || 
        (Attacks::betweenSquares[source][target] & allOccupied)) return 0;
 
-   // Return 0 if the source piece was already attacking 'target'.
-   if (ColorOfPiece(contents[source]) == side) return 0;
-
    Square attackSq = getDirectionalAttack(source,-dir,side);
    if (attackSq != InvalidSquare ) {
       // pinned if path is clear from attackSq to source
