@@ -1,4 +1,4 @@
-// Copyright 2013, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2015 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -496,7 +496,7 @@ static int testCheckStatus() {
            fen(str),move(m),result(r)
          {
          }
-   } cases[16] = {
+   } cases[20] = {
        TestCase("5r1k/pp4pp/2p5/2b1P3/4P3/1PB1p3/P5PP/3N1QK1 b - -","e2+",InCheck),
        TestCase("8/1n3ppk/7p/3n1P1P/kP4K1/1r6/2N5/3B4 w - -","Ne3",NotInCheck),
        TestCase("8/5ppb/3k3p/1p3P1P/1PrN1PK1/3R4/8/8 w - -","Nf3+",InCheck),
@@ -513,9 +513,13 @@ static int testCheckStatus() {
        TestCase("5k2/5ppb/7p/7P/3BrP2/8/2K5/8 b - -","Rd4+",InCheck),
        TestCase("6k1/5ppb/7p/7P/4rP2/3B4/2K5/8 b - -","Rd4",NotInCheck),
        TestCase("8/1R3P1k/8/5r2/2P1p1pP/8/1p5K/8 w - -","f8=Q",InCheck),
+       TestCase("2k2Nn1/2r5/q2p4/p2Np1P1/1pPpP1K1/1P1Pb2Q/P6R/8 w - -","Kh5+",InCheck),
+       TestCase("8/1P3ppb/2k4p/1p3P1P/1Pr3K1/3RN3/8/8 w - -","b8=N",InCheck),
+       TestCase("1r6/P4ppb/7p/1p2kP1P/1P1N2K1/3R4/8/8 w - -","axb8=Q",InCheck),
+       TestCase("1r6/P1N2ppb/7p/1p2kP1P/1P4K1/3R4/8/8 w - -","axb8=Q",NotInCheck)
    };
    int errs = 0;
-   for (int i = 0; i<16; i++) {
+   for (int i = 0; i<20; i++) {
       const TestCase &acase = cases[i];
       Board board;
       if (!BoardIO::readFEN(board, acase.fen.c_str())) {
