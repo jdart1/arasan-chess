@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2010-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2008, 2010-2013, 2015 by Jon Dart.  All Rights Reserved.
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
