@@ -1,4 +1,24 @@
-Changes in Arasan 17.4:
+Changes in Arasan 17.5:
+ 1) Modify and tune connected passer scoring.
+ 2) Fixes to book weight computation.
+ 3) Adjust queen mobility scoring.
+ 4) Fix slow unload under Windows.
+ 5) Add endgame mobility scoring for king (+3 ELO).
+ 6) Fix asymmetry in Knight outpost scores.
+ 7) More accurate eval of reduced-material endgames. Fix scoring for
+ pawnless Q vs RN.
+ 8) Changes to time management. Extend time if failing low at end of search,
+ but only long enough to resolve the fail-low. In addition, though: extend
+ if score is dropping relative to last search - amt of extension now varies
+ with how much score has dropped.
+ 9) Increase king position scores when opponent has very low material.
+ 10) Some tuning of scoring for blocked passed pawns. A penalty is given now
+ if the pawn is blocked but not at the immediate square in front.
+ 11) Some fixes for Intel C++ (icc) compilation.
+ 12) Do not prune moves that indirectly defend (via discovered attack) a
+ threatened piece. About +6 ELO.
+
+Changes in Arasan 17.4 (Oct. 2014):
  1) Deeper LMR (and different reduction formula). After a LMR search
     fails high, first re-search with no reduction but zero width bounds,
     then only do a full-width, full-depth search.
