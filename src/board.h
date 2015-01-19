@@ -294,7 +294,9 @@ public:
 
    // Return true if moving a piece from "source" to "dest" would be
    // prohibited due to a pin
-   int isPinned(ColorType kingColor, Square source, Square dest) const;
+   int isPinned(ColorType kingColor, Square source, Square dest) const {
+     return discoversAttack(source,dest,kingSquare(kingColor),OppositeColor(kingColor));
+   }
 
    // Return true if Move is illegal due to a pin
    int isPinned(ColorType kingColor, Move m) const {

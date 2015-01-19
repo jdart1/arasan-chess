@@ -1807,11 +1807,6 @@ int Board::discoversAttack(Square source, Square dest, Square target, ColorType 
    }
 }
 
-int Board::isPinned(ColorType kingColor, Square source, Square dest) const
-{
-   return discoversAttack(source,dest,kingSquare(kingColor),OppositeColor(kingColor));
-}
-
 static void set_bad( istream &i )
 {
    i.clear( ios::badbit | i.rdstate() );

@@ -2064,11 +2064,11 @@ int Search::calcExtensions(const Board &board,
             PieceType pm = PieceMoved(threat);
             if (TypeOfMove(threat)==Promotion || ((cap != Empty) &&
                                                   (PieceValue(cap) >= PieceValue(pm) || pm == King))) {
-                if (board.wouldAttack(move,DestSquare(threat) ||
+               if (board.wouldAttack(move,DestSquare(threat)) /*||
                                       board.discoversAttack(StartSquare(move),
                                                             DestSquare(move),
                                                             DestSquare(threat),
-                                                            board.sideToMove()))) {
+                                                            board.sideToMove()))*/) {
                     return 0;
                 }
             }
