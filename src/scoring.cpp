@@ -1955,52 +1955,34 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       int rank = Rank(sq, side);
       int file = File(sq);
       Square sq2;
-      Bitboard blockers;
+      Square blocker;
       if (side == White) {
-         blockers = Attacks::file_mask_up[sq] & board.occupied[oside];
+         Bitboard blockers(Attacks::file_mask_up[sq] & board.occupied[oside]);
          sq2 = sq + 8;
+         blocker = blockers.firstOne();
       }
       else {
-         blockers = Attacks::file_mask_down[sq] & board.occupied[oside];
+         Bitboard blockers(Attacks::file_mask_down[sq] & board.occupied[oside]);
          sq2 = sq - 8;
+         blocker = blockers.lastOne();
       }
-      if (blockers) {
-#ifdef PAWN_DEBUG
-         Scores tmp(scores);
-#endif
+      if (blocker != InvalidSquare) {
          // Tuned, Jan. 2015
-         if (blockers.isSet(sq2)) {
-            scores.mid -= 14 + 9*PASSED_PAWN[Midgame][rank]/32;
-            scores.end -= 14 + 4*PASSED_PAWN[Endgame][rank]/32; 
+         int mid_penalty = 14 + 9*PASSED_PAWN[Midgame][rank]/32;
+         int end_penalty = 14 + 4*PASSED_PAWN[Endgame][rank]/32;
+         if (blocker != sq2) {
+            mid_penalty /= (Rank(blocker,side)-rank);
          }
-         else {
-            scores.mid -= 6 + 4*PASSED_PAWN[Midgame][rank]/32;
-            scores.end -= 5 + 4*PASSED_PAWN[Endgame][rank]/32; 
-         }
+         scores.mid -= mid_penalty;
+         scores.end -= end_penalty;
 #ifdef PAWN_DEBUG
          cout <<
             ColorImage(side) <<
             " passed pawn on " <<
-            SquareImage(sq) <<
-            " blocked, score= (" << scores.mid - tmp.mid << ", " << 
-            scores.end - tmp.end << ")" << endl;
-#endif
-      }
-
-      if (!IsEmptyPiece(board[sq2]) && PieceColor(board[sq2]) == oside) {
-         scores.mid -= PASSED_PAWN[Midgame][rank]/2;
-         scores.end -= PASSED_PAWN[Endgame][rank]/2;
-#ifdef PAWN_DEBUG
-         cout <<
-            ColorImage(side) <<
-            " passed pawn on " <<
-            SquareImage(sq) <<
-            " blocked, score= (" <<
-            -PASSED_PAWN[Midgame][rank]/2 <<
-            ", " <<
-            -PASSED_PAWN[Endgame][rank]/2 <<
-            ")" <<
-            endl;
+            SquareImage(sq);
+         cout << " blocked by piece on " << 
+            SquareImage(blocker) << ", score= (" << -mid_penalty << ", " << 
+            -end_penalty << ")" << endl;
 #endif
       }
 
