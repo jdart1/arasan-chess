@@ -15,8 +15,6 @@ Changes in Arasan 17.5:
  10) Some tuning of scoring for blocked passed pawns. A penalty is given now
  if the pawn is blocked but not at the immediate square in front.
  11) Some fixes for Intel C++ (icc) compilation.
- 12) Do not prune moves that indirectly defend (via discovered attack) a
- threatened piece. About +6 ELO.
 
 Changes in Arasan 17.4 (Oct. 2014):
  1) Deeper LMR (and different reduction formula). After a LMR search
