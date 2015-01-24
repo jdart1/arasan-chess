@@ -620,9 +620,9 @@ Scoring::~Scoring() {
 }
 
 // adjust material score when both sides have pawn(s)
-static const int near_draw_adjust(const Material &ourmat,
-                                  const Material &oppmat,
-                                  int pawndiff) 
+static int near_draw_adjust(const Material &ourmat,
+                            const Material &oppmat,
+                            int pawndiff) 
 {
    int score = 0;
    
