@@ -86,7 +86,7 @@ r1bq1rk1/1p2b1pp/p1np4/8/2P1P1n1/N1N3B1/PP2BP1P/R2QK2R b KQ - bm Nxf2; id "arasa
 2kr1r2/ppq1b1p1/2n5/2PpPb1N/QP1B1pp1/2P5/P2N1P1P/R4RK1 b - - bm Rh8; id "arasan18.86"; c0 "Arasan-Q9550 (Rybka), ICC 2009";
 2r2r1k/pBBq2p1/1p5p/4p3/8/2Q1PPPb/P6P/2R3K1 b - - bm e4; id "arasan18.87"; c0 "Arasan-Data, ICC 2009";
 3r2k1/6p1/B1R2p1p/1pPr1P2/3P4/8/1P3nP1/2KR4 w - - bm Rc8; id "arasan18.88"; c0 "Ruffian-Arasan, test game 2009";
-3qb1k1/5rb1/r3p1Np/1n1pP2P/p1pB1PQ1/2P5/R1B4K/6R1 w - - bm Bc5; id "arasan18.89"; c0 "Maximus-Akhtar, 90'+15", IC Freestyle Battle 2014";
+3qb1k1/5rb1/r3p1Np/1n1pP2P/p1pB1PQ1/2P5/R1B4K/6R1 w - - bm Bc5; id "arasan18.89"; c0 "Maximus-Akhtar, 90'+15, IC Freestyle Battle 2014";
 2kr3r/1p2bpp1/p1p1pn1p/R3N2P/2PP4/1Q6/PP1B1Pq1/2KR4 w - - bm Rxa6; id "arasan18.90"; c0 "Data-Arasan, ICC 2009";
 3q1k2/p4pb1/3Pp3/p3P3/r6p/2QB3P/3B1P2/6K1 w - - bm Bb5; id "arasan18.91"; c0 "MingLi (Rybka 3 Dyanmic)-Ultrapower (Rybka), playchess.com 2009";
 r4r1k/ppqbn1pp/3b1p2/2pP3B/2P4N/7P/P2B1PP1/1R1QR1K1 w - - bm Rxe7; id "arasan18.92"; c0 "Q9550(Rybka)-Arasan, ICC 2009";
