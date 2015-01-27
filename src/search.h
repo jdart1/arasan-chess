@@ -145,7 +145,7 @@ class SearchController {
       TalkLevel t);
 
     unsigned getTimeLimit() const { 
-        return time_target + (time_added ? xtra_time : 0);
+      return time_target + time_added;
     }
 
     void terminateNow();
@@ -496,11 +496,11 @@ class RootSearch : public Search {
   int iteration_depth;
   int multipv_count;
   Move easyMove;
-  bool easy_adjust, fail_high_root_extend;
+  bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
   int fail_high_root;
   int last_score;
   int waitTime;
-  
+  int iteration_value[Constants::MaxPly];
 };
 
 #endif

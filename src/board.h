@@ -1,4 +1,5 @@
-// Copyright 1994-2000, 2004, 2005, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015 by Jon Dart.
+// All Rights Reserved.
 
 #include "types.h"
 #include "chess.h"
@@ -287,9 +288,15 @@ public:
    // check)
    int wasLegal(Move lastMove) const;
 
+   // True if moving from 'source' to 'dest' uncovers an attack by 'side' on
+   // 'target'
+   int discoversAttack(Square source, Square dest, Square target, ColorType side) const;
+
    // Return true if moving a piece from "source" to "dest" would be
    // prohibited due to a pin
-   int isPinned(ColorType kingColor, Square source, Square dest) const;
+   int isPinned(ColorType kingColor, Square source, Square dest) const {
+     return discoversAttack(source,dest,kingSquare(kingColor),OppositeColor(kingColor));
+   }
 
    // Return true if Move is illegal due to a pin
    int isPinned(ColorType kingColor, Move m) const {
@@ -350,9 +357,6 @@ public:
 
    // flip the board position up/down and change side to move
    void flip();
-
-   // flip board position right/left
-   void flip2();
 
    friend istream & operator >> (istream &i, Board &board);
    friend ostream & operator << (ostream &o, const Board &board);

@@ -498,55 +498,34 @@ int Search::checkTime(const Board &board,int ply) {
         }
         Unlock(controller->split_calc_lock);
     }
-
-    if (controller->typeOfSearch != FixedDepth) {
-        // update at least the part of the stats structure that
-        // is displayed in analysis mode.
-        if (controller->typeOfSearch == FixedTime) {
-            return stats->elapsed_time >= (unsigned)controller->time_target;
-        }
-        unsigned n = theLog->current();
-
-        if (controller->xtra_time > 0 && 
-            controller->time_target != INFINITE_TIME &&
-            controller->time_added == 0 &&
-            controller->typeOfSearch == TimeLimit) {
-            if (stats->elapsed_time > (unsigned)controller->time_target/3) {
-               // see if our score has dropped a lot since our
-               // last search
-               if (n >= 2 && !(*theLog)[n-2].fromBook() &&
-                   (stats->value < 5*PAWN_VALUE) &&
-                   (stats->value > -PAWN_VALUE*5) &&
-                   (stats->value < (*theLog)[n-2].score() - PAWN_VALUE/3)) {
-                   // search more time because our score is dropping
-                   controller->time_added++;
-                   if (talkLevel == Trace) {
-                       cout << "# adding time due to low score, new target=" << controller->getTimeLimit() << endl;
-                   }
-               }
-            }
-            if (stats->elapsed_time > (unsigned)controller->time_target &&
-                !controller->time_added && 
-                root()->fail_high_root) {
-                // root move is failing high, extend time
-                controller->time_added++;
-                if (talkLevel == Trace) {
+    if (controller->typeOfSearch == FixedTime) {
+       if (stats->elapsed_time >= (unsigned)controller->time_target) {
+          return 1;
+       }
+    }
+    else if (controller->typeOfSearch == TimeLimit) {
+       if (controller->xtra_time > 0 && 
+           controller->time_target != INFINITE_TIME &&
+           controller->typeOfSearch == TimeLimit) {
+          if (stats->elapsed_time > controller->getTimeLimit()) {
+              if (root()->fail_high_root) {
+                 // root move is failing high, extend time
+                 controller->time_added = controller->xtra_time;
+                 if (talkLevel == Trace) {
                     cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
-                }
-                // Set flag that we extended time.
-                root()->fail_high_root_extend = true;
-            }
-        }
-        if (root()->fail_high_root_extend && !root()->fail_high_root) {
-            // We extended the time to get the fail high resolved,
-            // but it is resolved now, so reduce time limit again.
-            // This will cause the following time check to terminate
-            // the search.
-            controller->time_added = false;
-            root()->fail_high_root_extend = false;
-            if (talkLevel == Trace) {
-                cout << "# resetting time_added - fail high is resolved" << endl;
-            }
+                 }
+                 // Set flag that we extended time.
+                 root()->fail_high_root_extend = true;
+              }
+              else if (stats->faillow) {
+                 // root move is failing low
+                 controller->time_added = controller->xtra_time;
+                 root()->fail_low_root_extend = true;
+                 if (talkLevel == Trace) {
+                    cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
+                 }
+              }
+           }
         }
         // check time limit after any time extensions have been made
         if (stats->elapsed_time > controller->getTimeLimit()) {
@@ -629,7 +608,7 @@ Move RootSearch::ply0_search(
 Move *excludes, int num_excludes)
 {
    easy_adjust = false;
-   fail_high_root_extend = false;
+   fail_high_root_extend = fail_low_root_extend = false;
    last_score = -Constants::MATE;
 #ifdef EVAL_STATS
    Scoring::clearStats();
@@ -888,7 +867,48 @@ Move *excludes, int num_excludes)
             }
          }
          // search value should now be in bounds (unless we are terminating)
-         if (!terminate) showStatus(board, node->best, 0, 0, 0);
+         if (!terminate) {
+            showStatus(board, node->best, 0, 0, 0);
+            if (fail_low_root_extend) {
+               // We extended time to get the fail-low resolved. Now
+               // we have a score. Only use still more time if the
+               // score is signficantly low (will be tested in the
+               // next block).
+               controller->time_added = 0;
+               fail_low_root_extend = false;
+               if (talkLevel == Trace) {
+                  cout << "# resetting time_added - fail low is resolved" << endl;
+               }
+            }
+            else if (fail_high_root_extend) {
+               // We extended the time to get the fail high resolved,
+               // but it is resolved now, so reduce time limit again.
+               controller->time_added = 0;
+               fail_high_root_extend = false;
+               if (talkLevel == Trace) {
+                  cout << "# resetting time_added - fail high is resolved" << endl;
+               }
+            }
+            if (controller->xtra_time > 0 &&
+                controller->time_target != INFINITE_TIME &&
+                controller->typeOfSearch == TimeLimit &&
+                controller->stats->elapsed_time > 2*(unsigned)controller->time_target/3) {
+               const unsigned n = theLog->current();
+               if (n >= 2 && !(*theLog)[n-2].fromBook() &&
+                   (value < 5*PAWN_VALUE) &&
+                   (value > -PAWN_VALUE*5) &&
+                   (value < (*theLog)[n-2].score() - PAWN_VALUE/3)) {
+                  // search more time because our score is dropping
+                  // (how much extra depends on how bad score is).
+                  controller->time_added = 
+                     controller->xtra_time*Util::Min(PAWN_VALUE,(*theLog)[n-2].score()-value)/PAWN_VALUE;
+                  if (talkLevel == Trace) {
+                     cout << "# adding time due to low score, new target=" << controller->getTimeLimit() << endl;
+                  }
+               }
+            }
+         }
+         
          if (!MovesEqual(node->best,easyMove)) {
             depth_at_pv_change = iteration_depth;
          }

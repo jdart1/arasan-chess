@@ -1,4 +1,4 @@
-// Copyright 1994-2012 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -1784,20 +1784,21 @@ int Board::wasLegal(Move lastMove) const {
     }
 }
 
-int Board::isPinned(ColorType kingColor, Square source, Square dest) const
+
+// True if moving from 'source' to 'dest' uncovers an attack by 'side' on
+// 'target'
+int Board::discoversAttack(Square source, Square dest, Square target, ColorType side) const
 {
-   const Square ks = kingSquare(kingColor);
-   const int dir = Attacks::directions[source][ks];
+   const int dir = Attacks::directions[source][target];
    // check that source is in a line to the King
    if (dir == 0) return 0;
-   const int dir2 =  Attacks::directions[dest][ks];
+   const int dir2 =  Attacks::directions[dest][target];
    // check for movement in direction of possible pin. Also exit
    // here if path is not clear to the King
    if (Util::Abs(dir) == Util::Abs(dir2) || 
-       (Attacks::betweenSquares[source][ks] & allOccupied)) return 0;
+       (Attacks::betweenSquares[source][target] & allOccupied)) return 0;
 
-   const ColorType oside = OppositeColor(kingColor);
-   Square attackSq = getDirectionalAttack(source,-dir,oside);
+   Square attackSq = getDirectionalAttack(source,-dir,side);
    if (attackSq != InvalidSquare ) {
       // pinned if path is clear from attackSq to source
       return Bitboard(Attacks::betweenSquares[attackSq][source] & allOccupied).isClear();
@@ -1849,7 +1850,7 @@ Bitboard Board::getPinned(Square ksq, ColorType side) const {
         if (b.singleBitSet()) {
             // Only one piece between "pinner" and King. See if it is
             // the correct color.
-            result |= b & occupied[side];
+            result |= (b & occupied[side]);
         }
     }
     return result;
@@ -1903,24 +1904,6 @@ void Board::flip() {
    state.castleStatus[White] = state.castleStatus[Black];
    state.castleStatus[Black] = tmp;
    side = OppositeColor(side);
-   setSecondaryVars();
-}
-
-void Board::flip2() {
-   for (int i=1;i<=4;i++) {
-     for (int j=1;j<=8;j++) {
-       Square sq = MakeSquare(i,j,White);
-       Square sq2 = MakeSquare(9-i,j,White);
-       Piece tmp = contents[sq];
-       contents[sq] = contents[sq2];
-       contents[sq2] = tmp;
-       if (sq == state.enPassantSq) {
-           state.enPassantSq = sq2;
-       } else if (sq2 == state.enPassantSq) {
-           state.enPassantSq = sq;
-       }
-     }
-   }
    setSecondaryVars();
 }
 

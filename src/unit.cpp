@@ -1,4 +1,4 @@
-// Copyright 2013, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2015 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -330,7 +330,7 @@ static const string pgn_test = "[Event \"?\"]"
 
 static int testEval() {
     // verify eval results are symmetrical (White/Black, right/left)
-    const int CASES = 9;
+    const int CASES = 25;
     static const string fens[CASES] = {
         "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
         "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
@@ -340,8 +340,25 @@ static int testEval() {
         "1rb1r1k1/2q2pb1/pp1p4/2n1pPPQ/Pn1BP3/1NN4R/1PP4P/R5K1 b - -",
         "6k1/1b4p1/5p1p/pq3P2/1p1BP3/1P2QR1P/P1r3PK/8 w - -",
         "8/5pk1/7p/3p1R2/p1p3P1/2P2K1P/1P1r4/8 w - -",
-        "6k1/p3pp2/6p1/7P/R7/b1q2P2/B1P1K2P/7R b - -"
+        "6k1/p3pp2/6p1/7P/R7/b1q2P2/B1P1K2P/7R b - -",
+        "r7/1b4k1/pp1np1p1/3pq1NN/7P/4P3/PP4P1/1Q3RK1 b - -",
+        "4b3/2p4p/pp1bk3/2p3p1/2P5/PPB2PP1/7P/3K1N2 w - -",
+        "r1bqr1k1/ppp2ppp/3p4/4n3/2PN4/P1Q1P3/1PB2PPP/R4RK1 b - -",
+        "r4rk1/1ppqbppp/p2p1n2/8/1n1PP3/1Q3N2/PP1N1PPP/R1B1R1K1 b - -",
+        "r6k/1p4bp/1p1n1pp1/1B6/8/P4NP1/1P3P1P/2R3K1 w - -",
+        "r1b2r1k/pp3n1p/2p1p3/3Pnppq/3PP3/1P1N1PP1/P5BP/R1Q2RK1 w - -",
+        "2kr3r/1bpnqp2/1p2p3/p2p3p/P1PPBPp1/2P1P1P1/2QN2P1/1R2K2R w K -",
+        "8/1R6/3k4/2p5/2p1B3/5K2/8/8 w - -",
+        "1BR2rk1/pP1nbpp1/B2P2p1/8/8/8/1P4P1/3n2K1 b - -",
+        "r1b1k2r/1p1n1pp1/p6p/2p5/4Nb2/5NP1/PPP2P1P/1K1R1B1R b kq -",
+        "r1b2rk1/1p1n1pp1/p6p/2p5/4Nb2/3R1NP1/PPP2P1P/1K1R1B2 b - -",
+        "1kr5/1p1b2R1/p3p2Q/2bp3P/8/P1PB1P2/1P1K1P2/R6q b - -",
+        "rb3rk1/1p1RRpp1/p6p/r1p5/4Nb2/5NP1/PPP2P1P/1K3B2 b - -",
+        "5rk1/1pqn2pp/4pn2/p7/2P5/4PP2/1B2BP1P/3Q1RK1 w - -",
+        "3k1q2/p3p1p1/1p1nQ3/3P4/P2P4/B2P4/6KP/8 b - -",
+        "6k1/4R1P1/5P2/5K1p/7r/8/8/8 w - -"
     };
+    
     int errs = 0;
     for (int i = 0; i < CASES; i++) {
         Board board;
@@ -355,12 +372,6 @@ static int testEval() {
         board.flip();
         int eval2 = s->evalu8(board);
         if (eval1 != eval2) {
-            ++errs;
-            cerr << "testEval case " << i << " eval mismatch" << endl;
-        }
-        board.flip2();
-        int eval3 = s->evalu8(board);
-        if (eval1 != eval3) {
             ++errs;
             cerr << "testEval case " << i << " eval mismatch" << endl;
         }
@@ -475,6 +486,71 @@ static int testWouldAttack() {
    return errs;
 }
 
+static int testCheckStatus() {
+   static const struct TestCase 
+   {
+      string fen;
+      string move;
+      CheckStatusType result;
+       TestCase(const string &str, const string &m, CheckStatusType r):
+           fen(str),move(m),result(r)
+         {
+         }
+   } cases[20] = {
+       TestCase("5r1k/pp4pp/2p5/2b1P3/4P3/1PB1p3/P5PP/3N1QK1 b - -","e2+",InCheck),
+       TestCase("8/1n3ppk/7p/3n1P1P/kP4K1/1r6/2N5/3B4 w - -","Ne3",NotInCheck),
+       TestCase("8/5ppb/3k3p/1p3P1P/1PrN1PK1/3R4/8/8 w - -","Nf3+",InCheck),
+       TestCase("8/5ppb/3k3p/1p1r1P1P/1P1N2K1/3R4/8/8 w - -","Nxb5+",InCheck),
+       TestCase("8/5ppb/7p/5P1P/k2BR1K1/8/8/8 w - -","Bxg7+",InCheck),
+       TestCase("7R/5kp1/4n1pp/2r1p3/4P1P1/3R3P/r4P2/5BK1 w - -","Rd7+",InCheck),
+       TestCase("7R/4nkp1/6pp/2r1p3/4P1P1/3R3P/r4P2/5BK1 w - -","Rd7",NotInCheck),
+       TestCase("r1bq1bkr/ppn2p2/2n4p/2p1p3/4B2p/2NP2P1/PP1NPP1P/R1B3QK w - -","gxh4+",InCheck),
+	   TestCase("4B3/1n3ppb/2P4p/5P1P/kPrN2K1/3R4/8/8 w - -","cxb7+",InCheck),
+       TestCase("8/4kp2/6pp/3P4/5P1n/P2R3P/7r/5K2 w - -","d6+",InCheck),
+       TestCase("7k/1p4p1/pPp4p/P1P1b2q/4Q1n1/2N3P1/5BK1/7R b - -","Qh1+",InCheck),
+       TestCase("7k/1p4p1/pPp4p/P1P1b2q/4Q1n1/2N2KP1/5BR1/8 b - -","Qh1",NotInCheck),
+       TestCase("8/5ppb/7p/5P1P/3B1RK1/8/4k3/8 w - -","Re4+",InCheck),
+       TestCase("5k2/5ppb/7p/7P/3BrP2/8/2K5/8 b - -","Rd4+",InCheck),
+       TestCase("6k1/5ppb/7p/7P/4rP2/3B4/2K5/8 b - -","Rd4",NotInCheck),
+       TestCase("8/1R3P1k/8/5r2/2P1p1pP/8/1p5K/8 w - -","f8=Q",InCheck),
+       TestCase("2k2Nn1/2r5/q2p4/p2Np1P1/1pPpP1K1/1P1Pb2Q/P6R/8 w - -","Kh5+",InCheck),
+       TestCase("8/1P3ppb/2k4p/1p3P1P/1Pr3K1/3RN3/8/8 w - -","b8=N",InCheck),
+       TestCase("1r6/P4ppb/7p/1p2kP1P/1P1N2K1/3R4/8/8 w - -","axb8=Q",InCheck),
+       TestCase("1r6/P1N2ppb/7p/1p2kP1P/1P4K1/3R4/8/8 w - -","axb8=Q",NotInCheck)
+   };
+   int errs = 0;
+   for (int i = 0; i<20; i++) {
+      const TestCase &acase = cases[i];
+      Board board;
+      if (!BoardIO::readFEN(board, acase.fen.c_str())) {
+          cerr << "testCheckStatus: error in test case " << i << " error in FEN" << endl;
+          ++errs;
+          continue;
+      }
+      Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,acase.move);
+	  if (IsNull(m)) {
+		  cerr << "testCheckStatus: error in test case " << i << " bad move" << endl;
+		  ++errs;
+		  continue;
+	  }
+      CheckStatusType wouldCheckResult = board.wouldCheck(m);
+      board.doMove(m);
+      if (board.checkStatus(m) != acase.result) {
+          cerr << "testCheckStatus: error in test case " << i << " bad result" << endl;
+          ++errs;
+      }
+      if (board.checkStatus() != wouldCheckResult) {
+          cerr << "testCheckStatus: error in test case " << i << " wouldCheck result" << endl;
+          ++errs;
+      }
+      if (board.checkStatus() != acase.result) {
+          cerr << "testCheckStatus: error in test case " << i << " result mismatch" << endl;
+          ++errs;
+      }
+   }
+   return errs;
+}
+
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
@@ -561,6 +637,7 @@ int doUnit() {
    errs += testPGN();
    errs += testEval();
    errs += testDrawEval();
+   errs += testCheckStatus();
    errs += testPerft();
    return errs;
 }

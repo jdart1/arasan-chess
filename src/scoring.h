@@ -15,35 +15,36 @@ class Scoring
 
     public:
 		
-    static const int NUM_PARAMS = 8;
+    enum { INVALID_SCORE = -Constants::MATE-1 };
+
+    static const int NUM_PARAMS = 6;
 
     enum {
-      BLOCK_MID_BASE,
-      BLOCK_MID_MULT,
-      BLOCK_END_BASE,
-      BLOCK_END_MULT,
-      BLOCK_MID_BASE2,
-      BLOCK_MID_MULT2,
-      BLOCK_END_BASE2,
-      BLOCK_END_MULT2
+      KING_SAFETY_SIGMOID_MID,
+      KING_SAFETY_SIGMOID_EXP,
+      ENDGAME_SIGMOID_MID,
+      ENDGAME_SIGMOID_EXP,
+      KS_THRESHOLD,
+      ENDGAME_THRESHOLD
     };
-
-    static struct TuneParam {
-      string name;
-      int current, min, max;
-    TuneParam(const string &n, int x1, int x2, int x3) :
-      name(n),current(x1),min(x2),max(x3) {
-      }
-    } params[NUM_PARAMS];
-
-
-    enum { INVALID_SCORE = -Constants::MATE-1 };
 
     static void init();
 
     static void initParams();
 
     static void cleanup();
+
+    struct TuneParam {
+      string name;
+      int current;
+      int min_value;
+      int max_value;
+    TuneParam(const string &n, int c, int minv, int maxv) :
+      name(n),current(c),min_value(minv),max_value(maxv) {
+      }
+    };
+
+    static TuneParam params[NUM_PARAMS];
 
     Scoring();
 
@@ -93,6 +94,9 @@ class Scoring
 
     void clearHashTables();
 
+    // return a material score
+    int materialScore( const Board &board ) const;
+
  private:
 
     static const int PAWN_HASH_SIZE = 16384;
@@ -139,18 +143,20 @@ class Scoring
     // The scores for opening, middlegame and endgame
     struct Scores {
       Scores()
-        :mid(0), end(0), any(0)
+      :mid(0), end(0), any(0), ks(0)
       {
       }
       Scores(const Scores &s)
       :mid(s.mid),end(s.end),any(s.any) {
       }
-      int mid, end, any; 
+      int mid, end, any, ks; 
       int blend(int materialLevel ) {
           return any + mid*MATERIAL_SCALE[materialLevel]/128 +
-             end*(128-MATERIAL_SCALE[materialLevel])/128;
+             end*(128-MATERIAL_SCALE[materialLevel])/128 +
+             ks*KS_MATERIAL_SCALE[materialLevel]/128;
       }
-      static const CACHE_ALIGN int MATERIAL_SCALE[32];
+      static CACHE_ALIGN int MATERIAL_SCALE[32];
+      static CACHE_ALIGN int KS_MATERIAL_SCALE[32];
       Scores & operator += (const Scores &s) {
           mid += s.mid;
           end += s.end;
@@ -175,8 +181,6 @@ class Scoring
                             const PawnHashEntry &pawnEntry,
                             Scores &scores,
                             Scores &oppScores);
-
-    int materialScore( const Board &board ) const;
 
     int adjustMaterialScore(const Board &board, ColorType side) const;
 

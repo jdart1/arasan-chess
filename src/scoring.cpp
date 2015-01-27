@@ -1,4 +1,4 @@
-// Copyright 1994-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2015 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "util.h"
@@ -16,6 +16,17 @@ extern "C"
 
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
+
+Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
+   Scoring::TuneParam("king_safety_sigmoid_mid",16,0,32),
+   Scoring::TuneParam("king_safety_sigmoid_exp",250,50,1000),
+   Scoring::TuneParam("endgame_sigmoid_mid",16,0,32),
+   Scoring::TuneParam("endgame_sigmoid_exp",250,50,1000),
+   Scoring::TuneParam("ks_threshold",10,0,30),
+   Scoring::TuneParam("endgame_threshold",10,0,30)
+};
+
+#define PARAM(x) params[x].current
 
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
@@ -71,32 +82,26 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
    
-Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("block_mid_base",12,0,20),
-   Scoring::TuneParam("block_mid_mult",9,0,24),
-   Scoring::TuneParam("block_end_base",10,0,20),
-   Scoring::TuneParam("block_end_mult",4,0,24),
-   Scoring::TuneParam("block_mid_base2",6,0,20),
-   Scoring::TuneParam("block_mid_mult2",4,0,24),
-   Scoring::TuneParam("block_end_base2",5,0,20),
-   Scoring::TuneParam("block_end_mult2",4,0,24)
-};
-
-#define PARAM(x) params[x].current
-
-
 #define BOOST
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
 
-const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
+CACHE_ALIGN int Scoring::Scores::MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
    108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
 };
 
-static const int MIDGAME_MATERIAL_THRESHOLD = 12;
-static const int ENDGAME_MATERIAL_THRESHOLD = 23;
+CACHE_ALIGN int Scoring::Scores::KS_MATERIAL_SCALE[32] =
+{
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
+   108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
+};
+
+// lower threshold for king safety calculation:
+static int MIDGAME_MATERIAL_THRESHOLD = 12;
+// upper threshold for endgame calculation:
+static int ENDGAME_MATERIAL_THRESHOLD = 23;
 
 static const CACHE_ALIGN int KnightScores[64][2] = { 
    { -22,-23},{-14,-19},{-11,-16},{-10,-15},{-10,-15},{-11,-16},{-14,-19},{-22,-23},
@@ -297,7 +302,6 @@ static const int KING_ENDGAME_MOBILITY[9] =
 // endgame terms
 static const int PAWN_SIDE_BONUS = 28;
 static const int BITBASE_WIN = 500;
-static const int DISTANCE_FROM_PAWN = -4;
 static const int SUPPORTED_PASSER6 = 38;
 static const int SUPPORTED_PASSER7 = 76;
 
@@ -360,17 +364,8 @@ static inline int OnFile(const Bitboard &b, int file) {
    return TEST_MASK(b, Attacks::file_mask[file - 1]);
 }
 
-static inline int FileOpen(const Board &board, int file, ColorType side) {
-   return !TEST_MASK(board.pawn_bits[side], Attacks::file_mask[file - 1]);
-}
-
 static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
-}
-
-// Return all squares attacked by a pawn of color "side" at square "sq".
-static FORCEINLINE Bitboard pawn_attacks(const Board &board, Square sq, ColorType side) {
-   return Bitboard(Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]);
 }
 
 static void initBitboards() {
@@ -634,6 +629,20 @@ void Scoring::init() {
 
 void Scoring::initParams() 
 {
+   ENDGAME_MATERIAL_THRESHOLD=32;
+   MIDGAME_MATERIAL_THRESHOLD=0;
+   int mid_thresh_set = 0;
+   for (int i = 0; i < 32; i++) {
+      Scores::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(ENDGAME_SIGMOID_EXP)*(i-PARAM(ENDGAME_SIGMOID_MID))/1000.0))));
+      if ((128-Scores::KS_MATERIAL_SCALE[i])>PARAM(ENDGAME_THRESHOLD)) {
+         ENDGAME_MATERIAL_THRESHOLD=i;
+      }
+      Scores::KS_MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(KING_SAFETY_SIGMOID_EXP)*(i-PARAM(KING_SAFETY_SIGMOID_MID))/1000.0))));
+      if (!mid_thresh_set && Scores::KS_MATERIAL_SCALE[i]>PARAM(KS_THRESHOLD)) {
+         MIDGAME_MATERIAL_THRESHOLD=i-1;
+         mid_thresh_set++;
+      }
+   }
 }
 
 void Scoring::cleanup() {
@@ -647,9 +656,9 @@ Scoring::~Scoring() {
 }
 
 // adjust material score when both sides have pawn(s)
-static const int near_draw_adjust(const Material &ourmat,
-                                  const Material &oppmat,
-                                  int pawndiff) 
+static int near_draw_adjust(const Material &ourmat,
+                            const Material &oppmat,
+                            int pawndiff) 
 {
    int score = 0;
    
@@ -881,21 +890,39 @@ template<ColorType side>
 int Scoring::calcCover(const Board &board, int file, int rank) {
    Square sq, pawn;
    int cover = -KING_COVER[1];
+   Bitboard pawns;
    if (side == White) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
-      pawn = Bitboard(Attacks::file_mask_up[sq] & board.pawn_bits[White]).firstOne();
+      pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
+      if (!pawns) {
+         if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+      }
+      else {
+         pawn = pawns.firstOne();
+         cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
+         // also count if pawn is on next rank
+         if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
+            cover += KING_COVER[Util::Min(4, Rank<side> (pawn) + 1 - rank)];
+         }
+      }
    }
    else {
       sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
-      pawn = Bitboard(Attacks::file_mask_down[sq] & board.pawn_bits[Black]).lastOne();
+      pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
+      if (!pawns) {
+         if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+      }
+      else {
+         pawn = pawns.lastOne();
+         cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
+         // also count if pawn is on next rank
+         if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
+            cover += KING_COVER[Util::Min(4, Rank<side> (pawn) + 1 - rank)];
+         }
+      }
    }
-   if (pawn == InvalidSquare) {
-      if (FileOpen(board, file)) cover += KING_FILE_OPEN;
-   }
-   else {
-      cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
-   }
-   return cover;
+   
+   return Util::Min(0,cover);
 }
 
 // Calculate a king cover score
@@ -1973,43 +2000,43 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
    }
 
+   ColorType oside = OppositeColor(side);
    Square sq;
-   Bitboard passers(pawnData.passers);
-   while(passers.iterate(sq)) {
+   Bitboard passers2(pawnData.passers);
+   while(passers2.iterate(sq)) {
       ASSERT(OnBoard(sq));
 
       int rank = Rank(sq, side);
       int file = File(sq);
       Square sq2;
-      Bitboard blockers;
+      Square blocker;
       if (side == White) {
-         blockers = Attacks::file_mask_up[sq] & board.occupied[Black];
+         Bitboard blockers(Attacks::file_mask_up[sq] & board.occupied[oside]);
          sq2 = sq + 8;
+         blocker = blockers.firstOne();
       }
       else {
-         blockers = Attacks::file_mask_down[sq] & board.occupied[White];
+         Bitboard blockers(Attacks::file_mask_down[sq] & board.occupied[oside]);
          sq2 = sq - 8;
+         blocker = blockers.lastOne();
       }
-      if (blockers) {
-#ifdef PAWN_DEBUG
-         Scores tmp(scores);
-#endif
+      if (blocker != InvalidSquare) {
          // Tuned, Jan. 2015
-         if (blockers.isSet(sq2)) {
-            scores.mid -= 14 + 9*PASSED_PAWN[Midgame][rank]/32;
-            scores.end -= 14 + 4*PARAM(BLOCK_END_MULT)*PASSED_PAWN[Endgame][rank]/32; 
+         int mid_penalty = 14 + 9*PASSED_PAWN[Midgame][rank]/32;
+         int end_penalty = 14 + 4*PASSED_PAWN[Endgame][rank]/32;
+         if (blocker != sq2) {
+            mid_penalty /= (Rank(blocker,side)-rank);
          }
-         else {
-            scores.mid -= 6 + 4*PASSED_PAWN[Midgame][rank]/32;
-            scores.end -= 5 + 4*PASSED_PAWN[Endgame][rank]/32; 
-         }
+         scores.mid -= mid_penalty;
+         scores.end -= end_penalty;
 #ifdef PAWN_DEBUG
          cout <<
             ColorImage(side) <<
             " passed pawn on " <<
-            SquareImage(sq) <<
-            " blocked, score= (" << scores.mid - tmp.mid << ", " << 
-            scores.end - tmp.end << ")" << endl;
+            SquareImage(sq);
+         cout << " blocked by piece on " << 
+            SquareImage(blocker) << ", score= (" << -mid_penalty << ", " << 
+            -end_penalty << ")" << endl;
 #endif
       }
 
@@ -2173,9 +2200,9 @@ void Scoring::scoreEndgame
 
    // King/Pawn interactions
    int uncatchables = (side == White) ? (int) endgameEntry->w_uncatchable : (int) endgameEntry->b_uncatchable;
-   Bitboard passers(pawnData.passers);
+   Bitboard passers2(pawnData.passers);
    Square passer;
-   while(passers.iterate(passer)) {
+   while(passers2.iterate(passer)) {
 
       // Encourage escorting a passer with the King, ideally with King in
       // front
