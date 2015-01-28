@@ -28,6 +28,10 @@
 #include <vector>
 using namespace std;
 
+extern "C"{
+#include <math.h>
+};
+
 enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
 
@@ -161,6 +165,9 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
        }
        p->winWeight = (winloss+100)/2;
        if (p->winWeight > bestWinWeight) bestWinWeight = p->winWeight;
+#ifdef _TRACE
+       cout << "win weight=" << p->winWeight << endl;
+#endif
    }
    // Now compute the weights
    int totalWeight = 0;
@@ -187,24 +194,12 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
 #endif
       }
       else {
-         if (bestWinWeight == 0) {
-             w = 0;
-         } else {
-             int winWeight = p->winWeight;
-             // moves that are distintly worse than the best move
-             // get bumped a little lower in weight
-             if (100*winWeight/bestWinWeight < 75) {
-                 winWeight -= winWeight/4;
-             }
-             if (100*winWeight/bestWinWeight < 50) {
-                 winWeight -= winWeight/3;
-             }
-             if (100*winWeight/bestWinWeight < 25) {
-                 winWeight /= 2;
-             }
-             w = (p->relativeFreq*winWeight)/50;
-         }
-         if (p->first && p->count < minFrequency) {
+#ifdef _TRACE
+          cout << "count=" << p->count << " moveEval=" <<
+              (int)p->moveEval << " posEval=" << (int)p->eval << endl;
+#endif
+          if (p->first && p->count < (unsigned)Util::Max(2,minFrequency) && 
+              (p->moveEval != NO_MOVE_EVAL || p->eval != NO_POSITION_EVAL)) {
              // This move is in the first annotated book file but
              // occurs elsewhere with very low frequency. If we have
              // information about it from an annotation, start
@@ -212,10 +207,24 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
              // the annotation (even if it has 0 winning results).
              // If however there is no NAG associated with the move,
              // use the win/loss frequency to set the weight as usual.
-             if (p->moveEval != NO_MOVE_EVAL ||
-                 p->eval != NO_POSITION_EVAL) {
-                 w = book::MAX_WEIGHT/2;
+             w = book::MAX_WEIGHT/2;
+#ifdef _TRACE
+             cout << "using neutral eval, w=" << w << endl;
+#endif
+         }
+         else if (bestWinWeight == 0) {
+#ifdef _TRACE
+             cout << "bestWinWeight = 0, so w=0" << endl;
+#endif
+             w = 0;
+         } else {
+             int winWeight = p->winWeight;
+             if (winWeight <= 9*bestWinWeight/10) {
+                // moves that are relatively worse than the best move
+                // get bumped lower in weight
+                winWeight = winWeight*winWeight/bestWinWeight;
              }
+             w = (p->relativeFreq*winWeight)/50;
          }
 #ifdef _TRACE
          cout << " computed weight=" << w << endl;
@@ -236,7 +245,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
             // is incomplete and there will be branches between those
             // moves and the eval point.
             // Note: ev is range -4..4
-            const int ev = (int)p->eval-(int)EQUAL_POSITION-1;
+            const int ev = (int)p->eval-(int)EQUAL_POSITION;
             const int div = 1 + p->count/10;
             if (black_to_move) {
                 w = w*(100-25*ev/div)/100;
@@ -270,6 +279,11 @@ static void
 add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
          const Variation &var)
 {
+#ifdef _TRACE
+   cout << "adding move ";
+   Notation::image(board,m.move,Notation::SAN_OUT,cout);
+   cout << endl;
+#endif
    const int move_index = m.index;
    const int recommend = m.rec;
    map<uint64,BookEntry *>::const_iterator it =
