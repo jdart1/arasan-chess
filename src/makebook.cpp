@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2015 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // a text file.
@@ -523,7 +523,14 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
              }
          }
          else if (tok.type == ChessIO::Comment) {
-            if (tok.val.substr(0,8) == "{weight:") {
+            string comment(tok.val);
+            if (comment.length() > 0 && comment[0] == '{') {
+                string::iterator it = comment.begin()+1;
+                // remove initial brace & leading spaces after it
+                while (it != comment.end() && isspace(*it)) it++;
+                comment = string(it,comment.end());
+            }
+            if (comment.length() >= 8 && comment.substr(0,7) == "weight:") {
                stringstream s(tok.val.substr(8));
                int num;
                s >> num;
@@ -542,15 +549,17 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
                   }
                }
             }
-            else if (tok.val.substr(0,8) == "1/2-1/2" ||
-                     tok.val.substr(0,3) == "\xBD-\xBD") {
-               varStack[var-1].result = DrawResult;
-            }
-            else if (tok.val.substr(0,4) == "{1-0") {
-               varStack[var-1].result = White_Win;
-            }
-            else if (tok.val.substr(0,4) == "{0-1") {
-               varStack[var-1].result = Black_Win;
+            else if (comment.length()>=3) {
+                if (comment.substr(0,7) == "1/2-1/2" ||
+                     comment.substr(0,3) == "\xBD-\xBD") {
+                    varStack[var-1].result = DrawResult;
+                }
+                else if (comment.substr(0,3) == "1-0") {
+                    varStack[var-1].result = White_Win;
+                }
+                else if (comment.substr(0,3) == "0-1") {
+                    varStack[var-1].result = Black_Win;
+                }
             }
          }
          else if (tok.type == ChessIO::Number) {
