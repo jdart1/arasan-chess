@@ -854,21 +854,39 @@ template<ColorType side>
 int Scoring::calcCover(const Board &board, int file, int rank) {
    Square sq, pawn;
    int cover = -KING_COVER[1];
+   Bitboard pawns;
    if (side == White) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
-      pawn = Bitboard(Attacks::file_mask_up[sq] & board.pawn_bits[White]).firstOne();
+      pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
+      if (!pawns) {
+         if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+      }
+      else {
+         pawn = pawns.firstOne();
+         cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
+         // also count if pawn is on next rank
+         if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
+            cover += KING_COVER[Util::Min(4, Rank<side> (pawn) + 1 - rank)];
+         }
+      }
    }
    else {
       sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
-      pawn = Bitboard(Attacks::file_mask_down[sq] & board.pawn_bits[Black]).lastOne();
+      pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
+      if (!pawns) {
+         if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+      }
+      else {
+         pawn = pawns.lastOne();
+         cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
+         // also count if pawn is on next rank
+         if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
+            cover += KING_COVER[Util::Min(4, Rank<side> (pawn) + 1 - rank)];
+         }
+      }
    }
-   if (pawn == InvalidSquare) {
-      if (FileOpen(board, file)) cover += KING_FILE_OPEN;
-   }
-   else {
-      cover += KING_COVER[Util::Min(4, Rank<side> (pawn) - rank)];
-   }
-   return cover;
+   
+   return Util::Min(0,cover);
 }
 
 // Calculate a king cover score
