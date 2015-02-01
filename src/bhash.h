@@ -47,9 +47,9 @@ class BoardHash
 
         static hash_t kingCoverHash(const Board &board, ColorType side) {
           if (side == White) 
-            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(White)][WhiteKing];
+            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(White)][WhiteKing] ^ w_castle_status[board.castleStatus(White)];
           else
-            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing];
+            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing] ^ b_castle_status[board.castleStatus(Black)];;
 	}
 };
 
