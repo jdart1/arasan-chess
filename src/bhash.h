@@ -1,4 +1,4 @@
-// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2015 by Jon Dart. All Rights Reserved.
 
 #ifndef _BOARDHASH_H_
 #define _BOARDHASH_H_
@@ -15,8 +15,6 @@ class BoardHash
 {
 	public:
 		
-	static void free();
-	
 	static hash_t hashCode(const Board &);
 	
         static hash_t pawnHash(const Board &, ColorType side);
@@ -49,7 +47,7 @@ class BoardHash
           if (side == White) 
             return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(White)][WhiteKing] ^ w_castle_status[board.castleStatus(White)];
           else
-            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing] ^ b_castle_status[board.castleStatus(Black)];;
+            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing] ^ b_castle_status[board.castleStatus(Black)];
 	}
 };
 
