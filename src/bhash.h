@@ -1,4 +1,4 @@
-// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2015 by Jon Dart. All Rights Reserved.
 
 #ifndef _BOARDHASH_H_
 #define _BOARDHASH_H_
@@ -15,8 +15,6 @@ class BoardHash
 {
 	public:
 		
-	static void free();
-	
 	static hash_t hashCode(const Board &);
 	
         static hash_t pawnHash(const Board &, ColorType side);
@@ -24,18 +22,6 @@ class BoardHash
         static FORCEINLINE hash_t Xor( hash_t h, const Square sq, const Piece piece ) {
            ASSERT(OnBoard(sq));
            return h ^ hash_codes[sq][(int)piece];
-        }
-
-        static hash_t kingPawnHash(const Board &b) {
-           hash_t h = b.pawnHashCodeB;
-           h ^= b.pawnHashCodeW;
-           h = Xor(Xor(h,b.kingSquare(White), WhiteKing), b.kingSquare(Black), BlackKing);
-           if (b.sideToMove() == Black) {
-               h &= 0x7ffffffffffffffULL;
-           } else {
-               h |= 0x800000000000000ULL;
-           }
-           return h;
         }
 
         static hash_t setSideToMove(hash_t input, ColorType side) {
@@ -50,11 +36,18 @@ class BoardHash
             return (input & 0x8000000000000000ULL) ? White : Black;
         }
 
+        static hash_t kingPawnHash(const Board &b) {
+           hash_t h = b.pawnHashCodeB;
+           h ^= b.pawnHashCodeW;
+           h = Xor(Xor(h,b.kingSquare(White), WhiteKing), b.kingSquare(Black), BlackKing);
+           return setSideToMove(h,b.sideToMove());
+        }
+
         static hash_t kingCoverHash(const Board &board, ColorType side) {
           if (side == White) 
-            return board.pawnHashCodeW ^ hash_codes[board.kingSquare(White)][WhiteKing];
+            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(White)][WhiteKing] ^ w_castle_status[board.castleStatus(White)];
           else
-            return board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing];
+            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing] ^ b_castle_status[board.castleStatus(Black)];
 	}
 };
 
