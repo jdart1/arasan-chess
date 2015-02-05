@@ -3,8 +3,7 @@
 // Creates a EPD file of test positions from a collection of PGNs
 
 #include "board.h"
-#include "bookdefs.h"
-#include "bookwrit.h"
+#include "boardio.h"
 #include "bhash.h"
 #include "chessio.h"
 #include "movegen.h"
@@ -52,10 +51,9 @@ BEGIN_PACKED_STRUCT
     HashEntryBase *next;
     int white_win_loss;  // wins - losses for White
     uint32 count;
+    int winloss;
+    int score;
     Move move;
-    int relativeFreq, winWeight;
-    uint16 weight;
-    uint16 winloss;
 END_PACKED_STRUCT
 
 
@@ -79,7 +77,7 @@ HashEntryBase::HashEntryBase(
                        HashEntryBase *nxt)
    :next(nxt), white_win_loss(0),
      count(1),
-     move(m), weight(0)
+     move(m)
 {
    if (result == "1-0") {
       white_win_loss++;
@@ -89,7 +87,7 @@ HashEntryBase::HashEntryBase(
    }
 }
 
-static map <uint64, HashEntryHead *>* hashTable = NULL;
+static std::map <uint64, HashEntryHead *>* hashTable = NULL;
 
 // Add move to our in-memory data structure
 static void
@@ -100,7 +98,7 @@ add_move(const Board & board, const Move &m, const string &result)
    Notation::image(board,m,Notation::SAN_OUT,cout);
    cout << endl;
 #endif
-   map<uint64,HashEntryHead *>::const_iterator it =
+   std::map<uint64,HashEntryHead *>::const_iterator it =
       hashTable->find(board.hashCode());
    HashEntryHead *be;
    if (it == hashTable->end())
@@ -148,7 +146,7 @@ add_move(const Board & board, const Move &m, const string &result)
          HashEntryBase *new_entry;
          try {
             new_entry = new HashEntryBase(result,
-                                      m, be);
+                                      m, NULL);
          } catch(std::bad_alloc) {
             cerr << "out of memory!" << endl;
             exit(-1);
@@ -192,6 +190,7 @@ static int do_pgn(ifstream &infile, const string &book_name)
       Board board;
 
       Board p1,p2;
+      int MIN_PLY = 16;
       for (;;) {
          string num;
          ChessIO::Token tok = ChessIO::get_next_token(infile);
@@ -212,10 +211,14 @@ static int do_pgn(ifstream &infile, const string &book_name)
                 cerr << "Illegal move: " << tok.val << 
                    " in game " << games << ", file " <<
                    book_name << endl;
-                return -1;
+                break;
             }
             else {
-               add_move(board,move,result);
+               if ((board.getMaterial(White).men() +
+                    board.getMaterial(Black).men() > 5) &&
+                   board.repCount() == 0 && move_num*2 > MIN_PLY) {
+                  add_move(board,move,result);
+               }
             }
             board.doMove(move);
             side = OppositeColor(side);
@@ -241,6 +244,12 @@ static void usage() {
     cerr << "tunefile -m <min frequency> <input file(s)>" << endl;
 }
 
+bool cmp (const pair<Move,int> &x, const pair<Move,int>&y)
+{
+   return (x.second > y.second);
+}
+
+
 int CDECL main(int argc, char **argv)
 {
    string book_name;
@@ -255,7 +264,7 @@ int CDECL main(int argc, char **argv)
    }
    atexit(cleanupGlobals);
 
-   hashTable =  new map< uint64, HashEntryHead*>;
+   hashTable =  new std::map< uint64, HashEntryHead*>;
 
    output_name = "";
    int arg = 1;
@@ -304,15 +313,16 @@ int CDECL main(int argc, char **argv)
 
    // Iterate through the hash table and output records
    if (verbose) cerr << "PGN processing complete." << endl;
-   map< uint64, HashEntryHead *>::const_iterator it = hashTable->begin();
+   std::map< uint64, HashEntryHead *>::const_iterator it = hashTable->begin();
    uint32 total_moves = 0;
    unsigned long positions = 0;
    while (it != hashTable->end()) {
        HashEntryBase* p = (*it).second;
+       HashEntryHead *first = (*it).second;
        // Note: (*it).first is the hash code
-       const int black_to_move = BoardHash::sideToMove((*it).first);
-       int added = 0;
+       const int black_to_move = BoardHash::sideToMove((*it).first) == Black;
        vector < pair<Move,int> > moves;
+       int total_count = 0;
        while (p) {
           if (black_to_move) {
              p->winloss = (-p->white_win_loss*100)/(int)(p->count);
@@ -321,15 +331,45 @@ int CDECL main(int argc, char **argv)
              // white is on move
              p->winloss = (p->white_win_loss*100)/(int)(p->count);
           }
-          total_moves++;
+          total_count += p->count;
           p = p->next;
        }
-       p = (*it).second;
+       p = first;
        while (p) {
-          // TBD
+          int winWeight = (p->winloss+100)/2;
+          p->score = winWeight*p->count/total_count;
+          moves.push_back(pair<Move,int>(p->move,p->score));
           p = p->next;
        }
-       if (added) ++positions;
+       if (moves.size()) {
+          if (moves.size() >1) {
+             std::sort(moves.begin(),moves.end(),cmp);
+          }
+          Board board;
+          BoardIO::readFEN(board,first->fen);
+          // output w/o move #
+          BoardIO::writeFEN(board,cout,0);
+          int count = 0;
+          cout << " bm";
+          int max_score = -1;
+          for (vector< pair<Move,int> >::const_iterator mit = moves.begin();
+               mit != moves.end() && count < 3;
+               mit++) {
+             if (count == 0) max_score = (*mit).second;
+             // if multiple moves drop those with 0 score or those
+             // scoring much less than max score
+             if (count > 0) {
+                if ((*mit).second == 0 ||
+                    (*mit).second < max_score/2) {
+                   break;
+                }
+             }
+             cout << ' ';
+             Notation::image(board,(*mit).first,Notation::SAN_OUT,cout);
+             count++;
+          }
+          cout << ';' << endl;
+       }
        ++it;
    }
 }

@@ -1967,7 +1967,7 @@ int Scoring::evalu8(const Board &board) {
 
    // Because positional scoring is inexact anyway, round the scores
    // so we will not change the selected move over a trivial difference.
-   score = (score / 4) * 4;
+   //score = (score / 4) * 4;
 
    return score;
 }

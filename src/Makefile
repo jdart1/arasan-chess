@@ -342,7 +342,7 @@ $(EXPORT)/tune:  $(TUNE_OBJS)
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_OBJS) $(DEBUG) -o $(EXPORT)/tune -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/tunefile:  $(TUNEFILE_OBJS) 
-	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_OBJS) $(DEBUG) -o $(EXPORT)/tunefile -lstdc++ $(LIBS) $(SMPLIB)	
+	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNEFILE_OBJS) $(DEBUG) -o $(EXPORT)/tunefile -lstdc++ $(LIBS) $(SMPLIB)	
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
