@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -6,6 +6,7 @@
 #include "board.h"
 #include "constant.h"
 #include "see.h"
+#include "refut.h"
 #include <vector>
 using namespace std;
 
@@ -20,7 +21,7 @@ class MoveGenerator
       enum Phase
       {
          START_PHASE, HASH_MOVE_PHASE, WINNING_CAPTURE_PHASE,
-         KILLER1_PHASE, KILLER2_PHASE, HISTORY_PHASE,
+         KILLER1_PHASE, KILLER2_PHASE, REFUTATION_PHASE, HISTORY_PHASE,
          LOSERS_PHASE, LAST_PHASE
       };
 
@@ -28,6 +29,7 @@ class MoveGenerator
          SearchContext *sc = NULL,
          unsigned ply = 0,
          Move pvMove = NullMove,
+         Move prevMove = NullMove,                     
          int trace = 0);
 
       // Generate the next move, in sorted order, NullMove if none left
@@ -156,6 +158,7 @@ class MoveGenerator
       int losers_count,index,batch_count,forced;
       Phase phase;
       Move hashMove;
+      Move prevMove;
       Bitboard king_attacks;                      // for evasions
       int num_attacks;                            // for evasions
       Square source;                              // for evasions;

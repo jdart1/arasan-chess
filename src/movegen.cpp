@@ -1,4 +1,4 @@
-// Copyright 1994-2013 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2015 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -53,7 +53,7 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
 SearchContext *s,
 Move pvMove,
 int trace)
-: MoveGenerator(board,s,0,pvMove,trace)
+   : MoveGenerator(board,s,0,pvMove,NullMove,trace)
 {
    batch = moves;
    batch_count = MoveGenerator::generateAllMoves(batch,0);
@@ -348,10 +348,13 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
             }
          }
          break;
+         case REFUTATION_PHASE:
+         break;
          case HISTORY_PHASE:
          {
             numMoves = generateNonCaptures(moves);
             if (numMoves) {
+               Move ref = Refutations::getRefutation(prevMove);
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
                   if (MovesEqual(hashMove,moves[i])) {
@@ -374,6 +377,12 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   SetPhase(moves[i],HISTORY_PHASE);
                   if (context) {
                       scores[i] = History::scoreForOrdering(moves[i],board.sideToMove());
+                  }
+                  if (MovesEqual(ref,moves[i])) {
+                     // score refutation much higher
+                     scores[i] = scores[i]*2 + 10000;
+                     // and put in separate phase
+                     SetPhase(moves[i],REFUTATION_PHASE);
                   }
                }
                if (numMoves > 1) {
@@ -723,7 +732,7 @@ int MoveGenerator::generateCaptures(Move * moves, const Bitboard &targets)
 
 MoveGenerator::MoveGenerator( const Board &ABoard,
 SearchContext *s,
-unsigned curr_ply, Move pvMove,
+unsigned curr_ply, Move pvMove, Move prvMove,
 int trace)
 :
 board(ABoard),
@@ -736,6 +745,7 @@ batch_count(0),
 forced(0),
 phase(START_PHASE),
 hashMove(pvMove),
+prevMove(prvMove),
 master(trace)
 {
 }

@@ -6,6 +6,7 @@
 #include "movegen.h"
 #include "util.h"
 #include "hash.h"
+#include "refut.h"
 #include "see.h"
 #ifdef GAVIOTA_TBS
 #include "gtb.h"
@@ -598,6 +599,7 @@ int Search::drawScore(const Board & board) const {
 void RootSearch::init(const Board &board, NodeStack &stack) {
   this->board = initialBoard = board;
   node = stack;
+  Refutations::clearRefutations();
   context.clearKiller();
   nodeAccumulator = 0;
   // local copy:
@@ -1473,7 +1475,7 @@ int Search::quiesce(int ply,int depth)
          return -Illegal;
       }
       int try_score;
-      MoveGenerator mg(board, &context, ply, pv, master());
+      MoveGenerator mg(board, &context, ply, pv, (node-1)->last_move, master());
       Move move;
       BoardState state = board.state;
       node->num_try = 0;
@@ -1695,7 +1697,7 @@ int Search::quiesce(int ply,int depth)
       }
       {
          MoveGenerator mg(board, &context, ply,
-                          NullMove, master());
+                          NullMove, (node-1)->last_move, master());
          Move *moves = (Move*)node->done;
          // generate all the capture moves
          int move_count = mg.generateCaptures(moves,board.occupied[oside]);
@@ -2635,7 +2637,7 @@ int Search::search()
 #endif
     }
     {
-        MoveGenerator mg(board, &context, ply, hash_move, master());
+        MoveGenerator mg(board, &context, ply, hash_move, (node-1)->last_move, master());
         BoardState state = board.state;
         int try_score;
 
@@ -2835,6 +2837,7 @@ int Search::search()
     }
     if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
         board.checkStatus() != InCheck) {
+        ASSERT(ply>0);
         context.setKiller((const Move)node->best, node->ply);
         History::updateHistory(board,node,node->best,
             depth,
@@ -3205,6 +3208,7 @@ int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node,
 #ifdef MOVE_ORDER_STATS
        parentNode->best_count = node->num_try-1;
 #endif
+       Refutations::setRefutation((parentNode-1)->last_move,move);
        if (score >= parentNode->beta) {
 #ifdef _TRACE
            if (master()) {
