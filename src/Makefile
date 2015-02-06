@@ -271,7 +271,7 @@ bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
+stats.cpp threadp.cpp threadc.cpp unit.cpp refut.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -282,7 +282,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp
+stats.cpp threadp.cpp threadc.cpp refut.cpp
 
 MAKEECO_SOURCES = makeeco.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -293,7 +293,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp
+stats.cpp threadp.cpp threadc.cpp refut.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)

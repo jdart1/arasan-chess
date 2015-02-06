@@ -223,7 +223,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\unit.obj $(TB_OBJS) 
+$(BUILD)\unit.obj $(BUILD)\refut.obj $(TB_OBJS) 
 
 ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
@@ -238,7 +238,7 @@ $(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookwrit.obj \
 $(PGO_BUILD)\calctime.obj $(PGO_BUILD)\legal.obj $(PGO_BUILD)\eco.obj \
 $(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
-$(PGO_BUILD)\unit.obj $(TB_OBJS) 
+$(PGO_BUILD)\unit.obj $(PGO_BUILD)\refut.obj $(TB_OBJS) 
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
@@ -267,7 +267,8 @@ $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
-$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(TB_PROFILE_OBJS) 
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj \
+$(PROFILE)\refut.obj $(TB_PROFILE_OBJS) 
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -280,7 +281,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\legal.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\refut.obj $(TB_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -293,7 +294,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\refut.obj $(TB_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<

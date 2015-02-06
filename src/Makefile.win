@@ -217,7 +217,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\unit.obj $(TB_OBJS)
+$(BUILD)\unit.obj $(BUILD)\refut.obj $(TB_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
@@ -231,7 +231,8 @@ $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
-$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\unit.obj $(TB_PROFILE_OBJS)
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\unit.obj \
+$(PROFILE)\refut.obj $(TB_PROFILE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -244,7 +245,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\legal.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\refut.obj $(TB_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -257,7 +258,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
 $(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\refut.obj $(TB_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
     $(CL)  $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
