@@ -15,9 +15,7 @@
 extern "C" {
 #include <math.h>
 #include <ctype.h>
-#ifndef _WIN32
 #include <semaphore.h>
-#endif
 };
 
 static int cores = 1;
@@ -34,20 +32,26 @@ static const int THREAD_STACK_SIZE = 8*1024*1024;
 
 static string fen_file;
 
-// results from the threads
-static double errors[MAX_THREADS];
+static vector<string> * positions = NULL;
 
-struct ThreadData {
+static bool terminated = false;
+
+// per-thread data
+static struct ThreadData {
     SearchController *searcher;
-    int index;
+    int index; 
+    size_t offset;
+    size_t size;
+    double penalty;
+    sem_t sem;
+    sem_t done;
     THREAD thread_id;
 } threadDatas[MAX_THREADS];
 
-#ifndef _WIN32
 static pthread_attr_t stackSizeAttrib;
-#endif
 
-static int search(SearchController* searcher, const Board &board, int alpha, int beta) 
+
+static int search(SearchController* searcher, const Board &board, int alpha, int beta, int depth) 
 {
    int value;
    options.search.easy_plies = 0;
@@ -57,7 +61,7 @@ static int search(SearchController* searcher, const Board &board, int alpha, int
                           FixedDepth,
                           999999,
                           0,
-                          SEARCH_DEPTH, false, false,
+                          depth, false, false,
                           stats,
                           Silent);
    value = stats.value;
@@ -85,20 +89,17 @@ static double sigmoid( double x )
    
 }
 
-static double computeError(SearchController *searcher, int index) {
-    double err = 0.0;
-	// This is a large object so put it on the heap:
-    Scoring *scoring = NULL;
-    if (SEARCH_DEPTH < 0) scoring = new Scoring();
-    
-    uint64 lines = 0ULL;
-    string buf;
-    double penalty = 0.0;
-    ifstream pos_file( fen_file.c_str(), ios::in);
-    while (!pos_file.eof()) {
-      std::getline(pos_file,buf);
-      ++lines;
-      stringstream stream(buf);
+// compute a part of the objective in a single thread
+static double computeError(SearchController *searcher, int index, size_t offset,
+   size_t size) {
+   string buf;
+   double penalty = 0.0;
+   uint64 done = 0;
+   uint64 lines = 0;
+   for (vector<string>::const_iterator it = positions->begin()+offset;
+        it != positions->end() && done < size;
+        it++, done++, lines++) {
+      stringstream stream(*it);
       EPDRecord epd_rec;
       Board board;
       if (!ChessIO::readEPDRecord(stream,board,epd_rec)) {
@@ -155,147 +156,154 @@ static double computeError(SearchController *searcher, int index) {
       RootMoveGenerator mg(board);
 
       // don't search if stalemate, mate, or forced move
-      if (mg.moveCount() <= 1) continue;
-
-      Move moves[Constants::MaxMoves];
-      int keys = 0;
-      vector<Move>::const_iterator it = solution_moves.begin();
-      // key moves go first
-      while (it != solution_moves.end()) {
-         moves[keys++] = *it++;
-      }
-      Move m;
-      int count = keys;
-      while ((m=mg.nextMove())!=NullMove) {
-         int akey = 0;
-         for (int i = 0; i < keys; i++) {
-            if (MovesEqual(m,moves[i])) {
-               akey++;
-               break;
-            }
-         }
-         if (akey) continue;
-         moves[count++] = m;
+      if (mg.moveCount() <= 1) {
+         continue;
       }
 
-      BoardState state(board.state);
-      int best = -Constants::MATE;
+      Move best;
+      int value = -Constants::MATE;
+
+      Move keyMove;
       int best_key_value = -Constants::MATE;
-      for (int i = 0; i < count; i++) {
+      int i = 0;
+      BoardState state(board.state);
+      for (vector<Move>::const_iterator it = solution_moves.begin();
+           it != solution_moves.end(); it++, i++) {
+         keyMove = *it;
          int alpha, beta;
          if (i == 0) {
             alpha = -Constants::MATE;
             beta = Constants::MATE;
          } else {
-            alpha = best;
-            beta = best + SEARCH_WINDOW;
+            alpha = best_key_value;
+            beta = best_key_value + SEARCH_WINDOW;
          }
-         board.doMove(moves[i]);
-         int value = -search(searcher, board,-beta,-alpha);
-         board.undoMove(moves[i],state);
+         board.doMove(keyMove);
+         int value = -search(searcher, board,-beta,-alpha,SEARCH_DEPTH);
+         board.undoMove(keyMove,state);
          if (i > 0 && value >= beta && SEARCH_DEPTH > 0) {
             // window was not wide enough
-            value = -search(searcher, board,-Constants::MATE,-alpha);
+            value = -search(searcher, board,-Constants::MATE,-alpha,SEARCH_DEPTH);
          }
-         if (value > best) {
-            best = value;
-            if (i < keys) {
-               best_key_value = value;
-            }
-         }
-         if (i >= keys && value > best_key_value) {
-            // non-key move scores higher, give penalty
-            penalty += sigmoid(value-best_key_value);
+         if (value > best_key_value) {
+            best_key_value = value;
          }
       }
-    }
-    if (SEARCH_DEPTH < 0) delete scoring;
-    cout << "thread " << index << " done" << endl;
-    
-    return penalty;
-
-}
-
-#ifdef _WIN32
-static DWORD WINAPI threadp(void *x)
-#else
-static void * CDECL threadp(void *x)
-#endif
-{
-    ThreadData *td = (ThreadData*)x;
-    if (!td->searcher) td->searcher = new SearchController();
-//    cout << "thread " << td->index << " starting" << endl;
-    errors[td->index] = computeError(td->searcher,td->index);
-    return 0;
-}
-
-static double computeLsqError() {
-    // prepare threads
-#ifndef _WIN32
-   if (pthread_attr_init (&stackSizeAttrib)) {
-      perror("pthread_attr_init");
-      return 0.0;
+      int best_value = best_key_value;
+      Move m;
+      while (!IsNull(m = mg.nextMove())) {
+         int solution = 0;
+         for (vector<Move>::const_iterator it = solution_moves.begin();
+              it != solution_moves.end();
+              it++) {
+            if (MovesEqual(m,*it)) {
+               ++solution;
+               break;
+            }
+         }
+         if (solution) continue;
+         board.doMove(m);
+         int try_value = -search(searcher, board,-best_value-SEARCH_WINDOW,-best_value,SEARCH_DEPTH);
+         board.undoMove(m,state);
+         if (try_value > best_value) {
+            if (try_value > best_value + SEARCH_WINDOW) {
+               // window was not wide enough
+               try_value = -search(searcher, board,-Constants::MATE,-best_value,SEARCH_DEPTH);
+            }
+            if (try_value > best_value) {
+               best_value = try_value;
+            }
+         }
+      }
+      if (best_value > best_key_value) {
+         penalty += sigmoid(best_value-best_key_value);
+      }
    }
+    
+   cout << "thread " << index << " done" << endl;
+    
+   return penalty;
+}
+
+static void * CDECL threadp(void *x)
+{
+   ThreadData *td = (ThreadData*)x;
+
+   // set stack size
    size_t stackSize;
    if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
         perror("pthread_attr_getstacksize");
-        return 0.0;
+        return 0;
    }
    if (stackSize < THREAD_STACK_SIZE) {
       if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
          perror("error setting thread stack size");
-         return 0.0;
+         return 0;
       }
    }
-//   cout << "initialized" << endl;
-#endif
+
+   // allocate controller in the thread
+   try {
+      td->searcher = new SearchController();
+   } catch(std::bad_alloc) {
+      cerr << "out of memory, thread " << td->index << endl;
+      return 0;
+   }
    
+   while (!terminated) {
+      // wait until signalled
+      sem_wait(&td->sem);
+      td->penalty = computeError(td->searcher,td->index,td->offset,td->size);
+      // tell parent we are done
+      cout << td->index << " done." << endl;
+      sem_post(&td->done);
+   }
+   delete td->searcher;
+   return 0;
+}
+   
+static void initThreads() 
+{
+    // prepare threads
+    if (pthread_attr_init (&stackSizeAttrib)) {
+       perror("pthread_attr_init");
+       return;
+    }
     for (int i = 0; i < cores; i++) {
         THREAD thread_id;
         threadDatas[i].index = i;
-#ifdef _WIN32
-        DWORD id;
-        thread_id = CreateThread(NULL,8*1024*1024,
-                                 threadp,threadDatas+i,
-                                 0,
-                                 &id);
-
-        if (thread_id == NULL) {
-            cerr << "thread creation failed" << endl;
-        }
-#else
-        if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)(threadDatas+i))) {
+        threadDatas[i].searcher = NULL;
+        sem_init(&threadDatas[i].sem,0,0);
+        sem_init(&threadDatas[i].done,0,0);
+        if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)&(threadDatas[i]))) {
             perror("thread creation failed");
         }
-#endif
-//        cout << "thread " << i << " created." << endl;
+        cout << "thread " << i << " created." << endl;
     }
-    // Wait for threads to complete
-#ifdef _WIN32
-    HANDLE handles[MAX_THREADS];
-    for (int i = 0; i<cores; i++) {
-        handles[i] = threadDatas[i].thread_id;
-    }
-    WaitForMultipleObjects(cores,handles,TRUE,INFINITE);
-#else
-    for (int i = 0; i < cores; i++) {
-       void *status;
-       if (pthread_join(threadDatas[i].thread_id,&status)) {
-          perror("pthread_join");
-       }
-    }
-    if (pthread_attr_destroy(&stackSizeAttrib)) {
-       perror("pthread_attr_destroy");
-    }
-#endif        
-    // total errors from the threads
-    double total = 0;
-    for (int i = 0; i < cores; i++) {
-        total += errors[i];
-    }
-    cout << "result: " << setprecision(8) << total << endl;
-    return total;
 }
+
+static double computeLsqError() {
+   
+   for (int i = 0; i < cores; i++) {
+      threadDatas[i].penalty = 0.0;
+      // signal searchers to start
+      sem_post(&threadDatas[i].sem);
+   }
+   // wait for all searchers done
+   for (int i = 0; i < cores; i++) {
+      sem_wait(&threadDatas[i].done);
+   }
+   cout << "all searchers done" << endl;
+
+   // total errors from the threads
+   double total = 0.0;
+   for (int i = 0; i < cores; i++) {
+      total += threadDatas[i].penalty;
+   }
+   cout << "result: " << setprecision(8) << total << endl;
+   return total;
+}
+
 
 /*----------------------------------------*/
 /*               The problem              */
@@ -344,6 +352,22 @@ public:
 
 };
 
+static uint64 readTrainingFile() 
+{
+   cout << "reading training file ..." << endl;
+   positions = new vector<string>();
+   uint64 lines = (uint64)0;
+   ifstream pos_file( fen_file.c_str(), ios::in);
+   string buf;
+   while (!pos_file.eof()) {
+      std::getline(pos_file,buf);
+      ++lines;
+      positions->push_back(buf);
+   }
+   cout << "training file read, " << lines << " lines" << endl;
+   return lines;
+}
+
 int CDECL main(int argc, char **argv)
 {
     Bitboard::init();
@@ -361,13 +385,13 @@ int CDECL main(int argc, char **argv)
         cerr << "Initialized tablebases" << endl;
     }
     options.book.book_enabled = options.log_enabled = 0;
+    options.search.use_tablebases = false;
 
     if (argc < 2) {
         cerr << "not enough arguments" << endl;
         return -1;
     }
     else {
-        Statistics stats;
         int arg = 1;
         while (arg < argc && argv[arg][0] == '-') {
            if (strcmp(argv[arg],"-c")==0) {
@@ -381,16 +405,29 @@ int CDECL main(int argc, char **argv)
            ++arg;
         }
         
-        for (int i = 0; i < cores; i++) {
-           threadDatas[i].searcher = NULL;
-        }
-        
         string paramFile = argv[arg++];
         fen_file = argv[arg];
 
         cout << "plies=" << SEARCH_DEPTH << " cores=" << cores << " param file=" << paramFile << " tune file=" << fen_file << (flush) << endl;
-        
 
+        initThreads();
+
+        uint64 lines = readTrainingFile();
+        
+        uint64 chunk = lines / cores;
+
+        uint64 off = (uint64)0;
+
+        for (int i = 0; i < cores; i++) {
+           threadDatas[i].index = i;
+           threadDatas[i].penalty = 0.0;
+           threadDatas[i].offset = (size_t)off;
+           uint64 size = chunk;
+           size = (i==cores-1) ? (lines-off) : chunk;
+           threadDatas[i].size = size;
+           off += chunk;
+        }
+        
         try {
            
         NOMAD::Display out ( std::cout );
