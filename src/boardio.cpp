@@ -155,6 +155,7 @@ int BoardIO::readFEN(Board &board, const string &buf)
    {
      return 0;
    }
+   ASSERT(board.state.moveCount+1<Board::RepListSize);
    board.repList[board.state.moveCount++] = board.hashCode();
 
    return 1;

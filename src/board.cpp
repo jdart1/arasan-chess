@@ -1331,6 +1331,7 @@ int Board::anyAttacks(Square sq, ColorType side, Bitboard &source) const
 
 Bitboard Board::calcAttacks(Square sq, ColorType side) const
 {
+   ASSERT(sq != InvalidSquare);
    Bitboard retval;
 
    retval |= (Attacks::pawn_attacks[sq][side] & pawn_bits[side]);
