@@ -1434,13 +1434,13 @@ void Scoring::pieceScore(const Board &board,
 #endif
 #ifdef EVAL_DEBUG
       Scores s;
-      s.mid = kattack;
+      s.ks = kattack;
       cout << " king attack score (" << ColorImage(side) << ") : " << kattack << " (pre-scaling), " << s.blend(board.getMaterial(oside).materialLevel()) << " (scaled)" << endl;
 #endif
 
       // decrement the opposing side's scores because we want to
       // scale king attacks by this side's material level.
-      opp_scores.mid -= kattack;
+      opp_scores.ks -= kattack;
    }
 
    if (pin_count) scores.end += PIN_MULTIPLIER[Endgame] * pin_count;
@@ -2297,7 +2297,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
       oppCover = kingCover<White> (board);
    }
 
-   scores.mid += ourCover - KING_OFF_BACK_RANK[Rank(board.kingSquare(side), side)];
+   scores.ks += ourCover - KING_OFF_BACK_RANK[Rank(board.kingSquare(side), side)];
    pieceScore<side> (board, pawnEntry.pawnData(side), 
                      pawnEntry.pawnData(oside), oppCover, scores, oppScores, 
                      board.getMaterial(side).materialLevel() < ENDGAME_MATERIAL_THRESHOLD,
