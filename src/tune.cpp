@@ -206,7 +206,7 @@ static double computeError(SearchController *searcher, int index, size_t offset,
          int try_value = -search(searcher, board,-best_value-SEARCH_WINDOW,-best_value,SEARCH_DEPTH);
          board.undoMove(m,state);
          if (try_value > best_value) {
-            if (try_value > best_value + SEARCH_WINDOW) {
+            if (try_value >= best_value + SEARCH_WINDOW) {
                // window was not wide enough
                try_value = -search(searcher, board,-Constants::MATE,-best_value,SEARCH_DEPTH);
             }
@@ -380,7 +380,7 @@ int CDECL main(int argc, char **argv)
     }
     atexit(cleanupGlobals);
     delayedInit();
-    options.search.hash_table_size = 0;
+    options.search.hash_table_size = 64000;
     if (EGTBMenCount) {
         cerr << "Initialized tablebases" << endl;
     }
