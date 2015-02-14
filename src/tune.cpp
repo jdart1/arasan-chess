@@ -36,6 +36,10 @@ static vector<string> * positions = NULL;
 
 static bool terminated = false;
 
+enum Strategy { MMTO, Texel };
+
+static const Strategy strategy = Texel;
+
 // per-thread data
 static struct ThreadData {
     SearchController *searcher;
@@ -54,8 +58,6 @@ static pthread_attr_t stackSizeAttrib;
 static int search(SearchController* searcher, const Board &board, int alpha, int beta, int depth) 
 {
    int value;
-   options.search.easy_plies = 0;
-   options.learning.position_learning = 0;
    Statistics stats;
    searcher->findBestMove(board,
                           FixedDepth,
@@ -89,6 +91,222 @@ static double sigmoid( double x )
    
 }
 
+double PARAM1 = 2.5;
+double PARAM2 = 2.0;
+
+static double sign(double x) 
+{
+   if (x == 0.0)
+      return 0.0;
+   else if (x > 0.0)
+      return 1.0;
+   else
+      return -1.0;
+}
+
+
+static double texelSigmoid(double val) {
+   //double s = -PARAM1*(-0.5+1.0/(1.0+pow(10.0,PARAM2*val/100.0)));
+   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val/400)));
+    if (s < -1.0) return -1.0;
+    if (s > 1.0) return 1.0;
+    return s;
+}
+
+
+static double computeErrorMMTO(SearchController *searcher, const string &pos, uint64 line) 
+{
+   double penalty = 0.0;
+   stringstream stream(pos);
+   EPDRecord epd_rec;
+   Board board;
+   if (!ChessIO::readEPDRecord(stream,board,epd_rec)) {
+      cerr << "error in EPD record, line " << line << endl;
+      return 0.0;
+   }
+   if (epd_rec.hasError()) {
+      cerr << "error in EPD record, line " << line;
+      cerr << ": ";
+      cerr << epd_rec.getError();
+      cerr << endl;
+      return 0.0;
+   }
+   vector <Move> solution_moves;
+   int illegal=0;
+   string id, comment;
+   for (int i = 0; i < epd_rec.getSize(); i++) {
+      string key, val;
+      epd_rec.getData(i,key,val);
+      if (key == "bm") {
+         Move m;
+         stringstream s(val);
+         while (!s.eof()) {
+            string moveStr;
+            // skips spaces
+            s >> moveStr;
+            if (!moveStr.length()) break;
+            m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
+            if (IsNull(m)) {
+               ++illegal;
+            } else {
+               solution_moves.push_back(m);
+            }
+         }
+      }
+      else if (key == "id") {
+         id = val;
+      }
+      else if (key == "c0") {
+         comment = val;
+      }
+   }
+   if (illegal) {
+      cerr << "illegal or invalid solution move(s) for EPD record, line ";
+      cerr << line << endl;
+      return 0.0;
+   }
+   else if (!solution_moves.size()) {
+      cerr << "no solution move(s) for EPD record, line " << line << endl;
+      return 0.0;
+   }
+
+   // generate root moves
+   RootMoveGenerator mg(board);
+
+   // don't search if stalemate, mate, or forced move
+   if (mg.moveCount() <= 1) {
+      return 0.0;
+   }
+
+   Move best;
+   int value = -Constants::MATE;
+
+   Move keyMove;
+   int best_key_value = -Constants::MATE;
+   int i = 0;
+   BoardState state(board.state);
+   for (vector<Move>::const_iterator it = solution_moves.begin();
+        it != solution_moves.end(); it++, i++) {
+      keyMove = *it;
+      int alpha, beta;
+      if (i == 0) {
+         alpha = -Constants::MATE;
+         beta = Constants::MATE;
+      } else {
+         alpha = best_key_value;
+         beta = best_key_value + SEARCH_WINDOW;
+      }
+      board.doMove(keyMove);
+      int value = -search(searcher, board,-beta,-alpha,SEARCH_DEPTH);
+      board.undoMove(keyMove,state);
+      if (i > 0 && value >= beta && SEARCH_DEPTH > 0) {
+         // window was not wide enough
+         value = -search(searcher, board,-Constants::MATE,-alpha,SEARCH_DEPTH);
+      }
+      if (value > best_key_value) {
+         best_key_value = value;
+      }
+   }
+   int best_value = best_key_value;
+   Move m;
+   while (!IsNull(m = mg.nextMove())) {
+      int solution = 0;
+      for (vector<Move>::const_iterator it = solution_moves.begin();
+           it != solution_moves.end();
+           it++) {
+         if (MovesEqual(m,*it)) {
+            ++solution;
+            break;
+         }
+      }
+      if (solution) continue;
+      board.doMove(m);
+      int try_value = -search(searcher, board,-best_value-SEARCH_WINDOW,-best_value,SEARCH_DEPTH);
+      board.undoMove(m,state);
+      if (try_value > best_value) {
+         if (try_value >= best_value + SEARCH_WINDOW) {
+            // window was not wide enough
+            try_value = -search(searcher, board,-Constants::MATE,-best_value,SEARCH_DEPTH);
+         }
+         if (try_value > best_value) {
+            best_value = try_value;
+         }
+      }
+   }
+   if (best_value > best_key_value) {
+      penalty += sigmoid(best_value-best_key_value);
+   }
+   return penalty;
+}
+
+static double computeErrorTexel(SearchController *searcher,const string &pos,uint64 line)
+{
+   
+   double err = 0.0;
+// This is a large object so put it on the heap:
+   Scoring *scoring = NULL;
+   if (SEARCH_DEPTH < 0) scoring = new Scoring();
+   size_t lines = 0;
+    
+   Board b;
+
+//   if (b.getMaterial(White).materialLevel() + 
+//    b.getMaterial(Black).materialLevel() < 24 ) return 0.0;
+   size_t split = pos.find_last_of(" ");
+   string fen;
+   int result = 0;
+   if (split == string::npos) {
+      cerr << "No result? line " << line << endl;
+      return 0.0;
+   } else {
+      fen = pos.substr(0,split);
+      string res = pos.substr(split+1);
+      std::size_t last  = res.find_last_of(" \n");
+      if (last != string::npos) {
+         res = res.substr(0,last);
+      }
+      
+      if (res == "0-1")
+         result = -1;
+      else if (res == "1-0")
+         result = 1;
+      else if (res == "1/2-1/2")
+         result = 0;
+      else if (res == "*")
+         return 0.0;
+      else {
+         cerr << "Missing or unrecognized result, line " << line << " (" << res << ")" << endl;
+         return 0.0;
+      }
+   }
+        
+   stringstream s(fen);
+   s >> b;
+   if (s.fail()) {
+      cerr << "error on FEN string: " << fen << ", line " << line << endl;
+      return 0.0;
+   }
+   int value;
+   if (SEARCH_DEPTH < 0) {
+      value = scoring->evalu8(b);
+   } else if (SEARCH_DEPTH == 0) {
+//      value = searcher->quiesce(-Constants::MATE,Constants::MATE,0,0);
+   } else {
+      value = search(searcher,b,-5*PAWN_VALUE,5*PAWN_VALUE,SEARCH_DEPTH);
+   }
+   if (b.sideToMove() == Black) value = -value;
+   double predict = texelSigmoid(value);
+
+//   cout << " value=" << value << " predict=" << predict << " result=" << result << " err = " <<  ((double)result - predict)*((double)result - predict) << endl;
+        
+   err += ((double)result - predict)*((double)result - predict);
+
+   if (SEARCH_DEPTH < 0)
+      delete scoring;
+
+   return err;
+}
+
 // compute a part of the objective in a single thread
 static double computeError(SearchController *searcher, int index, size_t offset,
    size_t size) {
@@ -99,128 +317,14 @@ static double computeError(SearchController *searcher, int index, size_t offset,
    for (vector<string>::const_iterator it = positions->begin()+offset;
         it != positions->end() && done < size;
         it++, done++, lines++) {
-      stringstream stream(*it);
-      EPDRecord epd_rec;
-      Board board;
-      if (!ChessIO::readEPDRecord(stream,board,epd_rec)) {
-         cerr << "error in EPD record, line " << lines << endl;
-         continue;
-      }
-      if (epd_rec.hasError()) {
-         cerr << "error in EPD record, line " << lines;
-         cerr << ": ";
-         cerr << epd_rec.getError();
-         cerr << endl;
-         continue;
-      }
-      vector <Move> solution_moves;
-      int illegal=0;
-      string id, comment;
-      for (int i = 0; i < epd_rec.getSize(); i++) {
-         string key, val;
-         epd_rec.getData(i,key,val);
-         if (key == "bm") {
-            Move m;
-            stringstream s(val);
-            while (!s.eof()) {
-               string moveStr;
-               // skips spaces
-               s >> moveStr;
-               if (!moveStr.length()) break;
-               m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
-               if (IsNull(m)) {
-                  ++illegal;
-               } else {
-                  solution_moves.push_back(m);
-               }
-            }
-         }
-         else if (key == "id") {
-            id = val;
-         }
-         else if (key == "c0") {
-            comment = val;
-         }
-      }
-      if (illegal) {
-         cerr << "illegal or invalid solution move(s) for EPD record, line ";
-         cerr << lines << endl;
-         continue;
-      }
-      else if (!solution_moves.size()) {
-         cerr << "no solution move(s) for EPD record, line " << lines << endl;
-         continue;
-      }
-
-      // generate root moves
-      RootMoveGenerator mg(board);
-
-      // don't search if stalemate, mate, or forced move
-      if (mg.moveCount() <= 1) {
-         continue;
-      }
-
-      Move best;
-      int value = -Constants::MATE;
-
-      Move keyMove;
-      int best_key_value = -Constants::MATE;
-      int i = 0;
-      BoardState state(board.state);
-      for (vector<Move>::const_iterator it = solution_moves.begin();
-           it != solution_moves.end(); it++, i++) {
-         keyMove = *it;
-         int alpha, beta;
-         if (i == 0) {
-            alpha = -Constants::MATE;
-            beta = Constants::MATE;
-         } else {
-            alpha = best_key_value;
-            beta = best_key_value + SEARCH_WINDOW;
-         }
-         board.doMove(keyMove);
-         int value = -search(searcher, board,-beta,-alpha,SEARCH_DEPTH);
-         board.undoMove(keyMove,state);
-         if (i > 0 && value >= beta && SEARCH_DEPTH > 0) {
-            // window was not wide enough
-            value = -search(searcher, board,-Constants::MATE,-alpha,SEARCH_DEPTH);
-         }
-         if (value > best_key_value) {
-            best_key_value = value;
-         }
-      }
-      int best_value = best_key_value;
-      Move m;
-      while (!IsNull(m = mg.nextMove())) {
-         int solution = 0;
-         for (vector<Move>::const_iterator it = solution_moves.begin();
-              it != solution_moves.end();
-              it++) {
-            if (MovesEqual(m,*it)) {
-               ++solution;
-               break;
-            }
-         }
-         if (solution) continue;
-         board.doMove(m);
-         int try_value = -search(searcher, board,-best_value-SEARCH_WINDOW,-best_value,SEARCH_DEPTH);
-         board.undoMove(m,state);
-         if (try_value > best_value) {
-            if (try_value >= best_value + SEARCH_WINDOW) {
-               // window was not wide enough
-               try_value = -search(searcher, board,-Constants::MATE,-best_value,SEARCH_DEPTH);
-            }
-            if (try_value > best_value) {
-               best_value = try_value;
-            }
-         }
-      }
-      if (best_value > best_key_value) {
-         penalty += sigmoid(best_value-best_key_value);
+      if (strategy == MMTO) {
+         penalty += computeErrorMMTO(searcher,*it,lines);
+      } else {
+         penalty += computeErrorTexel(searcher,*it,lines);
       }
    }
     
-   cout << "thread " << index << " done" << endl;
+//   cout << "thread " << index << " done" << endl;
     
    return penalty;
 }
@@ -255,7 +359,6 @@ static void * CDECL threadp(void *x)
       sem_wait(&td->sem);
       td->penalty = computeError(td->searcher,td->index,td->offset,td->size);
       // tell parent we are done
-      cout << td->index << " done." << endl;
       sem_post(&td->done);
    }
    delete td->searcher;
@@ -300,7 +403,6 @@ static double computeLsqError() {
    for (int i = 0; i < cores; i++) {
       total += threadDatas[i].penalty;
    }
-   cout << "result: " << setprecision(8) << total << endl;
    return total;
 }
 
@@ -325,7 +427,7 @@ public:
          }
          Scoring::initParams();
          cout << "computing" << endl;
-         double quality = computeLsqError();
+         double quality = computeLsqError()/positions->size();
          cout << "quality= " << quality << endl;
          
          NOMAD::Double q = quality;
@@ -359,7 +461,7 @@ static uint64 readTrainingFile()
    uint64 lines = (uint64)0;
    ifstream pos_file( fen_file.c_str(), ios::in);
    string buf;
-   while (!pos_file.eof()) {
+   while (pos_file.good()) {
       std::getline(pos_file,buf);
       ++lines;
       positions->push_back(buf);
@@ -381,11 +483,13 @@ int CDECL main(int argc, char **argv)
     atexit(cleanupGlobals);
     delayedInit();
     options.search.hash_table_size = 64000;
-    if (EGTBMenCount) {
-        cerr << "Initialized tablebases" << endl;
-    }
+//    if (EGTBMenCount) {
+//        cerr << "Initialized tablebases" << endl;
+//    }
     options.book.book_enabled = options.log_enabled = 0;
+    options.learning.position_learning = false;
     options.search.use_tablebases = false;
+    options.search.easy_plies = 0;
 
     if (argc < 2) {
         cerr << "not enough arguments" << endl;
@@ -410,11 +514,13 @@ int CDECL main(int argc, char **argv)
 
         cout << "plies=" << SEARCH_DEPTH << " cores=" << cores << " param file=" << paramFile << " tune file=" << fen_file << (flush) << endl;
 
-        initThreads();
-
         uint64 lines = readTrainingFile();
         
+        initThreads();
+
         uint64 chunk = lines / cores;
+
+        cout << "chunk size=" << chunk << endl;
 
         uint64 off = (uint64)0;
 
