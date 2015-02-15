@@ -7,7 +7,9 @@
 #include "chessio.h"
 #include "util.h"
 #include "search.h"
+#ifdef NOMAD
 #include "nomad.hpp"
+#endif
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -17,6 +19,13 @@ extern "C" {
 #include <ctype.h>
 #include <semaphore.h>
 };
+
+#define CMAES
+
+#ifdef CMAES
+#include "cmaes.h"
+using namespace libcmaes;
+#endif
 
 static int cores = 1;
 
@@ -113,6 +122,15 @@ static double texelSigmoid(double val) {
     return s;
 }
 
+static double scale(double val, int i) 
+{
+   return (val-(double)Scoring::params[i].min_value)/double(Scoring::params[i].max_value-Scoring::params[i].min_value);
+}
+
+static double unscale(double val, int i) 
+{
+  return double(Scoring::params[i].max_value-Scoring::params[i].min_value)*val+(double)Scoring::params[i].min_value;
+}
 
 static double computeErrorMMTO(SearchController *searcher, const string &pos, uint64 line) 
 {
@@ -407,6 +425,43 @@ static double computeLsqError() {
    return total;
 }
 
+#ifdef CMAES
+
+static FitFunc evaluator = [](const double *x, const int dim) 
+{
+   for ( int i = 0 ; i < Scoring::NUM_PARAMS ; i++ ) 
+   {
+      Scoring::params[i].current = round(unscale(x[i],i));
+   }
+   Scoring::initParams();
+   double err = computeLsqError()/positions->size();
+   cout << "objective=" << err << endl;
+   return err;
+   
+};
+
+static ProgressFunc<CMAParameters<>,CMASolutions> progress = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols)
+{
+   
+   std::cout << cmasols.niter() << " iterations, " << 
+   cmasols.fevals() << " function evals, elapsed time: " << cmasols.elapsed_last_iter() << " sigma=" << cmasols.sigma() << endl;
+   std::cout << "best solution: " << cmasols << std::endl;
+   vector <double> x0 = cmasols.best_candidate().get_x();
+   cout << "denormalized solution: " << endl;
+   int i = 0;
+        
+   for (vector<double>::const_iterator it = x0.begin();
+        it != x0.end();
+        it++,i++) {
+      cout << " " << unscale(*it,i) << endl;
+   }
+   cout << endl;
+   
+   return 0;
+};
+
+
+#else // NOMAD
 
 /*----------------------------------------*/
 /*               The problem              */
@@ -454,9 +509,9 @@ public:
       }
 
 };
+#endif
 
-static uint64 readTrainingFile() 
-{
+static uint64 readTrainingFile() {
    cout << "reading training file ..." << endl;
    positions = new vector<string>();
    uint64 lines = (uint64)0;
@@ -510,10 +565,15 @@ int CDECL main(int argc, char **argv)
            ++arg;
         }
         
+#ifdef NOMAD
         string paramFile = argv[arg++];
+#endif
         fen_file = argv[arg];
-
-        cout << "plies=" << SEARCH_DEPTH << " cores=" << cores << " param file=" << paramFile << " tune file=" << fen_file << (flush) << endl;
+        cout << "plies=" << SEARCH_DEPTH << " cores=" << cores;
+#ifdef NOMAD
+        cout << " param file=" << paramFile;
+#endif
+        cout << " tune file=" << fen_file << (flush) << endl;
 
         uint64 lines = readTrainingFile();
         
@@ -535,6 +595,20 @@ int CDECL main(int argc, char **argv)
            off += chunk;
         }
         
+#ifdef CMAES
+        int dim = Scoring::NUM_PARAMS;
+        // initialize & normalize
+        vector<double> x0;
+        double sigma = 0.05;
+        for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
+           x0.push_back(scale(double(Scoring::params[i].current),i));
+        }
+        CMAParameters<> cmaparams(x0,sigma);
+        CMASolutions cmasols = cmaes<>(evaluator,cmaparams,progress);
+#else
+        
+        
+        // NOMAD
         try {
            
         NOMAD::Display out ( std::cout );
@@ -569,6 +643,7 @@ int CDECL main(int argc, char **argv)
         catch ( exception & e ) {
            cerr << "\nNOMAD has been interrupted (" << e.what() << ")\n\n";
         }
+#endif
     }
     for (int i = 0; i < cores; i++) {
         delete threadDatas[i].searcher;

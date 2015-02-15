@@ -17,14 +17,12 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
-    static const int NUM_PARAMS = 6;
+    static const int NUM_PARAMS = 4;
 
     enum {
-      KING_SAFETY_SIGMOID_MID,
-      KING_SAFETY_SIGMOID_EXP,
-      ENDGAME_SIGMOID_MID,
-      ENDGAME_SIGMOID_EXP,
-      KS_THRESHOLD,
+      SCALING_SIGMOID_MID,
+      SCALING_SIGMOID_EXP,
+      MIDGAME_THRESHOLD,
       ENDGAME_THRESHOLD
     };
 
@@ -143,17 +141,16 @@ class Scoring
     // The scores for opening, middlegame and endgame
     struct Scores {
       Scores()
-      :mid(0), end(0), any(0), ks(0)
+      :mid(0), end(0), any(0)
       {
       }
       Scores(const Scores &s)
       :mid(s.mid),end(s.end),any(s.any) {
       }
-      int mid, end, any, ks; 
+      int mid, end, any;
       int blend(int materialLevel ) {
           return any + mid*MATERIAL_SCALE[materialLevel]/128 +
-             end*(128-MATERIAL_SCALE[materialLevel])/128 +
-             ks*KS_MATERIAL_SCALE[materialLevel]/128;
+            end*(128-MATERIAL_SCALE[materialLevel])/128;
       }
       static CACHE_ALIGN int MATERIAL_SCALE[32];
       static CACHE_ALIGN int KS_MATERIAL_SCALE[32];

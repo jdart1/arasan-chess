@@ -81,79 +81,81 @@ static const int Direction[2] = {1,-1};
 // Note: Arasan 10.0 and earlier used A8=0, B8=1, etc. but now we
 // use the more conventional A1=0, B1=1, etc.
 //
-#define A1 0
-#define B1 1
-#define C1 2
-#define D1 3
-#define E1 4
-#define F1 5
-#define G1 6
-#define H1 7
-#define A2 8
-#define B2 9
-#define C2 10
-#define D2 11
-#define E2 12
-#define F2 13
-#define G2 14
-#define H2 15
-#define A3 16
-#define B3 17
-#define C3 18
-#define D3 19
-#define E3 20
-#define F3 21
-#define G3 22
-#define H3 23
-#define A4 24
-#define B4 25
-#define C4 26
-#define D4 27
-#define E4 28
-#define F4 29
-#define G4 30
-#define H4 31
-#define A5 32
-#define B5 33
-#define C5 34
-#define D5 35
-#define E5 36
-#define F5 37
-#define G5 38
-#define H5 39
-#define A6 40
-#define B6 41
-#define C6 42
-#define D6 43
-#define E6 44
-#define F6 45
-#define G6 46
-#define H6 47
-#define A7 48
-#define B7 49
-#define C7 50
-#define D7 51
-#define E7 52
-#define F7 53
-#define G7 54
-#define H7 55
-#define A8 56
-#define B8 57
-#define C8 58
-#define D8 59
-#define E8 60
-#define F8 61
-#define G8 62
-#define H8 63
+namespace chess {
+  static const Square A1=0;
+  static const Square B1=1;
+  static const Square C1=2;
+  static const Square D1=3;
+  static const Square E1=4;
+  static const Square F1=5;
+  static const Square G1=6;
+  static const Square H1=7;
+  static const Square A2=8;
+  static const Square B2=9;
+  static const Square C2=10;
+  static const Square D2=11;
+  static const Square E2=12;
+  static const Square F2=13;
+  static const Square G2=14;
+  static const Square H2=15;
+  static const Square A3=16;
+  static const Square B3=17;
+  static const Square C3=18;
+  static const Square D3=19;
+  static const Square E3=20;
+  static const Square F3=21;
+  static const Square G3=22;
+  static const Square H3=23;
+  static const Square A4=24;
+  static const Square B4=25;
+  static const Square C4=26;
+  static const Square D4=27;
+  static const Square E4=28;
+  static const Square F4=29;
+  static const Square G4=30;
+  static const Square H4=31;
+  static const Square A5=32;
+  static const Square B5=33;
+  static const Square C5=34;
+  static const Square D5=35;
+  static const Square E5=36;
+  static const Square F5=37;
+  static const Square G5=38;
+  static const Square H5=39;
+  static const Square A6=40;
+  static const Square B6=41;
+  static const Square C6=42;
+  static const Square D6=43;
+  static const Square E6=44;
+  static const Square F6=45;
+  static const Square G6=46;
+  static const Square H6=47;
+  static const Square A7=48;
+  static const Square B7=49;
+  static const Square C7=50;
+  static const Square D7=51;
+  static const Square E7=52;
+  static const Square F7=53;
+  static const Square G7=54;
+  static const Square H7=55;
+  static const Square A8=56;
+  static const Square B8=57;
+  static const Square C8=58;
+  static const Square D8=59;
+  static const Square E8=60;
+  static const Square F8=61;
+  static const Square G8=62;
+  static const Square H8=63;
 
-#define AFILE 1
-#define BFILE 2
-#define CFILE 3
-#define DFILE 4
-#define EFILE 5
-#define FFILE 6
-#define GFILE 7
-#define HFILE 8
+  static const int AFILE=1;
+  static const int BFILE=2;
+  static const int CFILE=3;
+  static const int DFILE=4;
+  static const int EFILE=5;
+  static const int FFILE=6;
+  static const int GFILE=7;
+  static const int HFILE=8;
+};
 
 enum Piece {
   EmptyPiece = 0,
