@@ -913,24 +913,24 @@ static void edit_board(istream &fin, Board &board)
     board.setSecondaryVars();
     // edit doesn't set the castle status, so try to deduce it
     // from the piece positions
-    if (board.kingSquare(White) == E1) {
-        if (board[A1] == WhiteRook &&
-            board[H1] == WhiteRook)
+    if (board.kingSquare(White) == chess::E1) {
+       if (board[chess::A1] == WhiteRook &&
+           board[chess::H1] == WhiteRook)
             board.setCastleStatus(CanCastleEitherSide,White);
-        else if (board[A1] == WhiteRook)
+       else if (board[chess::A1] == WhiteRook)
             board.setCastleStatus(CanCastleQSide,White);
-        else if (board[H1] == WhiteRook)
+       else if (board[chess::H1] == WhiteRook)
             board.setCastleStatus(CanCastleKSide,White);
     }
     else
         board.setCastleStatus(CantCastleEitherSide,White);
-    if (board.kingSquare(Black) == E8) {
-        if (board[A8] == BlackRook &&
-            board[H8] == BlackRook)
+    if (board.kingSquare(Black) == chess::E8) {
+       if (board[chess::A8] == BlackRook &&
+           board[chess::H8] == BlackRook)
             board.setCastleStatus(CanCastleEitherSide,Black);
-        else if (board[A8] == BlackRook)
+       else if (board[chess::A8] == BlackRook)
             board.setCastleStatus(CanCastleQSide,Black);
-        else if (board[H8] == BlackRook)
+       else if (board[chess::H8] == BlackRook)
             board.setCastleStatus(CanCastleKSide,Black);
     }
     else

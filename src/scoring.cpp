@@ -75,7 +75,7 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
 static const int KING_ATTACK_BOOST_THRESHOLD = 48;
 static const int KING_ATTACK_BOOST_DIVISOR = 50;
 
-const CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
+CACHE_ALIGN const int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
    108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
@@ -471,7 +471,7 @@ static void initBitboards() {
          }
       }
 
-      if (file < EFILE)
+      if (file < chess::EFILE)
          abcd_mask.set(i);
       else
          efgh_mask.set(i);
@@ -486,10 +486,10 @@ static void initBitboards() {
       for(int y = x + 1; y < 8; y++) right_side_mask[x] |= Attacks::file_mask[y];
    }
 
-   center.set(D4);
-   center.set(D5);
-   center.set(E4);
-   center.set(E5);
+   center.set(chess::D4);
+   center.set(chess::D5);
+   center.set(chess::E4);
+   center.set(chess::E5);
 
    int first_bit[256];
    int last_bit[256];
@@ -551,57 +551,57 @@ static void initBitboards() {
       }
    }
 
-   BISHOP_TRAP_PATTERN[White][0].bishopMask.set(A7);
-   BISHOP_TRAP_PATTERN[White][0].bishopMask.set(B8);
-   BISHOP_TRAP_PATTERN[White][0].pawnMask.set(B6);
-   BISHOP_TRAP_PATTERN[White][0].pawnMask.set(C7);
+   BISHOP_TRAP_PATTERN[White][0].bishopMask.set(chess::A7);
+   BISHOP_TRAP_PATTERN[White][0].bishopMask.set(chess::B8);
+   BISHOP_TRAP_PATTERN[White][0].pawnMask.set(chess::B6);
+   BISHOP_TRAP_PATTERN[White][0].pawnMask.set(chess::C7);
 
-   BISHOP_TRAP_PATTERN[White][1].bishopMask.set(H7);
-   BISHOP_TRAP_PATTERN[White][1].bishopMask.set(G8);
-   BISHOP_TRAP_PATTERN[White][1].pawnMask.set(G6);
-   BISHOP_TRAP_PATTERN[White][1].pawnMask.set(F7);
+   BISHOP_TRAP_PATTERN[White][1].bishopMask.set(chess::H7);
+   BISHOP_TRAP_PATTERN[White][1].bishopMask.set(chess::G8);
+   BISHOP_TRAP_PATTERN[White][1].pawnMask.set(chess::G6);
+   BISHOP_TRAP_PATTERN[White][1].pawnMask.set(chess::F7);
 
-   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(H6);
-   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(G7);
-   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(H8);
-   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(F8);
-   BISHOP_TRAP_PATTERN[White][2].pawnMask.set(G5);
-   BISHOP_TRAP_PATTERN[White][2].pawnMask.set(F6);
-   BISHOP_TRAP_PATTERN[White][2].pawnMask.set(E7);
+   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(chess::H6);
+   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(chess::G7);
+   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(chess::H8);
+   BISHOP_TRAP_PATTERN[White][2].bishopMask.set(chess::F8);
+   BISHOP_TRAP_PATTERN[White][2].pawnMask.set(chess::G5);
+   BISHOP_TRAP_PATTERN[White][2].pawnMask.set(chess::F6);
+   BISHOP_TRAP_PATTERN[White][2].pawnMask.set(chess::E7);
 
-   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(A6);
-   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(B7);
-   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(A8);
-   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(C8);
-   BISHOP_TRAP_PATTERN[White][3].pawnMask.set(B5);
-   BISHOP_TRAP_PATTERN[White][3].pawnMask.set(C6);
-   BISHOP_TRAP_PATTERN[White][3].pawnMask.set(D7);
+   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(chess::A6);
+   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(chess::B7);
+   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(chess::A8);
+   BISHOP_TRAP_PATTERN[White][3].bishopMask.set(chess::C8);
+   BISHOP_TRAP_PATTERN[White][3].pawnMask.set(chess::B5);
+   BISHOP_TRAP_PATTERN[White][3].pawnMask.set(chess::C6);
+   BISHOP_TRAP_PATTERN[White][3].pawnMask.set(chess::D7);
 
-   BISHOP_TRAP_PATTERN[Black][0].bishopMask.set(A2);
-   BISHOP_TRAP_PATTERN[Black][0].bishopMask.set(B1);
-   BISHOP_TRAP_PATTERN[Black][0].pawnMask.set(B3);
-   BISHOP_TRAP_PATTERN[Black][0].pawnMask.set(C2);
+   BISHOP_TRAP_PATTERN[Black][0].bishopMask.set(chess::A2);
+   BISHOP_TRAP_PATTERN[Black][0].bishopMask.set(chess::B1);
+   BISHOP_TRAP_PATTERN[Black][0].pawnMask.set(chess::B3);
+   BISHOP_TRAP_PATTERN[Black][0].pawnMask.set(chess::C2);
 
-   BISHOP_TRAP_PATTERN[Black][1].bishopMask.set(H2);
-   BISHOP_TRAP_PATTERN[Black][1].bishopMask.set(G1);
-   BISHOP_TRAP_PATTERN[Black][1].pawnMask.set(G3);
-   BISHOP_TRAP_PATTERN[Black][1].pawnMask.set(F2);
+   BISHOP_TRAP_PATTERN[Black][1].bishopMask.set(chess::H2);
+   BISHOP_TRAP_PATTERN[Black][1].bishopMask.set(chess::G1);
+   BISHOP_TRAP_PATTERN[Black][1].pawnMask.set(chess::G3);
+   BISHOP_TRAP_PATTERN[Black][1].pawnMask.set(chess::F2);
 
-   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(H3);
-   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(G2);
-   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(H1);
-   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(F1);
-   BISHOP_TRAP_PATTERN[Black][2].pawnMask.set(G4);
-   BISHOP_TRAP_PATTERN[Black][2].pawnMask.set(F3);
-   BISHOP_TRAP_PATTERN[Black][2].pawnMask.set(E2);
+   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(chess::H3);
+   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(chess::G2);
+   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(chess::H1);
+   BISHOP_TRAP_PATTERN[Black][2].bishopMask.set(chess::F1);
+   BISHOP_TRAP_PATTERN[Black][2].pawnMask.set(chess::G4);
+   BISHOP_TRAP_PATTERN[Black][2].pawnMask.set(chess::F3);
+   BISHOP_TRAP_PATTERN[Black][2].pawnMask.set(chess::E2);
 
-   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(A3);
-   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(B2);
-   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(A1);
-   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(C1);
-   BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(B4);
-   BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(C3);
-   BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(D2);
+   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(chess::A3);
+   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(chess::B2);
+   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(chess::A1);
+   BISHOP_TRAP_PATTERN[Black][3].bishopMask.set(chess::C1);
+   BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(chess::B4);
+   BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(chess::C3);
+   BISHOP_TRAP_PATTERN[Black][3].pawnMask.set(chess::D2);
 }
 
 void Scoring::init() {
@@ -942,12 +942,12 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
    // discourage shuttling the king between G1/H1 by
    // treating these the same
    if (side == White) {
-      if (kp == H1) kp = G1;
-      if (kp == A1) kp = B1;
+      if (kp == chess::H1) kp = chess::G1;
+      if (kp == chess::A1) kp = chess::B1;
    }
    else {
-      if (kp == H8) kp = G8;
-      if (kp == A8) kp = B8;
+      if (kp == chess::H8) kp = chess::G8;
+      if (kp == chess::A8) kp = chess::B8;
    }
 
    int cover = calcCover<side> (board, kp);
@@ -955,22 +955,22 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
    {
    case CanCastleEitherSide:
       {
-         int k_cover = calcCover<side> (board, side == White ? G1 : G8);
-         int q_cover = calcCover<side> (board, side == White ? B1 : B8);
+         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
+         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
          coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
          break;
       }
 
    case CanCastleKSide:
       {
-         int k_cover = calcCover<side> (board, side == White ? G1 : G8);
+         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
          break;
       }
 
    case CanCastleQSide:
       {
-         int q_cover = calcCover<side> (board, side == White ? B1 : B8);
+         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
          break;
       }
@@ -1946,20 +1946,20 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
    // interaction of pawns and pieces
    if (side == White) {
-      if (board[D2] == WhitePawn && board[D3] > WhitePawn && board[D3] < BlackPawn) {
+      if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
          scores.mid += CENTER_PAWN_BLOCK;
       }
 
-      if (board[E2] == WhitePawn && board[E3] > WhitePawn && board[E3] < BlackPawn) {
+      if (board[chess::E2] == WhitePawn && board[chess::E3] > WhitePawn && board[chess::E3] < BlackPawn) {
          scores.mid += CENTER_PAWN_BLOCK;
       }
    }
    else {
-      if (board[D7] == BlackPawn && board[D6] > BlackPawn) {
+      if (board[chess::D7] == BlackPawn && board[chess::D6] > BlackPawn) {
          scores.mid += CENTER_PAWN_BLOCK;
       }
 
-      if (board[E7] == BlackPawn && board[E6] > BlackPawn) {
+      if (board[chess::E7] == BlackPawn && board[chess::E6] > BlackPawn) {
          scores.mid += CENTER_PAWN_BLOCK;
       }
    }
@@ -2132,9 +2132,9 @@ void Scoring::scoreEndgame
              scores.end += 10;
          } else if (OnEdge(oppkp)) {
              // position King appropriately
-             if (kfile == AFILE) {
+             if (kfile == chess::AFILE) {
                  if (Attacks::king_attacks[ourkp].isSet(oppkp + 1)) scores.end += 10;
-             } else if (kfile == HFILE) {
+             } else if (kfile == chess::HFILE) {
                  if (Attacks::king_attacks[ourkp].isSet(oppkp - 1)) scores.end += 10;
              } else if (krank == 1) {
                  if (Attacks::king_attacks[ourkp].isSet(oppkp+8)) scores.end += 10;
@@ -2273,12 +2273,12 @@ static int KBPDraw(const Board &board) {
    Square qsq = InvalidSquare;
    int pfile;
    if ((board.pawn_bits[side] & Attacks::file_mask[0]) == board.pawn_bits[side]) {
-      qsq = MakeSquare(AFILE, 8, side);
-      pfile = AFILE;
+      qsq = MakeSquare(chess::AFILE, 8, side);
+      pfile = chess::AFILE;
    }
    else if ((board.pawn_bits[side] & Attacks::file_mask[7]) == board.pawn_bits[side]) {
-      qsq = MakeSquare(HFILE, 8, side);
-      pfile = HFILE;
+      qsq = MakeSquare(chess::HFILE, 8, side);
+      pfile = chess::HFILE;
    }
 
    if (qsq != InvalidSquare) {
@@ -2477,13 +2477,13 @@ void Scoring::calcEndgame(const Board &board,
    // Similar to how Crafty does it.
    k_pos = KingEndgameScores[kp];
    if (!TEST_MASK(abcd_mask, all_pawns)) {
-      if (File(kp) > DFILE)
+      if (File(kp) > chess::DFILE)
          k_pos += PAWN_SIDE_BONUS;
       else
          k_pos -= PAWN_SIDE_BONUS;
    }
    else if (!TEST_MASK(efgh_mask, all_pawns)) {
-      if (File(kp) <= DFILE)
+      if (File(kp) <= chess::DFILE)
          k_pos += PAWN_SIDE_BONUS;
       else
          k_pos -= PAWN_SIDE_BONUS;
@@ -2493,13 +2493,13 @@ void Scoring::calcEndgame(const Board &board,
    kp = board.kingSquare(Black);
    k_pos = KingEndgameScores[63 - kp];
    if (!TEST_MASK(abcd_mask, all_pawns)) {
-      if (File(kp) > DFILE)
+      if (File(kp) > chess::DFILE)
          k_pos += PAWN_SIDE_BONUS;
       else
          k_pos -= PAWN_SIDE_BONUS;
    }
    else if (!TEST_MASK(efgh_mask, all_pawns)) {
-      if (File(kp) <= DFILE)
+      if (File(kp) <= chess::DFILE)
          k_pos += PAWN_SIDE_BONUS;
       else
          k_pos -= PAWN_SIDE_BONUS;

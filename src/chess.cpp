@@ -96,14 +96,14 @@ const int Rank7[64] =
 
 const int Flip[64] =
 {
-        A8, B8, C8, D8, E8, F8, G8, H8,
-        A7, B7, C7, D7, E7, F7, G7, H7,
-        A6, B6, C6, D6, E6, F6, G6, H6,
-        A5, B5, C5, D5, E5, F5, G5, H5,
-        A4, B4, C4, D4, E4, F4, G4, H4,
-        A3, B3, C3, D3, E3, F3, G3, H3,
-        A2, B2, C2, D2, E2, F2, G2, H2,
-        A1, B1, C1, D1, E1, F1, G1, H1
+   chess::A8, chess::B8, chess::C8, chess::D8, chess::E8, chess::F8, chess::G8, chess::H8,
+   chess::A7, chess::B7, chess::C7, chess::D7, chess::E7, chess::F7, chess::G7, chess::H7,
+   chess::A6, chess::B6, chess::C6, chess::D6, chess::E6, chess::F6, chess::G6, chess::H6,
+   chess::A5, chess::B5, chess::C5, chess::D5, chess::E5, chess::F5, chess::G5, chess::H5,
+   chess::A4, chess::B4, chess::C4, chess::D4, chess::E4, chess::F4, chess::G4, chess::H4,
+   chess::A3, chess::B3, chess::C3, chess::D3, chess::E3, chess::F3, chess::G3, chess::H3,
+   chess::A2, chess::B2, chess::C2, chess::D2, chess::E2, chess::F2, chess::G2, chess::H2,
+   chess::A1, chess::B1, chess::C1, chess::D1, chess::E1, chess::F1, chess::G1, chess::H1
 };
 
 const char *ColorImage( ColorType side )
@@ -169,7 +169,7 @@ char *SquareImage(Square sq) {
     return chars;
 }
 
-const int PAWN_VALUE = 100;
+const int PAWN_VALUE = 1000;
 const int BISHOP_VALUE = (int)(3.25*PAWN_VALUE);
 const int KNIGHT_VALUE = (int)(3.25*PAWN_VALUE);
 const int ROOK_VALUE = 5*PAWN_VALUE;
@@ -280,8 +280,7 @@ Move CreateMove(const Board &board, Square start, Square dest, PieceType promoti
    }
    MoveType type = get_move_type(board,start,dest);
    PieceType piece_moved = TypeOfPiece(board[start]);
-   // Hash moves get validity checked later
-   //   ASSERT(piece_moved != Empty);
+   ASSERT(piece_moved != Empty);
    PieceType capture;
    if (type == EnPassant)
      capture = Pawn;
