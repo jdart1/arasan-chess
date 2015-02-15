@@ -453,7 +453,7 @@ static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> pro
    for (vector<double>::const_iterator it = x0.begin();
         it != x0.end();
         it++,i++) {
-      cout << " " << unscale(*it,i) << endl;
+      cout << " " << Scoring::params[i].name << ": " << round(unscale(*it,i)) << endl;
    }
    cout << endl;
    

@@ -23,7 +23,14 @@ class Scoring
       SCALING_SIGMOID_MID,
       SCALING_SIGMOID_EXP,
       MIDGAME_THRESHOLD,
-      ENDGAME_THRESHOLD
+      ENDGAME_THRESHOLD,
+      CENTER_PAWN_BLOCK,
+      KING_COVER0,
+      KING_COVER1,
+      KING_COVER2,
+      KING_COVER3,
+      KING_COVER4,
+      KING_FILE_OPEN
     };
 
     static void init();

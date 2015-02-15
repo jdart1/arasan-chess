@@ -21,7 +21,14 @@ Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
    Scoring::TuneParam("sigmoid_mid",16,0,32),
    Scoring::TuneParam("sigmoid_exp",500,50,1000),
    Scoring::TuneParam("midgame_threshold",10,0,30),
-   Scoring::TuneParam("endgame_threshold",10,0,30)
+   Scoring::TuneParam("endgame_threshold",10,0,30),
+   Scoring::TuneParam("center_pawn_block",-12,-30,0),
+   Scoring::TuneParam("king_cover0",22,10,32),
+   Scoring::TuneParam("king_cover1",31,10,45),
+   Scoring::TuneParam("king_cover2",12,5,20),
+   Scoring::TuneParam("king_cover3",3,0,10),
+   Scoring::TuneParam("king_cover4",2,0,10),
+   Scoring::TuneParam("king_file_open",-15,-30,0)
 };
 
 #define PARAM(x) params[x].current
@@ -30,11 +37,10 @@ static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-static const int CENTER_PAWN_BLOCK = -12;
-
 // king cover scores, by rank of Pawn - rank of King
-static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
-static const int KING_FILE_OPEN = -15;
+//static const int KING_COVER[5] = { 22, 31, 12, 3, 2 };
+static int KING_COVER[5];
+//static const int KING_FILE_OPEN = -15;
 
 static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 6, 36, 36, 36, 36, 36 };
 static const int PIN_MULTIPLIER[2] = { 20, 30 };
@@ -373,6 +379,10 @@ void Scoring::initParams()
          mid_thresh_set++;
       }
    }
+   for (int i = 0; i < 5; i++) {
+      KING_COVER[i] = Scoring::params[KING_COVER0+i].current;
+   }
+   
 }
 
 static void initBitboards() {
@@ -885,7 +895,7 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
       pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
       if (!pawns) {
-         if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+         if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
       }
       else {
          pawn = pawns.firstOne();
@@ -900,7 +910,7 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
       pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
       if (!pawns) {
-         if (FileOpen(board, file)) cover += KING_FILE_OPEN;
+         if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
       }
       else {
          pawn = pawns.lastOne();
@@ -1973,20 +1983,20 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    // interaction of pawns and pieces
    if (side == White) {
       if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
-         scores.mid += CENTER_PAWN_BLOCK;
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
 
       if (board[chess::E2] == WhitePawn && board[chess::E3] > WhitePawn && board[chess::E3] < BlackPawn) {
-         scores.mid += CENTER_PAWN_BLOCK;
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
    }
    else {
       if (board[chess::D7] == BlackPawn && board[chess::D6] > BlackPawn) {
-         scores.mid += CENTER_PAWN_BLOCK;
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
 
       if (board[chess::E7] == BlackPawn && board[chess::E6] > BlackPawn) {
-         scores.mid += CENTER_PAWN_BLOCK;
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
    }
 

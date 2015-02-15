@@ -27,6 +27,11 @@ INSTALL = /usr/local/bin
 GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
+#
+LIBCMAES_INCLUDE=/usr/local/include/libcmaes
+LIBCMAES_PATH=/usr/local/lib
+EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
+EIGEN3_UNSUPPORTED=/home/jdart/eigen-eigen-10219c95fe65/unsupported/Eigen
 
 #define the appropriate macro for the type(s) of tablebase supported
 GAVIOTA_TBS = 1
@@ -39,7 +44,7 @@ ifdef NALIMOV_TBS
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
 
-CFLAGS := $(CFLAGS) -I$(NOMAD_HOME)/src
+CFLAGS := $(CFLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED)
 
 # Build the GTB sources into a separate object dir.
 GTB_BUILD	= ../build/gtb
@@ -84,8 +89,6 @@ else
 LBITS := $(shell getconf LONG_BIT)
 LIBS = -lc -lm
 endif
-
-LIBS := $(LIBS) $(NOMAD_HOME)/lib/nomad.a
 
 ifeq ($(LBITS),64)
    CFLAGS := $(CFLAGS) -D_64BIT
@@ -138,6 +141,7 @@ ifeq "$(GCCNEW)" "1"
 #OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
 #GTB_OPT := -Ofast -finline-functions $(SSE)
 CFLAGS := $(CFLAGS) -O2 -ansi
+CFLAGS := $(CFLAGS) -std=c++11
 else
 ifeq "$(GCCOLD)" "0"
 # pre-4.6 gcc options:
@@ -160,6 +164,9 @@ LDFLAGS := $(LDFLAGS)
 else
 LIBS := $(LIBS) -lrt
 endif
+
+LDFLAGS := $(LDFLAGS) -L$(LIBCMAES_PATH)
+LIBS := $(LIBS) -lcmaes
 
 all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tune $(EXPORT)/tunefile
 
