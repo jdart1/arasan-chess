@@ -440,7 +440,7 @@ static FitFunc evaluator = [](const double *x, const int dim)
    
 };
 
-static ProgressFunc<CMAParameters<>,CMASolutions> progress = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols)
+static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> progress = [](const CMAParameters<GenoPheno<pwqBoundStrategy>> &cmaparams, const CMASolutions &cmasols)
 {
    
    std::cout << cmasols.niter() << " iterations, " << 
@@ -597,14 +597,20 @@ int CDECL main(int argc, char **argv)
         
 #ifdef CMAES
         int dim = Scoring::NUM_PARAMS;
-        // initialize & normalize
         vector<double> x0;
         double sigma = 0.05;
+        // use variant with box bounds
+        double lbounds[Scoring::NUM_PARAMS],
+           ubounds[Scoring::NUM_PARAMS];
         for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
+           // initialize & normalize
            x0.push_back(scale(double(Scoring::params[i].current),i));
+           lbounds[i] = (double)Scoring::params[i].min_value;
+           ubounds[i] = (double)Scoring::params[i].max_value;
         }
-        CMAParameters<> cmaparams(x0,sigma);
-        CMASolutions cmasols = cmaes<>(evaluator,cmaparams,progress);
+        GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
+        CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
+        CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
 #else
         
         
