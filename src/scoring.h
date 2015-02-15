@@ -17,7 +17,7 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
-    static const int NUM_PARAMS = 4;
+    static const int NUM_PARAMS = 11;
 
     enum {
       SCALING_SIGMOID_MID,
