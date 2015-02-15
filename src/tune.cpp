@@ -388,6 +388,7 @@ static void initThreads()
 static double computeLsqError() {
    
    for (int i = 0; i < cores; i++) {
+      threadDatas[i].searcher->clearHashTables();
       threadDatas[i].penalty = 0.0;
       // signal searchers to start
       sem_post(&threadDatas[i].sem);
