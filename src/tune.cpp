@@ -544,7 +544,9 @@ int CDECL main(int argc, char **argv)
 //    }
     options.book.book_enabled = options.log_enabled = 0;
     options.learning.position_learning = false;
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     options.search.use_tablebases = false;
+#endif
     options.search.easy_plies = 0;
 
     if (argc < 2) {

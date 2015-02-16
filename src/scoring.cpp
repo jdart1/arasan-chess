@@ -30,7 +30,11 @@ Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
    Scoring::TuneParam("king_cover4",20,0,100),
    Scoring::TuneParam("king_file_open",-150,-300,0),
    Scoring::TuneParam("king_distance_basis",320,160,480),
-   Scoring::TuneParam("king_distance_mult",80,40,120)
+   Scoring::TuneParam("king_distance_mult",80,40,120),
+   Scoring::TuneParam("pp_block_mid_base",140,0,280),
+   Scoring::TuneParam("pp_block_mid_mult",90,20,180),
+   Scoring::TuneParam("pp_block_end_base",140,0,280),
+   Scoring::TuneParam("pp_block_end_mult",40,10,80)
 };
 
 #define PARAM(x) params[x].current
@@ -2028,8 +2032,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
       if (blocker != InvalidSquare) {
          // Tuned, Jan. 2015
-         int mid_penalty = 14 + 9*PASSED_PAWN[Midgame][rank]/32;
-         int end_penalty = 14 + 4*PASSED_PAWN[Endgame][rank]/32;
+         int mid_penalty = PARAM(PP_BLOCK_MID_BASE) + PARAM(PP_BLOCK_MID_MULT)*PASSED_PAWN[Midgame][rank]/32;
+         int end_penalty = PARAM(PP_BLOCK_END_BASE) + PARAM(PP_BLOCK_END_MULT)*PASSED_PAWN[Endgame][rank]/32;
          if (blocker != sq2) {
             mid_penalty /= (Rank(blocker,side)-rank);
          }
