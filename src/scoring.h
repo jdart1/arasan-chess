@@ -17,7 +17,7 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
-    static const int NUM_PARAMS = 11;
+    static const int NUM_PARAMS = 13;
 
     enum {
       SCALING_SIGMOID_MID,
@@ -30,7 +30,9 @@ class Scoring
       KING_COVER2,
       KING_COVER3,
       KING_COVER4,
-      KING_FILE_OPEN
+      KING_FILE_OPEN,
+      KING_DISTANCE_BASIS,
+      KING_DISTANCE_MULT
     };
 
     static void init();
@@ -138,10 +140,10 @@ class Scoring
     struct CACHE_ALIGN EndgameHashEntry {
         // defines one entry in the king/pawn hash table. 128 bytes.
         hash_t hc;                                    // hashcode
-        signed char white_king_position, black_king_position;
-        signed char white_endgame_pawn_proximity;
-        signed char black_endgame_pawn_proximity;
-        byte w_uncatchable, b_uncatchable;
+        int16 white_king_position, black_king_position;
+        int16 white_endgame_pawn_proximity;
+        int16 black_endgame_pawn_proximity;
+        uint16 w_uncatchable, b_uncatchable;
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
 
@@ -230,6 +232,8 @@ class Scoring
     void scoreEndgame(const Board &, EndgameHashEntry *endgameEntry,
 		     const PawnHashEntry::PawnData &pawnData, ColorType side,
 		     Scores &);
+
+    int kingDistanceScore(const Board &) const;
 
     template <ColorType side>
     int outpost(const Board &board, Square sq, Square scoreSq, 

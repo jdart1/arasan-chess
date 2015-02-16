@@ -40,8 +40,10 @@ static string output_name;
 
 static unsigned minFrequency = 0;
 
-class HashEntryBase
-BEGIN_PACKED_STRUCT
+class HashEntryBase 
+{
+   
+
    public:
     HashEntryBase( 
              const string &result,
@@ -54,7 +56,7 @@ BEGIN_PACKED_STRUCT
     int winloss;
     int score;
     Move move;
-END_PACKED_STRUCT
+};
 
 
 class HashEntryHead : public HashEntryBase 

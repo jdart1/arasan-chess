@@ -188,14 +188,14 @@ static inline CastleType UpdateCastleStatusW( CastleType cs, Square sq )
 // for 'side'
 {
    ASSERT(cs<3);
-   if (sq == A1) // Queen Rook moved or captured
+   if (sq == chess::A1) // Queen Rook moved or captured
    {
       if (cs == CanCastleEitherSide)
          return CanCastleKSide;
       else if (cs == CanCastleQSide)
          return CantCastleEitherSide;
    }
-   else if (sq == H1) // King Rook moved or captured
+   else if (sq == chess::H1) // King Rook moved or captured
    {
       if (cs == CanCastleEitherSide)
          return CanCastleQSide;
@@ -210,14 +210,14 @@ static inline CastleType UpdateCastleStatusB(CastleType cs, Square sq)
 // for 'side'
 {
    ASSERT(cs<3);
-   if (sq == A8) // Queen Rook moved or captured
+   if (sq == chess::A8) // Queen Rook moved or captured
    {
       if (cs == CanCastleEitherSide)
          return CanCastleKSide;
       else if (cs == CanCastleQSide)
          return CantCastleEitherSide;
    }
-   else if (sq==H8) // King Rook moved or captured
+   else if (sq==chess::H8) // King Rook moved or captured
    {
       if (cs == CanCastleEitherSide)
          return CanCastleQSide;
@@ -1331,7 +1331,6 @@ int Board::anyAttacks(Square sq, ColorType side, Bitboard &source) const
 
 Bitboard Board::calcAttacks(Square sq, ColorType side) const
 {
-   ASSERT(sq != InvalidSquare);
    Bitboard retval;
 
    retval |= (Attacks::pawn_attacks[sq][side] & pawn_bits[side]);

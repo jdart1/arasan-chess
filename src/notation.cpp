@@ -355,15 +355,15 @@ Move Notation::parseCastling( const Board &b,
    transform(castle.begin(), castle.end(), castle.begin(), ::toupper);
    if (castle == "O-O") {
       if (color == White)
-         return CreateMove(E1,G1,King,Empty,Empty,KCastle);
+         return CreateMove(chess::E1,chess::G1,King,Empty,Empty,KCastle);
       else
-         return CreateMove(E8,G8,King,Empty,Empty,KCastle);
+         return CreateMove(chess::E8,chess::G8,King,Empty,Empty,KCastle);
    }
    else if (castle == "O-O-O") {
       if (color == White)
-         return CreateMove(E1,C1,King,Empty,Empty,QCastle);
+         return CreateMove(chess::E1,chess::C1,King,Empty,Empty,QCastle);
       else
-         return CreateMove(E8,C8,King,Empty,Empty,QCastle);
+         return CreateMove(chess::E8,chess::C8,King,Empty,Empty,QCastle);
    } else {
       return NullMove;
    }
