@@ -3417,6 +3417,8 @@ int CDECL main(int argc, char **argv) {
     }
     atexit(cleanupGlobals);
 
+    Scoring::initParams();
+
     static const string fens[25] = {
        "8/1p4kP/4bp2/p7/4P3/P1P2P2/1KP5/8 w - - 0 36",
        "1b5r/p4kp1/P7/1pBrp2b/4Np1P/2Pp4/1P1N2RP/6RK b - - 0 37",
@@ -3553,7 +3555,6 @@ int CDECL main(int argc, char **argv) {
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
     searcher = new SearchController();
-    Scoring::initParams();
 
 #ifdef SELFPLAY 
     if (selfplay) {
