@@ -372,6 +372,7 @@ static inline int FileOpen(const Board &board, int file) {
 
 void Scoring::initParams() 
 {
+/*
    ENDGAME_MATERIAL_THRESHOLD=32;
    MIDGAME_MATERIAL_THRESHOLD=0;
    int mid_thresh_set = 0;
@@ -385,6 +386,7 @@ void Scoring::initParams()
          mid_thresh_set++;
       }
    }
+   */
    for (int i = 0; i < 5; i++) {
       KING_COVER[i] = Scoring::params[(int)KING_COVER0+i].current;
    }
@@ -781,7 +783,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     if (mdiff >= 3*PAWN_VALUE) {
        // Encourage trading pieces when we are ahead in material.
        if (oppmat.materialLevel() < 16) {
-          score += mdiff*10*(16-oppmat.materialLevel())/96;
+          score += mdiff*(16-oppmat.materialLevel())/96;
        }
        // Discourage trading pawns when our own material is low (because
        // harder to win).
@@ -1795,14 +1797,11 @@ int Scoring::calcPawnData(const Board &board,
 #endif   
    }
    
-   Bitboard centerCalc(center & board.pawn_bits[side]);
+   Bitboard centerCalc(center & (board.pawn_bits[side] | board.allPawnAttacks(side)));
 #ifdef PAWN_DEBUG
    int tmp = entr.midgame_score;
 #endif
    entr.midgame_score += PAWN_CENTER_SCORE * centerCalc.bitCount();
-
-   Bitboard centerCalc2(center & board.allPawnAttacks(side) &~centerCalc);
-   entr.midgame_score += PAWN_CENTER_SCORE * centerCalc2.bitCount();
 #ifdef PAWN_DEBUG
    cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << endl;
 #endif
