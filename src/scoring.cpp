@@ -14,8 +14,8 @@ extern "C"
 };
 #include <iomanip>
 
-#define PAWN_DEBUG
-#define EVAL_DEBUG
+//#define PAWN_DEBUG
+//#define EVAL_DEBUG
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
    Scoring::TuneParam("sigmoid_mid",16,0,32),
@@ -372,7 +372,6 @@ static inline int FileOpen(const Board &board, int file) {
 
 void Scoring::initParams() 
 {
-/*
    ENDGAME_MATERIAL_THRESHOLD=32;
    MIDGAME_MATERIAL_THRESHOLD=0;
    int mid_thresh_set = 0;
@@ -386,7 +385,6 @@ void Scoring::initParams()
          mid_thresh_set++;
       }
    }
-   */
    for (int i = 0; i < 5; i++) {
       KING_COVER[i] = Scoring::params[(int)KING_COVER0+i].current;
    }

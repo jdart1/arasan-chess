@@ -107,10 +107,10 @@ static const int PRUNE = -Constants::MATE;
 static FORCEINLINE int calcGain(const Board &board, Move move) {
     int gain = Gain(move);
     if (Capture(move) == Pawn && Rank(DestSquare(move),board.oppositeSide()) == 7) {
-        gain += 50;
+       gain += PAWN_VALUE/2;
     }
     if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) == 7) {             
-        gain += 50;
+       gain += PAWN_VALUE/2;
     }
     return gain;
 }

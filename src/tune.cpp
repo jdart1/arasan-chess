@@ -313,7 +313,7 @@ static double computeErrorTexel(SearchController *searcher,const string &pos,uin
       value = search(searcher,b,-5*PAWN_VALUE,5*PAWN_VALUE,SEARCH_DEPTH);
    }
    if (b.sideToMove() == Black) value = -value;
-   double predict = texelSigmoid(value);
+   double predict = texelSigmoid(value/10.0);
 
 //   cout << " value=" << value << " predict=" << predict << " result=" << result << " err = " <<  ((double)result - predict)*((double)result - predict) << endl;
         
@@ -331,7 +331,7 @@ static double computeError(SearchController *searcher, int index, size_t offset,
    string buf;
    double penalty = 0.0;
    uint64 done = 0;
-   uint64 lines = 0;
+   uint64 lines = (uint64)offset;
    for (vector<string>::const_iterator it = positions->begin()+offset;
         it != positions->end() && done < size;
         it++, done++, lines++) {
@@ -443,8 +443,6 @@ static FitFunc evaluator = [](const double *x, const int dim)
 static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> progress = [](const CMAParameters<GenoPheno<pwqBoundStrategy>> &cmaparams, const CMASolutions &cmasols)
 {
    
-   std::cout << cmasols.niter() << " iterations, " << 
-   cmasols.fevals() << " function evals, elapsed time: " << cmasols.elapsed_last_iter() << " sigma=" << cmasols.sigma() << endl;
    std::cout << "best solution: " << cmasols << std::endl;
    vector <double> x0 = cmasols.best_candidate().get_x();
    cout << "denormalized solution: " << endl;
@@ -607,8 +605,8 @@ int CDECL main(int argc, char **argv)
         for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
            // initialize & normalize
            x0.push_back(scale(double(Scoring::params[i].current),i));
-           lbounds[i] = (double)Scoring::params[i].min_value;
-           ubounds[i] = (double)Scoring::params[i].max_value;
+           lbounds[i] = scale((double)Scoring::params[i].min_value,i);
+           ubounds[i] = scale((double)Scoring::params[i].max_value,i);
         }
         GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
         CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
