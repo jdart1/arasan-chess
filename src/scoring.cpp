@@ -32,9 +32,9 @@ Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
    Scoring::TuneParam("king_distance_basis",320,160,480),
    Scoring::TuneParam("king_distance_mult",80,40,120),
    Scoring::TuneParam("pp_block_mid_base",140,0,280),
-   Scoring::TuneParam("pp_block_mid_mult",90,20,180),
+   Scoring::TuneParam("pp_block_mid_mult",72,0,180),
    Scoring::TuneParam("pp_block_end_base",140,0,280),
-   Scoring::TuneParam("pp_block_end_mult",40,10,80)
+   Scoring::TuneParam("pp_block_end_mult",32,0,80)
 };
 
 #define PARAM(x) params[x].current
@@ -55,9 +55,9 @@ static const int KING_ATTACK_PARAM1 = 500;
 static const int KING_ATTACK_PARAM2 = 320;
 static const int KING_ATTACK_PARAM3 = 1500;
 static const int ATTACK_FACTOR[6] = { 0, 4, 8, 8, 12, 12 };
-static const int ROOK_ATTACK_BOOST = 50;
-static const int QUEEN_ATTACK_BOOST1 = 40;
-static const int QUEEN_ATTACK_BOOST2 = 40;
+static const int ROOK_ATTACK_BOOST = 5;
+static const int QUEEN_ATTACK_BOOST1 = 4;
+static const int QUEEN_ATTACK_BOOST2 = 4;
 static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
    16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -386,7 +386,7 @@ void Scoring::initParams()
       }
    }
    for (int i = 0; i < 5; i++) {
-      KING_COVER[i] = Scoring::params[KING_COVER0+i].current;
+      KING_COVER[i] = Scoring::params[(int)KING_COVER0+i].current;
    }
    
 }
@@ -2032,8 +2032,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
       if (blocker != InvalidSquare) {
          // Tuned, Jan. 2015
-         int mid_penalty = PARAM(PP_BLOCK_MID_BASE) + PARAM(PP_BLOCK_MID_MULT)*PASSED_PAWN[Midgame][rank]/32;
-         int end_penalty = PARAM(PP_BLOCK_END_BASE) + PARAM(PP_BLOCK_END_MULT)*PASSED_PAWN[Endgame][rank]/32;
+         int mid_penalty = PARAM(PP_BLOCK_MID_BASE) + PARAM(PP_BLOCK_MID_MULT)*PASSED_PAWN[Midgame][rank]/256;
+         int end_penalty = PARAM(PP_BLOCK_END_BASE) + PARAM(PP_BLOCK_END_MULT)*PASSED_PAWN[Endgame][rank]/256;
          if (blocker != sq2) {
             mid_penalty /= (Rank(blocker,side)-rank);
          }
