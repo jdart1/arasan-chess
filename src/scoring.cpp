@@ -228,6 +228,12 @@ static const int POTENTIAL_PASSER[2][8] = {
    { 0, 0, 3, 6, 10, 15, 30, 0 }
 };
 
+// Blocked passed pawns (tuned Jan. 2015)
+static const int PP_BLOCK_MID_BASE = 14;
+static const int PP_BLOCK_MID_MULT = 9;
+static const int PP_BLOCK_END_BASE = 14;
+static const int PP_BLOCK_END_MULT = 4;
+
 static const int KING_NEAR_PASSER = 20;
 static const int OPP_KING_NEAR_PASSER = -28;
 
@@ -1988,8 +1994,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
       if (blocker != InvalidSquare) {
          // Tuned, Jan. 2015
-         int mid_penalty = 14 + 9*PASSED_PAWN[Midgame][rank]/32;
-         int end_penalty = 14 + 4*PASSED_PAWN[Endgame][rank]/32;
+         int mid_penalty = PP_BLOCK_MID_BASE + PP_BLOCK_MID_MULT*PASSED_PAWN[Midgame][rank]/32;
+         int end_penalty = PP_BLOCK_END_BASE + PP_BLOCK_END_MULT*PASSED_PAWN[Endgame][rank]/32;
          if (blocker != sq2) {
             mid_penalty /= (Rank(blocker,side)-rank);
          }
