@@ -285,6 +285,8 @@ static const int PAWN_SIDE_BONUS = 28;
 static const int BITBASE_WIN = 500;
 static const int SUPPORTED_PASSER6 = 38;
 static const int SUPPORTED_PASSER7 = 76;
+static const int KING_DISTANCE_BASIS = 32;
+static const int KING_DISTANCE_MULT = 8;
 
 static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
@@ -2065,6 +2067,12 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #endif
 }
 
+int Scoring::kingDistanceScore(const Board &board) const
+{
+   return KING_DISTANCE_BASIS - KING_DISTANCE_MULT*distance1(board.kingSquare(White), board.kingSquare(Black));
+}
+
+
 void Scoring::scoreEndgame
             (
                const Board &board,
@@ -2150,12 +2158,24 @@ void Scoring::scoreEndgame
 
    int k_pos = 0;
    if (side == White) {
+#ifdef EVAL_DEBUG
+      cout << "cached endgame scores (" << ColorImage(side) << "):" << endl;
+      cout << " score: " << (int)endgameEntry->wScore << endl;
+      cout << " king/pawn proximity: " << (int)endgameEntry->white_endgame_pawn_proximity << endl;
+      cout << " king position: " << (int)endgameEntry->white_king_position << endl;
+#endif
       scores.end += endgameEntry->wScore;
       k_pos = 
          (int) endgameEntry->white_endgame_pawn_proximity +
          (int) endgameEntry->white_king_position;
    }
    else {
+#ifdef EVAL_DEBUG
+      cout << "cached endgame scores (" << ColorImage(side) << "):" << endl;
+      cout << " score: " << (int)endgameEntry->bScore << endl;
+      cout << " king/pawn proximity: " << (int)endgameEntry->black_endgame_pawn_proximity << endl;
+      cout << " king position: " << (int)endgameEntry->black_king_position << endl;
+#endif
       scores.end += endgameEntry->bScore;
       k_pos =
          (int) endgameEntry->black_endgame_pawn_proximity +
@@ -2167,30 +2187,53 @@ void Scoring::scoreEndgame
    Bitboard passers2(pawnData.passers);
    Square passer;
    while(passers2.iterate(passer)) {
-
+#ifdef EVAL_DEBUG
+      int tmp = k_pos;
+#endif
       // Encourage escorting a passer with the King, ideally with King in
       // front
       Square ahead = (side == White ? passer + 8 : passer - 8);
       k_pos += (8-distance1(ahead,board.kingSquare(side)))*KING_NEAR_PASSER/16 +
          (8-distance1(ahead,board.kingSquare(oside)))*OPP_KING_NEAR_PASSER/16;
+#ifdef EVAL_DEBUG
+      if (tmp - k_pos) {
+         cout << "king escorting passer (" << ColorImage(side) << "): " <<
+            k_pos-tmp << endl;
+      }
+#endif
    }
 
    // King position is even more important with reduced
    // material. Apply scaling here.
    const int opp_pieces = board.getMaterial(oside).pieceCount();
    if (opp_pieces < 2) {
+#ifdef EVAL_DEBUG
+      int tmp = k_pos;
+#endif
       k_pos = (150-10*opp_pieces)*k_pos/128;
+#ifdef EVAL_DEBUG
+      if (tmp - k_pos) {
+         cout << "king pos after reduced material bonus (" << ColorImage(side) << "): " << k_pos-tmp << endl;
+      }
+#endif
    }
    scores.end += k_pos;
    
    if (uncatchables) {
       if ((ourMaterial.infobits() == Material::KP) && oppMaterial.kingOnly()) {
+#ifdef EVAL_DEBUG
+         cout << "uncatchable pawn bonus (" << ColorImage(side) << "): " <<
+            BITBASE_WIN << endl;
+#endif
          scores.end += BITBASE_WIN;
       }
    }
 
    Bitboard rooks(board.rook_bits[side]);
    Square rooksq;
+#ifdef EVAL_DEBUG
+   int tmp = scores.end;
+#endif
    while(rooks.iterate(rooksq)) {
       if (TEST_MASK(board.pawn_bits[side], Attacks::rank_mask[Rank(rooksq, White) - 1])) {
          Bitboard atcks(board.rankAttacks(rooksq) & board.pawn_bits[side]);
@@ -2203,6 +2246,12 @@ void Scoring::scoreEndgame
          }
       }
    }
+#ifdef EVAL_DEBUG
+   if (scores.end - tmp) {
+         cout << "side-protected pawns (" << ColorImage(side) << "): " <<
+            scores.end-tmp << endl;
+   }
+#endif
 }
 
 Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board) {

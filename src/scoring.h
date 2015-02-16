@@ -200,6 +200,8 @@ class Scoring
 		     const PawnHashEntry::PawnData &pawnData, ColorType side,
 		     Scores &);
 
+    int kingDistanceScore(const Board &board) const;
+
     template <ColorType side>
     int outpost(const Board &board, Square sq, Square scoreSq, 
                 const int scores[64],
