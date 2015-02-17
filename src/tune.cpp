@@ -375,6 +375,7 @@ static void * CDECL threadp(void *x)
    while (!terminated) {
       // wait until signalled
       sem_wait(&td->sem);
+      td->searcher->clearHashTables();
       td->penalty = computeError(td->searcher,td->index,td->offset,td->size);
       // tell parent we are done
       sem_post(&td->done);
@@ -406,8 +407,6 @@ static void initThreads()
 static double computeLsqError() {
    
    for (int i = 0; i < cores; i++) {
-      threadDatas[i].searcher->clearHashTables();
-      threadDatas[i].penalty = 0.0;
       // signal searchers to start
       sem_post(&threadDatas[i].sem);
    }
