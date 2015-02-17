@@ -18,23 +18,36 @@ extern "C"
 //#define EVAL_DEBUG
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam("sigmoid_mid",16,0,32),
-   Scoring::TuneParam("sigmoid_exp",500,50,1000),
-   Scoring::TuneParam("midgame_threshold",10,0,30),
-   Scoring::TuneParam("endgame_threshold",10,0,30),
-   Scoring::TuneParam("center_pawn_block",-120,-300,0),
-   Scoring::TuneParam("king_cover0",220,100,320),
-   Scoring::TuneParam("king_cover1",310,100,450),
-   Scoring::TuneParam("king_cover2",120,50,200),
-   Scoring::TuneParam("king_cover3",30,0,100),
-   Scoring::TuneParam("king_cover4",20,0,100),
-   Scoring::TuneParam("king_file_open",-150,-300,0),
-   Scoring::TuneParam("king_distance_basis",320,160,480),
-   Scoring::TuneParam("king_distance_mult",80,40,120),
-   Scoring::TuneParam("pp_block_mid_base",140,0,280),
-   Scoring::TuneParam("pp_block_mid_mult",72,0,180),
-   Scoring::TuneParam("pp_block_end_base",140,0,280),
-   Scoring::TuneParam("pp_block_end_mult",32,0,80)
+   Scoring::TuneParam("sigmoid_mid",14,0,32),
+   Scoring::TuneParam("sigmoid_exp",402,50,1000),
+//   Scoring::TuneParam("midgame_threshold",1,0,30),
+//   Scoring::TuneParam("endgame_threshold",9,0,30),
+   Scoring::TuneParam("center_pawn_block",-135,-300,0),
+   Scoring::TuneParam("king_cover0",255,100,320),
+   Scoring::TuneParam("king_cover1",236,100,450),
+   Scoring::TuneParam("king_cover2",109,50,200),
+   Scoring::TuneParam("king_cover3",20,0,100),
+   Scoring::TuneParam("king_cover4",32,0,100),
+   Scoring::TuneParam("king_file_open",-79,-300,0),
+   Scoring::TuneParam("king_distance_basis",356,160,480),
+   Scoring::TuneParam("king_distance_mult",92,40,120),
+   Scoring::TuneParam("king_off_back_rank2",9,0,120),
+   Scoring::TuneParam("king_off_back_rank3",95,0,250),
+   Scoring::TuneParam("king_off_back_rank4plus",206,0,1000),
+   Scoring::TuneParam("pin_multiplier_mid",391,100,500),
+   Scoring::TuneParam("pin_multiplier_end",283,100,500),
+   Scoring::TuneParam("king_attack_param1",699,0,1000),
+   Scoring::TuneParam("king_attack_param2",328,0,640),
+   Scoring::TuneParam("king_attack_param3",1829,0,3000),
+   Scoring::TuneParam("king_attack_scale_linear",94,0,100),
+   Scoring::TuneParam("king_attack_scale_sigmoid_mid",180,50,350),
+   Scoring::TuneParam("king_attack_scale_sigmoid_exp",525,50,1000),
+   Scoring::TuneParam("king_attack_boost_threshold",341,100,960),
+   Scoring::TuneParam("king_attack_boost_divisor",211,100,1000),
+   Scoring::TuneParam("pp_block_mid_base",77,0,280),
+   Scoring::TuneParam("pp_block_mid_mult",88,0,180),
+   Scoring::TuneParam("pp_block_end_base",159,0,280),
+   Scoring::TuneParam("pp_block_end_mult",0,0,80)
 };
 
 #define PARAM(x) params[x].current
@@ -48,16 +61,15 @@ static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 static int KING_COVER[5];
 //static const int KING_FILE_OPEN = -15;
 
-static const int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 60, 360, 360, 360, 360, 360 };
-static const int PIN_MULTIPLIER[2] = { 200, 300 };
+static int KING_OFF_BACK_RANK[9] = { 0, 0, 0, 60, 360, 360, 360, 360, 360 };
 // tuned, July 2014
-static const int KING_ATTACK_PARAM1 = 500;
-static const int KING_ATTACK_PARAM2 = 320;
-static const int KING_ATTACK_PARAM3 = 1500;
 static const int ATTACK_FACTOR[6] = { 0, 4, 8, 8, 12, 12 };
 static const int ROOK_ATTACK_BOOST = 5;
 static const int QUEEN_ATTACK_BOOST1 = 4;
 static const int QUEEN_ATTACK_BOOST2 = 4;
+static int KING_ATTACK_SCALE[512];
+
+/*
 static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
    16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -91,10 +103,8 @@ static const CACHE_ALIGN int KING_ATTACK_SCALE[512] = {
    341,342,342,342,342,343,343,343,343,344,344,344,344,345,345,345,
    345,346,346,346,346,347,347,347,347,348,348,348,348,349,349,349,
    349,350,350,350,350,351,351,351,351,352,352,352,352,353,353,353};
-   
+*/   
 #define BOOST
-static const int KING_ATTACK_BOOST_THRESHOLD = 480;
-static const int KING_ATTACK_BOOST_DIVISOR = 500;
 
 CACHE_ALIGN int Scoring::Scores:: MATERIAL_SCALE[32] =
 {
@@ -377,16 +387,34 @@ void Scoring::initParams()
    int mid_thresh_set = 0;
    for (int i = 0; i < 32; i++) {
       Scores::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*(i-PARAM(SCALING_SIGMOID_MID))/1000.0))));
-      if ((128-Scores::MATERIAL_SCALE[i])>PARAM(ENDGAME_THRESHOLD)) {
+      cout << Scores::MATERIAL_SCALE[i] << ' ';
+//      if ((128-Scores::MATERIAL_SCALE[i])>PARAM(ENDGAME_THRESHOLD))
+//      {
+      if ((128-Scores::MATERIAL_SCALE[i])>128/6) {
          ENDGAME_MATERIAL_THRESHOLD=i;
       }
-      if (!mid_thresh_set && Scores::MATERIAL_SCALE[i]>PARAM(MIDGAME_THRESHOLD)) {
+//      if (!mid_thresh_set && Scores::MATERIAL_SCALE[i]>PARAM(MIDGAME_THRESHOLD)) {
+      if (!mid_thresh_set && Scores::MATERIAL_SCALE[i]>128/6) {
          MIDGAME_MATERIAL_THRESHOLD=i-1;
          mid_thresh_set++;
       }
    }
+   cout << endl;
+   
+   cout << "mid thresh=" << MIDGAME_MATERIAL_THRESHOLD << " end thresh=" << ENDGAME_MATERIAL_THRESHOLD << endl;
+   for (int i = 0; i < 512; i++) {
+      int sigmoid = int(0.5 + 512.0*(1.0/(1+exp(-PARAM(KING_ATTACK_SCALE_SIGMOID_EXP)*(i-PARAM(KING_ATTACK_SCALE_SIGMOID_MID))/1000.0))));
+      int weight = PARAM(KING_ATTACK_SCALE_LINEAR);
+      KING_ATTACK_SCALE[i] = (weight*i + (100-weight)*sigmoid)/100;
+//      cout << KING_ATTACK_SCALE[i] << endl;
+   }
+   
+
    for (int i = 0; i < 5; i++) {
       KING_COVER[i] = Scoring::params[(int)KING_COVER0+i].current;
+   }
+   for (int i = 2; i<9; i++) {
+      KING_OFF_BACK_RANK[i] = Scoring::params[Util::Min(KING_OFF_BACK_RANK4PLUS,(int)KING_OFF_BACK_RANK2+i-2)].current;
    }
    
 }
@@ -1418,21 +1446,20 @@ void Scoring::pieceScore(const Board &board,
       }
       attackCount = Util::Min(4,attackCount);
       int scale =
-         (KING_ATTACK_PARAM1*attackWeight/4 + 
-          KING_ATTACK_PARAM2*attackWeight*attackCount/4 + KING_ATTACK_PARAM3*squaresAttacked)/16;
-      ASSERT(scale/10<512);
+         (PARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
+          PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
 //      cout << "attack: " << scale << endl;
-      int attack = 10*KING_ATTACK_SCALE[Util::Min(scale/10, 511)];
+      int attack = 8*KING_ATTACK_SCALE[Util::Min(scale/8, 511)];
 //      cout << "scaled attack: " << attack << endl;
-      if (pin_count) attack += PIN_MULTIPLIER[Midgame] * pin_count;
+      if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
 #ifdef BOOST
 #ifdef EVAL_DEBUG
       int kattack_tmp = kattack;
 #endif
-      if (kattack && cover < -KING_ATTACK_BOOST_THRESHOLD) {
-         kattack += Util::Min(kattack / 2, (-(cover + KING_ATTACK_BOOST_THRESHOLD) * kattack) / KING_ATTACK_BOOST_DIVISOR);
+      if (kattack && cover < -PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
+         kattack += Util::Min(kattack / 2, (-(cover + PARAM(KING_ATTACK_BOOST_THRESHOLD)) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif
@@ -1449,7 +1476,7 @@ void Scoring::pieceScore(const Board &board,
       opp_scores.mid -= kattack;
    }
 
-   if (pin_count) scores.end += PIN_MULTIPLIER[Endgame] * pin_count;
+   if (pin_count) scores.end += PARAM(PIN_MULTIPLIER_END) * pin_count;
 }
 
 int Scoring::calcPawnData(const Board &board,
