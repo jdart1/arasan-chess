@@ -1,4 +1,4 @@
-// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2015 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -17,7 +17,7 @@ class Scoring
 		
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
-    static const int NUM_PARAMS = 28;
+    static const int NUM_PARAMS = 51;
 
     enum {
       SCALING_SIGMOID_MID,
@@ -49,7 +49,30 @@ class Scoring
       PP_BLOCK_MID_BASE,
       PP_BLOCK_MID_MULT,
       PP_BLOCK_END_BASE,
-      PP_BLOCK_END_MULT
+      PP_BLOCK_END_MULT,
+      BISHOP_TRAPPED,
+      BISHOP_PAIR_MID,
+      BISHOP_PAIR_END,
+      BISHOP_PAWN_PLACEMENT_MID,
+      BISHOP_PAWN_PLACEMENT_END,
+      BAD_BISHOP_MID,
+      BAD_BISHOP_END,
+      KNIGHT_BACK_MID,
+      KNIGHT_BACK_END,
+      KNIGHT_ON_RIM_MID,
+      KNIGHT_ON_RIM_END,
+      KNIGHT_CENTER_OCCUPY_MID,
+      KNIGHT_CENTER_OCCUPY_END,
+      KNIGHT_CENTER_CONTROL_MID,
+      KNIGHT_CENTER_CONTROL_END,
+      KNIGHT_FILE_CENTRALITY_MID,
+      KNIGHT_FILE_CENTRALITY_END,
+      KNIGHT_RANK5_MID,
+      KNIGHT_RANK5_END,
+      KNIGHT_RANK6_MID,
+      KNIGHT_RANK6_END,
+      KNIGHT_RANK7_MID,
+      KNIGHT_RANK7_END
     };
 
     static void init();
@@ -59,12 +82,13 @@ class Scoring
     static void cleanup();
 
     struct TuneParam {
+      int index;
       string name;
       int current;
       int min_value;
       int max_value;
-    TuneParam(const string &n, int c, int minv, int maxv) :
-      name(n),current(c),min_value(minv),max_value(maxv) {
+    TuneParam(int i, const string &n, int c, int minv, int maxv) :
+      index(i),name(n),current(c),min_value(minv),max_value(maxv) {
       }
     };
 
