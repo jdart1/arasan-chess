@@ -18,59 +18,130 @@ extern "C"
 //#define EVAL_DEBUG
 
 Scoring::TuneParam Scoring::params[Scoring::NUM_PARAMS] = {
-   Scoring::TuneParam(SCALING_SIGMOID_MID,"sigmoid_mid",15,0,32),
-   Scoring::TuneParam(SCALING_SIGMOID_EXP,"sigmoid_exp",369,50,1000),
+   Scoring::TuneParam(SCALING_SIGMOID_MID,"sigmoid_mid",13,0,32),
+   Scoring::TuneParam(SCALING_SIGMOID_EXP,"sigmoid_exp",372,50,1000),
 //   Scoring::TuneParam("midgame_threshold",1,0,30),
 //   Scoring::TuneParam("endgame_threshold",9,0,30),
-   Scoring::TuneParam(CENTER_PAWN_BLOCK,"center_pawn_block",-101,-300,0),
-   Scoring::TuneParam(KING_COVER0,"king_cover0",251,100,320),
-   Scoring::TuneParam(KING_COVER1,"king_cover1",260,100,450),
-   Scoring::TuneParam(KING_COVER2,"king_cover2",118,50,200),
-   Scoring::TuneParam(KING_COVER3,"king_cover3",22,0,100),
-   Scoring::TuneParam(KING_COVER4,"king_cover4",35,0,100),
-   Scoring::TuneParam(KING_FILE_OPEN,"king_file_open",-79,-300,0),
-   Scoring::TuneParam(KING_DISTANCE_BASIS,"king_distance_basis",313,160,480),
-   Scoring::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",87,40,120),
-   Scoring::TuneParam(KING_OFF_BACK_RANK2,"king_off_back_rank2",17,0,120),
-   Scoring::TuneParam(KING_OFF_BACK_RANK3,"king_off_back_rank3",102,0,250),
-   Scoring::TuneParam(KING_OFF_BACK_RANK4PLUS,"king_off_back_rank4plus",218,0,1000),
-   Scoring::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",422,100,600),
-   Scoring::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",317,100,500),
-   Scoring::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",672,0,1000),
-   Scoring::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",345,0,640),
-   Scoring::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1566,0,3000),
-   Scoring::TuneParam(KING_ATTACK_SCALE_LINEAR,"king_attack_scale_linear",91,0,100),
-   Scoring::TuneParam(KING_ATTACK_SCALE_SIGMOID_MID,"king_attack_scale_sigmoid_mid",179,50,350),
-   Scoring::TuneParam(KING_ATTACK_SCALE_SIGMOID_EXP,"king_attack_scale_sigmoid_exp",474,100,1000),
-   Scoring::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",435,100,960),
-   Scoring::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",167,100,1000),
-   Scoring::TuneParam(PP_BLOCK_MID_BASE,"pp_block_mid_base",86,0,280),
-   Scoring::TuneParam(PP_BLOCK_MID_MULT,"pp_block_mid_mult",85,0,180),
-   Scoring::TuneParam(PP_BLOCK_END_BASE,"pp_block_end_base",177,0,280),
-   Scoring::TuneParam(PP_BLOCK_END_MULT,"pp_block_end_mult",0,0,80),
-   Scoring::TuneParam(BISHOP_TRAPPED,"bishop_trapped",-1359,-2000,-500),
-   Scoring::TuneParam(BISHOP_PAIR_MID,"bishop_pair_mid",437,100,600),
-   Scoring::TuneParam(BISHOP_PAIR_END,"bishop_pair_end",574,125,750),
-   Scoring::TuneParam(BISHOP_PAWN_PLACEMENT_MID,"bishop_pawn_placement_mid",-4,-200,0),
-   Scoring::TuneParam(BISHOP_PAWN_PLACEMENT_END,"bishop_pawn_placement_end",-171,-250,0),
-   Scoring::TuneParam(BAD_BISHOP_MID,"bad_bishop_mid",-41,-80,0),
-   Scoring::TuneParam(BAD_BISHOP_END,"bad_bishop_end",-67,-120,0),
-   Scoring::TuneParam(KNIGHT_BACK_MID,"knight_back_mid",-155,-250,0),
-   Scoring::TuneParam(KNIGHT_BACK_END,"knight_back_end",-119,-250,0),
-   Scoring::TuneParam(KNIGHT_ON_RIM_MID,"knight_on_rim_mid",-96,-250,0),
-   Scoring::TuneParam(KNIGHT_ON_RIM_END,"knight_on_rim_end",-104,-250,0),
-   Scoring::TuneParam(KNIGHT_CENTER_OCCUPY_MID,"knight_center_occupy_mid",104,0,250),
-   Scoring::TuneParam(KNIGHT_CENTER_OCCUPY_END,"knight_center_occupy_end",95,0,250),
-   Scoring::TuneParam(KNIGHT_CENTER_CONTROL_MID,"knight_center_control_mid",77,0,250),
-   Scoring::TuneParam(KNIGHT_CENTER_CONTROL_END,"knight_center_control_end",110,0,250),
-   Scoring::TuneParam(KNIGHT_FILE_CENTRALITY_MID,"knight_file_centrality_mid",7,0,100),
-   Scoring::TuneParam(KNIGHT_FILE_CENTRALITY_END,"knight_file_centrality_end",11,0,100),
-   Scoring::TuneParam(KNIGHT_RANK5_MID,"knight_rank5_mid",17,0,100),
-   Scoring::TuneParam(KNIGHT_RANK5_END,"knight_rank5_end",12,0,100),
-   Scoring::TuneParam(KNIGHT_RANK6_MID,"knight_rank6_mid",2,0,100),
-   Scoring::TuneParam(KNIGHT_RANK6_END,"knight_rank6_end",12,0,100),
-   Scoring::TuneParam(KNIGHT_RANK7_MID,"knight_rank7_mid",-23,-100,100),
-   Scoring::TuneParam(KNIGHT_RANK7_END,"knight_rank7_end",-14,-100,100)
+   Scoring::TuneParam(CENTER_PAWN_BLOCK,"center_pawn_block",-55,-300,0),
+   Scoring::TuneParam(KING_COVER0,"king_cover0",363,100,320),
+   Scoring::TuneParam(KING_COVER1,"king_cover1",227,100,450),
+   Scoring::TuneParam(KING_COVER2,"king_cover2",140,50,200),
+   Scoring::TuneParam(KING_COVER3,"king_cover3",23,0,100),
+   Scoring::TuneParam(KING_COVER4,"king_cover4",45,0,100),
+   Scoring::TuneParam(KING_FILE_OPEN,"king_file_open",-108,-300,0),
+   Scoring::TuneParam(KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
+   Scoring::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",89,60,120),
+   Scoring::TuneParam(KING_OFF_BACK_RANK2,"king_off_back_rank2",41,0,120),
+   Scoring::TuneParam(KING_OFF_BACK_RANK3,"king_off_back_rank3",37,0,250),
+   Scoring::TuneParam(KING_OFF_BACK_RANK4PLUS,"king_off_back_rank4plus",21,0,1000),
+   Scoring::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",441,100,600),
+   Scoring::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",416,100,500),
+   Scoring::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",493,0,1000),
+   Scoring::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",243,0,640),
+   Scoring::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1922,0,3000),
+//   Scoring::TuneParam(KING_ATTACK_SCALE_LINEAR,"king_attack_scale_linear",100,0,100),
+//   Scoring::TuneParam(KING_ATTACK_SCALE_SIGMOID_MID,"king_attack_scale_sigmoid_mid",137,50,350),
+//   Scoring::TuneParam(KING_ATTACK_SCALE_SIGMOID_EXP,"king_attack_scale_sigmoid_exp",299,100,1000),
+   Scoring::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",190,100,960),
+   Scoring::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",432,100,1000),
+   Scoring::TuneParam(BISHOP_TRAPPED,"bishop_trapped",-218,-2000,-400),
+   Scoring::TuneParam(BISHOP_PAIR_MID,"bishop_pair_mid",352,100,600),
+   Scoring::TuneParam(BISHOP_PAIR_END,"bishop_pair_end",782,125,750),
+//   Scoring::TuneParam(BISHOP_PAWN_PLACEMENT_MID,"bishop_pawn_placement_mid",-1,-200,0),
+   Scoring::TuneParam(BISHOP_PAWN_PLACEMENT_END,"bishop_pawn_placement_end",-149,-250,0),
+   Scoring::TuneParam(BAD_BISHOP_MID,"bad_bishop_mid",-66,-80,0),
+   Scoring::TuneParam(BAD_BISHOP_END,"bad_bishop_end",-73,-120,0),
+   Scoring::TuneParam(KNIGHT_BACK_MID,"knight_back_mid",-272,-300,-50),
+   Scoring::TuneParam(KNIGHT_BACK_END,"knight_back_end",-241,-300,-50),
+   Scoring::TuneParam(KNIGHT_BACK_CORNER_MID,"knight_back_corner_mid",-181,-350,0),
+   Scoring::TuneParam(KNIGHT_BACK_CORNER_END,"knight_back_corner_end",-76,-350,0),
+   Scoring::TuneParam(KNIGHT_ON_RIM_MID,"knight_on_rim_mid",-204,-250,0),
+   Scoring::TuneParam(KNIGHT_ON_RIM_END,"knight_on_rim_end",-94,-250,0),
+   Scoring::TuneParam(KNIGHT_CENTER_OCCUPY_MID,"knight_center_occupy_mid",263,0,250),
+   Scoring::TuneParam(KNIGHT_CENTER_OCCUPY_END,"knight_center_occupy_end",41,0,250),
+   Scoring::TuneParam(KNIGHT_CENTER_CONTROL_MID,"knight_center_control_mid",66,0,250),
+   Scoring::TuneParam(KNIGHT_CENTER_CONTROL_END,"knight_center_control_end",161,0,250),
+   Scoring::TuneParam(KNIGHT_FILE_CENTRALITY_MID,"knight_file_centrality_mid",-24,-50,100),
+   Scoring::TuneParam(KNIGHT_FILE_CENTRALITY_END,"knight_file_centrality_end",146,0,100),
+   Scoring::TuneParam(KNIGHT_RANK5_MID,"knight_rank5_mid",65,0,100),
+   Scoring::TuneParam(KNIGHT_RANK5_END,"knight_rank5_end",17,-50,100),
+   Scoring::TuneParam(KNIGHT_RANK6_MID,"knight_rank6_mid",-5,-50,100),
+   Scoring::TuneParam(KNIGHT_RANK6_END,"knight_rank6_end",27,0,100),
+   Scoring::TuneParam(KNIGHT_RANK7_MID,"knight_rank7_mid",-11,-100,100),
+   Scoring::TuneParam(KNIGHT_RANK7_END,"knight_rank7_end",-18,-100,100),
+   Scoring::TuneParam(KNIGHT_RANK8_MID,"knight_rank8_mid",-31,-100,100),
+   Scoring::TuneParam(KNIGHT_RANK8_END,"knight_rank8_end",-19,-100,100),
+   Scoring::TuneParam(BISHOP_BACK_MID,"bishop_back_mid",-120,-250,0),
+   Scoring::TuneParam(BISHOP_BACK_END,"bishop_back_end",-112,-250,0),
+   Scoring::TuneParam(BISHOP_BACK_CORNER_MID,"bishop_back_corner_mid",-166,-350,0),
+   Scoring::TuneParam(BISHOP_BACK_CORNER_END,"bishop_back_corner_end",-136,-350,0),
+   Scoring::TuneParam(BISHOP_CENTER_OCCUPY_MID,"bishop_center_occupy_mid",69,0,250),
+   Scoring::TuneParam(BISHOP_CENTER_OCCUPY_END,"bishop_center_occupy_end",58,0,250),
+   Scoring::TuneParam(BISHOP_CENTER_ATTACK_MID,"bishop_center_attack_mid",203,0,250),
+   Scoring::TuneParam(BISHOP_CENTER_ATTACK_END,"bishop_center_attack_end",92,0,250),
+   Scoring::TuneParam(BISHOP_RANK67_ATTACK_MID,"bishop_rank67_attack_mid",42,0,100),
+   Scoring::TuneParam(BISHOP_RANK67_ATTACK_END,"bishop_rank67_attack_end",22,0,100),
+   Scoring::TuneParam(BISHOP_RANK8_MID,"bishop_rank8_mid",-88,-250,100),
+   Scoring::TuneParam(BISHOP_RANK8_END,"bishop_rank8_end",-166,-250,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK4,"knight_outpost_rank4",55,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK4_CENTRALITY,"knight_outpost_rank4_centrality",10,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK4_CENTRALITY_POW,"knight_outpost_rank4_centrality_pow",83,50,250),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK5,"knight_outpost_rank5",17,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK5_CENTRALITY,"knight_outpost_rank5_centrality",16,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK5_CENTRALITY_POW,"knight_outpost_rank5_centrality_pow",97,-50,250),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK6,"knight_outpost_rank6",23,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK6_CENTRALITY,"knight_outpost_rank6_centrality",35,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK6_CENTRALITY_POW,"knight_outpost_rank6_centrality_pow",184,50,250),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK7,"knight_outpost_rank7",17,0,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK7_CENTRALITY,"knight_outpost_rank7_centrality",-26,-60,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK7_CENTRALITY_POW,"knight_outpost_rank7_centrality_pow",220,50,250),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK8,"knight_outpost_rank8",-4,-50,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK8_CENTRALITY,"knight_outpost_rank8_centrality",27,-50,100),
+   Scoring::TuneParam(KNIGHT_OUTPOST_RANK8_CENTRALITY_POW,"knight_outpost_rank8_centrality_pow",220,0,250),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK4,"bishop_outpost_rank4",29,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK4_CENTRALITY,"bishop_outpost_rank4_centrality",29,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK4_CENTRALITY_POW,"bishop_outpost_rank4_centrality_pow",196,50,250),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK5,"bishop_outpost_rank5",-7,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK5_CENTRALITY,"bishop_outpost_rank5_centrality",25,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK5_CENTRALITY_POW,"bishop_outpost_rank5_centrality_pow",26,-50,250),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK6,"bishop_outpost_rank6",17,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK6_CENTRALITY,"bishop_outpost_rank6_centrality",-8,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK6_CENTRALITY_POW,"bishop_outpost_rank6_centrality_pow",196,50,250),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK7,"bishop_outpost_rank7",60,0,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK7_CENTRALITY,"bishop_outpost_rank7_centrality",-24,-50,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK7_CENTRALITY_POW,"bishop_outpost_rank7_centrality_pow",220,50,250),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK8,"bishop_outpost_rank8",12,-50,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK8_CENTRALITY,"bishop_outpost_rank8_centrality",-24,-50,100),
+   Scoring::TuneParam(BISHOP_OUTPOST_RANK8_CENTRALITY_POW,"bishop_outpost_rank8_centrality_pow",195,0,250),
+   Scoring::TuneParam(KNIGHT_MOBILITY0,"knight_mobility0",-313,-100,-500),
+   Scoring::TuneParam(KNIGHT_MOBILITY_MULT,"knight_mobility_mult",37,0,45),
+   Scoring::TuneParam(KNIGHT_MOBILITY_OFFSET,"knight_mobility_offset",-63,-60,50),
+   Scoring::TuneParam(BISHOP_MOBILITY0,"bishop_mobility0",-502,-100,-500),
+   Scoring::TuneParam(BISHOP_MOBILITY_MULT,"bishop_mobility_mult",17,0,40),
+   Scoring::TuneParam(BISHOP_MOBILITY_OFFSET,"bishop_mobility_offset",-37,-50,50),
+   Scoring::TuneParam(OUTPOST_NOT_DEFENDED,"outpost_not_defended",46,0,64),
+   Scoring::TuneParam(PASSED_PAWN_BASE_MID,"passed_pawn_base_mid",16,0,250),
+   Scoring::TuneParam(PASSED_PAWN_SLOPE_MID,"passed_pawn_slope_mid",-19,0,350),
+   Scoring::TuneParam(PASSED_PAWN_POW_SLOPE_MID,"passed_pawn_pow_slope_mid",44,0,250),
+   Scoring::TuneParam(PASSED_PAWN_POW_MID,"passed_pawn_pow_mid",68,48,96),
+   Scoring::TuneParam(PASSED_PAWN_BASE_END,"passed_pawn_base_end",15,0,250),
+   Scoring::TuneParam(PASSED_PAWN_SLOPE_END,"passed_pawn_slope_end",107,0,350),
+   Scoring::TuneParam(PASSED_PAWN_POW_SLOPE_END,"passed_pawn_pow_slope_end",53,0,250),
+   Scoring::TuneParam(PASSED_PAWN_POW_END,"passed_pawn_pow_end",65,48,96),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_BASE_MID,"potential_passed_pawn_base_mid",-6,0,250),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_SLOPE_MID,"potential_passed_pawn_slope_mid",38,0,350),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_POW_SLOPE_MID,"potential_passed_pawn_pow_slope_mid",0,0,250),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_POW_MID,"potential_passed_pawn_pow_mid",60,48,96),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_BASE_END,"potential_passed_pawn_base_end",18,0,250),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_SLOPE_END,"potential_passed_pawn_slope_end",47,0,350),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_POW_SLOPE_END,"potential_passed_pawn_pow_slope_end",28,0,250),
+   Scoring::TuneParam(POTENTIAL_PASSED_PAWN_POW_END,"potential_passed_pawn_pow_end",75,48,96),
+   Scoring::TuneParam(PP_BLOCK_MID_BASE,"pp_block_mid_base",204,0,280),
+   Scoring::TuneParam(PP_BLOCK_MID_MULT,"pp_block_mid_mult",16,0,180),
+   Scoring::TuneParam(PP_BLOCK_END_BASE,"pp_block_end_base",176,0,280),
+   Scoring::TuneParam(PP_BLOCK_END_MULT,"pp_block_end_mult",3,0,80),
+   Scoring::TuneParam(OUTSIDE_PASSER_MID,"outside_passer_mid",113,0,250),
+   Scoring::TuneParam(OUTSIDE_PASSER_END,"outside_passer_end",257,0,500)
 };
 
 #define PARAM(x) params[x].current
@@ -148,7 +219,10 @@ static CACHE_ALIGN int KnightScores[64][2] = {
    {-150,-130},{-60,-70},{-40,-40},{-30,-30},{-30,-30},{-40,-40},{-60,-70},{-150,-130},
    {-180,-170},{-90,-130},{-70,-90} ,{-60,-80} ,{-60,-80} ,{-70,-90} ,{-90,-130},{-180,-170} };
 
-static const CACHE_ALIGN int BishopScores[64] =
+static CACHE_ALIGN int BishopScores[64][2];
+
+/*
+static CACHE_ALIGN int BishopScores[64] =
 {
    -180, -120, -120, -150, -150, -120, -120, -180,
     -100, 80, 0, 60, 60, 0, 80, -100,
@@ -159,9 +233,10 @@ static const CACHE_ALIGN int BishopScores[64] =
     -100, -100, -100, -100, -100, -100, -100, 100,
     -100, -100, -100, -100, -100, -100, -100, 100
 };
+*/
 
 // scores for White pieces
-static const CACHE_ALIGN int KnightOutpostScores[64] =
+static CACHE_ALIGN int KnightOutpostScores[64] =
 {
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
@@ -174,7 +249,7 @@ static const CACHE_ALIGN int KnightOutpostScores[64] =
 };
 
 // scores for White pieces
-static const CACHE_ALIGN int BishopOutpostScores[64] =
+static CACHE_ALIGN int BishopOutpostScores[64] =
 {
    0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0,
@@ -266,16 +341,14 @@ static const int ENDGAME_PAWN_BONUS = 120;
 static const int CASTLING_SCORES[6] = { 0, -70, -100, 280, 200, -280 };
 
 // scores by game phase and rank
-static const int PASSED_PAWN[2][8] = {
+static int PASSED_PAWN[2][8] = {
    { 0, 0, 60, 110, 180, 270, 560, 1110 },
    { 0, 0, 90, 160, 280, 420, 840, 1410 }
 };
-static const int POTENTIAL_PASSER[2][8] = {
+static int POTENTIAL_PASSER[2][8] = {
    { 0, 0, 20, 40, 60, 90, 200, 0 },
    { 0, 0, 30, 60, 100, 150, 300, 0 }
 };
-
-static const int OUTSIDE_PP[2] = { 120, 250 };
 
 static const int Midgame = 0;
 static const int Endgame = 1;
@@ -309,13 +382,13 @@ static const int QUEEN_OUT = -60;
 
 static const int PASSER_OWN_PIECE_BLOCK[2] = { -20, -50 };
 
-static const int KNIGHT_MOBILITY[9] = { -180, -70, -20, 0, 20, 50, 70, 100, 120 };
+static int KNIGHT_MOBILITY[9] = { -180, -70, -20, 0, 20, 50, 70, 100, 120 };
 static const int ROOK_MOBILITY[2][16] =
 {
    { -220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240 },
    { -300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320, 340 }
 };
-static const int BISHOP_MOBILITY[16] = { -200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90, 90 };
+static int BISHOP_MOBILITY[16] = { -200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90, 90 };
 static const int CACHE_ALIGN QUEEN_MOBILITY[2][29] = {
    {-100,-50,-10,10,40,70,90,110,130,140,160,170,190,200,210,210,210,210,210,210,210,210,210,210,210,210,210,210,210},
    {-120,-60,-10,10,50,80,110,130,160,170,200,210,230,250,260,260,260,260,260,260,260,260,260,260,260,260,260,260,260}
@@ -395,6 +468,21 @@ static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
 
+static const int centrality(int file) {
+   int f = file <=4 ? 4-file : file-5;
+   return 4-f;
+}
+
+static int passer_score(int i, int base, int slope, int pow_slope, int power) 
+{
+   if (i == 0) return 0;
+   int pp = base;
+   if(i>1) {
+      pp += int(slope*(i-2)+pow_slope*pow(double(i-2),double(power)/32.0));
+   }
+   return pp;
+}
+
 void Scoring::initParams() 
 {
 //#ifdef _DEBUG
@@ -410,7 +498,7 @@ void Scoring::initParams()
    int mid_thresh_set = 0;
    for (int i = 0; i < 32; i++) {
       Scores::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*(i-PARAM(SCALING_SIGMOID_MID))/1000.0))));
-      cout << Scores::MATERIAL_SCALE[i] << ' ';
+//      cout << Scores::MATERIAL_SCALE[i] << ' ';
 //      if ((128-Scores::MATERIAL_SCALE[i])>PARAM(ENDGAME_THRESHOLD))
 //      {
       if ((128-Scores::MATERIAL_SCALE[i])>128/6) {
@@ -422,22 +510,26 @@ void Scoring::initParams()
          mid_thresh_set++;
       }
    }
-   cout << endl;
+//   cout << endl;
    
-   cout << "mid thresh=" << MIDGAME_MATERIAL_THRESHOLD << " end thresh=" << ENDGAME_MATERIAL_THRESHOLD << endl;
+//   cout << "mid thresh=" << MIDGAME_MATERIAL_THRESHOLD << " end thresh=" << ENDGAME_MATERIAL_THRESHOLD << endl;
+/*
    for (int i = 0; i < 512; i++) {
       int sigmoid = int(0.5 + 512.0*(1.0/(1+exp(-PARAM(KING_ATTACK_SCALE_SIGMOID_EXP)*(i-PARAM(KING_ATTACK_SCALE_SIGMOID_MID))/1000.0))));
       int weight = PARAM(KING_ATTACK_SCALE_LINEAR);
       KING_ATTACK_SCALE[i] = (weight*i + (100-weight)*sigmoid)/100;
 //      cout << KING_ATTACK_SCALE[i] << endl;
    }
-   
+*/   
 
    for (int i = 0; i < 5; i++) {
       KING_COVER[i] = Scoring::params[(int)KING_COVER0+i].current;
    }
    for (int i = 2; i<9; i++) {
-      KING_OFF_BACK_RANK[i] = Scoring::params[Util::Min(KING_OFF_BACK_RANK4PLUS,(int)KING_OFF_BACK_RANK2+i-2)].current;
+      if (i < 4) 
+         KING_OFF_BACK_RANK[i] = PARAM(KING_OFF_BACK_RANK2+i-2);
+      else
+         KING_OFF_BACK_RANK[i] = PARAM(KING_OFF_BACK_RANK4PLUS);
    }
    
    for (Square i = 0; i < 64; i++) {
@@ -447,6 +539,9 @@ void Scoring::initParams()
          int file = File(i);
          if (rank == 1) {
             score += PARAM(KNIGHT_BACK_MID+phase);
+            if (i == chess::A1 || i == chess::H1) {
+               score += PARAM(KNIGHT_BACK_CORNER_MID+phase);
+            }
          }
          if (rank == 5) {
             score += PARAM(KNIGHT_RANK5_MID+phase);
@@ -455,13 +550,16 @@ void Scoring::initParams()
             score += PARAM(KNIGHT_RANK6_MID+phase);
          }
          if (rank == 7) {
-            score += PARAM(KNIGHT_RANK6_MID+phase);
+            score += PARAM(KNIGHT_RANK7_MID+phase);
+         }
+         if (rank == 8) {
+            score += PARAM(KNIGHT_RANK8_MID+phase);
          }
          if (file == chess::AFILE || File(i) == chess::HFILE) {
             score += PARAM(KNIGHT_ON_RIM_MID+phase);
          } else {
-            int dist = file <=4 ? 4-file : file-5;
-            score += (4-dist)*PARAM(KNIGHT_FILE_CENTRALITY_MID+phase);
+            int centr = centrality(file);
+            score += centr*PARAM(KNIGHT_FILE_CENTRALITY_MID+phase);
          }
          if (center.isSet(i)) {
             score += PARAM(KNIGHT_CENTER_OCCUPY_MID+phase);
@@ -469,6 +567,82 @@ void Scoring::initParams()
          int control = (Attacks::knight_attacks[i] & center).bitCount();
          score += control*PARAM(KNIGHT_CENTER_CONTROL_MID+phase);
          KnightScores[i][phase] = score;
+      }
+   }
+   Bitboard rank67mask(Attacks::rank_mask[6-1] |
+                       Attacks::rank_mask[7-1]);
+   for (Square i = 0; i < 64; i++) {
+      for (int phase = 0; phase < 1; phase++) {
+         int score = 0;
+         int rank = Rank(i,White);
+         int file = File(i);
+         if (rank == 1) {
+            score += PARAM(BISHOP_BACK_MID+phase);
+            if (i == chess::A1 || i == chess::H1) {
+               score += PARAM(BISHOP_BACK_CORNER_MID+phase);
+            }
+         }
+         if (rank == 8) {
+            score += PARAM(BISHOP_RANK8_MID+phase);
+         }
+         if (center.isSet(i)) {
+            score += PARAM(BISHOP_CENTER_OCCUPY_MID+phase);
+         }
+         Bitboard atcks(Attacks::diag_mask[i]);
+         if (atcks & center) {
+            score += PARAM(BISHOP_CENTER_ATTACK_MID+phase);
+         }
+         if (atcks & rank67mask) {
+            score += PARAM(BISHOP_RANK67_ATTACK_MID+phase);
+         }
+         BishopScores[i][phase] = score;
+      }
+   }
+   for (Square i = chess::A4; i < chess::H8; i++) {
+      int index = Rank(i,White)-4;
+      KnightOutpostScores[i] = PARAM(KNIGHT_OUTPOST_RANK4+3*index);
+      BishopOutpostScores[i] = PARAM(BISHOP_OUTPOST_RANK4+3*index);
+      int centr = centrality(File(i));
+      KnightOutpostScores[i] += int(PARAM(KNIGHT_OUTPOST_RANK4_CENTRALITY+3*index)*pow((double)centr,PARAM(KNIGHT_OUTPOST_RANK4_CENTRALITY_POW+3*index)/100.0)/10.0);
+      BishopOutpostScores[i] += int(PARAM(BISHOP_OUTPOST_RANK4_CENTRALITY+3*index)*pow((double)centr,PARAM(BISHOP_OUTPOST_RANK4_CENTRALITY_POW+3*index)/100.0)/10.0);
+   }
+   for (int i = 0; i < 9; i++) {
+      if (i == 0) {
+         KNIGHT_MOBILITY[i] = int(PARAM(KNIGHT_MOBILITY0));
+      }
+      else {
+         KNIGHT_MOBILITY[i] = log(i)*PARAM(KNIGHT_MOBILITY_MULT) +
+                                           PARAM(KNIGHT_MOBILITY_OFFSET);
+      }
+   }
+   PASSED_PAWN[Midgame][0] = PASSED_PAWN[Endgame][0] = 0;
+
+   for (int i = 0; i < 8; i++) {
+      PASSED_PAWN[Midgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_MID),
+                                             PARAM(PASSED_PAWN_SLOPE_MID),
+                                             PARAM(PASSED_PAWN_POW_SLOPE_MID),
+                                             PARAM(PASSED_PAWN_POW_MID));
+      PASSED_PAWN[Endgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_END),
+                                             PARAM(PASSED_PAWN_SLOPE_END),
+                                             PARAM(PASSED_PAWN_POW_SLOPE_END),
+                                             PARAM(PASSED_PAWN_POW_END));
+      POTENTIAL_PASSER[Midgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_MID),
+                                             PARAM(POTENTIAL_PASSED_PAWN_SLOPE_MID),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_SLOPE_MID),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_MID));
+      POTENTIAL_PASSER[Endgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_END),
+                                             PARAM(POTENTIAL_PASSED_PAWN_SLOPE_END),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_SLOPE_END),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_END));
+   }
+
+   for (int i = 0; i < 16; i++) {
+      if (i == 0) {
+         BISHOP_MOBILITY[i] = int(PARAM(BISHOP_MOBILITY0));
+      }
+      else {
+         BISHOP_MOBILITY[i] = log(i)*PARAM(BISHOP_MOBILITY_MULT) +
+                                           PARAM(BISHOP_MOBILITY_OFFSET);
       }
    }
 }
@@ -1150,7 +1324,7 @@ int Scoring::outpost(const Board &board,
       }
       else {
          // not defended by pawn
-         return 2 * outpost / 3;
+         return PARAM(OUTPOST_NOT_DEFENDED)* outpost / 64;
       }
    }
    else {
@@ -1217,9 +1391,9 @@ void Scoring::pieceScore(const Board &board,
 
       case Bishop:
          {
-            scores.mid += BishopScores[scoreSq];
-
-            //scores.end += BishopScores[scoreSq]/2;
+            scores.mid += BishopScores[scoreSq][Midgame];
+            scores.end += BishopScores[scoreSq][Endgame];
+            
             const Bitboard battacks(board.bishopAttacks(sq));
             allAttacks |= battacks;
             if (!deep_endgame) {
@@ -1434,7 +1608,7 @@ void Scoring::pieceScore(const Board &board,
          if (opp_pawns) {
 
             // penalize pawns on same color square as opposing single Bishop
-            opp_scores.mid += oppPawnData.w_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_MID)/opp_pawns;
+            //opp_scores.mid += oppPawnData.w_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_MID)/opp_pawns;
             opp_scores.end += oppPawnData.w_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END)/opp_pawns;
          }
       }
@@ -1457,7 +1631,7 @@ void Scoring::pieceScore(const Board &board,
 
          if (opp_pawns) {
             // penalize pawns on same color square as opposing single Bishop
-            opp_scores.mid += oppPawnData.b_square_pawns* PARAM(BISHOP_PAWN_PLACEMENT_MID)/opp_pawns;
+            //opp_scores.mid += oppPawnData.b_square_pawns* PARAM(BISHOP_PAWN_PLACEMENT_MID)/opp_pawns;
             opp_scores.end += oppPawnData.b_square_pawns *PARAM( BISHOP_PAWN_PLACEMENT_END)/opp_pawns;
          }
       }
@@ -1499,12 +1673,10 @@ void Scoring::pieceScore(const Board &board,
          attackCount = Util::Max(0,attackCount-1);
       }
       attackCount = Util::Min(4,attackCount);
-      int scale =
+      int attack =
          (PARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
           PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
-//      cout << "attack: " << scale << endl;
-      int attack = 8*KING_ATTACK_SCALE[Util::Min(scale/8, 511)];
-//      cout << "scaled attack: " << attack << endl;
+//      int attack = 8*KING_ATTACK_SCALE[Util::Min(attack/8, 511)];
       if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
@@ -2398,8 +2570,8 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
 
    // outside passed pawn scoring, based on cached pawn data
    if (pawnEntry.pawnData(side).outside && !pawnEntry.pawnData(oside).outside) {
-      scores.end += OUTSIDE_PP[Endgame];
-      scores.mid += OUTSIDE_PP[Midgame];
+      scores.end += PARAM(OUTSIDE_PASSER_MID);
+      scores.mid += PARAM(OUTSIDE_PASSER_END);
    }
 
    // Penalize loss of castling.

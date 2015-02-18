@@ -609,6 +609,8 @@ int CDECL main(int argc, char **argv)
         }
         GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
         CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
+        // use sep-cma-es:
+        cmaparams.set_sep();
         CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
 #else
         
