@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 17.0
+# Gnu Makefile for Arasan 18.0
 #
-VERSION = 17.0.0
+VERSION = 18.0.0
 
 # paths, modify as needed:
 
@@ -44,7 +44,7 @@ ifdef NALIMOV_TBS
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
 
-CFLAGS := $(CFLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED)
+CFLAGS := $(CFLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED) -DTUNE
 
 # Build the GTB sources into a separate object dir.
 GTB_BUILD	= ../build/gtb
@@ -138,7 +138,7 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 46)
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.6 or higher:
 #CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-#OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
+OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
 #GTB_OPT := -Ofast -finline-functions $(SSE)
 CFLAGS := $(CFLAGS) -O2 -ansi
 CFLAGS := $(CFLAGS) -std=c++11
@@ -168,7 +168,7 @@ endif
 LDFLAGS := $(LDFLAGS) -L$(LIBCMAES_PATH)
 LIBS := $(LIBS) -lcmaes
 
-all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tune $(EXPORT)/tunefile
+all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tuner $(EXPORT)/tunefile
 
 popcnt: SSE = -msse4.2
 popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
@@ -308,7 +308,7 @@ log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
-TUNE_SOURCES = tune.cpp globals.cpp  \
+TUNER_SOURCES = tune.cpp tuner.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
@@ -334,7 +334,7 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-TUNE_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TUNE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
+TUNER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TUNER_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 TUNEFILE_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TUNEFILE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
@@ -345,8 +345,8 @@ $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
 
-$(EXPORT)/tune:  $(TUNE_OBJS) 
-	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_OBJS) $(DEBUG) -o $(EXPORT)/tune -lstdc++ $(LIBS) $(SMPLIB)	
+$(EXPORT)/tuner:  $(TUNER_OBJS) 
+	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/tunefile:  $(TUNEFILE_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNEFILE_OBJS) $(DEBUG) -o $(EXPORT)/tunefile -lstdc++ $(LIBS) $(SMPLIB)	

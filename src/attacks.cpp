@@ -5426,6 +5426,8 @@ const CACHE_ALIGN Bitboard Attacks::b_magic[64]=
 };
 #endif
 
+Bitboard Attacks::center;
+
 CACHE_ALIGN Attacks::MagicData Attacks::bishopMagicData[64];
 CACHE_ALIGN Attacks::MagicData Attacks::rookMagicData[64];
 
@@ -5569,5 +5571,10 @@ void Attacks::initMagicData() {
 
 void Attacks::init() {
   initMagicData();
+  center.set(chess::E4);
+  center.set(chess::D4);
+  center.set(chess::E5);
+  center.set(chess::D5);
+  
 }
 

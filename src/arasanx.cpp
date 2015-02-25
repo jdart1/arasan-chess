@@ -1480,7 +1480,8 @@ static int do_all_pending(Board &board)
 
 //
 // Check for user move, resign or result in pending stack.
-// If found, return and do not dequeue command.
+// If found, return (1 if user move, 2 if game end command)
+// and do not dequeue command. Otherwise return 0.
 //
 static int check_pending(Board &board) {
     if (doTrace) cout << "# in check_pending" << endl;
@@ -1548,7 +1549,7 @@ static void analyze(Board &board)
             if (doTrace) cout << "# analysis mode: wait for input" << endl;
             if (inputSem.wait()) {
 #ifdef UCI_LOG
-                cout << "wait interrupted" << endl << (flush);
+                ucilog << "wait interrupted" << endl << (flush);
 #endif
                 break;
             }
@@ -1673,16 +1674,6 @@ static void processWinboardOptions(const string &args) {
     } else if (name == "Strength") {
         Options::setOption<int>(value,options.search.strength);
     } 
-    else {
-       // check for options from the Search module
-       for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
-          if (name == Scoring::params[i].name) {
-             Options::setOption<int>(value,Scoring::params[i].current);
-             Scoring::initParams();
-             break;
-          }
-       }
-    }
     searcher->updateSearchOptions();
 }
 
@@ -2783,7 +2774,6 @@ static bool do_command(const string &cmd, Board &board) {
                     cout << endl;
                 }
                 Scoring::init();
-                Scoring::initParams();
                 if (Scoring::isDraw(board))
                     cout << "position evaluates to draw (statically)" << endl;
                 Scoring *s = new Scoring();
@@ -3270,7 +3260,6 @@ static bool do_command(const string &cmd, Board &board) {
             cout << "# move text = " << movetext << endl;
         }
         Move move;
-process_move:
         if ((move = text_to_move(board,movetext)) != NullMove) {
             if (game_end) {
                 if (forceMode)
@@ -3332,19 +3321,19 @@ process_move:
                }
             }
             while (!forceMode && !analyzeMode && !game_end && !easy && time_target >= 100 /* 0.1 second */) {
+               ponder_move_ok = false;
+               int result;
                // check pending commands again before pondering in case
                // we have a resign or draw, or a move has come in (no
                // good pondering if the opponent has replied already).
-               ponder_move_ok = false;
-               int result;
-               if ((result = check_pending(board)) == 0) {
-                  ponder(board,reply,stats.best_line[1],uci);
-                  if (check_pending(board)==1) {
-                     return 1;                       // game end signal seen
-                  }
+               if ((result = check_pending(board)) != 0) {
+                   return result == 1;
                }
-               else if (result == 1)  {               // game end
-                  return 1;
+               ponder(board,reply,stats.best_line[1],uci);
+               // check again for game-ending commands before we process
+               // ponder result
+               if (check_pending(board)==1) {
+                  return 1;                       // game end signal seen
                }
                // We are done pondering. If we got a ponder hit
                // (opponent made our predicted move), then we are ready
@@ -3360,35 +3349,18 @@ process_move:
                   post_output(stats);
                   reply = ponder_move;
                   predicted_move = ponder_move = NullMove;
+                  // Continue pondering now with the new predicted
+                  // move from "stats".
                }
-               else if (check_pending(board)==2) {
-                  if (doTrace) cout << "# ponder failed, move in stack" << endl;
+               else {
+                  if (doTrace) cout << "# ponder failed, exiting ponder loop" << endl;
                   ponder_move = NullMove;
-                  Lock(input_lock);
-                  // process commands until we find a move
-                  while (!pending.empty()) {
-                     const string cmd = pending.front();
-                     pending.pop_front();
-                     if (cmd.substr(0,8) == "usermove") {
-                        movetext = cmd.substr(9);
-                     }
-                     else {
-                        movetext = cmd;
-                     }
-                     if (text_to_move(board,movetext) != NullMove) {
-                        Unlock(input_lock);
-                        goto process_move;
-                     } else {
-                        if (!do_command(cmd,board)) {
-                           Unlock(input_lock);
-                           return false;
-                        }
-                     }
-                  }
-                  Unlock(input_lock);
+                  // Leave ponder loop. If we were interrupted by
+                  // "usermove" we will ponder again immediately;
+                  // otherwise we completed pondering early and
+                  // will wait for the next opponent move.
+                  break;
                }
-               // ponder failed, leave ponder loop
-               break;
             }
         }
     }
@@ -3416,43 +3388,6 @@ int CDECL main(int argc, char **argv) {
         exit(-1);
     }
     atexit(cleanupGlobals);
-
-    Scoring::initParams();
-
-    static const string fens[25] = {
-       "8/1p4kP/4bp2/p7/4P3/P1P2P2/1KP5/8 w - - 0 36",
-       "1b5r/p4kp1/P7/1pBrp2b/4Np1P/2Pp4/1P1N2RP/6RK b - - 0 37",
-       "r3kb1r/1b3Pp1/p7/3qP1p1/Pp1p4/6Q1/1P1B2PP/R4RK1 b kq - 0 19",
-       "7k/rp1N3p/p2p2p1/3N4/3Q4/1P1K4/b1P2rP1/8 b - - 0 28",
-       "3r4/1kp2p2/1b6/p3P2p/P3P1r1/2P5/5nPK/RNB2R2 w - - 0 1",
-       "N1bkr3/pp1pbppp/2n5/5q2/N3nP2/3Q4/PPP1B1PP/R1B2RK1 b - - 0 1",
-       "N1bk4/pp1p1p1p/5Pp1/8/N7/2P1n3/PP1Rr1PP/3R2K1 b - - 0 1",
-       "rn4k1/pp2b2p/1q1p2p1/3PP3/4n1P1/8/PPQ4K/RNB5 w - - 0 1",
-       "r5k1/pp5p/3p2p1/3P4/6P1/1P3n1K/P7/4R3 w - - 0 1",
-       "2k3nr/1pp2pp1/2p5/p3P2p/1B1PbP2/R5P1/P5P1/3R2K1 b - - 0 1",
-       "R2R2nr/2p2pp1/2k1b3/2p1P2p/1p6/6P1/P4KP1/8 b - - 0 1",
-       "R6R/2p2p2/2k3p1/2p1P3/P1b5/8/6PK/q7 b - - 0 1",
-       "4r3/1pp1RkpQ/3q1np1/p2p2B1/P2b1P2/3B3P/1P4PK/4R3 b - - 0 1",
-       "8/Pq5k/6p1/8/1P5p/4Q2P/6P1/7K w - - 0 1",
-       "1Q6/8/5qk1/6p1/8/6QP/6PK/8 w - - 0 1",
-       "8/pp4b1/2b1p1k1/3p1p2/3P2p1/PPP2N1r/5R1P/4K1R1 b - - 0 1",
-       "8/pp6/2b5/3pp3/5kp1/PPP3R1/5K2/8 b - - 0 1",
-       "8/p7/8/1p6/1P1p1kp1/P4b2/5K2/R7 b - - 0 1",
-       "r4rk1/p4ppp/q4n2/2bp4/8/2Pn3P/PPQ1NPP1/R1BNK2R w KQ - 0 1",
-       "5rk1/p5pp/4q3/3p4/8/2Pn1rNP/PP1Q3K/R2N2R1 w - - 0 1",
-       "r1B4k/pQ4p1/1b1p4/4r3/5qp1/8/P4PPP/2RR2K1 w - - 0 1",
-       "1QB4k/p5p1/1b1p4/6q1/6p1/6P1/P1RK3P/8 w - - 0 1",
-       "8/4pk1p/q2p2pB/3n4/Pp3p2/2bP4/R3NPPP/3R2K1 w - - 0 28",
-       "7k/4Q1p1/5p1p/q2r4/P4PNP/2p3PB/7K/8 b - - 0 57",
-       "8/p1b1q3/1p2p2p/4Pkp1/5p2/2Q5/P4PPP/5R1K w - - 0 33"
-       };
-
-    Scoring s;
-    for (int i = 0; i < 25; i++) {
-       Board b;
-       BoardIO::readFEN(b, fens[i]);
-       cout << i << "\t" << s.evalu8(b) << endl;
-    }
 
 #ifdef _WIN32
     // setup polling thread for input from engine
@@ -3554,6 +3489,7 @@ int CDECL main(int argc, char **argv) {
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
+
     searcher = new SearchController();
 
 #ifdef SELFPLAY 
@@ -3568,20 +3504,20 @@ int CDECL main(int argc, char **argv) {
         while(!polling_terminated) {
            if (inputSem.wait()) {
 #ifdef UCI_LOG
-              cout << "wait interrupted" << endl << (flush);
+              ucilog << "wait interrupted" << endl << (flush);
 #endif
               break;
            }
-           while (!pending.empty()) {
+           while (!pending.empty() && !polling_terminated) {
               Lock(input_lock);
               string cmd (pending.front());
               pending.pop_front();
 #ifdef UCI_LOG
-              cout << "got cmd (main): " << cmd << endl;
+              ucilog << "got cmd (main): " << cmd << endl;
 #endif
               if (doTrace) {
                  cout << "# got cmd (main): "  << cmd << endl;
-                 cout << "# pending size = " << pending.size() << endl;
+                 //cout << "# pending size = " << pending.size() << endl;
               }
               Unlock(input_lock);
 #ifdef UCI_LOG
@@ -3591,7 +3527,6 @@ int CDECL main(int argc, char **argv) {
               if (!do_command(cmd,board)) {
                  if (doTrace) cout << "#terminating .. " << endl;
                  polling_terminated++;
-                 break;
               }
            }
         }
@@ -3605,9 +3540,9 @@ int CDECL main(int argc, char **argv) {
     delete searcher;
     delete ecoCoder;
 #ifdef _WIN32
-    polling_terminated++;
-    WaitForSingleObject(pollingThreadHandle,1000);
+    TerminateThread(pollingThreadHandle,0);
 #else
+    polling_terminated++;
     void *value_ptr;
     pthread_join(pollingThreadHandle,&value_ptr);
 #endif

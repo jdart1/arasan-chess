@@ -1,659 +1,601 @@
-// Copyright 2010-2015 by Jon Dart. All Rights Reserved.
-#include "board.h"
-#include "notation.h"
-#include "legal.h"
-#include "hash.h"
-#include "globals.h"
-#include "chessio.h"
-#include "util.h"
-#include "search.h"
-#ifdef NOMAD
-#include "nomad.hpp"
-#endif
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <map>
+// Copyright 2014-2015 by Jon Dart. All Rights Reserved.
+#include "tune.h"
+#include "chess.h"
+#include "attacks.h"
+#include "scoring.h"
+
 extern "C" {
 #include <math.h>
-#include <ctype.h>
-#include <semaphore.h>
+#include <string.h>
 };
 
-#define CMAES
+#define PARAM(x) tune::tune_params[x].current
 
-#ifdef CMAES
-#include "cmaes.h"
-using namespace libcmaes;
-#endif
+enum {
+      KING_PST_RANK1_MID,
+      KING_PST_RANK1_SLOPE_MID,
+      KING_PST_RANK2_MID,
+      KING_PST_RANK2_SLOPE_MID,
+      KING_PST_RANK3_MID,
+      KING_PST_RANK3_SLOPE_MID,
+      KING_PST_RANK4_MID,
+      KING_PST_RANK4_SLOPE_MID,
+      KING_PST_RANK5_MID,
+      KING_PST_RANK5_SLOPE_MID,
+      KING_PST_RANK6_MID,
+      KING_PST_RANK6_SLOPE_MID,
+      KING_PST_RANK7_MID,
+      KING_PST_RANK7_SLOPE_MID,
+      KING_PST_RANK8_MID,
+      KING_PST_RANK8_SLOPE_MID,
+      KING_PST_RANK1_END,
+      KING_PST_RANK1_SLOPE_END,
+      KING_PST_RANK2_END,
+      KING_PST_RANK2_SLOPE_END,
+      KING_PST_RANK3_END,
+      KING_PST_RANK3_SLOPE_END,
+      KING_PST_RANK4_END,
+      KING_PST_RANK4_SLOPE_END,
+      KING_PST_RANK5_END,
+      KING_PST_RANK5_SLOPE_END,
+      KING_PST_RANK6_END,
+      KING_PST_RANK6_SLOPE_END,
+      KING_PST_RANK7_END,
+      KING_PST_RANK7_SLOPE_END,
+      KING_PST_RANK8_END,
+      KING_PST_RANK8_SLOPE_END,
+      SCALING_SIGMOID_MID,
+      SCALING_SIGMOID_EXP,
+      KNIGHT_BACK_MID,
+      KNIGHT_BACK_END,
+      KNIGHT_BACK_CORNER_MID,
+      KNIGHT_BACK_CORNER_END,
+      KNIGHT_ON_RIM_MID,
+      KNIGHT_ON_RIM_END,
+      KNIGHT_CENTER_OCCUPY_MID,
+      KNIGHT_CENTER_OCCUPY_END,
+      KNIGHT_CENTER_CONTROL_MID,
+      KNIGHT_CENTER_CONTROL_END,
+      KNIGHT_FILE_CENTRALITY_MID,
+      KNIGHT_FILE_CENTRALITY_END,
+      KNIGHT_RANK5_MID,
+      KNIGHT_RANK5_END,
+      KNIGHT_RANK6_MID,
+      KNIGHT_RANK6_END,
+      KNIGHT_RANK7_MID,
+      KNIGHT_RANK7_END,
+      KNIGHT_RANK8_MID,
+      KNIGHT_RANK8_END,
+      BISHOP_BACK_MID,
+      BISHOP_BACK_END,
+      BISHOP_BACK_CORNER_MID,
+      BISHOP_BACK_CORNER_END,
+      BISHOP_CENTER_OCCUPY_MID,
+      BISHOP_CENTER_OCCUPY_END,
+      BISHOP_CENTER_ATTACK_MID,
+      BISHOP_CENTER_ATTACK_END,
+      BISHOP_RANK67_ATTACK_MID,
+      BISHOP_RANK67_ATTACK_END,
+      BISHOP_RANK8_MID,
+      BISHOP_RANK8_END,
+      KNIGHT_OUTPOST_RANK4,
+      KNIGHT_OUTPOST_RANK4_SLOPE,
+      KNIGHT_OUTPOST_RANK5,
+      KNIGHT_OUTPOST_RANK5_SLOPE,
+      KNIGHT_OUTPOST_RANK6,
+      KNIGHT_OUTPOST_RANK6_SLOPE,
+      KNIGHT_OUTPOST_RANK7,
+      KNIGHT_OUTPOST_RANK7_SLOPE,
+      KNIGHT_OUTPOST_RANK8,
+      KNIGHT_OUTPOST_RANK8_SLOPE,
+      BISHOP_OUTPOST_RANK4,
+      BISHOP_OUTPOST_RANK4_SLOPE,
+      BISHOP_OUTPOST_RANK5,
+      BISHOP_OUTPOST_RANK5_SLOPE,
+      BISHOP_OUTPOST_RANK6,
+      BISHOP_OUTPOST_RANK6_SLOPE,
+      BISHOP_OUTPOST_RANK7,
+      BISHOP_OUTPOST_RANK7_SLOPE,
+      BISHOP_OUTPOST_RANK8,
+      BISHOP_OUTPOST_RANK8_SLOPE,
+      KNIGHT_MOBILITY0,
+      KNIGHT_MOBILITY_MULT,
+      KNIGHT_MOBILITY_OFFSET,
+      BISHOP_MOBILITY0,
+      BISHOP_MOBILITY_MULT,
+      BISHOP_MOBILITY_OFFSET,
+      ROOK_MOBILITY0,
+      ROOK_MOBILITY_MULT,
+      ROOK_MOBILITY_OFFSET,
+      QUEEN_MOBILITY0_MID,
+      QUEEN_MOBILITY_MULT_MID,
+      QUEEN_MOBILITY_OFFSET_MID,
+      QUEEN_MOBILITY0_END,
+      QUEEN_MOBILITY_MULT_END,
+      QUEEN_MOBILITY_OFFSET_END,
+      KING_MOBILITY_ENDGAME0,
+      KING_MOBILITY_ENDGAME_MULT,
+      KING_MOBILITY_ENDGAME_OFFSET,
+      PASSED_PAWN_BASE_MID,
+      PASSED_PAWN_SLOPE_MID,
+      PASSED_PAWN_POW_SLOPE_MID,
+      PASSED_PAWN_POW_MID,
+      PASSED_PAWN_BASE_END,
+      PASSED_PAWN_SLOPE_END,
+      PASSED_PAWN_POW_SLOPE_END,
+      PASSED_PAWN_POW_END,
+      POTENTIAL_PASSED_PAWN_BASE_MID,
+      POTENTIAL_PASSED_PAWN_SLOPE_MID,
+      POTENTIAL_PASSED_PAWN_POW_SLOPE_MID,
+      POTENTIAL_PASSED_PAWN_POW_MID,
+      POTENTIAL_PASSED_PAWN_BASE_END,
+      POTENTIAL_PASSED_PAWN_SLOPE_END,
+      POTENTIAL_PASSED_PAWN_POW_SLOPE_END,
+      POTENTIAL_PASSED_PAWN_POW_END,
+      CONNECTED_PASSERS_BASE_MID,
+      CONNECTED_PASSERS_MULT_MID,
+      CONNECTED_PASSERS_POW_MID,
+      CONNECTED_PASSERS_BASE_END,
+      CONNECTED_PASSERS_MULT_END,
+      CONNECTED_PASSERS_POW_END,
+      ADJACENT_PASSERS_BASE_MID,
+      ADJACENT_PASSERS_MULT_MID,
+      ADJACENT_PASSERS_POW_MID,
+      ADJACENT_PASSERS_BASE_END,
+      ADJACENT_PASSERS_MULT_END,
+      ADJACENT_PASSERS_POW_END,
+      DOUBLED_PAWNS_BASE_MID,
+      DOUBLED_PAWNS_SLOPE_MID,
+      DOUBLED_PAWNS_BASE_END,
+      DOUBLED_PAWNS_SLOPE_END,
+      ISOLATED_PAWN_BASE_MID,
+      ISOLATED_PAWN_SLOPE_MID,
+      ISOLATED_PAWN_BASE_END,
+      ISOLATED_PAWN_SLOPE_END
+    };
 
-static int cores = 1;
-
-static int SEARCH_DEPTH = 1;
-
-static int FV_WINDOW = 256;
-
-static int SEARCH_WINDOW = PAWN_VALUE/2;
-
-static const int MAX_THREADS = 64;
-
-static const int THREAD_STACK_SIZE = 8*1024*1024;
-
-static string fen_file;
-
-static vector<string> * positions = NULL;
-
-static bool terminated = false;
-
-enum Strategy { MMTO, Texel };
-
-static const Strategy strategy = Texel;
-
-// per-thread data
-static struct ThreadData {
-    SearchController *searcher;
-    int index; 
-    size_t offset;
-    size_t size;
-    double penalty;
-    sem_t sem;
-    sem_t done;
-    THREAD thread_id;
-} threadDatas[MAX_THREADS];
-
-static pthread_attr_t stackSizeAttrib;
-
-
-static int search(SearchController* searcher, const Board &board, int alpha, int beta, int depth) 
-{
-   int value;
-   Statistics stats;
-   searcher->findBestMove(board,
-                          FixedDepth,
-                          999999,
-                          0,
-                          depth, false, false,
-                          stats,
-                          Silent);
-   value = stats.value;
-   return value;
-}
-
-static double sigmoid( double x )
-{
+tune::TuneParam tune::scoring_params[Scoring::PARAM_ARRAY_SIZE] = {
+   tune::TuneParam(Scoring::CASTLING0,"castling0",0,-100,100),
+   tune::TuneParam(Scoring::CASTLING1,"castling1",-70,-300,0),
+   tune::TuneParam(Scoring::CASTLING2,"castling2",-100,-300,0),
+   tune::TuneParam(Scoring::CASTLING3,"castling3",280,0,500),
+   tune::TuneParam(Scoring::CASTLING4,"castling4",200,0,500),
+   tune::TuneParam(Scoring::CASTLING5,"castling5",-280,-500,0),
+   tune::TuneParam(Scoring::KING_COVER0,"king_cover0",363,100,320),
+   tune::TuneParam(Scoring::KING_COVER1,"king_cover1",227,100,450),
+   tune::TuneParam(Scoring::KING_COVER2,"king_cover2",140,50,200),
+   tune::TuneParam(Scoring::KING_COVER3,"king_cover3",23,0,100),
+   tune::TuneParam(Scoring::KING_COVER4,"king_cover4",45,0,100),
+   tune::TuneParam(Scoring::KING_FILE_OPEN,"king_file_open",-108,-300,0),
+   tune::TuneParam(Scoring::KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
+   tune::TuneParam(Scoring::KING_DISTANCE_MULT,"king_distance_mult",89,60,120),
+   tune::TuneParam(Scoring::PIN_MULTIPLIER_MID,"pin_multiplier_mid",441,100,600),
+   tune::TuneParam(Scoring::PIN_MULTIPLIER_END,"pin_multiplier_end",416,100,500),
+   tune::TuneParam(Scoring::KING_ATTACK_PARAM1,"king_attack_param1",493,0,1000),
+   tune::TuneParam(Scoring::KING_ATTACK_PARAM2,"king_attack_param2",243,0,640),
+   tune::TuneParam(Scoring::KING_ATTACK_PARAM3,"king_attack_param3",1922,0,3000),
+   tune::TuneParam(Scoring::KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",190,100,960),
+   tune::TuneParam(Scoring::KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",432,100,1000),
+   tune::TuneParam(Scoring::BISHOP_TRAPPED,"bishop_trapped",-218,-2000,-400),
+   tune::TuneParam(Scoring::BISHOP_PAIR_MID,"bishop_pair_mid",352,100,600),
+   tune::TuneParam(Scoring::BISHOP_PAIR_END,"bishop_pair_end",782,125,750),
+//   tune::TuneParam(Scoring::"bishop_pawn_placement_mid",-1,-200,0),
+   tune::TuneParam(Scoring::BISHOP_PAWN_PLACEMENT_END,"bishop_pawn_placement_end",-149,-250,0),
+   tune::TuneParam(Scoring::BAD_BISHOP_MID,"bad_bishop_mid",-66,-80,0),
+   tune::TuneParam(Scoring::BAD_BISHOP_END,"bad_bishop_end",-73,-120,0),
+   tune::TuneParam(Scoring::OUTPOST_NOT_DEFENDED,"outpost_not_defended",46,0,64),
+   tune::TuneParam(Scoring::CENTER_PAWN_BLOCK,"center_pawn_block",-55,-300,0),
+   tune::TuneParam(Scoring::OUTSIDE_PASSER_MID,"outside_passer_mid",113,0,250),
+   tune::TuneParam(Scoring::OUTSIDE_PASSER_END,"outside_passer_end",257,0,500),
+   tune::TuneParam(Scoring::WEAK_PAWN_MID,"weak_pawn_mid",-80,-250,0),
+   tune::TuneParam(Scoring::WEAK_PAWN_END,"weak_pawn_end",-80,-250,0),
+   tune::TuneParam(Scoring::WEAK_ON_OPEN_FILE_MID,"weak_on_open_file_mid",-100,-250,0),
+   tune::TuneParam(Scoring::WEAK_ON_OPEN_FILE_END,"weak_on_open_file_end",-100,-250,0),
+   tune::TuneParam(Scoring::SPACE,"space",20,0,80),
+   tune::TuneParam(Scoring::PAWN_CENTER_SCORE_MID,"pawn_center_score_mid",30,0,100),
+   tune::TuneParam(Scoring::ROOK_ON_7TH_MID,"rook_on_7th_mid",260,0,800),
+   tune::TuneParam(Scoring::ROOK_ON_7TH_END,"rook_on_7th_end",260,0,800),
+   tune::TuneParam(Scoring::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",570,0,1200),
+   tune::TuneParam(Scoring::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",660,0,1200),
+   tune::TuneParam(Scoring::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",200,0,600),
+   tune::TuneParam(Scoring::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",0,0,600),
+   tune::TuneParam(Scoring::ROOK_ATTACKS_WEAK_PAWN_MID,"rook_attacks_weak_pawn_mid",100,0,600),
+   tune::TuneParam(Scoring::ROOK_ATTACKS_WEAK_PAWN_END,"rook_attacks_weak_pawn_end",100,0,600),
+   tune::TuneParam(Scoring::ROOK_BEHIND_PP_MID,"rook_attacks_weak_pawn_mid",50,0,600),
+   tune::TuneParam(Scoring::ROOK_BEHIND_PP_END,"rook_attacks_weak_pawn_end",100,0,600),
+   tune::TuneParam(Scoring::QUEEN_OUT,"queen_out",-60,-200,0),
+   tune::TuneParam(Scoring::PASSER_OWN_PIECE_BLOCK_MID,"passer_own_piece_block_mid",-20,-200,0),
+   tune::TuneParam(Scoring::PASSER_OWN_PIECE_BLOCK_END,"passer_own_piece_block_end",-20,-200,0 ),
+   tune::TuneParam(Scoring::PP_BLOCK_BASE_MID,"pp_block_base_mid",204,0,280),
+   tune::TuneParam(Scoring::PP_BLOCK_BASE_END,"pp_block_base_end",176,0,280),
+   tune::TuneParam(Scoring::PP_BLOCK_MULT_MID,"pp_block_mult_mid",16,0,180),
+   tune::TuneParam(Scoring::PP_BLOCK_MULT_END,"pp_block_mult_end",3,0,80),
+   tune::TuneParam(Scoring::ENDGAME_PAWN_BONUS,"endgame_pawn_bonus",-120,-500,0),
+   tune::TuneParam(Scoring::KING_NEAR_PASSER,"king_near_passer",200,0,500),
+   tune::TuneParam(Scoring::OPP_KING_NEAR_PASSER,"opp_king_near_passer",-280,-500,0),
+   tune::TuneParam(Scoring::PAWN_SIDE_BONUS,"pawn_side_bonus",280,0,500),
+   tune::TuneParam(Scoring::SUPPORTED_PASSER6,"supported_passer6",380,0,750),
+   tune::TuneParam(Scoring::SUPPORTED_PASSER7,"supported_passer7",760,0,1500),
+   tune::TuneParam(Scoring::SIDE_PROTECTED_PAWN,"side_protected_pawn",-100,-500,0),
+};
    
-   const double delta = (double)FV_WINDOW / 7.0;
-   double dd, dn, dtemp, dret;
-   if      ( x <= -FV_WINDOW ) {
-      dret = 0.0;
+tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
+   tune::TuneParam(KING_PST_RANK1_MID,"king_pst_rank1_mid",50,-500,500),
+   tune::TuneParam(KING_PST_RANK1_SLOPE_MID,"king_post_rank1_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK2_MID,"king_pst_rank2_mid",-200,-500,250),
+   tune::TuneParam(KING_PST_RANK2_SLOPE_MID,"king_pst_rank2_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK3_MID,"king_pst_rank3_mid",-300,-600,250),
+   tune::TuneParam(KING_PST_RANK3_SLOPE_MID,"king_pst_rank3_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK4_MID,"king_pst_rank4_mid",-500,-1000,250),
+   tune::TuneParam(KING_PST_RANK4_SLOPE_MID,"king_pst_rank4_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK5_MID,"king_pst_rank5_mid",-500,-1500,250),
+   tune::TuneParam(KING_PST_RANK5_SLOPE_MID,"king_pst_rank5_slope_mid",0,-500,250),
+   tune::TuneParam(KING_PST_RANK6_MID,"king_pst_rank6_mid",-500,-1500,250),
+   tune::TuneParam(KING_PST_RANK6_SLOPE_MID,"king_pst_rank6_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK7_MID,"king_pst_rank7_mid",-500,-1500,250),
+   tune::TuneParam(KING_PST_RANK7_SLOPE_MID,"king_pst_rank7_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK8_MID,"king_pst_rank8_mid",-500,-1500,250),
+   tune::TuneParam(KING_PST_RANK8_SLOPE_MID,"king_pst_rank8_slope_mid",0,-250,250),
+   tune::TuneParam(KING_PST_RANK1_END,"king_pst_rank1_end",-280,-500,500),
+   tune::TuneParam(KING_PST_RANK1_SLOPE_END,"king_post_rank1_slope_end",50,-250,250),
+   tune::TuneParam(KING_PST_RANK2_END,"king_pst_rank2_end",-220,-500,250),
+   tune::TuneParam(KING_PST_RANK2_SLOPE_END,"king_pst_rank2_slope_end",50,-250,250),
+   tune::TuneParam(KING_PST_RANK3_END,"king_pst_rank3_end",-160,-500,250),
+   tune::TuneParam(KING_PST_RANK3_SLOPE_END,"king_pst_rank3_slope_end",50,-250,250),
+   tune::TuneParam(KING_PST_RANK4_END,"king_pst_rank4_end",-100,-500,250),
+   tune::TuneParam(KING_PST_RANK4_SLOPE_END,"king_pst_rank4_slope_end",50,-250,250),
+   tune::TuneParam(KING_PST_RANK5_END,"king_pst_rank5_end",-40,-500,250),
+   tune::TuneParam(KING_PST_RANK5_SLOPE_END,"king_pst_rank5_slope_end",50,-500,250),
+   tune::TuneParam(KING_PST_RANK6_END,"king_pst_rank6_end",20,-500,250),
+   tune::TuneParam(KING_PST_RANK6_SLOPE_END,"king_pst_rank6_slope_end",50,-250,250),
+   tune::TuneParam(KING_PST_RANK7_END,"king_pst_rank7_end",80,-500,300),
+   tune::TuneParam(KING_PST_RANK7_SLOPE_END,"king_pst_rank7_slope_end",50,-250,250),
+   tune::TuneParam(KING_PST_RANK8_END,"king_pst_rank8_end",80,-500,300),
+   tune::TuneParam(KING_PST_RANK8_SLOPE_END,"king_pst_rank8_slope_end",50,-250,250),
+   tune::TuneParam(SCALING_SIGMOID_MID,"sigmoid_mid",13,0,32),
+   tune::TuneParam(SCALING_SIGMOID_EXP,"sigmoid_exp",372,50,1000),
+   tune::TuneParam(KNIGHT_BACK_MID,"knight_back_mid",-272,-300,-50),
+   tune::TuneParam(KNIGHT_BACK_END,"knight_back_end",-241,-300,-50),
+   tune::TuneParam(KNIGHT_BACK_CORNER_MID,"knight_back_corner_mid",-181,-350,0),
+   tune::TuneParam(KNIGHT_BACK_CORNER_END,"knight_back_corner_end",-76,-350,0),
+   tune::TuneParam(KNIGHT_ON_RIM_MID,"knight_on_rim_mid",-204,-250,0),
+   tune::TuneParam(KNIGHT_ON_RIM_END,"knight_on_rim_end",-94,-250,0),
+   tune::TuneParam(KNIGHT_CENTER_OCCUPY_MID,"knight_center_occupy_mid",263,0,250),
+   tune::TuneParam(KNIGHT_CENTER_OCCUPY_END,"knight_center_occupy_end",41,0,250),
+   tune::TuneParam(KNIGHT_CENTER_CONTROL_MID,"knight_center_control_mid",66,0,250),
+   tune::TuneParam(KNIGHT_CENTER_CONTROL_END,"knight_center_control_end",161,0,250),
+   tune::TuneParam(KNIGHT_FILE_CENTRALITY_MID,"knight_file_centrality_mid",-24,-50,100),
+   tune::TuneParam(KNIGHT_FILE_CENTRALITY_END,"knight_file_centrality_end",146,0,100),
+   tune::TuneParam(KNIGHT_RANK5_MID,"knight_rank5_mid",65,0,100),
+   tune::TuneParam(KNIGHT_RANK5_END,"knight_rank5_end",17,-50,100),
+   tune::TuneParam(KNIGHT_RANK6_MID,"knight_rank6_mid",-5,-50,100),
+   tune::TuneParam(KNIGHT_RANK6_END,"knight_rank6_end",27,0,100),
+   tune::TuneParam(KNIGHT_RANK7_MID,"knight_rank7_mid",-11,-100,100),
+   tune::TuneParam(KNIGHT_RANK7_END,"knight_rank7_end",-18,-100,100),
+   tune::TuneParam(KNIGHT_RANK8_MID,"knight_rank8_mid",-31,-100,100),
+   tune::TuneParam(KNIGHT_RANK8_END,"knight_rank8_end",-19,-100,100),
+   tune::TuneParam(BISHOP_BACK_MID,"bishop_back_mid",-120,-250,0),
+   tune::TuneParam(BISHOP_BACK_END,"bishop_back_end",-112,-250,0),
+   tune::TuneParam(BISHOP_BACK_CORNER_MID,"bishop_back_corner_mid",-166,-350,0),
+   tune::TuneParam(BISHOP_BACK_CORNER_END,"bishop_back_corner_end",-136,-350,0),
+   tune::TuneParam(BISHOP_CENTER_OCCUPY_MID,"bishop_center_occupy_mid",69,0,250),
+   tune::TuneParam(BISHOP_CENTER_OCCUPY_END,"bishop_center_occupy_end",58,0,250),
+   tune::TuneParam(BISHOP_CENTER_ATTACK_MID,"bishop_center_attack_mid",203,0,250),
+   tune::TuneParam(BISHOP_CENTER_ATTACK_END,"bishop_center_attack_end",92,0,250),
+   tune::TuneParam(BISHOP_RANK67_ATTACK_MID,"bishop_rank67_attack_mid",42,0,100),
+   tune::TuneParam(BISHOP_RANK67_ATTACK_END,"bishop_rank67_attack_end",22,0,100),
+   tune::TuneParam(BISHOP_RANK8_MID,"bishop_rank8_mid",-88,-250,100),
+   tune::TuneParam(BISHOP_RANK8_END,"bishop_rank8_end",-166,-250,100),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK4,"knight_outpost_rank4",200,-500,500),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK4_SLOPE,"knight_outpost_rank4_slope",0,-250,250),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK5,"knight_outpost_rank5",300,-500,500),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK5_SLOPE,"knight_outpost_rank5_slope",0,-500,250),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK6,"knight_outpost_rank6",300,-500,500),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK6_SLOPE,"knight_outpost_rank6_scope",0,-250,250),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK7,"knight_outpost_rank7",100,-500,500),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK7_SLOPE,"knight_outpost_rank7_slope",0,-250,250),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK8,"knight_outpost_rank8",100,-500,500),
+   tune::TuneParam(KNIGHT_OUTPOST_RANK8_SLOPE,"knight_outpost_rank8_scope",0,-250,250),
+   tune::TuneParam(BISHOP_OUTPOST_RANK4,"bishop_outpost_rank4",200,-500,500),
+   tune::TuneParam(BISHOP_OUTPOST_RANK4_SLOPE,"bishop_outpost_rank4_slope",0,-250,250),
+   tune::TuneParam(BISHOP_OUTPOST_RANK5,"bishop_outpost_rank5",300,-500,500),
+   tune::TuneParam(BISHOP_OUTPOST_RANK5_SLOPE,"bishop_outpost_rank5_slope",0,-500,250),
+   tune::TuneParam(BISHOP_OUTPOST_RANK6,"bishop_outpost_rank6",300,-500,500),
+   tune::TuneParam(BISHOP_OUTPOST_RANK6_SLOPE,"bishop_outpost_rank6_slope",0,-250,250),
+   tune::TuneParam(BISHOP_OUTPOST_RANK7,"bishop_outpost_rank7",100,-500,500),
+   tune::TuneParam(BISHOP_OUTPOST_RANK7_SLOPE,"bishop_outpost_rank7_slope",0,-250,250),
+   tune::TuneParam(BISHOP_OUTPOST_RANK8,"bishop_outpost_rank8",100,-500,500),
+   tune::TuneParam(BISHOP_OUTPOST_RANK8_SLOPE,"bishop_outpost_rank8_slope",0,-250,250),
+   tune::TuneParam(KNIGHT_MOBILITY0,"knight_mobility0",-313,-800,-100),
+   tune::TuneParam(KNIGHT_MOBILITY_MULT,"knight_mobility_mult",37,0,45),
+   tune::TuneParam(KNIGHT_MOBILITY_OFFSET,"knight_mobility_offset",-63,-100,50),
+   tune::TuneParam(BISHOP_MOBILITY0,"bishop_mobility0",-502,-800,-100),
+   tune::TuneParam(BISHOP_MOBILITY_MULT,"bishop_mobility_mult",17,0,40),
+   tune::TuneParam(BISHOP_MOBILITY_OFFSET,"bishop_mobility_offset",-37,-100,50),
+   tune::TuneParam(ROOK_MOBILITY0,"rook_mobility0",-502,-800,-100),
+   tune::TuneParam(ROOK_MOBILITY_MULT,"rook_mobility_mult",17,0,40),
+   tune::TuneParam(ROOK_MOBILITY_OFFSET,"rook_mobility_offset",-37,-100,50),
+   tune::TuneParam(QUEEN_MOBILITY0_MID,"queen_mobility0_mid",-502,-800,-100),
+   tune::TuneParam(QUEEN_MOBILITY_MULT_MID,"queen_mobility_mult_mid",17,0,40),
+   tune::TuneParam(QUEEN_MOBILITY_OFFSET_MID,"queen_mobility_offset_mid",-37,-100,100),
+   tune::TuneParam(QUEEN_MOBILITY0_END,"queen_mobility0_end",-100,-600,-100),
+   tune::TuneParam(QUEEN_MOBILITY_MULT_END,"queen_mobility_mult_end",17,0,40),
+   tune::TuneParam(QUEEN_MOBILITY_OFFSET_END,"queen_mobility_offset_end",-37,-100,100),
+   tune::TuneParam(KING_MOBILITY_ENDGAME0,"king_mobility_endgame0",-300,-800,50),
+   tune::TuneParam(KING_MOBILITY_ENDGAME_MULT,"king_mobility_endgame_mult",37,0,50),
+   tune::TuneParam(KING_MOBILITY_ENDGAME_OFFSET,"king_mobility_endgame_offset",0,-100,100),
+   tune::TuneParam(PASSED_PAWN_BASE_MID,"passed_pawn_base_mid",16,0,250),
+   tune::TuneParam(PASSED_PAWN_SLOPE_MID,"passed_pawn_slope_mid",-19,0,350),
+   tune::TuneParam(PASSED_PAWN_POW_SLOPE_MID,"passed_pawn_pow_slope_mid",44,0,250),
+   tune::TuneParam(PASSED_PAWN_POW_MID,"passed_pawn_pow_mid",68,48,96),
+   tune::TuneParam(PASSED_PAWN_BASE_END,"passed_pawn_base_end",15,0,250),
+   tune::TuneParam(PASSED_PAWN_SLOPE_END,"passed_pawn_slope_end",107,0,350),
+   tune::TuneParam(PASSED_PAWN_POW_SLOPE_END,"passed_pawn_pow_slope_end",53,0,250),
+   tune::TuneParam(PASSED_PAWN_POW_END,"passed_pawn_pow_end",65,48,96),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_BASE_MID,"potential_passed_pawn_base_mid",-6,0,250),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_SLOPE_MID,"potential_passed_pawn_slope_mid",38,0,350),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_POW_SLOPE_MID,"potential_passed_pawn_pow_slope_mid",0,0,250),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_POW_MID,"potential_passed_pawn_pow_mid",60,48,96),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_BASE_END,"potential_passed_pawn_base_end",18,0,250),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_SLOPE_END,"potential_passed_pawn_slope_end",47,0,350),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_POW_SLOPE_END,"potential_passed_pawn_pow_slope_end",28,0,250),
+   tune::TuneParam(POTENTIAL_PASSED_PAWN_POW_END,"potential_passed_pawn_pow_end",75,48,96),
+   tune::TuneParam(CONNECTED_PASSERS_BASE_MID,"connected_passers_base_mid",0,0,200),
+   tune::TuneParam(CONNECTED_PASSERS_MULT_MID,"connected_passers_mult_mid",0,50,100),
+   tune::TuneParam(CONNECTED_PASSERS_POW_MID,"connected_passers_pow_mid",64,48,96),
+   tune::TuneParam(CONNECTED_PASSERS_BASE_END,"connected_passers_base_end",0,0,200),
+   tune::TuneParam(CONNECTED_PASSERS_MULT_END,"connected_passers_mult_end",0,50,100),
+   tune::TuneParam(CONNECTED_PASSERS_POW_END,"connected_passers_pow_end",64,48,96),
+   tune::TuneParam(ADJACENT_PASSERS_BASE_MID,"adjacent_passers_base_mid",0,0,200),
+   tune::TuneParam(ADJACENT_PASSERS_MULT_MID,"adjacent_passers_mult_mid",0,30,100),
+   tune::TuneParam(ADJACENT_PASSERS_POW_MID,"adjacent_passers_pow_mid",64,48,96),
+   tune::TuneParam(ADJACENT_PASSERS_BASE_END,"adjacent_passers_base_end",0,0,200),
+   tune::TuneParam(ADJACENT_PASSERS_MULT_END,"adjacent_passers_mult_end",0,30,100),
+   tune::TuneParam(ADJACENT_PASSERS_POW_END,"adjacent_passers_pow_end",64,48,96),
+   tune::TuneParam(DOUBLED_PAWNS_BASE_MID,"doubled_pawns_base_mid",-60,-200,0),
+   tune::TuneParam(DOUBLED_PAWNS_SLOPE_MID,"doubled_pawns_slope_mid",-20,-100,100),
+   tune::TuneParam(DOUBLED_PAWNS_BASE_END,"doubled_pawns_base_end",-60,-200,0),
+   tune::TuneParam(DOUBLED_PAWNS_SLOPE_END,"doubled_pawns_slope_end",-20,-100,100),
+   tune::TuneParam(ISOLATED_PAWN_BASE_MID,"isolated_pawn_base_mid",-80,-200,0),
+   tune::TuneParam(ISOLATED_PAWN_SLOPE_MID,"isolated_pawn_slope_mid",0,-100,100),
+   tune::TuneParam(ISOLATED_PAWN_BASE_END,"isolated_pawn_base_end",-100,-200,0),
+   tune::TuneParam(ISOLATED_PAWN_SLOPE_END,"isolated_pawn_slope_end",0,-100,100)
+};
+
+static const int centrality(int file) {
+   int f = file <=4 ? 4-file : file-5;
+   return 4-f;
+}
+
+static int passer_score(int i, int base, int slope, int pow_slope, int power) 
+{
+   if (i == 0) return 0;
+   int pp = base;
+   if(i>1) {
+      pp += int(slope*(i-2)+pow_slope*pow(double(i-2),double(power)/32.0));
    }
-   else if ( x >=  FV_WINDOW ) {
-      dret = 0.0;
+   return pp;
+}
+
+static void symmetric_table_init(int *target, int tuning, int start_rank) 
+{
+   for (int rank = start_rank; rank <=8; rank++) {
+      int start = tune::tune_params[tuning++].current;
+      int slope = tune::tune_params[tuning++].current;
+      for (int file = 1; file <= 4; file++ ) {
+         Square sq = MakeSquare(file,rank,White);
+         target[sq] = start + slope*(file-1);
+      }
+      for (int file = 5; file <= 8; file++) {
+         Square sq = MakeSquare(file,rank,White);
+         Square model = MakeSquare((9-file),rank,White);
+         target[sq] = target[model];
+      }
    }
-   else {
-      dn    = exp( - x / delta );
-      dtemp = dn + 1.0;
-      dd    = delta * dtemp * dtemp;
-      dret  = dn / dd;
+}
+
+static void pawn_table_init(int *target, int tuning) 
+{
+   for (int i = 0; i < 4; i++) {
+      target[i] = tune::tune_params[tuning].current + tune::tune_params[tuning+1].current;
+      target[7-i] = target[i];
    }
-   return dret;
+}
+
+static void mobility_init(int *target, int tuning, int size) 
+{
+   for (int i = 0; i < size; i++) {
+      if (i == 0) {
+         *target++ = tune::tune_params[tuning].current;
+      }
+      else {
+         *target++ = round(log(i)*tune::tune_params[tuning+1].current + tune::tune_params[tuning+2].current);
+      }
+   }
+}
+
+void tune::initParams()
+{
+//#ifdef _DEBUG
+   for (int i = 0; i< Scoring::PARAM_ARRAY_SIZE; i++) {
+      if (tune::scoring_params[i].index != i) 
+         cerr << "warning: index mismatch in tune::scoring_params at " << tune::scoring_params[i].name << endl;
+   }
+   for (int i = 0; i<tune::NUM_TUNING_PARAMS; i++) {
+      if (tune::tune_params[i].index != i) 
+         cerr << "warning: index mismatch in tune::tune_params at " << tune::tune_params[i].name << endl;
+   }
+//#endif
+
+   memset((void*)&Scoring::params,'\0',sizeof(Scoring::Params));
    
-}
-
-double PARAM1 = 2.5;
-double PARAM2 = 2.0;
-
-static double sign(double x) 
-{
-   if (x == 0.0)
-      return 0.0;
-   else if (x > 0.0)
-      return 1.0;
-   else
-      return -1.0;
-}
-
-
-static double texelSigmoid(double val) {
-   //double s = -PARAM1*(-0.5+1.0/(1.0+pow(10.0,PARAM2*val/100.0)));
-   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val/400)));
-    if (s < -1.0) return -1.0;
-    if (s > 1.0) return 1.0;
-    return s;
-}
-
-static double scale(double val, int i) 
-{
-   return (val-(double)Scoring::params[i].min_value)/double(Scoring::params[i].max_value-Scoring::params[i].min_value);
-}
-
-static double unscale(double val, int i) 
-{
-  return double(Scoring::params[i].max_value-Scoring::params[i].min_value)*val+(double)Scoring::params[i].min_value;
-}
-
-static double computeErrorMMTO(SearchController *searcher, const string &pos, uint64 line) 
-{
-   double penalty = 0.0;
-   stringstream stream(pos);
-   EPDRecord epd_rec;
-   Board board;
-   if (!ChessIO::readEPDRecord(stream,board,epd_rec)) {
-      cerr << "error in EPD record, line " << line << endl;
-      return 0.0;
+   for (int i = 0; i < Scoring::PARAM_ARRAY_SIZE; i++) {
+      Scoring::params.params[i] = tune::scoring_params[i].current;
    }
-   if (epd_rec.hasError()) {
-      cerr << "error in EPD record, line " << line;
-      cerr << ": ";
-      cerr << epd_rec.getError();
-      cerr << endl;
-      return 0.0;
+   
+   Scoring::params.ENDGAME_THRESHOLD=32;
+   Scoring::params.MIDGAME_THRESHOLD=0;
+   int mid_thresh_set = 0;
+   for (int i = 0; i < 32; i++) {
+      Scoring::params.MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*(i-PARAM(SCALING_SIGMOID_MID))/1000.0))));
+      if ((128-Scoring::params.MATERIAL_SCALE[i])>128/6) {
+         Scoring::params.ENDGAME_THRESHOLD=i;
+      }
+      if (!mid_thresh_set && Scoring::params.MATERIAL_SCALE[i]>128/6) {
+         Scoring::params.MIDGAME_THRESHOLD=i-1;
+         mid_thresh_set++;
+      }
    }
-   vector <Move> solution_moves;
-   int illegal=0;
-   string id, comment;
-   for (int i = 0; i < epd_rec.getSize(); i++) {
-      string key, val;
-      epd_rec.getData(i,key,val);
-      if (key == "bm") {
-         Move m;
-         stringstream s(val);
-         while (!s.eof()) {
-            string moveStr;
-            // skips spaces
-            s >> moveStr;
-            if (!moveStr.length()) break;
-            m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
-            if (IsNull(m)) {
-               ++illegal;
-            } else {
-               solution_moves.push_back(m);
+
+   for (Square i = 0; i<64; i++) {
+      int rank = Rank(i,White);
+      int file = File(i);
+      for (int phase = 0; phase < 2; phase++) {
+         int score = 0;
+         if (rank == 1) {
+            score += PARAM(KNIGHT_BACK_MID+phase);
+            if (i == chess::A1 || i == chess::H1) {
+               score += PARAM(KNIGHT_BACK_CORNER_MID+phase);
             }
          }
-      }
-      else if (key == "id") {
-         id = val;
-      }
-      else if (key == "c0") {
-         comment = val;
-      }
-   }
-   if (illegal) {
-      cerr << "illegal or invalid solution move(s) for EPD record, line ";
-      cerr << line << endl;
-      return 0.0;
-   }
-   else if (!solution_moves.size()) {
-      cerr << "no solution move(s) for EPD record, line " << line << endl;
-      return 0.0;
-   }
-
-   // generate root moves
-   RootMoveGenerator mg(board);
-
-   // don't search if stalemate, mate, or forced move
-   if (mg.moveCount() <= 1) {
-      return 0.0;
-   }
-
-   Move best;
-   int value = -Constants::MATE;
-
-   Move keyMove;
-   int best_key_value = -Constants::MATE;
-   int i = 0;
-   BoardState state(board.state);
-   for (vector<Move>::const_iterator it = solution_moves.begin();
-        it != solution_moves.end(); it++, i++) {
-      keyMove = *it;
-      int alpha, beta;
-      if (i == 0) {
-         alpha = -Constants::MATE;
-         beta = Constants::MATE;
-      } else {
-         alpha = best_key_value;
-         beta = best_key_value + SEARCH_WINDOW;
-      }
-      board.doMove(keyMove);
-      int value = -search(searcher, board,-beta,-alpha,SEARCH_DEPTH);
-      board.undoMove(keyMove,state);
-      if (i > 0 && value >= beta && SEARCH_DEPTH > 0) {
-         // window was not wide enough
-         value = -search(searcher, board,-Constants::MATE,-alpha,SEARCH_DEPTH);
-      }
-      if (value > best_key_value) {
-         best_key_value = value;
-      }
-   }
-   int best_value = best_key_value;
-   Move m;
-   while (!IsNull(m = mg.nextMove())) {
-      int solution = 0;
-      for (vector<Move>::const_iterator it = solution_moves.begin();
-           it != solution_moves.end();
-           it++) {
-         if (MovesEqual(m,*it)) {
-            ++solution;
-            break;
+         if (rank == 5) {
+            score += PARAM(KNIGHT_RANK5_MID+phase);
          }
-      }
-      if (solution) continue;
-      board.doMove(m);
-      int try_value = -search(searcher, board,-best_value-SEARCH_WINDOW,-best_value,SEARCH_DEPTH);
-      board.undoMove(m,state);
-      if (try_value > best_value) {
-         if (try_value >= best_value + SEARCH_WINDOW) {
-            // window was not wide enough
-            try_value = -search(searcher, board,-Constants::MATE,-best_value,SEARCH_DEPTH);
+         if (rank == 6) {
+            score += PARAM(KNIGHT_RANK6_MID+phase);
          }
-         if (try_value > best_value) {
-            best_value = try_value;
+         if (rank == 7) {
+            score += PARAM(KNIGHT_RANK7_MID+phase);
          }
-      }
-   }
-   if (best_value > best_key_value) {
-      penalty += sigmoid(best_value-best_key_value);
-   }
-   return penalty;
-}
-
-static double computeErrorTexel(SearchController *searcher,const string &pos,uint64 line)
-{
-   
-   double err = 0.0;
-// This is a large object so put it on the heap:
-   Scoring *scoring = NULL;
-   if (SEARCH_DEPTH < 0) scoring = new Scoring();
-   size_t lines = 0;
-    
-   Board b;
-
-//   if (b.getMaterial(White).materialLevel() + 
-//    b.getMaterial(Black).materialLevel() < 24 ) return 0.0;
-   size_t split = pos.find_last_of(" ");
-   string fen;
-   int result = 0;
-   if (split == string::npos) {
-      cerr << "No result? line " << line << endl;
-      return 0.0;
-   } else {
-      fen = pos.substr(0,split);
-      string res = pos.substr(split+1);
-      std::size_t last  = res.find_last_of(" \n");
-      if (last != string::npos) {
-         res = res.substr(0,last);
-      }
-      
-      if (res == "0-1")
-         result = -1;
-      else if (res == "1-0")
-         result = 1;
-      else if (res == "1/2-1/2")
-         result = 0;
-      else if (res == "*")
-         return 0.0;
-      else {
-         cerr << "Missing or unrecognized result, line " << line << " (" << res << ")" << endl;
-         return 0.0;
-      }
-   }
-        
-   stringstream s(fen);
-   s >> b;
-   if (s.fail()) {
-      cerr << "error on FEN string: " << fen << ", line " << line << endl;
-      return 0.0;
-   }
-   int value;
-   if (SEARCH_DEPTH < 0) {
-      value = scoring->evalu8(b);
-   } else if (SEARCH_DEPTH == 0) {
-//      value = searcher->quiesce(-Constants::MATE,Constants::MATE,0,0);
-   } else {
-      value = search(searcher,b,-5*PAWN_VALUE,5*PAWN_VALUE,SEARCH_DEPTH);
-   }
-   if (b.sideToMove() == Black) value = -value;
-   double predict = texelSigmoid(value/10.0);
-
-//   cout << " value=" << value << " predict=" << predict << " result=" << result << " err = " <<  ((double)result - predict)*((double)result - predict) << endl;
-        
-   err += ((double)result - predict)*((double)result - predict);
-
-   if (SEARCH_DEPTH < 0)
-      delete scoring;
-
-   return err;
-}
-
-// compute a part of the objective in a single thread
-static double computeError(SearchController *searcher, int index, size_t offset,
-   size_t size) {
-   string buf;
-   double penalty = 0.0;
-   uint64 done = 0;
-   uint64 lines = (uint64)offset;
-   for (vector<string>::const_iterator it = positions->begin()+offset;
-        it != positions->end() && done < size;
-        it++, done++, lines++) {
-      if (strategy == MMTO) {
-         penalty += computeErrorMMTO(searcher,*it,lines);
-      } else {
-         penalty += computeErrorTexel(searcher,*it,lines);
-      }
-   }
-    
-//   cout << "thread " << index << " done" << endl;
-    
-   return penalty;
-}
-
-static void * CDECL threadp(void *x)
-{
-   ThreadData *td = (ThreadData*)x;
-
-   // set stack size
-   size_t stackSize;
-   if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
-        perror("pthread_attr_getstacksize");
-        return 0;
-   }
-   if (stackSize < THREAD_STACK_SIZE) {
-      if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
-         perror("error setting thread stack size");
-         return 0;
-      }
-   }
-
-   // allocate controller in the thread
-   try {
-      td->searcher = new SearchController();
-   } catch(std::bad_alloc) {
-      cerr << "out of memory, thread " << td->index << endl;
-      return 0;
-   }
-   
-   while (!terminated) {
-      // wait until signalled
-      sem_wait(&td->sem);
-      td->searcher->clearHashTables();
-      td->penalty = computeError(td->searcher,td->index,td->offset,td->size);
-      // tell parent we are done
-      sem_post(&td->done);
-   }
-   delete td->searcher;
-   return 0;
-}
-   
-static void initThreads() 
-{
-    // prepare threads
-    if (pthread_attr_init (&stackSizeAttrib)) {
-       perror("pthread_attr_init");
-       return;
-    }
-    for (int i = 0; i < cores; i++) {
-        THREAD thread_id;
-        threadDatas[i].index = i;
-        threadDatas[i].searcher = NULL;
-        sem_init(&threadDatas[i].sem,0,0);
-        sem_init(&threadDatas[i].done,0,0);
-        if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)&(threadDatas[i]))) {
-            perror("thread creation failed");
-        }
-        cout << "thread " << i << " created." << endl;
-    }
-}
-
-static double computeLsqError() {
-   
-   for (int i = 0; i < cores; i++) {
-      // signal searchers to start
-      sem_post(&threadDatas[i].sem);
-   }
-   // wait for all searchers done
-   for (int i = 0; i < cores; i++) {
-      sem_wait(&threadDatas[i].done);
-   }
-   cout << "all searchers done" << endl;
-
-   // total errors from the threads
-   double total = 0.0;
-   for (int i = 0; i < cores; i++) {
-      total += threadDatas[i].penalty;
-   }
-   return total;
-}
-
-#ifdef CMAES
-
-static FitFunc evaluator = [](const double *x, const int dim) 
-{
-   for ( int i = 0 ; i < Scoring::NUM_PARAMS ; i++ ) 
-   {
-      Scoring::params[i].current = round(unscale(x[i],i));
-   }
-   Scoring::initParams();
-   double err = computeLsqError()/positions->size();
-   cout << "objective=" << err << endl;
-   return err;
-   
-};
-
-static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> progress = [](const CMAParameters<GenoPheno<pwqBoundStrategy>> &cmaparams, const CMASolutions &cmasols)
-{
-   
-   std::cout << "best solution: " << cmasols << std::endl;
-   vector <double> x0 = cmasols.best_candidate().get_x();
-   cout << "denormalized solution: " << endl;
-   int i = 0;
-        
-   for (vector<double>::const_iterator it = x0.begin();
-        it != x0.end();
-        it++,i++) {
-      cout << " " << Scoring::params[i].name << ": " << round(unscale(*it,i)) << endl;
-   }
-   cout << endl;
-   
-   return 0;
-};
-
-
-#else // NOMAD
-
-/*----------------------------------------*/
-/*               The problem              */
-/*----------------------------------------*/
-class My_Evaluator : public NOMAD::Evaluator {
-public:
-   My_Evaluator  ( const NOMAD::Parameters & p ) :
-      NOMAD::Evaluator ( p ) {}
-
-   ~My_Evaluator ( void ) {}
-
-   bool eval_x ( NOMAD::Eval_Point   & x          ,
-                 const NOMAD::Double & h_max      ,
-                 bool                & count_eval   ) const 
-      {
-         for ( int i = 0 ; i < Scoring::NUM_PARAMS ; i++ ) 
-         {
-            Scoring::params[i].current = x[i].round();
+         if (rank == 8) {
+            score += PARAM(KNIGHT_RANK8_MID+phase);
          }
-         Scoring::initParams();
-         cout << "computing" << endl;
-         double quality = computeLsqError()/positions->size();
-         cout << "quality= " << quality << endl;
-         
-         NOMAD::Double q = quality;
-         
-         x.set_bb_output  ( 0 , q  ); // objective value
-
-         count_eval = true; // count a black-box evaluation
- 
-         return true;       // the evaluation succeeded
+         if (file == chess::AFILE || File(i) == chess::HFILE) {
+            score += PARAM(KNIGHT_ON_RIM_MID+phase);
+         } else {
+            int centr = centrality(file);
+            score += centr*PARAM(KNIGHT_FILE_CENTRALITY_MID+phase);
+         }
+         if (Attacks::center.isSet(i)) {
+            score += PARAM(KNIGHT_CENTER_OCCUPY_MID+phase);
+         }
+         int control = (Attacks::knight_attacks[i] & Attacks::center).bitCount();
+         score += control*PARAM(KNIGHT_CENTER_CONTROL_MID+phase);
+         Scoring::params.KNIGHT_PST[phase][i] = score;
       }
-
-
-       void update_iteration ( NOMAD::success_type  success,
-                                             const NOMAD::Stats &  stats,
-                                             const NOMAD::Evaluator_Control &  ev_control,
-                                             const NOMAD::Barrier &  true_barrier,
-                                             const NOMAD::Barrier &  sgte_barrier,
-                                             const NOMAD::Pareto_Front &  pareto_front,
-                               bool &  stop )  
-      {
-         cout << "iterations = " << stats.get_iterations() << 
-            ", black box evals = " << stats.get_bb_eval() << endl;
-      }
-
-};
-#endif
-
-static uint64 readTrainingFile() {
-   cout << "reading training file ..." << endl;
-   positions = new vector<string>();
-   uint64 lines = (uint64)0;
-   ifstream pos_file( fen_file.c_str(), ios::in);
-   string buf;
-   while (pos_file.good()) {
-      std::getline(pos_file,buf);
-      ++lines;
-      positions->push_back(buf);
    }
-   cout << "training file read, " << lines << " lines" << endl;
-   return lines;
+   Bitboard rank67mask(Attacks::rank_mask[6-1] |
+                       Attacks::rank_mask[7-1]);
+   for (Square i = 0; i < 64; i++) {
+      for (int phase = 0; phase < 2; phase++) {
+         int score = 0;
+         int rank = Rank(i,White);
+         int file = File(i);
+         if (rank == 1) {
+            score += PARAM(BISHOP_BACK_MID+phase);
+            if (i == chess::A1 || i == chess::H1) {
+               score += PARAM(BISHOP_BACK_CORNER_MID+phase);
+            }
+         }
+         if (rank == 8) {
+            score += PARAM(BISHOP_RANK8_MID+phase);
+         }
+         if (Attacks::center.isSet(i)) {
+            score += PARAM(BISHOP_CENTER_OCCUPY_MID+phase);
+         }
+         Bitboard atcks(Attacks::diag_mask[i]);
+         if (atcks & Attacks::center) {
+            score += PARAM(BISHOP_CENTER_ATTACK_MID+phase);
+         }
+         if (atcks & rank67mask) {
+            score += PARAM(BISHOP_RANK67_ATTACK_MID+phase);
+         }
+         Scoring::params.BISHOP_PST[phase][i] = score;
+      }
+   }
+   symmetric_table_init(Scoring::params.KING_PST[Scoring::Midgame],KING_PST_RANK1_MID,1);
+   symmetric_table_init(Scoring::params.KING_PST[Scoring::Endgame],KING_PST_RANK1_END,1);
+   symmetric_table_init(Scoring::params.KNIGHT_OUTPOST,KNIGHT_OUTPOST_RANK4,4);
+   symmetric_table_init(Scoring::params.BISHOP_OUTPOST,BISHOP_OUTPOST_RANK4,4);
+   
+   mobility_init(Scoring::params.KNIGHT_MOBILITY,KNIGHT_MOBILITY0,9);
+   mobility_init(Scoring::params.BISHOP_MOBILITY,BISHOP_MOBILITY0,15);
+   mobility_init(Scoring::params.ROOK_MOBILITY,ROOK_MOBILITY0,15);
+   mobility_init(Scoring::params.QUEEN_MOBILITY[Scoring::Midgame],QUEEN_MOBILITY0_MID,29);
+   mobility_init(Scoring::params.QUEEN_MOBILITY[Scoring::Endgame],QUEEN_MOBILITY0_END,29);
+   mobility_init(Scoring::params.KING_MOBILITY_ENDGAME,KING_MOBILITY_ENDGAME0,9);
+
+   pawn_table_init(Scoring::params.DOUBLED_PAWNS[Scoring::Midgame],DOUBLED_PAWNS_BASE_MID);
+   pawn_table_init(Scoring::params.DOUBLED_PAWNS[Scoring::Endgame],DOUBLED_PAWNS_BASE_END);
+   pawn_table_init(Scoring::params.ISOLATED_PAWN[Scoring::Midgame],ISOLATED_PAWN_BASE_MID);
+   pawn_table_init(Scoring::params.ISOLATED_PAWN[Scoring::Endgame],ISOLATED_PAWN_BASE_END);
+   
+   for (int i = 0; i < 8; i++) {
+      Scoring::params.PASSED_PAWN[Scoring::Midgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_MID),
+                                               PARAM(PASSED_PAWN_SLOPE_MID),
+                                             PARAM(PASSED_PAWN_POW_SLOPE_MID),
+                                             PARAM(PASSED_PAWN_POW_MID));
+      Scoring::params.PASSED_PAWN[Scoring::Endgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_END),
+                                             PARAM(PASSED_PAWN_SLOPE_END),
+                                             PARAM(PASSED_PAWN_POW_SLOPE_END),
+                                             PARAM(PASSED_PAWN_POW_END));
+      Scoring::params.POTENTIAL_PASSER[Scoring::Midgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_MID),
+                                             PARAM(POTENTIAL_PASSED_PAWN_SLOPE_MID),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_SLOPE_MID),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_MID));
+      Scoring::params.POTENTIAL_PASSER[Scoring::Endgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_END),
+                                             PARAM(POTENTIAL_PASSED_PAWN_SLOPE_END),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_SLOPE_END),
+                                             PARAM(POTENTIAL_PASSED_PAWN_POW_END));
+      Scoring::params.CONNECTED_PASSERS[Scoring::Midgame][i] = passer_score(i,PARAM(CONNECTED_PASSERS_BASE_MID),
+                                                     0,
+                                             PARAM(CONNECTED_PASSERS_MULT_MID),
+                                             PARAM(CONNECTED_PASSERS_POW_MID));
+
+      Scoring::params.CONNECTED_PASSERS[Scoring::Endgame][i] = passer_score(i,PARAM(CONNECTED_PASSERS_BASE_END),
+                                                     0,
+                                             PARAM(CONNECTED_PASSERS_MULT_END),
+                                             PARAM(CONNECTED_PASSERS_POW_END));
+      Scoring::params.ADJACENT_PASSERS[Scoring::Midgame][i] = passer_score(i,PARAM(ADJACENT_PASSERS_BASE_MID),
+                                                     0,
+                                             PARAM(ADJACENT_PASSERS_MULT_MID),
+                                             PARAM(ADJACENT_PASSERS_POW_MID));
+
+      Scoring::params.ADJACENT_PASSERS[Scoring::Endgame][i] = passer_score(i,PARAM(ADJACENT_PASSERS_BASE_END),
+                                                     0,
+                                             PARAM(ADJACENT_PASSERS_MULT_END),
+                                             PARAM(ADJACENT_PASSERS_POW_END));
+   }
+
 }
 
-int CDECL main(int argc, char **argv)
+void tune::writeX0(ostream &o) 
 {
-    Bitboard::init();
-    initOptions(argv[0]);
-    Attacks::init();
-    Scoring::init();
-    if (!initGlobals(argv[0], false)) {
-        cleanupGlobals();
-        exit(-1);
-    }
-    atexit(cleanupGlobals);
-    delayedInit();
-    options.search.hash_table_size = 64000;
-//    if (EGTBMenCount) {
-//        cerr << "Initialized tablebases" << endl;
-//    }
-    options.book.book_enabled = options.log_enabled = 0;
-    options.learning.position_learning = false;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
-    options.search.use_tablebases = false;
-#endif
-    options.search.easy_plies = 0;
-
-    if (argc < 2) {
-        cerr << "not enough arguments" << endl;
-        return -1;
-    }
-    else {
-        int arg = 1;
-        while (arg < argc && argv[arg][0] == '-') {
-           if (strcmp(argv[arg],"-c")==0) {
-              ++arg;
-              cores = atoi(argv[arg]);
-           }
-           else if (strcmp(argv[arg],"-p")==0) {
-              ++arg;
-              SEARCH_DEPTH = atoi(argv[arg]);
-           }
-           ++arg;
-        }
-        
-#ifdef NOMAD
-        string paramFile = argv[arg++];
-#endif
-        fen_file = argv[arg];
-        cout << "plies=" << SEARCH_DEPTH << " cores=" << cores;
-#ifdef NOMAD
-        cout << " param file=" << paramFile;
-#endif
-        cout << " tune file=" << fen_file << (flush) << endl;
-
-        uint64 lines = readTrainingFile();
-        
-        initThreads();
-
-        uint64 chunk = lines / cores;
-
-        cout << "chunk size=" << chunk << endl;
-
-        uint64 off = (uint64)0;
-
-        for (int i = 0; i < cores; i++) {
-           threadDatas[i].index = i;
-           threadDatas[i].penalty = 0.0;
-           threadDatas[i].offset = (size_t)off;
-           uint64 size = chunk;
-           size = (i==cores-1) ? (lines-off) : chunk;
-           threadDatas[i].size = size;
-           off += chunk;
-        }
-        
-#ifdef CMAES
-        int dim = Scoring::NUM_PARAMS;
-        vector<double> x0;
-        double sigma = 0.05;
-        // use variant with box bounds
-        double lbounds[Scoring::NUM_PARAMS],
-           ubounds[Scoring::NUM_PARAMS];
-        for (int i = 0; i < Scoring::NUM_PARAMS; i++) {
-           // initialize & normalize
-           x0.push_back(scale(double(Scoring::params[i].current),i));
-           lbounds[i] = scale((double)Scoring::params[i].min_value,i);
-           ubounds[i] = scale((double)Scoring::params[i].max_value,i);
-        }
-        GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
-        CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
-        // use sep-cma-es:
-        cmaparams.set_sep();
-        CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
-#else
-        
-        
-        // NOMAD
-        try {
-           
-        NOMAD::Display out ( std::cout );
-        out.precision ( NOMAD::DISPLAY_PRECISION_STD );
-
-        NOMAD::begin ( argc-arg+1 , argv+arg-1 );
-
-        srand((unsigned)(getCurrentTime() % (1<<31)));
-        NOMAD::RNG::set_seed(rand() % 12345);
-
-        NOMAD::Parameters p(out);
-        cout << "reading parameter file " << paramFile << endl;
-        p.read(paramFile);
-        // parameters validation:
-        p.check();
-        cout << "parameter check passed" << endl;
-        const vector<NOMAD::Point * > x0s = p.get_x0s();
-        for (vector<NOMAD::Point *>::const_iterator it =  x0s.begin();
-             it != x0s.end();
-             it++) {
-           cout << *(*it) << endl;
-        }       
-
-        // custom evaluator creation:
-        My_Evaluator ev   ( p );
-
-        // algorithm creation and execution:
-        NOMAD::Mads mads ( p , &ev );
-        mads.run();
-        
-        }
-        catch ( exception & e ) {
-           cerr << "\nNOMAD has been interrupted (" << e.what() << ")\n\n";
-        }
-#endif
-    }
-    for (int i = 0; i < cores; i++) {
-        delete threadDatas[i].searcher;
-    }
-    return 0;
+   o << "( ";
+   int i ;
+   for (i = 0; i < Scoring::PARAM_ARRAY_SIZE; i++) {
+      o << tune::scoring_params[i].current << ' ';
+   }
+   int j;
+   for (j=0; j < tune::NUM_TUNING_PARAMS; j++) {
+      o << tune::tune_params[j].current;
+      if (j < tune::NUM_TUNING_PARAMS-1) o << ' ';
+   }
+   o << ")" << endl;
 }
+
+
+void tune::readX0(istream &is) 
+{
+   int c;
+   while (is.good() && (c = is.get()) != '(') ;
+   for (int i = 0; is.good() && i < Scoring::PARAM_ARRAY_SIZE; i++) {
+      is >> tune::scoring_params[i].current;
+   }
+   for (int i = 0; is.good() && i < tune::NUM_TUNING_PARAMS; i++) {
+      is >> tune::tune_params[i].current;
+   }
+}
+
+
+
