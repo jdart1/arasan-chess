@@ -9,6 +9,8 @@ VERSION = 18.0.0
 SRC = ../src
 # location of .o files
 BUILD	= ../build
+# location of .o files for tuning program
+TUNE_BUILD	= ../tune_build
 # location for executables and binary book files
 EXPORT  = ../bin
 # location for profile-generating executables
@@ -43,8 +45,6 @@ endif
 ifdef NALIMOV_TBS 
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
-
-CFLAGS := $(CFLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED)
 
 # Build the GTB sources into a separate object dir.
 GTB_BUILD	= ../build/gtb
@@ -165,9 +165,6 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-LDFLAGS := $(LDFLAGS) -L$(LIBCMAES_PATH)
-LIBS := $(LIBS) -lcmaes
-
 all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tuner $(EXPORT)/tunefile
 
 popcnt: SSE = -msse4.2
@@ -185,6 +182,7 @@ arm-linux:
  
 clean: dirs
 	rm -f $(BUILD)/*.o
+	rm -f $(TUNE_BUILD)/*.o
 ifdef GAVIOTA_TBS
 	rm -f $(GTB_BUILD)/*.o
 	rm -f $(GTB_BUILD)/*.a
@@ -197,6 +195,7 @@ endif
 
 dirs:
 	mkdir -p $(BUILD)
+	mkdir -p $(TUNE_BUILD)
 ifdef GAVIOTA_TBS
 	mkdir -p $(GTB_BUILD)
 endif
@@ -224,6 +223,10 @@ install: all
 
 $(BUILD)/%.o: %.cpp
 	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+
+$(TUNE_BUILD)/%.o: %.cpp
+	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED) \
+	-UNALIMOV_TBS -UGAVIOTA_TBS -DTUNE $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
@@ -334,7 +337,7 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-TUNER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TUNER_SOURCES)) $(TB_OBJS) $(TB_LIBS)
+TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES))
 TUNEFILE_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TUNEFILE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
@@ -346,7 +349,8 @@ $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
-	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)	
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) -L$(LIBCMAES_PATH) \
+	$(SMPLIB) -lcmaes
 
 $(EXPORT)/tunefile:  $(TUNEFILE_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNEFILE_OBJS) $(DEBUG) -o $(EXPORT)/tunefile -lstdc++ $(LIBS) $(SMPLIB)	
