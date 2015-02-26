@@ -57,7 +57,7 @@ static struct ThreadData {
 
 static pthread_attr_t stackSizeAttrib;
 
-static const int TOTAL_PARAMS = tune::NUM_TUNING_PARAMS + Scoring::PARAM_ARRAY_SIZE;
+static const int TOTAL_PARAMS = tune::NUM_TUNING_PARAMS + Scoring::Params::PARAM_ARRAY_SIZE;
 
 static int search(SearchController* searcher, const Board &board, int alpha, int beta, int depth) 
 {
@@ -422,7 +422,7 @@ static double computeLsqError() {
 static FitFunc evaluator = [](const double *x, const int dim) 
 {
    int i;
-   for (i = 0; i < Scoring::PARAM_ARRAY_SIZE; i++) 
+   for (i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) 
    {
       tune::scoring_params[i].current = unscale(x[i],tune::scoring_params[i]);
 //      cout << tune::tune_params[i].name << ' ' <<
@@ -459,7 +459,7 @@ static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> pro
    cout << endl;
 */   
    tune::writeX0(cout);
-   Scoring::params.write(cout);
+   Scoring::Params::write(cout);
    cout << endl;
    return 0;
 };
@@ -507,91 +507,91 @@ int CDECL main(int argc, char **argv)
     string input_file;
     
     if (argc < 2) {
-        cerr << "not enough arguments" << endl;
-        return -1;
+       cerr << "not enough arguments" << endl;
+       return -1;
     }
-    else {
-        int arg = 1;
-        while (arg < argc && argv[arg][0] == '-') {
-           if (strcmp(argv[arg],"-c")==0) {
-              ++arg;
-              cores = atoi(argv[arg]);
-           }
-           else if (strcmp(argv[arg],"-p")==0) {
-              ++arg;
-              SEARCH_DEPTH = atoi(argv[arg]);
-           }
-           else if (strcmp(argv[arg],"-i")==0) {
-              ++arg;
-              input_file = argv[arg];
-           }
-           ++arg;
-        }
-        
-        fen_file = argv[arg];
-        cout << "plies=" << SEARCH_DEPTH << " cores=" << cores;
-        cout << " tune file=" << fen_file;
-        if (input_file.length()) {
-           cout << " input file=" << input_file;
-        }
-        cout << (flush) << endl;
-
-        if (input_file.length()) {
-           ifstream is(input_file);
-           if (is.good()) {
-              tune::readX0(is);
-           }
-           else {
-              cerr << "warning: cannot open input file " << input_file << endl;
-           }
-        }           
-
-        uint64 lines = readTrainingFile();
-
-        initThreads();
-
-        uint64 chunk = lines / cores;
-
-        cout << "chunk size=" << chunk << endl;
-
-        uint64 off = (uint64)0;
-
-        for (int i = 0; i < cores; i++) {
-           threadDatas[i].index = i;
-           threadDatas[i].penalty = 0.0;
-           threadDatas[i].offset = (size_t)off;
-           uint64 size = chunk;
-           size = (i==cores-1) ? (lines-off) : chunk;
-           threadDatas[i].size = size;
-           off += chunk;
-        }
-        
-        vector<double> x0;
-        double sigma = 0.05;
-        // use variant with box bounds
-        double lbounds[TOTAL_PARAMS],
-           ubounds[TOTAL_PARAMS];
-        // initialize & normalize
-        int i;
-        for (i = 0; i < Scoring::PARAM_ARRAY_SIZE; i++) {
-           x0.push_back(scale(tune::scoring_params[i]));
-           lbounds[i] = 0.0;
-           ubounds[i] = 1.0;
-        }
-        int j = 0;
-        for (; j < tune::NUM_TUNING_PARAMS; i++, j++) {
-           x0.push_back(scale(tune::tune_params[j]));
-           lbounds[i] = 0.0;
-           ubounds[i] = 1.0;
-        }
-        GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,TOTAL_PARAMS);
-        CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(TOTAL_PARAMS,&x0.front(),sigma,-1,0,gp);
-        // use sep-cma-es:
-        cmaparams.set_sep();
-        CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
+    int arg = 1;
+    while (arg < argc && argv[arg][0] == '-') {
+       if (strcmp(argv[arg],"-c")==0) {
+          ++arg;
+          cores = atoi(argv[arg]);
+       }
+       else if (strcmp(argv[arg],"-p")==0) {
+          ++arg;
+          SEARCH_DEPTH = atoi(argv[arg]);
+       }
+       else if (strcmp(argv[arg],"-i")==0) {
+          cout << "saw -i" << endl;
+          
+          ++arg;
+          input_file = argv[arg];
+       }
+       ++arg;
     }
+        
+    fen_file = argv[arg];
+    cout << "plies=" << SEARCH_DEPTH << " cores=" << cores;
+    cout << " tune file=" << fen_file;
+    if (input_file.length()) {
+       cout << " input file=" << input_file;
+    }
+    cout << (flush) << endl;
+
+    if (input_file.length()) {
+       ifstream is(input_file);
+       if (is.good()) {
+          tune::readX0(is);
+       }
+       else {
+          cerr << "warning: cannot open input file " << input_file << endl;
+       }
+    }           
+
+    uint64 lines = readTrainingFile();
+
+    initThreads();
+
+    uint64 chunk = lines / cores;
+
+    cout << "chunk size=" << chunk << endl;
+
+    uint64 off = (uint64)0;
+
     for (int i = 0; i < cores; i++) {
-        delete threadDatas[i].searcher;
+       threadDatas[i].index = i;
+       threadDatas[i].penalty = 0.0;
+       threadDatas[i].offset = (size_t)off;
+       uint64 size = chunk;
+       size = (i==cores-1) ? (lines-off) : chunk;
+       threadDatas[i].size = size;
+       off += chunk;
+    }
+        
+    vector<double> x0;
+    double sigma = 0.05;
+    // use variant with box bounds
+    double lbounds[TOTAL_PARAMS],
+       ubounds[TOTAL_PARAMS];
+    // initialize & normalize
+    int i;
+    for (i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+       x0.push_back(scale(tune::scoring_params[i]));
+       lbounds[i] = 0.0;
+       ubounds[i] = 1.0;
+    }
+    int j = 0;
+    for (; j < tune::NUM_TUNING_PARAMS; i++, j++) {
+       x0.push_back(scale(tune::tune_params[j]));
+       lbounds[i] = 0.0;
+       ubounds[i] = 1.0;
+    }
+    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,TOTAL_PARAMS);
+    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(TOTAL_PARAMS,&x0.front(),sigma,-1,0,gp);
+    // use sep-cma-es:
+    cmaparams.set_sep();
+    CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
+    for (int i = 0; i < cores; i++) {
+       delete threadDatas[i].searcher;
     }
     return 0;
 }

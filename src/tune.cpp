@@ -154,7 +154,7 @@ enum {
       ISOLATED_PAWN_SLOPE_END
     };
 
-tune::TuneParam tune::scoring_params[Scoring::PARAM_ARRAY_SIZE] = {
+tune::TuneParam tune::scoring_params[Scoring::Params::PARAM_ARRAY_SIZE] = {
    tune::TuneParam(Scoring::CASTLING0,"castling0",0,-100,100),
    tune::TuneParam(Scoring::CASTLING1,"castling1",-70,-300,0),
    tune::TuneParam(Scoring::CASTLING2,"castling2",-100,-300,0),
@@ -397,7 +397,7 @@ static void symmetric_table_init(int *target, int tuning, int start_rank)
 static void pawn_table_init(int *target, int tuning) 
 {
    for (int i = 0; i < 4; i++) {
-      target[i] = tune::tune_params[tuning].current + tune::tune_params[tuning+1].current;
+      target[i] = tune::tune_params[tuning].current + i*tune::tune_params[tuning+1].current;
       target[7-i] = target[i];
    }
 }
@@ -417,7 +417,7 @@ static void mobility_init(int *target, int tuning, int size)
 void tune::initParams()
 {
 //#ifdef _DEBUG
-   for (int i = 0; i< Scoring::PARAM_ARRAY_SIZE; i++) {
+   for (int i = 0; i< Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       if (tune::scoring_params[i].index != i) 
          cerr << "warning: index mismatch in tune::scoring_params at " << tune::scoring_params[i].name << endl;
    }
@@ -427,22 +427,22 @@ void tune::initParams()
    }
 //#endif
 
-   memset((void*)&Scoring::params,'\0',sizeof(Scoring::Params));
+   memset((void*)&Scoring::Params::params,'\0',sizeof(Scoring::Params));
    
-   for (int i = 0; i < Scoring::PARAM_ARRAY_SIZE; i++) {
-      Scoring::params.params[i] = tune::scoring_params[i].current;
+   for (int i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+      Scoring::Params::params[i] = tune::scoring_params[i].current;
    }
    
-   Scoring::params.ENDGAME_THRESHOLD=32;
-   Scoring::params.MIDGAME_THRESHOLD=0;
+   Scoring::Params::ENDGAME_THRESHOLD=32;
+   Scoring::Params::MIDGAME_THRESHOLD=0;
    int mid_thresh_set = 0;
    for (int i = 0; i < 32; i++) {
-      Scoring::params.MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*(i-PARAM(SCALING_SIGMOID_MID))/1000.0))));
-      if ((128-Scoring::params.MATERIAL_SCALE[i])>128/6) {
-         Scoring::params.ENDGAME_THRESHOLD=i;
+      Scoring::Params::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*(i-PARAM(SCALING_SIGMOID_MID))/1000.0))));
+      if ((128-Scoring::Params::MATERIAL_SCALE[i])>128/6) {
+         Scoring::Params::ENDGAME_THRESHOLD=i;
       }
-      if (!mid_thresh_set && Scoring::params.MATERIAL_SCALE[i]>128/6) {
-         Scoring::params.MIDGAME_THRESHOLD=i-1;
+      if (!mid_thresh_set && Scoring::Params::MATERIAL_SCALE[i]>128/6) {
+         Scoring::Params::MIDGAME_THRESHOLD=i-1;
          mid_thresh_set++;
       }
    }
@@ -481,7 +481,7 @@ void tune::initParams()
          }
          int control = (Attacks::knight_attacks[i] & Attacks::center).bitCount();
          score += control*PARAM(KNIGHT_CENTER_CONTROL_MID+phase);
-         Scoring::params.KNIGHT_PST[phase][i] = score;
+         Scoring::Params::KNIGHT_PST[phase][i] = score;
       }
    }
    Bitboard rank67mask(Attacks::rank_mask[6-1] |
@@ -510,58 +510,58 @@ void tune::initParams()
          if (atcks & rank67mask) {
             score += PARAM(BISHOP_RANK67_ATTACK_MID+phase);
          }
-         Scoring::params.BISHOP_PST[phase][i] = score;
+         Scoring::Params::BISHOP_PST[phase][i] = score;
       }
    }
-   symmetric_table_init(Scoring::params.KING_PST[Scoring::Midgame],KING_PST_RANK1_MID,1);
-   symmetric_table_init(Scoring::params.KING_PST[Scoring::Endgame],KING_PST_RANK1_END,1);
-   symmetric_table_init(Scoring::params.KNIGHT_OUTPOST,KNIGHT_OUTPOST_RANK4,4);
-   symmetric_table_init(Scoring::params.BISHOP_OUTPOST,BISHOP_OUTPOST_RANK4,4);
+   symmetric_table_init(Scoring::Params::KING_PST[Scoring::Midgame],KING_PST_RANK1_MID,1);
+   symmetric_table_init(Scoring::Params::KING_PST[Scoring::Endgame],KING_PST_RANK1_END,1);
+   symmetric_table_init(Scoring::Params::KNIGHT_OUTPOST,KNIGHT_OUTPOST_RANK4,4);
+   symmetric_table_init(Scoring::Params::BISHOP_OUTPOST,BISHOP_OUTPOST_RANK4,4);
    
-   mobility_init(Scoring::params.KNIGHT_MOBILITY,KNIGHT_MOBILITY0,9);
-   mobility_init(Scoring::params.BISHOP_MOBILITY,BISHOP_MOBILITY0,15);
-   mobility_init(Scoring::params.ROOK_MOBILITY,ROOK_MOBILITY0,15);
-   mobility_init(Scoring::params.QUEEN_MOBILITY[Scoring::Midgame],QUEEN_MOBILITY0_MID,29);
-   mobility_init(Scoring::params.QUEEN_MOBILITY[Scoring::Endgame],QUEEN_MOBILITY0_END,29);
-   mobility_init(Scoring::params.KING_MOBILITY_ENDGAME,KING_MOBILITY_ENDGAME0,9);
+   mobility_init(Scoring::Params::KNIGHT_MOBILITY,KNIGHT_MOBILITY0,9);
+   mobility_init(Scoring::Params::BISHOP_MOBILITY,BISHOP_MOBILITY0,15);
+   mobility_init(Scoring::Params::ROOK_MOBILITY,ROOK_MOBILITY0,15);
+   mobility_init(Scoring::Params::QUEEN_MOBILITY[Scoring::Midgame],QUEEN_MOBILITY0_MID,29);
+   mobility_init(Scoring::Params::QUEEN_MOBILITY[Scoring::Endgame],QUEEN_MOBILITY0_END,29);
+   mobility_init(Scoring::Params::KING_MOBILITY_ENDGAME,KING_MOBILITY_ENDGAME0,9);
 
-   pawn_table_init(Scoring::params.DOUBLED_PAWNS[Scoring::Midgame],DOUBLED_PAWNS_BASE_MID);
-   pawn_table_init(Scoring::params.DOUBLED_PAWNS[Scoring::Endgame],DOUBLED_PAWNS_BASE_END);
-   pawn_table_init(Scoring::params.ISOLATED_PAWN[Scoring::Midgame],ISOLATED_PAWN_BASE_MID);
-   pawn_table_init(Scoring::params.ISOLATED_PAWN[Scoring::Endgame],ISOLATED_PAWN_BASE_END);
+   pawn_table_init(Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame],DOUBLED_PAWNS_BASE_MID);
+   pawn_table_init(Scoring::Params::DOUBLED_PAWNS[Scoring::Endgame],DOUBLED_PAWNS_BASE_END);
+   pawn_table_init(Scoring::Params::ISOLATED_PAWN[Scoring::Midgame],ISOLATED_PAWN_BASE_MID);
+   pawn_table_init(Scoring::Params::ISOLATED_PAWN[Scoring::Endgame],ISOLATED_PAWN_BASE_END);
    
    for (int i = 0; i < 8; i++) {
-      Scoring::params.PASSED_PAWN[Scoring::Midgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_MID),
+      Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_MID),
                                                PARAM(PASSED_PAWN_SLOPE_MID),
                                              PARAM(PASSED_PAWN_POW_SLOPE_MID),
                                              PARAM(PASSED_PAWN_POW_MID));
-      Scoring::params.PASSED_PAWN[Scoring::Endgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_END),
+      Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = passer_score(i,PARAM(PASSED_PAWN_BASE_END),
                                              PARAM(PASSED_PAWN_SLOPE_END),
                                              PARAM(PASSED_PAWN_POW_SLOPE_END),
                                              PARAM(PASSED_PAWN_POW_END));
-      Scoring::params.POTENTIAL_PASSER[Scoring::Midgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_MID),
+      Scoring::Params::POTENTIAL_PASSER[Scoring::Midgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_MID),
                                              PARAM(POTENTIAL_PASSED_PAWN_SLOPE_MID),
                                              PARAM(POTENTIAL_PASSED_PAWN_POW_SLOPE_MID),
                                              PARAM(POTENTIAL_PASSED_PAWN_POW_MID));
-      Scoring::params.POTENTIAL_PASSER[Scoring::Endgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_END),
+      Scoring::Params::POTENTIAL_PASSER[Scoring::Endgame][i] = passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_END),
                                              PARAM(POTENTIAL_PASSED_PAWN_SLOPE_END),
                                              PARAM(POTENTIAL_PASSED_PAWN_POW_SLOPE_END),
                                              PARAM(POTENTIAL_PASSED_PAWN_POW_END));
-      Scoring::params.CONNECTED_PASSERS[Scoring::Midgame][i] = passer_score(i,PARAM(CONNECTED_PASSERS_BASE_MID),
+      Scoring::Params::CONNECTED_PASSERS[Scoring::Midgame][i] = passer_score(i,PARAM(CONNECTED_PASSERS_BASE_MID),
                                                      0,
                                              PARAM(CONNECTED_PASSERS_MULT_MID),
                                              PARAM(CONNECTED_PASSERS_POW_MID));
 
-      Scoring::params.CONNECTED_PASSERS[Scoring::Endgame][i] = passer_score(i,PARAM(CONNECTED_PASSERS_BASE_END),
+      Scoring::Params::CONNECTED_PASSERS[Scoring::Endgame][i] = passer_score(i,PARAM(CONNECTED_PASSERS_BASE_END),
                                                      0,
                                              PARAM(CONNECTED_PASSERS_MULT_END),
                                              PARAM(CONNECTED_PASSERS_POW_END));
-      Scoring::params.ADJACENT_PASSERS[Scoring::Midgame][i] = passer_score(i,PARAM(ADJACENT_PASSERS_BASE_MID),
+      Scoring::Params::ADJACENT_PASSERS[Scoring::Midgame][i] = passer_score(i,PARAM(ADJACENT_PASSERS_BASE_MID),
                                                      0,
                                              PARAM(ADJACENT_PASSERS_MULT_MID),
                                              PARAM(ADJACENT_PASSERS_POW_MID));
 
-      Scoring::params.ADJACENT_PASSERS[Scoring::Endgame][i] = passer_score(i,PARAM(ADJACENT_PASSERS_BASE_END),
+      Scoring::Params::ADJACENT_PASSERS[Scoring::Endgame][i] = passer_score(i,PARAM(ADJACENT_PASSERS_BASE_END),
                                                      0,
                                              PARAM(ADJACENT_PASSERS_MULT_END),
                                              PARAM(ADJACENT_PASSERS_POW_END));
@@ -573,7 +573,7 @@ void tune::writeX0(ostream &o)
 {
    o << "( ";
    int i ;
-   for (i = 0; i < Scoring::PARAM_ARRAY_SIZE; i++) {
+   for (i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       o << tune::scoring_params[i].current << ' ';
    }
    int j;
@@ -589,7 +589,7 @@ void tune::readX0(istream &is)
 {
    int c;
    while (is.good() && (c = is.get()) != '(') ;
-   for (int i = 0; is.good() && i < Scoring::PARAM_ARRAY_SIZE; i++) {
+   for (int i = 0; is.good() && i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       is >> tune::scoring_params[i].current;
    }
    for (int i = 0; is.good() && i < tune::NUM_TUNING_PARAMS; i++) {

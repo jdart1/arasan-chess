@@ -15,8 +15,6 @@ class Scoring
 
     public:
 		
-  static const int PARAM_ARRAY_SIZE = 61;
-
   enum {Midgame = 0, Endgame = 1};
 
   // indexes into the parameter array, below
@@ -84,11 +82,8 @@ class Scoring
       SIDE_PROTECTED_PAWN
     };
 
-#ifdef TUNE
-#include "varparams.h"
-#else
 #include "params.h"
-#endif
+
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
     static void init();
@@ -200,8 +195,8 @@ class Scoring
       }
       int mid, end, any;
       int blend(int materialLevel ) {
-        return any + mid*params.MATERIAL_SCALE[materialLevel]/128 +
-          end*(128-params.MATERIAL_SCALE[materialLevel])/128;
+        return any + mid*Params::MATERIAL_SCALE[materialLevel]/128 +
+          end*(128-Params::MATERIAL_SCALE[materialLevel])/128;
       }
 
       Scores & operator += (const Scores &s) {
