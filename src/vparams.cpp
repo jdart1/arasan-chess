@@ -14,6 +14,7 @@ int Scoring::Params::BISHOP_PST[2][64];
 int Scoring::Params::KNIGHT_OUTPOST[64];
 int Scoring::Params::BISHOP_OUTPOST[64];
 // TBD: rook PST
+int Scoring::Params::TRADE_DOWN[16];
 int Scoring::Params::KING_PST[2][64];
 int Scoring::Params::KNIGHT_MOBILITY[9];
 int Scoring::Params::BISHOP_MOBILITY[15];

@@ -28,6 +28,7 @@
     static PARAM_MOD int KNIGHT_OUTPOST[64];
     static PARAM_MOD int BISHOP_OUTPOST[64];
     // TBD: rook PST
+    static PARAM_MOD int TRADE_DOWN[16];
     static PARAM_MOD int KING_PST[2][64];
     static PARAM_MOD int KNIGHT_MOBILITY[9];
     static PARAM_MOD int BISHOP_MOBILITY[15];

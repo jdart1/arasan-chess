@@ -12,6 +12,8 @@ extern "C" {
 #define PARAM(x) tune::tune_params[x].current
 
 enum {
+      TRADE_DOWN_LINEAR,
+      TRADE_DOWN_SQ,
       KING_PST_RANK1_MID,
       KING_PST_RANK1_SLOPE_MID,
       KING_PST_RANK2_MID,
@@ -220,6 +222,8 @@ tune::TuneParam tune::scoring_params[Scoring::Params::PARAM_ARRAY_SIZE] = {
 };
    
 tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
+   tune::TuneParam(TRADE_DOWN_LINEAR,"trade_down_linear",10,0,75),
+   tune::TuneParam(TRADE_DOWN_SQ,"trade_down_sq",10,0,75),
    tune::TuneParam(KING_PST_RANK1_MID,"king_pst_rank1_mid",50,-500,500),
    tune::TuneParam(KING_PST_RANK1_SLOPE_MID,"king_post_rank1_slope_mid",0,-250,250),
    tune::TuneParam(KING_PST_RANK2_MID,"king_pst_rank2_mid",-200,-500,250),
@@ -433,6 +437,11 @@ void tune::initParams()
       Scoring::Params::params[i] = tune::scoring_params[i].current;
    }
    
+   for (int i = 0; i < 16; i++) {
+      int j = 16-i;
+      Scoring::Params::TRADE_DOWN[i] = round(PARAM(TRADE_DOWN_LINEAR)*j/64.0 +
+                                             PARAM(TRADE_DOWN_SQ)*j*j/256.0);
+   }
    Scoring::Params::ENDGAME_THRESHOLD=32;
    Scoring::Params::MIDGAME_THRESHOLD=0;
    int mid_thresh_set = 0;

@@ -20,7 +20,7 @@ namespace tune {
     }
   };
 
-  static const int NUM_TUNING_PARAMS = 140;
+  static const int NUM_TUNING_PARAMS = 142;
 
   extern TuneParam scoring_params[Scoring::Params::PARAM_ARRAY_SIZE];
   extern TuneParam tune_params[NUM_TUNING_PARAMS];

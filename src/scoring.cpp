@@ -552,8 +552,9 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     const int mdiff = ourmat.value() - oppmat.value();
     if (mdiff >= 3*PAWN_VALUE) {
        // Encourage trading pieces when we are ahead in material.
+       // Encourage trading pieces when we are ahead in material.
        if (oppmat.materialLevel() < 16) {
-          score += mdiff*(16-oppmat.materialLevel())/96;
+          score += mdiff*PARAM(TRADE_DOWN)[oppmat.materialLevel()]/256;
        }
        // Discourage trading pawns when our own material is low (because
        // harder to win).
@@ -2515,6 +2516,8 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params:: ROOK_MOBILITY, 15);
    o << "const int Scoring::Params::QUEEN_MOBILITY[2][29] = ";
    print_array(o,Params:: QUEEN_MOBILITY[0], QUEEN_MOBILITY[1], 29);
+   o << "const int Scoring::Params::TRADE_DOWN[16] = ";
+   print_array(o,Params::TRADE_DOWN,16);
    o << "const int Scoring::Params::KING_MOBILITY_ENDGAME[9] = ";
    print_array(o,Params::KING_MOBILITY_ENDGAME, 9);
    o << "const int Scoring::Params::PASSED_PAWN[2][8] = ";
