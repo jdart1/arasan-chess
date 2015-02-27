@@ -521,8 +521,6 @@ int CDECL main(int argc, char **argv)
           SEARCH_DEPTH = atoi(argv[arg]);
        }
        else if (strcmp(argv[arg],"-i")==0) {
-          cout << "saw -i" << endl;
-          
           ++arg;
           input_file = argv[arg];
        }
