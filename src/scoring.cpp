@@ -69,41 +69,6 @@ struct BishopTrapPattern
    Bitboard bishopMask, pawnMask;
 } BISHOP_TRAP_PATTERN[2][4];
 
-// material terms and trade bonus/penalties
-// TBD: move to Params structure
-static const int RB_ADJUST[9] = {
-   0,
-  (int)(0.25*PAWN_VALUE),
-  (int)(0.075*PAWN_VALUE),
-  (int)(-0.075*PAWN_VALUE),
-  (int)(-0.25*PAWN_VALUE),
-  (int)(-0.25*PAWN_VALUE),
-  (int)(-0.25*PAWN_VALUE),
-  (int)(-0.25*PAWN_VALUE),
-  (int)(-0.25*PAWN_VALUE)};
-
-static const int RBN_ADJUST[9] = {
-   0,
-  (int)(0.75*PAWN_VALUE - 0.25*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE - 0.075*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE + 0.075*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE),
-  (int)(0.75*PAWN_VALUE + 0.25*PAWN_VALUE)};
-
-static const int QR_ADJUST[9] = {
-  (int)(-0.5*PAWN_VALUE),
-  (int)(0*PAWN_VALUE),
-  (int)(0.5*PAWN_VALUE),
-  (int)(0.5*PAWN_VALUE),
-  (int)(0.5*PAWN_VALUE), 
-  (int)(0.5*PAWN_VALUE), 
-  (int)(0.5*PAWN_VALUE), 
-  (int)(0.5*PAWN_VALUE), 
-  (int)(0.5*PAWN_VALUE)};
-
 static const int BITBASE_WIN = 5000;
 
 static Bitboard backwardW[64], backwardB[64];
@@ -479,10 +444,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           if (ourmat.pawnCount() == 0) {
              // no mating material. We can't be better but if
              // opponent has 1-2 pawns we are not so bad
-             static const int KN_VS_PAWN_ADJUST[4] = {0,-int(2.4*PAWN_VALUE),
-                                                      -int(1.5*PAWN_VALUE),
-                                                      0};
-             score += KN_VS_PAWN_ADJUST[Util::Min(2,oppmat.pawnCount())];
+             score += APARAM(KN_VS_PAWN_ADJUST0+Util::Min(2,oppmat.pawnCount()));
           } else if (oppmat.pawnCount() == 0) {
              if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
@@ -516,7 +478,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-            score += QR_ADJUST[ourmat.minorCount()];
+           score += APARAM(QR_ADJUST0+Util::Min(3,ourmat.minorCount()));
         }
         break;
     } 
@@ -530,11 +492,12 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
             else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-                score += RB_ADJUST[ourmat.majorCount()];
+               ASSERT(ourmat.majorCount());
+               score += APARAM(RB_ADJUST1+Util::Min(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-                score -= RBN_ADJUST[oppmat.majorCount()];
+               score -= APARAM(RBN_ADJUST1+oppmat.majorCount()-1);
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -547,8 +510,6 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 #ifdef EVAL_DEBUG
     tmp = score;
 #endif
-    static const int PAWN_TRADE_SCORE[3] =
-       {-450, -250, -100 };
     const int mdiff = ourmat.value() - oppmat.value();
     if (mdiff >= 3*PAWN_VALUE) {
        // Encourage trading pieces when we are ahead in material.
@@ -559,7 +520,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
        // Discourage trading pawns when our own material is low (because
        // harder to win).
        if (ourmat.materialLevel() < 16 && ourmat.pawnCount() < 3) {
-          score += PAWN_TRADE_SCORE[ourmat.pawnCount()];
+          score += APARAM(PAWN_TRADE0+ourmat.pawnCount());
        }
     }
     // Also give bonus for having more pawns in endgame (assuming

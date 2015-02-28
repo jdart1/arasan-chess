@@ -14,7 +14,7 @@
 
   struct Params {
     
-    static const int PARAM_ARRAY_SIZE = 61;
+    static const int PARAM_ARRAY_SIZE = 79;
 
     // These have a 1-1 mapping to the tuning parameters
     static PARAM_MOD int params[PARAM_ARRAY_SIZE];

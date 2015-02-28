@@ -585,8 +585,7 @@ int CDECL main(int argc, char **argv)
     }
     GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,TOTAL_PARAMS);
     CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(TOTAL_PARAMS,&x0.front(),sigma,-1,0,gp);
-    // use sep-cma-es:
-    cmaparams.set_sep();
+    cmaparams.set_str_algo("abipop");
     CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
     for (int i = 0; i < cores; i++) {
        delete threadDatas[i].searcher;

@@ -157,6 +157,24 @@ enum {
     };
 
 tune::TuneParam tune::scoring_params[Scoring::Params::PARAM_ARRAY_SIZE] = {
+   tune::TuneParam(Scoring::RB_ADJUST1,"rb_adjust1",250,-100,400),
+   tune::TuneParam(Scoring::RB_ADJUST2,"rb_adjust2",75,-300,400),
+   tune::TuneParam(Scoring::RB_ADJUST3,"rb_adjust3",-75,-400,300),
+   tune::TuneParam(Scoring::RB_ADJUST4,"rb_adjust4",-250,-500,150),
+   tune::TuneParam(Scoring::RBN_ADJUST1,"rbn_adjust1",500,250,750),
+   tune::TuneParam(Scoring::RBN_ADJUST2,"rbn_adjust2",625,300,900),
+   tune::TuneParam(Scoring::RBN_ADJUST3,"rbn_adjust3",875,500,1200),
+   tune::TuneParam(Scoring::RBN_ADJUST4,"rbn_adjust4",1000,500,1500),
+   tune::TuneParam(Scoring::QR_ADJUST0,"qr_adjust0",-500,-750,-250),
+   tune::TuneParam(Scoring::QR_ADJUST1,"qr_adjust1",0,-500,500),
+   tune::TuneParam(Scoring::QR_ADJUST2,"qr_adjust2",500,250,750),
+   tune::TuneParam(Scoring::QR_ADJUST3,"q4_adjust3",500,250,750),
+   tune::TuneParam(Scoring::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250),
+   tune::TuneParam(Scoring::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200),
+   tune::TuneParam(Scoring::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2,",-1500,-2000,-1000),
+   tune::TuneParam(Scoring::PAWN_TRADE0,"pawn_trade0",-450,-900,0),
+   tune::TuneParam(Scoring::PAWN_TRADE1,"pawn_trade1",-250,-500,0),
+   tune::TuneParam(Scoring::PAWN_TRADE2,"pawn_trade2",-100,-250,0),
    tune::TuneParam(Scoring::CASTLING0,"castling0",0,-100,100),
    tune::TuneParam(Scoring::CASTLING1,"castling1",-70,-300,0),
    tune::TuneParam(Scoring::CASTLING2,"castling2",-100,-300,0),
@@ -348,7 +366,7 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(CONNECTED_PASSERS_MULT_MID,"connected_passers_mult_mid",0,50,100),
    tune::TuneParam(CONNECTED_PASSERS_POW_MID,"connected_passers_pow_mid",64,48,96),
    tune::TuneParam(CONNECTED_PASSERS_BASE_END,"connected_passers_base_end",0,0,200),
-   tune::TuneParam(CONNECTED_PASSERS_MULT_END,"connected_passers_mult_end",0,50,100),
+   tune::TuneParam(CONNECTED_PASSERS_MULT_END,"connected_passers_mult_end",61,0,100),
    tune::TuneParam(CONNECTED_PASSERS_POW_END,"connected_passers_pow_end",64,48,96),
    tune::TuneParam(ADJACENT_PASSERS_BASE_MID,"adjacent_passers_base_mid",0,0,200),
    tune::TuneParam(ADJACENT_PASSERS_MULT_MID,"adjacent_passers_mult_mid",0,30,100),
@@ -424,10 +442,29 @@ void tune::initParams()
    for (int i = 0; i< Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       if (tune::scoring_params[i].index != i) 
          cerr << "warning: index mismatch in tune::scoring_params at " << tune::scoring_params[i].name << endl;
+      if (tune::scoring_params[i].current < tune::scoring_params[i].min_value) {
+         cerr << "warning: param " << scoring_params[i].name << " has current < min" << endl;
+      }
+      if (tune::scoring_params[i].current > tune::scoring_params[i].max_value) {
+         cerr << "warning: param " << scoring_params[i].name << " has current > max" << endl;
+      }
+      if (tune::scoring_params[i].min_value > tune::scoring_params[i].max_value) {
+         cerr << "warning: param " << scoring_params[i].name << " has min>max" << endl;
+      }
+      
    }
    for (int i = 0; i<tune::NUM_TUNING_PARAMS; i++) {
       if (tune::tune_params[i].index != i) 
          cerr << "warning: index mismatch in tune::tune_params at " << tune::tune_params[i].name << endl;
+      if (tune::tune_params[i].current < tune::tune_params[i].min_value) {
+         cerr << "warning: param " << tune_params[i].name << " has current < min" << endl;
+      }
+      if (tune::tune_params[i].current > tune::tune_params[i].max_value) {
+         cerr << "warning: param " << tune_params[i].name << " has current > max" << endl;
+      }
+      if (tune::tune_params[i].min_value > tune::tune_params[i].max_value) {
+         cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
+      }
    }
 //#endif
 
