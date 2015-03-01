@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -24,9 +24,6 @@ class HashEntry {
          FORCED2_MASK = 0x40
       };
 
-      static const hash_t HASH_MASK = 0xffffffffffff0000ULL;
-      static const hash_t STATIC_VALUE_MASK = 0x000000000000ffffULL;
-
       static const int QSEARCH_CHECK_DEPTH = -1;
       static const int QSEARCH_NO_CHECK_DEPTH = -2;
 
@@ -38,10 +35,9 @@ class HashEntry {
       HashEntry() {
       }
 
-      HashEntry(hash_t hash, int value, int staticValue, int depth,
+      HashEntry(hash_t hash, int val, int staticValue, int depth,
          ValueType type, int age, int flags = 0,
-         Move bestMove = NullMove) {
-         contents.value = value;
+                Move bestMove = NullMove) {
          ASSERT(depth+2 >= 0 && depth+2 < 256);
          contents.depth = (byte)(depth+2);
          contents.age = age;
@@ -49,30 +45,29 @@ class HashEntry {
          contents.start = StartSquare(bestMove);
          contents.dest = DestSquare(bestMove);
          contents.promotion = PromoteTo(bestMove);
-         // Low order bits of val1 encode static value.
-         // Make non-negative:
-         val1 = (unsigned)(staticValue+Constants::MATE+1);
+         value = val;
+         static_value = staticValue;
          setEffectiveHash(hash);
       }
 
       int empty() const {
-         return val1 == 0x0ULL;
+         return hc == 0x0ULL;
       }
 
       int depth() const {
           return (int)contents.depth - 2;
       }
 
-      int value() const {
-         return (int)contents.value;
+      int getValue() const {
+         return this->value;
       }
 
       int staticValue() const {
-          return (int)(val1 & STATIC_VALUE_MASK) - Constants::MATE - 1;
+         return static_value;
       }
 
-      void setValue(int value) {
-         contents.value = (int16)value;
+      void setValue(int val) {
+         value = val;
       }
 
       ValueType type() const {
@@ -122,30 +117,28 @@ class HashEntry {
 
       bool avoidNull(int null_depth, int beta) const {
           return type() == UpperBound && depth() >= null_depth &&
-              value() < beta;
+              getValue() < beta;
       }
 
       int operator == (const hash_t hash) const {
-          return getEffectiveHash() == (hash & HASH_MASK);
+         return getEffectiveHash() == hash;
       }
 
       int operator != (const hash_t hash) const {
-          return getEffectiveHash() != (hash & HASH_MASK);
+         return getEffectiveHash() != hash;
       }
 
       hash_t getEffectiveHash() const {
-         return (val1 ^ val2) & HASH_MASK;
+         return (hc ^ val2);
       }
 
       void setEffectiveHash(hash_t hash) {
-         val1 &= ~HASH_MASK;
-         val1 |= (hash ^ val2) & HASH_MASK;
-	 ASSERT(*this == hash);
+         hc = (hash ^ val2);
       }
 
    protected:
 
-      uint64 val1;
+      uint64 hc;
       union
       {
 #ifdef _MSC_VER
@@ -153,7 +146,7 @@ class HashEntry {
 #endif
          struct
          {
-            int16 value;
+            int16 pad;
             byte depth;
             byte age;
             byte flags;
@@ -168,6 +161,8 @@ class HashEntry {
       __attribute__((packed))
 #endif
       ;
+      int32 value;
+      int32 static_value;
 };
 
 class Hash {

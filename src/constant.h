@@ -9,8 +9,8 @@ class Constants
 public:	
 
 enum {MaxPly = 62};
-enum {MATE = 10000 };
-enum {MATE_RANGE = 10000-256 };
+enum {MATE = 100000 };
+enum {MATE_RANGE = 100000-256 };
 enum {MaxMoves = 200};		
 enum {MaxCPUs = 64};		
 enum {HISTORY_MAX =32768};

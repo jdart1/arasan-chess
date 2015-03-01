@@ -18,7 +18,6 @@ extern "C"
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
 
-
 #ifdef TUNE
 #include "vparams.cpp"
 #else
@@ -26,7 +25,7 @@ extern "C"
 #endif
 
 #define PARAM(x) Params::x
-#define APARAM(x,index) *(&Params::x+index)
+#define APARAM(x,index) Params::x[index]
 
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
@@ -445,7 +444,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           if (ourmat.pawnCount() == 0) {
              // no mating material. We can't be better but if
              // opponent has 1-2 pawns we are not so bad
-             score += APARAM(KN_VS_PAWN_ADJUST0,Util::Min(2,oppmat.pawnCount()));
+             score += APARAM(KN_VS_PAWN_ADJUST,Util::Min(2,oppmat.pawnCount()));
           } else if (oppmat.pawnCount() == 0) {
              if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
@@ -479,7 +478,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-           score += APARAM(QR_ADJUST0,Util::Min(3,ourmat.minorCount()));
+           score += APARAM(QR_ADJUST,Util::Min(3,ourmat.minorCount()));
         }
         break;
     } 
@@ -493,12 +492,13 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
             else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount());
-               score += APARAM(RB_ADJUST1,Util::Min(3,ourmat.majorCount()-1));
+               ASSERT(ourmat.majorCount()>=0);
+               score += APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               score -= APARAM(RBN_ADJUST1,oppmat.majorCount()-1);
+               ASSERT(oppmat.majorCount()>=0);
+               score -= APARAM(RBN_ADJUST,Util::Min(3,oppmat.majorCount()-1));
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -520,7 +520,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
        // Discourage trading pawns when our own material is low (because
        // harder to win).
        if (ourmat.materialLevel() < 16 && ourmat.pawnCount() < 3) {
-          score += APARAM(PAWN_TRADE0,ourmat.pawnCount());
+          score += APARAM(PAWN_TRADE,ourmat.pawnCount());
        }
     }
     // Also give bonus for having more pawns in endgame (assuming
@@ -629,7 +629,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 template<ColorType side>
 int Scoring::calcCover(const Board &board, int file, int rank) {
    Square sq, pawn;
-   int cover = -PARAM(KING_COVER1);
+   int cover = -APARAM(KING_COVER,1);
    Bitboard pawns;
    if (side == White) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
@@ -639,10 +639,10 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       }
       else {
          pawn = pawns.firstOne();
-         cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) - rank));
+         cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) - rank));
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
-            cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) + 1 - rank));
+            cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) + 1 - rank));
          }
       }
    }
@@ -654,10 +654,10 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       }
       else {
          pawn = pawns.lastOne();
-         cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) - rank));
+         cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) - rank));
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
-            cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) + 1 - rank));
+            cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) + 1 - rank));
          }
       }
    }
@@ -1705,7 +1705,14 @@ int Scoring::evalu8(const Board &board) {
 
    // Because positional scoring is inexact anyway, round the scores
    // so we will not change the selected move over a trivial difference.
-   score = (score / 4) * 4;
+   //score = (score / 4) * 4;
+
+#ifdef _DEBUG
+   if (Util::Abs(score) >= Constants::MATE) {
+      cout << board << endl;
+      ASSERT(0);
+   }
+#endif
 
    return score;
 }
@@ -2038,7 +2045,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    }
 
    // Penalize loss of castling.
-   int castling = APARAM(CASTLING0,(int)board.castleStatus(side));
+   int castling = APARAM(CASTLING,(int)board.castleStatus(side));
    scores.mid += castling;
 #ifdef EVAL_DEBUG
    cout << "castling score: " << castling << endl;
@@ -2453,7 +2460,22 @@ void Scoring::Params::write(ostream &o)
    o << "// This is a generated file. Do not edit." << endl;
    o << "//" << endl;
    o << endl;
-   for (int i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+   o << "const int Scoring::Params::RB_ADJUST[4] = ";
+   print_array(o,Params::RB_ADJUST,4);
+   o << "const int Scoring::Params::RBN_ADJUST[4] = ";
+   print_array(o,Params::RBN_ADJUST,4);
+   o << "const int Scoring::Params::QR_ADJUST[4] = ";
+   print_array(o,Params::QR_ADJUST,4);
+   o << "const int Scoring::Params::KN_VS_PAWN_ADJUST[3] = ";
+   print_array(o,Params::KN_VS_PAWN_ADJUST,3);
+   o << "const int Scoring::Params::PAWN_TRADE[3] = ";
+   print_array(o,Params::PAWN_TRADE,3);
+   o << "const int Scoring::Params::CASTLING[6] = ";
+   print_array(o,Params::CASTLING,6);
+   o << "const int Scoring::Params::KING_COVER[5] = ";
+   print_array(o,Params::KING_COVER,5);
+
+   for (int i = 29; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       o << "const int Scoring::Params::";
       const string str(tune::tune_params[i].name);
       

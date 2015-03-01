@@ -3,35 +3,13 @@
 // definitions of scoring parameters, non-const for tuning
 
 // These have a 1-1 mapping to the tuning parameters
-int Scoring::Params::RB_ADJUST1;
-int Scoring::Params::RB_ADJUST2;
-int Scoring::Params::RB_ADJUST3;
-int Scoring::Params::RB_ADJUST4;
-int Scoring::Params::RBN_ADJUST1;
-int Scoring::Params::RBN_ADJUST2;
-int Scoring::Params::RBN_ADJUST3;
-int Scoring::Params::RBN_ADJUST4;
-int Scoring::Params::QR_ADJUST0;
-int Scoring::Params::QR_ADJUST1;
-int Scoring::Params::QR_ADJUST2;
-int Scoring::Params::QR_ADJUST3;
-int Scoring::Params::KN_VS_PAWN_ADJUST0;
-int Scoring::Params::KN_VS_PAWN_ADJUST1;
-int Scoring::Params::KN_VS_PAWN_ADJUST2;
-int Scoring::Params::PAWN_TRADE0;
-int Scoring::Params::PAWN_TRADE1;
-int Scoring::Params::PAWN_TRADE2;
-int Scoring::Params::CASTLING0;
-int Scoring::Params::CASTLING1;
-int Scoring::Params::CASTLING2;
-int Scoring::Params::CASTLING3;
-int Scoring::Params::CASTLING4;
-int Scoring::Params::CASTLING5;
-int Scoring::Params::KING_COVER0;
-int Scoring::Params::KING_COVER1;
-int Scoring::Params::KING_COVER2;
-int Scoring::Params::KING_COVER3;
-int Scoring::Params::KING_COVER4;
+int Scoring::Params::RB_ADJUST[4];
+int Scoring::Params::RBN_ADJUST[4];
+int Scoring::Params::QR_ADJUST[4];
+int Scoring::Params::KN_VS_PAWN_ADJUST[3];
+int Scoring::Params::PAWN_TRADE[3];
+int Scoring::Params::CASTLING[6];
+int Scoring::Params::KING_COVER[5];
 int Scoring::Params::KING_FILE_OPEN;
 int Scoring::Params::KING_DISTANCE_BASIS;
 int Scoring::Params::KING_DISTANCE_MULT;

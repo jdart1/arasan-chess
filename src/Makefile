@@ -57,9 +57,12 @@ SMPLIB   = -lpthread
 
 PGO_RUN_FLAGS = -H 64M
 
+TUNE_CFLAGS := -ansi -std=c++11 -DTUNE
+TUNE_OPT = -DUSE_INTRINSICS -O2
+
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
-DEBUG	= -g
+DEBUG = -g
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -137,11 +140,9 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 46)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.6 or higher:
-#CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
-#GTB_OPT := -Ofast -finline-functions $(SSE)
-CFLAGS := $(CFLAGS) -O2 -ansi
-CFLAGS := $(CFLAGS) -std=c++11
+GTB_OPT := -Ofast -finline-functions $(SSE)
 else
 ifeq "$(GCCOLD)" "0"
 # pre-4.6 gcc options:
@@ -225,8 +226,7 @@ $(BUILD)/%.o: %.cpp
 	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED) \
-	-UNALIMOV_TBS -UGAVIOTA_TBS -DTUNE $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(PROF) $(TRACE) $(TUNE_CFLAGS) $(TUNE_OPT) $(SMP_FLAGS) -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED)$(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)

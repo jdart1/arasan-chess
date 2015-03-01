@@ -477,6 +477,7 @@ static int passer_score(int i, int base, int slope, int pow_slope, int power)
 
 static void symmetric_table_init(int *target, int tuning, int start_rank) 
 {
+   memset((void*)target,'\0',64*sizeof(int));
    for (int rank = start_rank; rank <=8; rank++) {
       int start = tune::tune_params[tuning++].current;
       int slope = tune::tune_params[tuning++].current;
@@ -537,13 +538,36 @@ void tune::initParams()
 {
    checkParams();
 
-   memset((void*)&Scoring::Params::RB_ADJUST1,'\0',sizeof(Scoring::Params));
-   
-   int *dest = &Scoring::Params::RB_ADJUST1;
-   for (int i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
-      *dest++ = tune::tune_params[i].current;
+   int *dest = Scoring::Params::RB_ADJUST;
+   int i, j = 0;
+   for (i = 0; i < 4; i++) {
+      *dest++ = tune::tune_params[j++].current;
    }
-   
+   dest = Scoring::Params::RBN_ADJUST;
+   for (i = 0; i < 4; i++) {
+      *dest++ = tune::tune_params[j++].current;
+   }
+   dest = Scoring::Params::QR_ADJUST;
+   for (i = 0; i < 4; i++) {
+      *dest++ = tune::tune_params[j++].current;
+   }
+   dest = Scoring::Params::KN_VS_PAWN_ADJUST;
+   for (i = 0; i < 3; i++) {
+      *dest++ = tune::tune_params[j++].current;
+   }
+   dest = Scoring::Params::PAWN_TRADE;
+   for (i = 0; i < 3; i++) {
+      *dest++ = tune::tune_params[j++].current;
+   }
+   dest = Scoring::Params::CASTLING;
+   for (i = 0; i < 6; i++) {
+      *dest++ = tune::tune_params[j++].current;
+   }
+   dest = Scoring::Params::KING_COVER;
+   for (i = 0; i < 5; i++) {
+      *dest++ = tune::tune_params[j++].current;
+   }
+
    for (int i = 0; i < 16; i++) {
       int j = 16-i;
       Scoring::Params::TRADE_DOWN[i] = round(PARAM(TRADE_DOWN_LINEAR)*j +
@@ -682,7 +706,6 @@ void tune::initParams()
                                              PARAM(ADJACENT_PASSERS_MULT_END),
                                              PARAM(ADJACENT_PASSERS_POW_END));
    }
-
 }
 
 void tune::writeX0(ostream &o) 

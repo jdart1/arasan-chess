@@ -3,6 +3,8 @@
 #ifndef _PARAMS_H
 #define _PARAMS_H
 
+#include "types.h"
+
 #ifdef TUNE
 // scoring parameters that are not const, so can be
 // modified during tuning
@@ -12,40 +14,19 @@
 #define PARAM_MOD const
 #endif
 
-  struct Params {
+struct Params 
+BEGIN_PACKED_STRUCT
     
     // number of fixed parameters that map 1-1 to tuning paramaters
     static const int PARAM_ARRAY_SIZE = 79;
 
-    static PARAM_MOD int RB_ADJUST1;
-    static PARAM_MOD int RB_ADJUST2;
-    static PARAM_MOD int RB_ADJUST3;
-    static PARAM_MOD int RB_ADJUST4;
-    static PARAM_MOD int RBN_ADJUST1;
-    static PARAM_MOD int RBN_ADJUST2;
-    static PARAM_MOD int RBN_ADJUST3;
-    static PARAM_MOD int RBN_ADJUST4;
-    static PARAM_MOD int QR_ADJUST0;
-    static PARAM_MOD int QR_ADJUST1;
-    static PARAM_MOD int QR_ADJUST2;
-    static PARAM_MOD int QR_ADJUST3;
-    static PARAM_MOD int KN_VS_PAWN_ADJUST0;
-    static PARAM_MOD int KN_VS_PAWN_ADJUST1;
-    static PARAM_MOD int KN_VS_PAWN_ADJUST2;
-    static PARAM_MOD int PAWN_TRADE0;
-    static PARAM_MOD int PAWN_TRADE1;
-    static PARAM_MOD int PAWN_TRADE2;
-    static PARAM_MOD int CASTLING0;
-    static PARAM_MOD int CASTLING1;
-    static PARAM_MOD int CASTLING2;
-    static PARAM_MOD int CASTLING3;
-    static PARAM_MOD int CASTLING4;
-    static PARAM_MOD int CASTLING5;
-    static PARAM_MOD int KING_COVER0;
-    static PARAM_MOD int KING_COVER1;
-    static PARAM_MOD int KING_COVER2;
-    static PARAM_MOD int KING_COVER3;
-    static PARAM_MOD int KING_COVER4;
+    static PARAM_MOD int RB_ADJUST[4];
+    static PARAM_MOD int RBN_ADJUST[4];
+    static PARAM_MOD int QR_ADJUST[4];
+    static PARAM_MOD int KN_VS_PAWN_ADJUST[3];
+    static PARAM_MOD int PAWN_TRADE[3];
+    static PARAM_MOD int CASTLING[6];
+    static PARAM_MOD int KING_COVER[5];
     static PARAM_MOD int KING_FILE_OPEN;
     static PARAM_MOD int KING_DISTANCE_BASIS;
     static PARAM_MOD int KING_DISTANCE_MULT;
@@ -123,6 +104,6 @@
 #ifdef TUNE
     static void write(ostream &);
 #endif
-  };
+END_PACKED_STRUCT
 
 #endif
