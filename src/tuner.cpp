@@ -39,6 +39,10 @@ static vector<string> * positions = NULL;
 
 static bool terminated = false;
 
+static string out_file_name="params.cpp";
+
+static string x0_file_name="x0";
+
 enum Strategy { MMTO, Texel };
 
 static const Strategy strategy = Texel;
@@ -56,8 +60,6 @@ static struct ThreadData {
 } threadDatas[MAX_THREADS];
 
 static pthread_attr_t stackSizeAttrib;
-
-static const int TOTAL_PARAMS = tune::NUM_TUNING_PARAMS + Scoring::Params::PARAM_ARRAY_SIZE;
 
 static int search(SearchController* searcher, const Board &board, int alpha, int beta, int depth) 
 {
@@ -422,18 +424,9 @@ static double computeLsqError() {
 static FitFunc evaluator = [](const double *x, const int dim) 
 {
    int i;
-   for (i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) 
+   for (i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
    {
-      tune::scoring_params[i].current = unscale(x[i],tune::scoring_params[i]);
-//      cout << tune::tune_params[i].name << ' ' <<
-//      tune::tune_params[i].current <<  ' ' << x[i] << endl;
-   }
-   int j = 0;
-   for (; j < tune::NUM_TUNING_PARAMS ; i++, j++ ) 
-   {
-      tune::tune_params[j].current = unscale(x[i],tune::tune_params[j]);
-//      cout << tune::tune_params[j].name << ' ' << 
-//      tune::tune_params[j].current << ' ' << x[i] << endl;
+      tune::tune_params[i].current = unscale(x[i],tune::tune_params[i]);
    }
    tune::initParams();
    double err = computeLsqError()/positions->size();
@@ -458,9 +451,20 @@ static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> pro
    }
    cout << endl;
 */   
-   tune::writeX0(cout);
-   Scoring::Params::write(cout);
-   cout << endl;
+   if (x0_file_name.length()) {
+      ofstream x0_out(x0_file_name,ios::out | ios::trunc);
+      tune::writeX0(x0_out);
+   } else {
+      tune::writeX0(cout);
+   }
+   if (out_file_name.length()) {
+      ofstream param_out(out_file_name,ios::out | ios::trunc);
+      Scoring::Params::write(param_out);
+      param_out << endl;
+   } else {
+      Scoring::Params::write(cout);
+      cout << endl;
+   }
    return 0;
 };
 
@@ -479,6 +483,12 @@ static uint64 readTrainingFile() {
    }
    cout << "training file read, " << lines << " lines" << endl;
    return lines;
+}
+
+static void usage() 
+{
+   cerr << "Usage: tuner -i <input objective file> -c <threads> -p <search depth>" << endl;
+   cerr << "-o <output parameter file> -x <output objective file> training_file" << endl;
 }
 
 int CDECL main(int argc, char **argv)
@@ -507,7 +517,7 @@ int CDECL main(int argc, char **argv)
     string input_file;
     
     if (argc < 2) {
-       cerr << "not enough arguments" << endl;
+       usage();
        return -1;
     }
     int arg = 1;
@@ -524,6 +534,18 @@ int CDECL main(int argc, char **argv)
           ++arg;
           input_file = argv[arg];
        }
+       else if (strcmp(argv[arg],"-o")==0) {
+          ++arg;
+          out_file_name = argv[arg];
+       }
+       else if (strcmp(argv[arg],"-x")==0) {
+          ++arg;
+          x0_file_name = argv[arg];
+       } else {
+          cerr << "invalid option: " << argv[arg] << endl;
+          usage();
+          exit(-1);
+       }
        ++arg;
     }
         
@@ -539,6 +561,7 @@ int CDECL main(int argc, char **argv)
        ifstream is(input_file);
        if (is.good()) {
           tune::readX0(is);
+          tune::checkParams();
        }
        else {
           cerr << "warning: cannot open input file " << input_file << endl;
@@ -568,23 +591,16 @@ int CDECL main(int argc, char **argv)
     vector<double> x0;
     double sigma = 0.05;
     // use variant with box bounds
-    double lbounds[TOTAL_PARAMS],
-       ubounds[TOTAL_PARAMS];
+    double lbounds[tune::NUM_TUNING_PARAMS],
+       ubounds[tune::NUM_TUNING_PARAMS];
     // initialize & normalize
-    int i;
-    for (i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
-       x0.push_back(scale(tune::scoring_params[i]));
+    for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+       x0.push_back(scale(tune::tune_params[i]));
        lbounds[i] = 0.0;
        ubounds[i] = 1.0;
     }
-    int j = 0;
-    for (; j < tune::NUM_TUNING_PARAMS; i++, j++) {
-       x0.push_back(scale(tune::tune_params[j]));
-       lbounds[i] = 0.0;
-       ubounds[i] = 1.0;
-    }
-    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,TOTAL_PARAMS);
-    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(TOTAL_PARAMS,&x0.front(),sigma,-1,0,gp);
+    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,tune::NUM_TUNING_PARAMS);
+    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(tune::NUM_TUNING_PARAMS,&x0.front(),sigma,-1,0,gp);
     cmaparams.set_str_algo("abipop");
     CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
     for (int i = 0; i < cores; i++) {

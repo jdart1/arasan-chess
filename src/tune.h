@@ -20,14 +20,15 @@ namespace tune {
     }
   };
 
-  static const int NUM_TUNING_PARAMS = 142;
+  static const int NUM_TUNING_PARAMS = 142+79;
 
-  extern TuneParam scoring_params[Scoring::Params::PARAM_ARRAY_SIZE];
   extern TuneParam tune_params[NUM_TUNING_PARAMS];
 
   // initialize scoring parameters from the current tuned parameter
   // set
   extern void initParams();
+
+  extern void checkParams();
 
   extern void writeX0(ostream &);
 

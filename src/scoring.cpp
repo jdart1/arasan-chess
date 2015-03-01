@@ -11,6 +11,7 @@ extern "C"
 {
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 };
 #include <iomanip>
 
@@ -24,8 +25,8 @@ extern "C"
 #include "params.cpp"
 #endif
 
-#define APARAM(x) Params::params[x]
 #define PARAM(x) Params::x
+#define APARAM(x,index) *(&Params::x+index)
 
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
@@ -444,7 +445,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           if (ourmat.pawnCount() == 0) {
              // no mating material. We can't be better but if
              // opponent has 1-2 pawns we are not so bad
-             score += APARAM(KN_VS_PAWN_ADJUST0+Util::Min(2,oppmat.pawnCount()));
+             score += APARAM(KN_VS_PAWN_ADJUST0,Util::Min(2,oppmat.pawnCount()));
           } else if (oppmat.pawnCount() == 0) {
              if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
@@ -478,7 +479,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-           score += APARAM(QR_ADJUST0+Util::Min(3,ourmat.minorCount()));
+           score += APARAM(QR_ADJUST0,Util::Min(3,ourmat.minorCount()));
         }
         break;
     } 
@@ -493,11 +494,11 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount());
-               score += APARAM(RB_ADJUST1+Util::Min(3,ourmat.majorCount()-1));
+               score += APARAM(RB_ADJUST1,Util::Min(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               score -= APARAM(RBN_ADJUST1+oppmat.majorCount()-1);
+               score -= APARAM(RBN_ADJUST1,oppmat.majorCount()-1);
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -513,14 +514,13 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     const int mdiff = ourmat.value() - oppmat.value();
     if (mdiff >= 3*PAWN_VALUE) {
        // Encourage trading pieces when we are ahead in material.
-       // Encourage trading pieces when we are ahead in material.
        if (oppmat.materialLevel() < 16) {
-          score += mdiff*PARAM(TRADE_DOWN)[oppmat.materialLevel()]/256;
+          score += mdiff*PARAM(TRADE_DOWN)[oppmat.materialLevel()]/4096;
        }
        // Discourage trading pawns when our own material is low (because
        // harder to win).
        if (ourmat.materialLevel() < 16 && ourmat.pawnCount() < 3) {
-          score += APARAM(PAWN_TRADE0+ourmat.pawnCount());
+          score += APARAM(PAWN_TRADE0,ourmat.pawnCount());
        }
     }
     // Also give bonus for having more pawns in endgame (assuming
@@ -528,7 +528,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     if (mdiff>=0 && pieceDiff>=0 && ourmat.materialLevel() <= PARAM(ENDGAME_THRESHOLD)) {
        const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
        if (pawnDiff > 0) {
-          score += pawnDiff*APARAM(ENDGAME_PAWN_BONUS)*(128-PARAM(MATERIAL_SCALE)[ourmat.materialLevel()])/128;
+          score += pawnDiff*PARAM(ENDGAME_PAWN_BONUS)*(128-PARAM(MATERIAL_SCALE)[ourmat.materialLevel()])/128;
        }
     }
 #ifdef EVAL_DEBUG
@@ -629,20 +629,20 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 template<ColorType side>
 int Scoring::calcCover(const Board &board, int file, int rank) {
    Square sq, pawn;
-   int cover = -APARAM(KING_COVER1);
+   int cover = -PARAM(KING_COVER1);
    Bitboard pawns;
    if (side == White) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
       pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
       if (!pawns) {
-         if (FileOpen(board, file)) cover += APARAM(KING_FILE_OPEN);
+         if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
       }
       else {
          pawn = pawns.firstOne();
-         cover += APARAM(KING_COVER0 + Util::Min(4, Rank<side> (pawn) - rank));
+         cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) - rank));
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
-            cover += APARAM(KING_COVER0 + Util::Min(4, Rank<side> (pawn) + 1 - rank));
+            cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) + 1 - rank));
          }
       }
    }
@@ -650,14 +650,14 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
       pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
       if (!pawns) {
-         if (FileOpen(board, file)) cover += APARAM(KING_FILE_OPEN);
+         if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
       }
       else {
          pawn = pawns.lastOne();
-         cover += APARAM(KING_COVER0 + Util::Min(4, Rank<side> (pawn) - rank));
+         cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) - rank));
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
-            cover += APARAM(KING_COVER0 + Util::Min(4, Rank<side> (pawn) + 1 - rank));
+            cover += APARAM(KING_COVER0,Util::Min(4, Rank<side> (pawn) + 1 - rank));
          }
       }
    }
@@ -802,7 +802,7 @@ int Scoring::outpost(const Board &board,
       }
       else {
          // not defended by pawn
-         return APARAM(OUTPOST_NOT_DEFENDED) * outpost / 64;
+         return PARAM(OUTPOST_NOT_DEFENDED) * outpost / 64;
       }
    }
    else {
@@ -908,15 +908,15 @@ void Scoring::pieceScore(const Board &board,
          {
             const int r = Rank(sq, side);
             if (r == 7) {
-               scores.mid += APARAM(ROOK_ON_7TH_MID);
-               scores.end += APARAM(ROOK_ON_7TH_END);
+               scores.mid += PARAM(ROOK_ON_7TH_MID);
+               scores.end += PARAM(ROOK_ON_7TH_END);
 
                Bitboard right(Attacks::rank_mask_right[r] & board.occupied[side]);
                if (right && board[right.firstOne()] == MakePiece(Rook, side)) {
 
                   // 2 connected rooks on 7th
-                  scores.mid += APARAM(TWO_ROOKS_ON_7TH_MID);
-                  scores.end += APARAM(TWO_ROOKS_ON_7TH_END);
+                  scores.mid += PARAM(TWO_ROOKS_ON_7TH_MID);
+                  scores.end += PARAM(TWO_ROOKS_ON_7TH_END);
                }
             }
 
@@ -924,14 +924,14 @@ void Scoring::pieceScore(const Board &board,
             const Bitboard rattacks(board.rookAttacks(sq));
             allAttacks |= rattacks;
             if (FileOpen(board, file)) {
-               scores.mid += APARAM(ROOK_ON_OPEN_FILE_MID);
-               scores.end += APARAM(ROOK_ON_OPEN_FILE_END);
+               scores.mid += PARAM(ROOK_ON_OPEN_FILE_MID);
+               scores.end += PARAM(ROOK_ON_OPEN_FILE_END);
             }
 
             Bitboard rattacks2(board.rookAttacks(sq, side));
             if (rattacks2 & oppPawnData.weak_pawns) {
-               scores.mid += APARAM(ROOK_ATTACKS_WEAK_PAWN_MID);
-               scores.end += APARAM(ROOK_ATTACKS_WEAK_PAWN_END);
+               scores.mid += PARAM(ROOK_ATTACKS_WEAK_PAWN_MID);
+               scores.end += PARAM(ROOK_ATTACKS_WEAK_PAWN_END);
             }
 
             const int mobl = Bitboard(rattacks2 &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
@@ -995,7 +995,7 @@ void Scoring::pieceScore(const Board &board,
                if (rank > 3) {
                   Bitboard back
                            ((board.knight_bits[side] | board.bishop_bits[side]) & Attacks::rank_mask[side == White ? 0 : 7]);
-                  int queenOut = (APARAM(QUEEN_OUT) - (rank - 4) / 2) * (int) back.bitCount();
+                  int queenOut = (PARAM(QUEEN_OUT) - (rank - 4) / 2) * (int) back.bitCount();
 #ifdef EVAL_DEBUG
                   if (queenOut) {
                      cout << "premature Queen develop (" << ColorImage(side) << "): " << queenOut << endl;
@@ -1076,8 +1076,8 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
             Scores tmp = scores;
 #endif
-            scores.mid += APARAM(BAD_BISHOP_MID) * (whitePawns - blackPawns);
-            scores.end += APARAM(BAD_BISHOP_END) * (whitePawns - blackPawns);
+            scores.mid += PARAM(BAD_BISHOP_MID) * (whitePawns - blackPawns);
+            scores.end += PARAM(BAD_BISHOP_END) * (whitePawns - blackPawns);
 #ifdef EVAL_DEBUG
             cout << "bad bishop (" << ColorImage(side) << "): (" <<
                scores.mid - tmp.mid << "," << scores.end - tmp.end <<
@@ -1087,7 +1087,7 @@ void Scoring::pieceScore(const Board &board,
 
          if (opp_pawns) {
             // penalize pawns on same color square as opposing single Bishop
-            opp_scores.end += (oppPawnData.w_square_pawns * APARAM(BISHOP_PAWN_PLACEMENT_END))/ opp_pawns;
+            opp_scores.end += (oppPawnData.w_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END))/ opp_pawns;
          }
       }
       else {
@@ -1098,8 +1098,8 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
             Scores tmp = scores;
 #endif
-            scores.mid += APARAM(BAD_BISHOP_MID) * (blackPawns - whitePawns);
-            scores.end += APARAM(BAD_BISHOP_END) * (blackPawns - whitePawns);
+            scores.mid += PARAM(BAD_BISHOP_MID) * (blackPawns - whitePawns);
+            scores.end += PARAM(BAD_BISHOP_END) * (blackPawns - whitePawns);
 #ifdef EVAL_DEBUG
             cout << "bad bishop (" << ColorImage(side) << "): (" <<
                scores.mid - tmp.mid << "," << scores.end - tmp.end <<
@@ -1109,14 +1109,14 @@ void Scoring::pieceScore(const Board &board,
 
          if (opp_pawns) {
             // penalize pawns on same color square as opposing single Bishop
-            opp_scores.end += (oppPawnData.b_square_pawns * APARAM(BISHOP_PAWN_PLACEMENT_END))/opp_pawns;
+            opp_scores.end += (oppPawnData.b_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END))/opp_pawns;
          }
       }
    }
    else if (bishopCount >= 2) {
       // Bishop pair bonus, higher bonus in endgame
-      scores.mid += APARAM(BISHOP_PAIR_MID);
-      scores.end += APARAM(BISHOP_PAIR_END);
+      scores.mid += PARAM(BISHOP_PAIR_MID);
+      scores.end += PARAM(BISHOP_PAIR_END);
 #ifdef EVAL_DEBUG
       cout << "bishop pair (" << ColorImage(side) << ")" << endl;
 #endif
@@ -1151,18 +1151,18 @@ void Scoring::pieceScore(const Board &board,
       }
       attackCount = Util::Min(4,attackCount);
       int attack =
-         (APARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
-          APARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + APARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
+         (PARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
+          PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
 //      int attack = 8*KING_ATTACK_SCALE[Util::Min(attack/8, 511)];
-      if (pin_count) attack += APARAM(PIN_MULTIPLIER_MID) * pin_count;
+      if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
 #ifdef BOOST
 #ifdef EVAL_DEBUG
       int kattack_tmp = kattack;
 #endif
-      if (kattack && cover < -APARAM(KING_ATTACK_BOOST_THRESHOLD)) {
-         kattack += Util::Min(kattack / 2, (-(cover + APARAM(KING_ATTACK_BOOST_THRESHOLD)) * kattack) / APARAM(KING_ATTACK_BOOST_DIVISOR));
+      if (kattack && cover < -PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
+         kattack += Util::Min(kattack / 2, (-(cover + PARAM(KING_ATTACK_BOOST_THRESHOLD)) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif
@@ -1179,7 +1179,7 @@ void Scoring::pieceScore(const Board &board,
       opp_scores.mid -= kattack;
    }
 
-   if (pin_count) scores.end += APARAM(PIN_MULTIPLIER_END) * pin_count;
+   if (pin_count) scores.end += PARAM(PIN_MULTIPLIER_END) * pin_count;
 }
 
 int Scoring::calcPawnData(const Board &board,
@@ -1250,7 +1250,6 @@ int Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " passed";
 #endif
-
             // Doubled but potentially passed pawn.
             // Don't score as passed but give "potential passer" bonus
             entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
@@ -1320,8 +1319,8 @@ int Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
                   cout << " weak";
 #endif
-                  entr.midgame_score += APARAM(WEAK_PAWN_MID);
-                  entr.endgame_score += APARAM(WEAK_PAWN_END);
+                  entr.midgame_score += PARAM(WEAK_PAWN_MID);
+                  entr.endgame_score += PARAM(WEAK_PAWN_END);
                   weak++;
               }
           }
@@ -1490,7 +1489,7 @@ int Scoring::calcPawnData(const Board &board,
       }
 
       if (!passed && rank >= 4) {
-         int space = APARAM(SPACE) * (rank - 3);
+         int space = PARAM(SPACE) * (rank - 3);
          if (duo) space *= 2;
          score += space;
 #ifdef PAWN_DEBUG
@@ -1531,7 +1530,7 @@ int Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
    int tmp = entr.midgame_score;
 #endif
-   entr.midgame_score += APARAM(PAWN_CENTER_SCORE_MID) * centerCalc.bitCount();
+   entr.midgame_score += PARAM(PAWN_CENTER_SCORE_MID) * centerCalc.bitCount();
 #ifdef PAWN_DEBUG
    cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << endl;
 #endif
@@ -1716,27 +1715,27 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    scores.end += pawnData.endgame_score;
 
    if (board.rook_bits[OppositeColor(side)] | board.queen_bits[OppositeColor(side)]) {
-      scores.mid += (int) pawnData.weakopen * APARAM(WEAK_ON_OPEN_FILE_MID);
-      scores.end += (int) pawnData.weakopen * APARAM(WEAK_ON_OPEN_FILE_END);
+      scores.mid += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE_MID);
+      scores.end += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE_END);
    }
 
    // interaction of pawns and pieces
    if (side == White) {
       if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
-         scores.mid += APARAM(CENTER_PAWN_BLOCK);
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
 
       if (board[chess::E2] == WhitePawn && board[chess::E3] > WhitePawn && board[chess::E3] < BlackPawn) {
-         scores.mid += APARAM(CENTER_PAWN_BLOCK);
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
    }
    else {
       if (board[chess::D7] == BlackPawn && board[chess::D6] > BlackPawn) {
-         scores.mid += APARAM(CENTER_PAWN_BLOCK);
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
 
       if (board[chess::E7] == BlackPawn && board[chess::E6] > BlackPawn) {
-         scores.mid += APARAM(CENTER_PAWN_BLOCK);
+         scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
    }
 
@@ -1762,8 +1761,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
       if (blocker != InvalidSquare) {
          // Tuned, Jan. 2015
-         int mid_penalty = APARAM(PP_BLOCK_BASE_MID) + APARAM(PP_BLOCK_MULT_MID) * PARAM(PASSED_PAWN)[Midgame][rank]/256;
-         int end_penalty = APARAM(PP_BLOCK_BASE_END) + APARAM(PP_BLOCK_MULT_END) * PARAM(PASSED_PAWN)[Endgame][rank]/256;
+         int mid_penalty = PARAM(PP_BLOCK_BASE_MID) + PARAM(PP_BLOCK_MULT_MID) * PARAM(PASSED_PAWN)[Midgame][rank]/256;
+         int end_penalty = PARAM(PP_BLOCK_BASE_END) + PARAM(PP_BLOCK_MULT_END) * PARAM(PASSED_PAWN)[Endgame][rank]/256;
          if (blocker != sq2) {
             mid_penalty /= (Rank(blocker,side)-rank);
          }
@@ -1785,32 +1784,32 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             Attacks::file_mask_down[sq];
       if (atcks) {
          if (atcks & mask & board.occupied[side]) {
-            scores.mid += (Rank(sq, side) - 1) * APARAM(PASSER_OWN_PIECE_BLOCK_MID);
-            scores.end += (Rank(sq, side) - 1) * APARAM(PASSER_OWN_PIECE_BLOCK_END);
+            scores.mid += (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_MID);
+            scores.end += (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_END);
          }
       }
 
       if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
          atcks &= board.rook_bits[side];
          if (atcks & mask) {
-            scores.mid += APARAM(ROOK_BEHIND_PP_MID);
-            scores.end += APARAM(ROOK_BEHIND_PP_END);
+            scores.mid += PARAM(ROOK_BEHIND_PP_MID);
+            scores.end += PARAM(ROOK_BEHIND_PP_END);
          }
          
          // Rook adjacent to pawn on 7th is good too
          if (rank == 7 && file < 8 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file])) {
             Bitboard atcks(board.fileAttacks(sq + 1) & board.rook_bits[side]);
             if (!atcks.isClear() || board.rook_bits[side].isSet(sq + 1)) {
-               scores.mid += APARAM(ROOK_BEHIND_PP_MID);
-               scores.end += APARAM(ROOK_BEHIND_PP_END);
+               scores.mid += PARAM(ROOK_BEHIND_PP_MID);
+               scores.end += PARAM(ROOK_BEHIND_PP_END);
             }
          }
 
          if (rank == 7 && file > 1 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 2])) {
             Bitboard atcks(board.fileAttacks(sq - 1) & board.rook_bits[side]);
             if (!atcks.isClear() || board.rook_bits[side].isSet(sq - 1)) {
-               scores.mid += APARAM(ROOK_BEHIND_PP_MID);
-               scores.end += APARAM(ROOK_BEHIND_PP_END);
+               scores.mid += PARAM(ROOK_BEHIND_PP_MID);
+               scores.end += PARAM(ROOK_BEHIND_PP_END);
             }
          }
       }
@@ -1827,7 +1826,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
 int Scoring::kingDistanceScore(const Board &board) const
 {
-   return APARAM(KING_DISTANCE_BASIS) - APARAM(KING_DISTANCE_MULT)*distance1(board.kingSquare(White), board.kingSquare(Black));
+   return PARAM(KING_DISTANCE_BASIS) - PARAM(KING_DISTANCE_MULT)*distance1(board.kingSquare(White), board.kingSquare(Black));
 }
 
 
@@ -1952,7 +1951,7 @@ void Scoring::scoreEndgame
 #ifdef EVAL_DEBUG
       int tmp = k_pos;
 #endif
-      k_pos += (8-distance1(ahead,board.kingSquare(side)))*APARAM(KING_NEAR_PASSER)/16 + (8-distance1(ahead,board.kingSquare(oside)))*APARAM(OPP_KING_NEAR_PASSER)/16;
+      k_pos += (8-distance1(ahead,board.kingSquare(side)))*PARAM(KING_NEAR_PASSER)/16 + (8-distance1(ahead,board.kingSquare(oside)))*PARAM(OPP_KING_NEAR_PASSER)/16;
 #ifdef EVAL_DEBUG
       if (tmp - k_pos) {
          cout << "king escorting passer (" << ColorImage(side) << "): " <<
@@ -2000,7 +1999,7 @@ void Scoring::scoreEndgame
          int i = 0;
          while(atcks.iterate(pawnsq)) {
             if (!TEST_MASK(Attacks::pawn_attacks[pawnsq][side], board.pawn_bits[side])) // not protected by pawn
-               scores.end += APARAM(SIDE_PROTECTED_PAWN) * (i + 1);
+               scores.end += PARAM(SIDE_PROTECTED_PAWN) * (i + 1);
             ++i;
          }
       }
@@ -2034,12 +2033,12 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
 
    // outside passed pawn scoring, based on cached pawn data
    if (pawnEntry.pawnData(side).outside && !pawnEntry.pawnData(oside).outside) {
-      scores.end += APARAM(OUTSIDE_PASSER_MID);
-      scores.mid += APARAM(OUTSIDE_PASSER_END);
+      scores.end += PARAM(OUTSIDE_PASSER_MID);
+      scores.mid += PARAM(OUTSIDE_PASSER_END);
    }
 
    // Penalize loss of castling.
-   int castling = APARAM(CASTLING0 + (int)board.castleStatus(side));
+   int castling = APARAM(CASTLING0,(int)board.castleStatus(side));
    scores.mid += castling;
 #ifdef EVAL_DEBUG
    cout << "castling score: " << castling << endl;
@@ -2054,7 +2053,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
 #ifdef EVAL_DEBUG
          cout << "bishop trapped" << endl;
 #endif
-         scores.any += APARAM(BISHOP_TRAPPED);
+         scores.any += PARAM(BISHOP_TRAPPED);
       }
    }
 
@@ -2290,15 +2289,15 @@ void Scoring::calcEndgame(const Board &board,
 #endif
    if (!TEST_MASK(abcd_mask, all_pawns)) {
       if (File(kp) > chess::DFILE)
-         k_pos += APARAM(PAWN_SIDE_BONUS);
+         k_pos += PARAM(PAWN_SIDE_BONUS);
       else
-         k_pos -= APARAM(PAWN_SIDE_BONUS);
+         k_pos -= PARAM(PAWN_SIDE_BONUS);
    }
    else if (!TEST_MASK(efgh_mask, all_pawns)) {
       if (File(kp) <= chess::DFILE)
-         k_pos += APARAM(PAWN_SIDE_BONUS);
+         k_pos += PARAM(PAWN_SIDE_BONUS);
       else
-         k_pos -= APARAM(PAWN_SIDE_BONUS);
+         k_pos -= PARAM(PAWN_SIDE_BONUS);
    }
 #ifdef EVAL_DEBUG
    cout << "king position (White) after side bonus: " << k_pos << endl;
@@ -2312,15 +2311,15 @@ void Scoring::calcEndgame(const Board &board,
 #endif
    if (!TEST_MASK(abcd_mask, all_pawns)) {
       if (File(kp) > chess::DFILE)
-         k_pos += APARAM(PAWN_SIDE_BONUS);
+         k_pos += PARAM(PAWN_SIDE_BONUS);
       else
-         k_pos -= APARAM(PAWN_SIDE_BONUS);
+         k_pos -= PARAM(PAWN_SIDE_BONUS);
    }
    else if (!TEST_MASK(efgh_mask, all_pawns)) {
       if (File(kp) <= chess::DFILE)
-         k_pos += APARAM(PAWN_SIDE_BONUS);
+         k_pos += PARAM(PAWN_SIDE_BONUS);
       else
-         k_pos -= APARAM(PAWN_SIDE_BONUS);
+         k_pos -= PARAM(PAWN_SIDE_BONUS);
    }
 #ifdef EVAL_DEBUG
    cout << "king position (Black) after side bonus: " << k_pos << endl;
@@ -2361,14 +2360,14 @@ void Scoring::calcEndgame(const Board &board,
          rank == 6
       && (File(board.kingSquare(White)) == file - 1 || File(board.kingSquare(White)) == file + 1)
       && Rank(board.kingSquare(White), White) >= rank
-         ) endgameEntry->wScore += APARAM(SUPPORTED_PASSER6);
+         ) endgameEntry->wScore += PARAM(SUPPORTED_PASSER6);
       else if
          (
             rank == 7
          && (File(board.kingSquare(White)) == file - 1 || File(board.kingSquare(White)) == file + 1)
          && Rank(board.kingSquare(White), White) >= rank
          )
-         endgameEntry->wScore += APARAM(SUPPORTED_PASSER7);
+         endgameEntry->wScore += PARAM(SUPPORTED_PASSER7);
    }
 
    passers2 = bPawnData.passers;
@@ -2386,11 +2385,11 @@ void Scoring::calcEndgame(const Board &board,
       if (rank == 6 &&
          (File(board.kingSquare(Black)) == file - 1 || File(board.kingSquare(Black)) == file + 1) &&
          Rank(board.kingSquare(Black), Black) >= rank)
-         endgameEntry->bScore += APARAM(SUPPORTED_PASSER6);
+         endgameEntry->bScore += PARAM(SUPPORTED_PASSER6);
       else if (rank == 7 && 
                (File(board.kingSquare(Black)) == file - 1 || File(board.kingSquare(Black)) == file + 1) &&
                Rank(board.kingSquare(Black), Black) >= rank)
-         endgameEntry->bScore += APARAM(SUPPORTED_PASSER7);
+         endgameEntry->bScore += PARAM(SUPPORTED_PASSER7);
    }
 }
 
@@ -2447,14 +2446,26 @@ static void print_pst(ostream & o,int mid[], int end[], int size)
 }
 
 #ifdef TUNE
+#include "tune.h"
 void Scoring::Params::write(ostream &o) 
 {
    o << "// Copyright 2015 by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
    o << "//" << endl;
    o << endl;
-   o << "const int Scoring::Params::params[" << Scoring::Params::PARAM_ARRAY_SIZE << "] = ";
-   print_array(o,params,Params::PARAM_ARRAY_SIZE);
+   for (int i = 0; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+      o << "const int Scoring::Params::";
+      const string str(tune::tune_params[i].name);
+      
+      for (string::const_iterator it = str.begin();
+           it != str.end();
+           it++) {
+         o << (char)toupper((int)*it);
+      }
+      o << " = " << tune::tune_params[i].current << ";" << endl;
+   }
+   //o << "const int Scoring::Params::params[" << Scoring::Params::PARAM_ARRAY_SIZE << "] = ";
+   //print_array(o,params,Params::PARAM_ARRAY_SIZE);
    o << "const int Scoring::Params::MATERIAL_SCALE[32] = ";
    print_array(o,Params::MATERIAL_SCALE,32);
    o << "const int Scoring::Params::MIDGAME_THRESHOLD = " << Params::MIDGAME_THRESHOLD << ";" << endl;
