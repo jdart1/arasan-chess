@@ -1,5 +1,6 @@
 // Copyright 2010-2015 by Jon Dart. All Rights Reserved.
 #include "board.h"
+#include "boardio.h"
 #include "notation.h"
 #include "legal.h"
 #include "hash.h"
@@ -295,9 +296,7 @@ static double computeErrorTexel(SearchController *searcher,const string &pos,uin
       }
    }
         
-   stringstream s(fen);
-   s >> b;
-   if (s.fail()) {
+   if (!BoardIO::readFEN(b,fen)) {
       cerr << "error on FEN string: " << fen << ", line " << line << endl;
       return 0.0;
    }
