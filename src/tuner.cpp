@@ -503,6 +503,7 @@ int CDECL main(int argc, char **argv)
     atexit(cleanupGlobals);
     delayedInit();
     options.search.hash_table_size = 64000;
+
 //    if (EGTBMenCount) {
 //        cerr << "Initialized tablebases" << endl;
 //    }

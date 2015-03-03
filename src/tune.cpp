@@ -125,8 +125,9 @@ enum {
    KING_PST_RANK7_SLOPE_END,
    KING_PST_RANK8_END,
    KING_PST_RANK8_SLOPE_END,
-   SCALING_SIGMOID_MID,
-   SCALING_SIGMOID_EXP,
+//   SCALING_START,
+//   SCALING_SIGMOID_MID,
+//   SCALING_SIGMOID_EXP,
    KNIGHT_BACK_MID,
    KNIGHT_BACK_END,
    KNIGHT_BACK_CORNER_MID,
@@ -151,12 +152,8 @@ enum {
    BISHOP_BACK_END,
    BISHOP_BACK_CORNER_MID,
    BISHOP_BACK_CORNER_END,
-   BISHOP_CENTER_OCCUPY_MID,
-   BISHOP_CENTER_OCCUPY_END,
-   BISHOP_CENTER_ATTACK_MID,
-   BISHOP_CENTER_ATTACK_END,
-   BISHOP_RANK67_ATTACK_MID,
-   BISHOP_RANK67_ATTACK_END,
+   BISHOP_DIAG_SIZE_MID,
+   BISHOP_DIAG_SIZE_END,
    BISHOP_RANK8_MID,
    BISHOP_RANK8_END,
    KNIGHT_OUTPOST_RANK4,
@@ -180,23 +177,26 @@ enum {
    BISHOP_OUTPOST_RANK8,
    BISHOP_OUTPOST_RANK8_SLOPE,
    KNIGHT_MOBILITY0,
-   KNIGHT_MOBILITY_MULT,
-   KNIGHT_MOBILITY_OFFSET,
+   KNIGHT_MOBILITY_MAX,
+   KNIGHT_MOBILITY_POW,
    BISHOP_MOBILITY0,
-   BISHOP_MOBILITY_MULT,
-   BISHOP_MOBILITY_OFFSET,
-   ROOK_MOBILITY0,
-   ROOK_MOBILITY_MULT,
-   ROOK_MOBILITY_OFFSET,
+   BISHOP_MOBILITY_MAX,
+   BISHOP_MOBILITY_POW,
+   ROOK_MOBILITY0_MID,
+   ROOK_MOBILITY_MAX_MID,
+   ROOK_MOBILITY_POW_MID,
+   ROOK_MOBILITY0_END,
+   ROOK_MOBILITY_MAX_END,
+   ROOK_MOBILITY_POW_END,
    QUEEN_MOBILITY0_MID,
-   QUEEN_MOBILITY_MULT_MID,
-   QUEEN_MOBILITY_OFFSET_MID,
+   QUEEN_MOBILITY_MAX_MID,
+   QUEEN_MOBILITY_POW_MID,
    QUEEN_MOBILITY0_END,
-   QUEEN_MOBILITY_MULT_END,
-   QUEEN_MOBILITY_OFFSET_END,
+   QUEEN_MOBILITY_MAX_END,
+   QUEEN_MOBILITY_POW_END,
    KING_MOBILITY_ENDGAME0,
-   KING_MOBILITY_ENDGAME_MULT,
-   KING_MOBILITY_ENDGAME_OFFSET,
+   KING_MOBILITY_ENDGAME_MAX,
+   KING_MOBILITY_ENDGAME_POW,
    PASSED_PAWN_BASE_MID,
    PASSED_PAWN_SLOPE_MID,
    PASSED_PAWN_POW_SLOPE_MID,
@@ -350,8 +350,9 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_PST_RANK7_SLOPE_END,"king_pst_rank7_slope_end",50,-100,100),
    tune::TuneParam(KING_PST_RANK8_END,"king_pst_rank8_end",80,-500,300),
    tune::TuneParam(KING_PST_RANK8_SLOPE_END,"king_pst_rank8_slope_end",50,-100,100),
-   tune::TuneParam(SCALING_SIGMOID_MID,"sigmoid_mid",13,0,32),
-   tune::TuneParam(SCALING_SIGMOID_EXP,"sigmoid_exp",372,50,1000),
+//   tune::TuneParam(SCALING_START,"scaling_start",8,0,16),
+//   tune::TuneParam(SCALING_SIGMOID_MID,"sigmoid_mid",50,25,75),
+//   tune::TuneParam(SCALING_SIGMOID_EXP,"sigmoid_exp",372,50,1000),
    tune::TuneParam(KNIGHT_BACK_MID,"knight_back_mid",-272,-300,-50),
    tune::TuneParam(KNIGHT_BACK_END,"knight_back_end",-241,-300,-50),
    tune::TuneParam(KNIGHT_BACK_CORNER_MID,"knight_back_corner_mid",-181,-350,0),
@@ -376,12 +377,8 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(BISHOP_BACK_END,"bishop_back_end",-112,-250,0),
    tune::TuneParam(BISHOP_BACK_CORNER_MID,"bishop_back_corner_mid",-166,-350,0),
    tune::TuneParam(BISHOP_BACK_CORNER_END,"bishop_back_corner_end",-136,-350,0),
-   tune::TuneParam(BISHOP_CENTER_OCCUPY_MID,"bishop_center_occupy_mid",69,0,250),
-   tune::TuneParam(BISHOP_CENTER_OCCUPY_END,"bishop_center_occupy_end",58,0,250),
-   tune::TuneParam(BISHOP_CENTER_ATTACK_MID,"bishop_center_attack_mid",203,0,250),
-   tune::TuneParam(BISHOP_CENTER_ATTACK_END,"bishop_center_attack_end",92,0,250),
-   tune::TuneParam(BISHOP_RANK67_ATTACK_MID,"bishop_rank67_attack_mid",42,0,100),
-   tune::TuneParam(BISHOP_RANK67_ATTACK_END,"bishop_rank67_attack_end",22,0,100),
+   tune::TuneParam(BISHOP_DIAG_SIZE_MID,"bishop_diag_size_mid",10,0,50),
+   tune::TuneParam(BISHOP_DIAG_SIZE_END,"bishop_diag_size_end",10,0,50),
    tune::TuneParam(BISHOP_RANK8_MID,"bishop_rank8_mid",-88,-250,100),
    tune::TuneParam(BISHOP_RANK8_END,"bishop_rank8_end",-166,-250,100),
    tune::TuneParam(KNIGHT_OUTPOST_RANK4,"knight_outpost_rank4",200,-500,500),
@@ -404,24 +401,27 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(BISHOP_OUTPOST_RANK7_SLOPE,"bishop_outpost_rank7_slope",0,-250,250),
    tune::TuneParam(BISHOP_OUTPOST_RANK8,"bishop_outpost_rank8",100,-500,500),
    tune::TuneParam(BISHOP_OUTPOST_RANK8_SLOPE,"bishop_outpost_rank8_slope",0,-250,250),
-   tune::TuneParam(KNIGHT_MOBILITY0,"knight_mobility0",-313,-800,-100),
-   tune::TuneParam(KNIGHT_MOBILITY_MULT,"knight_mobility_mult",37,0,45),
-   tune::TuneParam(KNIGHT_MOBILITY_OFFSET,"knight_mobility_offset",-63,-100,50),
-   tune::TuneParam(BISHOP_MOBILITY0,"bishop_mobility0",-502,-800,-100),
-   tune::TuneParam(BISHOP_MOBILITY_MULT,"bishop_mobility_mult",17,0,40),
-   tune::TuneParam(BISHOP_MOBILITY_OFFSET,"bishop_mobility_offset",-37,-100,50),
-   tune::TuneParam(ROOK_MOBILITY0,"rook_mobility0",-502,-800,-100),
-   tune::TuneParam(ROOK_MOBILITY_MULT,"rook_mobility_mult",17,0,40),
-   tune::TuneParam(ROOK_MOBILITY_OFFSET,"rook_mobility_offset",-37,-100,50),
-   tune::TuneParam(QUEEN_MOBILITY0_MID,"queen_mobility0_mid",-502,-800,-100),
-   tune::TuneParam(QUEEN_MOBILITY_MULT_MID,"queen_mobility_mult_mid",17,0,40),
-   tune::TuneParam(QUEEN_MOBILITY_OFFSET_MID,"queen_mobility_offset_mid",-37,-100,100),
-   tune::TuneParam(QUEEN_MOBILITY0_END,"queen_mobility0_end",-100,-600,-100),
-   tune::TuneParam(QUEEN_MOBILITY_MULT_END,"queen_mobility_mult_end",17,0,40),
-   tune::TuneParam(QUEEN_MOBILITY_OFFSET_END,"queen_mobility_offset_end",-37,-100,100),
+   tune::TuneParam(KNIGHT_MOBILITY0,"knight_mobility0",-180,-800,-50),
+   tune::TuneParam(KNIGHT_MOBILITY_MAX,"knight_mobility_max",120,-25,250),
+   tune::TuneParam(KNIGHT_MOBILITY_POW,"knight_mobility_pow",75,48,120),
+   tune::TuneParam(BISHOP_MOBILITY0,"bishop_mobility0",-200,-800,-50),
+   tune::TuneParam(BISHOP_MOBILITY_MAX,"bishop_mobility_max",90,-25,250),
+   tune::TuneParam(BISHOP_MOBILITY_POW,"bishop_mobility_pow",64,48,96),
+   tune::TuneParam(ROOK_MOBILITY0_MID,"rook_mobility0_mid",-220,-800,-50),
+   tune::TuneParam(ROOK_MOBILITY_MAX_MID,"rook_mobility_max_mid",240,-25,500),
+   tune::TuneParam(ROOK_MOBILITY_POW_MID,"rook_mobility_pow_mid",64,48,96),
+   tune::TuneParam(ROOK_MOBILITY0_END,"rook_mobility0_end",-300,-800,-50),
+   tune::TuneParam(ROOK_MOBILITY_MAX_END,"rook_mobility_max_mid",340,-25,500),
+   tune::TuneParam(ROOK_MOBILITY_POW_END,"rook_mobility_pow_end",64,48,96),
+   tune::TuneParam(QUEEN_MOBILITY0_MID,"queen_mobility0_mid",-100,-800,-50),
+   tune::TuneParam(QUEEN_MOBILITY_MAX_MID,"queen_mobility_max_mid",50,-25,250),
+   tune::TuneParam(QUEEN_MOBILITY_POW_MID,"queen_mobility_pow_mid",64,48,96),
+   tune::TuneParam(QUEEN_MOBILITY0_END,"queen_mobility0_end",-120,-600,-50),
+   tune::TuneParam(QUEEN_MOBILITY_MAX_END,"queen_mobility_max_end",50,-25,250),
+   tune::TuneParam(QUEEN_MOBILITY_POW_END,"queen_mobility_pow_end",64,48,96),
    tune::TuneParam(KING_MOBILITY_ENDGAME0,"king_mobility_endgame0",-300,-800,50),
-   tune::TuneParam(KING_MOBILITY_ENDGAME_MULT,"king_mobility_endgame_mult",37,0,50),
-   tune::TuneParam(KING_MOBILITY_ENDGAME_OFFSET,"king_mobility_endgame_offset",0,-100,100),
+   tune::TuneParam(KING_MOBILITY_ENDGAME_MAX,"king_mobility_endgame_max",37,-25,250),
+   tune::TuneParam(KING_MOBILITY_ENDGAME_POW,"king_mobility_endgame_pow",64,48,96),
    tune::TuneParam(PASSED_PAWN_BASE_MID,"passed_pawn_base_mid",100,0,250),
    tune::TuneParam(PASSED_PAWN_SLOPE_MID,"passed_pawn_slope_mid",100,0,350),
    tune::TuneParam(PASSED_PAWN_POW_SLOPE_MID,"passed_pawn_pow_slope_mid",44,0,250),
@@ -503,12 +503,16 @@ static void pawn_table_init(int *target, int tuning)
 
 static void mobility_init(int *target, int tuning, int size) 
 {
+   int span = tune::tune_params[tuning+1].current-tune::tune_params[tuning].current;
+   const int base = tune::tune_params[tuning].current;
+   double power = tune::tune_params[tuning+2].current/32.0;
    for (int i = 0; i < size; i++) {
       if (i == 0) {
-         *target++ = tune::tune_params[tuning].current;
+         *target++ = base;
       }
       else {
-         *target++ = round(log(i)*tune::tune_params[tuning+1].current + tune::tune_params[tuning+2].current);
+         double factor = (1.0-pow(1.0-double(i)/size,power));
+         *target++ = round(base + factor*span);
       }
    }
 }
@@ -573,11 +577,19 @@ void tune::initParams()
       Scoring::Params::TRADE_DOWN[i] = round(PARAM(TRADE_DOWN_LINEAR)*j +
                                              PARAM(TRADE_DOWN_SQ)*j*j/64.0);
    }
+/*
    Scoring::Params::ENDGAME_THRESHOLD=32;
    Scoring::Params::MIDGAME_THRESHOLD=0;
    int mid_thresh_set = 0;
    for (int i = 0; i < 32; i++) {
-      Scoring::Params::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*(i-PARAM(SCALING_SIGMOID_MID))/1000.0))));
+      if (i < 32*PARAM(SCALING_START)/100) {
+         Scoring::Params::MATERIAL_SCALE[i] = 0;
+      } else {
+         double mid = PARAM(SCALING_SIGMOID_MID)/100.0;
+         double mid2 = int(mid*(32-PARAM(SCALING_START))+PARAM(SCALING_START));
+         int j = i-mid2;
+         Scoring::Params::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*j/1000.00))));
+      }
       if ((128-Scoring::Params::MATERIAL_SCALE[i])>128/6) {
          Scoring::Params::ENDGAME_THRESHOLD=i;
       }
@@ -586,6 +598,12 @@ void tune::initParams()
          mid_thresh_set++;
       }
    }
+*/
+   // fixed for now
+   const int MATERIAL_SCALE[32] = {0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 4, 5, 8, 11, 16, 22, 30, 40, 52, 64, 76, 88, 98, 106, 112, 117, 120, 123, 124, 126, 126, 127};
+   memcpy(Scoring::Params::MATERIAL_SCALE,MATERIAL_SCALE,sizeof(int)*32);
+   Scoring::Params::MIDGAME_THRESHOLD = 14;
+   Scoring::Params::ENDGAME_THRESHOLD = 23;
 
    for (Square i = 0; i<64; i++) {
       int rank = Rank(i,White);
@@ -637,18 +655,12 @@ void tune::initParams()
                score += PARAM(BISHOP_BACK_CORNER_MID+phase);
             }
          }
-         if (rank == 8) {
+         else if (rank == 8) {
             score += PARAM(BISHOP_RANK8_MID+phase);
          }
-         if (Attacks::center.isSet(i)) {
-            score += PARAM(BISHOP_CENTER_OCCUPY_MID+phase);
-         }
-         Bitboard atcks(Attacks::diag_mask[i]);
-         if (atcks & Attacks::center) {
-            score += PARAM(BISHOP_CENTER_ATTACK_MID+phase);
-         }
-         if (atcks & rank67mask) {
-            score += PARAM(BISHOP_RANK67_ATTACK_MID+phase);
+         else {
+            Bitboard atcks(Attacks::diag_mask[i]);
+            score += PARAM(BISHOP_DIAG_SIZE_MID+phase)*atcks.bitCount();
          }
          Scoring::Params::BISHOP_PST[phase][i] = score;
       }
@@ -660,7 +672,8 @@ void tune::initParams()
    
    mobility_init(Scoring::Params::KNIGHT_MOBILITY,KNIGHT_MOBILITY0,9);
    mobility_init(Scoring::Params::BISHOP_MOBILITY,BISHOP_MOBILITY0,15);
-   mobility_init(Scoring::Params::ROOK_MOBILITY,ROOK_MOBILITY0,15);
+   mobility_init(Scoring::Params::ROOK_MOBILITY[Scoring::Midgame],ROOK_MOBILITY0_MID,15);
+   mobility_init(Scoring::Params::ROOK_MOBILITY[Scoring::Endgame],ROOK_MOBILITY0_END,15);
    mobility_init(Scoring::Params::QUEEN_MOBILITY[Scoring::Midgame],QUEEN_MOBILITY0_MID,29);
    mobility_init(Scoring::Params::QUEEN_MOBILITY[Scoring::Endgame],QUEEN_MOBILITY0_END,29);
    mobility_init(Scoring::Params::KING_MOBILITY_ENDGAME,KING_MOBILITY_ENDGAME0,9);

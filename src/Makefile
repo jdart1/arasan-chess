@@ -62,7 +62,7 @@ TUNE_OPT = -DUSE_INTRINSICS -O2
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
-DEBUG = -g
+#DEBUG = -g
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)

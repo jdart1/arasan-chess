@@ -935,8 +935,8 @@ void Scoring::pieceScore(const Board &board,
             }
 
             const int mobl = Bitboard(rattacks2 &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
-            // TBD: diff for mid/endgame?
-            scores.any += PARAM(ROOK_MOBILITY)[mobl];
+            scores.mid += PARAM(ROOK_MOBILITY)[Midgame][mobl];
+            scores.end += PARAM(ROOK_MOBILITY)[Endgame][mobl];
 #ifdef EVAL_DEBUG
             cout << "rook mobility: " << mobl << endl;
 #endif
@@ -2488,10 +2488,14 @@ void Scoring::Params::write(ostream &o)
    }
    //o << "const int Scoring::Params::params[" << Scoring::Params::PARAM_ARRAY_SIZE << "] = ";
    //print_array(o,params,Params::PARAM_ARRAY_SIZE);
-   o << "const int Scoring::Params::MATERIAL_SCALE[32] = ";
-   print_array(o,Params::MATERIAL_SCALE,32);
-   o << "const int Scoring::Params::MIDGAME_THRESHOLD = " << Params::MIDGAME_THRESHOLD << ";" << endl;
-   o << "const int Scoring::Params::ENDGAME_THRESHOLD = " << Params::ENDGAME_THRESHOLD << ";" << endl;
+   // fixed for now
+   o << "const int Scoring::Params::MATERIAL_SCALE[32] = {0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 4, 5, 8, 11, 16, 22, 30, 40, 52, 64, 76, 88, 98, 106, 112, 117, 120, 123, 124, 126, 126, 127};" << endl;
+   o << "const int Scoring::Params::MIDGAME_THRESHOLD = 14;" << endl;
+   o << "const int Scoring::Params::ENDGAME_THRESHOLD = 23;" << endl;
+   //o << "const int Scoring::Params::MATERIAL_SCALE[32] = ";
+   //print_array(o,Params::MATERIAL_SCALE,32);
+   //o << "const int Scoring::Params::MIDGAME_THRESHOLD = " << Params::MIDGAME_THRESHOLD << ";" << endl;
+   //o << "const int Scoring::Params::ENDGAME_THRESHOLD = " << Params::ENDGAME_THRESHOLD << ";" << endl;
    o << "const int Scoring::Params::KNIGHT_PST[2][64] = " << endl;
    print_pst(o,Params::KNIGHT_PST[0],KNIGHT_PST[1],64);
    o << "const int Scoring::Params::BISHOP_PST[2][64] = " << endl;
@@ -2506,8 +2510,8 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params:: KNIGHT_MOBILITY, 9);
    o << "const int Scoring::Params::BISHOP_MOBILITY[15] = ";
    print_array(o,Params:: BISHOP_MOBILITY, 15);
-   o << "const int Scoring::Params::ROOK_MOBILITY[15] = ";
-   print_array(o,Params:: ROOK_MOBILITY, 15);
+   o << "const int Scoring::Params::ROOK_MOBILITY[2][15] = ";
+   print_array(o,Params:: ROOK_MOBILITY[0], ROOK_MOBILITY[1], 15);
    o << "const int Scoring::Params::QUEEN_MOBILITY[2][29] = ";
    print_array(o,Params:: QUEEN_MOBILITY[0], QUEEN_MOBILITY[1], 29);
    o << "const int Scoring::Params::TRADE_DOWN[16] = ";

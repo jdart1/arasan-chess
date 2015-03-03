@@ -74,7 +74,7 @@ int Scoring::Params::TRADE_DOWN[16];
 int Scoring::Params::KING_PST[2][64];
 int Scoring::Params::KNIGHT_MOBILITY[9];
 int Scoring::Params::BISHOP_MOBILITY[15];
-int Scoring::Params::ROOK_MOBILITY[15];
+int Scoring::Params::ROOK_MOBILITY[2][15];
 int Scoring::Params::QUEEN_MOBILITY[2][29];
 int Scoring::Params::KING_MOBILITY_ENDGAME[9];
 int Scoring::Params::PASSED_PAWN[2][8];

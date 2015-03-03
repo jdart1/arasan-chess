@@ -91,7 +91,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int KING_PST[2][64];
     static PARAM_MOD int KNIGHT_MOBILITY[9];
     static PARAM_MOD int BISHOP_MOBILITY[15];
-    static PARAM_MOD int ROOK_MOBILITY[15];
+    static PARAM_MOD int ROOK_MOBILITY[2][15];
     static PARAM_MOD int QUEEN_MOBILITY[2][29];
     static PARAM_MOD int KING_MOBILITY_ENDGAME[9];
     static PARAM_MOD int PASSED_PAWN[2][8];
