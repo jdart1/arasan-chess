@@ -3489,6 +3489,42 @@ int CDECL main(int argc, char **argv) {
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
+    static const string eval_fens[25] = {
+       "2r2rk1/pp1b2bp/3p2p1/q1nPn3/3NPp1P/1P3P2/P1RQNBB1/5RK1 b - - 0 1",
+       "6k1/p6p/1p4p1/7r/3NK3/5P2/P7/R7 w - - 0 1",
+       "r1b1k2r/p2n1pp1/1qp1pn1p/1p6/PbpP3B/2N1PN2/1P2BPPP/R2Q1RK1 w kq - 0 1",
+       "r4rk1/1p1n3p/p2n2p1/P1pPpp2/4P2q/6RP/1PQNBPP1/R5K1 w - - 0 1",
+       "r2q1rk1/pb2bppp/1p2pn2/4n3/2B5/PNN1P3/1P1BQPPP/R2R2K1 w - - 0 1",
+       "1q3rk1/5ppp/3r4/p2Pp3/Pb6/4B3/1PQ1RPPP/R5K1 b - - 0 1",
+       "3qr1k1/p4pbp/3p1np1/nrpP4/1p2P3/1P4P1/1BQN1PBP/R3R1K1 w - - 0 1",
+       "5r2/3P2k1/p4qp1/8/1P6/P3Q2B/5P1P/7K w - - 0 1",
+       "r1bq1rk1/4bppp/p1n1pn2/1p4B1/3P4/P1N2N2/BP3PPP/R2Q1RK1 b - - 0 1",
+       "5rk1/3r2bp/3p1np1/3P3q/P1Q1p3/B5P1/5PBP/1R3RK1 b - - 0 1",
+       "8/2p4p/4pkp1/R7/8/1Pn2BP1/P3PPKP/2r5 w - - 0 1",
+       "r3r1k1/1p3pp1/1qb2n1p/p2p4/1b6/P1BB1P2/1PP1N1PP/1K1RQ2R b - - 0 1",
+       "r2q1rk1/pp1n1ppp/2p1p3/2b5/4PBb1/5NPP/PPP2PB1/R3QRK1 b - - 0 1",
+       "8/2p3r1/1p5p/pP6/P5r1/2k4K/8/3Q4 b - - 0 1",
+       "r4k2/1R6/1P1r2pp/2np1p2/P2N4/1P4P1/1K4P1/5R2 w - - 0 1",
+       "1rR5/4kpp1/pp2pn1p/8/8/5B2/PPP2PPP/2KR4 b - - 0 1",
+       "8/6pk/5p2/R4K1P/1r4P1/5P2/8/8 w - - 0 1",
+       "r2qr1k1/1ppn1ppb/5n1p/p2p2P1/Pb1P1P1P/1PN1P1N1/3B2B1/R2QR1K1 b - - 0 1",
+       "1r3rk1/2p2p1p/p5p1/2n1p1q1/P1NbP3/3P1Q1P/2B2PP1/1R3R1K b - - 0 1",
+       "1r3rk1/3q1pbp/p2p1np1/2pP4/R1N5/2P1P1Pb/5PB1/2BQ1RK1 w - - 0 1",
+       "r6r/2p2Rpp/pk6/1p6/3p1Q2/1P6/1Pq2PPP/R5K1 b - - 0 1",
+       "r3r1k1/pp3pb1/2p1n1p1/4p2p/2P4P/2N5/PP2PP1P/1R2R1KB w - - 0 1",
+       "8/2N5/p5k1/1p5p/2p4K/2P1R3/P1r5/8 b - - 0 1",
+       "r1b1nr1k/ppn2qNp/3p4/2pPpp2/2P3P1/2NBBP2/PP1Q3P/2K1R1R1 b - - 0 1",
+       "4b1k1/5ppp/2N1p3/p7/8/P3PP1P/1r1n2P1/2R1B1K1 b - - 0 1"
+    };
+    
+    
+    for (int i = 0; i < 25; i++) {
+       Board board;
+       Scoring s;
+       int valid = BoardIO::readFEN(board, eval_fens[i]);
+       cout << i << '\t' << s.evalu8(board) << endl;
+    }
+    
 
     searcher = new SearchController();
 

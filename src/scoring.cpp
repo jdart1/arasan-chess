@@ -2434,7 +2434,7 @@ static void print_pst(ostream & o,int arr[], int size, int add_semi = 1)
    for (int i = 0; i < size; i++) {
       if (i) o << ",";
       o << *p++;
-      if (i+1 % 8 == 0) 
+      if ((i+1) % 8 == 0) 
          o << endl;
       else
          o << ' ';
