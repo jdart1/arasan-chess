@@ -1,7 +1,10 @@
 // Copyright 2014-2015 by Jon Dart.  All Rights Reserved.
 
 // Creates a file of FEN test positions + game results
-// from a collection of PGNs
+// from a collection of PGNs.
+//
+// By default: uses all positions from a minimum ply out to tablebase
+// range. Can also sample randomly from the PGNs (-s option).
 
 #include "board.h"
 #include "boardio.h"
@@ -31,6 +34,8 @@ enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
 
 static int min_ply = 16;
+
+static int sample = 0;
 
 static int max_ply_first_sample = 64;
 
@@ -103,14 +108,16 @@ static int do_pgn(ifstream &infile, const string &in_name)
                 break;
             }
             else {
-               if (ply >= next_sample && samples < samples_per_game &&
-                   (board.getMaterial(White).men() +
+               if ((board.getMaterial(White).men() +
                     board.getMaterial(Black).men() >= min_men) &&
                    board.repCount() == 0 && ply >= min_ply) {
-                  BoardIO::writeFEN(board,cout,0);
-                  cout << ' ' << result << endl;
-                  next_sample = ply + plies_between_samples;
-                  ++samples;
+                  if (!sample || (
+                         ply >= next_sample && samples < samples_per_game)) {
+                     BoardIO::writeFEN(board,cout,0);
+                     cout << ' ' << result << endl;
+                     next_sample = ply + plies_between_samples;
+                     ++samples;
+                  }
                }
             }
             board.doMove(move);
@@ -150,8 +157,22 @@ int CDECL main(int argc, char **argv)
    srand((unsigned int)getCurrentTime());
 
    int arg = 1;
-   // TBD: command-line options
-
+   while (arg < argc) {
+      if (*argv[arg] == '-') {
+         char c = argv[arg][1];
+         if (c == 's') {
+            ++sample;
+            ++arg;
+         } else {
+            cerr << "unknown option: " << argv[arg] << endl;
+            usage();
+            exit(-1);
+         }
+      } else {
+         break;
+      }
+   }
+   
    if (arg >= argc) {
        cerr << "No input files specified." << endl;
        usage();
