@@ -424,11 +424,11 @@ int MoveGenerator::generateNonCaptures(Move *moves)
       const Square kp = board.kingSquare(side);
 #ifdef _DEBUG
       if (side == White) {
-         ASSERT(kp == E1);
+         ASSERT(kp == chess::E1);
          ASSERT(board[kp+3] == WhiteRook);
       }
       else {
-         ASSERT(kp == E8);
+         ASSERT(kp == chess::E8);
          ASSERT(board[kp+3] == BlackRook);
       }
 #endif
