@@ -3489,6 +3489,7 @@ int CDECL main(int argc, char **argv) {
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
+/*
     static const string eval_fens[25] = {
        "2r2rk1/pp1b2bp/3p2p1/q1nPn3/3NPp1P/1P3P2/P1RQNBB1/5RK1 b - - 0 1",
        "6k1/p6p/1p4p1/7r/3NK3/5P2/P7/R7 w - - 0 1",
@@ -3524,7 +3525,7 @@ int CDECL main(int argc, char **argv) {
        int valid = BoardIO::readFEN(board, eval_fens[i]);
        cout << i << '\t' << s.evalu8(board) << endl;
     }
-    
+*/    
 
     searcher = new SearchController();
 

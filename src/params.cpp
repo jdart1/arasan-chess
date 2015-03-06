@@ -2,86 +2,150 @@
 // This is a generated file. Do not edit.
 //
 
-const int Scoring::Params::RB_ADJUST[4] = {211, 34, -77, -257};
-const int Scoring::Params::RBN_ADJUST[4] = {495, 585, 908, 1075};
-const int Scoring::Params::QR_ADJUST[4] = {-516, -92, 492, 476};
-const int Scoring::Params::KN_VS_PAWN_ADJUST[3] = {-19, -2385, -1553};
-const int Scoring::Params::PAWN_TRADE[3] = {-367, -260, -89};
-const int Scoring::Params::CASTLING[6] = {3, -55, -105, 284, 191, -265};
-const int Scoring::Params::KING_COVER[5] = {312, 218, 156, 27, 44};
-const int Scoring::Params::KING_FILE_OPEN = -94;
-const int Scoring::Params::KING_DISTANCE_BASIS = 306;
-const int Scoring::Params::KING_DISTANCE_MULT = 88;
-const int Scoring::Params::PIN_MULTIPLIER_MID = 437;
-const int Scoring::Params::PIN_MULTIPLIER_END = 422;
-const int Scoring::Params::KING_ATTACK_PARAM1 = 491;
-const int Scoring::Params::KING_ATTACK_PARAM2 = 243;
-const int Scoring::Params::KING_ATTACK_PARAM3 = 1757;
-const int Scoring::Params::KING_ATTACK_BOOST_THRESHOLD = 140;
-const int Scoring::Params::KING_ATTACK_BOOST_DIVISOR = 483;
-const int Scoring::Params::BISHOP_TRAPPED = -416;
-const int Scoring::Params::BISHOP_PAIR_MID = 329;
-const int Scoring::Params::BISHOP_PAIR_END = 745;
-const int Scoring::Params::BISHOP_PAWN_PLACEMENT_END = -144;
-const int Scoring::Params::BAD_BISHOP_MID = -72;
-const int Scoring::Params::BAD_BISHOP_END = -72;
+const int Scoring::Params::RB_ADJUST[4] = {250, 75, -75, -250};
+const int Scoring::Params::RBN_ADJUST[4] = {500, 675, 825, 1000};
+const int Scoring::Params::QR_ADJUST[4] = {-500, 0, 500, 500};
+const int Scoring::Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
+const int Scoring::Params::PAWN_TRADE[3] = {-450, -250, -100};
+const int Scoring::Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
+const int Scoring::Params::KING_COVER[5] = {220, 310, 120, 30, 20};
+const int Scoring::Params::KING_FILE_OPEN = -150;
+const int Scoring::Params::KING_DISTANCE_BASIS = 320;
+const int Scoring::Params::KING_DISTANCE_MULT = 80;
+const int Scoring::Params::PIN_MULTIPLIER_MID = 200;
+const int Scoring::Params::PIN_MULTIPLIER_END = 300;
+const int Scoring::Params::KING_ATTACK_PARAM1 = 500;
+const int Scoring::Params::KING_ATTACK_PARAM2 = 320;
+const int Scoring::Params::KING_ATTACK_PARAM3 = 1500;
+const int Scoring::Params::KING_ATTACK_BOOST_THRESHOLD = 480;
+const int Scoring::Params::KING_ATTACK_BOOST_DIVISOR = 500;
+const int Scoring::Params::BISHOP_TRAPPED = -1470;
+const int Scoring::Params::BISHOP_PAIR_MID = 420;
+const int Scoring::Params::BISHOP_PAIR_END = 550;
+const int Scoring::Params::BISHOP_PAWN_PLACEMENT_END = -160;
+const int Scoring::Params::BAD_BISHOP_MID = -40;
+const int Scoring::Params::BAD_BISHOP_END = -60;
 const int Scoring::Params::OUTPOST_NOT_DEFENDED = 42;
-const int Scoring::Params::CENTER_PAWN_BLOCK = -52;
-const int Scoring::Params::OUTSIDE_PASSER_MID = 134;
-const int Scoring::Params::OUTSIDE_PASSER_END = 247;
-const int Scoring::Params::WEAK_PAWN_MID = -75;
-const int Scoring::Params::WEAK_PAWN_END = -83;
-const int Scoring::Params::WEAK_ON_OPEN_FILE_MID = -98;
-const int Scoring::Params::WEAK_ON_OPEN_FILE_END = -108;
-const int Scoring::Params::SPACE = 24;
-const int Scoring::Params::PAWN_CENTER_SCORE_MID = 33;
-const int Scoring::Params::ROOK_ON_7TH_MID = 194;
-const int Scoring::Params::ROOK_ON_7TH_END = 286;
-const int Scoring::Params::TWO_ROOKS_ON_7TH_MID = 515;
-const int Scoring::Params::TWO_ROOKS_ON_7TH_END = 675;
-const int Scoring::Params::ROOK_ON_OPEN_FILE_MID = 174;
-const int Scoring::Params::ROOK_ON_OPEN_FILE_END = 12;
-const int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_MID = 48;
-const int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = 108;
-const int Scoring::Params::ROOK_BEHIND_PP_MID = 46;
-const int Scoring::Params::ROOK_BEHIND_PP_END = 97;
-const int Scoring::Params::QUEEN_OUT = -63;
-const int Scoring::Params::PASSER_OWN_PIECE_BLOCK_MID = -8;
-const int Scoring::Params::PASSER_OWN_PIECE_BLOCK_END = -18;
-const int Scoring::Params::PP_BLOCK_BASE_MID = 227;
-const int Scoring::Params::PP_BLOCK_BASE_END = 169;
-const int Scoring::Params::PP_BLOCK_MULT_MID = 19;
-const int Scoring::Params::PP_BLOCK_MULT_END = 5;
-const int Scoring::Params::ENDGAME_PAWN_BONUS = 132;
-const int Scoring::Params::KING_NEAR_PASSER = 203;
-const int Scoring::Params::OPP_KING_NEAR_PASSER = -296;
-const int Scoring::Params::PAWN_SIDE_BONUS = 310;
-const int Scoring::Params::SUPPORTED_PASSER6 = 394;
-const int Scoring::Params::SUPPORTED_PASSER7 = 786;
-const int Scoring::Params::SIDE_PROTECTED_PAWN = -113;
+const int Scoring::Params::CENTER_PAWN_BLOCK = -120;
+const int Scoring::Params::OUTSIDE_PASSER_MID = 120;
+const int Scoring::Params::OUTSIDE_PASSER_END = 250;
+const int Scoring::Params::WEAK_PAWN_MID = -80;
+const int Scoring::Params::WEAK_PAWN_END = -80;
+const int Scoring::Params::WEAK_ON_OPEN_FILE_MID = -100;
+const int Scoring::Params::WEAK_ON_OPEN_FILE_END = -100;
+const int Scoring::Params::SPACE = 20;
+const int Scoring::Params::PAWN_CENTER_SCORE_MID = 30;
+const int Scoring::Params::ROOK_ON_7TH_MID = 260;
+const int Scoring::Params::ROOK_ON_7TH_END = 260;
+const int Scoring::Params::TWO_ROOKS_ON_7TH_MID = 570;
+const int Scoring::Params::TWO_ROOKS_ON_7TH_END = 660;
+const int Scoring::Params::ROOK_ON_OPEN_FILE_MID = 200;
+const int Scoring::Params::ROOK_ON_OPEN_FILE_END = 200;
+const int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_MID = 100;
+const int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = 100;
+const int Scoring::Params::ROOK_BEHIND_PP_MID = 50;
+const int Scoring::Params::ROOK_BEHIND_PP_END = 100;
+const int Scoring::Params::QUEEN_OUT = -60;
+const int Scoring::Params::PASSER_OWN_PIECE_BLOCK_MID = -20;
+const int Scoring::Params::PASSER_OWN_PIECE_BLOCK_END = -50;
+const int Scoring::Params::PP_BLOCK_BASE_MID = 140;
+const int Scoring::Params::PP_BLOCK_BASE_END = 140;
+const int Scoring::Params::PP_BLOCK_MULT_MID = 72;
+const int Scoring::Params::PP_BLOCK_MULT_END = 32;
+const int Scoring::Params::ENDGAME_PAWN_BONUS = 120;
+const int Scoring::Params::KING_NEAR_PASSER = 200;
+const int Scoring::Params::OPP_KING_NEAR_PASSER = -280;
+const int Scoring::Params::PAWN_SIDE_BONUS = 280;
+const int Scoring::Params::SUPPORTED_PASSER6 = 380;
+const int Scoring::Params::SUPPORTED_PASSER7 = 760;
+const int Scoring::Params::SIDE_PROTECTED_PAWN = -100;
 const int Scoring::Params::MATERIAL_SCALE[32] = {0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 4, 5, 8, 11, 16, 22, 30, 40, 52, 64, 76, 88, 98, 106, 112, 117, 120, 123, 124, 126, 126, 127};
 const int Scoring::Params::MIDGAME_THRESHOLD = 14;
 const int Scoring::Params::ENDGAME_THRESHOLD = 23;
 const int Scoring::Params::KNIGHT_PST[2][64] = 
-{{-687 ,-312 ,-334 ,-356 ,-356 ,-334 ,-312 ,-687 ,-209 ,-44 ,-2 ,-24 ,-24 ,-2 ,-44 ,-209 ,-209 ,20 ,62 ,-24 ,-24 ,62 ,20 ,-209 ,-209 ,20 ,-2 ,159 ,159 ,-2 ,20 ,-209 ,-136 ,93 ,71 ,232 ,232 ,71 ,93 ,-136 ,-226 ,3 ,45 ,-41 ,-41 ,45 ,3 ,-226 ,-215 ,-50 ,-8 ,-30 ,-30 ,-8 ,-50 ,-215 ,-247 ,-82 ,-104 ,-126 ,-126 ,-104 ,-82 ,-247 }, {-429 ,-113 ,-38 ,37 ,37 ,-38 ,-113 ,-429 ,-87 ,150 ,407 ,482 ,482 ,407 ,150 ,-87 ,-87 ,332 ,589 ,482 ,482 ,589 ,332 ,-87 ,-87 ,332 ,407 ,332 ,332 ,407 ,332 ,-87 ,-70 ,349 ,424 ,349 ,349 ,424 ,349 ,-70 ,-56 ,363 ,620 ,513 ,513 ,620 ,363 ,-56 ,-122 ,115 ,372 ,447 ,447 ,372 ,115 ,-122 ,-94 ,143 ,218 ,293 ,293 ,218 ,143 ,-94 }};
+{{-220 ,-130 ,-125 ,-120 ,-120 ,-125 ,-130 ,-220
+,-120 ,10 ,35 ,40 ,40 ,35 ,10 ,-120
+,-120 ,30 ,55 ,40 ,40 ,55 ,30 ,-120
+,-120 ,30 ,35 ,70 ,70 ,35 ,30 ,-120
+,-55 ,95 ,100 ,135 ,135 ,100 ,95 ,-55
+,-70 ,80 ,105 ,90 ,90 ,105 ,80 ,-70
+,-131 ,-1 ,24 ,29 ,29 ,24 ,-1 ,-131
+,-151 ,-21 ,-16 ,-11 ,-11 ,-16 ,-21 ,-151
+}, {-280 ,-180 ,-175 ,-170 ,-170 ,-175 ,-180 ,-280
+,-130 ,10 ,35 ,40 ,40 ,35 ,10 ,-130
+,-130 ,30 ,55 ,40 ,40 ,55 ,30 ,-130
+,-130 ,30 ,35 ,30 ,30 ,35 ,30 ,-130
+,-113 ,47 ,52 ,47 ,47 ,52 ,47 ,-113
+,-103 ,57 ,82 ,67 ,67 ,82 ,57 ,-103
+,-148 ,-8 ,17 ,22 ,22 ,17 ,-8 ,-148
+,-149 ,-9 ,-4 ,1 ,1 ,-4 ,-9 ,-149
+}};
 const int Scoring::Params::BISHOP_PST[2][64] = 
-{{-306 ,-142 ,-142 ,-142 ,-142 ,-142 ,-142 ,-306 ,77 ,99 ,99 ,99 ,99 ,99 ,99 ,77 ,77 ,99 ,121 ,121 ,121 ,121 ,99 ,77 ,77 ,99 ,121 ,143 ,143 ,121 ,99 ,77 ,77 ,99 ,121 ,143 ,143 ,121 ,99 ,77 ,77 ,99 ,121 ,121 ,121 ,121 ,99 ,77 ,77 ,99 ,99 ,99 ,99 ,99 ,99 ,77 ,-92 ,-92 ,-92 ,-92 ,-92 ,-92 ,-92 ,-92 }, {-245 ,-125 ,-125 ,-125 ,-125 ,-125 ,-125 ,-245 ,49 ,63 ,63 ,63 ,63 ,63 ,63 ,49 ,49 ,63 ,77 ,77 ,77 ,77 ,63 ,49 ,49 ,63 ,77 ,91 ,91 ,77 ,63 ,49 ,49 ,63 ,77 ,91 ,91 ,77 ,63 ,49 ,49 ,63 ,77 ,77 ,77 ,77 ,63 ,49 ,49 ,63 ,63 ,63 ,63 ,63 ,63 ,49 ,-130 ,-130 ,-130 ,-130 ,-130 ,-130 ,-130 ,-130 }};
+{{-180 ,-120 ,-120 ,-120 ,-120 ,-120 ,-120 ,-180
+,0 ,20 ,20 ,20 ,20 ,20 ,20 ,0
+,0 ,20 ,40 ,40 ,40 ,40 ,20 ,0
+,0 ,20 ,40 ,60 ,60 ,40 ,20 ,0
+,0 ,20 ,40 ,60 ,60 ,40 ,20 ,0
+,0 ,20 ,40 ,40 ,40 ,40 ,20 ,0
+,-100 ,-80 ,-80 ,-80 ,-80 ,-80 ,-80 ,-100
+,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100
+}, {-172 ,-112 ,-112 ,-112 ,-112 ,-112 ,-112 ,-172
+,0 ,20 ,20 ,20 ,20 ,20 ,20 ,0
+,0 ,20 ,40 ,40 ,40 ,40 ,20 ,0
+,0 ,20 ,40 ,60 ,60 ,40 ,20 ,0
+,0 ,20 ,40 ,60 ,60 ,40 ,20 ,0
+,0 ,20 ,40 ,40 ,40 ,40 ,20 ,0
+,-100 ,-80 ,-80 ,-80 ,-80 ,-80 ,-80 ,-100
+,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100
+}};
 const int Scoring::Params::KNIGHT_OUTPOST[64] = 
-{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,204 ,157 ,110 ,63 ,63 ,110 ,157 ,204 ,229 ,265 ,301 ,337 ,337 ,301 ,265 ,229 ,262 ,285 ,308 ,331 ,331 ,308 ,285 ,262 ,41 ,65 ,89 ,113 ,113 ,89 ,65 ,41 ,163 ,185 ,207 ,229 ,229 ,207 ,185 ,163 };
+{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,10 ,30 ,50 ,70 ,70 ,50 ,30 ,10
+,10 ,45 ,80 ,115 ,115 ,80 ,45 ,10
+,10 ,45 ,80 ,115 ,115 ,80 ,45 ,10
+,10 ,30 ,50 ,70 ,70 ,50 ,30 ,10
+,10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
+};
 const int Scoring::Params::BISHOP_OUTPOST[64] = 
-{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,240 ,273 ,306 ,339 ,339 ,306 ,273 ,240 ,369 ,319 ,269 ,219 ,219 ,269 ,319 ,369 ,206 ,247 ,288 ,329 ,329 ,288 ,247 ,206 ,97 ,120 ,143 ,166 ,166 ,143 ,120 ,97 ,155 ,171 ,187 ,203 ,203 ,187 ,171 ,155 };
-const int Scoring::Params::KING_PST[2][64] = {{33 ,37 ,41 ,45 ,45 ,41 ,37 ,33 ,-201 ,-210 ,-219 ,-228 ,-228 ,-219 ,-210 ,-201 ,-334 ,-356 ,-378 ,-400 ,-400 ,-378 ,-356 ,-334 ,-437 ,-442 ,-447 ,-452 ,-452 ,-447 ,-442 ,-437 ,-540 ,-540 ,-540 ,-540 ,-540 ,-540 ,-540 ,-540 ,-504 ,-511 ,-518 ,-525 ,-525 ,-518 ,-511 ,-504 ,-500 ,-496 ,-492 ,-488 ,-488 ,-492 ,-496 ,-500 ,-551 ,-550 ,-549 ,-548 ,-548 ,-549 ,-550 ,-551 }, {-218 ,-178 ,-138 ,-98 ,-98 ,-138 ,-178 ,-218 ,-222 ,-192 ,-162 ,-132 ,-132 ,-162 ,-192 ,-222 ,-195 ,-155 ,-115 ,-75 ,-75 ,-115 ,-155 ,-195 ,-89 ,-29 ,31 ,91 ,91 ,31 ,-29 ,-89 ,-23 ,28 ,79 ,130 ,130 ,79 ,28 ,-23 ,35 ,93 ,151 ,209 ,209 ,151 ,93 ,35 ,109 ,159 ,209 ,259 ,259 ,209 ,159 ,109 ,35 ,94 ,153 ,212 ,212 ,153 ,94 ,35 }};
-const int Scoring::Params::KNIGHT_MOBILITY[9] = {-147, -79, -22, 24, 61, 88, 107, 119, 125};
-const int Scoring::Params::BISHOP_MOBILITY[15] = {-197, -158, -122, -89, -59, -31, -6, 16, 36, 53, 67, 79, 88, 94, 98};
-const int Scoring::Params::ROOK_MOBILITY[2][15] = {{-237, -176, -119, -66, -17, 27, 68, 104, 137, 165, 189, 208, 224, 235, 242}, {-307, -226, -151, -81, -17, 41, 94, 142, 183, 220, 250, 275, 295, 309, 317}};
-const int Scoring::Params::QUEEN_MOBILITY[2][29] = {{-78, -70, -62, -55, -48, -41, -35, -29, -23, -17, -12, -7, -3, 2, 6, 9, 13, 16, 19, 21, 24, 26, 28, 29, 30, 31, 32, 33, 33}, {-76, -68, -60, -52, -44, -37, -30, -23, -17, -11, -5, 1, 6, 11, 16, 20, 24, 28, 32, 35, 38, 41, 43, 45, 47, 48, 49, 50, 51}};
-const int Scoring::Params::TRADE_DOWN[16] = {740, 694, 647, 601, 554, 508, 462, 415, 369, 323, 277, 230, 184, 138, 92, 46};
-const int Scoring::Params::KING_MOBILITY_ENDGAME[9] = {-193, -146, -104, -68, -38, -13, 6, 19, 27};
-const int Scoring::Params::PASSED_PAWN[2][8] = {{0, 98, 98, 244, 455, 748, 1133, 1617}, {0, 124, 124, 285, 546, 912, 1386, 1970}};
-const int Scoring::Params::POTENTIAL_PASSER[2][8] = {{0, 58, 58, 149, 309, 535, 824, 1172}, {0, 63, 63, 159, 361, 680, 1123, 1693}};
-const int Scoring::Params::CONNECTED_PASSERS[2][8] = {{0, 1, 1, 98, 364, 788, 1363, 2086}, {0, 6, 6, 77, 329, 791, 1479, 2406}};
-const int Scoring::Params::ADJACENT_PASSERS[2][8] = {{0, 0, 0, 58, 232, 522, 928, 1450}, {0, 2, 2, 57, 226, 514, 920, 1447}};
-const int Scoring::Params::DOUBLED_PAWNS[2][8] = {{-54, -67, -80, -93, -93, -80, -67, -54}, {-58, -62, -66, -70, -70, -66, -62, -58}};
-const int Scoring::Params::ISOLATED_PAWN[2][8] = {{-84, -65, -46, -27, -27, -46, -65, -84}, {-93, -95, -97, -99, -99, -97, -95, -93}};
+{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,10 ,25 ,40 ,55 ,55 ,40 ,25 ,10
+,10 ,40 ,70 ,100 ,100 ,70 ,40 ,10
+,10 ,40 ,70 ,100 ,100 ,70 ,40 ,10
+,10 ,25 ,40 ,55 ,55 ,40 ,25 ,10
+,10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
+};
+const int Scoring::Params::KING_PST[2][64] = {{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,-60 ,-60 ,-60 ,-60 ,-60 ,-60 ,-60 ,-60
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+}, {-280 ,-230 ,-180 ,-130 ,-130 ,-180 ,-230 ,-280
+,-220 ,-170 ,-120 ,-70 ,-70 ,-120 ,-170 ,-220
+,-160 ,-110 ,-60 ,-10 ,-10 ,-60 ,-110 ,-160
+,-100 ,-50 ,0 ,50 ,50 ,0 ,-50 ,-100
+,-40 ,10 ,60 ,110 ,110 ,60 ,10 ,-40
+,20 ,70 ,120 ,170 ,170 ,120 ,70 ,20
+,80 ,130 ,180 ,230 ,230 ,180 ,130 ,80
+,80 ,130 ,180 ,230 ,230 ,180 ,130 ,80
+}};
+const int Scoring::Params::KNIGHT_MOBILITY[9] = {-180, -73, 3, 54, 87, 106, 115, 119, 120};
+const int Scoring::Params::BISHOP_MOBILITY[15] = {-200, -134, -80, -36, -1, 27, 47, 63, 73, 81, 85, 88, 89, 90, 90};
+const int Scoring::Params::ROOK_MOBILITY[2][15] = {{-220, -147, -82, -23, 28, 73, 112, 144, 172, 193, 210, 223, 232, 237, 239}, {-300, -199, -108, -26, 45, 108, 162, 207, 245, 275, 299, 316, 329, 336, 339}};
+const int Scoring::Params::QUEEN_MOBILITY[2][29] = {{-100, -69, -40, -13, 11, 34, 55, 75, 92, 108, 123, 136, 148, 158, 167, 175, 182, 188, 193, 197, 201, 203, 206, 207, 208, 209, 210, 210, 210}, {-120, -73, -31, 8, 42, 73, 101, 125, 147, 166, 182, 196, 209, 219, 228, 235, 241, 246, 250, 253, 255, 257, 258, 259, 259, 260, 260, 260, 260}};
+const int Scoring::Params::TRADE_DOWN[16] = {688, 645, 602, 559, 516, 473, 430, 387, 344, 301, 258, 215, 172, 129, 86, 43};
+const int Scoring::Params::KING_MOBILITY_ENDGAME[9] = {-200, -129, -75, -35, -7, 12, 23, 28, 30};
+const int Scoring::Params::PASSED_PAWN[2][8] = {{0, 0, 56, 125, 206, 300, 606, 1125}, {0, 0, 83, 185, 303, 440, 843, 1465}};
+const int Scoring::Params::POTENTIAL_PASSER[2][8] = {{0, 0, 25, 50, 75, 100, 225, 150}, {0, 0, 33, 67, 101, 135, 308, 202}};
+const int Scoring::Params::CONNECTED_PASSERS[2][8] = {{0, 0, 37, 90, 157, 240, 487, 850}, {0, 0, 37, 90, 157, 240, 487, 850}};
+const int Scoring::Params::ADJACENT_PASSERS[2][8] = {{0, 0, 30, 70, 120, 180, 370, 690}, {0, 0, 30, 70, 120, 180, 370, 690}};
+const int Scoring::Params::DOUBLED_PAWNS[2][8] = {{-60, -80, -100, -120, -120, -100, -80, -60}, {-60, -80, -100, -120, -120, -100, -80, -60}};
+const int Scoring::Params::ISOLATED_PAWN[2][8] = {{-80, -80, -80, -80, -80, -80, -80, -80}, {-120, -120, -120, -120, -120, -120, -120, -120}};
 
 

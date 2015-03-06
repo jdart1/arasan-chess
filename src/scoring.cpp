@@ -908,6 +908,9 @@ void Scoring::pieceScore(const Board &board,
          {
             const int r = Rank(sq, side);
             if (r == 7) {
+#ifdef EVAL_DEBUG
+               Scores tmp(scores);
+#endif
                scores.mid += PARAM(ROOK_ON_7TH_MID);
                scores.end += PARAM(ROOK_ON_7TH_END);
 
@@ -918,6 +921,9 @@ void Scoring::pieceScore(const Board &board,
                   scores.mid += PARAM(TWO_ROOKS_ON_7TH_MID);
                   scores.end += PARAM(TWO_ROOKS_ON_7TH_END);
                }
+#ifdef EVAL_DEBUG
+               cout << "rook on 7th: (" << scores.mid-tmp.mid << ", " << scores.end-tmp.end << ")" << endl;
+#endif
             }
 
             const int file = File(sq);
@@ -938,7 +944,8 @@ void Scoring::pieceScore(const Board &board,
             scores.mid += PARAM(ROOK_MOBILITY)[Midgame][mobl];
             scores.end += PARAM(ROOK_MOBILITY)[Endgame][mobl];
 #ifdef EVAL_DEBUG
-            cout << "rook mobility: " << mobl << endl;
+            cout << "rook mobility: (" << PARAM(ROOK_MOBILITY)[Midgame][mobl] <<
+               ", " << PARAM(ROOK_MOBILITY)[Endgame][mobl] << ")" << endl;
 #endif
             if (!deep_endgame) {
                Bitboard attacks(rattacks2 &nearKing);

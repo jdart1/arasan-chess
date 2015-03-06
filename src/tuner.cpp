@@ -516,6 +516,14 @@ int CDECL main(int argc, char **argv)
 
     string input_file;
     
+/*
+   cout << "writing initial solution" << endl;
+   tune::initParams();
+   ofstream param_out(out_file_name,ios::out | ios::trunc);
+   Scoring::Params::write(param_out);
+   param_out << endl;
+*/
+
     if (argc < 2) {
        usage();
        return -1;
