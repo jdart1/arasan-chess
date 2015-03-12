@@ -98,8 +98,8 @@ static double sigmoid( double x )
    
 }
 
-double PARAM1 = 2.5;
-double PARAM2 = 2.0;
+double PARAM1 = 2.69044;
+double PARAM2 = 1.82372;
 
 static double sign(double x) 
 {
