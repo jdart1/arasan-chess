@@ -15,8 +15,8 @@ extern "C"
 };
 #include <iomanip>
 
-//#define PAWN_DEBUG
-//#define EVAL_DEBUG
+#define PAWN_DEBUG
+#define EVAL_DEBUG
 
 #ifdef TUNE
 #include "vparams.cpp"
@@ -1071,6 +1071,13 @@ void Scoring::pieceScore(const Board &board,
          " any=" << scores.any - tmp.any << endl;
 #endif
    }
+#ifdef EVAL_DEBUG
+   cout << ColorImage(side) << " scores after piece loop: " << endl;
+   cout << " general: " << scores.any << endl;
+   cout << " midgame: " << scores.mid << endl;
+   cout << " endgame: " << scores.end << endl;
+   cout << " blend: " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
+#endif
 
    const int bishopCount = board.getMaterial(side).bishopCount();
    if (bishopCount == 1) {
@@ -1094,7 +1101,13 @@ void Scoring::pieceScore(const Board &board,
 
          if (opp_pawns) {
             // penalize pawns on same color square as opposing single Bishop
+#ifdef EVAL_DEBUG
+            int tmp = opp_scores.end;
+#endif
             opp_scores.end += (oppPawnData.w_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END))/ opp_pawns;
+#ifdef EVAL_DEBUG
+            cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(side)) << "): " << opp_scores.end - tmp << endl;
+#endif
          }
       }
       else {
@@ -1115,17 +1128,27 @@ void Scoring::pieceScore(const Board &board,
          }
 
          if (opp_pawns) {
+#ifdef EVAL_DEBUG
+            int tmp = opp_scores.end;
+#endif
             // penalize pawns on same color square as opposing single Bishop
             opp_scores.end += (oppPawnData.b_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END))/opp_pawns;
+#ifdef EVAL_DEBUG
+            cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(side)) << "): " << opp_scores.end - tmp << endl;
+#endif
          }
       }
    }
    else if (bishopCount >= 2) {
+#ifdef EVAL_DEBUG
+      Scores tmp(scores);
+#endif
       // Bishop pair bonus, higher bonus in endgame
       scores.mid += PARAM(BISHOP_PAIR_MID);
       scores.end += PARAM(BISHOP_PAIR_END);
 #ifdef EVAL_DEBUG
-      cout << "bishop pair (" << ColorImage(side) << ")" << endl;
+      cout << "bishop pair (" << ColorImage(side) << "): (" << 
+         scores.mid - tmp.mid << ", " << scores.end - tmp.end << ")" << endl;
 #endif
    }
 
@@ -1140,6 +1163,14 @@ void Scoring::pieceScore(const Board &board,
       cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << endl;
 #endif
    }
+#ifdef EVAL_DEBUG
+   cout << ColorImage(side) << " scores before deep_endgame: " << endl;
+   cout << " general: " << scores.any << endl;
+   cout << " midgame: " << scores.mid << endl;
+   cout << " endgame: " << scores.end << endl;
+   cout << " blend: " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
+#endif
+
    if (!deep_endgame) {
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
@@ -2047,8 +2078,8 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
 
    // outside passed pawn scoring, based on cached pawn data
    if (pawnEntry.pawnData(side).outside && !pawnEntry.pawnData(oside).outside) {
-      scores.end += PARAM(OUTSIDE_PASSER_MID);
-      scores.mid += PARAM(OUTSIDE_PASSER_END);
+      scores.mid += PARAM(OUTSIDE_PASSER_MID);
+      scores.end += PARAM(OUTSIDE_PASSER_END);
    }
 
    // Penalize loss of castling.
@@ -2084,6 +2115,13 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
       scores.mid += ourCover + PARAM(KING_PST)[Midgame][63-board.kingSquare(Black)];
    }
 
+#ifdef EVAL_DEBUG
+   cout << ColorImage(side) << " scores before pieceScore: " << endl;
+   cout << " general: " << scores.any << endl;
+   cout << " midgame: " << scores.mid << endl;
+   cout << " endgame: " << scores.end << endl;
+   cout << " blend: " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
+#endif
    pieceScore<side> (board, pawnEntry.pawnData(side), 
                      pawnEntry.pawnData(oside), oppCover, scores, oppScores, 
                      board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD),
