@@ -368,7 +368,7 @@ void tune::checkParams()
 
 void tune::initParams()
 {
-   checkParams();
+//   checkParams();
 
    int *dest = Scoring::Params::RB_ADJUST;
    int i, j = 0;
