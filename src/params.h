@@ -79,27 +79,29 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
-    static PARAM_MOD int MATERIAL_SCALE[32];
-    static PARAM_MOD int MIDGAME_THRESHOLD;
-    static PARAM_MOD int ENDGAME_THRESHOLD;
-    static PARAM_MOD int KNIGHT_PST[2][64];
-    static PARAM_MOD int BISHOP_PST[2][64];
-    static PARAM_MOD int KNIGHT_OUTPOST[64];
-    static PARAM_MOD int BISHOP_OUTPOST[64];
-    // TBD: rook PST
     static PARAM_MOD int TRADE_DOWN[16];
-    static PARAM_MOD int KING_PST[2][64];
-    static PARAM_MOD int KNIGHT_MOBILITY[9];
-    static PARAM_MOD int BISHOP_MOBILITY[15];
-    static PARAM_MOD int ROOK_MOBILITY[2][15];
-    static PARAM_MOD int QUEEN_MOBILITY[2][29];
-    static PARAM_MOD int KING_MOBILITY_ENDGAME[9];
     static PARAM_MOD int PASSED_PAWN[2][8];
     static PARAM_MOD int POTENTIAL_PASSER[2][8];
     static PARAM_MOD int CONNECTED_PASSERS[2][8];
     static PARAM_MOD int ADJACENT_PASSERS[2][8];
     static PARAM_MOD int DOUBLED_PAWNS[2][8];
     static PARAM_MOD int ISOLATED_PAWN[2][8];
+
+    // not tuned presently (fixed)
+    static const int MATERIAL_SCALE[32];
+    static const int MIDGAME_THRESHOLD;
+    static const int ENDGAME_THRESHOLD;
+    static const int KNIGHT_PST[2][64];
+    static const int BISHOP_PST[2][64];
+    static const int KNIGHT_OUTPOST[64];
+    static const int BISHOP_OUTPOST[64];
+    // TBD: rook PST
+    static const int KING_PST[2][64];
+    static const int KNIGHT_MOBILITY[9];
+    static const int BISHOP_MOBILITY[15];
+    static const int ROOK_MOBILITY[2][15];
+    static const int QUEEN_MOBILITY[2][29];
+    static const int KING_MOBILITY_ENDGAME[9];
 
 #ifdef TUNE
     static void write(ostream &);

@@ -93,158 +93,47 @@ enum {
    SIDE_PROTECTED_PAWN,
    TRADE_DOWN_LINEAR,
    TRADE_DOWN_SQ,
-   KING_PST_RANK1_MID,
-   KING_PST_RANK1_SLOPE_MID,
-   KING_PST_RANK2_MID,
-   KING_PST_RANK2_SLOPE_MID,
-   KING_PST_RANK3_MID,
-   KING_PST_RANK3_SLOPE_MID,
-   KING_PST_RANK4_MID,
-   KING_PST_RANK4_SLOPE_MID,
-   KING_PST_RANK5_MID,
-   KING_PST_RANK5_SLOPE_MID,
-   KING_PST_RANK6_MID,
-   KING_PST_RANK6_SLOPE_MID,
-   KING_PST_RANK7_MID,
-   KING_PST_RANK7_SLOPE_MID,
-   KING_PST_RANK8_MID,
-   KING_PST_RANK8_SLOPE_MID,
-   KING_PST_RANK1_END,
-   KING_PST_RANK1_SLOPE_END,
-   KING_PST_RANK2_END,
-   KING_PST_RANK2_SLOPE_END,
-   KING_PST_RANK3_END,
-   KING_PST_RANK3_SLOPE_END,
-   KING_PST_RANK4_END,
-   KING_PST_RANK4_SLOPE_END,
-   KING_PST_RANK5_END,
-   KING_PST_RANK5_SLOPE_END,
-   KING_PST_RANK6_END,
-   KING_PST_RANK6_SLOPE_END,
-   KING_PST_RANK7_END,
-   KING_PST_RANK7_SLOPE_END,
-   KING_PST_RANK8_END,
-   KING_PST_RANK8_SLOPE_END,
-//   SCALING_START,
-//   SCALING_SIGMOID_MID,
-//   SCALING_SIGMOID_EXP,
-   KNIGHT_BACK_MID,
-   KNIGHT_BACK_END,
-   KNIGHT_BACK_CORNER_MID,
-   KNIGHT_BACK_CORNER_END,
-   KNIGHT_ON_RIM_MID,
-   KNIGHT_ON_RIM_END,
-   KNIGHT_CENTER_OCCUPY_MID,
-   KNIGHT_CENTER_OCCUPY_END,
-   KNIGHT_CENTER_CONTROL_MID,
-   KNIGHT_CENTER_CONTROL_END,
-   KNIGHT_FILE_CENTRALITY_MID,
-   KNIGHT_FILE_CENTRALITY_END,
-   KNIGHT_RANK5_MID,
-   KNIGHT_RANK5_END,
-   KNIGHT_RANK6_MID,
-   KNIGHT_RANK6_END,
-   KNIGHT_RANK7_MID,
-   KNIGHT_RANK7_END,
-   KNIGHT_RANK8_MID,
-   KNIGHT_RANK8_END,
-   BISHOP_BACK_MID,
-   BISHOP_BACK_END,
-   BISHOP_BACK_CORNER_MID,
-   BISHOP_BACK_CORNER_END,
-   BISHOP_DIAG_SIZE_MID,
-   BISHOP_DIAG_SIZE_END,
-   BISHOP_RANK7_MID,
-   BISHOP_RANK7_END,
-   BISHOP_RANK8_MID,
-   BISHOP_RANK8_END,
-   KNIGHT_OUTPOST_RANK4,
-   KNIGHT_OUTPOST_RANK4_SLOPE,
-   KNIGHT_OUTPOST_RANK5,
-   KNIGHT_OUTPOST_RANK5_SLOPE,
-   KNIGHT_OUTPOST_RANK6,
-   KNIGHT_OUTPOST_RANK6_SLOPE,
-   KNIGHT_OUTPOST_RANK7,
-   KNIGHT_OUTPOST_RANK7_SLOPE,
-   KNIGHT_OUTPOST_RANK8,
-   KNIGHT_OUTPOST_RANK8_SLOPE,
-   BISHOP_OUTPOST_RANK4,
-   BISHOP_OUTPOST_RANK4_SLOPE,
-   BISHOP_OUTPOST_RANK5,
-   BISHOP_OUTPOST_RANK5_SLOPE,
-   BISHOP_OUTPOST_RANK6,
-   BISHOP_OUTPOST_RANK6_SLOPE,
-   BISHOP_OUTPOST_RANK7,
-   BISHOP_OUTPOST_RANK7_SLOPE,
-   BISHOP_OUTPOST_RANK8,
-   BISHOP_OUTPOST_RANK8_SLOPE,
-   KNIGHT_MOBILITY0,
-   KNIGHT_MOBILITY_MAX,
-   KNIGHT_MOBILITY_POW,
-   BISHOP_MOBILITY0,
-   BISHOP_MOBILITY_MAX,
-   BISHOP_MOBILITY_POW,
-   ROOK_MOBILITY0_MID,
-   ROOK_MOBILITY_MAX_MID,
-   ROOK_MOBILITY_POW_MID,
-   ROOK_MOBILITY0_END,
-   ROOK_MOBILITY_MAX_END,
-   ROOK_MOBILITY_POW_END,
-   QUEEN_MOBILITY0_MID,
-   QUEEN_MOBILITY_MAX_MID,
-   QUEEN_MOBILITY_POW_MID,
-   QUEEN_MOBILITY0_END,
-   QUEEN_MOBILITY_MAX_END,
-   QUEEN_MOBILITY_POW_END,
-   KING_MOBILITY_ENDGAME0,
-   KING_MOBILITY_ENDGAME_MAX,
-   KING_MOBILITY_ENDGAME_POW,
-   PASSED_PAWN_BASE_MID,
-   PASSED_PAWN_SLOPE_MID,
-   PASSED_PAWN_SQ_SLOPE_MID,
-   PASSED_PAWN_RANK6_BONUS_MID,
-   PASSED_PAWN_RANK7_BONUS_MID,
-   PASSED_PAWN_BASE_END,
-   PASSED_PAWN_SLOPE_END,
-   PASSED_PAWN_SQ_SLOPE_END,
-   PASSED_PAWN_RANK6_BONUS_END,
-   PASSED_PAWN_RANK7_BONUS_END,
-   POTENTIAL_PASSED_PAWN_BASE_MID,
-   POTENTIAL_PASSED_PAWN_SLOPE_MID,
-   POTENTIAL_PASSED_PAWN_POW_MID,
-   POTENTIAL_PASSED_PAWN_RANK6_BONUS_MID,
-   POTENTIAL_PASSED_PAWN_BASE_END,
-   POTENTIAL_PASSED_PAWN_SLOPE_END,
-   POTENTIAL_PASSED_PAWN_POW_END,
-   POTENTIAL_PASSED_PAWN_RANK6_BONUS_END,
-   CONNECTED_PASSERS_BASE_MID,
-   CONNECTED_PASSERS_SLOPE_MID,
-   CONNECTED_PASSERS_SQ_SLOPE_MID,
-   CONNECTED_PASSERS_RANK6_BONUS_MID,
-   CONNECTED_PASSERS_RANK7_BONUS_MID,
-   CONNECTED_PASSERS_BASE_END,
-   CONNECTED_PASSERS_SLOPE_END,
-   CONNECTED_PASSERS_SQ_SLOPE_END,
-   CONNECTED_PASSERS_RANK6_BONUS_END,
-   CONNECTED_PASSERS_RANK7_BONUS_END,
-   ADJACENT_PASSERS_BASE_MID,
-   ADJACENT_PASSERS_SLOPE_MID,
-   ADJACENT_PASSERS_SQ_SLOPE_MID,
-   ADJACENT_PASSERS_RANK6_BONUS_MID,
-   ADJACENT_PASSERS_RANK7_BONUS_MID,
-   ADJACENT_PASSERS_BASE_END,
-   ADJACENT_PASSERS_SLOPE_END,
-   ADJACENT_PASSERS_SQ_SLOPE_END,
-   ADJACENT_PASSERS_RANK6_BONUS_END,
-   ADJACENT_PASSERS_RANK7_BONUS_END,
-   DOUBLED_PAWNS_BASE_MID,
-   DOUBLED_PAWNS_SLOPE_MID,
-   DOUBLED_PAWNS_BASE_END,
-   DOUBLED_PAWNS_SLOPE_END,
-   ISOLATED_PAWN_BASE_MID,
-   ISOLATED_PAWN_SLOPE_MID,
-   ISOLATED_PAWN_BASE_END,
-   ISOLATED_PAWN_SLOPE_END
+   PASSED_PAWN1,
+   PASSED_PAWN2,
+   PASSED_PAWN3,
+   PASSED_PAWN4,
+   PASSED_PAWN5,
+   PASSED_PAWN6,
+   PASSED_PAWN7,
+   PASSED_PAWN_ENDGAME_FACTOR,
+   POTENTIAL_PASSER1,
+   POTENTIAL_PASSER2,
+   POTENTIAL_PASSER3,
+   POTENTIAL_PASSER4,
+   POTENTIAL_PASSER5,
+   POTENTIAL_PASSER6,
+   POTENTIAL_PASSER_ENDGAME_FACTOR,
+   CONNECTED_PASSERS1,
+   CONNECTED_PASSERS2,
+   CONNECTED_PASSERS3,
+   CONNECTED_PASSERS4,
+   CONNECTED_PASSERS5,
+   CONNECTED_PASSERS6,
+   CONNECTED_PASSERS7,
+   CONNECTED_PASSERS_ENDGAME_FACTOR,
+   ADJACENT_PASSERS1,
+   ADJACENT_PASSERS2,
+   ADJACENT_PASSERS3,
+   ADJACENT_PASSERS4,
+   ADJACENT_PASSERS5,
+   ADJACENT_PASSERS6,
+   ADJACENT_PASSERS7,
+   ADJACENT_PASSERS_ENDGAME_FACTOR,
+   DOUBLED_PAWNS1,
+   DOUBLED_PAWNS2,
+   DOUBLED_PAWNS3,
+   DOUBLED_PAWNS4,
+   DOUBLED_PAWNS_ENDGAME_FACTOR,
+   ISOLATED_PAWN1,
+   ISOLATED_PAWN2,
+   ISOLATED_PAWN3,
+   ISOLATED_PAWN4,
+   ISOLATED_PAWN_ENDGAME_FACTOR
 };
    
 tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
@@ -282,9 +171,9 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",80,40,120),
    tune::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",200,0,500),
    tune::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",300,0,500),
-   tune::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",500,0,1000),
-   tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",320,0,640),
-   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1500,0,3000),
+   tune::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",344,0,600),
+   tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",220,0,600),
+   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1033,0,1800),
    tune::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",480,100,960),
    tune::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",500,100,1000),
    tune::TuneParam(BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
@@ -330,158 +219,47 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(SIDE_PROTECTED_PAWN,"side_protected_pawn",-100,-500,0),
    tune::TuneParam(TRADE_DOWN_LINEAR,"trade_down_linear",43,0,150),
    tune::TuneParam(TRADE_DOWN_SQ,"trade_down_sq",0,0,150),
-   tune::TuneParam(KING_PST_RANK1_MID,"king_pst_rank1_mid",0,0,250),
-   tune::TuneParam(KING_PST_RANK1_SLOPE_MID,"king_pst_rank1_slope_mid",0,-50,50),
-   tune::TuneParam(KING_PST_RANK2_MID,"king_pst_rank2_mid",0,-500,100),
-   tune::TuneParam(KING_PST_RANK2_SLOPE_MID,"king_pst_rank2_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK3_MID,"king_pst_rank3_mid",-60,-500,0),
-   tune::TuneParam(KING_PST_RANK3_SLOPE_MID,"king_pst_rank3_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK4_MID,"king_pst_rank4_mid",-360,-1000,0),
-   tune::TuneParam(KING_PST_RANK4_SLOPE_MID,"king_pst_rank4_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK5_MID,"king_pst_rank5_mid",-360,-1500,0),
-   tune::TuneParam(KING_PST_RANK5_SLOPE_MID,"king_pst_rank5_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK6_MID,"king_pst_rank6_mid",-360,-1500,0),
-   tune::TuneParam(KING_PST_RANK6_SLOPE_MID,"king_pst_rank6_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK7_MID,"king_pst_rank7_mid",-360,-1500,0),
-   tune::TuneParam(KING_PST_RANK7_SLOPE_MID,"king_pst_rank7_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK8_MID,"king_pst_rank8_mid",-360,-1500,0),
-   tune::TuneParam(KING_PST_RANK8_SLOPE_MID,"king_pst_rank8_slope_mid",0,-100,100),
-   tune::TuneParam(KING_PST_RANK1_END,"king_pst_rank1_end",-280,-500,500),
-   tune::TuneParam(KING_PST_RANK1_SLOPE_END,"king_pst_rank1_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK2_END,"king_pst_rank2_end",-220,-500,250),
-   tune::TuneParam(KING_PST_RANK2_SLOPE_END,"king_pst_rank2_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK3_END,"king_pst_rank3_end",-160,-500,250),
-   tune::TuneParam(KING_PST_RANK3_SLOPE_END,"king_pst_rank3_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK4_END,"king_pst_rank4_end",-100,-500,250),
-   tune::TuneParam(KING_PST_RANK4_SLOPE_END,"king_pst_rank4_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK5_END,"king_pst_rank5_end",-40,-500,250),
-   tune::TuneParam(KING_PST_RANK5_SLOPE_END,"king_pst_rank5_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK6_END,"king_pst_rank6_end",20,-500,250),
-   tune::TuneParam(KING_PST_RANK6_SLOPE_END,"king_pst_rank6_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK7_END,"king_pst_rank7_end",80,-500,300),
-   tune::TuneParam(KING_PST_RANK7_SLOPE_END,"king_pst_rank7_slope_end",50,-100,100),
-   tune::TuneParam(KING_PST_RANK8_END,"king_pst_rank8_end",80,-500,300),
-   tune::TuneParam(KING_PST_RANK8_SLOPE_END,"king_pst_rank8_slope_end",50,-100,100),
-//   tune::TuneParam(SCALING_START,"scaling_start",8,0,16),
-//   tune::TuneParam(SCALING_SIGMOID_MID,"sigmoid_mid",50,25,75),
-//   tune::TuneParam(SCALING_SIGMOID_EXP,"sigmoid_exp",372,50,1000),
-   tune::TuneParam(KNIGHT_BACK_MID,"knight_back_mid",-140,-300,-50),
-   tune::TuneParam(KNIGHT_BACK_END,"knight_back_end",-190,-300,-50),
-   tune::TuneParam(KNIGHT_BACK_CORNER_MID,"knight_back_corner_mid",40,-350,100),
-   tune::TuneParam(KNIGHT_BACK_CORNER_END,"knight_back_corner_end",40,-350,100),
-   tune::TuneParam(KNIGHT_ON_RIM_MID,"knight_on_rim_mid",-120,-250,0),
-   tune::TuneParam(KNIGHT_ON_RIM_END,"knight_on_rim_end",-130,-250,0),
-   tune::TuneParam(KNIGHT_CENTER_OCCUPY_MID,"knight_center_occupy_mid",50,0,250),
-   tune::TuneParam(KNIGHT_CENTER_OCCUPY_END,"knight_center_occupy_end",10,0,250),
-   tune::TuneParam(KNIGHT_CENTER_CONTROL_MID,"knight_center_control_mid",20,0,250),
-   tune::TuneParam(KNIGHT_CENTER_CONTROL_END,"knight_center_control_end",20,0,250),
-   tune::TuneParam(KNIGHT_FILE_CENTRALITY_MID,"knight_file_centrality_mid",5,-100,100),
-   tune::TuneParam(KNIGHT_FILE_CENTRALITY_END,"knight_file_centrality_end",5,-100,100),
-   tune::TuneParam(KNIGHT_RANK5_MID,"knight_rank5_mid",65,-200,200),
-   tune::TuneParam(KNIGHT_RANK5_END,"knight_rank5_end",17,-200,200),
-   tune::TuneParam(KNIGHT_RANK6_MID,"knight_rank6_mid",50,-200,200),
-   tune::TuneParam(KNIGHT_RANK6_END,"knight_rank6_end",27,-200,200),
-   tune::TuneParam(KNIGHT_RANK7_MID,"knight_rank7_mid",-11,-200,200),
-   tune::TuneParam(KNIGHT_RANK7_END,"knight_rank7_end",-18,-200,200),
-   tune::TuneParam(KNIGHT_RANK8_MID,"knight_rank8_mid",-31,-200,200),
-   tune::TuneParam(KNIGHT_RANK8_END,"knight_rank8_end",-19,-200,200),
-   tune::TuneParam(BISHOP_BACK_MID,"bishop_back_mid",-120,-250,0),
-   tune::TuneParam(BISHOP_BACK_END,"bishop_back_end",-112,-250,0),
-   tune::TuneParam(BISHOP_BACK_CORNER_MID,"bishop_back_corner_mid",-60,-350,0),
-   tune::TuneParam(BISHOP_BACK_CORNER_END,"bishop_back_corner_end",-60,-350,0),
-   tune::TuneParam(BISHOP_DIAG_SIZE_MID,"bishop_diag_size_mid",10,0,50),
-   tune::TuneParam(BISHOP_DIAG_SIZE_END,"bishop_diag_size_end",10,0,50),
-   tune::TuneParam(BISHOP_RANK7_MID,"bishop_rank7_mid",-100,-250,100),
-   tune::TuneParam(BISHOP_RANK7_END,"bishop_rank7_end",-100,-250,100),
-   tune::TuneParam(BISHOP_RANK8_MID,"bishop_rank8_mid",-100,-250,100),
-   tune::TuneParam(BISHOP_RANK8_END,"bishop_rank8_end",-100,-250,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK4,"knight_outpost_rank4",10,-50,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK4_SLOPE,"knight_outpost_rank4_slope",20,0,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK5,"knight_outpost_rank5",10,-50,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK5_SLOPE,"knight_outpost_rank5_slope",35,0,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK6,"knight_outpost_rank6",10,-50,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK6_SLOPE,"knight_outpost_rank6_scope",35,0,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK7,"knight_outpost_rank7",10,-50,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK7_SLOPE,"knight_outpost_rank7_slope",20,0,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK8,"knight_outpost_rank8",10,-50,100),
-   tune::TuneParam(KNIGHT_OUTPOST_RANK8_SLOPE,"knight_outpost_rank8_scope",0,0,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK4,"bishop_outpost_rank4",10,-50,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK4_SLOPE,"bishop_outpost_rank4_slope",15,0,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK5,"bishop_outpost_rank5",10,-50,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK5_SLOPE,"bishop_outpost_rank5_slope",30,0,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK6,"bishop_outpost_rank6",10,-50,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK6_SLOPE,"bishop_outpost_rank6_slope",30,0,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK7,"bishop_outpost_rank7",10,-50,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK7_SLOPE,"bishop_outpost_rank7_slope",15,0,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK8,"bishop_outpost_rank8",10,-500,100),
-   tune::TuneParam(BISHOP_OUTPOST_RANK8_SLOPE,"bishop_outpost_rank8_slope",0,0,100),
-   tune::TuneParam(KNIGHT_MOBILITY0,"knight_mobility0",-180,-800,-50),
-   tune::TuneParam(KNIGHT_MOBILITY_MAX,"knight_mobility_max",120,-25,250),
-   tune::TuneParam(KNIGHT_MOBILITY_POW,"knight_mobility_pow",120,48,180),
-   tune::TuneParam(BISHOP_MOBILITY0,"bishop_mobility0",-200,-800,-50),
-   tune::TuneParam(BISHOP_MOBILITY_MAX,"bishop_mobility_max",90,-25,250),
-   tune::TuneParam(BISHOP_MOBILITY_POW,"bishop_mobility_pow",120,48,180),
-   tune::TuneParam(ROOK_MOBILITY0_MID,"rook_mobility0_mid",-220,-800,-50),
-   tune::TuneParam(ROOK_MOBILITY_MAX_MID,"rook_mobility_max_mid",240,-25,500),
-   tune::TuneParam(ROOK_MOBILITY_POW_MID,"rook_mobility_pow_mid",80,48,180),
-   tune::TuneParam(ROOK_MOBILITY0_END,"rook_mobility0_end",-300,-800,-50),
-   tune::TuneParam(ROOK_MOBILITY_MAX_END,"rook_mobility_max_mid",340,-25,500),
-   tune::TuneParam(ROOK_MOBILITY_POW_END,"rook_mobility_pow_end",80,48,180),
-   tune::TuneParam(QUEEN_MOBILITY0_MID,"queen_mobility0_mid",-100,-800,-50),
-   tune::TuneParam(QUEEN_MOBILITY_MAX_MID,"queen_mobility_max_mid",210,-25,350),
-   tune::TuneParam(QUEEN_MOBILITY_POW_MID,"queen_mobility_pow_mid",96,48,180),
-   tune::TuneParam(QUEEN_MOBILITY0_END,"queen_mobility0_end",-120,-600,-50),
-   tune::TuneParam(QUEEN_MOBILITY_MAX_END,"queen_mobility_max_end",260,-25,350),
-   tune::TuneParam(QUEEN_MOBILITY_POW_END,"queen_mobility_pow_end",120,48,180),
-   tune::TuneParam(KING_MOBILITY_ENDGAME0,"king_mobility_endgame0",-200,-800,50),
-   tune::TuneParam(KING_MOBILITY_ENDGAME_MAX,"king_mobility_endgame_max",30,-25,250),
-   tune::TuneParam(KING_MOBILITY_ENDGAME_POW,"king_mobility_endgame_pow",100,48,180),
-   tune::TuneParam(PASSED_PAWN_BASE_MID,"passed_pawn_base_mid",0,0,250),
-   tune::TuneParam(PASSED_PAWN_SLOPE_MID,"passed_pawn_slope_mid",200,0,500),
-   tune::TuneParam(PASSED_PAWN_SQ_SLOPE_MID,"passed_pawn_sq_slope_mid",25,0,100),
-   tune::TuneParam(PASSED_PAWN_RANK6_BONUS_MID,"passed_pawn_rank6_bonus_mid",200,50,1000),
-   tune::TuneParam(PASSED_PAWN_RANK7_BONUS_MID,"passed_pawn_rank7_bonus_mid",400,50,1000),
-   tune::TuneParam(PASSED_PAWN_BASE_END,"passed_pawn_base_end",0,0,250),
-   tune::TuneParam(PASSED_PAWN_SLOPE_END,"passed_pawn_slope_end",300,0,500),
-   tune::TuneParam(PASSED_PAWN_SQ_SLOPE_END,"passed_pawn_sq_slope_end",35,0,100),
-   tune::TuneParam(PASSED_PAWN_RANK6_BONUS_END,"passed_pawn_rank6_bonus_end",250,10,1000),
-   tune::TuneParam(PASSED_PAWN_RANK7_BONUS_END,"passed_pawn_rank7_bonus_end",450,10,1000),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_BASE_MID,"potential_passed_pawn_base_mid",0,0,250),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_SLOPE_MID,"potential_passed_pawn_slope_mid",100,0,400),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_POW_MID,"potential_passed_pawn_pow_mid",32,15,100),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_RANK6_BONUS_MID,"potential_passed_pawn_rank6_bonus_mid",100,0,500),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_BASE_END,"potential_passed_pawn_base_end",0,0,250),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_SLOPE_END,"potential_passed_pawn_slope_end",135,0,600),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_POW_END,"potential_passed_pawn_pow_end",32,18,110),
-   tune::TuneParam(POTENTIAL_PASSED_PAWN_RANK6_BONUS_END,"potential_passed_pawn_rank6_bonus_end",140,0,800),
-   tune::TuneParam(CONNECTED_PASSERS_BASE_MID,"connected_passers_base_mid",0,0,200),
-   tune::TuneParam(CONNECTED_PASSERS_SLOPE_MID,"connected_passers_slope_mid",120,0,500),
-   tune::TuneParam(CONNECTED_PASSERS_SQ_SLOPE_MID,"connected_passers_sq_slope_mid",30,0,100),
-   tune::TuneParam(CONNECTED_PASSERS_RANK6_BONUS_MID,"connected_passers_rank6_bonus_mid",150,0,800),
-   tune::TuneParam(CONNECTED_PASSERS_RANK7_BONUS_MID,"connected_passers_rank7_bonus_mid",250,0,1000),
-   tune::TuneParam(CONNECTED_PASSERS_BASE_END,"connected_passers_base_end",0,0,200),
-   tune::TuneParam(CONNECTED_PASSERS_SLOPE_END,"connected_passers_slope_end",120,0,500),
-   tune::TuneParam(CONNECTED_PASSERS_SQ_SLOPE_END,"connected_passers_sq_slope_end",30,0,100),
-   tune::TuneParam(CONNECTED_PASSERS_RANK6_BONUS_END,"connected_passers_rank6_bonus_end",150,0,800),
-   tune::TuneParam(CONNECTED_PASSERS_RANK7_BONUS_END,"connected_passers_rank7_bonus_end",250,0,1000),
-   tune::TuneParam(ADJACENT_PASSERS_BASE_MID,"adjacent_passers_base_mid",0,0,200),
-   tune::TuneParam(ADJACENT_PASSERS_SLOPE_MID,"adjacent_passers_slope_mid",100,0,500),
-   tune::TuneParam(ADJACENT_PASSERS_SQ_SLOPE_MID,"adjacent_passers_sq_slope_mid",20,0,50),
-   tune::TuneParam(ADJACENT_PASSERS_RANK6_BONUS_MID,"adjacent_passers_rank6_bonus_mid",120,0,800),
-   tune::TuneParam(ADJACENT_PASSERS_RANK7_BONUS_MID,"adjacent_passers_rank7_bonus_mid",240,0,800),
-   tune::TuneParam(ADJACENT_PASSERS_BASE_END,"adjacent_passers_base_end",0,0,200),
-   tune::TuneParam(ADJACENT_PASSERS_SLOPE_END,"adjacent_passers_slope_end",100,0,500),
-   tune::TuneParam(ADJACENT_PASSERS_SQ_SLOPE_END,"adjacent_passers_sq_slope_end",20,0,50),
-   tune::TuneParam(ADJACENT_PASSERS_RANK6_BONUS_END,"adjacent_passers_rank6_bonus_end",120,0,800),
-   tune::TuneParam(ADJACENT_PASSERS_RANK7_BONUS_END,"adjacent_passers_rank7_bonus_end",240,0,800),
-   tune::TuneParam(DOUBLED_PAWNS_BASE_MID,"doubled_pawns_base_mid",-60,-200,0),
-   tune::TuneParam(DOUBLED_PAWNS_SLOPE_MID,"doubled_pawns_slope_mid",-20,-100,100),
-   tune::TuneParam(DOUBLED_PAWNS_BASE_END,"doubled_pawns_base_end",-60,-200,0),
-   tune::TuneParam(DOUBLED_PAWNS_SLOPE_END,"doubled_pawns_slope_end",-20,-100,100),
-   tune::TuneParam(ISOLATED_PAWN_BASE_MID,"isolated_pawn_base_mid",-80,-200,0),
-   tune::TuneParam(ISOLATED_PAWN_SLOPE_MID,"isolated_pawn_slope_mid",0,-100,100),
-   tune::TuneParam(ISOLATED_PAWN_BASE_END,"isolated_pawn_base_end",-120,-200,0),
-   tune::TuneParam(ISOLATED_PAWN_SLOPE_END,"isolated_pawn_slope_end",0,-100,100)
+   tune::TuneParam(PASSED_PAWN1,"passed_pawn1",0,0,200),
+   tune::TuneParam(PASSED_PAWN2,"passed_pawn2",60,0,500),
+   tune::TuneParam(PASSED_PAWN3,"passed_pawn3",110,50,500),
+   tune::TuneParam(PASSED_PAWN4,"passed_pawn4",180,70,500),
+   tune::TuneParam(PASSED_PAWN5,"passed_pawn5",270,90,500),
+   tune::TuneParam(PASSED_PAWN6,"passed_pawn6",560,200,1000),
+   tune::TuneParam(PASSED_PAWN7,"passed_pawn7",1110,500,1500),
+   tune::TuneParam(PASSED_PAWN_ENDGAME_FACTOR,"passed_pawn_endgame_factor",162,100,250),
+   tune::TuneParam(POTENTIAL_PASSER1,"potential_passer1",0,0,200),
+   tune::TuneParam(POTENTIAL_PASSER2,"potential_passer2",20,0,200),
+   tune::TuneParam(POTENTIAL_PASSER3,"potential_passer3",40,0,200),
+   tune::TuneParam(POTENTIAL_PASSER4,"potential_passer4",60,0,300),
+   tune::TuneParam(POTENTIAL_PASSER5,"potential_passer5",90,0,500),
+   tune::TuneParam(POTENTIAL_PASSER6,"potential_passer6",200,0,750),
+   tune::TuneParam(POTENTIAL_PASSER_ENDGAME_FACTOR,"potential_passer_pawn_endgame_factor",192,100,300),
+   tune::TuneParam(CONNECTED_PASSERS1,"connected_passers1",0,0,200),
+   tune::TuneParam(CONNECTED_PASSERS2,"connected_passers2",0,0,250),
+   tune::TuneParam(CONNECTED_PASSERS3,"connected_passers3",100,50,300),
+   tune::TuneParam(CONNECTED_PASSERS4,"connected_passers4",190,70,400),
+   tune::TuneParam(CONNECTED_PASSERS5,"connected_passers5",240,90,500),
+   tune::TuneParam(CONNECTED_PASSERS6,"connected_passers6",480,200,1000),
+   tune::TuneParam(CONNECTED_PASSERS7,"connected_passers7",830,70,1500),
+   tune::TuneParam(CONNECTED_PASSERS_ENDGAME_FACTOR,"connected_passers_pawn_endgame_factor",128,70,200),
+   tune::TuneParam(ADJACENT_PASSERS1,"adjacent_passers1",0,0,200),
+   tune::TuneParam(ADJACENT_PASSERS2,"adjacent_passers2",0,0,300),
+   tune::TuneParam(ADJACENT_PASSERS3,"adjacent_passers3",80,40,500),
+   tune::TuneParam(ADJACENT_PASSERS4,"adjacent_passers4",150,70,500),
+   tune::TuneParam(ADJACENT_PASSERS5,"adjacent_passers5",170,80,500),
+   tune::TuneParam(ADJACENT_PASSERS6,"adjacent_passers6",340,170,1000),
+   tune::TuneParam(ADJACENT_PASSERS7,"adjacent_passers7",700,350,1500),
+   tune::TuneParam(ADJACENT_PASSERS_ENDGAME_FACTOR,"adjacent_passers_endgame_factor",128,70,250),
+   tune::TuneParam(DOUBLED_PAWNS1,"double_pawns1",-60,-250,0),
+   tune::TuneParam(DOUBLED_PAWNS2,"double_pawns2",-80,-250,0),
+   tune::TuneParam(DOUBLED_PAWNS3,"double_pawns3",-100,-250,0),
+   tune::TuneParam(DOUBLED_PAWNS4,"double_pawns4",-100,-250,0),
+   tune::TuneParam(DOUBLED_PAWNS_ENDGAME_FACTOR,"double_pawns_endgame_factor",204,70,300),
+   tune::TuneParam(ISOLATED_PAWN1,"isolated_pawn1",-80,-250,0),
+   tune::TuneParam(ISOLATED_PAWN2,"isolated_pawn2",-80,-250,0),
+   tune::TuneParam(ISOLATED_PAWN3,"isolated_pawn3",-80,-250,0),
+   tune::TuneParam(ISOLATED_PAWN4,"isolated_pawn4",-80,-250,0),
+   tune::TuneParam(ISOLATED_PAWN_ENDGAME_FACTOR,"isolated_pawn_endgame_factor",196,70,300)
 };
 
 static const int centrality(int file) {
@@ -627,156 +405,48 @@ void tune::initParams()
       Scoring::Params::TRADE_DOWN[i] = round(PARAM(TRADE_DOWN_LINEAR)*j +
                                              PARAM(TRADE_DOWN_SQ)*j*j/64.0);
    }
-/*
-   Scoring::Params::ENDGAME_THRESHOLD=32;
-   Scoring::Params::MIDGAME_THRESHOLD=0;
-   int mid_thresh_set = 0;
-   for (int i = 0; i < 32; i++) {
-      if (i < 32*PARAM(SCALING_START)/100) {
-         Scoring::Params::MATERIAL_SCALE[i] = 0;
-      } else {
-         double mid = PARAM(SCALING_SIGMOID_MID)/100.0;
-         double mid2 = int(mid*(32-PARAM(SCALING_START))+PARAM(SCALING_START));
-         int j = i-mid2;
-         Scoring::Params::MATERIAL_SCALE[i] = int(0.5 + 128.0*(1.0/(1+exp(-PARAM(SCALING_SIGMOID_EXP)*j/1000.00))));
-      }
-      if ((128-Scoring::Params::MATERIAL_SCALE[i])>128/6) {
-         Scoring::Params::ENDGAME_THRESHOLD=i;
-      }
-      if (!mid_thresh_set && Scoring::Params::MATERIAL_SCALE[i]>128/6) {
-         Scoring::Params::MIDGAME_THRESHOLD=i-1;
-         mid_thresh_set++;
-      }
+
+   memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(int)*8);
+   memset(Scoring::Params::PASSED_PAWN[1],'\0',sizeof(int)*8);
+   for (int i = 1; i < 8; i++) {
+      Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN1+i-1);
+      Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN1+i-1)*PARAM(PASSED_PAWN_ENDGAME_FACTOR)/128;
    }
-*/
-   // fixed for now
-   const int MATERIAL_SCALE[32] = {0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 4, 5, 8, 11, 16, 22, 30, 40, 52, 64, 76, 88, 98, 106, 112, 117, 120, 123, 124, 126, 126, 127};
-   memcpy(Scoring::Params::MATERIAL_SCALE,MATERIAL_SCALE,sizeof(int)*32);
-   Scoring::Params::MIDGAME_THRESHOLD = 14;
-   Scoring::Params::ENDGAME_THRESHOLD = 23;
-
-   for (Square i = 0; i<64; i++) {
-      int rank = Rank(i,White);
-      int file = File(i);
-      for (int phase = 0; phase < 2; phase++) {
-         int score = 0;
-         if (rank == 1) {
-            score += PARAM(KNIGHT_BACK_MID+phase);
-            if (i == chess::A1 || i == chess::H1) {
-               score += PARAM(KNIGHT_BACK_CORNER_MID+phase);
-            }
-         }
-         if (rank == 5) {
-            score += PARAM(KNIGHT_RANK5_MID+phase);
-         }
-         if (rank == 6) {
-            score += PARAM(KNIGHT_RANK6_MID+phase);
-         }
-         if (rank == 7) {
-            score += PARAM(KNIGHT_RANK7_MID+phase);
-         }
-         if (rank == 8) {
-            score += PARAM(KNIGHT_RANK8_MID+phase);
-         }
-         if (file == chess::AFILE || File(i) == chess::HFILE) {
-            score += PARAM(KNIGHT_ON_RIM_MID+phase);
-         } else {
-            int centr = centrality(file);
-            score += centr*PARAM(KNIGHT_FILE_CENTRALITY_MID+phase);
-         }
-         if (Attacks::center.isSet(i)) {
-            score += PARAM(KNIGHT_CENTER_OCCUPY_MID+phase);
-         }
-         int control = (Attacks::knight_attacks[i] & Attacks::center).bitCount();
-         score += control*PARAM(KNIGHT_CENTER_CONTROL_MID+phase);
-         Scoring::Params::KNIGHT_PST[phase][i] = score;
-      }
+   memset(Scoring::Params::POTENTIAL_PASSER[0],'\0',sizeof(int)*8);
+   memset(Scoring::Params::POTENTIAL_PASSER[1],'\0',sizeof(int)*8);
+   for (int i = 1; i < 7; i++) {
+      Scoring::Params::POTENTIAL_PASSER[Scoring::Midgame][i] = PARAM(POTENTIAL_PASSER1+i-1);
+      Scoring::Params::POTENTIAL_PASSER[Scoring::Endgame][i] = PARAM(POTENTIAL_PASSER1+i-1)*PARAM(POTENTIAL_PASSER_ENDGAME_FACTOR)/128;
    }
-   Bitboard rank67mask(Attacks::rank_mask[6-1] |
-                       Attacks::rank_mask[7-1]);
-   for (Square i = 0; i < 64; i++) {
-      for (int phase = 0; phase < 2; phase++) {
-         int score = 0;
-         int rank = Rank(i,White);
-         int file = File(i);
-         if (rank == 1) {
-            score += PARAM(BISHOP_BACK_MID+phase);
-            if (i == chess::A1 || i == chess::H1) {
-               score += PARAM(BISHOP_BACK_CORNER_MID+phase);
-            }
-         }
-         else if (rank == 7) {
-            score += PARAM(BISHOP_RANK7_MID+phase);
-         }
-         else if (rank == 8) {
-            score += PARAM(BISHOP_RANK8_MID+phase);
-         }
-         Bitboard atcks(Attacks::diag_mask[i]);
-         score += PARAM(BISHOP_DIAG_SIZE_MID+phase)*(atcks.bitCount()-7);
-         Scoring::Params::BISHOP_PST[phase][i] = score;
-      }
+   memset(Scoring::Params::CONNECTED_PASSERS[0],'\0',sizeof(int)*8);
+   memset(Scoring::Params::CONNECTED_PASSERS[1],'\0',sizeof(int)*8);
+   for (int i = 1; i < 8; i++) {
+      Scoring::Params::CONNECTED_PASSERS[Scoring::Midgame][i] = PARAM(CONNECTED_PASSERS1+i-1);
+      Scoring::Params::CONNECTED_PASSERS[Scoring::Endgame][i] = PARAM(CONNECTED_PASSERS1+i-1)*PARAM(CONNECTED_PASSERS_ENDGAME_FACTOR)/128;
    }
-   symmetric_table_init(Scoring::Params::KING_PST[Scoring::Midgame],KING_PST_RANK1_MID,1);
-   symmetric_table_init(Scoring::Params::KING_PST[Scoring::Endgame],KING_PST_RANK1_END,1);
-   symmetric_table_init(Scoring::Params::KNIGHT_OUTPOST,KNIGHT_OUTPOST_RANK4,4);
-   symmetric_table_init(Scoring::Params::BISHOP_OUTPOST,BISHOP_OUTPOST_RANK4,4);
-   
-   mobility_init(Scoring::Params::KNIGHT_MOBILITY,KNIGHT_MOBILITY0,9);
-   mobility_init(Scoring::Params::BISHOP_MOBILITY,BISHOP_MOBILITY0,15);
-   mobility_init(Scoring::Params::ROOK_MOBILITY[Scoring::Midgame],ROOK_MOBILITY0_MID,15);
-   mobility_init(Scoring::Params::ROOK_MOBILITY[Scoring::Endgame],ROOK_MOBILITY0_END,15);
-   mobility_init(Scoring::Params::QUEEN_MOBILITY[Scoring::Midgame],QUEEN_MOBILITY0_MID,29);
-   mobility_init(Scoring::Params::QUEEN_MOBILITY[Scoring::Endgame],QUEEN_MOBILITY0_END,29);
-   mobility_init(Scoring::Params::KING_MOBILITY_ENDGAME,KING_MOBILITY_ENDGAME0,9);
-
-   pawn_table_init(Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame],DOUBLED_PAWNS_BASE_MID);
-   pawn_table_init(Scoring::Params::DOUBLED_PAWNS[Scoring::Endgame],DOUBLED_PAWNS_BASE_END);
-   pawn_table_init(Scoring::Params::ISOLATED_PAWN[Scoring::Midgame],ISOLATED_PAWN_BASE_MID);
-   pawn_table_init(Scoring::Params::ISOLATED_PAWN[Scoring::Endgame],ISOLATED_PAWN_BASE_END);
-   
-   for (int i = 0; i < 8; i++) {
-      Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = passer_score2(i,PARAM(PASSED_PAWN_BASE_MID),
-                                               PARAM(PASSED_PAWN_SLOPE_MID),
-                                               PARAM(PASSED_PAWN_SQ_SLOPE_MID),
-                                             PARAM(PASSED_PAWN_RANK6_BONUS_MID),
-                                             PARAM(PASSED_PAWN_RANK7_BONUS_MID));
-      Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = passer_score2(i,PARAM(PASSED_PAWN_BASE_END),
-                                             PARAM(PASSED_PAWN_SLOPE_END),
-                                             PARAM(PASSED_PAWN_SQ_SLOPE_END),
-                                             PARAM(PASSED_PAWN_RANK6_BONUS_END),
-                                             PARAM(PASSED_PAWN_RANK7_BONUS_END));
-      Scoring::Params::POTENTIAL_PASSER[Scoring::Midgame][i] = potential_passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_MID),
-                                             PARAM(POTENTIAL_PASSED_PAWN_SLOPE_MID),
-                                             PARAM(POTENTIAL_PASSED_PAWN_POW_MID),
-                                             PARAM(POTENTIAL_PASSED_PAWN_RANK6_BONUS_MID));
-      Scoring::Params::POTENTIAL_PASSER[Scoring::Endgame][i] = potential_passer_score(i,PARAM(POTENTIAL_PASSED_PAWN_BASE_END),
-                                             PARAM(POTENTIAL_PASSED_PAWN_SLOPE_END),
-                                             PARAM(POTENTIAL_PASSED_PAWN_POW_END),
-                                             PARAM(POTENTIAL_PASSED_PAWN_RANK6_BONUS_END));
-      Scoring::Params::CONNECTED_PASSERS[Scoring::Midgame][i] = passer_score2(i,PARAM(CONNECTED_PASSERS_BASE_MID),
-                                                                              PARAM(CONNECTED_PASSERS_SLOPE_MID),
-                                                                              PARAM(CONNECTED_PASSERS_SQ_SLOPE_MID),
-                                                                              PARAM(CONNECTED_PASSERS_RANK6_BONUS_MID),
-                                                                              PARAM(CONNECTED_PASSERS_RANK7_BONUS_MID));
-
-      Scoring::Params::CONNECTED_PASSERS[Scoring::Endgame][i] = passer_score2(i,PARAM(CONNECTED_PASSERS_BASE_END),
-                                                                              PARAM(CONNECTED_PASSERS_SLOPE_END),
-                                                                              PARAM(CONNECTED_PASSERS_SQ_SLOPE_END),
-                                                                              PARAM(CONNECTED_PASSERS_RANK6_BONUS_END),
-                                                                              PARAM(CONNECTED_PASSERS_RANK7_BONUS_END));
-
-      Scoring::Params::ADJACENT_PASSERS[Scoring::Midgame][i] = passer_score2(i,PARAM(ADJACENT_PASSERS_BASE_MID),
-                                                                              PARAM(ADJACENT_PASSERS_SLOPE_MID),
-                                                                              PARAM(ADJACENT_PASSERS_SQ_SLOPE_MID),
-                                                                              PARAM(ADJACENT_PASSERS_RANK6_BONUS_MID),
-                                                                              PARAM(ADJACENT_PASSERS_RANK7_BONUS_MID));
-
-      Scoring::Params::ADJACENT_PASSERS[Scoring::Endgame][i] = passer_score2(i,PARAM(ADJACENT_PASSERS_BASE_END),
-                                                                              PARAM(ADJACENT_PASSERS_SLOPE_END),
-                                                                              PARAM(ADJACENT_PASSERS_SQ_SLOPE_END),
-                                                                              PARAM(ADJACENT_PASSERS_RANK6_BONUS_END),
-                                                                              PARAM(ADJACENT_PASSERS_RANK7_BONUS_END));
-
+   memset(Scoring::Params::ADJACENT_PASSERS[0],'\0',sizeof(int)*8);
+   memset(Scoring::Params::ADJACENT_PASSERS[1],'\0',sizeof(int)*8);
+   for (int i = 1; i < 8; i++) {
+      Scoring::Params::ADJACENT_PASSERS[Scoring::Midgame][i] = PARAM(ADJACENT_PASSERS1+i-1);
+      Scoring::Params::ADJACENT_PASSERS[Scoring::Endgame][i] = PARAM(ADJACENT_PASSERS1+i-1)*PARAM(ADJACENT_PASSERS_ENDGAME_FACTOR)/128;
+   }
+   memset(Scoring::Params::DOUBLED_PAWNS[0],'\0',sizeof(int)*8);
+   memset(Scoring::Params::DOUBLED_PAWNS[1],'\0',sizeof(int)*8);
+   memset(Scoring::Params::ISOLATED_PAWN[0],'\0',sizeof(int)*8);
+   memset(Scoring::Params::ISOLATED_PAWN[1],'\0',sizeof(int)*8);
+   for (int i = 0; i < 4; i++) {
+      Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame][i] = 
+         Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame][7-i] =
+         PARAM(DOUBLED_PAWNS1+i);
+      Scoring::Params::DOUBLED_PAWNS[Scoring::Endgame][i] = 
+         Scoring::Params::DOUBLED_PAWNS[Scoring::Endgame][7-i] = 
+         PARAM(DOUBLED_PAWNS1+i)*PARAM(DOUBLED_PAWNS_ENDGAME_FACTOR)/128;
+      Scoring::Params::ISOLATED_PAWN[Scoring::Midgame][i] = 
+         Scoring::Params::ISOLATED_PAWN[Scoring::Midgame][7-i] =
+         PARAM(ISOLATED_PAWN1+i);      
+      Scoring::Params::ISOLATED_PAWN[Scoring::Endgame][i] = 
+         Scoring::Params::ISOLATED_PAWN[Scoring::Endgame][7-i] = 
+         PARAM(ISOLATED_PAWN1+i)*PARAM(ISOLATED_PAWN_ENDGAME_FACTOR)/128;
    }
 }
 

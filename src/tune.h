@@ -20,7 +20,7 @@ namespace tune {
     }
   };
 
-  static const int NUM_TUNING_PARAMS = 230;
+  static const int NUM_TUNING_PARAMS = 122;
 
   extern TuneParam tune_params[NUM_TUNING_PARAMS];
 

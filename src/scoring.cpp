@@ -15,14 +15,105 @@ extern "C"
 };
 #include <iomanip>
 
-#define PAWN_DEBUG
-#define EVAL_DEBUG
+//#define PAWN_DEBUG
+//#define EVAL_DEBUG
 
 #ifdef TUNE
 #include "vparams.cpp"
 #else
 #include "params.cpp"
 #endif
+
+// const for now (not tuned)
+
+const int Scoring::Params:: MATERIAL_SCALE[32] =
+{
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
+   108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
+};
+
+const int Scoring::Params::MIDGAME_THRESHOLD = 12;
+const int Scoring::Params::ENDGAME_THRESHOLD = 23;
+
+const int Scoring::Params::KNIGHT_PST[2][64] = 
+{{-220 ,-140 ,-110 ,-100 ,-100 ,-110 ,-140 ,-220,
+  -150 ,-60 ,-40 ,-30 ,-30 ,-40 ,-60 ,-150,
+  -120 ,-40 ,-10 ,0 ,0 ,-10 ,-40 ,-120,
+  -110 ,-30 ,0 ,30 ,30 ,0 ,-30 ,-110,
+  -110 ,-30 ,0 ,30 ,30 ,0 ,-30 ,-110,
+  -120 ,-40 ,-10 ,0 ,0 ,-10,-40 ,-120,
+  -150 ,-60 ,-40 ,-30 ,-30 ,-40 ,-60 ,-150,
+  -180 ,-90 ,-70 ,-60 ,-60 ,-70 ,-90 ,-180},
+ {-230 ,-190 ,-160 ,-150 ,-150 ,-150 ,-160 ,-190,
+  -130 ,-90 ,-50 ,-40 ,-40 , -50 ,-90,-130,
+  -90 ,-50 ,-20 ,-10 ,-10 ,-20 ,-50 ,-90,
+  -80 ,-40 ,-10 ,0 ,0 ,-10 ,-40 ,-80,
+  -80 ,-30 ,0 ,10 ,10 ,0 ,-30,-80,
+  -90 ,-40 ,0 ,0 ,0 ,0 ,-40 ,-90,
+  -130 ,-70 ,-40 ,-30 ,-30 ,-40 ,-70 ,-130,
+  -170 ,-130 ,-90 ,-80 ,-80 ,-90 ,-130 ,-170
+ }};
+
+const int Scoring::Params::BISHOP_PST[2][64] = 
+{{-180 ,-120 ,-120 ,-120 ,-120 ,-120 ,-120 ,-180,
+-10 ,80 ,0 ,60 ,60 ,0 ,80 ,-10,
+-10 ,0 ,60 ,80 ,80 ,60 ,0 ,-10,
+0 ,0 ,60 ,100 ,100 ,60 ,0 ,0,
+0 ,60 ,60 ,60 ,60 ,60 ,60 ,0,
+100 ,100 ,100 ,100 ,100 ,100 ,100 ,100,
+-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100,
+-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100},
+{0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0}};
+
+const int Scoring::Params::KNIGHT_OUTPOST[64] = 
+{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
+0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
+0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
+10 ,30 ,60 ,60 ,60 ,60 ,30 ,10,
+10 ,40 ,90 ,140 ,140 ,90 ,40 ,10,
+10 ,40 ,90 ,140 ,140 ,90 ,40 ,10,
+10 ,10 ,60 ,60 ,60 ,60 ,10 ,10,
+10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
+};
+const int Scoring::Params::BISHOP_OUTPOST[64] = 
+{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
+0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
+0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
+10 ,20 ,50 ,50 ,50 ,50 ,20 ,10,
+10 ,30 ,70 ,110 ,110 ,70 ,30 ,10,
+10 ,30 ,70 ,110 ,110 ,70 ,30 ,10,
+10 ,10 ,50 ,50 ,50 ,50 ,10 ,10,
+10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
+};
+const int Scoring::Params::KING_PST[2][64] = {{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
+,-60 ,-60 ,-60 ,-60 ,-60 ,-60 ,-60 ,-60
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
+}, {-280 ,-230 ,-180 ,-130 ,-130 ,-180 ,-230 ,-280
+,-220 ,-170 ,-120 ,-70 ,-70 ,-120 ,-170 ,-220
+,-160 ,-110 ,-60 ,-10 ,-10 ,-60 ,-110 ,-160
+,-100 ,-50 ,0 ,50 ,50 ,0 ,-50 ,-100
+,-40 ,10 ,60 ,110 ,110 ,60 ,10 ,-40
+,20 ,70 ,120 ,170 ,170 ,120 ,70 ,20
+,80 ,130 ,180 ,230 ,230 ,180 ,130 ,80
+,80 ,130 ,180 ,230 ,230 ,180 ,130 ,80
+}};
+const int Scoring::Params::KNIGHT_MOBILITY[9] = {-180, -70, -20, 0, 20, 50, 70, 100, 120};
+const int Scoring::Params::BISHOP_MOBILITY[15] = {-200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90};
+const int Scoring::Params::ROOK_MOBILITY[2][15] = {{-220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240}, {-300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320}};
+const int Scoring::Params::QUEEN_MOBILITY[2][29] = {{-100, -50, -10, -10, 40, 70, 90, 110, 130, 140, 160, 170, 190, 200, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210}, {-120, -60, -10, 10, 50, 80, 110, 130, 160, 170, 200, 210, 230, 250, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260}};
+const int Scoring::Params::KING_MOBILITY_ENDGAME[9] = {-200, -120, -60, 0, 10, 20, 30, 30, 30};
 
 #define PARAM(x) Params::x
 #define APARAM(x,index) Params::x[index]
@@ -1071,13 +1162,6 @@ void Scoring::pieceScore(const Board &board,
          " any=" << scores.any - tmp.any << endl;
 #endif
    }
-#ifdef EVAL_DEBUG
-   cout << ColorImage(side) << " scores after piece loop: " << endl;
-   cout << " general: " << scores.any << endl;
-   cout << " midgame: " << scores.mid << endl;
-   cout << " endgame: " << scores.end << endl;
-   cout << " blend: " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
-#endif
 
    const int bishopCount = board.getMaterial(side).bishopCount();
    if (bishopCount == 1) {
@@ -1163,14 +1247,6 @@ void Scoring::pieceScore(const Board &board,
       cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << endl;
 #endif
    }
-#ifdef EVAL_DEBUG
-   cout << ColorImage(side) << " scores before deep_endgame: " << endl;
-   cout << " general: " << scores.any << endl;
-   cout << " midgame: " << scores.mid << endl;
-   cout << " endgame: " << scores.end << endl;
-   cout << " blend: " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
-#endif
-
    if (!deep_endgame) {
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
@@ -1191,7 +1267,7 @@ void Scoring::pieceScore(const Board &board,
       int attack =
          (PARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
           PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
-//      int attack = 8*KING_ATTACK_SCALE[Util::Min(attack/8, 511)];
+      attack = Util::Min(5120,attack);
       if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
@@ -2115,13 +2191,6 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
       scores.mid += ourCover + PARAM(KING_PST)[Midgame][63-board.kingSquare(Black)];
    }
 
-#ifdef EVAL_DEBUG
-   cout << ColorImage(side) << " scores before pieceScore: " << endl;
-   cout << " general: " << scores.any << endl;
-   cout << " midgame: " << scores.mid << endl;
-   cout << " endgame: " << scores.end << endl;
-   cout << " blend: " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
-#endif
    pieceScore<side> (board, pawnEntry.pawnData(side), 
                      pawnEntry.pawnData(oside), oppCover, scores, oppScores, 
                      board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD),
@@ -2531,38 +2600,8 @@ void Scoring::Params::write(ostream &o)
       }
       o << " = " << tune::tune_params[i].current << ";" << endl;
    }
-   //o << "const int Scoring::Params::params[" << Scoring::Params::PARAM_ARRAY_SIZE << "] = ";
-   //print_array(o,params,Params::PARAM_ARRAY_SIZE);
-   // fixed for now
-   o << "const int Scoring::Params::MATERIAL_SCALE[32] = {0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 4, 5, 8, 11, 16, 22, 30, 40, 52, 64, 76, 88, 98, 106, 112, 117, 120, 123, 124, 126, 126, 127};" << endl;
-   o << "const int Scoring::Params::MIDGAME_THRESHOLD = 14;" << endl;
-   o << "const int Scoring::Params::ENDGAME_THRESHOLD = 23;" << endl;
-   //o << "const int Scoring::Params::MATERIAL_SCALE[32] = ";
-   //print_array(o,Params::MATERIAL_SCALE,32);
-   //o << "const int Scoring::Params::MIDGAME_THRESHOLD = " << Params::MIDGAME_THRESHOLD << ";" << endl;
-   //o << "const int Scoring::Params::ENDGAME_THRESHOLD = " << Params::ENDGAME_THRESHOLD << ";" << endl;
-   o << "const int Scoring::Params::KNIGHT_PST[2][64] = " << endl;
-   print_pst(o,Params::KNIGHT_PST[0],KNIGHT_PST[1],64);
-   o << "const int Scoring::Params::BISHOP_PST[2][64] = " << endl;
-   print_pst(o,Params::BISHOP_PST[0],BISHOP_PST[1],64);
-   o << "const int Scoring::Params::KNIGHT_OUTPOST[64] = " << endl;
-   print_pst(o,Params::KNIGHT_OUTPOST,64);
-   o << "const int Scoring::Params::BISHOP_OUTPOST[64] = " << endl;
-   print_pst(o,Params::BISHOP_OUTPOST,64);
-   o << "const int Scoring::Params::KING_PST[2][64] = ";
-   print_pst(o,Params::KING_PST[0],KING_PST[1],64);
-   o << "const int Scoring::Params::KNIGHT_MOBILITY[9] = ";
-   print_array(o,Params:: KNIGHT_MOBILITY, 9);
-   o << "const int Scoring::Params::BISHOP_MOBILITY[15] = ";
-   print_array(o,Params:: BISHOP_MOBILITY, 15);
-   o << "const int Scoring::Params::ROOK_MOBILITY[2][15] = ";
-   print_array(o,Params:: ROOK_MOBILITY[0], ROOK_MOBILITY[1], 15);
-   o << "const int Scoring::Params::QUEEN_MOBILITY[2][29] = ";
-   print_array(o,Params:: QUEEN_MOBILITY[0], QUEEN_MOBILITY[1], 29);
    o << "const int Scoring::Params::TRADE_DOWN[16] = ";
    print_array(o,Params::TRADE_DOWN,16);
-   o << "const int Scoring::Params::KING_MOBILITY_ENDGAME[9] = ";
-   print_array(o,Params::KING_MOBILITY_ENDGAME, 9);
    o << "const int Scoring::Params::PASSED_PAWN[2][8] = ";
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
    o << "const int Scoring::Params::POTENTIAL_PASSER[2][8] = ";
@@ -2575,7 +2614,8 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params:: DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
    o << "const int Scoring::Params::ISOLATED_PAWN[2][8] = ";
    print_array(o,Params:: ISOLATED_PAWN[0], Params::ISOLATED_PAWN[1], 8);
-
    o << endl;
+
+
 }
 #endif
