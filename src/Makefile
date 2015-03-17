@@ -167,7 +167,7 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tuner $(EXPORT)/testpos
+all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tuner $(EXPORT)/testpos $(EXPORT)/$(ARASANX)-tune
 
 popcnt: SSE = -msse4.2
 popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
@@ -324,6 +324,18 @@ movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
+ARASANX_TUNE_SOURCES = arasanx.cpp tune.cpp globals.cpp  \
+board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
+movegen.cpp history.cpp \
+hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
+stats.cpp threadp.cpp threadc.cpp unit.cpp
+
 TESTPOS_SOURCES = testpos.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -339,6 +351,7 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES))
+ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES))
 TESTPOS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(TESTPOS_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
@@ -351,6 +364,9 @@ $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
 	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(GSL_LIBS) $(BLAS_LIBS) $(SMPLIB)
+
+$(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(GSL_LIBS) $(BLAS_LIBS) $(SMPLIB)
 
 $(EXPORT)/testpos:  $(TESTPOS_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TESTPOS_OBJS) $(DEBUG) -o $(EXPORT)/testpos -lstdc++ $(LIBS) $(SMPLIB)	
