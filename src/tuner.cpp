@@ -19,8 +19,8 @@ extern "C" {
 #include <semaphore.h>
 };
 
-#include "Rockstar.hpp"
-#include <Eigen/Core>
+#include "cmaes.h"
+using namespace libcmaes;
 
 static int cores = 1;
 
@@ -47,8 +47,6 @@ static string x0_file_name="x0";
 enum Strategy { MMTO, Texel };
 
 static const Strategy strategy = Texel;
-
-static double min_cost = 1.0;
 
 // per-thread data
 static struct ThreadData {
@@ -422,21 +420,36 @@ static double computeLsqError() {
    return total;
 }
 
-
-static double evaluate(const Eigen::VectorXd &x, const int dim) 
+static FitFunc evaluator = [](const double *x, const int dim) 
 {
    int i;
    for (i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
    {
-      tune::tune_params[i].current = unscale(x(i),tune::tune_params[i]);
+      tune::tune_params[i].current = unscale(x[i],tune::tune_params[i]);
    }
    tune::initParams();
    double err = computeLsqError()/positions->size();
+   cout << "objective=" << err << endl;
    return err;
+   
 };
 
-static void writeProgress(Eigen::VectorXd &theta)
+static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> progress = [](const CMAParameters<GenoPheno<pwqBoundStrategy>> &cmaparams, const CMASolutions &cmasols)
 {
+   
+   std::cout << "best solution: " << cmasols << std::endl;
+   vector <double> x0 = cmasols.best_candidate().get_x();
+/*
+   cout << "denormalized solution: " << endl;
+   int i = 0;
+        
+   for (vector<double>::const_iterator it = x0.begin();
+        it != x0.end();
+        it++,i++) {
+      cout << " " << tune_params[i].name << ": " << round(unscale(*it,i)) << endl;
+   }
+   cout << endl;
+*/   
    if (x0_file_name.length()) {
       ofstream x0_out(x0_file_name,ios::out | ios::trunc);
       tune::writeX0(x0_out);
@@ -451,6 +464,7 @@ static void writeProgress(Eigen::VectorXd &theta)
       Scoring::Params::write(cout);
       cout << endl;
    }
+   return 0;
 };
 
 static uint64 readTrainingFile() {
@@ -488,7 +502,7 @@ int CDECL main(int argc, char **argv)
     }
     atexit(cleanupGlobals);
     delayedInit();
-    options.search.hash_table_size = 0;
+    options.search.hash_table_size = 64000;
 
 //    if (EGTBMenCount) {
 //        cerr << "Initialized tablebases" << endl;
@@ -502,12 +516,13 @@ int CDECL main(int argc, char **argv)
 
     string input_file;
     
+/*
    cout << "writing initial solution" << endl;
    tune::initParams();
    ofstream param_out(out_file_name,ios::out | ios::trunc);
    Scoring::Params::write(param_out);
    param_out << endl;
-
+*/
 
     if (argc < 2) {
        usage();
@@ -554,7 +569,7 @@ int CDECL main(int argc, char **argv)
        ifstream is(input_file);
        if (is.good()) {
           tune::readX0(is);
-//          tune::checkParams();
+          tune::checkParams();
        }
        else {
           cerr << "warning: cannot open input file " << input_file << endl;
@@ -580,30 +595,22 @@ int CDECL main(int argc, char **argv)
        threadDatas[i].size = size;
        off += chunk;
     }
-
-    Eigen::VectorXd x0 = Eigen::VectorXd::Zero(tune::NUM_TUNING_PARAMS,1);
+        
+    vector<double> x0;
+    double sigma = 0.05;
+    // use variant with box bounds
+    double lbounds[tune::NUM_TUNING_PARAMS],
+       ubounds[tune::NUM_TUNING_PARAMS];
     // initialize & normalize
     for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-       x0(i) = scale(tune::tune_params[i]);
+       x0.push_back(scale(tune::tune_params[i]));
+       lbounds[i] = 0.0;
+       ubounds[i] = 1.0;
     }
-    Eigen::VectorXd Initial_StandardDeviation = Eigen::VectorXd::Ones(tune::NUM_TUNING_PARAMS,1) * 0.05;
-    Eigen::VectorXd theta = Eigen::VectorXd::Zero(tune::NUM_TUNING_PARAMS,1);
-
-    int initial_exp = 2;
-    rockstar::Rockstar optimizer(x0,Initial_StandardDeviation, initial_exp);
-
-    for(int i=0; i<1200; i++){
-      optimizer.getNextTheta2Evaluate(theta);
-      double cost = evaluate(theta,tune::NUM_TUNING_PARAMS);
-      optimizer.setTheCostFromTheLastTheta(cost);
-
-      std::cout<<optimizer.getRolloutNumber()<<"th rollout, this cost is   "<<cost<<", sigma is "<<optimizer.getSigma()<<std::endl;
-      if (cost < min_cost) {
-         writeProgress(theta);
-         min_cost = cost;
-      }
-    }
-
+    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,tune::NUM_TUNING_PARAMS);
+    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(tune::NUM_TUNING_PARAMS,&x0.front(),sigma,-1,0,gp);
+    cmaparams.set_algo(sepaBIPOP_CMAES);
+    CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
     for (int i = 0; i < cores; i++) {
        delete threadDatas[i].searcher;
     }
