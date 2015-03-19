@@ -62,6 +62,7 @@ int Scoring::Params::SUPPORTED_PASSER7;
 int Scoring::Params::SIDE_PROTECTED_PAWN;
 
 // The following tables are computed from tuning parameters.
+int Scoring::Params::KING_ATTACK_SCALE[512];
 int Scoring::Params::TRADE_DOWN[16];
 /*
 // not tuned presently

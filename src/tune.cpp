@@ -91,6 +91,9 @@ enum {
    SUPPORTED_PASSER6,
    SUPPORTED_PASSER7,
    SIDE_PROTECTED_PAWN,
+   KING_ATTACK_SIGMOID_MID,
+   KING_ATTACK_SIGMOID_DIV,
+   KING_ATTACK_SIGMOID_MULT,
    TRADE_DOWN_LINEAR,
    TRADE_DOWN_SQ,
    PASSED_PAWN1,
@@ -171,9 +174,9 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",80,40,120),
    tune::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",200,0,500),
    tune::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",300,0,500),
-   tune::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",344,0,600),
-   tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",220,0,600),
-   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1033,0,1800),
+   tune::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",500,0,800),
+   tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",320,0,800),
+   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1500,0,2500),
    tune::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",480,100,960),
    tune::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",500,100,1000),
    tune::TuneParam(BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
@@ -218,6 +221,9 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(SUPPORTED_PASSER7,"supported_passer7",760,0,1500),
    tune::TuneParam(SIDE_PROTECTED_PAWN,"side_protected_pawn",-100,-500,0),
    tune::TuneParam(TRADE_DOWN_LINEAR,"trade_down_linear",43,0,150),
+   tune::TuneParam(KING_ATTACK_SIGMOID_MID,"king_attack_sigmoid_mid",200,50,350),
+   tune::TuneParam(KING_ATTACK_SIGMOID_DIV,"king_attack_sigmoid_div",200,100,500),
+   tune::TuneParam(KING_ATTACK_SIGMOID_MULT,"king_attack_sigmoid_mult",200,150,300),
    tune::TuneParam(TRADE_DOWN_SQ,"trade_down_sq",0,0,150),
    tune::TuneParam(PASSED_PAWN1,"passed_pawn1",0,0,200),
    tune::TuneParam(PASSED_PAWN2,"passed_pawn2",60,0,500),
@@ -448,6 +454,12 @@ void tune::initParams()
          Scoring::Params::ISOLATED_PAWN[Scoring::Endgame][7-i] = 
          PARAM(ISOLATED_PAWN1+i)*PARAM(ISOLATED_PAWN_ENDGAME_FACTOR)/128;
    }
+   for (int i = 0; i < 512; i++) {
+      Scoring::Params::KING_ATTACK_SCALE[i] =
+         int(PARAM(KING_ATTACK_SIGMOID_MULT)*i/
+             (1.0+sqrt(1.0+pow((i-PARAM(KING_ATTACK_SIGMOID_MID))/PARAM(KING_ATTACK_SIGMOID_DIV),2.0)))/100.0);
+   }
+   
 }
 
 void tune::writeX0(ostream &o) 

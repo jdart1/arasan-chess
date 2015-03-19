@@ -79,6 +79,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
+    static PARAM_MOD int KING_ATTACK_SCALE[512];
     static PARAM_MOD int TRADE_DOWN[16];
     static PARAM_MOD int PASSED_PAWN[2][8];
     static PARAM_MOD int POTENTIAL_PASSER[2][8];

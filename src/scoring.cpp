@@ -1264,10 +1264,10 @@ void Scoring::pieceScore(const Board &board,
          attackCount = Util::Max(0,attackCount-1);
       }
       attackCount = Util::Min(4,attackCount);
-      int attack =
+      int scale =
          (PARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
           PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
-      attack = Util::Min(5120,attack);
+      int attack = 10*PARAM(KING_ATTACK_SCALE)[Util::Min(511,scale/10)];
       if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
@@ -2600,6 +2600,8 @@ void Scoring::Params::write(ostream &o)
       }
       o << " = " << tune::tune_params[i].current << ";" << endl;
    }
+   o << "const int Scoring::Params:KING_ATTACK_SCALE[512] = ";
+   print_array(o,Params::KING_ATTACK_SCALE,512);
    o << "const int Scoring::Params::TRADE_DOWN[16] = ";
    print_array(o,Params::TRADE_DOWN,16);
    o << "const int Scoring::Params::PASSED_PAWN[2][8] = ";

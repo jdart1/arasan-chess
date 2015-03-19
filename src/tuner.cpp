@@ -502,13 +502,12 @@ int CDECL main(int argc, char **argv)
 
     string input_file;
     
-/*
    cout << "writing initial solution" << endl;
    tune::initParams();
    ofstream param_out(out_file_name,ios::out | ios::trunc);
    Scoring::Params::write(param_out);
    param_out << endl;
-*/
+
 
     if (argc < 2) {
        usage();
@@ -555,7 +554,7 @@ int CDECL main(int argc, char **argv)
        ifstream is(input_file);
        if (is.good()) {
           tune::readX0(is);
-          tune::checkParams();
+//          tune::checkParams();
        }
        else {
           cerr << "warning: cannot open input file " << input_file << endl;
