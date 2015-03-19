@@ -16,27 +16,14 @@
 extern "C" {
 #include <math.h>
 #include <ctype.h>
-#include <semaphore.h>
+#include <unistd.h>
 };
 
 #include "cmaes.h"
 using namespace libcmaes;
 
-static int cores = 1;
-
-static int SEARCH_DEPTH = 1;
-
-static int FV_WINDOW = 256;
-
-static int SEARCH_WINDOW = PAWN_VALUE/2;
-
-static const int MAX_THREADS = 64;
-
-static const int THREAD_STACK_SIZE = 8*1024*1024;
-
-static string fen_file;
-
-static vector<string> * positions = NULL;
+// script to run matches
+static const char * MATCH_PATH="/home/jdart/tools/match.py";
 
 static bool terminated = false;
 
@@ -44,81 +31,13 @@ static string out_file_name="params.cpp";
 
 static string x0_file_name="x0";
 
-enum Strategy { MMTO, Texel };
+static int first_index = 0;
+ 
+static int last_index = tune::NUM_TUNING_PARAMS-1;
 
-static const Strategy strategy = Texel;
+static int GAME_LIMIT = 1000;
 
-// per-thread data
-static struct ThreadData {
-    SearchController *searcher;
-    int index; 
-    size_t offset;
-    size_t size;
-    double penalty;
-    sem_t sem;
-    sem_t done;
-    THREAD thread_id;
-} threadDatas[MAX_THREADS];
-
-static pthread_attr_t stackSizeAttrib;
-
-static int search(SearchController* searcher, const Board &board, int alpha, int beta, int depth) 
-{
-   int value;
-   Statistics stats;
-   searcher->findBestMove(board,
-                          FixedDepth,
-                          999999,
-                          0,
-                          depth, false, false,
-                          stats,
-                          Silent);
-   value = stats.value;
-   return value;
-}
-
-static double sigmoid( double x )
-{
-   
-   const double delta = (double)FV_WINDOW / 7.0;
-   double dd, dn, dtemp, dret;
-   if      ( x <= -FV_WINDOW ) {
-      dret = 0.0;
-   }
-   else if ( x >=  FV_WINDOW ) {
-      dret = 0.0;
-   }
-   else {
-      dn    = exp( - x / delta );
-      dtemp = dn + 1.0;
-      dd    = delta * dtemp * dtemp;
-      dret  = dn / dd;
-   }
-   return dret;
-   
-}
-
-double PARAM1 = 2.69044;
-double PARAM2 = 1.82372;
-
-static double sign(double x) 
-{
-   if (x == 0.0)
-      return 0.0;
-   else if (x > 0.0)
-      return 1.0;
-   else
-      return -1.0;
-}
-
-
-static double texelSigmoid(double val) {
-   //double s = -PARAM1*(-0.5+1.0/(1.0+pow(10.0,PARAM2*val/100.0)));
-   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val/400)));
-    if (s < -1.0) return -1.0;
-    if (s > 1.0) return 1.0;
-    return s;
-}
+static int best = 0;
 
 static double scale(const tune::TuneParam &t) 
 {
@@ -130,305 +49,77 @@ static int unscale(double val, const tune::TuneParam &t)
    return round(double(t.max_value-t.min_value)*val+(double)t.min_value);
 }
 
-static double computeErrorMMTO(SearchController *searcher, const string &pos, uint64 line) 
-{
-   double penalty = 0.0;
-   stringstream stream(pos);
-   EPDRecord epd_rec;
-   Board board;
-   if (!ChessIO::readEPDRecord(stream,board,epd_rec)) {
-      cerr << "error in EPD record, line " << line << endl;
-      return 0.0;
+static int exec(const char* cmd) {
+   
+   cout << "executing " << cmd << endl;
+
+   FILE* pipe = popen(cmd, "r");
+   if (!pipe) {
+      cerr << "perror failed" << endl;
+      return -1;
    }
-   if (epd_rec.hasError()) {
-      cerr << "error in EPD record, line " << line;
-      cerr << ": ";
-      cerr << epd_rec.getError();
-      cerr << endl;
-      return 0.0;
-   }
-   vector <Move> solution_moves;
-   int illegal=0;
-   string id, comment;
-   for (int i = 0; i < epd_rec.getSize(); i++) {
-      string key, val;
-      epd_rec.getData(i,key,val);
-      if (key == "bm") {
-         Move m;
-         stringstream s(val);
-         while (!s.eof()) {
-            string moveStr;
-            // skips spaces
-            s >> moveStr;
-            if (!moveStr.length()) break;
-            m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
-            if (IsNull(m)) {
-               ++illegal;
-            } else {
-               solution_moves.push_back(m);
-            }
+   char buffer[2048];
+   int result = -1;
+   while(!feof(pipe)) {
+      if(fgets(buffer, 2048, pipe) != NULL) {
+         cout << buffer << endl;
+         if (strlen(buffer)>7 && strncmp(buffer,"rating=",7)==0) {
+            result = atoi(buffer+7);
          }
       }
-      else if (key == "id") {
-         id = val;
-      }
-      else if (key == "c0") {
-         comment = val;
-      }
    }
-   if (illegal) {
-      cerr << "illegal or invalid solution move(s) for EPD record, line ";
-      cerr << line << endl;
-      return 0.0;
-   }
-   else if (!solution_moves.size()) {
-      cerr << "no solution move(s) for EPD record, line " << line << endl;
-      return 0.0;
-   }
-
-   // generate root moves
-   RootMoveGenerator mg(board);
-
-   // don't search if stalemate, mate, or forced move
-   if (mg.moveCount() <= 1) {
-      return 0.0;
-   }
-
-   Move best;
-   int value = -Constants::MATE;
-
-   Move keyMove;
-   int best_key_value = -Constants::MATE;
-   int i = 0;
-   BoardState state(board.state);
-   for (vector<Move>::const_iterator it = solution_moves.begin();
-        it != solution_moves.end(); it++, i++) {
-      keyMove = *it;
-      int alpha, beta;
-      if (i == 0) {
-         alpha = -Constants::MATE;
-         beta = Constants::MATE;
+   pclose(pipe);
+   if (result > best) {
+      if (x0_file_name.length()) {
+         ofstream x0_out(x0_file_name,ios::out | ios::trunc);
+         tune::writeX0(x0_out);
       } else {
-         alpha = best_key_value;
-         beta = best_key_value + SEARCH_WINDOW;
+         tune::writeX0(cout);
       }
-      board.doMove(keyMove);
-      int value = -search(searcher, board,-beta,-alpha,SEARCH_DEPTH);
-      board.undoMove(keyMove,state);
-      if (i > 0 && value >= beta && SEARCH_DEPTH > 0) {
-         // window was not wide enough
-         value = -search(searcher, board,-Constants::MATE,-alpha,SEARCH_DEPTH);
-      }
-      if (value > best_key_value) {
-         best_key_value = value;
-      }
-   }
-   int best_value = best_key_value;
-   Move m;
-   while (!IsNull(m = mg.nextMove())) {
-      int solution = 0;
-      for (vector<Move>::const_iterator it = solution_moves.begin();
-           it != solution_moves.end();
-           it++) {
-         if (MovesEqual(m,*it)) {
-            ++solution;
-            break;
-         }
-      }
-      if (solution) continue;
-      board.doMove(m);
-      int try_value = -search(searcher, board,-best_value-SEARCH_WINDOW,-best_value,SEARCH_DEPTH);
-      board.undoMove(m,state);
-      if (try_value > best_value) {
-         if (try_value >= best_value + SEARCH_WINDOW) {
-            // window was not wide enough
-            try_value = -search(searcher, board,-Constants::MATE,-best_value,SEARCH_DEPTH);
-         }
-         if (try_value > best_value) {
-            best_value = try_value;
-         }
-      }
-   }
-   if (best_value > best_key_value) {
-      penalty += sigmoid(best_value-best_key_value);
-   }
-   return penalty;
-}
-
-static double computeErrorTexel(SearchController *searcher,const string &pos,uint64 line)
-{
-   
-   double err = 0.0;
-// This is a large object so put it on the heap:
-   Scoring *scoring = NULL;
-   if (SEARCH_DEPTH < 0) scoring = new Scoring();
-   size_t lines = 0;
-    
-   Board b;
-
-//   if (b.getMaterial(White).materialLevel() + 
-//    b.getMaterial(Black).materialLevel() < 24 ) return 0.0;
-   size_t split = pos.find_last_of(" ");
-   string fen;
-   int result = 0;
-   if (split == string::npos) {
-      cerr << "No result? line " << line << endl;
-      return 0.0;
-   } else {
-      fen = pos.substr(0,split);
-      string res = pos.substr(split+1);
-      std::size_t last  = res.find_last_of(" \n");
-      if (last != string::npos) {
-         res = res.substr(0,last);
-      }
-      
-      if (res == "0-1")
-         result = -1;
-      else if (res == "1-0")
-         result = 1;
-      else if (res == "1/2-1/2")
-         result = 0;
-      else if (res == "*")
-         return 0.0;
-      else {
-         cerr << "Missing or unrecognized result, line " << line << " (" << res << ")" << endl;
-         return 0.0;
-      }
-   }
-        
-   if (!BoardIO::readFEN(b,fen)) {
-      cerr << "error on FEN string: " << fen << ", line " << line << endl;
-      return 0.0;
-   }
-   int value;
-   if (SEARCH_DEPTH < 0) {
-      value = scoring->evalu8(b);
-   } else if (SEARCH_DEPTH == 0) {
-//      value = searcher->quiesce(-Constants::MATE,Constants::MATE,0,0);
-   } else {
-      value = search(searcher,b,-5*PAWN_VALUE,5*PAWN_VALUE,SEARCH_DEPTH);
-   }
-   if (b.sideToMove() == Black) value = -value;
-   double predict = texelSigmoid(value/10.0);
-
-//   cout << " value=" << value << " predict=" << predict << " result=" << result << " err = " <<  ((double)result - predict)*((double)result - predict) << endl;
-        
-   err += ((double)result - predict)*((double)result - predict);
-
-   if (SEARCH_DEPTH < 0)
-      delete scoring;
-
-   return err;
-}
-
-// compute a part of the objective in a single thread
-static double computeError(SearchController *searcher, int index, size_t offset,
-   size_t size) {
-   string buf;
-   double penalty = 0.0;
-   uint64 done = 0;
-   uint64 lines = (uint64)offset;
-   for (vector<string>::const_iterator it = positions->begin()+offset;
-        it != positions->end() && done < size;
-        it++, done++, lines++) {
-      if (strategy == MMTO) {
-         penalty += computeErrorMMTO(searcher,*it,lines);
+      if (out_file_name.length()) {
+         ofstream param_out(out_file_name,ios::out | ios::trunc);
+         Scoring::Params::write(param_out);
+         param_out << endl;
       } else {
-         penalty += computeErrorTexel(searcher,*it,lines);
+         Scoring::Params::write(cout);
+         cout << endl;
       }
    }
-    
-//   cout << "thread " << index << " done" << endl;
-    
-   return penalty;
-}
-
-static void * CDECL threadp(void *x)
-{
-   ThreadData *td = (ThreadData*)x;
-
-   // set stack size
-   size_t stackSize;
-   if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
-        perror("pthread_attr_getstacksize");
-        return 0;
-   }
-   if (stackSize < THREAD_STACK_SIZE) {
-      if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
-         perror("error setting thread stack size");
-         return 0;
-      }
-   }
-
-   // allocate controller in the thread
-   try {
-      td->searcher = new SearchController();
-   } catch(std::bad_alloc) {
-      cerr << "out of memory, thread " << td->index << endl;
-      return 0;
-   }
    
-   while (!terminated) {
-      // wait until signalled
-      sem_wait(&td->sem);
-      td->searcher->clearHashTables();
-      td->penalty = computeError(td->searcher,td->index,td->offset,td->size);
-      // tell parent we are done
-      sem_post(&td->done);
-   }
-   delete td->searcher;
-   return 0;
-}
-   
-static void initThreads() 
-{
-    // prepare threads
-    if (pthread_attr_init (&stackSizeAttrib)) {
-       perror("pthread_attr_init");
-       return;
-    }
-    for (int i = 0; i < cores; i++) {
-        THREAD thread_id;
-        threadDatas[i].index = i;
-        threadDatas[i].searcher = NULL;
-        sem_init(&threadDatas[i].sem,0,0);
-        sem_init(&threadDatas[i].done,0,0);
-        if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)&(threadDatas[i]))) {
-            perror("thread creation failed");
-        }
-        cout << "thread " << i << " created." << endl;
-    }
+   return result;
 }
 
 static double computeLsqError() {
-   
-   for (int i = 0; i < cores; i++) {
-      // signal searchers to start
-      sem_post(&threadDatas[i].sem);
-   }
-   // wait for all searchers done
-   for (int i = 0; i < cores; i++) {
-      sem_wait(&threadDatas[i].done);
-   }
-   cout << "all searchers done" << endl;
 
-   // total errors from the threads
-   double total = 0.0;
-   for (int i = 0; i < cores; i++) {
-      total += threadDatas[i].penalty;
+   stringstream s;
+   s << MATCH_PATH;
+   s << ' ';
+/*
+   s << "-best ";
+   s << best;
+   s << ' ';
+*/
+   s << GAME_LIMIT;
+   for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+      s << ' ' << tune::tune_params[i].name << ' ';
+      s << tune::tune_params[i].current;
    }
-   return total;
+   s << '\0';
+   string cmd = s.str();
+   // Call external script to run the matches and return a rating.
+   // Optimizer minimizes, so optimize 5000-rating.
+   return double(5000-exec(cmd.c_str()));
 }
 
 static FitFunc evaluator = [](const double *x, const int dim) 
 {
    int i;
-   for (i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
+   for (i = first_index; i <= last_index; i++) 
    {
-      tune::tune_params[i].current = unscale(x[i],tune::tune_params[i]);
+      tune::tune_params[i].current = unscale(x[i-first_index],tune::tune_params[i]);
    }
    tune::initParams();
-   double err = computeLsqError()/positions->size();
+   double err = computeLsqError();
    cout << "objective=" << err << endl;
    return err;
    
@@ -450,44 +141,14 @@ static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> pro
    }
    cout << endl;
 */   
-   if (x0_file_name.length()) {
-      ofstream x0_out(x0_file_name,ios::out | ios::trunc);
-      tune::writeX0(x0_out);
-   } else {
-      tune::writeX0(cout);
-   }
-   if (out_file_name.length()) {
-      ofstream param_out(out_file_name,ios::out | ios::trunc);
-      Scoring::Params::write(param_out);
-      param_out << endl;
-   } else {
-      Scoring::Params::write(cout);
-      cout << endl;
-   }
    return 0;
 };
 
-static uint64 readTrainingFile() {
-   cout << "reading training file ..." << endl;
-   positions = new vector<string>();
-   uint64 lines = (uint64)0;
-   ifstream pos_file( fen_file.c_str(), ios::in);
-   string buf;
-   while (pos_file.good()) {
-      std::getline(pos_file,buf);
-      if (buf.length()) {
-         ++lines;
-         positions->push_back(buf);
-      }
-   }
-   cout << "training file read, " << lines << " lines" << endl;
-   return lines;
-}
-
 static void usage() 
 {
-   cerr << "Usage: tuner -i <input objective file> -c <threads> -p <search depth>" << endl;
-   cerr << "-o <output parameter file> -x <output objective file> training_file" << endl;
+   cerr << "Usage: tuner -i <input objective file>" << endl;
+   cerr << "-o <output parameter file> -x <output objective file>" << endl;
+   cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
 }
 
 int CDECL main(int argc, char **argv)
@@ -502,7 +163,7 @@ int CDECL main(int argc, char **argv)
     }
     atexit(cleanupGlobals);
     delayedInit();
-    options.search.hash_table_size = 64000;
+    options.search.hash_table_size = 0;
 
 //    if (EGTBMenCount) {
 //        cerr << "Initialized tablebases" << endl;
@@ -529,22 +190,24 @@ int CDECL main(int argc, char **argv)
        return -1;
     }
     int arg = 1;
+    string first_param, last_param;
+    
     while (arg < argc && argv[arg][0] == '-') {
-       if (strcmp(argv[arg],"-c")==0) {
-          ++arg;
-          cores = atoi(argv[arg]);
-       }
-       else if (strcmp(argv[arg],"-p")==0) {
-          ++arg;
-          SEARCH_DEPTH = atoi(argv[arg]);
-       }
-       else if (strcmp(argv[arg],"-i")==0) {
+       if (strcmp(argv[arg],"-i")==0) {
           ++arg;
           input_file = argv[arg];
        }
        else if (strcmp(argv[arg],"-o")==0) {
           ++arg;
           out_file_name = argv[arg];
+       }
+       else if (strcmp(argv[arg],"-f")==0) {
+          ++arg;
+          first_param = argv[arg];
+       }
+       else if (strcmp(argv[arg],"-s")==0) {
+          ++arg;
+          last_param = argv[arg];
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
@@ -556,63 +219,44 @@ int CDECL main(int argc, char **argv)
        }
        ++arg;
     }
-        
-    fen_file = argv[arg];
-    cout << "plies=" << SEARCH_DEPTH << " cores=" << cores;
-    cout << " tune file=" << fen_file;
-    if (input_file.length()) {
-       cout << " input file=" << input_file;
-    }
-    cout << (flush) << endl;
 
-    if (input_file.length()) {
-       ifstream is(input_file);
-       if (is.good()) {
-          tune::readX0(is);
-          tune::checkParams();
+    if (first_param.length()) {
+       first_index = tune::findParamByName(first_param);
+       if (first_index == -1) {
+          cerr << "Error: Parameter named " << first_param << " not found." << endl;
+          exit(-1);
        }
-       else {
-          cerr << "warning: cannot open input file " << input_file << endl;
-       }
-    }           
-
-    uint64 lines = readTrainingFile();
-
-    initThreads();
-
-    uint64 chunk = lines / cores;
-
-    cout << "chunk size=" << chunk << endl;
-
-    uint64 off = (uint64)0;
-
-    for (int i = 0; i < cores; i++) {
-       threadDatas[i].index = i;
-       threadDatas[i].penalty = 0.0;
-       threadDatas[i].offset = (size_t)off;
-       uint64 size = chunk;
-       size = (i==cores-1) ? (lines-off) : chunk;
-       threadDatas[i].size = size;
-       off += chunk;
     }
-        
+    if (last_param.length()) {
+       last_index = tune::findParamByName(last_param);
+       if (last_index == -1) {
+          cerr << "Error: Parameter named " << last_param << " not found." << endl;
+          exit(-1);
+       }
+    }
+    
+    int dim = last_index - first_index;
+    if (dim<=0) {
+       cerr << "Error: 2nd named parameter is before 1st!" << endl;
+       exit(-1);
+    }
+    cout << "dimension = " << dim << endl;
+    
     vector<double> x0;
     double sigma = 0.05;
     // use variant with box bounds
     double lbounds[tune::NUM_TUNING_PARAMS],
        ubounds[tune::NUM_TUNING_PARAMS];
     // initialize & normalize
-    for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+    for (int i = first_index; i <= last_index; i++) {
        x0.push_back(scale(tune::tune_params[i]));
-       lbounds[i] = 0.0;
-       ubounds[i] = 1.0;
+       lbounds[i-first_index] = 0.0;
+       ubounds[i-first_index] = 1.0;
     }
-    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,tune::NUM_TUNING_PARAMS);
-    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(tune::NUM_TUNING_PARAMS,&x0.front(),sigma,-1,0,gp);
+    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
+    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
     cmaparams.set_algo(sepaBIPOP_CMAES);
     CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
-    for (int i = 0; i < cores; i++) {
-       delete threadDatas[i].searcher;
-    }
+
     return 0;
 }

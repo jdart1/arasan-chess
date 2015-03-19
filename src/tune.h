@@ -34,6 +34,16 @@ namespace tune {
 
   extern void readX0(istream &);
 
+  // return index for parameter given name, -1 if not not found
+  static int findParamByName(const string &name) {
+    for (int i = 0; i < NUM_TUNING_PARAMS; i++) {
+      if (tune_params[i].name == name) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
 };
 
 #endif
