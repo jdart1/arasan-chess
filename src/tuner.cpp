@@ -35,7 +35,7 @@ static int first_index = 0;
  
 static int last_index = tune::NUM_TUNING_PARAMS-1;
 
-static int GAME_LIMIT = 1000;
+static int games = 1000;
 
 static int best = 0;
 
@@ -99,8 +99,8 @@ static double computeLsqError() {
    s << best;
    s << ' ';
 */
-   s << GAME_LIMIT;
-   for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+   s << games;
+   for (int i = first_index; i <= last_index; i++) {
       s << ' ' << tune::tune_params[i].name << ' ';
       s << tune::tune_params[i].current;
    }
@@ -197,6 +197,10 @@ int CDECL main(int argc, char **argv)
           ++arg;
           input_file = argv[arg];
        }
+       else if (strcmp(argv[arg],"-g")==0) {
+          ++arg;
+          games = atoi(argv[arg]);
+       }
        else if (strcmp(argv[arg],"-o")==0) {
           ++arg;
           out_file_name = argv[arg];
@@ -241,6 +245,7 @@ int CDECL main(int argc, char **argv)
        exit(-1);
     }
     cout << "dimension = " << dim << endl;
+    cout << "games per core per iteration = " << games << endl;
     
     vector<double> x0;
     double sigma = 0.05;
