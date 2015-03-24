@@ -30,16 +30,11 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
 #
-LIBCMAES_INCLUDE=/usr/local/include/libcmaes
-LIBCMAES_PATH=/usr/local/lib
+ROCKSTAR_INCLUDE=/home/jdart/opt/c_rockstar/cpp_code
 EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
-EIGEN3_UNSUPPORTED=/home/jdart/eigen-eigen-10219c95fe65/unsupported/Eigen
-
-TUNE_INCLUDES := -I$(LIBCMAES_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(EIGEN3_UNSUPPORTED)
-
-TUNE_LDFLAGS := -L$(LIBCMAES_PATH)
-
-TUNE_LIBS = -lcmaes
+GSL_INCLUDE=/usr/local/include
+GSL_LIBS=-lgsl
+BLAS_LIBS=-lgslcblas
 
 #define the appropriate macro for the type(s) of tablebase supported
 GAVIOTA_TBS = 1
@@ -63,8 +58,8 @@ SMPLIB   = -lpthread
 
 PGO_RUN_FLAGS = -H 64M
 
-TUNE_CFLAGS := -ansi -std=c++11 -DTUNE
-TUNE_OPT = -DUSE_INTRINSICS -O2
+TUNE_CFLAGS := -fno-strict-aliasing -DUSE_INSTRINSICS -DUSE_ASM -ansi -std=c++11 -DTUNE
+TUNE_OPT = -Ofast $(SSE)
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
@@ -232,7 +227,7 @@ $(BUILD)/%.o: %.cpp
 	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(TUNE_CFLAGS) $(TUNE_OPT) $(SMP_FLAGS) $(TUNE_INCLUDES) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(PROF) $(TRACE) $(TUNE_CFLAGS) $(TUNE_OPT) $(SMP_FLAGS) -I$(ROCKSTAR_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(GSL_INCLUDE) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
@@ -368,10 +363,10 @@ $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(TUNE_LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(GSL_LIBS) $(BLAS_LIBS) $(SMPLIB)
 
 $(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(TUNE_LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(GSL_LIBS) $(BLAS_LIBS) $(SMPLIB)
 
 $(EXPORT)/testpos:  $(TESTPOS_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TESTPOS_OBJS) $(DEBUG) -o $(EXPORT)/testpos -lstdc++ $(LIBS) $(SMPLIB)	

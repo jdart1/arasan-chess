@@ -7,6 +7,9 @@
 #include "hash.h"
 #include "globals.h"
 #include "movegen.h"
+#ifdef TUNE
+#include "tune.h"
+#endif
 extern "C"
 {
 #include <stdlib.h>
@@ -476,7 +479,9 @@ static void initBitboards() {
 
 void Scoring::init() {
    initBitboards();
-
+#ifdef TUNE
+    tune::initParams();
+#endif
 }
 
 void Scoring::cleanup() {
@@ -1264,9 +1269,18 @@ void Scoring::pieceScore(const Board &board,
          attackCount = Util::Max(0,attackCount-1);
       }
       attackCount = Util::Min(4,attackCount);
+      // general quadratic model with 3 params: weight, count and
+      // squares attacked.
       int scale =
-         (PARAM(KING_ATTACK_PARAM1)*attackWeight/4 + 
-          PARAM(KING_ATTACK_PARAM2)*attackWeight*attackCount/4 + PARAM(KING_ATTACK_PARAM3)*squaresAttacked)/16;
+         (PARAM(KING_ATTACK_PARAM1)*attackWeight + 
+          PARAM(KING_ATTACK_PARAM2)*attackWeight*attackWeight +
+          PARAM(KING_ATTACK_PARAM3)*attackCount + 
+          PARAM(KING_ATTACK_PARAM4)*attackCount*attackCount + 
+          PARAM(KING_ATTACK_PARAM5)*squaresAttacked +
+          PARAM(KING_ATTACK_PARAM6)*squaresAttacked*squaresAttacked +
+          PARAM(KING_ATTACK_PARAM7)*attackWeight*attackCount +
+          PARAM(KING_ATTACK_PARAM8)*attackWeight*squaresAttacked +
+          PARAM(KING_ATTACK_PARAM9)*attackCount*squaresAttacked)/64;
       int attack = 10*PARAM(KING_ATTACK_SCALE)[Util::Min(511,scale/10)];
       if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
@@ -2600,7 +2614,7 @@ void Scoring::Params::write(ostream &o)
       }
       o << " = " << tune::tune_params[i].current << ";" << endl;
    }
-   o << "const int Scoring::Params:KING_ATTACK_SCALE[512] = ";
+   o << "const int Scoring::Params::KING_ATTACK_SCALE[512] = ";
    print_array(o,Params::KING_ATTACK_SCALE,512);
    o << "const int Scoring::Params::TRADE_DOWN[16] = ";
    print_array(o,Params::TRADE_DOWN,16);

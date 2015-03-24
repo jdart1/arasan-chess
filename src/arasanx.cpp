@@ -2989,6 +2989,9 @@ static bool do_command(const string &cmd, Board &board) {
         searcher->registerPostFunction(post_output);
         delayedInitIfNeeded();
         searcher->clearHashTables();
+#ifdef TUNE
+        tune::initParams();
+#endif
         if (!analyzeMode && ics) {
            cout << "kib Hello from Arasan " << Arasan_Version << endl;
         }
@@ -3475,7 +3478,7 @@ int CDECL main(int argc, char **argv) {
             case 'p': 
             {
                // initialize tuning parameters from a file. These
-               // can be overridden with command-line options.
+               // can be overridden with Winboard options.
                ++arg;
 
                stringstream s(argv[arg]);
@@ -3492,6 +3495,7 @@ int CDECL main(int argc, char **argv) {
                for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
                   tune::tune_params[i].current = x[i];
                }
+               tune::initParams();
                break;
             }
 #endif
@@ -3536,7 +3540,9 @@ int CDECL main(int argc, char **argv) {
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl; 
 #endif
+
 /*
+  // some test code for eval
     static const string eval_fens[25] = {
        "2r2rk1/pp1b2bp/3p2p1/q1nPn3/3NPp1P/1P3P2/P1RQNBB1/5RK1 b - - 0 1",
        "6k1/p6p/1p4p1/7r/3NK3/5P2/P7/R7 w - - 0 1",
@@ -3569,11 +3575,13 @@ int CDECL main(int argc, char **argv) {
     for (int i = 0; i < 25; i++) {
        Board board;
        Scoring s;
-       int valid = BoardIO::readFEN(board, eval_fens[i]);
-       cout << i << '\t' << s.evalu8(board) << endl;
+       if (!BoardIO::readFEN(board, eval_fens[i])) {
+          cerr << "invalid test position " << eval_fens[i] << endl;
+       } else {
+          cout << i << '\t' << s.evalu8(board) << endl;
+       }
     }
-*/    
-
+*/
     searcher = new SearchController();
 
 #ifdef SELFPLAY 

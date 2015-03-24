@@ -18,7 +18,7 @@ struct Params
 BEGIN_PACKED_STRUCT
     
     // number of fixed parameters that map 1-1 to tuning paramaters
-    static const int PARAM_ARRAY_SIZE = 79;
+    static const int PARAM_ARRAY_SIZE = 85;
 
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
@@ -35,6 +35,12 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int KING_ATTACK_PARAM1;
     static PARAM_MOD int KING_ATTACK_PARAM2;
     static PARAM_MOD int KING_ATTACK_PARAM3;
+    static PARAM_MOD int KING_ATTACK_PARAM4;
+    static PARAM_MOD int KING_ATTACK_PARAM5;
+    static PARAM_MOD int KING_ATTACK_PARAM6;
+    static PARAM_MOD int KING_ATTACK_PARAM7;
+    static PARAM_MOD int KING_ATTACK_PARAM8;
+    static PARAM_MOD int KING_ATTACK_PARAM9;
     static PARAM_MOD int KING_ATTACK_BOOST_THRESHOLD;
     static PARAM_MOD int KING_ATTACK_BOOST_DIVISOR;
     static PARAM_MOD int BISHOP_TRAPPED;

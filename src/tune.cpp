@@ -49,6 +49,12 @@ enum {
    KING_ATTACK_PARAM1,
    KING_ATTACK_PARAM2,
    KING_ATTACK_PARAM3,
+   KING_ATTACK_PARAM4,
+   KING_ATTACK_PARAM5,
+   KING_ATTACK_PARAM6,
+   KING_ATTACK_PARAM7,
+   KING_ATTACK_PARAM8,
+   KING_ATTACK_PARAM9,
    KING_ATTACK_BOOST_THRESHOLD,
    KING_ATTACK_BOOST_DIVISOR,
    BISHOP_TRAPPED,
@@ -175,8 +181,14 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",200,0,500),
    tune::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",300,0,500),
    tune::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",500,0,800),
-   tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",320,0,800),
-   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",1500,0,2500),
+   tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",0,0,250),
+   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",0,0,500),
+   tune::TuneParam(KING_ATTACK_PARAM4,"king_attack_param4",0,0,250),
+   tune::TuneParam(KING_ATTACK_PARAM5,"king_attack_param5",375,0,800),
+   tune::TuneParam(KING_ATTACK_PARAM6,"king_attack_param6",0,0,2000),
+   tune::TuneParam(KING_ATTACK_PARAM7,"king_attack_param7",320,0,640),
+   tune::TuneParam(KING_ATTACK_PARAM8,"king_attack_param8",0,0,2500),
+   tune::TuneParam(KING_ATTACK_PARAM9,"king_attack_param9",0,0,2500),
    tune::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",480,100,960),
    tune::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",500,100,1000),
    tune::TuneParam(BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
@@ -220,10 +232,10 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(SUPPORTED_PASSER6,"supported_passer6",380,0,750),
    tune::TuneParam(SUPPORTED_PASSER7,"supported_passer7",760,0,1500),
    tune::TuneParam(SIDE_PROTECTED_PAWN,"side_protected_pawn",-100,-500,0),
-   tune::TuneParam(TRADE_DOWN_LINEAR,"trade_down_linear",43,0,150),
    tune::TuneParam(KING_ATTACK_SIGMOID_MID,"king_attack_sigmoid_mid",200,50,350),
    tune::TuneParam(KING_ATTACK_SIGMOID_DIV,"king_attack_sigmoid_div",200,100,500),
-   tune::TuneParam(KING_ATTACK_SIGMOID_MULT,"king_attack_sigmoid_mult",200,150,300),
+   tune::TuneParam(KING_ATTACK_SIGMOID_MULT,"king_attack_sigmoid_mult",170,80,300),
+   tune::TuneParam(TRADE_DOWN_LINEAR,"trade_down_linear",43,0,150),
    tune::TuneParam(TRADE_DOWN_SQ,"trade_down_sq",0,0,150),
    tune::TuneParam(PASSED_PAWN1,"passed_pawn1",0,0,200),
    tune::TuneParam(PASSED_PAWN2,"passed_pawn2",60,0,500),
@@ -260,7 +272,7 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(DOUBLED_PAWNS2,"double_pawns2",-80,-250,0),
    tune::TuneParam(DOUBLED_PAWNS3,"double_pawns3",-100,-250,0),
    tune::TuneParam(DOUBLED_PAWNS4,"double_pawns4",-100,-250,0),
-   tune::TuneParam(DOUBLED_PAWNS_ENDGAME_FACTOR,"double_pawns_endgame_factor",204,70,300),
+   tune::TuneParam(DOUBLED_PAWNS_ENDGAME_FACTOR,"double_pawns_endgame_factor",220,70,300),
    tune::TuneParam(ISOLATED_PAWN1,"isolated_pawn1",-80,-250,0),
    tune::TuneParam(ISOLATED_PAWN2,"isolated_pawn2",-80,-250,0),
    tune::TuneParam(ISOLATED_PAWN3,"isolated_pawn3",-80,-250,0),
@@ -374,7 +386,7 @@ void tune::checkParams()
 
 void tune::initParams()
 {
-//   checkParams();
+   checkParams();
 
    int *dest = Scoring::Params::RB_ADJUST;
    int i, j = 0;
