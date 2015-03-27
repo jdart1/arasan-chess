@@ -57,6 +57,20 @@ static int unscale(double val, const tune::TuneParam &t)
    return round(double(t.max_value-t.min_value)*val+(double)t.min_value);
 }
 
+// transform range 0..1 into log space
+static double logXForm(double val) 
+{
+   if (val <= 0.0) val = 0.001;
+   if (val >= 1.0) val = 0.999;
+   return log(val/(1.0-val));
+}
+
+// transform out of log space
+static double logUnXForm(double val) 
+{
+   return 1.0/(1+exp(-val));
+}
+
 static int exec(const char* cmd) {
    
    cout << "executing " << cmd << endl;
@@ -125,7 +139,7 @@ static double evaluate(const Eigen::VectorXd &x, const int dim)
    int i;
    for (i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
    {
-      tune::tune_params[i].current = unscale(x(i),tune::tune_params[i]);
+      tune::tune_params[i].current = unscale(logUnXForm(x(i)),tune::tune_params[i]);
    }
    tune::initParams();
    double err = computeLsqError();
@@ -288,9 +302,9 @@ int CDECL main(int argc, char **argv)
     
 #ifdef ROCKSTAR
     Eigen::VectorXd x0 = Eigen::VectorXd::Zero(tune::NUM_TUNING_PARAMS,1);
-    // initialize & normalize
+    // scale and transform initial solution
     for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-       x0(i) = scale(tune::tune_params[i]);
+       x0(i) = logXForm(scale(tune::tune_params[i]));
     }
     Eigen::VectorXd Initial_StandardDeviation = Eigen::VectorXd::Ones(tune::NUM_TUNING_PARAMS,1) * 0.05;
     Eigen::VectorXd theta = Eigen::VectorXd::Zero(tune::NUM_TUNING_PARAMS,1);

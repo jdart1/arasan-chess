@@ -370,13 +370,13 @@ void tune::checkParams()
          cerr << "warning: index mismatch in tune::tune_params at " << tune::tune_params[i].name << endl;
       if (tune::tune_params[i].current < tune::tune_params[i].min_value) {
          cerr << "warning: param " << tune_params[i].name << " has current < min" << endl;
-         cerr << "resetting to " << tune::tune_params[i].min_value << endl;
-         tune::tune_params[i].current = tune::tune_params[i].min_value;
+         //cerr << "resetting to " << tune::tune_params[i].min_value << endl;
+         //tune::tune_params[i].current = tune::tune_params[i].min_value;
       }
       if (tune::tune_params[i].current > tune::tune_params[i].max_value) {
          cerr << "warning: param " << tune_params[i].name << " has current > max" << endl;
-         cerr << "resetting to " << tune::tune_params[i].max_value << endl;
-         tune::tune_params[i].current = tune::tune_params[i].max_value;
+         //cerr << "resetting to " << tune::tune_params[i].max_value << endl;
+         //tune::tune_params[i].current = tune::tune_params[i].max_value;
       }
       if (tune::tune_params[i].min_value > tune::tune_params[i].max_value) {
          cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
