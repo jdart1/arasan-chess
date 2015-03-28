@@ -30,7 +30,9 @@ int Spsa::optimize(const vector<double> &initial_theta,
     const double gamma = 0.101;
     const double A = float(iterations)/10;
     const double c = 0.05;
-    const double a = 0.5;
+    // magnitude of objective is much greater than theta (which
+    // is scaled 0..1, so this constant must be small:
+    const double a = 0.0003;
     for (int i = 0; i < iterations; i++) {
        singleStep(i, theta, func, update, a, c, A, alpha, gamma);
     }
