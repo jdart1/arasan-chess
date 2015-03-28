@@ -20,6 +20,8 @@ extern "C" {
 #include <unistd.h>
 };
 
+//#define TEST
+
 static int iterations = 40;
 
 // script to run matches
@@ -47,20 +49,6 @@ static double scale(const tune::TuneParam &t)
 static int unscale(double val, const tune::TuneParam &t)
 {
    return round(double(t.max_value-t.min_value)*val+(double)t.min_value);
-}
-
-// transform range 0..1 into log space
-static double logXForm(double val) 
-{
-   if (val <= 0.0) val = 0.001;
-   if (val >= 1.0) val = 0.999;
-   return log(val/(1.0-val));
-}
-
-// transform out of log space
-static double logUnXForm(double val) 
-{
-   return 1.0/(1+exp(-val));
 }
 
 static int exec(const char* cmd) {
@@ -125,16 +113,24 @@ static double computeLsqError() {
    return double(5000-exec(cmd.c_str()));
 }
 
+#ifdef TEST
+static double evaluate(const vector<double> &x) 
+{
+   return 2500*sqrt(x[0]*x[0] + 1.1*x[1]*x[1]);
+}
+#else
+
 static double evaluate(const vector<double> &x)
 {
    for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
    {
-      tune::tune_params[i].current = round(unscale(logUnXForm(x[i]),tune::tune_params[i]));
+      tune::tune_params[i].current = round(unscale(x[i],tune::tune_params[i]));
    }
    tune::initParams();
    double err = computeLsqError();
    return err;
 };
+#endif
 
 void update(double obj, const vector<double> &x) 
 {
@@ -241,12 +237,21 @@ int CDECL main(int argc, char **argv)
     cout << "dimension = " << dim << endl;
     cout << "games per core per iteration = " << games << endl;
     
+#ifdef TEST
+    Spsa s(2);
+    vector <double> x0;
+    for (int i = 0; i < 2; i++) {
+       x0.push_back(0.8);
+    }
+    s.optimize(x0,iterations,evaluate,update);
+#else
     Spsa s(tune::NUM_TUNING_PARAMS);
     vector<double> x0;
     for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-       x0.push_back(logXForm(scale(tune::tune_params[i])));
+       x0.push_back(scale(tune::tune_params[i]));
     }
     s.optimize(x0,iterations,evaluate,update);
+#endif
 
     return 0;
 }
