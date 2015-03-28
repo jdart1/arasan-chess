@@ -30,11 +30,6 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
 #
-ROCKSTAR_INCLUDE=/home/jdart/opt/c_rockstar/cpp_code
-EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
-GSL_INCLUDE=/usr/local/include
-GSL_LIBS=-lgsl
-BLAS_LIBS=-lgslcblas
 
 #define the appropriate macro for the type(s) of tablebase supported
 GAVIOTA_TBS = 1
@@ -227,7 +222,7 @@ $(BUILD)/%.o: %.cpp
 	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(TUNE_CFLAGS) $(TUNE_OPT) $(SMP_FLAGS) -I$(ROCKSTAR_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(GSL_INCLUDE) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(PROF) $(TRACE) $(TUNE_CFLAGS) $(TUNE_OPT) $(SMP_FLAGS) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
@@ -322,7 +317,7 @@ bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
+stats.cpp threadp.cpp threadc.cpp unit.cpp spsa.cpp
 
 ARASANX_TUNE_SOURCES = arasanx.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -363,10 +358,10 @@ $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(GSL_LIBS) $(BLAS_LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(GSL_LIBS) $(BLAS_LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/testpos:  $(TESTPOS_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TESTPOS_OBJS) $(DEBUG) -o $(EXPORT)/testpos -lstdc++ $(LIBS) $(SMPLIB)	
