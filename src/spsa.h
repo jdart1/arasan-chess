@@ -15,10 +15,6 @@ class Spsa {
     void getBest(double &obj, vector<double> &best);
 
  private:
-    void singleStep(int iteration, vector<double> &theta, 
-                   double (*func)(const vector<double> &theta),
-                   void (*update)(double obj, const vector<double> &theta),
-                   double a, double c, double A, double alpha, double gamma);
 
     int dim;
     double best;

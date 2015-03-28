@@ -20,6 +20,7 @@ extern "C" {
 #include <unistd.h>
 };
 
+// define to run optimizer code on a simple test problem
 //#define TEST
 
 static int iterations = 40;
@@ -116,7 +117,13 @@ static double computeLsqError() {
 #ifdef TEST
 static double evaluate(const vector<double> &x) 
 {
-   return 2500*sqrt(x[0]*x[0] + 1.1*x[1]*x[1]);
+   double sum = 0;
+   for (int i = 0; i < x.size(); i++) {
+      double factor = 0.8;
+      if (i % 2 == 0) factor = 1.1;
+      sum += factor*pow(x[i],2.0);
+   }
+   return 200.0*sqrt(sum);
 }
 #else
 
@@ -143,6 +150,7 @@ static void usage()
    cerr << "Usage: tuner -i <input objective file>" << endl;
    cerr << "-o <output parameter file> -x <output objective file>" << endl;
    cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
+   cerr << "-n <iterations>" << endl;
 }
 
 int CDECL main(int argc, char **argv)
@@ -206,6 +214,10 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
           x0_file_name = argv[arg];
+       }
+       else if (strcmp(argv[arg],"-n")==0) {
+          ++arg;
+          iterations = atoi(argv[arg]);
        } else {
           cerr << "invalid option: " << argv[arg] << endl;
           usage();
@@ -238,9 +250,9 @@ int CDECL main(int argc, char **argv)
     cout << "games per core per iteration = " << games << endl;
     
 #ifdef TEST
-    Spsa s(2);
+    Spsa s(10);
     vector <double> x0;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 10; i++) {
        x0.push_back(0.8);
     }
     s.optimize(x0,iterations,evaluate,update);
