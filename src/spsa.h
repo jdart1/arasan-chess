@@ -1,4 +1,4 @@
-
+// Copyright 2015 by Jon Dart. All Rights Reserved.
 #include <vector>
 using namespace std;
 

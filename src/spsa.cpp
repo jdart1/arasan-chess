@@ -1,3 +1,4 @@
+// Copyright 2015 by Jon Dart. All Rights Reserved.
 extern "C" {
 #include <math.h>
 #include <stdlib.h>
@@ -157,14 +158,8 @@ int Spsa::optimize(const vector<double> &initial_theta,
       printArray("new theta",theta);
 #endif
 #ifdef RSPSA
-      previous_ghat.clear();
-      for (int i = 0; i < dim; i++) {
-         previous_ghat.push_back(current_ghat[i]);
-      }
-      previous_delta.clear();
-      for (int i = 0; i < dim; i++) {
-         previous_delta.push_back(current_delta[i]);
-      }
+      previous_ghat = current_ghat;
+      previous_delta = current_delta;
 #endif
    }
 }
