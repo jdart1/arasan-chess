@@ -1,4 +1,6 @@
 // Copyright 2015 by Jon Dart. All Rights Reserved.
+#ifndef _SPSA_H
+#define _SPSA_H
 #include <vector>
 using namespace std;
 
@@ -20,3 +22,4 @@ class Spsa {
     double best;
     vector<double> best_theta;
 };
+#endif

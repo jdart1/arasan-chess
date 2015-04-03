@@ -51,12 +51,12 @@ int Spsa::optimize(const vector<double> &initial_theta,
    const double alpha = 0.602;
    const double gamma = 0.101;
    const double A = double(iterations)/10;
-   const double c = 0.05;
-   const double delta_max = 0.05;
+   const double c = 0.1; //0.05;
+   const double delta_max = 0.1;
    const double delta_min = 0.005;
    // The magnitude of the objective is much greater than theta (which
    // is scaled 0..1), so this constant must be small:
-   const double a = 0.0003;
+   const double a = 0.06;
 #ifdef RSPSA
    vector<double> current_ghat;
    vector<double> previous_ghat;

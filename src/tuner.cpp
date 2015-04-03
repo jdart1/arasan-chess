@@ -123,7 +123,7 @@ static double evaluate(const vector<double> &x)
       if (i % 2 == 0) factor = 1.1;
       sum += factor*pow(x[i],2.0);
    }
-   return 200.0*sqrt(sum);
+   return 800.0*sqrt(sum);
 }
 #else
 
