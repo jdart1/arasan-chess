@@ -10,25 +10,26 @@
 #include "search.h"
 #include "tune.h"
 #include "spsa.h"
+#include "rspsa.h"
+#include "rockstar.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <map>
+#include <Eigen/Dense>
 extern "C" {
 #include <math.h>
 #include <ctype.h>
 #include <unistd.h>
 };
 
-//#define CMAES
-
-#include "cmaes.h"
-using namespace libcmaes;
-
-// define to run optimizer code on a simple test problem
-#define TEST
+using namespace Eigen;
 
 static int iterations = 40;
+
+static int test = 0;
+
+string algorithm = "Spsa";
 
 // script to run matches
 static const char * MATCH_PATH="/home/jdart/tools/match.py";
@@ -45,7 +46,7 @@ static int last_index = tune::NUM_TUNING_PARAMS-1;
 
 static int games = 1000;
 
-static int best = 0;
+static double best = 10000.0;
 
 static double scale(const tune::TuneParam &t) 
 {
@@ -119,84 +120,59 @@ static double computeLsqError() {
    return double(5000-exec(cmd.c_str()));
 }
 
-#ifdef CMAES
-static FitFunc evaluator = [](const double *x, const int dim) 
+static double test_func1(const VectorXd &x) 
 {
-   int i;
-   for (i = 0; i < dim; i++) 
-   {
-      tune::tune_params[i+first_index].current = unscale(x[i+first_index],tune::tune_params[i+first_index]);
-   }
-   tune::initParams();
-   double err = computeLsqError();
-   cout << "objective=" << err << endl;
-   return err;
-   
-};
-
-static FitFunc test_evaluator = [](const double *x, const int dim) 
-{
-   double sum = 0;
-   for (int i = 0; i < dim; i++) {
-      double factor = 0.8;
-      if (i % 2 == 0) factor = 1.1;
-      sum += factor*pow(x[i],2.0);
-   }
-   cout << "returning " << 800.0*sqrt(sum) << endl;
-   return 800.0*sqrt(sum);
-};
-
-static ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>,CMASolutions> progress = [](const CMAParameters<GenoPheno<pwqBoundStrategy>> &cmaparams, const CMASolutions &cmasols)
-{
-   
-   std::cout << "best solution: " << cmasols << std::endl;
-   vector <double> x0 = cmasols.best_candidate().get_x();
-/*
-   cout << "denormalized solution: " << endl;
-   int i = 0;
-        
-   for (vector<double>::const_iterator it = x0.begin();
-        it != x0.end();
-        it++,i++) {
-      cout << " " << tune_params[i].name << ": " << round(unscale(*it,i)) << endl;
-   }
-   cout << endl;
-*/   
-#ifndef TEST
-   if (x0_file_name.length()) {
-      ofstream x0_out(x0_file_name,ios::out | ios::trunc);
-      tune::writeX0(x0_out);
-   } else {
-      tune::writeX0(cout);
-   }
-   if (out_file_name.length()) {
-      ofstream param_out(out_file_name,ios::out | ios::trunc);
-      Scoring::Params::write(param_out);
-      param_out << endl;
-   } else {
-      Scoring::Params::write(cout);
-      cout << endl;
-   }
-#endif
-   return 0;
-};
-#endif
-
-#ifdef TEST
-static double evaluate(const vector<double> &x) 
-{
+   // simple parabolic function, minimum value 1800
    double sum = 0;
    for (int i = 0; i < x.size(); i++) {
       double factor = 0.8;
       if (i % 2 == 0) factor = 1.1;
       sum += factor*pow(x[i],2.0);
    }
-   return 800.0*sqrt(sum);
+   double eval = 200.0*sqrt(sum)+1800.0;
+   if (eval < best) {
+      best = eval;
+   }
+   return eval;
 }
-#else
 
-static double evaluate(const vector<double> &x)
+static double test_func2(const VectorXd &x) 
 {
+   // Somewhat harder function, minimum value about 2164.5
+   double sum = 0;
+   for (int i = 0; i < x.size(); i++) {
+      double factor = 0.8;
+      if (i % 2 == 0) factor = 1.1;
+      sum += factor*pow(x(i),2.0);
+      if (i % 3 == 0) {
+         double adj = 50.0*exp(-pow((x(i)-0.5),2.0)/0.02)/0.2506;
+         sum += adj;
+      }
+   }
+   double eval = 200.0*sqrt(sum)+1800.0;
+   if (eval < best) {
+      best = eval;
+   }
+   return eval;
+}
+
+
+static double rosen(const VectorXd &x) {
+   // Rosenbrock function
+   int end = x.size()-1;
+   Eigen::VectorXd y = x.block(0,0,end,1);
+   Eigen::VectorXd w = x.block(1,0,end,1);
+   Eigen::VectorXd q(end);
+   q.setOnes();
+   q=y-q;
+   double eval = (y.cwiseProduct(y) - w).squaredNorm()*100.0 + q.squaredNorm();
+   if (eval < best) {
+      best = eval;
+   }
+   return eval;
+}
+
+static double evaluate(const VectorXd &x) {
    for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
    {
       tune::tune_params[i].current = round(unscale(x[i],tune::tune_params[i]));
@@ -204,21 +180,43 @@ static double evaluate(const vector<double> &x)
    tune::initParams();
    double err = computeLsqError();
    return err;
-};
-#endif
+}
 
-void update(double obj, const vector<double> &x) 
+void update(double obj, const VectorXd &x) 
 {
-   cout << "objective=" << obj << endl;
-};
+//   cout << "objective=" << obj << endl;
+}
+
+
+static OptBase * allocate_optimizer(const string &algorithm,
+                                    int dim,
+                                    const Eigen::VectorXd &x0,
+                                    int eval_limit) 
+{
+   OptBase *s = NULL;
+   if (algorithm == "Spsa") {
+      s = (OptBase*)(new Spsa(dim,x0,eval_limit));
+   }
+   else if (algorithm == "RSpsa") {
+      s = (OptBase*)(new RSpsa(dim,x0,eval_limit));
+   }
+   else if (algorithm == "Rockstar") {
+      s = (OptBase*)(new Rockstar(dim,x0,eval_limit));
+   }
+   if (s == NULL) {
+      cerr << "optimizer allocation failed!" << endl;
+      exit(-1);
+   }
+   return s;
+}
 
 
 static void usage() 
 {
-   cerr << "Usage: tuner -i <input objective file>" << endl;
+   cerr << "Usage: tuner -i <input objective file> -a <algorithm>" << endl;
    cerr << "-o <output parameter file> -x <output objective file>" << endl;
    cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
-   cerr << "-n <iterations>" << endl;
+   cerr << "-n <iterations> -t <for test>" << endl;
 }
 
 int CDECL main(int argc, char **argv)
@@ -259,7 +257,17 @@ int CDECL main(int argc, char **argv)
     string first_param, last_param;
     
     while (arg < argc && argv[arg][0] == '-') {
-       if (strcmp(argv[arg],"-i")==0) {
+       if (strcmp(argv[arg],"-a")==0) {
+          ++arg;
+          algorithm = argv[arg];
+          if (algorithm != "Spsa" &&
+              algorithm != "RSpsa" &&
+              algorithm != "Rockstar") {
+             cerr << "unknown algorithm: " << algorithm << endl;
+             exit(-1);
+          }
+       }
+       else if (strcmp(argv[arg],"-i")==0) {
           ++arg;
           input_file = argv[arg];
        }
@@ -278,6 +286,9 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-s")==0) {
           ++arg;
           last_param = argv[arg];
+       }
+       else if (strcmp(argv[arg],"-t")==0) {
+          ++test;
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
@@ -309,7 +320,7 @@ int CDECL main(int argc, char **argv)
        }
     }
     
-    int dim = last_index - first_index;
+    const int dim = last_index - first_index;
     if (dim<=0) {
        cerr << "Error: 2nd named parameter is before 1st!" << endl;
        exit(-1);
@@ -317,51 +328,48 @@ int CDECL main(int argc, char **argv)
     cout << "dimension = " << dim << endl;
     cout << "games per core per iteration = " << games << endl;
     
-    vector<double> x0;
-#ifdef CMAES
-    double sigma = 0.05;
-    // use variant with box bounds
-    double lbounds[dim],
-       ubounds[dim];
-#ifdef TEST
-    dim = 10;
-    for (int i = 0; i < dim; i++) {
-       x0.push_back(0.8);
-       lbounds[i] = 0.0;
-       ubounds[i] = 1.0;
+
+    if (test) {
+       int num_iters[3] = { 50, 250, 1250 };
+       static const char *functions[3] =
+       {"func1", "func2", "Rosenbrock"
+       };
+       for (int func = 0; func < 3; func++) {
+          for (int n = 0; n < 3; n++) {
+             double avg = 0.0;
+             int max_tries = 5;
+             for (int tries = 0; tries < max_tries; tries++) {
+                VectorXd x0(10);
+                x0.fill(0.8);
+                best = 10000.0;
+                OptBase *s = allocate_optimizer(algorithm,10,x0,num_iters[n]);
+                switch (func) {
+                case 0:
+                   s->optimize(test_func1,update); break;
+                case 1:
+                   s->optimize(test_func2,update); break;
+                case 2:
+                   s->optimize(rosen,update); break;
+                default: break;
+                }
+                delete s;
+                cout << "try " << tries+1 << " best=" << best << endl;
+                avg += best;
+             }
+             cout << algorithm << "/" << functions[func] << " average: (" << num_iters[n] << " evals): " << avg/max_tries << endl;
+          }
+       }
     }
-    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
-    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
-    cmaparams.set_algo(sepaBIPOP_CMAES);
-    cmaparams.set_max_fevals(iterations);
-    CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(test_evaluator,cmaparams,progress);
-#else
-    // initialize & normalize
-    for (int i = 0; i < dim; i++) {
-       x0.push_back(scale(tune::tune_params[i+first_index]));
-       lbounds[i] = 0.0;
-       ubounds[i] = 1.0;
+    else {
+       VectorXd x0(dim);
+       // initialize and scale
+       for (int i = 0; i < dim; i++) {
+          x0(i) = scale(tune::tune_params[i+first_index]);
+       }
+       OptBase *s = allocate_optimizer(algorithm,dim,x0,iterations);
+       s->optimize(evaluate,update);
+       delete s;
     }
-    GenoPheno<pwqBoundStrategy> gp(lbounds,ubounds,dim);
-    CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(dim,&x0.front(),sigma,-1,0,gp);
-    cmaparams.set_algo(sepaBIPOP_CMAES);
-    cmaparams.set_max_iter(iterations);
-    CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(evaluator,cmaparams,progress);
-#endif
-#else
-#ifdef TEST
-    Spsa s(10);
-    for (int i = 0; i < 10; i++) {
-       x0.push_back(0.8);
-    }
-    s.optimize(x0,iterations,evaluate,update);
-#else
-    Spsa s(tune::NUM_TUNING_PARAMS);
-    for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-       x0.push_back(scale(tune::tune_params[i]));
-    }
-    s.optimize(x0,iterations,evaluate,update);
-#endif
-#endif
+
     return 0;
 }
