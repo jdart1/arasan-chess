@@ -2,9 +2,13 @@
 #include "rockstar.h"
 #include "Rockstar.hpp"
 
-// A wrapper around the Rock* algorithm, based on
+// A wrapper around the Rock* algorithm implementation by Jemin
+// Hwangbo,
+// based on: Jemin Hwangbo, Christian Gehring, Hannes Sommer,
+// Roland Siegwart, Jonas Buchli
 // "Reward Optimization with compact kernels and natural gradient
-// descent, 2015", Jemin Hwangbo
+// descent", Proceedings 2014 IEEE-RAS International Conference on
+// Humanoid Robots (2014).
 
 #define TRACE
 
