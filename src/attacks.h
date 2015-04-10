@@ -37,7 +37,7 @@ class Attacks
      static const CACHE_ALIGN Bitboard diag_a1_mask[64];
      static const CACHE_ALIGN Bitboard diag_a8_mask[64];
      
-     static Bitboard center;
+     static const Bitboard center;
 
      // mask for e.p. checking
      static const Bitboard ep_mask[8][2];

@@ -5190,6 +5190,8 @@ Bitboard(0x80000000000000ULL),
 Bitboard(0x0ULL)
 };
 
+const Bitboard Attacks::center = Bitboard(0x1818000000ULL);
+
 const Bitboard Attacks::ep_mask[8][2] =
 {
 {Bitboard(0x2000000ULL), Bitboard(0x200000000ULL)}, 
@@ -5426,8 +5428,6 @@ const CACHE_ALIGN Bitboard Attacks::b_magic[64]=
 };
 #endif
 
-Bitboard Attacks::center;
-
 CACHE_ALIGN Attacks::MagicData Attacks::bishopMagicData[64];
 CACHE_ALIGN Attacks::MagicData Attacks::rookMagicData[64];
 
@@ -5571,10 +5571,5 @@ void Attacks::initMagicData() {
 
 void Attacks::init() {
   initMagicData();
-  center.set(chess::E4);
-  center.set(chess::D4);
-  center.set(chess::E5);
-  center.set(chess::D5);
-  
 }
 
