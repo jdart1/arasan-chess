@@ -47,7 +47,7 @@ const int Scoring::Params::KNIGHT_PST[2][64] =
   -120 ,-40 ,-10 ,0 ,0 ,-10,-40 ,-120,
   -150 ,-60 ,-40 ,-30 ,-30 ,-40 ,-60 ,-150,
   -180 ,-90 ,-70 ,-60 ,-60 ,-70 ,-90 ,-180},
- {-230 ,-190 ,-160 ,-150 ,-150 ,-150 ,-160 ,-190,
+ {-230 ,-190 ,-160 ,-150 ,-150 ,-160 ,-190 ,-230,
   -130 ,-90 ,-50 ,-40 ,-40 , -50 ,-90,-130,
   -90 ,-50 ,-20 ,-10 ,-10 ,-20 ,-50 ,-90,
   -80 ,-40 ,-10 ,0 ,0 ,-10 ,-40 ,-80,
@@ -1310,9 +1310,9 @@ void Scoring::pieceScore(const Board &board,
    if (pin_count) scores.end += PARAM(PIN_MULTIPLIER_END) * pin_count;
 }
 
-int Scoring::calcPawnData(const Board &board,
-                          ColorType side,
-                          PawnHashEntry::PawnData &entr) {
+void Scoring::calcPawnData(const Board &board,
+                           ColorType side,
+                           PawnHashEntry::PawnData &entr) {
 
    // This function computes a pawn structure score that depends
    // only on the location of pawns (of both colors). It also fills
@@ -1320,7 +1320,6 @@ int Scoring::calcPawnData(const Board &board,
    //
    memset(&entr, '\0', sizeof(PawnHashEntry::PawnData));
 
-   int score = 0;
    int incr = (side == White) ? 8 : -8;
    const ColorType oside = OppositeColor(side);
    entr.opponent_pawn_attacks = board.allPawnAttacks(oside);
@@ -1333,7 +1332,6 @@ int Scoring::calcPawnData(const Board &board,
    while(bi.iterate(sq))
    {
 #ifdef PAWN_DEBUG
-      int tmp = score;
       int mid_tmp = entr.midgame_score;
       int end_tmp = entr.endgame_score;
       cout << ColorImage(side) << " pawn on " << FileImage(sq) << RankImage(sq);
@@ -1619,15 +1617,16 @@ int Scoring::calcPawnData(const Board &board,
       if (!passed && rank >= 4) {
          int space = PARAM(SPACE) * (rank - 3);
          if (duo) space *= 2;
-         score += space;
 #ifdef PAWN_DEBUG
          cout << " space=" << space;
 #endif
+         entr.midgame_score += space;
+         entr.endgame_score += space;
       }
 #ifdef PAWN_DEBUG
       cout << " total = (" <<
-         entr.midgame_score - mid_tmp + score - tmp << ", " <<
-         entr.endgame_score - end_tmp + score - tmp << ")" <<
+         entr.midgame_score - mid_tmp << ", " <<
+         entr.endgame_score - end_tmp << ")" <<
          endl;
 #endif
    }
@@ -1649,8 +1648,10 @@ int Scoring::calcPawnData(const Board &board,
       entr.midgame_score += cp_score.mid;
       entr.endgame_score += cp_score.end;
 #ifdef EVAL_DEBUG
-      cout << "connected passer score, square " << SquareImage(sq);
-      cout << " = (" << cp_score.mid << ", " << cp_score.end << ")" << endl;
+      if (cp_score.mid || cp_score.end) {
+         cout << "connected passer score, square " << SquareImage(sq);
+         cout << " = (" << cp_score.mid << ", " << cp_score.end << ")" << endl;
+      }
 #endif   
    }
    
@@ -1660,10 +1661,10 @@ int Scoring::calcPawnData(const Board &board,
 #endif
    entr.midgame_score += PARAM(PAWN_CENTER_SCORE_MID) * centerCalc.bitCount();
 #ifdef PAWN_DEBUG
-   cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << endl;
+   if (entr.midgame_score - tmp) {
+      cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << endl;
+   }
 #endif
-   entr.midgame_score += score;
-   entr.endgame_score += score;
 #ifdef PAWN_DEBUG
    cout <<
       "pawn score (" <<
@@ -1675,9 +1676,7 @@ int Scoring::calcPawnData(const Board &board,
       ')' <<
       endl;
 #endif
-   return score;
 }
-
 
 
 void Scoring::evalOutsidePassers(const Board &board, 
@@ -1846,15 +1845,33 @@ int Scoring::evalu8(const Board &board) {
 }
 
 void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry::PawnData &pawnData, Scores &scores) {
+#ifdef PAWN_DEBUG
+   Scores tmp(scores);
+#endif
    scores.mid += pawnData.midgame_score;
    scores.end += pawnData.endgame_score;
 
    if (board.rook_bits[OppositeColor(side)] | board.queen_bits[OppositeColor(side)]) {
+#ifdef PAWN_DEBUG
+      int mid_tmp = scores.mid;
+      int end_tmp = scores.end;
+#endif
       scores.mid += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE_MID);
       scores.end += (int) pawnData.weakopen * PARAM(WEAK_ON_OPEN_FILE_END);
+#ifdef PAWN_DEBUG
+      if (mid_tmp != scores.mid ||
+          end_tmp != scores.end) {
+         cout << "weak pawns on open file (" << ColorImage(side) << "): (";
+         cout << scores.mid - mid_tmp << ", ";
+         cout << scores.end - end_tmp << ")" << endl;
+      }
+#endif
    }
 
    // interaction of pawns and pieces
+#ifdef PAWN_DEBUG
+   int center_tmp = scores.mid;
+#endif
    if (side == White) {
       if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
          scores.mid += PARAM(CENTER_PAWN_BLOCK);
@@ -1863,6 +1880,11 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       if (board[chess::E2] == WhitePawn && board[chess::E3] > WhitePawn && board[chess::E3] < BlackPawn) {
          scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
+#ifdef PAWN_DEBUG
+      if (scores.mid - center_tmp) {
+         cout << "center pawn block (White): " << scores.mid - center_tmp << endl;
+      }
+#endif
    }
    else {
       if (board[chess::D7] == BlackPawn && board[chess::D6] > BlackPawn) {
@@ -1872,6 +1894,11 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       if (board[chess::E7] == BlackPawn && board[chess::E6] > BlackPawn) {
          scores.mid += PARAM(CENTER_PAWN_BLOCK);
       }
+#ifdef PAWN_DEBUG
+      if (scores.mid - center_tmp) {
+         cout << "center pawn block (Black): " << scores.mid - center_tmp << endl;
+      }
+#endif
    }
 
    ColorType oside = OppositeColor(side);
@@ -1919,11 +1946,22 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             Attacks::file_mask_down[sq];
       if (atcks) {
          if (atcks & mask & board.occupied[side]) {
-            scores.mid += (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_MID);
-            scores.end += (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_END);
+            int mid_penalty = (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_MID);
+            int end_penalty = (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_END);
+#ifdef PAWN_DEBUG
+            cout <<
+               ColorImage(side) << " passed pawn on " <<
+               SquareImage(sq) << " blocked by own piece(s) , score= (" << -mid_penalty << ", " << -end_penalty << ")" << endl;
+#endif
+            scores.mid += mid_penalty;
+            scores.end += end_penalty;
          }
       }
 
+#ifdef PAWN_DEBUG
+      int mid_tmp = scores.mid;
+      int end_tmp = scores.end;
+#endif
       if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
          atcks &= board.rook_bits[side];
          if (atcks & mask) {
@@ -1948,14 +1986,27 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             }
          }
       }
+#ifdef PAWN_DEBUG
+      if ((mid_tmp != scores.mid) ||
+          (end_tmp != scores.end)) {
+         cout << "rook/passed pawn placement (" << ColorImage(side) << ") (";
+         cout << scores.mid - mid_tmp << ", " <<
+            scores.end - end_tmp << ")" << endl;
+      }
+#endif
    }
 
 #ifdef PAWN_DEBUG
    cout << ColorImage(side) << " pawn score: " << endl;
-   cout << " general = " << scores.any << endl;
-   cout << " midgame = " << scores.mid << endl;
-   cout << " endgame = " << scores.end << endl;
-   cout << " blend = " << scores.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
+   cout << " general = " << scores.any-tmp.any << endl;
+   cout << " midgame = " << scores.mid-tmp.mid << endl;
+   cout << " endgame = " << scores.end-tmp.end << endl;
+   Scores diff;
+   diff.mid = scores.mid-tmp.mid;
+   diff.end = scores.end-tmp.end;
+   diff.any = scores.any-tmp.any;
+   
+   cout << " blend = " << diff.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
 #endif
 }
 
@@ -2149,7 +2200,6 @@ void Scoring::scoreEndgame
 
 Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board) {
    hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
-
    PawnHashEntry &pawnEntry = pawnHashTable[pawnHash % PAWN_HASH_SIZE];
    if (pawnEntry.hc != pawnHash) {
       calcPawnEntry(board, pawnEntry);
@@ -2170,6 +2220,11 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    if (pawnEntry.pawnData(side).outside && !pawnEntry.pawnData(oside).outside) {
       scores.mid += PARAM(OUTSIDE_PASSER_MID);
       scores.end += PARAM(OUTSIDE_PASSER_END);
+#ifdef PAWN_DEBUG
+      cout << "outside passer (" << ColorImage(side) << "): (" <<
+         PARAM(OUTSIDE_PASSER_MID) << ", " <<
+         PARAM(OUTSIDE_PASSER_END) << ")" << endl;
+#endif
    }
 
    // Penalize loss of castling.
@@ -2534,6 +2589,9 @@ void Scoring::clearHashTables() {
    memset(kingCoverHashTable, '\0', 2 * KING_COVER_HASH_SIZE * sizeof(KingCoverHashEntry));
 }
 
+#ifdef TUNE
+#include "tune.h"
+
 static void print_array(ostream & o,int arr[], int size, int add_semi = 1) 
 {
    o << "{";
@@ -2580,8 +2638,6 @@ static void print_pst(ostream & o,int mid[], int end[], int size)
    o << "};" << endl;
 }
 
-#ifdef TUNE
-#include "tune.h"
 void Scoring::Params::write(ostream &o) 
 {
    o << "// Copyright 2015 by Jon Dart. All Rights Reserved." << endl;

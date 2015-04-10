@@ -135,17 +135,6 @@ class Scoring
           end*(128-Params::MATERIAL_SCALE[materialLevel])/128;
       }
 
-      Scores & operator += (const Scores &s) {
-          mid += s.mid;
-          end += s.end;
-          any += s.any;
-          return *this;
-      }
-      const Scores operator + (const Scores &s) const {
-          Scores result = *this;
-          result += s;
-          return result;
-      }
       int operator == (const Scores &s) const {
         return s.mid == mid && s.end == end && s.any == any;
       }
@@ -187,7 +176,7 @@ class Scoring
 
     PawnHashEntry &pawnEntry(const Board &board);
 
-    int calcPawnData(const Board &board, ColorType side,
+    void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);
 
     void evalOutsidePassers(const Board &board,
