@@ -29,7 +29,7 @@ static int iterations = 40;
 
 static int test = 0;
 
-string algorithm = "Spsa";
+string algorithm = "Rockstar";
 
 // script to run matches
 static const char * MATCH_PATH="/home/jdart/tools/match.py";
@@ -173,9 +173,9 @@ static double rosen(const VectorXd &x) {
 }
 
 static double evaluate(const VectorXd &x) {
-   for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) 
+   for (int i = first_index; i <= last_index; i++) 
    {
-      tune::tune_params[i].current = round(unscale(x[i],tune::tune_params[i]));
+      tune::tune_params[i].current = round(unscale(x[i-first_index],tune::tune_params[i]));
    }
    tune::initParams();
    double err = computeLsqError();
@@ -320,7 +320,7 @@ int CDECL main(int argc, char **argv)
        }
     }
     
-    const int dim = last_index - first_index;
+    const int dim = last_index - first_index + 1;
     if (dim<=0) {
        cerr << "Error: 2nd named parameter is before 1st!" << endl;
        exit(-1);
