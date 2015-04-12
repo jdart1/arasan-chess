@@ -46,6 +46,7 @@ static int last_index = tune::NUM_TUNING_PARAMS-1;
 
 static int games = 1000;
 
+// best objective so far
 static double best = 10000.0;
 
 static double scale(const tune::TuneParam &t) 
@@ -78,22 +79,6 @@ static int exec(const char* cmd) {
       }
    }
    pclose(pipe);
-   if (result > best) {
-      if (x0_file_name.length()) {
-         ofstream x0_out(x0_file_name,ios::out | ios::trunc);
-         tune::writeX0(x0_out);
-      } else {
-         tune::writeX0(cout);
-      }
-      if (out_file_name.length()) {
-         ofstream param_out(out_file_name,ios::out | ios::trunc);
-         Scoring::Params::write(param_out);
-         param_out << endl;
-      } else {
-         Scoring::Params::write(cout);
-         cout << endl;
-      }
-   }
    
    return result;
 }
@@ -117,7 +102,25 @@ static double computeLsqError() {
    string cmd = s.str();
    // Call external script to run the matches and return a rating.
    // Optimizer minimizes, so optimize 5000-rating.
-   return double(5000-exec(cmd.c_str()));
+   double obj = double(5000-exec(cmd.c_str()));
+   if (obj < best) {
+      best = obj;
+      if (x0_file_name.length()) {
+         ofstream x0_out(x0_file_name,ios::out | ios::trunc);
+         tune::writeX0(x0_out);
+      } else {
+         tune::writeX0(cout);
+      }
+      if (out_file_name.length()) {
+         ofstream param_out(out_file_name,ios::out | ios::trunc);
+         Scoring::Params::write(param_out);
+         param_out << endl;
+      } else {
+         Scoring::Params::write(cout);
+         cout << endl;
+      }
+   }
+   return obj;
 }
 
 static double test_func1(const VectorXd &x) 
