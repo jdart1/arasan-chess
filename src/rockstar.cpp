@@ -20,6 +20,10 @@ Rockstar::Rockstar(int d, const Eigen::VectorXd &x0, int eval_limit)
    // defaults
    options.initial_exp = 2;
    options.initialSd = 0.05;
+   options.constraint_penalty = 100;
+   // constraints are 0..1 by default
+   upper.setOnes(dim);
+   lower.setZero(dim);
 }
 
 Rockstar::~Rockstar() 
@@ -29,7 +33,8 @@ Rockstar::~Rockstar()
 void Rockstar::setBoxConstraints(const Eigen::VectorXd &lower,
                                  const Eigen::VectorXd &upper) 
 {
-   cerr << "box constraints not supported!" <<endl;
+   this->lower = lower;
+   this->upper = upper;
 }
 
 #ifdef TRACE
@@ -55,6 +60,19 @@ void Rockstar::optimize(double (*func)(const Eigen::VectorXd &theta),
       printArray("newTheta",theta);
 #endif      
       double cost = eval(theta,func,update);
+      // apply penalty for constraint violations
+      double penalty = 0.0;
+      for (int i = 0; i < dim; i++) {
+         if (theta(i) < lower(i)) {
+            penalty += pow(lower(i)-theta(i),2.0)*options.constraint_penalty;
+         } else if (theta(i) > upper(i)) {
+            penalty += pow(theta(i)-upper(i),2.0)*options.constraint_penalty;
+         }
+      }
+#ifdef TRACE
+      cout << "constraint penalty=" << penalty << endl;
+#endif
+      cost += penalty;
       optimizer.setTheCostFromTheLastTheta(cost);
    }
 }

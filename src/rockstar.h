@@ -28,6 +28,7 @@ class Rockstar : public OptBase {
     struct Options {
       double initialSd;
       int initial_exp;
+      double constraint_penalty;
     } options;
     Eigen::VectorXd lower, upper;
 };
