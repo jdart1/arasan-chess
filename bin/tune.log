@@ -1,243 +1,0 @@
-Initialized tablebases
-reading parameters
-parameter check passed
-30  0 -20 -40 25 25 25
-
-MADS run {
-
-	BBE	(	SOL	)	OBJ
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2379    5    6 13200   46%  2406   24% 
-
-rating=2379
-
-	  1	(	30 0 -20 -40 25 25 25 )	2621.0000000000
-executing /home/jdart/tools/match.py 300 queen_value_adjust 60 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
-ssh: connect to host sassy port 22: Connection timed out
-ssh: connect to host sassy port 22: Connection timed out
-ssh: connect to host puppy port 22: Connection timed out
-ssh: connect to host puppy port 22: Connection timed out
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.14000 game(s) loaded, 0 game(s) with unknown result ignored.14306 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   2 Arasan-17.3     2374    5    5 14306   46%  2408   23% 
-
-rating=2374
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 15 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2374    6    6 13200   46%  2407   24% 
-
-rating=2374
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -13 kn_vs_pawns2 -40 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12900 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2374    6    5 12900   46%  2407   25% 
-
-rating=2374
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -31 q_vs_rm_with_rook 25 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12900 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2377    6    5 12900   46%  2407   25% 
-
-rating=2377
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 38 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2380    6    6 12600   46%  2407   25% 
-
-rating=2380
-
-	  6	(	30 0 -20 -40 38 25 25 )	2620.0000000000
-iterations = 1, black box evals = 6
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 77 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2378    5    5 13200   46%  2406   24% 
-
-rating=2378
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 51 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.13000 game(s) loaded, 0 game(s) with unknown result ignored.13200 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2379    5    6 13200   46%  2406   25% 
-
-rating=2379
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 64 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12900 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2375    5    5 12900   46%  2407   25% 
-
-rating=2375
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 90 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 38 q_vs_rm_wo_rook 25 rb_bonus 25
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.5000 game(s) loaded, 0 game(s) with unknown result ignored.6000 game(s) loaded, 0 game(s) with unknown result ignored.7000 game(s) loaded, 0 game(s) with unknown result ignored.8000 game(s) loaded, 0 game(s) with unknown result ignored.9000 game(s) loaded, 0 game(s) with unknown result ignored.10000 game(s) loaded, 0 game(s) with unknown result ignored.11000 game(s) loaded, 0 game(s) with unknown result ignored.12000 game(s) loaded, 0 game(s) with unknown result ignored.12600 game(s) loaded, 0 game(s) with unknown result ignored.
-calling remote_stop
-
-did remote_stop
-
-calling remote_stop
-
-did remote_stop
-
-waiting for local process completion
-
-All local processes completed.
-
-All remote processes completed.
-
-   4 Arasan-17.3     2377    6    6 12600   46%  2407   25% 
-
-rating=2377
-
-executing /home/jdart/tools/match.py 300 queen_value_adjust 30 rook_value_adjust 0 kn_vs_pawns1 -20 kn_vs_pawns2 -40 q_vs_rm_with_rook 38 q_vs_rm_wo_rook 25 rb_bonus 15
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-Terminated
-1000 game(s) loaded, 0 game(s) with unknown result ignored.2000 game(s) loaded, 0 game(s) with unknown result ignored.3000 game(s) loaded, 0 game(s) with unknown result ignored.4000 game(s) loaded, 0 game(s) with unknown result ignored.4929 game(s) loaded, 0 game(s) with unknown result ignored.
-close failed in file object destructor:
-sys.excepthook is missing
-lost sys.stderr
