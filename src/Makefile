@@ -35,15 +35,23 @@ EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
 GSL_INCLUDE=/usr/local/include
 GSL_LIBS=-lgsl
 BLAS_LIBS=-lgslcblas
+#ESS_INCLUDE=/home/jdart/opt/eSS
+#ESS_LIB_PATH=/home/jdart/opt/eSS
+#ESS_LIB=-less -ldl
+NOMAD_INCLUDE=/home/jdart/opt/nomad.3.7.1/src
+NOMAD_LIB_PATH=/home/jdart/opt/nomad.3.7.1/lib
+NOMAD_LIB=$(NOMAD_LIB_PATH)/nomad.a
 
 #LIBCMAES_INCLUDE=/usr/local/include/libcmaes
 #LIBCMAES_PATH=/usr/local/lib
 #EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
 #EIGEN3_UNSUPPORTED=/home/jdart/eigen-eigen-10219c95fe65/unsupported/Eigen
 
-TUNE_INCLUDES := -I$(ROCKSTAR_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(GSL_INCLUDE)
+TUNE_INCLUDES := -I$(ROCKSTAR_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(GSL_INCLUDE) \
+-I$(NOMAD_INCLUDE)
 #TUNE_LDFLAGS := -L$(LIBCMAES_PATH)
-TUNE_LIBS = $(GSL_LIBS) $(BLAS_LIBS)
+TUNE_LDFLAGS := -L$(NOMAD_LIB_PATH)
+TUNE_LIBS = $(GSL_LIBS) $(BLAS_LIBS) $(NOMAD_LIB)
 
 #define the appropriate macro for the type(s) of tablebase supported
 GAVIOTA_TBS = 1
@@ -71,7 +79,7 @@ TUNE_CFLAGS := -fno-strict-aliasing -DUSE_INSTRINSICS -DUSE_ASM -ansi -std=c++11
 TUNE_OPT = -Ofast $(SSE)
 
 #PROF     = -pg
-DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -331,7 +339,7 @@ log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp spsa.cpp \
-rspsa.cpp optbase.cpp rockstar.cpp
+rspsa.cpp optbase.cpp rockstar.cpp nomad.cpp
 
 ARASANX_TUNE_SOURCES = arasanx.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \

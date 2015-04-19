@@ -11,6 +11,7 @@
 #include "tune.h"
 #include "spsa.h"
 #include "rspsa.h"
+//#include "nomad.h"
 #include "rockstar.h"
 #include <iostream>
 #include <fstream>
@@ -41,15 +42,37 @@ static string out_file_name="params.cpp";
 static string x0_file_name="x0";
 
 static int first_index = 0;
- 
+
 static int last_index = tune::NUM_TUNING_PARAMS-1;
 
 static int games = 1000;
 
+static const int NUM_SUPPORTED_ALGORITHMS = 4;
+
+enum Algorithm { SPSA, RSPSA, ROCKSTAR, NOMAD, UNKNOWN };
+
+static const string supported_algorithms[NUM_SUPPORTED_ALGORITHMS] = {
+   string("Spsa"),
+   string("RSpsa"),
+   string("Rockstar"),
+   string("Nomad") 
+};
+
+static Algorithm find_algo(const string &alg) 
+{
+   for (int i = 0; i < NUM_SUPPORTED_ALGORITHMS; i++) {
+      if (alg == supported_algorithms[i]) {
+         return (Algorithm)i;
+      }
+   }
+   return UNKNOWN;
+}
+
+
 // best objective so far
 static double best = 10000.0;
 
-static double scale(const tune::TuneParam &t) 
+static double scale(const tune::TuneParam &t)
 {
    return double(t.current-t.min_value)/double(t.max_value-t.min_value);
 }
@@ -60,7 +83,7 @@ static int unscale(double val, const tune::TuneParam &t)
 }
 
 static int exec(const char* cmd) {
-   
+
    cout << "executing " << cmd << endl;
 
    FILE* pipe = popen(cmd, "r");
@@ -79,7 +102,7 @@ static int exec(const char* cmd) {
       }
    }
    pclose(pipe);
-   
+
    return result;
 }
 
@@ -111,6 +134,8 @@ static double computeLsqError() {
       } else {
          tune::writeX0(cout);
       }
+      // apply current tune_params to Scoring module:
+      tune::initParams();
       if (out_file_name.length()) {
          ofstream param_out(out_file_name,ios::out | ios::trunc);
          Scoring::Params::write(param_out);
@@ -123,7 +148,7 @@ static double computeLsqError() {
    return obj;
 }
 
-static double test_func1(const VectorXd &x) 
+static double test_func1(const VectorXd &x)
 {
    // simple parabolic function, minimum value 1800
    double sum = 0;
@@ -139,7 +164,7 @@ static double test_func1(const VectorXd &x)
    return eval;
 }
 
-static double test_func2(const VectorXd &x) 
+static double test_func2(const VectorXd &x)
 {
    // Somewhat harder function, minimum value about 2164.5
    double sum = 0;
@@ -176,7 +201,7 @@ static double rosen(const VectorXd &x) {
 }
 
 static double evaluate(const VectorXd &x) {
-   for (int i = first_index; i <= last_index; i++) 
+   for (int i = first_index; i <= last_index; i++)
    {
       tune::tune_params[i].current = round(unscale(x[i-first_index],tune::tune_params[i]));
    }
@@ -185,7 +210,7 @@ static double evaluate(const VectorXd &x) {
    return err;
 }
 
-void update(double obj, const VectorXd &x) 
+void update(double obj, const VectorXd &x)
 {
 //   cout << "objective=" << obj << endl;
 }
@@ -194,17 +219,21 @@ void update(double obj, const VectorXd &x)
 static OptBase * allocate_optimizer(const string &algorithm,
                                     int dim,
                                     const Eigen::VectorXd &x0,
-                                    int eval_limit) 
+                                    int eval_limit)
 {
    OptBase *s = NULL;
-   if (algorithm == "Spsa") {
-      s = (OptBase*)(new Spsa(dim,x0,eval_limit));
-   }
-   else if (algorithm == "RSpsa") {
-      s = (OptBase*)(new RSpsa(dim,x0,eval_limit));
-   }
-   else if (algorithm == "Rockstar") {
-      s = (OptBase*)(new Rockstar(dim,x0,eval_limit));
+   Algorithm alg = find_algo(algorithm);
+   switch (alg) {
+   case SPSA:
+      s = (OptBase*)(new Spsa(dim,x0,eval_limit)); break;
+   case RSPSA:
+      s = (OptBase*)(new RSpsa(dim,x0,eval_limit)); break;
+   case ROCKSTAR:      
+      s = (OptBase*)(new Rockstar(dim,x0,eval_limit)); break;
+   case NOMAD:      
+      s = (OptBase*)(new Rockstar(dim,x0,eval_limit)); break;
+   case UNKNOWN:
+      cerr << "unknown algorithm: " << algorithm << endl;
    }
    if (s == NULL) {
       cerr << "optimizer allocation failed!" << endl;
@@ -214,7 +243,7 @@ static OptBase * allocate_optimizer(const string &algorithm,
 }
 
 
-static void usage() 
+static void usage()
 {
    cerr << "Usage: tuner -i <input objective file> -a <algorithm>" << endl;
    cerr << "-o <output parameter file> -x <output objective file>" << endl;
@@ -247,7 +276,7 @@ int CDECL main(int argc, char **argv)
     options.search.easy_plies = 0;
 
     string input_file;
-    
+
    cout << "writing initial solution" << endl;
    tune::initParams();
    ofstream param_out(out_file_name,ios::out | ios::trunc);
@@ -258,14 +287,12 @@ int CDECL main(int argc, char **argv)
 
     int arg = 1;
     string first_param, last_param;
-    
+
     while (arg < argc && argv[arg][0] == '-') {
        if (strcmp(argv[arg],"-a")==0) {
           ++arg;
           algorithm = argv[arg];
-          if (algorithm != "Spsa" &&
-              algorithm != "RSpsa" &&
-              algorithm != "Rockstar") {
+          if (find_algo(algorithm) == UNKNOWN) {
              cerr << "unknown algorithm: " << algorithm << endl;
              exit(-1);
           }
@@ -322,7 +349,7 @@ int CDECL main(int argc, char **argv)
           exit(-1);
        }
     }
-    
+
     const int dim = last_index - first_index + 1;
     if (dim<=0) {
        cerr << "Error: 2nd named parameter is before 1st!" << endl;
@@ -330,7 +357,7 @@ int CDECL main(int argc, char **argv)
     }
     cout << "dimension = " << dim << endl;
     cout << "games per core per iteration = " << games << endl;
-    
+
 
     if (test) {
        int num_iters[3] = { 50, 250, 1250 };

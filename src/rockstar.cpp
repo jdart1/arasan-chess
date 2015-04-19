@@ -10,7 +10,7 @@
 // descent", Proceedings 2014 IEEE-RAS International Conference on
 // Humanoid Robots (2014).
 
-#define TRACE
+//#define TRACE
 
 Rockstar::Rockstar(int d, const Eigen::VectorXd &x0, int eval_limit) 
    : OptBase(d)
@@ -19,8 +19,8 @@ Rockstar::Rockstar(int d, const Eigen::VectorXd &x0, int eval_limit)
    setEvaluationLimit(eval_limit);
    // defaults
    options.initial_exp = 2;
-   options.initialSd = 0.05;
-   options.constraint_penalty = 100;
+   options.initialSd = 0.2; // was: 0.05
+   options.constraint_penalty = 1000;
    // constraints are 0..1 by default
    upper.setOnes(dim);
    lower.setZero(dim);
