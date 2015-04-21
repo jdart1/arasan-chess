@@ -1,6 +1,7 @@
 // Based on example code packaged with Nomad
 #include "nomad.h"
 #include <nomad.hpp>
+#include "types.h"
 using namespace std;
 
 Nomad::Nomad(int d, const Eigen::VectorXd &x0, int eval_limit):
@@ -79,6 +80,9 @@ void Nomad::optimize(double (*func)(const Eigen::VectorXd &theta),
     // NOMAD initializations:
     NOMAD::begin ( argc , argv );
 
+    srand((unsigned)(getCurrentTime() % (1<<31)));
+    NOMAD::RNG::set_seed(rand() % 12345);
+
     // parameters creation:
     NOMAD::Parameters p ( out );
 
@@ -93,21 +97,27 @@ void Nomad::optimize(double (*func)(const Eigen::VectorXd &theta),
 
     p.set_DISPLAY_STATS ( "bbe ( sol ) obj" );
 
-    NOMAD::Point px0(dim),pupper(dim),plower(dim);
-    // convert our input vector and bounds to NOMAD Point:
+    NOMAD::Point px0(dim);
+    // convert our input vector to NOMAD Point:
     for (int i = 0; i < dim; i++) {
-       px0[i] = initial_theta[i];
-       pupper[i] = upper[i];
-       plower[i] = lower[i];
+       px0[i] = NOMAD::Double(initial_theta[i]);
+       p.set_LOWER_BOUND(i,0.0);
+       p.set_UPPER_BOUND(i,1.0);
     }
     
     p.set_X0 ( px0 );
 
-    p.set_LOWER_BOUND ( plower);
-    p.set_LOWER_BOUND ( pupper );
+    std::list<NOMAD::bb_input_type> bbit;
+    for (int i = 0; i < dim; i++) {
+       // all params are real
+       bbit.push_back(NOMAD::CONTINUOUS);
+    }
+    p.set_BB_INPUT_TYPE ( bbit);
     
     p.set_MAX_BB_EVAL (eval_limit);
-    p.set_DISPLAY_DEGREE(2);
+//    p.set_SNAP_TO_BOUNDS(true);
+    p.set_INITIAL_POLL_SIZE(NOMAD::Double(0.25));
+    p.set_DISPLAY_DEGREE("2222");
     //p.set_SOLUTION_FILE("sol.txt");
 
     // parameters validation:
