@@ -391,7 +391,7 @@ static void parseLevel(const string &cmd) {
   incr = int(1000*floatincr);
 }
 
-static void process_st_command(const string &cmd_args) 
+static void process_st_command(const string &cmd_args)
 {
    stringstream s(cmd_args);
    float time_limit_sec;
@@ -619,7 +619,7 @@ static void save_game() {
       stringstream timec;
       timec << minutes*60;
       if (incr) {
-          timec << '+' << setprecision(2) << incr/1000.0F; 
+          timec << '+' << setprecision(2) << incr/1000.0F;
       }
       headers.append(ChessIO::Header("TimeControl",timec.str()));
       string result;
@@ -731,7 +731,7 @@ uint64 nodes, uint64 tb_hits, const string &best_line_image, int multipv) {
    }
 #ifdef UCI_LOG
    ucilog << s.str() << endl;
-#endif   
+#endif
 }
 
 
@@ -757,7 +757,8 @@ static void CDECL post_output(const Statistics &stats) {
                multi_pvs[stats.multipv_count] = MultiPVEntry(stats);
                if (stats.multipv_count+1 == stats.multipv_limit) {
                   for (int i = 0; i < stats.multipv_limit; i++) {
-                     uciOut(multi_pvs[i].depth,multi_pvs[i].score,
+                     uciOut(multi_pvs[i].depth,
+                        100*multi_pvs[i].score/PAWN_VALUE,
                         multi_pvs[i].time,multi_pvs[i].nodes,
                         multi_pvs[i].tb_hits,
                         multi_pvs[i].best_line_image,
@@ -779,7 +780,7 @@ static void CDECL post_output(const Statistics &stats) {
       printf("%2u%c %6d %6ld %8llu %s\n",
 #endif
          stats.depth,' ',
-         score,
+         (score*100)/PAWN_VALUE, // score in centipawns
          (long)stats.elapsed_time/10, // time in centiseconds
          stats.num_nodes,
          stats.best_line_image.c_str());
@@ -1069,7 +1070,7 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
             } else {
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    (uci ? calcTimeLimit(movestogo, 
+                    (uci ? calcTimeLimit(movestogo,
                                          getIncrUCI(board.sideToMove()),
                                          time_left, opp_time, false, doTrace)
                      : calcTimeLimit(moves, minutes, incr, time_left, opp_time, false, doTrace));
@@ -1212,7 +1213,7 @@ static void send_move(Board &board, Move &move, Statistics
         if (uci) {
 #ifdef UCI_LOG
             ucilog << "bestmove " << movebuf.str();
-#endif  
+#endif
             cout << "bestmove " << movebuf.str();
             if (!easy && !IsNull(stats.best_line[1])) {
                 stringstream ponderbuf;
@@ -1220,7 +1221,7 @@ static void send_move(Board &board, Move &move, Statistics
                 cout << " ponder " << ponderbuf.str();
 #ifdef UCI_LOG
                 ucilog << " ponder " << ponderbuf.str();
-#endif  
+#endif
             }
             cout << endl << (flush);
 #ifdef UCI_LOG
@@ -1676,7 +1677,7 @@ static void processWinboardOptions(const string &args) {
         setCheckOption(value,options.learning.position_learning);
     } else if (name == "Strength") {
         Options::setOption<int>(value,options.search.strength);
-    } 
+    }
 #ifdef TUNE
     else {
        // set named parameters that are in the tuning set
@@ -1695,7 +1696,7 @@ static void processWinboardOptions(const string &args) {
              break;
           }
        }
-    } 
+    }
 #endif
     searcher->updateSearchOptions();
 }
@@ -1715,7 +1716,7 @@ static void check_command(const string &cmd, int &terminate)
     split_cmd(cmd,cmd_word,cmd_args);
     if (uci) {
         if (doTrace) {
-            theLog->write("check_command: "); 
+            theLog->write("check_command: ");
             theLog->write(cmd.c_str());
             theLog->write_eol();
         }
@@ -1739,7 +1740,7 @@ static void check_command(const string &cmd, int &terminate)
                 ColorType side = searcher->getComputerSide();
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    calcTimeLimit(movestogo, 
+                    calcTimeLimit(movestogo,
                                   side == White ? winc : binc,
                                   time_left, opp_time, !easy, doTrace);
                 if (doTrace) {
@@ -1895,7 +1896,7 @@ static void check_command(const string &cmd, int &terminate)
         }
     }
     else if (cmd == "edit" || cmd_word == "setboard" || cmd == "analyze" ||
-             cmd == "go" || cmd == "exit" || cmd == "white" || 
+             cmd == "go" || cmd == "exit" || cmd == "white" ||
              cmd == "black" || cmd == "playother") {
         add_pending(cmd);
         terminate = true;
@@ -1964,7 +1965,7 @@ static void check_command(const string &cmd, int &terminate)
                         ColorType side = searcher->getComputerSide();
                         time_target =
                             (srctype == FixedTime) ? time_limit :
-                            (uci ? calcTimeLimit(movestogo, 
+                            (uci ? calcTimeLimit(movestogo,
                                                  getIncrUCI(side),
                                                  time_left, opp_time,
                                                  true, doTrace)
@@ -2400,7 +2401,7 @@ static void do_selfplay()
        selfplay_game(g);
    }
    // save last game
-   save_game(); 
+   save_game();
    delete mod_searcher;
 }
 #endif
@@ -2409,7 +2410,7 @@ static void do_selfplay()
 static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
     ucilog << "gui: " << cmd << (flush) << endl;
-#endif  
+#endif
     if (doTrace) {
         cout << "# do_command: " << cmd << endl;
     }
@@ -2448,17 +2449,17 @@ static bool do_command(const string &cmd, Board &board) {
         cout << " default " << options.search.tablebase_type;
         cout << endl;
 #ifdef GAVIOTA_TBS
-        cout << "option name GaviotaTbPath type string default " << 
+        cout << "option name GaviotaTbPath type string default " <<
             options.search.gtb_path << endl;
-        cout << "option name GaviotaTbCache type spin default " << 
-            options.search.gtb_cache_size/(1024*1024) << 
+        cout << "option name GaviotaTbCache type spin default " <<
+            options.search.gtb_cache_size/(1024*1024) <<
             " min 1 max 32" << endl;
 #endif
 #ifdef NALIMOV_TBS
-        cout << "option name NalimovPath type string default " << 
+        cout << "option name NalimovPath type string default " <<
             options.search.nalimov_path << endl;
         cout << "option name NalimovCache type spin default " <<
-            options.search.nalimov_cache_size/(1024*1024) << 
+            options.search.nalimov_cache_size/(1024*1024) <<
             " min 1 max 32" << endl;
 #endif
 #endif
@@ -2508,7 +2509,7 @@ static bool do_command(const string &cmd, Board &board) {
                     if (old != options.search.hash_table_size) {
                        searcher->resizeHash(options.search.hash_table_size);
                     }
-                } 
+                }
             }
         }
         else if (name == "Ponder") {
@@ -2717,7 +2718,7 @@ static bool do_command(const string &cmd, Board &board) {
                         cerr << "unexpected switch: " << *it << endl;
                         it++;
                     } else {
-                        break;   
+                        break;
                     }
                 }
                 do_command("new",board);
@@ -2773,7 +2774,7 @@ static bool do_command(const string &cmd, Board &board) {
                 int tbscore;
                 if (options.search.use_tablebases) {
 #ifdef GAVIOTA_TBS
-                    if (options.search.tablebase_type == 
+                    if (options.search.tablebase_type ==
                         Options::GAVIOTA_TYPE && GaviotaTb::probe_tb(board,tbscore,0,1)) {
                         cout << "score = ";
                         Scoring::printScore(tbscore,cout);
@@ -2781,7 +2782,7 @@ static bool do_command(const string &cmd, Board &board) {
                     }
 #endif
 #ifdef NALIMOV_TBS
-                    if (options.search.tablebase_type == 
+                    if (options.search.tablebase_type ==
                         Options::NALIMOV_TYPE && NalimovTb::probe_tb(board,tbscore,0)) {
                         cout << "score = ";
                         Scoring::printScore(tbscore,cout);
@@ -2906,7 +2907,7 @@ static bool do_command(const string &cmd, Board &board) {
             ucilog << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
             Notation::image(board,ponder_move,Notation::SAN_OUT,ucilog);
             ucilog << (flush) << endl;
-#endif  
+#endif
             if (ponderhit || searcher->wasStopped()) {
                 // ensure we send an "info" command - may not have been
                 // sent if the previous move was forced or a tb hit.
@@ -2928,18 +2929,18 @@ static bool do_command(const string &cmd, Board &board) {
         else {
 #ifdef UCI_LOG
             ucilog << "starting search, time=" << getCurrentTime() << (flush) << endl;
-#endif  
+#endif
             best_move = search(searcher,board,stats,infinite);
 
 #ifdef UCI_LOG
             ucilog << "done searching, time=" << getCurrentTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
-#endif  
+#endif
             if (options.search.multipv == 1) {
                uciOut(stats);
             }
             if (infinite && !searcher->wasStopped()) {
                 // We were told "go infinite" but completed searching early
-                // (due to a mate or forced move or tb hit). The protocol 
+                // (due to a mate or forced move or tb hit). The protocol
                 // requires that we go into a wait state before sending the
                 // move. We will exit when a "stop" command is received.
                 uciWaitState = 1;
@@ -3212,7 +3213,7 @@ static bool do_command(const string &cmd, Board &board) {
            // set number of threads
            stringstream ss(cmd_args);
            if((ss >> options.search.ncpus).fail()) {
-               cerr << "invalid value following 'cores'" << endl; 
+               cerr << "invalid value following 'cores'" << endl;
            } else {
                options.search.ncpus = Util::Min(options.search.ncpus,Constants::MaxCPUs);
                searcher->setThreadCount(options.search.ncpus);
@@ -3227,13 +3228,13 @@ static bool do_command(const string &cmd, Board &board) {
            stringstream ss(cmd_args);
            int mbs;
            if((ss >> mbs).fail()) {
-               cerr << "invalid value following 'memory'" << endl; 
+               cerr << "invalid value following 'memory'" << endl;
            } else {
                options.search.hash_table_size = (size_t)(mbs*1024L*1024L);
                searcher->resizeHash(options.search.hash_table_size);
            }
         }
-    } 
+    }
     else if  (cmd_word == "egtpath") {
         size_t space = cmd_args.find_first_of(' ');
         string type = cmd_args.substr(0,space);
@@ -3250,7 +3251,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #ifdef NALIMOV_TBS
         if (type == "nalimov") {
-            // tablebase path. Note: setting this after "new" is not 
+            // tablebase path. Note: setting this after "new" is not
             // supported. We require an engine restart for it to be
             // effective.
             options.search.use_tablebases = 1;
@@ -3475,7 +3476,7 @@ int CDECL main(int argc, char **argv) {
                 break;
 #endif
 #ifdef TUNE
-            case 'p': 
+            case 'p':
             {
                // initialize tuning parameters from a file. These
                // can be overridden with Winboard options.
@@ -3538,7 +3539,7 @@ int CDECL main(int argc, char **argv) {
 
 #ifdef UNIT_TESTS
     int errs = doUnit();
-    cout << "Unit tests ran: " << errs << " error(s)" << endl; 
+    cout << "Unit tests ran: " << errs << " error(s)" << endl;
 #endif
 
 /*
@@ -3570,8 +3571,8 @@ int CDECL main(int argc, char **argv) {
        "r1b1nr1k/ppn2qNp/3p4/2pPpp2/2P3P1/2NBBP2/PP1Q3P/2K1R1R1 b - - 0 1",
        "4b1k1/5ppp/2N1p3/p7/8/P3PP1P/1r1n2P1/2R1B1K1 b - - 0 1"
     };
-    
-    
+
+
     for (int i = 0; i < 25; i++) {
        Board board;
        Scoring s;
@@ -3584,7 +3585,7 @@ int CDECL main(int argc, char **argv) {
 */
     searcher = new SearchController();
 
-#ifdef SELFPLAY 
+#ifdef SELFPLAY
     if (selfplay) {
         do_selfplay();
     }
