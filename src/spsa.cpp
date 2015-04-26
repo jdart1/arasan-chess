@@ -15,7 +15,7 @@ extern "C" {
 // Simultaneous Perturbation Method for Efficient Optimization",
 // Johns Hopkins APL Technical Digest 19 (1998), pp 482-492.
 
-Spsa::Spsa(int d, const Eigen::VectorXd &x0, int eval_limit): OptBase(d)
+Spsa::Spsa(int d, const std::vector<double> &x0, int eval_limit): OptBase(d)
 {
    // The following two default constants are from Spall, 1998:
    options.alpha = 0.602;
@@ -36,9 +36,9 @@ Spsa::Spsa(int d, const Eigen::VectorXd &x0, int eval_limit): OptBase(d)
    // We currently assume values are scaled to the unit hypercube,
    // by default
    lower.resize(dim);
-   lower.fill(0.0);
+   lower.assign(dim,0.0);
    upper.resize(dim);
-   upper.fill(1.0);
+   upper.assign(dim,1.0);
 }
 
 Spsa::~Spsa() 
@@ -64,42 +64,42 @@ static int sgn(double val)
 }
 
 #ifdef TRACE
-static void printArray(const string &name, const Eigen::VectorXd &x) 
+static void printArray(const string &name, const std::vector<double> &x) 
 {
    cout << name << " ( ";
-   for (int i = 0; i < x.size(); i++ ) cout << x(i) << " ";
+   for (int i = 0; i < x.size(); i++ ) cout << x[i] << " ";
    cout << " )" << endl;
 }
 #endif
 
-void Spsa::setBoxConstraints(const Eigen::VectorXd &lower,
-                             const Eigen::VectorXd &upper) 
+void Spsa::setBoxConstraints(const std::vector<double> &lower,
+                             const std::vector<double> &upper) 
 {
    this->lower = lower;
    this->upper = upper;
 }
 
 void Spsa::optimize(
-                   double (*func)(const Eigen::VectorXd &theta),
-                   void (*update)(double obj, const Eigen::VectorXd &theta))
+                   double (*func)(const std::vector<double> &theta),
+                   void (*update)(double obj, const std::vector<double> &theta))
 {
-   Eigen::VectorXd theta = initial_theta;
+   std::vector<double> theta = initial_theta;
 #ifdef MONITOR_THETA
    double best = eval(initial_theta,func,update);
 #endif
    
-   Eigen::VectorXd theta_plus(dim);
-   Eigen::VectorXd theta_minus(dim);
-   Eigen::VectorXi deltas(dim);
+   std::vector<double> theta_plus(dim);
+   std::vector<double> theta_minus(dim);
+   std::vector<int> deltas(dim);
    for (int iteration = 0; iteration < iterations; iteration++) {
       const double ak = options.a/pow(iteration + 1 + options.A,options.alpha);
       const double ck = options.c/pow(iteration + 1, options.gamma);
       for (int i = 0; i < dim; i++) {
          const int delta = 2*round((float)rand()/(float)RAND_MAX) - 1;
          assert(delta);
-         deltas(i) = delta;
-         theta_plus(i) = theta(i) + ck*delta;
-         theta_minus(i) = theta(i) - ck*delta;
+         deltas[i] = delta;
+         theta_plus[i] = theta[i] + ck*delta;
+         theta_minus[i] = theta[i] - ck*delta;
       }
 #ifdef TRACE
       printArray("theta_minus",theta_minus);
@@ -124,17 +124,17 @@ void Spsa::optimize(
       const double diff = eval_plus - eval_minus;
       for (int i = 0; i < dim; i++) {
          // estimate of the gradient:
-         double ghat = diff/( 2.0*ck*deltas(i) );
+         double ghat = diff/( 2.0*ck*deltas[i] );
          double delta;
          delta = fabs(ak*ghat);
          // restrict amount of theta change per step.
          if (delta > options.delta_max) {
             delta = options.delta_max;
          }
-         theta(i) -= sgn(ghat)*delta;
+         theta[i] -= sgn(ghat)*delta;
          // apply constraints
-         if (theta(i) < lower(i)) theta(i) = lower(i);
-         if (theta(i) > upper(i)) theta(i) = upper(i);
+         theta[i] = std::min(upper[i],theta[i]);
+         theta[i] = std::max(lower[i],theta[i]);
       }
 #ifdef TRACE
       printArray("new theta",theta);

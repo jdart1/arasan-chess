@@ -9,7 +9,7 @@ class Spsa : public OptBase {
 
     // Note: SPSA requires an evaluation budget to be set. Each iteration
     // requires two function evals.
-    Spsa(int d, const Eigen::VectorXd &x0, int eval_limit);
+    Spsa(int d, const std::vector<double> &x0, int eval_limit);
 
     virtual ~Spsa();
 
@@ -18,11 +18,11 @@ class Spsa : public OptBase {
                        double a,
                        double delta_min, double delta_max);
 
-    virtual void setBoxConstraints(const Eigen::VectorXd &lower,
-                        const Eigen::VectorXd &upper);
+    virtual void setBoxConstraints(const std::vector<double> &lower,
+                        const std::vector<double> &upper);
 
-    virtual void optimize(double (*func)(const Eigen::VectorXd &theta),
-                         void (*update)(double obj, const Eigen::VectorXd &theta));
+    virtual void optimize(double (*func)(const std::vector<double> &theta),
+                         void (*update)(double obj, const std::vector<double> &theta));
 
  private:
     struct Options {
@@ -36,6 +36,6 @@ class Spsa : public OptBase {
     } options;
 
     int iterations;
-    Eigen::VectorXd lower, upper;
+    std::vector<double> lower, upper;
 };
 #endif

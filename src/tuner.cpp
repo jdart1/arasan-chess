@@ -11,20 +11,17 @@
 #include "tune.h"
 #include "spsa.h"
 #include "rspsa.h"
-//#include "nomad.h"
+#include "hill.h"
 #include "rockstar.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <map>
-#include <Eigen/Dense>
+#include <vector>
 extern "C" {
 #include <math.h>
 #include <ctype.h>
 #include <unistd.h>
 };
-
-using namespace Eigen;
 
 static int iterations = 40;
 
@@ -47,7 +44,9 @@ static int last_index = tune::NUM_TUNING_PARAMS-1;
 
 static int games = 1000;
 
-static const int NUM_SUPPORTED_ALGORITHMS = 4;
+static const int NUM_SUPPORTED_ALGORITHMS = 5;
+
+static const int TEST_DIMENSIONS = 10;
 
 enum Algorithm { SPSA, RSPSA, ROCKSTAR, NOMAD, UNKNOWN };
 
@@ -55,7 +54,7 @@ static const string supported_algorithms[NUM_SUPPORTED_ALGORITHMS] = {
    string("Spsa"),
    string("RSpsa"),
    string("Rockstar"),
-   string("Nomad") 
+   string("Nomad")
 };
 
 static Algorithm find_algo(const string &alg) 
@@ -63,7 +62,7 @@ static Algorithm find_algo(const string &alg)
    for (int i = 0; i < NUM_SUPPORTED_ALGORITHMS; i++) {
       if (alg == supported_algorithms[i]) {
          return (Algorithm)i;
-      }
+       }
    }
    return UNKNOWN;
 }
@@ -148,7 +147,21 @@ static double computeLsqError() {
    return obj;
 }
 
-static double test_func1(const VectorXd &x)
+static double update_best(const std::vector<double> &x, double obj) 
+{
+/*
+   for (int i = 0; i < x.size(); i++) {
+      if (x[i] < 0.0 || x[i] > 1.0) {
+         cerr << "warning: x is infeasible" << endl;
+      }
+   }
+*/
+   if (obj < best) {
+      best = obj;
+   }
+}
+
+static double test_func1(const std::vector<double> &x)
 {
    // simple parabolic function, minimum value 1800
    double sum = 0;
@@ -158,49 +171,41 @@ static double test_func1(const VectorXd &x)
       sum += factor*pow(x[i],2.0);
    }
    double eval = 200.0*sqrt(sum)+1800.0;
-   if (eval < best) {
-      best = eval;
-   }
+   update_best(x,eval);
    return eval;
 }
 
-static double test_func2(const VectorXd &x)
+static double test_func2(const std::vector<double> &x)
 {
    // Somewhat harder function, minimum value about 2164.5
    double sum = 0;
    for (int i = 0; i < x.size(); i++) {
       double factor = 0.8;
       if (i % 2 == 0) factor = 1.1;
-      sum += factor*pow(x(i),2.0);
+      sum += factor*pow(x[i],2.0);
       if (i % 3 == 0) {
-         double adj = 50.0*exp(-pow((x(i)-0.5),2.0)/0.02)/0.2506;
+         double adj = 50.0*exp(-pow((x[i]-0.5),2.0)/0.02)/0.2506;
          sum += adj;
       }
    }
    double eval = 200.0*sqrt(sum)+1800.0;
-   if (eval < best) {
-      best = eval;
-   }
+   update_best(x,eval);
    return eval;
 }
 
-
-static double rosen(const VectorXd &x) {
+static double rosen(const std::vector<double> &x) {
    // Rosenbrock function
-   int end = x.size()-1;
-   Eigen::VectorXd y = x.block(0,0,end,1);
-   Eigen::VectorXd w = x.block(1,0,end,1);
-   Eigen::VectorXd q(end);
-   q.setOnes();
-   q=y-q;
-   double eval = (y.cwiseProduct(y) - w).squaredNorm()*100.0 + q.squaredNorm();
-   if (eval < best) {
-      best = eval;
+   double sum = 0.0;
+   for (int i = 0; i < TEST_DIMENSIONS-1; i++) {
+     double a=x[i]*x[i]-x[i+1];
+     double b=1.-x[i];
+     sum+=(100.*a*a)+(b*b);      
    }
-   return eval;
+   update_best(x,sum);
+   return sum;
 }
 
-static double evaluate(const VectorXd &x) {
+static double evaluate(const std::vector<double> &x) {
    for (int i = first_index; i <= last_index; i++)
    {
       tune::tune_params[i].current = round(unscale(x[i-first_index],tune::tune_params[i]));
@@ -210,7 +215,7 @@ static double evaluate(const VectorXd &x) {
    return err;
 }
 
-void update(double obj, const VectorXd &x)
+void update(double obj, const std::vector<double> &x)
 {
 //   cout << "objective=" << obj << endl;
 }
@@ -218,7 +223,7 @@ void update(double obj, const VectorXd &x)
 
 static OptBase * allocate_optimizer(const string &algorithm,
                                     int dim,
-                                    const Eigen::VectorXd &x0,
+                                    const std::vector<double> &x0,
                                     int eval_limit)
 {
    OptBase *s = NULL;
@@ -369,10 +374,10 @@ int CDECL main(int argc, char **argv)
              double avg = 0.0;
              int max_tries = 5;
              for (int tries = 0; tries < max_tries; tries++) {
-                VectorXd x0(10);
-                x0.fill(0.8);
-                best = 10000.0;
-                OptBase *s = allocate_optimizer(algorithm,10,x0,num_iters[n]);
+                std::vector<double> x0(TEST_DIMENSIONS);
+                x0.assign(TEST_DIMENSIONS,0.8);
+                best = 1e10;
+                OptBase *s = allocate_optimizer(algorithm,TEST_DIMENSIONS,x0,num_iters[n]);
                 switch (func) {
                 case 0:
                    s->optimize(test_func1,update); break;
@@ -391,10 +396,10 @@ int CDECL main(int argc, char **argv)
        }
     }
     else {
-       VectorXd x0(dim);
+       std::vector<double> x0(dim);
        // initialize and scale
        for (int i = 0; i < dim; i++) {
-          x0(i) = scale(tune::tune_params[i+first_index]);
+          x0[i] = scale(tune::tune_params[i+first_index]);
        }
        OptBase *s = allocate_optimizer(algorithm,dim,x0,iterations);
        s->optimize(evaluate,update);

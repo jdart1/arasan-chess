@@ -2,13 +2,12 @@
 #define _ROCKSTAR_H
 
 #include "optbase.h"
-#include <Eigen/Core>
 
 class Rockstar : public OptBase {
 
  public:
 
-    Rockstar(int d, const Eigen::VectorXd &x0, int eval_limit);
+    Rockstar(int d, const std::vector<double> &x0, int eval_limit);
 
     virtual ~Rockstar();
 
@@ -17,11 +16,11 @@ class Rockstar : public OptBase {
       options.initial_exp = initial_exp;
     }
 
-    virtual void setBoxConstraints(const Eigen::VectorXd &lower,
-                        const Eigen::VectorXd &upper);
+    virtual void setBoxConstraints(const std::vector<double> &lower,
+                        const std::vector<double> &upper);
 
-    virtual void optimize(double (*func)(const Eigen::VectorXd &theta),
-                         void (*update)(double obj, const Eigen::VectorXd &theta));
+    virtual void optimize(double (*func)(const std::vector<double> &theta),
+                         void (*update)(double obj, const std::vector<double> &theta));
 
  private:
 
@@ -30,7 +29,7 @@ class Rockstar : public OptBase {
       int initial_exp;
       double constraint_penalty;
     } options;
-    Eigen::VectorXd lower, upper;
+    std::vector<double> lower, upper;
 };
 
 #endif

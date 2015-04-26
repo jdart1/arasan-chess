@@ -6,12 +6,12 @@
 class RSpsa : public OptBase {
 
  public:
-    RSpsa(int d, const Eigen::VectorXd &x0, int eval_limit);
+    RSpsa(int d, const std::vector<double> &x0, int eval_limit);
 
     virtual ~RSpsa();
 
-    virtual void setBoxConstraints(const Eigen::VectorXd &lower,
-                        const Eigen::VectorXd &upper);
+    virtual void setBoxConstraints(const std::vector<double> &lower,
+                        const std::vector<double> &upper);
 
     void setParameters(double delta0, double rho, double weight1,
                        double weight2, double delta_min, double delta_max) {
@@ -27,8 +27,8 @@ class RSpsa : public OptBase {
       eval_limit = limit;
       iterations = limit/2;
     }
-    virtual void optimize(double (*func)(const Eigen::VectorXd &theta),
-                          void (*update)(double obj, const Eigen::VectorXd &theta));
+    virtual void optimize(double (*func)(const std::vector<double> &theta),
+                          void (*update)(double obj, const std::vector<double> &theta));
 
  private:
     struct Options {
@@ -40,6 +40,6 @@ class RSpsa : public OptBase {
     } options;
 
     int iterations;
-    Eigen::VectorXd lower, upper;
+    std::vector<double> lower, upper;
 };
 #endif

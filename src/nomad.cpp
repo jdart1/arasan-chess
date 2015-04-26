@@ -4,7 +4,7 @@
 #include "types.h"
 using namespace std;
 
-Nomad::Nomad(int d, const Eigen::VectorXd &x0, int eval_limit):
+Nomad::Nomad(int d, const std::vector<double> &x0, int eval_limit):
    OptBase(d) 
 {
    setEvaluationLimit(eval_limit);
@@ -13,9 +13,9 @@ Nomad::Nomad(int d, const Eigen::VectorXd &x0, int eval_limit):
    // We currently assume values are scaled to the unit hypercube,
    // by default
    lower.resize(dim);
-   lower.fill(0.0);
+   lower.assign(dim,0.0);
    upper.resize(dim);
-   upper.fill(1.0);
+   upper.assign(dim,1.0);
 }
 
 Nomad::~Nomad() 
@@ -24,7 +24,7 @@ Nomad::~Nomad()
 
 static int local_dim;
 
-static double (*local_func)(const Eigen::VectorXd &theta);
+static double (*local_func)(const std::vector<double> &theta);
 
 class My_Evaluator : public NOMAD::Evaluator {
 public:
@@ -39,7 +39,7 @@ public:
       {
 
          // convert to Eigen vector
-         Eigen::VectorXd ex(local_dim);
+         std::vector<double> ex(local_dim);
          for (int i = 0; i < local_dim; i++) {
             ex[i] = x[i].value();
          }
@@ -55,15 +55,15 @@ public:
 	
 };
 
-void Nomad::setBoxConstraints(const Eigen::VectorXd &lower,
-                              const Eigen::VectorXd &upper) 
+void Nomad::setBoxConstraints(const std::vector<double> &lower,
+                              const std::vector<double> &upper) 
 {
    this->lower = lower;
    this->upper = upper;
 }
 
-void Nomad::optimize(double (*func)(const Eigen::VectorXd &theta),
-                     void (*update)(double obj, const Eigen::VectorXd &theta))
+void Nomad::optimize(double (*func)(const std::vector<double> &theta),
+                     void (*update)(double obj, const std::vector<double> &theta))
 {
   // display:
   NOMAD::Display out ( std::cout );

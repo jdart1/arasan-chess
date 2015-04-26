@@ -2,7 +2,7 @@
 
 #include "optbase.h"
 
-double OptBase::eval(const Eigen::VectorXd &theta,double (*func)(const Eigen::VectorXd &theta),void (*update)(double obj, const Eigen::VectorXd &best)) 
+double OptBase::eval(const std::vector<double> &theta,double (*func)(const std::vector<double> &theta),void (*update)(double obj, const std::vector<double> &best)) 
 {
    double best = func(theta);
    update(best,theta);

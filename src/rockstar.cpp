@@ -12,7 +12,7 @@
 
 //#define TRACE
 
-Rockstar::Rockstar(int d, const Eigen::VectorXd &x0, int eval_limit) 
+Rockstar::Rockstar(int d, const std::vector<double> &x0, int eval_limit) 
    : OptBase(d)
 {
    setInitialPoints(x0);
@@ -22,16 +22,16 @@ Rockstar::Rockstar(int d, const Eigen::VectorXd &x0, int eval_limit)
    options.initialSd = 0.2; // was: 0.05
    options.constraint_penalty = 1000;
    // constraints are 0..1 by default
-   upper.setOnes(dim);
-   lower.setZero(dim);
+   lower.assign(dim,0.0);
+   upper.assign(dim,1.0);
 }
 
 Rockstar::~Rockstar() 
 {
 }
 
-void Rockstar::setBoxConstraints(const Eigen::VectorXd &lower,
-                                 const Eigen::VectorXd &upper) 
+void Rockstar::setBoxConstraints(const std::vector<double> &lower,
+                                 const std::vector<double> &upper) 
 {
    this->lower = lower;
    this->upper = upper;
@@ -46,27 +46,32 @@ static void printArray(const string &name, const Eigen::VectorXd &x)
 }
 #endif
 
-void Rockstar::optimize(double (*func)(const Eigen::VectorXd &theta),
-                        void (*update)(double obj, const Eigen::VectorXd &theta)) 
+void Rockstar::optimize(double (*func)(const std::vector<double> &theta),
+                        void (*update)(double obj, const std::vector<double> &theta)) 
 {
-   Eigen::VectorXd Initial_StandardDeviation = Eigen::VectorXd::Ones(dim,1) * options.initialSd;
-   rockstar::Rockstar optimizer(initial_theta, Initial_StandardDeviation, options.initial_exp);
-
+   Eigen::VectorXd Initial_StandardDeviation(dim);
+   Initial_StandardDeviation.setOnes();
    Eigen::VectorXd theta(dim);
-   theta = initial_theta;
+   // convert input vector to Eigen vector:
+   for (int i=0;i<dim;i++) theta[i] = initial_theta[i];
+   rockstar::Rockstar optimizer(theta, Initial_StandardDeviation, options.initial_exp);
+
    for(int i=0; i< eval_limit; i++){
       optimizer.getNextTheta2Evaluate(theta);
 #ifdef TRACE
       printArray("newTheta",theta);
 #endif      
-      double cost = eval(theta,func,update);
+      // convert back to std vector for eval
+      std::vector<double> x(dim);
+      for (int j = 0; j < dim; j++) x[j] = theta[j];
+      double cost = eval(x,func,update);
       // apply penalty for constraint violations
       double penalty = 0.0;
       for (int i = 0; i < dim; i++) {
-         if (theta(i) < lower(i)) {
-            penalty += pow(lower(i)-theta(i),2.0)*options.constraint_penalty;
-         } else if (theta(i) > upper(i)) {
-            penalty += pow(theta(i)-upper(i),2.0)*options.constraint_penalty;
+         if (theta[i] < lower[i]) {
+            penalty += pow(lower[i]-theta[i],2.0)*options.constraint_penalty;
+         } else if (theta[i] > upper[i]) {
+            penalty += pow(theta[i]-upper[i],2.0)*options.constraint_penalty;
          }
       }
 #ifdef TRACE

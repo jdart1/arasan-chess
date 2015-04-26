@@ -15,7 +15,7 @@ extern "C" {
 //#define TRACE
 #define MONITOR_THETA
 
-RSpsa::RSpsa(int d, const Eigen::VectorXd &x0, int eval_limit):
+RSpsa::RSpsa(int d, const std::vector<double> &x0, int eval_limit):
    OptBase(d) 
 {
    setEvaluationLimit(eval_limit);
@@ -33,9 +33,9 @@ RSpsa::RSpsa(int d, const Eigen::VectorXd &x0, int eval_limit):
    // We currently assume values are scaled to the unit hypercube,
    // by default
    lower.resize(dim);
-   lower.fill(0.0);
+   lower.assign(dim,0.0);
    upper.resize(dim);
-   upper.fill(1.0);
+   upper.assign(dim,1.0);
 }
 
 RSpsa::~RSpsa() 
@@ -48,36 +48,36 @@ static int sgn(double val)
 }
 
 #ifdef TRACE
-static void printArray(const string &name, const Eigen::VectorXd &x) 
+static void printArray(const string &name, const std::vector<double> &x) 
 {
    cout << name << " ( ";
-   for (int i = 0; i < x.size(); i++ ) cout << x(i) << " ";
+   for (int i = 0; i < x.size(); i++ ) cout << x[i] << " ";
    cout << " )" << endl;
 }
 #endif
 
-void RSpsa::setBoxConstraints(const Eigen::VectorXd &lower,
-                              const Eigen::VectorXd &upper) 
+void RSpsa::setBoxConstraints(const std::vector<double> &lower,
+                              const std::vector<double> &upper) 
 {
    this->lower = lower;
    this->upper = upper;
 }
 
 void RSpsa::optimize(
-                   double (*func)(const Eigen::VectorXd &theta),
-                   void (*update)(double obj, const Eigen::VectorXd &theta))
+                   double (*func)(const std::vector<double> &theta),
+                   void (*update)(double obj, const std::vector<double> &theta))
 {
-   Eigen::VectorXd theta = initial_theta;
+   std::vector<double> theta = initial_theta;
 #ifdef MONITOR_THETA
    (void)eval(initial_theta,func,update);
 #endif
-   Eigen::VectorXd previous_gsgn(dim);
-   Eigen::VectorXd theta_plus(dim);
-   Eigen::VectorXd theta_minus(dim);
+   std::vector<double> previous_gsgn(dim);
+   std::vector<double> theta_plus(dim);
+   std::vector<double> theta_minus(dim);
    // step sizes (small delta in paper):
-   Eigen::VectorXd deltas(dim);
-   Eigen::VectorXi delta_dirs(dim);
-   deltas.fill(options.delta0);
+   std::vector<double> deltas(dim);
+   std::vector<int> delta_dirs(dim);
+   deltas.assign(dim,options.delta0);
 #ifdef TRACE
    printArray("deltas before loop",deltas);
 #endif   
@@ -87,13 +87,13 @@ void RSpsa::optimize(
          // step size
          const int delta_dir = 2*round((float)rand()/(float)RAND_MAX) - 1;
          assert(delta_dir);
-         delta_dirs(i) = delta_dir;
-         double big_delta = delta_dir*options.rho*deltas(i);
+         delta_dirs[i] = delta_dir;
+         double big_delta = delta_dir*options.rho*deltas[i];
 #ifdef TRACE
          cout << " big delta=" << big_delta << endl;
 #endif
-         theta_plus(i) = theta(i) + big_delta;
-         theta_minus(i) = theta(i) - big_delta;
+         theta_plus[i] = theta[i] + big_delta;
+         theta_minus[i] = theta[i] - big_delta;
       }
 #ifdef MONITOR_THETA
       // Note: we generally do not have an evaluation of the
@@ -116,14 +116,14 @@ void RSpsa::optimize(
          double delta = options.delta0;
          if (iteration > 0) {
 #ifdef TRACE
-            cout << " delta was=" << deltas(i) << endl;
+            cout << " delta was=" << deltas[i] << endl;
 #endif
             // we have the previous gradient estimate, check
             // for sign change
-            const int x = sgn(previous_gsgn(i)*gsgn);
+            const int x = sgn(previous_gsgn[i]*gsgn);
             if (x > 0) {
                // adjust step size up:
-               delta = options.weight2*deltas(i);
+               delta = options.weight2*deltas[i];
                if (delta > options.delta_max) {
                   delta = options.delta_max;
                }
@@ -131,7 +131,7 @@ void RSpsa::optimize(
             else if (x < 0) {
                // gradients point in opposite directions, so
                // adjust step size down.
-               delta = options.weight1*deltas(i);
+               delta = options.weight1*deltas[i];
                if (delta < options.delta_min) {
                   delta = options.delta_min;
                }
@@ -139,21 +139,21 @@ void RSpsa::optimize(
             }
             else {
                // do not adjust step size
-               delta = deltas(i);
+               delta = deltas[i];
             }
          }
          // store abs value for next iteration
-         deltas(i) = delta;
+         deltas[i] = delta;
 #ifdef TRACE
          cout << " small delta=" << delta << endl;
 #endif
          // adjust theta by computed step size in opposite direction
          // of gradient (because we are minimizing).
-         theta(i) -= gsgn*delta;
+         theta[i] -= gsgn*delta;
          // apply constraints
-         if (theta(i) < lower(i)) theta(i) = lower(i);
-         if (theta(i) > upper(i)) theta(i) = upper(i);
-         previous_gsgn(i) = gsgn;
+         theta[i] = std::min(upper[i],theta[i]);
+         theta[i] = std::max(lower[i],theta[i]);
+         previous_gsgn[i] = gsgn;
       }
 #ifdef TRACE
       printArray("new theta",theta);
