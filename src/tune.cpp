@@ -102,14 +102,20 @@ enum {
    KING_ATTACK_SIGMOID_MULT,
    TRADE_DOWN_LINEAR,
    TRADE_DOWN_SQ,
-   PASSED_PAWN1,
-   PASSED_PAWN2,
-   PASSED_PAWN3,
-   PASSED_PAWN4,
-   PASSED_PAWN5,
-   PASSED_PAWN6,
-   PASSED_PAWN7,
-   PASSED_PAWN_ENDGAME_FACTOR,
+   PASSED_PAWN_MID1,
+   PASSED_PAWN_MID2,
+   PASSED_PAWN_MID3,
+   PASSED_PAWN_MID4,
+   PASSED_PAWN_MID5,
+   PASSED_PAWN_MID6,
+   PASSED_PAWN_MID7,
+   PASSED_PAWN_END1,
+   PASSED_PAWN_END2,
+   PASSED_PAWN_END3,
+   PASSED_PAWN_END4,
+   PASSED_PAWN_END5,
+   PASSED_PAWN_END6,
+   PASSED_PAWN_END7,
    POTENTIAL_PASSER1,
    POTENTIAL_PASSER2,
    POTENTIAL_PASSER3,
@@ -237,14 +243,20 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_ATTACK_SIGMOID_MULT,"king_attack_sigmoid_mult",156,80,300),
    tune::TuneParam(TRADE_DOWN_LINEAR,"trade_down_linear",43,0,150),
    tune::TuneParam(TRADE_DOWN_SQ,"trade_down_sq",0,0,150),
-   tune::TuneParam(PASSED_PAWN1,"passed_pawn1",9,0,200),
-   tune::TuneParam(PASSED_PAWN2,"passed_pawn2",51,0,500),
-   tune::TuneParam(PASSED_PAWN3,"passed_pawn3",92,50,500),
-   tune::TuneParam(PASSED_PAWN4,"passed_pawn4",198,70,500),
-   tune::TuneParam(PASSED_PAWN5,"passed_pawn5",287,90,500),
-   tune::TuneParam(PASSED_PAWN6,"passed_pawn6",534,200,1000),
-   tune::TuneParam(PASSED_PAWN7,"passed_pawn7",1046,500,1500),
-   tune::TuneParam(PASSED_PAWN_ENDGAME_FACTOR,"passed_pawn_endgame_factor",159,100,250),
+   tune::TuneParam(PASSED_PAWN_MID1,"passed_pawn_mid1",0,0,200),
+   tune::TuneParam(PASSED_PAWN_MID2,"passed_pawn_mid2",60,0,500),
+   tune::TuneParam(PASSED_PAWN_MID3,"passed_pawn_mid3",110,50,500),
+   tune::TuneParam(PASSED_PAWN_MID4,"passed_pawn_mid4",180,70,500),
+   tune::TuneParam(PASSED_PAWN_MID5,"passed_pawn_mid5",270,90,500),
+   tune::TuneParam(PASSED_PAWN_MID6,"passed_pawn_mid6",560,200,1000),
+   tune::TuneParam(PASSED_PAWN_MID7,"passed_pawn_mid7",1110,500,1500),
+   tune::TuneParam(PASSED_PAWN_END1,"passed_pawn_end1",0,0,200),
+   tune::TuneParam(PASSED_PAWN_END2,"passed_pawn_mid2",90,0,500),
+   tune::TuneParam(PASSED_PAWN_END3,"passed_pawn_end3",160,50,500),
+   tune::TuneParam(PASSED_PAWN_END4,"passed_pawn_end4",280,70,500),
+   tune::TuneParam(PASSED_PAWN_END5,"passed_pawn_end5",420,90,500),
+   tune::TuneParam(PASSED_PAWN_END6,"passed_pawn_end6",840,200,1000),
+   tune::TuneParam(PASSED_PAWN_END7,"passed_pawn_end7",1410,500,1500),
    tune::TuneParam(POTENTIAL_PASSER1,"potential_passer1",10,0,200),
    tune::TuneParam(POTENTIAL_PASSER2,"potential_passer2",26,0,200),
    tune::TuneParam(POTENTIAL_PASSER3,"potential_passer3",37,0,200),
@@ -427,8 +439,8 @@ void tune::initParams()
    memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(int)*8);
    memset(Scoring::Params::PASSED_PAWN[1],'\0',sizeof(int)*8);
    for (int i = 1; i < 8; i++) {
-      Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN1+i-1);
-      Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN1+i-1)*PARAM(PASSED_PAWN_ENDGAME_FACTOR)/128;
+      Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN_MID1+i-1);
+      Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN_END1+i-1);
    }
    memset(Scoring::Params::POTENTIAL_PASSER[0],'\0',sizeof(int)*8);
    memset(Scoring::Params::POTENTIAL_PASSER[1],'\0',sizeof(int)*8);
