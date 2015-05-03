@@ -1281,7 +1281,7 @@ void Scoring::pieceScore(const Board &board,
           PARAM(KING_ATTACK_PARAM7)*attackWeight*attackCount +
           PARAM(KING_ATTACK_PARAM8)*attackWeight*squaresAttacked +
           PARAM(KING_ATTACK_PARAM9)*attackCount*squaresAttacked)/64;
-      int attack = 10*PARAM(KING_ATTACK_SCALE)[Util::Min(511,scale/10)];
+      int attack = 10*PARAM(KING_ATTACK_SCALE)[Util::Max(0,Util::Min(511,scale/10))];
       if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
