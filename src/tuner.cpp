@@ -134,7 +134,7 @@ static double computeLsqError() {
          tune::writeX0(cout);
       }
       // apply current tune_params to Scoring module:
-      tune::initParams();
+      tune::applyParams();
       if (out_file_name.length()) {
          ofstream param_out(out_file_name,ios::out | ios::trunc);
          Scoring::Params::write(param_out);
@@ -210,7 +210,7 @@ static double evaluate(const std::vector<double> &x) {
    {
       tune::tune_params[i].current = round(unscale(x[i-first_index],tune::tune_params[i]));
    }
-   tune::initParams();
+   tune::applyParams();
    double err = computeLsqError();
    return err;
 }
@@ -283,7 +283,7 @@ int CDECL main(int argc, char **argv)
     string input_file;
 
    cout << "writing initial solution" << endl;
-   tune::initParams();
+   tune::applyParams();
    ofstream param_out(out_file_name,ios::out | ios::trunc);
    Scoring::Params::write(param_out);
    param_out << endl;

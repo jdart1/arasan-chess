@@ -1696,6 +1696,8 @@ static void processWinboardOptions(const string &args) {
              break;
           }
        }
+       // apply params to Scoring module
+       tune::applyParams();
     }
 #endif
     searcher->updateSearchOptions();
@@ -2991,7 +2993,7 @@ static bool do_command(const string &cmd, Board &board) {
         delayedInitIfNeeded();
         searcher->clearHashTables();
 #ifdef TUNE
-        tune::initParams();
+        tune::applyParams();
 #endif
         if (!analyzeMode && ics) {
            cout << "kib Hello from Arasan " << Arasan_Version << endl;
@@ -3496,7 +3498,7 @@ int CDECL main(int argc, char **argv) {
                for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
                   tune::tune_params[i].current = x[i];
                }
-               tune::initParams();
+               tune::applyParams();
                break;
             }
 #endif

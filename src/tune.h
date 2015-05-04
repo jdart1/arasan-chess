@@ -26,7 +26,7 @@ namespace tune {
 
   // initialize scoring parameters from the current tuned parameter
   // set
-  extern void initParams();
+  extern void applyParams();
 
   extern void checkParams();
 

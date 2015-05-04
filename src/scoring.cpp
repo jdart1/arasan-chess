@@ -480,7 +480,7 @@ static void initBitboards() {
 void Scoring::init() {
    initBitboards();
 #ifdef TUNE
-    tune::initParams();
+    tune::applyParams();
 #endif
 }
 

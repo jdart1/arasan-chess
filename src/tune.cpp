@@ -396,7 +396,7 @@ void tune::checkParams()
    }
 }
 
-void tune::initParams()
+void tune::applyParams()
 {
    checkParams();
 
@@ -429,6 +429,63 @@ void tune::initParams()
    for (i = 0; i < 5; i++) {
       *dest++ = tune::tune_params[j++].current;
    }
+
+   Scoring::Params::KING_FILE_OPEN = tune_params[KING_FILE_OPEN].current;
+   Scoring::Params::KING_DISTANCE_BASIS = tune_params[KING_DISTANCE_BASIS].current;
+   Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
+   Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
+   Scoring::Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
+   Scoring::Params::KING_ATTACK_PARAM1 = tune_params[KING_ATTACK_PARAM1].current;
+   Scoring::Params::KING_ATTACK_PARAM2 = tune_params[KING_ATTACK_PARAM2].current;
+   Scoring::Params::KING_ATTACK_PARAM3 = tune_params[KING_ATTACK_PARAM3].current;
+   Scoring::Params::KING_ATTACK_PARAM4 = tune_params[KING_ATTACK_PARAM4].current;
+   Scoring::Params::KING_ATTACK_PARAM5 = tune_params[KING_ATTACK_PARAM5].current;
+   Scoring::Params::KING_ATTACK_PARAM6 = tune_params[KING_ATTACK_PARAM6].current;
+   Scoring::Params::KING_ATTACK_PARAM7 = tune_params[KING_ATTACK_PARAM7].current;
+   Scoring::Params::KING_ATTACK_PARAM8 = tune_params[KING_ATTACK_PARAM8].current;
+   Scoring::Params::KING_ATTACK_PARAM9 = tune_params[KING_ATTACK_PARAM9].current;
+   Scoring::Params::KING_ATTACK_BOOST_THRESHOLD = tune_params[KING_ATTACK_BOOST_THRESHOLD].current;
+   Scoring::Params::KING_ATTACK_BOOST_DIVISOR = tune_params[KING_ATTACK_BOOST_DIVISOR].current;
+   Scoring::Params::BISHOP_TRAPPED = tune_params[BISHOP_TRAPPED].current;
+   Scoring::Params::BISHOP_PAIR_MID = tune_params[BISHOP_PAIR_MID].current;
+   Scoring::Params::BISHOP_PAIR_END = tune_params[BISHOP_PAIR_END].current;
+   Scoring::Params::BISHOP_PAWN_PLACEMENT_END = tune_params[BISHOP_PAWN_PLACEMENT_END].current;
+   Scoring::Params::BAD_BISHOP_MID = tune_params[BAD_BISHOP_MID].current;
+   Scoring::Params::BAD_BISHOP_END = tune_params[BAD_BISHOP_END].current;
+   Scoring::Params::OUTPOST_NOT_DEFENDED = tune_params[OUTPOST_NOT_DEFENDED].current;
+   Scoring::Params::CENTER_PAWN_BLOCK = tune_params[CENTER_PAWN_BLOCK].current;
+   Scoring::Params::OUTSIDE_PASSER_MID = tune_params[OUTSIDE_PASSER_MID].current;
+   Scoring::Params::OUTSIDE_PASSER_END = tune_params[OUTSIDE_PASSER_END].current;
+   Scoring::Params::WEAK_PAWN_MID = tune_params[WEAK_PAWN_MID].current;
+   Scoring::Params::WEAK_PAWN_END = tune_params[WEAK_PAWN_END].current;
+   Scoring::Params::WEAK_ON_OPEN_FILE_MID = tune_params[WEAK_ON_OPEN_FILE_MID].current;
+   Scoring::Params::WEAK_ON_OPEN_FILE_END = tune_params[WEAK_ON_OPEN_FILE_END].current;
+   Scoring::Params::SPACE = tune_params[SPACE].current;
+   Scoring::Params::PAWN_CENTER_SCORE_MID = tune_params[PAWN_CENTER_SCORE_MID].current;
+   Scoring::Params::ROOK_ON_7TH_MID = tune_params[ROOK_ON_7TH_MID].current;
+   Scoring::Params::ROOK_ON_7TH_END = tune_params[ROOK_ON_7TH_END].current;
+   Scoring::Params::TWO_ROOKS_ON_7TH_MID = tune_params[TWO_ROOKS_ON_7TH_MID].current;
+   Scoring::Params::TWO_ROOKS_ON_7TH_END = tune_params[TWO_ROOKS_ON_7TH_END].current;
+   Scoring::Params::ROOK_ON_OPEN_FILE_MID = tune_params[ROOK_ON_OPEN_FILE_MID].current;
+   Scoring::Params::ROOK_ON_OPEN_FILE_END = tune_params[ROOK_ON_OPEN_FILE_END].current;
+   Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_MID = tune_params[ROOK_ATTACKS_WEAK_PAWN_MID].current;
+   Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = tune_params[ROOK_ATTACKS_WEAK_PAWN_END].current;
+   Scoring::Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
+   Scoring::Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
+   Scoring::Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;
+   Scoring::Params::PASSER_OWN_PIECE_BLOCK_MID = tune_params[PASSER_OWN_PIECE_BLOCK_MID].current;
+   Scoring::Params::PASSER_OWN_PIECE_BLOCK_END = tune_params[PASSER_OWN_PIECE_BLOCK_END].current;
+   Scoring::Params::PP_BLOCK_BASE_MID = tune_params[PP_BLOCK_BASE_MID].current;
+   Scoring::Params::PP_BLOCK_BASE_END = tune_params[PP_BLOCK_BASE_END].current;
+   Scoring::Params::PP_BLOCK_MULT_MID = tune_params[PP_BLOCK_MULT_MID].current;
+   Scoring::Params::PP_BLOCK_MULT_END = tune_params[PP_BLOCK_MULT_END].current;
+   Scoring::Params::ENDGAME_PAWN_BONUS = tune_params[ENDGAME_PAWN_BONUS].current;
+   Scoring::Params::KING_NEAR_PASSER = tune_params[KING_NEAR_PASSER].current;
+   Scoring::Params::OPP_KING_NEAR_PASSER = tune_params[OPP_KING_NEAR_PASSER].current;
+   Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
+   Scoring::Params::SUPPORTED_PASSER6 = tune_params[SUPPORTED_PASSER6].current;
+   Scoring::Params::SUPPORTED_PASSER7 = tune_params[SUPPORTED_PASSER7].current;
+   Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
 
    for (int i = 0; i < 16; i++) {
       int j = 16-i;
