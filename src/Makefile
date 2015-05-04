@@ -79,7 +79,7 @@ TUNE_CFLAGS := -fno-strict-aliasing -DUSE_INSTRINSICS -DUSE_ASM -ansi -std=c++11
 TUNE_OPT = -Ofast $(SSE)
 
 #PROF     = -pg
-DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
