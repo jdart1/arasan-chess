@@ -1,4 +1,4 @@
-// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2015 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -15,6 +15,11 @@ class Scoring
 
     public:
 		
+  enum {Midgame = 0, Endgame = 1};
+
+
+#include "params.h"
+
     enum { INVALID_SCORE = -Constants::MATE-1 };
 
     static void init();
@@ -108,39 +113,28 @@ class Scoring
     struct CACHE_ALIGN EndgameHashEntry {
         // defines one entry in the king/pawn hash table. 128 bytes.
         hash_t hc;                                    // hashcode
-        signed char white_king_position, black_king_position;
-        signed char white_endgame_pawn_proximity;
-        signed char black_endgame_pawn_proximity;
-        byte w_uncatchable, b_uncatchable;
+        int16 white_king_position, black_king_position;
+        int16 white_endgame_pawn_proximity;
+        int16 black_endgame_pawn_proximity;
+        uint16 w_uncatchable, b_uncatchable;
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
 
     // The scores for opening, middlegame and endgame
     struct Scores {
       Scores()
-        :mid(0), end(0), any(0)
+      :mid(0), end(0), any(0)
       {
       }
       Scores(const Scores &s)
       :mid(s.mid),end(s.end),any(s.any) {
       }
-      int mid, end, any; 
+      int mid, end, any;
       int blend(int materialLevel ) {
-          return any + mid*MATERIAL_SCALE[materialLevel]/128 +
-             end*(128-MATERIAL_SCALE[materialLevel])/128;
+        return any + mid*Params::MATERIAL_SCALE[materialLevel]/128 +
+          end*(128-Params::MATERIAL_SCALE[materialLevel])/128;
       }
-      static const CACHE_ALIGN int MATERIAL_SCALE[32];
-      Scores & operator += (const Scores &s) {
-          mid += s.mid;
-          end += s.end;
-          any += s.any;
-          return *this;
-      }
-      const Scores operator + (const Scores &s) const {
-          Scores result = *this;
-          result += s;
-          return result;
-      }
+
       int operator == (const Scores &s) const {
         return s.mid == mid && s.end == end && s.any == any;
       }
@@ -182,7 +176,7 @@ class Scoring
 
     PawnHashEntry &pawnEntry(const Board &board);
 
-    int calcPawnData(const Board &board, ColorType side,
+    void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);
 
     void evalOutsidePassers(const Board &board,
@@ -200,7 +194,7 @@ class Scoring
 		     const PawnHashEntry::PawnData &pawnData, ColorType side,
 		     Scores &);
 
-    int kingDistanceScore(const Board &board) const;
+    int kingDistanceScore(const Board &) const;
 
     template <ColorType side>
     int outpost(const Board &board, Square sq, Square scoreSq, 

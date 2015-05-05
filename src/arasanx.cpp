@@ -31,6 +31,9 @@ extern "C"
 #include <io.h>
 #endif
 }
+#ifdef TUNE
+#include "tune.h"
+#endif
 #ifdef GAVIOTA_TBS
 #include "gtb.h"
 #endif
@@ -388,7 +391,7 @@ static void parseLevel(const string &cmd) {
   incr = int(1000*floatincr);
 }
 
-static void process_st_command(const string &cmd_args) 
+static void process_st_command(const string &cmd_args)
 {
    stringstream s(cmd_args);
    float time_limit_sec;
@@ -616,7 +619,7 @@ static void save_game() {
       stringstream timec;
       timec << minutes*60;
       if (incr) {
-          timec << '+' << setprecision(2) << incr/1000.0F; 
+          timec << '+' << setprecision(2) << incr/1000.0F;
       }
       headers.append(ChessIO::Header("TimeControl",timec.str()));
       string result;
@@ -728,7 +731,7 @@ uint64 nodes, uint64 tb_hits, const string &best_line_image, int multipv) {
    }
 #ifdef UCI_LOG
    ucilog << s.str() << endl;
-#endif   
+#endif
 }
 
 
@@ -754,7 +757,8 @@ static void CDECL post_output(const Statistics &stats) {
                multi_pvs[stats.multipv_count] = MultiPVEntry(stats);
                if (stats.multipv_count+1 == stats.multipv_limit) {
                   for (int i = 0; i < stats.multipv_limit; i++) {
-                     uciOut(multi_pvs[i].depth,multi_pvs[i].score,
+                     uciOut(multi_pvs[i].depth,
+                        100*multi_pvs[i].score/PAWN_VALUE,
                         multi_pvs[i].time,multi_pvs[i].nodes,
                         multi_pvs[i].tb_hits,
                         multi_pvs[i].best_line_image,
@@ -776,7 +780,7 @@ static void CDECL post_output(const Statistics &stats) {
       printf("%2u%c %6d %6ld %8llu %s\n",
 #endif
          stats.depth,' ',
-         score,
+         (score*100)/PAWN_VALUE, // score in centipawns
          (long)stats.elapsed_time/10, // time in centiseconds
          stats.num_nodes,
          stats.best_line_image.c_str());
@@ -1066,7 +1070,7 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
             } else {
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    (uci ? calcTimeLimit(movestogo, 
+                    (uci ? calcTimeLimit(movestogo,
                                          getIncrUCI(board.sideToMove()),
                                          time_left, opp_time, false, doTrace)
                      : calcTimeLimit(moves, minutes, incr, time_left, opp_time, false, doTrace));
@@ -1209,7 +1213,7 @@ static void send_move(Board &board, Move &move, Statistics
         if (uci) {
 #ifdef UCI_LOG
             ucilog << "bestmove " << movebuf.str();
-#endif  
+#endif
             cout << "bestmove " << movebuf.str();
             if (!easy && !IsNull(stats.best_line[1])) {
                 stringstream ponderbuf;
@@ -1217,7 +1221,7 @@ static void send_move(Board &board, Move &move, Statistics
                 cout << " ponder " << ponderbuf.str();
 #ifdef UCI_LOG
                 ucilog << " ponder " << ponderbuf.str();
-#endif  
+#endif
             }
             cout << endl << (flush);
 #ifdef UCI_LOG
@@ -1673,7 +1677,29 @@ static void processWinboardOptions(const string &args) {
         setCheckOption(value,options.learning.position_learning);
     } else if (name == "Strength") {
         Options::setOption<int>(value,options.search.strength);
-    } 
+    }
+#ifdef TUNE
+    else {
+       // set named parameters that are in the tuning set
+       for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+          if (tune::tune_params[i].name == name) {
+             stringstream buf(value);
+             int tmp;
+             buf >> tmp;
+             if (!buf.bad() && !buf.fail()) {
+                tune::tune_params[i].current = tmp;
+             }
+             else {
+                cout << "# Warning: invalid value for option " <<
+                   name << ": " << value << endl;
+             }
+             break;
+          }
+       }
+       // apply params to Scoring module
+       tune::applyParams();
+    }
+#endif
     searcher->updateSearchOptions();
 }
 
@@ -1692,7 +1718,7 @@ static void check_command(const string &cmd, int &terminate)
     split_cmd(cmd,cmd_word,cmd_args);
     if (uci) {
         if (doTrace) {
-            theLog->write("check_command: "); 
+            theLog->write("check_command: ");
             theLog->write(cmd.c_str());
             theLog->write_eol();
         }
@@ -1716,7 +1742,7 @@ static void check_command(const string &cmd, int &terminate)
                 ColorType side = searcher->getComputerSide();
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    calcTimeLimit(movestogo, 
+                    calcTimeLimit(movestogo,
                                   side == White ? winc : binc,
                                   time_left, opp_time, !easy, doTrace);
                 if (doTrace) {
@@ -1872,7 +1898,7 @@ static void check_command(const string &cmd, int &terminate)
         }
     }
     else if (cmd == "edit" || cmd_word == "setboard" || cmd == "analyze" ||
-             cmd == "go" || cmd == "exit" || cmd == "white" || 
+             cmd == "go" || cmd == "exit" || cmd == "white" ||
              cmd == "black" || cmd == "playother") {
         add_pending(cmd);
         terminate = true;
@@ -1941,7 +1967,7 @@ static void check_command(const string &cmd, int &terminate)
                         ColorType side = searcher->getComputerSide();
                         time_target =
                             (srctype == FixedTime) ? time_limit :
-                            (uci ? calcTimeLimit(movestogo, 
+                            (uci ? calcTimeLimit(movestogo,
                                                  getIncrUCI(side),
                                                  time_left, opp_time,
                                                  true, doTrace)
@@ -2377,7 +2403,7 @@ static void do_selfplay()
        selfplay_game(g);
    }
    // save last game
-   save_game(); 
+   save_game();
    delete mod_searcher;
 }
 #endif
@@ -2386,7 +2412,7 @@ static void do_selfplay()
 static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
     ucilog << "gui: " << cmd << (flush) << endl;
-#endif  
+#endif
     if (doTrace) {
         cout << "# do_command: " << cmd << endl;
     }
@@ -2425,17 +2451,17 @@ static bool do_command(const string &cmd, Board &board) {
         cout << " default " << options.search.tablebase_type;
         cout << endl;
 #ifdef GAVIOTA_TBS
-        cout << "option name GaviotaTbPath type string default " << 
+        cout << "option name GaviotaTbPath type string default " <<
             options.search.gtb_path << endl;
-        cout << "option name GaviotaTbCache type spin default " << 
-            options.search.gtb_cache_size/(1024*1024) << 
+        cout << "option name GaviotaTbCache type spin default " <<
+            options.search.gtb_cache_size/(1024*1024) <<
             " min 1 max 32" << endl;
 #endif
 #ifdef NALIMOV_TBS
-        cout << "option name NalimovPath type string default " << 
+        cout << "option name NalimovPath type string default " <<
             options.search.nalimov_path << endl;
         cout << "option name NalimovCache type spin default " <<
-            options.search.nalimov_cache_size/(1024*1024) << 
+            options.search.nalimov_cache_size/(1024*1024) <<
             " min 1 max 32" << endl;
 #endif
 #endif
@@ -2485,7 +2511,7 @@ static bool do_command(const string &cmd, Board &board) {
                     if (old != options.search.hash_table_size) {
                        searcher->resizeHash(options.search.hash_table_size);
                     }
-                } 
+                }
             }
         }
         else if (name == "Ponder") {
@@ -2694,7 +2720,7 @@ static bool do_command(const string &cmd, Board &board) {
                         cerr << "unexpected switch: " << *it << endl;
                         it++;
                     } else {
-                        break;   
+                        break;
                     }
                 }
                 do_command("new",board);
@@ -2750,7 +2776,7 @@ static bool do_command(const string &cmd, Board &board) {
                 int tbscore;
                 if (options.search.use_tablebases) {
 #ifdef GAVIOTA_TBS
-                    if (options.search.tablebase_type == 
+                    if (options.search.tablebase_type ==
                         Options::GAVIOTA_TYPE && GaviotaTb::probe_tb(board,tbscore,0,1)) {
                         cout << "score = ";
                         Scoring::printScore(tbscore,cout);
@@ -2758,7 +2784,7 @@ static bool do_command(const string &cmd, Board &board) {
                     }
 #endif
 #ifdef NALIMOV_TBS
-                    if (options.search.tablebase_type == 
+                    if (options.search.tablebase_type ==
                         Options::NALIMOV_TYPE && NalimovTb::probe_tb(board,tbscore,0)) {
                         cout << "score = ";
                         Scoring::printScore(tbscore,cout);
@@ -2883,7 +2909,7 @@ static bool do_command(const string &cmd, Board &board) {
             ucilog << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
             Notation::image(board,ponder_move,Notation::SAN_OUT,ucilog);
             ucilog << (flush) << endl;
-#endif  
+#endif
             if (ponderhit || searcher->wasStopped()) {
                 // ensure we send an "info" command - may not have been
                 // sent if the previous move was forced or a tb hit.
@@ -2905,18 +2931,18 @@ static bool do_command(const string &cmd, Board &board) {
         else {
 #ifdef UCI_LOG
             ucilog << "starting search, time=" << getCurrentTime() << (flush) << endl;
-#endif  
+#endif
             best_move = search(searcher,board,stats,infinite);
 
 #ifdef UCI_LOG
             ucilog << "done searching, time=" << getCurrentTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
-#endif  
+#endif
             if (options.search.multipv == 1) {
                uciOut(stats);
             }
             if (infinite && !searcher->wasStopped()) {
                 // We were told "go infinite" but completed searching early
-                // (due to a mate or forced move or tb hit). The protocol 
+                // (due to a mate or forced move or tb hit). The protocol
                 // requires that we go into a wait state before sending the
                 // move. We will exit when a "stop" command is received.
                 uciWaitState = 1;
@@ -2966,6 +2992,9 @@ static bool do_command(const string &cmd, Board &board) {
         searcher->registerPostFunction(post_output);
         delayedInitIfNeeded();
         searcher->clearHashTables();
+#ifdef TUNE
+        tune::applyParams();
+#endif
         if (!analyzeMode && ics) {
            cout << "kib Hello from Arasan " << Arasan_Version << endl;
         }
@@ -3186,7 +3215,7 @@ static bool do_command(const string &cmd, Board &board) {
            // set number of threads
            stringstream ss(cmd_args);
            if((ss >> options.search.ncpus).fail()) {
-               cerr << "invalid value following 'cores'" << endl; 
+               cerr << "invalid value following 'cores'" << endl;
            } else {
                options.search.ncpus = Util::Min(options.search.ncpus,Constants::MaxCPUs);
                searcher->setThreadCount(options.search.ncpus);
@@ -3201,13 +3230,13 @@ static bool do_command(const string &cmd, Board &board) {
            stringstream ss(cmd_args);
            int mbs;
            if((ss >> mbs).fail()) {
-               cerr << "invalid value following 'memory'" << endl; 
+               cerr << "invalid value following 'memory'" << endl;
            } else {
                options.search.hash_table_size = (size_t)(mbs*1024L*1024L);
                searcher->resizeHash(options.search.hash_table_size);
            }
         }
-    } 
+    }
     else if  (cmd_word == "egtpath") {
         size_t space = cmd_args.find_first_of(' ');
         string type = cmd_args.substr(0,space);
@@ -3224,7 +3253,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #ifdef NALIMOV_TBS
         if (type == "nalimov") {
-            // tablebase path. Note: setting this after "new" is not 
+            // tablebase path. Note: setting this after "new" is not
             // supported. We require an engine restart for it to be
             // effective.
             options.search.use_tablebases = 1;
@@ -3448,6 +3477,31 @@ int CDECL main(int argc, char **argv) {
                 selfplay_games = atoi(argv[arg]);
                 break;
 #endif
+#ifdef TUNE
+            case 'p':
+            {
+               // initialize tuning parameters from a file. These
+               // can be overridden with Winboard options.
+               ++arg;
+
+               stringstream s(argv[arg]);
+               int x[tune::NUM_TUNING_PARAMS];
+               memset(x,'\0',sizeof(int)*tune::NUM_TUNING_PARAMS);
+               int i = 0;
+               while (s.good() && s.get() != (int)'(');
+               while (s.good() && i<tune::NUM_TUNING_PARAMS) {
+                  s >> x[i++];
+               }
+               if (i!=tune::NUM_TUNING_PARAMS) {
+                  cout << "# warning: received " << i << " tuning parameters, expected " << tune::NUM_TUNING_PARAMS << endl;
+               }
+               for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+                  tune::tune_params[i].current = x[i];
+               }
+               tune::applyParams();
+               break;
+            }
+#endif
             default:
                 cerr << "Warning: unknown option: " << argv[arg]+1 <<
                     endl;
@@ -3487,12 +3541,53 @@ int CDECL main(int argc, char **argv) {
 
 #ifdef UNIT_TESTS
     int errs = doUnit();
-    cout << "Unit tests ran: " << errs << " error(s)" << endl; 
+    cout << "Unit tests ran: " << errs << " error(s)" << endl;
 #endif
 
+/*
+  // some test code for eval
+    static const string eval_fens[25] = {
+       "2r2rk1/pp1b2bp/3p2p1/q1nPn3/3NPp1P/1P3P2/P1RQNBB1/5RK1 b - - 0 1",
+       "6k1/p6p/1p4p1/7r/3NK3/5P2/P7/R7 w - - 0 1",
+       "r1b1k2r/p2n1pp1/1qp1pn1p/1p6/PbpP3B/2N1PN2/1P2BPPP/R2Q1RK1 w kq - 0 1",
+       "r4rk1/1p1n3p/p2n2p1/P1pPpp2/4P2q/6RP/1PQNBPP1/R5K1 w - - 0 1",
+       "r2q1rk1/pb2bppp/1p2pn2/4n3/2B5/PNN1P3/1P1BQPPP/R2R2K1 w - - 0 1",
+       "1q3rk1/5ppp/3r4/p2Pp3/Pb6/4B3/1PQ1RPPP/R5K1 b - - 0 1",
+       "3qr1k1/p4pbp/3p1np1/nrpP4/1p2P3/1P4P1/1BQN1PBP/R3R1K1 w - - 0 1",
+       "5r2/3P2k1/p4qp1/8/1P6/P3Q2B/5P1P/7K w - - 0 1",
+       "r1bq1rk1/4bppp/p1n1pn2/1p4B1/3P4/P1N2N2/BP3PPP/R2Q1RK1 b - - 0 1",
+       "5rk1/3r2bp/3p1np1/3P3q/P1Q1p3/B5P1/5PBP/1R3RK1 b - - 0 1",
+       "8/2p4p/4pkp1/R7/8/1Pn2BP1/P3PPKP/2r5 w - - 0 1",
+       "r3r1k1/1p3pp1/1qb2n1p/p2p4/1b6/P1BB1P2/1PP1N1PP/1K1RQ2R b - - 0 1",
+       "r2q1rk1/pp1n1ppp/2p1p3/2b5/4PBb1/5NPP/PPP2PB1/R3QRK1 b - - 0 1",
+       "8/2p3r1/1p5p/pP6/P5r1/2k4K/8/3Q4 b - - 0 1",
+       "r4k2/1R6/1P1r2pp/2np1p2/P2N4/1P4P1/1K4P1/5R2 w - - 0 1",
+       "1rR5/4kpp1/pp2pn1p/8/8/5B2/PPP2PPP/2KR4 b - - 0 1",
+       "8/6pk/5p2/R4K1P/1r4P1/5P2/8/8 w - - 0 1",
+       "r2qr1k1/1ppn1ppb/5n1p/p2p2P1/Pb1P1P1P/1PN1P1N1/3B2B1/R2QR1K1 b - - 0 1",
+       "1r3rk1/2p2p1p/p5p1/2n1p1q1/P1NbP3/3P1Q1P/2B2PP1/1R3R1K b - - 0 1",
+       "1r3rk1/3q1pbp/p2p1np1/2pP4/R1N5/2P1P1Pb/5PB1/2BQ1RK1 w - - 0 1",
+       "r6r/2p2Rpp/pk6/1p6/3p1Q2/1P6/1Pq2PPP/R5K1 b - - 0 1",
+       "r3r1k1/pp3pb1/2p1n1p1/4p2p/2P4P/2N5/PP2PP1P/1R2R1KB w - - 0 1",
+       "8/2N5/p5k1/1p5p/2p4K/2P1R3/P1r5/8 b - - 0 1",
+       "r1b1nr1k/ppn2qNp/3p4/2pPpp2/2P3P1/2NBBP2/PP1Q3P/2K1R1R1 b - - 0 1",
+       "4b1k1/5ppp/2N1p3/p7/8/P3PP1P/1r1n2P1/2R1B1K1 b - - 0 1"
+    };
+
+
+    for (int i = 0; i < 25; i++) {
+       Board board;
+       Scoring s;
+       if (!BoardIO::readFEN(board, eval_fens[i])) {
+          cerr << "invalid test position " << eval_fens[i] << endl;
+       } else {
+          cout << i << '\t' << s.evalu8(board) << endl;
+       }
+    }
+*/
     searcher = new SearchController();
 
-#ifdef SELFPLAY 
+#ifdef SELFPLAY
     if (selfplay) {
         do_selfplay();
     }

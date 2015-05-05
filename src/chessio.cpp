@@ -302,7 +302,7 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
     while (ifs.good() && (c = ifs.get()) != EOF)
     {
         int saw_eoln = 0;
-        while (isspace(c))
+        while (ifs.good() && isspace(c))
         {
             if (c == '\n' || c == '\r')
                saw_eoln++;
@@ -315,46 +315,38 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
             break;
         }
         // collect command
-        char cmd[20], val[256];
-        char *p = cmd;
-        int count = 0;
-        while (ifs.good() && !isspace(c) && count < 19)
-        {
-            *p++ = c;
-            c = ifs.get();
-            ++count;
-        }
-        *p = '\0';
-        while (isspace(c))
-        {
+        string cmd, val;
+        while (ifs.good() && !isspace(c)) {
+            cmd += c;
             c = ifs.get();
         }
-        p = val;
-        int quoted = (c == '"');
-        count = 0;
-        while (ifs.good() && 
-               count < 255 &&
-               (c != ';' || quoted))
-        {
-            *p++ = c;
+        while (ifs.good() && isspace(c)) {
             c = ifs.get();
-            if (quoted && c == '"')
-            {
-               *p++ = c;
-               quoted = 0;
-               break;
-            }
         }
-        if (quoted)
-        {
-            rec.setError("Missing end quote in EPD record");
-            ifs.ignore(255,'\n');
-            return 1;
+        if (ifs.good()) {
+           int quoted = (c == '"');
+           while (ifs.good() && 
+                  (c != ';' || quoted))
+           {
+              val += c;
+              c = ifs.get();
+              if (quoted && c == '"')
+              {
+                 val += c;
+                 quoted = 0;
+                 break;
+              }
+           }
+           if (quoted)
+           {
+              rec.setError("Missing end quote in EPD record");
+              ifs.ignore(255,'\n');
+              return 1;
+           }
         }
-        *p = '\0';
-        if (*cmd && *val)
-            rec.add(cmd,val);
-        while (!ifs.eof() && c != ';') c = ifs.get();
+        if (cmd.size() && val.size())
+           rec.add(cmd.c_str(),val.c_str());
+        while (ifs.good() && c != ';') c = ifs.get();
     }
     if (c == '\n') c = ifs.get();
     return 1;

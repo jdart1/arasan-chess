@@ -108,10 +108,10 @@ static const int PRUNE = -Constants::MATE;
 static FORCEINLINE int calcGain(const Board &board, Move move) {
     int gain = Gain(move);
     if (Capture(move) == Pawn && Rank(DestSquare(move),board.oppositeSide()) == 7) {
-        gain += 50;
+       gain += PAWN_VALUE/2;
     }
     if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) == 7) {             
-        gain += 50;
+       gain += PAWN_VALUE/2;
     }
     return gain;
 }
@@ -1383,7 +1383,7 @@ int Search::quiesce(int ply,int depth)
       controller->stats->hash_hits++;
 #endif
       node->staticEval = hashEntry.staticValue();
-      value = hashEntry.value();
+      value = hashEntry.getValue();
       // If this is a mate score, adjust it to reflect the
       // current ply depth.
       //
@@ -1585,7 +1585,7 @@ int Search::quiesce(int ply,int depth)
             node->eval = node->staticEval = scoring.evalu8(board);
          }
          if (hit) {
-            const int hashValue = hashEntry.value();
+            const int hashValue = hashEntry.getValue();
             // Use the transposition table entry to provide a better score
             // for pruning decisions, if possible
             if (result == (hashValue > node->eval ? HashEntry::LowerBound :
@@ -2253,7 +2253,7 @@ int Search::search()
                result = HashEntry::Invalid;
             }
         }
-        int value = hashEntry.value();
+        int value = hashEntry.getValue();
         switch (result) {
             case HashEntry::Valid:
 #ifdef _TRACE
@@ -2407,7 +2407,7 @@ int Search::search()
         node->eval = node->staticEval = scoring.evalu8(board);
     }
     if (hit) {
-        const int hashValue = hashEntry.value();
+        const int hashValue = hashEntry.getValue();
         // Use the transposition table entry to provide a better score
         // for pruning decisions, if possible
         if (result == (hashValue > node->eval ? HashEntry::LowerBound :
@@ -2837,7 +2837,6 @@ int Search::search()
     }
     if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
         board.checkStatus() != InCheck) {
-        ASSERT(ply>0);
         context.setKiller((const Move)node->best, node->ply);
         History::updateHistory(board,node,node->best,
             depth,

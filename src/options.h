@@ -52,6 +52,7 @@ class Options
 #ifdef SELFPLAY
    int mod;
 #endif
+    int easy_plies; // do wide search for "easy move" detection
   } search;
 
    struct LearningOptions {

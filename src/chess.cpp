@@ -169,7 +169,7 @@ char *SquareImage(Square sq) {
     return chars;
 }
 
-const int PAWN_VALUE = 100;
+const int PAWN_VALUE = 1000;
 const int BISHOP_VALUE = (int)(3.25*PAWN_VALUE);
 const int KNIGHT_VALUE = (int)(3.25*PAWN_VALUE);
 const int ROOK_VALUE = 5*PAWN_VALUE;

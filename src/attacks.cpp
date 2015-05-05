@@ -5190,6 +5190,8 @@ Bitboard(0x80000000000000ULL),
 Bitboard(0x0ULL)
 };
 
+const Bitboard Attacks::center = Bitboard(0x1818000000ULL);
+
 const Bitboard Attacks::ep_mask[8][2] =
 {
 {Bitboard(0x2000000ULL), Bitboard(0x200000000ULL)}, 
