@@ -725,7 +725,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 template<ColorType side>
 int Scoring::calcCover(const Board &board, int file, int rank) {
    Square sq, pawn;
-   int cover = -APARAM(KING_COVER,1);
+   int cover = PARAM(KING_COVER_BASE);
    Bitboard pawns;
    if (side == White) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
@@ -758,7 +758,8 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       }
    }
    
-   return Util::Min(0,cover);
+//   return Util::Min(0,cover);
+   return cover;
 }
 
 // Calculate a king cover score
@@ -1289,8 +1290,8 @@ void Scoring::pieceScore(const Board &board,
 #ifdef EVAL_DEBUG
       int kattack_tmp = kattack;
 #endif
-      if (kattack && cover < -PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
-         kattack += Util::Min(kattack / 2, (-(cover + PARAM(KING_ATTACK_BOOST_THRESHOLD)) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
+      if (kattack && cover < PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
+         kattack += Util::Min(kattack / 2, ((PARAM(KING_ATTACK_BOOST_THRESHOLD)-cover) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
 #ifdef EVAL_DEBUG
          cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
 #endif

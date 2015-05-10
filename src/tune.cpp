@@ -36,6 +36,7 @@ enum {
    CASTLING3,
    CASTLING4,
    CASTLING5,
+   KING_COVER_BASE,
    KING_COVER0,
    KING_COVER1,
    KING_COVER2,
@@ -176,12 +177,13 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(CASTLING3,"castling3",280,0,500),
    tune::TuneParam(CASTLING4,"castling4",200,0,500),
    tune::TuneParam(CASTLING5,"castling5",-280,-500,0),
-   tune::TuneParam(KING_COVER0,"king_cover0",230,100,320),
-   tune::TuneParam(KING_COVER1,"king_cover1",293,100,450),
-   tune::TuneParam(KING_COVER2,"king_cover2",116,50,200),
-   tune::TuneParam(KING_COVER3,"king_cover3",27,0,100),
-   tune::TuneParam(KING_COVER4,"king_cover4",25,0,100),
-   tune::TuneParam(KING_FILE_OPEN,"king_file_open",-139,-300,0),
+   tune::TuneParam(KING_COVER0,"king_cover0",138,100,320),
+   tune::TuneParam(KING_COVER1,"king_cover1",310,100,450),
+   tune::TuneParam(KING_COVER2,"king_cover2",250,50,200),
+   tune::TuneParam(KING_COVER3,"king_cover3",29,0,100),
+   tune::TuneParam(KING_COVER4,"king_cover4",-37,0,100),
+   tune::TuneParam(KING_COVER0,"king_cover_base",-293,-500,0),
+   tune::TuneParam(KING_FILE_OPEN,"king_file_open",-285,-300,0),
    tune::TuneParam(KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
    tune::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
    tune::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500),
@@ -195,7 +197,7 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_ATTACK_PARAM7,"king_attack_param7",283,0,640),
    tune::TuneParam(KING_ATTACK_PARAM8,"king_attack_param8",283,0,2500),
    tune::TuneParam(KING_ATTACK_PARAM9,"king_attack_param9",100,0,2500),
-   tune::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",524,100,960),
+   tune::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",-524,-960,200),
    tune::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",481,100,1000),
    tune::TuneParam(BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
    tune::TuneParam(BISHOP_PAIR_MID,"bishop_pair_mid",447,100,600),
@@ -430,6 +432,7 @@ void tune::applyParams()
       *dest++ = tune::tune_params[j++].current;
    }
 
+   Scoring::Params::KING_COVER_BASE = tune_params[KING_COVER_BASE].current;
    Scoring::Params::KING_FILE_OPEN = tune_params[KING_FILE_OPEN].current;
    Scoring::Params::KING_DISTANCE_BASIS = tune_params[KING_DISTANCE_BASIS].current;
    Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
