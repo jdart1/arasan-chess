@@ -343,7 +343,7 @@ static void * CDECL inputPoll(void *x) {
       select(16, &readfds, 0, 0, &tv);
       data=FD_ISSET(fileno(stdin), &readfds);
       if (data == -1) {
-         if (errno == EINTR) break;
+         if (errno == EINTR) continue;
          perror("select");
       }
       else if (data) {
