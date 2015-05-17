@@ -383,7 +383,7 @@ static int testEval() {
 
 static int testDrawEval() {
     // verify detection of KBP and other draw situations
-    const int DRAW_CASES = 11;
+    const int DRAW_CASES = 12;
     static const string draw_fens[DRAW_CASES] = {
         "k7/8/P7/B7/1K6/8/8/8 w - - 0 1", // KBP draw
         "8/8/8/1k6/b7/p7/8/K7 b - - 0 1", // KBP draw
@@ -395,17 +395,19 @@ static int testDrawEval() {
         "8/8/2K4k/8/3N4/8/8/8 w - - 0 1", // KN draw
         "8/8/8/3n4/8/2k4K/8/8 b - - 0 1", // KN draw
         "8/8/8/8/8/2k4K/8/8 b - - 0 1", // KK draw
-        "8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1" // KB vs KB draw (same color)
+        "8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1", // KB vs KB draw (same color)
+        "8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1" // KBPP draw
         // technically these are draws but not recognized yet:
         //"8/8/8/1k6/b7/p7/8/2K5 b - - 0 1", // KBP draw
         // 8/5k2/8/5B2/8/6KP/8/8 w - - 0 1 // KBP draw
     };
 
-    const int NON_DRAW_CASES = 3;
+    const int NON_DRAW_CASES = 4;
     static const string nondraw_fens[NON_DRAW_CASES] = {
         "8/7k/8/6B1/6KP/8/8/8 w - - 0 3", // KBP right-color pawn
         "8/3k3B/8/8/5K2/7P/8/8 b - - 0 1", // KBP opp king too far
-        "6K1/8/6b1/6k1/8/6B1/8/8 w - - 0 1" // opp color bishops
+        "6K1/8/6b1/6k1/8/6B1/8/8 w - - 0 1", // opp color bishops
+        "8/8/8/5k1P/3K4/8/4B2P/8 w - - 0 1" // KBPP too far
     };
     int errs = 0;
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)

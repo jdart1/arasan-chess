@@ -2310,45 +2310,47 @@ static int KBPDraw(const Board &board) {
 }
 
 int Scoring::theoreticalDraw(const Board &board) {
-   const Material &mat1 = board.getMaterial(White);
-   const Material &mat2 = board.getMaterial(Black);
-   if (mat1.value() > KING_VALUE + (KNIGHT_VALUE * 2) || mat2.value() > KING_VALUE + (KNIGHT_VALUE * 2)) return 0;
+    if (board.getMaterial(White).value() > 
+        board.getMaterial(Black).value())
+        return theoreticalDraw<White>(board);
+    else if (board.getMaterial(White).value() < 
+             board.getMaterial(Black).value())
+        return theoreticalDraw<Black>(board);
+    else
+        return 0;
+}
 
-   // Check for K + P vs rook pawn
-   if (mat1.infobits() == Material::KP && mat2.kingOnly()) {
-      if (TEST_MASK(rook_pawn_mask, board.pawn_bits[White])) {
-         Square kp = board.kingSquare(White);
-         Square kp2 = board.kingSquare(Black);
-         Square psq = (board.pawn_bits[White].firstOne());
-         return lookupBitbase(kp, psq, kp2, White, board.sideToMove()) == 0;
-      }
-   }
-   else if (mat2.infobits() == Material::KP && mat1.kingOnly()) {
-      if (TEST_MASK(rook_pawn_mask, board.pawn_bits[Black])) {
-         Square kp = board.kingSquare(Black);
-         Square kp2 = board.kingSquare(White);
-         Square psq = (board.pawn_bits[Black].firstOne());
-         return lookupBitbase(kp, psq, kp2, Black, board.sideToMove()) == 0;
-      }
-   }
+// check for theoretical draws ("side" has the greater material)
+template <ColorType side>
+int Scoring::theoreticalDraw(const Board &board) {
+    const Material &mat1 = board.getMaterial(side);
+    const Material &mat2 = board.getMaterial(OppositeColor(side));
+    if (mat1.value() > KING_VALUE + (KNIGHT_VALUE * 2)) return 0;
 
-   // Check for wrong bishop + rook pawn(s) vs king.  Not very common but
-   // we don't want to get it wrong.
-   else if (mat1.infobits() == Material::KBP && mat2.kingOnly()) {
-      return KBPDraw<White> (board);
-   }
-   else if (mat2.infobits() == Material::KBP && mat1.kingOnly()) {
-      return KBPDraw<Black> (board);
-   }
-
-   // check for KNN vs K
-   if
-   (
-      ((unsigned) mat1.infobits() == Material::KNN && mat2.kingOnly())
-   || ((unsigned) mat2.infobits() == Material::KNN && mat1.kingOnly())
-   ) return 1;
-
-   return 0;
+    // Check for K + P vs rook pawn
+    if (mat1.infobits() == Material::KP && mat2.kingOnly()) {
+        if (TEST_MASK(rook_pawn_mask, board.pawn_bits[side])) {
+            Square kp = board.kingSquare(side);
+            Square kp2 = board.kingSquare(OppositeColor(side));
+            Square psq = (board.pawn_bits[side].firstOne());
+            return lookupBitbase(kp, psq, kp2, side, board.sideToMove()) == 0;
+        }
+        else {
+            return 0;
+        }
+    }
+    // Check for wrong bishop + rook pawn(s) vs king.  Not very common but
+    // we don't want to get it wrong.
+    else if (mat1.pieceBits() == Material::KB && mat2.kingOnly()) {
+        return KBPDraw<side> (board);
+    }
+    // check for KNN vs K
+    else if (mat1.infobits() == Material::KNN && mat2.kingOnly()) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
 int Scoring::repetitionDraw(const Board &board) {

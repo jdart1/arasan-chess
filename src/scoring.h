@@ -149,6 +149,9 @@ class Scoring
                             Scores &scores,
                             Scores &oppScores);
 
+    template <ColorType side>
+        static int theoreticalDraw(const Board &board);
+
     int adjustMaterialScore(const Board &board, ColorType side) const;
 
     int adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
