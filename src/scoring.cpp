@@ -552,6 +552,11 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              score = near_draw_adjust(ourmat,oppmat,pawnDiff);
           }
           return score;
+       } else if (pieces == Material::KR && (oppmat.pieceBits() ==
+                  Material::KN || oppmat.pieceBits() == Material::KB)) {
+           if (Util::Abs(ourmat.pawnCount()-oppmat.pawnCount()) <= 2) {
+              return near_draw_adjust(ourmat,oppmat,pawnDiff);
+           }
        } else {
           EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
           for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
