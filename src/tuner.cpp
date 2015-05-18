@@ -11,7 +11,7 @@
 #include "tune.h"
 #include "spsa.h"
 #include "rspsa.h"
-#include "hill.h"
+#include "nomad.h"
 #include "rockstar.h"
 #include <iostream>
 #include <fstream>
@@ -236,7 +236,7 @@ static OptBase * allocate_optimizer(const string &algorithm,
    case ROCKSTAR:      
       s = (OptBase*)(new Rockstar(dim,x0,eval_limit)); break;
    case NOMAD:      
-      s = (OptBase*)(new Rockstar(dim,x0,eval_limit)); break;
+      s = (OptBase*)(new Nomad(dim,x0,eval_limit)); break;
    case UNKNOWN:
       cerr << "unknown algorithm: " << algorithm << endl;
    }
