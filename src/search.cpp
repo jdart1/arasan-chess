@@ -616,9 +616,14 @@ Move *excludes, int num_excludes)
    Scoring::clearStats();
 #endif
    node->best = NullMove;
-   if (scoring.isLegalDraw(board)) {
+   if (scoring.isLegalDraw(board) &&
+       !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
       // If it's a legal draw situation before we even move, then
-      // just return a draw score and don't search.
+      // just return a draw score and don't search. (But don't do
+      // this in analysis mode: return a move if possible).
+#ifdef UCI_LOG
+       ucilog << "skipping search, draw" << endl << (flush);
+#endif
       controller->stats->state = Draw;
       controller->stats->value = drawScore(board);
       return NullMove;
@@ -755,23 +760,18 @@ Move *excludes, int num_excludes)
 #endif
             controller->updateStats(node,iteration_depth,
                                     value,lo_window,hi_window);
-            if (iteration_depth == 0 && scoring.isLegalDraw(board)) {
-               if (talkLevel == Trace)
-                  cout << "# draw, terminating" << endl;
-               controller->terminateNow();
-            }
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
             // the score will be inaccurate. Do not terminate here if a
             // resign score is returned (search deeper to get an accurate
             // score). Do not exit in analysis mode.
-            else if (!(controller->background || controller->time_target == INFINITE_TIME) &&
-                     mg.moveCount() == 1 &&
-                     (iteration_depth >= 2) &&
-                     (!options.search.can_resign ||
-                      (controller->stats->display_value >
-                       options.search.resign_threshold))) {
+            if (!(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
+                mg.moveCount() == 1 &&
+                (iteration_depth >= 2) &&
+                (!options.search.can_resign ||
+                 (controller->stats->display_value >
+                  options.search.resign_threshold))) {
                if (talkLevel == Trace)
                   cout << "# single legal move, terminating" << endl;
                controller->terminateNow();
