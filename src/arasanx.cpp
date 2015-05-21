@@ -749,28 +749,26 @@ static void CDECL post_output(const Statistics &stats) {
       return; // no valid score yet
    }
    if (verbose) {
-      if (uci) {
-         if (stats.elapsed_time) {
-            if (options.search.multipv > 1) {
+       if (uci) {
+           if (options.search.multipv > 1) {
                // accumulate multiple pvs until we are ready to output them
                ASSERT(stats.multipv_count<MAX_PV);
                multi_pvs[stats.multipv_count] = MultiPVEntry(stats);
                if (stats.multipv_count+1 == stats.multipv_limit) {
-                  for (int i = 0; i < stats.multipv_limit; i++) {
-                     uciOut(multi_pvs[i].depth,
-                        100*multi_pvs[i].score/PAWN_VALUE,
-                        multi_pvs[i].time,multi_pvs[i].nodes,
-                        multi_pvs[i].tb_hits,
-                        multi_pvs[i].best_line_image,
-                        i+1);
-                  }
+                   for (int i = 0; i < stats.multipv_limit; i++) {
+                       uciOut(multi_pvs[i].depth,
+                              100*multi_pvs[i].score/PAWN_VALUE,
+                              multi_pvs[i].time,multi_pvs[i].nodes,
+                              multi_pvs[i].tb_hits,
+                              multi_pvs[i].best_line_image,
+                              i+1);
+                   }
                }
-            }
-            else {
+           }
+           else {
                uciOut(stats);
-            }
-         }
-      }
+           }
+       }
    }
    else if (post) {
       // "post" output for Winboard
@@ -2937,10 +2935,9 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
             ucilog << "done searching, time=" << getCurrentTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
 #endif
-            if (options.search.multipv == 1) {
-               uciOut(stats);
-            }
             if (infinite && !searcher->wasStopped()) {
+                // ensure we send some info in analysis mode:
+                post_output(stats);
                 // We were told "go infinite" but completed searching early
                 // (due to a mate or forced move or tb hit). The protocol
                 // requires that we go into a wait state before sending the
@@ -2948,6 +2945,7 @@ static bool do_command(const string &cmd, Board &board) {
                 uciWaitState = 1;
             }
             else {
+                uciOut(stats);
                 send_move(board,best_move,stats);
             }
         }
