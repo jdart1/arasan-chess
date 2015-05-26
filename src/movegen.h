@@ -213,6 +213,8 @@ class RootMoveGenerator : public MoveGenerator
 
       void reorderByScore();
 
+      void suboptimal(int strength, Move &m, int &val);
+
       void exclude(Move *exclude, int num_exclude);
 
       void exclude(Move);

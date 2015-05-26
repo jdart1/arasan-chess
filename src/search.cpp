@@ -1,4 +1,4 @@
-// Copyright 1987-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2015 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -678,27 +678,29 @@ Move *excludes, int num_excludes)
    if (options.search.strength < 100 && controller->time_target != INFINITE_TIME) {
        int mgCount = mg.moveCount();
        if (mgCount) {
-           const float factor = 100.0F - (options.search.strength*options.search.strength)/100.0F;
+           const float factor = 1.0/controller->ply_limit + (100-options.search.strength)/250.0;
            const int max = int(0.3F*controller->time_target/mgCount);
            // wait time is in milliseconds
-           waitTime = int((max*factor)/100.0F);
+           waitTime = int((max*factor));
            if (talkLevel == Trace) {
                cout << "# waitTime=" << waitTime << endl;
            }
            // adjust time check interval since we are lowering nps
            Time_Check_Interval = Util::Max(1,Time_Check_Interval / (1+8*int(factor)));
-           if (options.search.strength <= 90) {
+           if (options.search.strength <= 95) {
                static const int limits[25] = {1,1,1,1,1,1,1,1,
-                                              2,2,2,2,3,3,4,5,6,7,8,
-                                              9,10,12,14,16};
+                                              2,2,2,2,3,3,4,6,8,9,10,
+                                              11,12,13,14,16};
                controller->ply_limit = Util::Min(limits[options.search.strength/4],
                                                  controller->ply_limit);
-               if (board.getMaterial(White).men() +
-                   board.getMaterial(Black).men() < 6 &&
+               if (talkLevel == Trace) {
+                   cout << "# setting ply limit to " << controller->ply_limit << endl;
+               }
+               if (board.getMaterial(White).materialLevel() +
+                   board.getMaterial(Black).materialLevel() < 16 &&
                    options.search.strength > 10) {
-                   // increase ply limit in simple endgames (so for example
-                   // elementary mates can be made)
-                   controller->ply_limit++;
+                   // increase ply limit in endgames
+                   controller->ply_limit += Util::Min(2,1+controller->ply_limit/8);
                }
                if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;
@@ -998,6 +1000,20 @@ Move *excludes, int num_excludes)
       }
    }
 
+   if (options.search.strength < 100 && iteration_depth <= MoveGenerator::EASY_PLIES) {
+       Move m;
+       int val;
+       mg.suboptimal(options.search.strength,m,val);
+       if (!MovesEqual(node->best,m)) {
+           node->best = m;
+           stats->display_value = stats->value = val;
+           stats->best_line[0] = m;
+           stats->best_line[1] = NullMove;
+           Notation::image(board,m,
+               controller->uci ? Notation::UCI : Notation::SAN_OUT,stats->best_line_image);
+       }
+   }
+
    if (talkLevel == Debug) {
       cout.setf(ios::fixed);
       cout << setprecision(2);
@@ -1129,10 +1145,9 @@ int depth, Move exclude [], int num_exclude)
     int move_index = 0;
     int hibound = beta;
     fail_high_root = 0;
-    bool skipped = false;
     while (!node->cutoff && !terminate) {
         Move move;
-        if ((move  = mg.nextMove(split))==NullMove) break;
+        if ((move = mg.nextMove(split))==NullMove) break;
         move_index++;
         if (IsUsed(move)) {
            continue;     // skip move
@@ -1227,17 +1242,11 @@ int depth, Move exclude [], int num_exclude)
 #endif
         }
         board.undoMove(move,save_state);
-        if (wide) mg.setScore(move,try_score);
+        if (wide) {
+            mg.setScore(move,try_score);
+        }
         if (try_score > node->best_score && !terminate) {
-            bool skip = false;
-            if (options.search.strength < 100 && mg.moveCount() > 1 &&
-                !skipped) {
-                    if (rand() % 1024 < int(500.0/pow(2.0,(double)options.search.strength/10.0))) {
-                        // sometimes miss the "best" move
-                        skip = skipped = true;
-                }
-            }
-            if (!skip && updateRootMove(board,node,node,move,try_score,move_index)) {
+            if (updateRootMove(board,node,node,move,try_score,move_index)) {
                 // beta cutoff
                 // ensure we send UCI output .. even in case of quick
                 // termination due to checkmate or whatever
@@ -2092,6 +2101,9 @@ int Search::calcExtensions(const Board &board,
 #ifdef SEARCH_STATS
                controller->stats->futility_pruning++;
 #endif
+#ifdef _TRACE
+               indent(ply); cout << "futility: pruned" << endl;
+#endif
                return PRUNE;
             }
          }
@@ -2100,6 +2112,9 @@ int Search::calcExtensions(const Board &board,
             if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
                ++controller->stats->lmp;
+#endif
+#ifdef _TRACE
+               indent(ply); cout << "LMP: pruned" << endl;
 #endif
                return PRUNE;
             }
@@ -2431,6 +2446,9 @@ int Search::search()
         const int threshold = node->beta+margin;
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval > threshold) {
+#ifdef _TRACE
+            indent(ply); cout << "static null pruned" << endl;
+#endif
 #ifdef SEARCH_STATS
             ++controller->stats->static_null_pruning;
 #endif
@@ -3137,7 +3155,9 @@ void Search::searchSMP(ThreadInfo *ti)
         else
            split->unlock();
         board.undoMove(move,state);
-        if (ply == 0 && controller->getIterationDepth()<=MoveGenerator::EASY_PLIES) ((RootMoveGenerator*)mg)->setScore(move,try_score);
+        if (ply == 0 && controller->getIterationDepth()<=MoveGenerator::EASY_PLIES) {
+            ((RootMoveGenerator*)mg)->setScore(move,try_score);
+        }
 #ifdef _TRACE
         if (master() || ply==0) {
             indent(ply);

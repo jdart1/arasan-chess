@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 
 extern const int Direction[2];
@@ -186,6 +187,42 @@ void RootMoveGenerator::reorderByScore() {
    std::sort(moveList.begin(),moveList.end(),compareScores);
 }
 
+void RootMoveGenerator::suboptimal(int strength,Move &m,int &val) {
+   if (moveCount() == 0) {
+       m = NullMove;
+       val = 0;
+       return;
+   }
+   reorderByScore();
+   m = moveList[0].move;
+   val = moveList[0].score;
+   if (moveCount() == 1) {
+       return;
+   }
+   double diff = (moveList[0].score - moveList[1].score)/PAWN_VALUE;
+   double s = (double)strength;
+   int threshold = int(750.0/pow(2.0,s/10.0));
+   // make it a little less likely to make a big blunder
+   threshold = int(threshold/(1.0+diff*strength/100.0));
+   if (rand() % 1024 < threshold) {
+       // deliberately choose a move that is not the best
+       m = moveList[1].move;
+       val = moveList[1].score;
+       int r = (rand() % 1024);
+       if (r < threshold/2 && moveCount() > 2) {
+           m = moveList[2].move;
+           val = moveList[2].score;
+       }
+       if (r < threshold/4 && moveCount() > 3) {
+           m = moveList[3].move;
+           val = moveList[3].score;
+       }
+       if (r < threshold/8 && moveCount() > 4) {
+           m = moveList[4].move;
+           val = moveList[4].score;
+       }
+   }
+}
 
 int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
    if (captures > 1) {

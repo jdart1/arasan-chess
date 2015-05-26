@@ -9,6 +9,9 @@ Changes in Arasan 18.0:
     (except stalemate).
  6) Add refutation table, similar to Gull & Rodent. This is global and
     refutations are produced in the phase of move generation after killers.
+ 7) Changes to reduced-strength mode. Instead of randomizing eval, now at
+    low strength settings the program will select sub-optimal moves
+    occasionally.
 
 Changes in Arasan 17.5:
  1) Modify and tune connected passer scoring.

@@ -1813,17 +1813,7 @@ int Scoring::evalu8(const Board &board) {
 
    if (options.search.strength < 100) {
       // "flatten" positional score values
-      score = score * Util::Max(10, options.search.strength) / 100;
-      if (options.search.strength <= 75) {
-         // somewhat randomize the scores
-         int max = int(PAWN_VALUE * (100 - 1.33F * options.search.strength) / 100) + 
-             Util::Max(0,(50-options.search.strength)*PAWN_VALUE/50) +
-             Util::Max(0,(25-options.search.strength)*PAWN_VALUE/25);
-         if ((rand() % 100) < (50 - options.search.strength)) {
-            max *= 2;
-         }
-         if (max) score += -max / 2 + (rand() % max);
-      }
+      score = score * Util::Max(100,options.search.strength*options.search.strength) / 10000;
    }
 
    // add material score, which is from the perspective of the side to move
