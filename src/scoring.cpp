@@ -20,6 +20,7 @@ extern "C"
 
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
+//#define ATTACK_DEBUG
 
 #ifdef TUNE
 #include "vparams.cpp"
@@ -28,6 +29,8 @@ extern "C"
 #endif
 
 // const for now (not tuned)
+
+const int PAWN_ATTACK_FACTOR = 2*64;
 
 const int Scoring::Params:: MATERIAL_SCALE[32] =
 {
@@ -125,13 +128,8 @@ static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-// tuned, July 2014
-static const int ATTACK_FACTOR[6] = { 0, 4, 8, 8, 12, 12 };
-static const int ROOK_ATTACK_BOOST = 5;
-static const int QUEEN_ATTACK_BOOST1 = 4;
-static const int QUEEN_ATTACK_BOOST2 = 4;
-
-#define BOOST
+// Fixed, currently
+static const int PAWN_ATTACK_BOOST = 2*64;
 
 // Note: the following tables are not part of Params structure (yet)
 static const int KBNKScores[64] =
@@ -236,13 +234,13 @@ static void initBitboards() {
       int fmax = Util::Min(8, file + 2);
       for(int f = fmin; f <= fmax; f++) {
          int r;
+         kingNearProximity[i] = Attacks::king_attacks[i];
+         kingNearProximity[i].set(i);
          Square kp = i;
          if (File(i) == 8) kp -= 1;
          if (File(i) == 1) kp += 1;
          kingProximity[White][i] = Attacks::king_attacks[kp];
-         kingProximity[White][i].set(i);
          kingProximity[White][i].set(kp);
-         kingNearProximity[i] = kingProximity[White][i];
          r = Rank(i, White);
          if (r <= 6) {
             kingProximity[White][i].set(MakeSquare(File(kp) - 1, r + 2, White));
@@ -963,7 +961,7 @@ void Scoring::pieceScore(const Board &board,
             allAttacks |= knattacks;
 
             if (knattacks & nearKing) {
-               attackWeight += ATTACK_FACTOR[Knight];
+               attackWeight += PARAM(MINOR_ATTACK_FACTOR);
                attackCount++;
             }
             break;
@@ -978,13 +976,13 @@ void Scoring::pieceScore(const Board &board,
             allAttacks |= battacks;
             if (!deep_endgame) {
                if (battacks & nearKing) {
-                  attackWeight += ATTACK_FACTOR[Bishop];
+                  attackWeight += PARAM(MINOR_ATTACK_FACTOR);
                   attackCount++;
                }
                else if (battacks & board.queen_bits[side]) {
                   // possible stacked attackers
                   if (board.bishopAttacks(sq, side) & nearKing) {
-                     attackWeight += ATTACK_FACTOR[Bishop];
+                     attackWeight += PARAM(MINOR_ATTACK_FACTOR);
                      attackCount++;
                   }
                }
@@ -1052,7 +1050,7 @@ void Scoring::pieceScore(const Board &board,
             if (!deep_endgame) {
                Bitboard attacks(rattacks2 &nearKing);
                if (attacks) {
-                  attackWeight += ATTACK_FACTOR[Rook];
+                  attackWeight += PARAM(ROOK_ATTACK_FACTOR);
                   attackCount++;
                   majorAttackCount++;
                   Bitboard attacks2(attacks &kingNearProximity[okp]);
@@ -1061,7 +1059,7 @@ void Scoring::pieceScore(const Board &board,
                      if (attacks2) {
 
                         // rook attacks at least 2 squares near king
-                        attackWeight += ROOK_ATTACK_BOOST;
+                        attackWeight += PARAM(ROOK_ATTACK_BOOST);
 #ifdef EVAL_DEBUG
                         cout << "rook attack boost= 1" << endl;
 #endif
@@ -1069,7 +1067,6 @@ void Scoring::pieceScore(const Board &board,
                   }
                }
             }
-
             if (board.pinOnRankOrFile(sq, okp, oside)) {
                pin_count++;
             }
@@ -1121,7 +1118,7 @@ void Scoring::pieceScore(const Board &board,
                }
 
                if (kattacks) {
-                  attackWeight += ATTACK_FACTOR[Queen];
+                  attackWeight += PARAM(QUEEN_ATTACK_FACTOR);
                   attackCount++;
                   majorAttackCount++;
 #ifdef EVAL_DEBUG
@@ -1132,14 +1129,13 @@ void Scoring::pieceScore(const Board &board,
                   if (nearAttacks) {
                      nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                      if (nearAttacks) {
-                        attackWeight += QUEEN_ATTACK_BOOST1;
+                        attackWeight += PARAM(QUEEN_ATTACK_BOOST);
                         nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                         if (nearAttacks) {
-                           attackWeight += QUEEN_ATTACK_BOOST2;
+                           attackWeight += PARAM(QUEEN_ATTACK_BOOST2);
                         }
                      }
                   }
-
 #ifdef EVAL_DEBUG
                   if (attackWeight - tmp) cout << "queen attack boost= " << attackWeight - tmp << endl;
 #endif
@@ -1250,6 +1246,27 @@ void Scoring::pieceScore(const Board &board,
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
    const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
+#ifdef EVAL_DEBUG
+   Bitboard sqb(kingNearProximity[okp]);
+   cout << "king near proximity: " << endl;
+   {
+       Square sq;
+       while (sqb.iterate(sq)) {
+           cout << SquareImage(sq) << ' ';
+       }
+   }
+   cout << endl;
+
+   cout << "squares attacked: ";
+   Bitboard sqa(allAttacks & kingNearProximity[okp]);
+   {
+       Square sq;
+       while (sqa.iterate(sq)) {
+           cout << SquareImage(sq) << ' ';
+       }
+   }
+   cout << endl;
+#endif
    if (early_endgame) {
       int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
                   ~allAttacks).bitCount();
@@ -1261,51 +1278,50 @@ void Scoring::pieceScore(const Board &board,
    if (!deep_endgame) {
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      attackWeight += proximity*ATTACK_FACTOR[Pawn];
-#ifdef EVAL_DEBUG
+      attackWeight += proximity*PAWN_ATTACK_FACTOR;
+      attackWeight = attackWeight/64;
+#ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
       cout << " pawn proximity=" << proximity << endl;
       cout << " attackCount=" << attackCount << endl;
       cout << " attackWeight=" << attackWeight << endl;
-      cout << " squaresAttacked=" << squaresAttacked << endl;
+      cout << " squaresAttacked=" << squaresAttacked << "/" << kingNearProximity[okp].bitCount() << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
       if (!majorAttackCount) {
          attackCount = Util::Max(0,attackCount-1);
       }
-      attackCount = Util::Min(4,attackCount);
-      // general quadratic model with 3 params: weight, count and
-      // squares attacked.
-      int scale =
-         (PARAM(KING_ATTACK_PARAM1)*attackWeight + 
-          PARAM(KING_ATTACK_PARAM2)*attackWeight*attackWeight +
-          PARAM(KING_ATTACK_PARAM3)*attackCount + 
-          PARAM(KING_ATTACK_PARAM4)*attackCount*attackCount + 
-          PARAM(KING_ATTACK_PARAM5)*squaresAttacked +
-          PARAM(KING_ATTACK_PARAM6)*squaresAttacked*squaresAttacked +
-          PARAM(KING_ATTACK_PARAM7)*attackWeight*attackCount +
-          PARAM(KING_ATTACK_PARAM8)*attackWeight*squaresAttacked +
-          PARAM(KING_ATTACK_PARAM9)*attackCount*squaresAttacked)/64;
-      int attack = 10*PARAM(KING_ATTACK_SCALE)[Util::Max(0,Util::Min(511,scale/10))];
+      int attackCountFactor = attackCount>1 ? attackCount : 0;
+      int scale = PARAM(KING_ATTACK_PARAM0) + PARAM(KING_ATTACK_PARAM1)*attackWeight/64;
+#ifdef ATTACK_DEBUG
+      cout << "scale based on attack Weight= " << scale << endl;
+#endif
+      if (scale > 0) {
+          int boostFactor = 0;
+          if (cover < PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
+              boostFactor = 256 * (PARAM(KING_ATTACK_BOOST_THRESHOLD)-cover) / PARAM(KING_ATTACK_BOOST_DIVISOR);
+              if (boostFactor > PARAM(KING_ATTACK_BOOST_MAX)) boostFactor = PARAM(KING_ATTACK_BOOST_MAX);
+          }
+#ifdef ATTACK_DEBUG
+          cout << "boost factor= " << (float)boostFactor/256 << endl;
+#endif
+          scale += scale*(PARAM(KING_ATTACK_PARAM2)*attackCountFactor + PARAM(KING_ATTACK_PARAM3)*squaresAttacked/kingNearProximity[okp].bitCount() + boostFactor)/256;
+#ifdef ATTACK_DEBUG
+          cout << "scale after corrections= " << scale << endl;
+#endif
+      }
+      int attack = 10*PARAM(KING_ATTACK_SCALE)[Util::Max(0,Util::Min(511,scale))];
+#ifdef ATTACK_DEBUG
+      cout << "attack= " << attack << endl;
+#endif
       if (pin_count) attack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 
       int kattack = attack;
-#ifdef BOOST
-#ifdef EVAL_DEBUG
-      int kattack_tmp = kattack;
-#endif
-      if (kattack && cover < PARAM(KING_ATTACK_BOOST_THRESHOLD)) {
-         kattack += Util::Min(kattack / 2, ((PARAM(KING_ATTACK_BOOST_THRESHOLD)-cover) * kattack) / PARAM(KING_ATTACK_BOOST_DIVISOR));
-#ifdef EVAL_DEBUG
-         cout << "boost factor= " << (float) kattack / (float) kattack_tmp << endl;
-#endif
-      }
-#endif
-#ifdef EVAL_DEBUG
+#ifdef ATTACK_DEBUG
       Scores s;
       s.mid = kattack;
-      cout << " king attack score (" << ColorImage(side) << ") : " << kattack << " (pre-scaling), " << s.blend(board.getMaterial(oside).materialLevel()) << " (scaled)" << endl;
+      cout << " king attack score (" << ColorImage(side) << ") : " << kattack << " (pre-scaling), " << s.blend(board.getMaterial(side).materialLevel()) << " (scaled)" << endl;
 #endif
 
       // decrement the opposing side's scores because we want to
@@ -2657,7 +2673,7 @@ void Scoring::Params::write(ostream &o)
    o << "const int Scoring::Params::KING_COVER[5] = ";
    print_array(o,Params::KING_COVER,5);
 
-   for (int i = 29; i < Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+   for (int i = 29; i < 29+Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       o << "const int Scoring::Params::";
       const string str(tune::tune_params[i].name);
       
