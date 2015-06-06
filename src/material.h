@@ -70,6 +70,11 @@ class Material
         return total;
     }
 	
+    // return value of pieces (excluding pawns)
+    int32 pieceValue() const {
+        return total - PAWN_VALUE*pawnCount();
+    }
+	
     uint32 infobits() const	{
         return info;
     }
@@ -92,6 +97,11 @@ class Material
     int pawnCount() const
     {
         return (info & 0xf);
+    }
+        
+    void clearPawns()
+    {
+        info &= ~0xf;
     }
         
     int queenCount() const

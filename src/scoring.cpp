@@ -195,9 +195,11 @@ private:
     int64 key;
 };
 
-static const int DRAW_PATTERN_COUNT = 11;
+static const int DRAW_PATTERN_COUNT = 13;
 
 static const EndgamePattern DRAW_PATTERN[] = {
+                   EndgamePattern(Material::KR, Material::KB),
+                   EndgamePattern(Material::KR, Material::KN),
                    EndgamePattern(Material::KNN, Material::K),
                    EndgamePattern(Material::KNN, Material::KR),
                    EndgamePattern(Material::KNN, Material::KB),
@@ -498,7 +500,6 @@ static int near_draw_adjust(const Material &ourmat,
                             int pawndiff) 
 {
    int score = 0;
-   
    if (pawndiff == 0) {
       // stronger side's piece advantage is worth less, esp. with few pawns
       score += -int(0.6*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.1*PAWN_VALUE);
@@ -512,8 +513,11 @@ static int near_draw_adjust(const Material &ourmat,
       // oppponent pawns.
       score += int(0.4*PAWN_VALUE)-(4-Util::Min(4,oppmat.pawnCount()))*int(0.1*PAWN_VALUE);
    }
+   if (ourmat.pawnCount() == 0) {
+      // extra penalty if we have no pawns
+      score += -int(0.5*PAWN_VALUE);
+   }
    return score;
-             
 }
 
 int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
@@ -524,8 +528,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 #ifdef EVAL_DEBUG
     int tmp = score;
 #endif
-    const int opponentPieceValue = (oppmat.value()-oppmat.pawnCount()*PAWN_VALUE);
-    const int pieceDiff = ourmat.value()-ourmat.pawnCount()*PAWN_VALUE - opponentPieceValue;
+    const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     // If we have a material advantage but few pawns and a
     // configuration that would be a likely draw w/o pawns, move
@@ -550,11 +553,6 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              score = near_draw_adjust(ourmat,oppmat,pawnDiff);
           }
           return score;
-       } else if (pieces == Material::KR && (oppmat.pieceBits() ==
-                  Material::KN || oppmat.pieceBits() == Material::KB)) {
-           if (Util::Abs(ourmat.pawnCount()-oppmat.pawnCount()) <= 2) {
-              return near_draw_adjust(ourmat,oppmat,pawnDiff);
-           }
        } else {
           EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
           for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
