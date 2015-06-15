@@ -1244,27 +1244,6 @@ void Scoring::pieceScore(const Board &board,
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
    const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
-#ifdef EVAL_DEBUG
-   Bitboard sqb(kingNearProximity[okp]);
-   cout << "king near proximity: " << endl;
-   {
-       Square sq;
-       while (sqb.iterate(sq)) {
-           cout << SquareImage(sq) << ' ';
-       }
-   }
-   cout << endl;
-
-   cout << "squares attacked: ";
-   Bitboard sqa(allAttacks & kingNearProximity[okp]);
-   {
-       Square sq;
-       while (sqa.iterate(sq)) {
-           cout << SquareImage(sq) << ' ';
-       }
-   }
-   cout << endl;
-#endif
    if (early_endgame) {
       int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
                   ~allAttacks).bitCount();
