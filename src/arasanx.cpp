@@ -1648,6 +1648,31 @@ static void execute_move(Board &board,Move m)
     gameMoves->add_move(board,previous_state,m,last_move_image,false);
 }
 
+#ifdef TUNE
+static void setTuningParam(const string &name, const string &value) 
+{
+   // set named parameters that are in the tuning set
+   for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
+      if (tune::tune_params[i].name == name) {
+         stringstream buf(value);
+         int tmp;
+         buf >> tmp;
+         if (!buf.bad() && !buf.fail()) {
+            tune::tune_params[i].current = tmp;
+         }
+         else {
+            cout << "# Warning: invalid value for option " <<
+               name << ": " << value << endl;
+            return;
+         }
+         break;
+      }
+   }
+   // apply params to Scoring module
+   tune::applyParams();
+}
+#endif
+
 static void processWinboardOptions(const string &args) {
     string name, value;
     size_t eq = args.find("=");
@@ -1678,24 +1703,7 @@ static void processWinboardOptions(const string &args) {
     }
 #ifdef TUNE
     else {
-       // set named parameters that are in the tuning set
-       for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-          if (tune::tune_params[i].name == name) {
-             stringstream buf(value);
-             int tmp;
-             buf >> tmp;
-             if (!buf.bad() && !buf.fail()) {
-                tune::tune_params[i].current = tmp;
-             }
-             else {
-                cout << "# Warning: invalid value for option " <<
-                   name << ": " << value << endl;
-             }
-             break;
-          }
-       }
-       // apply params to Scoring module
-       tune::applyParams();
+       setTuningParam(name,value);
     }
 #endif
     searcher->updateSearchOptions();
@@ -2594,6 +2602,11 @@ static bool do_command(const string &cmd, Board &board) {
                 if (options.search.strength > 100) options.search.strength = 100;
             }
 	}
+#ifdef TUNE
+        else {
+           setTuningParam(name,value);
+        }
+#endif
         searcher->updateSearchOptions();
     }
     else if (uci && cmd == "ucinewgame") {
