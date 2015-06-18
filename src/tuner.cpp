@@ -251,6 +251,7 @@ static OptBase * allocate_optimizer(const string &algorithm,
 static void usage()
 {
    cerr << "Usage: tuner -i <input objective file> -a <algorithm>" << endl;
+   cerr << "-d just write out current parameters values to params.cpp" << endl;
    cerr << "-o <output parameter file> -x <output objective file>" << endl;
    cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
    cerr << "-n <iterations> -t <for test>" << endl;
@@ -282,19 +283,20 @@ int CDECL main(int argc, char **argv)
 
     string input_file;
 
-   cout << "writing initial solution" << endl;
-   tune::applyParams();
-   ofstream param_out(out_file_name,ios::out | ios::trunc);
-   Scoring::Params::write(param_out);
-   param_out << endl;
-   ofstream x0_out(x0_file_name,ios::out | ios::trunc);
-   tune::writeX0(x0_out);
-
+    tune::applyParams();
     int arg = 1;
     string first_param, last_param;
 
     while (arg < argc && argv[arg][0] == '-') {
-       if (strcmp(argv[arg],"-a")==0) {
+       if (strcmp(argv[arg],"-d")==0) {
+          cout << "writing initial solution" << endl;
+          ofstream param_out(out_file_name,ios::out | ios::trunc);
+          Scoring::Params::write(param_out);
+          param_out << endl;
+          ofstream x0_out(x0_file_name,ios::out | ios::trunc);
+          tune::writeX0(x0_out);
+       }
+       else if (strcmp(argv[arg],"-a")==0) {
           ++arg;
           algorithm = argv[arg];
           if (find_algo(algorithm) == UNKNOWN) {
