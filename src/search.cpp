@@ -45,6 +45,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define HELPFUL_MASTER
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
+static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = int(1.5*DEPTH_INCREMENT);
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
@@ -64,6 +65,9 @@ static const int LMP_DEPTH=10;
 
 static const int LMP_MOVE_COUNT[11] = {1, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
 };
+
+static const int RAZOR_MARGIN_BASE = int(3.0*PAWN_VALUE);
+static const int RAZOR_MARGIN_INCR = int(1.0*PAWN_VALUE);
 
 static const int FUTILITY_MARGIN[4] =
    {(int)1.46*PAWN_VALUE,
@@ -2037,7 +2041,7 @@ int Search::calcExtensions(const Board &board,
    else if (TypeOfMove(move) == Normal &&
             Capture(move) != Empty && Capture(move) != Pawn &&
             board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-            board.getMaterial(board.sideToMove()).pieceCount() == 0) {
+            board.getMaterial(board.sideToMove()).noPieces()) {
       // Capture of last piece in endgame.
       node->extensions |= CAPTURE;
       extend += CAPTURE_EXTENSION;
@@ -2431,17 +2435,14 @@ int Search::search()
         }
     }
 
-    bool doNull = !in_check &&
+    const bool pruneOk = !in_check &&
         !node->PV() &&
-        !(node->flags & (IID|VERIFY)) &&
-        !IsNull((node-1)->last_move) &&
-        !Scoring::mateScore(node->alpha) &&
-        board.state.moveCount <= 98 &&
-        (board.getMaterial(board.sideToMove()).pieceCount() >= 1);
+        board.getMaterial(board.sideToMove()).hasPieces();
 
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, as in Stockfish, Protector, etc.
-    if (doNull && depth <= 3*DEPTH_INCREMENT) {
+    if (pruneOk && depth <= 3*DEPTH_INCREMENT &&
+        node->beta < Constants::MATE_RANGE) {
         const int margin = STATIC_NULL_MARGIN[depth*4/DEPTH_INCREMENT];
         const int threshold = node->beta+margin;
         ASSERT(node->eval != Scoring::INVALID_SCORE);
@@ -2459,9 +2460,8 @@ int Search::search()
 
 #ifdef RAZORING
     // razoring as in Glaurung & Toga
-    if (doNull && depth <= 3*DEPTH_INCREMENT &&
-        IsNull(hash_move)) {
-       const int threshold = node->beta - (depth <= DEPTH_INCREMENT ? int(1.0*PAWN_VALUE) : int(2.5*PAWN_VALUE));
+    if (pruneOk && node->beta < Constants::MATE_RANGE && depth <= RAZOR_DEPTH) {
+        const int threshold = node->beta - RAZOR_MARGIN_BASE - Util::Max(0,(depth-DEPTH_INCREMENT)*RAZOR_MARGIN_INCR/DEPTH_INCREMENT);
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
             // Note: use threshold as the bounds here, not beta, as
@@ -2486,7 +2486,11 @@ int Search::search()
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
     node->threatMove = NullMove;
-    if (doNull && depth >= 2*DEPTH_INCREMENT) {
+    if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
+        !(node->flags & (IID|VERIFY)) &&
+        !IsNull((node-1)->last_move) &&
+        !Scoring::mateScore(node->alpha) &&
+        board.state.moveCount <= 98) {
         int nu_depth;
         nu_depth = depth-4*DEPTH_INCREMENT; // R=3
         // If score is very good do extra reduction (aka "smooth scaling").

@@ -168,6 +168,11 @@ class Material
         return (info & (0xffffffff-0x100000-0xf)) == 0;
     }
         
+    bool hasPieces() const
+    {
+        return !noPieces();
+    }
+
     // True if no pawns
     bool noPawns() const
     {
