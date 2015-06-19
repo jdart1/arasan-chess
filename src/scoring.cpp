@@ -494,31 +494,43 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
-// adjust material score when both sides have pawn(s)
+
+// Adjust material score for "near draw" material configurations.
+// At least one side has pawns(s).
 static int near_draw_adjust(const Material &ourmat,
                             const Material &oppmat,
                             int pawndiff) 
 {
    int score = 0;
    if (pawndiff == 0) {
-      // stronger side's piece advantage is worth less, esp. with few pawns
+      // stronger side's piece advantage is worth less, esp. with few
+      // pawns
       score += -int(0.6*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.1*PAWN_VALUE);
    }
    else if (pawndiff == 1) {
       score += -int(0.4*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.05*PAWN_VALUE);
    }
-   else if (pawndiff == -1 || pawndiff == -2) {
+   else if (ourmat.hasPawns() && pawndiff < 0 && pawndiff > -3) {
       // add bonus for our side (thus, penalizing the other side for
-      // having only 1-2 pawns advantage). Less bonus if more
-      // oppponent pawns.
-      score += int(0.4*PAWN_VALUE)-(4-Util::Min(4,oppmat.pawnCount()))*int(0.1*PAWN_VALUE);
+      // being only 1-2 pawns ahead). Less bonus if more opponent
+      // pawns.
+      //score +=
+      // int(0.4*PAWN_VALUE)-(4-Util::Min(4,oppmat.pawnCount()))*int(0.1*PAWN_VALUE);
+      score += Util::Min(2,oppmat.pawnCount())*int(0.2*PAWN_VALUE);
+      if (oppmat.pawnCount() > 2) {
+         score -= Util::Max(int(0.2*PAWN_VALUE),int(0.05*PAWN_VALUE)*(oppmat.pawnCount()-2));
+      }
    }
-   if (ourmat.pawnCount() == 0) {
+   if (!ourmat.hasPawns()) {
       // extra penalty if we have no pawns
       score += -int(0.5*PAWN_VALUE);
    }
+#ifdef EVAL_DEBUG
+   cout << "near draw adjust: " << score << endl;
+#endif
    return score;
 }
+
 
 int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 {
