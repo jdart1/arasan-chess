@@ -1,15 +1,17 @@
 Build & install instructions for Arasan on Linux or Mac:
 
-If you want tablebase support, you must download and install the tablebase
-code (available separately) and edit the Makefile to select the type(s)
-of tablebase support you want and to point to the necessary sources.
+If you want tablebase support, you must download and install the
+tablebase code (available separately) and edit the Makefile to select
+the type(s) of tablebase support you want and to point to the
+necessary sources.
 
 gcc 4.2 or above is recommended for building Arasan. There is some
 support for older gcc versions (not very tested). It has also been
 verified to compile with Intel C++ 11.1 and 12.0.
 
-On MacOS, you need to install XCode 3.1 or above to get a compatible gcc.
-If you are on MacOS Leopard, you then probably need to set something like:
+On MacOS, you need to install XCode 3.1 or above to get a compatible
+gcc.  If you are on MacOS Leopard, you then probably need to set
+something like:
 
 export CC=g++-4.2
 export LDFLAGS=-L/Developer/usr/lib/i686-apple-darwin9/gcc-4.2.1
@@ -43,10 +45,12 @@ The Arasan engine binary is named "arasanx-32", "arasanx-64", or
 "arasanx-64-popcnt", depending on the architecture and build flags
 used.
 
-Note: the Makefile also builds a special version of Arasan for
-automated parameter tuning (arasanx-64-tune) and a console program
-for automated tuning (tuner). These require a compiler that supports
-C++ 11. Also: they have only been built/tested under Linux.
+Note: there is another target "tune" in the Makefile that builds a
+special version of Arasan for automated parameter tuning
+(arasanx-64-tune) and a console program for automated tuning
+(tuner). These require a compiler that supports C++ 11, and they
+have several external dependencies (see the Makefile for details).
+Also: they have only been built/tested under Linux.
 
 Limited testing has been done on architectures other than x32 and amd64.
 However, the code is believed to be portable. Two non-Intel targets are
