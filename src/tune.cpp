@@ -27,9 +27,6 @@ enum {
    KN_VS_PAWN_ADJUST0,
    KN_VS_PAWN_ADJUST1,
    KN_VS_PAWN_ADJUST2,
-   PAWN_TRADE0,
-   PAWN_TRADE1,
-   PAWN_TRADE2,
    CASTLING0,
    CASTLING1,
    CASTLING2,
@@ -47,6 +44,8 @@ enum {
    KING_DISTANCE_MULT,
    PIN_MULTIPLIER_MID,
    PIN_MULTIPLIER_END,
+   PAWN_ENDGAME1,
+   PAWN_ENDGAME2,
    MINOR_ATTACK_FACTOR,
    ROOK_ATTACK_FACTOR,
    QUEEN_ATTACK_FACTOR,
@@ -93,7 +92,6 @@ enum {
    PP_BLOCK_BASE_END,
    PP_BLOCK_MULT_MID,
    PP_BLOCK_MULT_END,
-   ENDGAME_PAWN_BONUS,
    KING_NEAR_PASSER,
    OPP_KING_NEAR_PASSER,
    PAWN_SIDE_BONUS,
@@ -170,9 +168,6 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250),
    tune::TuneParam(KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200),
    tune::TuneParam(KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",-1500,-2000,-1000),
-   tune::TuneParam(PAWN_TRADE0,"pawn_trade0",-450,-900,0),
-   tune::TuneParam(PAWN_TRADE1,"pawn_trade1",-250,-500,0),
-   tune::TuneParam(PAWN_TRADE2,"pawn_trade2",-100,-250,0),
    tune::TuneParam(CASTLING0,"castling0",0,-100,100),
    tune::TuneParam(CASTLING1,"castling1",-70,-300,0),
    tune::TuneParam(CASTLING2,"castling2",-100,-300,0),
@@ -190,6 +185,8 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
    tune::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500),
    tune::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,500),
+   tune::TuneParam(PAWN_ENDGAME1,"pawn_endgame1",200,0,500),
+   tune::TuneParam(PAWN_ENDGAME2,"pawn_endgame2",300,0,500),
    tune::TuneParam(MINOR_ATTACK_FACTOR,"minor_attack_factor",315,200,500),
    tune::TuneParam(ROOK_ATTACK_FACTOR,"rook_attack_factor",585,300,600),
    tune::TuneParam(QUEEN_ATTACK_FACTOR,"queen_attack_factor",640,500,900),
@@ -236,7 +233,6 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(PP_BLOCK_BASE_END,"pp_block_base_end",132,0,280),
    tune::TuneParam(PP_BLOCK_MULT_MID,"pp_block_mult_mid",97,0,180),
    tune::TuneParam(PP_BLOCK_MULT_END,"pp_block_mult_end",44,0,80),
-   tune::TuneParam(ENDGAME_PAWN_BONUS,"endgame_pawn_bonus",110,0,250),
    tune::TuneParam(KING_NEAR_PASSER,"king_near_passer",224,0,500),
    tune::TuneParam(OPP_KING_NEAR_PASSER,"opp_king_near_passer",-258,-500,0),
    tune::TuneParam(PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500),
@@ -401,6 +397,9 @@ void tune::checkParams()
    }
 }
 
+#ifdef __GNUC__
+#pragma optimize("", off)
+#endif
 void tune::applyParams()
 {
    checkParams();
@@ -422,10 +421,6 @@ void tune::applyParams()
    for (i = 0; i < 3; i++) {
       *dest++ = tune::tune_params[j++].current;
    }
-   dest = Scoring::Params::PAWN_TRADE;
-   for (i = 0; i < 3; i++) {
-      *dest++ = tune::tune_params[j++].current;
-   }
    dest = Scoring::Params::CASTLING;
    for (i = 0; i < 6; i++) {
       *dest++ = tune::tune_params[j++].current;
@@ -441,6 +436,8 @@ void tune::applyParams()
    Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
    Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
    Scoring::Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
+   Scoring::Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;
+   Scoring::Params::PAWN_ENDGAME2 = tune_params[PAWN_ENDGAME2].current;
    Scoring::Params::MINOR_ATTACK_FACTOR = tune_params[MINOR_ATTACK_FACTOR].current;
    Scoring::Params::ROOK_ATTACK_FACTOR = tune_params[ROOK_ATTACK_FACTOR].current;
    Scoring::Params::QUEEN_ATTACK_FACTOR = tune_params[QUEEN_ATTACK_FACTOR].current;
@@ -487,7 +484,6 @@ void tune::applyParams()
    Scoring::Params::PP_BLOCK_BASE_END = tune_params[PP_BLOCK_BASE_END].current;
    Scoring::Params::PP_BLOCK_MULT_MID = tune_params[PP_BLOCK_MULT_MID].current;
    Scoring::Params::PP_BLOCK_MULT_END = tune_params[PP_BLOCK_MULT_END].current;
-   Scoring::Params::ENDGAME_PAWN_BONUS = tune_params[ENDGAME_PAWN_BONUS].current;
    Scoring::Params::KING_NEAR_PASSER = tune_params[KING_NEAR_PASSER].current;
    Scoring::Params::OPP_KING_NEAR_PASSER = tune_params[OPP_KING_NEAR_PASSER].current;
    Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;

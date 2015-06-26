@@ -18,13 +18,12 @@ struct Params
 BEGIN_PACKED_STRUCT
     
     // number of fixed parameters that map 1-1 to tuning paramaters
-    static const int PARAM_ARRAY_SIZE = 59;
+    static const int PARAM_ARRAY_SIZE = 60;
 
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
     static PARAM_MOD int QR_ADJUST[4];
     static PARAM_MOD int KN_VS_PAWN_ADJUST[3];
-    static PARAM_MOD int PAWN_TRADE[3];
     static PARAM_MOD int CASTLING[6];
     static PARAM_MOD int KING_COVER[5];
     static PARAM_MOD int KING_COVER_BASE;
@@ -33,6 +32,8 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int KING_DISTANCE_MULT;
     static PARAM_MOD int PIN_MULTIPLIER_MID;
     static PARAM_MOD int PIN_MULTIPLIER_END;
+    static PARAM_MOD int PAWN_ENDGAME1;
+    static PARAM_MOD int PAWN_ENDGAME2;
     static PARAM_MOD int MINOR_ATTACK_FACTOR;
     static PARAM_MOD int ROOK_ATTACK_FACTOR;
     static PARAM_MOD int QUEEN_ATTACK_FACTOR;
@@ -79,7 +80,6 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int PP_BLOCK_BASE_END;
     static PARAM_MOD int PP_BLOCK_MULT_MID;
     static PARAM_MOD int PP_BLOCK_MULT_END;
-    static PARAM_MOD int ENDGAME_PAWN_BONUS;
     static PARAM_MOD int KING_NEAR_PASSER;
     static PARAM_MOD int OPP_KING_NEAR_PASSER;
     static PARAM_MOD int PAWN_SIDE_BONUS;

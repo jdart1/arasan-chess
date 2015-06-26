@@ -183,7 +183,7 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
+all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tuner $(EXPORT)/$(ARASANX)-tune
 
 tune: dirs $(EXPORT)/tuner $(EXPORT)/$(ARASANX)-tune
 
@@ -199,7 +199,7 @@ sparc-solaris:
 # Arm target on Arm host with GCC
 arm-linux:
 	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= CFLAGS='$(CFLAGS)' all
- 
+
 clean: dirs
 	rm -f $(BUILD)/*.o
 	rm -f $(TUNE_BUILD)/*.o

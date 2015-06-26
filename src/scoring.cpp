@@ -195,25 +195,6 @@ private:
     int64 key;
 };
 
-static const int DRAW_PATTERN_COUNT = 13;
-
-static const EndgamePattern DRAW_PATTERN[] = {
-                   EndgamePattern(Material::KR, Material::KB),
-                   EndgamePattern(Material::KR, Material::KN),
-                   EndgamePattern(Material::KNN, Material::K),
-                   EndgamePattern(Material::KNN, Material::KR),
-                   EndgamePattern(Material::KNN, Material::KB),
-                   EndgamePattern(Material::KNN, Material::KN),
-                   EndgamePattern(Material::KRN, Material::KR),
-                   EndgamePattern(Material::KRB, Material::KR),
-                   EndgamePattern(Material::KBB, Material::KB),
-                   EndgamePattern(Material::KBB, Material::KR),
-                   EndgamePattern(Material::KBN, Material::KR),
-                   EndgamePattern(Material::KBN, Material::KN),
-                   EndgamePattern(Material::KQ, Material::KRB)
-};
-
-
 // Don't call it "distance" - conflicts with MS template library
 static inline int distance1(int x, int y) {
    return distances[x][y];
@@ -494,44 +475,6 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
-
-// Adjust material score for "near draw" material configurations.
-// At least one side has pawns(s).
-static int near_draw_adjust(const Material &ourmat,
-                            const Material &oppmat,
-                            int pawndiff) 
-{
-   int score = 0;
-   if (pawndiff == 0) {
-      // stronger side's piece advantage is worth less, esp. with few
-      // pawns
-      score += -int(0.6*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.1*PAWN_VALUE);
-   }
-   else if (pawndiff == 1) {
-      score += -int(0.4*PAWN_VALUE)+Util::Min(4,ourmat.pawnCount())*int(0.05*PAWN_VALUE);
-   }
-   else if (ourmat.hasPawns() && pawndiff < 0 && pawndiff > -3) {
-      // add bonus for our side (thus, penalizing the other side for
-      // being only 1-2 pawns ahead). Less bonus if more opponent
-      // pawns.
-      //score +=
-      // int(0.4*PAWN_VALUE)-(4-Util::Min(4,oppmat.pawnCount()))*int(0.1*PAWN_VALUE);
-      score += Util::Min(2,oppmat.pawnCount())*int(0.2*PAWN_VALUE);
-      if (oppmat.pawnCount() > 2) {
-         score -= Util::Max(int(0.2*PAWN_VALUE),int(0.05*PAWN_VALUE)*(oppmat.pawnCount()-2));
-      }
-   }
-   if (!ourmat.hasPawns()) {
-      // extra penalty if we have no pawns
-      score += -int(0.5*PAWN_VALUE);
-   }
-#ifdef EVAL_DEBUG
-   cout << "near draw adjust: " << score << endl;
-#endif
-   return score;
-}
-
-
 int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 {
     const Material &ourmat = board.getMaterial(side);
@@ -541,11 +484,8 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     int tmp = score;
 #endif
     const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
-    const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
-    // If we have a material advantage but few pawns and a
-    // configuration that would be a likely draw w/o pawns, move
-    // the score towards a draw, and discourage trade or loss
-    // of remaining pawns.
+    
+    const int mdiff = ourmat.value() - oppmat.value();
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
        const uint32 pieces = ourmat.pieceBits();
        if (pieces == Material::KN || pieces == Material::KB) {
@@ -560,18 +500,10 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 score -= KNIGHT_VALUE;
              }
           }
-          else {
-             // both sides have pawns
-             score = near_draw_adjust(ourmat,oppmat,pawnDiff);
-          }
+#ifdef EVAL_DEBUG
+          cout << "minor piece adjustment (" << ColorImage(side) << ") = " << score << endl;
+#endif
           return score;
-       } else {
-          EndgamePattern pattern(ourmat.pieceBits(),oppmat.pieceBits());
-          for (int i = 0; i < DRAW_PATTERN_COUNT; i++) {
-             if (DRAW_PATTERN[i] == pattern) {
-                return near_draw_adjust(ourmat,oppmat,pawnDiff);
-             }
-          }
        }
     }
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
@@ -595,14 +527,13 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
         if (ourmat.rookCount() == oppmat.rookCount()+1) {
             if (ourmat.minorCount() == oppmat.minorCount()) {
                 // Rook vs. pawns. Usually the Rook is better.
-                int pawnDiff = oppmat.pawnCount() - ourmat.pawnCount();
-                score += PAWN_VALUE/3 - 4*Util::Max(0,pawnDiff-5);
+                score += PAWN_VALUE/3;
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>=0);
-               score += APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
+               score -= APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
@@ -616,35 +547,43 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     default:
         break;
     }
+#ifdef EVAL_DEBUG
+    if (score-tmp)
+       cout << "material imbalance (" << ColorImage(side) << ") = " << score-tmp << endl;
+#endif
     // Encourage trading pieces (but not pawns) when we are ahead in material.
+    if (oppmat.materialLevel() < 16) {
+       if (mdiff >= 3*PAWN_VALUE) {
+          // Encourage trading pieces when we are ahead in material.
 #ifdef EVAL_DEBUG
-    tmp = score;
+          int tmp = score;
 #endif
-    const int mdiff = ourmat.value() - oppmat.value();
-    if (mdiff >= 3*PAWN_VALUE) {
-       // Encourage trading pieces when we are ahead in material.
-       if (oppmat.materialLevel() < 16) {
           score += mdiff*PARAM(TRADE_DOWN)[oppmat.materialLevel()]/4096;
-       }
-       // Discourage trading pawns when our own material is low (because
-       // harder to win).
-       if (ourmat.materialLevel() < 16 && ourmat.pawnCount() < 3) {
-          score += APARAM(PAWN_TRADE,ourmat.pawnCount());
-       }
-    }
-    // Also give bonus for having more pawns in endgame (assuming
-    // we have not traded pieces for pawns).
-    if (mdiff>=0 && pieceDiff>=0 && ourmat.materialLevel() <= PARAM(ENDGAME_THRESHOLD)) {
-       const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
-       if (pawnDiff > 0) {
-          score += pawnDiff*PARAM(ENDGAME_PAWN_BONUS)*(128-PARAM(MATERIAL_SCALE)[ourmat.materialLevel()])/128;
-       }
-    }
 #ifdef EVAL_DEBUG
-    if (score-tmp) {
-       cout << "trade down=" << score-tmp << endl;
-    }
+          if (score-tmp) {
+             cout << "trade down (" << ColorImage(side) << ") = " << score-tmp << endl;
+          }
 #endif
+       }
+       const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
+       if (pieceDiff >= 0 && pieceDiff <= ROOK_VALUE && pawnDiff) {
+          // penalize being ahead in reduced-material endgame but with few pawns
+#ifdef EVAL_DEBUG
+          int tmp = score;
+#endif
+          if (pawnDiff > 0) {
+             // having more pawns is good, especially > 1
+             const int ourp = ourmat.pawnCount();
+             int adj = PARAM(PAWN_ENDGAME1) + ((ourp > 1) ? PARAM(PAWN_ENDGAME2) : 0);
+             score += (4-ourmat.materialLevel()/4)*adj/4;
+          } 
+#ifdef EVAL_DEBUG
+          if (score-tmp) {
+             cout << "pawn adjust (" << ColorImage(side) << ") = " << score-tmp << endl;
+          }
+#endif
+       }
+    }
     return score;
 }
 
@@ -1726,10 +1665,12 @@ int Scoring::materialScore(const Board &board) const {
         if (Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4)
             adjust -= mdiff/4;
     }
-    if (ourmat.pieceBits() != oppmat.pieceBits()) {
+    if (ourmat.infobits() != oppmat.infobits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
-            adjust += adjustMaterialScoreNoPawns(board,side) -
+           if (ourmat.pieceBits() != oppmat.pieceBits()) {
+              adjust += adjustMaterialScoreNoPawns(board,side) -
                 adjustMaterialScoreNoPawns(board,OppositeColor(side));
+           }
         }
         else {
             adjust += adjustMaterialScore(board,side) -
@@ -2655,14 +2596,12 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::QR_ADJUST,4);
    o << "const int Scoring::Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
-   o << "const int Scoring::Params::PAWN_TRADE[3] = ";
-   print_array(o,Params::PAWN_TRADE,3);
    o << "const int Scoring::Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
    o << "const int Scoring::Params::KING_COVER[5] = ";
    print_array(o,Params::KING_COVER,5);
 
-   for (int i = 29; i < 29+Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+   for (int i = 26; i < 26+Scoring::Params::PARAM_ARRAY_SIZE; i++) {
       o << "const int Scoring::Params::";
       const string str(tune::tune_params[i].name);
       

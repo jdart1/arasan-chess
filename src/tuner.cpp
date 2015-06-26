@@ -295,6 +295,7 @@ int CDECL main(int argc, char **argv)
           param_out << endl;
           ofstream x0_out(x0_file_name,ios::out | ios::trunc);
           tune::writeX0(x0_out);
+          exit(0);
        }
        else if (strcmp(argv[arg],"-a")==0) {
           ++arg;
