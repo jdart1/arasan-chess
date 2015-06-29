@@ -18,7 +18,7 @@ struct Params
 BEGIN_PACKED_STRUCT
     
     // number of fixed parameters that map 1-1 to tuning paramaters
-    static const int PARAM_ARRAY_SIZE = 60;
+    static const int PARAM_ARRAY_SIZE = 63;
 
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
@@ -32,6 +32,9 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int KING_DISTANCE_MULT;
     static PARAM_MOD int PIN_MULTIPLIER_MID;
     static PARAM_MOD int PIN_MULTIPLIER_END;
+    static PARAM_MOD int KRMINOR_VS_R;
+    static PARAM_MOD int MINOR_FOR_PAWNS;
+    static PARAM_MOD int ENDGAME_PAWN_ADVANTAGE;
     static PARAM_MOD int PAWN_ENDGAME1;
     static PARAM_MOD int PAWN_ENDGAME2;
     static PARAM_MOD int MINOR_ATTACK_FACTOR;

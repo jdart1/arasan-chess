@@ -483,9 +483,19 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 #ifdef EVAL_DEBUG
     int tmp = score;
 #endif
-    const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
-    
     const int mdiff = ourmat.value() - oppmat.value();
+    const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
+    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
+        // Bishop endgame: drawish
+       if (pawnDiff > 0 && Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4) {
+#ifdef EVAL_DEBUG
+          cout << "bishop endgame adjust: " << -mdiff/4 << endl;
+#endif
+          score -= mdiff/4;
+       }
+       return score;
+    }
+    const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
        const uint32 pieces = ourmat.pieceBits();
        if (pieces == Material::KN || pieces == Material::KB) {
@@ -509,11 +519,15 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
     case 0: {
-        if (ourmat.minorCount() == oppmat.minorCount() + 1) {
-            // Knight or Bishop vs. pawns
-            // Bonus for piece. Note: we do not have KN or KB alone - those are special
-            // cases handled above.
-            score += PAWN_VALUE/4;
+       if (ourmat.minorCount() == oppmat.minorCount()+1) {
+          // we have extra minor (but not only a minor)
+          if (oppmat.pieceBits() == Material::KR) {
+             // KR + minor vs KR - draw w. no pawns so lower score
+             score -= PARAM(KRMINOR_VS_R);
+          } else if (oppmat.pieceValue() > ROOK_VALUE) {
+             // Knight or Bishop traded for pawns. Bonus for piece
+             score += PARAM(MINOR_FOR_PAWNS);
+          }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
              ourmat.rookCount() == oppmat.rookCount() - 2) {
@@ -565,24 +579,28 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           }
 #endif
        }
-       const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
-       if (pieceDiff >= 0 && pieceDiff <= ROOK_VALUE && pawnDiff) {
-          // penalize being ahead in reduced-material endgame but with few pawns
 #ifdef EVAL_DEBUG
-          int tmp = score;
+       tmp = score;
 #endif
-          if (pawnDiff > 0) {
-             // having more pawns is good, especially > 1
-             const int ourp = ourmat.pawnCount();
-             int adj = PARAM(PAWN_ENDGAME1) + ((ourp > 1) ? PARAM(PAWN_ENDGAME2) : 0);
-             score += (4-ourmat.materialLevel()/4)*adj/4;
-          } 
-#ifdef EVAL_DEBUG
-          if (score-tmp) {
-             cout << "pawn adjust (" << ColorImage(side) << ") = " << score-tmp << endl;
-          }
-#endif
+       int adj = 0;
+       if (pawnDiff > 0 && pieceDiff >= 0) {
+          // better to have more pawns in endgame (if we have not
+          // traded pieces for pawns).
+          adj += PARAM(ENDGAME_PAWN_ADVANTAGE)*Util::Min(2,pawnDiff);
        }
+       if (pieceDiff > 0) {
+          // bonus for last few pawns - to discourage trade
+          const int ourp = ourmat.pawnCount();
+          if (ourp >= 3) adj += PARAM(PAWN_ENDGAME1);
+          if (ourp >= 2) adj += PARAM(PAWN_ENDGAME1);
+          if (ourp >= 1) adj += PARAM(PAWN_ENDGAME2);
+       }
+       score += (4-ourmat.materialLevel()/4)*adj/4;
+#ifdef EVAL_DEBUG
+       if (score-tmp) {
+          cout << "pawn adjust (" << ColorImage(side) << ") = " << score-tmp << endl;
+       }
+#endif
     }
     return score;
 }
@@ -1655,16 +1673,7 @@ int Scoring::materialScore(const Board &board) const {
     cout << "mdiff=" << mdiff << endl;
     
 #endif
-    const int our_pieces = ourmat.pieceBits();
-    const int opp_pieces = oppmat.pieceBits();
-
-    // check for bishop endgame - drawish
     int adjust = 0;
-    if (our_pieces == Material::KB && opp_pieces == Material::KB) {
-        // Bishop endgame: drawish
-        if (Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4)
-            adjust -= mdiff/4;
-    }
     if (ourmat.infobits() != oppmat.infobits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
            if (ourmat.pieceBits() != oppmat.pieceBits()) {

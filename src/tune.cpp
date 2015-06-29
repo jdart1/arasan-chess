@@ -44,6 +44,9 @@ enum {
    KING_DISTANCE_MULT,
    PIN_MULTIPLIER_MID,
    PIN_MULTIPLIER_END,
+   KRMINOR_VS_R,
+   MINOR_FOR_PAWNS,
+   ENDGAME_PAWN_ADVANTAGE,
    PAWN_ENDGAME1,
    PAWN_ENDGAME2,
    MINOR_ATTACK_FACTOR,
@@ -185,8 +188,11 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
    tune::TuneParam(PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500),
    tune::TuneParam(PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,500),
-   tune::TuneParam(PAWN_ENDGAME1,"pawn_endgame1",200,0,500),
-   tune::TuneParam(PAWN_ENDGAME2,"pawn_endgame2",300,0,500),
+   tune::TuneParam(KRMINOR_VS_R,"krminor_vs_r",100,0,500),
+   tune::TuneParam(MINOR_FOR_PAWNS,"minor_for_pawns",229,0,500),
+   tune::TuneParam(ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250),
+   tune::TuneParam(PAWN_ENDGAME1,"pawn_endgame1",75,0,500),
+   tune::TuneParam(PAWN_ENDGAME2,"pawn_endgame2",125,0,500),
    tune::TuneParam(MINOR_ATTACK_FACTOR,"minor_attack_factor",315,200,500),
    tune::TuneParam(ROOK_ATTACK_FACTOR,"rook_attack_factor",585,300,600),
    tune::TuneParam(QUEEN_ATTACK_FACTOR,"queen_attack_factor",640,500,900),
@@ -436,6 +442,9 @@ void tune::applyParams()
    Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
    Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
    Scoring::Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
+   Scoring::Params::KRMINOR_VS_R = tune_params[KRMINOR_VS_R].current;
+   Scoring::Params::MINOR_FOR_PAWNS = tune_params[MINOR_FOR_PAWNS].current;
+   Scoring::Params::ENDGAME_PAWN_ADVANTAGE = tune_params[ENDGAME_PAWN_ADVANTAGE].current;
    Scoring::Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;
    Scoring::Params::PAWN_ENDGAME2 = tune_params[PAWN_ENDGAME2].current;
    Scoring::Params::MINOR_ATTACK_FACTOR = tune_params[MINOR_ATTACK_FACTOR].current;
