@@ -158,14 +158,14 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 46)
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.6 or higher:
 CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
-GTB_OPT := -Ofast -finline-functions $(SSE)
+OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
+GTB_OPT := -Ofast $(SSE)
 else
 ifeq "$(GCCOLD)" "0"
 # pre-4.6 gcc options:
 CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	 = -O3 -fno-rtti -fno-enforce-eh-specs -finline-functions $(SSE)
-GTB_OPT := -O3 -finline-functions $(SSE)
+OPT	 = -O3 -fno-rtti -fno-enforce-eh-specs $(SSE)
+GTB_OPT := -O3 $(SSE)
 else
 # really old gcc
 CFLAGS  := -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
