@@ -1380,15 +1380,13 @@ int Search::quiesce(int ply,int depth)
    int value;
    HashEntry::ValueType result = HashEntry::NoHit;
    HashEntry hashEntry;
-   if (options.search.hash_table_size) {
-      // Note: we copy the hash entry .. so mods by another thread do not
-      // alter the copy
-      result = controller->hashTable.searchHash(board,hash,
-                                                ply,tt_depth,controller->age,hashEntry);
+   // Note: we copy the hash entry .. so mods by another thread do not
+   // alter the copy
+   result = controller->hashTable.searchHash(board,hash,
+                                             ply,tt_depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
-      controller->stats->hash_searches++;
+   controller->stats->hash_searches++;
 #endif
-   }
    bool hit = (result != HashEntry::NoHit);
    if (hit) {
       // a valid hashtable entry was found
@@ -1937,7 +1935,7 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
 void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int depth) {
     // don't insert into the hash table if we are terminating - we may
     // not have an accurate score.
-    if (options.search.hash_table_size && !terminate) {
+    if (!terminate) {
         // store the position in the hash table, if there's room
         int value = node->best_score;
         HashEntry::ValueType val_type;
