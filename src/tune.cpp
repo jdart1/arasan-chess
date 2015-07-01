@@ -202,7 +202,7 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(KING_ATTACK_PARAM0,"king_attack_param0",-48,-100,0),
    tune::TuneParam(KING_ATTACK_PARAM1,"king_attack_param1",325,150,500),
    tune::TuneParam(KING_ATTACK_PARAM2,"king_attack_param2",24,0,60),
-   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",51,0,60),
+   tune::TuneParam(KING_ATTACK_PARAM3,"king_attack_param3",25,0,60),
    tune::TuneParam(KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",-787,-960,300),
    tune::TuneParam(KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",850,500,1500),
    tune::TuneParam(KING_ATTACK_BOOST_MAX,"king_attack_boost_max",128,64,140),

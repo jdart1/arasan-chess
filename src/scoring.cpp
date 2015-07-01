@@ -1252,7 +1252,7 @@ void Scoring::pieceScore(const Board &board,
 #ifdef ATTACK_DEBUG
           cout << "boost factor= " << (float)boostFactor/256 << endl;
 #endif
-          scale += scale*(PARAM(KING_ATTACK_PARAM2)*attackCountFactor + PARAM(KING_ATTACK_PARAM3)*squaresAttacked/kingNearProximity[okp].bitCount() + boostFactor)/256;
+          scale += scale*(PARAM(KING_ATTACK_PARAM2)*attackCountFactor + PARAM(KING_ATTACK_PARAM3)*squaresAttacked + boostFactor)/256;
 #ifdef ATTACK_DEBUG
           cout << "scale after corrections= " << scale << endl;
 #endif
