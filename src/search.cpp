@@ -636,7 +636,7 @@ Move *excludes, int num_excludes)
    RootMoveGenerator mg(board,&context,NullMove,
       talkLevel == Trace);
    if (controller->uci) {
-       controller->stats->multipv_limit = Util::Min(mg.moveCount(),options.search.multipv);
+       controller->stats->multipv_limit = Util::Min(mg.moveCount(),srcOpts.multipv);
    }
    controller->time_check_counter = Time_Check_Interval;
    last_time = 0;
@@ -644,7 +644,7 @@ Move *excludes, int num_excludes)
    int tb_hit = 0, tb_pieces = 0;
    int value = Scoring::INVALID_SCORE;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
-   if (options.search.use_tablebases) {
+   if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
       int tb_score;
@@ -652,12 +652,12 @@ Move *excludes, int num_excludes)
       if(tb_pieces <= EGTBMenCount) {
          controller->stats->tb_probes++;
 #ifdef NALIMOV_TBS
-         if (options.search.tablebase_type == Options::NALIMOV_TYPE) {
+         if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
              tb_hit = NalimovTb::probe_tb(board, tb_score, 0);
          }
 #endif
 #ifdef GAVIOTA_TBS
-         if (options.search.tablebase_type == Options::GAVIOTA_TYPE) {
+         if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
              tb_hit = GaviotaTb::probe_tb(board, tb_score, 0, true);
          }
 #endif
@@ -679,10 +679,10 @@ Move *excludes, int num_excludes)
    }
    waitTime = 0;
    // Reduce strength but not in analysis mode:
-   if (options.search.strength < 100 && controller->time_target != INFINITE_TIME) {
+   if (srcOpts.strength < 100 && controller->time_target != INFINITE_TIME) {
        int mgCount = mg.moveCount();
        if (mgCount) {
-           const float factor = 1.0/controller->ply_limit + (100-options.search.strength)/250.0;
+           const float factor = 1.0/controller->ply_limit + (100-srcOpts.strength)/250.0;
            const int max = int(0.3F*controller->time_target/mgCount);
            // wait time is in milliseconds
            waitTime = int((max*factor));
@@ -691,18 +691,18 @@ Move *excludes, int num_excludes)
            }
            // adjust time check interval since we are lowering nps
            Time_Check_Interval = Util::Max(1,Time_Check_Interval / (1+8*int(factor)));
-           if (options.search.strength <= 95) {
+           if (srcOpts.strength <= 95) {
                static const int limits[25] = {1,1,1,1,1,1,1,1,
                                               2,2,2,2,3,3,4,6,8,9,10,
                                               11,12,13,14,16};
-               controller->ply_limit = Util::Min(limits[options.search.strength/4],
+               controller->ply_limit = Util::Min(limits[srcOpts.strength/4],
                                                  controller->ply_limit);
                if (talkLevel == Trace) {
                    cout << "# setting ply limit to " << controller->ply_limit << endl;
                }
                if (board.getMaterial(White).materialLevel() +
                    board.getMaterial(Black).materialLevel() < 16 &&
-                   options.search.strength > 10) {
+                   srcOpts.strength > 10) {
                    // increase ply limit in endgames
                    controller->ply_limit += Util::Min(2,1+controller->ply_limit/8);
                }
@@ -727,7 +727,7 @@ Move *excludes, int num_excludes)
         iteration_depth <= controller->ply_limit && !terminate;
         iteration_depth++) {
       if (!controller->explicit_excludes) num_excludes = 0;
-      for (multipv_count=0; multipv_count < options.search.multipv && !terminate; multipv_count++) {
+      for (multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
          int lo_window, hi_window;
          int aspirationWindow = ASPIRATION_WINDOW[0];
          if (iteration_depth <= 1) {
@@ -775,9 +775,9 @@ Move *excludes, int num_excludes)
             if (!(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
                 (iteration_depth >= 2) &&
-                (!options.search.can_resign ||
+                (!srcOpts.can_resign ||
                  (controller->stats->display_value >
-                  options.search.resign_threshold))) {
+                  srcOpts.resign_threshold))) {
                if (talkLevel == Trace)
                   cout << "# single legal move, terminating" << endl;
                controller->terminateNow();
@@ -928,7 +928,7 @@ Move *excludes, int num_excludes)
          cout << endl;
 #endif
          last_score = value;
-         if (options.search.multipv > 1) {
+         if (srcOpts.multipv > 1) {
             ASSERT(num_excludes<Constants::MaxMoves);
             excludes[num_excludes++] = node->pv[0];
          }
@@ -996,18 +996,18 @@ Move *excludes, int num_excludes)
    Statistics *stats = controller->stats;
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
-   if (!controller->uci && !stats->end_of_game && options.search.can_resign) {
+   if (!controller->uci && !stats->end_of_game && srcOpts.can_resign) {
       if (stats->display_value != Scoring::INVALID_SCORE &&
-         (100*stats->display_value)/PAWN_VALUE <= options.search.resign_threshold) {
+         (100*stats->display_value)/PAWN_VALUE <= srcOpts.resign_threshold) {
          state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
       }
    }
 
-   if (options.search.strength < 100 && iteration_depth <= MoveGenerator::EASY_PLIES) {
+   if (srcOpts.strength < 100 && iteration_depth <= MoveGenerator::EASY_PLIES) {
        Move m;
        int val;
-       mg.suboptimal(options.search.strength,m,val);
+       mg.suboptimal(srcOpts.strength,m,val);
        if (!MovesEqual(node->best,m)) {
            node->best = m;
            stats->display_value = stats->value = val;
@@ -1370,7 +1370,7 @@ int Search::quiesce(int ply,int depth)
    // Like Stockfish, only distinguish depths with checks vs depth without
    int tt_depth;
    const int inCheck = board.checkStatus((node-1)->last_move)==InCheck;
-   if (inCheck || depth >= 1-options.search.checks_in_qsearch) {
+   if (inCheck || depth >= 1-srcOpts.checks_in_qsearch) {
       tt_depth = HashEntry::QSEARCH_CHECK_DEPTH;
    }
    else {
