@@ -30,7 +30,7 @@ static int test = 0;
 string algorithm = "Rockstar";
 
 // script to run matches
-static const char * MATCH_PATH="/home/jdart/tools/match.py";
+static string match_path="/home/jdart/tools/match.py";
 
 static bool terminated = false;
 
@@ -41,8 +41,6 @@ static string x0_file_name="x0";
 static int first_index = 0;
 
 static int last_index = tune::NUM_TUNING_PARAMS-1;
-
-static int games = 1000;
 
 static const int NUM_SUPPORTED_ALGORITHMS = 5;
 
@@ -108,14 +106,7 @@ static int exec(const char* cmd) {
 static double computeLsqError() {
 
    stringstream s;
-   s << MATCH_PATH;
-   s << ' ';
-/*
-   s << "-best ";
-   s << best;
-   s << ' ';
-*/
-   s << games;
+   s << match_path;
    for (int i = first_index; i <= last_index; i++) {
       s << ' ' << tune::tune_params[i].name << ' ';
       s << tune::tune_params[i].current;
@@ -252,6 +243,7 @@ static void usage()
 {
    cerr << "Usage: tuner -i <input objective file> -a <algorithm>" << endl;
    cerr << "-d just write out current parameters values to params.cpp" << endl;
+   cerr << "-h <file> specify helper script that will evaluate rating" << endl;
    cerr << "-o <output parameter file> -x <output objective file>" << endl;
    cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
    cerr << "-n <iterations> -t <for test>" << endl;
@@ -305,13 +297,13 @@ int CDECL main(int argc, char **argv)
              exit(-1);
           }
        }
+       else if (strcmp(argv[arg],"-h")==0) {
+          ++arg;
+          match_path = argv[arg];
+       }
        else if (strcmp(argv[arg],"-i")==0) {
           ++arg;
           input_file = argv[arg];
-       }
-       else if (strcmp(argv[arg],"-g")==0) {
-          ++arg;
-          games = atoi(argv[arg]);
        }
        else if (strcmp(argv[arg],"-o")==0) {
           ++arg;
@@ -364,8 +356,6 @@ int CDECL main(int argc, char **argv)
        exit(-1);
     }
     cout << "dimension = " << dim << endl;
-    cout << "games per core per iteration = " << games << endl;
-
 
     if (test) {
        int num_iters[3] = { 50, 250, 1250 };
