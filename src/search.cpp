@@ -2093,8 +2093,9 @@ int Search::calcExtensions(const Board &board,
       if (pruneOk) {
          // futility pruning, enabled at low depths
          if (depth <= FUTILITY_DEPTH) {
-            // threshold increases with move index
             int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
+            // Threshold was formerly increased with the move index
+            // but this tests worse now.
             int threshold = parentNode->beta - fmargin;
             if (node->eval == Scoring::INVALID_SCORE) {
                node->eval = node->staticEval = scoring.evalu8(board);
