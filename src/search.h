@@ -258,6 +258,7 @@ class SearchController {
     bool stopped;
     SearchType typeOfSearch;
     int time_check_counter;
+    int failLowFactor;
 #ifdef SMP_STATS
     int sample_counter;
 #endif

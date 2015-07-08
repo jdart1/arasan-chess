@@ -515,6 +515,7 @@ int Search::checkTime(const Board &board,int ply) {
           if (stats->elapsed_time > controller->getTimeLimit()) {
               if (root()->fail_high_root) {
                  // root move is failing high, extend time
+                 // until fail-high is resolved.
                  controller->time_added = controller->xtra_time;
                  if (talkLevel == Trace) {
                     cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
@@ -523,11 +524,20 @@ int Search::checkTime(const Board &board,int ply) {
                  root()->fail_high_root_extend = true;
               }
               else if (stats->faillow) {
-                 // root move is failing low
+                 // root move is failing low, extend time until
+                 // fail-low is resolved
                  controller->time_added = controller->xtra_time;
                  root()->fail_low_root_extend = true;
                  if (talkLevel == Trace) {
                     cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
+                 }
+              } else if (controller->failLowFactor) {
+                 // not currently failing low but have done so
+                 // earlier. Add time: more time if failing late
+                 // in the search or dropping the score a lot.
+                 controller->time_added = Util::Min(100,controller->xtra_time*Util::Min(100,controller->failLowFactor)/100);
+                 if (talkLevel == Trace) {
+                    cout << "# adding time due to root fail low at earlier iteration, new target=" << controller->getTimeLimit() << endl;
                  }
               }
            }
@@ -719,10 +729,11 @@ Move *excludes, int num_excludes)
    // Incrementally search the board to greater depths - stop when
    // ply limit, time limit, interrupt, or a terminating condition
    // is reached.
+   // Search the first few iterations with a wide window - for easy
+   // move detection.
    node->best = node->pv[0] = NullMove;
    int depth_at_pv_change = 0;
-   // search the first few iterations with a wide window - for easy
-   // move detection.
+   controller->failLowFactor = 0;
    for (iteration_depth = 1;
         iteration_depth <= controller->ply_limit && !terminate;
         iteration_depth++) {
@@ -874,6 +885,7 @@ Move *excludes, int num_excludes)
                }
             }
          }
+         controller->failLowFactor += faillows*iteration_depth;
          // search value should now be in bounds (unless we are terminating)
          if (!terminate) {
             showStatus(board, node->best, 0, 0, 0);
@@ -895,24 +907,6 @@ Move *excludes, int num_excludes)
                fail_high_root_extend = false;
                if (talkLevel == Trace) {
                   cout << "# resetting time_added - fail high is resolved" << endl;
-               }
-            }
-            if (controller->xtra_time > 0 &&
-                controller->time_target != INFINITE_TIME &&
-                controller->typeOfSearch == TimeLimit &&
-                controller->stats->elapsed_time > 2*(unsigned)controller->time_target/3) {
-               const unsigned n = theLog->current();
-               if (n >= 2 && !(*theLog)[n-2].fromBook() &&
-                   (value < 5*PAWN_VALUE) &&
-                   (value > -PAWN_VALUE*5) &&
-                   (value < (*theLog)[n-2].score() - PAWN_VALUE/3)) {
-                  // search more time because our score is dropping
-                  // (how much extra depends on how bad score is).
-                  controller->time_added = 
-                     controller->xtra_time*Util::Min(PAWN_VALUE,(*theLog)[n-2].score()-value)/PAWN_VALUE;
-                  if (talkLevel == Trace) {
-                     cout << "# adding time due to low score, new target=" << controller->getTimeLimit() << endl;
-                  }
                }
             }
          }
