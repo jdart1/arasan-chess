@@ -511,44 +511,42 @@ int Search::checkTime(const Board &board,int ply) {
     else if (controller->typeOfSearch == TimeLimit) {
        if (controller->xtra_time > 0 && 
            controller->time_target != INFINITE_TIME &&
-           controller->typeOfSearch == TimeLimit) {
-          if (stats->elapsed_time > controller->getTimeLimit()) {
-              if (root()->fail_high_root) {
-                 // root move is failing high, extend time
-                 // until fail-high is resolved.
-                 controller->time_added = controller->xtra_time;
-                 if (talkLevel == Trace) {
-                    cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
-                 }
-                 // Set flag that we extended time.
-                 root()->fail_high_root_extend = true;
-              }
-              else if (stats->faillow) {
-                 // root move is failing low, extend time until
-                 // fail-low is resolved
-                 controller->time_added = controller->xtra_time;
-                 root()->fail_low_root_extend = true;
-                 if (talkLevel == Trace) {
-                    cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
-                 }
-              } else if (controller->failLowFactor) {
-                 // not currently failing low but have done so
-                 // earlier. Add time: more time if failing late
-                 // in the search or dropping the score a lot.
-                 controller->time_added = Util::Min(100,controller->xtra_time*Util::Min(100,controller->failLowFactor)/100);
-                 if (talkLevel == Trace) {
-                    cout << "# adding time due to root fail low at earlier iteration, new target=" << controller->getTimeLimit() << endl;
-                 }
-              }
-           }
-        }
-        // check time limit after any time extensions have been made
-        if (stats->elapsed_time > controller->getTimeLimit()) {
-            if (talkLevel == Trace) {
-                cout << "# terminating, time up" << endl;
-            }
-            return 1;
-        }
+           stats->elapsed_time > controller->getTimeLimit()) {
+          if (root()->fail_high_root) {
+             // root move is failing high, extend time
+             // until fail-high is resolved.
+             controller->time_added = controller->xtra_time;
+             if (talkLevel == Trace) {
+                cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
+             }
+             // Set flag that we extended time.
+             root()->fail_high_root_extend = true;
+          }
+          else if (stats->faillow) {
+             // root move is failing low, extend time until
+             // fail-low is resolved
+             controller->time_added = controller->xtra_time;
+             root()->fail_low_root_extend = true;
+             if (talkLevel == Trace) {
+                cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
+             }
+          } else if (controller->failLowFactor) {
+             // not currently failing low but have done so
+             // earlier. Add time: more time if failing late
+             // in the search or dropping the score a lot.
+             controller->time_added = controller->xtra_time*Util::Min(100,controller->failLowFactor)/100;
+             if (talkLevel == Trace) {
+                cout << "# adding time due to root fail low at earlier iteration, new target=" << controller->getTimeLimit() << endl;
+             }
+          }
+       }
+       // check time limit after any time extensions have been made
+       if (stats->elapsed_time > controller->getTimeLimit()) {
+          if (talkLevel == Trace) {
+             cout << "# terminating, time up" << endl;
+          }
+          return 1;
+       }
     }
     if (controller->uci && (current_time-last_time >= 2000)) {
         cout << "info";
@@ -891,9 +889,7 @@ Move *excludes, int num_excludes)
             showStatus(board, node->best, 0, 0, 0);
             if (fail_low_root_extend) {
                // We extended time to get the fail-low resolved. Now
-               // we have a score. Only use still more time if the
-               // score is signficantly low (will be tested in the
-               // next block).
+               // we have a score.
                controller->time_added = 0;
                fail_low_root_extend = false;
                if (talkLevel == Trace) {
