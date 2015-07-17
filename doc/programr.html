@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 17.3</h1>
+<h1>Arasan Programmer's Guide - version 18.0</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -53,7 +53,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  17.3
+  18.0
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -206,7 +206,7 @@ moves along that line.</p>
 <p>Arasan comes with a modest-sized book that was built from a
 combination of a small hand-tuned book file (basic.pgn) and a fairly large
 collection of high-quality human and computer games. There are over
-400,000 moves in the book. </p>
+500,000 moves in the book. </p>
 
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
@@ -437,6 +437,22 @@ version, then that is an indication that the change being tested is a
 good one (but you should use something like BayesELO to test for
 significance).</p>
 
+<h3>Automated parameter tuning</h3>
+
+<p>Version 18.0 has some support for automated parameter tuning.</p>
+<p>The Makefile builds by default a special version of the program
+for using in tuning. This is named "arasanx-64-tune" or "arasanx-32-tune"
+depending on the architecture you are on. This version of the program
+has all tunable parameters defined as variables rather than build-time
+constants, and their values can be set by using standard Winboard or
+UCI option commands. See tune.cpp for a list of the tunable parameters,
+their names, and their default values and ranges. Not all scoring parameters
+are in the tunable set, currently.
+</p>
+<p>The tuning version of the program can be used by
+<a href="http://www.remi-coulom.fr/CLOP/">CLOP</a> through its
+Python chess engine interface script. Note though I have had
+mixed results with CLOP.</p>
 
 <h2>Algorithms and data structures</h2>
 

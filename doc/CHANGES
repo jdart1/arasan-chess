@@ -3,15 +3,18 @@ Changes in Arasan 18.0:
     refutations are produced in the phase of move generation after killers.
  2) Major restructuring to support automated parameter tuning. Internal
     scores are now in millipawns (1/1000 pawn).
- 3) Move R + minor endgame closer to draw when few pawns.
+ 3) Changes to material balance scoring: in particular, better evaluation
+    of some "near draw" situations.
  4) Detect K vs K+B+wrong color pawns as draw with >1 pawn (on same file).
  5) When in UCI analysis mode, output a move even in legal draw situations
     (except stalemate).
- 6) Add refutation table, similar to Gull & Rodent. This is global and
-    refutations are produced in the phase of move generation after killers.
- 7) Changes to reduced-strength mode. Instead of randomizing eval, now at
+ 6) Changes to reduced-strength mode. Instead of randomizing eval, now at
     low strength settings the program will select sub-optimal moves
     occasionally.
+ 7) Changes to time management when search fails low.
+ 8) Changes to king safety scoring and tuning of related parameters.
+ 9) Change conditions for static null pruning and razoring. Adjust
+    razor margins.
 
 Changes in Arasan 17.5:
  1) Modify and tune connected passer scoring.
