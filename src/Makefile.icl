@@ -3,7 +3,7 @@
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 17.5
+VERSION = 18.0
 
 # directory defines - objects
 PROFILE = ..\$(TARGET)\profile
@@ -39,6 +39,7 @@ BUILD_TYPE=debug
 BUILD_TYPE=release
 !Endif
 BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
+TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)-tune
 PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
 PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
 PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
@@ -58,6 +59,8 @@ SMP=/MTd /DSMP /DSMP_STATS
 SMP=/MT /DSMP /DSMP_STATS
 !Endif
 PROF_RUN_SMP=-c 2
+
+TUNE_FLAGS=-DTUNE
 
 # Intel C++ 12.0 defs, release build (intel64)
 !If "$(TARGET)" == "win64"
@@ -87,7 +90,7 @@ TB_PROFILE_FLAGS = $(TB_FLAGS) $(PROF_USE_FLAGS)
 
 POPCNT_FLAGS = -DUSE_POPCNT /QxSSE4.2
 
-default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
+default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\$(ARASANX)-tune.exe
 
 !IfDef NALIMOV_TBS
 TB_OBJS = $(BUILD)\tbprobe.obj
@@ -221,9 +224,24 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
-$(BUILD)\learn.obj $(BUILD)\history.obj \
+$(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\refut.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\unit.obj $(BUILD)\refut.obj $(TB_OBJS) 
+$(BUILD)\unit.obj $(TB_OBJS) 
+
+ARASANX_TUNE_OBJS = $(TUNE_BUILD)\arasanx.obj \
+$(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
+$(TUNE_BUILD)\board.obj $(TUNE_BUILD)\boardio.obj $(TUNE_BUILD)\options.obj \
+$(TUNE_BUILD)\chess.obj $(TUNE_BUILD)\material.obj $(TUNE_BUILD)\movegen.obj \
+$(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
+$(TUNE_BUILD)\see.obj $(TUNE_BUILD)\globals.obj $(TUNE_BUILD)\search.obj \
+$(TUNE_BUILD)\notation.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\stats.obj \
+$(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \
+$(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\log.obj \
+$(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
+$(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
+$(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj $(TUNE_BUILD)\refut.obj \
+$(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
+$(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS) 
 
 ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
@@ -236,9 +254,9 @@ $(PGO_BUILD)\bitprobe.obj $(PGO_BUILD)\epdrec.obj $(PGO_BUILD)\chessio.obj \
 $(PGO_BUILD)\movearr.obj $(PGO_BUILD)\log.obj \
 $(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookwrit.obj \
 $(PGO_BUILD)\calctime.obj $(PGO_BUILD)\legal.obj $(PGO_BUILD)\eco.obj \
-$(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj \
+$(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj  $(BUILD)\refut.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
-$(PGO_BUILD)\unit.obj $(PGO_BUILD)\refut.obj $(TB_OBJS) 
+$(PGO_BUILD)\unit.obj $(TB_OBJS) 
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
@@ -251,7 +269,7 @@ $(POPCNT_BUILD)\bitprobe.obj $(POPCNT_BUILD)\epdrec.obj $(POPCNT_BUILD)\chessio.
 $(POPCNT_BUILD)\movearr.obj $(POPCNT_BUILD)\log.obj \
 $(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookwrit.obj \
 $(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
-$(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
+$(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj $(POPCNT_BUILD)\refut.obj \
 $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
 $(POPCNT_BUILD)\unit.obj $(TB_OBJS)
 
@@ -267,8 +285,8 @@ $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
-$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj \
-$(PROFILE)\refut.obj $(TB_PROFILE_OBJS) 
+$(PROFILE)\refut.obj \
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(TB_PROFILE_OBJS) 
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -280,8 +298,8 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\legal.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\refut.obj $(TB_OBJS)
+$(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\refut.obj $(BUILD)\legal.obj \
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -293,11 +311,14 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(BUILD)\refut.obj $(TB_OBJS)
+$(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\refut.obj $(BUILD)\learn.obj \
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
+
+{}.cpp{$(TUNE_BUILD)}.obj:
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
 
 {}.cpp{$(PROFILE)}.obj:
     $(CL) $(CFLAGS) $(OPT) $(SSE) $(PROF_GEN_FLAGS) /c /Fo$@ $<
@@ -318,6 +339,9 @@ $(BUILD)\makeeco.exe:  $(MAKEECO_OBJS)
 
 $(BUILD)\$(ARASANX).exe: dirs $(ARASANX_OBJS)
         $(LD) $(ARASANX_OBJS) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX).exe
+
+$(BUILD)\$(ARASANX)-tune.exe: dirs $(ARASANX_TUNE_OBJS)
+        $(LD) $(ARASANX_TUNE_OBJS) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX)-tune.exe
 
 $(BUILD)\tbprobe.obj: tbprobe.cpp
     $(CL) $(TB_FLAGS) /c /Fo$@ tbprobe.cpp
@@ -375,6 +399,9 @@ $(PROFDATA):
 $(BUILD):
 	md $(BUILD)
 
+$(TUNE_BUILD):
+	md $(TUNE_BUILD)
+
 $(PGO_BUILD):
 	md $(PGO_BUILD)
 
@@ -386,6 +413,8 @@ $(RELEASE):
 
 clean: dirs
 	del $(BUILD)\*.obj
+	del $(TUNE_BUILD)\*.obj
+	del $(TUNE_BUILD)\*.asm
 	del $(BUILD)\*.exe
 	del $(BUILD)\*.asm
 	del $(PROFILE)\*.asm
@@ -397,4 +426,4 @@ clean: dirs
 	del /q $(PGO_BUILD)\*.*
 	del /q $(POPCNT_BUILD)\*.*
 
-dirs: $(BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(POPCNT_BUILD) $(RELEASE)
+dirs: $(BUILD) $(TUNE_BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(POPCNT_BUILD) $(RELEASE)

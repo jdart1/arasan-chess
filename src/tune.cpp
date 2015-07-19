@@ -9,6 +9,13 @@ extern "C" {
 #include <string.h>
 };
 
+#if defined(_MSC_VER) && __cplusplus < 201103L
+// MSVC lacks round()
+static int round(double x) {
+    return int((x >= 0.0) ? floor(x + 0.5) : ceil(x - 0.5));
+}
+#endif
+
 #define PARAM(x) tune::tune_params[x].current
 
 enum {
