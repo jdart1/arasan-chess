@@ -30,29 +30,6 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
 
-ROCKSTAR_INCLUDE=/home/jdart/opt/c_rockstar/cpp_code
-EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
-GSL_INCLUDE=/usr/local/include
-GSL_LIBS=-lgsl
-BLAS_LIBS=-lgslcblas
-#ESS_INCLUDE=/home/jdart/opt/eSS
-#ESS_LIB_PATH=/home/jdart/opt/eSS
-#ESS_LIB=-less -ldl
-NOMAD_INCLUDE=/home/jdart/opt/nomad.3.7.1/src
-NOMAD_LIB_PATH=/home/jdart/opt/nomad.3.7.1/lib
-NOMAD_LIB=$(NOMAD_LIB_PATH)/nomad.a
-
-#LIBCMAES_INCLUDE=/usr/local/include/libcmaes
-#LIBCMAES_PATH=/usr/local/lib
-#EIGEN3_INCLUDE=/home/jdart/eigen-eigen-10219c95fe65/Eigen
-#EIGEN3_UNSUPPORTED=/home/jdart/eigen-eigen-10219c95fe65/unsupported/Eigen
-
-TUNE_INCLUDES := -I$(ROCKSTAR_INCLUDE) -I$(EIGEN3_INCLUDE) -I$(GSL_INCLUDE) \
--I$(NOMAD_INCLUDE)
-#TUNE_LDFLAGS := -L$(LIBCMAES_PATH)
-TUNE_LDFLAGS := -L$(NOMAD_LIB_PATH)
-TUNE_LIBS = $(GSL_LIBS) $(BLAS_LIBS) $(NOMAD_LIB)
-
 #define the appropriate macro for the type(s) of tablebase supported
 GAVIOTA_TBS = 1
 NALIMOV_TBS = 1
@@ -75,8 +52,7 @@ SMPLIB   = -lpthread
 
 PGO_RUN_FLAGS = -H 64M
 
-TUNE_CFLAGS := -fno-strict-aliasing -DUSE_INSTRINSICS -DUSE_ASM -ansi -std=c++11 -DTUNE
-TUNE_OPT = -Ofast $(SSE)
+TUNE_FLAGS := -DTUNE
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
@@ -183,9 +159,7 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/tuner $(EXPORT)/$(ARASANX)-tune
-
-tune: dirs $(EXPORT)/tuner $(EXPORT)/$(ARASANX)-tune
+all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/$(ARASANX)-tune
 
 popcnt: SSE = -msse4.2
 popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
@@ -245,7 +219,7 @@ $(BUILD)/%.o: %.cpp
 	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(TUNE_CFLAGS) $(TUNE_OPT) $(SMP_FLAGS) $(TUNE_INCLUDES) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMP_FLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
@@ -330,19 +304,6 @@ log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp refut.cpp
 
-TUNER_SOURCES = tune.cpp tuner.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp refut.cpp \
-hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp spsa.cpp \
-rspsa.cpp optbase.cpp rockstar.cpp nomad.cpp
-
 ARASANX_TUNE_SOURCES = arasanx.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -357,8 +318,7 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES))
-ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES))
+ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 
@@ -367,9 +327,6 @@ $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
 	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
-
-$(EXPORT)/tuner:  $(TUNER_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNE_LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(TUNE_LIBS) $(SMPLIB)
 
 $(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
 	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(SMPLIB)
