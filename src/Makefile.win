@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2014 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2015 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
@@ -11,8 +11,8 @@ VERSION = 18.0
 BUILD_ROOT=..
 
 #define the appropriate macro for the type(s) of tablebase supported
-GAVIOTA_TBS=1
-NALIMOV_TBS=1
+#GAVIOTA_TBS=1
+#NALIMOV_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
