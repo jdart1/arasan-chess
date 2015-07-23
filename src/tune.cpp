@@ -306,89 +306,6 @@ tune::TuneParam tune::tune_params[tune::NUM_TUNING_PARAMS] = {
    tune::TuneParam(ISOLATED_PAWN_ENDGAME_FACTOR,"isolated_pawn_endgame_factor",146,70,300)
 };
 
-static const int centrality(int file) {
-   int f = file <=4 ? 4-file : file-5;
-   return 4-f;
-}
-
-static int passer_score(int i, int base, int slope, int pow_slope, int power) 
-{
-   if (i == 0) return 0;
-
-   int pp = base;
-   if(i>1) {
-      pp += int(slope*(i-2)+pow_slope*pow(double(i-2),double(power)/32.0));
-   }
-   return pp;
-}
-
-static int potential_passer_score(int i, int base, int slope, int power, int rank6_bonus) 
-{
-   if (i == 0) return 0;
-
-   int pp = base;
-   if(i>1) {
-      pp += int(slope*pow(double(i-1),double(power)/32.0))/4;
-      if (i == 6) pp += rank6_bonus;
-   }
-   return pp;
-}
-
-static int passer_score2(int i, int base, int slope, int sq_slope,
-                         int rank6_bonus, int rank7_bonus) 
-{
-   if (i == 0) return 0;
-   int pp = base;
-   if(i>1) {
-      pp += (slope*(i-1)+(sq_slope*(i-1)*(i-1)))/4;
-      if (i >= 6) pp += rank6_bonus;
-      if (i == 7) pp += rank7_bonus;
-   }
-   return pp;
-}
-
-static void symmetric_table_init(int *target, int tuning, int start_rank) 
-{
-   memset((void*)target,'\0',64*sizeof(int));
-   for (int rank = start_rank; rank <=8; rank++) {
-      int start = tune::tune_params[tuning++].current;
-      int slope = tune::tune_params[tuning++].current;
-      for (int file = 1; file <= 4; file++ ) {
-         Square sq = MakeSquare(file,rank,White);
-         target[sq] = start + slope*(file-1);
-      }
-      for (int file = 5; file <= 8; file++) {
-         Square sq = MakeSquare(file,rank,White);
-         Square model = MakeSquare((9-file),rank,White);
-         target[sq] = target[model];
-      }
-   }
-}
-
-static void pawn_table_init(int *target, int tuning) 
-{
-   for (int i = 0; i < 4; i++) {
-      target[i] = tune::tune_params[tuning].current + i*tune::tune_params[tuning+1].current;
-      target[7-i] = target[i];
-   }
-}
-
-static void mobility_init(int *target, int tuning, int size) 
-{
-   int span = tune::tune_params[tuning+1].current-tune::tune_params[tuning].current;
-   const int base = tune::tune_params[tuning].current;
-   double power = tune::tune_params[tuning+2].current/32.0;
-   for (int i = 0; i < size; i++) {
-      if (i == 0) {
-         *target++ = base;
-      }
-      else {
-         double factor = (1.0-pow(1.0-double(i)/size,power));
-         *target++ = round(base + factor*span);
-      }
-   }
-}
-
 void tune::checkParams() 
 {
    for (int i = 0; i<tune::NUM_TUNING_PARAMS; i++) {
@@ -410,9 +327,6 @@ void tune::checkParams()
    }
 }
 
-#ifdef __GNUC__
-#pragma optimize("", off)
-#endif
 void tune::applyParams()
 {
    checkParams();
