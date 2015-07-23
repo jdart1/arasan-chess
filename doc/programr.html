@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 17.3</title>
+<title>Arasan Programmer's Guide - version 18.0</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
@@ -568,7 +568,15 @@ non-capture that previously caused beta cutoff. Arasan tries to use
 killer moves at the current ply and then, if available, killer
 moves stored at ply-2.</li>
 
-<li>Moves from the history table are returned, in sorted order by
+<li>At this point all non-capturing moves are generated. 
+The previous move is used to probe the "refutation table". This
+is a simple replace-always table that holds moves that have refuted
+another move (by causing the search to fail high). If the move
+list includes a move found in the refutation table,
+then that move is returned first before any of the history
+moves.</li>
+
+<li>All other non-capturing moves are returned, in sorted order by
 history score.</li>
 
 <li>Losing captures are searched.</li>
