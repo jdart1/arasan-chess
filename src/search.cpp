@@ -2481,15 +2481,8 @@ int Search::search()
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
-        nu_depth = depth-4*DEPTH_INCREMENT; // R=3
-        // If score is very good do extra reduction (aka "smooth scaling").
-        int threshold = node->beta + PAWN_VALUE;
-        int eval;
-        if (depth > 6*DEPTH_INCREMENT &&
-            (eval = node->eval) > threshold) {
-            nu_depth -= Util::Min(DEPTH_INCREMENT,DEPTH_INCREMENT*(eval-node->beta-(PAWN_VALUE/2))/(2*PAWN_VALUE));
-            nu_depth = Util::Max(nu_depth,DEPTH_INCREMENT);
-        }
+        // R=3 + some depth-dependent increment:
+        nu_depth = depth-4*DEPTH_INCREMENT - depth/6;
         // Skip null move if likely to be futile according to hash info
         if (!hit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
