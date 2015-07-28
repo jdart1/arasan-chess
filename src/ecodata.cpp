@@ -1106,6 +1106,7 @@ const struct ECOData eco_codes[] =
 {"E89", 0xfbd281166e8442beULL ,"King's Indian, Saemisch Variation"},
 {"E90", 0x371f844684d5380aULL ,"King's Indian Defense"},
 {"E90", 0xd6bbae5e42677016ULL ,"King's Indian Defense"},
+{"E90", 0xc07e8b0300824731ULL ,"King's Indian Defense"},
 {"E91", 0x2ed4cdb262cf6d16ULL ,"King's Indian Defense"},
 {"E92", 0xed7eefe88fd51286ULL ,"King's Indian Defense"},
 {"E92", 0x5ebdc41fb044a0eaULL ,"King's Indian, Gligoric Variation"},
