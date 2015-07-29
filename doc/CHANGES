@@ -19,8 +19,9 @@ Changes in Arasan 18.0:
     reduction formula. 
  11) Replace eval-dependent null depth reduction with a strictly depth-
     dependent formula.
+ 12) Fix GUI bug: changing strength setting during a game was not working.
 
-Changes in Arasan 17.5:
+Changes in Arasan 17.5 (Jan. 2015):
  1) Modify and tune connected passer scoring.
  2) Fixes to book weight computation.
  3) Adjust queen mobility scoring.
