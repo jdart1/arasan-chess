@@ -45,13 +45,6 @@ The Arasan engine binary is named "arasanx-32", "arasanx-64", or
 "arasanx-64-popcnt", depending on the architecture and build flags
 used.
 
-Note: there is another target "tune" in the Makefile that builds a
-special version of Arasan for automated parameter tuning
-(arasanx-64-tune) and a console program for automated tuning
-(tuner). These require a compiler that supports C++ 11, and they
-have several external dependencies (see the Makefile for details).
-Also: they have only been built/tested under Linux.
-
 Limited testing has been done on architectures other than x32 and amd64.
 However, the code is believed to be portable. Two non-Intel targets are
 defined in the Makefile: sparc-solaris (with gcc as compiler) and
