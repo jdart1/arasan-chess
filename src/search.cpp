@@ -57,7 +57,6 @@ static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const double LMR_BASE = 0.3;
 static const double LMR_NON_PV = 1.5;
 static const double LMR_PV = 2.25;
-static const int LMR_RESERVE = 1;
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
@@ -153,17 +152,19 @@ SearchController::SearchController()
         LMR_REDUCTION[0][d][moves] = 
            LMR_REDUCTION[1][d][moves] = 0;
         if (d >= 2 && moves > 0) {
-           // Formula similar to Protector & Toga. Tuned Sept. 2014.
-           double f = LMR_BASE + log((double)d) * log((double)moves);
-           double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
+           // Formula similar to Protector & Toga. Tuned Aug. 2015
+           double f = LMR_BASE + log((double)d) * log((double)moves+1);
+           const double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
            for (int i = 0; i < 2; i++) {
-              int r = Util::Max(DEPTH_INCREMENT,floor(reduction[i]*DEPTH_INCREMENT + 0.5));
+              double r = floor(reduction[i]+0.5);
               // do not reduce into the q-search
-              if (r > (d*DEPTH_INCREMENT-LMR_RESERVE)) {
-                 r = (d*DEPTH_INCREMENT-LMR_RESERVE);
-                 if (r < DEPTH_INCREMENT) r = 0;
-              }
-              LMR_REDUCTION[i][d][moves] = DEPTH_INCREMENT*(r/DEPTH_INCREMENT);
+              r = std::min<double>(r,double(d-1)-1.0/DEPTH_INCREMENT);
+              // limit LMR to fraction of depth
+              r = std::min<double>(d/2.5,r);
+              // do not do reductions < 1 ply
+              if (r < 1.0) r = 0.0;
+              // only reduce in units of DEPTH_INCREMENT
+              LMR_REDUCTION[i][d][moves] = DEPTH_INCREMENT*int(r);
            }
         }
       }
