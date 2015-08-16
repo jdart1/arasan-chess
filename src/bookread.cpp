@@ -219,7 +219,7 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    book_file.read((char*)&index,sizeof(book::IndexPage));
    if (book_file.fail()) return -1;
    // correct for endianness
-   index.next_free = (uint16)(swapEndian16((byte*)&index.next_free));
+   index.next_free = swapEndian32((byte*)&index.next_free);
    book::BookLocation loc(0,book::INVALID_INDEX);
    for (unsigned i = 0; i < index.next_free; i++) {
       // correct for endianness
