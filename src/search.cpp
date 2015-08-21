@@ -532,10 +532,10 @@ int Search::checkTime(const Board &board,int ply) {
                 cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
              }
           } else if (controller->failLowFactor) {
-             // not currently failing low but have done so
+             // not currently failing low, but have done so
              // earlier. Add time: more time if failing late
              // in the search or dropping the score a lot.
-             controller->time_added = controller->xtra_time*Util::Min(100,controller->failLowFactor)/100;
+             controller->time_added = Util::Min(controller->xtra_time,controller->xtra_time*controller->failLowFactor/(2*controller->getIterationDepth()));
              if (talkLevel == Trace) {
                 cout << "# adding time due to root fail low at earlier iteration, new target=" << controller->getTimeLimit() << endl;
              }
