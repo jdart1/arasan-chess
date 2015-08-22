@@ -535,7 +535,7 @@ int Search::checkTime(const Board &board,int ply) {
              // not currently failing low, but have done so
              // earlier. Add time: more time if failing late
              // in the search or dropping the score a lot.
-             controller->time_added = Util::Min(controller->xtra_time,controller->xtra_time*controller->failLowFactor/(2*controller->getIterationDepth()));
+             controller->time_added = Util::Min(controller->xtra_time,controller->xtra_time*controller->failLowFactor/(8*controller->getIterationDepth()));
              if (talkLevel == Trace) {
                 cout << "# adding time due to root fail low at earlier iteration, new target=" << controller->getTimeLimit() << endl;
              }
@@ -884,7 +884,9 @@ Move *excludes, int num_excludes)
                }
             }
          }
-         controller->failLowFactor += faillows*iteration_depth;
+         if (faillows) {
+            controller->failLowFactor += (1<<faillows)*iteration_depth/2;
+         }
          // search value should now be in bounds (unless we are terminating)
          if (!terminate) {
             showStatus(board, node->best, 0, 0, 0);
