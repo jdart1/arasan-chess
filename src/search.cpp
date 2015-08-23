@@ -1208,7 +1208,7 @@ int depth, Move exclude [], int num_exclude)
               << "]" << endl;
             cout << "score = " << try_score << " - no cutoff, researching .." << endl;
 #endif
-            if (extend < 0) {
+            if (extend < -DEPTH_INCREMENT) {
                extend = 0;
                node->extensions = 0;
                if (hibound == lobound+1) {
@@ -1226,6 +1226,8 @@ int depth, Move exclude [], int num_exclude)
                }
             }
             if (try_score > node->best_score && !terminate) {
+              extend = 0;
+              node->extensions = 0;
               if (depth+extend-DEPTH_INCREMENT > 0)
                 try_score=-search(-node->beta,-lobound,1,depth+extend-DEPTH_INCREMENT);
               else
@@ -2741,7 +2743,7 @@ int Search::search()
                         << "]" << endl;
                }
 #endif
-               if (extend < 0) {
+               if (extend < -DEPTH_INCREMENT) {
                  extend = 0;
                  node->extensions = 0;
                  // try zero-width but non-reduced search
@@ -2759,6 +2761,8 @@ int Search::search()
 #endif
                }
                if (try_score > node->best_score && !terminate) {
+                  extend = 0;
+                  node->extensions = 0;
                   if (depth+extend-DEPTH_INCREMENT > 0)
                      try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
                   else
@@ -3116,7 +3120,7 @@ void Search::searchSMP(ThreadInfo *ti)
             }
 #endif
             split->unlock();
-            if (extend < 0) {
+            if (extend < -DEPTH_INCREMENT) {
                 node->extensions = 0;
                 extend = 0;
                 if (ply == 0) {
@@ -3131,6 +3135,8 @@ void Search::searchSMP(ThreadInfo *ti)
 
             }
             if (try_score > parentNode->best_score && !terminate) {
+               node->extensions = 0;
+               extend = 0;
                if (ply == 0) {
                   fhr = true;
                   root()->fail_high_root++;
