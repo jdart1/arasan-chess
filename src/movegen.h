@@ -209,7 +209,7 @@ class RootMoveGenerator : public MoveGenerator
       using MoveGenerator::nextEvasion;
       virtual int generateAllMoves(NodeInfo *, SplitPoint *);
 
-      void reorder(Move pvMove, int depth);
+      void reorder(Move pvMove, int depth, bool initial = false);
 
       void reorderByScore();
 

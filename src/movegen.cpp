@@ -99,7 +99,7 @@ int trace)
      for (int i = j; i < batch_count; i++) {
          moveList.pop_back();
      }
-     reorderByScore();
+     reorder(pvMove,0,true);
      batch_count = j;
    }
    phase = LAST_PHASE;
@@ -117,7 +117,7 @@ static bool compareScores(const MoveEntry &a, const MoveEntry &b) {
   return a.score > b.score;
 }
 
-void RootMoveGenerator::reorder(Move pvMove,int depth)
+void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
    index = 0;  // reset so we will fetch moves again
    phase = START_PHASE;
@@ -136,13 +136,22 @@ void RootMoveGenerator::reorder(Move pvMove,int depth)
          }
          SetPhase(moveList[0].move,HASH_MOVE_PHASE);
       } else if (CaptureOrPromotion(moveList[i].move)) {
-         if (see(board,moveList[i].move) >= 0) {
+         int est;
+         if ((est = see(board,moveList[i].move)) >= 0) {
             SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
          } else {
             SetPhase(moveList[i].move,LOSERS_PHASE);
          }
+         if (initial) {
+            moveList[i].score = est;
+         }
       } else {
           SetPhase(moveList[i].move,HISTORY_PHASE);
+          if (initial) {
+             moveList[i].score = context ? 
+                History::scoreForOrdering(moveList[i].move,board.sideToMove())
+                : 0;
+          }
       }
    }
    if (depth <= EASY_PLIES && moveList.size() > 2) {
