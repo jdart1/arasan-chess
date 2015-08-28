@@ -153,7 +153,7 @@ static void * CDECL parkingLot(void *x)
    delete ti->work;
    ti->work = NULL;
 #ifdef _THREAD_TRACE
-   log("terminated, thread ",(ti->index);
+   log("terminated, thread ",ti->index);
 #endif
    return 0;
 }
