@@ -974,14 +974,14 @@ void Scoring::pieceScore(const Board &board,
       case Rook:
          {
             const int r = Rank(sq, side);
-            if (r == 7) {
+            if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[board.oppositeSide()] & Attacks::rank7mask[side]))) {
 #ifdef EVAL_DEBUG
                Scores tmp(scores);
 #endif
                scores.mid += PARAM(ROOK_ON_7TH_MID);
                scores.end += PARAM(ROOK_ON_7TH_END);
 
-               Bitboard right(Attacks::rank_mask_right[r] & board.occupied[side]);
+               Bitboard right(Attacks::rank_mask_right[sq] & board.occupied[side]);
                if (right && board[right.firstOne()] == MakePiece(Rook, side)) {
 
                   // 2 connected rooks on 7th
