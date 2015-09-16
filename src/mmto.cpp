@@ -952,17 +952,18 @@ int CDECL main(int argc, char **argv)
     string first_param, last_param;
     string x0_input_file_name;
 
+    int write_sol = 0;
+
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
        if (strcmp(argv[arg],"-d")==0) {
           cout << "writing initial solution" << endl;
-          output_solution();
-          exit(0);
+          ++write_sol;
        }
        else if (strcmp(argv[arg],"-o")==0) {
           ++arg;
           out_file_name = argv[arg];
        }
-       else if (strcmp(argv[arg],"-x")==0) {
+       else if (strcmp(argv[arg],"-i")==0) {
           ++arg;
           x0_input_file_name = argv[arg];
        }
@@ -993,6 +994,11 @@ int CDECL main(int argc, char **argv)
           usage();
           exit(-1);
        }
+    }
+
+    if (write_sol) {
+      output_solution();
+      exit(0);
     }
 
     last_index = tune_params.numTuningParams();
@@ -1027,6 +1033,7 @@ int CDECL main(int argc, char **argv)
        ifstream x0_input_file(x0_input_file_name.c_str());
        if (x0_input_file.good()) {
           tune_params.readX0(x0_input_file);
+          tune_params.applyParams();
        } else {
           cerr << "error opening x0 input file: " << x0_input_file_name << endl;
           exit(-1);
