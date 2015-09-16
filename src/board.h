@@ -201,6 +201,9 @@ public:
    // Also set "source" with the bit location of the attack piece.
    int anyAttacks(Square sq, ColorType side, Bitboard &source) const;
 
+   // Return a bitboard of all squares attacked by 'side'
+   Bitboard allAttacks(ColorType side) const;
+
    // Return a bit vector of all pieces of color "side" that attack "sq".
    Bitboard calcAttacks(Square sq, ColorType side) const;
    

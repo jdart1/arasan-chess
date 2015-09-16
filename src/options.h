@@ -53,6 +53,7 @@ class Options
    int mod;
 #endif
     int easy_plies; // do wide search for "easy move" detection
+    int easy_threshold; // wide search width in millipawns
   } search;
 
    struct LearningOptions {

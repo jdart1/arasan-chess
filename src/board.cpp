@@ -149,6 +149,7 @@ Board::Board(const Board &b)
    memcpy(&contents,&b.contents,(byte*)repList-(byte*)&contents);
    // Copy the repetition table
    int rep_entries = (int)(b.repListHead - b.repList);
+   ASSERT(rep_entries>=0 && rep_entries<RepListSize);
    if (rep_entries) {
      memcpy(repList,b.repList,sizeof(hash_t)*rep_entries);
    }
@@ -1327,6 +1328,21 @@ int Board::anyAttacks(Square sq, ColorType side, Bitboard &source) const
    if (!source.isClear()) return 1;
    source = Bitboard((bishop_bits[side] | queen_bits[side]) & bishopAttacks(sq));
    return !source.isClear();
+}
+
+Bitboard Board::allAttacks(ColorType side) const
+{
+   Square sq;
+   Bitboard ret(allPawnAttacks(side));
+   Bitboard knights(knight_bits[side]);
+   while (knights.iterate(sq)) ret |= Attacks::knight_attacks[sq];
+   Bitboard bishops(bishop_bits[side]);
+   while (bishops.iterate(sq)) ret |= bishopAttacks(sq);
+   Bitboard rooks(rook_bits[side]);
+   while (rooks.iterate(sq)) ret |= rookAttacks(sq);
+   Bitboard queens(queen_bits[side]);
+   while (queens.iterate(sq)) ret |= queenAttacks(sq);
+   return ret | Attacks::king_attacks[kingSquare(side)];
 }
 
 Bitboard Board::calcAttacks(Square sq, ColorType side) const

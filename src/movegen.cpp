@@ -119,6 +119,7 @@ static bool compareScores(const MoveEntry &a, const MoveEntry &b) {
 
 void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
+   // Set flag in case we have not gone through the move list yet
    index = 0;  // reset so we will fetch moves again
    phase = START_PHASE;
    for (unsigned i = 0; i < moveList.size(); i++) {

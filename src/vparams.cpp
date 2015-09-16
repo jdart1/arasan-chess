@@ -73,27 +73,27 @@ int Scoring::Params::SUPPORTED_PASSER6 = 380;
 int Scoring::Params::SUPPORTED_PASSER7 = 760;
 int Scoring::Params::SIDE_PROTECTED_PAWN = -100;
 
+int Scoring::Params::KNIGHT_PST[2][64];
+int Scoring::Params::BISHOP_PST[2][64];
+int Scoring::Params::ROOK_PST[2][64];
+int Scoring::Params::QUEEN_PST[2][64];
+int Scoring::Params::KING_PST[2][64];
+
 // The following tables are computed from tuning parameters.
 int Scoring::Params::KING_ATTACK_SCALE[512];
 int Scoring::Params::TRADE_DOWN[16];
-/*
-// not tuned presently
-int Scoring::Params::KNIGHT_PST[2][64];
-int Scoring::Params::BISHOP_PST[2][64];
-int Scoring::Params::KNIGHT_OUTPOST[64];
-int Scoring::Params::BISHOP_OUTPOST[64];
-// TBD: rook PST
-int Scoring::Params::KING_PST[2][64];
-int Scoring::Params::KNIGHT_MOBILITY[9];
-int Scoring::Params::BISHOP_MOBILITY[15];
-int Scoring::Params::ROOK_MOBILITY[2][15];
-int Scoring::Params::QUEEN_MOBILITY[2][29];
-int Scoring::Params::KING_MOBILITY_ENDGAME[9];
-*/
 int Scoring::Params::PASSED_PAWN[2][8];
 int Scoring::Params::POTENTIAL_PASSER[2][8];
 int Scoring::Params::CONNECTED_PASSERS[2][8];
 int Scoring::Params::ADJACENT_PASSERS[2][8];
 int Scoring::Params::DOUBLED_PAWNS[2][8];
 int Scoring::Params::ISOLATED_PAWN[2][8];
+
+int Scoring::Params::KNIGHT_OUTPOST[3][64];
+int Scoring::Params::BISHOP_OUTPOST[3][64];
+int Scoring::Params::KNIGHT_MOBILITY[9];
+int Scoring::Params::BISHOP_MOBILITY[15];
+int Scoring::Params::ROOK_MOBILITY[2][15];
+int Scoring::Params::QUEEN_MOBILITY[2][29];
+int Scoring::Params::KING_MOBILITY_ENDGAME[9];
 

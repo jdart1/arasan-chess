@@ -5,6 +5,7 @@
 
 #include "board.h"
 #include "hash.h"
+#include "attacks.h"
 
 #include <iostream>
 using namespace std;
@@ -76,6 +77,13 @@ class Scoring
 
     // return a material score
     int materialScore( const Board &board ) const;
+
+    int outpost(const Board &board, Square sq, ColorType side) const;
+
+    int outpost_defenders(const Board &board,
+                          Square sq, ColorType side) const {
+      return (Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]).bitCountOpt();
+    }
 
  private:
 
@@ -198,12 +206,6 @@ class Scoring
 		     Scores &);
 
     int kingDistanceScore(const Board &) const;
-
-    template <ColorType side>
-    int outpost(const Board &board, Square sq, Square scoreSq, 
-                const int scores[64],
-                const PawnHashEntry::PawnData &oppPawnData);
-
 
 };
 

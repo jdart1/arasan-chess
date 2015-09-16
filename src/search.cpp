@@ -53,7 +53,6 @@ static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
-static const int EASY_THRESHOLD = 2*PAWN_VALUE;
 static const double LMR_BASE = 0.3;
 static const double LMR_NON_PV = 1.5;
 static const double LMR_PV = 2.25;
@@ -531,14 +530,6 @@ int Search::checkTime(const Board &board,int ply) {
              if (talkLevel == Trace) {
                 cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
              }
-          } else if (controller->failLowFactor) {
-             // not currently failing low, but have done so
-             // earlier. Add time: more time if failing late
-             // in the search or dropping the score a lot.
-             controller->time_added = Util::Min(controller->xtra_time,controller->xtra_time*controller->failLowFactor/(8*controller->getIterationDepth()));
-             if (talkLevel == Trace) {
-                cout << "# adding time due to root fail low at earlier iteration, new target=" << controller->getTimeLimit() << endl;
-             }
           }
        }
        // check time limit after any time extensions have been made
@@ -691,7 +682,7 @@ Move *excludes, int num_excludes)
    if (srcOpts.strength < 100 && controller->time_target != INFINITE_TIME) {
        int mgCount = mg.moveCount();
        if (mgCount) {
-           const float factor = 1.0/controller->ply_limit + (100-srcOpts.strength)/250.0;
+           const double factor = 1.0/controller->ply_limit + (100-srcOpts.strength)/250.0;
            const int max = int(0.3F*controller->time_target/mgCount);
            // wait time is in milliseconds
            waitTime = int((max*factor));
@@ -744,8 +735,8 @@ Move *excludes, int num_excludes)
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
          } else if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-            lo_window = Util::Max(-Constants::MATE,value - EASY_THRESHOLD);
-            hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
+            lo_window = Util::Max(-Constants::MATE,value - options.search.easy_threshold);
+            hi_window = Util::Min(Constants::MATE,value + options.search.easy_threshold + aspirationWindow/2);
          } else {
             lo_window = Util::Max(-Constants::MATE,value - aspirationWindow/2);
             hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
@@ -848,7 +839,7 @@ Move *excludes, int num_excludes)
                   hi_window = Constants::MATE-iteration_depth-1;
                } else {
                   if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-                     aspirationWindow += EASY_THRESHOLD;
+                     aspirationWindow += 2*options.search.easy_threshold;
                   }
                   hi_window = Util::Min(Constants::MATE-iteration_depth-1,
                                         lo_window + aspirationWindow);
@@ -856,6 +847,11 @@ Move *excludes, int num_excludes)
             }
             else if (failLow) {
                showStatus(board, node->best, failLow, failHigh, 0);
+               if (talkLevel == Trace) {
+                   cout << "ply 0 fail low, re-searching ... value=";
+                   Scoring::printScore(value,cout);
+                   cout << " fails=" << fails+1 << endl;
+               }
 #ifdef _TRACE
                cout << "ply 0 fail low, re-searching ... value=";
                Scoring::printScore(value,cout);
@@ -878,7 +874,7 @@ Move *excludes, int num_excludes)
                   lo_window = iteration_depth-Constants::MATE-1;
                } else {
                   if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-                     aspirationWindow += EASY_THRESHOLD;
+                     aspirationWindow += 2*options.search.easy_threshold;
                   }
                   lo_window = Util::Max(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
                }
@@ -893,10 +889,13 @@ Move *excludes, int num_excludes)
             if (fail_low_root_extend) {
                // We extended time to get the fail-low resolved. Now
                // we have a score.
-               controller->time_added = 0;
                fail_low_root_extend = false;
+               // Continue searching based on how bad the fail-low was
+               int more_time = controller->xtra_time*Util::Min(100,controller->failLowFactor)/100;
+               controller->time_added = more_time;
                if (talkLevel == Trace) {
-                  cout << "# resetting time_added - fail low is resolved" << endl;
+                    cout << "# fail low resolved, new time target = " <<
+                        controller->getTimeLimit() << endl;
                }
             }
             else if (fail_high_root_extend) {
@@ -1104,10 +1103,10 @@ int depth, Move exclude [], int num_exclude)
         // Note: do not do "easy move" if capturing the last piece in
         // the endgame .. this can be tricky as the resulting pawn
         // endgame may be lost.
-        if (list.size() > 1 && list[0].score >= list[1].score + EASY_THRESHOLD         && !(TypeOfMove(node->best) == Normal &&
+        if (list.size() > 1 && (list[0].score >= list[1].score + options.search.easy_threshold) && TypeOfMove(node->best) == Normal &&
             Capture(node->best) != Empty && Capture(node->best) != Pawn &&
             board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-            board.getMaterial(board.sideToMove()).pieceCount() <= 1)) {
+            board.getMaterial(board.sideToMove()).pieceCount() <= 1) {
             easyMove = node->best;
             if (talkLevel == Trace) {
                 cout << "#easy move: ";
@@ -1203,6 +1202,9 @@ int depth, Move exclude [], int num_exclude)
            // We failed to get a cutoff and must re-search
            // Set flag if we may be getting a new best move:
            fail_high_root++;
+           if (talkLevel == Trace) {
+              cout << "root fail high, score = " << try_score << endl;
+           }
 #ifdef _TRACE
             cout << "window = [" << -hibound << "," << node->best_score
               << "]" << endl;
@@ -3139,6 +3141,9 @@ void Search::searchSMP(ThreadInfo *ti)
                extend = 0;
                if (ply == 0) {
                   fhr = true;
+                  if (talkLevel == Trace) {
+                      cout << "root fail high (smp), score = " << try_score << endl;
+                  }
                   root()->fail_high_root++;
                }
                if (depth+extend-DEPTH_INCREMENT > 0)
@@ -3186,7 +3191,7 @@ void Search::searchSMP(ThreadInfo *ti)
                 best_score = parentNode->best_score;
                 if (fhr) {
                     fhr = false;
-                    root()->fail_high_root--;
+                    root()->fail_high_root = 0;
                 }
             }
             if (try_score >= Constants::MATE-1-ply) {
@@ -3196,7 +3201,7 @@ void Search::searchSMP(ThreadInfo *ti)
         }
         if (fhr) {
             fhr = false;
-            root()->fail_high_root--;
+            root()->fail_high_root = 0;
         }
         if (ply == 0 && root()->getWaitTime()) {
             sleep(root()->getWaitTime());
@@ -3253,6 +3258,9 @@ void Search::updatePV(const Board &board, Move m, int ply)
     }
 #endif
     for (int i = ply; i < node->pv_length+ply; i++) {
+       if (ply == 0) {
+            MoveImage(node->pv[i],cout); cout << " " << (flush);
+       }
 #ifdef _TRACE
         if (master()) {
             MoveImage(node->pv[i],cout); cout << " " << (flush);

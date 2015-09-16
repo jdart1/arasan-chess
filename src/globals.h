@@ -1,4 +1,4 @@
-// Copyright 1994-2005, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2005, 2014, 2015 by Jon Dart.  All Rights Reserved.
 
 #ifndef _GLOBALS_H
 #define _GLOBALS_H
@@ -10,6 +10,9 @@
 #include "log.h"
 #include "bookread.h"
 #include "movearr.h"
+#ifdef TUNE
+#include "tune.h"
+#endif
 
 extern Options options;
 extern MoveArray *gameMoves;
@@ -20,6 +23,9 @@ extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
 extern lock_t input_lock;
+#ifdef TUNE
+extern Tune tune_params;
+#endif
 
 // KPK bitbases:
 extern CACHE_ALIGN const byte baseKPKW[24576];

@@ -18,7 +18,7 @@ struct Params
 BEGIN_PACKED_STRUCT
     
     // number of fixed parameters that map 1-1 to tuning paramaters
-    static const int PARAM_ARRAY_SIZE = 63;
+    static const int PARAM_ARRAY_SIZE = 62;
 
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
@@ -100,21 +100,28 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int DOUBLED_PAWNS[2][8];
     static PARAM_MOD int ISOLATED_PAWN[2][8];
 
+    // Piece/square tables
+    static PARAM_MOD int KNIGHT_PST[2][64];
+    static PARAM_MOD int BISHOP_PST[2][64];
+    static PARAM_MOD int ROOK_PST[2][64];
+    static PARAM_MOD int QUEEN_PST[2][64];
+    static PARAM_MOD int KING_PST[2][64];
+
+    // mobility tables
+    static PARAM_MOD int KNIGHT_MOBILITY[9];
+    static PARAM_MOD int BISHOP_MOBILITY[15];
+    static PARAM_MOD int ROOK_MOBILITY[2][15];
+    static PARAM_MOD int QUEEN_MOBILITY[2][29];
+    static PARAM_MOD int KING_MOBILITY_ENDGAME[9];
+
+    // outpost scores
+    static PARAM_MOD int KNIGHT_OUTPOST[3][64];
+    static PARAM_MOD int BISHOP_OUTPOST[3][64];
+
     // not tuned presently (fixed)
     static const int MATERIAL_SCALE[32];
     static const int MIDGAME_THRESHOLD;
     static const int ENDGAME_THRESHOLD;
-    static const int KNIGHT_PST[2][64];
-    static const int BISHOP_PST[2][64];
-    static const int KNIGHT_OUTPOST[64];
-    static const int BISHOP_OUTPOST[64];
-    // TBD: rook PST
-    static const int KING_PST[2][64];
-    static const int KNIGHT_MOBILITY[9];
-    static const int BISHOP_MOBILITY[15];
-    static const int ROOK_MOBILITY[2][15];
-    static const int QUEEN_MOBILITY[2][29];
-    static const int KING_MOBILITY_ENDGAME[9];
 
 #ifdef TUNE
     static void write(ostream &);

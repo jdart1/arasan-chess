@@ -20,6 +20,9 @@ BookReader openingBook;
 Log *theLog = NULL;
 string learnFileName;
 LockDefine(input_lock);
+#ifdef TUNE
+Tune tune_params;
+#endif
 
 static const char * LEARN_FILE_NAME = "arasan.lrn";
 

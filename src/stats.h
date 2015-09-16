@@ -59,6 +59,11 @@ struct Statistics
    int move_order[4];
    int move_order_count;
 #endif
+#ifdef TUNE
+   double target;
+   double target_out_window;
+   uint64 result_norm;
+#endif
    int end_of_game;
    Statistics();
    virtual ~Statistics();

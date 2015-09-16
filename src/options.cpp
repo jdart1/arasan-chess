@@ -38,7 +38,8 @@ Options::SearchOptions::SearchOptions() :
       strength(100),
       multipv(1),
       ncpus(1),
-      easy_plies(3) {
+      easy_plies(3),
+      easy_threshold(2000) {
 #if defined(GAVIOTA_TBS)
     tablebase_type = "Gaviota";
 #elif defined(NALIMOV_TBS)

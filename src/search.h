@@ -343,6 +343,11 @@ class Search : public ThreadControl {
 
    int drawScore(const Board &board) const;
 
+#ifdef TUNE
+   static const int LEARNING_SEARCH_WINDOW;
+   static double func( double x );
+#endif
+
  protected:
 
     enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,

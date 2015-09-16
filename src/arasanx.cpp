@@ -1652,24 +1652,22 @@ static void execute_move(Board &board,Move m)
 static void setTuningParam(const string &name, const string &value) 
 {
    // set named parameters that are in the tuning set
-   for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-      if (tune::tune_params[i].name == name) {
-         stringstream buf(value);
-         int tmp;
-         buf >> tmp;
-         if (!buf.bad() && !buf.fail()) {
-            tune::tune_params[i].current = tmp;
-         }
-         else {
-            cout << "# Warning: invalid value for option " <<
-               name << ": " << value << endl;
-            return;
-         }
-         break;
+   int index = tune_params.findParamByName(name);
+   if (index > 0) {
+      stringstream buf(value);
+      int tmp;
+      buf >> tmp;
+      if (!buf.bad() && !buf.fail()) {
+         tune_params.updateParamValue(index,tmp);
+      }
+      else {
+         cout << "# Warning: invalid value for option " <<
+            name << ": " << value << endl;
+         return;
       }
    }
    // apply params to Scoring module
-   tune::applyParams();
+   tune_params.applyParams();
 }
 #endif
 
@@ -3004,7 +3002,7 @@ static bool do_command(const string &cmd, Board &board) {
         delayedInitIfNeeded();
         searcher->clearHashTables();
 #ifdef TUNE
-        tune::applyParams();
+        tune_params.applyParams();
 #endif
         if (!analyzeMode && ics) {
            cout << "kib Hello from Arasan " << Arasan_Version << endl;
@@ -3487,31 +3485,6 @@ int CDECL main(int argc, char **argv) {
                 ++arg;
                 selfplay_games = atoi(argv[arg]);
                 break;
-#endif
-#ifdef TUNE
-            case 'p':
-            {
-               // initialize tuning parameters from a file. These
-               // can be overridden with Winboard options.
-               ++arg;
-
-               stringstream s(argv[arg]);
-               int x[tune::NUM_TUNING_PARAMS];
-               memset(x,'\0',sizeof(int)*tune::NUM_TUNING_PARAMS);
-               int i = 0;
-               while (s.good() && s.get() != (int)'(');
-               while (s.good() && i<tune::NUM_TUNING_PARAMS) {
-                  s >> x[i++];
-               }
-               if (i!=tune::NUM_TUNING_PARAMS) {
-                  cout << "# warning: received " << i << " tuning parameters, expected " << tune::NUM_TUNING_PARAMS << endl;
-               }
-               for (int i = 0; i < tune::NUM_TUNING_PARAMS; i++) {
-                  tune::tune_params[i].current = x[i];
-               }
-               tune::applyParams();
-               break;
-            }
 #endif
             default:
                 cerr << "Warning: unknown option: " << argv[arg]+1 <<
