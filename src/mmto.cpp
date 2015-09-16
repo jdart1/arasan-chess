@@ -844,7 +844,7 @@ static void learn()
 {
    try {
 #if __cplusplus >= 201103L
-      hash_table = new unordered_map<hash_t,PackedMove>();
+      hash_table = new unordered_map<hash_t,PositionDupEntry>();
 #else
       hash_table = new map<hash_t,PositionDupEntry>();
 #endif
