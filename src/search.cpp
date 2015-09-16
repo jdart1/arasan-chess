@@ -2125,12 +2125,14 @@ int Search::calcExtensions(const Board &board,
    // are pruned at low depths.
    if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
        parentNode->num_try &&
-       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-       (swap == Scoring::INVALID_SCORE ? !seeSign(board,move,0) : !swap)) {
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
+       if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+       if (!swap) {
 #ifdef SEARCH_STATS
-      ++controller->stats->see_pruning;
+          ++controller->stats->see_pruning;
 #endif
-      return PRUNE;
+          return PRUNE;
+       }
    }
    // See if we do late move reduction. Moves in the history phase of move
    // generation or later can be searched with reduced depth.
