@@ -95,9 +95,9 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int TRADE_DOWN[16];
     static PARAM_MOD int PASSED_PAWN[2][8];
     static PARAM_MOD int POTENTIAL_PASSER[2][8];
-    static PARAM_MOD int CONNECTED_PASSERS[2][8];
-    static PARAM_MOD int ADJACENT_PASSERS[2][8];
+    static PARAM_MOD int CONNECTED_PASSER[2][8];
     static PARAM_MOD int DOUBLED_PAWNS[2][8];
+    static PARAM_MOD int TRIPLED_PAWNS[2][8];
     static PARAM_MOD int ISOLATED_PAWN[2][8];
 
     // Piece/square tables

@@ -29,6 +29,11 @@ void Hash::initHash(size_t bytes)
 {
    if (!hash_init_done) {
       hashSize = (int)(bytes/sizeof(HashEntry));
+      if (!hashSize) {
+         hashMask = 0;
+         hash_init_done++;
+         return;
+      }
       int hashPower;
       for (hashPower = 1; hashPower < 32; hashPower++) {
         if (((size_t)1 << hashPower) > hashSize) {

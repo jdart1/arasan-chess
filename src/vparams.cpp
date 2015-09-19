@@ -84,9 +84,9 @@ int Scoring::Params::KING_ATTACK_SCALE[512];
 int Scoring::Params::TRADE_DOWN[16];
 int Scoring::Params::PASSED_PAWN[2][8];
 int Scoring::Params::POTENTIAL_PASSER[2][8];
-int Scoring::Params::CONNECTED_PASSERS[2][8];
-int Scoring::Params::ADJACENT_PASSERS[2][8];
+int Scoring::Params::CONNECTED_PASSER[2][8];
 int Scoring::Params::DOUBLED_PAWNS[2][8];
+int Scoring::Params::TRIPLED_PAWNS[2][8];
 int Scoring::Params::ISOLATED_PAWN[2][8];
 
 int Scoring::Params::KNIGHT_OUTPOST[3][64];

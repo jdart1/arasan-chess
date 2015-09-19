@@ -18,7 +18,6 @@ class Scoring
 		
   enum {Midgame = 0, Endgame = 1};
 
-
 #include "params.h"
 
     enum { INVALID_SCORE = -Constants::MATE-1 };
@@ -85,9 +84,27 @@ class Scoring
       return (Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]).bitCountOpt();
     }
 
- private:
+#ifdef TUNE
+    struct PawnDetail {
+      static const int PASSED=1;
+      static const int POTENTIAL_PASSER=2;
+      static const int CONNECTED_PASSER=4;
+      static const int BACKWARD=16;
+      static const int DOUBLED=32;
+      static const int TRIPLED=64;
+      static const int WEAK=128;
+      static const int ISOLATED=256;
+      int flags;
+      int space_weight;
+      Square sq;
+    };
+#endif
 
+#ifdef TUNE
+    static const int PAWN_HASH_SIZE = 8096;
+#else
     static const int PAWN_HASH_SIZE = 16384;
+#endif
     static const int KING_COVER_HASH_SIZE = 8192;
     static const int ENDGAME_HASH_SIZE = 32768;
 
@@ -106,6 +123,9 @@ class Scoring
            int32 endgame_score, midgame_score;
   	   int w_square_pawns,b_square_pawns;
            int outside;
+#ifdef TUNE
+         PawnDetail details[8];
+#endif
        } wPawnData, bPawnData;
 
        const PawnData &pawnData(ColorType side) const {
@@ -127,6 +147,10 @@ class Scoring
         uint16 w_uncatchable, b_uncatchable;
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
+
+    PawnHashEntry &pawnEntry(const Board &board);
+
+ private:
 
     // The scores for opening, middlegame and endgame
     struct Scores {
@@ -184,8 +208,6 @@ class Scoring
 
     template <ColorType side>
         int kingCover(const Board &board);
-
-    PawnHashEntry &pawnEntry(const Board &board);
 
     void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);

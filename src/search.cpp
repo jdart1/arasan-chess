@@ -1174,7 +1174,7 @@ int depth, Move exclude [], int num_exclude)
         }
         board.doMove(move);
         setCheckStatus(board,in_check_after_move);
-        node->num_try++;
+        node->done[node->num_try++] = move;
 #ifdef _TRACE
         cout << "window [" << -hibound << ", " << -node->best_score <<
           "]" << endl;

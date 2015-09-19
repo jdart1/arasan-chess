@@ -499,6 +499,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const ColorType oside = OppositeColor(side);
    const int mLevel = board.getMaterial(side).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
+   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board);
    grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
       tune_params.scale(1,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
    Bitboard knight_bits(board.knight_bits[side]);
@@ -560,7 +561,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (FileOpen(board, File(sq))) {
          grads[Tune::ROOK_ON_OPEN_FILE_MID] += tune_params.scale(inc,Tune::ROOK_ON_OPEN_FILE_MID,mLevel);
          grads[Tune::ROOK_ON_OPEN_FILE_END] += tune_params.scale(inc,Tune::ROOK_ON_OPEN_FILE_END,mLevel);
-
+      }
+      Bitboard rattacks2(board.rookAttacks(sq, side));
+      if (rattacks2 & pawn_entr.pawnData(oside).weak_pawns) {
+         grads[Tune::ROOK_ATTACKS_WEAK_PAWN_MID] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_MID,mLevel);
+         grads[Tune::ROOK_ATTACKS_WEAK_PAWN_END] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_END,mLevel);
       }
    }
    Bitboard queen_bits(board.queen_bits[side]);
@@ -578,6 +583,60 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc,Tune::KING_PST_ENDGAME+i,mLevel);
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
    grads[Tune::KING_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+mobl,mLevel);
+   const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
+   int pawns = board.pawn_bits[side].bitCount();
+   for (int i = 0; i < pawns; i++) {
+      ASSERT(OnBoard(pds[i].sq));
+      grads[Tune::SPACE] += inc*pds[i].space_weight;
+      if (pds[i].flags & Scoring::PawnDetail::PASSED) {
+         grads[Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2] += 
+            tune_params.scale(inc,Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2,mLevel);
+         grads[Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2] += 
+            tune_params.scale(inc,Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2,mLevel);
+      }
+      if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {
+         grads[Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2] += 
+            tune_params.scale(inc,Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2,mLevel);
+         grads[Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2] += 
+            tune_params.scale(inc,Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2,mLevel);
+      }
+      if (pds[i].flags & Scoring::PawnDetail::DOUBLED) {
+         int f = File(pds[i].sq);
+         if (f > 4) f = 9-f;
+         grads[Tune::DOUBLED_PAWNS_MID1+f-1] += 
+            tune_params.scale(inc,Tune::DOUBLED_PAWNS_MID1+f-1,mLevel);
+         grads[Tune::DOUBLED_PAWNS_END1+f-1] += 
+            tune_params.scale(inc,Tune::DOUBLED_PAWNS_END1+f-1,mLevel);
+      }
+      if (pds[i].flags & Scoring::PawnDetail::TRIPLED) {
+         int f = File(pds[i].sq);
+         if (f > 4) f = 9-f;
+         grads[Tune::TRIPLED_PAWNS_MID1+f-1] += 
+            tune_params.scale(inc,Tune::TRIPLED_PAWNS_MID1+f-1,mLevel);
+         grads[Tune::TRIPLED_PAWNS_END1+f-1] += 
+            tune_params.scale(inc,Tune::TRIPLED_PAWNS_END1+f-1,mLevel);
+      }
+      if (pds[i].flags & Scoring::PawnDetail::ISOLATED) {
+         int f = File(pds[i].sq);
+         if (f > 4) f = 9-f;
+         grads[Tune::ISOLATED_PAWN_MID1+f-1] += 
+            tune_params.scale(inc,Tune::ISOLATED_PAWN_MID1+f-1,mLevel);
+         grads[Tune::ISOLATED_PAWN_END1+f-1] += 
+            tune_params.scale(inc,Tune::ISOLATED_PAWN_END1+f-1,mLevel);
+      }
+      if (pds[i].flags & Scoring::PawnDetail::WEAK) {
+         grads[Tune::WEAK_PAWN_MID] += 
+            tune_params.scale(inc,Tune::WEAK_PAWN_MID,mLevel);
+         grads[Tune::WEAK_PAWN_END] += 
+            tune_params.scale(inc,Tune::WEAK_PAWN_END,mLevel);
+      }
+   }
+   if (board.rook_bits[oside] | board.queen_bits[oside]) {
+      grads[Tune::WEAK_ON_OPEN_FILE_MID] += 
+         tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_MID,mLevel);
+      grads[Tune::WEAK_ON_OPEN_FILE_END] += 
+            tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_END,mLevel);
+   }
 }
 
 // Computes one summand of equation (8) in the paper
@@ -688,8 +747,6 @@ static void parse2(ThreadData &td, Parse2Data &data)
    data.grads.clear();
    data.grads.resize(tune_params.numTuningParams(),0.0);
 
-   // We assume concurrent reads to the vector from multiple
-   // threads are ok:
    Scoring s;
    const int max = tmpdata.size();
    // each thread reads distinct games from the vector
@@ -832,6 +889,7 @@ static void learn_parse(Phase p, int cores)
 
 static void output_solution()
 {
+   tune_params.applyParams();
    ofstream param_out(out_file_name.c_str(),ios::out | ios::trunc);
    Scoring::Params::write(param_out);
    param_out << endl;
@@ -1056,7 +1114,16 @@ int CDECL main(int argc, char **argv)
        exit(-1);
     }
 
-    if (verbose) cout << "dimension = " << tune_params.numTuningParams() << endl;
+//    if (verbose) {
+       cout << "parameter count: " << tune_params.numTuningParams() << " (";
+       int tunable = 0;
+       for (int i = 0; i < tune_params.numTuningParams(); i++) {
+          Tune::TuneParam p;
+          tune_params.getParam(i,p);
+          if (p.tunable) ++tunable;
+       }
+       cout << tunable << " tunable)" << endl;
+//    }
 
     initThreads();
 

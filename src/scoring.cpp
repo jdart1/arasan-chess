@@ -1204,14 +1204,23 @@ void Scoring::calcPawnData(const Board &board,
    Bitboard bi(board.pawn_bits[side]);
    Bitboard potentialPlus, potentialMinus;
    Square sq;
+#ifdef TUNE
+   int count = 0;
+#endif
    while(bi.iterate(sq))
    {
+#ifdef TUNE
+      entr.details[count].sq = sq;
+      entr.details[count].flags = 0;
+      entr.details[count].space_weight = 0;
+      ASSERT(count<8);
+      PawnDetail &td = entr.details[count++];
+#endif
 #ifdef PAWN_DEBUG
       int mid_tmp = entr.midgame_score;
       int end_tmp = entr.endgame_score;
       cout << ColorImage(side) << " pawn on " << FileImage(sq) << RankImage(sq);
 #endif
-
       int file = File(sq);
       int rank = Rank(sq, side);
       if (SquareColor(sq) == White)
@@ -1251,6 +1260,9 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " passed";
 #endif
+#ifdef TUNE
+            td.flags |= PawnDetail::POTENTIAL_PASSER;
+#endif         
             // Doubled but potentially passed pawn.
             // Don't score as passed but give "potential passer" bonus
             entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
@@ -1258,15 +1270,23 @@ void Scoring::calcPawnData(const Board &board,
             passed = 0;
          }
 
-         entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][file - 1];
-         entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][file - 1];
          if (doubles.bitCountOpt() > 1) {
             // tripled pawns
 #ifdef PAWN_DEBUG
             cout << " tripled";
 #endif
-            entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][file - 1] / 2;
-            entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][file - 1] / 2;
+#ifdef TUNE
+            td.flags |= PawnDetail::TRIPLED;
+#endif         
+            entr.midgame_score += PARAM(TRIPLED_PAWNS)[Midgame][file - 1];
+            entr.endgame_score += PARAM(TRIPLED_PAWNS)[Endgame][file - 1];
+         }
+         else {
+#ifdef TUNE
+            td.flags |= PawnDetail::DOUBLED;
+#endif         
+            entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][file - 1];
+            entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][file - 1];
          }
          doubled++;
       }
@@ -1276,6 +1296,9 @@ void Scoring::calcPawnData(const Board &board,
          entr.endgame_score += PARAM(ISOLATED_PAWN)[Endgame][file-1];
 #ifdef PAWN_DEBUG
          cout << " isolated";
+#endif
+#ifdef TUNE
+         td.flags |= PawnDetail::ISOLATED;
 #endif
       }
       else if (rank < 6 && backward) {
@@ -1320,6 +1343,9 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
                   cout << " weak";
 #endif
+#ifdef TUNE
+                  td.flags |= PawnDetail::WEAK;
+#endif
                   entr.midgame_score += PARAM(WEAK_PAWN_MID);
                   entr.endgame_score += PARAM(WEAK_PAWN_END);
                   weak++;
@@ -1342,6 +1368,9 @@ void Scoring::calcPawnData(const Board &board,
          // considered passed.
 #ifdef PAWN_DEBUG
          cout << " passed";
+#endif
+#ifdef TUNE
+         td.flags |= PawnDetail::PASSED;
 #endif
          entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank];
          entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank];
@@ -1463,17 +1492,28 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
                cout << " (dup)";
 #endif
-
                int rankdup = Rank(dup, side);
 
                // Two potential passers share the same blocker(s).
                // Score according to the most advanced one.
                if (rank > rankdup) {
+#ifdef TUNE
+                  td.flags |= PawnDetail::POTENTIAL_PASSER;
+                  for (int i = 0; i < count; i++) {
+                     if (entr.details[i].sq == dup) {
+                        entr.details[i].flags &= ~PawnDetail::POTENTIAL_PASSER;
+                        break;
+                     }
+                  }
+#endif
                   entr.midgame_score += (PARAM(POTENTIAL_PASSER)[Midgame][rank] - PARAM(POTENTIAL_PASSER)[Midgame][rankdup]);
                   entr.endgame_score += (PARAM(POTENTIAL_PASSER)[Endgame][rank] - PARAM(POTENTIAL_PASSER)[Endgame][rankdup]);
                }
             }
             else {
+#ifdef TUNE
+               td.flags |= PawnDetail::POTENTIAL_PASSER;
+#endif
                entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
                entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
             }
@@ -1490,13 +1530,16 @@ void Scoring::calcPawnData(const Board &board,
       }
 
       if (!passed && rank >= 4) {
-         int space = PARAM(SPACE) * (rank - 3);
+         int space = (rank - 3);
          if (duo) space *= 2;
 #ifdef PAWN_DEBUG
-         cout << " space=" << space;
+         cout << " space=" << space*PARAM(SPACE);
 #endif
-         entr.midgame_score += space;
-         entr.endgame_score += space;
+#ifdef TUNE
+         td.space_weight = space;
+#endif
+         entr.midgame_score += space*PARAM(SPACE);
+         entr.endgame_score += space*PARAM(SPACE);
       }
 #ifdef PAWN_DEBUG
       cout << " total = (" <<
@@ -1507,17 +1550,14 @@ void Scoring::calcPawnData(const Board &board,
    }
 
    if (entr.passers) {
-      
       Bitboard passers(entr.passers);
       Scores cp_score;
       while(passers.iterate(sq)) {
-         if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
-            cp_score.mid += PARAM(CONNECTED_PASSERS)[Midgame][Rank(sq, side)];
-            cp_score.end += PARAM(CONNECTED_PASSERS)[Endgame][Rank(sq, side)];
-         }
-         else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
-            cp_score.mid += PARAM(ADJACENT_PASSERS)[Midgame][Rank(sq, side)];
-            cp_score.end += PARAM(ADJACENT_PASSERS)[Endgame][Rank(sq, side)];
+         if ((File(sq) != 8 && entr.passers.isSet(sq+1)) ||
+             (File(sq) != 1 && entr.passers.isSet(sq-1)) ||
+             TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
+            cp_score.mid += PARAM(CONNECTED_PASSER)[Midgame][Rank(sq, side)];
+            cp_score.end += PARAM(CONNECTED_PASSER)[Endgame][Rank(sq, side)];
          }
       }
       entr.midgame_score += cp_score.mid;
@@ -1552,7 +1592,6 @@ void Scoring::calcPawnData(const Board &board,
       endl;
 #endif
 }
-
 
 void Scoring::evalOutsidePassers(const Board &board, 
                                  PawnHashEntry &pawnEntry) {
@@ -2444,7 +2483,9 @@ void Scoring::calcEndgame(const Board &board,
 }
 
 void Scoring::clearHashTables() {
-   memset(pawnHashTable, 0xff, PAWN_HASH_SIZE * sizeof(PawnHashEntry));
+   for (int i = 0; i < PAWN_HASH_SIZE; i++) {
+      pawnHashTable[i].hc = (hash_t)0;
+   }
    memset(endgameHashTable, '\0', ENDGAME_HASH_SIZE * sizeof(EndgameHashEntry));
    memset(kingCoverHashTable, '\0', 2 * KING_COVER_HASH_SIZE * sizeof(KingCoverHashEntry));
 }
@@ -2538,12 +2579,12 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
    o << "const int Scoring::Params::POTENTIAL_PASSER[2][8] = ";
    print_array(o,Params::POTENTIAL_PASSER[0], Params::POTENTIAL_PASSER[1], 8);
-   o << "const int Scoring::Params::CONNECTED_PASSERS[2][8] = ";
-   print_array(o,Params::CONNECTED_PASSERS[0], Params::CONNECTED_PASSERS[1], 8);
-   o << "const int Scoring::Params::ADJACENT_PASSERS[2][8] = ";
-   print_array(o,Params::ADJACENT_PASSERS[0], Params::ADJACENT_PASSERS[1], 8);
+   o << "const int Scoring::Params::CONNECTED_PASSER[2][8] = ";
+   print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
    o << "const int Scoring::Params::DOUBLED_PAWNS[2][8] = ";
-   print_array(o,Params:: DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
+   print_array(o,Params::DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
+   o << "const int Scoring::Params::TRIPLED_PAWNS[2][8] = ";
+   print_array(o,Params::TRIPLED_PAWNS[0], Params::TRIPLED_PAWNS[1], 8);
    o << "const int Scoring::Params::ISOLATED_PAWN[2][8] = ";
    print_array(o,Params:: ISOLATED_PAWN[0], Params::ISOLATED_PAWN[1], 8);
    o << endl;
