@@ -2522,31 +2522,6 @@ static void print_array(ostream & o,int mid[], int end[], int size)
    o << "};" << endl;
 }
 
-static void print_pst(ostream & o,int arr[], int size, int add_semi = 1) 
-{
-   o << "{";
-   int *p = arr;
-   for (int i = 0; i < size; i++) {
-      if (i) o << ",";
-      o << *p++;
-      if ((i+1) % 8 == 0) 
-         o << endl;
-      else
-         o << ' ';
-   }
-   o << "}";
-   if (add_semi) o << ";" << endl;
-}
-
-static void print_pst(ostream & o,int mid[], int end[], int size) 
-{
-   o << "{";
-   print_pst(o,mid,size,0);
-   o << ", ";
-   print_pst(o,end,size,0);
-   o << "};" << endl;
-}
-
 void Scoring::Params::write(ostream &o) 
 {
    o << "// Copyright 2015 by Jon Dart. All Rights Reserved." << endl;
