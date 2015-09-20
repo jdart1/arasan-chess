@@ -1553,9 +1553,12 @@ void Scoring::calcPawnData(const Board &board,
       Bitboard passers(entr.passers);
       Scores cp_score;
       while(passers.iterate(sq)) {
+         // connected passer has passer adjacent to it or in a chain
+         // with it
          if ((File(sq) != 8 && entr.passers.isSet(sq+1)) ||
              (File(sq) != 1 && entr.passers.isSet(sq-1)) ||
-             TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
+             TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers) ||
+             TEST_MASK(Attacks::pawn_attacks[sq][oside],entr.passers)) {
 #ifdef TUNE
             for (int i = 0; i < count; i++) {
                if (entr.details[i].sq == sq) {
@@ -2492,7 +2495,7 @@ void Scoring::calcEndgame(const Board &board,
 
 void Scoring::clearHashTables() {
    for (int i = 0; i < PAWN_HASH_SIZE; i++) {
-      pawnHashTable[i].hc = (hash_t)0;
+      pawnHashTable[i].hc = (hash_t)0xababababababababULL;
    }
    memset(endgameHashTable, '\0', ENDGAME_HASH_SIZE * sizeof(EndgameHashEntry));
    memset(kingCoverHashTable, '\0', 2 * KING_COVER_HASH_SIZE * sizeof(KingCoverHashEntry));
