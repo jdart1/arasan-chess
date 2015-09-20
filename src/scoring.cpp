@@ -1556,6 +1556,14 @@ void Scoring::calcPawnData(const Board &board,
          if ((File(sq) != 8 && entr.passers.isSet(sq+1)) ||
              (File(sq) != 1 && entr.passers.isSet(sq-1)) ||
              TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
+#ifdef TUNE
+            for (int i = 0; i < count; i++) {
+               if (entr.details[i].sq == sq) {
+                  entr.details[i].flags |= PawnDetail::CONNECTED_PASSER;
+                  break;
+               }
+            }
+#endif
             cp_score.mid += PARAM(CONNECTED_PASSER)[Midgame][Rank(sq, side)];
             cp_score.end += PARAM(CONNECTED_PASSER)[Endgame][Rank(sq, side)];
          }

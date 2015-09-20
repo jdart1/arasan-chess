@@ -468,7 +468,7 @@ static int map_to_pst(int i, ColorType side)
    int r = Rank(i,side);
    int f = File(i);
    if (f > 4) f = 9-f;
-   return ((r-1)/4) + f - 1;
+   return 4*(r-1) + f - 1;
 }
 
 // map square to outpost index, returns -1 if no mapping
@@ -589,52 +589,58 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       ASSERT(OnBoard(pds[i].sq));
       grads[Tune::SPACE] += inc*pds[i].space_weight;
       if (pds[i].flags & Scoring::PawnDetail::PASSED) {
-         grads[Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2] += 
+         grads[Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2,mLevel);
-         grads[Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2] += 
+         grads[Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2,mLevel);
       }
       if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {
-         grads[Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2] += 
+         grads[Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2,mLevel);
-         grads[Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2] += 
+         grads[Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2,mLevel);
       }
       if (pds[i].flags & Scoring::PawnDetail::DOUBLED) {
          int f = File(pds[i].sq);
          if (f > 4) f = 9-f;
-         grads[Tune::DOUBLED_PAWNS_MID1+f-1] += 
+         grads[Tune::DOUBLED_PAWNS_MID1+f-1] +=
             tune_params.scale(inc,Tune::DOUBLED_PAWNS_MID1+f-1,mLevel);
-         grads[Tune::DOUBLED_PAWNS_END1+f-1] += 
+         grads[Tune::DOUBLED_PAWNS_END1+f-1] +=
             tune_params.scale(inc,Tune::DOUBLED_PAWNS_END1+f-1,mLevel);
       }
       if (pds[i].flags & Scoring::PawnDetail::TRIPLED) {
          int f = File(pds[i].sq);
          if (f > 4) f = 9-f;
-         grads[Tune::TRIPLED_PAWNS_MID1+f-1] += 
+         grads[Tune::TRIPLED_PAWNS_MID1+f-1] +=
             tune_params.scale(inc,Tune::TRIPLED_PAWNS_MID1+f-1,mLevel);
-         grads[Tune::TRIPLED_PAWNS_END1+f-1] += 
+         grads[Tune::TRIPLED_PAWNS_END1+f-1] +=
             tune_params.scale(inc,Tune::TRIPLED_PAWNS_END1+f-1,mLevel);
       }
       if (pds[i].flags & Scoring::PawnDetail::ISOLATED) {
          int f = File(pds[i].sq);
          if (f > 4) f = 9-f;
-         grads[Tune::ISOLATED_PAWN_MID1+f-1] += 
+         grads[Tune::ISOLATED_PAWN_MID1+f-1] +=
             tune_params.scale(inc,Tune::ISOLATED_PAWN_MID1+f-1,mLevel);
-         grads[Tune::ISOLATED_PAWN_END1+f-1] += 
+         grads[Tune::ISOLATED_PAWN_END1+f-1] +=
             tune_params.scale(inc,Tune::ISOLATED_PAWN_END1+f-1,mLevel);
       }
       if (pds[i].flags & Scoring::PawnDetail::WEAK) {
-         grads[Tune::WEAK_PAWN_MID] += 
+         grads[Tune::WEAK_PAWN_MID] +=
             tune_params.scale(inc,Tune::WEAK_PAWN_MID,mLevel);
-         grads[Tune::WEAK_PAWN_END] += 
+         grads[Tune::WEAK_PAWN_END] +=
             tune_params.scale(inc,Tune::WEAK_PAWN_END,mLevel);
+      }
+      if (pds[i].flags & Scoring::PawnDetail::CONNECTED_PASSER) {
+         grads[Tune::CONNECTED_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
+            tune_params.scale(inc,Tune::CONNECTED_PASSER_MID2+Rank(pds[i].sq,side),mLevel);
+         grads[Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side)-2] +=
+            tune_params.scale(inc,Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side),mLevel);
       }
    }
    if (board.rook_bits[oside] | board.queen_bits[oside]) {
-      grads[Tune::WEAK_ON_OPEN_FILE_MID] += 
+      grads[Tune::WEAK_ON_OPEN_FILE_MID] +=
          tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_MID,mLevel);
-      grads[Tune::WEAK_ON_OPEN_FILE_END] += 
+      grads[Tune::WEAK_ON_OPEN_FILE_END] +=
             tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_END,mLevel);
    }
 }
