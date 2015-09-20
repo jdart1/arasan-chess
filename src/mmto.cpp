@@ -35,7 +35,7 @@ extern "C" {
 
 using namespace mmto;
 
-//#define REGULARIZE
+#define REGULARIZE
 
 static int iterations = 2;
 
@@ -60,7 +60,7 @@ static const int THREAD_STACK_SIZE = 8*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
-static const double REGULARIZATION = 1.0E-8;
+static const double REGULARIZATION = 1.0E-4;
 static const int PV_RECALC_INTERVAL = 16;
 
 static int first_index = 0;
@@ -202,17 +202,24 @@ static int get_move_indx(const Board &board, Move move) {
 }
 #endif
 
+static double norm_val(const Tune::TuneParam &p) 
+{
+   double mid = (p.max_value-p.min_value)/2.0;
+   return (double(p.current)-mid)/double(p.max_value-p.min_value);
+}
+
 static double calc_penalty()
 {
    // apply L2-regularization to the tuning parameters
-   double l2 = 0;
+   double l2 = 0.0;
 #ifdef REGULARIZE
    for (int i = first_index; i < last_index; i++) {
       Tune::TuneParam p;
       tune_params.getParam(i,p);
       // apply penalty only for parameters being tuned
       if (p.tunable) {
-         l2 += REGULARIZATION*tune_params.getParamValue(i)*tune_params.getParamValue(i);
+         // normalize the values since their ranges differ
+         l2 += REGULARIZATION*norm_val(p)*norm_val(p);
       }
    }
 #endif
@@ -413,7 +420,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
    while (have_next_game) {
       Board board;
       if (moves.size()) {
-         if (verbose) cout << "game " << games << endl;
+         if (verbose) cout << "game " << games << " thread " << id << endl;
          GameInfo *g;
          try {
             g = new GameInfo;
@@ -637,6 +644,15 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc,Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side),mLevel);
       }
    }
+   if (pawn_entr.pawnData(side).outside && !pawn_entr.pawnData(oside).outside) {
+      grads[Tune::OUTSIDE_PASSER_MID] +=
+         tune_params.scale(inc,Tune::OUTSIDE_PASSER_MID,mLevel);
+      grads[Tune::OUTSIDE_PASSER_END] +=
+         tune_params.scale(inc,Tune::OUTSIDE_PASSER_END,mLevel);
+   }
+   grads[Tune::PAWN_CENTER_SCORE_MID] +=
+      tune_params.scale(inc,Tune::PAWN_CENTER_SCORE_MID,mLevel);
+
    if (board.rook_bits[oside] | board.queen_bits[oside]) {
       grads[Tune::WEAK_ON_OPEN_FILE_MID] +=
          tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_MID,mLevel);
@@ -789,7 +805,7 @@ static void adjust_params(Parse2Data &data0, int iterations)
       // non-tunable parameters will have derivative zero and
       // we don't regularize them.
       if (p.tunable) {
-         dv -= 2*REGULARIZATION*v;
+         dv += 2*REGULARIZATION*norm_val(p);
       }
 #endif
       // TBD size the step based on parameter range?
@@ -967,10 +983,9 @@ static void learn()
          }
       }
       data2[0].target /= num_moves;
-      cout << "target=" << data2[0].target << " penalty=" << calc_penalty() << endl;
+      cout << "pass 2 target=" << data2[0].target << " penalty=" << calc_penalty
+() << " objective=" << data2[0].target + calc_penalty() << endl;
       data2[0].target += calc_penalty();
-
-      cout << "pass 2 objective = " << data2[0].target << endl;
       if (data2[0].target < best) {
          best = data2[0].target;
          cout << "new best objective: " << best << endl;
