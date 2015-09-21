@@ -19,6 +19,7 @@ static int round(double x) {
 static const int MOBILITY_RANGE = PAWN_VALUE/2;
 static const int OUTPOST_RANGE = PAWN_VALUE/4;
 static const int PST_RANGE = PAWN_VALUE/3;
+static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
 
 int Tune::numTuningParams() const
 {
@@ -87,14 +88,14 @@ static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
    Tune::TuneParam(Tune::BAD_BISHOP_MID,"bad_bishop_mid",-44,-80,0,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::BAD_BISHOP_END,"bad_bishop_end",-66,-120,0,Tune::TuneParam::Endgame,1),
    Tune::TuneParam(Tune::CENTER_PAWN_BLOCK,"center_pawn_block",-127,-300,0),
-   Tune::TuneParam(Tune::OUTSIDE_PASSER_MID,"outside_passer_mid",110,0,250),
-   Tune::TuneParam(Tune::OUTSIDE_PASSER_END,"outside_passer_end",234,0,500),
+   Tune::TuneParam(Tune::OUTSIDE_PASSER_MID,"outside_passer_mid",110,0,250,Tune::TuneParam::Midgame,1),
+   Tune::TuneParam(Tune::OUTSIDE_PASSER_END,"outside_passer_end",234,0,500,Tune::TuneParam::Endgame,1),
    Tune::TuneParam(Tune::WEAK_PAWN_MID,"weak_pawn_mid",-102,-250,0,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::WEAK_PAWN_END,"weak_pawn_end",-26,-250,0,Tune::TuneParam::Endgame,1),
    Tune::TuneParam(Tune::WEAK_ON_OPEN_FILE_MID,"weak_on_open_file_mid",-112,-250,0,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::WEAK_ON_OPEN_FILE_END,"weak_on_open_file_end",-112,-250,0,Tune::TuneParam::Endgame,1),
    Tune::TuneParam(Tune::SPACE,"space",78,0,120,Tune::TuneParam::Any,1),
-   Tune::TuneParam(Tune::PAWN_CENTER_SCORE_MID,"pawn_center_score_mid",27,0,100),
+   Tune::TuneParam(Tune::PAWN_CENTER_SCORE_MID,"pawn_center_score_mid",27,0,100,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::ROOK_ON_7TH_MID,"rook_on_7th_mid",297,0,800,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::ROOK_ON_7TH_END,"rook_on_7th_end",313,0,800,Tune::TuneParam::Endgame,1),
    Tune::TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",624,0,1200,Tune::TuneParam::Midgame,1),
@@ -106,12 +107,6 @@ static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
    Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame),
    Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame),
    Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-200,0,Tune::TuneParam::Midgame),
-   Tune::TuneParam(Tune::PASSER_OWN_PIECE_BLOCK_MID,"passer_own_piece_block_mid",-15,-200,0,Tune::TuneParam::Midgame),
-   Tune::TuneParam(Tune::PASSER_OWN_PIECE_BLOCK_END,"passer_own_piece_block_end",-43,-200,0,Tune::TuneParam::Endgame),
-   Tune::TuneParam(Tune::PP_BLOCK_BASE_MID,"pp_block_base_mid",149,0,280,Tune::TuneParam::Midgame),
-   Tune::TuneParam(Tune::PP_BLOCK_BASE_END,"pp_block_base_end",132,0,280,Tune::TuneParam::Endgame),
-   Tune::TuneParam(Tune::PP_BLOCK_MULT_MID,"pp_block_mult_mid",97,0,180,Tune::TuneParam::Midgame),
-   Tune::TuneParam(Tune::PP_BLOCK_MULT_END,"pp_block_mult_end",44,0,80,Tune::TuneParam::Endgame),
    Tune::TuneParam(Tune::KING_NEAR_PASSER,"king_near_passer",224,0,500,Tune::TuneParam::Endgame),
    Tune::TuneParam(Tune::OPP_KING_NEAR_PASSER,"opp_king_near_passer",-258,-500,0,Tune::TuneParam::Endgame),
    Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500),
@@ -368,11 +363,38 @@ static const int QUEEN_PST_INIT[2][64] =
    for (;i < NUM_MISC_PARAMS; i++) {
       tune_params.push_back(initial_params[i]);
    }
+   static const TuneParam::Scaling scales[2] = {Tune::TuneParam::Midgame,
+                                                Tune::TuneParam::Endgame};
+   // add passed pawn block tables
+   for (int phase = 0; phase < 2; phase++) {
+      for (int i = 0; i < 21; i++) {
+         stringstream name;
+         name << "pp_own_piece_block";
+         if (phase == 0)
+            name << "_mid";
+         else
+            name << "_end";
+         name << i;
+         int val = (i<6) ? 0 : -PAWN_VALUE/20; //TBD
+         tune_params.push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
+      }
+   }
+   for (int phase = 0; phase < 2; phase++) {
+      for (int i = 0; i < 21; i++) {
+         stringstream name;
+         name << "pp_opp_piece_block";
+         if (phase == 0)
+            name << "_mid";
+         else
+            name << "_end";
+         name << i;
+         int val = (i<6) ? 0 : -PAWN_VALUE/20; //TBD
+         tune_params.push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
+      }
+   }
+
    static const string names[] =
       {"knight_pst","bishop_pst","rook_pst","queen_pst","king_pst"};
-   static const TuneParam::Scaling scales[2] = {Tune::TuneParam::Midgame,
-                                                Tune::TuneParam::Endgame
-   };
    // add PSTs
    for (int n = 0; n < 5; n++) {
       for (int phase = 0; phase < 2; phase++) {
@@ -471,8 +493,8 @@ static const int QUEEN_PST_INIT[2][64] =
 
 void Tune::checkParams() const
 {
-   if (NUM_MISC_PARAMS != KNIGHT_PST_MIDGAME) {
-      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KNIGHT_PST_MIDGAME << endl;
+   if (NUM_MISC_PARAMS != PP_OWN_PIECE_BLOCK_MID) {
+      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << PP_OWN_PIECE_BLOCK_MID << endl;
    }
    for (int i = 0; i<NUM_MISC_PARAMS; i++) {
       if (tune_params[i].index != i) 
@@ -573,12 +595,6 @@ void Tune::applyParams() const
    Scoring::Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
    Scoring::Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
    Scoring::Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;
-   Scoring::Params::PASSER_OWN_PIECE_BLOCK_MID = tune_params[PASSER_OWN_PIECE_BLOCK_MID].current;
-   Scoring::Params::PASSER_OWN_PIECE_BLOCK_END = tune_params[PASSER_OWN_PIECE_BLOCK_END].current;
-   Scoring::Params::PP_BLOCK_BASE_MID = tune_params[PP_BLOCK_BASE_MID].current;
-   Scoring::Params::PP_BLOCK_BASE_END = tune_params[PP_BLOCK_BASE_END].current;
-   Scoring::Params::PP_BLOCK_MULT_MID = tune_params[PP_BLOCK_MULT_MID].current;
-   Scoring::Params::PP_BLOCK_MULT_END = tune_params[PP_BLOCK_MULT_END].current;
    Scoring::Params::KING_NEAR_PASSER = tune_params[KING_NEAR_PASSER].current;
    Scoring::Params::OPP_KING_NEAR_PASSER = tune_params[OPP_KING_NEAR_PASSER].current;
    Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
@@ -635,6 +651,19 @@ void Tune::applyParams() const
          Scoring::Params::ISOLATED_PAWN[Scoring::Endgame][7-i] = 
          PARAM(ISOLATED_PAWN_END1+i);
    }
+   for (int p = 0; p < 2; p++) {
+      for (int i = 0; i < 21; i++) {
+         Scoring::Params::PP_OWN_PIECE_BLOCK[p][i] =
+            p == 0 ?
+            PARAM(PP_OWN_PIECE_BLOCK_MID+i) :
+            PARAM(PP_OWN_PIECE_BLOCK_END+i);
+         Scoring::Params::PP_OPP_PIECE_BLOCK[p][i] =
+            p == 0 ?
+            PARAM(PP_OPP_PIECE_BLOCK_MID+i) :
+            PARAM(PP_OPP_PIECE_BLOCK_END+i);
+      }
+   }
+
    double s1 = 1.0 - PARAM(KING_ATTACK_SLOPE_FACTOR)/100.0;
    double s2 = 1.0 + PARAM(KING_ATTACK_SLOPE_FACTOR)/100.0;
    int i1 = PARAM(KING_ATTACK_INFLECT1);
@@ -705,20 +734,40 @@ void Tune::applyParams() const
 
 void Tune::writeX0(ostream &o) 
 {
-   o << "( ";
    for (int i=0; i < numTuningParams(); i++) {
-      o << getParamValue(i);
-      if (i < numTuningParams()-1) o << ' ';
+      TuneParam p;
+      getParam(i,p);
+      o << p.name << ' ' << p.current << endl;
    }
-   o << ")" << endl;
+   o << endl;
 }
 
 void Tune::readX0(istream &is) 
 {
-   int c;
-   while (is.good() && (c = is.get()) != '(') ;
-   for (int i = 0; is.good() && i < numTuningParams(); i++) {
-      is >> tune_params[i].current;
+   while (is.good()) {
+      string in;
+      getline(is,in);
+      size_t pos = in.find(' ');
+      string name = in.substr(0,pos);
+      int index = -1;
+      for (unsigned i = 0; i < tune_params.size(); i++) {
+         if (tune_params[i].name == name) {
+            index = (int)i;
+            break;
+         }
+      }
+      if (index == -1) {
+         cerr << "invalid param name found in input file: " << name << endl;
+      } else {
+         stringstream valstream(in.substr(pos+1,in.size()));
+         int val;
+         valstream >> val;
+         if (!valstream.bad() && !valstream.fail()) {
+            updateParamValue(index,val);
+         } else {
+            cerr << "error parsing value for parameter " << name << endl;
+         }
+      }
    }
 }
 

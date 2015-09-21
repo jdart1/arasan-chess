@@ -58,12 +58,6 @@ const int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = 243;
 const int Scoring::Params::ROOK_BEHIND_PP_MID = 25;
 const int Scoring::Params::ROOK_BEHIND_PP_END = 78;
 const int Scoring::Params::QUEEN_OUT = -68;
-const int Scoring::Params::PASSER_OWN_PIECE_BLOCK_MID = -15;
-const int Scoring::Params::PASSER_OWN_PIECE_BLOCK_END = -43;
-const int Scoring::Params::PP_BLOCK_BASE_MID = 149;
-const int Scoring::Params::PP_BLOCK_BASE_END = 132;
-const int Scoring::Params::PP_BLOCK_MULT_MID = 97;
-const int Scoring::Params::PP_BLOCK_MULT_END = 44;
 const int Scoring::Params::KING_NEAR_PASSER = 224;
 const int Scoring::Params::OPP_KING_NEAR_PASSER = -258;
 const int Scoring::Params::PAWN_SIDE_BONUS = 306;
@@ -75,6 +69,14 @@ const int Scoring::Params::TRADE_DOWN[16] = {688, 645, 602, 559, 516, 473, 430, 
 const int Scoring::Params::PASSED_PAWN[2][8] = {{0, 0, 184, 234, 304, 394, 684, 1234}, {0, 0, 214, 284, 404, 500, 964, 1500}};
 const int Scoring::Params::POTENTIAL_PASSER[2][8] = {{0, 0, 150, 161, 199, 199, 360, 0}, {0, 0, 164, 181, 238, 238, 485, 0}};
 const int Scoring::Params::CONNECTED_PASSER[2][8] = {{0, 0, 8, 75, 132, 144, 296, 416}, {0, 0, 31, 127, 150, 161, 315, 436}};
+const int Scoring::Params::PP_OWN_PIECE_BLOCK[2][21] = {
+   {0,0,0,0,0,0,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50},
+   {0,0,0,0,0,0,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50}
+};
+const int Scoring::Params::PP_OPP_PIECE_BLOCK[2][21] = {
+   {0,0,0,0,0,0,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50},
+   {0,0,0,0,0,0,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50}
+};
 const int Scoring::Params::DOUBLED_PAWNS[2][8] = {{0, -8, -134, -46, -46, -134, -8, 0}, {0, 0, -19, -19, -19, -19, 0, 0}};
 const int Scoring::Params::TRIPLED_PAWNS[2][8] = {{-38, -88, -88, -88, -88, -88, -88, -38}, {-118, -138, -188, -188, -188, -188, -138, -118}};
 const int Scoring::Params::ISOLATED_PAWN[2][8] = {{-132, -132, -132, -157, -157, -132, -132, -132}, {-162, -162, -162, -182, -182, -162, -162, -162}};

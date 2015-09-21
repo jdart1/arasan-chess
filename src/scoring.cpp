@@ -1586,6 +1586,9 @@ void Scoring::calcPawnData(const Board &board,
    int tmp = entr.midgame_score;
 #endif
    entr.midgame_score += PARAM(PAWN_CENTER_SCORE_MID) * centerCalc.bitCount();
+#ifdef TUNE
+   entr.center_pawn_factor = centerCalc.bitCount();
+#endif
 #ifdef PAWN_DEBUG
    if (entr.midgame_score - tmp) {
       cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << endl;
@@ -1752,6 +1755,16 @@ int Scoring::evalu8(const Board &board) {
    return score;
 }
 
+static int pp_block_index(Square passer, Square blocker, ColorType side) 
+{
+   int dist = Rank(blocker,side)-Rank(passer,side)-1;
+   ASSERT(dist>=0);
+   static const int offsets[6] = {0,6,11,15,18,20};
+   int index = offsets[Rank(passer,side)-2]+dist;
+   ASSERT(index>=0 && index<21);
+   return index;
+}
+
 void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry::PawnData &pawnData, Scores &scores) {
 #ifdef PAWN_DEBUG
    Scores tmp(scores);
@@ -1814,58 +1827,53 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    Bitboard passers2(pawnData.passers);
    while(passers2.iterate(sq)) {
       ASSERT(OnBoard(sq));
+      const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
+         Attacks::file_mask_down[sq];
 
       int rank = Rank(sq, side);
       int file = File(sq);
-      Square sq2;
-      Square blocker;
+      Square own_blocker, opp_blocker;
       if (side == White) {
-         Bitboard blockers(Attacks::file_mask_up[sq] & board.occupied[oside]);
-         sq2 = sq + 8;
-         blocker = blockers.firstOne();
+         opp_blocker = (mask & board.occupied[oside]).firstOne();
+         own_blocker = (mask & board.occupied[side]).firstOne();
       }
       else {
-         Bitboard blockers(Attacks::file_mask_down[sq] & board.occupied[oside]);
-         sq2 = sq - 8;
-         blocker = blockers.lastOne();
+         opp_blocker = (mask & board.occupied[oside]).lastOne();
+         own_blocker = (mask & board.occupied[side]).lastOne();
       }
-      if (blocker != InvalidSquare) {
-         // Tuned, Jan. 2015
-         int mid_penalty = PARAM(PP_BLOCK_BASE_MID) + PARAM(PP_BLOCK_MULT_MID) * PARAM(PASSED_PAWN)[Midgame][rank]/256;
-         int end_penalty = PARAM(PP_BLOCK_BASE_END) + PARAM(PP_BLOCK_MULT_END) * PARAM(PASSED_PAWN)[Endgame][rank]/256;
-         if (blocker != sq2) {
-            mid_penalty /= (Rank(blocker,side)-rank);
-         }
-         scores.mid -= mid_penalty;
-         scores.end -= end_penalty;
+      if (own_blocker != InvalidSquare) {
+         int index = pp_block_index(sq,own_blocker,side);
+         int mid_penalty = Params::PP_OWN_PIECE_BLOCK[Midgame][index];
+         int end_penalty = Params::PP_OWN_PIECE_BLOCK[Endgame][index];
+         scores.mid += mid_penalty;
+         scores.end += end_penalty;
 #ifdef PAWN_DEBUG
          cout <<
             ColorImage(side) <<
             " passed pawn on " <<
             SquareImage(sq);
          cout << " blocked by piece on " << 
-            SquareImage(blocker) << ", score= (" << -mid_penalty << ", " << 
-            -end_penalty << ")" << endl;
+            SquareImage(own_blocker) << ", score= (" << mid_penalty << ", " << 
+            end_penalty << ")" << endl;
 #endif
       }
-
-      Bitboard atcks(board.fileAttacks(sq));
-      const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
-            Attacks::file_mask_down[sq];
-      if (atcks) {
-         if (atcks & mask & board.occupied[side]) {
-            int mid_penalty = (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_MID);
-            int end_penalty = (Rank(sq, side) - 1) * PARAM(PASSER_OWN_PIECE_BLOCK_END);
+      if (opp_blocker != InvalidSquare) {
+         int index = pp_block_index(sq,opp_blocker,side);
+         int mid_penalty = Params::PP_OPP_PIECE_BLOCK[Midgame][index];
+         int end_penalty = Params::PP_OPP_PIECE_BLOCK[Endgame][index];
+         scores.mid += mid_penalty;
+         scores.end += end_penalty;
 #ifdef PAWN_DEBUG
-            cout <<
-               ColorImage(side) << " passed pawn on " <<
-               SquareImage(sq) << " blocked by own piece(s) , score= (" << -mid_penalty << ", " << -end_penalty << ")" << endl;
+         cout <<
+            ColorImage(side) <<
+            " passed pawn on " <<
+            SquareImage(sq);
+         cout << " blocked by piece on " << 
+            SquareImage(opp_blocker) << ", score= (" << mid_penalty << ", " << 
+            end_penalty << ")" << endl;
 #endif
-            scores.mid += mid_penalty;
-            scores.end += end_penalty;
-         }
       }
-
+      Bitboard atcks(board.fileAttacks(sq));
 #ifdef PAWN_DEBUG
       int mid_tmp = scores.mid;
       int end_tmp = scores.end;
@@ -2567,6 +2575,10 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::POTENTIAL_PASSER[0], Params::POTENTIAL_PASSER[1], 8);
    o << "const int Scoring::Params::CONNECTED_PASSER[2][8] = ";
    print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
+   o << "const int Scoring::Params::PP_OWN_PIECE_BLOCK[2][21] = ";
+   print_array(o,Params::PP_OWN_PIECE_BLOCK[0], Params::PP_OWN_PIECE_BLOCK[1], 21);
+   o << "const int Scoring::Params::PP_OPP_PIECE_BLOCK[2][21] = ";
+   print_array(o,Params::PP_OPP_PIECE_BLOCK[0], Params::PP_OPP_PIECE_BLOCK[1], 21);
    o << "const int Scoring::Params::DOUBLED_PAWNS[2][8] = ";
    print_array(o,Params::DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
    o << "const int Scoring::Params::TRIPLED_PAWNS[2][8] = ";

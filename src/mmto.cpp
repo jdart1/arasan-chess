@@ -493,6 +493,16 @@ static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
 
+static int pp_block_index(Square passer, Square blocker, ColorType side) 
+{
+   int dist = Rank(blocker,side)-Rank(passer,side)-1;
+   ASSERT(dist>=0);
+   static const int offsets[6] = {0,6,11,15,18,20};
+   int index = offsets[Rank(passer,side)-2]+dist;
+   ASSERT(index>=0 && index<21);
+   return index;
+}
+
 // Updates a vector where each entry corresponds to a tunable
 // parameter. The update is based on a particular board position and
 // side and consists for each parameter the contribution of
@@ -600,6 +610,33 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc,Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2,mLevel);
          grads[Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2,mLevel);
+         sq = pds[i].sq;
+         const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
+            Attacks::file_mask_down[sq];
+
+         Square own_blocker, opp_blocker;
+         if (side == White) {
+            opp_blocker = (mask & board.occupied[oside]).firstOne();
+            own_blocker = (mask & board.occupied[side]).firstOne();
+         }
+         else {
+            opp_blocker = (mask & board.occupied[oside]).lastOne();
+            own_blocker = (mask & board.occupied[side]).lastOne();
+         }
+         if (own_blocker != InvalidSquare) {
+            int index = pp_block_index(sq,own_blocker,side);
+            grads[Tune::PP_OWN_PIECE_BLOCK_MID+index] +=
+               tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_MID+index,mLevel);
+            grads[Tune::PP_OWN_PIECE_BLOCK_END+index] +=
+               tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_END+index,mLevel);
+         }
+         if (opp_blocker != InvalidSquare) {
+            int index = pp_block_index(sq,opp_blocker,side);
+            grads[Tune::PP_OPP_PIECE_BLOCK_MID+index] +=
+               tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_MID+index,mLevel);
+            grads[Tune::PP_OPP_PIECE_BLOCK_END+index] +=
+               tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_END+index,mLevel);
+         }
       }
       if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {
          grads[Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
@@ -650,8 +687,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::OUTSIDE_PASSER_END] +=
          tune_params.scale(inc,Tune::OUTSIDE_PASSER_END,mLevel);
    }
+   Bitboard centerCalc(Attacks::center & (board.pawn_bits[side] | board.allPawnAttacks(side)));
    grads[Tune::PAWN_CENTER_SCORE_MID] +=
-      tune_params.scale(inc,Tune::PAWN_CENTER_SCORE_MID,mLevel);
+      tune_params.scale(inc*centerCalc.bitCount(),Tune::PAWN_CENTER_SCORE_MID,mLevel);
 
    if (board.rook_bits[oside] | board.queen_bits[oside]) {
       grads[Tune::WEAK_ON_OPEN_FILE_MID] +=

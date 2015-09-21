@@ -124,6 +124,7 @@ class Scoring
   	   int w_square_pawns,b_square_pawns;
            int outside;
 #ifdef TUNE
+         int center_pawn_factor;
          PawnDetail details[8];
 #endif
        } wPawnData, bPawnData;
