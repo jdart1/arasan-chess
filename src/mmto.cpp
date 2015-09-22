@@ -82,11 +82,7 @@ struct PositionDupEntry
    int val;
 };
 
-#if __cplusplus >= 201103L
 static unordered_map<hash_t,PositionDupEntry> *hash_table;
-#else
-static map<hash_t,PositionDupEntry> *hash_table;
-#endif
 
 enum Phase {Phase1, Phase2};
 
@@ -961,11 +957,7 @@ static void output_solution()
 static void learn()
 {
    try {
-#if __cplusplus >= 201103L
       hash_table = new unordered_map<hash_t,PositionDupEntry>();
-#else
-      hash_table = new map<hash_t,PositionDupEntry>();
-#endif
    } catch(std::bad_alloc) {
       cerr << "hash table alloc: out of memory!" << endl;
       exit(-1);
