@@ -89,13 +89,13 @@ class Scoring
       static const int PASSED=1;
       static const int POTENTIAL_PASSER=2;
       static const int CONNECTED_PASSER=4;
-      static const int BACKWARD=16;
-      static const int DOUBLED=32;
-      static const int TRIPLED=64;
-      static const int WEAK=128;
-      static const int ISOLATED=256;
-      int flags;
-      int space_weight;
+      static const int BACKWARD=8;
+      static const int DOUBLED=16;
+      static const int TRIPLED=32;
+      static const int WEAK=64;
+      static const int ISOLATED=128;
+      byte flags;
+      byte space_weight;
       Square sq;
     };
 #endif

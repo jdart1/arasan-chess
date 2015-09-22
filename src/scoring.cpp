@@ -1536,7 +1536,7 @@ void Scoring::calcPawnData(const Board &board,
          cout << " space=" << space*PARAM(SPACE);
 #endif
 #ifdef TUNE
-         td.space_weight = space;
+         td.space_weight += space;
 #endif
          entr.midgame_score += space*PARAM(SPACE);
          entr.endgame_score += space*PARAM(SPACE);
@@ -2505,8 +2505,13 @@ void Scoring::clearHashTables() {
    for (int i = 0; i < PAWN_HASH_SIZE; i++) {
       pawnHashTable[i].hc = (hash_t)0xababababababababULL;
    }
-   memset(endgameHashTable, '\0', ENDGAME_HASH_SIZE * sizeof(EndgameHashEntry));
-   memset(kingCoverHashTable, '\0', 2 * KING_COVER_HASH_SIZE * sizeof(KingCoverHashEntry));
+   for (int i = 0; i < ENDGAME_HASH_SIZE; i++) {
+      endgameHashTable[i].hc = (hash_t)0;
+   }
+   for (int i = 0; i < KING_COVER_HASH_SIZE; i++) {
+      kingCoverHashTable[White][i].hc = (hash_t)0;
+      kingCoverHashTable[Black][i].hc = (hash_t)0;
+   }
 }
 
 #ifdef TUNE
