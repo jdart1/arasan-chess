@@ -2378,9 +2378,11 @@ void Scoring::calcEndgame(const Board &board,
    // calculate & cache endgame score based on interaction of king & pawns
    const PawnHashEntry::PawnData & wPawnData = pawnEntry.wPawnData;
    const PawnHashEntry::PawnData & bPawnData = pawnEntry.bPawnData;
-   endgameEntry->wScore = endgameEntry->bScore = 0;
-   endgameEntry->white_endgame_pawn_proximity = endgameEntry->black_endgame_pawn_proximity = (byte) 0;
-   endgameEntry->w_uncatchable = endgameEntry->b_uncatchable = (byte) 0;
+   endgameEntry->w_uncatchable = endgameEntry->b_uncatchable = (uint16) 0;
+   endgameEntry->wScore = endgameEntry->bScore = (int16)0;
+   endgameEntry->white_endgame_pawn_proximity = endgameEntry->black_endgame_pawn_proximity = (int16) 0;
+   endgameEntry->white_king_position =
+      endgameEntry->black_king_position = (int16)0;
 
    Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
    if (!all_pawns) return;
