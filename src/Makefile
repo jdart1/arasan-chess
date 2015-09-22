@@ -52,7 +52,7 @@ SMPLIB   = -lpthread
 
 PGO_RUN_FLAGS = -H 64M
 
-TUNE_FLAGS := -DTUNE
+TUNE_FLAGS := -DTUNE -std=c++11
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS

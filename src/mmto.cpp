@@ -16,11 +16,8 @@
 #include <iomanip>
 #include <limits>
 #include <vector>
-#if __cplusplus >= 201103L
 #include <unordered_map>
-#else
-#include <map>
-#endif
+#include <atomic>
 extern "C" {
 #include <math.h>
 #include <ctype.h>
@@ -69,8 +66,10 @@ static int last_index = Tune::NUM_MISC_PARAMS;
 
 static vector<GameInfo *> tmpdata;
 
-LockDefine(data_lock);
+static atomic<int> phase2_game_index;
+
 LockDefine(file_lock);
+LockDefine(data_lock);
 
 static pthread_attr_t stackSizeAttrib;
 
@@ -809,11 +808,12 @@ static void parse2(ThreadData &td, Parse2Data &data)
 
    Scoring s;
    const int max = tmpdata.size();
-   // each thread reads distinct games from the vector
-   for (int i = td.index;
-        i < max;
-        i += cores) {
-      GameInfo *g = tmpdata[i];
+   for (;;) {
+      // obtain the next available game from the vector
+      int next = phase2_game_index.fetch_add(1);
+      if (next >= max) break;
+      if (verbose) cout << "game " << next << " thread " << td.index << endl;
+      GameInfo *g = tmpdata[next];
       // iterate over the game moves and the positions derived from them
       Board board;
       for (vector<PositionInfo>::const_iterator it2 = g->begin();
@@ -1012,6 +1012,7 @@ static void learn()
          game_file.clear();
          game_file.seekg(0,ios::beg);
       }
+      phase2_game_index = 0;
       learn_parse(Phase2, cores);
       // sum results over workers into 1st data element
       for (int i = 1; i < cores; i++) {
