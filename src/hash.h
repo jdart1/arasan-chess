@@ -54,6 +54,10 @@ class HashEntry {
          return hc == 0x0ULL;
       }
 
+      void clear() {
+        hc = 0x0ULL;
+      }
+
       int depth() const {
           return (int)contents.depth - 2;
       }
@@ -188,12 +192,11 @@ class Hash {
                                               int depth, int age,
                                               HashEntry &he
                                               ) {
-        int i;
         if (!hashSize) return HashEntry::NoHit;
         int probe = (int)(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = NULL;
-        for (i = MaxRehash; i != 0; --i) {
+        for (int i = MaxRehash; i != 0; --i) {
             // Copy hashtable entry before hash test below (avoids
             // race where entry is validated, then changed).
             HashEntry entry(*p);

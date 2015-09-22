@@ -75,7 +75,9 @@ void Hash::clearHash()
    if (hashSize == 0) return;
    size_t hashSizePlus = hashSize + MaxRehash;
    hashFree = hashSize;
-   memset(hashTable,'\0',sizeof(HashEntry)*hashSizePlus);
+   for (size_t i = 0; i< hashSizePlus; i++) {
+      hashTable[i].clear();
+   }
    if (options.learning.position_learning) {
       loadLearnInfo();
     }
