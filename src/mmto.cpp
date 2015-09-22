@@ -202,7 +202,7 @@ static int get_move_indx(const Board &board, Move move) {
 }
 #endif
 
-static double norm_val(const Tune::TuneParam &p) 
+static double norm_val(const Tune::TuneParam &p)
 {
    double mid = (p.max_value-p.min_value)/2.0;
    return (double(p.current)-mid)/double(p.max_value-p.min_value);
@@ -493,7 +493,7 @@ static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
 
-static int pp_block_index(Square passer, Square blocker, ColorType side) 
+static int pp_block_index(Square passer, Square blocker, ColorType side)
 {
    int dist = Rank(blocker,side)-Rank(passer,side)-1;
    ASSERT(dist>=0);
@@ -1052,6 +1052,8 @@ int CDECL main(int argc, char **argv)
     atexit(cleanupGlobals);
     delayedInit();
     options.search.hash_table_size = 0;
+    options.search.easy_threshold = LEARNING_SEARCH_WINDOW;
+    options.learning.position_learning = 0;
 
 //    if (EGTBMenCount) {
 //        cerr << "Initialized tablebases" << endl;
