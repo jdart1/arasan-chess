@@ -2379,7 +2379,7 @@ void Scoring::calcEndgame(const Board &board,
    const PawnHashEntry::PawnData & wPawnData = pawnEntry.wPawnData;
    const PawnHashEntry::PawnData & bPawnData = pawnEntry.bPawnData;
    endgameEntry->w_uncatchable = endgameEntry->b_uncatchable = (uint16) 0;
-   endgameEntry->wScore = endgameEntry->bScore = (int16)0;
+   endgameEntry->wScore = endgameEntry->bScore = 0;
    endgameEntry->white_endgame_pawn_proximity = endgameEntry->black_endgame_pawn_proximity = (int16) 0;
    endgameEntry->white_king_position =
       endgameEntry->black_king_position = (int16)0;
@@ -2413,7 +2413,7 @@ void Scoring::calcEndgame(const Board &board,
    cout << "king position (White) after side bonus: " << k_pos << endl;
 #endif
 
-   endgameEntry->white_king_position = k_pos;
+   endgameEntry->white_king_position = (int16)k_pos;
    kp = board.kingSquare(Black);
    k_pos = PARAM(KING_PST)[Endgame][63-kp];
 #ifdef EVAL_DEBUG
@@ -2434,15 +2434,14 @@ void Scoring::calcEndgame(const Board &board,
 #ifdef EVAL_DEBUG
    cout << "king position (Black) after side bonus: " << k_pos << endl;
 #endif
-
-   endgameEntry->black_king_position = k_pos;
+   endgameEntry->black_king_position = (int16)k_pos;
 
    // bonus for king near pawns
    Bitboard it(all_pawns);
    Square sq;
    while(it.iterate(sq)) {
-      endgameEntry->white_endgame_pawn_proximity += 10*(4 - distance1(board.kingSquare(White), sq));
-      endgameEntry->black_endgame_pawn_proximity += 10*(4 - distance1(board.kingSquare(Black), sq));
+      endgameEntry->white_endgame_pawn_proximity += (int16)(10*(4 - distance1(board.kingSquare(White), sq)));
+     endgameEntry->black_endgame_pawn_proximity += (int16)(10*(4 - distance1(board.kingSquare(Black), sq)));
    }
 
 #ifdef EVAL_DEBUG
@@ -2465,25 +2464,21 @@ void Scoring::calcEndgame(const Board &board,
 
       int rank = Rank(sq, White);
       int file = File(sq);
-      if
-      (
-         rank == 6
-      && (File(board.kingSquare(White)) == file - 1 || File(board.kingSquare(White)) == file + 1)
-      && Rank(board.kingSquare(White), White) >= rank
-         ) endgameEntry->wScore += PARAM(SUPPORTED_PASSER6);
-      else if
-         (
-            rank == 7
-         && (File(board.kingSquare(White)) == file - 1 || File(board.kingSquare(White)) == file + 1)
-         && Rank(board.kingSquare(White), White) >= rank
-         )
+      if (rank == 6 &&
+          (File(board.kingSquare(White)) == file - 1 || File(board.kingSquare(White)) == file + 1) &&
+          Rank(board.kingSquare(White), White) >= rank) {
+         endgameEntry->wScore += PARAM(SUPPORTED_PASSER6);
+      }
+      else if (rank == 7 &&
+               (File(board.kingSquare(White)) == file - 1 || File(board.kingSquare(White)) == file + 1) &&
+               Rank(board.kingSquare(White), White) >= rank) {
          endgameEntry->wScore += PARAM(SUPPORTED_PASSER7);
+      }
    }
 
    passers2 = bPawnData.passers;
    while(passers2.iterate(sq)) {
-      if (lookupBitbase(board.kingSquare(Black), sq, board.kingSquare(White), Black, board.sideToMove()))
-      {
+      if (lookupBitbase(board.kingSquare(Black), sq, board.kingSquare(White), Black, board.sideToMove())) {
 #ifdef PAWN_DEBUG
          cout << "Black pawn on " << SquareImage(sq) << " is uncatchable" << endl;
 #endif
@@ -2494,12 +2489,14 @@ void Scoring::calcEndgame(const Board &board,
       int file = File(sq);
       if (rank == 6 &&
          (File(board.kingSquare(Black)) == file - 1 || File(board.kingSquare(Black)) == file + 1) &&
-         Rank(board.kingSquare(Black), Black) >= rank)
+          Rank(board.kingSquare(Black), Black) >= rank) {
          endgameEntry->bScore += PARAM(SUPPORTED_PASSER6);
+      }
       else if (rank == 7 && 
                (File(board.kingSquare(Black)) == file - 1 || File(board.kingSquare(Black)) == file + 1) &&
-               Rank(board.kingSquare(Black), Black) >= rank)
+               Rank(board.kingSquare(Black), Black) >= rank) {
          endgameEntry->bScore += PARAM(SUPPORTED_PASSER7);
+      }
    }
 }
 
