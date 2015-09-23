@@ -53,7 +53,7 @@ static bool verbose = false;
 static const int MAX_PV_LENGTH = 256;
 static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
-static const int THREAD_STACK_SIZE = 8*1024*1024;
+static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
@@ -70,6 +70,7 @@ static atomic<int> phase2_game_index;
 
 LockDefine(file_lock);
 LockDefine(data_lock);
+LockDefine(hash_lock);
 
 static pthread_attr_t stackSizeAttrib;
 
@@ -430,6 +431,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
             // see if the pair position hash/move has already been used
             BoardState s(board.state);
             board.doMove(record_move);
+            Lock(hash_lock);
             PositionDupEntry &val = (*hash_table)[board.hashCode()];
             // Note: duplicated position/moves are recorded with an empty
             // pv, so we can trace through the game again, but
@@ -438,7 +440,11 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
             PositionInfo pi(record_move);
             if (val.val == 0) { // not already present
                val.val++; // mark present
+               Unlock(hash_lock);
                make_pv(board, td, pi.pvs, pdata, record_move);
+            }
+            else {
+               Unlock(hash_lock);
             }
             g->push_back(pi);
             board.doMove(record_move);
@@ -965,6 +971,7 @@ static void learn()
 
    LockInit(data_lock);
    LockInit(file_lock);
+   LockInit(hash_lock);
    uint64 num_moves = 0;
    double best = numeric_limits<double>::max();
 
@@ -1030,6 +1037,8 @@ static void learn()
    LockFree(data_lock);
    LockDestroy(file_lock);
    LockFree(file_lock);
+   LockDestroy(hash_lock);
+   LockFree(hash_lock);
 }
 
 int CDECL main(int argc, char **argv)
