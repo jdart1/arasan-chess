@@ -431,13 +431,13 @@ static const int QUEEN_PST_INIT[2][64] =
    ASSERT(i==KNIGHT_MOBILITY);
    for (int m = 0; m < 9; m++) {
       stringstream name;
-      name << "knight_mobility" << m << endl;
+      name << "knight_mobility" << m;
       tune_params.push_back(TuneParam(i++,name.str(),KNIGHT_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==BISHOP_MOBILITY);
    for (int m = 0; m < 15; m++) {
       stringstream name;
-      name << "bishop_mobility" << m << endl;
+      name << "bishop_mobility" << m;
       tune_params.push_back(TuneParam(i++,name.str(),BISHOP_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==ROOK_MOBILITY_MIDGAME);
@@ -451,7 +451,6 @@ static const int QUEEN_PST_INIT[2][64] =
          else {
             name << "_end";
          }
-         name << m << endl;
          tune_params.push_back(TuneParam(i++,name.str(),ROOK_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,scales[phase],1));
       }
    }
@@ -466,14 +465,13 @@ static const int QUEEN_PST_INIT[2][64] =
          else {
             name << "_end";
          }
-         name << m << endl;
          tune_params.push_back(TuneParam(i++,name.str(),QUEEN_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,scales[phase],1));
       }
    }
    ASSERT(i==KING_MOBILITY_ENDGAME);
    for (int m = 0; m < 9; m++) {
       stringstream name;
-      name << "king_mobility_endgame" << m << endl;
+      name << "king_mobility_endgame" << m;
       tune_params.push_back(TuneParam(i++,name.str(),KING_MOBILITY_ENDGAME_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Endgame,1));
    }
    // outposts
@@ -481,7 +479,7 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int p = 0; p < 3; p++) {
       for (int s = 0; s < 16; s++) {
          stringstream name;
-         name << "knight_outpost" << p << '_' << s << endl;
+         name << "knight_outpost" << p << '_' << s;
          int val = KNIGHT_OUTPOST_INIT[map_from_outpost(s)];
          if (p == 0) val /= 2;
          tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,Tune::TuneParam::Any,1));
@@ -491,7 +489,7 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int p = 0; p < 3; p++) {
       for (int s = 0; s < 16; s++) {
          stringstream name;
-         name << "bishop_outpost" << p << '_' << s << endl;
+         name << "bishop_outpost" << p << '_' << s;
          int val = BISHOP_OUTPOST_INIT[map_from_outpost(s)];
          if (p == 0) val /= 2;
          tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,Tune::TuneParam::Any,1));
