@@ -816,7 +816,7 @@ void Scoring::pieceScore(const Board &board,
 #endif
             scores.any += mobl;
             if (outpost(board,sq,side)) {
-               int outpost_score = PARAM(KNIGHT_OUTPOST)[outpost_defenders(board,sq,side)][scoreSq];
+               int outpost_score = Params::KNIGHT_OUTPOST[outpost_defenders(board,sq,side)][scoreSq];
 #ifdef EVAL_DEBUG
                cout << "knight outpost (defenders=" <<
                   outpost_defenders(board,sq,side) << "): score " << outpost_score << endl;
@@ -854,7 +854,7 @@ void Scoring::pieceScore(const Board &board,
             }
 
             if (outpost(board,sq,side)) {
-               int outpost_score = PARAM(BISHOP_OUTPOST)[outpost_defenders(board,sq,side)][scoreSq];
+               int outpost_score = Params::BISHOP_OUTPOST[outpost_defenders(board,sq,side)][scoreSq];
 #ifdef EVAL_DEBUG
                cout << "bishop outpost (defenders=" <<
                   outpost_defenders(board,sq,side) << "): score " << outpost_score << endl;

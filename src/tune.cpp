@@ -365,9 +365,10 @@ static const int QUEEN_PST_INIT[2][64] =
    }
    static const TuneParam::Scaling scales[2] = {Tune::TuneParam::Midgame,
                                                 Tune::TuneParam::Endgame};
+   ASSERT(i==PP_OWN_PIECE_BLOCK_MID);
    // add passed pawn block tables
    for (int phase = 0; phase < 2; phase++) {
-      for (int i = 0; i < 21; i++) {
+      for (int x = 0; x < 21; x++) {
          stringstream name;
          name << "pp_own_piece_block";
          if (phase == 0)
@@ -375,12 +376,12 @@ static const int QUEEN_PST_INIT[2][64] =
          else
             name << "_end";
          name << i;
-         int val = (i<6) ? 0 : -PAWN_VALUE/20; //TBD
+         int val = (x<6) ? 0 : -PAWN_VALUE/20; //TBD
          tune_params.push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
       }
    }
    for (int phase = 0; phase < 2; phase++) {
-      for (int i = 0; i < 21; i++) {
+      for (int x = 0; x < 21; x++) {
          stringstream name;
          name << "pp_opp_piece_block";
          if (phase == 0)
@@ -388,7 +389,7 @@ static const int QUEEN_PST_INIT[2][64] =
          else
             name << "_end";
          name << i;
-         int val = (i<6) ? 0 : -PAWN_VALUE/20; //TBD
+         int val = (x<6) ? 0 : -PAWN_VALUE/20; //TBD
          tune_params.push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
       }
    }
@@ -396,6 +397,7 @@ static const int QUEEN_PST_INIT[2][64] =
    static const string names[] =
       {"knight_pst","bishop_pst","rook_pst","queen_pst","king_pst"};
    // add PSTs
+   ASSERT(i == KNIGHT_PST_MIDGAME);
    for (int n = 0; n < 5; n++) {
       for (int phase = 0; phase < 2; phase++) {
          for (int j = 0; j < 32; j++) {
@@ -426,16 +428,19 @@ static const int QUEEN_PST_INIT[2][64] =
       }
    }
    // add mobility
+   ASSERT(i==KNIGHT_MOBILITY);
    for (int m = 0; m < 9; m++) {
       stringstream name;
       name << "knight_mobility" << m << endl;
       tune_params.push_back(TuneParam(i++,name.str(),KNIGHT_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Any,1));
    }
+   ASSERT(i==BISHOP_MOBILITY);
    for (int m = 0; m < 15; m++) {
       stringstream name;
       name << "bishop_mobility" << m << endl;
       tune_params.push_back(TuneParam(i++,name.str(),BISHOP_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Any,1));
    }
+   ASSERT(i==ROOK_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
       for (int m = 0; m < 15; m++) {
          stringstream name;
@@ -450,6 +455,7 @@ static const int QUEEN_PST_INIT[2][64] =
          tune_params.push_back(TuneParam(i++,name.str(),ROOK_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,scales[phase],1));
       }
    }
+   ASSERT(i==QUEEN_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
       for (int m = 0; m < 29; m++) {
          stringstream name;
@@ -464,12 +470,14 @@ static const int QUEEN_PST_INIT[2][64] =
          tune_params.push_back(TuneParam(i++,name.str(),QUEEN_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,scales[phase],1));
       }
    }
+   ASSERT(i==KING_MOBILITY_ENDGAME);
    for (int m = 0; m < 9; m++) {
       stringstream name;
       name << "king_mobility_endgame" << m << endl;
       tune_params.push_back(TuneParam(i++,name.str(),KING_MOBILITY_ENDGAME_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Endgame,1));
    }
    // outposts
+   ASSERT(i==KNIGHT_OUTPOST);
    for (int p = 0; p < 3; p++) {
       for (int s = 0; s < 16; s++) {
          stringstream name;
@@ -479,6 +487,7 @@ static const int QUEEN_PST_INIT[2][64] =
          tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,Tune::TuneParam::Any,1));
       }
    }
+   ASSERT(i==BISHOP_OUTPOST);
    for (int p = 0; p < 3; p++) {
       for (int s = 0; s < 16; s++) {
          stringstream name;
