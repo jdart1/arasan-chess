@@ -18,7 +18,7 @@ struct Params
 BEGIN_PACKED_STRUCT
     
     // number of fixed parameters that map 1-1 to tuning paramaters
-    static const int PARAM_ARRAY_SIZE = 62;
+    static const int PARAM_ARRAY_SIZE = 56;
 
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
