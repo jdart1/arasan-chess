@@ -515,7 +515,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                         vector<double> &grads, double inc)
 {
    const ColorType oside = OppositeColor(side);
-   const int mLevel = board.getMaterial(side).materialLevel();
+   const int mLevel = board.getMaterial(oside).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board);
    grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
