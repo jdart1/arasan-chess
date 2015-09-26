@@ -451,6 +451,7 @@ static const int QUEEN_PST_INIT[2][64] =
          else {
             name << "_end";
          }
+         name << m;
          tune_params.push_back(TuneParam(i++,name.str(),ROOK_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,scales[phase],1));
       }
    }
@@ -465,6 +466,7 @@ static const int QUEEN_PST_INIT[2][64] =
          else {
             name << "_end";
          }
+         name << m;
          tune_params.push_back(TuneParam(i++,name.str(),QUEEN_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,scales[phase],1));
       }
    }
