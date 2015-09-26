@@ -32,7 +32,7 @@ extern "C" {
 
 using namespace mmto;
 
-#define REGULARIZE
+static bool regularize = false;
 
 static int iterations = 2;
 
@@ -143,6 +143,7 @@ static void usage()
    cerr << "Usage: mmto -c <cores>" << endl;
    cerr << "-d just write out current parameters values to params.cpp" << endl;
    cerr << "-i <input parameter file> -o <output parameter file>" << endl;
+   cerr << "-r apply regularization" << endl;
    cerr << "-x <output objective file>" << endl;
    cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
    cerr << "-n <iterations>" << endl;
@@ -208,17 +209,18 @@ static double calc_penalty()
 {
    // apply L2-regularization to the tuning parameters
    double l2 = 0.0;
-#ifdef REGULARIZE
-   for (int i = first_index; i < last_index; i++) {
-      Tune::TuneParam p;
-      tune_params.getParam(i,p);
-      // apply penalty only for parameters being tuned
-      if (p.tunable) {
-         // normalize the values since their ranges differ
-         l2 += REGULARIZATION*norm_val(p)*norm_val(p);
+   if (regularize) {
+
+      for (int i = first_index; i < last_index; i++) {
+         Tune::TuneParam p;
+         tune_params.getParam(i,p);
+         // apply penalty only for parameters being tuned
+         if (p.tunable) {
+            // normalize the values since their ranges differ
+            l2 += REGULARIZATION*norm_val(p)*norm_val(p);
+         }
       }
    }
-#endif
    return l2;
 }
 
@@ -840,14 +842,16 @@ static void adjust_params(Parse2Data &data0, int iterations)
       Tune::TuneParam p;
       tune_params.getParam(i,p);
       int v = p.current;
-#ifdef REGULARIZE
-      // add the derivative of the regularization term. Note:
-      // non-tunable parameters will have derivative zero and
-      // we don't regularize them.
-      if (p.tunable) {
-         dv += 2*REGULARIZATION*norm_val(p);
+      if (regularize) {
+
+         // add the derivative of the regularization term. Note:
+         // non-tunable parameters will have derivative zero and
+         // we don't regularize them.
+         if (p.tunable) {
+            dv += 2*REGULARIZATION*norm_val(p);
+         }
       }
-#endif
+
       // TBD size the step based on parameter range?
 //      const int istep = Util::Max(1,(p.max_value-p.min_value)/(100+2*iterations));
       const int istep = 1;
@@ -1091,6 +1095,9 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-f")==0) {
           ++arg;
           first_param = argv[arg];
+       }
+       else if (strcmp(argv[arg],"-r")==0) {
+          regularize = true;
        }
        else if (strcmp(argv[arg],"-s")==0) {
           ++arg;
