@@ -157,6 +157,18 @@ class Tune {
     CONNECTED_PASSER_END5,
     CONNECTED_PASSER_END6,
     CONNECTED_PASSER_END7,
+    ADJACENT_PASSER_MID2,
+    ADJACENT_PASSER_MID3,
+    ADJACENT_PASSER_MID4,
+    ADJACENT_PASSER_MID5,
+    ADJACENT_PASSER_MID6,
+    ADJACENT_PASSER_MID7,
+    ADJACENT_PASSER_END2,
+    ADJACENT_PASSER_END3,
+    ADJACENT_PASSER_END4,
+    ADJACENT_PASSER_END5,
+    ADJACENT_PASSER_END6,
+    ADJACENT_PASSER_END7,
     DOUBLED_PAWNS_MID1,
     DOUBLED_PAWNS_MID2,
     DOUBLED_PAWNS_MID3,
@@ -230,7 +242,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 145;
+  static const int NUM_MISC_PARAMS = 157;
 
   double scale(double value,int index,int materialLevel) const;
 

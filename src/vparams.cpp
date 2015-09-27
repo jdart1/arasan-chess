@@ -79,6 +79,7 @@ int Scoring::Params::TRADE_DOWN[16];
 int Scoring::Params::PASSED_PAWN[2][8];
 int Scoring::Params::POTENTIAL_PASSER[2][8];
 int Scoring::Params::CONNECTED_PASSER[2][8];
+int Scoring::Params::ADJACENT_PASSER[2][8];
 int Scoring::Params::PP_OWN_PIECE_BLOCK[2][21];
 int Scoring::Params::PP_OPP_PIECE_BLOCK[2][21];
 int Scoring::Params::DOUBLED_PAWNS[2][8];

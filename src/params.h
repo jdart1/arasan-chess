@@ -96,6 +96,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int PASSED_PAWN[2][8];
     static PARAM_MOD int POTENTIAL_PASSER[2][8];
     static PARAM_MOD int CONNECTED_PASSER[2][8];
+    static PARAM_MOD int ADJACENT_PASSER[2][8];
     static PARAM_MOD int PP_OWN_PIECE_BLOCK[2][21];
     static PARAM_MOD int PP_OPP_PIECE_BLOCK[2][21];
     static PARAM_MOD int DOUBLED_PAWNS[2][8];

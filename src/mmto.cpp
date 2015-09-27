@@ -683,6 +683,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side),mLevel);
       }
+      if (pds[i].flags & Scoring::PawnDetail::ADJACENT_PASSER) {
+         grads[Tune::ADJACENT_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
+            tune_params.scale(inc,Tune::ADJACENT_PASSER_MID2+Rank(pds[i].sq,side),mLevel);
+         grads[Tune::ADJACENT_PASSER_END2+Rank(pds[i].sq,side)-2] +=
+            tune_params.scale(inc,Tune::ADJACENT_PASSER_END2+Rank(pds[i].sq,side),mLevel);
+      }
    }
    if (pawn_entr.pawnData(side).outside && !pawn_entr.pawnData(oside).outside) {
       grads[Tune::OUTSIDE_PASSER_MID] +=

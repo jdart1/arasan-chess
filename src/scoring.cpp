@@ -1553,12 +1553,9 @@ void Scoring::calcPawnData(const Board &board,
       Bitboard passers(entr.passers);
       Scores cp_score;
       while(passers.iterate(sq)) {
-         // connected passer has passer adjacent to it or in a chain
-         // with it
-         if ((File(sq) != 8 && entr.passers.isSet(sq+1)) ||
-             (File(sq) != 1 && entr.passers.isSet(sq-1)) ||
-             TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers) ||
-             TEST_MASK(Attacks::pawn_attacks[sq][oside],entr.passers)) {
+         if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
+            cp_score.mid += PARAM(CONNECTED_PASSER)[Midgame][Rank(sq, side)];
+            cp_score.end += PARAM(CONNECTED_PASSER)[Endgame][Rank(sq, side)];
 #ifdef TUNE
             for (int i = 0; i < count; i++) {
                if (entr.details[i].sq == sq) {
@@ -1567,8 +1564,18 @@ void Scoring::calcPawnData(const Board &board,
                }
             }
 #endif
-            cp_score.mid += PARAM(CONNECTED_PASSER)[Midgame][Rank(sq, side)];
-            cp_score.end += PARAM(CONNECTED_PASSER)[Endgame][Rank(sq, side)];
+         }
+         else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
+            cp_score.mid += PARAM(ADJACENT_PASSER)[Midgame][Rank(sq, side)];
+            cp_score.end += PARAM(ADJACENT_PASSER)[Endgame][Rank(sq, side)];
+#ifdef TUNE
+            for (int i = 0; i < count; i++) {
+               if (entr.details[i].sq == sq) {
+                  entr.details[i].flags |= PawnDetail::ADJACENT_PASSER;
+                  break;
+               }
+            }
+#endif
          }
       }
       entr.midgame_score += cp_score.mid;
@@ -2571,6 +2578,8 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::POTENTIAL_PASSER[0], Params::POTENTIAL_PASSER[1], 8);
    o << "const int Scoring::Params::CONNECTED_PASSER[2][8] = ";
    print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
+   o << "const int Scoring::Params::ADJACENT_PASSER[2][8] = ";
+   print_array(o,Params::ADJACENT_PASSER[0], Params::ADJACENT_PASSER[1], 8);
    o << "const int Scoring::Params::PP_OWN_PIECE_BLOCK[2][21] = ";
    print_array(o,Params::PP_OWN_PIECE_BLOCK[0], Params::PP_OWN_PIECE_BLOCK[1], 21);
    o << "const int Scoring::Params::PP_OPP_PIECE_BLOCK[2][21] = ";
