@@ -1,9 +1,9 @@
 Build & install instructions for Arasan on Linux or Mac:
 
 If you want tablebase support, you must download and install the
-tablebase code (available separately) and edit the Makefile to select
-the type(s) of tablebase support you want and to point to the
-necessary sources.
+tablebase code (available from http://arasanchess.org/downld.shtml)
+and edit the Makefile to select the type(s) of tablebase support you
+want and to point to the necessary sources.
 
 gcc 4.2 or above is recommended for building Arasan. There is some
 support for older gcc versions (not very tested). It has also been
