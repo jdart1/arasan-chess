@@ -17,6 +17,7 @@
 #include <limits>
 #include <vector>
 #include <unordered_map>
+#include <thread>
 #include <atomic>
 extern "C" {
 #include <math.h>
@@ -29,6 +30,8 @@ extern "C" {
 // Functions with Minimax Search,"
 // Journal of Articial Intelligence Research 49 (2014) 527-568.
 // Partly based on Bonanza source code.
+
+// Note: this file requires a C++11 compatible compiler/libraries.
 
 using namespace mmto;
 
@@ -96,8 +99,6 @@ struct ThreadData {
     Phase phase;
     void *data;
     double penalty;
-    sem_t sem;
-    sem_t done;
     THREAD thread_id;
 };
 
@@ -134,6 +135,7 @@ struct Parse2Data
    double target;
 };
 
+static std::thread threads[MAX_CORES];
 static ThreadData threadDatas[MAX_CORES];
 static Parse1Data data1[MAX_CORES];
 static Parse2Data data2[MAX_CORES];
@@ -838,7 +840,7 @@ static void parse2(ThreadData &td, Parse2Data &data)
          board.doMove(pi.record_move);
       }
    }
-   if (verbose) cout << "thread " << td.index << " complete.";
+//   if (verbose) cout << "thread " << td.index << " complete.";
 }
 
 static void adjust_params(Parse2Data &data0, int iterations)
@@ -871,67 +873,56 @@ static void adjust_params(Parse2Data &data0, int iterations)
    }
 }
 
-static void * CDECL threadp(void *x)
+static void threadp(ThreadData *td) 
 {
-   ThreadData *td = (ThreadData*)x;
-
-   // set stack size
+   // set stack size for Linux/Mac
+#ifdef _POSIX_VERSION
    size_t stackSize;
    if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
         perror("pthread_attr_getstacksize");
-        return 0;
+        return;
    }
    if (stackSize < THREAD_STACK_SIZE) {
       if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
          perror("error setting thread stack size");
-         return 0;
+         return;
       }
    }
+#endif
 
    // allocate controller in the thread
    try {
       td->searcher = new SearchController();
    } catch(std::bad_alloc) {
       cerr << "out of memory, thread " << td->index << endl;
-      return 0;
+      return;
    }
 
-   while (!terminated) {
-      // wait until signalled
-      sem_wait(&td->sem);
-      td->searcher->clearHashTables();
-      // perform work based on phase
-      if (td->phase == Phase1) {
-         if (verbose) cout << "starting phase 1, thread " << td->index << endl;
-         parse1(*td,data1[td->index],td->index);
-      } else {
-         if (verbose) cout << "starting phase 2, thread " << td->index << endl;
-         parse2(*td,data2[td->index]);
-      }
-      // tell parent we are done
-      sem_post(&td->done);
+   td->searcher->clearHashTables();
+   // perform work based on phase
+   if (td->phase == Phase1) {
+      if (verbose) cout << "starting phase 1, thread " << td->index << endl;
+      parse1(*td,data1[td->index],td->index);
+   } else {
+      if (verbose) cout << "starting phase 2, thread " << td->index << endl;
+      parse2(*td,data2[td->index]);
    }
    delete td->searcher;
-   return 0;
 }
 
 static void initThreads()
 {
    // prepare threads
+#ifdef _POSIX_VERSION
    if (pthread_attr_init (&stackSizeAttrib)) {
       perror("pthread_attr_init");
       return;
    }
+#endif
    for (int i = 0; i < cores; i++) {
       threadDatas[i].index = i;
       threadDatas[i].searcher = NULL;
       threadDatas[i].phase = Phase1;
-      sem_init(&threadDatas[i].sem,0,0);
-      sem_init(&threadDatas[i].done,0,0);
-      if (pthread_create(&(threadDatas[i].thread_id), &stackSizeAttrib, threadp, (void*)&(threadDatas[i]))) {
-         perror("thread creation failed");
-      }
-      if (verbose) cout << "thread " << i << " created." << endl;
    }
 }
 
@@ -939,12 +930,12 @@ static void launch_threads()
 {
    if (verbose) cout << "launch_threads" << endl;
    for (int i = 0; i < cores; i++) {
-      // signal searchers to start
-      sem_post(&threadDatas[i].sem);
+      threads[i] = std::thread(threadp,&threadDatas[i]);
+      if (verbose) cout << "thread " << i << " created." << endl;
    }
    // wait for all searchers done
    for (int i = 0; i < cores; i++) {
-      sem_wait(&threadDatas[i].done);
+      threads[i].join();
    }
    if (verbose) cout << "all searchers done" << endl;
 }
@@ -1013,7 +1004,6 @@ static void learn()
             cout << "target=" << data1[0].target << " penalty=" << calc_penalty() << endl;
          }
          data1[0].target += calc_penalty();
-         //double dtemp = data1[0].target_out_window / obj_norm;
          if (verbose) {
             cout << "pass 1 objective = " << data1[0].target << endl;
          }
@@ -1190,16 +1180,14 @@ int CDECL main(int argc, char **argv)
        exit(-1);
     }
 
-//    if (verbose) {
-       cout << "parameter count: " << tune_params.numTuningParams() << " (";
-       int tunable = 0;
-       for (int i = 0; i < tune_params.numTuningParams(); i++) {
-          Tune::TuneParam p;
-          tune_params.getParam(i,p);
-          if (p.tunable) ++tunable;
-       }
-       cout << tunable << " tunable)" << endl;
-//    }
+    cout << "parameter count: " << tune_params.numTuningParams() << " (";
+    int tunable = 0;
+    for (int i = 0; i < tune_params.numTuningParams(); i++) {
+       Tune::TuneParam p;
+       tune_params.getParam(i,p);
+       if (p.tunable) ++tunable;
+    }
+    cout << tunable << " tunable)" << endl;
 
     initThreads();
 
