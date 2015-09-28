@@ -41,8 +41,6 @@ static int iterations = 2;
 
 static int cores = 1;
 
-static bool terminated = false;
-
 static string out_file_name="params.cpp";
 
 static string x0_file_name="x0";
