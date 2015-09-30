@@ -50,6 +50,7 @@ static string game_file_name = "games.pgn";
 static ifstream game_file;
 
 static bool verbose = false;
+static bool validate = false;
 
 static const int MAX_PV_LENGTH = 256;
 static const int NUM_RESULT = 8;
@@ -58,7 +59,7 @@ static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
-static const double REGULARIZATION = 1.0E-4;
+static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16;
 
 static int first_index = 0;
@@ -147,6 +148,7 @@ static void usage()
    cerr << "-x <output objective file>" << endl;
    cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
    cerr << "-n <iterations>" << endl;
+   cerr << "-V validate only (compute objective)" << endl;
 }
 
 static double func( double x ) {
@@ -1022,6 +1024,7 @@ static void learn()
       cout << "pass 2 target=" << data2[0].target << " penalty=" << calc_penalty
 () << " objective=" << data2[0].target + calc_penalty() << endl;
       data2[0].target += calc_penalty();
+      if (validate) break;
       if (data2[0].target < best) {
          best = data2[0].target;
          cout << "new best objective: " << best << endl;
@@ -1111,11 +1114,18 @@ int CDECL main(int argc, char **argv)
        }
        else if (strcmp(argv[arg],"-v")==0) {
           verbose = true;
+       }
+       else if (strcmp(argv[arg],"-V")==0) {
+          validate = true;
        } else {
           cerr << "invalid option: " << argv[arg] << endl;
           usage();
           exit(-1);
        }
+    }
+
+    if (validate) {
+       regularize = false;
     }
 
     if (write_sol) {
