@@ -331,7 +331,7 @@ static const string pgn_test = "[Event \"?\"]"
 
 static int testEval() {
     // verify eval results are symmetrical (White/Black, right/left)
-    const int CASES = 25;
+    const int CASES = 30;
     static const string fens[CASES] = {
         "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
         "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
@@ -357,7 +357,12 @@ static int testEval() {
         "rb3rk1/1p1RRpp1/p6p/r1p5/4Nb2/5NP1/PPP2P1P/1K3B2 b - -",
         "5rk1/1pqn2pp/4pn2/p7/2P5/4PP2/1B2BP1P/3Q1RK1 w - -",
         "3k1q2/p3p1p1/1p1nQ3/3P4/P2P4/B2P4/6KP/8 b - -",
-        "6k1/4R1P1/5P2/5K1p/7r/8/8/8 w - -"
+        "6k1/4R1P1/5P2/5K1p/7r/8/8/8 w - -",
+        "1n1q1rk1/4ppbp/3p1np1/1PpP4/4P3/2N2N2/3B1PPP/Q3K2R b K -",
+        "3q1rk1/4ppbp/1n1p1np1/1PpP4/2N1P3/5N2/3B1PPP/Q3K2R b K -",
+        "3q1rk1/4ppbp/1n1p1np1/1P1P4/4P3/2p1BN2/2N2PPP/Q3K2R b K -",
+        "N5r1/pQ6/3b1nkp/2q5/2Pp1p2/4nP2/PP1B2PP/1RR3K1 b - -",
+        "8/2kn2q1/B1p2pP1/P1P2p1p/3P2bP/3P1B2/1K1P1Q2/8 b - -"
     };
     
     int errs = 0;
@@ -370,6 +375,7 @@ static int testEval() {
         }
         Scoring *s = new Scoring();
         int eval1 = s->evalu8(board);
+        cout << "case\t" << i << "\teval:" << eval1 << endl;
         board.flip();
         int eval2 = s->evalu8(board);
         if (eval1 != eval2) {

@@ -1838,10 +1838,14 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
       int rank = Rank(sq, side);
       int file = File(sq);
-      const Square blocker = (mask & board.allOccupied).firstOne();
+      Square blocker;
+      if (side == White)
+         blocker = (mask & board.allOccupied).firstOne();
+      else
+         blocker = (mask & board.allOccupied).lastOne();
       if (blocker != InvalidSquare) {
          const int index = pp_block_index(sq,blocker,side);
-         if (blocker & board.occupied[side]) {
+         if (board.occupied[side].isSet(blocker)) {
             int mid_penalty = Params::PP_OWN_PIECE_BLOCK[Midgame][index];
             int end_penalty = Params::PP_OWN_PIECE_BLOCK[Endgame][index];
             scores.mid += mid_penalty;
@@ -1852,7 +1856,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
                " passed pawn on " <<
                SquareImage(sq);
             cout << " blocked by piece on " << 
-               SquareImage(own_blocker) << ", score= (" << mid_penalty << ", " << 
+               SquareImage(blocker) << ", score= (" << mid_penalty << ", " << 
                end_penalty << ")" << endl;
 #endif
          }
@@ -1867,7 +1871,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
                " passed pawn on " <<
                SquareImage(sq);
             cout << " blocked by piece on " << 
-               SquareImage(opp_blocker) << ", score= (" << mid_penalty << ", " << 
+               SquareImage(blocker) << ", score= (" << mid_penalty << ", " << 
                end_penalty << ")" << endl;
 #endif
          }
