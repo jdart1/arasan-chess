@@ -22,7 +22,9 @@
 extern "C" {
 #include <math.h>
 #include <ctype.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 };
 
 // MMTO tuning code for Arasan, based on:
@@ -74,7 +76,9 @@ LockDefine(file_lock);
 LockDefine(data_lock);
 LockDefine(hash_lock);
 
+#ifdef _POSIX_VERSION
 static pthread_attr_t stackSizeAttrib;
+#endif
 
 struct PositionDupEntry
 {
@@ -819,10 +823,10 @@ static void parse2(ThreadData &td, Parse2Data &data)
    data.grads.resize(tune_params.numTuningParams(),0.0);
 
    Scoring s;
-   const int max = tmpdata.size();
+   const size_t max = tmpdata.size();
    for (;;) {
       // obtain the next available game from the vector
-      int next = phase2_game_index.fetch_add(1);
+      size_t next = (size_t)phase2_game_index.fetch_add(1);
       if (next >= max) break;
       if (verbose) cout << "game " << next << " thread " << td.index << endl;
       GameInfo *g = tmpdata[next];
@@ -974,7 +978,11 @@ static void learn()
    LockInit(file_lock);
    LockInit(hash_lock);
    uint64 num_moves = 0;
+#ifdef _MSC_VER
+   double best = 1.0e10;
+#else
    double best = numeric_limits<double>::max();
+#endif
 
    for (int iter = 1; iter <= iterations; iter++) {
       cout << "iteration " << iter << endl;
@@ -998,7 +1006,7 @@ static void learn()
          }
          if (data1[0].result_norm == 0) data1[0].result_norm = 1;
          if (data1[0].num_moves == 0) data1[0].num_moves = 1;
-         num_moves = (double)data1[0].num_moves;
+         num_moves = data1[0].num_moves;
          data1[0].target /= num_moves;
          if (verbose) {
             cout << "target=" << data1[0].target << " penalty=" << calc_penalty() << endl;
