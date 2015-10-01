@@ -375,7 +375,7 @@ static int testEval() {
         }
         Scoring *s = new Scoring();
         int eval1 = s->evalu8(board);
-        cout << "case\t" << i << "\teval:" << eval1 << endl;
+        //cout << "case\t" << i << "\teval:" << eval1 << endl;
         board.flip();
         int eval2 = s->evalu8(board);
         if (eval1 != eval2) {
