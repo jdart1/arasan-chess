@@ -878,6 +878,7 @@ void Scoring::pieceScore(const Board &board,
          {
             scores.mid += PARAM(ROOK_PST)[Midgame][scoreSq];
             scores.end += PARAM(ROOK_PST)[Endgame][scoreSq];
+            const Bitboard rattacks(board.rookAttacks(sq));
             const int r = Rank(sq, side);
             if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[board.oppositeSide()] & Attacks::rank7mask[side]))) {
 #ifdef EVAL_DEBUG
@@ -886,9 +887,7 @@ void Scoring::pieceScore(const Board &board,
                scores.mid += PARAM(ROOK_ON_7TH_MID);
                scores.end += PARAM(ROOK_ON_7TH_END);
 
-               Bitboard right(Attacks::rank_mask_right[sq] & board.occupied[side]);
-               if (right && board[right.firstOne()] == MakePiece(Rook, side)) {
-
+               if (Attacks::rank_mask_right[sq] & rattacks & board.rook_bits[side]) {
                   // 2 connected rooks on 7th
                   scores.mid += PARAM(TWO_ROOKS_ON_7TH_MID);
                   scores.end += PARAM(TWO_ROOKS_ON_7TH_END);
@@ -899,7 +898,6 @@ void Scoring::pieceScore(const Board &board,
             }
 
             const int file = File(sq);
-            const Bitboard rattacks(board.rookAttacks(sq));
             allAttacks |= rattacks;
             if (FileOpen(board, file)) {
                scores.mid += PARAM(ROOK_ON_OPEN_FILE_MID);
