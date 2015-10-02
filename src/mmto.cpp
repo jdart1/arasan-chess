@@ -63,6 +63,7 @@ static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
 static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16;
+static const int MIN_PLY = 16;
 
 static int first_index = 0;
 
@@ -832,13 +833,14 @@ static void parse2(ThreadData &td, Parse2Data &data)
       GameInfo *g = tmpdata[next];
       // iterate over the game moves and the positions derived from them
       Board board;
+      int ply = 0;
       for (vector<PositionInfo>::const_iterator it2 = g->begin();
            it2 != g->end();
-           it2++) {
+           it2++, ply++) {
          PositionInfo pi = *it2;
          // skip calculation if no pvs (this indicates a position/
-         // record move pair that is a duplicate).
-         if (pi.pvs.size() > 0) {
+         // record move pair that is a duplicate). Also skip if < MIN_PLY.
+         if (pi.pvs.size() > 0 && ply >= MIN_PLY) {
             calc_derivative(s, data, board, pi);
          }
          board.doMove(pi.record_move);
