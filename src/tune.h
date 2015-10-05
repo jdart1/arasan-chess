@@ -220,6 +220,9 @@ class Tune {
    
   int numTuningParams() const;
 
+  // number of fixed parameters that map 1-1 to tuning paramaters
+  int paramArraySize() const;
+
   // initialize scoring parameters from the current tuned parameter
   // set
   void applyParams() const;

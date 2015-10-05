@@ -27,6 +27,8 @@ extern "C" {
 #endif
 };
 
+//#define VALIDATE_GRADIENT
+
 // MMTO tuning code for Arasan, based on:
 // Kunihuto Hoki & Tomoyuki Kaneko, "Large-Scale Optimization for Evaluation
 // Functions with Minimax Search,"
@@ -526,9 +528,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const ColorType oside = OppositeColor(side);
    const int mLevel = board.getMaterial(oside).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
-   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board);
+#ifdef VALIDATE_GRADIENT
+   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,false);
+#else
+   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,true);
+#endif
    grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
-      tune_params.scale(1,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
+      tune_params.scale(inc,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
    Bitboard knight_bits(board.knight_bits[side]);
    Square sq;
    while (knight_bits.iterate(sq)) {
@@ -569,17 +575,18 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    Bitboard rook_bits(board.rook_bits[side]);
    while (rook_bits.iterate(sq)) {
-      int mobl = Bitboard(board.rookAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
+      Bitboard rattacks2(board.rookAttacks(sq, side));
+      int mobl = Bitboard(rattacks2 &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::ROOK_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::ROOK_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_ENDGAME+mobl,mLevel);
       int i = map_to_pst(sq,side);
       grads[Tune::ROOK_PST_MIDGAME+i] += tune_params.scale(inc,Tune::ROOK_PST_MIDGAME+i,mLevel);
       grads[Tune::ROOK_PST_ENDGAME+i] += tune_params.scale(inc,Tune::ROOK_PST_ENDGAME+i,mLevel);
-      if (Rank(sq,side) == 7 && (Rank(board.kingSquare(OppositeColor(side)),side) == 8 || (board.pawn_bits[board.oppositeSide()] & Attacks::rank7mask[side]))) {
+      if (Rank(sq,side) == 7 && (Rank(board.kingSquare(oside),side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
          grads[Tune::ROOK_ON_7TH_MID] += tune_params.scale(inc,Tune::ROOK_ON_7TH_MID,mLevel);
          grads[Tune::ROOK_ON_7TH_END] += tune_params.scale(inc,Tune::ROOK_ON_7TH_END,mLevel);
-         Bitboard right(Attacks::rank_mask_right[sq] & board.occupied[side]);
-         if (right && board[right.firstOne()] == MakePiece(Rook, side)) {
+         const Bitboard rattacks(board.rookAttacks(sq));
+         if (Attacks::rank_mask_right[sq] & rattacks & board.rook_bits[side]) {
             // 2 connected rooks on 7th
             grads[Tune::TWO_ROOKS_ON_7TH_MID] += tune_params.scale(inc,Tune::TWO_ROOKS_ON_7TH_MID,mLevel);
             grads[Tune::TWO_ROOKS_ON_7TH_END] += tune_params.scale(inc,Tune::TWO_ROOKS_ON_7TH_END,mLevel);
@@ -589,7 +596,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::ROOK_ON_OPEN_FILE_MID] += tune_params.scale(inc,Tune::ROOK_ON_OPEN_FILE_MID,mLevel);
          grads[Tune::ROOK_ON_OPEN_FILE_END] += tune_params.scale(inc,Tune::ROOK_ON_OPEN_FILE_END,mLevel);
       }
-      Bitboard rattacks2(board.rookAttacks(sq, side));
       if (rattacks2 & pawn_entr.pawnData(oside).weak_pawns) {
          grads[Tune::ROOK_ATTACKS_WEAK_PAWN_MID] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_MID,mLevel);
          grads[Tune::ROOK_ATTACKS_WEAK_PAWN_END] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_END,mLevel);
@@ -599,7 +605,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    while (queen_bits.iterate(sq)) {
       int mobl = Bitboard(board.queenAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::QUEEN_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_MIDGAME+mobl,mLevel);
-      grads[Tune::QUEEN_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_MIDGAME+mobl,mLevel);
+      grads[Tune::QUEEN_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_ENDGAME+mobl,mLevel);
       int i = map_to_pst(sq,side);
       grads[Tune::QUEEN_PST_MIDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_MIDGAME+i,mLevel);
       grads[Tune::QUEEN_PST_ENDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_ENDGAME+i,mLevel);
@@ -607,7 +613,18 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    Square ksq = board.kingSquare(side);
    int i = map_to_pst(ksq,side);
    grads[Tune::KING_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+i,mLevel);
-   grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc,Tune::KING_PST_ENDGAME+i,mLevel);
+
+   if (board.pawn_bits[White] | board.pawn_bits[Black]) {
+      
+      double inc_adjust = inc;
+      const int opp_pieces = board.getMaterial(oside).pieceCount();
+      if (opp_pieces < 2) {
+         inc_adjust = ((150-10*opp_pieces)*inc)/128;
+      }
+
+      grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+i,mLevel);
+   }
+   
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
    grads[Tune::KING_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+mobl,mLevel);
    const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
@@ -624,28 +641,24 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
             Attacks::file_mask_down[sq];
 
-         Square own_blocker, opp_blocker;
-         if (side == White) {
-            opp_blocker = (mask & board.occupied[oside]).firstOne();
-            own_blocker = (mask & board.occupied[side]).firstOne();
-         }
-         else {
-            opp_blocker = (mask & board.occupied[oside]).lastOne();
-            own_blocker = (mask & board.occupied[side]).lastOne();
-         }
-         if (own_blocker != InvalidSquare) {
-            int index = pp_block_index(sq,own_blocker,side);
-            grads[Tune::PP_OWN_PIECE_BLOCK_MID+index] +=
-               tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_MID+index,mLevel);
-            grads[Tune::PP_OWN_PIECE_BLOCK_END+index] +=
-               tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_END+index,mLevel);
-         }
-         if (opp_blocker != InvalidSquare) {
-            int index = pp_block_index(sq,opp_blocker,side);
-            grads[Tune::PP_OPP_PIECE_BLOCK_MID+index] +=
-               tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_MID+index,mLevel);
-            grads[Tune::PP_OPP_PIECE_BLOCK_END+index] +=
-               tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_END+index,mLevel);
+         Square blocker;
+         if (side == White)
+            blocker = (mask & board.allOccupied).firstOne();
+         else
+            blocker = (mask & board.allOccupied).lastOne();
+         if (blocker != InvalidSquare) {
+            const int index = pp_block_index(sq,blocker,side);
+            if (board.occupied[side].isSet(blocker)) {
+               grads[Tune::PP_OWN_PIECE_BLOCK_MID+index] +=
+                  tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_MID+index,mLevel);
+               grads[Tune::PP_OWN_PIECE_BLOCK_END+index] +=
+                  tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_END+index,mLevel);
+            } else {
+               grads[Tune::PP_OPP_PIECE_BLOCK_MID+index] +=
+                  tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_MID+index,mLevel);
+               grads[Tune::PP_OPP_PIECE_BLOCK_END+index] +=
+                  tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_END+index,mLevel);
+            }
          }
       }
       if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {
@@ -686,15 +699,15 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       if (pds[i].flags & Scoring::PawnDetail::CONNECTED_PASSER) {
          grads[Tune::CONNECTED_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
-            tune_params.scale(inc,Tune::CONNECTED_PASSER_MID2+Rank(pds[i].sq,side),mLevel);
+            tune_params.scale(inc,Tune::CONNECTED_PASSER_MID2+Rank(pds[i].sq,side)-2,mLevel);
          grads[Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side)-2] +=
-            tune_params.scale(inc,Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side),mLevel);
+            tune_params.scale(inc,Tune::CONNECTED_PASSER_END2+Rank(pds[i].sq,side)-2,mLevel);
       }
       if (pds[i].flags & Scoring::PawnDetail::ADJACENT_PASSER) {
          grads[Tune::ADJACENT_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
-            tune_params.scale(inc,Tune::ADJACENT_PASSER_MID2+Rank(pds[i].sq,side),mLevel);
+            tune_params.scale(inc,Tune::ADJACENT_PASSER_MID2+Rank(pds[i].sq,side)-2,mLevel);
          grads[Tune::ADJACENT_PASSER_END2+Rank(pds[i].sq,side)-2] +=
-            tune_params.scale(inc,Tune::ADJACENT_PASSER_END2+Rank(pds[i].sq,side),mLevel);
+            tune_params.scale(inc,Tune::ADJACENT_PASSER_END2+Rank(pds[i].sq,side)-2,mLevel);
       }
    }
    if (pawn_entr.pawnData(side).outside && !pawn_entr.pawnData(oside).outside) {
@@ -748,7 +761,11 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #endif
    // save position at end of 1st pv
    Board record_board(board_copy);
+#ifdef VALIDATE_GRADIENT
+   record_value = s.evalu8(board_copy,false);
+#else
    record_value = s.evalu8(board_copy);
+#endif
 
    if (board.sideToMove() != board_copy.sideToMove()) {
       record_value = -record_value;
@@ -779,8 +796,9 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #ifdef _TRACE
          cout << endl;
 #endif
-         int value = s.evalu8(board_copy);
-
+         int value = s.evalu8(board_copy,false);
+         // make score be from the perspective of "board", the head of
+         // the PV:
          if (board.sideToMove() != board_copy.sideToMove()) {
             value = -value;
          }
@@ -804,6 +822,50 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
          // the position at the of the pv.
          update_deriv_vector(s, board_copy, Black, data.grads, dT);
          update_deriv_vector(s, board_copy, White, data.grads, -dT);
+#ifdef VALIDATE_GRADIENT
+         vector<double> derivs(tune_params.numTuningParams());
+         for (int i = 0; i < tune_params.numTuningParams(); i++) {
+            derivs[i] = 0.0;
+         }
+         double inc = 1.0;
+         // compute the partial derivative vector for this position
+         update_deriv_vector(s, board_copy, board.sideToMove(), derivs, inc);
+         update_deriv_vector(s, board_copy, board.oppositeSide(), derivs, -inc);
+         for (int i = 0; i < tune_params.numTuningParams(); i++) {
+            if (derivs[i] != 0.0) {
+               Tune::TuneParam p;
+               tune_params.getParam(i,p);
+               int val = p.current;
+               int range = p.max_value - p.min_value;
+               int delta = Util::Max(1,range/20);
+               // increase by delta
+               int newval = val + delta;
+               tune_params.updateParamValue(i,newval);
+               tune_params.applyParams();
+               int score = s.evalu8(board_copy,false);
+               if (board.sideToMove() != board_copy.sideToMove()) {
+                  score = -score;
+               }
+               // compare predicted new value from gradient with
+               // actual value
+               if (fabs(value + derivs[i]*delta - score)>4.0) {
+                  cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " val=" << val << " newval=" << newval << " delta=" << delta << " deriv=" << derivs[i] << " old score=" << value << " predicted score=" << value + derivs[i]*delta << " actual score=" << score << endl;
+                  // The following code is useful when running under
+                  // gdb - it recomputes the before and after eval.
+                  tune_params.updateParamValue(i,val);
+                  tune_params.applyParams();
+                  s.evalu8(board_copy,false);
+                  cerr << "new score" << endl;
+                  tune_params.updateParamValue(i,newval);
+                  tune_params.applyParams();
+                  s.evalu8(board_copy,false);
+               }
+               // restore old value
+               tune_params.updateParamValue(i,val);
+               tune_params.applyParams();
+            }
+         }
+#endif
          nc++;
       }
    }

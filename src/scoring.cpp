@@ -745,12 +745,12 @@ void Scoring::calcCover(const Board &board, KingCoverHashEntry &coverEntry) {
 }
 
 template<ColorType side>
-int Scoring::kingCover(const Board &board) {
+int Scoring::kingCover(const Board &board, bool useCache) {
    const int oppMaterialLevel = board.getMaterial(OppositeColor(side)).materialLevel();
    if (oppMaterialLevel >= PARAM(MIDGAME_THRESHOLD)) {
       hash_t kcHash = BoardHash::kingCoverHash(board, side);
       KingCoverHashEntry *kingCoverEntry = &kingCoverHashTable[side][kcHash % KING_COVER_HASH_SIZE];
-      if (kingCoverEntry->hc != (uint32) (kcHash >> 32)) {
+      if (!useCache || kingCoverEntry->hc != (uint32) (kcHash >> 32)) {
          calcCover<side> (board, *kingCoverEntry);
          kingCoverEntry->hc = (uint32) (kcHash >> 32);
       }
@@ -880,7 +880,7 @@ void Scoring::pieceScore(const Board &board,
             scores.end += PARAM(ROOK_PST)[Endgame][scoreSq];
             const Bitboard rattacks(board.rookAttacks(sq));
             const int r = Rank(sq, side);
-            if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[board.oppositeSide()] & Attacks::rank7mask[side]))) {
+            if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
 #ifdef EVAL_DEBUG
                Scores tmp(scores);
 #endif
@@ -1202,18 +1202,20 @@ void Scoring::calcPawnData(const Board &board,
    Bitboard bi(board.pawn_bits[side]);
    Bitboard potentialPlus, potentialMinus;
    Square sq;
-#ifdef TUNE
    int count = 0;
+#ifndef TUNE
+   PawnDetails details;
 #endif
    while(bi.iterate(sq))
    {
 #ifdef TUNE
-      entr.details[count].sq = sq;
-      entr.details[count].flags = 0;
-      entr.details[count].space_weight = 0;
-      ASSERT(count<8);
-      PawnDetail &td = entr.details[count++];
+      PawnDetails &details = entr.details;
 #endif
+      details[count].sq = sq;
+      details[count].flags = 0;
+      details[count].space_weight = 0;
+      ASSERT(count<8);
+      PawnDetail &td = details[count++];
 #ifdef PAWN_DEBUG
       int mid_tmp = entr.midgame_score;
       int end_tmp = entr.endgame_score;
@@ -1495,17 +1497,21 @@ void Scoring::calcPawnData(const Board &board,
                // Two potential passers share the same blocker(s).
                // Score according to the most advanced one.
                if (rank > rankdup) {
-#ifdef TUNE
                   td.flags |= PawnDetail::POTENTIAL_PASSER;
-                  for (int i = 0; i < count; i++) {
-                     if (entr.details[i].sq == dup) {
-                        entr.details[i].flags &= ~PawnDetail::POTENTIAL_PASSER;
+                  int i = -1;
+                  for (; i < count; i++) {
+                     if (details[i].sq == dup) {
                         break;
                      }
                   }
-#endif
-                  entr.midgame_score += (PARAM(POTENTIAL_PASSER)[Midgame][rank] - PARAM(POTENTIAL_PASSER)[Midgame][rankdup]);
-                  entr.endgame_score += (PARAM(POTENTIAL_PASSER)[Endgame][rank] - PARAM(POTENTIAL_PASSER)[Endgame][rankdup]);
+                  entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
+                  entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
+                  ASSERT(i>=0);
+                  if (details[i].flags & PawnDetail::POTENTIAL_PASSER) {
+                      details[i].flags &= ~PawnDetail::POTENTIAL_PASSER;
+                      entr.midgame_score -= PARAM(POTENTIAL_PASSER)[Midgame][rankdup];
+                      entr.endgame_score -= PARAM(POTENTIAL_PASSER)[Endgame][rankdup];
+                  }
                }
             }
             else {
@@ -1662,14 +1668,14 @@ int Scoring::materialScore(const Board &board) const {
 }
 
       
-int Scoring::evalu8(const Board &board) {
+int Scoring::evalu8(const Board &board, bool useCache) {
    const int matScore = materialScore(board);
 
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
 
    PawnHashEntry &pawnEntry = pawnHashTable[pawnHash % PAWN_HASH_SIZE];
 
-   if (pawnEntry.hc != pawnHash) {
+   if (!useCache || pawnEntry.hc != pawnHash) {
       // Not found in table, need to calculate
       calcPawnEntry(board, pawnEntry);
    }
@@ -1677,8 +1683,8 @@ int Scoring::evalu8(const Board &board) {
    Scores wScores, bScores;
 
    // compute positional scores
-   positionalScore<White> (board, pawnEntry, wScores, bScores);
-   positionalScore<Black> (board, pawnEntry, bScores, wScores);
+   positionalScore<White> (board, pawnEntry, wScores, bScores, useCache);
+   positionalScore<Black> (board, pawnEntry, bScores, wScores, useCache);
 
    const int w_materialLevel = board.getMaterial(White).materialLevel();
    const int b_materialLevel = board.getMaterial(Black).materialLevel();
@@ -1687,12 +1693,12 @@ int Scoring::evalu8(const Board &board) {
    if (w_materialLevel <= PARAM(ENDGAME_THRESHOLD) || b_materialLevel <= PARAM(ENDGAME_THRESHOLD)) {
       hash_t hc = BoardHash::kingPawnHash(board);
       EndgameHashEntry *endgameEntry = &endgameHashTable[hc % ENDGAME_HASH_SIZE];
-      if (endgameEntry->hc != hc) {
+      if (!useCache || endgameEntry->hc != hc) {
          calcEndgame(board, pawnEntry, endgameEntry);
          endgameEntry->hc = hc;
       }
 
-      if (w_materialLevel <= PARAM(ENDGAME_THRESHOLD))
+      if (b_materialLevel <= PARAM(ENDGAME_THRESHOLD))
       {
 #ifdef EVAL_DEBUG
          int tmp = wScores.end;
@@ -1703,7 +1709,7 @@ int Scoring::evalu8(const Board &board) {
 #endif
       }
 
-      if (b_materialLevel <= PARAM(ENDGAME_THRESHOLD))
+      if (w_materialLevel <= PARAM(ENDGAME_THRESHOLD))
       {
 #ifdef EVAL_DEBUG
          int tmp = bScores.end;
@@ -2115,17 +2121,17 @@ void Scoring::scoreEndgame
 #endif
 }
 
-Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board) {
+Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board, bool useCache) {
    hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
    PawnHashEntry &pawnEntry = pawnHashTable[pawnHash % PAWN_HASH_SIZE];
-   if (pawnEntry.hc != pawnHash) {
+   if (!useCache || pawnEntry.hc != pawnHash) {
       calcPawnEntry(board, pawnEntry);
    }
    return pawnEntry;
 }
 
 template<ColorType side>
-void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, Scores &scores, Scores &oppScores) {
+void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, Scores &scores, Scores &oppScores, bool useCache) {
    const ColorType oside = OppositeColor(side);
 
 #ifdef EVAL_DEBUG
@@ -2167,13 +2173,13 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    // calculate penalties for damaged king cover
    int ourCover, oppCover;
    if (side == White) {
-      ourCover = kingCover<White> (board);
-      oppCover = kingCover<Black> (board);
+      ourCover = kingCover<White> (board, useCache);
+      oppCover = kingCover<Black> (board, useCache);
       scores.mid += ourCover + PARAM(KING_PST)[Midgame][board.kingSquare(White)];
    }
    else {
-      ourCover = kingCover<Black> (board);
-      oppCover = kingCover<White> (board);
+      ourCover = kingCover<Black> (board, useCache);
+      oppCover = kingCover<White> (board, useCache);
       scores.mid += ourCover + PARAM(KING_PST)[Midgame][63-board.kingSquare(Black)];
    }
 
@@ -2557,7 +2563,7 @@ void Scoring::Params::write(ostream &o)
    o << "const int Scoring::Params::KING_COVER[5] = ";
    print_array(o,Params::KING_COVER,5);
 
-   for (int i = 26; i < 26+Scoring::Params::PARAM_ARRAY_SIZE; i++) {
+   for (int i = 26; i < 26+tune_params.paramArraySize(); i++) {
       o << "const int Scoring::Params::";
       Tune::TuneParam param;
       tune_params.getParam(i,param);

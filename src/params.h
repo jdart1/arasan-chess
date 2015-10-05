@@ -17,9 +17,6 @@
 struct Params 
 BEGIN_PACKED_STRUCT
     
-    // number of fixed parameters that map 1-1 to tuning paramaters
-    static const int PARAM_ARRAY_SIZE = 56;
-
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
     static PARAM_MOD int QR_ADJUST[4];
@@ -77,12 +74,6 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int ROOK_BEHIND_PP_MID;
     static PARAM_MOD int ROOK_BEHIND_PP_END;
     static PARAM_MOD int QUEEN_OUT;
-    static PARAM_MOD int PASSER_OWN_PIECE_BLOCK_MID;
-    static PARAM_MOD int PASSER_OWN_PIECE_BLOCK_END;
-    static PARAM_MOD int PP_BLOCK_BASE_MID;
-    static PARAM_MOD int PP_BLOCK_BASE_END;
-    static PARAM_MOD int PP_BLOCK_MULT_MID;
-    static PARAM_MOD int PP_BLOCK_MULT_END;
     static PARAM_MOD int KING_NEAR_PASSER;
     static PARAM_MOD int OPP_KING_NEAR_PASSER;
     static PARAM_MOD int PAWN_SIDE_BONUS;

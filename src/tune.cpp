@@ -9,13 +9,6 @@ extern "C" {
 #include <string.h>
 };
 
-#if defined(_MSC_VER) && __cplusplus < 201103L
-// MSVC lacks round()
-static int round(double x) {
-    return int((x >= 0.0) ? floor(x + 0.5) : ceil(x - 0.5));
-}
-#endif
-
 static const int MOBILITY_RANGE = PAWN_VALUE/2;
 static const int OUTPOST_RANGE = PAWN_VALUE/4;
 static const int PST_RANGE = PAWN_VALUE/3;
@@ -24,6 +17,11 @@ static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
 int Tune::numTuningParams() const
 {
    return tune_params.size();
+}
+
+int Tune::paramArraySize() const 
+{
+   return (int)SIDE_PROTECTED_PAWN-(int)KING_COVER_BASE+1;
 }
 
 #define PARAM(x) tune_params[x].current
@@ -628,7 +626,7 @@ void Tune::applyParams() const
 
    for (int i = 0; i < 16; i++) {
       int j = 16-i;
-      Scoring::Params::TRADE_DOWN[i] = round(PARAM(TRADE_DOWN_LINEAR)*j +
+      Scoring::Params::TRADE_DOWN[i] = Util::Round(PARAM(TRADE_DOWN_LINEAR)*j +
                                              PARAM(TRADE_DOWN_SQ)*j*j/64.0);
    }
    memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(int)*8);

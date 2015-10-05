@@ -31,7 +31,7 @@ class Scoring
     ~Scoring();
         
     // evaluate "board" from the perspective of the side to move.
-    int evalu8( const Board &board );
+    int evalu8( const Board &board, bool useCache = true );
 
     // checks for legal draws plus certain other theoretically
     // draw positions
@@ -84,7 +84,6 @@ class Scoring
       return (Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]).bitCountOpt();
     }
 
-#ifdef TUNE
     struct PawnDetail {
       static const int PASSED=1;
       static const int POTENTIAL_PASSER=2;
@@ -99,7 +98,7 @@ class Scoring
       byte space_weight;
       Square sq;
     };
-#endif
+    typedef PawnDetail PawnDetails[8];
 
 #ifdef TUNE
     static const int PAWN_HASH_SIZE = 8096;
@@ -150,7 +149,7 @@ class Scoring
         int wScore,bScore;
     } endgameHashTable[ENDGAME_HASH_SIZE];
 
-    PawnHashEntry &pawnEntry(const Board &board);
+    PawnHashEntry &pawnEntry(const Board &board, bool useCache);
 
  private:
 
@@ -181,7 +180,8 @@ class Scoring
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
                             Scores &scores,
-                            Scores &oppScores);
+                            Scores &oppScores,
+                            bool useCache = false);
 
     template <ColorType side>
         static int theoreticalDraw(const Board &board);
@@ -209,7 +209,7 @@ class Scoring
     void calcCover(const Board &board, KingCoverHashEntry &cover);
 
     template <ColorType side>
-        int kingCover(const Board &board);
+      int kingCover(const Board &board,bool useCache);
 
     void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);

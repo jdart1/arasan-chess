@@ -1,10 +1,14 @@
-// Copyright 1994, 1997 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1997, 2015 by Jon Dart.  All Rights Reserved.
 
 #ifndef _UTIL_H
 #define _UTIL_H
 
 #include "types.h"
 #include "bitboard.h"
+
+extern "C" {
+#include <math.h>
+};
 
 struct BIGINT
 {
@@ -56,6 +60,14 @@ class Util
 	return (x > y) ? y : x;    
     }
 
+    static int Round(double x) {
+#if defined(_MSC_VER) && __cplusplus < 201103L
+      // MSVC lacks round()
+      return int((x >= 0.0) ? floor(x + 0.5) : ceil(x - 0.5));
+#else
+      return round(x);
+#endif
+    }
 };
 
 #endif
