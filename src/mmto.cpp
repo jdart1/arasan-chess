@@ -248,7 +248,8 @@ static void make_pv(const Board &board, ThreadData &td,
    int beta = Constants::MATE;
    Board board_copy(board);
 
-   while (!IsNull(m = mg.nextMove())) {
+   int order = 0;
+   while (!IsNull(m = mg.nextMove(order))) {
       BoardState state(board_copy.state);
 #ifdef _TRACE
       cout << board_copy << endl;

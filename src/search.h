@@ -32,8 +32,6 @@ struct SplitPoint {
     Board savedBoard;
     // node at which split occurred
     NodeInfo *splitNode;
-    // move index at which split occurred
-    int moveIndex;
     // parent of this split point. When all searchers at
     // this split point are finished, the master node
     // will revert to the parent split point.

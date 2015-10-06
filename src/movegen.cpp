@@ -247,7 +247,7 @@ int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
 }
 
 
-Move MoveGenerator::nextEvasion() {
+Move MoveGenerator::nextEvasion(int &ord) {
    if (batch_count==0) {
      if (phase == START_PHASE) {      
         ++phase;
@@ -304,6 +304,7 @@ Move MoveGenerator::nextEvasion() {
      }
    }
    if (index < batch_count) {
+      ord = order++;
       return moves[index++];
    }
    else
@@ -788,6 +789,7 @@ ply(curr_ply),
 moves_generated(0),
 losers_count(0),
 index(0),
+order(0),
 batch_count(0),
 forced(0),
 phase(START_PHASE),
@@ -1251,13 +1253,14 @@ int MoveGenerator::generateAllMoves(NodeInfo *node, SplitPoint *split)
    // so we get the correct move ordering and flags:
    int count = 0;
    Move m;
+   int ord;
    if (board.checkStatus() == InCheck) {
-      while ((m=nextEvasion()) != NullMove) {
+      while ((m=nextEvasion(ord)) != NullMove) {
          split->moves[count++] = m;
       }
    }
    else {
-      while ((m=nextMove()) != NullMove) {
+      while ((m=nextMove(ord)) != NullMove) {
          split->moves[count++] = m;
       }
    }
@@ -1305,29 +1308,29 @@ int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
 }
 
 
-Move MoveGenerator:: nextMove(SplitPoint *s)
+Move MoveGenerator:: nextMove(SplitPoint *s,int &order)
 {
    if (s) {
       s->lock();
-      Move m = nextMove();
+      Move m = nextMove(order);
       s->unlock();
       return m;
    }
    else
-      return nextMove();
+      return nextMove(order);
 }
 
 
-Move MoveGenerator::nextEvasion(SplitPoint *s)
+Move MoveGenerator::nextEvasion(SplitPoint *s,int &ord)
 {
    if (s) {
       s->lock();
-      Move m = nextEvasion();
+      Move m = nextEvasion(ord);
       s->unlock();
       return m;
    }
    else
-      return nextEvasion();
+      return nextEvasion(ord);
 }
 
 uint64 RootMoveGenerator::perft(Board &b, int depth) {
@@ -1337,7 +1340,8 @@ uint64 RootMoveGenerator::perft(Board &b, int depth) {
    Move m;
    RootMoveGenerator mg(b);
    BoardState state = b.state;
-   while ((m = mg.nextMove()) != NullMove) {
+   int order;
+   while ((m = mg.nextMove(order)) != NullMove) {
       if (depth > 1) {
          b.doMove(m);
          nodes += perft(b,depth-1);

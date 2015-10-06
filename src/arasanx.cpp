@@ -2255,7 +2255,8 @@ static uint64 perft(Board &board, int depth) {
    RootMoveGenerator mg(board);
    Move m;
    BoardState state = board.state;
-   while ((m = mg.nextMove()) != NullMove) {
+   int order = 0;
+   while ((m = mg.nextMove(order)) != NullMove) {
       if (depth > 1) {
          board.doMove(m);
          nodes += perft(board,depth-1);

@@ -1143,8 +1143,7 @@ int depth, Move exclude [], int num_exclude)
     fail_high_root = 0;
     while (!node->cutoff && !terminate) {
         Move move;
-        if ((move = mg.nextMove(split))==NullMove) break;
-        move_index++;
+        if ((move = mg.nextMove(split,move_index))==NullMove) break;
         if (IsUsed(move)) {
            continue;     // skip move
         }
@@ -1488,7 +1487,8 @@ int Search::quiesce(int ply,int depth)
       BoardState state = board.state;
       node->num_try = 0;
       int noncaps = 0;
-      while ((move = mg.nextEvasion()) != NullMove) {
+      int moveIndex = 0;
+      while ((move = mg.nextEvasion(moveIndex)) != NullMove) {
          ASSERT(OnBoard(StartSquare(move)));
          if (Capture(move) == King) {
 #ifdef _TRACE
@@ -2178,7 +2178,7 @@ int Search::search()
 {
     int rep_count;
     int using_tb;
-    int move_count;
+    int move_index = 0;
 #ifdef MOVE_ORDER_STATS
     node->best_count = 0;
 #endif
@@ -2414,7 +2414,6 @@ int Search::search()
     if (master() && in_check) { indent(ply); cout << "in_check=" << in_check << endl;}
 #endif
     node->fpruned_moves = 0;
-    move_count = 0;
     node->eval = node->staticEval = Scoring::INVALID_SCORE;
     if (hit) {
         // Use the cached static value if possible
@@ -2669,7 +2668,7 @@ int Search::search()
             Move move;
             // we do not bother to lock here, because if we have split
             // this node, we don't come back to this part of the loop
-            move = in_check ? mg.nextEvasion() : mg.nextMove();
+            move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
             if (IsUsed(move)) continue;
 #ifdef SEARCH_STATS
@@ -2680,7 +2679,6 @@ int Search::search()
             }
             ASSERT(DestSquare(move) != InvalidSquare);
             ASSERT(StartSquare(move) != InvalidSquare);
-            move_count++;
 #ifdef _TRACE
             if (master()) {
                 indent(ply);
@@ -3004,13 +3002,7 @@ void Search::searchSMP(ThreadInfo *ti)
     const int &ply = node->ply;
     const int &depth = node->depth;
 
-    // Count moves from the point where the parent was split.
-    // This is used for pruning and reduction. Note this will
-    // generally under-estimate the actual number of moves 
-    // that have been searched when multiple threads are at work,
-    // but that's ok: we would rather under-prune than prune
-    // excessively.
-    int moveIndex = node->num_try;
+    int moveIndex;
     // get node from which we were split
     NodeInfo *parentNode = split->splitNode;
     int best_score = parentNode->best_score;
@@ -3021,8 +3013,8 @@ void Search::searchSMP(ThreadInfo *ti)
     bool fhr = false;
     while (!parentNode->cutoff && !terminate) {
         move = in_check ?
-            mg->nextEvasion(split) :
-            mg->nextMove(split);
+           mg->nextEvasion(split,moveIndex) :
+           mg->nextMove(split,moveIndex);
         if (IsNull(move)) break;
         if (IsUsed(move)) continue;
 #ifdef SEARCH_STATS
@@ -3088,7 +3080,6 @@ void Search::searchSMP(ThreadInfo *ti)
             board.undoMove(move,state);
             continue;
         }
-        moveIndex++;
 #ifdef _TRACE
         if (master() || ply==0) {
             indent(ply); cout << ply << ". ";
@@ -3227,7 +3218,7 @@ int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node,
        parentNode->best_score = score;
        parentNode->best = move;
 #ifdef MOVE_ORDER_STATS
-       parentNode->best_count = node->num_try-1;
+       parentNode->best_count = parentNode->num_try-1;
 #endif
        Refutations::setRefutation((parentNode-1)->last_move,move);
        if (score >= parentNode->beta) {
@@ -3348,7 +3339,6 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
                split->ply = ply;
                split->depth = depth;
                split->mg = mg;
-               split->moveIndex = node->num_try;
                split->splitNode = node;
                // save master's current state
                split->savedBoard = board;
@@ -3499,7 +3489,6 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     // mostly access the parent node for state.
     node->ply = s->ply;
     node->depth = s->depth;
-    node->num_try = s->moveIndex;
     node->beta = (ns+s->ply)->beta;
     if (s->ply>0) {
       // There is some info from the previous node in the stack
