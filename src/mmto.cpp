@@ -41,6 +41,8 @@ using namespace mmto;
 
 static bool regularize = false;
 
+static bool use_adagrad = false;
+
 static int iterations = 2;
 
 static int cores = 1;
@@ -66,6 +68,8 @@ static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16;
 static const int MIN_PLY = 16;
+static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
+static const double ADAGRAD_STEP_SIZE = 4.0;
 
 static int first_index = 0;
 
@@ -148,7 +152,8 @@ static Parse2Data data2[MAX_CORES];
 
 static void usage()
 {
-   cerr << "Usage: mmto -c <cores>" << endl;
+   cerr << "Usage: mmto -a use AdaGrad" << endl;
+   cerr << "-c <cores>" << endl;
    cerr << "-d just write out current parameters values to params.cpp" << endl;
    cerr << "-i <input parameter file> -o <output parameter file>" << endl;
    cerr << "-r apply regularization" << endl;
@@ -616,7 +621,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    grads[Tune::KING_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+i,mLevel);
 
    if (board.pawn_bits[White] | board.pawn_bits[Black]) {
-      
+
       double inc_adjust = inc;
       const int opp_pieces = board.getMaterial(oside).pieceCount();
       if (opp_pieces < 2) {
@@ -625,7 +630,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 
       grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+i,mLevel);
    }
-   
+
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
    grads[Tune::KING_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+mobl,mLevel);
    const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
@@ -912,7 +917,7 @@ static void parse2(ThreadData &td, Parse2Data &data)
 //   if (verbose) cout << "thread " << td.index << " complete.";
 }
 
-static void adjust_params(Parse2Data &data0, int iterations)
+static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient, int iterations)
 {
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       double dv = data0.grads[i];
@@ -920,7 +925,6 @@ static void adjust_params(Parse2Data &data0, int iterations)
       tune_params.getParam(i,p);
       int v = p.current;
       if (regularize) {
-
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
          // we don't regularize them.
@@ -928,21 +932,28 @@ static void adjust_params(Parse2Data &data0, int iterations)
             dv += 2*REGULARIZATION*norm_val(p);
          }
       }
-
-      // TBD size the step based on parameter range?
-//      const int istep = Util::Max(1,(p.max_value-p.min_value)/(100+2*iterations));
-      const int istep = 1;
-      if ( dv > 0.0) {
-         v = Util::Min(p.max_value,v + istep);
+      if (dv != 0.0) {
+         int istep = 1;
+         if (use_adagrad) {
+            historical_gradient[i] += dv*dv;
+            double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
+            istep = Util::Round(ADAGRAD_STEP_SIZE*adjusted_grad);
+            //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
+            v = Util::Max(p.min_value,Util::Min(p.max_value,v + istep));
+         } else {
+            if ( dv > 0.0) {
+               v = Util::Min(p.max_value,v + istep);
+            }
+            else if (dv < 0.0) {
+               v = Util::Max(p.min_value,v - istep);
+            }
+         }
+         tune_params.updateParamValue(i,v);
       }
-      else if (dv < 0.0) {
-         v = Util::Max(p.min_value,v - istep);
-      }
-      tune_params.updateParamValue(i,v);
    }
 }
 
-static void threadp(ThreadData *td) 
+static void threadp(ThreadData *td)
 {
    // set stack size for Linux/Mac
 #ifdef _POSIX_VERSION
@@ -1048,7 +1059,7 @@ static void learn()
 #else
    double best = numeric_limits<double>::max();
 #endif
-
+   vector<double> historical_grad(tune_params.numTuningParams(),0.0);
    for (int iter = 1; iter <= iterations; iter++) {
       cout << "iteration " << iter << endl;
       tune_params.applyParams();
@@ -1103,7 +1114,7 @@ static void learn()
          cout << "new best objective: " << best << endl;
          output_solution();
       }
-      adjust_params(data2[0],iter);
+      adjust_params(data2[0],historical_grad,iter);
    }
 
    delete hash_table;
@@ -1150,8 +1161,11 @@ int CDECL main(int argc, char **argv)
     int write_sol = 0;
 
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
-       if (strcmp(argv[arg],"-d")==0) {
-          cout << "writing initial solution" << endl;
+       if (strcmp(argv[arg],"-a")==0) {
+          use_adagrad = true;
+       }
+       else if (strcmp(argv[arg],"-d")==0) {
+          cerr << "writing initial solution" << endl;
           ++write_sol;
        }
        else if (strcmp(argv[arg],"-o")==0) {
