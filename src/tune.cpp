@@ -16,7 +16,7 @@ static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
 
 int Tune::numTuningParams() const
 {
-   return tune_params.size();
+   return (int)tune_params.size();
 }
 
 int Tune::paramArraySize() const 
@@ -61,7 +61,8 @@ static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
    Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
    Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500),
    Tune::TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,500),
-   Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",100,0,500),
+   Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",-100,-500,0),
+   Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",-100,-500,0),
    Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",229,0,500),
    Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250),
    Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500),

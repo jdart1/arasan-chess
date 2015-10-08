@@ -30,6 +30,8 @@ class Material
     enum {KN  = 0x100010};
     enum {KR  = 0x101000};
     enum {KQ  = 0x110000};
+    enum {KQN = 0x110010};
+    enum {KQB = 0x110100};
 
     enum {PieceMask = 0x1ffff0};
         

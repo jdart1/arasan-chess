@@ -443,7 +443,11 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           // we have extra minor (but not only a minor)
           if (oppmat.pieceBits() == Material::KR) {
              // KR + minor vs KR - draw w. no pawns so lower score
-             score -= PARAM(KRMINOR_VS_R);
+             score += PARAM(KRMINOR_VS_R);
+          }
+          else if (oppmat.pieceBits() == Material::KQ) {
+              // Q + minor vs Q is a draw, generally
+              score += PARAM(KQMINOR_VS_Q);
           } else if (oppmat.pieceValue() > ROOK_VALUE) {
              // Knight or Bishop traded for pawns. Bonus for piece
              score += PARAM(MINOR_FOR_PAWNS);
@@ -499,6 +503,8 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           }
 #endif
        }
+    }
+    if (ourmat.materialLevel() < 16) {
 #ifdef EVAL_DEBUG
        tmp = score;
 #endif
@@ -537,11 +543,15 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
             score -= (QUEEN_VALUE-2*ROOK_VALUE);  // even
         }
         else if (oppmat.infobits() == Material::KRB) {
-                                                  // even
-            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE);
+           score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE); // even
         }
-                                                  // close to even
-        else if (oppmat.infobits() == Material::KRN) {
+        else if (oppmat.infobits() == Material::KQB) {
+            score -= BISHOP_VALUE;  // even
+        }
+        else if (oppmat.infobits() == Material::KQN) {
+            score -= KNIGHT_VALUE;  // even
+        }
+        else if (oppmat.infobits() == Material::KRN) { // close to even
             score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)-PAWN_VALUE/4;
         }
         else if (oppmat.infobits() == Material::KB ||
@@ -1498,15 +1508,21 @@ void Scoring::calcPawnData(const Board &board,
                // Score according to the most advanced one.
                if (rank > rankdup) {
                   td.flags |= PawnDetail::POTENTIAL_PASSER;
-                  int i = -1;
+                  int i = 0;
+#ifdef _DEBUG
+                  bool found = false;
+#endif
                   for (; i < count; i++) {
                      if (details[i].sq == dup) {
+#ifdef _DEBUG
+                        found = true;
+#endif
                         break;
                      }
                   }
                   entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
                   entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
-                  ASSERT(i>=0);
+                  ASSERT(found);
                   if (details[i].flags & PawnDetail::POTENTIAL_PASSER) {
                       details[i].flags &= ~PawnDetail::POTENTIAL_PASSER;
                       entr.midgame_score -= PARAM(POTENTIAL_PASSER)[Midgame][rankdup];
