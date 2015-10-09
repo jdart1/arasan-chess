@@ -521,6 +521,79 @@ static int pp_block_index(Square passer, Square blocker, ColorType side)
    return index;
 }
 
+static void adjustMaterialScore(const Board &board, ColorType side,
+                                vector<double> &grads, double inc) {
+    const Material &ourmat = board.getMaterial(side);
+    const Material &oppmat = board.getMaterial(OppositeColor(side));
+    const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
+       return;
+    }
+    
+    if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
+       const uint32 pieces = ourmat.pieceBits();
+       if (pieces == Material::KN || pieces == Material::KB) {
+          // Knight or Bishop vs pawns
+          if (ourmat.pawnCount() == 0) {
+             // no mating material. We can't be better but if
+             // opponent has 1-2 pawns we are not so bad
+             int index = Util::Min(2,oppmat.pawnCount());
+             grads[Tune::KN_VS_PAWN_ADJUST0+index] += inc;
+          }
+       }
+       return;
+    }
+    int majorDiff = ourmat.majorCount() - oppmat.majorCount();
+    switch(majorDiff) {
+    case 0: {
+       if (ourmat.minorCount() == oppmat.minorCount()+1) {
+          // we have extra minor (but not only a minor)
+          if (oppmat.pieceBits() == Material::KR) {
+             // KR + minor vs KR - draw w. no pawns so lower score
+             grads[Tune::KRMINOR_VS_R] += inc;
+          }
+          else if (oppmat.pieceBits() == Material::KQ) {
+              // Q + minor vs Q is a draw, generally
+             grads[Tune::KQMINOR_VS_Q] += inc;
+          } else if (oppmat.pieceValue() > ROOK_VALUE) {
+             // Knight or Bishop traded for pawns. Bonus for piece
+             grads[Tune::MINOR_FOR_PAWNS] += inc;
+          }
+        }
+        else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
+             ourmat.rookCount() == oppmat.rookCount() - 2) {
+            // Queen vs. Rooks
+            // Queen is better with minors on board (per Kaufman)
+           grads[Tune::QR_ADJUST0+Util::Min(3,ourmat.minorCount())] += inc;
+        }
+        break;
+    } 
+    case 1: {
+        if (ourmat.rookCount() == oppmat.rookCount()+1) {
+            if (ourmat.minorCount() == oppmat.minorCount()) {
+                // Rook vs. pawns. Usually the Rook is better.
+               grads[Tune::ROOK_VS_PAWNS] += inc;
+            }
+            else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
+                // Rook vs. minor
+                // not as bad w. fewer pieces
+               ASSERT(ourmat.majorCount()>=0);
+               grads[Tune::RB_ADJUST1+Util::Min(3,ourmat.majorCount()-1)] += inc;
+            }
+            else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
+                // bad trade - Rook for two minors, but not as bad w. fewer pieces
+               ASSERT(oppmat.majorCount()>=0);
+               grads[Tune::RBN_ADJUST1+Util::Min(3,oppmat.majorCount()-1)] += inc;
+            }
+        }
+        // Q vs RB or RN is already dealt with by piece values
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 // Updates a vector where each entry corresponds to a tunable
 // parameter. The update is based on a particular board position and
 // side and consists for each parameter the contribution of
@@ -531,7 +604,17 @@ static int pp_block_index(Square passer, Square blocker, ColorType side)
 static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                         vector<double> &grads, double inc)
 {
+
    const ColorType oside = OppositeColor(side);
+
+
+   const Material &ourmat = board.getMaterial(side);
+   const Material &oppmat = board.getMaterial(oside);
+   if (ourmat.infobits() != oppmat.infobits() &&
+       (ourmat.hasPawns() || oppmat.hasPawns())) {
+      adjustMaterialScore(board,side,grads,inc);
+   }
+
    const int mLevel = board.getMaterial(oside).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
 #ifdef VALIDATE_GRADIENT

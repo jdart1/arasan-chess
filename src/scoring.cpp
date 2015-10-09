@@ -449,7 +449,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
               // Q + minor vs Q is a draw, generally
               score += PARAM(KQMINOR_VS_Q);
           } else if (oppmat.pieceValue() > ROOK_VALUE) {
-             // Knight or Bishop traded for pawns. Bonus for piece
+             // Knight or Bishop traded for pawns. Bonus for piece.
              score += PARAM(MINOR_FOR_PAWNS);
           }
         }
@@ -465,18 +465,18 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
         if (ourmat.rookCount() == oppmat.rookCount()+1) {
             if (ourmat.minorCount() == oppmat.minorCount()) {
                 // Rook vs. pawns. Usually the Rook is better.
-                score += PAWN_VALUE/3;
+               score += PARAM(ROOK_VS_PAWNS);
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>=0);
-               score -= APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
+               score += APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
                ASSERT(oppmat.majorCount()>=0);
-               score -= APARAM(RBN_ADJUST,Util::Min(3,oppmat.majorCount()-1));
+               score += APARAM(RBN_ADJUST,Util::Min(3,oppmat.majorCount()-1));
             }
         }
         // Q vs RB or RN is already dealt with by piece values

@@ -29,21 +29,21 @@ int Tune::paramArraySize() const
 // Tuning params for most parameters (except PSTs, mobility).
 // These are initialized to some reasonable but not optimal values.
 static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
-   Tune::TuneParam(Tune::RB_ADJUST1,"rb_adjust1",250,-100,400,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RB_ADJUST2,"rb_adjust2",75,-300,400,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RB_ADJUST3,"rb_adjust3",-75,-400,300,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RB_ADJUST4,"rb_adjust4",-250,-500,150,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RBN_ADJUST1,"rbn_adjust1",500,250,750,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RBN_ADJUST2,"rbn_adjust2",675,300,900,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RBN_ADJUST3,"rbn_adjust3",825,500,1200,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::RBN_ADJUST4,"rbn_adjust4",1000,500,1500,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::QR_ADJUST0,"qr_adjust0",-500,-750,-250,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::QR_ADJUST1,"qr_adjust1",0,-500,500,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::QR_ADJUST2,"qr_adjust2",500,250,750,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::QR_ADJUST3,"qr_adjust3",500,250,750,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200,Tune::TuneParam::Any),
-   Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",-1500,-2000,-1000,Tune::TuneParam::Any),
+   Tune::TuneParam(Tune::RB_ADJUST1,"rb_adjust1",-250,-400,100,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RB_ADJUST2,"rb_adjust2",-75,-400,300,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RB_ADJUST3,"rb_adjust3",75,-300,400,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RB_ADJUST4,"rb_adjust4",250,-150,500,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RBN_ADJUST1,"rbn_adjust1",-500,-750,-250,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RBN_ADJUST2,"rbn_adjust2",-675,-900,-300,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RBN_ADJUST3,"rbn_adjust3",-825,-1200,-500,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::RBN_ADJUST4,"rbn_adjust4",-1000,-1500,-500,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::QR_ADJUST0,"qr_adjust0",-500,-750,-250,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::QR_ADJUST1,"qr_adjust1",0,-500,500,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::QR_ADJUST2,"qr_adjust2",500,250,750,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::QR_ADJUST3,"qr_adjust3",500,250,750,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",-1500,-2000,-1000,Tune::TuneParam::Any,1),
    Tune::TuneParam(Tune::CASTLING0,"castling0",0,-100,100,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::CASTLING1,"castling1",-70,-300,0,Tune::TuneParam::Midgame,1),
    Tune::TuneParam(Tune::CASTLING2,"castling2",-100,-300,0,Tune::TuneParam::Midgame,1),
@@ -61,9 +61,10 @@ static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
    Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
    Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500),
    Tune::TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,500),
-   Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",-100,-500,0),
-   Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",-100,-500,0),
-   Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",229,0,500),
+   Tune::TuneParam(Tune::ROOK_VS_PAWNS,"rook_vs_pawns",333,0,500,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",-100,-500,0,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",-100,-500,0,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",229,0,500,Tune::TuneParam::Any,1),
    Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250),
    Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500),
    Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500),
@@ -574,7 +575,9 @@ void Tune::applyParams() const
    Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
    Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
    Scoring::Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
+   Scoring::Params::ROOK_VS_PAWNS = tune_params[ROOK_VS_PAWNS].current;
    Scoring::Params::KRMINOR_VS_R = tune_params[KRMINOR_VS_R].current;
+   Scoring::Params::KQMINOR_VS_Q = tune_params[KQMINOR_VS_Q].current;
    Scoring::Params::MINOR_FOR_PAWNS = tune_params[MINOR_FOR_PAWNS].current;
    Scoring::Params::ENDGAME_PAWN_ADVANTAGE = tune_params[ENDGAME_PAWN_ADVANTAGE].current;
    Scoring::Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;

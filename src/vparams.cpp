@@ -15,6 +15,7 @@ int Scoring::Params::KING_DISTANCE_BASIS = 320;
 int Scoring::Params::KING_DISTANCE_MULT = 80;
 int Scoring::Params::PIN_MULTIPLIER_MID = 200;
 int Scoring::Params::PIN_MULTIPLIER_END = 300;
+int Scoring::Params::ROOK_VS_PAWNS = 333;
 int Scoring::Params::KRMINOR_VS_R = -100;
 int Scoring::Params::KQMINOR_VS_Q = -100;
 int Scoring::Params::MINOR_FOR_PAWNS = 250;
