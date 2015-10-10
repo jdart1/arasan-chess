@@ -75,7 +75,6 @@ struct NodeInfo {
 #ifdef MOVE_ORDER_STATS
     int best_count;
 #endif
-    volatile int fpruned_moves;
     int ply, depth;
 
     int PV() const {

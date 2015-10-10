@@ -1130,7 +1130,6 @@ int depth, Move exclude [], int num_exclude)
 #ifdef MOVE_ORDER_STATS
     node->best_count = 0;
 #endif
-    node->fpruned_moves = 0;
     node->ply = 0;
     node->depth = depth;
     node->eval = Scoring::INVALID_SCORE;
@@ -1168,7 +1167,6 @@ int depth, Move exclude [], int num_exclude)
 #ifdef _TRACE
             cout << "fwd pruned." << endl;
 #endif
-            node->fpruned_moves++;
             continue;
         }
         board.doMove(move);
@@ -2413,7 +2411,6 @@ int Search::search()
 #ifdef _TRACE
     if (master() && in_check) { indent(ply); cout << "in_check=" << in_check << endl;}
 #endif
-    node->fpruned_moves = 0;
     node->eval = node->staticEval = Scoring::INVALID_SCORE;
     if (hit) {
         // Use the cached static value if possible
@@ -2610,7 +2607,6 @@ int Search::search()
         node->cutoff = 0;
         node->depth = depth;
         node->alpha = node->best_score = alpha;
-        node->fpruned_moves = 0;
 
         // set hash move to IID search result (may still be null)
         hash_move = node->best;
@@ -2699,7 +2695,6 @@ int Search::search()
                 indent(ply); cout << "fwd pruned." << endl;
               }
 #endif
-              node->fpruned_moves++;
               continue;
             }
             board.doMove(move);
@@ -2823,9 +2818,12 @@ int Search::search()
             node->best_score = node->alpha;
             goto search_end2;
         }
-        if (node->num_try == 0 && node->fpruned_moves == 0
-        ) {
+        if (node->num_try == 0) {
             // no moves were tried
+#ifdef _DEBUG
+           RootMoveGenerator rmg(board);
+           ASSERT(rmg.moveCount() == 0);
+#endif
             if (in_check) {
 #ifdef _TRACE
                 if (master()) {
@@ -2930,10 +2928,6 @@ int Search::search()
             controller->stats->move_order[node->best_count]++;
         }
     }
-#endif
-#ifdef SEARCH_STATS
-    // don't count qsearch pruning
-    //    controller->stats->futility_pruning += node->fpruned_moves;
 #endif
     int score = node->best_score;
     ASSERT(score >= -Constants::MATE && score <= Constants::MATE);
@@ -3043,7 +3037,6 @@ void Search::searchSMP(ThreadInfo *ti)
               indent(ply); cout << "fwd pruned." << endl;
            }
 #endif
-           parentNode->fpruned_moves++;
            continue;
         }
         board.doMove(move);
