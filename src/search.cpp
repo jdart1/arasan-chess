@@ -31,9 +31,9 @@ extern fstream ucilog;
 #endif
 
 static const int ASPIRATION_WINDOW[] =
-    {(int)(0.375*PAWN_VALUE), 
+    {(int)(0.375*PAWN_VALUE),
      (int)(0.75*PAWN_VALUE),
-     (int)(1.5*PAWN_VALUE), 
+     (int)(1.5*PAWN_VALUE),
      (int)(3.0*PAWN_VALUE),
      (int)(6.0*PAWN_VALUE),
       Constants::MATE};
@@ -112,7 +112,7 @@ static FORCEINLINE int calcGain(const Board &board, Move move) {
     if (Capture(move) == Pawn && Rank(DestSquare(move),board.oppositeSide()) == 7) {
        gain += PAWN_VALUE/2;
     }
-    if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) == 7) {             
+    if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) == 7) {
        gain += PAWN_VALUE/2;
     }
     return gain;
@@ -148,7 +148,7 @@ SearchController::SearchController()
     rootSearch = (RootSearch*)ti->work;
     for (int d = 0; d < 64; d++) {
       for (int moves= 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] = 
+        LMR_REDUCTION[0][d][moves] =
            LMR_REDUCTION[1][d][moves] = 0;
         if (d >= 2 && moves > 0) {
            // Formula similar to Protector & Toga. Tuned Aug. 2015
@@ -447,7 +447,7 @@ void SearchController::uciSendInfos(const Board &board, Move move, int move_inde
       ucilog << endl << (flush);
 #endif
    }
-} 
+}
 
 void SearchController::resizeHash(size_t newSize) {
    hashTable.resizeHash(newSize);
@@ -509,7 +509,7 @@ int Search::checkTime(const Board &board,int ply) {
        }
     }
     else if (controller->typeOfSearch == TimeLimit) {
-       if (controller->xtra_time > 0 && 
+       if (controller->xtra_time > 0 &&
            controller->time_target != INFINITE_TIME &&
            stats->elapsed_time > controller->getTimeLimit()) {
           if (root()->fail_high_root) {
@@ -908,7 +908,7 @@ Move *excludes, int num_excludes)
                }
             }
          }
-         
+
          if (!MovesEqual(node->best,easyMove)) {
             depth_at_pv_change = iteration_depth;
          }
@@ -941,7 +941,7 @@ Move *excludes, int num_excludes)
             }
             else if (!controller->background &&
                      !controller->time_added &&
-                     !easy_adjust && 
+                     !easy_adjust &&
                      depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
                      MovesEqual(easyMove,node->best) &&
                      !faillows &&
@@ -1161,7 +1161,7 @@ int depth, Move exclude [], int num_exclude)
         node->extensions = 0;
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         int extend = calcExtensions(board,node,node,in_check_after_move,
-                                    node->num_try,
+                                    move_index,
                                     move);
         if (extend == PRUNE) {
 #ifdef _TRACE
@@ -1289,9 +1289,9 @@ int depth, Move exclude [], int num_exclude)
         }
     }
     else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
-             board.checkStatus() != InCheck) { 
+             board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
-        History::updateHistory(board, node, node->best, 0, 
+        History::updateHistory(board, node, node->best, 0,
                                board.sideToMove());
     }
 #ifdef MOVE_ORDER_STATS
@@ -1506,7 +1506,7 @@ int Search::quiesce(int ply,int depth)
          }
 #endif
          if (!node->PV() &&
-             noncaps > Util::Max(1+depth,0) && 
+             noncaps > Util::Max(1+depth,0) &&
              !Scoring::mateScore(node->beta) &&
              !IsForced(move) && !IsForced2(move) &&
              !CaptureOrPromotion(move) &&
@@ -1628,7 +1628,7 @@ int Search::quiesce(int ply,int depth)
                controller->hashTable.storeHash(hash, tt_depth,
                                                controller->age,
                                                HashEntry::Eval,
-                                               node->best_score, 
+                                               node->best_score,
                                                node->staticEval,
                                                0,
                                                node->best);
@@ -1662,7 +1662,7 @@ int Search::quiesce(int ply,int depth)
             cout << endl;
          }
 #endif
-         if (!node->PV() && !disc.isSet(StartSquare(pv)) && 
+         if (!node->PV() && !disc.isSet(StartSquare(pv)) &&
              (Capture(pv) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
             const int gain = calcGain(board,pv);
             const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
@@ -1729,7 +1729,7 @@ int Search::quiesce(int ply,int depth)
             }
 #endif
             // Futility pruning
-            if (!disc.isSet(StartSquare(move)) && 
+            if (!disc.isSet(StartSquare(move)) &&
                 (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
                const int gain = calcGain(board,move);
                const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
@@ -1750,7 +1750,7 @@ int Search::quiesce(int ply,int depth)
                   if (master()) {
                      indent(ply); cout << "pruned (SEE)" << endl;
                   }
-                  
+
 #endif
                   continue;
                }
@@ -1863,7 +1863,7 @@ int Search::quiesce(int ply,int depth)
                         if (master()) {
                            indent(ply); cout << "**CUTOFF**" << endl;
                         }
-                        
+
 #endif
                         goto search_end;
                      }
@@ -2021,7 +2021,7 @@ int Search::calcExtensions(const Board &board,
           controller->stats->check_extensions++;
 #endif
           extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-      } 
+      }
       // Note: bad checks can be reduced
    }
    if (passedPawnPush(board,move)) {
@@ -2046,7 +2046,7 @@ int Search::calcExtensions(const Board &board,
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
-   pruneOk &= moveIndex &&
+   pruneOk &= parentNode->num_try &&
        Capture(move) == Empty &&
        TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5) &&
@@ -2059,7 +2059,7 @@ int Search::calcExtensions(const Board &board,
       if (!IsNull(threat)) {
          if (StartSquare(move) == DestSquare(threat) ||
              DestSquare(move) == DestSquare(threat)) {
-            // We are moving a threatened piece, or we are 
+            // We are moving a threatened piece, or we are
             // blocking the dest square of the threat
             pruneOk = 0;
          } else if (Sliding(board[StartSquare(threat)])) {
@@ -2067,7 +2067,7 @@ int Search::calcExtensions(const Board &board,
             board.between(StartSquare(threat),DestSquare(threat),btwn);
             if (btwn.isSet(DestSquare(move))) {
                if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-               if (swap) { 
+               if (swap) {
                   // safe interposition
                   pruneOk = 0;
                }
@@ -2121,7 +2121,7 @@ int Search::calcExtensions(const Board &board,
    }
    // See pruning. Losing captures and moves that put pieces en prise
    // are pruned at low depths.
-   if (!node->PV() && depth <= SEE_PRUNING_DEPTH && 
+   if (!node->PV() && depth <= SEE_PRUNING_DEPTH &&
        parentNode->num_try &&
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
        if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
@@ -2333,7 +2333,7 @@ int Search::search()
 #endif
                     History::updateHistoryMove(board,hashEntry.bestMove(board),
                                                node->depth, board.sideToMove());
-                    
+
                     return value;                     // cutoff
                 }
                 break;
@@ -2688,7 +2688,7 @@ int Search::search()
             node->last_move = move;
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int extend = calcExtensions(board,node,node,in_check_after_move,
-                                        node->num_try,move);
+                                        move_index,move);
             if (extend == PRUNE) {
 #ifdef _TRACE
               if (master()) {
@@ -2726,7 +2726,7 @@ int Search::search()
                 board.undoMove(move,state);
                 continue;
             }
-            if (try_score > node->best_score && 
+            if (try_score > node->best_score &&
                (extend < 0 || hibound < node->beta) &&
                 !((node+1)->flags & EXACT) &&
                 !terminate) {
@@ -2913,7 +2913,7 @@ int Search::search()
         controller->hashTable.storeHash(hashCode, depth,
                                         controller->age,
                                         val_type,
-                                        node->best_score, 
+                                        node->best_score,
                                         node->staticEval,
                                         (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
                                         (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
@@ -2988,6 +2988,8 @@ int Search::updateRootMove(const Board &board,
    return 0;   // no cutoff
 }
 
+// Perform search in a separate thread. We have always searched
+// at least one move before calling this.
 void Search::searchSMP(ThreadInfo *ti)
 {
     Move move;
@@ -3092,7 +3094,7 @@ void Search::searchSMP(ThreadInfo *ti)
         // it is possible the parent node's best score has changed, so
         // compare against that
         split->lock();
-        if (try_score > parentNode->best_score && 
+        if (try_score > parentNode->best_score &&
             (parentNode->beta > best_score+1 || extend < 0) &&
             !((node+1)->flags & EXACT) &&
             !terminate) {
@@ -3322,7 +3324,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
                split = &splitStack[activeSplitPoints++];
 #ifdef _THREAD_TRACE
                ostringstream os;
-               os << "splitting from thread " << ti->index << 
+               os << "splitting from thread " << ti->index <<
                    " split stack size now " << activeSplitPoints << '\0';
                log(os.str());
 #endif
@@ -3385,8 +3387,8 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
         // with its slaves:
         searchSMP(ti);
         // The master thread has completed its work. If any slave threads
-        // remain, be a "helpful master" and make this thread available to 
-        // them. When all slave threads are done, the parent will be 
+        // remain, be a "helpful master" and make this thread available to
+        // them. When all slave threads are done, the parent will be
         // signalled and exit the idle loop.
         //
         // Important to lock here - otherwise there is a race condition with
@@ -3474,7 +3476,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     node = ns+s->ply;
     // The split variable holds the split point to which this Search
     // instance is attached
-    split = s;    
+    split = s;
     nodeAccumulator = 0;
     ti = slave_ti;
     // Copy a little info from the parent node to the child.
