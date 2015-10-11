@@ -120,7 +120,7 @@ static bool compareScores(const MoveEntry &a, const MoveEntry &b) {
 void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
    // Set flag in case we have not gone through the move list yet
-   index = 0;  // reset so we will fetch moves again
+   index = order = 0;  // reset so we will fetch moves again
    phase = START_PHASE;
    for (unsigned i = 0; i < moveList.size(); i++) {
       ClearUsed(moveList[i].move);
@@ -187,7 +187,7 @@ void RootMoveGenerator::exclude(Move exclude) {
 
 
 void RootMoveGenerator::reorderByScore() {
-   index = 0;  // reset so we will fetch moves again
+   index = order = 0;  // reset so we will fetch moves again
    phase = START_PHASE;
    if (moveList.size() <= 1)
       return;
@@ -251,7 +251,10 @@ Move MoveGenerator::nextEvasion(int &ord) {
    if (batch_count==0) {
      if (phase == START_PHASE) {      
         ++phase;
-        if (!IsNull(hashMove)) return hashMove;
+        if (!IsNull(hashMove)) {
+           ord = order++;
+           return hashMove;
+        }
         ++phase;
      } 
      batch_count = generateEvasions(moves);
