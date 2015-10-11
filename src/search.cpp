@@ -56,6 +56,8 @@ static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
 static const double LMR_BASE = 0.3;
 static const double LMR_NON_PV = 1.5;
 static const double LMR_PV = 2.25;
+static const int MAX_SPLIT_DEPTH=16*DEPTH_INCREMENT;
+static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
@@ -491,11 +493,11 @@ int Search::checkTime(const Board &board,int ply) {
             int target = srcOpts.ncpus*120;
             if (splitsPerSec > 3*target/2) {
                controller->setThreadSplitDepth(
-                   Util::Min(14*DEPTH_INCREMENT,
+                  Util::Min(MAX_SPLIT_DEPTH,
                              controller->threadSplitDepth + DEPTH_INCREMENT/2));
             } else if (splitsPerSec < target/2) {
                controller->setThreadSplitDepth(
-                    Util::Max(5*DEPTH_INCREMENT,
+                  Util::Max(MIN_SPLIT_DEPTH,
                               controller->threadSplitDepth - DEPTH_INCREMENT/2));
             }
             stats->last_split_sample = stats->splits;
