@@ -253,6 +253,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
         ++phase;
         if (!IsNull(hashMove)) {
            ord = order++;
+           ASSERT(ord<Constants::MaxMoves);
            return hashMove;
         }
         ++phase;
@@ -308,6 +309,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
    }
    if (index < batch_count) {
       ord = order++;
+      ASSERT(ord<Constants::MaxMoves);
       return moves[index++];
    }
    else

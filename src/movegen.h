@@ -52,6 +52,7 @@ class MoveGenerator
                     if (seeSign(board,move,0)) {
                          SetPhase(move,WINNING_CAPTURE_PHASE);
                          ord = order++;
+                         ASSERT(ord<Constants::MaxMoves);
                          return move;
                      } else {
                          SetPhase(move,LOSERS_PHASE);
@@ -60,6 +61,7 @@ class MoveGenerator
                  } else {
                      SetPhase(move,WINNING_CAPTURE_PHASE);
                      ord = order++;
+                     ASSERT(ord<Constants::MaxMoves);
                      return move;
                  }
              }
@@ -67,6 +69,7 @@ class MoveGenerator
              return nextMove(ord);
          }
          ord = order++;
+         ASSERT(ord<Constants::MaxMoves);
          return batch[index++];
       }
 
@@ -200,6 +203,7 @@ class RootMoveGenerator : public MoveGenerator
          ASSERT(index<=batch_count);
          if (index < batch_count) {
             ord = order++;
+            ASSERT(ord<Constants::MaxMoves);
             return moveList[index++].move;
          }
          else {
