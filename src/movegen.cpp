@@ -1258,6 +1258,8 @@ int MoveGenerator::generateAllMoves(NodeInfo *node, SplitPoint *split)
    // so we get the correct move ordering and flags:
    int count = 0;
    Move m;
+   // save current value of order
+   int temp = order;
    int ord;
    if (board.checkStatus() == InCheck) {
       while ((m=nextEvasion(ord)) != NullMove) {
@@ -1269,6 +1271,10 @@ int MoveGenerator::generateAllMoves(NodeInfo *node, SplitPoint *split)
          split->moves[count++] = m;
       }
    }
+   // restore order to what it was before movegen. The next
+   // move fetched via getMove or getEvasion will have this
+   // order.
+   order = temp;
    batch_count = count;
    // technically this is volatile but we are accessing it here
    // pre-split:
