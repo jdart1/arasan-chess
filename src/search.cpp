@@ -63,7 +63,7 @@ static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
 static const int LMP_DEPTH=10;
 
-static const int LMP_MOVE_COUNT[11] = {1, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
+static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
 };
 
 static const int RAZOR_MARGIN_BASE = int(3.0*PAWN_VALUE);
