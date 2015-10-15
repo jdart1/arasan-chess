@@ -10,8 +10,8 @@ extern "C" {
 };
 
 static const int MOBILITY_RANGE = PAWN_VALUE/2;
-static const int OUTPOST_RANGE = PAWN_VALUE/4;
-static const int PST_RANGE = PAWN_VALUE/3;
+static const int OUTPOST_RANGE = PAWN_VALUE/3;
+static const int PST_RANGE = PAWN_VALUE/2;
 static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
 
 int Tune::numTuningParams() const
