@@ -1201,9 +1201,6 @@ int depth, Move exclude [], int num_exclude)
            // We failed to get a cutoff and must re-search
            // Set flag if we may be getting a new best move:
            fail_high_root++;
-           if (talkLevel == Trace) {
-              cout << "root fail high, score = " << try_score << endl;
-           }
 #ifdef _TRACE
             cout << "window = [" << -hibound << "," << node->best_score
               << "]" << endl;
@@ -3131,9 +3128,6 @@ void Search::searchSMP(ThreadInfo *ti)
                extend = 0;
                if (ply == 0) {
                   fhr = true;
-                  if (talkLevel == Trace) {
-                      cout << "root fail high (smp), score = " << try_score << endl;
-                  }
                   root()->fail_high_root++;
                }
                if (depth+extend-DEPTH_INCREMENT > 0)
