@@ -1,3 +1,19 @@
+Changes in Arasan 18.1:
+ 1) Less aggressive LMR and LMP.
+ 2) More parameters are made tunable.
+ 3) Tuning code adding using MMTO algorithm and params adjusted via tuning.
+ 4) Bug fixes in potential passer scoring.
+ 5) Score Q + minor vs Q as draw.
+ 6) In a multi-threaded search, maintain a move index in the move generator
+    and pass it to the threads, for better/more consistent move order-based
+    pruning & reductions.
+ 7) Increase max split depth.
+ 8) Change how passed pawn blockers are scored and tune penalities.
+ 9) Fix scoring for two rooks on the 7th rank.
+ 10) After reduced depth search fails high, don't re-search with narrow
+    window and no reduction, unless reduction was > 1 ply.
+ 11) Modify formula for time extension when failing low.
+
 Changes in Arasan 18.0:
  1) Add refutation table, similar to Gull & Rodent. This is global and
     refutations are produced in the phase of move generation after killers.

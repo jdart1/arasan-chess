@@ -9,7 +9,7 @@
 #include "util.h"
 #include "search.h"
 #include "tune.h"
-#include "mmto.h"
+#include "tuner.h"
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -37,7 +37,7 @@ extern "C" {
 
 // Note: this file requires a C++11 compatible compiler/libraries.
 
-using namespace mmto;
+using namespace tuner;
 
 static bool regularize = false;
 
@@ -152,7 +152,7 @@ static Parse2Data data2[MAX_CORES];
 
 static void usage()
 {
-   cerr << "Usage: mmto <options> <training file>" << endl;
+   cerr << "Usage: tuner <options> <training file>" << endl;
    cerr << "Options:" << endl;
    cerr << " -a use AdaGrad" << endl;
    cerr << " -c <cores>" << endl;

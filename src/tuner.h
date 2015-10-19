@@ -2,7 +2,7 @@
 #ifndef _MMTO_H
 #define _MMTO_H
 
-namespace mmto {
+namespace tuner {
 
 typedef unsigned short PackedMove;
 

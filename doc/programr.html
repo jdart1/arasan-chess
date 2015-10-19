@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 18.0</title>
+<title>Arasan Programmer's Guide - version 18.1</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
@@ -12,16 +12,13 @@
 <br/>
 <p>Arasan is a chess program.</p>
 
-<p>This archive contains the source code for Arasan. It does not contain
-executables for the chess program.</p>
-
 <p>Usage of the source code is governed by the MIT license: see license.txt
 for details.</p>
 
 <p>Arasan includes a console-based chess engine that be used with
 Winboard, a separately available interface for chess programs, or with
 UCI-compatible interface programs such as Arena and Shredder. In
-addition, a Windows-only user interface program for Arasan is
+addition, a custom Windows-only user interface program for Arasan is
 available; it communicates with the chess engine using a pipe.</p>
 
 <p>Arasan is written in C++. Versions before 6.0 ran only on Windows. In
@@ -53,7 +50,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  18.0
+  18.1
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -439,20 +436,51 @@ significance).</p>
 
 <h3>Automated parameter tuning</h3>
 
-<p>Version 18.0 has some support for automated parameter tuning.</p>
-<p>The Makefile builds by default a special version of the program
-for using in tuning. This is named "arasanx-64-tune" or "arasanx-32-tune"
+<p>Version 18.1 has some support for automated parameter tuning.</p>
+<p>The Makefile has a "tuning" target that builds two extra executables
+(note: this build requires a C++11 compatible compiler).</p>
+<p>
+The first executable is special version of the program
+for using in tuning. This is named "arasanx-64-tune" or "arasanx-32-tune,"
 depending on the architecture you are on. This version of the program
 has all tunable parameters defined as variables rather than build-time
 constants, and their values can be set by using standard Winboard or
 UCI option commands. See tune.cpp for a list of the tunable parameters,
 their names, and their default values and ranges. Not all scoring parameters
-are in the tunable set, currently.
+are in the tunable set, currently, but most of them are.
 </p>
 <p>The tuning version of the program can be used by
 <a href="http://www.remi-coulom.fr/CLOP/">CLOP</a> through its
 Python chess engine interface script. Note though I have had
 mixed results with CLOP.</p>
+<p>The second executable built by the "tuner" target is named "tuner" and
+it is a somewhat experimental tool that can be used to "train" the parameter weights for the
+scoring module. It uses an algorithm called MMTO described by Hoki
+and Kaneko (see references). It is designed to be used together with
+a PGN file that contains high-quality games that serve as a reference
+set of "good" moves. The algorithm will adapt the scoring parameters
+so that the program will make moves similar to those in the training
+set.</p>
+<p>The "tuner" program expects a PGN file to be specified on the command
+line. It will output two files: by default the first one is named "x0"
+and contains the tuned parameter values; the second one is a compilable
+version of the parameters named "params.cpp.".</p>
+<p>
+The following command-line options are supported:<p>
+<ul>
+<li>-a use the AdaGrad method (see Duchi et. al.) of optimization instead of the "grid-adjacent update" described in the MMTO paper.</li>
+<li>-c &lt;cores&gt; run multithreaded with the specifed number of cores.</li>
+<li>-d just write out current parameters values to params.cpp"</li>
+<li>-i &lt;input parameter file&gt; specify the name of a file containing
+starting values for the parameters (can be the x0 file from a previous run).
+Without this some reasonable starting defaults will be used.</li>
+<li>-x &lt;output parameter file&gt; specify the name of the output file (instead of "x0")</li>
+<li>-r apply L2 regularization</li>
+<li>-o &lt;output .cpp file&gt; specify the name of the .cpp file that is
+output (instead of params.cpp)</li>
+<li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
+<li>-V validate only (compute objective)</li> << endl;
+</ul>
 
 <h2>Algorithms and data structures</h2>
 
@@ -1185,6 +1213,9 @@ found at <a href="http://www.arasanchess.org">arasanchess.org</a></p>
 </p>
 <p>Crafty source code, ftp.cis.uab.edu, directory /pub/hyatt.
 </p>
+<p>Duchi, John, Hazan, Elad and Singer, Yoram. "Adaptive Subgradient Methods
+for Online Learning and Stochastic Optimization" Journal of Machine Learning
+Research, Volume 12, 2/1/2011, pp. 2121-2159.</p>
 <p>Donninger, Ch. (1993). "Null Move and Deep Search" ICCA Journal,
 v. 16 no. 3.
 </p>
@@ -1199,6 +1230,7 @@ New York: Springer-Verlag.
 </p>
 <p>Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
 </p>
+<p>Hoki, Kunihuto and Kaneko, Tomoyuki "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Articial Intelligence Research 49 (2014) 527-568.</p>
 <p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.
 </p>
@@ -1208,5 +1240,7 @@ Proceedings of the 1996 ACM 24th annual conference on Computer science, pp.
 </p>
 <p>Zobrist, A. L. (1970). "A new hashing method with applications for game
 playing," Technical report 88, Computer Science Department, University
-of Wisconsin.
+of Wisconsin.</p>
+
+
 </body>

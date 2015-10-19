@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 18.0
+# Gnu Makefile for Arasan 18.1
 #
-VERSION = 18.0.0
+VERSION = 18.1.0
 
 # paths, modify as needed:
 
@@ -159,7 +159,9 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-all: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/$(ARASANX)-tune $(EXPORT)/mmto
+default: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
+
+tuning: dirs $(EXPORT)/$(ARASANX)-tune $(EXPORT)/tuner
 
 popcnt: SSE = -msse4.2
 popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
@@ -196,9 +198,6 @@ endif
 	mkdir -p $(EXPORT)
 	mkdir -p $(PROFILE)
 	mkdir -p $(PROF_DATA)
-
-#book:	$(EXPORT)/makebook
-#	$(EXPORT)/makebook -n 10 -o $(EXPORT)/book.bin $(BOOK)/basic.bk
 
 release:
 	mkdir -p ../release
@@ -316,7 +315,7 @@ movegen.cpp history.cpp refut.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
-MMTO_SOURCES = mmto.cpp tune.cpp globals.cpp  \
+TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
@@ -331,7 +330,7 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-MMTO_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(MMTO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
+TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 
@@ -344,8 +343,8 @@ $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 $(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
 	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/mmto:  $(MMTO_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MMTO_OBJS) $(DEBUG) -o $(EXPORT)/mmto -lstdc++ $(LIBS) $(SMPLIB)
+$(EXPORT)/tuner:  $(TUNER_OBJS) 
+	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
