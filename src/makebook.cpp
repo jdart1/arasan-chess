@@ -38,7 +38,7 @@ ResultType tmp_result;
 // number of pages in the book.
 static unsigned indexPages = 1;                    // default
 // max ply depth processed for PGN games
-static int maxPly = 70; 
+static int maxPly = 70;
 static bool verbose = false;
 
 enum MoveEval {NO_MOVE_EVAL,
@@ -100,7 +100,7 @@ static unsigned minFrequency = 0;
 class BookEntry
 BEGIN_PACKED_STRUCT
    public:
-   BookEntry( unsigned rec, PositionEval ev, 
+   BookEntry( unsigned rec, PositionEval ev,
                MoveEval mev, ResultType result,
                byte mv_indx,
                BookEntry *nxt, bool first);
@@ -139,7 +139,7 @@ static map <uint64, BookEntry *>* hashTable = NULL;
 
 // Compute a recommended relative weight for a set of book
 // moves from a given position
-static void computeWeights(const hash_t hashCode, BookEntry *be) 
+static void computeWeights(const hash_t hashCode, BookEntry *be)
 {
    int total = 0;
 
@@ -166,13 +166,16 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
        p->winWeight = (winloss+100)/2;
        if (p->winWeight > bestWinWeight) bestWinWeight = p->winWeight;
 #ifdef _TRACE
-       cout << "win weight=" << p->winWeight << endl;
+       cout << "index " << (int)p->move_index << " win weight=" << p->winWeight << endl;
 #endif
    }
    // Now compute the weights
    int totalWeight = 0;
    for (p = be; p; p = p->next) {
       int w;
+#ifdef _TRACE
+      cout << "index: " << (int)p->move_index << " ";
+#endif
       if (p->rec != book::NO_RECOMMEND) {
          w = p->rec*book::MAX_WEIGHT/100;
 #ifdef _TRACE
@@ -198,7 +201,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
           cout << "count=" << p->count << " moveEval=" <<
               (int)p->moveEval << " posEval=" << (int)p->eval << endl;
 #endif
-          if (p->first && p->count < (unsigned)Util::Max(2,minFrequency) && 
+          if (p->first && p->count < (unsigned)Util::Max(2,minFrequency) &&
               (p->moveEval != NO_MOVE_EVAL || p->eval != NO_POSITION_EVAL)) {
              // This move is in the first annotated book file but
              // occurs elsewhere with very low frequency. If we have
@@ -229,7 +232,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
 #ifdef _TRACE
          cout << " computed weight=" << w << endl;
          int w1 = w;
-#endif 
+#endif
          if (p->moveEval != NO_MOVE_EVAL) {
             // if there is an eval (from a NAG) for the move, use that
             // to modify the weight
@@ -255,7 +258,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
          }
 #ifdef _TRACE
          if (w1 != w) cout << "adjusted weight: " << w << endl;
-#endif 
+#endif
       }
       // This weight is not normalized yet, so allow it to exceed max weight
       w = Util::Min(w,2*book::MAX_WEIGHT);
@@ -271,6 +274,9 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
          // no moves have non-zero weight
          p->weight = 0;
       }
+#ifdef _TRACE
+      cout << "index " << (int)p->move_index << " normalized weight: " << p->weight << endl;
+#endif
    }
 }
 
@@ -310,7 +316,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
          " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
          Bitboard(board.hashCode()).lovalue() << (dec) <<
          " index = " << (int)move_index << " from bk = " << (int)is_first_file <<
-         " recommend=" << (int)recommend << endl;
+          " pos. eval=" << (int)var.eval << " moveEval=" << (int)m.moveEval << " recommend=" << (int)recommend << endl;
 #endif
    }
    else {
@@ -325,7 +331,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
       }
       if (found) {
          // Move already in hash table
-         p->count++; 
+         p->count++;
          if (var.result == White_Win) {
             p->white_win_loss++;
          }
@@ -345,10 +351,12 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
          cout << "updating: " <<
             " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
             Bitboard(board.hashCode()).lovalue() << (dec) <<
-            " index = " << (int)move_index << 
+            " index = " << (int)move_index <<
             " first = " << (int)is_first_file <<
             " winloss=" << p->white_win_loss <<
             " rec=" << p->rec <<
+            " pos. eval=" << (int)p->eval <<
+            " moveEval=" << (int)p->moveEval <<
             " count=" << p->count << endl;
 #endif
       }
@@ -359,7 +367,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
             " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
             Bitboard(board.hashCode()).lovalue() << (dec) <<
             " index = " << (int)move_index << " first = " << (int)is_first_file <<
-            " recommend=" << (int)recommend << endl;
+             " pos. eval =" << (int)var.eval << " move eval=" << (int)m.moveEval << " recommend=" << (int)recommend << endl;
 #endif
          BookEntry *new_entry;
          try {
@@ -418,7 +426,7 @@ static void processVar(const Variation &var, bool first) {
             ++ply;
             board.doMove(m.move);
         }
-    }   
+    }
 }
 
 static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
@@ -453,7 +461,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
       Variation varStack[MAX_VAR];
       varStack[var++] = Variation(board,0);
       Variation &topVar = varStack[0];
-      
+
 
       Board p1,p2;
       for (;;) {
@@ -514,7 +522,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
                  // get last move and set its eval
                  varStack[var-1].moves[varStack[var-1].moves.size()-1].moveEval = (*it).second;
              }
-             //check for position eval 
+             //check for position eval
              map<string,PositionEval>::const_iterator it2 =
                  positionEvals.find(tok.val);
              if (it2 != positionEvals.end()) {
@@ -571,7 +579,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
             // parse the move
             Move move = Notation::value(board,side,Notation::SAN_IN,tok.val);
             if (IsNull(move)) {
-                cerr << "Illegal move: " << tok.val << 
+                cerr << "Illegal move: " << tok.val <<
                    " in game " << games << ", file " <<
                    book_name << endl;
                 return -1;
@@ -579,7 +587,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
             else {
                 int move_indx = get_move_indx(board,move);
                 if (move_indx == -1) {
-                    cerr << "Illegal move: " << tok.val << 
+                    cerr << "Illegal move: " << tok.val <<
                         " in game " << games << ", file " <<
                         book_name << endl;
                     return -1;
@@ -592,11 +600,11 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
                     cout << "adding to stack " << var-1 << " ";
                     MoveImage(move,cout);
                     cout << endl;
-#endif                        
+#endif
                     varStack[var-1].moves.push_back(m);
 #ifdef _TRACE
                     cout << " size=" << varStack[var-1].moves.size() << endl;
-                        
+
 #endif
                 }
             }
@@ -606,7 +614,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
             side = OppositeColor(side);
          }
          else if (tok.type == ChessIO::Unknown) {
-            cerr << "Unrecognized text: " << tok.val << 
+            cerr << "Unrecognized text: " << tok.val <<
                          " in game " << games << ", file " <<
                           book_name << endl;
          }
@@ -700,7 +708,7 @@ int CDECL main(int argc, char **argv)
                ++arg;
                minFrequency = (unsigned)atoi(argv[arg]);
                break;
-            case 'v': 
+            case 'v':
                 verbose = true;
                 break;
             default:
@@ -751,6 +759,9 @@ int CDECL main(int argc, char **argv)
    while (it != hashTable->end()) {
        BookEntry* be = (*it).second;
        // Note: (*it).first is the hash code
+#ifdef _TRACE
+       cout << "h:" << (hex) << (*it).first << (dec) << endl;
+#endif
        computeWeights((*it).first,be);
        int added = 0;
        while (be) {
