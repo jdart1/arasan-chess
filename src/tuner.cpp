@@ -71,10 +71,6 @@ static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 4.0;
 
-static int first_index = 0;
-
-static int last_index = Tune::NUM_MISC_PARAMS;
-
 static vector<GameInfo *> tmpdata;
 
 static atomic<int> phase2_game_index;
@@ -160,7 +156,6 @@ static void usage()
    cerr << " -i <input parameter file> -o <output parameter file>" << endl;
    cerr << " -r apply regularization" << endl;
    cerr << " -x <output objective file>" << endl;
-   cerr << " -f <first_parameter_name> -s <last_parameter_name>" << endl;
    cerr << " -n <iterations>" << endl;
    cerr << " -V validate only (compute objective)" << endl;
 }
@@ -227,7 +222,7 @@ static double calc_penalty()
    double l2 = 0.0;
    if (regularize) {
 
-      for (int i = first_index; i < last_index; i++) {
+      for (int i = 0; i < tune_params.numTuningParams(); i++) {
          Tune::TuneParam p;
          tune_params.getParam(i,p);
          // apply penalty only for parameters being tuned
@@ -1235,7 +1230,6 @@ int CDECL main(int argc, char **argv)
     string input_file;
 
     int arg = 0;
-    string first_param, last_param;
     string x0_input_file_name;
 
     int write_sol = 0;
@@ -1256,16 +1250,8 @@ int CDECL main(int argc, char **argv)
           ++arg;
           x0_input_file_name = argv[arg];
        }
-       else if (strcmp(argv[arg],"-f")==0) {
-          ++arg;
-          first_param = argv[arg];
-       }
        else if (strcmp(argv[arg],"-r")==0) {
           regularize = true;
-       }
-       else if (strcmp(argv[arg],"-s")==0) {
-          ++arg;
-          last_param = argv[arg];
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
@@ -1300,28 +1286,6 @@ int CDECL main(int argc, char **argv)
       exit(0);
     }
 
-    last_index = tune_params.numTuningParams();
-
-    if (first_param.length()) {
-       first_index = tune_params.findParamByName(first_param);
-       if (first_index == -1) {
-          cerr << "Error: Parameter named " << first_param << " not found." << endl;
-          exit(-1);
-       }
-    }
-    if (last_param.length()) {
-       last_index = tune_params.findParamByName(last_param);
-       if (last_index == -1) {
-          cerr << "Error: Parameter named " << last_param << " not found." << endl;
-          exit(-1);
-       }
-    }
-
-    const int dim = last_index - first_index + 1;
-    if (dim<=0) {
-       cerr << "Error: 2nd named parameter is before 1st!" << endl;
-       exit(-1);
-    }
     if (arg >= argc) {
        cerr << "no file name specified" << endl;
        usage();
