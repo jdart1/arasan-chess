@@ -470,13 +470,13 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
             else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount()>=0);
+               ASSERT(ourmat.majorCount()>0);
                score += APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               ASSERT(oppmat.majorCount()>=0);
-               score += APARAM(RBN_ADJUST,Util::Min(3,oppmat.majorCount()-1));
+               ASSERT(ourmat.majorCount()>0);
+               score += APARAM(RBN_ADJUST,Util::Min(3,ourmat.majorCount()-1));
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -1491,6 +1491,7 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " potential passer";
 #endif
+            td.flags |= PawnDetail::POTENTIAL_PASSER;
             if (diff > 0) {
                potentialPlus.set(sq);
             }
@@ -1507,7 +1508,6 @@ void Scoring::calcPawnData(const Board &board,
                // Two potential passers share the same blocker(s).
                // Score according to the most advanced one.
                if (rank > rankdup) {
-                  td.flags |= PawnDetail::POTENTIAL_PASSER;
                   int i = 0;
 #ifdef _DEBUG
                   bool found = false;

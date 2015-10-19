@@ -577,13 +577,13 @@ static void adjustMaterialScore(const Board &board, ColorType side,
             else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount()>=0);
+               ASSERT(ourmat.majorCount()>0);
                grads[Tune::RB_ADJUST1+Util::Min(3,ourmat.majorCount()-1)] += inc;
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               ASSERT(oppmat.majorCount()>=0);
-               grads[Tune::RBN_ADJUST1+Util::Min(3,oppmat.majorCount()-1)] += inc;
+               ASSERT(ourmat.majorCount()>0);
+               grads[Tune::RBN_ADJUST1+Util::Min(3,ourmat.majorCount()-1)] += inc;
             }
         }
         // Q vs RB or RN is already dealt with by piece values
