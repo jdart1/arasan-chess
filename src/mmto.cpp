@@ -152,15 +152,17 @@ static Parse2Data data2[MAX_CORES];
 
 static void usage()
 {
-   cerr << "Usage: mmto -a use AdaGrad" << endl;
-   cerr << "-c <cores>" << endl;
-   cerr << "-d just write out current parameters values to params.cpp" << endl;
-   cerr << "-i <input parameter file> -o <output parameter file>" << endl;
-   cerr << "-r apply regularization" << endl;
-   cerr << "-x <output objective file>" << endl;
-   cerr << "-f <first_parameter_name> -s <last_parameter_name>" << endl;
-   cerr << "-n <iterations>" << endl;
-   cerr << "-V validate only (compute objective)" << endl;
+   cerr << "Usage: mmto <options> <training file>" << endl;
+   cerr << "Options:" << endl;
+   cerr << " -a use AdaGrad" << endl;
+   cerr << " -c <cores>" << endl;
+   cerr << " -d just write out current parameters values to params.cpp" << endl;
+   cerr << " -i <input parameter file> -o <output parameter file>" << endl;
+   cerr << " -r apply regularization" << endl;
+   cerr << " -x <output objective file>" << endl;
+   cerr << " -f <first_parameter_name> -s <last_parameter_name>" << endl;
+   cerr << " -n <iterations>" << endl;
+   cerr << " -V validate only (compute objective)" << endl;
 }
 
 static double func( double x ) {
@@ -1224,16 +1226,11 @@ int CDECL main(int argc, char **argv)
     options.search.hash_table_size = 0;
     options.search.easy_threshold = LEARNING_SEARCH_WINDOW;
     options.learning.position_learning = 0;
-
-//    if (EGTBMenCount) {
-//        cerr << "Initialized tablebases" << endl;
-//    }
     options.book.book_enabled = options.log_enabled = 0;
     options.learning.position_learning = false;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
     options.search.use_tablebases = false;
 #endif
-//    options.search.easy_plies = 0;
 
     string input_file;
 
