@@ -72,8 +72,10 @@ struct PositionInfo
       }
 };
 
-typedef vector <PositionInfo> GameInfo;
-
+struct GameInfo {
+  vector <PositionInfo> pis;
+  string result;
 };
 
+};
 #endif

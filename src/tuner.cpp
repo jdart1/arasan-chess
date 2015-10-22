@@ -41,6 +41,8 @@ using namespace tuner;
 
 static bool regularize = false;
 
+static bool texel = false;
+
 static bool use_adagrad = false;
 
 static int iterations = 2;
@@ -70,6 +72,8 @@ static const int PV_RECALC_INTERVAL = 16;
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 4.0;
+static const double PARAM1 = 2.69044;
+static const double PARAM2 = 1.82372;
 
 static vector<GameInfo *> tmpdata;
 
@@ -160,6 +164,53 @@ static void usage()
    cerr << " -V validate only (compute objective)" << endl;
 }
 
+static double texelSigmoid(double val) {
+   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val/4)));
+   if (s < -1.0) return -1.0;
+   if (s > 1.0) return 1.0;
+   return s;
+}
+
+static double texelSigmoidDeriv( double x, double result, const ColorType side )
+{
+   if (side == Black) x = -x;
+
+   double d = 1.0/(1.0+exp(-PARAM1*x/4));
+   if (d < 0.0) d = 0.0;
+   if (d > 1.0) d = 1.0;
+   return -2*(-0.5+texelSigmoid(x)-result)*PARAM2*(PARAM1/4)*d*(1.0-d);
+}
+
+double result_val(const string &res) 
+{
+   double result;
+   if (res == "0-1")
+      result = -1.0;
+   else if (res == "1-0")
+      result = 1.0;
+   else if (res == "1/2-1/2")
+      result = 0.0;
+   else if (res == "*")
+      return 0.0;
+   else {
+      cerr << "Missing or unrecognized result: " << res << endl;
+      return 0.0;
+   }
+   return result;
+}
+
+// value is eval in pawn units; res is result string for game
+static double computeErrorTexel(double value,const string &res,const ColorType side)
+{
+   double result = result_val(res);
+
+   if (side == Black) value = -value;
+
+   double predict = texelSigmoid(value);
+
+   return ((double)result - predict)*((double)result - predict);
+}
+
 static double func( double x ) {
    const double delta = (double)LEARNING_SEARCH_WINDOW / 7.0;
    if ( x < -LEARNING_SEARCH_WINDOW ) {
@@ -237,8 +288,47 @@ static double calc_penalty()
 
 // search all moves from a position, creating a Pv for each legal move
 static void make_pv(const Board &board, ThreadData &td,
-                   vector<Pv> &pvs,Parse1Data &pdata, Move record_move )
+                    vector<Pv> &pvs,Parse1Data &pdata, Move record_move,
+                    const string &result)
 {
+   if (texel) {
+      // We only care about the score for the PV and the PV moves.
+      // We do not need scores for all the moves.
+      PackedMove pv[MAX_PV_LENGTH];
+      Statistics stats;
+      (void) td.searcher->findBestMove(board,
+                                       FixedDepth,
+                                       999999,
+                                       0,
+                                       LEARNING_SEARCH_DEPTH,
+                                       false,
+                                       false,
+                                       stats,
+                                       Silent);
+      int len = 0;
+      const int score = stats.value;
+      for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
+#ifdef _TRACE
+         MoveImage(stats.best_line[len],cout);
+         cout << ' ';
+#endif
+         pv[len] = pack_move(stats.best_line[len]);
+      }
+#ifdef _TRACE
+      cout << endl;
+#endif
+      pvs.push_back(Pv(score,pv,len));
+      const double x = double(score)/double(PAWN_VALUE);
+      double func_value = computeErrorTexel(x, result, board.sideToMove());
+      pdata.target += func_value;
+#ifdef _TRACE
+      cout << "score=" << x << " sigmoid=" << texelSigmoid(x) << " error=" << func_value << " target sum=" << pdata.target << endl;
+#endif
+      pdata.num_moves++;
+      return;
+   }
+   
+
    RootMoveGenerator mg(board,NULL,record_move);
    Move m;
    bool first = true;
@@ -340,7 +430,8 @@ static void make_pv(const Board &board, ThreadData &td,
 }
 
 static int read_next_game(ifstream &infile, const string &file_name,
-                          vector<Move>&moves, unsigned long &games)
+                          vector<Move>&moves, unsigned long &games,
+                          string &result)
 {
    ArasanVector<ChessIO::Header> hdrs;
    if (!infile.eof() && infile.good()) {
@@ -407,7 +498,7 @@ static int read_next_game(ifstream &infile, const string &file_name,
                   file_name << endl;
             }
             else if (tok.type == ChessIO::Result) {
-               break;
+               result = tok.val;
             }
             else if (tok.type == ChessIO::OpenVar || tok.type == ChessIO::CloseVar) {
                cerr << "Warning: variations detected in game " << games << ", file " << file_name << endl;
@@ -427,6 +518,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
    pdata.clear();
    int have_next_game = 1;
    vector<Move> moves;
+   string result;
    while (have_next_game) {
       Board board;
       if (moves.size()) {
@@ -438,6 +530,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
             cerr << "out of memory!" << endl;
             exit(-1);
          }
+         g->result = result;
          for (vector<Move>::const_iterator it = moves.begin();
               it != moves.end() && !IsNull(*it);
               it++) {
@@ -455,12 +548,12 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
             if (val.val == 0) { // not already present
                val.val++; // mark present
                Unlock(hash_lock);
-               make_pv(board, td, pi.pvs, pdata, record_move);
+               make_pv(board, td, pi.pvs, pdata, record_move, result);
             }
             else {
                Unlock(hash_lock);
             }
-            g->push_back(pi);
+            g->pis.push_back(pi);
             board.doMove(record_move);
          }
          Lock(data_lock);
@@ -472,7 +565,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          moves.clear();
          Lock(file_lock);
          try {
-            have_next_game = read_next_game(game_file, game_file_name, moves, games);
+            have_next_game = read_next_game(game_file, game_file_name, moves, games, result);
          } catch(std::bad_alloc) {
             cerr << "out of memory reading game!" << endl;
             Unlock(file_lock);
@@ -748,6 +841,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
       }
       if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {
+         ASSERT(Rank(pds[i].sq,side)<7);
          grads[Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
             tune_params.scale(inc,Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2,mLevel);
          grads[Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2] +=
@@ -814,8 +908,54 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 }
 
+void validateGradient(Scoring &s, const Board &board, ColorType side, int eval) {
+   vector<double> derivs(tune_params.numTuningParams());
+   for (int i = 0; i < tune_params.numTuningParams(); i++) {
+      derivs[i] = 0.0;
+   }
+   double inc = 1.0;
+   // compute the partial derivative vector for this position
+   update_deriv_vector(s, board, side, derivs, inc);
+   update_deriv_vector(s, board, OppositeColor(side), derivs, -inc);
+   for (int i = 0; i < tune_params.numTuningParams(); i++) {
+      if (derivs[i] != 0.0) {
+         Tune::TuneParam p;
+         tune_params.getParam(i,p);
+         int val = p.current;
+         int range = p.max_value - p.min_value;
+         int delta = Util::Max(1,range/20);
+         // increase by delta
+         int newval = val + delta;
+         tune_params.updateParamValue(i,newval);
+         tune_params.applyParams();
+         int score = s.evalu8(board,false);
+         if (board.sideToMove() != side) {
+            score = -score;
+         }
+         // compare predicted new value from gradient with
+         // actual value
+         if (fabs(eval + derivs[i]*delta - score)>4.0) {
+            cerr << board << endl;
+            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << eval + derivs[i]*delta << " actual score=" << score << endl;
+            // The following code is useful when running under
+            // gdb - it recomputes the before and after eval.
+            tune_params.updateParamValue(i,val);
+            tune_params.applyParams();
+            s.evalu8(board,false);
+            const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,false);
+            tune_params.updateParamValue(i,newval);
+            tune_params.applyParams();
+            s.evalu8(board,false);
+         }
+         // restore old value
+         tune_params.updateParamValue(i,val);
+         tune_params.applyParams();
+      }
+   }
+}
+
 // Computes one summand of equation (8) in the paper
-static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, const PositionInfo &pi ) {
+static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, const PositionInfo &pi, const string &result) {
 
    unsigned int nc = 0;
    int record_value;
@@ -862,7 +1002,25 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
    cout << ' ' << record_value << endl;
 #endif
 
-   // now iterate over the remaining legal moves
+   if (texel) {
+      // only need the value at the end of the 1st pv
+      double func_value = computeErrorTexel(record_value,result,board.sideToMove());
+      double dT = texelSigmoidDeriv(record_value,result_val(result),board.sideToMove());
+      if (turn0 == Black) {
+         dT = -dT;
+      }
+      // update derivatives with a new summand. This is based on
+      // the position at the of the pv.
+      update_deriv_vector(s, board, Black, data.grads, dT);
+      update_deriv_vector(s, board, White, data.grads, -dT);
+      data.target += func_value;
+#ifdef VALIDATE_GRADIENT
+      validateGradient(s, board, board.sideToMove(), record_value);
+#endif
+      return;
+   }
+         
+   // iterate over the remaining legal moves
    if (pi.pvs.size() > 1) {
       for (vector<Pv>::const_iterator it = pi.pvs.begin()+1;
            it != pi.pvs.end();
@@ -892,14 +1050,14 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
          MoveImage(unpack_move(board,(*it).pv[0]),cout);
          cout << ' ' << value << endl;
 #endif
+         double func_value, dT;
          // accumulate differences with record value
-         const double func_value = func( value - record_value );
-         data.target += func_value;
+         func_value = func( value - record_value );
 #ifdef _TRACE
          cout << "diff=" << value-record_value << " target increment = " << func_value << " target sum=" << data.target << endl;
 #endif
          // and compute dT (first factor of equation (8))
-         double dT = dfunc( value - record_value );
+         dT = dfunc( value - record_value );
          if (turn0 == Black) {
             dT = -dT;
          }
@@ -908,49 +1066,9 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
          // the position at the of the pv.
          update_deriv_vector(s, board_copy, Black, data.grads, dT);
          update_deriv_vector(s, board_copy, White, data.grads, -dT);
+         data.target += func_value;
 #ifdef VALIDATE_GRADIENT
-         vector<double> derivs(tune_params.numTuningParams());
-         for (int i = 0; i < tune_params.numTuningParams(); i++) {
-            derivs[i] = 0.0;
-         }
-         double inc = 1.0;
-         // compute the partial derivative vector for this position
-         update_deriv_vector(s, board_copy, board.sideToMove(), derivs, inc);
-         update_deriv_vector(s, board_copy, board.oppositeSide(), derivs, -inc);
-         for (int i = 0; i < tune_params.numTuningParams(); i++) {
-            if (derivs[i] != 0.0) {
-               Tune::TuneParam p;
-               tune_params.getParam(i,p);
-               int val = p.current;
-               int range = p.max_value - p.min_value;
-               int delta = Util::Max(1,range/20);
-               // increase by delta
-               int newval = val + delta;
-               tune_params.updateParamValue(i,newval);
-               tune_params.applyParams();
-               int score = s.evalu8(board_copy,false);
-               if (board.sideToMove() != board_copy.sideToMove()) {
-                  score = -score;
-               }
-               // compare predicted new value from gradient with
-               // actual value
-               if (fabs(value + derivs[i]*delta - score)>4.0) {
-                  cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " val=" << val << " newval=" << newval << " delta=" << delta << " deriv=" << derivs[i] << " old score=" << value << " predicted score=" << value + derivs[i]*delta << " actual score=" << score << endl;
-                  // The following code is useful when running under
-                  // gdb - it recomputes the before and after eval.
-                  tune_params.updateParamValue(i,val);
-                  tune_params.applyParams();
-                  s.evalu8(board_copy,false);
-                  cerr << "new score" << endl;
-                  tune_params.updateParamValue(i,newval);
-                  tune_params.applyParams();
-                  s.evalu8(board_copy,false);
-               }
-               // restore old value
-               tune_params.updateParamValue(i,val);
-               tune_params.applyParams();
-            }
-         }
+         validateGradient(s, board_copy, board.sideToMove(), value);
 #endif
          nc++;
       }
@@ -958,8 +1076,10 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 
    // perform diff with record move position (2nd term of 2nd factor
    // in equation (8))
-   update_deriv_vector(s, record_board, Black, data.grads, -sum_dT);
-   update_deriv_vector(s, record_board, White, data.grads, sum_dT);
+   if (!texel) {
+      update_deriv_vector(s, record_board, Black, data.grads, -sum_dT);
+      update_deriv_vector(s, record_board, White, data.grads, sum_dT);
+   }
 #ifdef _TRACE
    cout << "accumulated target: " << data.target << endl;
 #endif
@@ -982,14 +1102,14 @@ static void parse2(ThreadData &td, Parse2Data &data)
       // iterate over the game moves and the positions derived from them
       Board board;
       int ply = 0;
-      for (vector<PositionInfo>::const_iterator it2 = g->begin();
-           it2 != g->end();
+      for (vector<PositionInfo>::const_iterator it2 = g->pis.begin();
+           it2 != g->pis.end();
            it2++, ply++) {
          PositionInfo pi = *it2;
          // skip calculation if no pvs (this indicates a position/
          // record move pair that is a duplicate). Also skip if < MIN_PLY.
          if (pi.pvs.size() > 0 && ply >= MIN_PLY) {
-            calc_derivative(s, data, board, pi);
+            calc_derivative(s, data, board, pi, g->result);
          }
          board.doMove(pi.record_move);
       }
@@ -1252,6 +1372,9 @@ int CDECL main(int argc, char **argv)
        }
        else if (strcmp(argv[arg],"-r")==0) {
           regularize = true;
+       }
+       else if (strcmp(argv[arg],"-t")==0) {
+          texel = true;
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;

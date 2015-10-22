@@ -1270,9 +1270,7 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " passed";
 #endif
-#ifdef TUNE
             td.flags |= PawnDetail::POTENTIAL_PASSER;
-#endif         
             // Doubled but potentially passed pawn.
             // Don't score as passed but give "potential passer" bonus
             entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
@@ -1491,7 +1489,6 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " potential passer";
 #endif
-            td.flags |= PawnDetail::POTENTIAL_PASSER;
             if (diff > 0) {
                potentialPlus.set(sq);
             }
@@ -1508,6 +1505,7 @@ void Scoring::calcPawnData(const Board &board,
                // Two potential passers share the same blocker(s).
                // Score according to the most advanced one.
                if (rank > rankdup) {
+                  td.flags |= PawnDetail::POTENTIAL_PASSER;
                   int i = 0;
 #ifdef _DEBUG
                   bool found = false;
@@ -1531,9 +1529,7 @@ void Scoring::calcPawnData(const Board &board,
                }
             }
             else {
-#ifdef TUNE
                td.flags |= PawnDetail::POTENTIAL_PASSER;
-#endif
                entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
                entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
             }
