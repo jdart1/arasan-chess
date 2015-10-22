@@ -546,10 +546,10 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE); // even
         }
         else if (oppmat.infobits() == Material::KQB) {
-            score -= BISHOP_VALUE;  // even
+            score += BISHOP_VALUE;  // even
         }
         else if (oppmat.infobits() == Material::KQN) {
-            score -= KNIGHT_VALUE;  // even
+            score += KNIGHT_VALUE;  // even
         }
         else if (oppmat.infobits() == Material::KRN) { // close to even
             score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)-PAWN_VALUE/4;
