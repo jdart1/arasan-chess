@@ -27,7 +27,7 @@ extern "C" {
 #endif
 };
 
-//#define VALIDATE_GRADIENT
+#define VALIDATE_GRADIENT
 
 // MMTO tuning code for Arasan, based on:
 // Kunihuto Hoki & Tomoyuki Kaneko, "Large-Scale Optimization for Evaluation
@@ -72,7 +72,7 @@ static const int PV_RECALC_INTERVAL = 16;
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 4.0;
-static const double PARAM1 = 2.69044;
+static const double PARAM1 = 0.67261;
 static const double PARAM2 = 1.82372;
 
 static vector<GameInfo *> tmpdata;
@@ -165,7 +165,7 @@ static void usage()
 }
 
 static double texelSigmoid(double val) {
-   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val/4)));
+   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val)));
    if (s < -1.0) return -1.0;
    if (s > 1.0) return 1.0;
    return s;
@@ -173,12 +173,13 @@ static double texelSigmoid(double val) {
 
 static double texelSigmoidDeriv( double x, double result, const ColorType side )
 {
-   if (side == Black) x = -x;
+   //if (side == Black) x = -x;
 
-   double d = 1.0/(1.0+exp(-PARAM1*x/4));
+   double e = exp(-PARAM1*x);
+   double d = 1.0/(1.0+e);
    if (d < 0.0) d = 0.0;
    if (d > 1.0) d = 1.0;
-   return -2*(-0.5+texelSigmoid(x)-result)*PARAM2*(PARAM1/4)*d*(1.0-d);
+   return -e*PARAM2*PARAM1/((1.0+e)*(1.0+e));
 }
 
 double result_val(const string &res) 
@@ -942,7 +943,6 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, int eval) 
             tune_params.updateParamValue(i,val);
             tune_params.applyParams();
             s.evalu8(board,false);
-            const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,false);
             tune_params.updateParamValue(i,newval);
             tune_params.applyParams();
             s.evalu8(board,false);
@@ -1005,17 +1005,19 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
    if (texel) {
       // only need the value at the end of the 1st pv
       double func_value = computeErrorTexel(record_value,result,board.sideToMove());
-      double dT = texelSigmoidDeriv(record_value,result_val(result),board.sideToMove());
-      if (turn0 == Black) {
+      // compute the change in squared error per delta in eval
+      // (partial derivative)
+      double dT = texelSigmoidDeriv(record_value,result_val(result),board.sideToMove())*2*(texelSigmoid(record_value)-result_val(result));
+      if (turn0 == White) {
          dT = -dT;
       }
       // update derivatives with a new summand. This is based on
-      // the position at the of the pv.
+      // the position at the end of the pv.
       update_deriv_vector(s, board, Black, data.grads, dT);
       update_deriv_vector(s, board, White, data.grads, -dT);
       data.target += func_value;
 #ifdef VALIDATE_GRADIENT
-      validateGradient(s, board, board.sideToMove(), record_value);
+      validateGradient(s, board_copy, board.sideToMove(), record_value);
 #endif
       return;
    }
@@ -1076,10 +1078,8 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 
    // perform diff with record move position (2nd term of 2nd factor
    // in equation (8))
-   if (!texel) {
-      update_deriv_vector(s, record_board, Black, data.grads, -sum_dT);
-      update_deriv_vector(s, record_board, White, data.grads, sum_dT);
-   }
+   update_deriv_vector(s, record_board, Black, data.grads, -sum_dT);
+   update_deriv_vector(s, record_board, White, data.grads, sum_dT);
 #ifdef _TRACE
    cout << "accumulated target: " << data.target << endl;
 #endif
