@@ -27,8 +27,6 @@ extern "C" {
 #endif
 };
 
-#define VALIDATE_GRADIENT
-
 // MMTO tuning code for Arasan, based on:
 // Kunihuto Hoki & Tomoyuki Kaneko, "Large-Scale Optimization for Evaluation
 // Functions with Minimax Search,"
@@ -161,7 +159,7 @@ static void usage()
    cerr << " -r apply regularization" << endl;
    cerr << " -x <output objective file>" << endl;
    cerr << " -n <iterations>" << endl;
-   cerr << " -V validate only (compute objective)" << endl;
+   cerr << " -V validate gradient" << endl;
 }
 
 static double texelSigmoid(double val) {
@@ -708,11 +706,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 
    const int mLevel = board.getMaterial(oside).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
-#ifdef VALIDATE_GRADIENT
-   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,false);
-#else
-   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,true);
-#endif
+   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
       tune_params.scale(inc,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
    Bitboard knight_bits(board.knight_bits[side]);
@@ -987,11 +981,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #endif
    // save position at end of 1st pv
    Board record_board(board_copy);
-#ifdef VALIDATE_GRADIENT
-   record_value = s.evalu8(board_copy,false);
-#else
-   record_value = s.evalu8(board_copy);
-#endif
+   record_value = s.evalu8(board_copy,!validate);
 
    if (board.sideToMove() != board_copy.sideToMove()) {
       record_value = -record_value;
@@ -1016,9 +1006,9 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
       update_deriv_vector(s, board, Black, data.grads, dT);
       update_deriv_vector(s, board, White, data.grads, -dT);
       data.target += func_value;
-#ifdef VALIDATE_GRADIENT
-      validateGradient(s, board_copy, board.sideToMove(), record_value);
-#endif
+      if (validate) {
+         validateGradient(s, board_copy, board.sideToMove(), record_value);
+      }
       return;
    }
          
@@ -1069,9 +1059,9 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
          update_deriv_vector(s, board_copy, Black, data.grads, dT);
          update_deriv_vector(s, board_copy, White, data.grads, -dT);
          data.target += func_value;
-#ifdef VALIDATE_GRADIENT
-         validateGradient(s, board_copy, board.sideToMove(), value);
-#endif
+         if (validate) {
+            validateGradient(s, board_copy, board.sideToMove(), value);
+         }
          nc++;
       }
    }
@@ -1308,7 +1298,6 @@ static void learn()
       cout << "pass 2 target=" << data2[0].target << " penalty=" << calc_penalty
 () << " objective=" << data2[0].target + calc_penalty() << endl;
       data2[0].target += calc_penalty();
-      if (validate) break;
       if (data2[0].target < best) {
          best = data2[0].target;
          cout << "new best objective: " << best << endl;
@@ -1398,10 +1387,6 @@ int CDECL main(int argc, char **argv)
           usage();
           exit(-1);
        }
-    }
-
-    if (validate) {
-       regularize = false;
     }
 
     if (write_sol) {

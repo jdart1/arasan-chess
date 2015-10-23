@@ -474,12 +474,13 @@ The following command-line options are supported:<p>
 <li>-i &lt;input parameter file&gt; specify the name of a file containing
 starting values for the parameters (can be the x0 file from a previous run).
 Without this some reasonable starting defaults will be used.</li>
+<li>-t use the "Texel" tuning method instead of MMTO.</li>
 <li>-x &lt;output parameter file&gt; specify the name of the output file (instead of "x0")</li>
 <li>-r apply L2 regularization</li>
 <li>-o &lt;output .cpp file&gt; specify the name of the .cpp file that is
 output (instead of params.cpp)</li>
 <li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
-<li>-V validate only (compute objective)</li> << endl;
+<li>-V validate gradients</li> << endl;
 </ul>
 
 <h2>Algorithms and data structures</h2>
