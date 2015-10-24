@@ -1270,11 +1270,13 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " passed";
 #endif
+            /*
             td.flags |= PawnDetail::POTENTIAL_PASSER;
             // Doubled but potentially passed pawn.
             // Don't score as passed but give "potential passer" bonus
             entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
             entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
+            */
             passed = 0;
          }
 
