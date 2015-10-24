@@ -443,11 +443,21 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           // we have extra minor (but not only a minor)
           if (oppmat.pieceBits() == Material::KR) {
              // KR + minor vs KR - draw w. no pawns so lower score
-             score += PARAM(KRMINOR_VS_R);
+             if (ourmat.hasPawns()) {
+                score += PARAM(KRMINOR_VS_R);
+             } else {
+                score += PARAM(KRMINOR_VS_R_NO_PAWNS);
+             }
           }
-          else if (oppmat.pieceBits() == Material::KQ) {
+          else if ((ourmat.pieceBits() == Material::KQN ||
+                   ourmat.pieceBits() == Material::KQB) &&
+                   oppmat.pieceBits() == Material::KQ) {
               // Q + minor vs Q is a draw, generally
-              score += PARAM(KQMINOR_VS_Q);
+             if (ourmat.hasPawns()) {
+                score += PARAM(KQMINOR_VS_Q);
+             } else {
+                score += PARAM(KQMINOR_VS_Q_NO_PAWNS);
+             }
           } else if (oppmat.pieceValue() > ROOK_VALUE) {
              // Knight or Bishop traded for pawns. Bonus for piece.
              score += PARAM(MINOR_FOR_PAWNS);

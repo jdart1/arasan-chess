@@ -70,7 +70,9 @@ class Tune {
     PIN_MULTIPLIER_END,
     ROOK_VS_PAWNS,
     KRMINOR_VS_R,
+    KRMINOR_VS_R_NO_PAWNS,
     KQMINOR_VS_Q,
+    KQMINOR_VS_Q_NO_PAWNS,
     MINOR_FOR_PAWNS,
     ENDGAME_PAWN_ADVANTAGE,
     PAWN_ENDGAME1,
@@ -247,7 +249,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 159;
+  static const int NUM_MISC_PARAMS = 161;
 
   double scale(double value,int index,int materialLevel) const;
 

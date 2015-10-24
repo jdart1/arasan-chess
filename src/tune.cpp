@@ -63,7 +63,9 @@ static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
    Tune::TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,500),
    Tune::TuneParam(Tune::ROOK_VS_PAWNS,"rook_vs_pawns",333,0,500,Tune::TuneParam::Any,1),
    Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",-100,-500,0,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",-500,-3000,0,Tune::TuneParam::Any,1),
    Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",-100,-500,0,Tune::TuneParam::Any,1),
+   Tune::TuneParam(Tune::KQMINOR_VS_Q_NO_PAWNS,"kqminor_vs_q_no_pawns",-100,-3000,0,Tune::TuneParam::Any,1),
    Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",229,0,500,Tune::TuneParam::Any,1),
    Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250),
    Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500),
@@ -577,7 +579,9 @@ void Tune::applyParams() const
    Scoring::Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
    Scoring::Params::ROOK_VS_PAWNS = tune_params[ROOK_VS_PAWNS].current;
    Scoring::Params::KRMINOR_VS_R = tune_params[KRMINOR_VS_R].current;
+   Scoring::Params::KRMINOR_VS_R_NO_PAWNS = tune_params[KRMINOR_VS_R_NO_PAWNS].current;
    Scoring::Params::KQMINOR_VS_Q = tune_params[KQMINOR_VS_Q].current;
+   Scoring::Params::KQMINOR_VS_Q_NO_PAWNS = tune_params[KQMINOR_VS_Q_NO_PAWNS].current;
    Scoring::Params::MINOR_FOR_PAWNS = tune_params[MINOR_FOR_PAWNS].current;
    Scoring::Params::ENDGAME_PAWN_ADVANTAGE = tune_params[ENDGAME_PAWN_ADVANTAGE].current;
    Scoring::Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;
