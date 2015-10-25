@@ -96,6 +96,7 @@ static list<string> pending;
 static bool doTrace = false;
 static bool easy = false;
 static int game_end = 0;
+static int result_pending = 0;
 static int32 last_score = Constants::MATE;
 static ECO *ecoCoder = NULL;
 static string hostname;
@@ -1188,6 +1189,8 @@ static void send_move(Board &board, Move &move, Statistics
             cout << "1/2-1/2 {" << reason << "}" << endl;
             // Wait for Winboard to send a "result" command before
             // actually concluding it's a draw.
+            // Set flag to indicate we are waiting.
+            result_pending++;
             return;
         }
     }
@@ -2985,7 +2988,7 @@ static bool do_command(const string &cmd, Board &board) {
         computer_plays_white = false;
         // Note: "new" does not reset analyze mode
         forceMode = 0;
-        game_end = 0;
+        game_end = result_pending = 0;
         testing = 0;
         computer = 0;
         opponent_name = "";
@@ -3359,7 +3362,7 @@ static bool do_command(const string &cmd, Board &board) {
                   send_move(board,reply,stats);
                }
             }
-            while (!forceMode && !analyzeMode && !game_end && !easy && time_target >= 100 /* 0.1 second */) {
+            while (!forceMode && !analyzeMode && !game_end && !result_pending && !easy && time_target >= 100 /* 0.1 second */) {
                ponder_move_ok = false;
                int result;
                // check pending commands again before pondering in case
