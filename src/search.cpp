@@ -46,7 +46,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
-static const int SEE_PRUNING_DEPTH = int(1.5*DEPTH_INCREMENT);
+static const int SEE_PRUNING_DEPTH = int(3*DEPTH_INCREMENT);
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int FORCED_EXTENSION = DEPTH_INCREMENT;
@@ -2122,7 +2122,9 @@ int Search::calcExtensions(const Board &board,
    // are pruned at low depths.
    if (!node->PV() && depth <= SEE_PRUNING_DEPTH &&
        parentNode->num_try &&
-       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+       !Scoring::mateScore(node->alpha)) {
+
        if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
        if (!swap) {
 #ifdef SEARCH_STATS
