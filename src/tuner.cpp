@@ -64,6 +64,8 @@ static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
+// Max score deviation from optimal move:
+static const int MMTO_DELTA = LEARNING_SEARCH_WINDOW/7.0;
 // L2-regularization factor
 static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16;
@@ -211,20 +213,18 @@ static double computeErrorTexel(double value,const string &res,const ColorType s
 }
 
 static double func( double x ) {
-   const double delta = (double)LEARNING_SEARCH_WINDOW / 7.0;
    if ( x < -LEARNING_SEARCH_WINDOW ) {
       x = -LEARNING_SEARCH_WINDOW;
    }
    else if ( x >  LEARNING_SEARCH_WINDOW ) {
       x = LEARNING_SEARCH_WINDOW;
    }
-   return 1.0 / ( 1.0 + exp(-x/delta) );
+   return 1.0 / ( 1.0 + exp(-x/MMTO_DELTA) );
 }
 
 // computes derivative of the sigmoid function "func", above
 static double dfunc( double x )
 {
-   const double delta = (double)LEARNING_SEARCH_WINDOW / 7.0;
    double dd, dn, dtemp, dret;
    if      ( x <= -LEARNING_SEARCH_WINDOW ) {
       dret = 0.0;
@@ -233,9 +233,9 @@ static double dfunc( double x )
       dret = 0.0;
    }
    else {
-      dn    = exp( - x / delta );
+      dn    = exp( - x / MMTO_DELTA );
       dtemp = dn + 1.0;
-      dd    = delta * dtemp * dtemp;
+      dd    = MMTO_DELTA * dtemp * dtemp;
       dret  = dn / dd;
    }
    return dret;
