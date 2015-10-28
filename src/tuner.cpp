@@ -158,35 +158,17 @@ static void usage()
    cerr << " -d just write out current parameters values to params.cpp" << endl;
    cerr << " -i <input parameter file> -o <output parameter file>" << endl;
    cerr << " -r apply regularization" << endl;
+   cerr << " -t use Texel method instead of MMTO" << endl;
    cerr << " -x <output objective file>" << endl;
    cerr << " -n <iterations>" << endl;
    cerr << " -V validate gradient" << endl;
 }
 
 static double texelSigmoid(double val) {
-   if (val > LEARNING_SEARCH_WINDOW) return 1.0;
-   if (val < -LEARNING_SEARCH_WINDOW) return 0;
    return 1.0/(1.0+exp(-PARAM1*val));
 }
 
-static double texelSigmoidDeriv( double x, double result, const ColorType side )
-{
-   //if (side == Black) x = -x;
-   if      ( x <= -LEARNING_SEARCH_WINDOW ) {
-      return 0.0;
-   }
-   else if ( x >= LEARNING_SEARCH_WINDOW ) {
-      return 0.0;
-   }
-
-   double e = exp(-PARAM1*x);
-   double d = 1.0/(1.0+e);
-   if (d < 0.0) d = 0.0;
-   if (d > 1.0) d = 1.0;
-   return -e*PARAM1/((1.0+e)*(1.0+e));
-}
-
-double result_val(const string &res) 
+double result_val(const string &res)
 {
    double result;
    if (res == "0-1")
@@ -205,14 +187,24 @@ double result_val(const string &res)
 // value is eval in pawn units; res is result string for game
 static double computeErrorTexel(double value,const string &res,const ColorType side)
 {
-   double result = result_val(res);
-
    if (side == Black) value = -value;
 
    double predict = texelSigmoid(value);
 
-   return (result - predict)*(result - predict);
+   double result = result_val(res);
+
+   return - result*log(predict) - (1.0-result)*log(1-predict);
 }
+
+static double computeTexelDeriv(double value,const string &res,const ColorType side)
+{
+   if (side == Black) value = -value;
+
+   double result = result_val(res);
+
+   return (result-texelSigmoid(value));
+}
+
 
 static double func( double x ) {
    if ( x < -LEARNING_SEARCH_WINDOW ) {
@@ -308,27 +300,30 @@ static void make_pv(const Board &board, ThreadData &td,
                                        Silent);
       int len = 0;
       const int score = stats.value;
-      for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
+      // skip positions with very large scores (including mate scores)
+      if (Util::Abs(score/PAWN_VALUE)<30) {
+         for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
 #ifdef _TRACE
-         MoveImage(stats.best_line[len],cout);
-         cout << ' ';
+            MoveImage(stats.best_line[len],cout);
+            cout << ' ';
 #endif
-         pv[len] = pack_move(stats.best_line[len]);
+            pv[len] = pack_move(stats.best_line[len]);
+         }
+#ifdef _TRACE
+         cout << endl;
+#endif
+         pvs.push_back(Pv(score,pv,len));
+         const double x = double(score)/double(PAWN_VALUE);
+         double func_value = computeErrorTexel(x, result, board.sideToMove());
+         pdata.target += func_value;
+#ifdef _TRACE
+         cout << "score=" << x << " sigmoid=" << texelSigmoid(x) << " error=" << func_value << " target sum=" << pdata.target << endl;
+#endif
+         pdata.num_moves++;
       }
-#ifdef _TRACE
-      cout << endl;
-#endif
-      pvs.push_back(Pv(score,pv,len));
-      const double x = double(score)/double(PAWN_VALUE);
-      double func_value = computeErrorTexel(x, result, board.sideToMove());
-      pdata.target += func_value;
-#ifdef _TRACE
-      cout << "score=" << x << " sigmoid=" << texelSigmoid(x) << " error=" << func_value << " target sum=" << pdata.target << endl;
-#endif
-      pdata.num_moves++;
       return;
    }
-   
+
 
    RootMoveGenerator mg(board,NULL,record_move);
    Move m;
@@ -536,26 +531,33 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
               it != moves.end() && !IsNull(*it);
               it++) {
             Move record_move = *it;
-            // see if the pair position hash/move has already been used
-            BoardState s(board.state);
-            board.doMove(record_move);
-            Lock(hash_lock);
-            PositionDupEntry &val = (*hash_table)[board.hashCode()];
-            // Note: duplicated position/moves are recorded with an empty
-            // pv, so we can trace through the game again, but
-            // we won't otherwise use this position record.
-            board.undoMove(record_move,s);
             PositionInfo pi(record_move);
-            if (texel || val.val == 0) { // not already present
-               val.val++; // mark present
-               Unlock(hash_lock);
+            if (texel) {
+               // allow duplicate position/move pairs
                make_pv(board, td, pi.pvs, pdata, record_move, result);
             }
             else {
-               Unlock(hash_lock);
+               // see if the pair position hash/move has already been used
+               BoardState s(board.state);
+               board.doMove(record_move);
+               Lock(hash_lock);
+               PositionDupEntry &val = (*hash_table)[board.hashCode()];
+               // Note: duplicated position/moves are recorded with an empty
+               // pv, so we can trace through the game again, but
+               // we won't otherwise use this position record.
+               board.undoMove(record_move,s);
+               if (val.val == 0) { // not already present
+                  val.val++; // mark present
+                  Unlock(hash_lock);
+                  make_pv(board, td, pi.pvs, pdata, record_move, result);
+               }
+               else {
+                  Unlock(hash_lock);
+               }
             }
             g->pis.push_back(pi);
             board.doMove(record_move);
+            
          }
          Lock(data_lock);
          tmpdata.push_back(g);
@@ -620,7 +622,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
        return;
     }
-    
+
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
        const uint32 pieces = ourmat.pieceBits();
        if (pieces == Material::KN || pieces == Material::KB) {
@@ -658,7 +660,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
            grads[Tune::QR_ADJUST0+Util::Min(3,ourmat.minorCount())] += inc;
         }
         break;
-    } 
+    }
     case 1: {
         if (ourmat.rookCount() == oppmat.rookCount()+1) {
             if (ourmat.minorCount() == oppmat.minorCount()) {
@@ -997,29 +999,27 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
    if (texel) {
       // only need the value at the end of the 1st pv
       double func_value = computeErrorTexel(record_value,result,board.sideToMove());
-      // compute the change in squared error per delta in eval
+      // compute the change in loss function per delta in eval
       // (partial derivative)
-      double dT = texelSigmoidDeriv(record_value,result_val(result),board.sideToMove())*2*(texelSigmoid(record_value)-result_val(result));
+      double dT = computeTexelDeriv(record_value,result,board.sideToMove());
+//      cout << "err=" << func_value << " dT=" << dT << endl;
+
 /*
-      cout << "err = " << pow(texelSigmoid(record_value)-result_val(result),2.0) << endl;
-      cout << "fact1 = " << texelSigmoidDeriv(record_value,result_val(result),board.sideToMove()) <<endl;
-      cout << "fact2 = " << 2*(texelSigmoid(record_value)-result_val(result)) << endl;
-      cout << "dT=" << dT << endl;
-*/
-      if (turn0 == White) {
+      if (turn0 == Black) {
          dT = -dT;
       }
-      // update derivatives with a new summand. This is based on
-      // the position at the end of the pv.
-      update_deriv_vector(s, board, Black, data.grads, dT);
-      update_deriv_vector(s, board, White, data.grads, -dT);
+*/
+      // multiply the derivative by the x (feature) value, scaled if necessary
+      // by game phase, and add to the gradient sum.
+      update_deriv_vector(s, board, White, data.grads, dT);
+      update_deriv_vector(s, board, Black, data.grads, -dT);
       data.target += func_value;
       if (validate) {
          validateGradient(s, board_copy, board.sideToMove(), record_value);
       }
       return;
    }
-         
+
    // iterate over the remaining legal moves
    if (pi.pvs.size() > 1) {
       for (vector<Pv>::const_iterator it = pi.pvs.begin()+1;

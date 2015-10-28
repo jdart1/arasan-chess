@@ -461,6 +461,9 @@ a PGN file that contains high-quality games that serve as a reference
 set of "good" moves. The algorithm will adapt the scoring parameters
 so that the program will make moves similar to those in the training
 set.</p>
+<p>There is also some support for using the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
+on logistic regression. For this method the input file should be a PGN
+of a diverse set of games (not with all high-quality moves).</p>
 <p>The "tuner" program expects a PGN file to be specified on the command
 line. It will output two files: by default the first one is named "x0"
 and contains the tuned parameter values; the second one is a compilable
