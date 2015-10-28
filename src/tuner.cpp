@@ -63,17 +63,16 @@ static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
-static const int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
+static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // Max score deviation from optimal move:
 static const int MMTO_DELTA = LEARNING_SEARCH_WINDOW/7.0;
 // L2-regularization factor
 static const double REGULARIZATION = 1.2E-4;
-static const int PV_RECALC_INTERVAL = 16;
+static const int PV_RECALC_INTERVAL = 16; // for MMTO
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 4.0;
-static const double PARAM1 = 0.67261;
-static const double PARAM2 = 1.82372;
+static const double PARAM1 = 0.75;
 
 static vector<GameInfo *> tmpdata;
 
@@ -165,37 +164,40 @@ static void usage()
 }
 
 static double texelSigmoid(double val) {
-   double s = PARAM2*(-0.5+1.0/(1.0+exp(-PARAM1*val)));
-   if (s < -1.0) return -1.0;
-   if (s > 1.0) return 1.0;
-   return s;
+   if (val > LEARNING_SEARCH_WINDOW) return 1.0;
+   if (val < -LEARNING_SEARCH_WINDOW) return 0;
+   return 1.0/(1.0+exp(-PARAM1*val));
 }
 
 static double texelSigmoidDeriv( double x, double result, const ColorType side )
 {
    //if (side == Black) x = -x;
+   if      ( x <= -LEARNING_SEARCH_WINDOW ) {
+      return 0.0;
+   }
+   else if ( x >= LEARNING_SEARCH_WINDOW ) {
+      return 0.0;
+   }
 
    double e = exp(-PARAM1*x);
    double d = 1.0/(1.0+e);
    if (d < 0.0) d = 0.0;
    if (d > 1.0) d = 1.0;
-   return -e*PARAM2*PARAM1/((1.0+e)*(1.0+e));
+   return -e*PARAM1/((1.0+e)*(1.0+e));
 }
 
 double result_val(const string &res) 
 {
    double result;
    if (res == "0-1")
-      result = -1.0;
+      result = 0.0;
    else if (res == "1-0")
       result = 1.0;
    else if (res == "1/2-1/2")
-      result = 0.0;
-   else if (res == "*")
-      return 0.0;
+      result = 0.5;
    else {
       cerr << "Missing or unrecognized result: " << res << endl;
-      return 0.0;
+      return 0.5;
    }
    return result;
 }
@@ -209,7 +211,7 @@ static double computeErrorTexel(double value,const string &res,const ColorType s
 
    double predict = texelSigmoid(value);
 
-   return ((double)result - predict)*((double)result - predict);
+   return (result - predict)*(result - predict);
 }
 
 static double func( double x ) {
@@ -544,7 +546,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
             // we won't otherwise use this position record.
             board.undoMove(record_move,s);
             PositionInfo pi(record_move);
-            if (val.val == 0) { // not already present
+            if (texel || val.val == 0) { // not already present
                val.val++; // mark present
                Unlock(hash_lock);
                make_pv(board, td, pi.pvs, pdata, record_move, result);
@@ -952,7 +954,7 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, int eval) 
 static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, const PositionInfo &pi, const string &result) {
 
    unsigned int nc = 0;
-   int record_value;
+   double record_value;
    double sum_dT = 0.0;
 
 #ifdef _TRACE
@@ -981,7 +983,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #endif
    // save position at end of 1st pv
    Board record_board(board_copy);
-   record_value = s.evalu8(board_copy,!validate);
+   record_value = s.evalu8(board_copy,!validate)/(1.0*PAWN_VALUE);
 
    if (board.sideToMove() != board_copy.sideToMove()) {
       record_value = -record_value;
@@ -998,6 +1000,12 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
       // compute the change in squared error per delta in eval
       // (partial derivative)
       double dT = texelSigmoidDeriv(record_value,result_val(result),board.sideToMove())*2*(texelSigmoid(record_value)-result_val(result));
+/*
+      cout << "err = " << pow(texelSigmoid(record_value)-result_val(result),2.0) << endl;
+      cout << "fact1 = " << texelSigmoidDeriv(record_value,result_val(result),board.sideToMove()) <<endl;
+      cout << "fact2 = " << 2*(texelSigmoid(record_value)-result_val(result)) << endl;
+      cout << "dT=" << dT << endl;
+*/
       if (turn0 == White) {
          dT = -dT;
       }
@@ -1253,7 +1261,12 @@ static void learn()
    for (int iter = 1; iter <= iterations; iter++) {
       cout << "iteration " << iter << endl;
       tune_params.applyParams();
-      if (((iter-1) % PV_RECALC_INTERVAL) == 0) {
+      int recalc;
+      if (texel)
+         recalc = iter == 1;
+      else
+         recalc = ((iter-1) % PV_RECALC_INTERVAL) == 0;
+      if (recalc) {
          if (verbose) cout << "(re)calculating PVs" << endl;
          // clean up data from previous pass
          while (!tmpdata.empty()) {
@@ -1327,14 +1340,6 @@ int CDECL main(int argc, char **argv)
     }
     atexit(cleanupGlobals);
     delayedInit();
-    options.search.hash_table_size = 0;
-    options.search.easy_threshold = LEARNING_SEARCH_WINDOW;
-    options.learning.position_learning = 0;
-    options.book.book_enabled = options.log_enabled = 0;
-    options.learning.position_learning = false;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
-    options.search.use_tablebases = false;
-#endif
 
     string input_file;
 
@@ -1411,6 +1416,16 @@ int CDECL main(int argc, char **argv)
        }
     }
 
+    if (texel) LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
+
+    options.search.hash_table_size = 0;
+    options.search.easy_threshold = LEARNING_SEARCH_WINDOW;
+    options.learning.position_learning = 0;
+    options.book.book_enabled = options.log_enabled = 0;
+    options.learning.position_learning = false;
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+    options.search.use_tablebases = false;
+#endif
     game_file_name = argv[arg];
 
     if (verbose) cout << "game file: " << game_file_name << endl;
