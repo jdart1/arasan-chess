@@ -243,6 +243,10 @@ class Tune {
 
   void getParam(int index, TuneParam &param) const;
 
+  TuneParam &operator [] (const int i) {
+    return tune_params[i];
+  }
+
   int getParamValue(int index) const;
 
   void updateParamValue(int index, int value);
