@@ -1082,7 +1082,8 @@ static void parse2(ThreadData &td, Parse2Data &data)
    data.grads.clear();
    data.grads.resize(tune_params.numTuningParams(),0.0);
 
-   Scoring s;
+   // This is large so allocate on heap:
+   Scoring *s = new Scoring();
    const size_t max = tmpdata.size();
    for (;;) {
       // obtain the next available game from the vector
@@ -1100,11 +1101,12 @@ static void parse2(ThreadData &td, Parse2Data &data)
          // skip calculation if no pvs (this indicates a position/
          // record move pair that is a duplicate). Also skip if < MIN_PLY.
          if (pi.pvs.size() > 0 && ply >= MIN_PLY) {
-            calc_derivative(s, data, board, pi, g->result);
+            calc_derivative(*s, data, board, pi, g->result);
          }
          board.doMove(pi.record_move);
       }
    }
+   delete s;
 //   if (verbose) cout << "thread " << td.index << " complete.";
 }
 
