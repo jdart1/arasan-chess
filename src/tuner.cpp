@@ -65,7 +65,7 @@ static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // Max score deviation from optimal move:
-static const int MMTO_DELTA = LEARNING_SEARCH_WINDOW/7.0;
+static const double MMTO_DELTA = LEARNING_SEARCH_WINDOW/7.0;
 // L2-regularization factor
 static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16; // for MMTO
@@ -907,7 +907,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 }
 
-void validateGradient(Scoring &s, const Board &board, ColorType side, int eval) {
+void validateGradient(Scoring &s, const Board &board, ColorType side, double eval) {
    vector<double> derivs(tune_params.numTuningParams());
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       derivs[i] = 0.0;
@@ -1002,13 +1002,6 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
       // compute the change in loss function per delta in eval
       // (partial derivative)
       double dT = computeTexelDeriv(record_value,result,board.sideToMove());
-//      cout << "err=" << func_value << " dT=" << dT << endl;
-
-/*
-      if (turn0 == Black) {
-         dT = -dT;
-      }
-*/
       // multiply the derivative by the x (feature) value, scaled if necessary
       // by game phase, and add to the gradient sum.
       update_deriv_vector(s, board, White, data.grads, dT);
@@ -1040,7 +1033,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #ifdef _TRACE
          cout << endl;
 #endif
-         int value = s.evalu8(board_copy,false);
+         double value = s.evalu8(board_copy,false)/(1.0*PAWN_VALUE);
          // make score be from the perspective of "board", the head of
          // the PV:
          if (board.sideToMove() != board_copy.sideToMove()) {
