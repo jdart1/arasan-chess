@@ -410,21 +410,19 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                Move ref = Refutations::getRefutation(prevMove);
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
+                  scores[i] = 0;
                   if (MovesEqual(hashMove,moves[i])) {
                      SetUsed(moves[i]);
-                     scores[i] = 0;
                      continue;
                   }
                   else if (MovesEqual(killer1,moves[i]) ||
                   MovesEqual(killer2,moves[i])) {
                      SetUsed(moves[i]);
-                     scores[i] = 0;
                      continue;
                   }
                   else if ((MovesEqual(killer3,moves[i]) ||
                   MovesEqual(killer4,moves[i]))) {
                      SetUsed(moves[i]);
-                     scores[i] = 0;
                      continue;
                   }
                   SetPhase(moves[i],HISTORY_PHASE);
