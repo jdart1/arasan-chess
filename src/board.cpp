@@ -865,6 +865,7 @@ hash_t Board::hashCode( Move move ) const
          if (Capture(move) != Empty) 
          {
             Piece cap = MakeBlackPiece(Capture(move));
+            ASSERT(OnBoard(target));
             Xor(newHash, target, cap);
             if (Capture(move) == Rook) {
                if ((int)state.castleStatus[Black]<3) {
@@ -965,6 +966,7 @@ hash_t Board::hashCode( Move move ) const
          if (Capture(move) != Empty)
          {
             Piece cap = MakeWhitePiece(Capture(move));
+            ASSERT(OnBoard(target));
             Xor(newHash, target, cap);
             if (Capture(move) == Rook) {
                if ((int)state.castleStatus[White]<3) {
