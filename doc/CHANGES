@@ -1,7 +1,8 @@
 Changes in Arasan 18.1:
  1) Less aggressive LMR and LMP.
  2) More parameters are made tunable.
- 3) Tuning code adding using MMTO algorithm and params adjusted via tuning.
+ 3) Tuning code revised to support MMTO and Texel methods and params
+    adjusted via tuning.
  4) Bug fixes in potential passer scoring.
  5) Score Q + minor vs Q as draw.
  6) In a multi-threaded search, maintain a move index in the move generator
@@ -13,6 +14,8 @@ Changes in Arasan 18.1:
  10) After reduced depth search fails high, don't re-search with narrow
     window and no reduction, unless reduction was > 1 ply.
  11) Modify formula for time extension when failing low.
+ 12) Bug fix: do not ponder after draw claim in Winboard mode.
+ 13) Increase SEE pruning depth but disable if alpha is a mate score.
 
 Changes in Arasan 18.0:
  1) Add refutation table, similar to Gull & Rodent. This is global and
