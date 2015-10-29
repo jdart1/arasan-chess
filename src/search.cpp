@@ -1899,13 +1899,6 @@ void RootSearch::clearHashTables() {
   scoring.clearHashTables();
 }
 
-static inline void swap( Move moves[], int i, int j)
-{
-   Move tmp = moves[j];
-   moves[j] = moves[i];
-   moves[i] = tmp;
-}
-
 static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
     return (PieceMoved(move) == Pawn &&
             Rank(DestSquare(move),board.sideToMove()) == 7);

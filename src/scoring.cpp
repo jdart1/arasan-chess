@@ -29,7 +29,6 @@ extern "C"
 #endif
 
 // const for now (not tuned)
-
 const int PAWN_ATTACK_FACTOR = 2*64;
 
 const int Scoring::Params:: MATERIAL_SCALE[32] =
@@ -47,9 +46,6 @@ const int Scoring::Params::ENDGAME_THRESHOLD = 23;
 static CACHE_ALIGN Bitboard kingProximity[2][64];
 static CACHE_ALIGN Bitboard kingNearProximity[64];
 static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
-
-// Fixed, currently
-static const int PAWN_ATTACK_BOOST = 2*64;
 
 // Note: the following tables are not part of Params structure (yet)
 static const int KBNKScores[64] =
