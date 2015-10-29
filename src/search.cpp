@@ -100,7 +100,9 @@ static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 // thread contention for global memory):
 static const int NODE_ACCUM_THRESHOLD = 16;
 
+#ifdef SMP_STATS
 static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
+#endif
 
 static int Time_Check_Interval;
 
