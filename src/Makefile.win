@@ -1,9 +1,9 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2015 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2014 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 18.0
+VERSION = 18.1
 
 #TRACE=/D_TRACE 
 #DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
@@ -81,9 +81,11 @@ PROF_RUN_FLAGS = -H 64M $(PROF_RUN_SMP)
 PROF_LINK_FLAGS = /LTCG:PGINSTRUMENT /pgd:$(PROFILE)\arasanx.pgd
 PROF_GEN_LD = link
 
-default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\$(ARASANX)-tune.exe
+default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
 profile: dirs $(PROFILE)\$(ARASANX).exe
+
+tuning: dirs $(BUILD)\$(ARASANX)-tune.exe $(BUILD)\tuner.exe
 
 !IfDef NALIMOV_TBS
 TB_OBJS = $(BUILD)\tbprobe.obj
@@ -237,6 +239,21 @@ $(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj $(TUNE_BUILD)\refut.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS)
 
+TUNER_OBJS = $(TUNE_BUILD)\tuner.obj \
+$(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
+$(TUNE_BUILD)\board.obj $(TUNE_BUILD)\boardio.obj $(TUNE_BUILD)\options.obj \
+$(TUNE_BUILD)\chess.obj $(TUNE_BUILD)\material.obj $(TUNE_BUILD)\movegen.obj \
+$(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
+$(TUNE_BUILD)\see.obj $(TUNE_BUILD)\globals.obj $(TUNE_BUILD)\search.obj \
+$(TUNE_BUILD)\notation.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\stats.obj \
+$(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \
+$(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\log.obj \
+$(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
+$(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
+$(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj $(TUNE_BUILD)\refut.obj \
+$(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
+$(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS)
+
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
@@ -298,6 +315,9 @@ $(BUILD)\$(ARASANX).exe:  dirs $(ARASANX_OBJS)
 
 $(BUILD)\$(ARASANX)-tune.exe:  dirs $(ARASANX_TUNE_OBJS)
         $(LD) $(ARASANX_TUNE_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX)-tune.exe
+
+$(BUILD)\tuner.exe:  dirs $(TUNER_OBJS)
+        $(LD) $(TUNER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\tuner.exe
 
 $(BUILD)\tbprobe.obj: tbprobe.cpp
     $(CL) $(TB_FLAGS) /c /Fo$@ tbprobe.cpp
