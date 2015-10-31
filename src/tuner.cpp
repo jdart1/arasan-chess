@@ -187,6 +187,8 @@ double result_val(const string &res)
 // value is eval in pawn units; res is result string for game
 static double computeErrorTexel(double value,const string &res,const ColorType side)
 {
+   value /= PAWN_VALUE;
+
    if (side == Black) value = -value;
 
    double predict = texelSigmoid(value);
@@ -198,6 +200,8 @@ static double computeErrorTexel(double value,const string &res,const ColorType s
 
 static double computeTexelDeriv(double value,const string &res,const ColorType side)
 {
+   value /= PAWN_VALUE;
+
    if (side == Black) value = -value;
 
    double result = result_val(res);
@@ -985,7 +989,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #endif
    // save position at end of 1st pv
    Board record_board(board_copy);
-   record_value = s.evalu8(board_copy,!validate)/(1.0*PAWN_VALUE);
+   record_value = s.evalu8(board_copy,!validate);
 
    if (board.sideToMove() != board_copy.sideToMove()) {
       record_value = -record_value;
@@ -1033,7 +1037,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #ifdef _TRACE
          cout << endl;
 #endif
-         double value = s.evalu8(board_copy,false)/(1.0*PAWN_VALUE);
+         double value = double(s.evalu8(board_copy,false));
          // make score be from the perspective of "board", the head of
          // the PV:
          if (board.sideToMove() != board_copy.sideToMove()) {
