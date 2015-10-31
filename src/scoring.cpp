@@ -444,6 +444,8 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              } else {
                 score += PARAM(KRMINOR_VS_R_NO_PAWNS);
              }
+             // do not apply trade down or pawn bonus
+             return score;
           }
           else if ((ourmat.pieceBits() == Material::KQN ||
                    ourmat.pieceBits() == Material::KQB) &&
@@ -454,6 +456,8 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              } else {
                 score += PARAM(KQMINOR_VS_Q_NO_PAWNS);
              }
+             // do not apply trade down or pawn bonus
+             return score;
           } else if (oppmat.pieceValue() > ROOK_VALUE) {
              // Knight or Bishop traded for pawns. Bonus for piece.
              score += PARAM(MINOR_FOR_PAWNS);
@@ -1667,14 +1671,12 @@ int Scoring::materialScore(const Board &board) const {
     int adjust = 0;
     if (ourmat.infobits() != oppmat.infobits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
-           if (ourmat.pieceBits() != oppmat.pieceBits()) {
-              adjust += adjustMaterialScoreNoPawns(board,side) -
-                adjustMaterialScoreNoPawns(board,OppositeColor(side));
-           }
+            adjust += adjustMaterialScoreNoPawns(board,side) -
+               adjustMaterialScoreNoPawns(board,OppositeColor(side));
         }
         else {
             adjust += adjustMaterialScore(board,side) -
-                adjustMaterialScore(board,OppositeColor(side));
+               adjustMaterialScore(board,OppositeColor(side));
         }
     }
 #ifdef EVAL_DEBUG
