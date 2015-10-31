@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 18.0</h1>
+<h1>Arasan Programmer's Guide - version 18.1</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -44,7 +44,7 @@ reference material mentioned at the end of this document.</p>
 <p>The source distribution for Arasan includes sources and makefiles for
 building the chess program (arasanx), and also source for the
 following other console programs:</p>
-<p>makebook - builds binary opening book files from text files</p>
+<p>makebook - builds binary opening book files from text (PGN) files</p>
 <p>makeeco  - builds ecodata.cpp from from "eco" text file</p>
 <p>Following is a sketch of the Arasan source directory tree:</p>
 <br/>
@@ -59,6 +59,7 @@ arasan
     tests   - test files and documentation
     prj     - Visual C++ project file and build directories (Windows)
 </pre>
+<br/>
 <p>Note: the source codes for Windows and Linux are identical, except
 that there are different format Makefiles, one for Windows nmake and
 one for GNU make.</p>
@@ -67,10 +68,9 @@ one for GNU make.</p>
 
 <p>The release binaries for Arasan were built with Visual C++ 2005 (32-bit)
 and Visual C++ 2012 (64-bit version).
-The chess engine was compiled with Profile Guided Optimization
-(PGO).</p>
+</p>
 
-<p>You have several choices for building the chess engine:<br/>
+<p>You have several choices for building the chess engine:</p>
 <ol>
 <li>The Windows source distribution includes Visual C++ 2005 solution
 files for the chess engine and tools and GUI in directories "prj"
@@ -105,10 +105,10 @@ source.</p>
 
 <p>To build the chess engine with VC++ and PGO, the easiest way
 is to use the command line and execute:</p>
-<br/>
 <pre>
 nmake clean profiled
 </pre>
+<br/>
 <p>Release binaries from a build are placed in the
 "&lt;target&gt;\Release" directory, where &lt;target&gt; is "win32" or "win64",
 while the debug objects and binaries are put into "&lt;target&gt;\Debug".</p>
@@ -127,10 +127,13 @@ and PGO, use "nmake popcnt-profiled".</p>
 
 <p>Remember to use the alternate Makefile if your compiler is Intel C++,
 like this:</p>
-<br/>
 <pre>
 nmake -f Makefile.icl popcnt-profiled
 </pre>
+<br/>
+<p>The makefiles have a separate "tuning" target that will build utilities
+used for automated parameter tuning (see the Parameter Tuning section
+for details). Note: these require a C++11 compatible compiler.</p>
 <p>To build the Arasan native Windows GUI, use the Visual C++ solution file
 in the "gui" subdirectory. (The command-line Makefile does not build the
 GUI).</p>
@@ -184,13 +187,14 @@ ratio for each move.</p>
 <p>PGN files can also have numeric annotation glyphs (best to use
 an editing program such as ChessBase to insert these). If present these
 have the following meaning in the context of "makebook:"</p>
-
-<br/>!! - a very good move, give it the maximum possible weight.
-<br/>! - a good move, weight it 50% higher than normal.
-<br/>!? - a worthwhile move, weight it 25% higher than normal
-<br/>? - a dubious move, do not play it
-<br/>?? - a blunder, do not play it.<br/>
-
+<pre>
+!! - a very good move, give it the maximum possible weight.
+! - a good move, weight it 50% higher than normal.
+!? - a worthwhile move, weight it 25% higher than normal
+? - a dubious move, do not play it
+?? - a blunder, do not play it.
+</pre>
+<br/>
 <p>The "normal" weighting is computed from the move's frequency plus
 win/loss percentage, except that if a move is in the first annotated
 file but rarely occurs elsewhere it is given a neutral default
@@ -220,7 +224,6 @@ will waste space by creating a bigger book.bin than is required.</p>
 to set a minimum number of times that a move must be played in a
 game collection to be included in the book. The default book shipped
 with arasan was built with "-m 4". Other options include:</p>
-<br/>
 <pre>
 -p <number> - sets maximum ply depth for moves extracted from a PGN file
 
@@ -228,6 +231,7 @@ with arasan was built with "-m 4". Other options include:</p>
 
 -v - show more verbose output.
 </pre>
+<br/>
 <p>See bookdefs.h for some documentation about the data layout within
 the book.bin file.</p>
 
@@ -351,7 +355,7 @@ La Puce Echiquenne. This is another test that purports to estimate
 a program's rating. Standard procedure is to allow 10 minutes for
 each problem. See lapuce2.doc for the scoring procedure.</li>
 <li>
-arasan17.epd is a set of test positions from Arasan games, plus some
+arasan18.epd is a set of test positions from Arasan games, plus some
 from other sources. They range in difficulty, but most are non-trivial
 and some are quite hard. This is the latest version of the test
 suite. Some positions in this file are "avoid move" positions where
@@ -374,14 +378,14 @@ eet.epd is a set of endgame tests from Walter Eigenmann. See
 The results file in the tests subdirectory summarizes Arasan's
 performance on these test suites. There are two targets in
 the Makefile that faciltate running tests with arasanx:</p>
-<br/><pre>
+<pre>
 run-tests  - runs all tests, put test results in file "test-results"
 in the test subdirectory
 
 score-tests - writes a test summary based on "test-results" into
 file "test-summary" in the test subdirectory.
 </pre>
-<p>
+<br/><p>
 Note that "run-tests" takes a long time to complete (over 8 hours)!</p>
 <p>
 "score-tests" requires that Perl be installed and be on the path.</p>
@@ -483,9 +487,9 @@ Without this some reasonable starting defaults will be used.</li>
 <li>-o &lt;output .cpp file&gt; specify the name of the .cpp file that is
 output (instead of params.cpp)</li>
 <li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
-<li>-V validate gradients</li> << endl;
+<li>-V validate gradients</li>
 </ul>
-
+</br>
 <h2>Algorithms and data structures</h2>
 
 <h3>The chess board</h3>

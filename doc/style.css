@@ -31,3 +31,15 @@ h3{
 	line-height: 1em;
 	}
 
+p {
+padding-bottom: 1em;
+}
+
+body ol {
+  margin: 1em 0;
+  padding: 0 0 0 40px;
+}
+
+body ol li {
+  list-style-type: decimal;
+}
