@@ -1,5 +1,5 @@
                         Arasan Chess Engine
-                  Copyright 1994-2014 by Jon Dart
+                  Copyright 1994-2015 by Jon Dart
 -----------------------------------------------------------------------------
 
                                LICENSE
