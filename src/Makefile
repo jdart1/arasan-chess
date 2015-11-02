@@ -135,6 +135,7 @@ ifeq "$(GCCNEW)" "1"
 # options for GCC 4.6 or higher:
 CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
+LTO	= -flto
 GTB_OPT := -Ofast $(SSE)
 else
 ifeq "$(GCCOLD)" "0"
@@ -224,7 +225,7 @@ $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
 	$(CPP) $(PROF_GEN) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 else
-	$(CPP) $(PROF_USE) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
 profiled: dirs
@@ -358,7 +359,7 @@ $(PROFILE)/arasanx:  $(ARASANX_PROFILE_OBJS)
 else
 ifeq ($(PASS),2)
 $(EXPORT)/$(ARASANX):  $(ARASANX_PROFILE_OBJS)
-	cd $(PROFILE) && $(LD) $(PROF_USE) $(ARASANX_PROFILE_OBJS) $(DEBUG) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(PROFILE) && $(LD) $(PROF_USE) $(OPT) $(LTO) $(ARASANX_PROFILE_OBJS) $(DEBUG) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
 	cp $(PROFILE)/arasanx $(EXPORT)/$(ARASANX)
 else
 # non-PGO build
