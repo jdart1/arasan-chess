@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "prj", "prj.vcproj", "{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		ArasanX_Debug|Win32 = ArasanX_Debug|Win32
+		ArasanX_Release|Win32 = ArasanX_Release|Win32
+		Makebook_Debug|Win32 = Makebook_Debug|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|Win32.ActiveCfg = ArasanX_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|Win32.Build.0 = ArasanX_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|Win32.ActiveCfg = ArasanX_Release|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|Win32.Build.0 = ArasanX_Release|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|Win32.ActiveCfg = Makebook_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|Win32.Build.0 = Makebook_Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
