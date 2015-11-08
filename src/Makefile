@@ -219,7 +219,7 @@ $(BUILD)/%.o: %.cpp
 	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMP_FLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
