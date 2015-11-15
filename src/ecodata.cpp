@@ -508,6 +508,7 @@ const struct ECOData eco_codes[] =
 {"C06", 0xbdbbb2e7ded5405cULL ,"French Defense, Tarrasch Variation"},
 {"C06", 0x2c29a57154e5ca8eULL ,"French Defense, Tarrasch Variation"},
 {"C06", 0xd76a979d585ad57ULL ,"French Defense, Tarrasch Variation"},
+{"C06", 0xcb08de5c02addc03ULL ,"French Defense, Tarrasch Variation"},
 {"C07", 0xaa55dbc7c88e7f44ULL ,"French Defense, Tarrasch Variation"},
 {"C07", 0xf3d0aa8402b42ed8ULL ,"French Defense, Tarrasch Variation"},
 {"C07", 0xdfe61e55bec35d17ULL ,"French Defense, Tarrasch Variation"},
