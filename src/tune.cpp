@@ -13,6 +13,7 @@ static const int MOBILITY_RANGE = PAWN_VALUE/2;
 static const int OUTPOST_RANGE = PAWN_VALUE/3;
 static const int PST_RANGE = PAWN_VALUE/2;
 static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
+static const int TRADE_DOWN_RANGE = 1000;
 
 int Tune::numTuningParams() const
 {
@@ -152,8 +153,6 @@ Tune::Tune()
         Tune::TuneParam(Tune::KING_ATTACK_INFLECT1,"king_attack_inflect1",70,30,120),
         Tune::TuneParam(Tune::KING_ATTACK_INFLECT2,"king_attack_inflect2",175,155,250),
         Tune::TuneParam(Tune::KING_ATTACK_SLOPE_FACTOR,"king_attack_slope_factor",25,0,40),
-        Tune::TuneParam(Tune::TRADE_DOWN_LINEAR,"trade_down_linear",43,0,150),
-        Tune::TuneParam(Tune::TRADE_DOWN_SQ,"trade_down_sq",0,0,150),
         Tune::TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",60,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",110,50,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",180,70,500,Tune::TuneParam::Midgame,1),
@@ -248,6 +247,8 @@ Tune::Tune()
        10 ,10 ,50 ,50 ,50 ,50 ,10 ,10,
        10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
       };
+
+   static const int TRADE_DOWN_INIT[16] = {688, 645, 602, 559, 516, 473, 430, 387, 344, 301, 258, 215, 172, 129, 86, 0};
    static const int KNIGHT_MOBILITY_INIT[9] = {-180, -70, -20, 0, 20, 50, 70, 100, 120};
    static const int BISHOP_MOBILITY_INIT[15] = {-200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90};
    static const int ROOK_MOBILITY_INIT[2][15] = {{-220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240}, {-300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320}};
@@ -425,6 +426,7 @@ static const int QUEEN_PST_INIT[2][64] =
                name << "_end";
             name << j;
             int val = 0;
+            ASSERT(map_from_pst(j) >= 0 && map_from_pst(j) < 64);
             switch(n) {
             case 0:
                val = KNIGHT_PST_INIT[phase][map_from_pst(j)]; break;
@@ -513,7 +515,19 @@ static const int QUEEN_PST_INIT[2][64] =
          tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,Tune::TuneParam::Any,1));
       }
    }
-   
+   // add trade down
+   ASSERT(i==TRADE_DOWN);
+   for (int p = 0; p < 16; p++) {
+      stringstream name;
+      name << "trade_down" << p;
+      int val = TRADE_DOWN_INIT[p];
+      if (p == 15)
+         // fix last entry to be 0
+         tune_params.push_back(TuneParam(i++,name.str(),0,0,TRADE_DOWN_RANGE,Tune::TuneParam::Any,0));
+      else   
+         tune_params.push_back(TuneParam(i++,name.str(),val,0,TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
+   }
+
 }
 
 void Tune::checkParams() const
@@ -632,9 +646,7 @@ void Tune::applyParams() const
    Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
 
    for (int i = 0; i < 16; i++) {
-      int j = 16-i;
-      Scoring::Params::TRADE_DOWN[i] = Util::Round(PARAM(TRADE_DOWN_LINEAR)*j +
-                                             PARAM(TRADE_DOWN_SQ)*j*j/64.0);
+      Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
    }
    memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(int)*8);
    memset(Scoring::Params::PASSED_PAWN[1],'\0',sizeof(int)*8);

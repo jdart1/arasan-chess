@@ -125,8 +125,6 @@ class Tune {
     KING_ATTACK_INFLECT1,
     KING_ATTACK_INFLECT2,
     KING_ATTACK_SLOPE_FACTOR,
-    TRADE_DOWN_LINEAR,
-    TRADE_DOWN_SQ,
     PASSED_PAWN_MID2,
     PASSED_PAWN_MID3,
     PASSED_PAWN_MID4,
@@ -219,7 +217,8 @@ class Tune {
     QUEEN_MOBILITY_ENDGAME = QUEEN_MOBILITY_MIDGAME+29,
     KING_MOBILITY_ENDGAME = QUEEN_MOBILITY_ENDGAME+29,
     KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+9,
-    BISHOP_OUTPOST = KNIGHT_OUTPOST+48
+    BISHOP_OUTPOST = KNIGHT_OUTPOST+48,
+    TRADE_DOWN = BISHOP_OUTPOST+48
   };
    
   int numTuningParams() const;
@@ -253,7 +252,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 161;
+  static const int NUM_MISC_PARAMS = 159;
 
   double scale(double value,int index,int materialLevel) const;
 

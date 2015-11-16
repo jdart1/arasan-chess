@@ -151,6 +151,8 @@ class Scoring
 
     PawnHashEntry &pawnEntry(const Board &board, bool useCache);
 
+    static int tradeDownIndex(const Material &ourmat, const Material &oppmat);
+
  private:
 
     // The scores for opening, middlegame and endgame

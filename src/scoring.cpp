@@ -391,6 +391,17 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
+int Scoring::tradeDownIndex(const Material &ourmat, const Material &oppmat)
+{
+   int index = -1;
+   const int mdiff = ourmat.value() - oppmat.value();
+   if (oppmat.materialLevel() < 16 && mdiff >= 3*PAWN_VALUE) {
+      // Encourage trading pieces when we are ahead in material.
+      index = oppmat.materialLevel();
+   }
+   return index;
+}
+
 int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 {
     const Material &ourmat = board.getMaterial(side);
@@ -500,19 +511,10 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
        cout << "material imbalance (" << ColorImage(side) << ") = " << score-tmp << endl;
 #endif
     // Encourage trading pieces (but not pawns) when we are ahead in material.
-    if (oppmat.materialLevel() < 16) {
-       if (mdiff >= 3*PAWN_VALUE) {
-          // Encourage trading pieces when we are ahead in material.
-#ifdef EVAL_DEBUG
-          int tmp = score;
-#endif
-          score += mdiff*PARAM(TRADE_DOWN)[oppmat.materialLevel()]/4096;
-#ifdef EVAL_DEBUG
-          if (score-tmp) {
-             cout << "trade down (" << ColorImage(side) << ") = " << score-tmp << endl;
-          }
-#endif
-       }
+    int index = tradeDownIndex(ourmat,oppmat);
+    if (index >=0) {
+       ASSERT(index<16);
+       score += mdiff*APARAM(TRADE_DOWN,index)/4096;
     }
     if (ourmat.materialLevel() < 16) {
 #ifdef EVAL_DEBUG

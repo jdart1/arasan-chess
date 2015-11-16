@@ -647,11 +647,25 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           // we have extra minor (but not only a minor)
           if (oppmat.pieceBits() == Material::KR) {
              // KR + minor vs KR - draw w. no pawns so lower score
-             grads[Tune::KRMINOR_VS_R] += inc;
+             if (ourmat.hasPawns()) {
+                grads[Tune::KRMINOR_VS_R] += inc;
+             } else {
+                grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
+             }
+             // do not apply trade down or pawn bonus
+             return;
           }
-          else if (oppmat.pieceBits() == Material::KQ) {
+          else if ((ourmat.pieceBits() == Material::KQN ||
+                   ourmat.pieceBits() == Material::KQB) &&
+                   oppmat.pieceBits() == Material::KQ) {
               // Q + minor vs Q is a draw, generally
-             grads[Tune::KQMINOR_VS_Q] += inc;
+             if (ourmat.hasPawns()) {
+                grads[Tune::KQMINOR_VS_Q] += inc;
+             } else {
+                grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
+             }
+             // do not apply trade down or pawn bonus
+             return;
           } else if (oppmat.pieceValue() > ROOK_VALUE) {
              // Knight or Bishop traded for pawns. Bonus for piece
              grads[Tune::MINOR_FOR_PAWNS] += inc;
@@ -689,6 +703,11 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     default:
         break;
     }
+    int index = Scoring::tradeDownIndex(ourmat,oppmat);
+    if (index != -1) {
+       const int mdiff = ourmat.value() - oppmat.value();
+       grads[Tune::TRADE_DOWN+index] += inc*mdiff/4096;
+    }
 }
 
 // Updates a vector where each entry corresponds to a tunable
@@ -703,7 +722,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 {
 
    const ColorType oside = OppositeColor(side);
-
+   const Square okp = board.kingSquare(oside);
+   int pin_count = 0;
+   const int mLevel = board.getMaterial(oside).materialLevel();
+   const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
+   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
 
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(oside);
@@ -712,9 +735,25 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       adjustMaterialScore(board,side,grads,inc);
    }
 
-   const int mLevel = board.getMaterial(oside).materialLevel();
-   const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
-   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
+   if (side == White) {
+      if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
+         grads[Tune::CENTER_PAWN_BLOCK] += tune_params.scale(inc,Tune::CENTER_PAWN_BLOCK,mLevel);
+      }
+
+      if (board[chess::E2] == WhitePawn && board[chess::E3] > WhitePawn && board[chess::E3] < BlackPawn) {
+         grads[Tune::CENTER_PAWN_BLOCK] += tune_params.scale(inc,Tune::CENTER_PAWN_BLOCK,mLevel);
+      }
+   }
+   else {
+      if (board[chess::D7] == BlackPawn && board[chess::D6] > BlackPawn) {
+         grads[Tune::CENTER_PAWN_BLOCK] += tune_params.scale(inc,Tune::CENTER_PAWN_BLOCK,mLevel);
+      }
+
+      if (board[chess::E7] == BlackPawn && board[chess::E6] > BlackPawn) {
+         grads[Tune::CENTER_PAWN_BLOCK] += tune_params.scale(inc,Tune::CENTER_PAWN_BLOCK,mLevel);
+      }
+   }
+
    grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
       tune_params.scale(inc,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
    Bitboard knight_bits(board.knight_bits[side]);
@@ -742,6 +781,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 
    while (bishop_bits.iterate(sq)) {
+      if (board.pinOnDiag(sq, okp, oside)) {
+         pin_count++;
+      }
       int mobl = Bitboard(board.bishopAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::BISHOP_MOBILITY+mobl] += tune_params.scale(inc,Tune::BISHOP_MOBILITY+mobl,mLevel);
       int i = map_to_pst(sq,side);
@@ -757,6 +799,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    Bitboard rook_bits(board.rook_bits[side]);
    while (rook_bits.iterate(sq)) {
+      if (board.pinOnRankOrFile(sq, okp, oside)) {
+         pin_count++;
+      }
       Bitboard rattacks2(board.rookAttacks(sq, side));
       int mobl = Bitboard(rattacks2 &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::ROOK_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_MIDGAME+mobl,mLevel);
@@ -785,6 +830,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    Bitboard queen_bits(board.queen_bits[side]);
    while (queen_bits.iterate(sq)) {
+      if (board.pinOnDiag(sq, okp, oside)) {
+         pin_count++;
+      }
+      if (board.pinOnRankOrFile(sq, okp, oside)) {
+         pin_count++;
+      }
       int mobl = Bitboard(board.queenAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::QUEEN_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::QUEEN_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_ENDGAME+mobl,mLevel);
@@ -805,6 +856,14 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
 
       grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+i,mLevel);
+   }
+
+   bool deep_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::MIDGAME_THRESHOLD;
+   if (pin_count && !deep_endgame) {
+      grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
+   }
+   if (pin_count) {
+      grads[Tune::PIN_MULTIPLIER_END] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_END,mLevel)*pin_count;
    }
 
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
@@ -840,6 +899,43 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_MID+index,mLevel);
                grads[Tune::PP_OPP_PIECE_BLOCK_END+index] +=
                   tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_END+index,mLevel);
+            }
+         }
+         Bitboard atcks(board.fileAttacks(sq));
+#ifdef PAWN_DEBUG
+         int mid_tmp = scores.mid;
+         int end_tmp = scores.end;
+#endif
+         const int file = File(sq);
+         const int rank = Rank(sq,side);
+         if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
+            atcks &= board.rook_bits[side];
+            if (atcks & mask) {
+               grads[Tune::ROOK_BEHIND_PP_MID] += 
+                  tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
+               grads[Tune::ROOK_BEHIND_PP_END] += 
+                  tune_params.scale(inc,Tune::ROOK_BEHIND_PP_END,mLevel);
+            }
+         
+            // Rook adjacent to pawn on 7th is good too
+            if (rank == 7 && file < 8 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file])) {
+               Bitboard atcks(board.fileAttacks(sq + 1) & board.rook_bits[side]);
+               if (!atcks.isClear() || board.rook_bits[side].isSet(sq + 1)) {
+                  grads[Tune::ROOK_BEHIND_PP_MID] += 
+                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
+                  grads[Tune::ROOK_BEHIND_PP_END] += 
+                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_END,mLevel);
+               }
+            }
+
+            if (rank == 7 && file > 1 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 2])) {
+               Bitboard atcks(board.fileAttacks(sq - 1) & board.rook_bits[side]);
+               if (!atcks.isClear() || board.rook_bits[side].isSet(sq - 1)) {
+                  grads[Tune::ROOK_BEHIND_PP_MID] += 
+                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
+                  grads[Tune::ROOK_BEHIND_PP_END] += 
+                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_END,mLevel);
+               }
             }
          }
       }
