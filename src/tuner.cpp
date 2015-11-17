@@ -623,6 +623,8 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
     const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const int mdiff = ourmat.value() - oppmat.value();
+    const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
        return;
     }
@@ -705,9 +707,26 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     }
     int index = Scoring::tradeDownIndex(ourmat,oppmat);
     if (index != -1) {
-       const int mdiff = ourmat.value() - oppmat.value();
        grads[Tune::TRADE_DOWN+index] += inc*mdiff/4096;
     }
+    if (ourmat.materialLevel() < 16) {
+       int adj = 0;
+       if (pawnDiff > 0 && pieceDiff >= 0) {
+          // better to have more pawns in endgame (if we have not
+          // traded pieces for pawns).
+          grads[Tune::ENDGAME_PAWN_ADVANTAGE] += 
+             inc*(4-ourmat.materialLevel()/4)*Util::Min(2,pawnDiff)/4;
+       }
+       if (pieceDiff > 0) {
+          // bonus for last few pawns - to discourage trade
+          const int ourp = ourmat.pawnCount();
+          int factor1 = (ourp >= 3) + (ourp >= 2);
+          int factor2 = (ourp >=1);
+          grads[Tune::PAWN_ENDGAME1] += inc*factor1*(4-ourmat.materialLevel()/4)/4;
+          grads[Tune::PAWN_ENDGAME2] += inc*factor2*(4-ourmat.materialLevel()/4)/4;
+       }
+    }
+
 }
 
 // Updates a vector where each entry corresponds to a tunable
