@@ -78,6 +78,8 @@ static vector<GameInfo *> tmpdata;
 
 static atomic<int> phase2_game_index;
 
+extern int distances[64][64];
+
 LockDefine(file_lock);
 LockDefine(data_lock);
 LockDefine(hash_lock);
@@ -710,7 +712,6 @@ static void adjustMaterialScore(const Board &board, ColorType side,
        grads[Tune::TRADE_DOWN+index] += inc*mdiff/4096;
     }
     if (ourmat.materialLevel() < 16) {
-       int adj = 0;
        if (pawnDiff > 0 && pieceDiff >= 0) {
           // better to have more pawns in endgame (if we have not
           // traded pieces for pawns).
@@ -741,9 +742,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 {
 
    const ColorType oside = OppositeColor(side);
+   const Square kp = board.kingSquare(side);
    const Square okp = board.kingSquare(oside);
    int pin_count = 0;
    const int mLevel = board.getMaterial(oside).materialLevel();
+   const int ourMatLevel = board.getMaterial(side).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
 
@@ -866,15 +869,42 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    int i = map_to_pst(ksq,side);
    grads[Tune::KING_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+i,mLevel);
 
-   if (board.pawn_bits[White] | board.pawn_bits[Black]) {
+   if (mLevel <= Scoring::Params::ENDGAME_THRESHOLD || ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD) {
+      if (board.pawn_bits[White] | board.pawn_bits[Black]) {
 
-      double inc_adjust = inc;
-      const int opp_pieces = board.getMaterial(oside).pieceCount();
-      if (opp_pieces < 2) {
-         inc_adjust = ((150-10*opp_pieces)*inc)/128;
+         double inc_adjust = inc;
+         const int opp_pieces = board.getMaterial(oside).pieceCount();
+         if (opp_pieces < 2) {
+            inc_adjust = ((150-10*opp_pieces)*inc)/128;
+         }
+         Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
+         if (ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD &&
+             (!board.getMaterial(oside).kingOnly() ||
+              (board.getMaterial(side).infobits() != Material::KBN &&
+               board.getMaterial(side).infobits() != Material::KR &&
+               board.getMaterial(side).infobits() != Material::KQ))) {
+            grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+i,mLevel);
+            int val = 0;
+            if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
+               if (File(kp) > chess::DFILE)
+                  ++val;
+               else
+                  --val;
+            }
+            else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
+               if (File(kp) <= chess::DFILE)
+                  ++val;
+               else
+                  --val;
+            }
+            grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust*val,Tune::PAWN_SIDE_BONUS,mLevel);
+            Bitboard it(all_pawns);
+            Square sq;
+            while(it.iterate(sq)) {
+               grads[Tune::ENDGAME_PAWN_PROXIMITY] += tune_params.scale(inc_adjust*(4-distances[kp][sq]),Tune::ENDGAME_PAWN_PROXIMITY,mLevel);
+            }
+         }
       }
-
-      grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+i,mLevel);
    }
 
    bool deep_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::MIDGAME_THRESHOLD;

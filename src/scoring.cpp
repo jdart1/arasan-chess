@@ -83,7 +83,6 @@ static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
 static Bitboard outpostW[64], outpostB[64];
 static const Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
-static Bitboard abcd_mask, efgh_mask;
 static Bitboard left_side_mask[8], right_side_mask[8];
 static Bitboard isolated_file_mask[8];
 static byte is_outside[256][256];
@@ -246,10 +245,6 @@ static void initBitboards() {
          }
       }
 
-      if (file < chess::EFILE)
-         abcd_mask.set(i);
-      else
-         efgh_mask.set(i);
    }
 
    int x;
@@ -2428,13 +2423,13 @@ void Scoring::calcEndgame(const Board &board,
 #ifdef EVAL_DEBUG
    cout << "king position (White): " << k_pos << endl;
 #endif
-   if (!TEST_MASK(abcd_mask, all_pawns)) {
+   if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
       if (File(kp) > chess::DFILE)
          k_pos += PARAM(PAWN_SIDE_BONUS);
       else
          k_pos -= PARAM(PAWN_SIDE_BONUS);
    }
-   else if (!TEST_MASK(efgh_mask, all_pawns)) {
+   else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
       if (File(kp) <= chess::DFILE)
          k_pos += PARAM(PAWN_SIDE_BONUS);
       else
@@ -2450,13 +2445,13 @@ void Scoring::calcEndgame(const Board &board,
 #ifdef EVAL_DEBUG
    cout << "king position (Black): " << k_pos << endl;
 #endif
-   if (!TEST_MASK(abcd_mask, all_pawns)) {
+   if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
       if (File(kp) > chess::DFILE)
          k_pos += PARAM(PAWN_SIDE_BONUS);
       else
          k_pos -= PARAM(PAWN_SIDE_BONUS);
    }
-   else if (!TEST_MASK(efgh_mask, all_pawns)) {
+   else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
       if (File(kp) <= chess::DFILE)
          k_pos += PARAM(PAWN_SIDE_BONUS);
       else
@@ -2471,8 +2466,8 @@ void Scoring::calcEndgame(const Board &board,
    Bitboard it(all_pawns);
    Square sq;
    while(it.iterate(sq)) {
-      endgameEntry->white_endgame_pawn_proximity += (int16)(10*(4 - distance1(board.kingSquare(White), sq)));
-     endgameEntry->black_endgame_pawn_proximity += (int16)(10*(4 - distance1(board.kingSquare(Black), sq)));
+      endgameEntry->white_endgame_pawn_proximity += (int16)(PARAM(ENDGAME_PAWN_PROXIMITY)*(4 - distance1(board.kingSquare(White), sq)));
+      endgameEntry->black_endgame_pawn_proximity += (int16)(PARAM(ENDGAME_PAWN_PROXIMITY)*(4 - distance1(board.kingSquare(Black), sq)));
    }
 
 #ifdef EVAL_DEBUG

@@ -64,6 +64,7 @@ int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = 100;
 int Scoring::Params::ROOK_BEHIND_PP_MID = 50;
 int Scoring::Params::ROOK_BEHIND_PP_END = 100;
 int Scoring::Params::QUEEN_OUT = -60;
+int Scoring::Params::ENDGAME_PAWN_PROXIMITY = 10;
 int Scoring::Params::KING_NEAR_PASSER = 200;
 int Scoring::Params::OPP_KING_NEAR_PASSER = -280;
 int Scoring::Params::PAWN_SIDE_BONUS = 280;

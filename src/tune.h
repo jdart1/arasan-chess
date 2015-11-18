@@ -116,6 +116,7 @@ class Tune {
     ROOK_BEHIND_PP_MID,
     ROOK_BEHIND_PP_END,
     QUEEN_OUT,
+    ENDGAME_PAWN_PROXIMITY,
     KING_NEAR_PASSER,
     OPP_KING_NEAR_PASSER,
     PAWN_SIDE_BONUS,
@@ -252,7 +253,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 159;
+  static const int NUM_MISC_PARAMS = 160;
 
   double scale(double value,int index,int materialLevel) const;
 

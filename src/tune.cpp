@@ -141,12 +141,13 @@ Tune::Tune()
         Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",182,0,600,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACKS_WEAK_PAWN_MID,"rook_attacks_weak_pawn_mid",71,0,600,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACKS_WEAK_PAWN_END,"rook_attacks_weak_pawn_end",119,0,600,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame),
-        Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame),
+        Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-200,0,Tune::TuneParam::Midgame),
+        Tune::TuneParam(Tune::ENDGAME_PAWN_PROXIMITY,"endgame_pawn_proximity",10,0,50,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_NEAR_PASSER,"king_near_passer",224,0,500,Tune::TuneParam::Endgame),
         Tune::TuneParam(Tune::OPP_KING_NEAR_PASSER,"opp_king_near_passer",-258,-500,0,Tune::TuneParam::Endgame),
-        Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500),
+        Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,750),
         Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1500),
         Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0),
@@ -638,6 +639,7 @@ void Tune::applyParams() const
    Scoring::Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
    Scoring::Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
    Scoring::Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;
+   Scoring::Params::ENDGAME_PAWN_PROXIMITY = tune_params[ENDGAME_PAWN_PROXIMITY].current;
    Scoring::Params::KING_NEAR_PASSER = tune_params[KING_NEAR_PASSER].current;
    Scoring::Params::OPP_KING_NEAR_PASSER = tune_params[OPP_KING_NEAR_PASSER].current;
    Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
