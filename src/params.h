@@ -78,15 +78,16 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int ROOK_BEHIND_PP_MID;
     static PARAM_MOD int ROOK_BEHIND_PP_END;
     static PARAM_MOD int QUEEN_OUT;
-    static PARAM_MOD int ENDGAME_PAWN_PROXIMITY;
-    static PARAM_MOD int KING_NEAR_PASSER;
-    static PARAM_MOD int OPP_KING_NEAR_PASSER;
     static PARAM_MOD int PAWN_SIDE_BONUS;
+    static PARAM_MOD int KING_OWN_PAWN_DISTANCE;
+    static PARAM_MOD int KING_OPP_PAWN_DISTANCE;
     static PARAM_MOD int SUPPORTED_PASSER6;
     static PARAM_MOD int SUPPORTED_PASSER7;
     static PARAM_MOD int SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
+    static PARAM_MOD int KING_OPP_PASSER_DISTANCE[6];
+    static PARAM_MOD int KING_POSITION_LOW_MATERIAL[3];
     static PARAM_MOD int KING_ATTACK_SCALE[512];
     static PARAM_MOD int TRADE_DOWN[16];
     static PARAM_MOD int PASSED_PAWN[2][8];

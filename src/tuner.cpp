@@ -78,8 +78,6 @@ static vector<GameInfo *> tmpdata;
 
 static atomic<int> phase2_game_index;
 
-extern int distances[64][64];
-
 LockDefine(file_lock);
 LockDefine(data_lock);
 LockDefine(hash_lock);
@@ -749,7 +747,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const int ourMatLevel = board.getMaterial(side).materialLevel();
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
-
+   const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
+   const Scoring::PawnHashEntry::PawnData oppPawnData = pawn_entr.pawnData(oside);
+   
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(oside);
    if (ourmat.infobits() != oppmat.infobits() &&
@@ -779,7 +779,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
       tune_params.scale(inc,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
    Bitboard knight_bits(board.knight_bits[side]);
-   Square sq;
+   Square sq = InvalidSquare;
    while (knight_bits.iterate(sq)) {
       const Bitboard &knattacks = Attacks::knight_attacks[sq];
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
@@ -866,43 +866,63 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::QUEEN_PST_ENDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_ENDGAME+i,mLevel);
    }
    Square ksq = board.kingSquare(side);
-   int i = map_to_pst(ksq,side);
-   grads[Tune::KING_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+i,mLevel);
+   int ksq_map = map_to_pst(ksq,side);
+   grads[Tune::KING_PST_MIDGAME+ksq_map] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+ksq_map,mLevel);
 
-   if (mLevel <= Scoring::Params::ENDGAME_THRESHOLD || ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD) {
-      if (board.pawn_bits[White] | board.pawn_bits[Black]) {
-
-         double inc_adjust = inc;
-         const int opp_pieces = board.getMaterial(oside).pieceCount();
-         if (opp_pieces < 2) {
-            inc_adjust = ((150-10*opp_pieces)*inc)/128;
+   Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
+   if (ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD &&
+       all_pawns &&
+       (!board.getMaterial(oside).kingOnly() ||
+        (board.getMaterial(side).infobits() != Material::KP &&
+         board.getMaterial(side).infobits() != Material::KBN &&
+         board.getMaterial(side).infobits() != Material::KR &&
+         board.getMaterial(side).infobits() != Material::KQ))) {
+      const int pieces = board.getMaterial(side).pieceCount();
+      double inc_adjust = inc;
+      if (pieces < 3) {
+         inc_adjust = inc_adjust*tune_params[Tune::KING_POSITION_LOW_MATERIAL0+pieces].current/128.0;
+      }
+      grads[Tune::KING_PST_ENDGAME+ksq_map] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+ksq_map,mLevel);
+      if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
+         if (File(kp) > chess::DFILE)
+            grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+         else
+            grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+      }
+      else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
+         if (File(kp) <= chess::DFILE)
+            grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+         else
+            grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+      }
+      inc_adjust /= 16.0;
+      Bitboard it(board.pawn_bits[side]);
+      Square sq;
+      while(it.iterate(sq)) {
+         grads[Tune::KING_OWN_PAWN_DISTANCE] +=
+           tune_params.scale(inc_adjust*(4-Scoring::mbox(kp,sq)),Tune::KING_OWN_PAWN_DISTANCE,mLevel);
+         int file = File(sq);
+         int rank = Rank (sq,side);
+         if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
+             (File(kp) == file - 1 || File(kp) == file + 1) &&
+             Rank(kp, side) >= rank) {
+            if (rank == 6)
+               grads[Tune::SUPPORTED_PASSER6] +=
+                  tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER6,mLevel);
+            else
+               grads[Tune::SUPPORTED_PASSER7] +=
+                  tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER7,mLevel);
          }
-         Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
-         if (ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD &&
-             (!board.getMaterial(oside).kingOnly() ||
-              (board.getMaterial(side).infobits() != Material::KBN &&
-               board.getMaterial(side).infobits() != Material::KR &&
-               board.getMaterial(side).infobits() != Material::KQ))) {
-            grads[Tune::KING_PST_ENDGAME+i] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+i,mLevel);
-            int val = 0;
-            if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
-               if (File(kp) > chess::DFILE)
-                  ++val;
-               else
-                  --val;
-            }
-            else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
-               if (File(kp) <= chess::DFILE)
-                  ++val;
-               else
-                  --val;
-            }
-            grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust*val,Tune::PAWN_SIDE_BONUS,mLevel);
-            Bitboard it(all_pawns);
-            Square sq;
-            while(it.iterate(sq)) {
-               grads[Tune::ENDGAME_PAWN_PROXIMITY] += tune_params.scale(inc_adjust*(4-distances[kp][sq]),Tune::ENDGAME_PAWN_PROXIMITY,mLevel);
-            }
+      }
+      it = board.pawn_bits[oside];
+      while (it.iterate(sq)) {
+          grads[Tune::KING_OPP_PAWN_DISTANCE] +=
+             tune_params.scale(inc_adjust*(4-Scoring::mbox(kp,sq)),Tune::KING_OPP_PAWN_DISTANCE,mLevel);
+         int rank = Rank(sq,oside);
+         if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
+            Square queenSq = MakeSquare(File(sq),8,oside);
+            grads[Tune::KING_OPP_PASSER_DISTANCE+rank-2] +=
+               tune_params.scale(inc_adjust*((4-Scoring::mbox(kp,sq))+(4-Scoring::mbox(kp,queenSq)))/2,Tune::KING_OPP_PASSER_DISTANCE+rank-2,mLevel);
          }
       }
    }
@@ -943,7 +963,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_MID+index,mLevel);
                grads[Tune::PP_OWN_PIECE_BLOCK_END+index] +=
                   tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_END+index,mLevel);
-            } else {
+            } else if (TypeOfPiece(board[blocker]) != King) {
                grads[Tune::PP_OPP_PIECE_BLOCK_MID+index] +=
                   tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_MID+index,mLevel);
                grads[Tune::PP_OPP_PIECE_BLOCK_END+index] +=
@@ -1082,7 +1102,7 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
          }
          // compare predicted new value from gradient with
          // actual value
-         if (fabs(eval + derivs[i]*delta - score)>4.0) {
+         if (fabs(eval + derivs[i]*delta - score)>5.0) {
             cerr << board << endl;
             cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << eval + derivs[i]*delta << " actual score=" << score << endl;
             // The following code is useful when running under
@@ -1132,6 +1152,14 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #ifdef _TRACE
    cout << endl;
 #endif
+   // skip KPK positions (evaluated by bitbases)
+   if ((board_copy.getMaterial(White).kingOnly() &&
+       board_copy.getMaterial(Black).infobits() == Material::KP) ||
+       (board_copy.getMaterial(Black).kingOnly() &&
+        board_copy.getMaterial(White).infobits() == Material::KP)) {
+      return;
+   }
+
    // save position at end of 1st pv
    Board record_board(board_copy);
    record_value = s.evalu8(board_copy,!validate);
@@ -1182,6 +1210,13 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
 #ifdef _TRACE
          cout << endl;
 #endif
+         // skip KPK positions (evaluated by bitbases)
+         if ((board_copy.getMaterial(White).kingOnly() &&
+              board_copy.getMaterial(Black).infobits() == Material::KP) ||
+             (board_copy.getMaterial(Black).kingOnly() &&
+              board_copy.getMaterial(White).infobits() == Material::KP)) {
+            continue;
+         }
          double value = double(s.evalu8(board_copy,false));
          // make score be from the perspective of "board", the head of
          // the PV:
@@ -1248,7 +1283,7 @@ static void parse2(ThreadData &td, Parse2Data &data)
            it2++, ply++) {
          PositionInfo pi = *it2;
          // skip calculation if no pvs (this indicates a position/
-         // record move pair that is a duplicate). Also skip if < MIN_PLY.
+         // record move pair that is a duplicate).
          if (pi.pvs.size() > 0 && ply >= MIN_PLY) {
             calc_derivative(*s, data, board, pi, g->result);
          }

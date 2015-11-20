@@ -43,7 +43,7 @@ class BoardHash
            return setSideToMove(h,b.sideToMove());
         }
 
-        static hash_t kingCoverHash(const Board &board, ColorType side) {
+        static hash_t kingPawnHash(const Board &board, ColorType side) {
           if (side == White) 
             return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(White)][WhiteKing] ^ w_castle_status[board.castleStatus(White)];
           else

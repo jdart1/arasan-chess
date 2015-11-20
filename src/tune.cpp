@@ -14,6 +14,7 @@ static const int OUTPOST_RANGE = PAWN_VALUE/3;
 static const int PST_RANGE = PAWN_VALUE/2;
 static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
 static const int TRADE_DOWN_RANGE = 1000;
+static const int ENDGAME_KING_POS_RANGE = 500;
 
 int Tune::numTuningParams() const
 {
@@ -144,13 +145,15 @@ Tune::Tune()
         Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-200,0,Tune::TuneParam::Midgame),
-        Tune::TuneParam(Tune::ENDGAME_PAWN_PROXIMITY,"endgame_pawn_proximity",10,0,50,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_NEAR_PASSER,"king_near_passer",224,0,500,Tune::TuneParam::Endgame),
-        Tune::TuneParam(Tune::OPP_KING_NEAR_PASSER,"opp_king_near_passer",-258,-500,0,Tune::TuneParam::Endgame),
         Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,750),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1500),
-        Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0),
+        Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,1000,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1000,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",200,128,300,Tune::TuneParam::Endgame,0),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",175,128,300,Tune::TuneParam::Endgame,0),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",150,128,300,Tune::TuneParam::Endgame,0),
         Tune::TuneParam(Tune::KING_ATTACK_INFLECT1,"king_attack_inflect1",70,30,120),
         Tune::TuneParam(Tune::KING_ATTACK_INFLECT2,"king_attack_inflect2",175,155,250),
         Tune::TuneParam(Tune::KING_ATTACK_SLOPE_FACTOR,"king_attack_slope_factor",25,0,40),
@@ -383,6 +386,12 @@ static const int QUEEN_PST_INIT[2][64] =
    }
    static const TuneParam::Scaling scales[2] = {Tune::TuneParam::Midgame,
                                                 Tune::TuneParam::Endgame};
+   ASSERT(i==KING_OPP_PASSER_DISTANCE);
+   for (int x = 0; x < 6; x++) {
+      stringstream name;
+      name << "king_opp_passer_distance_rank" << x+2 << endl;
+      tune_params.push_back(TuneParam(i++,name.str(),10+x*10,0,ENDGAME_KING_POS_RANGE,Tune::TuneParam::Endgame,1));
+   }
    ASSERT(i==PP_OWN_PIECE_BLOCK_MID);
    // add passed pawn block tables
    for (int phase = 0; phase < 2; phase++) {
@@ -533,8 +542,8 @@ static const int QUEEN_PST_INIT[2][64] =
 
 void Tune::checkParams() const
 {
-   if (NUM_MISC_PARAMS != PP_OWN_PIECE_BLOCK_MID) {
-      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << PP_OWN_PIECE_BLOCK_MID << endl;
+   if (NUM_MISC_PARAMS != KING_OPP_PASSER_DISTANCE) {
+      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_OPP_PASSER_DISTANCE << endl;
    }
    for (int i = 0; i<NUM_MISC_PARAMS; i++) {
       if (tune_params[i].index != i) 
@@ -639,14 +648,18 @@ void Tune::applyParams() const
    Scoring::Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
    Scoring::Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
    Scoring::Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;
-   Scoring::Params::ENDGAME_PAWN_PROXIMITY = tune_params[ENDGAME_PAWN_PROXIMITY].current;
-   Scoring::Params::KING_NEAR_PASSER = tune_params[KING_NEAR_PASSER].current;
-   Scoring::Params::OPP_KING_NEAR_PASSER = tune_params[OPP_KING_NEAR_PASSER].current;
    Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
+   Scoring::Params::KING_OWN_PAWN_DISTANCE = tune_params[KING_OWN_PAWN_DISTANCE].current;
+   Scoring::Params::KING_OPP_PAWN_DISTANCE = tune_params[KING_OPP_PAWN_DISTANCE].current;
    Scoring::Params::SUPPORTED_PASSER6 = tune_params[SUPPORTED_PASSER6].current;
    Scoring::Params::SUPPORTED_PASSER7 = tune_params[SUPPORTED_PASSER7].current;
    Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
-
+   for (int i = 0; i < 6; i++) {
+      Scoring::Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);
+   }
+   for (int i = 0; i < 3; i++) {
+      Scoring::Params::KING_POSITION_LOW_MATERIAL[i] = PARAM(KING_POSITION_LOW_MATERIAL0+i);
+   }
    for (int i = 0; i < 16; i++) {
       Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
    }

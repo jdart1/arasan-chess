@@ -64,14 +64,13 @@ int Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = 100;
 int Scoring::Params::ROOK_BEHIND_PP_MID = 50;
 int Scoring::Params::ROOK_BEHIND_PP_END = 100;
 int Scoring::Params::QUEEN_OUT = -60;
-int Scoring::Params::ENDGAME_PAWN_PROXIMITY = 10;
-int Scoring::Params::KING_NEAR_PASSER = 200;
-int Scoring::Params::OPP_KING_NEAR_PASSER = -280;
-int Scoring::Params::PAWN_SIDE_BONUS = 280;
-int Scoring::Params::SUPPORTED_PASSER6 = 380;
-int Scoring::Params::SUPPORTED_PASSER7 = 760;
-int Scoring::Params::SIDE_PROTECTED_PAWN = -100;
-
+int Scoring::Params::PAWN_SIDE_BONUS = 306;
+int Scoring::Params::KING_OWN_PAWN_DISTANCE = 50;
+int Scoring::Params::KING_OPP_PAWN_DISTANCE = 20;
+int Scoring::Params::SUPPORTED_PASSER6 = 401;
+int Scoring::Params::SUPPORTED_PASSER7 = 708;
+int Scoring::Params::SIDE_PROTECTED_PAWN = -92;
+int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = {10,20,30,40,50,60};
 int Scoring::Params::KNIGHT_PST[2][64];
 int Scoring::Params::BISHOP_PST[2][64];
 int Scoring::Params::ROOK_PST[2][64];
@@ -79,6 +78,7 @@ int Scoring::Params::QUEEN_PST[2][64];
 int Scoring::Params::KING_PST[2][64];
 
 // The following tables are computed from tuning parameters.
+int Scoring::Params::KING_POSITION_LOW_MATERIAL[3];
 int Scoring::Params::KING_ATTACK_SCALE[512];
 int Scoring::Params::TRADE_DOWN[16];
 int Scoring::Params::PASSED_PAWN[2][8];

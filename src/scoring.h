@@ -105,8 +105,7 @@ class Scoring
 #else
     static const int PAWN_HASH_SIZE = 16384;
 #endif
-    static const int KING_COVER_HASH_SIZE = 8192;
-    static const int ENDGAME_HASH_SIZE = 32768;
+    static const int KING_PAWN_HASH_SIZE = 8132;
 
     struct CACHE_ALIGN PawnHashEntry {
 
@@ -134,24 +133,25 @@ class Scoring
        }
     } pawnHashTable[PAWN_HASH_SIZE];
 
-    struct KingCoverHashEntry {
-       uint32 hc;
+    struct KingPawnHashEntry {
+       hash_t hc;
        int32 cover;
-    } kingCoverHashTable[2][KING_COVER_HASH_SIZE];
+       int32 king_endgame_position;
+    };
 
-    struct CACHE_ALIGN EndgameHashEntry {
-        // defines one entry in the king/pawn hash table. 128 bytes.
-        hash_t hc;                                    // hashcode
-        int16 white_king_position, black_king_position;
-        int16 white_endgame_pawn_proximity;
-        int16 black_endgame_pawn_proximity;
-        uint16 w_uncatchable, b_uncatchable;
-        int wScore,bScore;
-    } endgameHashTable[ENDGAME_HASH_SIZE];
+    KingPawnHashEntry kingPawnHashTable[2][KING_PAWN_HASH_SIZE];
 
     PawnHashEntry &pawnEntry(const Board &board, bool useCache);
 
+    template <ColorType side>
+      KingPawnHashEntry &getKPEntry(const Board &board,
+                        const PawnHashEntry::PawnData &ourPawnData,
+                        const PawnHashEntry::PawnData &oppPawnData,
+                        bool useCache);
+
     static int tradeDownIndex(const Material &ourmat, const Material &oppmat);
+
+    static int mbox(Square sq1, Square sq);
 
  private:
 
@@ -181,9 +181,9 @@ class Scoring
     template <ColorType side>
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
+                            int ownCover, int intOppCover,
                             Scores &scores,
-                            Scores &oppScores,
-                            bool useCache = false);
+                            Scores &oppScores);
 
     template <ColorType side>
         static int theoreticalDraw(const Board &board);
@@ -208,13 +208,15 @@ class Scoring
     static int calcCover(const Board &board, int file, int rank);
 
     template <ColorType side>
-    void calcCover(const Board &board, KingCoverHashEntry &cover);
-
-    template <ColorType side>
-      int kingCover(const Board &board,bool useCache);
+    void calcCover(const Board &board, KingPawnHashEntry &cover);
 
     void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);
+
+    void calcKingEndgamePosition(const Board &board,ColorType side,
+                                 const PawnHashEntry::PawnData &ourPawnData,
+                                 const PawnHashEntry::PawnData &oppPawnData,
+                                 KingPawnHashEntry &entry);
 
     void evalOutsidePassers(const Board &board,
 			    PawnHashEntry &pawnEntry);
@@ -224,12 +226,14 @@ class Scoring
     void pawnScore(const Board &board, ColorType side,
 		  const PawnHashEntry::PawnData &oppPawnData, Scores &);
 
-    void calcEndgame(const Board &board, const PawnHashEntry &pawnEntry,
-		     EndgameHashEntry *endgameEntry);
+    template <ColorType side>
+      void scoreEndgame(const Board &,int k_pos,Scores &);
 
-    void scoreEndgame(const Board &, EndgameHashEntry *endgameEntry,
-		     const PawnHashEntry::PawnData &pawnData, ColorType side,
-		     Scores &);
+    template <ColorType side>
+      int specialCaseEndgame(const Board &,
+                             const Material &ourMaterial,
+                             const Material &oppMaterial,
+                             Scores &);
 
     int kingDistanceScore(const Board &) const;
 
