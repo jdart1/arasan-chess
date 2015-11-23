@@ -25,26 +25,26 @@ chess engines).
 
 xboard can be used to play games against Arasan, play Arasan against
 other chess programs, and connect Arasan to an Internet chess server.
+Arasan works best with xboard versions 4.2.2 and later.
 
-xboard is included in most Linux distributions, but if you do not have
-xboard on your system, you can obtain it from
-http://savannah.gnu.org/projects/xboard.  Arasan is designed to work
-with xboard version 4.2.2 or higher. Other versions of xboard may work
-but this is not guaranteed.
+xboard is included in most Linux distributions. If you are on Ubuntu
+for example you can do "sudo apt-get install xboard" to install xboard
+binaries.
 
-Mac users should see
-http://www.open-aurec.com/wbforum/viewtopic.php?f=19&t=52964 for
-information about xboard on Mac OS.
-
-If you're planning to use xboard to connect to a chess server, or
-to connect to another machine on the local network, you should
-obtain the xboard source and build it with these commands:
+For systems without an installable xboard package, you can obtain the
+source from http://savannah.gnu.org/projects/xboard. To build xboard
+with computer and chess server support, compile it with these
+commands:
 
 configure --enable-zippy --disable-sigint
 make
 make install
 
 (you will need to be root, or use sudo, to do the install step).
+
+Mac users should see
+http://www.open-aurec.com/wbforum/viewtopic.php?f=19&t=52964 for
+information about xboard on Mac OS.
 
 
 Using xboard as a user interface
