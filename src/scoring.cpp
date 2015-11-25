@@ -88,11 +88,12 @@ static const Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[
 static Bitboard left_side_mask[8], right_side_mask[8];
 static Bitboard isolated_file_mask[8];
 static byte is_outside[256][256];
-static int distances[64][64];
 
 int Scoring::mbox(Square sq1, Square sq2)
 {
-   return distances[sq1][sq2];
+   int rankdist = Util::Abs(sq1/8 - sq2/8);
+   int filedist = Util::Abs((sq1 % 8)-(sq2 % 8));
+   return Util::Max(rankdist,filedist);
 }
 
 static inline int OnFile(const Bitboard &b, int file) {
@@ -151,18 +152,6 @@ static void initBitboards() {
             kingPawnProximity[Black][i].set(sq);
             kingPawnProximity[Black][i] |= Attacks::pawn_attacks[sq][White];
          }
-      }
-
-      for(int j = 0; j < 64; j++) {
-         int file_distance, rank_distance;
-         Square kp = i;
-         Square oppkp = j;
-         file_distance = Util::Abs(File(kp) - File(oppkp));
-         rank_distance = Util::Abs(Rank(kp, Black) - Rank(oppkp, Black));
-         if (file_distance > rank_distance)
-            distances[i][j] = file_distance;
-         else
-            distances[i][j] = rank_distance;
       }
 
       int rank = Rank(i, White);
