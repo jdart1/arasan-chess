@@ -89,7 +89,7 @@ static Bitboard left_side_mask[8], right_side_mask[8];
 static Bitboard isolated_file_mask[8];
 static byte is_outside[256][256];
 
-int Scoring::mbox(Square sq1, Square sq2)
+int Scoring::distance(Square sq1, Square sq2)
 {
    int rankdist = Util::Abs(sq1/8 - sq2/8);
    int filedist = Util::Abs((sq1 % 8)-(sq2 % 8));
@@ -1904,7 +1904,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
 int Scoring::kingDistanceScore(const Board &board) const
 {
-   return PARAM(KING_DISTANCE_BASIS) - PARAM(KING_DISTANCE_MULT)*mbox(board.kingSquare(White), board.kingSquare(Black));
+   return PARAM(KING_DISTANCE_BASIS) - PARAM(KING_DISTANCE_MULT)*distance(board.kingSquare(White), board.kingSquare(Black));
 }
 
 // returns 1 if we evaluated a special-case endgame
@@ -1975,7 +1975,7 @@ int Scoring::specialCaseEndgame(const Board &board,
          int krank = Rank(oppkp,White);
          int kfile = File(oppkp);
          if (InCorner(oppkp)) {
-            const int kingDistance = mbox(board.kingSquare(White), board.kingSquare(Black));
+            const int kingDistance = distance(board.kingSquare(White), board.kingSquare(Black));
             if (kingDistance == 2) {
                scores.end += 100;
             }
@@ -2038,7 +2038,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
    Square sq;
    while(it.iterate(sq)) {
       int rank = Rank(sq,side);
-      k_pos_adj += (4-mbox(kp,sq))*PARAM(KING_OWN_PAWN_DISTANCE);
+      k_pos_adj += (4-distance(kp,sq))*PARAM(KING_OWN_PAWN_DISTANCE);
       int file = File(sq);
       if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
           (File(kp) == file - 1 || File(kp) == file + 1) &&
@@ -2050,14 +2050,14 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
    it = board.pawn_bits[oside];
    while (it.iterate(sq)) {
       int rank = Rank(sq,oside);
-      k_pos_adj += (4-mbox(kp,sq))*PARAM(KING_OPP_PAWN_DISTANCE);
+      k_pos_adj += (4-distance(kp,sq))*PARAM(KING_OPP_PAWN_DISTANCE);
       if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
          // Extra bonus for being near and ahead of passers, esp.
          // advanced ones.
          // Reward king distance to the queening square and to the
          // pawn.
          Square queenSq = MakeSquare(File(sq),8,oside);
-         k_pos_adj += (4-(mbox(kp,sq))+(4-mbox(kp,queenSq)))*PARAM(KING_OPP_PASSER_DISTANCE)[rank-2]/2;
+         k_pos_adj += (4-(distance(kp,sq))+(4-distance(kp,queenSq)))*PARAM(KING_OPP_PASSER_DISTANCE)[rank-2]/2;
       }
    }
 

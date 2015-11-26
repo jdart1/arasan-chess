@@ -151,7 +151,7 @@ class Scoring
 
     static int tradeDownIndex(const Material &ourmat, const Material &oppmat);
 
-    static int mbox(Square sq1, Square sq);
+    static int distance(Square sq1, Square sq);
 
  private:
 
