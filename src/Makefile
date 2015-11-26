@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 18.1
+# Gnu Makefile for Arasan 18.2
 #
-VERSION = 18.1.0
+VERSION = 18.2.0
 
 # paths, modify as needed:
 
@@ -211,8 +211,6 @@ install: all
 	chmod 755 $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 	ln -s $(INSTALL)/arasan-$(VERSION)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)/arasanx
 	cp $(SRC)/arasan.rc $(INSTALL)/arasan-$(VERSION)
-	cp $(BOOK)/book.bin $(INSTALL)/arasan-$(VERSION)
-	chmod 644 $(INSTALL)/arasan-$(VERSION)/book.bin
 	chmod u+s $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 
 $(BUILD)/%.o: %.cpp
