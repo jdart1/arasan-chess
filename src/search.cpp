@@ -1330,6 +1330,7 @@ int Search::quiesce(int ply,int depth)
          }
       }
    }
+   ASSERT(depth<=0);
 #ifdef SEARCH_STATS
    controller->stats->num_qnodes++;
 #endif
@@ -1563,6 +1564,12 @@ int Search::quiesce(int ply,int depth)
          (node+1)->pv_length=0; // no PV from this point
          node->flags |= EXACT;
       }
+#ifdef _DEBUG
+      if (Util::Abs(node->best_score) > Constants::MATE) {
+          cout << board << endl;
+          ASSERT(0);
+      }
+#endif
       storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
@@ -1578,15 +1585,28 @@ int Search::quiesce(int ply,int depth)
       // captures are generated, or if no captures generate a better
       // score (since we generally can choose whether or not to capture).
       int bitscore;
+      ASSERT(node->eval == Scoring::INVALID_SCORE);
       if (board.getMaterial(White).materialLevel()==0 &&
           board.getMaterial(Black).materialLevel()==0 &&
           ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
          node->eval = bitscore;
+#ifdef _DEBUG
+         if (Util::Abs(node->eval) >= Constants::MATE) {
+             cout << board << endl;
+             ASSERT(0);
+         }
+#endif
       }
       else {
          had_eval = node->staticEval != Scoring::INVALID_SCORE;
          if (had_eval) {
             node->eval = node->staticEval;
+#ifdef _DEBUG
+            if (Util::Abs(node->eval) >= Constants::MATE) {
+                cout << board << endl;
+                ASSERT(0);
+            }
+#endif
          }
          if (node->eval == Scoring::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
@@ -1598,6 +1618,12 @@ int Search::quiesce(int ply,int depth)
             if (result == (hashValue > node->eval ? HashEntry::LowerBound :
                            HashEntry::UpperBound)) {
                node->eval = hashValue;
+#ifdef _DEBUG
+               if (Util::Abs(node->eval) >= Constants::MATE) {
+                   cout << board << endl;
+                   ASSERT(0);
+               }
+#endif
             }
          }
       }
@@ -1884,6 +1910,12 @@ int Search::quiesce(int ply,int depth)
          }
       }
    search_end:
+#ifdef _DEBUG
+      if (Util::Abs(node->best_score) > Constants::MATE) {
+          cout << board << endl;
+          ASSERT(0);
+      }
+#endif
       storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
