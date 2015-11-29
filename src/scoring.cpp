@@ -1921,7 +1921,7 @@ int Scoring::specialCaseEndgame(const Board &board,
          Square pawnSq = board.pawn_bits[side].firstOne();
          if (lookupBitbase(board.kingSquare(oside), pawnSq, board.kingSquare(side), side, board.sideToMove())) {
 #ifdef PAWN_DEBUG
-            cout << ColorImage(side) << " pawn on " << SquareImage(sq) << " is uncatchable" << endl;
+            cout << ColorImage(side) << " pawn on " << SquareImage(pawnSq) << " is uncatchable" << endl;
 #endif
             scores.end = BITBASE_WIN;
             return 1;
