@@ -45,8 +45,8 @@ class HashEntry {
          contents.start = StartSquare(bestMove);
          contents.dest = DestSquare(bestMove);
          contents.promotion = PromoteTo(bestMove);
-         value = val;
-         static_value = staticValue;
+         values.value = val;
+         values.static_value = staticValue;
          setEffectiveHash(hash);
       }
 
@@ -63,15 +63,15 @@ class HashEntry {
       }
 
       int getValue() const {
-         return this->value;
+         return values.value;
       }
 
       int staticValue() const {
-         return static_value;
+         return values.static_value;
       }
 
       void setValue(int val) {
-         value = val;
+         values.value = val;
       }
 
       ValueType type() const {
@@ -133,40 +133,41 @@ class HashEntry {
       }
 
       hash_t getEffectiveHash() const {
-         return (hc ^ val2);
+         return hc ^ val2 ^ val3;
       }
 
       void setEffectiveHash(hash_t hash) {
-         hc = (hash ^ val2);
+         hc = hash ^ val2 ^ val3;
       }
 
    protected:
 
-      uint64 hc;
+      struct Contents
+      BEGIN_PACKED_STRUCT
+        int16 pad;
+        byte depth;
+        byte age;
+        byte flags;
+        signed char start, dest, promotion;
+      END_PACKED_STRUCT
+
+      struct Values
+      BEGIN_PACKED_STRUCT
+        int32 value;
+        int32 static_value;
+      END_PACKED_STRUCT
+
+       uint64 hc;
       union
       {
-#ifdef _MSC_VER
-#pragma pack(push,1)
-#endif
-         struct
-         {
-            int16 pad;
-            byte depth;
-            byte age;
-            byte flags;
-            signed char start, dest, promotion;
-         } contents;
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-         uint64 val2;
-      }
-#ifndef _MSC_VER
-      __attribute__((packed))
-#endif
-      ;
-      int32 value;
-      int32 static_value;
+        Contents contents;
+        uint64 val2;
+      };
+
+      union {
+        Values values;
+        uint64 val3;
+      };
 };
 
 class Hash {
