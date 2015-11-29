@@ -2043,7 +2043,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
       if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
           (File(kp) == file - 1 || File(kp) == file + 1) &&
           Rank(kp, side) >= rank) {
-         k_pos += (rank == 6) ? PARAM(SUPPORTED_PASSER6) :
+         k_pos_adj += (rank == 6) ? PARAM(SUPPORTED_PASSER6) :
             PARAM(SUPPORTED_PASSER7);
       }
    }
