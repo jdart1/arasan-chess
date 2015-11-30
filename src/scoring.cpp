@@ -1832,8 +1832,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
                end_penalty << ")" << endl;
 #endif
          }
-         else if (TypeOfPiece(board[blocker]) != King) {
-            // blocking with the king is considered in scoreEndgame
+         else {
             int mid_penalty = Params::PP_OPP_PIECE_BLOCK[Midgame][index];
             int end_penalty = Params::PP_OPP_PIECE_BLOCK[Endgame][index];
             scores.mid += mid_penalty;

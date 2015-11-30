@@ -963,7 +963,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_MID+index,mLevel);
                grads[Tune::PP_OWN_PIECE_BLOCK_END+index] +=
                   tune_params.scale(inc,Tune::PP_OWN_PIECE_BLOCK_END+index,mLevel);
-            } else if (TypeOfPiece(board[blocker]) != King) {
+            } else {
                grads[Tune::PP_OPP_PIECE_BLOCK_MID+index] +=
                   tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_MID+index,mLevel);
                grads[Tune::PP_OPP_PIECE_BLOCK_END+index] +=
