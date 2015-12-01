@@ -192,7 +192,10 @@ class Scoring
 
     int adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
 
-    template <ColorType side>
+    template <ColorType bishopColor>
+      void scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
+
+   template <ColorType side>
     void pieceScore(const Board &board,
                    const PawnHashEntry::PawnData &ourPawnData,
 		   const PawnHashEntry::PawnData &oppPawnData,

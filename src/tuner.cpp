@@ -728,6 +728,43 @@ static void adjustMaterialScore(const Board &board, ColorType side,
 
 }
 
+template<ColorType bishopColor>
+static void bishopAndPawns(const Board &board,ColorType side,
+                           const Scoring::PawnHashEntry::PawnData &ourPawnData,
+                           const Scoring::PawnHashEntry::PawnData &oppPawnData,
+                    vector<double> &grads, double inc) 
+{
+   int mLevel = board.getMaterial(OppositeColor(side)).materialLevel();
+   int whitePawns = ourPawnData.w_square_pawns;
+   int blackPawns = ourPawnData.b_square_pawns;
+   int ourPawns, oppPawns;
+   if (bishopColor == White) {
+      ourPawns = whitePawns;
+      oppPawns = blackPawns;
+   } else {
+      ourPawns = blackPawns;
+      oppPawns = whitePawns;
+   }
+   if ((whitePawns + blackPawns > 4) && (ourPawns > oppPawns + 2))
+   {
+#ifdef EVAL_DEBUG
+      Scores tmp = scores;
+#endif
+      grads[Tune::BAD_BISHOP_MID] += tune_params.scale(inc*(ourPawns - oppPawns),Tune::BAD_BISHOP_MID,mLevel);
+      grads[Tune::BAD_BISHOP_END] += tune_params.scale(inc*(ourPawns - oppPawns),Tune::BAD_BISHOP_END,mLevel);
+   }
+   const int totalOppPawns = oppPawnData.b_square_pawns + oppPawnData.w_square_pawns;
+   if (totalOppPawns) {
+      // penalize pawns on same color square as opposing single Bishop
+#ifdef EVAL_DEBUG
+      int tmp = opp_scores.end;
+#endif
+      grads[Tune::BISHOP_PAWN_PLACEMENT_END] -= 
+         tune_params.scale(inc*((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns))/ totalOppPawns, Tune::BISHOP_PAWN_PLACEMENT_END,board.getMaterial(side).materialLevel());
+   }
+}
+
+
 // Updates a vector where each entry corresponds to a tunable
 // parameter. The update is based on a particular board position and
 // side and consists for each parameter the contribution of
@@ -797,7 +834,16 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    Bitboard bishop_bits(board.bishop_bits[side]);
-   if (bishop_bits.bitCountOpt() > 1) {
+   const int bishopCount = board.getMaterial(side).bishopCount();
+   if (bishopCount == 1) {
+      if (TEST_MASK(Board::white_squares, bishop_bits)) {
+         bishopAndPawns<White>(board,side,ourPawnData,oppPawnData,grads,inc);
+      }
+      else {
+         bishopAndPawns<Black>(board,side,ourPawnData,oppPawnData,grads,inc);
+      }
+   }
+   else if (bishopCount > 1) {
       grads[Tune::BISHOP_PAIR_MID] += tune_params.scale(inc,Tune::BISHOP_PAIR_MID,mLevel);
       grads[Tune::BISHOP_PAIR_END] += tune_params.scale(inc,Tune::BISHOP_PAIR_END,mLevel);
    }

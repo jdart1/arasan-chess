@@ -739,6 +739,46 @@ int Scoring::outpost(const Board &board,
 
 }
 
+template <ColorType bishopColor>
+void Scoring::scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores) 
+{
+   int whitePawns = ourPawnData.w_square_pawns;
+   int blackPawns = ourPawnData.b_square_pawns;
+   int ourPawns, oppPawns;
+   if (bishopColor == White) {
+      ourPawns = whitePawns;
+      oppPawns = blackPawns;
+   } else {
+      ourPawns = blackPawns;
+      oppPawns = whitePawns;
+   }
+   if ((whitePawns + blackPawns > 4) && (ourPawns > oppPawns + 2))
+   {
+#ifdef EVAL_DEBUG
+      Scores tmp = scores;
+#endif
+      scores.mid += PARAM(BAD_BISHOP_MID) * (ourPawns - oppPawns);
+      scores.end += PARAM(BAD_BISHOP_END) * (ourPawns - oppPawns);
+#ifdef EVAL_DEBUG
+      cout << "bad bishop (" << ColorImage(ourSide) << "): (" <<
+         scores.mid - tmp.mid << "," << scores.end - tmp.end <<
+         ")" << endl;
+#endif
+   }
+   const int totalOppPawns = oppPawnData.b_square_pawns + oppPawnData.w_square_pawns;
+   if (totalOppPawns) {
+      // penalize pawns on same color square as opposing single Bishop
+#ifdef EVAL_DEBUG
+      int tmp = opp_scores.end;
+#endif
+      opp_scores.end += ((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns) * PARAM(BISHOP_PAWN_PLACEMENT_END))/ totalOppPawns;
+#ifdef EVAL_DEBUG
+      cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(ourSide)) << "): " << opp_scores.end - tmp << endl;
+#endif
+   }
+}
+
+
 template<ColorType side>
 void Scoring::pieceScore(const Board &board,
                const PawnHashEntry::PawnData &ourPawnData,
@@ -1009,62 +1049,11 @@ void Scoring::pieceScore(const Board &board,
 
    const int bishopCount = board.getMaterial(side).bishopCount();
    if (bishopCount == 1) {
-      const int opp_pawns = oppPawnData.b_square_pawns + oppPawnData.w_square_pawns;
       if (TEST_MASK(Board::white_squares, board.bishop_bits[side])) {
-         int whitePawns = ourPawnData.w_square_pawns;
-         int blackPawns = ourPawnData.b_square_pawns;
-         if ((whitePawns + blackPawns > 4) && (whitePawns > blackPawns + 2))
-         {
-#ifdef EVAL_DEBUG
-            Scores tmp = scores;
-#endif
-            scores.mid += PARAM(BAD_BISHOP_MID) * (whitePawns - blackPawns);
-            scores.end += PARAM(BAD_BISHOP_END) * (whitePawns - blackPawns);
-#ifdef EVAL_DEBUG
-            cout << "bad bishop (" << ColorImage(side) << "): (" <<
-               scores.mid - tmp.mid << "," << scores.end - tmp.end <<
-               ")" << endl;
-#endif
-         }
-
-         if (opp_pawns) {
-            // penalize pawns on same color square as opposing single Bishop
-#ifdef EVAL_DEBUG
-            int tmp = opp_scores.end;
-#endif
-            opp_scores.end += (oppPawnData.w_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END))/ opp_pawns;
-#ifdef EVAL_DEBUG
-            cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(side)) << "): " << opp_scores.end - tmp << endl;
-#endif
-         }
+         scoreBishopAndPawns<White>(board,side,ourPawnData,oppPawnData,scores,opp_scores);
       }
       else {
-         int whitePawns = ourPawnData.w_square_pawns;
-         int blackPawns = ourPawnData.b_square_pawns;
-         if ((whitePawns + blackPawns > 4) && (blackPawns > whitePawns + 2))
-         {
-#ifdef EVAL_DEBUG
-            Scores tmp = scores;
-#endif
-            scores.mid += PARAM(BAD_BISHOP_MID) * (blackPawns - whitePawns);
-            scores.end += PARAM(BAD_BISHOP_END) * (blackPawns - whitePawns);
-#ifdef EVAL_DEBUG
-            cout << "bad bishop (" << ColorImage(side) << "): (" <<
-               scores.mid - tmp.mid << "," << scores.end - tmp.end <<
-               ")" << endl;
-#endif
-         }
-
-         if (opp_pawns) {
-#ifdef EVAL_DEBUG
-            int tmp = opp_scores.end;
-#endif
-            // penalize pawns on same color square as opposing single Bishop
-            opp_scores.end += (oppPawnData.b_square_pawns * PARAM(BISHOP_PAWN_PLACEMENT_END))/opp_pawns;
-#ifdef EVAL_DEBUG
-            cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(side)) << "): " << opp_scores.end - tmp << endl;
-#endif
-         }
+         scoreBishopAndPawns<Black>(board,side,ourPawnData,oppPawnData,scores,opp_scores);
       }
    }
    else if (bishopCount >= 2) {
