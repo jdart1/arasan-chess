@@ -895,6 +895,16 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::ROOK_ATTACKS_WEAK_PAWN_MID] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_MID,mLevel);
          grads[Tune::ROOK_ATTACKS_WEAK_PAWN_END] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_END,mLevel);
       }
+      if (TEST_MASK(board.pawn_bits[side], Attacks::rank_mask[Rank(sq, White) - 1])) {
+         Bitboard atcks(board.rankAttacks(sq) & board.pawn_bits[side]);
+         Square pawnsq;
+         int i = 0;
+         while(atcks.iterate(pawnsq)) {
+            if (!TEST_MASK(Attacks::pawn_attacks[pawnsq][side], board.pawn_bits[side])) // not protected by pawn
+            ++i;
+         }
+         grads[Tune::SIDE_PROTECTED_PAWN] += tune_params.scale(inc*i,Tune::SIDE_PROTECTED_PAWN,mLevel);
+      }
    }
    Bitboard queen_bits(board.queen_bits[side]);
    while (queen_bits.iterate(sq)) {
@@ -925,21 +935,30 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          board.getMaterial(side).infobits() != Material::KQ))) {
       const int pieces = board.getMaterial(side).pieceCount();
       double inc_adjust = inc;
+      int k_pos = tune_params[Tune::KING_PST_ENDGAME + ksq_map].current;
       if (pieces < 3) {
          inc_adjust = inc_adjust*tune_params[Tune::KING_POSITION_LOW_MATERIAL0+pieces].current/128.0;
       }
       grads[Tune::KING_PST_ENDGAME+ksq_map] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+ksq_map,mLevel);
       if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
-         if (File(kp) > chess::DFILE)
+         if (File(kp) > chess::DFILE) {
             grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
-         else
+            k_pos += tune_params[Tune::PAWN_SIDE_BONUS].current;
+         }
+         else {
             grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+            k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
+         }
       }
       else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
-         if (File(kp) <= chess::DFILE)
+         if (File(kp) <= chess::DFILE) {
             grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
-         else
+            k_pos += tune_params[Tune::PAWN_SIDE_BONUS].current;
+         }
+         else {
             grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+            k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
+         }
       }
       inc_adjust /= 16.0;
       Bitboard it(board.pawn_bits[side]);
@@ -947,29 +966,41 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       while(it.iterate(sq)) {
          grads[Tune::KING_OWN_PAWN_DISTANCE] +=
            tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OWN_PAWN_DISTANCE,mLevel);
+         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OWN_PAWN_DISTANCE].current/16;
          int file = File(sq);
          int rank = Rank (sq,side);
          if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
              (File(kp) == file - 1 || File(kp) == file + 1) &&
              Rank(kp, side) >= rank) {
-            if (rank == 6)
+            if (rank == 6) {
+               k_pos += tune_params[Tune::SUPPORTED_PASSER6].current/16;
                grads[Tune::SUPPORTED_PASSER6] +=
                   tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER6,mLevel);
-            else
+            }
+            else {
+               k_pos += tune_params[Tune::SUPPORTED_PASSER7].current/16;
                grads[Tune::SUPPORTED_PASSER7] +=
                   tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER7,mLevel);
+            }
          }
       }
       it = board.pawn_bits[oside];
       while (it.iterate(sq)) {
-          grads[Tune::KING_OPP_PAWN_DISTANCE] +=
+         grads[Tune::KING_OPP_PAWN_DISTANCE] +=
              tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OPP_PAWN_DISTANCE,mLevel);
+         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OPP_PAWN_DISTANCE].current/16;
          int rank = Rank(sq,oside);
          if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
             Square queenSq = MakeSquare(File(sq),8,oside);
             grads[Tune::KING_OPP_PASSER_DISTANCE+rank-2] +=
                tune_params.scale(inc_adjust*((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))/2,Tune::KING_OPP_PASSER_DISTANCE+rank-2,mLevel);
+            k_pos += ((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))*tune_params[Tune::KING_OPP_PASSER_DISTANCE+rank-2].current/(16*2);
          }
+      }
+      if (pieces < 3) {
+         // compute partial derivative of KING_POSITION_LOW_MATERIAL
+         grads[Tune::KING_POSITION_LOW_MATERIAL0+pieces] +=
+            tune_params.scale(k_pos*inc/128.0,Tune::KING_POSITION_LOW_MATERIAL0+pieces,mLevel);
       }
    }
 

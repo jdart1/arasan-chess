@@ -2094,9 +2094,9 @@ void Scoring::scoreEndgame(const Board &board,int k_pos,Scores &scores) {
          int i = 0;
          while(atcks.iterate(pawnsq)) {
             if (!TEST_MASK(Attacks::pawn_attacks[pawnsq][side], board.pawn_bits[side])) // not protected by pawn
-               scores.end += PARAM(SIDE_PROTECTED_PAWN) * (i + 1);
             ++i;
          }
+         scores.end += PARAM(SIDE_PROTECTED_PAWN)*i;
       }
    }
 #ifdef EVAL_DEBUG
