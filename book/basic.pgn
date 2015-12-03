@@ -10703,19 +10703,23 @@ Nf4 Bxa2 20. cxd4 Bxf4 21. g7 $2 (21. gxf7+) 21... Rg8 $2 (21... Rc8 $11) *
 
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. g3 e5 7. Nde2 (7. Nb3
 Nbd7 $2 (7... Be6 $2) (7... b5 $6 8. a4 $3 b4 9. Nd5 $14) (7... Be7 $3) 8. a4
-b6 (8... Be7 $1) 9. Bg2 Bb7 (9... Be7 $3 10. Nd2 $1 Qc7 11. Nf1 Bb7 12. Ne3 $14
-{0-1 (45) Strohhaeker,R (2432)-Weber,U (2425) Germany 2014}) 10. O-O Be7 11.
-Re1 Rc8 12. Nd2 Rc5 13. Nf1 Qa8 14. Bd2 $5 {1-0 (14) avis (3003)-Arasan 18.0 
-(2704) chessclub.com 2015} (14. Qd3 O-O (14... Rxc3 $5 15. Qxc3 Nxe4 16. Bxe4
-Bxe4 17. Rxe4 Qxe4 18. Qc8+ Bd8 $14 {0-1 (37) Filipenko,A (2351)-Shyam,N (2482)
-Moscow 2012}) 15. Ne3 Rfc8 16. Bd2 {1/2-1/2 (25) Boros,D (2501)-Becker,M (2330)
-Dresden 2007}) (14. Bg5 $14) (14. Ne3 $14)) 7... Nbd7 (7... b5 $2 8. Nd5 $1 (8.
-Bg2 Nbd7 9. O-O Be7 {1/2-1/2 (41) Bures,J (2477)-Mertens,M (2429) ICCF 2011})
-8... Nbd7 9. Nec3 Be7 10. a4 Nxd5 11. Nxd5 bxa4 12. Be3 O-O 13. Rxa4 Bg5 14.
-Bxg5 Qxg5 15. Bg2 Bb7 $2 {1-0 (15) ComputerGOD (2276)-Arasan 18.0 (1990)
-chessclub.com 2015} (15... Qd8 $1)) (7... Be7 $3 8. Bg2 $11) 8. a4 b6 9. Nd5
-Nxd5 10. Qxd5 Rb8 11. Nc3 Be7 12. Bg2 O-O (12... Bb7 $1 13. Qd3) 13. O-O Bb7
-14. Qd1 Rc8 (14... Qc7 $1) 15. Qe2 $14 1/2-1/2
+b6 9. Bg2 Bb7 (9... Be7 $3 10. Nd2 $1 Qc7 $2 (10... Nc5) 11. Nf1 Bb7 12. Ne3 g6
+$2 (12... O-O 13. Nf5 Rfe8 14. O-O $14 {0-1 (45) Strohhaeker,R (2432)-Weber,U 
+(2425) Germany 2014}) 13. Ned5 $14 {0-1 (52) avis (2148)-Arasan 18.2 (1998)
+chessclub.com 2015}) 10. O-O Be7 11. Re1 Rc8 12. Nd2 Rc5 (12... O-O 13. Nf1 Nc5
+14. Bg5 Ne6 15. Bxf6 Bxf6 16. Ne3 g6 17. Ncd5 Bg7 18. c3 Kh8 19. Qb3 Rb8 20.
+Red1 Ba8 21. Qc4 a5 22. Qb5 Nc7 23. Nxc7 Qxc7 {1/2-1/2 (23) Malinin,V (2404)
+-Vayser,V (2366) ICCF corr 2004}) 13. Nf1 Qa8 14. Bd2 $5 {1-0 (14) avis (3003)
+-Arasan 18.0 (2704) chessclub.com 2015} (14. Qd3 O-O (14... Rxc3 $5 15. Qxc3
+Nxe4 16. Bxe4 Bxe4 17. Rxe4 Qxe4 18. Qc8+ Bd8 $14 {0-1 (37) Filipenko,A (2351)
+-Shyam,N (2482) Moscow 2012}) 15. Ne3 Rfc8 16. Bd2 {1/2-1/2 (25) Boros,D (2501)
+-Becker,M (2330) Dresden 2007}) (14. Bg5 $14) (14. Ne3 $14)) 7... Nbd7 (7... b5
+$2 8. Nd5 $1 (8. Bg2 Nbd7 9. O-O Be7 {1/2-1/2 (41) Bures,J (2477)-Mertens,M 
+(2429) ICCF 2011}) 8... Nbd7 9. Nec3 Be7 10. a4 Nxd5 11. Nxd5 bxa4 12. Be3 O-O
+13. Rxa4 Bg5 14. Bxg5 Qxg5 15. Bg2 Bb7 $2 {1-0 (15) ComputerGOD (2276)-Arasan
+18.0 (1990) chessclub.com 2015} (15... Qd8 $1)) (7... Be7 $3 8. Bg2 $11) 8. a4
+b6 9. Nd5 Nxd5 10. Qxd5 Rb8 11. Nc3 Be7 12. Bg2 O-O (12... Bb7 $1 13. Qd3) 13.
+O-O Bb7 14. Qd1 Rc8 (14... Qc7 $1) 15. Qe2 $14 1/2-1/2
 
 [Event "?"]
 [Site "?"]
