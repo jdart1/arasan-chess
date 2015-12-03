@@ -7,9 +7,11 @@ Changes in Arasan 18.2:
     Scoring. Use local calc instead of array lookup for this function.
  3) Re-tune all parameters using latest rating gauntlet games as training
     file.
- 4) Add MSVC project files to repository.
- 5) For Linux builds with gcc, turn on Link Time Optimization along with PGO.
- 6) Lots of book changes/improvements.
+ 4) Add value fields to effective hash (fixes possible crashes in endgame
+    when running multi-threaded).
+ 5) Add MSVC project files to repository.
+ 6) For Linux builds with gcc, turn on Link Time Optimization along with PGO.
+ 7) Lots of book changes/improvements.
 
 Changes in Arasan 18.1 (Nov. 2015):
  1) Less aggressive LMR and LMP.
