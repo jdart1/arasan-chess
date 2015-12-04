@@ -107,16 +107,16 @@ void Log::add_move( Board &board, const Move &emove,
 
    // moves are always added at the "current" position.
 
-   if (my_current >= length()) {
-      append(entry);
+   if (my_current >= size()) {
+      push_back(entry);
    }
    else {
-      set(my_current,entry);
+      insert(begin()+my_current,entry);
    }
    my_current++;
    // Adding a move at a given point removes any moves
    // after it in the array.
-   if (length() > my_current) {
+   if (size() > my_current) {
       truncate(my_current);
    }
    stringstream s;
@@ -132,7 +132,7 @@ void Log::add_move( Board &board, const Move &emove,
          s << "     " << stats->depth << "\t" << stats->num_nodes << "\t";
          Scoring::printScore(stats->display_value,s);
          const string &pv = stats->best_line_image;
-         if (pv.length()) {
+         if (pv.size()) {
             s << '\t';
             // output up to 40 chars of the PV. Do not output the first
             // move, only the predicted continuation after that.
@@ -182,14 +182,14 @@ const Move &Log::last_move() const {
 
 void Log::setResult(const char *result) {
    if (!empty()) {
-      last().setResult(result);
+      back().setResult(result);
    }
 }
 
 
 Log::GameResult Log::getResult() const {
    if (!empty()) {
-      string result = last().result();
+      string result = back().result();
       if (result.find("1/2-1/2") != string::npos)
         return DrawResult;
       else if (result.find("1-0") != string::npos)
@@ -216,7 +216,7 @@ int Log::back_up() {
 
 int Log::go_forward()
 {
-   if (my_current < length()) {
+   if (my_current < size()) {
       ++my_current;
       return 1;
    }
@@ -234,7 +234,7 @@ void Log::reset()
 void Log::clear()
 {
    write_eol();
-   removeAll();
+   vector<LogEntry>::clear();
    my_current = 0;
 }
 

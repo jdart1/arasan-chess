@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2009, 2013-2015 by Jon Dart.  All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
@@ -7,9 +7,7 @@
 #include "search.h"
 #include <fstream>
 #include <string>
-using namespace std;
-
-#include "arasvec.h"
+#include <vector>
 
 using namespace std;
 
@@ -95,7 +93,7 @@ class LogEntry
      string my_result;
 };
 
-class Log : public ArasanVector<LogEntry>
+class Log : public vector<LogEntry>
 {
      // Maintains a log of moves made in the game so far.  Unlike the
      // Move_Array (see movearr.h), moves are not added and removed
@@ -125,7 +123,8 @@ class Log : public ArasanVector<LogEntry>
      // remove the most recently added move to the log.
      void remove_move()
      {
-        remove_last();
+        ASSERT(my_current>0);
+        pop_back();
         --my_current;
      }
              
@@ -133,13 +132,13 @@ class Log : public ArasanVector<LogEntry>
      // through the moves changes current w/o changing num_moves.        
      unsigned current() const
      {
-             return my_current;
+       return my_current;
      }
      
      // Return the total number of moves made.
      unsigned num_moves() const
      {
-       return length();
+       return (unsigned)size();
      }
      
      // Decrement the "current" move by one.
@@ -163,6 +162,11 @@ class Log : public ArasanVector<LogEntry>
         
      // remove everything from the log
      void clear();
+
+     // resize down to newSize
+     void truncate(int newSize) {
+       erase(begin()+newSize,end());
+     }
              
      void write_header();
 
@@ -179,7 +183,7 @@ class Log : public ArasanVector<LogEntry>
      GameResult getResult() const;
              
      void getResultAsString(string & result) const {
-       result = empty() ? "*" : last().result();
+       result = empty() ? "*" : back().result();
      }
 
      void setEnabled(int enable) {
@@ -189,7 +193,7 @@ class Log : public ArasanVector<LogEntry>
 private:
 
      void flush();
-     int my_current;
+     unsigned my_current;
      ofstream log_file;     
      char buf[256];
      int enabled;

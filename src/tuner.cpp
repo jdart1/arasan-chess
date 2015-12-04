@@ -433,10 +433,10 @@ static int read_next_game(ifstream &infile, const string &file_name,
                           vector<Move>&moves, unsigned long &games,
                           string &result)
 {
-   ArasanVector<ChessIO::Header> hdrs;
+   vector<ChessIO::Header> hdrs;
    if (!infile.eof() && infile.good()) {
       long first;
-      hdrs.removeAll();
+      hdrs.clear();
       int c;
       // skip to start of next header (handles cases where
       // comment follows end of previous game).
@@ -447,7 +447,7 @@ static int read_next_game(ifstream &infile, const string &file_name,
          }
       }
       ChessIO::collect_headers(infile,hdrs,first);
-      if (hdrs.length()) {
+      if (hdrs.size()) {
          ++games;
          int move_num = 0;
          Board board;

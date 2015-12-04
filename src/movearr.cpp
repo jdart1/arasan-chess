@@ -16,12 +16,12 @@ void MoveArray::add_move( const Board &board,
    const BoardState &previous_state, const Move &move,
                           const string &image, bool ponder) {
     MoveRecord entry( board, previous_state, move, image, ponder );
-    append(entry);
+    push_back(entry);
 }
 
 void MoveArray::remove_move() {
-    if (length() > 0) {
-       remove_last();
+    if (size() > 0) {
+       pop_back();
     }
 }
 

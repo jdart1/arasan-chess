@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2012-2014  by Jon Dart. All Rights Reserved.
+// Copyright 1994, 1995, 2008, 2012-2015  by Jon Dart. All Rights Reserved.
 
 #include "chessio.h"
 #include "epdrec.h"
@@ -34,7 +34,7 @@ static int skip_space(istream &game_file)
     return c;
 }
 
-void ChessIO::get_game_description(const ArasanVector<Header> &hdrs, string &descr, long id)
+void ChessIO::get_game_description(const vector<Header> &hdrs, string &descr, long id)
 {
       stringstream s;
       string tmp;
@@ -55,7 +55,7 @@ void ChessIO::get_game_description(const ArasanVector<Header> &hdrs, string &des
       get_header(hdrs, "Site", tmp);
       s << ", " << tmp;
       get_header(hdrs, "Round", tmp);
-      if (tmp.length() >0 && tmp[0] != '?')
+      if (tmp.size() >0 && tmp[0] != '?')
       {
         s << '(' << tmp << ')';
       }
@@ -71,7 +71,7 @@ void ChessIO::get_game_description(const ArasanVector<Header> &hdrs, string &des
       descr = s.str();
 }
 
-int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
+int ChessIO::scan_pgn(istream &game_file, vector<string> &contents)
 {
     Board board;
     int c;
@@ -80,7 +80,7 @@ int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
     {
         // Collect the header:
         long first;
-        ArasanVector<Header> hdrs;
+        vector<Header> hdrs;
         string eventStr;
         collect_headers(game_file, hdrs, first);
         if (get_header(hdrs,"Event",eventStr))
@@ -91,9 +91,9 @@ int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
            // description.
            string descr;
            get_game_description(hdrs, descr, first);
-           contents.append(descr);
+           contents.push_back(descr);
         }
-        hdrs.removeAll();
+        hdrs.clear();
         
         while (game_file.good() && !game_file.eof())
         {
@@ -108,13 +108,14 @@ int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
 }
 
 
-int ChessIO::get_header(const ArasanVector<Header> &hdrs, 
+int ChessIO::get_header(const vector<Header> &hdrs, 
   const string &key, string &val)
 {
     val = "";
-    for (int i=0; i <hdrs.length(); i++)
-    {
-         const Header &p = hdrs[i];
+    for (vector<Header>::const_iterator it = hdrs.begin();
+         it != hdrs.end();
+         it++) {
+         const Header &p = *it;
          if (p.tag() == key)
          {
              val = p.value();
@@ -124,10 +125,10 @@ int ChessIO::get_header(const ArasanVector<Header> &hdrs,
     return 0;
 }
 
-void ChessIO::add_header(ArasanVector <Header> &hdrs,
+void ChessIO::add_header(vector <Header> &hdrs,
   const string &key, const string & val)
 {
-   hdrs.append(Header(key,val));
+   hdrs.push_back(Header(key,val));
 }
 
 int ChessIO::load_fen(istream &ifs, Board &board)
@@ -143,19 +144,19 @@ int ChessIO::store_fen( ostream &ofile, const Board &board)
     return ofile.good();
 }
 
-int ChessIO::store_pgn(ostream &ofile,MoveArray &moves, 
+int ChessIO::store_pgn(ostream &ofile, const MoveArray &moves, 
                         const ColorType computer_side,
                         const string &result,
-                        ArasanVector<Header> &headers)
+                        vector<Header> &headers)
 {
     // Write standard PGN header.
 
-    int i;
+    unsigned i;
     string gameResult = result;
-    if (result.length() == 0)
+    if (result.size() == 0)
        gameResult = "*";
     string val;
-    ArasanVector <Header> newHeaders;
+    vector <Header> newHeaders;
     if (!get_header(headers, "Event", val))
        add_header(newHeaders,"Event","?");
     else
@@ -221,7 +222,7 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
     // We have now written all the mandatory headers.
     // Add any more headers that were passed into us.
 
-    int n = headers.length();
+    unsigned n = (unsigned)headers.size();
     for (i=0;i<n;i++)
     {
         Header p = headers[i];
@@ -239,29 +240,32 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
     return store_pgn(ofile,moves,longResult,newHeaders);
 }
 
-int ChessIO::store_pgn(ostream &ofile, MoveArray &moves,const string &result,
-                         ArasanVector<Header> &headers)
+int ChessIO::store_pgn(ostream &ofile, const MoveArray &moves,
+                       const string &result,
+                       vector<Header> &headers)
 {
-    int i,n;
-    n = headers.length();
-    for (i =0; i<n; i++) {
-        Header p = headers[i];
+    for (vector<Header>::const_iterator it = headers.begin();
+         it != headers.end();
+         it++) {
+        const Header &p = *it;
         ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << endl;
         
     }
     ofile << endl;
 
     // Write game moves.
-    int len = moves.length();
     stringstream buf;
-    for (int i = 0; i < len; i++) {
-        const MoveRecord &e = moves[i];
+	unsigned i = 0;
+	for (vector<MoveRecord>::const_iterator it = moves.begin();
+		it != moves.end();
+		it++, i++) {
+        const MoveRecord &e = *it;
         stringstream numbuf;
         if (i % 2 == 0) {
             numbuf << (i/2)+1 << ". ";
         }
-        const int image_size = (int)e.image().length();
-        if ((int)buf.tellp() + image_size + numbuf.str().length() + 1 >= PGN_MARGIN) {
+        const int image_size = (int)e.image().size();
+        if ((int)buf.tellp() + image_size + numbuf.str().size() + 1 >= PGN_MARGIN) {
             ofile << buf.str() << endl;
             buf.str("");
         }
@@ -270,7 +274,7 @@ int ChessIO::store_pgn(ostream &ofile, MoveArray &moves,const string &result,
         }
         buf << numbuf.str() << e.image();
     }
-    if ((int)buf.tellp() + result.length() + 1 >= PGN_MARGIN) {
+    if ((int)buf.tellp() + result.size() + 1 >= PGN_MARGIN) {
         ofile << buf.str() << endl;
         buf.str("");
         buf << result;
@@ -352,7 +356,7 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
     return 1;
 }
 
-void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, long &first)
+void ChessIO::collect_headers(istream &game_file,vector <Header>&hdrs, long &first)
 {
         first = -1L;
         int c;
@@ -410,7 +414,7 @@ void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, lon
                     }
                     val[v] = '\0'; 
                 }
-                hdrs.append(Header(tag,val));
+                hdrs.push_back(Header(tag,val));
                 while (!game_file.eof() && c != ']')
                     c = game_file.get();
             }
