@@ -87,9 +87,6 @@ struct NodeInfo {
     int newBest(int score) const {
       return score > best_score && score < beta;
     }
-
-   // pad to mult of 128 (Intel x64 platform)
-   volatile char pad[112];
 };
 
 typedef NodeInfo NodeStack[Constants::MaxPly];
