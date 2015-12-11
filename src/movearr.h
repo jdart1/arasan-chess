@@ -1,10 +1,10 @@
-// Copyright 1997-2002, 2008, 2012, 2015 by Jon Dart. All Rights Reserved.a
+// Copyright 1997-2002, 2008, 2012 by Jon Dart. All Rights Reserved.a
 //
 #ifndef _MOVE_ARRAY_H
 #define _MOVE_ARRAY_H
 
+#include "arasvec.h"
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -67,7 +67,7 @@ class MoveRecord
      bool my_ponder; // true if move was added provisionally during a ponder operation
 };
 
-class MoveArray : public vector <MoveRecord>
+class MoveArray : public ArasanVector <MoveRecord>
 {
      // Maintains a list of moves made in the game so far or in
      // the search process.	     
@@ -88,7 +88,7 @@ class MoveArray : public vector <MoveRecord>
      // return the total number of half-moves in the game:
      unsigned num_moves() const
      {
-       return (unsigned)size();
+       return (unsigned)length();
      }
      
      unsigned num_moves(const ColorType side) const;

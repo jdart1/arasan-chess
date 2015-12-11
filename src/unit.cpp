@@ -267,10 +267,10 @@ static const string pgn_test = "[Event \"?\"]"
 
       stringstream infile(pgn_test);
       long first;
-      vector <ChessIO::Header>hdrs;
+      ArasanVector <ChessIO::Header>hdrs;
       ChessIO::collect_headers(infile,hdrs,first);
       int errs = 0;
-      if (hdrs.size() != 10) {
+      if (hdrs.length() != 10) {
          ++errs;
          cerr << "error in PGN test: header count" << endl;
       }

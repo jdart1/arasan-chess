@@ -431,14 +431,14 @@ static void processVar(const Variation &var, bool first) {
 
 static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
 {
-   vector<ChessIO::Header> hdrs;
+   ArasanVector<ChessIO::Header> hdrs;
    long games = 0L;
    ColorType side = White;
    while (!infile.eof() && infile.good()) {
       long first;
       side = White;
       ResultType last_result = UnknownResult;
-      hdrs.clear();
+      hdrs.removeAll();
       int c;
       // skip to start of next header (handles cases where
       // comment follows end of previous game).

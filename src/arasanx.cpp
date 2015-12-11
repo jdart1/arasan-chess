@@ -145,7 +145,7 @@ int moves_to_search = 1;
 int flip = 0;
 Move solution_moves[10];
 bool avoid = false;
-vector<int> solution_times;
+ArasanVector<int> solution_times;
 static uint64 nodes_to_find_total;
 static int depth_to_find_total;
 static uint64 time_to_find_total;
@@ -574,12 +574,12 @@ static void save_game() {
       return;
    }
    if (game_file) {
-      vector<ChessIO::Header> headers;
+      ArasanVector<ChessIO::Header> headers;
       string opening_name, eco;
       if (ecoCoder) {
          if (doTrace) cout << "# calling classify" << endl;
          ecoCoder->classify(*gameMoves,eco,opening_name);
-         headers.push_back(ChessIO::Header("ECO",eco));
+         headers.append(ChessIO::Header("ECO",eco));
       }
       static char crating[15];
       static char orating[15];
@@ -587,42 +587,42 @@ static void save_game() {
       sprintf(orating,"%d",opponent_rating);
 
       if (hostname.length() > 0) {
-          headers.push_back(ChessIO::Header("Site",hostname));
+          headers.append(ChessIO::Header("Site",hostname));
       }
 
       if (computer_plays_white) {
-         headers.push_back(ChessIO::Header("Black",
+         headers.append(ChessIO::Header("Black",
             opponent_name.length() > 0 ? opponent_name : "?"));
          if (computer_rating)
-            headers.push_back(ChessIO::Header("WhiteElo",crating));
+            headers.append(ChessIO::Header("WhiteElo",crating));
          if (opponent_rating)
-            headers.push_back(ChessIO::Header("BlackElo",orating));
+            headers.append(ChessIO::Header("BlackElo",orating));
       }
       else {
-         headers.push_back(ChessIO::Header("White",
+         headers.append(ChessIO::Header("White",
             opponent_name.length() > 0 ? opponent_name : "?"));
          if (opponent_rating)
-            headers.push_back(ChessIO::Header("WhiteElo",orating));
+            headers.append(ChessIO::Header("WhiteElo",orating));
          if (computer_rating)
-            headers.push_back(ChessIO::Header("BlackElo",crating));
+            headers.append(ChessIO::Header("BlackElo",crating));
       }
 #ifdef SELFPLAY
       if (selfplay_round != -1) {
          stringstream rnd;
          rnd << selfplay_round;
-         headers.push_back(ChessIO::Header("Round",rnd.str()));
+         headers.append(ChessIO::Header("Round",rnd.str()));
       }
 #endif
       if (start_fen.size()) {
          // we had a non-standard starting position for the game
-          headers.push_back(ChessIO::Header("FEN",start_fen));
+          headers.append(ChessIO::Header("FEN",start_fen));
       }
       stringstream timec;
       timec << minutes*60;
       if (incr) {
           timec << '+' << setprecision(2) << incr/1000.0F;
       }
-      headers.push_back(ChessIO::Header("TimeControl",timec.str()));
+      headers.append(ChessIO::Header("TimeControl",timec.str()));
       string result;
       theLog->getResultAsString(result);
 #ifdef SELFPLAY
@@ -648,7 +648,7 @@ static void save_game() {
          result.c_str(),
          headers);
       // free headers
-      headers.clear();
+      headers.removeAll();
    }
    if (doTrace) cout << "# out of save_game" << endl;
 }
@@ -1015,7 +1015,7 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
         last_computer_move = ponder_move;
         last_computer_stats = ponder_stats;
         // Clean up the global move array, if we got no ponder hit.
-        if (!uci && gameMoves->size() && gameMoves->back().wasPonder()) {
+        if (!uci && gameMoves->length() > 0 && gameMoves->last().wasPonder()) {
             gameMoves->remove_move();
         }
     }
@@ -1645,7 +1645,7 @@ static void execute_move(Board &board,Move m)
     BoardState previous_state = board.state;
     board.doMove(m);
     // If our last move added was the pondering move, replace it
-    if (gameMoves->size() && gameMoves->back().wasPonder()) {
+    if (gameMoves->length() > 0 && gameMoves->last().wasPonder()) {
         gameMoves->remove_move();
     }
     gameMoves->add_move(board,previous_state,m,last_move_image,false);
@@ -2032,7 +2032,7 @@ Move excludes [], int num_excludes) {
    cout <<  '\t';
    total_time += stats.elapsed_time;
    total_nodes += stats.num_nodes;
-   gameMoves->clear();
+   gameMoves->removeAll();
    return move;
 }
 
@@ -2049,7 +2049,7 @@ static void do_test(string test_file)
    depth_to_find_total = 0;
    time_to_find_total = (uint64)0;
 
-   solution_times.clear();
+   solution_times.removeAll();
    Board board;
    ifstream pos_file( test_file.c_str(), ios::in);
    if (!pos_file) {
@@ -2150,7 +2150,7 @@ static void do_test(string test_file)
             if (IsNull(result)) break;
             excludes[index] = result;
             int correct = solution_time >=0;
-            solution_times.push_back((int)solution_time);
+            solution_times.append((int)solution_time);
             total_tests++;
             if (correct) {
                cout << "\t++ solved in " << setprecision(2) << (float)solution_time/1000.0 <<
@@ -2213,14 +2213,14 @@ static void do_test(string test_file)
       cout << i << "      ";
    cout << endl;
    double score = 0.0;
-   for (size_t i = 0; i < solution_times.size(); i++) {
+   for (i = 0; i < solution_times.length(); i++) {
       char digits[15];
       if (i == 0) {
-         sprintf(digits,"% 4d |       ",(int)i);
+         sprintf(digits,"% 4d |       ",i);
          cout << endl << digits;
       }
       else if ((i+1) % 10 == 0) {
-         sprintf(digits,"% 4d |",((int)i+1)/10);
+         sprintf(digits,"% 4d |",(i+1)/10);
          cout << endl << digits;
       }
       if (solution_times[i] == -1) {
@@ -2273,7 +2273,7 @@ static uint64 perft(Board &board, int depth) {
 }
 
 static void loadgame(Board &board,ifstream &file) {
-    vector<ChessIO::Header> hdrs(20);
+    ArasanVector<ChessIO::Header> hdrs(20);
     long first;
     ChessIO::collect_headers(file,hdrs,first);
     ColorType side = White;
@@ -2386,7 +2386,7 @@ static void do_selfplay()
            loadgame(*main_board,file);
            computer_plays_white = true;
            // save moves
-           selfplay_moves.clear();
+           selfplay_moves.removeAll();
            for (int i = 0; i < gameMoves->length(); i++) {
                selfplay_moves.append((*gameMoves)[i]);
            }
@@ -2626,7 +2626,7 @@ static bool do_command(const string &cmd, Board &board) {
         ponder_move = NullMove;
         if (cmd_args.substr(0,8) == "startpos") {
             board.reset();
-            gameMoves->clear();
+            gameMoves->removeAll();
         }
         else if (cmd_args.substr(0,3) == "fen") {
             string fen;
@@ -2647,7 +2647,7 @@ static bool do_command(const string &cmd, Board &board) {
             last_stats.clear();
             last_move = NullMove;
             last_move_image.clear();
-            gameMoves->clear();
+            gameMoves->removeAll();
             predicted_move = NullMove;
             pondering = 0;
             ponder_move_ok = false;
@@ -2997,7 +2997,7 @@ static bool do_command(const string &cmd, Board &board) {
         last_stats.clear();
         last_move = NullMove;
         last_move_image.clear();
-        gameMoves->clear();
+        gameMoves->removeAll();
         predicted_move = NullMove;
         pondering = 0;
         ponder_move_ok = false;
@@ -3122,7 +3122,7 @@ static bool do_command(const string &cmd, Board &board) {
         theLog->setResult(cmd_args.c_str());
         save_game();
         game_end = 1;
-        gameMoves->clear();
+        gameMoves->removeAll();
     }
     else if (cmd == "savegame") {
     }

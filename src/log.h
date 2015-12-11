@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014 by Jon Dart.  All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
@@ -7,7 +7,9 @@
 #include "search.h"
 #include <fstream>
 #include <string>
-#include <vector>
+using namespace std;
+
+#include "arasvec.h"
 
 using namespace std;
 
@@ -93,7 +95,7 @@ class LogEntry
      string my_result;
 };
 
-class Log : public vector<LogEntry>
+class Log : public ArasanVector<LogEntry>
 {
      // Maintains a log of moves made in the game so far.  Unlike the
      // Move_Array (see movearr.h), moves are not added and removed
@@ -123,8 +125,7 @@ class Log : public vector<LogEntry>
      // remove the most recently added move to the log.
      void remove_move()
      {
-        ASSERT(my_current>0);
-        pop_back();
+        remove_last();
         --my_current;
      }
              
@@ -132,13 +133,13 @@ class Log : public vector<LogEntry>
      // through the moves changes current w/o changing num_moves.        
      unsigned current() const
      {
-       return my_current;
+             return my_current;
      }
      
      // Return the total number of moves made.
      unsigned num_moves() const
      {
-       return (unsigned)size();
+       return length();
      }
      
      // Decrement the "current" move by one.
@@ -162,11 +163,6 @@ class Log : public vector<LogEntry>
         
      // remove everything from the log
      void clear();
-
-     // resize down to newSize
-     void truncate(int newSize) {
-       erase(begin()+newSize,end());
-     }
              
      void write_header();
 
@@ -183,7 +179,7 @@ class Log : public vector<LogEntry>
      GameResult getResult() const;
              
      void getResultAsString(string & result) const {
-       result = empty() ? "*" : back().result();
+       result = empty() ? "*" : last().result();
      }
 
      void setEnabled(int enable) {
@@ -193,7 +189,7 @@ class Log : public vector<LogEntry>
 private:
 
      void flush();
-     unsigned my_current;
+     int my_current;
      ofstream log_file;     
      char buf[256];
      int enabled;
