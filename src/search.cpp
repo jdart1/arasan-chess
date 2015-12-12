@@ -2014,7 +2014,6 @@ int Search::calcExtensions(const Board &board,
                            int moveIndex,
                            Move move) {
    // see if we should apply any extensions at this node.
-   int ply = node->ply;
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
@@ -2072,15 +2071,15 @@ int Search::calcExtensions(const Board &board,
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
-   pruneOk &= parentNode->num_try &&
+   pruneOk &= !node->PV() && parentNode->num_try &&
        Capture(move) == Empty &&
        TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5) &&
        !Scoring::mateScore(parentNode->alpha) &&
-       (board.getMaterial(White).men() +
-        board.getMaterial(Black).men() > 6);
+       board.getMaterial(White).hasPieces() &&
+       board.getMaterial(Black).hasPieces();
 
-   if (!node->PV() && ply > 0 && pruneOk) {
+   if (pruneOk) {
       const Move &threat = parentNode->threatMove;
       if (!IsNull(threat)) {
          if (StartSquare(move) == DestSquare(threat) ||
