@@ -44,7 +44,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define HELPFUL_MASTER
 
-static const int FUTILITY_DEPTH = 3*DEPTH_INCREMENT;
+static const int FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = int(3*DEPTH_INCREMENT);
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
@@ -69,12 +69,18 @@ static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
 static const int RAZOR_MARGIN_BASE = int(3.0*PAWN_VALUE);
 static const int RAZOR_MARGIN_INCR = int(1.0*PAWN_VALUE);
 
-static const int FUTILITY_MARGIN[4] =
-   {(int)1.46*PAWN_VALUE,
-    (int)2.46*PAWN_VALUE,
-    (int)3.96*PAWN_VALUE,
-    (int)5.96*PAWN_VALUE
-   };
+static const int FUTILITY_MARGIN_BASE = (int)(1.16*PAWN_VALUE);
+static const int FUTILITY_MARGIN_SLOPE = (int)(0.75*PAWN_VALUE);
+static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.25*PAWN_VALUE);
+
+static const int FUTILITY_MARGIN[6] =
+{FUTILITY_MARGIN_BASE,
+ FUTILITY_MARGIN_BASE+1*FUTILITY_MARGIN_SLOPE+1*1*FUTILITY_MARGIN_SLOPE2,
+ FUTILITY_MARGIN_BASE+2*FUTILITY_MARGIN_SLOPE+2*2*FUTILITY_MARGIN_SLOPE2,
+ FUTILITY_MARGIN_BASE+3*FUTILITY_MARGIN_SLOPE+3*3*FUTILITY_MARGIN_SLOPE2,
+ FUTILITY_MARGIN_BASE+4*FUTILITY_MARGIN_SLOPE+4*4*FUTILITY_MARGIN_SLOPE2,
+ FUTILITY_MARGIN_BASE+5*FUTILITY_MARGIN_SLOPE+5*5*FUTILITY_MARGIN_SLOPE2
+};
 
 static const int STATIC_NULL_MARGIN[16] = {
     (int)1.37*PAWN_VALUE,
@@ -2113,10 +2119,9 @@ int Search::calcExtensions(const Board &board,
       if (pruneOk) {
          // futility pruning, enabled at low depths
          if (depth <= FUTILITY_DEPTH) {
-            int fmargin = FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
             // Threshold was formerly increased with the move index
             // but this tests worse now.
-            int threshold = parentNode->beta - fmargin;
+            int threshold = parentNode->beta - FUTILITY_MARGIN[depth/DEPTH_INCREMENT];
             if (node->eval == Scoring::INVALID_SCORE) {
                node->eval = node->staticEval = scoring.evalu8(board);
             }
@@ -2675,7 +2680,6 @@ int Search::search()
         MoveGenerator mg(board, &context, ply, hash_move, (node-1)->last_move, master());
         BoardState state = board.state;
         int try_score;
-
         // we do not split if in check because generally there will
         // be few moves to search there.
         const int canSplit = srcOpts.ncpus>1 && !in_check &&
@@ -3024,7 +3028,6 @@ void Search::searchSMP(ThreadInfo *ti)
     BoardState state(board.state);
     const int &ply = node->ply;
     const int &depth = node->depth;
-
     int moveIndex;
     // get node from which we were split
     NodeInfo *parentNode = split->splitNode;
