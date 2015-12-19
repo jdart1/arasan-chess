@@ -166,10 +166,6 @@ SearchController::SearchController()
            const double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
            for (int i = 0; i < 2; i++) {
               double r = floor(reduction[i]+0.5);
-              // do not reduce into the q-search
-              r = std::min<double>(r,double(d-1)-1.0/DEPTH_INCREMENT);
-              // limit LMR to fraction of depth
-              r = std::min<double>(d/2.5,r);
               // do not do reductions < 1 ply
               if (r < 1.0) r = 0.0;
               // only reduce in units of DEPTH_INCREMENT
