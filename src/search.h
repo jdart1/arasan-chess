@@ -365,7 +365,7 @@ class Search : public ThreadControl {
 
     int updateMove(const Board &,
            NodeInfo *parentNode, NodeInfo* myNode, Move move, 
-           int score, int ply, int depth);
+                   int score, int ply, int depth, SplitPoint *split = NULL);
 
    void updatePV(const Board &, Move m, int ply);
 

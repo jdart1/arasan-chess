@@ -1566,12 +1566,7 @@ int Search::quiesce(int ply,int depth)
          (node+1)->pv_length=0; // no PV from this point
          node->flags |= EXACT;
       }
-#ifdef _DEBUG
-      if (Util::Abs(node->best_score) > Constants::MATE) {
-          cout << board << endl;
-          ASSERT(0);
-      }
-#endif
+      ASSERT(Util::Abs(node->best_score) <= Constants::MATE);
       storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
@@ -1592,23 +1587,13 @@ int Search::quiesce(int ply,int depth)
           board.getMaterial(Black).materialLevel()==0 &&
           ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
          node->eval = bitscore;
-#ifdef _DEBUG
-         if (Util::Abs(node->eval) >= Constants::MATE) {
-             cout << board << endl;
-             ASSERT(0);
-         }
-#endif
+         ASSERT(Util::Abs(node->eval) <= Constants::MATE);
       }
       else {
          had_eval = node->staticEval != Scoring::INVALID_SCORE;
          if (had_eval) {
             node->eval = node->staticEval;
-#ifdef _DEBUG
-            if (Util::Abs(node->eval) >= Constants::MATE) {
-                cout << board << endl;
-                ASSERT(0);
-            }
-#endif
+            ASSERT(Util::Abs(node->eval) <= Constants::MATE);
          }
          if (node->eval == Scoring::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
@@ -1620,12 +1605,7 @@ int Search::quiesce(int ply,int depth)
             if (result == (hashValue > node->eval ? HashEntry::LowerBound :
                            HashEntry::UpperBound)) {
                node->eval = hashValue;
-#ifdef _DEBUG
-               if (Util::Abs(node->eval) >= Constants::MATE) {
-                   cout << board << endl;
-                   ASSERT(0);
-               }
-#endif
+               ASSERT(Util::Abs(node->eval) <= Constants::MATE);
             }
          }
       }
@@ -1706,8 +1686,8 @@ int Search::quiesce(int ply,int depth)
             }
          }
 
-         ASSERT(validMove(board,pv));
          board.doMove(pv);
+         ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
          try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
          board.undoMove(pv,state);
          if (try_score != Illegal) {
@@ -1912,12 +1892,7 @@ int Search::quiesce(int ply,int depth)
          }
       }
    search_end:
-#ifdef _DEBUG
-      if (Util::Abs(node->best_score) > Constants::MATE) {
-          cout << board << endl;
-          ASSERT(0);
-      }
-#endif
+      ASSERT(Util::Abs(node->best_score) <= Constants::MATE);
       storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
@@ -2323,6 +2298,12 @@ int Search::search()
                     if (!IsNull(hash_move)) {
                         node->pv[ply] = hash_move;
                         node->pv_length = 1;
+                    }
+                    if (!legalMove(board,hash_move)) {
+                       cout << '#' << board << endl << (flush);
+                       cout << '#';
+                       MoveImage(hash_move,cout);
+                       cout << endl << (flush);
                     }
 #ifdef _TRACE
                     if (master()) {
@@ -3198,7 +3179,7 @@ void Search::searchSMP(ThreadInfo *ti)
                     ((RootSearch*)(split->master->work))->updateRootMove(board,parentNode,node,move,try_score,parentNode->num_try);
                 }
                 else
-                    split->master->work->updateMove(board,parentNode,node,move,try_score,ply,depth);
+                   updateMove(board,parentNode,node,move,try_score,ply,depth,split);
                 best_score = parentNode->best_score;
                 if (fhr) {
                     fhr = false;
@@ -3222,11 +3203,10 @@ void Search::searchSMP(ThreadInfo *ti)
     // other tasks
 }
 
-int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, int score, int ply, int depth)
+int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, int score, int ply, int depth, SplitPoint *s)
 {
     int cutoff = 0;
     int locked = 0;
-    SplitPoint *s = split;
     if (s) {
        s->lock();
        locked++;
