@@ -2449,7 +2449,7 @@ static bool do_command(const string &cmd, Board &board) {
         cout << "option name Use tablebases type check default ";
         if (options.search.use_tablebases) cout << "true"; else cout << "false";
         cout << endl;
-        cout << "option name Tablebase type type combo";
+        cout << "option name Tablebases type combo";
 #ifdef GAVIOTA_TBS
         cout << " var " << Options::GAVIOTA_TYPE;
 #endif
