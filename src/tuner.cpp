@@ -81,6 +81,7 @@ static atomic<int> phase2_game_index;
 LockDefine(file_lock);
 LockDefine(data_lock);
 LockDefine(hash_lock);
+LockDefine(output_lock);
 
 #ifdef _POSIX_VERSION
 static pthread_attr_t stackSizeAttrib;
@@ -1663,12 +1664,12 @@ int CDECL main(int argc, char **argv)
 
     if (x0_input_file_name.length()) {
        ifstream x0_input_file(x0_input_file_name.c_str());
-       if (x0_input_file.good()) {
-          tune_params.readX0(x0_input_file);
-          tune_params.applyParams();
-       } else {
+       if (x0_input_file.fail()) {
           cerr << "error opening x0 input file: " << x0_input_file_name << endl;
           exit(-1);
+       } else {
+          tune_params.readX0(x0_input_file);
+          tune_params.applyParams();
        }
     }
 
@@ -1688,12 +1689,7 @@ int CDECL main(int argc, char **argv)
 
     game_file.open(game_file_name.c_str());
 
-    if (game_file.bad()) {
-       cerr << "failed to open file " << game_file_name << endl;
-       exit(-1);
-    }
-
-    if (game_file.bad()) {
+    if (game_file.fail()) {
        cerr << "failed to open file " << game_file_name << endl;
        exit(-1);
     }

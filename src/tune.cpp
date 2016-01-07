@@ -542,6 +542,7 @@ static const int QUEEN_PST_INIT[2][64] =
 
 void Tune::checkParams() const
 {
+#ifdef _DEBUG
    if (NUM_MISC_PARAMS != KING_OPP_PASSER_DISTANCE) {
       cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_OPP_PASSER_DISTANCE << endl;
    }
@@ -562,6 +563,7 @@ void Tune::checkParams() const
          cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
       }
    }
+#endif
 }
 
 void Tune::applyParams() const
