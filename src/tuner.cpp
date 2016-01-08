@@ -32,7 +32,9 @@ extern "C" {
 // Functions with Minimax Search,"
 // Journal of Articial Intelligence Research 49 (2014) 527-568.
 // Partly based on Bonanza source code.
-
+//
+// Also implements the "Texel" tuning method via the -t switch.
+//
 // Note: this file requires a C++11 compatible compiler/libraries.
 
 using namespace tuner;
@@ -81,7 +83,6 @@ static atomic<int> phase2_game_index;
 LockDefine(file_lock);
 LockDefine(data_lock);
 LockDefine(hash_lock);
-LockDefine(output_lock);
 
 #ifdef _POSIX_VERSION
 static pthread_attr_t stackSizeAttrib;
@@ -1155,18 +1156,14 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 }
 
 void validateGradient(Scoring &s, const Board &board, ColorType side, double eval) {
-   vector<double> derivs(tune_params.numTuningParams());
-   for (int i = 0; i < tune_params.numTuningParams(); i++) {
-      derivs[i] = 0.0;
-   }
+   vector<double> derivs(tune_params.numTuningParams(),0.0);
    double inc = 1.0;
    // compute the partial derivative vector for this position
    update_deriv_vector(s, board, side, derivs, inc);
    update_deriv_vector(s, board, OppositeColor(side), derivs, -inc);
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       if (derivs[i] != 0.0) {
-         Tune::TuneParam p;
-         tune_params.getParam(i,p);
+         Tune::TuneParam p = tune_params[i];
          int val = p.current;
          int range = p.max_value - p.min_value;
          int delta = Util::Max(1,range/20);
@@ -1654,6 +1651,11 @@ int CDECL main(int argc, char **argv)
     if (write_sol) {
       output_solution();
       exit(0);
+    }
+
+    if (validate && cores > 1) {
+       cerr << "error: validation (-V) does not work with multiple threads" << endl;
+       exit(-1);
     }
 
     if (arg >= argc) {
