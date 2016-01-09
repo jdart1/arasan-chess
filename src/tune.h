@@ -247,7 +247,7 @@ class Tune {
 
   void getParam(int index, TuneParam &param) const;
 
-  TuneParam &operator [] (const int i) {
+  const TuneParam &operator [] (const int i) const {
     return tune_params[i];
   }
 
