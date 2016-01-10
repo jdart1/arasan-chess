@@ -3230,8 +3230,12 @@ static bool do_command(const string &cmd, Board &board) {
            if((ss >> options.search.ncpus).fail()) {
                cerr << "invalid value following 'cores'" << endl;
            } else {
-               options.search.ncpus = Util::Min(options.search.ncpus,Constants::MaxCPUs);
-               searcher->setThreadCount(options.search.ncpus);
+              if (doTrace) {
+                 cout << "# setting cores to " << options.search.ncpus << endl;
+              }
+              options.search.ncpus = Util::Min(options.search.ncpus,Constants::MaxCPUs);
+              searcher->updateSearchOptions();
+              searcher->setThreadCount(options.search.ncpus);
            }
         }
     }
@@ -3245,7 +3249,11 @@ static bool do_command(const string &cmd, Board &board) {
            if((ss >> mbs).fail()) {
                cerr << "invalid value following 'memory'" << endl;
            } else {
+               if (doTrace) {
+                  cout << "# setting hash size to " << options.search.hash_table_size << " MB" << endl;
+               }
                options.search.hash_table_size = (size_t)(mbs*1024L*1024L);
+               searcher->updateSearchOptions();
                searcher->resizeHash(options.search.hash_table_size);
            }
         }
