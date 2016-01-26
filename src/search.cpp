@@ -2299,12 +2299,14 @@ int Search::search()
                         node->pv[ply] = hash_move;
                         node->pv_length = 1;
                     }
+#ifdef _DEBUG
                     if (!legalMove(board,hash_move)) {
                        cout << '#' << board << endl << (flush);
                        cout << '#';
                        MoveImage(hash_move,cout);
                        cout << endl << (flush);
                     }
+#endif
 #ifdef _TRACE
                     if (master()) {
                         indent(ply); cout << "best line[ply][ply] = ";
