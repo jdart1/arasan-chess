@@ -1,7 +1,7 @@
 #
 # Gnu Makefile for Arasan 18.2
 #
-VERSION = 18.2.0
+VERSION = 18.3.0
 
 # paths, modify as needed:
 

@@ -1,4 +1,17 @@
-Changes in Arasan 18.2:
+Changes in Arasan 18.3:
+ 1) Bug fix: properly handle "cores" and "memory" options for Winboard.
+ 2) Adjust futility margins and allow futility pruning up to depth 5.
+ 3) Modify pruning condiitions slightly.
+ 4) Bug fix: guard against null move in updateHistoryMove.
+ 5) Bug fix: fix locking for PV update.
+ 6) Properly handle errors opening files in tuner program. Don't allow
+    validation (-V) when running multi-threaded (does not work). Some
+    code cleanup in the tuner.
+ 7) Fix UCI tablebase type selection option. 
+ 8) Remove some restrictions on LMR.
+ 9) Fix padding in NodeInfo for better alignment.
+
+Changes in Arasan 18.2 (Dec. 2015):
  1) Make more parameters tunable, including TRADE_DOWN array. Fix gradient
     computation for Q + minor vs Q material param.
  2) Revise and simplify endgame scoring. Combine endgame score cache
