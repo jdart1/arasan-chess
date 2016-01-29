@@ -66,7 +66,7 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
 void History::updateHistoryMove(const Board &,
                                 Move best, int depth, ColorType side) 
 {
-   if (!CaptureOrPromotion(best)) {
+   if (!IsNull(best) && !CaptureOrPromotion(best)) {
       const Piece pieceMoved = MakePiece(PieceMoved(best),side);
       HistoryEntry &h = history[pieceMoved][DestSquare(best)];
       h.order += (4*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT);
