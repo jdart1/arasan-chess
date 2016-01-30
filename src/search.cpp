@@ -2141,15 +2141,17 @@ int Search::calcExtensions(const Board &board,
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
        !passedPawnMove(board,move,6)) {
       int reduce = LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-      if (GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
-         reduce -= DEPTH_INCREMENT/2;
-         if (reduce < DEPTH_INCREMENT) reduce = 0;
-      }
-      extend -= reduce;
-      node->extensions |= LMR;
+      //if (GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+      //   reduce -= DEPTH_INCREMENT;
+      //   if (reduce < DEPTH_INCREMENT) reduce = 0;
+      //}
+      if (reduce) {
+         extend -= reduce;
+         node->extensions |= LMR;
 #ifdef SEARCH_STATS
-      ++controller->stats->reduced;
+         ++controller->stats->reduced;
 #endif
+      }
    }
    return extend;
 }

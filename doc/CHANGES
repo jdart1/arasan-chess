@@ -11,7 +11,7 @@ Changes in Arasan 18.3:
  8) Remove some restrictions on LMR.
  9) Fix padding in NodeInfo for better alignment.
 10) Allow reduction of moves in the killer and refutations phases of
-    movegen (but less reduction than in the history phase).
+    movegen.
 
 Changes in Arasan 18.2 (Dec. 2015):
  1) Make more parameters tunable, including TRADE_DOWN array. Fix gradient
