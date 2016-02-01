@@ -2135,19 +2135,16 @@ int Search::calcExtensions(const Board &board,
           return PRUNE;
        }
    }
-   // See if we do late move reduction. Moves in the killer phase of move
+   // See if we do late move reduction. Moves in the history phase of move
    // generation or later can be searched with reduced depth.
    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
-       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+       GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
        !passedPawnMove(board,move,6)) {
-      int reduce = LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-      if (reduce) {
-         extend -= reduce;
-         node->extensions |= LMR;
+      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+      node->extensions |= LMR;
 #ifdef SEARCH_STATS
-         ++controller->stats->reduced;
+      ++controller->stats->reduced;
 #endif
-      }
    }
    return extend;
 }
@@ -3013,6 +3010,22 @@ void Search::searchSMP(ThreadInfo *ti)
     int moveIndex;
     // get node from which we were split
     NodeInfo *parentNode = split->splitNode;
+    // Initialize top of our node stack from parent node
+    node->alpha = parentNode->alpha;
+    node->beta = parentNode->beta;
+    node->best_score = parentNode->best_score;
+    node->threatMove = parentNode->threatMove;
+    node->best = parentNode->best;
+    node->last_move = parentNode->last_move;
+    node->extensions = parentNode->extensions;
+    node->eval = parentNode->eval;
+    node->staticEval = parentNode->staticEval;
+#ifdef MOVE_ORDER_STATS
+    node->best_count = parentNode->best_count;
+#endif
+    node->ply = parentNode->ply;
+    node->depth = parentNode->depth;
+
     int best_score = parentNode->best_score;
 #ifdef _THREAD_TRACE
     log("searchSMP",ti->index);
