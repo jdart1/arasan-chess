@@ -513,6 +513,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
+    const int mdiff = ourmat.value()-oppmat.value();
     int score = 0;
     if (ourmat.infobits() == Material::KQ) {
         if (oppmat.infobits() == Material::KRR) {
@@ -545,7 +546,6 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
         else if (oppmat.infobits() == Material::KB) {
             score -= (ROOK_VALUE-BISHOP_VALUE);
         }
-                                                  // close to even
         else if (oppmat.infobits() == Material::KN) {
             score -= (ROOK_VALUE-KNIGHT_VALUE)-PAWN_VALUE/4;
         }
@@ -559,22 +559,19 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
         }
     }
     else if (ourmat.infobits() == Material::KRR) {
-        if (oppmat.infobits() == Material::KRB) { // even
-            score -= ROOK_VALUE-BISHOP_VALUE;
+        if (oppmat.infobits() == Material::KRB) {
+           // even
+           score -= ROOK_VALUE-BISHOP_VALUE;
         }
-                                                  // close to even
         else if (oppmat.infobits() == Material::KRN) {
-            score -= ROOK_VALUE-KNIGHT_VALUE-PAWN_VALUE/4;
+           score -= ROOK_VALUE-KNIGHT_VALUE-PAWN_VALUE/4;
         }
-                                                  // close to even
         else if (oppmat.infobits() == Material::KRBN) {
-            score += (KNIGHT_VALUE+BISHOP_VALUE-ROOK_VALUE)-PAWN_VALUE/4;
+           score += (KNIGHT_VALUE+BISHOP_VALUE-ROOK_VALUE)-PAWN_VALUE/4;
         }
     }
     else if (ourmat.infobits() == Material::KBB) {
-       const int mdiff = ourmat.value() - oppmat.value();
-       if (oppmat.infobits() == Material::KB ||
-           oppmat.infobits() == Material::KR) {
+       if (oppmat.infobits() == Material::KB) {
           // about 85% draw
           score -= (mdiff-int(0.35*PAWN_VALUE));
        }
@@ -582,18 +579,24 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
           // about 50% draw, 50% won for Bishops
           score -= int(1.5*PAWN_VALUE);
        }
-    } else if (ourmat.infobits() == Material::KBN &&
-               (oppmat.infobits() == Material::KN ||
-                oppmat.infobits() == Material::KB ||
-                oppmat.infobits() == Material::KR)) {
-       // about 75% draw, a little less if opponent has Bishop
-       score -= (BISHOP_VALUE - int(0.6*PAWN_VALUE) - (oppmat.hasBishop() ? int(0.15*PAWN_VALUE) : 0));
+       else if (oppmat.infobits() == Material::KR) {
+          // draw
+          score -= mdiff;
+       }
+    } else if (ourmat.infobits() == Material::KBN) {
+       if (oppmat.infobits() == Material::KN ||
+           oppmat.infobits() == Material::KB) {
+          // about 75% draw, a little less if opponent has Bishop
+          score -= (BISHOP_VALUE - int(0.6*PAWN_VALUE) - (oppmat.hasBishop() ? int(0.15*PAWN_VALUE) : 0));
+       } else if (oppmat.infobits() == Material::KR) {
+          score -= mdiff;
+       }
     } else if (ourmat.infobits() == Material::KNN &&
                (oppmat.infobits() == Material::KN ||
                 oppmat.infobits() == Material::KB ||
                 oppmat.infobits() == Material::KR)) {
        // draw
-       score -= ourmat.value()-oppmat.value();
+       score -= mdiff;
     }
     return score;
 }
