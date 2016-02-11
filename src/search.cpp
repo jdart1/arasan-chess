@@ -2612,19 +2612,22 @@ int Search::search()
         int alpha = node->alpha;
         node->depth = d;
         int iid_score = -search();
-        node->flags &= ~IID;
+        // set hash move to IID search result (may still be null)
+        hash_move = node->best;
         // reset key params
+        node->flags &= ~IID;
         node->num_try = 0;
         node->cutoff = 0;
         node->depth = depth;
         node->alpha = node->best_score = alpha;
-
-        // set hash move to IID search result (may still be null)
-        hash_move = node->best;
+        node->best = NullMove;
+        node->last_move = NullMove;
         // do not retain any pv information from the IID search
         // (can screw up non-IID pv).
         (node+1)->pv[ply+1] = NullMove;
         (node+1)->pv_length = 0;
+        node->pv[ply] = NullMove;
+        node->pv_length = 0;
         if (iid_score == Illegal || (node->flags & EXACT)) {
            // previous move was illegal or was an exact score
 #ifdef _TRACE
@@ -2636,7 +2639,6 @@ int Search::search()
            return -iid_score;
         }
         if (terminate) {
-            node->best_score = node->alpha;
             return node->alpha;
         }
 #ifdef _TRACE
