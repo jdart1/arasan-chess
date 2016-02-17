@@ -30,7 +30,7 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
 # location of the Syzygy tablebase source code (Fathom) (if used)
-STB=Fathom-1.0/src
+STB=syzygy
 
 #define the appropriate macro for the type(s) of tablebase supported
 GAVIOTA_TBS = 1
@@ -62,7 +62,7 @@ PGO_RUN_FLAGS = -H 64M
 TUNE_FLAGS := -DTUNE -std=c++11
 
 #PROF     = -pg
-DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)

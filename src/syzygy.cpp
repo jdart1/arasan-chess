@@ -39,8 +39,8 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
    Bitboard king_bits;
    king_bits.set(b.kingSquare(White));
    king_bits.set(b.kingSquare(Black));
-   unsigned result = tb_probe_root((uint64)(b.allOccupied & Board::white_squares),
-                                   (uint64)(b.allOccupied & Board::black_squares),
+   unsigned result = tb_probe_root((uint64)(b.occupied[White]),
+                                   (uint64)(b.occupied[Black]),
                                    (uint64)king_bits,
                                    (uint64)(b.queen_bits[Black] | b.queen_bits[White]),
                                    (uint64)(b.rook_bits[Black] | b.rook_bits[White]),
