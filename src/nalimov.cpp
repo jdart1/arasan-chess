@@ -1,10 +1,10 @@
-// Copyright 2001, 2008, 2012 Jon Dart. All Rights Reserved.
+// Copyright 2001, 2008, 2012, 2016 Jon Dart. All Rights Reserved.
 //
 // This module interfaces between the Nalimov tb code
 // and Arasan's datatypes. Requires egtb.cpp (not anymore
 // supplied with Arasan code).
 
-#include "tbprobe.h"
+#include "nalimov.h"
 #include "constant.h"
 #include "globals.h"
 #include "debug.h"

@@ -10,7 +10,10 @@
 #include "gtb.h"
 #endif
 #ifdef NALIMOV_TBS
-#include "tbprobe.h"
+#include "nalimov.h"
+#endif
+#ifdef SYZYGY_TBS
+#include "syzygy.h"
 #endif
 
 int EGTBMenCount = 0;
@@ -101,7 +104,7 @@ void initOptions(const char *pathName) {
 }
 
 void delayedInit() {
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
     if (options.search.use_tablebases) {
 #ifdef GAVIOTA_TBS
         if (options.search.tablebase_type == Options::GAVIOTA_TYPE) {
@@ -125,6 +128,14 @@ void delayedInit() {
             EGTBMenCount = NalimovTb::initTB(
                              (char*)options.search.nalimov_path.c_str(),
                              options.search.nalimov_cache_size);
+        }
+#endif
+#ifdef SYZYGY_TBS
+        if (options.search.tablebase_type == Options::SYZYGY_TYPE) {
+           if (options.search.syzygy_path == "") {
+              options.search.syzygy_path=derivePath("syzygy");
+           }
+           EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
         }
 #endif
     }

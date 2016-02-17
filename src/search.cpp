@@ -1,4 +1,4 @@
-// Copyright 1987-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2016 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -12,7 +12,10 @@
 #include "gtb.h"
 #endif
 #ifdef NALIMOV_TBS
-#include "tbprobe.h"
+#include "nalimov.h"
+#endif
+#ifdef SYZYGY_TBS
+#include "syzygy.h"
 #endif
 #include "legal.h"
 #include "history.h"
@@ -649,7 +652,7 @@ Move *excludes, int num_excludes)
 
    int tb_hit = 0, tb_pieces = 0;
    int value = Scoring::INVALID_SCORE;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -665,6 +668,17 @@ Move *excludes, int num_excludes)
 #ifdef GAVIOTA_TBS
          if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
              tb_hit = GaviotaTb::probe_tb(board, tb_score, 0, true);
+         }
+#endif
+#ifdef SYZYGY_TBS
+         if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
+            set<Move> moves;
+            tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
+            if (tb_hit) {
+               // restrict the search to moves that preserve the
+               // win or draw, if there is one.
+               mg.filter(moves);
+            }
          }
 #endif
          if (tb_hit) {

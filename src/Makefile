@@ -29,16 +29,23 @@ INSTALL = /usr/local/bin
 GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
+# location of the Syzygy tablebase source code (Fathom) (if used)
+STB=Fathom-1.0/src
 
 #define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS = 1
-#NALIMOV_TBS = 1
+GAVIOTA_TBS = 1
+NALIMOV_TBS = 1
+SYZYGY_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 endif
 ifdef NALIMOV_TBS 
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
+endif
+ifdef SYZYGY_TBS
+CFLAGS := $(CFLAGS) -DSYZYGY_TBS -I$(STB)
+STB_FLAGS := -std=c99
 endif
 
 # Build the GTB sources into a separate object dir.
@@ -55,7 +62,7 @@ PGO_RUN_FLAGS = -H 64M
 TUNE_FLAGS := -DTUNE -std=c++11
 
 #PROF     = -pg
-#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -99,6 +106,7 @@ AR      = xiar
 CFLAGS  := -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT     = -O3 -fno-rtti $(SSE)
 GTB_OPT := -O3 -fno-rtti $(SSE)
+STB_OPT := -O3 -fno-rtti $(SSE)
 
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
@@ -117,6 +125,7 @@ PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
 OPT     = -O3 -fno-rtti -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
+STB_OPT := -O3 -finline-functions $(SSE)
 
 else
 
@@ -137,16 +146,19 @@ CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
 LTO	= -flto
 GTB_OPT := -Ofast $(SSE)
+STB_OPT := -Ofast $(SSE)
 else
 ifeq "$(GCCOLD)" "0"
 # pre-4.6 gcc options:
 CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	 = -O3 -fno-rtti -fno-enforce-eh-specs $(SSE)
 GTB_OPT := -O3 $(SSE)
+STB_OPT := -O3 $(SSE)
 else
 # really old gcc
 CFLAGS  := -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	 = -O2
+STB_OPT := -O2
 endif
 endif
 
@@ -226,6 +238,9 @@ else
 	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
+$(BUILD)/%.o: $(STB)/%.c
+	$(CC) $(STB_FLAGS) $(STB_OPT) $(DEBUG) -c $< -o $@
+
 profiled: dirs
 	@$(MAKE) PASS=1 profile profile-run
 	@$(MAKE) PASS=2 profile
@@ -248,11 +263,15 @@ GTB_OBJS:=$(GTB_SOURCES:%.c=$(GTB_BUILD)/%.o)
 
 GTB_FLAGS := -x c -DZ_PREFIX -DNDEBUG $(SMP) -I$(GTB)/sysport -I$(GTB)/compression -I$(GTB)/compression/huffman -I$(GTB)/compression/lzma -I$(GTB)/compression/zlib -I$(GTB)/compression/liblzf $(GTB_FLAGS)
 
-TB_SOURCES := gtb.cpp
-TB_OBJS := $(BUILD)/gtb.o
-TB_LIBS := $(GTB_BUILD)/$(GTB_LIBNAME)
+TB_SOURCES := $(TB_SOURCES) gtb.cpp
+TB_OBJS := $(TB_OBJS) $(BUILD)/gtb.o
+TB_LIBS := $(TB_LIBS) $(GTB_BUILD)/$(GTB_LIBNAME)
 
+ifdef SYZYGY_TBS
+vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf $(STB)
+else
 vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf
+endif
 
 #rule for building GTB (c code)
 $(GTB_BUILD)/%.o: %.c
@@ -264,8 +283,13 @@ $(TB_LIBS): $(GTB_OBJS)
 endif
 
 ifdef NALIMOV_TBS 
-TB_SOURCES := $(TB_SOURCES) $(TB)/tbprobe.cpp
-TB_OBJS := $(TB_OBJS) $(BUILD)/tbprobe.o
+TB_SOURCES := $(TB_SOURCES) $(TB)/nalimov.cpp
+TB_OBJS := $(TB_OBJS) $(BUILD)/nalimov.o
+endif
+
+ifdef SYZYGY_TBS
+TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
+TB_OBJS := $(TB_OBJS) $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
 endif
 
 ARASANX_SOURCES = arasanx.cpp globals.cpp  \
