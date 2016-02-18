@@ -663,11 +663,13 @@ Move *excludes, int num_excludes)
 #ifdef NALIMOV_TBS
          if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
              tb_hit = NalimovTb::probe_tb(board, tb_score, 0);
+             value = tb_score;
          }
 #endif
 #ifdef GAVIOTA_TBS
          if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
              tb_hit = GaviotaTb::probe_tb(board, tb_score, 0, true);
+             value = tb_score;
          }
 #endif
 #ifdef SYZYGY_TBS
@@ -678,11 +680,12 @@ Move *excludes, int num_excludes)
                // restrict the search to moves that preserve the
                // win or draw, if there is one.
                mg.filter(moves);
+               // Note: do not set the value - search values are based
+               // on DTM not DTZ.
             }
          }
 #endif
          if (tb_hit) {
-            value = tb_score;
             controller->stats->tb_hits++;
             if (talkLevel == Trace) {
                cout << "# tb hit, score=";
