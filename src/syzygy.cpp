@@ -3,6 +3,9 @@
 #include "constant.h"
 #include "debug.h"
 
+// Alias internal init function to "tb_init".
+#define tb_init tb_init_impl
+
 static const int CURSED_SCORE = 5;
 
 static const int valueMap[5] = {-Constants::MATE, -CURSED_SCORE, 0, CURSED_SCORE, Constants::MATE};
@@ -25,7 +28,7 @@ static PieceType getPromotion(unsigned res)
 
 int SyzygyTb::initTB(const string &path) 
 {
-   bool ok = syzygy_tb_init(path.c_str());
+   bool ok = tb_init(path.c_str());
    if (!ok)
       return 0;
    else

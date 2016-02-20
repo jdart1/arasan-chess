@@ -54,6 +54,10 @@ typedef uint8_t bool;
 #endif
 #endif
 
+/*
+ * Internal definitions.  Do not call these functions directly.
+ */
+extern bool tb_init_impl(const char *_path);
 extern unsigned tb_probe_wdl_impl(
     uint64_t _white,
     uint64_t _black,
@@ -167,10 +171,11 @@ extern unsigned TB_LARGEST;
  * - true=succes, false=failed.  The TB_LARGEST global will also be
  *   initialized.  If no tablebase files are found, then `true' is returned
  *   and TB_LARGEST is set to zero.
- * J. Dart - renamed to "syzygy_tb_init" (from tb_init) to avoid conflict
- * with Gaviota tb code and Arasan variable.
  */
-extern bool syzygy_tb_init(const char *_path);
+static inline bool tb_init(const char *_path)
+{
+    return tb_init_impl(_path);
+}
 
 /*
  * Probe the Win-Draw-Loss (WDL) table.
@@ -194,6 +199,7 @@ extern bool syzygy_tb_init(const char *_path);
  *
  * NOTES:
  * - Engines should use this function during search.
+ * - This function is thread safe assuming TB_NO_THREADS is disabled.
  */
 static inline unsigned tb_probe_wdl(
     uint64_t _white,
@@ -259,6 +265,8 @@ static inline unsigned tb_probe_wdl(
  * - DTZ tablebases can suggest unnatural moves, especially for losing
  *   positions.  Engines may prefer to traditional search combined with WDL
  *   move filtering using the alternative results array.
+ * - This function is NOT thread safe.  For engines this function should only
+ *   be called once at the root per search.
  */
 static inline unsigned tb_probe_root(
     uint64_t _white,

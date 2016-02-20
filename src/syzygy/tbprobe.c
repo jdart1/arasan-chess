@@ -44,7 +44,7 @@
 #define BLACK_KNIGHT            (TB_BPAWN + 1)
 #define BLACK_PAWN              TB_BPAWN
 
-#define PRIME_WHITE_QUEEN       15472061604242789393ull
+#define PRIME_WHITE_QUEEN       11811845319353239651ull
 #define PRIME_WHITE_ROOK        10979190538029446137ull
 #define PRIME_WHITE_BISHOP      12311744257139811149ull
 #define PRIME_WHITE_KNIGHT      15202887380319082783ull
@@ -1776,7 +1776,7 @@ static uint16_t probe_root(const struct pos *pos, int *score,
     }
 }
 
-extern bool syzygy_tb_init(const char *path)
+extern bool tb_init_impl(const char *path)
 {
     if (sizeof(uint64_t) != 8 &&        // Paranoid check
             sizeof(uint32_t) != 4 &&
