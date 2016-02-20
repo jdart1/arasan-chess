@@ -4,7 +4,6 @@
 #include "hash.h"
 #include "bitprobe.h"
 #include "scoring.h"
-#include "tbprobe.h"
 #include "bitbase.cpp"
 #ifdef GAVIOTA_TBS
 #include "gtb.h"

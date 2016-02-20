@@ -33,9 +33,9 @@ TB=tb
 STB=syzygy
 
 #define the appropriate macro for the type(s) of tablebase supported
-GAVIOTA_TBS = 1
-NALIMOV_TBS = 1
-SYZYGY_TBS = 1
+#GAVIOTA_TBS = 1
+#NALIMOV_TBS = 1
+#SYZYGY_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
@@ -44,7 +44,7 @@ ifdef NALIMOV_TBS
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
 ifdef SYZYGY_TBS
-CFLAGS := $(CFLAGS) -DSYZYGY_TBS -I$(STB)
+CFLAGS := $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS := -std=c99
 endif
 

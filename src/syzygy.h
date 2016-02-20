@@ -3,10 +3,13 @@
 #define _SYZYGY_H_
 
 #include "board.h"
+// To avoid conflict with Gaviota tablebases:
+#define tb_init syzygy_tb_init
 extern "C" 
 {
-#include "tbprobe.h"
+#include "syzygy/tbprobe.h"
 };
+#undef tb_init
 #include <set>
 
 // Support for Syzygy tablebases. Interfaces between Arasan

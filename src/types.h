@@ -12,6 +12,10 @@ extern "C" {
 #include <string.h>
 #include <sys/types.h>
 #include <stdio.h>
+#if defined(__linux__) || defined(__GLIBC__)
+#include <endian.h>
+#include <byteswap.h>
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #include <mmsystem.h>
@@ -219,67 +223,54 @@ static inline void Unlock(lock_t &x) {
 #endif
 #endif
 
+// Byte swap macros
+#ifndef bswap16
+#if defined __GNUC__
+#define bswap16(x) __builtin_bswap16(x)
+#else
+#define bswap16(x) ((uint16)((((uint16) (x) & 0xff00) >> 8) | \
+                               (((uint16) (x) & 0x00ff) << 8)))
+#endif
+#endif
+
+#ifndef bswap32
+#if defined __GNUC__
+#define bswap32(x) __builtin_bswap32(x)
+#else
+#define bswap32(x) ((uint32)((((uint32) (x) & 0xff000000) >> 24) | \
+  (((uint32) (x) & 0x00ff0000) >> 8) | \
+  (((uint32) (x) & 0x0000ff00) << 8) | \
+                               (((uint32) (x) & 0x000000ff) << 24)))
+#endif
+#endif
+
+#ifndef bswap64
+#if defined __GNUC__
+#define bswap64(x) __builtin_bswap64(x)
+#else
+#define bswap64(x) ((uint64)((((uint64) (x) & 0xff00000000000000ull) >> 56) | \
+  (((uint64_t) (x) & 0x00ff000000000000ull) >> 40) | \
+  (((uint64_t) (x) & 0x0000ff0000000000ull) >> 24) | \
+  (((uint64_t) (x) & 0x000000ff00000000ull) >> 8) | \
+  (((uint64_t) (x) & 0x00000000ff000000ull) << 8) | \
+  (((uint64_t) (x) & 0x0000000000ff0000ull) << 24) | \
+  (((uint64_t) (x) & 0x000000000000ff00ull) << 40) | \
+                               (((uint64) (x) & 0x00000000000000ffull) << 56)))
+#endif
+#endif
+
 #ifdef __BIG_ENDIAN__
-union endian_convert64
-{
-    uint64 data;
-    byte bytes[8];
-};
-
-union endian_convert32
-{
-    uint32 data;
-    byte bytes[4];
-};
-
-union endian_convert16
-{
-    uint16 data;
-    byte bytes[2];
-};
-
-union endian_convert_float
-{
-    float data;
-    byte bytes[4];
-};
 
 FORCEINLINE uint64 swapEndian64(const byte *input) {
-    endian_convert64 ret;
-    ret.bytes[0] = input[7];
-    ret.bytes[1] = input[6];
-    ret.bytes[2] = input[5];
-    ret.bytes[3] = input[4];
-    ret.bytes[4] = input[3];
-    ret.bytes[5] = input[2];
-    ret.bytes[6] = input[1];
-    ret.bytes[7] = input[0];
-    return ret.data;
+   return bswap64((uint64*)input);
 }
 
 FORCEINLINE uint32 swapEndian32(const byte *input) {
-    endian_convert32 ret;
-    ret.bytes[0] = input[3];
-    ret.bytes[1] = input[2];
-    ret.bytes[2] = input[1];
-    ret.bytes[3] = input[0];
-    return ret.data;
+   return bswap32((uint32*)input);
 }
 
 FORCEINLINE uint16 swapEndian16(const byte *input) {
-    endian_convert16 ret;
-    ret.bytes[0] = input[1];
-    ret.bytes[1] = input[0];
-    return ret.data;
-}
-
-FORCEINLINE float swapEndianFloat(const byte *input) {
-    endian_convert_float ret;
-    ret.bytes[0] = input[3];
-    ret.bytes[1] = input[2];
-    ret.bytes[2] = input[1];
-    ret.bytes[3] = input[0];
-    return ret.data;
+   return bswap16((uint16*)input);
 }
 
 #else
@@ -287,7 +278,6 @@ FORCEINLINE float swapEndianFloat(const byte *input) {
 #define swapEndian64(x) *((uint64*)(x))
 #define swapEndian32(x) *((uint32*)(x))
 #define swapEndian16(x) *((uint16*)(x))
-#define swapEndianFloat(x) *((float*)(x))
 #endif
 
 #ifdef _MSC_VER

@@ -108,7 +108,7 @@ static SearchType srctype = TimeLimit;
 static int time_limit;
 static int ply_limit;
 static string start_fen;
-static int tb_init = 0;
+static int tb_init_done = 0;
 static int uci = 0;                               // non-zero for UCI mode
 static bool uci_limit_strength = false;
 static int movestogo = 0;
@@ -415,8 +415,8 @@ static int getIncrUCI(const ColorType side) {
 }
 
 static void delayedInitIfNeeded() {
-   if (!tb_init) {
-      delayedInit(); tb_init++;
+   if (!tb_init_done) {
+      delayedInit(); tb_init_done++;
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
       string path;
 #ifdef GAVIOTA_TBS
