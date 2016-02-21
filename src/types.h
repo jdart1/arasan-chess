@@ -27,6 +27,9 @@ extern "C" {
 
 #include "stdendian.h"
 
+typedef uint8_t byte;
+typedef uint64_t hash_t;
+
 #include <iostream>
 using namespace std;
 
@@ -51,21 +54,7 @@ enum {InvalidSquare = 127};
 #define _GNUC_PREREQ(major,minor) (__GNUC__ >= major || ( __GNUC__ == major && __GNUC_MINOR__ >= minor))
 #endif
 
-typedef unsigned char byte;
-typedef int int32;
-typedef unsigned int uint32;
-typedef short int16;
-typedef unsigned short uint16;
-
 #ifdef _WIN32
-#ifdef _MSC_VER
-  typedef unsigned __int64 hash_t;
-  typedef _int64 int64;
-  typedef unsigned __int64 uint64;
-#else // GCC
-  typedef unsigned long long hash_t;
-  typedef long long int64;
-  typedef unsigned long long uint64;
 #ifndef __MINGW32__
 extern "C" {
   #include <Windows32/Defines.h>
@@ -74,11 +63,7 @@ extern "C" {
   #include <sys/times.h>
 };
 #endif
-#endif
 #else
-typedef unsigned long long hash_t;
-typedef long long int64;
-typedef unsigned long long uint64;
 extern "C" {
   #include <limits.h>
   #define MAX_PATH PATH_MAX
@@ -210,24 +195,23 @@ static inline void Unlock(lock_t &x) {
 #endif
 
 #if _BYTE_ORDER == _BIG_ENDIAN
-FORCEINLINE uint64 swapEndian64(const byte *input) {
-  return bswap64((uint64*)input);
+FORCEINLINE uint64_t swapEndian64(const byte *input) {
+  return bswap64((uint64_t*)input);
 }
 
-FORCEINLINE uint32 swapEndian32(const byte *input) {
-  return bswap32((uint32*)input);
+FORCEINLINE uint32_t swapEndian32(const byte *input) {
+  return bswap32((uint64_t*)input);
 }
 
-FORCEINLINE uint16 swapEndian16(const byte *input) {
-  return bswap16((uint64*)input);
+FORCEINLINE uint16_t swapEndian16(const byte *input) {
+  return bswap16((uint64_t*)input);
 }
 
 #else
 // no need to convert, just de-reference
-#define swapEndian64(x) *((uint64*)(x))
-#define swapEndian32(x) *((uint32*)(x))
-#define swapEndian16(x) *((uint16*)(x))
-#define swapEndianFloat(x) *((float*)(x))
+#define swapEndian64(x) *((uint64_t*)(x))
+#define swapEndian32(x) *((uint32_t*)(x))
+#define swapEndian16(x) *((uint16_t*)(x))
 #endif
 
 #ifdef _MSC_VER

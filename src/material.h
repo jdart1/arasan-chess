@@ -68,20 +68,20 @@ class Material
     }
 
     // return the total material value:
-    int32 value() const {
+    int32_t value() const {
         return total;
     }
 	
     // return value of pieces (excluding pawns)
-    int32 pieceValue() const {
+    int32_t pieceValue() const {
         return total - PAWN_VALUE*pawnCount();
     }
 	
-    uint32 infobits() const	{
+    uint32_t infobits() const	{
         return info;
     }
 
-    uint32 pieceBits() const {
+    uint32_t pieceBits() const {
         return info & PieceMask;
     }
 	
@@ -204,13 +204,13 @@ class Material
         info = total = level = count = 0;
     }
 
-    int32 info;
-    int32 total;
-    int32 level;
+    int32_t info;
+    int32_t total;
+    int32_t level;
     int count;
-    static const int32 masks[8];
-    static const int32 masks2[8];
-    static const int32 levels[8];
+    static const int32_t masks[8];
+    static const int32_t masks2[8];
+    static const int32_t levels[8];
 };
 
 #endif

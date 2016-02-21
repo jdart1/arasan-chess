@@ -10,8 +10,8 @@
 
 lock_t ThreadPool::poolLock;
 
-uint64 ThreadPool::activeMask = 0ULL;
-uint64 ThreadPool::availableMask = 0ULL;
+uint64_t ThreadPool::activeMask = 0ULL;
+uint64_t ThreadPool::availableMask = 0ULL;
 
 #ifndef _WIN32
 static const size_t THREAD_STACK_SIZE = 8*1024*1024;

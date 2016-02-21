@@ -5529,7 +5529,7 @@ void Attacks::initMagicData() {
         bishopMagicData[sq].magic = b_magic[sq];
         // iterate through each possible combination of squares 
         // that can be occupied and generate the attacks.
-        for (uint64 occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
+        for (uint64_t occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
             Bitboard occ = generateOccupancy(mask,occBits);
             setBishopAttacks(sq,occ,generateBishopMoves(sq,occ));
             b_index++;
@@ -5555,7 +5555,7 @@ void Attacks::initMagicData() {
         rookMagicData[sq].magic = r_magic[sq];
         // iterate through each possible combination of squares 
         // that can be occupied and generate the attacks.
-        for (uint64 occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
+        for (uint64_t occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
             Bitboard occ = generateOccupancy(mask,occBits);
             setRookAttacks(sq,occ,generateRookMoves(sq,occ));
             r_index++;

@@ -6,7 +6,7 @@
 struct NalimovTb {
     // Initialize the tablebases. Character param is the
     // path to the TB directory.
-    static int initTB(char *,uint64 cache_size);
+    static int initTB(char *,uint64_t cache_size);
 
     // probe the tablebases. Return 1 if score was obtained,
     // 0 if not.

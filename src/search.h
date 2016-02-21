@@ -435,7 +435,7 @@ class Search : public ThreadControl {
     Board board;
     SearchContext context;
     int terminate;
-    uint64 nodeCount;
+    uint64_t nodeCount;
     int nodeAccumulator;
     NodeInfo *node; // pointer into NodeStack array (external to class)
     // lock for the split stack

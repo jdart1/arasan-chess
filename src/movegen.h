@@ -239,7 +239,7 @@ class RootMoveGenerator : public MoveGenerator
       }
 
       // enumerate the nodes for a "depth" ply search (for testing).
-      static uint64 perft(Board &, int depth);
+      static uint64_t perft(Board &, int depth);
 
    protected:
 

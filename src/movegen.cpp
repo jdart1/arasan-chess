@@ -1342,10 +1342,10 @@ Move MoveGenerator::nextEvasion(SplitPoint *s,int &ord)
       return nextEvasion(ord);
 }
 
-uint64 RootMoveGenerator::perft(Board &b, int depth) {
+uint64_t RootMoveGenerator::perft(Board &b, int depth) {
    if (depth == 0) return 1;
 
-   uint64 nodes = 0ULL;
+   uint64_t nodes = 0ULL;
    Move m;
    RootMoveGenerator mg(b);
    BoardState state = b.state;

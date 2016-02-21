@@ -30,30 +30,30 @@ struct Statistics
    unsigned depth;
    int mvtot; // total root moves 
    int mvleft; // moves left to analyze at current depth
-   uint64 tb_probes; // tablebase probes
-   uint64 tb_hits;   // tablebase hits
+   uint64_t tb_probes; // tablebase probes
+   uint64_t tb_hits;   // tablebase hits
 #ifdef SEARCH_STATS
-   uint64 num_qnodes;
-   uint64 reg_nodes;
-   uint64 moves_searched; // in regular search
-   uint64 futility_pruning;
-   uint64 static_null_pruning;
-   uint64 null_cuts;
-   uint64 razored;
-   uint64 check_extensions, capture_extensions,
+   uint64_t num_qnodes;
+   uint64_t reg_nodes;
+   uint64_t moves_searched; // in regular search
+   uint64_t futility_pruning;
+   uint64_t static_null_pruning;
+   uint64_t null_cuts;
+   uint64_t razored;
+   uint64_t check_extensions, capture_extensions,
      pawn_extensions, evasion_extensions;
-   uint64 reduced;
-   uint64 lmp;
-   uint64 history_pruning;
-   uint64 see_pruning;
-   uint64 hash_hits, hash_searches;
+   uint64_t reduced;
+   uint64_t lmp;
+   uint64_t history_pruning;
+   uint64_t see_pruning;
+   uint64_t hash_hits, hash_searches;
 #endif
-   uint64 num_nodes;
-   uint64 splits;
-   uint64 last_split_sample;
-   uint64 last_split_time;
+   uint64_t num_nodes;
+   uint64_t splits;
+   uint64_t last_split_sample;
+   uint64_t last_split_time;
 #ifdef SMP_STATS
-   uint64 samples, threads;
+   uint64_t samples, threads;
 #endif
 #ifdef MOVE_ORDER_STATS
    int move_order[4];
@@ -62,7 +62,7 @@ struct Statistics
 #ifdef TUNE
    double target;
    double target_out_window;
-   uint64 result_norm;
+   uint64_t result_norm;
 #endif
    int end_of_game;
    Statistics();

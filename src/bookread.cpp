@@ -67,7 +67,7 @@ static int getWeight(const book::DataEntry &data) {
    // If strength reduction is enabled, "dumb down" the opening book
    // by pruning away infrequent moves.
    if (options.search.strength < 100 && data.count <
-       (uint32)1<<((100-options.search.strength)/10)) {
+       (uint32_t)1<<((100-options.search.strength)/10)) {
        return 0;
    }
    return data.weight;
@@ -223,11 +223,11 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    book::BookLocation loc(0,book::INVALID_INDEX);
    for (unsigned i = 0; i < index.next_free; i++) {
       // correct for endianness
-      uint64 indexHashCode = (uint64)(swapEndian64((byte*)&index.index[i].hashCode));
+      uint64_t indexHashCode = (uint64_t)(swapEndian64((byte*)&index.index[i].hashCode));
       if (indexHashCode == board.hashCode()) {
          // correct for endianness
-         index.index[i].page = (uint16)(swapEndian16((byte*)&index.index[i].page));
-         index.index[i].index = (uint16)(swapEndian16((byte*)&index.index[i].index));
+         index.index[i].page = (uint16_t)(swapEndian16((byte*)&index.index[i].page));
+         index.index[i].index = (uint16_t)(swapEndian16((byte*)&index.index[i].index));
          loc = index.index[i];
          break;
       }

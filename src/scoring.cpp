@@ -388,7 +388,7 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     }
     const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
-       const uint32 pieces = ourmat.pieceBits();
+       const uint32_t pieces = ourmat.pieceBits();
        if (pieces == Material::KN || pieces == Material::KB) {
           // Knight or Bishop vs pawns
           if (ourmat.pawnCount() == 0) {

@@ -15,8 +15,8 @@ BookWriter::~BookWriter() {
 
 }
                 
-void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16 weight,
-                     int32 count) {
+void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
+                     int32_t count) {
    const int index_page = (int)(hashCode % index_pages);
    // fetch index page, allocate if necessary
    book::IndexPage *idx = index[index_page];
@@ -104,7 +104,7 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16 weight,
             // save existing head of the data chain in the old page.
             int oldDataIndex = existingIndex.index;
             // update index to point to new page
-            existingIndex.page = (uint16)data.size()-1;
+            existingIndex.page = (uint16_t)data.size()-1;
             existingIndex.index = newDp->free_list;
             book::DataPage *oldDp = dp;
             // transfer entries from old to new page
@@ -141,8 +141,8 @@ int BookWriter::write(const char* pathName) {
    ofstream book_file(pathName, ios::out | ios::trunc | ios::binary);
    book::BookHeader header;
    header.version = book::BOOK_VERSION;
-   uint16 pages = (uint16)index_pages;
-   header.num_index_pages = (uint16)swapEndian16((byte*)&pages);
+   uint16_t pages = (uint16_t)index_pages;
+   header.num_index_pages = (uint16_t)swapEndian16((byte*)&pages);
    book_file.write((char*)&header, sizeof(book::BookHeader));
    if (book_file.fail()) return -1;
 
@@ -151,23 +151,23 @@ int BookWriter::write(const char* pathName) {
       book::IndexPage *ip = (index[i] == NULL) ? &empty : index[i];
       // correct for endianness before disk write
       for (unsigned j = 0; j < ip->next_free; j++) {
-         ip->index[j].page = (uint16)swapEndian16((byte*)&ip->index[j].page);
-         ip->index[j].index = (uint16)swapEndian16((byte*)&ip->index[j].index);
-         ip->index[j].hashCode = (uint64)swapEndian64((byte*)&ip->index[j].hashCode);
+         ip->index[j].page = (uint16_t)swapEndian16((byte*)&ip->index[j].page);
+         ip->index[j].index = (uint16_t)swapEndian16((byte*)&ip->index[j].index);
+         ip->index[j].hashCode = (uint64_t)swapEndian64((byte*)&ip->index[j].hashCode);
       }
-      ip->next_free = (uint32)swapEndian32((byte*)&ip->next_free);
+      ip->next_free = (uint32_t)swapEndian32((byte*)&ip->next_free);
       book_file.write((char*)ip, sizeof(book::IndexPage));
       if (book_file.fail()) return -1;
    }
    for (unsigned i = 0; i < data.size(); i++) {
       book::DataPage *dp = data[i];
       // correct for endianness before disk write
-      dp->free_list = (uint32)swapEndian32((byte*)&dp->free_list);
-      dp->num_free = (uint32)swapEndian32((byte*)&dp->num_free);
+      dp->free_list = (uint32_t)swapEndian32((byte*)&dp->free_list);
+      dp->num_free = (uint32_t)swapEndian32((byte*)&dp->num_free);
       for (int j = 0; j < book::DATA_PAGE_SIZE; j++) {
-         dp->data[j].next = (uint16)swapEndian16((byte*)&dp->data[j].next);
-         dp->data[j].weight = (uint16)swapEndian16((byte*)&dp->data[j].weight);
-         dp->data[j].count = (uint32)swapEndian32((byte*)&dp->data[j].count);
+         dp->data[j].next = (uint16_t)swapEndian16((byte*)&dp->data[j].next);
+         dp->data[j].weight = (uint16_t)swapEndian16((byte*)&dp->data[j].weight);
+         dp->data[j].count = (uint32_t)swapEndian32((byte*)&dp->data[j].count);
       }
       book_file.write((char*)dp, sizeof(book::DataPage));
       if (book_file.fail()) return -1;

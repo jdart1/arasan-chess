@@ -13,9 +13,9 @@
 #if defined(USE_ASM) && defined(__x86_64__) 
 #include <string.h>
 // Inline ASM
-static FORCEINLINE unsigned int _bitScanForwardAsm(const uint64 bits)
+static FORCEINLINE unsigned int _bitScanForwardAsm(const uint64_t bits)
 {
-   uint64 ret;
+   uint64_t ret;
    __asm__ (
             "bsfq %[bits], %[ret]"
             :[ret] "=r" (ret)
@@ -24,9 +24,9 @@ static FORCEINLINE unsigned int _bitScanForwardAsm(const uint64 bits)
    return (unsigned int)ret;
 }
 
-static FORCEINLINE unsigned int _bitScanReverseAsm(const uint64 bits)
+static FORCEINLINE unsigned int _bitScanReverseAsm(const uint64_t bits)
 {
-   uint64 ret;
+   uint64_t ret;
    __asm__ (
             "bsrq %[bits], %[ret]"
             :[ret] "=r" (ret)
@@ -41,25 +41,25 @@ class Bitboard
 {
        friend ostream & operator << (ostream &o, const Bitboard &b);
 
-#define GETBIT64(x) (uint64)(((int64)x)&-((int64)x))
-#define GETBIT32(x) (uint32)(((int32)x)&-((int32)x))
+#define GETBIT64(x) (uint64_t)(((int64_t)x)&-((int64_t)x))
+#define GETBIT32(x) (uint32_t)(((int32_t)x)&-((int32_t)x))
 
     public:	
 
        struct ints
        {
 #if _BYTE_ORDER == _BIG_ENDIAN
-          uint32 hival,loval; 
+          uint32_t hival,loval; 
 #else
-          uint32 loval,hival;
+          uint32_t loval,hival;
 #endif
        };
        struct shorts
        {
 #if _BYTE_ORDER == _BIG_ENDIAN
-          uint16 hi2,hi1,lo2,lo1;
+          uint16_t hi2,hi1,lo2,lo1;
 #else
-          uint16 lo1,lo2,hi1,hi2;
+          uint16_t lo1,lo2,hi1,hi2;
 #endif
        };
        struct bytes
@@ -72,7 +72,7 @@ class Bitboard
        };
        union conv
        {
-          uint64 val1;
+          uint64_t val1;
           ints val2;
           shorts val3;
           bytes val4;
@@ -83,17 +83,17 @@ class Bitboard
     {
     }
     
-    Bitboard(uint64 n)
+    Bitboard(uint64_t n)
     : data(n)
     {
     }
 
-    Bitboard(uint32 hi,uint32 lo) {
+    Bitboard(uint32_t hi,uint32_t lo) {
       ((conv*)&data)->val2.hival = hi;
       ((conv*)&data)->val2.loval = lo;
     }
 
-    operator uint64() const
+    operator uint64_t() const
     {
        return data;
     }
@@ -103,12 +103,12 @@ class Bitboard
        return ((conv*)&data)->val4.b1;
     }
     
-    uint32 FORCEINLINE hivalue() const
+    uint32_t FORCEINLINE hivalue() const
     {
       return ((conv*)(this))->val2.hival;
     }
     
-    uint32 FORCEINLINE lovalue() const
+    uint32_t FORCEINLINE lovalue() const
     {
       return ((conv*)(this))->val2.loval;
     }
@@ -122,7 +122,7 @@ class Bitboard
 #if defined(_WIN64) && defined(_MSC_VER) && defined(USE_INTRINSICS)
        _bittestandset64((LONG64*)&data,(DWORD)n);
 #elif defined(_64BIT)
-       data |= ((uint64)1)<<n;
+       data |= ((uint64_t)1)<<n;
 #else
        data |= mask[n];
 #endif
@@ -132,7 +132,7 @@ class Bitboard
 #if defined(_WIN64) && defined(_MSC_VER) && defined(USE_INTRINSICS)
        _bittestandreset64((LONG64*)&data,(DWORD)n);
 #elif defined(_64BIT)
-       data &= ~(((uint64)1)<<n);
+       data &= ~(((uint64_t)1)<<n);
 #else
        data &= ~mask[n];
 #endif
@@ -144,15 +144,15 @@ class Bitboard
     int FORCEINLINE isSet(int n) const
     {
 #if defined(_WIN64) & defined(USE_INTRINSICS)
-        return _bittest64((__int64*)&data,n);
+        return _bittest64((__int64_t*)&data,n);
 #elif defined(_64BIT)
-        return (data & (((uint64)1)<<n)) != (uint64)0;
+        return (data & (((uint64_t)1)<<n)) != (uint64_t)0;
 #else
-        return ((data & mask[n]) != (uint64)0);
+        return ((data & mask[n]) != (uint64_t)0);
 #endif
     }
     int FORCEINLINE isClear()const {
-        return (data == (uint64)0);
+        return (data == (uint64_t)0);
     }
     Bitboard &operator = (const Bitboard &b) {
       data = b.data;
@@ -162,28 +162,28 @@ class Bitboard
     Bitboard operator & (const Bitboard &src) const {
       return Bitboard(data & src.data);
     }
-    Bitboard operator & (uint64 src) const {
+    Bitboard operator & (uint64_t src) const {
       return Bitboard(data & src);
     }
     const Bitboard & operator &= (const Bitboard &src) {
       data &= src.data;
       return *this;
     }
-    const Bitboard & operator &= (uint64 src) {
+    const Bitboard & operator &= (uint64_t src) {
       data &= src;
       return *this;
     }
     Bitboard operator | (const Bitboard &src) const {
       return Bitboard(data | src.data);
     }
-    Bitboard operator | (uint64 src) const {
+    Bitboard operator | (uint64_t src) const {
       return Bitboard(data | src);
     }
     const Bitboard & operator |= (const Bitboard &src) {
       data |= src.data;
       return *this;
     }
-    const Bitboard & operator |= (uint64 src) {
+    const Bitboard & operator |= (uint64_t src) {
       data |= src;
       return *this;
     }
@@ -277,7 +277,7 @@ class Bitboard
       return __builtin_popcountll(data);
 #else
       // see http://en.wikipedia.org/wiki/Hamming_weight
-      uint64 x = data;
+      uint64_t x = data;
 
       x -= (x >> 1) & m1;
       x = (x & m2) + ((x >> 2) & m2);
@@ -295,7 +295,7 @@ class Bitboard
         return bitCount();
 #else
         int count;
-        uint64 tmp = data;
+        uint64_t tmp = data;
         for (count=0; tmp; count++)
            tmp &= tmp-1;
         return count;
@@ -306,7 +306,7 @@ class Bitboard
 #ifdef USE_POPCNT
        return bitCount() == 1;
 #else
-       return data && ((data & (data-1)) == (uint64)0);
+       return data && ((data & (data-1)) == (uint64_t)0);
 #endif
     }
 
@@ -399,7 +399,7 @@ class Bitboard
       // generic 64-bit version, no intrinsics
       if (data == 0) return InvalidSquare;
       int bias = 0;
-      uint64 x = data;
+      uint64_t x = data;
       if (x > 0xFFFFFFFF) {
         x >>= 32;
         bias = 32;
@@ -439,7 +439,7 @@ class Bitboard
       // generic 32-bit code
       if (data == 0) return InvalidSquare;
       int bias = 0;
-      uint64 x = data;
+      uint64_t x = data;
       if (x > 0xFFFFFFFF) {
         x >>= 32;
         bias = 32;
@@ -461,7 +461,7 @@ class Bitboard
     FORCEINLINE int iterate(Square &sq) {
 #ifdef _64BIT
 #if defined(USE_ASM) && defined(__x86_64__)
-      if (data==(uint64)0) return 0;
+      if (data==(uint64_t)0) return 0;
       int tmp = _bitScanForwardAsm(data);
       clear(tmp);
       sq = tmp;
@@ -494,7 +494,7 @@ class Bitboard
 #else
       // generic 64-bit code
       if (data == 0) return 0;
-      uint64 tmp = (uint64)GETBIT64(data);
+      uint64_t tmp = (uint64_t)GETBIT64(data);
       sq = MagicTable64[(tmp*MAGIC64)>>58];
       // clear bit we will return
       data &= ~tmp;
@@ -543,7 +543,7 @@ class Bitboard
       if (data == 0) return 0;
       // use De Bruijn multiplication code from Lasse Hansen (fairly slow
       // compared to hardware instructions)
-      uint32 tmp;
+      uint32_t tmp;
       if (lovalue()) {
         tmp = GETBIT32(lovalue());
         sq = MagicTable32[(tmp*MAGIC32)>>27];
@@ -567,23 +567,23 @@ class Bitboard
 #if defined(_64BIT)
     static CACHE_ALIGN int MagicTable64[64];
 #endif
-    static CACHE_ALIGN const uint64 mask[64];
+    static CACHE_ALIGN const uint64_t mask[64];
     
-    uint64 data;
+    uint64_t data;
 
     private:
 #ifdef _64BIT
-    static const uint64 MAGIC64 = 0x07EDD5E59A4E28C2;
+    static const uint64_t MAGIC64 = 0x07EDD5E59A4E28C2;
 #endif
     static const unsigned MAGIC32 = 0xe89b2be;
-    static const uint64 m1  = 0x5555555555555555ULL; //binary: 0101...
-    static const uint64 m2  = 0x3333333333333333ULL; //binary: 00110011..
-    static const uint64 m4  = 0x0f0f0f0f0f0f0f0fULL; //binary:  4 zeros,  4 ones ...
+    static const uint64_t m1  = 0x5555555555555555ULL; //binary: 0101...
+    static const uint64_t m2  = 0x3333333333333333ULL; //binary: 00110011..
+    static const uint64_t m4  = 0x0f0f0f0f0f0f0f0fULL; //binary:  4 zeros,  4 ones ...
     static int msbTable[256];
 };
 
 inline int TEST_MASK(const Bitboard &b1,const Bitboard &b2) {
-  return (uint64)(b1 & b2) != (uint64)0;
+  return (uint64_t)(b1 & b2) != (uint64_t)0;
 }
 
 
