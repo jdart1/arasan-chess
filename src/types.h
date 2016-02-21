@@ -1,4 +1,4 @@
-// Copyright 1993-2009, 2012-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1993-2009, 2012-2014, 2016 by Jon Dart.  All Rights Reserved.
 
 #ifndef _TYPES_H
 #define _TYPES_H
@@ -21,12 +21,11 @@ extern "C" {
 #ifdef _MAC
 #include <sys/ipc.h>
 #include <sys/param.h>
-#include <sys/sem.h>
-#else
-#include <semaphore.h>
 #endif
 #endif
 };
+
+#include "stdendian.h"
 
 #include <iostream>
 using namespace std;
@@ -210,76 +209,17 @@ static inline void Unlock(lock_t &x) {
 #define THREAD pthread_t
 #endif
 
-#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
-#ifdef _WIN32
-// Assume Windows is little endian
-#define       __LITTLE_ENDIAN__
-#elif defined(__sparc)
-#define       __BIG_ENDIAN__
-#endif
-#endif
-
-#ifdef __BIG_ENDIAN__
-union endian_convert64
-{
-    uint64 data;
-    byte bytes[8];
-};
-
-union endian_convert32
-{
-    uint32 data;
-    byte bytes[4];
-};
-
-union endian_convert16
-{
-    uint16 data;
-    byte bytes[2];
-};
-
-union endian_convert_float
-{
-    float data;
-    byte bytes[4];
-};
-
+#if _BYTE_ORDER == _BIG_ENDIAN
 FORCEINLINE uint64 swapEndian64(const byte *input) {
-    endian_convert64 ret;
-    ret.bytes[0] = input[7];
-    ret.bytes[1] = input[6];
-    ret.bytes[2] = input[5];
-    ret.bytes[3] = input[4];
-    ret.bytes[4] = input[3];
-    ret.bytes[5] = input[2];
-    ret.bytes[6] = input[1];
-    ret.bytes[7] = input[0];
-    return ret.data;
+  return bswap64((uint64*)input);
 }
 
 FORCEINLINE uint32 swapEndian32(const byte *input) {
-    endian_convert32 ret;
-    ret.bytes[0] = input[3];
-    ret.bytes[1] = input[2];
-    ret.bytes[2] = input[1];
-    ret.bytes[3] = input[0];
-    return ret.data;
+  return bswap32((uint32*)input);
 }
 
 FORCEINLINE uint16 swapEndian16(const byte *input) {
-    endian_convert16 ret;
-    ret.bytes[0] = input[1];
-    ret.bytes[1] = input[0];
-    return ret.data;
-}
-
-FORCEINLINE float swapEndianFloat(const byte *input) {
-    endian_convert_float ret;
-    ret.bytes[0] = input[3];
-    ret.bytes[1] = input[2];
-    ret.bytes[2] = input[1];
-    ret.bytes[3] = input[0];
-    return ret.data;
+  return bswap16((uint64*)input);
 }
 
 #else

@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2010-2013, 2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2008, 2010-2013, 2015-2016 by Jon Dart.  All Rights Reserved.
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
@@ -48,7 +48,7 @@ class Bitboard
 
        struct ints
        {
-#ifdef __BIG_ENDIAN__
+#if _BYTE_ORDER == _BIG_ENDIAN
           uint32 hival,loval; 
 #else
           uint32 loval,hival;
@@ -56,7 +56,7 @@ class Bitboard
        };
        struct shorts
        {
-#ifdef __BIG_ENDIAN__
+#if _BYTE_ORDER == _BIG_ENDIAN
           uint16 hi2,hi1,lo2,lo1;
 #else
           uint16 lo1,lo2,hi1,hi2;
@@ -64,7 +64,7 @@ class Bitboard
        };
        struct bytes
        {
-#ifdef __BIG_ENDIAN__
+#if _BYTE_ORDER == _BIG_ENDIAN
           byte b8,b7,b6,b5,b4,b3,b2,b1;
 #else
           byte b1,b2,b3,b4,b5,b6,b7,b8;

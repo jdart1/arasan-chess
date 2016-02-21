@@ -1,9 +1,11 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2014 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2016 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
 VERSION = 18.3
+# Set PLATFORM=NT for a Windows NT compatible build
+PLATFORM=MODERN
 
 #TRACE=/D_TRACE 
 #DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
@@ -22,17 +24,22 @@ TB=tb
 
 !Ifndef ARASANX
 !If "$(TARGET)" == "win64"
-ARCH = /D_WIN64
 ARASANX = arasanx-64
+ARCH=/D_WIN64
 !Else
 ARASANX = arasanx-32
 !Endif
 !Endif
 
+
 !Ifdef DEBUG
 BUILD_TYPE=debug
 !Else
 BUILD_TYPE=release
+!Endif
+
+!If "$(PLATFORM)"=="NT"
+CFLAGS=/D_USING_V110_SDK71_
 !Endif
 
 BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
@@ -61,13 +68,17 @@ TUNE_FLAGS=-DTUNE
 LD=link
 CL=cl
 
-# Visual Studio 2005 defs (works for 2008, 2010, 2012 too)
-CFLAGS = $(ARCH) /GA /GF /EHs /EHc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
+# Visual Studio defs (only VC 2012+ has been tested)
+CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHs /EHc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
+!If "$(PLATFORM)" == "NT"
+OPT  = /Ox /Gr /Gy /GS- /GL
+!Else
 OPT  = /Ox /Gr /Gy /Oi /GS- /GL /DUSE_INTRINSICS
-LINKOPT = /LTCG /OPT:REF,ICF
+!Endif
+#LINKOPT = /LTCG /OPT:REF,ICF
 !Else
 OPT  = /Ox /Gr /Gy /GS- /GL /DUSE_INTRINSICS
 LINKOPT = /LTCG /OPT:REF
@@ -207,7 +218,16 @@ $(GTB_LIBDIR):
 !Endif
 
 # Linker flags
-LDFLAGS  = kernel32.lib user32.lib winmm.lib $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
+LDFLAGS  = kernel32.lib user32.lib winmm.lib $(LD_FLAGS) /nologo /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
+!If "$(PLATFORM)" == "NT"
+!If "$(TARGET)" == "win64"
+LDFLAGS = $(LDFLAGS) /subsystem:console,5.02
+!Else
+LDFLAGS = $(LDFLAGS) /subsystem:console,5.01
+!Endif
+!Else
+LDFLAGS = $(LDFLAGS) /subsystem:console
+!Endif
 
 ARASANX_OBJS = $(BUILD)\arasanx.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \

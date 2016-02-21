@@ -1,4 +1,4 @@
-// Copyright 1994-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2016 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -221,7 +221,7 @@ union MoveUnion
 {
    struct
    {
-#ifdef __BIG_ENDIAN__
+#if _BYTE_ORDER == _BIG_ENDIAN
         // invert order so moves have the same numeric 64-bit value as on little-endian arch
         byte phase;
         byte flags;

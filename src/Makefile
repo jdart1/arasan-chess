@@ -52,7 +52,7 @@ SMPLIB   = -lpthread
 
 PGO_RUN_FLAGS = -H 64M
 
-TUNE_FLAGS := -DTUNE -std=c++11
+TUNE_FLAGS := -DTUNE
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
@@ -114,7 +114,7 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
+CFLAGS  :=  -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
 OPT     = -O3 -fno-rtti -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
 
@@ -128,26 +128,16 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-GCCOLD  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \< 40)
-GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 46)
+GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
 
 ifeq "$(GCCNEW)" "1"
-# options for GCC 4.6 or higher:
-CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	 = -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
+# options for GCC 4.7 or higher:
+CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
 LTO	= -flto
 GTB_OPT := -Ofast $(SSE)
 else
-ifeq "$(GCCOLD)" "0"
-# pre-4.6 gcc options:
-CFLAGS  := -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	 = -O3 -fno-rtti -fno-enforce-eh-specs $(SSE)
-GTB_OPT := -O3 $(SSE)
-else
-# really old gcc
-CFLAGS  := -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	 = -O2
-endif
+$(error GCC version < 4.7 not supported)
 endif
 
 endif
