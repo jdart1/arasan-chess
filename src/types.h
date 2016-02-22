@@ -27,6 +27,9 @@ extern "C" {
 
 #include "stdendian.h"
 
+#include <thread>
+#include <atomic>
+
 typedef uint8_t byte;
 typedef uint64_t hash_t;
 
@@ -158,39 +161,35 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #endif
 
 // multithreading support.
-#ifdef _WIN32
-#define LockDefine(x) CRITICAL_SECTION x
-#define lock_t CRITICAL_SECTION
-#define LockInit(x) InitializeCriticalSection(&x)
-#define Lock(x) EnterCriticalSection(&x);
-#define Unlock(x) LeaveCriticalSection(&x);
-#define LockDestroy(x) DeleteCriticalSection(&x)
-#define LockFree(x) DeleteCriticalSection(&x)
-#define THREAD HANDLE
-#elif !_GNUC_PREREQ(4,2)
-// POSIX spinlock, for systems w/o gcc builtins
-#define THREAD pthread_t
-#define LockDefine(x) pthread_spinlock_t x
-#define lock_t pthread_spinlock_t
-#define LockInit(x) pthread_spin_init(&x, PTHREAD_PROCESS_PRIVATE)
-#define Lock(x) pthread_spin_lock(&x)
-#define Unlock(x) pthread_spin_unlock(&x)
-#define LockDestroy(x) pthread_spin_destroy(&x)
-#define LockFree(x)
-#else
-// GCC with builtins
-#define LockDefine(x) volatile int x
-#define lock_t volatile int
-#define LockInit(x) x = 0
-static inline void Lock(lock_t &x) {
-  while(__sync_lock_test_and_set(&x, 1))
-    ;
-}
-static inline void Unlock(lock_t &x) {
-   __sync_lock_release(&x);
-}
+class Spinlock {
+  atomic_flag locked;
+        
+ public:
+  Spinlock() {
+  }
+  virtual ~Spinlock() {
+  }
+  void lock()
+  {
+    while (locked.test_and_set(std::memory_order_acquire)) { ; }
+  }
+         
+  void unlock()
+  {
+    locked.clear(std::memory_order_release);
+  }
+};
+#define LockDefine(x) Spinlock x
+#define lock_t Spinlock
+#define LockInit(x)
+#define Lock(x) x.lock()
+#define Unlock(x) x.unlock()
 #define LockDestroy(x)
 #define LockFree(x)
+#ifdef _WIN32
+// native thread handle
+#define THREAD HANDLE
+#else
 #define THREAD pthread_t
 #endif
 
