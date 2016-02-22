@@ -206,7 +206,7 @@ static Move get_move(const string &cmd_word, const string &cmd_args) {
         move = cmd_word;
     }
     // see if it could be a move
-    string::iterator it = move.begin();
+    auto it = move.begin();
     while (it != move.end() && !isalpha(*it)) it++;
     move.erase(move.begin(),it);
     if (doTrace) {

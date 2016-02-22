@@ -68,7 +68,7 @@ static void set_strength_option(const string &name,
 
 void Options::setMemoryOption(size_t &value, const string &valueString) {
   string s = valueString;
-  string::iterator it = s.end()-1;
+  auto it = s.end()-1;
   size_t mult = 1L;
   if (*it == 'k' || *it == 'K') {
     s.erase(it);
