@@ -55,7 +55,7 @@ enum {InvalidSquare = 127};
 #endif
 
 #ifdef _WIN32
-#ifndef __MINGW32__
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
 extern "C" {
   #include <Windows32/Defines.h>
   #include <sys/time.h>
@@ -100,7 +100,7 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #ifdef _WIN32
 // force _cdecl even if compiler uses fastcall
 #undef CDECL
-#define CDECL _cdecl
+#define CDECL __cdecl
 #else
 #define CDECL
 #endif
