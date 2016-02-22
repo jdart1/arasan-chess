@@ -144,7 +144,7 @@ class Bitboard
     int FORCEINLINE isSet(int n) const
     {
 #if defined(_WIN64) & defined(USE_INTRINSICS)
-        return _bittest64((__int64_t*)&data,n);
+        return _bittest64((int64_t*)&data,n);
 #elif defined(_64BIT)
         return (data & (((uint64_t)1)<<n)) != (uint64_t)0;
 #else
