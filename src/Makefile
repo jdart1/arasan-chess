@@ -45,7 +45,6 @@ CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
 ifdef SYZYGY_TBS
 CFLAGS := $(CFLAGS) -DSYZYGY_TBS
-STB_FLAGS := -std=c99
 endif
 
 # Build the GTB sources into a separate object dir.
@@ -106,7 +105,6 @@ AR      = xiar
 CFLAGS  := -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT     = -O3 -fno-rtti $(SSE)
 GTB_OPT := -O3 -fno-rtti $(SSE)
-STB_OPT := -O3 -fno-rtti $(SSE)
 
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
@@ -125,7 +123,6 @@ PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 CFLAGS  :=  -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
 OPT     = -O3 -fno-rtti -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
-STB_OPT := -O3 -finline-functions $(SSE)
 
 else
 
@@ -145,7 +142,6 @@ CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CF
 OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
 LTO	= -flto
 GTB_OPT := -Ofast $(SSE)
-STB_OPT := -Ofast $(SSE)
 else
 $(error GCC version < 4.7 not supported)
 endif
@@ -226,9 +222,6 @@ else
 	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
-$(BUILD)/%.o: $(STB)/%.c
-	$(CC) $(STB_FLAGS) $(STB_OPT) $(DEBUG) -c $< -o $@
-
 profiled: dirs
 	@$(MAKE) PASS=1 profile profile-run
 	@$(MAKE) PASS=2 profile
@@ -278,6 +271,10 @@ endif
 ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
 TB_OBJS := $(TB_OBJS) $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
+STB_FLAGS := -x c++ $(CFLAGS)
+$(BUILD)/%.o: $(STB)/%.c
+	$(CC) $(STB_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
+
 endif
 
 ARASANX_SOURCES = arasanx.cpp globals.cpp  \
