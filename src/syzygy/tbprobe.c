@@ -1831,7 +1831,7 @@ extern unsigned tb_probe_wdl_impl(
         knights,
         pawns,
         0,
-        ep,
+        (uint8_t)ep,
         turn
     };
     int success;
@@ -1865,8 +1865,8 @@ extern unsigned tb_probe_root_impl(
         bishops,
         knights,
         pawns,
-        rule50,
-        ep,
+        (uint8_t)rule50,
+        (uint8_t)ep,
         turn
     };
     int dtz;
