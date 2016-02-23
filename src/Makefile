@@ -35,7 +35,7 @@ STB=syzygy
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS = 1
 #NALIMOV_TBS = 1
-#SYZYGY_TBS = 1
+SYZYGY_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
@@ -102,7 +102,7 @@ ifeq ("$(CC)","icc")
 CPP     = icc
 LD      = icc
 AR      = xiar
-CFLAGS  := -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+CFLAGS  := -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT     = -O3 -fno-rtti $(SSE)
 GTB_OPT := -O3 -fno-rtti $(SSE)
 
@@ -120,7 +120,7 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-CFLAGS  :=  -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
+CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
 OPT     = -O3 -fno-rtti -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
 
