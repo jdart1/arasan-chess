@@ -2,6 +2,21 @@
 #include "syzygy.h"
 #include "constant.h"
 #include "debug.h"
+#include "bitboard.h"
+
+// custom popcount implementation - overrides the one in
+// the Syzygy code.
+unsigned popcount(uint64_t x) 
+{
+   return (unsigned)Bitboard(x).bitCount();
+}
+
+// custom lsb implementation - overrides the one in
+// the Syzygy code.
+unsigned lsb(uint64_t x) 
+{
+   return (unsigned)Bitboard(x).firstOne();
+}
 
 static const int CURSED_SCORE = 5;
 
@@ -66,7 +81,7 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
    for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
       if (moveWdl >= wdl) {
          // move is ok, i.e. preserves WDL value
-         bool ep = TB_GET_EP(res);
+         unsigned ep = TB_GET_EP(res);
          // Note: castling not possible
          rootMoves.insert(CreateMove(TB_GET_FROM(res),
                                      TB_GET_TO(res),

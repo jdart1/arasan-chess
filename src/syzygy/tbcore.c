@@ -8,13 +8,15 @@
 */
 
 #include <stdio.h>
-#include <unistd.h>
+#ifndef TB_NO_STDINT
 #include <stdint.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef __WIN32__
+#ifndef _WIN32
+#include <unistd.h>
 #include <sys/mman.h>
 #endif
 #include "tbcore.h"
@@ -40,6 +42,11 @@
 
 #ifndef TB_NO_THREADS
 static LOCK_T TB_MUTEX;
+#endif
+
+#ifndef TB_CUSTOM_BSWAP
+#define bswap64(x) __builtin_bswap64(x)
+#define bswap32(x) __builtin_bswap32(x)
 #endif
 
 static int initialized = 0;
@@ -73,7 +80,7 @@ static FD open_tb(const char *str, const char *suffix)
     strcat(file, "/");
     strcat(file, str);
     strcat(file, suffix);
-#ifndef __WIN32__
+#ifndef _WIN32
     fd = open(file, O_RDONLY);
 #else
     fd = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -86,7 +93,7 @@ static FD open_tb(const char *str, const char *suffix)
 
 static void close_tb(FD fd)
 {
-#ifndef __WIN32__
+#ifndef _WIN32
   close(fd);
 #else
   CloseHandle(fd);
@@ -98,7 +105,7 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
   FD fd = open_tb(name, suffix);
   if (fd == FD_ERR)
     return NULL;
-#ifndef __WIN32__
+#ifndef _WIN32
   struct stat statbuf;
   fstat(fd, &statbuf);
   *mapping = statbuf.st_size;
@@ -129,7 +136,7 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
   return data;
 }
 
-#ifndef __WIN32__
+#ifndef _WIN32
 static void unmap_file(char *data, uint64 size)
 {
   if (!data) return;
@@ -1493,7 +1500,7 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
   int sym, bitcnt;
 
 #ifdef DECOMP64
-  uint64 code = __builtin_bswap64(*((uint64 *)ptr));
+  uint64 code = bswap64(*((uint64 *)ptr));
   ptr += 2;
   bitcnt = 0; // number of "empty bits" in code
   for (;;) {
@@ -1506,12 +1513,12 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
     bitcnt += l;
     if (bitcnt >= 32) {
       bitcnt -= 32;
-      code |= ((uint64)(__builtin_bswap32(*ptr++))) << bitcnt;
+      code |= ((uint64)(bswap32(*ptr++))) << bitcnt;
     }
   }
 #else
   uint32 next = 0;
-  uint32 code = __builtin_bswap32(*ptr++);
+  uint32 code = bswap32(*ptr++);
   bitcnt = 0; // number of bits in next
   for (;;) {
     int l = m;
@@ -1525,7 +1532,7 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
 	code |= (next >> (32 - l));
 	l -= bitcnt;
       }
-      next = __builtin_bswap32(*ptr++);
+      next = bswap32(*ptr++);
       bitcnt = 32;
     }
     code |= (next >> (32 - l));

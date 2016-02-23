@@ -5,7 +5,7 @@
 #ifndef TBCORE_H
 #define TBCORE_H
 
-#ifndef __WIN32__
+#ifndef _WIN32
 #include <pthread.h>
 #define SEP_CHAR ':'
 #define FD int
@@ -18,7 +18,7 @@
 #endif
 
 #ifdef TB_HAVE_THREADS
-#ifndef __WIN32__
+#ifndef _WIN32
 #define LOCK_T pthread_mutex_t
 #define LOCK_INIT(x) pthread_mutex_init(&(x), NULL)
 #define LOCK(x) pthread_mutex_lock(&(x))
@@ -81,7 +81,12 @@ struct TBEntry {
   ubyte num;
   ubyte symmetric;
   ubyte has_pawns;
-} __attribute__((__may_alias__));
+}
+#ifdef __GNUC__
+__attribute__((__may_alias__));
+#else
+;
+#endif
 
 struct TBEntry_piece {
   char *data;

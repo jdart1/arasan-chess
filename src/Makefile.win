@@ -15,12 +15,16 @@ BUILD_ROOT=..
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
 #NALIMOV_TBS=1
+SYZYGY_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
 
 # location of the Nalimov tablebase source code
 TB=tb
+
+# location of SYZYGY tablebase code
+STB=syzygy
 
 !Ifndef ARASANX
 !If "$(TARGET)" == "win64"
@@ -30,7 +34,6 @@ ARCH=/D_WIN64
 ARASANX = arasanx-32
 !Endif
 !Endif
-
 
 !Ifdef DEBUG
 BUILD_TYPE=debug
@@ -69,7 +72,7 @@ LD=link
 CL=cl
 
 # Visual Studio defs (only VC 2012+ has been tested)
-CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHs /EHc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
+CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
@@ -99,9 +102,9 @@ profile: dirs $(PROFILE)\$(ARASANX).exe
 tuning: dirs $(BUILD)\$(ARASANX)-tune.exe $(BUILD)\tuner.exe
 
 !IfDef NALIMOV_TBS
-TB_OBJS = $(BUILD)\tbprobe.obj
-TB_SRCS = tbprobe.cpp
-TB_PROFILE_OBJS = $(PROFILE)\tbprobe.obj
+TB_OBJS = $(BUILD)\nalimov.obj
+TB_SRCS = nalimov.cpp
+TB_PROFILE_OBJS = $(PROFILE)\nalimov.obj
 CFLAGS = $(CFLAGS) -DNALIMOV_TBS
 !Endif
 !IfDef GAVIOTA_TBS
@@ -215,6 +218,15 @@ gtb-lib: $(GTB_OBJS) $(GTB_LIBDIR)
 
 $(GTB_LIBDIR):
 	md $(GTB_LIBDIR)
+!Endif
+
+!IfDef SYZYGY_TBS
+CFLAGS = $(CFLAGS) -DSYZYGY_TBS
+STB_FLAGS = /TP $(CFLAGS)
+TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)/tbprobe.c
+TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
+{$(STB)}.c{$(BUILD)}.obj:
+    $(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $<
 !Endif
 
 # Linker flags
@@ -339,11 +351,11 @@ $(BUILD)\$(ARASANX)-tune.exe:  dirs $(ARASANX_TUNE_OBJS)
 $(BUILD)\tuner.exe:  dirs $(TUNER_OBJS)
         $(LD) $(TUNER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\tuner.exe
 
-$(BUILD)\tbprobe.obj: tbprobe.cpp
-    $(CL) $(TB_FLAGS) /c /Fo$@ tbprobe.cpp
+$(BUILD)\nalimov.obj: nalimov.cpp
+    $(CL) $(TB_FLAGS) /c /Fo$@ nalimov.cpp
 
-$(PROFILE)\tbprobe.obj: tbprobe.cpp
-    $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ tbprobe.cpp
+$(PROFILE)\nalimov.obj: nalimov.cpp
+    $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ nalimov.cpp
 
 $(PROFILE)\$(ARASANX).exe:  $(ARASANX_PROFILE_OBJS)
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PROFILE)\$(ARASANX).exe

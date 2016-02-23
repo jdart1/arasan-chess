@@ -24,9 +24,33 @@
 #ifndef TBCONFIG_H
 #define TBCONFIG_H
 
+#include "../types.h"
+
 /****************************************************************************/
 /* BUILD CONFIG:                                                            */
 /****************************************************************************/
+
+/*
+ * Define TB_CUSTOM_POP_COUNT to override the internal popcount
+ * implementation. To do this supply a function with the signature:
+ * unsigned popcount(uint64_t x)
+ */
+#define TB_CUSTOM_POP_COUNT
+
+/*
+ * Define TB_CUSTOM_LSB to override the internal lsb
+ * implementation. To do this supply a function with the signature:
+ * unsigned lsb(uint64_t x)
+ */
+#define TB_CUSTOM_LSB
+
+/*
+ * Define TB_CUSTOM_BSWAP to override the internal bswap*
+ * implementation. To do this supply functions or macros with the signature:
+ * uint64_t bswap64(uint64_t x) and
+ * uint32_t bswap32(uint32_t x)
+ */
+#define TB_CUSTOM_BSWAP
 
 /*
  * Define TB_NO_STDINT if you do not want to use <stdint.h> or it is not
@@ -38,7 +62,9 @@
  * Define TB_NO_STDBOOL if you do not want to use <stdbool.h> or it is not
  * available or unnecessary (e.g. C++).
  */
-/* #define TB_NO_STDBOOL */
+#ifdef _WIN32
+#define TB_NO_STDBOOL
+#endif
 
 /*
  * Define TB_NO_THREADS if your program is not multi-threaded.
@@ -48,7 +74,7 @@
 /*
  * Define TB_NO_HELPER_API if you do not need the helper API.
  */
-/* #define TB_NO_HELPER_API */
+#define TB_NO_HELPER_API
 
 /*
  * Define TB_NO_HW_POP_COUNT if there is no hardware popcount instruction.

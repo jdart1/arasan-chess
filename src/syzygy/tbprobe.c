@@ -29,7 +29,9 @@
 
 #include "tbprobe.h"
 
+#ifdef __GNUC__
 #include <x86intrin.h>
+#endif
 
 #define WHITE_KING              (TB_WPAWN + 5)
 #define WHITE_QUEEN             (TB_WPAWN + 4)
@@ -67,8 +69,12 @@
 #define SCORE_ILLEGAL           0x7FFF
 
 #ifndef TB_NO_HW_POP_COUNT
+#ifdef TB_CUSTOM_POP_COUNT
+extern unsigned popcount(uint64_t x);
+#else
 #include <popcntintrin.h>
 #define popcount(x)             _mm_popcnt_u64((x))
+#endif
 #else
 static inline unsigned popcount(uint64_t x)
 {
@@ -118,12 +124,16 @@ unsigned TB_LARGEST = 0;
 #define rank(s)                 ((s) >> 3)
 #define file(s)                 ((s) & 0x07)
 #define board(s)                ((uint64_t)1 << (s))
+#ifdef TB_CUSTOM_LSB
+extern unsigned lsb(uint64_t b);
+#else
 static inline unsigned lsb(uint64_t b)
 {
     size_t idx;
     __asm__("bsfq %1, %0": "=r"(idx): "rm"(b));
     return idx;
 }
+#endif
 #define square(r, f)            (8 * (r) + (f))
 
 #ifdef TB_KING_ATTACKS
@@ -684,7 +694,11 @@ static int probe_wdl_table(const struct pos *pos, int *success)
                 return 0;
             }
             // Memory barrier to ensure ptr->ready = 1 is not reordered.
+#ifdef __GNUC__
             __asm__ __volatile__ ("" ::: "memory");
+#elif defined(_MSC_VER)
+            MemoryBarrier();
+#endif
             ptr->ready = 1;
         }
         UNLOCK(TB_MUTEX);

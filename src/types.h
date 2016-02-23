@@ -208,7 +208,6 @@ FORCEINLINE uint32_t swapEndian32(const byte *input) {
 
 FORCEINLINE uint16_t swapEndian16(const byte *input) {
   return bswap16((uint64_t*)input);
->>>>>>> master
 }
 
 #else
