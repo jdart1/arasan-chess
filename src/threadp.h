@@ -95,8 +95,8 @@ private:
    unsigned nThreads;
 
    // mask of thread status - 0 if idle, 1 if active
-   static uint64 activeMask;
-   static uint64 availableMask;
+   static uint64_t activeMask;
+   static uint64_t availableMask;
 
 #ifndef _WIN32
    pthread_attr_t stackSizeAttrib;

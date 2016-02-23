@@ -32,8 +32,8 @@ class BookWriter {
         ~BookWriter();
                 
         // add a move to the file.
-        void add(const hash_t hashCode, byte moveIndex, uint16 weight,
-                 int32 count);
+        void add(const hash_t hashCode, byte moveIndex, uint16_t weight,
+                 int32_t count);
 
         // Write book contents out to the designated path. Returns 0
         // if no errors, -1 if error

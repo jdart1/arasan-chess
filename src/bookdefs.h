@@ -16,8 +16,8 @@ const int BOOK_VERSION = 14;
 
 const int INDEX_PAGE_SIZE = 1024;
 const int DATA_PAGE_SIZE = 1024;
-const uint16 NO_NEXT = 65535;
-const uint16 INVALID_INDEX = 65535;
+const uint16_t NO_NEXT = 65535;
+const uint16_t INVALID_INDEX = 65535;
 const unsigned NO_RECOMMEND = 1025;
 const int MAX_WEIGHT = 1024;
 
@@ -25,7 +25,7 @@ const int MAX_WEIGHT = 1024;
 struct BookHeader
 BEGIN_PACKED_STRUCT
    byte version;
-   uint16 num_index_pages;
+   uint16_t num_index_pages;
    BookHeader() : version(0), num_index_pages(0) {
    }
 END_PACKED_STRUCT
@@ -34,7 +34,7 @@ END_PACKED_STRUCT
 // of the head of a move chain
 struct BookLocation
 BEGIN_PACKED_STRUCT
-   BookLocation(uint16 p, uint16 i)
+   BookLocation(uint16_t p, uint16_t i)
     :page(p),index(i) {
     }
    BookLocation()
@@ -43,14 +43,14 @@ BEGIN_PACKED_STRUCT
     int isValid() const {
        return index != INVALID_INDEX;
     }
-    uint16 page;
-    uint16 index;
+    uint16_t page;
+    uint16_t index;
 END_PACKED_STRUCT
 
 // Entry in the index table
 struct IndexEntry : public BookLocation
 BEGIN_PACKED_STRUCT
-    IndexEntry(hash_t hash, uint16 p, uint16 i) :
+    IndexEntry(hash_t hash, uint16_t p, uint16_t i) :
     BookLocation(p,i),hashCode(hash) {
     }
     IndexEntry() :
@@ -61,7 +61,7 @@ END_PACKED_STRUCT
 
 struct IndexPage
 BEGIN_PACKED_STRUCT
-    uint32 next_free;
+    uint32_t next_free;
     IndexEntry index[INDEX_PAGE_SIZE];
     IndexPage() : next_free(0) {
     }
@@ -71,15 +71,15 @@ END_PACKED_STRUCT
 struct DataEntry
 BEGIN_PACKED_STRUCT 
     byte index;
-    uint16 next;
-    uint16 weight;
-    uint32 count;
+    uint16_t next;
+    uint16_t weight;
+    uint32_t count;
 END_PACKED_STRUCT
 
 struct DataPage
 BEGIN_PACKED_STRUCT
-    uint32 free_list;
-    uint32 num_free;
+    uint32_t free_list;
+    uint32_t num_free;
     DataEntry data[DATA_PAGE_SIZE];
     DataPage() : free_list(0), num_free(DATA_PAGE_SIZE) {
         // create the free list and link all entries into it

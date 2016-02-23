@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2016 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // a text file.
@@ -23,7 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <stack>
 #include <vector>
 using namespace std;
@@ -54,8 +54,8 @@ enum PositionEval {NO_POSITION_EVAL,
                    WHITE_MODERATE_ADVANTAGE,
                    WHITE_STRONG_ADVANTAGE,
                    WHITE_WINNING_ADVANTAGE};
-static map<string, MoveEval> moveEvals;
-static map<string, PositionEval> positionEvals;
+static unordered_map<string, MoveEval> moveEvals;
+static unordered_map<string, PositionEval> positionEvals;
 
 static string output_name;
 
@@ -112,9 +112,9 @@ BEGIN_PACKED_STRUCT
     MoveEval moveEval;
     unsigned rec; // explicit weight if any
     int relativeFreq, winWeight;
-    uint32 count;
+    uint32_t count;
     byte move_index;
-    uint16 weight;
+    uint16_t weight;
 END_PACKED_STRUCT
 
 BookEntry::BookEntry( unsigned r, PositionEval ev,
@@ -135,7 +135,7 @@ BookEntry::BookEntry( unsigned r, PositionEval ev,
 }
 
 
-static map <uint64, BookEntry *>* hashTable = NULL;
+static unordered_map <uint64_t, BookEntry *>* hashTable = NULL;
 
 // Compute a recommended relative weight for a set of book
 // moves from a given position
@@ -292,8 +292,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
 #endif
    const int move_index = m.index;
    const int recommend = m.rec;
-   map<uint64,BookEntry *>::const_iterator it =
-      hashTable->find(board.hashCode());
+   auto it = hashTable->find(board.hashCode());
    BookEntry *be;
    if (it == hashTable->end())
       be = NULL;
@@ -516,15 +515,13 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
          }
          else if (tok.type == ChessIO::NAG) {
              // applies to the previous move or line
-             map<string,MoveEval>::const_iterator it =
-                 moveEvals.find(tok.val);
+             auto it = moveEvals.find(tok.val);
              if (it != moveEvals.end()) {
                  // get last move and set its eval
                  varStack[var-1].moves[varStack[var-1].moves.size()-1].moveEval = (*it).second;
              }
              //check for position eval
-             map<string,PositionEval>::const_iterator it2 =
-                 positionEvals.find(tok.val);
+             auto it2 = positionEvals.find(tok.val);
              if (it2 != positionEvals.end()) {
                  // associate it with the current variation
                  varStack[var-1].eval = (PositionEval)((*it2).second);
@@ -658,7 +655,7 @@ int CDECL main(int argc, char **argv)
    }
    atexit(cleanupGlobals);
 
-   hashTable =  new map< uint64, BookEntry*>;
+   hashTable =  new unordered_map< uint64_t, BookEntry*>;
    moveEvals.insert(std::pair<string,MoveEval>("$1",GOOD_MOVE));
    moveEvals.insert(std::pair<string,MoveEval>("$2",POOR_MOVE));
    moveEvals.insert(std::pair<string,MoveEval>("$3",VERY_GOOD_MOVE));
@@ -752,9 +749,9 @@ int CDECL main(int argc, char **argv)
    // the "minFrequency" test. Also at this stage we compute move
    // weights.
    if (verbose) cout << "PGN processing complete." << endl;
-   map< uint64, BookEntry *>::const_iterator it = hashTable->begin();
+   auto it = hashTable->begin();
    BookWriter writer(indexPages);
-   uint32 total_moves = 0;
+   uint32_t total_moves = 0;
    unsigned long positions = 0;
    while (it != hashTable->end()) {
        BookEntry* be = (*it).second;

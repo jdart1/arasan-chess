@@ -100,7 +100,7 @@ static bool doTrace = false;
 static bool easy = false;
 static int game_end = 0;
 static int result_pending = 0;
-static int32 last_score = Constants::MATE;
+static int32_t last_score = Constants::MATE;
 static ECO *ecoCoder = NULL;
 static string hostname;
 static int xboard42 = 0;
@@ -133,15 +133,15 @@ extern fstream ucilog;
 #endif
 
 // profile
-uint64 total_nodes = 0L;
+uint64_t total_nodes = 0L;
 int total_correct = 0L;
 int total_tests = 0L;
-uint64 total_time = 0L;
+uint64_t total_time = 0L;
 int early_exit_plies = Constants::MaxPly;
 int early_exit = 0;
 int solution_move_count = 0;
 time_t solution_time = 0;
-uint64 solution_nodes = (uint64)0;
+uint64_t solution_nodes = (uint64_t)0;
 int last_iteration_depth = -1;
 int iterations_correct = 0;
 int moves_to_search = 1;
@@ -149,9 +149,9 @@ int flip = 0;
 Move solution_moves[10];
 bool avoid = false;
 ArasanVector<int> solution_times;
-static uint64 nodes_to_find_total;
+static uint64_t nodes_to_find_total;
 static int depth_to_find_total;
-static uint64 time_to_find_total;
+static uint64_t time_to_find_total;
 static int max_depth;
 static struct
 {
@@ -159,7 +159,7 @@ static struct
    int value;
    time_t time;
    int depth;
-   uint64 num_nodes;
+   uint64_t num_nodes;
 } search_progress[256];
 
 static string cmd_buf;
@@ -209,7 +209,7 @@ static Move get_move(const string &cmd_word, const string &cmd_args) {
         move = cmd_word;
     }
     // see if it could be a move
-    string::iterator it = move.begin();
+    auto it = move.begin();
     while (it != move.end() && !isalpha(*it)) it++;
     move.erase(move.begin(),it);
     if (doTrace) {
@@ -683,7 +683,7 @@ static void move_image(const Board &board, Move m, ostream &buf, int uci) {
 }
 
 
-static void print_nodes(uint64 nodes, ostream &out) {
+static void print_nodes(uint64_t nodes, ostream &out) {
    if (nodes >= 1000000) {
       cout << (float)(nodes)/1000000.0 << "M";
    }
@@ -700,8 +700,8 @@ static struct MultiPVEntry
    int depth;
    int score;
    time_t time;
-   uint64 nodes;
-   uint64 tb_hits;
+   uint64_t nodes;
+   uint64_t tb_hits;
    string best_line_image;
    Move best;
    MultiPVEntry() {}
@@ -716,7 +716,7 @@ static struct MultiPVEntry
 
 
 static void uciOut(int depth, int score, time_t time,
-uint64 nodes, uint64 tb_hits, const string &best_line_image, int multipv) {
+uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    stringstream s;
    s << "info";
    s << " multipv " << (multipv == 0 ? 1 : multipv);
@@ -789,7 +789,7 @@ static void CDECL post_output(const Statistics &stats) {
          stats.depth,' ',
          (score*100)/PAWN_VALUE, // score in centipawns
          (long)stats.elapsed_time/10, // time in centiseconds
-         stats.num_nodes,
+         (unsigned long long)stats.num_nodes,
          stats.best_line_image.c_str());
          fflush(stdout);
    }
@@ -2050,12 +2050,12 @@ static void do_test(string test_file)
    delayedInitIfNeeded();
    int tmp = options.book.book_enabled;
    options.book.book_enabled = 0;
-   total_nodes = (uint64)0;
+   total_nodes = (uint64_t)0;
    total_correct = total_tests = 0;
-   total_time = (uint64)0;
-   nodes_to_find_total = (uint64)0;
+   total_time = (uint64_t)0;
+   nodes_to_find_total = (uint64_t)0;
    depth_to_find_total = 0;
-   time_to_find_total = (uint64)0;
+   time_to_find_total = (uint64_t)0;
 
    solution_times.removeAll();
    Board board;
@@ -2175,7 +2175,7 @@ static void do_test(string test_file)
             }
             cout << stats.best_line_image << endl;
             if (correct && max_depth>0) {
-               uint64 nodes_to_find = (uint64)0;
+               uint64_t nodes_to_find = (uint64_t)0;
                int depth_to_find = 0;
                time_t time_to_find = 0;
                for (int i=max_depth-1;i>=0;i--) {
@@ -2246,7 +2246,7 @@ static void do_test(string test_file)
       string avg = "";
       if (total_correct > 1) avg = "avg. ";
       cout << avg << "nodes to solution : ";
-      uint64 avg_nodes = nodes_to_find_total/total_correct;
+      uint64_t avg_nodes = nodes_to_find_total/total_correct;
       if (avg_nodes > 1000000L) {
          cout << (float)(avg_nodes)/1000000.0 << "M" << endl;
       }
@@ -2259,10 +2259,10 @@ static void do_test(string test_file)
    testing = 0;
 }
 
-static uint64 perft(Board &board, int depth) {
+static uint64_t perft(Board &board, int depth) {
    if (depth == 0) return 1;
 
-   uint64 nodes = 0ULL;
+   uint64_t nodes = 0ULL;
    RootMoveGenerator mg(board);
    Move m;
    BoardState state = board.state;

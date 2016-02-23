@@ -1,4 +1,4 @@
-// Copyright 1994-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2016 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -210,7 +210,7 @@ extern PieceType PieceCharValue( char );
 // 1-character representation of piece
 extern char PieceImage(const PieceType p);
 
-typedef uint64 Move;
+typedef uint64_t Move;
 
 enum MoveFlags {NewMove = 0, Used = 1, Forced = 8,
   Forced2 = 16};
@@ -221,7 +221,7 @@ union MoveUnion
 {
    struct
    {
-#ifdef __BIG_ENDIAN__
+#if _BYTE_ORDER == _BIG_ENDIAN
         // invert order so moves have the same numeric 64-bit value as on little-endian arch
         byte phase;
         byte flags;
@@ -243,16 +243,16 @@ union MoveUnion
 #endif
    } contents;
 
-   uint64 intValue;
+   uint64_t intValue;
 
    struct
    {
 #ifdef __BIG_ENDIAN__
-      uint32 hipart;
-      uint32 lopart;
+      uint32_t hipart;
+      uint32_t lopart;
 #else
-      uint32 lopart;
-      uint32 hipart;
+      uint32_t lopart;
+      uint32_t hipart;
 #endif
    } split;
 
@@ -284,10 +284,10 @@ FORCEINLINE Move CreateMove(Square start, Square dest, PieceType pieceMoved,
   PieceType capture=Empty, PieceType promotion=Empty, MoveType type=Normal) {
   ASSERT((type == Promotion) == (promotion != Empty));
   ASSERT((type == Promotion) == (pieceMoved == Pawn && (dest/8 == 0 || dest/8 == 7)));
-  return (Move)(uint64(start | (dest<<8) | (pieceMoved << 16) |
-		       ((uint64)promotion << 24) |
-		       ((uint64)capture << 32) |
-		       ((uint64)type << 40)));
+  return (Move)(uint64_t(start | (dest<<8) | (pieceMoved << 16) |
+		       ((uint64_t)promotion << 24) |
+		       ((uint64_t)capture << 32) |
+		       ((uint64_t)type << 40)));
 }	
 
 #define NullMove CreateMove(InvalidSquare,InvalidSquare,Empty)

@@ -568,8 +568,8 @@ static int testPerft()
    {
       string fen;
       int depth;
-      uint64 result;
-      TestCase(const string &s, int d, uint64 r) :
+      uint64_t result;
+      TestCase(const string &s, int d, uint64_t r) :
          fen(s),depth(d),result(r)
          {
          }
@@ -627,7 +627,7 @@ static int testPerft()
          ++errs;
          continue;
       }
-      uint64 result;
+      uint64_t result;
       if ((result = RootMoveGenerator::perft(board,acase.depth)) != acase.result) {
          cerr << "testPerft: error in test case " << i << " wrong result: " << result << endl;
          ++errs;

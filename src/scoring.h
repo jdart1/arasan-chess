@@ -94,7 +94,7 @@ class Scoring
       static const int TRIPLED=64;
       static const int WEAK=128;
       static const int ISOLATED=256;
-      uint16 flags;
+      uint16_t flags;
       byte space_weight;
       Square sq;
     };
@@ -119,7 +119,7 @@ class Scoring
            byte pawn_file_mask;
            byte passer_file_mask;
            byte pad;
-           int32 endgame_score, midgame_score;
+           int32_t endgame_score, midgame_score;
   	   int w_square_pawns,b_square_pawns;
            int outside;
 #ifdef TUNE
@@ -135,8 +135,8 @@ class Scoring
 
     struct KingPawnHashEntry {
        hash_t hc;
-       int32 cover;
-       int32 king_endgame_position;
+       int32_t cover;
+       int32_t king_endgame_position;
     };
 
     KingPawnHashEntry kingPawnHashTable[2][KING_PAWN_HASH_SIZE];

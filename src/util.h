@@ -12,8 +12,8 @@ extern "C" {
 
 struct BIGINT
 {
-  uint32 low;
-  uint32 high;
+  uint32_t low;
+  uint32_t high;
 };
 
 union INT64UNION
@@ -22,13 +22,13 @@ union INT64UNION
   hash_t u;
 };
 
-FORCEINLINE int32 quickmod(int64 dividend, int32 divisor)
+FORCEINLINE int32_t quickmod(int64_t dividend, int32_t divisor)
 {
    // Compute a 32-bit derived hash code between 0..divisor.
    // Avoid a 64-bit division, to save time.
    INT64UNION un;
    un.u = dividend;
-   return (int32)(un.b.low % divisor);
+   return (int32_t)(un.b.low % divisor);
 }
 
 class Util

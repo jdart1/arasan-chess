@@ -42,7 +42,7 @@ void Hash::initHash(size_t bytes)
         }
       }
       hashSize = (size_t)1 << hashPower;
-      hashMask = (uint64)(hashSize-1);
+      hashMask = (uint64_t)(hashSize-1);
       size_t hashSizePlus = hashSize + MaxRehash;
       ALIGNED_MALLOC(hashTable,
          HashEntry,

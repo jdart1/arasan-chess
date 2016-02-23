@@ -115,23 +115,23 @@ struct ThreadData {
 
 struct Parse1Data
 {
-   uint64 result[NUM_RESULT];
+   uint64_t result[NUM_RESULT];
 
    // accumulated stats for this phase:
    double target;
    double target_out_window;
-   uint64 num_moves;
-   uint64 result_norm;
+   uint64_t num_moves;
+   uint64_t result_norm;
 
    unsigned amove_legal[Constants::MaxMoves];
 
    void clear() {
       for (int i = 0; i < NUM_RESULT; i++) {
-        result[i] = (uint64)0;
+        result[i] = (uint64_t)0;
       }
       result_norm = 0x0ULL;
       target = target_out_window = 0.0;
-      num_moves = (uint64)0;
+      num_moves = (uint64_t)0;
    }
 
 };
@@ -142,7 +142,7 @@ struct Parse2Data
 
    // holds accumulated derivatives for the scoring parameters:
    vector <double> grads;
-   uint64 num_moves_counted;
+   uint64_t num_moves_counted;
    double target;
 };
 
@@ -632,7 +632,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     }
 
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
-       const uint32 pieces = ourmat.pieceBits();
+       const uint32_t pieces = ourmat.pieceBits();
        if (pieces == Material::KN || pieces == Material::KB) {
           // Knight or Bishop vs pawns
           if (ourmat.pawnCount() == 0) {
@@ -1505,7 +1505,7 @@ static void learn()
    LockInit(data_lock);
    LockInit(file_lock);
    LockInit(hash_lock);
-   uint64 num_moves = 0;
+   uint64_t num_moves = 0;
 #ifdef _MSC_VER
    double best = 1.0e10;
 #else

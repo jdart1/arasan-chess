@@ -26,19 +26,19 @@ void Statistics::clear()
    multipv_count = 0;
    failhigh = faillow = 0;
    depth = 0;
-   num_nodes = (uint64)0;
+   num_nodes = (uint64_t)0;
    display_value = Scoring::INVALID_SCORE;
 #ifdef SEARCH_STATS
    num_qnodes = reg_nodes = moves_searched = static_null_pruning =
-       razored = (uint64)0;
-   hash_hits = hash_searches = futility_pruning = null_cuts = lmp = (uint64)0;
-   history_pruning = lmp = see_pruning = (uint64)0;
+       razored = (uint64_t)0;
+   hash_hits = hash_searches = futility_pruning = null_cuts = lmp = (uint64_t)0;
+   history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
      pawn_extensions = evasion_extensions = 0L;
 #endif
    end_of_game = 0;
    mvleft = mvtot = 0;
-   tb_probes = tb_hits = (uint64)0;
+   tb_probes = tb_hits = (uint64_t)0;
 #ifdef MOVE_ORDER_STATS
    move_order_count = 0;
    for (i = 0; i < 4; i++) move_order[i]=0;
@@ -50,7 +50,7 @@ void Statistics::clear()
 #endif
 #ifdef TUNE
    target = target_out_window = 0.0;
-   result_norm = (uint64)0;
+   result_norm = (uint64_t)0;
 #endif
 }
 

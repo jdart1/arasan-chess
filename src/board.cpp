@@ -1324,7 +1324,7 @@ int Board::anyAttacks(Square sq, ColorType side, Bitboard &source) const
    if (!source.isClear()) return 1;
    source = Bitboard(Attacks::knight_attacks[sq] & knight_bits[side]);
    if (!source.isClear()) return 1;
-   source = Bitboard((uint64)Attacks::king_attacks[sq] & (1ULL<<kingSquare(side)));
+   source = Bitboard((uint64_t)Attacks::king_attacks[sq] & (1ULL<<kingSquare(side)));
    if (!source.isClear()) return 1;
    source = Bitboard((rook_bits[side] | queen_bits[side]) & rookAttacks(sq));
    if (!source.isClear()) return 1;
@@ -1353,7 +1353,7 @@ Bitboard Board::calcAttacks(Square sq, ColorType side) const
 
    retval |= (Attacks::pawn_attacks[sq][side] & pawn_bits[side]);
    retval |= (Attacks::knight_attacks[sq] & knight_bits[side]);
-   retval |= (Attacks::king_attacks[sq] & (1ULL<<kingSquare(side)));
+   retval |= (Attacks::king_attacks[sq] & ((uint64_t)1<<kingSquare(side)));
    retval |= (rookAttacks(sq) & (rook_bits[side] | queen_bits[side]));
    retval |= (bishopAttacks(sq) & (bishop_bits[side] | queen_bits[side]));
 

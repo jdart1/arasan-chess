@@ -144,7 +144,7 @@ class HashEntry {
 
       struct Contents
       BEGIN_PACKED_STRUCT
-        int16 pad;
+        int16_t pad;
         byte depth;
         byte age;
         byte flags;
@@ -153,20 +153,20 @@ class HashEntry {
 
       struct Values
       BEGIN_PACKED_STRUCT
-        int32 value;
-        int32 static_value;
+        int32_t value;
+        int32_t static_value;
       END_PACKED_STRUCT
 
-       uint64 hc;
+       uint64_t hc;
       union
       {
         Contents contents;
-        uint64 val2;
+        uint64_t val2;
       };
 
       union {
         Values values;
-        uint64 val3;
+        uint64_t val3;
       };
 };
 

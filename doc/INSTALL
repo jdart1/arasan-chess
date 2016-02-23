@@ -5,18 +5,9 @@ tablebase code (available from http://arasanchess.org/downld.shtml)
 and edit the Makefile to select the type(s) of tablebase support you
 want and to point to the necessary sources.
 
-gcc 4.2 or above is recommended for building Arasan. There is some
-support for older gcc versions (not very tested). It has also been
-verified to compile with Intel C++ 11.1 and 12.0.
-
-On MacOS, you need to install XCode 3.1 or above to get a compatible
-gcc.  If you are on MacOS Leopard, you then probably need to set
-something like:
-
-export CC=g++-4.2
-export LDFLAGS=-L/Developer/usr/lib/i686-apple-darwin9/gcc-4.2.1
-
-to select the right compiler and libraries.
+Arasan now requires a modern compiler with C++11 features (although
+not necessarily complete C++11 support).  Gcc 4.7 or above is
+recommended for building Arasan.
 
 There is a makefile in the src directory. In most cases, just typing
 "make" should automatically select the correct target architecture and
@@ -39,7 +30,7 @@ If you want to use PGO to build the arasan engine (arasanx), do:
 make clean profiled
 
 (use popcnt-profiled instead of profile as the target for a POPCNT
-enabled build).
+enabled PGO build).
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64", or
 "arasanx-64-popcnt", depending on the architecture and build flags
@@ -53,5 +44,5 @@ arm-linux.
 "make release" will build the release tarball and place it in the
 release subdirectory.
 
-"make install" will install Arasan binaries into /usr/local/bin/arasan-18.2.0.
+"make install" will install Arasan binaries into /usr/local/bin/arasan-18.3.0.
 (You will need to be root, or use sudo, to execute "make install"). 
