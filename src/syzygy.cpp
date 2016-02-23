@@ -39,14 +39,14 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
    Bitboard king_bits;
    king_bits.set(b.kingSquare(White));
    king_bits.set(b.kingSquare(Black));
-   unsigned result = tb_probe_root((uint64)(b.occupied[White]),
-                                   (uint64)(b.occupied[Black]),
-                                   (uint64)king_bits,
-                                   (uint64)(b.queen_bits[Black] | b.queen_bits[White]),
-                                   (uint64)(b.rook_bits[Black] | b.rook_bits[White]),
-                                   (uint64)(b.bishop_bits[Black] | b.bishop_bits[White]),
-                                   (uint64)(b.knight_bits[Black] | b.knight_bits[White]),
-                                   (uint64)(b.pawn_bits[Black] | b.pawn_bits[White]),
+   unsigned result = tb_probe_root((uint64_t)(b.occupied[White]),
+                                   (uint64_t)(b.occupied[Black]),
+                                   (uint64_t)king_bits,
+                                   (uint64_t)(b.queen_bits[Black] | b.queen_bits[White]),
+                                   (uint64_t)(b.rook_bits[Black] | b.rook_bits[White]),
+                                   (uint64_t)(b.bishop_bits[Black] | b.bishop_bits[White]),
+                                   (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
+                                   (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
                                    b.state.moveCount,
                                    (int)b.castleStatus(White)<3 ||
                                    (int)b.castleStatus(Black)<3,
