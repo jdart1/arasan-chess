@@ -21,6 +21,11 @@
 #endif
 #include "tbcore.h"
 
+#if !defined(DECOMP64) && defined(_LP64)
+// use 64-bit decompression if OS is 64-bit
+#define DECOMP64
+#endif
+
 #define TBMAX_PIECE 254
 #define TBMAX_PAWN 256
 #define HSHMAX 5

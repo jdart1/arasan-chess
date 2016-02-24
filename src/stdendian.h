@@ -1,4 +1,5 @@
 /* from https://gist.github.com/michaeljclark/3b4fd912f6fa8bb598b3 */
+/* modified to use functions not macros for bswap */
 /*
  *   stdendian.h
  *
@@ -171,8 +172,10 @@
 #if defined __GNUC__
 #define bswap16(x) __builtin_bswap16(x)
 #else
-#define bswap16(x) ((uint16_t)((((uint16_t) (x) & 0xff00) >> 8) | \
-                               (((uint16_t) (x) & 0x00ff) << 8)))
+inline uint16_t bswap16(uint16_t x) {
+  return (uint16_t)((((uint16_t) (x) & 0xff00) >> 8) | \
+                    (((uint16_t) (x) & 0x00ff) << 8));
+}
 #endif
 #endif
 
@@ -180,10 +183,12 @@
 #if defined __GNUC__
 #define bswap32(x) __builtin_bswap32(x)
 #else
-#define bswap32(x) ((uint32_t)((((uint32_t) (x) & 0xff000000) >> 24) | \
-  (((uint32_t) (x) & 0x00ff0000) >> 8) | \
-  (((uint32_t) (x) & 0x0000ff00) << 8) | \
-                               (((uint32_t) (x) & 0x000000ff) << 24)))
+inline uint32_t bswap32(uint32_t x) {
+  return (( x & 0xff000000) >> 24) | \
+  (( x & 0x00ff0000) >> 8) | \
+  (( x & 0x0000ff00) << 8) | \
+  (( x & 0x000000ff) << 24);
+}
 #endif
 #endif
 
@@ -191,14 +196,16 @@
 #if defined __GNUC__
 #define bswap64(x) __builtin_bswap64(x)
 #else
-#define bswap64(x) ((uint64_t)((((uint64_t) (x) & 0xff00000000000000ull) >> 56) | \
-  (((uint64_t) (x) & 0x00ff000000000000ull) >> 40) | \
-  (((uint64_t) (x) & 0x0000ff0000000000ull) >> 24) | \
-  (((uint64_t) (x) & 0x000000ff00000000ull) >> 8) | \
-  (((uint64_t) (x) & 0x00000000ff000000ull) << 8) | \
-  (((uint64_t) (x) & 0x0000000000ff0000ull) << 24) | \
-  (((uint64_t) (x) & 0x000000000000ff00ull) << 40) | \
-                               (((uint64_t) (x) & 0x00000000000000ffull) << 56)))
+inline uint64_t bswap64(uint64_t x) {
+    return (( x & 0xff00000000000000ull) >> 56) | \
+  (( x & 0x00ff000000000000ull) >> 40) | \
+  (( x & 0x0000ff0000000000ull) >> 24) | \
+  (( x & 0x000000ff00000000ull) >> 8) | \
+  (( x & 0x00000000ff000000ull) << 8) | \
+  (( x & 0x0000000000ff0000ull) << 24) | \
+  (( x & 0x000000000000ff00ull) << 40) | \
+  (( x & 0x00000000000000ffull) << 56);
+}
 #endif
 #endif
 
@@ -213,7 +220,7 @@
 #define le16toh(x)              ((uint16_t)(x))
 
 #define htobe32(x)              bswap32((x))
-#define htole32(x)              ((uint32_t)(x))
+#define htole32(x)              ((uint32_t((x))
 #define be32toh(x)              bswap32((x))
 #define le32toh(x)              ((uint32_t)(x))
 

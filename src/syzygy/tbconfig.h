@@ -39,7 +39,7 @@
 
 /*
  * Define TB_CUSTOM_LSB to override the internal lsb
- * implementation. To do this supply a function with the signature:
+ * implementation. To do this supply a function or macro with the signature:
  * unsigned lsb(uint64_t x)
  */
 #define TB_CUSTOM_LSB
