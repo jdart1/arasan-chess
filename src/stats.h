@@ -19,6 +19,7 @@ struct Statistics
    StateType state;
    int value;
    int display_value;
+   int tb_value;
    bool fromBook;
    int complete; // if at end of iteration
    int multipv_count; // only for UCI

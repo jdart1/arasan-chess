@@ -682,6 +682,7 @@ Move *excludes, int num_excludes)
                mg.filter(moves);
                // Note: do not set the value - search values are based
                // on DTM not DTZ.
+               controller->stats->tb_value = tb_score;
             }
          }
 #endif
@@ -1011,6 +1012,12 @@ Move *excludes, int num_excludes)
    Statistics *stats = controller->stats;
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
+   // If a Syzygy tablebase hit set the score based on that. But
+   // don't override a mate score found with search.
+   if (!Scoring::mateScore(stats->display_value) &&
+      stats->tb_value != Scoring::INVALID_SCORE) {
+      stats->display_value = stats->tb_value;
+   }
    if (!controller->uci && !stats->end_of_game && srcOpts.can_resign) {
       if (stats->display_value != Scoring::INVALID_SCORE &&
          (100*stats->display_value)/PAWN_VALUE <= srcOpts.resign_threshold) {
@@ -1018,7 +1025,6 @@ Move *excludes, int num_excludes)
          stats->end_of_game = end_of_game[(int)state];
       }
    }
-
    if (srcOpts.strength < 100 && iteration_depth <= MoveGenerator::EASY_PLIES) {
        Move m;
        int val;

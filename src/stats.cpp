@@ -17,6 +17,7 @@ void Statistics::clear()
 {
    state = NormalState;
    value = 0;
+   tb_value = Scoring::INVALID_SCORE;
    elapsed_time = 0;
    int i;
    best_line_image.clear();

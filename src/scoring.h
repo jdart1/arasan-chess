@@ -60,7 +60,8 @@ class Scoring
     static void printScoreUCI( int score, ostream & );
 
     static bool mateScore(int score) {
-      return score>=Constants::MATE_RANGE || score<=-Constants::MATE_RANGE;
+      return score != INVALID_SCORE &&
+        (score>=Constants::MATE_RANGE || score<=-Constants::MATE_RANGE);
     }
 
 #ifdef EVAL_STATS
