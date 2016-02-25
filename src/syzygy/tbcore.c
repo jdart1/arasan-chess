@@ -1518,7 +1518,8 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
     bitcnt += l;
     if (bitcnt >= 32) {
       bitcnt -= 32;
-      code |= ((uint64)(bswap32(*ptr++))) << bitcnt;
+      uint32 data = *ptr++;
+      code |= ((uint64)(bswap32(data))) << bitcnt;
     }
   }
 #else
