@@ -38,7 +38,10 @@ extern "C"
 #include "gtb.h"
 #endif
 #ifdef NALIMOV_TBS
-#include "tbprobe.h"
+#include "nalimov.h"
+#endif
+#ifdef SYZYGY_TBS
+#include "syzygy.h"
 #endif
 #include <fstream>
 #include <iostream>
@@ -105,7 +108,7 @@ static SearchType srctype = TimeLimit;
 static int time_limit;
 static int ply_limit;
 static string start_fen;
-static int tb_init = 0;
+static int tb_init_done = 0;
 static int uci = 0;                               // non-zero for UCI mode
 static bool uci_limit_strength = false;
 static int movestogo = 0;
@@ -412,9 +415,9 @@ static int getIncrUCI(const ColorType side) {
 }
 
 static void delayedInitIfNeeded() {
-   if (!tb_init) {
-      delayedInit(); tb_init++;
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+   if (!tb_init_done) {
+      delayedInit(); tb_init_done++;
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
       string path;
 #ifdef GAVIOTA_TBS
       if (options.search.tablebase_type == Options::GAVIOTA_TYPE) {
@@ -424,6 +427,11 @@ static void delayedInitIfNeeded() {
 #ifdef NALIMOV_TBS
       if (options.search.tablebase_type == Options::NALIMOV_TYPE) {
           path = options.search.nalimov_path;
+      }
+#endif
+#ifdef SYZYGY_TBS
+      if (options.search.tablebase_type == Options::SYZYGY_TYPE) {
+          path = options.search.syzygy_path;
       }
 #endif
       if (EGTBMenCount)
@@ -2785,7 +2793,7 @@ static bool do_command(const string &cmd, Board &board) {
             }
             else {
                 delayedInitIfNeeded();
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
                 int tbscore;
                 if (options.search.use_tablebases) {
 #ifdef GAVIOTA_TBS
@@ -2802,6 +2810,17 @@ static bool do_command(const string &cmd, Board &board) {
                         cout << "score = ";
                         Scoring::printScore(tbscore,cout);
                         cout << " (from " << options.search.tablebase_type << " tablebases)" << endl;
+                    }
+#endif
+#ifdef SYZYGY_TBS
+                    if (options.search.tablebase_type ==
+                        Options::SYZYGY_TYPE) {
+                       set<Move> rootMoves;
+                       if (SyzygyTb::probe_root(board,tbscore,rootMoves)) {
+                          cout << "score = ";
+                          Scoring::printScore(tbscore,cout);
+                          cout << " (from " << options.search.tablebase_type << " tablebases)" << endl;
+                       }
                     }
 #endif
                 }

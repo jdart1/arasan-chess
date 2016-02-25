@@ -1,5 +1,5 @@
-#ifndef _TBPROBE_H_
-#define _TBPROBE_H_
+#ifndef _NALIMOV_H_
+#define _NALIMOV_H_
 
 #include "board.h"
 

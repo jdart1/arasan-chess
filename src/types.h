@@ -12,6 +12,10 @@ extern "C" {
 #include <string.h>
 #include <sys/types.h>
 #include <stdio.h>
+#if defined(__linux__) || defined(__GLIBC__)
+#include <endian.h>
+#include <byteswap.h>
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #include <mmsystem.h>

@@ -13,6 +13,7 @@ class Options
  public:
     static const string NALIMOV_TYPE;
     static const string GAVIOTA_TYPE;
+    static const string SYZYGY_TYPE;
 
   struct BookOptions {
     BookOptions() 
@@ -33,7 +34,7 @@ class Options
    size_t hash_table_size;
    int can_resign;
    int resign_threshold;
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
    int use_tablebases;
    string tablebase_type;
 #endif
@@ -45,6 +46,9 @@ class Options
 #ifdef NALIMOV_TBS
    size_t nalimov_cache_size;
    string nalimov_path;
+#endif
+#ifdef SYZYGY_TBS
+   string syzygy_path;
 #endif
    int strength; // 0 .. 100
    int multipv; // for UCI only

@@ -1,4 +1,4 @@
-// Copyright 1994-2015 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2016 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -175,6 +175,15 @@ void RootMoveGenerator::exclude(Move *exclude, int num_exclude)
    }
 }
 
+void RootMoveGenerator::filter(const set<Move> &include) 
+{
+  for (int i = 0; i < batch_count; i++) {
+      ClearUsed(moveList[i].move);
+      if (include.find(moveList[i].move) == include.end()) {
+         SetUsed(moveList[i].move);
+      }
+   }
+}
 
 void RootMoveGenerator::exclude(Move exclude) {
    for (int i = 0; i < batch_count; i++) {

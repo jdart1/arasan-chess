@@ -168,7 +168,6 @@ public:
          Bitboard(allOccupied & Attacks::betweenSquares[sq1][sq2]).isClear();
    }
 
-
    // makes a move
    void doMove(Move m);
 

@@ -73,19 +73,21 @@ search.ncpus=1
 # True to enable use of tablebases, false to disable
 search.use_tablebases=true
 #
-# Tablebase type - supported values are "Gaviota", "Nalimov".
-# Both may be installed, but only one type is active at any given time.
-search.tablebase_type=Gaviota
+# Tablebase type - supported values are "Gaviota", "Nalimov", "Syzygy".
+# >1 type may be installed, but only one type is active at any given time.
+search.tablebase_type=Syzygy
 #
 # Tablebase cache size.
 # can use: K for kilobytes, M for megabytes, G for gigabytes
+# Note: Syzygy does not have an associated cache size.
 search.gtb_cache_size=8M
 search.nalimov_cache_size=8M
 #
 # Tablebase location. By default, this option is not set and 
 # the tablebases are assumed to be in a directory under the
 # directory where Arasan is installed ("gtb" for Gaviota, "TB" for
-# Nalimov).
+# Nalimov, "syzygy" for Syzygy).
 #search.gtb_path=c:\chess\gtb
 #search.nalimov_path=c:\chess\tb
+search.syzygy_path=/home/jdart/chess/syzygy
 #

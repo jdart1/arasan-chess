@@ -17,13 +17,14 @@ using namespace std;
 
 const string Options::NALIMOV_TYPE = "Nalimov";
 const string Options::GAVIOTA_TYPE = "Gaviota";
+const string Options::SYZYGY_TYPE = "Syzygy";
 
-Options::SearchOptions::SearchOptions() : 
+Options::SearchOptions::SearchOptions() :
       checks_in_qsearch(1),
       hash_table_size(32*1024*1024),
       can_resign(1),
       resign_threshold(-500),
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
       use_tablebases(1),
 #endif
 #ifdef GAVIOTA_TBS
@@ -35,12 +36,17 @@ Options::SearchOptions::SearchOptions() :
       nalimov_cache_size((size_t)8*1024L*1024L),
       nalimov_path("TB"),
 #endif
+#ifdef SYZYGY_TBS
+      syzygy_path("syzygy"),
+#endif
       strength(100),
       multipv(1),
       ncpus(1),
       easy_plies(3),
       easy_threshold(2000) {
 #if defined(GAVIOTA_TBS)
+    tablebase_type = "Syzygy"; // default
+#elif defined(GAVIOTA_TBS)
     tablebase_type = "Gaviota";
 #elif defined(NALIMOV_TBS)
     tablebase_type = "Nalimov";
@@ -73,7 +79,7 @@ void Options::setMemoryOption(size_t &value, const string &valueString) {
   if (*it == 'k' || *it == 'K') {
     s.erase(it);
     mult = 1024L;
-  } 
+  }
   else if (*it == 'm' || *it == 'M') {
     s.erase(it);
     mult = 1024L*1024L;
@@ -93,7 +99,7 @@ void Options::setMemoryOption(size_t &value, const string &valueString) {
 static void set_boolean_option(string name,string valueString,int &value) {
   if (valueString == "true")
     value = 1;
-  else if (valueString == "false") 
+  else if (valueString == "false")
     value = 0;
   else
     cerr << "warning: invalid value for option " << name << " (expected 'true' or 'false')"  << endl;
@@ -147,7 +153,7 @@ void Options::set_option(const string &name, const string &value) {
   else if (name == "search.hash_table_size") {
     setMemoryOption(search.hash_table_size,value);
   }
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
   else if (name == "search.use_tablebases") {
     set_boolean_option(name,value,search.use_tablebases);
   }
@@ -161,6 +167,11 @@ void Options::set_option(const string &name, const string &value) {
 #endif
 #ifdef NALIMOV_TBS
       if (value == NALIMOV_TYPE) {
+          search.tablebase_type = value;
+      }
+#endif
+#ifdef SYZYGY_TBS
+      if (value == SYZYGY_TYPE) {
           search.tablebase_type = value;
       }
 #endif
@@ -189,6 +200,11 @@ void Options::set_option(const string &name, const string &value) {
     search.nalimov_path = value;
   }
 #endif
+#ifdef SYZYGY_TBS
+  else if (name == "search.syzygy_path") {
+    search.syzygy_path = value;
+  }
+#endif
   else if (name == "search.strength") {
     set_strength_option(name,search.strength,value);
   }
@@ -200,7 +216,7 @@ void Options::set_option(const string &name, const string &value) {
 }
 
 int Options::init(const string& fileName) {
-  
+
   ifstream infile(fileName.c_str());
   if (!infile.good()) {
      return -1;

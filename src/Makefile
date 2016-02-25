@@ -29,16 +29,22 @@ INSTALL = /usr/local/bin
 GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
+# location of the Syzygy tablebase source code (Fathom) (if used)
+STB=syzygy
 
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS = 1
 #NALIMOV_TBS = 1
+#SYZYGY_TBS = 1
 
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 endif
 ifdef NALIMOV_TBS 
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
+endif
+ifdef SYZYGY_TBS
+CFLAGS := $(CFLAGS) -DSYZYGY_TBS
 endif
 
 # Build the GTB sources into a separate object dir.
@@ -238,11 +244,15 @@ GTB_OBJS:=$(GTB_SOURCES:%.c=$(GTB_BUILD)/%.o)
 
 GTB_FLAGS := -x c -DZ_PREFIX -DNDEBUG $(SMP) -I$(GTB)/sysport -I$(GTB)/compression -I$(GTB)/compression/huffman -I$(GTB)/compression/lzma -I$(GTB)/compression/zlib -I$(GTB)/compression/liblzf $(GTB_FLAGS)
 
-TB_SOURCES := gtb.cpp
-TB_OBJS := $(BUILD)/gtb.o
-TB_LIBS := $(GTB_BUILD)/$(GTB_LIBNAME)
+TB_SOURCES := $(TB_SOURCES) gtb.cpp
+TB_OBJS := $(TB_OBJS) $(BUILD)/gtb.o
+TB_LIBS := $(TB_LIBS) $(GTB_BUILD)/$(GTB_LIBNAME)
 
+ifdef SYZYGY_TBS
+vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf $(STB)
+else
 vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf
+endif
 
 #rule for building GTB (c code)
 $(GTB_BUILD)/%.o: %.c
@@ -254,8 +264,17 @@ $(TB_LIBS): $(GTB_OBJS)
 endif
 
 ifdef NALIMOV_TBS 
-TB_SOURCES := $(TB_SOURCES) $(TB)/tbprobe.cpp
-TB_OBJS := $(TB_OBJS) $(BUILD)/tbprobe.o
+TB_SOURCES := $(TB_SOURCES) $(TB)/nalimov.cpp
+TB_OBJS := $(TB_OBJS) $(BUILD)/nalimov.o
+endif
+
+ifdef SYZYGY_TBS
+TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
+TB_OBJS := $(TB_OBJS) $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
+STB_FLAGS := -x c++ $(CFLAGS)
+$(BUILD)/%.o: $(STB)/%.c
+	$(CC) $(STB_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
+
 endif
 
 ARASANX_SOURCES = arasanx.cpp globals.cpp  \
