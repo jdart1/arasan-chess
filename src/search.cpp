@@ -1122,7 +1122,7 @@ int depth, Move exclude [], int num_exclude)
     mg.exclude(exclude,num_exclude);
 
     if (controller->getIterationDepth() == MoveGenerator::EASY_PLIES+1) {
-        vector<MoveEntry> &list = mg.getMoveList();
+        auto list = mg.getMoveList();
         // Note: do not do "easy move" if capturing the last piece in
         // the endgame .. this can be tricky as the resulting pawn
         // endgame may be lost.

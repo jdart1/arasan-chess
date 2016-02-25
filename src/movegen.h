@@ -182,12 +182,6 @@ class MoveGenerator
 
 };
 
-struct MoveEntry
-{
-   Move move;
-   int score;
-};
-
 class RootMoveGenerator : public MoveGenerator
 {
    friend class RootSearch;
@@ -247,12 +241,18 @@ class RootMoveGenerator : public MoveGenerator
 
    protected:
 
+      struct MoveEntry
+      {
+         Move move;
+         int score;
+      };
+
       vector <MoveEntry> &getMoveList() {
           return moveList;
       }
 
       void setScore(Move m, int score) {         
-          for (vector<MoveEntry>::iterator it = moveList.begin();it != moveList.end();it++) {
+          for (auto it = moveList.begin();it != moveList.end();it++) {
               if (MovesEqual((*it).move,m)) {
                   (*it).score = score;
                   break;

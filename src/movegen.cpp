@@ -113,10 +113,6 @@ int RootMoveGenerator::generateAllMoves(NodeInfo *, SplitPoint *)
    return batch_count-index;
 }
 
-static bool compareScores(const MoveEntry &a, const MoveEntry &b) {
-  return a.score > b.score;
-}
-
 void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
    // Set flag in case we have not gone through the move list yet
@@ -158,7 +154,12 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
    if (depth <= EASY_PLIES && moveList.size() > 2) {
        // we are in the "wide window" part of the search, so
        // reorder non-PV moves by search scores
-       std::sort(moveList.begin()+1,moveList.end(),compareScores);
+       std::sort(moveList.begin()+1,moveList.end(),
+                 [](const MoveEntry &a, const MoveEntry &b)
+                 {
+                    return a.score > b.score;
+                 }
+          );
    }
 }
 
@@ -203,7 +204,12 @@ void RootMoveGenerator::reorderByScore() {
    for (unsigned i = 0; i < moveList.size(); i++) {
       ClearUsed(moveList[i].move);
    }
-   std::sort(moveList.begin(),moveList.end(),compareScores);
+   std::sort(moveList.begin(),moveList.end(),
+             [](const MoveEntry &a, const MoveEntry &b)
+             {
+                return a.score > b.score;
+             }
+      );
 }
 
 void RootMoveGenerator::suboptimal(int strength,Move &m,int &val) {
