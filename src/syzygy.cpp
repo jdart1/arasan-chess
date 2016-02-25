@@ -20,7 +20,7 @@ unsigned lsb(uint64_t x)
 
 static const int CURSED_SCORE = 5;
 
-static const int valueMap[5] = {-Constants::MATE, -CURSED_SCORE, 0, CURSED_SCORE, Constants::MATE};
+static const int valueMap[5] = {-Constants::TABLEBASE_WIN, -CURSED_SCORE, 0, CURSED_SCORE, Constants::TABLEBASE_WIN};
 
 static PieceType getPromotion(unsigned res) 
 {

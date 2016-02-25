@@ -2369,6 +2369,12 @@ void Scoring::printScore(int score, ostream &str) {
    else if (score >= Constants::MATE_RANGE) {
       str << "+Mate" << (Constants::MATE - score + 1) / 2;
    }
+   else if (score == Constants::TABLEBASE_WIN) {
+      str << "+TbWin";
+   }
+   else if (score == -Constants::TABLEBASE_WIN) {
+      str << "-TbLoss";
+   }
    else {
       if (score >= 0) str << '+';
       str << fixed << setprecision(2) << (score * 1.0) / double(PAWN_VALUE);
