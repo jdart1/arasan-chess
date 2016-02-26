@@ -23,7 +23,8 @@
 
 #if !defined(DECOMP64) && defined(_LP64)
 // use 64-bit decompression if OS is 64-bit
-#define DECOMP64
+// (appears not to work so commented out for now)
+//#define DECOMP64
 #endif
 
 #define TBMAX_PIECE 254
@@ -1524,7 +1525,8 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
   }
 #else
   uint32 next = 0;
-  uint32 code = bswap32(*ptr++);
+  uint32 data = *ptr++;
+  uint32 code = bswap32(data);
   bitcnt = 0; // number of bits in next
   for (;;) {
     int l = m;
