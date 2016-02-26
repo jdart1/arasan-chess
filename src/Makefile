@@ -37,14 +37,15 @@ STB=syzygy
 #NALIMOV_TBS = 1
 #SYZYGY_TBS = 1
 
+CFLAGS=
 ifdef GAVIOTA_TBS
-CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
+CFLAGS := -DGAVIOTA_TBS -I$(GTB)
 endif
 ifdef NALIMOV_TBS 
-CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
+CFLAGS := -DNALIMOV_TBS -I. -I$(TB)
 endif
 ifdef SYZYGY_TBS
-CFLAGS := $(CFLAGS) -DSYZYGY_TBS
+CFLAGS := -DSYZYGY_TBS
 endif
 
 # Build the GTB sources into a separate object dir.
@@ -102,7 +103,7 @@ ifeq ("$(CC)","icc")
 CPP     = icc
 LD      = icc
 AR      = xiar
-CFLAGS  := -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+CFLAGS  := -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
 OPT     = -O3 -fno-rtti $(SSE)
 GTB_OPT := -O3 -fno-rtti $(SSE)
 
@@ -120,7 +121,7 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS) $(SSE)
+CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS) 
 OPT     = -O3 -fno-rtti -finline-functions $(SSE)
 GTB_OPT := -O3 -finline-functions $(SSE)
 
@@ -138,7 +139,7 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.7 or higher:
-CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
 LTO	= -flto
 GTB_OPT := -Ofast $(SSE)
@@ -210,10 +211,10 @@ install: all
 	chmod u+s $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 
 $(BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(PROF) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
@@ -343,16 +344,16 @@ MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJ
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS) 
-	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)	
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
-	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(PROF) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
@@ -371,7 +372,7 @@ $(EXPORT)/$(ARASANX):  $(ARASANX_PROFILE_OBJS)
 else
 # non-PGO build
 $(EXPORT)/$(ARASANX):  $(ARASANX_OBJS)
-	cd $(BUILD) && $(LD) $(PROF) $(LDFLAGS) $(ARASANX_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX) -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(ARASANX_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX) -lstdc++ $(LIBS) $(SMPLIB)
 endif
 endif
 
