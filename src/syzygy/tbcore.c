@@ -50,9 +50,16 @@
 static LOCK_T TB_MUTEX;
 #endif
 
-#ifndef TB_CUSTOM_BSWAP
-#define bswap64(x) __builtin_bswap64(x)
-#define bswap32(x) __builtin_bswap32(x)
+#ifdef TB_CUSTOM_BSWAP32
+#define internal_bswap32(x) TB_CUSTOM_BSWAP32(x)
+#else
+#define internal_bswap32(x) __builtin_bswap32(x)
+#endif
+
+#ifdef TB_CUSTOM_BSWAP64
+#define internal_bswap64(x) TB_CUSTOM_BSWAP64(x)
+#else
+#define internal_bswap64(x) __builtin_bswap64(x)
 #endif
 
 static int initialized = 0;
@@ -1506,7 +1513,7 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
   int sym, bitcnt;
 
 #ifdef DECOMP64
-  uint64 code = bswap64(*((uint64 *)ptr));
+  uint64 code = internal_bswap64(*((uint64 *)ptr));
   ptr += 2;
   bitcnt = 0; // number of "empty bits" in code
   for (;;) {
@@ -1520,13 +1527,13 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
     if (bitcnt >= 32) {
       bitcnt -= 32;
       uint32 data = *ptr++;
-      code |= ((uint64)(bswap32(data))) << bitcnt;
+      code |= ((uint64)(internal_bswap32(data))) << bitcnt;
     }
   }
 #else
   uint32 next = 0;
   uint32 data = *ptr++;
-  uint32 code = bswap32(data);
+  uint32 code = internal_bswap32(data);
   bitcnt = 0; // number of bits in next
   for (;;) {
     int l = m;
@@ -1540,7 +1547,8 @@ static ubyte decompress_pairs(struct PairsData *d, uint64 idx)
 	code |= (next >> (32 - l));
 	l -= bitcnt;
       }
-      next = bswap32(*ptr++);
+      data = *ptr++;
+      next = internal_bswap32(data);
       bitcnt = 32;
     }
     code |= (next >> (32 - l));

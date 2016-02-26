@@ -70,7 +70,7 @@
 
 #ifndef TB_NO_HW_POP_COUNT
 #ifdef TB_CUSTOM_POP_COUNT
-extern unsigned popcount(uint64_t x);
+#define popcount(x) TB_CUSTOM_POP_COUNT(x)
 #else
 #include <popcntintrin.h>
 #define popcount(x)             _mm_popcnt_u64((x))
@@ -125,7 +125,7 @@ unsigned TB_LARGEST = 0;
 #define file(s)                 ((s) & 0x07)
 #define board(s)                ((uint64_t)1 << (s))
 #ifdef TB_CUSTOM_LSB
-extern unsigned lsb(uint64_t b);
+#define lsb(b) TB_CUSTOM_LSB(b)
 #else
 static inline unsigned lsb(uint64_t b)
 {
