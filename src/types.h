@@ -165,6 +165,16 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #endif
 
 // multithreading support.
+#ifdef _WIN32
+#define LockDefine(x) CRITICAL_SECTION x
+#define lock_t CRITICAL_SECTION
+#define LockInit(x) InitializeCriticalSection(&x)
+#define Lock(x) EnterCriticalSection(&x);
+#define Unlock(x) LeaveCriticalSection(&x);
+#define LockDestroy(x) DeleteCriticalSection(&x)
+#define LockFree(x) DeleteCriticalSection(&x)
+#define THREAD HANDLE
+#else
 class Spinlock {
   atomic_flag locked;
         
@@ -190,10 +200,6 @@ class Spinlock {
 #define Unlock(x) x.unlock()
 #define LockDestroy(x)
 #define LockFree(x)
-#ifdef _WIN32
-// native thread handle
-#define THREAD HANDLE
-#else
 #define THREAD pthread_t
 #endif
 
