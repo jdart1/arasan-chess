@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
-# Copyright 2004-2015 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2016 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
@@ -17,12 +17,16 @@ BUILD_ROOT=..
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
 #NALIMOV_TBS=1
+#SYZYGY_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
 
 # location of the Nalimov tablebase source code
 TB=tb
+
+# location of SYZYGY tablebase code
+STB=syzygy
 
 !Ifndef ARASANX
 !If "$(TARGET)" == "win64"
@@ -62,19 +66,19 @@ PROF_RUN_SMP=-c 2
 
 TUNE_FLAGS=-DTUNE
 
-# Intel C++ 12.0 defs, release build (intel64)
+# Intel C++ defs, release build (intel64)
 !If "$(TARGET)" == "win64"
 INTEL64 = /Wp64
 INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
-CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
+CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Else
-# Intel C++ 12.0 defs, release build (IA32)
+# Intel C++ defs, release build (IA32)
 CL       = icl
 LD       = xilink
-CFLAGS = /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
+CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /Oy- /Gr /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Endif
 
@@ -210,6 +214,15 @@ gtb-lib: $(GTB_OBJS) $(GTB_LIBDIR)
 
 $(GTB_LIBDIR):
 	md $(GTB_LIBDIR)
+!Endif
+
+!IfDef SYZYGY_TBS
+CFLAGS = $(CFLAGS) -DSYZYGY_TBS
+STB_FLAGS = /TP $(CFLAGS)
+TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)\tbprobe.c
+TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
+{$(STB)}.c{$(BUILD)}.obj:
+    $(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $<
 !Endif
 
 # Linker flags
@@ -363,11 +376,11 @@ $(BUILD)\$(ARASANX)-tune.exe: dirs $(ARASANX_TUNE_OBJS)
 $(BUILD)\tuner.exe: dirs $(TUNER_OBJS)
         $(LD) $(TUNER_OBJS) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\tuner.exe
 
-$(BUILD)\tbprobe.obj: tbprobe.cpp
-    $(CL) $(TB_FLAGS) /c /Fo$@ tbprobe.cpp
+$(BUILD)\nalimov.obj: nalimov.cpp
+    $(CL) $(TB_FLAGS) /c /Fo$@ nalimov.cpp
 
-$(PROFILE)\tbprobe.obj: tbprobe.cpp
-    $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ tbprobe.cpp
+$(PROFILE)\nalimov.obj: nalimov.cpp
+    $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ nalimov.cpp
 
 $(PROFILE)\arasanx.exe:  $(ARASANX_PROFILE_OBJS)
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PROFILE)\arasanx.exe

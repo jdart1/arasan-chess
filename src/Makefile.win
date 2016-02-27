@@ -1,8 +1,8 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2016 by Jon Dart. All Rights Reserved.
 #
-#TARGET = win32
-TARGET = win64
+TARGET = win32
+#TARGET = win64
 VERSION = 18.3
 # Set PLATFORM=NT for a Windows NT compatible build
 PLATFORM=MODERN
@@ -15,7 +15,7 @@ BUILD_ROOT=..
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
 #NALIMOV_TBS=1
-SYZYGY_TBS=1
+#SYZYGY_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
@@ -223,7 +223,7 @@ $(GTB_LIBDIR):
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
-TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)/tbprobe.c
+TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)\tbprobe.c
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 {$(STB)}.c{$(BUILD)}.obj:
     $(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $<
