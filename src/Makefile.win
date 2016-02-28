@@ -53,7 +53,6 @@ PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
 RELEASE = $(BUILD_ROOT)\release
 # relative to root:
 SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
-BUILD_PROFILE = $(PROFILE)
 
 TESTS = ..\tests
 
@@ -223,10 +222,14 @@ $(GTB_LIBDIR):
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
-TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)\tbprobe.c
+STB_PROFILE_FLAGS = $(STB_FLAGS)
+TB_SOURCES = $(TB_SOURCES) syzygy.cpp $(STB)\tbprobe.c
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
-{$(STB)}.c{$(BUILD)}.obj:
-    $(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $<
+TB_PROFILE_OBJS = $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
+$(BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+$(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
 
 # Linker flags
@@ -351,11 +354,13 @@ $(BUILD)\$(ARASANX)-tune.exe:  dirs $(ARASANX_TUNE_OBJS)
 $(BUILD)\tuner.exe:  dirs $(TUNER_OBJS)
         $(LD) $(TUNER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\tuner.exe
 
+!IfDef NALIMOV_TBS
 $(BUILD)\nalimov.obj: nalimov.cpp
     $(CL) $(TB_FLAGS) /c /Fo$@ nalimov.cpp
 
 $(PROFILE)\nalimov.obj: nalimov.cpp
     $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ nalimov.cpp
+!Endif
 
 $(PROFILE)\$(ARASANX).exe:  $(ARASANX_PROFILE_OBJS)
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PROFILE)\$(ARASANX).exe

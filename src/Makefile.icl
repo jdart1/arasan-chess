@@ -99,8 +99,9 @@ default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 tuning: dirs $(BUILD)\$(ARASANX)-tune.exe $(BUILD)\tuner.exe
 
 !IfDef NALIMOV_TBS
-TB_OBJS = $(BUILD)\tbprobe.obj
-TB_PROFILE_OBJS = $(PROFILE)\tbprobe.obj
+TB_OBJS = $(BUILD)\nalimov.obj
+TB_PROFILE_OBJS = $(PROFILE)\nalimov.obj
+TB_PGO_OBJS = $(PGO_BUILD)\nalimov.obj
 CFLAGS = $(CFLAGS) -DNALIMOV_TBS
 !Endif
 !IfDef GAVIOTA_TBS
@@ -155,6 +156,23 @@ GTB_PROFILE_OBJS = $(PROFILE)\gtb-probe.obj $(PROFILE)\gtb-dec.obj \
 	$(PROFILE)\trees.obj $(PROFILE)\zutil.obj \
 	$(PROFILE)\lzf_c.obj $(PROFILE)\lzf_d.obj
 
+GTB_PGO_OBJS = $(PGO_BUILD)\gtb-probe.obj $(PGO_BUILD)\gtb-dec.obj \
+	$(PGO_BUILD)\gtb-att.obj \
+	$(PGO_BUILD)\sysport.obj \
+	$(PGO_BUILD)\wrap.obj $(PGO_BUILD)\hzip.obj \
+	$(PGO_BUILD)\LzmaEnc.obj $(PGO_BUILD)\LzmaDec.obj \
+	$(PGO_BUILD)\Alloc.obj $(PGO_BUILD)\LzFind.obj \
+	$(PGO_BUILD)\Lzma86Enc.obj \
+	$(PGO_BUILD)\Lzma86Dec.obj \
+	$(PGO_BUILD)\Bra86.obj \
+	$(PGO_BUILD)\zcompress.obj \
+	$(PGO_BUILD)\uncompr.obj $(PGO_BUILD)\inflate.obj \
+	$(PGO_BUILD)\deflate.obj $(PGO_BUILD)\adler32.obj \
+	$(PGO_BUILD)\crc32.obj $(PGO_BUILD)\infback.obj \
+	$(PGO_BUILD)\inffast.obj $(PGO_BUILD)\inftrees.obj \
+	$(PGO_BUILD)\trees.obj $(PGO_BUILD)\zutil.obj \
+	$(PGO_BUILD)\lzf_c.obj $(PGO_BUILD)\lzf_d.obj
+
 GTB_FLAGS = $(OPT) /DZ_PREFIX $(SMP) /I$(GTB)\sysport /I$(GTB)\compression /I$(GTB)\compression/huffman /I$(GTB)\compression/lzma /I$(GTB)\compression/zlib /I$(GTB)\compression/liblzf
 
 {$(GTB)}.c{$(BUILD)}.obj:
@@ -203,6 +221,7 @@ CFLAGS = $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 
 TB_OBJS = $(TB_OBJS) $(GTB_OBJS) $(BUILD)\gtb.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(GTB_PROFILE_OBJS) $(PROFILE)\gtb.obj
+TB_PGO_OBJS = $(TB_PGO_OBJS) $(GTB_PGO_OBJS) $(PGO_BUILD)\gtb.obj
 
 GTB_LIBDIR=..\lib\$(TARGET)\$(BUILD_TYPE)
 GTB_LIBNAME=gtb.lib
@@ -219,10 +238,26 @@ $(GTB_LIBDIR):
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
+<<<<<<< HEAD
 TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)\tbprobe.c
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 {$(STB)}.c{$(BUILD)}.obj:
     $(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $<
+=======
+TB_SOURCES = $(TB_SOURCES) syzygy.cpp $(STB)\tbprobe.c
+TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
+TB_PGO_OBJS = $(TB_PGO_OBJS) $(PGO_BUILD)\syzygy.obj $(PGO_BUILD)\tbprobe.obj
+TB_PROFILE_OBJS = $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
+CFLAGS = $(CFLAGS) -DSYZYGY_TBS
+STB_FLAGS = /TP $(CFLAGS)
+STB_PROFILE_FLAGS = $(STB_FLAGS)
+$(BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+	$(CL) $(STB_FLAGS) $(OPT)  $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+$(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+$(PGO_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+	$(CL) $(STB_PROFILE_FLAGS) $(PROF_USE_FLAGS) $(OPT) $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+>>>>>>> 8716e50... Windows Makefile fixes for profile builds.
 !Endif
 
 # Linker flags
@@ -286,7 +321,7 @@ $(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookwrit.obj \
 $(PGO_BUILD)\calctime.obj $(PGO_BUILD)\legal.obj $(PGO_BUILD)\eco.obj \
 $(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj  $(BUILD)\refut.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
-$(PGO_BUILD)\unit.obj $(TB_OBJS) 
+$(PGO_BUILD)\unit.obj $(TB_PGO_OBJS) 
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
