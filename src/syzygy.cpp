@@ -4,19 +4,7 @@
 #include "debug.h"
 #include "bitboard.h"
 
-// custom popcount implementation - overrides the one in
-// the Syzygy code.
-unsigned popcount(uint64_t x) 
-{
-   return (unsigned)Bitboard(x).bitCount();
-}
-
-// custom lsb implementation - overrides the one in
-// the Syzygy code.
-unsigned lsb(uint64_t x) 
-{
-   return (unsigned)Bitboard(x).firstOne();
-}
+extern unsigned TB_LARGEST;
 
 static const int CURSED_SCORE = 5;
 
