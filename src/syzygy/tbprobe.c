@@ -1790,7 +1790,10 @@ static uint16_t probe_root(const struct pos *pos, int *score,
     }
 }
 
-extern bool tb_init_impl(const char *path)
+#ifndef __cplusplus
+extern
+#endif
+bool tb_init_impl(const char *path)
 {
     if (sizeof(uint64_t) != 8 &&        // Paranoid check
             sizeof(uint32_t) != 4 &&
@@ -1808,7 +1811,10 @@ extern bool tb_init_impl(const char *path)
     return true;
 }
 
-extern unsigned tb_probe_wdl_impl(
+#ifndef __cplusplus
+extern
+#endif
+unsigned tb_probe_wdl_impl(
     uint64_t white,
     uint64_t black,
     uint64_t kings,
@@ -1841,7 +1847,10 @@ extern unsigned tb_probe_wdl_impl(
     return (unsigned)(v + 2);
 }
 
-extern unsigned tb_probe_root_impl(
+#ifndef __cplusplus
+extern
+#endif
+unsigned tb_probe_root_impl(
     uint64_t white,
     uint64_t black,
     uint64_t kings,
