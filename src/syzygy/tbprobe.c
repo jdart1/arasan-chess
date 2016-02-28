@@ -1790,9 +1790,6 @@ static uint16_t probe_root(const struct pos *pos, int *score,
     }
 }
 
-#ifndef __cplusplus
-extern
-#endif
 bool tb_init_impl(const char *path)
 {
     if (sizeof(uint64_t) != 8 &&        // Paranoid check
@@ -1811,9 +1808,6 @@ bool tb_init_impl(const char *path)
     return true;
 }
 
-#ifndef __cplusplus
-extern
-#endif
 unsigned tb_probe_wdl_impl(
     uint64_t white,
     uint64_t black,
@@ -1847,9 +1841,6 @@ unsigned tb_probe_wdl_impl(
     return (unsigned)(v + 2);
 }
 
-#ifndef __cplusplus
-extern
-#endif
 unsigned tb_probe_root_impl(
     uint64_t white,
     uint64_t black,
