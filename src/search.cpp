@@ -85,23 +85,10 @@ static const int FUTILITY_MARGIN[6] =
  FUTILITY_MARGIN_BASE+5*FUTILITY_MARGIN_SLOPE+5*5*FUTILITY_MARGIN_SLOPE2
 };
 
-static const int STATIC_NULL_MARGIN[16] = {
-    (int)1.37*PAWN_VALUE,
-    (int)1.37*PAWN_VALUE,
-    (int)1.43*PAWN_VALUE,
-    (int)1.72*PAWN_VALUE,
-    (int)2.02*PAWN_VALUE,
-    (int)2.31*PAWN_VALUE,
-    (int)2.60*PAWN_VALUE,
-    (int)2.89*PAWN_VALUE,
-    (int)3.19*PAWN_VALUE,
-    (int)3.69*PAWN_VALUE,
-    (int)4.20*PAWN_VALUE,
-    (int)4.70*PAWN_VALUE,
-    (int)5.21*PAWN_VALUE,
-    (int)9.54*PAWN_VALUE,
-    (int)9.62*PAWN_VALUE,
-    (int)9.70*PAWN_VALUE};
+static const int STATIC_NULL_PRUNING_DEPTH = 4*DEPTH_INCREMENT;
+static const int STATIC_NULL_MARGIN_BASE = PAWN_VALUE;
+static const int STATIC_NULL_MARGIN_SLOPE = int(0.3*PAWN_VALUE);
+static const int STATIC_NULL_MARGIN_SLOPE2 = int(0.2*PAWN_VALUE);
 
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 
@@ -2468,21 +2455,25 @@ int Search::search()
         board.getMaterial(board.sideToMove()).hasPieces();
 
 #ifdef STATIC_NULL_PRUNING
-    // static null pruning, as in Stockfish, Protector, etc.
-    if (pruneOk && depth <= 3*DEPTH_INCREMENT &&
-        node->beta < Constants::MATE_RANGE) {
-        const int margin = STATIC_NULL_MARGIN[depth*4/DEPTH_INCREMENT];
-        const int threshold = node->beta+margin;
-        ASSERT(node->eval != Scoring::INVALID_SCORE);
-        if (node->eval > threshold) {
+    // static null pruning, aka reverse futility pruning,
+    // as in Protector, Texel, etc.
+    if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
+        node->beta < Constants::TABLEBASE_WIN) {
+       const int d = depth/DEPTH_INCREMENT;
+       const int margin = STATIC_NULL_MARGIN_BASE +
+          d*STATIC_NULL_MARGIN_SLOPE +
+          d*d*STATIC_NULL_MARGIN_SLOPE2;
+       const int threshold = node->beta+margin;
+       ASSERT(node->eval != Scoring::INVALID_SCORE);
+       if (node->eval >= threshold) {
 #ifdef _TRACE
-            indent(ply); cout << "static null pruned" << endl;
+          indent(ply); cout << "static null pruned" << endl;
 #endif
 #ifdef SEARCH_STATS
-            ++controller->stats->static_null_pruning;
+          ++controller->stats->static_null_pruning;
 #endif
-            return node->eval - margin;
-        }
+          return node->eval - margin;
+       }
     }
 #endif
 
