@@ -2453,16 +2453,19 @@ static bool do_command(const string &cmd, Board &board) {
             "2000" << endl;
 #endif
         cout << "option name Ponder type check default true" << endl;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
         cout << "option name Use tablebases type check default ";
         if (options.search.use_tablebases) cout << "true"; else cout << "false";
         cout << endl;
         cout << "option name Tablebases type combo";
-#ifdef GAVIOTA_TBS
-        cout << " var " << Options::GAVIOTA_TYPE;
+#ifdef SYZYGY_TBS
+        cout << " var " << Options::SYZYGY_TYPE;
 #endif
 #ifdef NALIMOV_TBS
         cout << " var " << Options::NALIMOV_TYPE;
+#endif
+#ifdef GAVIOTA_TBS
+        cout << " var " << Options::GAVIOTA_TYPE;
 #endif
         cout << " default " << options.search.tablebase_type;
         cout << endl;
@@ -2479,6 +2482,10 @@ static bool do_command(const string &cmd, Board &board) {
         cout << "option name NalimovCache type spin default " <<
             options.search.nalimov_cache_size/(1024*1024) <<
             " min 1 max 32" << endl;
+#endif
+#ifdef SYZYGY_TBS
+        cout << "option name SyzygyPath type string default " <<
+            options.search.syzygy_path << endl;
 #endif
 #endif
         cout << "option name MultiPV type spin default 1 min 1 max " << MAX_PV << endl;
@@ -3038,13 +3045,25 @@ static bool do_command(const string &cmd, Board &board) {
     else if (cmd_word == "protover") {
         // new in Winboard 4.2
         cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
-#if defined(GAVIOTA_TBS) && defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) && defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+        string opts(" egt=");
         cout << " egt=\"gaviota,nalimov\" ";
-#elif defined(GAVIOTA_TBS)
-        cout << " egt=\"gaviota\" ";
-#elif defined(NALIMOV_TBS)
-        cout << " egt=\"nalimov\" ";
+        int i = 0;
+#if defined(SYZYGY_TBS)
+        opts += "\"syzygy\" ";
+        i++;
 #endif
+#if defined(NALIMOV_TBS)
+        if (i) opts += ',';
+        opts += "\"nalimov\" ";
+        i++;
+#endif
+#if defined(GAVIOTA_TBS)
+        if (i) opts += ',';
+        opts += "\"gaviota\" ";
+#endif
+        cout << opts;
+#endif        
         // custom option for book selectivity
         cout << " option=\"Book selectivity -spin " <<
             options.book.selectivity << " 1 100\"";

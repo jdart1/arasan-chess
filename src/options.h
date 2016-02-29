@@ -1,4 +1,4 @@
-// Copyright 2000-2014 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 

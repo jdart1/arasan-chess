@@ -1,4 +1,4 @@
-// Copyright 2002-2014 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
@@ -44,7 +44,7 @@ Options::SearchOptions::SearchOptions() :
       ncpus(1),
       easy_plies(3),
       easy_threshold(2000) {
-#if defined(GAVIOTA_TBS)
+#if defined(SYZYGY_TBS)
     tablebase_type = "Syzygy"; // default
 #elif defined(GAVIOTA_TBS)
     tablebase_type = "Gaviota";
