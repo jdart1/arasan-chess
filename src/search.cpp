@@ -2352,9 +2352,14 @@ int Search::search()
                             " value = " << value << endl;
                     }
 #endif
-                    History::updateHistoryMove(board,hashEntry.bestMove(board),
-                                               node->depth, board.sideToMove());
-
+                    if (board.checkStatus() != InCheck) {
+                       Move best = hashEntry.bestMove(board);
+                       if (!IsNull(best) && !CaptureOrPromotion(best)) {
+                          History::updateHistoryMove(board,best,
+                                                  node->depth, board.sideToMove());
+                          context.setKiller(best, node->ply);
+                       }
+                    }
                     return value;                     // cutoff
                 }
                 break;

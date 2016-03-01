@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2016 by Jon Dart. All Rights Reserved.
 
 #include "history.h"
 #include "search.h"
@@ -66,15 +66,13 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
 void History::updateHistoryMove(const Board &,
                                 Move best, int depth, ColorType side) 
 {
-   if (!IsNull(best) && !CaptureOrPromotion(best)) {
-      const Piece pieceMoved = MakePiece(PieceMoved(best),side);
-      HistoryEntry &h = history[pieceMoved][DestSquare(best)];
-      h.order += (4*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT);
-      if (h.order > Constants::HISTORY_MAX) {
-         for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 64; j++) {
-               history[i][j].order /= 2;
-            }
+   const Piece pieceMoved = MakePiece(PieceMoved(best),side);
+   HistoryEntry &h = history[pieceMoved][DestSquare(best)];
+   h.order += (4*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT);
+   if (h.order > Constants::HISTORY_MAX) {
+      for (int i = 0; i < 16; i++) {
+         for (int j = 0; j < 64; j++) {
+            history[i][j].order /= 2;
          }
       }
    }
