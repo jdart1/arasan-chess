@@ -107,17 +107,6 @@ static unsigned last_time = 0;
 static const int Illegal = Scoring::INVALID_SCORE;
 static const int PRUNE = -Constants::MATE;
 
-static FORCEINLINE int calcGain(const Board &board, Move move) {
-    int gain = Gain(move);
-    if (Capture(move) == Pawn && Rank(DestSquare(move),board.oppositeSide()) == 7) {
-       gain += PAWN_VALUE/2;
-    }
-    if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) == 7) {
-       gain += PAWN_VALUE/2;
-    }
-    return gain;
-}
-
 static void setCheckStatus(Board &board, CheckStatusType s)
 {
    if (s != CheckUnknown) {
@@ -126,6 +115,26 @@ static void setCheckStatus(Board &board, CheckStatusType s)
       // structure after the move and avoid another calculation.
       board.setCheckStatus(s);
    }
+}
+
+static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
+    return (PieceMoved(move) == Pawn &&
+            Rank(DestSquare(move),board.sideToMove()) == 7);
+}
+
+static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
+  extern CACHE_ALIGN Bitboard passedW[64];
+  extern CACHE_ALIGN Bitboard passedB[64];
+  if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) >= rank) {
+    if (board.sideToMove() == White) {
+        return Bitboard(board.pawn_bits[Black] & passedW[DestSquare(move)]).isClear();
+    }
+    else {
+        return Bitboard(board.pawn_bits[White] & passedB[DestSquare(move)]).isClear();
+    }
+  }
+  else
+    return 0;
 }
 
 SearchController::SearchController()
@@ -1681,10 +1690,11 @@ int Search::quiesce(int ply,int depth)
             cout << endl;
          }
 #endif
-         if (!node->PV() && !disc.isSet(StartSquare(pv)) &&
+         if (!node->PV() && !board.wouldCheck(pv) &&
+             !passedPawnPush(board,pv) &&
+             node->beta > -Constants::TABLEBASE_WIN &&
              (Capture(pv) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-            const int gain = calcGain(board,pv);
-            const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+            const int optScore = Gain(pv) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
             if (optScore < node->alpha) {
 #ifdef _TRACE
                if (master()) {
@@ -1695,6 +1705,7 @@ int Search::quiesce(int ply,int depth)
                break;
             }
          }
+         // don't do see pruning because hash move passed that test already
 
          board.doMove(pv);
          ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
@@ -1748,10 +1759,11 @@ int Search::quiesce(int ply,int depth)
             }
 #endif
             // Futility pruning
-            if (!disc.isSet(StartSquare(move)) &&
+            if (!board.wouldCheck(move) &&
+                !passedPawnPush(board,move) &&
+                node->beta > -Constants::TABLEBASE_WIN &&
                 (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-               const int gain = calcGain(board,move);
-               const int optScore = gain + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+               const int optScore = Gain(move) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
                if (optScore < node->alpha) {
 #ifdef _TRACE
                   if (master()) {
@@ -1761,18 +1773,21 @@ int Search::quiesce(int ply,int depth)
                   node->best_score = Util::Max(node->best_score,optScore);
                   continue;
                }
-               // See pruning
-               if (gain - PieceValue(PieceMoved(move)) <= 0 && !seeSign(board,move,
-                   Util::Max(0,node->alpha - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
-                  // This appears to be a losing capture, or one that can't bring us above alpha
+            }
+            // See pruning
+            if (PieceValue(Capture(move)) - PieceValue(PieceMoved(move)) <= 0 &&
+                node->beta > -Constants::TABLEBASE_WIN &&
+                !passedPawnPush(board,move) &&
+                !disc.isSet(StartSquare(move)) && 
+                !seeSign(board,move,Util::Max(0,node->alpha - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
+               // This appears to be a losing capture, or one that can't bring us above alpha
 #ifdef _TRACE
-                  if (master()) {
-                     indent(ply); cout << "pruned (SEE)" << endl;
-                  }
+               if (master()) {
+                  indent(ply); cout << "pruned (SEE)" << endl;
+               }
 
 #endif
-                  continue;
-               }
+               continue;
             }
             node->last_move = move;
             board.doMove(move);
@@ -1918,26 +1933,6 @@ void RootSearch::clearHashTables() {
   History::clearHistory();
   context.clearKiller();
   scoring.clearHashTables();
-}
-
-static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
-    return (PieceMoved(move) == Pawn &&
-            Rank(DestSquare(move),board.sideToMove()) == 7);
-}
-
-static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
-  extern CACHE_ALIGN Bitboard passedW[64];
-  extern CACHE_ALIGN Bitboard passedB[64];
-  if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) >= rank) {
-    if (board.sideToMove() == White) {
-        return Bitboard(board.pawn_bits[Black] & passedW[DestSquare(move)]).isClear();
-    }
-    else {
-        return Bitboard(board.pawn_bits[White] & passedB[DestSquare(move)]).isClear();
-    }
-  }
-  else
-    return 0;
 }
 
 void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int depth) {
