@@ -223,7 +223,12 @@ FORCEINLINE uint16_t swapEndian16(const byte *input) {
 #define swapEndian16(x) *((uint16_t*)(x))
 #endif
 
-#ifdef _MSC_VER
+#ifdef __INTEL_COMPILER
+// Intel only supports #pragma, which can't be emitted by a macro.
+// So we must deal with Intel support with #ifdefs in the code.
+#define BEGIN_PACKED_STRUCT {
+#define END_PACKED_STRUCT };
+#elif defined (_MSC_VER)
 #define BEGIN_PACKED_STRUCT \
 { \
 __pragma(pack(push,1))

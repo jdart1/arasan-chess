@@ -142,6 +142,9 @@ class HashEntry {
 
    protected:
 
+#ifdef __INTEL_COMPILER
+#pragma pack(push,1)
+#endif
       struct Contents
       BEGIN_PACKED_STRUCT
         int16_t pad;
@@ -156,7 +159,9 @@ class HashEntry {
         int32_t value;
         int32_t static_value;
       END_PACKED_STRUCT
-
+#ifdef __INTEL_COMPILER
+#pragma pack(pop)
+#endif
        uint64_t hc;
       union
       {

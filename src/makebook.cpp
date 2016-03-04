@@ -97,6 +97,10 @@ struct Variation {
 
 static unsigned minFrequency = 0;
 
+#ifdef __INTEL_COMPILER
+#pragma pack(push,1)
+#endif
+
 class BookEntry
 BEGIN_PACKED_STRUCT
    public:
@@ -116,6 +120,10 @@ BEGIN_PACKED_STRUCT
     byte move_index;
     uint16_t weight;
 END_PACKED_STRUCT
+
+#ifdef __INTEL_COMPILER
+#pragma pack(pop)
+#endif
 
 BookEntry::BookEntry( unsigned r, PositionEval ev,
                        MoveEval mev,

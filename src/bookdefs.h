@@ -21,6 +21,10 @@ const uint16_t INVALID_INDEX = 65535;
 const unsigned NO_RECOMMEND = 1025;
 const int MAX_WEIGHT = 1024;
 
+#ifdef __INTEL_COMPILER
+#pragma pack(push,1)
+#endif
+
 // Header of the opening book.
 struct BookHeader
 BEGIN_PACKED_STRUCT
@@ -90,6 +94,10 @@ BEGIN_PACKED_STRUCT
         data[DATA_PAGE_SIZE-1].next = NO_NEXT;
     }
 END_PACKED_STRUCT
+
+#ifdef __INTEL_COMPILER
+#pragma pack(pop)
+#endif
 
 };
 

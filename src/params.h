@@ -1,4 +1,4 @@
-// Copyright 2015 by Jon Dart. All Rights Reserved.
+// Copyright 2015, 2016 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PARAMS_H
 #define _PARAMS_H
@@ -12,6 +12,10 @@
 #else
 // parameters are const so can be optimized better
 #define PARAM_MOD const
+#endif
+
+#ifdef __INTEL_COMPILER
+#pragma pack(push,1)
 #endif
 
 struct Params 
@@ -127,5 +131,9 @@ BEGIN_PACKED_STRUCT
     static void write(ostream &);
 #endif
 END_PACKED_STRUCT
+
+#ifdef __INTEL_COMPILER
+#pragma pack(pop)
+#endif
 
 #endif
