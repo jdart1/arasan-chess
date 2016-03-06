@@ -962,25 +962,25 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
          }
       }
-      inc_adjust /= 16.0;
+      inc_adjust /= 4.0;
       Bitboard it(board.pawn_bits[side]);
       Square sq;
       while(it.iterate(sq)) {
          grads[Tune::KING_OWN_PAWN_DISTANCE] +=
            tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OWN_PAWN_DISTANCE,mLevel);
-         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OWN_PAWN_DISTANCE].current/16;
+         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OWN_PAWN_DISTANCE].current/4;
          int file = File(sq);
          int rank = Rank (sq,side);
          if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
              (File(kp) == file - 1 || File(kp) == file + 1) &&
              Rank(kp, side) >= rank) {
             if (rank == 6) {
-               k_pos += tune_params[Tune::SUPPORTED_PASSER6].current/16;
+               k_pos += tune_params[Tune::SUPPORTED_PASSER6].current/4;
                grads[Tune::SUPPORTED_PASSER6] +=
                   tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER6,mLevel);
             }
             else {
-               k_pos += tune_params[Tune::SUPPORTED_PASSER7].current/16;
+               k_pos += tune_params[Tune::SUPPORTED_PASSER7].current/4;
                grads[Tune::SUPPORTED_PASSER7] +=
                   tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER7,mLevel);
             }
@@ -990,13 +990,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       while (it.iterate(sq)) {
          grads[Tune::KING_OPP_PAWN_DISTANCE] +=
              tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OPP_PAWN_DISTANCE,mLevel);
-         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OPP_PAWN_DISTANCE].current/16;
+         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OPP_PAWN_DISTANCE].current/4;
          int rank = Rank(sq,oside);
          if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
             Square queenSq = MakeSquare(File(sq),8,oside);
             grads[Tune::KING_OPP_PASSER_DISTANCE+rank-2] +=
                tune_params.scale(inc_adjust*((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))/2,Tune::KING_OPP_PASSER_DISTANCE+rank-2,mLevel);
-            k_pos += ((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))*tune_params[Tune::KING_OPP_PASSER_DISTANCE+rank-2].current/(16*2);
+            k_pos += ((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))*tune_params[Tune::KING_OPP_PASSER_DISTANCE+rank-2].current/(4*2);
          }
       }
       if (pieces < 3) {
