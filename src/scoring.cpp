@@ -2052,7 +2052,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
       }
    }
 
-   k_pos += k_pos_adj/16;
+   k_pos += k_pos_adj/4;
    entry.king_endgame_position = k_pos;
 }
 
