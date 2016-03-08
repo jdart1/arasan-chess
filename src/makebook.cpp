@@ -29,6 +29,7 @@
 using namespace std;
 
 extern "C"{
+#include <ctype.h>
 #include <math.h>
 };
 
@@ -540,7 +541,13 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
             if (comment.length() > 0 && comment[0] == '{') {
                 string::iterator it = comment.begin()+1;
                 // remove initial brace & leading spaces after it
-                while (it != comment.end() && isascii(*it) && isspace(*it)) it++;
+                while (it != comment.end() &&
+#ifdef __CYGWIN__
+		       (((unsigned char)(*it))<=0x7f) &&
+#else
+		       isascii(*it) &&
+#endif
+		       isspace(*it)) it++;
                 comment = string(it,comment.end());
             }
             if (comment.length() >= 8 && comment.substr(0,7) == "weight:") {

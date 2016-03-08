@@ -1,6 +1,6 @@
 // Main driver module for Arasan chess engine.
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2016 by Jon Dart. All Rights Reserved.
 //
 #include "board.h"
 #include "movegen.h"
@@ -23,14 +23,6 @@
 #ifdef UNIT_TESTS
 #include "unit.h"
 #endif
-extern "C"
-{
-#include <string.h>
-#include <ctype.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-}
 #ifdef TUNE
 #include "tune.h"
 #endif
@@ -43,21 +35,29 @@ extern "C"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
+
+#include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
+
+extern "C"
+{
+#include <string.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
 #include <signal.h>
 #include <sys/timeb.h>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <errno.h>
+#include <unistd.h>
 #endif
-
-#include <string>
-#include <iomanip>
-#include <algorithm>
-#include <iterator>
+};
 using namespace std;
 
 static int verbose = 0, post = 0;
@@ -339,20 +339,20 @@ static void * CDECL inputPoll(void *x) {
       int data;
 
       FD_ZERO(&readfds);
-      FD_SET(fileno(stdin), &readfds);
+      FD_SET(STDIN_FILENO, &readfds);
       // set a timeout so we can interrupt the polling thread
       // with no input.
       tv.tv_sec=2;
       tv.tv_usec=0;
       select(16, &readfds, 0, 0, &tv);
-      data=FD_ISSET(fileno(stdin), &readfds);
+      data=FD_ISSET(STDIN_FILENO, &readfds);
       if (data == -1) {
          if (errno == EINTR) continue;
          perror("select");
       }
       else if (data) {
          // we have something to read
-         int bytes = read(fileno(stdin),buf,1024);
+         int bytes = read(STDIN_FILENO,buf,1024);
          if (bytes <= 0) {
             cerr << "error from read()" << endl;
             break;
@@ -797,7 +797,7 @@ static void CDECL post_output(const Statistics &stats) {
 
 
 static int solution_match(Move result) {
-   for (int i = 0; i < solution_move_count; ++i) {
+   for (int i = 0; i < Util::Min(10,solution_move_count); i++) {
       if (MovesEqual(solution_moves[i],result)) {
          return 1;
       }

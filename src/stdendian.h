@@ -1,5 +1,6 @@
 /* from https://gist.github.com/michaeljclark/3b4fd912f6fa8bb598b3 */
 /* modified to use functions not macros for bswap */
+/* and added a fix for Cygwin */
 /*
  *   stdendian.h
  *
@@ -66,7 +67,7 @@
 #endif
 
 /* Linux / GLIBC */
-#if defined(__linux__) || defined(__GLIBC__)
+#if defined(__linux__) || defined(__GLIBC__) || defined(__CYGWIN__)
 #include <endian.h>
 #include <byteswap.h>
 #define __ENDIAN_DEFINED        1
