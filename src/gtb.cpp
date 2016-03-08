@@ -1,4 +1,4 @@
-// Copyright 2012 by Jon Dart. All Rights Reserved.
+// Copyright 2012, 2016 by Jon Dart. All Rights Reserved.
 //
 // Interface to Gaviota tablebase code
 
@@ -9,7 +9,7 @@ static const int WDL_FRACTION = 96;
 static const char **paths = tbpaths_init();
 
 int GaviotaTb::initTB(const string &path, const string &scheme,
-                      uint64 cache_size) {
+                      uint64_t cache_size) {
 
     if (NULL == paths) {
         cerr << "error in path initialization for Gaviota TBs" << endl;

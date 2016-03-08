@@ -1,4 +1,4 @@
-// Copyright 2012 by Jon Dart. All Rights Reserved.
+// Copyright 2012, 2016 by Jon Dart. All Rights Reserved.
 #ifndef _GTB_H_
 #define _GTB_H_
 
@@ -13,7 +13,7 @@ struct GaviotaTb {
     // scheme. Returns the highest number of pieces that the tbs
     // support (3/4/5/6).
     static int initTB(const string &path, const string &scheme,
-                      uint64 cache_size);
+                      uint64_t cache_size);
 
     // Probe the tablebases. Return 1 if score was obtained,
     // 0 if not. If 'hard' is set do a hard probe (read disk),

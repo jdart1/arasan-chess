@@ -42,10 +42,10 @@ ifdef GAVIOTA_TBS
 CFLAGS := -DGAVIOTA_TBS -I$(GTB)
 endif
 ifdef NALIMOV_TBS 
-CFLAGS := -DNALIMOV_TBS -I. -I$(TB)
+CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
 endif
 ifdef SYZYGY_TBS
-CFLAGS := -DSYZYGY_TBS
+CFLAGS := $(CFLAGS) -DSYZYGY_TBS
 endif
 
 # Build the GTB sources into a separate object dir.
@@ -231,7 +231,9 @@ popcnt-profiled: dirs
 	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile profile-run
 	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile
 
-# sources for tablebase support.
+TB_SOURCES=
+TB_OJBS=
+TB_LIBS=
 ifdef GAVIOTA_TBS
 # all sources are under $(GTB), we will use vpath (see below) to find them
 GTB_SOURCES := gtb-probe.c gtb-dec.c gtb-att.c sysport.c \
@@ -245,9 +247,9 @@ GTB_OBJS:=$(GTB_SOURCES:%.c=$(GTB_BUILD)/%.o)
 
 GTB_FLAGS := -x c -DZ_PREFIX -DNDEBUG $(SMP) -I$(GTB)/sysport -I$(GTB)/compression -I$(GTB)/compression/huffman -I$(GTB)/compression/lzma -I$(GTB)/compression/zlib -I$(GTB)/compression/liblzf $(GTB_FLAGS)
 
-TB_SOURCES := $(TB_SOURCES) gtb.cpp
-TB_OBJS := $(TB_OBJS) $(BUILD)/gtb.o
-TB_LIBS := $(TB_LIBS) $(GTB_BUILD)/$(GTB_LIBNAME)
+TB_SOURCES := gtb.cpp
+TB_OBJS := $(BUILD)/gtb.o
+TB_LIBS := $(GTB_BUILD)/$(GTB_LIBNAME)
 
 ifdef SYZYGY_TBS
 vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf $(STB)
