@@ -49,6 +49,8 @@ class Options
 #endif
 #ifdef SYZYGY_TBS
    string syzygy_path;
+   int syzygy_50_move_rule;
+   int syzygy_probe_depth;
 #endif
    int strength; // 0 .. 100
    int multipv; // for UCI only

@@ -2486,6 +2486,10 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         cout << "option name SyzygyPath type string default " <<
             options.search.syzygy_path << endl;
+        cout << "option name SyzygyUse50MoveRule type check default true" << endl;
+        cout << "option name SyzygyProbeDepth type spin default " <<
+            options.search.syzygy_probe_depth <<
+           " min 0 max 32" << endl;
 #endif
 #endif
         cout << "option name MultiPV type spin default 1 min 1 max " << MAX_PV << endl;
@@ -2540,7 +2544,7 @@ static bool do_command(const string &cmd, Board &board) {
         else if (name == "Ponder") {
             easy = !(value == "true");
         }
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
         else if (name == "Use tablebases") {
             options.search.use_tablebases = (value == "true");
         }
@@ -2553,6 +2557,11 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef NALIMOV_TBS
             if (value == Options::NALIMOV_TYPE) {
                 options.search.tablebase_type = Options::NALIMOV_TYPE;
+            }
+#endif
+#ifdef SYZYGY_TBS
+            if (value == Options::SYZYGY_TYPE) {
+               options.search.tablebase_type = Options::SYZYGY_TYPE;
             }
 #endif
         }
@@ -2583,6 +2592,19 @@ static bool do_command(const string &cmd, Board &board) {
             if (Options::setOption<int>(value,size)) {
                 options.search.gtb_cache_size = Util::Min(32,size)*1024L*1024L;
             }
+        }
+#endif
+#ifdef SYZYGY_TBS
+        else if (name == "SyzygyTbPath") {
+           options.search.syzygy_path = value;
+           options.search.use_tablebases = 1;
+           options.search.tablebase_type = Options::SYZYGY_TYPE;
+        }
+        else if (name == "SyzygyUse50MoveRule") {
+           options.search.syzygy_50_move_rule = (value == "true");
+        }
+        else if (name == "SyzygyProbeDepth") {
+           Options::setOption<int>(value,options.search.syzygy_probe_depth);
         }
 #endif
         else if (name == "OwnBook") {

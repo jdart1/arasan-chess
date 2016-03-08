@@ -38,6 +38,8 @@ Options::SearchOptions::SearchOptions() :
 #endif
 #ifdef SYZYGY_TBS
       syzygy_path("syzygy"),
+      syzygy_50_move_rule(1),
+      syzygy_probe_depth(2),
 #endif
       strength(100),
       multipv(1),
@@ -203,6 +205,12 @@ void Options::set_option(const string &name, const string &value) {
 #ifdef SYZYGY_TBS
   else if (name == "search.syzygy_path") {
     search.syzygy_path = value;
+  }
+  else if (name == "search.syzygy_50_move_rule") {
+    setOption<int>(name,value,search.syzygy_50_move_rule);
+  }
+  else if (name == "search.syzygy_probe_depth") {
+    setOption<int>(name,value,search.syzygy_probe_depth);
   }
 #endif
   else if (name == "search.strength") {
