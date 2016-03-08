@@ -1660,7 +1660,7 @@ static void execute_move(Board &board,Move m)
 }
 
 #ifdef TUNE
-static void setTuningParam(const string &name, const string &value) 
+static void setTuningParam(const string &name, const string &value)
 {
    // set named parameters that are in the tuning set
    int index = tune_params.findParamByName(name);
@@ -3046,24 +3046,23 @@ static bool do_command(const string &cmd, Board &board) {
         // new in Winboard 4.2
         cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
 #if defined(GAVIOTA_TBS) && defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
-        string opts(" egt=");
-        cout << " egt=\"gaviota,nalimov\" ";
+        string opts(" egt=\"");
         int i = 0;
 #if defined(SYZYGY_TBS)
-        opts += "\"syzygy\" ";
+        opts += "syzygy";
         i++;
 #endif
 #if defined(NALIMOV_TBS)
         if (i) opts += ',';
-        opts += "\"nalimov\" ";
+        opts += "nalimov";
         i++;
 #endif
 #if defined(GAVIOTA_TBS)
         if (i) opts += ',';
-        opts += "\"gaviota\" ";
+        opts += "gaviota";
 #endif
-        cout << opts;
-#endif        
+        cout << opts << '"';
+#endif
         // custom option for book selectivity
         cout << " option=\"Book selectivity -spin " <<
             options.book.selectivity << " 1 100\"";
@@ -3302,6 +3301,7 @@ static bool do_command(const string &cmd, Board &board) {
         transform(type.begin(), type.end(), type.begin(), ::tolower);
         string path;
         if (space != string::npos) path = cmd_args.substr(space+1);
+#ifdef _WIN32
         // path may be in Unix format. Convert.
         string::iterator it = path.begin();
         while (it != path.end()) {
@@ -3310,6 +3310,7 @@ static bool do_command(const string &cmd, Board &board) {
              }
              it++;
         }
+#endif
 #ifdef NALIMOV_TBS
         if (type == "nalimov") {
             // tablebase path. Note: setting this after "new" is not
@@ -3317,6 +3318,7 @@ static bool do_command(const string &cmd, Board &board) {
             // effective.
             options.search.use_tablebases = 1;
             options.search.nalimov_path = path;
+            options.search.tablebase_type = Options::NALIMOV_TYPE;
             if (doTrace) {
                 cout << "# setting Nalimov tb path to " << options.search.nalimov_path << endl;
             }
@@ -3326,8 +3328,19 @@ static bool do_command(const string &cmd, Board &board) {
         if (type == "gaviota") {
             options.search.use_tablebases = 1;
             options.search.gtb_path = path;
+            options.search.tablebase_type = Options::GAVIOTA_TYPE;
             if (doTrace) {
                 cout << "# setting Gaviota tb path to " << options.search.gtb_path << endl;
+            }
+        }
+#endif
+#ifdef SYZYGY_TBS
+        if (type == "syzygy") {
+            options.search.use_tablebases = 1;
+            options.search.syzygy_path = path;
+            options.search.tablebase_type = Options::SYZYGY_TYPE;
+            if (doTrace) {
+                cout << "# setting Syzygy tb path to " << options.search.syzygy_path << endl;
             }
         }
 #endif
