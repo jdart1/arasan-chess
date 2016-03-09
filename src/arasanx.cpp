@@ -2489,7 +2489,7 @@ static bool do_command(const string &cmd, Board &board) {
         cout << "option name SyzygyUse50MoveRule type check default true" << endl;
         cout << "option name SyzygyProbeDepth type spin default " <<
             options.search.syzygy_probe_depth <<
-           " min 0 max 32" << endl;
+           " min 0 max 64" << endl;
 #endif
 #endif
         cout << "option name MultiPV type spin default 1 min 1 max " << MAX_PV << endl;
