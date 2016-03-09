@@ -76,8 +76,8 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
          rootMoves.insert(CreateMove(TB_GET_FROM(res),
                                      TB_GET_TO(res),
                                      TypeOfPiece(b[TB_GET_FROM(res)]),
-                                     getPromotion(res),
                                      ep ? Pawn : TypeOfPiece(b[TB_GET_TO(res)]),
+                                     getPromotion(res),
                                      ep ? EnPassant : Normal));
       }
    }
