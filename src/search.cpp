@@ -1415,10 +1415,10 @@ int Search::quiesce(int ply,int depth)
       // If this is a mate score, adjust it to reflect the
       // current ply depth.
       //
-      if (value >= Constants::MATE_RANGE) {
+      if (value >= Constants::TABLEBASE_WIN) {
          value -= ply;
       }
-      else if (value <= -Constants::MATE_RANGE) {
+      else if (value <= -Constants::TABLEBASE_WIN) {
          value += ply;
       }
       // do not allow cutoff in PV nodes:
@@ -2291,10 +2291,10 @@ int Search::search()
                 // If this is a mate score, adjust it to reflect the
                 // current ply depth.
                 //
-                if (value >= Constants::MATE_RANGE) {
+                if (value >= Constants::TABLEBASE_WIN) {
                     value -= ply;
                 }
-                else if (value <= -Constants::MATE_RANGE) {
+                else if (value <= -Constants::TABLEBASE_WIN) {
                     value += ply;
                 }
                 if (node->inBounds(value)) {
@@ -2383,7 +2383,8 @@ int Search::search()
 #ifdef SYZYGY_TBS
        if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
           if (node->depth >= options.search.syzygy_probe_depth) {
-             tb_hit = SyzygyTb::probe_wdl(board, tb_score);
+             tb_hit = SyzygyTb::probe_wdl(board, tb_score, 
+                                          srcOpts.syzygy_50_move_rule);
           }
        }
 #endif
@@ -2396,10 +2397,10 @@ int Search::search()
 #endif
             int score = tb_score;
             // insert TB info in hash table.
-            if (score <= -Constants::MATE_RANGE) {
+            if (score <= -Constants::TABLEBASE_WIN) {
                 score -= ply;
             }
-            else if (score >= Constants::MATE_RANGE) {
+            else if (score >= Constants::TABLEBASE_WIN) {
                 score += ply;
             }
 #ifdef _TRACE

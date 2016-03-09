@@ -5,7 +5,7 @@
 #include "board.h"
 // To avoid conflict with Gaviota tablebases:
 #define tb_init syzygy_tb_init
-extern "C" 
+extern "C"
 {
 #include "syzygy/tbprobe.h"
 };
@@ -16,15 +16,17 @@ extern "C"
 // datatypes and the "Fathom" probing code by Roland de Man.
 
 struct SyzygyTb {
-    
+
+    static const int CURSED_SCORE;
+
     // Initialize the tablebases. 'path' is the
-    // path to the TB directories. 
+    // path to the TB directories.
     // Returns the highest number of pieces that the tbs
     // support (3/4/5/6).
     static int initTB(const string &path);
 
     // Probe the tablebases. Return 1 if score was obtained,
-    // 0 if not. "score" is the score for the position. 
+    // 0 if not. "score" is the score for the position.
     // If found and the score is winning or drawing then
     // "rootMoves" is filled with the moves that preserve
     // the draw or win.
@@ -32,8 +34,8 @@ struct SyzygyTb {
 
     // Probe the wdl tablebases (not at root).
     // Return 1 if score was obtained,
-    // 0 if not. "score" is the score for the position. 
-    static int probe_wdl(const Board &b, int &score);
+    // 0 if not. "score" is the score for the position.
+    static int probe_wdl(const Board &b, int &score, bool use50MoveRule);
 
 };
 
