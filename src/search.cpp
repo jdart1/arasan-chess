@@ -2382,7 +2382,7 @@ int Search::search()
 #endif
 #ifdef SYZYGY_TBS
        if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
-          if (node->depth >= options.search.syzygy_probe_depth) {
+          if (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth) {
              tb_hit = SyzygyTb::probe_wdl(board, tb_score, 
                                           srcOpts.syzygy_50_move_rule);
           }
