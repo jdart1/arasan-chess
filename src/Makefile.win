@@ -15,7 +15,7 @@ BUILD_ROOT=..
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
 #NALIMOV_TBS=1
-SYZYGY_TBS=1
+#SYZYGY_TBS=1
 
 # location of the Gaviota tablebase source code
 GTB=michiguel-Gaviota-Tablebases-161d6cb
@@ -102,7 +102,6 @@ tuning: dirs $(BUILD)\$(ARASANX)-tune.exe $(BUILD)\tuner.exe
 
 !IfDef NALIMOV_TBS
 TB_OBJS = $(BUILD)\nalimov.obj
-TB_SRCS = nalimov.cpp
 TB_PROFILE_OBJS = $(PROFILE)\nalimov.obj
 CFLAGS = $(CFLAGS) -DNALIMOV_TBS
 !Endif
@@ -223,9 +222,8 @@ $(GTB_LIBDIR):
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
-TB_SOURCES = $(TB_SOURCES) syzygy.cpp $(STB)\tbprobe.c
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
-TB_PROFILE_OBJS = $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
+TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
 $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c

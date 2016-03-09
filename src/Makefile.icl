@@ -73,7 +73,7 @@ INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
 CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
-OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
+#OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
 !Else
 # Intel C++ defs, release build (IA32)
 CL       = icl
@@ -238,16 +238,9 @@ $(GTB_LIBDIR):
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
-<<<<<<< HEAD
-TB_SOURCES = $(TB_SOURCES) syzygy.obj $(STB)\tbprobe.c
-TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
-{$(STB)}.c{$(BUILD)}.obj:
-    $(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $<
-=======
-TB_SOURCES = $(TB_SOURCES) syzygy.cpp $(STB)\tbprobe.c
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 TB_PGO_OBJS = $(TB_PGO_OBJS) $(PGO_BUILD)\syzygy.obj $(PGO_BUILD)\tbprobe.obj
-TB_PROFILE_OBJS = $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
+TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
@@ -257,7 +250,6 @@ $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PGO_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 	$(CL) $(STB_PROFILE_FLAGS) $(PROF_USE_FLAGS) $(OPT) $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
->>>>>>> 8716e50... Windows Makefile fixes for profile builds.
 !Endif
 
 # Linker flags
@@ -416,6 +408,9 @@ $(BUILD)\nalimov.obj: nalimov.cpp
 
 $(PROFILE)\nalimov.obj: nalimov.cpp
     $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ nalimov.cpp
+
+$(PGO_BUILD)\nalimov.obj: nalimov.cpp
+    $(CL) $(PROF_USE_FLAGS) $(TB_PROFILE_FLAGS) /c /Fo$@ nalimov.cpp
 
 $(PROFILE)\arasanx.exe:  $(ARASANX_PROFILE_OBJS)
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PROFILE)\arasanx.exe
