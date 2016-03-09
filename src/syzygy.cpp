@@ -10,7 +10,7 @@ static const int CURSED_SCORE = 5;
 
 static const int valueMap[5] = {-Constants::TABLEBASE_WIN, -CURSED_SCORE, 0, CURSED_SCORE, Constants::TABLEBASE_WIN};
 
-static PieceType getPromotion(unsigned res) 
+static PieceType getPromotion(unsigned res)
 {
       switch (TB_GET_PROMOTES(res)) {
       case TB_PROMOTES_QUEEN:
@@ -26,7 +26,7 @@ static PieceType getPromotion(unsigned res)
       }
 }
 
-int SyzygyTb::initTB(const string &path) 
+int SyzygyTb::initTB(const string &path)
 {
    bool ok = syzygy_tb_init(path.c_str());
    if (!ok)
@@ -35,7 +35,7 @@ int SyzygyTb::initTB(const string &path)
       return TB_LARGEST;
 }
 
-int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves) 
+int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
 {
    score = 0;
    unsigned results[TB_MAX_MOVES];
@@ -56,11 +56,11 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
                                    b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
                                    b.sideToMove() == White,
                                    results);
-   
+
    if (result == TB_RESULT_FAILED) {
       return 0;
    }
-   
+
    unsigned wdl = TB_GET_WDL(result);
    ASSERT(wdl<5);
    score = valueMap[wdl];
@@ -79,6 +79,36 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
                                      ep ? EnPassant : Normal));
       }
    }
+   return 1;
+}
+
+int SyzygyTb::probe_wdl(const Board &b, int &score)
+{
+   score = 0;
+   Bitboard king_bits;
+   king_bits.set(b.kingSquare(White));
+   king_bits.set(b.kingSquare(Black));
+   unsigned result = tb_probe_wdl((uint64_t)(b.occupied[White]),
+                                   (uint64_t)(b.occupied[Black]),
+                                   (uint64_t)king_bits,
+                                   (uint64_t)(b.queen_bits[Black] | b.queen_bits[White]),
+                                   (uint64_t)(b.rook_bits[Black] | b.rook_bits[White]),
+                                   (uint64_t)(b.bishop_bits[Black] | b.bishop_bits[White]),
+                                   (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
+                                   (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
+                                   b.state.moveCount,
+                                   (int)b.castleStatus(White)<3 ||
+                                   (int)b.castleStatus(Black)<3,
+                                   b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
+                                   b.sideToMove() == White);
+
+   if (result == TB_RESULT_FAILED) {
+      return 0;
+   }
+
+   unsigned wdl = TB_GET_WDL(result);
+   ASSERT(wdl<5);
+   score = valueMap[wdl];
    return 1;
 }
 

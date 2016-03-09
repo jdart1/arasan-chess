@@ -30,6 +30,11 @@ struct SyzygyTb {
     // the draw or win.
     static int probe_root(const Board &b, int &score, set<Move> &rootMoves);
 
+    // Probe the wdl tablebases (not at root).
+    // Return 1 if score was obtained,
+    // 0 if not. "score" is the score for the position. 
+    static int probe_wdl(const Board &b, int &score);
+
 };
 
 #endif

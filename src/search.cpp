@@ -1778,7 +1778,7 @@ int Search::quiesce(int ply,int depth)
             if (PieceValue(Capture(move)) - PieceValue(PieceMoved(move)) <= 0 &&
                 node->beta > -Constants::TABLEBASE_WIN &&
                 !passedPawnPush(board,move) &&
-                !disc.isSet(StartSquare(move)) && 
+                !disc.isSet(StartSquare(move)) &&
                 !seeSign(board,move,Util::Max(0,node->alpha - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
                // This appears to be a losing capture, or one that can't bring us above alpha
 #ifdef _TRACE
@@ -2364,23 +2364,30 @@ int Search::search()
         // Note: hash move may be usable even if score is not usable
         hash_move = hashEntry.bestMove(board);
     }
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
     if (using_tb && rep_count==0) {
-        int tb_hit = 0;
-        controller->stats->tb_probes++;
-        int tb_score;
+       int tb_hit = 0;
+       controller->stats->tb_probes++;
+       int tb_score;
 #ifdef NALIMOV_TBS
-         if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
-             tb_hit = NalimovTb::probe_tb(board, tb_score, ply);
-         }
+       if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
+          tb_hit = NalimovTb::probe_tb(board, tb_score, ply);
+       }
 #endif
 #ifdef GAVIOTA_TBS
-         if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
-             // TBD: use soft probing at lower depths
-             tb_hit = GaviotaTb::probe_tb(board, tb_score, ply, true);
-         }
+       if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
+          // TBD: use soft probing at lower depths
+          tb_hit = GaviotaTb::probe_tb(board, tb_score, ply, true);
+       }
 #endif
-        if (tb_hit) {
+#ifdef SYZYGY_TBS
+       if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
+          if (node->depth >= options.search.syzygy_probe_depth) {
+             tb_hit = SyzygyTb::probe_wdl(board, tb_score);
+          }
+       }
+#endif
+       if (tb_hit) {
             controller->stats->tb_hits++;
 #ifdef _TRACE
             if (master()) {
@@ -3540,6 +3547,3 @@ void Search::clearHashTables() {
 void Search::setSearchOptions() {
    srcOpts = options.search;
 }
-
-
-
