@@ -2247,9 +2247,13 @@ int Search::search()
         const Material &bMat = board.getMaterial(Black);
         egtbDepth = 3*DEPTH_INCREMENT*root()->getIterationDepth()/4;
         using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) &&
+#ifdef SYZYGY_TBS
            (srcOpts.tablebase_type == Options::SYZYGY_TYPE ?
             (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth)
             : (depth >= egtbDepth || ply <= 2));
+#else
+			(depth >= egtbDepth || ply <= 2);
+#endif
     }
 #endif
     HashEntry hashEntry;
@@ -2308,7 +2312,7 @@ int Search::search()
                         node->pv_length = 1;
                     }
 #ifdef _DEBUG
-                    if (!legalMove(board,hash_move)) {
+                    if (!IsNull(hash_move) && !legalMove(board,hash_move)) {
                        cout << '#' << board << endl << (flush);
                        cout << '#';
                        MoveImage(hash_move,cout);
