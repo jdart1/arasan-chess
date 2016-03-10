@@ -2240,13 +2240,16 @@ int Search::search()
     }
     Move hash_move = NullMove;
     using_tb = 0;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
     int egtbDepth = Constants::MaxPly*DEPTH_INCREMENT;
     if (srcOpts.use_tablebases) {
         const Material &wMat = board.getMaterial(White);
         const Material &bMat = board.getMaterial(Black);
         egtbDepth = 3*DEPTH_INCREMENT*root()->getIterationDepth()/4;
-        using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) && (depth >= egtbDepth || ply <= 2);
+        using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) &&
+           (srcOpts.tablebase_type == Options::SYZYGY_TYPE ?
+            (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth)
+            : (depth >= egtbDepth || ply <= 2));
     }
 #endif
     HashEntry hashEntry;
@@ -2382,10 +2385,8 @@ int Search::search()
 #endif
 #ifdef SYZYGY_TBS
        if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
-          if (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth) {
-             tb_hit = SyzygyTb::probe_wdl(board, tb_score, 
-                                          srcOpts.syzygy_50_move_rule);
-          }
+          tb_hit = SyzygyTb::probe_wdl(board, tb_score, 
+                                       srcOpts.syzygy_50_move_rule);
        }
 #endif
        if (tb_hit) {
