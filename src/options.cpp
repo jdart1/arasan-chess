@@ -39,7 +39,7 @@ Options::SearchOptions::SearchOptions() :
 #ifdef SYZYGY_TBS
       syzygy_path("syzygy"),
       syzygy_50_move_rule(1),
-      syzygy_probe_depth(2),
+      syzygy_probe_depth(4),
 #endif
       strength(100),
       multipv(1),
