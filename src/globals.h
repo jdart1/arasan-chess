@@ -1,4 +1,4 @@
-// Copyright 1994-2005, 2014, 2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2005, 2014-2016 by Jon Dart.  All Rights Reserved.
 
 #ifndef _GLOBALS_H
 #define _GLOBALS_H
@@ -36,6 +36,8 @@ extern CACHE_ALIGN const byte baseKPKB[24576];
 #include <stdio.h>
 #endif
 
+extern bool tb_init_done(const Options::TbType);
+
 extern string derivePath(const char *fileName);
 extern string derivePath(const char *base, const char *fileName);
 
@@ -47,7 +49,12 @@ extern void initOptions(const char *pathName);
 
 // Perform actions that need to be done before a game but after
 // program startup (chiefly ones that depend on runtime options
-// being set)
+// being set).
 extern void delayedInit();
+
+// Attempt to unload the specified tablebase type (if in use),
+// freeing memeory/resources. Note: Nalimov code does not support
+// this (but re-init will free memory).
+extern void unloadTb(Options::TbType type);
 
 #endif

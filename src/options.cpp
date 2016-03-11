@@ -19,13 +19,54 @@ const string Options::NALIMOV_TYPE = "Nalimov";
 const string Options::GAVIOTA_TYPE = "Gaviota";
 const string Options::SYZYGY_TYPE = "Syzygy";
 
+Options::TbType Options::stringToTbType(const string &value) 
+{
+#ifdef GAVIOTA_TBS
+   if (value == GAVIOTA_TYPE) {
+      return Options::TbType::GaviotaTb;
+   }
+#endif
+#ifdef NALIMOV_TBS
+   if (value == NALIMOV_TYPE) {
+      return Options::TbType::NalimovTb;
+   }
+#endif
+#ifdef SYZYGY_TBS
+   if (value == SYZYGY_TYPE) {
+      return Options::TbType::SyzygyTb;
+   }
+#endif
+   return Options::TbType::None;
+}
+
+string Options::tbTypeToString(TbType type) 
+{
+#ifdef GAVIOTA_TBS
+   if (type == Options::TbType::GaviotaTb) {
+      return GAVIOTA_TYPE;
+   }
+#endif
+#ifdef NALIMOV_TBS
+   if (type == Options::TbType::NalimovTb) {
+      return NALIMOV_TYPE;
+   }
+#endif
+#ifdef SYZYGY_TBS
+   if (type == Options::TbType::SyzygyTb) {
+      return SYZYGY_TYPE;
+   }
+#endif
+   return "None";
+}
+
 Options::SearchOptions::SearchOptions() :
       checks_in_qsearch(1),
       hash_table_size(32*1024*1024),
       can_resign(1),
       resign_threshold(-500),
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-      use_tablebases(1),
+      use_tablebases(0),
+      tablebase_type(TbType::None),
 #endif
 #ifdef GAVIOTA_TBS
       gtb_cache_size((size_t)8*1024L*1024L),
@@ -46,13 +87,6 @@ Options::SearchOptions::SearchOptions() :
       ncpus(1),
       easy_plies(3),
       easy_threshold(2000) {
-#if defined(SYZYGY_TBS)
-    tablebase_type = "Syzygy"; // default
-#elif defined(GAVIOTA_TBS)
-    tablebase_type = "Gaviota";
-#elif defined(NALIMOV_TBS)
-    tablebase_type = "Nalimov";
-#endif
 }
 
 
@@ -160,27 +194,12 @@ void Options::set_option(const string &name, const string &value) {
     set_boolean_option(name,value,search.use_tablebases);
   }
   else if (name == "search.tablebase_type") {
-      string tmp = search.tablebase_type;
-      search.tablebase_type.clear();
-#ifdef GAVIOTA_TBS
-      if (value == GAVIOTA_TYPE) {
-          search.tablebase_type = value;
-      }
-#endif
-#ifdef NALIMOV_TBS
-      if (value == NALIMOV_TYPE) {
-          search.tablebase_type = value;
-      }
-#endif
-#ifdef SYZYGY_TBS
-      if (value == SYZYGY_TYPE) {
-          search.tablebase_type = value;
-      }
-#endif
-      if (search.tablebase_type == "") {
-          cerr << "Invalid tablebase type: " << value << endl;
-          search.tablebase_type = tmp;
-      }
+     TbType tmp = search.tablebase_type;
+     search.tablebase_type = stringToTbType(value);
+     if (search.tablebase_type == TbType::None) {
+        cerr << "Invalid tablebase type: " << value << endl;
+        search.tablebase_type = tmp;
+     }
   }
 #endif
 #ifdef GAVIOTA_TBS

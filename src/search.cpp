@@ -657,19 +657,19 @@ Move *excludes, int num_excludes)
       if(tb_pieces <= EGTBMenCount) {
          controller->stats->tb_probes++;
 #ifdef NALIMOV_TBS
-         if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
+         if (srcOpts.tablebase_type == Options::TbType::NalimovTb) {
              tb_hit = NalimovTb::probe_tb(board, tb_score, 0);
              value = tb_score;
          }
 #endif
 #ifdef GAVIOTA_TBS
-         if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
+         if (srcOpts.tablebase_type == Options::TbType::GaviotaTb) {
              tb_hit = GaviotaTb::probe_tb(board, tb_score, 0, true);
              value = tb_score;
          }
 #endif
 #ifdef SYZYGY_TBS
-         if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
+         if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
             set<Move> moves;
             tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
             if (tb_hit) {
@@ -2248,7 +2248,7 @@ int Search::search()
         egtbDepth = 3*DEPTH_INCREMENT*root()->getIterationDepth()/4;
         using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) &&
 #ifdef SYZYGY_TBS
-           (srcOpts.tablebase_type == Options::SYZYGY_TYPE ?
+           (srcOpts.tablebase_type == Options::TbType::SyzygyTb ?
             (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth)
             : (depth >= egtbDepth || ply <= 2));
 #else
@@ -2377,18 +2377,18 @@ int Search::search()
        controller->stats->tb_probes++;
        int tb_score;
 #ifdef NALIMOV_TBS
-       if (srcOpts.tablebase_type == Options::NALIMOV_TYPE) {
+       if (srcOpts.tablebase_type == Options::TbType::NalimovTb) {
           tb_hit = NalimovTb::probe_tb(board, tb_score, ply);
        }
 #endif
 #ifdef GAVIOTA_TBS
-       if (srcOpts.tablebase_type == Options::GAVIOTA_TYPE) {
+       if (srcOpts.tablebase_type == Options::TbType::GaviotaTb) {
           // TBD: use soft probing at lower depths
           tb_hit = GaviotaTb::probe_tb(board, tb_score, ply, true);
        }
 #endif
 #ifdef SYZYGY_TBS
-       if (srcOpts.tablebase_type == Options::SYZYGY_TYPE) {
+       if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
           tb_hit = SyzygyTb::probe_wdl(board, tb_score, 
                                        srcOpts.syzygy_50_move_rule);
        }

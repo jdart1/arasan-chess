@@ -11,9 +11,11 @@ using namespace std;
 class Options
 {
  public:
-    static const string NALIMOV_TYPE;
-    static const string GAVIOTA_TYPE;
-    static const string SYZYGY_TYPE;
+  enum class TbType {None, NalimovTb, GaviotaTb, SyzygyTb};
+
+  static const string NALIMOV_TYPE;
+  static const string GAVIOTA_TYPE;
+  static const string SYZYGY_TYPE;
 
   struct BookOptions {
     BookOptions() 
@@ -36,7 +38,7 @@ class Options
    int resign_threshold;
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
    int use_tablebases;
-   string tablebase_type;
+   TbType tablebase_type;
 #endif
 #ifdef GAVIOTA_TBS
    size_t gtb_cache_size;
@@ -98,6 +100,10 @@ class Options
 
    static void setMemoryOption(size_t &value, const string &valueString);
 
+   static TbType stringToTbType(const string &);
+
+   static string tbTypeToString(TbType);
+
    // sets options based on a .rc file
    int init(const string &optionsFile);
 
@@ -108,6 +114,7 @@ class Options
    string game_pathname;
 
  private:
+
    void set_option(const string &name,const string &value);
 
    template <class T>
