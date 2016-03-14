@@ -65,6 +65,7 @@ struct NodeInfo {
     int num_try;
     int flags; 
     Move threatMove;
+    Move singularMove;
     volatile Move best;
     Move last_move;
     int extensions; // mask of extensions
@@ -76,7 +77,7 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
-    char pad[126];
+    char pad[118];
 
     int PV() const {
         return (beta > alpha+1);
@@ -346,9 +347,9 @@ class Search : public ThreadControl {
  protected:
 
     enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
-       FORCED=16, LMR=64 };
+                          FORCED=16, LMR=64, SINGULAR_EXT=128 };
 
-    enum SearchFlags { IID=1, VERIFY=2, EXACT=4 };
+    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8 };
 
     int movesRelated( Move lastMove, Move threatMove) const;
 

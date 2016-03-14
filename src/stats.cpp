@@ -35,7 +35,7 @@ void Statistics::clear()
    hash_hits = hash_searches = futility_pruning = null_cuts = lmp = (uint64_t)0;
    history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
-     pawn_extensions = evasion_extensions = 0L;
+     pawn_extensions = evasion_extensions = singular_extensions = 0L;
 #endif
    end_of_game = 0;
    mvleft = mvtot = 0;

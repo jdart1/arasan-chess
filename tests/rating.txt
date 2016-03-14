@@ -5,3 +5,4 @@ Rank Name            Elo    +    - games score oppo. draws
    4 Stockfish-1.5  2381    7    6  7200   49%  2390   29% 
    5 Toga-3.0       2350    6    7  7200   44%  2390   25% 
    6 Crafty-25.0.1  2347    6    7  7200   44%  2390   27% 
+
