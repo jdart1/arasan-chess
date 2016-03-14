@@ -2606,7 +2606,9 @@ int Search::search()
                 // Extend previously reduced move if threat move related to
                 // that move (idea from Stockfish)
                 if (!IsNull(node->threatMove) &&
-                    ply > 0 && ((node-1)->extensions & LMR) &
+                    ply > 0 &&
+                    depth < 5*DEPTH_INCREMENT &&
+                    ((node-1)->extensions & LMR) &
                     movesRelated( (node-1)->last_move, node->threatMove)) {
                     // return a fail-low score (fail high in parent node),
                     // forcing a full width search
