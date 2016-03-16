@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="ArasanX_Debug|Win32">
@@ -131,6 +131,7 @@
     <TargetName>arasanx-64</TargetName>
     <OutDir>..\win64\Debug\</OutDir>
     <IntDir>..\win64\Debug\</IntDir>
+    <IncludePath>$(ICIncludeDir);$(IncludePath);c:\arasan\19.0\src\tb</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">
     <LinkIncremental />
@@ -264,7 +265,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;SEARCH_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;UNIT_TESTS;USE_INTRINSICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;NALIMOV_TBS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -371,6 +372,7 @@
     <ClInclude Include="..\src\util.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\arasanx.cpp" />
     <ClCompile Include="..\src\attacks.cpp" />
     <ClCompile Include="..\src\bhash.cpp" />
     <ClCompile Include="..\src\bitboard.cpp" />
@@ -404,12 +406,10 @@
     <ClCompile Include="..\src\learn.cpp" />
     <ClCompile Include="..\src\legal.cpp" />
     <ClCompile Include="..\src\log.cpp" />
-    <ClCompile Include="..\src\makebook.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\material.cpp" />
     <ClCompile Include="..\src\movearr.cpp" />
     <ClCompile Include="..\src\movegen.cpp" />
+    <ClCompile Include="..\src\nalimov.cpp" />
     <ClCompile Include="..\src\notation.cpp" />
     <ClCompile Include="..\src\options.cpp" />
     <ClCompile Include="..\src\refut.cpp" />
