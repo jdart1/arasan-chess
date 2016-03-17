@@ -66,6 +66,7 @@ static const double LMR_PV = 2.25;
 static const int MAX_SPLIT_DEPTH=16*DEPTH_INCREMENT;
 static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 
+#ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth) 
 {
    return depth*100/PAWN_VALUE;
@@ -75,6 +76,7 @@ static int singularExtensionDepth(int depth)
 {
    return depth - 3*DEPTH_INCREMENT;
 }
+#endif
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
