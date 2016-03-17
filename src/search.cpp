@@ -3269,6 +3269,7 @@ void Search::searchSMP(ThreadInfo *ti)
             }
 #endif
             split->unlock();
+            bool retry = true;
             if (extend < -DEPTH_INCREMENT) {
                 node->extensions = 0;
                 extend = 0;
@@ -3281,9 +3282,11 @@ void Search::searchSMP(ThreadInfo *ti)
                    try_score=-search(-best_score-1,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
                 else
                    try_score=-quiesce(-best_score-1,-best_score,ply+1,0);
-
+                // if node is not a PV node we are already at max
+                // width, no need for a 2nd retry
+                retry = node->PV();
             }
-            if (try_score > parentNode->best_score && !terminate) {
+            if (retry && try_score > parentNode->best_score && !terminate) {
                node->extensions = 0;
                extend = 0;
                if (ply == 0) {
