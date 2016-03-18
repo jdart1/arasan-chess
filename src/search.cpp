@@ -2339,7 +2339,7 @@ int Search::search()
                         node->pv_length = 1;
                     }
 #ifdef _DEBUG
-                    if (!IsNull(hash_move) && !legalMove(board,hash_move)) {
+                    if (!IsNull(hashMove) && !legalMove(board,hashMove)) {
                        cout << '#' << board << endl << (flush);
                        cout << '#';
                        MoveImage(hashMove,cout);
