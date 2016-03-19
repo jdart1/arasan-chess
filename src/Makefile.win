@@ -42,7 +42,7 @@ BUILD_TYPE=release
 !Endif
 
 !If "$(PLATFORM)"=="NT"
-CFLAGS=/D_USING_V110_SDK71_
+CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
 !Endif
 
 BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
@@ -76,13 +76,13 @@ POPCNT_FLAGS = -DUSE_POPCNT
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 !If "$(PLATFORM)" == "NT"
-OPT  = /Ox /Gr /Gy /GS- /GL
+OPT  = /Ox /Gr /Gy /GS- /GL /DNDEBUG
 !Else
-OPT  = /Ox /Gr /Gy /Oi /GS- /GL /DUSE_INTRINSICS
+OPT  = /Ox /Gr /Gy /Oi /GS- /GL /DUSE_INTRINSICS /DNDEBUG
 !Endif
 LINKOPT = /LTCG /OPT:REF,ICF
 !Else
-OPT  = /Ox /Gr /Gy /GS- /GL /DUSE_INTRINSICS
+OPT  = /Ox /Gr /Gy /GS- /GL /DUSE_INTRINSICS /DNDEBUG
 LINKOPT = /LTCG /OPT:REF
 !Endif
 !Endif	

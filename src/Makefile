@@ -72,7 +72,7 @@ OSTYPE       := $(UNAME)
 endif
 ARCH         := $(shell uname -m)
 
-ifeq ($(ARCH),"x86_64")
+ifeq ("$(ARCH)","x86_64")
 SSE=-msse3
 endif
 
@@ -104,8 +104,8 @@ CPP     = icc
 LD      = icc
 AR      = xiar
 CFLAGS  := -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
-OPT     = -O3 -fno-rtti $(SSE)
-GTB_OPT := -O3 -fno-rtti $(SSE)
+OPT     = -O3 -fno-rtti $(SSE) -DNDEBUG
+GTB_OPT := -O3 -fno-rtti $(SSE) -DNDEBUG
 
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
@@ -122,8 +122,8 @@ PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
 CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS) 
-OPT     = -O3 -fno-rtti -finline-functions $(SSE)
-GTB_OPT := -O3 -finline-functions $(SSE)
+OPT     = -O3 -fno-rtti -finline-functions $(SSE) -DNDEBUG
+GTB_OPT := -O3 -finline-functions $(SSE) -DNDEBUG
 
 else
 
@@ -140,9 +140,9 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.7 or higher:
 CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE)
+OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
 LTO	= -flto
-GTB_OPT := -Ofast $(SSE)
+GTB_OPT := -Ofast $(SSE) -DNDEBUG
 else
 $(error GCC version < 4.7 not supported)
 endif

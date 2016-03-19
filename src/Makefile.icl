@@ -73,13 +73,13 @@ INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
 CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
-#OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
+OPT = /O3 /Ob2 /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM /DNDEBUG
 !Else
 # Intel C++ defs, release build (IA32)
 CL       = icl
 LD       = xilink
 CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
-OPT = /O3 /Ob2 /Oy- /Gr /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM
+OPT = /O3 /Ob2 /Oy- /Gr /GR- /Qinline-max-size- /DUSE_INTRINSICS /DUSE_ASM /DNDEBUG
 !Endif
 
 # Intel C++ defs (profile build)
@@ -245,11 +245,11 @@ CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
 $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
-	$(CL) $(STB_FLAGS) $(OPT)  $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
-	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PGO_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
-	$(CL) $(STB_PROFILE_FLAGS) $(PROF_USE_FLAGS) $(OPT) $(SSE) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+	$(CL) $(STB_PROFILE_FLAGS) $(PROF_USE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
 
 # Linker flags
@@ -378,13 +378,13 @@ $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
 
 {}.cpp{$(PROFILE)}.obj:
-    $(CL) $(CFLAGS) $(OPT) $(SSE) $(PROF_GEN_FLAGS) /c /Fo$@ $<
+    $(CL) $(CFLAGS) $(OPT) $(PROF_GEN_FLAGS) /c /Fo$@ $<
 
 {}.cpp{$(PGO_BUILD)}.obj:
-    $(CL) $(CFLAGS) $(PROF_USE_FLAGS) $(OPT) $(SSE) /c /Fo$@ $<
+    $(CL) $(CFLAGS) $(PROF_USE_FLAGS) $(OPT) /c /Fo$@ $<
 
 {}.cpp{$(POPCNT_BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) /c /Fo$@ $<
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
 
 profile: dirs $(PROFILE)\arasanx.exe
 
