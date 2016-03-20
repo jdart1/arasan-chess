@@ -2280,9 +2280,16 @@ int Search::search()
     HashEntry::ValueType result;
     bool hashHit = false;
     int hashValue = Scoring::INVALID_SCORE;
-    if (node->flags & SINGULAR) {
-        hashMove = node->singularMove;
+    if (node->flags & IID) {
+       // already did hash probe, with no hit
+       result = HashEntry::NoHit;
     }
+#ifdef SINGULAR_EXTENSION
+    else if (node->flags & SINGULAR) {
+        hashMove = node->singularMove;
+        result = HashEntry::Invalid;
+    }
+#endif
     else {
        // Search the hash table to see if we have hit this
        // position before.
@@ -2399,7 +2406,7 @@ int Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
-    if (using_tb && rep_count==0) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR))) {
        int tb_hit = 0;
        controller->stats->tb_probes++;
        int tb_score;
@@ -2654,7 +2661,9 @@ int Search::search()
     // Use "internal iterative deepening" to get an initial move to try if
     // there is no hash move .. an idea from Crafty (previously used by
     // Hitech).
-    if (IsNull(hashMove) && depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) {
+    if (IsNull(hashMove) &&
+        board.checkStatus() == NotInCheck &&
+        depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) {
         int d;
         d = Util::Min(depth-2*DEPTH_INCREMENT,depth/2);
         if (!node->PV()) d-=DEPTH_INCREMENT;
