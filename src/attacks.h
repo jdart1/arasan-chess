@@ -68,14 +68,6 @@ class Attacks
        return file_mask[Files[sq]-1];
      }
      
-     FORCEINLINE static Bitboard rankMask(Square sq) {
-       return rank_mask[Rank<White>(sq)-1];
-     }
-     
-     FORCEINLINE static Bitboard rankMask(int rank, ColorType side) {
-       return rank_mask[(rank == White ? rank : 8-rank)-1];
-     }
-     
      FORCEINLINE static const Bitboard rookAttacks(Square sq,
                                                    const Bitboard &occupied) {
 #ifdef _64BIT
