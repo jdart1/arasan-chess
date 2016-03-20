@@ -2501,6 +2501,7 @@ int Search::search()
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
+        !(node->flags & (IID|VERIFY|SINGULAR)) &&
         node->beta < Constants::TABLEBASE_WIN) {
        const int d = depth/DEPTH_INCREMENT;
        const int margin = STATIC_NULL_MARGIN_BASE +
@@ -2522,7 +2523,9 @@ int Search::search()
 
 #ifdef RAZORING
     // razoring as in Glaurung & Toga
-    if (pruneOk && node->beta < Constants::MATE_RANGE && depth <= RAZOR_DEPTH && !(node->flags & SINGULAR)) {
+    if (pruneOk && node->beta < Constants::MATE_RANGE &&
+        depth <= RAZOR_DEPTH &&
+        !(node->flags & (IID|VERIFY|SINGULAR))) {
         const int threshold = node->beta - RAZOR_MARGIN_BASE - Util::Max(0,(depth-DEPTH_INCREMENT)*RAZOR_MARGIN_INCR/DEPTH_INCREMENT);
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
@@ -2651,7 +2654,7 @@ int Search::search()
     // Use "internal iterative deepening" to get an initial move to try if
     // there is no hash move .. an idea from Crafty (previously used by
     // Hitech).
-    if (IsNull(hashMove) && depth >= 4*DEPTH_INCREMENT) {
+    if (IsNull(hashMove) && depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) {
         int d;
         d = Util::Min(depth-2*DEPTH_INCREMENT,depth/2);
         if (!node->PV()) d-=DEPTH_INCREMENT;
@@ -2667,6 +2670,7 @@ int Search::search()
         // Note: we do not push down the node stack because we want this
         // search to have all the same parameters (including ply) as the
         // current search, just reduced depth + the IID flag set.
+        int old_flags = node->flags;
         node->flags |= IID;
         int alpha = node->alpha;
         node->depth = d;
@@ -2674,7 +2678,7 @@ int Search::search()
         // set hash move to IID search result (may still be null)
         hashMove = node->best;
         // reset key params
-        node->flags &= ~IID;
+        node->flags = old_flags;
         node->num_try = 0;
         node->cutoff = 0;
         node->depth = depth;
