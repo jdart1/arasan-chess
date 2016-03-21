@@ -67,12 +67,12 @@ static const int MAX_SPLIT_DEPTH=16*DEPTH_INCREMENT;
 static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 
 #ifdef SINGULAR_EXTENSION
-static int singularExtensionMargin(int depth) 
+static int singularExtensionMargin(int depth)
 {
    return depth*100/PAWN_VALUE;
 }
 
-static int singularExtensionDepth(int depth) 
+static int singularExtensionDepth(int depth)
 {
    return depth - 3*DEPTH_INCREMENT;
 }
@@ -180,11 +180,12 @@ SearchController::SearchController()
            double f = LMR_BASE + log((double)d) * log((double)moves+1);
            const double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
            for (int i = 0; i < 2; i++) {
-              double r = floor(reduction[i]+0.5);
+              int r = DEPTH_INCREMENT*floor(2*reduction[i]+0.5)/2;
+              // do not reduce into the qsearch:
+              if (r > d*DEPTH_INCREMENT) r = d*DEPTH_INCREMENT-1;
               // do not do reductions < 1 ply
-              if (r < 1.0) r = 0.0;
-              // only reduce in units of DEPTH_INCREMENT
-              LMR_REDUCTION[i][d][moves] = DEPTH_INCREMENT*int(r);
+              if (r < DEPTH_INCREMENT) r = 0;
+              LMR_REDUCTION[i][d][moves] = r;
            }
         }
       }
@@ -193,7 +194,7 @@ SearchController::SearchController()
     for (int i = 0; i < 64; i++) {
       cout << "--- i=" << i << endl;
       for (int m=0; m<64; m++) {
-      cout << m << " " << LMR_REDUCTION[0][i][m] << ' ' << LMR_REDUCTION[1][i][m] << endl;
+      cout << m << " " << 1.0*LMR_REDUCTION[0][i][m]/DEPTH_INCREMENT << ' ' << 1.0*LMR_REDUCTION[1][i][m]/DEPTH_INCREMENT << endl;
       }
     }
 */
@@ -1100,7 +1101,7 @@ Move *excludes, int num_excludes)
          100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
          100.0*stats->pawn_extensions/stats->moves_searched << "% pawn, " <<
          100.0*stats->singular_extensions/stats->moves_searched << "% singular" << endl;
-      
+
 #endif
       cout << stats->tb_probes << " tablebase probes, " <<
          stats->tb_hits << " tablebase hits" << endl;
@@ -2166,10 +2167,12 @@ int Search::calcExtensions(const Board &board,
        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
        !passedPawnMove(board,move,6)) {
       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-      node->extensions |= LMR;
+      if (extend) {
+         node->extensions |= LMR;
 #ifdef SEARCH_STATS
-      ++controller->stats->reduced;
+         ++controller->stats->reduced;
 #endif
+      }
    }
    return extend;
 }
@@ -2423,7 +2426,7 @@ int Search::search()
 #endif
 #ifdef SYZYGY_TBS
        if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
-          tb_hit = SyzygyTb::probe_wdl(board, tb_score, 
+          tb_hit = SyzygyTb::probe_wdl(board, tb_score,
                                        srcOpts.syzygy_50_move_rule);
        }
 #endif
@@ -2734,7 +2737,7 @@ int Search::search()
 #ifdef SINGULAR_EXTENSION
         if (depth >= SINGULAR_EXTENSION_DEPTH &&
             !(node->flags & SINGULAR) &&
-            hashHit && 
+            hashHit &&
             hashEntry.depth() >= depth - 3*DEPTH_INCREMENT &&
             !IsNull(hashMove) &&
             Util::Abs(hashValue) < Constants::MATE_RANGE &&
@@ -2837,7 +2840,7 @@ int Search::search()
 #endif
             }
             else {
-               extend = calcExtensions(board,node,node,in_check_after_move, 
+               extend = calcExtensions(board,node,node,in_check_after_move,
                                         move_index,move);
             }
             if (extend == PRUNE) {
