@@ -59,7 +59,7 @@ static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
 static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
-static const int LMR_DEPTH = int(2.5*DEPTH_INCREMENT);
+static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static const double LMR_BASE = 0.3;
 static const double LMR_NON_PV = 1.5;
 static const double LMR_PV = 2.25;
@@ -2162,7 +2162,7 @@ int Search::calcExtensions(const Board &board,
        }
    }
    // See if we do late move reduction. Moves in the history phase of move
-   // generation or later can be searched with reduced depth.
+   // generation can be searched with reduced depth.
    if (reduceOk && depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
        GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
        !passedPawnMove(board,move,6)) {
