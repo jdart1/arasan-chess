@@ -173,7 +173,7 @@ class MoveGenerator
       Move *batch;
       Move losers[100];
       Move moves[Constants::MaxMoves];
-      Move killer1,killer2,killer3,killer4;
+      Move killer1,killer2;
       int master;
 
       inline void setMove( Square source, Square dest,

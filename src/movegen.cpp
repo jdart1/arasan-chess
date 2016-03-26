@@ -372,22 +372,10 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          {
             if (!context) continue;
             context->getKillers(ply,killer1,killer2);
-            if (ply >=2)
-               context->getKillers(ply-2,killer3,killer4);
-            else
-               killer3 = killer4 = NullMove;
             if (!IsNull(killer1) && !MovesEqual(hashMove,killer1)) {
                if (validMove(board,killer1)) {
                   SetPhase(killer1,KILLER1_PHASE);
                   moves[numMoves++] = killer1;
-                  index = 0;
-               }
-            }
-            if (ply>=2 && !IsNull(killer3) && !MovesEqual(hashMove,killer3) &&
-            !MovesEqual(killer1,killer3)) {
-               if (validMove(board,killer3)) {
-                  SetPhase(killer3,KILLER1_PHASE);
-                  moves[numMoves++] = killer3;
                   index = 0;
                }
             }
@@ -396,21 +384,10 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          case KILLER2_PHASE:
          {
             if (!context) continue;
-            if (!IsNull(killer2) && !MovesEqual(hashMove,killer2) &&
-            (ply<2||!MovesEqual(killer2,killer3))) {
+            if (!IsNull(killer2) && !MovesEqual(hashMove,killer2)) {
                if (validMove(board,killer2)) {
                   SetPhase(killer2,KILLER2_PHASE);
                   moves[numMoves++] = killer2;
-                  index = 0;
-               }
-            }
-            if (ply>=2 && !IsNull(killer4) &&
-               !MovesEqual(hashMove,killer4) &&
-               !MovesEqual(killer1,killer4) &&
-               !MovesEqual(killer2,killer4)) {
-               if (validMove(board,killer4)) {
-                  SetPhase(killer4,KILLER2_PHASE);
-                  moves[numMoves++] = killer4;
                   index = 0;
                }
             }
@@ -432,11 +409,6 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   }
                   else if (MovesEqual(killer1,moves[i]) ||
                   MovesEqual(killer2,moves[i])) {
-                     SetUsed(moves[i]);
-                     continue;
-                  }
-                  else if ((MovesEqual(killer3,moves[i]) ||
-                  MovesEqual(killer4,moves[i]))) {
                      SetUsed(moves[i]);
                      continue;
                   }
