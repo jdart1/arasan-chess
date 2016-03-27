@@ -2127,7 +2127,7 @@ int Search::calcExtensions(const Board &board,
                controller->stats->futility_pruning++;
 #endif
 #ifdef _TRACE
-               indent(ply); cout << "futility: pruned" << endl;
+               indent(node->ply); cout << "futility: pruned" << endl;
 #endif
                return PRUNE;
             }
@@ -2139,7 +2139,7 @@ int Search::calcExtensions(const Board &board,
                ++controller->stats->lmp;
 #endif
 #ifdef _TRACE
-               indent(ply); cout << "LMP: pruned" << endl;
+               indent(node->ply); cout << "LMP: pruned" << endl;
 #endif
                return PRUNE;
             }
