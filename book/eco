@@ -206,7 +206,6 @@ A66     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 "Benon
 A67     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Bb5 "Benoni, Mikenas Variation"
 A68     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Nf3 O-O "Benoni"
 A69     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Nf3 O-O 9. Be2 Re8 "Benoni"
-
 A70     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 "Benoni"
 A70     1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 d6 5. Nc3 exd5 6. cxd5 g6 7. h3 Bg7 8. e4 O-O "Benoni"
 A71     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 "Benoni"
@@ -214,7 +213,8 @@ A72     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. 
 A73     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O "Benoni"
 A74     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O a6 "Benoni"
 A75     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O a6 10. a4 Bg4 "Benoni"
-A75     1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 d6 5. Nc3 exd5 6. cxd5 g6 7. e4 a6 8. a4 Bg4 9. Be2 Bg7 10. O-O O-O "Benoni"
+A75     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O a6 10. a4 Bg4 11. Bf4 "Benoni"
+A75     1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 d6 5. Nc3 exd5 6. cxd5 g6 7. e4 a6 8. a4 Bg4 9. Be2 Bxf3 10. Bxf3 Nbd7 11. O-O Bg7 12. Bf4 Qe7 13. Re1 O-O "Benoni"
 A76     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O Re8 "Benoni"
 A77     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O Re8 10. Nd2
 A78     1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 ed5 5. cd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O Re8 10. Nd2 Na6
@@ -384,8 +384,9 @@ B41     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 a6 "Sicilian Defense, Paulsen Variat
 B42     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 a6 5. Bd3 "Sicilian Defense, Paulsen Variation"
 B43     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 a6 5. Nc3 "Sicilian Defense, Paulsen Variation"
 B43     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 a6 5. Nc3 Qc7 6. Bd3 "Sicilian Defense, Paulsen Variation"
-B44     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 "Sicilian Defense, Taimanov Variation"
-
+B44     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 "Sicilian Defense"
+B44     1. e4 c5 2. Nf3 e6 3. d4 cxd4 4. Nd4 Nc6 5. Nb5 "Sicilian Defense, Szen"
+B44     1. e4 c5 2. Nf3 e6 3. d4 cxd4 4. Nd4 Nc6 5. Nb5 d6 6. Bf4 e5 7. Be3 a6 8. N5c3 "Sicilian Defense, Szen"
 B45     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 "Sicilian Defense"
 B45     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 Nf6 "Sicilian Defense, Four Knights Variation"
 B46     1. e4 c5 2. Nf3 e6 3. d4 cd4 4. Nd4 Nc6 5. Nc3 a6 "Sicilian Defense, Taimanov Variation"
