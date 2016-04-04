@@ -223,6 +223,19 @@ else
 	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
+$(BUILD)/scoring.o: scoring.cpp params.cpp
+	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $(BUILD)/scoring.o scoring.cpp
+
+$(TUNE_BUILD)/scoring.o: scoring.cpp params.cpp
+	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $(TUNE_BUILD)/scoring.o scoring.cpp
+
+$(PROFILE)/scoring.o: scoring.cpp params.cpp
+ifeq ($(PASS),1)
+	$(CPP) $(PROF_GEN) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $(PROFILE)/scoring.o scoring.cpp
+else
+	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $(PROFILE)/scoring.o scoring.cpp
+endif
+
 profiled: dirs
 	@$(MAKE) PASS=1 profile profile-run
 	@$(MAKE) PASS=2 profile
