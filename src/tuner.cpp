@@ -277,6 +277,9 @@ static double calc_penalty()
          tune_params.getParam(i,p);
          // apply penalty only for parameters being tuned
          if (p.tunable) {
+            if (p.max_value-p.min_value==0) {
+               cerr << "warning: param " << p.name << " has zero range" << endl;
+            }
             // normalize the values since their ranges differ
             l2 += REGULARIZATION*norm_val(p)*norm_val(p);
          }
