@@ -6,7 +6,7 @@ and edit the Makefile to select the type(s) of tablebase support you
 want and to point to the necessary sources.
 
 Arasan now requires a modern compiler with C++11 features (although
-not necessarily complete C++11 support).  Gcc 4.7 or above is
+not necessarily complete C++11 support). Gcc 4.7 or above is
 recommended for building Arasan.
 
 There is a makefile in the src directory. In most cases, just typing

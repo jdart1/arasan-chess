@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 18.2</title>
+<title>Arasan Programmer's Guide - version 19.0</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 18.2</h1>
+<h1>Arasan Programmer's Guide - version 19.0</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -51,7 +51,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  18.2
+  19.0
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -101,16 +101,22 @@ only works for a 64-bit target. The executable will be named
 "arasanx-64-popcnt.exe" and will be placed in the release or debug 
 directory (depending on build type). To build with both POPCNT support
 and PGO, use "nmake popcnt-profiled".</p>
-<p>You can also use the Intel C++ compiler (version 9.0 or later recommended).
+<p>To make a XP-compatible build, edit the Makefile to set PLATFORM=XP
+and be sure to also use the 7.1A SDK includes and libraries, as detailed
+<a href="https://blogs.msdn.microsoft.com/vcblog/2012/10/08/windows-xp-targeting-with-c-in-visual-studio-2012/" target="_blank">here</a>. Visual C++ users
+should read <a href="https://msdn.microsoft.com/en-us/library/jj851139.aspx" target="_blank">this<a/>.</p>
+<p>You can also use the Intel C++ compiler but a recent version is
+required, at least version 13.0.
 Use the alternate Makefile if your compiler is Intel C++,
 like this:</p>
 <pre>
 nmake -f Makefile.icl popcnt-profiled
 </pre>
+<p>Note: Intel C++ does not support Windows Xp.<a/>
 <br/>
 <p>The makefiles have a separate "tuning" target that will build utilities
 used for automated parameter tuning (see the Parameter Tuning section
-for details). Note: these require a C++11 compatible compiler.</p>
+for details).</p>
 <p>To build the Arasan native Windows GUI, use the Visual C++ solution file
 in the "gui" subdirectory. (The command-line Makefile does not build the
 GUI). You cannot build the GUI with the Express Edition of Visual C++,
@@ -119,15 +125,16 @@ because it lacks the required MFC libraries.
 
 <h3>Other build methods</h3>
 <ol>
-<li>The Windows source distribution includes Visual C++ 2012 and
-VC 2005 solution files for the chess engine and tools and GUI in
+<li>The Windows source distribution includes Visual C++ 2012 solution
+files for the chess engine and tools and GUI in
 directories "prj" and "gui", respectively. But I use the "prj" solution
 file mostly for debugging, not for building the final release.</li>
 <br/><li>
-Arasan can be built using the Cygwin development tools, which simulate
-a Linux environment under Windows, or the <a href="http://www.mingw.org">MingW</a> tools,
-which use the Gnu C++ compiler with support for the Windows native API. Use
-the Linux source package for building with Cygwin or MingW.
+Arasan can also be built using the Cygwin development tools, which simulate
+a Linux environment under Windows. Use
+the Linux source package for building with Cygwin. I do not recommend
+or support
+<a href="https://msdn.microsoft.com/en-us/library/jj851139.aspx" target="_blank">MingW</a>.
 </li>
 </ol>
 
@@ -428,7 +435,7 @@ significance).</p>
 
 <h3>Automated parameter tuning</h3>
 
-<p>Version 18.2 has some support for automated parameter tuning.</p>
+<p>Version 19.0 has some support for automated parameter tuning.</p>
 <p>The Makefile has a "tuning" target that builds two extra executables
 (note: this build requires a C++11 compatible compiler).</p>
 <p>
@@ -459,7 +466,7 @@ of a diverse set of games (not with all high-quality moves).</p>
 <p>The "tuner" program expects a PGN file to be specified on the command
 line. It will output two files: by default the first one is named "x0"
 and contains the tuned parameter values; the second one is a compilable
-version of the parameters named "params.cpp.".</p>
+version of the parameters named "params.cpp."</p>
 <p>
 The following command-line options are supported:<p>
 <ul>
@@ -476,6 +483,7 @@ Without this some reasonable starting defaults will be used.</li>
 output (instead of params.cpp)</li>
 <li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
 <li>-V validate gradients</li>
+<li>-T &lt;fen string&gt; just compute the gradient for the specified FEN.</li>
 </ul>
 </br>
 <h2>Algorithms and data structures</h2>
@@ -588,17 +596,19 @@ score are deferred to the losing capture phase. This approach minimizes
 calls to SEE, which is expensive.</li>
 
 <li>"Killer moves" are returned if available. A killer move is a
-non-capture that previously caused beta cutoff. Arasan tries to use
-killer moves at the current ply and then, if available, killer
-moves stored at ply-2.</li>
+non-capture, non-promoting move that is valid in the current board
+context and previously caused beta cutoff at the current ply. Killer moves are indexed by piece type and dest square.</li>
 
 <li>At this point all non-capturing moves are generated. 
 The previous move is used to probe the "refutation table". This
 is a simple replace-always table that holds moves that have refuted
-another move (by causing the search to fail high). If the move
+another move (by causing the search to fail high). 
+Refutations are indexed by the previous move that
+was made by the opponent.
+If the move
 list includes a move found in the refutation table,
 then that move is returned first before any of the history
-moves.</li>
+moves and is flagged as belonging to the refutation phase.</li>
 
 <li>All other non-capturing moves are returned, in sorted order by
 history score.</li>
@@ -855,7 +865,7 @@ pawn, then it is not pruned.</p>
 Note that it is necessary to search at least one legal move before any
 pruning is done, because we need to distinguish nodes at which no
 moves are searched due to stalemate from those at which all nodes
-would cause pruning.</p>
+would cause pruning. Also no pruning is done at the root node.</p>
 <p>
 Futility pruning in Arasan is similar to that described by Ernst Heinz
 for the program Dark Thought. It allows some moves to not be searched,

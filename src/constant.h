@@ -21,7 +21,7 @@ enum {HISTORY_MAX =32768};
 const int INFINITE_TIME = 9999999;
 
 #define DEPTH_INCREMENT 4
-#define Arasan_Version "18.3"
+#define Arasan_Version "19.0"
 #define Arasan_Copyright "Copyright 1994-2016 by Jon Dart. All Rights Reserved."
 
 #endif
