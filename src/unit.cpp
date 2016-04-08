@@ -1,4 +1,4 @@
-// Copyright 2013-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2016 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -417,7 +417,7 @@ static int testDrawEval() {
         "8/8/8/5k1P/3K4/8/4B2P/8 w - - 0 1" // KBPP too far
     };
     int errs = 0;
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
     int tmp = options.search.use_tablebases;
     options.search.use_tablebases = 0;
 #endif
@@ -449,7 +449,7 @@ static int testDrawEval() {
         }
 	delete s;
     }
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS)
+#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
     options.search.use_tablebases = tmp;
 #endif
     return errs;
