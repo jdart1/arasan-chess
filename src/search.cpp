@@ -3021,6 +3021,9 @@ int Search::search()
     if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
         board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
+        if (node->ply > 0) {
+           Refutations::setRefutation((node-1)->last_move,node->best);
+        }
         History::updateHistory(board,node,node->best,
             depth,
             board.sideToMove());
@@ -3401,7 +3404,6 @@ int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node,
 #ifdef MOVE_ORDER_STATS
        parentNode->best_count = parentNode->num_try-1;
 #endif
-       Refutations::setRefutation((parentNode-1)->last_move,move);
        if (score >= parentNode->beta) {
 #ifdef _TRACE
            if (master()) {
