@@ -2,65 +2,53 @@
 
 #include "history.h"
 #include "search.h"
+#include <limits>
 
 struct History::HistoryEntry History::history[16][64];
+
+#define HISTORY_MAX std::numeric_limits<uint32_t>::max()-(Constants::MaxPly*Constants::MaxPly)-1
+
+int History::depthFactor(int depth) {
+   return (depth/DEPTH_INCREMENT)*(depth/DEPTH_INCREMENT);
+}
 
 void History::clearHistory() {
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 64; j++) {
-      history[i][j].order = 0;
-      history[i][j].successCount = history[i][j].failureCount = history[i][j].total = 1;
+       history[i][j].success = history[i][j].failure = (uint32_t)0;
     }
   }
 }
 
 void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best, int depth, ColorType side)
 {
-    // sanity checks
-    ASSERT(!IsNull(best));
-    ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
-    const Piece pieceMoved = MakePiece(PieceMoved(best),side);
-    HistoryEntry &h = history[pieceMoved][DestSquare(best)];
-    for (int i=0; i<parentNode->num_try; i++) {
-        ASSERT(i<Constants::MaxMoves);
-        // safe to access this here because it is after slave thread completion:
-        const Move &m = (const Move &)parentNode->done[i];
-        if (CaptureOrPromotion(m)) continue;
-        if (MovesEqual(m,best)) {
-	    h.successCount++;
-	    h.total++;
-	    if (h.total > Constants::HISTORY_MAX) {
-               for (int i = 0; i < 16; i++) {
-                  for (int j = 0; j < 64; j++) {
-                     history[i][j].successCount /= 2;
-                     history[i][j].failureCount /= 2;
-		     history[i][j].total /= 2;
-                  }
-               }
-	    }
-            h.order += (4*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT);
-            if (h.order > Constants::HISTORY_MAX) {
-               for (int i = 0; i < 16; i++) {
-                  for (int j = 0; j < 64; j++) {
-                     history[i][j].order /= 2;
-                  }
-               }
-            }
-	}
-	else {
- 	   h.failureCount++;
-	   h.total++;
-	   if (h.total > Constants::HISTORY_MAX) {
-              for (int i = 0; i < 16; i++) {
-                 for (int j = 0; j < 64; j++) {
-                    history[i][j].successCount /= 2;
-                    history[i][j].failureCount /= 2;
-	            history[i][j].total /= 2;
-                 }
-              }
-	   }
-       }
-    }
+   // sanity checks
+   ASSERT(!IsNull(best));
+   ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
+   ASSERT(parentNode->num_try);
+   const int bonus = depthFactor(depth);
+   for (int i=0; i<parentNode->num_try; i++) {
+      ASSERT(i<Constants::MaxMoves);
+      // safe to access this here because it is after slave thread
+      // completion:
+      const Move &m = (const Move &)parentNode->done[i];
+      const Piece pieceMoved = MakePiece(PieceMoved(m),side);
+      HistoryEntry &h = history[pieceMoved][DestSquare(m)];
+      if (MovesEqual(best,m)) {
+         h.success += bonus;
+         if (h.success > HISTORY_MAX) {
+            h.success /= 2;
+            h.failure /= 2;
+         }
+      }
+      else {
+         h.failure += bonus;
+         if (h.failure > HISTORY_MAX) {
+            h.success /= 2;
+            h.failure /= 2;
+         }
+      }
+   }
 }
 
 void History::updateHistoryMove(const Board &,
@@ -68,13 +56,10 @@ void History::updateHistoryMove(const Board &,
 {
    const Piece pieceMoved = MakePiece(PieceMoved(best),side);
    HistoryEntry &h = history[pieceMoved][DestSquare(best)];
-   h.order += (4*depth*depth)/(DEPTH_INCREMENT*DEPTH_INCREMENT);
-   if (h.order > Constants::HISTORY_MAX) {
-      for (int i = 0; i < 16; i++) {
-         for (int j = 0; j < 64; j++) {
-            history[i][j].order /= 2;
-         }
-      }
+   h.success += depthFactor(depth);
+   if (h.success > HISTORY_MAX) {
+      h.success /= 2;
+      h.failure /= 2;
    }
 }
 

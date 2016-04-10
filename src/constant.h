@@ -14,7 +14,6 @@ enum {MATE_RANGE = 100000-256 };
 enum {TABLEBASE_WIN = MATE_RANGE-1};
 enum {MaxMoves = 200};		
 enum {MaxCPUs = 64};		
-enum {HISTORY_MAX =32768};
 
 };
 
