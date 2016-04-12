@@ -36,10 +36,20 @@ padding-bottom: 1em;
 }
 
 body ol {
-  margin: 1em 0;
-  padding: 0 0 0 40px;
+  margin-top: 0;
+  margin-bottom: 1em;
+  margin-left: 3em;
+/*  padding: 0 0 0 40px;*/
 }
 
 body ol li {
   list-style-type: decimal;
 }
+
+body ul {
+  margin-top: 0;
+  margin-bottom: 1em;
+  margin-left: 3em;
+/*  padding: 0 0 0 40px;*/
+}
+

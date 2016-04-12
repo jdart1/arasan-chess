@@ -112,7 +112,7 @@ like this:</p>
 <pre>
 nmake -f Makefile.icl popcnt-profiled
 </pre>
-<p>Note: Intel C++ does not support Windows Xp.<a/>
+<br/><p>Note: Intel C++ does not support Windows Xp.<a/>
 <br/>
 <p>The makefiles have a separate "tuning" target that will build utilities
 used for automated parameter tuning (see the Parameter Tuning section
@@ -120,7 +120,8 @@ for details).</p>
 <p>To build the Arasan native Windows GUI, use the Visual C++ solution file
 in the "gui" subdirectory. (The command-line Makefile does not build the
 GUI). You cannot build the GUI with the Express Edition of Visual C++,
-because it lacks the required MFC libraries.
+because it lacks the required MFC libraries. The Community Edition is ok,
+though.
 </p>
 
 <h3>Other build methods</h3>
@@ -206,10 +207,10 @@ collection of high-quality human and computer games. There are over
 
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
-<br/>
 <pre>
 makebook -n 100 -o book.bin basic.pgn big.pgn
 </pre>
+<br/>
 <p>The -n parameter to makebook specifies how many "index pages" are in the
 binary book file. You may have to experiment with this parameter. Too
 small a value will cause an error building the book. Too large a value
@@ -221,9 +222,7 @@ game collection to be included in the book. The default book shipped
 with arasan was built with "-m 4". Other options include:</p>
 <pre>
 -p <number> - sets maximum ply depth for moves extracted from a PGN file
-
 -o <filename> - sets output file name (default book.bin)
-
 -v - show more verbose output.
 </pre>
 <br/>
@@ -310,16 +309,14 @@ scoring.cpp, then you can see detailed output of the scoring components.</p>
 format will do a search on each position in the file and output the
 results to stdout.  Additional switches can be added after the
 filename:</p>
-
+<pre>
 -v - prints more verbose output
-
 -t <seconds> searches for the specified number of seconds per position
-
 -x <count> can terminate the search early if the correct move is found
- and held for "count" plies.
-
+and held for "count" plies.
 -o <file> stores test output in "file".
-
+</pre>
+<br/>
 <p>If the search module is compiled with -D_TRACE, arasanx will print
 out copious information about the search process when it is run (if
 running multi-threaded, only the main thread is traced). See
@@ -460,7 +457,7 @@ a PGN file that contains high-quality games that serve as a reference
 set of "good" moves. The algorithm will adapt the scoring parameters
 so that the program will make moves similar to those in the training
 set.</p>
-<p>There is also some support for using the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
+<p>There is also support for using the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
 on logistic regression. For this method the input file should be a PGN
 of a diverse set of games (not with all high-quality moves).</p>
 <p>The "tuner" program expects a PGN file to be specified on the command
@@ -468,7 +465,7 @@ line. It will output two files: by default the first one is named "x0"
 and contains the tuned parameter values; the second one is a compilable
 version of the parameters named "params.cpp."</p>
 <p>
-The following command-line options are supported:<p>
+The following command-line options are supported:</p>
 <ul>
 <li>-a use the AdaGrad method (see Duchi et. al.) of optimization instead of the "grid-adjacent update" described in the MMTO paper.</li>
 <li>-c &lt;cores&gt; run multithreaded with the specifed number of cores.</li>
@@ -541,7 +538,7 @@ contains a start square, destination square, promotion value, the type
 of piece being moved, the type of piece being captured (if any), and the
 type of move (normal, castling, en passant, etc).</p>
 
-</h3>Attack Generation</h3>
+<h3>Attack Generation</h3>
 
 <p>Earlier versions of Arasan used rotated bitboards for computation of
 attack information. The rotated bitboards allow computing which pieces
@@ -651,7 +648,7 @@ extensions. The search class is the largest single module in the
 program, and is necessarily rather complicated, but I have tried to
 structure it and comment it so that it is understandable. I will
 assume that the reader knows the basics of the alpha-beta algorithm,
-and will concentrate on describing this implementation of it.<p>
+and will concentrate on describing this implementation of it.</p>
 
 <p>In general, the search routine tries to terminate a search tree, or
 some portion of one, as soon as possible, and will defer as much work
@@ -871,8 +868,17 @@ Futility pruning in Arasan is similar to that described by Ernst Heinz
 for the program Dark Thought. It allows some moves to not be searched,
 if it determined that the side to move is behind in material and the
 move to be made is not likely to gain enough material to be worth
-considering. Futility pruning is applied at relatively low search
-depths before the quiescence search and during the quiescence search.</p>
+considering.</p>
+<p>
+Futility pruning is applied at relatively low search
+depths before the quiescence search and during the quiescence search.
+First the program computes an optimistic score for the 
+move and adds a margin that varies based on search depth; the sum is
+then compared against alpha and the move is pruned if the optimistic
+score + margin is still below alpha.</p>
+<p>
+Late move reduction is done before futility pruning and the futility
+margin is based on the reduced depth (if a reduction was done).</p>
 <p>
 Arasan also does "late move pruning." Quiet moves that are in the history
 phase of move generation (after the pv move, winning captures, and
@@ -988,7 +994,7 @@ allocated on a per-thread basis (each thread has its own tables).</p>
 
 <h3>Position Scoring</h3>
 
-<p>There are rougly five main components to the positional score used by Arasan:</p>
+<p>There are roughly five main components to the positional score used by Arasan:</p>
 <ol>
 <li>Pawn structure</li>
 <li>Development</li>
@@ -1236,7 +1242,7 @@ New York: Springer-Verlag.
 </p>
 <p>Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
 </p>
-<p>Hoki, Kunihuto and Kaneko, Tomoyuki "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Articial Intelligence Research 49 (2014) 527-568.</p>
+<p>Hoki, Kunihuto and Kaneko, Tomoyuki "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Artificial Intelligence Research 49 (2014) 527-568.</p>
 <p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.
 </p>
