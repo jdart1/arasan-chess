@@ -88,9 +88,9 @@ static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
 static const int RAZOR_MARGIN_BASE = int(3.0*PAWN_VALUE);
 static const int RAZOR_MARGIN_INCR = int(1.0*PAWN_VALUE);
 
-static const int FUTILITY_MARGIN_BASE = (int)(1.16*PAWN_VALUE);
-static const int FUTILITY_MARGIN_SLOPE = (int)(0.75*PAWN_VALUE);
-static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.25*PAWN_VALUE);
+static const int FUTILITY_MARGIN_BASE = (int)(1.01*PAWN_VALUE);
+static const int FUTILITY_MARGIN_SLOPE = (int)(0.772*PAWN_VALUE);
+static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.299*PAWN_VALUE);
 
 static const int FUTILITY_MARGIN[6] =
 {FUTILITY_MARGIN_BASE,
