@@ -17,6 +17,7 @@ extern "C" {
 #include <byteswap.h>
 #endif
 #ifdef _WIN32
+#define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h>
 #include <malloc.h>
