@@ -2561,17 +2561,12 @@ int Search::search()
     if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
         !(node->flags & (IID|VERIFY|SINGULAR)) &&
         !IsNull((node-1)->last_move) &&
-        //node->eval >= node->beta &&
+        node->staticEval >= node->beta &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
-        // R=3 + some depth-dependent increment + value-based increment:
-        int valueReduction;
-        if (node->eval > node->beta)
-           valueReduction = Util::Min((node->eval - node->beta)/int(1.5*PAWN_VALUE),3)*DEPTH_INCREMENT;
-        else
-           valueReduction = 0;
-        nu_depth = depth - 4*DEPTH_INCREMENT - depth/6 - valueReduction;
+        // R=3 + some depth-dependent increment
+        nu_depth = depth - 4*DEPTH_INCREMENT - depth/6;
 
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
