@@ -1130,7 +1130,9 @@ int depth, Move exclude [], int num_exclude)
     --controller->time_check_counter;
     nodeAccumulator++;
 
+#ifdef _TRACE
     int in_pv = 1;
+#endif
     int in_check = 0;
 
     const bool wide = iteration_depth <= MoveGenerator::EASY_PLIES;
@@ -1242,45 +1244,33 @@ int depth, Move exclude [], int num_exclude)
         if (in_pv) cout << " (pv)";
         cout << endl;
 #endif
-        if (!in_pv && try_score > node->best_score && !((node+1)->flags & EXACT) && !terminate) {
+        while (try_score > node->best_score &&
+               (extend < 0 || hibound < node->beta) &&
+               !((node+1)->flags & EXACT) &&
+               !terminate) {
            // We failed to get a cutoff and must re-search
            // Set flag if we may be getting a new best move:
            fail_high_root++;
 #ifdef _TRACE
-            cout << "window = [" << -hibound << "," << node->best_score
-              << "]" << endl;
-            cout << "score = " << try_score << " - no cutoff, researching .." << endl;
+           cout << "window = [" << -hibound << "," << node->best_score
+                << "]" << endl;
+           cout << "score = " << try_score << " - no cutoff, researching .." << endl;
 #endif
-            if (extend < -DEPTH_INCREMENT) {
-               extend = 0;
-               node->extensions = 0;
-               if (hibound == lobound+1) {
-                  // first try a non-reduced zero-width search
-                  if (depth+extend-DEPTH_INCREMENT > 0)
-                     try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
-                  else
-                     try_score=-quiesce(-hibound,-lobound,1,0);
+           if (extend >= -DEPTH_INCREMENT) {
+              hibound = node->beta;
+           }
+           if (extend < 0) {
+              extend = node->extensions = 0;
+           }
+           if (depth+extend-DEPTH_INCREMENT > 0)
+              try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
+           else
+              try_score=-quiesce(-hibound,-lobound,1,0);
 #ifdef _TRACE
-                  cout << "0. ";
-                  MoveImage(move,cout);
-                  cout << ' ' << try_score;
-                  cout << endl;
-#endif
-               }
-            }
-            if (try_score > node->best_score && !terminate) {
-              extend = 0;
-              node->extensions = 0;
-              if (depth+extend-DEPTH_INCREMENT > 0)
-                try_score=-search(-node->beta,-lobound,1,depth+extend-DEPTH_INCREMENT);
-              else
-                try_score=-quiesce(-node->beta,-lobound,1,0);
-            }
-#ifdef _TRACE
-            cout << "0. ";
-            MoveImage(move,cout);
-            cout << ' ' << try_score;
-            cout << endl;
+           cout << "0. ";
+           MoveImage(move,cout);
+           cout << ' ' << try_score;
+           cout << endl;
 #endif
         }
         board.undoMove(move,save_state);
@@ -1305,7 +1295,9 @@ int depth, Move exclude [], int num_exclude)
             sleep(waitTime);
         }
         hibound = node->best_score + 1;  // zero-width window
+#ifdef _TRACE
         in_pv = 0;
+#endif
         if (srcOpts.ncpus>1 && depth >= threadSplitDepth &&
             maybeSplit(board, node, &mg, 0, depth)) {
             // remaining moves are searched by searchSMP
@@ -2810,8 +2802,8 @@ int Search::search()
 #ifdef _TRACE
         int first = 1;
 #endif
-        int hibound = node->beta;
         while (!node->cutoff && !terminate) {
+            int hibound = node->num_try == 0 ? node->beta : node->best_score +1;
             Move move;
             // we do not bother to lock here, because if we split
             // the node, we don't come back to this part of the loop
@@ -2892,7 +2884,7 @@ int Search::search()
                 board.undoMove(move,state);
                 continue;
             }
-            if (try_score > node->best_score &&
+            while (try_score > node->best_score &&
                (extend < 0 || hibound < node->beta) &&
                 !((node+1)->flags & EXACT) &&
                 !terminate) {
@@ -2902,43 +2894,27 @@ int Search::search()
                   indent(ply); cout << ply << ". ";
                   MoveImage(move,cout);
                   cout << " score = " << try_score << " - no cutoff, researching .." << endl;
-                    indent(ply); cout << "window = [" << node->best_score << "," << node->beta
-                        << "]" << endl;
+                    indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
-               if (extend < -DEPTH_INCREMENT) {
-                 extend = 0;
-                 node->extensions = 0;
-                 // try zero-width but non-reduced search
-                 if (depth+extend-DEPTH_INCREMENT > 0)
-                    try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-                 else
-                    try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
+               if (extend >= -DEPTH_INCREMENT) {
+                  hibound = node->beta;
+               }
+               if (extend < 0) {
+                  extend = node->extensions = 0;
+               }
+               if (depth+extend-DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+               else
+                 try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
 #ifdef _TRACE
-                 if (master()) {
-                    indent(ply);
-                    cout << ply << ". ";
-                    MoveImage(move,cout);
-                    cout << ' ' << try_score << endl;
-                 }
-#endif
+               if (master()) {
+                  indent(ply);
+                  cout << ply << ". ";
+                  MoveImage(move,cout);
+                  cout << ' ' << try_score << endl;
                }
-               if (try_score > node->best_score && !terminate) {
-                  extend = 0;
-                  node->extensions = 0;
-                  if (depth+extend-DEPTH_INCREMENT > 0)
-                     try_score=-search(-node->beta,-node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-                  else
-                     try_score=-quiesce(-node->beta,-node->best_score,ply+1,0);
-#ifdef _TRACE
-                  if (master()) {
-                     indent(ply);
-                     cout << ply << ". ";
-                     MoveImage(move,cout);
-                     cout << ' ' << try_score << endl;
-                  }
 #endif
-               }
             }
             board.undoMove(move,state);
             if (terminate) {
@@ -2968,8 +2944,6 @@ int Search::search()
                 node->cutoff++;
                 break;                            // mating move found
             }
-            // zero-width window for the rest of the moves
-            hibound = node->best_score+1;
             if (canSplit && maybeSplit(board, node, &mg, ply, depth)) {
                 break;
             }
@@ -3281,13 +3255,12 @@ void Search::searchSMP(ThreadInfo *ti)
            board.undoMove(move,state);
            break;
         }
-        // it is possible the parent node's best score has changed, so
-        // compare against that
-        split->lock();
-        if (try_score > parentNode->best_score &&
-            (parentNode->beta > best_score+1 || extend < 0) &&
-            !((node+1)->flags & EXACT) &&
-            !terminate) {
+        int hibound = node->best_score+1;
+        while (try_score > best_score &&
+               (extend < 0 || hibound < node->beta) &&
+               !((node+1)->flags & EXACT) &&
+               !parentNode->cutoff &&
+               !terminate) {
             // We got a new best move but with a zero-width search or with
             // reduction enabled, so we must re-search.
 #ifdef _TRACE
@@ -3299,39 +3272,21 @@ void Search::searchSMP(ThreadInfo *ti)
                 cout << ti->index << ')' << endl;
             }
 #endif
-            split->unlock();
-            bool retry = true;
-            if (extend < -DEPTH_INCREMENT) {
-                node->extensions = 0;
-                extend = 0;
-                if (ply == 0) {
-                   fhr = true;
-                   root()->fail_high_root++;
-                }
-                // first try a zero-width but non-reduced search
-                if (depth+extend-DEPTH_INCREMENT > 0)
-                   try_score=-search(-best_score-1,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-                else
-                   try_score=-quiesce(-best_score-1,-best_score,ply+1,0);
-                // if node is not a PV node we are already at max
-                // width, no need for a 2nd retry
-                retry = node->PV();
+            if (extend >= -DEPTH_INCREMENT) {
+               hibound = node->beta;
             }
-            if (retry && try_score > parentNode->best_score && !terminate) {
-               node->extensions = 0;
-               extend = 0;
-               if (ply == 0) {
-                  fhr = true;
-                  root()->fail_high_root++;
-               }
-               if (depth+extend-DEPTH_INCREMENT > 0)
-                  try_score=-search(-parentNode->beta,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-               else
-                  try_score=-quiesce(-parentNode->beta,-best_score,ply+1,0);
+            if (ply == 0) {
+               fhr = true;
+               root()->fail_high_root++;
             }
+            if (extend < 0) {
+               extend = node->extensions = 0;
+            }
+            if (depth+extend-DEPTH_INCREMENT > 0)
+               try_score=-search(-hibound,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+            else
+               try_score=-quiesce(-hibound,-best_score,ply+1,0);
         }
-        else
-           split->unlock();
         board.undoMove(move,state);
         if (ply == 0 && controller->getIterationDepth()<=MoveGenerator::EASY_PLIES) {
             ((RootMoveGenerator*)mg)->setScore(move,try_score);
@@ -3345,11 +3300,15 @@ void Search::searchSMP(ThreadInfo *ti)
         }
 #endif
         if (!terminate && !parentNode->cutoff) {
+            int parent_best;
             split->lock();
             ASSERT(parentNode->num_try<Constants::MaxMoves);
             parentNode->done[parentNode->num_try++] = move;
+            parent_best = parentNode->best_score;
             split->unlock();
-            if (try_score > parentNode->best_score) {
+            // update our window in case parent best score changed
+            best_score = parent_best;
+            if (try_score > parent_best) {
                 // search produced a new best move or cutoff, update parent node
 #if defined (_THREAD_TRACE) || defined(_TRACE)
               stringstream s;
@@ -3366,7 +3325,7 @@ void Search::searchSMP(ThreadInfo *ti)
                 }
                 else
                    updateMove(board,parentNode,node,move,try_score,ply,depth,split);
-                best_score = parentNode->best_score;
+                best_score = try_score;
                 if (fhr) {
                     fhr = false;
                     root()->fail_high_root = 0;
