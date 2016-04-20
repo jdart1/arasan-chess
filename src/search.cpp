@@ -69,7 +69,7 @@ static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
 {
-   return depth*100/PAWN_VALUE;
+   return (depth*PAWN_VALUE)/(100*DEPTH_INCREMENT);
 }
 
 static int singularExtensionDepth(int depth)
