@@ -1,4 +1,28 @@
-Changes in Arasan 18.3:
+Changes in Arasan 19.0:
+ 1) Adjust scoring for some pawnless endgames.
+ 2) Add Syzygy tablebase support, using Fathom library.
+ 3) Convert codebase to C++ 11. Remove support for older compilers.
+    Use standard types from stdint. Use bswap macros where available
+    for byte re-ordering. Misc other code cleanups and portability
+    fixes.
+ 4) Update killers on lower bound hash hit. But not if in check. Move
+    guard conditions for killer/history update to search.cpp and make
+    them consistent.
+ 5) Change qsearch pruning conditions.
+ 6) Limit threat move extension to low depth as Stockfish did.
+ 7) Fixes to IID. Change IID depth conditions. 
+ 8) Omit all forms of forward pruning (before the move gen/
+    search loop) when any of IID, VERIFY or SINGULAR flags are set.
+ 9) Allow fractional (half-depth) reductions. Limit reductions so they
+    don't hit the q-search. Don't set LMR flag if reduction is 0. Change
+    min LMR search depth to 3 ply.
+ 10) Use only 2 killer moves (not also killers from previous ply as
+    formerly).
+ 11) Do pruning after LMR and using reduced depth (except use non-reduced
+    depth for LMP).
+ 12) Modify how history scores are maintained and used (similar to Texel).
+
+Changes in Arasan 18.3 (Feb. 2016):
  1) Bug fix: properly handle "cores" and "memory" options for Winboard.
  2) Adjust futility margins and allow futility pruning up to depth 5.
  3) Modify pruning condiitions slightly.
