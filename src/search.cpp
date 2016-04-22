@@ -106,6 +106,14 @@ static const int STATIC_NULL_MARGIN_BASE = PAWN_VALUE;
 static const int STATIC_NULL_MARGIN_SLOPE = int(0.3*PAWN_VALUE);
 static const int STATIC_NULL_MARGIN_SLOPE2 = int(0.2*PAWN_VALUE);
 
+static const int STATIC_NULL_MARGIN[5] =
+{STATIC_NULL_MARGIN_BASE,
+ STATIC_NULL_MARGIN_BASE+1*STATIC_NULL_MARGIN_SLOPE+1*1*STATIC_NULL_MARGIN_SLOPE2,
+ STATIC_NULL_MARGIN_BASE+2*STATIC_NULL_MARGIN_SLOPE+2*2*STATIC_NULL_MARGIN_SLOPE2,
+ STATIC_NULL_MARGIN_BASE+3*STATIC_NULL_MARGIN_SLOPE+3*3*STATIC_NULL_MARGIN_SLOPE2,
+ STATIC_NULL_MARGIN_BASE+4*STATIC_NULL_MARGIN_SLOPE+4*4*STATIC_NULL_MARGIN_SLOPE2
+};
+
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
@@ -2510,10 +2518,7 @@ int Search::search()
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
         !(node->flags & (IID|VERIFY|SINGULAR)) &&
         node->beta < Constants::TABLEBASE_WIN) {
-       const int d = depth/DEPTH_INCREMENT;
-       const int margin = STATIC_NULL_MARGIN_BASE +
-          d*STATIC_NULL_MARGIN_SLOPE +
-          d*d*STATIC_NULL_MARGIN_SLOPE2;
+       const int margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
        const int threshold = node->beta+margin;
        ASSERT(node->eval != Scoring::INVALID_SCORE);
        if (node->eval >= threshold) {
