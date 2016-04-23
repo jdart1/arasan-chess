@@ -303,7 +303,7 @@ bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp refut.cpp
+stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -314,7 +314,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp refut.cpp
+stats.cpp threadp.cpp threadc.cpp
 
 MAKEECO_SOURCES = makeeco.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -325,7 +325,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp refut.cpp
+stats.cpp threadp.cpp threadc.cpp
 
 ARASANX_TUNE_SOURCES = arasanx.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -335,7 +335,7 @@ scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp refut.cpp \
+movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
@@ -347,7 +347,7 @@ scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp refut.cpp \
+movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 

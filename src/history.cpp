@@ -4,15 +4,13 @@
 #include "search.h"
 #include <limits>
 
-struct History::HistoryEntry History::history[16][64];
-
 #define HISTORY_MAX std::numeric_limits<uint32_t>::max()-(Constants::MaxPly*Constants::MaxPly)-1
 
 int History::depthFactor(int depth) {
    return (depth/DEPTH_INCREMENT)*(depth/DEPTH_INCREMENT);
 }
 
-void History::clearHistory() {
+void History::clear() {
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 64; j++) {
        history[i][j].success = history[i][j].failure = (uint32_t)0;

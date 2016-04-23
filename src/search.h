@@ -478,8 +478,6 @@ class RootSearch : public Search {
 
   Move ply0_search(Move *exclude, int num_exclude);
 
-  virtual void clearHashTables();
-
   const Board &getInitialBoard() const {
     return initialBoard;
   }

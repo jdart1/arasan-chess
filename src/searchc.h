@@ -1,17 +1,21 @@
-// Copyright 2006-2008 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
 
 #include "constant.h"
 #include "chess.h"
+#include "history.h"
+#include "refut.h"
 
 struct NodeInfo;
 class Board;
 
-class SearchContext {
+class CACHE_ALIGN SearchContext {
  public:
-  SearchContext();
+    SearchContext();
+
+    void clear();
 
     void clearKiller(); 
     void setKiller(const Move & move,unsigned ply);
@@ -20,7 +24,8 @@ class SearchContext {
     Move Killers1[Constants::MaxPly];
     Move Killers2[Constants::MaxPly];
 
+    Refutations refutations;
+    History history;
 };
-
 
 #endif

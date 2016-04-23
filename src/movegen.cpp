@@ -146,7 +146,7 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
           SetPhase(moveList[i].move,HISTORY_PHASE);
           if (initial) {
              moveList[i].score = context ? 
-                History::scoreForOrdering(moveList[i].move,board.sideToMove())
+                context->history.scoreForOrdering(moveList[i].move,board.sideToMove())
                 : 0;
           }
       }
@@ -399,7 +399,11 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          {
             numMoves = generateNonCaptures(moves);
             if (numMoves) {
-               Move ref = Refutations::getRefutation(prevMove);
+               Move ref;
+               if (context)
+                  ref = context->refutations.getRefutation(prevMove);
+               else
+                  ref = NullMove;
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
                   scores[i] = 0;
@@ -414,7 +418,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   }
                   SetPhase(moves[i],HISTORY_PHASE);
                   if (context) {
-                      scores[i] = History::scoreForOrdering(moves[i],board.sideToMove());
+                      scores[i] = context->history.scoreForOrdering(moves[i],board.sideToMove());
                   }
                   if (MovesEqual(ref,moves[i])) {
                      // score refutation much higher

@@ -11,22 +11,22 @@ class Board;
 class History {
 
 public:
-    static void clearHistory();
+    void clear();
 
-    static int scoreForOrdering (Move m, ColorType side) {
+    int scoreForOrdering (Move m, ColorType side) {
       unsigned succ = (unsigned)history[MakePiece(PieceMoved(m),side)][DestSquare(m)].success;
       unsigned fail = (unsigned)history[MakePiece(PieceMoved(m),side)][DestSquare(m)].failure;
       return (int)(succ+fail > 0 ? (64*succ)/(succ+fail) : 0);
     }
 
-    static void updateHistory(const Board &,
+    void updateHistory(const Board &,
        NodeInfo *parentNode, Move best, int depth, ColorType side);
 
-    static void updateHistoryMove(const Board &,
+    void updateHistoryMove(const Board &,
        Move best, int depth, ColorType side);
 
  private:
-    static struct CACHE_ALIGN HistoryEntry {
+    struct CACHE_ALIGN HistoryEntry {
       uint32_t success, failure;
     } history[16][64];
 

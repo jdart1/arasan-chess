@@ -487,11 +487,8 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),terminate(0),
     activeSplitPoints(0),split(NULL),ti(threadInfo) {
     LockInit(splitLock);
+    // Note: context was cleared in its constructor
     setSearchOptions();
-    // Ensure the thread creating this Search instance is the
-    // first to touch the local hash memory (important for NUMA
-    // systems).
-    clearHashTables();
 }
 
 Search::~Search() {
@@ -632,12 +629,14 @@ int Search::drawScore(const Board & board) const {
 
 void RootSearch::init(const Board &board, NodeStack &stack) {
   this->board = initialBoard = board;
+#ifdef SINGULAR_EXTENSION
   for (int i = 0; i < Constants::MaxPly; i++) {
      stack[i].singularMove = NullMove;
   }
-  node = stack;
-  Refutations::clearRefutations();
+#endif
+  // clean the killer table (but not other tables)
   context.clearKiller();
+  node = stack;
   nodeAccumulator = 0;
   // local copy:
   threadSplitDepth = controller->threadSplitDepth;
@@ -1335,8 +1334,8 @@ int depth, Move exclude [], int num_exclude)
     else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
              board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
-        History::updateHistory(board, node, node->best, 0,
-                               board.sideToMove());
+        context.history.updateHistory(board, node, node->best, 0,
+           board.sideToMove());
     }
 #ifdef MOVE_ORDER_STATS
     if (node->num_try && node->best_score > node->alpha) {
@@ -1949,13 +1948,6 @@ int Search::quiesce(int ply,int depth)
    }
 }
 
-void RootSearch::clearHashTables() {
-  Search::clearHashTables();
-  History::clearHistory();
-  context.clearKiller();
-  scoring.clearHashTables();
-}
-
 void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int depth) {
     // don't insert into the hash table if we are terminating - we may
     // not have an accurate score.
@@ -2399,8 +2391,8 @@ int Search::search()
                     if (board.checkStatus() != InCheck) {
                        Move best = hashEntry.bestMove(board);
                        if (!IsNull(best) && !CaptureOrPromotion(best)) {
-                          History::updateHistoryMove(board,best,
-                                                  node->depth, board.sideToMove());
+                          context.history.updateHistoryMove(board,best,
+                             node->depth, board.sideToMove());
                           context.setKiller(best, node->ply);
                        }
                     }
@@ -2996,9 +2988,9 @@ int Search::search()
         board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
         if (node->ply > 0) {
-           Refutations::setRefutation((node-1)->last_move,node->best);
+           context.refutations.setRefutation((node-1)->last_move,node->best);
         }
-        History::updateHistory(board,node,node->best,
+        context.history.updateHistory(board,node,node->best,
             depth,
             board.sideToMove());
     }
@@ -3645,6 +3637,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
 
 void Search::clearHashTables() {
    scoring.clearHashTables();
+   context.clear();
 }
 
 void Search::setSearchOptions() {
