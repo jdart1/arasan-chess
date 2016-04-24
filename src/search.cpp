@@ -3513,12 +3513,14 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
             --remaining;
         }
         // now start the slave threads (if we allocated any)
-    	Lock(splitLock);
-        for (int i = 0; i < splits; i++) {
-            // Start searching in the new thread:
-            slaves[i]->start();
+        if (splits) {
+           Lock(splitLock);
+           for (int i = 0; i < splits; i++) {
+              // Start searching in the new thread:
+              slaves[i]->start();
+           }
+           Unlock(splitLock);
         }
-        Unlock(splitLock);
     }
     if (splits) {
         ASSERT(activeSplitPoints);
