@@ -106,7 +106,7 @@ int trace)
 }
 
 
-int RootMoveGenerator::generateAllMoves()
+int RootMoveGenerator::generateAllMoves(NodeInfo *, SplitPoint *)
 {
    // There's nothing to be done here since we generated moves in the
    // constructor. Just return the number of moves remaining.
@@ -1241,7 +1241,7 @@ int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckC
 }
 
 
-int MoveGenerator::generateAllMoves()
+int MoveGenerator::generateAllMoves(NodeInfo *node, SplitPoint *split)
 {
    // Force the remaining moves to be generated - do it incrementally
    // so we get the correct move ordering and flags:
@@ -1252,12 +1252,12 @@ int MoveGenerator::generateAllMoves()
    int ord;
    if (board.checkStatus() == InCheck) {
       while ((m=nextEvasion(ord)) != NullMove) {
-         moves[count++] = m;
+         split->moves[count++] = m;
       }
    }
    else {
       while ((m=nextMove(ord)) != NullMove) {
-         moves[count++] = m;
+         split->moves[count++] = m;
       }
    }
    // restore order to what it was before movegen. The next
@@ -1265,7 +1265,9 @@ int MoveGenerator::generateAllMoves()
    // order.
    order = temp;
    batch_count = count;
-   batch = moves;
+   // technically this is volatile but we are accessing it here
+   // pre-split:
+   batch = (Move *)split->moves;
    index = 0;
    phase = LAST_PHASE;
    return count;
