@@ -83,7 +83,7 @@ class MoveGenerator
       virtual Move nextMove(SplitPoint *,int &order);
       virtual Move nextEvasion(SplitPoint *, int &order);
 
-      virtual int generateAllMoves(NodeInfo *, SplitPoint *);
+      virtual int generateAllMoves();
 
       // Generate only non-capturing moves.
       int generateNonCaptures(Move *moves);
@@ -213,7 +213,7 @@ class RootMoveGenerator : public MoveGenerator
 
       using MoveGenerator::nextMove;
       using MoveGenerator::nextEvasion;
-      virtual int generateAllMoves(NodeInfo *, SplitPoint *);
+      virtual int generateAllMoves();
 
       void reorder(Move pvMove, int depth, bool initial = false);
 

@@ -23,7 +23,6 @@ struct NodeInfo;
 // Definition of a split point
 struct SplitPoint {
     ArasanSet<ThreadInfo *,Constants::MaxCPUs> slaves;
-    Move moves[Constants::MaxMoves];
     int ply;
     int depth;
     // Thread that is master of the split point

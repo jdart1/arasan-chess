@@ -2073,6 +2073,13 @@ int Search::calcExtensions(const Board &board,
        !passedPawnMove(board,move,6)) {
       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
       if (extend) {
+/*
+         if (depth + extend > 3*DEPTH_INCREMENT) {
+            // reduce moves with bad SEE further
+            if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+            if (!swap) extend -= DEPTH_INCREMENT;
+         }
+*/
          node->extensions |= LMR;
 #ifdef SEARCH_STATS
          ++controller->stats->reduced;
@@ -3448,7 +3455,13 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
 
         ThreadInfo *slave_ti;
         ThreadInfo *slaves[Constants::MaxCPUs];
-        int remaining = 100;
+        // Force all remaining moves to be generated, since the
+        // MoveGenerator class is not thread-safe otherwise (it
+        // maintains a pointer to the board and when accessed by
+        // multiple threads this pointer may not always be at the
+        // current position). Also we want to know how many moves
+        // remain.
+        int remaining = mg->generateAllMoves();
         // Keep trying to get/assign threads until no threads are
         // available or no more moves are available to search.
         while (remaining>1 && (slave_ti = controller->pool->checkOut(this,node,ply,depth))!=NULL) {
@@ -3481,13 +3494,6 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
                ti->reset();
 #endif
                Unlock(splitLock);
-               // Force all remaining moves to be generated, since the
-               // MoveGenerator class is not thread-safe otherwise (it
-               // maintains a pointer to the board and when accessed by
-               // multiple threads this pointer may not always be at the
-               // current position). Also we want to know how many moves
-               // remain.
-               remaining = mg->generateAllMoves(node,split);
             }
             split->lock();
             ASSERT(slave_ti != ti);
@@ -3513,12 +3519,14 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
             --remaining;
         }
         // now start the slave threads (if we allocated any)
-    	Lock(splitLock);
-        for (int i = 0; i < splits; i++) {
-            // Start searching in the new thread:
-            slaves[i]->start();
+        if (splits) {
+            Lock(splitLock);
+            for (int i = 0; i < splits; i++) {
+                // Start searching in the new thread:
+                slaves[i]->start();
+            }
+            Unlock(splitLock);
         }
-        Unlock(splitLock);
     }
     if (splits) {
         ASSERT(activeSplitPoints);
