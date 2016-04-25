@@ -3,7 +3,7 @@
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 18.3
+VERSION = 19.0
 
 # directory defines - objects
 PROFILE = ..\$(TARGET)\profile
@@ -16,7 +16,7 @@ BUILD_ROOT=..
 
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
-NALIMOV_TBS=1
+#NALIMOV_TBS=1
 SYZYGY_TBS=1
 
 # location of the Gaviota tablebase source code

@@ -35,7 +35,7 @@ STB=syzygy
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS = 1
 #NALIMOV_TBS = 1
-#SYZYGY_TBS = 1
+SYZYGY_TBS = 1
 
 CFLAGS=
 ifdef GAVIOTA_TBS
