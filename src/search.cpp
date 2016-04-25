@@ -3439,7 +3439,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
     int splits = 0;
     if (!terminate && mg->more() &&
         activeSplitPoints < SPLIT_STACK_MAX_DEPTH &&
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
         (!srcOpts.use_tablebases ||
         board.getMaterial(White).men() +
         board.getMaterial(Black).men() > EGTBMenCount) &&
