@@ -245,7 +245,7 @@ popcnt-profiled: dirs
 	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile
 
 TB_SOURCES=
-TB_OJBS=
+TB_OBJS=
 TB_LIBS=
 ifdef GAVIOTA_TBS
 # all sources are under $(GTB), we will use vpath (see below) to find them
