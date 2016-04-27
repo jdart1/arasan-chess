@@ -1414,7 +1414,7 @@ int Search::quiesce(int ply,int depth)
    else {
       tt_depth = HashEntry::QSEARCH_NO_CHECK_DEPTH;
    }
-   Move pv = NullMove;
+   Move hashMove = NullMove;
    int hashValue;
    HashEntry::ValueType result = HashEntry::NoHit;
    HashEntry hashEntry;
@@ -1456,15 +1456,15 @@ int Search::quiesce(int ply,int depth)
 #endif
             if (node->inBounds(hashValue)) {
                // parent node will consider this a new best line
-               pv = hashEntry.bestMove(board);
-               if (!IsNull(pv)) {
-                  node->pv[ply] = pv;
+               hashMove = hashEntry.bestMove(board);
+               if (!IsNull(hashMove)) {
+                  node->pv[ply] = hashMove;
                   node->pv_length = 1;
                }
 #ifdef _TRACE
                if (master()) {
                   indent(ply); cout << "best line[ply][ply] = ";
-                  MoveImage(pv,cout);
+                  MoveImage(hashMove,cout);
                   cout << endl;
                }
 #endif
@@ -1503,12 +1503,12 @@ int Search::quiesce(int ply,int depth)
          } // end switch
       }
       // Note: hash move may be usable even if score is not usable
-      pv = hashEntry.bestMove(board);
+      hashMove = hashEntry.bestMove(board);
    }
-   if (tt_depth == HashEntry::QSEARCH_NO_CHECK_DEPTH && !(inCheck || CaptureOrPromotion(pv))) {
+   if (tt_depth == HashEntry::QSEARCH_NO_CHECK_DEPTH && !(inCheck || CaptureOrPromotion(hashMove))) {
       // don't fetch a non-capture/promotion checking move from the
       // hash table if we aren't at a depth where checks are allowed.
-      pv = NullMove;
+      hashMove = NullMove;
    }
    if (inCheck) {
 #ifdef _TRACE
@@ -1523,7 +1523,7 @@ int Search::quiesce(int ply,int depth)
          return -Illegal;
       }
       int try_score;
-      MoveGenerator mg(board, &context, ply, pv, (node-1)->last_move, master());
+      MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, master());
       Move move;
       BoardState state = board.state;
       node->num_try = 0;
@@ -1691,8 +1691,8 @@ int Search::quiesce(int ply,int depth)
       Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
       // Isn't really a loop: but we code this way so can use
       // break to exit the following block.
-      while (!IsNull(pv) && validMove(board,pv)) {
-         if (Capture(pv) == King) {
+      while (!IsNull(hashMove) && validMove(board,hashMove)) {
+         if (Capture(hashMove) == King) {
 #ifdef _TRACE
             if (master()) {
                indent(ply);
@@ -1701,20 +1701,20 @@ int Search::quiesce(int ply,int depth)
 #endif
             return -Illegal;
          }
-         node->last_move = pv;
+         node->last_move = hashMove;
 #ifdef _TRACE
          if (master()) {
             indent(ply);
             cout << "trying " << ply << ". ";
-            MoveImage(pv,cout);
+            MoveImage(hashMove,cout);
             cout << endl;
          }
 #endif
-         if (!node->PV() && !board.wouldCheck(pv) &&
-             !passedPawnPush(board,pv) &&
+         if (!node->PV() && !board.wouldCheck(hashMove) &&
+             !passedPawnPush(board,hashMove) &&
              node->beta > -Constants::TABLEBASE_WIN &&
-             (Capture(pv) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-            const int optScore = Gain(pv) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+             (Capture(hashMove) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
+            const int optScore = Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
             if (optScore < node->alpha) {
 #ifdef _TRACE
                if (master()) {
@@ -1725,24 +1725,25 @@ int Search::quiesce(int ply,int depth)
                break;
             }
          }
-         // don't do see pruning because hash move passed that test already
-
-         board.doMove(pv);
+         // Don't do see pruning for the hash move. The hash move
+         // already passed a SEE test, although possibly with
+         // different bounds. Doing SEE here tests worse.
+         board.doMove(hashMove);
          ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
          try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
-         board.undoMove(pv,state);
+         board.undoMove(hashMove,state);
          if (try_score != Illegal) {
 #ifdef _TRACE
             if (master()) {
                indent(ply);
                cout << ply << ". ";
-               MoveImage(pv,cout);
+               MoveImage(hashMove,cout);
                cout << "(pv) " << try_score << endl;
             }
 #endif
             if (try_score > node->best_score) {
                node->best_score = try_score;
-               node->best = pv;
+               node->best = hashMove;
                if (try_score >= node->beta)
                   goto search_end;
                if (node->best_score >= Constants::MATE-1-ply)
@@ -1760,7 +1761,7 @@ int Search::quiesce(int ply,int depth)
          mg.initialSortCaptures(moves, move_count);
          while (move_index < move_count) {
             Move move = moves[move_index++];
-            if (MovesEqual(move,pv)) continue;  // already did this one
+            if (MovesEqual(move,hashMove)) continue;  // already did this one
             if (Capture(move) == King) {
 #ifdef _TRACE
                if (master()) {
@@ -1862,7 +1863,7 @@ int Search::quiesce(int ply,int depth)
 #endif
             while (move_index < move_count) {
                Move move = moves[move_index++];
-               if (MovesEqual(move,pv)) continue;
+               if (MovesEqual(move,hashMove)) continue;
 #ifdef _TRACE
                if (master()) {
                   indent(ply);
