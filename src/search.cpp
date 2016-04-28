@@ -1710,12 +1710,12 @@ int Search::quiesce(int ply,int depth)
             cout << endl;
          }
 #endif
-         if (!node->PV() && !board.wouldCheck(hashMove) &&
+         if (!board.wouldCheck(hashMove) &&
              !passedPawnPush(board,hashMove) &&
              node->beta > -Constants::TABLEBASE_WIN &&
              (Capture(hashMove) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
             const int optScore = Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
-            if (optScore < node->alpha) {
+            if (optScore < node->best_score) {
 #ifdef _TRACE
                if (master()) {
                   indent(ply); cout << "pruned (futility)" << endl;
@@ -1785,23 +1785,22 @@ int Search::quiesce(int ply,int depth)
                 node->beta > -Constants::TABLEBASE_WIN &&
                 (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
                const int optScore = Gain(move) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
-               if (optScore < node->alpha) {
+               if (optScore < node->best_score) {
 #ifdef _TRACE
                   if (master()) {
                      indent(ply); cout << "pruned (futility)" << endl;
                   }
 #endif
-                  node->best_score = Util::Max(node->best_score,optScore);
                   continue;
                }
             }
             // See pruning
-            if (PieceValue(Capture(move)) - PieceValue(PieceMoved(move)) <= 0 &&
+            int neededGain = node->best_score - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN;
+            if (PieceValue(Capture(move)) - PieceValue(PieceMoved(move)) <= neededGain &&
                 node->beta > -Constants::TABLEBASE_WIN &&
                 !passedPawnPush(board,move) &&
                 !disc.isSet(StartSquare(move)) &&
-                !seeSign(board,move,Util::Max(0,node->alpha - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN))) {
-               // This appears to be a losing capture, or one that can't bring us above alpha
+                !seeSign(board,move,Util::Max(0,neededGain))) {
 #ifdef _TRACE
                if (master()) {
                   indent(ply); cout << "pruned (SEE)" << endl;
