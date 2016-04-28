@@ -4,7 +4,7 @@
 #TARGET = win32
 TARGET = win64
 VERSION = 19.0
-# Set PLATFORM=NT for a Windows NT compatible build
+# Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
 
 #TRACE=/D_TRACE 
@@ -41,7 +41,7 @@ BUILD_TYPE=debug
 BUILD_TYPE=release
 !Endif
 
-!If "$(PLATFORM)"=="NT"
+!If "$(PLATFORM)"=="XP"
 CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
 !Endif
 
@@ -75,7 +75,7 @@ CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /
 POPCNT_FLAGS = -DUSE_POPCNT
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
-!If "$(PLATFORM)" == "NT"
+!If "$(PLATFORM)" == "XP"
 OPT  = /Ox /Gr /Gy /GS- /GL /DNDEBUG
 !Else
 OPT  = /Ox /Gr /Gy /Oi /GS- /GL /DUSE_INTRINSICS /DNDEBUG
@@ -232,7 +232,7 @@ $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 
 # Linker flags
 LDFLAGS  = kernel32.lib user32.lib winmm.lib $(LD_FLAGS) /nologo /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
-!If "$(PLATFORM)" == "NT"
+!If "$(PLATFORM)" == "XP"
 !If "$(TARGET)" == "win64"
 LDFLAGS = $(LDFLAGS) /subsystem:console,5.02
 !Else
