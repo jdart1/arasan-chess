@@ -80,8 +80,8 @@ search.tablebase_type=Syzygy
 # Tablebase cache size.
 # can use: K for kilobytes, M for megabytes, G for gigabytes
 # Note: Syzygy does not have an associated cache size.
-search.gtb_cache_size=8M
-search.nalimov_cache_size=8M
+#search.gtb_cache_size=8M
+#search.nalimov_cache_size=8M
 #
 # Tablebase location. By default, this option is not set and 
 # the tablebases are assumed to be in a directory under the
