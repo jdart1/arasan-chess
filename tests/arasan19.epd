@@ -130,7 +130,7 @@ r7/ppp3kp/2bn4/4qp2/2B1pR2/2P1Q2P/P5P1/5RK1 w - - bm Rxf5; id "arasan19.127"; c0
 r2q2k1/1b1nrpb1/p2p2p1/1pnP3p/P1p1P2R/2P1B1NP/1PB2QPN/5RK1 w - - bm Rxh5; id "arasan19.130"; c0 "Ilyasov-Myakutin, MT/Latash-B (RUS) ICCF 2014";
 5rk1/2p1R2p/r5q1/2pPR2p/5p2/1p5P/P4PbK/2BQ4 w - - bm d6; id "arasan19.131"; c0 "Observer(Houdini 2.0c Pro)-Numerobis(Fritz 13), playchess.com 2011";
 r2q1r2/1b2bpkp/p3p1p1/2ppP1P1/7R/1PN1BQR1/1PP2P1P/4K3 w - - bm Qf6+; id "arasan19.132"; c0 "Asauskas-Malisauskas, Vilnius 2004";
-b3r3/7k/2p3p1/2R4p/p3q1pP/2B3P1/3Q1P2/6K1 w - - bm Rc4; id "arasan19.133"; c0 "Ultrapower(Houdini 2.0b Pro)-Deep Abyss(Deep Rybka 4.1), playchess.com 2011";
+r1r3k1/1ppn2bp/p1q1p1p1/3pP3/3PB1P1/PQ3NP1/3N4/2BK3R w - - bm Ng5; id "arasan19.133"; c0 "Torres-Graudins, LAT-USA ICCF 2015 (analysis after 19. .. e6)";
 1rr1b1k1/1pq1bp2/p2p1np1/4p3/P2BP3/2NB2Q1/1PP3PP/4RR1K w - - bm Rxf6; id "arasan19.134"; c0 "Glek-Lingnau, Dortmund op-A 1992";
 r1r3k1/1q3p1p/4p1pP/1bnpP1P1/pp1Q1P2/1P6/P1PR1N2/1K3B1R b - - bm axb3; id "arasan19.135"; c0 "Great Ozzie(Komodo64 3)-Erdo(Critter 1.2), playchess.com 2011";
 r1b2rk1/pppnq3/4ppp1/6N1/3P3Q/2PB4/P1PK2PP/3R3R w - - bm Nxe6; id "arasan19.136"; c0 "Leisebein-Woelfelschneider, BDG04-01 DVC 2001";
