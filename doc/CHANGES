@@ -2,9 +2,9 @@ Changes in Arasan 19.0:
  1) Adjust scoring for some pawnless endgames.
  2) Add Syzygy tablebase support, using Fathom library.
  3) Convert codebase to C++ 11. Remove support for older compilers.
-    Use standard types from stdint. Use bswap macros where available
-    for byte re-ordering. Misc other code cleanups and portability
-    fixes.
+    Use standard types from stdint. Use platform bswap macros where
+    available for byte re-ordering. Misc other code cleanups and
+    portability fixes.
  4) Update killers on lower bound hash hit. But not if in check. Move
     guard conditions for killer/history update to search.cpp and make
     them consistent.
@@ -21,6 +21,7 @@ Changes in Arasan 19.0:
  11) Do pruning after LMR and using reduced depth (except use non-reduced
     depth for LMP).
  12) Modify how history scores are maintained and used (similar to Texel).
+ 13) Make history & refutation tables local to threads.
 
 Changes in Arasan 18.3 (Feb. 2016):
  1) Bug fix: properly handle "cores" and "memory" options for Winboard.
