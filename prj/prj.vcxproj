@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="ArasanX_Debug|Win32">
       <Configuration>ArasanX_Debug</Configuration>
@@ -42,35 +42,35 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -204,7 +204,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\release\arasanx-64.exe</OutputFile>
-      <Version>18.3</Version>
+      <Version>19.0</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -276,7 +276,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\arasanx-64.exe</OutputFile>
-      <Version>18.3</Version>
+      <Version>19.0</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -412,7 +412,6 @@
     <ClCompile Include="..\src\nalimov.cpp" />
     <ClCompile Include="..\src\notation.cpp" />
     <ClCompile Include="..\src\options.cpp" />
-    <ClCompile Include="..\src\refut.cpp" />
     <ClCompile Include="..\src\scoring.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
