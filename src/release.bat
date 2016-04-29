@@ -4,10 +4,9 @@ pushd ..
 7z u -tzip -orelease %1 src\release.bat
 7z u -tzip -orelease %1 src\syzygy\*.*
 7z u -tzip -orelease %1 gui\*.h gui\*.cpp  gui\gui.rc gui\res\*.*
-7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcproj
+7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj
 7z u -tzip -orelease %1 gui\fonts\*.zip
-7z u -tzip -orelease %1 prj\prj.sln prj\prj-VC2005.sln prj\prj.vcproj prj\prj.vcxproj
-7z u -tzip -orelease %1 prj\gtb.sln prj\gtb.vcproj
+7z u -tzip -orelease %1 prj\prj.sln prj\prj.vcxproj
 7z u -tzip -orelease %1 book\basic.pgn book\eco doc\changes.txt 
 7z u -tzip -orelease %1 doc\programr.html doc\style.css
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd
