@@ -269,23 +269,20 @@ class Bitboard
 #else
       return (int)__popcnt64(data);
 #endif
-#else
+#else // 32-bit
+#ifdef USE_POPCNT
+      // With current MSVC this apparently only works with POPCNT
+      // hardware support
       return __popcnt(lovalue()) + __popcnt(hivalue());
+#else
+      return bitCountOpt();
+#endif
 #endif
 #elif defined(__GNUC__) && defined(_64BIT)
       // only uses POPCNT instruction if -msse4.2
       return __builtin_popcountll(data);
 #else
-      // see http://en.wikipedia.org/wiki/Hamming_weight
-      uint64_t x = data;
-
-      x -= (x >> 1) & m1;
-      x = (x & m2) + ((x >> 2) & m2);
-      x = (x + (x >> 4)) & m4;
-      x += x >>  8;
-      x += x >> 16;
-      x += x >> 32;
-      return (int)(x & 0x7f);
+      return bitCountOpt();
 #endif
     }
     
