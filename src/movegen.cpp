@@ -178,10 +178,16 @@ void RootMoveGenerator::exclude(Move *exclude, int num_exclude)
 
 void RootMoveGenerator::filter(const set<Move> &include) 
 {
-  for (int i = 0; i < batch_count; i++) {
-      ClearUsed(moveList[i].move);
-      if (include.find(moveList[i].move) == include.end()) {
-         SetUsed(moveList[i].move);
+   for (int i = 0; i < batch_count; i++) {
+      Move m = moveList[i].move;
+      // include list has neither flags nor phase set, so
+      // clear these before compare
+      SetPhase(m,(Phase)0);
+      SetFlags(m,(byte)0);
+      if (include.find(m) == include.end()) {
+          // Note: use the Excluded flag, since the Used flag
+          // is reset each iteration
+         SetExcluded(moveList[i].move);
       }
    }
 }
@@ -194,7 +200,6 @@ void RootMoveGenerator::exclude(Move exclude) {
       }
    }
 }
-
 
 void RootMoveGenerator::reorderByScore() {
    index = order = 0;  // reset so we will fetch moves again

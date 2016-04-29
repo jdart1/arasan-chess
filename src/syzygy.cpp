@@ -63,12 +63,12 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
       return 0;
    }
 
-   unsigned wdl = TB_GET_WDL(result);
+   const unsigned wdl = TB_GET_WDL(result);
    ASSERT(wdl<5);
    score = valueMap[wdl];
-   const unsigned moveWdl = TB_GET_WDL(result);
    unsigned res;
    for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
+      const unsigned moveWdl = TB_GET_WDL(res);
       if (moveWdl >= wdl) {
          // move is ok, i.e. preserves WDL value
          unsigned ep = TB_GET_EP(res);

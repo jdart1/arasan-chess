@@ -212,7 +212,7 @@ extern char PieceImage(const PieceType p);
 
 typedef uint64_t Move;
 
-enum MoveFlags {NewMove = 0, Used = 1, Forced = 8,
+enum MoveFlags {NewMove = 0, Used = 1, Excluded = 2, Forced = 8,
   Forced2 = 16};
 
 enum MoveType { Normal, KCastle, QCastle, EnPassant, Promotion };
@@ -294,6 +294,10 @@ FORCEINLINE Move CreateMove(Square start, Square dest, PieceType pieceMoved,
 
 extern Move CreateMove(const Board &board, Square start, Square dest, PieceType promotion );
 
+FORCEINLINE void SetFlags(Move &move,byte flags) {
+  ((union MoveUnion*)&(move))->contents.flags = flags;
+}
+
 FORCEINLINE int IsUsed(Move move) {
   return (int)(((union MoveUnion*)&(move))->contents.flags & Used);
 }
@@ -304,6 +308,18 @@ FORCEINLINE void SetUsed(Move &move) {
 
 FORCEINLINE void ClearUsed(Move &move) {
   ((union MoveUnion*)&(move))->contents.flags &= ~Used;
+}
+
+FORCEINLINE int IsExcluded(Move move) {
+  return (int)(((union MoveUnion*)&(move))->contents.flags & Excluded);
+}
+
+FORCEINLINE void SetExcluded(Move &move) {
+  ((union MoveUnion*)&(move))->contents.flags |= Excluded;
+}
+
+FORCEINLINE void ClearExcluded(Move &move) {
+  ((union MoveUnion*)&(move))->contents.flags &= ~Excluded;
 }
 
 FORCEINLINE int IsForced(Move move) {

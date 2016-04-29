@@ -1199,7 +1199,7 @@ int depth, Move exclude [], int num_exclude)
     while (!node->cutoff && !terminate) {
         Move move;
         if ((move = mg.nextMove(split,move_index))==NullMove) break;
-        if (IsUsed(move)) {
+        if (IsUsed(move) || IsExcluded(move)) {
            continue;     // skip move
         }
         node->last_move = move;
