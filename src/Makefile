@@ -122,8 +122,8 @@ PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
 CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS) 
-OPT     = -O3 -fno-rtti -finline-functions $(SSE) -DNDEBUG
-GTB_OPT := -O3 -finline-functions $(SSE) -DNDEBUG
+OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
+GTB_OPT := -O3 $(SSE) -DNDEBUG
 
 else
 

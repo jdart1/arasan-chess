@@ -1,13 +1,16 @@
 Build & install instructions for Arasan on Linux or Mac:
 
-If you want tablebase support, you must download and install the
-tablebase code (available from http://arasanchess.org/downld.shtml)
-and edit the Makefile to select the type(s) of tablebase support you
-want and to point to the necessary sources.
+Syzygy tablebase support is enabled by default.
+
+If you want Nalimov or Gaviota tablebase support, you must download
+and install the tablebase code (available from
+http://arasanchess.org/downld.shtml) and edit the Makefile to select
+the type(s) of tablebase support you want and to point to the
+necessary sources.
 
 Arasan now requires a modern compiler with C++11 features (although
 not necessarily complete C++11 support). Gcc 4.7 or above is
-recommended for building Arasan.
+recommended for building Arasan (on Mac OS, use clang).
 
 There is a makefile in the src directory. In most cases, just typing
 "make" should automatically select the correct target architecture and
