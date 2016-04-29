@@ -28030,13 +28030,18 @@ $2) 14. fxe4 Rxf1+ 15. Kxf1 Qf8+ $11 {1-0 (15) Sillycon (2310)-Arasan 17.3
 [EventDate "2014.??.??"]
 [TimeControl "300+3"]
 
-1. c4 Nf6 2. Nc3 e6 3. d4 Bb4 4. Nf3 b6 5. e3 Bb7 6. Bd3 c5 7. O-O O-O 8. Na4
-cxd4 (8... Qe7 9. a3 Ba5 10. dxc5 bxc5 11. Nxc5 Qxc5 12. b4 Bxf3 13. Qxf3 Qe5
-14. bxa5 Qxa1 15. Qxa8 Qc3 (15... Nc6 $3 16. Qb7 $1 $11) 16. Rd1 Nc6 17. Qb7
-Qxa5 18. Qb5 (18. Qb1 $1) 18... Qc7 {1/2-1/2 (65) Crafty-25.0 JA-Arasan 18.3 -
-2016}) 9. a3 (9. exd4 Re8 $1) 9... Be7 10. exd4 d6 11. b4 Nbd7 12. Re1 Re8 13.
-Bb2 Bf8 14. Qd2 $2 (14. Nc3 g6 15. Bf1 (15. Bc2 $5) 15... Bg7 {1/2-1/2 (32)
-Malaniuk,V (2543)-Kovalyov,A (2599) Montreal 2010}) 14... Bxf3 15. gxf3 Nh5 0-1
+1. c4 Nf6 2. Nc3 e6 3. d4 Bb4 4. Nf3 b6 5. e3 Bb7 (5... Ne4 6. Qc2 Bb7 7. Bd3
+f5 (7... Bxc3+ 8. bxc3 f5 9. O-O O-O) 8. O-O Bxc3 9. bxc3 O-O 10. Nd2 Qh4 11.
+f3 Ng5 $2 (11... Nxd2 $3 12. Bxd2 Nc6 $1 13. Rab1 d6 14. e4 (14. Be1) 14... f4
+$11 {1-0 (39) Lafuente,P (2561)-Harikrishna,P (2667) Caleta 2011}) 12. f4 $3
+Nf7 13. Ba3 d6 14. e4 $16 {1-0 (25) Tari,A (2556)-Almasi,Z (2684) Caleta ENG
+2016}) 6. Bd3 c5 7. O-O O-O 8. Na4 cxd4 (8... Qe7 9. a3 Ba5 10. dxc5 bxc5 11.
+Nxc5 Qxc5 12. b4 Bxf3 13. Qxf3 Qe5 14. bxa5 Qxa1 15. Qxa8 Qc3 (15... Nc6 $3 16.
+Qb7 $1 $11) 16. Rd1 Nc6 17. Qb7 Qxa5 18. Qb5 (18. Qb1 $1) 18... Qc7 {1/2-1/2 
+(65) Crafty-25.0 JA-Arasan 18.3 - 2016}) 9. a3 (9. exd4 Re8 $1) 9... Be7 10.
+exd4 d6 11. b4 Nbd7 12. Re1 Re8 13. Bb2 Bf8 14. Qd2 $2 (14. Nc3 g6 15. Bf1 (15.
+Bc2 $5) 15... Bg7 {1/2-1/2 (32) Malaniuk,V (2543)-Kovalyov,A (2599) Montreal
+2010}) 14... Bxf3 15. gxf3 Nh5 0-1
 
 [Event "-"]
 [Site "-"]
