@@ -7,7 +7,8 @@ pushd ..
 7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj
 7z u -tzip -orelease %1 gui\fonts\*.zip
 7z u -tzip -orelease %1 prj\prj.sln prj\prj.vcxproj
-7z u -tzip -orelease %1 book\basic.pgn book\eco doc\changes.txt 
+7z u -tzip -orelease %1 book\basic.pgn book\eco doc\changes.txt
+7z u -tzip -orelease %1 doc\readme.txt
 7z u -tzip -orelease %1 doc\programr.html doc\style.css
 7z u -tzip -orelease %1 doc\*license*.txt
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd
