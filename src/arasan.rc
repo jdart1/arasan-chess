@@ -89,5 +89,5 @@ search.tablebase_type=Syzygy
 # Nalimov, "syzygy" for Syzygy).
 #search.gtb_path=c:\chess\gtb
 #search.nalimov_path=c:\chess\tb
-search.syzygy_path=/home/jdart/chess/syzygy
+#search.syzygy_path=/home/jdart/chess/syzygy
 #
