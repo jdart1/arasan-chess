@@ -1,3 +1,7 @@
+Changes in Arasan 19.0.1:
+ 1) Fix tablebase options in UCI mode. Comment out default path from
+ arasan.rc.
+
 Changes in Arasan 19.0:
  1) Adjust scoring for some pawnless endgames.
  2) Add Syzygy tablebase support, using Fathom library.
