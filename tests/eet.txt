@@ -1,0 +1,131 @@
+
+I ran these through Arasan at 1 hr/move, 3 best moves per position. I got a crash
+analyzing position 42 so I have only done part of the testsuite so far. Arasan
+had 5-man tablebases accessible.
+
+Generally this is a good test but on quite a few positions I got additional or
+different best moves or no clear best move.
+
+Disclaimer: Arasan doesn't have a lot of endgame knowledge so it may just be missing
+things in some cases. But generally I now don't trust test suites unless I've
+verified them at long time controls.
+
+Some notes on specific tests (note: scores are from perspective of side to move):
+
+E_E_T 001 - Ke6 is variant solution it seems.
+
+E_T_T 007 - There are at least 2 other moves that are practically as good as Kd3:
+
+"E_E_T 007 - B vs L" bm Kd3
+result:	Kd3	3600 seconds.	score: +0.06	2083760049 nodes.	++ correct
+Kd3 Bd8 Kd4 Kg4 Ke5 g6 d6 Ba5 f5 Kxg5 f6 Kh6 Ke6 Bd8 Kf7 g5 Ke8 Bxf6 d8=Q Bxd8 Kxd8 g4 Kc7 g3 d7 g2 d8=Q g1=Q Kd6 
+result(2):	Kf3	3600 seconds.	score: +0.00	2250081056 nodes.	** error
+Kf3 Kh4 Ke3 Kh5 Ke4 Kg6 d6 Bd8 Ke5 Kf7 Kf5 g6+ Ke5 Kg7 Kd5 Kf7 Kc5 Ke6 Kc6 Ba5 Kb5 Kxd7 Kxa5 Kxd6 
+result(3):	Ke3	3600 seconds.	score: +0.00	2242798524 nodes.	** error
+Ke3 Kg3 Ke4 Kg4 Ke5 g6 Ke6 Bd8 f5 Kxg5 f6 Kh6 Kf7 g5 Ke8 Bxf6 d6 g4 d8=Q Bxd8 
+
+probably this test (E_E_T 007) should be dropped from the testsuite.
+
+E_E_T 010: bm given is Ne1 but this is not in Arasan's first 3 choices.
+result:	Nb3+	3600 seconds.	score: -0.25	2408102076 nodes.	** error
+Nb3+ Ke5 Nc5 Kd5 Nb7 g3 h3 Ke5 Kd8 g4 g5 d7 Ke7 Kf5 Nc5 Kxg5 Nxe6+ Kh4 Kxd7 Kxh3 Nd4 Kg3 
+result(2):	g5	3600 seconds.	score: -0.56	2368091955 nodes.	** error
+g5 Kd5
+result(3):	Kd8	3600 seconds.	score: -0.25	2375767279 nodes.	** error
+Kd8 Kd5 Nb3 g3 h3 g4 Na5 Kd4 Nb7 Ke5 g5 d7 Ke7 Kf5 Nc5 Kxg5 Nxe6+ Kh4 Kxd7 Kxh3 Nd4 
+
+this is another candidate for dropping IMO.
+
+E_E_T 011: solution is "avoid Qc1+" but in fact d4+ seems to be the singular best move:
+"E_E_T 011 - D vs D" am Qc1+
+result:	d4+	3600 seconds.	score: +1.63	2325568823 nodes.	++ correct
+d4+ Qxd4 Qf3+ Kb4 Kh7 Qh4+ Kg7 Qd4+ f6 Qd7+ Kh6 Qxe6 f5 Qd7 Qa8 a7 g5 
+result(2):	Qc1+	3600 seconds.	score: -0.28	2285539538 nodes.	** error
+Qc1+ Kb4 Qb2+ Ka5 Kh7 Qc7 Qa3+ Kb6 Qb3+ Ka5 Qa2+ Kb6 e5 a7 Qb3+ Ka6 Qa4+ Kb7 Qb5+ Qb6 Qd7+ Qc7 Qb5+ 
+result(3):	Qe4	3600 seconds.	score: -0.13	2228588272 nodes.	++ correct
+Qe4 a7 d4+ Qxd4 Qc6+ Kb4 Qa8 Ka5 e5 Qc5 Kh7 Kb6 Qe4 Qc6 Qb4+ Qb5 Qd6+ Qc6 Qb4+ 
+
+E_E_T 013: Qa1+ gets the highest score but at least 2 other moves are close:
+
+result:	Qf6+	3600 seconds.	score: +0.20	2447280087 nodes.	** error
+Qf6+ Ng7 gxh5 Qa3+ Kg2 Qa2+ Kg1 Qb1+ Qf1 Qb6+ Qf2 Qb1+ Qf1 
+result(2):	gxf5	3600 seconds.	score: +0.16	2575267467 nodes.	** error
+gxf5 Qxf7 Qa1+ Kg8 Qa8+ Kg7 Qa1+ Qf6 Qa7+ Kh6 Qe3+ Qg5 Qb6+ Kg7 Qd4+ Qf6 Qa7+ 
+result(3):	Qa1+	3600 seconds.	score: +0.36	2396011594 nodes.	++ correct
+Qa1+ Ng7 Qf6 hxg4+ Kxg4 h5+ Kg5 Qc5+ Kh6 Qe3+ Kg6 Qg1+ Kh6 Qe3+ 
+
+E_E_T 014: Arasan thinks fxg6+ is quite a bit better than the supplied solution Ba4:
+result:	fxg6+	3600 seconds.	score: +2.06	2169919010 nodes.	** error
+fxg6+ Qxg6 Bc2 Rxf4+ Qxf4 Qxc2 Qf7+ Kxh6 Qxe7 Qf5+ Ke2 b5 Ke3 Qe5+ Kf3 Qf5+ Kg3 Qe5+ Kf2 Qf4+ Ke1 Qe4+ Kd1 Qd4+ Kc1 Qc3+ Kb1 Qb3+ Kc1 Qc3+ 
+result(2):	Ba4	3600 seconds.	score: +1.44	2180845604 nodes.	++ correct
+Ba4 b5 fxg6+ Qxg6 Bc2 Rxf4+ Qxf4 Qxc2 Qf7+ Kxh6 Qxe7 Qf5+ Ke2 Qe4+ Kd2 Kg6 Qc5 Kf6 e7 Qxe7 Qxb5 Qe6 Qf1+ Ke7 Qb1 Kd6 
+result(3):	Bc2	3600 seconds.	score: +0.25	2168355317 nodes.	** error
+
+E_E_T 016: Arasan thinks White is bad in any case but the supplied solution f4+ is worse than
+alternatives:
+result:	Nc7	3600 seconds.	score: -2.05	2379200377 nodes.	** error
+Nc7 Rxd6+ Kxd6 c2 Ne6+ Kf6 Nd2 c1=Q Ne4+ Kf7 Ke5 Qf1 Nf4 Qa1 Nd6+ Kg8 Ke6 Qg1 Ne4 Qh2 Ke5 Kf7 Nd6+ Kf8 f3 h5 
+result(2):	Nh2	3600 seconds.	score: -2.67	2357857986 nodes.	** error
+Nh2 Rxd6+ Kxd6 c2 Nf3+ Kf6 Nb6 c1=Q Nd5+ Kg7 Ke5 Qh1 Nxh4 Qe1 Nf5+ Kh8 Kxd4 Qd2+ Ke4 Qc2+ Kf4 Qxe2 f3 Qh2+ Ke4 Qxh3 f4 
+result(3):	f4+	3600 seconds.	score: -4.39	2310463423 nodes.	++ correct
+f4+ Kh5 Nc7 Rxd6+ Kxd6 c2 Nh2 c1=Q Nd5 d3 exd3 Qa3+ Ke5 Qxd3 Ng4 Qxh3 Ndf6+ Kg6 f5+ Kg7 Ke6 Qa3 Ne8+ Kf8 Nd6 Qa2+ Kf6 h5 
+
+E_E_T 017: Qa3 was given as the best move but at least two other moves are close in score:
+result:	Bc4+	3600 seconds.	score: +1.02	1679523591 nodes.	** error
+Bc4+ Kf8 Qa7 Bf6 Qb8+ Kg7 b3 Kh6 Qd8 Qc5 Re1 Qc8 Qb6 e6 Qe3+ Kg7 Be2 Qc6 Bf3 
+result(2):	Qa3	3600 seconds.	score: +1.19	1695516771 nodes.	++ correct
+Qa3 Qxa3 bxa3 Be4 Rc7 e6 Bf3 Bxf3 gxf3 b5 Ra7 Bf8 Rxa6 Kf7 Ra5 Kf6 Rxb5 Bxa3 Rb7 
+result(3):	Qc3	3600 seconds.	score: +0.83	1658931014 nodes.	** error
+Qc3 Qb6 b3 Kf7 Bc4+ Ke8 Qf3 e4 Qf4 
+
+E_E_T 020: this is an avoid move position but it looks like Kf6 is the singular best move:
+
+"E_E_T 020 - L vs B" am g3
+result:	Kf6	3600 seconds.	score: +1.81	2194512593 nodes.	++ correct
+Kf6 Bf2 Kg5 Bc5 f3 Kxb7 h5 Be3+ Kh4 Kxa6 Kh3 Kb6 Kxh2 a5 g3 a6 f2 a7 f1=Q a8=Q g2 Qb8+ Kh1 Qd8 Qb1+ 
+result(2):	h5	3600 seconds.	score: -0.50	2198774995 nodes.	++ correct
+h5 Be7
+result(3):	a5	3600 seconds.	score: -0.69	2223759730 nodes.	++ correct
+a5 Bd6 f3 Bg3 Kg6 Kc5 Kf6 Kd4 Ke6 Ke4 h5 Kf4 
+
+E_E_T 022: no clear best move here
+result:	f3	3600 seconds.	score: -0.69	2234684876 nodes.	** error
+f3 Bb5 Ke6 Kd4 Kf5 a4 Kg4 a5 Bf5 a6 Bc8 Ke3 Kg3 a7 Bb7 b4 f2 Bf1 d4+ Kxd4 Kxh4 b5 Kg4 Ke3 Kg3 b6 
+result(2):	Ke6	3600 seconds.	score: -0.69	2218663242 nodes.	** error
+Ke6 Kd4 f3 Bb5 Kf5 a4 Kg4 a5 Bf5 a6 Bc8 Ke3 Kg3 a7 Bb7 b4 f2 Bf1 d4+ Kxd4 Kxh4 b5 Kg4 Ke3 Kg3 b6 
+result(3):	Bg2	3600 seconds.	score: -0.88	2222512134 nodes.	++ correct
+Bg2 Bc6 f3 Bxd5 Bh1 Bc4 Bg2 a4 f2 b4 f1=Q Bxf1 Bxf1 b5 Bg2 a5 Bf1 a6 Ke6 a7 Bg2 Kd4 Kd7 b6 Kc8 
+
+E_E_T 024: b4 was bm but bxa4 is ok too it seems:
+result:	bxa4	3600 seconds.	score: +1.50	2319145397 nodes.	** error
+bxa4 d5 a5 d4 Kf2 d3 Bg6 d2 Bh5 Bxf5 a6 Bg6 Bd1 Be4 Ke3 f5 Kxd2 f4 a4 Kb1 a7 Ba8 Bc2+ Kb2 Bf5 f3 Ke3 
+result(2):	b4	3600 seconds.	score: +1.44	2334322596 nodes.	++ correct
+b4 Bg4 Kf2 d5 b5 d4 b6 d3 Ke3 d2 Bg8+ Kxa3 Kxd2 Bf3 Kc3 Bb7 Be6 Bf3 Kd4 Bb7 Bd5 Ba6 Kc3 Bc8 b7 Bxb7 Bxb7 Ka2 
+result(3):	Kh2	3600 seconds.	score:-11.16	2354254256 nodes.	** error
+Kh2 axb3 Kxh3 b2 a4 b1=Q Bg6 Qb3+ Kh4 Qxa4+ Kh5 Qf4 Bf7+ Ka3 Kg6 Qg5+ Kh7 Qxf5+ Bg6 Qh3+ Kg7 f5 Kf6 f4 Bf5 Qc3+ Kg6 d6 Kf7 d5 Be6 d4 
+
+E_E_T 028: b4 was given as bm but isn't much better than alternatives:
+result:	Kb2	3600 seconds.	score: +0.38	2045673714 nodes.	** error
+Kb2 b6 Ka3 Kf8 b4 Bd7 Ba6 axb4+ Kxb4 Ke8 Kb3 Bc6 Bd3 Kd7 Kb4 Ke8 a5 bxa5+ Kxa5 Kd8 Bc2 Bd7 Kb6 Be8 Bd3 Ba4 Kc5 Kd7 Kb4 Bc6 Ka5 
+result(2):	Kb1	3600 seconds.	score: +0.38	2037472273 nodes.	** error
+Kb1 b6 Ka2 Kf8 Ka3 Bc6 b4 axb4+ Kxb4 Ke8 Bb1 Kd7 Ka3 Ke8 Bd3 Kd7 Be2 Kc7 Kb4 Kd7 Bd1 Kc7 Bf3 Bb7 Be2 Bc6 Bd3 Kd7 a5 bxa5+ 
+result(3):	b4	3600 seconds.	score: +0.44	2044352664 nodes.	++ correct
+b4 axb4 Bc2 b3 Bxb3 b6 Kb2 Bc6 Bd1 Bb7 Be2 Bc6 Ka3 Kf8 Kb4 Ke8 Bd1 Kd7 a5 bxa5+ Kxa5 Kc7 
+
+E_E_T 032: Arasan thinks White is not good in any variation but likes Ne6 best
+(instead of Bh5+):
+result:	Ne6	3600 seconds.	score: -3.56	1964454282 nodes.	** error
+Ne6 Bc6+ Kg1 Be8 Bd4 Bxf7 Bxe3 Bxe6 Bxa7 Bd7 Kg2 Bd6 Bd4 Kd1 Bc3 Bxa3 Kf3 Be6 Bf6 
+result(2):	Nb3	3600 seconds.	score: -4.41	1915418874 nodes.	** error
+Nb3 Bc6+ Kg1 Kd3 Bg6+ Be4 Be8 a6 Bd7 Bxa3 Bc8 Rg3+ Kh2 Rg6 Be5 Rb6 Na5 Bb4 Nb3 a5 Nd4 
+result(3):	Bh5+	3600 seconds.	score: -4.48	1928800868 nodes.	++ correct
+Bh5+ Kd2 Bg5 Bxc5 Kf2 Ba4 Bg6 Bc6 Bh6 a5 Bf5 a4 Bg6 Bb6 Bf7 Ba7 Bc4 Be4 Bxe3+ 
+
+E_E_T 035: Arasan finds multiple moves with similar scores:
+result:	Kg5	3600 seconds.	score: -0.50	2030139480 nodes.	** error
+Kg5 Bd1 Nc1 Kc6 Na2 Be2 Nc3 Bc4 Ne4 Bd3 Nf6 Kb7 Kxh5 Kxa7 Nd7 b6 Nxb6 Kxb6 Kg4 Kc5 Kf4 Be2 Ke4 
+result(2):	Kg7	3600 seconds.	score: -0.44	2067061813 nodes.	** error
+Kg7 Bc4 Na5 Ba2 Kh6 Kc5 Nb7+ Kc6 Na5+ Kc7 Kxh5 b6 a6 b7 Nxb7 Kxb7 a5 Bb3 Kh4 Kb6 Kh3 Kxa5 Bh2 Ne3 Bf4 
+result(3):	Na5	3600 seconds.	score: -0.50	2039002385 nodes.	++ correct
+Na5 Kd6 Nb3 Bc4 Nd4 Kc7 Kxh5 Kb7 Kg4 Kxa7 Kh3 b6 Nc6+ Ka8 Bh2 b7 Bf4 Bd5 Nd4 Be4 Kh4 Bg6 Kh3 
+
