@@ -2438,7 +2438,7 @@ static bool do_command(const string &cmd, Board &board) {
         cout << "option name Use tablebases type check default ";
         if (options.search.use_tablebases) cout << "true"; else cout << "false";
         cout << endl;
-        cout << "option name Tablebases type combo";
+        cout << "option name Tablebases type combo var None";
 #ifdef SYZYGY_TBS
         cout << " var " << Options::SYZYGY_TYPE;
 #endif
@@ -2465,7 +2465,7 @@ static bool do_command(const string &cmd, Board &board) {
             " min 1 max 32" << endl;
 #endif
 #ifdef SYZYGY_TBS
-        cout << "option name SyzygyPath type string default " <<
+        cout << "option name SyzygyTbPath type string default " <<
             options.search.syzygy_path << endl;
         cout << "option name SyzygyUse50MoveRule type check default true" << endl;
         cout << "option name SyzygyProbeDepth type spin default " <<
@@ -2529,8 +2529,13 @@ static bool do_command(const string &cmd, Board &board) {
         else if (name == "Use tablebases") {
             options.search.use_tablebases = (value == "true");
         }
-        else if (name == "Tablebase type") {
+        else if (name == "Tablebases") {
+            Options::TbType previous = options.search.tablebase_type;
             options.search.tablebase_type = Options::stringToTbType(value);
+            if (previous != options.search.tablebase_type) {
+                // Type has changed
+                unloadTb(previous);
+            }
         }
 #endif
 #ifdef NALIMOV_TBS
