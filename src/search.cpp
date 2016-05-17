@@ -726,7 +726,9 @@ Move *excludes, int num_excludes)
    }
    waitTime = 0;
    // Reduce strength but not in analysis mode:
-   if (srcOpts.strength < 100 && controller->time_target != INFINITE_TIME) {
+   if (srcOpts.strength < 100 && (controller->typeOfSearch ==
+                                  FixedDepth ||
+                                  controller->time_target != INFINITE_TIME)) {
        int mgCount = mg.moveCount();
        if (mgCount) {
            const double factor = 1.0/controller->ply_limit + (100-srcOpts.strength)/250.0;
@@ -742,17 +744,15 @@ Move *excludes, int num_excludes)
                static const int limits[25] = {1,1,1,1,1,1,1,1,
                                               2,2,2,2,3,3,4,6,8,9,10,
                                               11,12,13,14,16};
-               controller->ply_limit = Util::Min(limits[srcOpts.strength/4],
-                                                 controller->ply_limit);
-               if (talkLevel == Trace) {
-                   cout << "# setting ply limit to " << controller->ply_limit << endl;
-               }
+               int ply_limit = limits[srcOpts.strength/4];
                if (board.getMaterial(White).materialLevel() +
                    board.getMaterial(Black).materialLevel() < 16 &&
                    srcOpts.strength > 10) {
                    // increase ply limit in endgames
-                   controller->ply_limit += Util::Min(2,1+controller->ply_limit/8);
+                   ply_limit += Util::Min(2,1+ply_limit/8);
                }
+               controller->ply_limit = Util::Min(ply_limit,
+                                                 controller->ply_limit);
                if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;
                }
