@@ -1,4 +1,4 @@
-// Copyright 2014-2015 by Jon Dart. All Rights Reserved.
+// Copyright 2014-2016 by Jon Dart. All Rights Reserved.
 #include "tune.h"
 #include "chess.h"
 #include "attacks.h"
@@ -119,6 +119,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::KING_ATTACK_BOOST_THRESHOLD,"king_attack_boost_threshold",-787,-960,300),
         Tune::TuneParam(Tune::KING_ATTACK_BOOST_DIVISOR,"king_attack_boost_divisor",850,500,1500),
         Tune::TuneParam(Tune::KING_ATTACK_BOOST_MAX,"king_attack_boost_max",128,64,140),
+        Tune::TuneParam(Tune::PAWN_THREAT,"pawn_threat",-250,-500,0,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
         Tune::TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",447,100,600,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::BISHOP_PAIR_END,"bishop_pair_end",577,125,750,Tune::TuneParam::Endgame,1),
@@ -257,7 +258,7 @@ Tune::Tune()
    static const int BISHOP_MOBILITY_INIT[15] = {-200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90};
    static const int ROOK_MOBILITY_INIT[2][15] = {{-220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240}, {-300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320}};
    static const int QUEEN_MOBILITY_INIT[2][29] = {{-100, -50, -10, -10, 40, 70, 90, 110, 130, 140, 160, 170, 190, 200, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210}, {-120, -60, -10, 10, 50, 80, 110, 130, 160, 170, 200, 210, 230, 250, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260}};
-   static const int KING_MOBILITY_ENDGAME_INIT[9] = {-200, -120, -60, 0, 10, 20, 30, 30, 30};
+   static const int KING_MOBILITY_ENDGAME_INIT[5] = {-200, -120, -60, 0, 10};
 
 static const int KNIGHT_PST_INIT[2][64] = 
 {
@@ -499,7 +500,7 @@ static const int QUEEN_PST_INIT[2][64] =
       }
    }
    ASSERT(i==KING_MOBILITY_ENDGAME);
-   for (int m = 0; m < 9; m++) {
+   for (int m = 0; m < 5; m++) {
       stringstream name;
       name << "king_mobility_endgame" << m;
       tune_params.push_back(TuneParam(i++,name.str(),KING_MOBILITY_ENDGAME_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Endgame,1));
@@ -763,7 +764,7 @@ void Tune::applyParams() const
       Scoring::Params::QUEEN_MOBILITY[0][i] = PARAM(QUEEN_MOBILITY_MIDGAME+i);
       Scoring::Params::QUEEN_MOBILITY[1][i] = PARAM(QUEEN_MOBILITY_ENDGAME+i);
    }
-   for (int i = 0; i < 9; i++) {
+   for (int i = 0; i < 5; i++) {
       Scoring::Params::KING_MOBILITY_ENDGAME[i] = PARAM(KING_MOBILITY_ENDGAME+i);
    }
 

@@ -37,6 +37,7 @@ int Scoring::Params::KING_ATTACK_PARAM3 = 500;
 int Scoring::Params::KING_ATTACK_BOOST_THRESHOLD = -524;
 int Scoring::Params::KING_ATTACK_BOOST_DIVISOR = 500;
 int Scoring::Params::KING_ATTACK_BOOST_MAX = 128;
+int Scoring::Params::PAWN_THREAT = -250;
 int Scoring::Params::BISHOP_TRAPPED = -1470;
 int Scoring::Params::BISHOP_PAIR_MID = 420;
 int Scoring::Params::BISHOP_PAIR_END = 550;
@@ -96,5 +97,5 @@ int Scoring::Params::KNIGHT_MOBILITY[9];
 int Scoring::Params::BISHOP_MOBILITY[15];
 int Scoring::Params::ROOK_MOBILITY[2][15];
 int Scoring::Params::QUEEN_MOBILITY[2][29];
-int Scoring::Params::KING_MOBILITY_ENDGAME[9];
+int Scoring::Params::KING_MOBILITY_ENDGAME[5];
 

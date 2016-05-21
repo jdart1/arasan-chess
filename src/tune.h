@@ -1,4 +1,4 @@
-// Copyright 2015 by Jon Dart. All Rights Reserved.
+// Copyright 2016 by Jon Dart. All Rights Reserved.
 
 #ifndef _TUNE_H
 #define _TUNE_H
@@ -90,6 +90,7 @@ class Tune {
     KING_ATTACK_BOOST_THRESHOLD,
     KING_ATTACK_BOOST_DIVISOR,
     KING_ATTACK_BOOST_MAX,
+    PAWN_THREAT,
     BISHOP_TRAPPED,
     BISHOP_PAIR_MID,
     BISHOP_PAIR_END,
@@ -221,7 +222,7 @@ class Tune {
     QUEEN_MOBILITY_MIDGAME = ROOK_MOBILITY_ENDGAME+15,
     QUEEN_MOBILITY_ENDGAME = QUEEN_MOBILITY_MIDGAME+29,
     KING_MOBILITY_ENDGAME = QUEEN_MOBILITY_ENDGAME+29,
-    KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+9,
+    KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+5,
     BISHOP_OUTPOST = KNIGHT_OUTPOST+48,
     TRADE_DOWN = BISHOP_OUTPOST+48
   };
@@ -257,7 +258,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 162;
+  static const int NUM_MISC_PARAMS = 163;
 
   double scale(double value,int index,int materialLevel) const;
 

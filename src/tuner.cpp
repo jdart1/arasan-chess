@@ -1018,7 +1018,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
-   grads[Tune::KING_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+mobl,mLevel);
+   grads[Tune::KING_MOBILITY_ENDGAME+Util::Min(4,mobl)] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+Util::Min(4,mobl),mLevel);
    const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
    int pawns = board.pawn_bits[side].bitCount();
    for (int i = 0; i < pawns; i++) {
@@ -1156,6 +1156,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::WEAK_ON_OPEN_FILE_END] +=
             tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_END,mLevel);
    }
+   grads[Tune::PAWN_THREAT] += 
+      tune_params.scale(inc*Bitboard(board.allPawnAttacks(oside) & (board.occupied[side] & ~board.pawn_bits[side])).bitCount(),Tune::PAWN_THREAT,mLevel);
 }
 
 void validateGradient(Scoring &s, const Board &board, ColorType side, double eval) {

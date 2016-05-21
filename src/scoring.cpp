@@ -1078,7 +1078,7 @@ void Scoring::pieceScore(const Board &board,
    if (early_endgame) {
       int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
                   ~allAttacks).bitCount();
-      opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[mobl];
+      opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[Util::Min(4,mobl)];
 #ifdef EVAL_DEBUG
       cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << endl;
 #endif
@@ -1138,6 +1138,9 @@ void Scoring::pieceScore(const Board &board,
    }
 
    if (pin_count) scores.end += PARAM(PIN_MULTIPLIER_END) * pin_count;
+   // penalize pawn threats against pieces
+   Bitboard pawn_attacks();
+   scores.any += PARAM(PAWN_THREAT)*Bitboard(board.allPawnAttacks(oside) & (board.occupied[side] & ~board.pawn_bits[side])).bitCount();
 }
 
 void Scoring::calcPawnData(const Board &board,
@@ -2454,7 +2457,7 @@ static void print_array(ostream & o,int mid[], int end[], int size)
 
 void Scoring::Params::write(ostream &o)
 {
-   o << "// Copyright 2015 by Jon Dart. All Rights Reserved." << endl;
+   o << "// Copyright 2015, 2016 by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
    o << "//" << endl;
    o << endl;
@@ -2530,8 +2533,8 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::ROOK_MOBILITY[0],Params::ROOK_MOBILITY[1],15);
    o << "const int Scoring::Params::QUEEN_MOBILITY[2][29] = ";
    print_array(o,Params::QUEEN_MOBILITY[0],Params::QUEEN_MOBILITY[1],29);
-   o << "const int Scoring::Params::KING_MOBILITY_ENDGAME[9] = ";
-   print_array(o,Params::KING_MOBILITY_ENDGAME,9);
+   o << "const int Scoring::Params::KING_MOBILITY_ENDGAME[5] = ";
+   print_array(o,Params::KING_MOBILITY_ENDGAME,5);
    o << endl;
    o << "const int Scoring::Params::KNIGHT_OUTPOST[3][64] = {";
    for (int p = 0; p < 3; p++) {
