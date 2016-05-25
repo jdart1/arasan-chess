@@ -223,6 +223,16 @@ class SearchController {
 
     Hash hashTable;
 
+#ifdef NUMA
+    void rebind() {
+      pool->rebind();
+    }
+
+    void unbind() {
+      pool->unbind();
+    }
+#endif
+
  private:
 
     // pointer to function, called to output status during

@@ -62,6 +62,10 @@ class Options
 #endif
     int easy_plies; // do wide search for "easy move" detection
     int easy_threshold; // wide search width in millipawns
+#ifdef NUMA
+    int set_processor_affinity; // lock threads to processors
+    int affinity_offset; // offset: first processor to use for affinity
+#endif
   } search;
 
    struct LearningOptions {

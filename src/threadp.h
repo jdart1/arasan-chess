@@ -1,4 +1,4 @@
-// Copyright 2005-2013 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2013, 2016 by Jon Dart. All Rights Reserved.
 
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
@@ -6,7 +6,11 @@
 #include "types.h"
 #include "threadc.h"
 #include "constant.h"
+#ifdef NUMA
+#include "topo.h"
+#endif
 
+#include <bitset>
 #include <functional>
 
 using namespace std;
@@ -86,6 +90,31 @@ public:
      return controller;
    }
 
+   void lock() {
+     Lock(poolLock);
+   }
+
+   void unlock() {
+     Unlock(poolLock);
+   }
+
+#ifdef NUMA
+   int bind(int index) {
+     return topo.bind(index);
+   }
+
+   void rebind() {
+     // set flags so threads will be rebound
+     rebindMask.set();
+   }
+
+   void unbind() {
+     topo.reset();
+     // set flags so threads will be rebound
+     rebind();
+   }
+#endif
+
 private:
    void shutDown();
 
@@ -103,6 +132,10 @@ private:
 #endif
 
    SearchController *controller;
+#ifdef NUMA
+   static bitset<Constants::MaxCPUs> rebindMask;
+   Topology topo;
+#endif
 };
 
 #ifdef _THREAD_TRACE

@@ -288,6 +288,14 @@ Move SearchController::findBestMove(
     }
     computerSide = board.sideToMove();
 
+#ifdef NUMA
+    if (pool->rebindMask.test(0)) {
+       // rebind main thread
+       pool->bind(0);
+       pool->rebindMask.reset(0);
+    }
+#endif
+
     // propagate controller variables to searches
     pool->forEachSearch<&Search::setVariablesFromController>();
 

@@ -1690,6 +1690,24 @@ static void processWinboardOptions(const string &args) {
         setCheckOption(value,options.learning.position_learning);
     } else if (name == "Strength") {
         Options::setOption<int>(value,options.search.strength);
+#ifdef NUMA
+    } else if (name == "Set processor affinity") {
+       setCheckOption(value,options.search.set_processor_affinity);
+       int tmp = options.search.set_processor_affinity;
+       if (tmp != options.search.set_processor_affinity) {
+          if (options.search.set_processor_affinity) {
+             searcher->rebind();
+          } else {
+             searcher->unbind();
+          }
+       }
+    } else if (name == "Affinity offset") {
+       int tmp = options.search.affinity_offset;
+       Options::setOption<int>(value,options.search.affinity_offset);
+       if (tmp != options.search.affinity_offset) {
+          searcher->rebind();
+       }
+#endif
     }
 #ifdef TUNE
     else {
@@ -2480,8 +2498,16 @@ static bool do_command(const string &cmd, Board &board) {
         cout << "option name Threads type spin default " <<
             options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << endl;
-        cout << "option name UCI_LimitStrength type check default false" << endl;       cout << "option name UCI_Elo type spin default " <<
+        cout << "option name UCI_LimitStrength type check default false" << endl;
+        cout << "option name UCI_Elo type spin default " <<
             1000+options.search.strength*16 << " min 1000 max 2600" << endl;
+#ifdef NUMA
+        cout << "option name Set processor affinity type check default " <<
+           (options.search.set_processor_affinity ? "true" : "false") << endl;
+        cout << "option name Affinity offset type spin default " <<
+           options.search.affinity_offset << " min 0 max " <<
+           Constants::MaxCPUs << endl;
+#endif
         cout << "uciok" << endl;
         return true;
     }
@@ -2616,6 +2642,26 @@ static bool do_command(const string &cmd, Board &board) {
                 if (options.search.strength > 100) options.search.strength = 100;
             }
 	}
+#ifdef NUMA
+        else if (name == "Set processor affinity") {
+           int tmp = options.search.set_processor_affinity;
+           options.search.set_processor_affinity = (value == "true");
+           if (tmp != options.search.set_processor_affinity) {
+              if (options.search.set_processor_affinity) {
+                 searcher->rebind();
+              } else {
+                 searcher->unbind();
+              }
+           }
+        }
+        else if (name == "Affinity offset") {
+           int tmp = options.search.affinity_offset;
+           Options::setOption<int>(value,options.search.affinity_offset);
+           if (tmp != options.search.affinity_offset) {
+              searcher->rebind();
+           }
+        }
+#endif
 #ifdef TUNE
         else {
            setTuningParam(name,value);
@@ -3067,6 +3113,13 @@ static bool do_command(const string &cmd, Board &board) {
             options.learning.position_learning << "\"";
         // strength option (new for 14.2)
         cout << " option=\"Strength -spin " << options.search.strength << " 0 100\"";
+#ifdef NUMA
+        cout << " option=\"Set processor affinity\" -check " <<
+           options.search.set_processor_affinity << endl;
+        // TBD: limit to actual detected # of CPUs
+        cout << " option=\"Affinity offset\" -spin " <<
+           options.search.affinity_offset << " 0 " << Constants::MaxCPUs << endl;
+#endif
         cout << " myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
         // set done = 0 because it may take some time to initialize tablebases.
         cout << "feature done=0" << endl;

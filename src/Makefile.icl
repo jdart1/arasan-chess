@@ -28,19 +28,38 @@ TB=tb
 # location of SYZYGY tablebase code
 STB=syzygy
 
-!Ifndef ARASANX
+# enable NUMA support
+#NUMA=1
+
+# location of hwloc library
+HWLOC64=c:\chess\hwloc-win64-build-1.11.3
+HWLOC32=c:\chess\hwloc-win32-build-1.11.3
+
 !If "$(TARGET)" == "win64"
-ARCH = /D_WIN64
+!Ifndef ARASANX
 ARASANX = arasanx-64
+!Endif
+ARCH=/D_WIN64
+HWLOC=$(HWLOC64)
 !Else
+!Ifndef ARASANX
 ARASANX = arasanx-32
 !Endif
+HWLOC=$(HWLOC32)
 !Endif
 
 !Ifdef DEBUG
 BUILD_TYPE=debug
 !Else
 BUILD_TYPE=release
+!Endif
+!IfDef NUMA
+CFLAGS=$(CFLAGS) /DNUMA /I$(HWLOC)/include
+NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
+NUMA_OBJS=$(BUILD)/topo.obj
+NUMA_PGO_OBJS=$(PGO_BUILD)/topo.obj
+NUMA_PROFILE_OBJS=$(PROFILE_BUILD)/topo.obj
+NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
 BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
 TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)-tune
@@ -253,7 +272,7 @@ $(PGO_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 !Endif
 
 # Linker flags
-LDFLAGS  = kernel32.lib user32.lib winmm.lib $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
+LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
  
 ARASANX_OBJS = $(BUILD)\arasanx.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -268,7 +287,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\unit.obj $(TB_OBJS) 
+$(BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ARASANX_TUNE_OBJS = $(TUNE_BUILD)\arasanx.obj \
 $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
@@ -298,7 +317,7 @@ $(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
 $(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
 $(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
-$(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS) 
+$(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS) $(NUMA_TUNE_OBJS)
 
 ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
@@ -313,7 +332,7 @@ $(PGO_BUILD)\bookread.obj $(PGO_BUILD)\bookwrit.obj \
 $(PGO_BUILD)\calctime.obj $(PGO_BUILD)\legal.obj $(PGO_BUILD)\eco.obj \
 $(PGO_BUILD)\learn.obj $(PGO_BUILD)\history.obj \
 $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
-$(PGO_BUILD)\unit.obj $(TB_PGO_OBJS) 
+$(PGO_BUILD)\unit.obj $(TB_PGO_OBJS) $(NUMA_PGO_OBJS)
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
@@ -328,7 +347,7 @@ $(POPCNT_BUILD)\bookread.obj $(POPCNT_BUILD)\bookwrit.obj \
 $(POPCNT_BUILD)\calctime.obj $(POPCNT_BUILD)\legal.obj $(POPCNT_BUILD)\eco.obj \
 $(POPCNT_BUILD)\learn.obj $(POPCNT_BUILD)\history.obj \
 $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
-$(POPCNT_BUILD)\unit.obj $(TB_OBJS)
+$(POPCNT_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
@@ -342,7 +361,8 @@ $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
-$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(TB_PROFILE_OBJS) 
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(TB_PROFILE_OBJS) \
+$(NUMA_PROFILE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -355,7 +375,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj $(BUILD)\legal.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -368,7 +388,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
-$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS)
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<

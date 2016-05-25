@@ -1,4 +1,4 @@
-// Copyright 2005-2010, 2012, 2013 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2010, 2012, 2013, 2016 by Jon Dart. All Rights Reserved.
 
 #include "threadp.h"
 #include "search.h"
@@ -12,6 +12,9 @@ lock_t ThreadPool::poolLock;
 
 uint64_t ThreadPool::activeMask = 0ULL;
 uint64_t ThreadPool::availableMask = 0ULL;
+#ifdef NUMA
+bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
+#endif
 
 #ifndef _WIN32
 static const size_t THREAD_STACK_SIZE = 8*1024*1024;
@@ -45,6 +48,14 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
       }
 #endif
       Lock(poolLock);
+#ifdef NUMA
+      if (rebindMask.test(ti->index)) {
+         if (ti->pool->bind(ti->index)) {
+            cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
+         }
+         rebindMask.reset(ti->index);
+      }
+#endif
       if (ti->wouldWait()) {
         ti->state = ThreadInfo::Idle; // mark thread available again
         activeMask &= ~(1ULL << ti->index);
@@ -223,6 +234,15 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
       }
    }
 #endif
+#ifdef NUMA
+   cout << topo.description() << endl;
+   rebindMask.set();
+   // bind main thread
+   if (bind(0)) {
+      cerr << "Warning: bind to CPU failed for thread 0" << endl;
+   }
+   rebindMask.set(0,0);
+#endif
 #ifdef _THREAD_TRACE
   LockInit(io_lock);
 #endif
@@ -326,7 +346,10 @@ ThreadInfo * ThreadPool::checkOut(Search *parent, NodeInfo *forNode,
 
 void ThreadPool::resize(unsigned n, SearchController *controller) {
     if (n >= 1 && n < Constants::MaxCPUs && n != nThreads) {
-        Lock(poolLock);
+        lock();
+#ifdef NUMA
+        topo.recalc();
+#endif
         if (n>nThreads) {
             // growing
             while (n > nThreads) {
@@ -354,7 +377,7 @@ void ThreadPool::resize(unsigned n, SearchController *controller) {
                 --nThreads;
             }
         }
-        Unlock(poolLock);
+        unlock();
     }
     ASSERT(nThreads == n);
     availableMask = (n == 64) ? 0xffffffffffffffffULL :

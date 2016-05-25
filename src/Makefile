@@ -31,15 +31,21 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 # location of the Syzygy tablebase source code (Fathom) (if used)
 STB=syzygy
+# compile in NUMA support
+#NUMA=1
 
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS = 1
 #NALIMOV_TBS = 1
 SYZYGY_TBS = 1
 
+ifdef NUMA
+CFLAGS := -DNUMA
+else
 CFLAGS=
+endif
 ifdef GAVIOTA_TBS
-CFLAGS := -DGAVIOTA_TBS -I$(GTB)
+CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 endif
 ifdef NALIMOV_TBS 
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
@@ -76,21 +82,11 @@ ifeq ("$(ARCH)","x86_64")
 SSE=-msse3
 endif
 
-ifeq ("mingw","$(findstring mingw,$(UNAME))")
-# MingW
-LIBS = -lmsvcrt -lwinmm
-SMPLIB := -mthreads $(SMPLIB)
-#set MINGW for gtb code
-GTB_FLAGS := $(GTB_FLAGS) -DMINGW
-# do not rely on getconf
-ifeq ("mingw32","$(findstring mingw32,$(UNAME))")
-LBITS = 32
-else
-LBITS = 64
-endif
-else
 LBITS := $(shell getconf LONG_BIT)
-LIBS = -lc -lm
+LIBS := -lc -lm
+
+ifdef NUMA
+LIBS := -lhwloc $(LIBS)
 endif
 
 ifeq ($(LBITS),64)
@@ -104,8 +100,10 @@ CPP     = icc
 LD      = icc
 AR      = xiar
 CFLAGS  := -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
+ifndef DEBUG
 OPT     = -O3 -fno-rtti $(SSE) -DNDEBUG
 GTB_OPT := -O3 -fno-rtti $(SSE) -DNDEBUG
+endif
 
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
@@ -122,8 +120,10 @@ PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
 CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS) 
+ifndef DEBUG
 OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
 GTB_OPT := -O3 $(SSE) -DNDEBUG
+endif
 
 else
 
@@ -140,9 +140,11 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.7 or higher:
 CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+ifndef DEBUG
 OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
 LTO	= -flto
 GTB_OPT := -Ofast $(SSE) -DNDEBUG
+endif
 else
 $(error GCC version < 4.7 not supported)
 endif
@@ -247,6 +249,11 @@ popcnt-profiled: dirs
 TB_SOURCES=
 TB_OBJS=
 TB_LIBS=
+ifdef NUMA
+NUMA_OBJS=$(BUILD)/topo.o
+NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
+NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
+endif
 ifdef GAVIOTA_TBS
 # all sources are under $(GTB), we will use vpath (see below) to find them
 GTB_SOURCES := gtb-probe.c gtb-dec.c gtb-att.c sysport.c \
@@ -351,12 +358,12 @@ movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
-ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(TB_LIBS)
-ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(TB_LIBS)
-MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(TB_LIBS)
+ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
+ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
+TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
+MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS) 
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)	

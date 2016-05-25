@@ -86,7 +86,13 @@ Options::SearchOptions::SearchOptions() :
       multipv(1),
       ncpus(1),
       easy_plies(3),
-      easy_threshold(2000) {
+      easy_threshold(2000)
+#ifdef NUMA
+      ,
+      set_processor_affinity(0),
+      affinity_offset(0)
+#endif
+{
 }
 
 
@@ -238,6 +244,14 @@ void Options::set_option(const string &name, const string &value) {
   else if (name == "search.ncpus") {
     setOption<int>(name,value,search.ncpus);
   }
+#ifdef NUMA
+  else if (name == "search.set_processor_affinity") {
+    set_boolean_option(name,value,search.set_processor_affinity);
+  }
+  else if (name == "search.affinity_offset") {
+    setOption<int>(name,value,search.affinity_offset);
+  }
+#endif
   else
     cerr << "warning: unrecognized option name: " << name << endl;
 }
