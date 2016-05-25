@@ -9,7 +9,7 @@ extern "C" {
 #include "hwloc/helper.h"
 };
 
-Topology::Topology() 
+Topology::Topology()
 {
    int ret = init();
    if (ret) {
@@ -20,7 +20,7 @@ Topology::Topology()
    }
 }
 
-Topology::~Topology() 
+Topology::~Topology()
 {
    cleanup();
 }
@@ -30,12 +30,12 @@ std::string Topology::description() const {
    int cores = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_CORE);
    int cpus  = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_PU);
    std::stringstream s;
-   s << "detected " << socks << " socket(s), " << 
+   s << "detected " << socks << " socket(s), " <<
       cores << " core(s), " << cpus << " logical processing units.";
    return s.str();
 }
 
-int Topology::bind(int index) 
+int Topology::bind(int index)
 {
    if (!options.search.set_processor_affinity) {
       return 0;
@@ -65,7 +65,7 @@ int Topology::bind(int index)
 }
 
 static void accum(hwloc_obj_t obj,hwloc_cpuset_t set, int &count,
-                  int offset, int n) 
+                  int offset, int n)
 {
    // do a depth-first traversal of the tree, which will place cpus
    // together that share common parent(s).
@@ -80,8 +80,8 @@ static void accum(hwloc_obj_t obj,hwloc_cpuset_t set, int &count,
       } else {
          accum(obj->children[i],set,count,offset,n);
       }
-      
-   }   
+
+   }
 }
 
 void Topology::recalc() {
@@ -96,7 +96,7 @@ void Topology::reset() {
    set = hwloc_bitmap_dup(root->allowed_cpuset);
 }
 
-void Topology::computeSet() 
+void Topology::computeSet()
 {
    const int n = options.search.ncpus;
    const int offset = options.search.affinity_offset;
@@ -111,7 +111,7 @@ void Topology::computeSet()
 }
 
 
-void Topology::cleanup() 
+void Topology::cleanup()
 {
    hwloc_topology_destroy(topo);
    hwloc_bitmap_free(set);
@@ -125,4 +125,4 @@ int Topology::init() {
    return hwloc_topology_load(topo);
 }
 
-      
+
