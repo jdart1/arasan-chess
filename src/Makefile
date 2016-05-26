@@ -163,11 +163,6 @@ default: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
 
 tuning: dirs $(EXPORT)/$(ARASANX)-tune $(EXPORT)/tuner
 
-popcnt: SSE = -msse4.2
-popcnt: CFLAGS := $(CFLAGS) -DUSE_POPCNT
-popcnt: ARASANX := $(ARASANX)-popcnt
-popcnt: all
-
 # Solaris target: note only GCC is supported
 sparc-solaris: 
 	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS)' CFLAGS='$(CFLAGS)' all
@@ -245,6 +240,9 @@ profiled: dirs
 popcnt-profiled: dirs
 	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile profile-run
 	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile
+
+popcnt: dirs
+	@$(MAKE) ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2
 
 TB_SOURCES=
 TB_OBJS=
