@@ -1449,67 +1449,64 @@ int Search::quiesce(int ply,int depth)
       else if (hashValue <= -Constants::TABLEBASE_WIN) {
          hashValue += ply;
       }
-      // do not allow cutoff in PV nodes:
-      if (!node->PV()) {
-         switch (result) {
-         case HashEntry::Valid:
+      switch (result) {
+      case HashEntry::Valid:
+#ifdef _TRACE
+         if (master()) {
+            indent(ply);
+            cout << "hash cutoff, type = E" <<
+               " alpha = " << node->alpha <<
+               " beta = " << node->beta <<
+               " value = " << hashValue << endl;
+         }
+#endif
+         if (node->inBounds(hashValue)) {
+            // parent node will consider this a new best line
+            hashMove = hashEntry.bestMove(board);
+            if (!IsNull(hashMove)) {
+               node->pv[ply] = hashMove;
+               node->pv_length = 1;
+            }
+#ifdef _TRACE
+            if (master()) {
+               indent(ply); cout << "best line[ply][ply] = ";
+               MoveImage(hashMove,cout);
+               cout << endl;
+            }
+#endif
+         }
+         return hashValue;
+      case HashEntry::UpperBound:
+         if (hashValue <= node->alpha) {
 #ifdef _TRACE
             if (master()) {
                indent(ply);
-               cout << "hash cutoff, type = E" <<
+               cout << "hash cutoff, type = U" <<
                   " alpha = " << node->alpha <<
                   " beta = " << node->beta <<
                   " value = " << hashValue << endl;
             }
 #endif
-            if (node->inBounds(hashValue)) {
-               // parent node will consider this a new best line
-               hashMove = hashEntry.bestMove(board);
-               if (!IsNull(hashMove)) {
-                  node->pv[ply] = hashMove;
-                  node->pv_length = 1;
-               }
+            return hashValue;                     // cutoff
+         }
+         break;
+      case HashEntry::LowerBound:
+         if (hashValue >= node->beta) {
 #ifdef _TRACE
-               if (master()) {
-                  indent(ply); cout << "best line[ply][ply] = ";
-                  MoveImage(hashMove,cout);
-                  cout << endl;
-               }
-#endif
+            if (master()) {
+               indent(ply);
+               cout << "hash cutoff, type = L" <<
+                  " alpha = " << node->alpha <<
+                  " beta = " << node->beta <<
+                  " value = " << hashValue << endl;
             }
-            return hashValue;
-         case HashEntry::UpperBound:
-            if (hashValue <= node->alpha) {
-#ifdef _TRACE
-               if (master()) {
-                  indent(ply);
-                  cout << "hash cutoff, type = U" <<
-                     " alpha = " << node->alpha <<
-                     " beta = " << node->beta <<
-                     " value = " << hashValue << endl;
-               }
 #endif
-               return hashValue;                     // cutoff
-            }
-            break;
-         case HashEntry::LowerBound:
-            if (hashValue >= node->beta) {
-#ifdef _TRACE
-               if (master()) {
-                  indent(ply);
-                  cout << "hash cutoff, type = L" <<
-                     " alpha = " << node->alpha <<
-                     " beta = " << node->beta <<
-                     " value = " << hashValue << endl;
-               }
-#endif
-               return hashValue;                     // cutoff
-            }
-            break;
-         default:
-            break;
-         } // end switch
-      }
+            return hashValue;                     // cutoff
+         }
+         break;
+      default:
+         break;
+      } // end switch
       // Note: hash move may be usable even if score is not usable
       hashMove = hashEntry.bestMove(board);
    }
