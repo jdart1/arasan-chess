@@ -2162,11 +2162,16 @@ int Search::calcExtensions(const Board &board,
       }
    }
    // See pruning. Losing captures and moves that put pieces en prise
-   // are pruned at low depths.
+   // are pruned at low depths. Losing checks can be pruned unless
+   // they are discovered check.
    if (!node->PV() && predictedDepth <= SEE_PRUNING_DEPTH &&
+       board.checkStatus() == NotInCheck &&
        parentNode->num_try &&
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
-       !Scoring::mateScore(node->alpha)) {
+       !Scoring::mateScore(node->alpha) &&
+       !board.discoversAttack(StartSquare(move),DestSquare(move),
+                              board.kingSquare(board.oppositeSide()),
+                              board.sideToMove())) {
 
        if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
        if (!swap) {
