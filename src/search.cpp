@@ -2029,25 +2029,21 @@ int Search::calcExtensions(const Board &board,
          controller->stats->evasion_extensions++;
 #endif
       }
-      else if (IsForced2(move)) {
-         // two replies to check
-         extend += FORCED_EXTENSION / 2;
-         node->extensions |= FORCED;
-#ifdef SEARCH_STATS
-         controller->stats->evasion_extensions++;
-#endif
-      }
    }
    if (in_check_after_move == InCheck) { // move is a checking move
-      // extend if check does not lose > 1 pawn
-      if (seeSign(board,move,-PAWN_VALUE)) {
+      // extend if check does not lose material or is a discovered check
+      if ((swap = seeSign(board,move,0)) ||
+          board.isPinned(board.oppositeSide(),move)) {
           node->extensions |= CHECK;
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
           extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
-      // Note: bad checks can be reduced
+      else {
+         // Bad checks can be reduced or pruned (SEE pruning only)
+         pruneOk = 0;
+      }
    }
    if (passedPawnPush(board,move)) {
       node->extensions |= PAWN_PUSH;
@@ -2162,17 +2158,12 @@ int Search::calcExtensions(const Board &board,
       }
    }
    // See pruning. Losing captures and moves that put pieces en prise
-   // are pruned at low depths. Losing checks can be pruned unless
-   // they are discovered check.
-   if (!node->PV() && predictedDepth <= SEE_PRUNING_DEPTH &&
-       board.checkStatus() == NotInCheck &&
-       parentNode->num_try &&
-       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
+   // are pruned at low depths. Losing checks can be pruned.
+   if (predictedDepth <= SEE_PRUNING_DEPTH &&
+       !node->PV() && parentNode->num_try &&
        !Scoring::mateScore(node->alpha) &&
-       !board.discoversAttack(StartSquare(move),DestSquare(move),
-                              board.kingSquare(board.oppositeSide()),
-                              board.sideToMove())) {
-
+       board.checkStatus() == NotInCheck &&
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
        if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
        if (!swap) {
 #ifdef SEARCH_STATS
