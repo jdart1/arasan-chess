@@ -801,39 +801,35 @@ static void CDECL post_test(const Statistics &stats)
          search_progress[max_depth].num_nodes = stats.num_nodes;
          max_depth++;
    }
+   int ok;
    if (avoid) {
       // note: doesn't handle multiple "am" moves
-      int ok = !MovesEqual(solution_moves[0],best);
-      if (ok) {
-         if (solution_time == -1) {
-            solution_time = stats.elapsed_time;
-               solution_nodes = stats.num_nodes;
-         }
-      }
-      else
-         solution_time = -1;
-         return;
+      ok = !MovesEqual(solution_moves[0],best);
    }
    else {
-      if (solution_match(best)) {
-         if ((int)stats.depth > last_iteration_depth) {
-            // Wait 2 sec before counting iterations correct, unless
-            // we found a mate
-            if (stats.elapsed_time >= 200 ||
-               stats.value > Constants::MATE_RANGE)
-               ++iterations_correct;
-               last_iteration_depth = stats.depth;
+      ok = solution_match(best);
+   }
+   if (ok) {
+      if ((int)stats.depth > last_iteration_depth) {
+         // Wait 2 sec before counting iterations correct, unless
+         // we found a mate
+         if (stats.elapsed_time >= 200 ||
+             stats.value > Constants::MATE_RANGE) {
+            ++iterations_correct;
          }
-         if (iterations_correct >= early_exit_plies)
-            early_exit = 1;
-         if (solution_time == -1) {
-            solution_time = stats.elapsed_time;
-               solution_nodes = stats.num_nodes;
-         }
-         return;
+         last_iteration_depth = stats.depth;
       }
-      else
-         solution_time = -1;                      // not solved yet, or has moved off solution
+      if (iterations_correct >= early_exit_plies)
+         early_exit = 1;
+      if (solution_time == -1) {
+         solution_time = stats.elapsed_time;
+         solution_nodes = stats.num_nodes;
+      }
+      return;
+   }
+   else {
+      solution_time = -1;   // not solved yet, or has moved off
+                            // solution
    }
    iterations_correct = 0;
 }
