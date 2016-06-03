@@ -2202,9 +2202,10 @@ static void do_test(string test_file)
       while (!pos_file.eof()) {
          c = pos_file.get();
          if (!isspace(c) && c != '\n') {
-            if (!pos_file.eof())
+            if (!pos_file.eof()) {
                pos_file.putback(c);
-               break;
+            }
+            break;
          }
       }
    }
@@ -2245,10 +2246,11 @@ static void do_test(string test_file)
       if (avg_nodes > 1000000L) {
          cout << (float)(avg_nodes)/1000000.0 << "M" << endl;
       }
-      else
+      else {
          cout << (float)(avg_nodes)/1000.0 << "K" << endl;
-         cout << avg << "depth to solution : " << (float)(depth_to_find_total)/total_correct << endl;
-         cout << avg << "time to solution  : " << (float)(time_to_find_total)/(1000.0*total_correct) << " sec." << endl;
+      }
+      cout << avg << "depth to solution : " << (float)(depth_to_find_total)/total_correct << endl;
+      cout << avg << "time to solution  : " << (float)(time_to_find_total)/(1000.0*total_correct) << " sec." << endl;
    }
    options.book.book_enabled = tmp;
    testing = 0;
