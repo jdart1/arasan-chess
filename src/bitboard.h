@@ -275,14 +275,15 @@ class Bitboard
       // hardware support
       return __popcnt(lovalue()) + __popcnt(hivalue());
 #else
-      return bitCountOpt();
+      return genericPopcnt(data);
 #endif
 #endif
-#elif defined(__GNUC__) && defined(_64BIT)
-      // only uses POPCNT instruction if -msse4.2
+#elif defined(__GNUC__) && defined(_64BIT) && defined(__SSE4_2__)
+      // GCC only uses POPCNT instruction if -msse4.2. Otherwise
+      // it uses a relatively slow algorithm.
       return __builtin_popcountll(data);
 #else
-      return bitCountOpt();
+      return genericPopcnt(data);
 #endif
     }
     
@@ -577,6 +578,14 @@ class Bitboard
     static const uint64_t m2  = 0x3333333333333333ULL; //binary: 00110011..
     static const uint64_t m4  = 0x0f0f0f0f0f0f0f0fULL; //binary:  4 zeros,  4 ones ...
     static int msbTable[256];
+
+    unsigned genericPopcnt(uint64_t x) const {
+      x = (x & 0x5555555555555555ULL) + ((x >>  1) & 0x5555555555555555ULL);
+      x = (x & 0x3333333333333333ULL) + ((x >>  2) & 0x3333333333333333ULL);
+      x = (x & 0x0F0F0F0F0F0F0F0FULL) + ((x >>  4) & 0x0F0F0F0F0F0F0F0FULL);
+      return (((uint32_t)(x >> 32)) * 0x01010101 >> 24) + 
+        (((uint32_t)(x      )) * 0x01010101 >> 24);
+    }
 };
 
 inline int TEST_MASK(const Bitboard &b1,const Bitboard &b2) {
