@@ -1172,13 +1172,14 @@ static bool is_en_passant(const struct pos *pos, uint16_t move)
         return false;
     if (to != pos->ep)
         return false;
-    if ((board(from) & us & pos->pawns) != 0)
+    if ((board(from) & us & pos->pawns) == 0)
         return false;
     return true;
 }
 
 /*
- * Test if the given position is legal (can the king be captured?)
+ * Test if the given position is legal.
+ * (Pawns on backrank? Can the king be captured?)
  */
 static bool is_legal(const struct pos *pos)
 {
@@ -1290,6 +1291,8 @@ static bool is_valid(const struct pos *pos)
     if ((pos->bishops & pos->pawns) != 0)
         return false;
     if ((pos->knights & pos->pawns) != 0)
+        return false;
+    if (pos->pawns & BOARD_FILE_EDGE)
         return false;
     if ((pos->white | pos->black) !=
         (pos->kings | pos->queens | pos->rooks | pos->bishops | pos->knights |
@@ -1423,7 +1426,7 @@ static int probe_wdl(const struct pos *pos, int *success)
         struct pos pos1;
         if (!do_move(&pos1, pos, *moves))
             continue;
-        int v0 = -probe_ab(pos, -2, 2, success);
+        int v0 = -probe_ab(&pos1, -2, 2, success);
         if (*success == 0)
             return 0;
         if (v0 > v1)
@@ -1600,7 +1603,7 @@ static int probe_dtz(const struct pos *pos, int *success)
         struct pos pos1;
         if (!do_move(&pos1, pos, *moves))
             continue;
-        int v0 = -probe_ab(pos, -2, 2, success);
+        int v0 = -probe_ab(&pos1, -2, 2, success);
         if (*success == 0)
             return 0;
         if (v0 > v1)
@@ -1721,7 +1724,7 @@ static uint16_t probe_root(const struct pos *pos, int *score,
             res = TB_SET_TO(res, move_to(moves[i]));
             res = TB_SET_PROMOTES(res, move_promotes(moves[i]));
             res = TB_SET_EP(res, is_en_passant(pos, moves[i]));
-            res = TB_SET_DTZ(res, (dtz < 0? -dtz: dtz));
+            res = TB_SET_DTZ(res, (v < 0? -v: v));
             results[j++] = res;
         }
     }
