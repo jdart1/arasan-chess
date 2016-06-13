@@ -73,9 +73,12 @@
 #define __ENDIAN_DEFINED        1
 #define __BSWAP_DEFINED         1
 #define __HOSTSWAP_DEFINED      1
+// NDK defines _BYTE_ORDER etc
+#ifndef _BYTE_ORDER
 #define _BYTE_ORDER             __BYTE_ORDER
 #define _LITTLE_ENDIAN          __LITTLE_ENDIAN
 #define _BIG_ENDIAN             __BIG_ENDIAN
+#endif
 #define bswap16(x)              bswap_16(x)
 #define bswap32(x)              bswap_32(x)
 #define bswap64(x)              bswap_64(x)
