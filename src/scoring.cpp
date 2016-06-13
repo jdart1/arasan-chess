@@ -798,8 +798,8 @@ void Scoring::pieceScore(const Board &board,
    Square kp = board.kingSquare(side);
    ColorType oside = OppositeColor(side);
    Square okp = board.kingSquare(oside);
-   const Bitboard &nearKing = kingProximity[oside][okp];
-   Bitboard allAttacks;
+   const Bitboard &nearKing(kingProximity[oside][okp]);
+   Bitboard allAttacks, minorAttacks, rookAttacks;
    int attackWeight = 0;
    int attackCount = 0;
    int majorAttackCount = 0;
@@ -832,6 +832,7 @@ void Scoring::pieceScore(const Board &board,
                scores.any += outpost_score;
             }
             allAttacks |= knattacks;
+            minorAttacks |= knattacks;
 
             if (knattacks & nearKing) {
                attackWeight += PARAM(MINOR_ATTACK_FACTOR);
@@ -847,6 +848,7 @@ void Scoring::pieceScore(const Board &board,
 
             const Bitboard battacks(board.bishopAttacks(sq));
             allAttacks |= battacks;
+            minorAttacks |= battacks;
             if (!deep_endgame) {
                if (battacks & nearKing) {
                   attackWeight += PARAM(MINOR_ATTACK_FACTOR);
@@ -907,6 +909,7 @@ void Scoring::pieceScore(const Board &board,
 
             const int file = File(sq);
             allAttacks |= rattacks;
+            rookAttacks |= rattacks;
             if (FileOpen(board, file)) {
                scores.mid += PARAM(ROOK_ON_OPEN_FILE_MID);
                scores.end += PARAM(ROOK_ON_OPEN_FILE_END);
@@ -1138,9 +1141,60 @@ void Scoring::pieceScore(const Board &board,
    }
 
    if (pin_count) scores.end += PARAM(PIN_MULTIPLIER_END) * pin_count;
-   // penalize pawn threats against pieces
-   Bitboard pawn_attacks();
-   scores.any += PARAM(PAWN_THREAT)*Bitboard(board.allPawnAttacks(oside) & (board.occupied[side] & ~board.pawn_bits[side])).bitCount();
+   const Bitboard & opa = ourPawnData.opponent_pawn_attacks;
+   // bonus for pawn threats against pieces
+   int pawnThreats = Bitboard(oppPawnData.opponent_pawn_attacks & board.occupied[side] & ~board.pawn_bits[side]).bitCountOpt();
+   if (pawnThreats) {
+      scores.mid += PARAM(PAWN_THREAT_ON_PIECE_MID)*pawnThreats;
+      scores.end += PARAM(PAWN_THREAT_ON_PIECE_END)*pawnThreats;
+   }
+   Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
+   // penalize threats by pieces against pieces or pawns
+   if (minorAttacks) {
+      int qattacks = Bitboard(board.queen_bits[oside] & minorAttacks).bitCountOpt();
+      int rattacks = Bitboard(board.rook_bits[oside] & minorAttacks).bitCountOpt();
+      int mattacks = Bitboard((board.bishop_bits[oside] |
+                               board.knight_bits[oside]) &
+                              ~opa &
+                              minorAttacks).bitCountOpt();
+      if (!deep_endgame) {
+         scores.mid += PARAM(PIECE_THREAT_MM_MID)*mattacks;
+         scores.mid += PARAM(PIECE_THREAT_MR_MID)*rattacks;
+         scores.mid += PARAM(PIECE_THREAT_MQ_MID)*qattacks;
+      }
+      if (early_endgame) {
+         scores.end += PARAM(PIECE_THREAT_MM_END)*mattacks;
+         scores.end += PARAM(PIECE_THREAT_MR_END)*rattacks;
+         scores.end += PARAM(PIECE_THREAT_MQ_END)*qattacks;
+         scores.end += Bitboard(unsafePawns & minorAttacks).bitCountOpt()*PARAM(ENDGAME_MINOR_PAWN_THREAT);
+      }
+   }
+   if (rookAttacks) {
+      int qattacks = Bitboard(board.queen_bits[oside] & rookAttacks).bitCountOpt();
+      int rattacks = Bitboard(board.rook_bits[oside] & minorAttacks & ~opa).bitCountOpt();
+      int mattacks = Bitboard((board.bishop_bits[oside] |
+                               board.knight_bits[oside]) &
+                              ~opa &
+                              minorAttacks).bitCountOpt();
+      if (!deep_endgame) {
+         scores.mid += PARAM(PIECE_THREAT_RM_MID)*mattacks;
+         scores.mid += PARAM(PIECE_THREAT_RR_MID)*rattacks;
+         scores.mid += PARAM(PIECE_THREAT_RQ_MID)*qattacks;
+      }
+      if (early_endgame) {
+         scores.end += PARAM(PIECE_THREAT_RM_END)*mattacks;
+         scores.end += PARAM(PIECE_THREAT_RR_END)*rattacks;
+         scores.end += PARAM(PIECE_THREAT_RQ_END)*qattacks;
+         scores.end += Bitboard(unsafePawns & rookAttacks).bitCountOpt()*PARAM(ENDGAME_ROOK_PAWN_THREAT);
+      }
+   }
+   if (early_endgame) {
+      // attacks on undefended pawns or pieces
+      Bitboard kattacks(Attacks::king_attacks[kp] & board.occupied[oside] & ~opa);
+      if (kattacks) {
+         scores.end += kattacks.bitCountOpt()*PARAM(ENDGAME_KING_THREAT);
+      }
+   }
 }
 
 void Scoring::calcPawnData(const Board &board,

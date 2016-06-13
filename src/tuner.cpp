@@ -1,4 +1,4 @@
-// Copyright 2015 by Jon Dart. All Rights Reserved.
+// Copyright 2015, 2016 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -794,11 +794,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(oside);
+   Bitboard minorAttacks, rookAttacks;
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
       adjustMaterialScore(board,side,grads,inc);
    }
-
    if (side == White) {
       if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
          grads[Tune::CENTER_PAWN_BLOCK] += tune_params.scale(inc,Tune::CENTER_PAWN_BLOCK,mLevel);
@@ -824,6 +824,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    Square sq = InvalidSquare;
    while (knight_bits.iterate(sq)) {
       const Bitboard &knattacks = Attacks::knight_attacks[sq];
+      minorAttacks |= knattacks;
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::KNIGHT_MOBILITY+mobl] += tune_params.scale(inc,Tune::KNIGHT_MOBILITY+mobl,mLevel);
       int i;
@@ -857,6 +858,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (board.pinOnDiag(sq, okp, oside)) {
          pin_count++;
       }
+      minorAttacks |= board.bishopAttacks(sq);
       int mobl = Bitboard(board.bishopAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::BISHOP_MOBILITY+mobl] += tune_params.scale(inc,Tune::BISHOP_MOBILITY+mobl,mLevel);
       int i = map_to_pst(sq,side);
@@ -875,6 +877,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (board.pinOnRankOrFile(sq, okp, oside)) {
          pin_count++;
       }
+      rookAttacks |= board.rookAttacks(sq);
       Bitboard rattacks2(board.rookAttacks(sq, side));
       int mobl = Bitboard(rattacks2 &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::ROOK_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_MIDGAME+mobl,mLevel);
@@ -1009,7 +1012,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
 
-   bool deep_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::MIDGAME_THRESHOLD;
+   const bool deep_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::MIDGAME_THRESHOLD;
+   const bool early_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::ENDGAME_THRESHOLD;
    if (pin_count && !deep_endgame) {
       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
    }
@@ -1156,8 +1160,78 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::WEAK_ON_OPEN_FILE_END] +=
             tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_END,mLevel);
    }
-   grads[Tune::PAWN_THREAT] += 
-      tune_params.scale(inc*Bitboard(board.allPawnAttacks(oside) & (board.occupied[side] & ~board.pawn_bits[side])).bitCount(),Tune::PAWN_THREAT,mLevel);
+   const Bitboard & opa = opponent_pawn_attacks;
+   // bonus for pawn threats against pieces
+   int pawnThreats = Bitboard(oppPawnData.opponent_pawn_attacks & board.occupied[side] & ~board.pawn_bits[side]).bitCountOpt();
+   if (pawnThreats) {
+      grads[Tune::PAWN_THREAT_ON_PIECE_MID] += 
+         tune_params.scale(inc*pawnThreats,Tune::PAWN_THREAT_ON_PIECE_MID,mLevel);
+      grads[Tune::PAWN_THREAT_ON_PIECE_END] += 
+         tune_params.scale(inc*pawnThreats,Tune::PAWN_THREAT_ON_PIECE_END,mLevel);
+   }
+   Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
+   // penalize threats by pieces against pieces or pawns
+   if (minorAttacks) {
+      int qattacks = Bitboard(board.queen_bits[oside] & minorAttacks).bitCountOpt();
+      int rattacks = Bitboard(board.rook_bits[oside] & minorAttacks).bitCountOpt();
+      int mattacks = Bitboard((board.bishop_bits[oside] |
+                               board.knight_bits[oside]) &
+                              ~opa &
+                              minorAttacks).bitCountOpt();
+      if (!deep_endgame) {
+         grads[Tune::PIECE_THREAT_MM_MID] +=
+            tune_params.scale(inc*mattacks,Tune::PIECE_THREAT_MM_MID,mLevel);
+         grads[Tune::PIECE_THREAT_MR_MID] +=
+            tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_MR_MID,mLevel);
+         grads[Tune::PIECE_THREAT_MQ_MID] +=
+            tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_MQ_MID,mLevel);
+      }
+      if (early_endgame) {
+         grads[Tune::PIECE_THREAT_MM_END] +=
+            tune_params.scale(inc*mattacks,Tune::PIECE_THREAT_MM_END,mLevel);
+         grads[Tune::PIECE_THREAT_MR_END] +=
+            tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_MR_END,mLevel);
+         grads[Tune::PIECE_THREAT_MQ_END] +=
+            tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_MQ_END,mLevel);
+         grads[Tune::ENDGAME_MINOR_PAWN_THREAT] +=
+            tune_params.scale(inc*Bitboard(unsafePawns & minorAttacks).bitCountOpt(),Tune::ENDGAME_MINOR_PAWN_THREAT,mLevel);
+      }
+   }
+   if (rookAttacks) {
+      int qattacks = Bitboard(board.queen_bits[oside] & rookAttacks).bitCountOpt();
+      int rattacks = Bitboard(board.rook_bits[oside] & minorAttacks & ~opa).bitCountOpt();
+      int mattacks = Bitboard((board.bishop_bits[oside] |
+                               board.knight_bits[oside]) &
+                              ~opa &
+                              minorAttacks).bitCountOpt();
+      if (!deep_endgame) {
+         grads[Tune::PIECE_THREAT_RM_MID] +=
+            tune_params.scale(inc*mattacks,Tune::PIECE_THREAT_RM_MID,mLevel);
+         grads[Tune::PIECE_THREAT_RR_MID] +=
+            tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_RR_MID,mLevel);
+         grads[Tune::PIECE_THREAT_RQ_MID] +=
+            tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_RQ_MID,mLevel);
+      }
+      if (early_endgame) {
+         grads[Tune::PIECE_THREAT_RM_END] +=
+            tune_params.scale(inc*mattacks,Tune::PIECE_THREAT_RM_END,mLevel);
+         grads[Tune::PIECE_THREAT_RR_END] +=
+            tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_RR_END,mLevel);
+         grads[Tune::PIECE_THREAT_RQ_END] +=
+            tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_RQ_END,mLevel);
+         grads[Tune::ENDGAME_ROOK_PAWN_THREAT] +=
+            tune_params.scale(inc*Bitboard(unsafePawns & rookAttacks).bitCountOpt(),Tune::ENDGAME_ROOK_PAWN_THREAT,mLevel);
+      }
+   }
+   if (early_endgame) {
+      // attacks on undefended pawns or pieces
+      Bitboard kattacks(Attacks::king_attacks[kp] & board.occupied[oside] & ~opa);
+      if (kattacks) {
+         grads[Tune::ENDGAME_KING_THREAT] +=
+            tune_params.scale(inc*kattacks.bitCountOpt(),
+                              Tune::ENDGAME_KING_THREAT,mLevel);
+      }
+   }
 }
 
 void validateGradient(Scoring &s, const Board &board, ColorType side, double eval) {
