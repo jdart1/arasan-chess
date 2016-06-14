@@ -50,7 +50,6 @@ extern "C"
 #include <ctype.h>
 #include <time.h>
 #include <signal.h>
-#include <sys/timeb.h>
 #ifdef _WIN32
 #include <io.h>
 #else
