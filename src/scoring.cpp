@@ -916,11 +916,6 @@ void Scoring::pieceScore(const Board &board,
             }
 
             Bitboard rattacks2(board.rookAttacks(sq, side));
-            if (rattacks2 & oppPawnData.weak_pawns) {
-               scores.mid += PARAM(ROOK_ATTACKS_WEAK_PAWN_MID);
-               scores.end += PARAM(ROOK_ATTACKS_WEAK_PAWN_END);
-            }
-
             const int mobl = Bitboard(rattacks2 &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
             scores.mid += PARAM(ROOK_MOBILITY)[Midgame][mobl];
             scores.end += PARAM(ROOK_MOBILITY)[Endgame][mobl];
@@ -1148,7 +1143,8 @@ void Scoring::pieceScore(const Board &board,
       scores.mid += PARAM(PAWN_THREAT_ON_PIECE_MID)*pawnThreats;
       scores.end += PARAM(PAWN_THREAT_ON_PIECE_END)*pawnThreats;
    }
-   Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
+   //Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
+   const Bitboard unsafePawns = oppPawnData.weak_pawns;
    // penalize threats by pieces against pieces or pawns
    if (minorAttacks) {
       int qattacks = Bitboard(board.queen_bits[oside] & minorAttacks).bitCountOpt();

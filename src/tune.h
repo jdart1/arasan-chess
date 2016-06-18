@@ -128,8 +128,6 @@ class Tune {
     TWO_ROOKS_ON_7TH_END,
     ROOK_ON_OPEN_FILE_MID,
     ROOK_ON_OPEN_FILE_END,
-    ROOK_ATTACKS_WEAK_PAWN_MID,
-    ROOK_ATTACKS_WEAK_PAWN_END,
     ROOK_BEHIND_PP_MID,
     ROOK_BEHIND_PP_END,
     QUEEN_OUT,
@@ -274,7 +272,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 179;
+  static const int NUM_MISC_PARAMS = 177;
 
   double scale(double value,int index,int materialLevel) const;
 

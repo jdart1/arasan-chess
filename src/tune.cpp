@@ -157,8 +157,6 @@ Tune::Tune()
         Tune::TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",250,0,800,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",170,0,600,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",182,0,600,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ROOK_ATTACKS_WEAK_PAWN_MID,"rook_attacks_weak_pawn_mid",71,0,600,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ATTACKS_WEAK_PAWN_END,"rook_attacks_weak_pawn_end",119,0,600,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-200,0,Tune::TuneParam::Midgame),
@@ -679,8 +677,6 @@ void Tune::applyParams() const
    Scoring::Params::TWO_ROOKS_ON_7TH_END = tune_params[TWO_ROOKS_ON_7TH_END].current;
    Scoring::Params::ROOK_ON_OPEN_FILE_MID = tune_params[ROOK_ON_OPEN_FILE_MID].current;
    Scoring::Params::ROOK_ON_OPEN_FILE_END = tune_params[ROOK_ON_OPEN_FILE_END].current;
-   Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_MID = tune_params[ROOK_ATTACKS_WEAK_PAWN_MID].current;
-   Scoring::Params::ROOK_ATTACKS_WEAK_PAWN_END = tune_params[ROOK_ATTACKS_WEAK_PAWN_END].current;
    Scoring::Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
    Scoring::Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
    Scoring::Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;

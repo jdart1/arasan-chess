@@ -899,10 +899,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::ROOK_ON_OPEN_FILE_MID] += tune_params.scale(inc,Tune::ROOK_ON_OPEN_FILE_MID,mLevel);
          grads[Tune::ROOK_ON_OPEN_FILE_END] += tune_params.scale(inc,Tune::ROOK_ON_OPEN_FILE_END,mLevel);
       }
-      if (rattacks2 & pawn_entr.pawnData(oside).weak_pawns) {
-         grads[Tune::ROOK_ATTACKS_WEAK_PAWN_MID] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_MID,mLevel);
-         grads[Tune::ROOK_ATTACKS_WEAK_PAWN_END] += tune_params.scale(inc,Tune::ROOK_ATTACKS_WEAK_PAWN_END,mLevel);
-      }
       if (TEST_MASK(board.pawn_bits[side], Attacks::rank_mask[Rank(sq, White) - 1])) {
          Bitboard atcks(board.rankAttacks(sq) & board.pawn_bits[side]);
          Square pawnsq;
@@ -1169,7 +1165,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::PAWN_THREAT_ON_PIECE_END] += 
          tune_params.scale(inc*pawnThreats,Tune::PAWN_THREAT_ON_PIECE_END,mLevel);
    }
-   Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
+   //Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
+   const Bitboard unsafePawns = oppPawnData.weak_pawns;
    // penalize threats by pieces against pieces or pawns
    if (minorAttacks) {
       int qattacks = Bitboard(board.queen_bits[oside] & minorAttacks).bitCountOpt();
