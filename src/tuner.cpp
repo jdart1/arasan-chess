@@ -1182,6 +1182,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_MR_MID,mLevel);
          grads[Tune::PIECE_THREAT_MQ_MID] +=
             tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_MQ_MID,mLevel);
+         grads[Tune::MINOR_PAWN_THREAT_MID] +=
+            tune_params.scale(inc*Bitboard(unsafePawns & minorAttacks).bitCountOpt(),Tune::MINOR_PAWN_THREAT_MID,mLevel);
       }
       if (early_endgame) {
          grads[Tune::PIECE_THREAT_MM_END] +=
@@ -1190,8 +1192,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_MR_END,mLevel);
          grads[Tune::PIECE_THREAT_MQ_END] +=
             tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_MQ_END,mLevel);
-         grads[Tune::ENDGAME_MINOR_PAWN_THREAT] +=
-            tune_params.scale(inc*Bitboard(unsafePawns & minorAttacks).bitCountOpt(),Tune::ENDGAME_MINOR_PAWN_THREAT,mLevel);
+         grads[Tune::MINOR_PAWN_THREAT_END] +=
+            tune_params.scale(inc*Bitboard(unsafePawns & minorAttacks).bitCountOpt(),Tune::MINOR_PAWN_THREAT_END,mLevel);
       }
    }
    if (rookAttacks) {
@@ -1208,6 +1210,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_RR_MID,mLevel);
          grads[Tune::PIECE_THREAT_RQ_MID] +=
             tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_RQ_MID,mLevel);
+         grads[Tune::ROOK_PAWN_THREAT_MID] +=
+            tune_params.scale(inc*Bitboard(unsafePawns & rookAttacks).bitCountOpt(),Tune::ROOK_PAWN_THREAT_MID,mLevel);
       }
       if (early_endgame) {
          grads[Tune::PIECE_THREAT_RM_END] +=
@@ -1216,8 +1220,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc*rattacks,Tune::PIECE_THREAT_RR_END,mLevel);
          grads[Tune::PIECE_THREAT_RQ_END] +=
             tune_params.scale(inc*qattacks,Tune::PIECE_THREAT_RQ_END,mLevel);
-         grads[Tune::ENDGAME_ROOK_PAWN_THREAT] +=
-            tune_params.scale(inc*Bitboard(unsafePawns & rookAttacks).bitCountOpt(),Tune::ENDGAME_ROOK_PAWN_THREAT,mLevel);
+         grads[Tune::ROOK_PAWN_THREAT_END] +=
+            tune_params.scale(inc*Bitboard(unsafePawns & rookAttacks).bitCountOpt(),Tune::ROOK_PAWN_THREAT_END,mLevel);
       }
    }
    if (early_endgame) {

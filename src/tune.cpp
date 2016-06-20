@@ -127,14 +127,16 @@ Tune::Tune()
         Tune::TuneParam(Tune::PIECE_THREAT_MM_END,"piece_threat_mm_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_MR_END,"piece_threat_mr_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_MQ_END,"piece_threat_mq_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ENDGAME_MINOR_PAWN_THREAT,"endgame_minor_pawn_threat",50,0,750,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::MINOR_PAWN_THREAT_MID,"minor_pawn_threat_mid",50,0,750,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::MINOR_PAWN_THREAT_END,"minor_pawn_threat_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_RM_MID,"piece_threat_rm_mid",50,0,750,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_RR_MID,"piece_threat_rr_mid",50,0,750,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_RQ_MID,"piece_threat_rq_mid",50,0,750,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_RM_END,"piece_threat_rm_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_RR_END,"piece_threat_rr_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_RQ_END,"piece_threat_rq_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ENDGAME_ROOK_PAWN_THREAT,"endgame_rook_pawn_threat",50,0,750,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ROOK_PAWN_THREAT_MID,"rook_pawn_threat_mid",50,0,750,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_PAWN_THREAT_END,"rook_pawn_threat_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
         Tune::TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",447,100,600,Tune::TuneParam::Midgame,1),
@@ -647,14 +649,16 @@ void Tune::applyParams() const
    Scoring::Params::PIECE_THREAT_MM_END = tune_params[PIECE_THREAT_MM_END].current;
    Scoring::Params::PIECE_THREAT_MR_END = tune_params[PIECE_THREAT_MR_END].current;
    Scoring::Params::PIECE_THREAT_MQ_END = tune_params[PIECE_THREAT_MQ_END].current;
-   Scoring::Params::ENDGAME_MINOR_PAWN_THREAT = tune_params[ENDGAME_MINOR_PAWN_THREAT].current;
+   Scoring::Params::MINOR_PAWN_THREAT_MID = tune_params[MINOR_PAWN_THREAT_MID].current;
+   Scoring::Params::MINOR_PAWN_THREAT_END = tune_params[MINOR_PAWN_THREAT_END].current;
    Scoring::Params::PIECE_THREAT_RM_MID = tune_params[PIECE_THREAT_RM_MID].current;
    Scoring::Params::PIECE_THREAT_RR_MID = tune_params[PIECE_THREAT_RR_MID].current;
    Scoring::Params::PIECE_THREAT_RQ_MID = tune_params[PIECE_THREAT_RQ_MID].current;
    Scoring::Params::PIECE_THREAT_RM_END = tune_params[PIECE_THREAT_RM_END].current;
    Scoring::Params::PIECE_THREAT_RR_END = tune_params[PIECE_THREAT_RR_END].current;
    Scoring::Params::PIECE_THREAT_RQ_END = tune_params[PIECE_THREAT_RQ_END].current;
-   Scoring::Params::ENDGAME_ROOK_PAWN_THREAT = tune_params[ENDGAME_ROOK_PAWN_THREAT].current;
+   Scoring::Params::ROOK_PAWN_THREAT_MID = tune_params[ROOK_PAWN_THREAT_MID].current;
+   Scoring::Params::ROOK_PAWN_THREAT_END = tune_params[ROOK_PAWN_THREAT_END].current;
    Scoring::Params::ENDGAME_KING_THREAT = tune_params[ENDGAME_KING_THREAT].current;
    Scoring::Params::BISHOP_TRAPPED = tune_params[BISHOP_TRAPPED].current;
    Scoring::Params::BISHOP_PAIR_MID = tune_params[BISHOP_PAIR_MID].current;

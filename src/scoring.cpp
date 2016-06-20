@@ -1,4 +1,4 @@
-// Copyright 1994-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2016 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "util.h"
@@ -1157,12 +1157,13 @@ void Scoring::pieceScore(const Board &board,
          scores.mid += PARAM(PIECE_THREAT_MM_MID)*mattacks;
          scores.mid += PARAM(PIECE_THREAT_MR_MID)*rattacks;
          scores.mid += PARAM(PIECE_THREAT_MQ_MID)*qattacks;
+         scores.mid += Bitboard(unsafePawns & minorAttacks).bitCountOpt()*PARAM(MINOR_PAWN_THREAT_MID);
       }
       if (early_endgame) {
          scores.end += PARAM(PIECE_THREAT_MM_END)*mattacks;
          scores.end += PARAM(PIECE_THREAT_MR_END)*rattacks;
          scores.end += PARAM(PIECE_THREAT_MQ_END)*qattacks;
-         scores.end += Bitboard(unsafePawns & minorAttacks).bitCountOpt()*PARAM(ENDGAME_MINOR_PAWN_THREAT);
+         scores.end += Bitboard(unsafePawns & minorAttacks).bitCountOpt()*PARAM(MINOR_PAWN_THREAT_END);
       }
    }
    if (rookAttacks) {
@@ -1176,12 +1177,13 @@ void Scoring::pieceScore(const Board &board,
          scores.mid += PARAM(PIECE_THREAT_RM_MID)*mattacks;
          scores.mid += PARAM(PIECE_THREAT_RR_MID)*rattacks;
          scores.mid += PARAM(PIECE_THREAT_RQ_MID)*qattacks;
+         scores.mid += Bitboard(unsafePawns & rookAttacks).bitCountOpt()*PARAM(ROOK_PAWN_THREAT_MID);
       }
       if (early_endgame) {
          scores.end += PARAM(PIECE_THREAT_RM_END)*mattacks;
          scores.end += PARAM(PIECE_THREAT_RR_END)*rattacks;
          scores.end += PARAM(PIECE_THREAT_RQ_END)*qattacks;
-         scores.end += Bitboard(unsafePawns & rookAttacks).bitCountOpt()*PARAM(ENDGAME_ROOK_PAWN_THREAT);
+         scores.end += Bitboard(unsafePawns & rookAttacks).bitCountOpt()*PARAM(ROOK_PAWN_THREAT_END);
       }
    }
    if (early_endgame) {
@@ -1363,9 +1365,9 @@ void Scoring::calcPawnData(const Board &board,
           }
       }
 
-      if (!passed && (weak || isolated)) {
+      if (weak || isolated) {
           entr.weak_pawns.set(sq);
-          if (!OnFile(board.pawn_bits[oside], file)) {
+          if (!passed && !OnFile(board.pawn_bits[oside], file)) {
               entr.weakopen++;
 #ifdef PAWN_DEBUG
               cout << " weak/open";

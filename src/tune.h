@@ -98,14 +98,16 @@ class Tune {
     PIECE_THREAT_MM_END,
     PIECE_THREAT_MR_END,
     PIECE_THREAT_MQ_END,
-    ENDGAME_MINOR_PAWN_THREAT,
+    MINOR_PAWN_THREAT_MID,
+    MINOR_PAWN_THREAT_END,
     PIECE_THREAT_RM_MID,
     PIECE_THREAT_RR_MID,
     PIECE_THREAT_RQ_MID,
     PIECE_THREAT_RM_END,
     PIECE_THREAT_RR_END,
     PIECE_THREAT_RQ_END,
-    ENDGAME_ROOK_PAWN_THREAT,
+    ROOK_PAWN_THREAT_MID,
+    ROOK_PAWN_THREAT_END,
     ENDGAME_KING_THREAT,
     BISHOP_TRAPPED,
     BISHOP_PAIR_MID,
@@ -272,7 +274,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 177;
+  static const int NUM_MISC_PARAMS = 179;
 
   double scale(double value,int index,int materialLevel) const;
 
