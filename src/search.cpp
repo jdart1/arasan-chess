@@ -2503,13 +2503,13 @@ int Search::search()
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
+        !(node->flags & (IID|VERIFY|SINGULAR)) &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
-        !(node->flags & (IID|VERIFY|SINGULAR)) &&
         node->beta < Constants::TABLEBASE_WIN) {
        const int margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
        const int threshold = node->beta+margin;
@@ -2529,8 +2529,7 @@ int Search::search()
 #ifdef RAZORING
     // razoring as in Glaurung & Toga
     if (pruneOk && node->beta < Constants::MATE_RANGE &&
-        depth <= RAZOR_DEPTH &&
-        !(node->flags & (IID|VERIFY|SINGULAR))) {
+        depth <= RAZOR_DEPTH) {
         const int threshold = node->beta - RAZOR_MARGIN_BASE - Util::Max(0,(depth-DEPTH_INCREMENT)*RAZOR_MARGIN_INCR/DEPTH_INCREMENT);
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
@@ -2557,7 +2556,6 @@ int Search::search()
     // Also avoid null move near the 50-move draw limit.
     node->threatMove = NullMove;
     if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
-        !(node->flags & (IID|VERIFY|SINGULAR)) &&
         !IsNull((node-1)->last_move) &&
         node->staticEval >= node->beta &&
         !Scoring::mateScore(node->alpha) &&
@@ -2662,10 +2660,12 @@ int Search::search()
     // there is no hash move .. an idea from Crafty (previously used by
     // Hitech).
     if (IsNull(hashMove) &&
-        board.checkStatus() == NotInCheck &&
-        depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) {
+        (depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) &&
+        (node->PV() ||
+         (board.checkStatus() == NotInCheck &&
+          node->eval >= node->beta - PAWN_VALUE))) {
         int d;
-        d = Util::Min(depth-2*DEPTH_INCREMENT,depth/2);
+        d = depth/2;
         if (!node->PV()) d-=DEPTH_INCREMENT;
 #ifdef _TRACE
         if (master()) {
