@@ -188,7 +188,7 @@ SearchController::SearchController()
            double f = LMR_BASE + log((double)d) * log((double)moves+1);
            const double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
            for (int i = 0; i < 2; i++) {
-              int r = DEPTH_INCREMENT*floor(2*reduction[i]+0.5)/2;
+              int r = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction[i]+0.5)/2);
               // do not reduce into the qsearch:
               if (r > d*DEPTH_INCREMENT) r = d*DEPTH_INCREMENT-1;
               // do not do reductions < 1 ply
@@ -2425,7 +2425,7 @@ int Search::search()
 #ifdef SYZYGY_TBS
        if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
           tb_hit = SyzygyTb::probe_wdl(board, tb_score,
-                                       srcOpts.syzygy_50_move_rule);
+                                       srcOpts.syzygy_50_move_rule != 0);
        }
 #endif
        if (tb_hit) {
