@@ -1236,11 +1236,11 @@ int depth, Move exclude [], int num_exclude)
         board.doMove(move);
         setCheckStatus(board,in_check_after_move);
         node->done[node->num_try++] = move;
+        int lobound = wide ? node->alpha : node->best_score;
 #ifdef _TRACE
-        cout << "window [" << -hibound << ", " << -node->best_score <<
+        cout << "window [" << -hibound << ", " << -lobound <<
           "]" << endl;
 #endif
-        int lobound = wide ? node->alpha : node->best_score;
         if (depth+extend-DEPTH_INCREMENT > 0) {
            try_score = -search(-hibound, -lobound,
                                1, depth+extend-DEPTH_INCREMENT);
@@ -1309,7 +1309,9 @@ int depth, Move exclude [], int num_exclude)
             // we are in reduced strength mode, waste some time
             sleep(waitTime);
         }
-        hibound = node->best_score + 1;  // zero-width window
+        if (!wide) {
+           hibound = node->best_score + 1;  // zero-width window
+        }
 #ifdef _TRACE
         in_pv = 0;
 #endif
@@ -3157,6 +3159,7 @@ void Search::searchSMP(ThreadInfo *ti)
 #endif
     node->ply = parentNode->ply;
     node->depth = parentNode->depth;
+    node->cutoff = 0;
 
     int best_score = parentNode->best_score;
 #ifdef _THREAD_TRACE
@@ -3293,14 +3296,12 @@ void Search::searchSMP(ThreadInfo *ti)
         }
 #endif
         if (!terminate && !parentNode->cutoff) {
-            int parent_best;
             split->lock();
             ASSERT(parentNode->num_try<Constants::MaxMoves);
             parentNode->done[parentNode->num_try++] = move;
-            parent_best = parentNode->best_score;
+            int parent_best = parentNode->best_score;
             split->unlock();
             // update our window in case parent best score changed
-            best_score = parent_best;
             if (try_score > parent_best) {
                 // search produced a new best move or cutoff, update parent node
 #if defined (_THREAD_TRACE) || defined(_TRACE)
@@ -3314,17 +3315,17 @@ void Search::searchSMP(ThreadInfo *ti)
 #endif
 #endif
                 if (ply == 0) {
-                    ((RootSearch*)(split->master->work))->updateRootMove(board,parentNode,node,move,try_score,parentNode->num_try);
+                    node->cutoff |= ((RootSearch*)(split->master->work))->updateRootMove(board,parentNode,node,move,try_score,parentNode->num_try);
                 }
                 else
-                   updateMove(board,parentNode,node,move,try_score,ply,depth,split);
+                   node->cutoff |= updateMove(board,parentNode,node,move,try_score,ply,depth,split);
                 best_score = try_score;
                 if (fhr) {
                     fhr = false;
                     root()->fail_high_root = 0;
                 }
             }
-            if (try_score >= Constants::MATE-1-ply) {
+            if (node->cutoff || try_score >= Constants::MATE-1-ply) {
                 parentNode->cutoff++;
                 break;                            // mating move found
             }
