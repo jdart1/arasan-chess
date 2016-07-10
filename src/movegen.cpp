@@ -117,54 +117,66 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
    index = order = 0;  // reset index so we will fetch moves again
    phase = START_PHASE;
-   // if in the "easy move" part of the search leave the scores
-   // intact: they are set according to the search results
-   if (initial || depth > EASY_PLIES) {
+   if (initial || depth <= EASY_PLIES) {
+       // if in the "easy move" part of the search leave the scores
+       // intact: they are set according to the search results
+       if (initial) {
+           // sort winning captures first
+           for (unsigned i = 0; i < moveList.size(); i++) {
+               ClearUsed(moveList[i].move);
+               if (MovesEqual(moveList[i].move,pvMove)) {
+                   SetPhase(moveList[i].move,HASH_MOVE_PHASE);
+                   moveList[i].score = PAWN_VALUE*100;
+               } else if (CaptureOrPromotion(moveList[i].move)) {
+                   int est;
+                   if ((est = see(board,moveList[i].move)) >= 0) {
+                       SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
+                       moveList[i].score = est;
+                   } else {
+                       SetPhase(moveList[i].move,LOSERS_PHASE);
+                       moveList[i].score = est;
+                   }
+               }
+               else {
+                   SetPhase(moveList[i].move,HISTORY_PHASE);
+                   moveList[i].score = 0;
+               }
+           }
+       }
+       if (moveList.size() > 1) {
+           std::sort(moveList.begin(),moveList.end(),
+                     [](const MoveEntry &a, const MoveEntry &b)
+                     {
+                         return a.score > b.score;
+                     }
+                     );
+       }
+   }
+   else {
+       /*
       Move killer1 = NullMove;
       Move killer2 = NullMove;
       if (context) {
          context->getKillers(0,killer1,killer2);
       }
+       */
+      unsigned pvIndex = -1;
       for (unsigned i = 0; i < moveList.size(); i++) {
          ClearUsed(moveList[i].move);
+         // save the hash move index
          if (MovesEqual(moveList[i].move,pvMove)) {
-            SetPhase(moveList[i].move,HASH_MOVE_PHASE);
-            moveList[i].score = PAWN_VALUE*100;
-         } else if (CaptureOrPromotion(moveList[i].move)) {
-            int est;
-            if ((est = see(board,moveList[i].move)) >= 0) {
-               SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
-               moveList[i].score = est;
-            } else {
-               SetPhase(moveList[i].move,LOSERS_PHASE);
-               moveList[i].score = est;
-            }
-         } else if (context) {
-            if (MovesEqual(moveList[i].move,killer1)) {
-               SetPhase(moveList[i].move,KILLER1_PHASE);
-               moveList[i].score = 50*PAWN_VALUE;
-            }
-            else if (MovesEqual(moveList[i].move,killer2)) {
-               SetPhase(moveList[i].move,KILLER2_PHASE);
-               moveList[i].score = 49*PAWN_VALUE;
-            }
-            else {
-               SetPhase(moveList[i].move,HISTORY_PHASE);
-               moveList[i].score = context->history.scoreForOrdering(moveList[i].move,board.sideToMove());
-            }
+             pvIndex = i;
          }
-         else {
-            moveList[i].score = 0;
-         }
+      } 
+      ASSERT(pvIndex != -1);
+      if (pvIndex) {
+          // put the hash move first and move all other moves down
+          MoveEntry pvEntry(moveList[pvIndex]);
+          for (unsigned j = pvIndex; j > 0; --j) {
+              moveList[j] = moveList[j-1];
+          }
+          moveList[0] = pvEntry;
       }
-   }
-   if (moveList.size() > 1) {
-      std::sort(moveList.begin(),moveList.end(),
-                [](const MoveEntry &a, const MoveEntry &b)
-                {
-                   return a.score > b.score;
-                }
-         );
    }
 }
 
