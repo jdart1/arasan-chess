@@ -2072,9 +2072,15 @@ int Search::calcExtensions(const Board &board,
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
    if (depth >= LMR_DEPTH && moveIndex > 1+2*node->PV() &&
-       GetPhase(move) == MoveGenerator::HISTORY_PHASE &&
+       (node->ply == 0 || GetPhase(move) == MoveGenerator::HISTORY_PHASE) &&
        !passedPawnMove(board,move,6)) {
-      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+      if (node->ply == 0) {
+         // reduce somewhat less at ply 0
+         extend -= DEPTH_INCREMENT + Util::Min(depth-DEPTH_INCREMENT-1,depth/8 + Bitboard(moveIndex-2).lastOne()*DEPTH_INCREMENT/4);
+      }
+      else {
+         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+      }
       if (extend) {
          node->extensions |= LMR;
 #ifdef SEARCH_STATS
