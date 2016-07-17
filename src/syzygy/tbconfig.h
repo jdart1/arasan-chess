@@ -82,11 +82,12 @@
 #define TB_NO_HELPER_API
 
 /*
- * Define TB_NO_HW_POP_COUNT if there is no hardware popcount instruction.
+ * If no custom popcount function is defined, and if the following
+ * define is not set, the code will attempt to use an available hardware
+ * popcnt (currently supported on x86_64 architecture only) and otherwise
+ * will fall back to a software implementation.
  */
-#ifndef USE_POPCNT
-#define TB_NO_HW_POP_COUNT
-#endif
+//#define TB_NO_HW_POP_COUNT
 
 /***************************************************************************/
 /* ENGINE INTEGRATION CONFIG                                               */
