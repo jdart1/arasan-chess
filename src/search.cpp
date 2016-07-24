@@ -684,6 +684,8 @@ Move *excludes, int num_excludes)
    int tb_hit = 0, tb_pieces = 0;
    int value = Scoring::INVALID_SCORE;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+   options.search.tb_probe_in_search = 1;
+   controller->updateSearchOptions();
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -711,9 +713,20 @@ Move *excludes, int num_excludes)
                // restrict the search to moves that preserve the
                // win or draw, if there is one.
                mg.filter(moves);
-               // Note: do not set the value - search values are based
-               // on DTM not DTZ.
-               controller->stats->tb_value = tb_score;
+               if (mg.moveCount() == 0) {
+                   // should not happen
+                   if (talkLevel == Trace) {
+                       cout << "# warning: no moves after Syzygy move filtering" << endl;
+                   }
+                   tb_hit = 0;
+               } else {
+                   // Note: do not set the value - search values are based
+                   // on DTM not DTZ.
+                   controller->stats->tb_value = tb_score;
+                   // do not probe in the search
+                   options.search.tb_probe_in_search = 0;
+                   controller->updateSearchOptions();
+               }
             }
          }
 #endif
@@ -984,8 +997,12 @@ Move *excludes, int num_excludes)
             // if we have >=6 man tbs in use (because tb set may be
             // incomplete - in that case it is better to allow us to
             // search deeper those nodes that don't produce a tb hit).
+            // Also do not terminate if using Syzygy tbs and move list is
+            // >1. We want in that case to keep searching to find the
+            // best move (according to the engine) among the available
+            // tb moves.
             //
-            if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0])) {
+            if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0]) && !(options.search.tablebase_type == Options::TbType::SyzygyTb && mg.moveCount()>1)) {
                if (talkLevel == Trace)
                   cout << "# terminating, tablebase hit" << endl;
 #ifdef _TRACE
@@ -2277,6 +2294,7 @@ int Search::search()
         egtbDepth = 3*DEPTH_INCREMENT*root()->getIterationDepth()/4;
         using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) &&
 #ifdef SYZYGY_TBS
+            srcOpts.tb_probe_in_search &&
            (srcOpts.tablebase_type == Options::TbType::SyzygyTb ?
             (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth)
             : (depth >= egtbDepth || ply <= 2));

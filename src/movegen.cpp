@@ -54,7 +54,8 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
 SearchContext *s,
 Move pvMove,
 int trace)
-   : MoveGenerator(board,s,0,pvMove,NullMove,trace)
+    : MoveGenerator(board,s,0,pvMove,NullMove,trace),
+      excluded(0)
 {
    batch = moves;
    batch_count = MoveGenerator::generateAllMoves(batch,0);
@@ -195,6 +196,7 @@ void RootMoveGenerator::exclude(Move *exclude, int num_exclude)
 
 void RootMoveGenerator::filter(const set<Move> &include) 
 {
+   excluded = 0;
    for (int i = 0; i < batch_count; i++) {
       Move m = moveList[i].move;
       // include list has neither flags nor phase set, so
@@ -204,7 +206,8 @@ void RootMoveGenerator::filter(const set<Move> &include)
       if (include.find(m) == include.end()) {
           // Note: use the Excluded flag, since the Used flag
           // is reset each iteration
-         SetExcluded(moveList[i].move);
+          SetExcluded(moveList[i].move);
+          ++excluded;
       }
    }
 }

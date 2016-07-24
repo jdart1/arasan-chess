@@ -18,7 +18,7 @@ class Options
   static const string SYZYGY_TYPE;
 
   struct BookOptions {
-    BookOptions() 
+    BookOptions()
       : selectivity(50),
         random(0),
         book_enabled(1)
@@ -30,7 +30,7 @@ class Options
   } book;
 
   struct SearchOptions {
-    SearchOptions(); 
+    SearchOptions();
 
    int checks_in_qsearch;
    size_t hash_table_size;
@@ -39,6 +39,7 @@ class Options
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
    int use_tablebases;
    TbType tablebase_type;
+   int tb_probe_in_search;
 #endif
 #ifdef GAVIOTA_TBS
    size_t gtb_cache_size;
@@ -69,7 +70,7 @@ class Options
   } search;
 
    struct LearningOptions {
-     LearningOptions() 
+     LearningOptions()
      : position_learning(1),
        position_learning_threshold(33),
        position_learning_horizon(5),

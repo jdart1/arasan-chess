@@ -67,6 +67,7 @@ Options::SearchOptions::SearchOptions() :
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
       use_tablebases(0),
       tablebase_type(TbType::None),
+      tb_probe_in_search(1),
 #endif
 #ifdef GAVIOTA_TBS
       gtb_cache_size((size_t)8*1024L*1024L),

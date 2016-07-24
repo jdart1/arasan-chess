@@ -229,7 +229,7 @@ class RootMoveGenerator : public MoveGenerator
       void exclude(Move);
 
       int moveCount() const {
-         return batch_count;
+         return batch_count-excluded;
       }
 
       Move first() const {
@@ -262,6 +262,7 @@ class RootMoveGenerator : public MoveGenerator
 
    private:
       vector<MoveEntry> moveList;
+      int excluded;
 };
 
 inline MoveGenerator::Phase operator++(MoveGenerator::Phase &phase)

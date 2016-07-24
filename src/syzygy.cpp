@@ -28,6 +28,18 @@ static PieceType getPromotion(unsigned res)
       }
 }
 
+static const Move getMove(const Board &b, unsigned res) {
+    const unsigned ep = TB_GET_EP(res);
+    const PieceType promoteTo = getPromotion(res);
+    // Note: castling not possible
+    return CreateMove(TB_GET_FROM(res),
+                      TB_GET_TO(res),
+                      TypeOfPiece(b[TB_GET_FROM(res)]),
+                      ep ? Pawn : TypeOfPiece(b[TB_GET_TO(res)]),
+                      promoteTo,
+                      ep ? EnPassant : (promoteTo != Empty ? Promotion : Normal));
+}
+
 int SyzygyTb::initTB(const string &path)
 {
    bool ok = syzygy_tb_init(path.c_str());
@@ -66,19 +78,21 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
    const unsigned wdl = TB_GET_WDL(result);
    ASSERT(wdl<5);
    score = valueMap[wdl];
+   if (b.repCount()) {
+       // In case of repetition fall back to making the single
+       // suggested tb move. This move preserves the WDL value.
+       // Otherwise the engine may repeat the position again.
+       rootMoves.insert(getMove(b,result));
+       return 1;
+   }
+   // In positions w/o repetition, return a move list containing
+   // moves that preserved the WDL value. These will be searched.
    unsigned res;
    for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
       const unsigned moveWdl = TB_GET_WDL(res);
       if (moveWdl >= wdl) {
          // move is ok, i.e. preserves WDL value
-         unsigned ep = TB_GET_EP(res);
-         // Note: castling not possible
-         rootMoves.insert(CreateMove(TB_GET_FROM(res),
-                                     TB_GET_TO(res),
-                                     TypeOfPiece(b[TB_GET_FROM(res)]),
-                                     ep ? Pawn : TypeOfPiece(b[TB_GET_TO(res)]),
-                                     getPromotion(res),
-                                     ep ? EnPassant : Normal));
+         rootMoves.insert(getMove(b,res));
       }
    }
    return 1;
