@@ -12,6 +12,7 @@
 #include <memory.h>
 #include <assert.h>
 #include <iostream>
+#include <unordered_set>
 
 using namespace std;
 
@@ -343,7 +344,7 @@ void Board::doMove( Move move )
          Square target = dest; // where we captured
          Piece capture = contents[dest]; // what we captured
          switch (TypeOfPiece(contents[StartSquare(move)])) {
-         case Empty: break;  
+         case Empty: break;
          case Pawn:
             state.moveCount = 0;
             switch (moveType)
@@ -449,7 +450,7 @@ void Board::doMove( Move move )
             break;
          }
          contents[start] = EmptyPiece;
-         if (capture != EmptyPiece) 
+         if (capture != EmptyPiece)
          {
             state.moveCount = 0;
             ASSERT(target != InvalidSquare);
@@ -457,7 +458,7 @@ void Board::doMove( Move move )
             Xor(state.hashCode, target, capture);
             switch (TypeOfPiece(capture))
             {
-            case Empty: break;  
+            case Empty: break;
             case Pawn:
                    ASSERT(pawn_bits[Black].isSet(target));
                pawn_bits[Black].clear(target);
@@ -496,7 +497,7 @@ void Board::doMove( Move move )
                state.castleStatus[Black] = CantCastleEitherSide;
                material[Black].removePiece(King);
                break;
-            default: 
+            default:
                break;
             }
          }
@@ -573,7 +574,7 @@ void Board::doMove( Move move )
          Square target = dest; // where we captured
                  Piece capture = contents[dest]; // what we captured
          switch (TypeOfPiece(contents[StartSquare(move)])) {
-         case Empty: break;  
+         case Empty: break;
          case Pawn:
             state.moveCount = 0;
             switch (moveType)
@@ -623,7 +624,7 @@ void Board::doMove( Move move )
                Xor(pawnHashCodeB, dest, BlackPawn);
                contents[dest] = BlackPawn;
                if (start - dest == 16) // 2-square pawn advance
-               { 
+               {
                   if (TEST_MASK(Attacks::ep_mask[File(dest)-1][(int)Black],pawn_bits[White])) {
                     state.enPassantSq = dest;
                     state.hashCode ^= ep_codes[0];
@@ -686,7 +687,7 @@ void Board::doMove( Move move )
             occupied[White].clear(target);
             Xor(state.hashCode, target, capture);
             switch (TypeOfPiece(capture)) {
-            case Empty: break;  
+            case Empty: break;
             case Pawn:
                    ASSERT(pawn_bits[White].isSet(target));
                pawn_bits[White].clear(target);
@@ -725,7 +726,7 @@ void Board::doMove( Move move )
                state.castleStatus[White] = CantCastleEitherSide;
                material[White].removePiece(King);
                break;
-            default: 
+            default:
                break;
             }
          }
@@ -762,7 +763,7 @@ void Board::doMove( Move move )
    ASSERT(occupied[Black] == copy.occupied[Black]);
    ASSERT(contents[kingPos[White]]==WhiteKing);
    ASSERT(contents[kingPos[Black]]==BlackKing);
-#endif     
+#endif
 }
 
 hash_t Board::hashCode( Move move ) const
@@ -803,7 +804,7 @@ hash_t Board::hashCode( Move move ) const
          Square target = dest; // where we captured
          switch (TypeOfPiece(contents[StartSquare(move)]))
          {
-         case Empty: break;  
+         case Empty: break;
          case Pawn:
             switch (moveType)
             {
@@ -862,7 +863,7 @@ hash_t Board::hashCode( Move move ) const
             }
             break;
          }
-         if (Capture(move) != Empty) 
+         if (Capture(move) != Empty)
          {
             Piece cap = MakeBlackPiece(Capture(move));
             ASSERT(OnBoard(target));
@@ -904,7 +905,7 @@ hash_t Board::hashCode( Move move ) const
          Square target = dest; // where we captured
          switch (TypeOfPiece(contents[StartSquare(move)]))
          {
-         case Empty: break;  
+         case Empty: break;
          case Pawn:
             switch (moveType)
             {
@@ -923,7 +924,7 @@ hash_t Board::hashCode( Move move ) const
                Xor(newHash, start, BlackPawn );
                Xor(newHash, dest, BlackPawn );
                if (dest - start == 16) // 2-square pawn advance
-               { 
+               {
                   if (TEST_MASK(Attacks::ep_mask[File(dest)-1][(int)Black],pawn_bits[White])) {
                     newHash ^= ep_codes[0];
                     newHash ^= ep_codes[dest];
@@ -1044,7 +1045,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
          }
          setAll(White,start);
          switch (TypeOfPiece(contents[start])) {
-         case Empty: break;  
+         case Empty: break;
          case Pawn:
             Xor(pawnHashCodeW,start,WhitePawn);
             switch (moveType) {
@@ -1070,7 +1071,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
                }
                break;
             case EnPassant:
-              target = dest - 8; 
+              target = dest - 8;
                   ASSERT(OnBoard(target));
                   ASSERT(contents[target]==EmptyPiece);
             case Normal:
@@ -1155,7 +1156,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
          }
          setAll(Black,start);
          switch (TypeOfPiece(contents[start])) {
-         case Empty: break;  
+         case Empty: break;
          case Pawn:
             Xor(pawnHashCodeB,start,BlackPawn);
             switch (moveType) {
@@ -1255,7 +1256,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
    state = old_state;
    ASSERT(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
    ASSERT(getMaterial(oppositeSide()).pawnCount() == (int)pawn_bits[oppositeSide()].bitCount());
-   
+
    --repListHead;
    allOccupied = Bitboard(occupied[White] | occupied[Black]);
    ASSERT(state.hashCode == BoardHash::hashCode(*this));
@@ -1277,7 +1278,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
    ASSERT(occupied[Black] == copy.occupied[Black]);
    ASSERT(contents[kingPos[White]]==WhiteKing);
    ASSERT(contents[kingPos[Black]]==BlackKing);
-#endif     
+#endif
 }
 
 int Board::wouldAttack(Move m,Square target) const {
@@ -1382,7 +1383,7 @@ Bitboard Board::calcBlocks(Square sq, ColorType side) const
           contents[origin + 8] == WhitePawn)
           retval.set(origin + 8);
    }
-   
+
    retval |= (Attacks::knight_attacks[sq] & knight_bits[side]);
    retval |= (rookAttacks(sq) & (rook_bits[side] | queen_bits[side]));
    retval |= (bishopAttacks(sq) & (bishop_bits[side] | queen_bits[side]));
@@ -1475,7 +1476,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
          return attacker;
       }
       break;
-   default:  
+   default:
       return InvalidSquare;
    }
 }
@@ -1589,7 +1590,7 @@ CheckStatusType Board::checkStatus(Move lastMove) const {
          }
       }
       break;
-   case Bishop: 
+   case Bishop:
       switch(d) {
       case 7:
       case -7:
@@ -1615,7 +1616,7 @@ CheckStatusType Board::checkStatus(Move lastMove) const {
       if (Attacks::knight_attacks[checker].isSet(kp)) {
          b.state.checkStatus = InCheck;
       }
-      else {    
+      else {
          if (state.checkStatus == CheckUnknown) {
             // check for discovered attack
             if (discAttack(StartSquare(lastMove),kp,oppositeSide())) {
@@ -1627,14 +1628,14 @@ CheckStatusType Board::checkStatus(Move lastMove) const {
          }
       }
       break;
-   case Queen: 
+   case Queen:
       if (d && clear(checker,kp)) {
          b.state.checkStatus = InCheck;
       } else {
          b.state.checkStatus = NotInCheck;
       }
       break;
-   case King: 
+   case King:
       if (TypeOfMove(lastMove) != Normal) /* castling */
          return checkStatus();
       if (Attacks::king_attacks[checker].isSet(kp)) {
@@ -1673,7 +1674,7 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
              if (Attacks::pawn_attacks[kp][sideToMove()].isSet(checker)) {
                  return InCheck;
              }
-             return CheckUnknown;             
+             return CheckUnknown;
           case Promotion:
              // see if the promoted to piece would check the King:
              switch(PromoteTo(lastMove)) {
@@ -1752,8 +1753,8 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
           switch(d) {
             case 7:
             case -7:
-            case 9:   
-            case -9:   
+            case 9:
+            case -9:
                return ((Attacks::betweenSquares[checker][kp] & allOccupied) ? NotInCheck : InCheck);
             default:
               break;
@@ -1774,14 +1775,14 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
           }
           break;
         }
-        case Queen: 
+        case Queen:
           return clear(checker,kp) ? InCheck : NotInCheck;
         default:
          break;
    }
    return NotInCheck;
 }
-   
+
 int Board::wasLegal(Move lastMove) const {
     if (IsNull(lastMove)) return 1;
     Square kp = kingSquare(oppositeSide());
@@ -1813,7 +1814,7 @@ int Board::discoversAttack(Square source, Square dest, Square target, ColorType 
    const int dir2 =  Attacks::directions[dest][target];
    // check for movement in direction of possible pin. Also exit
    // here if path is not clear to the King
-   if (Util::Abs(dir) == Util::Abs(dir2) || 
+   if (Util::Abs(dir) == Util::Abs(dir2) ||
        (Attacks::betweenSquares[source][target] & allOccupied)) return 0;
 
    Square attackSq = getDirectionalAttack(source,-dir,side);
@@ -1850,6 +1851,23 @@ int Board::repCount(int target) const
       }
    }
    return count;
+}
+
+int Board::anyRep() const
+{
+   int entries = state.moveCount;
+   // If only 2 entries side to move is different so the
+   // hash codes cannot match:
+   if (entries < 3) return 0;
+   unordered_set<hash_t> codes;
+   for (hash_t *repList=repListHead-1;
+      entries>0;
+      repList--,entries--) {
+      if (!codes.emplace(*repList).second) {
+         return 1;
+      }
+   }
+   return 0;
 }
 
 Bitboard Board::getPinned(Square ksq, ColorType side) const {
@@ -1934,8 +1952,8 @@ istream & operator >> (istream &i, Board &board)
    int c;
    int fields = 0;
    int count = 0;
-   while (i.good() && fields < 4 && (c = i.get()) != '\n' && 
-          c != EOF && 
+   while (i.good() && fields < 4 && (c = i.get()) != '\n' &&
+          c != EOF &&
           ++count < 128)
    {
       *bp++ = c;

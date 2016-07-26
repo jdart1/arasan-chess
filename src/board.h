@@ -352,6 +352,10 @@ public:
    // Get repetition count, stop if "target" count reached
    int repCount(int target = 2) const;
 
+   // Return true if there has been a repetition since the last
+   // move that reset the 50-move counter.
+   int anyRep() const;
+
    // Return true if current position is material draw
    int materialDraw() const;
 

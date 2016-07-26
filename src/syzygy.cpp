@@ -78,9 +78,9 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
    const unsigned wdl = TB_GET_WDL(result);
    ASSERT(wdl<5);
    score = valueMap[wdl];
-   if (b.repCount()) {
-       // In case of repetition fall back to making the single
-       // suggested tb move. This move preserves the WDL value.
+   if (b.anyRep()) {
+       // In case of repetition, fall back to making the single
+       // suggested tb move that minimizes DTZ.
        // Otherwise the engine may repeat the position again.
        rootMoves.insert(getMove(b,result));
        return 1;
