@@ -3,7 +3,7 @@
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 19.0
+VERSION = 19.1
 # Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
 
@@ -86,7 +86,7 @@ TUNE_FLAGS=-DTUNE
 LD=link
 CL=cl
 
-# Visual Studio defs (only VC 2012+ has been tested)
+# Visual Studio defs (Visual Studio 2012 or later recommended)
 CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
 !Ifndef DEBUG
