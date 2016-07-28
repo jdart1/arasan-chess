@@ -1,8 +1,33 @@
-Changes in Arasan 19.0.1:
+Changes in Arasan 19.1:
+ 1) Change/fix root move reordering. After wide search phase, just move
+    the pv move first and other moves down.
+ 2) Scoring change: limit range of KING_MOBILITY_ENDGAME array.
+ 3) Add scoring for threats of lower-valued pieces and pawns against
+    higher-valued pieces (previously only pawn threats were scored).
+ 4) Add support for thread affinity via the hwloc library (not enabled
+    in the release builds; must recompile from source to get this).
+ 5) Add restrictions on SEE pruning: don't prune evasions, and only prune
+    checking moves if they are not discovered check.
+ 6) Change extension logic: extend checks if not losing or if discovered.
+    Other checks can be pruned (SEE pruning) or reduced. Remove FORCED2
+    extension (2 legal evasions).
+ 7) Pick up en passant fixes from Fathom library.
+ 8) Add fixes for Android compatibility (although note: Makefiles still do
+    not support Android cross-compilation).
+ 9) Fix bugs in Syzygy probing to avoid non-progress in endgames where
+    a repetition has occurred.
+ 10) Non-POPCNT builds use a better software POPCNT implementation.
+ 11) Change IID conditions: allow IID in check if in PV. In non-PV node,
+     score must not be too bad (like Protector).
+ 12) In "wide" search mode do not shrink upper bound of search window.
+ 13) Use different LMR formula for root search. Decrease  starting move
+ count for LMR (1 for non-PV nodes).
+
+Changes in Arasan 19.0.1 (May 2016):
  1) Fix tablebase options in UCI mode. Comment out default path from
  arasan.rc.
 
-Changes in Arasan 19.0:
+Changes in Arasan 19.0 (Apr. 2016):
  1) Adjust scoring for some pawnless endgames.
  2) Add Syzygy tablebase support, using Fathom library.
  3) Convert codebase to C++ 11. Remove support for older compilers.
