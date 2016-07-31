@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 19.0</h1>
+<h1>Arasan Programmer's Guide - version 19.1</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -51,7 +51,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  19.0
+  19.1
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -796,8 +796,7 @@ If the move checks the opponent, the search is extended, provided
 the score from the static exchange evaluator (SEE) is no worse
 than a loss of one pawn.</li>
 <li>If the side to move is in check, and there is only a single move
-available to escape check, the search is extended. If two evasion
-moves are available, a lesser extension is done.</li>
+available to escape check, the search is extended.</li>
 <li>
 Pushing a pawn to the 7th rank causes the search to be extended,
 on the theory that this pawn may soon promote.</li>
@@ -882,11 +881,13 @@ score + margin is still below alpha.</p>
 Late move reduction is done before futility pruning and the futility
 margin is based on the reduced depth (if a reduction was done).</p>
 <p>
-Arasan also does "late move pruning." Quiet moves that are in the history
-phase of move generation (after the pv move, winning captures, and
-killer moves) and are relatively late in the move order can be pruned
-away. The theory is that if we have not already achieved a cutoff
-searching more moves is not likely to produce one.</p>
+Arasan also does "late move pruning." In non-PV nodes, quiet moves
+that are in the history phase of move generation (after the pv move,
+winning captures, and killer moves) and are relatively late in the
+move order can be pruned away. The theory is that if we have not
+already achieved a cutoff searching more moves is not likely to
+produce one. (In Arasan 19.1, a somewhat different reduction
+formula is used at the root node).</p>
 <p>
 In addition at depths just before the quiescence search, moves that
 appear to lose material based on a static exchange analysis are

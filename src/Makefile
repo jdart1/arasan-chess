@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 19.0
+# Gnu Makefile for Arasan 19.1
 #
-VERSION = 19.0.0
+VERSION = 19.1.0
 
 # paths, modify as needed:
 
@@ -32,11 +32,11 @@ TB=tb
 # location of the Syzygy tablebase source code (Fathom) (if used)
 STB=syzygy
 # compile in NUMA support
-#NUMA=1
+//NUMA=1
 
 #define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS = 1
-#NALIMOV_TBS = 1
+//GAVIOTA_TBS = 1
+//NALIMOV_TBS = 1
 SYZYGY_TBS = 1
 
 ifdef NUMA
