@@ -323,17 +323,8 @@ Move SearchController::findBestMove(
 void SearchController::setRatingDiff(int rdiff)
 {
     ratingDiff = rdiff;
-    ratingFactor = 0;
-    if (ratingDiff < -100) {
-        ratingFactor = Util::Max((PAWN_VALUE*(ratingDiff+100))/300,-PAWN_VALUE);
-        if (ratingDiff < -400)
-          ratingFactor += (400+ratingDiff)*PAWN_VALUE/1000;
-    }
-    else if (ratingDiff > 100) {
-        ratingFactor = Util::Min((PAWN_VALUE*(ratingDiff-100))/300,PAWN_VALUE);
-        if (ratingDiff > 400)
-          ratingFactor += (ratingDiff-400)*PAWN_VALUE/1000;
-    }
+    ratingFactor = (PAWN_VALUE*rdiff)/350;
+
     // propagate rating diff to searches
     pool->forEachSearch<&Search::setRatingVariablesFromController>();
 }

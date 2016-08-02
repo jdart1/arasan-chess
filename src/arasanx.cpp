@@ -496,11 +496,7 @@ static bool accept_draw(Board &board) {
    board.setSideToMove(side);
    int draw_score = searcher->root()->drawScore(board);
    board.setSideToMove(tmp);
-   int threshold = (3*PAWN_VALUE)/4 -(PAWN_VALUE*rating_diff)/200;
-   if (rating_diff > 0)
-      threshold = Util::Max(-PAWN_VALUE,threshold);
-   else
-      threshold = Util::Min(3*PAWN_VALUE,threshold);
+   const int threshold = PAWN_VALUE/4;
    if (doTrace) {
       cout << "# rating_diff = " << rating_diff << endl;
       cout << "# draw_score = " << draw_score << endl;
