@@ -39,8 +39,10 @@ struct SplitPoint {
     // Move Generator instance for split node
     MoveGenerator * mg;
     lock_t mylock;
+    std::atomic<int> failHigh;
     SplitPoint() {
         LockInit(mylock);
+        failHigh = 0;
     }
     ~SplitPoint() {
         LockDestroy(mylock);
@@ -353,6 +355,8 @@ class Search : public ThreadControl {
    static const int LEARNING_SEARCH_WINDOW;
    static double func( double x );
 #endif
+
+   void terminateSlaveSearches();
 
  protected:
 

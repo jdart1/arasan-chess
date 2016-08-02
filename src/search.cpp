@@ -635,6 +635,18 @@ int Search::drawScore(const Board & board) const {
     return score;
 }
 
+void Search::terminateSlaveSearches()
+{
+   Lock(splitLock);
+   if (split) {
+      split->failHigh++;
+      for (int i = 0; i <activeSplitPoints; i++) {
+         splitStack[i].failHigh++;
+      }
+   }
+   Unlock(splitLock);
+}
+
 void RootSearch::init(const Board &board, NodeStack &stack) {
   this->board = initialBoard = board;
 #ifdef SINGULAR_EXTENSION
@@ -3191,7 +3203,8 @@ void Search::searchSMP(ThreadInfo *ti)
 #endif
     MoveGenerator *mg = ti->work->split->mg;
     bool fhr = false;
-    while (!parentNode->cutoff && !terminate) {
+    ASSERT(split);
+    while (!terminate && !split->failHigh) {
         move = in_check ?
            mg->nextEvasion(split,moveIndex) :
            mg->nextMove(split,moveIndex);
@@ -3266,12 +3279,7 @@ void Search::searchSMP(ThreadInfo *ti)
             cout << " " << try_score << endl;
         }
 #endif
-        if (terminate || parentNode->cutoff) {
-#ifdef _TRACE
-          if (master()) {
-             indent(ply); cout << "parent node cutoff" << endl;
-          }
-#endif
+        if (terminate || split->failHigh) {
            board.undoMove(move,state);
            break;
         }
@@ -3279,7 +3287,7 @@ void Search::searchSMP(ThreadInfo *ti)
         while (try_score > best_score &&
                (extend < 0 || hibound < node->beta) &&
                !((node+1)->flags & EXACT) &&
-               !parentNode->cutoff &&
+               !split->failHigh &&
                !terminate) {
             // We got a new best move but with a zero-width search or with
             // reduction enabled, so we must re-search.
@@ -3319,7 +3327,7 @@ void Search::searchSMP(ThreadInfo *ti)
             cout << " " << try_score << endl;
         }
 #endif
-        if (!terminate && !parentNode->cutoff) {
+        if (!terminate && !split->failHigh) {
             split->lock();
             ASSERT(parentNode->num_try<Constants::MaxMoves);
             parentNode->done[parentNode->num_try++] = move;
@@ -3350,8 +3358,9 @@ void Search::searchSMP(ThreadInfo *ti)
                 }
             }
             if (node->cutoff || try_score >= Constants::MATE-1-ply) {
+                split->failHigh++;
                 parentNode->cutoff++;
-                break;                            // mating move found
+                break;
             }
         }
         if (fhr) {
@@ -3644,6 +3653,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     // The split variable holds the split point to which this Search
     // instance is attached
     split = s;
+    split->failHigh = 0;
     nodeAccumulator = 0;
     ti = slave_ti;
     // Copy a little info from the parent node to the child.
