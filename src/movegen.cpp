@@ -161,7 +161,7 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
          context->getKillers(0,killer1,killer2);
       }
        */
-      unsigned pvIndex = -1;
+      int pvIndex = -1;
       for (unsigned i = 0; i < moveList.size(); i++) {
          ClearUsed(moveList[i].move);
          // save the hash move index
