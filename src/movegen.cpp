@@ -318,8 +318,10 @@ Move MoveGenerator::nextEvasion(int &ord) {
              continue;
           }
           if (CaptureOrPromotion(moves[i])) {
+             int gain = Gain(moves[i]);
+             int pieceVal = PieceValue(PieceMoved(moves[i]));
              scores[i] = MVV_LVA(moves[i]);
-             if (scores[i] > 0 || (scores[i] = see(board,moves[i])) >= 0) {
+             if (gain-pieceVal > 0 || (scores[i] = see(board,moves[i])) >= 0) {
                 ++poscaps;
                 if (i > poscaps) {
                    // move positive captures to front of list

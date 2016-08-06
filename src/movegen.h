@@ -49,7 +49,7 @@ class MoveGenerator
                      // already did this one
                      continue;
                  }
-                 if (MVV_LVA(move)<=0) {
+                 if (Gain(move)-PieceValue(Capture(move))<=0) {
                     if (seeSign(board,move,0)) {
                          SetPhase(move,WINNING_CAPTURE_PHASE);
                          ord = order++;

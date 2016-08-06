@@ -393,7 +393,7 @@ FORCEINLINE int Gain(Move move) {
 }
 
 FORCEINLINE int MVV_LVA(Move move) {
-    return Gain(move) - PieceValue(PieceMoved(move));
+    return 8*Gain(move) - PieceValue(PieceMoved(move));
 }
 
 extern void MoveImage(Move m,ostream &out);
