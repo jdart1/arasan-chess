@@ -60,9 +60,8 @@ static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
-static const double LMR_BASE = 0.3;
-static const double LMR_NON_PV = 1.5;
-static const double LMR_PV = 2.25;
+static const double LMR_BASE[2] = {0.5,0.3};
+static const double LMR_DIV[2] = {1.8,2.5};
 static const int MAX_SPLIT_DEPTH=16*DEPTH_INCREMENT;
 static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 
@@ -180,17 +179,17 @@ SearchController::SearchController()
     ti->state = ThreadInfo::Working;
     rootSearch = (RootSearch*)ti->work;
     for (int d = 0; d < 64; d++) {
-      for (int moves= 0; moves < 64; moves++) {
+      for (int moves = 0; moves < 64; moves++) {
         LMR_REDUCTION[0][d][moves] =
            LMR_REDUCTION[1][d][moves] = 0;
-        if (d >= 2 && moves > 0) {
-           // Formula similar to Protector & Toga. Tuned Aug. 2015
-           double f = LMR_BASE + log((double)d) * log((double)moves+1);
-           const double reduction[2] = {f/LMR_NON_PV, f/LMR_PV};
+        if (d > 2 && moves > 0) {
+           // Formula similar to Protector & Toga. Last modified Aug. 2016.
+           const double f = log((double)d) * log((double)moves+1);
            for (int i = 0; i < 2; i++) {
-              int r = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction[i]+0.5)/2);
+              const double reduction = LMR_BASE[i] + f/LMR_DIV[i];
+              int r = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
               // do not reduce into the qsearch:
-              if (r > d*DEPTH_INCREMENT) r = d*DEPTH_INCREMENT-1;
+              r = Util::Min(r,d*DEPTH_INCREMENT-1);
               // do not do reductions < 1 ply
               if (r < DEPTH_INCREMENT) r = 0;
               LMR_REDUCTION[i][d][moves] = r;
@@ -199,7 +198,7 @@ SearchController::SearchController()
       }
     }
 /*
-    for (int i = 0; i < 64; i++) {
+    for (int i = 3; i < 64; i++) {
       cout << "--- i=" << i << endl;
       for (int m=0; m<64; m++) {
       cout << m << " " << 1.0*LMR_REDUCTION[0][i][m]/DEPTH_INCREMENT << ' ' << 1.0*LMR_REDUCTION[1][i][m]/DEPTH_INCREMENT << endl;
@@ -2094,13 +2093,7 @@ int Search::calcExtensions(const Board &board,
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() &&
        (node->ply == 0 || GetPhase(move) == MoveGenerator::HISTORY_PHASE) &&
        !passedPawnMove(board,move,6)) {
-      if (node->ply == 0) {
-         // reduce somewhat less at ply 0
-         extend -= DEPTH_INCREMENT + Util::Min(depth-DEPTH_INCREMENT-1,depth/8 + Bitboard(moveIndex-2).lastOne()*DEPTH_INCREMENT/4);
-      }
-      else {
-         extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
-      }
+      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
       if (extend) {
          node->extensions |= LMR;
 #ifdef SEARCH_STATS
