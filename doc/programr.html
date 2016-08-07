@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 19.0</title>
+<title>Arasan Programmer's Guide - version 19.1</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
@@ -793,15 +793,15 @@ are several cases in which this occurs:</p>
 <ol>
 <li>
 If the move checks the opponent, the search is extended, provided
-the score from the static exchange evaluator (SEE) is no worse
-than a loss of one pawn.</li>
+that the checking move does not lose material (according to SEE) or is a
+discovered check.</li>
 <li>If the side to move is in check, and there is only a single move
 available to escape check, the search is extended.</li>
 <li>
 Pushing a pawn to the 7th rank causes the search to be extended,
 on the theory that this pawn may soon promote.</li>
 </li>
-Only at PV nodes: if a safe capture is done and the last opponent
+If a safe capture is done and the last opponent
 piece has been captured, the search is extended.</li>
 </ol>
 <p>
@@ -1007,7 +1007,7 @@ allocated on a per-thread basis (each thread has its own tables).</p>
 </ol>
 
 <p>The positional score is typically within the range of plus or minus
-the value of a pawn (100), but can be greater in some circumstances.</p>
+the value of a pawn (1000), but can be greater in some circumstances.</p>
 
 <p>Pawn structure scoring is done in two stages. First, the pawn hash
 table is probed to get the score for the position. If the position
