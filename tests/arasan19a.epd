@@ -34,7 +34,7 @@ br4k1/1qrnbppp/pp1ppn2/8/NPPBP3/PN3P2/5QPP/2RR1B1K w - - bm Nxb6; id "arasan19.3
 r2q1rk1/ppp2p2/3p1np1/4pNQ1/4P1pP/1PPP4/1P3P2/R3K1R1 w Q - bm Qh6; id "arasan19.34"; c0 "Morella-Fernandez, Cuba 1998";
 1qb2rk1/3p1pp1/1p6/1pbBp3/r5p1/3QB3/PPP2P1P/2KR2R1 w - - bm b3; id "arasan19.35"; c0 "Shirov-Zvjaginsev, Biel 1995";
 r1b2q1k/2Qn1p1p/1p1Rpp2/p6B/4P2P/6N1/P4PP1/6K1 w - - bm e5; id "arasan19.36"; c0 "Amateur-Rybka, ACCA East-West team match, ICC 2008";
-r1q2k1r/ppp2ppp/4n3/3N4/2B5/3Q4/Pb3PPP/4RRK1 w - - bm Rxe6; id "arasan19.37"; c0 "Akopian-Ramaswamy, Gilbraltar Masters 2007";
+r2q1rk1/p2pn3/bpp2p1p/3Nb1pQ/7B/8/PPB2PPP/R3R1K1 w - - bm Bxg5; id "arasan19.37a"; c0 "Stockfish 7-Rybka 4.1, Gambit tournament 2016";
 r4rk1/p4ppp/qp2p3/b5B1/n1R5/5N2/PP2QPPP/1R4K1 w - - bm Bf6; id "arasan19.38"; c0 "Alekhine-Sterk, Budapest 1921";
 r2q1rk1/4bppp/3pb3/2n1pP2/1p2P1PP/1P3Q2/1BP1N1B1/2KR3R b - - bm Ra2; id "arasan19.39"; c0 "Gereben-Geller, Budapest 1952";
 2r2rkb/1Q1b3p/p2p3q/2PPnp2/1P2p1p1/2N5/P3BPPB/4RRK1 b - - bm e3; id "arasan19.40"; c0 "Houdini 4 x64-Stockfish 7 x64, Stockfish Gauntlet (G. Banks) 2016";
