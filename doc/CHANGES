@@ -20,12 +20,12 @@ Changes in Arasan 19.1:
  11) Change IID conditions: allow IID in check if in PV. In non-PV node,
      score must not be too bad (like Protector).
  12) In "wide" search mode do not shrink upper bound of search window.
- 13) Use different LMR formula for root search. Decrease starting move
- count for LMR (1 for non-PV nodes).
+ 13) Small changes to LMR reduction formula.
  14) Fixes to terminate multithreaded searches faster when fail-high
  detected.
- 15) Fixes to draw score calculation when ratings are available and
+ 15) Changes to draw score calculation when ratings are available and
  to logic for "accept draw."
+ 16) Fix MVV/LVA calculation for move ordering.
 
 Changes in Arasan 19.0.1 (May 2016):
  1) Fix tablebase options in UCI mode. Comment out default path from
