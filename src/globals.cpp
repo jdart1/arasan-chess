@@ -51,6 +51,8 @@ static const char * LEARN_FILE_NAME = "arasan.lrn";
 
 static const char * DEFAULT_BOOK_NAME = "book.bin";
 
+static const char * RC_FILE_NAME = "arasan.rc";
+
 #ifdef UCI_LOG
 fstream ucilog;
 #endif
@@ -115,14 +117,14 @@ void CDECL cleanupGlobals(void) {
 
 void initOptions(const char *pathName) {
     programPath = pathName;
-    string rcPath = derivePath("arasan.rc");
+    string rcPath = derivePath(RC_FILE_NAME);
     // try to read arasan.rc file
     options.init(rcPath);
 #ifndef _WIN32
     // Also read .rc from the user's HOME,
     // if there is one.
     if (getenv("HOME")) {
-       rcPath = derivePath(getenv("HOME"),"arasan.rc");
+       rcPath = derivePath(getenv("HOME"),RC_FILE_NAME);
        options.init(rcPath);
     }
 #endif
