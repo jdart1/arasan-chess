@@ -1004,6 +1004,7 @@ Move *excludes, int num_excludes)
             // best move (according to the engine) among the available
             // tb moves.
             //
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
             if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0]) && !(options.search.tablebase_type == Options::TbType::SyzygyTb && mg.moveCount()>1)) {
                if (talkLevel == Trace)
                   cout << "# terminating, tablebase hit" << endl;
@@ -1013,7 +1014,9 @@ Move *excludes, int num_excludes)
                controller->terminateNow();
                break;
             }
-            else if (!controller->background &&
+            else
+#endif
+            if (!controller->background &&
                      !controller->time_added &&
                      !easy_adjust &&
                      depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
