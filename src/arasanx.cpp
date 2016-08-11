@@ -2416,6 +2416,11 @@ static void do_selfplay()
 }
 #endif
 
+static bool validTbPath(const string &path) {
+   // Shredder at least sets path to "<empty>" for tb types that are disabled
+   return path != "" && path != "<empty>";
+}
+
 // Execute a command, return false if program should terminate.
 static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
@@ -2558,7 +2563,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #endif
 #ifdef NALIMOV_TBS
-        else if (name == "NalimovPath") {
+        else if (name == "NalimovPath" && validTbPath(value)) {
             unloadTb(options.search.tablebase_type);
             options.search.nalimov_path = value;
             options.search.use_tablebases = 1;
@@ -2573,7 +2578,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #endif
 #ifdef GAVIOTA_TBS
-        else if (name == "GaviotaTbPath") {
+        else if (name == "GaviotaTbPath" && validTbPath(value)) {
             unloadTb(options.search.tablebase_type);
             options.search.gtb_path = value;
             options.search.use_tablebases = 1;
@@ -2588,7 +2593,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #endif
 #ifdef SYZYGY_TBS
-        else if (name == "SyzygyTbPath") {
+        else if (name == "SyzygyTbPath" && validTbPath(value)) {
            unloadTb(options.search.tablebase_type);
            options.search.syzygy_path = value;
            options.search.use_tablebases = 1;
