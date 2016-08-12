@@ -599,7 +599,7 @@ int failhigh,int complete)
             if (failhigh) cout << '!';
         }
         cout << '\t';
-        Scoring::printScore(stats->value,cout);
+        Scoring::printScore(stats->display_value,cout);
         cout << '\t' << stats->num_nodes << endl;
     }
     // Post during ponder if UCI
@@ -652,6 +652,29 @@ void RootSearch::init(const Board &board, NodeStack &stack) {
   threadSplitDepth = controller->threadSplitDepth;
 }
 
+int Search::tbScoreAdjust(const Board &board,
+                    int value,int tb_hit,Options::TbType tablebase_type,int tb_score) const 
+{
+   if (tb_hit && tablebase_type == Options::TbType::SyzygyTb &&
+       !Scoring::mateScore(value)) {
+      // If a Syzygy tablebase hit set the score based on that. But
+      // don't override a mate score found with search.
+      if (tb_score == Constants::TABLEBASE_WIN) {
+         return tb_score;
+      }
+      else if (tb_score >= 0) {
+         return drawScore(board);
+      }
+      else {
+         // loss or cursed draw position
+         return -Constants::TABLEBASE_WIN;
+      }
+   }
+   else {
+      return value;
+   }
+}
+
 Move RootSearch::ply0_search(
 Move *excludes, int num_excludes)
 {
@@ -688,10 +711,12 @@ Move *excludes, int num_excludes)
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
+   int tb_score = Scoring::INVALID_SCORE;
+   cout << "srcOpts.use_tablebases=" <<
+      srcOpts.use_tablebases << " EGTBMenCount= " << EGTBMenCount << endl;
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
-      int tb_score;
       tb_pieces = wMat.men() + bMat.men();
       if(tb_pieces <= EGTBMenCount) {
          controller->stats->tb_probes++;
@@ -837,6 +862,13 @@ Move *excludes, int num_excludes)
 #endif
             controller->updateStats(node,iteration_depth,
                                     value,lo_window,hi_window);
+            // Correct if necessary the display value, used for score
+            // output and resign decisions, based on the tb information:
+            controller->stats->display_value = tbScoreAdjust(board,
+                                                      controller->stats->display_value,
+                                                      tb_hit,
+                                                      options.search.tablebase_type,
+                                                      tb_score);
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
@@ -1065,12 +1097,6 @@ Move *excludes, int num_excludes)
    Statistics *stats = controller->stats;
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
-   // If a Syzygy tablebase hit set the score based on that. But
-   // don't override a mate score found with search.
-   if (!Scoring::mateScore(stats->display_value) &&
-      stats->tb_value != Scoring::INVALID_SCORE) {
-      stats->display_value = stats->tb_value;
-   }
    if (!controller->uci && !stats->end_of_game && srcOpts.can_resign) {
       if (stats->display_value != Scoring::INVALID_SCORE &&
          (100*stats->display_value)/PAWN_VALUE <= srcOpts.resign_threshold) {

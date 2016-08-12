@@ -391,6 +391,9 @@ class Search : public ThreadControl {
    void showStatus(const Board &board, Move best,int faillow,
             int failhigh,int complete);
 
+   int tbScoreAdjust(const Board &board,
+                     int value,int tb_hit,Options::TbType tablebase_type,int tb_score) const;
+
    FORCEINLINE void PUSH(int alpha,int beta,int flags,
                           int ply, int depth) {
        ++node; 
