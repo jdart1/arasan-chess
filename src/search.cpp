@@ -712,8 +712,6 @@ Move *excludes, int num_excludes)
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
    int tb_score = Scoring::INVALID_SCORE;
-   cout << "srcOpts.use_tablebases=" <<
-      srcOpts.use_tablebases << " EGTBMenCount= " << EGTBMenCount << endl;
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -2608,7 +2606,7 @@ int Search::search()
     node->threatMove = NullMove;
     if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
-        node->staticEval >= node->beta &&
+        (depth>=12*DEPTH_INCREMENT || node->staticEval >= node->beta) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
