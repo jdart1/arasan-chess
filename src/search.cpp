@@ -68,12 +68,13 @@ static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
 {
-   return (depth*PAWN_VALUE)/(100*DEPTH_INCREMENT);
+//   return (depth*PAWN_VALUE)/(100*DEPTH_INCREMENT);
+   return PAWN_VALUE/4;
 }
 
 static int singularExtensionDepth(int depth)
 {
-   return depth - 3*DEPTH_INCREMENT;
+   return depth/2;
 }
 #endif
 
@@ -2606,7 +2607,7 @@ int Search::search()
     node->threatMove = NullMove;
     if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
-        (depth>=12*DEPTH_INCREMENT || node->staticEval >= node->beta) &&
+        node->staticEval >= node->beta &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
@@ -2787,7 +2788,7 @@ int Search::search()
             hashEntry.depth() >= depth - 3*DEPTH_INCREMENT &&
             !IsNull(hashMove) &&
             Util::Abs(hashValue) < Constants::MATE_RANGE &&
-            result != HashEntry::LowerBound &&
+            result != HashEntry::UpperBound &&
             calcExtensions(board,node,node,board.wouldCheck(hashMove),
                            0,hashMove) < DEPTH_INCREMENT &&
             validMove(board,hashMove)) {
