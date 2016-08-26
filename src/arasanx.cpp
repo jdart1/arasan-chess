@@ -1642,15 +1642,23 @@ static void setTuningParam(const string &name, const string &value)
       buf >> tmp;
       if (!buf.bad() && !buf.fail()) {
          tune_params.updateParamValue(index,tmp);
+         // apply params to Scoring module
+         tune_params.applyParams();
       }
       else {
-         cout << "# Warning: invalid value for option " <<
+         if (uci) cout << "info ";
+         else cout << "#";
+         cout << "Warning: invalid value for option " <<
             name << ": " << value << endl;
          return;
       }
    }
-   // apply params to Scoring module
-   tune_params.applyParams();
+   else {
+      if (uci) cout << "info ";
+      else cout << "#";
+      cout << "Warning: invalid option name \"" <<
+            name << "\"" << endl;
+   }
 }
 #endif
 
@@ -2421,6 +2429,18 @@ static bool validTbPath(const string &path) {
    return path != "" && path != "<empty>";
 }
 
+static bool uciOptionCompare(const string &a, const string &b) {
+   if (a.length() != b.length()) {
+      return false;
+   } else {
+      for (unsigned i = 0; i < a.length(); i++) {
+         if (tolower(a[i]) != tolower(b[i])) return false;
+      }
+      return true;
+   }
+}
+
+
 // Execute a command, return false if program should terminate.
 static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
@@ -2528,7 +2548,7 @@ static bool do_command(const string &cmd, Board &board) {
                value = value.erase(value.find_last_not_of(' ') + 1);
             }
         }
-        if (name == "Hash") {
+        if (uciOptionCompare(name,"Hash")) {
             if (!memorySet) {
                 size_t old = options.search.hash_table_size;
                 // size is in megabytes
@@ -2546,14 +2566,14 @@ static bool do_command(const string &cmd, Board &board) {
                 }
             }
         }
-        else if (name == "Ponder") {
+        else if (uciOptionCompare(name,"Ponder")) {
             easy = !(value == "true");
         }
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-        else if (name == "Use tablebases") {
+        else if (uciOptionCompare(name,"Use tablebases")) {
             options.search.use_tablebases = (value == "true");
         }
-        else if (name == "Tablebases") {
+        else if (uciOptionCompare(name,"Tablebases")) {
             Options::TbType previous = options.search.tablebase_type;
             options.search.tablebase_type = Options::stringToTbType(value);
             if (previous != options.search.tablebase_type) {
@@ -2563,13 +2583,13 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #endif
 #ifdef NALIMOV_TBS
-        else if (name == "NalimovPath" && validTbPath(value)) {
+        else if (uciOptionCompare(name,"NalimovPath") && validTbPath(value)) {
             unloadTb(options.search.tablebase_type);
             options.search.nalimov_path = value;
             options.search.use_tablebases = 1;
             options.search.tablebase_type = Options::TbType::NalimovTb;
         }
-        else if (name == "NalimovCache") {
+        else if (uciOptionCompare(name,"NalimovCache")) {
             // This is in MB
             int size = 0;
             if (Options::setOption<int>(value,size)) {
@@ -2584,7 +2604,7 @@ static bool do_command(const string &cmd, Board &board) {
             options.search.use_tablebases = 1;
             options.search.tablebase_type = Options::TbType::GaviotaTb;
         }
-        else if (name == "GaviotaTbCache") {
+        else if (uciOptionCompare(name,"GaviotaTbCache")) {
             // This is in MB
             int size;
             if (Options::setOption<int>(value,size)) {
@@ -2593,26 +2613,26 @@ static bool do_command(const string &cmd, Board &board) {
         }
 #endif
 #ifdef SYZYGY_TBS
-        else if (name == "SyzygyTbPath" && validTbPath(value)) {
+        else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
            unloadTb(options.search.tablebase_type);
            options.search.syzygy_path = value;
            options.search.use_tablebases = 1;
            options.search.tablebase_type = Options::TbType::SyzygyTb;
         }
-        else if (name == "SyzygyUse50MoveRule") {
+        else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
            options.search.syzygy_50_move_rule = (value == "true");
         }
-        else if (name == "SyzygyProbeDepth") {
+        else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
            Options::setOption<int>(value,options.search.syzygy_probe_depth);
         }
 #endif
-        else if (name == "OwnBook") {
+        else if (uciOptionCompare(name,"OwnBook")) {
             options.book.book_enabled = (value == "true");
         }
-        else if (name == "Book selectivity") {
+        else if (uciOptionCompare(name,"Book selectivity")) {
             Options::setOption<int>(value,options.book.selectivity);
         }
-        else if (name == "MultiPV") {
+        else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
             options.search.multipv = Util::Min(MAX_PV,options.search.multipv);
             // GUIs (Shredder at least) send 0 to turn multi-pv off: but
@@ -2623,16 +2643,16 @@ static bool do_command(const string &cmd, Board &board) {
             // migrate current stats to 1st Multi-PV table entry:
             multi_pvs[0] = MultiPVEntry(stats);
         }
-        else if (name == "Threads") {
+        else if (uciOptionCompare(name,"Threads")) {
             int threads = options.search.ncpus;
             if (Options::setOption<int>(value,threads) && threads >0 && threads <= Constants::MaxCPUs) {
                 options.search.ncpus = threads;
                 searcher->setThreadCount(options.search.ncpus);
             }
         }
-        else if (name == "UCI_LimitStrength") {
+        else if (uciOptionCompare(name,"UCI_LimitStrength")) {
             uci_limit_strength = (value == "true");
-        } else if (name == "UCI_Elo" && uci_limit_strength) {
+        } else if (uciOptionCompare(name,"UCI_Elo") && uci_limit_strength) {
             int rating = 2400;
             if (Options::setOption<int>(value,rating)) {
                 options.search.strength = (rating-1000)/16;
@@ -2641,7 +2661,7 @@ static bool do_command(const string &cmd, Board &board) {
             }
 	}
 #ifdef NUMA
-        else if (name == "Set processor affinity") {
+        else if (uciOptionCompare(name,"Set processor affinity")) {
            int tmp = options.search.set_processor_affinity;
            options.search.set_processor_affinity = (value == "true");
            if (tmp != options.search.set_processor_affinity) {
@@ -2652,7 +2672,7 @@ static bool do_command(const string &cmd, Board &board) {
               }
            }
         }
-        else if (name == "Affinity offset") {
+        else if (uciOptionCompare(name,"Affinity offset")) {
            int tmp = options.search.affinity_offset;
            Options::setOption<int>(value,options.search.affinity_offset);
            if (tmp != options.search.affinity_offset) {
@@ -2663,6 +2683,10 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef TUNE
         else {
            setTuningParam(name,value);
+        }
+#else
+        else {
+           cout << "info error: invalid option name \"" << name << "\"" << endl;
         }
 #endif
         searcher->updateSearchOptions();
