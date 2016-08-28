@@ -1712,8 +1712,12 @@ static void processWinboardOptions(const string &args) {
     else {
        setTuningParam(name,value);
     }
+#else
+    else {
+       cout << "# Warning: invalid option name \"" << name << "\"" << endl;
+   }
 #endif
-    searcher->updateSearchOptions();
+   searcher->updateSearchOptions();
 }
 
 // Handle a command received while searching.  terminate is set
