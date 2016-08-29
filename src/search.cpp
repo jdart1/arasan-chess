@@ -1244,7 +1244,6 @@ int depth, Move exclude [], int num_exclude)
     node->ply = 0;
     node->depth = depth;
     node->eval = Scoring::INVALID_SCORE;
-    node->threatMove = NullMove;
     // clear split point stack:
     activeSplitPoints = 0;
 
@@ -2142,67 +2141,35 @@ int Search::calcExtensions(const Board &board,
        board.getMaterial(Black).hasPieces();
 
    if (pruneOk) {
-      const Move &threat = parentNode->threatMove;
-      if (!IsNull(threat)) {
-         if (StartSquare(move) == DestSquare(threat) ||
-             DestSquare(move) == DestSquare(threat)) {
-            // We are moving a threatened piece, or we are
-            // blocking the dest square of the threat
-            pruneOk = 0;
-         } else if (Sliding(board[StartSquare(threat)])) {
-            Bitboard btwn;
-            board.between(StartSquare(threat),DestSquare(threat),btwn);
-            if (btwn.isSet(DestSquare(move))) {
-               if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-               if (swap) {
-                  // safe interposition
-                  pruneOk = 0;
-               }
-            }
-         }
-         if (pruneOk) {
-            // check for move defending dest square, if threat is a
-            // capture or promotion
-            PieceType cap = Capture(threat);
-            PieceType pm = PieceMoved(threat);
-            if (TypeOfMove(threat)==Promotion || ((cap != Empty) &&
-                                                  (PieceValue(cap) >= PieceValue(pm) || pm == King) &&
-                                                  board.wouldAttack(move,DestSquare(threat)))) {
-               pruneOk = 0; // don't prune
-            }
+      // do not use predictedDepth for LMP
+      if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
+         GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+         if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
+#ifdef SEARCH_STATS
+            ++controller->stats->lmp;
+#endif
+#ifdef _TRACE
+            indent(node->ply); cout << "LMP: pruned" << endl;
+#endif
+            return PRUNE;
          }
       }
-      if (pruneOk) {
-         // do not use predictedDepth for LMP
-         if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
-            GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-            if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
-#ifdef SEARCH_STATS
-               ++controller->stats->lmp;
-#endif
-#ifdef _TRACE
-               indent(node->ply); cout << "LMP: pruned" << endl;
-#endif
-               return PRUNE;
-            }
+      // futility pruning, enabled at low depths
+      if (predictedDepth <= FUTILITY_DEPTH) {
+         // Threshold was formerly increased with the move index
+         // but this tests worse now.
+         int threshold = parentNode->beta - FUTILITY_MARGIN[predictedDepth/DEPTH_INCREMENT];
+         if (node->eval == Scoring::INVALID_SCORE) {
+            node->eval = node->staticEval = scoring.evalu8(board);
          }
-         // futility pruning, enabled at low depths
-         if (predictedDepth <= FUTILITY_DEPTH) {
-            // Threshold was formerly increased with the move index
-            // but this tests worse now.
-            int threshold = parentNode->beta - FUTILITY_MARGIN[predictedDepth/DEPTH_INCREMENT];
-            if (node->eval == Scoring::INVALID_SCORE) {
-               node->eval = node->staticEval = scoring.evalu8(board);
-            }
-            if (node->eval < threshold) {
+         if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-               controller->stats->futility_pruning++;
+            controller->stats->futility_pruning++;
 #endif
 #ifdef _TRACE
-               indent(node->ply); cout << "futility: pruned" << endl;
+            indent(node->ply); cout << "futility: pruned" << endl;
 #endif
-               return PRUNE;
-            }
+            return PRUNE;
          }
       }
    }
@@ -2222,26 +2189,6 @@ int Search::calcExtensions(const Board &board,
        }
    }
    return extend;
-}
-
-int Search::movesRelated( Move lastMove, Move threatMove) const {
-   if (DestSquare(lastMove) == StartSquare(threatMove) ||
-       StartSquare(lastMove) == DestSquare(threatMove)) {
-      return 1;
-   }
-   if (Sliding(PieceMoved(threatMove))) {
-      Bitboard btwn;
-      board.between(StartSquare(threatMove),DestSquare(threatMove),btwn);
-      if (btwn.isSet(StartSquare(lastMove))) {
-         // move of sliding piece enabled by lastMove
-         return 1;
-      }
-   }
-   if (board.wouldAttack(lastMove,DestSquare(threatMove))) {
-      // last move defends or attacks dest square of threat
-      return 1;
-   }
-   return 0;
 }
 
 // Recursive function, implements alpha/beta search below ply 0 but
@@ -2604,7 +2551,6 @@ int Search::search()
     // zugzwang is a possibility. Do not do null move if this is an
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
-    node->threatMove = NullMove;
     if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
         node->staticEval >= node->beta &&
@@ -2686,22 +2632,6 @@ int Search::search()
                             nscore;
                         goto hash_insert;
                     }
-            }
-            else {
-                // Null move failed low. Remember what the opponent move was
-                // that refuted the null move.
-                node->threatMove = (node+1)->best;
-                // Extend previously reduced move if threat move related to
-                // that move (idea from Stockfish)
-                if (!IsNull(node->threatMove) &&
-                    ply > 0 &&
-                    depth < 5*DEPTH_INCREMENT &&
-                    ((node-1)->extensions & LMR) &
-                    movesRelated( (node-1)->last_move, node->threatMove)) {
-                    // return a fail-low score (fail high in parent node),
-                    // forcing a full width search
-                    return node->alpha;
-                }
             }
         }
     }
@@ -3196,7 +3126,6 @@ void Search::searchSMP(ThreadInfo *ti)
     node->alpha = parentNode->alpha;
     node->beta = parentNode->beta;
     node->best_score = parentNode->best_score;
-    node->threatMove = parentNode->threatMove;
     node->best = parentNode->best;
     node->last_move = parentNode->last_move;
     node->extensions = parentNode->extensions;

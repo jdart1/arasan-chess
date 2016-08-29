@@ -66,7 +66,6 @@ struct NodeInfo {
     volatile int cutoff;
     int num_try;
     int flags; 
-    Move threatMove;
     Move singularMove;
     volatile Move best;
     Move last_move;
@@ -79,7 +78,7 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
-    char pad[118];
+    char pad[110];
 
     int PV() const {
         return (beta > alpha+1);
@@ -364,8 +363,6 @@ class Search : public ThreadControl {
                           FORCED=16, LMR=64, SINGULAR_EXT=128 };
 
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8 };
-
-    int movesRelated( Move lastMove, Move threatMove) const;
 
     int calcExtensions(const Board &board,
                        NodeInfo *node, NodeInfo *parentNode,
