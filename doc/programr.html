@@ -453,15 +453,18 @@ Python chess engine interface script. Note though I have had
 mixed results with CLOP.</p>
 <p>The second executable built by the "tuner" target is named "tuner" and
 it is a somewhat experimental tool that can be used to "train" the parameter weights for the
-scoring module. It uses an algorithm called MMTO described by Hoki
-and Kaneko (see references). It is designed to be used together with
+scoring module. This supports two different tuning methods:</p>
+<ol>
+<li>The default is the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
+on logistic regression. For this method the input file should be a PGN
+of a diverse set of games (not with all high-quality moves).</li>
+<li>With the -m switch, the tuner uses an algorithm called MMTO described by Hoki
+and Kaneko (see references). This is designed to be used together with
 a PGN file that contains high-quality games that serve as a reference
 set of "good" moves. The algorithm will adapt the scoring parameters
 so that the program will make moves similar to those in the training
-set.</p>
-<p>There is also support for using the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
-on logistic regression. For this method the input file should be a PGN
-of a diverse set of games (not with all high-quality moves).</p>
+set.</li>
+</ol>
 <p>The "tuner" program expects a PGN file to be specified on the command
 line. It will output two files: by default the first one is named "x0"
 and contains the tuned parameter values; the second one is a compilable
@@ -475,7 +478,7 @@ The following command-line options are supported:</p>
 <li>-i &lt;input parameter file&gt; specify the name of a file containing
 starting values for the parameters (can be the x0 file from a previous run).
 Without this some reasonable starting defaults will be used.</li>
-<li>-t use the "Texel" tuning method instead of MMTO.</li>
+<li>-m use the MMTO tuning method instead of the Texel method.</li>
 <li>-x &lt;output parameter file&gt; specify the name of the output file (instead of "x0")</li>
 <li>-r apply L2 regularization</li>
 <li>-o &lt;output .cpp file&gt; specify the name of the .cpp file that is

@@ -27,13 +27,13 @@ extern "C" {
 #endif
 };
 
-// MMTO tuning code for Arasan, based on:
+// Parameter tuning code for Arasan.
+// Implements the "Texel" tuning method.
+// Or with the -m switch uses the MMTO algorithm, based on:
 // Kunihuto Hoki & Tomoyuki Kaneko, "Large-Scale Optimization for Evaluation
 // Functions with Minimax Search,"
 // Journal of Articial Intelligence Research 49 (2014) 527-568.
 // Partly based on Bonanza source code.
-//
-// Also implements the "Texel" tuning method via the -t switch.
 //
 // Note: this file requires a C++11 compatible compiler/libraries.
 
@@ -41,7 +41,8 @@ using namespace tuner;
 
 static bool regularize = false;
 
-static bool texel = false;
+// Texel method is default
+static bool texel = true;
 
 static bool use_adagrad = false;
 
@@ -160,7 +161,7 @@ static void usage()
    cerr << " -d just write out current parameters values to params.cpp" << endl;
    cerr << " -i <input parameter file> -o <output parameter file>" << endl;
    cerr << " -r apply regularization" << endl;
-   cerr << " -t use Texel method instead of MMTO" << endl;
+   cerr << " -m use MMTO method instead of Texel" << endl;
    cerr << " -x <output objective file>" << endl;
    cerr << " -n <iterations>" << endl;
    cerr << " -V validate gradient" << endl;
@@ -1701,8 +1702,8 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-r")==0) {
           regularize = true;
        }
-       else if (strcmp(argv[arg],"-t")==0) {
-          texel = true;
+       else if (strcmp(argv[arg],"-m")==0) {
+          texel = false;
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
