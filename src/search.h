@@ -39,7 +39,7 @@ struct SplitPoint {
     // Move Generator instance for split node
     MoveGenerator * mg;
     lock_t mylock;
-    std::atomic<int> failHigh;
+    atomic<int> failHigh;
     SplitPoint() {
         LockInit(mylock);
         failHigh = 0;
@@ -61,19 +61,19 @@ struct NodeInfo {
     NodeInfo() : cutoff(0),best(NullMove)
     {
     }
-    volatile int best_score;
-    volatile int alpha, beta;
-    volatile int cutoff;
+    int best_score;
+    int alpha, beta;
+    int cutoff;
     int num_try;
     int flags; 
     Move singularMove;
-    volatile Move best;
+    Move best;
     Move last_move;
     int extensions; // mask of extensions
     int eval, staticEval;
-    volatile Move pv[Constants::MaxPly];
-    volatile int pv_length;
-    volatile Move done[Constants::MaxMoves];
+    Move pv[Constants::MaxPly];
+    int pv_length;
+    Move done[Constants::MaxMoves];
 #ifdef MOVE_ORDER_STATS
     int best_count;
 #endif
