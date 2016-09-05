@@ -2518,7 +2518,8 @@ int Search::search()
 #ifdef SEARCH_STATS
           ++controller->stats->static_null_pruning;
 #endif
-          return node->eval - margin;
+          node->best_score = node->eval - margin;
+          goto hash_insert;
        }
     }
 #endif
@@ -2540,7 +2541,8 @@ int Search::search()
 #ifdef SEARCH_STATS
                 controller->stats->razored++;
 #endif
-                return v;
+                node->best_score = v;
+                goto hash_insert;
             }
         }
     }
@@ -2980,7 +2982,7 @@ int Search::search()
     // not have an accurate score.
  hash_insert:
     if (!terminate && !(node->flags & SINGULAR)) {
-        if (node->best == NullMove) node->best = hashMove;
+        if (IsNull(node->best)) node->best = hashMove;
         // store the position in the hash table, if there's room
         int value = node->best_score;
         HashEntry::ValueType val_type;
