@@ -2738,7 +2738,6 @@ int Search::search()
            int old_alpha = node->alpha;
            int old_beta = node->beta;
            int old_flags = node->flags;
-           Move threatMove = node->threatMove;
            node->depth = nu_depth;
            node->singularMove = hashMove;
            node->alpha = nu_beta-1;
@@ -2756,7 +2755,6 @@ int Search::search()
            node->depth = depth;
            node->alpha = node->best_score = old_alpha;
            node->beta = old_beta;
-           node->threatMove = threatMove;
            node->singularMove = NullMove;
            node->last_move = NullMove;
            node->best = NullMove;
