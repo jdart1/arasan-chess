@@ -834,8 +834,9 @@ void Scoring::pieceScore(const Board &board,
             allAttacks |= knattacks;
             minorAttacks |= knattacks;
 
-            if (knattacks & nearKing) {
-               attackWeight += PARAM(MINOR_ATTACK_FACTOR);
+            Bitboard kattacks(knattacks & nearKing);
+            if (kattacks) {
+               attackWeight += PARAM(MINOR_ATTACK_FACTOR)*kattacks.bitCountOpt();
                attackCount++;
             }
             break;
@@ -850,14 +851,16 @@ void Scoring::pieceScore(const Board &board,
             allAttacks |= battacks;
             minorAttacks |= battacks;
             if (!deep_endgame) {
-               if (battacks & nearKing) {
-                  attackWeight += PARAM(MINOR_ATTACK_FACTOR);
+               Bitboard kattacks(battacks & nearKing);
+               if (kattacks) {
+                  attackWeight += PARAM(MINOR_ATTACK_FACTOR)*kattacks.bitCountOpt();
                   attackCount++;
                }
                else if (battacks & board.queen_bits[side]) {
                   // possible stacked attackers
-                  if (board.bishopAttacks(sq, side) & nearKing) {
-                     attackWeight += PARAM(MINOR_ATTACK_FACTOR);
+                  kattacks = board.bishopAttacks(sq, side) & nearKing;
+                  if (kattacks) {
+                     attackWeight += PARAM(MINOR_ATTACK_FACTOR)*kattacks.bitCountOpt();
                      attackCount++;
                   }
                }

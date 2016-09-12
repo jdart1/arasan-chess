@@ -106,7 +106,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",315,200,500),
+        Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",200,150,500),
         Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",585,300,600),
         Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",640,500,900),
         Tune::TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",79,0,250),
