@@ -653,6 +653,7 @@ void RootSearch::init(const Board &board, NodeStack &stack) {
   threadSplitDepth = controller->threadSplitDepth;
 }
 
+#ifdef SYZYGY_TBS
 int Search::tbScoreAdjust(const Board &board,
                     int value,int tb_hit,Options::TbType tablebase_type,int tb_score) const 
 {
@@ -675,6 +676,7 @@ int Search::tbScoreAdjust(const Board &board,
       return value;
    }
 }
+#endif
 
 Move RootSearch::ply0_search(
 Move *excludes, int num_excludes)
@@ -707,9 +709,9 @@ Move *excludes, int num_excludes)
    controller->time_check_counter = Time_Check_Interval;
    last_time = 0;
 
-   int tb_hit = 0, tb_pieces = 0;
    int value = Scoring::INVALID_SCORE;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+   int tb_hit = 0, tb_pieces = 0;
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
    int tb_score = Scoring::INVALID_SCORE;
@@ -861,6 +863,7 @@ Move *excludes, int num_excludes)
 #endif
             controller->updateStats(node,iteration_depth,
                                     value,lo_window,hi_window);
+#ifdef SYZYGY_TBS
             // Correct if necessary the display value, used for score
             // output and resign decisions, based on the tb information:
             controller->stats->display_value = tbScoreAdjust(board,
@@ -868,6 +871,7 @@ Move *excludes, int num_excludes)
                                                       tb_hit,
                                                       options.search.tablebase_type,
                                                       tb_score);
+#endif
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
