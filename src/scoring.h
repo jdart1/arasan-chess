@@ -108,6 +108,10 @@ class Scoring
 #endif
     static const int KING_PAWN_HASH_SIZE = 8132;
 
+    static CACHE_ALIGN Bitboard kingProximity[2][64];
+    static CACHE_ALIGN Bitboard kingNearProximity[64];
+    static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
+
     struct CACHE_ALIGN PawnHashEntry {
 
        hash_t hc;
@@ -240,6 +244,8 @@ class Scoring
                              Scores &);
 
     int kingDistanceScore(const Board &) const;
+
+    static void initBitboards();
 
 };
 

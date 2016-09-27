@@ -21,6 +21,9 @@
 struct Params 
 BEGIN_PACKED_STRUCT
     
+    static const int KING_ATTACK_SCALE_SIZE = 128;
+    static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
+
     static PARAM_MOD int RB_ADJUST[4];
     static PARAM_MOD int RBN_ADJUST[4];
     static PARAM_MOD int QR_ADJUST[4];
@@ -43,18 +46,12 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int PAWN_ENDGAME1;
     static PARAM_MOD int PAWN_ENDGAME2;
     static PARAM_MOD int MINOR_ATTACK_FACTOR;
+    static PARAM_MOD int MINOR_ATTACK_BOOST;
     static PARAM_MOD int ROOK_ATTACK_FACTOR;
     static PARAM_MOD int QUEEN_ATTACK_FACTOR;
     static PARAM_MOD int ROOK_ATTACK_BOOST;
     static PARAM_MOD int QUEEN_ATTACK_BOOST;
     static PARAM_MOD int QUEEN_ATTACK_BOOST2;
-    static PARAM_MOD int KING_ATTACK_PARAM0;
-    static PARAM_MOD int KING_ATTACK_PARAM1;
-    static PARAM_MOD int KING_ATTACK_PARAM2;
-    static PARAM_MOD int KING_ATTACK_PARAM3;
-    static PARAM_MOD int KING_ATTACK_BOOST_THRESHOLD;
-    static PARAM_MOD int KING_ATTACK_BOOST_DIVISOR;
-    static PARAM_MOD int KING_ATTACK_BOOST_MAX;
     static PARAM_MOD int PAWN_THREAT_ON_PIECE_MID;
     static PARAM_MOD int PAWN_THREAT_ON_PIECE_END;
     static PARAM_MOD int PIECE_THREAT_MM_MID;
@@ -107,10 +104,11 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
+    static PARAM_MOD int KING_ATTACK_COUNT_BOOST[4];
     static PARAM_MOD int KING_OPP_PASSER_DISTANCE[6];
     static PARAM_MOD int KING_POSITION_LOW_MATERIAL[3];
-    static PARAM_MOD int KING_ATTACK_SCALE[512];
     static PARAM_MOD int TRADE_DOWN[16];
+    static PARAM_MOD int KING_ATTACK_SCALE[KING_ATTACK_SCALE_SIZE];
     static PARAM_MOD int PASSED_PAWN[2][8];
     static PARAM_MOD int POTENTIAL_PASSER[2][8];
     static PARAM_MOD int CONNECTED_PASSER[2][8];

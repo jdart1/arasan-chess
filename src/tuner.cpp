@@ -46,6 +46,8 @@ static bool texel = true;
 
 static bool use_adagrad = false;
 
+static bool use_adam = false;
+
 static int iterations = 2;
 
 static int cores = 1;
@@ -76,6 +78,10 @@ static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 4.0;
 static const double PARAM1 = 0.75;
+static const double ADAM_ALPHA = 4.0;
+static const double ADAM_BETA1 = 0.9;
+static const double ADAM_BETA2 = 0.999;
+static const double ADAM_EPSILON = 1.0e-8;
 
 static vector<GameInfo *> tmpdata;
 
@@ -157,6 +163,7 @@ static void usage()
    cerr << "Usage: tuner <options> <training file>" << endl;
    cerr << "Options:" << endl;
    cerr << " -a use AdaGrad" << endl;
+   cerr << " -A use ADAM" << endl;
    cerr << " -c <cores>" << endl;
    cerr << " -d just write out current parameters values to params.cpp" << endl;
    cerr << " -i <input parameter file> -o <output parameter file>" << endl;
@@ -786,8 +793,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Square kp = board.kingSquare(side);
    const Square okp = board.kingSquare(oside);
    int pin_count = 0;
+   int attackWeight = 0;
+   int attackCount = 0;
+   int majorAttackCount = 0;
    const int mLevel = board.getMaterial(oside).materialLevel();
    const int ourMatLevel = board.getMaterial(side).materialLevel();
+   const bool deep_endgame = ourMatLevel <= Scoring::Params::MIDGAME_THRESHOLD;
+   const bool early_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::ENDGAME_THRESHOLD;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
@@ -795,7 +807,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(oside);
+   const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Bitboard minorAttacks, rookAttacks;
+   int attackTypes[7];
+   for (auto i = 0; i < 7; i++) {
+      attackTypes[i] = 0;
+   }
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
       adjustMaterialScore(board,side,grads,inc);
@@ -839,6 +856,16 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          ASSERT(defenders <=2);
          grads[Tune::KNIGHT_OUTPOST+defenders*16+i] += inc;
       }
+      Bitboard kattacks(knattacks & nearKing);
+      if (kattacks) {
+         attackCount++;
+         attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+         attackTypes[0]++;
+         if (kattacks & (kattacks-1)) {
+            attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+            attackTypes[1]++;
+         }
+      }
    }
    Bitboard bishop_bits(board.bishop_bits[side]);
    const int bishopCount = board.getMaterial(side).bishopCount();
@@ -859,7 +886,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (board.pinOnDiag(sq, okp, oside)) {
          pin_count++;
       }
-      minorAttacks |= board.bishopAttacks(sq);
+      Bitboard battacks(board.bishopAttacks(sq));
+      minorAttacks |= battacks;
       int mobl = Bitboard(board.bishopAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::BISHOP_MOBILITY+mobl] += tune_params.scale(inc,Tune::BISHOP_MOBILITY+mobl,mLevel);
       int i = map_to_pst(sq,side);
@@ -872,6 +900,31 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          ASSERT(defenders <=2);
          grads[Tune::BISHOP_OUTPOST+defenders*16+i] += inc;
       }
+      if (!deep_endgame) {
+         Bitboard kattacks(battacks & nearKing);
+         if (kattacks) {
+            attackCount++;
+            attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+            attackTypes[0]++;
+            if (kattacks & (kattacks - 1)) {
+               attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+               attackTypes[1]++;
+            }
+         }
+         else if (battacks & board.queen_bits[side]) {
+            // possible stacked attackers
+            kattacks = board.bishopAttacks(sq, side) & nearKing;
+            if (kattacks) {
+               attackCount++;
+               attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+               attackTypes[0]++;
+               if (kattacks & (kattacks - 1)) {
+                  attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+                  attackTypes[1]++;
+               }
+            }
+         }
+      }
    }
    Bitboard rook_bits(board.rook_bits[side]);
    while (rook_bits.iterate(sq)) {
@@ -880,7 +933,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       rookAttacks |= board.rookAttacks(sq);
       Bitboard rattacks2(board.rookAttacks(sq, side));
-      int mobl = Bitboard(rattacks2 &~board.allOccupied &~opponent_pawn_attacks).bitCount();
+      int mobl = Bitboard(rattacks2 &~board.allOccupied & ~opponent_pawn_attacks).bitCount();
       grads[Tune::ROOK_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::ROOK_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_ENDGAME+mobl,mLevel);
       int i = map_to_pst(sq,side);
@@ -910,6 +963,27 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
          grads[Tune::SIDE_PROTECTED_PAWN] += tune_params.scale(inc*i,Tune::SIDE_PROTECTED_PAWN,mLevel);
       }
+      if (!deep_endgame) {
+         Bitboard rattacks2(board.rookAttacks(sq, side));
+         Bitboard attacks(rattacks2 & nearKing);
+         if (attacks) {
+            attackCount++;
+            majorAttackCount++;
+            attackWeight += tune_params[Tune::ROOK_ATTACK_FACTOR].current;
+            attackTypes[Tune::ROOK_ATTACK_FACTOR-
+                        Tune::MINOR_ATTACK_FACTOR]++;
+            Bitboard attacks2(attacks & Scoring::kingNearProximity[okp]);
+            if (attacks2) {
+               attacks2 &= (attacks2 - 1);
+               if (attacks2) {
+                  // rook attacks at least 2 squares near king
+                  attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST].current;
+                  attackTypes[Tune::ROOK_ATTACK_BOOST-
+                              Tune::MINOR_ATTACK_FACTOR]++;
+               }
+            }
+         }
+      }
    }
    Bitboard queen_bits(board.queen_bits[side]);
    while (queen_bits.iterate(sq)) {
@@ -925,6 +999,51 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int i = map_to_pst(sq,side);
       grads[Tune::QUEEN_PST_MIDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_MIDGAME+i,mLevel);
       grads[Tune::QUEEN_PST_ENDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_ENDGAME+i,mLevel);
+      if (!deep_endgame) {
+         Bitboard kattacks;
+         Bitboard battacks(board.bishopAttacks(sq));
+         kattacks = battacks & nearKing;
+         if (!kattacks) {
+            kattacks = board.bishopAttacks(sq, side) & nearKing;
+         }
+         Bitboard rattacks = board.rookAttacks(sq);
+         if (rattacks & nearKing) {
+            kattacks |= (rattacks & nearKing);
+         }
+         else {
+            kattacks |= (board.rookAttacks(sq, side) & nearKing);
+         }
+
+         if (kattacks) {
+            attackCount++;
+            majorAttackCount++;
+            attackWeight += tune_params[Tune::QUEEN_ATTACK_FACTOR].current;
+#ifdef EVAL_DEBUG
+            int tmp = attackWeight;
+#endif
+            attackTypes[Tune::QUEEN_ATTACK_FACTOR-
+                        Tune::MINOR_ATTACK_FACTOR]++;
+            // bonus if Queen attacks multiple squares near King:
+            Bitboard nearAttacks(kattacks & Scoring::kingNearProximity[okp]);
+            if (nearAttacks) {
+               nearAttacks &= (nearAttacks - 1);      // clear 1st bit
+               if (nearAttacks) {
+                  attackWeight += tune_params[Tune::QUEEN_ATTACK_BOOST].current;
+                  attackTypes[Tune::QUEEN_ATTACK_BOOST-
+                              Tune::MINOR_ATTACK_FACTOR]++;
+                  nearAttacks &= (nearAttacks - 1);   // clear 1st bit
+                  if (nearAttacks) {
+                     attackWeight += tune_params[Tune::QUEEN_ATTACK_BOOST2].current;
+                     attackTypes[Tune::QUEEN_ATTACK_BOOST2-
+                                 Tune::MINOR_ATTACK_FACTOR]++;
+                  }
+               }
+            }
+#ifdef EVAL_DEBUG
+            if (attackWeight - tmp) cout << "queen attack boost= " << attackWeight - tmp << endl;
+#endif
+         }
+      }
    }
    Square ksq = board.kingSquare(side);
    int ksq_map = map_to_pst(ksq,side);
@@ -1009,8 +1128,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
 
-   const bool deep_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::MIDGAME_THRESHOLD;
-   const bool early_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::ENDGAME_THRESHOLD;
    if (pin_count && !deep_endgame) {
       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
    }
@@ -1234,6 +1351,38 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                               Tune::ENDGAME_KING_THREAT,mLevel);
       }
    }
+   if (!deep_endgame) {
+      int proximity = Bitboard(Scoring::kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
+      if (attackCount >= 2 && majorAttackCount) {
+         attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(3,attackCount-2)];
+      }
+      // king safety tuning
+      const int scale_index =
+         Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,proximity+(attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION));
+      // approximate the gradient of the scale
+      int low = Util::Max(0,scale_index);
+      int high = Util::Min(scale_index + 1,Scoring::Params::KING_ATTACK_SCALE_SIZE-1);
+      if (low == high) --low;
+      double scale_grad = double(tune_params[Tune::KING_ATTACK_SCALE+high].current-tune_params[Tune::KING_ATTACK_SCALE+low].current)/double(high-low);
+      // compute partial derivates for attack factors
+      for (int i = Tune::MINOR_ATTACK_FACTOR;
+           i <= Tune::QUEEN_ATTACK_BOOST2;
+           i++) {
+         if (tune_params[i].tunable) {
+            grads[i] +=
+               tune_params.scale((inc*scale_grad*attackTypes[i-Tune::MINOR_ATTACK_FACTOR])/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,i,ourMatLevel);
+         }
+      }
+      if (attackCount >= 2) {
+         grads[Tune::KING_ATTACK_COUNT_BOOST+attackCount-2] +=
+            tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COUNT_BOOST+attackCount-2,ourMatLevel);
+      }
+      // compute partial derivative for scale table entry
+      if (tune_params[Tune::KING_ATTACK_SCALE+scale_index].tunable) {
+         grads[Tune::KING_ATTACK_SCALE+scale_index] +=
+            tune_params.scale(inc,Tune::KING_ATTACK_SCALE+scale_index,ourMatLevel);
+      }
+   }
 }
 
 void validateGradient(Scoring &s, const Board &board, ColorType side, double eval) {
@@ -1247,7 +1396,15 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
          Tune::TuneParam p = tune_params[i];
          int val = p.current;
          int range = p.max_value - p.min_value;
-         int delta = Util::Max(1,range/20);
+         int delta;
+         if ((i>=Tune::MINOR_ATTACK_FACTOR &&
+              i<=Tune::QUEEN_ATTACK_BOOST2) ||
+             (i>=Tune::KING_ATTACK_COUNT_BOOST &&
+              i<=Tune::KING_ATTACK_COUNT_BOOST+3))
+            delta = Util::Max(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,range/20);
+         else
+            delta = Util::Max(1,range/20);
+         
          // increase by delta
          int newval = val + delta;
          tune_params.updateParamValue(i,newval);
@@ -1450,13 +1607,16 @@ static void parse2(ThreadData &td, Parse2Data &data)
 //   if (verbose) cout << "thread " << td.index << " complete.";
 }
 
-static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient, int iterations)
+static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient, 
+                          vector<double> &m /* for ADAM */, 
+                          vector<double> &v /* for ADAM */, 
+                          int iterations)
 {
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       double dv = data0.grads[i];
       Tune::TuneParam p;
       tune_params.getParam(i,p);
-      int v = p.current;
+      int val = p.current;
       if (regularize) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
@@ -1472,16 +1632,24 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
             istep = Util::Round(ADAGRAD_STEP_SIZE*adjusted_grad);
             //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
-            v = Util::Max(p.min_value,Util::Min(p.max_value,v + istep));
+            val = Util::Max(p.min_value,Util::Min(p.max_value,val + istep));
+         } else if (use_adam) {
+            m[i] = ADAM_BETA1*m[i] + (1.0-ADAM_BETA1)*dv;
+            v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
+            double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
+            double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
+            istep = Util::Round(ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON));
+//            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
+            val = Util::Max(p.min_value,Util::Min(p.max_value,val + istep));
          } else {
             if ( dv > 0.0) {
-               v = Util::Min(p.max_value,v + istep);
+               val = Util::Min(p.max_value,val + istep);
             }
             else if (dv < 0.0) {
-               v = Util::Max(p.min_value,v - istep);
+               val = Util::Max(p.min_value,val - istep);
             }
          }
-         tune_params.updateParamValue(i,v);
+         tune_params.updateParamValue(i,val);
       }
    }
 }
@@ -1593,6 +1761,8 @@ static void learn()
    double best = numeric_limits<double>::max();
 #endif
    vector<double> historical_grad(tune_params.numTuningParams(),0.0);
+   vector<double> m(tune_params.numTuningParams(),0.0);
+   vector<double> v(tune_params.numTuningParams(),0.0);
    for (int iter = 1; iter <= iterations; iter++) {
       cout << "iteration " << iter << endl;
       tune_params.applyParams();
@@ -1651,7 +1821,7 @@ static void learn()
          cout << "new best objective: " << best << endl;
          output_solution();
       }
-      adjust_params(data2[0],historical_grad,iter);
+      adjust_params(data2[0],historical_grad,m,v,iter);
    }
 
    delete hash_table;
@@ -1686,6 +1856,9 @@ int CDECL main(int argc, char **argv)
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
        if (strcmp(argv[arg],"-a")==0) {
           use_adagrad = true;
+       }
+       else if (strcmp(argv[arg],"-A")==0) {
+          use_adam = true;
        }
        else if (strcmp(argv[arg],"-d")==0) {
           cerr << "writing initial solution" << endl;
@@ -1732,6 +1905,11 @@ int CDECL main(int argc, char **argv)
     if (write_sol) {
       output_solution();
       exit(0);
+    }
+
+    if (use_adagrad && use_adam) {
+       cerr << "error: choose only one of -a -A" << endl;
+       exit(-1);
     }
 
     if (validate && cores > 1) {

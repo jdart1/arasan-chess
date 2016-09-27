@@ -20,7 +20,7 @@ class Tune {
     int max_value;
     enum Scaling {None, Midgame, Endgame, Any};
     Scaling scaling;
-    int tunable; // via MMTO
+    int tunable;
 
   TuneParam(int i, const string &n, int c, int minv, int maxv, Scaling s = None,int t = 0) :
     index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
@@ -78,18 +78,12 @@ class Tune {
     PAWN_ENDGAME1,
     PAWN_ENDGAME2,
     MINOR_ATTACK_FACTOR,
+    MINOR_ATTACK_BOOST,
     ROOK_ATTACK_FACTOR,
-    QUEEN_ATTACK_FACTOR,
     ROOK_ATTACK_BOOST,
+    QUEEN_ATTACK_FACTOR,
     QUEEN_ATTACK_BOOST,
     QUEEN_ATTACK_BOOST2,
-    KING_ATTACK_PARAM0,
-    KING_ATTACK_PARAM1,
-    KING_ATTACK_PARAM2,
-    KING_ATTACK_PARAM3,
-    KING_ATTACK_BOOST_THRESHOLD,
-    KING_ATTACK_BOOST_DIVISOR,
-    KING_ATTACK_BOOST_MAX,
     PAWN_THREAT_ON_PIECE_MID,
     PAWN_THREAT_ON_PIECE_END,
     PIECE_THREAT_MM_MID,
@@ -142,9 +136,6 @@ class Tune {
     KING_POSITION_LOW_MATERIAL0,
     KING_POSITION_LOW_MATERIAL1,
     KING_POSITION_LOW_MATERIAL2,
-    KING_ATTACK_INFLECT1,
-    KING_ATTACK_INFLECT2,
-    KING_ATTACK_SLOPE_FACTOR,
     PASSED_PAWN_MID2,
     PASSED_PAWN_MID3,
     PASSED_PAWN_MID4,
@@ -216,7 +207,8 @@ class Tune {
     ISOLATED_PAWN_END3,
     ISOLATED_PAWN_END4,
 
-    KING_OPP_PASSER_DISTANCE = ISOLATED_PAWN_END4+1,
+    KING_ATTACK_COUNT_BOOST = ISOLATED_PAWN_END4+1,
+    KING_OPP_PASSER_DISTANCE = KING_ATTACK_COUNT_BOOST+4,
     PP_OWN_PIECE_BLOCK_MID = KING_OPP_PASSER_DISTANCE+6,
     PP_OWN_PIECE_BLOCK_END = PP_OWN_PIECE_BLOCK_MID+21,
     PP_OPP_PIECE_BLOCK_MID = PP_OWN_PIECE_BLOCK_END+21,
@@ -240,7 +232,8 @@ class Tune {
     KING_MOBILITY_ENDGAME = QUEEN_MOBILITY_ENDGAME+29,
     KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+5,
     BISHOP_OUTPOST = KNIGHT_OUTPOST+48,
-    TRADE_DOWN = BISHOP_OUTPOST+48
+    TRADE_DOWN = BISHOP_OUTPOST+48,
+    KING_ATTACK_SCALE = TRADE_DOWN+16
   };
    
   int numTuningParams() const;
@@ -274,7 +267,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 179;
+  static const int NUM_MISC_PARAMS = 170;
 
   double scale(double value,int index,int materialLevel) const;
 
