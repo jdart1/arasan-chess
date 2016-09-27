@@ -21,7 +21,7 @@
 struct Params 
 BEGIN_PACKED_STRUCT
     
-    static const int KING_ATTACK_SCALE_SIZE = 128;
+    static const int KING_ATTACK_SCALE_SIZE = 160;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
 
     static PARAM_MOD int RB_ADJUST[4];
