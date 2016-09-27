@@ -1,4 +1,4 @@
-// Copyright 1992-2015 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2016 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -246,6 +246,9 @@ class Scoring
     int kingDistanceScore(const Board &) const;
 
     static void initBitboards();
+
+    template<ColorType side>
+      static void initProximity(Square i);
 
 };
 

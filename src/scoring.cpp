@@ -104,57 +104,38 @@ static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
 
+template<ColorType side> void Scoring::initProximity(Square i) {
+   kingNearProximity[i] = Attacks::king_attacks[i];
+   kingNearProximity[i].set(i);
+   Square kp = i;
+   if (File(i) == 8) kp -= 1;
+   if (File(i) == 1) kp += 1;
+   kingProximity[side][i] = Attacks::king_attacks[kp];
+   kingProximity[side][i].set(kp);
+   const int r = Rank(i, side);
+   if (r <= 6) {
+      kingProximity[side][i].set(MakeSquare(File(kp) - 1, r + 2, side));
+      kingProximity[side][i].set(MakeSquare(File(kp), r + 2, side));
+      kingProximity[side][i].set(MakeSquare(File(kp) + 1, r + 2, side));
+   }
+   kingPawnProximity[side][i] = kingProximity[side][i];
+
+   Square sq;
+   Bitboard tmp(kingProximity[side][i]);
+   while(tmp.iterate(sq)) {
+      kingPawnProximity[side][i].set(sq);
+      kingPawnProximity[side][i] |= Attacks::pawn_attacks[sq][OppositeColor(side)];
+   }
+}
+
 void Scoring::initBitboards() {
    int i, r;
 
    for(i = 0; i < 64; i++) {
-      int file = File(i);
-      int fmin = Util::Max(1, file - 2);
-      int fmax = Util::Min(8, file + 2);
-      for(int f = fmin; f <= fmax; f++) {
-         int r;
-         kingNearProximity[i] = Attacks::king_attacks[i];
-         kingNearProximity[i].set(i);
-         Square kp = i;
-         if (File(i) == 8) kp -= 1;
-         if (File(i) == 1) kp += 1;
-         kingProximity[White][i] = Attacks::king_attacks[kp];
-         kingProximity[White][i].set(kp);
-         r = Rank(i, White);
-         if (r <= 6) {
-            kingProximity[White][i].set(MakeSquare(File(kp) - 1, r + 2, White));
-            kingProximity[White][i].set(MakeSquare(File(kp), r + 2, White));
-            kingProximity[White][i].set(MakeSquare(File(kp) + 1, r + 2, White));
-         }
-
-         kingPawnProximity[White][i] = kingProximity[White][i];
-
-         Square sq;
-         Bitboard tmp(kingProximity[White][i]);
-         while(tmp.iterate(sq)) {
-            kingPawnProximity[White][i].set(sq);
-            kingPawnProximity[White][i] |= Attacks::pawn_attacks[sq][Black];
-         }
-
-         kingProximity[Black][i] = Attacks::king_attacks[kp];
-         kingProximity[Black][i].set(i);
-         kingProximity[Black][i].set(kp);
-         r = Rank(i, Black);
-         if (r <= 6) {
-            kingProximity[Black][i].set(MakeSquare(File(kp) - 1, r + 2, Black));
-            kingProximity[Black][i].set(MakeSquare(File(kp), r + 2, Black));
-            kingProximity[Black][i].set(MakeSquare(File(kp) + 1, r + 2, Black));
-         }
-
-         kingPawnProximity[Black][i] = kingProximity[Black][i];
-         tmp = kingPawnProximity[Black][i];
-         while(tmp.iterate(sq)) {
-            kingPawnProximity[Black][i].set(sq);
-            kingPawnProximity[Black][i] |= Attacks::pawn_attacks[sq][White];
-         }
-      }
-
+      initProximity<White>(i);
+      initProximity<Black>(i);
       int rank = Rank(i, White);
+      int file = File(i);
       for(r = rank - 1; r > 1; r--) {
          Square sq2 = MakeSquare(file, r, White);
          if (file != 8) {
