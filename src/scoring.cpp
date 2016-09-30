@@ -1066,7 +1066,6 @@ void Scoring::pieceScore(const Board &board,
 
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
-//   const int squaresAttacked =  Bitboard(allAttacks & kingNearProximity[okp]).bitCount();
    if (early_endgame) {
       int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
                   ~allAttacks).bitCount();
@@ -1089,7 +1088,6 @@ void Scoring::pieceScore(const Board &board,
       cout << " attackCount=" << attackCount << endl;
       cout << " attackWeight=" << attackWeight << endl;
       cout << " index=" << index << endl;
-      cout << " squaresAttacked=" << squaresAttacked << "/" << kingNearProximity[okp].bitCount() << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
       int kattack = PARAM(KING_ATTACK_SCALE)[Util::Min(Params::KING_ATTACK_SCALE_SIZE-1,index)];
