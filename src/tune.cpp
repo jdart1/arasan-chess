@@ -108,13 +108,13 @@ Tune::Tune()
         Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",10,3,50,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",8,0,70,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",30,5,75,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",30,0,75,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",48,25,100,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",28,0,100,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",12,0,100,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",23,3,50,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,0,70,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,5,75,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",34,0,75,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",33,25,100,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",50,0,100,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",50,0,750,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_END,"pawn_threat_on_piece_end",50,0,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PIECE_THREAT_MM_MID,"piece_threat_mm_mid",50,0,750,Tune::TuneParam::Midgame,1),
@@ -561,7 +561,7 @@ static const int QUEEN_PST_INIT[2][64] =
       stringstream name;
       name << "king_attack_scale" << p;
       tune_params.push_back(TuneParam(i++,name.str(),int(f*val/2),0,KING_ATTACK_SCALE_RANGE,Tune::TuneParam::Midgame,p));
-      slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE ? p/2 : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p)/2);
+      slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE ? p : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p));
       if (p>10) val += slope;
    }
 }
