@@ -61,7 +61,7 @@ class Scoring
 
     static bool mateScore(int score) {
       return score != INVALID_SCORE &&
-        (score>=Constants::MATE_RANGE || score<=-Constants::MATE_RANGE);
+        (score>=Constants::TABLEBASE_WIN || score<=-Constants::TABLEBASE_WIN);
     }
 
 #ifdef EVAL_STATS

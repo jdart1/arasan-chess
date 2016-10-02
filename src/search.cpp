@@ -2334,10 +2334,10 @@ int Search::search()
                 // If this is a mate score, adjust it to reflect the
                 // current ply depth.
                 //
-                if (hashValue >= Constants::TABLEBASE_WIN) {
+                if (hashValue >= Constants::MATE_RANGE) {
                     hashValue -= ply;
                 }
-                else if (hashValue <= -Constants::TABLEBASE_WIN) {
+                else if (hashValue <= -Constants::MATE_RANGE) {
                     hashValue += ply;
                 }
                 if (node->inBounds(hashValue)) {
@@ -2437,11 +2437,12 @@ int Search::search()
             }
 #endif
             int score = tb_score;
-            // insert TB info in hash table.
-            if (score <= -Constants::TABLEBASE_WIN) {
+            // insert TB info in hash table. Adjust mate scores for
+            // plies from root. Note: do not adjust TABLEBASE_WIN scores.
+            if (score <= -Constants::MATE_RANGE) {
                 score -= ply;
             }
-            else if (score >= Constants::TABLEBASE_WIN) {
+            else if (score >= Constants::MATE_RANGE) {
                 score += ply;
             }
 #ifdef _TRACE
@@ -2991,10 +2992,10 @@ int Search::search()
         // Adjust mate scores to reflect current ply. But only
         // if the score is in bounds.
         if (value > node->alpha && value < node->beta) {
-            if (value < -Constants::MATE_RANGE) {
+            if (value <= -Constants::MATE_RANGE) {
                 value -= ply;
             }
-            else if (value > Constants::MATE_RANGE) {
+            else if (value >= Constants::MATE_RANGE) {
                 value += ply;
             }
         }
