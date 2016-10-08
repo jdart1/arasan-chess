@@ -85,8 +85,10 @@ static const int LMP_DEPTH=10;
 static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
 };
 
-static const int RAZOR_MARGIN_BASE = int(3.0*PAWN_VALUE);
-static const int RAZOR_MARGIN_INCR = int(1.0*PAWN_VALUE);
+static const int RAZOR_MARGIN[4] = { 0.9*PAWN_VALUE,
+                                     1.25*PAWN_VALUE,
+                                     3.0*PAWN_VALUE,
+                                     3.5*PAWN_VALUE };
 
 static const int FUTILITY_MARGIN_BASE = (int)(1.01*PAWN_VALUE);
 static const int FUTILITY_MARGIN_SLOPE = (int)(0.772*PAWN_VALUE);
@@ -2533,7 +2535,7 @@ int Search::search()
     // razoring as in Glaurung & Toga
     if (pruneOk && node->beta < Constants::MATE_RANGE &&
         depth <= RAZOR_DEPTH) {
-        const int threshold = node->beta - RAZOR_MARGIN_BASE - Util::Max(0,(depth-DEPTH_INCREMENT)*RAZOR_MARGIN_INCR/DEPTH_INCREMENT);
+        const int threshold = node->beta - RAZOR_MARGIN[depth/DEPTH_INCREMENT];
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
             // Note: use threshold as the bounds here, not beta, as
