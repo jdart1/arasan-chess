@@ -164,7 +164,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,1000,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1000,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",180,128,300,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",180,128,400,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",160,128,300,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",150,128,300,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",60,0,500,Tune::TuneParam::Midgame,1),
