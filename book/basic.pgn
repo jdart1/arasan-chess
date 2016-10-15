@@ -146,14 +146,16 @@ Qxc4 Be6 6. Qc2 $11 f6 $3 {0-1 (56) Vezzani,S (2161)-Ortega,L (2456) Porto San
 Giorgio 2008}) (3. Nf3 $2 e4 4. Nd4 c5 $3 5. Nb3 c4 6. Nd4 Bc5 7. c3 Nf6 {
 0-1 (60) Arasan 17.3-Deep Fritz 13 2014}) 3... c6 (3... Nc6 $1) (3... Nf6 4.
 Nf3 (4. Nc3 Be7 5. Nf3 d4 6. Ne4 $2 {1/2-1/2 (6) Arasan 17.3 (1926)-Texel 
-(2155) winboard.nl 2014} (6. Nb1 Nc6 $11)) (4. Nd2 c6 $3) 4... Bd6 5. O-O O-O
-6. c4 $1 dxc4 $2 (6... d4 {'!'} 7. e3 c5 $1 8. exd4 cxd4 $11) 7. dxc4 h6 8. Nc3
-Nc6 9. Qc2 Nd4 $2 (9... Be6 10. b3 $11 {Stockfish}) 10. Nxd4 exd4 11. Nb5 $14 {
-1-0 (49) Svidler,P (2758)-Kramnik,V (2793) London 2013}) 4. Nf3 Bd6 5. O-O Nf6
-6. c4 $3 O-O 7. cxd5 cxd5 8. Nc3 h6 $1 9. Qb3 $2 (9. Nb5 $3 Nc6 10. Nxd6 Qxd6
-11. d4 e4 12. Ne5 {1/2-1/2 (38) Kamsky,G (2762)-Svidler,P (2747) Tashkent 2012}
-) 9... d4 10. Nb5 Be6 11. Qc2 Na6 $11 (11... Nc6 12. Nxd6 Qxd6 $15 {0-1 (53)
-Arasan 19.1 (2138)-Gaon (2395) chessclub.com 2016}) 1/2-1/2
+(2155) winboard.nl 2014} (6. Nb1 Nc6 $11)) (4. Nd2 c6 $3) 4... Bd6 (4... Nc6 $3
+5. O-O Be7) 5. O-O O-O 6. c4 $3 (6. Nc3 $2 c6 7. e4 d4 8. Ne2 c5 {0-1 (45)
+Arasan 19.1 (2122)-ipfreely (2245) chessclub.com 2016}) 6... d4 $1 (6... dxc4
+$2 7. dxc4 h6 8. Nc3 Nc6 9. Qc2 Nd4 $2 (9... Be6 10. b3 $11 {Stockfish}) 10.
+Nxd4 exd4 11. Nb5 $14 {1-0 (49) Svidler,P (2758)-Kramnik,V (2793) London 2013})
+7. e3 c5 $1 8. exd4 cxd4 $11) 4. Nf3 Bd6 5. O-O Nf6 6. c4 $3 O-O 7. cxd5 cxd5
+8. Nc3 h6 $1 9. Qb3 $2 (9. Nb5 $3 Nc6 10. Nxd6 Qxd6 11. d4 e4 12. Ne5 {1/2-1/2
+(38) Kamsky,G (2762)-Svidler,P (2747) Tashkent 2012}) 9... d4 10. Nb5 Be6 11.
+Qc2 Na6 $11 (11... Nc6 12. Nxd6 Qxd6 $15 {0-1 (53) Arasan 19.1 (2138)-Gaon 
+(2395) chessclub.com 2016}) 1/2-1/2
 
 [Event "chessclub.com"]
 [Site "chessclub.com"]
@@ -1958,11 +1960,12 @@ Ra5 20. Bf1 b6 21. d4 exd4 22. exd4 Bf7 23. Qd3 Bg6 24. Qc4 Bf7 25. Qd3 {
 16... Nd6 17. Nde4 Nxe4 18. Nxe4 Bd5 19. Nc5 Bxg2 20. Kxg2 Bxc5 21. Qxc5 Qe6
 22. Bb2 Rf7 {½-½ (85) Svidler-Giri, 2016})) 16... Ra5 (16... Rd8 17. Rfc1 $1
 Nd6 18. Nde4 Nf7 (18... Bb3 {1/2-1/2 (99) Kozlov,G (2317)-Bukavshin,I (2517)
-Samara 2013}) 19. Ne2 Bf8 {1/2-1/2 (40) Svidler,P (2753)-Kramnik,V (2783)
-Stavanger 2014}) 17. Bc1 $2 {0-1 (17) Arasan 17.3 (2532) -Polyphemus (2950)
-chessclub.com 2014} (17. Nc4 Nxc4 18. dxc4 Bxc4 19. Nd5 Bxf1 20. Bxf1 Kh8 {
-Stockfish DD 64 SSE4.2 2threads:} 21. Bc3 Ra8 22. Bh3 Qd8 23. Bxf5 Qxd5 24.
-Bxh7 Bxa3 25. Qf5 g5 26. b6 cxb6 27. Bg6 Kg7 $11)) 10... a5 11. b5 Nd4 {
+Samara 2013}) 19. Ne2 (19. Nd1 Bd5 20. f4 {½-½ (49) Tsynarev,N-Pilkin,E ICCF
+email 2012} (20. Qe2 $5)) 19... Bf8 {1/2-1/2 (40) Svidler,P (2753)-Kramnik,V 
+(2783) Stavanger 2014}) 17. Bc1 $2 {0-1 (17) Arasan 17.3 (2532) -Polyphemus 
+(2950) chessclub.com 2014} (17. Nc4 Nxc4 18. dxc4 Bxc4 19. Nd5 Bxf1 20. Bxf1
+Kh8 {Stockfish DD 64 SSE4.2 2threads:} 21. Bc3 Ra8 22. Bh3 Qd8 23. Bxf5 Qxd5
+24. Bxh7 Bxa3 25. Qf5 g5 26. b6 cxb6 27. Bg6 Kg7 $11)) 10... a5 11. b5 Nd4 {
 1/2-1/2 (42) Nepomniachtchi,I (2705) -Fressinet,L (2702) Baku 2015} 12. Nd2 (
 12. Nxe5 $1 Bf6 13. f4 Nb3 14. Be3 Nxa1 15. Qxa1 Bxe5 16. fxe5 Nd5 17. Bf2 Qd7
 $2 (17... a4 18. Ne4 b6 19. Qb2 $11) 18. a4 Rac8 19. Qb2 (19. Nxd5 Bxd5 20. e4
@@ -4880,42 +4883,41 @@ Bxe4 Nd7 $14 {1/2-1/2 (22) Stefansson,H (2510)-Danielsen,H (2524) Reykjavik
 5... g6 $5 (5... c6 6. Ne5 $3 Nbd7 (6... a5) (6... Be6 7. Bf4 $1 Qd8 8. Be2 g6
 9. O-O Bg7 10. Qd2 (10. Re1 $5) 10... Nbd7 {1/2-1/2 (38) Nguyen,A (2455)
 -Tiviakov,S (2674) Kuala Lumpur 2012}) 7. Bf4 (7. Nc4 $3 Qc7 8. Qf3 Nb6 9. Bf4
-Qd7 10. Nxb6 $1 (10. h3 Nxc4 11. Bxc4 Qxd4 12. Bb3 e6 13. Rd1 Qb6 (13... Qc5
-14. O-O Be7 15. Ne4 {1-0 (47) Gara,A (2369)-Mikadze,M (2345) Konya 2011}) 14.
-O-O Be7 15. Ne4 Nxe4 16. Qxe4 O-O {1-0 (36) Bologan,V (2690)-Tiviakov,S (2637)
-Sibenik 2010}) 10... axb6 11. O-O-O e6 (11... Qd8 $5) 12. Be5 (12. Bc4 $5 $14)
-12... Nd5 (12... Be7 $5) 13. Bc4 f6 14. Bf4 $14 {1/2-1/2 (40) Kotronias,V 
-(2588)-Tiviakov,S (2623) Vrachati 2011} (14. Bg3 Bb4 15. Nxd5 exd5 16. Bd3 O-O
-$2 (16... Rxa2) 17. a3 Bd6 18. Rde1 $1 $16 {0-1 (43) Kravtsiv,M (2621)
--Ivanchuk,V (2726) Berlin 2015})) (7. f4 Nb6 8. g4 Be6 (8... g6 9. Bg2 Bg7 10.
-O-O O-O 11. a4 a5 12. Kh1 h5 $1 $11) 9. Bg2 g6 10. O-O Rd8 (10... Bg7 $5) 11.
-a4 $1 Bg7 12. g5 $2 {0-1 (29) Barrientos Chavarriaga,S (2516)-Tiviakov,S (2621)
-Bogota 2010} (12. a5 $3 $14)) 7... Nd5 8. Nxd5 Qxd5 9. Be2 (9. Nf3 $3) 9...
-Nxe5 10. Bxe5 Qxg2 11. Bf3 Qg6 12. Qe2 Qe6 $2 (12... h5 13. O-O-O Bg4 14. h3
-Bxf3 15. Qxf3 Qe6 16. Kb1 f6 17. Bh2 Qd5 18. Qd3 e6 19. Qg6+ Ke7 20. Rhe1 {
-0-1 (42) Caruana,F (2646)-Milanovic, D (2552) Budva 2009} Rh6 $11) 13. d5 $3
-cxd5 14. O-O-O f6 15. Bxd5 Qxe5 16. Qc4 e6 17. Rhe1 {1-0 (22) Degraeve,J (2553)
--Smirnov,I (2505) Cappelle la Grande 2009}) (5... a6 $2 6. Be3 (6. Bd3 $1 g6 $1
-7. O-O Bg7 8. h3 {1/2-1/2 (95) Nevednichy,V (2594)-Horvath,C (2565) Sibenik
-2005}) (6. g3 $3 Bg4 (6... e6 7. Bg2 Be7 8. O-O Nc6 9. Bf4 Qd8 10. Ne2 Nd5 {
-1-0 (47) Parligras,M (2577)-Podinic, V (2415) Bijelo Polje 2005}) 7. h3 Bxf3 8.
-Qxf3 c6 9. Be3 e6 10. O-O-O $14 {1-0 (10) NightmareX (2628)-Arasan 17.5 (2586)
-freechess.org 2015}) (6. Be2 $2) 6... b5 7. Bd3 Bb7 8. O-O Nbd7 9. Qe2 e6 10.
-Rfd1 $5 $14 (10. Bg5 $11 {0-1 (44) Goldin,A (2620)-Stripunsky,A (2533) San
-Diego 2004})) (5... Bg4 6. h3 $1 Bh5 (6... Bxf3 $6) 7. g4 Bg6 8. Bg2 $1 (8. Ne5
-Nbd7 9. Nxg6 hxg6 10. Bg2 c6 {1/2-1/2 (52) Degraeve,J (2551)-Bacrot,E (2694)
-Saint-Quentin 2015}) 8... Nbd7 9. g5 Nd5 10. Nxd5 Qxd5 11. O-O {1-0 (38)
-Laznicka,V (2681)-Kovalenko,I (2626) Yerevan 2014}) 6. Nb5 Qb6 $1 (6... Qd8 7.
-c4 c6 $2 (7... Bg7 8. Bf4 Na6 9. Be2 O-O 10. O-O c6 11. Nc3 Bf5 $1 12. h3 {
-1-0 (45) Bosiocic,M (2555)-Janaszak,D (2363) Wroclaw 2014} Nc7 $5 $14) 8. Nc3
-Bg4 9. Be3 $5 (9. Be2 Bg7 10. O-O O-O 11. Be3 $14 {1/2-1/2 (80) Papp,G (2601)
--Vakhidov,J (2525) Abu Dhabi 2015}) 9... Qb6 10. Rb1 Bg7 11. h3 $16 {1-0 (60)
-NightmareX (2754)-Arasan 18.1 (2637) freechess.org 2015}) 7. Na3 $3 (7. c4 c6
-8. Nc3 Bg7 (8... Bg4 $2 9. c5 $3) 9. c5 (9. h3) 9... Qc7 10. Bc4 O-O 11. O-O {
-1-0 (38) Landa,K (2641)-Chatalbashev, B (2535) Bad Wiessee 2012} b6 $11) (7.
-Bf4 Nd5 8. Bd2 (8. Be5 $5) 8... c6 $1 9. Na3 Bg7 10. Nc4 Qc7 11. Nce5 O-O 12.
-Bc4 b5 13. Bb3 a5 14. a4 b4 15. O-O $11 {0-1 (42) Boros,D (2485)-Motylev,A 
-(2705) Rijeka 2010}) 7... c6 8. Nc4 Qc7 *
+Qd7 10. Nxb6 $1 (10. h3 $5 Nxc4 11. Bxc4 Qxd4 12. Bb3 e6 13. Rd1 Qb6 {1-0 (36)
+Bologan,V (2690)-Tiviakov,S (2637) Sibenik CRO 2010} (13... Qc5 14. O-O Be7 15.
+Ne4 {1-0 (47) Gara,A (2369)-Mikadze,M (2345) Konya 2011})) 10... axb6 11. O-O-O
+e6 (11... Qd8 $5) 12. Be5 (12. Bc4 $5 $14) 12... Nd5 (12... Be7 $5) 13. Bc4 f6
+14. Bf4 $14 {1/2-1/2 (40) Kotronias,V (2588)-Tiviakov,S (2623) Vrachati 2011} (
+14. Bg3 Bb4 15. Nxd5 exd5 16. Bd3 O-O $2 (16... Rxa2) 17. a3 Bd6 18. Rde1 $1
+$16 {0-1 (43) Kravtsiv,M (2621)-Ivanchuk,V (2726) Berlin 2015})) (7. f4 Nb6 8.
+g4 Be6 (8... g6 9. Bg2 Bg7 10. O-O O-O 11. a4 a5 12. Kh1 h5 $1 $11) 9. Bg2 g6
+10. O-O Rd8 (10... Bg7 $5) 11. a4 $1 Bg7 12. g5 $2 {0-1 (29) Barrientos
+Chavarriaga,S (2516)-Tiviakov,S (2621) Bogota 2010} (12. a5 $3 $14)) 7... Nd5
+8. Nxd5 Qxd5 9. Be2 (9. Nf3 $3) 9... Nxe5 10. Bxe5 Qxg2 11. Bf3 Qg6 12. Qe2 Qe6
+$2 (12... h5 13. O-O-O Bg4 14. h3 Bxf3 15. Qxf3 Qe6 16. Kb1 f6 17. Bh2 Qd5 18.
+Qd3 e6 19. Qg6+ Ke7 20. Rhe1 {0-1 (42) Caruana,F (2646)-Milanovic, D (2552)
+Budva 2009} Rh6 $11) 13. d5 $3 cxd5 14. O-O-O f6 15. Bxd5 Qxe5 16. Qc4 e6 17.
+Rhe1 {1-0 (22) Degraeve,J (2553) -Smirnov,I (2505) Cappelle la Grande 2009}) (
+5... a6 $2 6. Be3 (6. Bd3 $1 g6 $1 7. O-O Bg7 8. h3 {1/2-1/2 (95) Nevednichy,V
+(2594)-Horvath,C (2565) Sibenik 2005}) (6. g3 $3 Bg4 (6... e6 7. Bg2 Be7 8. O-O
+Nc6 9. Bf4 Qd8 10. Ne2 Nd5 {1-0 (47) Parligras,M (2577)-Podinic, V (2415)
+Bijelo Polje 2005}) 7. h3 Bxf3 8. Qxf3 c6 9. Be3 e6 10. O-O-O $14 {1-0 (10)
+NightmareX (2628)-Arasan 17.5 (2586) freechess.org 2015}) (6. Be2 $2) 6... b5
+7. Bd3 Bb7 8. O-O Nbd7 9. Qe2 e6 10. Rfd1 $5 $14 (10. Bg5 $11 {0-1 (44) Goldin,
+A (2620)-Stripunsky,A (2533) San Diego 2004})) (5... Bg4 6. h3 $1 Bh5 (6...
+Bxf3 $6) 7. g4 Bg6 8. Bg2 $1 (8. Ne5 Nbd7 9. Nxg6 hxg6 10. Bg2 c6 {1/2-1/2 (52)
+Degraeve,J (2551)-Bacrot,E (2694) Saint-Quentin 2015}) 8... Nbd7 9. g5 Nd5 10.
+Nxd5 Qxd5 11. O-O {1-0 (38) Laznicka,V (2681)-Kovalenko,I (2626) Yerevan 2014})
+6. Nb5 Qb6 $1 (6... Qd8 7. c4 c6 $2 (7... Bg7 8. Bf4 Na6 9. Be2 O-O 10. O-O c6
+11. Nc3 Bf5 $1 12. h3 {1-0 (45) Bosiocic,M (2555)-Janaszak,D (2363) Wroclaw
+2014} Nc7 $5 $14) 8. Nc3 Bg4 9. Be3 $5 (9. Be2 Bg7 10. O-O O-O 11. Be3 $14 {
+1/2-1/2 (80) Papp,G (2601)-Vakhidov,J (2525) Abu Dhabi 2015}) 9... Qb6 10. Rb1
+Bg7 11. h3 $16 {1-0 (60) NightmareX (2754)-Arasan 18.1 (2637) freechess.org
+2015}) 7. Na3 $3 (7. c4 c6 8. Nc3 Bg7 (8... Bg4 $2 9. c5 $3) 9. c5 (9. h3) 9...
+Qc7 10. Bc4 O-O 11. O-O {1-0 (38) Landa,K (2641)-Chatalbashev, B (2535) Bad
+Wiessee 2012} b6 $11) (7. Bf4 Nd5 8. Bd2 (8. Be5 $5) 8... c6 $1 9. Na3 Bg7 10.
+Nc4 Qc7 11. Nce5 O-O 12. Bc4 b5 13. Bb3 a5 14. a4 b4 15. O-O $11 {0-1 (42)
+Boros,D (2485)-Motylev,A (2705) Rijeka 2010}) 7... c6 8. Nc4 Qc7 *
 
 [Event "Jakarta"]
 [Site "Jakarta"]
@@ -5053,38 +5055,40 @@ Bxc4 15. Qxc4 Nd7 16. e6 1/2-1/2
 [EventDate "2014.??.??"]
 
 1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. c4 Nb6 5. exd6 (5. f4 dxe5 6. fxe5 Nc6 7. Be3
-Bf5 8. Nc3 e6 9. Nf3 Nb4 $2 (9... Be7 10. d5 exd5 11. cxd5 Nb4 12. Nd4 Bd7 (
-12... Bg6 $2) 13. e6 fxe6 14. dxe6 Bc6 15. Nxc6 Qxd1+ 16. Rxd1 bxc6 17. Rd2 {
-1/2-1/2 (39) Luther,T (2556)-Rozentalis,E (2622) Jenbach 2013}) (9... Bg4 10.
-Be2 Bxf3 11. gxf3 Qh4+ 12. Bf2 Qf4 13. c5 Nd7 14. Qc1 Qxc1+ 15. Rxc1 O-O-O 16.
-a3 $14 {1-0 (52) Jones,G (2593)-Short,N (2658) Bunratty IRL 2011}) 10. Rc1 c5
-11. Be2 cxd4 (11... Be7 12. O-O cxd4 13. Nxd4 Bg6 14. Ndb5 O-O 15. Nd6 Nd7 16.
-Nxb7 {1/2-1/2 (16) Spassky,B (2620)-Westerinen,H (2410) Solingen 1986}) 12.
-Nxd4 $14 {1-0 (12) Arasan 16.3-Arasan 17.0} Bg6 $1 (12... Qc7 $2 13. Nxf5 exf5
-14. Nb5 {1-0 (14) Arasan 16.3-Arasan 17.0}) 13. a3 (13. Ncb5 $14) 13... Nc6 14.
-Nxc6 Qxd1+ 15. Bxd1 bxc6 16. Bf3 {½-½ (40) Predojevic,B (2543)-Laketic,G 
-(2467) Vrnjacka Banja 2005}) 5... cxd6 (5... exd6 6. Nc3 Be7 (6... Nc6 $1 7.
-Nf3 (7. d5 $5) 7... Be7 $1) 7. Bd3 Nc6 8. Nge2 O-O 9. O-O Bg4 10. f3 Bh5 11. b3
-Bf6 $2 (11... Bg6 12. Bxg6 hxg6 13. d5 Ne5 {1/2-1/2 (83) Bernotas,A (2268)
--Kovalenko,I (2596) Riga 2013}) 12. Be4 (12. Be3 $14) 12... Re8 13. Be3 Bg6 14.
-Qd2 $14 {1-0 (14) DesertCat (2989)-Arasan 17.1 (2796) chessclub.com 2014}) 6.
-Nc3 g6 7. Be3 (7. h3 Bg7 8. Nf3 O-O 9. Be2 Nc6 10. O-O Bf5 11. Be3 d5 12. c5
-Nc4 13. Bxc4 dxc4 14. Qa4 Bd3 15. Rfd1 e5 $2 (15... Qe8 16. Ne1 Nxd4 17. Qxe8
-Rfxe8 18. Nxd3 cxd3 19. Rxd3 {1/2-1/2 (23) Magar,T-Gross,S (2420) St Ingbert
-1987}) 16. d5 Ne7 17. d6 Nf5 18. Ne1 Nxe3 19. fxe3 Bf5 20. e4 Be6 21. Nd5 $16 {
-1-0 (21) Arasan 16.3-Arasan 17.0}) (7. Bd3 Bg7 8. Nge2 O-O 9. O-O Nc6 10. Be3
-Bg4 (10... e5) 11. f3 $1 (11. h3 Bxe2 12. Nxe2) 11... Bf5 12. b3 Bxd3 13. Qxd3
-e6 14. Rac1 d5 $11 {1/2-1/2 (18) Minic,D (2490)-Gipslis,A (2580) Yerevan 1971})
-7... Bg7 8. Rc1 O-O 9. b3 Bf5 (9... e5 $3 10. dxe5 dxe5 11. Qxd8 (11. c5 N6d7)
-11... Rxd8 12. c5 (12. Nb5 $2 Nc6 13. Nf3 $3 Bg4 14. Be2 $11 {4 Houdini}) 12...
-N6d7 13. Bc4) (9... f5 $2 10. Nf3 f4 11. Bd2 Nc6 12. d5 Nd4 13. Nxd4 Bxd4 14.
-Be2 $14 {1-0 (14) Stripunsky,A (2566)-Shabalov,A (2523) Philadelphia 2012}) (
-9... Nc6 $2 10. d5 Ne5 11. Be2 f5 12. Nh3 $14 {1-0 (38) zerowin (2633)-Arasan
-18.0 (2582) freechess.org 2015} (12. f4 $1)) 10. d5 $2 (10. Nf3 Bg4 (10... d5
-11. c5 Nc8 12. h3 $3 (12. Be2 Nc6 13. O-O Bg4 $1 {1/2-1/2 (36) Arencibia
-Rodriguez,W (2526)-Panjwani,R (2409) Ottawa CAN 2013})) 11. Be2 e6 $1 12. d5 {
-1/2-1/2 (64) Baklan, V (2647) -Nakamura,H (2670) France 2008} (12. h3 $5))
-10... e6 11. dxe6 Bxe6 12. Nf3 Nc6 $11 {4 Houdini} *
+Bf5 8. Nc3 e6 9. Nf3 Nb4 $2 (9... Be7 10. d5 (10. Be2 O-O 11. O-O f6 12. exf6
+Bxf6 13. Qd2 Qe7 14. h3 Bg6 $11 {0-1 (38) Solomon,S (2391)-Ly,M (2513)
+Queensland Championships 2016}) 10... exd5 11. cxd5 Nb4 12. Nd4 Bd7 (12... Bg6
+$2) 13. e6 fxe6 14. dxe6 Bc6 15. Nxc6 Qxd1+ 16. Rxd1 bxc6 17. Rd2 {1/2-1/2 (39)
+Luther,T (2556)-Rozentalis,E (2622) Jenbach 2013}) (9... Bg4 10. Be2 Bxf3 11.
+gxf3 Qh4+ 12. Bf2 Qf4 13. c5 Nd7 14. Qc1 Qxc1+ 15. Rxc1 O-O-O 16. a3 $14 {
+1-0 (52) Jones,G (2593)-Short,N (2658) Bunratty IRL 2011}) 10. Rc1 c5 11. Be2
+cxd4 (11... Be7 12. O-O cxd4 13. Nxd4 Bg6 14. Ndb5 O-O 15. Nd6 Nd7 16. Nxb7 {
+1/2-1/2 (16) Spassky,B (2620)-Westerinen,H (2410) Solingen 1986}) 12. Nxd4 $14
+{1-0 (12) Arasan 16.3-Arasan 17.0} Bg6 $1 (12... Qc7 $2 13. Nxf5 exf5 14. Nb5 {
+1-0 (14) Arasan 16.3-Arasan 17.0}) 13. a3 (13. Ncb5 $14) 13... Nc6 14. Nxc6
+Qxd1+ 15. Bxd1 bxc6 16. Bf3 {½-½ (40) Predojevic,B (2543)-Laketic,G (2467)
+Vrnjacka Banja 2005}) 5... cxd6 (5... exd6 6. Nc3 Be7 (6... Nc6 $1 7. Nf3 (7.
+d5 $5) 7... Be7 $1) 7. Bd3 Nc6 8. Nge2 O-O 9. O-O Bg4 10. f3 Bh5 11. b3 Bf6 $2
+(11... Bg6 12. Bxg6 hxg6 13. d5 Ne5 {1/2-1/2 (83) Bernotas,A (2268) -Kovalenko,
+I (2596) Riga 2013}) 12. Be4 (12. Be3 $14) 12... Re8 13. Be3 Bg6 14. Qd2 $14 {
+1-0 (14) DesertCat (2989)-Arasan 17.1 (2796) chessclub.com 2014}) 6. Nc3 g6 7.
+Be3 (7. h3 Bg7 8. Nf3 O-O 9. Be2 Nc6 10. O-O Bf5 11. Be3 d5 12. c5 Nc4 13. Bxc4
+dxc4 14. Qa4 Bd3 15. Rfd1 e5 $2 (15... Qe8 16. Ne1 Nxd4 17. Qxe8 Rfxe8 18. Nxd3
+cxd3 19. Rxd3 {1/2-1/2 (23) Magar,T-Gross,S (2420) St Ingbert 1987}) 16. d5 Ne7
+17. d6 Nf5 18. Ne1 Nxe3 19. fxe3 Bf5 20. e4 Be6 21. Nd5 $16 {1-0 (21) Arasan
+16.3-Arasan 17.0}) (7. Bd3 Bg7 8. Nge2 O-O 9. O-O Nc6 10. Be3 Bg4 (10... e5)
+11. f3 $1 (11. h3 Bxe2 12. Nxe2) 11... Bf5 12. b3 Bxd3 13. Qxd3 e6 14. Rac1 d5
+$11 {1/2-1/2 (18) Minic,D (2490)-Gipslis,A (2580) Yerevan 1971}) 7... Bg7 8.
+Rc1 O-O 9. b3 Bf5 (9... e5 $3 10. dxe5 dxe5 11. Qxd8 (11. c5 N6d7) 11... Rxd8
+12. c5 (12. Nb5 $2 Nc6 13. Nf3 $3 Bg4 14. Be2 $11 {4 Houdini}) 12... N6d7 13.
+Bc4) (9... f5 $2 10. Nf3 f4 11. Bd2 Nc6 12. d5 Nd4 13. Nxd4 Bxd4 14. Be2 $14 {
+1-0 (14) Stripunsky,A (2566)-Shabalov,A (2523) Philadelphia 2012}) (9... Nc6 $2
+10. d5 Ne5 11. Be2 f5 12. Nh3 $14 {1-0 (38) zerowin (2633)-Arasan 18.0 (2582)
+freechess.org 2015} (12. f4 $1)) 10. d5 $2 (10. Nf3 Bg4 (10... d5 11. c5 Nc8
+12. h3 $3 (12. Be2 Nc6 13. O-O Bg4 $1 {1/2-1/2 (36) Arencibia Rodriguez,W 
+(2526)-Panjwani,R (2409) Ottawa CAN 2013})) 11. Be2 e6 $1 12. d5 {1/2-1/2 (64)
+Baklan, V (2647) -Nakamura,H (2670) France 2008} (12. h3 $5)) 10... e6 11. dxe6
+Bxe6 12. Nf3 Nc6 $11 {4 Houdini} *
 
 [Event "?"]
 [Site "?"]
@@ -5437,17 +5441,18 @@ Vanczak,A (2253)-Suto,G (2271) Hungary 2005}) 7... Ne4 8. Nxe4 dxe4 9. Ng5 c5
 }) 5... O-O (5... c5 $5 6. dxc5 Qa5 7. O-O (7. cxd6 $1 Nxe4 8. O-O (8. dxe7
 Nxc3 9. bxc3 Bxc3+ 10. Bd2 $11)) 7... Qxc5 8. Be3 Qa5 9. Nd2 $1 O-O 10. f3 (10.
 f4 Nbd7 $2 {0-1 (40) Wells,P (2460) -Watson,W (2505) London 1991 CBM 024 
-[Stohl,I]} (10... Nc6 $11)) 10... Nc6 $11 {1-0 (10) Thiamath (2741)-Arasan 17.
+(Stohl,I)} (10... Nc6 $11)) 10... Nc6 $11 {1-0 (10) Thiamath (2741)-Arasan 17.
 5 (2567) freechess.org 2015}) 6. O-O (6. Be3 e5 $2 (6... c6 $1 7. a4 Ng4 $11)
 7. dxe5 dxe5 8. O-O Nc6 9. Qxd8 (9. Bb5 $1 $14) 9... Rxd8 10. Rad1 {1-0 (36)
 Schneider,I (2489)-Petrosian,S (2384) Germany 2013} Bg4 $11) 6... e6 $6 (6...
-Nc6 $1) (6... c6 $3) (6... a6 $2 7. Re1 $3) (6... e5 $2) (6... Nbd7 7. Re1 e5 (
-7... c5 $2 8. d5 a6 9. a4 $14) 8. a4 (8. dxe5 Nxe5) 8... exd4 9. Nxd4 Re8 10.
-Bf1 $11 {1-0 (36) Nepomniachtchi,I (2703) -Svidler,P (2747) Moscow 2013}) (6...
-Bg4 7. h3 Bxf3 8. Bxf3 e5 $2 (8... c6 $2) (8... Nc6 $1) 9. d5 $1 Nbd7 10. Bg5
-$14 {1-0 (59) bookbuilder (2840)-Arasan 18.0 (2612) chessclub.com 2015} (10.
-Be3)) 7. e5 $1 (7. h3) 7... dxe5 8. dxe5 Qxd1 9. Rxd1 Nfd7 10. Bf4 Nc6 $2 (
-10... a6) *
+Nc6 $1) (6... c6 $3) (6... a6 $2 7. Re1 $3 (7. Qd3 $5 Nc6 8. d5 Nb8 9. a4 {
+1-0 (53) Alekseev,E (2642)-Bocharov,D (2558) Khanty-Mansiysk 2015}) (7. a4 $6
+Nc6 $3)) (6... e5 $2) (6... Nbd7 7. Re1 e5 (7... c5 $2 8. d5 a6 9. a4 $14) 8.
+a4 (8. dxe5 Nxe5) 8... exd4 9. Nxd4 Re8 10. Bf1 $11 {1-0 (36) Nepomniachtchi,I
+(2703) -Svidler,P (2747) Moscow 2013}) (6... Bg4 7. h3 Bxf3 8. Bxf3 e5 $2 (8...
+c6 $2) (8... Nc6 $1) 9. d5 $1 Nbd7 10. Bg5 $14 {1-0 (59) bookbuilder (2840)
+-Arasan 18.0 (2612) chessclub.com 2015} (10. Be3)) 7. e5 $1 (7. h3) 7... dxe5
+8. dxe5 Qxd1 9. Rxd1 Nfd7 10. Bf4 Nc6 $2 (10... a6) *
 
 [Event "37th Barbera del Valles Open 2014"]
 [Site "Barbera del Valles ESP"]
@@ -5592,20 +5597,21 @@ cxd4 $3 7. Nxd4 Ne7 8. O-O (8. c4 Nbc6 9. Qa4 dxc4 10. Na3 Qa5+ 11. Qxa5 Nxa5
 12. Nxc4 Nxc4 13. Bxc4 a6 14. O-O Be4 15. Rac1 Bd5 16. Be2 Rc8 17. Rxc8+ Nxc8
 18. Rc1 Ne7 (18... Kd7 $1 19. a3 Ne7 20. f4 Nc6 21. Nxc6 Bxc6 22. Kf2 Be7 23.
 Bc5 Bxc5+ 24. Rxc5 Rc8 25. g4 {1/2-1/2 (54) Adams,M (2733)-Ragger,M (2655)
-Germany 2011 CBM 146 [RR]} (25. g3)) 19. Bd2 Kd7 20. Ba5 Nc6 21. Nxc6 bxc6 22.
+Germany 2011 CBM 146 (RR)} (25. g3)) 19. Bd2 Kd7 20. Ba5 Nc6 21. Nxc6 bxc6 22.
 Rd1 $14 {1/2-1/2 (71) NightmareX (2629)-Arasan 18.0 (2617) freechess.org 2015}
-(22. b3 $14)) 8... Nbc6 9. Bb5 Bg6 (9... Rc8 10. Nd2 Bg6) 10. c4 a6 11. Ba4 $1
-dxc4 12. Na3 $5 Bd3 13. Rc1 Bxf1 14. Qxf1 Rc8 15. Qxc4 Qd7 $11 {1-0 (51)
-Westera,B (2432)-Hollands,G (2202) ICCF 2012}) (6... Nd7 7. O-O (7. Nbd2 $1)
-7... Ne7 8. Nbd2 cxd4 (8... Nc6 9. c4 Be7 10. cxd5 exd5 11. dxc5 O-O 12. Nb3
-Ndxe5 13. Nxe5 Nxe5 14. Nd4 Bd7 15. Rc1 Re8 16. b4 Bf6 17. b5 $14 {1-0 (62)
-Efremov,A (2610)-Vayser,V (2550) ICCF 2010}) 9. Nxd4 Nxe5 10. c4 N5c6 11. N2b3
-dxc4 $2 ({Komodo 9.01 64-bit:} 11... Be4 12. f3 Bg6 13. Rc1 e5 14. Nxc6 bxc6
-$11) 12. Bxc4 $14 {1-0 (31) ENGINEMASTER (2365)-Arasan 19.0 (1975) chessclub.
-com 2016}) 7. Nc3 Nc6 (7... Qxb2 $2 8. Nb5 $3 (8. Qb1 $2 Qb4 (8... Qxb1+ 9.
-Rxb1 c4 10. Rxb7 Nc6 11. Nb5 Nd8 12. Rc7 Rb8 13. Nd6+ Bxd6 14. exd6 Rb1+ 15.
-Bd1 Bxc2 16. Kd2 Bxd1 17. Rxd1 Rb6 18. Bf4 Nf6 19. Re7+ Kf8 20. Rxa7 Ne4+ 21.
-Kc2 f6 22. h4 $14 {1-0 (34) Karjakin,S (2747) -Eljanov,P (2761)
+(22. b3 $14)) 8... Nbc6 9. Bb5 Bg6 (9... Rc8 10. Nd2 Bg6) (9... a6 10. Bxc6+
+bxc6 11. c4 Qd7 12. Nc3 {1/2-1/2 (47) Caruana,F (2808)-Navara,D (2742) Baku
+2016}) 10. c4 a6 11. Ba4 $1 dxc4 12. Na3 $5 Bd3 13. Rc1 Bxf1 14. Qxf1 Rc8 15.
+Qxc4 Qd7 $11 {1-0 (51) Westera,B (2432)-Hollands,G (2202) ICCF 2012}) (6... Nd7
+7. O-O (7. Nbd2 $1) 7... Ne7 8. Nbd2 cxd4 (8... Nc6 9. c4 Be7 10. cxd5 exd5 11.
+dxc5 O-O 12. Nb3 Ndxe5 13. Nxe5 Nxe5 14. Nd4 Bd7 15. Rc1 Re8 16. b4 Bf6 17. b5
+$14 {1-0 (62) Efremov,A (2610)-Vayser,V (2550) ICCF 2010}) 9. Nxd4 Nxe5 10. c4
+N5c6 11. N2b3 dxc4 $2 ({Komodo 9.01 64-bit:} 11... Be4 12. f3 Bg6 13. Rc1 e5
+14. Nxc6 bxc6 $11) 12. Bxc4 $14 {1-0 (31) ENGINEMASTER (2365)-Arasan 19.0 
+(1975) chessclub.com 2016}) 7. Nc3 Nc6 (7... Qxb2 $2 8. Nb5 $3 (8. Qb1 $2 Qb4 (
+8... Qxb1+ 9. Rxb1 c4 10. Rxb7 Nc6 11. Nb5 Nd8 12. Rc7 Rb8 13. Nd6+ Bxd6 14.
+exd6 Rb1+ 15. Bd1 Bxc2 16. Kd2 Bxd1 17. Rxd1 Rb6 18. Bf4 Nf6 19. Re7+ Kf8 20.
+Rxa7 Ne4+ 21. Kc2 f6 22. h4 $14 {1-0 (34) Karjakin,S (2747) -Eljanov,P (2761)
 Khanty-Mansiysk 2010}) 9. a3 Qxb1+ 10. Rxb1 c4 11. Rxb7 Nc6 $11 {1-0 (35)
 Quesada Perez,Y (2636)-Sarkar,J (2437) Rockville 2013} 12. Kd2 Bxa3 13. Rhb1
 $14) 8... c4 $2 (8... Bxc2 9. Qc1 Qxc1+ 10. Rxc1 Bg6 11. dxc5 Kd7 12. Nd6 Nc6
@@ -5638,7 +5644,7 @@ com 2016}) 18. Rc3 a6 $2 19. Bd7 g6 $2 20. Rc7 {1-0 (27) Gashimov,V (2733)
 Rc3 h5 25. Bc8 Rh7 26. Rcc7 f4 27. Ra8 {1-0 (27) Gashimov,V (2733)-Ivanchuk,V 
 (2764) Reggio Emilia ITA 2011}) 12... Ba5 13. Rb1 Qxc2 14. Rb3 (14. Rc1 Qb2 15.
 g4 Bg6 16. f4 Be4 (16... Ne7 $11) 17. Rf2 Nh6 $2 {1-0 (30) Caruana,F (2801)
--Vachier Lagrave,M (2768) Saint Louis 2014 CBM 162 [Postny,E]} (17... Kf8 18.
+-Vachier Lagrave,M (2768) Saint Louis 2014 CBM 162 (Postny,E)} (17... Kf8 18.
 Bd3 Qb4 19. Rb1 Qc5 20. Nxe4 Qxb5 21. Qf1 Qa4 22. Nc5 Qc6 23. Rc2 Bb6 $11) (
 17... Qb4) 18. Bd3 $16 {1-0 (18) Fabiano Caruana (2801) -Maxime
 Vachier-Lagrave (2768) Saint Louis USA 2014 1-0 (30) Caruana,F (2801)-Vachier
@@ -5764,15 +5770,17 @@ Ne3 Be4 $14) (8... Bg6 $1 9. Nb3 Nf5 {0-1 (35) Van Kampen,R (2637)-Navara,D
 (2722) Bilbao 2014}) (8... a6 $2 9. a4 g5 10. b4 $1 Bg7 11. Nb3 O-O 12. Nc5
 Nxc5 13. bxc5 Qc7 (13... Qa5 14. Ra3 $16) 14. h4 $16 {1-0 (30) RayJr (2256)
 -Arasan 18.2 (2019) chessclub.com 2015}) 9. Re1 $1 a6 $1 (9... O-O-O $2) (9...
-Bh7 $1 10. Nb3)) 8. dxc5 $3 (8. Be3 Nc6 9. Nbd2 Be7 10. dxc5 $1 Nxc5 11. Nb3
-Nd7 12. Nfd4 {1/2-1/2 (56) Sjugirov,S (2643)-Maletin,P (2584) Olginka 2011})
-8... Nxc5 9. Nd4 a6 10. Nd2 (10. Be3 $1 Qc7 11. f4 g5 12. fxg5 Bg7 13. Nd2 Bxe5
-14. N2f3 Bg7 $2 (14... Bf4 $11) (14... Bd6 $1 15. Bb5+ Nd7 16. Nxf5 Nxf5 17.
-Bd4 O-O $2 (17... Nxd4 18. Bxd7+ Qxd7 19. Qxd4 {Komodo 9.01 64-bit:} Rg8 $11)
-18. Bxd7 Qxd7 $2 (18... Nxd4 19. Nxd4 $14) 19. Ne5 $16 {1-0 (50) NightmareX 
-(2682) -Arasan 18.1 (2634) freechess.org 2015}) 15. c4 Be4 $2 16. Rc1 {1-0 (30)
-Caruana,F (2594)-Rombaldoni,D (2402) Martina Franca 2007}) 10... Bg6 $3 11.
-N2f3 Qb6 (11... Qc7) *
+Bh7 $1 10. Nb3) 10. Nf1 Bg6 (10... c5 $1) 11. b4 a5 12. a4 Nf5 13. g4 Ne7 14.
+Ng3 axb4 $2 (14... Nc8 $1 $11) 15. cxb4 {1/2-1/2 (98) Schinitzu,B (2487)-BMind,
+a (2556) Engine Room 2016 (0.40;0.29)}) 8. dxc5 $3 (8. Be3 Nc6 9. Nbd2 Be7 10.
+dxc5 $1 Nxc5 11. Nb3 Nd7 12. Nfd4 {1/2-1/2 (56) Sjugirov,S (2643)-Maletin,P 
+(2584) Olginka 2011}) 8... Nxc5 9. Nd4 a6 10. Nd2 (10. Be3 $1 Qc7 11. f4 g5 12.
+fxg5 Bg7 13. Nd2 Bxe5 14. N2f3 Bg7 $2 (14... Bf4 $11) (14... Bd6 $1 15. Bb5+
+Nd7 16. Nxf5 Nxf5 17. Bd4 O-O $2 (17... Nxd4 18. Bxd7+ Qxd7 19. Qxd4 {Komodo 9.
+01 64-bit:} Rg8 $11) 18. Bxd7 Qxd7 $2 (18... Nxd4 19. Nxd4 $14) 19. Ne5 $16 {
+1-0 (50) NightmareX (2682) -Arasan 18.1 (2634) freechess.org 2015}) 15. c4 Be4
+$2 16. Rc1 {1-0 (30) Caruana,F (2594)-Rombaldoni,D (2402) Martina Franca 2007})
+10... Bg6 $3 11. N2f3 Qb6 (11... Qc7) *
 
 [Event "-"]
 [Site "-"]
@@ -6628,25 +6636,25 @@ Nf6 4. Bb5+ $3 Nbd7 5. Qe2 (5. d3 $1) 5... g6 6. f4 Bg7 7. Nf3 O-O 8. O-O $1 (
 [EventDate "2014.??.??"]
 
 1. e4 c5 2. d4 $6 (2. f4 e6 3. Nf3 d5 $1 4. Bb5+ Bd7 5. Bxd7+ Nxd7 6. d3 Bd6 (
-6... Ne7 $1) 7. O-O Ne7 8. c4 O-O 9. cxd5 exd5 10. Nc3 (10. e5 Bc7 11. Nc3 {1/
-2-1/2 (37) Hodgson,J (2545)-Georgiev,K (2590) San Bernardino 1989}) 10... a6
-$11 {1-0 (10) GNU Chess 5.60 64-bit-Arasan 17.5 64-bit ChessGUI2 2015}) 2...
-cxd4 3. c3 (3. Nf3 {weight:60} Nc6 4. Nxd4) (3. Qxd4 $2 Nc6) 3... dxc3 (3... d3
-$6 4. Bxd3 Nc6 (4... d6 5. c4 $1) 5. Nf3 (5. c4 $1 g6 6. Nf3 Bg7 7. O-O d6 8.
-h3 Nf6 9. Nc3 Nd7 $11 {1-0 (51) Mons,L (2339)-Naiditsch,A (2704) Germany 2013}
-(9... O-O)) 5... g6 $2 (5... d6 6. O-O g6 (6... Nf6 7. h3 $1 e6 8. c4 $1 Be7 9.
-Nc3 O-O 10. Bf4 b6 {1-0 (40) Zeller,F (2420)-Moor,R (2363) Switzerland 2013})
-7. Re1 Bg7 {1/2-1/2 (32) Jong,E (2264)-Sikorsky,R (2286) ICCF email 2006}) 6.
-O-O Bg7 7. c4 $1) (3... Nf6 {weight:75} 4. e5 Nd5 {B22} 5. Nf3 Nc6 6. cxd4 d6
-7. Bc4 Nb6 8. Bb5 dxe5 9. Nxe5 Bd7 10. Nxd7 Qxd7 11. Nc3 e6 12. O-O Rd8 $11 {
-0-1 (44) Tiviakov,S (2663)-Bu Xiangzhi (2683) Antalya TUR 2013}) 4. Nxc3 e6 {
-weight:40} (4... Nc6 5. Nf3 d6 (5... g6 6. h4 (6. Bc4 $1) 6... Bg7 7. h5 gxh5
-8. Bc4 d6 $15) 6. Bc4 e6 (6... a6 7. O-O Nf6 8. Bf4 Bg4 $1 9. h3 Bxf3 (9... Bh5
-$3) 10. Qxf3 e6 11. Rfd1 {1/2-1/2 (28) Zelic,M (2300)-Bozinovic,B (2223)
-Topusko 2015}) 7. O-O Be7 8. Qe2 a6 9. Rd1 Bd7 10. Bf4 e5 11. Be3 Nf6 {1/2-1/2
-(50) Parma,B-Eliskases,E Mar del Plata 1962}) 5. Nf3 Nc6 6. Bc4 Bb4 (6... a6)
-7. O-O Nge7 8. Qe2 $1 (8. Nb5 $6 d5 {½-½ (48) Schmidt,H (2408)-Zakhartsov,V 
-(2562) Travemuende 2009}) *
+6... Ne7 $1) 7. O-O Ne7 8. c4 O-O 9. cxd5 exd5 10. Nc3 (10. e5 Bc7 11. Nc3 {
+1/2-1/2 (37) Hodgson,J (2545)-Georgiev,K (2590) San Bernardino 1989}) 10... a6
+$11 {1-0 (10) GNU Chess 5.60 64-bit-Arasan 17.5 64-bit ChessGUI2 2015}) (2. b3
+Nc6 $1 3. Bb2 e5 $3) 2... cxd4 3. c3 (3. Nf3 {weight:60} Nc6 4. Nxd4) (3. Qxd4
+$2 Nc6) 3... dxc3 (3... d3 $6 4. Bxd3 Nc6 (4... d6 5. c4 $1) 5. Nf3 (5. c4 $1
+g6 6. Nf3 Bg7 7. O-O d6 8. h3 Nf6 9. Nc3 Nd7 $11 {1-0 (51) Mons,L (2339)
+-Naiditsch,A (2704) Germany 2013} (9... O-O)) 5... g6 $2 (5... d6 6. O-O g6 (
+6... Nf6 7. h3 $1 e6 8. c4 $1 Be7 9. Nc3 O-O 10. Bf4 b6 {1-0 (40) Zeller,F 
+(2420)-Moor,R (2363) Switzerland 2013}) 7. Re1 Bg7 {1/2-1/2 (32) Jong,E (2264)
+-Sikorsky,R (2286) ICCF email 2006}) 6. O-O Bg7 7. c4 $1) (3... Nf6 {weight:75}
+4. e5 Nd5 {B22} 5. Nf3 Nc6 6. cxd4 d6 7. Bc4 Nb6 8. Bb5 dxe5 9. Nxe5 Bd7 10.
+Nxd7 Qxd7 11. Nc3 e6 12. O-O Rd8 $11 {0-1 (44) Tiviakov,S (2663)-Bu Xiangzhi 
+(2683) Antalya TUR 2013}) 4. Nxc3 e6 {weight:40} (4... Nc6 5. Nf3 d6 (5... g6
+6. h4 (6. Bc4 $1) 6... Bg7 7. h5 gxh5 8. Bc4 d6 $15) 6. Bc4 e6 (6... a6 7. O-O
+Nf6 8. Bf4 Bg4 $1 9. h3 Bxf3 (9... Bh5 $3) 10. Qxf3 e6 11. Rfd1 {1/2-1/2 (28)
+Zelic,M (2300)-Bozinovic,B (2223) Topusko 2015}) 7. O-O Be7 8. Qe2 a6 9. Rd1
+Bd7 10. Bf4 e5 11. Be3 Nf6 {1/2-1/2 (50) Parma,B-Eliskases,E Mar del Plata 1962
+}) 5. Nf3 Nc6 6. Bc4 Bb4 (6... a6) 7. O-O Nge7 8. Qe2 $1 (8. Nb5 $6 d5 {
+½-½ (48) Schmidt,H (2408)-Zakhartsov,V (2562) Travemuende 2009}) *
 
 [Event "Remco Heite rap op 3rd"]
 [Site "Wolvega"]
@@ -9984,78 +9992,81 @@ Bb3 {1/2-1/2 (32) Zabutov,S (2262)-Dushkin,D ICCF 2012} (16. Bc5)) (15... a5 $2
 16. g4 $3 $14 (16. h4 $2 {1/2-1/2 (37) Kolesar,M (2512)-Westera,B (2446) ICCF
 2011})) 16. Bc5 Nf4 17. Bxe6 Nxe6 18. Bd6 $14 {1/2-1/2 (40) Harmon Vellotti,L 
 (2434)-Bodek,M (2408) Saint Louis 2016}) (14... h6 $1 15. Bc5 Re8 16. Ne4 f5
-17. Nd6 Re7 18. Bb3 Rd7 19. Nc4 Qf6 {0-1 (58) Schuller,J (2378)-Hagen,T (2407)
-ICCF 2012}) (14... Qd7 15. h4 h5 16. Ne4 Rfb8 $14 {1/2-1/2 (50) Shields,G 
-(2359)-Vekelis,G (2351) ICCF 2014}) (14... a5 $2 15. h4 $1) 15. Ne4 (15. Bb3 $1
-Qe7 16. h4 h5 $14) 15... f5 16. Ng5 $3 (16. Bxa7 $1 Qe7 (16... Qc7 $2 17. Bxb8
-Rxb8 18. Ng5 $18) 17. Bc5 Qb7 18. Bb3 fxe4 19. Bxf8 Rxf8 20. fxe4 Nf4 21. Qc3
-$1 Kh8 (21... Bxb3 $5 22. Qxb3+ $14) 22. Rhf1 {1-0 (45) Konstantinov,M-Hansen,
-L ICCF 2015} (22. Bxe6 $3 Nxe6 23. Qb3 $14)) 16... Bc8 17. h4 h6 18. Ne4 {
-1/2-1/2 (52) Edouard,R (2659)-Jones,G (2661) London Chess Classic Challenge
-2014}) (14. Bc5 $2 Qg5+) 14... Qc7 15. Bc5 Rfd8 (15... Rfe8 $2) 16. Qh4 $1 h6
-17. g4 Nf4 {1/2-1/2 (19) Prie,E (2460)-Koch,J (2455) Montpellier 1991}) (10.
-Kb1 Nxd4 $1 (10... Rb8 $2 11. Ndb5 $1 (11. Bf4 $2 e5 12. Nxc6 bxc6 13. Bxe5
-Nxe4 14. Qd4 c5 15. Qxe4 dxe4 $17 {1/2-1/2 (37) Nguyen Ngoc Truong Son (2634)
--Mamedov,R (2657) Berlin GER 2015}) 11... a6 12. Na7 e6 13. Qf2 $1) 11. e5 Nf5
-12. exf6 Bxf6 $2 (12... exf6 $3 13. Nxd5 Nxe3 14. Qxe3 Be6 15. Bc4 f5 16. c3 (
-16. Nc3 {1/2-1/2 (48) Andreikin,D (2713) -Morozevich,A (2760) Moscow 2013})
-16... Re8 17. Nf4 Qc7 18. Bxe6 fxe6 19. h4 Rad8 {1/2-1/2 (34) Soberano,J (2583)
--Ham,S (2560) ICCF 2010}) 13. Nxd5 Qxd5 14. Qxd5 Nxe3 15. Qd2 Nxd1 16. Qxd1 Be6
-17. Bd3 (17. Bb5 $1) 17... Rfd8 18. Qe2 Rd6 {1-0 DesertCat (3078)-Arasan 17.3 
-(2693) chessclub.com 2014}) (10. Nxc6 bxc6 11. Bh6 $1 Bxh6 12. Qxh6 Qb6 13. h4
-(13. e5 Nd7 14. h4 Nxe5 15. h5 Bf5 16. g4 f6 17. Qf4 (17. Qd2 $5) 17... Rab8
-18. b3 Bd7 $15) 13... Rb8 14. b3 Qa5 $5 {0-1 (20) Zdrazil,T (2035)-Rymskyy,A 
-(2151) Olomouc 2008}) 10... Nxd5 11. Nxc6 bxc6 12. Bd4 $1 (12. Nxd5 cxd5 13.
-Qxd5 Qc7 14. Qc5 Qb8 $2 (14... Qb7 15. b3 $1 (15. c3 $2 Rb8 (15... Bf5)) (15.
-Qa3 Bf5 16. Bd3 Rab8 17. b3 Qc6 18. Qa5 Qf6 19. Bxf5 Qb2+ 20. Kd2 gxf5 21. Ke2
-Rfc8 {1/2-1/2 (21) Johansen,O (2247)-Bekkesletten,C (2375) ICCF 2011}) 15...
-Bf5 $1 16. Bd3 Rac8 17. Qa5 Rc3 18. Bxf5 Rxe3 19. Be4 Qc8 20. g4 Qb8 (20... h6
-$2 21. h4 $14 {1/2-1/2 (34) Pacificrabbit,K (2651)-DJ Jacob,S (2475) Engine
-Room 2016}) (20... Kh8 $5) 21. Kb1 Qf4 22. Rd8 Bc3 23. Rxf8+ Kxf8 24. Qxa7 Re2
-(24... Qxh2 25. Qxe3 Qxh1+ 26. Qc1 Qh2 27. a3 h5 28. gxh5 gxh5 29. b4 h4 30.
-Qe3 Be5 31. a4 h3 32. a5 Qh1+ 33. Ka2 f5 34. Bd5 {1/2-1/2 (34) Volovici,D 
-(2473)-Nilsson,S (2510) ICCF 2011}) 25. a3 Qxh2 26. Rd1 {1/2-1/2 (26) Kribben,
-D (2652)-Lecroq,M (2609) ICCF 2011}) 15. c3 Be6 16. Qa5 $3 Be5 17. g3 Bc7 18.
-Qa6 Bb6 19. Bf4 $16 {1-0 (57) Crafty-25.0 JA-Arasan 18.3 - 2016}) 12... Bxd4 $3
-(12... Nxc3 $1 13. Qxc3 Bh6+ 14. Be3 Bxe3+ 15. Qxe3 Qb6 16. Qxe7 $1 Be6 17. Qa3
-Rad8 18. Bd3 Rd5 19. b3 (19. Rhe1 $2 {0-1 (66) Vajolet2 2.2 (2200)-iCE 3.0 
-(2200) EDDY-PC 2016}) 19... Rfd8 $3 (19... Rg5 20. Rhg1 Rd8 {1/2-1/2 (31) Fajs,
-B (2481)-Moreira,J (2422) ICCF 2010}) 20. Rde1 Rd4 21. Re5 R8d5 {1/2-1/2 (49)
-Bauer,W (2513)-Moura,A (2487) ICCF 2010} 22. Re2 (22. Rxd5 $5 $14) 22... Qd8 $3
-23. Rhe1 a5 24. Re4 {1/2-1/2 (51) Wang,H (2724)-Timofeev,A (2690) Ningbo 2010})
-(12... e5 13. Bc5 Be6 14. Ne4 Re8 (14... Rb8 $2 15. Bc4 (15. Bxf8 {weight:5}
-Qxf8 16. Qa5 Bf5 $2 (16... f5 $2 17. Ng5 $3 $16) (16... Ne3 17. Rd2 Bh6 $11)
-17. Bd3 Qe7 18. Kb1 $16 {1-0 (18) NightmareX (2781) -Arasan 17.3 (2402)
-freechess.org 2014}) 15... Re8 $1 16. h4 a5 (16... h6 17. g4 {1-0 (17) Spike 1.
-4 MP Q6600 (3102)-Arasan 17.2 MP Q6600 (3027) Tony Hedlund 2015}) (16... Nf4)
-17. Bb3 h6 18. g4 Ra8 19. a4 Qc7 20. g5 h5 21. Qf2 Red8 22. Rd3 $14 {1-0 (38)
-Popovic,P (2540) -Sax,G (2565) Subotica 1987}) 15. h4 h6 (15... h5 16. Bc4 Nf4
-(16... Qc7 $2 17. g4) 17. Bxe6 Nxe6 18. Be3 (18. Qc3 $1) 18... Qxd2+ $2 (18...
-Qc7 $14) 19. Rxd2 {1-0 (19) avis (2943)-Arasan 17.5 (2644) chessclub.com 2015})
-(15... Nf4 $1) 16. g4 (16. h5 g5 17. c4 Nf6 18. Qe1 Qc7 19. Bd6 Qb6 20. Bxe5
-$14) 16... Qc7 (16... Nf4 $2 17. Qc3 $3) 17. g5 (17. h5 g5 18. Bc4 Red8 19. Qf2
-Nf4 20. Bxe6 Nxe6 21. Bd6 $14 {1/2-1/2 (21) Vokarev, S (2502)-Azarov,S (2585)
-Kazan 2008}) 17... h5 18. Bc4 Red8 19. Qf2 Nf4 20. Bb3 Bd5 {0-1 (38) Najer,E 
-(2657)-Mista,A (2574) Germany 2010} 21. Kb1 $14) 13. Qxd4 Qb6 $3 14. Na4 $1 (
-14. Nxd5 cxd5 15. Qxb6 axb6 16. a3 Rd8 17. Rd4 $1 e5 18. Rb4 $11) (14. Bc4 $5
-Ne3 15. Rd2 Nxc4 16. Qxc4 Be6 17. Qf4 Rab8 18. b3 c5 {1/2-1/2 (78) Alekseev,E 
-(2677)-Grandelius,N (2609) Jerusalem ISR 2015}) 14... Qc7 (14... Qa5 15. b3 Be6
-$5 (15... Qc7 $1 16. h4 $1 (16. g3) (16. c4) 16... h5) 16. Qe5 Qb4 17. c4 Nf6
-18. Bd3 Nd7 $2 (18... Rfd8 $5) 19. Qc3 Qa3+ 20. Qb2 Qb4 21. h4 Nc5 22. Nxc5
-Qxc5 23. h5 Rad8 24. hxg6 fxg6 25. Be4 $2 {1/2-1/2 (70) Akopian,V (2656)-Jones,
-G (2650) Dubai 2016} (25. Rhe1 $14)) 15. Bc4 $1 (15. Nc5 a5 16. Bc4 (16. h4 $5)
-16... Rb8 $2 {1-0 (16) Komodo-7-64bit-Arasan 17.3 - 2014} (16... a4 17. a3 Ra5
-$1 $11)) 15... Rd8 16. Nc5 (16. Bb3 Be6 17. Nc5 Nf4 18. Nxe6 Nxe6 19. Qe3 Nf4
-20. g3 Nd5 21. Qg5 e6 22. Rhe1 a5 $11 {1-0 (70) Leko,P (2735)-Van Wely,L (2679)
-Wijk aan Zee 2013} 23. Qe5) 16... Bf5 17. Bb3 h5 $2 (17... Nf4 18. Qf2 (18. Qc4
-e5 19. g3 Nd5 $2 (19... Be6 $11) 20. Rhe1 {1-0 (54) Haslinger,S (2553)-Pijpers,
-A (2338) Haarlem 2013}) 18... Rxd1+ 19. Rxd1 Rd8 20. Rxd8+ Qxd8 21. g3 Nd5 (
-21... Qd4 22. Qxd4 Ne2+ $11) 22. g4 Bc8 23. Nd3 Ba6 {1/2-1/2 (23) Kukk,R (2600)
--Voll,A (2563) ICCF 2012}) (17... Nb6 $2 18. Qc3 (18. Qe3 $1 Nd5 19. Qg5 $1 {
-1-0 (51) RayJr (2378)-Arasan 19.0.1 (2050) chessclub.com 2016}) 18... Rxd1+ 19.
-Rxd1 h5 {1/2-1/2 (39) Ottesen,S (2423)-Gusan,B (2500) ICCF email 2009}) 18. g4
-$1 e5 19. Qg1 Nf4 20. Re1 hxg4 21. fxg4 Bc8 22. Qg3 a5 23. Qh4 a4 24. Bxf7+ Kg7
-25. Ne4 1-0
+17. Nd6 Re7 18. Bb3 Rd7 19. Nc4 (19. c4 Rxd6 20. Bxd6 Qxd6 21. Qa5 Rd8 22. cxd5
+cxd5 23. Qxa7 e4 24. Rc1 Qe5 25. Rc3 Kh7 26. Rhc1 {1/2-1/2 (26) Noble,M (2498)
+-González Rabago,N (2457) ICCF 2014}) 19... Qf6 {0-1 (58) Schuller,J (2378)
+-Hagen,T (2407) ICCF 2012}) (14... Qd7 15. h4 h5 16. Ne4 Rfb8 $14 {1/2-1/2 (50)
+Shields,G (2359)-Vekelis,G (2351) ICCF 2014}) (14... a5 $2 15. h4 $1) 15. Ne4 (
+15. Bb3 $1 Qe7 16. h4 h5 $14) 15... f5 16. Ng5 $3 (16. Bxa7 $1 Qe7 (16... Qc7
+$2 17. Bxb8 Rxb8 18. Ng5 $18) 17. Bc5 Qb7 18. Bb3 fxe4 19. Bxf8 Rxf8 20. fxe4
+Nf4 21. Qc3 $1 Kh8 (21... Bxb3 $5 22. Qxb3+ $14) 22. Rhf1 {1-0 (45)
+Konstantinov,M-Hansen,L ICCF 2015} (22. Bxe6 $3 Nxe6 23. Qb3 $14)) 16... Bc8
+17. h4 h6 18. Ne4 {1/2-1/2 (52) Edouard,R (2659)-Jones,G (2661) London Chess
+Classic Challenge 2014}) (14. Bc5 $2 Qg5+) 14... Qc7 15. Bc5 Rfd8 (15... Rfe8
+$2) 16. Qh4 $1 (16. h4 $5 Nf4 (16... h6 17. g4 Nf4 (17... f5 $1 18. gxf5 gxf5
+19. Ng3 Kh7 $11) 18. Bxe6 $14 {1/2-1/2 (47) Hebels,A (2409)-Bauer,M (2410)
+ICCF 2014}) 17. Bxe6 Rxd1+ 18. Qxd1 Nxe6 19. Be3 $11) 16... h6 17. g4 Nf4 {
+1/2-1/2 (19) Prie,E (2460)-Koch,J (2455) Montpellier 1991} (17... Rd7 18. b3
+Rad8 19. g5 h5 20. Qf2 Nf4 21. Bxe6 Nxe6 22. Rxd7 Rxd7 23. Be3 {1-0 (64) Comp3
+(2430)-Arasan 19.1 (2123) chessclub.com 2016})) (10. Kb1 Nxd4 $1 (10... Rb8 $2
+11. Ndb5 $1 (11. Bf4 $2 e5 12. Nxc6 bxc6 13. Bxe5 Nxe4 14. Qd4 c5 15. Qxe4 dxe4
+$17 {1/2-1/2 (37) Nguyen Ngoc Truong Son (2634)-Mamedov,R (2657) Berlin GER
+2015}) 11... a6 12. Na7 e6 13. Qf2 $1) 11. e5 Nf5 12. exf6 Bxf6 $2 (12... exf6
+$3 13. Nxd5 Nxe3 14. Qxe3 Be6 15. Bc4 f5 16. c3 (16. Nc3 {1/2-1/2 (48)
+Andreikin,D (2713) -Morozevich,A (2760) Moscow 2013}) 16... Re8 17. Nf4 Qc7 18.
+Bxe6 fxe6 19. h4 Rad8 {1/2-1/2 (34) Soberano,J (2583)-Ham,S (2560) ICCF 2010})
+13. Nxd5 Qxd5 14. Qxd5 Nxe3 15. Qd2 Nxd1 16. Qxd1 Be6 17. Bd3 (17. Bb5 $1)
+17... Rfd8 18. Qe2 Rd6 {1-0 DesertCat (3078)-Arasan 17.3 (2693) chessclub.com
+2014}) (10. Nxc6 bxc6 11. Bh6 $1 Bxh6 12. Qxh6 Qb6 13. h4 (13. e5 Nd7 14. h4
+Nxe5 15. h5 Bf5 16. g4 f6 17. Qf4 (17. Qd2 $5) 17... Rab8 18. b3 Bd7 $15) 13...
+Rb8 14. b3 Qa5 $5 {0-1 (20) Zdrazil,T (2035)-Rymskyy,A (2151) Olomouc 2008})
+10... Nxd5 11. Nxc6 bxc6 12. Bd4 $1 (12. Nxd5 cxd5 13. Qxd5 Qc7 14. Qc5 Qb8 $2
+(14... Qb7 15. b3 $1 (15. c3 $2 Rb8 (15... Bf5)) (15. Qa3 Bf5 16. Bd3 Rab8 17.
+b3 Qc6 18. Qa5 Qf6 19. Bxf5 Qb2+ 20. Kd2 gxf5 21. Ke2 Rfc8 {1/2-1/2 (21)
+Johansen,O (2247)-Bekkesletten,C (2375) ICCF 2011}) 15... Bf5 $1 16. Bd3 Rac8
+17. Qa5 Rc3 18. Bxf5 Rxe3 19. Be4 Qc8 20. g4 Qb8 (20... h6 $2 21. h4 $14 {
+1/2-1/2 (34) Pacificrabbit,K (2651)-DJ Jacob,S (2475) Engine Room 2016}) (20...
+Kh8 $5) 21. Kb1 Qf4 22. Rd8 Bc3 23. Rxf8+ Kxf8 24. Qxa7 Re2 (24... Qxh2 25.
+Qxe3 Qxh1+ 26. Qc1 Qh2 27. a3 h5 28. gxh5 gxh5 29. b4 h4 30. Qe3 Be5 31. a4 h3
+32. a5 Qh1+ 33. Ka2 f5 34. Bd5 {1/2-1/2 (34) Volovici,D (2473)-Nilsson,S (2510)
+ICCF 2011}) 25. a3 Qxh2 26. Rd1 {1/2-1/2 (26) Kribben,D (2652)-Lecroq,M (2609)
+ICCF 2011}) 15. c3 Be6 16. Qa5 $3 Be5 17. g3 Bc7 18. Qa6 Bb6 19. Bf4 $16 {
+1-0 (57) Crafty-25.0 JA-Arasan 18.3 - 2016}) 12... Bxd4 $3 (12... Nxc3 $1 13.
+Qxc3 Bh6+ 14. Be3 Bxe3+ 15. Qxe3 Qb6 16. Qxe7 $1 Be6 17. Qa3 Rad8 18. Bd3 Rd5
+19. b3 (19. Rhe1 $2 {0-1 (66) Vajolet2 2.2 (2200)-iCE 3.0 (2200) EDDY-PC 2016})
+19... Rfd8 $3 (19... Rg5 20. Rhg1 Rd8 {1/2-1/2 (31) Fajs,B (2481)-Moreira,J 
+(2422) ICCF 2010}) 20. Rde1 Rd4 21. Re5 R8d5 {1/2-1/2 (49) Bauer,W (2513)
+-Moura,A (2487) ICCF 2010} 22. Re2 (22. Rxd5 $5 $14) 22... Qd8 $3 23. Rhe1 a5
+24. Re4 {1/2-1/2 (51) Wang,H (2724)-Timofeev,A (2690) Ningbo 2010}) (12... e5
+13. Bc5 Be6 14. Ne4 Re8 (14... Rb8 $2 15. Bc4 (15. Bxf8 {weight:5} Qxf8 16. Qa5
+Bf5 $2 (16... f5 $2 17. Ng5 $3 $16) (16... Ne3 17. Rd2 Bh6 $11) 17. Bd3 Qe7 18.
+Kb1 $16 {1-0 (18) NightmareX (2781) -Arasan 17.3 (2402) freechess.org 2014})
+15... Re8 $1 16. h4 a5 (16... h6 17. g4 {1-0 (17) Spike 1.4 MP Q6600 (3102)
+-Arasan 17.2 MP Q6600 (3027) Tony Hedlund 2015}) (16... Nf4) 17. Bb3 h6 18. g4
+Ra8 19. a4 Qc7 20. g5 h5 21. Qf2 Red8 22. Rd3 $14 {1-0 (38) Popovic,P (2540)
+-Sax,G (2565) Subotica 1987}) 15. h4 h6 (15... h5 16. Bc4 Nf4 (16... Qc7 $2 17.
+g4) 17. Bxe6 Nxe6 18. Be3 (18. Qc3 $1) 18... Qxd2+ $2 (18... Qc7 $14) 19. Rxd2
+{1-0 (19) avis (2943)-Arasan 17.5 (2644) chessclub.com 2015}) (15... Nf4 $1)
+16. g4 (16. h5 g5 17. c4 Nf6 18. Qe1 Qc7 19. Bd6 Qb6 20. Bxe5 $14) 16... Qc7 (
+16... Nf4 $2 17. Qc3 $3) 17. g5 (17. h5 g5 18. Bc4 Red8 19. Qf2 Nf4 20. Bxe6
+Nxe6 21. Bd6 $14 {1/2-1/2 (21) Vokarev, S (2502)-Azarov,S (2585) Kazan 2008})
+17... h5 18. Bc4 Red8 19. Qf2 Nf4 20. Bb3 Bd5 {0-1 (38) Najer,E (2657)-Mista,A
+(2574) Germany 2010} 21. Kb1 $14) 13. Qxd4 Qb6 $3 14. Na4 $1 (14. Nxd5 cxd5 15.
+Qxb6 axb6 16. a3 Rd8 17. Rd4 $1 e5 18. Rb4 $11) (14. Bc4 $5 Ne3 15. Rd2 Nxc4
+16. Qxc4 Be6 17. Qf4 Rab8 18. b3 c5 {1/2-1/2 (78) Alekseev,E (2677)-Grandelius,
+N (2609) Jerusalem ISR 2015}) 14... Qc7 15. Bc4 $1 (15. Nc5 a5 16. Bc4 (16. h4
+$5) 16... Rb8 $2 {1-0 (16) Komodo-7-64bit-Arasan 17.3 - 2014} (16... a4 17. a3
+Ra5 $1 $11)) 15... Rd8 16. Nc5 (16. Bb3 Be6 17. Nc5 Nf4 18. Nxe6 Nxe6 19. Qe3
+Nf4 20. g3 Nd5 21. Qg5 e6 22. Rhe1 a5 $11 {1-0 (70) Leko,P (2735)-Van Wely,L 
+(2679) Wijk aan Zee 2013} 23. Qe5) 16... Bf5 17. Bb3 h5 $2 (17... Nf4 18. Qf2 (
+18. Qc4 e5 19. g3 Nd5 $2 (19... Be6 $11) 20. Rhe1 {1-0 (54) Haslinger,S (2553)
+-Pijpers,A (2338) Haarlem 2013}) 18... Rxd1+ 19. Rxd1 Rd8 20. Rxd8+ Qxd8 21. g3
+Nd5 (21... Qd4 22. Qxd4 Ne2+ $11) 22. g4 Bc8 23. Nd3 Ba6 {1/2-1/2 (23) Kukk,R 
+(2600) -Voll,A (2563) ICCF 2012}) (17... Nb6 $2 18. Qc3 (18. Qe3 $1 Nd5 19. Qg5
+$1 {1-0 (51) RayJr (2378)-Arasan 19.0.1 (2050) chessclub.com 2016}) 18... Rxd1+
+19. Rxd1 h5 {1/2-1/2 (39) Ottesen,S (2423)-Gusan,B (2500) ICCF email 2009}) 18.
+g4 $1 e5 19. Qg1 Nf4 20. Re1 hxg4 21. fxg4 Bc8 22. Qg3 a5 23. Qh4 a4 24. Bxf7+
+Kg7 25. Ne4 1-0
 
 [Event "FRA-chT Top 16 GpB"]
 [Site "France"]
@@ -10556,15 +10567,17 @@ Rxb8 27. Kb2 Bd2 28. Be2 Kc6 29. Rd1 Bf4 30. Bd3 b4 1/2-1/2
 $2 Ng4 $3 (6... e6 $2 7. f4 e5 8. Nf3 $1 {B82})) 6... e6 (6... e5 7. Nb3 Be7 8.
 Be3 O-O 9. Qd2 a5 10. Bb5 Na7 11. Be2 Nc6 (11... Be6) 12. Bb5 Na7 13. Ba4 $2 (
 13. Bd3 $11) 13... Be6 14. Bxa7 Rxa7 15. Qf2 Ra8 16. O-O-O Qb8 {0-1 (16) Anand,
-V (2781)-Kramnik,V (2751) Monte Carlo 1999 [Dart, J.]}) (6... Nxd4 7. Qxd4 g6
+V (2781)-Kramnik,V (2751) Monte Carlo 1999 (Dart, J.)}) (6... Nxd4 7. Qxd4 g6
 8. Be3 Bg7 9. Bc4 {B75} O-O 10. Qd2 Be6 11. Bxe6 fxe6 12. Ne2 Rc8 13. O-O Qc7
 14. c3 $14 {½-½ (21) Kovacevic,A (2549)-Popovic,P (2533) Banja Koviljaca
-2002 (analysis)}) 7. Be3 Be7 8. Qd2 O-O (8... d5 $3) 9. g4 d5 (9... Nxd4 10.
-Bxd4 a6 11. O-O-O b5 {B80}) 10. g5 Nxd4 $2 (10... Nh5) 11. Qxd4 Nh5 (11... Nd7
-$2) 12. O-O-O Bxg5 13. Kb1 Kh8 14. Bxg5 Qxg5 15. Rg1 Qf4 16. Qc5 Bd7 17. exd5
-Nf6 18. Bh3 exd5 19. Bxd7 Nxd7 20. Qxd5 Nf6 (20... Ne5 $5) 21. Qxb7 Qxh2 22.
-Ne4 Nxe4 23. Qxe4 Rad8 $11 {1-0 (68) Karjakin,S (2706)-Movsesian,S (2751) Wijk
-aan Zee 2009} *
+2002 (analysis)}) 7. Be3 Be7 8. Qd2 O-O (8... d5 $2 9. Bb5 Bd7 10. exd5 Nxd5
+11. Nxd5 exd5 12. O-O-O $1 O-O 13. Ne2 Be6 {1-0 (40) Antoniewski,R (2513)
+-Atlas,V (2431) Austria 2009} (13... a6 $5 $14)) 9. g4 d5 (9... Nxd4 10. Bxd4
+a6 11. O-O-O b5 {B80}) 10. g5 Nxd4 $2 (10... Nh5) 11. Qxd4 Nh5 (11... Nd7 $2)
+12. O-O-O Bxg5 13. Kb1 Kh8 14. Bxg5 Qxg5 15. Rg1 Qf4 16. Qc5 Bd7 17. exd5 Nf6
+18. Bh3 exd5 19. Bxd7 Nxd7 20. Qxd5 Nf6 (20... Ne5 $5) 21. Qxb7 Qxh2 22. Ne4
+Nxe4 23. Qxe4 Rad8 $11 {1-0 (68) Karjakin,S (2706)-Movsesian,S (2751) Wijk aan
+Zee 2009} *
 
 [Event "?"]
 [Site "Moscow"]
@@ -11666,60 +11679,69 @@ Bc4 Bxa3 29. Bd5 Qa6 30. bxa3 Ra7 31. Bxb3 Qxa3 32. Qb2 $11) 26... h6 27. Rd5
 Ra4 28. Bb5 Ra7 29. Be3 Rxa3 30. bxa3 Nc7 31. a4 Rc8 32. Rc1 Nxd5 33. exd5
 Rxc1+ 34. Bxc1 Qc8 35. Kb2 Qxf5 36. Qe2 Bd8 $2 {1-0 (46) Busemann,D (2606)
 -Papenin,N (2729) ICCF 2012 1/2-1/2 (46) (Dart, J.)} (36... Qc8)) 13. Kb1 (13.
-Nd5 Bxd5 14. exd5 f6 15. gxf6 (15. h4 fxg5 16. hxg5 Rxf3 17. Rxh5 Rxe3 18. Qxe3
-g6 19. Nd4 exd4 20. Qe6+ Kg7 21. Rh2 Bxg5+ 22. Kb1 Nc5 23. Qh3 h6 24. Rxd4 Qf6
-25. c3 h5 26. Rd1 Qf4 27. Be2 Re8 28. Rf1 Qe4+ 29. Ka1 Qxd5 $4 {1-0 (29)
-Arasan test game 2014} (29... Qe3 30. Bf3 $11)) 15... Bxf6 16. Na5 Qe8 17. Qb4
-$2 (17. Bh3 Bd8) (17. Rg1 Nf4 18. Qb4 Nc5 (18... Bd8 $1) 19. Bxc5 dxc5 20. Qe4
-c4 21. d6 Qd7 22. Kb1 Rfc8 $2 (22... Rab8 $1) 23. Qb7 Ra7 24. Qe4 Kh8 25. Ka1
-$2 {0-1 (75) Arasan 16.3-Arasan 17.4} (25. b3 $11)) 17... Bd8 18. Nb7 Rxf3 19.
-Nxd6 Qe7 20. Bd2 Rf4 21. Bxf4 Nxf4 22. Qa3 b4 23. Qxb4 Bb6 24. c3 Bc5 25. Qb7
-Rb8 26. Nf5 Qf7 27. Nh6+ gxh6 28. Qxa6 Kh8 29. Bb5 Qf5 30. Rhe1 Nf6 31. Qc6 Rc8
-$17 {0-1 (31) Arasan 17.4 (2537) -bookbuilder (2820) chessclub.com 2014}) 13...
-Nb6 14. Na5 (14. Nd5 Nxd5 15. exd5 Bd7 (15... Bf5 $2)) 14... Qc7 $1 (14... Rc8
-15. a3 g6 (15... Qc7 16. h4 g6 17. Rh2 Rb8 $1 18. Nd5 Nxd5 19. exd5 Bxd5 20.
-Qxd5 Qxa5 $11) 16. Rg1 Qc7 17. Nd5 $1 Nxd5 18. exd5 Bxd5 (18... Bd7 19. c4 (19.
-Bd3 Bd8 20. Nc6 Bxc6 21. dxc6 d5 22. c3 Qxc6 23. Bc2 d4 24. cxd4 {1/2-1/2 (54)
-Dominguez Perez,L (2726) -Vachier Lagrave,M (2758) Beijing 2014}) 19... Nf4 20.
-Rc1 Qb8 21. h4 Rfe8 22. Rh1 Nh5 $2 (22... Bf8 $11 {Hiarcs}) 23. Rg1 $2 {
-0-1 (23) Arasan 17.0-Arasan 16.3} (23. Bd3 $14)) 19. Qxd5 Qxa5 20. Bd3 (20. Rg4
-Qc7 21. c4 bxc4 22. Rxc4 Qd8 23. h4 Ng3 24. Rdc1 Rxc4 25. Bxc4 Nf5 26. Bf2 h6
-27. Bxa6 hxg5 28. Rc8 Qd7 29. Rxf8+ Kxf8 30. Bb5 Qc7 31. Bc4 Bf6 32. Bb6 Qd7
-33. hxg5 Bxg5 34. Bb5 {1/2-1/2 (88) Krivic,D (2528)-Noble,M (2490) ICCF 2014})
-20... Qc7 (20... Rb8 $1) 21. Be4 Rfd8 {1/2-1/2 (57) Arasan 17.0-Arasan 16.3 -
-2014} (21... Rb8)) 15. Nd5 (15. a3 Rab8 (15... g6 16. Nd5 (16. h4 $5) 16...
-Nxd5 17. exd5 Bxd5 18. Qxd5 Qxa5 19. Bd3 Qc7 20. Be4 Rab8 {1/2-1/2 (51)
-Trembeckí,L (2514)-Lounek,J (2501) ICCF 2012}) 16. Nd5 Nxd5 17. exd5 Bxd5 18.
-Qxd5 Qxa5 19. Bc4 Qc7 20. Ba2 Kh8 (20... Qb7 21. Qd3 Qxf3 22. Rdf1 Qh3 23. g6
-Kh8 24. Rxf7 Rxf7 25. gxf7 Nf6 26. Re1 Rc8 27. Qe2 h6 28. Bd2 Bf8 29. Bb3 $11 {
-1-0 (58) Crawly,H (2601)-Katzenmaier,F (2499) Engine Room 2012}) 21. Rhe1 f6
-22. h4 fxg5 23. hxg5 Nf4 24. Bxf4 Rxf4 25. g6 h6 26. Rh1 a5 $11 {1-0 (26)
-Komodo 7a 64-bit-Arasan 17.3 book6-1 2014}) 15... Nxd5 16. exd5 Bd7 17. c4 (17.
-Bd3 $14) 17... f6 $11 {0-1 (45) Dominguez Perez,L (2726)-Nepomniachtchi,I 
-(2714) Beijing 2014}) (9... h5 $1 10. Nd5 $3 Nxd5 $3 (10... Bxd5 11. exd5 Nbd7
-(11... O-O 12. Be2 $14) 12. Be2 (12. c4 O-O 13. Bd3 a5 (13... e4 $1) 14. a4 e4
-15. fxe4 Ng4 16. Bd4 $11 {1-0 (39) El Shaddai,R (2455)-PAKman,R (2670)
-playchess.com INT 2006}) 12... O-O (12... a5 13. a4) 13. O-O b6 (13... Qb8 14.
-Kh1 Bd8 15. c4 (15. a4 $1) 15... Bb6 16. Bxb6 Nxb6 {1-0 (57) Saric,I (2666)
--Nepomniachtchi,I (2735) Poikovsky 2014}) 14. c4 h4 15. Bd3 a5 (15... Nh5 16.
-Bf5 $3 (16. a4 a5) 16... Rb8 $14) 16. a4 (16. Rad1 $1) 16... Nc5 17. Nxc5 bxc5
-18. b3 Nh5 $11 {-0.44/25 77 NightmareX (1979)-ArasanX (1935) winboard.nl 2014 
-(18... -0.44)} (18... Rb8 $1 $11)) 11. exd5 Bf5 (11... Bc8 $2 12. a4 (12. Bd3
-$1) 12... Bf5 13. Na5 Nd7 14. Ra3 Qc7 15. Rb3 $3 (15. Nc4 O-O 16. a5 e4 17. f4
-Rac8 $11) 15... Rb8 $2 (15... Bd8) 16. Ba7 $14 {1-0 (16) Polyphemus (3224)
--Arasan 17.3 (2745) chessclub.com 2014} Rc8 17. Rxb7 Qxc2 18. Qxc2 Rxc2 19. h4
-$1 $14 {115.06/0 1-0 (19) Ntembe,S (2528)-Tictacto,S (2399) playchess. com 2014
-}) 12. Be2 $1 (12. Bd3 $2) 12... Bh4+ $3 (12... O-O 13. O-O Bg6 (13... Nd7 $1)
-14. c4 a5 $11 {0-1 (71) Wei,Y (2376)-Xiu, D (2494) Ho Chi Minh City 2012}) (
-12... a5 13. a4 Nd7 14. O-O O-O 15. f4 exf4 16. Bxf4 Bg6 17. Bb5 Bh4 $2 {
-1-0 (17) NightmareX (2692)-Arasan 17.3 (2638) chessclub.com 2014} (17... Ne5
-$11) (17... Bf6 $11)) (12... Nd7 $1 13. Na5 Qc7 14. O-O O-O 15. c4 Nf6 $3 16.
-Rac1 Rfe8 17. b4 {1/2-1/2 (41) Efremov,A (2522) -Nickel,A (2645) ICCF 2012})
-13. g3 Be7 14. Bd3 (14. Na5) (14. O-O Nd7 15. Na5 Qc7 16. c4 O-O 17. b4 Nf6 18.
-Rfd1 Rad8 19. Rac1 Rfe8 20. b5 e4 21. Bd4 exf3 22. Bxf3 Be4 23. b6 Qd7 {
-1/2-1/2 (33) Polovnikov,Y (2355)-Ciciotti,A (2414) ICCF 2013}) 14... Bh3 15.
-O-O-O a5 $2 (15... Nd7 16. Kb1 Nf6 17. c4 Qd7 {1/2-1/2 (34) Rotaru,D (2464)
--Ciciotti,A (2417) ICCF 2013}) 16. a4 O-O 17. g4 {1-0 (17) Discocheck-5.
+Nd5 Bxd5 14. exd5 f6 15. gxf6 (15. h4 fxg5 (15... Ng3 16. Rg1 Nxf1 17. Rdxf1 a5
+18. Qd3 b4 $2 (18... a4 19. Nd2 f5 20. Qxb5 Qc7 21. Qc4 (21. h5 Rfc8 22. Qd3 e4
+23. Qc3 Qb7 24. Qd4 $11) 21... Qb7 22. Qc6 Qxc6 23. dxc6 Nb8 24. c7 Na6 25. Bb6
+{1/2-1/2 (25) Daubenfeld,N (2521)-Matheis,T (2436) ICCF 2012}) (18... f5 19.
+Qxb5 a4 20. Nd2 Qc7) 19. g6 f5 20. gxh7+ Kh8 $146 (20... Kxh7 21. Nd2 $14) 21.
+Rg2 $2 (21. h5 $1 $14) 21... a4 22. Nd2 Bxh4 23. Rfg1 Rf7 24. Nc4 Qc7 $11 {
+0-1 (55) Shahmate (2275)-Comp3 (2434) Internet Chess Club 2016}) 16. hxg5 Rxf3
+17. Rxh5 Rxe3 18. Qxe3 g6 19. Nd4 exd4 20. Qe6+ Kg7 21. Rh2 Bxg5+ 22. Kb1 Nc5
+23. Qh3 h6 24. Rxd4 Qf6 25. c3 h5 26. Rd1 Qf4 27. Be2 Re8 28. Rf1 Qe4+ 29. Ka1
+Qxd5 $4 {1-0 (29) Arasan test game 2014} (29... Qe3 30. Bf3 $11)) 15... Bxf6
+16. Na5 Qe8 (16... Nf4 17. c4 (17. Nc6 Qc7 18. c4 Nb8 19. Qa5 {1/2-1/2 (63)
+Walden-Footbolo playchess.com INT 2007}) 17... bxc4 18. Nc6 Qe8 19. Bxc4 Qh5
+20. Rdf1 Nh3 {1-0 Grischuk,A (2715)-Amonatov,F (2637) Moscow 2007} (20... Bd8
+$11)) 17. Qb4 $2 (17. Bh3 Bd8) (17. Rg1 Nf4 18. Qb4 Nc5 (18... Bd8 $1) 19. Bxc5
+dxc5 20. Qe4 c4 21. d6 Qd7 22. Kb1 Rfc8 $2 (22... Rab8 $1) 23. Qb7 Ra7 24. Qe4
+Kh8 25. Ka1 $2 {0-1 (75) Arasan 16.3-Arasan 17.4} (25. b3 $11)) 17... Bd8 18.
+Nb7 Rxf3 19. Nxd6 Qe7 20. Bd2 Rf4 21. Bxf4 Nxf4 22. Qa3 b4 23. Qxb4 Bb6 24. c3
+Bc5 25. Qb7 Rb8 26. Nf5 Qf7 27. Nh6+ gxh6 28. Qxa6 Kh8 29. Bb5 Qf5 30. Rhe1 Nf6
+31. Qc6 Rc8 $17 {0-1 (31) Arasan 17.4 (2537) -bookbuilder (2820) chessclub.com
+2014}) 13... Nb6 14. Na5 (14. Nd5 Nxd5 15. exd5 Bd7 (15... Bf5 $2)) 14... Qc7
+$1 (14... Rc8 15. a3 g6 (15... Qc7 16. h4 g6 17. Rh2 Rb8 $1 18. Nd5 Nxd5 19.
+exd5 Bxd5 20. Qxd5 Qxa5 $11) 16. Rg1 Qc7 17. Nd5 $1 Nxd5 18. exd5 Bxd5 (18...
+Bd7 19. c4 (19. Bd3 Bd8 20. Nc6 Bxc6 21. dxc6 d5 22. c3 Qxc6 23. Bc2 d4 24.
+cxd4 {1/2-1/2 (54) Dominguez Perez,L (2726) -Vachier Lagrave,M (2758) Beijing
+2014}) 19... Nf4 20. Rc1 Qb8 21. h4 Rfe8 22. Rh1 Nh5 $2 (22... Bf8 $11 {Hiarcs}
+) 23. Rg1 $2 {0-1 (23) Arasan 17.0-Arasan 16.3} (23. Bd3 $14)) 19. Qxd5 Qxa5
+20. Bd3 (20. Rg4 Qc7 21. c4 bxc4 22. Rxc4 Qd8 23. h4 Ng3 24. Rdc1 Rxc4 25. Bxc4
+Nf5 26. Bf2 h6 27. Bxa6 hxg5 28. Rc8 Qd7 29. Rxf8+ Kxf8 30. Bb5 Qc7 31. Bc4 Bf6
+32. Bb6 Qd7 33. hxg5 Bxg5 34. Bb5 {1/2-1/2 (88) Krivic,D (2528)-Noble,M (2490)
+ICCF 2014}) 20... Qc7 (20... Rb8 $1) 21. Be4 Rfd8 {1/2-1/2 (57) Arasan 17.
+0-Arasan 16.3 - 2014} (21... Rb8)) 15. Nd5 (15. a3 Rab8 (15... g6 16. Nd5 (16.
+h4 $5) 16... Nxd5 17. exd5 Bxd5 18. Qxd5 Qxa5 19. Bd3 Qc7 20. Be4 Rab8 {
+1/2-1/2 (51) Trembeckí,L (2514)-Lounek,J (2501) ICCF 2012}) 16. Nd5 Nxd5 17.
+exd5 Bxd5 18. Qxd5 Qxa5 19. Bc4 Qc7 20. Ba2 Kh8 (20... Qb7 21. Qd3 Qxf3 22.
+Rdf1 Qh3 23. g6 Kh8 24. Rxf7 Rxf7 25. gxf7 Nf6 26. Re1 Rc8 27. Qe2 h6 28. Bd2
+Bf8 29. Bb3 $11 {1-0 (58) Crawly,H (2601)-Katzenmaier,F (2499) Engine Room 2012
+}) 21. Rhe1 f6 22. h4 fxg5 23. hxg5 Nf4 24. Bxf4 Rxf4 25. g6 h6 26. Rh1 a5 $11
+{1-0 (26) Komodo 7a 64-bit-Arasan 17.3 book6-1 2014}) 15... Nxd5 16. exd5 Bd7
+17. c4 (17. Bd3 $14) 17... f6 $11 {0-1 (45) Dominguez Perez,L (2726)
+-Nepomniachtchi,I (2714) Beijing 2014}) (9... h5 $1 10. Nd5 $3 Nxd5 $3 (10...
+Bxd5 11. exd5 Nbd7 (11... O-O 12. Be2 $14) 12. Be2 (12. c4 O-O 13. Bd3 a5 (
+13... e4 $1) 14. a4 e4 15. fxe4 Ng4 16. Bd4 $11 {1-0 (39) El Shaddai,R (2455)
+-PAKman,R (2670) playchess.com INT 2006}) 12... O-O (12... a5 13. a4) 13. O-O
+b6 (13... Qb8 14. Kh1 Bd8 15. c4 (15. a4 $1) 15... Bb6 16. Bxb6 Nxb6 {1-0 (57)
+Saric,I (2666) -Nepomniachtchi,I (2735) Poikovsky 2014}) 14. c4 h4 15. Bd3 a5 (
+15... Nh5 16. Bf5 $3 (16. a4 a5) 16... Rb8 $14) 16. a4 (16. Rad1 $1) 16... Nc5
+17. Nxc5 bxc5 18. b3 Nh5 $11 {-0.44/25 77 NightmareX (1979)-ArasanX (1935)
+winboard.nl 2014 (18... -0.44)} (18... Rb8 $1 $11)) 11. exd5 Bf5 (11... Bc8 $2
+12. a4 (12. Bd3 $1) 12... Bf5 13. Na5 Nd7 14. Ra3 Qc7 15. Rb3 $3 (15. Nc4 O-O
+16. a5 e4 17. f4 Rac8 $11) 15... Rb8 $2 (15... Bd8) 16. Ba7 $14 {1-0 (16)
+Polyphemus (3224) -Arasan 17.3 (2745) chessclub.com 2014} Rc8 17. Rxb7 Qxc2 18.
+Qxc2 Rxc2 19. h4 $1 $14 {115.06/0 1-0 (19) Ntembe,S (2528)-Tictacto,S (2399)
+playchess. com 2014}) 12. Be2 $1 (12. Bd3 $2) 12... Bh4+ $3 (12... O-O 13. O-O
+Bg6 (13... Nd7 $1) 14. c4 a5 $11 {0-1 (71) Wei,Y (2376)-Xiu, D (2494) Ho Chi
+Minh City 2012}) (12... a5 13. a4 Nd7 14. O-O O-O 15. f4 exf4 16. Bxf4 Bg6 17.
+Bb5 Bh4 $2 {1-0 (17) NightmareX (2692)-Arasan 17.3 (2638) chessclub.com 2014} (
+17... Ne5 $11) (17... Bf6 $11)) (12... Nd7 $1 13. Na5 Qc7 14. O-O O-O 15. c4
+Nf6 $3 16. Rac1 Rfe8 17. b4 {1/2-1/2 (41) Efremov,A (2522) -Nickel,A (2645)
+ICCF 2012}) 13. g3 Be7 14. Bd3 (14. Na5) (14. O-O Nd7 15. Na5 Qc7 16. c4 O-O
+17. b4 Nf6 18. Rfd1 Rad8 19. Rac1 Rfe8 20. b5 e4 21. Bd4 exf3 22. Bxf3 Be4 23.
+b6 Qd7 {1/2-1/2 (33) Polovnikov,Y (2355)-Ciciotti,A (2414) ICCF 2013}) 14...
+Bh3 15. O-O-O a5 $2 (15... Nd7 16. Kb1 Nf6 17. c4 Qd7 {1/2-1/2 (34) Rotaru,D 
+(2464) -Ciciotti,A (2417) ICCF 2013}) 16. a4 O-O 17. g4 {1-0 (17) Discocheck-5.
 2-Arasan 16.4}) 10. O-O-O (10. g4 h6 $2 (10... b5 $1) (10... O-O $1) (10... Nb6
 $2 11. O-O-O Rc8 12. Kb1 (12. Bxb6 Qxb6 $11 {1-0 (48) Lorand,N (2314)-Farkas,T
 (2289) Hungary 2008}) 12... O-O 13. h4 Qc7 (13... Nfd7 14. h5 $1 $16) 14. h5
@@ -11856,94 +11878,96 @@ Qe6 $1) 30. Bc5) 26. Rc2 Rd7 $2 (26... d5 $5 27. a4 Rd7 28. Rdc1 Re7 29. Qf2 {
 Rd7 28. Kh2 {1/2-1/2 (44) Stuwph,S (2533)-IdOnOtTaLk,S (2573) Engine Room 2016}
 ) 27. Nb3 b5 28. Rdc1 d5 29. Nd4 Qf6 $2 30. h4 $1 $14 {1-0 (53) RayJr (2384)
 -Arasan 19.0.1 (1961) chessclub.com 2016}) 14. c4 (14. Kh1 $1) (14. c3 O-O 15.
-Kh1 $1 (15. h3 $2 Qc7 16. Rac1 Rfe8 17. g4 (17. Rfd1 Qb7 18. a3 Rad8 $11 {
-Gaon (2375)-Arasan 19.1 (2129) chessclub.com 2016}) (17. Rfe1 $1) 17... Qb7 $2
-{1-0 (67) xaitporter (2138)-Arasan 19.1 (1984) chessclub.com 2016} (17... Nc5
-$1)) (15. Rfe1 $1 Re8) 15... Re8) (14. Rfd1) 14... O-O 15. Rac1 (15. Kh1 $1) (
-15. Rae1 $1) 15... Nh7 $2 {1-0 (32) Nasuta,G (2417)-Hracek,Z (2605) Warsaw POL
-2016} (15... Re8)) 9... Nbd7 $3 (9... Be7 {weight:5} 10. Nd5 $3 Bxd5 (10...
-Nxd5 11. exd5 Bf5 12. Be2 (12. Na5 $1 Nd7 (12... b6 13. Nc4 Nd7 $11) 13. Nc4 (
-13. Be2) 13... Qc7 14. a4 e4 $2 (14... O-O) 15. f4 Rc8 16. a5 O-O 17. Be2 $14 {
-0-1 (46) NightmareX (2675)-Arasan 19.0.1 (2664) freechess.org 2016}) 12... Nd7
-(12... Bh4+ 13. g3 Be7 14. O-O Nd7 15. Na5 Qc7 (15... Qb8 $2 16. c4 O-O 17. b4
-Rd8 18. Rac1 {1-0 (68) Fulcrum2000,S (2512)-E=m*c+/=,S (2330) Engine Room 2015}
-) 16. Qb4 $5 (16. c4 $1 O-O 17. b4 Nf6 $11 {1/2-1/2 (81) IdOnOtTaLk,K (2600)
--E=m*c+/=,S (2432) Engine Room 2015}) 16... O-O 17. c4 (17. Nc4 $1) 17... h4 $2
-{1-0 (59) Crafty-25.0 JA-Arasan 19.0.1 - 2016} (17... Bd8 $1 18. Nb3)) (12...
-O-O 13. O-O Bg6 14. c4 a5 $11 {0-1 (71) Wei,Y (2376)-Xiu,D (2494) Ho Chi Minh
-City 2012}) 13. O-O (13. Na5 Qc7 (13... h4 $2 14. O-O Qc7 15. c4 $14) 14. O-O (
-14. c4 Bh4+ 15. g3 Bf6 $2 $14 (15... Bd8 $11)) 14... O-O 15. Rac1 Nf6 16. c4
-Rfe8 17. b4 Qd7 $1 {1/2-1/2 (32) Unen,J (2507)-Degerhammar,R (2478) ICCF 2014})
-13... O-O 14. Na5 Qc8 15. c4 (15. Rac1 Bd8 16. c4 (16. Nc4 $1 Qb8 17. f4 $1 b5
-$1 (17... Be4 $2 18. fxe5 (18. Qb4 $5) 18... dxe5 19. Bxh5 b5 20. Na3 Nf6 21.
-Bf3 Bxf3 22. Rxf3 Be7 $2 (22... Qd6 23. c4 Rc8 $11) 23. c4 $14 {1-0 (40) xeroz
-(2311)-Arasan 19.1 (2491) chessclub.com 2016}) 18. Na5 Bxa5 19. Qxa5 Bg4 20.
-Qd2 Re8 $11) 16... Nc5 17. Nb3 Bb6 18. Nxc5 Bxc5 $11) 15... Bd8 16. Rac1 $11 {
-0-1 (60) Svidler,P (2739)-Khismatullin,D (2642) St Petersburg 2015}) 11. exd5
-Nbd7 12. Be2 (12. O-O-O Qc7 13. Kb1 Nb6 14. Qa5 $1 Rc8 15. c3 Bd8 (15... Nc4 $2
-16. Qxc7 Rxc7 17. Bf2 Bd8 $2 {1-0 (65) Mekhitarian,K (2555)-Leitao,R (2633)
-Rio de Janeiro 2016} (17... Nd7 $5)) 16. Bxb6 Qxb6 17. Qa4+ Kf8 18. Be2 $11)
-12... O-O (12... Rc8 $1 13. Na5 Qc7 $11 {0-1 (49) Erdogdu,M (2449) -Paragua,M 
-(2526) Beijing 2008}) (12... h4 $2 13. c4 Qc7 14. O-O b6 (14... h3 15. g3 a5
-16. Qd3 b6 17. Nd2 Nc5 18. Qc2 Qc8 19. Kh1 Kf8 20. f4 Kg8 21. Rae1 Ncd7 22. Bd3
-Rb8 23. Bf5 b5 24. fxe5 dxe5 25. b3 Qe8 26. g4 bxc4 27. bxc4 g6 28. g5 Nxd5 29.
-cxd5 gxf5 30. Qxf5 Bb4 31. g6 fxg6 32. Rg1 {1-0 (32) Gerasimov,V (2452)-Groot,
-A (2394) ICCF 2011}) 15. Bd3 O-O 16. Rae1 Rab8 $2 {1/2-1/2 (82) Cfm,S (2490)
--TheSource,S (2519) Engine Room 2015} (16... Rfe8 $5 $14)) 13. O-O Re8 $2 (
-13... b6 14. c4 h4 15. Bd3 a5 (15... Rc8) 16. Rad1 $14) (13... Qb8 $1 $14) 14.
-c4 e4 15. Nd4 exf3 16. gxf3 g6 (16... Bf8 17. Kh1 g6 $14) 17. Kh1 Bf8 18. Rg1
-Kh7 $14 {BigMomma (3035) -ArasanX (2571) freechess.org 2015 (18... -0.80)}) 10.
-Nd5 $1 (10. a4 Be7 (10... Rc8 11. a5 (11. Be2 Be7 12. a5 Qc7 13. O-O O-O $11)
-11... Be7) (10... Qc7 $1 11. Be2 (11. a5 $5) 11... Be7 $1) 11. Be2 Qc7 $11 12.
-O-O O-O 13. Rfd1 (13. a5 $1 Rac8 14. Rfc1 $11) 13... Rfd8 14. Qe1 Rac8 15. Bf1
-Nc5 16. Nd5 $2 (16. Nxc5 dxc5 $11) 16... Nxd5 {½-½ (34) Lastin,A (2622)
--Zakhartsov,V (2580) Voronezh 2008 1-0}) (10. O-O-O Be7 11. Kb1 $3 b5 (11...
-Rc8) (11... Qc7) 12. Nd5 (12. f4 Rc8 13. f5 (13. Bd3 Qc7 14. h3 h4 15. Rhe1 O-O
-$1 (15... Bc4 $2 16. Bf2 $3 g6 (16... Bxd3 17. cxd3 b4 (17... O-O) 18. Ne2 Qb7
-19. fxe5 dxe5 20. Ng1 $16) 17. Be3 $14 {1-0 (60) RayJr (2401)-Arasan 19.0 
-(1929) chessclub.com 2016}) 16. a3 Rfd8 17. f5 Bc4 18. Bg5 Nb6 19. Bxh4 d5 20.
-Bxf6 Bxf6 21. exd5 Bxd5 22. Nxd5 Rxd5 23. c3 {1/2-1/2 (43) Tiemann,H (2391)
--Barria,V (2527) ICCF 2013}) 13... Bc4 14. Bd3 Qc7 15. a3 O-O 16. g4 hxg4 (
-16... d5 $2 17. g5 d4 18. Nxd4 exd4 19. Bxd4 $14 {1/2-1/2 (41) Papenin,N (2733)
--Cesetti,C (2591) ICCF 2011}) 17. h3 g3 18. Rdg1 (18. Rhg1) 18... Nh5 19. Qd1
-Ndf6 20. Bg5 Rfd8 21. Bxf6 Nxf6 22. Rxg3 d5 23. Rhg1 Bf8 24. exd5 Bxd5 25. Nxd5
-Nxd5 {½-½ (41) Papenin,N (2733)-Robson,N (2540) ICCF 2011}) 12... Bxd5 13.
-exd5 Nb6 14. Bxb6 Qxb6 15. Na5 Rc8 16. Bd3 b4 17. Nc4 Qb7 18. Qe2 O-O 19. f4
-exf4 20. Na5 Qb6 21. Nc6 Bd8 $3 $11 {Arasan 16.3-Arasan 17.1 - 2014 (analysis)}
-) 10... Bxd5 $1 (10... Nxd5 $2 11. exd5 Bf5 12. Be2 (12. Na5 $1 Qc7 (12... Rb8
-$1 13. a4 Qf6 (13... h4 $2 14. Nc4 $3 Be7 15. a5 O-O $14 {1-0 (15) Data (2219)
--Arasan 19.0.1 (2001) chessclub.com 2016} (15... Rc8 $14)) 14. Qc3 Qh4+ 15. Bf2
-Qd8 16. Nc4 Be7 {1/2-1/2 (53) Gektor,S (2437)-pezi400,S (2471) playchess
-#646134Machines A 2015}) 13. Rc1 Nf6 14. c4 (14. Be2 Be7 $11) 14... h4 15. Be2
-$1 $14 {0-1 (60) Crafty-25.0 JA-Arasan 18.3 - 2016}) 12... Qh4+ 13. g3 Qd8 $1 (
-13... Qf6 14. Na5 Rc8 (14... Rb8 $3 $11) 15. Bg5 Qg6 16. Nxb7 f6 17. Be3 Rxc2
-18. Qb4 Kf7 {0-1 (94) jernjoffen,H (2514)-Graf,H (2556) Engine Room 2012} 19.
-Nd8+ $14) 14. Bd3 (14. O-O-O $14) (14. Na5 $6 Qc7 15. c4 $3 {1/2-1/2 (15)
-jpsingh1972 (2162) -Arasan 18.1 (1943) chessclub.com 2015}) 14... Bxd3 15. Qxd3
-Rc8 16. O-O-O Be7 17. Kb1 O-O {1-0 (17) Komodo 7a 64-bit-Arasan 17.3 book6-1
-2014} 18. Rhe1 $14) 11. exd5 g6 $1 (11... Qc7 12. c4 a5 $1 (12... g6 13. Rc1 a5
-14. a4 b6 15. Bd3 Bg7 16. O-O O-O {1/2-1/2 (52) Sun_Zhu (2500)-rafpier (2500)
-InfinityChess INT 2014} (16... h4 17. Qe1 $2 (17. Rce1) (17. Qf2 $1) 17... Kf8
-18. Qd2 {1/2-1/2 (29) Don52,S (2490)-TheSource,S (2525) Engine Room 2015})) (
-12... h4 $2 13. Bd3 $1 $14 (13. Be2 Be7 $2 (13... a5 $3))) 13. a4 b6 14. Be2 $5
-({more popular in correspondence is} 14. Bd3 $3 g6 15. O-O Bg7 16. Rae1 (16. h3
-O-O 17. Qf2 Rae8 18. Qc2 Kh7 19. Rae1 Bh6 20. Bxh6 Kxh6 21. f4 Kg7 22. fxe5 {
-1/2-1/2 (22) Bücker,J (2559)-Gleichmann,M (2528) ICCF 2012}) 16... O-O 17. h3
-({another known line is} 17. Nc1 Nc5) 17... Rac8 18. Kh1 $11 {0-1 (71) Wilczek,
-T (2597)-Stalmach,K (2567) ICCF 2012}) 14... g6 15. O-O Bg7 16. Rae1 O-O 17. h3
-Rfe8 $146 18. g4 Rab8 19. g5 Nh7 20. Qc2 Nc5 21. Nxc5 dxc5 $2 {1-0 (61)
-Caruana,F-Kovalyov,A Baku AZE 2015} (21... bxc5 22. b3 $11)) 12. Be2 (12. O-O-O
-Bg7 (12... Nb6 13. Kb1 (13. Qa5 Bh6 14. Bxh6 Rxh6 15. g3 Kf8 16. Kb1 Kg7 17.
-Be2 Rh8 18. c4 Rc8 19. Rc1 Nfd7 20. Rhd1 Rc7 $2 (20... Nc5 $11) 21. Qa3 $2 {
-1-0 (42) Topalov,V (2813)-Wojtaszek,R (2734) Skopje 2015} (21. Nd2 $14)) 13...
-Nbxd5 14. Bg5 Be7 15. Na5 Rb8 (15... Qc7) 16. Bc4 {1/2-1/2 (31) Grischuk,A 
-(2771)-Topalov,V (2816) Saint Louis 2015}) 13. Kb1 (13. Qb4 Qc7 14. Na5 b5 15.
-c4 O-O 16. Kb1 e4 17. Bf4 $2 (17. Bd4) 17... Ne5 $2 (17... Nc5 $11) 18. Bxe5
-dxe5 19. d6 $16 {1/2-1/2 (19) Gaviota-Arasan 18.0 - 2015}) 13... Qc7 14. h4 O-O
-15. g4 hxg4 16. fxg4 a5 17. g5 Nh5 18. a3 a4 19. Nc1 e4 20. Qf2 $1 $14 (20. Rh3
-Rac8 $11 21. Qg2 Nb6 $11 {1-0 (21) Arasan 17.3-Arasan 17.3-mod - 2014}) 20...
-Ne5 21. Bd4 {1/2-1/2 (48) Crawly,D (2641)-Rybka33,D (2571) Engine Room 2010}) (
-12. Na5 $2 Qc7 13. c4 (13. Nc4 $2 Ng8 (13... Bg7 14. a4 O-O 15. a5 e4 16. O-O-O
+Kh1 $1 (15. h3 Qc7 16. Rac1 Rfe8 17. g4 (17. Rfd1 $2 Qb7 18. a3 (18. Rb1 $1)
+18... Rad8 {1-0 Gaon (2375)-Arasan 19.1 (2129) chessclub.com 2016}) (17. Rfe1
+$1 Qb7 18. c4 {1/2-1/2 (33) Poli,G (2468)-Nekhaev,A (2517) ICCF email 2014})
+17... Nc5 $1 (17... Qb7 $2 18. Rcd1) 18. Nxc5 bxc5 {1/2-1/2 (32) Jónsson,D 
+(2543)-Serazeev,A (2522) ICCF 2015}) (15. Rfe1 $1 Re8) 15... Re8) (14. Rfd1)
+14... O-O 15. Rac1 (15. Kh1 $1) (15. Rae1 $1) 15... Nh7 $2 {1-0 (32) Nasuta,G 
+(2417)-Hracek,Z (2605) Warsaw POL 2016} (15... Re8)) 9... Nbd7 $3 (9... Be7 {
+weight:5} 10. Nd5 $3 Bxd5 (10... Nxd5 11. exd5 Bf5 12. Be2 (12. Na5 $1 Nd7 (
+12... b6 13. Nc4 Nd7 $11) 13. Nc4 (13. Be2) 13... Qc7 14. a4 e4 $2 (14... O-O)
+15. f4 Rc8 16. a5 O-O 17. Be2 $14 {0-1 (46) NightmareX (2675)-Arasan 19.0.1 
+(2664) freechess.org 2016}) 12... Nd7 (12... Bh4+ 13. g3 Be7 14. O-O Nd7 15.
+Na5 Qc7 (15... Qb8 $2 16. c4 O-O 17. b4 Rd8 18. Rac1 {1-0 (68) Fulcrum2000,S 
+(2512)-E=m*c+/=,S (2330) Engine Room 2015}) 16. Qb4 $5 (16. c4 $1 O-O 17. b4
+Nf6 $11 {1/2-1/2 (81) IdOnOtTaLk,K (2600)-E=m*c+/=,S (2432) Engine Room 2015})
+16... O-O 17. c4 (17. Nc4 $1) 17... h4 $2 {1-0 (59) Crafty-25.0 JA-Arasan 19.0.
+1 - 2016} (17... Bd8 $1 18. Nb3)) (12... O-O 13. O-O Bg6 14. c4 a5 $11 {
+0-1 (71) Wei,Y (2376)-Xiu,D (2494) Ho Chi Minh City 2012}) 13. O-O (13. Na5 Qc7
+(13... h4 $2 14. O-O Qc7 15. c4 $14) 14. O-O (14. c4 Bh4+ 15. g3 Bf6 $2 $14 (
+15... Bd8 $11)) 14... O-O 15. Rac1 Nf6 16. c4 Rfe8 17. b4 Qd7 $1 {1/2-1/2 (32)
+Unen,J (2507)-Degerhammar,R (2478) ICCF 2014}) 13... O-O 14. Na5 Qc8 15. c4 (
+15. Rac1 Bd8 16. c4 (16. Nc4 $1 Qb8 17. f4 $1 b5 $1 (17... Be4 $2 18. fxe5 (18.
+Qb4 $5) 18... dxe5 19. Bxh5 b5 20. Na3 Nf6 21. Bf3 Bxf3 22. Rxf3 Be7 $2 (22...
+Qd6 23. c4 Rc8 $11) 23. c4 $14 {1-0 (40) xeroz (2311)-Arasan 19.1 (2491)
+chessclub.com 2016}) 18. Na5 Bxa5 19. Qxa5 Bg4 20. Qd2 Re8 $11) 16... Nc5 17.
+Nb3 Bb6 18. Nxc5 Bxc5 $11) 15... Bd8 16. Rac1 $11 {0-1 (60) Svidler,P (2739)
+-Khismatullin,D (2642) St Petersburg 2015}) 11. exd5 Nbd7 12. Be2 (12. O-O-O
+Qc7 13. Kb1 Nb6 14. Qa5 $1 Rc8 15. c3 Bd8 (15... Nc4 $2 16. Qxc7 Rxc7 17. Bf2
+Bd8 $2 {1-0 (65) Mekhitarian,K (2555)-Leitao,R (2633) Rio de Janeiro 2016} (
+17... Nd7 $5)) 16. Bxb6 Qxb6 17. Qa4+ Kf8 18. Be2 $11) 12... O-O (12... Rc8 $1
+13. Na5 Qc7 $11 {0-1 (49) Erdogdu,M (2449) -Paragua,M (2526) Beijing 2008}) (
+12... h4 $2 13. c4 Qc7 14. O-O b6 (14... h3 15. g3 a5 16. Qd3 b6 17. Nd2 Nc5
+18. Qc2 Qc8 19. Kh1 Kf8 20. f4 Kg8 21. Rae1 Ncd7 22. Bd3 Rb8 23. Bf5 b5 24.
+fxe5 dxe5 25. b3 Qe8 26. g4 bxc4 27. bxc4 g6 28. g5 Nxd5 29. cxd5 gxf5 30. Qxf5
+Bb4 31. g6 fxg6 32. Rg1 {1-0 (32) Gerasimov,V (2452)-Groot,A (2394) ICCF 2011})
+15. Bd3 O-O 16. Rae1 Rab8 $2 {1/2-1/2 (82) Cfm,S (2490)-TheSource,S (2519)
+Engine Room 2015} (16... Rfe8 $5 $14)) 13. O-O Re8 $2 (13... b6 14. c4 h4 15.
+Bd3 a5 (15... Rc8) 16. Rad1 $14) (13... Qb8 $1 $14) 14. c4 e4 15. Nd4 exf3 16.
+gxf3 g6 (16... Bf8 17. Kh1 g6 $14) 17. Kh1 Bf8 18. Rg1 Kh7 $14 {BigMomma (3035)
+-ArasanX (2571) freechess.org 2015 (18... -0.80)}) 10. Nd5 $1 (10. a4 Be7 (
+10... Rc8 11. a5 (11. Be2 Be7 12. a5 Qc7 13. O-O O-O $11) 11... Be7) (10... Qc7
+$1 11. Be2 (11. a5 $5) 11... Be7 $1) 11. Be2 Qc7 $11 12. O-O O-O 13. Rfd1 (13.
+a5 $1 Rac8 14. Rfc1 $11) 13... Rfd8 14. Qe1 Rac8 15. Bf1 Nc5 16. Nd5 $2 (16.
+Nxc5 dxc5 $11) 16... Nxd5 {½-½ (34) Lastin,A (2622)-Zakhartsov,V (2580)
+Voronezh 2008 1-0}) (10. O-O-O Be7 11. Kb1 $3 b5 (11... Rc8) (11... Qc7) 12.
+Nd5 (12. f4 Rc8 13. f5 (13. Bd3 Qc7 14. h3 h4 15. Rhe1 O-O $1 (15... Bc4 $2 16.
+Bf2 $3 g6 (16... Bxd3 17. cxd3 b4 (17... O-O) 18. Ne2 Qb7 19. fxe5 dxe5 20. Ng1
+$16) 17. Be3 $14 {1-0 (60) RayJr (2401)-Arasan 19.0 (1929) chessclub.com 2016})
+16. a3 Rfd8 17. f5 Bc4 18. Bg5 Nb6 19. Bxh4 d5 20. Bxf6 Bxf6 21. exd5 Bxd5 22.
+Nxd5 Rxd5 23. c3 {1/2-1/2 (43) Tiemann,H (2391)-Barria,V (2527) ICCF 2013})
+13... Bc4 14. Bd3 Qc7 15. a3 O-O 16. g4 hxg4 (16... d5 $2 17. g5 d4 18. Nxd4
+exd4 19. Bxd4 $14 {1/2-1/2 (41) Papenin,N (2733)-Cesetti,C (2591) ICCF 2011})
+17. h3 g3 18. Rdg1 (18. Rhg1) 18... Nh5 19. Qd1 Ndf6 20. Bg5 Rfd8 21. Bxf6 Nxf6
+22. Rxg3 d5 23. Rhg1 Bf8 24. exd5 Bxd5 25. Nxd5 Nxd5 {½-½ (41) Papenin,N 
+(2733)-Robson,N (2540) ICCF 2011}) 12... Bxd5 13. exd5 Nb6 14. Bxb6 Qxb6 15.
+Na5 Rc8 16. Bd3 b4 17. Nc4 Qb7 18. Qe2 O-O 19. f4 exf4 20. Na5 Qb6 21. Nc6 Bd8
+$3 $11 {Arasan 16.3-Arasan 17.1 - 2014 (analysis)}) 10... Bxd5 $1 (10... Nxd5
+$2 11. exd5 Bf5 12. Be2 (12. Na5 $1 Qc7 (12... Rb8 $1 13. a4 Qf6 (13... h4 $2
+14. Nc4 $3 Be7 15. a5 O-O $14 {1-0 (15) Data (2219)-Arasan 19.0.1 (2001)
+chessclub.com 2016} (15... Rc8 $14)) 14. Qc3 Qh4+ 15. Bf2 Qd8 16. Nc4 Be7 {
+1/2-1/2 (53) Gektor,S (2437)-pezi400,S (2471) playchess #646134Machines A 2015}
+) 13. Rc1 Nf6 14. c4 (14. Be2 Be7 $11) 14... h4 15. Be2 $1 $14 {0-1 (60)
+Crafty-25.0 JA-Arasan 18.3 - 2016}) 12... Qh4+ 13. g3 Qd8 $1 (13... Qf6 14. Na5
+Rc8 (14... Rb8 $3 $11) 15. Bg5 Qg6 16. Nxb7 f6 17. Be3 Rxc2 18. Qb4 Kf7 {
+0-1 (94) jernjoffen,H (2514)-Graf,H (2556) Engine Room 2012} 19. Nd8+ $14) 14.
+Bd3 (14. O-O-O $14) (14. Na5 $6 Qc7 15. c4 $3 {1/2-1/2 (15) jpsingh1972 (2162)
+-Arasan 18.1 (1943) chessclub.com 2015}) 14... Bxd3 15. Qxd3 Rc8 16. O-O-O Be7
+17. Kb1 O-O {1-0 (17) Komodo 7a 64-bit-Arasan 17.3 book6-1 2014} 18. Rhe1 $14)
+11. exd5 g6 $1 (11... Qc7 12. c4 a5 $1 (12... g6 13. Rc1 a5 14. a4 b6 15. Bd3
+Bg7 16. O-O O-O {1/2-1/2 (52) Sun_Zhu (2500)-rafpier (2500) InfinityChess INT
+2014} (16... h4 17. Qe1 $2 (17. Rce1) (17. Qf2 $1) 17... Kf8 18. Qd2 {1/2-1/2 
+(29) Don52,S (2490)-TheSource,S (2525) Engine Room 2015})) (12... h4 $2 13. Bd3
+$1 $14 (13. Be2 Be7 $2 (13... a5 $3))) 13. a4 b6 14. Be2 $5 ({more popular in
+correspondence is} 14. Bd3 $3 g6 15. O-O Bg7 16. Rae1 (16. h3 O-O 17. Qf2 Rae8
+18. Qc2 Kh7 19. Rae1 Bh6 20. Bxh6 Kxh6 21. f4 Kg7 22. fxe5 {1/2-1/2 (22)
+Bücker,J (2559)-Gleichmann,M (2528) ICCF 2012}) 16... O-O 17. h3 ({another
+known line is} 17. Nc1 Nc5) 17... Rac8 18. Kh1 $11 {0-1 (71) Wilczek,T (2597)
+-Stalmach,K (2567) ICCF 2012}) 14... g6 15. O-O Bg7 16. Rae1 O-O 17. h3 Rfe8
+$146 18. g4 Rab8 19. g5 Nh7 20. Qc2 Nc5 21. Nxc5 dxc5 $2 {1-0 (61) Caruana,
+F-Kovalyov,A Baku AZE 2015} (21... bxc5 22. b3 $11)) 12. Be2 (12. O-O-O Bg7 (
+12... Nb6 13. Kb1 (13. Qa5 Bh6 14. Bxh6 Rxh6 15. g3 Kf8 16. Kb1 Kg7 17. Be2 Rh8
+18. c4 Rc8 19. Rc1 Nfd7 20. Rhd1 Rc7 $2 (20... Nc5 $11) 21. Qa3 $2 {1-0 (42)
+Topalov,V (2813)-Wojtaszek,R (2734) Skopje 2015} (21. Nd2 $14)) 13... Nbxd5 14.
+Bg5 Be7 15. Na5 Rb8 (15... Qc7) 16. Bc4 {1/2-1/2 (31) Grischuk,A (2771)
+-Topalov,V (2816) Saint Louis 2015}) 13. Kb1 (13. Qb4 Qc7 14. Na5 b5 15. c4 O-O
+16. Kb1 e4 17. Bf4 $2 (17. Bd4) 17... Ne5 $2 (17... Nc5 $11) 18. Bxe5 dxe5 19.
+d6 $16 {1/2-1/2 (19) Gaviota-Arasan 18.0 - 2015}) 13... Qc7 14. h4 O-O 15. g4
+hxg4 16. fxg4 a5 17. g5 Nh5 18. a3 a4 19. Nc1 e4 20. Qf2 $1 $14 (20. Rh3 Rac8
+$11 21. Qg2 Nb6 $11 {1-0 (21) Arasan 17.3-Arasan 17.3-mod - 2014}) 20... Ne5
+21. Bd4 {1/2-1/2 (48) Crawly,D (2641)-Rybka33,D (2571) Engine Room 2010}) (12.
+Na5 $2 Qc7 13. c4 (13. Nc4 $2 Ng8 (13... Bg7 14. a4 O-O 15. a5 e4 16. O-O-O
 Rfe8 {1/2-1/2 (21) Willow,D (2278)-Evans,D (2350) ICCF 2015}) 14. a4 Bh6 15.
 Bxh6 Nxh6 16. Bd3 {1/2-1/2 (46) Stushkin,I (2410)-Tsygankov,E (2410) ICCF 2014}
 ) 13... Bg7 14. Be2 e4 $1 15. O-O $1 (15. f4 $2 Ng4 16. Bxg4 hxg4 $15 {1/2-1/2
@@ -11972,9 +11996,9 @@ Bf8 $11 {1/2-1/2 (132) ComputerGOD (2422) -RayJr (2404) Internet Chess Club
 gxf3 Re8 18. c4 Qe7 $2 (18... Ne5 $11 {0-1 (71) ComputerGOD (2321)-CCNP (2333)
 Internet Chess Club 2015}) 19. Rb3 {1-0 (55) ComputerGOD (2294)-Arasan 18.0 
 (1979) chessclub.com 2015}) 14. c4 e4 15. O-O exf3 (15... O-O $2) 16. gxf3 O-O
-{'='} 17. b4 (17. Rac1 $1 {1/2-1/2 (34) Shablinsky,M (2443) -Pasko,P (2515)
-ICCF 2014} Rae8 (17... Rfe8) 18. b4 Re7 $2 (18... Rxe3 $1 19. Qxe3 Re8 20. Qd2
-Qb6+ $1 21. Kh1 Bh6 22. f4 Ne4 23. Qe1 Nef6 {1/2-1/2 (29) Kryvoruchko,Y (2706)
+$11 17. b4 (17. Rac1 $1 {1/2-1/2 (34) Shablinsky,M (2443) -Pasko,P (2515) ICCF
+2014} Rae8 (17... Rfe8) 18. b4 Re7 $2 (18... Rxe3 $1 19. Qxe3 Re8 20. Qd2 Qb6+
+$1 21. Kh1 Bh6 22. f4 Ne4 23. Qe1 Nef6 {1/2-1/2 (29) Kryvoruchko,Y (2706)
 -Areshchenko,A (2655) Lvov 2014}) 19. Bf4 {1-0 (68) Data (2220)-Arasan 19.1 
 (2010) chessclub.com 2016}) 17... Rfe8 18. Rac1 $1 Rxe3 (18... h4 $2 19. Bg5
 $11 (19. Kh1 $1 Ne5 20. Bg5 b6 21. Nb3 Qc8 22. Kg2 $1 (22. c5 $1 Qh3 23. Bxf6
@@ -11985,7 +12009,7 @@ Rxc7 27. Rxc7 Qxc7 {1/2-1/2 (49) Deep SKY,S (2494)-Fulcrum2000,S (2497) Engine
 Room 2016})) (18... Ne5 $1 19. c5 Qd7 20. c6 bxc6 21. dxc6 Qe7 22. c7 Rac8 23.
 Bxa6 Rxc7 24. Rxc7 Qxc7 25. Bb5 Rc8 26. Be2 Qd7 27. b5 Qf5 28. Bd1 Ra8 29. a4 {
 1/2-1/2 (29) Tiemann,C (2317)-Johnson,B (2442) ICCF 2014}) 19. Qxe3 Re8 20. Qd2
-Kh7 $2 (20... Qb6+ $2 {'!'} 21. Kh1 Bh6 22. f4 Ne4 23. Qe1 Nef6 {1/2-1/2 (29)
+Kh7 $2 (20... Qb6+ $1 21. Kh1 Bh6 22. f4 Ne4 23. Qe1 Nef6 {1/2-1/2 (29)
 Kryvoruchko,Y (2706)-Areshchenko,A (2655) Lvov 2014} 24. Rc2 Ng4 25. c5 dxc5
 26. Nc4 Qf6 27. Qg3 Qf5 28. Qd3 Qxd3 29. Bxd3 Bf8 30. bxc5 Nxc5 31. Be2 {
 1-0 (67) Hatzl,J (2493)-Trembeckí,L (2541) ICCF 2014}) (20... Bh6 $1 21. Qxh6 (
@@ -14352,38 +14376,41 @@ Rxe8+ Rxe8 20. Qd2 Qc4 21. Re1 Re6 {1-0 (35) Quesada Perez,Y (2452)-Otero
 Acosta,D (2527) Merida 2013}) 12. Bd3 h6 13. Bc2 Be6 14. Qd3 Qf6 15. Be3 Bxe3
 16. Rxe3 g6 17. Ree1 Rad8 18. Nc5 Bc8 19. Ba4 a6 $11 {1/2-1/2 (19) Arasan 16.
 3-Arasan 17.0}) 2. d4 d5 3. Nd2 c5 4. exd5 exd5 5. Ngf3 Nc6 6. Bb5 Bd6 7. dxc5
-Bxc5 8. O-O Nge7 9. Nb3 Bd6 (9... Bb6 $6 10. Bg5 $6 (10. Re1 O-O 11. Be3 Bg4 (
-11... Bf5 $1) 12. Bxb6 axb6 13. h3 Bh5 14. c3 Qd6 15. Be2 Rad8 16. Nfd4 Bg6 17.
-Qd2 $14 {½-½ (52) Anand,V (2720) -Kortschnoj,V (2615) London 1994}) 10... O-O
-11. Re1 f6 12. Be3 Bxe3 (12... Ng6 $5) 13. Rxe3 {1/2-1/2 (13) Arasan 17.
-3-Arasan 17.3-mod - 2014}) 10. Bg5 (10. Re1 O-O 11. Bd3 (11. h3 a6 12. Bd3 h6
-13. c3 Bf5 14. Bxf5 Nxf5 15. Qd3 Qd7 16. Be3 Rfe8 $2 {1-0 (54) Dominguez Perez,
-L (2732)-Ponkratov,P (2604) Berlin 2015} (16... Nxe3)) 11... h6 (11... Qc7 $5)
-12. h3 Nf5 (12... Bf5 $1 13. c3 Qd7 14. Nbd4 Bxd3 15. Qxd3 Rfe8 16. Be3 Rad8
-17. Rad1 a6 18. Nb3 b5 $2 (18... Ng6 $11) 19. Bb6 {1-0 (42) Guseinov,G (2615)
--Peng,Z (2392) Bilbao 2014}) 13. c3 Qf6 (13... Re8 14. Rxe8+ Qxe8 15. Bc2 Qe6
-16. Bd2 Bd7 17. Qf1 $1 $14 {1-0 (51) Data (2341)-Arasan 19.1 (2126) chessclub.
-com 2016}) (13... Bc7 $1 14. Bc2 Qd6 15. Qd3 g6 16. Bd2 (16. Qd2 h5 17. Qg5 Bd7
-$11) 16... Be6 17. Qb5 Kh7 18. Rad1 Rae8 19. Bxf5 Bxf5 {1/2-1/2 (27) Zmokly,A 
-(2496)-Jung,B (2448) ICCF 2014}) 14. Bc2 Rd8 (14... Be6 15. Qd3 Rfe8 $3 $14)
-15. Qd3 g6 16. Nh2 $1 (16. Bd2 a5 17. a4 b6 18. Qe2 Ba6 19. Qd1 (19. Bd3 Bxd3
-20. Qxd3 Ne5 21. Nxe5 Bxe5 22. Qe2 Bc7 23. Qf3 Be5 24. g4 Nh4 25. Qxf6 Bxf6 26.
-Red1 g5 27. Be3 Rd6 28. Kf1 Rad8 29. Nd4 Bxd4 30. Bxd4 f5 31. Rd3 Re8 32. Re1
-Rxe1+ 33. Kxe1 Kf7 34. f3 f4 35. Kd1 Ng6 {1/2-1/2 (35) Blauhut,H (2497)
--Liebert,E (2478) ICCF email 2008}) 19... Re8 $1 20. Bxf5 gxf5 21. Nbd4 Nxd4
-22. Rxe8+ Rxe8 23. Nxd4 f4 24. Qb3 Bc4 25. Qxb6 Rb8 26. Qxa5 (26. Qc6 $5) 26...
-Rxb2 {1/2-1/2 (46) Ohtake,S (2370)-Kayis,C (2237) ICCF 2015}) 16... Bxh2+ $2 (
-16... a5 $3 17. Ng4 Qg7 18. a4 Be6 {1/2-1/2 (77) De Carlos Arregui,I (2376)
--Palmo,P (2404) ICCF email 2009}) 17. Kxh2 d4 18. Bf4 b6 $3 (18... Nfe7 19. Bc7
-Bf5 20. Qf3 Rdc8 21. Bg3 dxc3 22. bxc3 Kg7 23. Bd1 $14 {1/2-1/2 (41)
-Jaederholm,B (2437)-Palsson,J (2476) ICCF email 2009}) 19. Nd2 Nd6 (19... Be6
-20. Ne4 Qg7 21. Qb5 {1-0 (60) Rogos,J (2318)-Morley,P (2211) ICCF email 2009})
-20. Qg3 dxc3 21. bxc3 g5 22. Be3 Bf5 $2 {1-0 (28) Timofeev,A (2658)-Lysyj,I 
-(2590) Sochi 2007} (22... Qxc3 $14)) 10... O-O 11. Re1 Bg4 12. Bh4 Re8 13. Bg3
-Bxg3 14. hxg3 Qb6 15. a4 a6 (15... h6 16. Qd2 Bxf3 17. gxf3 $14 {1-0 (36) Emms,
-J (2527) -Hansen,A (2562) Esbjerg DEN 2000}) (15... Red8 {0-1 (29) Wells,P 
-(2485) -Tischbierek,R (2519) Austria 2003}) 16. Bxc6 Bxf3 $2 (16... Qxc6 $1)
-17. Qxf3 (17. gxf3 $5) 17... Qxc6 18. c3 Rad8 1/2-1/2
+Bxc5 8. O-O Nge7 9. Nb3 Bd6 (9... Bb6 $6 10. Bg5 (10. Re1 $3 O-O 11. Be3 Bg4 (
+11... Bf5 $1 12. Bxb6 Qxb6 13. Bd3 Rad8 14. a4 {1/2-1/2 (43) Kolek,P (2336)
+-Köhl,R (2300) ICCF 2012}) 12. Bxb6 axb6 13. h3 Bh5 14. c3 Qd6 15. Be2 Rad8 16.
+Nfd4 Bg6 17. Qd2 $14 {½-½ (52) Anand,V (2720) -Kortschnoj,V (2615) London
+1994}) (10. h3 $5 O-O (10... Qd6 $2 {1-0 (61) Shahmate (2280)-Arasan 19.1 
+(2109) chessclub.com 2016}) (10... Bf5)) 10... O-O 11. Re1 f6 (11... Re8 $1)
+12. Be3 Bxe3 (12... Ng6 $5) (12... Bg4 $2 13. Bxb6 $14 {1-0 (37) Tiviakov,S 
+(2668)-Kortschnoj,V (2600) Banyoles 2006}) (12... Ne5 $14) 13. Rxe3 {1/2-1/2 
+(13) Arasan 17.3-Arasan 17.3-mod - 2014}) 10. Bg5 (10. Re1 O-O 11. Bd3 (11. h3
+a6 12. Bd3 h6 13. c3 Bf5 14. Bxf5 Nxf5 15. Qd3 Qd7 16. Be3 Rfe8 $2 {1-0 (54)
+Dominguez Perez,L (2732)-Ponkratov,P (2604) Berlin 2015} (16... Nxe3)) 11... h6
+(11... Qc7 $5) 12. h3 Nf5 (12... Bf5 $1 13. c3 Qd7 14. Nbd4 Bxd3 15. Qxd3 Rfe8
+16. Be3 Rad8 17. Rad1 a6 18. Nb3 b5 $2 (18... Ng6 $11) 19. Bb6 {1-0 (42)
+Guseinov,G (2615)-Peng,Z (2392) Bilbao 2014}) 13. c3 Qf6 (13... Re8 14. Rxe8+
+Qxe8 15. Bc2 Qe6 16. Bd2 Bd7 17. Qf1 $1 $14 {1-0 (51) Data (2341)-Arasan 19.1 
+(2126) chessclub.com 2016}) (13... Bc7 $1 14. Bc2 Qd6 15. Qd3 g6 16. Bd2 (16.
+Qd2 h5 17. Qg5 Bd7 $11) 16... Be6 17. Qb5 Kh7 18. Rad1 Rae8 19. Bxf5 Bxf5 {
+1/2-1/2 (27) Zmokly,A (2496)-Jung,B (2448) ICCF 2014}) 14. Bc2 Rd8 (14... Be6
+15. Qd3 Rfe8 $3 $14) 15. Qd3 g6 16. Nh2 $1 (16. Bd2 a5 17. a4 b6 18. Qe2 Ba6
+19. Qd1 (19. Bd3 Bxd3 20. Qxd3 Ne5 21. Nxe5 Bxe5 22. Qe2 Bc7 23. Qf3 Be5 24. g4
+Nh4 25. Qxf6 Bxf6 26. Red1 {1/2-1/2 (35) Blauhut,H (2497)-Liebert,E (2478)
+ICCF email 2008}) 19... Re8 $1 20. Bxf5 gxf5 21. Nbd4 Nxd4 22. Rxe8+ Rxe8 23.
+Nxd4 f4 24. Qb3 Bc4 25. Qxb6 Rb8 26. Qxa5 (26. Qc6 $5) 26... Rxb2 {1/2-1/2 (46)
+Ohtake,S (2370)-Kayis,C (2237) ICCF 2015}) 16... Bxh2+ $2 (16... a5 $3 17. Ng4
+Qg7 18. a4 Be6 {1/2-1/2 (77) De Carlos Arregui,I (2376)-Palmo,P (2404) ICCF
+email 2009}) 17. Kxh2 d4 18. Bf4 b6 $3 (18... Nfe7 19. Bc7 Bf5 20. Qf3 Rdc8 21.
+Bg3 dxc3 22. bxc3 Kg7 23. Bd1 $14 {1/2-1/2 (41) Jaederholm,B (2437)-Palsson,J 
+(2476) ICCF email 2009}) 19. Nd2 Nd6 (19... Be6 20. Ne4 Qg7 21. Qb5 {1-0 (60)
+Rogos,J (2318)-Morley,P (2211) ICCF email 2009}) 20. Qg3 dxc3 21. bxc3 g5 22.
+Be3 Bf5 $2 {1-0 (28) Timofeev,A (2658)-Lysyj,I (2590) Sochi 2007} (22... Qxc3
+$14)) 10... O-O 11. Re1 Bg4 12. Bh4 Re8 13. Bg3 Bxg3 14. hxg3 Qb6 15. a4 a6 (
+15... h6 16. Qd2 Bxf3 17. gxf3 $14 {1-0 (36) Emms,J (2527) -Hansen,A (2562)
+Esbjerg DEN 2000}) (15... Red8 {0-1 (29) Wells,P (2485) -Tischbierek,R (2519)
+Austria 2003}) 16. Bxc6 Bxf3 $2 (16... Qxc6 $1) 17. Qxf3 (17. gxf3 $5) 17...
+Qxc6 18. c3 Rad8 1/2-1/2
 
 [Event "ICCF email"]
 [Site "ICCF"]
@@ -15694,52 +15721,56 @@ Rxe7 15. dxc5 $3 e5 16. Nd2 Be6 (16... e4 $1) (16... Bg4) 17. O-O-O e4 $146 (
 17... Rc8 {1/2-1/2 (38) Klovans,J (2570) -Nyman,S (2353) ICCF corr 1988}) 18.
 Be2 Rc8 19. Nb3 Ne5 20. Rhe1 Bf7 $2 {1-0 (62) FloppyBaby (2258)-Arasan 18.3 
 (1966) chessclub.com 2016} (20... Rcc7 $11)) 12. Qh4 e4 13. Bxf6 gxf6 14. Qxf6
-exd3 15. cxd3 cxd4 16. Nxd4 Nxd4 17. Qxd4 Nc6 18. Qe3 d4 19. cxd4 Bf5 $11 {
-[%emt 0:00:14]} 20. O-O $14) 9... Ng6 10. Nf3 (10. Nh3 $2 Qc7 11. Be3 c4 12.
-Bxg6 fxg6 13. Qg4 {1-0 (54) Caruana,F (2795)-Shankland,S (2656) Saint Louis
-USA 2016} Qa5 $15) 10... Qc7 (10... Nce7 $5 11. h4 (11. dxc5 b6 12. c6 Qc7 13.
-O-O Qxc6 $11 {1-0 (26) Rodriguez Guerrero,E (2500)-Vilar Lopez,M (2145)
-Andorra 2003}) 11... Qc7 $2 (11... Qa5 12. Bd2 c4 13. Be2 Nc6 14. Qg4 Nge7 15.
-h5 h6 $11 {[%emt 0:00:04] Houdini}) 12. O-O (12. Bd2 {1-0 (17) L'Ami,E (2541)
--Lopez Martinez,J (2505) Stepanakert 2005}) 12... c4 13. Be2 f6 14. Qg4 fxe5
-15. h5 Nf4 16. Nxe5 Nxe2+ 17. Qxe2 Nc6 18. Nxc6 bxc6 19. h6 $14 {1-0 (19)
-MindSucker (2803)-Arasan 16.4 (2739) chessclub. com 2014}) 11. Be3 (11. Ng5 h6
-12. Nxf7 Qxf7 13. Qxg6 Qxg6 14. Bxg6 cxd4 15. cxd4 Nxd4 16. Be3 Nf5 17. Bc5 {
-1/2-1/2 (17) Nisipeanu,L (2707)-Jussupow,A (2595) Germany 2006}) 11... c4 12.
-Bxg6 fxg6 13. Qg4 Bd7 (13... Qf7 $1 14. Ng5 Qe8 15. h4 Bd7 (15... h6 16. Nh3
-Ne7 $2 (16... b5 $1) 17. Qe2 Nf5 18. Nf4 Bd7 19. Qg4 (19. h5 $2 {1/2-1/2 (58)
-Cheparinov,I (2672) -Lenderman,A (2561) Caleta 2014}) 19... Nxe3 $2 (19... Kh7)
-20. fxe3 Kh7 $14 {1-0 (20) Baiocchi,G (2454)-Palmo,P (2398) ICCF 2010}) (15...
-Ne7 16. a4 Bd7 $2 (16... a5 17. O-O $1 Bd7 18. Rfb1 Rb8 19. Bc1 Rf5 {1/2-1/2 
-(27) Koskela,T (2470)-Hansen,O (2498) ICCF 2012}) 17. a5 Rf5 $146 (17... h6 18.
-Nh3 Qf7 19. Bc1 {1-0 (31) Schulze,M (2423)-Claverie,R (2358) IECG email 2003})
-18. O-O Nc8 $5 $11 {1-0 (18) NightmareX (2663)-GnuCheese (2477) FICS, San Jose,
-California US 2015}) 16. Qe2 b5 $11) (13... b5 $3 14. h4 Rf5 15. Ng5 (15. Ke2
-a5 16. Ng5 (16. h5 Rxh5 17. Ng5 Rxh1 18. Rxh1 h6 $1 19. Nf3 Kh7 20. Bxh6 gxh6
-21. Ng5+ Kg8 22. Rxh6 Qg7 23. Rh7 Qxh7 24. Nxh7 Kxh7 25. Qh4+ Kg8 26. Qf6 Ra7
-27. Qxg6+ Kf8 28. Qf6+ {1/2-1/2 (28) Langer,R (2317)-Roy Laguens,A (2318) ICCF
-2015}) 16... h6 17. h5 Qe7 18. f4 $2 (18. hxg6 Rxg5 19. Bxg5 Qxg5 20. Qxg5 hxg5
-21. Rh5 Ne7 $11) 18... Qe8 19. Nf3 gxh5 20. Qh3 Ne7 $15 {1-0 (35) Berg,E (2543)
--Sjodahl,P (2428) Vaxjo SWE 2015}) (15. Qh3 $6 h6 16. g4 $1 Rf7 $2 (16... Rf8
-17. h5 g5 18. Nxg5 hxg5 19. h6 gxh6 20. Bxg5 Qh7 21. Bf6 Kf7 $11) 17. Ng5 $1 (
-17. h5 $2 g5 18. Bxg5 hxg5 19. Nxg5 Rf4 20. h6 g6 21. Qe3 Rf8 22. Kf1 Qe7 23.
-Kg2 $15 {1/2-1/2 (39) Polovnikov,Y (2361)-Rákay,M (2390) ICCF 2014}) 17... Rf8
-18. h5 Ne7 19. Nf3 gxh5 20. g5 g6 21. gxh6 Kh7 22. Kd2 a5 23. Rag1 $16 {
-1-0 (38) Ulasevich,S (2412)-Boucher,W (2402) ICCF 2014}) 15... Qe7 16. Qh3 (16.
-h5 $3 h6 17. Nh3 gxh5 18. Qg3 h4 (18... Kh7 19. Nf4 $11) 19. Qg4 Kh7 $11 {Negi}
-) 16... h6 17. g4 (17. Nf3 $1 $11) 17... Rf8 18. h5 Qe8 19. Nf3 g5 20. Ng1 {
-1/2-1/2 (60) Leko,P (2740)-Lupulescu,C (2625) Tromso NOR 2014}) 14. h4 Rf5 15.
-h5 gxh5 16. Rxh5 Rxh5 (16... Raf8 17. Rh3 $1 (17. Kd2 Be8 18. Rxf5 exf5 19. Qg3
-Nd8 20. Ng5 Bg6 21. Rh1 Qc6 22. Qh4 f4 23. Nxh7 Qa4 24. Nxf8 Qxc2+ 25. Ke1 Qb1+
-26. Ke2 Qd3+ 27. Kf3 Qe4+ 28. Ke2 Qd3+ {1/2-1/2 (28) Carlsen,M (2567)
--Ostenstad,B (2482) Oslo 2004})) 17. Qxh5 Rf8 $2 (17... Be8 18. Qh3 Nd8 19. Kd2
-Bg6 20. Nh4 Qf7 21. g4 Nc6 22. f4 Be4 23. f5 Rf8 24. Rf1 Nd8 25. Bg5 $1 $146 (
-25. Rf2 $2 {1/2-1/2 (31) Berecz,A (2390)-Kolehmainen,K (2438) ICCF email 2006})
-25... Qe8 26. Bxd8 Qxd8 27. Ng2 Qg5+ $2 (27... Bxg2 28. Qxg2 Qg5+ $11) 28. Ne3
-Qe7 29. fxe6 Rxf1 30. Nxf1 b6 31. Ne3 h6 $2 (31... Qxe6) 32. Nf5 {1-0 (32)
-DesertCat (2846) -Arasan 17.0 (2760) chessclub.com 2014}) 18. Kd2 $1 Be8 19.
-Qh3 Nd8 20. Ng5 h6 21. Nxe6 Nxe6 22. Qxe6+ Bf7 23. Qh3 Bg6 24. a4 Qc6 25. g4
-$16 *
+exd3 15. cxd3 cxd4 16. Nxd4 Nxd4 17. Qxd4 Nc6 18. Qe3 d4 19. cxd4 Bf5 $11 {14}
+20. O-O $14) (9. Bg5 Qa5 10. Ne2 Ng6 11. O-O c4 12. Bxg6 fxg6 13. a4 Qc7 14.
+Bc1 Qf7 15. Ng3 $1 Ne7 $1 (15... Bd7 $2 16. Ba3) 16. a5 (16. Ba3 $1 Bd7 17. a5
+Rfc8 18. Rfb1 Bc6 19. h4 Nf5 20. Ne2 {1/2-1/2 (44) Bubir,S (2613)-Boukal,P 
+(2466) ICCF email 2008}) 16... Nf5 17. Ne2 Bd7 18. h4 b6 {1/2-1/2 (18)
+Dominguez Perez,L (2655)-Bareev,E (2683) Havana 2006}) 9... Ng6 10. Nf3 (10.
+Nh3 $2 Qc7 11. Be3 c4 12. Bxg6 fxg6 13. Qg4 {1-0 (54) Caruana,F (2795)
+-Shankland,S (2656) Saint Louis USA 2016} Qa5 $15) 10... Qc7 (10... Nce7 $5 11.
+h4 (11. dxc5 b6 12. c6 Qc7 13. O-O Qxc6 $11 {1-0 (26) Rodriguez Guerrero,E 
+(2500)-Vilar Lopez,M (2145) Andorra 2003}) 11... Qc7 $2 (11... Qa5 12. Bd2 c4
+13. Be2 Nc6 14. Qg4 Nge7 15. h5 h6 $11 {4 Houdini}) 12. O-O (12. Bd2 {1-0 (17)
+L'Ami,E (2541)-Lopez Martinez,J (2505) Stepanakert 2005}) 12... c4 13. Be2 f6
+14. Qg4 fxe5 15. h5 Nf4 16. Nxe5 Nxe2+ 17. Qxe2 Nc6 18. Nxc6 bxc6 19. h6 $14 {
+1-0 (19) MindSucker (2803)-Arasan 16.4 (2739) chessclub. com 2014}) 11. Be3 (
+11. Ng5 h6 12. Nxf7 Qxf7 13. Qxg6 Qxg6 14. Bxg6 cxd4 15. cxd4 Nxd4 16. Be3 Nf5
+17. Bc5 {1/2-1/2 (17) Nisipeanu,L (2707)-Jussupow,A (2595) Germany 2006}) 11...
+c4 12. Bxg6 fxg6 13. Qg4 Bd7 (13... Qf7 $1 14. Ng5 Qe8 15. h4 Bd7 (15... h6 16.
+Nh3 Ne7 $2 (16... b5 $1) 17. Qe2 Nf5 18. Nf4 Bd7 19. Qg4 (19. h5 $2 {1/2-1/2 
+(58) Cheparinov,I (2672) -Lenderman,A (2561) Caleta 2014}) 19... Nxe3 $2 (19...
+Kh7) 20. fxe3 Kh7 $14 {1-0 (20) Baiocchi,G (2454)-Palmo,P (2398) ICCF 2010}) (
+15... Ne7 16. a4 Bd7 $2 (16... a5 17. O-O $1 Bd7 18. Rfb1 Rb8 19. Bc1 Rf5 {
+1/2-1/2 (27) Koskela,T (2470)-Hansen,O (2498) ICCF 2012}) 17. a5 Rf5 $146 (
+17... h6 18. Nh3 Qf7 19. Bc1 {1-0 (31) Schulze,M (2423)-Claverie,R (2358) IECG
+email 2003}) 18. O-O Nc8 $5 $11 {1-0 (18) NightmareX (2663)-GnuCheese (2477)
+FICS, San Jose, California US 2015}) 16. Qe2 b5 $11) (13... b5 $3 14. h4 Rf5
+15. Ng5 (15. Ke2 a5 16. Ng5 (16. h5 Rxh5 17. Ng5 Rxh1 18. Rxh1 h6 $1 19. Nf3
+Kh7 20. Bxh6 gxh6 21. Ng5+ Kg8 22. Rxh6 Qg7 23. Rh7 Qxh7 24. Nxh7 Kxh7 25. Qh4+
+Kg8 26. Qf6 Ra7 27. Qxg6+ Kf8 28. Qf6+ {1/2-1/2 (28) Langer,R (2317)-Roy
+Laguens,A (2318) ICCF 2015}) 16... h6 17. h5 Qe7 18. f4 $2 (18. hxg6 Rxg5 19.
+Bxg5 Qxg5 20. Qxg5 hxg5 21. Rh5 Ne7 $11) 18... Qe8 19. Nf3 gxh5 20. Qh3 Ne7 $15
+{1-0 (35) Berg,E (2543)-Sjodahl,P (2428) Vaxjo SWE 2015}) (15. Qh3 $6 h6 16. g4
+$1 Rf7 $2 (16... Rf8 17. h5 g5 18. Nxg5 hxg5 19. h6 gxh6 20. Bxg5 Qh7 21. Bf6
+Kf7 $11) 17. Ng5 $1 (17. h5 $2 g5 18. Bxg5 hxg5 19. Nxg5 Rf4 20. h6 g6 21. Qe3
+Rf8 22. Kf1 Qe7 23. Kg2 $15 {1/2-1/2 (39) Polovnikov,Y (2361)-Rákay,M (2390)
+ICCF 2014}) 17... Rf8 18. h5 Ne7 19. Nf3 gxh5 20. g5 g6 21. gxh6 Kh7 22. Kd2 a5
+23. Rag1 $16 {1-0 (38) Ulasevich,S (2412)-Boucher,W (2402) ICCF 2014}) 15...
+Qe7 16. Qh3 (16. h5 $3 h6 17. Nh3 gxh5 18. Qg3 h4 (18... Kh7 19. Nf4 $11) 19.
+Qg4 Kh7 $11 {Negi}) 16... h6 17. g4 (17. Nf3 $1 $11) 17... Rf8 18. h5 Qe8 19.
+Nf3 g5 20. Ng1 {1/2-1/2 (60) Leko,P (2740)-Lupulescu,C (2625) Tromso NOR 2014})
+14. h4 Rf5 15. h5 gxh5 16. Rxh5 Rxh5 (16... Raf8 17. Rh3 $1 (17. Kd2 Be8 18.
+Rxf5 exf5 19. Qg3 Nd8 20. Ng5 Bg6 21. Rh1 Qc6 22. Qh4 f4 23. Nxh7 Qa4 24. Nxf8
+Qxc2+ 25. Ke1 Qb1+ 26. Ke2 Qd3+ 27. Kf3 Qe4+ 28. Ke2 Qd3+ {1/2-1/2 (28)
+Carlsen,M (2567) -Ostenstad,B (2482) Oslo 2004})) 17. Qxh5 Rf8 $2 (17... Be8
+18. Qh3 Nd8 19. Kd2 Bg6 20. Nh4 Qf7 21. g4 Nc6 22. f4 Be4 23. f5 Rf8 24. Rf1
+Nd8 25. Bg5 $1 $146 (25. Rf2 $2 {1/2-1/2 (31) Berecz,A (2390)-Kolehmainen,K 
+(2438) ICCF email 2006}) 25... Qe8 26. Bxd8 Qxd8 27. Ng2 Qg5+ $2 (27... Bxg2
+28. Qxg2 Qg5+ $11) 28. Ne3 Qe7 29. fxe6 Rxf1 30. Nxf1 b6 31. Ne3 h6 $2 (31...
+Qxe6) 32. Nf5 {1-0 (32) DesertCat (2846) -Arasan 17.0 (2760) chessclub.com 2014
+}) 18. Kd2 $1 Be8 19. Qh3 Nd8 20. Ng5 h6 21. Nxe6 Nxe6 22. Qxe6+ Bf7 23. Qh3
+Bg6 24. a4 Qc6 25. g4 $16 *
 
 [Event "Kecskement"]
 [Site "Kecskement"]
@@ -17949,67 +17980,69 @@ Qb3 $1 (10. Bxc6+ bxc6 11. Qe2+ Qxe2+ 12. Kxe2 O-O-O (12... Ne7 13. Be3 O-O-O)
 
 1. e4 e5 2. Nf3 Nc6 3. d4 exd4 4. Nxd4 Bc5 (4... Nf6 $3 5. Nxc6 bxc6 6. Bd3 $6
 (6. Nd2 d5 7. exd5 cxd5 8. Bb5+ Bd7 9. Bxd7+ Qxd7 10. O-O Be7 11. b3 O-O 12.
-Bb2 Rfe8 {1/2-1/2 (21) Volokitin,A (2687)-Efimenko,Z (2651) Kiev 2013}) 6... d5
-$1 7. exd5 $2 (7. e5 $1) (7. Qe2 $1) 7... cxd5 8. Bb5+ Bd7 9. Bxd7+ Qxd7 10.
-O-O Be7 11. Nd2 O-O 12. Nf3 $2 (12. b3) 12... Rfe8 $1 {0-1 (56) Arasan 18.3 
-(1995)-Foe-hammer (2304) chessclub.com 2016}) 5. Nxc6 (5. Nb3 Bb6 6. Qe2 (6. a4
-a6 7. Nc3 Nge7 8. Bg5 f6 9. Bf4 (9. Bh4 $1) 9... d6 $6 (9... O-O $1) 10. Qh5+ (
-10. Bc4 $5 Ng6) 10... Ng6 11. Bc4 Bd7 $1 (11... Nce5 12. Bxe5 fxe5 13. g3 c6
-14. O-O-O Qe7 15. a5 (15. Kb1 $5) 15... Bxf2 16. Rd3 $2 (16. Rhf1 $1 $14) 16...
-Be6 $2 (16... Rf8 $5) 17. Bxe6 {1-0 (45) Tomczak,J (2596)-Urban,K (2430)
-Poznan 2015}) (11... Qe7 $5) 12. O-O (12. Nd5 $5 Ba7) 12... Ba7 $11 {0-1 (66)
-Arasan 18.3 (2200)-iCE 3.0 (2200) EDDY-PC 2016 [Dart,Jon]}) 6... d6 7. Be3 Nf6
-8. Nc3 Ng4 $5 9. Bxb6 axb6 10. f3 Nge5 11. f4 Nd7 12. O-O-O O-O 13. Qf3 Nc5 $11
-{1/2-1/2 (13) Arasan 17.4-Crafty-24.1 - 2014}) (5. Be3 Qf6 6. c3 Nge7 7. Bc4
-Ne5 8. Be2 d6 9. O-O Qg6 10. f4 $6 (10. f3 $1 O-O 11. Nd2 $1 d5 $1 12. Kh1 dxe4
-13. fxe4 Bg4 14. Bf4 Bxe2 15. Qxe2 Bd6 16. Rad1 $2 (16. Nb5 $1 N7c6 17. Nxd6
-cxd6 18. Rad1 Rae8 (18... Rad8 $5 19. Nf3 Rfe8 $11) 19. Nf3 Qe6 $2 {1/2-1/2 
-(25) Baklan,V (2617)-Erdos,V (2608) Trieste 2011} (19... Qg4 $1 $11)) 16...
-Rad8 17. Bxe5 Bxe5 18. Nc4 $2 (18. N2f3 $1 Bxd4 19. cxd4 c6 20. Qc2 f5 21. Nh4
-Qe6 22. exf5 Qxa2 {1/2-1/2 (36) Baklanov,V (2466)-Ruggeri Laderchi,G (2516)
-ICCF email 2006}) 18... Bxd4 19. cxd4 f5 20. e5 $2 {1/2-1/2 (26) Arasan 19.0 
-(2411)-MyrddinComp (2301) chessclub.com 2016} (20. d5 $5)) (10. Kh1 Qxe4 11.
-Nd2 Qg6 12. Bh5 $11) (10. Bh5 $2 Qxe4 11. Nd2) 10... Qxe4 11. Bf2 Bxd4 12. cxd4
-N5g6 13. g3 $2 (13. Nc3 Qxf4 14. Nb5 O-O 15. Nxc7 Rb8 16. d5 b6 17. Rc1 Qg5 18.
-Rc3 Nf5 19. Re1 {1/2-1/2 (19) Petrosian,S (2395)-Silber,H (2300) Germany 2008})
-13... Bh3 14. Bf3 Qf5 15. Re1 d5 16. Nc3 c6 17. b4 {0-1 (17) Arasan 17.
-5-Crafty-24.1 - 2014} (17. Na4 $5)) 5... Qf6 (5... bxc6 6. Bd3 (6. Nc3 $5 Nf6
-7. Bd3 d6 {transposes to Laznicka-Eljanov} (7... O-O 8. Na4 $1 Bb6 9. O-O $11 {
-Stockfish 4 DD})) 6... Qh4 (6... d6 7. Nc3 $1 (7. Qe2 Nf6 8. Bg5 (8. O-O $11)
-8... Qe7 ({Komodo 10 64-bit:} 8... O-O 9. Nc3 h6 $11) 9. Nc3 {1-0 (30)
-Nepomniachtchi,I (2710)-Zhigalko,S (2677) Bilbao 2014}) 7... Nf6 8. Na4 Bb6 9.
-O-O Nd7 (9... O-O 10. Nxb6 axb6 11. Bg5 h6 12. Bh4 {1-0 (40) Lalic,S (2365)
--Kennaugh,C (2290) England 1996}) 10. b3 Bd4 11. c3 (11. Bb2) 11... Bf6 12. f4
-O-O 13. Qc2 $2 {1/2-1/2 (48) Laznicka,V (2677)-Eljanov,P (2702) Poikovsky 2013}
-(13. Qf3 $1 Nc5 $14)) 7. Qe2 $3 (7. Qf3 Nf6 8. O-O (8. Bf4 d6 $1) (8. h3 $5)
-8... O-O) (7. O-O Nf6 8. Qf3) 7... Nf6 8. Be3 Bxe3 9. Qxe3 O-O 10. Nd2 Re8 11.
-O-O d6 {Â½-Â½ (21) Carlsen,M (2714) -Kamsky,G (2714) Khanty-Mansiysk 2007})
-6. Qd2 (6. Qf3 $1 bxc6 $1 7. Nd2 d6 $11) (6. Qe2 $2) (6. f3 $2) 6... dxc6 7.
-Nc3 Bd4 $2 {draw line, avoid} (7... Be6 8. Na4 Rd8 (8... Bd6 9. Qe3 Nh6 (9...
-Qh4 10. g3 Qh5 11. Bd2 Nf6 12. Be2 Qe5 $11 {0-1 (57) Farias,S (2400)-De Souza,
-J (2340) ICCF email 2006}) 10. h3 O-O 11. Bd3 (11. Bd2 $1 Rfe8 12. O-O-O Bxa2
-$2 {1-0 (29) Manca,F (2396)-Skembris,S (2475) Padova 2000} (12... b5 $1 $11))
-11... Qh4 12. g3 $2 {0-1 (42) Arasan 19.0 (1906)-Metaphysician (2375)
-chessclub.com 2016} (12. Qg5 Qxg5 13. Bxg5 $11)) 9. Bd3 Bd6 10. Qe3 $11) (7...
-Ne7 8. Na4 Bd6 9. f4 b5 $5 10. e5 $2 (10. Nc3 Bc5 11. Bd3 {1/2-1/2 (33)
-Dworakowska,J (2364)-Naumkin,I (2415) San Marino 2006}) 10... Bxe5 11. fxe5
-Qh4+ 12. Qf2 Qxf2+ 13. Kxf2 bxa4 14. Bd3 Bf5 15. Bxf5 Nxf5 16. Rd1 Rd8 $15 {
-0-1 (16) Arasan 17.4-Gaviota - 2014}) 8. Bd3 Ne7 9. O-O Ng6 10. Kh1 (10. Ne2
-Bxb2 $2 (10... Bb6 $1 11. Nf4 Qh4 {0-1 (37) Pavasovic,D (2597) -Svidler,P 
-(2732) Khanty-Mansiysk 2007}) 11. Bxb2 Qxb2 12. Qe3 $2 (12. f4 Qa3 {Houdini 4
-x64:} (12... O-O $2 13. Rab1 (13. f5) 13... Qa3 14. h3 $2 {0-1 (14) Arasan 17.
-3-Crafty-23.4 PS - 2014} (14. f5)) 13. Kh1 $1 (13. f5 Ne5 14. Qg5 Bd7 15. Qxg7
-Qc5+ 16. Kh1 O-O-O 17. Qf6 h5 18. h3 Kb8 19. Rf4 Bc8 20. Rh4 Rhg8 21. Rf1 Rd6
-22. Qe7 Qa5 23. Rxh5 Rd7 {1/2-1/2 (27) Smeets,J (2545) -Beliavsky,A (2679)
-Maribor 2004} 24. Qf6 Rd6 25. Qe7 Rd7 26. Qf6 Rd6 27. Qe7 Rd7 {1/2-1/2 (27)
-Smeets,J (2545)-Beliavsky,A (2679) Maribor 2004}) (13. Qe3 Bd7 14. Qd4 f6 {
-0-1 (31) Santhosh,M (2344)-Suto,J (2387) ICCF 2008}) 13... Bg4 14. Rab1 O-O-O
-15. Rb3 Qc5 16. Nc3 Be6 17. Rbb1 Bc4 18. Na4 Qd4 19. Qa5 Bxd3 20. cxd3 b5 $11)
-(12. a4 $5) 12... O-O) (10. Rb1 $1) 10... Ne5 11. Be2 (11. f4 Ng4 12. Qe1 Nxh2
-13. Kxh2 Qh6+ 14. Kg3 Qg6+ 15. Kh2 $11) 11... Ng4 12. Nd1 Qd6 (12... Be6 13. c3
-Bb6 14. Bxg4 Bxg4 15. f3 {1/2-1/2 (36) SvÃ¡cek,P (2549) -Almiron,L (2598)
-ICCF 2012} (15. Ne3)) 13. f4 Nxh2 14. Kxh2 Qh6+ 15. Kg3 Qg6+ 16. Kh2 Qh6+ 17.
-Kg3 Qg6+ 18. Kh2 Qh6+ *
+Bb2 Rfe8 {1/2-1/2 (21) Volokitin,A (2687)-Efimenko,Z (2651) Kiev 2013}) (6. e5
+Qe7 7. Qe2 Nd5 8. c4 Ba6 9. b3 g6 10. f4 d6 $3 (10... Bg7 $2 11. Qf2 Nf6 12.
+Be2 $1 $14) 11. Qf2 Nf6 12. Be2 dxe5 13. O-O (13. Ba3 Qe6) 13... Ne4 $11 {
+0-1 (35) Nedev,T (2484)-Kramnik,V (2760) Tromso 2014}) 6... d5 $1 7. exd5 $2 (
+7. e5 $1) (7. Qe2 $1) 7... cxd5 8. Bb5+ Bd7 9. Bxd7+ Qxd7 10. O-O Be7 11. Nd2
+O-O 12. Nf3 $2 (12. b3) 12... Rfe8 $1 {0-1 (56) Arasan 18.3 (1995)-Foe-hammer 
+(2304) chessclub.com 2016}) 5. Nxc6 (5. Nb3 Bb6 6. Qe2 (6. a4 a6 7. Nc3 Nge7 8.
+Bg5 f6 9. Bf4 (9. Bh4 $1) 9... d6 $6 (9... O-O $1) 10. Qh5+ (10. Bc4 $5 Ng6)
+10... Ng6 11. Bc4 Bd7 $1 (11... Nce5 12. Bxe5 fxe5 13. g3 c6 14. O-O-O Qe7 15.
+a5 (15. Kb1 $5) 15... Bxf2 16. Rd3 $2 (16. Rhf1 $1 $14) 16... Be6 $2 (16... Rf8
+$5) 17. Bxe6 {1-0 (45) Tomczak,J (2596)-Urban,K (2430) Poznan 2015}) (11... Qe7
+$5) 12. O-O (12. Nd5 $5 Ba7) 12... Ba7 $11 {0-1 (66) Arasan 18.3 (2200)-iCE 3.
+0 (2200) EDDY-PC 2016 (Dart,Jon)}) 6... d6 7. Be3 Nf6 8. Nc3 Ng4 $5 9. Bxb6
+axb6 10. f3 Nge5 11. f4 Nd7 12. O-O-O O-O 13. Qf3 Nc5 $11 {1/2-1/2 (13) Arasan
+17.4-Crafty-24.1 - 2014}) (5. Be3 Qf6 6. c3 Nge7 7. Bc4 Ne5 8. Be2 d6 9. O-O
+Qg6 10. f4 $6 (10. f3 $1 O-O 11. Nd2 $1 d5 $1 12. Kh1 dxe4 13. fxe4 Bg4 14. Bf4
+Bxe2 15. Qxe2 Bd6 16. Rad1 $2 (16. Nb5 $1 N7c6 17. Nxd6 cxd6 18. Rad1 Rae8 (
+18... Rad8 $5 19. Nf3 Rfe8 $11) 19. Nf3 Qe6 $2 {1/2-1/2 (25) Baklan,V (2617)
+-Erdos,V (2608) Trieste 2011} (19... Qg4 $1 $11)) 16... Rad8 17. Bxe5 Bxe5 18.
+Nc4 $2 (18. N2f3 $1 Bxd4 19. cxd4 c6 20. Qc2 f5 21. Nh4 Qe6 22. exf5 Qxa2 {
+1/2-1/2 (36) Baklanov,V (2466)-Ruggeri Laderchi,G (2516) ICCF email 2006})
+18... Bxd4 19. cxd4 f5 20. e5 $2 {1/2-1/2 (26) Arasan 19.0 (2411)-MyrddinComp 
+(2301) chessclub.com 2016} (20. d5 $5)) (10. Kh1 Qxe4 11. Nd2 Qg6 12. Bh5 $11)
+(10. Bh5 $2 Qxe4 11. Nd2) 10... Qxe4 11. Bf2 Bxd4 12. cxd4 N5g6 13. g3 $2 (13.
+Nc3 Qxf4 14. Nb5 O-O 15. Nxc7 Rb8 16. d5 b6 17. Rc1 Qg5 18. Rc3 Nf5 19. Re1 {
+1/2-1/2 (19) Petrosian,S (2395)-Silber,H (2300) Germany 2008}) 13... Bh3 14.
+Bf3 Qf5 15. Re1 d5 16. Nc3 c6 17. b4 {0-1 (17) Arasan 17.5-Crafty-24.1 - 2014}
+(17. Na4 $5)) 5... Qf6 (5... bxc6 6. Bd3 (6. Nc3 $5 Nf6 7. Bd3 d6 {transposes
+to Laznicka-Eljanov} (7... O-O 8. Na4 $1 Bb6 9. O-O $11 {Stockfish 4 DD})) 6...
+Qh4 (6... d6 7. Nc3 $1 (7. Qe2 Nf6 8. Bg5 (8. O-O $11) 8... Qe7 ({Komodo 10
+64-bit:} 8... O-O 9. Nc3 h6 $11) 9. Nc3 {1-0 (30) Nepomniachtchi,I (2710)
+-Zhigalko,S (2677) Bilbao 2014}) 7... Nf6 8. Na4 Bb6 9. O-O Nd7 (9... O-O 10.
+Nxb6 axb6 11. Bg5 h6 12. Bh4 {1-0 (40) Lalic,S (2365) -Kennaugh,C (2290)
+England 1996}) 10. b3 Bd4 11. c3 (11. Bb2) 11... Bf6 12. f4 O-O 13. Qc2 $2 {
+1/2-1/2 (48) Laznicka,V (2677)-Eljanov,P (2702) Poikovsky 2013} (13. Qf3 $1 Nc5
+$14)) 7. Qe2 $3 (7. Qf3 Nf6 8. O-O (8. Bf4 d6 $1) (8. h3 $5) 8... O-O) (7. O-O
+Nf6 8. Qf3) 7... Nf6 8. Be3 Bxe3 9. Qxe3 O-O 10. Nd2 Re8 11. O-O d6 {Â½-Â½
+(21) Carlsen,M (2714) -Kamsky,G (2714) Khanty-Mansiysk 2007}) 6. Qd2 (6. Qf3 $1
+bxc6 $1 7. Nd2 d6 $11) (6. Qe2 $2) (6. f3 $2) 6... dxc6 7. Nc3 Bd4 $2 {draw
+line, avoid} (7... Be6 8. Na4 Rd8 (8... Bd6 9. Qe3 Nh6 (9... Qh4 10. g3 Qh5 11.
+Bd2 Nf6 12. Be2 Qe5 $11 {0-1 (57) Farias,S (2400)-De Souza,J (2340) ICCF email
+2006}) 10. h3 O-O 11. Bd3 (11. Bd2 $1 Rfe8 12. O-O-O Bxa2 $2 {1-0 (29) Manca,F
+(2396)-Skembris,S (2475) Padova 2000} (12... b5 $1 $11)) 11... Qh4 12. g3 $2 {
+0-1 (42) Arasan 19.0 (1906)-Metaphysician (2375) chessclub.com 2016} (12. Qg5
+Qxg5 13. Bxg5 $11)) 9. Bd3 Bd6 10. Qe3 $11) (7... Ne7 8. Na4 Bd6 9. f4 b5 $5
+10. e5 $2 (10. Nc3 Bc5 11. Bd3 {1/2-1/2 (33) Dworakowska,J (2364)-Naumkin,I 
+(2415) San Marino 2006}) 10... Bxe5 11. fxe5 Qh4+ 12. Qf2 Qxf2+ 13. Kxf2 bxa4
+14. Bd3 Bf5 15. Bxf5 Nxf5 16. Rd1 Rd8 $15 {0-1 (16) Arasan 17.4-Gaviota - 2014}
+) 8. Bd3 Ne7 9. O-O Ng6 10. Kh1 (10. Ne2 Bxb2 $2 (10... Bb6 $1 11. Nf4 Qh4 {
+0-1 (37) Pavasovic,D (2597) -Svidler,P (2732) Khanty-Mansiysk 2007}) 11. Bxb2
+Qxb2 12. Qe3 $2 (12. f4 Qa3 {Houdini 4 x64:} (12... O-O $2 13. Rab1 (13. f5)
+13... Qa3 14. h3 $2 {0-1 (14) Arasan 17.3-Crafty-23.4 PS - 2014} (14. f5)) 13.
+Kh1 $1 (13. f5 Ne5 14. Qg5 Bd7 15. Qxg7 Qc5+ 16. Kh1 O-O-O 17. Qf6 h5 18. h3
+Kb8 19. Rf4 Bc8 20. Rh4 Rhg8 21. Rf1 Rd6 22. Qe7 Qa5 23. Rxh5 Rd7 {1/2-1/2 (27)
+Smeets,J (2545) -Beliavsky,A (2679) Maribor 2004} 24. Qf6 Rd6 25. Qe7 Rd7 26.
+Qf6 Rd6 27. Qe7 Rd7 {1/2-1/2 (27) Smeets,J (2545)-Beliavsky,A (2679) Maribor
+2004}) (13. Qe3 Bd7 14. Qd4 f6 {0-1 (31) Santhosh,M (2344)-Suto,J (2387) ICCF
+2008}) 13... Bg4 14. Rab1 O-O-O 15. Rb3 Qc5 16. Nc3 Be6 17. Rbb1 Bc4 18. Na4
+Qd4 19. Qa5 Bxd3 20. cxd3 b5 $11) (12. a4 $5) 12... O-O) (10. Rb1 $1) 10... Ne5
+11. Be2 (11. f4 Ng4 12. Qe1 Nxh2 13. Kxh2 Qh6+ 14. Kg3 Qg6+ 15. Kh2 $11) 11...
+Ng4 12. Nd1 Qd6 (12... Be6 13. c3 Bb6 14. Bxg4 Bxg4 15. f3 {1/2-1/2 (36)
+SvÃ¡cek,P (2549) -Almiron,L (2598) ICCF 2012} (15. Ne3)) 13. f4 Nxh2 14. Kxh2
+Qh6+ 15. Kg3 Qg6+ 16. Kh2 Qh6+ 17. Kg3 Qg6+ 18. Kh2 Qh6+ *
 
 [Event "-"]
 [Site "ICCF"]
@@ -19124,18 +19157,20 @@ Qxd6 19. Nxe5 Rfe8 $2 {½-½ (81) Zhigalko,S (2656)-Inarkiev,E (2660) Berlin
 2015} (19... Rae8)) 14. Qc2 c5 15. Qxc5 Ba6 16. Re1 Bxd3 17. b3 $11 {0-1 (17)
 Arasan 17.4-Arasan 17.5 - 2015})) 9... Nf4 (9... Be7 $1 10. Qf3 (10. Nc3 Nf4
 11. Bf1 O-O 12. d3 f6 13. Nf3 Re8 14. g3 Nd5 15. Be2 $11 {0-1 (87) Costa
-Trillo,V (2084)-Sanner,Z (2244) ICCF 2012}) 10... f5 11. Bxf5 Rf8 12. g4 g6 13.
-Nxh7 gxf5 14. Nxf8 e4 {1/2-1/2 (36) Pijpers,A (2333)-Bartel,M (2296) Haarlem
-2012}) (9... Qc7 $2 10. Nxh7 $2 (10. O-O h6 11. Nf3 Bd6 {1/2-1/2 (19) Pellen,M
-(2497)-Vinchev,S (2449) ICCF 2014}) 10... Be7 11. Qh5 g6 12. Qh6 Be6 13. h5
-gxh5 14. Nc3 O-O-O 15. Nxd5 cxd5 16. b3 e4 $17 {0-1 (43) Arasan 17.4-1-Komodo
-8 64-bit book11-1 2014}) 10. Bf1 h6 (10... f6 11. Ne4 f5 12. Ng5 Bd6 13. g3 Nd5
-) 11. Nf3 Bd6 12. d3 $11) 9. Ne4 $3 (9. Nh3 f5 10. Be2 $11 {1-0 (38) McShane,L
-(2645)-L'Ami,E (2626) Wolvega 2010}) 9... f5 10. Be2 h5 11. h3 fxe4 12. hxg4
-Bc5 13. b4 Qd4 14. bxc5 O-O 15. O-O Qxa1 16. Nc3 e3 17. gxh5 exf2+ 18. Rxf2
-Rxf2 19. Kxf2 Be6 20. Bf3 Rf8 21. Kg3 Bxa2 22. Qe1 Be6 23. d4 Nc4 $2 (23... Bf5
-$11) 24. Kh2 Rxf3 25. gxf3 Bf7 26. h6 gxh6 27. Ne4 Bg6 28. Qf1 Kh8 29. Qxc4
-Qxc1 30. Qe6 Qf4+ 31. Ng3 Bh5 32. Qc8+ Kh7 33. Qb7+ Kg8 34. Qc8+ 1/2-1/2
+Trillo,V (2084)-Sanner,Z (2244) ICCF 2012}) 10... f5 (10... Nf6 11. b3 {
+1-0 (38) Gonzalez,B (2377)-Dillenburg,A (2322) ICCF 2016} (11. Nc3 $14)) 11.
+Bxf5 Rf8 12. g4 g6 13. Nxh7 gxf5 14. Nxf8 e4 {1/2-1/2 (36) Pijpers,A (2333)
+-Bartel,M (2296) Haarlem 2012}) (9... Qc7 $2 10. Nxh7 $2 (10. O-O h6 11. Nf3
+Bd6 {1/2-1/2 (19) Pellen,M (2497)-Vinchev,S (2449) ICCF 2014}) 10... Be7 11.
+Qh5 g6 12. Qh6 Be6 13. h5 gxh5 14. Nc3 O-O-O 15. Nxd5 cxd5 16. b3 e4 $17 {
+0-1 (43) Arasan 17.4-1-Komodo 8 64-bit book11-1 2014}) 10. Bf1 h6 (10... f6 11.
+Ne4 f5 12. Ng5 Bd6 13. g3 Nd5) 11. Nf3 Bd6 $1 12. d3 $11) 9. Ne4 $3 (9. Nh3 f5
+10. Be2 $11 {1-0 (38) McShane,L (2645)-L'Ami,E (2626) Wolvega 2010}) 9... f5
+10. Be2 h5 11. h3 fxe4 12. hxg4 Bc5 13. b4 Qd4 14. bxc5 O-O 15. O-O Qxa1 16.
+Nc3 e3 17. gxh5 exf2+ 18. Rxf2 Rxf2 19. Kxf2 Be6 20. Bf3 Rf8 21. Kg3 Bxa2 22.
+Qe1 Be6 23. d4 Nc4 $2 (23... Bf5 $11) 24. Kh2 Rxf3 25. gxf3 Bf7 26. h6 gxh6 27.
+Ne4 Bg6 28. Qf1 Kh8 29. Qxc4 Qxc1 30. Qe6 Qf4+ 31. Ng3 Bh5 32. Qc8+ Kh7 33.
+Qb7+ Kg8 34. Qc8+ 1/2-1/2
 
 [Event "?"]
 [Site "?"]
@@ -19423,7 +19458,7 @@ g4 Ng6 20. Kg3 Be7 21. Nd2 Rhd8 22. Ne4 Bf8 23. Nef6 $2 (23. f3 $11) 23... b5
 $1 {1-0 (45) Carlsen,M (2863)-Anand,V (2792) Sochi RUS 2014}) 11. Bb2 (11. Nc3)
 11... Be7 $2 (11... Kc8) 12. g4 {1/2-1/2 (78) zerowin (2604)-Arasan 18.0 (2566)
 freechess.org 2015}) (10. Nc3 Be7 $2 11. Rd1 Kc8 12. Bg5 {1-0 (102) Jakovenko,
-D (2710)-Almasi,Z (2691) Khanty-Mansiysk 2007 CBM 122 [Marin,M]}) 10... Be7 11.
+D (2710)-Almasi,Z (2691) Khanty-Mansiysk 2007 CBM 122 (Marin,M)}) 10... Be7 11.
 g4 Nh4 12. Nxh4 Bxh4 13. Nd2 Kc8 14. Nf3 Be7 {1/2-1/2 (42) Caruana,F (2782)
 -Grischuk,A (2785) Warsaw 2013}) 9... Ke8 (9... Bd7 $3 10. h3 (10. b3) (10. Rd1
 $1 Kc8 11. Ng5 $1 (11. b3 h6) 11... Be8 12. b3 (12. Nge4 $1 b6 13. f3 c5 {
@@ -19454,20 +19489,20 @@ A (2748) -Eljanov,P (2693) Odessa UKR 2009}) 14. Nd4 (14. Ne2 $1 Ng6 15. Ne1 (
 (2638) Moscow 2008}) 15... h5 16. Nd3 c5 17. c4 a5 18. a4 h4 19. Nc3 Be6 20.
 Nd5 Kb7 21. Ne3 Rh5 22. Bc3 Re8 23. Rd2 Kc8 24. f4 Ne7 25. Nf2 Nf5 {Â½-Â½ 
 (25) Kasparov,G (2849)-Kramnik,V (2770) London 2000}) 14... c5 15. Nde2 a5 (
-15... Bf5 {Houdini 4 x64:} 16. Rd2 Nc6 17. Nd1 {[%eval 0,25]}) (15... Nc6 $2
-16. Nd5 {1-0 (42) Sutovsky,E (2654) -Georgiev,K (2671) Subotica 2008}) 16. Rd2
-Nc6 $2 (16... Bc6) 17. Rfd1 Be6 18. Nf4 Bf5 19. g4 Be6 20. Nxe6 fxe6 21. Nb5
-Rg8 22. Rd7 Bd6 23. R1xd6 {1-0 (23) Efimenko,Z (2670)-Naiditsch,A (2665)
-Subotica 2008}) 13. Rad1 Ne7 $1 14. Rfe1 c5 15. Ne2 $11 {1/2-1/2 (74) Anand,V 
-(2804)-Nakamura,H (2741) London 2010 CBM 140 [Kritz,L]}) (9... Ne7 $6 10. h3
-Ng6 11. b3 (11. Be3 Ke8 $6 (11... Be7 $1) 12. a3 $1 Be7 13. Rad1 h5 (13... Bd7
-$5) 14. Rfe1 h4 15. Nd4 $3 Bd7 16. f4 $14 {1-0 (57) RayJr (2202)-Arasan 18.3 
-(1937) chessclub.com 2016}) (11. Bg5+ Ke8 12. Rad1 Bd7 13. Nd4 (13. Rd2 Be6 14.
-Rfd1 Be7 15. Be3 h6 16. Nd4 Nxe5 17. Bf4 Bd6 18. Nxe6 fxe6 19. Bxe5 Bxe5 20.
-Ne4 b6 21. c3 {1/2-1/2 (21) Gorokhov,S (2387)-Kevický,I (2411) ICCF 2015})
-13... h6 14. Be3 Be7 15. f4 $14 {1/2-1/2 (41) Radjabov,T (2735)-Topalov,V 
-(2780) Morelia/Linares 2008}) 11... h6 12. Bb2 Nf4 13. Rad1+ Ke8 14. Nd4 a5 $1
-{1/2-1/2 (38) Jakovenko,D (2737)-Bacrot,E (2705) Elista 2008}) (9... Be6 10.
+15... Bf5 {Houdini 4 x64:} 16. Rd2 Nc6 17. Nd1 {0.00/25}) (15... Nc6 $2 16. Nd5
+{1-0 (42) Sutovsky,E (2654) -Georgiev,K (2671) Subotica 2008}) 16. Rd2 Nc6 $2 (
+16... Bc6) 17. Rfd1 Be6 18. Nf4 Bf5 19. g4 Be6 20. Nxe6 fxe6 21. Nb5 Rg8 22.
+Rd7 Bd6 23. R1xd6 {1-0 (23) Efimenko,Z (2670)-Naiditsch,A (2665) Subotica 2008}
+) 13. Rad1 Ne7 $1 14. Rfe1 c5 15. Ne2 $11 {1/2-1/2 (74) Anand,V (2804)
+-Nakamura,H (2741) London 2010 CBM 140 (Kritz,L)}) (9... Ne7 $6 10. h3 Ng6 11.
+b3 (11. Be3 Ke8 $6 (11... Be7 $1) 12. a3 $1 Be7 13. Rad1 h5 (13... Bd7 $5) 14.
+Rfe1 h4 15. Nd4 $3 Bd7 16. f4 $14 {1-0 (57) RayJr (2202)-Arasan 18.3 (1937)
+chessclub.com 2016}) (11. Bg5+ Ke8 12. Rad1 Bd7 13. Nd4 (13. Rd2 Be6 14. Rfd1
+Be7 15. Be3 h6 16. Nd4 Nxe5 17. Bf4 Bd6 18. Nxe6 fxe6 19. Bxe5 Bxe5 20. Ne4 b6
+21. c3 {1/2-1/2 (21) Gorokhov,S (2387)-Kevický,I (2411) ICCF 2015}) 13... h6
+14. Be3 Be7 15. f4 $14 {1/2-1/2 (41) Radjabov,T (2735)-Topalov,V (2780)
+Morelia/Linares 2008}) 11... h6 12. Bb2 Nf4 13. Rad1+ Ke8 14. Nd4 a5 $1 {
+1/2-1/2 (38) Jakovenko,D (2737)-Bacrot,E (2705) Elista 2008}) (9... Be6 10.
 Rd1+ (10. Ng5 Ke7 11. Rd1 h6 12. Nge4 Rd8 13. Bf4 Ke8 14. Ne2 Be7 15. N4g3 Bc5
 16. Rxd8+ Kxd8 17. Rd1+ Kc8 18. a3 Rd8 19. Rxd8+ Kxd8 20. Kf1 {1/2-1/2 (20)
 Caruana,F (2675) -Jurcik,M (2487) Chur 2010}) 10... Ke8 11. Ng5 $1 Bc8 12. h3
@@ -19480,67 +19515,67 @@ Ng6 $3 (11... Bf5 $2 12. Nd4 Bg6 13. Bf4 (13. e6 $5 Nf5 14. exf7+ (14. Nxf5
 Bxf5 15. Rd7 Rc8 16. Rxf7 Bxe6 17. Rf3 $14) 14... Kxf7 15. Nf3 {1/2-1/2 (22)
 Fontaine,R (2320)-Rausis,I (2470) Enghien les Bains 1997}) 13... Nf5 $11 {
 0-1 (13) Arizmendi Martinez,J (2534)-Georgiev,K (2645) Gibraltar 2006} (13...
-Rc8 14. Rac1 h5 15. Nf3 Bf5 {[%eval -65,23] [%emt 0:00:27]} 16. Bg5 Ng6 17. Nd4
-$14 {NightmareX (2621)-ArasanX (2583) freechess.org 2015 [15... -0.65]})) (
-11... h6 $2 12. b3 $3 Ng6) 12. Ne2 $1 (12. Re1 Bb4 13. Bd2 Be6 14. a3 Bxc3 15.
-Bxc3 Rd8 16. Kh2 $11 {1-0 (35) Dominguez Perez,L (2719)-Lysyj,I (2629)
-Khanty-Mansiysk 2011}) (12. Be3 Be7 (12... Bb4) 13. Ne2 {1/2-1/2 (38) Bologan,
-V (2681)-Alekseev,E (2695) Loo 2013}) (12. b3 Be7 $1 (12... Bd7 $6 13. Bb2 Rd8
-14. Ne2 Rg8 $11 {1-0 (14) ENGINEMASTER (2397)-ArasanX (1913) Internet Chess
-Club 2016} (14... h5 $11)) (12... a5 $2 13. Bb2 Be7) 13. Bb2 (13. Ne4 $1 a5 (
-13... h6) 14. Bb2 a4 15. Re1 axb3 16. axb3 Rxa1 17. Rxa1 (17. Bxa1) 17... Bf5 {
-1/2-1/2 (29) Anokhin,Y (2386)-Balshaw,A (2378) ICCF 2015}) 13... Bf5 $1 (13...
-a5 $2) 14. Nd4 Bd7 15. Re1 Rd8 16. e6 Bc8 17. Nf5 Bf6 18. Na4 Bxb2 19. Nxb2 Rg8
-20. exf7+ Kxf7 21. Ne3 Nf4 22. Rad1 Rge8 23. Rxd8 {1/2-1/2 (23) Fedorchuk,S 
-(2653)-Ipatov,A (2621) Kocaeli 2015}) 12... Be7 13. b3 f6 (13... a5 14. a4 h6 (
-14... f6)) 14. Bb2 Kf7 15. Ng3 c5 {1/2-1/2 (45) Churkin,M (2493)-Turkov,V 
-(2550) ICCF 2013} (15... Be6 16. exf6 Bxf6 17. Bxf6 gxf6 $11)) (10. Ne2 Ne7 $1
-(10... Bd7 11. Nf4 Rd8 {1-0 (74) Adams,M (2753)-McShane,L (2697) Germany 2014})
-(10... b6 $1 11. Rd1 Bb7 12. Ned4 Nxd4 13. Nxd4 Rd8 14. Be3 h6 {1/2 (30)-1/2 
-(30) BescÃ³s Anzano,M (2516)-Ljubicic,I (2624) ICCF 2010}) (10... Be6 11. Rd1
-(11. Nf4)) 11. h3 Ng6 12. Re1 (12. b3 Bd7) 12... Be7 $2 (12... h6 13. Ng3 h5
-14. Ne4 h4 15. Bg5 Rh5 16. Rad1 Be6 17. Nd4 Be7 18. Bxe7 Kxe7 19. Nc5 Bc8 20.
-Nd3 Bd7 21. Nc5 Bc8 22. Nd3 Bd7 {1/2-1/2 (22) Gharamian,T (2555)-Fressinet,L 
-(2676) Germany 2009}) (12... c5 $1 13. Nc3 (13. Be3 b6 $11) 13... h6 14. Be3
-Be6 15. Rad1 Rd8 16. Nb5 Rd7 17. a4 a6 18. Nc3 a5 19. Nb5 $2 {0-1 (55)
-Sjugirov,S (2612)-Fressinet,L (2653) Khanty-Mansiysk 2009 CBM 134 [Kritz,L]} (
-19. Kh2 {Kritz})) 13. Ng3 h5 $2 {0-1 (41) Yemelin,V (2500)-Sepp,O (2404)
-Myyrmanni 1999}) 10... h5 $1 (10... Be7 $1 11. g4 (11. Rd1 Nh4 12. Nd4 Ng6 13.
-Re1 Bd7 14. Ne4 c5 $11 {stockfishbot-Arasan, FICS 2014 (analysis)}) 11... Nh4
-12. Nxh4 Bxh4 $11) (10... h6 $2 11. b3 (11. Rd1 Bd7 $1 (11... Ne7 12. Bf4 (12.
-b3 Bf5 $2 (12... Ng6 $1 13. Bb2 (13. a4 Be6 $2 (13... a6) 14. Nd4 $1 {1-0 (50)
-Pinger (2246)-Arasan 18.2 (1944) chessclub.com 2015}) 13... Be7 14. Ne4 {
-1/2-1/2 (37) Svetushkin,D (2597)-Kryvoruchko,Y (2676) Achaea 2012} (14. Ne2 {
-1-0 (83) Kamsky,G (2705)-Bruzon Batista,L (2679) Khanty-Mansiysk 2010})) 13.
-Nd4 Bh7 14. Bb2 Rd8 15. Nce2 Nd5 16. c4 Nb4 17. Nf4 Rg8 $2 (17... Be7) 18. g4 {
-1-0 (45) Caruana,F (2805)-Carlsen,M (2876) Stavanger NOR 2015}) (12. Nd4 Ng6 $3
-13. f4 Bc5 $2 (13... f6 14. exf6 gxf6 15. f5 Nh4 {1/2-1/2 (56) Efremov,A (2574)
--Unen,J (2543) ICCF 2011}) 14. Be3 h5 15. Ne4 Bxd4 16. Rxd4 h4 17. Rad1 Bf5 18.
-e6 Bxe6 19. Nc5 Rh5 (19... b6 20. Nxe6 fxe6 21. Rd7 Ne7 22. Rxc7 $16 {1-0 (33)
-Saric,I (2609)-Sulava,N (2565) Marija Bistrica 2011}) 20. Nxb7 $14 {1-0 (37)
+Rc8 14. Rac1 h5 15. Nf3 Bf5 {-0.65/23 27} 16. Bg5 Ng6 17. Nd4 $14 {NightmareX 
+(2621)-ArasanX (2583) freechess.org 2015 (15... -0.65)})) (11... h6 $2 12. b3
+$3 Ng6) 12. Ne2 $1 (12. Re1 Bb4 13. Bd2 Be6 14. a3 Bxc3 15. Bxc3 Rd8 16. Kh2
+$11 {1-0 (35) Dominguez Perez,L (2719)-Lysyj,I (2629) Khanty-Mansiysk 2011}) (
+12. Be3 Be7 (12... Bb4) 13. Ne2 {1/2-1/2 (38) Bologan, V (2681)-Alekseev,E 
+(2695) Loo 2013}) (12. b3 Be7 $1 (12... Bd7 $6 13. Bb2 Rd8 14. Ne2 Rg8 $11 {
+1-0 (14) ENGINEMASTER (2397)-ArasanX (1913) Internet Chess Club 2016} (14... h5
+$11)) (12... a5 $2 13. Bb2 Be7) 13. Bb2 (13. Ne4 $1 a5 (13... h6) 14. Bb2 a4
+15. Re1 axb3 16. axb3 Rxa1 17. Rxa1 (17. Bxa1) 17... Bf5 {1/2-1/2 (29) Anokhin,
+Y (2386)-Balshaw,A (2378) ICCF 2015}) 13... Bf5 $1 (13... a5 $2) 14. Nd4 Bd7
+15. Re1 Rd8 16. e6 Bc8 17. Nf5 Bf6 18. Na4 Bxb2 19. Nxb2 Rg8 20. exf7+ Kxf7 21.
+Ne3 Nf4 22. Rad1 Rge8 23. Rxd8 {1/2-1/2 (23) Fedorchuk,S (2653)-Ipatov,A (2621)
+Kocaeli 2015}) 12... Be7 13. b3 f6 (13... a5 14. a4 h6 (14... f6)) 14. Bb2 Kf7
+15. Ng3 c5 {1/2-1/2 (45) Churkin,M (2493)-Turkov,V (2550) ICCF 2013} (15... Be6
+16. exf6 Bxf6 17. Bxf6 gxf6 $11)) (10. Ne2 Ne7 $1 (10... Bd7 11. Nf4 Rd8 {
+1-0 (74) Adams,M (2753)-McShane,L (2697) Germany 2014}) (10... b6 $1 11. Rd1
+Bb7 12. Ned4 Nxd4 13. Nxd4 Rd8 14. Be3 h6 {1/2 (30)-1/2 (30) BescÃ³s Anzano,
+M (2516)-Ljubicic,I (2624) ICCF 2010}) (10... Be6 11. Rd1 (11. Nf4)) 11. h3 Ng6
+12. Re1 (12. b3 Bd7) 12... Be7 $2 (12... h6 13. Ng3 h5 14. Ne4 h4 15. Bg5 Rh5
+16. Rad1 Be6 17. Nd4 Be7 18. Bxe7 Kxe7 19. Nc5 Bc8 20. Nd3 Bd7 21. Nc5 Bc8 22.
+Nd3 Bd7 {1/2-1/2 (22) Gharamian,T (2555)-Fressinet,L (2676) Germany 2009}) (
+12... c5 $1 13. Nc3 (13. Be3 b6 $11) 13... h6 14. Be3 Be6 15. Rad1 Rd8 16. Nb5
+Rd7 17. a4 a6 18. Nc3 a5 19. Nb5 $2 {0-1 (55) Sjugirov,S (2612)-Fressinet,L 
+(2653) Khanty-Mansiysk 2009 CBM 134 (Kritz,L)} (19. Kh2 {Kritz})) 13. Ng3 h5 $2
+{0-1 (41) Yemelin,V (2500)-Sepp,O (2404) Myyrmanni 1999}) 10... h5 $1 (10...
+Be7 $1 11. g4 (11. Rd1 Nh4 12. Nd4 Ng6 13. Re1 Bd7 14. Ne4 c5 $11 {
+stockfishbot-Arasan, FICS 2014 (analysis)}) 11... Nh4 12. Nxh4 Bxh4 $11) (10...
+h6 $2 11. b3 (11. Rd1 Bd7 $1 (11... Ne7 12. Bf4 (12. b3 Bf5 $2 (12... Ng6 $1
+13. Bb2 (13. a4 Be6 $2 (13... a6) 14. Nd4 $1 {1-0 (50) Pinger (2246)-Arasan 18.
+2 (1944) chessclub.com 2015}) 13... Be7 14. Ne4 {1/2-1/2 (37) Svetushkin,D 
+(2597)-Kryvoruchko,Y (2676) Achaea 2012} (14. Ne2 {1-0 (83) Kamsky,G (2705)
+-Bruzon Batista,L (2679) Khanty-Mansiysk 2010})) 13. Nd4 Bh7 14. Bb2 Rd8 15.
+Nce2 Nd5 16. c4 Nb4 17. Nf4 Rg8 $2 (17... Be7) 18. g4 {1-0 (45) Caruana,F 
+(2805)-Carlsen,M (2876) Stavanger NOR 2015}) (12. Nd4 Ng6 $3 13. f4 Bc5 $2 (
+13... f6 14. exf6 gxf6 15. f5 Nh4 {1/2-1/2 (56) Efremov,A (2574) -Unen,J (2543)
+ICCF 2011}) 14. Be3 h5 15. Ne4 Bxd4 16. Rxd4 h4 17. Rad1 Bf5 18. e6 Bxe6 19.
+Nc5 Rh5 (19... b6 20. Nxe6 fxe6 21. Rd7 Ne7 22. Rxc7 $16 {1-0 (33) Saric,I 
+(2609)-Sulava,N (2565) Marija Bistrica 2011}) 20. Nxb7 $14 {1-0 (37)
 Vachier-Lagrave,M (2731)-Topalov,V (2816) Saint Louis 2015}) 12... Ng6 13. Bh2
 Bb4 14. Ne2 Be7 15. Nfd4 Nf8 16. g4 $2 (16. Rd2 $1) 16... h5 17. Nf5 Ne6 18.
 Kg2 b6 19. f3 c5 20. Bg3 {1/2-1/2 (26) Caruana,F (2811)-Carlsen,M (2865) Baden
-Baden GER 2015}) 12. Bf4 Rd8 $11) (11. Ne2 Ne7 12. b3 Bf5 $2 (12... a5) 13.
-Ned4 {1-0 (13) antonescu (2588)-Arasan 18.0 (2582) freechess.org 2015}) 11...
-a5 (11... b6 $5 12. Bb2 Bb7 13. Rad1 Rd8 $11) 12. Bb2 h5 (12... Bb4 13. Ne2 $14
-{1/2-1/2 (23) Arasan 17.4-Arasan 17.5 - 2015}) 13. Rad1 $1 Be7 $1 {1/2-1/2 (27)
-Bromberger,S (2530)-Balogh,C (2608) Germany 2011} (13... h4 $2)) (10... Ne7 11.
-Re1 Ng6 12. Bd2 $1 Be6 $11 {1-0 (12) GnuCheese (2458)-Arasan 17.2 (2468)
-freechess.org 2014} (12... h6)) (10... b6 11. Ne4 c5 12. c3 h6 13. Bf4 {
-1/2-1/2 (26) Obregon,C (2406)-Slipak,S (2469) Villa Martelli 2009}) (10... Be6
-11. g4 Ne7 12. Ng5 Bc4 13. Re1 Nd5 14. Nd1 h6 15. Ne4 Nb4 16. Ne3 Bd5 17. Ng3
-Be6 18. a3 Nd5 19. Ng2 {1/2-1/2 (47) De Firmian,N (2560)-Miles,A (2595) Biel
-1990} (19. Nxd5 $5)) 11. Bg5 (11. Bf4 Be7 $3 (11... Be6 12. Rfd1 Rd8 $2 (12...
-Be7 13. Ng5 Rh6 14. Nxe6 Rxe6 15. Kf1 Rd8 (15... g5 $5) 16. Rxd8+ Bxd8 17. Ne4
-Be7 18. Re1 c5 19. c4 Nd4 20. Nc3 $11 {1-0 (47) Kamsky,G (2732)-Navara, D 
-(2712) Wijk aan Zee 2012}) 13. Rxd8+ Kxd8 14. Ng5 $14 {1-0 (43) RayJr (2225)
--Arasan 18.2 (1924) chessclub.com 2016}) 12. Rad1 Nh4 (12... Be6 $1 13. Ng5 Rh6
-14. Rfe1 Bb4 15. g4 hxg4 16. hxg4 Ne7 17. Nxe6 Rxe6 18. Kg2 Rd8 19. Rxd8+ Kxd8
-20. Rd1+ Kc8 {1/2-1/2 (20) Caruana,F (2801) -Nakamura,H (2787) Saint Louis USA
-2014}) 13. Nxh4 Bxh4 14. Ne2 Be7 15. Nd4 g5 16. Bg3 {1/2-1/2 (44) Khairullin,I
-(2649)-Lysyj,I (2629) Taganrog 2011} h4 $11) 11... Be6 12. b3 Be7 13. Rad1 h4
-14. Ne4 b6 1/2-1/2
+Baden GER 2015}) 12. Bf4 (12. a4 $5 Rd8 $1) 12... Rd8 $11) (11. Ne2 Ne7 12. b3
+Bf5 $2 (12... a5) 13. Ned4 {1-0 (13) antonescu (2588)-Arasan 18.0 (2582)
+freechess.org 2015}) 11... a5 (11... b6 $5 12. Bb2 Bb7 13. Rad1 Rd8 $11) 12.
+Bb2 h5 (12... Bb4 13. Ne2 $14 {1/2-1/2 (23) Arasan 17.4-Arasan 17.5 - 2015})
+13. Rad1 $1 Be7 $1 {1/2-1/2 (27) Bromberger,S (2530)-Balogh,C (2608) Germany
+2011} (13... h4 $2)) (10... Ne7 11. Re1 Ng6 12. Bd2 $1 Be6 $11 {1-0 (12)
+GnuCheese (2458)-Arasan 17.2 (2468) freechess.org 2014} (12... h6)) (10... b6
+11. Ne4 c5 12. c3 h6 13. Bf4 {1/2-1/2 (26) Obregon,C (2406)-Slipak,S (2469)
+Villa Martelli 2009}) (10... Be6 11. g4 Ne7 12. Ng5 Bc4 13. Re1 Nd5 14. Nd1 h6
+15. Ne4 Nb4 16. Ne3 Bd5 17. Ng3 Be6 18. a3 Nd5 19. Ng2 {1/2-1/2 (47) De
+Firmian,N (2560)-Miles,A (2595) Biel 1990} (19. Nxd5 $5)) 11. Bg5 (11. Bf4 Be7
+$3 (11... Be6 12. Rfd1 Rd8 $2 (12... Be7 13. Ng5 Rh6 14. Nxe6 Rxe6 15. Kf1 Rd8
+(15... g5 $5) 16. Rxd8+ Bxd8 17. Ne4 Be7 18. Re1 c5 19. c4 Nd4 20. Nc3 $11 {
+1-0 (47) Kamsky,G (2732)-Navara, D (2712) Wijk aan Zee 2012}) 13. Rxd8+ Kxd8
+14. Ng5 $14 {1-0 (43) RayJr (2225) -Arasan 18.2 (1924) chessclub.com 2016}) 12.
+Rad1 Nh4 (12... Be6 $1 13. Ng5 Rh6 14. Rfe1 Bb4 15. g4 hxg4 16. hxg4 Ne7 17.
+Nxe6 Rxe6 18. Kg2 Rd8 19. Rxd8+ Kxd8 20. Rd1+ Kc8 {1/2-1/2 (20) Caruana,F 
+(2801) -Nakamura,H (2787) Saint Louis USA 2014}) 13. Nxh4 Bxh4 14. Ne2 Be7 15.
+Nd4 g5 16. Bg3 {1/2-1/2 (44) Khairullin,I (2649)-Lysyj,I (2629) Taganrog 2011}
+h4 $11) 11... Be6 12. b3 Be7 13. Rad1 h4 14. Ne4 b6 1/2-1/2
 
 [Event "Nagykanizsa 1st"]
 [Site "Nagykanizsa"]
@@ -23813,16 +23848,17 @@ Be5 Bg4 (11... f6 $5) 12. Be2 Bxf3 (12... Ne4 $1) 13. Bxf3 Bf6 14. Bxf6 Qxf6
 9... b6 10. O-O Bb7 11. Rfd1 Rc8 12. Rac1 {1/2-1/2 (70) Khismatullin,D (2636)
 -Goganov,A (2525) St Petersburg 2012}) 10. Bxc4 a6 11. a4 Bd7 12. O-O Qa5 13.
 Ne5 Rac8 $1 $11 {Illescas Cordoba,M (2595)-Vallejo Pons,F (2629) Dos Hermanas
-2003}) 7... c6 (7... Nh5 8. Bd3 Nxf4 9. exf4 b6 10. b4 a5 11. a3 c6 12. O-O Qc7
-(12... Ba6 13. Bxa6 Rxa6 {1/2-1/2 (37) Akobian,V (2533)-Ambartsoumian,A (2424)
-Los Angeles 2003}) 13. g3 Ba6 14. Bxa6 $1 Rxa6 15. Qe2 Rfa8 $2 (15... Raa8) 16.
-b5 cxb5 17. Nxd5 exd5 18. Qxe7 Rc8 19. Rfb1 $1 bxc5 20. Rxb5 Re6 21. Qg5 {
-1-0 (43) Aronian,L (2802)-Giri,A (2714) Porto Carras 2011}) (7... Ne4 $1 8. Rc1
-$1 f5 9. h3 c6 10. Be2 Bf6 11. O-O Qe8 $14 {0-1 (60) Vitiugov,N (2725)-Le,Q 
-(2697) Baku 2015} (11... b5 $5)) 8. Bd3 (8. h3 $1 b6 9. b4 a5 10. a3 h6 $1 (
-10... Ba6 11. Bxa6 Rxa6 12. b5 cxb5 13. c6 Qc8 14. c7 b4 15. Nb5 a4 16. Rc1 Ne4
-17. Nd2 Ndf6 18. Nxe4 Nxe4 $2 (18... dxe4 $11) 19. O-O $2 {1-0 (19) Arasan 17.
-0-Arasan 16.3} (19. f3 $14 {0-1 (78) Gyimesi,Z (2616)-Vaganian,R (2587)
+2003}) (7. Be2 dxc4 8. O-O Nb6 $1 {1/2-1/2 (34) Shirov,A (2713)-Oparin,G (2526)
+Riga 2014}) 7... c6 (7... Nh5 8. Bd3 Nxf4 9. exf4 b6 10. b4 a5 11. a3 c6 12.
+O-O Qc7 (12... Ba6 13. Bxa6 Rxa6 {1/2-1/2 (37) Akobian,V (2533)-Ambartsoumian,
+A (2424) Los Angeles 2003}) 13. g3 Ba6 14. Bxa6 $1 Rxa6 15. Qe2 Rfa8 $2 (15...
+Raa8) 16. b5 cxb5 17. Nxd5 exd5 18. Qxe7 Rc8 19. Rfb1 $1 bxc5 20. Rxb5 Re6 21.
+Qg5 {1-0 (43) Aronian,L (2802)-Giri,A (2714) Porto Carras 2011}) (7... Ne4 $1
+8. Rc1 $1 f5 9. h3 c6 10. Be2 Bf6 11. O-O Qe8 $14 {0-1 (60) Vitiugov,N (2725)
+-Le,Q (2697) Baku 2015} (11... b5 $5)) 8. Bd3 (8. h3 $1 b6 9. b4 a5 10. a3 h6
+$1 (10... Ba6 11. Bxa6 Rxa6 12. b5 cxb5 13. c6 Qc8 14. c7 b4 15. Nb5 a4 16. Rc1
+Ne4 17. Nd2 Ndf6 18. Nxe4 Nxe4 $2 (18... dxe4 $11) 19. O-O $2 {1-0 (19) Arasan
+17.0-Arasan 16.3} (19. f3 $14 {0-1 (78) Gyimesi,Z (2616)-Vaganian,R (2587)
 Germany 2006})) 11. Bd3 Ba6 12. Bxa6 Rxa6 13. O-O Qa8 14. Rb1 axb4 15. axb4 Qb7
 16. Nd2 Rfa8 17. Nb3 Ra3 18. Qc2 bxc5 19. bxc5 Bd8 20. Rb2 Qa6 21. Rc1 Kh8 22.
 f3 Qa7 $11 {1-0 (41) Pashikian,A (2612)-Aghasaryan,R (2503) Yerevan 2014}) (8.
@@ -25458,63 +25494,73 @@ Nxc5 15. dxc5 Rxc5 16. f4 Nd5 17. Bb2 Nxc3 18. Bxc3 Qc7 19. Rfc1 (19. Bxh7+ Kh8
 Qe2 Qd8 19. Rfd1 Ra6 {1/2-1/2 (19) Baranowski,T (2437)-Freeman,M (2517) ICCF
 2011}) 10... Bb7 $1 (10... a6 11. Ng5 (11. Rd1 $2 Qc7 12. e4 $2 (12. Bd2 $5 c5
 13. dxc5 Qxc5 14. b4 Qc7 {1/2-1/2 (61) Inarkiev,E (2660)-Quesada Perez,Y (2643)
-Baku 2015}) 12... e5 13. g3 (13. Bg5 $1) 13... Re8 14. a3 h6 15. b4 a5 $2 (
-15... Bb7 $11) 16. Rb1 Bb7 (16... axb4 $1 17. axb4 $14) 17. dxe5 Nxe5 18. Nd4
-$14 {1-0 (70) Dirty Nov  3 2015-Arasan 18.3 - 2016}) (11. e4 $1 e5 12. h3 (12.
-Be3 Re8 13. Rad1 Qc7 14. Kh1 {1/2-1/2 (40) Dhanish,P (2600)-Stalmach,K (2567)
-ICCF 2014} exd4 15. Nxd4 $11) 12... Re8 13. Be3 (13. dxe5 Nxe5 14. Be3 Qc7 {
-1/2-1/2 (20) Schuster,P (2439)-Nightingale,D (2522) ICCF 2014}) 13... Qc7 14.
-Rad1 exd4 15. Nxd4 $11 {1-0 (37) Vaibhav,S (2552)-Shankland,S (2655) Abu Dhabi
-2015}) 11... Qc7 12. e4 h6 13. e5 hxg5 14. exd6 Qxd6 15. Bxg5 Qxd4 16. h4 Bb7
-17. Rad1 Qc5 18. Qd2 b4 19. Na4 Qa5 20. b3 c5 21. h5 c4 22. Qe3 Qe5 $2 (22...
-c3 23. h6 Nd5 $11) 23. Qxe5 Nxe5 24. Nb6 {1-0 (46) Nepomniachtchi,I (2714)
--Korobov,A (2687) Jerusalem 2015}) 11. Rd1 (11. e4 $1 e5 12. dxe5 Nxe5 13. Nd4
-Neg4 14. g3 Bc5 $3 15. Nf5 Re8 16. Bf4 Qb6 17. Kg2 (17. Bxg4 Nxg4 18. Rad1 $1
-Rad8 19. Rxd8 Rxd8 20. h3 Nxf2 21. Rxf2 Bxf2+ 22. Qxf2 b4 23. Na4 Rd1+ 24. Kg2
-Qxf2+ 25. Kxf2 Ba6 $11 {1-0 (25) bookbuilder (2836)-Arasan 17.5-dev (2571)
-chessclub.com 2015}) 17... Nxf2 $2 (17... g6 18. Bxg4 Nxg4 19. h3 gxf5 20. hxg4
-fxe4 $11) 18. e5 Nd7 $2 (18... N6g4) 19. b4 Bxb4 20. Rxf2 Nxe5 21. Nxg7 (21.
-Ne4 c5 22. Kf1 Bxe4 23. Qxe4 Ng6 24. Qd5 Nxf4 25. Ne7+ $16 {1-0 (75) Giri,A 
-(2768)-Shirov,A (2691) Hoogeveen 2014}) 21... c5+ 22. Kh3 Bc8+ 23. g4 Kxg7 24.
-Bxe5+ Rxe5 25. Rxf7+ Kxf7 26. Qxh7+ Ke6 27. Qg6+ Ke7 28. Qg7+ Ke6 29. Qh6+ Ke7
-30. Qh7+ Ke6 31. Qg6+ Ke7 32. Qg7+ Ke6 33. Qg6+ {1/2-1/2 (33) Wagner,D (2481)
--Shirov,A (2685) Eppingen GER 2014}) 11... Qc7 12. e4 (12. Bd2 $1 b4 13. Na4 c5
-14. dxc5 a5 15. Rac1 Rfc8 16. Bc3 Nxc5 17. Bxf6 Nxa4 18. Qd2 $146 (18. Qb1 Nc5
-19. Ng5 g6 20. Nf3 Qb8 21. Rc4 {1/2-1/2 (21) Soltau,A (2630)-Geider,F (2494)
-ICCF email 2004}) 18... Nc5 19. Bxg7 $2 (19. Qxd6 Qxd6 20. Rxd6 gxf6 $11) 19...
-Kxg7 20. Qxd6 Qxd6 21. Rxd6 $15 {0-1 (68) Arasan 18.1 (2023)-ComputerGOD (2427)
-chessclub. com 2015}) (12. b3 $2 a6 13. a4 $2 (13. Ne4 Nxe4 14. Qxe4 c5 15. Qh4
-c4 $3 (15... Rfe8 $3) 16. bxc4 bxc4 17. Bd2 Ba3 18. Bc3 $1 (18. Bc1 Bd6 19. Bd2
-$11) 18... Nf6 (18... Rfe8 $1) 19. d5 $1 Nxd5 20. Rxd5 exd5 21. Bxg7 Kxg7 $11)
-13... b4 14. Ne4 Nxe4 15. Qxe4 c5 16. Qc2 Rac8 17. Bb2 h6 $11 {1-0 (17)
-Gaviota (2200)-Arasan 18.2 (2200) EDDY-PC 2015}) 12... e5 13. dxe5 (13. Bg5
-exd4 14. Rxd4 Ne5 (14... Rfe8 $2) (14... b4 $2)) (13. g3 Rfe8 14. dxe5 Nxe5 15.
-Bg5 Neg4 16. h3 (16. Rac1 $1 Bc5 17. Bxf6 Bxf2+ 18. Kh1 gxf6 19. Nxb5 Qe7 20.
-Nd6 Ne3 21. Qc3 Nxd1 22. Rxd1 c5 23. Nxe8 Rxe8 24. Rf1 Bd4 25. Nxd4 cxd4 26.
-Qxd4 Qxe4+ 27. Qxe4 Bxe4+ {1/2-1/2 (45) Dragun,K (2572)-Shirov,A (2702) Riga
-2015} 28. Kg1 Rc8 $11) 16... Bxg3 17. hxg4 Nxg4 18. Be3 Re6 19. Bc5 $2 (19. Qd3
-Nxe3 20. Qxe3 Bf4 $11) 19... b4 20. Nb1 Rae8 21. Nbd2 Rg6 22. Kf1 Bc8 23. Qc4
-Bf4 24. Ke1 Nf6 25. a3 $2 (25. Rac1) 25... b3 26. Qxb3 {0-1 (85) Gaviota (2200)
--Arasan 18.3 (2200) EDDY-PC 2016}) 13... Nxe5 14. Nd4 Neg4 (14... Bc5 15. Bf4
-Bxd4 16. Rxd4 Nf3+ 17. Bxf3 Qxf4 {1/2 (57)-1/2 (57) Socko,B (2643)-Giri,A 
-(2722) Reykjavik 2013}) 15. Bxg4 (15. g3 Bc5 16. Bxg4 Nxg4 17. Nce2 Qb6 18. a4
-bxa4 19. Rxa4 Rfe8 20. f3 Ne5 21. Kg2 a5 22. Nf5 Ba6 23. Bf4 Rab8 24. Ned4 Bf8
-25. Ne3 c5 26. Nd5 Qxb2 27. Rd2 Qxc2 28. Nxc2 Nc4 29. Bxb8 Nxd2 30. Bf4 Bb7 31.
-Bxd2 Bxd5 32. Rxa5 Bc6 33. Ra6 Bb5 34. Rb6 {1/2-1/2 (34) Pravec,L (2342)
--Glaser,K (2303) ICCF email 2009}) 15... Bxh2+ 16. Kf1 Nxg4 17. g3 Nxf2 (17...
-Bxg3 $3 {Houdini 4 x64:} 18. fxg3 Qe5 19. Bf4 Qh5 20. Kg2 g5 21. Rh1 Qg6 22.
-Nf5 Rfe8 23. Qe2 Qxf5 24. Rh5 f6 25. exf5 Rxe2+ 26. Nxe2 c5+ 27. Kf1 gxf4 28.
-gxf4 Rd8 29. Rh3 b4 30. a3 $11) (17... Qe5 18. Kg2 c5 19. Nf3 Qh5 20. Nd5 f5
-21. Nf4 Qe8 22. Re1 fxe4 23. Nxh2 e3+ 24. f3 Nxh2 25. Kxh2 Rxf4 26. gxf4 Qh5+
-27. Kg1 Qxf3 28. Qh2 Qg4+ 29. Kf1 Qf3+ 30. Kg1 Re8 31. Rxe3 Rxe3 32. Bxe3 Qxe3+
-33. Qf2 Qh3 $15 {1/2-1/2 (78) Khalifman,A (2627) -Inarkiev,E (2692) St
-Petersburg 2011}) ({Houdini 4 x64:} 17... b4 $2 18. Nd5 Qe5 19. Bf4 Qh5 20.
-Ne7+ Kh8 21. Kg2 c5 22. Ndf5 Bg1 23. Rxg1 Qh2+ 24. Kf3 Qh5 25. Rae1 Ne5+ 26.
-Kg2 Qf3+ 27. Kh3 Nd3 28. Kh2 Bxe4 29. Re3 Ne5 30. Qe2 $14) 18. Qxf2 ({Houdini
-4 x64:} 18. Nd5 Qd7 19. Qxf2 cxd5 20. Qxh2 Rae8 21. Re1 dxe4 22. Be3 f6 23.
-Rac1 Re5 24. Kg2 Rd5 25. Nb3 Ba8 26. Qh4 Rd8 27. Kg1 h6 28. Nc5 Qf7 29. Qf4 f5
-30. b4 R5d6 31. Rf1 Qg6 32. Qh4 Rd5 {0.41/29}) 18... Bxg3 (18... Qxg3 $2) 19.
-Qf5 $2 (19. Qg2 $11) 19... g6 $15 0-1
+Baku 2015}) 12... e5 13. g3 (13. Bg5 $1) 13... Re8 14. a3 h6 $5 (14... exd4 15.
+Nxd4 Be5 16. Be3 c5 17. Nf5 Nb6 (17... Bb7 18. a4 $1 $11) 18. Bf3 $2 {0-1 (62)
+Arasan 19.1 (2125)-ipfreely (2261) chessclub.com 2016} (18. a4 $1 $11)) 15. b4
+a5 $2 (15... Bb7 $11) 16. Rb1 Bb7 (16... axb4 $1 17. axb4 $14) 17. dxe5 Nxe5
+18. Nd4 $14 {1-0 (70) Dirty Nov 3 2015-Arasan 18.3 - 2016}) (11. e4 $1 e5 12.
+h3 (12. Be3 $5 Re8 (12... Ng4 13. Bg5 Qc7 14. h3 h6 15. Bd2 Ngf6 16. dxe5 Nxe5
+17. Nh4 {1/2-1/2 (38) Dickies1002000,V (2500)-KingOfWar,S (2511) Engine Room
+2016}) 13. Rad1 Qc7 14. Kh1 {1/2-1/2 (40) Dhanish,P (2600)-Stalmach,K (2567)
+ICCF 2014} exd4 15. Nxd4 $11) (12. Rd1 $6 Qc7 13. g3 Re8 14. a3) 12... Re8 13.
+Be3 (13. dxe5 Nxe5 14. Be3 Qc7 {1/2-1/2 (20) Schuster,P (2439)-Nightingale,D 
+(2522) ICCF 2014}) 13... Qc7 14. Rad1 exd4 15. Nxd4 $11 {1-0 (37) Vaibhav,S 
+(2552)-Shankland,S (2655) Abu Dhabi 2015} b4 16. Na4 Nxe4 $2 (16... c5 $1 17.
+Nf5 Bh2+ 18. Kh1 Nxe4 19. g3 Ndf6 20. Nh6+ gxh6 21. Kxh2 Bb7 22. Bf4 Qc6 23.
+Bf3 Qb5 24. Be2 {1/2-1/2 (24) Antonov,N (2429)-Kishkin,S (2426) ICCF 2015}) 17.
+Nxc6 {1-0 (37) Vaibhav,S (2552)-Shankland,S (2655) Abu Dhabi 2015}) 11... Qc7
+12. e4 h6 13. e5 hxg5 14. exd6 Qxd6 15. Bxg5 Qxd4 16. h4 Bb7 17. Rad1 Qc5 18.
+Qd2 b4 19. Na4 Qa5 20. b3 c5 21. h5 c4 22. Qe3 Qe5 $2 (22... c3 23. h6 Nd5 $11)
+23. Qxe5 Nxe5 24. Nb6 {1-0 (46) Nepomniachtchi,I (2714)-Korobov,A (2687)
+Jerusalem 2015}) 11. Rd1 (11. e4 $1 e5 12. dxe5 Nxe5 13. Nd4 Neg4 14. g3 Bc5 $3
+15. Nf5 Re8 16. Bf4 Qb6 17. Kg2 (17. Bxg4 Nxg4 18. Rad1 $1 Rad8 19. Rxd8 Rxd8
+20. h3 Nxf2 21. Rxf2 Bxf2+ 22. Qxf2 b4 23. Na4 Rd1+ 24. Kg2 Qxf2+ 25. Kxf2 Ba6
+$11 {1-0 (25) bookbuilder (2836)-Arasan 17.5-dev (2571) chessclub.com 2015})
+17... Nxf2 $2 (17... g6 18. Bxg4 (18. h3 $1 Ne5 19. Bg5 gxf5 20. Bxf6 fxe4 21.
+Nxe4 Bd4 22. Bxe5 c5 23. f4 {1/2-1/2 (23) Ruggeri Laderchi,G (2451)-Teichmann,
+C (2361) ICCF 2016}) 18... Nxg4 19. h3 gxf5 20. hxg4 fxe4 $11) 18. e5 Nd7 $2 (
+18... N6g4) 19. b4 Bxb4 20. Rxf2 Nxe5 21. Nxg7 (21. Ne4 c5 22. Kf1 Bxe4 23.
+Qxe4 Ng6 24. Qd5 Nxf4 25. Ne7+ $16 {1-0 (75) Giri,A (2768)-Shirov,A (2691)
+Hoogeveen 2014}) 21... c5+ 22. Kh3 Bc8+ 23. g4 Kxg7 24. Bxe5+ Rxe5 25. Rxf7+
+Kxf7 26. Qxh7+ Ke6 27. Qg6+ Ke7 28. Qg7+ Ke6 29. Qh6+ Ke7 30. Qh7+ Ke6 31. Qg6+
+Ke7 32. Qg7+ Ke6 33. Qg6+ {1/2-1/2 (33) Wagner,D (2481)-Shirov,A (2685)
+Eppingen GER 2014}) 11... Qc7 12. e4 (12. Bd2 $1 b4 13. Na4 c5 14. dxc5 a5 15.
+Rac1 Rfc8 16. Bc3 Nxc5 17. Bxf6 Nxa4 18. Qd2 $146 (18. Qb1 Nc5 19. Ng5 g6 20.
+Nf3 Qb8 21. Rc4 {1/2-1/2 (21) Soltau,A (2630)-Geider,F (2494) ICCF email 2004})
+18... Nc5 19. Bxg7 $2 (19. Qxd6 Qxd6 20. Rxd6 gxf6 $11) 19... Kxg7 20. Qxd6
+Qxd6 21. Rxd6 $15 {0-1 (68) Arasan 18.1 (2023)-ComputerGOD (2427) chessclub.
+com 2015}) (12. b3 $2 a6 13. a4 $2 (13. Ne4 Nxe4 14. Qxe4 c5 15. Qh4 c4 $3 (
+15... Rfe8 $3) 16. bxc4 bxc4 17. Bd2 Ba3 18. Bc3 $1 (18. Bc1 Bd6 19. Bd2 $11)
+18... Nf6 (18... Rfe8 $1) 19. d5 $1 Nxd5 20. Rxd5 exd5 21. Bxg7 Kxg7 $11) 13...
+b4 14. Ne4 Nxe4 15. Qxe4 c5 16. Qc2 Rac8 17. Bb2 h6 $11 {1-0 (17) Gaviota 
+(2200)-Arasan 18.2 (2200) EDDY-PC 2015}) 12... e5 13. dxe5 (13. Bg5 exd4 14.
+Rxd4 Ne5 (14... Rfe8 $2) (14... b4 $2)) (13. g3 Rfe8 14. dxe5 Nxe5 15. Bg5 Neg4
+16. h3 (16. Rac1 $1 Bc5 17. Bxf6 Bxf2+ 18. Kh1 gxf6 19. Nxb5 Qe7 20. Nd6 Ne3
+21. Qc3 Nxd1 22. Rxd1 c5 23. Nxe8 Rxe8 24. Rf1 Bd4 25. Nxd4 cxd4 26. Qxd4 Qxe4+
+27. Qxe4 Bxe4+ {1/2-1/2 (45) Dragun,K (2572)-Shirov,A (2702) Riga 2015} 28. Kg1
+Rc8 $11) 16... Bxg3 17. hxg4 Nxg4 18. Be3 Re6 19. Bc5 $2 (19. Qd3 Nxe3 20. Qxe3
+Bf4 $11) 19... b4 20. Nb1 Rae8 21. Nbd2 Rg6 22. Kf1 Bc8 23. Qc4 Bf4 24. Ke1 Nf6
+25. a3 $2 (25. Rac1) 25... b3 26. Qxb3 {0-1 (85) Gaviota (2200) -Arasan 18.3 
+(2200) EDDY-PC 2016}) 13... Nxe5 14. Nd4 Neg4 (14... Bc5 15. Bf4 Bxd4 16. Rxd4
+Nf3+ 17. Bxf3 Qxf4 {1/2 (57)-1/2 (57) Socko,B (2643)-Giri,A (2722) Reykjavik
+2013}) 15. Bxg4 (15. g3 Bc5 16. Bxg4 Nxg4 17. Nce2 Qb6 18. a4 bxa4 19. Rxa4
+Rfe8 20. f3 Ne5 21. Kg2 a5 22. Nf5 Ba6 23. Bf4 Rab8 24. Ned4 Bf8 25. Ne3 c5 26.
+Nd5 Qxb2 27. Rd2 Qxc2 28. Nxc2 Nc4 29. Bxb8 Nxd2 30. Bf4 Bb7 31. Bxd2 Bxd5 32.
+Rxa5 Bc6 33. Ra6 Bb5 34. Rb6 {1/2-1/2 (34) Pravec,L (2342) -Glaser,K (2303)
+ICCF email 2009}) 15... Bxh2+ 16. Kf1 Nxg4 17. g3 Nxf2 (17... Bxg3 $3 {Houdini
+4 x64:} 18. fxg3 Qe5 19. Bf4 Qh5 20. Kg2 g5 21. Rh1 Qg6 22. Nf5 Rfe8 23. Qe2
+Qxf5 24. Rh5 f6 25. exf5 Rxe2+ 26. Nxe2 c5+ 27. Kf1 gxf4 28. gxf4 Rd8 29. Rh3
+b4 30. a3 $11) (17... Qe5 18. Kg2 c5 19. Nf3 Qh5 20. Nd5 f5 21. Nf4 Qe8 22. Re1
+fxe4 23. Nxh2 e3+ 24. f3 Nxh2 25. Kxh2 Rxf4 26. gxf4 Qh5+ 27. Kg1 Qxf3 28. Qh2
+Qg4+ 29. Kf1 Qf3+ 30. Kg1 Re8 31. Rxe3 Rxe3 32. Bxe3 Qxe3+ 33. Qf2 Qh3 $15 {
+1/2-1/2 (78) Khalifman,A (2627) -Inarkiev,E (2692) St Petersburg 2011}) ({
+Houdini 4 x64:} 17... b4 $2 18. Nd5 Qe5 19. Bf4 Qh5 20. Ne7+ Kh8 21. Kg2 c5 22.
+Ndf5 Bg1 23. Rxg1 Qh2+ 24. Kf3 Qh5 25. Rae1 Ne5+ 26. Kg2 Qf3+ 27. Kh3 Nd3 28.
+Kh2 Bxe4 29. Re3 Ne5 30. Qe2 $14) 18. Qxf2 ({Houdini 4 x64:} 18. Nd5 Qd7 19.
+Qxf2 cxd5 20. Qxh2 Rae8 21. Re1 dxe4 22. Be3 f6 23. Rac1 Re5 24. Kg2 Rd5 25.
+Nb3 Ba8 26. Qh4 Rd8 27. Kg1 h6 28. Nc5 Qf7 29. Qf4 f5 30. b4 R5d6 31. Rf1 Qg6
+32. Qh4 Rd5 {0.41/29}) 18... Bxg3 (18... Qxg3 $2) 19. Qf5 $2 (19. Qg2 $11)
+19... g6 $15 0-1
 
 [Event "?"]
 [Site "?"]
