@@ -1353,8 +1353,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    if (!deep_endgame) {
       int proximity = Bitboard(Scoring::kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
+      int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
+      attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
       if (attackCount >= 2 && majorAttackCount) {
-         attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(3,attackCount-2)];
+         attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(2,attackCount-2)];
       }
       // king safety tuning
       const int scale_index =
@@ -1364,6 +1366,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int high = Util::Min(scale_index + 1,Scoring::Params::KING_ATTACK_SCALE_SIZE-1);
       if (low == high) --low;
       double scale_grad = double(tune_params[Tune::KING_ATTACK_SCALE+high].current-tune_params[Tune::KING_ATTACK_SCALE+low].current)/double(high-low);
+      grads[Tune::PAWN_ATTACK_FACTOR1] +=
+         tune_params.scale(inc*scale_grad*proximity/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
+      grads[Tune::PAWN_ATTACK_FACTOR2] +=
+         tune_params.scale(inc*scale_grad*pawnAttacks/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
       // compute partial derivates for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;
            i <= Tune::QUEEN_ATTACK_BOOST2;
@@ -1374,8 +1380,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
       }
       if (attackCount >= 2) {
-         grads[Tune::KING_ATTACK_COUNT_BOOST+attackCount-2] +=
-            tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COUNT_BOOST+attackCount-2,ourMatLevel);
+         int index = Tune::KING_ATTACK_COUNT_BOOST+Util::Min(2,attackCount-2);
+         grads[index] +=
+            tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
       }
       // compute partial derivative for scale table entry
       if (tune_params[Tune::KING_ATTACK_SCALE+scale_index].tunable) {

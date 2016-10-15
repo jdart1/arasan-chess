@@ -108,6 +108,8 @@ Tune::Tune()
         Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",0,2,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",0,2,25,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",23,3,50,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,0,70,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,5,75,Tune::TuneParam::Midgame,1),
@@ -397,7 +399,7 @@ static const int QUEEN_PST_INIT[2][64] =
    static const TuneParam::Scaling scales[2] = {Tune::TuneParam::Midgame,
                                                 Tune::TuneParam::Endgame};
    ASSERT(i==KING_ATTACK_COUNT_BOOST);
-   for (int x = 0; x < 4; x++) {
+   for (int x = 0; x < 3; x++) {
       stringstream name;
       name << "king_attack_count_boost" << x+2 << endl;
       tune_params.push_back(TuneParam(i++,name.str(),6+4*x,0,KING_ATTACK_COUNT_BOOST_RANGE,Tune::TuneParam::Midgame,1));
@@ -637,6 +639,8 @@ void Tune::applyParams() const
    Scoring::Params::ENDGAME_PAWN_ADVANTAGE = tune_params[ENDGAME_PAWN_ADVANTAGE].current;
    Scoring::Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;
    Scoring::Params::PAWN_ENDGAME2 = tune_params[PAWN_ENDGAME2].current;
+   Scoring::Params::PAWN_ATTACK_FACTOR1 = tune_params[PAWN_ATTACK_FACTOR1].current;
+   Scoring::Params::PAWN_ATTACK_FACTOR2 = tune_params[PAWN_ATTACK_FACTOR2].current;
    Scoring::Params::MINOR_ATTACK_FACTOR = tune_params[MINOR_ATTACK_FACTOR].current;
    Scoring::Params::MINOR_ATTACK_BOOST = tune_params[MINOR_ATTACK_BOOST].current;
    Scoring::Params::ROOK_ATTACK_FACTOR = tune_params[ROOK_ATTACK_FACTOR].current;
@@ -693,7 +697,7 @@ void Tune::applyParams() const
    Scoring::Params::SUPPORTED_PASSER6 = tune_params[SUPPORTED_PASSER6].current;
    Scoring::Params::SUPPORTED_PASSER7 = tune_params[SUPPORTED_PASSER7].current;
    Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
-   for (int i = 0; i < 4; i++) {
+   for (int i = 0; i < 3; i++) {
       Scoring::Params::KING_ATTACK_COUNT_BOOST[i] = PARAM(KING_ATTACK_COUNT_BOOST+i);
    }
    for (int i = 0; i < 6; i++) {

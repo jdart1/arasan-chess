@@ -21,7 +21,7 @@
 struct Params 
 BEGIN_PACKED_STRUCT
     
-    static const int KING_ATTACK_SCALE_SIZE = 80;
+    static const int KING_ATTACK_SCALE_SIZE = 90;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
 
     static PARAM_MOD int RB_ADJUST[4];
@@ -45,6 +45,8 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int ENDGAME_PAWN_ADVANTAGE;
     static PARAM_MOD int PAWN_ENDGAME1;
     static PARAM_MOD int PAWN_ENDGAME2;
+    static PARAM_MOD int PAWN_ATTACK_FACTOR1;
+    static PARAM_MOD int PAWN_ATTACK_FACTOR2;
     static PARAM_MOD int MINOR_ATTACK_FACTOR;
     static PARAM_MOD int MINOR_ATTACK_BOOST;
     static PARAM_MOD int ROOK_ATTACK_FACTOR;
@@ -104,7 +106,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
-    static PARAM_MOD int KING_ATTACK_COUNT_BOOST[4];
+    static PARAM_MOD int KING_ATTACK_COUNT_BOOST[3];
     static PARAM_MOD int KING_OPP_PASSER_DISTANCE[6];
     static PARAM_MOD int KING_POSITION_LOW_MATERIAL[3];
     static PARAM_MOD int TRADE_DOWN[16];

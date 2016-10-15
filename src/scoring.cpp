@@ -1077,10 +1077,13 @@ void Scoring::pieceScore(const Board &board,
    if (!deep_endgame) {
       // add in pawn attacks
       int proximity = Bitboard(kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
+      int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
+      attackWeight += PARAM(PAWN_ATTACK_FACTOR1)*proximity +
+         PARAM(PAWN_ATTACK_FACTOR2)*pawnAttacks;
       if (attackCount >= 2 && majorAttackCount) {
-         attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[Util::Min(3,attackCount-2)];
+         attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[Util::Min(2,attackCount-2)];
       }
-      const int index = attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION + proximity*PAWN_ATTACK_FACTOR;
+      const int index = attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION;
 #ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << cover << endl;
@@ -2510,8 +2513,8 @@ void Scoring::Params::write(ostream &o)
       }
       o << " = " << param.current << ";" << endl;
    }
-   o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[4] = ";
-   print_array(o,Params::KING_ATTACK_COUNT_BOOST,4);
+   o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = ";
+   print_array(o,Params::KING_ATTACK_COUNT_BOOST,3);
    o << "const int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
    o << "const int Scoring::Params::KING_POSITION_LOW_MATERIAL[3] =";
