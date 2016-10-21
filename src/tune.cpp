@@ -90,7 +90,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::CASTLING5,"castling5",-280,-500,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER0,"king_cover0",138,100,320),
         Tune::TuneParam(Tune::KING_COVER1,"king_cover1",310,100,450),
-        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",250,50,4000),
+        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",250,50,400),
         Tune::TuneParam(Tune::KING_COVER3,"king_cover3",29,-50,100),
         Tune::TuneParam(Tune::KING_COVER4,"king_cover4",-37,-100,100),
         Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",-293,-500,0),
