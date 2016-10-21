@@ -618,7 +618,6 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       }
    }
 
-//   return Util::Min(0,cover);
    return cover;
 }
 
@@ -627,43 +626,22 @@ template<ColorType side>
 int Scoring::calcCover(const Board &board, Square kp) {
    int cover = 0;
    int kpfile = File(kp);
-   if (side == White) {
-      int rank = Rank(kp, White);
-      if (kpfile > 5) {
-         for(int i = 6; i <= 8; i++) {
-            cover += calcCover<White> (board, i, rank);
-         }
+   int rank = Rank(kp, side);
+   if (kpfile > 5) {
+      for(int i = 6; i <= 8; i++) {
+         cover += calcCover<side> (board, i, rank);
       }
-      else if (kpfile < 4) {
-         for(int i = 1; i <= 3; i++) {
-            cover += calcCover<White> (board, i, rank);
-         }
-      }
-      else {
-         for(int i = kpfile - 1; i <= kpfile + 1; i++) {
-            cover += calcCover<White> (board, i, rank);
-         }
+   }
+   else if (kpfile < 4) {
+      for(int i = 1; i <= 3; i++) {
+         cover += calcCover<side> (board, i, rank);
       }
    }
    else {
-      int rank = Rank(kp, Black);
-      if (kpfile > 5) {
-         for(int i = 6; i <= 8; i++) {
-            cover += calcCover<Black> (board, i, rank);
-         }
-      }
-      else if (kpfile < 4) {
-         for(int i = 1; i <= 3; i++) {
-            cover += calcCover<Black> (board, i, rank);
-         }
-      }
-      else {
-         for(int i = kpfile - 1; i <= kpfile + 1; i++) {
-            cover += calcCover<Black> (board, i, rank);
-         }
+      for(int i = kpfile - 1; i <= kpfile + 1; i++) {
+         cover += calcCover<side> (board, i, rank);
       }
    }
-
    cover = Util::Min(0, cover);
    return cover;
 }
