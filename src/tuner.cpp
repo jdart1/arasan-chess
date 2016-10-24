@@ -1360,12 +1360,15 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       // king safety tuning
       const int scale_index =
-         Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,proximity+(attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION));
+         Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
       // approximate the gradient of the scale
-      int low = Util::Max(0,scale_index);
-      int high = Util::Min(scale_index + 1,Scoring::Params::KING_ATTACK_SCALE_SIZE-1);
-      if (low == high) --low;
-      double scale_grad = double(tune_params[Tune::KING_ATTACK_SCALE+high].current-tune_params[Tune::KING_ATTACK_SCALE+low].current)/double(high-low);
+      double scale_grad = 0.0;
+      if (scale_index > 8) {
+         int low = Util::Max(0,scale_index);
+         int high = Util::Min(scale_index + 1,Scoring::Params::KING_ATTACK_SCALE_SIZE-1);
+         if (low == high) --low;
+         scale_grad = double(tune_params[Tune::KING_ATTACK_SCALE+high].current-tune_params[Tune::KING_ATTACK_SCALE+low].current)/double(high-low);
+      }
       grads[Tune::PAWN_ATTACK_FACTOR1] +=
          tune_params.scale(inc*scale_grad*proximity/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR2] +=
@@ -1379,7 +1382,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                tune_params.scale((inc*scale_grad*attackTypes[i-Tune::MINOR_ATTACK_FACTOR])/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,i,ourMatLevel);
          }
       }
-      if (attackCount >= 2) {
+      if (attackCount >= 2 && majorAttackCount) {
          int index = Tune::KING_ATTACK_COUNT_BOOST+Util::Min(2,attackCount-2);
          grads[index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
@@ -1404,11 +1407,16 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
          int val = p.current;
          int range = p.max_value - p.min_value;
          int delta;
-         if ((i>=Tune::MINOR_ATTACK_FACTOR &&
+         if (i>=Tune::KING_ATTACK_SCALE) {
+            delta = 10;
+         }
+         else if (i==Tune::PAWN_ATTACK_FACTOR1 ||
+             i==Tune::PAWN_ATTACK_FACTOR2 ||
+             (i>=Tune::MINOR_ATTACK_FACTOR &&
               i<=Tune::QUEEN_ATTACK_BOOST2) ||
              (i>=Tune::KING_ATTACK_COUNT_BOOST &&
               i<=Tune::KING_ATTACK_COUNT_BOOST+3))
-            delta = Util::Max(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,range/20);
+            delta = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION;
          else
             delta = Util::Max(1,range/20);
          

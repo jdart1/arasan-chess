@@ -67,7 +67,7 @@ Tune::Tune()
     // Tuning params for most parameters (except PSTs, mobility).
     // These are initialized to some reasonable but not optimal values.
     static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
-        Tune::TuneParam(Tune::RB_ADJUST1,"rb_adjust1",-250,-400,100,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::RB_ADJUST1,"rb_adjust1",-350,-400,100,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RB_ADJUST2,"rb_adjust2",-75,-400,300,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RB_ADJUST3,"rb_adjust3",75,-300,400,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RB_ADJUST4,"rb_adjust4",250,-150,500,Tune::TuneParam::Any,1),
@@ -75,10 +75,10 @@ Tune::Tune()
         Tune::TuneParam(Tune::RBN_ADJUST2,"rbn_adjust2",-675,-900,-300,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RBN_ADJUST3,"rbn_adjust3",-825,-1200,-500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RBN_ADJUST4,"rbn_adjust4",-1000,-1500,-500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST0,"qr_adjust0",-500,-750,-250,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::QR_ADJUST0,"qr_adjust0",-500,-750,-150,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::QR_ADJUST1,"qr_adjust1",0,-500,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST2,"qr_adjust2",500,250,750,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST3,"qr_adjust3",500,250,750,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::QR_ADJUST2,"qr_adjust2",500,250,1000,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::QR_ADJUST3,"qr_adjust3",500,250,1000,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",-1500,-2000,-1000,Tune::TuneParam::Any,1),
@@ -101,15 +101,15 @@ Tune::Tune()
         Tune::TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ROOK_VS_PAWNS,"rook_vs_pawns",333,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",-100,-500,0,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",-500,-3000,0,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",-250,-1000,0,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",-100,-500,0,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KQMINOR_VS_Q_NO_PAWNS,"kqminor_vs_q_no_pawns",-100,-3000,0,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",229,0,500,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",500,0,750,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",0,2,25,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",0,2,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",2,0,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",2,0,25,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",23,3,50,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,0,70,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,5,75,Tune::TuneParam::Midgame,1),
@@ -164,11 +164,11 @@ Tune::Tune()
         Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,1000,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1000,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",180,128,400,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",160,128,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",150,128,300,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",180,128,600,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",160,128,400,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",150,128,400,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",60,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",110,50,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",180,70,500,Tune::TuneParam::Midgame,1),
@@ -562,7 +562,8 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int p = 0; p < Scoring::Params::KING_ATTACK_SCALE_SIZE; p++) {
       stringstream name;
       name << "king_attack_scale" << p;
-      tune_params.push_back(TuneParam(i++,name.str(),int(f*val/2),0,KING_ATTACK_SCALE_RANGE,Tune::TuneParam::Midgame,p));
+      int val2 = (p < 10) ? 0 : int(f*val/2);
+      tune_params.push_back(TuneParam(i++,name.str(),val2,0,KING_ATTACK_SCALE_RANGE,Tune::TuneParam::Midgame,val2));
       slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE ? p : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p));
       if (p>10) val += slope;
    }
