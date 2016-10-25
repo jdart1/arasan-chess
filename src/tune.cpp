@@ -71,7 +71,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::RB_ADJUST2,"rb_adjust2",-75,-400,300,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RB_ADJUST3,"rb_adjust3",75,-300,400,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RB_ADJUST4,"rb_adjust4",250,-150,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RBN_ADJUST1,"rbn_adjust1",-500,-750,-250,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::RBN_ADJUST1,"rbn_adjust1",-500,-750,-150,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RBN_ADJUST2,"rbn_adjust2",-675,-900,-300,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RBN_ADJUST3,"rbn_adjust3",-825,-1200,-500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::RBN_ADJUST4,"rbn_adjust4",-1000,-1500,-500,Tune::TuneParam::Any,1),
