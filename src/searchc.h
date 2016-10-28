@@ -11,7 +11,7 @@
 struct NodeInfo;
 class Board;
 
-class CACHE_ALIGN SearchContext {
+class SearchContext {
  public:
     SearchContext();
 
