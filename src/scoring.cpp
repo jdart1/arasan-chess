@@ -30,9 +30,6 @@ extern "C"
 #include "params.cpp"
 #endif
 
-// const for now (not tuned)
-const int PAWN_ATTACK_FACTOR = 1;
-
 const int Scoring::Params:: MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
