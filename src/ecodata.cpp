@@ -905,7 +905,7 @@ const struct ECOData eco_codes[] =
 {"D25", 0x5e2c0cb8ccebbcf5ULL ,"Queen's Gambit Accepted"},
 {"D26", 0xa202cccb17225ac5ULL ,"Queen's Gambit Accepted"},
 {"D26", 0xcef0468d5a84302ULL ,"Queen's Gambit Accepted"},
-{"D27", 0x7b5d5ef4804b863fULL ,"Queen's Gambit Accepted"},
+{"D26", 0x9342467beba28ca3ULL ,"Queen's Gambit Accepted"},
 {"D27", 0xcdf9646093f8380fULL ,"Queen's Gambit Accepted"},
 {"D27", 0x14f1702f2063a776ULL ,"Queen's Gambit Accepted"},
 {"D27", 0x1b233a90e7682626ULL ,"Queen's Gambit Accepted"},
