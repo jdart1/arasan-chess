@@ -584,11 +584,11 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 
 template<ColorType side>
 #ifdef TUNE
-int Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[6])  
+int Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[6])
 {
 #else
 int Scoring::calcCover(const Board &board, int file, int rank) {
-#endif   
+#endif
    Square sq, pawn;
    int cover = PARAM(KING_COVER_BASE);
    Bitboard pawns;
@@ -727,7 +727,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
          coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
 #ifdef TUNE
          for (int i = 0; i < 6; i++) {
-            coverEntry.counts[i] = 2*float(king_cover[i])/3 + 
+            coverEntry.counts[i] = 2*float(king_cover[i])/3 +
                (k_cover < q_cover ?
                 float(kside_cover[i])/3 :
                 float(qside_cover[i])/3);
@@ -746,7 +746,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
 #ifdef TUNE
          for (int i = 0; i < 6; i++) {
-            coverEntry.counts[i] = 2*float(king_cover[i])/3 + 
+            coverEntry.counts[i] = 2*float(king_cover[i])/3 +
                float(kside_cover[i])/3;
          }
 #endif
@@ -763,7 +763,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
 #ifdef TUNE
          for (int i = 0; i < 6; i++) {
-            coverEntry.counts[i] = 2*float(king_cover[i])/3 + 
+            coverEntry.counts[i] = 2*float(king_cover[i])/3 +
                float(qside_cover[i])/3;
          }
 #endif
@@ -791,7 +791,7 @@ int Scoring::outpost(const Board &board,
 }
 
 template <ColorType bishopColor>
-void Scoring::scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores) 
+void Scoring::scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores)
 {
    int whitePawns = ourPawnData.w_square_pawns;
    int blackPawns = ourPawnData.b_square_pawns;
@@ -2258,7 +2258,7 @@ bool useCache)
          cout << "cover1=" << entry.cover << " cover2=" << entry2.cover << endl;
          ASSERT(entry.cover == entry2.cover);
       }
-      
+
       if (needEndgame && entry.king_endgame_position != entry2.king_endgame_position) {
          cout << board << endl;
          ASSERT(entry.king_endgame_position == entry2.king_endgame_position);
