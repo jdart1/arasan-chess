@@ -21,7 +21,7 @@
 struct Params 
 BEGIN_PACKED_STRUCT
     
-    static const int KING_ATTACK_SCALE_SIZE = 90;
+    static const int KING_ATTACK_SCALE_SIZE = 150;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
 
     static PARAM_MOD int RB_ADJUST[4];
@@ -107,6 +107,7 @@ BEGIN_PACKED_STRUCT
 
     // The following tables are computed from tuning parameters.
     static PARAM_MOD int KING_ATTACK_COUNT_BOOST[3];
+    static PARAM_MOD int KING_ATTACK_COVER_BOOST[5];
     static PARAM_MOD int KING_OPP_PASSER_DISTANCE[6];
     static PARAM_MOD int KING_POSITION_LOW_MATERIAL[3];
     static PARAM_MOD int TRADE_DOWN[16];

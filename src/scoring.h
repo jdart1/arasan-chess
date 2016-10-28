@@ -99,6 +99,7 @@ class Scoring
       byte space_weight;
       Square sq;
     };
+
     typedef PawnDetail PawnDetails[8];
 
 #ifdef TUNE
@@ -129,8 +130,8 @@ class Scoring
            int outside;
 #ifdef TUNE
          int center_pawn_factor;
-         PawnDetail details[8];
 #endif
+         PawnDetail details[8];
        } wPawnData, bPawnData;
 
        const PawnData &pawnData(ColorType side) const {
@@ -142,6 +143,9 @@ class Scoring
        hash_t hc;
        int32_t cover;
        int32_t king_endgame_position;
+#ifdef TUNE
+       float counts[6];
+#endif
     };
 
     KingPawnHashEntry kingPawnHashTable[2][KING_PAWN_HASH_SIZE];
@@ -157,6 +161,10 @@ class Scoring
     static int tradeDownIndex(const Material &ourmat, const Material &oppmat);
 
     static int distance(Square sq1, Square sq);
+
+    // Public, for use by the tuner.
+    template <ColorType side>
+    void calcCover(const Board &board, KingPawnHashEntry &cover);
 
  private:
 
@@ -208,15 +216,20 @@ class Scoring
                     bool early_endgame,
                     bool deep_endgame);
 
-    // compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
-    static int calcCover(const Board &board, Square kp);
-
-    template <ColorType side>
+#ifdef TUNE
+    static int calcCover(const Board &board, int file, int rank, int (&counts)[6]);
+#else
     static int calcCover(const Board &board, int file, int rank);
+#endif
 
+    // Compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
-    void calcCover(const Board &board, KingPawnHashEntry &cover);
+#ifdef TUNE
+    static int calcCover(const Board &board, Square kp, int (&counts)[6]);
+#else
+    static int calcCover(const Board &board, Square kp);
+#endif
 
     void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);

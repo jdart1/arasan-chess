@@ -84,6 +84,7 @@ int Scoring::Params::SUPPORTED_PASSER6 = 401;
 int Scoring::Params::SUPPORTED_PASSER7 = 708;
 int Scoring::Params::SIDE_PROTECTED_PAWN = -92;
 int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = {6,12,15};
+int Scoring::Params::KING_ATTACK_COVER_BOOST[5] = {0, 5, 10, 15, 20 };
 int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = {10,20,30,40,50,60};
 int Scoring::Params::KNIGHT_PST[2][64];
 int Scoring::Params::BISHOP_PST[2][64];

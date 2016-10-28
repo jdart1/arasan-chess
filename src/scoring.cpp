@@ -583,7 +583,12 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 }
 
 template<ColorType side>
+#ifdef TUNE
+int Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[6])  
+{
+#else
 int Scoring::calcCover(const Board &board, int file, int rank) {
+#endif   
    Square sq, pawn;
    int cover = PARAM(KING_COVER_BASE);
    Bitboard pawns;
@@ -591,14 +596,25 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), White);
       pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
       if (!pawns) {
-         if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
+         if (FileOpen(board, file)) {
+            cover += PARAM(KING_FILE_OPEN);
+#ifdef TUNE
+            counts[5]++;
+#endif
+         }
       }
       else {
          pawn = pawns.firstOne();
          cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) - rank));
+#ifdef TUNE
+         counts[Util::Min(4, Rank<side> (pawn) - rank)]++;
+#endif
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
             cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) + 1 - rank));
+#ifdef TUNE
+            counts[Util::Min(4, Rank<side> (pawn) + 1 - rank)]++;
+#endif
          }
       }
    }
@@ -606,14 +622,25 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
       pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
       if (!pawns) {
-         if (FileOpen(board, file)) cover += PARAM(KING_FILE_OPEN);
+         if (FileOpen(board, file)) {
+            cover += PARAM(KING_FILE_OPEN);
+#ifdef TUNE
+            counts[5]++;
+#endif
+         }
       }
       else {
          pawn = pawns.lastOne();
          cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) - rank));
+#ifdef TUNE
+         counts[Util::Min(4, Rank<side> (pawn) - rank)]++;
+#endif
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
             cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) + 1 - rank));
+#ifdef TUNE
+            counts[Util::Min(4, Rank<side> (pawn) + 1 - rank)]++;
+#endif
          }
       }
    }
@@ -623,23 +650,39 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
 
 // Calculate a king cover score
 template<ColorType side>
+#ifdef TUNE
+int Scoring::calcCover(const Board &board, Square kp, int (&counts)[6]) {
+#else
 int Scoring::calcCover(const Board &board, Square kp) {
+#endif
    int cover = 0;
    int kpfile = File(kp);
    int rank = Rank(kp, side);
    if (kpfile > 5) {
       for(int i = 6; i <= 8; i++) {
+#ifdef TUNE
+         cover += calcCover<side> (board, i, rank, counts);
+#else
          cover += calcCover<side> (board, i, rank);
+#endif
       }
    }
    else if (kpfile < 4) {
       for(int i = 1; i <= 3; i++) {
+#ifdef TUNE
+         cover += calcCover<side> (board, i, rank, counts);
+#else
          cover += calcCover<side> (board, i, rank);
+#endif
       }
    }
    else {
       for(int i = kpfile - 1; i <= kpfile + 1; i++) {
+#ifdef TUNE
+         cover += calcCover<side> (board, i, rank, counts);
+#else
          cover += calcCover<side> (board, i, rank);
+#endif
       }
    }
    cover = Util::Min(0, cover);
@@ -661,33 +704,79 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
       if (kp == chess::A8) kp = chess::B8;
    }
 
+#ifdef TUNE
+   int king_cover[6], kside_cover[6], qside_cover[6];
+   memset(king_cover,'\0',sizeof(int)*6);
+   memset(kside_cover,'\0',sizeof(int)*6);
+   memset(qside_cover,'\0',sizeof(int)*6);
+   int cover = calcCover<side> (board, kp, king_cover);
+#else
    int cover = calcCover<side> (board, kp);
+#endif
    switch(board.castleStatus(side))
    {
    case CanCastleEitherSide:
       {
+#ifdef TUNE
+         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
+         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
+#else
          int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
          int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
+#endif
          coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
+#ifdef TUNE
+         for (int i = 0; i < 6; i++) {
+            coverEntry.counts[i] = 2*float(king_cover[i])/3 + 
+               (k_cover < q_cover ?
+                float(kside_cover[i])/3 :
+                float(qside_cover[i])/3);
+         }
+#endif
          break;
       }
 
    case CanCastleKSide:
       {
+#ifdef TUNE
+         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
+#else
          int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
+#endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
+#ifdef TUNE
+         for (int i = 0; i < 6; i++) {
+            coverEntry.counts[i] = 2*float(king_cover[i])/3 + 
+               float(kside_cover[i])/3;
+         }
+#endif
          break;
       }
 
    case CanCastleQSide:
       {
+#ifdef TUNE
+         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
+#else
          int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
+#endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
+#ifdef TUNE
+         for (int i = 0; i < 6; i++) {
+            coverEntry.counts[i] = 2*float(king_cover[i])/3 + 
+               float(qside_cover[i])/3;
+         }
+#endif
          break;
       }
 
    default:
       coverEntry.cover = cover;
+#ifdef TUNE
+      for (int i = 0; i < 6; i++) {
+         coverEntry.counts[i] = float(king_cover[i]);
+      }
+#endif
       break;
    }
 }
@@ -745,7 +834,7 @@ template<ColorType side>
 void Scoring::pieceScore(const Board &board,
                const PawnHashEntry::PawnData &ourPawnData,
                const PawnHashEntry::PawnData &oppPawnData,
-               int cover,
+               int oppCover,
                Scores &scores,
                Scores &opp_scores,
                bool early_endgame,
@@ -1061,6 +1150,9 @@ void Scoring::pieceScore(const Board &board,
       if (attackCount >= 2 && majorAttackCount) {
          attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[Util::Min(2,attackCount-2)];
       }
+      if (oppCover < 0) {
+         attackWeight += PARAM(KING_ATTACK_COVER_BOOST)[Util::Min(4,-oppCover/(PAWN_VALUE*256/1000))];
+      }
       const int index = attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION;
 #ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
@@ -1167,14 +1259,9 @@ void Scoring::calcPawnData(const Board &board,
    Bitboard potentialPlus, potentialMinus;
    Square sq;
    int count = 0;
-#ifndef TUNE
-   PawnDetails details;
-#endif
    while(bi.iterate(sq))
    {
-#ifdef TUNE
       PawnDetails &details = entr.details;
-#endif
       details[count].sq = sq;
       details[count].flags = 0;
       details[count].space_weight = 0;
@@ -1461,7 +1548,9 @@ void Scoring::calcPawnData(const Board &board,
                // Two potential passers share the same blocker(s).
                // Score according to the most advanced one.
                if (rank > rankdup) {
+#ifdef TUNE
                   td.flags |= PawnDetail::POTENTIAL_PASSER;
+#endif
                   int i = 0;
 #ifdef _DEBUG
                   bool found = false;
@@ -1474,9 +1563,9 @@ void Scoring::calcPawnData(const Board &board,
                         break;
                      }
                   }
+                  ASSERT(found);
                   entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
                   entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
-                  ASSERT(found);
                   if (details[i].flags & PawnDetail::POTENTIAL_PASSER) {
                       details[i].flags &= ~PawnDetail::POTENTIAL_PASSER;
                       entr.midgame_score -= PARAM(POTENTIAL_PASSER)[Midgame][rankdup];
@@ -2493,6 +2582,8 @@ void Scoring::Params::write(ostream &o)
    }
    o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = ";
    print_array(o,Params::KING_ATTACK_COUNT_BOOST,3);
+   o << "const int Scoring::Params::KING_ATTACK_COVER_BOOST[5] = ";
+   print_array(o,Params::KING_ATTACK_COVER_BOOST,5);
    o << "const int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
    o << "const int Scoring::Params::KING_POSITION_LOW_MATERIAL[3] =";

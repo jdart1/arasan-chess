@@ -17,6 +17,7 @@ static const int TRADE_DOWN_RANGE = PAWN_VALUE;
 static const int ENDGAME_KING_POS_RANGE = PAWN_VALUE/2;
 static const int KING_ATTACK_SCALE_RANGE = 5*PAWN_VALUE;
 static const int KING_ATTACK_COUNT_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
+static const int KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 int Tune::numTuningParams() const
 {
@@ -88,13 +89,13 @@ Tune::Tune()
         Tune::TuneParam(Tune::CASTLING3,"castling3",280,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::CASTLING4,"castling4",200,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::CASTLING5,"castling5",-280,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER0,"king_cover0",138,100,320),
-        Tune::TuneParam(Tune::KING_COVER1,"king_cover1",310,100,450),
-        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",250,50,400),
-        Tune::TuneParam(Tune::KING_COVER3,"king_cover3",29,-50,100),
-        Tune::TuneParam(Tune::KING_COVER4,"king_cover4",-37,-100,100),
-        Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",-293,-500,0),
-        Tune::TuneParam(Tune::KING_FILE_OPEN,"king_file_open",-285,-300,0),
+        Tune::TuneParam(Tune::KING_COVER0,"king_cover0",138,50,500,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER1,"king_cover1",310,50,500,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",250,50,400,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER3,"king_cover3",29,-150,200,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER4,"king_cover4",-37,-200,200,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",-250,-500,0,Tune::TuneParam::Midgame,0),
+        Tune::TuneParam(Tune::KING_FILE_OPEN,"king_file_open",-285,-400,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
         Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
         Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500,Tune::TuneParam::Midgame,1),
@@ -401,12 +402,19 @@ static const int QUEEN_PST_INIT[2][64] =
    ASSERT(i==KING_ATTACK_COUNT_BOOST);
    for (int x = 0; x < 3; x++) {
       stringstream name;
-      name << "king_attack_count_boost" << x+2 << endl;
+      name << "king_attack_count_boost" << x+2;
       tune_params.push_back(TuneParam(i++,name.str(),6+4*x,0,KING_ATTACK_COUNT_BOOST_RANGE,Tune::TuneParam::Midgame,1));
    }
+   ASSERT(i==KING_ATTACK_COVER_BOOST);
+   for (int x = 0; x < 5; x++) {
+      stringstream name;
+      name << "king_attack_cover_boost" << x;
+      tune_params.push_back(TuneParam(i++,name.str(),5*x,0,KING_ATTACK_COVER_BOOST_RANGE,Tune::TuneParam::Midgame,x));
+   }
+   ASSERT(i==KING_OPP_PASSER_DISTANCE);
    for (int x = 0; x < 6; x++) {
       stringstream name;
-      name << "king_opp_passer_distance_rank" << x+2 << endl;
+      name << "king_opp_passer_distance_rank" << x+2;
       tune_params.push_back(TuneParam(i++,name.str(),10+x*10,0,ENDGAME_KING_POS_RANGE,Tune::TuneParam::Endgame,1));
    }
    ASSERT(i==PP_OWN_PIECE_BLOCK_MID);
@@ -562,9 +570,9 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int p = 0; p < Scoring::Params::KING_ATTACK_SCALE_SIZE; p++) {
       stringstream name;
       name << "king_attack_scale" << p;
-      int val2 = (p < 10) ? 0 : int(f*val/2);
-      tune_params.push_back(TuneParam(i++,name.str(),val2,0,KING_ATTACK_SCALE_RANGE,Tune::TuneParam::Midgame,val2));
-      slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE ? p : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p));
+      int val2 = Util::Min(KING_ATTACK_SCALE_RANGE,p < 10 ? 0 : int(f*val/2));
+      tune_params.push_back(TuneParam(i++,name.str(),val2,0,KING_ATTACK_SCALE_RANGE,Tune::TuneParam::Midgame,p >= 10));
+      slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE/2 ? p : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p));
       if (p>10) val += slope;
    }
 }
@@ -700,6 +708,9 @@ void Tune::applyParams() const
    Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
    for (int i = 0; i < 3; i++) {
       Scoring::Params::KING_ATTACK_COUNT_BOOST[i] = PARAM(KING_ATTACK_COUNT_BOOST+i);
+   }
+   for (int i = 0; i < 5; i++) {
+      Scoring::Params::KING_ATTACK_COVER_BOOST[i] = PARAM(KING_ATTACK_COVER_BOOST+i);
    }
    for (int i = 0; i < 6; i++) {
       Scoring::Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);

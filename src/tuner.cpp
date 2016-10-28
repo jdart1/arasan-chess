@@ -808,7 +808,21 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(oside);
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
+   Scoring::KingPawnHashEntry oppKpe,ourKpe;
+   memset(ourKpe.counts,'\0',sizeof(float)*6);
+   memset(oppKpe.counts,'\0',sizeof(float)*6);
+   if (side == White) {
+      s.calcCover<White>(board,ourKpe);
+      s.calcCover<Black>(board,oppKpe);
+   }
+   else {
+      s.calcCover<Black>(board,ourKpe);
+      s.calcCover<White>(board,oppKpe);
+   }
+   const int oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
+   grads[Tune::KING_FILE_OPEN] +=
+         tune_params.scale(inc*oppKpe.counts[5],Tune::KING_FILE_OPEN,mLevel);
    int attackTypes[7];
    for (auto i = 0; i < 7; i++) {
       attackTypes[i] = 0;
@@ -1358,6 +1372,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (attackCount >= 2 && majorAttackCount) {
          attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(2,attackCount-2)];
       }
+      int cover_boost_index = -1;
+      if (oppCover < 0) {
+         cover_boost_index = Util::Min(4,-oppCover/(PAWN_VALUE*256/1000));
+         attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index].current;
+      }
       // king safety tuning
       const int scale_index =
          Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
@@ -1373,7 +1392,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          tune_params.scale(inc*scale_grad*proximity/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR2] +=
          tune_params.scale(inc*scale_grad*pawnAttacks/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
-      // compute partial derivates for attack factors
+      // compute partial derivatives for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;
            i <= Tune::QUEEN_ATTACK_BOOST2;
            i++) {
@@ -1387,7 +1406,17 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
       }
-      // compute partial derivative for scale table entry
+      if (oppCover < 0) {
+         grads[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index] +=
+            tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST+cover_boost_index,ourMatLevel);
+      }
+      for (int i=0; i<5; i++) {
+         // Note: we do not adjust the gradient to account for any
+         // increase to the attackWeight from changes in the king
+         // cover score. In most cases there is no change.
+         grads[Tune::KING_COVER0+i] +=
+         tune_params.scale(inc*ourKpe.counts[i],Tune::KING_COVER0+i,mLevel);
+      }
       if (tune_params[Tune::KING_ATTACK_SCALE+scale_index].tunable) {
          grads[Tune::KING_ATTACK_SCALE+scale_index] +=
             tune_params.scale(inc,Tune::KING_ATTACK_SCALE+scale_index,ourMatLevel);
@@ -1402,7 +1431,7 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
    update_deriv_vector(s, board, side, derivs, inc);
    update_deriv_vector(s, board, OppositeColor(side), derivs, -inc);
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
-      if (derivs[i] != 0.0) {
+      if (derivs[i] != 0.0 && tune_params[i].tunable) {
          Tune::TuneParam p = tune_params[i];
          int val = p.current;
          int range = p.max_value - p.min_value;
@@ -1415,7 +1444,7 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
              (i>=Tune::MINOR_ATTACK_FACTOR &&
               i<=Tune::QUEEN_ATTACK_BOOST2) ||
              (i>=Tune::KING_ATTACK_COUNT_BOOST &&
-              i<=Tune::KING_ATTACK_COUNT_BOOST+3))
+              i<=Tune::KING_ATTACK_COVER_BOOST+4))
             delta = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION;
          else
             delta = Util::Max(1,range/20);
@@ -1640,7 +1669,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             dv += 2*REGULARIZATION*norm_val(p);
          }
       }
-      if (dv != 0.0) {
+      if (dv != 0.0 && p.tunable) {
          int istep = 1;
          if (use_adagrad) {
             historical_gradient[i] += dv*dv;
