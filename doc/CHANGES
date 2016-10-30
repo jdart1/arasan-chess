@@ -1,3 +1,17 @@
+Changes in Arasan 19.2:
+ 1) In UCI mode, don't set tb type when a tb path is received if that path
+    is empty or the string "<empty>". Fixes issues under Shredder GUI.
+ 2) Fixes to Syzygy tablebase handling. Don't correct TABLEBASE_WIN scores
+    for depth when storing/retrieving from the hash table. Adjust search
+    scores based on the tablebase score, when available.
+ 3) Make UCI option handling insensitive to the case of the option name,
+    per the UCI spec. Add some error handling for invalid option names.
+ 4) Change razoring margins.
+ 5) Simplify king safety scoring and make most king safety parameters
+    tunable.
+ 6) Tuner now uses the Texel method by default and supports the ADAM
+    gradient descent algorithm.
+
 Changes in Arasan 19.1:
  1) Change/fix root move reordering. After wide search phase, just move
     the pv move first and other moves down.
