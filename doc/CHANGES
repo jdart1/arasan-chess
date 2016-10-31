@@ -11,6 +11,8 @@ Changes in Arasan 19.2:
     tunable.
  6) Tuner now uses the Texel method by default and supports the ADAM
     gradient descent algorithm.
+ 7) Changes to cover calculation. Give bonus for king cover only if King
+    on rank <=2, and do not rate cover relative to King rank.
 
 Changes in Arasan 19.1:
  1) Change/fix root move reordering. After wide search phase, just move
