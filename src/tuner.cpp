@@ -821,8 +821,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    const int oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
-   grads[Tune::KING_FILE_OPEN] +=
-         tune_params.scale(inc*oppKpe.counts[5],Tune::KING_FILE_OPEN,mLevel);
    int attackTypes[7];
    for (auto i = 0; i < 7; i++) {
       attackTypes[i] = 0;
@@ -1421,6 +1419,19 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::KING_ATTACK_SCALE+scale_index] +=
             tune_params.scale(inc,Tune::KING_ATTACK_SCALE+scale_index,ourMatLevel);
       }
+   }
+   if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
+      for (int i=0; i<5; i++) {
+         // Note: we do not adjust the gradient to account for any
+         // increase to the attackWeight from changes in the king
+         // cover score. In most cases there is no change.
+         if (ourKpe.counts[i]) {
+            grads[Tune::KING_COVER0+i] +=
+               tune_params.scale(inc*ourKpe.counts[i],Tune::KING_COVER0+i,mLevel);
+         }
+      }
+      grads[Tune::KING_FILE_OPEN] +=
+         tune_params.scale(inc*ourKpe.counts[5],Tune::KING_FILE_OPEN,mLevel);
    }
 }
 

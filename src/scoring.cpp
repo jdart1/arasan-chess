@@ -588,9 +588,10 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
 #endif
    Square sq, pawn;
    int cover = PARAM(KING_COVER_BASE);
+   if (rank > 2) return cover;
    Bitboard pawns;
+   sq = MakeSquare(file, 1, side);
    if (side == White) {
-      sq = MakeSquare(file, Util::Max(1, rank - 1), White);
       pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
       if (!pawns) {
          if (FileOpen(board, file)) {
@@ -616,7 +617,6 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       }
    }
    else {
-      sq = MakeSquare(file, Util::Max(1, rank - 1), Black);
       pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
       if (!pawns) {
          if (FileOpen(board, file)) {
@@ -1153,7 +1153,7 @@ void Scoring::pieceScore(const Board &board,
       const int index = attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION;
 #ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
-      cout << " cover= " << cover << endl;
+      cout << " cover= " << oppCover << endl;
       cout << " pawn proximity=" << proximity << endl;
       cout << " attackCount=" << attackCount << endl;
       cout << " attackWeight=" << attackWeight << endl;
