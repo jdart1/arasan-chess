@@ -61,9 +61,12 @@ class Tune {
     KING_COVER1,
     KING_COVER2,
     KING_COVER3,
-    KING_COVER4,
-    KING_COVER_BASE,
     KING_FILE_OPEN,
+    KING_COVER_FILE_FACTOR0,
+    KING_COVER_FILE_FACTOR1,
+    KING_COVER_FILE_FACTOR2,
+    KING_COVER_FILE_FACTOR3,
+    KING_COVER_BASE,
     KING_DISTANCE_BASIS,
     KING_DISTANCE_MULT,
     PIN_MULTIPLIER_MID,
@@ -270,7 +273,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 172;
+  static const int NUM_MISC_PARAMS = 175;
 
   double scale(double value,int index,int materialLevel) const;
 

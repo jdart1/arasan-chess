@@ -809,8 +809,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Material &oppmat = board.getMaterial(oside);
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
-   memset(ourKpe.counts,'\0',sizeof(float)*6);
-   memset(oppKpe.counts,'\0',sizeof(float)*6);
    if (side == White) {
       s.calcCover<White>(board,ourKpe);
       s.calcCover<Black>(board,oppKpe);
@@ -1408,13 +1406,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST+cover_boost_index,ourMatLevel);
       }
-      for (int i=0; i<5; i++) {
-         // Note: we do not adjust the gradient to account for any
-         // increase to the attackWeight from changes in the king
-         // cover score. In most cases there is no change.
-         grads[Tune::KING_COVER0+i] +=
-         tune_params.scale(inc*ourKpe.counts[i],Tune::KING_COVER0+i,mLevel);
-      }
       if (tune_params[Tune::KING_ATTACK_SCALE+scale_index].tunable) {
          grads[Tune::KING_ATTACK_SCALE+scale_index] +=
             tune_params.scale(inc,Tune::KING_ATTACK_SCALE+scale_index,ourMatLevel);
@@ -1422,16 +1413,19 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
       for (int i=0; i<5; i++) {
-         // Note: we do not adjust the gradient to account for any
-         // increase to the attackWeight from changes in the king
-         // cover score. In most cases there is no change.
-         if (ourKpe.counts[i]) {
-            grads[Tune::KING_COVER0+i] +=
-               tune_params.scale(inc*ourKpe.counts[i],Tune::KING_COVER0+i,mLevel);
+         for (int j = 0; j < 4; j++) {
+            // Note: we do not adjust the gradient to account for any
+            // increase to the attackWeight (from the KING_COVER_BOOST
+            // params) from changes in the king cover score. In most
+            // cases small changes in the cover do not change the boost.
+            if (ourKpe.counts[i][j]) {
+               grads[Tune::KING_COVER0+i] +=
+                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64,Tune::KING_COVER0+i,mLevel);
+               grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
+                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER0+i].current/64,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
+            }
          }
       }
-      grads[Tune::KING_FILE_OPEN] +=
-         tune_params.scale(inc*ourKpe.counts[5],Tune::KING_FILE_OPEN,mLevel);
    }
 }
 

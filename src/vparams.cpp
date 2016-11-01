@@ -8,7 +8,7 @@ int Scoring::Params::RBN_ADJUST[4] = {500, 675, 825, 1000};
 int Scoring::Params::QR_ADJUST[4] = {-500, 0, 500, 500};
 int Scoring::Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
 int Scoring::Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
-int Scoring::Params::KING_COVER[5] = {138, 310, 250, 29, -37};
+int Scoring::Params::KING_COVER[5][4];
 int Scoring::Params::KING_COVER_BASE = -293;
 int Scoring::Params::KING_FILE_OPEN = -150;
 int Scoring::Params::KING_DISTANCE_BASIS = 320;

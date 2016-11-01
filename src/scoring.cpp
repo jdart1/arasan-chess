@@ -581,7 +581,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 
 template<ColorType side>
 #ifdef TUNE
-int Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[6])
+int Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[5][4])
 {
 #else
 int Scoring::calcCover(const Board &board, int file, int rank) {
@@ -589,29 +589,30 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
    Square sq, pawn;
    int cover = PARAM(KING_COVER_BASE);
    if (rank > 2) return cover;
+   const int f = file > 4 ? 8 - file : file - 1;
    Bitboard pawns;
    sq = MakeSquare(file, 1, side);
    if (side == White) {
       pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
       if (!pawns) {
          if (FileOpen(board, file)) {
-            cover += PARAM(KING_FILE_OPEN);
+            cover += PARAM(KING_COVER)[4][f];
 #ifdef TUNE
-            counts[5]++;
+            counts[4][f]++;
 #endif
          }
       }
       else {
          pawn = pawns.firstOne();
-         cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) - rank));
+         cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn) - 1)][f];
 #ifdef TUNE
-         counts[Util::Min(4, Rank<side> (pawn) - rank)]++;
+         counts[Util::Min(3, Rank<side> (pawn) - 1)][f]++;
 #endif
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
-            cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) + 1 - rank));
+            cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn))][f];
 #ifdef TUNE
-            counts[Util::Min(4, Rank<side> (pawn) + 1 - rank)]++;
+            counts[Util::Min(3, Rank<side> (pawn))][f]++;
 #endif
          }
       }
@@ -620,23 +621,23 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
       pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
       if (!pawns) {
          if (FileOpen(board, file)) {
-            cover += PARAM(KING_FILE_OPEN);
+            cover += PARAM(KING_COVER)[4][f];
 #ifdef TUNE
-            counts[5]++;
+            counts[4][f]++;
 #endif
          }
       }
       else {
          pawn = pawns.lastOne();
-         cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) - rank));
+         cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn) - 1)][f];
 #ifdef TUNE
-         counts[Util::Min(4, Rank<side> (pawn) - rank)]++;
+         counts[Util::Min(3, Rank<side> (pawn) - 1)][f]++;
 #endif
          // also count if pawn is on next rank
          if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
-            cover += APARAM(KING_COVER,Util::Min(4, Rank<side> (pawn) + 1 - rank));
+            cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn))][f];
 #ifdef TUNE
-            counts[Util::Min(4, Rank<side> (pawn) + 1 - rank)]++;
+            counts[Util::Min(3, Rank<side> (pawn))][f]++;
 #endif
          }
       }
@@ -648,7 +649,7 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
 // Calculate a king cover score
 template<ColorType side>
 #ifdef TUNE
-int Scoring::calcCover(const Board &board, Square kp, int (&counts)[6]) {
+int Scoring::calcCover(const Board &board, Square kp, int (&counts)[5][4]) {
 #else
 int Scoring::calcCover(const Board &board, Square kp) {
 #endif
@@ -690,6 +691,12 @@ template<ColorType side>
 void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    Square kp = board.kingSquare(side);
 
+#ifdef TUNE
+   for (int i = 0; i < 5; i++)
+      for (int j = 0; j < 4; j++)
+         coverEntry.counts[i][j] = 0.0F;
+#endif
+
    // discourage shuttling the king between G1/H1 by
    // treating these the same
    if (side == White) {
@@ -702,10 +709,12 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    }
 
 #ifdef TUNE
-   int king_cover[6], kside_cover[6], qside_cover[6];
-   memset(king_cover,'\0',sizeof(int)*6);
-   memset(kside_cover,'\0',sizeof(int)*6);
-   memset(qside_cover,'\0',sizeof(int)*6);
+   int king_cover[5][4], kside_cover[5][4], qside_cover[5][4];
+   for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 4; j++) {
+         king_cover[i][j] = kside_cover[i][j] = qside_cover[i][j] = 0;
+      }
+   }
    int cover = calcCover<side> (board, kp, king_cover);
 #else
    int cover = calcCover<side> (board, kp);
@@ -723,11 +732,13 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
 #ifdef TUNE
-         for (int i = 0; i < 6; i++) {
-            coverEntry.counts[i] = 2*float(king_cover[i])/3 +
+         for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 4; j++) {
+               coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                (k_cover < q_cover ?
-                float(kside_cover[i])/3 :
-                float(qside_cover[i])/3);
+                float(kside_cover[i][j])/3 :
+                float(qside_cover[i][j])/3);
+            }
          }
 #endif
          break;
@@ -742,9 +753,12 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
 #ifdef TUNE
-         for (int i = 0; i < 6; i++) {
-            coverEntry.counts[i] = 2*float(king_cover[i])/3 +
-               float(kside_cover[i])/3;
+         for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 4; j++) {
+               coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
+               float(kside_cover[i][j])/3;
+            }
+            
          }
 #endif
          break;
@@ -759,9 +773,11 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
 #ifdef TUNE
-         for (int i = 0; i < 6; i++) {
-            coverEntry.counts[i] = 2*float(king_cover[i])/3 +
-               float(qside_cover[i])/3;
+         for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 4; j++) {
+               coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
+               float(qside_cover[i][j])/3;
+            }
          }
 #endif
          break;
@@ -770,8 +786,10 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    default:
       coverEntry.cover = cover;
 #ifdef TUNE
-      for (int i = 0; i < 6; i++) {
-         coverEntry.counts[i] = float(king_cover[i]);
+      for (int i = 0; i < 5; i++) {
+         for (int j = 0; j < 4; j++) {
+            coverEntry.counts[i][j] = float(king_cover[i][j]);
+         }
       }
 #endif
       break;
@@ -2561,10 +2579,14 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
    o << "const int Scoring::Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
-   o << "const int Scoring::Params::KING_COVER[5] = ";
-   print_array(o,Params::KING_COVER,5);
-
-   for (int i = 26; i < 26+tune_params.paramArraySize(); i++) {
+   o << "const int Scoring::Params::KING_COVER[5][4] = {";
+   for (int i = 0; i < 5; i++) {
+      print_array(o,Params::KING_COVER[i],4,0);
+      if (i<4) o << "," << endl;
+   }
+   o << "};" << endl;
+   int start = Tune::KING_COVER_BASE;
+   for (int i = start; i < start+tune_params.paramArraySize(); i++) {
       o << "const int Scoring::Params::";
       Tune::TuneParam param;
       tune_params.getParam(i,param);

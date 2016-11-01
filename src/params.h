@@ -29,7 +29,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD int QR_ADJUST[4];
     static PARAM_MOD int KN_VS_PAWN_ADJUST[3];
     static PARAM_MOD int CASTLING[6];
-    static PARAM_MOD int KING_COVER[5];
+    static PARAM_MOD int KING_COVER[5][4];
     static PARAM_MOD int KING_COVER_BASE;
     static PARAM_MOD int KING_FILE_OPEN;
     static PARAM_MOD int KING_DISTANCE_BASIS;

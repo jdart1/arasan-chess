@@ -144,7 +144,7 @@ class Scoring
        int32_t cover;
        int32_t king_endgame_position;
 #ifdef TUNE
-       float counts[6];
+       float counts[5][4];
 #endif
     };
 
@@ -218,7 +218,7 @@ class Scoring
 
     template <ColorType side>
 #ifdef TUNE
-    static int calcCover(const Board &board, int file, int rank, int (&counts)[6]);
+    static int calcCover(const Board &board, int file, int rank, int (&counts)[5][4]);
 #else
     static int calcCover(const Board &board, int file, int rank);
 #endif
@@ -226,7 +226,7 @@ class Scoring
     // Compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
 #ifdef TUNE
-    static int calcCover(const Board &board, Square kp, int (&counts)[6]);
+    static int calcCover(const Board &board, Square kp, int (&counts)[5][4]);
 #else
     static int calcCover(const Board &board, Square kp);
 #endif
