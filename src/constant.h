@@ -12,7 +12,7 @@ enum {MaxPly = 62};
 enum {MATE = 100000 };
 enum {MATE_RANGE = 100000-256 };
 enum {TABLEBASE_WIN = MATE_RANGE-1};
-enum {MaxMoves = 200};		
+enum {MaxMoves = 220};
 enum {MaxCPUs = 64};		
 
 };
@@ -20,7 +20,7 @@ enum {MaxCPUs = 64};
 const int INFINITE_TIME = 9999999;
 
 #define DEPTH_INCREMENT 4
-#define Arasan_Version "19.1"
+#define Arasan_Version "19.2"
 #define Arasan_Copyright "Copyright 1994-2016 by Jon Dart. All Rights Reserved."
 
 #endif

@@ -6,12 +6,13 @@ Changes in Arasan 19.2:
     scores based on the tablebase score, when available.
  3) Make UCI option handling insensitive to the case of the option name,
     per the UCI spec. Add some error handling for invalid option names.
- 4) Change razoring margins.
- 5) Simplify king safety scoring and make most king safety parameters
+ 4) Remove threat extension and related code.
+ 5) Change razoring margins.
+ 6) Simplify king safety scoring and make most king safety parameters
     tunable.
- 6) Tuner now uses the Texel method by default and supports the ADAM
+ 7) Tuner now uses the Texel method by default and supports the ADAM
     gradient descent algorithm.
- 7) Changes to cover calculation. Give bonus for king cover only if King
+ 8) Changes to King cover calculation. Give bonus for King cover only if King
     on rank <=2, and do not rate cover relative to King rank.
 
 Changes in Arasan 19.1:

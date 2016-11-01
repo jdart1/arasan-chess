@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 19.1</title>
+<title>Arasan Programmer's Guide - version 19.2</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 19.1</h1>
+<h1>Arasan Programmer's Guide - version 19.2</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -51,7 +51,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  19.1
+  19.2
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     data    - bitbase files
@@ -858,11 +858,10 @@ score above alpha, it is re-searched with normal depth. This technique
 became popular due to its use in Fabien Letouzey's program "Fruit".
 </p>
 <p>
-Arasan also does several different kinds of pruning.
-Several tests are made on each move and if the move was extended for
-any reason, if looks like the move defends against a threat, or if it
-is a capture, special move (like castling) or advance of a passed
-pawn, then it is not pruned.</p>
+Arasan also does several different kinds of pruning.  Several tests
+are made on each move and if the move was extended for any reason, or
+if it is a capture, special move (like castling) or advance of a
+passed pawn, then it is not pruned.</p>
 <p>
 Note that it is necessary to search at least one legal move before any
 pruning is done, because we need to distinguish nodes at which no
@@ -890,8 +889,7 @@ that are in the history phase of move generation (after the pv move,
 winning captures, and killer moves) and are relatively late in the
 move order can be pruned away. The theory is that if we have not
 already achieved a cutoff searching more moves is not likely to
-produce one. (In Arasan 19.1, a somewhat different reduction
-formula is used at the root node).</p>
+produce one.</p>
 <p>
 In addition at depths just before the quiescence search, moves that
 appear to lose material based on a static exchange analysis are
