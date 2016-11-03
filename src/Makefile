@@ -1,5 +1,5 @@
 #
-# Gnu Makefile for Arasan 19.1
+# Gnu Makefile for Arasan 19.2
 #
 VERSION = 19.2.0
 
