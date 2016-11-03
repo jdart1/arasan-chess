@@ -113,7 +113,7 @@ class Scoring
     static CACHE_ALIGN Bitboard kingNearProximity[64];
     static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
 
-    struct CACHE_ALIGN PawnHashEntry {
+    struct PawnHashEntry {
 
        hash_t hc;
 
