@@ -172,7 +172,7 @@
     <Link>
       <AdditionalDependencies>..\lib\win32\release\gtb.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win32\release\arasanx.exe</OutputFile>
-      <Version>15.2</Version>
+      <Version>19.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -204,7 +204,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\release\arasanx-64.exe</OutputFile>
-      <Version>19.0</Version>
+      <Version>19.2</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -227,7 +227,7 @@
     <Link>
       <AdditionalDependencies>..\lib\win32\debug\gtb.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win32\debug\arasanx.exe</OutputFile>
-      <Version>15.2</Version>
+      <Version>19.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -252,7 +252,7 @@
     <Link>
       <AdditionalDependencies>..\lib\win32\debug\gtb.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win32\debug\arasanx.exe</OutputFile>
-      <Version>15.2</Version>
+      <Version>19.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -276,7 +276,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\arasanx-64.exe</OutputFile>
-      <Version>19.0</Version>
+      <Version>19.2</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -300,7 +300,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\tuner.exe</OutputFile>
-      <Version>18.3</Version>
+      <Version>19.2</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -323,7 +323,7 @@
     <Link>
       <AdditionalDependencies>..\lib\win32\debug\gtb.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win32\debug\makebook.exe</OutputFile>
-      <Version>15.2</Version>
+      <Version>19.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -347,7 +347,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\debug\makebook.exe</OutputFile>
-      <Version>18.3</Version>
+      <Version>19.2</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\arasanx.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -409,7 +409,6 @@
     <ClCompile Include="..\src\material.cpp" />
     <ClCompile Include="..\src\movearr.cpp" />
     <ClCompile Include="..\src\movegen.cpp" />
-    <ClCompile Include="..\src\nalimov.cpp" />
     <ClCompile Include="..\src\notation.cpp" />
     <ClCompile Include="..\src\options.cpp" />
     <ClCompile Include="..\src\scoring.cpp">
@@ -422,16 +421,6 @@
     <ClCompile Include="..\src\stats.cpp" />
     <ClCompile Include="..\src\threadc.cpp" />
     <ClCompile Include="..\src\threadp.cpp" />
-    <ClCompile Include="..\src\tune.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\src\tuner.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\unit.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
