@@ -81,7 +81,7 @@ r1b2rk1/qp5p/p1n1ppp1/7N/4P1P1/2N1pP2/PPP5/2KR1QR1 w - - bm e5; id "arasan19.78"
 r1b1k2r/2q2pp1/p1p1pn2/2b4p/Pp2P3/3B3P/1PP1QPP1/RNB2RK1 b kq - bm Ng4; id "arasan19.81"; c0 "Nataf-Volokitin, SCG-chT Budva 2004";
 2r1rb1k/ppq2pp1/4b2p/3pP2Q/5B2/2PB2R1/P4PPP/1R4K1 w - - bm Rxg7; id "arasan19.82"; c0 "IvanHoe 57aU-x64.F-Deep Rybka 4, 2010";
 6k1/p4qp1/1p3r1p/2pPp1p1/1PP1PnP1/2P1KR1P/1B6/7Q b - - bm h5; id "arasan19.83"; c0 "Arasan-ProDeo, YAT Tournament 2015";
-rnb1kb1r/pp1p1ppp/1q2p3/8/3NP1n1/2N1B3/PPP2PPP/R2QKB1R w KQkq - bm Qxg4; id "arasan19.84"; c0 "WC25-SF20 ICCF Email 2001.08.01 Dahlgren, Jonas (SWE) vs Dolgitser, Konstantin";
+rnb1kb1r/pp1p1ppp/1q2p3/8/3NP1n1/2N1B3/PPP2PPP/R2QKB1R w KQkq - bm Qxg4; id "arasan19.84"; c0 "Dahlgren-Dolgitser, WC25-SF20 ICCF Email 2001";
 r3kb1r/1b1n2p1/p3Nn1p/3Pp3/1p4PP/3QBP2/qPP5/2KR1B1R w kq - bm Qg6+; id "arasan19.85"; c0 "Morozevich - Vachier-Lagrave, Biel 2009 (analysis after 17. .. Bb7)";
 1r1qrbk1/pb3p2/2p1pPpp/1p4B1/2pP2PQ/2P5/P4PBP/R3R1K1 w - - bm Bxh6; id "arasan19.86"; c0 "Future Breeze(Naum 4.1)-Ultrapower(Rybka 3), playchess.com 2010 (analysis)";
 2r1r2k/1b1n1p1p/p3pPp1/1p1pP2q/3N4/P3Q1P1/1PP4P/2KRRB2 w - - bm g4; id "arasan19.87"; c0 "Blackborn(Deep Rybka 4)-Zax(Stockfish 1.8 JA), playchess.com 2010";
