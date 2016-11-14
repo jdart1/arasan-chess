@@ -109,7 +109,6 @@ static int ply_limit;
 static string start_fen;
 
 static int uci = 0;                               // non-zero for UCI mode
-static bool uci_limit_strength = false;
 static int movestogo = 0;
 static int ponderhit = 0;
 static int testing = 0;
@@ -118,6 +117,17 @@ static int uciWaitState = 0;
 static string test_file;
 static int cpusSet = 0; // true if cmd line specifies -c
 static int memorySet = 0; // true if cmd line specifies -H
+static struct UciStrengthOpts
+{
+   bool limitStrength;
+   int eco;
+
+   UciStrengthOpts()
+      : limitStrength(false),
+        eco(2600)
+      {
+      }
+} uciStrengthOpts;
 #ifdef SELFPLAY
 static int selfplay = 0;
 static int selfplay_wins = 0, selfplay_losses = 0, selfplay_draws = 0;
@@ -2655,13 +2665,20 @@ static bool do_command(const string &cmd, Board &board) {
             }
         }
         else if (uciOptionCompare(name,"UCI_LimitStrength")) {
-            uci_limit_strength = (value == "true");
-        } else if (uciOptionCompare(name,"UCI_Elo") && uci_limit_strength) {
-            int rating = 2400;
+            uciStrengthOpts.limitStrength = (value == "true");
+            if (uciStrengthOpts.limitStrength) {
+               options.setRating(uciStrengthOpts.eco);
+            } else {
+               // reset to full strength
+               options.setRating(2600);
+            }
+        } else if (uciOptionCompare(name,"UCI_Elo")) {
+            int rating;
             if (Options::setOption<int>(value,rating)) {
-                options.search.strength = (rating-1000)/16;
-                if (options.search.strength < 0) options.search.strength = 0;
-                if (options.search.strength > 100) options.search.strength = 100;
+               uciStrengthOpts.eco = rating;
+               if (uciStrengthOpts.limitStrength) {
+                  options.setRating(rating);
+               }
             }
 	}
 #ifdef NUMA

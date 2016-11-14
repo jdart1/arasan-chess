@@ -7,6 +7,7 @@
 using namespace std;
 
 #include "types.h"
+#include "util.h"
 
 class Options
 {
@@ -101,6 +102,10 @@ class Options
            return 1;
        }
        return 0;
+   }
+
+   void setRating(int rating) {
+      search.strength = Util::Max(0,Util::Min(100,(rating-1000)/16));
    }
 
    static void setMemoryOption(size_t &value, const string &valueString);

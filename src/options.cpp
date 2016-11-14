@@ -9,7 +9,6 @@
 #include <iterator>
 
 #include "constant.h"
-#include "util.h"
 
 #include <cmath>
 
