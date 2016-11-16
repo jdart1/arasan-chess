@@ -133,7 +133,7 @@ int BookReader::filterAndNormalize(const Board &board,
 
    Move move_list[Constants::MaxMoves];
    MoveGenerator mg(board);
-   const int max = mg.generateAllMoves(move_list,1 /* repeatable */);
+   const unsigned max = (unsigned)mg.generateAllMoves(move_list,1 /* repeatable */);
 
    // Convert move indexes to moves and normalize weight values.
    // Remove 0-weighted moves.
