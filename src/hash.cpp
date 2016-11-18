@@ -99,8 +99,7 @@ void Hash::loadLearnInfo()
                rec.score,
                       Scoring::INVALID_SCORE, // TBD
                       HashEntry::LEARNED_MASK |
-                      (IsForced(best) ? HashEntry::FORCED_MASK : 0) |
-                      (IsForced2(best) ? HashEntry::FORCED2_MASK : 0),
+                      (IsForced(best) ? HashEntry::FORCED_MASK : 0),
                best);
          }
       }

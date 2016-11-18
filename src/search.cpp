@@ -2056,8 +2056,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
             controller->age,
             val_type,
             node->best_score, node->staticEval,
-            (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
-            (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
+            (IsForced(node->best) ? HashEntry::FORCED_MASK : 0),
             node->best);
     }
 }
@@ -3044,8 +3043,7 @@ int Search::search()
                                         val_type,
                                         node->best_score,
                                         node->staticEval,
-                                        (IsForced(node->best) ? HashEntry::FORCED_MASK : 0) |
-                                        (IsForced2(node->best) ? HashEntry::FORCED2_MASK : 0),
+                                        (IsForced(node->best) ? HashEntry::FORCED_MASK : 0),
                                         node->best);
     }
     search_end2:

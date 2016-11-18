@@ -20,8 +20,7 @@ class HashEntry {
          TYPE_MASK = 0x7,
          TB_MASK = 0x08,
          LEARNED_MASK = 0x10,
-         FORCED_MASK = 0x20,
-         FORCED2_MASK = 0x40
+         FORCED_MASK = 0x20
       };
 
       static const int QSEARCH_CHECK_DEPTH = -1;
@@ -90,10 +89,6 @@ class HashEntry {
          return (int)((contents.flags & FORCED_MASK) != 0);
       }
 
-      int forced2() const {
-         return (int)((contents.flags & FORCED2_MASK) != 0);
-      }
-
       int learned() const {
          return (int)((contents.flags & LEARNED_MASK) != 0);
       }
@@ -114,7 +109,6 @@ class HashEntry {
                (PieceType)contents.promotion);
             //if (!validMove(b,m)) return NullMove;
             if (forced()) SetForced(m);
-            if (forced2()) SetForced2(m);
             return m;
          }
       }
