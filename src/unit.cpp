@@ -330,8 +330,8 @@ static const string pgn_test = "[Event \"?\"]"
 }
 
 static int testEval() {
-    // verify eval results are symmetrical (White/Black, right/left)
-    const int CASES = 31;
+    // verify eval results are symmetrical (White/Black)
+    const int CASES = 41;
     static const string fens[CASES] = {
         "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
         "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
@@ -363,7 +363,17 @@ static int testEval() {
         "3q1rk1/4ppbp/1n1p1np1/1P1P4/4P3/2p1BN2/2N2PPP/Q3K2R b K -",
         "N5r1/pQ6/3b1nkp/2q5/2Pp1p2/4nP2/PP1B2PP/1RR3K1 b - -",
         "8/2kn2q1/B1p2pP1/P1P2p1p/3P2bP/3P1B2/1K1P1Q2/8 b - -",
-        "5nk1/3b1r2/2p1p3/1pPpP1qp/1P1Q4/6P1/4BN1P/R5K1 w - - 0 1"
+        "5nk1/3b1r2/2p1p3/1pPpP1qp/1P1Q4/6P1/4BN1P/R5K1 w - - 0 1",
+        "r5rk/1R3Q2/2p5/p4K2/5N2/5q2/P7/1R6 b - - 0 43",
+        "2r2bk1/7p/7p/2qPpPP1/pp1p4/P2Q4/1PP5/1K1R3R w - - 0 31",
+        "1r6/2Qnk2p/3p4/5p2/2P5/1P2b1P1/P5KP/8 w - - 0 30",
+        "8/3B2k1/4K1p1/8/8/4B2P/1b6/8 b - - 0 59",
+        "2r5/8/1qr3pk/3p1p1p/R2PpP1P/2Pb2P1/3Q3K/2RB4 b - - 0 52",
+        "5r2/3rq2k/p2Np1p1/1b1pP2p/3Q1P1P/1P4P1/2R3K1/2R5 b - - 0 42",
+        "8/8/8/1K6/3N4/k5p1/6N1/8 b - - 0 92",
+        "1r5k/3nbp2/1r2b1pP/3np3/2B1R3/1NN4q/1PPB2R1/1K3Q2 b - - 0 31",
+        "8/6pk/6p1/4r3/1Qp5/4qPpP/6P1/6RK b - - 0 44",
+        "2k5/1p1b1p2/5n2/p1p1pP2/2PnPq2/3P2r1/PP3QB1/3R1RK1 b - - 0 36"
     };
     
     int errs = 0;
@@ -376,7 +386,6 @@ static int testEval() {
         }
         Scoring *s = new Scoring();
         int eval1 = s->evalu8(board);
-        //cout << "case\t" << i << "\teval:" << eval1 << endl;
         board.flip();
         int eval2 = s->evalu8(board);
         if (eval1 != eval2) {
