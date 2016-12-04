@@ -76,9 +76,11 @@ static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16; // for MMTO
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
-static const double ADAGRAD_STEP_SIZE = 4.0;
+// step size relative to parameter range:
+static const double ADAGRAD_STEP_SIZE = 0.01;
 static const double PARAM1 = 0.75;
-static const double ADAM_ALPHA = 4.0;
+// step size relative to parameter range:
+static const double ADAM_ALPHA = 0.01;
 static const double ADAM_BETA1 = 0.9;
 static const double ADAM_BETA2 = 0.999;
 static const double ADAM_EPSILON = 1.0e-8;
@@ -1678,7 +1680,8 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
          if (use_adagrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
-            istep = Util::Round(ADAGRAD_STEP_SIZE*adjusted_grad);
+            int step_size = Util::Max(1,Util::Round(ADAGRAD_STEP_SIZE*p.range()));
+            istep = Util::Round(step_size*adjusted_grad);
             //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
             val = Util::Max(p.min_value,Util::Min(p.max_value,val + istep));
          } else if (use_adam) {
@@ -1686,7 +1689,8 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
             double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
-            istep = Util::Round(ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON));
+            int step_size = Util::Max(1,Util::Round(ADAM_ALPHA*p.range()));
+            istep = Util::Round(step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON));
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
             val = Util::Max(p.min_value,Util::Min(p.max_value,val + istep));
          } else {
