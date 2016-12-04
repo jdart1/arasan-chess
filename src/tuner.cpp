@@ -270,8 +270,8 @@ static int get_move_indx(const Board &board, Move move) {
 
 static double norm_val(const Tune::TuneParam &p)
 {
-   double mid = (p.max_value-p.min_value)/2.0;
-   return (double(p.current)-mid)/double(p.max_value-p.min_value);
+   double mid = (p.range())/2.0;
+   return (double(p.current)-mid)/p.range();
 }
 
 static double calc_penalty()
@@ -285,7 +285,7 @@ static double calc_penalty()
          tune_params.getParam(i,p);
          // apply penalty only for parameters being tuned
          if (p.tunable) {
-            if (p.max_value-p.min_value==0) {
+            if (p.range()==0) {
                cerr << "warning: param " << p.name << " has zero range" << endl;
             }
             // normalize the values since their ranges differ
@@ -1439,7 +1439,7 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
       if (derivs[i] != 0.0 && tune_params[i].tunable) {
          Tune::TuneParam p = tune_params[i];
          int val = p.current;
-         int range = p.max_value - p.min_value;
+         const int range = p.range();
          int delta;
          if (i>=Tune::KING_ATTACK_SCALE) {
             delta = 10;

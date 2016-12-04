@@ -28,6 +28,9 @@ class Tune {
     TuneParam():
     index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
     }
+    int range() const {
+      return max_value - min_value;
+    }
   };
 
   Tune();
