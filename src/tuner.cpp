@@ -330,8 +330,7 @@ static void make_pv(const Board &board, ThreadData &td,
          cout << endl;
 #endif
          pvs.push_back(Pv(score,pv,len));
-         const double x = double(score)/double(PAWN_VALUE);
-         double func_value = computeErrorTexel(x, result, board.sideToMove());
+         double func_value = computeErrorTexel(score, result, board.sideToMove());
          pdata.target += func_value;
 #ifdef _TRACE
          cout << "score=" << x << " sigmoid=" << texelSigmoid(x) << " error=" << func_value << " target sum=" << pdata.target << endl;
