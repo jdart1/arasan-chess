@@ -95,7 +95,7 @@ int Scoring::Params::KING_PST[2][64];
 
 // The following tables are computed from tuning parameters.
 int Scoring::Params::KING_POSITION_LOW_MATERIAL[3];
-int Scoring::Params::TRADE_DOWN[16];
+int Scoring::Params::TRADE_DOWN[8];
 int Scoring::Params::KING_ATTACK_SCALE[Scoring::Params::KING_ATTACK_SCALE_SIZE];
 int Scoring::Params::PASSED_PAWN[2][8];
 int Scoring::Params::POTENTIAL_PASSER[2][8];

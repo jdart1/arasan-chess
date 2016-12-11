@@ -270,7 +270,7 @@ Tune::Tune()
        10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
       };
 
-   static const int TRADE_DOWN_INIT[16] = {688, 645, 602, 559, 516, 473, 430, 387, 344, 301, 258, 215, 172, 129, 86, 0};
+   static const int TRADE_DOWN_INIT[8] = {688, 602, 516, 430, 344, 258, 172, 86};
    static const int KNIGHT_MOBILITY_INIT[9] = {-180, -70, -20, 0, 20, 50, 70, 100, 120};
    static const int BISHOP_MOBILITY_INIT[15] = {-200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90};
    static const int ROOK_MOBILITY_INIT[2][15] = {{-220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240}, {-300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320}};
@@ -557,15 +557,11 @@ static const int QUEEN_PST_INIT[2][64] =
    }
    // add trade down
    ASSERT(i==TRADE_DOWN);
-   for (int p = 0; p < 16; p++) {
+   for (int p = 0; p < 8; p++) {
       stringstream name;
       name << "trade_down" << p;
       int val = TRADE_DOWN_INIT[p];
-      if (p == 15)
-         // fix last entry to be 0
-         tune_params.push_back(TuneParam(i++,name.str(),0,0,TRADE_DOWN_RANGE,Tune::TuneParam::Any,0));
-      else   
-         tune_params.push_back(TuneParam(i++,name.str(),val,Util::Max(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
+      tune_params.push_back(TuneParam(i++,name.str(),val,Util::Max(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==KING_ATTACK_SCALE);
    int slope = 0;
@@ -727,7 +723,7 @@ void Tune::applyParams() const
    for (int i = 0; i < 3; i++) {
       Scoring::Params::KING_POSITION_LOW_MATERIAL[i] = PARAM(KING_POSITION_LOW_MATERIAL0+i);
    }
-   for (int i = 0; i < 16; i++) {
+   for (int i = 0; i < 8; i++) {
       Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
    }
    for (int i = 0; i < Scoring::Params::KING_ATTACK_SCALE_SIZE; i++) {
