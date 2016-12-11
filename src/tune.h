@@ -89,6 +89,7 @@ class Tune {
     MINOR_ATTACK_BOOST,
     ROOK_ATTACK_FACTOR,
     ROOK_ATTACK_BOOST,
+    ROOK_ATTACK_BOOST2,
     QUEEN_ATTACK_FACTOR,
     QUEEN_ATTACK_BOOST,
     QUEEN_ATTACK_BOOST2,
@@ -276,7 +277,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 175;
+  static const int NUM_MISC_PARAMS = 176;
 
   double scale(double value,int index,int materialLevel) const;
 

@@ -1009,12 +1009,11 @@ void Scoring::pieceScore(const Board &board,
                   if (attacks2) {
                      attacks2 &= (attacks2 - 1);
                      if (attacks2) {
-
-                        // rook attacks at least 2 squares near king
                         attackWeight += PARAM(ROOK_ATTACK_BOOST);
-#ifdef EVAL_DEBUG
-                        cout << "rook attack boost= 1" << endl;
-#endif
+                        attacks2 &= (attacks2 - 1);
+                        if (attacks2) {
+                           attackWeight += PARAM(ROOK_ATTACK_BOOST2);
+                        }
                      }
                   }
                }

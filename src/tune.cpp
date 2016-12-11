@@ -9,13 +9,13 @@ extern "C" {
 #include <string.h>
 };
 
-static const int MOBILITY_RANGE = PAWN_VALUE/2;
+static const int MOBILITY_RANGE = PAWN_VALUE/3;
 static const int OUTPOST_RANGE = PAWN_VALUE/3;
 static const int PST_RANGE = PAWN_VALUE/2;
 static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
-static const int TRADE_DOWN_RANGE = PAWN_VALUE;
+static const int TRADE_DOWN_RANGE = PAWN_VALUE/3;
 static const int ENDGAME_KING_POS_RANGE = PAWN_VALUE/2;
-static const int KING_ATTACK_SCALE_RANGE = 5*PAWN_VALUE;
+static const int KING_ATTACK_SCALE_MAX = 5*PAWN_VALUE;
 static const int KING_COVER_RANGE = int(0.3*PAWN_VALUE);
 static const int KING_ATTACK_COUNT_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 static const int KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
@@ -113,13 +113,14 @@ Tune::Tune()
         Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",2,0,25,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",2,0,25,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",23,3,50,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,0,70,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,5,75,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",10,0,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",10,0,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",25,10,50,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,5,70,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,12,75,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",34,0,75,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",33,25,100,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ATTACK_BOOST2,"rook_attack_boost2",34,0,75,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",33,25,75,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",50,0,750,Tune::TuneParam::Midgame,1),
@@ -171,20 +172,20 @@ Tune::Tune()
         Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,1000,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",180,128,600,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",160,128,400,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",150,128,400,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",150,128,200,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",140,128,200,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",130,128,200,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",60,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",110,50,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",180,70,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID5,"passed_pawn_mid5",270,90,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID6,"passed_pawn_mid6",560,200,1000,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID6,"passed_pawn_mid6",700,500,1000,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_MID7,"passed_pawn_mid7",1110,500,1750,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END2,"passed_pawn_end2",90,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END3,"passed_pawn_end3",160,50,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END4,"passed_pawn_end4",280,70,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",420,90,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",840,200,1000,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",840,500,1000,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",1410,500,1750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",26,0,200,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",37,0,200,Tune::TuneParam::Midgame,1),
@@ -488,7 +489,8 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int m = 0; m < 9; m++) {
       stringstream name;
       name << "knight_mobility" << m;
-      tune_params.push_back(TuneParam(i++,name.str(),KNIGHT_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Any,1));
+      const int val = KNIGHT_MOBILITY_INIT[m];
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-MOBILITY_RANGE,val+MOBILITY_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==BISHOP_MOBILITY);
    for (int m = 0; m < 15; m++) {
@@ -563,18 +565,19 @@ static const int QUEEN_PST_INIT[2][64] =
          // fix last entry to be 0
          tune_params.push_back(TuneParam(i++,name.str(),0,0,TRADE_DOWN_RANGE,Tune::TuneParam::Any,0));
       else   
-         tune_params.push_back(TuneParam(i++,name.str(),val,0,TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
+         tune_params.push_back(TuneParam(i++,name.str(),val,Util::Max(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==KING_ATTACK_SCALE);
    int slope = 0;
    int  val = 0;
-   double f = KING_ATTACK_SCALE_RANGE/(25.0*Scoring::Params::KING_ATTACK_SCALE_SIZE);
+   double f = KING_ATTACK_SCALE_MAX/(25.0*Scoring::Params::KING_ATTACK_SCALE_SIZE);
 
    for (int p = 0; p < Scoring::Params::KING_ATTACK_SCALE_SIZE; p++) {
       stringstream name;
       name << "king_attack_scale" << p;
-      int val2 = Util::Min(KING_ATTACK_SCALE_RANGE,p < 10 ? 0 : int(f*val/2));
-      tune_params.push_back(TuneParam(i++,name.str(),val2,0,KING_ATTACK_SCALE_RANGE,Tune::TuneParam::Midgame,p >= 10));
+      int val2 = Util::Min(KING_ATTACK_SCALE_MAX,p < 10 ? 0 : int(f*val/2));
+      int range = Util::Max(PAWN_VALUE/4,val2/3);
+      tune_params.push_back(TuneParam(i++,name.str(),val2,Util::Max(0,val2-range),Util::Min(KING_ATTACK_SCALE_MAX,val2+range),Tune::TuneParam::Midgame,p >= 10));
       slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE/2 ? p : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p));
       if (p>10) val += slope;
    }
@@ -659,6 +662,7 @@ void Tune::applyParams() const
    Scoring::Params::MINOR_ATTACK_BOOST = tune_params[MINOR_ATTACK_BOOST].current;
    Scoring::Params::ROOK_ATTACK_FACTOR = tune_params[ROOK_ATTACK_FACTOR].current;
    Scoring::Params::ROOK_ATTACK_BOOST = tune_params[ROOK_ATTACK_BOOST].current;
+   Scoring::Params::ROOK_ATTACK_BOOST2 = tune_params[ROOK_ATTACK_BOOST2].current;
    Scoring::Params::QUEEN_ATTACK_FACTOR = tune_params[QUEEN_ATTACK_FACTOR].current;
    Scoring::Params::QUEEN_ATTACK_BOOST = tune_params[QUEEN_ATTACK_BOOST].current;
    Scoring::Params::QUEEN_ATTACK_BOOST2 = tune_params[QUEEN_ATTACK_BOOST2].current;

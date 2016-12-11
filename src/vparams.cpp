@@ -29,6 +29,7 @@ int Scoring::Params::PAWN_ATTACK_FACTOR2 = 3;
 int Scoring::Params::MINOR_ATTACK_FACTOR = 4;
 int Scoring::Params::MINOR_ATTACK_BOOST = 4;
 int Scoring::Params::ROOK_ATTACK_FACTOR = 44;
+int Scoring::Params::ROOK_ATTACK_BOOST2 = 35;
 int Scoring::Params::ROOK_ATTACK_BOOST = 8;
 int Scoring::Params::QUEEN_ATTACK_FACTOR = 52;
 int Scoring::Params::QUEEN_ATTACK_BOOST = 28;

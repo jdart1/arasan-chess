@@ -820,10 +820,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    const int oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
-   int attackTypes[7];
-   for (auto i = 0; i < 7; i++) {
-      attackTypes[i] = 0;
-   }
+   vector<int> attackTypes(8,0);
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
       adjustMaterialScore(board,side,grads,inc);
@@ -991,6 +988,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST].current;
                   attackTypes[Tune::ROOK_ATTACK_BOOST-
                               Tune::MINOR_ATTACK_FACTOR]++;
+                  attacks2 &= (attacks2 - 1);
+                  if (attacks2) {
+                     attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST2].current;
+                     attackTypes[Tune::ROOK_ATTACK_BOOST2-
+                                 Tune::MINOR_ATTACK_FACTOR]++;
+                  }
                }
             }
          }
