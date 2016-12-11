@@ -373,7 +373,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
       switch(phase) {
          case HASH_MOVE_PHASE:
          {
-            if (!IsNull(hashMove) && validMove(board,hashMove)) {
+            if (!IsNull(hashMove)) {
                *moves = hashMove;
                SetPhase(*moves,phase);
 #ifdef _TRACE
@@ -818,6 +818,8 @@ hashMove(pvMove),
 prevMove(prvMove),
 master(trace)
 {
+   // Verify hash move before use
+   if (!validMove(board,hashMove)) hashMove = NullMove;
 }
 
 
