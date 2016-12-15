@@ -80,10 +80,9 @@ static int singularExtensionDepth(int depth)
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-static const int LMP_DEPTH=10;
+static const int LMP_DEPTH=6;
 
-static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93
-};
+static const int LMP_MOVE_COUNT[7] = {3, 6, 10, 16, 24, 33, 44};
 
 static const int RAZOR_MARGIN[4] = { int(0.9*PAWN_VALUE),
                                      int(1.25*PAWN_VALUE),
@@ -2148,16 +2147,15 @@ int Search::calcExtensions(const Board &board,
    if (pruneOk) {
       // do not use predictedDepth for LMP
       if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
-         GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-         if (moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
+         GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
+         moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
-            ++controller->stats->lmp;
+         ++controller->stats->lmp;
 #endif
 #ifdef _TRACE
-            indent(node->ply); cout << "LMP: pruned" << endl;
+         indent(node->ply); cout << "LMP: pruned" << endl;
 #endif
-            return PRUNE;
-         }
+         return PRUNE;
       }
       // futility pruning, enabled at low depths
       if (predictedDepth <= FUTILITY_DEPTH) {
