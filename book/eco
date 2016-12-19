@@ -1121,6 +1121,7 @@ D89     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cd5 Nd5 5. e4 Nc3 6. bc3 Bg7 7. Bc4 O-O 
 D90     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 "Gruenfeld Defense"
 D90     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 "Gruenfeld Defense"
 D90     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qa4+ "Gruenfeld Defense, Flohr Variation"
+D90     1. Nf3 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. Qb3 Nb6 6. d4 Bg7 "Gruenfeld Defense"
 D91     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Bg5 "Gruenfeld Defense"
 D92     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Bf4 "Gruenfeld Defense"
 D93     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Bf4 O-O 6. e3 "Gruenfeld Defense"

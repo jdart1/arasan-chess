@@ -1081,6 +1081,7 @@ const struct ECOData eco_codes[] =
 {"D90", 0x6e4fa96316b9fbbcULL ,"Gruenfeld Defense"},
 {"D90", 0x8fcebccd427b572cULL ,"Gruenfeld Defense"},
 {"D90", 0x6111d556c5c711e9ULL ,"Gruenfeld Defense, Flohr Variation"},
+{"D90", 0x8cd1eb991fa71a60ULL ,"Gruenfeld Defense"},
 {"D91", 0x2be48b11873b80e0ULL ,"Gruenfeld Defense"},
 {"D92", 0x1879fab3af2c673dULL ,"Gruenfeld Defense"},
 {"D93", 0x1c48b182ffe906dcULL ,"Gruenfeld Defense"},
