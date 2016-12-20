@@ -5,6 +5,21 @@
 
 // Types and macros for OS, machine, and compiler portability
 
+#define USE_SPINLOCK
+
+// Spinlock appears not to work under address sanitizer
+
+// Detect address sanitizer under clang
+#if defined(__has_feature)
+#  if __has_feature(address_sanitizer)
+#undef USE_SPINLOCK
+#endif
+#endif
+// Detect for gcc
+#ifdef __SANITIZE_ADDRESS__
+#undef USE_SPINLOCK
+#endif
+
 extern "C" {
 #include <stddef.h>
 #include <stdlib.h>
@@ -175,7 +190,7 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #define LockDestroy(x) DeleteCriticalSection(&x)
 #define LockFree(x) DeleteCriticalSection(&x)
 #define THREAD HANDLE
-#else
+#elif defined(USE_SPINLOCK)
 class Spinlock {
   atomic_flag locked;
         
@@ -202,6 +217,16 @@ class Spinlock {
 #define LockDestroy(x)
 #define LockFree(x)
 #define THREAD pthread_t
+#else
+#define LockDefine(x) std::mutex *x
+#define lock_t std::mutex *
+#define LockInit(x) x = new std::mutex
+#define Lock(x) x->lock()
+#define Unlock(x) x->unlock()
+#define LockDestroy(x)
+#define LockFree(x) delete x
+#define THREAD pthread_t
+
 #endif
 
 #if _BYTE_ORDER == _BIG_ENDIAN
