@@ -45,7 +45,7 @@ struct SplitPoint {
         failHigh = 0;
     }
     ~SplitPoint() {
-        LockDestroy(mylock);
+        LockFree(mylock);
     }
     void lock() {
         Lock(mylock);

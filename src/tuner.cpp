@@ -1880,12 +1880,9 @@ static void learn()
    }
 
    delete hash_table;
-   LockDestroy(data_lock);
    LockFree(data_lock);
-   LockDestroy(file_lock);
+   LockFree(data_lock);
    LockFree(file_lock);
-   LockDestroy(hash_lock);
-   LockFree(hash_lock);
 }
 
 int CDECL main(int argc, char **argv)

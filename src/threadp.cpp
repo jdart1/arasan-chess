@@ -266,14 +266,14 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 }
 
 ThreadPool::~ThreadPool() {
-    shutDown();
+   shutDown();
 #ifdef _THREAD_TRACE
-  LockDestroy(io_lock);
+   LockFree(io_lock);
 #endif
 #ifndef _WIN32
-  if (pthread_attr_destroy(&stackSizeAttrib)) {
-     perror("pthread_attr_destroy");
-  }
+   if (pthread_attr_destroy(&stackSizeAttrib)) {
+      perror("pthread_attr_destroy");
+   }
 #endif
 }
 

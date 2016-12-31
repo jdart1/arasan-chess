@@ -187,7 +187,6 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #define LockInit(x) InitializeCriticalSection(&x)
 #define Lock(x) EnterCriticalSection(&x);
 #define Unlock(x) LeaveCriticalSection(&x);
-#define LockDestroy(x) DeleteCriticalSection(&x)
 #define LockFree(x) DeleteCriticalSection(&x)
 #define THREAD HANDLE
 #elif defined(USE_SPINLOCK)
@@ -214,7 +213,6 @@ class Spinlock {
 #define LockInit(x)
 #define Lock(x) x.lock()
 #define Unlock(x) x.unlock()
-#define LockDestroy(x)
 #define LockFree(x)
 #define THREAD pthread_t
 #else
@@ -223,7 +221,6 @@ class Spinlock {
 #define LockInit(x) x = new std::mutex
 #define Lock(x) x->lock()
 #define Unlock(x) x->unlock()
-#define LockDestroy(x)
 #define LockFree(x) delete x
 #define THREAD pthread_t
 

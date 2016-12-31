@@ -213,7 +213,7 @@ SearchController::SearchController()
 SearchController::~SearchController() {
    delete pool;
    hashTable.freeHash();
-   LockDestroy(split_calc_lock);
+   LockFree(split_calc_lock);
 }
 
 void SearchController::terminateNow() {
@@ -492,7 +492,7 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
 }
 
 Search::~Search() {
-    LockDestroy(splitLock);
+    LockFree(splitLock);
 }
 
 int Search::checkTime(const Board &board,int ply) {

@@ -105,7 +105,7 @@ void CDECL cleanupGlobals(void) {
    openingBook.close();
    delete gameMoves;
    delete theLog;
-   LockDestroy(input_lock);
+   LockFree(input_lock);
    Scoring::cleanup();
 #ifdef UCI_LOG
     ucilog.close();
