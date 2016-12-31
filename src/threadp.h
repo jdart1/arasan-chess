@@ -28,7 +28,7 @@ struct ThreadInfo : public ThreadControl {
    ThreadInfo(ThreadPool *,int i);
    virtual ~ThreadInfo();
    void start();
-   volatile State state;
+   atomic<State> state;
    Search *work;
    ThreadPool *pool;
    THREAD thread_id;
