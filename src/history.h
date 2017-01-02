@@ -26,7 +26,7 @@ public:
        Move best, int depth, ColorType side);
 
  private:
-    struct CACHE_ALIGN HistoryEntry {
+    struct HistoryEntry {
       uint32_t success, failure;
     } history[16][64];
 
