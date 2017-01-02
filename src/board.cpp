@@ -1350,6 +1350,8 @@ Bitboard Board::allAttacks(ColorType side) const
 
 Bitboard Board::calcAttacks(Square sq, ColorType side) const
 {
+   ASSERT(sq != InvalidSquare);
+
    Bitboard retval;
 
    retval |= (Attacks::pawn_attacks[sq][side] & pawn_bits[side]);
@@ -1363,6 +1365,8 @@ Bitboard Board::calcAttacks(Square sq, ColorType side) const
 
 Bitboard Board::calcBlocks(Square sq, ColorType side) const
 {
+   ASSERT(sq != InvalidSquare);
+
    Bitboard retval;
 
    if (side == Black)
