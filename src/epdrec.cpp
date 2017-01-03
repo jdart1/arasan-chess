@@ -36,6 +36,7 @@ bool EPDRecord::getVal(const string &key, string &val) const
          val = (*it).second;
          return true;
       }
+      it++;
    }
    return false;
 }
@@ -58,7 +59,7 @@ bool EPDRecord::getData(int i,string &key,string &val) const
    return false;
 }
 
-void EPDRecord::add(const string &key, const char * value)
+void EPDRecord::add(const string &key, const string &value)
 {
    cmds.push_back(pair<string,string>(key,value));
 }

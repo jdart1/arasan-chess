@@ -1,4 +1,4 @@
-// Copyright 1996, 2008, 2013 by Jon Dart. All Rights Reserved.
+// Copyright 1996, 2008, 2013, 2017 by Jon Dart. All Rights Reserved.
 //
 #ifndef __EPDREC_H__
 #define __EPDREC_H__
@@ -23,7 +23,7 @@ public:
 
     bool getVal(const string &key, string &val) const;
 
-    void add(const string &key, const char * val);
+    void add(const string &key, const string &val);
 
     bool hasError() const
     {

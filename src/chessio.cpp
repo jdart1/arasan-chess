@@ -1,4 +1,5 @@
-// Copyright 1994, 1995, 2008, 2012-2014  by Jon Dart. All Rights Reserved.
+// Copyright 1994, 1995, 2008, 2012-2014, 2017  by Jon Dart.
+// All Rights Reserved.
 
 #include "chessio.h"
 #include "epdrec.h"
@@ -298,57 +299,32 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
         return 1;
     }
     // read EPD commands
-    int c = 0;
-    while (ifs.good() && (c = ifs.get()) != EOF)
-    {
-        int saw_eoln = 0;
-        while (ifs.good() && isspace(c))
-        {
-            if (c == '\n' || c == '\r')
-               saw_eoln++;
-            c = ifs.get();
-        }
-        if (c == 0) break;
-        if (saw_eoln)
-        {
-            ifs.putback(c);
-            break;
-        }
-        // collect command
-        string cmd, val;
-        while (ifs.good() && !isspace(c)) {
-            cmd += c;
-            c = ifs.get();
-        }
-        while (ifs.good() && isspace(c)) {
-            c = ifs.get();
-        }
-        if (ifs.good()) {
-           int quoted = (c == '"');
-           while (ifs.good() && 
-                  (c != ';' || quoted))
-           {
-              val += c;
-              c = ifs.get();
-              if (quoted && c == '"')
-              {
-                 val += c;
-                 quoted = 0;
-                 break;
-              }
-           }
-           if (quoted)
-           {
-              rec.setError("Missing end quote in EPD record");
-              ifs.ignore(255,'\n');
-              return 1;
-           }
-        }
-        if (cmd.size() && val.size())
-           rec.add(cmd.c_str(),val.c_str());
-        while (ifs.good() && c != ';') c = ifs.get();
+    string commands, command;
+    getline(ifs,commands);
+    stringstream s(commands);
+    while (getline(s,command,';')) {
+       // each command should contain a verb and a value
+       string cmd,val;
+       auto it = command.begin();
+       auto collect = [&it, end = command.end()](string &out) {
+          int spaces = 0;
+          bool quoted = false;
+          for (; it != end; it++) {
+             if (isspace(*it) && !quoted) {
+                if (!spaces) continue;
+                break;
+             }
+             else if (*it == '\"') {
+                quoted = !quoted;
+             }
+             ++spaces;
+             out += *it;
+          }
+       };
+       collect(cmd);
+       collect(val);
+       rec.add(cmd,val);
     }
-    if (c == '\n') c = ifs.get();
     return 1;
 }
 
