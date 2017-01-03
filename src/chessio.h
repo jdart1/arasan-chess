@@ -61,8 +61,11 @@ public:
     static int get_header(const ArasanVector<Header> &hdrs, 
 	  const string &key, string &val);
 
-    // read an EPD file, return 1 if ok, 0 if EOF
+    // read an EPD record from a stream, return 1 if ok, 0 if EOF
     static int readEPDRecord(istream &ifs, Board &board, EPDRecord &out);
+
+    // write an EPD record
+    static void writeEPDRecord(ostream &ofs, Board &board, const EPDRecord &rec);
     
     enum TokenType { Number, GameMove, Result, 
                      OpenVar,

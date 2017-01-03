@@ -1,4 +1,4 @@
-// Copyright 2013-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2017 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -570,6 +570,69 @@ static int testCheckStatus() {
    return errs;
 }
 
+static int testRec(const EPDRecord &rec) 
+{
+   int errs = 0;
+   if (rec.hasError()) {
+      cerr << "EPD test: error reading EPD record: " << rec.getError() << endl;
+      return ++errs;
+   }
+   if (rec.getSize() != 2) {
+      cerr << "EPD test: expected size 2, got " << rec.getSize() << endl;
+      return ++errs;
+   }
+   string key, val;
+   if (rec.getData(0,key,val)) {
+      if (key != "c1" || val != "\"3 0\"") {
+         cerr << "EPD test: invalid data for EPD command" << endl;
+         return ++errs;
+      }
+   } else {
+      cerr << "EPD test: failed to retrieve key 0" << endl;
+      return ++errs;
+   }
+   if (rec.getData(1,key,val)) {
+      if (key != "c2" || val != "\"1.000\"") {
+         cerr << "EPD test: invalid data for EPD command" << endl;
+         return ++errs;
+      }
+   } else {
+      cerr << "EPD test: failed to retrieve key 1" << endl;
+      return ++errs;
+   }
+   return errs;
+}
+
+
+static int testEPD()
+{
+   static const char *epd = "r1b1k2r/ppq3b1/2p1pp2/P2pPpNp/1P1P1P2/2P4P/6P1/RN1QR1K1 w kq - c1 \"3 0\"; c2 \"1.000\";\n";
+   EPDRecord rec;
+   stringstream s(epd);
+   Board board;
+   ChessIO::readEPDRecord(s,board,rec);
+   int errs = testRec(rec);
+   if (errs) {
+      return errs;
+   }
+   ostringstream out;
+   ChessIO::writeEPDRecord(out,board,rec);
+   errs += testRec(rec);
+   if (errs) {
+      return errs;
+   }
+   if (out.str() != epd) {
+      cerr << "EPD test: output string != input string" << endl;
+      return ++errs;
+   }
+   rec.clear();
+   if (rec.getSize() != 0) {
+      cerr << "EPD test: invalid size after clear" << endl;
+      return ++errs;
+   }
+   return 0;
+}
+
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
@@ -657,6 +720,7 @@ int doUnit() {
    errs += testEval();
    errs += testDrawEval();
    errs += testCheckStatus();
+   errs += testEPD();
    errs += testPerft();
    return errs;
 }

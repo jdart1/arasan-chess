@@ -47,8 +47,6 @@ public:
        return (int)cmds.size();
     }
     
-    void sort();
-
     void clear();
     
 private:

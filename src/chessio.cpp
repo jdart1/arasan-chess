@@ -2,6 +2,7 @@
 // All Rights Reserved.
 
 #include "chessio.h"
+#include "boardio.h"
 #include "epdrec.h"
 #include "debug.h"
 #include "constant.h"
@@ -326,6 +327,17 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
        rec.add(cmd,val);
     }
     return 1;
+}
+
+void ChessIO::writeEPDRecord(ostream &ofs, Board &board, const EPDRecord &rec)
+{
+   BoardIO::writeFEN(board,ofs,0);
+   for (int i = 0; i < rec.getSize(); i++) {
+      string key,val;
+      (void)rec.getData(i,key,val);
+      ofs << ' ' << key << ' ' << val << ';';
+   }
+   ofs << endl;
 }
 
 void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, long &first)
