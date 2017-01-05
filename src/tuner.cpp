@@ -207,7 +207,7 @@ static double computeErrorTexel(double value,const string &res,const ColorType s
 
    double result = result_val(res);
 
-   return - result*log(predict) - (1.0-result)*log(1-predict);
+   return (result-predict)*(result-predict);
 }
 
 static double computeTexelDeriv(double value,const string &res,const ColorType side)
@@ -218,7 +218,9 @@ static double computeTexelDeriv(double value,const string &res,const ColorType s
 
    double result = result_val(res);
 
-   return (result-texelSigmoid(value));
+   const double p = exp(PARAM1*value);
+
+   return -2*PARAM1*p*((result-1)*p + result)/pow(p+1,3);
 }
 
 
