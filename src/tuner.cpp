@@ -320,9 +320,9 @@ static void make_pv(const Board &board, ThreadData &td,
                                        stats,
                                        Silent);
       int len = 0;
-      const int score = stats.value;
+      const score_t score = stats.value;
       // skip positions with very large scores (including mate scores)
-      if (Util::Abs(score/PAWN_VALUE)<30) {
+      if (fabs(score/PAWN_VALUE)<30.0) {
          for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
 #ifdef _TRACE
             MoveImage(stats.best_line[len],cout);
@@ -348,12 +348,12 @@ static void make_pv(const Board &board, ThreadData &td,
    RootMoveGenerator mg(board,NULL,record_move);
    Move m;
    bool first = true;
-   int record_value = Scoring::INVALID_SCORE;
+   score_t record_value = Scoring::INVALID_SCORE;
    int nth = 0;
    int nc = 0;
 
-   int alpha = -Constants::MATE;
-   int beta = Constants::MATE;
+   score_t alpha = -Constants::MATE;
+   score_t beta = Constants::MATE;
    Board board_copy(board);
 
    int order = 0;
@@ -367,8 +367,8 @@ static void make_pv(const Board &board, ThreadData &td,
 #endif
       board_copy.doMove(m);
       if (!first) {
-         alpha = Util::Max(-Constants::MATE,record_value - LEARNING_SEARCH_WINDOW/2);
-         beta = Util::Min(Constants::MATE,record_value + LEARNING_SEARCH_WINDOW/2);
+         alpha = std::max<score_t>(-Constants::MATE,record_value - LEARNING_SEARCH_WINDOW/2);
+         beta = std::min<score_t>(Constants::MATE,record_value + LEARNING_SEARCH_WINDOW/2);
       }
       PackedMove pv[MAX_PV_LENGTH];
       Statistics stats;
@@ -383,7 +383,7 @@ static void make_pv(const Board &board, ThreadData &td,
                                        Silent);
 
       board_copy.undoMove(m,state);
-      const int score = -stats.value;
+      const score_t score = -stats.value;
       pv[0] = pack_move(m);
       int len = 1;
 #ifdef _TRACE
@@ -1444,8 +1444,8 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       if (derivs[i] != 0.0 && tune_params[i].tunable) {
          Tune::TuneParam p = tune_params[i];
-         int val = p.current;
-         const int range = p.range();
+         score_t val = p.current;
+         const score_t range = p.range();
          int delta;
          if (i>=Tune::KING_ATTACK_SCALE) {
             delta = 10;
@@ -1458,13 +1458,13 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
               i<=Tune::KING_ATTACK_COVER_BOOST+4))
             delta = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION;
          else
-            delta = Util::Max(1,range/20);
+            delta = std::max<score_t>(1.0,range/20);
          
          // increase by delta
-         int newval = val + delta;
+         score_t newval = val + delta;
          tune_params.updateParamValue(i,newval);
          tune_params.applyParams();
-         int score = s.evalu8(board,false);
+         score_t score = s.evalu8(board,false);
          if (board.sideToMove() != side) {
             score = -score;
          }
@@ -1493,7 +1493,7 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
 static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, const PositionInfo &pi, const string &result) {
 
    unsigned int nc = 0;
-   double record_value;
+   score_t record_value;
    double sum_dT = 0.0;
 
 #ifdef _TRACE
@@ -1585,7 +1585,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, co
               board_copy.getMaterial(White).infobits() == Material::KP)) {
             continue;
          }
-         double value = double(s.evalu8(board_copy,false));
+         score_t value = s.evalu8(board_copy,false);
          // make score be from the perspective of "board", the head of
          // the PV:
          if (board.sideToMove() != board_copy.sideToMove()) {
@@ -1681,12 +1681,12 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
          }
       }
       if (dv != 0.0 && p.tunable) {
-         int istep = 1;
+         double istep = 1.0;
          if (use_adagrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
-            int step_size = Util::Max(1,Util::Round(ADAGRAD_STEP_SIZE*p.range()));
-            istep = Util::Round(step_size*adjusted_grad);
+            double step_size = ADAGRAD_STEP_SIZE*p.range();
+            istep = step_size*adjusted_grad;
             //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
             val = Util::Max(p.min_value,Util::Min(p.max_value,val + istep));
          } else if (use_adam) {
@@ -1694,16 +1694,16 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
             double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
-            int step_size = Util::Max(1,Util::Round(ADAM_ALPHA*p.range()));
-            istep = Util::Round(step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON));
+            double step_size = ADAM_ALPHA*p.range();
+            istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
-            val = Util::Max(p.min_value,Util::Min(p.max_value,val + istep));
+            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val + istep));
          } else {
             if ( dv > 0.0) {
-               val = Util::Min(p.max_value,val + istep);
+               val = std::min<score_t>(p.max_value,val + istep);
             }
             else if (dv < 0.0) {
-               val = Util::Max(p.min_value,val - istep);
+               val = std::max<score_t>(p.min_value,val - istep);
             }
          }
          tune_params.updateParamValue(i,val);

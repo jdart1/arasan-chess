@@ -20,10 +20,10 @@ Move unpack_move(const Board &board,PackedMove p)
 
 // Could be a vector, but we use a more compact array representation:
  struct Pv {
-   int value;
+   score_t value;
    int len;
    PackedMove *pv;
- Pv(int val, const PackedMove *moves, int length)
+ Pv(score_t val, const PackedMove *moves, int length)
  : value(val),len(length),pv(NULL)
    {
      if (len) {

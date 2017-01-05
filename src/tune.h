@@ -15,14 +15,14 @@ class Tune {
   struct TuneParam {
     int index;
     string name;
-    int current;
-    int min_value;
-    int max_value;
+    score_t current;
+    score_t min_value;
+    score_t max_value;
     enum Scaling {None, Midgame, Endgame, Any};
     Scaling scaling;
     int tunable;
 
-  TuneParam(int i, const string &n, int c, int minv, int maxv, Scaling s = None,int t = 0) :
+  TuneParam(int i, const string &n, int c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
     index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
     }
     TuneParam():

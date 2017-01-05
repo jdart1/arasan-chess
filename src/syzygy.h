@@ -17,7 +17,7 @@ extern "C"
 
 struct SyzygyTb {
 
-    static const int CURSED_SCORE;
+    static const score_t CURSED_SCORE;
 
     // Initialize the tablebases. 'path' is the
     // path to the TB directories.
@@ -30,12 +30,12 @@ struct SyzygyTb {
     // If found and the score is winning or drawing then
     // "rootMoves" is filled with the moves that preserve
     // the draw or win.
-    static int probe_root(const Board &b, int &score, set<Move> &rootMoves);
+    static int probe_root(const Board &b, score_t &score, set<Move> &rootMoves);
 
     // Probe the wdl tablebases (not at root).
     // Return 1 if score was obtained,
     // 0 if not. "score" is the score for the position.
-    static int probe_wdl(const Board &b, int &score, bool use50MoveRule);
+    static int probe_wdl(const Board &b, score_t &score, bool use50MoveRule);
 
 };
 

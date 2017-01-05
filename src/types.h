@@ -62,6 +62,12 @@ typedef DWORD CLOCK_TYPE;
 typedef unsigned long CLOCK_TYPE;
 #endif
 
+#ifdef TUNE
+typedef double score_t;
+#else
+typedef int score_t;
+#endif
+
 // Define this here since Bitboard class depends on it
 typedef int Square;
 

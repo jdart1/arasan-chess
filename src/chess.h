@@ -175,10 +175,10 @@ enum Piece {
 
 enum PieceType { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
 
-extern const int PAWN_VALUE, BISHOP_VALUE, KNIGHT_VALUE, ROOK_VALUE,
+extern const score_t PAWN_VALUE, BISHOP_VALUE, KNIGHT_VALUE, ROOK_VALUE,
     QUEEN_VALUE, KING_VALUE;
 
-extern const int PieceValues[8];
+extern const score_t PieceValues[8];
 extern const int _sliders[16];
 extern const Piece _pieces[8][2];	   
 
@@ -386,13 +386,13 @@ FORCEINLINE int IsNull(Move move) {
     return (move == NullMove);
 }
 	
-FORCEINLINE int Gain(Move move) {
+FORCEINLINE score_t Gain(Move move) {
     return ((TypeOfMove(move) == Promotion) ?
             PieceValue(Capture(move)) + PieceValue(PromoteTo(move)) - PAWN_VALUE 
             : PieceValue(Capture(move)));
 }
 
-FORCEINLINE int MVV_LVA(Move move) {
+FORCEINLINE score_t MVV_LVA(Move move) {
     return 8*Gain(move) - PieceValue(PieceMoved(move));
 }
 

@@ -99,7 +99,7 @@ static bool doTrace = false;
 static bool easy = false;
 static int game_end = 0;
 static int result_pending = 0;
-static int32_t last_score = Constants::MATE;
+static score_t last_score = Constants::MATE;
 static ECO *ecoCoder = NULL;
 static string hostname;
 static int xboard42 = 0;
@@ -466,7 +466,7 @@ static bool accept_draw(Board &board) {
       if (doTrace)
          cout << "# checking tablebases .." << endl;
       // accept a draw when the tablebases say it's a draw
-      int tbscore;
+      score_t tbscore;
 #ifdef GAVIOTA_TBS
       if (options.search.tablebase_type == Options::TbType::GaviotaTb) {
           if (GaviotaTb::probe_tb(board,tbscore,0,1) && tbscore == 0) {
@@ -773,7 +773,7 @@ static void CDECL post_output(const Statistics &stats) {
       printf("%2u%c %6d %6ld %8llu %s\n",
 #endif
          stats.depth,' ',
-         (score*100)/PAWN_VALUE, // score in centipawns
+         int((score*100)/PAWN_VALUE), // score in centipawns
          (long)stats.elapsed_time/10, // time in centiseconds
          (unsigned long long)stats.num_nodes,
          stats.best_line_image.c_str());
@@ -2887,7 +2887,7 @@ static bool do_command(const string &cmd, Board &board) {
             else {
                 delayedInit();
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-                int tbscore;
+                score_t tbscore;
                 if (options.search.use_tablebases) {
 #ifdef GAVIOTA_TBS
                    if (options.search.tablebase_type == Options::TbType::GaviotaTb && GaviotaTb::probe_tb(board,tbscore,0,1)) {

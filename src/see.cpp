@@ -57,7 +57,7 @@ static Square minAttacker(const Board &board, Bitboard atcks, ColorType side) {
    }    
 }
 
-int see( const Board &board, Move move ) {
+score_t see( const Board &board, Move move ) {
    ASSERT(!IsNull(move));
 #ifdef ATTACK_TRACE
    cout << "see ";
@@ -80,8 +80,8 @@ int see( const Board &board, Move move ) {
 #endif
        return Gain(move);
    }
-   int score_list[20];
-   int swap_score = 0;
+   score_t score_list[20];
+   score_t swap_score = 0;
    int gain;
    Bitboard attacks[2]; 
    Square last_attack_sq[2] = {InvalidSquare, InvalidSquare};
@@ -161,7 +161,7 @@ int see( const Board &board, Move move ) {
    return score_list[0];
 }
 
-int seeSign( const Board &board, Move move, int threshold ) {
+score_t seeSign( const Board &board, Move move, score_t threshold ) {
    ASSERT(!IsNull(move));
 #ifdef ATTACK_TRACE
    cout << "see ";
@@ -184,8 +184,8 @@ int seeSign( const Board &board, Move move, int threshold ) {
 #endif
        return Gain(move) >= threshold;
    }
-   int score_list[20];
-   int swap_score = 0;
+   score_t score_list[20];
+   score_t swap_score = 0;
    int gain;
    Bitboard attacks[2]; 
    Square last_attack_sq[2] = {InvalidSquare, InvalidSquare};

@@ -40,7 +40,7 @@ static int map_from_pst(int i)
    return MakeSquare(f,r,White);
 }
 
-static void apply_to_pst(int i,int val,int arr[]) 
+static void apply_to_pst(int i,score_t val,score_t arr[]) 
 {
    int r = 1+(i/4);
    int f = 1+(i%4);
@@ -56,7 +56,7 @@ static int map_from_outpost(int i)
    return MakeSquare(f,r,White);
 }
 
-static void apply_to_outpost(int i,int val,int arr[]) 
+static void apply_to_outpost(int i,score_t val,score_t arr[]) 
 {
    int r = 5+(i/4);
    int f = 1+(i%4);
@@ -609,7 +609,7 @@ void Tune::applyParams() const
 {
    checkParams();
 
-   int *dest = Scoring::Params::RB_ADJUST;
+   score_t *dest = Scoring::Params::RB_ADJUST;
    int i, j = 0;
    for (i = 0; i < 4; i++) {
       *dest++ = Tune::tune_params[j++].current;

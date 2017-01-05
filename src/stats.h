@@ -17,9 +17,9 @@ enum StateType {NormalState,Terminated,Check,Checkmate,
 struct Statistics
 {
    StateType state;
-   int value;
-   int display_value;
-   int tb_value;
+   score_t value;
+   score_t display_value;
+   score_t tb_value;
    bool fromBook;
    int complete; // if at end of iteration
    int multipv_count; // only for UCI

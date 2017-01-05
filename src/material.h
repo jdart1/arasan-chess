@@ -68,13 +68,13 @@ class Material
     }
 
     // return the total material value:
-    int32_t value() const {
-        return total;
+    score_t value() const {
+       return (score_t)total;
     }
 	
     // return value of pieces (excluding pawns)
-    int32_t pieceValue() const {
-        return total - PAWN_VALUE*pawnCount();
+    score_t pieceValue() const {
+       return (score_t)(total - PAWN_VALUE*pawnCount());
     }
 	
     uint32_t infobits() const	{
