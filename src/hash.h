@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015, 2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -208,7 +208,7 @@ class Hash {
                    entry.setEffectiveHash(hashCode);
                    *p = entry;
                 }
-                hit = &entry;
+                hit = p;
                 he = entry;
                 if (entry.depth() >= depth) {
                     // usable depth
