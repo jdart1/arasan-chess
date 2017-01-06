@@ -2215,7 +2215,7 @@ static void do_test(string test_file)
          }
       }
 
-      char c;
+      int c;
       while (!pos_file.eof()) {
          c = pos_file.get();
          if (!isspace(c) && c != '\n') {
