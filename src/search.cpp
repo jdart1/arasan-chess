@@ -485,7 +485,17 @@ void SearchController::resizeHash(size_t newSize) {
 
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),terminate(0),
-    activeSplitPoints(0),split(NULL),ti(threadInfo) {
+    nodeCount(0ULL),
+    nodeAccumulator(0),
+    node(NULL),
+    activeSplitPoints(0),
+    split(NULL),
+    ti(threadInfo),
+    threadSplitDepth(0),
+    computerSide(White),
+    ratingDiff(0),
+    ratingFactor(0),
+    talkLevel(c->getTalkLevel()) {
     LockInit(splitLock);
     // Note: context was cleared in its constructor
     setSearchOptions();
