@@ -685,9 +685,6 @@ Move *excludes, int num_excludes)
    easy_adjust = false;
    fail_high_root_extend = fail_low_root_extend = false;
    last_score = -Constants::MATE;
-#ifdef EVAL_STATS
-   Scoring::clearStats();
-#endif
    node->best = NullMove;
    if (scoring.isLegalDraw(board) &&
        !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
@@ -1175,9 +1172,6 @@ Move *excludes, int num_excludes)
 #if defined(SMP_STATS)
       cout << stats->splits << " splits," <<
          " average thread usage=" << (float)(stats->threads)/(float)stats->samples << endl;
-#endif
-#ifdef EVAL_STATS
-      Scoring::showStats(cout);
 #endif
       cout << (flush);
    }
