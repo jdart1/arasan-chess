@@ -589,6 +589,7 @@ int failhigh,int complete)
     stats->complete = complete;
     if (talkLevel == Debug) {
         // This is the output for the "test" command in verbose mode
+        std::ios_base::fmtflags original_flags = cout.flags();
         cout.setf(ios::fixed);
         cout << setprecision(2);
         cout << ply << '\t';
@@ -603,6 +604,7 @@ int failhigh,int complete)
         cout << '\t';
         Scoring::printScore(stats->display_value,cout);
         cout << '\t' << stats->num_nodes << endl;
+        cout.flags(original_flags);
     }
     // Post during ponder if UCI
     if ((!controller->background || controller->uci)) {
@@ -1120,6 +1122,7 @@ Move *excludes, int num_excludes)
    }
 
    if (talkLevel == Debug) {
+      std::ios_base::fmtflags original_flags = cout.flags();
       cout.setf(ios::fixed);
       cout << setprecision(2);
       if (stats->elapsed_time > 0) {
@@ -1174,6 +1177,7 @@ Move *excludes, int num_excludes)
          " average thread usage=" << (float)(stats->threads)/(float)stats->samples << endl;
 #endif
       cout << (flush);
+      cout.flags(original_flags);
    }
 #ifdef UCI_LOG
    ucilog << "out of search" << endl << (flush);
