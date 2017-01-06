@@ -249,7 +249,7 @@ void RootMoveGenerator::suboptimal(int strength,Move &m,int &val) {
    if (moveCount() == 1) {
        return;
    }
-   double diff = (moveList[0].score - moveList[1].score)/PAWN_VALUE;
+   double diff = double(moveList[0].score - moveList[1].score)/PAWN_VALUE;
    double s = (double)strength;
    int threshold = int(750.0/pow(2.0,s/10.0));
    // make it a little less likely to make a big blunder
