@@ -132,6 +132,7 @@ BookEntry::BookEntry( unsigned r, PositionEval ev,
                        BookEntry *nxt, bool first_file)
     :next(nxt), first(first_file), white_win_loss(0),
      eval(ev), moveEval(mev), rec(r),
+     relativeFreq(0),winWeight(0),
      count(1),
      move_index(mv_indx), weight(0)
 {
