@@ -95,7 +95,7 @@ static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
 
 enum class Objective {
-   Msq, Log, Ordinal
+   Msq, Ordinal
 };
 
 static Objective obj = Objective::Msq;
@@ -229,17 +229,6 @@ static double computeErrorTexel(double value,double result,const ColorType side)
    switch(obj) {
    case Objective::Msq:
       err = (predict-result)*(predict-result);
-   case Objective::Log:
-      if (result == 1.0) {
-         err = -log(predict);
-      } else if (result == 0.0) {
-         err = -log(1-predict);
-      } else {
-         if (predict > result)
-            err = -0.5*log(2*(1-predict));
-         else
-            err = -0.5*log(2*predict);
-      }
    case Objective::Ordinal:
       if (result == 0) {
          err = texelSigmoid(value-THETA1);
@@ -270,30 +259,18 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
 //      deriv = -2*PARAM1*(result-predict)*p/(pow(1+p,2));
       deriv = -2*PARAM1*p*((predict-1)*p + predict)/pow(p+1,3.0);
    }
-   case Objective::Log:
-      if (result == 1.0) {
-         deriv = -PARAM1*(1-predict);
-      } else if (result == 0.0) {
-         deriv = PARAM1*predict;
-      } else {
-         if (predict > result) {
-            deriv = 0.5*PARAM1*predict;
-         } else {
-            deriv = -0.5*PARAM1*(1-predict);
-         }
-      }
    case Objective::Ordinal: {
-         auto g = [] (double x) { return PARAM1/(1.0+exp(-PARAM1*x)); };
-         if (result == 0) {
-            deriv = g(value-THETA1);
-         }
-         else if (result == 0.5) {
-            deriv = g(value-THETA2) - g(THETA1-value);
-         }
-         else {
-            deriv = -g(THETA2-value);
-         }
+      auto g = [] (double x) { return PARAM1/(1.0+exp(-PARAM1*x)); };
+      if (result == 0) {
+         deriv = g(value-THETA1);
       }
+      else if (result == 0.5) {
+         deriv = g(value-THETA2) - g(THETA1-value);
+      }
+      else {
+         deriv = -g(THETA2-value);
+      }
+   }
    }
    return deriv;
 }
@@ -1389,8 +1366,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
          if (use_adagrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
-            int step_size = Util::Max(1,Util::Round(ADAGRAD_STEP_SIZE*p.range()));
-            istep = Util::Round(step_size*adjusted_grad);
+            double istep = ADAGRAD_STEP_SIZE*p.range()*adjusted_grad;
             //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
             val = Util::Max(p.min_value,Util::Min(p.max_value,val - istep));
          } else if (use_adam) {
@@ -1398,8 +1374,8 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
             double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
-            int step_size = Util::Max(1,Util::Round(ADAM_ALPHA*p.range()));
-            istep = Util::Round(step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON));
+            double step_size = ADAM_ALPHA*p.range();
+            istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
             val = Util::Max(p.min_value,Util::Min(p.max_value,val - istep));
          } else if (use_adaptive) {
@@ -1413,8 +1389,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             } else {
                step_sizes[i] = step_sizes[i] + ADAPTIVE_STEP_FACTOR1;
             }
-
-            int istep = Util::Round(step_sizes[i]);
+            score_t istep = step_sizes[i];
             if ( dv > 0.0) {
                val = Util::Min(p.max_value,val - istep);
             }
@@ -1676,9 +1651,7 @@ int CDECL main(int argc, char **argv)
              usage();
              exit(-1);
           }
-          if (strcmp(argv[arg],"log") == 0)
-             obj = Objective::Log;
-          else if (strcmp(argv[arg],"ordinal") == 0)
+          if (strcmp(argv[arg],"ordinal") == 0)
              obj = Objective::Ordinal;
           else if (strcmp(argv[arg],"msq") == 0)
              obj = Objective::Msq;
