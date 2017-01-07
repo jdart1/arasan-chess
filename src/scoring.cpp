@@ -2486,7 +2486,9 @@ void Scoring::printScore(int score, ostream &str) {
    }
    else {
       if (score >= 0) str << '+';
+      std::ios_base::fmtflags original_flags = str.flags();
       str << fixed << setprecision(2) << (score * 1.0) / double(PAWN_VALUE);
+      str.flags(original_flags);
    }
 }
 

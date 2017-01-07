@@ -485,7 +485,17 @@ void SearchController::resizeHash(size_t newSize) {
 
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),terminate(0),
-    activeSplitPoints(0),split(NULL),ti(threadInfo) {
+    nodeCount(0ULL),
+    nodeAccumulator(0),
+    node(NULL),
+    activeSplitPoints(0),
+    split(NULL),
+    ti(threadInfo),
+    threadSplitDepth(0),
+    computerSide(White),
+    ratingDiff(0),
+    ratingFactor(0),
+    talkLevel(c->getTalkLevel()) {
     LockInit(splitLock);
     // Note: context was cleared in its constructor
     setSearchOptions();
@@ -589,6 +599,7 @@ int failhigh,int complete)
     stats->complete = complete;
     if (talkLevel == Debug) {
         // This is the output for the "test" command in verbose mode
+        std::ios_base::fmtflags original_flags = cout.flags();
         cout.setf(ios::fixed);
         cout << setprecision(2);
         cout << ply << '\t';
@@ -603,6 +614,7 @@ int failhigh,int complete)
         cout << '\t';
         Scoring::printScore(stats->display_value,cout);
         cout << '\t' << stats->num_nodes << endl;
+        cout.flags(original_flags);
     }
     // Post during ponder if UCI
     if ((!controller->background || controller->uci)) {
@@ -685,9 +697,6 @@ Move *excludes, int num_excludes)
    easy_adjust = false;
    fail_high_root_extend = fail_low_root_extend = false;
    last_score = -Constants::MATE;
-#ifdef EVAL_STATS
-   Scoring::clearStats();
-#endif
    node->best = NullMove;
    if (scoring.isLegalDraw(board) &&
        !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
@@ -1123,6 +1132,7 @@ Move *excludes, int num_excludes)
    }
 
    if (talkLevel == Debug) {
+      std::ios_base::fmtflags original_flags = cout.flags();
       cout.setf(ios::fixed);
       cout << setprecision(2);
       if (stats->elapsed_time > 0) {
@@ -1176,10 +1186,8 @@ Move *excludes, int num_excludes)
       cout << stats->splits << " splits," <<
          " average thread usage=" << (float)(stats->threads)/(float)stats->samples << endl;
 #endif
-#ifdef EVAL_STATS
-      Scoring::showStats(cout);
-#endif
       cout << (flush);
+      cout.flags(original_flags);
    }
 #ifdef UCI_LOG
    ucilog << "out of search" << endl << (flush);

@@ -64,12 +64,6 @@ class Scoring
         (score>=Constants::TABLEBASE_WIN || score<=-Constants::TABLEBASE_WIN);
     }
 
-#ifdef EVAL_STATS
-    static void clearStats();
-
-    static void showStats(ostream &out);
-#endif
-
     // Try to return a score based on bitbases, INVALID_SCORE if not found
     static int tryBitbase(const Board &board);
 

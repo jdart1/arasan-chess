@@ -12,9 +12,9 @@ class Material
     friend class Board;
  public:
  Material():
-    info(0), total(0), level(0)
-	{
-	}
+    info(0), total(0), level(0), count(0)
+      {
+      }
 	
     enum {K  = 0x100000};
     enum {KP = 0x100001};
