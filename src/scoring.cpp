@@ -1738,7 +1738,7 @@ score_t Scoring::materialScore(const Board &board) const {
 
 score_t Scoring::evalu8(const Board &board, bool useCache) {
 
-   const int matScore = materialScore(board);
+   const score_t matScore = materialScore(board);
 
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
 
@@ -1753,8 +1753,8 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(White),pawnEntry.pawnData(Black),useCache);
    KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(Black),pawnEntry.pawnData(White),useCache);
-   int whiteCover = whiteKPEntry.cover == Scoring::INVALID_SCORE ? 0 : whiteKPEntry.cover;
-   int blackCover = blackKPEntry.cover == Scoring::INVALID_SCORE ? 0 : blackKPEntry.cover;
+   score_t whiteCover = whiteKPEntry.cover == Scoring::INVALID_SCORE ? 0 : whiteKPEntry.cover;
+   score_t blackCover = blackKPEntry.cover == Scoring::INVALID_SCORE ? 0 : blackKPEntry.cover;
 
    // compute positional scores
    positionalScore<White> (board, pawnEntry, whiteCover, blackCover, wScores, bScores);
@@ -1804,7 +1804,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 #endif
 
    // scale scores by game phase
-   int score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
+   score_t score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
 
    if (options.search.strength < 100) {
       // "flatten" positional score values
@@ -1826,7 +1826,11 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    //score = (score / 4) * 4;
 
 #ifdef _DEBUG
+#ifdef TUNE
+   if (fabs(score)) >= Constants::MATE) {
+#else
    if (Util::Abs(score) >= Constants::MATE) {
+#endif
       cout << board << endl;
       ASSERT(0);
    }

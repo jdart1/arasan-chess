@@ -883,12 +883,12 @@ void Tune::getParam(int index, TuneParam &param) const
    param = tune_params[index];
 }
 
-int Tune::getParamValue(int index) const
+score_t Tune::getParamValue(int index) const
 {
    return tune_params[index].current;
 }
 
-void Tune::updateParamValue(int index, int value) 
+void Tune::updateParamValue(int index, score_t value) 
 {
    tune_params[index].current = value;
 }
@@ -906,7 +906,7 @@ int Tune::findParamByName(const string &name) const {
    return -1;
 }
 
-double Tune::scale(double value,int index,int materialLevel) const
+double Tune::scale(score_t value,int index,int materialLevel) const
 {
    switch (tune_params[index].scaling) {
    case Tune::TuneParam::Any:

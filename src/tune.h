@@ -22,13 +22,13 @@ class Tune {
     Scaling scaling;
     int tunable;
 
-  TuneParam(int i, const string &n, int c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
+  TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
     index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
     }
     TuneParam():
     index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
     }
-    int range() const {
+    score_t range() const {
       return max_value - min_value;
     }
   };
@@ -271,15 +271,15 @@ class Tune {
     return tune_params[i];
   }
 
-  int getParamValue(int index) const;
+  score_t getParamValue(int index) const;
 
-  void updateParamValue(int index, int value);
+  void updateParamValue(int index, score_t value);
 
   int findParamByName(const string &name) const;
 
   static const int NUM_MISC_PARAMS = 176;
 
-  double scale(double value,int index,int materialLevel) const;
+  double scale(score_t value,int index,int materialLevel) const;
 
  private:
 
