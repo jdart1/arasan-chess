@@ -920,7 +920,7 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
             Square loc;
             while (pieces.iterate(loc)) {
                switch (TypeOfPiece(board[loc])) {
-                  case EmptyPiece:
+                  case Empty:
                   case Pawn:
                      break;
                   case Knight:
