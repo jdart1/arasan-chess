@@ -196,6 +196,7 @@ static void usage()
 }
 
 static double texelSigmoid(double val) {
+   // predicted score in range [0,1] based on eval.
    return 1.0/(1.0+exp(-PARAM1*val));
 }
 
@@ -251,14 +252,12 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
 
    if (side == Black) value = -value;
 
-   const double predict = texelSigmoid(value);
-
    double deriv = 0.0;
 
    switch(obj) {
    case Objective::Msq: {
       double p = exp(PARAM1*value);
-      deriv = -2*PARAM1*p*((predict-1)*p + predict)/pow(p+1,3.0);
+      deriv = -2*PARAM1*p*((result-1)*p + result)/(PAWN_VALUE*pow(p+1,3.0));
       break;
    }
    case Objective::Ordinal: {
@@ -1278,9 +1277,10 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
          }
          // compare predicted new value from gradient with
          // actual value
-         if (fabs(eval + derivs[i]*delta - score)>5.0) {
+         double predictedEval = eval + derivs[i]*delta;
+         if (fabs(predictedEval - score)>5.0) {
             cerr << board << endl;
-            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << eval + derivs[i]*delta << " actual score=" << score << endl;
+            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << score << endl;
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
             tune_params.updateParamValue(i,val);
@@ -1290,6 +1290,17 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
             tune_params.applyParams();
             s.evalu8(board,false);
          }
+         // Test derivative of sigmoid computation too
+         // Assume draw result
+         double result = 0.5;
+         double dT = computeTexelDeriv(eval,result,side);
+         double baseError = computeErrorTexel(eval,result,side);
+         double newError = computeErrorTexel(score,result,side);
+         double predictedError = baseError + derivs[i]*dT*delta;
+         if ((predictedError-newError) > 0.001) {
+            cerr << "warning: param " << p.name << " eval=" << eval << " base = " << baseError << " new = " << newError << " feature=" << derivs[i] << " dT= " << dT << " predicted = " << predictedError << endl;
+         }
+
          // restore old value
          tune_params.updateParamValue(i,val);
          tune_params.applyParams();
