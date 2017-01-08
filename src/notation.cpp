@@ -17,7 +17,7 @@ static void UCIMoveImage(const Move &move, ostream &image) {
         image << RankImage(DestSquare(move));
         if (TypeOfMove(move) == Promotion) {
             ASSERT(PromoteTo(move)<16);
-            image << (char)tolower(PieceImage(TypeOfPiece(PromoteTo(move))));
+            image << (char)tolower(PieceImage(PromoteTo(move)));
         }
     }
 }
