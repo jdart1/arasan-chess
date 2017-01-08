@@ -41,9 +41,9 @@ static bool regularize = false;
 // Texel method is default
 static bool texel = true;
 
-static bool use_adagrad = false;
+static bool use_adagrad = true;
 
-static bool use_adaptive = true;
+static bool use_adaptive = false;
 
 static bool use_adam = false;
 
@@ -229,6 +229,7 @@ static double computeErrorTexel(double value,double result,const ColorType side)
    switch(obj) {
    case Objective::Msq:
       err = (predict-result)*(predict-result);
+      break;
    case Objective::Ordinal:
       if (result == 0) {
          err = texelSigmoid(value-THETA1);
@@ -239,6 +240,7 @@ static double computeErrorTexel(double value,double result,const ColorType side)
       else {
          err = texelSigmoid(THETA2-value);
       }
+      break;
    }
    return err;
 }
@@ -256,8 +258,8 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
    switch(obj) {
    case Objective::Msq: {
       double p = exp(PARAM1*value);
-//      deriv = -2*PARAM1*(result-predict)*p/(pow(1+p,2));
       deriv = -2*PARAM1*p*((predict-1)*p + predict)/pow(p+1,3.0);
+      break;
    }
    case Objective::Ordinal: {
       auto g = [] (double x) { return PARAM1/(1.0+exp(-PARAM1*x)); };
@@ -270,6 +272,7 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
       else {
          deriv = -g(THETA2-value);
       }
+      break;
    }
    }
    return deriv;
@@ -1362,7 +1365,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
          }
       }
       if (dv != 0.0 && p.tunable) {
-         int istep = 1;
+         score_t istep = 1;
          if (use_adagrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
@@ -1377,7 +1380,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             double step_size = ADAM_ALPHA*p.range();
             istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
-            val = Util::Max(p.min_value,Util::Min(p.max_value,val - istep));
+            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
          } else if (use_adaptive) {
             // simple adaptive learning rate
             if (iterations == 1) {
@@ -1389,20 +1392,20 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             } else {
                step_sizes[i] = step_sizes[i] + ADAPTIVE_STEP_FACTOR1;
             }
-            score_t istep = step_sizes[i];
+            istep = step_sizes[i];
             if ( dv > 0.0) {
-               val = Util::Min(p.max_value,val - istep);
+               val = std::max<score_t>(p.min_value,val - istep);
             }
             else if (dv < 0.0) {
-               val = Util::Max(p.min_value,val + istep);
+               val = std::min<score_t>(p.max_value,val + istep);
             }
             prev_gradient[i] = dv;
          } else {
             if ( dv > 0.0) {
-               val = Util::Min(p.max_value,val + istep);
+               val = std::min<score_t>(p.max_value,val + istep);
             }
             else if (dv < 0.0) {
-               val = Util::Max(p.min_value,val - istep);
+               val = std::max<score_t>(p.min_value,val - istep);
             }
          }
          tune_params.updateParamValue(i,val);
