@@ -1071,13 +1071,15 @@ void Board::undoMove( Move move, const BoardState &old_state )
                }
                break;
             case EnPassant:
-              target = dest - 8;
-                  ASSERT(OnBoard(target));
-                  ASSERT(contents[target]==EmptyPiece);
+               target = dest - 8;
+               ASSERT(OnBoard(target));
+               ASSERT(contents[target]==EmptyPiece);
+               // note: falls through to normal case
             case Normal:
-              pawn_bits[White].clear(dest);
-              Xor(pawnHashCodeW,dest,WhitePawn);
-            default: break;
+               pawn_bits[White].clear(dest);
+               Xor(pawnHashCodeW,dest,WhitePawn);
+            default:
+               break;
             }
             pawn_bits[White].set(start);
             break;
@@ -1181,16 +1183,19 @@ void Board::undoMove( Move move, const BoardState &old_state )
                default:
                   break;
                }
-                           break;
-                        }
+               break;
+            }
             case EnPassant:
-              target = dest + 8;
-                          ASSERT(OnBoard(target));
-                          ASSERT(contents[target]== EmptyPiece);
+               target = dest + 8;
+               ASSERT(OnBoard(target));
+               ASSERT(contents[target]== EmptyPiece);
+               // note: falls through to normal case
             case Normal:
-              pawn_bits[Black].clear(dest);
-              Xor(pawnHashCodeB,dest,BlackPawn);
-            default: break;
+               pawn_bits[Black].clear(dest);
+               Xor(pawnHashCodeB,dest,BlackPawn);
+               break;
+            default:
+               break;
             }
             pawn_bits[Black].set(start);
             break;
