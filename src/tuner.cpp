@@ -38,14 +38,9 @@ using namespace tuner;
 
 static bool regularize = false;
 
-// Texel method is default
-static bool texel = true;
+enum class OptimMethod { AdaGrad, ADAM, Adaptive };
 
-static bool use_adagrad = true;
-
-static bool use_adaptive = false;
-
-static bool use_adam = false;
+static OptimMethod method = OptimMethod::Adaptive;
 
 static int iterations = 2;
 
@@ -68,8 +63,6 @@ static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
-// Max score deviation from optimal move:
-static const double MMTO_DELTA = LEARNING_SEARCH_WINDOW/7.0;
 // L2-regularization factor
 static const double REGULARIZATION = 1.2E-4;
 static const int PV_RECALC_INTERVAL = 16; // for MMTO
@@ -182,16 +175,14 @@ static void usage()
 {
    cerr << "Usage: tuner <options> <training file>" << endl;
    cerr << "Options:" << endl;
-   cerr << " -a use AdaGrad" << endl;
-   cerr << " -A use ADAM" << endl;
    cerr << " -c <cores>" << endl;
    cerr << " -d just write out current parameters values to params.cpp" << endl;
    cerr << " -i <input parameter file> -o <output parameter file>" << endl;
    cerr << " -r apply regularization" << endl;
-   cerr << " -m use MMTO method instead of Texel" << endl;
    cerr << " -x <output objective file>" << endl;
    cerr << " -n <iterations>" << endl;
-   cerr << " -O log|ordinal|msq select objective type" << endl;
+   cerr << " -o adagrad|adam|adaptive select optimization method" << endl;
+   cerr << " -O ordinal|msq select objective type" << endl;
    cerr << " -V validate gradient" << endl;
 }
 
@@ -1377,13 +1368,13 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
       }
       if (dv != 0.0 && p.tunable) {
          score_t istep = 1;
-         if (use_adagrad) {
+         if (method == OptimMethod::AdaGrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
             double istep = ADAGRAD_STEP_SIZE*p.range()*adjusted_grad;
             //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
             val = Util::Max(p.min_value,Util::Min(p.max_value,val - istep));
-         } else if (use_adam) {
+         } else if (method == OptimMethod::ADAM) {
             m[i] = ADAM_BETA1*m[i] + (1.0-ADAM_BETA1)*dv;
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
@@ -1392,7 +1383,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
             val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
-         } else if (use_adaptive) {
+         } else {
             // simple adaptive learning rate
             if (iterations == 1) {
                step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE*p.range());
@@ -1411,13 +1402,6 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
                val = std::min<score_t>(p.max_value,val + istep);
             }
             prev_gradient[i] = dv;
-         } else {
-            if ( dv > 0.0) {
-               val = std::min<score_t>(p.max_value,val + istep);
-            }
-            else if (dv < 0.0) {
-               val = std::max<score_t>(p.min_value,val - istep);
-            }
          }
          tune_params.updateParamValue(i,val);
       }
@@ -1538,11 +1522,8 @@ static void learn()
    for (int iter = 1; iter <= iterations; iter++) {
       cout << "iteration " << iter << endl;
       tune_params.applyParams();
-      int recalc;
-      if (texel)
-         recalc = iter == 1;
-      else
-         recalc = ((iter-1) % PV_RECALC_INTERVAL) == 0;
+      bool recalc = iter == 1;
+      // recalc = ((iter-1) % PV_RECALC_INTERVAL) == 0;
       if (recalc) {
          if (verbose) cout << "(re)calculating PVs" << endl;
          // clean up data from previous pass
@@ -1615,15 +1596,7 @@ int CDECL main(int argc, char **argv)
     int write_sol = 0;
 
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
-       if (strcmp(argv[arg],"-a")==0) {
-          use_adagrad = true;
-          use_adaptive = use_adam = false;
-       }
-       else if (strcmp(argv[arg],"-A")==0) {
-          use_adam = true;
-          use_adaptive = use_adagrad = false;
-       }
-       else if (strcmp(argv[arg],"-d")==0) {
+       if (strcmp(argv[arg],"-d")==0) {
           cerr << "writing initial solution" << endl;
           ++write_sol;
        }
@@ -1637,9 +1610,6 @@ int CDECL main(int argc, char **argv)
        }
        else if (strcmp(argv[arg],"-r")==0) {
           regularize = true;
-       }
-       else if (strcmp(argv[arg],"-m")==0) {
-          texel = false;
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
@@ -1659,6 +1629,24 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-V")==0) {
           validate = true;
        }
+       else if (strcmp(argv[arg],"-o")==0) {
+          ++arg;
+          if (arg >= argc) {
+             usage();
+             exit(-1);
+          }
+          if (strcmp(argv[arg],"adagrad") == 0)
+             method = OptimMethod::AdaGrad;
+          else if (strcmp(argv[arg],"adam") == 0)
+             method = OptimMethod::ADAM;
+          else if (strcmp(argv[arg],"adaptive") == 0)
+             method = OptimMethod::Adaptive;
+          else {
+             cerr << "invalid optimization type: specify one of: ";
+             cerr << "adagrad, adam or adaptive." << endl;
+             exit(-1);
+          }
+       }
        else if (strcmp(argv[arg],"-O")==0) {
           ++arg;
           if (arg >= argc) {
@@ -1671,7 +1659,7 @@ int CDECL main(int argc, char **argv)
              obj = Objective::Msq;
           else {
              cerr << "invalid objective type: specify one of: ";
-             cerr << "Log, Ordinal or Msq" << endl;
+             cerr << "Ordinal or Msq" << endl;
              exit(-1);
           }
        } else {
@@ -1684,11 +1672,6 @@ int CDECL main(int argc, char **argv)
     if (write_sol) {
       output_solution();
       exit(0);
-    }
-
-    if (use_adagrad && use_adam) {
-       cerr << "error: choose only one of -a -A" << endl;
-       exit(-1);
     }
 
     if (validate && cores > 1) {
@@ -1713,7 +1696,7 @@ int CDECL main(int argc, char **argv)
        }
     }
 
-    if (texel) LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
+    LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
 
     options.search.hash_table_size = 0;
     options.search.easy_threshold = LEARNING_SEARCH_WINDOW;
