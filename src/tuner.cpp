@@ -261,7 +261,7 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
       break;
    }
    case Objective::Ordinal: {
-      auto g = [] (double x) { return PARAM1/(1.0+exp(-PARAM1*x)); };
+      auto g = [] (double x) { return PARAM1/(PAWN_VALUE*(1.0+exp(-PARAM1*x))); };
       if (result == 0) {
          deriv = g(value-THETA1);
       }
@@ -1242,7 +1242,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 }
 
-void validateGradient(Scoring &s, const Board &board, ColorType side, double eval) {
+void validateGradient(Scoring &s, const Board &board, double eval) {
+   const ColorType side = board.sideToMove();
    vector<double> derivs(tune_params.numTuningParams(),0.0);
    double inc = 1.0;
    // compute the partial derivative vector for this position
@@ -1272,9 +1273,6 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
          tune_params.updateParamValue(i,newval);
          tune_params.applyParams();
          score_t score = s.evalu8(board,false);
-         if (board.sideToMove() != side) {
-            score = -score;
-         }
          // compare predicted new value from gradient with
          // actual value
          double predictedEval = eval + derivs[i]*delta;
@@ -1290,17 +1288,18 @@ void validateGradient(Scoring &s, const Board &board, ColorType side, double eva
             tune_params.applyParams();
             s.evalu8(board,false);
          }
+/*
          // Test derivative of sigmoid computation too
          // Assume draw result
-         double result = 0.5;
+         const double result = 0.5;
          double dT = computeTexelDeriv(eval,result,side);
          double baseError = computeErrorTexel(eval,result,side);
          double newError = computeErrorTexel(score,result,side);
          double predictedError = baseError + derivs[i]*dT*delta;
-         if ((predictedError-newError) > 0.001) {
-            cerr << "warning: param " << p.name << " eval=" << eval << " base = " << baseError << " new = " << newError << " feature=" << derivs[i] << " dT= " << dT << " predicted = " << predictedError << endl;
+         if (fabs(predictedError-newError) > 1e-4) {
+            cerr << "warning: param " << p.name << " eval=" << eval << " base=" << baseError << " new=" << newError << " feature=" << derivs[i] << " dT=" << dT << " predicted=" << predictedError << endl;
          }
-
+*/
          // restore old value
          tune_params.updateParamValue(i,val);
          tune_params.applyParams();
@@ -1325,7 +1324,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
    update_deriv_vector(s, board, Black, data.grads, -dT);
    data.target += func_value;
    if (validate) {
-      validateGradient(s, board, board.sideToMove(), record_value);
+      validateGradient(s, board, record_value);
    }
    return;
 }
