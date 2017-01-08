@@ -1,4 +1,4 @@
-// Copyright 1994-2008, 2012, 2013 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2012, 2013, 2017 by Jon Dart. All Rights Reserved.
 
 #include "stats.h"
 #include "scoring.h"
@@ -18,6 +18,8 @@ void Statistics::clear()
    state = NormalState;
    value = 0;
    tb_value = Scoring::INVALID_SCORE;
+   fromBook = false;
+   complete = 0;
    elapsed_time = 0;
    int i;
    best_line_image.clear();
@@ -25,6 +27,7 @@ void Statistics::clear()
         best_line[i] = NullMove;
    }
    multipv_count = 0;
+   multipv_limit = 1;
    failhigh = faillow = 0;
    depth = 0;
    num_nodes = (uint64_t)0;
@@ -57,6 +60,7 @@ void Statistics::clear()
 
 void Statistics::printNPS(ostream &s) {
    double nps = ((float)num_nodes)/((float)elapsed_time);
+   std::ios_base::fmtflags original_flags = s.flags();
    s.setf(ios::fixed);
    s << setprecision(2);
    if (nps >= 1000.0) {
@@ -65,4 +69,5 @@ void Statistics::printNPS(ostream &s) {
    else {
       s << nps << "k";
    }
+   s.flags(original_flags);
 }
