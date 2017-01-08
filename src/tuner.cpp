@@ -296,6 +296,7 @@ static double calc_penalty()
          if (p.tunable) {
             if (p.range()==0) {
                cerr << "warning: param " << p.name << " has zero range" << endl;
+               continue;
             }
             // normalize the values since their ranges differ
             l2 += REGULARIZATION*norm_val(p)*norm_val(p);
