@@ -192,18 +192,41 @@ FORCEINLINE int Sliding(PieceType p)
    return _sliders[p];
 }
 
-#define MakePiece( type, color ) _pieces[type][color]
-#define MakeWhitePiece( type ) (Piece)((int)type)
-#define MakeBlackPiece( type ) (Piece)((int)type + 8)
-    
-#define TypeOfPiece(piece) ((PieceType)((int)piece & 7))
-   
-#define PieceColor(piece) ((ColorType)((int)piece > 8))
-#define ColorOfPiece(piece) ((ColorType)((int)piece > 8))
+FORCEINLINE Piece MakePiece( PieceType type, ColorType color ) {
+  return _pieces[type][color];
+}
 
-#define IsEmptyPiece(piece) (piece == EmptyPiece)
+FORCEINLINE Piece MakeWhitePiece( PieceType type ) {
+  return (Piece)((int)type);
+}
+
+FORCEINLINE Piece MakeBlackPiece( PieceType type ) {
+  return (Piece)((int)type + 8);
+}
+    
+FORCEINLINE PieceType TypeOfPiece( Piece piece ) {
+  return ((PieceType)((int)piece & 7));
+}
    
-#define PieceValue(piece) PieceValues[TypeOfPiece(piece)]   
+FORCEINLINE ColorType PieceColor( Piece piece ) {
+  return ((ColorType)((int)piece > 8));
+}
+
+FORCEINLINE ColorType ColorOfPiece( Piece piece ) {
+  return ((ColorType)((int)piece > 8));
+}
+
+FORCEINLINE int IsEmptyPiece( Piece piece ) {
+  return (piece == EmptyPiece);
+}
+   
+FORCEINLINE int PieceValue( Piece piece ) {
+  return PieceValues[TypeOfPiece(piece)];
+}
+
+FORCEINLINE int PieceValue( PieceType pieceType ) {
+  return PieceValues[pieceType];
+}
 
 extern PieceType PieceCharValue( char );
 
