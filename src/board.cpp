@@ -1702,6 +1702,7 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
                      return NotInCheck;
                  }
              }
+             break;
              case Rook: {
                  const int d = (int)Attacks::directions[checker][kp];
                  if (Util::Abs(d) == 1 || Util::Abs(d) == 8) {
@@ -1741,8 +1742,9 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
           case QCastle:
           break;
           }
-       }
-       case Knight:
+      }
+      break;
+      case Knight:
         if (Attacks::knight_attacks[checker].isSet(kp)) {
            return InCheck;
         } else {
