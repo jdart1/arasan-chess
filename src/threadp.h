@@ -9,7 +9,7 @@
 #ifdef NUMA
 #include "topo.h"
 #endif
-
+#include <array>
 #include <bitset>
 #include <functional>
 
@@ -120,7 +120,7 @@ private:
 
    // lock for the class. Static so idle_loop can access.
    static LockDefine(poolLock);
-   ThreadInfo * data[Constants::MaxCPUs];
+   std::array<ThreadInfo *,Constants::MaxCPUs> data;
    unsigned nThreads;
 
    // mask of thread status - 0 if idle, 1 if active
@@ -133,7 +133,7 @@ private:
 
    SearchController *controller;
 #ifdef NUMA
-   static bitset<Constants::MaxCPUs> rebindMask;
+   static std::bitset<Constants::MaxCPUs> rebindMask;
    Topology topo;
 #endif
 };
