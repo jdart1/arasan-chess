@@ -64,7 +64,7 @@ static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
-static const double REGULARIZATION = 1.2E-4;
+static const double REGULARIZATION = 6E-5;
 static const int PV_RECALC_INTERVAL = 16; // for MMTO
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
@@ -1233,43 +1233,32 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 }
 
-void validateGradient(Scoring &s, const Board &board, double eval) {
-   const ColorType side = board.sideToMove();
+void validateGradient(Scoring &s, const Board &board, double eval, double result) {
    vector<double> derivs(tune_params.numTuningParams(),0.0);
    double inc = 1.0;
+   if (board.sideToMove() == Black) eval = -eval;
    // compute the partial derivative vector for this position
-   update_deriv_vector(s, board, side, derivs, inc);
-   update_deriv_vector(s, board, OppositeColor(side), derivs, -inc);
+   update_deriv_vector(s, board, White, derivs, inc);
+   update_deriv_vector(s, board, Black, derivs, -inc);
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       if (derivs[i] != 0.0 && tune_params[i].tunable) {
          Tune::TuneParam p = tune_params[i];
          score_t val = p.current;
          const score_t range = p.range();
-         score_t delta;
-         if (i>=Tune::KING_ATTACK_SCALE) {
-            delta = (score_t)10;
-         }
-         else if (i==Tune::PAWN_ATTACK_FACTOR1 ||
-             i==Tune::PAWN_ATTACK_FACTOR2 ||
-             (i>=Tune::MINOR_ATTACK_FACTOR &&
-              i<=Tune::QUEEN_ATTACK_BOOST2) ||
-             (i>=Tune::KING_ATTACK_COUNT_BOOST &&
-              i<=Tune::KING_ATTACK_COVER_BOOST+4))
-            delta = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION;
-         else
-            delta = std::max<score_t>(1,range/20);
+         score_t delta = std::max<score_t>(1,range/40);
 
          // increase by delta
          score_t newval = val + delta;
          tune_params.updateParamValue(i,newval);
          tune_params.applyParams();
-         score_t score = s.evalu8(board,false);
+         score_t newEval = s.evalu8(board,false);
+         if (board.sideToMove() == Black) newEval = -newEval;
          // compare predicted new value from gradient with
          // actual value
          double predictedEval = eval + derivs[i]*delta;
-         if (fabs(predictedEval - score)>5.0) {
+         if (fabs(predictedEval - newEval)>5.0) {
             cerr << board << endl;
-            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << score << endl;
+            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << newEval << endl;
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
             tune_params.updateParamValue(i,val);
@@ -1279,18 +1268,15 @@ void validateGradient(Scoring &s, const Board &board, double eval) {
             tune_params.applyParams();
             s.evalu8(board,false);
          }
-/*
          // Test derivative of sigmoid computation too
-         // Assume draw result
-         const double result = 0.5;
-         double dT = computeTexelDeriv(eval,result,side);
-         double baseError = computeErrorTexel(eval,result,side);
-         double newError = computeErrorTexel(score,result,side);
-         double predictedError = baseError + derivs[i]*dT*delta;
+         double dT = computeTexelDeriv(eval,result,White);
+         double baseError = computeErrorTexel(eval,result,White);
+         double newError = computeErrorTexel(newEval,result,White);
+         double predictedError = baseError + dT*(newEval-eval);
+         double estDeriv = (newError-baseError)/(newEval-eval);
          if (fabs(predictedError-newError) > 1e-4) {
-            cerr << "warning: param " << p.name << " eval=" << eval << " base=" << baseError << " new=" << newError << " feature=" << derivs[i] << " dT=" << dT << " predicted=" << predictedError << endl;
+            cerr << "warning: param " << p.name << " eval=" << eval << " base=" << baseError << " new=" << newError << " result=" << result << " dT=" << dT << " predicted=" << predictedError << " estDriv= " << estDeriv << endl;
          }
-*/
          // restore old value
          tune_params.updateParamValue(i,val);
          tune_params.applyParams();
@@ -1315,7 +1301,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
    update_deriv_vector(s, board, Black, data.grads, -dT);
    data.target += func_value;
    if (validate) {
-      validateGradient(s, board, record_value);
+      validateGradient(s, board, record_value, result);
    }
    return;
 }
