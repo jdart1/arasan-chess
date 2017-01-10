@@ -135,16 +135,18 @@ int BookReader::filterAndNormalize(const Board &board,
    MoveGenerator mg(board);
    const unsigned max = (unsigned)mg.generateAllMoves(move_list,1 /* repeatable */);
 
-   // Convert move indexes to moves and normalize weight values.
-   // Remove 0-weighted moves.
-   for (unsigned i=0; i<candidates.size(); i++) {
-      const unsigned index = (unsigned)candidates[i].first.index;
-      ASSERT(index < max);
-      const int normalizedWeight = (book::MAX_WEIGHT*candidates[i].second)/total_weight;
-      if (normalizedWeight && index < max) {
-         moves.push_back( pair<Move,int> (
-                             move_list[index],
-                             normalizedWeight));
+   if (total_weight) {
+      // Convert move indexes to moves and normalize weight values.
+      // Remove 0-weighted moves.
+      for (unsigned i=0; i<candidates.size(); i++) {
+         const unsigned index = (unsigned)candidates[i].first.index;
+         ASSERT(index < max);
+         const int normalizedWeight = (book::MAX_WEIGHT*candidates[i].second)/total_weight;
+         if (normalizedWeight && index < max) {
+            moves.push_back( pair<Move,int> (
+                                move_list[index],
+                                normalizedWeight));
+         }
       }
    }
    return (int)moves.size();
