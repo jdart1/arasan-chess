@@ -349,7 +349,7 @@ void SearchController::setThreadSplitDepth(int depth) {
 }
 
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
-int score, int alpha, int beta)
+score_t score, score_t alpha, score_t beta)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
     stats->multipv_count = rootSearch->multipv_count;
@@ -624,8 +624,8 @@ int failhigh,int complete)
     }
 }
 
-int Search::drawScore(const Board & board) const {
-    int score = 0;
+score_t Search::drawScore(const Board & board) const {
+    score_t score = 0;
 
     // if we know the opponent's rating (which will be the case if playing
     // on ICC), factor that into the draw score - a draw against a high-rated
@@ -667,8 +667,8 @@ void RootSearch::init(const Board &board, NodeStack &stack) {
 }
 
 #ifdef SYZYGY_TBS
-int Search::tbScoreAdjust(const Board &board,
-                    int value,int tb_hit,Options::TbType tablebase_type,int tb_score) const 
+score_t Search::tbScoreAdjust(const Board &board,
+                    score_t value,int tb_hit,Options::TbType tablebase_type,score_t tb_score) const 
 {
    if (tb_hit && tablebase_type == Options::TbType::SyzygyTb &&
        !Scoring::mateScore(value)) {
@@ -719,12 +719,12 @@ Move *excludes, int num_excludes)
    controller->time_check_counter = Time_Check_Interval;
    last_time = 0;
 
-   int value = Scoring::INVALID_SCORE;
+   score_t value = Scoring::INVALID_SCORE;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
    int tb_hit = 0, tb_pieces = 0;
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
-   int tb_score = Scoring::INVALID_SCORE;
+   score_t tb_score = Scoring::INVALID_SCORE;
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -841,11 +841,11 @@ Move *excludes, int num_excludes)
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
          } else if (iteration_depth <= MoveGenerator::EASY_PLIES) {
-            lo_window = Util::Max(-Constants::MATE,value - options.search.easy_threshold);
-            hi_window = Util::Min(Constants::MATE,value + options.search.easy_threshold + aspirationWindow/2);
+            lo_window = std::max<score_t>(-Constants::MATE,value - options.search.easy_threshold);
+            hi_window = std::min<score_t>(Constants::MATE,value + options.search.easy_threshold + aspirationWindow/2);
          } else {
-            lo_window = Util::Max(-Constants::MATE,value - aspirationWindow/2);
-            hi_window = Util::Min(Constants::MATE,value + aspirationWindow/2);
+            lo_window = std::max<score_t>(-Constants::MATE,value - aspirationWindow/2);
+            hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
          }
          if (talkLevel == Trace && controller->background) {
             cout << "# " << iteration_depth << ". move=";
@@ -991,7 +991,7 @@ Move *excludes, int num_excludes)
                   if (iteration_depth <= MoveGenerator::EASY_PLIES) {
                      aspirationWindow += 2*options.search.easy_threshold;
                   }
-                  lo_window = Util::Max(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
+                  lo_window = std::max<score_t>(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
                }
             }
          }
@@ -1195,7 +1195,7 @@ Move *excludes, int num_excludes)
    return node->best;
 }
 
-int RootSearch::ply0_search(RootMoveGenerator &mg, int alpha, int beta,
+int RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         int iteration_depth,
 int depth, Move exclude [], int num_exclude)
 {
@@ -1215,7 +1215,7 @@ int depth, Move exclude [], int num_exclude)
     in_check = (board.checkStatus() == InCheck);
     BoardState save_state = board.state;
 
-    int try_score = alpha;
+    score_t try_score = alpha;
     //
     // Re-sort the ply 0 moves and re-init move generator.
     mg.reorder(node->best,controller->getIterationDepth());
@@ -1261,7 +1261,7 @@ int depth, Move exclude [], int num_exclude)
     activeSplitPoints = 0;
 
     int move_index = 0;
-    int hibound = beta;
+    score_t hibound = beta;
     fail_high_root = 0;
     while (!node->cutoff && !terminate) {
         Move move;
@@ -1295,7 +1295,7 @@ int depth, Move exclude [], int num_exclude)
         board.doMove(move);
         setCheckStatus(board,in_check_after_move);
         node->done[node->num_try++] = move;
-        int lobound = wide ? node->alpha : node->best_score;
+        score_t lobound = wide ? node->alpha : node->best_score;
 #ifdef _TRACE
         cout << "window [" << -hibound << ", " << -lobound <<
           "]" << endl;
@@ -1420,7 +1420,7 @@ int depth, Move exclude [], int num_exclude)
     return node->best_score;
 }
 
-int Search::quiesce(int ply,int depth)
+score_t Search::quiesce(int ply,int depth)
 {
    // recursive function, implements quiescence search.
    //
@@ -1484,7 +1484,7 @@ int Search::quiesce(int ply,int depth)
       tt_depth = HashEntry::QSEARCH_NO_CHECK_DEPTH;
    }
    Move hashMove = NullMove;
-   int hashValue;
+   score_t hashValue;
    HashEntry::ValueType result = HashEntry::NoHit;
    HashEntry hashEntry;
    // Note: we copy the hash entry .. so mods by another thread do not
@@ -1588,7 +1588,7 @@ int Search::quiesce(int ply,int depth)
       if (!board.wasLegal((node-1)->last_move)) {
          return -Illegal;
       }
-      int try_score;
+      score_t try_score;
       MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, master());
       Move move;
       BoardState state = board.state;
@@ -1686,7 +1686,7 @@ int Search::quiesce(int ply,int depth)
       // Establish a default score.  This score is returned if no
       // captures are generated, or if no captures generate a better
       // score (since we generally can choose whether or not to capture).
-      int bitscore;
+      score_t bitscore;
       ASSERT(node->eval == Scoring::INVALID_SCORE);
       if (board.getMaterial(White).materialLevel()==0 &&
           board.getMaterial(Black).materialLevel()==0 &&
@@ -1787,7 +1787,7 @@ int Search::quiesce(int ply,int depth)
                   indent(ply); cout << "pruned (futility)" << endl;
                }
 #endif
-               node->best_score = Util::Max(node->best_score,optScore);
+               node->best_score = std::max<score_t>(node->best_score,optScore);
                break;
             }
          }
@@ -1850,7 +1850,7 @@ int Search::quiesce(int ply,int depth)
                 !passedPawnPush(board,move) &&
                 node->beta > -Constants::TABLEBASE_WIN &&
                 (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-               const int optScore = Gain(move) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+               const score_t optScore = Gain(move) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
                if (optScore < node->best_score) {
 #ifdef _TRACE
                   if (master()) {
@@ -1861,12 +1861,12 @@ int Search::quiesce(int ply,int depth)
                }
             }
             // See pruning
-            int neededGain = node->best_score - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN;
+            score_t neededGain = node->best_score - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN;
             if (PieceValue(Capture(move)) - PieceValue(PieceMoved(move)) <= neededGain &&
                 node->beta > -Constants::TABLEBASE_WIN &&
                 !passedPawnPush(board,move) &&
                 !disc.isSet(StartSquare(move)) &&
-                !seeSign(board,move,Util::Max(0,neededGain))) {
+                !seeSign(board,move,std::max<score_t>(0,neededGain))) {
 #ifdef _TRACE
                if (master()) {
                   indent(ply); cout << "pruned (SEE)" << endl;
@@ -2019,7 +2019,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
     // not have an accurate score.
     if (!terminate) {
         // store the position in the hash table, if there's room
-        int value = node->best_score;
+        score_t value = node->best_score;
         HashEntry::ValueType val_type;
         // Adjust mate scores to reflect current ply.
         if (value <= -Constants::MATE_RANGE) {
@@ -2078,7 +2078,7 @@ int Search::calcExtensions(const Board &board,
    node->extensions = 0;
    int extend = 0;
    int pruneOk = 1;
-   int swap = Scoring::INVALID_SCORE;
+   score_t swap = Scoring::INVALID_SCORE;
    if (board.checkStatus() == InCheck) { // evading check
       pruneOk = 0;
       if (IsForced(move)) {
@@ -2208,7 +2208,7 @@ int Search::calcExtensions(const Board &board,
 // The current board is this->board.
 // The search parameters such as depth, ply are in this->node.
 //
-int Search::search()
+score_t Search::search()
 {
     int rep_count;
     int using_tb;
@@ -2288,7 +2288,7 @@ int Search::search()
     HashEntry hashEntry;
     HashEntry::ValueType result;
     bool hashHit = false;
-    int hashValue = Scoring::INVALID_SCORE;
+    score_t hashValue = Scoring::INVALID_SCORE;
     if (node->flags & IID) {
        // already did hash probe, with no hit
        result = HashEntry::NoHit;
@@ -2418,7 +2418,7 @@ int Search::search()
     if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR))) {
        int tb_hit = 0;
        controller->stats->tb_probes++;
-       int tb_score;
+       score_t tb_score;
 #ifdef NALIMOV_TBS
        if (srcOpts.tablebase_type == Options::TbType::NalimovTb) {
           tb_hit = NalimovTb::probe_tb(board, tb_score, ply);
@@ -2443,7 +2443,7 @@ int Search::search()
                 indent(ply); cout << "EGTB hit: score " << tb_score << endl;
             }
 #endif
-            int score = tb_score;
+            score_t score = tb_score;
             // insert TB info in hash table. Adjust mate scores for
             // plies from root. Note: do not adjust TABLEBASE_WIN scores.
             if (score <= -Constants::MATE_RANGE) {
@@ -2520,8 +2520,8 @@ int Search::search()
     // as in Protector, Texel, etc.
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
         node->beta < Constants::TABLEBASE_WIN) {
-       const int margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
-       const int threshold = node->beta+margin;
+       const score_t margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
+       const score_t threshold = node->beta+margin;
        ASSERT(node->eval != Scoring::INVALID_SCORE);
        if (node->eval >= threshold) {
 #ifdef _TRACE
@@ -2540,12 +2540,12 @@ int Search::search()
     // razoring as in Glaurung & Toga
     if (pruneOk && node->beta < Constants::MATE_RANGE &&
         depth <= RAZOR_DEPTH) {
-        const int threshold = node->beta - RAZOR_MARGIN[depth/DEPTH_INCREMENT];
+        const score_t threshold = node->beta - RAZOR_MARGIN[depth/DEPTH_INCREMENT];
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
             // Note: use threshold as the bounds here, not beta, as
             // was done in Toga 3.0:
-            int v = quiesce(threshold-1,threshold,ply+1,0);
+            score_t v = quiesce(threshold-1,threshold,ply+1,0);
             if(v < threshold) {
 #ifdef _TRACE
                 indent(ply); cout << "razored node, score=" << v << endl;
@@ -2585,7 +2585,7 @@ int Search::search()
                 cout << "trying " << ply << ". " << "(null)" << endl;
             }
 #endif
-            int nscore;
+            score_t nscore;
             if (nu_depth > 0)
                 nscore = -search(-node->beta, 1-node->beta,
                                  ply+1, nu_depth);
@@ -2677,7 +2677,7 @@ int Search::search()
         node->flags |= IID;
         int alpha = node->alpha;
         node->depth = d;
-        int iid_score = -search();
+        score_t iid_score = -search();
         // set hash move to IID search result (may still be null)
         hashMove = node->best;
         // reset key params
@@ -2744,11 +2744,11 @@ int Search::search()
            // implemented in the Ippo* series of engines (and
            // presumably in Rybka), and also now in Stockfish, Komodo,
            // Texel, Protector, etc.
-           int nu_beta = hashValue - singularExtensionMargin(depth);
+           score_t nu_beta = hashValue - singularExtensionMargin(depth);
            int nu_depth = singularExtensionDepth(depth);
            // save current bounds & flags
-           int old_alpha = node->alpha;
-           int old_beta = node->beta;
+           score_t old_alpha = node->alpha;
+           score_t old_beta = node->beta;
            int old_flags = node->flags;
            node->depth = nu_depth;
            node->singularMove = hashMove;
@@ -2776,7 +2776,7 @@ int Search::search()
 #endif
         MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, master());
         BoardState state = board.state;
-        int try_score;
+        score_t try_score;
         // we do not split if in check because generally there will
         // be few moves to search there.
         const int canSplit = srcOpts.ncpus>1 && !in_check &&
@@ -2788,7 +2788,7 @@ int Search::search()
         int first = 1;
 #endif
         while (!node->cutoff && !terminate) {
-            int hibound = node->num_try == 0 ? node->beta : node->best_score +1;
+            score_t hibound = node->num_try == 0 ? node->beta : node->best_score +1;
             Move move;
             // we do not bother to lock here, because if we split
             // the node, we don't come back to this part of the loop
@@ -3069,7 +3069,7 @@ int Search::search()
 
 int Search::updateRootMove(const Board &board,
                            NodeInfo *parentNode, NodeInfo *node,
-                           Move move, int score, int move_index)
+                           Move move, score_t score, int move_index)
 {
    int locked = 0;
    SplitPoint *s = split;
@@ -3283,7 +3283,7 @@ void Search::searchSMP(ThreadInfo *ti)
             split->lock();
             ASSERT(parentNode->num_try<Constants::MaxMoves);
             parentNode->done[parentNode->num_try++] = move;
-            int parent_best = parentNode->best_score;
+            score_t parent_best = parentNode->best_score;
             split->unlock();
             // update our window in case parent best score changed
             if (try_score > parent_best) {
@@ -3327,7 +3327,7 @@ void Search::searchSMP(ThreadInfo *ti)
     // other tasks
 }
 
-int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, int score, int ply, int depth, SplitPoint *s)
+int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, score_t score, int ply, int depth, SplitPoint *s)
 {
     int cutoff = 0;
     int locked = 0;

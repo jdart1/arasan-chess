@@ -61,8 +61,8 @@ struct NodeInfo {
     NodeInfo() : cutoff(0),best(NullMove)
     {
     }
-    int best_score;
-    int alpha, beta;
+    score_t best_score;
+    score_t alpha, beta;
     int cutoff;
     int num_try;
     int flags; 
@@ -70,7 +70,7 @@ struct NodeInfo {
     Move best;
     Move last_move;
     int extensions; // mask of extensions
-    int eval, staticEval;
+    score_t eval, staticEval;
     Move pv[Constants::MaxPly];
     int pv_length;
     Move done[Constants::MaxMoves];
@@ -84,10 +84,10 @@ struct NodeInfo {
         return (beta > alpha+1);
     }
     
-    int inBounds(int score) const {
+    int inBounds(score_t score) const {
       return score > alpha && score < beta;
     }
-    int newBest(int score) const {
+    int newBest(score_t score) const {
       return score > best_score && score < beta;
     }
 };
@@ -246,7 +246,7 @@ class SearchController {
     int check_input(const Board &);
 
     void updateStats(NodeInfo *node,int iteration_depth,
-		     int score, int alpha, int beta);
+		     score_t score, score_t alpha, score_t beta);
 
     int uci;
     int age;
@@ -293,22 +293,22 @@ class Search : public ThreadControl {
 
   void init(NodeStack &ns, ThreadInfo *child_ti);
 
-    int search(int alpha, int beta,
+    int search(score_t alpha, score_t beta,
                int ply, int depth, int flags = 0) {
       PUSH(alpha,beta,flags,ply,depth);
       return POP(search());
     }
 
     // search based on current board & NodeInfo
-    int search();
+    score_t search();
 
-    int quiesce(int alpha, int beta,
+    score_t quiesce(score_t alpha, score_t beta,
                 int ply, int depth) {
        PUSHQ(alpha,beta,ply);
        return POP(quiesce(ply,depth));
     }
 
-    int quiesce(int ply,int depth);
+    score_t quiesce(int ply,int depth);
 
     int wasTerminated() const {
       return terminate;
@@ -319,8 +319,10 @@ class Search : public ThreadControl {
     }
 
     int master() const { return ti->index == 0; }
+
     // perform a subsidiary search in a separate thread
     void searchSMP(ThreadInfo *);
+
     int maybeSplit(const Board &board, NodeInfo *node,
                    MoveGenerator *mg, int ply, int depth);
     void stop() {
@@ -348,7 +350,7 @@ class Search : public ThreadControl {
    // forces a reload of that cache from the global options:
    void setSearchOptions();
 
-   int drawScore(const Board &board) const;
+   score_t drawScore(const Board &board) const;
 
 #ifdef TUNE
    static const int LEARNING_SEARCH_WINDOW;
@@ -373,11 +375,11 @@ class Search : public ThreadControl {
     void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
 
     int updateRootMove(const Board &board, NodeInfo *parentNode, 
-                       NodeInfo *node, Move move, int score, int move_index);
+                       NodeInfo *node, Move move, score_t score, int move_index);
 
     int updateMove(const Board &,
-           NodeInfo *parentNode, NodeInfo* myNode, Move move, 
-                   int score, int ply, int depth, SplitPoint *split = NULL);
+                   NodeInfo *parentNode, NodeInfo* myNode, Move move, 
+                   score_t score, int ply, int depth, SplitPoint *split = NULL);
 
    void updatePV(const Board &, Move m, int ply);
 
@@ -388,10 +390,10 @@ class Search : public ThreadControl {
    void showStatus(const Board &board, Move best,int faillow,
             int failhigh,int complete);
 
-   int tbScoreAdjust(const Board &board,
-                     int value,int tb_hit,Options::TbType tablebase_type,int tb_score) const;
+   score_t tbScoreAdjust(const Board &board,
+                     score_t score, int tb_hit, Options::TbType tablebase_type,score_t tb_score) const;
 
-   FORCEINLINE void PUSH(int alpha,int beta,int flags,
+   FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
        ++node; 
        node->alpha = node->best_score = alpha; 
@@ -406,7 +408,7 @@ class Search : public ThreadControl {
        node->pv_length = 0;
     }
 
-    FORCEINLINE void PUSHQ(int alpha,int beta, int ply) {
+    FORCEINLINE void PUSHQ(score_t alpha, score_t beta, int ply) {
        ++node; 
        node->flags = 0;
        node->alpha = node->best_score = alpha; 
@@ -416,10 +418,9 @@ class Search : public ThreadControl {
        node->pv_length = 0;
     }
 
-    FORCEINLINE int POP(int value)  {
-       int val = value; 
+    FORCEINLINE score_t POP(score_t value)  {
        --node; 
-       return val;
+       return value;
     }
 
     RootSearch *root() const {
@@ -502,7 +503,7 @@ class RootSearch : public Search {
 
  protected:
 
-  int ply0_search(RootMoveGenerator &, int alpha, int beta,
+  int ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
      int iteration_depth,
      int depth, Move exclude [], int num_exclude);
 
@@ -512,7 +513,7 @@ class RootSearch : public Search {
   Move easyMove;
   bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
   int fail_high_root;
-  int last_score;
+  score_t last_score;
   int waitTime;
   int iteration_value[Constants::MaxPly];
 };

@@ -6,11 +6,11 @@
 
 extern unsigned TB_LARGEST;
 
-const int SyzygyTb::CURSED_SCORE = 1;
+const score_t SyzygyTb::CURSED_SCORE = (score_t)1;
 
-static const int valueMap[5] = {-Constants::TABLEBASE_WIN, -SyzygyTb::CURSED_SCORE, 0, SyzygyTb::CURSED_SCORE, Constants::TABLEBASE_WIN};
+static const score_t valueMap[5] = {-Constants::TABLEBASE_WIN, -SyzygyTb::CURSED_SCORE, 0, SyzygyTb::CURSED_SCORE, Constants::TABLEBASE_WIN};
 
-static const int valueMapNo50[5] = {-Constants::TABLEBASE_WIN, -Constants::TABLEBASE_WIN, 0, Constants::TABLEBASE_WIN, Constants::TABLEBASE_WIN};
+static const score_t valueMapNo50[5] = {-Constants::TABLEBASE_WIN, -Constants::TABLEBASE_WIN, 0, Constants::TABLEBASE_WIN, Constants::TABLEBASE_WIN};
 
 static PieceType getPromotion(unsigned res)
 {
@@ -49,7 +49,7 @@ int SyzygyTb::initTB(const string &path)
       return TB_LARGEST;
 }
 
-int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
+int SyzygyTb::probe_root(const Board &b, score_t &score, set<Move> &rootMoves)
 {
    score = 0;
    unsigned results[TB_MAX_MOVES];
@@ -98,7 +98,7 @@ int SyzygyTb::probe_root(const Board &b, int &score, set<Move> &rootMoves)
    return 1;
 }
 
-int SyzygyTb::probe_wdl(const Board &b, int &score, bool use50MoveRule)
+int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)
 {
    score = 0;
    Bitboard king_bits;

@@ -344,13 +344,13 @@ int Scoring::tradeDownIndex(const Material &ourmat, const Material &oppmat)
    return index;
 }
 
-int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
+score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 {
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
-    int score = 0;
+    score_t score = 0;
 #ifdef EVAL_DEBUG
-    int tmp = score;
+    score_t tmp = score;
 #endif
     const int mdiff = ourmat.value() - oppmat.value();
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
@@ -486,13 +486,13 @@ int Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 }
 
 
-int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) const
+score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) const
 {
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
     const int mdiff = ourmat.value()-oppmat.value();
-    int score = 0;
+    score_t score = 0;
     if (ourmat.infobits() == Material::KQ) {
         if (oppmat.infobits() == Material::KRR) {
             score -= (QUEEN_VALUE-2*ROOK_VALUE);  // even
@@ -551,11 +551,11 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
     else if (ourmat.infobits() == Material::KBB) {
        if (oppmat.infobits() == Material::KB) {
           // about 85% draw
-          score -= (mdiff-int(0.35*PAWN_VALUE));
+          score -= (mdiff-score_t(0.35*PAWN_VALUE));
        }
        else if (oppmat.infobits() == Material::KN) {
           // about 50% draw, 50% won for Bishops
-          score -= int(1.5*PAWN_VALUE);
+          score -= score_t(1.5*PAWN_VALUE);
        }
        else if (oppmat.infobits() == Material::KR) {
           // draw
@@ -565,7 +565,7 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
        if (oppmat.infobits() == Material::KN ||
            oppmat.infobits() == Material::KB) {
           // about 75% draw, a little less if opponent has Bishop
-          score -= (BISHOP_VALUE - int(0.6*PAWN_VALUE) - (oppmat.hasBishop() ? int(0.15*PAWN_VALUE) : 0));
+          score -= (BISHOP_VALUE - score_t(0.6*PAWN_VALUE) - (oppmat.hasBishop() ? score_t(0.15*PAWN_VALUE) : 0));
        } else if (oppmat.infobits() == Material::KR) {
           score -= mdiff;
        }
@@ -581,13 +581,13 @@ int Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) co
 
 template<ColorType side>
 #ifdef TUNE
-int Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[5][4])
+score_t Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[5][4])
 {
 #else
-int Scoring::calcCover(const Board &board, int file, int rank) {
+score_t Scoring::calcCover(const Board &board, int file, int rank) {
 #endif
    Square sq, pawn;
-   int cover = PARAM(KING_COVER_BASE);
+   score_t cover = PARAM(KING_COVER_BASE);
    if (rank > 2) return cover;
    const int f = file > 4 ? 8 - file : file - 1;
    Bitboard pawns;
@@ -649,9 +649,9 @@ int Scoring::calcCover(const Board &board, int file, int rank) {
 // Calculate a king cover score
 template<ColorType side>
 #ifdef TUNE
-int Scoring::calcCover(const Board &board, Square kp, int (&counts)[5][4]) {
+score_t Scoring::calcCover(const Board &board, Square kp, int (&counts)[5][4]) {
 #else
-int Scoring::calcCover(const Board &board, Square kp) {
+score_t Scoring::calcCover(const Board &board, Square kp) {
 #endif
    int cover = 0;
    int kpfile = File(kp);
@@ -724,11 +724,11 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    case CanCastleEitherSide:
       {
 #ifdef TUNE
-         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
-         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
+         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
+         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
 #else
-         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
-         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
+         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
+         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
 #endif
          coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
 #ifdef TUNE
@@ -747,9 +747,9 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    case CanCastleKSide:
       {
 #ifdef TUNE
-         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
+         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
 #else
-         int k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
+         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
 #endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
 #ifdef TUNE
@@ -767,9 +767,9 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    case CanCastleQSide:
       {
 #ifdef TUNE
-         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
+         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
 #else
-         int q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
+         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
 #endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
 #ifdef TUNE
@@ -796,7 +796,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    }
 }
 
-int Scoring::outpost(const Board &board,
+score_t Scoring::outpost(const Board &board,
                      Square sq, ColorType side) const
 {
    return Rank(sq,side) > 4 && ((side == White) ?
@@ -835,7 +835,7 @@ void Scoring::scoreBishopAndPawns(const Board &board,ColorType ourSide,const Paw
    if (totalOppPawns) {
       // penalize pawns on same color square as opposing single Bishop
 #ifdef EVAL_DEBUG
-      int tmp = opp_scores.end;
+      score_t tmp = opp_scores.end;
 #endif
       opp_scores.end += ((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns) * PARAM(BISHOP_PAWN_PLACEMENT_END))/ totalOppPawns;
 #ifdef EVAL_DEBUG
@@ -863,7 +863,7 @@ void Scoring::pieceScore(const Board &board,
    Square okp = board.kingSquare(oside);
    const Bitboard &nearKing(kingProximity[oside][okp]);
    Bitboard allAttacks, minorAttacks, rookAttacks;
-   int attackWeight = 0;
+   score_t attackWeight = 0;
    int attackCount = 0;
    int majorAttackCount = 0;
    Square sq;
@@ -881,13 +881,13 @@ void Scoring::pieceScore(const Board &board,
             scores.end += PARAM(KNIGHT_PST)[Endgame][scoreSq];
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
-            const int mobl = PARAM(KNIGHT_MOBILITY)[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
+            const score_t mobl = PARAM(KNIGHT_MOBILITY)[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
             cout << "knight moblility =" << mobl << endl;
 #endif
             scores.any += mobl;
             if (outpost(board,sq,side)) {
-               int outpost_score = Params::KNIGHT_OUTPOST[outpost_defenders(board,sq,side)][scoreSq];
+               score_t outpost_score = Params::KNIGHT_OUTPOST[outpost_defenders(board,sq,side)][scoreSq];
 #ifdef EVAL_DEBUG
                cout << "knight outpost (defenders=" <<
                   outpost_defenders(board,sq,side) << "): score " << outpost_score << endl;
@@ -940,7 +940,7 @@ void Scoring::pieceScore(const Board &board,
                }
             }
             if (outpost(board,sq,side)) {
-               int outpost_score = Params::BISHOP_OUTPOST[outpost_defenders(board,sq,side)][scoreSq];
+               score_t outpost_score = Params::BISHOP_OUTPOST[outpost_defenders(board,sq,side)][scoreSq];
 #ifdef EVAL_DEBUG
                cout << "bishop outpost (defenders=" <<
                   outpost_defenders(board,sq,side) << "): score " << outpost_score << endl;
@@ -952,7 +952,7 @@ void Scoring::pieceScore(const Board &board,
                pin_count++;
             }
 
-            const int mobl = PARAM(BISHOP_MOBILITY)[Bitboard(battacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
+            const score_t mobl = PARAM(BISHOP_MOBILITY)[Bitboard(battacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
             cout << "bishop mobility (" << SquareImage(sq) << "): " << mobl << endl;
 #endif
@@ -1029,7 +1029,6 @@ void Scoring::pieceScore(const Board &board,
             scores.mid += PARAM(QUEEN_PST)[Midgame][scoreSq];
             scores.end += PARAM(QUEEN_PST)[Endgame][scoreSq];
             int qmobl = 0;
-
             Bitboard battacks(board.bishopAttacks(sq));
             allAttacks |= battacks;
             Bitboard qmobility(battacks);
@@ -1054,7 +1053,7 @@ void Scoring::pieceScore(const Board &board,
                if (rank > 3) {
                   Bitboard back
                            ((board.knight_bits[side] | board.bishop_bits[side]) & Attacks::rank_mask[side == White ? 0 : 7]);
-                  int queenOut = (PARAM(QUEEN_OUT) - (rank - 4) / 2) * (int) back.bitCount();
+                  score_t queenOut = (PARAM(QUEEN_OUT) - (rank - 4) / 2) * (int) back.bitCount();
 #ifdef EVAL_DEBUG
                   if (queenOut) {
                      cout << "premature Queen develop (" << ColorImage(side) << "): " << queenOut << endl;
@@ -1167,7 +1166,7 @@ void Scoring::pieceScore(const Board &board,
       if (oppCover < 0) {
          attackWeight += PARAM(KING_ATTACK_COVER_BOOST)[Util::Min(4,-oppCover/(PAWN_VALUE*256/1000))];
       }
-      const int index = attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION;
+      const int index = int(attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 #ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << oppCover << endl;
@@ -1177,7 +1176,7 @@ void Scoring::pieceScore(const Board &board,
       cout << " index=" << index << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
-      int kattack = PARAM(KING_ATTACK_SCALE)[Util::Min(Params::KING_ATTACK_SCALE_SIZE-1,index)];
+      score_t kattack = PARAM(KING_ATTACK_SCALE)[Util::Min(Params::KING_ATTACK_SCALE_SIZE-1,index)];
 #ifdef ATTACK_DEBUG
       cout << "scaled king attack score=  " << kattack << endl;
 #endif
@@ -1706,7 +1705,7 @@ void Scoring::calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry) {
    pawnEntry.hc = board.pawnHash();
 }
 
-int Scoring::materialScore(const Board &board) const {
+score_t Scoring::materialScore(const Board &board) const {
     const ColorType side = board.sideToMove();
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
@@ -1737,9 +1736,9 @@ int Scoring::materialScore(const Board &board) const {
 }
 
 
-int Scoring::evalu8(const Board &board, bool useCache) {
+score_t Scoring::evalu8(const Board &board, bool useCache) {
 
-   const int matScore = materialScore(board);
+   const score_t matScore = materialScore(board);
 
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
 
@@ -1754,8 +1753,8 @@ int Scoring::evalu8(const Board &board, bool useCache) {
 
    KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(White),pawnEntry.pawnData(Black),useCache);
    KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(Black),pawnEntry.pawnData(White),useCache);
-   int whiteCover = whiteKPEntry.cover == Scoring::INVALID_SCORE ? 0 : whiteKPEntry.cover;
-   int blackCover = blackKPEntry.cover == Scoring::INVALID_SCORE ? 0 : blackKPEntry.cover;
+   score_t whiteCover = whiteKPEntry.cover == Scoring::INVALID_SCORE ? 0 : whiteKPEntry.cover;
+   score_t blackCover = blackKPEntry.cover == Scoring::INVALID_SCORE ? 0 : blackKPEntry.cover;
 
    // compute positional scores
    positionalScore<White> (board, pawnEntry, whiteCover, blackCover, wScores, bScores);
@@ -1805,7 +1804,7 @@ int Scoring::evalu8(const Board &board, bool useCache) {
 #endif
 
    // scale scores by game phase
-   int score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
+   score_t score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
 
    if (options.search.strength < 100) {
       // "flatten" positional score values
@@ -1827,7 +1826,11 @@ int Scoring::evalu8(const Board &board, bool useCache) {
    //score = (score / 4) * 4;
 
 #ifdef _DEBUG
+#ifdef TUNE
+   if (fabs(score)) >= Constants::MATE) {
+#else
    if (Util::Abs(score) >= Constants::MATE) {
+#endif
       cout << board << endl;
       ASSERT(0);
    }
@@ -2108,7 +2111,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
 
    const Square kp = board.kingSquare(side);
 
-   entry.king_endgame_position = 0;
+   entry.king_endgame_position = (score_t)0;
 
    Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
    if (!all_pawns) return;
@@ -2116,8 +2119,8 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
    // Evaluate king position. Big bonus for centralizing king or
    // moving it forward in the endgame.
    Square scoreSq = (side == White) ? kp : (63-kp);
-   int k_pos = PARAM(KING_PST)[Endgame][scoreSq];
-   int k_pos_adj = 0;
+   score_t k_pos = PARAM(KING_PST)[Endgame][scoreSq];
+   score_t k_pos_adj = 0;
 
    // If all pawns are on same side, bonus for King being on the
    // same side (idea from Crafty):
@@ -2168,7 +2171,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
 
 
 template<ColorType side>
-void Scoring::scoreEndgame(const Board &board,int k_pos,Scores &scores) {
+void Scoring::scoreEndgame(const Board &board,score_t k_pos,Scores &scores) {
    const ColorType oside = OppositeColor(side);
 
    const Material &ourMaterial = board.getMaterial(side);
@@ -2543,19 +2546,19 @@ void Scoring::clearHashTables() {
 #ifdef TUNE
 #include "tune.h"
 
-static void print_array(ostream & o,int arr[], int size, int add_semi = 1)
+static void print_array(ostream & o,score_t arr[], int size, int add_semi = 1)
 {
    o << "{";
-   int *p = arr;
+   score_t *p = arr;
    for (int i = 0; i < size; i++) {
       if (i) o << ", ";
-      o << *p++;
+      o << Util::Round(*p++);
    }
    o << "}";
    if (add_semi) o << ";" << endl;
 }
 
-static void print_array(ostream & o,int mid[], int end[], int size)
+static void print_array(ostream & o,score_t mid[], score_t end[], int size)
 {
    o << "{";
    print_array(o,mid,size,0);
@@ -2598,7 +2601,7 @@ void Scoring::Params::write(ostream &o)
            it++) {
          o << (char)toupper((int)*it);
       }
-      o << " = " << param.current << ";" << endl;
+      o << " = " << Util::Round(param.current) << ";" << endl;
    }
    o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = ";
    print_array(o,Params::KING_ATTACK_COUNT_BOOST,3);

@@ -31,7 +31,7 @@ class Scoring
     ~Scoring();
         
     // evaluate "board" from the perspective of the side to move.
-    int evalu8( const Board &board, bool useCache = true );
+    score_t evalu8( const Board &board, bool useCache = true );
 
     // checks for legal draws plus certain other theoretically
     // draw positions
@@ -70,9 +70,9 @@ class Scoring
     void clearHashTables();
 
     // return a material score
-    int materialScore( const Board &board ) const;
+    score_t materialScore( const Board &board ) const;
 
-    int outpost(const Board &board, Square sq, ColorType side) const;
+    score_t outpost(const Board &board, Square sq, ColorType side) const;
 
     int outpost_defenders(const Board &board,
                           Square sq, ColorType side) const {
@@ -119,7 +119,11 @@ class Scoring
            byte pawn_file_mask;
            byte passer_file_mask;
            byte pad;
+#ifdef TUNE
+           score_t endgame_score, midgame_score;
+#else
            int32_t endgame_score, midgame_score;
+#endif
   	   int w_square_pawns,b_square_pawns;
            int outside;
 #ifdef TUNE
@@ -135,8 +139,13 @@ class Scoring
 
     struct KingPawnHashEntry {
        hash_t hc;
+#ifdef TUNE
+       score_t cover;
+       score_t king_endgame_position;
+#else
        int32_t cover;
        int32_t king_endgame_position;
+#endif
 #ifdef TUNE
        float counts[5][4];
 #endif
@@ -171,8 +180,8 @@ class Scoring
       Scores(const Scores &s)
       :mid(s.mid),end(s.end),any(s.any) {
       }
-      int mid, end, any;
-      int blend(int materialLevel ) {
+      score_t mid, end, any;
+      score_t blend(int materialLevel ) {
         return any + mid*Params::MATERIAL_SCALE[materialLevel]/128 +
           end*(128-Params::MATERIAL_SCALE[materialLevel])/128;
       }
@@ -195,9 +204,9 @@ class Scoring
     template <ColorType side>
         static int theoreticalDraw(const Board &board);
 
-    int adjustMaterialScore(const Board &board, ColorType side) const;
+    score_t adjustMaterialScore(const Board &board, ColorType side) const;
 
-    int adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
+    score_t adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
 
     template <ColorType bishopColor>
       void scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
@@ -212,17 +221,17 @@ class Scoring
 
     template <ColorType side>
 #ifdef TUNE
-    static int calcCover(const Board &board, int file, int rank, int (&counts)[5][4]);
+    static score_t calcCover(const Board &board, int file, int rank, int (&counts)[5][4]);
 #else
-    static int calcCover(const Board &board, int file, int rank);
+    static score_t calcCover(const Board &board, int file, int rank);
 #endif
 
     // Compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
 #ifdef TUNE
-    static int calcCover(const Board &board, Square kp, int (&counts)[5][4]);
+    static score_t calcCover(const Board &board, Square kp, int (&counts)[5][4]);
 #else
-    static int calcCover(const Board &board, Square kp);
+    static score_t calcCover(const Board &board, Square kp);
 #endif
 
     void calcPawnData(const Board &board, ColorType side,
@@ -242,7 +251,7 @@ class Scoring
 		  const PawnHashEntry::PawnData &oppPawnData, Scores &);
 
     template <ColorType side>
-      void scoreEndgame(const Board &,int k_pos,Scores &);
+      void scoreEndgame(const Board &,score_t k_pos,Scores &);
 
     template <ColorType side>
       int specialCaseEndgame(const Board &,

@@ -8,11 +8,11 @@
 // This function performs a static exchange evalution ("SEE") to
 // estimate the gain from making capture move "move" on board
 // "board".
-int see( const Board &board, Move move );
+score_t see( const Board &board, Move move );
 
 // return 0 if SEE value is below threshold, 1 if SEE value
 // is >= threshold
-int seeSign( const Board &board, Move move, int threshold);
+score_t seeSign( const Board &board, Move move, score_t threshold);
 
 #endif
 

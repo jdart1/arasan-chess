@@ -40,7 +40,7 @@ static int map_from_pst(int i)
    return MakeSquare(f,r,White);
 }
 
-static void apply_to_pst(int i,int val,int arr[]) 
+static void apply_to_pst(int i,score_t val,score_t arr[]) 
 {
    int r = 1+(i/4);
    int f = 1+(i%4);
@@ -56,7 +56,7 @@ static int map_from_outpost(int i)
    return MakeSquare(f,r,White);
 }
 
-static void apply_to_outpost(int i,int val,int arr[]) 
+static void apply_to_outpost(int i,score_t val,score_t arr[]) 
 {
    int r = 5+(i/4);
    int f = 1+(i%4);
@@ -113,14 +113,14 @@ Tune::Tune()
         Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",10,0,25,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",10,0,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",8,0,25,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",8,0,25,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",25,10,50,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,5,70,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,12,75,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",34,0,75,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_ATTACK_BOOST2,"rook_attack_boost2",34,0,75,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",33,25,75,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",33,20,75,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",50,0,750,Tune::TuneParam::Midgame,1),
@@ -609,7 +609,7 @@ void Tune::applyParams() const
 {
    checkParams();
 
-   int *dest = Scoring::Params::RB_ADJUST;
+   score_t *dest = Scoring::Params::RB_ADJUST;
    int i, j = 0;
    for (i = 0; i < 4; i++) {
       *dest++ = Tune::tune_params[j++].current;
@@ -883,12 +883,12 @@ void Tune::getParam(int index, TuneParam &param) const
    param = tune_params[index];
 }
 
-int Tune::getParamValue(int index) const
+score_t Tune::getParamValue(int index) const
 {
    return tune_params[index].current;
 }
 
-void Tune::updateParamValue(int index, int value) 
+void Tune::updateParamValue(int index, score_t value) 
 {
    tune_params[index].current = value;
 }
@@ -906,7 +906,7 @@ int Tune::findParamByName(const string &name) const {
    return -1;
 }
 
-double Tune::scale(double value,int index,int materialLevel) const
+double Tune::scale(score_t value,int index,int materialLevel) const
 {
    switch (tune_params[index].scaling) {
    case Tune::TuneParam::Any:

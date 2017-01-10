@@ -161,7 +161,7 @@ endif
 
 default: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
 
-tuning: dirs $(EXPORT)/$(ARASANX)-tune $(EXPORT)/tuner
+tuning: dirs $(EXPORT)/tuner
 
 # Solaris target: note only GCC is supported
 sparc-solaris: 
@@ -291,11 +291,15 @@ endif
 
 ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
+TB_TUNE_OBJS := $(TB_OBJS) $(TUNE_BUILD)/syzygy.o $(TUNE_BUILD)/tbprobe.o
 TB_OBJS := $(TB_OBJS) $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
 STB_FLAGS := -x c++ $(CFLAGS)
 $(BUILD)/%.o: $(STB)/%.c
 	$(CC) $(STB_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
+
+$(TUNE_BUILD)/%.o: $(STB)/%.c
+	$(CC) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 endif
 
 ARASANX_SOURCES = arasanx.cpp globals.cpp  \
@@ -359,7 +363,7 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
-TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
+TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
@@ -368,9 +372,6 @@ $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
-
-$(EXPORT)/$(ARASANX)-tune:  $(ARASANX_TUNE_OBJS) 
-	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(ARASANX_TUNE_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX)-tune -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
 	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)

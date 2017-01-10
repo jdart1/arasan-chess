@@ -150,8 +150,13 @@ class HashEntry {
 
       struct Values
       BEGIN_PACKED_STRUCT
+#ifdef TUNE
+        float value;
+        float static_value;
+#else
         int32_t value;
         int32_t static_value;
+#endif
       END_PACKED_STRUCT
 #ifdef __INTEL_COMPILER
 #pragma pack(pop)
