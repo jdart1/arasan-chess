@@ -218,6 +218,9 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 
  ThreadPool::ThreadPool(SearchController *ctrl, int n) :
     controller(ctrl) {
+   for (int i = 0; i < Constants::MaxCPUs; i++) {
+      data[i] = NULL;
+   }
 #ifndef _WIN32
    if (pthread_attr_init (&stackSizeAttrib)) {
       perror("pthread_attr_init");
@@ -247,9 +250,6 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
   LockInit(io_lock);
 #endif
    LockInit(poolLock);
-   for (int i = 0; i < Constants::MaxCPUs; i++) {
-      data[i] = NULL;
-   }
    nThreads = n;
    for (int i = 0; i < n; i++) {
       ThreadInfo *p = new ThreadInfo(this,i);
