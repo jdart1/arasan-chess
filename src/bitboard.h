@@ -304,7 +304,7 @@ class Bitboard
 #ifdef USE_POPCNT
        return bitCount() == 1;
 #else
-       return data && ((data & (data-1)) == (uint64_t)0);
+       return data != (uint64_t)0 && ((data & (data-1)) == (uint64_t)0);
 #endif
     }
 

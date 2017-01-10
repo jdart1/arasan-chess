@@ -344,10 +344,10 @@ public:
    }
 
    // Return a bitboard of all pieces that are pinned (have attacker
-   // of "side" behind them that would attack "ksq" if the piece were
-   // moved). If "side" is the same side as the king then these are
+   // of "pnnerSide" behind them that would attack "ksq" if the piece were
+   // moved). If "pinnedSide" is the same side as pinnerSide then these are
    // pieces that could generate discovered check.
-   Bitboard getPinned(Square ksq, ColorType side) const;
+   Bitboard getPinned(Square ksq, ColorType pinnerSide, ColorType pinnedSide) const;
 
    // Get repetition count, stop if "target" count reached
    int repCount(int target = 2) const;

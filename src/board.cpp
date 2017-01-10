@@ -1881,12 +1881,12 @@ int Board::anyRep() const
    return 0;
 }
 
-Bitboard Board::getPinned(Square ksq, ColorType side) const {
+Bitboard Board::getPinned(Square ksq, ColorType pinnerSide, ColorType pinnedSide) const {
     // Same algorithm as Stockfish: get potential pinners then
     // determine which are actually pinning.
-    Bitboard pinners( ((rook_bits[side] | queen_bits[side]) &
+    Bitboard pinners( ((rook_bits[pinnerSide] | queen_bits[pinnerSide]) &
                  Attacks::rank_file_mask[ksq]) |
-                ((bishop_bits[side] | queen_bits[side]) &
+                ((bishop_bits[pinnerSide] | queen_bits[pinnerSide]) &
                  Attacks::diag_mask[ksq]));
     Square pinner;
     Bitboard result;
@@ -1897,7 +1897,7 @@ Bitboard Board::getPinned(Square ksq, ColorType side) const {
         if (b.singleBitSet()) {
             // Only one piece between "pinner" and King. See if it is
             // the correct color.
-            result |= (b & occupied[side]);
+            result |= (b & occupied[pinnedSide]);
         }
     }
     return result;

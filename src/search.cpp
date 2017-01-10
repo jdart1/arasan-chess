@@ -1754,7 +1754,7 @@ score_t Search::quiesce(int ply,int depth)
       int try_score;
       BoardState state(board.state);
       const ColorType oside = board.oppositeSide();
-      Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove()));
+      Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
       // Isn't really a loop: but we code this way so can use
       // break to exit the following block.
       while (!IsNull(hashMove) && validMove(board,hashMove)) {

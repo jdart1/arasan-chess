@@ -14,8 +14,9 @@
 #include "search.h"
 #include "globals.h"
 
+#include <algorithm>
 #include <iostream>
-
+#include <set>
 #include <string>
 
 using namespace std;
@@ -27,15 +28,12 @@ static int testIsPinned() {
        string fen;
        Square start, dest;
        int result;
-       IsPinnedData(const char *fenStr, Square s, Square d, int res) {
-          fen = fenStr; 
+       IsPinnedData(const char *fenStr, Square s, Square d, int res) 
+          : fen(fenStr), start(s), dest(d), result(res) {
           if (!BoardIO::readFEN(board, fenStr)) {
              cerr << "error in FEN: " << fenStr << endl;
              return;
           }
-          dest = d;
-          start = s;
-          result = res;
        }
        Board board;
     };
@@ -69,14 +67,72 @@ static int testIsPinned() {
        IsPinnedData("1r5k/5bp1/3K2p1/8/4PR1P/1p4b1/6BN/2n4Q w - -",F4,F3,1),
        IsPinnedData("1r6/2b2bp1/3r2p1/2p1k3/4P2P/1pn4K/1B4BQ/N5R1 b - -",C3,A4,1),
        IsPinnedData("1r5k/2b2bp1/3r2p1/2p1K3/7P/1p2R3/4B2Q/2n1r3 w - -",E3,C3,0)
-    }; 
+    };
 
     int errs = 0;
     for (int i = 0; i<28; i++) {
        const IsPinnedData & data = cases[i];
        if (data.board.isPinned(data.board.sideToMove(),data.start, data.dest) != data.result) {
-          cerr << "isPinned: error in case " << i << endl; 
+          cerr << "isPinned: error in case " << i << endl;
           ++errs;
+       }
+    }
+    return errs;
+}
+
+static int testGetPinned() {
+
+    struct GetPinnedData {
+       string fen;
+       set<Square> sqs;
+       int result;
+       GetPinnedData(const char *fenStr, const std::initializer_list<Square> &sqlist) {
+          fen = fenStr;
+          if (!BoardIO::readFEN(board, fenStr)) {
+             cerr << "error in FEN: " << fenStr << endl;
+             return;
+          }
+          for (auto it = sqlist.begin(); it != sqlist.end(); it++) {
+             sqs.insert(*it);
+          }
+       }
+       Board board;
+    };
+
+    const GetPinnedData cases[] = {
+       GetPinnedData("1R2b2k/5rp1/3Q2p1/2p5/4P2P/1p6/2r1n1BK/8 w - -",{E8}),
+       GetPinnedData("4r2k/5bp1/3Q2p1/2p1B2p/4P3/1p5R/2r1n2K/8 w - -", {H5, G7}),
+
+       GetPinnedData("5R2/7b/1p3n1n/5k2/P1P1p3/2P1B2P/4P1BK/3r4 w - -", {F6}),
+       GetPinnedData("r1k2r2/p6p/2pbn3/2p1p1pq/N2p4/1P1P1PPB/P1Q2RKP/R7 w - -", {E6}),
+       GetPinnedData("4kn1Q/4b3/2q3p1/1n2p1P1/1pB5/1P2B1N1/1PK5/8 w - -",{F8}),
+       GetPinnedData("4kn1Q/4b3/2q3p1/1n2p1P1/1pB5/1P2B1N1/1PK5/8 b - -",{C4}),
+       GetPinnedData("4knbQ/8/2q3p1/1n2p1P1/1pB5/1P2B1N1/1PK5/8 w - -",{}),
+       GetPinnedData("7B/p2q4/1p1p1p2/1PpPk1pQ/4P3/3n4/1P5P/5B1K w - -",{G5,F6}),
+       GetPinnedData("B7/4Npp1/7p/2k1p3/p1pn2PP/P3n1K1/2r2B2/2R5 w - -",{}),
+       GetPinnedData("8/2p3r1/1p4kR/1P1P4/3rP2R/2p5/4K2P/8 b - -",{})
+    };
+
+    int errs = 0;
+    for (int i = 0; i<10; i++) {
+       const GetPinnedData & data = cases[i];
+       Board board(data.board);
+       const ColorType side = board.sideToMove();
+       const ColorType oside = board.oppositeSide();
+       Bitboard b = board.getPinned(board.kingSquare(oside), side, oside);
+       if (b.bitCount() != data.sqs.size()) {
+          cout << i << ' ' << b.bitCount() << ' ' << data.sqs.size() << endl;
+          cerr << "error in getPinned (count), case " << i << endl;
+          ++errs;
+          continue;
+       }
+       Square sq;
+       while (b.iterate(sq)) {
+          if (data.sqs.count(sq) != 1) {
+             cerr << "error in getPinned, case " << i << ' ' <<
+                SquareImage(sq) << " not found" << endl;
+             ++errs;
+          }
        }
     }
     return errs;
@@ -88,19 +144,17 @@ static int testSee() {
        string fen;
        Move move;
        int result;
-       SeeData(const char *fenStr, const char *moveStr, int res) {
-          fen = fenStr; 
+       SeeData(const char *fenStr, const char *moveStr, int res) :
+          fen(fenStr), move(NullMove), result(res) {
           if (!BoardIO::readFEN(board, fenStr)) {
-             cerr << "error in FEN: " << fenStr << endl;
+             cerr << "warning: testSee: error in FEN: " << fenStr << endl;
              return;
           }
           move = Notation::value(board,board.sideToMove(),
                                  Notation::SAN_IN,moveStr);
           if (IsNull(move)) {
-             cerr << "error in move: " << moveStr << endl;
-             return;
+             cerr << "warning: testSee: error in move: " << moveStr << endl;
           }
-          result = res;
        }
        Board board;
     };
@@ -150,7 +204,7 @@ static int testNotation() {
     struct NotationData {
        string fen,moveStr;
        NotationData(const char *fenStr, const char *s) {
-          fen = fenStr; 
+          fen = fenStr;
           if (!BoardIO::readFEN(board, fenStr)) {
              cerr << "error in FEN: " << fenStr << endl;
              return;
@@ -190,7 +244,7 @@ static int testNotation() {
            cout << "notation: error in case " << i << endl;
            ++errs;
         }
-    } 
+    }
     // Verify e.p. square is set correctly
     Board board;
     stringstream s(notationData[15].fen);
@@ -246,7 +300,7 @@ static int testNotation() {
     return errs;
 }
 
-static int testPGN() { 
+static int testPGN() {
 static const string pgn_test = "[Event \"?\"]"
 "[Site \"chessclub.com\"]"
 "[Date \"2013.12.16\"]"
@@ -283,7 +337,7 @@ static const string pgn_test = "[Event \"?\"]"
          ++errs;
          cerr << "error in PGN test: bad value" << endl;
       }
-      
+
       int var = 0;
       int seen = 0;
       for (;;) {
@@ -375,7 +429,7 @@ static int testEval() {
         "8/6pk/6p1/4r3/1Qp5/4qPpP/6P1/6RK b - - 0 44",
         "2k5/1p1b1p2/5n2/p1p1pP2/2PnPq2/3P2r1/PP3QB1/3R1RK1 b - - 0 36"
     };
-    
+
     int errs = 0;
     for (int i = 0; i < CASES; i++) {
         Board board;
@@ -465,7 +519,7 @@ static int testDrawEval() {
 }
 
 static int testWouldAttack() {
-   static const struct TestCase 
+   static const struct TestCase
    {
       string fen;
       Square start, dest;
@@ -506,7 +560,7 @@ static int testWouldAttack() {
 }
 
 static int testCheckStatus() {
-   static const struct TestCase 
+   static const struct TestCase
    {
       string fen;
       string move;
@@ -570,7 +624,7 @@ static int testCheckStatus() {
    return errs;
 }
 
-static int testRec(const EPDRecord &rec) 
+static int testRec(const EPDRecord &rec)
 {
    int errs = 0;
    if (rec.hasError()) {
@@ -636,7 +690,7 @@ static int testEPD()
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
-   static const struct TestCase 
+   static const struct TestCase
    {
       string fen;
       int depth;
@@ -687,7 +741,7 @@ static int testPerft()
       TestCase("8/8/8/8/1k6/8/K1p5/8 b - - 0 1",7,567584),
       // double check:
       TestCase("8/8/2k5/5q2/5n2/8/5K2/8 b - - 0 1",4,23527),
-      TestCase("8/5k2/8/5N2/5Q2/2K5/8/8 w - - 0 1",4,23527)    
+      TestCase("8/5k2/8/5N2/5Q2/2K5/8/8 w - - 0 1",4,23527)
    };
    int errs = 0;
    for (int i = 0; i<28; i++) {
@@ -715,6 +769,7 @@ int doUnit() {
    errs += testWouldAttack();
    errs += testNotation();
    errs += testIsPinned();
+   errs += testGetPinned();
    errs += testSee();
    errs += testPGN();
    errs += testEval();
