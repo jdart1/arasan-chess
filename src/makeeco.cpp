@@ -27,18 +27,22 @@ void charout(unsigned char c)
     else
     {
         cout << '\\';
+        std::ios_base::fmtflags original_flags = cout.flags();
 	cout.fill('0');
         std::streamsize oldwidth = cout.width();
 	cout.width(3);
 	cout << (oct) << (unsigned)c;
 	cout.width(oldwidth);
 	cout.fill(' ');
+        cout.flags(original_flags);
     }
 }
 
 static void write_64(hash_t h, ostream &out)
 {
-  out << "0x" << (hex) << h << "ULL";
+   std::ios_base::fmtflags original_flags = out.flags();
+   out << "0x" << (hex) << h << "ULL";
+   out.flags(original_flags);
 }
 
 int do_eco(const string &eco_line)
