@@ -217,7 +217,7 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 }
 
  ThreadPool::ThreadPool(SearchController *ctrl, int n) :
-    controller(ctrl) {
+    controller(ctrl), nThreads(n) {
    for (int i = 0; i < Constants::MaxCPUs; i++) {
       data[i] = NULL;
    }
@@ -250,7 +250,6 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
   LockInit(io_lock);
 #endif
    LockInit(poolLock);
-   nThreads = n;
    for (int i = 0; i < n; i++) {
       ThreadInfo *p = new ThreadInfo(this,i);
       if (i==0) {

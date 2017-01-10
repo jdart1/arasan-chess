@@ -120,8 +120,9 @@ private:
 
    // lock for the class. Static so idle_loop can access.
    static LockDefine(poolLock);
-   std::array<ThreadInfo *,Constants::MaxCPUs> data;
+   SearchController *controller;
    unsigned nThreads;
+   std::array<ThreadInfo *,Constants::MaxCPUs> data;
 
    // mask of thread status - 0 if idle, 1 if active
    static uint64_t activeMask;
@@ -131,7 +132,6 @@ private:
    pthread_attr_t stackSizeAttrib;
 #endif
 
-   SearchController *controller;
 #ifdef NUMA
    static std::bitset<Constants::MaxCPUs> rebindMask;
    Topology topo;
