@@ -85,16 +85,13 @@ static int testGetPinned() {
     struct GetPinnedData {
        string fen;
        set<Square> sqs;
-       int result;
-       GetPinnedData(const char *fenStr, const std::initializer_list<Square> &sqlist) {
-          fen = fenStr;
+       GetPinnedData(const char *fenStr, const std::initializer_list<Square> &sqlist) : fen(fenStr) {
           if (!BoardIO::readFEN(board, fenStr)) {
              cerr << "error in FEN: " << fenStr << endl;
              return;
           }
-          for (auto it = sqlist.begin(); it != sqlist.end(); it++) {
-             sqs.insert(*it);
-          }
+          std::for_each(sqlist.begin(), sqlist.end(),
+                        [this] (Square sq) { sqs.insert(sq); });
        }
        Board board;
     };
