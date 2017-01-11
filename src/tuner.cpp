@@ -1358,8 +1358,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
             double istep = ADAGRAD_STEP_SIZE*p.range()*adjusted_grad;
-            //cout << i << " step: " << istep << " variance " << dv << " adjusted grad " << adjusted_grad <<  endl;
-            val = Util::Max(p.min_value,Util::Min(p.max_value,val - istep));
+            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
          } else if (method == OptimMethod::ADAM) {
             m[i] = ADAM_BETA1*m[i] + (1.0-ADAM_BETA1)*dv;
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
