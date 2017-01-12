@@ -1173,8 +1173,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(2,attackCount-2)];
       }
       int cover_boost_index = -1;
-      if (oppCover < 0) {
-         cover_boost_index = Util::Min(4,-oppCover/(PAWN_VALUE*256/1000));
+      if (oppCover <= -PAWN_VALUE/5) {
+         cover_boost_index = Util::Min(4,int(-oppCover/(PAWN_VALUE/5))-1);
          attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index].current;
       }
       // king safety tuning
@@ -1223,10 +1223,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             // params) from changes in the king cover score. In most
             // cases small changes in the cover do not change the boost.
             if (ourKpe.counts[i][j]) {
-               grads[Tune::KING_COVER0+i] +=
-                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64,Tune::KING_COVER0+i,mLevel);
+               grads[Tune::KING_COVER1+i] +=
+                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0,Tune::KING_COVER1+i,mLevel);
                grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
-                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER0+i].current/64,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
+                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
             }
          }
       }

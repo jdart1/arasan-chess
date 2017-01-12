@@ -1,4 +1,4 @@
-// Copyright 1992-2016 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2017 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -147,7 +147,7 @@ class Scoring
        int32_t king_endgame_position;
 #endif
 #ifdef TUNE
-       float counts[5][4];
+       float counts[6][4];
 #endif
     };
 
@@ -221,7 +221,7 @@ class Scoring
 
     template <ColorType side>
 #ifdef TUNE
-    static score_t calcCover(const Board &board, int file, int rank, int (&counts)[5][4]);
+    static score_t calcCover(const Board &board, int file, int rank, int (&counts)[6][4]);
 #else
     static score_t calcCover(const Board &board, int file, int rank);
 #endif
@@ -229,7 +229,7 @@ class Scoring
     // Compute king cover for King on square 'kp' of color 'side'
     template <ColorType side>
 #ifdef TUNE
-    static score_t calcCover(const Board &board, Square kp, int (&counts)[5][4]);
+    static score_t calcCover(const Board &board, Square kp, int (&counts)[6][4]);
 #else
     static score_t calcCover(const Board &board, Square kp);
 #endif

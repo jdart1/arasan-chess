@@ -1,4 +1,4 @@
-// Copyright 1994-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "util.h"
@@ -581,13 +581,13 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
 
 template<ColorType side>
 #ifdef TUNE
-score_t Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[5][4])
+score_t Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[6][4])
 {
 #else
 score_t Scoring::calcCover(const Board &board, int file, int rank) {
 #endif
    Square sq, pawn;
-   score_t cover = PARAM(KING_COVER_BASE);
+   score_t cover = 0;
    if (rank > 2) return cover;
    const int f = file > 4 ? 8 - file : file - 1;
    Bitboard pawns;
@@ -596,6 +596,12 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
       pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
       if (!pawns) {
          if (FileOpen(board, file)) {
+            cover += PARAM(KING_COVER)[5][f];
+#ifdef TUNE
+            counts[5][f]++;
+#endif
+         }
+         else {
             cover += PARAM(KING_COVER)[4][f];
 #ifdef TUNE
             counts[4][f]++;
@@ -604,23 +610,25 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
       }
       else {
          pawn = pawns.firstOne();
-         cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn) - 1)][f];
+         const int rank = Rank<side>(pawn);
+         ASSERT(rank >= 2);
+         const int rank_dist = Util::Min(3,rank - 2);
+         cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
-         counts[Util::Min(3, Rank<side> (pawn) - 1)][f]++;
+         counts[rank_dist][f]++;
 #endif
-         // also count if pawn is on next rank
-         if (Rank(pawn,side)!=8 && pawns.isSet(pawn+8)) {
-            cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn))][f];
-#ifdef TUNE
-            counts[Util::Min(3, Rank<side> (pawn))][f]++;
-#endif
-         }
       }
    }
    else {
       pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
       if (!pawns) {
          if (FileOpen(board, file)) {
+            cover += PARAM(KING_COVER)[5][f];
+#ifdef TUNE
+            counts[5][f]++;
+#endif
+         }
+         else {
             cover += PARAM(KING_COVER)[4][f];
 #ifdef TUNE
             counts[4][f]++;
@@ -629,27 +637,22 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
       }
       else {
          pawn = pawns.lastOne();
-         cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn) - 1)][f];
+         const int rank = Rank<side>(pawn);
+         ASSERT(rank >= 2);
+         const int rank_dist = Util::Min(3,rank - 2);
+         cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
-         counts[Util::Min(3, Rank<side> (pawn) - 1)][f]++;
+         counts[rank_dist][f]++;
 #endif
-         // also count if pawn is on next rank
-         if (Rank(pawn,side)!=8 && pawns.isSet(pawn-8)) {
-            cover += PARAM(KING_COVER)[Util::Min(3, Rank<side> (pawn))][f];
-#ifdef TUNE
-            counts[Util::Min(3, Rank<side> (pawn))][f]++;
-#endif
-         }
       }
    }
-
    return cover;
 }
 
 // Calculate a king cover score
 template<ColorType side>
 #ifdef TUNE
-score_t Scoring::calcCover(const Board &board, Square kp, int (&counts)[5][4]) {
+score_t Scoring::calcCover(const Board &board, Square kp, int (&counts)[6][4]) {
 #else
 score_t Scoring::calcCover(const Board &board, Square kp) {
 #endif
@@ -692,7 +695,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    Square kp = board.kingSquare(side);
 
 #ifdef TUNE
-   for (int i = 0; i < 5; i++)
+   for (int i = 0; i < 4; i++)
       for (int j = 0; j < 4; j++)
          coverEntry.counts[i][j] = 0.0F;
 #endif
@@ -709,8 +712,8 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    }
 
 #ifdef TUNE
-   int king_cover[5][4], kside_cover[5][4], qside_cover[5][4];
-   for (int i = 0; i < 5; i++) {
+   int king_cover[6][4], kside_cover[6][4], qside_cover[6][4];
+   for (int i = 0; i < 6; i++) {
       for (int j = 0; j < 4; j++) {
          king_cover[i][j] = kside_cover[i][j] = qside_cover[i][j] = 0;
       }
@@ -732,7 +735,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
 #ifdef TUNE
-         for (int i = 0; i < 5; i++) {
+         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                (k_cover < q_cover ?
@@ -753,7 +756,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
 #ifdef TUNE
-         for (int i = 0; i < 5; i++) {
+         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                float(kside_cover[i][j])/3;
@@ -773,7 +776,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
 #ifdef TUNE
-         for (int i = 0; i < 5; i++) {
+         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                float(qside_cover[i][j])/3;
@@ -786,7 +789,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    default:
       coverEntry.cover = cover;
 #ifdef TUNE
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 4; i++) {
          for (int j = 0; j < 4; j++) {
             coverEntry.counts[i][j] = float(king_cover[i][j]);
          }
@@ -1163,8 +1166,9 @@ void Scoring::pieceScore(const Board &board,
       if (attackCount >= 2 && majorAttackCount) {
          attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[Util::Min(2,attackCount-2)];
       }
-      if (oppCover < 0) {
-         attackWeight += PARAM(KING_ATTACK_COVER_BOOST)[Util::Min(4,-oppCover/(PAWN_VALUE*256/1000))];
+      if (oppCover <= -PAWN_VALUE/5) {
+         int cover_boost_index = Util::Min(4,int(-oppCover/(PAWN_VALUE/5))-1);
+         attackWeight += PARAM(KING_ATTACK_COVER_BOOST)[cover_boost_index];
       }
       const int index = int(attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 #ifdef ATTACK_DEBUG
@@ -2583,13 +2587,13 @@ void Scoring::Params::write(ostream &o)
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
    o << "const int Scoring::Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
-   o << "const int Scoring::Params::KING_COVER[5][4] = {";
-   for (int i = 0; i < 5; i++) {
+   o << "const int Scoring::Params::KING_COVER[6][4] = {";
+   for (int i = 0; i < 6; i++) {
       print_array(o,Params::KING_COVER[i],4,0);
-      if (i<4) o << "," << endl;
+      if (i<5) o << "," << endl;
    }
    o << "};" << endl;
-   int start = Tune::KING_COVER_BASE;
+   int start = Tune::KING_DISTANCE_BASIS;
    for (int i = start; i < start+tune_params.paramArraySize(); i++) {
       o << "const int Scoring::Params::";
       Tune::TuneParam param;

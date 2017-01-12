@@ -1,4 +1,4 @@
-// Copyright 2014-2016 by Jon Dart. All Rights Reserved.
+// Copyright 2014-2017 by Jon Dart. All Rights Reserved.
 #include "tune.h"
 #include "chess.h"
 #include "attacks.h"
@@ -16,7 +16,7 @@ static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
 static const int TRADE_DOWN_RANGE = PAWN_VALUE/3;
 static const int ENDGAME_KING_POS_RANGE = PAWN_VALUE/2;
 static const int KING_ATTACK_SCALE_MAX = 5*PAWN_VALUE;
-static const int KING_COVER_RANGE = int(0.3*PAWN_VALUE);
+static const int KING_COVER_RANGE = int(0.35*PAWN_VALUE);
 static const int KING_ATTACK_COUNT_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 static const int KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
@@ -27,7 +27,7 @@ int Tune::numTuningParams() const
 
 int Tune::paramArraySize() const 
 {
-   return (int)SIDE_PROTECTED_PAWN-(int)KING_COVER_BASE+1;
+   return (int)SIDE_PROTECTED_PAWN-(int)KING_DISTANCE_BASIS+1;
 }
 
 #define PARAM(x) tune_params[x].current
@@ -90,16 +90,16 @@ Tune::Tune()
         Tune::TuneParam(Tune::CASTLING3,"castling3",280,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::CASTLING4,"castling4",200,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::CASTLING5,"castling5",-280,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER0,"king_cover0",250,50,KING_COVER_RANGE,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER1,"king_cover1",225,50,KING_COVER_RANGE,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",100,50,KING_COVER_RANGE*3/4,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER3,"king_cover3",29,-150,KING_COVER_RANGE/2,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER1,"king_cover1",50,0,KING_COVER_RANGE/2,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",-100,-2*KING_COVER_RANGE/3,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER3,"king_cover3",-150,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER4,"king_cover4",-200,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_FILE_HALF_OPEN,"king_file_half_open",-200,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_FILE_OPEN,"king_file_open",-285,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR0,"king_cover_file_factor0",64,48,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR1,"king_cover_file_factor1",64,48,96,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR2,"king_cover_file_factor2",64,48,96,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR3,"king_cover_file_factor3",64,48,96,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",-350,-500,0,Tune::TuneParam::Midgame,0),
+        Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR2,"king_cover_file_factor2",50,32,96,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR3,"king_cover_file_factor3",40,32,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
         Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
         Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500,Tune::TuneParam::Midgame,1),
@@ -413,7 +413,7 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int x = 0; x < 5; x++) {
       stringstream name;
       name << "king_attack_cover_boost" << x;
-      tune_params.push_back(TuneParam(i++,name.str(),5*x,0,KING_ATTACK_COVER_BOOST_RANGE,Tune::TuneParam::Midgame,x));
+      tune_params.push_back(TuneParam(i++,name.str(),5*(x+1),0,KING_ATTACK_COVER_BOOST_RANGE,Tune::TuneParam::Midgame,x));
    }
    ASSERT(i==KING_OPP_PASSER_DISTANCE);
    for (int x = 0; x < 6; x++) {
@@ -631,14 +631,12 @@ void Tune::applyParams() const
       *dest++ = Tune::tune_params[j++].current;
    }
    // compute king cover scores
-   for (i = 0; i < 5; i++) {
+   for (i = 0; i < 6; i++) {
       for (int k = 0; k < 4; k++) {
          Scoring::Params::KING_COVER[i][k] =
-            tune_params[Tune::KING_COVER0+i].current*tune_params[Tune::KING_COVER_FILE_FACTOR0+k].current/64;
+            tune_params[Tune::KING_COVER1+i].current*tune_params[Tune::KING_COVER_FILE_FACTOR0+k].current/64;
       }
    }
-   Scoring::Params::KING_COVER_BASE = tune_params[KING_COVER_BASE].current;
-   Scoring::Params::KING_FILE_OPEN = tune_params[KING_FILE_OPEN].current;
    Scoring::Params::KING_DISTANCE_BASIS = tune_params[KING_DISTANCE_BASIS].current;
    Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
    Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;

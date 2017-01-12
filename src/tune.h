@@ -1,4 +1,4 @@
-// Copyright 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2017 by Jon Dart. All Rights Reserved.
 
 #ifndef _TUNE_H
 #define _TUNE_H
@@ -60,16 +60,16 @@ class Tune {
     CASTLING3,
     CASTLING4,
     CASTLING5,
-    KING_COVER0,
     KING_COVER1,
     KING_COVER2,
     KING_COVER3,
+    KING_COVER4,
+    KING_FILE_HALF_OPEN,
     KING_FILE_OPEN,
     KING_COVER_FILE_FACTOR0,
     KING_COVER_FILE_FACTOR1,
     KING_COVER_FILE_FACTOR2,
     KING_COVER_FILE_FACTOR3,
-    KING_COVER_BASE,
     KING_DISTANCE_BASIS,
     KING_DISTANCE_MULT,
     PIN_MULTIPLIER_MID,
