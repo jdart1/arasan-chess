@@ -341,7 +341,8 @@ static DWORD WINAPI inputPoll(void *x) {
 
 static void * CDECL inputPoll(void *x) {
    if (doTrace) cout << "# starting poll thread" << endl;
-   char buf[1024];
+   static const int INPUT_BUF_SIZE = 1024;
+   char buf[INPUT_BUF_SIZE];
    while (!polling_terminated) {
       fd_set readfds;
       struct timeval tv;
@@ -353,20 +354,25 @@ static void * CDECL inputPoll(void *x) {
       // with no input.
       tv.tv_sec=2;
       tv.tv_usec=0;
-      select(16, &readfds, 0, 0, &tv);
-      data=FD_ISSET(STDIN_FILENO, &readfds);
-      if (data == -1) {
-         if (errno == EINTR) continue;
+      int ret = select(16, &readfds, 0, 0, &tv);
+      if (ret == 0) {
+         // no data available
+         continue;
+      } else if (ret == -1) {
          perror("select");
+         continue;
       }
-      else if (data) {
+      data=FD_ISSET(STDIN_FILENO, &readfds);
+      if (data>0) {
          // we have something to read
-         int bytes = read(STDIN_FILENO,buf,1024);
-         if (bytes <= 0) {
-            cerr << "error from read()" << endl;
-            break;
+         int bytes = read(STDIN_FILENO,buf,INPUT_BUF_SIZE);
+         if (bytes == -1) {
+            perror("input poll: read");
+            continue;
          }
-         processCmdChars(buf,bytes);
+         if (bytes) {
+            processCmdChars(buf,bytes);
+         }
       }
    }
    if (doTrace) cout << "input polling thread terminated" << endl;
@@ -1254,6 +1260,7 @@ static void send_move(Board &board, Move &move, Statistics
             cout << "tellics kibitz ";
         else
             cout << "tellics whisper ";
+        std::ios_base::fmtflags original_flags = cout.flags();
         cout << "time=" << fixed << setprecision(2) <<
             (float)last_stats.elapsed_time/1000.0 << " sec. score=";
         Scoring::printScore(last_stats.display_value,cout);
@@ -1274,6 +1281,7 @@ static void send_move(Board &board, Move &move, Statistics
         if (last_stats.best_line_image.length() && !game_end) {
             cout << " pv: " << last_stats.best_line_image;
         }
+        cout.flags(original_flags);
         cout << endl;
     }
     if (uci) return; // With UCI, GUI is in charge of game end detection
