@@ -54,10 +54,10 @@ arasan
   19.2
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
-    data    - bitbase files
     book    - text files for opening book and ECO recognizer
     doc     - documentation
     tests   - test files and documentation
+    tools   - misc. utility scripts
     prj     - Visual C++ project file and build directories (Windows)
 </pre>
 <br/>
@@ -434,61 +434,97 @@ significance).</p>
 
 <h3>Automated parameter tuning</h3>
 
-<p>Version 19.0 has some support for automated parameter tuning.</p>
-<p>The Makefile has a "tuning" target that builds two extra executables
-(note: this build requires a C++11 compatible compiler).</p>
-<p>
-The first executable is special version of the program
-for using in tuning. This is named "arasanx-64-tune" or "arasanx-32-tune,"
-depending on the architecture you are on. This version of the program
-has all tunable parameters defined as variables rather than build-time
-constants, and their values can be set by using standard Winboard or
-UCI option commands. See tune.cpp for a list of the tunable parameters,
-their names, and their default values and ranges. Not all scoring parameters
-are in the tunable set, currently, but most of them are.
+<p>Arasan since version 19.0 has some support for automated parameter tuning.</p>
+<p>The Makefile has a "tuning" target that builds a "tuner" executable
+that when run will generate the parameter file (params.cpp) containing
+evaluation weights used by the Arasan scoring module.</p>
 </p>
-<p>The tuning version of the program can be used by
-<a href="http://www.remi-coulom.fr/CLOP/">CLOP</a> through its
-Python chess engine interface script. Note though I have had
-mixed results with CLOP.</p>
-<p>The second executable built by the "tuner" target is named "tuner" and
-it is a somewhat experimental tool that can be used to "train" the parameter weights for the
-scoring module. This supports two different tuning methods:</p>
-<ol>
-<li>The default is the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
-on logistic regression. For this method the input file should be a PGN
-of a diverse set of games (not with all high-quality moves).</li>
-<li>With the -m switch, the tuner uses an algorithm called MMTO described by Hoki
-and Kaneko (see references). This is designed to be used together with
-a PGN file that contains high-quality games that serve as a reference
-set of "good" moves. The algorithm will adapt the scoring parameters
-so that the program will make moves similar to those in the training
-set.</li>
-</ol>
-<p>The "tuner" program expects a PGN file to be specified on the command
+<p>The tuner implements a variant of the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
+on logistic regression. 
+(Formerly Arasan also supported a tuning method called MMTO described by Hoki
+and Kaneko (see references), but the current version no longer does).
+For this method the input file should be a EPD
+(Extended Position Description) file with a
+diverse set of positions. The tuner program expects each position to have
+two EPD tags:</p>
+<ul>
+<li>The "c1" tag should hold the Arasan castling status (see board.h) as
+two integers, the first for the White side and the second for Black. For
+example c1 "0 0" means both sides can castle either side. (This tag is
+needed because Arasan scores positions based not just on whether castling
+is possible, but whether it has occurred).
+</li>
+<li>
+The "c2" tag holds the game result as one of the following strings: "0.0" (Black win), "0.5" (draw), or "1.0" (White win).
+</li>
+</ul>
+<p>The "tuner" program expects an EPD file to be specified on the command
 line. It will output two files: by default the first one is named "x0"
 and contains the tuned parameter values; the second one is a compilable
 version of the parameters named "params.cpp."</p>
 <p>
 The following command-line options are supported:</p>
 <ul>
-<li>-a use the AdaGrad method (see Duchi et. al.) of optimization instead of the "grid-adjacent update" described in the MMTO paper.</li>
-<li>-A use the ADAM method (see Kingma and Ba) of optimization instead of the "grid-adjacent update" described in the MMTO paper.</li>
 <li>-c &lt;cores&gt; run multithreaded with the specifed number of cores.</li>
-<li>-d just write out current parameters values to params.cpp"</li>
+<li>-d just write out default parameter values to params.cpp"</li>
 <li>-i &lt;input parameter file&gt; specify the name of a file containing
 starting values for the parameters (can be the x0 file from a previous run).
 Without this some reasonable starting defaults will be used.</li>
-<li>-m use the MMTO tuning method instead of the Texel method.</li>
 <li>-x &lt;output parameter file&gt; specify the name of the output file (instead of "x0")</li>
-<li>-r apply L2 regularization</li>
-<li>-o &lt;output .cpp file&gt; specify the name of the .cpp file that is
-output (instead of params.cpp)</li>
 <li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
-<li>-V validate gradients</li>
-<li>-T &lt;fen string&gt; just compute the gradient for the specified FEN.</li>
+<li>-o adagrad|adam|adaptive select optimization method</li>
+<li>-O ordinal|msq select objective function</li>
+<li>-V validate gradients (not compatible with multithreading)</li>
 </ul>
-</br>
+<p>Some further notes on the options: The default objective is "msq", the
+mean squared error between the predicted result value (sigmoid function
+of the evaluation) and the actual result value. The tuner also supports
+Ordinal Logistic Regresssion based on the three possible discrete game
+results, but this is not really tested.</p>
+<p>Three iterative optimization methods are supported. The default is
+"adaptive," which is
+a simple momentum based approach described by Geoffrey Hinton. The tuner
+also supports the AdaGrad method (see Duchi et. al.) and the ADAM method (see Kingma and Ba).</li>
+
+<h3>Generating the training file</h3>
+<p>The Arasan source distribution contains some tools used for
+generating the labeled EPD file used for parameter tuning.</p>
+<p>One program is called "pgnselect," located in the "util" subdirectory.
+This program reads a PGN input file and produces EPD output to stdout.
+The EPD output is based on a randomly selected 
+subset of the positions encountered during
+the game. If the -r flag is used, then for each sampled position, a
+randomly selected legal move will be made (this trick was used in the
+neural-network based program "Giraffe" (see references). It produces
+more varied and unbalanced positions that just game sampling would).
+The EPD output will contain the "c1" tag with the castling status, but
+no result tag.
+<p>Other swithes supported by the "pgnselect" program:</p>
+<ul>
+<li>-max &lt;int&gt; - max ply to sample (default: 150)</li>
+<li>-min &lt;int&gt; - min ply to sample (default: 30)</li>
+<li>-d &lt;int&gt; - min ply distance between samples (default: 3)</li>
+<li>-r - insert random moves</li>
+<li>-s &lt;int&gt; -  max ply distance between samples</li>
+</ul>
+<p>There is also a Python 3 script in the "tools" subdirectory called
+"label_positions.py". This will take as input the EPD produced from
+"pgnselect" and then will label each position with a game result,
+based on a game in which both sides are played by a selected chess engine at a short time control.</p>
+<p>
+This script relies on <a href="https://github.com/cutechess/cutechess" target="_blank">cutechess-cli</a> being installed and the path
+to that executable must be set in the script. Note: it has only been
+tested on Linux, although it should work on Windows, too.</p>
+<p>The script takes two command-line switches:</p>
+<ul>
+<li>-e &lt;name&gt; - name of the chess program in the "engines.json" file that cutechess-cli uses.</li>
+<li>-c &lt;cores&gt; - number of concurrent matches to run</li>
+</ul>
+<p>
+Following the switches the EPD file path should be specified. Output
+from the script goes to stdout; errors are written to stderr.
+</p>
+
 <h2>Algorithms and data structures</h2>
 
 <h3>The chess board</h3>
@@ -1226,7 +1262,7 @@ found at <a href="http://www.arasanchess.org">arasanchess.org</a></p>
 
 <h2>References</h2>
 
-<p>Chess Programming Wiki, topic <a href="http://chessprogramming.wikispaces.com/Magic+Bitboards">Magic Bitboards</a>.
+<p>Chess Programming Wiki, topic <a href="http://chessprogramming.wikispaces.com/Magic+Bitboards" target="_blank">Magic Bitboards</a>.
 </p>
 <p>Crafty source code, ftp.cis.uab.edu, directory /pub/hyatt.
 </p>
@@ -1240,7 +1276,7 @@ v. 16 no. 3.
 MIT Press.
 </p>
 <p>Feldmann, Rainer. Game Tree Search on Massively Parallel Systems (1993). Ph.D. Thesis, University of Paderborn. (see also
-<a href="http://wwwcs.uni-paderborn.de/cs/ag-monien/PERSONAL/OBELIX/publications.html">related publications</a>.)
+<a href="http://wwwcs.uni-paderborn.de/cs/ag-monien/PERSONAL/OBELIX/publications.html" target="_blank">related publications</a>.)
 </p>
 <p>Frey, Peter W. (ed.) (1983). Chess Skill in Man and Machine.
 New York: Springer-Verlag.
@@ -1248,7 +1284,8 @@ New York: Springer-Verlag.
 <p>Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
 </p>
 <p>Hoki, Kunihuto and Kaneko, Tomoyuki "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Artificial Intelligence Research 49 (2014) 527-568.</p>
-<p>Kingman, Diederik P. and Ba, Jimmy Lei <a href="https://arxiv.org/pdf/1412.6980v8.pdf">ADAM: A Method For Stochastic Optimization</a>, ICLR 2015.</p>
+<p>Lai, Matthew (2015) <a href="https://arxiv.org/abs/1509.01549" target="_blank">Giraffe: Using Deep Reinforcement Learning to Play Chess</a>. MSc Dissertation, Imperial College, London.</p>
+<p>Kingman, Diederik P. and Ba, Jimmy Lei <a href="https://arxiv.org/pdf/1412.6980v8.pdf" target="_blank">ADAM: A Method For Stochastic Optimization</a>, ICLR 2015.</p>
 <p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.
 </p>
