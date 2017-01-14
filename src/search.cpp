@@ -361,6 +361,9 @@ score_t score, score_t alpha, score_t beta)
     if (stats->value > alpha) {
        stats->display_value = stats->value;
     }
+    if (talkLevel == Trace && stats->elapsed_time >= 5) {
+       cout << "# elapsed time=" << stats->elapsed_time << " target=" << getTimeLimit() << endl;
+    }
     //stats->state = state;
     Board board_copy(rootSearch->getInitialBoard());
 
@@ -963,12 +966,12 @@ Move *excludes, int num_excludes)
             else if (failLow) {
                showStatus(board, node->best, failLow, failHigh, 0);
                if (talkLevel == Trace) {
-                   cout << "ply 0 fail low, re-searching ... value=";
+                   cout << "# ply 0 fail low, re-searching ... value=";
                    Scoring::printScore(value,cout);
                    cout << " fails=" << fails+1 << endl;
                }
 #ifdef _TRACE
-               cout << "ply 0 fail low, re-searching ... value=";
+               cout << "# ply 0 fail low, re-searching ... value=";
                Scoring::printScore(value,cout);
                cout << " fails=" << fails+1 << endl;
 #endif
@@ -1192,6 +1195,11 @@ Move *excludes, int num_excludes)
 #ifdef UCI_LOG
    ucilog << "out of search" << endl << (flush);
 #endif
+   if (talkLevel == Trace) {
+      cout << "# exiting root search, move = ";
+      MoveImage(node->best,cout);
+      cout << endl;
+   }
    return node->best;
 }
 
@@ -2239,8 +2247,8 @@ score_t Search::search()
             if (checkTime(board,ply)) {
                if (talkLevel == Trace) {
                   cout << "# terminating, time up" << endl;
-                }
-                controller->terminateNow();   // signal all searches to end
+               }
+               controller->terminateNow();   // signal all searches to end
             }
         }
     }

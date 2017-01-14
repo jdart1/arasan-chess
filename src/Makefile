@@ -33,22 +33,23 @@ TB=tb
 STB=syzygy
 # compile in NUMA support
 #NUMA=1
+# directory for utility programs
+UTIL = util
 
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS = 1
 #NALIMOV_TBS = 1
 SYZYGY_TBS = 1
 
+CFLAGS = -I.
 ifdef NUMA
-CFLAGS := -DNUMA
-else
-CFLAGS=
+CFLAGS := $(CFLAGS) -DNUMA
 endif
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 endif
 ifdef NALIMOV_TBS 
-CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I. -I$(TB)
+CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I$(TB)
 endif
 ifdef SYZYGY_TBS
 CFLAGS := $(CFLAGS) -DSYZYGY_TBS
@@ -163,6 +164,8 @@ default: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
 
 tuning: dirs $(EXPORT)/tuner
 
+utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco
+
 # Solaris target: note only GCC is supported
 sparc-solaris: 
 	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS)' CFLAGS='$(CFLAGS)' all
@@ -182,7 +185,7 @@ endif
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROF_DATA)/*.dyn
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess pgnselect
 
 dirs:
 	mkdir -p $(BUILD)
@@ -208,6 +211,9 @@ install: all
 	chmod u+s $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 
 $(BUILD)/%.o: %.cpp
+	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+
+$(BUILD)/%.o: $(UTIL)/%.cpp
 	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
@@ -360,18 +366,50 @@ movegen.cpp history.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
+PGNSELECT_SOURCES = pgnselect.cpp globals.cpp  \
+board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
+movegen.cpp history.cpp \
+hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
+stats.cpp threadp.cpp threadc.cpp unit.cpp
+
+PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
+board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
+movegen.cpp history.cpp \
+hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
+stats.cpp threadp.cpp threadc.cpp unit.cpp
+
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS) 
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
+
+$(EXPORT)/pgnselect:  $(PGNSELECT_OBJS) 
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)	
+
+$(EXPORT)/playchess:  $(PLAYCHESS_OBJS) 
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/tuner:  $(TUNER_OBJS) 
 	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)

@@ -13,6 +13,7 @@ PROFDATA = ..\$(TARGET)\profdata
 #DEBUG=/Zi -D_DEBUG 
 #LDDEBUG=/DEBUG /PDB:arasanx.pdb
 BUILD_ROOT=..
+UTIL=util
 
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS=1
@@ -115,7 +116,9 @@ POPCNT_FLAGS = -DUSE_POPCNT /QxSSE4.2
 
 default: dirs $(BUILD)\$(ARASANX).exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
-tuning: dirs $(BUILD)\$(ARASANX)-tune.exe $(BUILD)\tuner.exe
+tuning: dirs $(BUILD)\tuner.exe
+
+utils: $(BUILD)\pgnselect.exe $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe
 
 !IfDef NALIMOV_TBS
 TB_OBJS = $(BUILD)\nalimov.obj
@@ -390,8 +393,39 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\legal.obj  $(BUILD)\history.obj $(BUILD)\learn.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
 
+PGNSELECT_OBJS = $(BUILD)\pgnselect.obj \
+$(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
+$(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
+$(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
+$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
+$(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
+$(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
+$(BUILD)\legal.obj  $(BUILD)\history.obj \
+$(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
+$(NUMA_OBJS)
+
+PLAYCHESS_OBJS = $(BUILD)\playchess.obj \
+$(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
+$(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
+$(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
+$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
+$(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
+$(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
+$(BUILD)\legal.obj  $(BUILD)\history.obj \
+$(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
+$(NUMA_OBJS)
+
 {}.cpp{$(BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
+
+{$(UTIL)}.cpp{$(BUILD)}.obj:
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) -I. /c /Fo$@ $<
 
 {}.cpp{$(TUNE_BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
@@ -416,11 +450,14 @@ $(BUILD)\makeeco.exe:  $(MAKEECO_OBJS)
 $(BUILD)\$(ARASANX).exe: dirs $(ARASANX_OBJS)
         $(LD) $(ARASANX_OBJS) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX).exe
 
-$(BUILD)\$(ARASANX)-tune.exe: dirs $(ARASANX_TUNE_OBJS)
-        $(LD) $(ARASANX_TUNE_OBJS) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX)-tune.exe
-
 $(BUILD)\tuner.exe: dirs $(TUNER_OBJS)
         $(LD) $(TUNER_OBJS) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\tuner.exe
+
+$(BUILD)\pgnselect.exe: dirs $(PGNSELECT_OBJS)
+        $(LD) $(PGNSELECT_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\pgnselect.exe
+
+$(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
+        $(LD) $(PGNSELECT_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\playchess.exe
 
 $(BUILD)\nalimov.obj: nalimov.cpp
     $(CL) $(TB_FLAGS) /c /Fo$@ nalimov.cpp
