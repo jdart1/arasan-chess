@@ -3,6 +3,8 @@ pushd ..
 7z u -tzip -orelease %1 src\*.h src\*.cpp src\*.c src\Makefile src\Makefile.icl
 7z u -tzip -orelease %1 src\release.bat
 7z u -tzip -orelease %1 src\syzygy\*.*
+7z u -tzip -orelease %1 src\util\*.*
+7z u -tzip -orelease %1 src\tools\*.*
 7z u -tzip -orelease %1 gui\*.h gui\*.cpp  gui\gui.rc gui\res\*.*
 7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj
 7z u -tzip -orelease %1 gui\fonts\*.zip
