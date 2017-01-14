@@ -222,12 +222,11 @@ will waste space by creating a bigger book.bin than is required.</p>
 to set a minimum number of times that a move must be played in a
 game collection to be included in the book. The default book shipped
 with arasan was built with "-m 4". Other options include:</p>
-<pre>
--p <number> - sets maximum ply depth for moves extracted from a PGN file
--o <filename> - sets output file name (default book.bin)
--v - show more verbose output.
-</pre>
-<br/>
+<ul>
+<li>-p &lt;number&gt; - sets maximum ply depth for moves extracted from a PGN file</li>
+<li>-o &lt;filename&gt; - sets output file name (default book.bin)</li>
+<li>-v - show more verbose output.</li>
+</ul>
 <p>See bookdefs.h for some documentation about the data layout within
 the book.bin file.</p>
 
@@ -311,14 +310,12 @@ scoring.cpp, then you can see detailed output of the scoring components.</p>
 format will do a search on each position in the file and output the
 results to stdout.  Additional switches can be added after the
 filename:</p>
-<pre>
--v - prints more verbose output
--t <seconds> searches for the specified number of seconds per position
--x <count> can terminate the search early if the correct move is found
-and held for "count" plies.
--o <file> stores test output in "file".
-</pre>
-<br/>
+<ul>
+<li>-v - prints more verbose output</li>
+<li>-t &lt;seconds&gt; searches for the specified number of seconds per position</li>
+<li>-x &lt;count&gt; can terminate the search early if the correct move is found and held for "count" plies.</li>
+<li>-o &lt;file&gt; stores test output in "file".</li>
+</ul>
 <p>If the search module is compiled with -D_TRACE, arasanx will print
 out copious information about the search process when it is run (if
 running multi-threaded, only the main thread is traced). See
@@ -372,14 +369,13 @@ eet.epd is a set of endgame tests from Walter Eigenmann. See
 The results file in the tests subdirectory summarizes Arasan's
 performance on these test suites. There are two targets in
 the Makefile that faciltate running tests with arasanx:</p>
-<pre>
-run-tests  - runs all tests, put test results in file "test-results"
-in the test subdirectory
-
-score-tests - writes a test summary based on "test-results" into
-file "test-summary" in the test subdirectory.
-</pre>
-<br/><p>
+<ul>
+<li>run-tests  - runs all tests, put test results in file "test-results"
+in the test subdirectory</li>
+<li>score-tests - writes a test summary based on "test-results" into
+file "test-summary" in the test subdirectory.</li>
+</ul>
+<p>
 Note that "run-tests" takes a long time to complete (over 8 hours)!</p>
 <p>
 "score-tests" requires that Perl be installed and be on the path.</p>
