@@ -86,8 +86,6 @@ int CDECL main(int argc, char **argv)
       for (;arg < argc;arg++) {
          ifstream pgn_file( argv[arg], ios::in);
          int c;
-         int count = 0;
-         hash_t game_hash;
          ColorType side;
          string result, white, black;
          if (!pgn_file.good()) {
@@ -113,11 +111,8 @@ int CDECL main(int argc, char **argv)
                hdrs.removeAll();
                ChessIO::collect_headers(pgn_file,hdrs,first);
 
-               game_hash = 0;
                float last_score = -1;
-               int mate = 0;
                int valid = 1;
-               int have_scores =  0;
                int var = 0;
                int done = 0;
                while (!done) {
@@ -187,8 +182,9 @@ int CDECL main(int argc, char **argv)
                         last_score = float(stats.value)/PAWN_VALUE;
                      }
                      if (board.sideToMove() != White) last_score = -last_score;
-                  }
                      ++done;
+                  }
+                  default:   
                      break;
                   } // end switch
                }
