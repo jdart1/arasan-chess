@@ -56,6 +56,7 @@ static ifstream pos_file;
 
 static bool verbose = false;
 static bool validate = false;
+static bool recalc = false;
 
 static const int MAX_PV_LENGTH = 256;
 static const int NUM_RESULT = 8;
@@ -65,7 +66,7 @@ static const int LEARNING_SEARCH_DEPTH = 1;
 static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
 static const double REGULARIZATION = 6E-5;
-static const int PV_RECALC_INTERVAL = 16; // for MMTO
+static const int PV_RECALC_INTERVAL = 16;
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 // step size relative to parameter range:
@@ -177,13 +178,15 @@ static void usage()
    cerr << "Options:" << endl;
    cerr << " -c <cores>" << endl;
    cerr << " -d just write out current parameters values to params.cpp" << endl;
-   cerr << " -i <input parameter file> -o <output parameter file>" << endl;
+   cerr << " -f <ouput .cpp file>" << endl;
+   cerr << " -i <input parameter file>" << endl;
    cerr << " -r apply regularization" << endl;
-   cerr << " -x <output objective file>" << endl;
    cerr << " -n <iterations>" << endl;
    cerr << " -o adagrad|adam|adaptive select optimization method" << endl;
    cerr << " -O ordinal|msq select objective type" << endl;
+   cerr << " -R periodically recalulate PVs" << endl;
    cerr << " -V validate gradient" << endl;
+   cerr << " -x <ouput parameter file>" << endl;
 }
 
 static double texelSigmoid(double val) {
@@ -1481,8 +1484,14 @@ static void output_solution()
    ofstream param_out(out_file_name.c_str(),ios::out | ios::trunc);
    Scoring::Params::write(param_out);
    param_out << endl;
+   if (param_out.bad() || param_out.fail()) {
+      cerr << "error writing .cpp output file" << endl;
+   }
    ofstream x0_out(x0_file_name.c_str(),ios::out | ios::trunc);
    tune_params.writeX0(x0_out);
+   if (x0_out.bad() || x0_out.fail()) {
+      cerr << "error writing parameters output file" << endl;
+   }
 }
 
 
@@ -1511,9 +1520,8 @@ static void learn()
    for (int iter = 1; iter <= iterations; iter++) {
       cout << "iteration " << iter << endl;
       tune_params.applyParams();
-      bool recalc = iter == 1;
-      // recalc = ((iter-1) % PV_RECALC_INTERVAL) == 0;
-      if (recalc) {
+      if (iter == 1 ||
+          (recalc && ((iter-1) % PV_RECALC_INTERVAL) == 0)) {
          if (verbose) cout << "(re)calculating PVs" << endl;
          // clean up data from previous pass
          while (!positions.empty()) {
@@ -1589,7 +1597,7 @@ int CDECL main(int argc, char **argv)
           cerr << "writing initial solution" << endl;
           ++write_sol;
        }
-       else if (strcmp(argv[arg],"-o")==0) {
+       else if (strcmp(argv[arg],"-f")==0) {
           ++arg;
           out_file_name = argv[arg];
        }
@@ -1651,6 +1659,9 @@ int CDECL main(int argc, char **argv)
              cerr << "Ordinal or Msq" << endl;
              exit(-1);
           }
+       }
+       else if (strcmp(argv[arg],"-R")==0) {
+          recalc = true;
        } else {
           cerr << "invalid option: " << argv[arg] << endl;
           usage();

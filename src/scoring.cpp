@@ -2573,7 +2573,7 @@ static void print_array(ostream & o,score_t mid[], score_t end[], int size)
 
 void Scoring::Params::write(ostream &o)
 {
-   o << "// Copyright 2015, 2016 by Jon Dart. All Rights Reserved." << endl;
+   o << "// Copyright 2015-2017 by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
    o << "//" << endl;
    o << endl;

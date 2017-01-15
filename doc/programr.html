@@ -46,6 +46,8 @@ building the chess program (arasanx), and also source for the
 following other console programs:</p>
 <p>makebook - builds binary opening book files from text (PGN) files</p>
 <p>makeeco  - builds ecodata.cpp from from "eco" text file</p>
+<p>pgnfilter - samples PGN files, writes EPD records to stdout</p>
+<p>playchess - filters PGN games, removing those where end eval differs from result (and short games)</p>
 <p>tuner  - automatically tunes scoring parameters</p>
 <p>Following is a sketch of the Arasan source directory tree:</p>
 <br/>
@@ -463,6 +465,7 @@ The following command-line options are supported:</p>
 <ul>
 <li>-c &lt;cores&gt; run multithreaded with the specifed number of cores.</li>
 <li>-d just write out default parameter values to params.cpp"</li>
+<li>-f &lt;ouput .cpp file&gt;</li>
 <li>-i &lt;input parameter file&gt; specify the name of a file containing
 starting values for the parameters (can be the x0 file from a previous run).
 Without this some reasonable starting defaults will be used.</li>
@@ -470,6 +473,7 @@ Without this some reasonable starting defaults will be used.</li>
 <li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
 <li>-o adagrad|adam|adaptive select optimization method</li>
 <li>-O ordinal|msq select objective function</li>
+<li>-R periodically recalulate PVs</li>
 <li>-V validate gradients (not compatible with multithreading)</li>
 </ul>
 <p>Some further notes on the options: The default objective is "msq", the
