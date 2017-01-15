@@ -1284,7 +1284,10 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
    }
 }
 
-// Computes one summand of equation (8) in the paper
+// For a single position, compute its objective function and add to
+// the sum total objective, and then, for each parameter, compute the
+// gradient value and add it to the sum of gradients that we are
+// accumulating.
 static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, double result) {
 
 #ifdef _TRACE
