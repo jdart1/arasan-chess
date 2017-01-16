@@ -2180,19 +2180,22 @@ static void do_test(string test_file)
             int correct = solution_time >=0;
             solution_times.append((int)solution_time);
             total_tests++;
+            std::ios_base::fmtflags original_flags = cout.flags();
+            cout << setprecision(4);
             if (correct) {
-               cout << "\t++ solved in " << setprecision(2) << (float)solution_time/1000.0 <<
+               cout << "\t++ solved in " << (float)solution_time/1000.0 <<
                   " sec. (";
                print_nodes(solution_nodes,cout);
                cout << " nodes)" << endl;
                total_correct++;
             }
             else {
-               cout << "\t** not solved in " << setprecision(2) <<
+               cout << "\t** not solved in " <<
                   (float)stats.elapsed_time/1000.0 << " secs. (";
                print_nodes(stats.num_nodes,cout);
                cout << " nodes)" << endl;
             }
+            cout.flags(original_flags);
             cout << stats.best_line_image << endl;
             if (correct && max_depth>0) {
                uint64_t nodes_to_find = (uint64_t)0;
