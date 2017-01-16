@@ -15,7 +15,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef __WIN32__
+#ifndef _WIN32
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
@@ -87,7 +87,7 @@ static FD open_tb(const char *str, const char *suffix)
   int i;
   FD fd;
   int remain;
-#ifdef __WIN32__
+#ifdef _WIN32
   const int MAX_LEN = MAX_PATH;
 #else
   // assume 256
