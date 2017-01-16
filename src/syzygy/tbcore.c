@@ -137,6 +137,7 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
 #ifndef _WIN32
   struct stat statbuf;
   if (fstat(fd, &statbuf)) {
+    close_tb(fd);
     return NULL;
   }
   *mapping = statbuf.st_size;
