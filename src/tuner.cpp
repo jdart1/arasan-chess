@@ -1607,6 +1607,9 @@ int CDECL main(int argc, char **argv)
 
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
        cmdline += " " + string(argv[arg]);
+    }
+
+    for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
        if (strcmp(argv[arg],"-d")==0) {
           cerr << "writing initial solution" << endl;
           ++write_sol;
