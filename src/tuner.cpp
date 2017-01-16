@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -97,6 +98,8 @@ static Objective obj = Objective::Msq;
 static vector<GameInfo *> tmpdata;
 
 static atomic<int> phase2_game_index;
+
+static string cmdline;
 
 LockDefine(file_lock);
 LockDefine(data_lock);
@@ -1478,11 +1481,19 @@ static void learn_parse(Phase p, int cores)
    if (p == Phase1) cout << positions.size() << " positions read." << endl;
 }
 
-static void output_solution()
+static void output_solution(const string &cmd)
 {
    tune_params.applyParams();
    ofstream param_out(out_file_name.c_str(),ios::out | ios::trunc);
-   Scoring::Params::write(param_out);
+
+   time_t curr_time;
+   char buffer[256];
+   time(&curr_time);
+   struct tm *timeinfo = localtime(&curr_time);
+   strftime(buffer,256,"%d-%b-%Y %I:%M:%S",timeinfo);
+   string timestr(buffer);
+   string comment("Generated " + timestr + " by \"" + cmd + "\"");
+   Scoring::Params::write(param_out,comment);
    param_out << endl;
    if (param_out.bad() || param_out.fail()) {
       cerr << "error writing .cpp output file" << endl;
@@ -1561,7 +1572,7 @@ static void learn()
       if (data2[0].target < best) {
          best = data2[0].target;
          cout << "new best objective: " << best << endl;
-         output_solution();
+         output_solution(cmdline);
       }
       adjust_params(data2[0],historical_grad,m,v,prev_gradient,step_sizes,iter);
    }
@@ -1592,7 +1603,10 @@ int CDECL main(int argc, char **argv)
 
     int write_sol = 0;
 
+    cmdline = "tuner";
+
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
+       cmdline += " " + string(argv[arg]);
        if (strcmp(argv[arg],"-d")==0) {
           cerr << "writing initial solution" << endl;
           ++write_sol;
@@ -1670,7 +1684,7 @@ int CDECL main(int argc, char **argv)
     }
 
     if (write_sol) {
-      output_solution();
+      output_solution(cmdline);
       exit(0);
     }
 

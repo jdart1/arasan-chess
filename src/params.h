@@ -145,7 +145,7 @@ BEGIN_PACKED_STRUCT
     static const int ENDGAME_THRESHOLD;
 
 #ifdef TUNE
-    static void write(ostream &);
+    static void write(ostream &, const string &comment);
 #endif
 END_PACKED_STRUCT
 

@@ -2571,10 +2571,11 @@ static void print_array(ostream & o,score_t mid[], score_t end[], int size)
    o << "};" << endl;
 }
 
-void Scoring::Params::write(ostream &o)
+void Scoring::Params::write(ostream &o, const string &comment)
 {
    o << "// Copyright 2015-2017 by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
+   o << "// " << comment << endl;
    o << "//" << endl;
    o << endl;
    o << "const int Scoring::Params::RB_ADJUST[4] = ";
