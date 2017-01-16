@@ -1605,7 +1605,7 @@ int CDECL main(int argc, char **argv)
 
     cmdline = "tuner";
 
-    for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
+    for (arg = 1; arg < argc; ++arg) {
        cmdline += " " + string(argv[arg]);
     }
 
