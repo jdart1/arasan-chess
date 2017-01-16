@@ -108,6 +108,7 @@ int CDECL main(int argc, char **argv)
                      break;
                   }
                }
+               if (pgn_file.eof()) break;
                hdrs.removeAll();
                ChessIO::collect_headers(pgn_file,hdrs,first);
 
