@@ -1731,6 +1731,7 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
              default:
               break;
              }
+             break;
           case Normal: {
              if (Attacks::pawn_attacks[kp][sideToMove()].isSet(checker)) {
                  return InCheck;
