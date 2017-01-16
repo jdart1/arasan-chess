@@ -1,4 +1,4 @@
-// Copyright 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 2014, 2017 by Jon Dart.  All Rights Reserved.
 
 #include "bookwrit.h"
 #include <fstream>
@@ -12,7 +12,7 @@ BookWriter::BookWriter(int i) :
 }
 
 BookWriter::~BookWriter() {
-
+   delete [] index;
 }
                 
 void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
