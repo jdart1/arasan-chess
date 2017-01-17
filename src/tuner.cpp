@@ -59,6 +59,8 @@ static bool verbose = false;
 static bool validate = false;
 static bool recalc = false;
 
+static int pv_recalc_interval = 16;
+
 static const int MAX_PV_LENGTH = 256;
 static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
@@ -67,7 +69,6 @@ static const int LEARNING_SEARCH_DEPTH = 1;
 static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
 // L2-regularization factor
 static const double REGULARIZATION = 6E-5;
-static const int PV_RECALC_INTERVAL = 16;
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 // step size relative to parameter range:
@@ -187,7 +188,7 @@ static void usage()
    cerr << " -n <iterations>" << endl;
    cerr << " -o adagrad|adam|adaptive select optimization method" << endl;
    cerr << " -O ordinal|msq select objective type" << endl;
-   cerr << " -R periodically recalulate PVs" << endl;
+   cerr << " -R <recalc interval> periodically recalulate PVs" << endl;
    cerr << " -V validate gradient" << endl;
    cerr << " -x <ouput parameter file>" << endl;
 }
@@ -1532,7 +1533,7 @@ static void learn()
       cout << "iteration " << iter << endl;
       tune_params.applyParams();
       if (iter == 1 ||
-          (recalc && ((iter-1) % PV_RECALC_INTERVAL) == 0)) {
+          (recalc && ((iter-1) % pv_recalc_interval) == 0)) {
          if (verbose) cout << "(re)calculating PVs" << endl;
          // clean up data from previous pass
          while (!positions.empty()) {
@@ -1679,6 +1680,11 @@ int CDECL main(int argc, char **argv)
        }
        else if (strcmp(argv[arg],"-R")==0) {
           recalc = true;
+          if (arg >= argc) {
+             cerr << "expected integer after -R" << endl;
+             exit(-1);
+          }
+          pv_recalc_interval = atoi(argv[++arg]);
        } else {
           cerr << "invalid option: " << argv[arg] << endl;
           usage();
