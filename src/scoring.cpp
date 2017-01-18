@@ -587,7 +587,7 @@ score_t Scoring::calcCover(const Board &board, int file, int rank, int (&counts)
 score_t Scoring::calcCover(const Board &board, int file, int rank) {
 #endif
    Square sq, pawn;
-   score_t cover = 0;
+   score_t cover = PARAM(KING_COVER_BASE);
    if (rank > 2) return cover;
    const int f = file > 4 ? 8 - file : file - 1;
    Bitboard pawns;
@@ -2594,7 +2594,7 @@ void Scoring::Params::write(ostream &o, const string &comment)
       if (i<5) o << "," << endl;
    }
    o << "};" << endl;
-   int start = Tune::KING_DISTANCE_BASIS;
+   int start = Tune::KING_COVER_BASE;
    for (int i = start; i < start+tune_params.paramArraySize(); i++) {
       o << "const int Scoring::Params::";
       Tune::TuneParam param;

@@ -27,7 +27,7 @@ int Tune::numTuningParams() const
 
 int Tune::paramArraySize() const 
 {
-   return (int)SIDE_PROTECTED_PAWN-(int)KING_DISTANCE_BASIS+1;
+   return (int)SIDE_PROTECTED_PAWN-(int)KING_COVER_BASE+1;
 }
 
 #define PARAM(x) tune_params[x].current
@@ -91,7 +91,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::CASTLING4,"castling4",200,0,500,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::CASTLING5,"castling5",-280,-500,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER1,"king_cover1",50,0,KING_COVER_RANGE/2,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",-100,-2*KING_COVER_RANGE/3,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",-100,-2*KING_COVER_RANGE/3,2*KING_COVER_RANGE/3,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER3,"king_cover3",-150,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER4,"king_cover4",-200,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_FILE_HALF_OPEN,"king_file_half_open",-200,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
@@ -100,6 +100,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR1,"king_cover_file_factor1",64,48,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR2,"king_cover_file_factor2",50,32,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR3,"king_cover_file_factor3",40,32,96,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",-100,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,0),
         Tune::TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
         Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
         Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,500,Tune::TuneParam::Midgame,1),
@@ -637,6 +638,7 @@ void Tune::applyParams() const
             tune_params[Tune::KING_COVER1+i].current*tune_params[Tune::KING_COVER_FILE_FACTOR0+k].current/64;
       }
    }
+   Scoring::Params::KING_COVER_BASE = tune_params[KING_COVER_BASE].current;
    Scoring::Params::KING_DISTANCE_BASIS = tune_params[KING_DISTANCE_BASIS].current;
    Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
    Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
