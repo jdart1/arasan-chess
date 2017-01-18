@@ -307,7 +307,8 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
        // each command should contain a verb and a value
        string cmd,val;
        auto it = command.begin();
-       auto collect = [&it, end = command.end()](string &out) {
+       auto end = command.end();
+       auto collect = [&it, &end](string &out) {
           int spaces = 0;
           bool quoted = false;
           for (; it != end; it++) {
