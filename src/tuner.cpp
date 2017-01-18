@@ -1213,7 +1213,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
       }
-      if (oppCover < 0) {
+      if (cover_boost_index >= 0) {
          grads[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST+cover_boost_index,ourMatLevel);
       }
