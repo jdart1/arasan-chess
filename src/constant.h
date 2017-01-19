@@ -20,7 +20,7 @@ enum {MaxCPUs = 64};
 const int INFINITE_TIME = 9999999;
 
 #define DEPTH_INCREMENT 4
-#define Arasan_Version "19.2"
+#define Arasan_Version "20.0"
 #define Arasan_Copyright "Copyright 1994-2017 by Jon Dart. All Rights Reserved."
 
 #endif

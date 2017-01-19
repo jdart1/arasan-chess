@@ -170,8 +170,8 @@ Tune::Tune()
         Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",401,0,1000,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",728,0,1500,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",600,0,1000,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",1000,0,1500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",150,128,200,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",140,128,200,Tune::TuneParam::Endgame,1),
@@ -582,7 +582,7 @@ static const int QUEEN_PST_INIT[2][64] =
 
 void Tune::checkParams() const
 {
-#ifdef _DEBUG
+//#ifdef _DEBUG
    if (NUM_MISC_PARAMS != KING_ATTACK_COUNT_BOOST) {
       cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_ATTACK_COUNT_BOOST << endl;
    }
@@ -602,8 +602,14 @@ void Tune::checkParams() const
       if (tune_params[i].min_value > tune_params[i].max_value) {
          cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
       }
+      if (tune_params[i].min_value == tune_params[i].current) {
+         cerr << "warning: param " << tune_params[i].name << " tuned to min value." << endl;
+      }
+      if (tune_params[i].max_value == tune_params[i].current) {
+         cerr << "warning: param " << tune_params[i].name << " tuned to max value." << endl;
+      }
    }
-#endif
+//#endif
 }
 
 void Tune::applyParams() const

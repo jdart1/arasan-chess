@@ -1,3 +1,15 @@
+Changes in Arasan 20.0:
+ 1) Fix to handling of UCI_LimitStrength and UCI_Elo options. These can now
+    be processed in either order and will set the search strength correctly.
+ 2) Revised tuning program. Only the "Texel" method is supported now. Tuner
+    uses a "mean-squared error" objective and takes a labeled EPD file
+    as input. Various optimization methods can be selected. Optimization
+    steps are scaled appropriately based on parameter ranges.
+ 3) Changes to king cover and king safety scoring.
+ 4) Bug fix: Ensure hash move is always checked for validity (was not being
+    done for evasions).
+ 5) Considerable code cleanup has been done.
+
 Changes in Arasan 19.2:
  1) In UCI mode, don't set tb type when a tb path is received if that path
     is empty or the string "<empty>". Fixes issues under Shredder GUI.

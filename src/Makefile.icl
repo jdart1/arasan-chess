@@ -1,9 +1,9 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
-# Copyright 2004-2016 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2017 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
-VERSION = 19.2
+VERSION = 20.0
 
 # directory defines - objects
 PROFILE = ..\$(TARGET)\profile
