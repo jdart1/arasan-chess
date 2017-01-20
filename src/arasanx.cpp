@@ -3418,8 +3418,13 @@ static bool do_command(const string &cmd, Board &board) {
 #endif
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
         Options::TbType tb_type = Options::stringToTbType(type);
-        // unload existing tb set if in use
-        unloadTb(options.search.tablebase_type);
+        // Unload existing tb set if in use and if type or path
+        // has changed
+        if ((options.tbPath(tb_type) != path) ||
+            (options.search.tablebase_type != tb_type)) {
+           if (doTrace) cout << "# unloading tablebases" << endl;
+           unloadTb(options.search.tablebase_type);
+        }
 #endif
         // Set the tablebase options. But do not initialize the
         // tablebases here. Defer until delayedInit is called again.

@@ -114,6 +114,8 @@ class Options
 
    static string tbTypeToString(TbType);
 
+   string tbPath(TbType) const;
+
    // sets options based on a .rc file
    int init(const string &optionsFile);
 

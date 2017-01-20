@@ -58,6 +58,26 @@ string Options::tbTypeToString(TbType type)
    return "None";
 }
 
+string Options::tbPath(Options::TbType type) const
+{
+#ifdef GAVIOTA_TBS
+   if (type == Options::TbType::GaviotaTb) {
+      return search.gtb_path;
+   }
+#endif
+#ifdef NALIMOV_TBS
+   if (type == Options::TbType::NalimovTb) {
+      return search.nalimov_path;
+   }
+#endif
+#ifdef SYZYGY_TBS
+   if (type == Options::TbType::SyzygyTb) {
+      return search.syzygy_path;
+   }
+#endif
+   return "";
+}
+
 Options::SearchOptions::SearchOptions() :
       checks_in_qsearch(1),
       hash_table_size(32*1024*1024),
