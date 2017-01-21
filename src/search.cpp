@@ -1357,20 +1357,23 @@ int depth, Move exclude [], int num_exclude)
         }
         board.undoMove(move,save_state);
         if (wide) {
-            mg.setScore(move,try_score);
+           mg.setScore(move,try_score);
         }
+	if (split) split->lock();
         if (try_score > node->best_score && !terminate) {
-            if (updateRootMove(board,node,node,move,try_score,move_index)) {
-                // beta cutoff
-                // ensure we send UCI output .. even in case of quick
-                // termination due to checkmate or whatever
-                controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
-                // don't reset this until after the PV update, in case
-                // it causes us to terminate:
-                fail_high_root = 0;
-                break;
-            }
+           if (updateRootMove(board,node,node,move,try_score,move_index)) {
+              // beta cutoff
+              // ensure we send UCI output .. even in case of quick
+              // termination due to checkmate or whatever
+              controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
+              // don't reset this until after the PV update, in case
+              // it causes us to terminate:
+              fail_high_root = 0;
+              if (split) split->unlock();
+              break;
+           }
         }
+        if (split) split->unlock();
         fail_high_root = 0;
         if (waitTime) {
             // we are in reduced strength mode, waste some time
@@ -3079,12 +3082,6 @@ int Search::updateRootMove(const Board &board,
                            NodeInfo *parentNode, NodeInfo *node,
                            Move move, score_t score, int move_index)
 {
-   int locked = 0;
-   SplitPoint *s = split;
-   if (s) {
-       s->lock();
-       locked++;
-   }
    if (score > parentNode->best_score)  {
       parentNode->best = move;
       parentNode->best_score = score;
@@ -3104,9 +3101,6 @@ int Search::updateRootMove(const Board &board,
          controller->updateStats(parentNode, controller->getIterationDepth(),
                             parentNode->best_score,
                             parentNode->alpha,parentNode->beta);
-         if (locked) {
-            s->unlock();
-         }
          if (controller->uci) {
             cout << "info score ";
             Scoring::printScoreUCI(score,cout);
@@ -3122,9 +3116,6 @@ int Search::updateRootMove(const Board &board,
           // best move has changed, show new best move
           showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta,0);
       }
-   }
-   if (locked) {
-      s->unlock();
    }
    return 0;   // no cutoff
 }
@@ -3291,10 +3282,8 @@ void Search::searchSMP(ThreadInfo *ti)
             split->lock();
             ASSERT(parentNode->num_try<Constants::MaxMoves);
             parentNode->done[parentNode->num_try++] = move;
-            score_t parent_best = parentNode->best_score;
-            split->unlock();
             // update our window in case parent best score changed
-            if (try_score > parent_best) {
+            if (try_score > parentNode->best_score) {
                 // search produced a new best move or cutoff, update parent node
 #if defined (_THREAD_TRACE) || defined(_TRACE)
               stringstream s;
@@ -3320,8 +3309,10 @@ void Search::searchSMP(ThreadInfo *ti)
             if (node->cutoff || try_score >= Constants::MATE-1-ply) {
                 split->failHigh++;
                 parentNode->cutoff++;
+                split->unlock();
                 break;
             }
+            split->unlock();
         }
         if (fhr) {
             fhr = false;
