@@ -822,7 +822,7 @@ static int probe_dtz_table(const struct pos *pos, int wdl, int *success)
             }
             ptr = ptr2[i].ptr;
             char str[16];
-            int mirror = (ptr->key != key);
+            const bool mirror = (ptr->key != key);
             prt_str(pos, str, mirror);
             if (DTZ_table[DTZ_ENTRIES - 1].entry)
                 free_dtz_entry(DTZ_table[DTZ_ENTRIES-1].entry);
@@ -1806,9 +1806,9 @@ static uint16_t probe_root(const struct pos *pos, int *score,
 
 bool tb_init_impl(const char *path)
 {
-    if (sizeof(uint64_t) != 8 &&        // Paranoid check
-            sizeof(uint32_t) != 4 &&
-            sizeof(uint16_t) != 2 &&
+    if (sizeof(uint64_t) != 8 ||        // Paranoid check
+            sizeof(uint32_t) != 4 ||
+            sizeof(uint16_t) != 2 ||
             sizeof(uint8_t) != 1)
         return false;
     king_attacks_init();
