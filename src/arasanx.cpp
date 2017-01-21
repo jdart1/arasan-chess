@@ -1,6 +1,6 @@
 // Main driver module for Arasan chess engine.
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2016 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2017 by Jon Dart. All Rights Reserved.
 //
 #include "board.h"
 #include "movegen.h"

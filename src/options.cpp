@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2017 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
