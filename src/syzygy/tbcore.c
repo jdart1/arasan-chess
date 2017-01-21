@@ -137,6 +137,7 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
 #ifndef _WIN32
   struct stat statbuf;
   if (fstat(fd, &statbuf)) {
+    perror("fstat");
     close_tb(fd);
     return NULL;
   }
@@ -144,7 +145,7 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
   char *data = (char *)mmap(NULL, statbuf.st_size, PROT_READ,
 			      MAP_SHARED, fd, 0);
   if (data == (char *)(-1)) {
-    printf("Could not mmap() %s.\n", name);
+    fprintf(stderr,"Could not mmap() %s.\n", name);
     exit(1);
   }
 #else
@@ -154,13 +155,13 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
   HANDLE map = CreateFileMapping(fd, NULL, PAGE_READONLY, size_high, size_low,
 				  NULL);
   if (map == NULL) {
-    printf("CreateFileMapping() failed.\n");
+    fprintf(stderr,"CreateFileMapping() failed.\n");
     exit(1);
   }
   *mapping = (uint64)map;
   char *data = (char *)MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
   if (data == NULL) {
-    printf("MapViewOfFile() failed, name = %s%s, error = %lu.\n", name, suffix, GetLastError());
+    fprintf(stderr,"MapViewOfFile() failed, name = %s%s, error = %lu.\n", name, suffix, GetLastError());
     exit(1);
   }
 #endif
@@ -172,14 +173,20 @@ static char *map_file(const char *name, const char *suffix, uint64 *mapping)
 static void unmap_file(char *data, uint64 size)
 {
   if (!data) return;
-  munmap(data, size);
+  if (!munmap(data, size)) {
+	  perror("munmap");
+  }
 }
 #else
 static void unmap_file(char *data, uint64 mapping)
 {
   if (!data) return;
-  UnmapViewOfFile(data);
-  CloseHandle((HANDLE)mapping);
+  if (!UnmapViewOfFile(data)) {
+	  fprintf(stderr, "unmap failed, error code %d", GetLastError());
+  }
+  if (!CloseHandle((HANDLE)mapping)) {
+	  fprintf(stderr, "CloseHandle failed, error code %d", GetLastError());
+  }
 }
 #endif
 
@@ -191,7 +198,7 @@ static void add_to_hash(struct TBEntry *ptr, uint64 key)
   while (i < HSHMAX && TB_hash[hshidx][i].ptr)
     i++;
   if (i == HSHMAX) {
-    printf("HSHMAX too low!\n");
+    fprintf(stderr,"HSHMAX too low!\n");
     exit(1);
   } else {
     TB_hash[hshidx][i].key = key;
@@ -245,13 +252,13 @@ static void init_tb(char *str)
   key2 = calc_key_from_pcs(pcs, 1);
   if (pcs[TB_WPAWN] + pcs[TB_BPAWN] == 0) {
     if (TBnum_piece == TBMAX_PIECE) {
-      printf("TBMAX_PIECE limit too low!\n");
+      fprintf(stderr,"TBMAX_PIECE limit too low!\n");
       exit(1);
     }
     entry = (struct TBEntry *)&TB_piece[TBnum_piece++];
   } else {
     if (TBnum_pawn == TBMAX_PAWN) {
-      printf("TBMAX_PAWN limit too low!\n");
+      fprintf(stderr,"TBMAX_PAWN limit too low!\n");
       exit(1);
     }
     entry = (struct TBEntry *)&TB_pawn[TBnum_pawn++];
@@ -1307,13 +1314,13 @@ static int init_table_wdl(struct TBEntry *entry, char *str)
   // first mmap the table into memory
   entry->data = map_file(str, WDLSUFFIX, &entry->mapping);
   if (!entry->data) {
-    printf("Could not find %s" WDLSUFFIX "\n", str);
+    fprintf(stderr,"Could not find %s" WDLSUFFIX "\n", str);
     return 0;
   }
 
   ubyte *data = (ubyte *)entry->data;
   if (((uint32 *)data)[0] != WDL_MAGIC) {
-    printf("Corrupted table.\n");
+    fprintf(stderr,"Corrupted table.\n");
     unmap_file(entry->data, entry->mapping);
     entry->data = 0;
     return 0;
@@ -1423,7 +1430,7 @@ static int init_table_dtz(struct TBEntry *entry)
     return 0;
 
   if (((uint32 *)data)[0] != DTZ_MAGIC) {
-    printf("Corrupted table.\n");
+    fprintf(stderr,"Corrupted table.\n");
     return 0;
   }
 
@@ -1634,11 +1641,13 @@ void load_dtz_table(char *str, uint64 key1, uint64 key2)
 static void free_wdl_entry(struct TBEntry *entry)
 {
   unmap_file(entry->data, entry->mapping);
+  entry->data = NULL; entry->mapping = 0;
   if (!entry->has_pawns) {
     struct TBEntry_piece *ptr = (struct TBEntry_piece *)entry;
     free(ptr->precomp[0]);
     if (ptr->precomp[1])
       free(ptr->precomp[1]);
+    ptr->precomp[0] = ptr->precomp[1] = NULL;
   } else {
     struct TBEntry_pawn *ptr = (struct TBEntry_pawn *)entry;
     int f;
@@ -1646,6 +1655,7 @@ static void free_wdl_entry(struct TBEntry *entry)
       free(ptr->file[f].precomp[0]);
       if (ptr->file[f].precomp[1])
 	free(ptr->file[f].precomp[1]);
+      ptr->file[f].precomp[0] = ptr->file[f].precomp[1] = NULL;
     }
   }
 }
@@ -1653,14 +1663,18 @@ static void free_wdl_entry(struct TBEntry *entry)
 static void free_dtz_entry(struct TBEntry *entry)
 {
   unmap_file(entry->data, entry->mapping);
+  entry->data = NULL; entry->mapping = 0;
   if (!entry->has_pawns) {
     struct DTZEntry_piece *ptr = (struct DTZEntry_piece *)entry;
     free(ptr->precomp);
+    ptr->precomp = NULL;
   } else {
     struct DTZEntry_pawn *ptr = (struct DTZEntry_pawn *)entry;
     int f;
-    for (f = 0; f < 4; f++)
+    for (f = 0; f < 4; f++) {
       free(ptr->file[f].precomp);
+      ptr->file[f].precomp = NULL;
+    }
   }
   free(entry);
 }
