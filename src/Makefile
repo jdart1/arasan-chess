@@ -342,18 +342,6 @@ log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
-ARASANX_TUNE_SOURCES = arasanx.cpp tune.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp \
-hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
-
 TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -392,7 +380,6 @@ stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-ARASANX_TUNE_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(ARASANX_TUNE_SOURCES)) $(TB_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
