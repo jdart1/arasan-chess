@@ -2933,8 +2933,8 @@ score_t Search::search()
             ASSERT(node->num_try<Constants::MaxMoves);
             if (try_score > node->best_score) {
                 if (updateMove(board,node,node,move,try_score,ply,depth)) {
-                    // cutoff
-                    break;
+                   // cutoff
+                   break;
                 }
             }
             if (try_score >= Constants::MATE-1-ply) {
@@ -3279,12 +3279,12 @@ void Search::searchSMP(ThreadInfo *ti)
             cout << " " << try_score << endl;
         }
 #endif
-        if (!terminate && !split->failHigh) {
+        if (!terminate) {
             split->lock();
             ASSERT(parentNode->num_try<Constants::MaxMoves);
             parentNode->done[parentNode->num_try++] = move;
             // update our window in case parent best score changed
-            if (try_score > parentNode->best_score) {
+            if (try_score > parentNode->best_score && !split->failHigh) {
                 // search produced a new best move or cutoff, update parent node
 #if defined (_THREAD_TRACE) || defined(_TRACE)
               stringstream s;
@@ -3329,36 +3329,27 @@ void Search::searchSMP(ThreadInfo *ti)
 
 int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, score_t score, int ply, int depth, SplitPoint *s)
 {
-    int cutoff = 0;
-    int locked = 0;
-    if (s) {
-       s->lock();
-       locked++;
-    }
-    // avoid race - check score again when lock acquired
-    if (score > parentNode->best_score) {
-       parentNode->best_score = score;
-       parentNode->best = move;
+   int cutoff = 0;
+   parentNode->best_score = score;
+   parentNode->best = move;
 #ifdef MOVE_ORDER_STATS
-       parentNode->best_count = parentNode->num_try-1;
+   parentNode->best_count = parentNode->num_try-1;
 #endif
-       if (score >= parentNode->beta) {
+   if (score >= parentNode->beta) {
 #ifdef _TRACE
-           if (master()) {
-               indent(ply); cout << "beta cutoff" << endl;
-           }
+      if (master()) {
+         indent(ply); cout << "beta cutoff" << endl;
+      }
 #endif
-           parentNode->cutoff++;
-           cutoff++;
-       }
-       else {
-           parentNode->best_score = score;
-           // update pv from slave node to master
-           updatePV(board,parentNode,(node+1),move,ply);
-       }
-    }
-    if (locked) s->unlock();
-    return cutoff;
+      parentNode->cutoff++;
+      cutoff++;
+   }
+   else {
+      parentNode->best_score = score;
+      // update pv from slave node to master
+      updatePV(board,parentNode,(node+1),move,ply);
+   }
+   return cutoff;
 }
 
 void Search::updatePV(const Board &board, Move m, int ply)
