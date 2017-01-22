@@ -1,4 +1,5 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017 by Jon Dart.
+// All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
@@ -27,7 +28,7 @@ class LogEntry
                const Move &move,
                const string &move_image,
                bool fromBook,
-               int score,
+               score_t score,
                int depth);
              
      // create a null log entry.  Used only to initialize storage.
@@ -61,7 +62,7 @@ class LogEntry
        my_result = result;
      }
      
-     int score() const
+     score_t score() const
      {
          return my_score;
      }
@@ -90,7 +91,7 @@ class LogEntry
      Move my_move;
      string my_image;
      bool my_fromBook;
-     int my_score;
+     score_t my_score;
      int my_depth;
      string my_result;
 };

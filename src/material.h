@@ -1,4 +1,4 @@
-// Copyright 1994, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 2014, 2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _MATERIAL_H
 #define _MATERIAL_H
@@ -38,7 +38,7 @@ class Material
     FORCEINLINE void addPiece(const PieceType p)
     {
         info += masks[(int)p];
-        total += PieceValue(p);
+        total += (stored_score_t)PieceValue(p);
         level += levels[(int)p];
         count++;
         ASSERT(level >=0);
@@ -47,7 +47,7 @@ class Material
     FORCEINLINE void removePiece(const PieceType p)
     {
         info -= masks[(int)p];
-        total -= PieceValue(p);
+        total -= (stored_score_t)PieceValue(p);
         level -= levels[(int)p];
         count--;
         ASSERT(level >=0);
@@ -56,14 +56,14 @@ class Material
     FORCEINLINE void addPawn()
     {
         info += masks[(int)Pawn];
-        total += PAWN_VALUE;
+        total += (stored_score_t)PAWN_VALUE;
         ++count; 
     }
 
     FORCEINLINE void removePawn()
     {
         info -= masks[(int)Pawn];
-        total -= PAWN_VALUE;
+        total -= (stored_score_t)PAWN_VALUE;
         --count;
     }
 
@@ -74,7 +74,7 @@ class Material
 	
     // return value of pieces (excluding pawns)
     score_t pieceValue() const {
-       return (score_t)(total - PAWN_VALUE*pawnCount());
+       return (score_t)(total - (stored_score_t)PAWN_VALUE*pawnCount());
     }
 	
     uint32_t infobits() const	{
@@ -201,12 +201,13 @@ class Material
 
  private:
     void clear() {
-        info = total = level = count = 0;
+        info = level = count = 0;
+		total = 0;
     }
 
-    int32_t info;
-    int32_t total;
-    int32_t level;
+	uint32_t info;
+	stored_score_t total;
+	uint32_t level;
     int count;
     static const int32_t masks[8];
     static const int32_t masks2[8];

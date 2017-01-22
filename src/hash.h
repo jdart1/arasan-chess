@@ -13,7 +13,7 @@ extern const hash_t rep_codes[3];
 
 class HashEntry {
 
-   public:
+	public:
 
       // Contents of the flag field
       enum {
@@ -34,7 +34,7 @@ class HashEntry {
       HashEntry() {
       }
 
-      HashEntry(hash_t hash, int val, int staticValue, int depth,
+      HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
          ValueType type, int age, int flags = 0,
                 Move bestMove = NullMove) {
          ASSERT(depth+2 >= 0 && depth+2 < 256);
@@ -44,8 +44,8 @@ class HashEntry {
          contents.start = StartSquare(bestMove);
          contents.dest = DestSquare(bestMove);
          contents.promotion = PromoteTo(bestMove);
-         values.value = val;
-         values.static_value = staticValue;
+         values.value = stored_score_t(val);
+         values.static_value = stored_score_t(staticValue);
          setEffectiveHash(hash);
       }
 
@@ -61,16 +61,16 @@ class HashEntry {
           return (int)contents.depth - 2;
       }
 
-      int getValue() const {
-         return values.value;
+      score_t getValue() const {
+         return score_t(values.value);
       }
 
-      int staticValue() const {
-         return values.static_value;
+      score_t staticValue() const {
+         return (score_t)values.static_value;
       }
 
-      void setValue(int val) {
-         values.value = val;
+      void setValue(score_t val) {
+         values.value = (stored_score_t)val;
       }
 
       ValueType type() const {
@@ -113,7 +113,7 @@ class HashEntry {
          }
       }
 
-      bool avoidNull(int null_depth, int beta) const {
+      bool avoidNull(int null_depth, score_t beta) const {
           return type() == UpperBound && depth() >= null_depth &&
               getValue() < beta;
       }
@@ -150,13 +150,8 @@ class HashEntry {
 
       struct Values
       BEGIN_PACKED_STRUCT
-#ifdef TUNE
-        float value;
-        float static_value;
-#else
-        int32_t value;
-        int32_t static_value;
-#endif
+        stored_score_t value;
+        stored_score_t static_value;
       END_PACKED_STRUCT
 #ifdef __INTEL_COMPILER
 #pragma pack(pop)
@@ -236,8 +231,8 @@ class Hash {
     void storeHash(hash_t hashCode, const int depth,
                           int age,
                           HashEntry::ValueType type,
-                          int value,
-                          int staticValue,
+                          score_t value,
+                          score_t staticValue,
                           byte flags,
                           Move best_move) {
 
@@ -246,10 +241,10 @@ class Hash {
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = NULL;
-        ASSERT(Util::Abs(value) <= Constants::MATE);
+        ASSERT(value >= -Constants::MATE && value <= Constants::MATE);
         // Of the positions that hash to the same locations
         // as this one, find the best one to replace.
-        int maxScore = -Constants::MaxPly*DEPTH_INCREMENT;
+        score_t maxScore = score_t(-Constants::MaxPly*DEPTH_INCREMENT);
         for (int i = MaxRehash; i != 0; --i) {
             HashEntry &q = *p;
 
@@ -267,7 +262,7 @@ class Hash {
                        (HashEntry::LEARNED_MASK | HashEntry::TB_MASK)) && 
                      (q.depth() <= depth || q.age() != age)) {
                 // candidate for replacement
-                int score = replaceScore(q,age);
+                score_t score = replaceScore(q,age);
                 if (score > maxScore) {
                     maxScore = score;
                     best = &q;
@@ -297,8 +292,8 @@ class Hash {
     }
 
 private:
-    int replaceScore(const HashEntry &pos, int age) {
-        return (Util::Abs(pos.age()-age)<<12) - pos.depth();
+    score_t replaceScore(const HashEntry &pos, int age) const {
+        return score_t((Util::Abs(pos.age()-age)<<12) - pos.depth());
     }
 
     HashEntry *hashTable;

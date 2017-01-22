@@ -1,4 +1,4 @@
-// Copyright 1994-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -220,11 +220,11 @@ FORCEINLINE int IsEmptyPiece( Piece piece ) {
   return (piece == EmptyPiece);
 }
    
-FORCEINLINE int PieceValue( Piece piece ) {
+FORCEINLINE score_t PieceValue( Piece piece ) {
   return PieceValues[TypeOfPiece(piece)];
 }
 
-FORCEINLINE int PieceValue( PieceType pieceType ) {
+FORCEINLINE score_t PieceValue( PieceType pieceType ) {
   return PieceValues[pieceType];
 }
 

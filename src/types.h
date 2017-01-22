@@ -1,4 +1,5 @@
-// Copyright 1993-2009, 2012-2014, 2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1993-2009, 2012-2014, 2016-2017 by Jon Dart.
+// All Rights Reserved.
 
 #ifndef _TYPES_H
 #define _TYPES_H
@@ -64,8 +65,10 @@ typedef unsigned long CLOCK_TYPE;
 
 #ifdef TUNE
 typedef double score_t;
+typedef float stored_score_t;
 #else
 typedef int score_t;
+typedef uint32_t stored_score_t;
 #endif
 
 // Define this here since Bitboard class depends on it

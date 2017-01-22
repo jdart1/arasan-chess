@@ -165,7 +165,7 @@ static int max_depth;
 static struct
 {
    Move move;
-   int value;
+   score_t value;
    time_t time;
    int depth;
    uint64_t num_nodes;
@@ -458,8 +458,8 @@ static bool accept_draw(Board &board) {
    // our score is way positive
    if (ourmat.noPawns() && oppmat.noPawns() &&
        ourmat.materialLevel() <= 5 &&
-      (Util::Abs(ourmat.value() - oppmat.value()) < (int)PAWN_VALUE/2) &&
-      last_score < (int)PAWN_VALUE) {
+      (std::abs(ourmat.value() - oppmat.value()) < PAWN_VALUE/2) &&
+      last_score < PAWN_VALUE) {
       if (doTrace)
          cout << "# pawnless ending, accept draw" << endl;
       return true;
@@ -510,9 +510,9 @@ static bool accept_draw(Board &board) {
       cout << "# checking draw score .." << endl;
    ColorType tmp = board.sideToMove();
    board.setSideToMove(side);
-   int draw_score = searcher->root()->drawScore(board);
+   score_t draw_score = searcher->root()->drawScore(board);
    board.setSideToMove(tmp);
-   const int threshold = PAWN_VALUE/4;
+   const score_t threshold = PAWN_VALUE/4;
    if (doTrace) {
       cout << "# rating_diff = " << rating_diff << endl;
       cout << "# draw_score = " << draw_score << endl;
@@ -690,7 +690,7 @@ static void print_nodes(uint64_t nodes, ostream &out) {
 static struct MultiPVEntry
 {
    int depth;
-   int score;
+   score_t score;
    time_t time;
    uint64_t nodes;
    uint64_t tb_hits;
@@ -707,7 +707,7 @@ static struct MultiPVEntry
 } multi_pvs[MAX_PV];
 
 
-static void uciOut(int depth, int score, time_t time,
+static void uciOut(int depth, score_t score, time_t time,
 uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    stringstream s;
    s << "info";
@@ -745,7 +745,7 @@ static void uciOut(const Statistics &stats) {
 
 static void CDECL post_output(const Statistics &stats) {
    last_score = stats.value;
-   int score = stats.display_value;
+   score_t score = stats.display_value;
    if (score == Scoring::INVALID_SCORE) {
       return; // no valid score yet
    }

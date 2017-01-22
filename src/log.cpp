@@ -1,8 +1,4 @@
-// Copyright 1994, 1995, 2000, 2008-2014 by Jon Dart.  All Rights Reserved.
-#if defined(_WIN32) && !defined(__INTEL_COMPILER)
-#pragma optimize("g",off)
-#endif
-
+// Copyright 1994, 1995, 2000, 2008-2014, 2017 by Jon Dart.  All Rights Reserved.
 #include "log.h"
 #include "notation.h"
 #include "globals.h"
@@ -19,7 +15,8 @@ using namespace std;
 #define LOG_FILE_NAME "arasan.log"
 
 LogEntry::LogEntry(const BoardState &state, const Move &move,
-                   const string &move_image, bool fromBook, int score, int depth)
+                   const string &move_image, bool fromBook,
+                   score_t score, int depth)
 : my_state(state),
 my_move(move),
 my_image(move_image),

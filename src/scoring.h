@@ -54,12 +54,12 @@ class Scoring
 
     // Turn a score into a formatted string (mate scores are
     // shown like +Mate6).
-    static void printScore( int score, ostream & );
+    static void printScore( score_t score, ostream & );
 
     // Output scores in the format required by the UCI protocol.
-    static void printScoreUCI( int score, ostream & );
+    static void printScoreUCI( score_t score, ostream & );
 
-    static bool mateScore(int score) {
+    static bool mateScore(score_t score) {
       return score != INVALID_SCORE &&
         (score>=Constants::TABLEBASE_WIN || score<=-Constants::TABLEBASE_WIN);
     }
@@ -197,7 +197,7 @@ class Scoring
     template <ColorType side>
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
-                            int ownCover, int intOppCover,
+                            score_t ownCover, score_t oppCover,
                             Scores &scores,
                             Scores &oppScores);
 
@@ -213,9 +213,9 @@ class Scoring
 
    template <ColorType side>
     void pieceScore(const Board &board,
-                   const PawnHashEntry::PawnData &ourPawnData,
-		   const PawnHashEntry::PawnData &oppPawnData,
-                    int cover, Scores &, Scores &opp_scores,
+                    const PawnHashEntry::PawnData &ourPawnData,
+		    const PawnHashEntry::PawnData &oppPawnData,
+                    score_t cover, Scores &, Scores &opp_scores,
                     bool early_endgame,
                     bool deep_endgame);
 
@@ -259,7 +259,7 @@ class Scoring
                              const Material &oppMaterial,
                              Scores &);
 
-    int kingDistanceScore(const Board &) const;
+    score_t kingDistanceScore(const Board &) const;
 
     static void initBitboards();
 

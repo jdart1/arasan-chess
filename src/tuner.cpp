@@ -9,7 +9,6 @@
 #include "util.h"
 #include "search.h"
 #include "tune.h"
-#include "tuner.h"
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
@@ -34,8 +33,6 @@ extern "C" {
 // Implements the "Texel" tuning method.
 //
 // Note: this file requires a C++11 compatible compiler/libraries.
-
-using namespace tuner;
 
 static bool regularize = false;
 
@@ -66,7 +63,7 @@ static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
-static int LEARNING_SEARCH_WINDOW = 3*PAWN_VALUE;
+static const score_t LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
 // L2-regularization factor
 static const double REGULARIZATION = 6E-5;
 static const int MIN_PLY = 16;
@@ -83,9 +80,9 @@ static const double ADAM_EPSILON = 1.0e-8;
 static const double THETA1 = -0.75;
 static const double THETA2 = 0.75;
 
-static const int ADAPTIVE_STEP_BASE = 0.04;
-static const int ADAPTIVE_STEP_FACTOR1 = 0.2;
-static const int ADAPTIVE_STEP_FACTOR2 = 0.8;
+static const double ADAPTIVE_STEP_BASE = 0.04;
+static const double ADAPTIVE_STEP_FACTOR1 = 0.2;
+static const double ADAPTIVE_STEP_FACTOR2 = 0.8;
 
 static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
@@ -95,8 +92,6 @@ enum class Objective {
 };
 
 static Objective obj = Objective::Msq;
-
-static vector<GameInfo *> tmpdata;
 
 static atomic<int> phase2_game_index;
 
@@ -305,7 +300,7 @@ static double calc_penalty()
 
 // search a position and return the terminal position at the end of
 // the PV. Return 1 if position is valid for tuning.
-static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,int &score)
+static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &score)
 {
    Statistics stats;
    (void) td.searcher->findBestMove(board,
@@ -320,7 +315,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,int &score)
    int len = 0;
    score = stats.value;
    // skip positions with very large scores (including mate scores)
-   if (Util::Abs(score/PAWN_VALUE)<30) {
+   if (fabs(score/PAWN_VALUE)<30.0) {
       pvBoard = board;
       for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
          pvBoard.doMove(stats.best_line[len]);
@@ -363,10 +358,11 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
             // trim quotes
             val.erase(std::remove( val.begin(), val.end(), '\"' ),val.end());
             stringstream vstream(val);
-            int wstatus = 5, bstatus = 5;
+            unsigned wstatus = 5, bstatus = 5;
             vstream >> wstatus;
             vstream >> bstatus;
-            if (!vstream.bad() && !vstream.fail()) {
+            if (!vstream.bad() && !vstream.fail() && wstatus <= 5 &&
+                bstatus <= 5) {
                board.setCastleStatus((CastleType)wstatus,White);
                board.setCastleStatus((CastleType)bstatus,Black);
             } else {
@@ -388,7 +384,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          Bitboard atcks = board.calcAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove());
          // If king can be captured, position is illegal
          if (!atcks.isClear()) continue;
-         int score;
+         score_t score;
          if (make_pv(td,board,pvBoard,score)) {
             double func_value = computeErrorTexel(score, result, board.sideToMove());
             pdata.target += func_value;
@@ -443,8 +439,8 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                                 vector<double> &grads, double inc) {
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
-    const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
-    const int mdiff = ourmat.value() - oppmat.value();
+    const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const score_t mdiff = ourmat.value() - oppmat.value();
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
        return;
@@ -601,7 +597,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Square kp = board.kingSquare(side);
    const Square okp = board.kingSquare(oside);
    int pin_count = 0;
-   int attackWeight = 0;
+   score_t attackWeight = 0;
    int attackCount = 0;
    int majorAttackCount = 0;
    const int mLevel = board.getMaterial(oside).materialLevel();
@@ -625,7 +621,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       s.calcCover<Black>(board,ourKpe);
       s.calcCover<White>(board,oppKpe);
    }
-   const int oppCover = oppKpe.cover;
+   const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
    vector<int> attackTypes(8,0);
    if (ourmat.infobits() != oppmat.infobits() &&
@@ -880,7 +876,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          board.getMaterial(side).infobits() != Material::KQ))) {
       const int pieces = board.getMaterial(side).pieceCount();
       double inc_adjust = inc;
-      int k_pos = tune_params[Tune::KING_PST_ENDGAME + ksq_map].current;
+      score_t k_pos = tune_params[Tune::KING_PST_ENDGAME + ksq_map].current;
       if (pieces < 3) {
          inc_adjust = inc_adjust*tune_params[Tune::KING_POSITION_LOW_MATERIAL0+pieces].current/128.0;
       }
@@ -1186,7 +1182,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       // king safety tuning
       const int scale_index =
-         Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
+         Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,int(attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION));
       // approximate the gradient of the scale
       double scale_grad = 0.0;
       if (scale_index > 8) {
@@ -1353,7 +1349,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
       double dv = data0.grads[i];
       Tune::TuneParam p;
       tune_params.getParam(i,p);
-      int val = p.current;
+      score_t val = p.current;
       if (regularize) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
@@ -1719,10 +1715,8 @@ int CDECL main(int argc, char **argv)
        }
     }
 
-    LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
-
     options.search.hash_table_size = 0;
-    options.search.easy_threshold = LEARNING_SEARCH_WINDOW;
+    options.search.easy_threshold = (int)LEARNING_SEARCH_WINDOW;
     options.learning.position_learning = 0;
     options.book.book_enabled = options.log_enabled = 0;
     options.learning.position_learning = false;

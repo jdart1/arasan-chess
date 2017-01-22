@@ -272,7 +272,8 @@ class SearchController {
     int threadSplitDepth;
     Statistics *stats;
     ColorType computerSide;
-    int ratingDiff, ratingFactor;
+    int ratingDiff;
+    score_t ratingFactor;
     CLOCK_TYPE startTime;
     RootSearch *rootSearch;
     ThreadPool *pool;
@@ -293,7 +294,7 @@ class Search : public ThreadControl {
 
   void init(NodeStack &ns, ThreadInfo *child_ti);
 
-    int search(score_t alpha, score_t beta,
+    score_t search(score_t alpha, score_t beta,
                int ply, int depth, int flags = 0) {
       PUSH(alpha,beta,flags,ply,depth);
       return POP(search());
@@ -470,7 +471,7 @@ class Search : public ThreadControl {
     Options::SearchOptions srcOpts;
     ColorType computerSide;
     int ratingDiff;
-    int ratingFactor;
+    score_t ratingFactor;
     TalkLevel talkLevel;
 };
 
@@ -503,7 +504,7 @@ class RootSearch : public Search {
 
  protected:
 
-  int ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
+  score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
      int iteration_depth,
      int depth, Move exclude [], int num_exclude);
 

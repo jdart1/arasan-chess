@@ -16,7 +16,8 @@ extern void learn(const Board &board, int rep_count);
 struct LearnRecord {
   hash_t hashcode;
   int in_check;
-  int score, depth;
+  score_t score;
+  int depth;
   Square start, dest;
   PieceType promotion;
 };

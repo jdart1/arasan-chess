@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -126,6 +126,21 @@ void Board::setSecondaryVars()
    pawnHashCodeB = BoardHash::pawnHash(*this,Black);
 }
 
+void Board::setCastleStatus( CastleType t, ColorType side )
+{
+   CastleType old = castleStatus(side);
+   state.castleStatus[side] = t;
+   if (side == White) {
+      state.hashCode ^= w_castle_status[old];
+      state.hashCode ^= w_castle_status[t];
+   }
+   else {
+      state.hashCode ^= b_castle_status[old];
+      state.hashCode ^= b_castle_status[t];
+   }
+   state.hashCode = BoardHash::setSideToMove(state.hashCode, sideToMove());
+}
+
 void Board::reset()
 {
    if (!initialBoard) {
@@ -229,7 +244,9 @@ static inline CastleType UpdateCastleStatusB(CastleType cs, Square sq)
    return cs;
 }
 
-#define Xor(h,sq,piece) h ^= hash_codes[sq][(int)piece]
+static FORCEINLINE void Xor(hash_t &h,Square sq,Piece piece) {
+   h ^= hash_codes[sq][(int)piece];
+}
 
 void Board::doNull()
 {
@@ -251,6 +268,7 @@ void Board::doNull()
 void Board::doMove( Move move )
 {
    ASSERT(!IsNull(move));
+   ASSERT(state.hashCode == BoardHash::hashCode(*this));
    state.checkStatus = CheckUnknown;
    ++state.moveCount;
    if (state.enPassantSq != InvalidSquare)
@@ -460,7 +478,7 @@ void Board::doMove( Move move )
             {
             case Empty: break;
             case Pawn:
-                   ASSERT(pawn_bits[Black].isSet(target));
+               ASSERT(pawn_bits[Black].isSet(target));
                pawn_bits[Black].clear(target);
                Xor(pawnHashCodeB, target, capture);
                if (moveType == EnPassant)
@@ -572,7 +590,7 @@ void Board::doMove( Move move )
          const Bitboard bits(Bitboard::mask[start] |
                            Bitboard::mask[dest]);
          Square target = dest; // where we captured
-                 Piece capture = contents[dest]; // what we captured
+         Piece capture = contents[dest]; // what we captured
          switch (TypeOfPiece(contents[StartSquare(move)])) {
          case Empty: break;
          case Pawn:

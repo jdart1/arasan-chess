@@ -23,6 +23,7 @@
 #include <errno.h>
 #endif
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <list>
@@ -103,11 +104,11 @@ static const int FUTILITY_MARGIN[6] =
 };
 
 static const int STATIC_NULL_PRUNING_DEPTH = 4*DEPTH_INCREMENT;
-static const int STATIC_NULL_MARGIN_BASE = PAWN_VALUE;
-static const int STATIC_NULL_MARGIN_SLOPE = int(0.3*PAWN_VALUE);
-static const int STATIC_NULL_MARGIN_SLOPE2 = int(0.2*PAWN_VALUE);
+static const score_t STATIC_NULL_MARGIN_BASE = PAWN_VALUE;
+static const score_t STATIC_NULL_MARGIN_SLOPE = score_t(0.3*PAWN_VALUE);
+static const score_t STATIC_NULL_MARGIN_SLOPE2 = score_t(0.2*PAWN_VALUE);
 
-static const int STATIC_NULL_MARGIN[5] =
+static const score_t STATIC_NULL_MARGIN[5] =
 {STATIC_NULL_MARGIN_BASE,
  STATIC_NULL_MARGIN_BASE+1*STATIC_NULL_MARGIN_SLOPE+1*1*STATIC_NULL_MARGIN_SLOPE2,
  STATIC_NULL_MARGIN_BASE+2*STATIC_NULL_MARGIN_SLOPE+2*2*STATIC_NULL_MARGIN_SLOPE2,
@@ -838,8 +839,8 @@ Move *excludes, int num_excludes)
         iteration_depth++) {
       if (!controller->explicit_excludes) num_excludes = 0;
       for (multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
-         int lo_window, hi_window;
-         int aspirationWindow = ASPIRATION_WINDOW[0];
+         score_t lo_window, hi_window;
+         score_t aspirationWindow = ASPIRATION_WINDOW[0];
          if (iteration_depth <= 1) {
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
@@ -959,7 +960,7 @@ Move *excludes, int num_excludes)
                   if (iteration_depth <= MoveGenerator::EASY_PLIES) {
                      aspirationWindow += 2*options.search.easy_threshold;
                   }
-                  hi_window = Util::Min(Constants::MATE-iteration_depth-1,
+                  hi_window = std::min<score_t>(Constants::MATE-iteration_depth-1,
                                         lo_window + aspirationWindow);
                }
             }
@@ -1203,7 +1204,7 @@ Move *excludes, int num_excludes)
    return node->best;
 }
 
-int RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
+score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         int iteration_depth,
 int depth, Move exclude [], int num_exclude)
 {
@@ -1682,7 +1683,7 @@ score_t Search::quiesce(int ply,int depth)
          (node+1)->pv_length=0; // no PV from this point
          node->flags |= EXACT;
       }
-      ASSERT(Util::Abs(node->best_score) <= Constants::MATE);
+      ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
       storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
@@ -1703,13 +1704,13 @@ score_t Search::quiesce(int ply,int depth)
           board.getMaterial(Black).materialLevel()==0 &&
           ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
          node->eval = bitscore;
-         ASSERT(Util::Abs(node->eval) <= Constants::MATE);
+         ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
       }
       else {
          had_eval = node->staticEval != Scoring::INVALID_SCORE;
          if (had_eval) {
             node->eval = node->staticEval;
-            ASSERT(Util::Abs(node->eval) <= Constants::MATE);
+            ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
          }
          if (node->eval == Scoring::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
@@ -1717,11 +1718,11 @@ score_t Search::quiesce(int ply,int depth)
          if (hashHit) {
             // Use the transposition table entry to provide a better score
             // for pruning decisions, if possible
-            const int hashValue = hashEntry.getValue();
+            const score_t hashValue = hashEntry.getValue();
             if (result == (hashValue > node->eval ? HashEntry::LowerBound :
                            HashEntry::UpperBound)) {
                node->eval = hashValue;
-               ASSERT(Util::Abs(node->eval) <= Constants::MATE);
+               ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
             }
          }
       }
@@ -1762,7 +1763,7 @@ score_t Search::quiesce(int ply,int depth)
          }
       }
       int move_index = 0;
-      int try_score;
+      score_t try_score;
       BoardState state(board.state);
       const ColorType oside = board.oppositeSide();
       Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
@@ -1791,7 +1792,7 @@ score_t Search::quiesce(int ply,int depth)
              !passedPawnPush(board,hashMove) &&
              node->beta > -Constants::TABLEBASE_WIN &&
              (Capture(hashMove) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-            const int optScore = Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+            const score_t optScore = Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
             if (optScore < node->best_score) {
 #ifdef _TRACE
                if (master()) {
@@ -2014,7 +2015,7 @@ score_t Search::quiesce(int ply,int depth)
          }
       }
    search_end:
-      ASSERT(Util::Abs(node->best_score) <= Constants::MATE);
+      ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
       storeHash(board,hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
@@ -2180,7 +2181,7 @@ int Search::calcExtensions(const Board &board,
       if (predictedDepth <= FUTILITY_DEPTH) {
          // Threshold was formerly increased with the move index
          // but this tests worse now.
-         int threshold = parentNode->beta - FUTILITY_MARGIN[predictedDepth/DEPTH_INCREMENT];
+         score_t threshold = parentNode->beta - FUTILITY_MARGIN[predictedDepth/DEPTH_INCREMENT];
          if (node->eval == Scoring::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
          }
@@ -2686,7 +2687,7 @@ score_t Search::search()
         // current search, just reduced depth + the IID flag set.
         int old_flags = node->flags;
         node->flags |= IID;
-        int alpha = node->alpha;
+        score_t alpha = node->alpha;
         node->depth = d;
         score_t iid_score = -search();
         // set hash move to IID search result (may still be null)
@@ -3005,7 +3006,7 @@ score_t Search::search()
     if (!terminate && !(node->flags & SINGULAR)) {
         if (IsNull(node->best)) node->best = hashMove;
         // store the position in the hash table, if there's room
-        int value = node->best_score;
+        score_t value = node->best_score;
         HashEntry::ValueType val_type;
         // Adjust mate scores to reflect current ply. But only
         // if the score is in bounds.
@@ -3073,7 +3074,7 @@ score_t Search::search()
         }
     }
 #endif
-    int score = node->best_score;
+    score_t score = node->best_score;
     ASSERT(score >= -Constants::MATE && score <= Constants::MATE);
     return score;
 }
@@ -3148,7 +3149,7 @@ void Search::searchSMP(ThreadInfo *ti)
     node->depth = parentNode->depth;
     node->cutoff = 0;
 
-    int best_score = parentNode->best_score;
+    score_t best_score = parentNode->best_score;
 #ifdef _THREAD_TRACE
     log("searchSMP",ti->index);
 #endif
@@ -3174,7 +3175,7 @@ void Search::searchSMP(ThreadInfo *ti)
         }
 #endif
         ASSERT(Capture(move) != King);
-        int try_score;
+        score_t try_score;
 
         node->extensions = 0;
         node->last_move = move;
@@ -3234,7 +3235,7 @@ void Search::searchSMP(ThreadInfo *ti)
            board.undoMove(move,state);
            break;
         }
-        int hibound = node->best_score+1;
+        score_t hibound = node->best_score+1;
         while (try_score > best_score &&
                (extend < 0 || hibound < node->beta) &&
                !((node+1)->flags & EXACT) &&

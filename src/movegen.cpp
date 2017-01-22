@@ -1,4 +1,4 @@
-// Copyright 1994-2016 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2017 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -83,7 +83,7 @@ int trace)
      int j = 0;
      for (int i=0; i<batch_count; i++) {
         Move &move = moveList[i].move;
-        int score = (Capture(move) != Empty) ? see(board,move) : 0;
+        int score = (Capture(move) != Empty) ? (int)see(board,move) : 0;
         tmp.doMove(move);
         if (tmp.anyAttacks(tmp.kingSquare(tmp.oppositeSide()),tmp.sideToMove())) {
           // move was illegal, own king is in check
@@ -127,10 +127,10 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
                ClearUsed(moveList[i].move);
                if (MovesEqual(moveList[i].move,pvMove)) {
                    SetPhase(moveList[i].move,HASH_MOVE_PHASE);
-                   moveList[i].score = PAWN_VALUE*100;
+                   moveList[i].score = int(PAWN_VALUE*100);
                } else if (CaptureOrPromotion(moveList[i].move)) {
                    int est;
-                   if ((est = see(board,moveList[i].move)) >= 0) {
+                   if ((est = (int)see(board,moveList[i].move)) >= 0) {
                        SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
                        moveList[i].score = est;
                    } else {
@@ -279,7 +279,7 @@ int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
       int scores[40];
       ASSERT(captures < 40);
       for (int i = index; i < index+captures; i++) {
-          scores[i] = MVV_LVA(moves[i]);
+          scores[i] = int(MVV_LVA(moves[i]));
       }
       sortMoves(moves,scores,captures);
    }
@@ -318,10 +318,10 @@ Move MoveGenerator::nextEvasion(int &ord) {
              continue;
           }
           if (CaptureOrPromotion(moves[i])) {
-             int gain = Gain(moves[i]);
-             int pieceVal = PieceValue(PieceMoved(moves[i]));
-             scores[i] = MVV_LVA(moves[i]);
-             if (gain-pieceVal > 0 || (scores[i] = see(board,moves[i])) >= 0) {
+             score_t gain = Gain(moves[i]);
+             score_t pieceVal = PieceValue(PieceMoved(moves[i]));
+             scores[i] = int(MVV_LVA(moves[i]));
+             if (gain-pieceVal > 0 || (scores[i] = (int)see(board,moves[i])) >= 0) {
                 ++poscaps;
                 if (i > poscaps) {
                    // move positive captures to front of list

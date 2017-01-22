@@ -336,7 +336,7 @@ Scoring::~Scoring() {
 int Scoring::tradeDownIndex(const Material &ourmat, const Material &oppmat)
 {
    int index = -1;
-   const int mdiff = ourmat.value() - oppmat.value();
+   const score_t mdiff = ourmat.value() - oppmat.value();
    if (oppmat.materialLevel() < 16 && mdiff >= 3*PAWN_VALUE) {
       // Encourage trading pieces when we are ahead in material.
       index = oppmat.materialLevel()/2;
@@ -352,7 +352,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 #ifdef EVAL_DEBUG
     score_t tmp = score;
 #endif
-    const int mdiff = ourmat.value() - oppmat.value();
+    const score_t mdiff = ourmat.value() - oppmat.value();
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
         // Bishop endgame: drawish
@@ -364,7 +364,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
        }
        return score;
     }
-    const int pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
        const uint32_t pieces = ourmat.pieceBits();
        if (pieces == Material::KN || pieces == Material::KB) {
@@ -462,11 +462,11 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 #ifdef EVAL_DEBUG
        tmp = score;
 #endif
-       int adj = 0;
+       score_t adj = 0;
        if (pawnDiff > 0 && pieceDiff >= 0) {
           // better to have more pawns in endgame (if we have not
           // traded pieces for pawns).
-          adj += PARAM(ENDGAME_PAWN_ADVANTAGE)*Util::Min(2,pawnDiff);
+          adj += PARAM(ENDGAME_PAWN_ADVANTAGE)*std::min<int>(2,pawnDiff);
        }
        if (pieceDiff > 0) {
           // bonus for last few pawns - to discourage trade
@@ -491,7 +491,7 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
-    const int mdiff = ourmat.value()-oppmat.value();
+    const score_t mdiff = ourmat.value()-oppmat.value();
     score_t score = 0;
     if (ourmat.infobits() == Material::KQ) {
         if (oppmat.infobits() == Material::KRR) {
@@ -656,7 +656,7 @@ score_t Scoring::calcCover(const Board &board, Square kp, int (&counts)[6][4]) {
 #else
 score_t Scoring::calcCover(const Board &board, Square kp) {
 #endif
-   int cover = 0;
+   score_t cover = 0;
    int kpfile = File(kp);
    int rank = Rank(kp, side);
    if (kpfile > 5) {
@@ -686,7 +686,7 @@ score_t Scoring::calcCover(const Board &board, Square kp) {
 #endif
       }
    }
-   cover = Util::Min(0, cover);
+   cover = std::min<score_t>(0, cover);
    return cover;
 }
 
@@ -718,9 +718,9 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
          king_cover[i][j] = kside_cover[i][j] = qside_cover[i][j] = 0;
       }
    }
-   int cover = calcCover<side> (board, kp, king_cover);
+   score_t cover = calcCover<side> (board, kp, king_cover);
 #else
-   int cover = calcCover<side> (board, kp);
+   score_t cover = calcCover<side> (board, kp);
 #endif
    switch(board.castleStatus(side))
    {
@@ -733,7 +733,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
          score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
          score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
 #endif
-         coverEntry.cover = (cover * 2) / 3 + Util::Min(k_cover, q_cover) / 3;
+         coverEntry.cover = (cover * 2) / 3 + std::min<score_t>(k_cover, q_cover) / 3;
 #ifdef TUNE
          for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
@@ -852,7 +852,7 @@ template<ColorType side>
 void Scoring::pieceScore(const Board &board,
                const PawnHashEntry::PawnData &ourPawnData,
                const PawnHashEntry::PawnData &oppPawnData,
-               int oppCover,
+               score_t oppCover,
                Scores &scores,
                Scores &opp_scores,
                bool early_endgame,
@@ -1718,7 +1718,7 @@ score_t Scoring::materialScore(const Board &board) const {
     cout << "mdiff=" << mdiff << endl;
 
 #endif
-    int adjust = 0;
+    score_t adjust = 0;
     if (ourmat.infobits() != oppmat.infobits()) {
         if (ourmat.noPawns() && oppmat.noPawns()) {
             adjust += adjustMaterialScoreNoPawns(board,side) -
@@ -1732,7 +1732,7 @@ score_t Scoring::materialScore(const Board &board) const {
 #ifdef EVAL_DEBUG
     if (adjust) cout << "material score adjustment = " << adjust << endl;
 #endif
-    const int matScore = mdiff + adjust;
+    const score_t matScore = mdiff + adjust;
 #ifdef EVAL_DEBUG
     cout << "adjusted material score = " << matScore << endl;
 #endif
@@ -1831,7 +1831,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
 #ifdef _DEBUG
 #ifdef TUNE
-   if (fabs(score)) >= Constants::MATE) {
+   if (fabs(score) >= Constants::MATE) {
 #else
    if (Util::Abs(score) >= Constants::MATE) {
 #endif
@@ -1927,8 +1927,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       if (blocker != InvalidSquare) {
          const int index = pp_block_index(sq,blocker,side);
          if (board.occupied[side].isSet(blocker)) {
-            int mid_penalty = Params::PP_OWN_PIECE_BLOCK[Midgame][index];
-            int end_penalty = Params::PP_OWN_PIECE_BLOCK[Endgame][index];
+            score_t mid_penalty = Params::PP_OWN_PIECE_BLOCK[Midgame][index];
+            score_t end_penalty = Params::PP_OWN_PIECE_BLOCK[Endgame][index];
             scores.mid += mid_penalty;
             scores.end += end_penalty;
 #ifdef PAWN_DEBUG
@@ -1942,8 +1942,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #endif
          }
          else {
-            int mid_penalty = Params::PP_OPP_PIECE_BLOCK[Midgame][index];
-            int end_penalty = Params::PP_OPP_PIECE_BLOCK[Endgame][index];
+            score_t mid_penalty = Params::PP_OPP_PIECE_BLOCK[Midgame][index];
+            score_t end_penalty = Params::PP_OPP_PIECE_BLOCK[Endgame][index];
             scores.mid += mid_penalty;
             scores.end += end_penalty;
 #ifdef PAWN_DEBUG
@@ -1959,8 +1959,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
       Bitboard atcks(board.fileAttacks(sq));
 #ifdef PAWN_DEBUG
-      int mid_tmp = scores.mid;
-      int end_tmp = scores.end;
+      score_t mid_tmp = scores.mid;
+      score_t end_tmp = scores.end;
 #endif
       if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
          atcks &= board.rook_bits[side];
@@ -2010,7 +2010,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #endif
 }
 
-int Scoring::kingDistanceScore(const Board &board) const
+score_t Scoring::kingDistanceScore(const Board &board) const
 {
    return PARAM(KING_DISTANCE_BASIS) - PARAM(KING_DISTANCE_MULT)*distance(board.kingSquare(White), board.kingSquare(Black));
 }
@@ -2291,7 +2291,7 @@ bool useCache)
 
 
 template<ColorType side>
-void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, int ownCover, int oppCover, Scores &scores, Scores &oppScores) {
+void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, score_t ownCover, score_t oppCover, Scores &scores, Scores &oppScores) {
    const ColorType oside = OppositeColor(side);
 
 #ifdef EVAL_DEBUG
@@ -2311,7 +2311,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    }
 
    // Penalize loss of castling.
-   int castling = APARAM(CASTLING,(int)board.castleStatus(side));
+   score_t castling = APARAM(CASTLING,(int)board.castleStatus(side));
    scores.mid += castling;
 #ifdef EVAL_DEBUG
    cout << "castling score: " << castling << endl;
@@ -2479,12 +2479,12 @@ int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
       return 0;
 }
 
-void Scoring::printScore(int score, ostream &str) {
+void Scoring::printScore(score_t score, ostream &str) {
    if (score <= -Constants::MATE_RANGE) {
-      str << "-Mate" << (Constants::MATE + score + 1) / 2;
+      str << "-Mate" << int(Constants::MATE + score + 1) / 2;
    }
    else if (score >= Constants::MATE_RANGE) {
-      str << "+Mate" << (Constants::MATE - score + 1) / 2;
+      str << "+Mate" << int(Constants::MATE - score + 1) / 2;
    }
    else if (score == Constants::TABLEBASE_WIN) {
       str << "+TbWin";
@@ -2500,15 +2500,15 @@ void Scoring::printScore(int score, ostream &str) {
    }
 }
 
-void Scoring::printScoreUCI(int score, ostream &str) {
+void Scoring::printScoreUCI(score_t score, ostream &str) {
    if (score <= -Constants::MATE_RANGE) {
-      str << "mate " << -(Constants::MATE + score + 1) / 2;
+      str << "mate " << -int(Constants::MATE + score + 1) / 2;
    }
    else if (score >= Constants::MATE_RANGE) {
-      str << "mate " << (Constants::MATE - score + 1) / 2;
+      str << "mate " << int(Constants::MATE - score + 1) / 2;
    }
    else
-      str << "cp " << (score*100)/PAWN_VALUE;
+      str << "cp " << int(score*100)/PAWN_VALUE;
 }
 
 int Scoring::tryBitbase(const Board &board) {

@@ -79,10 +79,7 @@ public:
        return state.castleStatus[side];        
    }
    
-   void setCastleStatus( CastleType t, ColorType side )
-   {
-       state.castleStatus[side] = t;
-   }
+   void setCastleStatus( CastleType t, ColorType side );
 
    int castled(ColorType side) const
    {

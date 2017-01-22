@@ -1,4 +1,5 @@
-// Copyright 1996, 1997, 2000, 2008, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1996, 1997, 2000, 2008, 2013, 2017 by Jon Dart.
+//  All Rights Reserved.
 
 #include "see.h"
 #include "see.h"
@@ -82,7 +83,7 @@ score_t see( const Board &board, Move move ) {
    }
    score_t score_list[20];
    score_t swap_score = 0;
-   int gain;
+   score_t gain;
    Bitboard attacks[2]; 
    Square last_attack_sq[2] = {InvalidSquare, InvalidSquare};
    attacks[side] = board.calcAttacks(square,side);
@@ -186,7 +187,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
    }
    score_t score_list[20];
    score_t swap_score = 0;
-   int gain;
+   score_t gain;
    Bitboard attacks[2]; 
    Square last_attack_sq[2] = {InvalidSquare, InvalidSquare};
    attacks[side] = board.calcAttacks(square,side);

@@ -4,21 +4,22 @@
 #include "attacks.h"
 #include "scoring.h"
 
+#include <algorithm>
+
 extern "C" {
 #include <math.h>
 #include <string.h>
 };
 
-static const int MOBILITY_RANGE = PAWN_VALUE/3;
-static const int OUTPOST_RANGE = PAWN_VALUE/3;
-static const int PST_RANGE = PAWN_VALUE/2;
-static const int PP_BLOCK_RANGE = PAWN_VALUE/3;
-static const int TRADE_DOWN_RANGE = PAWN_VALUE/3;
-static const int ENDGAME_KING_POS_RANGE = PAWN_VALUE/2;
-static const int KING_ATTACK_SCALE_MAX = 5*PAWN_VALUE;
-static const int KING_COVER_RANGE = int(0.35*PAWN_VALUE);
-static const int KING_ATTACK_COUNT_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
-static const int KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
+static const score_t MOBILITY_RANGE = PAWN_VALUE/3;
+static const score_t OUTPOST_RANGE = PAWN_VALUE/3;
+static const score_t PST_RANGE = PAWN_VALUE/2;
+static const score_t PP_BLOCK_RANGE = PAWN_VALUE/3;
+static const score_t TRADE_DOWN_RANGE = PAWN_VALUE/3;
+static const score_t ENDGAME_KING_POS_RANGE = PAWN_VALUE/2;
+static const score_t KING_ATTACK_SCALE_MAX = 5*PAWN_VALUE;
+static const score_t KING_ATTACK_COUNT_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
+static const score_t KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 int Tune::numTuningParams() const
 {
@@ -66,6 +67,8 @@ static void apply_to_outpost(int i,score_t val,score_t arr[])
 
 Tune::Tune() 
 {
+    static const score_t KING_COVER_RANGE = score_t(0.35*PAWN_VALUE);
+
     // Tuning params for most parameters (except PSTs, mobility).
     // These are initialized to some reasonable but not optimal values.
     static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
@@ -562,7 +565,7 @@ static const int QUEEN_PST_INIT[2][64] =
       stringstream name;
       name << "trade_down" << p;
       int val = TRADE_DOWN_INIT[p];
-      tune_params.push_back(TuneParam(i++,name.str(),val,Util::Max(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
+      tune_params.push_back(TuneParam(i++,name.str(),val,std::max<score_t>(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==KING_ATTACK_SCALE);
    int slope = 0;
@@ -572,9 +575,9 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int p = 0; p < Scoring::Params::KING_ATTACK_SCALE_SIZE; p++) {
       stringstream name;
       name << "king_attack_scale" << p;
-      int val2 = Util::Min(KING_ATTACK_SCALE_MAX,p < 10 ? 0 : int(f*val/2));
-      int range = Util::Max(PAWN_VALUE/4,val2/3);
-      tune_params.push_back(TuneParam(i++,name.str(),val2,Util::Max(0,val2-range),Util::Min(KING_ATTACK_SCALE_MAX,val2+range),Tune::TuneParam::Midgame,p >= 10));
+      score_t val2 = std::min<score_t>(KING_ATTACK_SCALE_MAX,p < 10 ? 0 : int(f*val/2));
+      score_t range = std::max<score_t>(PAWN_VALUE/4,val2/3);
+      tune_params.push_back(TuneParam(i++,name.str(),val2,std::max<score_t>(0,val2-range),std::min<score_t>(KING_ATTACK_SCALE_MAX,val2+range),Tune::TuneParam::Midgame,p >= 10));
       slope = (p < Scoring::Params::KING_ATTACK_SCALE_SIZE/2 ? p : (Scoring::Params::KING_ATTACK_SCALE_SIZE-p));
       if (p>10) val += slope;
    }
@@ -582,7 +585,7 @@ static const int QUEEN_PST_INIT[2][64] =
 
 void Tune::checkParams() const
 {
-//#ifdef _DEBUG
+#ifdef _DEBUG
    if (NUM_MISC_PARAMS != KING_ATTACK_COUNT_BOOST) {
       cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_ATTACK_COUNT_BOOST << endl;
    }
@@ -591,25 +594,21 @@ void Tune::checkParams() const
          cerr << "warning: index mismatch in Tune::tune_params at position " << i << ", param " << tune_params[i].name << endl;
       if (tune_params[i].current < tune_params[i].min_value) {
          cerr << "warning: param " << tune_params[i].name << " has current < min" << endl;
-         //cerr << "resetting to " << tune_params[i].min_value << endl;
-         //tune_params[i].current = tune_params[i].min_value;
       }
       if (tune_params[i].current > tune_params[i].max_value) {
          cerr << "warning: param " << tune_params[i].name << " has current > max" << endl;
-         //cerr << "resetting to " << tune_params[i].max_value << endl;
-         //tune_params[i].current = tune_params[i].max_value;
       }
       if (tune_params[i].min_value > tune_params[i].max_value) {
          cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
       }
       if (tune_params[i].min_value == tune_params[i].current) {
-         cerr << "warning: param " << tune_params[i].name << " tuned to min value." << endl;
+         cerr << "warning: param " << tune_params[i].name << " tuned to min value (" << tune_params[i].current << ")." << endl;
       }
       if (tune_params[i].max_value == tune_params[i].current) {
-         cerr << "warning: param " << tune_params[i].name << " tuned to max value." << endl;
+         cerr << "warning: param " << tune_params[i].name << " tuned to max value (" << tune_params[i].current << ")." << endl;
       }
    }
-//#endif
+#endif
 }
 
 void Tune::applyParams() const

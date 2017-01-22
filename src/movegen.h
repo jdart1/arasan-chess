@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2016 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2017 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -251,10 +251,10 @@ class RootMoveGenerator : public MoveGenerator
           return moveList;
       }
 
-      void setScore(Move m, int score) {         
+      void setScore(Move m, score_t score) {
           for (auto it = moveList.begin();it != moveList.end();it++) {
               if (MovesEqual((*it).move,m)) {
-                  (*it).score = score;
+                  (*it).score = (int)score;
                   break;
               }
           }
