@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2016 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2017 by Jon Dart. All Rights Reserved.
 #
 #TARGET = win32
 TARGET = win64
@@ -51,6 +51,15 @@ BUILD_TYPE=debug
 BUILD_TYPE=release
 !Endif
 
+BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
+TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)-tune
+PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
+PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
+PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
+RELEASE = $(BUILD_ROOT)\release
+# relative to root:
+SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
+
 !If "$(PLATFORM)"=="XP"
 CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
 !Endif
@@ -61,15 +70,6 @@ NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE_BUILD)/topo.obj
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
-
-BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
-TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)-tune
-PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
-PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
-PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
-RELEASE = $(BUILD_ROOT)\release
-# relative to root:
-SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
 
 TESTS = ..\tests
 
@@ -275,21 +275,6 @@ $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\history.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
-
-ARASANX_TUNE_OBJS = $(TUNE_BUILD)\arasanx.obj \
-$(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
-$(TUNE_BUILD)\board.obj $(TUNE_BUILD)\boardio.obj $(TUNE_BUILD)\options.obj \
-$(TUNE_BUILD)\chess.obj $(TUNE_BUILD)\material.obj $(TUNE_BUILD)\movegen.obj \
-$(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
-$(TUNE_BUILD)\see.obj $(TUNE_BUILD)\globals.obj $(TUNE_BUILD)\search.obj \
-$(TUNE_BUILD)\notation.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\stats.obj \
-$(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \
-$(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\log.obj \
-$(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
-$(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
-$(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj \
-$(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
-$(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS) $(NUMA_TUNE_OBJS)
 
 TUNER_OBJS = $(TUNE_BUILD)\tuner.obj \
 $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
