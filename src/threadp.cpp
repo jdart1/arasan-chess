@@ -322,14 +322,20 @@ ThreadInfo * ThreadPool::checkOut(Search *parent, NodeInfo *forNode,
     while (b.iterate(i)) {
        ThreadInfo *p = data[i];
        ASSERT(p->state == ThreadInfo::Idle);
-       // If this is a "master" thread it is not sufficient to just be
-       // idle - assign it only to one of its slave threads at the
-       // current top of the search stack.
        Search *child = p->work;
        // lock the split stack in the child for the following test
        Lock(child->splitLock);
-       if (!child->activeSplitPoints /* not master of a split point */ ||
-           child->splitStack[child->activeSplitPoints-1].slaves.exists(parent->ti)) {
+       // If this is a "master" thread it is not sufficient to just be
+       // idle - assign it only to one of its slave threads at the
+       // current top of the search stack.
+       bool ok;
+       if (child->activeSplitPoints) {
+          auto slaves = child->splitStack[child->activeSplitPoints-1].slaves;
+          ok = slaves.find(parent->ti) != slaves.end();
+       } else {
+          ok = true;
+       }
+       if (ok) {
          // We're working now - ensure we will not be allocated again
          p->state = ThreadInfo::Working; 
          activeMask |= (1ULL << p->index);
@@ -403,8 +409,7 @@ void ThreadPool::checkIn(ThreadInfo *ti) {
     Lock(parentSearch->splitLock);
     split->lock();
     // dissociate the thread from the parent
-    ArasanSet<ThreadInfo *,Constants::MaxCPUs> &slaves =
-        split->slaves;
+    set<ThreadInfo *> &slaves = split->slaves;
     // remove ti from the list of slave threads in the parent
 #ifdef _THREAD_TRACE
     {
@@ -415,9 +420,9 @@ void ThreadPool::checkIn(ThreadInfo *ti) {
     }
 #endif
 #ifdef _DEBUG
-    ASSERT(slaves.remove(ti));
+    ASSERT(slaves.erase(ti)==1);
 #else
-    slaves.remove(ti);
+    slaves.erase(ti);
 #endif
     const int remaining = slaves.size();
     const bool top = split - parentSearch->splitStack + 1 == parentSearch->activeSplitPoints;

@@ -4,7 +4,6 @@
 #define _SEARCH_H
 
 #include "board.h"
-#include "arasset.h"
 #include "stats.h"
 #include "searchc.h"
 #include "scoring.h"
@@ -22,7 +21,7 @@ struct NodeInfo;
 
 // Definition of a split point
 struct SplitPoint {
-    ArasanSet<ThreadInfo *,Constants::MaxCPUs> slaves;
+    set<ThreadInfo *> slaves;
     Move moves[Constants::MaxMoves];
     int ply;
     int depth;

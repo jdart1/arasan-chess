@@ -3470,7 +3470,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
             split->lock();
             ASSERT(slave_ti != ti);
             // Add new slave to the list of slaves in the parent split point
-            split->slaves.add(slave_ti);
+            split->slaves.insert(slave_ti);
             split->unlock();
             // set new slave Search's "split" variable
             slave_ti->work->split = split;
@@ -3519,20 +3519,24 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
             ostringstream os;
             os << "search with master " << ti->index << " done, slaves count=" <<
                 split->slaves.size() << " active=";
-            for (int i = 0; i < split->slaves.size(); i++) {
-                os << split->slaves[i]->index << ' ';
+           for (auto it = split->slaves.begin();
+                it != split->slaves.end();
+                it++) {
+               os << (*it)->index << ' ';
             }
             os << '\0';
             log(os.str());
         }
 #endif
         if (split->slaves.size()) {
-            ASSERT(!split->slaves.exists(ti));
+           ASSERT(split->slaves.count(ti) == 0);
 #ifdef _DEBUG
-            for (int i = 0; i < split->slaves.size(); i++) {
+           for (auto it = split->slaves.begin();
+                it != split->slaves.end();
+                it++) {
                 // If idle, thread must be master of a split point.
                 // If idle and not split, we will wait forever on it.
-                ASSERT(split->slaves[i]->state == ThreadInfo::Working || split->slaves[i]->work->activeSplitPoints);
+              ASSERT((*it)->state == ThreadInfo::Working || (*it)->work->activeSplitPoints);
             }
 #endif
 #ifdef _THREAD_TRACE
