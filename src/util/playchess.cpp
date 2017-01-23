@@ -93,7 +93,7 @@ int CDECL main(int argc, char **argv)
             exit(-1);
          }
          else {
-            ArasanVector<ChessIO::Header> hdrs;
+            vector<ChessIO::Header> hdrs;
 
             Board board;
             while (!pgn_file.eof()) {
@@ -109,7 +109,7 @@ int CDECL main(int argc, char **argv)
                   }
                }
                if (pgn_file.eof()) break;
-               hdrs.removeAll();
+               hdrs.clear();
                ChessIO::collect_headers(pgn_file,hdrs,first);
 
                float last_score = -1;

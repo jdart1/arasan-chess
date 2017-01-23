@@ -8,192 +8,189 @@
 #include "search.h"
 #include <fstream>
 #include <string>
-using namespace std;
-
-#include "arasvec.h"
-
+#include <vector>
 using namespace std;
 
 class Log;
 
 class LogEntry
 {
-     // Maintains info on a move made so far in the game.            
+   // Maintains info on a move made so far in the game.
 
-     public:
-     
-     // create a log entry. 
-     // "move_image" is the string representation of the move.
-     LogEntry(const BoardState &state,
-               const Move &move,
-               const string &move_image,
-               bool fromBook,
-               score_t score,
-               int depth);
-             
-     // create a null log entry.  Used only to initialize storage.
-     LogEntry() {
-     }
-             
-     virtual ~LogEntry();
-     
-     const Move &move() const
-     {
-         return my_move;
-     }
-     
-     const char *image() const
-     {
-         return my_image.c_str();
-     }
-     
-     const BoardState &state() const
-     {
-        return my_state;
-     }
-     
-     const string & result() const
-     {
+public:
+
+   // create a log entry.
+   // "move_image" is the string representation of the move.
+   LogEntry(const BoardState &state,
+            const Move &move,
+            const string &move_image,
+            bool fromBook,
+            score_t score,
+            int depth);
+
+   // create a null log entry.  Used only to initialize storage.
+   LogEntry() {
+   }
+
+   virtual ~LogEntry();
+
+   const Move &move() const {
+       return my_move;
+   }
+
+   const char *image() const {
+       return my_image.c_str();
+   }
+
+   const BoardState &state() const {
+       return my_state;
+   }
+
+   const string & result() const {
        return my_result;
-     }
-     
-     void setResult( const char *result)
-     {
+   }
+
+   void setResult( const char *result) {
        my_result = result;
-     }
-     
-     score_t score() const
-     {
-         return my_score;
-     }
-     
-     int depth() const
-     {
-         return my_depth;
-     }
+   }
 
-     bool fromBook() const {
-         return my_fromBook;
-     }
-    
-     int operator == ( const LogEntry &l ) const;
-     int operator != ( const LogEntry &l ) const;
+   score_t score() const {
+        return my_score;
+   }
 
-     bool operator < (const LogEntry &le) const
-     {
-        return my_state.hashCode < le.my_state.hashCode;
-     }
-     
+   int depth() const {
+       return my_depth;
+   }
 
-     private:
-             
-     BoardState my_state;
-     Move my_move;
-     string my_image;
-     bool my_fromBook;
-     score_t my_score;
-     int my_depth;
-     string my_result;
-};
+   bool fromBook() const {
+      return my_fromBook;
+   }
 
-class Log : public ArasanVector<LogEntry>
-{
-     // Maintains a log of moves made in the game so far.  Unlike the
-     // Move_Array (see movearr.h), moves are not added and removed
-     // during the search process.  The log maintains a size, which
-     // is the total number of moves ever added, and a current position,
-     // which is normally == to its size, but may be less if the
-     // user has "taken back" moves.
+   int operator == ( const LogEntry &l ) const;
+   int operator != ( const LogEntry &l ) const;
 
-     public:         
-        
-     enum GameResult {WhiteWin, BlackWin, DrawResult, Incomplete};
-
-     Log();
-     // create a log.
-             
-     virtual ~Log();         
-
-     // Add a move to the log.  If "toFile" is true, also record it
-     // in the log file.  This is called before the move has been
-     // made.
-     void add_move( Board &board,
-                    const Move &emove,
-                    const string &move_image,
-                    const Statistics *stats,
-                    int toFile);
-             
-     // remove the most recently added move to the log.
-     void remove_move()
-     {
-        remove_last();
-        --my_current;
-     }
-             
-     // Return the number of the last move made.  "Backing up"
-     // through the moves changes current w/o changing num_moves.        
-     unsigned current() const
-     {
-             return my_current;
-     }
-     
-     // Return the total number of moves made.
-     unsigned num_moves() const
-     {
-       return length();
-     }
-     
-     // Decrement the "current" move by one.
-     int back_up();
-     
-     // Advance the "current" move pointer.
-     int go_forward();
-     
-     // Reset the "current" position to the start of the game, w/o
-     // altering the file or clearing the log.    
-     void reset();
-     
-     // return the last move in the log.  The log must be non-empty.
-     const Move &last_move() const;
-
-     // return the nth move in the log.  0 <= n <= num_moves - 1.
-     const Move &move( int n ) const
-     {
-        return (*this)[n].move();
-     }
-        
-     // remove everything from the log
-     void clear();
-             
-     void write_header();
-
-     void write(const char *);
-
-     void write(const string &s) {
-       write(s.c_str());
-     }
-
-     void write_eol();
-     
-     void setResult(const char *result);
-     
-     GameResult getResult() const;
-             
-     void getResultAsString(string & result) const {
-       result = empty() ? "*" : last().result();
-     }
-
-     void setEnabled(int enable) {
-        enabled = enable;
-     }
+   bool operator < (const LogEntry &le) const {
+       return my_state.hashCode < le.my_state.hashCode;
+   }
 
 private:
 
-     void flush();
-     int my_current;
-     ofstream log_file;     
-     char buf[256];
-     int enabled;
+   BoardState my_state;
+   Move my_move;
+   string my_image;
+   bool my_fromBook;
+   score_t my_score;
+   int my_depth;
+   string my_result;
+};
+
+class Log
+{
+   // Maintains a log of moves made in the game so far.  Unlike the
+   // Move_Array (see movearr.h), moves are not added and removed
+   // during the search process.  The log maintains a size, which
+   // is the total number of moves ever added, and a current position,
+   // which is normally == to its size, but may be less if the
+   // user has "taken back" moves.
+
+public:
+
+   enum GameResult {WhiteWin, BlackWin, DrawResult, Incomplete};
+
+   Log();
+
+   virtual ~Log();
+
+   // Add a move to the log.  If "toFile" is true, also record it
+   // in the log file.  This is called before the move has been
+   // made.
+   void add_move( Board &board,
+                  const Move &emove,
+                  const string &move_image,
+                  const Statistics *stats,
+                  int toFile);
+
+   // remove the most recently added move to the log.
+   void remove_move()
+      {
+         if (my_current) {
+            entries.pop_back();
+            --my_current;
+         }
+      }
+
+   // Return the number of the last move made.  "Backing up"
+   // through the moves changes current w/o changing num_moves.
+   unsigned current() const
+      {
+         return my_current;
+      }
+
+   // Return the total number of moves made.
+   unsigned num_moves() const
+      {
+         return (unsigned)entries.size();
+      }
+
+   // Decrement the "current" move by one.
+   int back_up();
+
+   // Advance the "current" move pointer.
+   int go_forward();
+
+   // Reset the "current" position to the start of the game, w/o
+   // altering the file or clearing the log.
+   void reset();
+
+   // return the last move in the log.  The log must be non-empty.
+   const Move &last_move() const;
+
+   // return the nth move in the log.  0 <= n <= num_moves - 1.
+   const Move &move( int n ) const
+      {
+         return entries[n].move();
+      }
+
+   // remove everything from the log
+   void clear();
+
+   void write_header();
+
+   void write(const char *);
+
+   void write(const string &s) {
+      write(s.c_str());
+   }
+
+   void write_eol();
+
+   void setResult(const char *result);
+
+   GameResult getResult() const;
+
+   void getResultAsString(string & result) const {
+      result = empty() ? "*" : entries.back().result();
+   }
+
+   void setEnabled(int enable) {
+      enabled = enable;
+   }
+
+   bool empty() const {
+      return entries.size() == 0;
+   }
+
+   const LogEntry &operator[]( size_t index ) const {
+      return entries[index];
+   }
+
+private:
+
+   vector<LogEntry> entries;
+
+   unsigned my_current;
+   ofstream log_file;
+   int enabled;
 };
 
 #endif

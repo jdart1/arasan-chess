@@ -161,7 +161,7 @@ int CDECL main(int argc, char **argv)
       }
       else
       {
-         ArasanVector<ChessIO::Header> hdrs;
+         vector<ChessIO::Header> hdrs;
          while (!pgn_file.eof())
          {
             long first;
@@ -184,9 +184,9 @@ int CDECL main(int argc, char **argv)
                   }
                }
             }
-            hdrs.removeAll();
+            hdrs.clear();
             ChessIO::collect_headers(pgn_file,hdrs,first);
-            if (!hdrs.length()) continue;
+            if (!hdrs.size()) continue;
             bool ok = true;
             bool done = false;
             bool exit = false;

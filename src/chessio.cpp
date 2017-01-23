@@ -36,7 +36,7 @@ static int skip_space(istream &game_file)
     return c;
 }
 
-void ChessIO::get_game_description(const ArasanVector<Header> &hdrs, string &descr, long id)
+void ChessIO::get_game_description(const vector<Header> &hdrs, string &descr, long id)
 {
       stringstream s;
       string tmp;
@@ -65,7 +65,7 @@ void ChessIO::get_game_description(const ArasanVector<Header> &hdrs, string &des
       get_header(hdrs, "Date", tmp);
       s << tmp.substr(0,4);
       get_header(hdrs, "Result", tmp);
-      if (tmp != "*") 
+      if (tmp != "*")
       {
         s << ' ' << tmp;
       }
@@ -73,7 +73,7 @@ void ChessIO::get_game_description(const ArasanVector<Header> &hdrs, string &des
       descr = s.str();
 }
 
-int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
+int ChessIO::scan_pgn(istream &game_file, vector<string> &contents)
 {
     Board board;
     int c;
@@ -82,21 +82,21 @@ int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
     {
         // Collect the header:
         long first;
-        ArasanVector<Header> hdrs;
+        vector<Header> hdrs;
         string eventStr;
         collect_headers(game_file, hdrs, first);
         if (get_header(hdrs,"Event",eventStr))
         {
            // We have the headers, munge them into a single-line game
            // description. Append the index to the game so the GUI
-           // can navigate to the game when the user clicks on the 
+           // can navigate to the game when the user clicks on the
            // description.
            string descr;
            get_game_description(hdrs, descr, first);
-           contents.append(descr);
+           contents.push_back(descr);
         }
-        hdrs.removeAll();
-        
+        hdrs.clear();
+
         while (game_file.good() && !game_file.eof())
         {
            if ((c = game_file.get()) == '[')
@@ -105,35 +105,34 @@ int ChessIO::scan_pgn(istream &game_file, ArasanVector<string> &contents)
                break;
            }
         }
-    } 
+    }
     return 1;
 }
 
 
-int ChessIO::get_header(const ArasanVector<Header> &hdrs, 
+int ChessIO::get_header(const vector<Header> &hdrs,
   const string &key, string &val)
 {
     val = "";
-    for (int i=0; i <hdrs.length(); i++)
+    for (auto it = hdrs.begin(); it != hdrs.end(); it++)
     {
-         const Header &p = hdrs[i];
-         if (p.tag() == key)
+         if ((*it).tag() == key)
          {
-             val = p.value();
+             val = (*it).value();
              return 1;
          }
     }
     return 0;
 }
 
-void ChessIO::add_header(ArasanVector <Header> &hdrs,
+void ChessIO::add_header(vector <Header> &hdrs,
   const string &key, const string & val)
 {
-   hdrs.append(Header(key,val));
+   hdrs.push_back(Header(key,val));
 }
 
 int ChessIO::load_fen(istream &ifs, Board &board)
-{                  
+{
     ifs >> board;
     board.state.moveCount = 0;
     return ifs.good();
@@ -145,19 +144,18 @@ int ChessIO::store_fen( ostream &ofile, const Board &board)
     return ofile.good();
 }
 
-int ChessIO::store_pgn(ostream &ofile,MoveArray &moves, 
+int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
                         const ColorType computer_side,
                         const string &result,
-                        ArasanVector<Header> &headers)
+                        vector<Header> &headers)
 {
     // Write standard PGN header.
 
-    int i;
     string gameResult = result;
     if (result.length() == 0)
        gameResult = "*";
     string val;
-    ArasanVector <Header> newHeaders;
+    vector <Header> newHeaders;
     if (!get_header(headers, "Event", val))
        add_header(newHeaders,"Event","?");
     else
@@ -181,7 +179,7 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
        add_header(newHeaders,"Round","?");
     else
        add_header(newHeaders,"Round",val);
- 
+
     string name("Arasan ");
     name += Arasan_Version;
     if (computer_side == White)
@@ -196,7 +194,7 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
          add_header(newHeaders,"Black","?");
        else
          add_header(newHeaders,"Black",val);
-    } 
+    }
     else
     {
        if (!get_header(headers, "White",val))
@@ -223,15 +221,14 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
     // We have now written all the mandatory headers.
     // Add any more headers that were passed into us.
 
-    int n = headers.length();
-    for (i=0;i<n;i++)
+    for (auto it = headers.begin(); it != headers.end(); it++)
     {
-        Header p = headers[i];
+        Header p = *it;
         if (p.tag() !="Event" &&
             p.tag() !="Site" &&
             p.tag() != "Date" &&
             p.tag() != "Round" &&
-            p.tag() != "White" && 
+            p.tag() != "White" &&
             p.tag() != "Black" &&
             p.tag() != "Result")
             add_header(newHeaders,p.tag(),p.value());
@@ -242,21 +239,18 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
 }
 
 int ChessIO::store_pgn(ostream &ofile, MoveArray &moves,const string &result,
-                         ArasanVector<Header> &headers)
+                         vector<Header> &headers)
 {
-    int i,n;
-    n = headers.length();
-    for (i =0; i<n; i++) {
-        Header p = headers[i];
-        ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << endl;
-        
+    for (auto it = headers.begin(); it != headers.end(); it++) {
+       Header p = *it;
+       ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << endl;
     }
     ofile << endl;
 
     // Write game moves.
-    int len = moves.length();
+    unsigned len = moves.num_moves();
     stringstream buf;
-    for (int i = 0; i < len; i++) {
+    for (unsigned i = 0; i < len; i++) {
         const MoveRecord &e = moves[i];
         stringstream numbuf;
         if (i % 2 == 0) {
@@ -341,69 +335,69 @@ void ChessIO::writeEPDRecord(ostream &ofs, Board &board, const EPDRecord &rec)
    ofs << endl;
 }
 
-void ChessIO::collect_headers(istream &game_file,ArasanVector <Header>&hdrs, long &first)
+void ChessIO::collect_headers(istream &game_file,vector <Header>&hdrs, long &first)
 {
-        first = -1L;
-        int c;
-        bool firstTag = true;
-        while (!game_file.eof())
-        {
-            char tag[MAX_TAG+1];
-            char val[MAX_VAL+1];
-            c = skip_space(game_file);
-            if (c!='[')
-            {
-                game_file.putback(c);
-                break;
-            }
+   first = -1L;
+   int c;
+   bool firstTag = true;
+   while (!game_file.eof())
+   {
+      char tag[MAX_TAG+1];
+      char val[MAX_VAL+1];
+      c = skip_space(game_file);
+      if (c!='[')
+      {
+         game_file.putback(c);
+         break;
+      }
+      else
+      {
+         if (first == -1)
+            first = (long)game_file.tellg()-1;
+         int t = 0;
+         while (!game_file.eof())
+         {
+            c = game_file.get();
+            if (!isspace(c) && c != '"' && t < MAX_TAG)
+               tag[t++] = c;
             else
+               break;
+         }
+         tag[t] = '\0';
+         if (firstTag)
+         {
+            if (strcmp(tag,"vent") == 0)
             {
-                if (first == -1)
-                    first = (long)game_file.tellg()-1;
-                int t = 0;
-                while (!game_file.eof())
-                {
-                    c = game_file.get();
-                    if (!isspace(c) && c != '"' && t < MAX_TAG)
-                        tag[t++] = c;
-                    else
-                        break;
-                } 
-                tag[t] = '\0';
-                if (firstTag)
-                {
-                    if (strcmp(tag,"vent") == 0)
-                    {
-                       // It appears that there is a bug in iostream.
-                       // Calling tellg (above) sometimes causes
-                       // a missing char when the next read occurs.
-                       // So we get a partial tag. This is a workaround.
-                       strcpy(tag,"Event");
-                    }
-                }
-                firstTag = false;
-                if (isspace(c)) {
-                    c = skip_space(game_file);
-                }
-                val[0] = '\0';
-                if (c=='"')
-                {
-                    int v = 0;
-                    while (!game_file.eof())
-                    {
-                        c = game_file.get();
-                        if (c != '"' && v < MAX_VAL)
-                            val[v++] = c;
-                        else
-                            break;
-                    }
-                    val[v] = '\0'; 
-                }
-                hdrs.append(Header(tag,val));
-                while (!game_file.eof() && c != ']')
-                    c = game_file.get();
+               // It appears that there is a bug in iostream.
+               // Calling tellg (above) sometimes causes
+               // a missing char when the next read occurs.
+               // So we get a partial tag. This is a workaround.
+               strcpy(tag,"Event");
             }
-        }
+         }
+         firstTag = false;
+         if (isspace(c)) {
+            c = skip_space(game_file);
+         }
+         val[0] = '\0';
+         if (c=='"')
+         {
+            int v = 0;
+            while (!game_file.eof())
+            {
+               c = game_file.get();
+               if (c != '"' && v < MAX_VAL)
+                  val[v++] = c;
+               else
+                  break;
+            }
+            val[v] = '\0';
+         }
+         hdrs.push_back(Header(tag,val));
+         while (!game_file.eof() && c != ']')
+            c = game_file.get();
+      }
+   }
 }
 
 ChessIO::Token ChessIO::get_next_token(istream &game_file) {
@@ -439,7 +433,7 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
     else if (c == ')') {
         value += ')';
         return Token(CloseVar,value);
-    } 
+    }
     else if (c == '$') {
         value += c;
         while (game_file.good()) {
@@ -477,7 +471,7 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
                // castling.  To handle this, we need to peek ahead
                // one more character.
                int nextc2 = game_file.peek();
-               if (toupper(nextc2) == 'O' || nextc2 == '0') {            
+               if (toupper(nextc2) == 'O' || nextc2 == '0') {
                   // castling, we presume
                   value += c;
                   c = nextc;
@@ -516,9 +510,9 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
             }
             tok = Number;
         }
-   }           
+   }
    else if (isalpha(c)) {
-       while (game_file.good() && (isalnum(c) 
+       while (game_file.good() && (isalnum(c)
               || c == '-' || c == '=' || (c == '+'))) {
            value += c;
            c = game_file.get();
@@ -539,7 +533,7 @@ ChessIO::Token ChessIO::get_next_token(istream &game_file) {
        tok = Unknown;
    }
    return Token(tok,value);
-} 
+}
 
 
 

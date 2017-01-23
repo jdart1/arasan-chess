@@ -48,7 +48,6 @@ static void time_image(time_t time,ostream &s)
 Log::Log()
 {
    my_current = 0;
-   *buf = '\0';
    enabled = 0;
    string log_path;
    if (options.log_enabled) {
@@ -81,7 +80,6 @@ Log::Log()
 Log::~Log()
 {
    if (enabled && log_file.good()) {
-      log_file << buf << endl;
       log_file.close();
    }
 }
@@ -104,17 +102,17 @@ void Log::add_move( Board &board, const Move &emove,
 
    // moves are always added at the "current" position.
 
-   if (my_current >= length()) {
-      append(entry);
+   if (my_current >= entries.size()) {
+       entries.push_back(entry);
    }
    else {
-      set(my_current,entry);
+       entries[my_current] = entry;
    }
    my_current++;
    // Adding a move at a given point removes any moves
    // after it in the array.
-   if (length() > my_current) {
-      truncate(my_current);
+   if (entries.size() > my_current) {
+       entries.resize(my_current);
    }
    stringstream s;
    s << (num_moves()-1)/2 + 1 << ". " << move_image;
@@ -179,14 +177,14 @@ const Move &Log::last_move() const {
 
 void Log::setResult(const char *result) {
    if (!empty()) {
-      last().setResult(result);
+      entries.back().setResult(result);
    }
 }
 
 
 Log::GameResult Log::getResult() const {
    if (!empty()) {
-      string result = last().result();
+      const string &result = entries.back().result();
       if (result.find("1/2-1/2") != string::npos)
         return DrawResult;
       else if (result.find("1-0") != string::npos)
@@ -213,7 +211,7 @@ int Log::back_up() {
 
 int Log::go_forward()
 {
-   if (my_current < length()) {
+   if (my_current < entries.size()) {
       ++my_current;
       return 1;
    }
@@ -231,7 +229,7 @@ void Log::reset()
 void Log::clear()
 {
    write_eol();
-   removeAll();
+   entries.clear();
    my_current = 0;
 }
 
@@ -239,11 +237,10 @@ void Log::clear()
 void Log::write_header()
 {
    if (enabled && log_file.is_open()) {
-      flush();
       static char header1[] = "Arasan version ";
       static char header2[] = "   move          time     depth\tnodes\tvalue\tpredicted";
       log_file << header1 << Arasan_Version << " game log" << endl;
-      log_file << header2 << endl;
+      log_file << header2 << (flush) << endl;
    }
 }
 
@@ -251,9 +248,7 @@ void Log::write_header()
 void Log::write(const char *s)
 {
    if (enabled && log_file.is_open()) {
-      flush();
-      log_file << s;
-      log_file.flush();
+      log_file << s << (flush);
    }
 }
 
@@ -264,11 +259,3 @@ void Log::write_eol()
       log_file << endl;
 }
 
-
-void Log::flush()
-{
-   if (enabled && strlen(buf) > 0 && log_file.is_open()) {
-      log_file << buf << endl;
-   }
-   *buf = '\0';
-}
