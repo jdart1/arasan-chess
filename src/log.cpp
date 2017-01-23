@@ -165,7 +165,7 @@ void Log::add_move( Board &board, const Move &emove,
    }
    if (!enabled || !toFile || !log_file.is_open())
       return;
-   log_file << s.str() << endl;
+   log_file << s.str() << endl << (flush);
 }
 
 

@@ -18,9 +18,8 @@ class MoveRecord
 public:
 
     MoveRecord()
-        : my_move(NullMove),my_hashcode((hash_t)0ULL), my_ponder(false)
-        {
-        }
+        : my_move(NullMove),my_hashcode((hash_t)0ULL), my_ponder(false) {
+    }
 
     // "board" is the board position after the move.
     MoveRecord(const Board &board, const BoardState &previous_state,
@@ -107,12 +106,16 @@ public:
     }
 
     void removeAll() {
-      entries.clear();
+        entries.clear();
     }
 
     const MoveRecord &last() const {
-      ASSERT(num_moves());
-      return entries.back();
+        ASSERT(num_moves());
+        return entries.back();
+    }
+
+    void truncate(unsigned size) {
+        entries.resize(size);
     }
 
 private:
