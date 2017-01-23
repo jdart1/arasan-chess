@@ -160,7 +160,7 @@ else
 LIBS := $(LIBS) -lrt
 endif
 
-default: dirs $(EXPORT)/$(ARASANX) $(EXPORT)/makebook $(EXPORT)/makeeco
+default: dirs $(EXPORT)/$(ARASANX)
 
 tuning: dirs $(EXPORT)/tuner
 
