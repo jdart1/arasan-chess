@@ -44,6 +44,9 @@ However, the code is believed to be portable. Two non-Intel targets are
 defined in the Makefile: sparc-solaris (with gcc as compiler) and
 arm-linux.
 
+"make utils" builds a set of utility programs including the "makebook"
+program that is used to construct the opening book from PGN files.
+
 "make release" will build the release tarball and place it in the
 release subdirectory. This target uses "git archive" so it needs to
 be run from within a git repository.
