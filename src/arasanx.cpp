@@ -2418,13 +2418,13 @@ static void do_selfplay()
            computer_plays_white = true;
            // save moves
            selfplay_moves.removeAll();
-           for (int i = 0; i < gameMoves->length(); i++) {
+           for (int i = 0; i < gameMoves->num_moves(); i++) {
                selfplay_moves.append((*gameMoves)[i]);
            }
        } else {
            computer_plays_white = false;
            // replay moves into global gameMove array
-           for (int i = 0; i < selfplay_moves.length(); i++) {
+           for (int i = 0; i < selfplay_moves.num_moves(); i++) {
                BoardState previous_state = main_board->state;
                Move m = (*gameMoves)[i].move();
                string image;
