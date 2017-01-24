@@ -424,7 +424,7 @@ void ThreadPool::checkIn(ThreadInfo *ti) {
 #else
     slaves.erase(ti);
 #endif
-    const int remaining = slaves.size();
+    const unsigned remaining = (unsigned)slaves.size();
     const bool top = split - parentSearch->splitStack + 1 == parentSearch->activeSplitPoints;
 #ifdef _THREAD_TRACE
     {
