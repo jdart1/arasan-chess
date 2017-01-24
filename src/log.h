@@ -28,8 +28,11 @@ public:
             score_t score,
             int depth);
 
-   // create a null log entry.  Used only to initialize storage.
-   LogEntry() {
+   LogEntry() : my_image(""),
+     my_fromBook(false),
+     my_score((score_t)0),
+     my_depth(0),
+     my_result("") {
    }
 
    virtual ~LogEntry();
