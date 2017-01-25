@@ -164,7 +164,7 @@ default: dirs $(EXPORT)/$(ARASANX)
 
 tuning: dirs $(EXPORT)/tuner
 
-utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco
+utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
 
 # Solaris target: note only GCC is supported
 sparc-solaris: 
@@ -342,6 +342,18 @@ log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
+ECOCODER_SOURCES = makeeco.cpp globals.cpp  \
+board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
+scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
+movegen.cpp hash.cpp legal.cpp \
+eco.cpp ecodata.cpp \
+stats.cpp threadp.cpp threadc.cpp
+
 TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -383,6 +395,7 @@ ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
@@ -391,6 +404,9 @@ $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
+
+$(EXPORT)/ecocoder:  $(ECOCODER_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(ECOCODER_OBJS) $(DEBUG) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)	
 
 $(EXPORT)/pgnselect:  $(PGNSELECT_OBJS) 
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)	
