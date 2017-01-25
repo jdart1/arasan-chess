@@ -8,7 +8,10 @@ Changes in Arasan 20.0:
  3) Changes to king cover and king safety scoring.
  4) Bug fix: Ensure hash move is always checked for validity (was not being
     done for evasions).
- 5) Considerable code cleanup has been done.
+ 5) Fix possible race condition updating root PV.
+ 6) Add some utility programs and Python scripts to source package.
+ 7) Considerable code cleanup and fixing warnings and possible bugs, notably
+    in Syzygy tb code.
 
 Changes in Arasan 19.2:
  1) In UCI mode, don't set tb type when a tb path is received if that path
