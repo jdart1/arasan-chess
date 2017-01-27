@@ -2102,11 +2102,10 @@ static void do_test(string test_file)
          cerr << endl;
       }
       else {
-         int i;
          solution_move_count = 0;
          int illegal=0;
          id = "";
-         for (i = 0; i < epd_rec.getSize(); i++) {
+         for (unsigned i = 0; i < epd_rec.getSize(); i++) {
             string key, val;
             epd_rec.getData(i,key,val);
             if (key == "bm" || key == "am") {

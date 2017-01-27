@@ -42,9 +42,9 @@ public:
     
     bool getData(int i,string &key,string &val) const;
     
-    int getSize() const
+    unsigned getSize() const
     {
-       return (int)cmds.size();
+       return (unsigned)cmds.size();
     }
     
     void clear();

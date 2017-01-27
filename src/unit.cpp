@@ -18,6 +18,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <utility>
 
 using namespace std;
 using namespace chess;
@@ -28,7 +29,7 @@ static int testIsPinned() {
        string fen;
        Square start, dest;
        int result;
-       IsPinnedData(const char *fenStr, Square s, Square d, int res) 
+       IsPinnedData(const char *fenStr, Square s, Square d, int res)
           : fen(fenStr), start(s), dest(d), result(res) {
           if (!BoardIO::readFEN(board, fenStr)) {
              cerr << "error in FEN: " << fenStr << endl;
@@ -621,35 +622,36 @@ static int testCheckStatus() {
    return errs;
 }
 
-static int testRec(const EPDRecord &rec)
+static int testRec(const EPDRecord &rec, vector < pair<string,string> > correct)
 {
    int errs = 0;
    if (rec.hasError()) {
-      cerr << "EPD test: error reading EPD record: " << rec.getError() << endl;
+       cerr << "EPD test: error reading EPD record: " << rec.getError() << endl;
       return ++errs;
    }
-   if (rec.getSize() != 2) {
-      cerr << "EPD test: expected size 2, got " << rec.getSize() << endl;
+   if (rec.getSize() != correct.size()) {
+      cerr << "EPD test: expected size " << correct.size() << ", got " << rec.getSize() << endl;
       return ++errs;
    }
-   string key, val;
-   if (rec.getData(0,key,val)) {
-      if (key != "c1" || val != "\"3 0\"") {
-         cerr << "EPD test: invalid data for EPD command" << endl;
-         return ++errs;
+   unsigned i = 0;
+   for (auto it = correct.begin(); it != correct.end(); it++, i++) {
+      const string &ckey = it->first;
+      const string &cval = it->second;
+      string key,val;
+      if (rec.getData(i,key,val)) {
+          if (key != ckey) {
+              cerr << "EPD test: key mismatch" << endl;
+              ++errs;
+          }
+          if (val != cval) {
+              cerr << "EPD test: value mismatch" << endl;
+              ++errs;
+          }
       }
-   } else {
-      cerr << "EPD test: failed to retrieve key 0" << endl;
-      return ++errs;
-   }
-   if (rec.getData(1,key,val)) {
-      if (key != "c2" || val != "\"1.000\"") {
-         cerr << "EPD test: invalid data for EPD command" << endl;
-         return ++errs;
+      else {
+          cerr << "EPD test: failed to retrieve key " << i << endl;
+          ++errs;
       }
-   } else {
-      cerr << "EPD test: failed to retrieve key 1" << endl;
-      return ++errs;
    }
    return errs;
 }
@@ -657,31 +659,48 @@ static int testRec(const EPDRecord &rec)
 
 static int testEPD()
 {
-   static const char *epd = "r1b1k2r/ppq3b1/2p1pp2/P2pPpNp/1P1P1P2/2P4P/6P1/RN1QR1K1 w kq - c1 \"3 0\"; c2 \"1.000\";\n";
+   static string epd1 = "r1b1k2r/ppq3b1/2p1pp2/P2pPpNp/1P1P1P2/2P4P/6P1/RN1QR1K1 w kq - c1 \"3 0\"; c2 \"1.000\";\n";
+   static string epd2 = "8/6k1/5R2/K3p1P1/P3Pp2/8/nPb5/8 w - - bm Re6 Rf5; c0 \"Arasan-Crafty, test game 2017\";\n";
+   typedef vector < pair<string, string> > pairvect;
+   pairvect correct1,correct2;
+   correct1.push_back(pair<string,string>("c1","\"3 0\""));
+   correct1.push_back(pair<string,string>("c2","\"1.000\""));
+   correct2.push_back(pair<string,string>("bm","Re6 Rf5"));
+   correct2.push_back(pair<string,string>("c0","\"Arasan-Crafty, test game 2017\""));
+
+   struct Case
+   {
+       string epd;
+       pairvect correct;
+       Case(string e, const pairvect &corr):
+           epd(e),correct(corr)
+           {
+           }
+   } cases[2] = { Case(epd1,correct1), Case(epd2,correct2) };
+
    EPDRecord rec;
-   stringstream s(epd);
    Board board;
-   ChessIO::readEPDRecord(s,board,rec);
-   int errs = testRec(rec);
-   if (errs) {
-      return errs;
+   int errs = 0;
+   for (int i = 0; i < 2; i++) {
+       const Case &acase = cases[i];
+       stringstream s(acase.epd);
+       ChessIO::readEPDRecord(s,board,rec);
+       errs += testRec(rec,acase.correct);
+       if (errs) continue;
+       ostringstream out;
+       ChessIO::writeEPDRecord(out,board,rec);
+       errs += testRec(rec,acase.correct);
+       if (out.str() != acase.epd) {
+           cerr << "EPD test: output string != input string" << endl;
+           ++errs;
+       }
+       rec.clear();
+       if (rec.getSize() != 0) {
+           cerr << "EPD test: invalid size after clear" << endl;
+           ++errs;
+       }
    }
-   ostringstream out;
-   ChessIO::writeEPDRecord(out,board,rec);
-   errs += testRec(rec);
-   if (errs) {
-      return errs;
-   }
-   if (out.str() != epd) {
-      cerr << "EPD test: output string != input string" << endl;
-      return ++errs;
-   }
-   rec.clear();
-   if (rec.getSize() != 0) {
-      cerr << "EPD test: invalid size after clear" << endl;
-      return ++errs;
-   }
-   return 0;
+   return errs;
 }
 
 static int testPerft()

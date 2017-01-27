@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "constant.h"
 
+#include <algorithm>
 #include <sstream>
 using namespace std;
 
@@ -302,23 +303,12 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
        string cmd,val;
        auto it = command.begin();
        auto end = command.end();
-       auto collect = [&it, &end](string &out) {
-          int spaces = 0;
-          bool quoted = false;
-          for (; it != end; it++) {
-             if (isspace(*it) && !quoted) {
-                if (!spaces) continue;
-                break;
-             }
-             else if (*it == '\"') {
-                quoted = !quoted;
-             }
-             ++spaces;
-             out += *it;
-          }
-       };
-       collect(cmd);
-       collect(val);
+       // command does not have embedded spaces
+       while (it != end && isspace(*it)) it++;
+       while (it != end && !isspace(*it)) cmd += *it++;
+       while (it != end && isspace(*it)) it++;
+       // value may have spaces (multiple values) or be quoted
+       while (it != end) val += *it++;
        rec.add(cmd,val);
     }
     return 1;
@@ -327,7 +317,7 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
 void ChessIO::writeEPDRecord(ostream &ofs, Board &board, const EPDRecord &rec)
 {
    BoardIO::writeFEN(board,ofs,0);
-   for (int i = 0; i < rec.getSize(); i++) {
+   for (unsigned i = 0; i < rec.getSize(); i++) {
       string key,val;
       (void)rec.getData(i,key,val);
       ofs << ' ' << key << ' ' << val << ';';
