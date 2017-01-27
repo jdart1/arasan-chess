@@ -48,7 +48,7 @@ endif
 ifdef GAVIOTA_TBS
 CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 endif
-ifdef NALIMOV_TBS 
+ifdef NALIMOV_TBS
 CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I$(TB)
 endif
 ifdef SYZYGY_TBS
@@ -109,7 +109,7 @@ endif
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
 
-else 
+else
 
 ifeq ("$(CC)","clang")
 
@@ -120,7 +120,7 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS) 
+CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
 ifndef DEBUG
 OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
 GTB_OPT := -O3 $(SSE) -DNDEBUG
@@ -154,8 +154,8 @@ endif
 endif
 
 ifeq ("darwin","$(findstring darwin,$(OSTYPE))")
-CFLAGS := -D_MAC $(CFLAGS) 
-LDFLAGS := $(LDFLAGS) 
+CFLAGS := -D_MAC $(CFLAGS)
+LDFLAGS := $(LDFLAGS)
 else
 LIBS := $(LIBS) -lrt
 endif
@@ -167,7 +167,7 @@ tuning: dirs $(EXPORT)/tuner
 utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
 
 # Solaris target: note only GCC is supported
-sparc-solaris: 
+sparc-solaris:
 	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS)' CFLAGS='$(CFLAGS)' all
 
 # Arm target on Arm host with GCC
@@ -203,7 +203,7 @@ release:
 	gzip ../release/arasan-$(VERSION).tar
 
 install: all
-	mkdir -p $(INSTALL)/arasan-$(VERSION) 
+	mkdir -p $(INSTALL)/arasan-$(VERSION)
 	cp $(EXPORT)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)
 	chmod 755 $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 	ln -s $(INSTALL)/arasan-$(VERSION)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)/arasanx
@@ -290,7 +290,7 @@ $(TB_LIBS): $(GTB_OBJS)
 
 endif
 
-ifdef NALIMOV_TBS 
+ifdef NALIMOV_TBS
 TB_SOURCES := $(TB_SOURCES) $(TB)/nalimov.cpp
 TB_OBJS := $(TB_OBJS) $(BUILD)/nalimov.o
 endif
@@ -399,22 +399,22 @@ ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJ
 PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
-$(EXPORT)/makebook:  $(MAKEBOOK_OBJS) 
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)	
+$(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/makeeco:  $(MAKEECO_OBJS) 
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)	
+$(EXPORT)/makeeco:  $(MAKEECO_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/ecocoder:  $(ECOCODER_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(ECOCODER_OBJS) $(DEBUG) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)	
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(ECOCODER_OBJS) $(DEBUG) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/pgnselect:  $(PGNSELECT_OBJS) 
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)	
+$(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/playchess:  $(PLAYCHESS_OBJS) 
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)	
+$(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/tuner:  $(TUNER_OBJS) 
+$(EXPORT)/tuner:  $(TUNER_OBJS)
 	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
