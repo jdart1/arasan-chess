@@ -373,6 +373,7 @@ const struct ECOData eco_codes[] =
 {"B21", 0x4742c93b0f041c26ULL ,"Sicilian Defense, Flank Gambit"},
 {"B21", 0x7205c88db85d715fULL ,"Smith-Morra Gambit"},
 {"B21", 0x4a7196fbf84ce439ULL ,"Smith-Morra Gambit"},
+{"B21", 0x4d5de3e91f8501ffULL ,"Smith-Morra Gambit"},
 {"B22", 0x230588aa46544e17ULL ,"Sicilian Defense, Alapin Variation"},
 {"B22", 0xa55793bb800a8b60ULL ,"Sicilian Defense, Alapin Variation"},
 {"B22", 0x54ff93e5151575d4ULL ,"Sicilian Defense, Alapin Variation"},
