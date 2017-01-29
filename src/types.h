@@ -203,7 +203,7 @@ class Spinlock {
   atomic_flag locked;
         
  public:
-  Spinlock() {
+  Spinlock() : locked(ATOMIC_FLAG_INIT) {
   }
   virtual ~Spinlock() {
   }
