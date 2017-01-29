@@ -1,4 +1,4 @@
-test ..\..\tests\arasan19.epd 30 -x 5 
+test ..\..\tests\arasan19a.epd 60 -x 5 
 test ..\..\tests\ecmgcp.epd 10 -x 5 
 test ..\..\tests\iq4.epd 10 -x 5 
 test ..\..\tests\wacnew.epd 10 -x 5 
