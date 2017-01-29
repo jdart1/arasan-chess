@@ -24,8 +24,8 @@ rnb1k2r/pp2qppp/3p1n2/2pp2B1/1bP5/2N1P3/PP2NPPP/R2QKB1R w KQkq - bm a3; id "test
 R7/3p3p/8/3P2P1/3k4/1p5p/1P1NKP1P/7q w - - bm g6; id "test 24";
 8/8/3k1p2/p2BnP2/4PN2/1P2K1p1/8/5b2 b - - bm Nd3; id "test 25";
 2r3k1/pbr1q2p/1p2pnp1/3p4/3P1P2/1P1BR3/PB1Q2PP/5RK1 w - - bm f5; id "test 26";
-3r2k1/p2r2p1/1p1B2Pp/4PQ1P/2b1p3/P3P3/7K/8 w - - bm e6; id "test 27";
-rnb1k1nr/p2p1ppp/3B4/1p1N1N1P/4P1P1/3P1Q2/PqP5/R4Kb1 w kq - bm e5; id "test 28";
-r1b1kb1r/pp1n1ppp/2q5/2p3B1/Q1B5/2p2N2/PP3PPP/R3K2R w KQkq - bm O-O-O; id "test 29";
+3r2k1/p2r2p1/1p1B2Pp/4PQ1P/2b1p3/P3P3/7K/8 w - - bm Bb4; id "test 27";
+rnb1k1nr/p2p1ppp/3B4/1p1N1N1P/4P1P1/3P1Q2/PqP5/R4Kb1 w kq - bm Re1; id "test 28";
+r1b1kb1r/pp1n1ppp/2q5/2p3B1/Q1B5/2p2N2/PP3PPP/R3K2R w KQkq - bm Bxf7+; id "test 29";
 2k5/2p3Rp/p1pb4/1p2p3/4P3/PN1P1P2/1P2KP1r/8 w - - bm f4; id "test 30";
 
