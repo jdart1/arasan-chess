@@ -10,6 +10,7 @@
 #include "search.h"
 #include "tune.h"
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cmath>
 #include <ctime>
@@ -623,7 +624,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
-   vector<int> attackTypes(8,0);
+   array<int,8> attackTypes;
+   for (int i = 0; i < 8; i++) attackTypes[i] = 0;
+   
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
       adjustMaterialScore(board,side,grads,inc);
@@ -1183,14 +1186,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       // king safety tuning
       const int scale_index =
          Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,int(attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION));
-      // approximate the gradient of the scale
-      double scale_grad = 0.0;
-      if (scale_index > 8) {
-         int low = Util::Max(0,scale_index);
-         int high = Util::Min(scale_index + 1,Scoring::Params::KING_ATTACK_SCALE_SIZE-1);
-         if (low == high) --low;
-         scale_grad = double(tune_params[Tune::KING_ATTACK_SCALE+high].current-tune_params[Tune::KING_ATTACK_SCALE+low].current)/double(high-low);
-      }
+      // compute the gradient of the scale
+      double k = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current/1000.0;
+      double x = exp(k*(scale_index-tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current));
+      double scale_grad = tune_params[Tune::KING_ATTACK_SCALE_MAX].current*k*x/pow(1.0 + x,2.0);
       grads[Tune::PAWN_ATTACK_FACTOR1] +=
          tune_params.scale(inc*scale_grad*proximity/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR2] +=
@@ -1212,10 +1211,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (cover_boost_index >= 0) {
          grads[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST+cover_boost_index,ourMatLevel);
-      }
-      if (tune_params[Tune::KING_ATTACK_SCALE+scale_index].tunable) {
-         grads[Tune::KING_ATTACK_SCALE+scale_index] +=
-            tune_params.scale(inc,Tune::KING_ATTACK_SCALE+scale_index,ourMatLevel);
       }
    }
    if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {

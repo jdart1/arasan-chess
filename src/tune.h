@@ -60,6 +60,10 @@ class Tune {
     CASTLING3,
     CASTLING4,
     CASTLING5,
+    KING_ATTACK_SCALE_MAX,
+    KING_ATTACK_SCALE_INFLECT,
+    KING_ATTACK_SCALE_FACTOR,
+    KING_ATTACK_SCALE_BIAS,
     KING_COVER1,
     KING_COVER2,
     KING_COVER3,
@@ -244,7 +248,6 @@ class Tune {
     KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+5,
     BISHOP_OUTPOST = KNIGHT_OUTPOST+48,
     TRADE_DOWN = BISHOP_OUTPOST+48,
-    KING_ATTACK_SCALE = TRADE_DOWN+8
   };
    
   int numTuningParams() const;
@@ -278,7 +281,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 177;
+  static const int NUM_MISC_PARAMS = 181;
 
   double scale(score_t value,int index,int materialLevel) const;
 
