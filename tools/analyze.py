@@ -1,11 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Tool to analyze an EPD file with test positions and produce PVs and
-# solution times/counts.
-# Copyright 2016 by Jon Dart. All Rights Reserved.
-# This code is under the MIT license: see license directory.
-
 import re, sys, subprocess, time, chess, chess.uci
 
 class Options:
@@ -135,8 +130,7 @@ def main(argv = None):
                 except exceptions.ValueError:
                     print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
                     return 2
-            arg = arg + 1
-        if (argv[arg][1] == 't'):
+        elif (argv[arg][1] == 't'):
             arg = arg + 1
             if (arg < len(argv)):
                 try:
@@ -144,12 +138,10 @@ def main(argv = None):
                 except exceptions.ValueError:
                     print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
                     return 2
-            arg = arg + 1
         elif (argv[arg][1] == 'e'):
             arg = arg + 1
             if (arg < len(argv)):
                 options.engine_name = argv[arg]
-                arg = arg + 1
         elif (argv[arg][1] == 'H'):
             arg = arg + 1
             if (arg < len(argv)):
@@ -158,7 +150,6 @@ def main(argv = None):
                 except exceptions.ValueError:
                     print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
                     return 2
-            arg = arg+1
         elif (argv[arg][1] == 'm'):
             arg = arg + 1
             if (arg < len(argv)):
@@ -167,10 +158,11 @@ def main(argv = None):
                 except exceptions.ValueError:
                     print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
                     return 2
-            arg = arg+1
         else:
             print("Unrecognized switch: " + argv[arg], file=sys.stderr)
             return
+        arg = arg + 1
+
     time = options.search_time*1000
 
     if (arg >= len(argv)):
