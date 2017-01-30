@@ -185,7 +185,7 @@ endif
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROF_DATA)/*.dyn
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess pgnselect
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess pgnselect ecocoder
 
 dirs:
 	mkdir -p $(BUILD)
