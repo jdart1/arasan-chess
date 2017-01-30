@@ -200,10 +200,10 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #define THREAD HANDLE
 #elif defined(USE_SPINLOCK)
 class Spinlock {
-  atomic_flag locked;
+  atomic_flag locked = ATOMIC_FLAG_INIT;
         
  public:
-  Spinlock() : locked(ATOMIC_FLAG_INIT) {
+  Spinlock() {
   }
   virtual ~Spinlock() {
   }
