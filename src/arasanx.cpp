@@ -418,6 +418,7 @@ static void process_st_command(const string &cmd_args)
    s >> time_limit_sec;
    if (s.bad() || time_limit_sec <= 0.0) {
       cout << "# illegal value for st command: " << cmd_args << endl;
+      return;
    } else {
       srctype = FixedTime;
    }
@@ -3016,11 +3017,7 @@ static bool do_command(const string &cmd, Board &board) {
             }
             else if (option == "movetime") {
                 if (it == eos) break;
-                int t = 0;
-                if (Options::setOption<int>(*it++,t)) {
-                    srctype = FixedTime;
-                    time_limit = t;
-                }
+                process_st_command(*it++);
             }
             else if (option == "ponder") {
                 ++do_ponder;
