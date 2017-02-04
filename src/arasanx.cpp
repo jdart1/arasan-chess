@@ -556,6 +556,7 @@ static void do_help() {
    cout << "sd <x>:          limit thinking to depth x" << endl;
    cout << "setboard <FEN>:  set board to a specified FEN string" << endl;
    cout << "st <x>:          limit thinking to x seconds" << endl;
+   cout << "test <epd_file> <sec/move> <-x iter> <-N pvs> <-v>:  run test suite" << endl;
    cout << "time <int>:      set computer time remaining (in centiseconds)" << endl;
    cout << "undo:            back up a half move" << endl;
    cout << "white:           set computer to play White" << endl;
@@ -686,26 +687,6 @@ static void print_nodes(uint64_t nodes, ostream &out) {
 }
 
 
-static struct MultiPVEntry
-{
-   int depth;
-   score_t score;
-   time_t time;
-   uint64_t nodes;
-   uint64_t tb_hits;
-   string best_line_image;
-   Move best;
-   MultiPVEntry() {}
-   MultiPVEntry(const Statistics &stats)
-      : depth(stats.depth),score(stats.value),
-      time(stats.elapsed_time),nodes(stats.num_nodes),
-      tb_hits(stats.tb_hits) {
-      best_line_image = stats.best_line_image;
-      best = stats.best_line[0];
-   }
-} multi_pvs[MAX_PV];
-
-
 static void uciOut(int depth, score_t score, time_t time,
 uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    stringstream s;
@@ -751,16 +732,15 @@ static void CDECL post_output(const Statistics &stats) {
    if (verbose) {
        if (uci) {
            if (options.search.multipv > 1) {
-               // accumulate multiple pvs until we are ready to output them
-               ASSERT(stats.multipv_count<MAX_PV);
-               multi_pvs[stats.multipv_count] = MultiPVEntry(stats);
+               // output stats only when multipv array has been filled
                if (stats.multipv_count+1 == stats.multipv_limit) {
                    for (int i = 0; i < stats.multipv_limit; i++) {
-                       uciOut(multi_pvs[i].depth,
-                              100*multi_pvs[i].score/PAWN_VALUE,
-                              multi_pvs[i].time,multi_pvs[i].nodes,
-                              multi_pvs[i].tb_hits,
-                              multi_pvs[i].best_line_image,
+                       uciOut(stats.multi_pvs[i].depth,
+                              stats.multi_pvs[i].score,
+                              stats.multi_pvs[i].time,
+                              stats.multi_pvs[i].nodes,
+                              stats.multi_pvs[i].tb_hits,
+                              stats.multi_pvs[i].best_line_image,
                               i+1);
                    }
                }
@@ -2037,7 +2017,7 @@ static void check_command(const string &cmd, int &terminate)
 // for support of the "test" command
 static Move search(Board &board, int ply_limit,
 int time_limit, Statistics &stats,
-Move excludes [], int num_excludes) {
+const vector<Move> &excludes) {
    Move move = NullMove;
    solution_time = -1;
 
@@ -2046,10 +2026,10 @@ Move excludes [], int num_excludes) {
       time_limit, 0, ply_limit,
       0, 0, stats,
       verbose ? Debug : Silent,
-      excludes, num_excludes);
+      excludes);
 
-   if (num_excludes)
-      cout << "result(" << num_excludes+1 << "):";
+   if (excludes.size())
+      cout << "result(" << excludes.size()+1 << "):";
    else
       cout << "result:";
    cout << '\t';
@@ -2168,34 +2148,36 @@ static void do_test(string test_file)
             cout << endl;
          }
          srctype = FixedTime;
-         Move excludes[Constants::MaxMoves];
+         vector <Move> excludes;
+         total_tests++;
          for (int index = 0; index < moves_to_search; index++) {
             searcher->clearHashTables();
-            Move result = search(board,ply_limit,time_limit,stats,
-            excludes,index);
+            Move result = search(board,ply_limit,time_limit,stats,excludes);
             if (IsNull(result)) break;
-            excludes[index] = result;
+            excludes.push_back(result);
             int correct = solution_time >=0;
-            solution_times.push_back((int)solution_time);
-            total_tests++;
+            if (index == 0) {
+                // only put solutions in summary at end if they are
+                // made on the first search attempt.
+                solution_times.push_back((int)solution_time);
+                if (correct) total_correct++;
+            }
             std::ios_base::fmtflags original_flags = cout.flags();
             cout << setprecision(4);
             if (correct) {
                cout << "\t++ solved in " << (float)solution_time/1000.0 <<
                   " sec. (";
                print_nodes(solution_nodes,cout);
-               cout << " nodes)" << endl;
-               total_correct++;
             }
             else {
                cout << "\t** not solved in " <<
                   (float)stats.elapsed_time/1000.0 << " secs. (";
                print_nodes(stats.num_nodes,cout);
-               cout << " nodes)" << endl;
             }
+            cout << " nodes)" << endl;
             cout.flags(original_flags);
             cout << stats.best_line_image << endl;
-            if (correct && max_depth>0) {
+            if (index == 0 && correct && max_depth>0) {
                uint64_t nodes_to_find = (uint64_t)0;
                int depth_to_find = 0;
                time_t time_to_find = 0;
@@ -2532,7 +2514,7 @@ static bool do_command(const string &cmd, Board &board) {
            " min 0 max 64" << endl;
 #endif
 #endif
-        cout << "option name MultiPV type spin default 1 min 1 max " << MAX_PV << endl;
+        cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << endl;
         cout << "option name OwnBook type check default true" << endl;
         cout << "option name Book selectivity type spin default " <<
             options.book.selectivity << " min 0 max 100" << endl;
@@ -2657,14 +2639,15 @@ static bool do_command(const string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
-            options.search.multipv = Util::Min(MAX_PV,options.search.multipv);
+            options.search.multipv = Util::Min(Statistics::MAX_PV,options.search.multipv);
             // GUIs (Shredder at least) send 0 to turn multi-pv off: but
             // our option counts the # of lines to show, so we set it to
             // 1 in this case.
             if (options.search.multipv == 0) options.search.multipv = 1;
             stats.multipv_count = 0;
             // migrate current stats to 1st Multi-PV table entry:
-            multi_pvs[0] = MultiPVEntry(stats);
+            stats.multi_pvs[0] =
+              Statistics::MultiPVEntry(stats);
         }
         else if (uciOptionCompare(name,"Threads")) {
             int threads = options.search.ncpus;

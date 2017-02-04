@@ -221,7 +221,7 @@ class RootMoveGenerator : public MoveGenerator
 
       void suboptimal(int strength, Move &m, int &val);
 
-      void exclude(Move *exclude, int num_exclude);
+      void exclude(const vector<Move> &excluded);
 
       // include only moves in the set
       void filter(const set<Move> &exclude);

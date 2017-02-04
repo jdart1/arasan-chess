@@ -127,7 +127,7 @@ class SearchController {
       int isUCI,
       Statistics &stat_buf,
       TalkLevel t,
-      Move *exclude, int num_exclude);
+      const vector <Move> &exclude);
 
    Move findBestMove( 
       const Board &board, 
@@ -249,7 +249,6 @@ class SearchController {
 
     int uci;
     int age;
-    int explicit_excludes;
     TalkLevel talkLevel;
     // time limit is nominal time limit in centiseconds
     // time target is actual time to search in centiseconds
@@ -491,7 +490,7 @@ class RootSearch : public Search {
     return iteration_depth;
   }
 
-  Move ply0_search(Move *exclude, int num_exclude);
+  Move ply0_search(const vector<Move> &exclude);
 
   const Board &getInitialBoard() const {
     return initialBoard;
@@ -504,8 +503,8 @@ class RootSearch : public Search {
  protected:
 
   score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
-     int iteration_depth,
-     int depth, Move exclude [], int num_exclude);
+                      int iteration_depth,
+                      int depth, const vector<Move> &exclude);
 
   Board initialBoard;
   int iteration_depth;

@@ -235,10 +235,9 @@ Move SearchController::findBestMove(
    TalkLevel t)
 {
     active = true;
-    explicit_excludes = 0;
-    Move excludes[Constants::MaxMoves];
+    vector<Move> excludes;
     Move result = findBestMove(board,srcType,time_limit,xtra_time,ply_limit,
-                        background, isUCI, stat_buf, t, excludes, 0);
+                        background, isUCI, stat_buf, t, excludes);
     active = false;
     return result;
 }
@@ -254,7 +253,7 @@ Move SearchController::findBestMove(
    int isUCI,
    Statistics &stat_buf,
    TalkLevel t,
-   Move *exclude, int num_exclude)
+   const vector<Move> &exclude)
 {
     this->typeOfSearch = srcType;
     this->time_limit = time_target = time_limit;
@@ -302,9 +301,6 @@ Move SearchController::findBestMove(
     pool->forEachSearch<&Search::setVariablesFromController>();
 
     stats->clear();
-    explicit_excludes = 0;
-    num_exclude = Util::Min(MAX_PV,num_exclude);
-    if (num_exclude) explicit_excludes = 1;
 
     // Positions are stored in the hashtable with an "age" to identify
     // which search they came from. "Newer" positions can replace
@@ -319,7 +315,7 @@ Move SearchController::findBestMove(
     rootSearch->init(board,rootStack);
     startTime = getCurrentTime();
 
-    return rootSearch->ply0_search(exclude,num_exclude);
+    return rootSearch->ply0_search(exclude);
 }
 
 void SearchController::setRatingDiff(int rdiff)
@@ -350,11 +346,11 @@ void SearchController::setThreadSplitDepth(int depth) {
 }
 
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
-score_t score, score_t alpha, score_t beta)
+                                   score_t score, score_t alpha, score_t beta)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
     stats->multipv_count = rootSearch->multipv_count;
-    ASSERT(stats->multipv_count >= 0 && stats->multipv_count < MAX_PV);
+    ASSERT(stats->multipv_count >= 0 && stats->multipv_count < Statistics::MAX_PV);
     stats->value = score;
     stats->depth = iteration_depth;
     // if failing low, keep the current value for display purposes,
@@ -622,6 +618,11 @@ int failhigh,int complete)
     }
     // Post during ponder if UCI
     if ((!controller->background || controller->uci)) {
+       if (srcOpts.multipv > 1) {
+          // Accumulate multiple pvs until we are ready to output
+          // them.
+          stats->multi_pvs[stats->multipv_count] = Statistics::MultiPVEntry(*stats);
+        }
         if (controller->post_function) {
             controller->post_function(*stats);
         }
@@ -695,8 +696,7 @@ score_t Search::tbScoreAdjust(const Board &board,
 }
 #endif
 
-Move RootSearch::ply0_search(
-Move *excludes, int num_excludes)
+Move RootSearch::ply0_search(const vector <Move> &exclude)
 {
    easy_adjust = false;
    fail_high_root_extend = fail_low_root_extend = false;
@@ -823,8 +823,7 @@ Move *excludes, int num_excludes)
        }
    }
 
-   controller->stats->value =
-      controller->stats->display_value = value;
+   value = controller->stats->value = controller->stats->display_value = value;
 
    // Incrementally search the board to greater depths - stop when
    // ply limit, time limit, interrupt, or a terminating condition
@@ -837,10 +836,19 @@ Move *excludes, int num_excludes)
    for (iteration_depth = 1;
         iteration_depth <= controller->ply_limit && !terminate;
         iteration_depth++) {
-      if (!controller->explicit_excludes) num_excludes = 0;
+      vector<Move> excluded(exclude);
+      controller->stats->multipv_count = 0;
       for (multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
+         controller->stats->clearPV();
+         if (multipv_count) {
+             excluded.push_back(controller->stats->multi_pvs[multipv_count-1].best);
+             if (iteration_depth > 1) {
+                 // set value to previous iteration's value
+                 value = controller->stats->multi_pvs[multipv_count].score;
+             }
+         }
          if (iteration_depth <= 1) {
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
@@ -870,7 +878,7 @@ Move *excludes, int num_excludes)
 #endif
             value = ply0_search(mg, lo_window, hi_window, iteration_depth,
                                 DEPTH_INCREMENT*iteration_depth,
-                                excludes,num_excludes);
+                                excluded);
 #ifdef _TRACE
             cout << "iteration " << iteration_depth << " result: " <<
                value << endl;
@@ -965,6 +973,12 @@ Move *excludes, int num_excludes)
                }
             }
             else if (failLow) {
+                cout << "info fail low : best= ";
+                MoveImage(node->best,cout);
+                cout << " pv = " <<
+                    stats->best_line_image;
+                cout << endl;
+                
                showStatus(board, node->best, failLow, failHigh, 0);
                if (talkLevel == Trace) {
                    cout << "# ply 0 fail low, re-searching ... value=";
@@ -1039,11 +1053,7 @@ Move *excludes, int num_excludes)
          cout << endl;
 #endif
          last_score = value;
-         if (srcOpts.multipv > 1) {
-            ASSERT(num_excludes<Constants::MaxMoves);
-            excludes[num_excludes++] = node->pv[0];
-         }
-         else if (!(controller->uci && controller->time_limit == INFINITE_TIME)) {
+         if (!srcOpts.multipv && !(controller->uci && controller->time_limit == INFINITE_TIME)) {
             // Allow early termination on a tablebase position, but not
             // if we have >=6 man tbs in use (because tb set may be
             // incomplete - in that case it is better to allow us to
@@ -1206,7 +1216,7 @@ Move *excludes, int num_excludes)
 
 score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         int iteration_depth,
-int depth, Move exclude [], int num_exclude)
+                        int depth, const vector<Move> &exclude)
 {
     // implements alpha/beta search for the top most ply.  We use
     // the negascout algorithm.
@@ -1229,7 +1239,7 @@ int depth, Move exclude [], int num_exclude)
     // Re-sort the ply 0 moves and re-init move generator.
     mg.reorder(node->best,controller->getIterationDepth());
     // if in N-variation mode, exclude any moves we have searched already
-    mg.exclude(exclude,num_exclude);
+    mg.exclude(exclude);
 
     if (controller->getIterationDepth() == MoveGenerator::EASY_PLIES+1) {
         auto list = mg.getMoveList();

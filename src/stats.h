@@ -1,11 +1,11 @@
-// Copyright 1994-2009, 2012-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2009, 2012-2017 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
 
 #include "chess.h"
 #include "constant.h"
-#define MAX_PV 10
+#include <array>
 #include <string>
 using namespace std;
 
@@ -13,9 +13,11 @@ enum StateType {NormalState,Terminated,Check,Checkmate,
                 Stalemate,Draw,Resigns};
 
 // This structure holds information about a search
-// after it has completed.
+// during and after completion.
 struct Statistics
 {
+  static const unsigned MAX_PV = 10;
+
    StateType state;
    score_t value;
    score_t display_value;
@@ -60,15 +62,48 @@ struct Statistics
    int move_order[4];
    int move_order_count;
 #endif
-#ifdef TUNE
-   double target;
-   double target_out_window;
-   uint64_t result_norm;
-#endif
    int end_of_game;
+
+   struct MultiPVEntry {
+      int depth;
+      score_t score;
+      time_t time;
+      uint64_t nodes;
+      uint64_t tb_hits;
+      string best_line_image;
+      Move best;
+      MultiPVEntry() : depth(0),
+                        score(0),
+                        time(0),
+                        nodes(0),
+                        tb_hits(0),
+                        best_line_image(""),
+                        best(NullMove){}
+
+      MultiPVEntry(const Statistics &stats)
+        : depth(stats.depth),score(stats.value),
+          time(stats.elapsed_time),nodes(stats.num_nodes),
+          tb_hits(stats.tb_hits) {
+            best_line_image = stats.best_line_image;
+            best = stats.best_line[0];
+      }
+
+   };
+
+   array<MultiPVEntry,MAX_PV> multi_pvs;
+
    Statistics();
    virtual ~Statistics();
    void clear();
+
+   void clearPV() {
+      int i;
+      best_line_image.clear();
+      for (i = 0; i < Constants::MaxPly; i++) {
+         best_line[i] = NullMove;
+      }
+   }
+
    void printNPS(ostream &);
 };
 

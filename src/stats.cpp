@@ -52,10 +52,6 @@ void Statistics::clear()
    last_split_sample = 0ULL;
    last_split_time = getCurrentTime();
 #endif
-#ifdef TUNE
-   target = target_out_window = 0.0;
-   result_norm = (uint64_t)0;
-#endif
 }
 
 void Statistics::printNPS(ostream &s) {

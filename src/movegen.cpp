@@ -182,12 +182,12 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 }
 
 
-void RootMoveGenerator::exclude(Move *exclude, int num_exclude)
+void RootMoveGenerator::exclude(const vector<Move> &excluded)
 {
-  for (int i = 0; i < batch_count; i++) {
+   for (int i = 0; i < batch_count; i++) {
       ClearUsed(moveList[i].move);
-      for (int j = 0; j < num_exclude; j++) {
-         if (MovesEqual(moveList[i].move,exclude[j])) {
+      for (auto it = excluded.begin(); it != excluded.end(); it++) {
+         if (MovesEqual(moveList[i].move,*it)) {
             SetUsed(moveList[i].move);
          }
       }
