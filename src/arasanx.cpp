@@ -3017,7 +3017,16 @@ static bool do_command(const string &cmd, Board &board) {
             }
             else if (option == "movetime") {
                 if (it == eos) break;
-                process_st_command(*it++);
+                stringstream s(*it++);
+                int srctime;
+                s >> srctime;
+                if (s.bad() || srctime < 0.0) {
+                    cerr << "movetime: invalid argument" << endl;
+                } else {
+                    srctype = FixedTime;
+                    // set time limit (milliseconds)
+                    time_limit = srctime;
+                }
             }
             else if (option == "ponder") {
                 ++do_ponder;
