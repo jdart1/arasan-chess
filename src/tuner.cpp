@@ -56,8 +56,11 @@ static ifstream pos_file;
 static bool verbose = false;
 static bool validate = false;
 static bool recalc = false;
+static bool test = false;
 
 static int pv_recalc_interval = 16;
+
+static double lambda = 6E-5;
 
 static const int MAX_PV_LENGTH = 256;
 static const int NUM_RESULT = 8;
@@ -66,7 +69,6 @@ static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 static const score_t LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
 // L2-regularization factor
-static const double REGULARIZATION = 6E-5;
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 // step size relative to parameter range:
@@ -180,13 +182,14 @@ static void usage()
    cerr << " -d just write out current parameters values to params.cpp" << endl;
    cerr << " -f <ouput .cpp file>" << endl;
    cerr << " -i <input parameter file>" << endl;
-   cerr << " -r apply regularization" << endl;
    cerr << " -n <iterations>" << endl;
    cerr << " -o adagrad|adam|adaptive select optimization method" << endl;
+   cerr << " -r <lambda> apply regularization" << endl;
+   cerr << " -t just compute objective against file with current parameters" << endl;
+   cerr << " -x <ouput parameter file>" << endl;
    cerr << " -O ordinal|msq select objective type" << endl;
    cerr << " -R <recalc interval> periodically recalulate PVs" << endl;
    cerr << " -V validate gradient" << endl;
-   cerr << " -x <ouput parameter file>" << endl;
 }
 
 static double texelSigmoid(double val) {
@@ -292,7 +295,7 @@ static double calc_penalty()
                continue;
             }
             // normalize the values since their ranges differ
-            l2 += REGULARIZATION*norm_val(p)*norm_val(p);
+            l2 += lambda*norm_val(p)*norm_val(p);
          }
       }
    }
@@ -1345,13 +1348,11 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
       Tune::TuneParam p;
       tune_params.getParam(i,p);
       score_t val = p.current;
-      if (regularize) {
+      if (regularize && p.tunable) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
          // we don't regularize them.
-         if (p.tunable) {
-            dv += 2*REGULARIZATION*norm_val(p);
-         }
+         dv += 2*lambda*norm_val(p);
       }
       if (dv != 0.0 && p.tunable) {
          score_t istep = 1;
@@ -1521,7 +1522,7 @@ static void learn()
    vector<double> prev_gradient(tune_params.numTuningParams(),0.0);
    vector<double> step_sizes(tune_params.numTuningParams(),0.0);
    for (int iter = 1; iter <= iterations; iter++) {
-      cout << "iteration " << iter << endl;
+      if (!test) cout << "iteration " << iter << endl;
       tune_params.applyParams();
       if (iter == 1 ||
           (recalc && ((iter-1) % pv_recalc_interval) == 0)) {
@@ -1537,6 +1538,10 @@ static void learn()
             data1[0].target += data1[i].target;
          }
          data1[0].target /= positions.size();
+         if (test) {
+            cout << "objective=" << data1[0].target << endl;
+            break;
+         }
          if (verbose) {
             cout << "target=" << data1[0].target << " penalty=" << calc_penalty() << endl;
          }
@@ -1615,6 +1620,14 @@ int CDECL main(int argc, char **argv)
           x0_input_file_name = argv[arg];
        }
        else if (strcmp(argv[arg],"-r")==0) {
+          ++arg;
+          if (arg < argc) {
+              stringstream s(argv[arg]);
+              s >> lambda;
+              if (s.bad() || s.fail()) {
+                  cerr << "expected real number after -r" << endl;
+              }
+          }
           regularize = true;
        }
        else if (strcmp(argv[arg],"-x")==0) {
@@ -1628,6 +1641,9 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-c")==0) {
           ++arg;
           cores = atoi(argv[arg]);
+       }
+       else if (strcmp(argv[arg],"-t")==0) {
+          test = true;
        }
        else if (strcmp(argv[arg],"-v")==0) {
           verbose = true;
@@ -1681,6 +1697,12 @@ int CDECL main(int argc, char **argv)
           usage();
           exit(-1);
        }
+    }
+
+    if (test && write_sol) {
+       cerr << "error: -d and -t not compatible" << endl;
+       usage();
+       exit(-1);
     }
 
     if (write_sol) {
