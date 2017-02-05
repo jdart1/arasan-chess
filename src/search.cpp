@@ -973,12 +973,6 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                }
             }
             else if (failLow) {
-                cout << "info fail low : best= ";
-                MoveImage(node->best,cout);
-                cout << " pv = " <<
-                    stats->best_line_image;
-                cout << endl;
-                
                showStatus(board, node->best, failLow, failHigh, 0);
                if (talkLevel == Trace) {
                    cout << "# ply 0 fail low, re-searching ... value=";
