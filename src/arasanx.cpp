@@ -55,6 +55,7 @@ extern "C"
 #else
 #include <errno.h>
 #include <unistd.h>
+#include <sys/select.h>
 #endif
 };
 using namespace std;

@@ -161,7 +161,7 @@ inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
 #else // Linux/GCC
 #define CACHE_ALIGN __attribute__ ((aligned (128)))
 #define FORCEINLINE __inline
-#if defined(__sun) && defined(__SVR4)
+#if defined(__CYGWIN__) || (defined(__sun) && defined(__SVR4))
 // no posix_memalign
 #define ALIGNED_MALLOC(ptr, type, size, alignment) ptr = (type*)memalign(alignment,size)
 #else
