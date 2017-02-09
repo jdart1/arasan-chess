@@ -841,7 +841,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
       for (multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
-         controller->stats->clearPV();
+         if (srcOpts.multipv > 1) controller->stats->clearPV();
          if (multipv_count) {
              excluded.push_back(controller->stats->multi_pvs[multipv_count-1].best);
              if (iteration_depth > 1) {
@@ -949,7 +949,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
             if (failHigh) {
                showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
-               cout << "ply 0 high cutoff, re-searching ... value=";
+               cout << "# ply 0 high cutoff, re-searching ... value=";
                Scoring::printScore(value,cout);
                cout << " fails=" << fails+1 << endl;
 #endif
@@ -1047,7 +1047,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
          cout << endl;
 #endif
          last_score = value;
-         if (!srcOpts.multipv && !(controller->uci && controller->time_limit == INFINITE_TIME)) {
+         if (srcOpts.multipv==1 && !(controller->uci && controller->time_limit == INFINITE_TIME)) {
             // Allow early termination on a tablebase position, but not
             // if we have >=6 man tbs in use (because tb set may be
             // incomplete - in that case it is better to allow us to
