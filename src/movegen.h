@@ -7,6 +7,7 @@
 #include "constant.h"
 #include "see.h"
 #include "refut.h"
+#include <random>
 #include <set>
 #include <vector>
 using namespace std;
@@ -263,6 +264,8 @@ class RootMoveGenerator : public MoveGenerator
    private:
       vector<MoveEntry> moveList;
       int excluded;
+      std::mt19937_64 random_engine;
+
 };
 
 inline MoveGenerator::Phase operator++(MoveGenerator::Phase &phase)

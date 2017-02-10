@@ -1,4 +1,4 @@
-// Copyright 1992, 1995, 2013, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1995, 2013, 2014, 2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _BOOK_READER_H
 #define _BOOK_READER_H
@@ -7,6 +7,7 @@
 #include "board.h"
 #include "hash.h"
 #include <fstream>
+#include <random>
 #include <vector>
 
 using namespace std;
@@ -53,6 +54,8 @@ protected:
 
     ifstream book_file;
     book::BookHeader hdr;
+
+    std::mt19937_64 engine;
 };
 
 #endif

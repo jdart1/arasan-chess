@@ -104,6 +104,7 @@ int trace)
      batch_count = j;
    }
    phase = LAST_PHASE;
+   random_engine.seed(getCurrentTime());
 }
 
 
@@ -251,14 +252,15 @@ void RootMoveGenerator::suboptimal(int strength,Move &m,int &val) {
    }
    double diff = double(moveList[0].score - moveList[1].score)/PAWN_VALUE;
    double s = (double)strength;
-   int threshold = int(750.0/pow(2.0,s/10.0));
+   unsigned threshold = unsigned(750.0/pow(2.0,s/10.0));
    // make it a little less likely to make a big blunder
    threshold = int(threshold/(1.0+diff*strength/100.0));
-   if (rand() % 1024 < threshold) {
+   std::uniform_int_distribution<unsigned> dist(0,1024);
+   unsigned r;
+   if ((r = dist(random_engine)) < threshold) {
        // deliberately choose a move that is not the best
        m = moveList[1].move;
        val = moveList[1].score;
-       int r = (rand() % 1024);
        if (r < threshold/2 && moveCount() > 2) {
            m = moveList[2].move;
            val = moveList[2].score;

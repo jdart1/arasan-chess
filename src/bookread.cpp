@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -20,7 +20,8 @@ extern "C" {
 
 BookReader::BookReader()
 {                 
-   srand((unsigned)(getCurrentTime() % (1<<31)));
+   // seed the random number generator
+   engine.seed(getCurrentTime());
 }
 
 BookReader::~BookReader()
@@ -171,7 +172,8 @@ Move BookReader::pickRandom(const Board &b,
    for (int i = 0; i < n; i++) total_weight += moves[i].second;
    // If total_weight is 0, no moves have non-zero weights.
    if (total_weight == 0) return NullMove;
-   unsigned nRand = rand() % total_weight;
+   std::uniform_int_distribution<unsigned> dist(0,total_weight);
+   unsigned nRand = dist(engine);
    unsigned weight = 0;
    // Randomly pick from the available moves.  Prefer moves
    // with high weights.
