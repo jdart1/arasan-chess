@@ -695,7 +695,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    Square kp = board.kingSquare(side);
 
 #ifdef TUNE
-   for (int i = 0; i < 4; i++)
+   for (int i = 0; i < 6; i++)
       for (int j = 0; j < 4; j++)
          coverEntry.counts[i][j] = 0.0F;
 #endif
@@ -1037,13 +1037,6 @@ void Scoring::pieceScore(const Board &board,
             Bitboard qmobility(battacks);
             Bitboard kattacks;
 
-            if (!deep_endgame) {
-               kattacks = battacks & nearKing;
-               if (!kattacks) {
-                  kattacks = board.bishopAttacks(sq, side) & nearKing;
-               }
-            }
-
             if (board.pinOnDiag(sq, okp, oside)) {
                pin_count++;
             }
@@ -1065,6 +1058,10 @@ void Scoring::pieceScore(const Board &board,
                   scores.mid += queenOut;
                }
 
+               kattacks = battacks & nearKing;
+               if (!kattacks) {
+                  kattacks = board.bishopAttacks(sq, side) & nearKing;
+               }
                if (rattacks & nearKing) {
                   kattacks |= (rattacks & nearKing);
                }
