@@ -1437,8 +1437,8 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef TUNE
          td.flags |= PawnDetail::PASSED;
 #endif
-         entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank];
-         entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank];
+         entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank] + PARAM(PASSED_PAWN_FILE_ADJUST)[File(sq)-1];
+         entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank] + PARAM(PASSED_PAWN_FILE_ADJUST)[File(sq)-1];
          entr.passers.set(sq);
       }
       else {
@@ -2619,6 +2619,13 @@ void Scoring::Params::write(ostream &o, const string &comment)
    print_array(o,Params::TRADE_DOWN,8);
    o << "const int Scoring::Params::PASSED_PAWN[2][8] = ";
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
+   score_t file_adjust[8];
+   for (int i = 0; i < 8; i++) {
+      int j = i < 4 ? i : 7-i;
+      file_adjust[i] = tune_params[Tune::PASSED_PAWN_FILE_ADJUST1+j].current;
+   }
+   o << "const int Scoring::Params::PASSED_PAWN_FILE_ADJUST[8] = ";
+   print_array(o,file_adjust, 8);
    o << "const int Scoring::Params::POTENTIAL_PASSER[2][8] = ";
    print_array(o,Params::POTENTIAL_PASSER[0], Params::POTENTIAL_PASSER[1], 8);
    o << "const int Scoring::Params::CONNECTED_PASSER[2][8] = ";

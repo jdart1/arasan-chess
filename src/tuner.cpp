@@ -91,7 +91,7 @@ static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
 
 enum class Objective {
-   Msq, Ordinal
+    Msq, Ordinal, Log
 };
 
 static Objective obj = Objective::Msq;
@@ -239,39 +239,61 @@ static double computeErrorTexel(double value,double result,const ColorType side)
          err = texelSigmoid(THETA2-value);
       }
       break;
+   case Objective::Log:
+      if (result == 0.0) {
+          err = -log(1-predict);
+      } else if (result == 1.0) {
+          err = -log(predict);
+      } else {
+          err = -2*(log(1-predict)+log(predict));
+      }
+      break;
    }
    return err;
 }
 
 static double computeTexelDeriv(double value, double result, const ColorType side)
 {
-   value /= PAWN_VALUE;
+    value /= PAWN_VALUE;
 
-   if (side == Black) value = -value;
+    if (side == Black) value = -value;
 
-   double deriv = 0.0;
+    double deriv = 0.0;
 
-   switch(obj) {
-   case Objective::Msq: {
-      double p = exp(PARAM1*value);
-      deriv = -2*PARAM1*p*((result-1)*p + result)/(PAWN_VALUE*pow(p+1,3.0));
-      break;
-   }
-   case Objective::Ordinal: {
-      auto g = [] (double x) { return PARAM1/(PAWN_VALUE*(1.0+exp(-PARAM1*x))); };
-      if (result == 0) {
-         deriv = g(value-THETA1);
-      }
-      else if (result == 0.5) {
-         deriv = g(value-THETA2) - g(THETA1-value);
-      }
-      else {
-         deriv = -g(THETA2-value);
-      }
-      break;
-   }
-   }
-   return deriv;
+    switch(obj) {
+    case Objective::Msq: {
+        double p = exp(PARAM1*value);
+        deriv = -2*PARAM1*p*((result-1)*p + result)/(PAWN_VALUE*pow(p+1,3.0));
+        break;
+    }
+    case Objective::Ordinal: {
+        auto g = [] (double x) { return PARAM1/(PAWN_VALUE*(1.0+exp(-PARAM1*x))); };
+        if (result == 0) {
+            deriv = g(value-THETA1);
+        }
+        else if (result == 0.5) {
+            deriv = g(value-THETA2) - g(THETA1-value);
+        }
+        else {
+            deriv = -g(THETA2-value);
+        }
+        break;
+    }
+    case Objective::Log:
+    {
+        double p = exp(PARAM1*value);
+        if (result == 0.0) {
+            deriv = PARAM1*p/(1+p);
+        } else if (result == 1.0) {
+            deriv = -PARAM1/(1+p);
+        } else {
+            deriv = 2*PARAM1*(p-1)/(1+p);
+        }
+        deriv /= PAWN_VALUE;
+        break;
+    }
+    }
+    return deriv;
 }
 
 static double norm_val(const Tune::TuneParam &p)
@@ -629,7 +651,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    Bitboard minorAttacks, rookAttacks;
    array<int,8> attackTypes;
    for (int i = 0; i < 8; i++) attackTypes[i] = 0;
-   
+
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
       adjustMaterialScore(board,side,grads,inc);
@@ -966,11 +988,16 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       ASSERT(OnBoard(pds[i].sq));
       grads[Tune::SPACE] += inc*pds[i].space_weight;
       if (pds[i].flags & Scoring::PawnDetail::PASSED) {
-         grads[Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2] +=
+         const Square sq = pds[i].sq;
+         grads[Tune::PASSED_PAWN_MID2+Rank(sq,side)-2] +=
             tune_params.scale(inc,Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2,mLevel);
-         grads[Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2] +=
+         grads[Tune::PASSED_PAWN_END2+Rank(sq,side)-2] +=
             tune_params.scale(inc,Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2,mLevel);
-         sq = pds[i].sq;
+         int f = File(sq)-1;
+         int index = f < 4 ? f : 7-f;
+         grads[Tune::PASSED_PAWN_FILE_ADJUST1+index] +=
+            tune_params.scale(inc,Tune::PASSED_PAWN_FILE_ADJUST1+index,mLevel);
+
          const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
             Attacks::file_mask_down[sq];
 
@@ -1276,7 +1303,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          double predictedError = baseError + dT*(newEval-eval);
          double estDeriv = (newError-baseError)/(newEval-eval);
          if (fabs(predictedError-newError) > 1e-4) {
-            cerr << "warning: param " << p.name << " eval=" << eval << " base=" << baseError << " new=" << newError << " result=" << result << " dT=" << dT << " predicted=" << predictedError << " estDriv= " << estDeriv << endl;
+             cerr << "warning: param " << p.name << " eval=" << eval << " newEval=" << newEval << " result=" << result << " dT=" << dT << " estDeriv= " << estDeriv << " base=" << baseError << " predicted=" << predictedError << " actual=" << newError << endl;
          }
          // restore old value
          tune_params.updateParamValue(i,val);
@@ -1679,9 +1706,11 @@ int CDECL main(int argc, char **argv)
              obj = Objective::Ordinal;
           else if (strcmp(argv[arg],"msq") == 0)
              obj = Objective::Msq;
+          else if (strcmp(argv[arg],"log") == 0)
+             obj = Objective::Log;
           else {
              cerr << "invalid objective type: specify one of: ";
-             cerr << "Ordinal or Msq" << endl;
+             cerr << "ordinal, log or msq" << endl;
              exit(-1);
           }
        }

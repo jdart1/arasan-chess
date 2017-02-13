@@ -162,6 +162,10 @@ class Tune {
     PASSED_PAWN_END5,
     PASSED_PAWN_END6,
     PASSED_PAWN_END7,
+    PASSED_PAWN_FILE_ADJUST1,
+    PASSED_PAWN_FILE_ADJUST2,
+    PASSED_PAWN_FILE_ADJUST3,
+    PASSED_PAWN_FILE_ADJUST4,
     POTENTIAL_PASSER_MID2,
     POTENTIAL_PASSER_MID3,
     POTENTIAL_PASSER_MID4,
@@ -281,7 +285,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 181;
+  static const int NUM_MISC_PARAMS = 185;
 
   double scale(score_t value,int index,int materialLevel) const;
 

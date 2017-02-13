@@ -97,6 +97,7 @@ score_t Scoring::Params::KING_POSITION_LOW_MATERIAL[3];
 score_t Scoring::Params::TRADE_DOWN[8];
 score_t Scoring::Params::KING_ATTACK_SCALE[Scoring::Params::KING_ATTACK_SCALE_SIZE];
 score_t Scoring::Params::PASSED_PAWN[2][8];
+score_t Scoring::Params::PASSED_PAWN_FILE_ADJUST[8] = {0,0,0,0,0,0,0,0};
 score_t Scoring::Params::POTENTIAL_PASSER[2][8];
 score_t Scoring::Params::CONNECTED_PASSER[2][8];
 score_t Scoring::Params::ADJACENT_PASSER[2][8];

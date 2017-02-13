@@ -194,6 +194,10 @@ Tune::Tune()
         Tune::TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",420,50,750,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",840,500,1000,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",1410,500,1750,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST1,"passed_pawn_file_adjust1",0,-100,100,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST2,"passed_pawn_file_adjust2",0,-100,100,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST3,"passed_pawn_file_adjust3",0,-100,100,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",0,-100,100,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",26,0,200,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",37,0,200,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID4,"potential_passer_mid4",75,0,300,Tune::TuneParam::Midgame,1),
@@ -730,6 +734,9 @@ void Tune::applyParams() const
    for (int i = 2; i < 8; i++) {
       Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN_MID2+i-2);
       Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN_END2+i-2);
+   }
+   for (int i = 0; i < 4; i++) {
+      Scoring::Params::PASSED_PAWN_FILE_ADJUST[i] = PARAM(PASSED_PAWN_FILE_ADJUST1+i);
    }
    memset(Scoring::Params::POTENTIAL_PASSER[0],'\0',sizeof(int)*8);
    memset(Scoring::Params::POTENTIAL_PASSER[1],'\0',sizeof(int)*8);
