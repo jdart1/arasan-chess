@@ -761,7 +761,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                float(kside_cover[i][j])/3;
             }
-            
+
          }
 #endif
          break;
@@ -1850,6 +1850,18 @@ static int pp_block_index(Square passer, Square blocker, ColorType side)
    return index;
 }
 
+static Square nextBlocker(const Board &board, ColorType side, Square sq)
+{
+   const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
+      Attacks::file_mask_down[sq];
+   Bitboard occ(mask & board.allOccupied);
+   if (!occ) return InvalidSquare;
+   if (side == White)
+      return occ.firstOne();
+   else
+      return occ.lastOne();
+}
+
 void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry::PawnData &pawnData, Scores &scores) {
 #ifdef PAWN_DEBUG
    Scores tmp(scores);
@@ -1911,16 +1923,11 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    Bitboard passers2(pawnData.passers);
    while(passers2.iterate(sq)) {
       ASSERT(OnBoard(sq));
-      const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
-         Attacks::file_mask_down[sq];
 
       int rank = Rank(sq, side);
       int file = File(sq);
       Square blocker;
-      if (side == White)
-         blocker = (mask & board.allOccupied).firstOne();
-      else
-         blocker = (mask & board.allOccupied).lastOne();
+      blocker = nextBlocker(board,side,sq);
       if (blocker != InvalidSquare) {
          const int index = pp_block_index(sq,blocker,side);
          if (board.occupied[side].isSet(blocker)) {
@@ -1961,7 +1968,12 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #endif
       if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
          atcks &= board.rook_bits[side];
+         const Bitboard &mask = (side == White) ? Attacks::file_mask_down[sq] :
+                Attacks::file_mask_up[sq];
          if (atcks & mask) {
+#ifdef EVAL_DEBUG
+            cout << "rook behind PP: " << SquareImage(sq) << endl;
+#endif
             scores.mid += PARAM(ROOK_BEHIND_PP_MID);
             scores.end += PARAM(ROOK_BEHIND_PP_END);
          }

@@ -451,6 +451,18 @@ static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
 
+static Square nextBlocker(const Board &board, ColorType side, Square sq) 
+{
+   const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
+      Attacks::file_mask_down[sq];
+   Bitboard occ(mask & board.allOccupied);
+   if (!occ) return InvalidSquare;
+   if (side == White)
+      return occ.firstOne();
+   else
+      return occ.lastOne();
+}
+
 static int pp_block_index(Square passer, Square blocker, ColorType side)
 {
    int dist = Rank(blocker,side)-Rank(passer,side)-1;
@@ -998,14 +1010,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::PASSED_PAWN_FILE_ADJUST1+index] +=
             tune_params.scale(inc,Tune::PASSED_PAWN_FILE_ADJUST1+index,mLevel);
 
-         const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
-            Attacks::file_mask_down[sq];
-
          Square blocker;
-         if (side == White)
-            blocker = (mask & board.allOccupied).firstOne();
-         else
-            blocker = (mask & board.allOccupied).lastOne();
+         blocker = nextBlocker(board,side,sq);
          if (blocker != InvalidSquare) {
             const int index = pp_block_index(sq,blocker,side);
             if (board.occupied[side].isSet(blocker)) {
@@ -1029,6 +1035,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          const int rank = Rank(sq,side);
          if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
             atcks &= board.rook_bits[side];
+            const Bitboard &mask = (side == White) ? Attacks::file_mask_down[sq] :
+                Attacks::file_mask_up[sq];
             if (atcks & mask) {
                grads[Tune::ROOK_BEHIND_PP_MID] +=
                   tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
