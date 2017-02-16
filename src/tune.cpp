@@ -192,12 +192,12 @@ Tune::Tune()
         Tune::TuneParam(Tune::PASSED_PAWN_END3,"passed_pawn_end3",160,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END4,"passed_pawn_end4",280,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",420,50,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",840,500,1000,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",840,500,1250,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",1410,500,1750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST1,"passed_pawn_file_adjust1",0,-100,100,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST2,"passed_pawn_file_adjust2",0,-100,100,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST3,"passed_pawn_file_adjust3",0,-100,100,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",0,-100,100,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST1,"passed_pawn_file_adjust1",64,48,96,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST2,"passed_pawn_file_adjust2",64,48,96,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST3,"passed_pawn_file_adjust3",64,48,96,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",64,48,80,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",26,0,200,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",37,0,200,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::POTENTIAL_PASSER_MID4,"potential_passer_mid4",75,0,300,Tune::TuneParam::Midgame,1),
@@ -729,39 +729,40 @@ void Tune::applyParams() const
            Util::Round(PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(i-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0)));
        Scoring::Params::KING_ATTACK_SCALE[i] = x;
    }
-   memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::PASSED_PAWN[1],'\0',sizeof(int)*8);
+   memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::PASSED_PAWN[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 8; i++) {
       Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN_MID2+i-2);
       Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN_END2+i-2);
    }
    for (int i = 0; i < 4; i++) {
-      Scoring::Params::PASSED_PAWN_FILE_ADJUST[i] = PARAM(PASSED_PAWN_FILE_ADJUST1+i);
+      Scoring::Params::PASSED_PAWN_FILE_ADJUST[i] =
+      Scoring::Params::PASSED_PAWN_FILE_ADJUST[7-i] = PARAM(PASSED_PAWN_FILE_ADJUST1+i);
    }
-   memset(Scoring::Params::POTENTIAL_PASSER[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::POTENTIAL_PASSER[1],'\0',sizeof(int)*8);
+   memset(Scoring::Params::POTENTIAL_PASSER[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::POTENTIAL_PASSER[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 7; i++) {
       Scoring::Params::POTENTIAL_PASSER[Scoring::Midgame][i] = PARAM(POTENTIAL_PASSER_MID2+i-2);
       Scoring::Params::POTENTIAL_PASSER[Scoring::Endgame][i] = PARAM(POTENTIAL_PASSER_END2+i-2);
    }
-   memset(Scoring::Params::CONNECTED_PASSER[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::CONNECTED_PASSER[1],'\0',sizeof(int)*8);
+   memset(Scoring::Params::CONNECTED_PASSER[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::CONNECTED_PASSER[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 8; i++) {
       Scoring::Params::CONNECTED_PASSER[Scoring::Midgame][i] = PARAM(CONNECTED_PASSER_MID2+i-2);
       Scoring::Params::CONNECTED_PASSER[Scoring::Endgame][i] = PARAM(CONNECTED_PASSER_END2+i-2);
    }
-   memset(Scoring::Params::ADJACENT_PASSER[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::ADJACENT_PASSER[1],'\0',sizeof(int)*8);
+   memset(Scoring::Params::ADJACENT_PASSER[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::ADJACENT_PASSER[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 8; i++) {
       Scoring::Params::ADJACENT_PASSER[Scoring::Midgame][i] = PARAM(ADJACENT_PASSER_MID2+i-2);
       Scoring::Params::ADJACENT_PASSER[Scoring::Endgame][i] = PARAM(ADJACENT_PASSER_END2+i-2);
    }
-   memset(Scoring::Params::DOUBLED_PAWNS[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::DOUBLED_PAWNS[1],'\0',sizeof(int)*8);
-   memset(Scoring::Params::TRIPLED_PAWNS[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::TRIPLED_PAWNS[1],'\0',sizeof(int)*8);
-   memset(Scoring::Params::ISOLATED_PAWN[0],'\0',sizeof(int)*8);
-   memset(Scoring::Params::ISOLATED_PAWN[1],'\0',sizeof(int)*8);
+   memset(Scoring::Params::DOUBLED_PAWNS[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::DOUBLED_PAWNS[1],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::TRIPLED_PAWNS[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::TRIPLED_PAWNS[1],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::ISOLATED_PAWN[0],'\0',sizeof(score_t)*8);
+   memset(Scoring::Params::ISOLATED_PAWN[1],'\0',sizeof(score_t)*8);
    for (int i = 0; i < 4; i++) {
       Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame][i] = 
          Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame][7-i] =
@@ -825,14 +826,14 @@ void Tune::applyParams() const
       apply_to_pst(i,PARAM(KING_PST_MIDGAME+i),Scoring::Params::KING_PST[0]);
       apply_to_pst(i,PARAM(KING_PST_ENDGAME+i),Scoring::Params::KING_PST[1]);
    }
-   memset(Scoring::Params::KNIGHT_OUTPOST,'\0',3*64*sizeof(int));
+   memset(Scoring::Params::KNIGHT_OUTPOST,'\0',3*64*sizeof(score_t));
    int index = 0;
    for (int p = 0; p < 3; p++) {
       for (int i = 0; i < 16; i++,index++) {
          apply_to_outpost(i,PARAM(KNIGHT_OUTPOST+index),Scoring::Params::KNIGHT_OUTPOST[p]);
       }
    }
-   memset(Scoring::Params::BISHOP_OUTPOST,'\0',3*64*sizeof(int));
+   memset(Scoring::Params::BISHOP_OUTPOST,'\0',3*64*sizeof(score_t));
    index = 0;
    for (int p = 0; p < 3; p++) {
       for (int i = 0; i < 16; i++,index++) {

@@ -1001,17 +1001,27 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::SPACE] += inc*pds[i].space_weight;
       if (pds[i].flags & Scoring::PawnDetail::PASSED) {
          const Square sq = pds[i].sq;
-         grads[Tune::PASSED_PAWN_MID2+Rank(sq,side)-2] +=
-            tune_params.scale(inc,Tune::PASSED_PAWN_MID2+Rank(pds[i].sq,side)-2,mLevel);
-         grads[Tune::PASSED_PAWN_END2+Rank(sq,side)-2] +=
-            tune_params.scale(inc,Tune::PASSED_PAWN_END2+Rank(pds[i].sq,side)-2,mLevel);
-         int f = File(sq)-1;
-         int index = f < 4 ? f : 7-f;
-         grads[Tune::PASSED_PAWN_FILE_ADJUST1+index] +=
-            tune_params.scale(inc,Tune::PASSED_PAWN_FILE_ADJUST1+index,mLevel);
+         const int rank = Rank(sq, side);
+         const int file = File(sq);
+         const int f = file-1;
+         const int index = f < 4 ? f : 7-f;
+         const score_t factor = tune_params[Tune::PASSED_PAWN_FILE_ADJUST1+index].current/64.0;
 
-         Square blocker;
-         blocker = nextBlocker(board,side,sq);
+         grads[Tune::PASSED_PAWN_MID2+rank-2] +=
+            tune_params.scale(inc*factor,Tune::PASSED_PAWN_MID2+rank-2,mLevel);
+         grads[Tune::PASSED_PAWN_END2+rank-2] +=
+            tune_params.scale(inc*factor,Tune::PASSED_PAWN_END2+rank-2,mLevel);
+
+         score_t blended =
+             tune_params.scale(tune_params[Tune::PASSED_PAWN_MID2+rank-2].current,
+                               Tune::PASSED_PAWN_MID2+rank-2,mLevel) +
+             tune_params.scale(tune_params[Tune::PASSED_PAWN_END2+rank-2].current,
+                               Tune::PASSED_PAWN_END2+rank-2,mLevel);
+         score_t inc2 = blended*inc/64.0;
+         grads[Tune::PASSED_PAWN_FILE_ADJUST1+index] +=
+            tune_params.scale(inc2,Tune::PASSED_PAWN_FILE_ADJUST1+index,mLevel);
+
+         Square blocker = nextBlocker(board,side,sq);
          if (blocker != InvalidSquare) {
             const int index = pp_block_index(sq,blocker,side);
             if (board.occupied[side].isSet(blocker)) {
@@ -1031,8 +1041,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          int mid_tmp = scores.mid;
          int end_tmp = scores.end;
 #endif
-         const int file = File(sq);
-         const int rank = Rank(sq,side);
          if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
             atcks &= board.rook_bits[side];
             const Bitboard &mask = (side == White) ? Attacks::file_mask_down[sq] :
@@ -1774,7 +1782,7 @@ int CDECL main(int argc, char **argv)
     options.learning.position_learning = 0;
     options.book.book_enabled = options.log_enabled = 0;
     options.learning.position_learning = false;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
     options.search.use_tablebases = false;
 #endif
     pos_file_name = argv[arg];
