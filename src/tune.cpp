@@ -176,8 +176,11 @@ Tune::Tune()
         Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER6,"supported_passer6",600,0,1000,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SUPPORTED_PASSER7,"supported_passer7",1000,0,1500,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_CONTROL_MID,"queening_square_control_mid",200,0,750,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_CONTROL_END,"queening_square_control_end",400,0,750,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_MID,"queening_square_opp_control_mid",-200,-500,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_END,"queening_square_opp_control_end",-400,-500,0,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::WRONG_COLOR_BISHOP,"wrong_color_bishop",-400,-1000,0,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",150,128,200,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",140,128,200,Tune::TuneParam::Endgame,1),
@@ -706,8 +709,11 @@ void Tune::applyParams() const
    Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
    Scoring::Params::KING_OWN_PAWN_DISTANCE = tune_params[KING_OWN_PAWN_DISTANCE].current;
    Scoring::Params::KING_OPP_PAWN_DISTANCE = tune_params[KING_OPP_PAWN_DISTANCE].current;
-   Scoring::Params::SUPPORTED_PASSER6 = tune_params[SUPPORTED_PASSER6].current;
-   Scoring::Params::SUPPORTED_PASSER7 = tune_params[SUPPORTED_PASSER7].current;
+   Scoring::Params::QUEENING_SQUARE_CONTROL_MID = tune_params[QUEENING_SQUARE_CONTROL_MID].current;
+   Scoring::Params::QUEENING_SQUARE_CONTROL_END = tune_params[QUEENING_SQUARE_CONTROL_END].current;
+   Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_MID = tune_params[QUEENING_SQUARE_OPP_CONTROL_MID].current;
+   Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_END = tune_params[QUEENING_SQUARE_OPP_CONTROL_END].current;
+   Scoring::Params::WRONG_COLOR_BISHOP = tune_params[WRONG_COLOR_BISHOP].current;
    Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
    for (int i = 0; i < 3; i++) {
       Scoring::Params::KING_ATTACK_COUNT_BOOST[i] = PARAM(KING_ATTACK_COUNT_BOOST+i);

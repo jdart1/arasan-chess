@@ -451,7 +451,7 @@ static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
 
-static Square nextBlocker(const Board &board, ColorType side, Square sq) 
+static Square nextBlocker(const Board &board, ColorType side, Square sq)
 {
    const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
       Attacks::file_mask_down[sq];
@@ -948,22 +948,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[Tune::KING_OWN_PAWN_DISTANCE] +=
            tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OWN_PAWN_DISTANCE,mLevel);
          k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OWN_PAWN_DISTANCE].current/4;
-         int file = File(sq);
-         int rank = Rank (sq,side);
-         if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
-             (File(kp) == file - 1 || File(kp) == file + 1) &&
-             Rank(kp, side) >= rank) {
-            if (rank == 6) {
-               k_pos += tune_params[Tune::SUPPORTED_PASSER6].current/4;
-               grads[Tune::SUPPORTED_PASSER6] +=
-                  tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER6,mLevel);
-            }
-            else {
-               k_pos += tune_params[Tune::SUPPORTED_PASSER7].current/4;
-               grads[Tune::SUPPORTED_PASSER7] +=
-                  tune_params.scale(inc_adjust,Tune::SUPPORTED_PASSER7,mLevel);
-            }
-         }
       }
       it = board.pawn_bits[oside];
       while (it.iterate(sq)) {
@@ -1036,42 +1020,51 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   tune_params.scale(inc,Tune::PP_OPP_PIECE_BLOCK_END+index,mLevel);
             }
          }
-         Bitboard atcks(board.fileAttacks(sq));
 #ifdef PAWN_DEBUG
          int mid_tmp = scores.mid;
          int end_tmp = scores.end;
 #endif
-         if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
-            atcks &= board.rook_bits[side];
-            const Bitboard &mask = (side == White) ? Attacks::file_mask_down[sq] :
-                Attacks::file_mask_up[sq];
-            if (atcks & mask) {
+         if (board.rook_bits[side] & Attacks::file_mask[file-1]) {
+             Bitboard atcks = (side == White) ? board.fileAttacksDown(sq) :
+                 board.fileAttacksUp(sq);
+             if (board.rook_bits[side] & atcks) {
                grads[Tune::ROOK_BEHIND_PP_MID] +=
                   tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
                grads[Tune::ROOK_BEHIND_PP_END] +=
                   tune_params.scale(inc,Tune::ROOK_BEHIND_PP_END,mLevel);
             }
+         }
+         Square queenSq = MakeSquare(file,8,side);
+         if (rank >= 6) {
+             // evaluate control of Queening square
+             Bitboard ahead = (side == White) ? Attacks::file_mask_up[file-1] :
+                 Attacks::file_mask_down[file-1];
+             Bitboard atcks(board.calcAttacks(queenSq,side));
+             // don't count pawn attacks because connected passer
+             // score gives bonus for that
+             if (atcks & ~board.pawn_bits[side] & ~ahead) {
+                 grads[Tune::QUEENING_SQUARE_CONTROL_MID] +=
+                     tune_params.scale(inc,Tune::QUEENING_SQUARE_CONTROL_MID,mLevel);
+                 grads[Tune::QUEENING_SQUARE_CONTROL_END] +=
+                     tune_params.scale(inc,Tune::QUEENING_SQUARE_CONTROL_END,mLevel);
+             }
+             Bitboard oppAtcks(board.calcAttacks(queenSq,OppositeColor(side)));
+             if (oppAtcks) {
+                 grads[Tune::QUEENING_SQUARE_OPP_CONTROL_MID] +=
+                     tune_params.scale(inc,Tune::QUEENING_SQUARE_OPP_CONTROL_MID,mLevel);
+                 grads[Tune::QUEENING_SQUARE_OPP_CONTROL_END] +=
+                     tune_params.scale(inc,Tune::QUEENING_SQUARE_OPP_CONTROL_END,mLevel);
+             }
+         }
 
-            // Rook adjacent to pawn on 7th is good too
-            if (rank == 7 && file < 8 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file])) {
-               Bitboard atcks(board.fileAttacks(sq + 1) & board.rook_bits[side]);
-               if (!atcks.isClear() || board.rook_bits[side].isSet(sq + 1)) {
-                  grads[Tune::ROOK_BEHIND_PP_MID] +=
-                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
-                  grads[Tune::ROOK_BEHIND_PP_END] +=
-                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_END,mLevel);
-               }
-            }
-
-            if (rank == 7 && file > 1 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 2])) {
-               Bitboard atcks(board.fileAttacks(sq - 1) & board.rook_bits[side]);
-               if (!atcks.isClear() || board.rook_bits[side].isSet(sq - 1)) {
-                  grads[Tune::ROOK_BEHIND_PP_MID] +=
-                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_MID,mLevel);
-                  grads[Tune::ROOK_BEHIND_PP_END] +=
-                     tune_params.scale(inc,Tune::ROOK_BEHIND_PP_END,mLevel);
-               }
-            }
+         if (board.getMaterial(side).materialLevel()<=9 &&
+             board.bishop_bits[side]) {
+             Bitboard mask = SquareColor(queenSq) == White ? Board::white_squares : Board::black_squares;
+             if (!(mask & board.bishop_bits[side])) {
+                 // we have a Bishop but it can't cover the queening square
+                 grads[Tune::WRONG_COLOR_BISHOP] +=
+                     tune_params.scale(inc,Tune::WRONG_COLOR_BISHOP,mLevel);
+             }
          }
       }
       if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {

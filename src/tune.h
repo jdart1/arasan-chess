@@ -144,8 +144,11 @@ class Tune {
     PAWN_SIDE_BONUS,
     KING_OWN_PAWN_DISTANCE,
     KING_OPP_PAWN_DISTANCE,
-    SUPPORTED_PASSER6,
-    SUPPORTED_PASSER7,
+    QUEENING_SQUARE_CONTROL_MID,
+    QUEENING_SQUARE_CONTROL_END,
+    QUEENING_SQUARE_OPP_CONTROL_MID,
+    QUEENING_SQUARE_OPP_CONTROL_END,
+    WRONG_COLOR_BISHOP,
     SIDE_PROTECTED_PAWN,
     KING_POSITION_LOW_MATERIAL0,
     KING_POSITION_LOW_MATERIAL1,
@@ -285,7 +288,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 185;
+  static const int NUM_MISC_PARAMS = 188;
 
   double scale(score_t value,int index,int materialLevel) const;
 

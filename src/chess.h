@@ -60,7 +60,9 @@ static FORCEINLINE int Rank(Square square, ColorType side) {
     
 #define IsInvalid(square) (square == InvalidSquare)
     
-#define SquareColor(square) ((ColorType)Colors[square])
+FORCEINLINE ColorType SquareColor(Square square) {
+  return ((ColorType)Colors[square]);
+}
     
 // Parse a square value in algebraic notation (e.g. "g7") and
 // return a corresponding Square type.

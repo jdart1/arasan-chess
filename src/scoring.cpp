@@ -1924,8 +1924,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    while(passers2.iterate(sq)) {
       ASSERT(OnBoard(sq));
 
-      int rank = Rank(sq, side);
-      int file = File(sq);
+      const int file = File(sq);
+      const int rank = Rank(sq,side);
       Square blocker;
       blocker = nextBlocker(board,side,sq);
       if (blocker != InvalidSquare) {
@@ -1961,38 +1961,19 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #endif
          }
       }
-      Bitboard atcks(board.fileAttacks(sq));
 #ifdef PAWN_DEBUG
       score_t mid_tmp = scores.mid;
       score_t end_tmp = scores.end;
 #endif
-      if (TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 1])) {
-         atcks &= board.rook_bits[side];
-         const Bitboard &mask = (side == White) ? Attacks::file_mask_down[sq] :
-                Attacks::file_mask_up[sq];
-         if (atcks & mask) {
+      if (board.rook_bits[side] & Attacks::file_mask[file-1]) {
+          Bitboard atcks = (side == White) ? board.fileAttacksDown(sq) :
+              board.fileAttacksUp(sq);
+          if (board.rook_bits[side] & atcks) {
 #ifdef EVAL_DEBUG
             cout << "rook behind PP: " << SquareImage(sq) << endl;
 #endif
             scores.mid += PARAM(ROOK_BEHIND_PP_MID);
             scores.end += PARAM(ROOK_BEHIND_PP_END);
-         }
-
-         // Rook adjacent to pawn on 7th is good too
-         if (rank == 7 && file < 8 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file])) {
-            Bitboard atcks(board.fileAttacks(sq + 1) & board.rook_bits[side]);
-            if (!atcks.isClear() || board.rook_bits[side].isSet(sq + 1)) {
-               scores.mid += PARAM(ROOK_BEHIND_PP_MID);
-               scores.end += PARAM(ROOK_BEHIND_PP_END);
-            }
-         }
-
-         if (rank == 7 && file > 1 && TEST_MASK(board.rook_bits[side], Attacks::file_mask[file - 2])) {
-            Bitboard atcks(board.fileAttacks(sq - 1) & board.rook_bits[side]);
-            if (!atcks.isClear() || board.rook_bits[side].isSet(sq - 1)) {
-               scores.mid += PARAM(ROOK_BEHIND_PP_MID);
-               scores.end += PARAM(ROOK_BEHIND_PP_END);
-            }
          }
       }
 #ifdef PAWN_DEBUG
@@ -2003,6 +1984,32 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             scores.end - end_tmp << ")" << endl;
       }
 #endif
+      Square queenSq = MakeSquare(file,8,side);
+      if (rank >= 6) {
+          // evaluate control of Queening square
+          Bitboard ahead = (side == White) ? Attacks::file_mask_up[file-1] :
+              Attacks::file_mask_down[file-1];
+          Bitboard atcks(board.calcAttacks(queenSq,side));
+          // don't count pawn attacks because connected passer
+          // score gives bonus for that. Also no bonus for
+          // pieces that block queening path.
+          if (atcks & ~board.pawn_bits[side] & ~ahead) {
+              scores.mid += PARAM(QUEENING_SQUARE_CONTROL_MID);
+              scores.end += PARAM(QUEENING_SQUARE_CONTROL_END);
+          }
+          Bitboard oppAtcks(board.calcAttacks(queenSq,OppositeColor(side)));
+          if (oppAtcks) {
+              scores.mid += PARAM(QUEENING_SQUARE_OPP_CONTROL_MID);
+              scores.end += PARAM(QUEENING_SQUARE_OPP_CONTROL_END);
+          }
+      }
+      if (board.getMaterial(side).materialLevel()<=9 &&
+          board.bishop_bits[side]) {
+          Bitboard mask = SquareColor(queenSq) == White ? Board::white_squares : Board::black_squares;
+          if (!(mask & board.bishop_bits[side])) {
+              scores.end += PARAM(WRONG_COLOR_BISHOP);
+          }
+      }
    }
 
 #ifdef PAWN_DEBUG
@@ -2154,15 +2161,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
    Bitboard it(board.pawn_bits[side]);
    Square sq;
    while(it.iterate(sq)) {
-      int rank = Rank(sq,side);
       k_pos_adj += (4-distance(kp,sq))*PARAM(KING_OWN_PAWN_DISTANCE);
-      int file = File(sq);
-      if (ourPawnData.passers.isSet(sq) && rank >= 6 &&
-          (File(kp) == file - 1 || File(kp) == file + 1) &&
-          Rank(kp, side) >= rank) {
-         k_pos_adj += (rank == 6) ? PARAM(SUPPORTED_PASSER6) :
-            PARAM(SUPPORTED_PASSER7);
-      }
    }
    it = board.pawn_bits[oside];
    while (it.iterate(sq)) {
