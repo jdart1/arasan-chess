@@ -48,8 +48,9 @@ extern "C" {
 
 #include "stdendian.h"
 
-#include <thread>
 #include <atomic>
+#include <chrono>
+#include <thread>
 
 typedef uint8_t byte;
 typedef uint64_t hash_t;
@@ -57,11 +58,7 @@ typedef uint64_t hash_t;
 #include <iostream>
 using namespace std;
 
-#ifdef _WIN32
-typedef DWORD CLOCK_TYPE;
-#else
-typedef unsigned long CLOCK_TYPE;
-#endif
+typedef std::chrono::high_resolution_clock::time_point CLOCK_TYPE;
 
 #ifdef TUNE
 typedef double score_t;
@@ -109,24 +106,17 @@ extern "C" {
 #include <sstream>
 
 inline CLOCK_TYPE getCurrentTime() {
-#if defined(_MSC_VER) || defined(__MINGW32__)
-  return (CLOCK_TYPE)timeGetTime();
-#elif defined(_MAC)
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return tv.tv_sec*1000 + tv.tv_usec/1000;
-#else
-  struct timespec timeval;
-  if (clock_gettime(CLOCK_REALTIME,&timeval)) {
-    perror("clock_gettime");
-  }
-  return (CLOCK_TYPE)(timeval.tv_sec * 1000 + (timeval.tv_nsec / 1000000));
-#endif
+  return std::chrono::high_resolution_clock::now();
 }
 
 // get elapsed time in milliseconds
-inline unsigned getElapsedTime(CLOCK_TYPE start,CLOCK_TYPE end) {
-  return end - start;
+inline uint64_t getElapsedTime(const CLOCK_TYPE &startTime,const CLOCK_TYPE &endTime) {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+}
+
+inline uint64_t getRandomSeed() {
+  return (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>
+    (std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 #ifdef _WIN32

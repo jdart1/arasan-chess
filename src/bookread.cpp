@@ -21,7 +21,7 @@ extern "C" {
 BookReader::BookReader()
 {                 
    // seed the random number generator
-   engine.seed(getCurrentTime());
+   engine.seed(getRandomSeed());
 }
 
 BookReader::~BookReader()

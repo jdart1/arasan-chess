@@ -10,8 +10,10 @@
 #include "movegen.h"
 #include "threadp.h"
 #include "options.h"
+extern "C" {
 #include <memory.h>
 #include <time.h>
+};
 #include <set>
 using namespace std;
 
@@ -273,6 +275,7 @@ class SearchController {
     int ratingDiff;
     score_t ratingFactor;
     CLOCK_TYPE startTime;
+    CLOCK_TYPE last_time;
     RootSearch *rootSearch;
     ThreadPool *pool;
     bool active;

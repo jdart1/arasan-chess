@@ -128,8 +128,6 @@ static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 
 static int Time_Check_Interval;
 
-static unsigned last_time = 0;
-
 static const int Illegal = Scoring::INVALID_SCORE;
 static const int PRUNE = -Constants::MATE;
 
@@ -313,8 +311,7 @@ Move SearchController::findBestMove(
 
     NodeStack rootStack;
     rootSearch->init(board,rootStack);
-    startTime = getCurrentTime();
-
+    startTime = last_time = getCurrentTime();
     return rootSearch->ply0_search(exclude);
 }
 
@@ -522,9 +519,10 @@ int Search::checkTime(const Board &board,int ply) {
         // Lock the stats structure since other threads may try to
         // modify it
         Lock(controller->split_calc_lock);
-        if (current_time-stats->last_split_time > 50 &&
+        unsigned interval;
+        if ((interval=getElapsedTime(stats->last_split_time,current_time)) > 50 &&
             stats->splits-stats->last_split_sample > 0) {
-            int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/int(current_time-stats->last_split_time);
+            int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/interval;
             int target = srcOpts.ncpus*120;
             if (splitsPerSec > 3*target/2) {
                controller->setThreadSplitDepth(
@@ -577,12 +575,12 @@ int Search::checkTime(const Board &board,int ply) {
           return 1;
        }
     }
-    if (controller->uci && (current_time-last_time >= 2000)) {
+    if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 2000) {
         cout << "info";
         if (stats->elapsed_time>300) cout << " nps " <<
                 (long)((1000L*stats->num_nodes)/stats->elapsed_time);
         cout << " nodes " << stats->num_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
-        last_time = current_time;
+        controller->last_time = current_time;
     }
     return 0;
 }
@@ -721,7 +719,6 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
        controller->stats->multipv_limit = Util::Min(mg.moveCount(),srcOpts.multipv);
    }
    controller->time_check_counter = Time_Check_Interval;
-   last_time = 0;
 
    score_t value = Scoring::INVALID_SCORE;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)

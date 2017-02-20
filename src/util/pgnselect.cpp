@@ -25,6 +25,7 @@ extern "C"
 #include <fstream>
 #include <iostream>
 #include <ctype.h>
+#include <random>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -51,6 +52,7 @@ static struct SelectOptions
       }
 } selOptions;
          
+static std::mt19937_64 random_engine;
 
 static unordered_map<hash_t,double> *positions;
 
@@ -94,7 +96,8 @@ int CDECL main(int argc, char **argv)
       exit(-1);
    }
    atexit(cleanupGlobals);
-   srand(getCurrentTime() % 100000);
+
+   random_engine.seed(getRandomSeed());
    
    positions = new unordered_map<hash_t,double>();
 
@@ -124,7 +127,6 @@ int CDECL main(int argc, char **argv)
       for (;arg < argc && *(argv[arg]) == '-';++arg) {
          if (strcmp(argv[arg],"-r")==0) {
             selOptions.randomMoves = true;
-            arg++;
          }
          else if (strcmp(argv[arg],"-d")==0) {
             processInt(selOptions.minSampleDistance,"d");
@@ -191,7 +193,8 @@ int CDECL main(int argc, char **argv)
             bool done = false;
             bool exit = false;
             int ply = 0;
-            int next = selOptions.minPly + (rand() % selOptions.sampleInterval);
+            std::uniform_int_distribution<unsigned> dist(0,selOptions.sampleInterval-1);
+            int next = selOptions.minPly + dist(random_engine);
             while (ok && !exit) {
                ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
                string num;
@@ -233,9 +236,8 @@ int CDECL main(int argc, char **argv)
                      ++ply;
                      if (ply >= next && ply <= selOptions.maxPly) {
                         bool ok_to_insert = false;
-                        bool madeMove = false;
                         BoardState state(board.state);
-                        Move move = NullMove;
+                        Move randomMove = NullMove;
                         if (selOptions.randomMoves) {
                            RootMoveGenerator mg(board);
                            Move allmoves[Constants::MaxMoves];
@@ -245,9 +247,9 @@ int CDECL main(int argc, char **argv)
                               allmoves[count] = move;
                            }
                            if (count > 1) {
-                              move = allmoves[rand() % count];
-                              board.doMove(move);
-                              madeMove = true;
+                              std::uniform_int_distribution<unsigned> move_dist(0,count-1);
+                              randomMove = allmoves[move_dist(random_engine)];
+                              board.doMove(randomMove);
                            }
                         }
                               
@@ -262,8 +264,8 @@ int CDECL main(int argc, char **argv)
                            ChessIO::writeEPDRecord(cout,board,rec);
                            next += selOptions.minSampleDistance + (rand() % (selOptions.sampleInterval - selOptions.minSampleDistance));
                         }
-                        if (madeMove) {
-                           board.undoMove(move,state);
+                        if (!IsNull(randomMove)) {
+                           board.undoMove(randomMove,state);
                         }
                      }
                   }

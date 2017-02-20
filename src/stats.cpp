@@ -47,10 +47,10 @@ void Statistics::clear()
    move_order_count = 0;
    for (i = 0; i < 4; i++) move_order[i]=0;
 #endif
+   last_split_time = getCurrentTime();
 #ifdef SMP_STATS
    splits = samples = threads = 0L;
    last_split_sample = 0ULL;
-   last_split_time = getCurrentTime();
 #endif
 }
 

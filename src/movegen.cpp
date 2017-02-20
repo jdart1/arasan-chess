@@ -104,7 +104,7 @@ int trace)
      batch_count = j;
    }
    phase = LAST_PHASE;
-   random_engine.seed(getCurrentTime());
+   random_engine.seed(getRandomSeed());
 }
 
 

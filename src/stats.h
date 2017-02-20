@@ -54,7 +54,7 @@ struct Statistics
    uint64_t num_nodes;
    uint64_t splits;
    uint64_t last_split_sample;
-   uint64_t last_split_time;
+   CLOCK_TYPE last_split_time;
 #ifdef SMP_STATS
    uint64_t samples, threads;
 #endif
