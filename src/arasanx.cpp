@@ -251,6 +251,7 @@ static void dispatchCmd(const string &cmd) {
         // is not processed until search completion. So set the stopped flag
         // and the search will detect that it should terminate. (This fixes
         // issues with the "Process testsuite" command in Fritz).
+        ASSERT(searcher);
         searcher->stop();
 #ifdef UCI_LOG
         ucilog << "got stop" << endl << (flush);
@@ -2097,7 +2098,10 @@ static void do_test(string test_file)
                   string moveStr;
                   // skips spaces
                   s >> moveStr;
-                  if (!moveStr.length()) break;
+                  if (s.bad() || s.fail() || !moveStr.length()) {
+                      cerr << "error reading solution move " << val << endl;
+                      break;
+                  }
                   m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
                   if (IsNull(m)) {
                      ++illegal;
