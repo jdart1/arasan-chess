@@ -735,7 +735,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + std::min<score_t>(k_cover, q_cover) / 3;
 #ifdef TUNE
-         for (int i = 0; i < 4; i++) {
+         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 4; j++) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                (k_cover < q_cover ?
@@ -756,7 +756,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
 #ifdef TUNE
-         for (int i = 0; i < 4; i++) {
+         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 4; j++) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                float(kside_cover[i][j])/3;
@@ -776,7 +776,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
 #endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
 #ifdef TUNE
-         for (int i = 0; i < 4; i++) {
+         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 4; j++) {
                coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
                float(qside_cover[i][j])/3;
@@ -789,7 +789,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    default:
       coverEntry.cover = cover;
 #ifdef TUNE
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 6; i++) {
          for (int j = 0; j < 4; j++) {
             coverEntry.counts[i][j] = float(king_cover[i][j]);
          }

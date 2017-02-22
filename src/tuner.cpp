@@ -1253,7 +1253,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
-      for (int i=0; i<5; i++) {
+      for (int i=0; i<6; i++) {
          for (int j = 0; j < 4; j++) {
             // Note: we do not adjust the gradient to account for any
             // increase to the attackWeight (from the KING_COVER_BOOST
