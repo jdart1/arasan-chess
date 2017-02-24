@@ -98,6 +98,8 @@ class Tune {
     QUEEN_ATTACK_FACTOR,
     QUEEN_ATTACK_BOOST,
     QUEEN_ATTACK_BOOST2,
+    KING_ATTACK_COVER_BOOST_BASE,
+    KING_ATTACK_COVER_BOOST_SLOPE,
     PAWN_THREAT_ON_PIECE_MID,
     PAWN_THREAT_ON_PIECE_END,
     PIECE_THREAT_MM_MID,
@@ -229,8 +231,7 @@ class Tune {
     ISOLATED_PAWN_END4,
 
     KING_ATTACK_COUNT_BOOST = ISOLATED_PAWN_END4+1,
-    KING_ATTACK_COVER_BOOST = KING_ATTACK_COUNT_BOOST+3,
-    KING_OPP_PASSER_DISTANCE = KING_ATTACK_COVER_BOOST+5,
+    KING_OPP_PASSER_DISTANCE = KING_ATTACK_COUNT_BOOST+3,
     PP_OWN_PIECE_BLOCK_MID = KING_OPP_PASSER_DISTANCE+6,
     PP_OWN_PIECE_BLOCK_END = PP_OWN_PIECE_BLOCK_MID+21,
     PP_OPP_PIECE_BLOCK_MID = PP_OWN_PIECE_BLOCK_END+21,
@@ -288,9 +289,11 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 188;
+  static const int NUM_MISC_PARAMS = 190;
 
   double scale(score_t value,int index,int materialLevel) const;
+
+  score_t kingAttackSigmoid(score_t weight) const;
 
  private:
 

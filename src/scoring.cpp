@@ -1163,11 +1163,10 @@ void Scoring::pieceScore(const Board &board,
       if (attackCount >= 2 && majorAttackCount) {
          attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[Util::Min(2,attackCount-2)];
       }
-      if (oppCover <= -PAWN_VALUE/5) {
-         int cover_boost_index = Util::Min(4,int(-oppCover/(PAWN_VALUE/5))-1);
-         attackWeight += PARAM(KING_ATTACK_COVER_BOOST)[cover_boost_index];
-      }
-      const int index = int(attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
+
+      attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/128;
+
+      const score_t index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 #ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << oppCover << endl;
@@ -1177,7 +1176,11 @@ void Scoring::pieceScore(const Board &board,
       cout << " index=" << index << endl;
       cout << " pin_count=" << pin_count << endl;
 #endif
+#ifdef TUNE
+      score_t kattack = kingAttackSigmoid(index);
+#else
       score_t kattack = PARAM(KING_ATTACK_SCALE)[Util::Min(Params::KING_ATTACK_SCALE_SIZE-1,index)];
+#endif
 #ifdef ATTACK_DEBUG
       cout << "scaled king attack score=  " << kattack << endl;
 #endif
@@ -2558,6 +2561,12 @@ void Scoring::clearHashTables() {
 #ifdef TUNE
 #include "tune.h"
 
+score_t Scoring::kingAttackSigmoid(score_t weight) const 
+{
+    return PARAM(KING_ATTACK_SCALE_BIAS) +
+        PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(weight-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0));
+}
+
 static void print_array(ostream & o,score_t arr[], int size, int add_semi = 1)
 {
    o << "{";
@@ -2618,8 +2627,6 @@ void Scoring::Params::write(ostream &o, const string &comment)
    }
    o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = ";
    print_array(o,Params::KING_ATTACK_COUNT_BOOST,3);
-   o << "const int Scoring::Params::KING_ATTACK_COVER_BOOST[5] = ";
-   print_array(o,Params::KING_ATTACK_COVER_BOOST,5);
    o << "const int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
    o << "const int Scoring::Params::KING_POSITION_LOW_MATERIAL[3] =";

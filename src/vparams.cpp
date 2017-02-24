@@ -1,4 +1,4 @@
-// Copyright 2015 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
 //
 // definitions of scoring parameters, non-const for tuning
 
@@ -8,6 +8,12 @@ score_t Scoring::Params::RBN_ADJUST[4] = {500, 675, 825, 1000};
 score_t Scoring::Params::QR_ADJUST[4] = {-500, 0, 500, 500};
 score_t Scoring::Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
 score_t Scoring::Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
+#ifdef TUNE
+score_t Scoring::Params::KING_ATTACK_SCALE_MAX;
+score_t Scoring::Params::KING_ATTACK_SCALE_INFLECT;
+score_t Scoring::Params::KING_ATTACK_SCALE_FACTOR;
+score_t Scoring::Params::KING_ATTACK_SCALE_BIAS;
+#endif
 score_t Scoring::Params::KING_COVER[6][4];
 score_t Scoring::Params::KING_COVER_BASE = -100;
 score_t Scoring::Params::KING_DISTANCE_BASIS = 320;
@@ -33,6 +39,8 @@ score_t Scoring::Params::ROOK_ATTACK_BOOST = 8;
 score_t Scoring::Params::QUEEN_ATTACK_FACTOR = 52;
 score_t Scoring::Params::QUEEN_ATTACK_BOOST = 28;
 score_t Scoring::Params::QUEEN_ATTACK_BOOST2 = 12;
+score_t Scoring::Params::KING_ATTACK_COVER_BOOST_BASE;
+score_t Scoring::Params::KING_ATTACK_COVER_BOOST_SLOPE;
 score_t Scoring::Params::PAWN_THREAT_ON_PIECE_MID = -50;
 score_t Scoring::Params::PAWN_THREAT_ON_PIECE_END = -50;
 score_t Scoring::Params::PIECE_THREAT_MM_MID = -50;
@@ -89,7 +97,6 @@ score_t Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_END = -400;
 score_t Scoring::Params::WRONG_COLOR_BISHOP = -400;
 score_t Scoring::Params::SIDE_PROTECTED_PAWN = -92;
 score_t Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = {6,12,15};
-score_t Scoring::Params::KING_ATTACK_COVER_BOOST[5] = {0, 5, 10, 15, 20 };
 score_t Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = {10,20,30,40,50,60};
 score_t Scoring::Params::KNIGHT_PST[2][64];
 score_t Scoring::Params::BISHOP_PST[2][64];

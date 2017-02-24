@@ -169,6 +169,10 @@ class Scoring
     template <ColorType side>
     void calcCover(const Board &board, KingPawnHashEntry &cover);
 
+#ifdef TUNE
+    score_t kingAttackSigmoid(score_t weight) const;
+#endif
+
  private:
 
     // The scores for opening, middlegame and endgame

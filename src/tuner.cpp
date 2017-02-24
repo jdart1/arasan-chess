@@ -39,7 +39,7 @@ static bool regularize = false;
 
 enum class OptimMethod { AdaGrad, ADAM, Adaptive };
 
-static OptimMethod method = OptimMethod::Adaptive;
+static OptimMethod method = OptimMethod::ADAM;
 
 static int iterations = 2;
 
@@ -1217,18 +1217,22 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (attackCount >= 2 && majorAttackCount) {
          attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(2,attackCount-2)];
       }
-      int cover_boost_index = -1;
-      if (oppCover <= -PAWN_VALUE/5) {
-         cover_boost_index = Util::Min(4,int(-oppCover/(PAWN_VALUE/5))-1);
-         attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index].current;
-      }
+      attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/128;
       // king safety tuning
-      const int scale_index =
-         Util::Min(Scoring::Params::KING_ATTACK_SCALE_SIZE-1,int(attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION));
+      const score_t scale_index = std::max<score_t>(0,attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
       // compute the gradient of the scale
       double k = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current/1000.0;
       double x = exp(k*(scale_index-tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current));
       double scale_grad = tune_params[Tune::KING_ATTACK_SCALE_MAX].current*k*x/pow(1.0 + x,2.0);
+      double inflect_grad = -scale_grad;
+      grads[Tune::KING_ATTACK_SCALE_INFLECT] +=
+          tune_params.scale(inc*inflect_grad,Tune::KING_ATTACK_SCALE_INFLECT,ourMatLevel);
+      double factor_grad = tune_params[Tune::KING_ATTACK_SCALE_MAX].current*(scale_index-tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current)*x/(1000.0*pow(1.0 + x,2.0));
+      grads[Tune::KING_ATTACK_SCALE_FACTOR] +=
+          tune_params.scale(inc*factor_grad,Tune::KING_ATTACK_SCALE_FACTOR,ourMatLevel);
+      double max_grad = 1/(1+(1/x));
+      grads[Tune::KING_ATTACK_SCALE_MAX] +=
+          tune_params.scale(inc*max_grad,Tune::KING_ATTACK_SCALE_MAX,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR1] +=
          tune_params.scale(inc*scale_grad*proximity/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR2] +=
@@ -1247,25 +1251,34 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          grads[index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
       }
-      if (cover_boost_index >= 0) {
-         grads[Tune::KING_ATTACK_COVER_BOOST+cover_boost_index] +=
-            tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST+cover_boost_index,ourMatLevel);
-      }
-   }
-   if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
-      for (int i=0; i<6; i++) {
-         for (int j = 0; j < 4; j++) {
-            // Note: we do not adjust the gradient to account for any
-            // increase to the attackWeight (from the KING_COVER_BOOST
-            // params) from changes in the king cover score. In most
-            // cases small changes in the cover do not change the boost.
-            if (ourKpe.counts[i][j]) {
-               grads[Tune::KING_COVER1+i] +=
-                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0,Tune::KING_COVER1+i,mLevel);
-               grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
-                  tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
-            }
-         }
+      double boost_slope_grad = -oppCover*scale_grad/(128*Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
+      grads[Tune::KING_ATTACK_COVER_BOOST_SLOPE] +=
+          tune_params.scale(inc*boost_slope_grad,Tune::KING_ATTACK_COVER_BOOST_SLOPE,ourMatLevel);
+      grads[Tune::KING_ATTACK_COVER_BOOST_BASE] +=
+          tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST_BASE,ourMatLevel);
+      if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
+          for (int i=0; i<6; i++) {
+              for (int j = 0; j < 4; j++) {
+                  if (ourKpe.counts[i][j]) {
+                      grads[Tune::KING_COVER1+i] +=
+                          tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0,Tune::KING_COVER1+i,mLevel);
+                      grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
+                          tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
+                  }
+                  // Note: we must adjust the gradient to account for any
+                  // increase to the attackWeight (from the KING_COVER_BOOST
+                  // params) from changes in the king cover score.
+                  if (oppKpe.counts[i][j]) {
+                      double cover = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0;
+                      double file = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0;
+                      double mult = -inc*scale_grad*cover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
+                      grads[Tune::KING_COVER1+i] +=
+                          tune_params.scale(mult*cover,Tune::KING_COVER1+i,ourMatLevel);
+                      grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
+                          tune_params.scale(mult*file,Tune::KING_COVER_FILE_FACTOR0+j,ourMatLevel);
+                  }
+              }
+          }
       }
    }
 }
@@ -1296,6 +1309,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          if (fabs(predictedEval - newEval)>5.0) {
             cerr << board << endl;
             cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << newEval << endl;
+
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
             tune_params.updateParamValue(i,val);
