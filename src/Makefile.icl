@@ -1,9 +1,10 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2017 by Jon Dart. All Rights Reserved.
 #
+VERSION = 20.0
+#
 #TARGET = win32
 TARGET = win64
-VERSION = 20.0
 
 # directory defines - objects
 PROFILE = ..\$(TARGET)\profile
@@ -85,6 +86,12 @@ SMP=/MTd /DSMP /DSMP_STATS
 SMP=/MT /DSMP /DSMP_STATS
 !Endif
 PROF_RUN_SMP=-c 2
+
+!Ifdef ARASAN_VERSION
+CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
+!Else
+CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(VERSION)
+!Endif
 
 TUNE_FLAGS=-DTUNE
 

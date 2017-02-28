@@ -31,7 +31,7 @@ if (@ARGV) {
         }
         if ($key eq "Result") {
           if ($value ne "\*") {
-            if ($white =~ m/Arasan 20.0/) {
+            if ($white =~ m/Arasan v/) {
                 $opponent = $black;
 	    }
             else {
@@ -48,7 +48,7 @@ if (@ARGV) {
         } 
         if ($key eq "Result") {
           if ($value ne "\*") {
-            if ($white =~ m/Arasan 20.0/) {
+            if ($white =~ m/Arasan v/) {
 		if ($value eq "1-0") {
 		    $win++;
 		}

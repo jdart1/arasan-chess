@@ -1,9 +1,11 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2017 by Jon Dart. All Rights Reserved.
 #
+VERSION = 20.0
+#
 #TARGET = win32
 TARGET = win64
-VERSION = 20.0
+
 # Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
 
@@ -70,7 +72,11 @@ NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE_BUILD)/topo.obj
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
-
+!Ifdef ARASAN_VERSION
+CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
+!Else
+CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(VERSION)
+!Endif
 TESTS = ..\tests
 
 # SMP flags. Note: we don't support a non-SMP build any more.

@@ -79,6 +79,14 @@ OSTYPE       := $(UNAME)
 endif
 ARCH         := $(shell uname -m)
 
+IN_GIT := $(shell git rev-parse --is-inside-work-tree)
+ifeq ("$(IN_GIT)","true")
+ARASAN_VERSION ?= $(shell git describe --tags --always)
+else
+ARASAN_VERSION ?= $(VERSION)
+endif
+CFLAGS := $(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
+
 ifeq ("$(ARCH)","x86_64")
 SSE=-msse3
 endif
