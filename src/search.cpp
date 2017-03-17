@@ -700,14 +700,16 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
    fail_high_root_extend = fail_low_root_extend = false;
    last_score = -Constants::MATE;
    node->best = NullMove;
-   if (scoring.isLegalDraw(board) &&
+   if (scoring.isLegalDraw(board) && !controller->uci &&
        !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
       // If it's a legal draw situation before we even move, then
       // just return a draw score and don't search. (But don't do
-      // this in analysis mode: return a move if possible).
-#ifdef UCI_LOG
-       ucilog << "skipping search, draw" << endl << (flush);
-#endif
+      // this in analysis mode: return a move if possible. Also do
+      // a seearch in all cases for UCI, since the engine cannot
+      // claim draw and some interfaces may expect a move.
+      if (talkLevel == Trace) {
+          cout << "# skipping search, draw" << endl;
+      }
       controller->stats->state = Draw;
       controller->stats->value = drawScore(board);
       return NullMove;
