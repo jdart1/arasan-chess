@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2016-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2016 by Jon Dart. All Rights Reserved.
 #ifndef _HISTORY_H
 #define _HISTORY_H
 
@@ -14,7 +14,9 @@ public:
     void clear();
 
     int scoreForOrdering (Move m, ColorType side) {
-      return (unsigned)history[MakePiece(PieceMoved(m),side)][DestSquare(m)].h;
+      unsigned succ = (unsigned)history[MakePiece(PieceMoved(m),side)][DestSquare(m)].success;
+      unsigned fail = (unsigned)history[MakePiece(PieceMoved(m),side)][DestSquare(m)].failure;
+      return (int)(succ+fail > 0 ? (64*succ)/(succ+fail) : 0);
     }
 
     void updateHistory(const Board &,
@@ -24,11 +26,11 @@ public:
        Move best, int depth, ColorType side);
 
  private:
-    struct HistoryEntry {
-      int32_t h;
+    struct CACHE_ALIGN HistoryEntry {
+      uint32_t success, failure;
     } history[16][64];
 
-    static unsigned depthFactor(int depth);
+    static int depthFactor(int depth);
 };
 
 #endif
