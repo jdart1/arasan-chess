@@ -368,9 +368,6 @@ class Search : public ThreadControl {
 
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8 };
 
-    score_t research(score_t try_score, NodeInfo *node,
-                     int extend, score_t hibound, score_t lobound);
-
     int calcExtensions(const Board &board,
                        NodeInfo *node, NodeInfo *parentNode,
                        CheckStatusType in_check_after_move,

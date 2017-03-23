@@ -1330,16 +1330,35 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
         if (in_pv) cout << " (pv)";
         cout << endl;
 #endif
-        if (try_score > node->best_score) {
-            fail_high_root++;
-            try_score = research(try_score, node, extend, hibound, lobound);
-        }
+        while (try_score > node->best_score &&
+               (extend < 0 || hibound < node->beta) &&
+               !((node+1)->flags & EXACT) &&
+               !terminate) {
+           // We failed to get a cutoff and must re-search
+           // Set flag if we may be getting a new best move:
+           fail_high_root++;
 #ifdef _TRACE
-        cout << "0. ";
-        MoveImage(move,cout);
-        cout << ' ' << try_score;
-        cout << endl;
+           cout << "window = [" << -hibound << "," << node->best_score
+                << "]" << endl;
+           cout << "score = " << try_score << " - no cutoff, researching .." << endl;
 #endif
+           if (extend >= -DEPTH_INCREMENT) {
+              hibound = node->beta;
+           }
+           if (extend < 0) {
+              extend = node->extensions = 0;
+           }
+           if (depth+extend-DEPTH_INCREMENT > 0)
+              try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
+           else
+              try_score=-quiesce(-hibound,-lobound,1,0);
+#ifdef _TRACE
+           cout << "0. ";
+           MoveImage(move,cout);
+           cout << ' ' << try_score;
+           cout << endl;
+#endif
+        }
         board.undoMove(move,save_state);
         if (wide) {
            mg.setScore(move,try_score);
@@ -2198,39 +2217,6 @@ int Search::calcExtensions(const Board &board,
    return extend;
 }
 
-score_t Search::research(score_t try_score, NodeInfo *node,
-                         int extend, score_t hibound, score_t lobound)  
-{
-// We failed to get a cutoff and must re-search
-    while (try_score > node->best_score &&
-           (extend < 0 || hibound < node->beta) &&
-           !((node+1)->flags & EXACT) &&
-           !terminate) {
-#ifdef _TRACE
-        indent(node->ply);
-        cout << "score = " << try_score << " - no cutoff, researching .." << endl;
-#endif
-        if (extend < 0) {
-            if (extend >= -DEPTH_INCREMENT) {
-                // also widen window
-                hibound = node->beta;
-            }
-            extend = node->extensions = 0;
-        }
-        else if (hibound < node->beta) {
-            hibound = node->beta;
-        }
-        if (node->depth+extend-DEPTH_INCREMENT > 0) {
-
-            return -search(-hibound,-lobound,node->ply+1,node->depth+extend-DEPTH_INCREMENT);
-        }
-        else {
-            return -quiesce(-hibound,-lobound,node->ply+1,0);
-        }
-    }
-    return try_score;
-}
-
 // Recursive function, implements alpha/beta search below ply 0 but
 // above the quiescence search.
 //
@@ -2898,8 +2884,37 @@ score_t Search::search()
                 board.undoMove(move,state);
                 continue;
             }
-            if (try_score > node->best_score) {
-                try_score = research(try_score,node,extend,hibound,node->best_score);
+            while (try_score > node->best_score &&
+               (extend < 0 || hibound < node->beta) &&
+                !((node+1)->flags & EXACT) &&
+                !terminate) {
+               // We failed to get a cutoff and must re-search
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply); cout << ply << ". ";
+                  MoveImage(move,cout);
+                  cout << " score = " << try_score << " - no cutoff, researching .." << endl;
+                    indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
+               }
+#endif
+               if (extend >= -DEPTH_INCREMENT) {
+                  hibound = node->beta;
+               }
+               if (extend < 0) {
+                  extend = node->extensions = 0;
+               }
+               if (depth+extend-DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+               else
+                 try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
+#ifdef _TRACE
+               if (master()) {
+                  indent(ply);
+                  cout << ply << ". ";
+                  MoveImage(move,cout);
+                  cout << ' ' << try_score << endl;
+               }
+#endif
             }
             board.undoMove(move,state);
             if (terminate) {
@@ -3223,8 +3238,37 @@ void Search::searchSMP(ThreadInfo *ti)
            board.undoMove(move,state);
            break;
         }
-        if (try_score > node->best_score) {
-            try_score = research(try_score,node,extend,best_score+1,best_score);
+        score_t hibound = node->best_score+1;
+        while (try_score > best_score &&
+               (extend < 0 || hibound < node->beta) &&
+               !((node+1)->flags & EXACT) &&
+               !split->failHigh &&
+               !terminate) {
+            // We got a new best move but with a zero-width search or with
+            // reduction enabled, so we must re-search.
+#ifdef _TRACE
+            if (master() || ply==0) {
+                indent(ply); cout << ply << ". ";
+                MoveImage(move,cout);
+                cout << "score = " << try_score << " - no cutoff, researching";
+                cout << " (smp ";
+                cout << ti->index << ')' << endl;
+            }
+#endif
+            if (extend >= -DEPTH_INCREMENT) {
+               hibound = node->beta;
+            }
+            if (ply == 0) {
+               fhr = true;
+               root()->fail_high_root++;
+            }
+            if (extend < 0) {
+               extend = node->extensions = 0;
+            }
+            if (depth+extend-DEPTH_INCREMENT > 0)
+               try_score=-search(-hibound,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+            else
+               try_score=-quiesce(-hibound,-best_score,ply+1,0);
         }
         board.undoMove(move,state);
         if (ply == 0 && controller->getIterationDepth()<=MoveGenerator::EASY_PLIES) {
