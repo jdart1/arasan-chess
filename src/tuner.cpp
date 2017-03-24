@@ -1269,13 +1269,17 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   // increase to the attackWeight (from the KING_COVER_BOOST
                   // params) from changes in the king cover score.
                   if (oppKpe.counts[i][j]) {
+                      // partial deriv of cover term
                       double cover = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0;
+                      // partial deriv of file term
                       double file = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0;
-                      double mult = -inc*scale_grad*cover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
+                      // how much a change in cover value will affect
+                      // king attack score:
+                      double kscale = -inc*scale_grad*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
                       grads[Tune::KING_COVER1+i] +=
-                          tune_params.scale(mult*cover,Tune::KING_COVER1+i,ourMatLevel);
+                          tune_params.scale(kscale*cover,Tune::KING_COVER1+i,ourMatLevel);
                       grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
-                          tune_params.scale(mult*file,Tune::KING_COVER_FILE_FACTOR0+j,ourMatLevel);
+                          tune_params.scale(kscale*file,Tune::KING_COVER_FILE_FACTOR0+j,ourMatLevel);
                   }
               }
           }
@@ -1295,7 +1299,12 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          Tune::TuneParam p = tune_params[i];
          score_t val = p.current;
          const score_t range = p.range();
-         score_t delta = std::max<score_t>(1,range/40);
+         score_t delta;
+         if (i >= Tune::KING_COVER1 &&
+             i <= Tune::KING_COVER_BASE)
+             delta = range/100;
+         else
+             delta = range/40;
 
          // increase by delta
          score_t newval = val + delta;
@@ -1308,7 +1317,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          double predictedEval = eval + derivs[i]*delta;
          if (fabs(predictedEval - newEval)>5.0) {
             cerr << board << endl;
-            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(White).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << newEval << endl;
+            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(Black).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << newEval << endl;
 
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
@@ -1320,14 +1329,17 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
             s.evalu8(board,false);
          }
          // Test derivative of sigmoid computation too
+/*
          double dT = computeTexelDeriv(eval,result,White);
          double baseError = computeErrorTexel(eval,result,White);
          double newError = computeErrorTexel(newEval,result,White);
          double predictedError = baseError + dT*(newEval-eval);
          double estDeriv = (newError-baseError)/(newEval-eval);
          if (fabs(predictedError-newError) > 1e-4) {
-             cerr << "warning: param " << p.name << " eval=" << eval << " newEval=" << newEval << " result=" << result << " dT=" << dT << " estDeriv= " << estDeriv << " base=" << baseError << " predicted=" << predictedError << " actual=" << newError << endl;
+             cerr << "warning: param " << p.name << " eval=" << eval << " newEval=" << newEval << " result=" << result << " dT=" << dT << " estDeriv= " << estDeriv << " base=" << baseError << " predicted=" << predictedError << " actual="
+ << newError << endl;
          }
+*/
          // restore old value
          tune_params.updateParamValue(i,val);
          tune_params.applyParams();
