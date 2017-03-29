@@ -1,4 +1,4 @@
-// Copyright 1987-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2017 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -3131,8 +3131,8 @@ void Search::searchSMP(ThreadInfo *ti)
     Move move;
     const int in_check = board.checkStatus() == InCheck;
     BoardState state(board.state);
-    const int &ply = node->ply;
-    const int &depth = node->depth;
+    const int ply = node->ply;
+    const int depth = node->depth;
     int moveIndex;
     // get node from which we were split
     NodeInfo *parentNode = split->splitNode;
@@ -3606,19 +3606,10 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     split->failHigh = 0;
     nodeAccumulator = 0;
     ti = slave_ti;
-    // Copy a little info from the parent node to the child.
-    // Note: we do not copy all of it, since the child will
-    // mostly access the parent node for state.
     node->ply = s->ply;
     node->depth = s->depth;
-    node->beta = (ns+s->ply)->beta;
-    if (s->ply>0) {
-      // There is some info from the previous node in the stack
-      // that the search needs to access, so copy it from the parent too:
-      (node-1)->extensions = (ns+s->ply-1)->extensions;
-      (node-1)->last_move = (ns+s->ply-1)->last_move;
-    }
-    // clear killer since the side to move may have been different
+    // Rest of new node initialization is done in searchSMP().
+    // Clear killer since the side to move may have been different
     // in the previous use of this class.
     context.clearKiller();
 }
