@@ -2163,9 +2163,7 @@ int Search::calcExtensions(const Board &board,
        Capture(move) == Empty &&
        TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5) &&
-       !Scoring::mateScore(parentNode->alpha) &&
-       board.getMaterial(White).hasPieces() &&
-       board.getMaterial(Black).hasPieces();
+       !Scoring::mateScore(parentNode->alpha);
 
    if (pruneOk) {
       // do not use predictedDepth for LMP
