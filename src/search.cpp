@@ -2092,19 +2092,8 @@ int Search::calcExtensions(const Board &board,
    int depth = node->depth;
    node->extensions = 0;
    int extend = 0;
-   int pruneOk = 1;
+   int pruneOk = board.checkStatus() != InCheck;
    score_t swap = Scoring::INVALID_SCORE;
-   if (board.checkStatus() == InCheck) { // evading check
-      pruneOk = 0;
-      if (IsForced(move)) {
-         // one single reply to check
-         extend += FORCED_EXTENSION;
-         node->extensions |= FORCED;
-#ifdef SEARCH_STATS
-         controller->stats->evasion_extensions++;
-#endif
-      }
-   }
    if (in_check_after_move == InCheck) { // move is a checking move
       // extend if check does not lose material or is a discovered check
       if ((swap = seeSign(board,move,0)) ||
