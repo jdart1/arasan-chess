@@ -313,6 +313,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
           if (MovesEqual(moves[i],hashMove)) {
              // make this the 1st move
              scores[i] = Constants::MATE;
+             SetPhase(moves[i],HASH_MOVE_PHASE);
              if (i) swap(moves,scores,0,i);   
              ++poscaps;
              // bump index so we will skip this move
@@ -325,14 +326,17 @@ Move MoveGenerator::nextEvasion(int &ord) {
              scores[i] = int(MVV_LVA(moves[i]));
              if (gain-pieceVal > 0 || (scores[i] = (int)see(board,moves[i])) >= 0) {
                 ++poscaps;
+                SetPhase(moves[i],WINNING_CAPTURE_PHASE);
                 if (i > poscaps) {
                    // move positive captures to front of list
                    swap(moves,scores,i,poscaps);
                 }
              } else {
+                SetPhase(moves[i],LOSERS_PHASE);
                 ++negcaps;
              }
           } else {
+             SetPhase(moves[i],HISTORY_PHASE);
              scores[i] = 0;
           }
           if (flag) SetForced2(moves[i]);
