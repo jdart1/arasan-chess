@@ -2131,17 +2131,24 @@ int Search::calcExtensions(const Board &board,
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
+   bool moveCountPruning = moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT];
+
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() &&
-       ((node->ply == 0 && !CaptureOrPromotion(move))  || GetPhase(move) == MoveGenerator::HISTORY_PHASE || (GetPhase(move) != MoveGenerator::WINNING_CAPTURE_PHASE && board.checkStatus() == InCheck && moveIndex >=3)) &&
+       (board.checkStatus() == NotInCheck || moveIndex >=3) &&
+       (GetPhase(move) >= MoveGenerator::HISTORY_PHASE) &&
+       (!CaptureOrPromotion(move) || moveCountPruning) &&
        !passedPawnMove(board,move,6)) {
       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
       if (extend) {
-         node->extensions |= LMR;
+        if (CaptureOrPromotion(move)) extend += DEPTH_INCREMENT;
+        if (extend <= -DEPTH_INCREMENT) {
+            node->extensions |= LMR;
 #ifdef SEARCH_STATS
-         ++controller->stats->reduced;
+            ++controller->stats->reduced;
 #endif
+        }
       }
    }
 
@@ -2158,7 +2165,7 @@ int Search::calcExtensions(const Board &board,
       // do not use predictedDepth for LMP
       if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
          GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
-         moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
+         moveCountPruning) {
 #ifdef SEARCH_STATS
          ++controller->stats->lmp;
 #endif
