@@ -2110,11 +2110,15 @@ int Search::calcExtensions(const Board &board,
       }
    }
    if (passedPawnPush(board,move)) {
-      node->extensions |= PAWN_PUSH;
-      extend += PAWN_PUSH_EXTENSION;
+      if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+      if (swap) {
+          // safe pawn push to 7th rank
+          node->extensions |= PAWN_PUSH;
+          extend += PAWN_PUSH_EXTENSION;
 #ifdef SEARCH_STATS
-      controller->stats->pawn_extensions++;
+          controller->stats->pawn_extensions++;
 #endif
+      }
    }
    else if (TypeOfMove(move) == Normal &&
             Capture(move) != Empty && Capture(move) != Pawn &&
