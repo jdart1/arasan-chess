@@ -2135,7 +2135,7 @@ int Search::calcExtensions(const Board &board,
       return Util::Min(extend,DEPTH_INCREMENT);
    }
 
-   bool moveCountPruning = moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT];
+   const bool moveCountPruning = moveIndex >= LMP_MOVE_COUNT[std::min<int>(LMP_DEPTH,depth/DEPTH_INCREMENT)];
 
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
@@ -2167,16 +2167,16 @@ int Search::calcExtensions(const Board &board,
 
    if (pruneOk) {
       // do not use predictedDepth for LMP
-      if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
-         GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
-         moveCountPruning) {
+      if (depth/DEPTH_INCREMENT <= LMP_DEPTH &&
+          moveCountPruning &&
+          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
 #ifdef SEARCH_STATS
-         ++controller->stats->lmp;
+          ++controller->stats->lmp;
 #endif
 #ifdef _TRACE
-         indent(node->ply); cout << "LMP: pruned" << endl;
+          indent(node->ply); cout << "LMP: pruned" << endl;
 #endif
-         return PRUNE;
+          return PRUNE;
       }
       // futility pruning, enabled at low depths
       if (predictedDepth <= FUTILITY_DEPTH) {
