@@ -2102,7 +2102,7 @@ int Search::calcExtensions(const Board &board,
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
-          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+          extend += (depth >= 4*DEPTH_INCREMENT || node->PV()) ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
       else {
          // Bad checks can be reduced or pruned (SEE pruning only)
