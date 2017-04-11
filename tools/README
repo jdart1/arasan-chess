@@ -1,0 +1,6 @@
+This directory contains some Python scripts to help with
+auto-optimization of parameters and run test matches. Most of these
+have hard-coded paths and other data in them that may need
+modifications if used in a different environment. They have only been
+tested under Linux and are unlikely to work under Windows without
+modification.
