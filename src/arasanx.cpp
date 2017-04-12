@@ -425,7 +425,7 @@ static void process_st_command(const string &cmd_args)
       srctype = FixedTime;
    }
    // convert to ms. and subtract a buffer to prevent losses on time
-   time_limit = int(time_limit_sec * 1000 - Util::Min(int(time_limit_sec*100),100));
+   time_limit = int(time_limit_sec * 1000 - std::min<int>(int(time_limit_sec*100),100));
 }
 
 static int getIncrUCI(const ColorType side) {
@@ -770,7 +770,7 @@ static void CDECL post_output(const Statistics &stats) {
 
 
 static int solution_match(Move result) {
-   for (int i = 0; i < Util::Min(10,solution_move_count); i++) {
+   for (int i = 0; i < std::min<int>(10,solution_move_count); i++) {
       if (MovesEqual(solution_moves[i],result)) {
          return 1;
       }
@@ -2603,7 +2603,7 @@ static bool do_command(const string &cmd, Board &board) {
             // This is in MB
             int size = 0;
             if (Options::setOption<int>(value,size)) {
-                options.search.nalimov_cache_size = Util::Min(32,size)*1024L*1024L;
+                options.search.nalimov_cache_size = std::min<int>(32,size)*1024L*1024L;
             }
         }
 #endif
@@ -2618,7 +2618,7 @@ static bool do_command(const string &cmd, Board &board) {
             // This is in MB
             int size;
             if (Options::setOption<int>(value,size)) {
-                options.search.gtb_cache_size = Util::Min(32,size)*1024L*1024L;
+                options.search.gtb_cache_size = std::min<int>(32,size)*1024L*1024L;
             }
         }
 #endif
@@ -2644,7 +2644,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
-            options.search.multipv = Util::Min(Statistics::MAX_PV,options.search.multipv);
+            options.search.multipv = std::min<int>(Statistics::MAX_PV,options.search.multipv);
             // GUIs (Shredder at least) send 0 to turn multi-pv off: but
             // our option counts the # of lines to show, so we set it to
             // 1 in this case.
@@ -3363,7 +3363,7 @@ static bool do_command(const string &cmd, Board &board) {
               if (doTrace) {
                  cout << "# setting cores to " << options.search.ncpus << endl;
               }
-              options.search.ncpus = Util::Min(options.search.ncpus,Constants::MaxCPUs);
+              options.search.ncpus = std::min<int>(options.search.ncpus,Constants::MaxCPUs);
               searcher->updateSearchOptions();
               searcher->setThreadCount(options.search.ncpus);
            }
@@ -3622,7 +3622,7 @@ int CDECL main(int argc, char **argv) {
             switch (c) {
             case 'c':
                 ++arg;
-                options.search.ncpus = Util::Min(Constants::MaxCPUs,atol(argv[arg]));
+                options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
                 ++cpusSet;
                 if (options.search.ncpus<=0) {
                     cerr << "-c parameter must be >=1" << endl;

@@ -1,7 +1,8 @@
-// Copyright 1997, 1998, 1999, 2012-2013 by Jon Dart. All Rights Reserved.
+// Copyright 1997, 1998, 1999, 2012-2013, 2017 by Jon Dart. All Rights Reserved.
 #include "calctime.h"
 #include "globals.h"
-#include "util.h"
+
+#include <algorithm>
 
 static const int DEFAULT_MOVES_TO_TC = 35;
 static const float PONDER_FACTOR = 1.3F;
@@ -27,7 +28,7 @@ int time_left, int opp_time, bool ponderHit, int trace)
 {
    if (trace) cout << "# movestogo=" << movestogo << " time_left=" << time_left << endl;
    if (movestogo == 0) movestogo = DEFAULT_MOVES_TO_TC;
-   time_left = Util::Max(time_left-GAME_TIME_RESERVE,0);
+   time_left = std::max<int>(time_left-GAME_TIME_RESERVE,0);
    int time_target = (time_left/movestogo);
    time_target += 9*incr/10;
 

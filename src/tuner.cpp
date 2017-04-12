@@ -491,7 +491,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           if (ourmat.pawnCount() == 0) {
              // no mating material. We can't be better but if
              // opponent has 1-2 pawns we are not so bad
-             int index = Util::Min(2,oppmat.pawnCount());
+             int index = std::min<int>(2,oppmat.pawnCount());
              grads[Tune::KN_VS_PAWN_ADJUST0+index] += inc;
           }
        }
@@ -532,7 +532,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
              ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-           grads[Tune::QR_ADJUST0+Util::Min(3,ourmat.minorCount())] += inc;
+           grads[Tune::QR_ADJUST0+std::min<int>(3,ourmat.minorCount())] += inc;
         }
         break;
     }
@@ -546,12 +546,12 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>0);
-               grads[Tune::RB_ADJUST1+Util::Min(3,ourmat.majorCount()-1)] += inc;
+               grads[Tune::RB_ADJUST1+std::min<int>(3,ourmat.majorCount()-1)] += inc;
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>0);
-               grads[Tune::RBN_ADJUST1+Util::Min(3,ourmat.majorCount()-1)] += inc;
+               grads[Tune::RBN_ADJUST1+std::min<int>(3,ourmat.majorCount()-1)] += inc;
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -569,7 +569,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           // better to have more pawns in endgame (if we have not
           // traded pieces for pawns).
           grads[Tune::ENDGAME_PAWN_ADVANTAGE] +=
-             inc*(4-ourmat.materialLevel()/4)*Util::Min(2,pawnDiff)/4;
+             inc*(4-ourmat.materialLevel()/4)*std::min<int>(2,pawnDiff)/4;
        }
        if (pieceDiff > 0) {
           // bonus for last few pawns - to discourage trade
@@ -977,7 +977,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    }
 
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
-   grads[Tune::KING_MOBILITY_ENDGAME+Util::Min(4,mobl)] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+Util::Min(4,mobl),mLevel);
+   grads[Tune::KING_MOBILITY_ENDGAME+std::min<int>(4,mobl)] += tune_params.scale(inc,Tune::KING_MOBILITY_ENDGAME+std::min<int>(4,mobl),mLevel);
    const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
    int pawns = board.pawn_bits[side].bitCount();
    for (int i = 0; i < pawns; i++) {
@@ -1215,7 +1215,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
       attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
       if (attackCount >= 2 && majorAttackCount) {
-         attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[Util::Min(2,attackCount-2)];
+         attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[std::min<int>(2,attackCount-2)];
       }
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/128;
       // king safety tuning
@@ -1247,7 +1247,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
       }
       if (attackCount >= 2 && majorAttackCount) {
-         int index = Tune::KING_ATTACK_COUNT_BOOST+Util::Min(2,attackCount-2);
+         int index = Tune::KING_ATTACK_COUNT_BOOST+std::min<int>(2,attackCount-2);
          grads[index] +=
             tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
       }

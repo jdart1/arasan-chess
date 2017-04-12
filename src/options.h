@@ -2,12 +2,12 @@
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
+#include <algorithm>
 #include <string>
 #include <sstream>
 using namespace std;
 
 #include "types.h"
-#include "util.h"
 
 class Options
 {
@@ -105,7 +105,7 @@ class Options
    }
 
    void setRating(int rating) {
-      search.strength = Util::Max(0,Util::Min(100,(rating-1000)/16));
+     search.strength = std::max<int>(0,std::min<int>(100,(rating-1000)/16));
    }
 
    static void setMemoryOption(size_t &value, const string &valueString);

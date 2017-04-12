@@ -1,4 +1,4 @@
-// Copyright 1994, 1997, 2015 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1997, 2015, 2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _UTIL_H
 #define _UTIL_H
@@ -50,16 +50,6 @@ class Util
 	     return (x > 0) ? 1 : -1;
     }
     
-    static int Max( int x, int y )
-    {
-	return (x > y) ? x : y;    
-    }
-  
-    static int Min( int x, int y )
-    {
-	return (x > y) ? y : x;    
-    }
-
     static int Round(double x) {
 #if defined(_MSC_VER) && __cplusplus < 201103L
       // MSVC lacks round()

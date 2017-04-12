@@ -190,7 +190,7 @@ SearchController::SearchController()
               const double reduction = LMR_BASE[i] + f/LMR_DIV[i];
               int r = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
               // do not reduce into the qsearch:
-              r = Util::Min(r,d*DEPTH_INCREMENT-1);
+              r = std::min<int>(r,d*DEPTH_INCREMENT-1);
               // do not do reductions < 1 ply
               if (r < DEPTH_INCREMENT) r = 0;
               LMR_REDUCTION[i][d][moves] = r;
@@ -261,8 +261,8 @@ Move SearchController::findBestMove(
         ply_limit = Constants::MaxPly-1;
     }
     else {
-        ply_limit = Util::Min(ply_limit,Constants::MaxPly-1);
-        ply_limit = Util::Max(1,ply_limit);
+        ply_limit = std::min<int>(ply_limit,Constants::MaxPly-1);
+        ply_limit = std::max<int>(1,ply_limit);
     }
     this->ply_limit = ply_limit;
     this->background = background;
@@ -526,11 +526,11 @@ int Search::checkTime(const Board &board,int ply) {
             int target = srcOpts.ncpus*120;
             if (splitsPerSec > 3*target/2) {
                controller->setThreadSplitDepth(
-                  Util::Min(MAX_SPLIT_DEPTH,
+                  std::min<int>(MAX_SPLIT_DEPTH,
                              controller->threadSplitDepth + DEPTH_INCREMENT/2));
             } else if (splitsPerSec < target/2) {
                controller->setThreadSplitDepth(
-                  Util::Max(MIN_SPLIT_DEPTH,
+                  std::max<int>(MIN_SPLIT_DEPTH,
                               controller->threadSplitDepth - DEPTH_INCREMENT/2));
             }
             stats->last_split_sample = stats->splits;
@@ -718,7 +718,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
    RootMoveGenerator mg(board,&context,NullMove,
       talkLevel == Trace);
    if (controller->uci) {
-       controller->stats->multipv_limit = Util::Min(mg.moveCount(),srcOpts.multipv);
+       controller->stats->multipv_limit = std::min<int>(mg.moveCount(),srcOpts.multipv);
    }
    controller->time_check_counter = Time_Check_Interval;
 
@@ -801,7 +801,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                cout << "# waitTime=" << waitTime << endl;
            }
            // adjust time check interval since we are lowering nps
-           Time_Check_Interval = Util::Max(1,Time_Check_Interval / (1+8*int(factor)));
+           Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
            if (srcOpts.strength <= 95) {
                static const int limits[25] = {1,1,1,1,1,1,1,1,
                                               2,2,2,2,3,3,4,6,8,9,10,
@@ -811,9 +811,9 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                    board.getMaterial(Black).materialLevel() < 16 &&
                    srcOpts.strength > 10) {
                    // increase ply limit in endgames
-                   ply_limit += Util::Min(2,1+ply_limit/8);
+                   ply_limit += std::min<int>(2,1+ply_limit/8);
                }
-               controller->ply_limit = Util::Min(ply_limit,
+               controller->ply_limit = std::min<int>(ply_limit,
                                                  controller->ply_limit);
                if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;
@@ -1017,7 +1017,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                // we have a score.
                fail_low_root_extend = false;
                // Continue searching based on how bad the fail-low was
-               int more_time = controller->xtra_time*Util::Min(100,controller->failLowFactor)/100;
+               int more_time = controller->xtra_time*std::min<int>(100,controller->failLowFactor)/100;
                controller->time_added = more_time;
                if (talkLevel == Trace) {
                     cout << "# fail low resolved, new time target = " <<
@@ -1630,7 +1630,7 @@ score_t Search::quiesce(int ply,int depth)
          }
 #endif
          if (!node->PV() &&
-             noncaps > Util::Max(1+depth,0) &&
+             noncaps > std::max<int>(1+depth,0) &&
              !Scoring::mateScore(node->beta) &&
              !IsForced(move) && !IsForced2(move) &&
              !CaptureOrPromotion(move) &&
@@ -2132,7 +2132,7 @@ int Search::calcExtensions(const Board &board,
 #endif
    }
    if (extend) {
-      return Util::Min(extend,DEPTH_INCREMENT);
+      return std::min<int>(extend,DEPTH_INCREMENT);
    }
 
    const bool moveCountPruning = moveIndex >= LMP_MOVE_COUNT[std::min<int>(LMP_DEPTH,depth/DEPTH_INCREMENT)];
@@ -2144,7 +2144,7 @@ int Search::calcExtensions(const Board &board,
        (GetPhase(move) >= MoveGenerator::HISTORY_PHASE) &&
        (!CaptureOrPromotion(move) || moveCountPruning) &&
        !passedPawnMove(board,move,6)) {
-      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][Util::Min(63,moveIndex)];
+      extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
       if (extend) {
         if (CaptureOrPromotion(move)) extend += DEPTH_INCREMENT;
         if (extend <= -DEPTH_INCREMENT) {

@@ -17,6 +17,7 @@ extern "C"
 #include <math.h>
 #include <ctype.h>
 };
+#include <algorithm>
 #include <climits>
 #include <iomanip>
 
@@ -90,7 +91,7 @@ int Scoring::distance(Square sq1, Square sq2)
 {
    int rankdist = Util::Abs(sq1/8 - sq2/8);
    int filedist = Util::Abs((sq1 % 8)-(sq2 % 8));
-   return Util::Max(rankdist,filedist);
+   return std::max<int>(rankdist,filedist);
 }
 
 static inline int OnFile(const Bitboard &b, int file) {
@@ -372,7 +373,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           if (ourmat.pawnCount() == 0) {
              // no mating material. We can't be better but if
              // opponent has 1-2 pawns we are not so bad
-             score += APARAM(KN_VS_PAWN_ADJUST,Util::Min(2,oppmat.pawnCount()));
+             score += APARAM(KN_VS_PAWN_ADJUST,std::min<int>(2,oppmat.pawnCount()));
           } else if (oppmat.pawnCount() == 0) {
              if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
@@ -420,7 +421,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-           score += APARAM(QR_ADJUST,Util::Min(3,ourmat.minorCount()));
+           score += APARAM(QR_ADJUST,std::min<int>(3,ourmat.minorCount()));
         }
         break;
     }
@@ -434,12 +435,12 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>0);
-               score += APARAM(RB_ADJUST,Util::Min(3,ourmat.majorCount()-1));
+               score += APARAM(RB_ADJUST,std::min<int>(3,ourmat.majorCount()-1));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>0);
-               score += APARAM(RBN_ADJUST,Util::Min(3,ourmat.majorCount()-1));
+               score += APARAM(RBN_ADJUST,std::min<int>(3,ourmat.majorCount()-1));
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -612,7 +613,7 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
          pawn = pawns.firstOne();
          const int rank = Rank<side>(pawn);
          ASSERT(rank >= 2);
-         const int rank_dist = Util::Min(3,rank - 2);
+         const int rank_dist = std::min<int>(3,rank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
          counts[rank_dist][f]++;
@@ -639,7 +640,7 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
          pawn = pawns.lastOne();
          const int rank = Rank<side>(pawn);
          ASSERT(rank >= 2);
-         const int rank_dist = Util::Min(3,rank - 2);
+         const int rank_dist = std::min<int>(3,rank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
          counts[rank_dist][f]++;
@@ -1149,7 +1150,7 @@ void Scoring::pieceScore(const Board &board,
    if (early_endgame) {
       int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
                   ~allAttacks).bitCount();
-      opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[Util::Min(4,mobl)];
+      opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[std::min<int>(4,mobl)];
 #ifdef EVAL_DEBUG
       cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << endl;
 #endif
@@ -1161,7 +1162,7 @@ void Scoring::pieceScore(const Board &board,
       attackWeight += PARAM(PAWN_ATTACK_FACTOR1)*proximity +
          PARAM(PAWN_ATTACK_FACTOR2)*pawnAttacks;
       if (attackCount >= 2 && majorAttackCount) {
-         attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[Util::Min(2,attackCount-2)];
+         attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[std::min<int>(2,attackCount-2)];
       }
 
       attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/128;
@@ -1179,7 +1180,7 @@ void Scoring::pieceScore(const Board &board,
 #ifdef TUNE
       score_t kattack = kingAttackSigmoid(index);
 #else
-      score_t kattack = PARAM(KING_ATTACK_SCALE)[Util::Min(Params::KING_ATTACK_SCALE_SIZE-1,index)];
+      score_t kattack = PARAM(KING_ATTACK_SCALE)[std::min<int>(Params::KING_ATTACK_SCALE_SIZE-1,index)];
 #endif
 #ifdef ATTACK_DEBUG
       cout << "scaled king attack score=  " << kattack << endl;
@@ -1812,7 +1813,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    if (options.search.strength < 100) {
       // "flatten" positional score values
-      score = score * Util::Max(100,options.search.strength*options.search.strength) / 10000;
+      score = score * std::max<int>(100,options.search.strength*options.search.strength) / 10000;
    }
 
    // add material score, which is from the perspective of the side to move
