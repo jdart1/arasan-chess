@@ -54,7 +54,6 @@ static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = int(3*DEPTH_INCREMENT);
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
-static const int FORCED_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
@@ -519,10 +518,10 @@ int Search::checkTime(const Board &board,int ply) {
         // Lock the stats structure since other threads may try to
         // modify it
         Lock(controller->split_calc_lock);
-        unsigned interval;
+        uint64_t interval;
         if ((interval=getElapsedTime(stats->last_split_time,current_time)) > 50 &&
             stats->splits-stats->last_split_sample > 0) {
-            int splitsPerSec = (int(stats->splits-stats->last_split_sample)*1000)/interval;
+            int splitsPerSec = int((stats->splits-stats->last_split_sample*1000)/interval);
             int target = srcOpts.ncpus*120;
             if (splitsPerSec > 3*target/2) {
                controller->setThreadSplitDepth(
@@ -539,7 +538,7 @@ int Search::checkTime(const Board &board,int ply) {
         Unlock(controller->split_calc_lock);
     }
     if (controller->typeOfSearch == FixedTime) {
-       if (stats->elapsed_time >= (unsigned)controller->time_target) {
+       if (stats->elapsed_time >= controller->time_target) {
           return 1;
        }
     }
@@ -1017,8 +1016,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                // we have a score.
                fail_low_root_extend = false;
                // Continue searching based on how bad the fail-low was
-               int more_time = controller->xtra_time*std::min<int>(100,controller->failLowFactor)/100;
-               controller->time_added = more_time;
+               controller->time_added = controller->xtra_time*std::min<int>(100,controller->failLowFactor)/100;
                if (talkLevel == Trace) {
                     cout << "# fail low resolved, new time target = " <<
                         controller->getTimeLimit() << endl;

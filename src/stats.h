@@ -29,7 +29,7 @@ struct Statistics
    int failhigh, faillow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   unsigned elapsed_time; // in milliseconds
+   uint64_t elapsed_time; // in milliseconds
    unsigned depth;
    int mvtot; // total root moves 
    int mvleft; // moves left to analyze at current depth
@@ -67,7 +67,7 @@ struct Statistics
    struct MultiPVEntry {
       int depth;
       score_t score;
-      time_t time;
+      uint64_t time;
       uint64_t nodes;
       uint64_t tb_hits;
       string best_line_image;

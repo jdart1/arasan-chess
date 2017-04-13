@@ -142,7 +142,7 @@ class SearchController {
       Statistics &stats,
       TalkLevel t);
 
-    unsigned getTimeLimit() const { 
+    uint64_t getTimeLimit() const { 
       return time_target + time_added;
     }
 
@@ -180,7 +180,7 @@ class SearchController {
       background = b;
     }
 
-    void setTimeLimit(int limit,int xtra) {
+    void setTimeLimit(uint64_t limit,uint64_t xtra) {
       typeOfSearch = TimeLimit;
       time_limit = time_target = limit;
       xtra_time = xtra;
@@ -254,10 +254,10 @@ class SearchController {
     TalkLevel talkLevel;
     // time limit is nominal time limit in centiseconds
     // time target is actual time to search in centiseconds
-    int time_limit, time_target;
-    int time_added;
+    uint64_t time_limit, time_target;
+    uint64_t time_added;
     // Amount of time we can add if score is dropping:
-    int xtra_time;
+    uint64_t xtra_time;
     int ply_limit;
     int background;
     // flag for UCI. When set the search will terminate at the

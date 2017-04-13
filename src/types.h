@@ -110,7 +110,7 @@ inline CLOCK_TYPE getCurrentTime() {
 }
 
 // get elapsed time in milliseconds
-inline uint64_t getElapsedTime(const CLOCK_TYPE &startTime,const CLOCK_TYPE &endTime) {
+inline uint64_t getElapsedTime(const CLOCK_TYPE startTime,const CLOCK_TYPE endTime) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 }
 
