@@ -52,32 +52,42 @@ class MyInfoHandler(chess.uci.InfoHandler):
         global results
         global position
         global options
+        print(line)
         match = MyInfoHandler.pat.search(line)
         if match != None:
             parts = match.group().split()
             if len(parts)>1:
                 results.infos[int(parts[1])] = line
+            else:
+                return
         elif options.multi_pv_value == 1:
             match = MyInfoHandler.pat2.search(line)
-            if match != None:
-                results.infos[1] = line
-        i = results.infos[1].find(" time ")
-        if i != -1:
-            rest = results.infos[1][i+6:]
-            j = rest.find(" ")
-            if (j == -1):
-                time_str = rest[0:]
-            else:
-                time_str = rest[0:j]
+            if match == None:
+               # unrecognized line
+               return
+            else:   
+               results.infos[1] = line
+        try:               
+           result = results.infos[1]
+        except KeyError:
+           return
+        if " time " in result:
+           i = result.find(" time ")
+           rest = result[i+6:]
+           if " " in rest:
+              j = rest.find(" ")
+              time_str = rest[0:j]
+           else:
+              time_str = rest[0:]
         # obtain the current bm from the pv
-        i = results.infos[1].find(" pv ")
-        if i != -1:
-            rest = results.infos[1][i+4:]
-            j = rest.find(" ")
-            if (j == -1):
-                move = rest[0:]
-            else:
-                move = rest[0:j]
+        if " pv " in result:
+            i = result.find(" pv ")
+            rest = result[i+4:]
+            if " " in rest:
+               j = rest.find(" ")
+               move = rest[0:j]
+            else: 
+               move = rest[0:]
             m = chess.Move.from_uci(move)
             if correct(m,position):
                if (results.solution_time == 0):
@@ -107,8 +117,11 @@ def search(engine,board,ops,search_time):
     engine.position(board)
     engine.go(movetime=search_time)
     # print last group of results
-    for i in range(1,options.multi_pv_value+1):
-        print(results.infos[i])
+    try:
+       for i in range(1,options.multi_pv_value+1):
+          print(results.infos[i])
+    except KeyError:
+       print("no results")
 
 def main(argv = None):
     global options
