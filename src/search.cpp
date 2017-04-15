@@ -2100,7 +2100,7 @@ int Search::calcExtensions(const Board &board,
 #ifdef SEARCH_STATS
           controller->stats->check_extensions++;
 #endif
-          extend += (depth >= 4*DEPTH_INCREMENT || node->PV()) ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
       else {
          // Bad checks can be reduced or pruned (SEE pruning only)
@@ -2108,15 +2108,11 @@ int Search::calcExtensions(const Board &board,
       }
    }
    if (passedPawnPush(board,move)) {
-      if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
-      if (swap) {
-          // safe pawn push to 7th rank
-          node->extensions |= PAWN_PUSH;
-          extend += PAWN_PUSH_EXTENSION;
+      node->extensions |= PAWN_PUSH;
+      extend += PAWN_PUSH_EXTENSION;
 #ifdef SEARCH_STATS
-          controller->stats->pawn_extensions++;
+      controller->stats->pawn_extensions++;
 #endif
-      }
    }
    else if (TypeOfMove(move) == Normal &&
             Capture(move) != Empty && Capture(move) != Pawn &&
@@ -2133,24 +2129,17 @@ int Search::calcExtensions(const Board &board,
       return std::min<int>(extend,DEPTH_INCREMENT);
    }
 
-   const bool moveCountPruning = moveIndex >= LMP_MOVE_COUNT[std::min<int>(LMP_DEPTH,depth/DEPTH_INCREMENT)];
-
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() &&
-       (board.checkStatus() == NotInCheck || moveIndex >=3) &&
-       (GetPhase(move) >= MoveGenerator::HISTORY_PHASE) &&
-       (!CaptureOrPromotion(move) || moveCountPruning) &&
+       ((node->ply == 0 && !CaptureOrPromotion(move))  || GetPhase(move) == MoveGenerator::HISTORY_PHASE || (GetPhase(move) != MoveGenerator::WINNING_CAPTURE_PHASE && board.checkStatus() == InCheck && moveIndex >=3)) &&
        !passedPawnMove(board,move,6)) {
       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
       if (extend) {
-        if (CaptureOrPromotion(move)) extend += DEPTH_INCREMENT;
-        if (extend <= -DEPTH_INCREMENT) {
-            node->extensions |= LMR;
+         node->extensions |= LMR;
 #ifdef SEARCH_STATS
-            ++controller->stats->reduced;
+         ++controller->stats->reduced;
 #endif
-        }
       }
    }
 
@@ -2165,16 +2154,16 @@ int Search::calcExtensions(const Board &board,
 
    if (pruneOk) {
       // do not use predictedDepth for LMP
-      if (depth/DEPTH_INCREMENT <= LMP_DEPTH &&
-          moveCountPruning &&
-          GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+      if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
+         GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
+         moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
-          ++controller->stats->lmp;
+         ++controller->stats->lmp;
 #endif
 #ifdef _TRACE
-          indent(node->ply); cout << "LMP: pruned" << endl;
+         indent(node->ply); cout << "LMP: pruned" << endl;
 #endif
-          return PRUNE;
+         return PRUNE;
       }
       // futility pruning, enabled at low depths
       if (predictedDepth <= FUTILITY_DEPTH) {
