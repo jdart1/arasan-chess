@@ -25,6 +25,9 @@
 #ifndef TBCONFIG_H
 #define TBCONFIG_H
 
+#include "../types.h"
+#include "../bitboard.h"
+
 /****************************************************************************/
 /* BUILD CONFIG:                                                            */
 /****************************************************************************/
@@ -34,40 +37,40 @@
  * implementation. To do this supply a macro or function definition
  * here:
  */
-/* #define TB_CUSTOM_POP_COUNT(x) <DEFINITION> */
+#define TB_CUSTOM_POP_COUNT(x) (unsigned)Bitboard(x).bitCount()
 
 /*
  * Define TB_CUSTOM_LSB to override the internal lsb
  * implementation. To do this supply a macro or function definition
  * here:
  */
-/* #define TB_CUSTOM_LSB(x) <DEFINITION> */
+#define TB_CUSTOM_LSB(x) (unsigned)Bitboard(x).firstOne()
 
 /*
  * Define TB_CUSTOM_BSWAP32 to override the internal bswap32
  * implementation. To do this supply a macro or function definition
  * here:
  */
-/* #define TB_CUSTOM_BSWAP32(x) <DEFINITION> */
+#define TB_CUSTOM_BSWAP32(x) bswap32(x)
 
 /*
- * Define TB_CUSTOM_BSWAP64 to override the internal bswap64
+ * Define TB_CUSTOM_BSWAP64 to override the internal bswap32
  * implementation. To do this supply a macro or function definition
  * here:
  */
-/* #define TB_CUSTOM_BSWAP64(x) <DEFINITION> */
+#define TB_CUSTOM_BSWAP64(x) bswap64(x)
 
-/*
- * Define TB_NO_STDINT if you do not want to use <stdint.h> or it is not
- * available.
- */
+/* Define TB_NO_STDINT if you do not want to use <stdint.h> or it is not
+ * available. */
 /* #define TB_NO_STDINT */
 
 /*
  * Define TB_NO_STDBOOL if you do not want to use <stdbool.h> or it is not
  * available or unnecessary (e.g. C++).
  */
-/* #define TB_NO_STDBOOL */
+#ifdef _WIN32
+#define TB_NO_STDBOOL
+#endif
 
 /*
  * Define TB_NO_THREADS if your program is not multi-threaded.
@@ -77,20 +80,15 @@
 /*
  * Define TB_NO_HELPER_API if you do not need the helper API.
  */
-/* #define TB_NO_HELPER_API */
+#define TB_NO_HELPER_API
 
 /*
- * Define TB_NO_HW_POP_COUNT if there is no hardware popcount instruction.
- *
- * Note: if defined, TB_CUSTOM_POP_COUNT is always used in preference
- * to any built-in popcount functions.
- *
  * If no custom popcount function is defined, and if the following
  * define is not set, the code will attempt to use an available hardware
  * popcnt (currently supported on x86_64 architecture only) and otherwise
  * will fall back to a software implementation.
  */
-/* #define TB_NO_HW_POP_COUNT */
+//#define TB_NO_HW_POP_COUNT
 
 /***************************************************************************/
 /* ENGINE INTEGRATION CONFIG                                               */
