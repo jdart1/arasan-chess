@@ -2434,10 +2434,12 @@ static void do_selfplay()
 }
 #endif
 
+#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
 static bool validTbPath(const string &path) {
    // Shredder at least sets path to "<empty>" for tb types that are disabled
    return path != "" && path != "<empty>";
 }
+#endif
 
 static bool uciOptionCompare(const string &a, const string &b) {
    if (a.length() != b.length()) {
