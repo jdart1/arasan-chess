@@ -48,6 +48,7 @@ const struct ECOData eco_codes[] =
 {"A08", 0x4736ba482c10ca2eULL ,"Reti, King's Indian Attack"},
 {"A09", 0x541cef51e63c11deULL ,"Reti Opening, Classical Variation"},
 {"A09", 0xd8977ed2a65da364ULL ,"Reti Opening, Classical Variation"},
+{"A09", 0xaac4dbfb6ba2fee1ULL ,"Reti Opening, Classical Variation"},
 {"A10", 0x993f12ca44a91dfULL ,"English Opening"},
 {"A11", 0xf4c7f2dc68e629d7ULL ,"English Opening"},
 {"A11", 0xd671eb809bc8c05fULL ,"English Opening"},
