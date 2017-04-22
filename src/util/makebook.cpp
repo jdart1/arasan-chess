@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2017 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // a text file.
@@ -211,7 +211,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
           cout << "count=" << p->count << " moveEval=" <<
               (int)p->moveEval << " posEval=" << (int)p->eval << endl;
 #endif
-          if (p->first && p->count < (unsigned)Util::Max(2,minFrequency) &&
+          if (p->first && p->count < (unsigned)std::max<int>(2,minFrequency) &&
               (p->moveEval != NO_MOVE_EVAL || p->eval != NO_POSITION_EVAL)) {
              // This move is in the first annotated book file but
              // occurs elsewhere with very low frequency. If we have
@@ -271,7 +271,7 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
 #endif
       }
       // This weight is not normalized yet, so allow it to exceed max weight
-      w = Util::Min(w,2*book::MAX_WEIGHT);
+      w = std::min<int>(w,2*book::MAX_WEIGHT);
       p->weight = w;
       totalWeight += w;
    }
@@ -502,12 +502,12 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
                  // minimax child variation evals back to parent
                  if (parent.save.sideToMove() == branchPoint.save.sideToMove()) {
                      // maximize
-                     parent.eval = (PositionEval)Util::Max(
+                     parent.eval = (PositionEval)std::max<int>(
                                                            (int)parent.eval,
                                                            (int)branchPoint.eval);
                  } else {
                      // minimize
-                     parent.eval = (PositionEval)Util::Min(
+                     parent.eval = (PositionEval)std::min<int>(
                                                            (int)parent.eval,
                                                            (int)branchPoint.eval);
                  }
