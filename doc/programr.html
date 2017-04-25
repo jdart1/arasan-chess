@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 20.0</title>
+<title>Arasan Programmer's Guide - version 20.1</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 20.0</h1>
+<h1>Arasan Programmer's Guide - version 20.1</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -350,7 +350,7 @@ La Puce Echiquenne. This is another test that purports to estimate
 a program's rating. Standard procedure is to allow 10 minutes for
 each problem. See lapuce2.doc for the scoring procedure.</li>
 <li>
-arasan19.epd is a set of test positions from Arasan games, plus some
+arasan20.epd is a set of test positions from Arasan games, plus some
 from other sources. They range in difficulty, but most are non-trivial
 and some are quite hard. This is the latest version of the test
 suite. Some positions in this file are "avoid move" positions where
@@ -837,8 +837,6 @@ are several cases in which this occurs:</p>
 If the move checks the opponent, the search is extended, provided
 that the checking move does not lose material (according to SEE) or is a
 discovered check.</li>
-<li>If the side to move is in check, and there is only a single move
-available to escape check, the search is extended.</li>
 <li>
 Pushing a pawn to the 7th rank causes the search to be extended,
 on the theory that this pawn may soon promote.</li>
