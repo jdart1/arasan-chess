@@ -59,14 +59,11 @@ class Options
    int strength; // 0 .. 100
    int multipv; // for UCI only
    int ncpus;
-#ifdef SELFPLAY
-   int mod;
-#endif
-    int easy_plies; // do wide search for "easy move" detection
-    int easy_threshold; // wide search width in millipawns
+   int easy_plies; // do wide search for "easy move" detection
+   int easy_threshold; // wide search width in millipawns
 #ifdef NUMA
-    int set_processor_affinity; // lock threads to processors
-    int affinity_offset; // offset: first processor to use for affinity
+   int set_processor_affinity; // lock threads to processors
+   int affinity_offset; // offset: first processor to use for affinity
 #endif
   } search;
 

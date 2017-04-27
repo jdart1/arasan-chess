@@ -62,9 +62,6 @@ using namespace std;
 
 static int verbose = 0, post = 0;
 static SearchController *searcher = NULL;
-#ifdef SELFPLAY
-static SearchController *mod_searcher = NULL;
-#endif
 
 static Move last_move;
 static string last_move_image;
@@ -129,14 +126,6 @@ static struct UciStrengthOpts
       {
       }
 } uciStrengthOpts;
-#ifdef SELFPLAY
-static int selfplay = 0;
-static int selfplay_wins = 0, selfplay_losses = 0, selfplay_draws = 0;
-static int selfplay_round = -1;
-static MoveArray selfplay_moves;
-static string selfplay_openings;
-static int selfplay_games;
-#endif
 
 #ifdef UCI_LOG
 extern fstream ucilog;
@@ -610,13 +599,6 @@ static void save_game() {
          if (computer_rating)
             headers.push_back(ChessIO::Header("BlackElo",crating));
       }
-#ifdef SELFPLAY
-      if (selfplay_round != -1) {
-         stringstream rnd;
-         rnd << selfplay_round;
-         headers.push_back(ChessIO::Header("Round",rnd.str()));
-      }
-#endif
       if (start_fen.size()) {
          // we had a non-standard starting position for the game
           headers.push_back(ChessIO::Header("FEN",start_fen));
@@ -629,24 +611,6 @@ static void save_game() {
       headers.push_back(ChessIO::Header("TimeControl",timec.str()));
       string result;
       theLog->getResultAsString(result);
-#ifdef SELFPLAY
-      if (selfplay) {
-          if (result == "1-0") {
-              if (computer_plays_white) selfplay_losses++;
-              else selfplay_wins++;
-          } else if (result == "0-1") {
-              if (computer_plays_white) selfplay_wins++;
-              else selfplay_losses++;
-          } else {
-              selfplay_draws++;
-          }
-          // results reported are for the "mod" side (vs. base version)
-          cout << "+" << selfplay_wins << " -" <<
-              selfplay_losses << " =" << selfplay_draws << " " <<
-              setprecision(4) <<
-              (100.0F*selfplay_wins + 50.0F*selfplay_draws)/(selfplay_wins + selfplay_losses + selfplay_draws) << '%' << endl;
-      }
-#endif
       ChessIO::store_pgn(*game_file, *gameMoves,
          computer_plays_white ? White : Black,
          result,
@@ -2330,109 +2294,6 @@ static void loadgame(Board &board,ifstream &file) {
     }
 }
 
-#ifdef SELFPLAY
-static void selfplay_game(int count) {
-    selfplay_round = count+1;
-    for (;;) {
-        CLOCK_TYPE time1 = getCurrentTime();
-        SearchController *s;
-        if ((computer_plays_white && main_board->sideToMove()==White) ||
-            (!computer_plays_white && main_board->sideToMove()==Black)) {
-           options.search.mod = 0;
-           s = searcher;
-        } else {
-           options.search.mod = 1;
-           s = mod_searcher;
-        }
-        Move m = search(s,*main_board,stats,false);
-        unsigned time_used = getElapsedTime(time1,getCurrentTime());
-        if (computer_plays_white) {
-            time_left -= time_used;
-            time_left += incr;
-        } else {
-            opp_time -= time_used;
-            opp_time += incr;
-        }
-        if (IsNull(m)) {
-            // no move
-            if (stats.state == Stalemate || stats.state == Draw) {
-                theLog->setResult("1/2-1/2");
-            }
-            else if (stats.state == Checkmate) {
-                // we are checkmated
-               if (main_board->sideToMove() == White) {
-                  theLog->setResult("0-1");
-               } else {
-                   theLog->setResult("1-0");
-               }
-            }
-            break;
-        }
-        BoardState previous_state = main_board->state;
-        stringstream image;
-        Notation::image(*main_board,m,Notation::SAN_OUT,image);
-        gameMoves->add_move(*main_board,previous_state,m,image.str(),false);
-        last_move_image = image.str();
-        theLog->add_move(*main_board,m,last_move_image,&stats,true);
-        main_board->doMove(m);
-        if (stats.display_value >= 7*PAWN_VALUE) {
-            // note winning side is not the side to move, since we did doMove
-           if (main_board->sideToMove() == White) {
-               theLog->setResult("0-1");
-           } else {
-                theLog->setResult("1-0");
-           }
-           break;
-        }
-    }
-}
-
-static void do_selfplay()
-{
-   delayedInit();
-   options.book.book_enabled = 0;
-   options.learning.position_learning = 0;
-   ifstream file(selfplay_openings.c_str(),ios::in);
-   mod_searcher = new SearchController();
-   for (int g = 0; g < selfplay_games; g++) {
-       // reset vars & save previous game:
-       do_command("new",*main_board);
-       opponent_name = "mod";
-       cout << "starting game " << g+1 << endl;
-       if (g % 2 == 0) {
-           // load next opening from file
-           loadgame(*main_board,file);
-           computer_plays_white = true;
-           // save moves
-           selfplay_moves.removeAll();
-           for (int i = 0; i < gameMoves->num_moves(); i++) {
-               selfplay_moves.append((*gameMoves)[i]);
-           }
-       } else {
-           computer_plays_white = false;
-           // replay moves into global gameMove array
-           for (int i = 0; i < selfplay_moves.num_moves(); i++) {
-               BoardState previous_state = main_board->state;
-               Move m = (*gameMoves)[i].move();
-               string image;
-               Notation::image(*main_board,m,Notation::SAN_OUT,image);
-               gameMoves->add_move(*main_board,previous_state,m,image.c_str(),false);
-               main_board->doMove(m);
-           }
-       }
-       // time control (fixed for now)
-       time_left = 5000;
-       opp_time = 5000;
-       incr = 100;
-       moves = 0;
-       minutes = float(5)/60;
-       selfplay_game(g);
-   }
-   // save last game
-   save_game();
-   delete mod_searcher;
-}
-#endif
 
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
 static bool validTbPath(const string &path) {
@@ -2451,7 +2312,6 @@ static bool uciOptionCompare(const string &a, const string &b) {
       return true;
    }
 }
-
 
 // Execute a command, return false if program should terminate.
 static bool do_command(const string &cmd, Board &board) {
@@ -3649,15 +3509,6 @@ int CDECL main(int argc, char **argv) {
                 //++arg;
                 doTrace = true;
                 break;
-#ifdef SELFPLAY
-            case 's':
-                ++selfplay;
-                ++arg;
-                selfplay_openings = argv[arg];
-                ++arg;
-                selfplay_games = atoi(argv[arg]);
-                break;
-#endif
             default:
                 cerr << "Warning: unknown option: " << argv[arg]+1 <<
                     endl;
@@ -3702,47 +3553,39 @@ int CDECL main(int argc, char **argv) {
 
     searcher = new SearchController();
 
-#ifdef SELFPLAY
-    if (selfplay) {
-        do_selfplay();
-    }
-    else
-#endif
-    {
-        searcher->registerPostFunction(post_output);
+    searcher->registerPostFunction(post_output);
 
-        while(!polling_terminated) {
-           if (inputSem.wait()) {
+    while(!polling_terminated) {
+        if (inputSem.wait()) {
 #ifdef UCI_LOG
-              ucilog << "wait interrupted" << endl << (flush);
+            ucilog << "wait interrupted" << endl << (flush);
 #endif
-              break;
-           }
-           while (!pending.empty() && !polling_terminated) {
-              Lock(input_lock);
-              string cmd (pending.front());
-              pending.pop_front();
-#ifdef UCI_LOG
-              ucilog << "got cmd (main): " << cmd << endl;
-#endif
-              if (doTrace) {
-                 cout << "# got cmd (main): "  << cmd << endl;
-                 //cout << "# pending size = " << pending.size() << endl;
-              }
-              Unlock(input_lock);
-#ifdef UCI_LOG
-              ucilog << "calling do_command(main):" << cmd << (flush) << endl;
-#endif
-              if (doTrace) cout << "# calling do_command(main):" << cmd << (flush) << endl;
-              if (!do_command(cmd,board)) {
-                 if (doTrace) cout << "#terminating .. " << endl;
-                 polling_terminated++;
-              }
-           }
+            break;
         }
-        // handle termination.
-        save_game();
+        while (!pending.empty() && !polling_terminated) {
+            Lock(input_lock);
+            string cmd (pending.front());
+            pending.pop_front();
+#ifdef UCI_LOG
+            ucilog << "got cmd (main): " << cmd << endl;
+#endif
+            if (doTrace) {
+                cout << "# got cmd (main): "  << cmd << endl;
+                //cout << "# pending size = " << pending.size() << endl;
+            }
+            Unlock(input_lock);
+#ifdef UCI_LOG
+            ucilog << "calling do_command(main):" << cmd << (flush) << endl;
+#endif
+            if (doTrace) cout << "# calling do_command(main):" << cmd << (flush) << endl;
+            if (!do_command(cmd,board)) {
+                if (doTrace) cout << "#terminating .. " << endl;
+                polling_terminated++;
+            }
+        }
     }
+    // handle termination.
+    save_game();
     if (doTrace) cout << "# terminating" << endl;
 #ifdef UCI_LOG
     ucilog << "terminating" << endl << (flush);
