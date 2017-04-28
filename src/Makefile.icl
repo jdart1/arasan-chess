@@ -1,7 +1,7 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2017 by Jon Dart. All Rights Reserved.
 #
-VERSION = 20.0
+VERSION = 20.1
 #
 #TARGET = win32
 TARGET = win64
@@ -508,13 +508,6 @@ popcnt-profiled:
 	SET CFLAGS=$(POPCNT_FLAGS)
 	SET ARASANX=$(ARASANX)-popcnt
 	nmake -f Makefile.icl profile-build
-
-run-tests:
-    $(BUILD)\$(ARASANX) -H 256M -c 2 <$(TESTS)\tests >$(TESTS)\test-results.txt
-
-score-tests:
-    date /t >$(TESTS)\test-summary.txt
-    perl $(TESTS)\tests.pl >>$(TESTS)\test-summary.txt
 
 release: $(RELEASE) $(SOURCE_ARCHIVE)
 

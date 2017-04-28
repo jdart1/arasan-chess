@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 20.0
+# Gnu Makefile for Arasan 20.1
 #
-VERSION = 20.0.0
+VERSION = 20.1.0
 
 # paths, modify as needed:
 
@@ -450,13 +450,6 @@ profile-run:
 	$(PROFILE)/arasanx $(PGO_RUN_FLAGS) <../tests/prof
 	rm $(PROFILE)/*.o
 	rm -f $(PROFILE)/arasanx $(EXPORT)/arasanx
-
-run-tests:
-	$(EXPORT)/$(ARASANX) -H 256m -c 2 <$(TESTS)/tests >$(TESTS)/test-results
-
-score-tests:
-	date >$(TESTS)/test-summary
-	perl $(TESTS)/tests.pl $(TESTS)/test-results >>$(TESTS)/test-summary
 
 .PHONY: all clean dirs profile profile-run install release run-tests score-tests
 

@@ -371,18 +371,9 @@ eet.epd is a set of endgame tests from Walter Eigenmann. See
 </ol>
 <p>
 The results file in the tests subdirectory summarizes Arasan's
-performance on these test suites. There are two targets in
-the Makefile that faciltate running tests with arasanx:</p>
-<ul>
-<li>run-tests  - runs all tests, put test results in file "test-results"
-in the test subdirectory</li>
-<li>score-tests - writes a test summary based on "test-results" into
-file "test-summary" in the test subdirectory.</li>
-</ul>
-<p>
-Note that "run-tests" takes a long time to complete (over 8 hours)!</p>
-<p>
-"score-tests" requires that Perl be installed and be on the path.</p>
+performance on these test suites. There is a Perl script (tests.pl)
+in the tests directory that generates a summary of test results
+given a log file produced by the Arasan "test" command.</p>
 
 <h3>Perft</h3>
 
