@@ -2,19 +2,20 @@ Changes in Arasan 20.1:
  1) Fixes to UCI multipv handling.
  2) Fix logic for terminating search on tablebase hit.
  3) Bug fixes in parameter tuning code. Use actual sigmoid function when
- tuning king safety, not an approximated lookup table.
+    tuning king safety, not an approximated lookup table.
  4) Add file-dependent scoring for passed pawns.
  5) Fix bug in scoring for rooks behind passed pawns.
- 6) Allow setting arasan version string on make command line. Builds done
-    between release tags now have versions generated from git commit # (Linux
-    only).
+ 6) Allow setting Arasan version string on make command line. Builds done
+    between release tags now have versions generated from git commit # (if
+    done from a git repository).
  7) In UCI mode, return a move even in cases where a legal draw position
     (according to 3-move rule) exists before search is started. Fixes problems
     with some UCI UIs.
  8) Allow LMR of some evasion moves.
  9) Remove "forced move" extension (1 single reply to check).
  10) More code cleanup and conversion to C++ 11.
- 11) Some Android portability fixes.
+ 11) Some Android portability fixes. Note: Android build still not fully
+     supported.
 
 Changes in Arasan 20.0 (Jan. 2017):
  1) Fix to handling of UCI_LimitStrength and UCI_Elo options. These can now

@@ -51,5 +51,5 @@ program that is used to construct the opening book from PGN files.
 release subdirectory. This target uses "git archive" so it needs to
 be run from within a git repository.
 
-"make install" will install Arasan binaries into /usr/local/bin/arasan-20.0.0.
+"make install" will install Arasan binaries into /usr/local/bin/arasan-20.1.0.
 (You will need to be root, or use sudo, to execute "make install"). 
