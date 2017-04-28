@@ -131,6 +131,7 @@ utils: $(BUILD)\pgnselect.exe $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUI
 
 !IfDef NALIMOV_TBS
 TB_OBJS = $(BUILD)\nalimov.obj
+TB_TUNE_OBJS = $(TUNE_BUILD)\nalimov.obj
 TB_PROFILE_OBJS = $(PROFILE)\nalimov.obj
 TB_PGO_OBJS = $(PGO_BUILD)\nalimov.obj
 CFLAGS = $(CFLAGS) -DNALIMOV_TBS
@@ -169,6 +170,23 @@ GTB_OBJS = $(BUILD)\gtb-probe.obj $(BUILD)\gtb-dec.obj \
 	$(BUILD)\inffast.obj $(BUILD)\inftrees.obj \
 	$(BUILD)\trees.obj $(BUILD)\zutil.obj \
 	$(BUILD)\lzf_c.obj $(BUILD)\lzf_d.obj
+
+GTB_TUNE_OBJS = $(TUNE_BUILD)\gtb-probe.obj $(TUNE_BUILD)\gtb-dec.obj \
+	$(TUNE_BUILD)\gtb-att.obj \
+	$(TUNE_BUILD)\sysport.obj \
+	$(TUNE_BUILD)\wrap.obj $(TUNE_BUILD)\hzip.obj \
+	$(TUNE_BUILD)\LzmaEnc.obj $(TUNE_BUILD)\LzmaDec.obj \
+	$(TUNE_BUILD)\Alloc.obj $(TUNE_BUILD)\LzFind.obj \
+	$(TUNE_BUILD)\Lzma86Enc.obj \
+	$(TUNE_BUILD)\Lzma86Dec.obj \
+	$(TUNE_BUILD)\Bra86.obj \
+	$(TUNE_BUILD)\zcompress.obj \
+	$(TUNE_BUILD)\uncompr.obj $(TUNE_BUILD)\inflate.obj \
+	$(TUNE_BUILD)\deflate.obj $(TUNE_BUILD)\adler32.obj \
+	$(TUNE_BUILD)\crc32.obj $(TUNE_BUILD)\infback.obj \
+	$(TUNE_BUILD)\inffast.obj $(TUNE_BUILD)\inftrees.obj \
+	$(TUNE_BUILD)\trees.obj $(TUNE_BUILD)\zutil.obj \
+	$(TUNE_BUILD)\lzf_c.obj $(TUNE_BUILD)\lzf_d.obj
 
 GTB_PROFILE_OBJS = $(PROFILE)\gtb-probe.obj $(PROFILE)\gtb-dec.obj \
 	$(PROFILE)\gtb-att.obj \
@@ -251,6 +269,7 @@ GTB_FLAGS = $(OPT) /DZ_PREFIX $(SMP) /I$(GTB)\sysport /I$(GTB)\compression /I$(G
 CFLAGS = $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
 
 TB_OBJS = $(TB_OBJS) $(GTB_OBJS) $(BUILD)\gtb.obj
+TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(GTB_TUNE_OBJS) $(TUNE_BUILD)\gtb.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(GTB_PROFILE_OBJS) $(PROFILE)\gtb.obj
 TB_PGO_OBJS = $(TB_PGO_OBJS) $(GTB_PGO_OBJS) $(PGO_BUILD)\gtb.obj
 
@@ -270,6 +289,7 @@ $(GTB_LIBDIR):
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
+TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(BUILD_TUNE)\syzygy.obj $(BUILD_TUNE)\tbprobe.obj
 TB_PGO_OBJS = $(TB_PGO_OBJS) $(PGO_BUILD)\syzygy.obj $(PGO_BUILD)\tbprobe.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
@@ -314,7 +334,7 @@ $(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
 $(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
 $(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
-$(TUNE_BUILD)\unit.obj $(TUNE_BUILD)\tune.obj $(TB_OBJS) $(NUMA_TUNE_OBJS)
+$(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
 ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
