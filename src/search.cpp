@@ -2132,8 +2132,7 @@ int Search::calcExtensions(const Board &board,
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() &&
-       (board.checkStatus() == InCheck ?
-        (moveIndex >= 2 && GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) : GetPhase(move) == MoveGenerator::HISTORY_PHASE) &&
+       (board.checkStatus() == InCheck ? GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE : GetPhase(move) == MoveGenerator::HISTORY_PHASE) &&
        !passedPawnMove(board,move,6)) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
       if (extend) {
