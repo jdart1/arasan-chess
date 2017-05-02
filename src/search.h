@@ -366,7 +366,7 @@ class Search : public ThreadControl {
     enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
                           FORCED=16, LMR=64, SINGULAR_EXT=128 };
 
-    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8 };
+    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8, PROBCUT=16 };
 
     int calcExtensions(const Board &board,
                        NodeInfo *node, NodeInfo *parentNode,

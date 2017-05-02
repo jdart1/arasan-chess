@@ -59,6 +59,9 @@ static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
 static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
+static const int PROBCUT_DEPTH = 4*DEPTH_INCREMENT;
+static const score_t PROBCUT_MARGIN = 2*PAWN_VALUE;
+static const score_t PROBCUT_MARGIN2 = int(0.33*PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static const double LMR_BASE[2] = {0.5,0.3};
 static const double LMR_DIV[2] = {1.8,2.5};
@@ -2415,7 +2418,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
-    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR))) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT))) {
        int tb_hit = 0;
        controller->stats->tb_probes++;
        score_t tb_score;
@@ -2512,7 +2515,7 @@ score_t Search::search()
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        !(node->flags & (IID|VERIFY|SINGULAR)) &&
+        !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
 #ifdef STATIC_NULL_PRUNING
@@ -2648,6 +2651,108 @@ score_t Search::search()
                     }
             }
         }
+    }
+
+    // ProbCut
+    if (!node->PV() && board.checkStatus() == NotInCheck &&
+        depth >= PROBCUT_DEPTH &&
+        node->beta < Constants::MATE_RANGE) {
+       const score_t threshold = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
+       const int nu_depth = depth - 4*DEPTH_INCREMENT;
+       BoardState state(board.state);
+       if (!IsNull(hashMove) && Capture(hashMove) > Pawn && node->eval + Gain(hashMove) >= threshold - PROBCUT_MARGIN2 && validMove(board,hashMove) && seeSign(board,hashMove,PROBCUT_MARGIN)) {
+#ifdef _TRACE
+           indent(ply);
+           cout << "Probcut: trying " << ply << ". ";
+           MoveImage(hashMove,cout);
+#endif
+           board.doMove(hashMove);
+           if (!board.wasLegal(hashMove)) {
+               board.undoMove(hashMove,state);
+               goto probcut_search;
+           }
+           SetPhase(hashMove,MoveGenerator::WINNING_CAPTURE_PHASE);
+           node->last_move = hashMove;
+           node->num_try++;
+           //int extension = 0;
+           //if (board.checkStatus() == InCheck) extension += DEPTH_INCREMENT;
+           int value = -search(-threshold-1, -threshold,
+                               ply+1, nu_depth, PROBCUT);
+#ifdef _TRACE
+           indent(ply);
+           cout << ply << ". ";
+           MoveImage(hashMove,cout);
+           cout << " " << value << endl;
+#endif
+           board.undoMove(hashMove,state);
+           if (value != Illegal && value > threshold) {
+               // We have found a good capture .. so assume this
+               // refutes the previous move and do not search
+               // further
+#ifdef _TRACE
+               indent(ply);
+               cout << "Probcut: cutoff" << endl;
+#endif
+               node->best_score = value;
+               node->best = hashMove;
+               goto hash_insert;
+           }
+       }
+    probcut_search:
+       {
+          Move moves[40];
+          MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, master());
+          // skip pawn captures because they will be below threshold
+          int moveCount = mg.generateCaptures(moves,board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
+          for (int i = 0; i<moveCount; i++) {
+             if (MovesEqual(hashMove,moves[i])) {
+                continue;
+             }
+             else if (Capture(moves[i])==King) {
+                return -Illegal;                  // previous move was illegal
+             }
+             else if (node->eval + Gain(moves[i]) >= threshold - PROBCUT_MARGIN2 && seeSign(board,moves[i],threshold)) {
+#ifdef _TRACE
+                indent(ply);
+                cout << "Probcut: trying " << ply << ". ";
+                MoveImage(moves[i],cout);
+#endif
+                board.doMove(moves[i]);
+                if (!board.wasLegal(moves[i])) {
+                   board.undoMove(moves[i],state);
+                   continue;
+                }
+                SetPhase(moves[i],MoveGenerator::WINNING_CAPTURE_PHASE);
+                node->last_move = moves[i];
+                node->num_try++;
+                //int extension = 0;
+                //if (board.checkStatus() == InCheck) extension += DEPTH_INCREMENT;
+                int value = -search(-threshold-1, -threshold,
+                                    ply+1, nu_depth, PROBCUT);
+#ifdef _TRACE
+                indent(ply);
+                cout << ply << ". ";
+                MoveImage(moves[i],cout);
+                cout << " " << value << endl;
+#endif
+                board.undoMove(moves[i],state);
+                if (value != Illegal && value > threshold) {
+                   // We have found a good capture .. so assume this
+                   // refutes the previous move and do not search
+                   // further
+#ifdef _TRACE
+                   indent(ply);
+                   cout << "Probcut: cutoff" << endl;
+#endif
+                   node->best_score = value;
+                   node->best = moves[i];
+                   goto hash_insert;
+                }
+             }
+          }
+       }
+       node->num_try = 0;
+       node->last_move = NullMove;
     }
 
     // Use "internal iterative deepening" to get an initial move to try if
