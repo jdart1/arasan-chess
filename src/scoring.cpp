@@ -380,6 +380,16 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 score -= KNIGHT_VALUE;
              }
           }
+          else if (pieces == Material::KB && ourmat.pawnCount() == 1) {
+              int wrongBishop = (side == White) ? KBPDraw<White>(board) : KBPDraw<Black>(board);
+              if (wrongBishop) {
+                  // We have the configuration of "wrong color bishop"
+                  // and rook pawn. Opponent may or may not have
+                  // pawns. We likely can't do better than draw, so
+                  // reduce score.
+                  score -= BISHOP_VALUE;
+              }
+          }
 #ifdef EVAL_DEBUG
           cout << "minor piece adjustment (" << ColorImage(side) << ") = " << score << endl;
 #endif
@@ -2353,7 +2363,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
 }
 
 template<ColorType side>
-static int KBPDraw(const Board &board) {
+int Scoring::KBPDraw(const Board &board) {
    Square qsq = InvalidSquare;
    int pfile;
    if ((board.pawn_bits[side] & Attacks::file_mask[0]) == board.pawn_bits[side]) {
@@ -2562,7 +2572,7 @@ void Scoring::clearHashTables() {
 #ifdef TUNE
 #include "tune.h"
 
-score_t Scoring::kingAttackSigmoid(score_t weight) const 
+score_t Scoring::kingAttackSigmoid(score_t weight) const
 {
     return PARAM(KING_ATTACK_SCALE_BIAS) +
         PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(weight-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0));

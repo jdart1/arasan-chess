@@ -265,6 +265,9 @@ class Scoring
 
     score_t kingDistanceScore(const Board &) const;
 
+    template<ColorType side>
+      static int KBPDraw(const Board &board);
+
     static void initBitboards();
 
     template<ColorType side>
