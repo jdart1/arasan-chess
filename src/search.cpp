@@ -51,7 +51,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 static const int FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
-static const int SEE_PRUNING_DEPTH = int(3*DEPTH_INCREMENT);
+static const int SEE_PRUNING_DEPTH = 3*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
@@ -2194,6 +2194,9 @@ int Search::calcExtensions(const Board &board,
        !Scoring::mateScore(node->alpha) &&
        board.checkStatus() == NotInCheck &&
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
+       if (GetPhase(move) == MoveGenerator::LOSERS_PHASE) {
+           swap = 0;
+       }
        if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
        if (!swap) {
 #ifdef SEARCH_STATS
