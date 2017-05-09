@@ -455,7 +455,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   }
                   if (MovesEqual(ref,moves[i])) {
                      // score refutation much higher
-                     scores[i] = scores[i]*2 + 10000;
+                     scores[i] = History::HISTORY_MAX;
                      // and put in separate phase
                      SetPhase(moves[i],REFUTATION_PHASE);
                   }

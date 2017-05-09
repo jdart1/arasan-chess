@@ -1,19 +1,19 @@
-// Copyright 2006-2008, 2011, 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2016-2017 by Jon Dart. All Rights Reserved.
 
 #include "history.h"
 #include "search.h"
-#include <limits>
+#include "debug.h"
 
-#define HISTORY_MAX std::numeric_limits<uint32_t>::max()-(Constants::MaxPly*Constants::MaxPly)-1
+static const int BONUS_MAX = 18*18;
 
 int History::depthFactor(int depth) {
-   return (depth/DEPTH_INCREMENT)*(depth/DEPTH_INCREMENT);
+    return (depth/DEPTH_INCREMENT)*(depth/DEPTH_INCREMENT);
 }
 
 void History::clear() {
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 64; j++) {
-       history[i][j].success = history[i][j].failure = (uint32_t)0;
+       history[i][j].val = 0;
     }
   }
 }
@@ -25,6 +25,7 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
    ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
    ASSERT(parentNode->num_try);
    const int bonus = depthFactor(depth);
+   if (bonus >= BONUS_MAX) return;
    for (int i=0; i<parentNode->num_try; i++) {
       ASSERT(i<Constants::MaxMoves);
       // safe to access this here because it is after slave thread
@@ -33,32 +34,27 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
       const Piece pieceMoved = MakePiece(PieceMoved(m),side);
       HistoryEntry &h = history[pieceMoved][DestSquare(m)];
       if (MovesEqual(best,m)) {
-         h.success += bonus;
-         if (h.success > HISTORY_MAX) {
-            h.success /= 2;
-            h.failure /= 2;
-         }
+         h.val = h.val*bonus/BONUS_MAX;
+         h.val += bonus*32;
       }
       else {
-         h.failure += bonus;
-         if (h.failure > HISTORY_MAX) {
-            h.success /= 2;
-            h.failure /= 2;
-         }
+         h.val = h.val*bonus/BONUS_MAX;
+         h.val -= bonus*32;
       }
+      ASSERT(Util::Abs(int(h.val)) < HISTORY_MAX);
    }
 }
 
 void History::updateHistoryMove(const Board &,
                                 Move best, int depth, ColorType side) 
 {
+   const int bonus = depthFactor(depth);
+   if (bonus >= BONUS_MAX) return;
    const Piece pieceMoved = MakePiece(PieceMoved(best),side);
    HistoryEntry &h = history[pieceMoved][DestSquare(best)];
-   h.success += depthFactor(depth);
-   if (h.success > HISTORY_MAX) {
-      h.success /= 2;
-      h.failure /= 2;
-   }
+   h.val = h.val*bonus/BONUS_MAX;
+   h.val += bonus*32;
+   ASSERT(Util::Abs(int(h.val)) < HISTORY_MAX);
 }
 
 
