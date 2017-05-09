@@ -36,12 +36,13 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
       if (MovesEqual(best,m)) {
          h.val = h.val*bonus/BONUS_MAX;
          h.val += bonus*32;
+         h.val = std::min<int>(HISTORY_MAX-1,h.val);
       }
       else {
          h.val = h.val*bonus/BONUS_MAX;
          h.val -= bonus*32;
+         h.val = std::max<int>(1-HISTORY_MAX,h.val);
       }
-      ASSERT(Util::Abs(int(h.val)) < HISTORY_MAX);
    }
 }
 
@@ -54,7 +55,7 @@ void History::updateHistoryMove(const Board &,
    HistoryEntry &h = history[pieceMoved][DestSquare(best)];
    h.val = h.val*bonus/BONUS_MAX;
    h.val += bonus*32;
-   ASSERT(Util::Abs(int(h.val)) < HISTORY_MAX);
+   h.val = std::min<int>(HISTORY_MAX-1,h.val);
 }
 
 
