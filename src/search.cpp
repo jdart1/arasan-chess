@@ -2406,7 +2406,7 @@ score_t Search::search()
                     if (board.checkStatus() != InCheck) {
                        Move best = hashEntry.bestMove(board);
                        if (!IsNull(best) && !CaptureOrPromotion(best)) {
-                          context.history.updateHistoryMove(board,best,
+                           context.history.updateHistory(board, nullptr, best,
                              node->depth, board.sideToMove());
                           context.setKiller(best, node->ply);
                        }

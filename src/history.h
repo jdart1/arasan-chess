@@ -20,8 +20,6 @@ public:
     void updateHistory(const Board &,
        NodeInfo *parentNode, Move best, int depth, ColorType side);
 
-    void updateHistoryMove(const Board &, Move best, int depth, ColorType side);
-
     static const int HISTORY_MAX = 1<<16;
 
  private:
@@ -31,6 +29,9 @@ public:
 
     static int depthFactor(int depth);
 
+    void addBonus(int &val,int bonus);
+
+    void addPenalty(int &val,int bonus);
 };
 
 #endif
