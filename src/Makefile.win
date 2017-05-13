@@ -300,7 +300,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
-$(BUILD)\learn.obj $(BUILD)\history.obj \
+$(BUILD)\learn.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
@@ -315,7 +315,7 @@ $(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \
 $(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\log.obj \
 $(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
 $(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
-$(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\history.obj \
+$(TUNE_BUILD)\learn.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
@@ -330,7 +330,7 @@ $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
 $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
-$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\history.obj \
+$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj \
 $(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\unit.obj $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
@@ -343,7 +343,7 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\learn.obj $(BUILD)\history.obj \
+$(BUILD)\learn.obj \
 $(BUILD)\legal.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
@@ -357,7 +357,7 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj  $(BUILD)\history.obj \
+$(BUILD)\legal.obj  \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
@@ -371,7 +371,7 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj  $(BUILD)\history.obj \
+$(BUILD)\legal.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(BUILD)\eco.obj $(BUILD)\ecodata.obj $(TB_OBJS) \
 $(NUMA_OBJS)
@@ -386,7 +386,7 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj  $(BUILD)\history.obj \
+$(BUILD)\legal.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
@@ -400,7 +400,7 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj  $(BUILD)\history.obj \
+$(BUILD)\legal.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 

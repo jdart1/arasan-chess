@@ -1,4 +1,4 @@
-// Copyright 1994-2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -60,13 +60,13 @@ struct SplitPoint {
 // Per-node info, part of search history stack
 struct NodeInfo {
     NodeInfo() : cutoff(0),best(NullMove)
-    {
-    }
+        {
+        }
     score_t best_score;
     score_t alpha, beta;
     int cutoff;
     int num_try;
-    int flags; 
+    int flags;
     Move singularMove;
     Move best;
     Move last_move;
@@ -84,12 +84,12 @@ struct NodeInfo {
     int PV() const {
         return (beta > alpha+1);
     }
-    
+
     int inBounds(score_t score) const {
-      return score > alpha && score < beta;
+        return score > alpha && score < beta;
     }
     int newBest(score_t score) const {
-      return score > best_score && score < beta;
+        return score > best_score && score < beta;
     }
 };
 
@@ -101,7 +101,7 @@ typedef NodeInfo NodeStack[Constants::MaxPly];
 // comments on a chess server. "Trace" is used in trace mode
 // (-t) of the chess server client.
 enum TalkLevel { Silent, Debug, Whisper, Trace };
-    
+
 enum SearchType { FixedDepth, TimeLimit, FixedTime };
 
 class Search;
@@ -111,57 +111,57 @@ typedef void (CDECL *PostFunction)(const Statistics &);
 typedef int (CDECL *TerminateFunction)(const Statistics &);
 
 class SearchController {
-  friend class Search;
-  friend class RootSearch;
+    friend class Search;
+    friend class RootSearch;
 
- public:
-   SearchController();
+public:
+    SearchController();
 
-   ~SearchController();
+    ~SearchController();
 
-   Move findBestMove(
-      const Board &board,
-      SearchType srcType,
-      int time_limit,
-      int xtra_time,
-      int ply_limit,
-      int background,
-      int isUCI,
-      Statistics &stat_buf,
-      TalkLevel t,
-      const vector <Move> &exclude);
+    Move findBestMove(
+        const Board &board,
+        SearchType srcType,
+        int time_limit,
+        int xtra_time,
+        int ply_limit,
+        int background,
+        int isUCI,
+        Statistics &stat_buf,
+        TalkLevel t,
+        const vector <Move> &exclude);
 
-   Move findBestMove( 
-      const Board &board, 
-      SearchType srcType,
-      int time_limit,
-      int xtra_time,
-      int ply_limit,
-      int background,
-      int isUCI,
-      Statistics &stats,
-      TalkLevel t);
+    Move findBestMove(
+        const Board &board,
+        SearchType srcType,
+        int time_limit,
+        int xtra_time,
+        int ply_limit,
+        int background,
+        int isUCI,
+        Statistics &stats,
+        TalkLevel t);
 
-    uint64_t getTimeLimit() const { 
-      return time_target + time_added;
+    uint64_t getTimeLimit() const {
+        return time_target + time_added;
     }
 
     void terminateNow();
 
     PostFunction registerPostFunction(PostFunction post) {
-       PostFunction tmp = post_function;
-       post_function = post;
-       return tmp;
+        PostFunction tmp = post_function;
+        post_function = post;
+        return tmp;
     }
-     
+
     TerminateFunction registerTerminateFunction(TerminateFunction term) {
-       TerminateFunction tmp = terminate_function;
-       terminate_function = term;
-       return tmp;
+        TerminateFunction tmp = terminate_function;
+        terminate_function = term;
+        return tmp;
     }
 
     TalkLevel getTalkLevel() const {
-      return talkLevel;
+        return talkLevel;
     }
 
     void setTalkLevel(TalkLevel t);
@@ -173,17 +173,17 @@ class SearchController {
     void stopAllThreads();
 
     void clearStopFlags();
-     
+
     void updateSearchOptions();
 
     void setBackground(int b) {
-      background = b;
+        background = b;
     }
 
     void setTimeLimit(uint64_t limit,uint64_t xtra) {
-      typeOfSearch = TimeLimit;
-      time_limit = time_target = limit;
-      xtra_time = xtra;
+        typeOfSearch = TimeLimit;
+        time_limit = time_target = limit;
+        xtra_time = xtra;
     }
 
     int wasTerminated() const;
@@ -196,7 +196,7 @@ class SearchController {
     int getIterationDepth() const;
 
     RootSearch *root() const {
-      return rootSearch;
+        return rootSearch;
     }
 
     ColorType getComputerSide() const {
@@ -227,15 +227,15 @@ class SearchController {
 
 #ifdef NUMA
     void rebind() {
-      pool->rebind();
+        pool->rebind();
     }
 
     void unbind() {
-      pool->unbind();
+        pool->unbind();
     }
 #endif
 
- private:
+private:
 
     // pointer to function, called to output status during
     // a search.
@@ -284,40 +284,40 @@ class SearchController {
 
 class Search : public ThreadControl {
 
-  friend class ThreadPool;
-  friend class SearchController;
+    friend class ThreadPool;
+    friend class SearchController;
 
- public:
+public:
 
-  Search(SearchController *c, ThreadInfo *ti);
+    Search(SearchController *c, ThreadInfo *ti);
 
-  virtual ~Search();
+    virtual ~Search();
 
-  void init(NodeStack &ns, ThreadInfo *child_ti);
+    void init(NodeStack &ns, ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
-               int ply, int depth, int flags = 0) {
-      PUSH(alpha,beta,flags,ply,depth);
-      return POP(search());
+                   int ply, int depth, int flags = 0) {
+        PUSH(alpha,beta,flags,ply,depth);
+        return POP(search());
     }
 
     // search based on current board & NodeInfo
     score_t search();
 
     score_t quiesce(score_t alpha, score_t beta,
-                int ply, int depth) {
-       PUSHQ(alpha,beta,ply);
-       return POP(quiesce(ply,depth));
+                    int ply, int depth) {
+        PUSHQ(alpha,beta,ply);
+        return POP(quiesce(ply,depth));
     }
 
     score_t quiesce(int ply,int depth);
 
     int wasTerminated() const {
-      return terminate;
+        return terminate;
     }
 
     NodeInfo * getNode() const {
-      return node;
+        return node;
     }
 
     int master() const { return ti->index == 0; }
@@ -347,21 +347,21 @@ class Search : public ThreadControl {
         }
     }
 
-   // We maintain a local copy of the search options, to reduce
-   // the need for each thread to query global memory. This
-   // forces a reload of that cache from the global options:
-   void setSearchOptions();
+    // We maintain a local copy of the search options, to reduce
+    // the need for each thread to query global memory. This
+    // forces a reload of that cache from the global options:
+    void setSearchOptions();
 
-   score_t drawScore(const Board &board) const;
+    score_t drawScore(const Board &board) const;
 
 #ifdef TUNE
-   static const int LEARNING_SEARCH_WINDOW;
-   static double func( double x );
+    static const int LEARNING_SEARCH_WINDOW;
+    static double func( double x );
 #endif
 
-   void terminateSlaveSearches();
+    void terminateSlaveSearches();
 
- protected:
+protected:
 
     enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
                           FORCED=16, LMR=64, SINGULAR_EXT=128 };
@@ -376,77 +376,77 @@ class Search : public ThreadControl {
 
     void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
 
-    int updateRootMove(const Board &board, NodeInfo *parentNode, 
+    int updateRootMove(const Board &board, NodeInfo *parentNode,
                        NodeInfo *node, Move move, score_t score, int move_index);
 
     int updateMove(const Board &,
-                   NodeInfo *parentNode, NodeInfo* myNode, Move move, 
+                   NodeInfo *parentNode, NodeInfo* myNode, Move move,
                    score_t score, int ply, int depth, SplitPoint *split = NULL);
 
-   void updatePV(const Board &, Move m, int ply);
+    void updatePV(const Board &, Move m, int ply);
 
-   void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
+    void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
 
-   int checkTime(const Board &board,int ply);
+    int checkTime(const Board &board,int ply);
 
-   void showStatus(const Board &board, Move best,int faillow,
-            int failhigh,int complete);
+    void showStatus(const Board &board, Move best,int faillow,
+                    int failhigh,int complete);
 
-   score_t tbScoreAdjust(const Board &board,
-                     score_t score, int tb_hit, Options::TbType tablebase_type,score_t tb_score) const;
+    score_t tbScoreAdjust(const Board &board,
+                          score_t score, int tb_hit, Options::TbType tablebase_type,score_t tb_score) const;
 
-   FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
+    FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
-       ++node; 
-       node->alpha = node->best_score = alpha; 
-       node->beta = beta; 
-       node->flags = flags; 
-       node->best = NullMove; 
-       node->num_try = 0;
-       node->ply = ply;
-       node->depth = depth;
-       node->cutoff = 0; 
-       node->pv[ply] = NullMove;
-       node->pv_length = 0;
+        ++node;
+        node->alpha = node->best_score = alpha;
+        node->beta = beta;
+        node->flags = flags;
+        node->best = NullMove;
+        node->num_try = 0;
+        node->ply = ply;
+        node->depth = depth;
+        node->cutoff = 0;
+        node->pv[ply] = NullMove;
+        node->pv_length = 0;
     }
 
     FORCEINLINE void PUSHQ(score_t alpha, score_t beta, int ply) {
-       ++node; 
-       node->flags = 0;
-       node->alpha = node->best_score = alpha; 
-       node->beta = beta; 
-       node->best = NullMove; 
-       node->pv[ply] = NullMove;
-       node->pv_length = 0;
+        ++node;
+        node->flags = 0;
+        node->alpha = node->best_score = alpha;
+        node->beta = beta;
+        node->best = NullMove;
+        node->pv[ply] = NullMove;
+        node->pv_length = 0;
     }
 
     FORCEINLINE score_t POP(score_t value)  {
-       --node; 
-       return value;
+        --node;
+        return value;
     }
 
     RootSearch *root() const {
-      return controller->rootSearch;
+        return controller->rootSearch;
     }
 
     void setVariablesFromController() {
-       computerSide = controller->computerSide;
-       talkLevel = controller->talkLevel;
-       ratingDiff = controller->ratingDiff;
-       ratingFactor = controller->ratingFactor;
+        computerSide = controller->computerSide;
+        talkLevel = controller->talkLevel;
+        ratingDiff = controller->ratingDiff;
+        ratingFactor = controller->ratingFactor;
     }
 
     void setRatingVariablesFromController() {
-       ratingDiff = controller->ratingDiff;
-       ratingFactor = controller->ratingFactor;
+        ratingDiff = controller->ratingDiff;
+        ratingFactor = controller->ratingFactor;
     }
 
     void setTalkLevelFromController() {
-       talkLevel = controller->talkLevel;
+        talkLevel = controller->talkLevel;
     }
 
     void setSplitDepthFromController() {
-       threadSplitDepth = controller->threadSplitDepth;
+        threadSplitDepth = controller->threadSplitDepth;
     }
 
     SearchController *controller;
@@ -462,11 +462,11 @@ class Search : public ThreadControl {
     int activeSplitPoints;
     // Split point to which this search instance is attached (may be null).
     // All slave nodes and the parent share a split point instance.
-    SplitPoint *split; 
+    SplitPoint *split;
     Scoring scoring;
     ThreadInfo *ti; // thread now running this search
     int threadSplitDepth;
-    // The following variables are maintained as local copies of 
+    // The following variables are maintained as local copies of
     // state from the controller. Placing them in each thread instance
     // helps avoid global variable contention.
     Options::SearchOptions srcOpts;
@@ -478,46 +478,46 @@ class Search : public ThreadControl {
 
 class RootSearch : public Search {
 
-  friend class SearchController;
-  friend class Search;
+    friend class SearchController;
+    friend class Search;
 
- public:
+public:
 
-  RootSearch(SearchController *c, ThreadInfo *ti) 
-    : Search(c,ti),iteration_depth(0) {
-  }
+    RootSearch(SearchController *c, ThreadInfo *ti)
+        : Search(c,ti),iteration_depth(0) {
+    }
 
-  void init(const Board &board, NodeStack &ns);
+    void init(const Board &board, NodeStack &ns);
 
-  int getIterationDepth() const {
-    return iteration_depth;
-  }
+    int getIterationDepth() const {
+        return iteration_depth;
+    }
 
-  Move ply0_search(const vector<Move> &exclude);
+    Move ply0_search(const vector<Move> &exclude);
 
-  const Board &getInitialBoard() const {
-    return initialBoard;
-  }
+    const Board &getInitialBoard() const {
+        return initialBoard;
+    }
 
-  int getWaitTime() const {
-      return waitTime;
-  }
+    int getWaitTime() const {
+        return waitTime;
+    }
 
- protected:
+protected:
 
-  score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
-                      int iteration_depth,
-                      int depth, const vector<Move> &exclude);
+    score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
+                        int iteration_depth,
+                        int depth, const vector<Move> &exclude);
 
-  Board initialBoard;
-  int iteration_depth;
-  int multipv_count;
-  Move easyMove;
-  bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
-  int fail_high_root;
-  score_t last_score;
-  int waitTime;
-  int iteration_value[Constants::MaxPly];
+    Board initialBoard;
+    int iteration_depth;
+    int multipv_count;
+    Move easyMove;
+    bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
+    int fail_high_root;
+    score_t last_score;
+    int waitTime;
+    int iteration_value[Constants::MaxPly];
 };
 
 #endif

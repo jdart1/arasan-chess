@@ -4,10 +4,8 @@
 #include "attacks.h"
 #include "util.h"
 #include "debug.h"
-#include "searchc.h"
 #include "search.h"
 #include "legal.h"
-#include "history.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -434,7 +432,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
             if (numMoves) {
                Move ref;
                if (context)
-                  ref = context->refutations.getRefutation(prevMove);
+                  ref = context->getRefutation(prevMove);
                else
                   ref = NullMove;
                int scores[Constants::MaxMoves];
@@ -451,11 +449,11 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   }
                   SetPhase(moves[i],HISTORY_PHASE);
                   if (context) {
-                      scores[i] = context->history.scoreForOrdering(moves[i],board.sideToMove());
+                      scores[i] = context->scoreForOrdering(moves[i],prevMove,board.sideToMove());
                   }
                   if (MovesEqual(ref,moves[i])) {
                      // score refutation much higher
-                     scores[i] = History::HISTORY_MAX;
+                     scores[i] = 2*SearchContext::HISTORY_MAX;
                      // and put in separate phase
                      SetPhase(moves[i],REFUTATION_PHASE);
                   }

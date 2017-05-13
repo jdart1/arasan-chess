@@ -27,11 +27,9 @@ public:
       int32_t val;
     } history[16][64];
 
-    static int depthFactor(int depth);
+    void addBonus(int &val,int depth,int bonus);
 
-    void addBonus(int &val,int bonus);
-
-    void addPenalty(int &val,int bonus);
+    void addPenalty(int &val,int depth,int bonus);
 };
 
 #endif

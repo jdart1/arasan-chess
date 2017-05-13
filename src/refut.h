@@ -1,12 +1,28 @@
-// Copyright 2015, 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
 
 #ifndef _REFUT_H
 #define _REFUT_H
 
-#include "chess.h"
+#include "board.h"
+#include <array>
+
+class NodeInfo;
 
 class Refutations {
  public:
+
+   using CmhArray = std::array<std::array<int, 64>, 6>;
+
+   using CmhMatrix = std::array< std::array< CmhArray, 64>, 6 >;
+
+   Refutations() {
+      counterMoveHistory = new CmhMatrix;
+      clear();
+   }
+
+   virtual ~Refutations() {
+      delete counterMoveHistory;
+   }
 
     Move getRefutation(Move prev) const {
        return refutations[refutationKey(prev)];
@@ -18,7 +34,15 @@ class Refutations {
 
     void clear() {
        for (int i = 0; i < REFUTATION_TABLE_SIZE; i++) refutations[i] = NullMove;
+       for (int i = 0; i < 6; i++)
+         for (int j = 0; j < 64; j++)
+           for (int k = 0; k < 6; k++)
+             for (int l = 0; l < 64; l++)
+               (*counterMoveHistory)[i][j][k][l] = 0;
     }
+
+    void updateCounterMoveHistory(const Board &,
+       NodeInfo *parentNode, Move best, int depth, ColorType side);
 
  private:
 
@@ -30,7 +54,9 @@ class Refutations {
       return key;
     }
 
-    Move refutations[REFUTATION_TABLE_SIZE];
+    array<Move,REFUTATION_TABLE_SIZE> refutations;
+
+    CmhMatrix *counterMoveHistory;
 };
 
 

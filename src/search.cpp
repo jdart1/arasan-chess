@@ -6,7 +6,6 @@
 #include "movegen.h"
 #include "util.h"
 #include "hash.h"
-#include "refut.h"
 #include "see.h"
 #ifdef GAVIOTA_TBS
 #include "gtb.h"
@@ -18,7 +17,6 @@
 #include "syzygy.h"
 #endif
 #include "legal.h"
-#include "history.h"
 #ifndef _WIN32
 #include <errno.h>
 #endif
@@ -1419,7 +1417,7 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
              board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
-        context.history.updateHistory(board, node, node->best, 0,
+        context.updateStats(board, node, node->best, 0,
            board.sideToMove());
     }
 #ifdef MOVE_ORDER_STATS
@@ -2406,7 +2404,7 @@ score_t Search::search()
                     if (board.checkStatus() != InCheck) {
                        Move best = hashEntry.bestMove(board);
                        if (!IsNull(best) && !CaptureOrPromotion(best)) {
-                           context.history.updateHistory(board, nullptr, best,
+                           context.updateStats(board, node, best,
                              node->depth, board.sideToMove());
                           context.setKiller(best, node->ply);
                        }
@@ -3089,9 +3087,9 @@ score_t Search::search()
         board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
         if (node->ply > 0) {
-           context.refutations.setRefutation((node-1)->last_move,node->best);
+           context.setRefutation((node-1)->last_move,node->best);
         }
-        context.history.updateHistory(board,node,node->best,
+        context.updateStats(board,node,node->best,
             depth,
             board.sideToMove());
     }
@@ -3701,6 +3699,11 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     ti = slave_ti;
     node->ply = s->ply;
     node->depth = s->depth;
+    if (node->ply > 0) {
+        // previous move, needed for counter move history 
+        (node-1)->last_move = ((s->splitNode)-1)->last_move;
+    }
+    
     // Rest of new node initialization is done in searchSMP().
     // Clear killer since the side to move may have been different
     // in the previous use of this class.

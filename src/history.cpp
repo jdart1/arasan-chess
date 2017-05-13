@@ -4,11 +4,8 @@
 #include "search.h"
 #include "debug.h"
 
-static const int BONUS_MAX = 18*18;
-
-int History::depthFactor(int depth) {
-    return (depth/DEPTH_INCREMENT)*(depth/DEPTH_INCREMENT);
-}
+static const int MAX_HISTORY_DEPTH = 15;
+static const int HISTORY_DIVISOR = 64;
 
 void History::clear() {
   for (int i = 0; i < 16; i++) {
@@ -18,17 +15,17 @@ void History::clear() {
   }
 }
 
-void History::addBonus(int &val,int bonus)
+void History::addBonus(int &val,int depth,int bonus)
 {
-    val = val*bonus/BONUS_MAX;
-    val += bonus*32;
+    val = val*depth/HISTORY_DIVISOR;
+    val += bonus;
     val = std::min<int>(HISTORY_MAX-1,val);
 }
 
-void History::addPenalty(int &val,int bonus)
+void History::addPenalty(int &val,int depth,int bonus)
 {
-     val = val*bonus/BONUS_MAX;
-     val -= bonus*32;
+     val = val*depth/HISTORY_DIVISOR;
+     val -= bonus;
      val = std::max<int>(1-HISTORY_MAX,val);
 }
 
@@ -37,9 +34,8 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
     // sanity checks
     ASSERT(!IsNull(best));
     ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
-    ASSERT(parentNode->num_try);
-    const int bonus = depthFactor(depth);
-    if (bonus >= BONUS_MAX) return;
+    depth = std::min(MAX_HISTORY_DEPTH,depth/DEPTH_INCREMENT);
+    const int bonus = depth*depth;
     if (parentNode && parentNode->num_try) {
         for (int i=0; i<parentNode->num_try; i++) {
             ASSERT(i<Constants::MaxMoves);
@@ -50,16 +46,16 @@ void History::updateHistory(const Board &board, NodeInfo *parentNode, Move best,
                 const Piece pieceMoved = MakePiece(PieceMoved(m),side);
                 int &val = history[pieceMoved][DestSquare(m)].val;
                 if (MovesEqual(best,m)) {
-                    addBonus(val,bonus);
+                    addBonus(val,depth,bonus);
                 }
                 else {
-                    addPenalty(val,bonus);
+                    addPenalty(val,depth,bonus);
                 }
             }
         }
     } else {
         int &val = history[MakePiece(PieceMoved(best),side)][DestSquare(best)].val;
-        addBonus(val,bonus);
+        addBonus(val,depth,bonus);
     }
 }
 

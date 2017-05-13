@@ -324,8 +324,7 @@ scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp \
-hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
+movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
@@ -335,7 +334,7 @@ bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
@@ -346,7 +345,7 @@ bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
@@ -357,7 +356,7 @@ bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp history.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp legal.cpp \
 eco.cpp ecodata.cpp \
 stats.cpp threadp.cpp threadc.cpp
@@ -368,9 +367,8 @@ chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp \
+bookread.cpp bookwrit.cpp log.cpp search.cpp \
+searchc.cpp learn.cpp movegen.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp unit.cpp
 
@@ -382,9 +380,8 @@ scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp \
-hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
+movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
+legal.cpp stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -394,9 +391,8 @@ scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp history.cpp \
-hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
+movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
+legal.cpp stats.cpp threadp.cpp threadc.cpp unit.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
