@@ -6,7 +6,6 @@
 #include "board.h"
 #include "constant.h"
 #include "see.h"
-#include "refut.h"
 #include <random>
 #include <set>
 #include <vector>
