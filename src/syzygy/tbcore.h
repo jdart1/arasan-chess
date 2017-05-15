@@ -5,7 +5,7 @@
 #ifndef TBCORE_H
 #define TBCORE_H
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && defined(TB_USE_ATOMIC)
 #include <atomic>
 #endif
 
@@ -96,7 +96,7 @@ struct TBEntry_piece {
   char *data;
   uint64 key;
   uint64 mapping;
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && defined(TB_USE_ATOMIC)
   atomic<ubyte> ready;
 #else
   ubyte ready;
