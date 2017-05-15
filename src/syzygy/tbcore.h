@@ -5,6 +5,10 @@
 #ifndef TBCORE_H
 #define TBCORE_H
 
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#include <atomic>
+#endif
+
 #ifndef _WIN32
 #include <pthread.h>
 #define SEP_CHAR ':'
@@ -92,7 +96,11 @@ struct TBEntry_piece {
   char *data;
   uint64 key;
   uint64 mapping;
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+  atomic<ubyte> ready;
+#else
   ubyte ready;
+#endif
   ubyte num;
   ubyte symmetric;
   ubyte has_pawns;
@@ -107,7 +115,11 @@ struct TBEntry_pawn {
   char *data;
   uint64 key;
   uint64 mapping;
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+  atomic<ubyte> ready;
+#else
   ubyte ready;
+#endif
   ubyte num;
   ubyte symmetric;
   ubyte has_pawns;

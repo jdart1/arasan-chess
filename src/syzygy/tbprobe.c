@@ -702,12 +702,15 @@ static int probe_wdl_table(const struct pos *pos, int *success)
                 return 0;
             }
             // Memory barrier to ensure ptr->ready = 1 is not reordered.
+#if !defined(__cplusplus) || (__cplusplus < 201103L)
 #ifdef __GNUC__
             __asm__ __volatile__ ("" ::: "memory");
 #elif defined(_MSC_VER)
             MemoryBarrier();
 #endif
+#endif
             ptr->ready = 1;
+
         }
         UNLOCK(TB_MUTEX);
     }
@@ -746,6 +749,7 @@ static int probe_wdl_table(const struct pos *pos, int *success)
             uint64_t bb = get_pieces(pos, pc[i] ^ cmirror);
             do
             {
+                assert(i<TBPIECES);
                 p[i++] = lsb(bb);
                 bb = poplsb(bb);
             } while (bb);
@@ -914,6 +918,7 @@ static int probe_dtz_table(const struct pos *pos, int wdl, int *success)
             bb = get_pieces(pos, pc[i] ^ cmirror);
             do
             {
+                assert(i<TBPIECES);
                 p[i++] = lsb(bb) ^ mirror;
                 bb = poplsb(bb);
             }
