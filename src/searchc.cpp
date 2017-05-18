@@ -89,7 +89,10 @@ void SearchContext::updateStats(const Board &board, NodeInfo *parentNode, Move b
                 update(history[MakePiece(PieceMoved(m),side)][DestSquare(m)].val);
                 if (parentNode->ply > 0) {
                     Move lastMove = (parentNode-1)->last_move;
-                    update((*counterMoveHistory)[PieceMoved(lastMove)-1][DestSquare(lastMove)][PieceMoved(m)-1][DestSquare(m)]);
+                    if (!IsNull(lastMove)) {
+                       update((*counterMoveHistory)[PieceMoved(lastMove)-1][DestSquare(lastMove)][PieceMoved(m)-1][DestSquare(m)]);
+                    }
+
                 }
             }
         }
@@ -98,8 +101,10 @@ void SearchContext::updateStats(const Board &board, NodeInfo *parentNode, Move b
         addBonus(val,depth,bonus);
         if (parentNode && parentNode->ply > 0) {
            Move lastMove = (parentNode-1)->last_move;
-           val = (*counterMoveHistory)[PieceMoved(lastMove)-1][DestSquare(lastMove)][PieceMoved(best)-1][DestSquare(best)];
-           addBonus(val,depth,bonus);
+		   if (!IsNull(lastMove)) {
+			  val = (*counterMoveHistory)[PieceMoved(lastMove) - 1][DestSquare(lastMove)][PieceMoved(best) - 1][DestSquare(best)];
+			  addBonus(val, depth, bonus);
+		   }
         }
     }
 }
