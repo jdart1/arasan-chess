@@ -787,6 +787,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
       value = 0;
    }
    waitTime = 0;
+   depth_adjust = 0;
    // Reduce strength but not in analysis mode:
    if (srcOpts.strength < 100 && (controller->typeOfSearch ==
                                   FixedDepth ||
@@ -803,10 +804,10 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
            // adjust time check interval since we are lowering nps
            Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
            if (srcOpts.strength <= 95) {
-               static const int limits[25] = {1,1,1,1,1,1,1,1,
-                                              2,2,2,2,3,3,4,6,8,9,10,
-                                              11,12,13,14,16};
-               int ply_limit = limits[srcOpts.strength/4];
+               const double limit = pow(2.1,srcOpts.strength/25.0)-0.25;
+               double int_limit;
+               double frac_limit = modf(limit,&int_limit);
+               int ply_limit = std::max(1,int(int_limit));
                if (board.getMaterial(White).materialLevel() +
                    board.getMaterial(Black).materialLevel() < 16 &&
                    srcOpts.strength > 10) {
@@ -815,8 +816,12 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                }
                controller->ply_limit = std::min<int>(ply_limit,
                                                  controller->ply_limit);
+               if (limit > 1.0) {
+                  depth_adjust = Util::Round(DEPTH_INCREMENT*frac_limit);
+               }
                if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;
+                   cout << "# depth adjust =" << depth_adjust << endl;
                }
            }
        }
@@ -876,7 +881,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                lo_window << "," << hi_window << "]" << endl;
 #endif
             value = ply0_search(mg, lo_window, hi_window, iteration_depth,
-                                DEPTH_INCREMENT*iteration_depth,
+                                DEPTH_INCREMENT*iteration_depth + depth_adjust,
                                 excluded);
 #ifdef _TRACE
             cout << "iteration " << iteration_depth << " result: " <<
@@ -1123,10 +1128,10 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
          stats->end_of_game = end_of_game[(int)state];
       }
    }
-   if (srcOpts.strength < 100 && iteration_depth <= MoveGenerator::EASY_PLIES) {
-       Move m;
-       int val;
-       mg.suboptimal(srcOpts.strength,m,val);
+   if (srcOpts.strength < 100) {
+       Move m = node->best;
+       int val = node->best_score;
+       suboptimal(mg,m,val);
        if (!MovesEqual(node->best,m)) {
            node->best = m;
            stats->display_value = stats->value = val;
@@ -1432,6 +1437,58 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     controller->stats->num_nodes += nodeAccumulator;
     nodeAccumulator = 0;
     return node->best_score;
+}
+
+void RootSearch::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
+    if (mg.moveCount() < 2) {
+        return;
+    }
+    mg.reorderByScore();
+    unsigned threshold_base = unsigned(750.0/(1.0 + 0.25*pow(srcOpts.strength/10.0,2.0)));
+    const unsigned r = random(1024);
+    // In reduced strength mode sometimes, deliberately choose a move
+    // that is not the best
+    int ord;
+    board = initialBoard;
+    BoardState state(board.state);
+    score_t first_val = val;
+    for (int i = 0; i <= 4; i++) {
+        Move move = (board.checkStatus() == InCheck ? mg.nextEvasion(ord) :
+                  mg.nextMove(ord));
+        if (IsNull(move)) break;
+        // For this search do not reduce strength
+        int tmp = srcOpts.strength;
+        srcOpts.strength = 100;
+        node->last_move = move;
+        board.doMove(move);
+        int n = std::max(3,controller->ply_limit-2);
+        score_t score = -search(-Constants::MATE,Constants::MATE,
+                                1,n*DEPTH_INCREMENT);
+        srcOpts.strength = tmp;
+        board.undoMove(move,state);
+        if (i == 0) {
+           first_val = score;
+        } else {
+           unsigned threshold;
+           if (score > val || val-score > 10*PAWN_VALUE) {
+              threshold = 0;
+           }
+           else {
+              double diff = exp((val-score)/(3.0*PAWN_VALUE))-1.0;
+              threshold = unsigned(threshold_base/(2*diff+i));
+           }
+           if (r < threshold) {
+              if (controller->talkLevel == Trace) {
+                 cout << "# suboptimal: index= " << i <<
+                    " score=" << score << " val=" << first_val <<
+                    " threshold=" << threshold <<
+                    " r=" << r << endl;
+              }
+              m = move;
+              val = score;
+           }
+        }
+    }
 }
 
 score_t Search::quiesce(int ply,int depth)
@@ -3718,3 +3775,4 @@ void Search::clearHashTables() {
 void Search::setSearchOptions() {
    srcOpts = options.search;
 }
+

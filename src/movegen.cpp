@@ -102,7 +102,6 @@ int trace)
      batch_count = j;
    }
    phase = LAST_PHASE;
-   random_engine.seed(getRandomSeed());
 }
 
 
@@ -115,8 +114,7 @@ int RootMoveGenerator::generateAllMoves(NodeInfo *, SplitPoint *)
 
 void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
-   index = order = 0;  // reset index so we will fetch moves again
-   phase = START_PHASE;
+   reset();
    if (initial || depth <= EASY_PLIES) {
        // if in the "easy move" part of the search leave the scores
        // intact: they are set according to the search results
@@ -221,8 +219,7 @@ void RootMoveGenerator::exclude(Move exclude) {
 }
 
 void RootMoveGenerator::reorderByScore() {
-   index = order = 0;  // reset so we will fetch moves again
-   phase = START_PHASE;
+   reset();
    if (moveList.size() <= 1)
       return;
    for (unsigned i = 0; i < moveList.size(); i++) {
@@ -234,44 +231,6 @@ void RootMoveGenerator::reorderByScore() {
                 return a.score > b.score;
              }
       );
-}
-
-void RootMoveGenerator::suboptimal(int strength,Move &m,int &val) {
-   if (moveCount() == 0) {
-       m = NullMove;
-       val = 0;
-       return;
-   }
-   reorderByScore();
-   m = moveList[0].move;
-   val = moveList[0].score;
-   if (moveCount() == 1) {
-       return;
-   }
-   double diff = double(moveList[0].score - moveList[1].score)/PAWN_VALUE;
-   double s = (double)strength;
-   unsigned threshold = unsigned(750.0/pow(2.0,s/10.0));
-   // make it a little less likely to make a big blunder
-   threshold = int(threshold/(1.0+diff*strength/100.0));
-   std::uniform_int_distribution<unsigned> dist(0,1024);
-   unsigned r;
-   if ((r = dist(random_engine)) < threshold) {
-       // deliberately choose a move that is not the best
-       m = moveList[1].move;
-       val = moveList[1].score;
-       if (r < threshold/2 && moveCount() > 2) {
-           m = moveList[2].move;
-           val = moveList[2].score;
-       }
-       if (r < threshold/4 && moveCount() > 3) {
-           m = moveList[3].move;
-           val = moveList[3].score;
-       }
-       if (r < threshold/8 && moveCount() > 4) {
-           m = moveList[4].move;
-           val = moveList[4].score;
-       }
-   }
 }
 
 int MoveGenerator::initialSortCaptures (Move *moves,int captures) {

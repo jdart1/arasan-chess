@@ -6,7 +6,6 @@
 #include "board.h"
 #include "constant.h"
 #include "see.h"
-#include <random>
 #include <set>
 #include <vector>
 using namespace std;
@@ -219,6 +218,11 @@ class RootMoveGenerator : public MoveGenerator
 
       void reorderByScore();
 
+      void reset() {
+        index = order = 0;  // reset so we will fetch moves again
+        phase = START_PHASE;
+      }
+
       void suboptimal(int strength, Move &m, int &val);
 
       void exclude(const vector<Move> &excluded);
@@ -263,7 +267,6 @@ class RootMoveGenerator : public MoveGenerator
    private:
       vector<MoveEntry> moveList;
       int excluded;
-      std::mt19937_64 random_engine;
 
 };
 

@@ -14,6 +14,7 @@ extern "C" {
 #include <memory.h>
 #include <time.h>
 };
+#include <random>
 #include <set>
 using namespace std;
 
@@ -484,7 +485,8 @@ class RootSearch : public Search {
 public:
 
     RootSearch(SearchController *c, ThreadInfo *ti)
-        : Search(c,ti),iteration_depth(0) {
+        : Search(c,ti),iteration_depth(0),waitTime(0),depth_adjust(0) {
+        random_engine.seed(getRandomSeed());
     }
 
     void init(const Board &board, NodeStack &ns);
@@ -509,6 +511,13 @@ protected:
                         int iteration_depth,
                         int depth, const vector<Move> &exclude);
 
+    unsigned random(unsigned max) {
+       std::uniform_int_distribution<unsigned> dist(0,max);
+       return dist(random_engine);
+    }
+
+    void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
+
     Board initialBoard;
     int iteration_depth;
     int multipv_count;
@@ -517,7 +526,9 @@ protected:
     int fail_high_root;
     score_t last_score;
     int waitTime;
+    int depth_adjust; // for strength feature
     int iteration_value[Constants::MaxPly];
+    std::mt19937_64 random_engine;
 };
 
 #endif
