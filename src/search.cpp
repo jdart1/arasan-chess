@@ -1130,7 +1130,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
    }
    if (srcOpts.strength < 100) {
        Move m = node->best;
-       int val = node->best_score;
+       score_t val = node->best_score;
        suboptimal(mg,m,val);
        if (!MovesEqual(node->best,m)) {
            node->best = m;
@@ -2734,8 +2734,8 @@ score_t Search::search()
            node->num_try++;
            //int extension = 0;
            //if (board.checkStatus() == InCheck) extension += DEPTH_INCREMENT;
-           int value = -search(-threshold-1, -threshold,
-                               ply+1, nu_depth, PROBCUT);
+           score_t value = -search(-threshold-1, -threshold,
+                                   ply+1, nu_depth, PROBCUT);
 #ifdef _TRACE
            indent(ply);
            cout << ply << ". ";
