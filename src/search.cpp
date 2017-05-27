@@ -1522,6 +1522,7 @@ score_t Search::quiesce(int ply,int depth)
       if (!board.wasLegal((node-1)->last_move)) {
          return -Illegal;
       }
+      node->flags |= EXACT;
       return scoring.evalu8(board);
    }
    else if (Scoring::isDraw(board,rep_count,ply)) {
@@ -2312,6 +2313,7 @@ score_t Search::search()
        if (!board.wasLegal((node-1)->last_move)) {
           return -Illegal;
        }
+       node->flags |= EXACT;
        return scoring.evalu8(board);
     }
 
@@ -2607,7 +2609,7 @@ score_t Search::search()
             // Note: use threshold as the bounds here, not beta, as
             // was done in Toga 3.0:
             score_t v = quiesce(threshold-1,threshold,ply+1,0);
-            if(v < threshold) {
+            if (v != -Illegal && v < threshold) {
 #ifdef _TRACE
                 indent(ply); cout << "razored node, score=" << v << endl;
 #endif

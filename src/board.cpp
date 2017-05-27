@@ -1838,6 +1838,9 @@ int Board::wasLegal(Move lastMove) const {
 // 'target'
 int Board::discoversAttack(Square source, Square dest, Square target, ColorType side) const
 {
+   ASSERT(OnBoard(source));
+   ASSERT(OnBoard(dest));
+   ASSERT(OnBoard(target));
    const int dir = Attacks::directions[source][target];
    // check that source is in a line to the King
    if (dir == 0) return 0;

@@ -407,7 +407,7 @@ protected:
         node->ply = ply;
         node->depth = depth;
         node->cutoff = 0;
-        node->pv[ply] = NullMove;
+        node->pv[ply] = node->last_move = NullMove;
         node->pv_length = 0;
     }
 
