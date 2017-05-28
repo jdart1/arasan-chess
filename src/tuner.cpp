@@ -1307,6 +1307,8 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          if (i >= Tune::KING_COVER1 &&
              i <= Tune::KING_COVER_BASE)
              delta = range/100;
+         else if (i == Tune::KING_ATTACK_SCALE_FACTOR)
+             delta = range/100;
          else
              delta = range/40;
 
@@ -1333,8 +1335,6 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
             s.evalu8(board,false);
             tune_params.updateParamValue(i,val);
             tune_params.applyParams();
-            update_deriv_vector(s, board, White, derivs, inc);
-            update_deriv_vector(s, board, Black, derivs, -inc);
          }
          // Test derivative of sigmoid computation too
 /*
