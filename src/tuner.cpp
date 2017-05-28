@@ -638,17 +638,17 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    score_t attackWeight = 0;
    int attackCount = 0;
    int majorAttackCount = 0;
-   const int mLevel = board.getMaterial(oside).materialLevel();
-   const int ourMatLevel = board.getMaterial(side).materialLevel();
-   const bool deep_endgame = ourMatLevel <= Scoring::Params::MIDGAME_THRESHOLD;
-   const bool early_endgame = board.getMaterial(side).materialLevel() <= Scoring::Params::ENDGAME_THRESHOLD;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
    const Scoring::PawnHashEntry::PawnData oppPawnData = pawn_entr.pawnData(oside);
-
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(oside);
+   const int mLevel = oppmat.materialLevel();
+   const int ourMatLevel = ourmat.materialLevel();
+   const bool deep_endgame = ourMatLevel <= Scoring::Params::MIDGAME_THRESHOLD;
+   const bool early_endgame = ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD;
+
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
    if (side == White) {
@@ -1256,34 +1256,38 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
           tune_params.scale(inc*boost_slope_grad,Tune::KING_ATTACK_COVER_BOOST_SLOPE,ourMatLevel);
       grads[Tune::KING_ATTACK_COVER_BOOST_BASE] +=
           tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST_BASE,ourMatLevel);
-      if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
-          for (int i=0; i<6; i++) {
-              for (int j = 0; j < 4; j++) {
-                  if (ourKpe.counts[i][j]) {
-                      grads[Tune::KING_COVER1+i] +=
-                          tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0,Tune::KING_COVER1+i,mLevel);
-                      grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
-                          tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
-                  }
-                  // Note: we must adjust the gradient to account for any
-                  // increase to the attackWeight (from the KING_COVER_BOOST
-                  // params) from changes in the king cover score.
-                  if (oppKpe.counts[i][j]) {
-                      // partial deriv of cover term
-                      double cover = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0;
-                      // partial deriv of file term
-                      double file = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0;
-                      // how much a change in cover value will affect
-                      // king attack score:
-                      double kscale = -inc*scale_grad*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
-                      grads[Tune::KING_COVER1+i] +=
-                          tune_params.scale(kscale*cover,Tune::KING_COVER1+i,ourMatLevel);
-                      grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
-                          tune_params.scale(kscale*file,Tune::KING_COVER_FILE_FACTOR0+j,ourMatLevel);
-                  }
-              }
-          }
+      for (int i=0; i<6; i++) {
+         for (int j = 0; j < 4; j++) {
+            // Note: we must adjust the gradient to account for any
+            // increase to the attackWeight (from the KING_COVER_BOOST
+            // params) from changes in the king cover score.
+            if (oppKpe.counts[i][j] && ourMatLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
+               // partial deriv of cover term
+               double coverDeriv = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0;
+               // partial deriv of file term
+               double fileDeriv = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0;
+               // how much a change in cover value will affect
+               // king attack score:
+               double kscale = -inc*scale_grad*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
+               grads[Tune::KING_COVER1+i] +=
+                  tune_params.scale(kscale*coverDeriv,Tune::KING_COVER1+i,ourMatLevel);
+               grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
+                  tune_params.scale(kscale*fileDeriv,Tune::KING_COVER_FILE_FACTOR0+j,ourMatLevel);
+            }
+         }
       }
+   }
+   if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
+       for (int i=0; i<6; i++) {
+           for (int j = 0; j < 4; j++) {
+               if (ourKpe.counts[i][j]) {
+                   grads[Tune::KING_COVER1+i] +=
+                       tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0,Tune::KING_COVER1+i,mLevel);
+                   grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
+                       tune_params.scale(inc*ourKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0,Tune::KING_COVER_FILE_FACTOR0+j,mLevel);
+               }
+           }
+       }
    }
 }
 
@@ -1327,6 +1331,10 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
             tune_params.updateParamValue(i,newval);
             tune_params.applyParams();
             s.evalu8(board,false);
+            tune_params.updateParamValue(i,val);
+            tune_params.applyParams();
+            update_deriv_vector(s, board, White, derivs, inc);
+            update_deriv_vector(s, board, Black, derivs, -inc);
          }
          // Test derivative of sigmoid computation too
 /*

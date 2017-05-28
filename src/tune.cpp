@@ -593,12 +593,14 @@ void Tune::checkParams() const
       if (tune_params[i].min_value > tune_params[i].max_value) {
          cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
       }
+/*
       if (tune_params[i].min_value == tune_params[i].current) {
          cerr << "warning: param " << tune_params[i].name << " tuned to min value (" << tune_params[i].current << ")." << endl;
       }
       if (tune_params[i].max_value == tune_params[i].current) {
          cerr << "warning: param " << tune_params[i].name << " tuned to max value (" << tune_params[i].current << ")." << endl;
       }
+*/
    }
 #endif
 }
@@ -918,6 +920,7 @@ int Tune::findParamByName(const string &name) const {
 
 double Tune::scale(score_t value,int index,int materialLevel) const
 {
+   ASSERT(materialLevel >= 0 && materialLevel<32);
    switch (tune_params[index].scaling) {
    case Tune::TuneParam::Any:
       return value;
