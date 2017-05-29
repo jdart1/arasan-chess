@@ -1197,6 +1197,8 @@ static bool is_legal(const struct pos *pos)
     uint64_t us = (pos->turn? pos->black: pos->white),
              them = (pos->turn? pos->white: pos->black);
     uint64_t king = pos->kings & us;
+    if (!king)
+        return false;
     unsigned sq = lsb(king);
     if (king_attacks(sq) & (pos->kings & them))
         return false;
