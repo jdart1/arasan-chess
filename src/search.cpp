@@ -2194,12 +2194,22 @@ int Search::calcExtensions(const Board &board,
        (board.checkStatus() == InCheck ? GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE : GetPhase(move) == MoveGenerator::HISTORY_PHASE) &&
        !passedPawnMove(board,move,6)) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
-      if (extend) {
-         node->extensions |= LMR;
+       if (extend) {
+           // history based reductions
+           int hist = context.scoreForOrdering(move,(node->ply == 0) ? NullMove\
+                                               : (node-1)->last_move,board.sideToMove())/128;
+           extend += hist*DEPTH_INCREMENT;
+           extend = std::max(extend,1-depth);
+           if (extend <= -DEPTH_INCREMENT) {
+               node->extensions |= LMR;
 #ifdef SEARCH_STATS
-         ++controller->stats->reduced;
+               ++controller->stats->reduced;
 #endif
-      }
+           } else {
+               // do not reduce < 1 ply
+               extend = 0;
+           }
+       }
    }
 
    // for pruning decisions, use depth after LMR
