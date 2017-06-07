@@ -115,11 +115,12 @@ int CDECL main(int argc, char **argv)
                float last_score = -1;
                int valid = 1;
                int var = 0;
-               int done = 0;
+               bool done = false;
                while (!done) {
                   ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
                   switch(tok.type) {
                   case ChessIO::Eof:
+                     done = true;
                      break;
                   case ChessIO::Number:
                      continue;
@@ -183,7 +184,7 @@ int CDECL main(int argc, char **argv)
                         last_score = float(stats.value)/PAWN_VALUE;
                      }
                      if (board.sideToMove() != White) last_score = -last_score;
-                     ++done;
+                     done = true;
                   }
                   default:   
                      break;
