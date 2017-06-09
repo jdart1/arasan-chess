@@ -10,27 +10,6 @@ extern "C" {
 #include <math.h>
 };
 
-struct BIGINT
-{
-  uint32_t low;
-  uint32_t high;
-};
-
-union INT64UNION
-{
-  BIGINT b;
-  hash_t u;
-};
-
-FORCEINLINE int32_t quickmod(int64_t dividend, int32_t divisor)
-{
-   // Compute a 32-bit derived hash code between 0..divisor.
-   // Avoid a 64-bit division, to save time.
-   INT64UNION un;
-   un.u = dividend;
-   return (int32_t)(un.b.low % divisor);
-}
-
 class Util
 { 
     // commonly used utility functions
