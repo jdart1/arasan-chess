@@ -2639,7 +2639,7 @@ score_t Search::search()
     // zugzwang is a possibility. Do not do null move if this is an
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
-    if (pruneOk && depth >= 2*DEPTH_INCREMENT &&
+    if (pruneOk && depth >= DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
         node->staticEval >= node->beta &&
         !Scoring::mateScore(node->alpha) &&
