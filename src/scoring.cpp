@@ -17,6 +17,7 @@ extern "C"
 #include <math.h>
 #include <ctype.h>
 };
+#include <cstddef>
 #include <algorithm>
 #include <climits>
 #include <iomanip>
@@ -89,8 +90,8 @@ static byte is_outside[256][256];
 
 int Scoring::distance(Square sq1, Square sq2)
 {
-   int rankdist = Util::Abs(sq1/8 - sq2/8);
-   int filedist = Util::Abs((sq1 % 8)-(sq2 % 8));
+   int rankdist = std::abs(sq1/8 - sq2/8);
+   int filedist = std::abs((sq1 % 8)-(sq2 % 8));
    return std::max<int>(rankdist,filedist);
 }
 
@@ -357,7 +358,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
         // Bishop endgame: drawish
-       if (pawnDiff > 0 && Util::Abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4) {
+       if (pawnDiff > 0 && std::abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4) {
 #ifdef EVAL_DEBUG
           cout << "bishop endgame adjust: " << -mdiff/4 << endl;
 #endif
@@ -1844,7 +1845,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 #ifdef TUNE
    if (fabs(score) >= Constants::MATE) {
 #else
-   if (Util::Abs(score) >= Constants::MATE) {
+   if (std::abs(score) >= Constants::MATE) {
 #endif
       cout << board << endl;
       ASSERT(0);
@@ -2388,7 +2389,7 @@ int Scoring::KBPDraw(const Board &board) {
 
          // This does not cover all drawing cases but many of them:
          if (Attacks::king_attacks[qsq].isSet(okp)
-             || (Util::Abs(File(okp) - pfile) <= 1 &&
+             || (std::abs(File(okp) - pfile) <= 1 &&
                  Rank(okp, side) > Rank(pawn, side) &&
                  Rank(okp, side) > Rank(kp,side))) {
             return 1;   // draw

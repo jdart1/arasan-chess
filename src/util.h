@@ -37,11 +37,6 @@ class Util
 	    
     public:	
 	
-    static int Abs( const int x )
-    {
-	 return (x < 0) ? -x : x;    
-    }
-    
     static int Sign( const int x )
     {
 	 if (x==0)

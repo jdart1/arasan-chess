@@ -1,9 +1,11 @@
-// Copyright 1994-2002, 2004, 2008-2009, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2002, 2004, 2008-2009, 2014, 2017 by Jon Dart.
+// All Rights Reserved.
 
 #include "learn.h"
 #include "globals.h"
 #include "util.h"
 #include "scoring.h"
+#include <cstddef>
 #include <sstream>
 
 // max ply for position learning
@@ -34,7 +36,7 @@ void learn(const Board &board, int rep_count)
 #ifdef TUNE
          diff1 = fabs(last_score - prev.score());
 #else
-         diff1 = Util::Abs(last_score - prev.score());
+         diff1 = std::abs(last_score - prev.score());
 #endif
          if (theLog->current()>=5) {
             const LogEntry &prev = (*theLog)[theLog->current()-5];
@@ -42,7 +44,7 @@ void learn(const Board &board, int rep_count)
 #ifdef TUNE
                diff2 = fabs(last_score - prev.score());
 #else
-               diff2 = Util::Abs(last_score - prev.score());
+               diff2 = std::abs(last_score - prev.score());
 #endif
             }
          }

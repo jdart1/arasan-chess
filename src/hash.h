@@ -8,6 +8,7 @@
 #ifdef _DEBUG
 #include "legal.h"
 #endif
+#include <cstddef>
 
 extern const hash_t rep_codes[3];
 
@@ -293,7 +294,7 @@ class Hash {
 
 private:
     score_t replaceScore(const HashEntry &pos, int age) const {
-        return score_t((Util::Abs(pos.age()-age)<<12) - pos.depth());
+        return score_t((std::abs(pos.age()-age)<<12) - pos.depth());
     }
 
     HashEntry *hashTable;

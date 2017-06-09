@@ -36,6 +36,7 @@
 #include "syzygy.h"
 #endif
 
+#include <cstddef>
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
@@ -485,7 +486,7 @@ static bool accept_draw(Board &board) {
 #endif
 #ifdef SYZYGY_TBS
       if (options.search.tablebase_type == Options::TbType::SyzygyTb) {
-         if (SyzygyTb::probe_wdl(board,tbscore,true) && Util::Abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
+         if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
               if (doTrace)
                   cout << "# tablebase score says draw" << endl;
               return true;

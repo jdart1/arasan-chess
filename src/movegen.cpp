@@ -6,6 +6,7 @@
 #include "debug.h"
 #include "search.h"
 #include "legal.h"
+#include <cstddef>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -1083,7 +1084,7 @@ int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckC
          case Pawn: {
             const int dir = Attacks::directions[loc][kp];
             ASSERT(dir);
-            if (Util::Abs(dir) != 8) {
+            if (std::abs(dir) != 8) {
                // Pawn does not move in direction of pin
                const int step = (board.sideToMove() == White) ? 8 : -8;
                if (board[loc+step] == EmptyPiece && Rank(loc,board.sideToMove()) < 7) {

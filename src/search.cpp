@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <iomanip>
 #include <list>
 #include <vector>
@@ -2906,7 +2907,7 @@ score_t Search::search()
             hashHit &&
             hashEntry.depth() >= depth - 3*DEPTH_INCREMENT &&
             !IsNull(hashMove) &&
-            Util::Abs(hashValue) < Constants::MATE_RANGE &&
+            std::abs(hashValue) < Constants::MATE_RANGE &&
             result != HashEntry::UpperBound &&
             calcExtensions(board,node,node,board.wouldCheck(hashMove),
                            0,hashMove) < DEPTH_INCREMENT &&

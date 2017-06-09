@@ -1,10 +1,11 @@
-// Copyright 1994-2008 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2013-2014, 2017 by Jon Dart. All Rights Reserved.
 
 #include "chess.h"
 #include "debug.h"
 #include "board.h"
 #include "bitboard.h"
 #include "util.h"
+#include <cstddef>
 #include <iostream>
 #include <iomanip>
 
@@ -258,7 +259,7 @@ static MoveType get_move_type(const Board &board, Square start, Square dest)
        }
        break;
     case King:
-       if (Util::Abs((int)start - (int)dest) == 2)
+       if (std::abs((int)start - (int)dest) == 2)
        {
           if (start > dest)
 	         move_type = QCastle;

@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include <memory.h>
 #include <assert.h>
+#include <cstddef>
 #include <iostream>
 #include <unordered_set>
 
@@ -1710,7 +1711,7 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
                  InCheck : NotInCheck;
              case Bishop: {
                  const int d = (int)Attacks::directions[checker][kp];
-                 if (Util::Abs(d) == 7 || Util::Abs(d) == 9) {
+                 if (std::abs(d) == 7 || std::abs(d) == 9) {
                      Board &b = (Board&)*this;
                      b.allOccupied.clear(StartSquare(lastMove));
                      int in_check = bishopAttacks(checker).isSet(kp);
@@ -1723,7 +1724,7 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
              break;
              case Rook: {
                  const int d = (int)Attacks::directions[checker][kp];
-                 if (Util::Abs(d) == 1 || Util::Abs(d) == 8) {
+                 if (std::abs(d) == 1 || std::abs(d) == 8) {
                      Board &b = (Board&)*this;
                      b.allOccupied.clear(StartSquare(lastMove));
                      int in_check = rookAttacks(checker).isSet(kp);
@@ -1847,7 +1848,7 @@ int Board::discoversAttack(Square source, Square dest, Square target, ColorType 
    const int dir2 =  Attacks::directions[dest][target];
    // check for movement in direction of possible pin. Also exit
    // here if path is not clear to the King
-   if (Util::Abs(dir) == Util::Abs(dir2) ||
+   if (std::abs(dir) == std::abs(dir2) ||
        (Attacks::betweenSquares[source][target] & allOccupied)) return 0;
 
    Square attackSq = getDirectionalAttack(source,-dir,side);

@@ -1,8 +1,9 @@
-// Copyright 1998, 2005, 2008 by Jon Dart. All Rights Reserved.
+// Copyright 1998, 2005, 2008, 2017 by Jon Dart. All Rights Reserved.
 
 #include "legal.h"
 #include "movegen.h"
 #include "util.h"
+#include <cstddef>
 
 int validMove(const Board &board, Move move)
 {
@@ -57,17 +58,17 @@ int validMove(const Board &board, Move move)
       }
       case Rook:
       {
-         int d = Util::Abs(Attacks::directions[start][dest]);
+         int d = std::abs(Attacks::directions[start][dest]);
          return (d==1 || d==8) && board.clear(start,dest);
       }
       case Bishop:
       {
-         int d = Util::Abs(Attacks::directions[start][dest]);
+         int d = std::abs(Attacks::directions[start][dest]);
          return (d==7 || d==9) && board.clear(start,dest);
       }
       case Queen:
       {
-         int d = Util::Abs(Attacks::directions[start][dest]);
+         int d = std::abs(Attacks::directions[start][dest]);
          return (d==1 || d==8 || d==7 || d==9) && board.clear(start,dest);
       }
       case Pawn:
