@@ -2641,7 +2641,7 @@ score_t Search::search()
     // Also avoid null move near the 50-move draw limit.
     if (pruneOk && depth >= DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
-        node->staticEval >= node->beta &&
+        ((node->staticEval >= node->beta - int(0.25*PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
