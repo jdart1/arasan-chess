@@ -386,6 +386,8 @@ B14     1. e4 c6 2. d4 d5 3. ed5 cd5 4. c4 Nf6 5. Nc3 e6 6. Nf3 "Caro-Kann, Pano
 B14     1. e4 c6 2. d4 d5 3. ed5 cd5 4. c4 Nf6 5. Nc3 e6 6. Nf3 Be7 "Caro-Kann, Panov-Botvinnik Attack"
 B14     1. e4 c6 2. d4 d5 3. ed5 cd5 4. c4 Nf6 5. Nc3 e6 6. Nf3 Bb4 "Caro-Kann, Panov-Botvinnik Attack"
 B14     1. e4 c6 2. d4 d5 3. exd5 cxd5 4. c4 Nf6 5. Nc3 e6 6. Nf3 Bb4 7. cxd5 Nxd5 8. Qc2 Nc6 "Caro-Kann, Panov-Botvinnik Attack"
+B14     1. e4 c6 2. d4 d5 3. exd5 cxd5 4. c4 Nf6 5. Nc3 g6 "Caro-Kann, Panov-Botvinnik Attack"
+B14     1. c4 c6 2. e4 d5 3. exd5 cxd5 4. d4 Nf6 5. Nc3 g6 6. cxd5 Nxd5 "Caro-Kann, Panov-Botvinnik Attack"
 B15     1. e4 c6 2. d4 d5 3. Nc3 "Caro-Kann Defense"
 B15     1. e4 c6 2. d4 d5 3. Nc3 g6 "Caro-Kann, Gurgandize System"
 B15     1. e4 c6 2. d4 d5 3. Nc3 g6 4. h3 "Caro-Kann, Gurgandize System"

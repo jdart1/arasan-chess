@@ -381,6 +381,8 @@ const struct ECOData eco_codes[] =
 {"B14", 0xb327e99d8ff51234ULL ,"Caro-Kann, Panov-Botvinnik Attack"},
 {"B14", 0xabe8e8afa15283f2ULL ,"Caro-Kann, Panov-Botvinnik Attack"},
 {"B14", 0xccadaa8586fd5757ULL ,"Caro-Kann, Panov-Botvinnik Attack"},
+{"B14", 0xdd06a52251696e73ULL ,"Caro-Kann, Panov-Botvinnik Attack"},
+{"B14", 0xcb92c381958010faULL ,"Caro-Kann, Panov-Botvinnik Attack"},
 {"B15", 0x16b0a85af06d709dULL ,"Caro-Kann Defense"},
 {"B15", 0xd75ef8e0f3239864ULL ,"Caro-Kann, Gurgandize System"},
 {"B15", 0x16f1de0707c67629ULL ,"Caro-Kann, Gurgandize System"},
