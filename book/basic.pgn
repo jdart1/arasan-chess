@@ -30944,14 +30944,20 @@ $1 $11 {1/2-1/2 (179) Arasan 19.0 (2455)-WretchedOyster (2466) chessclub.com
 [EventCategory "16"]
 
 1. Nf3 d5 2. d4 Nf6 3. c4 e6 4. Nc3 Be7 (4... Nbd7 5. Bg5 h6 6. Bh4 Be7 7. e3
-O-O 8. Rc1 $1 dxc4 $6 (8... c5 $1 9. cxd5 Nxd5 10. Bxe7 Nxe7 11. Be2 (11. dxc5
-$5 Nxc5 12. Qxd8 Rxd8 13. b4 Nd7 $11 {1-0 (49) Nakamura,H (2787)-Fressinet,L 
-(2687) Paris 2016}) 11... b6 12. O-O Bb7 $11 {0-1 (55) Salem,A (2586)-Kramnik,
-V (2760) Doha 2014 CBM 164 (Sagar Shah)}) 9. Bxc4 a6 10. a4 c5 11. O-O cxd4 12.
-exd4 Nb6 13. Ba2 Bd7 14. Ne5 a5 $2 (14... Bc6 $1) 15. Qd3 $14 {1-0 (38)
-ComputerGOD (2420)-Arasan 18.2 (2055) chessclub.com 2015}) 5. Bg5 O-O 6. e3
-Nbd7 7. Rc1 c6 8. Bd3 a6 9. c5 e5 10. dxe5 Ne8 11. h4 Nxc5 12. Bb1 Ne6 $2 (
-12... f6) 13. Qc2 (13. Qd3 $16 {Stockfish}) 13... Nxg5 $11 *
+O-O 8. Rc1 $1 dxc4 $6 (8... c5 $1 9. cxd5 (9. dxc5 Nxc5 10. cxd5 g5 11. Bg3
+Nxd5 12. Nxd5 Qxd5 13. Qxd5 exd5 14. Be2 Bd7 15. O-O Rac8 $11 {1/2-1/2 (35)
+Topalov,V (2741)-Kramnik,V (2811) Shamkir 2017} 16. Be5 $5 $14) 9... Nxd5 10.
+Bxe7 Nxe7 11. Be2 (11. dxc5 $5 Nxc5 12. Qxd8 Rxd8 13. b4 Nd7 $11 {1-0 (49)
+Nakamura,H (2787)-Fressinet,L (2687) Paris 2016}) 11... b6 12. O-O Bb7 $11 {
+0-1 (55) Salem,A (2586)-Kramnik,V (2760) Doha 2014 CBM 164 [Sagar Shah]}) (8...
+b6 $2 9. cxd5 exd5 10. Bd3 Bb7 (10... c5 11. O-O Bb7) 11. O-O c5 12. Qc2 $1 c4
+(12... Nh5 13. Bxe7 Qxe7 $14) 13. Be2 (13. Bf5 $1 $14) 13... a6 14. a4 Bb4 15.
+Ne5 $14 {1-0 (49) zerowin (2809)-Arasan v20.1.0-34-g114bb0b (2762) freechess.
+org 2017}) (8... c6 $1) (8... a6 $1) 9. Bxc4 a6 10. a4 c5 11. O-O cxd4 12. exd4
+Nb6 13. Ba2 Bd7 14. Ne5 a5 $2 (14... Bc6 $1) 15. Qd3 $14 {1-0 (38) ComputerGOD
+(2420)-Arasan 18.2 (2055) chessclub.com 2015}) 5. Bg5 O-O 6. e3 Nbd7 (6... h6
+$1) 7. Rc1 c6 8. Bd3 a6 9. c5 e5 10. dxe5 Ne8 11. h4 Nxc5 12. Bb1 Ne6 $2 (12...
+f6) 13. Qc2 (13. Qd3 $16 {Stockfish}) 13... Nxg5 $11 *
 
 [Event "Copenhagen"]
 [Site "Copenhagen"]
