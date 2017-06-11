@@ -18,10 +18,10 @@
 
 extern "C"
 {
-#include <stddef.h>
 #include <string.h>
 #include <ctype.h>
 };
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <ctype.h>
@@ -253,7 +253,7 @@ int CDECL main(int argc, char **argv)
                            }
                         }
                               
-                        ok_to_insert = positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 6) && Util::Abs(score(searcher,board,stats)) < selOptions.maxScore;
+                        ok_to_insert = positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 6) && std::abs(score(searcher,board,stats)) < selOptions.maxScore;
                         if (ok_to_insert) {
                            EPDRecord rec;
                            stringstream cs_string;
