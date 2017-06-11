@@ -5408,18 +5408,21 @@ Haarlem 2014}) 2. Nf3 f5 3. g3 Nf6 4. Bg2 g6 5. O-O Bg7 6. c4 O-O 7. Nc3 Qe8 (
 7... c6 $1 8. Qb3 (8. Rb1 a5 $1 9. Qb3 $3 Kh8 (9... h6 $2 10. Be3 $1 $14) 10.
 Rd1 Na6 $11) (8. b3 Na6 9. Bb2 (9. Re1 Qa5 10. Qd2 $5 $14) 9... Qe8 (9... Qc7)
 10. Re1 $14 (10. d5 $2 Bd7 {1/2-1/2 (56) Dubov,D (2614)-Hoang,T (2511) Caleta
-2014})) 8... Na6 9. Rd1 Kh8 10. Qa3 Nc7 11. d5 cxd5 $2 (11... Bd7 $3 {1/2-1/2 
-(57) Bacrot,E (2702)-Svidler,P (2762) Porto Vecchio 2016}) 12. Nxd5 Ncxd5 13.
-cxd5 $14 {1-0 (34) ipfreely (2234)-Arasan 19.1 (2133) chessclub.com 2016}) 8.
-d5 (8. Re1 Qf7 9. e4 $1 fxe4 (9... Nxe4 $2 10. Nxe4 fxe4 11. Rxe4) 10. Nxe4 Nc6
-11. d5 (11. Neg5 Qxc4 12. b3 Qb5 $11 {1-0 (65) Shishkin,V (2496)-Sivuk,V (2481)
-Kiev 2013}) 11... Nxe4 12. Rxe4 Ne5 13. Rf4 Nxf3+ 14. Rxf3 Qe8 15. Qe2 Rxf3 16.
-Bxf3 $11) (8. Qb3 $1 Na6 $1 9. Rd1 $1 $14) 8... Na6 9. Rb1 c6 10. b4 Bd7 11.
-dxc6 (11. c5 $1 $14) 11... bxc6 12. a3 Nc7 13. Bb2 Ne6 (13... Rd8 14. Qa4 e5
-15. Rfd1 Qe7 $2 {1-0 (35) Bu,X (2714)-Gurevich,M (2634) Beijing 2008} (15... e4
-$3 16. Nd4 $11 {1-0 (41) Muhl,P (2096)-Sherwood,R (2026) LSS email 2008})) 14.
-e3 Rb8 15. Ne2 a5 16. Bc3 axb4 17. axb4 Qf7 {1/2-1/2 (37) Illescas Cordoba,M 
-(2600)-Gurevich,M (2635) France 1998} 1/2-1/2
+2014})) (8. d5 e5 9. e4 cxd5 $1 (9... Na6 $2 10. exf5 Bxf5 (10... gxf5) 11. Bg5
+$14 {1-0 (64) zerowin (2815)-Arasan v20.1.0-34-g114bb0b (2756) freechess.org
+2017}) 10. cxd5 (10. exd5 $2 Na6 $1) 10... Na6 11. Ng5 $3 $11) 8... Na6 9. Rd1
+Kh8 10. Qa3 Nc7 11. d5 cxd5 $2 (11... Bd7 $3 {1/2-1/2 (57) Bacrot,E (2702)
+-Svidler,P (2762) Porto Vecchio 2016}) 12. Nxd5 Ncxd5 13. cxd5 $14 {1-0 (34)
+ipfreely (2234)-Arasan 19.1 (2133) chessclub.com 2016}) 8. d5 (8. Re1 Qf7 9. e4
+$1 fxe4 (9... Nxe4 $2 10. Nxe4 fxe4 11. Rxe4) 10. Nxe4 Nc6 11. d5 (11. Neg5
+Qxc4 12. b3 Qb5 $11 {1-0 (65) Shishkin,V (2496)-Sivuk,V (2481) Kiev 2013})
+11... Nxe4 12. Rxe4 Ne5 13. Rf4 Nxf3+ 14. Rxf3 Qe8 15. Qe2 Rxf3 16. Bxf3 $11) (
+8. Qb3 $1 Na6 $1 9. Rd1 $1 $14) 8... Na6 9. Rb1 c6 10. b4 Bd7 11. dxc6 (11. c5
+$1 $14) 11... bxc6 12. a3 Nc7 13. Bb2 Ne6 (13... Rd8 14. Qa4 e5 15. Rfd1 Qe7 $2
+{1-0 (35) Bu,X (2714)-Gurevich,M (2634) Beijing 2008} (15... e4 $3 16. Nd4 $11
+{1-0 (41) Muhl,P (2096)-Sherwood,R (2026) LSS email 2008})) 14. e3 Rb8 15. Ne2
+a5 16. Bc3 axb4 17. axb4 Qf7 {1/2-1/2 (37) Illescas Cordoba,M (2600)-Gurevich,
+M (2635) France 1998} 1/2-1/2
 
 [Event "Berlin rap"]
 [Site "Berlin East"]
