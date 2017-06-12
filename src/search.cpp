@@ -91,7 +91,7 @@ static const int RAZOR_MARGIN[4] = { int(0.9*PAWN_VALUE),
                                      int(3.0*PAWN_VALUE),
                                      int(3.5*PAWN_VALUE) };
 
-static const int FUTILITY_MARGIN_BASE = (int)(1.01*PAWN_VALUE);
+static const int FUTILITY_MARGIN_BASE = (int)(1.5*PAWN_VALUE);
 static const int FUTILITY_MARGIN_SLOPE = (int)(0.772*PAWN_VALUE);
 static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.299*PAWN_VALUE);
 
@@ -105,17 +105,6 @@ static const int FUTILITY_MARGIN[6] =
 };
 
 static const int STATIC_NULL_PRUNING_DEPTH = 4*DEPTH_INCREMENT;
-static const score_t STATIC_NULL_MARGIN_BASE = PAWN_VALUE;
-static const score_t STATIC_NULL_MARGIN_SLOPE = score_t(0.3*PAWN_VALUE);
-static const score_t STATIC_NULL_MARGIN_SLOPE2 = score_t(0.2*PAWN_VALUE);
-
-static const score_t STATIC_NULL_MARGIN[5] =
-{STATIC_NULL_MARGIN_BASE,
- STATIC_NULL_MARGIN_BASE+1*STATIC_NULL_MARGIN_SLOPE+1*1*STATIC_NULL_MARGIN_SLOPE2,
- STATIC_NULL_MARGIN_BASE+2*STATIC_NULL_MARGIN_SLOPE+2*2*STATIC_NULL_MARGIN_SLOPE2,
- STATIC_NULL_MARGIN_BASE+3*STATIC_NULL_MARGIN_SLOPE+3*3*STATIC_NULL_MARGIN_SLOPE2,
- STATIC_NULL_MARGIN_BASE+4*STATIC_NULL_MARGIN_SLOPE+4*4*STATIC_NULL_MARGIN_SLOPE2
-};
 
 static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
 
@@ -694,6 +683,11 @@ score_t Search::tbScoreAdjust(const Board &board,
    }
 }
 #endif
+
+score_t Search::futilityMargin(int depth) const
+{
+    return FUTILITY_MARGIN[std::max(1,depth/DEPTH_INCREMENT)-1];
+}
 
 Move RootSearch::ply0_search(const vector <Move> &exclude)
 {
@@ -2239,7 +2233,7 @@ int Search::calcExtensions(const Board &board,
       if (predictedDepth <= FUTILITY_DEPTH) {
          // Threshold was formerly increased with the move index
          // but this tests worse now.
-         score_t threshold = parentNode->beta - FUTILITY_MARGIN[predictedDepth/DEPTH_INCREMENT];
+          score_t threshold = parentNode->beta - futilityMargin(predictedDepth);
          if (node->eval == Scoring::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
          }
@@ -2594,7 +2588,7 @@ score_t Search::search()
     // as in Protector, Texel, etc.
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
         node->beta < Constants::TABLEBASE_WIN) {
-       const score_t margin = STATIC_NULL_MARGIN[depth/DEPTH_INCREMENT];
+        const score_t margin = futilityMargin(depth);
        const score_t threshold = node->beta+margin;
        ASSERT(node->eval != Scoring::INVALID_SCORE);
        if (node->eval >= threshold) {

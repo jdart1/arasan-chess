@@ -396,6 +396,8 @@ protected:
     score_t tbScoreAdjust(const Board &board,
                           score_t score, int tb_hit, Options::TbType tablebase_type,score_t tb_score) const;
 
+    score_t futilityMargin(int depth) const;
+
     FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
         ++node;
