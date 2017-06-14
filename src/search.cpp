@@ -91,9 +91,9 @@ static const int RAZOR_MARGIN[4] = { int(0.9*PAWN_VALUE),
                                      int(3.0*PAWN_VALUE),
                                      int(3.5*PAWN_VALUE) };
 
-static const int FUTILITY_MARGIN_BASE = (int)(1.5*PAWN_VALUE);
-static const int FUTILITY_MARGIN_SLOPE = (int)(0.75*PAWN_VALUE);
-static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.1*PAWN_VALUE);
+static const int FUTILITY_MARGIN_BASE = (int)(0.25*PAWN_VALUE);
+static const int FUTILITY_MARGIN_SLOPE = (int)(0.5*PAWN_VALUE);
+static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.2*PAWN_VALUE);
 
 static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
@@ -677,9 +677,8 @@ score_t Search::tbScoreAdjust(const Board &board,
 
 score_t Search::futilityMargin(int depth) const
 {
-    int d = depth-3*DEPTH_INCREMENT/2;
-    return (d<=0) ? FUTILITY_MARGIN_BASE :
-        FUTILITY_MARGIN_BASE + (d*FUTILITY_MARGIN_SLOPE + d*d*FUTILITY_MARGIN_SLOPE2)/DEPTH_INCREMENT;
+    int d = std::max(depth,int(1.5*DEPTH_INCREMENT));
+    return FUTILITY_MARGIN_BASE + d*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT + d*d*FUTILITY_MARGIN_SLOPE2/(DEPTH_INCREMENT*DEPTH_INCREMENT);
 }
 
 Move RootSearch::ply0_search(const vector <Move> &exclude)
