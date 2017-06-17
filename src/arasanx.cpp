@@ -607,7 +607,7 @@ static void save_game() {
       stringstream timec;
       timec << minutes*60;
       if (incr) {
-          timec << '+' << setprecision(2) << incr/1000.0F;
+         timec << '+' << fixed << setprecision(2) << incr/1000.0F;
       }
       headers.push_back(ChessIO::Header("TimeControl",timec.str()));
       string result;
