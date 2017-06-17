@@ -1,7 +1,6 @@
 // Copyright 1999-2005, 2011, 2012, 2014 Jon Dart. All Rights Reserved.
 
 #include "hash.h"
-#include "util.h"
 #include "debug.h"
 #include "constant.h"
 #include "globals.h"

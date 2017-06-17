@@ -13,7 +13,6 @@
 #include "attacks.h"
 #include "globals.h"
 #include "log.h"
-#include "util.h"
 #include "calctime.h"
 #include "eco.h"
 #include "learn.h"

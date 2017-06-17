@@ -3,7 +3,6 @@
 
 #include "learn.h"
 #include "globals.h"
-#include "util.h"
 #include "scoring.h"
 #include <cstddef>
 #include <sstream>

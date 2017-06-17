@@ -6,7 +6,6 @@
 #include "bookdefs.h"
 #include "movegen.h"
 #include "globals.h"
-#include "util.h"
 #include "debug.h"
 extern "C" {
 #include <string.h>

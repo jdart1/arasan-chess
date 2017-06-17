@@ -1,7 +1,6 @@
 // Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
-#include "util.h"
 #include "bhash.h"
 #include "bitprobe.h"
 #include "hash.h"
@@ -2585,7 +2584,7 @@ static void print_array(ostream & o,score_t arr[], int size, int add_semi = 1)
    score_t *p = arr;
    for (int i = 0; i < size; i++) {
       if (i) o << ", ";
-      o << Util::Round(*p++);
+      o << std::round(*p++);
    }
    o << "}";
    if (add_semi) o << ";" << endl;
@@ -2635,7 +2634,7 @@ void Scoring::Params::write(ostream &o, const string &comment)
            it++) {
          o << (char)toupper((int)*it);
       }
-      o << " = " << Util::Round(param.current) << ";" << endl;
+      o << " = " << std::round(param.current) << ";" << endl;
    }
    o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = ";
    print_array(o,Params::KING_ATTACK_COUNT_BOOST,3);

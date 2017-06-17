@@ -4,7 +4,6 @@
 #include "board.h"
 #include "movegen.h"
 #include "debug.h"
-#include "util.h"
 #include <algorithm>
 
 static void UCIMoveImage(const Move &move, ostream &image) {

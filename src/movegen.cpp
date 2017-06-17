@@ -2,7 +2,6 @@
 //
 #include "movegen.h"
 #include "attacks.h"
-#include "util.h"
 #include "debug.h"
 #include "search.h"
 #include "legal.h"

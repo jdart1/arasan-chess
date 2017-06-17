@@ -4,7 +4,6 @@
 #include "debug.h"
 #include "board.h"
 #include "bitboard.h"
-#include "util.h"
 #include <cstddef>
 #include <iostream>
 #include <iomanip>

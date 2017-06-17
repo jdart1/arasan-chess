@@ -3,7 +3,6 @@
 
 #include "see.h"
 #include "see.h"
-#include "util.h"
 #include "constant.h"
 #include "debug.h"
 

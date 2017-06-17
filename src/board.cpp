@@ -3,7 +3,6 @@
 #include "constant.h"
 #include "chess.h"
 #include "board.h"
-#include "util.h"
 #include "attacks.h"
 #include "debug.h"
 #include "boardio.h"

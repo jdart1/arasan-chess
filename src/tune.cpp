@@ -734,7 +734,7 @@ void Tune::applyParams() const
    }
    for (int i = 0; i < Scoring::Params::KING_ATTACK_SCALE_SIZE; i++) {
        int x = PARAM(KING_ATTACK_SCALE_BIAS) +
-           Util::Round(PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(i-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0)));
+           int(std::round(PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(i-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0))));
        Scoring::Params::KING_ATTACK_SCALE[i] = x;
    }
    memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(score_t)*8);

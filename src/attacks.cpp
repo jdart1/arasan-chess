@@ -1,7 +1,6 @@
 // Copyright 2008-2013 by Jon Dart.  All Rights Reserved.
 //
 #include "attacks.h"
-#include "util.h"
 #include "debug.h"
 
 const CACHE_ALIGN int Attacks::directions[64][64] =

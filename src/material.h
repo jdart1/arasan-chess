@@ -5,7 +5,6 @@
 
 #include "chess.h"
 #include "debug.h"
-#include "util.h"
 
 class Material
 {

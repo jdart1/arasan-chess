@@ -6,7 +6,6 @@
 #include "hash.h"
 #include "globals.h"
 #include "chessio.h"
-#include "util.h"
 #include "search.h"
 #include "tune.h"
 #include <algorithm>

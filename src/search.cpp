@@ -4,7 +4,6 @@
 #include "globals.h"
 #include "notation.h"
 #include "movegen.h"
-#include "util.h"
 #include "hash.h"
 #include "see.h"
 #ifdef GAVIOTA_TBS
@@ -804,7 +803,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
                controller->ply_limit = std::min<int>(ply_limit,
                                                  controller->ply_limit);
                if (limit > 1.0) {
-                  depth_adjust = Util::Round(DEPTH_INCREMENT*frac_limit);
+                  depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
                }
                if (talkLevel == Trace) {
                    cout << "# ply limit =" << controller->ply_limit << endl;

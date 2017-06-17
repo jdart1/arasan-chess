@@ -2,7 +2,6 @@
 
 #include "legal.h"
 #include "movegen.h"
-#include "util.h"
 #include <cstddef>
 
 int validMove(const Board &board, Move move)
