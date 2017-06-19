@@ -85,18 +85,17 @@ static const int LMP_DEPTH=10;
 
 static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93};
 
-static const int RAZOR_MARGIN[4] = { int(0.9*PAWN_VALUE),
-                                     int(1.25*PAWN_VALUE),
-                                     int(3.0*PAWN_VALUE),
-                                     int(3.5*PAWN_VALUE) };
+static const score_t RAZOR_MARGIN1 = score_t(0.9*PAWN_VALUE);
+static const score_t RAZOR_MARGIN2 = score_t(2.75*PAWN_VALUE);
+static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
 
-static const int FUTILITY_MARGIN_BASE = (int)(0.25*PAWN_VALUE);
-static const int FUTILITY_MARGIN_SLOPE = (int)(0.5*PAWN_VALUE);
-static const int FUTILITY_MARGIN_SLOPE2 = (int)(0.2*PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_BASE = (score_t)(0.25*PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_SLOPE = (score_t)(0.5*PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_SLOPE2 = (score_t)(0.2*PAWN_VALUE);
 
 static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
-static const int QSEARCH_FORWARD_PRUNE_MARGIN = int(0.6*PAWN_VALUE);
+static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = score_t(0.6*PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -678,6 +677,12 @@ score_t Search::futilityMargin(int depth) const
 {
     int d = std::max(depth,int(1.5*DEPTH_INCREMENT));
     return FUTILITY_MARGIN_BASE + d*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT + d*d*FUTILITY_MARGIN_SLOPE2/(DEPTH_INCREMENT*DEPTH_INCREMENT);
+}
+
+score_t Search::razorMargin(int depth) const
+{
+    return(depth<=DEPTH_INCREMENT) ?
+        RAZOR_MARGIN1 : RAZOR_MARGIN2 + (PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
 }
 
 Move RootSearch::ply0_search(const vector <Move> &exclude)
@@ -2599,7 +2604,7 @@ score_t Search::search()
     // razoring as in Glaurung & Toga
     if (pruneOk && node->beta < Constants::MATE_RANGE &&
         depth <= RAZOR_DEPTH) {
-        const score_t threshold = node->beta - RAZOR_MARGIN[depth/DEPTH_INCREMENT];
+        const score_t threshold = node->beta - razorMargin(depth);
         ASSERT(node->eval != Scoring::INVALID_SCORE);
         if (node->eval < threshold) {
             // Note: use threshold as the bounds here, not beta, as

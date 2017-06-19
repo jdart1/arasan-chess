@@ -398,6 +398,8 @@ protected:
 
     score_t futilityMargin(int depth) const;
 
+    score_t razorMargin(int depth) const;
+
     FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
         ++node;
