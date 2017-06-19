@@ -18,7 +18,6 @@
 #include "debug.h"
 #include "attacks.h"
 #include "globals.h"
-#include "util.h"
 
 #include <fstream>
 #include <iostream>

@@ -12,7 +12,6 @@
 #include "chessio.h"
 #include "movearr.h"
 #include "globals.h"
-#include "util.h"
 #include "chessio.h"
 #include "search.h"
 
