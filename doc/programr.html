@@ -388,15 +388,15 @@ computation.</p>
 <p>The Makefile has a "tuning" target that builds a "tuner" executable
 that when run will generate the parameter file (params.cpp) containing
 evaluation weights used by the Arasan scoring module.</p>
-</p>
 <p>The tuner implements a variant of the <a href="https://chessprogramming.wikispaces.com/Texel's+Tuning+Method">Texel tuning method</a>, based
 on logistic regression. 
 (Formerly Arasan also supported a tuning method called MMTO described by Hoki
-and Kaneko (see references), but the current version no longer does).
-For this method the input file should be a EPD
+  and Kaneko (see references), but the current version no longer does).</p>
+<p>
+The input file should be a EPD
 (Extended Position Description) file with a
-diverse set of positions. The tuner program expects each position to have
-two EPD tags:</p>
+diverse set of positions. These do not have to be quiescent (i.e. can
+have possible captures, checks and/or promotions). The tuner program expects each position to have two EPD tags:</p>
 <ul>
 <li>The "c1" tag should hold the Arasan castling status (see board.h) as
 two integers, the first for the White side and the second for Black. For
@@ -409,7 +409,22 @@ The "c2" tag holds the game result as one of the following strings: "0.0" (Black
 </li>
 </ul>
 <p>The "tuner" program expects an EPD file to be specified on the command
-line. It will output two files: by default the first one is named "x0"
+line. For each position it will conduct a shallow-depth
+  search. The principal variation (PV) from this search will end in a
+  quiescent position. These positions are stored in memory and and their
+  static evaluations are used as a proxy for the initial position's eval.
+  The tuner has the option of periodically re-computing the PVs, since
+  as the parameters change so potentially do the PVs (this is similar
+  to what MMTO does).</p>
+<p>
+  The tuner tries to minimize a
+  measure of difference between the predicted game results (which are
+  computed using a sigmoid function of the evaluation scores) and the
+  actual game results. It does this using one of several gradient
+  descent methods. The code explicitly computes the gradient of the
+  evaluation function, rather than approximating it as some programs do.
+  </p>
+<p>The tuner will output two files: by default the first one is named "x0"
 and contains the tuned parameter values; the second one is a compilable
 version of the parameters named "params.cpp."</p>
 <p>
