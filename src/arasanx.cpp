@@ -605,10 +605,31 @@ static void save_game() {
       }
       stringstream timec;
       timec << minutes*60;
+      string timestr = timec.str();
       if (incr) {
          timec << '+' << fixed << setprecision(2) << incr/1000.0F;
+         timestr = timec.str();
+         size_t per = timestr.find('.');
+         if (per != string::npos) {
+             int eraseCount = 0;
+             // remove trailing zeros and decimal pt if possible:
+             for (auto it = timestr.end()-1; it != timestr.begin(); it--) {
+                 if (*it == '0' || *it == '.') {
+                     ++eraseCount;
+                     if (*it == '.') break;
+                 }
+                 else {
+                     break;
+                 }
+             }
+             if (eraseCount) {
+                 timestr.erase(timestr.size()-eraseCount,eraseCount);
+             }
+         }
+      } else {
+          timestr = timec.str();
       }
-      headers.push_back(ChessIO::Header("TimeControl",timec.str()));
+      headers.push_back(ChessIO::Header("TimeControl",timestr));
       string result;
       theLog->getResultAsString(result);
       ChessIO::store_pgn(*game_file, *gameMoves,
