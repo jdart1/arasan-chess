@@ -4,7 +4,7 @@
 <head>
 <title>Arasan Programmer's Guide - version 20.1</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
-<link rel="stylesheet" href="style.css" type="text/css"/>
+<link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
 <h1>Arasan Programmer's Guide - version 20.1</h1>
@@ -269,11 +269,13 @@ this one, you need to run "makeeco" manually whenever you change the
 <p>makeeco takes a single argument: the location of the eco file. It
 writes the generated ecodata.cpp file to stdout.</p>
 
-<p>Note: the ECO recognizer is pretty crude right now, because only the
-main ECO lines are stored in the data file, not sublines like "ECO
-C18/3". Therefore transpositions that wind up in an ECO subline like
-C18/3 but skip the position that is stored for C18 will not be
-recognized correctly. There is no general solution for this problem,
+<p>Note: the ECO recognizer is pretty crude right now, because Arasan
+does not contain all the possible ECO lines and sublines in its data file.
+Therefore transpositions that wind up in an ECO subline like
+C18/3 but skip the position that is stored for C18 may not be
+recognized correctly. Transpositions across opening systems may also
+be missed.
+There is no general solution for this problem,
 since the ECO classification scheme is ambiguous in some cases, but
 recognition could be improved by expanding the number of positions in
 the eco file. If the number becomes large enough, however, the
@@ -298,10 +300,6 @@ will show up in the Winboard debug log if Winboard is started with the
 <p>If the source is compiled with /DUCI_LOG, then a similar log file 
 named "ucilog" is produced on disk when running in UCI mode. This however
 doesn't have exactly the same information shown by "-t".</p>
-
-<p>If the source is compiled with /DUNIT_TESTS, then some simple unit tests
-are run on program startup. The results are displayed on the console.
-This build flag is off by default.</p>
 
 <p>The chess engine supports a couple of commands to aid with testing. 
 The "eval" command followed by a filename will read the file (assumed
@@ -382,7 +380,15 @@ for testing. The command "perft"
 should be followed by a number indicating the ply depth for the
 computation.</p>
 
-<h3>Automated parameter tuning</h3>
+<h3>Unit tests</h3>
+
+<p>If compiled with -DUNIT_TESTS, Arasan will run a set of tests on
+program startup (this flag is off by default). These tests verify that
+a set of critical functions operate correctly, verify that evaluation
+results are symmetrical between White and Black sides, and also run
+and verify the perft test over a set of positions.</p>
+
+<h2>Automated parameter tuning</h2>
 
 <p>Arasan since version 19.0 has some support for automated parameter tuning.</p>
 <p>The Makefile has a "tuning" target that builds a "tuner" executable
@@ -448,10 +454,10 @@ mean squared error between the predicted result value (sigmoid function
 of the evaluation) and the actual result value. The tuner also supports
 Ordinal Logistic Regresssion based on the three possible discrete game
 results, but this is not really tested.</p>
-<p>Three iterative optimization methods are supported. The default is
+<p>Three iterative optimization methods are supported. The first is
 "adaptive," which is
 a simple momentum based approach described by Geoffrey Hinton. The tuner
-also supports the AdaGrad method (see Duchi et. al.) and the ADAM method (see Kingma and Ba).</li>
+also supports the AdaGrad method (see Duchi et. al.) and the ADAM method (see Kingma and Ba). ADAM is currently the default method.</li>
 
 <h3>Generating the training file</h3>
 <p>The Arasan source distribution contains some tools used for
@@ -723,10 +729,11 @@ bounds enough to cause cutoff, then we may also try the endgame
 tablebases, if they are installed and enabled, and if material is
 reduced enough that they can give an exact score.</p>
 
-<p>If a position is eligible for null pruning (see below) then Arasan
-first tries a couple of simpler and less expensive pruning techniques.</p>
-
-<p>The first of these is "static null pruning", which cuts off search for
+<p>In non-PV nodes where the side to move is not in check,
+Arasan first tries a couple of techniques to
+decide if the entire node can be pruned away, before doing any
+searching.
+The first of these is "static null pruning", which cuts off search for
 nodes that have very high scores.</p>
 
 <p>Arasan may then try "razoring". Razoring takes place when the static
@@ -750,22 +757,15 @@ algorithm. See Donninger's article in ICCA for more information on
 this algorithm.</p>
 
 <p>A null move is searched to a depth less than that used for regular
-moves.</p>
-
-<p>Arasan uses a so-called R=3 depth reduction for the null move search:
+moves.
+Arasan uses at least a so-called R=3 depth reduction for the null move search:
 in other words, a search is done with the regular 1-ply reduction in
-depth plus three extra plies. Some extra null reduction can
-be done if the static score is high.</p>
+depth plus three extra plies. (At high depths, a depth-dependent amount is added to the reduction factor.)</p>
 
 <p>After a null move produces a beta cutoff, Arasan does an extra
 reduced-depth verification search to ensure that the null move cutoff is
 actually valid. The verification search uses reduced depth, but doesn't
 insert the null move first.</p>
-
-<p>If the null move fails low, and the previous move was reduced, and the
-move refuting the null move appears related to the previous move, then
-the search returns a score of alpha, which will force a full-width
-re-search in the parent (idea from Stockfish).</p>
 
 <p>If the null move search doesn't cause cutoff, then we must actually do
 some searching from the current node.</p>
@@ -806,7 +806,7 @@ discovered check.</li>
 Pushing a pawn to the 7th rank causes the search to be extended,
 on the theory that this pawn may soon promote.</li>
 </li>
-If a safe capture is done and the last opponent
+<li>If a safe capture is done and the last opponent
 piece has been captured, the search is extended.</li>
 </ol>
 <p>
