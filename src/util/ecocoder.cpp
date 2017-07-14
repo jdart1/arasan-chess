@@ -12,7 +12,6 @@
 #include "eco.h"
 #include "movearr.h"
 #include "globals.h"
-#include "util.h"
 #include "chessio.h"
 
 extern "C"
