@@ -1,4 +1,25 @@
-Changes in Arasan 20.1:
+Changes in Arasan 20.2:
+ 1) Add probcut to search.
+ 2) Detect King and Rook pawn vs wrong-color Bishop configuration
+    and score near draw, even if opponent has pawns.
+ 3) Change history score calculation (similar to Stockfish).
+ 4) Implement countermove history similar to Stockfish and use in move
+    ordering. Consolidate history/refutation/countermove history stuff
+    into SearchContext class and remove separate History and Refutations
+    classes.
+ 5) Sync with changes to jdart1/Fathom. In particular, pick up a fix for
+    crashes when running multithreaded.
+ 6) Changes/fixes to strength limitation feature.
+ 7) Fix possible out of range errors in razoring code.
+ 8) Fixes to king cover parameter tuning code. Re-tune parameters.
+ 9) Changes to LMR. Adjust LMR amount based on history values.
+ 10) Remove Util class and replace with std library functions.
+ 11) Allow null move at depth = 1 ply.
+ 12) Changes to futility, reverse futility, and razoring margins.
+ 13) Fix possible bug in output of time control increment to PGN.
+ 14) Separate scoring for outposts in middlegame/endgame.
+
+Changes in Arasan 20.1 (April 2017):
  1) Fixes to UCI multipv handling.
  2) Fix logic for terminating search on tablebase hit.
  3) Bug fixes in parameter tuning code. Use actual sigmoid function when
