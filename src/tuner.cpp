@@ -702,9 +702,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       i = map_to_outpost(sq,side);
       ASSERT(i<16);
       if (s.outpost(board,sq,side)) {
-         int defenders = s.outpost_defenders(board,sq,side);
-         ASSERT(defenders <=2);
-         grads[Tune::KNIGHT_OUTPOST+defenders*16+i] += inc;
+         int defenders = s.outpost_defenders(board,sq,side) != 0;
+         int index = Tune::KNIGHT_OUTPOST + defenders*32 + 2*i;
+         grads[index] += tune_params.scale(inc,index,mLevel);
+         index++;
+         grads[index] += tune_params.scale(inc,index,mLevel);
       }
       Bitboard kattacks(knattacks & nearKing);
       if (kattacks) {
@@ -746,9 +748,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       i = map_to_outpost(sq,side);
       ASSERT(i<16);
       if (s.outpost(board,sq,side)) {
-         int defenders = s.outpost_defenders(board,sq,side);
-         ASSERT(defenders <=2);
-         grads[Tune::BISHOP_OUTPOST+defenders*16+i] += inc;
+         int defenders = s.outpost_defenders(board,sq,side) != 0;
+         int index = Tune::BISHOP_OUTPOST + defenders*32 + 2*i;
+         grads[index] += tune_params.scale(inc,index,mLevel);
+         index++;
+         grads[index] += tune_params.scale(inc,index,mLevel);
       }
       if (!deep_endgame) {
          Bitboard kattacks(battacks & nearKing);

@@ -12,7 +12,7 @@ extern "C" {
 };
 
 static const score_t MOBILITY_RANGE = PAWN_VALUE/3;
-static const score_t OUTPOST_RANGE = PAWN_VALUE/3;
+static const score_t OUTPOST_RANGE = PAWN_VALUE/2;
 static const score_t PST_RANGE = PAWN_VALUE/2;
 static const score_t PP_BLOCK_RANGE = PAWN_VALUE/3;
 static const score_t TRADE_DOWN_RANGE = PAWN_VALUE/3;
@@ -42,10 +42,10 @@ static int map_from_pst(int i)
 
 static void apply_to_pst(int i,score_t val,score_t arr[])
 {
-   int r = 1+(i/4);
-   int f = 1+(i%4);
-   ASSERT(OnBoard(MakeSquare(f,r,White)));
-   arr[MakeSquare(f,r,White)] = arr[MakeSquare(9-f,r,White)] = val;
+    int r = 1+(i/4);
+    int f = 1+(i%4);
+    ASSERT(OnBoard(MakeSquare(f,r,White)));
+    arr[MakeSquare(f,r,White)] = arr[MakeSquare(9-f,r,White)] = val;
 }
 
 static int map_from_outpost(int i)
@@ -56,12 +56,12 @@ static int map_from_outpost(int i)
    return MakeSquare(f,r,White);
 }
 
-static void apply_to_outpost(int i,score_t val,score_t arr[])
+static void apply_to_outpost(int i,int p,int stage,score_t val,score_t arr[2][64][2])
 {
    int r = 5+(i/4);
    int f = 1+(i%4);
    ASSERT(OnBoard(MakeSquare(f,r,White)));
-   arr[MakeSquare(f,r,White)] = arr[MakeSquare(9-f,r,White)] = val;
+   arr[p][MakeSquare(f,r,White)][stage] = arr[p][MakeSquare(9-f,r,White)][stage] = val;
 }
 
 Tune::Tune()
@@ -546,23 +546,29 @@ static const int QUEEN_PST_INIT[2][64] =
    }
    // outposts
    ASSERT(i==KNIGHT_OUTPOST);
-   for (int p = 0; p < 3; p++) {
+   for (int p = 0; p < 2; p++) {
       for (int s = 0; s < 16; s++) {
-         stringstream name;
-         name << "knight_outpost" << p << '_' << s;
-         int val = KNIGHT_OUTPOST_INIT[map_from_outpost(s)];
-         if (p == 0) val /= 2;
-         tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,Tune::TuneParam::Any,1));
+          for (int stage = 0; stage < 2; stage++) {
+              stringstream name;
+              name << "knight_outpost" << p << '_' << s << "_" << (stage == 0 ? "mid" : "end");
+              int val = KNIGHT_OUTPOST_INIT[map_from_outpost(s)];
+              if (p == 0) val /= 2;
+              tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,
+                                              stage == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
+          }
       }
    }
    ASSERT(i==BISHOP_OUTPOST);
-   for (int p = 0; p < 3; p++) {
+   for (int p = 0; p < 2; p++) {
       for (int s = 0; s < 16; s++) {
-         stringstream name;
-         name << "bishop_outpost" << p << '_' << s;
-         int val = BISHOP_OUTPOST_INIT[map_from_outpost(s)];
-         if (p == 0) val /= 2;
-         tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,Tune::TuneParam::Any,1));
+          for (int stage = 0; stage < 2; stage++) {
+              stringstream name;
+              name << "bishop_outpost" << p << '_' << s << "_" << (stage == 0 ? "mid" : "end");
+              int val = BISHOP_OUTPOST_INIT[map_from_outpost(s)];
+              if (p == 0) val /= 2;
+              tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,
+                                              stage == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
+          }
       }
    }
    // add trade down
@@ -834,18 +840,22 @@ void Tune::applyParams() const
       apply_to_pst(i,PARAM(KING_PST_MIDGAME+i),Scoring::Params::KING_PST[0]);
       apply_to_pst(i,PARAM(KING_PST_ENDGAME+i),Scoring::Params::KING_PST[1]);
    }
-   memset(Scoring::Params::KNIGHT_OUTPOST,'\0',3*64*sizeof(score_t));
+   memset(Scoring::Params::KNIGHT_OUTPOST,'\0',64*sizeof(score_t));
    int index = 0;
-   for (int p = 0; p < 3; p++) {
-      for (int i = 0; i < 16; i++,index++) {
-         apply_to_outpost(i,PARAM(KNIGHT_OUTPOST+index),Scoring::Params::KNIGHT_OUTPOST[p]);
+   for (int p = 0; p < 2; p++) {
+      for (int i = 0; i < 16; i++) {
+          for (int stage = 0; stage < 2; stage++,index++) {
+              apply_to_outpost(i,p,stage,PARAM(KNIGHT_OUTPOST+index),Scoring::Params::KNIGHT_OUTPOST);
+          }
       }
    }
-   memset(Scoring::Params::BISHOP_OUTPOST,'\0',3*64*sizeof(score_t));
+   memset(Scoring::Params::BISHOP_OUTPOST,'\0',64*sizeof(score_t));
    index = 0;
-   for (int p = 0; p < 3; p++) {
-      for (int i = 0; i < 16; i++,index++) {
-         apply_to_outpost(i,PARAM(BISHOP_OUTPOST+index),Scoring::Params::BISHOP_OUTPOST[p]);
+   for (int p = 0; p < 2; p++) {
+      for (int i = 0; i < 16; i++) {
+          for (int stage = 0; stage < 2; stage++, index++) {
+              apply_to_outpost(i,p,stage,PARAM(BISHOP_OUTPOST+index),Scoring::Params::BISHOP_OUTPOST);
+          }
       }
    }
 
