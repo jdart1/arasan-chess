@@ -93,7 +93,6 @@ score_t Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_MID = -200;
 score_t Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_END = -400;
 score_t Scoring::Params::WRONG_COLOR_BISHOP = -400;
 score_t Scoring::Params::SIDE_PROTECTED_PAWN = -92;
-score_t Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = {6,12,15};
 score_t Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = {10,20,30,40,50,60};
 score_t Scoring::Params::KNIGHT_PST[2][64];
 score_t Scoring::Params::BISHOP_PST[2][64];

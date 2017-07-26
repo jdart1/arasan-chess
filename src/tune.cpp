@@ -17,7 +17,6 @@ static const score_t PST_RANGE = PAWN_VALUE/2;
 static const score_t PP_BLOCK_RANGE = PAWN_VALUE/3;
 static const score_t TRADE_DOWN_RANGE = PAWN_VALUE/3;
 static const score_t ENDGAME_KING_POS_RANGE = 3*PAWN_VALUE/4;
-static const score_t KING_ATTACK_COUNT_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 int Tune::numTuningParams() const
@@ -420,11 +419,6 @@ static const int QUEEN_PST_INIT[2][64] =
    }
    static const TuneParam::Scaling scales[2] = {Tune::TuneParam::Midgame,
                                                 Tune::TuneParam::Endgame};
-   for (int x = 0; x < 3; x++) {
-      stringstream name;
-      name << "king_attack_count_boost" << x+2;
-      tune_params.push_back(TuneParam(i++,name.str(),6+4*x,0,KING_ATTACK_COUNT_BOOST_RANGE,Tune::TuneParam::Midgame,1));
-   }
    ASSERT(i==KING_OPP_PASSER_DISTANCE);
    for (int x = 0; x < 6; x++) {
       stringstream name;
@@ -584,8 +578,8 @@ static const int QUEEN_PST_INIT[2][64] =
 void Tune::checkParams() const
 {
 #ifdef _DEBUG
-   if (NUM_MISC_PARAMS != KING_ATTACK_COUNT_BOOST) {
-      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_ATTACK_COUNT_BOOST << endl;
+   if (NUM_MISC_PARAMS != KING_OPP_PASSER_DISTANCE) {
+      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_OPP_PASSER_DISTANCE << endl;
    }
    for (int i = 0; i<NUM_MISC_PARAMS; i++) {
       if (tune_params[i].index != i)
@@ -726,9 +720,6 @@ void Tune::applyParams() const
    Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_END = tune_params[QUEENING_SQUARE_OPP_CONTROL_END].current;
    Scoring::Params::WRONG_COLOR_BISHOP = tune_params[WRONG_COLOR_BISHOP].current;
    Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
-   for (int i = 0; i < 3; i++) {
-      Scoring::Params::KING_ATTACK_COUNT_BOOST[i] = PARAM(KING_ATTACK_COUNT_BOOST+i);
-   }
    for (int i = 0; i < 6; i++) {
       Scoring::Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);
    }

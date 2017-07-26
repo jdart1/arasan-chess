@@ -1217,9 +1217,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int proximity = Bitboard(Scoring::kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
       int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
       attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
-      if (attackCount >= 2 && majorAttackCount) {
-         attackWeight += Scoring::Params::KING_ATTACK_COUNT_BOOST[std::min<int>(2,attackCount-2)];
-      }
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/128;
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
@@ -1248,11 +1245,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             grads[i] +=
                tune_params.scale((inc*scale_grad*attackTypes[i-Tune::MINOR_ATTACK_FACTOR])/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,i,ourMatLevel);
          }
-      }
-      if (attackCount >= 2 && majorAttackCount) {
-         int index = Tune::KING_ATTACK_COUNT_BOOST+std::min<int>(2,attackCount-2);
-         grads[index] +=
-            tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,index,ourMatLevel);
       }
       double boost_slope_grad = -oppCover*scale_grad/(128*Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
       grads[Tune::KING_ATTACK_COVER_BOOST_SLOPE] +=

@@ -116,7 +116,6 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
-    static PARAM_MOD KING_ATTACK_COUNT_BOOST[3];
     static PARAM_MOD KING_OPP_PASSER_DISTANCE[6];
     static PARAM_MOD KING_POSITION_LOW_MATERIAL[3];
     static PARAM_MOD TRADE_DOWN[8];

@@ -1179,10 +1179,6 @@ void Scoring::pieceScore(const Board &board,
       int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
       attackWeight += PARAM(PAWN_ATTACK_FACTOR1)*proximity +
          PARAM(PAWN_ATTACK_FACTOR2)*pawnAttacks;
-      if (attackCount >= 2 && majorAttackCount) {
-         attackWeight += PARAM(KING_ATTACK_COUNT_BOOST)[std::min<int>(2,attackCount-2)];
-      }
-
       attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/128;
 
       const score_t index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
@@ -2644,8 +2640,6 @@ void Scoring::Params::write(ostream &o, const string &comment)
       }
       o << " = " << std::round(param.current) << ";" << endl;
    }
-   o << "const int Scoring::Params::KING_ATTACK_COUNT_BOOST[3] = ";
-   print_array(o,Params::KING_ATTACK_COUNT_BOOST,3);
    o << "const int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
    o << "const int Scoring::Params::KING_POSITION_LOW_MATERIAL[3] =";
