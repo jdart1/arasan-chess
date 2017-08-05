@@ -363,21 +363,24 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
 {
    pdata.clear();
    // iterate for each position in file
+   uint64_t line = 0;
    while (!pos_file.eof() && pos_file.good()) {
       try {
          Board board, pvBoard;
          double result = 0.0;
          EPDRecord rec;
          Lock(file_lock);
+         ++line;
          if (!ChessIO::readEPDRecord(pos_file,board,rec)) {
             // EOF
             Unlock(file_lock);
             break;
          }
-         if (rec.hasError()) {
-            cerr << "error in EPD record: " << rec.getError() << endl;
-         }
          Unlock(file_lock);
+         if (rec.hasError()) {
+            cerr << "error in EPD record, line " << line << ": " << rec.getError() << endl;
+            continue;
+         }
          string val;
          if (rec.getVal(CASTLE_STATUS_KEY,val)) {
             // trim quotes
