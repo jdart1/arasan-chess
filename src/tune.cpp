@@ -289,7 +289,7 @@ Tune::Tune()
    static const int KNIGHT_MOBILITY_INIT[9] = {-180, -70, -20, 0, 20, 50, 70, 100, 120};
    static const int BISHOP_MOBILITY_INIT[15] = {-200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90};
    static const int ROOK_MOBILITY_INIT[2][15] = {{-220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240}, {-300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320}};
-   static const int QUEEN_MOBILITY_INIT[2][29] = {{-100, -50, -10, -10, 40, 70, 90, 110, 130, 140, 160, 170, 190, 200, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210}, {-120, -60, -10, 10, 50, 80, 110, 130, 160, 170, 200, 210, 230, 250, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260}};
+   static const int QUEEN_MOBILITY_INIT[2][24] = {{-100, -50, -10, -10, 40, 70, 90, 110, 130, 140, 160, 170, 190, 200, 210, 210, 210, 210, 210, 210, 210, 210, 210}, {-120, -60, -10, 10, 50, 80, 110, 130, 160, 170, 200, 210, 230, 250, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260}};
    static const int KING_MOBILITY_ENDGAME_INIT[5] = {-200, -120, -60, 0, 10};
 
 static const int KNIGHT_PST_INIT[2][64] =
@@ -519,7 +519,7 @@ static const int QUEEN_PST_INIT[2][64] =
    }
    ASSERT(i==QUEEN_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
-      for (int m = 0; m < 29; m++) {
+      for (int m = 0; m < 24; m++) {
          stringstream name;
          name << "queen_mobility";
          if (phase == 0) {
@@ -811,7 +811,7 @@ void Tune::applyParams() const
       Scoring::Params::ROOK_MOBILITY[0][i] = PARAM(ROOK_MOBILITY_MIDGAME+i);
       Scoring::Params::ROOK_MOBILITY[1][i] = PARAM(ROOK_MOBILITY_ENDGAME+i);
    }
-   for (int i = 0; i < 29; i++) {
+   for (int i = 0; i < 24; i++) {
       Scoring::Params::QUEEN_MOBILITY[0][i] = PARAM(QUEEN_MOBILITY_MIDGAME+i);
       Scoring::Params::QUEEN_MOBILITY[1][i] = PARAM(QUEEN_MOBILITY_ENDGAME+i);
    }

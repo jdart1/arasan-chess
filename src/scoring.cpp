@@ -1114,6 +1114,7 @@ void Scoring::pieceScore(const Board &board,
             }
 
             qmobl += Bitboard(qmobility &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount();
+            qmobl = std::min<int>(23,qmobl);
             scores.mid += PARAM(QUEEN_MOBILITY)[Midgame][qmobl];
             scores.end += PARAM(QUEEN_MOBILITY)[Endgame][qmobl];
 #ifdef EVAL_DEBUG
@@ -2691,8 +2692,8 @@ void Scoring::Params::write(ostream &o, const string &comment)
    print_array(o,Params::BISHOP_MOBILITY,15);
    o << "const int Scoring::Params::ROOK_MOBILITY[2][15] = ";
    print_array(o,Params::ROOK_MOBILITY[0],Params::ROOK_MOBILITY[1],15);
-   o << "const int Scoring::Params::QUEEN_MOBILITY[2][29] = ";
-   print_array(o,Params::QUEEN_MOBILITY[0],Params::QUEEN_MOBILITY[1],29);
+   o << "const int Scoring::Params::QUEEN_MOBILITY[2][24] = ";
+   print_array(o,Params::QUEEN_MOBILITY[0],Params::QUEEN_MOBILITY[1],24);
    o << "const int Scoring::Params::KING_MOBILITY_ENDGAME[5] = ";
    print_array(o,Params::KING_MOBILITY_ENDGAME,5);
    o << endl;

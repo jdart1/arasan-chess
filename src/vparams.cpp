@@ -119,6 +119,6 @@ score_t Scoring::Params::BISHOP_OUTPOST[2][64][2];
 score_t Scoring::Params::KNIGHT_MOBILITY[9];
 score_t Scoring::Params::BISHOP_MOBILITY[15];
 score_t Scoring::Params::ROOK_MOBILITY[2][15];
-score_t Scoring::Params::QUEEN_MOBILITY[2][29];
+score_t Scoring::Params::QUEEN_MOBILITY[2][24];
 score_t Scoring::Params::KING_MOBILITY_ENDGAME[5];
 

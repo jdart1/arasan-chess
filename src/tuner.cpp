@@ -856,7 +856,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (board.pinOnRankOrFile(sq, okp, oside)) {
          pin_count++;
       }
-      int mobl = Bitboard(board.queenAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
+      int mobl = std::min<int>(23,Bitboard(board.queenAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount());
       grads[Tune::QUEEN_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::QUEEN_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_ENDGAME+mobl,mLevel);
       int i = map_to_pst(sq,side);
