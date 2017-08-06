@@ -437,11 +437,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     }
     case 1: {
         if (ourmat.rookCount() == oppmat.rookCount()+1) {
-            if (ourmat.minorCount() == oppmat.minorCount()) {
-                // Rook vs. pawns. Usually the Rook is better.
-               score += PARAM(ROOK_VS_PAWNS);
-            }
-            else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
+            if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>0);

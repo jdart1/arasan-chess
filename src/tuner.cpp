@@ -540,11 +540,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     }
     case 1: {
         if (ourmat.rookCount() == oppmat.rookCount()+1) {
-            if (ourmat.minorCount() == oppmat.minorCount()) {
-                // Rook vs. pawns. Usually the Rook is better.
-               grads[Tune::ROOK_VS_PAWNS] += inc;
-            }
-            else if (ourmat.minorCount() == oppmat.minorCount() - 1) {
+            if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
                ASSERT(ourmat.majorCount()>0);
