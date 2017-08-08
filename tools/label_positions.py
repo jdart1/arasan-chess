@@ -19,7 +19,7 @@ RESULT_KEY='c2'
 
 class Options:
    engine_name = 'Stockfish-8'
-   tc = "0.04+0.1"
+   tc = "0.10+0.1"
    cores = 1
 
 file_lock = threading.RLock()
