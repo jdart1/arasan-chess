@@ -24,9 +24,9 @@ BEGIN_PACKED_STRUCT
     static const int KING_ATTACK_SCALE_SIZE = 150;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
 
-    static PARAM_MOD RB_ADJUST[4];
-    static PARAM_MOD RBN_ADJUST[4];
-    static PARAM_MOD QR_ADJUST[4];
+    static PARAM_MOD RB_ADJUST[6];
+    static PARAM_MOD RBN_ADJUST[6];
+    static PARAM_MOD QR_ADJUST[5];
     static PARAM_MOD KN_VS_PAWN_ADJUST[3];
     static PARAM_MOD CASTLING[6];
 #ifdef TUNE

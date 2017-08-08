@@ -70,18 +70,6 @@ Tune::Tune()
     // Tuning params for most parameters (except PSTs, mobility).
     // These are initialized to some reasonable but not optimal values.
     static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
-        Tune::TuneParam(Tune::RB_ADJUST1,"rb_adjust1",-350,-400,100,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RB_ADJUST2,"rb_adjust2",-75,-400,300,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RB_ADJUST3,"rb_adjust3",75,-300,400,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RB_ADJUST4,"rb_adjust4",250,-150,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RBN_ADJUST1,"rbn_adjust1",-500,-750,-150,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RBN_ADJUST2,"rbn_adjust2",-675,-900,-300,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RBN_ADJUST3,"rbn_adjust3",-825,-1200,-500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::RBN_ADJUST4,"rbn_adjust4",-1000,-1500,-500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST0,"qr_adjust0",-500,-750,-150,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST1,"qr_adjust1",0,-500,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST2,"qr_adjust2",500,250,1000,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::QR_ADJUST3,"qr_adjust3",500,250,1000,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",-1500,-2000,-1000,Tune::TuneParam::Any,1),
@@ -572,6 +560,29 @@ static const int QUEEN_PST_INIT[2][64] =
       int val = TRADE_DOWN_INIT[p];
       tune_params.push_back(TuneParam(i++,name.str(),val,std::max<score_t>(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
    }
+   ASSERT(i==RB_ADJUST);
+   for (int p = 0; p < 6; p++) {
+      stringstream name;
+      name << "rb_adjust" << p;
+      score_t val = score_t(-0.35*PAWN_VALUE)+ (p>0 ? PAWN_VALUE/4: 0) + 
+          score_t(0.05*PAWN_VALUE)*p;
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-PAWN_VALUE/2,val+PAWN_VALUE/2,Tune::TuneParam::Any,1));
+   }
+   ASSERT(i==RBN_ADJUST);
+   for (int p = 0; p < 6; p++) {
+      stringstream name;
+      name << "rb_adjust" << p;
+      score_t val = score_t(-0.15*PAWN_VALUE) - score_t(0.15*PAWN_VALUE)*p;
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-PAWN_VALUE/2,val+PAWN_VALUE/2,Tune::TuneParam::Any,1));
+   }
+   ASSERT(i==QR_ADJUST);
+   for (int p = 0; p < 5; p++) {
+      stringstream name;
+      name << "qr_adjust" << p;
+      score_t init[5] = {-0.150*PAWN_VALUE, 0.500*PAWN_VALUE, 0.9*PAWN_VALUE, 0.3*PAWN_VALUE, 0.3*PAWN_VALUE};
+      score_t val = init[p];
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-PAWN_VALUE/2,val+PAWN_VALUE/2,Tune::TuneParam::Any,1));
+   }
 }
 
 void Tune::checkParams() const
@@ -608,20 +619,8 @@ void Tune::applyParams() const
 {
    checkParams();
 
-   score_t *dest = Scoring::Params::RB_ADJUST;
+   score_t *dest = Scoring::Params::KN_VS_PAWN_ADJUST;
    int i, j = 0;
-   for (i = 0; i < 4; i++) {
-      *dest++ = Tune::tune_params[j++].current;
-   }
-   dest = Scoring::Params::RBN_ADJUST;
-   for (i = 0; i < 4; i++) {
-      *dest++ = Tune::tune_params[j++].current;
-   }
-   dest = Scoring::Params::QR_ADJUST;
-   for (i = 0; i < 4; i++) {
-      *dest++ = Tune::tune_params[j++].current;
-   }
-   dest = Scoring::Params::KN_VS_PAWN_ADJUST;
    for (i = 0; i < 3; i++) {
       *dest++ = Tune::tune_params[j++].current;
    }
@@ -726,6 +725,18 @@ void Tune::applyParams() const
    }
    for (int i = 0; i < 8; i++) {
       Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
+   }
+   for (int i = 0; i < 8; i++) {
+      Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
+   }
+   for (int i = 0; i < 6; i++) {
+      Scoring::Params::RB_ADJUST[i] = PARAM(RB_ADJUST+i);
+   }
+   for (int i = 0; i < 6; i++) {
+      Scoring::Params::RBN_ADJUST[i] = PARAM(RBN_ADJUST+i);
+   }
+   for (int i = 0; i < 5; i++) {
+      Scoring::Params::QR_ADJUST[i] = PARAM(QR_ADJUST+i);
    }
    for (int i = 0; i < Scoring::Params::KING_ATTACK_SCALE_SIZE; i++) {
        int x = PARAM(KING_ATTACK_SCALE_BIAS) +

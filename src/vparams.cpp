@@ -3,9 +3,9 @@
 // definitions of scoring parameters, non-const for tuning
 
 // These have a 1-1 mapping to the tuning parameters
-score_t Scoring::Params::RB_ADJUST[4] = {250, 75, -75, -250};
-score_t Scoring::Params::RBN_ADJUST[4] = {500, 675, 825, 1000};
-score_t Scoring::Params::QR_ADJUST[4] = {-500, 0, 500, 500};
+score_t Scoring::Params::RB_ADJUST[6];
+score_t Scoring::Params::RBN_ADJUST[6];
+score_t Scoring::Params::QR_ADJUST[5];
 score_t Scoring::Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
 score_t Scoring::Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
 #ifdef TUNE

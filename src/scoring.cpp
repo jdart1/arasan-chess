@@ -366,35 +366,33 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
        return score;
     }
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
-    if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
-       const uint32_t pieces = ourmat.pieceBits();
-       if (pieces == Material::KN || pieces == Material::KB) {
-          // Knight or Bishop vs pawns
-          if (ourmat.pawnCount() == 0) {
-             // no mating material. We can't be better but if
-             // opponent has 1-2 pawns we are not so bad
-             score += APARAM(KN_VS_PAWN_ADJUST,std::min<int>(2,oppmat.pawnCount()));
-          } else if (oppmat.pawnCount() == 0) {
-             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
+    const uint32_t pieces = ourmat.pieceBits();
+    if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
+        // Knight or Bishop vs pawns
+        if (ourmat.pawnCount() == 0) {
+            // no mating material. We can't be better but if
+            // opponent has 1-2 pawns we are not so bad
+            score += APARAM(KN_VS_PAWN_ADJUST,std::min<int>(2,oppmat.pawnCount()));
+        } else if (oppmat.pawnCount() == 0) {
+            if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
                 score -= KNIGHT_VALUE;
-             }
-          }
-          else if (pieces == Material::KB && ourmat.pawnCount() == 1) {
-              int wrongBishop = (side == White) ? KBPDraw<White>(board) : KBPDraw<Black>(board);
-              if (wrongBishop) {
-                  // We have the configuration of "wrong color bishop"
-                  // and rook pawn. Opponent may or may not have
-                  // pawns. We likely can't do better than draw, so
-                  // reduce score.
-                  score -= BISHOP_VALUE;
-              }
-          }
+            }
+        }
+        else if (pieces == Material::KB && ourmat.pawnCount() == 1) {
+            int wrongBishop = (side == White) ? KBPDraw<White>(board) : KBPDraw<Black>(board);
+            if (wrongBishop) {
+                // We have the configuration of "wrong color bishop"
+                // and rook pawn. Opponent may or may not have
+                // pawns. We likely can't do better than draw, so
+                // reduce score.
+                score -= BISHOP_VALUE;
+            }
+        }
 #ifdef EVAL_DEBUG
-          cout << "minor piece adjustment (" << ColorImage(side) << ") = " << score << endl;
+        cout << "minor piece adjustment (" << ColorImage(side) << ") = " << score << endl;
 #endif
-          return score;
-       }
+        return score;
     }
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
@@ -431,7 +429,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-           score += APARAM(QR_ADJUST,std::min<int>(3,ourmat.minorCount()));
+           score += APARAM(QR_ADJUST,std::min<int>(4,ourmat.minorCount()));
         }
         break;
     }
@@ -440,13 +438,11 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
             if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount()>0);
-               score += APARAM(RB_ADJUST,std::min<int>(3,ourmat.majorCount()-1));
+               score += APARAM(RB_ADJUST,std::min<int>(5,ourmat.materialLevel()/2-2));
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount()>0);
-               score += APARAM(RBN_ADJUST,std::min<int>(3,ourmat.majorCount()-1));
+               score += APARAM(RBN_ADJUST,std::min<int>(5,ourmat.materialLevel()/2-2));
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -2607,12 +2603,12 @@ void Scoring::Params::write(ostream &o, const string &comment)
    o << "// " << comment << endl;
    o << "//" << endl;
    o << endl;
-   o << "const int Scoring::Params::RB_ADJUST[4] = ";
-   print_array(o,Params::RB_ADJUST,4);
-   o << "const int Scoring::Params::RBN_ADJUST[4] = ";
-   print_array(o,Params::RBN_ADJUST,4);
-   o << "const int Scoring::Params::QR_ADJUST[4] = ";
-   print_array(o,Params::QR_ADJUST,4);
+   o << "const int Scoring::Params::RB_ADJUST[6] = ";
+   print_array(o,Params::RB_ADJUST,6);
+   o << "const int Scoring::Params::RBN_ADJUST[6] = ";
+   print_array(o,Params::RBN_ADJUST,6);
+   o << "const int Scoring::Params::QR_ADJUST[5] = ";
+   print_array(o,Params::QR_ADJUST,5);
    o << "const int Scoring::Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
    o << "const int Scoring::Params::CASTLING[6] = ";

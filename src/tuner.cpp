@@ -486,18 +486,16 @@ static void adjustMaterialScore(const Board &board, ColorType side,
        return;
     }
 
-    if (ourmat.materialLevel() <= 9 && pieceDiff > 0) {
-       const uint32_t pieces = ourmat.pieceBits();
-       if (pieces == Material::KN || pieces == Material::KB) {
-          // Knight or Bishop vs pawns
-          if (ourmat.pawnCount() == 0) {
-             // no mating material. We can't be better but if
-             // opponent has 1-2 pawns we are not so bad
-             int index = std::min<int>(2,oppmat.pawnCount());
-             grads[Tune::KN_VS_PAWN_ADJUST0+index] += inc;
-          }
-       }
-       return;
+    const uint32_t pieces = ourmat.pieceBits();
+    if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
+        // Knight or Bishop vs pawns
+        if (ourmat.pawnCount() == 0) {
+            // no mating material. We can't be better but if
+            // opponent has 1-2 pawns we are not so bad
+            int index = std::min<int>(2,oppmat.pawnCount());
+            grads[Tune::KN_VS_PAWN_ADJUST0+index] += inc;
+        }
+        return;
     }
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
@@ -531,10 +529,10 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
-             ourmat.rookCount() == oppmat.rookCount() - 2) {
-            // Queen vs. Rooks
-            // Queen is better with minors on board (per Kaufman)
-           grads[Tune::QR_ADJUST0+std::min<int>(3,ourmat.minorCount())] += inc;
+                 ourmat.rookCount() == oppmat.rookCount() - 2) {
+           // Queen vs. Rooks
+           // Queen is better with minors on board (per Kaufman)
+           grads[Tune::QR_ADJUST+std::min<int>(4,ourmat.minorCount())] += inc;
         }
         break;
     }
@@ -543,13 +541,11 @@ static void adjustMaterialScore(const Board &board, ColorType side,
             if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount()>0);
-               grads[Tune::RB_ADJUST1+std::min<int>(3,ourmat.majorCount()-1)] += inc;
+                grads[Tune::RB_ADJUST+std::min<int>(5,ourmat.materialLevel()/2-2)] += inc;
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               ASSERT(ourmat.majorCount()>0);
-               grads[Tune::RBN_ADJUST1+std::min<int>(3,ourmat.majorCount()-1)] += inc;
+               grads[Tune::RBN_ADJUST+std::min<int>(5,ourmat.materialLevel()/2-2)] += inc;
             }
         }
         // Q vs RB or RN is already dealt with by piece values

@@ -39,18 +39,6 @@ class Tune {
   }
 
   enum {
-    RB_ADJUST1,
-    RB_ADJUST2,
-    RB_ADJUST3,
-    RB_ADJUST4,
-    RBN_ADJUST1,
-    RBN_ADJUST2,
-    RBN_ADJUST3,
-    RBN_ADJUST4,
-    QR_ADJUST0,
-    QR_ADJUST1,
-    QR_ADJUST2,
-    QR_ADJUST3,
     KN_VS_PAWN_ADJUST0,
     KN_VS_PAWN_ADJUST1,
     KN_VS_PAWN_ADJUST2,
@@ -254,6 +242,9 @@ class Tune {
     KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+5,
     BISHOP_OUTPOST = KNIGHT_OUTPOST+64,
     TRADE_DOWN = BISHOP_OUTPOST+64,
+    RB_ADJUST = TRADE_DOWN + 8,
+    RBN_ADJUST = RB_ADJUST + 6,
+    QR_ADJUST = RBN_ADJUST + 6
   };
    
   int numTuningParams() const;
@@ -287,7 +278,7 @@ class Tune {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 189;
+  static const int NUM_MISC_PARAMS = 177;
 
   double scale(score_t value,int index,int materialLevel) const;
 
