@@ -57,6 +57,8 @@ static unordered_map<hash_t,double> *positions;
 
 static const char *CASTLE_STATUS_KEY = "c1";
 
+static const int SEARCH_DEPTH = 2;
+
 static void show_usage()
 {
    cerr << "Usage: pgnselect [options] pgn_file" << endl;
@@ -76,7 +78,7 @@ static int score(SearchController *searcher,const Board &board,
                           FixedDepth,
                           999,
                           0,            /* extra time allowed */
-                          8,            /* ply limit */
+                          SEARCH_DEPTH, /* ply limit */
                           false,        /* background */
                           false, /* UCI */
                           stats,
@@ -252,7 +254,14 @@ int CDECL main(int argc, char **argv)
                            }
                         }
                               
-                        ok_to_insert = positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 6) && std::abs(score(searcher,board,stats)) < selOptions.maxScore;
+                        // omit KPK and drawn positions
+                        ok_to_insert = !((board.getMaterial(White).kingOnly() &&
+                                          board.getMaterial(Black).infobits() == Material::KP) ||
+                                         (board.getMaterial(Black).kingOnly() &&
+                                          board.getMaterial(White).infobits() == Material::KP)) &&
+                            !Scoring::materialDraw(board);
+
+                        ok_to_insert &= positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 3) && std::abs(score(searcher,board,stats)) < selOptions.maxScore;
                         if (ok_to_insert) {
                            EPDRecord rec;
                            stringstream cs_string;
