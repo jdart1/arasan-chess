@@ -291,7 +291,8 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
     if (!ifs.good())
     {
         rec.setError("Bad EPD record: FEN board description missing or invalid");
-        ifs.ignore(255,'\n');
+        ifs.clear();
+        ifs.ignore(4096,'\n');
         return 1;
     }
     // read EPD commands

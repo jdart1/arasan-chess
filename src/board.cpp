@@ -1979,25 +1979,37 @@ void Board::flip() {
 istream & operator >> (istream &i, Board &board)
 {
    // read in a board position in Forsythe-Edwards (FEN) notation.
-   char buf[128];
+   stringstream buf;
+   char c = '\0';
 
-   char *bp = buf;
-   int c;
+   // skip leading spaces/newlines
+   while (i.good() && !i.eof() && (((c=i.get()) == '\n') || isspace(c))) ;
+
+   if (i.bad() || i.eof()) return i;
+
+   i.putback(c);
+
    int fields = 0;
-   int count = 0;
-   while (i.good() && fields < 4 && (c = i.get()) != '\n' &&
-          c != EOF &&
-          ++count < 128)
-   {
-      *bp++ = c;
+   // read only the required 4 fields that are part of FEN:
+   // leave any remaining text such as EPD operators unread.
+   while (i.good() && !i.eof() && fields < 4 && (c = i.get()) != '\n') {
+      buf << c;
       if (isspace(c))
          fields++;
    }
-   *bp = '\0';
+
    if (i.fail())
       return i;
-   if (!BoardIO::readFEN(board, buf))
+
+   if (!BoardIO::readFEN(board, buf.str())) {
+       set_bad(i);
+   }
+   // Simple sanity check
+   else if (board.kingSquare(White) == InvalidSquare ||
+       board.kingSquare(Black) == InvalidSquare) {
       set_bad(i);
+   }
+
    return i;
 }
 
