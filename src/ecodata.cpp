@@ -453,6 +453,7 @@ const struct ECOData eco_codes[] =
 {"B27", 0x72c18902c7580493ULL ,"Sicilan Defense"},
 {"B28", 0xdaecf81f987dabbbULL ,"Sicilian Defense, O'Kelly Variation"},
 {"B29", 0xfb7299cb9ecff43fULL ,"Sicilian Defense"},
+{"B29", 0xa6de8c27f0cfa626ULL ,"Sicilian Defense"},
 {"B30", 0xf144848cd46dda08ULL ,"Sicilian Defense"},
 {"B30", 0x120f92839877be93ULL ,"Sicilian Defense, Rossolimo Variation"},
 {"B30", 0x18dec5da81a63770ULL ,"Sicilian Defense"},
