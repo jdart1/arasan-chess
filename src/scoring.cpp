@@ -77,8 +77,6 @@ struct BishopTrapPattern
    Bitboard bishopMask, pawnMask;
 } BISHOP_TRAP_PATTERN[2][4];
 
-static const int BITBASE_WIN = 50000;
-
 static Bitboard backwardW[64], backwardB[64];
 CACHE_ALIGN Bitboard passedW[64], passedB[64];              // not static because needed by search module
 static CACHE_ALIGN Bitboard outpostW[64], outpostB[64];
@@ -1750,6 +1748,12 @@ score_t Scoring::materialScore(const Board &board) const {
 
 score_t Scoring::evalu8(const Board &board, bool useCache) {
 
+   score_t score;
+    
+   if ((score = tryBitbase(board)) != INVALID_SCORE) {
+       return score;
+   }
+
    const score_t matScore = materialScore(board);
 
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
@@ -1816,7 +1820,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 #endif
 
    // scale scores by game phase
-   score_t score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
+   score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
 
    if (options.search.strength < 100) {
       // "flatten" positional score values
@@ -2052,17 +2056,7 @@ int Scoring::specialCaseEndgame(const Board &board,
    if (oppMaterial.kingOnly()) {
       // code for some special-case endgames, pawn or piece vs bare King
       const ColorType oside = OppositeColor(side);
-      if (ourMaterial.infobits() == Material::KP) {
-         Square pawnSq = board.pawn_bits[side].firstOne();
-         if (lookupBitbase(board.kingSquare(oside), pawnSq, board.kingSquare(side), side, board.sideToMove())) {
-#ifdef PAWN_DEBUG
-            cout << ColorImage(side) << " pawn on " << SquareImage(pawnSq) << " is uncatchable" << endl;
-#endif
-            scores.end = BITBASE_WIN;
-            return 1;
-         }
-      }
-      else if (ourMaterial.infobits() == Material::KBN) {
+      if (ourMaterial.infobits() == Material::KBN) {
          // KBNK endgame, special case.
          Square oppkp = board.kingSquare(oside);
          Bitboard bishops(board.bishop_bits[side]);
@@ -2530,14 +2524,14 @@ void Scoring::printScoreUCI(score_t score, ostream &str) {
       str << "cp " << int(score*100)/PAWN_VALUE;
 }
 
-int Scoring::tryBitbase(const Board &board) {
+score_t Scoring::tryBitbase(const Board &board) {
    const Material &wMat = board.getMaterial(White);
    const Material &bMat = board.getMaterial(Black);
-   int score = 0;
    if ((unsigned) wMat.infobits() == Material::KP && bMat.kingOnly()) {
       Square passer = board.pawn_bits[White].firstOne();
       if (lookupBitbase(board.kingSquare(White), passer, board.kingSquare(Black), White, board.sideToMove())) {
-         score += BITBASE_WIN;
+         return board.sideToMove() == White ? Constants::BITBASE_WIN :
+              -Constants::BITBASE_WIN;
       }
       else {
          return 0;
@@ -2546,7 +2540,8 @@ int Scoring::tryBitbase(const Board &board) {
    else if ((unsigned) bMat.infobits() == Material::KP && wMat.kingOnly()) {
       Square passer = board.pawn_bits[Black].firstOne();
       if (lookupBitbase(board.kingSquare(Black), passer, board.kingSquare(White), Black, board.sideToMove())) {
-         score -= BITBASE_WIN;
+         return board.sideToMove() == Black ? Constants::BITBASE_WIN :
+              -Constants::BITBASE_WIN;
       }
       else {
          return 0;

@@ -65,7 +65,7 @@ class Scoring
     }
 
     // Try to return a score based on bitbases, INVALID_SCORE if not found
-    static int tryBitbase(const Board &board);
+    static score_t tryBitbase(const Board &board);
 
     void clearHashTables();
 

@@ -449,6 +449,47 @@ static int testEval() {
     return errs;
 }
 
+static int testBitbases() {
+    // verify eval results are symmetrical (White/Black)
+    const int CASES = 8;
+    struct Case 
+    {
+        Case(const string &f, int r)
+            :fen(f),result(r) 
+            {
+            }
+        string fen;
+        int result;
+    };
+    
+    static const Case cases[CASES] = {
+        Case("8/8/1p6/2k5/8/5K2/8/8 b - - 0 1",Constants::BITBASE_WIN),
+        Case("8/8/5k2/8/2K5/1P6/8/8 w - - 0 1",Constants::BITBASE_WIN),
+        Case("8/8/1p6/2k5/8/5K2/8/8 w - - 0 1",-Constants::BITBASE_WIN),
+        Case("8/8/5k2/8/2K5/1P6/8/8 b - - 0 1",-Constants::BITBASE_WIN),
+        Case("8/8/8/k7/p7/8/8/1K6 b - - 0 1",0),
+        Case("8/8/8/k7/p7/8/8/1K6 w - - 0 1",0),
+        Case("1k6/8/8/P7/K7/8/8/8 w - - 0 1",0),
+        Case("1k6/8/8/P7/K7/8/8/8 b - - 0 1",0)
+    };
+
+    int errs = 0;
+    Scoring *s = new Scoring();
+    Board board;
+    for (int i = 0; i<CASES; i++) {
+        if (!BoardIO::readFEN(board, cases[i].fen.c_str())) {
+            cerr << "testBitbases: case " << i << " invalid FEN" << endl;
+            ++errs;
+        } else {
+            if (s->evalu8(board) != cases[i].result) {
+                cerr << "testBitbases: case " << i << " invalid result" << endl;
+                ++errs;
+            }
+        }
+    }
+    return errs;
+}
+
 static int testDrawEval() {
     // verify detection of KBP and other draw situations
     const int DRAW_CASES = 12;
@@ -789,6 +830,7 @@ int doUnit() {
    errs += testSee();
    errs += testPGN();
    errs += testEval();
+   errs += testBitbases();
    errs += testDrawEval();
    errs += testCheckStatus();
    errs += testEPD();

@@ -1749,33 +1749,24 @@ score_t Search::quiesce(int ply,int depth)
       // Establish a default score.  This score is returned if no
       // captures are generated, or if no captures generate a better
       // score (since we generally can choose whether or not to capture).
-      score_t bitscore;
       ASSERT(node->eval == Scoring::INVALID_SCORE);
-      if (board.getMaterial(White).materialLevel()==0 &&
-          board.getMaterial(Black).materialLevel()==0 &&
-          ((bitscore=Scoring::tryBitbase(board))!=Scoring::INVALID_SCORE)) {
-         node->eval = bitscore;
-         ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
+      had_eval = node->staticEval != Scoring::INVALID_SCORE;
+      if (had_eval) {
+          node->eval = node->staticEval;
+          ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
       }
-      else {
-         had_eval = node->staticEval != Scoring::INVALID_SCORE;
-         if (had_eval) {
-            node->eval = node->staticEval;
-            ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
-         }
-         if (node->eval == Scoring::INVALID_SCORE) {
-            node->eval = node->staticEval = scoring.evalu8(board);
-         }
-         if (hashHit) {
-            // Use the transposition table entry to provide a better score
-            // for pruning decisions, if possible
-            const score_t hashValue = hashEntry.getValue();
-            if (result == (hashValue > node->eval ? HashEntry::LowerBound :
-                           HashEntry::UpperBound)) {
-               node->eval = hashValue;
-               ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
-            }
-         }
+      if (node->eval == Scoring::INVALID_SCORE) {
+          node->eval = node->staticEval = scoring.evalu8(board);
+      }
+      if (hashHit) {
+          // Use the transposition table entry to provide a better score
+          // for pruning decisions, if possible
+          const score_t hashValue = hashEntry.getValue();
+          if (result == (hashValue > node->eval ? HashEntry::LowerBound :
+                         HashEntry::UpperBound)) {
+              node->eval = hashValue;
+              ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
+          }
       }
       ASSERT(node->eval != Scoring::INVALID_SCORE);
 #ifdef _TRACE
