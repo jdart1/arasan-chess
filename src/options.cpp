@@ -197,8 +197,9 @@ void Options::set_option(const string &name, const string &value) {
   }
   else if (name == "learning.position_learning.threshold") {
     int tmp;
-    setOption<int>(name,value,tmp);
-    learning.position_learning_threshold = (64*tmp)/100;
+    if (setOption<int>(name,value,tmp)) {
+       learning.position_learning_threshold = (64*tmp)/100;
+    }
   }
   else if (name == "learning.position_learning.minDepth") {
      setOption<int>(name,value,learning.position_learning_minDepth);
