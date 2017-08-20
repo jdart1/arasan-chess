@@ -286,7 +286,7 @@ $(GTB_LIBDIR):
 !Endif
 
 !IfDef SYZYGY_TBS
-CFLAGS = $(CFLAGS) -DSYZYGY_TBS
+CFLAGS = $(CFLAGS) -I. -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(BUILD_TUNE)\syzygy.obj $(BUILD_TUNE)\tbprobe.obj
