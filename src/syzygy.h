@@ -7,7 +7,7 @@
 #define tb_init syzygy_tb_init
 extern "C"
 {
-#include "syzygy/tbprobe.h"
+#include "syzygy/src/tbprobe.h"
 };
 #undef tb_init
 #include <set>

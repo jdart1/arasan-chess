@@ -27,7 +27,7 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 
 # location of SYZYGY tablebase code
-STB=syzygy
+STB=syzygy/src
 
 # enable NUMA support
 #NUMA=1

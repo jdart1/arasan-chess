@@ -30,7 +30,7 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 # location of the Nalimov tablebase source code (if used)
 TB=tb
 # location of the Syzygy tablebase source code (Fathom) (if used)
-STB=syzygy
+STB=syzygy/src
 # compile in NUMA support
 #NUMA=1
 # directory for utility programs
