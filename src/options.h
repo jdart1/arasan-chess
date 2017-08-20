@@ -127,7 +127,7 @@ class Options
    void set_option(const string &name,const string &value);
 
    template <class T>
-   void setOption(const string &name, const string &valueString, T &val);
+   int setOption(const string &name, const string &valueString, T &val);
 };
 
 #endif

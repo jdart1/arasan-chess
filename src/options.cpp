@@ -117,11 +117,13 @@ Options::SearchOptions::SearchOptions() :
 
 
 template <class T>
-void Options::setOption(const string &name,
+int Options::setOption(const string &name,
                         const string &valueString, T &value) {
     if (!Options::setOption<T>(valueString,value)) {
         cerr << "warning: invalid value for option " << name << endl;
+        return 0;
     }
+    return 1;
 }
 
 static void set_strength_option(const string &name,
