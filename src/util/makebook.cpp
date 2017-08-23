@@ -14,8 +14,6 @@
 #include "chessio.h"
 #include "movegen.h"
 #include "notation.h"
-#include "types.h"
-#include "debug.h"
 #include "attacks.h"
 #include "globals.h"
 
