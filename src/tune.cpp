@@ -726,9 +726,6 @@ void Tune::applyParams() const
    for (int i = 0; i < 8; i++) {
       Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
    }
-   for (int i = 0; i < 8; i++) {
-      Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
-   }
    for (int i = 0; i < 6; i++) {
       Scoring::Params::RB_ADJUST[i] = PARAM(RB_ADJUST+i);
    }
@@ -840,7 +837,6 @@ void Tune::applyParams() const
       apply_to_pst(i,PARAM(KING_PST_MIDGAME+i),Scoring::Params::KING_PST[0]);
       apply_to_pst(i,PARAM(KING_PST_ENDGAME+i),Scoring::Params::KING_PST[1]);
    }
-   memset(Scoring::Params::KNIGHT_OUTPOST,'\0',64*sizeof(score_t));
    int index = 0;
    for (int p = 0; p < 2; p++) {
       for (int i = 0; i < 16; i++) {
@@ -849,7 +845,6 @@ void Tune::applyParams() const
           }
       }
    }
-   memset(Scoring::Params::BISHOP_OUTPOST,'\0',64*sizeof(score_t));
    index = 0;
    for (int p = 0; p < 2; p++) {
       for (int i = 0; i < 16; i++) {
