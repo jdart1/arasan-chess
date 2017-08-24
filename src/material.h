@@ -5,6 +5,7 @@
 
 #include "chess.h"
 #include "debug.h"
+#include "params.h"
 
 class Material
 {
@@ -37,7 +38,7 @@ class Material
     FORCEINLINE void addPiece(const PieceType p)
     {
         info += masks[(int)p];
-        total += (stored_score_t)PieceValue(p);
+        total += (stored_score_t)Params::PieceValue(p);
         level += levels[(int)p];
         count++;
         ASSERT(level >=0);
@@ -46,7 +47,7 @@ class Material
     FORCEINLINE void removePiece(const PieceType p)
     {
         info -= masks[(int)p];
-        total -= (stored_score_t)PieceValue(p);
+        total -= (stored_score_t)Params::PieceValue(p);
         level -= levels[(int)p];
         count--;
         ASSERT(level >=0);
@@ -55,14 +56,14 @@ class Material
     FORCEINLINE void addPawn()
     {
         info += masks[(int)Pawn];
-        total += (stored_score_t)PAWN_VALUE;
+        total += (stored_score_t)Params::PAWN_VALUE;
         ++count; 
     }
 
     FORCEINLINE void removePawn()
     {
         info -= masks[(int)Pawn];
-        total -= (stored_score_t)PAWN_VALUE;
+        total -= (stored_score_t)Params::PAWN_VALUE;
         --count;
     }
 
@@ -73,7 +74,7 @@ class Material
 	
     // return value of pieces (excluding pawns)
     score_t pieceValue() const {
-       return (score_t)(total - (stored_score_t)PAWN_VALUE*pawnCount());
+       return (score_t)(total - (stored_score_t)Params::PAWN_VALUE*pawnCount());
     }
 	
     uint32_t infobits() const	{

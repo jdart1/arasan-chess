@@ -124,7 +124,7 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
                ClearUsed(moveList[i].move);
                if (MovesEqual(moveList[i].move,pvMove)) {
                    SetPhase(moveList[i].move,HASH_MOVE_PHASE);
-                   moveList[i].score = int(PAWN_VALUE*100);
+                   moveList[i].score = int(Params::PAWN_VALUE*100);
                } else if (CaptureOrPromotion(moveList[i].move)) {
                    int est;
                    if ((est = (int)see(board,moveList[i].move)) >= 0) {
@@ -238,7 +238,7 @@ int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
       int scores[40];
       ASSERT(captures < 40);
       for (int i = index; i < index+captures; i++) {
-          scores[i] = int(MVV_LVA(moves[i]));
+          scores[i] = int(Params::MVV_LVA(moves[i]));
       }
       sortMoves(moves,scores,captures);
    }
@@ -278,9 +278,9 @@ Move MoveGenerator::nextEvasion(int &ord) {
              continue;
           }
           if (CaptureOrPromotion(moves[i])) {
-             score_t gain = Gain(moves[i]);
-             score_t pieceVal = PieceValue(PieceMoved(moves[i]));
-             scores[i] = int(MVV_LVA(moves[i]));
+             score_t gain = Params::Gain(moves[i]);
+             score_t pieceVal = Params::PieceValue(PieceMoved(moves[i]));
+             scores[i] = int(Params::MVV_LVA(moves[i]));
              if (gain-pieceVal > 0 || (scores[i] = (int)see(board,moves[i])) >= 0) {
                 ++poscaps;
                 SetPhase(moves[i],WINNING_CAPTURE_PHASE);

@@ -234,19 +234,6 @@ else
 	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
-$(BUILD)/scoring.o: scoring.cpp params.cpp
-	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $(BUILD)/scoring.o scoring.cpp
-
-$(TUNE_BUILD)/scoring.o: scoring.cpp params.cpp
-	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $(TUNE_BUILD)/scoring.o scoring.cpp
-
-$(PROFILE)/scoring.o: scoring.cpp params.cpp
-ifeq ($(PASS),1)
-	$(CPP) $(PROF_GEN) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $(PROFILE)/scoring.o scoring.cpp
-else
-	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $(PROFILE)/scoring.o scoring.cpp
-endif
-
 profiled: dirs
 	@$(MAKE) PASS=1 profile profile-run
 	@$(MAKE) PASS=2 profile
@@ -320,7 +307,7 @@ ARASANX_SOURCES = arasanx.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
+params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
@@ -331,7 +318,7 @@ MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
-scoring.cpp see.cpp \
+params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
@@ -342,7 +329,7 @@ MAKEECO_SOURCES = makeeco.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
-scoring.cpp see.cpp \
+params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
@@ -353,7 +340,7 @@ ECOCODER_SOURCES = makeeco.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
-scoring.cpp see.cpp \
+params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
@@ -365,7 +352,7 @@ TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
+vparams.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp log.cpp search.cpp \
 searchc.cpp learn.cpp movegen.cpp \
@@ -376,7 +363,7 @@ PGNSELECT_SOURCES = pgnselect.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
+params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
@@ -387,7 +374,7 @@ PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
+params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \

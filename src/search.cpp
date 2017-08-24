@@ -33,11 +33,11 @@ extern fstream ucilog;
 #endif
 
 static const int ASPIRATION_WINDOW[] =
-    {(int)(0.375*PAWN_VALUE),
-     (int)(0.75*PAWN_VALUE),
-     (int)(1.5*PAWN_VALUE),
-     (int)(3.0*PAWN_VALUE),
-     (int)(6.0*PAWN_VALUE),
+    {(int)(0.375*Params::PAWN_VALUE),
+     (int)(0.75*Params::PAWN_VALUE),
+     (int)(1.5*Params::PAWN_VALUE),
+     (int)(3.0*Params::PAWN_VALUE),
+     (int)(6.0*Params::PAWN_VALUE),
       Constants::MATE};
 static const int ASPIRATION_WINDOW_STEPS = 6;
 
@@ -58,8 +58,8 @@ static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
 static const int PROBCUT_DEPTH = 4*DEPTH_INCREMENT;
-static const score_t PROBCUT_MARGIN = 2*PAWN_VALUE;
-static const score_t PROBCUT_MARGIN2 = int(0.33*PAWN_VALUE);
+static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
+static const score_t PROBCUT_MARGIN2 = int(0.33*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static const double LMR_BASE[2] = {0.5,0.3};
 static const double LMR_DIV[2] = {1.8,2.5};
@@ -69,8 +69,8 @@ static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
 {
-//   return (depth*PAWN_VALUE)/(100*DEPTH_INCREMENT);
-   return PAWN_VALUE/4;
+//   return (depth*Params::PAWN_VALUE)/(100*DEPTH_INCREMENT);
+   return Params::PAWN_VALUE/4;
 }
 
 static int singularExtensionDepth(int depth)
@@ -85,17 +85,17 @@ static const int LMP_DEPTH=10;
 
 static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93};
 
-static const score_t RAZOR_MARGIN1 = score_t(0.9*PAWN_VALUE);
-static const score_t RAZOR_MARGIN2 = score_t(2.75*PAWN_VALUE);
+static const score_t RAZOR_MARGIN1 = score_t(0.9*Params::PAWN_VALUE);
+static const score_t RAZOR_MARGIN2 = score_t(2.75*Params::PAWN_VALUE);
 static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
 
-static const score_t FUTILITY_MARGIN_BASE = (score_t)(0.25*PAWN_VALUE);
-static const score_t FUTILITY_MARGIN_SLOPE = (score_t)(0.5*PAWN_VALUE);
-static const score_t FUTILITY_MARGIN_SLOPE2 = (score_t)(0.2*PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_BASE = (score_t)(0.25*Params::PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_SLOPE = (score_t)(0.5*Params::PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_SLOPE2 = (score_t)(0.2*Params::PAWN_VALUE);
 
 static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
-static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = score_t(0.6*PAWN_VALUE);
+static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = score_t(0.6*Params::PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -297,7 +297,7 @@ Move SearchController::findBestMove(
 void SearchController::setRatingDiff(int rdiff)
 {
     ratingDiff = rdiff;
-    ratingFactor = (PAWN_VALUE*rdiff)/350;
+    ratingFactor = (Params::PAWN_VALUE*rdiff)/350;
 
     // propagate rating diff to searches
     pool->forEachSearch<&Search::setRatingVariablesFromController>();
@@ -682,7 +682,7 @@ score_t Search::futilityMargin(int depth) const
 score_t Search::razorMargin(int depth) const
 {
     return(depth<=DEPTH_INCREMENT) ?
-        RAZOR_MARGIN1 : RAZOR_MARGIN2 + (PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
+        RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
 }
 
 Move RootSearch::ply0_search(const vector <Move> &exclude)
@@ -1114,7 +1114,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
    stats->end_of_game = end_of_game[(int)stats->state];
    if (!controller->uci && !stats->end_of_game && srcOpts.can_resign) {
       if (stats->display_value != Scoring::INVALID_SCORE &&
-         (100*stats->display_value)/PAWN_VALUE <= srcOpts.resign_threshold) {
+         (100*stats->display_value)/Params::PAWN_VALUE <= srcOpts.resign_threshold) {
          state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
       }
@@ -1461,11 +1461,11 @@ void RootSearch::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
            first_val = score;
         } else {
            unsigned threshold;
-           if (score > val || val-score > 10*PAWN_VALUE) {
+           if (score > val || val-score > 10*Params::PAWN_VALUE) {
               threshold = 0;
            }
            else {
-              double diff = exp((val-score)/(3.0*PAWN_VALUE))-1.0;
+              double diff = exp((val-score)/(3.0*Params::PAWN_VALUE))-1.0;
               threshold = unsigned(threshold_base/(2*diff+i));
            }
            if (r < threshold) {
@@ -1834,7 +1834,7 @@ score_t Search::quiesce(int ply,int depth)
              !passedPawnPush(board,hashMove) &&
              node->beta > -Constants::TABLEBASE_WIN &&
              (Capture(hashMove) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-            const score_t optScore = Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+            const score_t optScore = Params::Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
             if (optScore < node->best_score) {
 #ifdef _TRACE
                if (master()) {
@@ -1904,7 +1904,7 @@ score_t Search::quiesce(int ply,int depth)
                 !passedPawnPush(board,move) &&
                 node->beta > -Constants::TABLEBASE_WIN &&
                 (Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-               const score_t optScore = Gain(move) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
+               const score_t optScore = Params::Gain(move) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
                if (optScore < node->best_score) {
 #ifdef _TRACE
                   if (master()) {
@@ -1916,7 +1916,7 @@ score_t Search::quiesce(int ply,int depth)
             }
             // See pruning
             score_t neededGain = node->best_score - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN;
-            if (PieceValue(Capture(move)) - PieceValue(PieceMoved(move)) <= neededGain &&
+            if (Params::PieceValue(Capture(move)) - Params::PieceValue(PieceMoved(move)) <= neededGain &&
                 node->beta > -Constants::TABLEBASE_WIN &&
                 !passedPawnPush(board,move) &&
                 !disc.isSet(StartSquare(move)) &&
@@ -1968,7 +1968,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
          }
          // Do checks in qsearch
-         if ((node->eval >= node->alpha - 2*PAWN_VALUE) &&
+         if ((node->eval >= node->alpha - 2*Params::PAWN_VALUE) &&
              (depth >= 1-srcOpts.checks_in_qsearch)) {
             move_count = mg.generateChecks(moves,disc);
             move_index = 0;
@@ -2622,7 +2622,7 @@ score_t Search::search()
     // Also avoid null move near the 50-move draw limit.
     if (pruneOk && depth >= DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
-        ((node->staticEval >= node->beta - int(0.25*PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
+        ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
@@ -2712,7 +2712,7 @@ score_t Search::search()
        const score_t threshold = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const int nu_depth = depth - 4*DEPTH_INCREMENT;
        BoardState state(board.state);
-       if (!IsNull(hashMove) && Capture(hashMove) > Pawn && node->eval + Gain(hashMove) >= threshold - PROBCUT_MARGIN2 && validMove(board,hashMove) && seeSign(board,hashMove,PROBCUT_MARGIN)) {
+       if (!IsNull(hashMove) && Capture(hashMove) > Pawn && node->eval + Params::Gain(hashMove) >= threshold - PROBCUT_MARGIN2 && validMove(board,hashMove) && seeSign(board,hashMove,PROBCUT_MARGIN)) {
 #ifdef _TRACE
            indent(ply);
            cout << "Probcut: trying " << ply << ". ";
@@ -2763,7 +2763,7 @@ score_t Search::search()
              else if (Capture(moves[i])==King) {
                 return -Illegal;                  // previous move was illegal
              }
-             else if (node->eval + Gain(moves[i]) >= threshold - PROBCUT_MARGIN2 && seeSign(board,moves[i],threshold)) {
+             else if (node->eval + Params::Gain(moves[i]) >= threshold - PROBCUT_MARGIN2 && seeSign(board,moves[i],threshold)) {
 #ifdef _TRACE
                 indent(ply);
                 cout << "Probcut: trying " << ply << ". ";
@@ -2814,7 +2814,7 @@ score_t Search::search()
         (depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) &&
         (node->PV() ||
          (board.checkStatus() == NotInCheck &&
-          node->eval >= node->beta - PAWN_VALUE))) {
+          node->eval >= node->beta - Params::PAWN_VALUE))) {
         int d;
         d = depth/2;
         if (!node->PV()) d-=DEPTH_INCREMENT;

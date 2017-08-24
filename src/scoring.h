@@ -6,6 +6,7 @@
 #include "board.h"
 #include "hash.h"
 #include "attacks.h"
+#include "params.h"
 
 #include <iostream>
 using namespace std;
@@ -17,8 +18,6 @@ class Scoring
     public:
 		
   enum {Midgame = 0, Endgame = 1};
-
-#include "params.h"
 
     enum { INVALID_SCORE = -Constants::MATE-1 };
 

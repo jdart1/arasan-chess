@@ -25,20 +25,14 @@ extern "C"
 //#define EVAL_DEBUG
 //#define ATTACK_DEBUG
 
-#ifdef TUNE
-#include "vparams.cpp"
-#else
-#include "params.cpp"
-#endif
-
-const int Scoring::Params:: MATERIAL_SCALE[32] =
+const int Params:: MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
    108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
 };
 
-const int Scoring::Params::MIDGAME_THRESHOLD = 12;
-const int Scoring::Params::ENDGAME_THRESHOLD = 23;
+const int Params::MIDGAME_THRESHOLD = 12;
+const int Params::ENDGAME_THRESHOLD = 23;
 
 #define PARAM(x) Params::x
 #define APARAM(x,index) Params::x[index]
@@ -336,7 +330,7 @@ int Scoring::tradeDownIndex(const Material &ourmat, const Material &oppmat)
 {
    int index = -1;
    const score_t mdiff = ourmat.value() - oppmat.value();
-   if (oppmat.materialLevel() < 16 && mdiff >= 3*PAWN_VALUE) {
+   if (oppmat.materialLevel() < 16 && mdiff >= 3*Params::PAWN_VALUE) {
       // Encourage trading pieces when we are ahead in material.
       index = oppmat.materialLevel()/2;
    }
@@ -374,7 +368,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
         } else if (oppmat.pawnCount() == 0) {
             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
-                score -= KNIGHT_VALUE;
+                score -= Params::KNIGHT_VALUE;
             }
         }
         else if (pieces == Material::KB && ourmat.pawnCount() == 1) {
@@ -384,7 +378,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 // and rook pawn. Opponent may or may not have
                 // pawns. We likely can't do better than draw, so
                 // reduce score.
-                score -= BISHOP_VALUE;
+                score -= Params::BISHOP_VALUE;
             }
         }
 #ifdef EVAL_DEBUG
@@ -418,7 +412,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
              }
              // do not apply trade down or pawn bonus
              return score;
-          } else if (oppmat.pieceValue() > ROOK_VALUE) {
+          } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
              // Knight or Bishop traded for pawns. Bonus for piece.
              score += PARAM(MINOR_FOR_PAWNS);
           }
@@ -496,67 +490,67 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
     score_t score = 0;
     if (ourmat.infobits() == Material::KQ) {
         if (oppmat.infobits() == Material::KRR) {
-            score -= (QUEEN_VALUE-2*ROOK_VALUE);  // even
+            score -= (Params::QUEEN_VALUE-2*Params::ROOK_VALUE);  // even
         }
         else if (oppmat.infobits() == Material::KRB) {
-           score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE); // even
+           score -= Params::QUEEN_VALUE-(Params::ROOK_VALUE+Params::BISHOP_VALUE); // even
         }
         else if (oppmat.infobits() == Material::KQB) {
-            score += BISHOP_VALUE;  // even
+            score += Params::BISHOP_VALUE;  // even
         }
         else if (oppmat.infobits() == Material::KQN) {
-            score += KNIGHT_VALUE;  // even
+            score += Params::KNIGHT_VALUE;  // even
         }
         else if (oppmat.infobits() == Material::KRN) { // close to even
-            score -= QUEEN_VALUE-(ROOK_VALUE+BISHOP_VALUE)-PAWN_VALUE/4;
+            score -= Params::QUEEN_VALUE-(Params::ROOK_VALUE+Params::BISHOP_VALUE)-Params::PAWN_VALUE/4;
         }
         else if (oppmat.infobits() == Material::KB ||
                  oppmat.infobits() == Material::KN ||
                  oppmat.infobits() == Material::KR) {
             // won for the stronger side
-            score += 2*PAWN_VALUE;
+            score += 2*Params::PAWN_VALUE;
         }
     }
     else if (ourmat.infobits() == Material::KR) {
         if (oppmat.infobits() == Material::KBN) { // close to even
-            score += (KNIGHT_VALUE+BISHOP_VALUE-ROOK_VALUE)-PAWN_VALUE/4;
+            score += (Params::KNIGHT_VALUE+Params::BISHOP_VALUE-Params::ROOK_VALUE)-Params::PAWN_VALUE/4;
         }
                                                   // even
         else if (oppmat.infobits() == Material::KB) {
-            score -= (ROOK_VALUE-BISHOP_VALUE);
+            score -= (Params::ROOK_VALUE-Params::BISHOP_VALUE);
         }
         else if (oppmat.infobits() == Material::KN) {
-            score -= (ROOK_VALUE-KNIGHT_VALUE)-PAWN_VALUE/4;
+            score -= (Params::ROOK_VALUE-Params::KNIGHT_VALUE)-Params::PAWN_VALUE/4;
         }
         else if (oppmat.infobits() == Material::KRB) {
            // even
-           score += BISHOP_VALUE;
+           score += Params::BISHOP_VALUE;
         }
         else if (oppmat.infobits() == Material::KRN) {
            // even
-           score += KNIGHT_VALUE;
+           score += Params::KNIGHT_VALUE;
         }
     }
     else if (ourmat.infobits() == Material::KRR) {
         if (oppmat.infobits() == Material::KRB) {
            // even
-           score -= ROOK_VALUE-BISHOP_VALUE;
+           score -= Params::ROOK_VALUE-Params::BISHOP_VALUE;
         }
         else if (oppmat.infobits() == Material::KRN) {
-           score -= ROOK_VALUE-KNIGHT_VALUE-PAWN_VALUE/4;
+           score -= Params::ROOK_VALUE-Params::KNIGHT_VALUE-Params::PAWN_VALUE/4;
         }
         else if (oppmat.infobits() == Material::KRBN) {
-           score += (KNIGHT_VALUE+BISHOP_VALUE-ROOK_VALUE)-PAWN_VALUE/4;
+           score += (Params::KNIGHT_VALUE+Params::BISHOP_VALUE-Params::ROOK_VALUE)-Params::PAWN_VALUE/4;
         }
     }
     else if (ourmat.infobits() == Material::KBB) {
        if (oppmat.infobits() == Material::KB) {
           // about 85% draw
-          score -= (mdiff-score_t(0.35*PAWN_VALUE));
+          score -= (mdiff-score_t(0.35*Params::PAWN_VALUE));
        }
        else if (oppmat.infobits() == Material::KN) {
           // about 50% draw, 50% won for Bishops
-          score -= score_t(1.5*PAWN_VALUE);
+          score -= score_t(1.5*Params::PAWN_VALUE);
        }
        else if (oppmat.infobits() == Material::KR) {
           // draw
@@ -566,7 +560,7 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
        if (oppmat.infobits() == Material::KN ||
            oppmat.infobits() == Material::KB) {
           // about 75% draw, a little less if opponent has Bishop
-          score -= (BISHOP_VALUE - score_t(0.6*PAWN_VALUE) - (oppmat.hasBishop() ? score_t(0.15*PAWN_VALUE) : 0));
+          score -= (Params::BISHOP_VALUE - score_t(0.6*Params::PAWN_VALUE) - (oppmat.hasBishop() ? score_t(0.15*Params::PAWN_VALUE) : 0));
        } else if (oppmat.infobits() == Material::KR) {
           score -= mdiff;
        }
@@ -2406,7 +2400,7 @@ template <ColorType side>
 int Scoring::theoreticalDraw(const Board &board) {
     const Material &mat1 = board.getMaterial(side);
     const Material &mat2 = board.getMaterial(OppositeColor(side));
-    if (mat1.value() > KING_VALUE + (KNIGHT_VALUE * 2)) return 0;
+    if (mat1.value() > Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) return 0;
 
     // Check for K + P vs rook pawn
     if (mat1.infobits() == Material::KP && mat2.kingOnly()) {
@@ -2481,8 +2475,8 @@ int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
 
    if
    (
-      board.getMaterial(White).value() <= KING_VALUE + (KNIGHT_VALUE * 2)
-   && board.getMaterial(Black).value() <= KING_VALUE + (KNIGHT_VALUE * 2)
+      board.getMaterial(White).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)
+   && board.getMaterial(Black).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)
    ) {
 
       // check for insufficient material and other drawing situations
@@ -2508,7 +2502,7 @@ void Scoring::printScore(score_t score, ostream &str) {
    else {
       if (score >= 0) str << '+';
       std::ios_base::fmtflags original_flags = str.flags();
-      str << fixed << setprecision(2) << (score * 1.0) / double(PAWN_VALUE);
+      str << fixed << setprecision(2) << (score * 1.0) / double(Params::PAWN_VALUE);
       str.flags(original_flags);
    }
 }
@@ -2521,7 +2515,7 @@ void Scoring::printScoreUCI(score_t score, ostream &str) {
       str << "mate " << int(Constants::MATE - score + 1) / 2;
    }
    else
-      str << "cp " << int(score*100)/PAWN_VALUE;
+      str << "cp " << int(score*100)/Params::PAWN_VALUE;
 }
 
 score_t Scoring::tryBitbase(const Board &board) {
@@ -2591,24 +2585,25 @@ static void print_array(ostream & o,score_t mid[], score_t end[], int size)
    o << "};" << endl;
 }
 
-void Scoring::Params::write(ostream &o, const string &comment)
+void Params::write(ostream &o, const string &comment)
 {
    o << "// Copyright 2015-2017 by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
    o << "// " << comment << endl;
    o << "//" << endl;
+   o << endl << "#include \"params.h\"" << endl;
    o << endl;
-   o << "const int Scoring::Params::RB_ADJUST[6] = ";
+   o << "const int Params::RB_ADJUST[6] = ";
    print_array(o,Params::RB_ADJUST,6);
-   o << "const int Scoring::Params::RBN_ADJUST[6] = ";
+   o << "const int Params::RBN_ADJUST[6] = ";
    print_array(o,Params::RBN_ADJUST,6);
-   o << "const int Scoring::Params::QR_ADJUST[5] = ";
+   o << "const int Params::QR_ADJUST[5] = ";
    print_array(o,Params::QR_ADJUST,5);
-   o << "const int Scoring::Params::KN_VS_PAWN_ADJUST[3] = ";
+   o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
-   o << "const int Scoring::Params::CASTLING[6] = ";
+   o << "const int Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
-   o << "const int Scoring::Params::KING_COVER[6][4] = {";
+   o << "const int Params::KING_COVER[6][4] = {";
    for (int i = 0; i < 6; i++) {
       print_array(o,Params::KING_COVER[i],4,0);
       if (i<5) o << "," << endl;
@@ -2616,7 +2611,7 @@ void Scoring::Params::write(ostream &o, const string &comment)
    o << "};" << endl;
    int start = Tune::KING_COVER_BASE;
    for (int i = start; i < start+tune_params.paramArraySize(); i++) {
-      o << "const int Scoring::Params::";
+      o << "const int Params::";
       Tune::TuneParam param;
       tune_params.getParam(i,param);
       const string str(param.name);
@@ -2628,63 +2623,63 @@ void Scoring::Params::write(ostream &o, const string &comment)
       }
       o << " = " << std::round(param.current) << ";" << endl;
    }
-   o << "const int Scoring::Params::KING_OPP_PASSER_DISTANCE[6] = ";
+   o << "const int Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
-   o << "const int Scoring::Params::KING_POSITION_LOW_MATERIAL[3] =";
+   o << "const int Params::KING_POSITION_LOW_MATERIAL[3] =";
    print_array(o,Params::KING_POSITION_LOW_MATERIAL,3);
-   o << "const int Scoring::Params::KING_ATTACK_SCALE[Scoring::Params::KING_ATTACK_SCALE_SIZE] = ";
-   print_array(o,Params::KING_ATTACK_SCALE,Scoring::Params::KING_ATTACK_SCALE_SIZE);
-   o << "const int Scoring::Params::TRADE_DOWN[8] = ";
+   o << "const int Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE] = ";
+   print_array(o,Params::KING_ATTACK_SCALE,Params::KING_ATTACK_SCALE_SIZE);
+   o << "const int Params::TRADE_DOWN[8] = ";
    print_array(o,Params::TRADE_DOWN,8);
-   o << "const int Scoring::Params::PASSED_PAWN[2][8] = ";
+   o << "const int Params::PASSED_PAWN[2][8] = ";
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
    score_t file_adjust[8];
    for (int i = 0; i < 8; i++) {
       int j = i < 4 ? i : 7-i;
       file_adjust[i] = tune_params[Tune::PASSED_PAWN_FILE_ADJUST1+j].current;
    }
-   o << "const int Scoring::Params::PASSED_PAWN_FILE_ADJUST[8] = ";
+   o << "const int Params::PASSED_PAWN_FILE_ADJUST[8] = ";
    print_array(o,file_adjust,8);
-   o << "const int Scoring::Params::POTENTIAL_PASSER[2][8] = ";
+   o << "const int Params::POTENTIAL_PASSER[2][8] = ";
    print_array(o,Params::POTENTIAL_PASSER[0], Params::POTENTIAL_PASSER[1], 8);
-   o << "const int Scoring::Params::CONNECTED_PASSER[2][8] = ";
+   o << "const int Params::CONNECTED_PASSER[2][8] = ";
    print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
-   o << "const int Scoring::Params::ADJACENT_PASSER[2][8] = ";
+   o << "const int Params::ADJACENT_PASSER[2][8] = ";
    print_array(o,Params::ADJACENT_PASSER[0], Params::ADJACENT_PASSER[1], 8);
-   o << "const int Scoring::Params::PP_OWN_PIECE_BLOCK[2][21] = ";
+   o << "const int Params::PP_OWN_PIECE_BLOCK[2][21] = ";
    print_array(o,Params::PP_OWN_PIECE_BLOCK[0], Params::PP_OWN_PIECE_BLOCK[1], 21);
-   o << "const int Scoring::Params::PP_OPP_PIECE_BLOCK[2][21] = ";
+   o << "const int Params::PP_OPP_PIECE_BLOCK[2][21] = ";
    print_array(o,Params::PP_OPP_PIECE_BLOCK[0], Params::PP_OPP_PIECE_BLOCK[1], 21);
-   o << "const int Scoring::Params::DOUBLED_PAWNS[2][8] = ";
+   o << "const int Params::DOUBLED_PAWNS[2][8] = ";
    print_array(o,Params::DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
-   o << "const int Scoring::Params::TRIPLED_PAWNS[2][8] = ";
+   o << "const int Params::TRIPLED_PAWNS[2][8] = ";
    print_array(o,Params::TRIPLED_PAWNS[0], Params::TRIPLED_PAWNS[1], 8);
-   o << "const int Scoring::Params::ISOLATED_PAWN[2][8] = ";
+   o << "const int Params::ISOLATED_PAWN[2][8] = ";
    print_array(o,Params:: ISOLATED_PAWN[0], Params::ISOLATED_PAWN[1], 8);
    o << endl;
-   o << "const int Scoring::Params::KNIGHT_PST[2][64] = ";
+   o << "const int Params::KNIGHT_PST[2][64] = ";
    print_array(o,Params::KNIGHT_PST[0],Params::KNIGHT_PST[1],64);
-   o << "const int Scoring::Params::BISHOP_PST[2][64] = ";
+   o << "const int Params::BISHOP_PST[2][64] = ";
    print_array(o,Params::BISHOP_PST[0],Params::BISHOP_PST[1],64);
-   o << "const int Scoring::Params::ROOK_PST[2][64] = ";
+   o << "const int Params::ROOK_PST[2][64] = ";
    print_array(o,Params::ROOK_PST[0],Params::ROOK_PST[1],64);
-   o << "const int Scoring::Params::QUEEN_PST[2][64] = ";
+   o << "const int Params::QUEEN_PST[2][64] = ";
    print_array(o,Params::QUEEN_PST[0],Params::QUEEN_PST[1],64);
-   o << "const int Scoring::Params::KING_PST[2][64] = ";
+   o << "const int Params::KING_PST[2][64] = ";
    print_array(o,Params::KING_PST[0],Params::KING_PST[1],64);
    o << endl;
-   o << "const int Scoring::Params::KNIGHT_MOBILITY[9] = ";
+   o << "const int Params::KNIGHT_MOBILITY[9] = ";
    print_array(o,Params::KNIGHT_MOBILITY,9);
-   o << "const int Scoring::Params::BISHOP_MOBILITY[15] = ";
+   o << "const int Params::BISHOP_MOBILITY[15] = ";
    print_array(o,Params::BISHOP_MOBILITY,15);
-   o << "const int Scoring::Params::ROOK_MOBILITY[2][15] = ";
+   o << "const int Params::ROOK_MOBILITY[2][15] = ";
    print_array(o,Params::ROOK_MOBILITY[0],Params::ROOK_MOBILITY[1],15);
-   o << "const int Scoring::Params::QUEEN_MOBILITY[2][24] = ";
+   o << "const int Params::QUEEN_MOBILITY[2][24] = ";
    print_array(o,Params::QUEEN_MOBILITY[0],Params::QUEEN_MOBILITY[1],24);
-   o << "const int Scoring::Params::KING_MOBILITY_ENDGAME[5] = ";
+   o << "const int Params::KING_MOBILITY_ENDGAME[5] = ";
    print_array(o,Params::KING_MOBILITY_ENDGAME,5);
    o << endl;
-   o << "const int Scoring::Params::KNIGHT_OUTPOST[2][64][2] = {";
+   o << "const int Params::KNIGHT_OUTPOST[2][64][2] = {";
    for (int p = 0; p < 2; p++) {
        o << "{";
        for (int sq = 0; sq < 64; sq++) {
@@ -2695,7 +2690,7 @@ void Scoring::Params::write(ostream &o, const string &comment)
        if (p < 1) o << ",";
    }
    o << "};" << endl;
-   o << "const int Scoring::Params::BISHOP_OUTPOST[2][64][2] = {";
+   o << "const int Params::BISHOP_OUTPOST[2][64][2] = {";
    for (int p = 0; p < 2; p++) {
        o << "{";
        for (int sq = 0; sq < 64; sq++) {

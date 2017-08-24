@@ -3,7 +3,7 @@
 #ifndef _PARAMS_H
 #define _PARAMS_H
 
-#include "types.h"
+#include "chess.h"
 
 #ifdef TUNE
 // scoring parameters that are not const, so can be
@@ -23,6 +23,40 @@ BEGIN_PACKED_STRUCT
     
     static const int KING_ATTACK_SCALE_SIZE = 150;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
+
+    // Currently piece values are fixed
+    static constexpr score_t PAWN_VALUE = (score_t)1000;
+    static constexpr score_t BISHOP_VALUE = (score_t)(3.25*PAWN_VALUE);
+    static constexpr score_t KNIGHT_VALUE = (score_t)(3.25*PAWN_VALUE);
+    static constexpr score_t ROOK_VALUE = (score_t)5*PAWN_VALUE;
+    static constexpr score_t QUEEN_VALUE = (score_t)(9.75*PAWN_VALUE);
+    static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
+
+    static FORCEINLINE score_t PieceValue( PieceType pieceType ) {
+        switch(pieceType) {
+        case Empty: return 0;
+        case Pawn: return PAWN_VALUE;
+        case Knight: return KNIGHT_VALUE;
+        case Bishop: return BISHOP_VALUE;
+        case Rook: return ROOK_VALUE;
+        case Queen: return QUEEN_VALUE;
+        case King: return KING_VALUE;
+        default: return 0;
+        }
+    }
+
+    static FORCEINLINE score_t PieceValue( Piece piece ) {
+        return PieceValue(TypeOfPiece(piece));
+    }
+
+    static FORCEINLINE score_t Gain(Move move) {
+        return ((TypeOfMove(move) == Promotion) ?
+                PieceValue(Capture(move)) + PieceValue(PromoteTo(move)) - PAWN_VALUE : PieceValue(Capture(move)));
+    }
+
+    static FORCEINLINE score_t MVV_LVA(Move move) {
+        return 8*Gain(move) - PieceValue(PieceMoved(move));
+    }
 
     static PARAM_MOD RB_ADJUST[6];
     static PARAM_MOD RBN_ADJUST[6];

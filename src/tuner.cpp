@@ -66,7 +66,7 @@ static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
-static const score_t LEARNING_SEARCH_WINDOW = 7*PAWN_VALUE;
+static const score_t LEARNING_SEARCH_WINDOW = 7*Params::PAWN_VALUE;
 // L2-regularization factor
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
@@ -215,7 +215,7 @@ double result_val(const string &res)
 // value is eval in pawn units; res is result string for game
 static double computeErrorTexel(double value,double result,const ColorType side)
 {
-   value /= PAWN_VALUE;
+   value /= Params::PAWN_VALUE;
 
    if (side == Black) value = -value;
 
@@ -253,7 +253,7 @@ static double computeErrorTexel(double value,double result,const ColorType side)
 
 static double computeTexelDeriv(double value, double result, const ColorType side)
 {
-    value /= PAWN_VALUE;
+    value /= Params::PAWN_VALUE;
 
     if (side == Black) value = -value;
 
@@ -262,11 +262,11 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     switch(obj) {
     case Objective::Msq: {
         double p = exp(PARAM1*value);
-        deriv = -2*PARAM1*p*((result-1)*p + result)/(PAWN_VALUE*pow(p+1,3.0));
+        deriv = -2*PARAM1*p*((result-1)*p + result)/(Params::PAWN_VALUE*pow(p+1,3.0));
         break;
     }
     case Objective::Ordinal: {
-        auto g = [] (double x) { return PARAM1/(PAWN_VALUE*(1.0+exp(-PARAM1*x))); };
+        auto g = [] (double x) { return PARAM1/(Params::PAWN_VALUE*(1.0+exp(-PARAM1*x))); };
         if (result == 0) {
             deriv = g(value-THETA1);
         }
@@ -288,7 +288,7 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
         } else {
             deriv = 2*PARAM1*(p-1)/(1+p);
         }
-        deriv /= PAWN_VALUE;
+        deriv /= Params::PAWN_VALUE;
         break;
     }
     }
@@ -340,7 +340,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
    int len = 0;
    score = stats.value;
    // skip positions with very large scores (including mate scores)
-   if (fabs(score/PAWN_VALUE)<30.0) {
+   if (fabs(score/Params::PAWN_VALUE)<30.0) {
       pvBoard = board;
       for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
          pvBoard.doMove(stats.best_line[len]);
@@ -523,7 +523,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
              }
              // do not apply trade down or pawn bonus
              return;
-          } else if (oppmat.pieceValue() > ROOK_VALUE) {
+          } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
              // Knight or Bishop traded for pawns. Bonus for piece
              grads[Tune::MINOR_FOR_PAWNS] += inc;
           }
@@ -640,8 +640,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Material &oppmat = board.getMaterial(oside);
    const int mLevel = oppmat.materialLevel();
    const int ourMatLevel = ourmat.materialLevel();
-   const bool deep_endgame = ourMatLevel <= Scoring::Params::MIDGAME_THRESHOLD;
-   const bool early_endgame = ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD;
+   const bool deep_endgame = ourMatLevel <= Params::MIDGAME_THRESHOLD;
+   const bool early_endgame = ourMatLevel <= Params::ENDGAME_THRESHOLD;
 
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
@@ -905,7 +905,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    grads[Tune::KING_PST_MIDGAME+ksq_map] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+ksq_map,mLevel);
 
    Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
-   if (ourMatLevel <= Scoring::Params::ENDGAME_THRESHOLD &&
+   if (ourMatLevel <= Params::ENDGAME_THRESHOLD &&
        all_pawns &&
        (!board.getMaterial(oside).kingOnly() ||
         (board.getMaterial(side).infobits() != Material::KP &&
@@ -1214,7 +1214,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/128;
       // king safety tuning
-      const score_t scale_index = std::max<score_t>(0,attackWeight/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
+      const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
       // compute the gradient of the scale
       double k = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current/1000.0;
       double x = exp(k*(scale_index-tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current));
@@ -1229,36 +1229,36 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::KING_ATTACK_SCALE_MAX] +=
           tune_params.scale(inc*max_grad,Tune::KING_ATTACK_SCALE_MAX,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR1] +=
-         tune_params.scale(inc*scale_grad*proximity/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
+         tune_params.scale(inc*scale_grad*proximity/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR2] +=
-         tune_params.scale(inc*scale_grad*pawnAttacks/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
+         tune_params.scale(inc*scale_grad*pawnAttacks/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
       // compute partial derivatives for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;
            i <= Tune::QUEEN_ATTACK_BOOST2;
            i++) {
          if (tune_params[i].tunable) {
             grads[i] +=
-               tune_params.scale((inc*scale_grad*attackTypes[i-Tune::MINOR_ATTACK_FACTOR])/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,i,ourMatLevel);
+               tune_params.scale((inc*scale_grad*attackTypes[i-Tune::MINOR_ATTACK_FACTOR])/Params::KING_ATTACK_FACTOR_RESOLUTION,i,ourMatLevel);
          }
       }
-      double boost_slope_grad = -oppCover*scale_grad/(128*Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION);
+      double boost_slope_grad = -oppCover*scale_grad/(128*Params::KING_ATTACK_FACTOR_RESOLUTION);
       grads[Tune::KING_ATTACK_COVER_BOOST_SLOPE] +=
           tune_params.scale(inc*boost_slope_grad,Tune::KING_ATTACK_COVER_BOOST_SLOPE,ourMatLevel);
       grads[Tune::KING_ATTACK_COVER_BOOST_BASE] +=
-          tune_params.scale(inc*scale_grad/Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST_BASE,ourMatLevel);
+          tune_params.scale(inc*scale_grad/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COVER_BOOST_BASE,ourMatLevel);
       for (int i=0; i<6; i++) {
          for (int j = 0; j < 4; j++) {
             // Note: we must adjust the gradient to account for any
             // increase to the attackWeight (from the KING_COVER_BOOST
             // params) from changes in the king cover score.
-            if (oppKpe.counts[i][j] && ourMatLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
+            if (oppKpe.counts[i][j] && ourMatLevel >= Params::MIDGAME_THRESHOLD) {
                // partial deriv of cover term
                double coverDeriv = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER_FILE_FACTOR0+j].current/64.0;
                // partial deriv of file term
                double fileDeriv = oppKpe.counts[i][j]*tune_params[Tune::KING_COVER1+i].current/64.0;
                // how much a change in cover value will affect
                // king attack score:
-               double kscale = -inc*scale_grad*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
+               double kscale = -inc*scale_grad*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/(Params::KING_ATTACK_FACTOR_RESOLUTION*128.0);
                grads[Tune::KING_COVER1+i] +=
                   tune_params.scale(kscale*coverDeriv,Tune::KING_COVER1+i,ourMatLevel);
                grads[Tune::KING_COVER_FILE_FACTOR0+j] +=
@@ -1267,7 +1267,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
       }
    }
-   if (mLevel >= Scoring::Params::MIDGAME_THRESHOLD) {
+   if (mLevel >= Params::MIDGAME_THRESHOLD) {
        for (int i=0; i<6; i++) {
            for (int j = 0; j < 4; j++) {
                if (ourKpe.counts[i][j]) {
@@ -1546,7 +1546,7 @@ static void output_solution(const string &cmd)
    strftime(buffer,256,"%d-%b-%Y %I:%M:%S",timeinfo);
    string timestr(buffer);
    string comment("Generated " + timestr + " by \"" + cmd + "\"");
-   Scoring::Params::write(param_out,comment);
+   Params::write(param_out,comment);
    param_out << endl;
    if (param_out.bad() || param_out.fail()) {
       cerr << "error writing .cpp output file" << endl;

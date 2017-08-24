@@ -11,13 +11,13 @@ extern "C" {
 #include <string.h>
 };
 
-static const score_t MOBILITY_RANGE = PAWN_VALUE/3;
-static const score_t OUTPOST_RANGE = PAWN_VALUE/2;
-static const score_t PST_RANGE = PAWN_VALUE;
-static const score_t PP_BLOCK_RANGE = PAWN_VALUE/3;
-static const score_t TRADE_DOWN_RANGE = PAWN_VALUE/3;
-static const score_t ENDGAME_KING_POS_RANGE = 3*PAWN_VALUE/4;
-static const score_t KING_ATTACK_COVER_BOOST_RANGE = Scoring::Params::KING_ATTACK_FACTOR_RESOLUTION*30;
+static const score_t MOBILITY_RANGE = Params::PAWN_VALUE/3;
+static const score_t OUTPOST_RANGE = Params::PAWN_VALUE/2;
+static const score_t PST_RANGE = Params::PAWN_VALUE;
+static const score_t PP_BLOCK_RANGE = Params::PAWN_VALUE/3;
+static const score_t TRADE_DOWN_RANGE = Params::PAWN_VALUE/3;
+static const score_t ENDGAME_KING_POS_RANGE = 3*Params::PAWN_VALUE/4;
+static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 int Tune::numTuningParams() const
 {
@@ -65,7 +65,7 @@ static void apply_to_outpost(int i,int p,int stage,score_t val,score_t arr[2][64
 
 Tune::Tune()
 {
-    static const score_t KING_COVER_RANGE = score_t(0.35*PAWN_VALUE);
+    static const score_t KING_COVER_RANGE = score_t(0.35*Params::PAWN_VALUE);
 
     // Tuning params for most parameters (except PSTs, mobility).
     // These are initialized to some reasonable but not optimal values.
@@ -564,24 +564,24 @@ static const int QUEEN_PST_INIT[2][64] =
    for (int p = 0; p < 6; p++) {
       stringstream name;
       name << "rb_adjust" << p;
-      score_t val = score_t(-0.35*PAWN_VALUE)+ (p>0 ? PAWN_VALUE/4: 0) + 
-          score_t(0.05*PAWN_VALUE)*p;
-      tune_params.push_back(TuneParam(i++,name.str(),val,val-PAWN_VALUE,val+PAWN_VALUE,Tune::TuneParam::Any,1));
+      score_t val = score_t(-0.35*Params::PAWN_VALUE)+ (p>0 ? Params::PAWN_VALUE/4: 0) + 
+          score_t(0.05*Params::PAWN_VALUE)*p;
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-Params::PAWN_VALUE,val+Params::PAWN_VALUE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==RBN_ADJUST);
    for (int p = 0; p < 6; p++) {
       stringstream name;
       name << "rb_adjust" << p;
-      score_t val = -score_t(0.15*PAWN_VALUE)*p;
-      tune_params.push_back(TuneParam(i++,name.str(),val,val-PAWN_VALUE/2,val+PAWN_VALUE/2,Tune::TuneParam::Any,1));
+      score_t val = -score_t(0.15*Params::PAWN_VALUE)*p;
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-Params::PAWN_VALUE/2,val+Params::PAWN_VALUE/2,Tune::TuneParam::Any,1));
    }
    ASSERT(i==QR_ADJUST);
    for (int p = 0; p < 5; p++) {
       stringstream name;
       name << "qr_adjust" << p;
-      score_t init[5] = {0.350*PAWN_VALUE, PAWN_VALUE, 0.9*PAWN_VALUE, 0.3*PAWN_VALUE, 0};
+      score_t init[5] = {0.350*Params::PAWN_VALUE, Params::PAWN_VALUE, 0.9*Params::PAWN_VALUE, 0.3*Params::PAWN_VALUE, 0};
       score_t val = init[p];
-      tune_params.push_back(TuneParam(i++,name.str(),val,val-score_t(0.75*PAWN_VALUE),val+score_t(0.75*PAWN_VALUE),Tune::TuneParam::Any,1));
+      tune_params.push_back(TuneParam(i++,name.str(),val,val-score_t(0.75*Params::PAWN_VALUE),val+score_t(0.75*Params::PAWN_VALUE),Tune::TuneParam::Any,1));
    }
 }
 
@@ -619,188 +619,188 @@ void Tune::applyParams() const
 {
    checkParams();
 
-   score_t *dest = Scoring::Params::KN_VS_PAWN_ADJUST;
+   score_t *dest = Params::KN_VS_PAWN_ADJUST;
    int i, j = 0;
    for (i = 0; i < 3; i++) {
       *dest++ = Tune::tune_params[j++].current;
    }
-   dest = Scoring::Params::CASTLING;
+   dest = Params::CASTLING;
    for (i = 0; i < 6; i++) {
       *dest++ = Tune::tune_params[j++].current;
    }
-   Scoring::Params::KING_ATTACK_SCALE_MAX = tune_params[Tune::KING_ATTACK_SCALE_MAX].current;
-   Scoring::Params::KING_ATTACK_SCALE_INFLECT = tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current;
-   Scoring::Params::KING_ATTACK_SCALE_FACTOR = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current;
-   Scoring::Params::KING_ATTACK_SCALE_BIAS = tune_params[Tune::KING_ATTACK_SCALE_BIAS].current;
+   Params::KING_ATTACK_SCALE_MAX = tune_params[Tune::KING_ATTACK_SCALE_MAX].current;
+   Params::KING_ATTACK_SCALE_INFLECT = tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current;
+   Params::KING_ATTACK_SCALE_FACTOR = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current;
+   Params::KING_ATTACK_SCALE_BIAS = tune_params[Tune::KING_ATTACK_SCALE_BIAS].current;
 
    // compute king cover scores
    for (i = 0; i < 6; i++) {
       for (int k = 0; k < 4; k++) {
-         Scoring::Params::KING_COVER[i][k] =
+         Params::KING_COVER[i][k] =
             tune_params[Tune::KING_COVER1+i].current*tune_params[Tune::KING_COVER_FILE_FACTOR0+k].current/64;
       }
    }
-   Scoring::Params::KING_COVER_BASE = tune_params[KING_COVER_BASE].current;
-   Scoring::Params::KING_DISTANCE_BASIS = tune_params[KING_DISTANCE_BASIS].current;
-   Scoring::Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
-   Scoring::Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
-   Scoring::Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
-   Scoring::Params::KRMINOR_VS_R = tune_params[KRMINOR_VS_R].current;
-   Scoring::Params::KRMINOR_VS_R_NO_PAWNS = tune_params[KRMINOR_VS_R_NO_PAWNS].current;
-   Scoring::Params::KQMINOR_VS_Q = tune_params[KQMINOR_VS_Q].current;
-   Scoring::Params::KQMINOR_VS_Q_NO_PAWNS = tune_params[KQMINOR_VS_Q_NO_PAWNS].current;
-   Scoring::Params::MINOR_FOR_PAWNS = tune_params[MINOR_FOR_PAWNS].current;
-   Scoring::Params::ENDGAME_PAWN_ADVANTAGE = tune_params[ENDGAME_PAWN_ADVANTAGE].current;
-   Scoring::Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;
-   Scoring::Params::PAWN_ENDGAME2 = tune_params[PAWN_ENDGAME2].current;
-   Scoring::Params::PAWN_ATTACK_FACTOR1 = tune_params[PAWN_ATTACK_FACTOR1].current;
-   Scoring::Params::PAWN_ATTACK_FACTOR2 = tune_params[PAWN_ATTACK_FACTOR2].current;
-   Scoring::Params::MINOR_ATTACK_FACTOR = tune_params[MINOR_ATTACK_FACTOR].current;
-   Scoring::Params::MINOR_ATTACK_BOOST = tune_params[MINOR_ATTACK_BOOST].current;
-   Scoring::Params::ROOK_ATTACK_FACTOR = tune_params[ROOK_ATTACK_FACTOR].current;
-   Scoring::Params::ROOK_ATTACK_BOOST = tune_params[ROOK_ATTACK_BOOST].current;
-   Scoring::Params::ROOK_ATTACK_BOOST2 = tune_params[ROOK_ATTACK_BOOST2].current;
-   Scoring::Params::KING_ATTACK_COVER_BOOST_BASE = tune_params[KING_ATTACK_COVER_BOOST_BASE].current;
-   Scoring::Params::KING_ATTACK_COVER_BOOST_SLOPE = tune_params[KING_ATTACK_COVER_BOOST_SLOPE].current;
-   Scoring::Params::QUEEN_ATTACK_FACTOR = tune_params[QUEEN_ATTACK_FACTOR].current;
-   Scoring::Params::QUEEN_ATTACK_BOOST = tune_params[QUEEN_ATTACK_BOOST].current;
-   Scoring::Params::QUEEN_ATTACK_BOOST2 = tune_params[QUEEN_ATTACK_BOOST2].current;
-   Scoring::Params::PAWN_THREAT_ON_PIECE_MID = tune_params[PAWN_THREAT_ON_PIECE_MID].current;
-   Scoring::Params::PAWN_THREAT_ON_PIECE_END = tune_params[PAWN_THREAT_ON_PIECE_END].current;
-   Scoring::Params::PIECE_THREAT_MM_MID = tune_params[PIECE_THREAT_MM_MID].current;
-   Scoring::Params::PIECE_THREAT_MR_MID = tune_params[PIECE_THREAT_MR_MID].current;
-   Scoring::Params::PIECE_THREAT_MQ_MID = tune_params[PIECE_THREAT_MQ_MID].current;
-   Scoring::Params::PIECE_THREAT_MM_END = tune_params[PIECE_THREAT_MM_END].current;
-   Scoring::Params::PIECE_THREAT_MR_END = tune_params[PIECE_THREAT_MR_END].current;
-   Scoring::Params::PIECE_THREAT_MQ_END = tune_params[PIECE_THREAT_MQ_END].current;
-   Scoring::Params::MINOR_PAWN_THREAT_MID = tune_params[MINOR_PAWN_THREAT_MID].current;
-   Scoring::Params::MINOR_PAWN_THREAT_END = tune_params[MINOR_PAWN_THREAT_END].current;
-   Scoring::Params::PIECE_THREAT_RM_MID = tune_params[PIECE_THREAT_RM_MID].current;
-   Scoring::Params::PIECE_THREAT_RR_MID = tune_params[PIECE_THREAT_RR_MID].current;
-   Scoring::Params::PIECE_THREAT_RQ_MID = tune_params[PIECE_THREAT_RQ_MID].current;
-   Scoring::Params::PIECE_THREAT_RM_END = tune_params[PIECE_THREAT_RM_END].current;
-   Scoring::Params::PIECE_THREAT_RR_END = tune_params[PIECE_THREAT_RR_END].current;
-   Scoring::Params::PIECE_THREAT_RQ_END = tune_params[PIECE_THREAT_RQ_END].current;
-   Scoring::Params::ROOK_PAWN_THREAT_MID = tune_params[ROOK_PAWN_THREAT_MID].current;
-   Scoring::Params::ROOK_PAWN_THREAT_END = tune_params[ROOK_PAWN_THREAT_END].current;
-   Scoring::Params::ENDGAME_KING_THREAT = tune_params[ENDGAME_KING_THREAT].current;
-   Scoring::Params::BISHOP_TRAPPED = tune_params[BISHOP_TRAPPED].current;
-   Scoring::Params::BISHOP_PAIR_MID = tune_params[BISHOP_PAIR_MID].current;
-   Scoring::Params::BISHOP_PAIR_END = tune_params[BISHOP_PAIR_END].current;
-   Scoring::Params::BISHOP_PAWN_PLACEMENT_END = tune_params[BISHOP_PAWN_PLACEMENT_END].current;
-   Scoring::Params::BAD_BISHOP_MID = tune_params[BAD_BISHOP_MID].current;
-   Scoring::Params::BAD_BISHOP_END = tune_params[BAD_BISHOP_END].current;
-   Scoring::Params::CENTER_PAWN_BLOCK = tune_params[CENTER_PAWN_BLOCK].current;
-   Scoring::Params::OUTSIDE_PASSER_MID = tune_params[OUTSIDE_PASSER_MID].current;
-   Scoring::Params::OUTSIDE_PASSER_END = tune_params[OUTSIDE_PASSER_END].current;
-   Scoring::Params::WEAK_PAWN_MID = tune_params[WEAK_PAWN_MID].current;
-   Scoring::Params::WEAK_PAWN_END = tune_params[WEAK_PAWN_END].current;
-   Scoring::Params::WEAK_ON_OPEN_FILE_MID = tune_params[WEAK_ON_OPEN_FILE_MID].current;
-   Scoring::Params::WEAK_ON_OPEN_FILE_END = tune_params[WEAK_ON_OPEN_FILE_END].current;
-   Scoring::Params::SPACE = tune_params[SPACE].current;
-   Scoring::Params::PAWN_CENTER_SCORE_MID = tune_params[PAWN_CENTER_SCORE_MID].current;
-   Scoring::Params::ROOK_ON_7TH_MID = tune_params[ROOK_ON_7TH_MID].current;
-   Scoring::Params::ROOK_ON_7TH_END = tune_params[ROOK_ON_7TH_END].current;
-   Scoring::Params::TWO_ROOKS_ON_7TH_MID = tune_params[TWO_ROOKS_ON_7TH_MID].current;
-   Scoring::Params::TWO_ROOKS_ON_7TH_END = tune_params[TWO_ROOKS_ON_7TH_END].current;
-   Scoring::Params::ROOK_ON_OPEN_FILE_MID = tune_params[ROOK_ON_OPEN_FILE_MID].current;
-   Scoring::Params::ROOK_ON_OPEN_FILE_END = tune_params[ROOK_ON_OPEN_FILE_END].current;
-   Scoring::Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
-   Scoring::Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
-   Scoring::Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;
-   Scoring::Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
-   Scoring::Params::KING_OWN_PAWN_DISTANCE = tune_params[KING_OWN_PAWN_DISTANCE].current;
-   Scoring::Params::KING_OPP_PAWN_DISTANCE = tune_params[KING_OPP_PAWN_DISTANCE].current;
-   Scoring::Params::QUEENING_SQUARE_CONTROL_MID = tune_params[QUEENING_SQUARE_CONTROL_MID].current;
-   Scoring::Params::QUEENING_SQUARE_CONTROL_END = tune_params[QUEENING_SQUARE_CONTROL_END].current;
-   Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_MID = tune_params[QUEENING_SQUARE_OPP_CONTROL_MID].current;
-   Scoring::Params::QUEENING_SQUARE_OPP_CONTROL_END = tune_params[QUEENING_SQUARE_OPP_CONTROL_END].current;
-   Scoring::Params::WRONG_COLOR_BISHOP = tune_params[WRONG_COLOR_BISHOP].current;
-   Scoring::Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
+   Params::KING_COVER_BASE = tune_params[KING_COVER_BASE].current;
+   Params::KING_DISTANCE_BASIS = tune_params[KING_DISTANCE_BASIS].current;
+   Params::KING_DISTANCE_MULT = tune_params[KING_DISTANCE_MULT].current;
+   Params::PIN_MULTIPLIER_MID = tune_params[PIN_MULTIPLIER_MID].current;
+   Params::PIN_MULTIPLIER_END = tune_params[PIN_MULTIPLIER_END].current;
+   Params::KRMINOR_VS_R = tune_params[KRMINOR_VS_R].current;
+   Params::KRMINOR_VS_R_NO_PAWNS = tune_params[KRMINOR_VS_R_NO_PAWNS].current;
+   Params::KQMINOR_VS_Q = tune_params[KQMINOR_VS_Q].current;
+   Params::KQMINOR_VS_Q_NO_PAWNS = tune_params[KQMINOR_VS_Q_NO_PAWNS].current;
+   Params::MINOR_FOR_PAWNS = tune_params[MINOR_FOR_PAWNS].current;
+   Params::ENDGAME_PAWN_ADVANTAGE = tune_params[ENDGAME_PAWN_ADVANTAGE].current;
+   Params::PAWN_ENDGAME1 = tune_params[PAWN_ENDGAME1].current;
+   Params::PAWN_ENDGAME2 = tune_params[PAWN_ENDGAME2].current;
+   Params::PAWN_ATTACK_FACTOR1 = tune_params[PAWN_ATTACK_FACTOR1].current;
+   Params::PAWN_ATTACK_FACTOR2 = tune_params[PAWN_ATTACK_FACTOR2].current;
+   Params::MINOR_ATTACK_FACTOR = tune_params[MINOR_ATTACK_FACTOR].current;
+   Params::MINOR_ATTACK_BOOST = tune_params[MINOR_ATTACK_BOOST].current;
+   Params::ROOK_ATTACK_FACTOR = tune_params[ROOK_ATTACK_FACTOR].current;
+   Params::ROOK_ATTACK_BOOST = tune_params[ROOK_ATTACK_BOOST].current;
+   Params::ROOK_ATTACK_BOOST2 = tune_params[ROOK_ATTACK_BOOST2].current;
+   Params::KING_ATTACK_COVER_BOOST_BASE = tune_params[KING_ATTACK_COVER_BOOST_BASE].current;
+   Params::KING_ATTACK_COVER_BOOST_SLOPE = tune_params[KING_ATTACK_COVER_BOOST_SLOPE].current;
+   Params::QUEEN_ATTACK_FACTOR = tune_params[QUEEN_ATTACK_FACTOR].current;
+   Params::QUEEN_ATTACK_BOOST = tune_params[QUEEN_ATTACK_BOOST].current;
+   Params::QUEEN_ATTACK_BOOST2 = tune_params[QUEEN_ATTACK_BOOST2].current;
+   Params::PAWN_THREAT_ON_PIECE_MID = tune_params[PAWN_THREAT_ON_PIECE_MID].current;
+   Params::PAWN_THREAT_ON_PIECE_END = tune_params[PAWN_THREAT_ON_PIECE_END].current;
+   Params::PIECE_THREAT_MM_MID = tune_params[PIECE_THREAT_MM_MID].current;
+   Params::PIECE_THREAT_MR_MID = tune_params[PIECE_THREAT_MR_MID].current;
+   Params::PIECE_THREAT_MQ_MID = tune_params[PIECE_THREAT_MQ_MID].current;
+   Params::PIECE_THREAT_MM_END = tune_params[PIECE_THREAT_MM_END].current;
+   Params::PIECE_THREAT_MR_END = tune_params[PIECE_THREAT_MR_END].current;
+   Params::PIECE_THREAT_MQ_END = tune_params[PIECE_THREAT_MQ_END].current;
+   Params::MINOR_PAWN_THREAT_MID = tune_params[MINOR_PAWN_THREAT_MID].current;
+   Params::MINOR_PAWN_THREAT_END = tune_params[MINOR_PAWN_THREAT_END].current;
+   Params::PIECE_THREAT_RM_MID = tune_params[PIECE_THREAT_RM_MID].current;
+   Params::PIECE_THREAT_RR_MID = tune_params[PIECE_THREAT_RR_MID].current;
+   Params::PIECE_THREAT_RQ_MID = tune_params[PIECE_THREAT_RQ_MID].current;
+   Params::PIECE_THREAT_RM_END = tune_params[PIECE_THREAT_RM_END].current;
+   Params::PIECE_THREAT_RR_END = tune_params[PIECE_THREAT_RR_END].current;
+   Params::PIECE_THREAT_RQ_END = tune_params[PIECE_THREAT_RQ_END].current;
+   Params::ROOK_PAWN_THREAT_MID = tune_params[ROOK_PAWN_THREAT_MID].current;
+   Params::ROOK_PAWN_THREAT_END = tune_params[ROOK_PAWN_THREAT_END].current;
+   Params::ENDGAME_KING_THREAT = tune_params[ENDGAME_KING_THREAT].current;
+   Params::BISHOP_TRAPPED = tune_params[BISHOP_TRAPPED].current;
+   Params::BISHOP_PAIR_MID = tune_params[BISHOP_PAIR_MID].current;
+   Params::BISHOP_PAIR_END = tune_params[BISHOP_PAIR_END].current;
+   Params::BISHOP_PAWN_PLACEMENT_END = tune_params[BISHOP_PAWN_PLACEMENT_END].current;
+   Params::BAD_BISHOP_MID = tune_params[BAD_BISHOP_MID].current;
+   Params::BAD_BISHOP_END = tune_params[BAD_BISHOP_END].current;
+   Params::CENTER_PAWN_BLOCK = tune_params[CENTER_PAWN_BLOCK].current;
+   Params::OUTSIDE_PASSER_MID = tune_params[OUTSIDE_PASSER_MID].current;
+   Params::OUTSIDE_PASSER_END = tune_params[OUTSIDE_PASSER_END].current;
+   Params::WEAK_PAWN_MID = tune_params[WEAK_PAWN_MID].current;
+   Params::WEAK_PAWN_END = tune_params[WEAK_PAWN_END].current;
+   Params::WEAK_ON_OPEN_FILE_MID = tune_params[WEAK_ON_OPEN_FILE_MID].current;
+   Params::WEAK_ON_OPEN_FILE_END = tune_params[WEAK_ON_OPEN_FILE_END].current;
+   Params::SPACE = tune_params[SPACE].current;
+   Params::PAWN_CENTER_SCORE_MID = tune_params[PAWN_CENTER_SCORE_MID].current;
+   Params::ROOK_ON_7TH_MID = tune_params[ROOK_ON_7TH_MID].current;
+   Params::ROOK_ON_7TH_END = tune_params[ROOK_ON_7TH_END].current;
+   Params::TWO_ROOKS_ON_7TH_MID = tune_params[TWO_ROOKS_ON_7TH_MID].current;
+   Params::TWO_ROOKS_ON_7TH_END = tune_params[TWO_ROOKS_ON_7TH_END].current;
+   Params::ROOK_ON_OPEN_FILE_MID = tune_params[ROOK_ON_OPEN_FILE_MID].current;
+   Params::ROOK_ON_OPEN_FILE_END = tune_params[ROOK_ON_OPEN_FILE_END].current;
+   Params::ROOK_BEHIND_PP_MID = tune_params[ROOK_BEHIND_PP_MID].current;
+   Params::ROOK_BEHIND_PP_END = tune_params[ROOK_BEHIND_PP_END].current;
+   Params::QUEEN_OUT = tune_params[QUEEN_OUT].current;
+   Params::PAWN_SIDE_BONUS = tune_params[PAWN_SIDE_BONUS].current;
+   Params::KING_OWN_PAWN_DISTANCE = tune_params[KING_OWN_PAWN_DISTANCE].current;
+   Params::KING_OPP_PAWN_DISTANCE = tune_params[KING_OPP_PAWN_DISTANCE].current;
+   Params::QUEENING_SQUARE_CONTROL_MID = tune_params[QUEENING_SQUARE_CONTROL_MID].current;
+   Params::QUEENING_SQUARE_CONTROL_END = tune_params[QUEENING_SQUARE_CONTROL_END].current;
+   Params::QUEENING_SQUARE_OPP_CONTROL_MID = tune_params[QUEENING_SQUARE_OPP_CONTROL_MID].current;
+   Params::QUEENING_SQUARE_OPP_CONTROL_END = tune_params[QUEENING_SQUARE_OPP_CONTROL_END].current;
+   Params::WRONG_COLOR_BISHOP = tune_params[WRONG_COLOR_BISHOP].current;
+   Params::SIDE_PROTECTED_PAWN = tune_params[SIDE_PROTECTED_PAWN].current;
    for (int i = 0; i < 6; i++) {
-      Scoring::Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);
+      Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);
    }
    for (int i = 0; i < 3; i++) {
-      Scoring::Params::KING_POSITION_LOW_MATERIAL[i] = PARAM(KING_POSITION_LOW_MATERIAL0+i);
+      Params::KING_POSITION_LOW_MATERIAL[i] = PARAM(KING_POSITION_LOW_MATERIAL0+i);
    }
    for (int i = 0; i < 8; i++) {
-      Scoring::Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
+      Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
    }
    for (int i = 0; i < 6; i++) {
-      Scoring::Params::RB_ADJUST[i] = PARAM(RB_ADJUST+i);
+      Params::RB_ADJUST[i] = PARAM(RB_ADJUST+i);
    }
    for (int i = 0; i < 6; i++) {
-      Scoring::Params::RBN_ADJUST[i] = PARAM(RBN_ADJUST+i);
+      Params::RBN_ADJUST[i] = PARAM(RBN_ADJUST+i);
    }
    for (int i = 0; i < 5; i++) {
-      Scoring::Params::QR_ADJUST[i] = PARAM(QR_ADJUST+i);
+      Params::QR_ADJUST[i] = PARAM(QR_ADJUST+i);
    }
-   for (int i = 0; i < Scoring::Params::KING_ATTACK_SCALE_SIZE; i++) {
-       int x = PARAM(KING_ATTACK_SCALE_BIAS) +
-           int(std::round(PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(i-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0))));
-       Scoring::Params::KING_ATTACK_SCALE[i] = x;
+   for (int i = 0; i < Params::KING_ATTACK_SCALE_SIZE; i++) {
+       int x = int(PARAM(KING_ATTACK_SCALE_BIAS) +
+           std::round(PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(i-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0))));
+       Params::KING_ATTACK_SCALE[i] = x;
    }
-   memset(Scoring::Params::PASSED_PAWN[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::PASSED_PAWN[1],'\0',sizeof(score_t)*8);
+   memset(Params::PASSED_PAWN[0],'\0',sizeof(score_t)*8);
+   memset(Params::PASSED_PAWN[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 8; i++) {
-      Scoring::Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN_MID2+i-2);
-      Scoring::Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN_END2+i-2);
+      Params::PASSED_PAWN[Scoring::Midgame][i] = PARAM(PASSED_PAWN_MID2+i-2);
+      Params::PASSED_PAWN[Scoring::Endgame][i] = PARAM(PASSED_PAWN_END2+i-2);
    }
    for (int i = 0; i < 4; i++) {
-      Scoring::Params::PASSED_PAWN_FILE_ADJUST[i] =
-      Scoring::Params::PASSED_PAWN_FILE_ADJUST[7-i] = PARAM(PASSED_PAWN_FILE_ADJUST1+i);
+      Params::PASSED_PAWN_FILE_ADJUST[i] =
+      Params::PASSED_PAWN_FILE_ADJUST[7-i] = PARAM(PASSED_PAWN_FILE_ADJUST1+i);
    }
-   memset(Scoring::Params::POTENTIAL_PASSER[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::POTENTIAL_PASSER[1],'\0',sizeof(score_t)*8);
+   memset(Params::POTENTIAL_PASSER[0],'\0',sizeof(score_t)*8);
+   memset(Params::POTENTIAL_PASSER[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 7; i++) {
-      Scoring::Params::POTENTIAL_PASSER[Scoring::Midgame][i] = PARAM(POTENTIAL_PASSER_MID2+i-2);
-      Scoring::Params::POTENTIAL_PASSER[Scoring::Endgame][i] = PARAM(POTENTIAL_PASSER_END2+i-2);
+      Params::POTENTIAL_PASSER[Scoring::Midgame][i] = PARAM(POTENTIAL_PASSER_MID2+i-2);
+      Params::POTENTIAL_PASSER[Scoring::Endgame][i] = PARAM(POTENTIAL_PASSER_END2+i-2);
    }
-   memset(Scoring::Params::CONNECTED_PASSER[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::CONNECTED_PASSER[1],'\0',sizeof(score_t)*8);
+   memset(Params::CONNECTED_PASSER[0],'\0',sizeof(score_t)*8);
+   memset(Params::CONNECTED_PASSER[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 8; i++) {
-      Scoring::Params::CONNECTED_PASSER[Scoring::Midgame][i] = PARAM(CONNECTED_PASSER_MID2+i-2);
-      Scoring::Params::CONNECTED_PASSER[Scoring::Endgame][i] = PARAM(CONNECTED_PASSER_END2+i-2);
+      Params::CONNECTED_PASSER[Scoring::Midgame][i] = PARAM(CONNECTED_PASSER_MID2+i-2);
+      Params::CONNECTED_PASSER[Scoring::Endgame][i] = PARAM(CONNECTED_PASSER_END2+i-2);
    }
-   memset(Scoring::Params::ADJACENT_PASSER[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::ADJACENT_PASSER[1],'\0',sizeof(score_t)*8);
+   memset(Params::ADJACENT_PASSER[0],'\0',sizeof(score_t)*8);
+   memset(Params::ADJACENT_PASSER[1],'\0',sizeof(score_t)*8);
    for (int i = 2; i < 8; i++) {
-      Scoring::Params::ADJACENT_PASSER[Scoring::Midgame][i] = PARAM(ADJACENT_PASSER_MID2+i-2);
-      Scoring::Params::ADJACENT_PASSER[Scoring::Endgame][i] = PARAM(ADJACENT_PASSER_END2+i-2);
+      Params::ADJACENT_PASSER[Scoring::Midgame][i] = PARAM(ADJACENT_PASSER_MID2+i-2);
+      Params::ADJACENT_PASSER[Scoring::Endgame][i] = PARAM(ADJACENT_PASSER_END2+i-2);
    }
-   memset(Scoring::Params::DOUBLED_PAWNS[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::DOUBLED_PAWNS[1],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::TRIPLED_PAWNS[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::TRIPLED_PAWNS[1],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::ISOLATED_PAWN[0],'\0',sizeof(score_t)*8);
-   memset(Scoring::Params::ISOLATED_PAWN[1],'\0',sizeof(score_t)*8);
+   memset(Params::DOUBLED_PAWNS[0],'\0',sizeof(score_t)*8);
+   memset(Params::DOUBLED_PAWNS[1],'\0',sizeof(score_t)*8);
+   memset(Params::TRIPLED_PAWNS[0],'\0',sizeof(score_t)*8);
+   memset(Params::TRIPLED_PAWNS[1],'\0',sizeof(score_t)*8);
+   memset(Params::ISOLATED_PAWN[0],'\0',sizeof(score_t)*8);
+   memset(Params::ISOLATED_PAWN[1],'\0',sizeof(score_t)*8);
    for (int i = 0; i < 4; i++) {
-      Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame][i] =
-         Scoring::Params::DOUBLED_PAWNS[Scoring::Midgame][7-i] =
+      Params::DOUBLED_PAWNS[Scoring::Midgame][i] =
+         Params::DOUBLED_PAWNS[Scoring::Midgame][7-i] =
          PARAM(DOUBLED_PAWNS_MID1+i);
-      Scoring::Params::DOUBLED_PAWNS[Scoring::Endgame][i] =
-         Scoring::Params::DOUBLED_PAWNS[Scoring::Endgame][7-i] =
+      Params::DOUBLED_PAWNS[Scoring::Endgame][i] =
+         Params::DOUBLED_PAWNS[Scoring::Endgame][7-i] =
          PARAM(DOUBLED_PAWNS_END1+i);
-      Scoring::Params::TRIPLED_PAWNS[Scoring::Midgame][i] =
-         Scoring::Params::TRIPLED_PAWNS[Scoring::Midgame][7-i] =
+      Params::TRIPLED_PAWNS[Scoring::Midgame][i] =
+         Params::TRIPLED_PAWNS[Scoring::Midgame][7-i] =
          PARAM(TRIPLED_PAWNS_MID1+i);
-      Scoring::Params::TRIPLED_PAWNS[Scoring::Endgame][i] =
-         Scoring::Params::TRIPLED_PAWNS[Scoring::Endgame][7-i] =
+      Params::TRIPLED_PAWNS[Scoring::Endgame][i] =
+         Params::TRIPLED_PAWNS[Scoring::Endgame][7-i] =
          PARAM(TRIPLED_PAWNS_END1+i);
-      Scoring::Params::ISOLATED_PAWN[Scoring::Midgame][i] =
-         Scoring::Params::ISOLATED_PAWN[Scoring::Midgame][7-i] =
+      Params::ISOLATED_PAWN[Scoring::Midgame][i] =
+         Params::ISOLATED_PAWN[Scoring::Midgame][7-i] =
          PARAM(ISOLATED_PAWN_MID1+i);
-      Scoring::Params::ISOLATED_PAWN[Scoring::Endgame][i] =
-         Scoring::Params::ISOLATED_PAWN[Scoring::Endgame][7-i] =
+      Params::ISOLATED_PAWN[Scoring::Endgame][i] =
+         Params::ISOLATED_PAWN[Scoring::Endgame][7-i] =
          PARAM(ISOLATED_PAWN_END1+i);
    }
    for (int p = 0; p < 2; p++) {
       for (int i = 0; i < 21; i++) {
-         Scoring::Params::PP_OWN_PIECE_BLOCK[p][i] =
+         Params::PP_OWN_PIECE_BLOCK[p][i] =
             p == 0 ?
             PARAM(PP_OWN_PIECE_BLOCK_MID+i) :
             PARAM(PP_OWN_PIECE_BLOCK_END+i);
-         Scoring::Params::PP_OPP_PIECE_BLOCK[p][i] =
+         Params::PP_OPP_PIECE_BLOCK[p][i] =
             p == 0 ?
             PARAM(PP_OPP_PIECE_BLOCK_MID+i) :
             PARAM(PP_OPP_PIECE_BLOCK_END+i);
@@ -808,40 +808,40 @@ void Tune::applyParams() const
    }
 
    for (int i = 0; i < 9; i++) {
-      Scoring::Params::KNIGHT_MOBILITY[i] = PARAM(KNIGHT_MOBILITY+i);
+      Params::KNIGHT_MOBILITY[i] = PARAM(KNIGHT_MOBILITY+i);
    }
    for (int i = 0; i < 15; i++) {
-      Scoring::Params::BISHOP_MOBILITY[i] = PARAM(BISHOP_MOBILITY+i);
+      Params::BISHOP_MOBILITY[i] = PARAM(BISHOP_MOBILITY+i);
    }
    for (int i = 0; i < 15; i++) {
-      Scoring::Params::ROOK_MOBILITY[0][i] = PARAM(ROOK_MOBILITY_MIDGAME+i);
-      Scoring::Params::ROOK_MOBILITY[1][i] = PARAM(ROOK_MOBILITY_ENDGAME+i);
+      Params::ROOK_MOBILITY[0][i] = PARAM(ROOK_MOBILITY_MIDGAME+i);
+      Params::ROOK_MOBILITY[1][i] = PARAM(ROOK_MOBILITY_ENDGAME+i);
    }
    for (int i = 0; i < 24; i++) {
-      Scoring::Params::QUEEN_MOBILITY[0][i] = PARAM(QUEEN_MOBILITY_MIDGAME+i);
-      Scoring::Params::QUEEN_MOBILITY[1][i] = PARAM(QUEEN_MOBILITY_ENDGAME+i);
+      Params::QUEEN_MOBILITY[0][i] = PARAM(QUEEN_MOBILITY_MIDGAME+i);
+      Params::QUEEN_MOBILITY[1][i] = PARAM(QUEEN_MOBILITY_ENDGAME+i);
    }
    for (int i = 0; i < 5; i++) {
-      Scoring::Params::KING_MOBILITY_ENDGAME[i] = PARAM(KING_MOBILITY_ENDGAME+i);
+      Params::KING_MOBILITY_ENDGAME[i] = PARAM(KING_MOBILITY_ENDGAME+i);
    }
 
    for (int i = 0; i < 32; i++) {
-      apply_to_pst(i,PARAM(KNIGHT_PST_MIDGAME+i),Scoring::Params::KNIGHT_PST[0]);
-      apply_to_pst(i,PARAM(KNIGHT_PST_ENDGAME+i),Scoring::Params::KNIGHT_PST[1]);
-      apply_to_pst(i,PARAM(BISHOP_PST_MIDGAME+i),Scoring::Params::BISHOP_PST[0]);
-      apply_to_pst(i,PARAM(BISHOP_PST_ENDGAME+i),Scoring::Params::BISHOP_PST[1]);
-      apply_to_pst(i,PARAM(ROOK_PST_MIDGAME+i),Scoring::Params::ROOK_PST[0]);
-      apply_to_pst(i,PARAM(ROOK_PST_ENDGAME+i),Scoring::Params::ROOK_PST[1]);
-      apply_to_pst(i,PARAM(QUEEN_PST_MIDGAME+i),Scoring::Params::QUEEN_PST[0]);
-      apply_to_pst(i,PARAM(QUEEN_PST_ENDGAME+i),Scoring::Params::QUEEN_PST[1]);
-      apply_to_pst(i,PARAM(KING_PST_MIDGAME+i),Scoring::Params::KING_PST[0]);
-      apply_to_pst(i,PARAM(KING_PST_ENDGAME+i),Scoring::Params::KING_PST[1]);
+      apply_to_pst(i,PARAM(KNIGHT_PST_MIDGAME+i),Params::KNIGHT_PST[0]);
+      apply_to_pst(i,PARAM(KNIGHT_PST_ENDGAME+i),Params::KNIGHT_PST[1]);
+      apply_to_pst(i,PARAM(BISHOP_PST_MIDGAME+i),Params::BISHOP_PST[0]);
+      apply_to_pst(i,PARAM(BISHOP_PST_ENDGAME+i),Params::BISHOP_PST[1]);
+      apply_to_pst(i,PARAM(ROOK_PST_MIDGAME+i),Params::ROOK_PST[0]);
+      apply_to_pst(i,PARAM(ROOK_PST_ENDGAME+i),Params::ROOK_PST[1]);
+      apply_to_pst(i,PARAM(QUEEN_PST_MIDGAME+i),Params::QUEEN_PST[0]);
+      apply_to_pst(i,PARAM(QUEEN_PST_ENDGAME+i),Params::QUEEN_PST[1]);
+      apply_to_pst(i,PARAM(KING_PST_MIDGAME+i),Params::KING_PST[0]);
+      apply_to_pst(i,PARAM(KING_PST_ENDGAME+i),Params::KING_PST[1]);
    }
    int index = 0;
    for (int p = 0; p < 2; p++) {
       for (int i = 0; i < 16; i++) {
           for (int stage = 0; stage < 2; stage++,index++) {
-              apply_to_outpost(i,p,stage,PARAM(KNIGHT_OUTPOST+index),Scoring::Params::KNIGHT_OUTPOST);
+              apply_to_outpost(i,p,stage,PARAM(KNIGHT_OUTPOST+index),Params::KNIGHT_OUTPOST);
           }
       }
    }
@@ -849,7 +849,7 @@ void Tune::applyParams() const
    for (int p = 0; p < 2; p++) {
       for (int i = 0; i < 16; i++) {
           for (int stage = 0; stage < 2; stage++, index++) {
-              apply_to_outpost(i,p,stage,PARAM(BISHOP_OUTPOST+index),Scoring::Params::BISHOP_OUTPOST);
+              apply_to_outpost(i,p,stage,PARAM(BISHOP_OUTPOST+index),Params::BISHOP_OUTPOST);
           }
       }
    }
@@ -930,9 +930,9 @@ double Tune::scale(score_t value,int index,int materialLevel) const
    case Tune::TuneParam::Any:
       return value;
    case Tune::TuneParam::Midgame:
-      return (value*Scoring::Params::MATERIAL_SCALE[materialLevel])/128.0;
+      return (value*Params::MATERIAL_SCALE[materialLevel])/128.0;
    case Tune::TuneParam::Endgame:
-      return (value*(128-Scoring::Params::MATERIAL_SCALE[materialLevel]))/128.0;
+      return (value*(128-Params::MATERIAL_SCALE[materialLevel]))/128.0;
    case Tune::TuneParam::None:
       return 0;
    }

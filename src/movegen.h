@@ -5,6 +5,7 @@
 
 #include "board.h"
 #include "constant.h"
+#include "params.h"
 #include "see.h"
 #include <set>
 #include <vector>
@@ -48,7 +49,7 @@ class MoveGenerator
                      // already did this one
                      continue;
                  }
-                 if (Gain(move)-PieceValue(Capture(move))<=0) {
+                 if (Params::Gain(move)-Params::PieceValue(Capture(move))<=0) {
                     if (seeSign(board,move,0)) {
                          SetPhase(move,WINNING_CAPTURE_PHASE);
                          ord = order++;

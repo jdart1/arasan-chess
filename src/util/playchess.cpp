@@ -180,7 +180,7 @@ int CDECL main(int argc, char **argv)
                                                stats,
                                                Silent);
                      
-                        last_score = float(stats.value)/PAWN_VALUE;
+                        last_score = float(stats.value)/Params::PAWN_VALUE;
                      }
                      if (board.sideToMove() != White) last_score = -last_score;
                      done = true;

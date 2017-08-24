@@ -46,7 +46,7 @@ static struct SelectOptions
       sampleInterval(16),
       minSampleDistance(3),
       randomMoves(false),
-      maxScore(30*PAWN_VALUE)
+      maxScore(30*Params::PAWN_VALUE)
       {
       }
 } selOptions;

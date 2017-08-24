@@ -169,25 +169,6 @@ char *SquareImage(Square sq) {
     return chars;
 }
 
-const score_t PAWN_VALUE = 1000;
-const score_t BISHOP_VALUE = (int)(3.25*PAWN_VALUE);
-const score_t KNIGHT_VALUE = (int)(3.25*PAWN_VALUE);
-const score_t ROOK_VALUE = 5*PAWN_VALUE;
-const score_t QUEEN_VALUE = (int)(9.75*PAWN_VALUE);
-const score_t KING_VALUE = 32*PAWN_VALUE;
-
-const score_t PieceValues[8] = 
-{
-   0,
-   PAWN_VALUE,
-   KNIGHT_VALUE,
-   BISHOP_VALUE,
-   ROOK_VALUE,
-   QUEEN_VALUE,
-   KING_VALUE,
-   0
-};
-
 const Piece _pieces[8][2] =
 { {EmptyPiece,EmptyPiece},
 { WhitePawn, BlackPawn },

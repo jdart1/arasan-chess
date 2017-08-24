@@ -1932,8 +1932,8 @@ int Board::materialDraw() const {
     if (mat1.pawnCount() || mat2.pawnCount()) {
         return 0 ;
     }
-    if ((mat1.value() <= KING_VALUE + BISHOP_VALUE) &&
-    (mat2.value() <= KING_VALUE + BISHOP_VALUE)) {
+    if ((mat1.value() <= Params::KING_VALUE + Params::BISHOP_VALUE) &&
+    (mat2.value() <= Params::KING_VALUE + Params::BISHOP_VALUE)) {
         if (mat1.kingOnly() || mat2.kingOnly())
             // K vs K, or K vs KN, or K vs KB
             return 1;

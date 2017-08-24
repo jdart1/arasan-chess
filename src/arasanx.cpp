@@ -440,7 +440,7 @@ static bool accept_draw(Board &board) {
    const ColorType side = computer_plays_white ? White : Black;
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(OppositeColor(side));
-   if (ourmat.noPawns() && ourmat.value() <= KING_VALUE + BISHOP_VALUE) {
+   if (ourmat.noPawns() && ourmat.value() <= Params::KING_VALUE + Params::BISHOP_VALUE) {
       // We don't have mating material
       if (doTrace)
          cout << "# no mating material, accept draw" << endl;
@@ -450,8 +450,8 @@ static bool accept_draw(Board &board) {
    // our score is way positive
    if (ourmat.noPawns() && oppmat.noPawns() &&
        ourmat.materialLevel() <= 5 &&
-      (std::abs(ourmat.value() - oppmat.value()) < PAWN_VALUE/2) &&
-      last_score < PAWN_VALUE) {
+      (std::abs(ourmat.value() - oppmat.value()) < Params::PAWN_VALUE/2) &&
+      last_score < Params::PAWN_VALUE) {
       if (doTrace)
          cout << "# pawnless ending, accept draw" << endl;
       return true;
@@ -504,7 +504,7 @@ static bool accept_draw(Board &board) {
    board.setSideToMove(side);
    score_t draw_score = searcher->root()->drawScore(board);
    board.setSideToMove(tmp);
-   const score_t threshold = PAWN_VALUE/4;
+   const score_t threshold = Params::PAWN_VALUE/4;
    if (doTrace) {
       cout << "# rating_diff = " << rating_diff << endl;
       cout << "# draw_score = " << draw_score << endl;
@@ -745,7 +745,7 @@ static void CDECL post_output(const Statistics &stats) {
       printf("%2u%c %6d %6ld %8llu %s\n",
 #endif
          stats.depth,' ',
-         int((score*100)/PAWN_VALUE), // score in centipawns
+         int((score*100)/Params::PAWN_VALUE), // score in centipawns
          (long)stats.elapsed_time/10, // time in centiseconds
          (unsigned long long)stats.num_nodes,
          stats.best_line_image.c_str());

@@ -28,7 +28,7 @@ GTB=michiguel-Gaviota-Tablebases-161d6cb
 TB=tb
 
 # location of SYZYGY tablebase code
-STB=syzygy/src
+STB=syzygy
 
 # enable NUMA support
 #NUMA=1
@@ -286,7 +286,7 @@ $(GTB_LIBDIR):
 !Endif
 
 !IfDef SYZYGY_TBS
-CFLAGS = $(CFLAGS) -I. -DSYZYGY_TBS
+CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(BUILD_TUNE)\syzygy.obj $(BUILD_TUNE)\tbprobe.obj
@@ -310,7 +310,7 @@ ARASANX_OBJS = $(BUILD)\arasanx.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
@@ -325,7 +325,7 @@ TUNER_OBJS = $(TUNE_BUILD)\tuner.obj \
 $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
 $(TUNE_BUILD)\board.obj $(TUNE_BUILD)\boardio.obj $(TUNE_BUILD)\options.obj \
 $(TUNE_BUILD)\chess.obj $(TUNE_BUILD)\material.obj $(TUNE_BUILD)\movegen.obj \
-$(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
+$(TUNE_BUILD)\vparams.obj $(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
 $(TUNE_BUILD)\see.obj $(TUNE_BUILD)\globals.obj $(TUNE_BUILD)\search.obj \
 $(TUNE_BUILD)\notation.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\stats.obj \
 $(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \
@@ -340,7 +340,7 @@ ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
 $(PGO_BUILD)\board.obj $(PGO_BUILD)\boardio.obj $(PGO_BUILD)\options.obj \
 $(PGO_BUILD)\chess.obj $(PGO_BUILD)\material.obj $(PGO_BUILD)\movegen.obj \
-$(PGO_BUILD)\scoring.obj $(PGO_BUILD)\searchc.obj \
+$(PGO_BUILD)\params.obj $(PGO_BUILD)\scoring.obj $(PGO_BUILD)\searchc.obj \
 $(PGO_BUILD)\see.obj $(PGO_BUILD)\globals.obj $(PGO_BUILD)\search.obj \
 $(PGO_BUILD)\notation.obj $(PGO_BUILD)\hash.obj $(PGO_BUILD)\stats.obj \
 $(PGO_BUILD)\bitprobe.obj $(PGO_BUILD)\epdrec.obj $(PGO_BUILD)\chessio.obj \
@@ -355,7 +355,7 @@ ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
 $(POPCNT_BUILD)\board.obj $(POPCNT_BUILD)\boardio.obj $(POPCNT_BUILD)\options.obj \
 $(POPCNT_BUILD)\chess.obj $(POPCNT_BUILD)\material.obj $(POPCNT_BUILD)\movegen.obj \
-$(POPCNT_BUILD)\scoring.obj $(POPCNT_BUILD)\searchc.obj \
+$(POPCNT_BUILD)\params.obj $(POPCNT_BUILD)\scoring.obj $(POPCNT_BUILD)\searchc.obj \
 $(POPCNT_BUILD)\see.obj $(POPCNT_BUILD)\globals.obj $(POPCNT_BUILD)\search.obj \
 $(POPCNT_BUILD)\notation.obj $(POPCNT_BUILD)\hash.obj $(POPCNT_BUILD)\stats.obj \
 $(POPCNT_BUILD)\bitprobe.obj $(POPCNT_BUILD)\epdrec.obj $(POPCNT_BUILD)\chessio.obj \
@@ -370,7 +370,7 @@ ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \
-$(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
+$(PROFILE)\params.obj $(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
 $(PROFILE)\see.obj $(PROFILE)\globals.obj $(PROFILE)\search.obj \
 $(PROFILE)\notation.obj $(PROFILE)\hash.obj $(PROFILE)\stats.obj \
 $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
@@ -385,7 +385,7 @@ MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
@@ -398,7 +398,7 @@ MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
@@ -411,7 +411,7 @@ ECOCODER_OBJS = $(BUILD)\ecocoder.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
@@ -426,7 +426,7 @@ PGNSELECT_OBJS = $(BUILD)\pgnselect.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
@@ -440,7 +440,7 @@ PLAYCHESS_OBJS = $(BUILD)\playchess.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
