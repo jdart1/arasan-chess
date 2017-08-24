@@ -1123,6 +1123,7 @@ const struct ECOData eco_codes[] =
 {"D43", 0xd77e80198a03f4baULL ,"Semi-Slav Defense"},
 {"D44", 0x9d8bde5ec8ff65b3ULL ,"Semi-Slav Defense, Botvinnik Gambit"},
 {"D44", 0x4b5180aebc6f7b9aULL ,"Semi-Slav Defense, Botvinnik Gambit"},
+{"D44", 0x59eed7e78cdc2356ULL ,"Semi-Slav Defense, Botvinnik Gambit"},
 {"D44", 0xbbce9e5c03e44b91ULL ,"Semi-Slav Defense, Botvinnik Gambit"},
 {"D44", 0x1019f34b11bb259dULL ,"Semi-Slav Defense, Botvinnik Gambit"},
 {"D45", 0x789590cd8dd16268ULL ,"Semi-Slav Defense"},

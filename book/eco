@@ -1153,6 +1153,7 @@ D43     1. d4 d5 2. c4 e6 3. Nf3 c6 5. Qc2 Nf6 6. Bg5 h6 7. Bxf6 Qxf6 8. Nc3 Nd7
 D43     1. d4 Nf6 2. Nf3 e6 3. c4 d5 4. Nc3 dxc4 5. Qa4+ c6 "Semi-Slav Defense"
 D44     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. Bg5 dc4 "Semi-Slav Defense, Botvinnik Gambit"
 D44     1. Nf3 d5 2. d4 Nf6 3. c4 c6 4. Nc3 e6 5. Bg5 dxc4 6. a4 "Semi-Slav Defense, Botvinnik Gambit"
+D44     1. Nf3 d5 2. d4 Nf6 3. c4 e6 4. Nc3 c6 5. Bg5 dxc4 6. a4 Bb4 7. e4 "Semi-Slav Defense, Botvinnik Gambit"
 D44     1. d4 d5 2. c4 e6 3. Nf3 Nf6 4. Bg5 dxc4 5. e4 b5 6. a4 c6 "Semi-Slav Defense, Botvinnik Gambit"
 D44     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. Bg5 h6 6. Bh4 dxc4 7. e4 b5 8. e5 "Semi-Slav Defense, Botvinnik Gambit"
 D45     1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3 "Semi-Slav Defense"
