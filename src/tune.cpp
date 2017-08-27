@@ -160,7 +160,7 @@ Tune::Tune()
         Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",182,0,600,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-200,0,Tune::TuneParam::Midgame),
+        Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-300,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),

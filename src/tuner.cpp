@@ -855,6 +855,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::QUEEN_PST_MIDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_MIDGAME+i,mLevel);
       grads[Tune::QUEEN_PST_ENDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_ENDGAME+i,mLevel);
       if (!deep_endgame) {
+         int rank = Rank(sq, side);
+         if (rank > 3) {
+            Bitboard back((board.knight_bits[side] | board.bishop_bits[side]) & Attacks::rank_mask[side == White ? 0 : 7]);
+            grads[Tune::QUEEN_OUT] += tune_params.scale(inc*back.bitCount(),Tune::QUEEN_OUT,mLevel);
+         }
          Bitboard kattacks;
          Bitboard battacks(board.bishopAttacks(sq));
          kattacks = battacks & nearKing;
