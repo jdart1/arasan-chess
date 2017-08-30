@@ -315,7 +315,10 @@ A91     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 "Dutch Defense"
 A91     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 "Dutch Defense"
 A92     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O "Dutch Defense"
 A92     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 "Dutch Defense, Stonewall"
+A92     1. d4 e6 2. c4 f5 3. Nf3 Nf6 4. Qc2 Be7 5. g3 O-O 6. Bg2 d5 7. O-O c6 8. Nbd2 "Dutch Defense, Stonewall"
+A92     1. d4 e6 2. c4 f5 3. Nf3 Nf6 4. Qc2 Be7 5. g3 O-O 6. Bg2 d5 7. O-O c6 8. Ne5 "Dutch Defense, Stonewall"
 A93     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. b3 "Dutch Defense, Stonewall"
+A93     1. d4 f5 2. g3 Nf6 3. Bg2 e6 4. c4 c6 5. Qc2 Be7 6. Nf3 O-O 7. O-O d5 8. b3 "Dutch Defense, Stonewall"
 A93     1. d4 f5 2. g3 Nf6 3. Bg2 e6 4. c4 Be7 5. Nf3 O-O 6. O-O d5 7. b3 Nbd7 8. Qc2 Ne4 9. Bb2 c6 "Dutch Defense, Stonewall"
 A94     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. b3 c6 8. Ba3 "Dutch Defense, Stonewall"
 
@@ -325,7 +328,9 @@ A95     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. Nc3 c6 8.
 A95     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d5 7. Nc3 c6 8. Qc2 "Dutch Defense, Stonewall"
 A96     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d6 "Dutch Defense, Classical"
 A96     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d6 7. Nc3 "Dutch Defense, Classical"
+A96     1. d4 e6 2. c4 f5 3. g3 Nf6 4. Bg2 Be7 5. Nf3 d6 6. O-O O-O 7. Nc3 c6 8. Qc2 d5 9. b3 "Dutch Defense, Classical"
 A97     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d6 7. Nc3 Qe8 "Dutch Defense, Classical"
+A97     1. d4 f5 2. Nf3 e6 3. g3 Nf6 4. Bg2 Be7 5. O-O O-O 6. c4 d6 7. Nc3 Qe8 8. Re1 "Dutch Defense, Classical"
 A98     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d6 7. Nc3 Qe8 8. Qc2 "Dutch Defense, Classical"
 A99     1. d4 f5 2. c4 Nf6 3. g3 e6 4. Bg2 Be7 5. Nf3 O-O 6. O-O d6 7. Nc3 Qe8 8. b3 "Dutch Defense, Classical"
 
@@ -1405,7 +1410,8 @@ E28     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bc3 5. bc3 O-O 6. e3 "Nimzo-Indian D
 E29     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bc3 5. bc3 O-O 6. e3 c5 7. Bd3 Nc6 "Nimzo-Indian Defense"
 
 E30     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Bg5 "Nimzo-Indian, Leningrad Variation"
-E31     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Bg5 h6 5. Bh4 c5 6. d5 d6
+E31     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Bg5 h6 5. Bh4 c5 6. d5 d6 "Nimzo-Indian Defense"
+E31     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Bg5 h6 5. Bh4 c5 6. d5 Bxc3+ 7. bxc3 d6 8. e3 "Nimzo-Indian Defense"
 E32     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 "Nimzo-Indian, Classical Variation"
 E32     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Nf3 b6 5. Qc2 Bb7 6. a3 Bxc3+ 7. Qxc3 O-O 8. Bg5 d6  "Nimzo-Indian, Classical Variation"
 E33     1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 Nc6 "Nimzo-Indian, Classical, Zurich"
