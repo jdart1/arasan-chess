@@ -124,7 +124,9 @@ Tablebases
 Arasan supports Nalimov, Gaviota or Syzygy format compressed
 tablebases. You can configure Arasan to use tablebases by editing the
 arasan.rc file, or by using a GUI that supports UCI or Winboard option
-commands.
+commands. Note that many Chess GUIs will override the arasan.rc
+settings, so if using a GUI you should if possible set the tablebase
+path and related options in the GUI.
 
 The Arasan distribution does not come with any tablebase files. You
 can download Nalimov tablebase files from ftp.cis.uab.edu, directory
