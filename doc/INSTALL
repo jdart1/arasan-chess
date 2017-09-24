@@ -2,6 +2,14 @@ Build & install instructions for Arasan on Linux or Mac:
 
 Syzygy tablebase support is enabled by default.
 
+However, the Syzygy probing code is now imported as a submodule from
+jdart1/Fathom. So to obtain this code in your source tree, you
+should issue the command:
+
+git submodule update --init --recursive
+
+in your repository directory.
+
 If you want Nalimov or Gaviota tablebase support, you must download
 and install the tablebase code (available from
 http://arasanchess.org/downld.shtml) and edit the Makefile to select
