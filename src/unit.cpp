@@ -149,7 +149,7 @@ static int testSee() {
              return;
           }
           move = Notation::value(board,board.sideToMove(),
-                                 Notation::SAN_IN,moveStr);
+                                 Notation::InputFormat::SAN,moveStr);
           if (IsNull(move)) {
              cerr << "warning: testSee: error in move: " << moveStr << endl;
           }
@@ -236,7 +236,7 @@ static int testNotation() {
     for (int i = 0; i < 17; i++) {
         Move m = Notation::value(notationData[i].board,
                                  notationData[i].board.sideToMove(),
-                                 Notation::SAN_IN,
+                                 Notation::InputFormat::SAN,
                                  notationData[i].moveStr);
         if (m == NullMove || !legalMove(notationData[i].board,m)) {
            cout << "notation: error in case " << i << endl;
@@ -274,28 +274,54 @@ static int testNotation() {
     if (board.enPassantSq() != G5) {
         cout << "notation: error in case 21" << endl;
     }
-    string fenStr = "4Qnk1/pp1P1p2/6rp/8/3P4/r5BK/8/8 w - -";
-    if (!BoardIO::readFEN(board, fenStr.c_str())) {
-        cerr << "error in FEN: " << fenStr << endl;
-        return ++errs;
-    }
-    // Test WB_IN format
-    Move m = Notation::value(board,White,Notation::WB_IN,"d7d8q");
-    if (m == NullMove || StartSquare(m) != D7 || DestSquare(m) != D8 || PromoteTo(m) != Queen) {
-       cout << "notation: error in case 22" << endl;
-       ++errs;
-    }
-    fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
-    if (!BoardIO::readFEN(board, fenStr.c_str())) {
-        cerr << "notation: error in FEN: " << fenStr << endl;
-        return ++errs;
-    }
-    m = Notation::value(board,White,Notation::WB_IN,"e2e4");
-    if (m == NullMove || StartSquare(m) != E2 || DestSquare(m) != E4 || PromoteTo(m) != Empty) {
-       cout << "notation: error in case 23" << endl;
-       ++errs;
+    int casenum = 22;
+    // Test WB and UCI formats
+    for (int i = 0; i < 2; i++) {
+        Notation::InputFormat fmt = (i == 0 ? Notation::InputFormat::WB :
+                                     Notation::InputFormat::UCI);
+        string fenStr = "4Qnk1/pp1P1p2/6rp/8/3P4/r5BK/8/8 w - -";
+        if (!BoardIO::readFEN(board, fenStr.c_str())) {
+            cerr << "error in FEN: " << fenStr << endl;
+            return ++errs;
+        }
+        Move m = Notation::value(board,White,fmt,"d7d8q");
+        if (m == NullMove || StartSquare(m) != D7 || DestSquare(m) != D8 || PromoteTo(m) != Queen) {
+            cout << "notation: error in case " << casenum << endl;
+            ++errs;
+        }
+        fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
+        if (!BoardIO::readFEN(board, fenStr.c_str())) {
+            cerr << "notation: error in FEN: " << fenStr << endl;
+            return ++errs;
+        }
+        m = Notation::value(board,White,fmt,"e2e4");
+        if (m == NullMove || StartSquare(m) != E2 || DestSquare(m) != E4 || PromoteTo(m) != Empty) {
+            cout << "notation: error in case " << casenum << endl;
+            ++errs;
+        }
+        fenStr = "r2qr1k1/p2n1pp1/1pb2b1p/3p4/8/1QNBPN2/PP3PPP/3RK2R w K -";
+        if (!BoardIO::readFEN(board, fenStr.c_str())) {
+            cerr << "notation: error in FEN: " << fenStr << endl;
+            return ++errs;
+        }
+        m = Notation::value(board,White,fmt,fmt == Notation::InputFormat::WB ? "O-O" : "e1g1");
+        if (TypeOfMove(m) != KCastle) {
+            cout << "notation: error in case " << casenum << endl;
+            ++errs;
+        }
+        fenStr = "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b kq -";
+        if (!BoardIO::readFEN(board, fenStr.c_str())) {
+            cerr << "notation: error in FEN: " << fenStr << endl;
+            return ++errs;
+        }
+        m = Notation::value(board,White,fmt,fmt == Notation::InputFormat::WB ? "O-O-O" : "e8c8");
+        if (TypeOfMove(m) != QCastle) {
+            cout << "notation: error in case " << casenum << endl;
+            ++errs;
+        }
     }
     return errs;
+
 }
 
 static int testPGN() {
@@ -639,7 +665,7 @@ static int testCheckStatus() {
           ++errs;
           continue;
       }
-      Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,acase.move);
+      Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,acase.move);
 	  if (IsNull(m)) {
 		  cerr << "testCheckStatus: error in test case " << i << " bad move" << endl;
 		  ++errs;

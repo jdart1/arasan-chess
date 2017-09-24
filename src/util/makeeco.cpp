@@ -91,7 +91,7 @@ int do_eco(const string &eco_line)
        if (isdigit(text[0])) continue;
        if (!isalpha(text[0])) return -1;
        // parse the move
-       Move m = Notation::value(board,side,Notation::SAN_IN,text);
+       Move m = Notation::value(board,side,Notation::InputFormat::SAN,text);
        if (IsNull(m) ||
        	   !legalMove(board,StartSquare(m),DestSquare(m)))
        {

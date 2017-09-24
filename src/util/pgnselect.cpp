@@ -220,7 +220,7 @@ int CDECL main(int argc, char **argv)
                      break;
                   }
                   // parse the move
-                  Move m = Notation::value(board,side,Notation::SAN_IN,tok.val);
+                  Move m = Notation::value(board,side,Notation::InputFormat::SAN,tok.val);
                   if (IsNull(m) ||
                       !legalMove(board,StartSquare(m),
                                  DestSquare(m))) {
@@ -231,7 +231,7 @@ int CDECL main(int argc, char **argv)
                      BoardState bs = board.state;
                      string img;
                      // convert to SAN
-                     Notation::image(board,m,Notation::SAN_OUT,img);
+                     Notation::image(board,m,Notation::OutputFormat::SAN,img);
                      moves.add_move(board,bs,m,img,false);
                      board.doMove(m);
                      ++ply;

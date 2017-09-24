@@ -130,7 +130,8 @@ public:
         int isUCI,
         Statistics &stat_buf,
         TalkLevel t,
-        const vector <Move> &exclude);
+        const vector<Move> &exclude,
+        const vector<Move> &include);
 
     Move findBestMove(
         const Board &board,
@@ -499,7 +500,8 @@ public:
         return iteration_depth;
     }
 
-    Move ply0_search(const vector<Move> &exclude);
+    Move ply0_search(const vector<Move> &exclude,
+                     const vector<Move> &include);
 
     const Board &getInitialBoard() const {
         return initialBoard;
@@ -513,7 +515,9 @@ protected:
 
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth,
-                        int depth, const vector<Move> &exclude);
+                        int depth,
+                        const vector<Move> &exclude,
+                        const vector<Move> &include);
 
     unsigned random(unsigned max) {
        std::uniform_int_distribution<unsigned> dist(0,max);

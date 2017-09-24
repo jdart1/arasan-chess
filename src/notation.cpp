@@ -1,4 +1,5 @@
-// Copyright 1994, 1995, 2008, 2009, 2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2008, 2009, 2013, 2017 by Jon Dart.
+// All Rights Reserved.
 
 #include "notation.h"
 #include "board.h"
@@ -28,10 +29,10 @@ void Notation::image(const Board &b, const Move &m, OutputFormat format, string 
 }
 
 void Notation::image(const Board & b, const Move & m, OutputFormat format, ostream &image) {
-   if (format == UCI) {
+   if (format == OutputFormat::UCI) {
       return UCIMoveImage(m,image);
    }
-   else if (format == WB_OUT) {
+   else if (format == OutputFormat::WB) {
       if (TypeOfMove(m) == KCastle) {
           image << "O-O";
       }
@@ -52,7 +53,7 @@ void Notation::image(const Board & b, const Move & m, OutputFormat format, ostre
    }
    // format is SAN
    if (IsNull(m)) {
-       image << "(null)";
+      image << "(null)";
       return;
    }
 
@@ -146,6 +147,30 @@ static int is_file(char c) {
 
 Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image) 
 {
+    if (format == InputFormat::UCI) {
+        if (image.length() >= 4) {
+            Square start = SquareValue(image.substr(0,2));
+            Square dest = SquareValue(image.substr(2,2));
+            PieceType promotion = Empty;
+            if (image.length() > 4) {
+                switch (image[4]) {
+                case 'q': promotion = Queen; break;
+                case 'n': promotion = Knight; break;
+                case 'b': promotion = Bishop; break;
+                case 'r': promotion = Rook; break;
+                default: promotion = Empty; break;
+                }
+            }
+            if (!OnBoard(start) || !OnBoard(dest))
+                return NullMove;
+            else
+                return CreateMove(board,start,dest,promotion);
+        }
+        else {
+            return NullMove;
+        }
+    }
+
     int rank = 0;
     int file = 0;
 
@@ -168,7 +193,7 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
     if (*it == 'O' || *it == '0') {
        // castling, we presume
        return parseCastling(board, side, img);
-    } else if (format == WB_IN) {
+    } else if (format == InputFormat::WB) {
        if (img.length() < 4) return NullMove;
        Square start = SquareValue(img.substr(0,2));
        if (!OnBoard(start)) return NullMove;

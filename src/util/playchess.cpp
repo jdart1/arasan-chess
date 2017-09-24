@@ -128,7 +128,7 @@ int CDECL main(int argc, char **argv)
                      // parse the move
                      Move m;
                      m = Notation::value(board,board.sideToMove(),
-                                         Notation::SAN_IN,tok.val);
+                                         Notation::InputFormat::SAN,tok.val);
                      if (IsNull(m) ||
                          !legalMove(board,StartSquare(m), DestSquare(m))) {
                         // echo to both stdout and stderr
@@ -139,7 +139,7 @@ int CDECL main(int argc, char **argv)
                      }
                      else if (valid) {
                         string result;
-                        Notation::image(board,m,Notation::SAN_OUT,result);
+                        Notation::image(board,m,Notation::OutputFormat::SAN,result);
                         BoardState bs = board.state;
                         moves.add_move(board,bs,m,result,false);
 

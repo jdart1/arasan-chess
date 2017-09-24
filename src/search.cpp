@@ -212,9 +212,9 @@ Move SearchController::findBestMove(
    TalkLevel t)
 {
     active = true;
-    vector<Move> excludes;
+    vector<Move> excludes, includes;
     Move result = findBestMove(board,srcType,time_limit,xtra_time,ply_limit,
-                        background, isUCI, stat_buf, t, excludes);
+                               background, isUCI, stat_buf, t, excludes, includes);
     active = false;
     return result;
 }
@@ -230,7 +230,8 @@ Move SearchController::findBestMove(
    int isUCI,
    Statistics &stat_buf,
    TalkLevel t,
-   const vector<Move> &exclude)
+   const vector<Move> &exclude,
+   const vector<Move> &include)
 {
     this->typeOfSearch = srcType;
     this->time_limit = time_target = time_limit;
@@ -291,7 +292,7 @@ Move SearchController::findBestMove(
     NodeStack rootStack;
     rootSearch->init(board,rootStack);
     startTime = last_time = getCurrentTime();
-    return rootSearch->ply0_search(exclude);
+    return rootSearch->ply0_search(exclude,include);
 }
 
 void SearchController::setRatingDiff(int rdiff)
@@ -368,7 +369,7 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
         ASSERT(legalMove(board_copy,stats->best_line[i]));
         if (i!=0) best_line_image << ' ';
         Notation::image(board_copy,stats->best_line[i],
-               uci ? Notation::UCI : Notation::SAN_OUT,best_line_image);
+                        uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,best_line_image);
         int len = (int)best_line_image.tellg();
         // limit the length
         if (len > 250) {
@@ -394,7 +395,7 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
                     stats->best_line[i] = hashMove;
                     if (i!=0) best_line_image << ' ';
                     Notation::image(board_copy,hashMove,
-                        uci ? Notation::UCI : Notation::SAN_OUT,best_line_image);
+                                    uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,best_line_image);
                     ++i;
                 }
                 break;
@@ -442,13 +443,13 @@ void SearchController::uciSendInfos(const Board &board, Move move, int move_inde
    if (uci) {
       cout << "info depth " << depth;
       cout << " currmove ";
-      Notation::image(board,move,Notation::UCI,cout);
+      Notation::image(board,move,Notation::OutputFormat::UCI,cout);
       cout << " currmovenumber " << move_index;
       cout << endl << (flush);
 #ifdef UCI_LOG
       ucilog << "info depth " << depth;
       ucilog << " currmove ";
-      Notation::image(board,move,Notation::UCI,ucilog);
+      Notation::image(board,move,Notation::OutputFormat::UCI,ucilog);
       ucilog << " currmovenumber " << move_index;
       ucilog << endl << (flush);
 #endif
@@ -585,7 +586,7 @@ int failhigh,int complete)
             cout << " --";
         }
         else if (best != NullMove) {
-            Notation::image(board, best, Notation::SAN_OUT,cout);
+            Notation::image(board, best, Notation::OutputFormat::SAN,cout);
             if (failhigh) cout << '!';
         }
         cout << '\t';
@@ -685,7 +686,8 @@ score_t Search::razorMargin(int depth) const
         RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
 }
 
-Move RootSearch::ply0_search(const vector <Move> &exclude)
+Move RootSearch::ply0_search(const vector<Move> &exclude,
+                             const vector<Move> &include)
 {
    easy_adjust = false;
    fail_high_root_extend = fail_low_root_extend = false;
@@ -696,8 +698,8 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
       // If it's a legal draw situation before we even move, then
       // just return a draw score and don't search. (But don't do
       // this in analysis mode: return a move if possible. Also do
-      // a seearch in all cases for UCI, since the engine cannot
-      // claim draw and some interfaces may expect a move.
+      // a search in all cases for UCI, since the engine cannot
+      // claim draw and some interfaces may expect a move.)
       if (talkLevel == Trace) {
           cout << "# skipping search, draw" << endl;
       }
@@ -873,7 +875,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
 #endif
             value = ply0_search(mg, lo_window, hi_window, iteration_depth,
                                 DEPTH_INCREMENT*iteration_depth + depth_adjust,
-                                excluded);
+                                excluded,include);
 #ifdef _TRACE
             cout << "iteration " << iteration_depth << " result: " <<
                value << endl;
@@ -1129,7 +1131,7 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
            stats->best_line[0] = m;
            stats->best_line[1] = NullMove;
            Notation::image(board,m,
-               controller->uci ? Notation::UCI : Notation::SAN_OUT,stats->best_line_image);
+                           controller->uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,stats->best_line_image);
        }
    }
 
@@ -1204,7 +1206,9 @@ Move RootSearch::ply0_search(const vector <Move> &exclude)
 
 score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         int iteration_depth,
-                        int depth, const vector<Move> &exclude)
+                        int depth,
+                        const vector<Move> &exclude,
+                        const vector<Move> &include)
 {
     // implements alpha/beta search for the top most ply.  We use
     // the negascout algorithm.
@@ -1273,8 +1277,10 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     while (!node->cutoff && !terminate) {
         Move move;
         if ((move = mg.nextMove(split,move_index))==NullMove) break;
-        if (IsUsed(move) || IsExcluded(move)) {
-           continue;     // skip move
+        if (IsUsed(move) || IsExcluded(move) ||
+            (!include.empty() && include.end() == std::find_if(include.begin(),
+             include.end(),[&move](const Move &m) {return MovesEqual(m,move);}))) {
+            continue;     // skip move
         }
         node->last_move = move;
         controller->stats->mvleft = controller->stats->mvtot-move_index;

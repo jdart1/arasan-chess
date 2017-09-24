@@ -587,7 +587,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
          }
          else if (tok.type == ChessIO::GameMove) {
             // parse the move
-            Move move = Notation::value(board,side,Notation::SAN_IN,tok.val);
+             Move move = Notation::value(board,side,Notation::InputFormat::SAN,tok.val);
             if (IsNull(move)) {
                 cerr << "Illegal move: " << tok.val <<
                    " in game " << games << ", file " <<

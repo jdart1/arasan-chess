@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2012, 2013 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2012, 2013, 2017 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _NOTATION_H
@@ -16,11 +16,11 @@ class Notation {
 
  public:
 
-    // WB_OUT is Winboard coordinate format
-    enum OutputFormat {SAN_OUT, WB_OUT, UCI};
+    // WB is Winboard coordinate format
+    enum class OutputFormat {SAN, WB, UCI};
 	
-    // WB_IN is old Winboard coordinate format
-    enum InputFormat {SAN_IN, WB_IN};
+    // WB is old Winboard coordinate format
+    enum class InputFormat {SAN, WB, UCI};
 
     // Writes a string image of a move to "result".
     // "b" must be the board position before the move is made.

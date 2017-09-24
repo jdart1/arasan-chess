@@ -187,13 +187,13 @@ static void split_cmd(const string &cmd, string &cmd_word, string &cmd_args) {
 
 static Move text_to_move(const Board &board, const string &input) {
    // Try SAN
-   Move m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,input);
+    Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,input);
    if (!IsNull(m)) return m;
    if (input.length() >= 4 && isalpha(input[0]) && isdigit(input[1]) &&
        isalpha(input[2]) && isdigit(input[3])) {
       // This appears to be "old" coordinate style notation, used in
       // Winboard before 4.2
-      return Notation::value(board,board.sideToMove(),Notation::WB_IN,input);
+       return Notation::value(board,board.sideToMove(),Notation::InputFormat::WB,input);
    } else {
       return NullMove;
    }
@@ -658,7 +658,7 @@ static int calc_extra_time(const ColorType side) {
 // Produce a text string representing the move, in a form
 // the GUI understands
 static void move_image(const Board &board, Move m, ostream &buf, int uci) {
-   Notation::image(board,m,uci ? Notation::UCI : Notation::WB_OUT,buf);
+    Notation::image(board,m,uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::WB,buf);
 }
 
 
@@ -995,7 +995,8 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
 
 // Search using the current board position.
 //
-static Move search(SearchController *searcher, Board &board, Statistics &stats, bool infinite)
+static Move search(SearchController *searcher, Board &board, 
+                   const vector<Move> &movesToSearch, Statistics &stats, bool infinite)
 {
     last_stats.clear();
     last_score = Constants::MATE;
@@ -1004,7 +1005,10 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
 
     Move move = NullMove;
     stats.fromBook = false;
-    if (!infinite && options.book.book_enabled && !testing) {
+    // Note: not clear what the semantics should be when "searchmoves"
+    // is specified and using "own book." Currently we force a search
+    // in this case and ignore the book moves.
+    if (!infinite && options.book.book_enabled && !testing && movesToSearch.empty()) {
         move = openingBook.pick(board);
         if (!IsNull(move)) stats.fromBook = true;
     }
@@ -1016,6 +1020,7 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
         if (verbose && !uci) level = Debug;
         else if (doTrace) level = Trace;
         else level = Silent;
+        vector<Move> excludes;
         if (srctype == FixedDepth) {
             move = searcher->findBestMove(board,
                 srctype,
@@ -1023,7 +1028,9 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
                 0,
                 ply_limit, false, uci,
                 stats,
-                level);
+                level,
+                excludes,
+                movesToSearch);
         }
         else {
             if (infinite) {
@@ -1047,7 +1054,9 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
                 calc_extra_time(board.sideToMove()),
                 Constants::MaxPly, false, uci,
                 stats,
-                level);
+                level,
+                excludes,
+                movesToSearch);
         }
         if (doTrace) {
             cout << "# search done : move = ";
@@ -1079,14 +1088,14 @@ static Move search(SearchController *searcher, Board &board, Statistics &stats, 
             else
                 s << "tellics whisper book moves: (";
             for (int i=0;i<moveCount;i++) {
-                Notation::image(board,choices[i].first,Notation::SAN_OUT,s);
+                Notation::image(board,choices[i].first,Notation::OutputFormat::SAN,s);
                 s << ' ';
                 s << (int)(100.0*choices[i].second/(float)book::MAX_WEIGHT + 0.5F);
                 if (i < moveCount-1)
                     s << ", ";
             }
             s << "), choosing ";
-            Notation::image(board,move,Notation::SAN_OUT,s);
+            Notation::image(board,move,Notation::OutputFormat::SAN,s);
             cout << s.str() << endl;
         }
         stats.clear();
@@ -1158,7 +1167,7 @@ static void send_move(Board &board, Move &move, Statistics
     }
     if (!IsNull(move)) {
         stringstream img;
-        Notation::image(board,last_move,Notation::SAN_OUT,img);
+        Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
         last_move_image = img.str();
         theLog->add_move(board,last_move,last_move_image,&last_stats,true);
         // Perform learning (if enabled):
@@ -1369,7 +1378,7 @@ static void doHint() {
         else
             cout << "Book moves: ";
         for (unsigned i = 0; i<count; i++) {
-            Notation::image(*main_board,moves[i].first,Notation::SAN_OUT,cout);
+            Notation::image(*main_board,moves[i].first,Notation::OutputFormat::SAN,cout);
             if (i<count-1) cout << ' ';
         }
         cout << endl;
@@ -1409,7 +1418,7 @@ static void doHint() {
         (doTrace) ? Trace : Silent);
     if (!IsNull(move)) {
         cout << "Hint: ";
-        Notation::image(*main_board,move,Notation::SAN_OUT,cout);
+        Notation::image(*main_board,move,Notation::OutputFormat::SAN,cout);
         cout << endl;
     }
 }
@@ -1603,7 +1612,7 @@ static void execute_move(Board &board,Move m)
     }
     last_move = m;
     stringstream img;
-    Notation::image(board,m,Notation::SAN_OUT,img);
+    Notation::image(board,m,Notation::OutputFormat::SAN,img);
     last_move_image = img.str();
     theLog->add_move(board,m,last_move_image,NULL,true);
     BoardState previous_state = board.state;
@@ -2002,25 +2011,26 @@ static void check_command(const string &cmd, int &terminate)
 
 
 // for support of the "test" command
-static Move search(Board &board, int ply_limit,
+static Move test_search(Board &board, int ply_limit,
 int time_limit, Statistics &stats,
 const vector<Move> &excludes) {
    Move move = NullMove;
    solution_time = -1;
 
+   vector<Move> includes;
    move = searcher->findBestMove(board,
       srctype,
       time_limit, 0, ply_limit,
       0, 0, stats,
       verbose ? Debug : Silent,
-      excludes);
+      excludes, includes);
 
    if (excludes.size())
       cout << "result(" << excludes.size()+1 << "):";
    else
       cout << "result:";
    cout << '\t';
-   Notation::image(board,move,Notation::SAN_OUT,cout);
+   Notation::image(board,move,Notation::OutputFormat::SAN,cout);
    cout << "\tscore: ";
    Scoring::printScore(stats.display_value,cout);
    cout <<  '\t';
@@ -2087,7 +2097,7 @@ static void do_test(string test_file)
                       cerr << "error reading solution move " << val << endl;
                       break;
                   }
-                  m = Notation::value(board,board.sideToMove(),Notation::SAN_IN,moveStr);
+                  m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,moveStr);
                   if (IsNull(m)) {
                      ++illegal;
                   }
@@ -2126,14 +2136,14 @@ static void do_test(string test_file)
          if (comment.length()) cout << comment << ' ';
          if (avoid) {
             cout << "am ";
-            Notation::image(board,solution_moves[0],Notation::SAN_OUT,cout);
+            Notation::image(board,solution_moves[0],Notation::OutputFormat::SAN,cout);
             cout << endl;
          }
          else {
             cout << "bm";
             for (int i = 0; i < solution_move_count; i++) {
                cout << ' ';
-               Notation::image(board,solution_moves[i],Notation::SAN_OUT,cout);
+               Notation::image(board,solution_moves[i],Notation::OutputFormat::SAN,cout);
             }
             cout << endl;
          }
@@ -2142,7 +2152,7 @@ static void do_test(string test_file)
          total_tests++;
          for (int index = 0; index < moves_to_search; index++) {
             searcher->clearHashTables();
-            Move result = search(board,ply_limit,time_limit,stats,excludes);
+            Move result = test_search(board,ply_limit,time_limit,stats,excludes);
             if (IsNull(result)) break;
             excludes.push_back(result);
             int correct = solution_time >=0;
@@ -2290,7 +2300,7 @@ static void loadgame(Board &board,ifstream &file) {
         }
         else if (tok.type == ChessIO::GameMove) {
             // parse the move
-            Move m = Notation::value(board,side,Notation::SAN_IN,tok.val);
+            Move m = Notation::value(board,side,Notation::InputFormat::SAN,tok.val);
             if (IsNull(m) ||
                 !legalMove(board,StartSquare(m),
                            DestSquare(m))) {
@@ -2303,7 +2313,7 @@ static void loadgame(Board &board,ifstream &file) {
                 // Don't use the current move string as the input
                 // parser is forgiving and will accept incorrect
                 // SAN. Convert it here to the correct form:
-                Notation::image(board,m,Notation::SAN_OUT,image);
+                Notation::image(board,m,Notation::OutputFormat::SAN,image);
                 gameMoves->add_move(board,previous_state,m,image.c_str(),false);
                 board.doMove(m);
             }
@@ -2640,23 +2650,11 @@ static bool do_command(const string &cmd, Board &board) {
             istream_iterator<string> eos;
             while (it != eos) {
                 string move(*it++);
-                if (move.length() >= 4) {
-                    Square start = SquareValue(move.substr(0,2));
-                    Square dest = SquareValue(move.substr(2,2));
-                    PieceType promotion = Empty;
-                    if (move.length() > 4) {
-                        switch (move[4]) {
-                        case 'q': promotion = Queen; break;
-                        case 'n': promotion = Knight; break;
-                        case 'b': promotion = Bishop; break;
-                        case 'r': promotion = Rook; break;
-                        default: promotion = Empty; break;
-                        }
-                    }
-                    Move m = CreateMove(board,start,dest,promotion);
-                    BoardState previous_state = board.state;
-                    board.doMove(m);
-                    gameMoves->add_move(board,previous_state,m,"",false);
+                Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::UCI,move);
+                if (!IsNull(m)) {
+                   BoardState previous_state = board.state;
+                   board.doMove(m);
+                   gameMoves->add_move(board,previous_state,m,"",false);
                 }
             }
         }
@@ -2831,6 +2829,7 @@ static bool do_command(const string &cmd, Board &board) {
         stringstream ss(cmd_args);
         istream_iterator<string> it(ss);
         istream_iterator<string> eos;
+        vector<Move> movesToSearch;
         while (it != eos) {
             option = *it++;
             if (option == "wtime") {
@@ -2903,6 +2902,18 @@ static bool do_command(const string &cmd, Board &board) {
                 ++do_ponder;
                 ponderhit = 0;
             }
+            else if (option == "searchmoves") {
+                for (;it != eos;it++) {
+                    Move m = Notation::value(board,board.sideToMove(),
+                                             Notation::InputFormat::UCI,*it);
+                    if (IsNull(m)) {
+                        // illegal move, or end of move list
+                        break;
+                    } else {
+                        movesToSearch.push_back(m);
+                    }
+                }
+            }
         }
         forceMode = 0;
         if (do_ponder) {
@@ -2915,7 +2926,7 @@ static bool do_command(const string &cmd, Board &board) {
             // UI we received the stop.
 #ifdef UCI_LOG
             ucilog << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
-            Notation::image(board,ponder_move,Notation::SAN_OUT,ucilog);
+            Notation::image(board,ponder_move,Notation::OutputFormat::SAN,ucilog);
             ucilog << (flush) << endl;
 #endif
             if (ponderhit || searcher->wasStopped()) {
@@ -2940,7 +2951,7 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef UCI_LOG
             ucilog << "starting search, time=" << getCurrentTime() << (flush) << endl;
 #endif
-            best_move = search(searcher,board,stats,infinite);
+            best_move = search(searcher,board,movesToSearch,stats,infinite);
 
 #ifdef UCI_LOG
             ucilog << "done searching, time=" << getCurrentTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
@@ -3090,7 +3101,7 @@ static bool do_command(const string &cmd, Board &board) {
             cout << " book moves:" << endl;
             for (int i = 0; i<count; i++) {
                 cout << '\t';
-                Notation::image(*main_board,moves[i].first,Notation::SAN_OUT,cout);
+                Notation::image(*main_board,moves[i].first,Notation::OutputFormat::SAN,cout);
                 cout << endl;
             }
             cout << endl;
@@ -3193,7 +3204,8 @@ static bool do_command(const string &cmd, Board &board) {
         // set the side flag here - do not rely on the deprecated
         // "white" and "black" commands.
         computer_plays_white = board.sideToMove() == White;
-        Move reply = search(searcher,board,stats,false);
+        vector<Move> movesToSearch;
+        Move reply = search(searcher,board,movesToSearch,stats,false);
         if (!forceMode) send_move(board,reply,stats);
     }
     else if (cmd == "easy") {
@@ -3391,7 +3403,8 @@ static bool do_command(const string &cmd, Board &board) {
                }
                else {
                   predicted_move = ponder_move = NullMove;
-                  reply = search(searcher,board,stats,false);
+                  vector<Move> movesToSearch;
+                  reply = search(searcher,board,movesToSearch,stats,false);
                   // Note: we may know the game has ended here before
                   // we get confirmation from Winboard. So be sure
                   // we set the global game_end flag here so that we won't
