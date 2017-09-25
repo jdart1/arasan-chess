@@ -289,6 +289,7 @@ static int testNotation() {
             cout << "notation: error in case " << casenum << endl;
             ++errs;
         }
+        ++casenum;
         fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
             cerr << "notation: error in FEN: " << fenStr << endl;
@@ -299,6 +300,7 @@ static int testNotation() {
             cout << "notation: error in case " << casenum << endl;
             ++errs;
         }
+        ++casenum;
         fenStr = "r2qr1k1/p2n1pp1/1pb2b1p/3p4/8/1QNBPN2/PP3PPP/3RK2R w K -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
             cerr << "notation: error in FEN: " << fenStr << endl;
@@ -309,16 +311,40 @@ static int testNotation() {
             cout << "notation: error in case " << casenum << endl;
             ++errs;
         }
+        ++casenum;
         fenStr = "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b kq -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
             cerr << "notation: error in FEN: " << fenStr << endl;
             return ++errs;
         }
-        m = Notation::value(board,White,fmt,fmt == Notation::InputFormat::WB ? "O-O-O" : "e8c8");
+        m = Notation::value(board,Black,fmt,fmt == Notation::InputFormat::WB ? "O-O" : "e8g8");
+        if (TypeOfMove(m) != KCastle) {
+            cout << "notation: error in case " << casenum << endl;
+            ++errs;
+        }
+        ++casenum;
+        fenStr = "r2qkb1r/1p3pp1/p1bppn1p/8/4P3/2NB1Q2/PPPB1PPP/R3K2R w KQkq -";
+        if (!BoardIO::readFEN(board, fenStr.c_str())) {
+            cerr << "notation: error in FEN: " << fenStr << endl;
+            return ++errs;
+        }
+        m = Notation::value(board,White,fmt,fmt == Notation::InputFormat::WB ? "O-O-O" : "e1c1");
         if (TypeOfMove(m) != QCastle) {
             cout << "notation: error in case " << casenum << endl;
             ++errs;
         }
+        ++casenum;
+        fenStr = "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b kq -";
+        if (!BoardIO::readFEN(board, fenStr.c_str())) {
+            cerr << "notation: error in FEN: " << fenStr << endl;
+            return ++errs;
+        }
+        m = Notation::value(board,Black,fmt,fmt == Notation::InputFormat::WB ? "O-O-O" : "e8c8");
+        if (TypeOfMove(m) != QCastle) {
+            cout << "notation: error in case " << casenum << endl;
+            ++errs;
+        }
+        ++casenum;
     }
     return errs;
 
