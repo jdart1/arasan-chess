@@ -742,6 +742,9 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
 #ifdef SYZYGY_TBS
          if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
             set<Move> moves;
+            // If include set is non-empty, ensure all "include" moves
+            // will be in the set to search, even if some are losing moves.
+            std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
             tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
             if (tb_hit) {
                // restrict the search to moves that preserve the
