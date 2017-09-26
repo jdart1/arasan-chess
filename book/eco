@@ -1281,6 +1281,7 @@ D93     1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Qc2 g6 5. Bf4 Bg7 6. e3 O-O 7. Nc3 "Grue
 D94     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. e3 "Gruenfeld Defense"
 D94     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. e3 c6 "Slav Defense, Schlecter Variation"
 D94     1. d4 Nf6 2. Nf3 g6 3. e3 d5 4. Be2 Bg7 5. O-O O-O 6. c4 c6 7. Nc3 "Slav Defense, Schlecter Variation"
+D94     1. c4 c6 2. Nf3 d5 3. e3 Nf6 4. Nc3 g6 5. d4 Bg7 6. Bd3 O-O 7. O-O "Slav Defense, Schlecter Variation"
 D95     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. e3 O-O 6. Qb3 "Gruenfeld Defense"
 D96     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3 "Gruenfeld Defense, Classical Variation"
 D97     1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3 dc4 6. Qc4 O-O 7. e4 "Gruenfeld Defense, Classical Variation"

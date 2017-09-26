@@ -1245,6 +1245,7 @@ const struct ECOData eco_codes[] =
 {"D94", 0x6a5bdde4d40c7ed1ULL ,"Gruenfeld Defense"},
 {"D94", 0x970fde1418a0c6d9ULL ,"Slav Defense, Schlecter Variation"},
 {"D94", 0x33aa4cd624bbe104ULL ,"Slav Defense, Schlecter Variation"},
+{"D94", 0x2c8a579b371bc4cfULL ,"Slav Defense, Schlecter Variation"},
 {"D95", 0x4f0e9b8cc7950b1eULL ,"Gruenfeld Defense"},
 {"D96", 0x4b3fd0bd97506affULL ,"Gruenfeld Defense, Classical Variation"},
 {"D97", 0x12fdebbb2acb6effULL ,"Gruenfeld Defense, Classical Variation"},
