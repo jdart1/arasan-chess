@@ -41,29 +41,31 @@ CACHE_ALIGN Bitboard Scoring::kingProximity[2][64];
 CACHE_ALIGN Bitboard Scoring::kingNearProximity[64];
 CACHE_ALIGN Bitboard Scoring::kingPawnProximity[2][64];
 
+static score_t VAL(double x) { return score_t(Params::PAWN_VALUE*x); }
+
 // Note: the following tables are not part of Params structure (yet)
-static const int KBNKScores[64] =
+static const score_t KBNKScores[64] =
 {
-   -400, -300, -150, -50, 50, 150, 300, 400,
-   -300, -150, -50, 0, -10, 50, 150, 300,
-   -150, -50, 0, 0, 0, -10, 50, 150,
-    -50, -50, 0, -30, -30, 0, -10, 50,
-     50, -10, 0, -30, -30, 0, 0, -50,
-    150, 50, -10, 0, 0, 0, -50, -150,
-    300, 150, 50, -10, 0, -50, -150, -300,
-    400, 300, 150, 50, -50, -150, -300, -400
+    VAL(-0.4), VAL(-0.3), VAL(-0.15), VAL(-0.05), VAL(0.05), VAL(0.150), VAL(0.3), VAL(0.4),
+    VAL(-0.3), VAL(-0.15), VAL(-0.05), VAL(0), VAL(-0.01), VAL(0.05), VAL(0.15), VAL(0.3),
+    VAL(-0.15), VAL(-0.05), VAL(0), VAL(0), VAL(0), VAL(-0.01), VAL(0.05), VAL(0.15),
+    VAL(-0.05), VAL(-0.05), VAL(0), VAL(-0.03), VAL(-0.03), VAL(0), VAL(-0.01), VAL(0.05),
+    VAL(0.05), VAL(-0.01), VAL(0), VAL(-0.03), VAL(-0.03), VAL(0), VAL(0), VAL(-0.05),
+    VAL(0.15), VAL(0.05), VAL(-0.01), VAL(0), VAL(0), VAL(0), VAL(-0.05), VAL(-0.15),
+    VAL(0.3), VAL(0.15), VAL(0.05), VAL(-0.01), VAL(0), VAL(-0.05), VAL(-0.15), VAL(-0.3),
+    VAL(0.4), VAL(0.3), VAL(0.15), VAL(0.05), VAL(-0.05), VAL(-0.15), VAL(-0.3), VAL(-0.4)
 };
 
-static const int KRScores[64] =
+static const score_t KRScores[64] =
 {
-   -160, -160, -160, -160, 160, -160, -160, -160,
-   -160, 0, 0, 0, 0, 0, 0, -160,
-   -160, 0, 80, 80, 80,  80, 0, -160,
-   -160, 0, 80, 160, 160, 80, 0, -160,
-   -160, 0, 80, 160, 160, 80, 0, -160,
-   -160, 0,  80, 80, 80, 80, 0, -160,
-   -160, 0, 0, 0, 0, 0, 0, -160,
-   -160, -160, -160, -160, -160, -160, -160, -160
+    VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16),
+    VAL(-0.16), VAL(0), VAL(0), VAL(0), VAL(0), VAL(0), VAL(0), VAL(-0.16),
+    VAL(-0.16), VAL(0), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0), VAL(-0.16),
+    VAL(-0.16), VAL(0), VAL(0.08), VAL(0.16), VAL(0.16), VAL(0.08), VAL(0), VAL(-0.16),
+    VAL(-0.16), VAL(0), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0), VAL(-0.16),
+    VAL(-0.16), VAL(0), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0), VAL(-0.16),
+    VAL(-0.16), VAL(0), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0.08), VAL(0), VAL(-0.16),
+    VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16), VAL(-0.16)
 };
 
 struct BishopTrapPattern
@@ -1164,7 +1166,7 @@ void Scoring::pieceScore(const Board &board,
       int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
       attackWeight += PARAM(PAWN_ATTACK_FACTOR1)*proximity +
          PARAM(PAWN_ATTACK_FACTOR2)*pawnAttacks;
-      attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/128;
+      attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/Params::PAWN_VALUE;
 
       const score_t index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 #ifdef ATTACK_DEBUG
@@ -2078,16 +2080,16 @@ int Scoring::specialCaseEndgame(const Board &board,
          int rrank = Rank(rookSq,White);
          // Place the Rook so as to restrict the opposing King
          if (krank >= 4) {
-            if (rrank == krank - 1) scores.end += 10*(10+(4-krank));
+             if (rrank == krank - 1) scores.end += Params::PAWN_VALUE*(8+(4-krank))/128;
          } else {
-            if (rrank == krank + 1) scores.end += 10*(10+(krank-4));
+             if (rrank == krank + 1) scores.end += Params::PAWN_VALUE*(8+(krank-4))/128;
          }
          int kfile = File(oppkp);
          int rfile = File(rookSq);
          if (kfile >= 4) {
-            if (rfile == kfile-1) scores.end += 10*(10+(4-kfile));
+             if (rfile == kfile-1) scores.end += Params::PAWN_VALUE*(8+(4-kfile))/128;
          } else {
-            if (rfile == kfile+1) scores.end += 10*(10+(kfile-4));
+             if (rfile == kfile+1) scores.end += Params::PAWN_VALUE*(8+(kfile-4))/128;
          }
          return 1;
       } else if (ourMaterial.infobits() == Material::KQ) {
@@ -2100,18 +2102,18 @@ int Scoring::specialCaseEndgame(const Board &board,
          if (InCorner(oppkp)) {
             const int kingDistance = distance(board.kingSquare(White), board.kingSquare(Black));
             if (kingDistance == 2) {
-               scores.end += 100;
+               scores.end += Params::PAWN_VALUE/10;
             }
          } else if (OnEdge(oppkp)) {
              // position King appropriately
              if (kfile == chess::AFILE) {
-                 if (Attacks::king_attacks[ourkp].isSet(oppkp + 1)) scores.end += 100;
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp + 1)) scores.end += Params::PAWN_VALUE/10;
              } else if (kfile == chess::HFILE) {
-                 if (Attacks::king_attacks[ourkp].isSet(oppkp - 1)) scores.end += 100;
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp - 1)) scores.end += Params::PAWN_VALUE/10;
              } else if (krank == 1) {
-                 if (Attacks::king_attacks[ourkp].isSet(oppkp+8)) scores.end += 100;
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp+8)) scores.end += Params::PAWN_VALUE/10;
              } else if (krank == 8) {
-                 if (Attacks::king_attacks[ourkp].isSet(oppkp-8)) scores.end += 100;
+                 if (Attacks::king_attacks[ourkp].isSet(oppkp-8)) scores.end += Params::PAWN_VALUE/10;
              }
          }
          // drive opposing king to the edge

@@ -11,12 +11,15 @@ extern "C" {
 #include <string.h>
 };
 
-static const score_t MOBILITY_RANGE = Params::PAWN_VALUE/3;
-static const score_t OUTPOST_RANGE = Params::PAWN_VALUE/2;
-static const score_t PST_RANGE = Params::PAWN_VALUE;
-static const score_t PP_BLOCK_RANGE = Params::PAWN_VALUE/3;
-static const score_t TRADE_DOWN_RANGE = Params::PAWN_VALUE/3;
-static const score_t ENDGAME_KING_POS_RANGE = 3*Params::PAWN_VALUE/4;
+#define VAL(x) (Params::PAWN_VALUE*x)
+
+static const score_t MOBILITY_RANGE = VAL(0.333);
+static const score_t OUTPOST_RANGE = VAL(0.5);
+static const score_t PST_RANGE = VAL(1.0);
+static const score_t PP_BLOCK_RANGE = VAL(0.333);
+static const score_t TRADE_DOWN_RANGE = VAL(0.333);
+static const score_t THREAT_RANGE = VAL(0.75);
+static const score_t ENDGAME_KING_POS_RANGE = VAL(0.75);
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 int Tune::numTuningParams() const
@@ -70,42 +73,42 @@ Tune::Tune()
     // Tuning params for most parameters (except PSTs, mobility).
     // These are initialized to some reasonable but not optimal values.
     static Tune::TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
-        Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,-250,250,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",-2400,-3600,-1200,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",-1500,-2000,-1000,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::CASTLING0,"castling0",0,-100,100,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CASTLING1,"castling1",-70,-300,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CASTLING2,"castling2",-100,-300,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CASTLING3,"castling3",280,0,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CASTLING4,"castling4",200,0,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CASTLING5,"castling5",-280,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_ATTACK_SCALE_MAX,"king_attack_scale_max",5000,3500,6500,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,VAL(-0.25),VAL(0.25),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",VAL(-2.4),VAL(-3.6),VAL(-1.2),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",VAL(-1.5),VAL(-2.0),VAL(-1.0),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::CASTLING0,"castling0",0,VAL(-0.1),VAL(0.1),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CASTLING1,"castling1",VAL(-0.07),VAL(-0.3),0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CASTLING2,"castling2",VAL(-0.1),VAL(-0.3),0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CASTLING3,"castling3",VAL(0.28),VAL(0),VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CASTLING4,"castling4",VAL(0.2),VAL(0),VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CASTLING5,"castling5",VAL(-0.28),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_ATTACK_SCALE_MAX,"king_attack_scale_max",VAL(5.0),VAL(3.5),VAL(6.5),Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_ATTACK_SCALE_INFLECT,"king_attack_scale_inflect",85,60,120,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_ATTACK_SCALE_FACTOR,"king_attack_scale_factor",54,33,150,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_ATTACK_SCALE_BIAS,"king_attack_scale_bias",-48,-200,0,Tune::TuneParam::Any,0),
-        Tune::TuneParam(Tune::KING_COVER1,"king_cover1",50,0,KING_COVER_RANGE/2,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",-100,-2*KING_COVER_RANGE/3,2*KING_COVER_RANGE/3,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER3,"king_cover3",-150,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER4,"king_cover4",-200,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_FILE_HALF_OPEN,"king_file_half_open",-200,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_FILE_OPEN,"king_file_open",-285,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_ATTACK_SCALE_BIAS,"king_attack_scale_bias",VAL(-0.048),VAL(-0.2),0,Tune::TuneParam::Any,0),
+        Tune::TuneParam(Tune::KING_COVER1,"king_cover1",VAL(0.05),VAL(0),KING_COVER_RANGE/2,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER2,"king_cover2",VAL(-0.1),-2*KING_COVER_RANGE/3,2*KING_COVER_RANGE/3,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER3,"king_cover3",VAL(-0.15),-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_COVER4,"king_cover4",VAL(-0.2),-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_FILE_HALF_OPEN,"king_file_half_open",VAL(-0.2),-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::KING_FILE_OPEN,"king_file_open",VAL(-0.285),-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR0,"king_cover_file_factor0",64,48,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR1,"king_cover_file_factor1",64,48,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR2,"king_cover_file_factor2",50,32,96,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_COVER_FILE_FACTOR3,"king_cover_file_factor3",40,32,96,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",-100,-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,0),
-        Tune::TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",312,200,400),
-        Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",77,40,120),
-        Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",227,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",289,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",-100,-500,0,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",-500,-2000,0,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",-100,-500,0,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::KQMINOR_VS_Q_NO_PAWNS,"kqminor_vs_q_no_pawns",-500,-3000,0,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",500,0,750,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",31,0,250,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",75,0,500,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",125,0,500,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KING_COVER_BASE,"king_cover_base",VAL(-0.1),-KING_COVER_RANGE,0,Tune::TuneParam::Midgame,0),
+        Tune::TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",VAL(0.312),VAL(0.2),VAL(0.4),Tune::TuneParam::Endgame,0),
+        Tune::TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",VAL(0.077),VAL(0.04),VAL(0.12),Tune::TuneParam::Endgame,0),
+        Tune::TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",VAL(0.227),0,VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",VAL(0.289),0,VAL(0.750),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",VAL(-0.1),VAL(-0.5),VAL(0),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",VAL(-0.5),VAL(-2.0),VAL(0),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",VAL(-0.1),VAL(-0.5),VAL(0),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::KQMINOR_VS_Q_NO_PAWNS,"kqminor_vs_q_no_pawns",VAL(-0.5),VAL(-3.0),0,Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",VAL(0.5),0,VAL(0.75),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",VAL(0.03),VAL(0),VAL(0.25),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",VAL(0.3),VAL(0),VAL(0.5),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",VAL(0.06),0,VAL(0.5),Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",14,0,20,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",14,0,20,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",25,10,45,Tune::TuneParam::Midgame,1),
@@ -117,288 +120,235 @@ Tune::Tune()
         Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",50,0,100,Tune::TuneParam::Midgame,1),
         Tune::TuneParam(Tune::KING_ATTACK_COVER_BOOST_BASE,"king_attack_cover_boost_base",6,4,30,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::KING_ATTACK_COVER_BOOST_SLOPE,"king_attack_cover_boost_slope",14,4,30,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_END,"pawn_threat_on_piece_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_MM_MID,"piece_threat_mm_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_MR_MID,"piece_threat_mr_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_MQ_MID,"piece_threat_mq_mid",750,0,1000,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_MM_END,"piece_threat_mm_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_MR_END,"piece_threat_mr_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_MQ_END,"piece_threat_mq_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::MINOR_PAWN_THREAT_MID,"minor_pawn_threat_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::MINOR_PAWN_THREAT_END,"minor_pawn_threat_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_RM_MID,"piece_threat_rm_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_RR_MID,"piece_threat_rr_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_RQ_MID,"piece_threat_rq_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_RM_END,"piece_threat_rm_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_RR_END,"piece_threat_rr_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PIECE_THREAT_RQ_END,"piece_threat_rq_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ROOK_PAWN_THREAT_MID,"rook_pawn_threat_mid",50,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_PAWN_THREAT_END,"rook_pawn_threat_end",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",50,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",-1470,-2000,-400),
-        Tune::TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",447,100,600,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::BISHOP_PAIR_END,"bishop_pair_end",577,125,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::BISHOP_PAWN_PLACEMENT_END,"bishop_pawn_placement_end",-170,-250,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::BAD_BISHOP_MID,"bad_bishop_mid",-44,-80,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::BAD_BISHOP_END,"bad_bishop_end",-66,-120,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CENTER_PAWN_BLOCK,"center_pawn_block",-127,-300,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::OUTSIDE_PASSER_MID,"outside_passer_mid",110,0,250,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::OUTSIDE_PASSER_END,"outside_passer_end",234,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::WEAK_PAWN_MID,"weak_pawn_mid",-80,-250,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::WEAK_PAWN_END,"weak_pawn_end",-80,-250,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::WEAK_ON_OPEN_FILE_MID,"weak_on_open_file_mid",-112,-250,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::WEAK_ON_OPEN_FILE_END,"weak_on_open_file_end",-112,-250,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SPACE,"space",16,0,120,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::PAWN_CENTER_SCORE_MID,"pawn_center_score_mid",27,0,100,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ON_7TH_MID,"rook_on_7th_mid",235,0,800,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ON_7TH_END,"rook_on_7th_end",251,0,800,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",250,0,800,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",250,0,800,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",170,0,600,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",182,0,600,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",25,0,600,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",78,0,600,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",-68,-300,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",306,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",50,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::QUEENING_SQUARE_CONTROL_MID,"queening_square_control_mid",200,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEENING_SQUARE_CONTROL_END,"queening_square_control_end",400,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_MID,"queening_square_opp_control_mid",-200,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_END,"queening_square_opp_control_end",-400,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::WRONG_COLOR_BISHOP,"wrong_color_bishop",-400,-1000,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",-92,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",150,128,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",140,128,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",130,128,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",60,0,300,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",110,0,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",180,0,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID5,"passed_pawn_mid5",270,50,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID6,"passed_pawn_mid6",700,500,1000,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_MID7,"passed_pawn_mid7",1110,500,1750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END2,"passed_pawn_end2",90,0,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END3,"passed_pawn_end3",160,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END4,"passed_pawn_end4",280,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",420,50,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",840,500,1250,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",1410,500,1750,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_ATTACK_COVER_BOOST_SLOPE,"king_attack_cover_boost_slope",140,40,300,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",VAL(0.05),VAL(0),VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_THREAT_ON_PIECE_END,"pawn_threat_on_piece_end",VAL(0.05),0,VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_MM_MID,"piece_threat_mm_mid",VAL(0.1),0,THREAT_RANGE,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_MR_MID,"piece_threat_mr_mid",VAL(0.4),0,THREAT_RANGE,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_MQ_MID,"piece_threat_mq_mid",VAL(0.4),0,THREAT_RANGE,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_MM_END,"piece_threat_mm_end",VAL(0.25),0,THREAT_RANGE,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_MR_END,"piece_threat_mr_end",VAL(0.5),VAL(0),THREAT_RANGE,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_MQ_END,"piece_threat_mq_end",VAL(0.5),0,THREAT_RANGE,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::MINOR_PAWN_THREAT_MID,"minor_pawn_threat_mid",VAL(0.07),0,VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::MINOR_PAWN_THREAT_END,"minor_pawn_threat_end",VAL(0.15),0,VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_RM_MID,"piece_threat_rm_mid",VAL(0.15),0,THREAT_RANGE,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_RR_MID,"piece_threat_rr_mid",VAL(0.15),0,THREAT_RANGE,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_RQ_MID,"piece_threat_rq_mid",VAL(0.5),0,THREAT_RANGE,Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_RM_END,"piece_threat_rm_end",VAL(0.2),0,THREAT_RANGE,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_RR_END,"piece_threat_rr_end",VAL(0.2),0,THREAT_RANGE,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PIECE_THREAT_RQ_END,"piece_threat_rq_end",VAL(0.5),0,VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ROOK_PAWN_THREAT_MID,"rook_pawn_threat_mid",VAL(0.1),0,VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_PAWN_THREAT_END,"rook_pawn_threat_end",VAL(0.2),0,VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",VAL(0.25),0,VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",VAL(-1.47),VAL(-2.0),VAL(-0.4)),
+        Tune::TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",VAL(0.447),VAL(0.1),VAL(0.6),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::BISHOP_PAIR_END,"bishop_pair_end",VAL(0.577),VAL(0.125),VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::BISHOP_PAWN_PLACEMENT_END,"bishop_pawn_placement_end",VAL(-0.17),VAL(-0.25),0,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::BAD_BISHOP_MID,"bad_bishop_mid",VAL(-0.04),VAL(-0.15),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::BAD_BISHOP_END,"bad_bishop_end",VAL(-0.06),VAL(-0.15),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CENTER_PAWN_BLOCK,"center_pawn_block",VAL(-0.2),VAL(-0.35),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::OUTSIDE_PASSER_MID,"outside_passer_mid",VAL(0.11),VAL(0),VAL(0.25),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::OUTSIDE_PASSER_END,"outside_passer_end",VAL(0.25),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::WEAK_PAWN_MID,"weak_pawn_mid",VAL(-0.02),VAL(-0.25),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::WEAK_PAWN_END,"weak_pawn_end",VAL(-0.02),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::WEAK_ON_OPEN_FILE_MID,"weak_on_open_file_mid",VAL(-0.15),VAL(-0.25),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::WEAK_ON_OPEN_FILE_END,"weak_on_open_file_end",VAL(-0.15),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SPACE,"space",VAL(0.03),VAL(0),VAL(0.12),Tune::TuneParam::Any,1),
+        Tune::TuneParam(Tune::PAWN_CENTER_SCORE_MID,"pawn_center_score_mid",VAL(0.02),VAL(0),VAL(0.1),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ON_7TH_MID,"rook_on_7th_mid",VAL(0.235),VAL(0),VAL(0.8),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ON_7TH_END,"rook_on_7th_end",VAL(0.25),VAL(0),VAL(0.8),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",VAL(0.25),VAL(0),VAL(0.8),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",VAL(0.25),VAL(0),VAL(0.8),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",VAL(0.17),VAL(0),VAL(0.6),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",VAL(0.18),VAL(0),VAL(0.6),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",VAL(0.025),0,VAL(0.25),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ROOK_BEHIND_PP_END,"rook_behind_pp_end",VAL(0.07),VAL(0),VAL(0.25),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::QUEEN_OUT,"queen_out",VAL(-0.2),VAL(-0.35),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",VAL(0.125),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",VAL(0.075),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",VAL(0.02),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_CONTROL_MID,"queening_square_control_mid",VAL(0.5),VAL(0),VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_CONTROL_END,"queening_square_control_end",VAL(0.5),VAL(0),VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_MID,"queening_square_opp_control_mid",VAL(-0.2),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_END,"queening_square_opp_control_end",VAL(-0.4),VAL(-0.6),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::WRONG_COLOR_BISHOP,"wrong_color_bishop",VAL(0),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",VAL(-0.05),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",250,128,300,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",225,128,300,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",130,128,256,Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",VAL(0.06),VAL(0),VAL(0.3),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",VAL(0.11),VAL(0),VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",VAL(0.18),VAL(0),VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID5,"passed_pawn_mid5",VAL(0.27),VAL(0),VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID6,"passed_pawn_mid6",VAL(0.7),VAL(0.3),VAL(1.0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_MID7,"passed_pawn_mid7",VAL(1.1),VAL(0.5),VAL(1.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END2,"passed_pawn_end2",VAL(0.09),VAL(0),VAL(0.3),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END3,"passed_pawn_end3",VAL(0.16),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END4,"passed_pawn_end4",VAL(0.28),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",VAL(0.42),VAL(0),VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",VAL(0.84),VAL(0.5),VAL(1.25),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",VAL(1.4),VAL(0.5),VAL(1.75),Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST1,"passed_pawn_file_adjust1",64,48,96,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST2,"passed_pawn_file_adjust2",64,48,96,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST3,"passed_pawn_file_adjust3",64,48,96,Tune::TuneParam::Any,1),
         Tune::TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",64,48,80,Tune::TuneParam::Any,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",26,0,200,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",37,0,200,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID4,"potential_passer_mid4",75,0,300,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID5,"potential_passer_mid5",75,0,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID6,"potential_passer_mid6",236,0,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_END2,"potential_passer_end2",40,0,200,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_END3,"potential_passer_end3",56,0,200,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_END4,"potential_passer_end4",115,0,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_END5,"potential_passer_end5",115,0,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::POTENTIAL_PASSER_END6,"potential_passer_end6",363,0,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_MID2,"connected_passer_mid2",0,0,250,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_MID3,"connected_passer_mid3",88,0,300,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_MID4,"connected_passer_mid4",206,0,400,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_MID5,"connected_passer_mid5",227,75,750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_MID6,"connected_passer_mid6",531,100,1250,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_MID7,"connected_passer_mid7",771,150,1750,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_END2,"connected_passer_end2",0,0,250,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_END3,"connected_passer_end3",92,0,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_END4,"connected_passer_end4",215,0,400,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_END5,"connected_passer_end5",237,75,750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_END6,"connected_passer_end6",555,150,1250,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::CONNECTED_PASSER_END7,"connected_passer_end7",800,250,1750,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_MID2,"adjacent_passer_mid2",0,0,250,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_MID3,"adjacent_passer_mid3",100,50,300,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_MID4,"adjacent_passer_mid4",150,70,400,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_MID5,"adjacent_passer_mid5",150,75,500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_MID6,"adjacent_passer_mid6",306,100,1000,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_MID7,"adjacent_passer_mid7",771,150,1500,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_END2,"adjacent_passer_end2",0,0,250,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_END3,"adjacent_passer_end3",103,50,300,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_END4,"adjacent_passer_end4",155,70,400,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_END5,"adjacent_passer_end5",155,75,500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_END6,"adjacent_passer_end6",317,150,1000,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ADJACENT_PASSER_END7,"adjacent_passer_end7",801,250,1500,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID1,"doubled_pawns_mid1",-47,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID2,"doubled_pawns_mid2",-70,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID3,"doubled_pawns_mid3",-108,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID4,"doubled_pawns_mid4",-108,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_END1,"doubled_pawns_end1",-82,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_END2,"doubled_pawns_end2",-123,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_END3,"doubled_pawns_end3",-190,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::DOUBLED_PAWNS_END4,"doubled_pawns_end4",-190,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID1,"tripled_pawns_mid1",-70,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID2,"tripled_pawns_mid2",-105,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID3,"tripled_pawns_mid3",-160,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID4,"tripled_pawns_mid4",-162,-500,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_END1,"tripled_pawns_end1",-123,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_END2,"tripled_pawns_end2",-184,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_END3,"tripled_pawns_end3",-285,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::TRIPLED_PAWNS_END4,"tripled_pawns_end4",-285,-500,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_MID1,"isolated_pawn_mid1",-70,-250,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_MID2,"isolated_pawn_mid2",-70,-250,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_MID3,"isolated_pawn_mid3",-70,-250,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_MID4,"isolated_pawn_mid4",-95,-250,0,Tune::TuneParam::Midgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_END1,"isolated_pawn_end1",-79,-250,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_END2,"isolated_pawn_end2",-79,-250,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_END3,"isolated_pawn_end3",-79,-250,0,Tune::TuneParam::Endgame,1),
-        Tune::TuneParam(Tune::ISOLATED_PAWN_END4,"isolated_pawn_end4",-108,-250,0,Tune::TuneParam::Endgame,1)
-
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",VAL(0.026),VAL(0),VAL(0.2),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",VAL(0.037),VAL(0),VAL(0.25),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID4,"potential_passer_mid4",VAL(0.075),VAL(0),VAL(0.3),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID5,"potential_passer_mid5",VAL(0.075),VAL(0),VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_MID6,"potential_passer_mid6",VAL(0.236),VAL(0),VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_END2,"potential_passer_end2",VAL(0.04),VAL(0),VAL(0.2),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_END3,"potential_passer_end3",VAL(0.056),VAL(0),VAL(0.25),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_END4,"potential_passer_end4",VAL(0.115),VAL(0),VAL(0.3),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_END5,"potential_passer_end5",VAL(0.115),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::POTENTIAL_PASSER_END6,"potential_passer_end6",VAL(0.36),VAL(0),VAL(0.75),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_MID2,"connected_passer_mid2",VAL(0),VAL(0),VAL(0.25),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_MID3,"connected_passer_mid3",VAL(0.08),VAL(0),VAL(0.3),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_MID4,"connected_passer_mid4",VAL(0.2),VAL(0),VAL(0.4),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_MID5,"connected_passer_mid5",VAL(0.227),VAL(0),VAL(0.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_MID6,"connected_passer_mid6",VAL(0.5),VAL(0.1),VAL(1.75),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_MID7,"connected_passer_mid7",VAL(0.77),VAL(0.25),VAL(2.25),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_END2,"connected_passer_end2",VAL(0),VAL(0),VAL(0.25),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_END3,"connected_passer_end3",VAL(0.08),VAL(0),VAL(0.3),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_END4,"connected_passer_end4",VAL(0.2),VAL(0),VAL(0.4),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_END5,"connected_passer_end5",VAL(0.227),VAL(0),VAL(1.0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_END6,"connected_passer_end6",VAL(0.5),VAL(0.1),VAL(2.0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::CONNECTED_PASSER_END7,"connected_passer_end7",VAL(0.77),VAL(0.25),VAL(2.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_MID2,"adjacent_passer_mid2",VAL(0),VAL(0),VAL(0.25),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_MID3,"adjacent_passer_mid3",VAL(0.1),VAL(0),VAL(0.3),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_MID4,"adjacent_passer_mid4",VAL(0.15),VAL(0),VAL(0.4),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_MID5,"adjacent_passer_mid5",VAL(0.15),VAL(0),VAL(0.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_MID6,"adjacent_passer_mid6",VAL(0.3),VAL(0),VAL(1.0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_MID7,"adjacent_passer_mid7",VAL(0.7),VAL(0.15),VAL(1.5),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_END2,"adjacent_passer_end2",VAL(0),VAL(0),VAL(0.25),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_END3,"adjacent_passer_end3",VAL(0.1),VAL(0),VAL(0.3),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_END4,"adjacent_passer_end4",VAL(0.15),VAL(0),VAL(0.4),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_END5,"adjacent_passer_end5",VAL(0.15),VAL(0),VAL(0.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_END6,"adjacent_passer_end6",VAL(0.3),VAL(0),VAL(1.0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ADJACENT_PASSER_END7,"adjacent_passer_end7",VAL(0.7),VAL(0.15),VAL(1.5),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID1,"doubled_pawns_mid1",VAL(-0.05),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID2,"doubled_pawns_mid2",VAL(-0.06),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID3,"doubled_pawns_mid3",VAL(-0.08),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_MID4,"doubled_pawns_mid4",VAL(-0.1),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_END1,"doubled_pawns_end1",VAL(-0.05),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_END2,"doubled_pawns_end2",VAL(-0.06),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_END3,"doubled_pawns_end3",VAL(-0.08),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::DOUBLED_PAWNS_END4,"doubled_pawns_end4",VAL(-0.1),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID1,"tripled_pawns_mid1",VAL(-0.07),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID2,"tripled_pawns_mid2",VAL(-0.1),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID3,"tripled_pawns_mid3",VAL(-0.16),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_MID4,"tripled_pawns_mid4",VAL(-0.2),VAL(-0.5),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_END1,"tripled_pawns_end1",VAL(-0.07),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_END2,"tripled_pawns_end2",VAL(-0.1),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_END3,"tripled_pawns_end3",VAL(-0.16),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::TRIPLED_PAWNS_END4,"tripled_pawns_end4",VAL(-0.2),VAL(-0.5),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_MID1,"isolated_pawn_mid1",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_MID2,"isolated_pawn_mid2",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_MID3,"isolated_pawn_mid3",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_MID4,"isolated_pawn_mid4",VAL(-0.1),VAL(-0.25),VAL(0),Tune::TuneParam::Midgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_END1,"isolated_pawn_end1",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_END2,"isolated_pawn_end2",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_END3,"isolated_pawn_end3",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
+        Tune::TuneParam(Tune::ISOLATED_PAWN_END4,"isolated_pawn_end4",VAL(-0.1),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1)
     };
 
    // boostrap values - maybe not optimal
-   static const int KNIGHT_OUTPOST_INIT[64] =
+   static const score_t KNIGHT_OUTPOST_INIT[64] =
       {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
        0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
        0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       10 ,30 ,60 ,60 ,60 ,60 ,30 ,10,
-       10 ,40 ,90 ,140 ,140 ,90 ,40 ,10,
-       10 ,40 ,90 ,140 ,140 ,90 ,40 ,10,
-       10 ,10 ,60 ,60 ,60 ,60 ,10 ,10,
-       10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
+       VAL(0.01), VAL(0.03), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.03), VAL(0.01),
+       VAL(0.01), VAL(0.04), VAL(0.09), VAL(0.140), VAL(0.140), VAL(0.090), VAL(0.04),VAL(0.01),
+       VAL(0.01), VAL(0.04), VAL(0.09),VAL(0.140), VAL(0.140),VAL(0.09),VAL(0.04), VAL(0.01),
+       VAL(0.01), VAL(0.03), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.03), VAL(0.01),
+       VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01)
       };
-   static const int BISHOP_OUTPOST_INIT[64] =
+
+   static const score_t BISHOP_OUTPOST_INIT[64] = 
       {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
        0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
        0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       10 ,20 ,50 ,50 ,50 ,50 ,20 ,10,
-       10 ,30 ,70 ,110 ,110 ,70 ,30 ,10,
-       10 ,30 ,70 ,110 ,110 ,70 ,30 ,10,
-       10 ,10 ,50 ,50 ,50 ,50 ,10 ,10,
-       10 ,10 ,10 ,10 ,10 ,10 ,10 ,10
+       VAL(0.01), VAL(0.02), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.02), VAL(0.10),
+       VAL(0.01), VAL(0.03), VAL(0.07), VAL(0.110), VAL(0.110), VAL(0.07), VAL(0.03), VAL(0.01),
+       VAL(0.01), VAL(0.03), VAL(0.07), VAL(0.110), VAL(0.110), VAL(0.07), VAL(0.03), VAL(0.01),
+       VAL(0.01), VAL(0.01), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.01), VAL(0.10),
+       VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01)
       };
 
-   static const int TRADE_DOWN_INIT[8] = {688, 602, 516, 430, 344, 258, 172, 86};
-   static const int KNIGHT_MOBILITY_INIT[9] = {-180, -70, -20, 0, 20, 50, 70, 100, 120};
-   static const int BISHOP_MOBILITY_INIT[15] = {-200, -110, -70, -30, 0, 30, 60, 90, 90, 90, 90, 90, 90, 90, 90};
-   static const int ROOK_MOBILITY_INIT[2][15] = {{-220, -120, -80, -30, 0, 30, 70, 100, 120, 140, 170, 190, 210, 230, 240}, {-300, -170, -110, -50, 0, 50, 90, 140, 170, 200, 230, 260, 290, 310, 320}};
-   static const int QUEEN_MOBILITY_INIT[2][24] = {{-100, -50, -10, -10, 40, 70, 90, 110, 130, 140, 160, 170, 190, 200, 210, 210, 210, 210, 210, 210, 210, 210, 210}, {-120, -60, -10, 10, 50, 80, 110, 130, 160, 170, 200, 210, 230, 250, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260}};
-   static const int KING_MOBILITY_ENDGAME_INIT[5] = {-200, -120, -60, 0, 10};
+   static const score_t TRADE_DOWN_INIT[16] = {VAL(0.688), VAL(0.645), VAL(0.602), VAL(0.559), VAL(0.516), VAL(0.473), VAL(0.430), VAL(0.387), VAL(0.344), VAL(0.301), VAL(0.258), VAL(0.215), VAL(0.172), VAL(0.129), VAL(0.086), 0};
+   static const score_t KNIGHT_MOBILITY_INIT[9] = {VAL(-0.180), VAL(-0.07), VAL(-0.02), 0, VAL(0.02), VAL(0.05), VAL(0.07), VAL(0.1), VAL(0.12)};
+   static const score_t BISHOP_MOBILITY_INIT[15] = {VAL(-0.2), VAL(-0.11), VAL(-.07), -VAL(0.03), 0, VAL(0.03), VAL(0.06), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09)};
+   static const score_t ROOK_MOBILITY_INIT[2][15] = {{VAL(-0.22), VAL(-0.12), VAL(-0.08), VAL(-0.03), 0, VAL(0.03), VAL(0.07), VAL(0.1), VAL(0.12), VAL(0.14), VAL(0.17), VAL(0.19), VAL(0.21), VAL(0.23), VAL(0.24)}, {VAL(-0.3), VAL(-0.17), VAL(-0.11), VAL(-0.05), 0, VAL(0.05), VAL(0.09), VAL(0.14), VAL(0.17), VAL(0.2), VAL(0.23), VAL(0.26), VAL(0.29), VAL(0.31), VAL(0.32)}};
+   static const score_t QUEEN_MOBILITY_INIT[2][29] = {{VAL(-0.1), VAL(-0.05), VAL(-0.01), VAL(-0.01), VAL(0.04), VAL(0.07), VAL(0.09), VAL(0.11), VAL(0.13), VAL(0.14), VAL(0.16), VAL(0.17), VAL(0.19), VAL(0.2), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21), VAL(0.21)}, {VAL(-0.12), VAL(-0.06), VAL(-0.01), VAL(0.01), VAL(0.05), VAL(0.08), VAL(0.11), VAL(0.13), VAL(0.16), VAL(0.17), VAL(0.2), VAL(0.21), VAL(0.23), VAL(0.25), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26), VAL(0.26)}};
+   static const score_t KING_MOBILITY_ENDGAME_INIT[5] = {VAL(-0.2), VAL(-0.12), VAL(-0.06), 0, VAL(0.01)};
 
-static const int KNIGHT_PST_INIT[2][64] =
-{
-   {
-      -220 ,-140 ,-110 ,-100 ,-100 ,-110 ,-140 ,-220,
-      -150 ,-60 ,-40 ,-30 ,-30 ,-40 ,-60 ,-150,
-      -120 ,-40 ,-10 ,0 ,0 ,-10 ,-40 ,-120,
-      -110 ,-30 ,0 ,30 ,30 ,0 ,-30 ,-110,
-      -110 ,-30 ,0 ,30 ,30 ,0 ,-30 ,-110,
-      -120 ,-40 ,-10 ,0 ,0 ,-10,-40 ,-120,
-      -150 ,-60 ,-40 ,-30 ,-30 ,-40 ,-60 ,-150,
-      -180 ,-90 ,-70 ,-60 ,-60 ,-70 ,-90 ,-180
-   }
-   ,
-   {-230 ,-190 ,-160 ,-150 ,-150 ,-160 ,-190 ,-230,
-    -130 ,-90 ,-50 ,-40 ,-40 , -50 ,-90,-130,
-    -90 ,-50 ,-20 ,-10 ,-10 ,-20 ,-50 ,-90,
-    -80 ,-40 ,-10 ,0 ,0 ,-10 ,-40 ,-80,
-    -80 ,-30 ,0 ,10 ,10 ,0 ,-30,-80,
-    -90 ,-40 ,0 ,0 ,0 ,0 ,-40 ,-90,
-    -130 ,-70 ,-40 ,-30 ,-30 ,-40 ,-70 ,-130,
-    -170 ,-130 ,-90 ,-80 ,-80 ,-90 ,-130 ,-170
-   }
-};
+   static const score_t KNIGHT_PST_INIT[2][64] =
+       {
+          {VAL(-0.22), VAL(-0.14), VAL(-0.11), VAL(-0.1), VAL(-0.1), VAL(-0.11), VAL(-0.14), VAL(-0.22),
+           VAL(-0.15), VAL(-0.06), VAL(-0.04), VAL(-0.03), VAL(-0.03), VAL(-0.04), VAL(-0.06), VAL(-0.015),
+           VAL(-0.12), VAL(-0.04), VAL(-0.01), VAL(0), VAL(0), VAL(-0.01), VAL(-0.04), VAL(-0.12),
+           VAL(-0.11), VAL(-0.03), VAL(0.0), VAL(0.03), VAL(0.03), VAL(0.0), VAL(-0.0), VAL(-0.11),
+           VAL(-0.11), VAL(-0.03), VAL(0.0), VAL(0.03), VAL(0.03), VAL(0.0), VAL(-0.0), VAL(-0.11),
+           VAL(-0.12), VAL(-0.04), VAL(-0.01), VAL(0.0), VAL(0.0), VAL(-0.01), VAL(-0.04), VAL(-0.12),
+           VAL(-0.15), VAL(-0.06), VAL(-0.04), VAL(-0.03), VAL(-0.03), VAL(-0.04), VAL(-0.06), VAL(-0.15),
+           VAL(-0.18), VAL(-0.09), VAL(-0.07), VAL(-0.06), VAL(-0.06), VAL(-0.07), VAL(-0.09), VAL(-0.18)
+           }, 
+           {VAL(-0.230), VAL(-0.190), VAL(-0.160), VAL(-0.150), VAL(-0.150), VAL(-0.160), VAL(-0.190), VAL(-0.230),
+            VAL(-0.130), VAL(-0.90), VAL(-0.50), VAL(-0.40), VAL(-0.40),  VAL(-0.50), VAL(-0.90), VAL(-0.130),
+            VAL(-0.90), VAL(-0.50), VAL(-0.20), VAL(-0.10), VAL(-0.10), VAL(-0.20), VAL(-0.50), VAL(-0.90),
+            VAL(-0.80), VAL(-0.40), VAL(-0.10), VAL(0.0), VAL(0.0), VAL(-0.10), VAL(-0.40), VAL(-0.80),
+            VAL(-0.80), VAL(-0.30), VAL(0.0), VAL(0.010), VAL(0.010), VAL(0.0), VAL(-0.30), VAL(-0.80),
+            VAL(-0.90), VAL(-0.40), VAL(0.0), VAL(0.0), VAL(0.0), VAL(0.0), VAL(-0.40), VAL(-0.90),
+            VAL(-0.130), VAL(-0.70), VAL(-0.40), VAL(-0.30), VAL(-0.30), VAL(-0.40), VAL(-0.70), VAL(-0.130),
+            VAL(-0.170), VAL(-0.130), VAL(-0.90), VAL(-0.80), VAL(-0.80), VAL(-0.90), VAL(-0.130), VAL(-0.170)
+           }
+       };
 
-static const int BISHOP_PST_INIT[2][64] =
-{
-   {
-      -225 ,-120 ,-155 ,-155 ,-155 ,-155 ,-120 ,-225,
-      -10 ,80 ,0 ,60 ,60 ,0 ,80 ,-10,
-      -10 ,0 ,60 ,80 ,80 ,60 ,0 ,-10,
-      0 ,0 ,60 ,100 ,100 ,60 ,0 ,0,
-      0 ,60 ,60 ,60 ,60 ,60 ,60 ,0,
-      100 ,100 ,100 ,100 ,100 ,100 ,100 ,100,
-      -100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100,
-      -100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100 ,-100
-   }
-   ,
-   { -75,-45,-5,45,45,-5,-45,-75,
-     -45,-15,25,75,75,25,-15,-45,
-     -5,25,65,115,115,65,25,-5,
-     45,75,115,165,165,115,75,45,
-     45,75,115,165,165,115,75,45,
-     -5,25,65,115,115,65,25,-5,
-     -45,-15,25,75,75,25,-15,-45,
-     -75,-45,-5,45,45,-5,-45,-75
-   }
-};
+   static const score_t BISHOP_PST_INIT[2][64] =
+       {
+           {VAL(-0.225), VAL(-0.120 ), VAL(-0.155 ), VAL(-0.155 ), VAL(-0.155 ), VAL(-0.155 ), VAL(-0.120 ), VAL(-0.225),
+            VAL(-0.10 ), VAL(0.08), VAL(0.0), VAL(0.06), VAL(0.06), VAL(0.0), VAL(0.08), VAL(-0.01),
+            VAL(-0.10 ), VAL(0.0), VAL(0.06), VAL(0.08), VAL(0.08), VAL(0.06), VAL(0.0), VAL(-0.10),
+            VAL(0.0), VAL(0.0), VAL(0.06), VAL(0.100), VAL(0.100), VAL(0.06), VAL(0.0), VAL(0.0),
+            VAL(0.0), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.0),
+            VAL(0.100), VAL(0.100), VAL(0.100), VAL(0.100), VAL(0.100), VAL(0.100), VAL(0.100), VAL(0.100),
+            VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100),
+            VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100 ), VAL(-0.100)
+           },
+           { VAL(-0.75), VAL(-0.45), VAL(-0.005), VAL(0.045), VAL(0.045), VAL(-0.005), VAL(-0.45), VAL(-0.75),
+             VAL(-0.45), VAL(-0.15), VAL(0.025), VAL(0.075), VAL(0.075), VAL(0.025), VAL(-0.15), VAL(-0.45),
+             VAL(-0.005), VAL(0.025), VAL(0.065), VAL(0.115), VAL(0.115), VAL(0.065), VAL(0.025), VAL(-0.005),
+             VAL(0.045), VAL(0.075), VAL(0.115), VAL(0.165), VAL(0.165), VAL(0.115), VAL(0.075), VAL(0.045),
+             VAL(0.045), VAL(0.075), VAL(0.115), VAL(0.165), VAL(0.165), VAL(0.115), VAL(0.075), VAL(0.045),
+             VAL(-0.005), VAL(0.025), VAL(0.065), VAL(0.115), VAL(0.115), VAL(0.065), VAL(0.025), VAL(-0.005),
+             VAL(-0.45), VAL(-0.15), VAL(0.025), VAL(0.075), VAL(0.075), VAL(0.025), VAL(-0.15), VAL(-0.45),
+             VAL(-0.75), VAL(-0.45), VAL(-0.005), 45, 45, VAL(-0.005), VAL(-0.45), VAL(-0.75)
+           }
+       };
 
-static const int ROOK_PST_INIT[2][64] =
-{
-   {
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
-   },
-   {
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
-   }
-};
-
-static const int QUEEN_PST_INIT[2][64] =
-{
-   {
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
-   },
-   {
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-      0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
-   }
-};
-
-   static const int KING_PST_INIT[2][64] = {
-      {
-         0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
-         ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
-         ,-60 ,-60 ,-60 ,-60 ,-60 ,-60 ,-60 ,-60
-         ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
-         ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
-         ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
-         ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
-         ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360 ,-360
-      }
-      , {-280 ,-230 ,-180 ,-130 ,-130 ,-180 ,-230 ,-280
-         ,-220 ,-170 ,-120 ,-70 ,-70 ,-120 ,-170 ,-220
-         ,-160 ,-110 ,-60 ,-10 ,-10 ,-60 ,-110 ,-160
-         ,-100 ,-50 ,0 ,50 ,50 ,0 ,-50 ,-100
-         ,-40 ,10 ,60 ,110 ,110 ,60 ,10 ,-40
-         ,20 ,70 ,120 ,170 ,170 ,120 ,70 ,20
-         ,80 ,130 ,180 ,230 ,230 ,180 ,130 ,80
-         ,80 ,130 ,180 ,230 ,230 ,180 ,130 ,80
-      }
+   static const score_t KING_PST_INIT[2][64] = {
+       {0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06),
+        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
+        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
+        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
+        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
+        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36)
+       },
+       {VAL(-0.280), VAL(-0.230), VAL(-0.180), VAL(-0.130), VAL(-0.130), VAL(-0.180), VAL(-0.230), VAL(-0.280),
+        VAL(-0.220), VAL(-0.170), VAL(-0.120), VAL(-0.070), VAL(-0.070), VAL(-0.120), VAL(-0.170), VAL(-0.220),
+        VAL(-0.160), VAL(-0.110), VAL(-0.06), VAL(-0.010), VAL(-0.010), VAL(-0.06), VAL(-0.110), VAL(-0.160),
+        VAL(-0.100), VAL(-0.050), VAL(0.0), VAL(0.050), VAL(0.050), VAL(0.0), VAL(-0.050), VAL(-0.100),
+        VAL(-0.40), VAL(0.010), VAL(0.060), VAL(0.110), VAL(0.110), VAL(0.060), VAL(0.010), VAL(-0.40),
+        VAL(0.020), VAL(0.070), VAL(0.120), VAL(0.170), VAL(0.170), VAL(0.120), VAL(0.070), VAL(0.020),
+        VAL(0.080), VAL(0.130), VAL(0.180), VAL(0.230), VAL(0.230), VAL(0.180), VAL(0.130), VAL(0.080),
+        VAL(0.080), VAL(0.130), VAL(0.180), VAL(0.230), VAL(0.230), VAL(0.180), VAL(0.130), VAL(0.080)
+       }
    };
 
-   const int PP_OWN_PIECE_BLOCK_INIT[2][21] = {{-15,-15,-15,-15,-15,-15,-30,-30,-30,-30,-30,-45,-45,-45,-45,-60,-60,-60,-75,-75,-90},{-43,-43,-43,-43,-43,-43,-86,-86,-86,-86,-86,-129,-129,-129,-129,-172,-172,-172,-215,-215,-258}};
-   const int PP_OPP_PIECE_BLOCK_INIT[2][21] = {{-171,-85,-57,-42,-34,-28,-190,-95,-63,-47,-38,-217,-108,-72,-54,-251,-125,-83,-361,-180,-569},{-147,-147,-147,-147,-147,-147,-159,-159,-159,-159,-159,-180,-180,-180,-180,-204,-204,-204,-276,-276,-374}};
+   const score_t PP_OWN_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.060),VAL(-0.060),VAL(-0.060),VAL(-0.075),VAL(-0.075),VAL(-0.090)},{VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.172),VAL(-0.172),VAL(-0.172),VAL(-0.215),VAL(-0.215),VAL(-0.258)}};
+   const score_t PP_OPP_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.171),VAL(-0.085),VAL(-0.057),VAL(-0.042),VAL(-0.034),VAL(-0.028),VAL(-0.190),VAL(-0.095),VAL(-0.063),VAL(-0.047),VAL(-0.038),VAL(-0.217),VAL(-0.108),VAL(-0.072),VAL(-0.54),VAL(-0.251),VAL(-0.125),VAL(-0.083),VAL(-0.361),VAL(-0.180),VAL(-0.569)},{VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.204),VAL(-0.204),VAL(-0.204),VAL(-0.276),VAL(-0.276),VAL(-0.374)}};
 
    int i = 0;
    for (;i < NUM_MISC_PARAMS; i++) {
@@ -463,9 +413,8 @@ static const int QUEEN_PST_INIT[2][64] =
             case 1:
                val = BISHOP_PST_INIT[phase][map_from_pst(j)]; break;
             case 2:
-               val = ROOK_PST_INIT[phase][map_from_pst(j)]; break;
             case 3:
-               val = QUEEN_PST_INIT[phase][map_from_pst(j)]; break;
+               val = (score_t)0; break;
             case 4:
                val = KING_PST_INIT[phase][map_from_pst(j)]; break;
             default:

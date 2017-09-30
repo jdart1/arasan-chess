@@ -25,7 +25,7 @@ BEGIN_PACKED_STRUCT
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
 
     // Currently piece values are fixed
-    static constexpr score_t PAWN_VALUE = (score_t)1000;
+    static constexpr score_t PAWN_VALUE = (score_t)128;
     static constexpr score_t BISHOP_VALUE = (score_t)(3.25*PAWN_VALUE);
     static constexpr score_t KNIGHT_VALUE = (score_t)(3.25*PAWN_VALUE);
     static constexpr score_t ROOK_VALUE = (score_t)5*PAWN_VALUE;

@@ -1217,7 +1217,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int proximity = Bitboard(Scoring::kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
       int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
       attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
-      attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/128;
+      attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
       // compute the gradient of the scale
