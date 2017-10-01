@@ -1768,16 +1768,19 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    score_t whiteCover = whiteKPEntry.cover == Scoring::INVALID_SCORE ? 0 : whiteKPEntry.cover;
    score_t blackCover = blackKPEntry.cover == Scoring::INVALID_SCORE ? 0 : blackKPEntry.cover;
 
-   // compute positional scores
-   positionalScore<White> (board, pawnEntry, whiteCover, blackCover, wScores, bScores);
-   positionalScore<Black> (board, pawnEntry, blackCover, whiteCover, bScores, wScores);
-
    const int w_materialLevel = board.getMaterial(White).materialLevel();
    const int b_materialLevel = board.getMaterial(Black).materialLevel();
+
+   bool posEval = true;
 
    // Endgame scoring
    if (b_materialLevel <= PARAM(ENDGAME_THRESHOLD))
    {
+      if (specialCaseEndgame<White>(board,board.getMaterial(White),
+                                    board.getMaterial(Black),wScores)) {
+          posEval = false;
+      }
+
 #ifdef EVAL_DEBUG
       int tmp = wScores.end;
 #endif
@@ -1791,6 +1794,10 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    if (w_materialLevel <= PARAM(ENDGAME_THRESHOLD))
    {
+      if (specialCaseEndgame<Black>(board,board.getMaterial(Black),
+                                    board.getMaterial(White),bScores)) {
+          posEval = false;
+      }
 #ifdef EVAL_DEBUG
       int tmp = bScores.end;
 #endif
@@ -1800,6 +1807,12 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 #ifdef EVAL_DEBUG
       cout << "endgame score (Black)=" << bScores.end - tmp << endl;
 #endif
+   }
+
+   if (posEval) {
+       // compute positional scores
+       positionalScore<White>(board, pawnEntry, whiteCover, blackCover, wScores, bScores);
+       positionalScore<Black>(board, pawnEntry, blackCover, whiteCover, bScores, wScores);
    }
 
 #ifdef EVAL_DEBUG
@@ -1832,10 +1845,6 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    if (board.sideToMove() == Black) {
       score = -score;
    }
-
-   // Because positional scoring is inexact anyway, round the scores
-   // so we will not change the selected move over a trivial difference.
-   //score = (score / 4) * 4;
 
 #ifdef _DEBUG
 #ifdef TUNE
@@ -2185,18 +2194,12 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
 
 template<ColorType side>
 void Scoring::scoreEndgame(const Board &board,score_t k_pos,Scores &scores) {
-   const ColorType oside = OppositeColor(side);
 
    const Material &ourMaterial = board.getMaterial(side);
-   const Material &oppMaterial = board.getMaterial(oside);
-
-   if (specialCaseEndgame<side>(board,ourMaterial,oppMaterial,scores)) {
-      return;
-   }
 
    // King position is even more important with reduced
    // material. Apply special scaling for late endgame here.
-   const int pieces = board.getMaterial(side).pieceCount();
+   const int pieces = ourMaterial.pieceCount();
    if (pieces < 3) {
 #ifdef EVAL_DEBUG
       int tmp = k_pos;
