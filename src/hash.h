@@ -39,7 +39,6 @@ class HashEntry {
          ValueType type, int age, int flags = 0,
                 Move bestMove = NullMove) {
          ASSERT(depth+2 >= 0 && depth+2 < 256);
-         ASSERT(std::abs(val)<=Constants::MATE);
          contents.depth = (byte)(depth+2);
          contents.age = age;
          contents.flags = type | flags;
