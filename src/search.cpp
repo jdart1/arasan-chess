@@ -327,7 +327,7 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
     stats->multipv_count = rootSearch->multipv_count;
-    ASSERT(stats->multipv_count >= 0 && stats->multipv_count < Statistics::MAX_PV);
+    ASSERT(stats->multipv_count >= 0 && (unsigned)stats->multipv_count < Statistics::MAX_PV);
     stats->value = score;
     stats->depth = iteration_depth;
     // if failing low, keep the current value for display purposes,
