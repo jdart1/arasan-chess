@@ -8,8 +8,6 @@
 #include <fcntl.h>
 #endif
 
-lock_t ThreadPool::poolLock;
-
 uint64_t ThreadPool::activeMask = 0ULL;
 uint64_t ThreadPool::availableMask = 0ULL;
 #ifdef NUMA
@@ -47,7 +45,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
       log(s.str());
       }
 #endif
-      Lock(poolLock);
+      ti->pool->lock();
 #ifdef NUMA
       if (rebindMask.test(ti->index)) {
          if (ti->pool->bind(ti->index)) {
@@ -59,7 +57,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
       if (ti->wouldWait()) {
         ti->state = ThreadInfo::Idle; // mark thread available again
         activeMask &= ~(1ULL << ti->index);
-        Unlock(poolLock);
+        ti->pool->unlock();
         int result;
         if ((result = ti->wait()) != 0) {
             if (result == -1) continue; // was interrupted
@@ -76,7 +74,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
 #endif
         // Avoid waiting if the thread state is already signalled. Also,
         // in this case, do not even temporarily set the state to Idle.
-        Unlock(poolLock);
+        ti->pool->unlock();
       }
 #ifdef _THREAD_TRACE
       log("unblocked",ti->index);
@@ -180,7 +178,7 @@ void ThreadInfo::start() {
     signal();
 }
 
-ThreadInfo::ThreadInfo(ThreadPool *p, int i) 
+ThreadInfo::ThreadInfo(ThreadPool *p, int i)
  : state(Idle),
 #ifdef _WIN32
    thread_id(NULL),
@@ -218,6 +216,7 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 
  ThreadPool::ThreadPool(SearchController *ctrl, int n) :
     controller(ctrl), nThreads(n) {
+   LockInit(poolLock);
    for (int i = 0; i < Constants::MaxCPUs; i++) {
       data[i] = NULL;
    }
@@ -277,6 +276,7 @@ ThreadPool::~ThreadPool() {
       perror("pthread_attr_destroy");
    }
 #endif
+   LockFree(poolLock);
 }
 
 void ThreadPool::shutDown() {

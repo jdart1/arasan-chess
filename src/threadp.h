@@ -77,13 +77,13 @@ public:
 
    template <void (Search::*fn)()>
       void forEachSearch() {
-      Lock(poolLock);
+      lock();
       for (unsigned i = 0; i < nThreads; i++) {
           if (data[i] && data[i]->work) {
               std::mem_fun<void,Search>(fn)(data[i]->work);
           }
       }
-      Unlock(poolLock);
+      unlock();
    }
 
    SearchController *getController() const {
@@ -118,8 +118,8 @@ public:
 private:
    void shutDown();
 
-   // lock for the class. Static so idle_loop can access.
-   static LockDefine(poolLock);
+   // lock for the class.
+   LockDefine(poolLock);
    SearchController *controller;
    unsigned nThreads;
    std::array<ThreadInfo *,Constants::MaxCPUs> data;
