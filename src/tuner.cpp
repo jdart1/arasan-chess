@@ -166,12 +166,20 @@ struct Parse2Data
    // holds accumulated derivatives for the scoring parameters:
    vector <double> grads;
    double target;
+   size_t count;
+
+   void clear() {
+       target = 0.0;
+       grads.clear();
+       grads.resize(tune_params.numTuningParams(),0.0);
+       count = 0;
+   }
 };
 
-static std::thread threads[MAX_CORES];
-static ThreadData threadDatas[MAX_CORES];
-static Parse1Data data1[MAX_CORES];
-static Parse2Data data2[MAX_CORES];
+static std::thread threads[MAX_CORES+1];
+static ThreadData threadDatas[MAX_CORES+1];
+static Parse1Data data1[MAX_CORES+1];
+static Parse2Data data2[MAX_CORES+1];
 
 static void usage()
 {
@@ -213,7 +221,7 @@ double result_val(const string &res)
 }
 
 // value is eval in pawn units; res is result string for game
-static double computeErrorTexel(double value,double result,const ColorType side)
+static double computeErrorTexel(const Board &board,double value,double result,const ColorType side)
 {
    value /= Params::PAWN_VALUE;
 
@@ -239,13 +247,7 @@ static double computeErrorTexel(double value,double result,const ColorType side)
       }
       break;
    case Objective::Log:
-      if (result == 0.0) {
-          err = -log(1-predict);
-      } else if (result == 1.0) {
-          err = -log(predict);
-      } else {
-          err = -2*(log(1-predict)+log(predict));
-      }
+      err = (result-1.0)*log(1.0-predict) - result*log(predict);
       break;
    }
    return err;
@@ -281,14 +283,7 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     case Objective::Log:
     {
         double p = exp(PARAM1*value);
-        if (result == 0.0) {
-            deriv = PARAM1*p/(1+p);
-        } else if (result == 1.0) {
-            deriv = -PARAM1/(1+p);
-        } else {
-            deriv = 2*PARAM1*(p-1)/(1+p);
-        }
-        deriv /= Params::PAWN_VALUE;
+        return PARAM1*((1.0-result)*p - result)/(p+1);
         break;
     }
     }
@@ -337,12 +332,11 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
                                     false,
                                     stats,
                                     Silent);
-   int len = 0;
    score = stats.value;
    // skip positions with very large scores (including mate scores)
    if (fabs(score/Params::PAWN_VALUE)<30.0) {
       pvBoard = board;
-      for (; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
+      for (int len = 0; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
          pvBoard.doMove(stats.best_line[len]);
       }
       // skip KPK positions (evaluated by bitbases)
@@ -414,13 +408,15 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          if (!atcks.isClear()) continue;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
-            double func_value = computeErrorTexel(score, result, board.sideToMove());
-            pdata.target += func_value;
-            stringstream fen;
-            fen << pvBoard;
-            Lock(data_lock);
-            positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
-            Unlock(data_lock);
+             if (fabs(score) < 30.0*Params::PAWN_VALUE) {
+                 double func_value = computeErrorTexel(board, score, result, board.sideToMove());
+                 pdata.target += func_value;
+                 stringstream fen;
+                 fen << pvBoard;
+                 Lock(data_lock);
+                 positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
+                 Unlock(data_lock);
+             }
          }
       } catch(std::bad_alloc) {
          cerr << "out of memory" << endl;
@@ -1361,7 +1357,12 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
 #endif
    double record_value = s.evalu8(board,!validate);
 
-   double func_value = computeErrorTexel(record_value,result,board.sideToMove());
+   if (fabs(record_value) > 30.0*Params::PAWN_VALUE) {
+       // invalid record - score is too high
+       return;
+   }
+
+   double func_value = computeErrorTexel(board,record_value,result,board.sideToMove());
    // compute the change in loss function per delta in eval
    double dT = computeTexelDeriv(record_value,result,board.sideToMove());
    // multiply the derivative by the x (feature) value, scaled if necessary
@@ -1369,6 +1370,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
    update_deriv_vector(s, board, White, data.grads, dT);
    update_deriv_vector(s, board, Black, data.grads, -dT);
    data.target += func_value;
+   data.count++;
    if (validate) {
       validateGradient(s, board, record_value, result);
    }
@@ -1377,10 +1379,6 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
 
 static void parse2(ThreadData &td, Parse2Data &data)
 {
-   data.target = 0.0;
-   data.grads.clear();
-   data.grads.resize(tune_params.numTuningParams(),0.0);
-
    // This is large so allocate on heap:
    Scoring *s = new Scoring();
    const size_t max = positions.size();
@@ -1507,7 +1505,7 @@ static void initThreads()
       return;
    }
 #endif
-   for (int i = 0; i < cores; i++) {
+   for (int i = 1; i <= cores; i++) {
       threadDatas[i].index = i;
       threadDatas[i].searcher = NULL;
       threadDatas[i].phase = Phase1;
@@ -1517,12 +1515,12 @@ static void initThreads()
 static void launch_threads()
 {
    if (verbose) cout << "launch_threads" << endl;
-   for (int i = 0; i < cores; i++) {
+   for (int i = 1; i <= cores; i++) {
       threads[i] = std::thread(threadp,&threadDatas[i]);
       if (verbose) cout << "thread " << i << " created." << endl;
    }
    // wait for all searchers done
-   for (int i = 0; i < cores; i++) {
+   for (int i = 1; i <= cores; i++) {
       threads[i].join();
    }
    if (verbose) cout << "all searchers done" << endl;
@@ -1532,7 +1530,7 @@ static void learn_parse(Phase p, int cores)
 {
    hash_table->clear();
    if (verbose) cout << "hash table cleared" << endl;
-   for (int i = 0; i < cores; i++) {
+   for (int i = 1; i <= cores; i++) {
       threadDatas[i].phase = p;
    }
    launch_threads();
@@ -1589,6 +1587,10 @@ static void learn()
    for (int iter = 1; iter <= iterations; iter++) {
       if (!test) cout << "iteration " << iter << endl;
       tune_params.applyParams();
+      for (int i = 0; i <= cores; i++) {
+         data1[i].clear();
+         data2[i].clear();
+      }
       if (iter == 1 ||
           (recalc && ((iter-1) % pv_recalc_interval) == 0)) {
          if (verbose) cout << "(re)calculating PVs" << endl;
@@ -1599,7 +1601,7 @@ static void learn()
          }
          learn_parse(Phase1, cores);
          // sum results over workers into 1st data element
-         for (int i = 1; i < cores; i++) {
+         for (int i = 1; i <= cores; i++) {
             data1[0].target += data1[i].target;
          }
          data1[0].target /= positions.size();
@@ -1621,13 +1623,14 @@ static void learn()
       phase2_game_index = 0;
       learn_parse(Phase2, cores);
       // sum results over workers into 1st data element
-      for (int i = 1; i < cores; i++) {
+      for (int i = 1; i <= cores; i++) {
          data2[0].target += data2[i].target;
+         data2[0].count += data2[i].count;
          for (int j = 0; j < tune_params.numTuningParams(); j++) {
             data2[0].grads[j] += data2[i].grads[j];
          }
       }
-      data2[0].target /= positions.size();
+      data2[0].target /= data2[0].count;
       cout << "pass 2 target=" << data2[0].target << " penalty=" << calc_penalty
 () << " objective=" << data2[0].target + calc_penalty() << endl;
       data2[0].target += calc_penalty();
