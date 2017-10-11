@@ -194,7 +194,7 @@ static void usage()
    cerr << " -r <lambda> apply regularization" << endl;
    cerr << " -t just compute objective against file with current parameters" << endl;
    cerr << " -x <ouput parameter file>" << endl;
-   cerr << " -O ordinal|msq select objective type" << endl;
+   cerr << " -O log|ordinal|msq select objective type" << endl;
    cerr << " -R <recalc interval> periodically recalulate PVs" << endl;
    cerr << " -V validate gradient" << endl;
 }
