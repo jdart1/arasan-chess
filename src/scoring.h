@@ -172,8 +172,6 @@ class Scoring
     score_t kingAttackSigmoid(score_t weight) const;
 #endif
 
- private:
-
     // The scores for opening, middlegame and endgame
     struct Scores {
       Scores()
@@ -196,6 +194,14 @@ class Scoring
         return s.mid != mid || s.end != end || s.any != any;
       }
     };
+
+    template <ColorType side>
+      int specialCaseEndgame(const Board &,
+                             const Material &ourMaterial,
+                             const Material &oppMaterial,
+                             Scores &);
+
+ private:
 
     template <ColorType side>
      void  positionalScore( const Board &board,
@@ -255,12 +261,6 @@ class Scoring
 
     template <ColorType side>
       void scoreEndgame(const Board &,score_t k_pos,Scores &);
-
-    template <ColorType side>
-      int specialCaseEndgame(const Board &,
-                             const Material &ourMaterial,
-                             const Material &oppMaterial,
-                             Scores &);
 
     score_t kingDistanceScore(const Board &) const;
 

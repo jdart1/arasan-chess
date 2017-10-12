@@ -867,6 +867,7 @@ void Scoring::pieceScore(const Board &board,
    int attackCount = 0;
    int majorAttackCount = 0;
    Square sq;
+
    while(b.iterate(sq))
    {
 #ifdef EVAL_DEBUG
@@ -1149,6 +1150,7 @@ void Scoring::pieceScore(const Board &board,
          scores.mid - tmp.mid << ", " << scores.end - tmp.end << ")" << endl;
 #endif
    }
+   scores.mid += PARAM(KING_PST)[Midgame][(side == White) ? kp : 63 - kp];
 
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
@@ -1192,7 +1194,6 @@ void Scoring::pieceScore(const Board &board,
       s.mid = kattack;
       cout << " king attack score (" << ColorImage(side) << ") : " << kattack << " (pre-scaling), " << s.blend(board.getMaterial(side).materialLevel()) << " (scaled)" << endl;
 #endif
-
       // decrement the opposing side's scores because we want to
       // scale king attacks by this side's material level.
       opp_scores.mid -= kattack;
@@ -2342,13 +2343,8 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
       }
    }
 
-   // calculate penalties for damaged king cover
-   if (side == White) {
-      scores.mid += ownCover + PARAM(KING_PST)[Midgame][board.kingSquare(White)];
-   }
-   else {
-      scores.mid += ownCover + PARAM(KING_PST)[Midgame][63-board.kingSquare(Black)];
-   }
+   // add penalty for damaged king cover
+   scores.mid += ownCover;
 
    pieceScore<side> (board, pawnEntry.pawnData(side),
                      pawnEntry.pawnData(oside), oppCover, scores, oppScores,

@@ -639,6 +639,81 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const bool deep_endgame = ourMatLevel <= Params::MIDGAME_THRESHOLD;
    const bool early_endgame = ourMatLevel <= Params::ENDGAME_THRESHOLD;
 
+   Square ksq = board.kingSquare(side);
+   int ksq_map = map_to_pst(ksq,side);
+   Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
+   if (mLevel <= Params::ENDGAME_THRESHOLD) {
+       Scoring::Scores end_scores;
+       int specialCase = side == White ?
+           s.specialCaseEndgame<White>(board,
+                                        board.getMaterial(White),
+                                        board.getMaterial(Black),end_scores) :
+           s.specialCaseEndgame<Black>(board,
+                                        board.getMaterial(Black),
+                                        board.getMaterial(White),end_scores);
+       if (specialCase) {
+           // Only special case endgame scoring applies. These
+           // parameters are not tuned. So just exit.
+           return;
+       } else if (all_pawns) {
+           const int pieces = board.getMaterial(side).pieceCount();
+           double inc_adjust = inc;
+           score_t k_pos = tune_params[Tune::KING_PST_ENDGAME + ksq_map].current;
+           if (pieces < 3) {
+               inc_adjust = inc_adjust*tune_params[Tune::KING_POSITION_LOW_MATERIAL0+pieces].current/128.0;
+           }
+           grads[Tune::KING_PST_ENDGAME+ksq_map] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+ksq_map,mLevel);
+           if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
+               if (File(kp) > chess::DFILE) {
+                   grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+                   k_pos += tune_params[Tune::PAWN_SIDE_BONUS].current;
+               }
+               else {
+                   grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+                   k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
+               }
+           }
+           else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
+               if (File(kp) <= chess::DFILE) {
+                   grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+                   k_pos += tune_params[Tune::PAWN_SIDE_BONUS].current;
+               }
+               else {
+                   grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
+                   k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
+               }
+           }
+           inc_adjust /= 4.0;
+           Bitboard it(board.pawn_bits[side]);
+           Square sq;
+           while(it.iterate(sq)) {
+               grads[Tune::KING_OWN_PAWN_DISTANCE] +=
+                   tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OWN_PAWN_DISTANCE,mLevel);
+               k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OWN_PAWN_DISTANCE].current/4;
+           }
+           it = board.pawn_bits[oside];
+           while (it.iterate(sq)) {
+               grads[Tune::KING_OPP_PAWN_DISTANCE] +=
+                   tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OPP_PAWN_DISTANCE,mLevel);
+               k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OPP_PAWN_DISTANCE].current/4;
+               int rank = Rank(sq,oside);
+               if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
+                   Square queenSq = MakeSquare(File(sq),8,oside);
+                   grads[Tune::KING_OPP_PASSER_DISTANCE+rank-2] +=
+                       tune_params.scale(inc_adjust*((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))/2,Tune::KING_OPP_PASSER_DISTANCE+rank-2,mLevel);
+                   k_pos += ((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))*tune_params[Tune::KING_OPP_PASSER_DISTANCE+rank-2].current/(4*2);
+               }
+           }
+           if (pieces < 3) {
+               // compute partial derivative of KING_POSITION_LOW_MATERIAL
+               grads[Tune::KING_POSITION_LOW_MATERIAL0+pieces] +=
+                   tune_params.scale(k_pos*inc/128.0,Tune::KING_POSITION_LOW_MATERIAL0+pieces,mLevel);
+           }
+       }
+   };
+   
+   grads[Tune::KING_PST_MIDGAME+ksq_map] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+ksq_map,mLevel);
+
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
    if (side == White) {
@@ -901,78 +976,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
       }
    }
-   Square ksq = board.kingSquare(side);
-   int ksq_map = map_to_pst(ksq,side);
-   grads[Tune::KING_PST_MIDGAME+ksq_map] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+ksq_map,mLevel);
-
-   Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
-   if (ourMatLevel <= Params::ENDGAME_THRESHOLD &&
-       all_pawns &&
-       (!board.getMaterial(oside).kingOnly() ||
-        (board.getMaterial(side).infobits() != Material::KP &&
-         board.getMaterial(side).infobits() != Material::KBN &&
-         board.getMaterial(side).infobits() != Material::KR &&
-         board.getMaterial(side).infobits() != Material::KQ))) {
-      const int pieces = board.getMaterial(side).pieceCount();
-      double inc_adjust = inc;
-      score_t k_pos = tune_params[Tune::KING_PST_ENDGAME + ksq_map].current;
-      if (pieces < 3) {
-         inc_adjust = inc_adjust*tune_params[Tune::KING_POSITION_LOW_MATERIAL0+pieces].current/128.0;
-      }
-      grads[Tune::KING_PST_ENDGAME+ksq_map] += tune_params.scale(inc_adjust,Tune::KING_PST_ENDGAME+ksq_map,mLevel);
-      if (!TEST_MASK(Attacks::abcd_mask, all_pawns)) {
-         if (File(kp) > chess::DFILE) {
-            grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
-            k_pos += tune_params[Tune::PAWN_SIDE_BONUS].current;
-         }
-         else {
-            grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
-            k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
-         }
-      }
-      else if (!TEST_MASK(Attacks::efgh_mask, all_pawns)) {
-         if (File(kp) <= chess::DFILE) {
-            grads[Tune::PAWN_SIDE_BONUS] += tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
-            k_pos += tune_params[Tune::PAWN_SIDE_BONUS].current;
-         }
-         else {
-            grads[Tune::PAWN_SIDE_BONUS] -= tune_params.scale(inc_adjust,Tune::PAWN_SIDE_BONUS,mLevel);
-            k_pos -= tune_params[Tune::PAWN_SIDE_BONUS].current;
-         }
-      }
-      inc_adjust /= 4.0;
-      Bitboard it(board.pawn_bits[side]);
-      Square sq;
-      while(it.iterate(sq)) {
-         grads[Tune::KING_OWN_PAWN_DISTANCE] +=
-           tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OWN_PAWN_DISTANCE,mLevel);
-         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OWN_PAWN_DISTANCE].current/4;
-      }
-      it = board.pawn_bits[oside];
-      while (it.iterate(sq)) {
-         grads[Tune::KING_OPP_PAWN_DISTANCE] +=
-             tune_params.scale(inc_adjust*(4-Scoring::distance(kp,sq)),Tune::KING_OPP_PAWN_DISTANCE,mLevel);
-         k_pos += (4-Scoring::distance(kp,sq))*tune_params[Tune::KING_OPP_PAWN_DISTANCE].current/4;
-         int rank = Rank(sq,oside);
-         if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
-            Square queenSq = MakeSquare(File(sq),8,oside);
-            grads[Tune::KING_OPP_PASSER_DISTANCE+rank-2] +=
-               tune_params.scale(inc_adjust*((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))/2,Tune::KING_OPP_PASSER_DISTANCE+rank-2,mLevel);
-            k_pos += ((4-Scoring::distance(kp,sq))+(4-Scoring::distance(kp,queenSq)))*tune_params[Tune::KING_OPP_PASSER_DISTANCE+rank-2].current/(4*2);
-         }
-      }
-      if (pieces < 3) {
-         // compute partial derivative of KING_POSITION_LOW_MATERIAL
-         grads[Tune::KING_POSITION_LOW_MATERIAL0+pieces] +=
-            tune_params.scale(k_pos*inc/128.0,Tune::KING_POSITION_LOW_MATERIAL0+pieces,mLevel);
-      }
-   }
-
    if (pin_count && !deep_endgame) {
-      grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
+       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
    }
    if (pin_count) {
-      grads[Tune::PIN_MULTIPLIER_END] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_END,mLevel)*pin_count;
+       grads[Tune::PIN_MULTIPLIER_END] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_END,mLevel)*pin_count;
    }
 
    int mobl = Bitboard(Attacks::king_attacks[board.kingSquare(side)] & ~board.allOccupied & ~board.allAttacks(oside)).bitCount();
