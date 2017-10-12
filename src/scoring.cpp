@@ -1776,37 +1776,41 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    // Endgame scoring
    if (b_materialLevel <= PARAM(ENDGAME_THRESHOLD))
    {
+#ifdef EVAL_DEBUG
+      int tmp = wScores.end;
+#endif
       if (specialCaseEndgame<White>(board,board.getMaterial(White),
                                     board.getMaterial(Black),wScores)) {
           posEval = false;
       }
-
-#ifdef EVAL_DEBUG
-      int tmp = wScores.end;
-#endif
-      ASSERT(whiteKPEntry.king_endgame_position != Scoring::INVALID_SCORE);
-      scoreEndgame<White>(board, whiteKPEntry.king_endgame_position,
-                   wScores);
+      else {
+          ASSERT(whiteKPEntry.king_endgame_position != Scoring::INVALID_SCORE);
+          scoreEndgame<White>(board, whiteKPEntry.king_endgame_position,
+                              wScores);
+      }
 #ifdef EVAL_DEBUG
       cout << "endgame score (White)=" << wScores.end - tmp << endl;
 #endif
+
    }
 
    if (w_materialLevel <= PARAM(ENDGAME_THRESHOLD))
    {
+#ifdef EVAL_DEBUG
+      int tmp = bScores.end;
+#endif
       if (specialCaseEndgame<Black>(board,board.getMaterial(Black),
                                     board.getMaterial(White),bScores)) {
           posEval = false;
       }
+      else {
+          ASSERT(blackKPEntry.king_endgame_position != Scoring::INVALID_SCORE);
+          scoreEndgame<Black>(board,
+                              blackKPEntry.king_endgame_position, bScores);
 #ifdef EVAL_DEBUG
-      int tmp = bScores.end;
+          cout << "endgame score (Black)=" << bScores.end - tmp << endl;
 #endif
-      ASSERT(blackKPEntry.king_endgame_position != Scoring::INVALID_SCORE);
-      scoreEndgame<Black>(board,
-                   blackKPEntry.king_endgame_position, bScores);
-#ifdef EVAL_DEBUG
-      cout << "endgame score (Black)=" << bScores.end - tmp << endl;
-#endif
+      }
    }
 
    if (posEval) {
