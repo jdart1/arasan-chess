@@ -596,10 +596,13 @@ int failhigh,int complete)
     }
     // Post during ponder if UCI
     if ((!controller->background || controller->uci)) {
-       if (srcOpts.multipv > 1) {
-          // Accumulate multiple pvs until we are ready to output
-          // them.
-          stats->multi_pvs[stats->multipv_count] = Statistics::MultiPVEntry(*stats);
+        if (srcOpts.multipv > 1) {
+            // Accumulate multiple pvs until we are ready to output
+            // them.
+            stats->multi_pvs[stats->multipv_count] = Statistics::MultiPVEntry(*stats);
+            if (stats->multipv_count >= stats->multipv_limit) {
+                stats->sortMultiPVs();
+            }
         }
         if (controller->post_function) {
             controller->post_function(*stats);

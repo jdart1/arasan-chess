@@ -1138,6 +1138,11 @@ static int isDraw(const Board &board, Statistics &last_stats, string &reason) {
 
 static void send_move(Board &board, Move &move, Statistics
                       &stats) {
+    // In case of multi-pv, make sure the high-scoring move is
+    // sent as best move.
+    if (stats.multipv_limit > 1) {
+        move = stats.multi_pvs[0].best;
+    }
     last_move = move;
     last_stats = stats;
     if (stats.state == Terminated) {

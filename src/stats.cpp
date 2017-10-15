@@ -2,6 +2,7 @@
 
 #include "stats.h"
 #include "scoring.h"
+#include <algorithm>
 #include <iomanip>
 
 Statistics::Statistics()
@@ -54,6 +55,14 @@ void Statistics::clear()
 #endif
 }
 
+void Statistics::sortMultiPVs() {
+   // Ensure Multi PVs are in descending order by score (may not
+   // happen automatically, esp. when finding mate scores).
+    std::sort(multi_pvs.begin(), multi_pvs.begin()+multipv_limit,
+              [] (const MultiPVEntry &a, const MultiPVEntry &b) {
+                  return a.score > b.score; });
+}
+
 void Statistics::printNPS(ostream &s) {
    double nps = ((float)num_nodes)/((float)elapsed_time);
    std::ios_base::fmtflags original_flags = s.flags();
@@ -67,3 +76,4 @@ void Statistics::printNPS(ostream &s) {
    }
    s.flags(original_flags);
 }
+

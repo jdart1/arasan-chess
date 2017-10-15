@@ -31,7 +31,7 @@ struct Statistics
    string best_line_image;
    uint64_t elapsed_time; // in milliseconds
    unsigned depth;
-   int mvtot; // total root moves 
+   int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes
    uint64_t tb_hits;   // tablebase hits
@@ -104,7 +104,10 @@ struct Statistics
       }
    }
 
+   void sortMultiPVs();
+
    void printNPS(ostream &);
+
 };
 
 #endif
