@@ -2966,7 +2966,6 @@ static bool do_command(const string &cmd, Board &board) {
                 uciWaitState = 1;
             }
             else {
-                uciOut(stats);
                 send_move(board,best_move,stats);
             }
         }
