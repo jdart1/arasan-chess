@@ -66,7 +66,6 @@ static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
-static const score_t LEARNING_SEARCH_WINDOW = 7*Params::PAWN_VALUE;
 // L2-regularization factor
 static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
@@ -1811,7 +1810,7 @@ int CDECL main(int argc, char **argv)
     }
 
     options.search.hash_table_size = 0;
-    options.search.easy_threshold = (int)LEARNING_SEARCH_WINDOW;
+    options.search.easy_plies = 0;
     options.learning.position_learning = 0;
     options.book.book_enabled = options.log_enabled = 0;
     options.learning.position_learning = false;
