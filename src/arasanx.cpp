@@ -37,6 +37,7 @@
 
 #include <cstddef>
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -145,7 +146,7 @@ int last_iteration_depth = -1;
 int iterations_correct = 0;
 int moves_to_search = 1;
 int flip = 0;
-Move solution_moves[10];
+array<Move,10> solution_moves;
 bool avoid = false;
 vector<int> solution_times;
 static uint64_t nodes_to_find_total;
