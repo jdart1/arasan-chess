@@ -1,5 +1,5 @@
 #
-# Gnu Makefile for Arasan 20.1
+# Gnu Makefile for Arasan 20.2
 #
 VERSION = 20.2.0
 
@@ -69,7 +69,7 @@ PGO_RUN_FLAGS = -H 64M
 TUNE_FLAGS := -DTUNE
 
 #PROF     = -pg
-DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
