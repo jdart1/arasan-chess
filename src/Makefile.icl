@@ -58,6 +58,7 @@ BUILD_TYPE=release
 
 BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
 POPCNT_BUILD = $(BUILD_ROOT)\$(TARGET)-popcnt\$(BUILD_TYPE)
+BMI2_BUILD = $(BUILD_ROOT)\$(TARGET)-bmi2\$(BUILD_TYPE)
 TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)-tune
 PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
 PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
@@ -122,6 +123,8 @@ TB_FLAGS = $(CFLAGS) $(SMP) /Gr /O1 /GS- /I$(TB) /I.
 TB_PROFILE_FLAGS = $(TB_FLAGS) $(PROF_USE_FLAGS)
 
 POPCNT_FLAGS = -DUSE_POPCNT /QxSSE4.2
+
+BMI2_FLAGS = -DUSE_POPCNT -DBMI2 /QxCORE-AVX2
 
 default: dirs $(BUILD)\$(ARASANX).exe
 
@@ -366,6 +369,21 @@ $(POPCNT_BUILD)\learn.obj \
 $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.obj \
 $(POPCNT_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
+ARASANX_BMI2_OBJS = $(BMI2_BUILD)\arasanx.obj \
+$(BMI2_BUILD)\attacks.obj $(BMI2_BUILD)\bhash.obj $(BMI2_BUILD)\bitboard.obj \
+$(BMI2_BUILD)\board.obj $(BMI2_BUILD)\boardio.obj $(BMI2_BUILD)\options.obj \
+$(BMI2_BUILD)\chess.obj $(BMI2_BUILD)\material.obj $(BMI2_BUILD)\movegen.obj \
+$(BMI2_BUILD)\params.obj $(BMI2_BUILD)\scoring.obj $(BMI2_BUILD)\searchc.obj \
+$(BMI2_BUILD)\see.obj $(BMI2_BUILD)\globals.obj $(BMI2_BUILD)\search.obj \
+$(BMI2_BUILD)\notation.obj $(BMI2_BUILD)\hash.obj $(BMI2_BUILD)\stats.obj \
+$(BMI2_BUILD)\bitprobe.obj $(BMI2_BUILD)\epdrec.obj $(BMI2_BUILD)\chessio.obj \
+$(BMI2_BUILD)\movearr.obj $(BMI2_BUILD)\log.obj \
+$(BMI2_BUILD)\bookread.obj $(BMI2_BUILD)\bookwrit.obj \
+$(BMI2_BUILD)\calctime.obj $(BMI2_BUILD)\legal.obj $(BMI2_BUILD)\eco.obj \
+$(BMI2_BUILD)\learn.obj \
+$(BMI2_BUILD)\ecodata.obj $(BMI2_BUILD)\threadp.obj $(BMI2_BUILD)\threadc.obj \
+$(BMI2_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
+
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
@@ -468,6 +486,9 @@ $(NUMA_OBJS)
 {}.cpp{$(POPCNT_BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
 
+{}.cpp{$(BMI2_BUILD)}.obj:
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
+
 profile: dirs $(PROFILE)\arasanx.exe
 
 $(BUILD)\makebook.exe:  $(MAKEBOOK_OBJS)
@@ -515,18 +536,23 @@ popcnt: dirs
 	set ARASANX=$(ARASANX)-popcnt
 	nmake -f Makefile.icl
 
-profile-build: dirs profile profile-run profile-optimized 
-
-popcnt: dirs
-	SET CFLAGS=$(POPCNT_FLAGS)
-	set ARASANX=$(ARASANX)-popcnt
+bmi2: dirs
+	SET CFLAGS=$(BMI2_FLAGS)
+	set ARASANX=$(ARASANX)-bmi2
 	nmake -f Makefile.icl
+
+profile-build: dirs profile profile-run profile-optimized 
 
 profiled: profile-build
 
 popcnt-profiled:
 	SET CFLAGS=$(POPCNT_FLAGS)
 	SET ARASANX=$(ARASANX)-popcnt
+	nmake -f Makefile.icl profile-build
+
+bmi2-profiled:
+	SET CFLAGS=$(BMI2_FLAGS)
+	SET ARASANX=$(ARASANX)-bmi2
 	nmake -f Makefile.icl profile-build
 
 release: $(RELEASE) $(SOURCE_ARCHIVE)
@@ -552,6 +578,9 @@ $(PGO_BUILD):
 $(POPCNT_BUILD):
 	md $(POPCNT_BUILD)
 
+$(BMI2_BUILD):
+	md $(BMI2_BUILD)
+
 $(RELEASE):
 	md $(RELEASE)
 
@@ -569,5 +598,6 @@ clean: dirs
 	del /q $(RELEASE)\*.*
 	del /q $(PGO_BUILD)\*.*
 	del /q $(POPCNT_BUILD)\*.*
+	del /q $(BMI2_BUILD)\*.*
 
-dirs: $(BUILD) $(TUNE_BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(POPCNT_BUILD) $(RELEASE)
+dirs: $(BUILD) $(TUNE_BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(POPCNT_BUILD) $(BMI2_BUILD) $(RELEASE)

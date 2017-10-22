@@ -1,7 +1,8 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2017 by Jon Dart. All Rights Reserved.
 #
-VERSION = 20.2
+VERSION=20.2
+LINK_VERSION=20.2
 #
 #TARGET = win32
 TARGET = win64
@@ -96,6 +97,7 @@ CL=cl
 # Visual Studio defs (Visual Studio 2012 or later recommended)
 CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
+BMI2_FLAGS = -DBMI2
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 !If "$(PLATFORM)" == "XP"
@@ -278,7 +280,7 @@ $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 !Endif
 
 # Linker flags
-LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
+LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /incremental:no /opt:ref /stack:4000000 /version:$(LINK_VERSION)
 !If "$(PLATFORM)" == "XP"
 !If "$(TARGET)" == "win64"
 LDFLAGS = $(LDFLAGS) /subsystem:console,5.02
@@ -404,6 +406,20 @@ $(BUILD)\legal.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
+EPDFILTER_OBJS = $(BUILD)\epdfilter.obj \
+$(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
+$(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
+$(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
+$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
+$(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
+$(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
+$(BUILD)\legal.obj \
+$(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
+$(NUMA_OBJS)
+
 {}.cpp{$(BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
 
@@ -437,6 +453,9 @@ $(BUILD)\pgnselect.exe: dirs $(PGNSELECT_OBJS)
 $(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
         $(LD) $(PLAYCHESS_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\playchess.exe
 
+$(BUILD)\epdfilter.exe: dirs $(EPDFILTER_OBJS)
+        $(LD) $(EPDFILTER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\epdfilter.exe
+
 !IfDef NALIMOV_TBS
 $(BUILD)\nalimov.obj: nalimov.cpp
     $(CL) $(TB_FLAGS) /c /Fo$@ nalimov.cpp
@@ -467,11 +486,21 @@ popcnt: dirs
 	set ARASANX=$(ARASANX)-popcnt
 	nmake
 
+bmi2: dirs
+	SET CFLAGS=$(POPCNT_FLAGS) $(BMI2_FLAGS)
+	set ARASANX=$(ARASANX)-bmi2
+	nmake
+
 profiled: profile-build
 
 popcnt-profiled:
 	SET CFLAGS=$(POPCNT_FLAGS)
 	SET ARASANX=$(ARASANX)-popcnt
+	nmake profile-build
+
+bmi2-profiled:
+	SET CFLAGS=$(POPCNT_FLAGS) $(BMI2_FLAGS)
+	SET ARASANX=$(ARASANX)-bmi2
 	nmake profile-build
 
 release: $(RELEASE) $(SOURCE_ARCHIVE)

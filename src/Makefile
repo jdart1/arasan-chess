@@ -69,7 +69,7 @@ PGO_RUN_FLAGS = -H 64M
 TUNE_FLAGS := -DTUNE
 
 #PROF     = -pg
-#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -244,6 +244,13 @@ popcnt-profiled: dirs
 
 popcnt: dirs
 	@$(MAKE) ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2
+
+bmi2: dirs
+	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) -mbmi2 -DUSE_POPCNT -DBMI2' SSE=-msse4.2
+
+bmi2-profiled: dirs
+	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) -mbmi2 -DUSE_POPCNT -DBMI2' SSE=-msse4.2 profile profile-run
+	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) -mbmi2 -DUSE_POPCNT -DBMI2' SSE=-msse4.2 profile
 
 TB_SOURCES=
 TB_OBJS=

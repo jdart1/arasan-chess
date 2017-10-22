@@ -36,21 +36,26 @@ If you have a processor that supports the amd64 POPCNT hardware
 instruction, you can build a version of Arasan that uses that by
 typing "make popcnt" (works only on a 64-bit OS).
 
+If you have a processor that supports the amd64 BMI2 hardware
+instructions, you can build a version of Arasan that uses those,
+along with popcnt, by typing "make bmi2" (works only on a 64-bit OS).
+
 If you want to use PGO to build the arasan engine (arasanx), do:
 
 make clean profiled
 
 (use popcnt-profiled instead of profile as the target for a POPCNT
-enabled PGO build).
+enabled PGO build, or bmi2-profiled for a BMI2 compatilbe profiled
+build).
 
-The Arasan engine binary is named "arasanx-32", "arasanx-64", or
-"arasanx-64-popcnt", depending on the architecture and build flags
-used.
+The Arasan engine binary is named "arasanx-32", "arasanx-64",
+"arasanx-64-popcnt", or "arasanx-64-bmi2," depending on the
+architecture and build flags used.
 
-Limited testing has been done on architectures other than x32 and amd64.
-However, the code is believed to be portable. Two non-Intel targets are
-defined in the Makefile: sparc-solaris (with gcc as compiler) and
-arm-linux.
+Limited testing has been done on other OSs and architectures other
+than x32 and amd64.  However, the code is believed to be portable. Two
+non-Intel targets are defined in the Makefile: sparc-solaris (with gcc
+as compiler) and arm-linux.
 
 "make utils" builds a set of utility programs including the "makebook"
 program that is used to construct the opening book from PGN files.

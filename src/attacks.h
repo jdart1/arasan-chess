@@ -1,4 +1,4 @@
-// Copyright 1992, 1997-2000, 2008-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1997-2000, 2008-2013, 2017 by Jon Dart.  All Rights Reserved.
 
 #ifndef _ATTACK_H
 #define _ATTACK_H
@@ -6,6 +6,12 @@
 #include "types.h"
 #include "chess.h"
 #include "bitboard.h"
+
+#ifdef BMI2
+extern "C" {
+#include <immintrin.h>
+};
+#endif
 
 class Attacks
 {
@@ -44,15 +50,22 @@ class Attacks
 
      // arrays for "magic" attack generator
 
+#ifdef BMI2
+     struct MagicData {
+         uint16_t *data;
+         Bitboard mask1;
+         Bitboard mask2;
+     };
+
+     static CACHE_ALIGN uint16_t magicmovesdb[107648];
+
+#else
      struct MagicData {
          Bitboard mask;
          Bitboard magic;
          Bitboard *moves;
          unsigned shift;
      };
-
-     static CACHE_ALIGN MagicData bishopMagicData[64];
-     static CACHE_ALIGN MagicData rookMagicData[64];
 
      static CACHE_ALIGN Bitboard magicmovesbdb[5248];
      static CACHE_ALIGN Bitboard magicmovesrdb[102400];
@@ -63,6 +76,10 @@ class Attacks
      static const CACHE_ALIGN Bitboard r_magic[64];
      static const CACHE_ALIGN unsigned r_shift[64];
 
+#endif
+
+     static CACHE_ALIGN MagicData bishopMagicData[64];
+     static CACHE_ALIGN MagicData rookMagicData[64];
 
      FORCEINLINE static Bitboard fileMask(Square sq) {
        return file_mask[Files[sq]-1];
@@ -71,8 +88,12 @@ class Attacks
      FORCEINLINE static const Bitboard rookAttacks(Square sq,
                                                    const Bitboard &occupied) {
 #ifdef _64BIT
+#ifdef BMI2
+         return _pdep_u64(rookMagicData[sq].data[_pext_u64(occupied,rookMagicData[sq].mask1)], rookMagicData[sq].mask2);
+#else
          return *(rookMagicData[sq].moves+(int)
                 (((occupied & rookMagicData[sq].mask)*rookMagicData[sq].magic)>>rookMagicData[sq].shift));
+#endif
 #else
          Bitboard b(rookMagicData[sq].mask & occupied);
          return *(rookMagicData[sq].moves+(int)(
@@ -85,14 +106,18 @@ class Attacks
    FORCEINLINE static const Bitboard bishopAttacks(Square sq, 
 					  const Bitboard &occupied) {
 #ifdef _64BIT
-     return *(bishopMagicData[sq].moves+(int)
-	      (((occupied & bishopMagicData[sq].mask)*bishopMagicData[sq].magic)>>bishopMagicData[sq].shift));
+#ifdef BMI2
+      return _pdep_u64(bishopMagicData[sq].data[_pext_u64(occupied,bishopMagicData[sq].mask1)], bishopMagicData[sq].mask2);
 #else
-     Bitboard b(bishopMagicData[sq].mask & occupied);
-     return *(bishopMagicData[sq].moves+(int)(
-            ((b.lovalue()*bishopMagicData[sq].magic.lovalue()) ^
-            (b.hivalue()*bishopMagicData[sq].magic.hivalue()))>>
-            bishopMagicData[sq].shift));
+      return *(bishopMagicData[sq].moves+(int)
+	      (((occupied & bishopMagicData[sq].mask)*bishopMagicData[sq].magic)>>bishopMagicData[sq].shift));
+#endif
+#else
+      Bitboard b(bishopMagicData[sq].mask & occupied);
+      return *(bishopMagicData[sq].moves+(int)(
+             ((b.lovalue()*bishopMagicData[sq].magic.lovalue()) ^
+             (b.hivalue()*bishopMagicData[sq].magic.hivalue()))>>
+             bishopMagicData[sq].shift));
 #endif
    }
 
@@ -105,6 +130,7 @@ class Attacks
      static void init();
 
  private:
+#ifndef BMI2
      static void setRookAttacks(Square sq,
                                 const Bitboard &occupied, const Bitboard &value) {
 #ifdef _64BIT
@@ -134,6 +160,7 @@ class Attacks
             bishopMagicData[sq].shift)) = value;
 #endif
      }
+#endif
 
      static void initMagicData(void);
 };

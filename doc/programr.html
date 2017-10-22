@@ -106,6 +106,14 @@ only works for a 64-bit target. The executable will be named
 "arasanx-64-popcnt.exe" and will be placed in the release or debug 
 directory (depending on build type). To build with both POPCNT support
 and PGO, use "nmake popcnt-profiled".</p>
+<p>Similarly, if you have a processor that has the BMI2 instruction set
+(introduced with Haswell)
+then you can use "nmake bmi2" to produce a build that uses that
+instruction set, along with popcnt. This
+only works for a 64-bit target. The executable will be named
+"arasanx-64-bmi2.exe" and will be placed in the release or debug 
+directory (depending on build type). To build with both BMI2 support
+and PGO, use "nmake popcnt-bmi2".</p>
 <p>To make a XP-compatible build, edit the Makefile to set PLATFORM=XP
 and be sure to also use the 7.1A SDK includes and libraries, as detailed
 <a href="https://blogs.msdn.microsoft.com/vcblog/2012/10/08/windows-xp-targeting-with-c-in-visual-studio-2012/" target="_blank">here</a>. Visual C++ users
@@ -565,17 +573,21 @@ uses a technique called "magic bitboards", which basically computes a
 hash code that looks up attack information, in a way that ensures there
 are no invalid hash collisions.</p>
 
-<p>There are several ways to do this, but the algorithms and data structures
-used in Arasan follow an approach initially published by Pradyumna Kannan.
-The constants for the 64-bit version were constructed by generation code
-posted by Tord Romstad.</p>
+<p>There are several ways to do this, but the algorithms and data
+structures used in Arasan follow an approach initially published by
+Pradyumna Kannan.  The constants for the 64-bit version were
+constructed by generation code posted by Tord Romstad. The 32-bit
+version follows an approach first taken by H. G. Mueller, as discussed
+in the Winboard Forum. Starting in version 20.3, Arasan alternatively
+supports computing sliding attacks using the x86_64 PEXT AND PDEP
+instructions, as first suggested by Zach Wegner (see references).</p>
 
-<p>The magic bitboard code is primarily in file attacks.cpp. There
-are two versions of the code: one uses 64-bit multiplication and
-is best suited to running on a 64-bit architecture. The other
-uses only 32-bit multiplications. One or the other is automatically
-selected at compile time based on the target processor architecture.</p>
-
+<p>The magic bitboard code is primarily in file attacks.cpp. There are
+two versions of the code: one uses 64-bit multiplication (or
+PEXT/PDEP if enabled) and is designed for a 64-bit
+architecture. The other uses only 32-bit multiplications. One or the
+other is automatically selected at compile time based on the target
+processor architecture.</p>
 
 <h3>Move Generator</h3>
 
@@ -1248,12 +1260,12 @@ found at <a href="http://www.arasanchess.org">arasanchess.org</a></p>
 </p>
 <p><a href="http://craftychess.com/downloads/source">Crafty source code</a>.
 </p>
-<p>Duchi, John, Hazan, Elad and Singer, Yoram. "Adaptive Subgradient Methods
-for Online Learning and Stochastic Optimization" Journal of Machine Learning
-Research, Volume 12, 2/1/2011, pp. 2121-2159.</p>
 <p>Donninger, Ch. (1993). "Null Move and Deep Search" ICCA Journal,
 v. 16 no. 3.
 </p>
+<p>Duchi, John, Hazan, Elad and Singer, Yoram. "Adaptive Subgradient Methods
+for Online Learning and Stochastic Optimization" Journal of Machine Learning
+Research, Volume 12, 2/1/2011, pp. 2121-2159.</p>
 <p>Ebeling, Carl. (1987). All The Right Moves: A VLSI Architecture for Chess.
 MIT Press.
 </p>
@@ -1266,15 +1278,18 @@ New York: Springer-Verlag.
 <p>Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
 </p>
 <p>Hoki, Kunihuto and Kaneko, Tomoyuki "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Artificial Intelligence Research 49 (2014) 527-568.</p>
-<p>Lai, Matthew (2015) <a href="https://arxiv.org/abs/1509.01549" target="_blank">Giraffe: Using Deep Reinforcement Learning to Play Chess</a>. MSc Dissertation, Imperial College, London.</p>
+<p>Kannan, Pradyumna (2007) <a href="http://www.pradu.us/old/Nov27_2008/Buzz/research/magic/Bitboards.pdf" target="_blank">Magic Move-Bitboard Generation in Computer Chess</a>.</p>
 <p>Kingman, Diederik P. and Ba, Jimmy Lei <a href="https://arxiv.org/pdf/1412.6980v8.pdf" target="_blank">ADAM: A Method For Stochastic Optimization</a>, ICLR 2015.</p>
+<p>Lai, Matthew (2015) <a href="https://arxiv.org/abs/1509.01549" target="_blank">Giraffe: Using Deep Reinforcement Learning to Play Chess</a>. MSc Dissertation, Imperial College, London.</p>
 <p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.
 </p>
+<p>Wegner, Zach (2011) <a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&p=423024&t=40333&sid=7048574dbf26d14dfc7479d6fe9c2f23" target="_blank">Haswell New Instructions</a>.</p>
 <p>Weill, Jean-Christophe (1996). "The ABDADA Distributed Search Algorithm"
 Proceedings of the 1996 ACM 24th annual conference on Computer science, pp.
 131-138.
 </p>
+<p>Winboard forum, discussion <a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=5997" target="_blank">"A Faster Magic Move Bitboard Generator?"</a></p>
 <p>Zobrist, A. L. (1970). "A new hashing method with applications for game
 playing," Technical report 88, Computer Science Department, University
 of Wisconsin.</p>

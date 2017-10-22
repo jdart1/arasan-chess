@@ -1,4 +1,4 @@
-// Copyright 2008-2013 by Jon Dart.  All Rights Reserved.
+// Copyright 2008-2013, 2017 by Jon Dart.  All Rights Reserved.
 //
 #include "attacks.h"
 #include "debug.h"
@@ -5197,17 +5197,17 @@ const Bitboard Attacks::efgh_mask = Bitboard(0xf0f0f0f0f0f0f0f0ULL);
 
 const Bitboard Attacks::ep_mask[8][2] =
 {
-{Bitboard(0x2000000ULL), Bitboard(0x200000000ULL)}, 
-{Bitboard(0x5000000ULL), Bitboard(0x500000000ULL)}, 
-{Bitboard(0xa000000ULL), Bitboard(0xa00000000ULL)}, 
-{Bitboard(0x14000000ULL), Bitboard(0x1400000000ULL)}, 
-{Bitboard(0x28000000ULL), Bitboard(0x2800000000ULL)}, 
-{Bitboard(0x50000000ULL), Bitboard(0x5000000000ULL)}, 
-{Bitboard(0xa0000000ULL), Bitboard(0xa000000000ULL)}, 
+{Bitboard(0x2000000ULL), Bitboard(0x200000000ULL)},
+{Bitboard(0x5000000ULL), Bitboard(0x500000000ULL)},
+{Bitboard(0xa000000ULL), Bitboard(0xa00000000ULL)},
+{Bitboard(0x14000000ULL), Bitboard(0x1400000000ULL)},
+{Bitboard(0x28000000ULL), Bitboard(0x2800000000ULL)},
+{Bitboard(0x50000000ULL), Bitboard(0x5000000000ULL)},
+{Bitboard(0xa0000000ULL), Bitboard(0xa000000000ULL)},
 {Bitboard(0x40000000ULL), Bitboard(0x4000000000ULL)}
 };
 
-#ifdef _64BIT
+#if defined (_64BIT) && !defined(BMI2)
 const CACHE_ALIGN unsigned Attacks::r_shift[64]=
 {
 	52, 53, 53, 53, 53, 53, 53, 52,
@@ -5239,15 +5239,15 @@ const CACHE_ALIGN Bitboard Attacks::r_magic[64]=
 	Bitboard(0x00FFFCDDFCED714AULL), Bitboard(0x007FFCDDFCED714AULL), Bitboard(0x003FFFCDFFD88096ULL), Bitboard(0x0000040810002101ULL),
 	Bitboard(0x0001000204080011ULL), Bitboard(0x0001000204000801ULL), Bitboard(0x0001000082000401ULL), Bitboard(0x0001FFFAABFAD1A2ULL)
 };
-#else // 32 bit
+#elif !defined(_64BIT) // 32 bit
 const CACHE_ALIGN unsigned Attacks::r_shift[64] = {
-20, 21, 21, 21, 21, 21, 21, 20, 
-21, 22, 22, 22, 22, 22, 22, 21, 
-21, 22, 22, 22, 22, 22, 22, 21, 
-21, 22, 22, 22, 22, 22, 22, 21, 
-21, 22, 22, 22, 22, 22, 22, 21, 
-21, 22, 22, 22, 22, 22, 22, 21, 
-21, 22, 22, 22, 22, 22, 22, 21, 
+20, 21, 21, 21, 21, 21, 21, 20,
+21, 22, 22, 22, 22, 22, 22, 21,
+21, 22, 22, 22, 22, 22, 22, 21,
+21, 22, 22, 22, 22, 22, 22, 21,
+21, 22, 22, 22, 22, 22, 22, 21,
+21, 22, 22, 22, 22, 22, 22, 21,
+21, 22, 22, 22, 22, 22, 22, 21,
 20, 21, 21, 21, 21, 21, 21, 20
 };
 const CACHE_ALIGN Bitboard Attacks::r_magic[64]=
@@ -5319,8 +5319,7 @@ const CACHE_ALIGN Bitboard Attacks::r_magic[64]=
 };
 #endif
 
-#ifdef _64BIT
-//my original tables for bishops
+#if defined(_64BIT) && !defined(BMI2)
 const CACHE_ALIGN unsigned Attacks::b_shift[64]=
 {
 	58, 59, 59, 59, 59, 59, 59, 58,
@@ -5351,15 +5350,15 @@ const Bitboard Attacks::b_magic[64]=
 	Bitboard(0x0000104104104000ULL), Bitboard(0x0000002082082000ULL), Bitboard(0x0000000020841000ULL), Bitboard(0x0000000000208800ULL),
 	Bitboard(0x0000000010020200ULL), Bitboard(0x0000000404080200ULL), Bitboard(0x0000040404040400ULL), Bitboard(0x0002020202020200ULL)
 };
-#else // 32 bit
+#elif !defined(_64BIT) // 32 bit
 const CACHE_ALIGN unsigned Attacks::b_shift[64] = {
-26, 27, 27, 27, 27, 27, 27, 26, 
-27, 27, 27, 27, 27, 27, 27, 27, 
-27, 27, 25, 25, 25, 25, 27, 27, 
-27, 27, 25, 23, 23, 25, 27, 27, 
-27, 27, 25, 23, 23, 25, 27, 27, 
-27, 27, 25, 25, 25, 25, 27, 27, 
-27, 27, 27, 27, 27, 27, 27, 27, 
+26, 27, 27, 27, 27, 27, 27, 26,
+27, 27, 27, 27, 27, 27, 27, 27,
+27, 27, 25, 25, 25, 25, 27, 27,
+27, 27, 25, 23, 23, 25, 27, 27,
+27, 27, 25, 23, 23, 25, 27, 27,
+27, 27, 25, 25, 25, 25, 27, 27,
+27, 27, 27, 27, 27, 27, 27, 27,
 26, 27, 27, 27, 27, 27, 27, 26
 };
 const CACHE_ALIGN Bitboard Attacks::b_magic[64]=
@@ -5434,8 +5433,12 @@ const CACHE_ALIGN Bitboard Attacks::b_magic[64]=
 CACHE_ALIGN Attacks::MagicData Attacks::bishopMagicData[64];
 CACHE_ALIGN Attacks::MagicData Attacks::rookMagicData[64];
 
+#ifdef BMI2
+CACHE_ALIGN uint16_t Attacks::magicmovesdb[107648];
+#else
 CACHE_ALIGN Bitboard Attacks::magicmovesbdb[5248];
 CACHE_ALIGN Bitboard Attacks::magicmovesrdb[102400];
+#endif
 
 struct MoveInfo {
     int dir;
@@ -5466,7 +5469,7 @@ static Bitboard generateSlidingMoves(Square sq, const Bitboard &occ,
             do {
                 dest += dir;
                 ASSERT(OnBoard(dest));
-                if (!excludeEdge || 
+                if (!excludeEdge ||
                     !limits[i].edges.isSet(dest)) moves.set(dest);
             } while (!limit.isSet(dest));
         }
@@ -5514,59 +5517,76 @@ static Bitboard generateOccupancy(const Bitboard &squares, const Bitboard &index
 
 void Attacks::initMagicData() {
     int b_index = 0;
-    Square sq;
-    Bitboard edges;
-    edges = file_mask[0] | file_mask[7] | rank_mask[0] | rank_mask[7];
-    for(sq=0;sq<64;sq++)  {
-        // This is the set of possible squares reachable by a Bishop
-        // on "sq":
+    for (Square sq=0; sq<64; sq++)  {
+#ifdef BMI2
+        bishopMagicData[sq].data = magicmovesdb+b_index;
+        Bitboard mask1 = bishopMagicData[sq].mask1 = generateBishopMask(sq);
+        const int numSquares = mask1.bitCount();
+
+        for (uint64_t occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
+            Bitboard occ = generateOccupancy(mask1,Bitboard(occBits));
+            Bitboard atcks = generateBishopMoves(sq,occ);
+            if (occBits == 0) {
+               bishopMagicData[sq].mask2 = atcks;
+            }
+            ASSERT(b_index<107648);
+            magicmovesdb[b_index++] = uint16_t(_pext_u64(atcks, bishopMagicData[sq].mask2));
+        }
+#else
         const Bitboard mask(generateBishopMask(sq));
-        int numSquares = mask.bitCount();
+        const int numSquares = mask.bitCount();
         bishopMagicData[sq].moves = magicmovesbdb+b_index;
         bishopMagicData[sq].shift = b_shift[sq];
         bishopMagicData[sq].mask = mask;
         bishopMagicData[sq].magic = b_magic[sq];
-        // iterate through each possible combination of squares 
+        // iterate through each possible combination of squares
         // that can be occupied and generate the attacks.
         for (uint64_t occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
             Bitboard occ = generateOccupancy(mask,occBits);
             setBishopAttacks(sq,occ,generateBishopMoves(sq,occ));
             b_index++;
         }
-        /**
-           #ifdef _64BIT
-           b_index += 1<<(64-b_shift[i]);
-           #else
-           b_index += 1<<(32-b_shift[i]);
-           #endif
-        **/
         if (b_index > 5248) cout << "error" << endl;
+#endif
     }
+#ifdef BMI2
+    int r_index = b_index;
+#else
     int r_index = 0;
-    for (sq=0; sq < 64; sq++) {
+#endif
+    for (Square sq=0; sq < 64; sq++) {
+#ifdef BMI2
+        rookMagicData[sq].data = magicmovesdb+r_index;
+        Bitboard mask1 = rookMagicData[sq].mask1 = generateRookMask(sq);
+        const int numSquares = mask1.bitCount();
+
+        for (uint64_t occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
+            Bitboard occ = generateOccupancy(mask1,Bitboard(occBits));
+            Bitboard atcks = generateRookMoves(sq,occ);
+            if (occBits == 0) {
+               rookMagicData[sq].mask2 = atcks;
+            }
+            ASSERT(b_index<107648);
+            magicmovesdb[r_index++] = uint16_t(_pext_u64(atcks, rookMagicData[sq].mask2));
+        }
+#else
         // This is the set of possible squares reachable by a Rook
         // on "sq":
         const Bitboard mask(generateRookMask(sq));
-        int numSquares = mask.bitCount();
+        const int numSquares = mask.bitCount();
         rookMagicData[sq].moves = magicmovesrdb+r_index;
         rookMagicData[sq].shift = r_shift[sq];
         rookMagicData[sq].mask = mask;
         rookMagicData[sq].magic = r_magic[sq];
-        // iterate through each possible combination of squares 
+        // iterate through each possible combination of squares
         // that can be occupied and generate the attacks.
         for (uint64_t occBits = 0; occBits < (1ULL)<<numSquares; occBits++) {
             Bitboard occ = generateOccupancy(mask,occBits);
             setRookAttacks(sq,occ,generateRookMoves(sq,occ));
             r_index++;
         }
-        /**
-           #ifdef _64BIT
-           r_index += 1<<(64-r_shift[i]);
-           #else
-           r_index += 1<<(32-r_shift[i]);
-           #endif
-        **/
         if (r_index > 102400) cout << "error" << endl;
+#endif
     }
 }
 
