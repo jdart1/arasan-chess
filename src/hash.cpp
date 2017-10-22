@@ -9,7 +9,7 @@
 #include "scoring.h"
 extern "C"
 {
-#if !defined(_MAC) && !defined(__clang__)
+#if !defined(_MAC) && !defined(__clang__) && !defined(__FreeBSD__)
 #include <malloc.h>
 #endif
 #include <memory.h>
