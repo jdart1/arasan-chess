@@ -64,6 +64,9 @@ GTB_LIBNAME     = libgtb.a
 SMPFLAGS = -DSMP -DSMP_STATS
 SMPLIB   = -lpthread
 
+POPCNT_FLAGS := -DUSE_POPCNT -msse4.2
+BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2
+
 PGO_RUN_FLAGS = -H 64M
 
 TUNE_FLAGS := -DTUNE
@@ -108,7 +111,7 @@ ifeq ("$(CC)","icc")
 CPP     = icc
 LD      = icc
 AR      = xiar
-CFLAGS  := -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
+CFLAGS  := $(CFLAGS) -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
 ifndef DEBUG
 OPT     = -O3 -fno-rtti $(SSE) -DNDEBUG
 GTB_OPT := -O3 -fno-rtti $(SSE) -DNDEBUG
@@ -129,6 +132,7 @@ PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
 CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
+BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
 GTB_OPT := -O3 $(SSE) -DNDEBUG
@@ -149,6 +153,7 @@ GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
 ifeq "$(GCCNEW)" "1"
 # options for GCC 4.7 or higher:
 CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
 LTO	= -flto
@@ -239,18 +244,18 @@ profiled: dirs
 	@$(MAKE) PASS=2 profile
 
 popcnt-profiled: dirs
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile profile-run
-	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile profile-run
+	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
 
 popcnt: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) -DUSE_POPCNT' SSE=-msse4.2
+	@$(MAKE) ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2
 
 bmi2: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) -mbmi2 -DUSE_POPCNT -DBMI2' SSE=-msse4.2
+	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2
 
 bmi2-profiled: dirs
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) -mbmi2 -DUSE_POPCNT -DBMI2' SSE=-msse4.2 profile profile-run
-	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) -mbmi2 -DUSE_POPCNT -DBMI2' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile profile-run
+	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
 
 TB_SOURCES=
 TB_OBJS=
