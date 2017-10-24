@@ -35,7 +35,7 @@ void Statistics::clear()
    display_value = Scoring::INVALID_SCORE;
 #ifdef SEARCH_STATS
    num_qnodes = reg_nodes = moves_searched = static_null_pruning =
-       razored = (uint64_t)0;
+       razored = reduced = (uint64_t)0;
    hash_hits = hash_searches = futility_pruning = null_cuts = lmp = (uint64_t)0;
    history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
