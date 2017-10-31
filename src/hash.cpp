@@ -93,13 +93,12 @@ void Hash::loadLearnInfo()
             if (rec.start != InvalidSquare)
                best = CreateMove(rec.start,rec.dest,rec.promotion);
             storeHash(rec.hashcode,rec.depth*DEPTH_INCREMENT,
-               0,                                 /* age */
-               HashEntry::Valid,
-               rec.score,
+                      0,                                 /* age */
+                      HashEntry::Valid,
+                      rec.score,
                       Scoring::INVALID_SCORE, // TBD
-                      HashEntry::LEARNED_MASK |
-                      (IsForced(best) ? HashEntry::FORCED_MASK : 0),
-               best);
+                      HashEntry::LEARNED_MASK,
+                      best);
          }
       }
    }

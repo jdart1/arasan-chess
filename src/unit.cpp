@@ -504,16 +504,16 @@ static int testEval() {
 static int testBitbases() {
     // verify eval results are symmetrical (White/Black)
     const int CASES = 8;
-    struct Case 
+    struct Case
     {
         Case(const string &f, int r)
-            :fen(f),result(r) 
+            :fen(f),result(r)
             {
             }
         string fen;
         int result;
     };
-    
+
     static const Case cases[CASES] = {
         Case("8/8/1p6/2k5/8/5K2/8/8 b - - 0 1",Constants::BITBASE_WIN),
         Case("8/8/5k2/8/2K5/1P6/8/8 w - - 0 1",Constants::BITBASE_WIN),
@@ -796,6 +796,157 @@ static int testEPD()
    return errs;
 }
 
+static int testHash() {
+    string fen1 = "r2qk2r/ppp1b1pp/2n5/3p1p2/3Pn1b1/2PB1N2/PP3PPP/RNBQR1K1 w kq -";
+    string fen2 = "rn1q1rk1/ppp2ppp/3b1n2/3p2B1/3P2b1/2NB1N2/PPP2PPP/R2Q1RK1 b - -";
+    string fen3 = "2b2rk1/3P1pbp/p5q1/2r5/2N1pp2/1P5Q/P1B2PPP/3R1RK1 w - -";
+    string fen4 = "5bk1/p1p3p1/8/2p2QP1/8/1P6/PBP2PP1/3q2K1 w - -";
+    Board board;
+
+    Hash hashTable;
+    hashTable.initHash(4000);
+
+    int errs = 0;
+    if (!BoardIO::readFEN(board, fen1)) {
+        cerr << "testHash: error in FEN: " << fen1 << endl;
+        ++errs;
+    }
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
+                        0, CreateMove(chess::D1,chess::B3,Queen));
+
+    HashEntry he;
+
+    HashEntry::ValueType val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he);
+    if (val != HashEntry::Valid) {
+        ++errs;
+        cerr << "testHash case 1: entry not found" << endl;
+        return errs;
+    }
+    if (he.depth() != 1) {
+        ++errs;
+        cerr << "testHash case 1: invalid depth" << endl;
+    }
+    if (he.age() != 1) {
+        ++errs;
+        cerr << "testHash case 1: invalid age" << endl;
+    }
+    if (he.getValue() != score_t(0.1*Params::PAWN_VALUE)) {
+        ++errs;
+        cerr << "testHash case 1: invalid value" << endl;
+    }
+    if (he.staticValue() != score_t(0.2*Params::PAWN_VALUE)) {
+        ++errs;
+        cerr << "testHash case 1: invalid static value" << endl;
+    }
+    Move m = CreateMove(chess::D1,chess::B3,Queen);
+    if (!MovesEqual(m,he.bestMove(board))) {
+        ++errs;
+        cerr << "testHash case 1: invalid move" << endl;
+    }
+
+    if (!BoardIO::readFEN(board, fen2)) {
+        cerr << "testHash case 1: error in FEN: " << fen2 << endl;
+        ++errs;
+    }
+
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::LowerBound,score_t(-0.1*Params::PAWN_VALUE),Scoring::INVALID_SCORE,0, NullMove);
+
+    HashEntry he2;
+
+    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he2);
+
+    if (val != HashEntry::LowerBound) {
+        ++errs;
+        cerr << "testHash case 2: entry type invalid" << endl;
+    }
+    if (!IsNull(he2.bestMove(board))) {
+        ++errs;
+        cerr << "testHash case 2: expected Nullmove" << endl;
+    }
+    if (he2.staticValue() != Scoring::INVALID_SCORE) {
+        ++errs;
+        cerr << "testHash case 2: invalid static score" << endl;
+    }
+
+    if (!BoardIO::readFEN(board, fen3)) {
+        cerr << "testHash case 2: error in FEN: " << fen3 << endl;
+        ++errs;
+    }
+
+    m = CreateMove(board,chess::D7,chess::C8,Queen);
+
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Scoring::INVALID_SCORE,0,m);
+
+    HashEntry he3;
+
+    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he3);
+
+    if (val != HashEntry::UpperBound) {
+        ++errs;
+        cerr << "testHash case 3: entry type invalid" << endl;
+    }
+    m = CreateMove(board,chess::D7,chess::C8,Queen);
+    if (!MovesEqual(m,he3.bestMove(board))) {
+        ++errs;
+        cerr << "testHash case 3: invalid move" << endl;
+    }
+    if (PieceMoved(he3.bestMove(board)) != Pawn) {
+        ++errs;
+        cerr << "testHash case 3: invalid PieceMoved" << endl;
+    }
+    if (PromoteTo(he3.bestMove(board)) != Queen) {
+        ++errs;
+        cerr << "testHash case 3: invalid PromoteTo" << endl;
+    }
+    if (Capture(he3.bestMove(board)) != Bishop) {
+        ++errs;
+        cerr << "testHash case 3: invalid Capture" << endl;
+    }
+    if (!BoardIO::readFEN(board, fen4)) {
+        cerr << "testHash case 4: error in FEN: " << fen4 << endl;
+        ++errs;
+    }
+    m = CreateMove(board,chess::G1,chess::H2,King);
+    hashTable.storeHash(board.hashCode(),1,10,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Scoring::INVALID_SCORE,HashEntry::LEARNED_MASK,m);
+
+    HashEntry he4;
+    val = hashTable.searchHash(board, board.hashCode(), 1, -1, 10, he4);
+
+    if (val != HashEntry::UpperBound) {
+        ++errs;
+        cerr << "testHash case 4: entry type invalid" << endl;
+    }
+    if (he4.age() != 10) {
+        ++errs;
+        cerr << "testHash case 4: invalid age" << endl;
+    }
+    if (he4.depth() != 1) {
+        ++errs;
+        cerr << "testHash case 4: invalid depth" << endl;
+    }
+    if (!MovesEqual(m,he4.bestMove(board))) {
+        ++errs;
+        cerr << "testHash case 4: moves not equal" << endl;
+    }
+    if (!he4.learned()) {
+        ++errs;
+        cerr << "testHash case 4: learned flag not set" << endl;
+    }
+
+    // search with higher depth should return invalid entry
+    val = hashTable.searchHash(board, board.hashCode(), 1, 2, 10, he4);
+    if (val != HashEntry::Invalid) {
+        ++errs;
+        cerr << "testHash case 4: expected invalid entry" << endl;
+    }
+    // move should still be valid though
+    if (!MovesEqual(m,he4.bestMove(board))) {
+        ++errs;
+        cerr << "testHash case 4: expected valid move" << endl;
+    }
+    return errs;
+}
+
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
@@ -886,6 +1037,7 @@ int doUnit() {
    errs += testDrawEval();
    errs += testCheckStatus();
    errs += testEPD();
+   errs += testHash();
    errs += testPerft();
    return errs;
 }

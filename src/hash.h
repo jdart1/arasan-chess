@@ -20,8 +20,7 @@ class HashEntry {
       enum {
          TYPE_MASK = 0x7,
          TB_MASK = 0x08,
-         LEARNED_MASK = 0x10,
-         FORCED_MASK = 0x20
+         LEARNED_MASK = 0x10
       };
 
       static const int QSEARCH_CHECK_DEPTH = -1;
@@ -86,10 +85,6 @@ class HashEntry {
          contents.age = age;
       }
 
-      int forced() const {
-         return (int)((contents.flags & FORCED_MASK) != 0);
-      }
-
       int learned() const {
          return (int)((contents.flags & LEARNED_MASK) != 0);
       }
@@ -109,7 +104,6 @@ class HashEntry {
             Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
                (PieceType)contents.promotion);
             //if (!validMove(b,m)) return NullMove;
-            if (forced()) SetForced(m);
             return m;
          }
       }

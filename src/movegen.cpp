@@ -69,12 +69,7 @@ int trace)
      me.score = 0;
      moveList.push_back(me);
    }
-   if (board.checkStatus()==InCheck) {
-     if (batch_count == 1) {
-        SetForced(moveList[0].move);
-     }
-   }
-   else {
+   if (!(board.checkStatus()==InCheck)) {
      // exclude illegal moves
      const BoardState state = board.state;
      Board tmp(board);
@@ -264,7 +259,6 @@ Move MoveGenerator::nextEvasion(int &ord) {
      else if (batch_count > 1) {
        int scores[40];
        ASSERT(batch_count < 40);
-       const int flag = (batch_count == 2);
        int poscaps = 0, negcaps = 0;
        for (int i = 0; i < batch_count; i++) {
           if (MovesEqual(moves[i],hashMove)) {
@@ -296,7 +290,6 @@ Move MoveGenerator::nextEvasion(int &ord) {
              SetPhase(moves[i],HISTORY_PHASE);
              scores[i] = 0;
           }
-          if (flag) SetForced2(moves[i]);
        }
        if (poscaps > 1) {
           sortMoves(moves,scores,negcaps ? batch_count : poscaps);
@@ -307,9 +300,6 @@ Move MoveGenerator::nextEvasion(int &ord) {
      else if (MovesEqual(moves[0],hashMove)) {
         // sole evasion move is the hash move
         index++;
-     }
-     else {
-       SetForced(moves[0]);
      }
    }
    if (index < batch_count) {

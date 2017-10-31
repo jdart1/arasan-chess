@@ -1690,17 +1690,17 @@ score_t Search::quiesce(int ply,int depth)
          }
 #endif
          if (!node->PV() &&
-             noncaps > std::max<int>(1+depth,0) &&
+             noncaps &&
+             node->num_try > 2 &&
              !Scoring::mateScore(node->beta) &&
-             !IsForced(move) && !IsForced2(move) &&
              !CaptureOrPromotion(move) &&
              board.wouldCheck(move) == NotInCheck) {
-            // We have searched one or more legal non-capture evasions
-            // and failed to cutoff. So don't search any more.
+             // We have searched one or more legal non-capture evasions
+             // and failed to cutoff. So don't search any more.
 #ifdef _TRACE
-            indent(ply); cout << "pruned" << endl;
+             indent(ply); cout << "pruned" << endl;
 #endif
-            continue;
+             continue;
          }
          node->last_move = move;
          board.doMove(move);
@@ -2129,7 +2129,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
             controller->age,
             val_type,
             node->best_score, node->staticEval,
-            (IsForced(node->best) ? HashEntry::FORCED_MASK : 0),
+            0,
             node->best);
     }
 }
@@ -3218,7 +3218,7 @@ score_t Search::search()
                                         val_type,
                                         node->best_score,
                                         node->staticEval,
-                                        (IsForced(node->best) ? HashEntry::FORCED_MASK : 0),
+                                        0,
                                         node->best);
     }
     search_end2:
