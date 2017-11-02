@@ -1,4 +1,25 @@
-Changes in Arasan 20.2:
+Changes in Arasan 20.3:
+ 1) Change queen mobility scoring: square reach beyond 23 squares gets
+    same score.
+ 2) Re-work scoring for material imbalance with pawns.
+ 3) Bug fixes for EPD/FEN handling (mostly affects utility programs).
+ 4) Bug fixes for bitbases. Mate scores from bitbases were not being
+    transmitted to the search. Also bitbase scores were being added to
+    other eval terms which are not relevant for KPK. 
+ 5) Syzygy code (Fathom) is imported as a git submodule now.
+ 6) Code restructuring, move piece values into Param class.
+ 7) Change eval scale so Pawn value = 128 (vs. 1000 in 20.2).
+ 8) Implement UCI "searchmoves" option to "go" command.
+ 9) Bug fixes in parameter tuner.
+ 10) If special-case endgame detected, skip other endgame scoring and
+    just use the special-case code.
+ 11) In UCI MultiPV mode, ensure bestmove that is eventually sent is the
+    highest-scoring move, and re-order PVs if necessary so that they are
+    in decreasing score order.
+ 12) Implement BMI2 (PEXT/PDEP) attack computation.
+ 13) Change evasion pruning in qearch.
+
+Changes in Arasan 20.2 (July 2017):
  1) Add probcut to search.
  2) Detect King and Rook pawn vs wrong-color Bishop configuration
     and score near draw, even if opponent has pawns.
