@@ -36,6 +36,9 @@ STB=syzygy/src
 # directory for utility programs
 UTIL = util
 
+# Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
+GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
+
 #define the appropriate macro for the type(s) of tablebase supported
 #GAVIOTA_TBS = 1
 #NALIMOV_TBS = 1
@@ -212,7 +215,7 @@ endif
 
 release:
 	mkdir -p ../release
-	cd .. && git archive --format tar --prefix arasan-$(VERSION)/ -o release/arasan-$(VERSION).tar v$(VERSION)
+	cd .. && $(GIT_ARCHIVE_ALL_PATH)/git_archive_all.py --prefix arasan-$(VERSION)/ release/arasan-$(VERSION).tar
 	gzip ../release/arasan-$(VERSION).tar
 
 install: all
