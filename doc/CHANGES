@@ -18,6 +18,7 @@ Changes in Arasan 20.3:
     in decreasing score order.
  12) Implement BMI2 (PEXT/PDEP) attack computation.
  13) Change evasion pruning in qearch.
+ 14) Pack hash entries into 2 64-bits words instead of 3.
 
 Changes in Arasan 20.2 (July 2017):
  1) Add probcut to search.
