@@ -35,7 +35,7 @@ class HashEntry {
       }
 
       HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
-         ValueType type, int age, int flags = 0,
+         ValueType type, unsigned age, byte flags = 0,
                 Move bestMove = NullMove) {
          ASSERT(depth+2 >= 0 && depth+2 < 256);
          contents.depth = (byte)(depth+2);
@@ -44,9 +44,8 @@ class HashEntry {
          contents.start = StartSquare(bestMove);
          contents.dest = DestSquare(bestMove);
          contents.promotion = PromoteTo(bestMove);
-         values.value = stored_score_t(val);
-         values.static_value = stored_score_t(staticValue);
-         setEffectiveHash(hash);
+         contents.value = stored_score_t(val);
+         setEffectiveHash(hash,staticValue);
       }
 
       int empty() const {
@@ -58,30 +57,35 @@ class HashEntry {
       }
 
       int depth() const {
-          return (int)contents.depth - 2;
+         return (int)contents.depth - 2;
       }
 
       score_t getValue() const {
-         return score_t(values.value);
+         return score_t(contents.value);
       }
 
       score_t staticValue() const {
-         return (score_t)values.static_value;
+          // assumes 2's complement machine
+          unsigned bits = unsigned(hc & STATIC_VALUE_MASK);
+          if (bits & 0x8000)
+              return score_t(-32768 + (bits & 0x7fff));
+          else
+              return score_t(bits & 0x7fff);
       }
 
       void setValue(score_t val) {
-         values.value = (stored_score_t)val;
+         contents.value = (stored_score_t)val;
       }
 
       ValueType type() const {
          return (ValueType)(contents.flags & TYPE_MASK);
       }
 
-      int age() const {
+      unsigned age() const {
          return (int)contents.age;
       }
 
-      void setAge(int age) {
+      void setAge(unsigned age) {
          contents.age = age;
       }
 
@@ -101,67 +105,60 @@ class HashEntry {
          if (contents.start == InvalidSquare)
             return NullMove;
          else {
-            Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
+            return CreateMove(b,(Square)contents.start,(Square)contents.dest,
                (PieceType)contents.promotion);
-            //if (!validMove(b,m)) return NullMove;
-            return m;
          }
       }
 
       bool avoidNull(int null_depth, score_t beta) const {
-          return type() == UpperBound && depth() >= null_depth &&
+         return type() == UpperBound && depth() >= null_depth &&
               getValue() < beta;
       }
 
       int operator == (const hash_t hash) const {
-         return getEffectiveHash() == hash;
+         return getEffectiveHash() == (hash & HASH_MASK);
       }
 
       int operator != (const hash_t hash) const {
-         return getEffectiveHash() != hash;
+         return getEffectiveHash() != (hash & HASH_MASK);
       }
 
       hash_t getEffectiveHash() const {
-         return hc ^ val2 ^ val3;
+         return (hc ^ val) & HASH_MASK;
       }
 
-      void setEffectiveHash(hash_t hash) {
-         hc = hash ^ val2 ^ val3;
+      void setEffectiveHash(hash_t hash, score_t static_score) {
+         hc = ((hash ^ val) & HASH_MASK) | (uint16_t)static_score;
       }
 
    protected:
+
+      static const hash_t HASH_MASK = 0xffffffffffff0000;
+      static const hash_t STATIC_VALUE_MASK = ~HASH_MASK;
 
 #ifdef __INTEL_COMPILER
 #pragma pack(push,1)
 #endif
       struct Contents
       BEGIN_PACKED_STRUCT
-        int16_t pad;
+        stored_score_t value;
         byte depth;
         byte age;
         byte flags;
         signed char start, dest, promotion;
       END_PACKED_STRUCT
 
-      struct Values
-      BEGIN_PACKED_STRUCT
-        stored_score_t value;
-        stored_score_t static_value;
-      END_PACKED_STRUCT
 #ifdef __INTEL_COMPILER
 #pragma pack(pop)
 #endif
-       uint64_t hc;
       union
       {
-        Contents contents;
-        uint64_t val2;
+          Contents contents;
+          uint64_t val;
       };
 
-      union {
-        Values values;
-        uint64_t val3;
-      };
+      // static value is packed in the low-order hash bits
+      uint64_t hc;
 };
 
 class Hash {
@@ -184,14 +181,15 @@ class Hash {
 
     HashEntry::ValueType searchHash(const Board& b,hash_t hashCode,
                                               int ply,
-                                              int depth, int age,
+                                              int depth, unsigned age,
                                               HashEntry &he
                                               ) {
         if (!hashSize) return HashEntry::NoHit;
         int probe = (int)(hashCode & hashMask);
+
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = NULL;
-        for (int i = MaxRehash; i != 0; --i) {
+        for (int i = MaxRehash; i != 0; --i, p++) {
             // Copy hashtable entry before hash test below (avoids
             // race where entry is validated, then changed).
             HashEntry entry(*p);
@@ -200,7 +198,7 @@ class Hash {
                 // so update the age to discourage replacement:
                 if (entry.age() && (entry.age() != age)) {
                    entry.setAge(age);
-                   entry.setEffectiveHash(hashCode);
+                   entry.setEffectiveHash(hashCode,entry.staticValue());
                    *p = entry;
                 }
                 hit = p;
@@ -213,7 +211,6 @@ class Hash {
                     break;
                 }
             }
-            p++;
         }
         if (hit) {
           // hash hit, but with insufficient depth:
@@ -224,11 +221,11 @@ class Hash {
     }
 
     void storeHash(hash_t hashCode, const int depth,
-                          int age,
+                          unsigned age,
                           HashEntry::ValueType type,
                           score_t value,
                           score_t staticValue,
-                          byte flags,
+                          int flags,
                           Move best_move) {
 
         if (!hashSize) return;
@@ -253,8 +250,8 @@ class Hash {
                 best = &q;
                 break;
             }
-            else if (!(q.flags() & 
-                       (HashEntry::LEARNED_MASK | HashEntry::TB_MASK)) && 
+            else if (!(q.flags() &
+                       (HashEntry::LEARNED_MASK | HashEntry::TB_MASK)) &&
                      (q.depth() <= depth || q.age() != age)) {
                 // candidate for replacement
                 score_t score = replaceScore(q,age);
@@ -269,7 +266,7 @@ class Hash {
             if (best->empty()) {
                hashFree--;
             }
-            *best = HashEntry(hashCode, value, 
+            *best = HashEntry(hashCode, value,
                               staticValue, depth, type, age, flags, best_move);
        }
     }
@@ -288,7 +285,7 @@ class Hash {
 
 private:
     score_t replaceScore(const HashEntry &pos, int age) const {
-        return score_t((std::abs(pos.age()-age)<<12) - pos.depth());
+        return score_t((std::abs((int)pos.age()-(int)age)<<12) - pos.depth());
     }
 
     HashEntry *hashTable;
