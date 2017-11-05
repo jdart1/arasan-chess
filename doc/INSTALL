@@ -61,8 +61,11 @@ as compiler) and arm-linux.
 program that is used to construct the opening book from PGN files.
 
 "make release" will build the release tarball and place it in the
-release subdirectory. This target uses "git archive" so it needs to
-be run from within a git repository.
+release subdirectory. This target uses a Python tool git-archive-all
+(https://github.com/Kentzo/git-archive-all), which needs to be
+installed and its path set in the Makefile (or passed to it) in the
+variable GIT_ARCHIVE_ALL_PATH. And that tool calls "git archive" so
+"make release" needs to be run from within a git repository.
 
 "make install" will install Arasan binaries into /usr/local/bin/arasan-20.3.0.
 (You will need to be root, or use sudo, to execute "make install"). 
