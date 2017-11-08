@@ -2842,46 +2842,64 @@ score_t Search::search()
         // Note: we do not push down the node stack because we want this
         // search to have all the same parameters (including ply) as the
         // current search, just reduced depth + the IID flag set.
-        int old_flags = node->flags;
-        node->flags |= IID;
-        score_t alpha = node->alpha;
-        node->depth = d;
-        score_t iid_score = -search();
-        // set hash move to IID search result (may still be null)
-        hashMove = node->best;
-        // reset key params
-        node->flags = old_flags;
-        node->num_try = 0;
-        node->cutoff = 0;
-        node->depth = depth;
-        node->alpha = node->best_score = alpha;
-        node->best = NullMove;
-        node->last_move = NullMove;
-        // do not retain any pv information from the IID search
-        // (can screw up non-IID pv).
-        (node+1)->pv[ply+1] = NullMove;
-        (node+1)->pv_length = 0;
-        node->pv[ply] = NullMove;
-        node->pv_length = 0;
-        if (iid_score == Illegal || (node->flags & EXACT)) {
-           // previous move was illegal or was an exact score
-#ifdef _TRACE
-          if (master()) {
-             indent(ply);
-             cout << "== exact result from IID" << endl;
-          }
-#endif
-           return -iid_score;
-        }
-        if (terminate) {
-            return node->alpha;
-        }
-#ifdef _TRACE
-        if (master()) {
-            indent(ply); cout << "== IID done.";
-        }
-#endif
+        score_t iid_score = -Constants::MATE;
+        score_t low_window = node->alpha;
+        for (int i = 0; i<4 && iid_score < node->alpha; i++) {
+            int old_flags = node->flags;
+            node->flags |= IID;
+            score_t old_alpha = node->alpha;
+            node->alpha = node->best_score = low_window;
+            node->depth = d;
 
+            score_t iid_score = -search();
+
+            // set hash move to IID search result (may still be null)
+            hashMove = node->best;
+            // reset key params
+            node->flags = old_flags;
+            node->num_try = 0;
+            node->cutoff = 0;
+            node->depth = depth;
+            node->alpha = node->best_score = old_alpha;
+            node->best = NullMove;
+            node->last_move = NullMove;
+            // do not retain any pv information from the IID search
+            // (can screw up non-IID pv).
+            (node+1)->pv[ply+1] = NullMove;
+            (node+1)->pv_length = 0;
+            node->pv[ply] = NullMove;
+            node->pv_length = 0;
+            if (iid_score == Illegal || (node->flags & EXACT)) {
+                // previous move was illegal or was an exact score
+#ifdef _TRACE
+                if (master()) {
+                    indent(ply);
+                    cout << "== exact result from IID" << endl;
+                }
+#endif
+                return -iid_score;
+            }
+            if (terminate) {
+                return node->alpha;
+            }
+#ifdef _TRACE
+            if (master()) {
+                indent(ply); cout << "== IID done.";
+            }
+#endif
+            if (node->PV()) {
+                if (iid_score <= node->alpha) {
+                    low_window = std::max<score_t>(-Constants::MATE,node->alpha - ASPIRATION_WINDOW[i]);
+                }
+                else {
+                    break;
+                }
+            }
+            else {
+                break;
+            }
+        }
+        
 #ifdef _TRACE
         if (master()) {
             if (!IsNull(hashMove)) {
