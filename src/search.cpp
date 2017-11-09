@@ -2827,9 +2827,7 @@ score_t Search::search()
         (node->PV() ||
          (board.checkStatus() == NotInCheck &&
           node->eval >= node->beta - Params::PAWN_VALUE))) {
-        int d;
-        d = depth/2;
-        if (!node->PV()) d-=DEPTH_INCREMENT;
+        const int d = node->PV() ? std::max(depth - 2*DEPTH_INCREMENT,2*depth/3) : depth/2;
 #ifdef _TRACE
         if (master()) {
             indent(ply); cout << "== start IID, depth = " << d
