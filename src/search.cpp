@@ -45,7 +45,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define STATIC_NULL_PRUNING
 #define RAZORING
 #define HELPFUL_MASTER
-//#define SINGULAR_EXTENSION
+#define SINGULAR_EXTENSION
 
 static const int FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
@@ -55,7 +55,7 @@ static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
-static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
+static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 #endif
 static const int PROBCUT_DEPTH = 4*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
@@ -69,8 +69,7 @@ static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
 {
-//   return (depth*Params::PAWN_VALUE)/(100*DEPTH_INCREMENT);
-   return Params::PAWN_VALUE/4;
+    return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
 }
 
 static int singularExtensionDepth(int depth)
