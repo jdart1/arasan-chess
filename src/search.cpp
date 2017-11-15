@@ -45,7 +45,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define STATIC_NULL_PRUNING
 #define RAZORING
 #define HELPFUL_MASTER
-#define SINGULAR_EXTENSION
+//#define SINGULAR_EXTENSION
 
 static const int FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
@@ -55,7 +55,7 @@ static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
-static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
+static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
 static const int PROBCUT_DEPTH = 4*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
@@ -69,7 +69,8 @@ static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
 {
-    return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
+//   return (depth*Params::PAWN_VALUE)/(100*DEPTH_INCREMENT);
+   return Params::PAWN_VALUE/4;
 }
 
 static int singularExtensionDepth(int depth)
@@ -2826,7 +2827,9 @@ score_t Search::search()
         (node->PV() ||
          (board.checkStatus() == NotInCheck &&
           node->eval >= node->beta - Params::PAWN_VALUE))) {
-        const int d = node->PV() ? std::max(depth - 2*DEPTH_INCREMENT,2*depth/3) : depth/2;
+        int d;
+        d = depth/2;
+        if (!node->PV()) d-=DEPTH_INCREMENT;
 #ifdef _TRACE
         if (master()) {
             indent(ply); cout << "== start IID, depth = " << d
@@ -2839,64 +2842,46 @@ score_t Search::search()
         // Note: we do not push down the node stack because we want this
         // search to have all the same parameters (including ply) as the
         // current search, just reduced depth + the IID flag set.
-        score_t iid_score = -Constants::MATE;
-        score_t low_window = node->alpha;
-        for (int i = 0; i<4 && iid_score < node->alpha; i++) {
-            int old_flags = node->flags;
-            node->flags |= IID;
-            score_t old_alpha = node->alpha;
-            node->alpha = node->best_score = low_window;
-            node->depth = d;
-
-            score_t iid_score = -search();
-
-            // set hash move to IID search result (may still be null)
-            hashMove = node->best;
-            // reset key params
-            node->flags = old_flags;
-            node->num_try = 0;
-            node->cutoff = 0;
-            node->depth = depth;
-            node->alpha = node->best_score = old_alpha;
-            node->best = NullMove;
-            node->last_move = NullMove;
-            // do not retain any pv information from the IID search
-            // (can screw up non-IID pv).
-            (node+1)->pv[ply+1] = NullMove;
-            (node+1)->pv_length = 0;
-            node->pv[ply] = NullMove;
-            node->pv_length = 0;
-            if (iid_score == Illegal || (node->flags & EXACT)) {
-                // previous move was illegal or was an exact score
+        int old_flags = node->flags;
+        node->flags |= IID;
+        score_t alpha = node->alpha;
+        node->depth = d;
+        score_t iid_score = -search();
+        // set hash move to IID search result (may still be null)
+        hashMove = node->best;
+        // reset key params
+        node->flags = old_flags;
+        node->num_try = 0;
+        node->cutoff = 0;
+        node->depth = depth;
+        node->alpha = node->best_score = alpha;
+        node->best = NullMove;
+        node->last_move = NullMove;
+        // do not retain any pv information from the IID search
+        // (can screw up non-IID pv).
+        (node+1)->pv[ply+1] = NullMove;
+        (node+1)->pv_length = 0;
+        node->pv[ply] = NullMove;
+        node->pv_length = 0;
+        if (iid_score == Illegal || (node->flags & EXACT)) {
+           // previous move was illegal or was an exact score
 #ifdef _TRACE
-                if (master()) {
-                    indent(ply);
-                    cout << "== exact result from IID" << endl;
-                }
+          if (master()) {
+             indent(ply);
+             cout << "== exact result from IID" << endl;
+          }
 #endif
-                return -iid_score;
-            }
-            if (terminate) {
-                return node->alpha;
-            }
-#ifdef _TRACE
-            if (master()) {
-                indent(ply); cout << "== IID done.";
-            }
-#endif
-            if (node->PV()) {
-                if (iid_score <= node->alpha) {
-                    low_window = std::max<score_t>(-Constants::MATE,node->alpha - ASPIRATION_WINDOW[i]);
-                }
-                else {
-                    break;
-                }
-            }
-            else {
-                break;
-            }
+           return -iid_score;
         }
-        
+        if (terminate) {
+            return node->alpha;
+        }
+#ifdef _TRACE
+        if (master()) {
+            indent(ply); cout << "== IID done.";
+        }
+#endif
+
 #ifdef _TRACE
         if (master()) {
             if (!IsNull(hashMove)) {
