@@ -131,8 +131,10 @@ CPP     := $(CC)
 LD      := $(CC)
 AR      = ar
 
-PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
-PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
+LLVM_PROFDATA = llvm-profdata
+
+PROF_GEN = -fprofile-generate=$(PROF_DATA)
+PROF_USE = -fprofile-use=$(PROF_DATA)
 
 CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
@@ -172,6 +174,7 @@ endif
 ifeq ("darwin","$(findstring darwin,$(OSTYPE))")
 CFLAGS := -D_MAC $(CFLAGS)
 LDFLAGS := $(LDFLAGS)
+LLVM-PROFDATA := xcrun $(LLVM_PROFDATA)
 else
 LIBS := $(LIBS) -lrt
 endif
@@ -200,7 +203,7 @@ endif
 	rm -f $(PROFILE)/*.o
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
-	rm -f $(PROF_DATA)/*.dyn
+	rm -f $(PROF_DATA)/*.dyn $(PROF_DATA)/*.profraw $(PROF_DATA)/*.profdata
 	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess pgnselect ecocoder
 
 dirs:
@@ -238,6 +241,9 @@ $(TUNE_BUILD)/%.o: %.cpp
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
 	$(CPP) $(PROF_GEN) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+ifeq ($(CC),"clang")
+	$(LLVM_PROFDATA) merge -output=$(PROF_DIR)/default.profdata $(PROF_DIR)/default_*profraw
+endif
 else
 	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
