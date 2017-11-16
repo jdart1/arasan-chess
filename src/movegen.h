@@ -27,7 +27,7 @@ class MoveGenerator
       };
 
       MoveGenerator( const Board &,
-         SearchContext *sc = NULL,
+         SearchContext *sc = nullptr,
          unsigned ply = 0,
          Move pvMove = NullMove,
          Move prevMove = NullMove,                     
@@ -189,7 +189,7 @@ class RootMoveGenerator : public MoveGenerator
 
    public:
       RootMoveGenerator(const Board &board,
-         SearchContext *context = NULL,
+         SearchContext *context = nullptr,
          Move pvMove = NullMove,
          int trace = 0);
 

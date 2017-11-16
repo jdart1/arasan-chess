@@ -1,4 +1,4 @@
-// Copyright 2005-2010, 2012, 2013, 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2010, 2012, 2013, 2016-2017 by Jon Dart. All Rights Reserved.
 
 #include "threadp.h"
 #include "search.h"
@@ -160,7 +160,7 @@ static void * CDECL parkingLot(void *x)
    ThreadPool::idle_loop(ti);
    // Free Search instance
    delete ti->work;
-   ti->work = NULL;
+   ti->work = nullptr;
 #ifdef _THREAD_TRACE
    log("terminated, thread ",ti->index);
 #endif
@@ -181,10 +181,10 @@ void ThreadInfo::start() {
 ThreadInfo::ThreadInfo(ThreadPool *p, int i)
  : state(Idle),
 #ifdef _WIN32
-   thread_id(NULL),
-   work(NULL),
+   thread_id(nullptr),
+   work(nullptr),
 #else
-   work(NULL),
+   work(nullptr),
 #endif
    pool(p),
    index(i)
@@ -218,7 +218,7 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
     controller(ctrl), nThreads(n) {
    LockInit(poolLock);
    for (int i = 0; i < Constants::MaxCPUs; i++) {
-      data[i] = NULL;
+      data[i] = nullptr;
    }
 #ifndef _WIN32
    if (pthread_attr_init (&stackSizeAttrib)) {
@@ -349,7 +349,7 @@ ThreadInfo * ThreadPool::checkOut(Search *parent, NodeInfo *forNode,
     // no luck, no free threads
     Unlock(parent->splitLock);
     Unlock(poolLock);
-    return NULL;
+    return nullptr;
 }
 
 void ThreadPool::resize(unsigned n, SearchController *controller) {
@@ -381,7 +381,7 @@ void ThreadPool::resize(unsigned n, SearchController *controller) {
 #endif
                 }
                 delete p;
-                data[nThreads] = NULL;
+                data[nThreads] = nullptr;
                 --nThreads;
             }
         }

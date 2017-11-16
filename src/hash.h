@@ -31,7 +31,15 @@ class HashEntry {
       // a hash match.
       enum ValueType { Valid, UpperBound, LowerBound, Eval, Invalid, NoHit };
 
-      HashEntry() {
+    HashEntry() {
+          contents.depth = 0;
+          contents.age = 0;
+          contents.flags = Eval;
+          contents.start = contents.dest = InvalidSquare;
+          contents.promotion = Empty;
+          contents.start = InvalidSquare;
+          contents.value = Constants::INVALID_SCORE;
+          setEffectiveHash(0,Constants::INVALID_SCORE);
       }
 
       HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
@@ -188,7 +196,7 @@ class Hash {
         int probe = (int)(hashCode & hashMask);
 
         HashEntry *p = &hashTable[probe];
-        HashEntry *hit = NULL;
+        HashEntry *hit = nullptr;
         for (int i = MaxRehash; i != 0; --i, p++) {
             // Copy hashtable entry before hash test below (avoids
             // race where entry is validated, then changed).
@@ -232,7 +240,7 @@ class Hash {
         int probe = (int)(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
 
-        HashEntry *best = NULL;
+        HashEntry *best = nullptr;
         ASSERT(value >= -Constants::MATE && value <= Constants::MATE);
         // Of the positions that hash to the same locations
         // as this one, find the best one to replace.
@@ -262,7 +270,7 @@ class Hash {
             }
             p++;
         }
-        if (best != NULL) {
+        if (best != nullptr) {
             if (best->empty()) {
                hashFree--;
             }

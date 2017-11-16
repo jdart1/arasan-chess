@@ -17,7 +17,7 @@ extern "C"
 };
 
 Hash::Hash() {
-   hashTable = NULL;
+   hashTable = nullptr;
    hashSize = 0;
    hashMask = 0x0ULL;
    hashFree = 0;
@@ -46,7 +46,7 @@ void Hash::initHash(size_t bytes)
       ALIGNED_MALLOC(hashTable,
          HashEntry,
          sizeof(HashEntry)*hashSizePlus,128);
-      if (hashTable == NULL) {
+      if (hashTable == nullptr) {
           cerr << "hash table allocation failed!" << endl;
           hashSize = 0;
       }
@@ -96,7 +96,7 @@ void Hash::loadLearnInfo()
                       0,                                 /* age */
                       HashEntry::Valid,
                       rec.score,
-                      Scoring::INVALID_SCORE, // TBD
+                      Constants::INVALID_SCORE, // TBD
                       HashEntry::LEARNED_MASK,
                       best);
          }

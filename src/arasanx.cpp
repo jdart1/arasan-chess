@@ -62,14 +62,14 @@ extern "C"
 using namespace std;
 
 static int verbose = 0, post = 0;
-static SearchController *searcher = NULL;
+static SearchController *searcher = nullptr;
 
 static Move last_move;
 static string last_move_image;
 static Move last_computer_move;
 static Statistics last_computer_stats;
 static string game_pathname;
-static ofstream *game_file = NULL;
+static ofstream *game_file = nullptr;
 static int time_left = 0;
 static int opp_time = 0;
 static float minutes = 5.0;
@@ -82,7 +82,7 @@ static string opponent_name;
 static bool ics = false;
 static int forceMode = 0, analyzeMode = 0;
 static int moves = 40;                            /* moves in a time control bloc */
-static Board *ponder_board = NULL, *main_board = NULL;
+static Board *ponder_board = nullptr, *main_board = nullptr;
 static bool ponder_move_ok = false;
 static Move predicted_move;
 static int pondering = 0;
@@ -99,7 +99,7 @@ static bool easy = false;
 static int game_end = 0;
 static int result_pending = 0;
 static score_t last_score = Constants::MATE;
-static ECO *ecoCoder = NULL;
+static ECO *ecoCoder = nullptr;
 static string hostname;
 static int xboard42 = 0;
 static SearchType srctype = TimeLimit;
@@ -368,7 +368,7 @@ static void * CDECL inputPoll(void *x) {
       }
    }
    if (doTrace) cout << "input polling thread terminated" << endl;
-   return NULL;
+   return nullptr;
 }
 
 #endif
@@ -714,7 +714,7 @@ static void uciOut(const Statistics &stats) {
 static void CDECL post_output(const Statistics &stats) {
    last_score = stats.value;
    score_t score = stats.display_value;
-   if (score == Scoring::INVALID_SCORE) {
+   if (score == Constants::INVALID_SCORE) {
       return; // no valid score yet
    }
    if (verbose) {
@@ -1236,7 +1236,7 @@ static void send_move(Board &board, Move &move, Statistics
     } else {
         if (doTrace) cout << "# warning : move is null" << endl;
     }
-    if (ics && time_target >= 3000 && stats.display_value != Scoring::INVALID_SCORE) {
+    if (ics && time_target >= 3000 && stats.display_value != Constants::INVALID_SCORE) {
         if (computer)
             cout << "tellics kibitz ";
         else
@@ -1620,7 +1620,7 @@ static void execute_move(Board &board,Move m)
     stringstream img;
     Notation::image(board,m,Notation::OutputFormat::SAN,img);
     last_move_image = img.str();
-    theLog->add_move(board,m,last_move_image,NULL,true);
+    theLog->add_move(board,m,last_move_image,nullptr,true);
     BoardState previous_state = board.state;
     board.doMove(m);
     // If our last move added was the pondering move, replace it
@@ -2667,7 +2667,7 @@ static bool do_command(const string &cmd, Board &board) {
     }
     else if (cmd_word == "test") {
         string filename;
-        ofstream *out_file = NULL;
+        ofstream *out_file = nullptr;
         streambuf *sbuf = cout.rdbuf();
         stringstream s(cmd_args);
         istream_iterator<string> it(s);
@@ -2801,7 +2801,7 @@ static bool do_command(const string &cmd, Board &board) {
                 }
 #endif
                 int score;
-                if ((score = Scoring::tryBitbase(board))!= Scoring::INVALID_SCORE) {
+                if ((score = Scoring::tryBitbase(board))!= Constants::INVALID_SCORE) {
                     cout << "bitbase score=";
                     Scoring::printScore(score,cout);
                     cout << endl;
@@ -3581,7 +3581,7 @@ int CDECL main(int argc, char **argv) {
         if (!game_file->good()) {
             cerr << "Warning: cannot open game file. Games will not be saved." << endl;
             delete game_file;
-            game_file = NULL;
+            game_file = nullptr;
         }
     }
 

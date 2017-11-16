@@ -18,7 +18,7 @@ void Statistics::clear()
 {
    state = NormalState;
    value = 0;
-   tb_value = Scoring::INVALID_SCORE;
+   tb_value = Constants::INVALID_SCORE;
    fromBook = false;
    complete = 0;
    elapsed_time = 0;
@@ -32,7 +32,7 @@ void Statistics::clear()
    failhigh = faillow = 0;
    depth = 0;
    num_nodes = (uint64_t)0;
-   display_value = Scoring::INVALID_SCORE;
+   display_value = Constants::INVALID_SCORE;
 #ifdef SEARCH_STATS
    num_qnodes = reg_nodes = moves_searched = static_null_pruning =
        razored = reduced = (uint64_t)0;

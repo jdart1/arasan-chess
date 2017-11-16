@@ -7,7 +7,7 @@ BookWriter::BookWriter(int i) :
    index_pages(i) {
    index = new book::IndexPage *[index_pages];
    for (int i = 0; i < index_pages; i++) {
-      index[i] = NULL; // no index page allocated yet
+      index[i] = nullptr; // no index page allocated yet
    }
 }
 
@@ -20,7 +20,7 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
    const int index_page = (int)(hashCode % index_pages);
    // fetch index page, allocate if necessary
    book::IndexPage *idx = index[index_page];
-   if (idx == NULL) {
+   if (idx == nullptr) {
       idx = index[index_page] = new book::IndexPage();
    }
    // see if index entry for hashcode is present already
@@ -42,7 +42,7 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
       book::DataPage *dp;
       int dataIndex;
       if (!data.size()) {
-         dp = NULL;
+         dp = nullptr;
       } else {
          dp = data[data.size()-1];
       }
@@ -148,7 +148,7 @@ int BookWriter::write(const char* pathName) {
 
    book::IndexPage empty;
    for (int i = 0; i < index_pages; i++) {
-      book::IndexPage *ip = (index[i] == NULL) ? &empty : index[i];
+      book::IndexPage *ip = (index[i] == nullptr) ? &empty : index[i];
       // correct for endianness before disk write
       for (unsigned j = 0; j < ip->next_free; j++) {
          ip->index[j].page = (uint16_t)swapEndian16((byte*)&ip->index[j].page);

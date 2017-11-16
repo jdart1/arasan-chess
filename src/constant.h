@@ -13,6 +13,7 @@ enum {MATE = 32767 };
 enum {MATE_RANGE = MATE-256 };
 enum {TABLEBASE_WIN = MATE_RANGE-1};
 enum {BITBASE_WIN = MATE_RANGE-1000};
+enum { INVALID_SCORE = -MATE-1 };
 enum {MaxMoves = 220};
 enum {MaxCPUs = 64};		
 

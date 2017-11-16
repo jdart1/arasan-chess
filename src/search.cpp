@@ -107,7 +107,7 @@ static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 
 static int Time_Check_Interval;
 
-static const int Illegal = Scoring::INVALID_SCORE;
+static const int Illegal = Constants::INVALID_SCORE;
 static const int PRUNE = -Constants::MATE;
 
 static void setCheckStatus(Board &board, CheckStatusType s)
@@ -141,8 +141,8 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
 }
 
 SearchController::SearchController()
-  : post_function(NULL),
-    terminate_function(NULL),
+  : post_function(nullptr),
+    terminate_function(nullptr),
     age(1),
     talkLevel(Silent),
     stopped(false),
@@ -464,9 +464,9 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),terminate(0),
     nodeCount(0ULL),
     nodeAccumulator(0),
-    node(NULL),
+    node(nullptr),
     activeSplitPoints(0),
-    split(NULL),
+    split(nullptr),
     ti(threadInfo),
     threadSplitDepth(0),
     computerSide(White),
@@ -718,12 +718,12 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    }
    controller->time_check_counter = Time_Check_Interval;
 
-   score_t value = Scoring::INVALID_SCORE;
+   score_t value = Constants::INVALID_SCORE;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
    int tb_hit = 0, tb_pieces = 0;
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
-   score_t tb_score = Scoring::INVALID_SCORE;
+   score_t tb_score = Constants::INVALID_SCORE;
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -782,7 +782,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    }
 #endif
    easyMove = NullMove;
-   if (value == Scoring::INVALID_SCORE) {
+   if (value == Constants::INVALID_SCORE) {
       value = 0;
    }
    waitTime = 0;
@@ -1121,7 +1121,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
    if (!controller->uci && !stats->end_of_game && srcOpts.can_resign) {
-      if (stats->display_value != Scoring::INVALID_SCORE &&
+      if (stats->display_value != Constants::INVALID_SCORE &&
          (100*stats->display_value)/Params::PAWN_VALUE <= srcOpts.resign_threshold) {
          state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
@@ -1273,7 +1273,7 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
 #endif
     node->ply = 0;
     node->depth = depth;
-    node->eval = Scoring::INVALID_SCORE;
+    node->eval = Constants::INVALID_SCORE;
     // clear split point stack:
     activeSplitPoints = 0;
 
@@ -1547,7 +1547,7 @@ score_t Search::quiesce(int ply,int depth)
                         << node->beta << "]" << endl;
    }
 #endif
-   node->eval = node->staticEval = Scoring::INVALID_SCORE;
+   node->eval = node->staticEval = Constants::INVALID_SCORE;
    const hash_t hash = board.hashCode(rep_count);
    // Like Stockfish, only distinguish depths with checks vs depth without
    int tt_depth;
@@ -1761,13 +1761,13 @@ score_t Search::quiesce(int ply,int depth)
       // Establish a default score.  This score is returned if no
       // captures are generated, or if no captures generate a better
       // score (since we generally can choose whether or not to capture).
-      ASSERT(node->eval == Scoring::INVALID_SCORE);
-      had_eval = node->staticEval != Scoring::INVALID_SCORE;
+      ASSERT(node->eval == Constants::INVALID_SCORE);
+      had_eval = node->staticEval != Constants::INVALID_SCORE;
       if (had_eval) {
           node->eval = node->staticEval;
           ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
       }
-      if (node->eval == Scoring::INVALID_SCORE) {
+      if (node->eval == Constants::INVALID_SCORE) {
           node->eval = node->staticEval = scoring.evalu8(board);
       }
       if (hashHit) {
@@ -1780,7 +1780,7 @@ score_t Search::quiesce(int ply,int depth)
               ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
           }
       }
-      ASSERT(node->eval != Scoring::INVALID_SCORE);
+      ASSERT(node->eval != Constants::INVALID_SCORE);
 #ifdef _TRACE
       if (master()) {
          indent(ply);
@@ -2144,7 +2144,7 @@ int Search::calcExtensions(const Board &board,
    node->extensions = 0;
    int extend = 0;
    int pruneOk = board.checkStatus() != InCheck;
-   score_t swap = Scoring::INVALID_SCORE;
+   score_t swap = Constants::INVALID_SCORE;
    if (in_check_after_move == InCheck) { // move is a checking move
       // extend if check does not lose material or is a discovered check
       if ((swap = seeSign(board,move,0)) ||
@@ -2233,7 +2233,7 @@ int Search::calcExtensions(const Board &board,
          // Threshold was formerly increased with the move index
          // but this tests worse now.
           score_t threshold = parentNode->beta - futilityMargin(predictedDepth);
-         if (node->eval == Scoring::INVALID_SCORE) {
+         if (node->eval == Constants::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
          }
          if (node->eval < threshold) {
@@ -2257,7 +2257,7 @@ int Search::calcExtensions(const Board &board,
        if (GetPhase(move) == MoveGenerator::LOSERS_PHASE) {
            swap = 0;
        }
-       if (swap == Scoring::INVALID_SCORE) swap = seeSign(board,move,0);
+       if (swap == Constants::INVALID_SCORE) swap = seeSign(board,move,0);
        if (!swap) {
 #ifdef SEARCH_STATS
           ++controller->stats->see_pruning;
@@ -2355,7 +2355,7 @@ score_t Search::search()
     HashEntry hashEntry;
     HashEntry::ValueType result;
     bool hashHit = false;
-    score_t hashValue = Scoring::INVALID_SCORE;
+    score_t hashValue = Constants::INVALID_SCORE;
     if (node->flags & IID) {
        // already did hash probe, with no hit
        result = HashEntry::NoHit;
@@ -2532,7 +2532,7 @@ score_t Search::search()
                 controller->age,
                 HashEntry::Valid,
                 score,
-                Scoring::INVALID_SCORE,
+                Constants::INVALID_SCORE,
                 HashEntry::TB_MASK,
                 NullMove);
             node->best_score = tb_score;               // unadjusted score
@@ -2559,12 +2559,12 @@ score_t Search::search()
     // Note: for a singular search, leave the eval and staticEval
     // fields alone: they have already been set.
     if (!(node->flags & SINGULAR)) {
-       node->eval = node->staticEval = Scoring::INVALID_SCORE;
+       node->eval = node->staticEval = Constants::INVALID_SCORE;
        if (hashHit) {
           // Use the cached static value if possible
           node->eval = node->staticEval = hashEntry.staticValue();
        }
-       if (node->eval == Scoring::INVALID_SCORE) {
+       if (node->eval == Constants::INVALID_SCORE) {
           node->eval = node->staticEval = scoring.evalu8(board);
        }
        if (hashHit) {
@@ -2589,7 +2589,7 @@ score_t Search::search()
         node->beta < Constants::TABLEBASE_WIN) {
         const score_t margin = futilityMargin(depth);
        const score_t threshold = node->beta+margin;
-       ASSERT(node->eval != Scoring::INVALID_SCORE);
+       ASSERT(node->eval != Constants::INVALID_SCORE);
        if (node->eval >= threshold) {
 #ifdef _TRACE
           indent(ply); cout << "static null pruned" << endl;
@@ -2608,7 +2608,7 @@ score_t Search::search()
     if (pruneOk && node->beta < Constants::MATE_RANGE &&
         depth <= RAZOR_DEPTH) {
         const score_t threshold = node->beta - razorMargin(depth);
-        ASSERT(node->eval != Scoring::INVALID_SCORE);
+        ASSERT(node->eval != Constants::INVALID_SCORE);
         if (node->eval < threshold) {
             // Note: use threshold as the bounds here, not beta, as
             // was done in Toga 3.0:
@@ -3586,7 +3586,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
         int remaining = 100;
         // Keep trying to get/assign threads until no threads are
         // available or no more moves are available to search.
-        while (remaining>1 && (slave_ti = controller->pool->checkOut(this,node,ply,depth))!=NULL) {
+        while (remaining>1 && (slave_ti = controller->pool->checkOut(this,node,ply,depth))!=nullptr) {
             // A thread is available.
             ASSERT(slave_ti != ti);
             if (!splits) {

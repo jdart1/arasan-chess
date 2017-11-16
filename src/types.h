@@ -156,7 +156,7 @@ inline uint64_t getRandomSeed() {
 #define ALIGNED_MALLOC(ptr, type, size, alignment) ptr = (type*)memalign(alignment,size)
 #else
 #define ALIGNED_MALLOC(ptr, type, size, alignment) if (posix_memalign((void**)&ptr, alignment, size)) { \
-                                                                        ptr = NULL; \
+                                                                        ptr = nullptr; \
                                                        }
 #endif
 // POSIX says aligned memory can be freed with free()

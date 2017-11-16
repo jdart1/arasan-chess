@@ -27,7 +27,7 @@ const hash_t rep_codes[3] =
     0xd4767986f0ab49a7ULL
 };
 
-static Board *initialBoard = NULL;
+static Board *initialBoard = nullptr;
 
 void Board::setupInitialBoard() {
    initialBoard = (Board*)malloc(sizeof(Board));

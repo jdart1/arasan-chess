@@ -142,7 +142,7 @@ BookEntry::BookEntry( unsigned r, PositionEval ev,
 }
 
 
-static unordered_map <uint64_t, BookEntry *>* hashTable = NULL;
+static unordered_map <uint64_t, BookEntry *>* hashTable = nullptr;
 
 // Compute a recommended relative weight for a set of book
 // moves from a given position
@@ -302,16 +302,16 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
    auto it = hashTable->find(board.hashCode());
    BookEntry *be;
    if (it == hashTable->end())
-      be = NULL;
+      be = nullptr;
    else
       be = (*it).second;
-   if (be == NULL) {
+   if (be == nullptr) {
        // position not found in hashtable
        BookEntry *new_entry;
        try {
           new_entry = new BookEntry(recommend,
                                     var.eval, m.moveEval, var.result,
-                                    move_index, NULL, is_first_file);
+                                    move_index, nullptr, is_first_file);
        } catch(std::bad_alloc) {
           cerr << "out of memory!" << endl;
           exit(-1);

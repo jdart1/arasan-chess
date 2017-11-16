@@ -1514,7 +1514,7 @@ static void initThreads()
 #endif
    for (int i = 1; i <= cores; i++) {
       threadDatas[i].index = i;
-      threadDatas[i].searcher = NULL;
+      threadDatas[i].searcher = nullptr;
       threadDatas[i].phase = Phase1;
    }
 }

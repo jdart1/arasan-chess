@@ -1747,7 +1747,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    score_t score;
     
-   if ((score = tryBitbase(board)) != INVALID_SCORE) {
+   if ((score = tryBitbase(board)) != Constants::INVALID_SCORE) {
        return score;
    }
 
@@ -1766,8 +1766,8 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(White),pawnEntry.pawnData(Black),useCache);
    KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(Black),pawnEntry.pawnData(White),useCache);
-   score_t whiteCover = whiteKPEntry.cover == Scoring::INVALID_SCORE ? 0 : whiteKPEntry.cover;
-   score_t blackCover = blackKPEntry.cover == Scoring::INVALID_SCORE ? 0 : blackKPEntry.cover;
+   score_t whiteCover = whiteKPEntry.cover == Constants::INVALID_SCORE ? 0 : whiteKPEntry.cover;
+   score_t blackCover = blackKPEntry.cover == Constants::INVALID_SCORE ? 0 : blackKPEntry.cover;
 
    const int w_materialLevel = board.getMaterial(White).materialLevel();
    const int b_materialLevel = board.getMaterial(Black).materialLevel();
@@ -1785,7 +1785,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
           posEval = false;
       }
       else {
-          ASSERT(whiteKPEntry.king_endgame_position != Scoring::INVALID_SCORE);
+          ASSERT(whiteKPEntry.king_endgame_position != Constants::INVALID_SCORE);
           scoreEndgame<White>(board, whiteKPEntry.king_endgame_position,
                               wScores);
       }
@@ -1805,7 +1805,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
           posEval = false;
       }
       else {
-          ASSERT(blackKPEntry.king_endgame_position != Scoring::INVALID_SCORE);
+          ASSERT(blackKPEntry.king_endgame_position != Constants::INVALID_SCORE);
           scoreEndgame<Black>(board,
                               blackKPEntry.king_endgame_position, bScores);
 #ifdef EVAL_DEBUG
@@ -2268,20 +2268,20 @@ bool useCache)
       if (needCover) {
          calcCover<side>(board,entry);
       } else {
-         entry.cover = Scoring::INVALID_SCORE;
+         entry.cover = Constants::INVALID_SCORE;
       }
       if (needEndgame) {
          calcKingEndgamePosition(board,side,ourPawnData,oppPawnData,entry);
       } else {
-         entry.king_endgame_position = Scoring::INVALID_SCORE;
+         entry.king_endgame_position = Constants::INVALID_SCORE;
       }
       entry.hc = kphash;
    }
    else {
-      if (needCover && entry.cover == Scoring::INVALID_SCORE) {
+      if (needCover && entry.cover == Constants::INVALID_SCORE) {
          calcCover<side>(board,entry);
       }
-      if (needEndgame && entry.king_endgame_position == Scoring::INVALID_SCORE) {
+      if (needEndgame && entry.king_endgame_position == Constants::INVALID_SCORE) {
          calcKingEndgamePosition(board,side,ourPawnData,oppPawnData,entry);
       }
 #ifdef _DEBUG
@@ -2547,7 +2547,7 @@ score_t Scoring::tryBitbase(const Board &board) {
       }
    }
 
-   return INVALID_SCORE;
+   return Constants::INVALID_SCORE;
 }
 
 void Scoring::clearHashTables() {

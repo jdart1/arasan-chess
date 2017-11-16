@@ -849,7 +849,7 @@ static int testHash() {
         ++errs;
     }
 
-    hashTable.storeHash(board.hashCode(),1,1,HashEntry::LowerBound,score_t(-0.1*Params::PAWN_VALUE),Scoring::INVALID_SCORE,0, NullMove);
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::LowerBound,score_t(-0.1*Params::PAWN_VALUE),Constants::INVALID_SCORE,0, NullMove);
 
     HashEntry he2;
 
@@ -863,7 +863,7 @@ static int testHash() {
         ++errs;
         cerr << "testHash case 2: expected Nullmove" << endl;
     }
-    if (he2.staticValue() != Scoring::INVALID_SCORE) {
+    if (he2.staticValue() != Constants::INVALID_SCORE) {
         ++errs;
         cerr << "testHash case 2: invalid static score" << endl;
     }
@@ -875,7 +875,7 @@ static int testHash() {
 
     m = CreateMove(board,chess::D7,chess::C8,Queen);
 
-    hashTable.storeHash(board.hashCode(),1,1,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Scoring::INVALID_SCORE,0,m);
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Constants::INVALID_SCORE,0,m);
 
     HashEntry he3;
 
@@ -907,7 +907,7 @@ static int testHash() {
         ++errs;
     }
     m = CreateMove(board,chess::G1,chess::H2,King);
-    hashTable.storeHash(board.hashCode(),1,10,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Scoring::INVALID_SCORE,HashEntry::LEARNED_MASK,m);
+    hashTable.storeHash(board.hashCode(),1,10,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Constants::INVALID_SCORE,HashEntry::LEARNED_MASK,m);
 
     HashEntry he4;
     val = hashTable.searchHash(board, board.hashCode(), 1, -1, 10, he4);

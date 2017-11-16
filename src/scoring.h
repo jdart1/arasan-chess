@@ -17,9 +17,7 @@ class Scoring
 
     public:
 		
-  enum {Midgame = 0, Endgame = 1};
-
-    enum { INVALID_SCORE = -Constants::MATE-1 };
+    enum {Midgame = 0, Endgame = 1};
 
     static void init();
 
@@ -59,7 +57,7 @@ class Scoring
     static void printScoreUCI( score_t score, ostream & );
 
     static bool mateScore(score_t score) {
-      return score != INVALID_SCORE &&
+      return score != Constants::INVALID_SCORE &&
         (score>=Constants::TABLEBASE_WIN || score<=-Constants::TABLEBASE_WIN);
     }
 

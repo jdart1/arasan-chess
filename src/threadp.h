@@ -65,7 +65,7 @@ public:
    }
 
    // Threads that are waiting for work execute this function
-   static void idle_loop(ThreadInfo *ti, const SplitPoint *split = NULL);
+   static void idle_loop(ThreadInfo *ti, const SplitPoint *split = nullptr);
 
    // return a thread to the pool
    void checkIn(ThreadInfo *);

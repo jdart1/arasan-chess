@@ -1,4 +1,4 @@
-// Copyright 2012, 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2012, 2016, 2017 by Jon Dart. All Rights Reserved.
 //
 // Interface to Gaviota tablebase code
 
@@ -11,12 +11,12 @@ static const char **paths = tbpaths_init();
 int GaviotaTb::initTB(const string &path, const string &scheme,
                       uint64_t cache_size) {
 
-    if (NULL == paths) {
+    if (nullptr == paths) {
         cerr << "error in path initialization for Gaviota TBs" << endl;
         return 0;
     }
     paths = tbpaths_add(paths, path.c_str());
-    if (NULL == paths) {
+    if (nullptr == paths) {
         cerr << "error in path initialization for Gaviota TBs" << endl;
         return 0;
     }
@@ -36,7 +36,7 @@ int GaviotaTb::initTB(const string &path, const string &scheme,
     char *initinfo = tb_init (0, intScheme, paths);
     tbcache_init((size_t)cache_size, WDL_FRACTION);
     tbstats_reset();
-    if (initinfo != NULL) {
+    if (initinfo != nullptr) {
         cout << initinfo << endl;
     }
     int avail = tb_availability();

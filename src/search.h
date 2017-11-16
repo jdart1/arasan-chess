@@ -383,7 +383,7 @@ protected:
 
     int updateMove(const Board &,
                    NodeInfo *parentNode, NodeInfo* myNode, Move move,
-                   score_t score, int ply, int depth, SplitPoint *split = NULL);
+                   score_t score, int ply, int depth, SplitPoint *split = nullptr);
 
     void updatePV(const Board &, Move m, int ply);
 

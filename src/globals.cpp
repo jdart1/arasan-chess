@@ -1,4 +1,4 @@
-// Copyright 1996-2012, 2014, 2016 by Jon Dart.  All Rights Reserved.
+ // Copyright 1996-2012, 2014, 2016, 2017 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -40,7 +40,7 @@ int EGTBMenCount = 0;
 MoveArray *gameMoves;
 Options options;
 BookReader openingBook;
-Log *theLog = NULL;
+Log *theLog = nullptr;
 string learnFileName;
 LockDefine(input_lock);
 #ifdef TUNE

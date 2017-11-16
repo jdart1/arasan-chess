@@ -17,7 +17,7 @@ ECO_Info::ECO_Info( const char *code, const char *opening_name, hash_t hc)
     if (opening_name)
         my_opening_name = (char*)opening_name;
     else
-        my_opening_name = NULL;
+        my_opening_name = nullptr;
 }
 
 ECO_Info::ECO_Info(const ECO_Info &e)
@@ -29,7 +29,7 @@ ECO_Info::ECO_Info(const ECO_Info &e)
         my_opening_name = strdup(e.my_opening_name);
     }
     else
-        my_opening_name = NULL;
+        my_opening_name = nullptr;
 }
 
 ECO_Info::~ECO_Info()
@@ -47,7 +47,7 @@ ECO_Info &ECO_Info::operator = (const ECO_Info &e)
            my_opening_name = strdup(e.my_opening_name);
        }
        else
-           my_opening_name = NULL;
+           my_opening_name = nullptr;
     }
     return *this;
 }
