@@ -2793,7 +2793,12 @@ static bool do_command(const string &cmd, Board &board) {
                        set<Move> rootMoves;
                        if (SyzygyTb::probe_root(board,tbscore,rootMoves)) {
                           cout << "score = ";
-                          Scoring::printScore(tbscore,cout);
+                          if (tbscore == -SyzygyTb::CURSED_SCORE)
+                              cout << "draw (Cursed Loss)";
+                          else if (tbscore == -SyzygyTb::CURSED_SCORE)
+                              cout << "draw (Cursed Win)";
+                          else
+                              Scoring::printScore(tbscore,cout);
                           cout << " (from " << Options::tbTypeToString(options.search.tablebase_type) << " tablebases)" << endl;
                        }
                     }
