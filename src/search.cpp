@@ -663,11 +663,11 @@ score_t Search::tbScoreAdjust(const Board &board,
       if (tb_score == Constants::TABLEBASE_WIN) {
          return tb_score;
       }
-      else if (tb_score >= 0) {
+      else if (std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
          return drawScore(board);
       }
       else {
-         // loss or cursed draw position
+         // loss
          return -Constants::TABLEBASE_WIN;
       }
    }
