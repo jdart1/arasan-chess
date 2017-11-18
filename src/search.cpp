@@ -656,24 +656,36 @@ void RootSearch::init(const Board &board, NodeStack &stack) {
 score_t Search::tbScoreAdjust(const Board &board,
                     score_t value,int tb_hit,Options::TbType tablebase_type,score_t tb_score) const 
 {
+#ifdef _TRACE
+    cout << "tb score adjust: input=";
+    Scoring::printScore(tb_score,cout);
+    cout << endl;
+#endif
+   score_t output;
    if (tb_hit && tablebase_type == Options::TbType::SyzygyTb &&
        !Scoring::mateScore(value)) {
       // If a Syzygy tablebase hit set the score based on that. But
       // don't override a mate score found with search.
       if (tb_score == Constants::TABLEBASE_WIN) {
-         return tb_score;
+          output = tb_score;
       }
-      else if (std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
-         return drawScore(board);
+      else if (tb_score == 0 || std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
+         output = drawScore(board);
       }
       else {
          // loss
-         return -Constants::TABLEBASE_WIN;
+         output = -Constants::TABLEBASE_WIN;
       }
    }
    else {
-      return value;
+      output = value;
    }
+#ifdef _TRACE
+   cout << "tb score adjust: output=";
+   Scoring::printScore(output,cout);
+   cout << endl;
+#endif
+   return output;
 }
 #endif
 
@@ -760,6 +772,14 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
                    }
                    tb_hit = 0;
                } else {
+#ifdef _TRACE
+                   cout << "filtered moves from Syzygy:";
+                   for (auto it = moves.begin(); it != moves.end(); it++) {
+                       cout << ' ';;
+                       Notation::image(board,*it,Notation::OutputFormat::SAN,cout);
+                   }
+                   cout << endl;
+#endif
                    // Note: do not set the value - search values are based
                    // on DTM not DTZ.
                    controller->stats->tb_value = tb_score;
