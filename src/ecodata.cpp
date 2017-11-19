@@ -982,6 +982,7 @@ const struct ECOData eco_codes[] =
 {"C96", 0xe9e83f325858619aULL ,"Ruy Lopez, Chigorin Variation"},
 {"C96", 0xd8118ee3ade84beULL ,"Ruy Lopez, Chigorin Variation"},
 {"C96", 0xaeb261886854a840ULL ,"Ruy Lopez, Chigorin Variation"},
+{"C96", 0x32ce4666e999cc2cULL ,"Ruy Lopez, Chigorin Variation"},
 {"C97", 0xf38221af098f344bULL ,"Ruy Lopez, Chigorin Variation"},
 {"C98", 0xfc8e2a1854ab3b89ULL ,"Ruy Lopez, Chigorin Variation"},
 {"C99", 0x550c25cb013f1624ULL ,"Ruy Lopez, Chigorin Variation"},
