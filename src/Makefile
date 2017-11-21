@@ -357,7 +357,7 @@ log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp
 
-ECOCODER_SOURCES = makeeco.cpp globals.cpp  \
+ECOCODER_SOURCES = ecocoder.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \

@@ -44,7 +44,7 @@ int CDECL main(int argc, char **argv)
       exit(-1);
    }
    atexit(cleanupGlobals);
-   
+
    Board board;
    ECO eco;
    int arg = 1;
@@ -119,7 +119,7 @@ int CDECL main(int argc, char **argv)
                      break;
                   }
                   // parse the move
-                  Move m = Notation::value(board,side,Notation::SAN_IN,tok.val);
+                  Move m = Notation::value(board,side,Notation::InputFormat::SAN,tok.val);
                   if (IsNull(m) ||
                       !legalMove(board,StartSquare(m),
                                  DestSquare(m))) {
@@ -132,7 +132,7 @@ int CDECL main(int argc, char **argv)
                      BoardState bs = board.state;
                      string img;
                      // convert to SAN
-                     Notation::image(board,m,Notation::SAN_OUT,img);
+                     Notation::image(board,m,Notation::OutputFormat::SAN,img);
                      moves.add_move(board,bs,m,img,false);
                      board.doMove(m);
                   }
@@ -162,6 +162,12 @@ int CDECL main(int argc, char **argv)
                   done = true;
                   break;
                }
+               case ChessIO::OpenVar:
+                   cerr << "Warning: variations not supported" << endl;
+                   done = true;
+               default:
+                   break;
+
                } // end switch
             }
             // output header
@@ -174,7 +180,7 @@ int CDECL main(int argc, char **argv)
                   ChessIO::Header ecoHeader("ECO",ecoC.c_str());
                   hdrs.push_back(ecoHeader);
                }
-            }         
+            }
             else if (ecoC == "") {
                string name;
                eco.classify(moves,ecoC,name);
