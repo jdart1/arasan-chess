@@ -99,12 +99,12 @@ int CDECL main(int argc, char **argv)
    atexit(cleanupGlobals);
 
    random_engine.seed(getRandomSeed());
-   
-   positions = new unordered_map<hash_t,double>();
+
+   positions = new unordered_map<hash_t, double>();
 
    Board board;
 
-   if (argc <=1)
+   if (argc <= 1)
    {
       show_usage();
       return -1;
@@ -112,34 +112,35 @@ int CDECL main(int argc, char **argv)
    else
    {
       int arg = 1;
-      auto processInt = [&arg,&argc,&argv] (int &opt, const string &name) {
+      auto processInt = [&arg, &argc, &argv](int &opt, const string &name) {
          if (++arg < argc) {
             stringstream s(argv[arg]);
             s >> opt;
             if (s.bad() || s.fail()) {
-               cerr << "expected integer after -" << name  << endl;
+               cerr << "expected integer after -" << name << endl;
                exit(-1);
             }
-         } else {
+         }
+         else {
             cerr << "expected integer after -" << name << endl;
             exit(-1);
          }
       };
-      for (;arg < argc && *(argv[arg]) == '-';++arg) {
-         if (strcmp(argv[arg],"-r")==0) {
+      for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
+         if (strcmp(argv[arg], "-r") == 0) {
             selOptions.randomMoves = true;
          }
-         else if (strcmp(argv[arg],"-d")==0) {
-            processInt(selOptions.minSampleDistance,"d");
+         else if (strcmp(argv[arg], "-d") == 0) {
+            processInt(selOptions.minSampleDistance, "d");
          }
-         else if (strcmp(argv[arg],"-max")==0) {
-            processInt(selOptions.maxPly,"max");
+         else if (strcmp(argv[arg], "-max") == 0) {
+            processInt(selOptions.maxPly, "max");
          }
-         else if (strcmp(argv[arg],"-min")==0) {
-            processInt(selOptions.minPly,"-min");
+         else if (strcmp(argv[arg], "-min") == 0) {
+            processInt(selOptions.minPly, "-min");
          }
-         else if (strcmp(argv[arg],"-s")==0) {
-            processInt(selOptions.sampleInterval,"-s");
+         else if (strcmp(argv[arg], "-s") == 0) {
+            processInt(selOptions.sampleInterval, "-s");
          }
          else {
             show_usage();
@@ -150,12 +151,11 @@ int CDECL main(int argc, char **argv)
          show_usage();
          exit(-1);
       }
-      
+
       SearchController *searcher = new SearchController();
       Statistics stats;
 
-      ifstream pgn_file( argv[arg], ios::in | ios::binary);
-      int c;
+      ifstream pgn_file(argv[arg], ios::in);
       ColorType side;
       string result, white, black;
       if (!pgn_file.good()) {
@@ -165,36 +165,37 @@ int CDECL main(int argc, char **argv)
       else
       {
          vector<ChessIO::Header> hdrs;
-         while (!pgn_file.eof())
-         {
+         bool quit = false;
+         while (!quit && !pgn_file.eof()) {
             long first;
             MoveArray moves;
             board.reset();
             side = White;
-            while (pgn_file.good() && (c = pgn_file.get()) != EOF)
-            {
-               if (c=='[')
-               {
-                  int c1 = pgn_file.get();
-                  if (c1 == 'E') {
-                     int c2 = pgn_file.get();
-                     if (c2 == 'v') {
-                        pgn_file.putback(c2);
-                        pgn_file.putback(c1);
-                        pgn_file.putback(c);
-                        break;
-                     }
-                  }
+            if (!pgn_file.good()) {
+               if (pgn_file.bad() || pgn_file.fail()) {
+                  cerr << "read error" << endl;
+                  quit = true;
                }
             }
+            else {
+               pgn_file.ignore('[');
+               if (!pgn_file.good()) {
+                  if (!pgn_file.eof()) cerr << "read error" << endl;
+                  quit = true;
+               }
+               else {
+                  pgn_file.putback('[');
+               }
+            }
+            if (quit) break;
             hdrs.clear();
-            ChessIO::collect_headers(pgn_file,hdrs,first);
+            ChessIO::collect_headers(pgn_file, hdrs, first);
             if (!hdrs.size()) continue;
             bool ok = true;
             bool done = false;
             bool exit = false;
             int ply = 0;
-            std::uniform_int_distribution<unsigned> dist(0,selOptions.sampleInterval-1);
+            std::uniform_int_distribution<unsigned> dist(0, selOptions.sampleInterval - 1);
             int next = selOptions.minPly + dist(random_engine);
             while (ok && !exit) {
                ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
@@ -213,16 +214,16 @@ int CDECL main(int argc, char **argv)
                      // we should not have moves after the result
                      // if it looks like a tag, push it back
                      if (tok.val.size() && tok.val[0] == '[') {
-                        for (int i = (int)tok.val.size()-1; i >= 0; --i)
+                        for (int i = (int)tok.val.size() - 1; i >= 0; --i)
                            pgn_file.putback(tok.val[0]);
                      }
                      exit = true;
                      break;
                   }
                   // parse the move
-                  Move m = Notation::value(board,side,Notation::InputFormat::SAN,tok.val);
+                  Move m = Notation::value(board, side, Notation::InputFormat::SAN, tok.val);
                   if (IsNull(m) ||
-                      !legalMove(board,StartSquare(m),
+                      !legalMove(board, StartSquare(m),
                                  DestSquare(m))) {
                      cerr << "Illegal move: " << tok.val << endl;
                      ok = false;
@@ -231,8 +232,8 @@ int CDECL main(int argc, char **argv)
                      BoardState bs = board.state;
                      string img;
                      // convert to SAN
-                     Notation::image(board,m,Notation::OutputFormat::SAN,img);
-                     moves.add_move(board,bs,m,img,false);
+                     Notation::image(board, m, Notation::OutputFormat::SAN, img);
+                     moves.add_move(board, bs, m, img, false);
                      board.doMove(m);
                      ++ply;
                      if (ply >= next && ply <= selOptions.maxPly) {
@@ -248,32 +249,32 @@ int CDECL main(int argc, char **argv)
                               allmoves[count] = move;
                            }
                            if (count > 1) {
-                              std::uniform_int_distribution<unsigned> move_dist(0,count-1);
+                              std::uniform_int_distribution<unsigned> move_dist(0, count - 1);
                               randomMove = allmoves[move_dist(random_engine)];
                               board.doMove(randomMove);
                            }
                         }
-                              
+
                         // omit KPK and drawn positions
                         ok_to_insert = !((board.getMaterial(White).kingOnly() &&
                                           board.getMaterial(Black).infobits() == Material::KP) ||
                                          (board.getMaterial(Black).kingOnly() &&
                                           board.getMaterial(White).infobits() == Material::KP)) &&
-                            !Scoring::materialDraw(board);
+                           !Scoring::materialDraw(board);
 
-                        ok_to_insert &= positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 3) && std::abs(score(searcher,board,stats)) < selOptions.maxScore;
+                        ok_to_insert &= positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 3) && std::abs(score(searcher, board, stats)) < selOptions.maxScore;
                         if (ok_to_insert) {
                            EPDRecord rec;
                            stringstream cs_string;
                            cs_string << (int)board.castleStatus(White) << ' ' <<
                               (int)board.castleStatus(Black);
                            string key(CASTLE_STATUS_KEY);
-                           rec.add(key,cs_string.str().c_str());
-                           ChessIO::writeEPDRecord(cout,board,rec);
+                           rec.add(key, cs_string.str().c_str());
+                           ChessIO::writeEPDRecord(cout, board, rec);
                            next += selOptions.minSampleDistance + (rand() % (selOptions.sampleInterval - selOptions.minSampleDistance));
                         }
                         if (!IsNull(randomMove)) {
-                           board.undoMove(randomMove,state);
+                           board.undoMove(randomMove, state);
                         }
                      }
                   }
@@ -285,11 +286,11 @@ int CDECL main(int argc, char **argv)
                      // ignore unknown text after result
                      // if it looks like a tag, push it back
                      if (tok.val.size() && tok.val[0] == '[') {
-                        for (int i = (int)tok.val.size()-1; i >= 0; --i)
+                        for (int i = (int)tok.val.size() - 1; i >= 0; --i)
                            pgn_file.putback(tok.val[0]);
                      }
-                     exit = true; 
-                    break;
+                     exit = true;
+                     break;
                   }
                   cerr << "Unrecognized text: " << tok.val << endl;
                   break;
@@ -308,7 +309,7 @@ int CDECL main(int argc, char **argv)
                } // end switch
             }
          }
-            
+
          pgn_file.close();
       }
       delete searcher;
