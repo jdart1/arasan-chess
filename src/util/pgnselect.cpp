@@ -14,7 +14,7 @@
 #include "globals.h"
 #include "chessio.h"
 #include "search.h"
-
+#include "see.h"
 extern "C"
 {
 #include <string.h>
@@ -31,7 +31,7 @@ extern "C"
 
 using namespace std;
 
-static struct SelectOptions 
+static struct SelectOptions
 {
    int minPly;
    int maxPly;
@@ -39,6 +39,7 @@ static struct SelectOptions
    int minSampleDistance;
    bool randomMoves;
    int maxScore;
+   int quiesce;
 
    SelectOptions() :
       minPly(20),
@@ -46,11 +47,12 @@ static struct SelectOptions
       sampleInterval(16),
       minSampleDistance(3),
       randomMoves(false),
-      maxScore(30*Params::PAWN_VALUE)
+      maxScore(30*Params::PAWN_VALUE),
+      quiesce(0)
       {
       }
 } selOptions;
-         
+
 static std::mt19937_64 random_engine;
 
 static unordered_map<hash_t,double> *positions;
@@ -71,7 +73,7 @@ static void show_usage()
 }
 
 static int score(SearchController *searcher,const Board &board,
-                 Statistics &stats) 
+                 Statistics &stats)
 {
    stats.clear();
    searcher->findBestMove(board,
@@ -83,8 +85,31 @@ static int score(SearchController *searcher,const Board &board,
                           false, /* UCI */
                           stats,
                           Silent);
-                     
+
    return stats.value;
+}
+
+static int ok_to_insert(const Board &board, SearchController *searcher, Statistics &stats) {
+   int ok = !((board.getMaterial(White).kingOnly() &&
+                board.getMaterial(Black).infobits() == Material::KP) ||
+               (board.getMaterial(Black).kingOnly() &&
+                board.getMaterial(White).infobits() == Material::KP)) &&
+              !Scoring::isDraw(board) &&
+               positions->count(board.hashCode()) == 0 &&
+               (board.getMaterial(White).men() + board.getMaterial(Black).men() > 5);
+   if (ok) {
+      int val = std::abs(score(searcher,board,stats));
+      if (val > selOptions.maxScore) {
+          ok = false;
+      }
+      else {
+          std::normal_distribution<double> dist(0,double(5*Params::PAWN_VALUE));
+          // favor positions with more moderate scores
+          ok = val <= 5*Params::PAWN_VALUE ||
+               val >= std::round(std::abs(dist(random_engine)));
+      }
+   }
+   return ok;
 }
 
 int CDECL main(int argc, char **argv)
@@ -142,6 +167,9 @@ int CDECL main(int argc, char **argv)
          else if (strcmp(argv[arg], "-s") == 0) {
             processInt(selOptions.sampleInterval, "-s");
          }
+         else if (strcmp(argv[arg], "-q") == 0) {
+            selOptions.quiesce++;
+         }
          else {
             show_usage();
             exit(-1);
@@ -154,6 +182,9 @@ int CDECL main(int argc, char **argv)
 
       SearchController *searcher = new SearchController();
       Statistics stats;
+
+      // This ensures PVs are not terminated by a hash hit
+      options.search.hash_table_size = 0;
 
       ifstream pgn_file(argv[arg], ios::in);
       ColorType side;
@@ -237,7 +268,6 @@ int CDECL main(int argc, char **argv)
                      board.doMove(m);
                      ++ply;
                      if (ply >= next && ply <= selOptions.maxPly) {
-                        bool ok_to_insert = false;
                         BoardState state(board.state);
                         Move randomMove = NullMove;
                         if (selOptions.randomMoves) {
@@ -249,32 +279,49 @@ int CDECL main(int argc, char **argv)
                               allmoves[count] = move;
                            }
                            if (count > 1) {
-                              std::uniform_int_distribution<unsigned> move_dist(0, count - 1);
+                              std::uniform_int_distribution<unsigned> move_dist(0,count-1);
                               randomMove = allmoves[move_dist(random_engine)];
                               board.doMove(randomMove);
                            }
                         }
 
                         // omit KPK and drawn positions
-                        ok_to_insert = !((board.getMaterial(White).kingOnly() &&
-                                          board.getMaterial(Black).infobits() == Material::KP) ||
-                                         (board.getMaterial(Black).kingOnly() &&
-                                          board.getMaterial(White).infobits() == Material::KP)) &&
-                           !Scoring::materialDraw(board);
+                        bool ok = ok_to_insert(board,searcher,stats);
+                        if (ok) {
+                           Board tmp(board);
+                           if (selOptions.quiesce) {
+                              // obtain the quiet position at the end of the
+                              // PV
+                              for (int len = 0; !IsNull(stats.best_line[len]) && len < Constants::MaxPly; len++) {
+                                 board.doMove(stats.best_line[len]);
+                              }
+                              ok = ok_to_insert(board,searcher,stats);
+                              // verify actually is quiet
+                              RootMoveGenerator mg(board);
+                              Move moves[Constants::MaxMoves];
+                              int n = mg.generateCaptures(moves);
+                              for (int i = 0; i < n; i++) {
+                                 if (see(board,moves[i]>0)) {
+                                    ok = false;
+                                    break;
+                                 }
+                              }
+                           }
 
-                        ok_to_insert &= positions->count(board.hashCode()) == 0 && (board.getMaterial(White).men() + board.getMaterial(Black).men() > 3) && std::abs(score(searcher, board, stats)) < selOptions.maxScore;
-                        if (ok_to_insert) {
-                           EPDRecord rec;
-                           stringstream cs_string;
-                           cs_string << (int)board.castleStatus(White) << ' ' <<
-                              (int)board.castleStatus(Black);
-                           string key(CASTLE_STATUS_KEY);
-                           rec.add(key, cs_string.str().c_str());
-                           ChessIO::writeEPDRecord(cout, board, rec);
-                           next += selOptions.minSampleDistance + (rand() % (selOptions.sampleInterval - selOptions.minSampleDistance));
+                           if (ok) {
+                              EPDRecord rec;
+                              stringstream cs_string;
+                              cs_string << "\"" << (int)board.castleStatus(White) << ' ' <<
+                                 (int)board.castleStatus(Black) << "\"";
+                              string key(CASTLE_STATUS_KEY);
+                              rec.add(key,cs_string.str().c_str());
+                              ChessIO::writeEPDRecord(cout,board,rec);
+                              next += selOptions.minSampleDistance + (rand() % (selOptions.sampleInterval - selOptions.minSampleDistance));
+                           }
+                           board = tmp;
                         }
                         if (!IsNull(randomMove)) {
-                           board.undoMove(randomMove, state);
+                           board.undoMove(randomMove,state);
                         }
                      }
                   }
