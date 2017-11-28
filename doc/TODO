@@ -36,7 +36,7 @@ for NUMA: memory striping for hash. Rebind memory on thread resize
 pin-aware SEE (Stockfish idea)
 https://github.com/mcostalba/Stockfish/commit/90ce24b11ea080f923e1b5d37470e2ca98f4d98b
 
-Consider L1 regularization for tuner (https://en.wikipedia.org/wiki/Hinge_loss)
+Consider L1 regularization for tuner, possibly with smooth approximation (http://pages.cs.wisc.edu/~gfung/GeneralL1/L1_approx_bounds.pdf)
 
 Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper.
 http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf
