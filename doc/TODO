@@ -1,0 +1,45 @@
+post 20.3
+
+Android build, support cross-compilation
+
+Revisit IID conditions
+Consider IID even when hash move is present but depth is low (Gull)
+
+singular extensions
+
+implement UCI_Opponent
+implement Contempt for UCI
+
+change reduction based on node type
+change redudction based on "improving" test (Stockfish)
+       - neither works so far
+
+New book format (
+LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database)
+LevelDB, RocksDB
+
+Dropout expansion
+
+better book selection - see
+http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+
+Allow tuner to use mini-batches
+
+outpost calc - looks wonky/interacts with PST.
+
+losses on time - tune time mgmt when very near time limit
+
+Multi-core scaling sucks! LazySMP?
+http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
+for NUMA: memory striping for hash. Rebind memory on thread resize
+
+pin-aware SEE (Stockfish idea)
+https://github.com/mcostalba/Stockfish/commit/90ce24b11ea080f923e1b5d37470e2ca98f4d98b
+
+Consider L1 regularization for tuner (https://en.wikipedia.org/wiki/Hinge_loss)
+
+Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper.
+http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf
+
+
+
