@@ -31,6 +31,12 @@ class Tune {
     score_t range() const {
       return max_value - min_value;
     }
+    score_t scaled() const {
+      return (current - min_value)/range();
+    };
+    void scale(score_t val) {
+      current = val*range() + min_value;
+    }
   };
 
   Tune();
@@ -268,6 +274,10 @@ class Tune {
 
   void getParam(int index, TuneParam &param) const;
 
+  TuneParam &operator [] (const int i) {
+    return tune_params[i];
+  }
+
   const TuneParam &operator [] (const int i) const {
     return tune_params[i];
   }
@@ -284,7 +294,7 @@ class Tune {
 
   score_t kingAttackSigmoid(score_t weight) const;
 
- private:
+private:
 
   vector<TuneParam> tune_params;
 

@@ -373,7 +373,7 @@ Tune::Tune()
          else
             name << "_end";
          name << x;
-         int val = PP_OWN_PIECE_BLOCK_INIT[phase][x];
+         score_t val = PP_OWN_PIECE_BLOCK_INIT[phase][x];
          tune_params.push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
       }
    }
@@ -386,7 +386,7 @@ Tune::Tune()
          else
             name << "_end";
          name << x;
-         int val = PP_OPP_PIECE_BLOCK_INIT[phase][x];
+         score_t val = PP_OPP_PIECE_BLOCK_INIT[phase][x];
          tune_params.push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
       }
    }
@@ -405,7 +405,7 @@ Tune::Tune()
             else
                name << "_end";
             name << j;
-            int val = 0;
+            score_t val = 0;
             ASSERT(map_from_pst(j) >= 0 && map_from_pst(j) < 64);
             switch(n) {
             case 0:
@@ -429,7 +429,7 @@ Tune::Tune()
    for (int m = 0; m < 9; m++) {
       stringstream name;
       name << "knight_mobility" << m;
-      const int val = KNIGHT_MOBILITY_INIT[m];
+      const score_t val = KNIGHT_MOBILITY_INIT[m];
       tune_params.push_back(TuneParam(i++,name.str(),val,val-MOBILITY_RANGE,val+MOBILITY_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==BISHOP_MOBILITY);
@@ -481,7 +481,7 @@ Tune::Tune()
           for (int stage = 0; stage < 2; stage++) {
               stringstream name;
               name << "knight_outpost" << p << '_' << s << "_" << (stage == 0 ? "mid" : "end");
-              int val = KNIGHT_OUTPOST_INIT[map_from_outpost(s)];
+              score_t val = KNIGHT_OUTPOST_INIT[map_from_outpost(s)];
               if (p == 0) val /= 2;
               tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,
                                               stage == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
@@ -494,7 +494,7 @@ Tune::Tune()
           for (int stage = 0; stage < 2; stage++) {
               stringstream name;
               name << "bishop_outpost" << p << '_' << s << "_" << (stage == 0 ? "mid" : "end");
-              int val = BISHOP_OUTPOST_INIT[map_from_outpost(s)];
+              score_t val = BISHOP_OUTPOST_INIT[map_from_outpost(s)];
               if (p == 0) val /= 2;
               tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,
                                               stage == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
@@ -506,7 +506,7 @@ Tune::Tune()
    for (int p = 0; p < 8; p++) {
       stringstream name;
       name << "trade_down" << p;
-      int val = TRADE_DOWN_INIT[p];
+      score_t val = TRADE_DOWN_INIT[p];
       tune_params.push_back(TuneParam(i++,name.str(),val,std::max<score_t>(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,Tune::TuneParam::Any,1));
    }
    ASSERT(i==RB_ADJUST);
@@ -520,7 +520,7 @@ Tune::Tune()
    ASSERT(i==RBN_ADJUST);
    for (int p = 0; p < 6; p++) {
       stringstream name;
-      name << "rb_adjust" << p;
+      name << "rbn_adjust" << p;
       score_t val = -score_t(0.15*Params::PAWN_VALUE)*p;
       tune_params.push_back(TuneParam(i++,name.str(),val,val-Params::PAWN_VALUE/2,val+Params::PAWN_VALUE/2,Tune::TuneParam::Any,1));
    }
@@ -821,22 +821,17 @@ void Tune::readX0(istream &is)
       string in;
       getline(is,in);
       size_t pos = in.find(' ');
-      string name = in.substr(0,pos);
-      int index = -1;
-      for (unsigned i = 0; i < tune_params.size(); i++) {
-         if (tune_params[i].name == name) {
-            index = (int)i;
-            break;
-         }
-      }
-      if (index == -1) {
+      if (pos == string::npos) continue;
+      const string name = in.substr(0,pos);
+      auto it = std::find_if(tune_params.begin(),tune_params.end(),[&name] (const TuneParam &p) { return p.name == name; });
+      if (it == tune_params.end()) {
          cerr << "invalid param name found in input file: " << name << endl;
       } else {
          stringstream valstream(in.substr(pos+1,in.size()));
-         int val;
+         score_t val;
          valstream >> val;
          if (!valstream.bad() && !valstream.fail()) {
-            updateParamValue(index,val);
+            it->current = val;
          } else {
             cerr << "error parsing value for parameter " << name << endl;
          }
