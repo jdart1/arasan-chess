@@ -1870,6 +1870,7 @@ static int pp_block_index(Square passer, Square blocker, ColorType side)
    int dist = Rank(blocker,side)-Rank(passer,side)-1;
    ASSERT(dist>=0);
    static const int offsets[6] = {0,6,11,15,18,20};
+   ASSERT(Rank(passer,side)>=2);
    int index = offsets[Rank(passer,side)-2]+dist;
    ASSERT(index>=0 && index<21);
    return index;
@@ -2181,6 +2182,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,       
    it = board.pawn_bits[oside];
    while (it.iterate(sq)) {
       int rank = Rank(sq,oside);
+      ASSERT(rank>=2 && rank<8);
       k_pos_adj += (4-distance(kp,sq))*PARAM(KING_OPP_PAWN_DISTANCE);
       if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
          // Extra bonus for being near and ahead of passers, esp.
