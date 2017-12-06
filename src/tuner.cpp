@@ -77,9 +77,6 @@ static const double ADAM_ALPHA = 0.01;
 static const double ADAM_BETA1 = 0.9;
 static const double ADAM_BETA2 = 0.999;
 static const double ADAM_EPSILON = 1.0e-8;
-// for ordinal regression
-static const double THETA1 = -0.75;
-static const double THETA2 = 0.75;
 
 static const double ADAPTIVE_STEP_BASE = 0.04;
 static const double ADAPTIVE_STEP_FACTOR1 = 0.2;
@@ -89,7 +86,7 @@ static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
 
 enum class Objective {
-    Msq, Ordinal, Log
+    Msq, Log
 };
 
 static Objective obj = Objective::Msq;
@@ -193,7 +190,7 @@ static void usage()
    cerr << " -r <lambda> apply regularization" << endl;
    cerr << " -t just compute objective against file with current parameters" << endl;
    cerr << " -x <ouput parameter file>" << endl;
-   cerr << " -O log|ordinal|msq select objective type" << endl;
+   cerr << " -O log|msq select objective type" << endl;
    cerr << " -R <recalc interval> periodically recalulate PVs" << endl;
    cerr << " -V validate gradient" << endl;
 }
@@ -234,17 +231,6 @@ static double computeErrorTexel(const Board &board,double value,double result,co
    case Objective::Msq:
       err = (predict-result)*(predict-result);
       break;
-   case Objective::Ordinal:
-      if (result == 0) {
-         err = texelSigmoid(value-THETA1);
-      }
-      else if (result == 0.5) {
-         err = texelSigmoid(THETA1-value) + texelSigmoid(value-THETA2);
-      }
-      else {
-         err = texelSigmoid(THETA2-value);
-      }
-      break;
    case Objective::Log:
       err = (result-1.0)*log(1.0-predict) - result*log(predict);
       break;
@@ -264,19 +250,6 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     case Objective::Msq: {
         double p = exp(PARAM1*value);
         deriv = -2*PARAM1*p*((result-1)*p + result)/(Params::PAWN_VALUE*pow(p+1,3.0));
-        break;
-    }
-    case Objective::Ordinal: {
-        auto g = [] (double x) { return PARAM1/(Params::PAWN_VALUE*(1.0+exp(-PARAM1*x))); };
-        if (result == 0) {
-            deriv = g(value-THETA1);
-        }
-        else if (result == 0.5) {
-            deriv = g(value-THETA2) - g(THETA1-value);
-        }
-        else {
-            deriv = -g(THETA2-value);
-        }
         break;
     }
     case Objective::Log:
@@ -1750,15 +1723,13 @@ int CDECL main(int argc, char **argv)
              usage();
              exit(-1);
           }
-          if (strcmp(argv[arg],"ordinal") == 0)
-             obj = Objective::Ordinal;
-          else if (strcmp(argv[arg],"msq") == 0)
+          if (strcmp(argv[arg],"msq") == 0)
              obj = Objective::Msq;
           else if (strcmp(argv[arg],"log") == 0)
              obj = Objective::Log;
           else {
              cerr << "invalid objective type: specify one of: ";
-             cerr << "ordinal, log or msq" << endl;
+             cerr << "log or msq" << endl;
              exit(-1);
           }
        }
