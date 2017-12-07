@@ -86,7 +86,7 @@ static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
 
 enum class Objective {
-    Msq, Log
+   Msq, Log, MsqLog
 };
 
 static Objective obj = Objective::Msq;
@@ -190,7 +190,7 @@ static void usage()
    cerr << " -r <lambda> apply regularization" << endl;
    cerr << " -t just compute objective against file with current parameters" << endl;
    cerr << " -x <ouput parameter file>" << endl;
-   cerr << " -O log|msq select objective type" << endl;
+   cerr << " -O log|msq|msqlog select objective type" << endl;
    cerr << " -R <recalc interval> periodically recalulate PVs" << endl;
    cerr << " -V validate gradient" << endl;
 }
@@ -234,6 +234,9 @@ static double computeErrorTexel(const Board &board,double value,double result,co
    case Objective::Log:
       err = (result-1.0)*log(1.0-predict) - result*log(predict);
       break;
+   case Objective::MsqLog:
+      err = (predict-result)*(predict-result) + (result-1.0)*log(1.0-predict) - result*log(predict);
+      break;
    }
    return err;
 }
@@ -256,6 +259,13 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     {
         double p = exp(PARAM1*value);
         return PARAM1*((1.0-result)*p - result)/(p+1);
+        break;
+    }
+    case Objective::MsqLog:
+    {
+        double p = exp(PARAM1*value);
+        deriv = -2*PARAM1*p*((result-1)*p + result)/(Params::PAWN_VALUE*pow(p+1,3.0)) + PARAM1*((1.0-result)*p - result)/(p+1);
+
         break;
     }
     }
@@ -1727,9 +1737,11 @@ int CDECL main(int argc, char **argv)
              obj = Objective::Msq;
           else if (strcmp(argv[arg],"log") == 0)
              obj = Objective::Log;
+          else if (strcmp(argv[arg],"msqlog") == 0)
+             obj = Objective::Msq;
           else {
              cerr << "invalid objective type: specify one of: ";
-             cerr << "log or msq" << endl;
+             cerr << "log, msq, or msqlog" << endl;
              exit(-1);
           }
        }
