@@ -321,10 +321,13 @@ results to stdout.  Additional switches can be added after the
 filename:</p>
 <ul>
 <li>-v - prints more verbose output</li>
+<li>-d &lt;depth&gt; search to fixed depth (plies)</li>
 <li>-t &lt;seconds&gt; searches for the specified number of seconds per position</li>
+<li>-N &lt;variations&gt; show multiple variations (default 1).</li>
 <li>-x &lt;count&gt; can terminate the search early if the correct move is found and held for "count" plies.</li>
 <li>-o &lt;file&gt; stores test output in "file".</li>
 </ul>
+<p>Either -d or -t must be included as one of the options.</p>
 <p>If the search module is compiled with -D_TRACE, arasanx will print
 out copious information about the search process when it is run (if
 running multi-threaded, only the main thread is traced). See

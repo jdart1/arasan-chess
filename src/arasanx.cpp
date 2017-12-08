@@ -548,7 +548,7 @@ static void do_help() {
    cout << "sd <x>:          limit thinking to depth x" << endl;
    cout << "setboard <FEN>:  set board to a specified FEN string" << endl;
    cout << "st <x>:          limit thinking to x seconds" << endl;
-   cout << "test <epd_file> <sec/move> <-x iter> <-N pvs> <-v>:  run test suite" << endl;
+   cout << "test <epd_file> -d <depth> -t <sec/move> <-x iter> <-N pvs> <-v>:  run test suite" << endl;
    cout << "time <int>:      set computer time remaining (in centiseconds)" << endl;
    cout << "undo:            back up a half move" << endl;
    cout << "white:           set computer to play White" << endl;
@@ -2018,14 +2018,23 @@ static void check_command(const string &cmd, int &terminate)
 
 // for support of the "test" command
 static Move test_search(Board &board, int ply_limit,
-int time_limit, Statistics &stats,
+                        int time_limit, Statistics &stats,
 const vector<Move> &excludes) {
    Move move = NullMove;
    solution_time = -1;
 
    vector<Move> includes;
+   SearchType type;
+   if (ply_limit != 0) {
+      type = FixedDepth;
+      time_limit = INFINITE_TIME;
+   }
+   else {
+      type = FixedTime;
+      ply_limit = Constants::MaxPly;
+   }
    move = searcher->findBestMove(board,
-      srctype,
+      type,
       time_limit, 0, ply_limit,
       0, 0, stats,
       verbose ? Debug : Silent,
@@ -2047,7 +2056,7 @@ const vector<Move> &excludes) {
 }
 
 
-static void do_test(string test_file)
+static void do_test(string test_file, int depth_limit, int time_limit)
 {
    delayedInit();
    int tmp = options.book.book_enabled;
@@ -2158,7 +2167,7 @@ static void do_test(string test_file)
          total_tests++;
          for (int index = 0; index < moves_to_search; index++) {
             searcher->clearHashTables();
-            Move result = test_search(board,ply_limit,time_limit,stats,excludes);
+            Move result = test_search(board,depth_limit,time_limit,stats,excludes);
             if (IsNull(result)) break;
             excludes.push_back(result);
             int correct = solution_time >=0;
@@ -2675,14 +2684,31 @@ static bool do_command(const string &cmd, Board &board) {
         if (it != eos) {
             filename = *it++;
             if (it != eos) {
-                stringstream num(*it++);
-                num >> time_limit;
-                time_limit *= 1000; // convert seconds to milliseconds
                 early_exit_plies = Constants::MaxPly;
                 moves_to_search = 1;
                 verbose = 0;
+                int max_depth = 0, max_time = 0;
                 while (it != eos) {
-                    if (*it == "-v") {
+                    if (*it == "-d") {
+                        if (++it == eos) {
+                            cerr << "expected number after -d" << endl;
+                        } else {
+                            stringstream num(*it);
+                            num >> max_depth;
+                            it++;
+                        }
+                    }
+                    else if (*it == "-t") {
+                        if (++it == eos) {
+                            cerr << "expected number after -t" << endl;
+                        } else {
+                            stringstream num(*it);
+                            num >> max_time;
+                            max_time *= 1000; // convert sections to ms
+                            it++;
+                        }
+                    }
+                    else if (*it == "-v") {
                         it++;
                         ++verbose;
                         continue;
@@ -2721,22 +2747,27 @@ static bool do_command(const string &cmd, Board &board) {
                         break;
                     }
                 }
-                do_command("new",board);
-                PostFunction old_post = searcher->registerPostFunction(post_test);
-                TerminateFunction old_terminate = searcher->registerTerminateFunction(terminate);
-                Options tmp = options;
-                options.book.book_enabled = 0;
-                options.learning.position_learning = 0;
-                do_test(filename);
-                if (out_file) {
-                    out_file->close();
-                    delete out_file;
-                    cout.rdbuf(sbuf);               // restore console output
+                if (max_time == 0 && max_depth == 0) {
+                   cerr << "error: time (-t) or depth (-d) must be specified" << endl;
                 }
-                options = tmp;
-                searcher->registerPostFunction(old_post);
-                searcher->registerTerminateFunction(old_terminate);
-                cout << "test complete" << endl;
+                else {
+                   do_command("new",board);
+                   PostFunction old_post = searcher->registerPostFunction(post_test);
+                   TerminateFunction old_terminate = searcher->registerTerminateFunction(terminate);
+                   Options tmp = options;
+                   options.book.book_enabled = 0;
+                   options.learning.position_learning = 0;
+                   do_test(filename,max_depth,max_time);
+                   searcher->registerPostFunction(old_post);
+                   searcher->registerTerminateFunction(old_terminate);
+                   options = tmp;
+                   cout << "test complete" << endl;
+                }
+                if (out_file) {
+                   out_file->close();
+                   delete out_file;
+                   cout.rdbuf(sbuf);               // restore console output
+                }
             }
             else
                 cout << "invalid command" << endl;

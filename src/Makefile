@@ -455,7 +455,7 @@ profile-run:
 	rm $(PROFILE)/*.o
 	rm -f $(PROFILE)/arasanx $(EXPORT)/arasanx
 
-.PHONY: all clean dirs profile profile-run install release run-tests score-tests
+.PHONY: all clean dirs profile bmi2 profile-run install release
 
 .EXPORT_ALL_VARIABLES:
 
