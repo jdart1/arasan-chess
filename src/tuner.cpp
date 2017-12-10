@@ -1424,8 +1424,8 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
             val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
          } else {
-            // Simple adaptive rate method with momentum (from Geoffrey
-            // Hinton, U. Toronto).
+            // Simple adaptive rate method with momentum, similar to
+            // "bold driver" algorithm.
             if (iterations == 1) {
                step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE*p.range());
             }
