@@ -33,6 +33,8 @@ TB=tb
 STB=syzygy/src
 # compile in NUMA support
 #NUMA=1
+# location of hwloc library (required for NUMA)
+HWLOC64=/home/jdart/chess/hwloc-build-1.11.3
 # directory for utility programs
 UTIL = util
 
@@ -101,6 +103,7 @@ LBITS := $(shell getconf LONG_BIT)
 LIBS := -lc -lm
 
 ifdef NUMA
+CFLAGS := $(CFLAGS) -I$(HWLOC64)/include
 LIBS := -lhwloc $(LIBS)
 endif
 
