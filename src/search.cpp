@@ -1255,7 +1255,9 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     score_t try_score = alpha;
     //
     // Re-sort the ply 0 moves and re-init move generator.
-    mg.reorder(node->best,controller->getIterationDepth());
+    if (controller->getIterationDepth()>1) {
+       mg.reorder(node->best,controller->getIterationDepth(),false);
+    }
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude);
 

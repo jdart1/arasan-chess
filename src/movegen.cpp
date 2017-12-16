@@ -49,56 +49,53 @@ void MoveGenerator::sortMoves(Move moves[], int scores[], int n) {
 
 
 RootMoveGenerator::RootMoveGenerator(const Board &board,
-SearchContext *s,
-Move pvMove,
-int trace)
-    : MoveGenerator(board,s,0,pvMove,NullMove,trace),
-      excluded(0)
+                                     SearchContext *s,
+                                     Move pvMove,
+                                     int trace)
+   : MoveGenerator(board,s,0,pvMove,NullMove,trace),
+     excluded(0)
 {
    batch = moves;
    batch_count = MoveGenerator::generateAllMoves(batch,0);
-#ifdef _TRACE
-   cout << "root moves:" << endl;
-#endif
    for (int i=0; i < batch_count; i++) {
-#ifdef _TRACE
-         MoveImage(batch[i],cout); cout << endl;
-#endif
-     MoveEntry me;
-     me.move = batch[i];
-     me.score = 0;
-     moveList.push_back(me);
+      MoveEntry me;
+      me.move = batch[i];
+      me.score = 0;
+      moveList.push_back(me);
    }
-   if (!(board.checkStatus()==InCheck)) {
-     // exclude illegal moves
-     const BoardState state = board.state;
-     Board tmp(board);
-     int j = 0;
-     for (int i=0; i<batch_count; i++) {
-        Move &move = moveList[i].move;
-        int score = (Capture(move) != Empty) ? (int)see(board,move) : 0;
-        tmp.doMove(move);
-        if (tmp.anyAttacks(tmp.kingSquare(tmp.oppositeSide()),tmp.sideToMove())) {
-          // move was illegal, own king is in check
-           tmp.undoMove(move,state);
-           continue;
-        }
-        if (j != i) {
+   int j = batch_count;
+   if (board.checkStatus() != InCheck) {
+      // exclude illegal moves
+      const BoardState state(board.state);
+      Board tmp(board);
+      j = 0;
+      for (int i=0; i<batch_count; i++) {
+         Move move = moveList[i].move;
+         tmp.doMove(move);
+         if (tmp.anyAttacks(tmp.kingSquare(tmp.oppositeSide()),tmp.sideToMove())) {
+            // move was illegal, own king is in check
+            tmp.undoMove(move,state);
+            continue;
+         }
+         if (j != i) {
             // compress the move list so illegal moves are excluded
             moveList[j] = moveList[i];
-        }
-        moveList[j++].score = score;
-        tmp.undoMove(move,state);
-     }
-     for (int i = j; i < batch_count; i++) {
-         moveList.pop_back();
-     }
-     reorder(pvMove,0,true);
-     batch_count = j;
+         }
+         ++j;
+         tmp.undoMove(move,state);
+      }
+      moveList.erase(moveList.begin()+j,moveList.end());
    }
+   reorder(pvMove,0,true);
+#ifdef _TRACE
+   cout << "root moves:" << endl;
+   for (auto it = moveList.begin(); it != moveList.end(); it++) {
+      MoveImage(it->move,cout); cout << endl;
+   }
+#endif
+   batch_count = j;
    phase = LAST_PHASE;
 }
-
 
 int RootMoveGenerator::generateAllMoves(NodeInfo *, SplitPoint *)
 {
@@ -111,48 +108,45 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
    reset();
    if (initial || depth <= EASY_PLIES) {
-       // if in the "easy move" part of the search leave the scores
-       // intact: they are set according to the search results
-       if (initial) {
-           // sort winning captures first
-           for (unsigned i = 0; i < moveList.size(); i++) {
-               ClearUsed(moveList[i].move);
-               if (MovesEqual(moveList[i].move,pvMove)) {
-                   SetPhase(moveList[i].move,HASH_MOVE_PHASE);
-                   moveList[i].score = int(Params::PAWN_VALUE*100);
-               } else if (CaptureOrPromotion(moveList[i].move)) {
-                   int est;
-                   if ((est = (int)see(board,moveList[i].move)) >= 0) {
-                       SetPhase(moveList[i].move,WINNING_CAPTURE_PHASE);
-                       moveList[i].score = est;
-                   } else {
-                       SetPhase(moveList[i].move,LOSERS_PHASE);
-                       moveList[i].score = est;
-                   }
+      // If this is the first sort, use SEE to sort move list.
+      // Else, if in the "easy move" part of the search leave the scores
+      // intact: they are set according to the search results.
+      if (initial) {
+         // sort winning captures first
+         for (auto it = moveList.begin();
+              it != moveList.end();
+              it++) {
+            MoveEntry &m = *it;
+            ClearUsed(m.move);
+            if (MovesEqual(m.move,pvMove)) {
+               SetPhase(m.move,HASH_MOVE_PHASE);
+               m.score = int(Params::PAWN_VALUE*100);
+            } else if (CaptureOrPromotion(m.move)) {
+               int est;
+               if ((est = (int)see(board,m.move)) >= 0) {
+                  SetPhase(m.move,WINNING_CAPTURE_PHASE);
+                  m.score = est;
+               } else {
+                  SetPhase(m.move,LOSERS_PHASE);
+                  m.score = est;
                }
-               else {
-                   SetPhase(moveList[i].move,HISTORY_PHASE);
-                   moveList[i].score = 0;
-               }
-           }
-       }
-       if (moveList.size() > 1) {
-           std::sort(moveList.begin(),moveList.end(),
-                     [](const MoveEntry &a, const MoveEntry &b)
-                     {
-                         return a.score > b.score;
-                     }
-                     );
-       }
+            }
+            else {
+               SetPhase(m.move,HISTORY_PHASE);
+               m.score = 0;
+            }
+         }
+      }
+      if (moveList.size() > 1) {
+         std::stable_sort(moveList.begin(),moveList.end(),
+                          [](const MoveEntry &a, const MoveEntry &b)
+                          {
+                             return a.score > b.score;
+                          }
+            );
+      }
    }
    else {
-       /*
-      Move killer1 = NullMove;
-      Move killer2 = NullMove;
-      if (context) {
-         context->getKillers(0,killer1,killer2);
-      }
-       */
       int pvIndex = -1;
       for (unsigned i = 0; i < moveList.size(); i++) {
          ClearUsed(moveList[i].move);
