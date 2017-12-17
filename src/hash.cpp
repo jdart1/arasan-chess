@@ -72,7 +72,6 @@ void Hash::freeHash()
 void Hash::clearHash()
 {
    if (hashSize == 0) return;
-   size_t hashSizePlus = hashSize + MaxRehash;
    hashFree = hashSize;
    HashEntry empty;
    for (size_t i = 0; i < hashSize; i++) {
