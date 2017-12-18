@@ -60,7 +60,7 @@ class Options
    int multipv; // for UCI only
    int ncpus;
    int easy_plies; // do wide search for "easy move" detection
-   int easy_threshold; // wide search width in millipawns
+   int easy_threshold; // wide search width in centipawns
 #ifdef NUMA
    int set_processor_affinity; // lock threads to processors
    int affinity_offset; // offset: first processor to use for affinity

@@ -805,6 +805,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    if (value == Constants::INVALID_SCORE) {
       value = 0;
    }
+   easyScore = value;
    waitTime = 0;
    depth_adjust = 0;
    // Reduce strength but not in analysis mode:
@@ -846,7 +847,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
        }
    }
 
-   value = controller->stats->value = controller->stats->display_value = value;
+   controller->stats->value = controller->stats->display_value = value;
 
    // Incrementally search the board to greater depths - stop when
    // ply limit, time limit, interrupt, or a terminating condition
@@ -1092,18 +1093,18 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             else
 #endif
             if (!controller->background &&
-                     !controller->time_added &&
-                     !easy_adjust &&
-                     depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
-                     MovesEqual(easyMove,node->best) &&
-                     !faillows &&
-                     (controller->stats->elapsed_time >
-                      (unsigned)controller->time_target/3)) {
-               easy_adjust = true;
-               if (talkLevel == Trace) {
-                  cout << "# easy move, adjusting time lower" << endl;
-               }
-               controller->time_target /= 3;
+                !controller->time_added &&
+                !easy_adjust &&
+                (controller->stats->elapsed_time >
+                (unsigned)controller->time_target/3) &&
+                depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
+                MovesEqual(easyMove,node->best) &&
+                !faillows) {
+                easy_adjust = true;
+                if (talkLevel == Trace) {
+                   cout << "# easy move, adjusting time lower" << endl;
+                }
+                controller->time_target /= 3;
             }
             if (value <= iteration_depth - Constants::MATE) {
                // We're either checkmated or we certainly will be, so
@@ -1266,16 +1267,17 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
         // Note: do not do "easy move" if capturing the last piece in
         // the endgame .. this can be tricky as the resulting pawn
         // endgame may be lost.
-        if (list.size() > 1 && (list[0].score >= list[1].score + options.search.easy_threshold) && TypeOfMove(node->best) == Normal &&
-            Capture(node->best) != Empty && Capture(node->best) != Pawn &&
-            board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-            board.getMaterial(board.sideToMove()).pieceCount() <= 1) {
-            easyMove = node->best;
-            if (talkLevel == Trace) {
-                cout << "#easy move: ";
-                MoveImage(easyMove,cout);
-                cout << endl;
-            }
+        if (list.size() > 1 && (list[0].score >= list[1].score + (Params::PAWN_VALUE*options.search.easy_threshold)/100) && TypeOfMove(node->best) == Normal &&
+            (Capture(node->best) == Empty || !(Capture(node->best) != Pawn &&
+                                               board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
+                                               board.getMaterial(board.sideToMove()).pieceCount() <= 1))) {
+           easyMove = node->best;
+           easyScore = list[0].score;
+           if (talkLevel == Trace) {
+              cout << "#easy move: ";
+              MoveImage(easyMove,cout);
+              cout << endl;
+           }
         }
     }
 

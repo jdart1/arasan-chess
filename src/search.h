@@ -530,6 +530,7 @@ protected:
     int iteration_depth;
     int multipv_count;
     Move easyMove;
+    score_t easyScore;
     bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
     int fail_high_root;
     score_t last_score;

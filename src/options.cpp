@@ -106,7 +106,7 @@ Options::SearchOptions::SearchOptions() :
       multipv(1),
       ncpus(1),
       easy_plies(3),
-      easy_threshold(2000)
+      easy_threshold(200)
 #ifdef NUMA
       ,
       set_processor_affinity(0),
