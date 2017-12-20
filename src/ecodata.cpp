@@ -1302,6 +1302,7 @@ const struct ECOData eco_codes[] =
 {"E05", 0x9a7e8c6e536312e1ULL ,"Catalan, Open Variation"},
 {"E05", 0xc6b47d404fd0283cULL ,"Catalan, Open Variation"},
 {"E05", 0x34e05447bfa35c8bULL ,"Catalan, Open Variation"},
+{"E05", 0x1911416576198d52ULL ,"Catalan, Open Variation"},
 {"E06", 0xcf779456d06515bfULL ,"Catalan, Closed Variation"},
 {"E06", 0x2d2f971773bbd7a0ULL ,"Catalan, Closed Variation"},
 {"E06", 0x5c19f980c38eda58ULL ,"Catalan, Closed Variation"},

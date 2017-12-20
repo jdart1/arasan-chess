@@ -1339,7 +1339,7 @@ E04     1. d4 d5 2. c4 e6 3. Nf3 Nf6 4. g3 Bb4+ 5. Nbd2 dxc4 6. Bg2 "Catalan, Op
 E05     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dc4 5. Nf3 Be7 "Catalan, Open Variation"
 E05     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Nf3 Be7 5. Bg2 O-O 6. O-O dxc4 "Catalan, Open Variation"
 E05     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Nf3 Be7 5. Bg2 O-O 6. O-O dxc4 7. Qc2 "Catalan, Open Variation"
-
+E05     1. Nf3 d5 2. d4 Nf6 3. c4 e6 4. g3 Be7 5. Bg2 O-O 6. O-O dxc4 7. Qc2 a6 8. a4 Bd7 9. Qxc4 "Catalan, Open Variation"
 E06     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 "Catalan, Closed Variation"
 E06     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. Qc2 "Catalan, Closed Variation"
 E06     1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. Nc3 "Catalan, Closed Variation"
