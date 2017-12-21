@@ -1,16 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+# Copyright 2016-2017 by Jon Dart. All Rights Reserved.
+# This code is under the MIT license: see license directory.
+#
 # Tool to run matches that add score records (with c2 tag) to an EPD
 # input file.
-# Copyright 2016 by Jon Dart. All Rights Reserved.
-# This code is under the MIT license: see license directory.
+# Usage:
+# python3 label_positions.py [-c cores] [-e engine] [-t time control] [-o options] epd_file
+# Note: this has only been tested on Linux. May need mods for other platforms.
 
 import re, sys, subprocess, tempfile, time, threading
 from subprocess import Popen, PIPE, call
 
 # Path to the cutechess-cli executable.
-# On Windows this should point to cutechess-cli.exe
 cutechess_cli_path = '/home/jdart/chess/cutechess-gui-0.9.4/projects/cli'
 
 SHELL='/bin/bash'
@@ -21,6 +24,7 @@ class Options:
    engine_name = 'Stockfish-8'
    tc = "0.10+0.1"
    cores = 1
+   extra_options = "option.SyzygyPath=/home/jdart/chess/syzygy option.Hash=128"
 
 file_lock = threading.RLock()
 
@@ -53,7 +57,7 @@ class RunGames:
 
       try:
           fcp = Options.engine_name
-          options = "-openings file=%s format=epd -each tc=%s" % (temp_file_name,Options.tc)
+          options = "-openings file=%s format=epd -each tc=%s %s" % (temp_file_name,Options.tc,Options.extra_options)
           cutechess_args = ' -engine conf=%s -engine conf=%s %s' % (fcp, fcp, options)
           command = '%s/%s %s' % (cutechess_cli_path, 'cutechess-cli', cutechess_args)
 
@@ -119,6 +123,16 @@ def main(argv = None):
             arg = arg + 1
             if (arg < len(argv)):
                 Options.engine_name = argv[arg]
+                arg = arg + 1
+        elif (argv[arg][1] == 'o'):
+            arg = arg + 1
+            if (arg < len(argv)):
+                Options.extra_options = argv[arg]
+                arg = arg + 1
+        elif (argv[arg][1] == 't'):
+            arg = arg + 1
+            if (arg < len(argv)):
+                Options.tc = argv[arg]
                 arg = arg + 1
         else:
             print("Unrecognized switch: " + argv[arg], file=sys.stderr)
