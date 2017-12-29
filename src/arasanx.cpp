@@ -2991,12 +2991,13 @@ static bool do_command(const string &cmd, Board &board) {
         }
         else {
 #ifdef UCI_LOG
-            ucilog << "starting search, time=" << getCurrentTime() << (flush) << endl;
+            CLOCK_TYPE startTime = getCurrentTime();
+            ucilog << "starting search" << (flush) << endl;
 #endif
             best_move = search(searcher,board,movesToSearch,stats,infinite);
 
 #ifdef UCI_LOG
-            ucilog << "done searching, time=" << getCurrentTime() << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
+            ucilog << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
 #endif
             if (infinite && !searcher->wasStopped()) {
                 // ensure we send some info in analysis mode:
