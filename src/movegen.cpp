@@ -111,31 +111,30 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
       // If this is the first sort, use SEE to sort move list.
       // Else, if in the "easy move" part of the search leave the scores
       // intact: they are set according to the search results.
-      if (initial) {
-         // sort winning captures first
-         for (auto it = moveList.begin();
-              it != moveList.end();
-              it++) {
-            MoveEntry &m = *it;
-            ClearUsed(m.move);
-            if (MovesEqual(m.move,pvMove)) {
-               SetPhase(m.move,HASH_MOVE_PHASE);
-               m.score = int(Params::PAWN_VALUE*100);
-            } else if (CaptureOrPromotion(m.move)) {
-               int est;
-               if ((est = (int)see(board,m.move)) >= 0) {
-                  SetPhase(m.move,WINNING_CAPTURE_PHASE);
-                  m.score = est;
-               } else {
-                  SetPhase(m.move,LOSERS_PHASE);
-                  m.score = est;
-               }
-            }
-            else {
-               SetPhase(m.move,HISTORY_PHASE);
-               m.score = 0;
-            }
-         }
+      for (auto it = moveList.begin();
+           it != moveList.end();
+           it++) {
+           MoveEntry &m = *it;
+           ClearUsed(m.move);
+           if (initial) {
+              // sort winning captures first
+              if (MovesEqual(m.move,pvMove)) {
+                 SetPhase(m.move,HASH_MOVE_PHASE);
+                 m.score = int(Params::PAWN_VALUE*100);
+              } else if (CaptureOrPromotion(m.move)) {
+                 int est;
+                 if ((est = (int)see(board,m.move)) >= 0) {
+                    SetPhase(m.move,WINNING_CAPTURE_PHASE);
+                 } else {
+                    SetPhase(m.move,LOSERS_PHASE);
+                 }
+                 m.score = est;
+              }
+              else {
+                 SetPhase(m.move,HISTORY_PHASE);
+                 m.score = 0;
+              }
+           }
       }
       if (moveList.size() > 1) {
          std::stable_sort(moveList.begin(),moveList.end(),
