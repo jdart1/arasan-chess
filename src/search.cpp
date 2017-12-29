@@ -146,8 +146,7 @@ SearchController::SearchController()
     age(1),
     talkLevel(Silent),
     stopped(false),
-    ratingDiff(0),
-    ratingFactor(0),
+    contempt(0),
     active(false) {
 
 #ifdef SMP_STATS
@@ -295,13 +294,12 @@ Move SearchController::findBestMove(
     return rootSearch->ply0_search(exclude,include);
 }
 
-void SearchController::setRatingDiff(int rdiff)
+void SearchController::setContempt(score_t c)
 {
-    ratingDiff = rdiff;
-    ratingFactor = (Params::PAWN_VALUE*rdiff)/350;
+    contempt = c;
 
     // propagate rating diff to searches
-    pool->forEachSearch<&Search::setRatingVariablesFromController>();
+    pool->forEachSearch<&Search::setContemptFromController>();
 }
 
 int SearchController::wasTerminated() const {
@@ -470,8 +468,7 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     ti(threadInfo),
     threadSplitDepth(0),
     computerSide(White),
-    ratingDiff(0),
-    ratingFactor(0),
+    contempt(0),
     talkLevel(c->getTalkLevel()) {
     LockInit(splitLock);
     // Note: context was cleared in its constructor
@@ -614,13 +611,14 @@ score_t Search::drawScore(const Board & board) const {
     score_t score = 0;
 
     // if we know the opponent's rating (which will be the case if playing
-    // on ICC), factor that into the draw score - a draw against a high-rated
-    // opponent is good; a draw against a lower-rated one is bad.
-    if (ratingDiff != 0) {
+    // on ICC in xboard mode), or if the user has set a contempt value
+    // (in UCI mode), factor that into the draw score - a draw against
+    // a high-rated opponent is good; a draw against a lower-rated one is bad.
+    if (contempt) {
         if (board.sideToMove() == computerSide)
-           score += ratingFactor;
+           score -= contempt;
         else
-           score -= ratingFactor;
+           score += contempt;
     }
     return score;
 }

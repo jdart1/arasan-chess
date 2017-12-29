@@ -8,7 +8,6 @@ Consider IID even when hash move is present but depth is low (Gull)
 singular extensions
 
 implement UCI_Opponent
-implement Contempt for UCI
 
 change reduction based on node type
 change redudction based on "improving" test (Stockfish)

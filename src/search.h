@@ -190,7 +190,7 @@ public:
 
     int wasTerminated() const;
 
-    void setRatingDiff(int diff);
+    void setContempt(score_t contempt);
 
     // Note: should not call this while searching
     void setThreadCount(int threads);
@@ -274,8 +274,7 @@ private:
     int threadSplitDepth;
     Statistics *stats;
     ColorType computerSide;
-    int ratingDiff;
-    score_t ratingFactor;
+    score_t contempt;
     CLOCK_TYPE startTime;
     CLOCK_TYPE last_time;
     RootSearch *rootSearch;
@@ -438,13 +437,11 @@ protected:
     void setVariablesFromController() {
         computerSide = controller->computerSide;
         talkLevel = controller->talkLevel;
-        ratingDiff = controller->ratingDiff;
-        ratingFactor = controller->ratingFactor;
+        contempt = controller->contempt;
     }
 
-    void setRatingVariablesFromController() {
-        ratingDiff = controller->ratingDiff;
-        ratingFactor = controller->ratingFactor;
+    void setContemptFromController() {
+        contempt = controller->contempt;
     }
 
     void setTalkLevelFromController() {
@@ -477,8 +474,7 @@ protected:
     // helps avoid global variable contention.
     Options::SearchOptions srcOpts;
     ColorType computerSide;
-    int ratingDiff;
-    score_t ratingFactor;
+    score_t contempt;
     TalkLevel talkLevel;
 };
 

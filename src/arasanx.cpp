@@ -418,6 +418,13 @@ static void process_st_command(const string &cmd_args)
    time_limit = int(time_limit_sec * 1000 - std::min<int>(int(time_limit_sec*100),100));
 }
 
+// In Winboard mode, on the chess server, compute a contempt value
+// from ratings
+static int contemptFromRatings(int computer_rating,int opponent_rating) {
+   int rdiff = computer_rating-opponent_rating;
+   return (Params::PAWN_VALUE*rdiff)/350;
+}
+
 static int getIncrUCI(const ColorType side) {
     return side == White ? winc : binc;
 }
@@ -1942,7 +1949,7 @@ static void check_command(const string &cmd, int &terminate)
         stringstream args(cmd_args);
         args >> computer_rating;
         args >> opponent_rating;
-        if (searcher) searcher->setRatingDiff(opponent_rating-computer_rating);
+        if (searcher) searcher->setContempt(contemptFromRatings(computer_rating,opponent_rating));
     }
     else if (cmd_word == "option") {
         processWinboardOptions(cmd_args);
@@ -2388,6 +2395,7 @@ static bool do_command(const string &cmd, Board &board) {
             "2000" << endl;
 #endif
         cout << "option name Ponder type check default true" << endl;
+        cout << "option name Contempt type spin default 0 min -200 max 200" << endl;
 #if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
         cout << "option name Use tablebases type check default ";
         if (options.search.use_tablebases) cout << "true"; else cout << "false";
@@ -2486,6 +2494,20 @@ static bool do_command(const string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"Ponder")) {
             easy = !(value == "true");
+        }
+        else if (uciOptionCompare(name,"Contempt")) {
+            stringstream buf(value);
+            int uciContempt;
+            buf >> uciContempt;
+            if (buf.bad()) {
+               cout << "info problem setting contempt value" << endl;
+            }
+            else if (uciContempt < -200 || uciContempt > 200) {
+               cout << "invalid contempt value, must be >=-200, <= 200 centipawns" << endl;
+            }
+            else {
+               searcher->setContempt(uciContempt);
+            }
         }
 #if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
         else if (uciOptionCompare(name,"Use tablebases")) {
@@ -3279,7 +3301,7 @@ static bool do_command(const string &cmd, Board &board) {
         stringstream args(cmd_args);
         args >> computer_rating;
         args >> opponent_rating;
-        if (searcher) searcher->setRatingDiff(opponent_rating-computer_rating);
+        if (searcher) searcher->setContempt(contemptFromRatings(computer_rating,opponent_rating));
     }
     else if (cmd == "computer") {
         computer = 1;
