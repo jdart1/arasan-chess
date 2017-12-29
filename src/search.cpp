@@ -1402,7 +1402,7 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
               // beta cutoff
               // ensure we send UCI output .. even in case of quick
               // termination due to checkmate or whatever
-              controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
+              if (!srcOpts.multipv) controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
               // don't reset this until after the PV update, in case
               // it causes us to terminate:
               fail_high_root = 0;
@@ -1437,11 +1437,11 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
         if (in_check) {
             if (mg.moveCount() == 0) {           // mate
                 node->best_score = -(Constants::MATE);
-                controller->stats->state = Checkmate;
+                if (!srcOpts.multipv) controller->stats->state = Checkmate;
             }
         }
         else {                                    // stalemate
-            controller->stats->state = Stalemate;
+            if (!srcOpts.multipv) controller->stats->state = Stalemate;
 #ifdef _TRACE
             cout << "stalemate!" << endl;
 #endif
@@ -3285,7 +3285,7 @@ int Search::updateRootMove(const Board &board,
          controller->updateStats(parentNode, controller->getIterationDepth(),
                             parentNode->best_score,
                             parentNode->alpha,parentNode->beta);
-         if (controller->uci) {
+         if (controller->uci && !srcOpts.multipv) {
             cout << "info score ";
             Scoring::printScoreUCI(score,cout);
             cout << " lowerbound" << endl;
