@@ -122,17 +122,6 @@ struct PosInfo
 
 static vector<PosInfo *> positions;
 
-struct PositionDupEntry
-{
-   PositionDupEntry() : val(0)
-      {
-      }
-
-   int val;
-};
-
-static unordered_map<hash_t,PositionDupEntry> *hash_table;
-
 enum Phase {Phase1, Phase2};
 
 struct ThreadData {
@@ -1518,8 +1507,6 @@ static void launch_threads()
 
 static void learn_parse(Phase p, int cores)
 {
-   hash_table->clear();
-   if (verbose) cout << "hash table cleared" << endl;
    for (int i = 1; i <= cores; i++) {
       threadDatas[i].phase = p;
    }
@@ -1554,13 +1541,6 @@ static void output_solution(const string &cmd)
 
 static void learn()
 {
-   try {
-      hash_table = new unordered_map<hash_t,PositionDupEntry>();
-   } catch(std::bad_alloc) {
-      cerr << "hash table alloc: out of memory!" << endl;
-      exit(-1);
-   }
-
    LockInit(data_lock);
    LockInit(file_lock);
    LockInit(hash_lock);
@@ -1632,7 +1612,6 @@ static void learn()
       adjust_params(data2[0],historical_grad,m,v,prev_gradient,step_sizes,iter);
    }
 
-   delete hash_table;
    LockFree(data_lock);
    LockFree(file_lock);
    LockFree(hash_lock);
