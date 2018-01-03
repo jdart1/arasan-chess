@@ -1,7 +1,7 @@
 #
-# Gnu Makefile for Arasan 20.3
+# Gnu Makefile for Arasan 20.4
 #
-VERSION = 20.3.0
+VERSION = 20.4.0
 
 # paths, modify as needed:
 

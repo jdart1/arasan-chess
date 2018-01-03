@@ -1,4 +1,19 @@
-Changes in Arasan 20.3:
+Changes in Arasan 20.4:
+ 1) Fix Linux/Mac Makefile so PGO works with clang.
+ 2) Code cleanup. Replace NULL with nullptr in most places (except some C library calls).
+ 3) Fix serious bug in Syzygy tb code for handling cursed losses.
+ 4) Fix "ecocoder" target in Makefile and fix ecocoder code (sync with changes to Notation).
+ 5) Updates to "pgnselect" utility program.
+ 6) A few fixes in the tuner program. Remove ordinal objective (was not working properly).
+ 7) Add -d option to test command so can do fixed depth. Profile uses fixed depth now.
+ 8) Some updates to the label_positions.py tool.
+ 9) Re-tune paramters with larger traning set and more frequent PV updates.
+ 10) Bug fixes in "easy move" code.
+ 11) Some minor changes/fixes to root move ordering.
+ 12) Bug fixes for UCI multi-pv model
+ 13) Add UCI contempt option.
+
+Changes in Arasan 20.3 (Nov. 2017):
  1) Change queen mobility scoring: square reach beyond 23 squares gets
     same score.
  2) Re-work scoring for material imbalance with pawns.
