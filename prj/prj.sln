@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "prj", "prj.vcxproj", "{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}"
 EndProject
@@ -17,6 +17,8 @@ Global
 		ArasanX_Release|x64 = ArasanX_Release|x64
 		Makebook_Debug|Win32 = Makebook_Debug|Win32
 		Makebook_Debug|x64 = Makebook_Debug|x64
+		Pgnselect_Debug|Win32 = Pgnselect_Debug|Win32
+		Pgnselect_Debug|x64 = Pgnselect_Debug|x64
 		Tuner_Debug|Win32 = Tuner_Debug|Win32
 		Tuner_Debug|x64 = Tuner_Debug|x64
 	EndGlobalSection
@@ -37,6 +39,10 @@ Global
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|Win32.Build.0 = Makebook_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|x64.ActiveCfg = Makebook_Debug|x64
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|x64.Build.0 = Makebook_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Pgnselect_Debug|Win32.ActiveCfg = Pgnselect_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Pgnselect_Debug|Win32.Build.0 = Pgnselect_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Pgnselect_Debug|x64.ActiveCfg = Pgnselect_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Pgnselect_Debug|x64.Build.0 = Pgnselect_Debug|x64
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Tuner_Debug|Win32.ActiveCfg = Tuner_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Tuner_Debug|Win32.Build.0 = Tuner_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Tuner_Debug|x64.ActiveCfg = Tuner_Debug|x64
