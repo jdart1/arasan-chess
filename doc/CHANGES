@@ -7,10 +7,10 @@ Changes in Arasan 20.4:
  6) A few fixes in the tuner program. Remove ordinal objective (was not working properly).
  7) Add -d option to test command so can do fixed depth. Profile uses fixed depth now.
  8) Some updates to the label_positions.py tool.
- 9) Re-tune paramters with larger traning set and more frequent PV updates.
+ 9) Re-tune parameters with larger traning set and more frequent PV updates.
  10) Bug fixes in "easy move" code.
  11) Some minor changes/fixes to root move ordering.
- 12) Bug fixes for UCI multi-pv model
+ 12) Bug fixes for UCI multi-pv mode.
  13) Add UCI contempt option.
 
 Changes in Arasan 20.3 (Nov. 2017):
