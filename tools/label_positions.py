@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2016-2017 by Jon Dart. All Rights Reserved.
-# This code is under the MIT license: see license directory.
+# This code is under the MIT license: see doc directory.
 #
 # Tool to run matches that add score records (with c2 tag) to an EPD
 # input file.
@@ -80,7 +80,7 @@ class RunGames:
                   print(line,file=sys.stderr)
               print('Could not execute command: %s' % command,file=sys.stderr)
               return 2
-          # Convert Cutechess-cli's result into a numeric soore.
+          # Convert Cutechess-cli's result into a numeric score.
           # Note that only one game should be played
           result = 0
           result_pat = re.compile("^Score of.+\[([0-9\.]+)\]*")
