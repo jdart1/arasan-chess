@@ -174,9 +174,15 @@ void delayedInit() {
           tb_init_map[Options::TbType::SyzygyTb] = true;
        }
 #endif
-       if (EGTBMenCount)
-          cerr << "found " << EGTBMenCount << "-man " <<
+       if (EGTBMenCount) {
+          stringstream msg;
+          msg << "found " << EGTBMenCount << "-man " <<
              Options::tbTypeToString(options.search.tablebase_type) << " tablebases in directory " << path << endl;
+          cerr << msg.str();
+#ifdef UCI_LOG
+          ucilog << msg.str();
+#endif
+       }
     }
 #endif
     // also initialize the book here
