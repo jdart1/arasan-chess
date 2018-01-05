@@ -2980,6 +2980,11 @@ static bool do_command(const string &cmd, Board &board) {
             }
         }
         forceMode = 0;
+        // Some GUIs such as Fritz send tablebase options after
+        // "isready" and so it is possible tablebases and book are
+        // not initialized. Make sure they are before we execute
+        // "go:"
+        delayedInit();
         if (do_ponder) {
             ponder(board,NullMove,NullMove,1);
             // We should not send the move unless we have received a
