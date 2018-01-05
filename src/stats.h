@@ -81,7 +81,7 @@ struct Statistics
                         best(NullMove){}
 
       MultiPVEntry(const Statistics &stats)
-        : depth(stats.depth),score(stats.value),
+        : depth(stats.depth),score(stats.display_value),
           time(stats.elapsed_time),nodes(stats.num_nodes),
           tb_hits(stats.tb_hits) {
             best_line_image = stats.best_line_image;
