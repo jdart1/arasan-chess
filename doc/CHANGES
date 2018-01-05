@@ -1,4 +1,8 @@
-Changes in Arasan 20.4:
+Changes in Arasan 20.4.1:
+ 1) Fixes to ensure tablebases are initalized before search in UCI GUIs.
+ 2) Fix to output correct TB scores in UCI multi-pv mode.
+
+Changes in Arasan 20.4 (Jan. 2017):
  1) Fix Linux/Mac Makefile so PGO works with clang.
  2) Code cleanup. Replace NULL with nullptr in most places (except some C library calls).
  3) Fix serious bug in Syzygy tb code for handling cursed losses.
