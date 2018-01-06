@@ -457,15 +457,15 @@ Without this some reasonable starting defaults will be used.</li>
 <li>-x &lt;output parameter file&gt; specify the name of the output file (instead of "x0")</li>
 <li>-n &lt;iterations&gt; how many iterations to use in tuning</li>
 <li>-o adagrad|adam|adaptive select optimization method</li>
-<li>-O ordinal|msq select objective function</li>
+<li>-O msq|log|msqlog select objective function</li>
 <li>-R &lt;interval&gt; periodically recalulate PVs</li>
 <li>-V validate gradients (not compatible with multithreading)</li>
 </ul>
 <p>Some further notes on the options: The default objective is "msq", the
 mean squared error between the predicted result value (sigmoid function
 of the evaluation) and the actual result value. The tuner also supports
-Ordinal Logistic Regresssion based on the three possible discrete game
-results, but this is not really tested.</p>
+cross-entropy error (-O log) or a combination of mean-square and cross-entropy
+(msqlog).</p>
 <p>Three iterative optimization methods are supported. The first is
 "adaptive," which is
 a simple momentum based approach described by Geoffrey Hinton. The tuner
@@ -497,7 +497,7 @@ no result tag.
 "pgnselect" and then will label each position with a game result,
 based on a game in which both sides are played by a selected chess engine at a short time control.</p>
 <p>
-This script relies on <a href="https://github.com/cutechess/cutechess" target="_blank">cutechess-cli</a> being installed and the path
+The label_positions script relies on <a href="https://github.com/cutechess/cutechess" target="_blank">cutechess-cli</a> being installed and the path
 to that executable must be set in the script. Note: it has only been
 tested on Linux, although it should work on Windows, too.</p>
 <p>The script takes two command-line switches:</p>
