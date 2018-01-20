@@ -1514,7 +1514,7 @@ static void learn_parse(Phase p, int cores)
    if (p == Phase1) cout << positions.size() << " positions read." << endl;
 }
 
-static void output_solution(const string &cmd)
+static void output_solution(const string &cmd, double obj)
 {
    tune_params.applyParams();
    ofstream param_out(out_file_name.c_str(),ios::out | ios::trunc);
@@ -1525,8 +1525,12 @@ static void output_solution(const string &cmd)
    struct tm *timeinfo = localtime(&curr_time);
    strftime(buffer,256,"%d-%b-%Y %I:%M:%S",timeinfo);
    string timestr(buffer);
-   string comment("Generated " + timestr + " by \"" + cmd + "\"");
-   Params::write(param_out,comment);
+   stringstream comment;
+   comment << "Generated " << timestr << " by " << cmd << endl;
+   if (obj != 0) {
+      comment << "Final objective value: " << obj << endl;
+   }
+   Params::write(param_out,comment.str());
    param_out << endl;
    if (param_out.bad() || param_out.fail()) {
       cerr << "error writing .cpp output file" << endl;
@@ -1601,13 +1605,14 @@ static void learn()
          }
       }
       data2[0].target /= data2[0].count;
+      const double obj = data2[0].target + calc_penalty();
       cout << "pass 2 target=" << data2[0].target << " penalty=" << calc_penalty
-() << " objective=" << data2[0].target + calc_penalty() << endl;
+() << " objective=" << obj << endl;
       data2[0].target += calc_penalty();
       if (data2[0].target < best) {
          best = data2[0].target;
          cout << "new best objective: " << best << endl;
-         output_solution(cmdline);
+         output_solution(cmdline,obj);
       }
       adjust_params(data2[0],historical_grad,m,v,prev_gradient,step_sizes,iter);
    }
@@ -1745,7 +1750,7 @@ int CDECL main(int argc, char **argv)
     }
 
     if (write_sol) {
-      output_solution(cmdline);
+      output_solution(cmdline,0);
       exit(0);
     }
 
