@@ -301,7 +301,7 @@ int CDECL main(int argc, char **argv)
                               Move moves[Constants::MaxMoves];
                               int n = mg.generateCaptures(moves);
                               for (int i = 0; i < n; i++) {
-                                 if (see(board,moves[i]>0)) {
+                                 if (see(board,moves[i])>0) {
                                     ok = false;
                                     break;
                                  }
