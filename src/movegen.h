@@ -128,7 +128,7 @@ class MoveGenerator
          return (Phase)phase;
       }
 
-      int more() const
+      virtual int more() const
       {
          return phase<LAST_PHASE || index < batch_count;
       }
@@ -214,6 +214,11 @@ class RootMoveGenerator : public MoveGenerator
       using MoveGenerator::nextMove;
       using MoveGenerator::nextEvasion;
       virtual int generateAllMoves(NodeInfo *, SplitPoint *);
+
+      virtual int more() const
+      {
+         return index < batch_count;
+      }
 
       void reorder(Move pvMove, int depth, bool initial = false);
 
