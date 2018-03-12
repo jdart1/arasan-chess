@@ -1781,7 +1781,7 @@ int CDECL main(int argc, char **argv)
     options.learning.position_learning = 0;
     options.book.book_enabled = options.log_enabled = 0;
     options.learning.position_learning = false;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
     options.search.use_tablebases = false;
 #endif
     pos_file_name = argv[arg];

@@ -52,9 +52,7 @@ extern void initOptions(const char *pathName);
 // being set).
 extern void delayedInit();
 
-// Attempt to unload the specified tablebase type (if in use),
-// freeing memeory/resources. Note: Nalimov code does not support
-// this (but re-init will free memory).
-extern void unloadTb(Options::TbType type);
+// Attempt to unload the tablebases (if in use),
+extern void unloadTb();
 
 #endif

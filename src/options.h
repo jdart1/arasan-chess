@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2018 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -13,10 +13,6 @@ class Options
 {
  public:
   enum class TbType {None, NalimovTb, GaviotaTb, SyzygyTb};
-
-  static const string NALIMOV_TYPE;
-  static const string GAVIOTA_TYPE;
-  static const string SYZYGY_TYPE;
 
   struct BookOptions {
     BookOptions()
@@ -37,21 +33,9 @@ class Options
    size_t hash_table_size;
    int can_resign;
    int resign_threshold;
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-   int use_tablebases;
-   TbType tablebase_type;
-   int tb_probe_in_search;
-#endif
-#ifdef GAVIOTA_TBS
-   size_t gtb_cache_size;
-   string gtb_scheme;
-   string gtb_path;
-#endif
-#ifdef NALIMOV_TBS
-   size_t nalimov_cache_size;
-   string nalimov_path;
-#endif
 #ifdef SYZYGY_TBS
+   int use_tablebases;
+   int tb_probe_in_search;
    string syzygy_path;
    int syzygy_50_move_rule;
    int syzygy_probe_depth;
@@ -111,7 +95,7 @@ class Options
 
    static string tbTypeToString(TbType);
 
-   string tbPath(TbType) const;
+   string tbPath() const;
 
    // sets options based on a .rc file
    int init(const string &optionsFile);

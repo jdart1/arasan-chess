@@ -1,5 +1,6 @@
 #
 # Gnu Makefile for Arasan 20.4.1
+# Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
 VERSION = 20.4.1
 
@@ -41,20 +42,12 @@ UTIL = util
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
 
-#define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS = 1
-#NALIMOV_TBS = 1
+# set to enable compliation with Syzygy tablebase support
 SYZYGY_TBS = 1
 
 CFLAGS = -I.
 ifdef NUMA
 CFLAGS := $(CFLAGS) -DNUMA
-endif
-ifdef GAVIOTA_TBS
-CFLAGS := $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
-endif
-ifdef NALIMOV_TBS
-CFLAGS := $(CFLAGS) -DNALIMOV_TBS -I$(TB)
 endif
 ifdef SYZYGY_TBS
 CFLAGS := $(CFLAGS) -DSYZYGY_TBS
@@ -199,10 +192,6 @@ arm-linux:
 clean: dirs
 	rm -f $(BUILD)/*.o
 	rm -f $(TUNE_BUILD)/*.o
-ifdef GAVIOTA_TBS
-	rm -f $(GTB_BUILD)/*.o
-	rm -f $(GTB_BUILD)/*.a
-endif
 	rm -f $(PROFILE)/*.o
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
@@ -212,9 +201,6 @@ endif
 dirs:
 	mkdir -p $(BUILD)
 	mkdir -p $(TUNE_BUILD)
-ifdef GAVIOTA_TBS
-	mkdir -p $(GTB_BUILD)
-endif
 	mkdir -p $(EXPORT)
 	mkdir -p $(PROFILE)
 	mkdir -p $(PROF_DATA)
@@ -276,42 +262,6 @@ ifdef NUMA
 NUMA_OBJS=$(BUILD)/topo.o
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
-endif
-ifdef GAVIOTA_TBS
-# all sources are under $(GTB), we will use vpath (see below) to find them
-GTB_SOURCES := gtb-probe.c gtb-dec.c gtb-att.c sysport.c \
-	wrap.c hzip.c LzmaEnc.c LzmaDec.c Alloc.c LzFind.c \
-	Lzma86Enc.c Lzma86Dec.c Bra86.c zcompress.c \
-	uncompr.c inflate.c deflate.c adler32.c \
-	crc32.c infback.c inffast.c inftrees.c \
-	trees.c zutil.c lzf_c.c lzf_d.c
-
-GTB_OBJS:=$(GTB_SOURCES:%.c=$(GTB_BUILD)/%.o)
-
-GTB_FLAGS := -x c -DZ_PREFIX -DNDEBUG $(SMP) -I$(GTB)/sysport -I$(GTB)/compression -I$(GTB)/compression/huffman -I$(GTB)/compression/lzma -I$(GTB)/compression/zlib -I$(GTB)/compression/liblzf $(GTB_FLAGS)
-
-TB_SOURCES := gtb.cpp
-TB_OBJS := $(BUILD)/gtb.o
-TB_LIBS := $(GTB_BUILD)/$(GTB_LIBNAME)
-
-ifdef SYZYGY_TBS
-vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf $(STB)
-else
-vpath %.c $(GTB) $(GTB)/sysport $(GTB)/compression $(GTB)/compression/zlib $(GTB)/compression/huffman $(GTB)/compression/lzma $(GTB)/compression/liblzf
-endif
-
-#rule for building GTB (c code)
-$(GTB_BUILD)/%.o: %.c
-	$(CC) $(GTB_FLAGS) $(GTB_OPT) $(DEBUG) -c $< -o $@
-
-$(TB_LIBS): $(GTB_OBJS)
-	$(AR) $(GTB_AR_OPT) rcs $(GTB_BUILD)/$(GTB_LIBNAME) $(GTB_OBJS)
-
-endif
-
-ifdef NALIMOV_TBS
-TB_SOURCES := $(TB_SOURCES) $(TB)/nalimov.cpp
-TB_OBJS := $(TB_OBJS) $(BUILD)/nalimov.o
 endif
 
 ifdef SYZYGY_TBS

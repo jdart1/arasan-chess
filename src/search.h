@@ -394,7 +394,7 @@ protected:
                     int failhigh,int complete);
 
     score_t tbScoreAdjust(const Board &board,
-                          score_t score, int tb_hit, Options::TbType tablebase_type,score_t tb_score) const;
+                          score_t score, int tb_hit, score_t tb_score) const;
 
     score_t futilityMargin(int depth) const;
 

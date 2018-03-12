@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
-# Copyright 2004-2017 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
 VERSION = 20.4.1
 #
@@ -16,16 +16,8 @@ PROFDATA = ..\$(TARGET)\profdata
 BUILD_ROOT=..
 UTIL=util
 
-#define the appropriate macro for the type(s) of tablebase supported
-#GAVIOTA_TBS=1
-#NALIMOV_TBS=1
-SYZYGY_TBS=1
-
-# location of the Gaviota tablebase source code
-GTB=michiguel-Gaviota-Tablebases-161d6cb
-
-# location of the Nalimov tablebase source code
-TB=tb
+# set to enable compliation with Syzygy tablebase support
+SYZYGY_TBS = 1
 
 # location of SYZYGY tablebase code
 STB=syzygy
@@ -139,155 +131,6 @@ TB_PROFILE_OBJS = $(PROFILE)\nalimov.obj
 TB_PGO_OBJS = $(PGO_BUILD)\nalimov.obj
 CFLAGS = $(CFLAGS) -DNALIMOV_TBS
 !Endif
-!IfDef GAVIOTA_TBS
-
-GTB_SRCS = $(GTB)\gtb-probe.c $(GTB)\gtb-dec.c $(GTB)\gtb-att.c \
-	$(GTB)\sysport\sysport.c \
-	$(GTB)\compression\wrap.c $(GTB)\compression\huffman\hzip.c \
-	$(GTB)\compression\lzma\LzmaEnc.c $(GTB)\compression\lzma\LzmaDec.c \
-	$(GTB)\compression\lzma\Alloc.c $(GTB)\compression\lzma\LzFind.c \
-	$(GTB)\compression\lzma\Lzma86Enc.c \
-	$(GTB)\compression\lzma\Lzma86Dec.c \
-	$(GTB)\compression\lzma\Bra86.c \
-	$(GTB)\compression\zlib\zcompress.c \
-	$(GTB)\compression\zlib\uncompr.c $(GTB)\compression\zlib\inflate.c \
-	$(GTB)\compression\zlib\deflate.c $(GTB)\compression\zlib\adler32.c \
-	$(GTB)\compression\zlib\crc32.c $(GTB)\compression\zlib\infback.c \
-	$(GTB)\compression\zlib\inffast.c $(GTB)\compression\zlib\inftrees.c \
-	$(GTB)\compression\zlib\trees.c $(GTB)\compression\zlib\zutil.c \
-	$(GTB)\compression\liblzf\lzf_c.c $(GTB)\compression\liblzf\lzf_d.c
-
-GTB_OBJS = $(BUILD)\gtb-probe.obj $(BUILD)\gtb-dec.obj \
-	$(BUILD)\gtb-att.obj \
-	$(BUILD)\sysport.obj \
-	$(BUILD)\wrap.obj $(BUILD)\hzip.obj \
-	$(BUILD)\LzmaEnc.obj $(BUILD)\LzmaDec.obj \
-	$(BUILD)\Alloc.obj $(BUILD)\LzFind.obj \
-	$(BUILD)\Lzma86Enc.obj \
-	$(BUILD)\Lzma86Dec.obj \
-	$(BUILD)\Bra86.obj \
-	$(BUILD)\zcompress.obj \
-	$(BUILD)\uncompr.obj $(BUILD)\inflate.obj \
-	$(BUILD)\deflate.obj $(BUILD)\adler32.obj \
-	$(BUILD)\crc32.obj $(BUILD)\infback.obj \
-	$(BUILD)\inffast.obj $(BUILD)\inftrees.obj \
-	$(BUILD)\trees.obj $(BUILD)\zutil.obj \
-	$(BUILD)\lzf_c.obj $(BUILD)\lzf_d.obj
-
-GTB_TUNE_OBJS = $(TUNE_BUILD)\gtb-probe.obj $(TUNE_BUILD)\gtb-dec.obj \
-	$(TUNE_BUILD)\gtb-att.obj \
-	$(TUNE_BUILD)\sysport.obj \
-	$(TUNE_BUILD)\wrap.obj $(TUNE_BUILD)\hzip.obj \
-	$(TUNE_BUILD)\LzmaEnc.obj $(TUNE_BUILD)\LzmaDec.obj \
-	$(TUNE_BUILD)\Alloc.obj $(TUNE_BUILD)\LzFind.obj \
-	$(TUNE_BUILD)\Lzma86Enc.obj \
-	$(TUNE_BUILD)\Lzma86Dec.obj \
-	$(TUNE_BUILD)\Bra86.obj \
-	$(TUNE_BUILD)\zcompress.obj \
-	$(TUNE_BUILD)\uncompr.obj $(TUNE_BUILD)\inflate.obj \
-	$(TUNE_BUILD)\deflate.obj $(TUNE_BUILD)\adler32.obj \
-	$(TUNE_BUILD)\crc32.obj $(TUNE_BUILD)\infback.obj \
-	$(TUNE_BUILD)\inffast.obj $(TUNE_BUILD)\inftrees.obj \
-	$(TUNE_BUILD)\trees.obj $(TUNE_BUILD)\zutil.obj \
-	$(TUNE_BUILD)\lzf_c.obj $(TUNE_BUILD)\lzf_d.obj
-
-GTB_PROFILE_OBJS = $(PROFILE)\gtb-probe.obj $(PROFILE)\gtb-dec.obj \
-	$(PROFILE)\gtb-att.obj \
-	$(PROFILE)\sysport.obj \
-	$(PROFILE)\wrap.obj $(PROFILE)\hzip.obj \
-	$(PROFILE)\LzmaEnc.obj $(PROFILE)\LzmaDec.obj \
-	$(PROFILE)\Alloc.obj $(PROFILE)\LzFind.obj \
-	$(PROFILE)\Lzma86Enc.obj \
-	$(PROFILE)\Lzma86Dec.obj \
-	$(PROFILE)\Bra86.obj \
-	$(PROFILE)\zcompress.obj \
-	$(PROFILE)\uncompr.obj $(PROFILE)\inflate.obj \
-	$(PROFILE)\deflate.obj $(PROFILE)\adler32.obj \
-	$(PROFILE)\crc32.obj $(PROFILE)\infback.obj \
-	$(PROFILE)\inffast.obj $(PROFILE)\inftrees.obj \
-	$(PROFILE)\trees.obj $(PROFILE)\zutil.obj \
-	$(PROFILE)\lzf_c.obj $(PROFILE)\lzf_d.obj
-
-GTB_PGO_OBJS = $(PGO_BUILD)\gtb-probe.obj $(PGO_BUILD)\gtb-dec.obj \
-	$(PGO_BUILD)\gtb-att.obj \
-	$(PGO_BUILD)\sysport.obj \
-	$(PGO_BUILD)\wrap.obj $(PGO_BUILD)\hzip.obj \
-	$(PGO_BUILD)\LzmaEnc.obj $(PGO_BUILD)\LzmaDec.obj \
-	$(PGO_BUILD)\Alloc.obj $(PGO_BUILD)\LzFind.obj \
-	$(PGO_BUILD)\Lzma86Enc.obj \
-	$(PGO_BUILD)\Lzma86Dec.obj \
-	$(PGO_BUILD)\Bra86.obj \
-	$(PGO_BUILD)\zcompress.obj \
-	$(PGO_BUILD)\uncompr.obj $(PGO_BUILD)\inflate.obj \
-	$(PGO_BUILD)\deflate.obj $(PGO_BUILD)\adler32.obj \
-	$(PGO_BUILD)\crc32.obj $(PGO_BUILD)\infback.obj \
-	$(PGO_BUILD)\inffast.obj $(PGO_BUILD)\inftrees.obj \
-	$(PGO_BUILD)\trees.obj $(PGO_BUILD)\zutil.obj \
-	$(PGO_BUILD)\lzf_c.obj $(PGO_BUILD)\lzf_d.obj
-
-GTB_FLAGS = $(OPT) /DZ_PREFIX $(SMP) /I$(GTB)\sysport /I$(GTB)\compression /I$(GTB)\compression/huffman /I$(GTB)\compression/lzma /I$(GTB)\compression/zlib /I$(GTB)\compression/liblzf
-
-{$(GTB)}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\sysport}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\lzma}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\zlib}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\liblzf}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\huffman}.c{$(BUILD)}.obj:
-	$(CL) $(GTB_FLAGS) /Fo$@ -c $<
-
-{$(GTB)}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\sysport}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\lzma}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\zlib}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\liblzf}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-{$(GTB)\compression\huffman}.c{$(PROFILE)}.obj:
-	$(CL) $(GTB_FLAGS) $(PROF_GEN_FLAGS) /Fo$@ -c $<
-
-CFLAGS = $(CFLAGS) -DGAVIOTA_TBS -I$(GTB)
-
-TB_OBJS = $(TB_OBJS) $(GTB_OBJS) $(BUILD)\gtb.obj
-TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(GTB_TUNE_OBJS) $(TUNE_BUILD)\gtb.obj
-TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(GTB_PROFILE_OBJS) $(PROFILE)\gtb.obj
-TB_PGO_OBJS = $(TB_PGO_OBJS) $(GTB_PGO_OBJS) $(PGO_BUILD)\gtb.obj
-
-GTB_LIBDIR=..\lib\$(TARGET)\$(BUILD_TYPE)
-GTB_LIBNAME=gtb.lib
-
-# A library version of the GTB code, mostly for use with the Visual C++ IDE.
-# Note: PGO in Visual C++ is not compatible with static libraries.
-gtb-lib: $(GTB_OBJS) $(GTB_LIBDIR)
-	lib /LTCG /out:$(GTB_LIBDIR)\$(GTB_LIBNAME) $(GTB_OBJS)
-
-$(GTB_LIBDIR):
-	md $(GTB_LIBDIR)
-!Endif
-
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) -DSYZYGY_TBS
 STB_FLAGS = /TP $(CFLAGS)

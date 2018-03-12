@@ -73,10 +73,6 @@ search.ncpus=1
 # True to enable use of tablebases, false to disable
 search.use_tablebases=true
 #
-# Tablebase type - supported values are "Gaviota", "Nalimov", "Syzygy".
-# >1 type may be installed, but only one type is active at any given time.
-search.tablebase_type=Syzygy
-#
 # Tablebase cache size.
 # can use: K for kilobytes, M for megabytes, G for gigabytes
 # Note: Syzygy does not have an associated cache size.

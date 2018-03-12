@@ -25,12 +25,6 @@
 #ifdef TUNE
 #include "tune.h"
 #endif
-#ifdef GAVIOTA_TBS
-#include "gtb.h"
-#endif
-#ifdef NALIMOV_TBS
-#include "nalimov.h"
-#endif
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
@@ -464,7 +458,7 @@ static bool accept_draw(Board &board) {
          cout << "# pawnless ending, accept draw" << endl;
       return true;
    }
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS)
+#ifdef SYZYGY_TBS
    const Material &wMat = board.getMaterial(White);
    const Material &bMat = board.getMaterial(Black);
    if(options.search.use_tablebases &&
@@ -473,33 +467,12 @@ static bool accept_draw(Board &board) {
          cout << "# checking tablebases .." << endl;
       // accept a draw when the tablebases say it's a draw
       score_t tbscore;
-#ifdef GAVIOTA_TBS
-      if (options.search.tablebase_type == Options::TbType::GaviotaTb) {
-          if (GaviotaTb::probe_tb(board,tbscore,0,1) && tbscore == 0) {
-              if (doTrace)
-                  cout << "# tablebase score says draw" << endl;
-              return true;
-          }
+      if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
+         if (doTrace) {
+            cout << "# tablebase score says draw" << endl;
+         }
+         return true;
       }
-#endif
-#ifdef NALIMOV_TBS
-      if (options.search.tablebase_type == Options::TbType::NalimovTb) {
-          if (NalimovTb::probe_tb(board,tbscore,0) && tbscore == 0) {
-              if (doTrace)
-                  cout << "# tablebase score says draw" << endl;
-              return true;
-          }
-      }
-#endif
-#ifdef SYZYGY_TBS
-      if (options.search.tablebase_type == Options::TbType::SyzygyTb) {
-         if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
-              if (doTrace)
-                  cout << "# tablebase score says draw" << endl;
-              return true;
-          }
-      }
-#endif
    }
 #endif
    if (opponent_rating == 0)
@@ -2348,7 +2321,7 @@ static void loadgame(Board &board,ifstream &file) {
 }
 
 
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
 static bool validTbPath(const string &path) {
    // Shredder at least sets path to "<empty>" for tb types that are disabled
    return path != "" && path != "<empty>";
@@ -2396,44 +2369,16 @@ static bool do_command(const string &cmd, Board &board) {
 #endif
         cout << "option name Ponder type check default true" << endl;
         cout << "option name Contempt type spin default 0 min -200 max 200" << endl;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
         cout << "option name Use tablebases type check default ";
         if (options.search.use_tablebases) cout << "true"; else cout << "false";
         cout << endl;
-        cout << "option name Tablebases type combo var None";
-#ifdef SYZYGY_TBS
-        cout << " var " << Options::SYZYGY_TYPE;
-#endif
-#ifdef NALIMOV_TBS
-        cout << " var " << Options::NALIMOV_TYPE;
-#endif
-#ifdef GAVIOTA_TBS
-        cout << " var " << Options::GAVIOTA_TYPE;
-#endif
-        cout << " default " << Options::tbTypeToString(options.search.tablebase_type);
-        cout << endl;
-#ifdef GAVIOTA_TBS
-        cout << "option name GaviotaTbPath type string default " <<
-            options.search.gtb_path << endl;
-        cout << "option name GaviotaTbCache type spin default " <<
-            options.search.gtb_cache_size/(1024*1024) <<
-            " min 1 max 32" << endl;
-#endif
-#ifdef NALIMOV_TBS
-        cout << "option name NalimovPath type string default " <<
-            options.search.nalimov_path << endl;
-        cout << "option name NalimovCache type spin default " <<
-            options.search.nalimov_cache_size/(1024*1024) <<
-            " min 1 max 32" << endl;
-#endif
-#ifdef SYZYGY_TBS
         cout << "option name SyzygyTbPath type string default " <<
             options.search.syzygy_path << endl;
         cout << "option name SyzygyUse50MoveRule type check default true" << endl;
         cout << "option name SyzygyProbeDepth type spin default " <<
             options.search.syzygy_probe_depth <<
            " min 0 max 64" << endl;
-#endif
 #endif
         cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << endl;
         cout << "option name OwnBook type check default true" << endl;
@@ -2509,55 +2454,14 @@ static bool do_command(const string &cmd, Board &board) {
                searcher->setContempt(uciContempt);
             }
         }
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
         else if (uciOptionCompare(name,"Use tablebases")) {
             options.search.use_tablebases = (value == "true");
         }
-        else if (uciOptionCompare(name,"Tablebases")) {
-            Options::TbType previous = options.search.tablebase_type;
-            options.search.tablebase_type = Options::stringToTbType(value);
-            if (previous != options.search.tablebase_type) {
-                // Type has changed
-                unloadTb(previous);
-            }
-        }
-#endif
-#ifdef NALIMOV_TBS
-        else if (uciOptionCompare(name,"NalimovPath") && validTbPath(value)) {
-            unloadTb(options.search.tablebase_type);
-            options.search.nalimov_path = value;
-            options.search.use_tablebases = 1;
-            options.search.tablebase_type = Options::TbType::NalimovTb;
-        }
-        else if (uciOptionCompare(name,"NalimovCache")) {
-            // This is in MB
-            int size = 0;
-            if (Options::setOption<int>(value,size)) {
-                options.search.nalimov_cache_size = std::min<int>(32,size)*1024L*1024L;
-            }
-        }
-#endif
-#ifdef GAVIOTA_TBS
-        else if (name == "GaviotaTbPath" && validTbPath(value)) {
-            unloadTb(options.search.tablebase_type);
-            options.search.gtb_path = value;
-            options.search.use_tablebases = 1;
-            options.search.tablebase_type = Options::TbType::GaviotaTb;
-        }
-        else if (uciOptionCompare(name,"GaviotaTbCache")) {
-            // This is in MB
-            int size;
-            if (Options::setOption<int>(value,size)) {
-                options.search.gtb_cache_size = std::min<int>(32,size)*1024L*1024L;
-            }
-        }
-#endif
-#ifdef SYZYGY_TBS
         else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
-           unloadTb(options.search.tablebase_type);
+           unloadTb();
            options.search.syzygy_path = value;
            options.search.use_tablebases = 1;
-           options.search.tablebase_type = Options::TbType::SyzygyTb;
         }
         else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
            options.search.syzygy_50_move_rule = (value == "true");
@@ -2823,39 +2727,20 @@ static bool do_command(const string &cmd, Board &board) {
             }
             else {
                 delayedInit();
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
                 score_t tbscore;
                 if (options.search.use_tablebases) {
-#ifdef GAVIOTA_TBS
-                   if (options.search.tablebase_type == Options::TbType::GaviotaTb && GaviotaTb::probe_tb(board,tbscore,0,1)) {
-                        cout << "score = ";
-                        Scoring::printScore(tbscore,cout);
-                        cout << " (from " << Options::tbTypeToString(options.search.tablebase_type) << " tablebases)" << endl;
-                    }
-#endif
-#ifdef NALIMOV_TBS
-                    if (options.search.tablebase_type ==
-                        Options::TbType::NalimovTb && NalimovTb::probe_tb(board,tbscore,0)) {
-                        cout << "score = ";
-                        Scoring::printScore(tbscore,cout);
-                        cout << " (from " << Options::tbTypeToString(options.search.tablebase_type) << " tablebases)" << endl;
-                    }
-#endif
-#ifdef SYZYGY_TBS
-                    if (options.search.tablebase_type == Options::TbType::SyzygyTb) {
-                       set<Move> rootMoves;
-                       if (SyzygyTb::probe_root(board,tbscore,rootMoves)) {
-                          cout << "score = ";
-                          if (tbscore == -SyzygyTb::CURSED_SCORE)
-                              cout << "draw (Cursed Loss)";
-                          else if (tbscore == -SyzygyTb::CURSED_SCORE)
-                              cout << "draw (Cursed Win)";
-                          else
-                              Scoring::printScore(tbscore,cout);
-                          cout << " (from " << Options::tbTypeToString(options.search.tablebase_type) << " tablebases)" << endl;
-                       }
-                    }
-#endif
+                   set<Move> rootMoves;
+                   if (SyzygyTb::probe_root(board,tbscore,rootMoves)) {
+                      cout << "score = ";
+                      if (tbscore == -SyzygyTb::CURSED_SCORE)
+                         cout << "draw (Cursed Loss)";
+                      else if (tbscore == -SyzygyTb::CURSED_SCORE)
+                         cout << "draw (Cursed Win)";
+                      else
+                         Scoring::printScore(tbscore,cout);
+                      cout << " (from Syzygy tablebases)" << endl;
+                   }
                 }
 #endif
                 int score;
@@ -3094,23 +2979,8 @@ static bool do_command(const string &cmd, Board &board) {
     else if (cmd_word == "protover") {
         // new in Winboard 4.2
         cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
-#if defined(GAVIOTA_TBS) && defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
-        string opts(" egt=\"");
-        int i = 0;
-#if defined(SYZYGY_TBS)
-        opts += "syzygy";
-        i++;
-#endif
-#if defined(NALIMOV_TBS)
-        if (i) opts += ',';
-        opts += "nalimov";
-        i++;
-#endif
-#if defined(GAVIOTA_TBS)
-        if (i) opts += ',';
-        opts += "gaviota";
-#endif
-        cout << opts << '"';
+#ifdef SYZYGY_TBS
+        cout << " egt=\"syzygy\"";
 #endif
         // custom option for book selectivity
         cout << " option=\"Book selectivity -spin " <<
@@ -3371,48 +3241,20 @@ static bool do_command(const string &cmd, Board &board) {
              it++;
         }
 #endif
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-        Options::TbType tb_type = Options::stringToTbType(type);
-        // Unload existing tb set if in use and if type or path
-        // has changed
-        if ((options.tbPath(tb_type) != path) ||
-            (options.search.tablebase_type != tb_type)) {
+#ifdef SYZYGY_TBS
+        // Unload existing tb set if in use and if path has changed
+        if (options.tbPath() != path) {
            if (doTrace) cout << "# unloading tablebases" << endl;
-           unloadTb(options.search.tablebase_type);
+           unloadTb();
         }
-#endif
         // Set the tablebase options. But do not initialize the
         // tablebases here. Defer until delayedInit is called again.
         // One reason to do this is that we may receive multiple
         // egtpath commands from Winboard.
-#ifdef NALIMOV_TBS
-        if (tb_type == Options::TbType::NalimovTb) {
-            options.search.use_tablebases = 1;
-            options.search.nalimov_path = path;
-            options.search.tablebase_type = tb_type;
-            if (doTrace) {
-                cout << "# setting Nalimov tb path to " << options.search.nalimov_path << endl;
-            }
-        }
-#endif
-#ifdef GAVIOTA_TBS
-        if (tb_type == Options::TbType::GaviotaTb) {
-            options.search.use_tablebases = 1;
-            options.search.gtb_path = path;
-            options.search.tablebase_type = tb_type;
-            if (doTrace) {
-                cout << "# setting Gaviota tb path to " << options.search.gtb_path << endl;
-            }
-        }
-#endif
-#ifdef SYZYGY_TBS
-        if (tb_type == Options::TbType::SyzygyTb) {
-            options.search.use_tablebases = 1;
-            options.search.syzygy_path = path;
-            options.search.tablebase_type = tb_type;
-            if (doTrace) {
-                cout << "# setting Syzygy tb path to " << options.search.syzygy_path << endl;
-            }
+        options.search.use_tablebases = 1;
+        options.search.syzygy_path = path;
+        if (doTrace) {
+           cout << "# setting Syzygy tb path to " << options.search.syzygy_path << endl;
         }
 #endif
     }

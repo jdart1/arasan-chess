@@ -10,12 +10,6 @@ git submodule update --init --recursive
 
 in your repository directory.
 
-If you want Nalimov or Gaviota tablebase support, you must download
-and install the tablebase code (available from
-http://arasanchess.org/downld.shtml) and edit the Makefile to select
-the type(s) of tablebase support you want and to point to the
-necessary sources.
-
 Arasan now requires a modern compiler with C++11 features (although
 not necessarily complete C++11 support). Gcc 4.7 or above is
 recommended for building Arasan (on Mac OS, use clang).

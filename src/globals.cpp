@@ -1,42 +1,24 @@
- // Copyright 1996-2012, 2014, 2016, 2017 by Jon Dart.  All Rights Reserved.
+ // Copyrightgg 1996-2012, 2014, 2016-2018 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
 #include "bitprobe.h"
 #include "scoring.h"
 #include "bitbase.cpp"
-#ifdef GAVIOTA_TBS
-#include "gtb.h"
-#endif
-#ifdef NALIMOV_TBS
-#include "nalimov.h"
-#endif
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
 
-#include <map>
+#ifdef SYZYGY_TBS
+static bool tb_init = false;
 
-#if !defined(_MSC_VER) || (_MSC_VER >= 1800)
-static map<Options::TbType,bool> tb_init_map =
-{{Options::TbType::None, false},
-{Options::TbType::NalimovTb, false},
-{Options::TbType::GaviotaTb, false},
-{Options::TbType::SyzygyTb, false}};
-#else
-static map<Options::TbType,bool> tb_init_map;
+bool tb_init_done()
+{
+   return tb_init;
+}
+int EGTBMenCount = 0;
 #endif
 
-bool tb_init_done(const Options::TbType type)
-{
-   auto done = tb_init_map.find(type);
-   if (done == tb_init_map.end())
-      return false;
-   else
-      return (*done).second;
-}
-
-int EGTBMenCount = 0;
 MoveArray *gameMoves;
 Options options;
 BookReader openingBook;
@@ -132,52 +114,19 @@ void initOptions(const char *pathName) {
 }
 
 void delayedInit() {
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-    if (options.search.use_tablebases && !tb_init_done(options.search.tablebase_type)) {
+#ifdef SYZYGY_TBS
+   if (options.search.use_tablebases && !tb_init_done()) {
        EGTBMenCount = 0;
        string path;
-#ifdef GAVIOTA_TBS
-       if (options.search.tablebase_type == Options::TbType::GaviotaTb) {
-            // If no tablebase directory was specified in the .rc file,
-            // try to find the table bases under the arasan install dir
-            if (options.search.gtb_path == "") {
-                options.search.gtb_path=derivePath("gtb");
-            }
-            path = options.search.gtb_path;
-            EGTBMenCount = GaviotaTb::initTB(options.search.gtb_path,
-                              options.search.gtb_scheme,
-                              options.search.gtb_cache_size);
-            tb_init_map[Options::TbType::GaviotaTb] = true;
+       if (options.search.syzygy_path == "") {
+          options.search.syzygy_path=derivePath("syzygy");
        }
-#endif
-#ifdef NALIMOV_TBS
-       if (options.search.tablebase_type == Options::TbType::NalimovTb) {
-            // If no tablebase directory was specified in the .rc file,
-            // try to find the table bases under the arasan install dir
-            if (options.search.nalimov_path == "") {
-                options.search.nalimov_path=derivePath("TB");
-            }
-            path = options.search.nalimov_path;
-            EGTBMenCount = NalimovTb::initTB(
-                             (char*)options.search.nalimov_path.c_str(),
-                             options.search.nalimov_cache_size);
-            tb_init_map[Options::TbType::NalimovTb] = true;
-       }
-#endif
-#ifdef SYZYGY_TBS
-       if (options.search.tablebase_type == Options::TbType::SyzygyTb) {
-          if (options.search.syzygy_path == "") {
-             options.search.syzygy_path=derivePath("syzygy");
-          }
-          path = options.search.syzygy_path;
-          EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
-          tb_init_map[Options::TbType::SyzygyTb] = true;
-       }
-#endif
+       path = options.search.syzygy_path;
+       EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
+       tb_init = true;
        if (EGTBMenCount) {
           stringstream msg;
-          msg << "found " << EGTBMenCount << "-man " <<
-             Options::tbTypeToString(options.search.tablebase_type) << " tablebases in directory " << path << endl;
+          msg << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << endl;
           cerr << msg.str();
 #ifdef UCI_LOG
           ucilog << msg.str();
@@ -191,18 +140,11 @@ void delayedInit() {
     }
 }
 
-void unloadTb(Options::TbType type)
-{
-   if (tb_init_done(type)) {
-      // Note: Only Gaviota tb code has an explicit free command.
-      // Nalimov and Syzygy will free any existing memory if
-      // initialized more than once.
-#ifdef GAVIOTA_TBS
-      if (type == Options::TbType::GaviotaTb) {
-         GaviotaTb::freeTB();
-      }
-#endif
-      tb_init_map[type] = false;
+   void unloadTb() {
+   if (tb_init_done()) {
+      // Note: Syzygy code will free any existing memory if
+      // initialized more than once. So no need to do anything here.
+      tb_init = false;
    }
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2018 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
@@ -14,90 +14,21 @@
 
 using namespace std;
 
-const string Options::NALIMOV_TYPE = "Nalimov";
-const string Options::GAVIOTA_TYPE = "Gaviota";
-const string Options::SYZYGY_TYPE = "Syzygy";
-
-Options::TbType Options::stringToTbType(const string &value) 
-{
-#ifdef GAVIOTA_TBS
-   if (value == GAVIOTA_TYPE) {
-      return Options::TbType::GaviotaTb;
-   }
-#endif
-#ifdef NALIMOV_TBS
-   if (value == NALIMOV_TYPE) {
-      return Options::TbType::NalimovTb;
-   }
-#endif
 #ifdef SYZYGY_TBS
-   if (value == SYZYGY_TYPE) {
-      return Options::TbType::SyzygyTb;
-   }
-#endif
-   return Options::TbType::None;
-}
-
-string Options::tbTypeToString(TbType type) 
+string Options::tbPath() const
 {
-#ifdef GAVIOTA_TBS
-   if (type == Options::TbType::GaviotaTb) {
-      return GAVIOTA_TYPE;
-   }
-#endif
-#ifdef NALIMOV_TBS
-   if (type == Options::TbType::NalimovTb) {
-      return NALIMOV_TYPE;
-   }
-#endif
-#ifdef SYZYGY_TBS
-   if (type == Options::TbType::SyzygyTb) {
-      return SYZYGY_TYPE;
-   }
-#endif
-   return "None";
+   return search.syzygy_path;
 }
-
-string Options::tbPath(Options::TbType type) const
-{
-#ifdef GAVIOTA_TBS
-   if (type == Options::TbType::GaviotaTb) {
-      return search.gtb_path;
-   }
 #endif
-#ifdef NALIMOV_TBS
-   if (type == Options::TbType::NalimovTb) {
-      return search.nalimov_path;
-   }
-#endif
-#ifdef SYZYGY_TBS
-   if (type == Options::TbType::SyzygyTb) {
-      return search.syzygy_path;
-   }
-#endif
-   return "";
-}
 
 Options::SearchOptions::SearchOptions() :
       checks_in_qsearch(1),
       hash_table_size(32*1024*1024),
       can_resign(1),
       resign_threshold(-500),
-#if defined(NALIMOV_TBS) || defined(GAVIOTA_TBS) || defined(SYZYGY_TBS)
-      use_tablebases(0),
-      tablebase_type(TbType::None),
-      tb_probe_in_search(1),
-#endif
-#ifdef GAVIOTA_TBS
-      gtb_cache_size((size_t)8*1024L*1024L),
-      gtb_scheme("cp4"),
-      gtb_path("gtb"),
-#endif
-#ifdef NALIMOV_TBS
-      nalimov_cache_size((size_t)8*1024L*1024L),
-      nalimov_path("TB"),
-#endif
 #ifdef SYZYGY_TBS
+      use_tablebases(0),
+      tb_probe_in_search(1),
       syzygy_path("syzygy"),
       syzygy_50_move_rule(1),
       syzygy_probe_depth(4),
@@ -218,39 +149,10 @@ void Options::set_option(const string &name, const string &value) {
   else if (name == "search.hash_table_size") {
     setMemoryOption(search.hash_table_size,value);
   }
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
   else if (name == "search.use_tablebases") {
     set_boolean_option(name,value,search.use_tablebases);
   }
-  else if (name == "search.tablebase_type") {
-     TbType tmp = search.tablebase_type;
-     search.tablebase_type = stringToTbType(value);
-     if (search.tablebase_type == TbType::None) {
-        cerr << "Invalid tablebase type: " << value << endl;
-        search.tablebase_type = tmp;
-     }
-  }
-#endif
-#ifdef GAVIOTA_TBS
-  else if (name == "search.gtb_cache_size") {
-    setMemoryOption(search.gtb_cache_size,value);
-  }
-  else if (name == "search.gtb_path") {
-    search.gtb_path = value;
-  }
-  else if (name == "search.gtb_scheme") {
-    search.gtb_scheme = value;
-  }
-#endif
-#ifdef NALIMOV_TBS
-  else if (name == "search.nalimov_cache_size") {
-    setMemoryOption(search.nalimov_cache_size,value);
-  }
-  else if (name == "search.nalimov_path") {
-    search.nalimov_path = value;
-  }
-#endif
-#ifdef SYZYGY_TBS
   else if (name == "search.syzygy_path") {
     search.syzygy_path = value;
   }

@@ -6,12 +6,6 @@
 #include "movegen.h"
 #include "hash.h"
 #include "see.h"
-#ifdef GAVIOTA_TBS
-#include "gtb.h"
-#endif
-#ifdef NALIMOV_TBS
-#include "nalimov.h"
-#endif
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
@@ -652,7 +646,7 @@ void RootSearch::init(const Board &board, NodeStack &stack) {
 
 #ifdef SYZYGY_TBS
 score_t Search::tbScoreAdjust(const Board &board,
-                    score_t value,int tb_hit,Options::TbType tablebase_type,score_t tb_score) const 
+                    score_t value,int tb_hit,score_t tb_score) const 
 {
 #ifdef _TRACE
     cout << "tb score adjust: input=";
@@ -660,8 +654,7 @@ score_t Search::tbScoreAdjust(const Board &board,
     cout << endl;
 #endif
    score_t output;
-   if (tb_hit && tablebase_type == Options::TbType::SyzygyTb &&
-       !Scoring::mateScore(value)) {
+   if (tb_hit && !Scoring::mateScore(value)) {
       // If a Syzygy tablebase hit set the score based on that. But
       // don't override a mate score found with search.
       if (tb_score == Constants::TABLEBASE_WIN) {
@@ -729,7 +722,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    controller->time_check_counter = Time_Check_Interval;
 
    score_t value = Constants::INVALID_SCORE;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
    int tb_hit = 0, tb_pieces = 0;
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
@@ -740,54 +733,38 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
       tb_pieces = wMat.men() + bMat.men();
       if(tb_pieces <= EGTBMenCount) {
          controller->stats->tb_probes++;
-#ifdef NALIMOV_TBS
-         if (srcOpts.tablebase_type == Options::TbType::NalimovTb) {
-             tb_hit = NalimovTb::probe_tb(board, tb_score, 0);
-             value = tb_score;
-         }
-#endif
-#ifdef GAVIOTA_TBS
-         if (srcOpts.tablebase_type == Options::TbType::GaviotaTb) {
-             tb_hit = GaviotaTb::probe_tb(board, tb_score, 0, true);
-             value = tb_score;
-         }
-#endif
-#ifdef SYZYGY_TBS
-         if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
-            set<Move> moves;
-            // If include set is non-empty, ensure all "include" moves
-            // will be in the set to search, even if some are losing moves.
-            std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
-            tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
-            if (tb_hit) {
-               // restrict the search to moves that preserve the
-               // win or draw, if there is one.
-               mg.filter(moves);
-               if (mg.moveCount() == 0) {
-                   // should not happen
-                   if (talkLevel == Trace) {
-                       cout << "# warning: no moves after Syzygy move filtering" << endl;
-                   }
-                   tb_hit = 0;
-               } else {
-#ifdef _TRACE
-                   cout << "filtered moves from Syzygy:";
-                   for (auto it = moves.begin(); it != moves.end(); it++) {
-                       cout << ' ';;
-                       Notation::image(board,*it,Notation::OutputFormat::SAN,cout);
-                   }
-                   cout << endl;
-#endif
-                   // Note: do not set the value - search values are based
-                   // on DTM not DTZ.
-                   controller->stats->tb_value = tb_score;
-                   // do not probe in the search
-                   options.search.tb_probe_in_search = 0;
-                   controller->updateSearchOptions();
+         set<Move> moves;
+         // If include set is non-empty, ensure all "include" moves
+         // will be in the set to search, even if some are losing moves.
+         std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
+         tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
+         if (tb_hit) {
+            // restrict the search to moves that preserve the
+            // win or draw, if there is one.
+            mg.filter(moves);
+            if (mg.moveCount() == 0) {
+               // should not happen
+               if (talkLevel == Trace) {
+                  cout << "# warning: no moves after Syzygy move filtering" << endl;
                }
+               tb_hit = 0;
+            } else {
+#ifdef _TRACE
+               cout << "filtered moves from Syzygy:";
+               for (auto it = moves.begin(); it != moves.end(); it++) {
+                  cout << ' ';;
+                  Notation::image(board,*it,Notation::OutputFormat::SAN,cout);
+               }
+               cout << endl;
+#endif
+               // Note: do not set the value - search values are based
+               // on DTM not DTZ.
+               controller->stats->tb_value = tb_score;
+               // do not probe in the search
+               options.search.tb_probe_in_search = 0;
+               controller->updateSearchOptions();
             }
          }
-#endif
          if (tb_hit) {
             controller->stats->tb_hits++;
             if (talkLevel == Trace) {
@@ -913,7 +890,6 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             controller->stats->display_value = tbScoreAdjust(board,
                                                       controller->stats->display_value,
                                                       tb_hit,
-                                                      options.search.tablebase_type,
                                                       tb_score);
 #endif
             // check for forced move, but only at depth 2
@@ -1068,64 +1044,41 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
          cout << endl;
 #endif
          last_score = value;
-         if (srcOpts.multipv==1 && !(controller->uci && controller->time_limit == INFINITE_TIME)) {
-            // Allow early termination on a tablebase position, but not
-            // if we have >=6 man tbs in use (because tb set may be
-            // incomplete - in that case it is better to allow us to
-            // search deeper those nodes that don't produce a tb hit).
-            // Also do not terminate if using Syzygy tbs and move list is
-            // >1. We want in that case to keep searching to find the
-            // best move (according to the engine) among the available
-            // tb moves.
-            //
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
-            if (tb_hit && tb_pieces<6 && iteration_depth>=3 && !IsNull(node->pv[0]) && !(options.search.tablebase_type == Options::TbType::SyzygyTb && mg.moveCount()>1)) {
-               if (talkLevel == Trace)
-                  cout << "# terminating, tablebase hit" << endl;
+         if (!controller->background &&
+             !controller->time_added &&
+             !easy_adjust &&
+             (controller->stats->elapsed_time >
+              (unsigned)controller->time_target/3) &&
+             depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
+             MovesEqual(easyMove,node->best) &&
+             !faillows) {
+            easy_adjust = true;
+            if (talkLevel == Trace) {
+               cout << "# easy move, adjusting time lower" << endl;
+            }
+            controller->time_target /= 3;
+         }
+         if (value <= iteration_depth - Constants::MATE) {
+            // We're either checkmated or we certainly will be, so
+            // quit searching.
+            if (talkLevel == Trace)
+               cout << "# terminating, low score" << endl;
 #ifdef _TRACE
-               cout << "terminating, tablebase hit" << endl;
+            cout << "terminating, low score" << endl;
+#endif
+            controller->terminateNow();
+            break;
+         }
+         else if (value >= Constants::MATE - iteration_depth - 1) {
+            // found a forced mate, terminate
+            if (iteration_depth>=2) {
+               if (talkLevel == Trace)
+                  cout << "# terminating, mate score" << endl;
+#ifdef _TRACE
+               cout << "terminating, mate score" << endl;
 #endif
                controller->terminateNow();
                break;
-            }
-            else
-#endif
-            if (!controller->background &&
-                !controller->time_added &&
-                !easy_adjust &&
-                (controller->stats->elapsed_time >
-                (unsigned)controller->time_target/3) &&
-                depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
-                MovesEqual(easyMove,node->best) &&
-                !faillows) {
-                easy_adjust = true;
-                if (talkLevel == Trace) {
-                   cout << "# easy move, adjusting time lower" << endl;
-                }
-                controller->time_target /= 3;
-            }
-            if (value <= iteration_depth - Constants::MATE) {
-               // We're either checkmated or we certainly will be, so
-               // quit searching.
-               if (talkLevel == Trace)
-                  cout << "# terminating, low score" << endl;
-#ifdef _TRACE
-               cout << "terminating, low score" << endl;
-#endif
-               controller->terminateNow();
-               break;
-            }
-            else if (value >= Constants::MATE - iteration_depth - 1) {
-               // found a forced mate, terminate
-               if (iteration_depth>=2) {
-                  if (talkLevel == Trace)
-                     cout << "# terminating, mate score" << endl;
-#ifdef _TRACE
-                  cout << "terminating, mate score" << endl;
-#endif
-                  controller->terminateNow();
-                  break;
-               }
             }
          }
       }
@@ -2359,21 +2312,13 @@ score_t Search::search()
     }
     Move hashMove = NullMove;
     using_tb = 0;
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
-    int egtbDepth = Constants::MaxPly*DEPTH_INCREMENT;
+#ifdef SYZYGY_TBS
     if (srcOpts.use_tablebases) {
         const Material &wMat = board.getMaterial(White);
         const Material &bMat = board.getMaterial(Black);
-        egtbDepth = 3*DEPTH_INCREMENT*root()->getIterationDepth()/4;
         using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) &&
-#ifdef SYZYGY_TBS
-            srcOpts.tb_probe_in_search &&
-           (srcOpts.tablebase_type == Options::TbType::SyzygyTb ?
-            (node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth)
-            : (depth >= egtbDepth || ply <= 2));
-#else
-			(depth >= egtbDepth || ply <= 2);
-#endif
+           srcOpts.tb_probe_in_search &&
+           node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth;
     }
 #endif
     HashEntry hashEntry;
@@ -2505,28 +2450,11 @@ score_t Search::search()
         // Note: hash move may be usable even if score is not usable
         hashMove = hashEntry.bestMove(board);
     }
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
     if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT))) {
-       int tb_hit = 0;
        controller->stats->tb_probes++;
        score_t tb_score;
-#ifdef NALIMOV_TBS
-       if (srcOpts.tablebase_type == Options::TbType::NalimovTb) {
-          tb_hit = NalimovTb::probe_tb(board, tb_score, ply);
-       }
-#endif
-#ifdef GAVIOTA_TBS
-       if (srcOpts.tablebase_type == Options::TbType::GaviotaTb) {
-          // TBD: use soft probing at lower depths
-          tb_hit = GaviotaTb::probe_tb(board, tb_score, ply, true);
-       }
-#endif
-#ifdef SYZYGY_TBS
-       if (srcOpts.tablebase_type == Options::TbType::SyzygyTb) {
-          tb_hit = SyzygyTb::probe_wdl(board, tb_score,
-                                       srcOpts.syzygy_50_move_rule != 0);
-       }
-#endif
+       int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
        if (tb_hit) {
             controller->stats->tb_hits++;
 #ifdef _TRACE
@@ -3598,7 +3526,7 @@ int Search::maybeSplit(const Board &board, NodeInfo *node,
     int splits = 0;
     if (!terminate && mg->more() &&
         activeSplitPoints < SPLIT_STACK_MAX_DEPTH &&
-#if defined(GAVIOTA_TBS) || defined(NALIMOV_TBS) || defined(SYZYGY_TBS)
+#ifdef SYZYGY_TBS
         (!srcOpts.use_tablebases ||
         board.getMaterial(White).men() +
         board.getMaterial(Black).men() > EGTBMenCount) &&
