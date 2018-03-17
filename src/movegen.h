@@ -13,7 +13,6 @@ using namespace std;
 
 class SearchContext;
 struct NodeInfo;
-struct SplitPoint;
 
 class MoveGenerator
 {
@@ -79,11 +78,6 @@ class MoveGenerator
 
       // Generate the next check evasion, NullMove if none left
       virtual Move nextEvasion(int &order);
-
-      virtual Move nextMove(SplitPoint *,int &order);
-      virtual Move nextEvasion(SplitPoint *, int &order);
-
-      virtual int generateAllMoves(NodeInfo *, SplitPoint *);
 
       // Generate only non-capturing moves.
       int generateNonCaptures(Move *moves);
@@ -184,7 +178,6 @@ class MoveGenerator
 
 class RootMoveGenerator : public MoveGenerator
 {
-   friend class RootSearch;
    friend class Search;
 
    public:
@@ -213,7 +206,6 @@ class RootMoveGenerator : public MoveGenerator
 
       using MoveGenerator::nextMove;
       using MoveGenerator::nextEvasion;
-      virtual int generateAllMoves(NodeInfo *, SplitPoint *);
 
       virtual int more() const
       {

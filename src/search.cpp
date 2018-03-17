@@ -146,11 +146,11 @@ SearchController::SearchController()
 #ifdef SMP_STATS
     sample_counter = SAMPLE_INTERVAL;
 #endif
+    random_engine.seed(getRandomSeed());
     LockInit(split_calc_lock);
     pool = new ThreadPool(this,options.search.ncpus);
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
-    rootSearch = (RootSearch*)ti->work;
     for (int d = 0; d < 64; d++) {
       for (int moves = 0; moves < 64; moves++) {
         LMR_REDUCTION[0][d][moves] =
@@ -228,6 +228,9 @@ Move SearchController::findBestMove(
 {
     this->typeOfSearch = srcType;
     this->time_limit = time_target = time_limit;
+    std::copy(exclude.begin(),exclude.end(),this->exclude.begin());
+    std::copy(include.begin(),include.end(),this->include.begin());
+
     time_added = 0;
     this->xtra_time = xtra_time;
     if (srcType == FixedTime || srcType == TimeLimit) {
@@ -242,12 +245,6 @@ Move SearchController::findBestMove(
     this->uci = isUCI;
     this->talkLevel = t;
     this->stats = &stat_buf;
-
-    // set initial thread split depth based on number of CPUS and material
-    threadSplitDepth = 6*DEPTH_INCREMENT + (options.search.ncpus/8)*DEPTH_INCREMENT/2;
-    int mat = board.getMaterial(board.sideToMove()).materialLevel();
-    if (mat < 16) threadSplitDepth += DEPTH_INCREMENT/2;
-    if (mat < 12) threadSplitDepth += DEPTH_INCREMENT;
 
     Time_Check_Interval = 4096/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
@@ -282,10 +279,242 @@ Move SearchController::findBestMove(
     // reset terminate flag on all threads
     clearStopFlags();
 
-    NodeStack rootStack;
-    rootSearch->init(board,rootStack);
     startTime = last_time = getCurrentTime();
-    return rootSearch->ply0_search(exclude,include);
+
+    if (Scoring::isLegalDraw(board) && !uci &&
+       !(typeOfSearch == FixedTime && time_target == INFINITE_TIME)) {
+      // If it's a legal draw situation before we even move, then
+      // just return a draw score and don't search. (But don't do
+      // this in analysis mode: return a move if possible. Also do
+      // a search in all cases for UCI, since the engine cannot
+      // claim draw and some interfaces may expect a move.)
+      if (talkLevel == Trace) {
+          cout << "# skipping search, draw" << endl;
+      }
+      stats->state = Draw;
+      stats->value = drawScore(board);
+      return NullMove;
+   }
+   // Generate the ply 0 moves here:
+   RootMoveGenerator mg(board,nullptr,NullMove,
+      talkLevel == Trace);
+   if (uci) {
+       stats->multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
+   }
+   time_check_counter = Time_Check_Interval;
+
+   score_t value = Constants::INVALID_SCORE;
+#ifdef SYZYGY_TBS
+   tb_hit = 0;
+   int tb_pieces = 0;
+   options.search.tb_probe_in_search = 1;
+   updateSearchOptions();
+   tb_score = Constants::INVALID_SCORE;
+   if (options.search.use_tablebases) {
+      const Material &wMat = board.getMaterial(White);
+      const Material &bMat = board.getMaterial(Black);
+      tb_pieces = wMat.men() + bMat.men();
+      if(tb_pieces <= EGTBMenCount) {
+         stats->tb_probes++;
+         set<Move> moves;
+         // If include set is non-empty, ensure all "include" moves
+         // will be in the set to search, even if some are losing moves.
+         std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
+         tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
+         if (tb_hit) {
+            // restrict the search to moves that preserve the
+            // win or draw, if there is one.
+            mg.filter(moves);
+            if (mg.moveCount() == 0) {
+               // should not happen
+               if (talkLevel == Trace) {
+                  cout << "# warning: no moves after Syzygy move filtering" << endl;
+               }
+               tb_hit = 0;
+            } else {
+#ifdef _TRACE
+               cout << "filtered moves from Syzygy:";
+               for (auto it = moves.begin(); it != moves.end(); it++) {
+                  cout << ' ';;
+                  Notation::image(board,*it,Notation::OutputFormat::SAN,cout);
+               }
+               cout << endl;
+#endif
+               // Note: do not set the value - search values are based
+               // on DTM not DTZ.
+               stats->tb_value = tb_score;
+               // do not probe in the search
+               options.search.tb_probe_in_search = 0;
+               updateSearchOptions();
+            }
+         }
+         if (tb_hit) {
+            stats->tb_hits++;
+            if (talkLevel == Trace) {
+               cout << "# tb hit, score=";
+               Scoring::printScore(value,cout);
+               cout << endl;
+            }
+         }
+      }
+   }
+#endif
+   if (value == Constants::INVALID_SCORE) {
+      value = 0;
+   }
+   initialValue = value;
+   depth_adjust = 0;
+/* TBD : strength reduction, easy move
+   easyMove = NullMove;
+   easyScore = value;
+   waitTime = 0;
+   // Reduce strength but not in analysis mode:
+   if (srcOpts.strength < 100 && (typeOfSearch ==
+                                  FixedDepth ||
+                                  time_target != INFINITE_TIME)) {
+       int mgCount = mg.moveCount();
+       if (mgCount) {
+           const double factor = 1.0/ply_limit + (100-srcOpts.strength)/250.0;
+           const int max = int(0.3F*time_target/mgCount);
+           // wait time is in milliseconds
+           waitTime = int((max*factor));
+           if (talkLevel == Trace) {
+               cout << "# waitTime=" << waitTime << endl;
+           }
+           // adjust time check interval since we are lowering nps
+           Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
+           if (srcOpts.strength <= 95) {
+               const double limit = pow(2.1,srcOpts.strength/25.0)-0.25;
+               double int_limit;
+               double frac_limit = modf(limit,&int_limit);
+               int ply_limit = std::max(1,int(int_limit));
+               if (board.getMaterial(White).materialLevel() +
+                   board.getMaterial(Black).materialLevel() < 16 &&
+                   srcOpts.strength > 10) {
+                   // increase ply limit in endgames
+                   ply_limit += std::min<int>(2,1+ply_limit/8);
+               }
+               ply_limit = std::min<int>(ply_limit,
+                                                 ply_limit);
+               if (limit > 1.0) {
+                  depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
+               }
+               if (talkLevel == Trace) {
+                   cout << "# ply limit =" << ply_limit << endl;
+                   cout << "# depth adjust =" << depth_adjust << endl;
+               }
+           }
+       }
+   }
+
+*/
+   stats->value = stats->display_value = value;
+
+   // Start all searches
+   pool->unblockAll();
+
+   // Start searching in the main thread
+   rootSearch = pool->rootSearch();
+   NodeStack rootStack;
+   rootSearch->init(rootStack,pool->mainThread());
+   Move best = rootSearch->ply0_search();
+
+   // Wait for thread completion
+   pool->waitAll();
+
+   // search done (all threads), set status and report statistics
+   static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
+   Statistics *stats = &stat_buf;
+   StateType &state = stats->state;
+   stats->end_of_game = end_of_game[(int)stats->state];
+   if (!uci && !stats->end_of_game && options.search.can_resign) {
+      if (stats->display_value != Constants::INVALID_SCORE &&
+         (100*stats->display_value)/Params::PAWN_VALUE <= options.search.resign_threshold) {
+         state = Resigns;
+         stats->end_of_game = end_of_game[(int)state];
+      }
+   }
+   if (options.search.strength < 100) {
+       score_t val = stats->display_value;
+       Move m = best;
+       suboptimal(mg,best,val);
+       if (!MovesEqual(best,m)) {
+           best = m;
+           stats->display_value = stats->value = val;
+           stats->best_line[0] = m;
+           stats->best_line[1] = NullMove;
+           Notation::image(board,m,
+                           uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,stats->best_line_image);
+       }
+   }
+
+   if (talkLevel == Debug) {
+      std::ios_base::fmtflags original_flags = cout.flags();
+      cout.setf(ios::fixed);
+      cout << setprecision(2);
+      if (stats->elapsed_time > 0) {
+         stats->printNPS(cout);
+         cout << " nodes/second." << endl;
+      }
+#ifdef SEARCH_STATS
+      cout << (stats->num_nodes-stats->num_qnodes) << " regular nodes, " <<
+         stats->num_qnodes << " quiescence nodes." << endl;
+      cout << stats->hash_searches << " searches of hash table, " <<
+         stats->hash_hits << " successful";
+      if (stats->hash_searches != 0)
+         cout << " (" <<
+            (int)((100.0*(float)stats->hash_hits)/((float)stats->hash_searches)) <<
+            " percent).";
+      cout << endl;
+      cout << "hash table is " << setprecision(2) <<
+          1.0F*hashTable.pctFull()/10.0F << "% full." << endl;
+#endif
+#ifdef MOVE_ORDER_STATS
+      cout << "move ordering: ";
+      static const char *labels[] = {"1st","2nd","3rd","4th"};
+      for (int i = 0; i < 4; i++) {
+         cout << setprecision(2) << labels[i] << " " <<
+            (100.0*stats->move_order[i])/(float)stats->move_order_count << "% " ;
+      }
+      cout << endl;
+#endif
+#ifdef SEARCH_STATS
+      cout << "pre-search pruning: " << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->razored/stats->reg_nodes << "% razoring" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "% static null pruning" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "% null cuts" << endl;
+      cout << "search pruning: " << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "% futility" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "% history" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "% lmp" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "% SEE" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "% reduced" << endl;
+      cout << "extensions: " <<
+         100.0*stats->check_extensions/stats->moves_searched << "% check, " <<
+         100.0*stats->evasion_extensions/stats->moves_searched << "% evasions, " <<
+         100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
+         100.0*stats->pawn_extensions/stats->moves_searched << "% pawn, " <<
+         100.0*stats->singular_extensions/stats->moves_searched << "% singular" << endl;
+
+#endif
+      cout << stats->tb_probes << " tablebase probes, " <<
+         stats->tb_hits << " tablebase hits" << endl;
+#if defined(SMP_STATS)
+      cout << stats->splits << " splits," <<
+         " average thread usage=" << (float)(stats->threads)/(float)stats->samples << endl;
+#endif
+      cout << (flush);
+      cout.flags(original_flags);
+   }
+#ifdef UCI_LOG
+   ucilog << "out of search" << endl << (flush);
+#endif
+   if (talkLevel == Trace) {
+      cout << "# exiting root search, move = ";
+      MoveImage(best,cout);
+      cout << endl;
+   }
+   return best;
 }
 
 void SearchController::setContempt(score_t c)
@@ -304,21 +533,11 @@ void SearchController::setThreadCount(int threads) {
    pool->resize(threads,this);
 }
 
-int SearchController::getIterationDepth() const {
-   return rootSearch->getIterationDepth();
-}
-
-
-void SearchController::setThreadSplitDepth(int depth) {
-   threadSplitDepth = depth;
-   pool->forEachSearch<&Search::setSplitDepthFromController>();
-}
-
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
                                    score_t score, score_t alpha, score_t beta)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
-    stats->multipv_count = rootSearch->multipv_count;
+    stats->multipv_count = multipv_count;
     ASSERT(stats->multipv_count >= 0 && (unsigned)stats->multipv_count < Statistics::MAX_PV);
     stats->value = score;
     stats->depth = iteration_depth;
@@ -331,7 +550,7 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
        cout << "# elapsed time=" << stats->elapsed_time << " target=" << getTimeLimit() << endl;
     }
     //stats->state = state;
-    Board board_copy(rootSearch->getInitialBoard());
+    Board board_copy(initialBoard);
 
     // note: retain previous best line if we do not have one here
     if (IsNull(node->pv[0])) {
@@ -457,20 +676,15 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     nodeCount(0ULL),
     nodeAccumulator(0),
     node(nullptr),
-    activeSplitPoints(0),
-    split(nullptr),
     ti(threadInfo),
-    threadSplitDepth(0),
     computerSide(White),
     contempt(0),
     talkLevel(c->getTalkLevel()) {
-    LockInit(splitLock);
     // Note: context was cleared in its constructor
     setSearchOptions();
 }
 
 Search::~Search() {
-    LockFree(splitLock);
 }
 
 int Search::checkTime(const Board &board,int ply) {
@@ -485,36 +699,13 @@ int Search::checkTime(const Board &board,int ply) {
     Statistics *stats = controller->stats;
     CLOCK_TYPE current_time = getCurrentTime();
     stats->elapsed_time = getElapsedTime(controller->startTime,current_time);
-    // dynamically change the thread split depth based on # of splits
-    if (srcOpts.ncpus >1 && stats->elapsed_time > 100) {
-        // Lock the stats structure since other threads may try to
-        // modify it
-        Lock(controller->split_calc_lock);
-        uint64_t interval;
-        if ((interval=getElapsedTime(stats->last_split_time,current_time)) > 50 &&
-            stats->splits-stats->last_split_sample > 0) {
-            int splitsPerSec = int((stats->splits-stats->last_split_sample*1000)/interval);
-            int target = srcOpts.ncpus*120;
-            if (splitsPerSec > 3*target/2) {
-               controller->setThreadSplitDepth(
-                  std::min<int>(MAX_SPLIT_DEPTH,
-                             controller->threadSplitDepth + DEPTH_INCREMENT/2));
-            } else if (splitsPerSec < target/2) {
-               controller->setThreadSplitDepth(
-                  std::max<int>(MIN_SPLIT_DEPTH,
-                              controller->threadSplitDepth - DEPTH_INCREMENT/2));
-            }
-            stats->last_split_sample = stats->splits;
-            stats->last_split_time = current_time;
-        }
-        Unlock(controller->split_calc_lock);
-    }
     if (controller->typeOfSearch == FixedTime) {
        if (stats->elapsed_time >= controller->time_target) {
           return 1;
        }
     }
     else if (controller->typeOfSearch == TimeLimit) {
+ /* TBD: time adjustment
        if (controller->xtra_time > 0 &&
            controller->time_target != INFINITE_TIME &&
            stats->elapsed_time > controller->getTimeLimit()) {
@@ -538,6 +729,7 @@ int Search::checkTime(const Board &board,int ply) {
              }
           }
        }
+*/
        // check time limit after any time extensions have been made
        if (stats->elapsed_time > controller->getTimeLimit()) {
           if (talkLevel == Trace) {
@@ -602,46 +794,12 @@ int failhigh,int complete)
 }
 
 score_t Search::drawScore(const Board & board) const {
-    score_t score = 0;
-
-    // if we know the opponent's rating (which will be the case if playing
-    // on ICC in xboard mode), or if the user has set a contempt value
-    // (in UCI mode), factor that into the draw score - a draw against
-    // a high-rated opponent is good; a draw against a lower-rated one is bad.
-    if (contempt) {
-        if (board.sideToMove() == computerSide)
-           score -= contempt;
-        else
-           score += contempt;
-    }
-    return score;
+   return controller->drawScore(board);
 }
 
 void Search::terminateSlaveSearches()
 {
-   Lock(splitLock);
-   if (split) {
-      split->failHigh++;
-      for (int i = 0; i <activeSplitPoints; i++) {
-         splitStack[i].failHigh++;
-      }
-   }
-   Unlock(splitLock);
-}
-
-void RootSearch::init(const Board &board, NodeStack &stack) {
-  this->board = initialBoard = board;
-#ifdef SINGULAR_EXTENSION
-  for (int i = 0; i < Constants::MaxPly; i++) {
-     stack[i].singularMove = NullMove;
-  }
-#endif
-  // clean the killer table (but not other tables)
-  context.clearKiller();
-  node = stack;
-  nodeAccumulator = 0;
-  // local copy:
-  threadSplitDepth = controller->threadSplitDepth;
+   // TBD
 }
 
 #ifdef SYZYGY_TBS
@@ -692,166 +850,52 @@ score_t Search::razorMargin(int depth) const
         RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
 }
 
-Move RootSearch::ply0_search(const vector<Move> &exclude,
-                             const vector<Move> &include)
+Move Search::ply0_search() 
 {
-   easy_adjust = false;
-   fail_high_root_extend = fail_low_root_extend = false;
-   last_score = -Constants::MATE;
+// TBD: time mgmt
+//   easy_adjust = false;
+//   fail_high_root_extend = fail_low_root_extend = false;
+// TBD    score_t last_score = -Constants::MATE;
    node->best = NullMove;
-   if (scoring.isLegalDraw(board) && !controller->uci &&
-       !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
-      // If it's a legal draw situation before we even move, then
-      // just return a draw score and don't search. (But don't do
-      // this in analysis mode: return a move if possible. Also do
-      // a search in all cases for UCI, since the engine cannot
-      // claim draw and some interfaces may expect a move.)
-      if (talkLevel == Trace) {
-          cout << "# skipping search, draw" << endl;
-      }
-      controller->stats->state = Draw;
-      controller->stats->value = drawScore(board);
-      return NullMove;
-   }
-   // Generate the ply 0 moves here:
-   RootMoveGenerator mg(board,&context,NullMove,
-      talkLevel == Trace);
-   if (controller->uci) {
-       controller->stats->multipv_limit = std::min<int>(mg.moveCount(),srcOpts.multipv);
-   }
-   controller->time_check_counter = Time_Check_Interval;
-
-   score_t value = Constants::INVALID_SCORE;
-#ifdef SYZYGY_TBS
-   int tb_hit = 0, tb_pieces = 0;
-   options.search.tb_probe_in_search = 1;
-   controller->updateSearchOptions();
-   score_t tb_score = Constants::INVALID_SCORE;
-   if (srcOpts.use_tablebases) {
-      const Material &wMat = board.getMaterial(White);
-      const Material &bMat = board.getMaterial(Black);
-      tb_pieces = wMat.men() + bMat.men();
-      if(tb_pieces <= EGTBMenCount) {
-         controller->stats->tb_probes++;
-         set<Move> moves;
-         // If include set is non-empty, ensure all "include" moves
-         // will be in the set to search, even if some are losing moves.
-         std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
-         tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
-         if (tb_hit) {
-            // restrict the search to moves that preserve the
-            // win or draw, if there is one.
-            mg.filter(moves);
-            if (mg.moveCount() == 0) {
-               // should not happen
-               if (talkLevel == Trace) {
-                  cout << "# warning: no moves after Syzygy move filtering" << endl;
-               }
-               tb_hit = 0;
-            } else {
-#ifdef _TRACE
-               cout << "filtered moves from Syzygy:";
-               for (auto it = moves.begin(); it != moves.end(); it++) {
-                  cout << ' ';;
-                  Notation::image(board,*it,Notation::OutputFormat::SAN,cout);
-               }
-               cout << endl;
-#endif
-               // Note: do not set the value - search values are based
-               // on DTM not DTZ.
-               controller->stats->tb_value = tb_score;
-               // do not probe in the search
-               options.search.tb_probe_in_search = 0;
-               controller->updateSearchOptions();
-            }
-         }
-         if (tb_hit) {
-            controller->stats->tb_hits++;
-            if (talkLevel == Trace) {
-               cout << "# tb hit, score=";
-               Scoring::printScore(value,cout);
-               cout << endl;
-            }
-         }
-      }
-   }
-#endif
-   easyMove = NullMove;
-   if (value == Constants::INVALID_SCORE) {
-      value = 0;
-   }
-   easyScore = value;
-   waitTime = 0;
-   depth_adjust = 0;
-   // Reduce strength but not in analysis mode:
-   if (srcOpts.strength < 100 && (controller->typeOfSearch ==
-                                  FixedDepth ||
-                                  controller->time_target != INFINITE_TIME)) {
-       int mgCount = mg.moveCount();
-       if (mgCount) {
-           const double factor = 1.0/controller->ply_limit + (100-srcOpts.strength)/250.0;
-           const int max = int(0.3F*controller->time_target/mgCount);
-           // wait time is in milliseconds
-           waitTime = int((max*factor));
-           if (talkLevel == Trace) {
-               cout << "# waitTime=" << waitTime << endl;
-           }
-           // adjust time check interval since we are lowering nps
-           Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
-           if (srcOpts.strength <= 95) {
-               const double limit = pow(2.1,srcOpts.strength/25.0)-0.25;
-               double int_limit;
-               double frac_limit = modf(limit,&int_limit);
-               int ply_limit = std::max(1,int(int_limit));
-               if (board.getMaterial(White).materialLevel() +
-                   board.getMaterial(Black).materialLevel() < 16 &&
-                   srcOpts.strength > 10) {
-                   // increase ply limit in endgames
-                   ply_limit += std::min<int>(2,1+ply_limit/8);
-               }
-               controller->ply_limit = std::min<int>(ply_limit,
-                                                 controller->ply_limit);
-               if (limit > 1.0) {
-                  depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
-               }
-               if (talkLevel == Trace) {
-                   cout << "# ply limit =" << controller->ply_limit << endl;
-                   cout << "# depth adjust =" << depth_adjust << endl;
-               }
-           }
-       }
-   }
-
-   controller->stats->value = controller->stats->display_value = value;
-
    // Incrementally search the board to greater depths - stop when
    // ply limit, time limit, interrupt, or a terminating condition
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
    node->best = node->pv[0] = NullMove;
-   int depth_at_pv_change = 0;
+// TBD   int depth_at_pv_change = 0;
    controller->failLowFactor = 0;
-   for (iteration_depth = 1;
-        iteration_depth <= controller->ply_limit && !terminate;
-        iteration_depth++) {
-      vector<Move> excluded(exclude);
+   score_t value = controller->initialValue;
+   RootMoveGenerator mg(controller->initialBoard,&context);
+   for (iterationDepth = 1;
+        iterationDepth <= controller->ply_limit && !terminate;
+        iterationDepth++) {
+      if (!mainThread()) {
+         // distribute search depths across the threads
+         // TBD: better way to do this?
+         if (srcOpts.ncpus > 1 && ((iterationDepth + ti->index) % 2 == 0)) {
+            continue;
+         }
+      }
+      vector<Move> excluded(controller->exclude);
       controller->stats->multipv_count = 0;
-      for (multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
+      for (int multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
+         /* TBD: multi-pv
          if (srcOpts.multipv > 1) controller->stats->clearPV();
          if (multipv_count) {
              excluded.push_back(controller->stats->multi_pvs[multipv_count-1].best);
-             if (iteration_depth > 1) {
+             if (iterationDepth > 1) {
                  // set value to previous iteration's value
                  value = controller->stats->multi_pvs[multipv_count].score;
              }
          }
-         if (iteration_depth <= 1) {
+         */
+         if (iterationDepth <= 1) {
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
-         } else if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+         } else if (iterationDepth <= MoveGenerator::EASY_PLIES) {
             lo_window = std::max<score_t>(-Constants::MATE,value - options.search.easy_threshold);
             hi_window = std::min<score_t>(Constants::MATE,value + options.search.easy_threshold + aspirationWindow/2);
          } else {
@@ -859,7 +903,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
          }
          if (talkLevel == Trace && controller->background) {
-            cout << "# " << iteration_depth << ". move=";
+            cout << "# " << iterationDepth << ". move=";
             MoveImage(node->best,cout); cout << " score=" << node->best_score
                                              << " terminate=" << terminate << endl;
          }
@@ -872,25 +916,25 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
          while (!terminate && (failLow || failHigh)) {
             failHigh = failLow = false;
 #ifdef _TRACE
-            cout << "iteration " << iteration_depth << " window = [" <<
+            cout << "iteration " << iterationDepth << " window = [" <<
                lo_window << "," << hi_window << "]" << endl;
 #endif
-            value = ply0_search(mg, lo_window, hi_window, iteration_depth,
-                                DEPTH_INCREMENT*iteration_depth + depth_adjust,
-                                excluded,include);
+            value = ply0_search(mg, lo_window, hi_window, iterationDepth,
+                                DEPTH_INCREMENT*iterationDepth + controller->depth_adjust,
+                                excluded,controller->include);
 #ifdef _TRACE
-            cout << "iteration " << iteration_depth << " result: " <<
+            cout << "iteration " << iterationDepth << " result: " <<
                value << endl;
 #endif
-            controller->updateStats(node,iteration_depth,
+            controller->updateStats(node,iterationDepth,
                                     value,lo_window,hi_window);
 #ifdef SYZYGY_TBS
             // Correct if necessary the display value, used for score
             // output and resign decisions, based on the tb information:
             controller->stats->display_value = tbScoreAdjust(board,
                                                       controller->stats->display_value,
-                                                      tb_hit,
-                                                      tb_score);
+                                                      controller->tb_hit,
+                                                      controller->tb_score);
 #endif
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
@@ -900,7 +944,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             // score). Do not exit in analysis mode.
             if (!(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
-                (iteration_depth >= 2) &&
+                (iterationDepth >= 2) &&
                 (!srcOpts.can_resign ||
                  (controller->stats->display_value >
                   srcOpts.resign_threshold))) {
@@ -942,8 +986,8 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
                   controller->terminateNow();
                }
             }
-            failHigh = value >= hi_window && (hi_window < Constants::MATE-iteration_depth-1);
-            failLow = value <= lo_window  && (lo_window > iteration_depth-Constants::MATE);
+            failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
+            failLow = value <= lo_window  && (lo_window > iterationDepth-Constants::MATE);
             if (failHigh) {
                showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
@@ -961,12 +1005,12 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
                   aspirationWindow = ASPIRATION_WINDOW[++fails];
                }
                if (aspirationWindow == Constants::MATE) {
-                  hi_window = Constants::MATE-iteration_depth-1;
+                  hi_window = Constants::MATE-iterationDepth-1;
                } else {
-                  if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+                  if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                      aspirationWindow += 2*options.search.easy_threshold;
                   }
-                  hi_window = std::min<score_t>(Constants::MATE-iteration_depth-1,
+                  hi_window = std::min<score_t>(Constants::MATE-iterationDepth-1,
                                         lo_window + aspirationWindow);
                }
             }
@@ -996,21 +1040,22 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
                   aspirationWindow = ASPIRATION_WINDOW[++fails];
                }
                if (aspirationWindow == Constants::MATE) {
-                  lo_window = iteration_depth-Constants::MATE-1;
+                  lo_window = iterationDepth-Constants::MATE-1;
                } else {
-                  if (iteration_depth <= MoveGenerator::EASY_PLIES) {
+                  if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                      aspirationWindow += 2*options.search.easy_threshold;
                   }
-                  lo_window = std::max<score_t>(iteration_depth-Constants::MATE,hi_window - aspirationWindow);
+                  lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
                }
             }
          }
          if (faillows) {
-            controller->failLowFactor += (1<<faillows)*iteration_depth/2;
+            controller->failLowFactor += (1<<faillows)*iterationDepth/2;
          }
          // search value should now be in bounds (unless we are terminating)
+/*
          if (!terminate) {
-            showStatus(board, node->best, 0, 0, 0);
+            if (mainThread()) showStatus(board, node->best, 0, 0, 0);
             if (fail_low_root_extend) {
                // We extended time to get the fail-low resolved. Now
                // we have a score.
@@ -1029,21 +1074,21 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
                fail_high_root_extend = false;
                if (talkLevel == Trace) {
                   cout << "# resetting time_added - fail high is resolved" << endl;
-               }
-            }
+               }}
          }
-
          if (!MovesEqual(node->best,easyMove)) {
-            depth_at_pv_change = iteration_depth;
+            depth_at_pv_change = iterationDepth;
          }
+*/
 #ifdef _TRACE
-         cout << iteration_depth << " ply search result: ";
+         cout << iterationDepth << " ply search result: ";
          MoveImage(node->best,cout);
          cout << " value = ";
          Scoring::printScore(value,cout);
          cout << endl;
 #endif
-         last_score = value;
+// TBD         last_score = value;
+/* TBD easy move
          if (!controller->background &&
              !controller->time_added &&
              !easy_adjust &&
@@ -1058,7 +1103,8 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             }
             controller->time_target /= 3;
          }
-         if (value <= iteration_depth - Constants::MATE) {
+*/
+         if (value <= iterationDepth - Constants::MATE) {
             // We're either checkmated or we certainly will be, so
             // quit searching.
             if (talkLevel == Trace)
@@ -1069,9 +1115,9 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             controller->terminateNow();
             break;
          }
-         else if (value >= Constants::MATE - iteration_depth - 1) {
+         else if (value >= Constants::MATE - iterationDepth - 1) {
             // found a forced mate, terminate
-            if (iteration_depth>=2) {
+            if (iterationDepth>=2) {
                if (talkLevel == Trace)
                   cout << "# terminating, mate score" << endl;
 #ifdef _TRACE
@@ -1087,103 +1133,11 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
 #ifdef UCI_LOG
    ucilog << "out of search loop " << endl << (flush);
 #endif
-   // search done, set status and report statistics
-   static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
-   Statistics *stats = controller->stats;
-   StateType &state = stats->state;
-   stats->end_of_game = end_of_game[(int)stats->state];
-   if (!controller->uci && !stats->end_of_game && srcOpts.can_resign) {
-      if (stats->display_value != Constants::INVALID_SCORE &&
-         (100*stats->display_value)/Params::PAWN_VALUE <= srcOpts.resign_threshold) {
-         state = Resigns;
-         stats->end_of_game = end_of_game[(int)state];
-      }
-   }
-   if (srcOpts.strength < 100) {
-       Move m = node->best;
-       score_t val = node->best_score;
-       suboptimal(mg,m,val);
-       if (!MovesEqual(node->best,m)) {
-           node->best = m;
-           stats->display_value = stats->value = val;
-           stats->best_line[0] = m;
-           stats->best_line[1] = NullMove;
-           Notation::image(board,m,
-                           controller->uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,stats->best_line_image);
-       }
-   }
-
-   if (talkLevel == Debug) {
-      std::ios_base::fmtflags original_flags = cout.flags();
-      cout.setf(ios::fixed);
-      cout << setprecision(2);
-      if (stats->elapsed_time > 0) {
-         stats->printNPS(cout);
-         cout << " nodes/second." << endl;
-      }
-#ifdef SEARCH_STATS
-      cout << (stats->num_nodes-stats->num_qnodes) << " regular nodes, " <<
-         stats->num_qnodes << " quiescence nodes." << endl;
-      cout << stats->hash_searches << " searches of hash table, " <<
-         stats->hash_hits << " successful";
-      if (stats->hash_searches != 0)
-         cout << " (" <<
-            (int)((100.0*(float)stats->hash_hits)/((float)stats->hash_searches)) <<
-            " percent).";
-      cout << endl;
-      cout << "hash table is " << setprecision(2) <<
-          1.0F*controller->hashTable.pctFull()/10.0F << "% full." << endl;
-#endif
-#ifdef MOVE_ORDER_STATS
-      cout << "move ordering: ";
-      static const char *labels[] = {"1st","2nd","3rd","4th"};
-      for (int i = 0; i < 4; i++) {
-         cout << setprecision(2) << labels[i] << " " <<
-            (100.0*stats->move_order[i])/(float)stats->move_order_count << "% " ;
-      }
-      cout << endl;
-#endif
-#ifdef SEARCH_STATS
-      cout << "pre-search pruning: " << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->razored/stats->reg_nodes << "% razoring" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "% static null pruning" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "% null cuts" << endl;
-      cout << "search pruning: " << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "% futility" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "% history" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "% lmp" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "% SEE" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "% reduced" << endl;
-      cout << "extensions: " <<
-         100.0*stats->check_extensions/stats->moves_searched << "% check, " <<
-         100.0*stats->evasion_extensions/stats->moves_searched << "% evasions, " <<
-         100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
-         100.0*stats->pawn_extensions/stats->moves_searched << "% pawn, " <<
-         100.0*stats->singular_extensions/stats->moves_searched << "% singular" << endl;
-
-#endif
-      cout << stats->tb_probes << " tablebase probes, " <<
-         stats->tb_hits << " tablebase hits" << endl;
-#if defined(SMP_STATS)
-      cout << stats->splits << " splits," <<
-         " average thread usage=" << (float)(stats->threads)/(float)stats->samples << endl;
-#endif
-      cout << (flush);
-      cout.flags(original_flags);
-   }
-#ifdef UCI_LOG
-   ucilog << "out of search" << endl << (flush);
-#endif
-   if (talkLevel == Trace) {
-      cout << "# exiting root search, move = ";
-      MoveImage(node->best,cout);
-      cout << endl;
-   }
    return node->best;
 }
 
-score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
-                        int iteration_depth,
+score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
+                        int iterationDepth,
                         int depth,
                         const vector<Move> &exclude,
                         const vector<Move> &include)
@@ -1199,7 +1153,7 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
 #endif
     int in_check = 0;
 
-    const bool wide = iteration_depth <= MoveGenerator::EASY_PLIES;
+    const bool wide = iterationDepth <= MoveGenerator::EASY_PLIES;
 
     in_check = (board.checkStatus() == InCheck);
     BoardState save_state = board.state;
@@ -1207,15 +1161,16 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     score_t try_score = alpha;
     //
     // Re-sort the ply 0 moves and re-init move generator.
-    if (controller->getIterationDepth()>1) {
-       mg.reorder(node->best,controller->getIterationDepth(),false);
+    if (iterationDepth>1) {
+       mg.reorder(node->best,iterationDepth,false);
     } else {
        mg.reset();
     }
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude);
 
-    if (controller->getIterationDepth() == MoveGenerator::EASY_PLIES+1) {
+/* TBD easy move
+    if (iterationDepth == MoveGenerator::EASY_PLIES+1) {
         auto list = mg.getMoveList();
         // Note: do not do "easy move" if capturing the last piece in
         // the endgame .. this can be tricky as the resulting pawn
@@ -1233,6 +1188,7 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
            }
         }
     }
+*/
 
     //
     // Search the next ply
@@ -1251,15 +1207,14 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     node->ply = 0;
     node->depth = depth;
     node->eval = Constants::INVALID_SCORE;
-    // clear split point stack:
-    activeSplitPoints = 0;
 
     int move_index = 0;
     score_t hibound = beta;
-    fail_high_root = 0;
+    // TBD
+    // fail_high_root = 0;
     while (!node->cutoff && !terminate) {
         Move move;
-        if ((move = mg.nextMove(split,move_index))==NullMove) break;
+        if ((move = mg.nextMove(move_index))==NullMove) break;
         if (IsUsed(move) || IsExcluded(move) ||
             (!include.empty() && include.end() == std::find_if(include.begin(),
              include.end(),[&move](const Move &m) {return MovesEqual(m,move);}))) {
@@ -1268,7 +1223,7 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
         node->last_move = move;
         controller->stats->mvleft = controller->stats->mvtot-move_index;
         if (controller->uci && controller->stats->elapsed_time > 300) {
-            controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
+            controller->uciSendInfos(board, move, move_index, iterationDepth);
         }
 #ifdef _TRACE
         cout << "trying 0. ";
@@ -1320,7 +1275,8 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
                !terminate) {
            // We failed to get a cutoff and must re-search
            // Set flag if we may be getting a new best move:
-           fail_high_root++;
+           // TBD
+           // fail_high_root++;
 #ifdef _TRACE
            cout << "window = [" << -hibound << "," << node->best_score
                 << "]" << endl;
@@ -1347,37 +1303,31 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
         if (wide) {
            mg.setScore(move,try_score);
         }
-	if (split) split->lock();
         if (try_score > node->best_score && !terminate) {
            if (updateRootMove(board,node,node,move,try_score,move_index)) {
               // beta cutoff
               // ensure we send UCI output .. even in case of quick
               // termination due to checkmate or whatever
-              if (!srcOpts.multipv) controller->uciSendInfos(board, move, move_index, controller->getIterationDepth());
+              if (master() && !srcOpts.multipv) controller->uciSendInfos(board, move, move_index, iterationDepth);
               // don't reset this until after the PV update, in case
               // it causes us to terminate:
-              fail_high_root = 0;
-              if (split) split->unlock();
+              // TBD fail_high_root = 0;
               break;
            }
         }
-        if (split) split->unlock();
-        fail_high_root = 0;
+        // TBD fail_high_root = 0;
+        /* TBD : strength reduction
         if (waitTime) {
             // we are in reduced strength mode, waste some time
             sleep(waitTime);
         }
+        */
         if (!wide) {
            hibound = node->best_score + 1;  // zero-width window
         }
 #ifdef _TRACE
         in_pv = 0;
 #endif
-        if (srcOpts.ncpus>1 && depth >= threadSplitDepth &&
-            maybeSplit(board, node, &mg, 0, depth)) {
-            // remaining moves are searched by searchSMP
-            break;
-        }
     }
 
     if (node->cutoff) {
@@ -1419,17 +1369,17 @@ score_t RootSearch::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t be
     return node->best_score;
 }
 
-void RootSearch::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
+void SearchController::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
     if (mg.moveCount() < 2) {
         return;
     }
     mg.reorderByScore();
-    unsigned threshold_base = unsigned(750.0/(1.0 + 0.25*pow(srcOpts.strength/10.0,2.0)));
+    unsigned threshold_base = unsigned(750.0/(1.0 + 0.25*pow(options.search.strength/10.0,2.0)));
     const unsigned r = random(1024);
     // In reduced strength mode sometimes, deliberately choose a move
     // that is not the best
     int ord;
-    board = initialBoard;
+    Board  board(initialBoard);
     BoardState state(board.state);
     score_t first_val = val;
     for (int i = 0; i <= 4; i++) {
@@ -1437,14 +1387,14 @@ void RootSearch::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
                   mg.nextMove(ord));
         if (IsNull(move)) break;
         // For this search do not reduce strength
-        int tmp = srcOpts.strength;
-        srcOpts.strength = 100;
-        node->last_move = move;
+        int tmp = options.search.strength;
+        rootSearch->srcOpts.strength = 100;
+        // TBD node->last_move = move;
         board.doMove(move);
-        int n = std::max(3,controller->ply_limit-2);
-        score_t score = -search(-Constants::MATE,Constants::MATE,
+        int n = std::max(3,ply_limit-2);
+        score_t score = -rootSearch->search(-Constants::MATE,Constants::MATE,
                                 1,n*DEPTH_INCREMENT);
-        srcOpts.strength = tmp;
+        rootSearch->srcOpts.strength = tmp;
         board.undoMove(move,state);
         if (i == 0) {
            first_val = score;
@@ -1458,7 +1408,7 @@ void RootSearch::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
               threshold = unsigned(threshold_base/(2*diff+i));
            }
            if (r < threshold) {
-              if (controller->talkLevel == Trace) {
+              if (talkLevel == Trace) {
                  cout << "# suboptimal: index= " << i <<
                     " score=" << score << " val=" << first_val <<
                     " threshold=" << threshold <<
@@ -2896,12 +2846,8 @@ score_t Search::search()
         }
 #endif
         MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, master());
-        BoardState state = board.state;
+        BoardState state(board.state);
         score_t try_score;
-        // we do not split if in check because generally there will
-        // be few moves to search there.
-        const int canSplit = srcOpts.ncpus>1 && !in_check &&
-            depth >= threadSplitDepth;
         //
         // Now we are ready to loop through the moves from this position
         //
@@ -2911,8 +2857,6 @@ score_t Search::search()
         while (!node->cutoff && !terminate) {
             score_t hibound = node->num_try == 0 ? node->beta : node->best_score +1;
             Move move;
-            // we do not bother to lock here, because if we split
-            // the node, we don't come back to this part of the loop
             move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
 #ifdef SINGULAR_EXTENSION
@@ -3049,9 +2993,6 @@ score_t Search::search()
             if (try_score >= Constants::MATE-1-ply) {
                 node->cutoff++;
                 break;                            // mating move found
-            }
-            if (canSplit && maybeSplit(board, node, &mg, ply, depth)) {
-                break;
             }
         }                                         // end move loop
 #ifdef _TRACE
@@ -3208,7 +3149,7 @@ int Search::updateRootMove(const Board &board,
          parentNode->pv_length = 1;
          parentNode->cutoff++;
          parentNode->best_score = score;
-         controller->updateStats(parentNode, controller->getIterationDepth(),
+         controller->updateStats(parentNode, iterationDepth,
                             parentNode->best_score,
                             parentNode->alpha,parentNode->beta);
          if (controller->uci && !srcOpts.multipv) {
@@ -3219,7 +3160,7 @@ int Search::updateRootMove(const Board &board,
          return 1;  // signal cutoff
       }
       updatePV(board,parentNode,(node+1),move,0);
-      controller->updateStats(parentNode, controller->getIterationDepth(),
+      controller->updateStats(parentNode, iterationDepth,
                               parentNode->best_score,
                               parentNode->alpha,parentNode->beta);
       if (move_index>1) {
@@ -3230,213 +3171,7 @@ int Search::updateRootMove(const Board &board,
    return 0;   // no cutoff
 }
 
-// Perform search in a separate thread. We have always searched
-// at least one move before calling this.
-void Search::searchSMP(ThreadInfo *ti)
-{
-    Move move;
-    const int in_check = board.checkStatus() == InCheck;
-    BoardState state(board.state);
-    const int ply = node->ply;
-    const int depth = node->depth;
-    int moveIndex;
-    // get node from which we were split
-    NodeInfo *parentNode = split->splitNode;
-    // Initialize top of our node stack from parent node
-    node->alpha = parentNode->alpha;
-    node->beta = parentNode->beta;
-    node->best_score = parentNode->best_score;
-    node->best = parentNode->best;
-    node->last_move = parentNode->last_move;
-    node->extensions = parentNode->extensions;
-    node->eval = parentNode->eval;
-    node->staticEval = parentNode->staticEval;
-#ifdef MOVE_ORDER_STATS
-    node->best_count = parentNode->best_count;
-#endif
-    node->ply = parentNode->ply;
-    node->depth = parentNode->depth;
-    node->cutoff = 0;
-
-    score_t best_score = parentNode->best_score;
-#ifdef _THREAD_TRACE
-    log("searchSMP",ti->index);
-#endif
-    MoveGenerator *mg = ti->work->split->mg;
-    bool fhr = false;
-    ASSERT(split);
-    while (!terminate && !split->failHigh) {
-        move = in_check ?
-           mg->nextEvasion(split,moveIndex) :
-           mg->nextMove(split,moveIndex);
-        if (IsNull(move)) break;
-        if (IsUsed(move)) continue;
-#ifdef SEARCH_STATS
-        ++controller->stats->moves_searched;
-#endif
-        if (ply == 0) {
-            fhr = false;
-        }
-#ifdef _TRACE
-        if (master() || ply==0) {
-            indent(ply); cout << "trying " << ply << ". ";
-            MoveImage(move,cout); cout << endl;
-        }
-#endif
-        ASSERT(Capture(move) != King);
-        score_t try_score;
-
-        node->extensions = 0;
-        node->last_move = move;
-        CheckStatusType in_check_after_move = board.wouldCheck(move);
-        int extend = calcExtensions(board,node,parentNode,in_check_after_move,
-                                    moveIndex,move);
-        if (extend == PRUNE) {
-#ifdef _TRACE
-           if (master()) {
-              indent(ply); cout << "fwd pruned." << endl;
-           }
-#endif
-           continue;
-        }
-        board.doMove(move);
-        if (!in_check && !board.wasLegal(move)) {
-#ifdef _TRACE
-           if (master()) {
-               indent(ply); cout << "Illegal move!" << endl;
-           }
-#endif
-           board.undoMove(move,state);
-           continue;
-        }
-        setCheckStatus(board,in_check_after_move);
-#ifdef _TRACE
-        if (master()) {
-            indent(ply); cout << "window [" << best_score <<
-                "," << best_score+1 << "]" << endl;
-        }
-#endif
-        if (depth+extend-DEPTH_INCREMENT > 0) {
-            try_score = -search(-best_score-1, -best_score,
-                ply+1, depth+extend-DEPTH_INCREMENT);
-        }
-        else {
-            try_score = -quiesce(-best_score-1, -best_score,
-                ply+1, 0);
-        }
-        if (try_score == Illegal) {
-#ifdef _TRACE
-            if (master()) {
-                indent(ply); cout << "Illegal move" << endl;
-            }
-#endif
-            board.undoMove(move,state);
-            continue;
-        }
-#ifdef _TRACE
-        if (master() || ply==0) {
-            indent(ply); cout << ply << ". ";
-            MoveImage(move,cout);
-            cout << " " << try_score << endl;
-        }
-#endif
-        if (terminate || split->failHigh) {
-           board.undoMove(move,state);
-           break;
-        }
-        score_t hibound = node->best_score+1;
-        while (try_score > best_score &&
-               (extend < 0 || hibound < node->beta) &&
-               !((node+1)->flags & EXACT) &&
-               !split->failHigh &&
-               !terminate) {
-            // We got a new best move but with a zero-width search or with
-            // reduction enabled, so we must re-search.
-#ifdef _TRACE
-            if (master() || ply==0) {
-                indent(ply); cout << ply << ". ";
-                MoveImage(move,cout);
-                cout << "score = " << try_score << " - no cutoff, researching";
-                cout << " (smp ";
-                cout << ti->index << ')' << endl;
-            }
-#endif
-            if (extend >= -DEPTH_INCREMENT) {
-               hibound = node->beta;
-            }
-            if (ply == 0) {
-               fhr = true;
-               root()->fail_high_root++;
-            }
-            if (extend < 0) {
-               extend = node->extensions = 0;
-            }
-            if (depth+extend-DEPTH_INCREMENT > 0)
-               try_score=-search(-hibound,-best_score,ply+1,depth+extend-DEPTH_INCREMENT);
-            else
-               try_score=-quiesce(-hibound,-best_score,ply+1,0);
-        }
-        board.undoMove(move,state);
-        if (ply == 0 && controller->getIterationDepth()<=MoveGenerator::EASY_PLIES) {
-            ((RootMoveGenerator*)mg)->setScore(move,try_score);
-        }
-#ifdef _TRACE
-        if (master() || ply==0) {
-            indent(ply);
-            cout << ply << ". ";
-            MoveImage(move,cout);
-            cout << " " << try_score << endl;
-        }
-#endif
-        if (!terminate) {
-            split->lock();
-            ASSERT(parentNode->num_try<Constants::MaxMoves);
-            parentNode->done[parentNode->num_try++] = move;
-            // update our window in case parent best score changed
-            if (try_score > parentNode->best_score && !split->failHigh) {
-                // search produced a new best move or cutoff, update parent node
-#if defined (_THREAD_TRACE) || defined(_TRACE)
-              stringstream s;
-                s << "new best smp, thread=" << ti->index << " ply= " << ply << '\0';
-#ifdef _TRACE
-                cout << s.str() << endl;
-#endif
-#ifdef _THREAD_TRACE
-                log(s.str());
-#endif
-#endif
-                if (ply == 0) {
-                    node->cutoff |= ((RootSearch*)(split->master->work))->updateRootMove(board,parentNode,node,move,try_score,parentNode->num_try);
-                }
-                else
-                   node->cutoff |= updateMove(board,parentNode,node,move,try_score,ply,depth,split);
-                best_score = try_score;
-                if (fhr) {
-                    fhr = false;
-                    root()->fail_high_root = 0;
-                }
-            }
-            if (node->cutoff || try_score >= Constants::MATE-1-ply) {
-                split->failHigh++;
-                parentNode->cutoff++;
-                split->unlock();
-                break;
-            }
-            split->unlock();
-        }
-        if (fhr) {
-            fhr = false;
-            root()->fail_high_root = 0;
-        }
-        if (ply == 0 && root()->getWaitTime()) {
-            sleep(root()->getWaitTime());
-        }
-    }
-    // this search is done, make this thread available for
-    // other tasks
-}
-
-int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, score_t score, int ply, int depth, SplitPoint *s)
+int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, score_t score, int ply, int depth)
 {
    int cutoff = 0;
    parentNode->best_score = score;
@@ -3464,28 +3199,18 @@ int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node,
 void Search::updatePV(const Board &board, Move m, int ply)
 {
     updatePV(board,node,(node+1),m,ply);
-#ifdef _DEBUG
-    Board board_copy(board);
 #ifdef _TRACE
     if (master()) {
-        indent(ply); cout << "update_pv, ply " << ply << endl;
-    }
-#endif
-    for (int i = ply; i < node->pv_length+ply; i++) {
-       if (ply == 0) {
-            MoveImage(node->pv[i],cout); cout << " " << (flush);
+       indent(ply); cout << "update_pv, ply " << ply << endl;
+       for (int i = ply; i < node->pv_length+ply; i++) {
+          if (ply == 0) {
+             MoveImage(node->pv[i],cout); cout << " " << (flush);
+          }
+          ASSERT(legalMove(board_copy,node->pv[i]));
+          board_copy.doMove(node->pv[i]);
        }
-#ifdef _TRACE
-        if (master()) {
-            MoveImage(node->pv[i],cout); cout << " " << (flush);
-        }
-#endif
-        ASSERT(legalMove(board_copy,node->pv[i]));
-        board_copy.doMove(node->pv[i]);
+       cout << endl;
     }
-#endif
-#ifdef _TRACE
-    if (master()) cout << endl;
 #endif
 }
 
@@ -3518,206 +3243,21 @@ void Search::updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move 
 #endif
 }
 
-int Search::maybeSplit(const Board &board, NodeInfo *node,
-                       MoveGenerator *mg, int ply, int depth)
-{
-    // Now that we have searched at least one valid move, we can
-    // consider using multiple threads to search the rest (YBWC).
-    int splits = 0;
-    if (!terminate && mg->more() &&
-        activeSplitPoints < SPLIT_STACK_MAX_DEPTH &&
-#ifdef SYZYGY_TBS
-        (!srcOpts.use_tablebases ||
-        board.getMaterial(White).men() +
-        board.getMaterial(Black).men() > EGTBMenCount) &&
-#endif
-        controller->pool->checkAvailable()) {
-
-        ThreadInfo *slave_ti;
-        ThreadInfo *slaves[Constants::MaxCPUs];
-        int remaining = 100;
-        // Keep trying to get/assign threads until no threads are
-        // available or no more moves are available to search.
-        while (remaining>1 && (slave_ti = controller->pool->checkOut(this,node,ply,depth))!=nullptr) {
-            // A thread is available.
-            ASSERT(slave_ti != ti);
-            if (!splits) {
-               // Save the current split point if any (may be NULL)
-               SplitPoint *parent = split;
-               // We are about the change the parent's stack, so lock it
-               Lock(splitLock);
-               // create a split point for this search instance
-               split = &splitStack[activeSplitPoints++];
-#ifdef _THREAD_TRACE
-               ostringstream os;
-               os << "splitting from thread " << ti->index <<
-                   " split stack size now " << activeSplitPoints << '\0';
-               log(os.str());
-#endif
-               // initialize the new split point
-               split->master = ti;
-               split->parent = parent;
-               split->ply = ply;
-               split->depth = depth;
-               split->mg = mg;
-               split->splitNode = node;
-               // save master's current state
-               split->savedBoard = board;
-#ifndef _WIN32
-               // ensure parent thread will wait when back in idle loop
-               ti->reset();
-#endif
-               Unlock(splitLock);
-               // Force all remaining moves to be generated, since the
-               // MoveGenerator class is not thread-safe otherwise (it
-               // maintains a pointer to the board and when accessed by
-               // multiple threads this pointer may not always be at the
-               // current position). Also we want to know how many moves
-               // remain.
-               remaining = mg->generateAllMoves(node,split);
-            }
-            split->lock();
-            ASSERT(slave_ti != ti);
-            // Add new slave to the list of slaves in the parent split point
-            split->slaves.insert(slave_ti);
-            split->unlock();
-            // set new slave Search's "split" variable
-            slave_ti->work->split = split;
-            // Defer further initialization of slave Search until its
-            // thread runs, because we need access to its thread-specific
-            // search stack.
-#ifdef _THREAD_TRACE
-            log("adding slave thread ", slave_ti->index);
-#endif
-            slaves[splits++] = slave_ti;
-#ifdef SMP_STATS
-            controller->stats->splits++;
-#endif
-#ifdef _THREAD_TRACE
-            log("split ply",ply);
-            log("depth",depth);
-#endif
-            --remaining;
-        }
-        // now start the slave threads (if we allocated any)
-        if (splits) {
-           Lock(splitLock);
-           for (int i = 0; i < splits; i++) {
-              // Start searching in the new thread:
-              slaves[i]->start();
-           }
-           Unlock(splitLock);
-        }
-    }
-    if (splits) {
-        ASSERT(activeSplitPoints);
-        // Go ahead and try to grab/search moves in this thread, in parallel
-        // with its slaves:
-        searchSMP(ti);
-        // The master thread has completed its work. If any slave threads
-        // remain, be a "helpful master" and make this thread available to
-        // them. When all slave threads are done, the parent will be
-        // signalled and exit the idle loop.
-        //
-        // Important to lock here - otherwise there is a race condition with
-        // ThreadPool::checkIn.
-        Lock(splitLock);
-        split->lock();
-#ifdef _THREAD_TRACE
-        {
-            ostringstream os;
-            os << "search with master " << ti->index << " done, slaves count=" <<
-                split->slaves.size() << " active=";
-           for (auto it = split->slaves.begin();
-                it != split->slaves.end();
-                it++) {
-               os << (*it)->index << ' ';
-            }
-            os << '\0';
-            log(os.str());
-        }
-#endif
-        if (split->slaves.size()) {
-           ASSERT(split->slaves.count(ti) == 0);
-#ifdef _DEBUG
-           for (auto it = split->slaves.begin();
-                it != split->slaves.end();
-                it++) {
-                // If idle, thread must be master of a split point.
-                // If idle and not split, we will wait forever on it.
-              ASSERT((*it)->state == ThreadInfo::Working || (*it)->work->activeSplitPoints);
-            }
-#endif
-#ifdef _THREAD_TRACE
-            log("helpful master entering idle_loop, thread #",ti->index);
-#endif
-            // ensure parent will wait when back in loop
-            ti->reset();
-#ifdef HELPFUL_MASTER
-            SplitPoint *currentSplit = split;
-            split->unlock();
-            Unlock(splitLock);
-            ThreadPool::idle_loop(ti, split);
-#ifdef _THREAD_TRACE
-            log("helpful master out of idle_loop, thread #",ti->index);
-#endif
-            Lock(splitLock);
-            ASSERT(ti->state == ThreadInfo::Working);
-            //ASSERT(split->slaves.size() == 0);
-            // The master returns to whatever split point it was previously
-            // working on.
-            split = currentSplit;
-            ASSERT(split->master == ti);
-            Unlock(splitLock);
-#else
-            split->unlock();
-            Unlock(splitLock);
-            // wait to be signalled by last child thread exiting
-            ti->wait();
-#endif
-        } else {
-            // No additional work at this split point so no use being a helpful master
-            split->unlock();
-            Unlock(splitLock);
-        }
-        // Now all work at the split point is finished, so pop the stack
-        Lock(splitLock);
-        restoreFromSplit(split);
-        --activeSplitPoints;
-        split = split->parent;
-#ifdef _THREAD_TRACE
-        {
-            std::ostringstream s;
-            s << "split stack " << ti->index << " popped, active count now="
-              << activeSplitPoints << '\0';
-            log(s.str());
-        }
-#endif
-        Unlock(splitLock);
-    }
-    return splits;
-}
-
-
-// Initialize a Search instance to prepare it for searching at a split point.
-// This is called from the thread in which the search will execute.
+// Initialize a Search instance to prepare it for searching in a
+// particular thread. This is called from the thread in which the
+// search will execute.
 void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
-    SplitPoint *s = split;
-    // copy in new state
-    board = s->savedBoard;
-    node = ns+s->ply;
-    // The split variable holds the split point to which this Search
-    // instance is attached
-    split = s;
-    split->failHigh = 0;
+    this->board = controller->initialBoard;
+    node = ns;
     nodeAccumulator = 0;
     ti = slave_ti;
-    node->ply = s->ply;
-    node->depth = s->depth;
-    if (node->ply > 0) {
-        // previous move, needed for counter move history 
-        (node-1)->last_move = ((s->splitNode)-1)->last_move;
+    node->ply = 0;
+    // depth will be set later
+#ifdef SINGULAR_EXTENSION
+    for (int i = 0; i < Constants::MaxPly; i++) {
+       ns[i].singularMove = NullMove;
     }
+#endif
     
     // Rest of new node initialization is done in searchSMP().
     // Clear killer since the side to move may have been different

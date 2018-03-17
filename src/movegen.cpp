@@ -97,13 +97,6 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    phase = LAST_PHASE;
 }
 
-int RootMoveGenerator::generateAllMoves(NodeInfo *, SplitPoint *)
-{
-   // There's nothing to be done here since we generated moves in the
-   // constructor. Just return the number of moves remaining.
-   return batch_count-index;
-}
-
 void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 {
    reset();
@@ -1216,39 +1209,6 @@ int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckC
 }
 
 
-int MoveGenerator::generateAllMoves(NodeInfo *node, SplitPoint *split)
-{
-   // Force the remaining moves to be generated - do it incrementally
-   // so we get the correct move ordering and flags:
-   int count = 0;
-   Move m;
-   // save current value of order
-   int temp = order;
-   int ord;
-   if (board.checkStatus() == InCheck) {
-      while ((m=nextEvasion(ord)) != NullMove) {
-         split->moves[count++] = m;
-      }
-   }
-   else {
-      while ((m=nextMove(ord)) != NullMove) {
-         split->moves[count++] = m;
-      }
-   }
-   // restore order to what it was before movegen. The next
-   // move fetched via getMove or getEvasion will have this
-   // order.
-   order = temp;
-   batch_count = count;
-   // technically this is volatile but we are accessing it here
-   // pre-split:
-   batch = (Move *)split->moves;
-   index = 0;
-   phase = LAST_PHASE;
-   return count;
-}
-
-
 int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
 {
    unsigned numMoves  = 0;
@@ -1282,31 +1242,6 @@ int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
    return numMoves;
 }
 
-
-Move MoveGenerator:: nextMove(SplitPoint *s,int &order)
-{
-   if (s) {
-      s->lock();
-      Move m = nextMove(order);
-      s->unlock();
-      return m;
-   }
-   else
-      return nextMove(order);
-}
-
-
-Move MoveGenerator::nextEvasion(SplitPoint *s,int &ord)
-{
-   if (s) {
-      s->lock();
-      Move m = nextEvasion(ord);
-      s->unlock();
-      return m;
-   }
-   else
-      return nextEvasion(ord);
-}
 
 uint64_t RootMoveGenerator::perft(Board &b, int depth) {
    if (depth == 0) return 1;

@@ -36,7 +36,7 @@ void log(const string &s,int param) {
 }
 #endif
 
-void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
+void ThreadPool::idle_loop(ThreadInfo *ti) {
    while (ti->state != ThreadInfo::Terminating) {
 #ifdef _THREAD_TRACE
       {
@@ -54,96 +54,46 @@ void ThreadPool::idle_loop(ThreadInfo *ti, const SplitPoint *split) {
          rebindMask.reset(ti->index);
       }
 #endif
-      if (ti->wouldWait()) {
-        ti->state = ThreadInfo::Idle; // mark thread available again
-        activeMask &= ~(1ULL << ti->index);
-        ti->pool->unlock();
-        int result;
-        if ((result = ti->wait()) != 0) {
-            if (result == -1) continue; // was interrupted
-            else break;
-        }
-      } else {
-#ifdef _THREAD_TRACE
-         {
-            std::ostringstream s;
-            s << "thread " << ti->index << " already signalled, skipping wait()" << '\0';
-            log(s.str());
-         }
-         
-#endif
-        // Avoid waiting if the thread state is already signalled. Also,
-        // in this case, do not even temporarily set the state to Idle.
-        ti->pool->unlock();
+      ti->state = ThreadInfo::Idle; // mark thread available again
+      activeMask &= ~(1ULL << ti->index);
+      ti->pool->unlock();
+      int result;
+      if ((result = ti->wait()) != 0) {
+         if (result == -1) continue; // was interrupted
+         else break;
       }
 #ifdef _THREAD_TRACE
       log("unblocked",ti->index);
 #endif
-      // We've been woken up. There are three possible reasons:
+      // We've been woken up. There are two possible reasons:
       // 1. This thread is terminating.
-      // 2. We are a master at a split point and all our slave threads
-      // are done.
-      // 3. This thread (a slave) has been assigned some work.
+      // 2. This thread has been assigned some work.
       //
       if (ti->state == ThreadInfo::Terminating) {
           break;
       }
-      else if (split && split->master == ti) {
-          // This thread is master of a split point, test for condition #2
-          Lock(split->master->work->splitLock);
-          if (split->slaves.size()==0) {
-#ifdef _THREAD_TRACE
-              log("helpful master exiting idle loop -  thread #",ti->index);
-#endif
-              ASSERT(ti->state == ThreadInfo::Working);
-              Unlock(split->master->work->splitLock);
-              // This thread exits the thread pool and returns to what it
-              // was previously doing.
-              return;
-          }
-#ifdef _THREAD_TRACE
-      {
-      std::ostringstream s;
-      s << "master thread " << ti->index << " woken" << '\0';
-      log(s.str());
-      }
-#endif
-          Unlock(split->master->work->splitLock);
-      }
-#ifdef _THREAD_TRACE
-      log("wakeup",ti->index);
-#endif
       ASSERT(ti->work);
-#ifdef _DEBUG
-      int state = ti->state;
-#ifdef _THREAD_TRACE
-      if (state != ThreadInfo::Working) log("error ",ti->index);
-#endif
-      ASSERT(state == ThreadInfo::Working);
-#endif
-      // child should have its split point set
-      ASSERT(ti->work->split);
-      NodeStack childStack; // stack on which child will search
-      ti->work->init(childStack, ti);
+      ti->pool->lock();
+      activeMask |= (1ULL << ti->index);
+      ti->state = ThreadInfo::Working;
+      ti->pool->unlock();
+      NodeStack searchStack; // stack on which search will be done
+      ti->work->init(searchStack, ti);
 #ifdef _THREAD_TRACE
       {
       std::ostringstream s;
-      s << "search starting, thread " << ti->index << ", ply=" << ti->work->split->ply << '\0';
+      s << "search starting, thread " << ti->index;
       log(s.str());
       }
 #endif
-      ti->work->searchSMP(ti);  
+      ti->work->ply0_search();
 #ifdef _THREAD_TRACE
       {
       std::ostringstream s;
-      s << "search completed, thread " << ti->index << ", ply=" << ti->work->split->ply << '\0';
+      s << "search completed, thread " << ti->index;
       log(s.str());
       }
 #endif
-#ifdef _THREAD_TRACE
-      log("search completed ",ti->index);
-#endif
-      ti->pool->checkIn(ti);
    }
 }
 
@@ -252,7 +202,7 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
    for (int i = 0; i < n; i++) {
       ThreadInfo *p = new ThreadInfo(this,i);
       if (i==0) {
-         p->work = new RootSearch(controller,p);
+         p->work = new Search(controller,p);
          p->work->ti = p;
       }
       else {
@@ -309,49 +259,6 @@ void ThreadPool::shutDown() {
     Unlock(poolLock);
 }
 
-ThreadInfo * ThreadPool::checkOut(Search *parent, NodeInfo *forNode,
-  int ply, int depth) {
-    // lock against changes to the pool
-    Lock(poolLock);
-    // and aginst changes to the split stack in the parent
-    Lock(parent->splitLock);
-    // only loop over available threads
-    Bitboard b(~activeMask & availableMask);
-    b.clear(parent->ti->index);
-    int i;
-    while (b.iterate(i)) {
-       ThreadInfo *p = data[i];
-       ASSERT(p->state == ThreadInfo::Idle);
-       Search *child = p->work;
-       // lock the split stack in the child for the following test
-       Lock(child->splitLock);
-       // If this is a "master" thread it is not sufficient to just be
-       // idle - assign it only to one of its slave threads at the
-       // current top of the search stack.
-       bool ok;
-       if (child->activeSplitPoints) {
-          auto slaves = child->splitStack[child->activeSplitPoints-1].slaves;
-          ok = slaves.find(parent->ti) != slaves.end();
-       } else {
-          ok = true;
-       }
-       if (ok) {
-         // We're working now - ensure we will not be allocated again
-         p->state = ThreadInfo::Working; 
-         activeMask |= (1ULL << p->index);
-         Unlock(child->splitLock);
-         Unlock(parent->splitLock);
-         Unlock(poolLock);
-         return p;
-       }
-       Unlock(child->splitLock);
-    }
-    // no luck, no free threads
-    Unlock(parent->splitLock);
-    Unlock(poolLock);
-    return nullptr;
-}
-
 void ThreadPool::resize(unsigned n, SearchController *controller) {
     if (n >= 1 && n < Constants::MaxCPUs && n != nThreads) {
         lock();
@@ -390,75 +297,6 @@ void ThreadPool::resize(unsigned n, SearchController *controller) {
     ASSERT(nThreads == n);
     availableMask = (n == 64) ? 0xffffffffffffffffULL :
        (1ULL << n)-1;
-}
-
-void ThreadPool::checkIn(ThreadInfo *ti) {
-#ifdef _THREAD_TRACE
-    {
-        std::ostringstream s;
-        s << "checkIn: " << ti->index << " master=" <<
-            ti->work->split->master->index << '\0';
-        log(s.str());
-    }
-#endif
-    Lock(poolLock);
-    SplitPoint *split = ti->work->split;
-    ThreadInfo *parent = split->master;
-    Search *parentSearch = parent->work;
-    // lock parent's stack
-    Lock(parentSearch->splitLock);
-    split->lock();
-    // dissociate the thread from the parent
-    set<ThreadInfo *> &slaves = split->slaves;
-    // remove ti from the list of slave threads in the parent
-#ifdef _THREAD_TRACE
-    {
-        std::ostringstream s;
-        s << "removing slave thread " <<  ti->index << " from master "
-          << split->master->index << '\0';
-        log(s.str());
-    }
-#endif
-#ifdef _DEBUG
-    ASSERT(slaves.erase(ti)==1);
-#else
-    slaves.erase(ti);
-#endif
-    const unsigned remaining = (unsigned)slaves.size();
-    const bool top = split - parentSearch->splitStack + 1 == parentSearch->activeSplitPoints;
-#ifdef _THREAD_TRACE
-    {
-        std::ostringstream s;
-        s << "after checkIn: " << ti->index << " remaining: " << remaining << " top=" << top << '\0';
-        log(s.str());
-    }
-#endif
-    if (!remaining && top) {
-        // all slave threads are completed, so signal parent that it
-        // can exit its wait state and pop the split stack.
-        ASSERT(parent);
-        // Set parent state to Working before it even wakes up. This
-        // ensures it will not be allocated to another split point.
-        parent->state = ThreadInfo::Working;
-        activeMask |= (1ULL << parent->index);
-#ifdef _THREAD_TRACE
-        std::ostringstream s;
-        s << "thread " << ti->index <<  
-            " signaling parent (" << parent->index << ")" << 
-            " parent state=" << parent->state << '\0';
-        log(s.str());
-#endif
-        ASSERT(parent->index != ti->index);
-#ifdef _THREAD_TRACE
-        log("signal",parent->index);
-#endif
-        parent->signal();
-    }
-    // ensure we we will wait when back in the idle loop
-    ti->reset();
-    split->unlock();
-    Unlock(parentSearch->splitLock);
-    Unlock(poolLock);
 }
 
 int ThreadPool::activeCount() const {

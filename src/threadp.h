@@ -12,13 +12,13 @@
 #include <array>
 #include <bitset>
 #include <functional>
+#include <mutex>
 
 using namespace std;
 
 class Search;
 class SearchController;
 struct NodeInfo;
-struct SplitPoint;
 
 class ThreadPool;
 
@@ -51,24 +51,8 @@ public:
 
    virtual ~ThreadPool();
 
-   ThreadInfo *mainThread() const {
-     return data[0];
-   }
-
-   // obtain an idle thread if possible, returns 
-   // non-null if successful
-   ThreadInfo *checkOut(Search *,NodeInfo *,int ply,int depth);
-
-   // Do a quick check for thread availability (w/o locking)
-   int checkAvailable() {
-      return (activeMask & availableMask) != availableMask;
-   }
-
    // Threads that are waiting for work execute this function
-   static void idle_loop(ThreadInfo *ti, const SplitPoint *split = nullptr);
-
-   // return a thread to the pool
-   void checkIn(ThreadInfo *);
+   static void idle_loop(ThreadInfo *ti);
 
    int activeCount() const;
 
@@ -86,6 +70,19 @@ public:
       unlock();
    }
 
+   void unblockAll() {
+      // No need to unblock thread 0: that is the main thread
+      for (unsigned i = 1; i < nThreads; i++) {
+         data[i]->signal();
+      }
+   }
+
+   void waitAll() {
+      for (unsigned i = 1; i < nThreads; i++) {
+         data[i]->wait();
+      }
+   }
+
    SearchController *getController() const {
      return controller;
    }
@@ -96,6 +93,14 @@ public:
 
    void unlock() {
      Unlock(poolLock);
+   }
+
+   Search *rootSearch() const {
+      return data[0]->work;
+   }
+
+   ThreadInfo *mainThread() const {
+      return data[0];
    }
 
 #ifdef NUMA

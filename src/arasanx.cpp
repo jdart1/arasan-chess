@@ -483,7 +483,7 @@ static bool accept_draw(Board &board) {
       cout << "# checking draw score .." << endl;
    ColorType tmp = board.sideToMove();
    board.setSideToMove(side);
-   score_t draw_score = searcher->root()->drawScore(board);
+   score_t draw_score = searcher->drawScore(board);
    board.setSideToMove(tmp);
    const score_t threshold = Params::PAWN_VALUE/4;
    if (doTrace) {
