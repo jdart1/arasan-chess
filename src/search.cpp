@@ -380,7 +380,7 @@ Move SearchController::findBestMove(
            waitTime = int((max*factor));
            if (talkLevel == Trace) {
                cout << "# waitTime=" << waitTime << endl;
-           }
+<           }
            // adjust time check interval since we are lowering nps
            Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
            if (srcOpts.strength <= 95) {
@@ -421,6 +421,24 @@ Move SearchController::findBestMove(
 
    // Wait for thread completion
    pool->waitAll();
+
+   // Find the best pv from the threads
+   Search *bestWorker = pool->data[0]->work;
+   // TBD multipv?
+   if (options.search.multipv == 1) {
+      for (int thread = 1; thread < options.search.ncpus; thread++) {
+         if (pool->data[thread]->work->completedDepth > bestWorker->completedDepth &&
+             pool->data[thread]->work->node->best_score > bestWorker->node->best_score) {
+            bestWorker = pool->data[thread]->work;
+         }
+      }
+   }
+
+   // Update the statistics from the best worker
+   updateStats(bestWorker->node,bestWorker->completedDepth,
+               bestWorker->node->best_score,
+               bestWorker->node->alpha,
+               bestWorker->node->beta);
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
@@ -867,6 +885,7 @@ Move Search::ply0_search()
    controller->failLowFactor = 0;
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
+   completedDepth = 0;
    for (iterationDepth = 1;
         iterationDepth <= controller->ply_limit && !terminate;
         iterationDepth++) {
@@ -926,8 +945,10 @@ Move Search::ply0_search()
             cout << "iteration " << iterationDepth << " result: " <<
                value << endl;
 #endif
-            controller->updateStats(node,iterationDepth,
+            if (mainThread()) {
+               controller->updateStats(node,iterationDepth,
                                     value,lo_window,hi_window);
+            }
 #ifdef SYZYGY_TBS
             // Correct if necessary the display value, used for score
             // output and resign decisions, based on the tb information:
@@ -1053,9 +1074,9 @@ Move Search::ply0_search()
             controller->failLowFactor += (1<<faillows)*iterationDepth/2;
          }
          // search value should now be in bounds (unless we are terminating)
-/*
          if (!terminate) {
-            if (mainThread()) showStatus(board, node->best, 0, 0, 0);
+               if (mainThread()) showStatus(board, node->best, 0, 0, 0);
+/*
             if (fail_low_root_extend) {
                // We extended time to get the fail-low resolved. Now
                // we have a score.
@@ -1075,13 +1096,14 @@ Move Search::ply0_search()
                if (talkLevel == Trace) {
                   cout << "# resetting time_added - fail high is resolved" << endl;
                }}
+*/
          }
+/* TBD easy move
          if (!MovesEqual(node->best,easyMove)) {
-            depth_at_pv_change = iterationDepth;
-         }
+            depth_at_pv_change = iterationDepth;}
 */
 #ifdef _TRACE
-         cout << iterationDepth << " ply search result: ";
+         cout << iteration_depth << " ply search result: ";
          MoveImage(node->best,cout);
          cout << " value = ";
          Scoring::printScore(value,cout);
@@ -1104,6 +1126,9 @@ Move Search::ply0_search()
             controller->time_target /= 3;
          }
 */
+         if (!terminate) {
+            completedDepth = iterationDepth;
+         }
          if (value <= iterationDepth - Constants::MATE) {
             // We're either checkmated or we certainly will be, so
             // quit searching.
@@ -3149,13 +3174,15 @@ int Search::updateRootMove(const Board &board,
          parentNode->pv_length = 1;
          parentNode->cutoff++;
          parentNode->best_score = score;
-         controller->updateStats(parentNode, iterationDepth,
+         if (mainThread()) {
+            controller->updateStats(parentNode, iterationDepth,
                             parentNode->best_score,
                             parentNode->alpha,parentNode->beta);
-         if (controller->uci && !srcOpts.multipv) {
-            cout << "info score ";
-            Scoring::printScoreUCI(score,cout);
-            cout << " lowerbound" << endl;
+            if (controller->uci && !srcOpts.multipv) {
+               cout << "info score ";
+               Scoring::printScoreUCI(score,cout);
+               cout << " lowerbound" << endl;
+            }
          }
          return 1;  // signal cutoff
       }

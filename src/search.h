@@ -440,7 +440,7 @@ protected:
 
     SearchController *controller;
     Board board;
-    int iterationDepth;
+    int iterationDepth, completedDepth;
     SearchContext context;
     int terminate;
     uint64_t nodeCount;
