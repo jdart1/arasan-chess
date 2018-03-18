@@ -79,10 +79,12 @@ public:
    }
 
    void waitAll() {
-      // try to lock completed mutex
-      completed.lock();
-      // succeed, now unlock it
-      completed.unlock();
+      if (nThreads>1) {
+         // try to lock completed mutex
+         completed.lock();
+         // succeed, now unlock it
+         completed.unlock();
+      }
    }
 
    SearchController *getController() const {

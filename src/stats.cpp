@@ -21,7 +21,6 @@ void Statistics::clear()
    tb_value = Constants::INVALID_SCORE;
    fromBook = false;
    complete = 0;
-   elapsed_time = 0;
    int i;
    best_line_image.clear();
    for (i = 0; i < Constants::MaxPly; i++) {

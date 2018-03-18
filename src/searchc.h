@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    struct CACHE_ALIGN HistoryEntry {
+    struct HistoryEntry {
         int32_t val;
     } history[16][64];
 

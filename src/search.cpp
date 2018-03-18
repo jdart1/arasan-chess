@@ -423,23 +423,22 @@ Move SearchController::findBestMove(
    // Wait for thread completion
    pool->waitAll();
 
-   // Find the best pv from the threads
-   Search *bestWorker = pool->data[0]->work;
+   // Find the best result from the threads
+   Search::Results bestResult(pool->data[0]->work->results);
    // TBD multipv?
    if (options.search.multipv == 1) {
       for (int thread = 1; thread < options.search.ncpus; thread++) {
-         if (pool->data[thread]->work->completedDepth > bestWorker->completedDepth &&
-             pool->data[thread]->work->node->best_score > bestWorker->node->best_score) {
-            bestWorker = pool->data[thread]->work;
+         Search::Results &results = pool->data[thread]->work->results;
+         if (results.completedDepth > bestResult.completedDepth &&
+             (results.best_score >= bestResult.best_score ||
+              results.best_score >= Constants::MATE_RANGE)) {
+            bestResult = results;
          }
       }
    }
 
    // Update the statistics from the best worker
-   updateStats(bestWorker->node,bestWorker->completedDepth,
-               bestWorker->node->best_score,
-               bestWorker->node->alpha,
-               bestWorker->node->beta);
+   updateStats(bestResult);
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
@@ -583,6 +582,34 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
     }
     node->best = node->pv[0];                     // ensure "best" is non-null
     ASSERT(!IsNull(node->best));
+    updatePVinStats(node->pv,node->pv_length,iteration_depth);
+}
+
+void SearchController::updateStats(Search::Results &results) 
+{
+    stats->value = results.best_score;
+    stats->depth = results.completedDepth;
+    // if failing low, keep the current value for display purposes,
+    // not the bottom of the window
+    if (stats->value > results.alpha) {
+       stats->display_value = stats->value;
+    }
+
+    // note: retain previous best line if we do not have one here
+    if (IsNull(results.pv[0])) {
+#ifdef _TRACE
+        cout << "# warning: pv is null\n";
+#endif
+        return;
+    }
+    else if (results.pv_length == 0) {
+        return;
+    }
+    updatePVinStats(results.pv,results.pv_length,results.completedDepth);
+}
+
+void SearchController::updatePVinStats(Move *moves, int pv_length, int iteration_depth) {
+    Board board_copy(initialBoard);
     stats->best_line[0] = NullMove;
     int i = 0;
     stats->best_line_image.clear();
@@ -590,11 +617,11 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
     cout << "best line:" << endl;
 #endif
     stringstream best_line_image;
-    while (i < node->pv_length && !IsNull(node->pv[i])) {
+    while (i < pv_length && !IsNull(moves[i])) {
         ASSERT(i<Constants::MaxPly);
-        stats->best_line[i] = node->pv[i];
+        stats->best_line[i] = moves[i];
 #ifdef _TRACE
-        MoveImage(node->pv[i],cout); cout << ' ' << (flush);
+        MoveImage(moves[i],cout); cout << ' ' << (flush);
 #endif
         ASSERT(legalMove(board_copy,stats->best_line[i]));
         if (i!=0) best_line_image << ' ';
@@ -611,7 +638,7 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
         if (Scoring::isDraw(board_copy,rep_count,0)) {
             break;
         }
-        if (node->pv_length < 2) {
+        if (pv_length < 2) {
             // get the next move from the hash table, if possible
             // (for pondering)
             HashEntry entry;
@@ -867,6 +894,20 @@ score_t Search::razorMargin(int depth) const
 {
     return(depth<=DEPTH_INCREMENT) ?
         RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
+}
+
+void Search::setVariablesFromController() {
+   computerSide = controller->computerSide;
+   talkLevel = controller->talkLevel;
+   contempt = controller->contempt;
+}
+
+void Search::setContemptFromController() {
+   contempt = controller->contempt;
+}
+
+void Search::setTalkLevelFromController() {
+   talkLevel = controller->talkLevel;
 }
 
 Move Search::ply0_search() 
@@ -1159,6 +1200,7 @@ Move Search::ply0_search()
 #ifdef UCI_LOG
    ucilog << "out of search loop " << endl << (flush);
 #endif
+   results.copy(node,completedDepth);
    return node->best;
 }
 
@@ -3288,6 +3330,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
        ns[i].singularMove = NullMove;
     }
 #endif
+    results.clear();
     
     // Rest of new node initialization is done in searchSMP().
     // Clear killer since the side to move may have been different

@@ -69,10 +69,206 @@ enum TalkLevel { Silent, Debug, Whisper, Trace };
 
 enum SearchType { FixedDepth, TimeLimit, FixedTime };
 
-class Search;
+class SearchController;
 
 typedef void (CDECL *PostFunction)(const Statistics &);
 typedef int (CDECL *TerminateFunction)(const Statistics &);
+
+class Search : public ThreadControl {
+
+    friend class ThreadPool;
+    friend class SearchController;
+
+public:
+
+    Search(SearchController *c, ThreadInfo *ti);
+
+    virtual ~Search();
+
+    void init(NodeStack &ns, ThreadInfo *child_ti);
+
+    score_t search(score_t alpha, score_t beta,
+                   int ply, int depth, int flags = 0) {
+        PUSH(alpha,beta,flags,ply,depth);
+        return POP(search());
+    }
+
+    // search based on current board & NodeInfo
+    score_t search();
+
+    score_t quiesce(score_t alpha, score_t beta,
+                    int ply, int depth) {
+        PUSHQ(alpha,beta,ply);
+        return POP(quiesce(ply,depth));
+    }
+
+    score_t quiesce(int ply,int depth);
+
+    int wasTerminated() const {
+        return terminate;
+    }
+
+    NodeInfo * getNode() const {
+        return node;
+    }
+
+    int master() const { return ti->index == 0; }
+
+    void stop() {
+        terminate = 1;
+    }
+
+    void clearStopFlag() {
+        terminate = 0;
+    }
+
+    virtual void clearHashTables();
+
+    // We maintain a local copy of the search options, to reduce
+    // the need for each thread to query global memory. This
+    // forces a reload of that cache from the global options:
+    void setSearchOptions();
+
+    score_t drawScore(const Board &board) const;
+
+#ifdef TUNE
+    static const int LEARNING_SEARCH_WINDOW;
+    static double func( double x );
+#endif
+
+    void terminateSlaveSearches();
+
+    // main entry point for top-level search; non-main threads enter here
+    Move ply0_search();
+
+    score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
+                        int iteration_depth,
+                        int depth,
+                        const vector<Move> &exclude,
+                        const vector<Move> &include);
+
+    bool mainThread() const {
+       return ti->index == 0;
+    }
+   
+    // Container for essential search results
+    struct Results {
+       score_t best_score;
+       Move best_move;
+       Move pv[Constants::MaxPly];
+       int pv_length;
+       int completedDepth;
+       int alpha,beta;
+       void clear()  {
+          best_score = Constants::INVALID_SCORE;
+          best_move = NullMove;
+          pv_length = 0;
+          completedDepth = 0;
+          alpha = beta = 0;
+       }
+       void copy(NodeInfo *node, int depth) {
+          best_score = node->best_score;
+          best_move = node->best;
+          pv_length = node->pv_length;
+          memcpy(pv,node->pv,sizeof(Move)*pv_length);
+          alpha = node->alpha;
+          beta = node->beta;
+          completedDepth = depth;
+       }
+    } results;
+
+protected:
+
+    enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
+                          FORCED=16, LMR=64, SINGULAR_EXT=128 };
+
+    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8, PROBCUT=16 };
+
+    int calcExtensions(const Board &board,
+                       NodeInfo *node, NodeInfo *parentNode,
+                       CheckStatusType in_check_after_move,
+                       int moveIndex,
+                       Move move);
+
+    void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
+
+    int updateRootMove(const Board &board, NodeInfo *parentNode,
+                       NodeInfo *node, Move move, score_t score, int move_index);
+
+    int updateMove(const Board &,
+                   NodeInfo *parentNode, NodeInfo* myNode, Move move,
+                   score_t score, int ply, int depth);
+
+    void updatePV(const Board &, Move m, int ply);
+
+    void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
+
+    int checkTime(const Board &board,int ply);
+
+    void showStatus(const Board &board, Move best,int faillow,
+                    int failhigh,int complete);
+
+    score_t tbScoreAdjust(const Board &board,
+                          score_t score, int tb_hit, score_t tb_score) const;
+
+    score_t futilityMargin(int depth) const;
+
+    score_t razorMargin(int depth) const;
+
+    FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
+                          int ply, int depth) {
+        ++node;
+        node->alpha = node->best_score = alpha;
+        node->beta = beta;
+        node->flags = flags;
+        node->best = NullMove;
+        node->num_try = 0;
+        node->ply = ply;
+        node->depth = depth;
+        node->cutoff = 0;
+        node->pv[ply] = node->last_move = NullMove;
+        node->pv_length = 0;
+    }
+
+    FORCEINLINE void PUSHQ(score_t alpha, score_t beta, int ply) {
+        ++node;
+        node->flags = 0;
+        node->alpha = node->best_score = alpha;
+        node->beta = beta;
+        node->best = NullMove;
+        node->pv[ply] = NullMove;
+        node->pv_length = 0;
+    }
+
+    FORCEINLINE score_t POP(score_t value)  {
+        --node;
+        return value;
+    }
+
+    void setVariablesFromController();
+
+    void setContemptFromController();
+
+    void setTalkLevelFromController();
+
+    SearchController *controller;
+    Board board;
+    int iterationDepth, completedDepth;
+    SearchContext context;
+    int terminate;
+    uint64_t nodeCount;
+    int nodeAccumulator;
+    NodeInfo *node; // pointer into NodeStack array (external to class)
+    Scoring scoring;
+    ThreadInfo *ti; // thread now running this search
+    // The following variables are maintained as local copies of
+    // state from the controller. Placing them in each thread instance
+    // helps avoid global variable contention.
+    Options::SearchOptions srcOpts;
+    ColorType computerSide;
+    score_t contempt;
+    TalkLevel talkLevel;
+};
 
 class SearchController {
     friend class Search;
@@ -219,6 +415,10 @@ private:
     void updateStats(NodeInfo *node,int iteration_depth,
 		     score_t score, score_t alpha, score_t beta);
 
+    void updateStats(Search::Results &res);
+
+    void updatePVinStats(Move *pv, int pv_length, int iteration_depth);
+
     unsigned random(unsigned max) {
        std::uniform_int_distribution<unsigned> dist(0,max);
        return dist(random_engine);
@@ -277,184 +477,6 @@ private:
     int depth_adjust; // for strength feature
     int iteration_value[Constants::MaxPly];
     std::mt19937_64 random_engine;
-};
-
-class Search : public ThreadControl {
-
-    friend class ThreadPool;
-    friend class SearchController;
-
-public:
-
-    Search(SearchController *c, ThreadInfo *ti);
-
-    virtual ~Search();
-
-    void init(NodeStack &ns, ThreadInfo *child_ti);
-
-    score_t search(score_t alpha, score_t beta,
-                   int ply, int depth, int flags = 0) {
-        PUSH(alpha,beta,flags,ply,depth);
-        return POP(search());
-    }
-
-    // search based on current board & NodeInfo
-    score_t search();
-
-    score_t quiesce(score_t alpha, score_t beta,
-                    int ply, int depth) {
-        PUSHQ(alpha,beta,ply);
-        return POP(quiesce(ply,depth));
-    }
-
-    score_t quiesce(int ply,int depth);
-
-    int wasTerminated() const {
-        return terminate;
-    }
-
-    NodeInfo * getNode() const {
-        return node;
-    }
-
-    int master() const { return ti->index == 0; }
-
-    void stop() {
-        terminate = 1;
-    }
-
-    void clearStopFlag() {
-        terminate = 0;
-    }
-
-    virtual void clearHashTables();
-
-    // We maintain a local copy of the search options, to reduce
-    // the need for each thread to query global memory. This
-    // forces a reload of that cache from the global options:
-    void setSearchOptions();
-
-    score_t drawScore(const Board &board) const;
-
-#ifdef TUNE
-    static const int LEARNING_SEARCH_WINDOW;
-    static double func( double x );
-#endif
-
-    void terminateSlaveSearches();
-
-    // main entry point for top-level search; non-main threads enter here
-    Move ply0_search();
-
-    score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
-                        int iteration_depth,
-                        int depth,
-                        const vector<Move> &exclude,
-                        const vector<Move> &include);
-
-    bool mainThread() const {
-       return ti->index == 0;
-    }
-   
-protected:
-
-    enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
-                          FORCED=16, LMR=64, SINGULAR_EXT=128 };
-
-    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8, PROBCUT=16 };
-
-    int calcExtensions(const Board &board,
-                       NodeInfo *node, NodeInfo *parentNode,
-                       CheckStatusType in_check_after_move,
-                       int moveIndex,
-                       Move move);
-
-    void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
-
-    int updateRootMove(const Board &board, NodeInfo *parentNode,
-                       NodeInfo *node, Move move, score_t score, int move_index);
-
-    int updateMove(const Board &,
-                   NodeInfo *parentNode, NodeInfo* myNode, Move move,
-                   score_t score, int ply, int depth);
-
-    void updatePV(const Board &, Move m, int ply);
-
-    void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
-
-    int checkTime(const Board &board,int ply);
-
-    void showStatus(const Board &board, Move best,int faillow,
-                    int failhigh,int complete);
-
-    score_t tbScoreAdjust(const Board &board,
-                          score_t score, int tb_hit, score_t tb_score) const;
-
-    score_t futilityMargin(int depth) const;
-
-    score_t razorMargin(int depth) const;
-
-    FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
-                          int ply, int depth) {
-        ++node;
-        node->alpha = node->best_score = alpha;
-        node->beta = beta;
-        node->flags = flags;
-        node->best = NullMove;
-        node->num_try = 0;
-        node->ply = ply;
-        node->depth = depth;
-        node->cutoff = 0;
-        node->pv[ply] = node->last_move = NullMove;
-        node->pv_length = 0;
-    }
-
-    FORCEINLINE void PUSHQ(score_t alpha, score_t beta, int ply) {
-        ++node;
-        node->flags = 0;
-        node->alpha = node->best_score = alpha;
-        node->beta = beta;
-        node->best = NullMove;
-        node->pv[ply] = NullMove;
-        node->pv_length = 0;
-    }
-
-    FORCEINLINE score_t POP(score_t value)  {
-        --node;
-        return value;
-    }
-
-    void setVariablesFromController() {
-        computerSide = controller->computerSide;
-        talkLevel = controller->talkLevel;
-        contempt = controller->contempt;
-    }
-
-    void setContemptFromController() {
-        contempt = controller->contempt;
-    }
-
-    void setTalkLevelFromController() {
-        talkLevel = controller->talkLevel;
-    }
-
-    SearchController *controller;
-    Board board;
-    int iterationDepth, completedDepth;
-    SearchContext context;
-    int terminate;
-    uint64_t nodeCount;
-    int nodeAccumulator;
-    NodeInfo *node; // pointer into NodeStack array (external to class)
-    Scoring scoring;
-    ThreadInfo *ti; // thread now running this search
-    // The following variables are maintained as local copies of
-    // state from the controller. Placing them in each thread instance
-    // helps avoid global variable contention.
-    Options::SearchOptions srcOpts;
-    ColorType computerSide;
-    score_t contempt;
-    TalkLevel talkLevel;
 };
 
 #endif
