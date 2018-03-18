@@ -3187,12 +3187,14 @@ int Search::updateRootMove(const Board &board,
          return 1;  // signal cutoff
       }
       updatePV(board,parentNode,(node+1),move,0);
-      controller->updateStats(parentNode, iterationDepth,
-                              parentNode->best_score,
-                              parentNode->alpha,parentNode->beta);
-      if (move_index>1) {
-          // best move has changed, show new best move
-          showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta,0);
+      if (mainThread()) {
+         controller->updateStats(parentNode, iterationDepth,
+                                 parentNode->best_score,
+                                 parentNode->alpha,parentNode->beta);
+         if (move_index>1) {
+            // best move has changed, show new best move
+            showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta,0);
+         }
       }
    }
    return 0;   // no cutoff
