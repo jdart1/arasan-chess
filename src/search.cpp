@@ -227,6 +227,7 @@ Move SearchController::findBestMove(
    const vector<Move> &include)
 {
     this->typeOfSearch = srcType;
+    this->initialBoard = board;
     this->time_limit = time_target = time_limit;
     std::copy(exclude.begin(),exclude.end(),this->exclude.begin());
     std::copy(include.begin(),include.end(),this->include.begin());
@@ -1010,7 +1011,7 @@ Move Search::ply0_search()
             failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
             failLow = value <= lo_window  && (lo_window > iterationDepth-Constants::MATE);
             if (failHigh) {
-               showStatus(board, node->best, failLow, failHigh, 0);
+               if (mainThread()) showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
                cout << "# ply 0 high cutoff, re-searching ... value=";
                Scoring::printScore(value,cout);
@@ -1036,7 +1037,7 @@ Move Search::ply0_search()
                }
             }
             else if (failLow) {
-               showStatus(board, node->best, failLow, failHigh, 0);
+               if (mainThread()) showStatus(board, node->best, failLow, failHigh, 0);
                if (talkLevel == Trace) {
                    cout << "# ply 0 fail low, re-searching ... value=";
                    Scoring::printScore(value,cout);
