@@ -56,6 +56,10 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
 #endif
       ti->state = ThreadInfo::Idle; // mark thread available again
       activeMask &= ~(1ULL << ti->index);
+      if ((activeMask & ~1ULL) == 0ULL) {
+         // unblock thread waiting on completion
+         ti->pool->completed.unlock();
+      }
       ti->pool->unlock();
       int result;
       if ((result = ti->wait()) != 0) {
