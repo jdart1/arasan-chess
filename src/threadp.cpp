@@ -45,22 +45,16 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       log(s.str());
       }
 #endif
-      ti->pool->lock();
 #ifdef NUMA
+      ti->pool->lock();
       if (rebindMask.test(ti->index)) {
          if (ti->pool->bind(ti->index)) {
             cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
          }
          rebindMask.reset(ti->index);
       }
-#endif
-      ti->state = ThreadInfo::Idle; // mark thread available again
-      activeMask &= ~(1ULL << ti->index);
-      if ((activeMask & ~1ULL) == 0ULL) {
-         // unblock thread waiting on completion
-         ti->pool->completed.unlock();
-      }
       ti->pool->unlock();
+#endif
       int result;
       if ((result = ti->wait()) != 0) {
          if (result == -1) continue; // was interrupted
@@ -98,6 +92,15 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       log(s.str());
       }
 #endif
+      ti->pool->lock();
+      // remove thread from active list and set state back to Idle
+      activeMask &= ~(1ULL << ti->index);
+      if ((activeMask & ~1ULL) == 0ULL) {
+         // unblock thread waiting on completion
+         ti->pool->completed.unlock();
+      }
+      ti->state = ThreadInfo::Idle;
+      ti->pool->unlock();
    }
 }
 
