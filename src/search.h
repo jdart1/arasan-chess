@@ -150,15 +150,37 @@ public:
     bool mainThread() const {
        return ti->index == 0;
     }
-   
+
     // Container for essential search results
     struct Results {
        score_t best_score;
        Move best_move;
-       Move pv[Constants::MaxPly];
-       int pv_length;
        int completedDepth;
        int alpha,beta;
+       int pv_length;
+       Move* pv;
+       Results() {
+          clear();
+       }
+       Results(const Results &r):
+         best_score(r.best_score),
+         completedDepth(r.completedDepth),
+         alpha(r.alpha),
+         beta(r.beta),
+         pv_length(r.pv_length) {
+          ASSERT(pv_length<Constants::MaxPly);
+          memcpy(pv,r.pv,pv_length*sizeof(Move));
+       }
+       Results & operator = (const Results &r) {
+         best_score = r.best_score;
+         completedDepth = r.completedDepth;
+         alpha = r.alpha;
+         beta = r.beta;
+         pv_length = r.pv_length;
+         ASSERT(pv_length<Constants::MaxPly);
+         memcpy(pv,r.pv,pv_length*sizeof(Move));
+         return *this;
+       }
        void clear()  {
           best_score = Constants::INVALID_SCORE;
           best_move = NullMove;
@@ -169,11 +191,12 @@ public:
        void copy(NodeInfo *node, int depth) {
           best_score = node->best_score;
           best_move = node->best;
-          pv_length = node->pv_length;
-          memcpy(pv,node->pv,sizeof(Move)*pv_length);
           alpha = node->alpha;
           beta = node->beta;
           completedDepth = depth;
+          pv_length = node->pv_length;
+          ASSERT(pv_length<Constants::MaxPly);
+          memcpy(pv,node->pv,pv_length*sizeof(Move));
        }
     } results;
 
@@ -390,7 +413,7 @@ public:
       }
       return 0;
    }
-   
+
 #ifdef NUMA
     void rebind() {
         pool->rebind();
@@ -463,7 +486,7 @@ private:
 #ifdef SYZYGY_TBS
     int tb_hit;
     score_t tb_score;
-#endif   
+#endif
 
     Board initialBoard;
     score_t initialValue;
