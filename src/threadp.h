@@ -24,7 +24,7 @@ class ThreadPool;
 
 struct ThreadInfo : public ThreadControl {
  
-   enum State { Idle, Working, Terminating };
+   enum State { Starting, Idle, Working, Terminating };
    ThreadInfo(ThreadPool *,int i);
    virtual ~ThreadInfo();
    void start();

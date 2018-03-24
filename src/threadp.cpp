@@ -45,16 +45,17 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       log(s.str());
       }
 #endif
-#ifdef NUMA
       ti->pool->lock();
+      ti->state = ThreadInfo::Idle;
+#ifdef NUMA
       if (rebindMask.test(ti->index)) {
          if (ti->pool->bind(ti->index)) {
             cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
          }
          rebindMask.reset(ti->index);
       }
-      ti->pool->unlock();
 #endif
+      ti->pool->unlock();
       int result;
       if ((result = ti->wait()) != 0) {
          if (result == -1) continue; // was interrupted
@@ -136,7 +137,7 @@ void ThreadInfo::start() {
 }
 
 ThreadInfo::ThreadInfo(ThreadPool *p, int i)
- : state(Idle),
+ : state(Starting),
 #ifdef _WIN32
    thread_id(nullptr),
    work(nullptr),
@@ -221,6 +222,14 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
    activeMask = 1ULL;
    availableMask = (n == 64) ? 0xffffffffffffffffULL :
       (1ULL << n)-1;
+   // Wait for all threads to start up
+   while (n >1) {
+       int cnt = 0;
+       for (int i = 1; i < n; i++)
+          if (data[i]->state == ThreadInfo::Idle)
+             ++cnt;
+       if (cnt==n-1) break;
+   }
 }
 
 ThreadPool::~ThreadPool() {

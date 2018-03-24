@@ -149,6 +149,7 @@ SearchController::SearchController()
     random_engine.seed(getRandomSeed());
     LockInit(split_calc_lock);
     pool = new ThreadPool(this,options.search.ncpus);
+
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     for (int d = 0; d < 64; d++) {
@@ -596,6 +597,7 @@ void SearchController::updateStats(Search::Results &results)
     }
 
     // note: retain previous best line if we do not have one here
+    ASSERT(results.pv_length>=1);
     if (IsNull(results.pv[0])) {
 #ifdef _TRACE
         cout << "# warning: pv is null\n";
