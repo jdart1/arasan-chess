@@ -158,7 +158,7 @@ public:
        int completedDepth;
        int alpha,beta;
        int pv_length;
-       Move* pv;
+       Move pv[Constants::MaxPly];
        Results() {
           clear();
        }

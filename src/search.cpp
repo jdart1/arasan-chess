@@ -597,14 +597,10 @@ void SearchController::updateStats(Search::Results &results)
     }
 
     // note: retain previous best line if we do not have one here
-    ASSERT(results.pv_length>=1);
-    if (IsNull(results.pv[0])) {
+    if (results.pv_length == 0) {
 #ifdef _TRACE
         cout << "# warning: pv is null\n";
 #endif
-        return;
-    }
-    else if (results.pv_length == 0) {
         return;
     }
     updatePVinStats(results.pv,results.pv_length,results.completedDepth);
