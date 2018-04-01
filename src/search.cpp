@@ -837,7 +837,9 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
         iteration_depth++) {
       vector<Move> excluded(exclude);
       controller->stats->multipv_count = 0;
-      for (multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
+      for (multipv_count=0;
+           multipv_count < controller->stats->multipv_limit && !terminate;
+           multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
          if (srcOpts.multipv > 1) controller->stats->clearPV();
