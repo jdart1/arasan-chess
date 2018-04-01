@@ -938,7 +938,9 @@ Move Search::ply0_search()
       }
       vector<Move> excluded(controller->exclude);
       controller->stats->multipv_count = 0;
-      for (int multipv_count=0; multipv_count < srcOpts.multipv && !terminate; multipv_count++) {
+      for (int multipv_count=0;
+           multipv_count < controller->stats->multipv_limit && !terminate;
+           multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
          /* TBD: multi-pv
