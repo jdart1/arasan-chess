@@ -98,7 +98,10 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       activeMask &= ~(1ULL << ti->index);
       if ((activeMask & ~1ULL) == 0ULL) {
          // unblock thread waiting on completion
-         ti->pool->completed.unlock();
+         {
+            std::lock_guard<std::mutex> (ti->pool->cvm);
+         }
+         ti->pool->cv.notify_one();
       }
       ti->state = ThreadInfo::Idle;
       ti->pool->unlock();

@@ -71,20 +71,17 @@ public:
    }
 
    void unblockAll() {
-	  completed.lock();
-      // No need to unblock thread 0: that is the main thread
-      for (unsigned i = 1; i < nThreads; i++) {
-         data[i]->signal();
-      }
+     // No need to unblock thread 0: that is the main thread
+     for (unsigned i = 1; i < nThreads; i++) {
+       data[i]->signal();
+     }
    }
 
    void waitAll() {
       if (nThreads>1) {
-         // try to lock completed mutex
-         completed.lock();
+         std::unique_lock<std::mutex> lock(cvm);
+		 cv.wait(lock, [] {return (activeMask & ~1ULL) == 0ULL; });
       }
-	  // unlock mutex
-	  completed.unlock();
    }
 
    SearchController *getController() const {
@@ -133,7 +130,9 @@ private:
    unsigned nThreads;
    std::array<ThreadInfo *,Constants::MaxCPUs> data;
 
-   std::mutex completed;
+   // Used for signaling/waiting all threads completion:
+   std::mutex cvm;
+   std::condition_variable cv;
 
    // mask of thread status - 0 if idle, 1 if active
    static uint64_t activeMask;
