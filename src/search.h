@@ -291,6 +291,7 @@ protected:
     ColorType computerSide;
     score_t contempt;
     TalkLevel talkLevel;
+    int multipv_count;
 };
 
 class SearchController {
@@ -327,6 +328,10 @@ public:
 
     uint64_t getTimeLimit() const {
         return time_target + time_added;
+    }
+
+    uint64_t getMaxTime() const {
+        return time_target + xtra_time;
     }
 
     void terminateNow();
@@ -436,7 +441,8 @@ private:
     int check_input(const Board &);
 
     void updateStats(NodeInfo *node,int iteration_depth,
-		     score_t score, score_t alpha, score_t beta);
+		     score_t score, score_t alpha, score_t beta,
+                     int multipv_count);
 
     void updateStats(Search::Results &res);
 
@@ -490,7 +496,6 @@ private:
 
     Board initialBoard;
     score_t initialValue;
-    int multipv_count;
     Move easyMove;
     score_t easyScore;
     bool easy_adjust, fail_high_root_extend, fail_low_root_extend;

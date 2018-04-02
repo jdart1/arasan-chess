@@ -1,4 +1,4 @@
-// Copyright 1987-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2018 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -141,7 +141,8 @@ SearchController::SearchController()
     talkLevel(Silent),
     stopped(false),
     contempt(0),
-    active(false) {
+    active(false)
+{
 
 #ifdef SMP_STATS
     sample_counter = SAMPLE_INTERVAL;
@@ -553,7 +554,7 @@ void SearchController::setThreadCount(int threads) {
 }
 
 void SearchController::updateStats(NodeInfo *node, int iteration_depth,
-                                   score_t score, score_t alpha, score_t beta)
+                                   score_t score, score_t alpha, score_t beta, int multipv_count)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
     stats->multipv_count = multipv_count;
@@ -749,35 +750,9 @@ int Search::checkTime(const Board &board,int ply) {
        }
     }
     else if (controller->typeOfSearch == TimeLimit) {
- /* TBD: time adjustment
-       if (controller->xtra_time > 0 &&
-           controller->time_target != INFINITE_TIME &&
-           stats->elapsed_time > controller->getTimeLimit()) {
-          if (root()->fail_high_root) {
-             // root move is failing high, extend time
-             // until fail-high is resolved.
-             controller->time_added = controller->xtra_time;
-             if (talkLevel == Trace) {
-                cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
-             }
-             // Set flag that we extended time.
-             root()->fail_high_root_extend = true;
-          }
-          else if (stats->faillow) {
-             // root move is failing low, extend time until
-             // fail-low is resolved
-             controller->time_added = controller->xtra_time;
-             root()->fail_low_root_extend = true;
-             if (talkLevel == Trace) {
-                cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
-             }
-          }
-       }
-*/
-       // check time limit after any time extensions have been made
        if (stats->elapsed_time > controller->getTimeLimit()) {
           if (talkLevel == Trace) {
-             cout << "# terminating, time up" << endl;
+             cout << "# terminating, max time reached" << endl;
           }
           return 1;
        }
@@ -938,7 +913,7 @@ Move Search::ply0_search()
       }
       vector<Move> excluded(controller->exclude);
       controller->stats->multipv_count = 0;
-      for (int multipv_count=0;
+      for (multipv_count=0;
            multipv_count < controller->stats->multipv_limit && !terminate;
            multipv_count++) {
          score_t lo_window, hi_window;
@@ -989,7 +964,7 @@ Move Search::ply0_search()
 #endif
             if (mainThread()) {
                controller->updateStats(node,iterationDepth,
-                                    value,lo_window,hi_window);
+                                       value,lo_window,hi_window,multipv_count);
             }
 #ifdef SYZYGY_TBS
             // Correct if necessary the display value, used for score
@@ -1051,6 +1026,13 @@ Move Search::ply0_search()
             }
             failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
             failLow = value <= lo_window  && (lo_window > iterationDepth-Constants::MATE);
+            // reset time if no longer failing low
+            if (mainThread() && !failLow && controller->time_added) {
+               controller->time_added = 0;
+               if (talkLevel == Trace) {
+                   cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
+               }
+            }
             if (failHigh) {
                if (mainThread()) showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
@@ -1079,6 +1061,18 @@ Move Search::ply0_search()
             }
             else if (failLow) {
                if (mainThread()) showStatus(board, node->best, failLow, failHigh, 0);
+               // time adjustment
+               if (controller->xtra_time > 0 &&
+                   controller->time_target != INFINITE_TIME) {
+                  if (mainThread() && failLow) {
+                     // root move is failing low, extend time until
+                     // fail-low is resolved
+                     controller->time_added = controller->xtra_time;
+                     if (talkLevel == Trace) {
+                        cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
+                     }
+                  }
+               }
                if (talkLevel == Trace) {
                    cout << "# ply 0 fail low, re-searching ... value=";
                    Scoring::printScore(value,cout);
@@ -1421,7 +1415,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
              board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
         context.updateStats(board, node, node->best, 0,
-           board.sideToMove());
+                            board.sideToMove());
     }
 #ifdef MOVE_ORDER_STATS
     if (node->num_try && node->best_score > node->alpha) {
@@ -2455,7 +2449,7 @@ score_t Search::search()
                        Move best = hashEntry.bestMove(board);
                        if (!IsNull(best) && !CaptureOrPromotion(best)) {
                            context.updateStats(board, node, best,
-                             node->depth, board.sideToMove());
+                                               node->depth, board.sideToMove());
                           context.setKiller(best, node->ply);
                        }
                     }
@@ -3114,8 +3108,8 @@ score_t Search::search()
            context.setRefutation((node-1)->last_move,node->best);
         }
         context.updateStats(board,node,node->best,
-            depth,
-            board.sideToMove());
+                            depth,
+                            board.sideToMove());
     }
 
     // don't insert into the hash table if we are terminating - we may
@@ -3219,8 +3213,8 @@ int Search::updateRootMove(const Board &board,
          parentNode->best_score = score;
          if (mainThread()) {
             controller->updateStats(parentNode, iterationDepth,
-                            parentNode->best_score,
-                            parentNode->alpha,parentNode->beta);
+                                    parentNode->best_score,
+                                    parentNode->alpha,parentNode->beta,multipv_count);
             if (controller->uci && !srcOpts.multipv) {
                cout << "info score ";
                Scoring::printScoreUCI(score,cout);
@@ -3233,7 +3227,8 @@ int Search::updateRootMove(const Board &board,
       if (mainThread()) {
          controller->updateStats(parentNode, iterationDepth,
                                  parentNode->best_score,
-                                 parentNode->alpha,parentNode->beta);
+                                 parentNode->alpha,parentNode->beta,
+                                 multipv_count);
          if (move_index>1) {
             // best move has changed, show new best move
             showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta,0);

@@ -71,7 +71,7 @@ public:
    }
 
    void unblockAll() {
-      completed.lock();
+	  completed.lock();
       // No need to unblock thread 0: that is the main thread
       for (unsigned i = 1; i < nThreads; i++) {
          data[i]->signal();
@@ -82,9 +82,9 @@ public:
       if (nThreads>1) {
          // try to lock completed mutex
          completed.lock();
-         // succeed, now unlock it
-         completed.unlock();
       }
+	  // unlock mutex
+	  completed.unlock();
    }
 
    SearchController *getController() const {
