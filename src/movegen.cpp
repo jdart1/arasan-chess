@@ -421,7 +421,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
       }                                           // end switch
    }                                              // end for
 #ifdef DEBUG
-   for (int = 0; i < numMoves; i++)
+   for (int i = 0; i < numMoves; i++)
       if (Capture(batch[i])==King) ASSERT(0);
 #endif
    return numMoves;
