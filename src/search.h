@@ -248,7 +248,7 @@ private:
     // check console input
     int check_input(const Board &);
 
-    void updateStats(NodeInfo *node,int iteration_depth,
+    void updateStats(const Board &, NodeInfo *node,int iteration_depth,
 		     score_t score, score_t alpha, score_t beta);
 
     int uci;

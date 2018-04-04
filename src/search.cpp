@@ -314,7 +314,7 @@ void SearchController::setThreadSplitDepth(int depth) {
    pool->forEachSearch<&Search::setSplitDepthFromController>();
 }
 
-void SearchController::updateStats(NodeInfo *node, int iteration_depth,
+void SearchController::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
                                    score_t score, score_t alpha, score_t beta)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
@@ -324,12 +324,22 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
     stats->depth = iteration_depth;
     // if failing low, keep the current value for display purposes,
     // not the bottom of the window
-    if (stats->value > alpha) {
+    if (stats->value > alpha && stats->tb_value == Constants::INVALID_SCORE) {
        stats->display_value = stats->value;
     }
     if (talkLevel == Trace && stats->elapsed_time >= 5) {
        cout << "# elapsed time=" << stats->elapsed_time << " target=" << getTimeLimit() << endl;
     }
+#ifdef SYZYGY_TBS
+    // Correct if necessary the display value, used for score
+    // output and resign decisions, based on the tb information:
+    if (stats->tb_value != Constants::INVALID_SCORE) {
+       stats->display_value = root()->tbScoreAdjust(board,
+                                                    stats->value,
+                                                    1,
+                                                    stats->tb_value);
+    }
+#endif
     //stats->state = state;
     Board board_copy(rootSearch->getInitialBoard());
 
@@ -884,23 +894,16 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             cout << "iteration " << iteration_depth << " result: " <<
                value << endl;
 #endif
-            controller->updateStats(node,iteration_depth,
+            controller->updateStats(board, node,iteration_depth,
                                     value,lo_window,hi_window);
-#ifdef SYZYGY_TBS
-            // Correct if necessary the display value, used for score
-            // output and resign decisions, based on the tb information:
-            controller->stats->display_value = tbScoreAdjust(board,
-                                                      controller->stats->display_value,
-                                                      tb_hit,
-                                                      tb_score);
-#endif
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
             // the score will be inaccurate. Do not terminate here if a
             // resign score is returned (search deeper to get an accurate
             // score). Do not exit in analysis mode.
-            if (!(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
+            if (controller->typeOfSearch != FixedDepth &&
+                !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
                 (iteration_depth >= 2) &&
                 (!srcOpts.can_resign ||
@@ -3210,7 +3213,7 @@ int Search::updateRootMove(const Board &board,
          parentNode->pv_length = 1;
          parentNode->cutoff++;
          parentNode->best_score = score;
-         controller->updateStats(parentNode, controller->getIterationDepth(),
+         controller->updateStats(board, parentNode, controller->getIterationDepth(),
                             parentNode->best_score,
                             parentNode->alpha,parentNode->beta);
          if (controller->uci && !srcOpts.multipv) {
@@ -3221,7 +3224,7 @@ int Search::updateRootMove(const Board &board,
          return 1;  // signal cutoff
       }
       updatePV(board,parentNode,(node+1),move,0);
-      controller->updateStats(parentNode, controller->getIterationDepth(),
+      controller->updateStats(board, parentNode, controller->getIterationDepth(),
                               parentNode->best_score,
                               parentNode->alpha,parentNode->beta);
       if (move_index>1) {
