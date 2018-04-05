@@ -1063,27 +1063,29 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             }
             controller->time_target /= 3;
          }
-         if (value <= iteration_depth - Constants::MATE) {
-            // We're either checkmated or we certainly will be, so
-            // quit searching.
-            if (talkLevel == Trace)
-               cout << "# terminating, low score" << endl;
-#ifdef _TRACE
-            cout << "terminating, low score" << endl;
-#endif
-            controller->terminateNow();
-            break;
-         }
-         else if (value >= Constants::MATE - iteration_depth - 1) {
-            // found a forced mate, terminate
-            if (iteration_depth>=2) {
+         if (controller->typeOfSearch == TimeLimit) {
+            if (value <= iteration_depth - Constants::MATE) {
+               // We're either checkmated or we certainly will be, so
+               // quit searching.
                if (talkLevel == Trace)
-                  cout << "# terminating, mate score" << endl;
+                  cout << "# terminating, low score" << endl;
 #ifdef _TRACE
-               cout << "terminating, mate score" << endl;
+               cout << "terminating, low score" << endl;
 #endif
                controller->terminateNow();
                break;
+            }
+            else if (value >= Constants::MATE - iteration_depth - 1) {
+               // found a forced mate, terminate
+               if (iteration_depth>=2) {
+                  if (talkLevel == Trace)
+                     cout << "# terminating, mate score" << endl;
+#ifdef _TRACE
+                  cout << "terminating, mate score" << endl;
+#endif
+                  controller->terminateNow();
+                  break;
+               }
             }
          }
       }
