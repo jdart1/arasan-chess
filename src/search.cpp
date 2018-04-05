@@ -1,4 +1,4 @@
-// Copyright 1987-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2018 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"

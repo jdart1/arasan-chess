@@ -1,6 +1,6 @@
 // Main driver module for Arasan chess engine.
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018 by Jon Dart. All Rights Reserved.
 //
 #include "board.h"
 #include "movegen.h"
@@ -1161,13 +1161,6 @@ static void send_move(Board &board, Move &move, Statistics
         stringstream movebuf;
         move_image(board,last_move,movebuf,uci);
 
-        BoardState previous_state = board.state;
-        board.doMove(last_move);
-        gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
-
-        delete ponder_board;
-        ponder_board = new Board(board);
-
         if (uci) {
 #ifdef UCI_LOG
             ucilog << "bestmove " << movebuf.str();
@@ -1187,6 +1180,14 @@ static void send_move(Board &board, Move &move, Statistics
 #endif
         }
         else { // Winboard
+            // Execute the move and prepare to ponder.
+            BoardState previous_state = board.state;
+            board.doMove(last_move);
+            gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
+
+            delete ponder_board;
+            ponder_board = new Board(board);
+
             string reason;
             if (isDraw(board,last_stats,reason)) {
                 // It will be a draw after we move (by rule).
