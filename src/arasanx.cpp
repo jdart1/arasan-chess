@@ -685,7 +685,7 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
 
 
 static void uciOut(const Statistics &stats) {
-   uciOut(stats.depth,stats.value,stats.elapsed_time,
+   uciOut(stats.depth,stats.display_value,stats.elapsed_time,
       stats.num_nodes,stats.tb_hits,
       stats.best_line_image,0);
 }

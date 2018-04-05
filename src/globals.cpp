@@ -141,10 +141,12 @@ void delayedInit() {
 }
 
    void unloadTb() {
+#ifdef SYZYGY_TBS
    if (tb_init_done()) {
       // Note: Syzygy code will free any existing memory if
       // initialized more than once. So no need to do anything here.
       tb_init = false;
    }
+#endif
 }
 

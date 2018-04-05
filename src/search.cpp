@@ -440,7 +440,7 @@ Move SearchController::findBestMove(
    }
 
    // Update the statistics from the best worker
-   updateStats(bestResult);
+   updateStats(board, bestResult);
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
@@ -553,7 +553,7 @@ void SearchController::setThreadCount(int threads) {
    pool->resize(threads,this);
 }
 
-void SearchController::updateStats(NodeInfo *node, int iteration_depth,
+void SearchController::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
                                    score_t score, score_t alpha, score_t beta, int multipv_count)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
@@ -563,12 +563,22 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
     stats->depth = iteration_depth;
     // if failing low, keep the current value for display purposes,
     // not the bottom of the window
-    if (stats->value > alpha) {
+    if (stats->value > alpha && stats->tb_value == Constants::INVALID_SCORE) {
        stats->display_value = stats->value;
     }
     if (talkLevel == Trace && stats->elapsed_time >= 5) {
        cout << "# elapsed time=" << stats->elapsed_time << " target=" << getTimeLimit() << endl;
     }
+#ifdef SYZYGY_TBS
+    // Correct if necessary the display value, used for score
+    // output and resign decisions, based on the tb information:
+    if (stats->tb_value != Constants::INVALID_SCORE) {
+       stats->display_value = rootSearch->tbScoreAdjust(board,
+                                                        stats->value,
+                                                        1,
+                                                        stats->tb_value);
+    }
+#endif
     //stats->state = state;
     Board board_copy(initialBoard);
 
@@ -587,7 +597,7 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
     updatePVinStats(node->pv,node->pv_length,iteration_depth);
 }
 
-void SearchController::updateStats(Search::Results &results) 
+void SearchController::updateStats(const Board &board, Search::Results &results) 
 {
     stats->value = results.best_score;
     stats->depth = results.completedDepth;
@@ -596,7 +606,16 @@ void SearchController::updateStats(Search::Results &results)
     if (stats->value > results.alpha) {
        stats->display_value = stats->value;
     }
-
+#ifdef SYZYGY_TBS
+    // Correct if necessary the display value, used for score
+    // output and resign decisions, based on the tb information:
+    if (stats->tb_value != Constants::INVALID_SCORE) {
+       stats->display_value = rootSearch->tbScoreAdjust(board,
+                                                        stats->value,
+                                                        1,
+                                                        stats->tb_value);
+    }
+#endif
     // note: retain previous best line if we do not have one here
     if (results.pv_length == 0) {
 #ifdef _TRACE
@@ -963,24 +982,17 @@ Move Search::ply0_search()
                value << endl;
 #endif
             if (mainThread()) {
-               controller->updateStats(node,iterationDepth,
+               controller->updateStats(board, node,iterationDepth,
                                        value,lo_window,hi_window,multipv_count);
             }
-#ifdef SYZYGY_TBS
-            // Correct if necessary the display value, used for score
-            // output and resign decisions, based on the tb information:
-            controller->stats->display_value = tbScoreAdjust(board,
-                                                      controller->stats->display_value,
-                                                      controller->tb_hit,
-                                                      controller->tb_score);
-#endif
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
             // the score will be inaccurate. Do not terminate here if a
             // resign score is returned (search deeper to get an accurate
             // score). Do not exit in analysis mode.
-            if (!(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
+            if (controller->typeOfSearch != FixedDepth &&
+                !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
                 (iterationDepth >= 2) &&
                 (!srcOpts.can_resign ||
@@ -3212,7 +3224,7 @@ int Search::updateRootMove(const Board &board,
          parentNode->cutoff++;
          parentNode->best_score = score;
          if (mainThread()) {
-            controller->updateStats(parentNode, iterationDepth,
+            controller->updateStats(board, parentNode, iterationDepth,
                                     parentNode->best_score,
                                     parentNode->alpha,parentNode->beta,multipv_count);
             if (controller->uci && !srcOpts.multipv) {
@@ -3225,7 +3237,7 @@ int Search::updateRootMove(const Board &board,
       }
       updatePV(board,parentNode,(node+1),move,0);
       if (mainThread()) {
-         controller->updateStats(parentNode, iterationDepth,
+         controller->updateStats(board, parentNode, iterationDepth,
                                  parentNode->best_score,
                                  parentNode->alpha,parentNode->beta,
                                  multipv_count);
