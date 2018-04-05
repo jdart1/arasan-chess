@@ -1,4 +1,18 @@
-Changes in Arasan 20.4.1:
+Changes in Arasan 20.5:
+ 1) Have tuner output objective value to params file.
+ 2) Bug fix in more() function of RootMoveGenerator.
+ 3) Fixes to Syzygy code: enable locking when multi-threaded.
+ 4) Fix very shallow search when MultiPV greater than the number of legal moves.
+ 5) Fix UCI score output when tb hit at root - now outputs score based on tb score
+    (worked with multipv but not when multipv == 1).
+ 6) Do not exit search for forced mate if UCI and search type is fixed depth or
+    fixed time.
+ 7) Don't execute move after UCI "bestmove" Wait for GUI to send position.
+ 8) Remove Nalimov and Gaviota tb support.
+ 9) Fix mate score output in GUI.
+ 10) Add code to restore save/restore window flags and state in GUI.
+
+Changes in Arasan 20.4.1 (Jan. 2017):
  1) Fixes to ensure tablebases are initalized before search in UCI GUIs.
  2) Fix to output correct TB scores in UCI multi-pv mode.
 
