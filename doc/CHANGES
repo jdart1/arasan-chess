@@ -10,7 +10,7 @@ Changes in Arasan 20.5:
  7) Don't execute move after UCI "bestmove" Wait for GUI to send position.
  8) Remove Nalimov and Gaviota tb support.
  9) Fix mate score output in GUI.
- 10) Add code to restore save/restore window flags and state in GUI.
+ 10) Add code to save/restore window flags and state in GUI.
 
 Changes in Arasan 20.4.1 (Jan. 2017):
  1) Fixes to ensure tablebases are initalized before search in UCI GUIs.
