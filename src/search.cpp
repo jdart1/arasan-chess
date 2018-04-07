@@ -708,7 +708,6 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    easy_adjust = false;
    fail_high_root_extend = fail_low_root_extend = false;
    last_score = -Constants::MATE;
-   node->best = NullMove;
    if (scoring.isLegalDraw(board) && !controller->uci &&
        !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
       // If it's a legal draw situation before we even move, then
@@ -723,6 +722,17 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
       controller->stats->value = drawScore(board);
       return NullMove;
    }
+   node->best = node->pv[0] = NullMove;
+   int depth_at_pv_change = 0;
+
+#ifdef SYZYGY_TBS
+   int tb_hit = 0, tb_pieces = 0;
+   options.search.tb_probe_in_search = 1;
+   controller->updateSearchOptions();
+   score_t tb_score = Constants::INVALID_SCORE;
+#endif
+   score_t value = Constants::INVALID_SCORE;
+   
    // Generate the ply 0 moves here:
    RootMoveGenerator mg(board,&context,NullMove,
       talkLevel == Trace);
@@ -741,12 +751,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    controller->stats->multipv_limit = std::min<int>(mg.moveCount(), srcOpts.multipv);
    controller->time_check_counter = Time_Check_Interval;
 
-   score_t value = Constants::INVALID_SCORE;
 #ifdef SYZYGY_TBS
-   int tb_hit = 0, tb_pieces = 0;
-   options.search.tb_probe_in_search = 1;
-   controller->updateSearchOptions();
-   score_t tb_score = Constants::INVALID_SCORE;
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -849,8 +854,6 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
-   node->best = node->pv[0] = NullMove;
-   int depth_at_pv_change = 0;
    controller->failLowFactor = 0;
    for (iteration_depth = 1;
         iteration_depth <= controller->ply_limit && !terminate;
