@@ -183,6 +183,7 @@
     <OutDir>..\win64\Debug\</OutDir>
     <IntDir>..\win64\Debug\</IntDir>
     <IncludePath>$(ICIncludeDir);$(IncludePath)</IncludePath>
+    <SourcePath>$(VC_SourcePath);e:\arasan\20.5\src</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">
     <LinkIncremental />
@@ -260,7 +261,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <PreprocessorDefinitions>_WIN64;NDEBUG;_WINDOWS;SMP;USE_INTRINSICS;USE_POPCNT;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;_WINDOWS;SMP;USE_INTRINSICS;USE_POPCNT;_CRT_SECURE_NO_DEPRECATE;ARASAN_VERSION=20.5;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -276,7 +277,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\release\arasanx-64.exe</OutputFile>
-      <Version>20.4</Version>
+      <Version>20.5</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -362,7 +363,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS=1;ARASAN_VERSION=20.5;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -375,9 +376,9 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\arasanx-64.exe</OutputFile>
-      <Version>20.4</Version>
+      <Version>20.5</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>..\win64\debug\arasanx-64.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
       <StackCommitSize>4000000</StackCommitSize>
@@ -387,7 +388,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_64BIT;_CONSOLE;_DEBUG;USE_POPCNT;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_64BIT;_CONSOLE;_DEBUG;USE_POPCNT;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=20.5;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -400,7 +401,7 @@
     </ClCompile>
     <Link>
       <OutputFile>..\win64\debug\arasanx-64-popcnt.exe</OutputFile>
-      <Version>20.4</Version>
+      <Version>20.5</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -412,7 +413,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>;_64BIT;_DEBUG;FULL_DEBUG;TUNE;WIN64;_WINDOWS;SMP;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;TUNE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>;_64BIT;_DEBUG;FULL_DEBUG;TUNE;WIN64;_WINDOWS;SMP;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;TUNE;ARASAN_VERSION=20.5;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -429,7 +430,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\tuner.exe</OutputFile>
-      <Version>20.4</Version>
+      <Version>20.5</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\tuner.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -490,7 +491,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CONSOLE;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;ARASAN_VERSION=20.5;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -503,7 +504,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\debug\makebook.exe</OutputFile>
-      <Version>20.4</Version>
+      <Version>20.5</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\makebook.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -515,7 +516,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CONSOLE;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;ARASAN_VERSION=20.5;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -528,7 +529,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\debug\pgnselect.exe</OutputFile>
-      <Version>20.4</Version>
+      <Version>20.5</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\makebook.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
