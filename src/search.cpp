@@ -1073,7 +1073,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             }
             controller->time_target /= 3;
          }
-         if (controller->typeOfSearch == TimeLimit) {
+         if (!controller->uci || controller->typeOfSearch == TimeLimit) {
             if (value <= iteration_depth - Constants::MATE) {
                // We're either checkmated or we certainly will be, so
                // quit searching.
