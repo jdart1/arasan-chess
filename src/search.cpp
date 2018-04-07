@@ -726,9 +726,19 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    // Generate the ply 0 moves here:
    RootMoveGenerator mg(board,&context,NullMove,
       talkLevel == Trace);
-   if (controller->uci) {
-       controller->stats->multipv_limit = std::min<int>(mg.moveCount(),srcOpts.multipv);
+   if (mg.moveCount() == 0) {
+	   // Checkmate or statemate
+	   if (board.inCheck()) {
+		   controller->stats->state = Checkmate;
+		   controller->stats->value = controller->stats->display_value = -Constants::MATE;
+	   }
+	   else {
+		   controller->stats->state = Stalemate;
+		   controller->stats->value = controller->stats->display_value = drawScore(board);
+	   }
+	   goto search_end;
    }
+   controller->stats->multipv_limit = std::min<int>(mg.moveCount(), srcOpts.multipv);
    controller->time_check_counter = Time_Check_Interval;
 
    score_t value = Constants::INVALID_SCORE;
@@ -1094,6 +1104,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
 #ifdef UCI_LOG
    ucilog << "out of search loop " << endl << (flush);
 #endif
+search_end:
    // search done, set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
    Statistics *stats = controller->stats;
