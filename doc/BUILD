@@ -39,7 +39,7 @@ If you want to use PGO to build the arasan engine (arasanx), do:
 make clean profiled
 
 (use popcnt-profiled instead of profile as the target for a POPCNT
-enabled PGO build, or bmi2-profiled for a BMI2 compatilbe profiled
+enabled PGO build, or bmi2-profiled for a BMI2 compatible profiled
 build).
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64",

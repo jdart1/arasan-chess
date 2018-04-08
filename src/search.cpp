@@ -298,12 +298,25 @@ Move SearchController::findBestMove(
       stats->value = drawScore(board);
       return NullMove;
    }
+   Search *rootSearch = pool->rootSearch();
    // Generate the ply 0 moves here:
-   RootMoveGenerator mg(board,nullptr,NullMove,
+   RootMoveGenerator mg(board,&(rootSearch->context),NullMove,
       talkLevel == Trace);
-   if (uci) {
-       stats->multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
+   stats->multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
+
+   if (mg.moveCount() == 0) {
+      // Checkmate or statemate
+      if (board.inCheck()) {
+         stats->state = Checkmate;
+         stats->value = stats->display_value = -Constants::MATE;
+      }
+      else {
+         stats->state = Stalemate;
+         stats->value = stats->display_value = drawScore(board);
+      }
+      return NullMove;
    }
+
    time_check_counter = Time_Check_Interval;
 
    score_t value = Constants::INVALID_SCORE;
@@ -914,8 +927,6 @@ Move Search::ply0_search()
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
-   node->best = node->pv[0] = NullMove;
-// TBD   int depth_at_pv_change = 0;
    controller->failLowFactor = 0;
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
@@ -1177,36 +1188,58 @@ Move Search::ply0_search()
          if (!terminate) {
             completedDepth = iterationDepth;
          }
-         if (value <= iterationDepth - Constants::MATE) {
-            // We're either checkmated or we certainly will be, so
-            // quit searching.
-            if (talkLevel == Trace)
-               cout << "# terminating, low score" << endl;
-#ifdef _TRACE
-            cout << "terminating, low score" << endl;
-#endif
-            controller->terminateNow();
-            break;
-         }
-         else if (value >= Constants::MATE - iterationDepth - 1) {
-            // found a forced mate, terminate
-            if (iterationDepth>=2) {
+         if (!controller->uci || controller->typeOfSearch == TimeLimit) {
+            if (value <= iterationDepth - Constants::MATE) {
+               // We're either checkmated or we certainly will be, so
+               // quit searching.
                if (talkLevel == Trace)
-                  cout << "# terminating, mate score" << endl;
+                  cout << "# terminating, low score" << endl;
 #ifdef _TRACE
-               cout << "terminating, mate score" << endl;
+               cout << "terminating, low score" << endl;
 #endif
                controller->terminateNow();
                break;
+            }
+            else if (value >= Constants::MATE - iterationDepth - 1) {
+               // found a forced mate, terminate
+               if (iterationDepth>=2) {
+                  if (talkLevel == Trace)
+                     cout << "# terminating, low score" << endl;
+#ifdef _TRACE
+                  cout << "terminating, low score" << endl;
+#endif
+                  controller->terminateNow();
+                  break;
+               }
+               else if (value >= Constants::MATE - iterationDepth - 1) {
+                  // found a forced mate, terminate
+                  if (iterationDepth>=2) {
+                     if (talkLevel == Trace)
+                        cout << "# terminating, mate score" << endl;
+#ifdef _TRACE
+                     cout << "terminating, mate score" << endl;
+#endif
+                     controller->terminateNow();
+                     break;
+                  }
+               }
             }
          }
       }
    }
 
 #ifdef UCI_LOG
-   ucilog << "out of search loop " << endl << (flush);
+   if (master()) {
+         ucilog << "out of search loop, move= " << endl << (flush);
+         MoveImage(node->best,ucilog);
+         ucilog << endl;
+   }
 #endif
-   results.copy(node,completedDepth);
+   if (talkLevel == Trace) {
+      cout << "# exiting root search, move = ";
+      MoveImage(node->best,cout);
+      cout << endl;
+   }
    return node->best;
 }
 
