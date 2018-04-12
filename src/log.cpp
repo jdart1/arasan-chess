@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2008-2014, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2008-2014, 2017-2018 by Jon Dart.  All Rights Reserved.
 #include "log.h"
 #include "notation.h"
 #include "globals.h"
@@ -87,6 +87,7 @@ Log::~Log()
 
 void Log::add_move( Board &board, const Move &emove,
                     const string &move_image, const Statistics *stats,
+                    uint64_t elapsed_time,
                     int toFile)
 {
    // adding a move clears the "result" field
@@ -123,7 +124,7 @@ void Log::add_move( Board &board, const Move &emove,
       }
       else {
          s << '\t';
-         time_image(stats->elapsed_time,s);
+         time_image(elapsed_time,s);
          s << "     " << stats->depth << "\t" << stats->num_nodes << "\t";
          Scoring::printScore(stats->display_value,s);
          const string &pv = stats->best_line_image;

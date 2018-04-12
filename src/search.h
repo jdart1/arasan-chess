@@ -153,7 +153,7 @@ public:
 
     // Container for essential search results
     struct Results {
-       score_t best_score;
+       score_t best_score, display_value;
        Move best_move;
        int completedDepth;
        int alpha,beta;
@@ -163,31 +163,34 @@ public:
           clear();
        }
        Results(const Results &r):
-         best_score(r.best_score),
-         completedDepth(r.completedDepth),
-         alpha(r.alpha),
-         beta(r.beta),
-         pv_length(r.pv_length) {
+          best_score(r.best_score),
+          display_value(r.display_value),
+          completedDepth(r.completedDepth),
+          alpha(r.alpha),
+          beta(r.beta),
+          pv_length(r.pv_length) {
           ASSERT(pv_length<Constants::MaxPly);
           memcpy(pv,r.pv,pv_length*sizeof(Move));
        }
        Results & operator = (const Results &r) {
-         best_score = r.best_score;
-         completedDepth = r.completedDepth;
-         alpha = r.alpha;
-         beta = r.beta;
-         pv_length = r.pv_length;
-         ASSERT(pv_length<Constants::MaxPly);
-         memcpy(pv,r.pv,pv_length*sizeof(Move));
-         return *this;
+          best_score = r.best_score;
+          display_value = r.display_value;
+          completedDepth = r.completedDepth;
+          alpha = r.alpha;
+          beta = r.beta;
+          pv_length = r.pv_length;
+          ASSERT(pv_length<Constants::MaxPly);
+          memcpy(pv,r.pv,pv_length*sizeof(Move));
+          return *this;
        }
        void clear()  {
-          best_score = Constants::INVALID_SCORE;
+          best_score = display_value = Constants::INVALID_SCORE;
           best_move = NullMove;
           pv_length = 0;
           completedDepth = 0;
           alpha = beta = 0;
        }
+/*
        void copy(NodeInfo *node, int depth) {
           best_score = node->best_score;
           best_move = node->best;
@@ -197,6 +200,19 @@ public:
           pv_length = node->pv_length;
           ASSERT(pv_length<Constants::MaxPly);
           memcpy(pv,node->pv,pv_length*sizeof(Move));
+       }
+*/
+       void copy(const Statistics &stats) {
+          best_score = stats.value;
+          display_value = stats.display_value;
+          best_move = stats.best_line[0];
+          completedDepth = stats.depth;
+          pv_length = 0;
+          while (!IsNull(stats.best_line[pv_length])) {
+             pv[pv_length] = stats.best_line[pv_length];
+             ++pv_length;
+          }
+          ASSERT(pv_length<Constants::MaxPly);
        }
     } results;
 
@@ -274,8 +290,15 @@ protected:
 
     void setTalkLevelFromController();
 
+    void updateStats(const Board &, NodeInfo *node,int iteration_depth,
+		     score_t score, score_t alpha, score_t beta,
+                     int multipv_count);
+
+    void updatePVinStats(Move *pv, int pv_length, int iteration_depth);
+
     SearchController *controller;
     Board board;
+    Statistics stats;
     int iterationDepth, completedDepth;
     SearchContext context;
     int terminate;
@@ -429,6 +452,17 @@ public:
     }
 #endif
 
+    uint64_t getElapsedTime() const {
+       return elapsed_time;
+    }
+   
+   double getCpuPercentage() const {
+      if (samples)
+         return (100.0*threads)/samples;
+      else
+         return 0.0;
+   }
+
 private:
 
     // pointer to function, called to output status during
@@ -440,13 +474,7 @@ private:
     // check console input
     int check_input(const Board &);
 
-    void updateStats(const Board &, NodeInfo *node,int iteration_depth,
-		     score_t score, score_t alpha, score_t beta,
-                     int multipv_count);
-
     void updateStats(const Board &, Search::Results &res);
-
-    void updatePVinStats(Move *pv, int pv_length, int iteration_depth);
 
     unsigned random(unsigned max) {
        std::uniform_int_distribution<unsigned> dist(0,max);
@@ -505,6 +533,12 @@ private:
     int depth_adjust; // for strength feature
     int iteration_value[Constants::MaxPly];
     std::mt19937_64 random_engine;
+
+    uint64_t elapsed_time; // in milliseconds
+#ifdef SMP_STATS
+    uint64_t samples, threads;
+#endif
+
 };
 
 #endif

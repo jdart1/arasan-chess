@@ -1,10 +1,11 @@
-// Copyright 1994-2009, 2012-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2009, 2012-2018 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
 
 #include "chess.h"
 #include "constant.h"
+#include "hash.h"
 #include <array>
 #include <string>
 using namespace std;
@@ -29,7 +30,6 @@ struct Statistics
    int failhigh, faillow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   uint64_t elapsed_time; // in milliseconds
    unsigned depth;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
@@ -52,9 +52,6 @@ struct Statistics
    uint64_t hash_hits, hash_searches;
 #endif
    uint64_t num_nodes;
-#ifdef SMP_STATS
-   uint64_t samples, threads;
-#endif
 #ifdef MOVE_ORDER_STATS
    int move_order[4];
    int move_order_count;
@@ -79,7 +76,7 @@ struct Statistics
 
       MultiPVEntry(const Statistics &stats)
         : depth(stats.depth),score(stats.display_value),
-          time(stats.elapsed_time),nodes(stats.num_nodes),
+          /* TBD time(stats.elapsed_time),*/nodes(stats.num_nodes),
           tb_hits(stats.tb_hits) {
             best_line_image = stats.best_line_image;
             best = stats.best_line[0];
@@ -103,7 +100,10 @@ struct Statistics
 
    void sortMultiPVs();
 
-   void printNPS(ostream &);
+   static void printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time);
+
+   void updatePV(const Board &board, Move *moves, int pv_length, int iteration_depth,
+                 bool uci, int age, Hash &hashTable);
 
 };
 

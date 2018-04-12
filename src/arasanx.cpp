@@ -685,7 +685,7 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
 
 
 static void uciOut(const Statistics &stats) {
-   uciOut(stats.depth,stats.display_value,stats.elapsed_time,
+   uciOut(stats.depth,stats.display_value,searcher->getElapsedTime(),
       stats.num_nodes,stats.tb_hits,
       stats.best_line_image,0);
 }
@@ -727,7 +727,7 @@ static void CDECL post_output(const Statistics &stats) {
 #endif
          stats.depth,' ',
          int((score*100)/Params::PAWN_VALUE), // score in centipawns
-         (long)stats.elapsed_time/10, // time in centiseconds
+         (long)searcher->getElapsedTime()/10, // time in centiseconds
          (unsigned long long)stats.num_nodes,
          stats.best_line_image.c_str());
          fflush(stdout);
@@ -754,7 +754,7 @@ static void CDECL post_test(const Statistics &stats)
       int ply = stats.depth-1;
          search_progress[max_depth].move = best;
          search_progress[max_depth].value = stats.value;
-         search_progress[max_depth].time = stats.elapsed_time;
+         search_progress[max_depth].time = searcher->getElapsedTime();
          search_progress[max_depth].depth = ply;
          search_progress[max_depth].num_nodes = stats.num_nodes;
          max_depth++;
@@ -771,7 +771,7 @@ static void CDECL post_test(const Statistics &stats)
       if ((int)stats.depth > last_iteration_depth) {
          // Wait 2 sec before counting iterations correct, unless
          // we found a mate
-         if (stats.elapsed_time >= 200 ||
+         if (searcher->getElapsedTime() >= 200 ||
              stats.value > Constants::MATE_RANGE) {
             ++iterations_correct;
          }
@@ -780,7 +780,7 @@ static void CDECL post_test(const Statistics &stats)
       if (iterations_correct >= early_exit_plies)
          early_exit = 1;
       if (solution_time == -1) {
-         solution_time = stats.elapsed_time;
+         solution_time = searcher->getElapsedTime();
          solution_nodes = stats.num_nodes;
       }
       return;
@@ -1155,7 +1155,7 @@ static void send_move(Board &board, Move &move, Statistics
         stringstream img;
         Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
         last_move_image = img.str();
-        theLog->add_move(board,last_move,last_move_image,&last_stats,true);
+        theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
         // Perform learning (if enabled):
         learn(board,board.repCount());
         stringstream movebuf;
@@ -1224,20 +1224,20 @@ static void send_move(Board &board, Move &move, Statistics
             cout << "tellics whisper ";
         std::ios_base::fmtflags original_flags = cout.flags();
         cout << "time=" << fixed << setprecision(2) <<
-            (float)last_stats.elapsed_time/1000.0 << " sec. score=";
+            (float)searcher->getElapsedTime()/1000.0 << " sec. score=";
         Scoring::printScore(last_stats.display_value,cout);
         cout << " depth=" << last_stats.depth;
-        if (last_stats.elapsed_time > 0) {
+        if (searcher->getElapsedTime() > 0) {
             cout << " nps=";
-            last_stats.printNPS(cout);
+            Statistics::printNPS(cout,last_stats.num_nodes,searcher->getElapsedTime());
         }
         if (last_stats.tb_hits) {
             cout << " egtb=" << last_stats.tb_hits << '/' << last_stats.tb_probes;
         }
 #if defined(SMP_STATS)
-        if (last_stats.samples && options.search.ncpus>1) {
+        if (options.search.ncpus>1) {
             cout << " cpu=" << fixed << setprecision(2) <<
-                (100.0*last_stats.threads)/((float)last_stats.samples) << '%';
+               searcher->getCpuPercentage() << '%';
         }
 #endif
         if (last_stats.best_line_image.length() && !game_end) {
@@ -1490,7 +1490,7 @@ static int check_pending(Board &board) {
 static void analyze_output(const Statistics &stats) {
     // output search status
     cout << "stat01: " <<
-        stats.elapsed_time << " " << stats.num_nodes << " " <<
+        searcher->getElapsedTime() << " " << stats.num_nodes << " " <<
         stats.depth << " " <<
         stats.mvleft << " " << stats.mvtot << endl;
 }
@@ -1601,7 +1601,7 @@ static void execute_move(Board &board,Move m)
     stringstream img;
     Notation::image(board,m,Notation::OutputFormat::SAN,img);
     last_move_image = img.str();
-    theLog->add_move(board,m,last_move_image,nullptr,true);
+    theLog->add_move(board,m,last_move_image,nullptr,searcher->getElapsedTime(),true);
     BoardState previous_state = board.state;
     board.doMove(m);
     // If our last move added was the pondering move, replace it
@@ -1999,8 +1999,8 @@ static void check_command(const string &cmd, int &terminate)
 
 // for support of the "test" command
 static Move test_search(Board &board, int ply_limit,
-                        int time_limit, Statistics &stats,
-const vector<Move> &excludes) {
+                        int time_limit, 
+                        Statistics &stats, const vector<Move> &excludes) {
    Move move = NullMove;
    solution_time = -1;
 
@@ -2030,7 +2030,7 @@ const vector<Move> &excludes) {
    cout << "\tscore: ";
    Scoring::printScore(stats.display_value,cout);
    cout <<  '\t';
-   total_time += stats.elapsed_time;
+   total_time += searcher->getElapsedTime();
    total_nodes += stats.num_nodes;
    gameMoves->removeAll();
    return move;
@@ -2167,7 +2167,7 @@ static void do_test(string test_file, int depth_limit, int time_limit)
             }
             else {
                cout << "\t** not solved in " <<
-                  (float)stats.elapsed_time/1000.0 << " secs. (";
+                  (float)searcher->getElapsedTime()/1000.0 << " secs. (";
                print_nodes(stats.num_nodes,cout);
             }
             cout << " nodes)" << endl;

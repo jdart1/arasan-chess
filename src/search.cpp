@@ -248,6 +248,10 @@ Move SearchController::findBestMove(
     this->uci = isUCI;
     this->talkLevel = t;
     this->stats = &stat_buf;
+#ifdef SMP_STATS
+    samples = threads = 0L;
+#endif
+    elapsed_time = 0ULL;
 
     Time_Check_Interval = 4096/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
@@ -485,8 +489,8 @@ Move SearchController::findBestMove(
       std::ios_base::fmtflags original_flags = cout.flags();
       cout.setf(ios::fixed);
       cout << setprecision(2);
-      if (stats->elapsed_time > 0) {
-         stats->printNPS(cout);
+      if (elapsed_time > 0) {
+         Statistics::printNPS(cout,stats->num_nodes,elapsed_time);
          cout << " nodes/second." << endl;
       }
 #ifdef SEARCH_STATS
@@ -528,14 +532,9 @@ Move SearchController::findBestMove(
          100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
          100.0*stats->pawn_extensions/stats->moves_searched << "% pawn, " <<
          100.0*stats->singular_extensions/stats->moves_searched << "% singular" << endl;
-
 #endif
       cout << stats->tb_probes << " tablebase probes, " <<
          stats->tb_hits << " tablebase hits" << endl;
-#if defined(SMP_STATS)
-      cout << stats->splits << " splits," <<
-         " average thread usage=" << (float)(stats->threads)/(float)stats->samples << endl;
-#endif
       cout << (flush);
       cout.flags(original_flags);
    }
@@ -566,59 +565,18 @@ void SearchController::setThreadCount(int threads) {
    pool->resize(threads,this);
 }
 
-void SearchController::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
-                                   score_t score, score_t alpha, score_t beta, int multipv_count)
-{
-    stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
-    stats->multipv_count = multipv_count;
-    ASSERT(stats->multipv_count >= 0 && (unsigned)stats->multipv_count < Statistics::MAX_PV);
-    stats->value = score;
-    stats->depth = iteration_depth;
-    // if failing low, keep the current value for display purposes,
-    // not the bottom of the window
-    if (stats->value > alpha && stats->tb_value == Constants::INVALID_SCORE) {
-       stats->display_value = stats->value;
-    }
-    if (talkLevel == Trace && stats->elapsed_time >= 5) {
-       cout << "# elapsed time=" << stats->elapsed_time << " target=" << getTimeLimit() << endl;
-    }
-#ifdef SYZYGY_TBS
-    // Correct if necessary the display value, used for score
-    // output and resign decisions, based on the tb information:
-    if (stats->tb_value != Constants::INVALID_SCORE) {
-       stats->display_value = rootSearch->tbScoreAdjust(board,
-                                                        stats->value,
-                                                        1,
-                                                        stats->tb_value);
-    }
-#endif
-    //stats->state = state;
-    Board board_copy(initialBoard);
-
-    // note: retain previous best line if we do not have one here
-    if (IsNull(node->pv[0])) {
-#ifdef _TRACE
-        cout << "# warning: pv is null\n";
-#endif
-        return;
-    }
-    else if (node->pv_length == 0) {
-        return;
-    }
-    node->best = node->pv[0];                     // ensure "best" is non-null
-    ASSERT(!IsNull(node->best));
-    updatePVinStats(node->pv,node->pv_length,iteration_depth);
-}
-
 void SearchController::updateStats(const Board &board, Search::Results &results) 
 {
-    stats->value = results.best_score;
+    stats->value = stats->display_value = results.best_score;
     stats->depth = results.completedDepth;
     // if failing low, keep the current value for display purposes,
     // not the bottom of the window
+    // TBD
+    /*
     if (stats->value > results.alpha) {
        stats->display_value = stats->value;
     }
+    */
 #ifdef SYZYGY_TBS
     // Correct if necessary the display value, used for score
     // output and resign decisions, based on the tb information:
@@ -629,6 +587,38 @@ void SearchController::updateStats(const Board &board, Search::Results &results)
                                                         stats->tb_value);
     }
 #endif
+    // Sum all counters across the threads
+    for (int i = 0; i < options.search.ncpus; i++) {
+       Statistics &s = pool->data[i]->work->stats;
+       stats->tb_probes += s.tb_probes;
+       stats->tb_hits += s.tb_hits;
+       stats->num_nodes += s.num_nodes;
+#ifdef SEARCH_STATS
+       stats->num_qnodes += s.num_qnodes;
+       stats->reg_nodes += s.reg_nodes;
+       stats->moves_searched += s.moves_searched;
+       stats->futility_pruning += s.futility_pruning;
+       stats->static_null_pruning += s.static_null_pruning;
+       stats->null_cuts += s.null_cuts;
+       stats->razored += s.razored;
+       stats->check_extensions += s.check_extensions;
+       stats->capture_extensions += s.capture_extensions;
+       stats->pawn_extensions += s.pawn_extensions;
+       stats->evasion_extensions += s.evasion_extensions;
+       stats->singular_extensions += s.singular_extensions;
+       stats->reduced += s.reduced;
+       stats->lmp += s.lmp;
+       stats->history_pruning += s.history_pruning;
+       stats->see_pruning += s.see_pruning;
+       stats->hash_hits += s.hash_hits;
+       stats->hash_searches += s.hash_searches;
+#endif
+#ifdef MOVE_ORDER_STATS
+       stats->move_order_count += s.move_order_count;
+       for (j = 0; j < 4; j++) stats->move_order[j] += s.move_order[j];
+#endif       
+    }
+
     // note: retain previous best line if we do not have one here
     if (results.pv_length == 0) {
 #ifdef _TRACE
@@ -636,68 +626,9 @@ void SearchController::updateStats(const Board &board, Search::Results &results)
 #endif
         return;
     }
-    updatePVinStats(results.pv,results.pv_length,results.completedDepth);
-}
+    stats->updatePV(board,results.pv,results.pv_length,results.completedDepth,
+                    static_cast<bool>(uci),age,hashTable);
 
-void SearchController::updatePVinStats(Move *moves, int pv_length, int iteration_depth) {
-    Board board_copy(initialBoard);
-    stats->best_line[0] = NullMove;
-    int i = 0;
-    stats->best_line_image.clear();
-#ifdef _TRACE
-    cout << "best line:" << endl;
-#endif
-    stringstream best_line_image;
-    while (i < pv_length && !IsNull(moves[i])) {
-        ASSERT(i<Constants::MaxPly);
-        stats->best_line[i] = moves[i];
-#ifdef _TRACE
-        MoveImage(moves[i],cout); cout << ' ' << (flush);
-#endif
-        ASSERT(legalMove(board_copy,stats->best_line[i]));
-        if (i!=0) best_line_image << ' ';
-        Notation::image(board_copy,stats->best_line[i],
-                        uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,best_line_image);
-        int len = (int)best_line_image.tellg();
-        // limit the length
-        if (len > 250) {
-            break;
-        }
-        board_copy.doMove(stats->best_line[i]);
-        ++i;
-        int rep_count;
-        if (Scoring::isDraw(board_copy,rep_count,0)) {
-            break;
-        }
-        if (pv_length < 2) {
-            // get the next move from the hash table, if possible
-            // (for pondering)
-            HashEntry entry;
-            HashEntry::ValueType result =
-                hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
-                           0,age,
-                           iteration_depth,entry);
-            if (result != HashEntry::NoHit) {
-                Move hashMove = entry.bestMove(board_copy);
-                if (!IsNull(hashMove)) {
-                    stats->best_line[i] = hashMove;
-                    if (i!=0) best_line_image << ' ';
-                    Notation::image(board_copy,hashMove,
-                                    uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,best_line_image);
-                    ++i;
-                }
-                break;
-            }
-        }
-    }
-#ifdef _TRACE
-    cout << endl;
-#endif
-    stats->best_line[i] = NullMove;
-    stats->best_line_image = best_line_image.str();
-#ifdef _TRACE
-    cout << "best line image: " << stats->best_line_image << endl;
-#endif
 }
 
 void SearchController::clearHashTables()
@@ -775,14 +706,14 @@ int Search::checkTime(const Board &board,int ply) {
 
     Statistics *stats = controller->stats;
     CLOCK_TYPE current_time = getCurrentTime();
-    stats->elapsed_time = getElapsedTime(controller->startTime,current_time);
+    controller->elapsed_time = getElapsedTime(controller->startTime,current_time);
     if (controller->typeOfSearch == FixedTime) {
-       if (stats->elapsed_time >= controller->time_target) {
+       if (controller->elapsed_time >= controller->time_target) {
           return 1;
        }
     }
     else if (controller->typeOfSearch == TimeLimit) {
-       if (stats->elapsed_time > controller->getTimeLimit()) {
+       if (controller->elapsed_time > controller->getTimeLimit()) {
           if (talkLevel == Trace) {
              cout << "# terminating, max time reached" << endl;
           }
@@ -791,8 +722,8 @@ int Search::checkTime(const Board &board,int ply) {
     }
     if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 2000) {
         cout << "info";
-        if (stats->elapsed_time>300) cout << " nps " <<
-                (long)((1000L*stats->num_nodes)/stats->elapsed_time);
+        if (controller->elapsed_time>300) cout << " nps " <<
+                (long)((1000L*stats->num_nodes)/controller->elapsed_time);
         cout << " nodes " << stats->num_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
         controller->last_time = current_time;
     }
@@ -804,18 +735,17 @@ int failhigh,int complete)
 {
     if (terminate)
         return;
-    Statistics *stats = controller->stats;
-    stats->faillow = faillow;
-    stats->failhigh = failhigh;
-    int ply = stats->depth;
-    stats->complete = complete;
-    if (talkLevel == Debug) {
+    stats.faillow = faillow;
+    stats.failhigh = failhigh;
+    int ply = stats.depth;
+    stats.complete = complete;
+    if (master() && talkLevel == Debug) {
         // This is the output for the "test" command in verbose mode
         std::ios_base::fmtflags original_flags = cout.flags();
         cout.setf(ios::fixed);
         cout << setprecision(2);
         cout << ply << '\t';
-        cout << stats->elapsed_time/1000.0 << '\t';
+        cout << controller->elapsed_time/1000.0 << '\t';
         if (faillow) {
             cout << " --";
         }
@@ -824,8 +754,8 @@ int failhigh,int complete)
             if (failhigh) cout << '!';
         }
         cout << '\t';
-        Scoring::printScore(stats->display_value,cout);
-        cout << '\t' << stats->num_nodes << endl;
+        Scoring::printScore(stats.display_value,cout);
+        cout << '\t' << stats.num_nodes << endl;
         cout.flags(original_flags);
     }
     // Post during ponder if UCI
@@ -833,13 +763,13 @@ int failhigh,int complete)
         if (srcOpts.multipv > 1) {
             // Accumulate multiple pvs until we are ready to output
             // them.
-            stats->multi_pvs[stats->multipv_count] = Statistics::MultiPVEntry(*stats);
-            if (stats->multipv_count >= stats->multipv_limit) {
-                stats->sortMultiPVs();
+            stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
+            if (stats.multipv_count >= stats.multipv_limit) {
+                stats.sortMultiPVs();
             }
         }
-        if (controller->post_function) {
-            controller->post_function(*stats);
+        if (master() && controller->post_function) {
+            controller->post_function(stats);
         }
     }
 }
@@ -915,6 +845,46 @@ void Search::setTalkLevelFromController() {
    talkLevel = controller->talkLevel;
 }
 
+void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
+                         score_t score, score_t alpha, score_t beta, int multipv_count)
+{
+   //stats.elapsed_time = getElapsedTime(startTime,getCurrentTime());
+    stats.multipv_count = multipv_count;
+    ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
+    stats.value = score;
+    stats.depth = iteration_depth;
+    // if failing low, keep the current value for display purposes,
+    // not the bottom of the window
+    if (stats.value > alpha && stats.tb_value == Constants::INVALID_SCORE) {
+       stats.display_value = stats.value;
+    }
+#ifdef SYZYGY_TBS
+    // Correct if necessary the display value, used for score
+    // output and resign decisions, based on the tb information:
+    if (stats.tb_value != Constants::INVALID_SCORE) {
+       stats.display_value = tbScoreAdjust(board,
+                                            stats.value,
+                                            1,
+                                            stats.tb_value);
+    }
+#endif
+    // note: retain previous best line if we do not have one here
+    if (IsNull(node->pv[0])) {
+#ifdef _TRACE
+        cout << "# warning: pv is null\n";
+#endif
+        return;
+    }
+    else if (node->pv_length == 0) {
+        return;
+    }
+    node->best = node->pv[0];                     // ensure "best" is non-null
+    ASSERT(!IsNull(node->best));
+    stats.updatePV(board,node->pv,node->pv_length,iteration_depth,controller->uci,
+                   controller->age,
+                   controller->hashTable);
+}
+
 Move Search::ply0_search() 
 {
 // TBD: time mgmt
@@ -942,7 +912,7 @@ Move Search::ply0_search()
          }
       }
       vector<Move> excluded(controller->exclude);
-      controller->stats->multipv_count = 0;
+      stats.multipv_count = 0;
       for (multipv_count=0;
            multipv_count < controller->stats->multipv_limit && !terminate;
            multipv_count++) {
@@ -977,8 +947,8 @@ Move Search::ply0_search()
          bool failHigh = true;
          int fails = 0;
          int faillows = 0;
-         controller->stats->faillow = 0;
-         controller->stats->failhigh = 0;
+         stats.faillow = 0;
+         stats.failhigh = 0;
          while (!terminate && (failLow || failHigh)) {
             failHigh = failLow = false;
 #ifdef _TRACE
@@ -992,10 +962,8 @@ Move Search::ply0_search()
             cout << "iteration " << iterationDepth << " result: " <<
                value << endl;
 #endif
-            if (mainThread()) {
-               controller->updateStats(board, node,iterationDepth,
-                                       value,lo_window,hi_window,multipv_count);
-            }
+            updateStats(board, node,iterationDepth,
+                        value,lo_window,hi_window,multipv_count);
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
@@ -1007,14 +975,13 @@ Move Search::ply0_search()
                 mg.moveCount() == 1 &&
                 (iterationDepth >= 2) &&
                 (!srcOpts.can_resign ||
-                 (controller->stats->display_value >
+                 (stats.display_value >
                   srcOpts.resign_threshold))) {
                if (talkLevel == Trace)
                   cout << "# single legal move, terminating" << endl;
                controller->terminateNow();
             }
-            Statistics *stats = controller->stats;
-            StateType &state = stats->state;
+            StateType &state = stats.state;
             if (!terminate && (state == Checkmate || state == Stalemate)) {
                if (talkLevel == Trace)
                   cout << "# terminating due to checkmate or statemate, state="
@@ -1022,13 +989,13 @@ Move Search::ply0_search()
                controller->terminateNow();
                break;
             }
-            if (stats->elapsed_time > 200) {
-               Time_Check_Interval = int((20L*stats->num_nodes)/(stats->elapsed_time*NODE_ACCUM_THRESHOLD));
-               if ((int)controller->time_limit - (int)stats->elapsed_time < 100) {
+            if (controller->elapsed_time > 200) {
+               Time_Check_Interval = int((20L*stats.num_nodes)/(controller->elapsed_time*NODE_ACCUM_THRESHOLD));
+               if ((int)controller->time_limit - (int)controller->elapsed_time < 100) {
                   Time_Check_Interval /= 2;
                }
                if (talkLevel == Trace) {
-                  cout << "# time check interval=" << Time_Check_Interval << " elapsed_time=" << stats->elapsed_time << " target=" << controller->getTimeLimit() << endl;
+                  cout << "# time check interval=" << Time_Check_Interval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << endl;
                }
             }
             if (terminate) {
@@ -1041,7 +1008,7 @@ Move Search::ply0_search()
                   controller->terminateNow();
                }
                else if (controller->terminate_function &&
-                        controller->terminate_function(*stats)) {
+                        controller->terminate_function(stats)) {
                   if (talkLevel == Trace)
                      cout << "# terminating due to program or user input" << endl;
                   controller->terminateNow();
@@ -1057,7 +1024,7 @@ Move Search::ply0_search()
                }
             }
             if (failHigh) {
-               if (mainThread()) showStatus(board, node->best, failLow, failHigh, 0);
+               showStatus(board, node->best, failLow, failHigh, 0);
 #ifdef _TRACE
                cout << "# ply 0 high cutoff, re-searching ... value=";
                Scoring::printScore(value,cout);
@@ -1083,7 +1050,7 @@ Move Search::ply0_search()
                }
             }
             else if (failLow) {
-               if (mainThread()) showStatus(board, node->best, failLow, failHigh, 0);
+               showStatus(board, node->best, failLow, failHigh, 0);
                // time adjustment
                if (controller->xtra_time > 0 &&
                    controller->time_target != INFINITE_TIME) {
@@ -1134,7 +1101,7 @@ Move Search::ply0_search()
          }
          // search value should now be in bounds (unless we are terminating)
          if (!terminate) {
-               if (mainThread()) showStatus(board, node->best, 0, 0, 0);
+            showStatus(board, node->best, 0, 0, 0);
 /*
             if (fail_low_root_extend) {
                // We extended time to get the fail-low resolved. Now
@@ -1173,7 +1140,7 @@ Move Search::ply0_search()
          if (!controller->background &&
              !controller->time_added &&
              !easy_adjust &&
-             (controller->stats->elapsed_time >
+             (controller->controller->elapsed_time >
               (unsigned)controller->time_target/3) &&
              depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
              MovesEqual(easyMove,node->best) &&
@@ -1328,8 +1295,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             continue;     // skip move
         }
         node->last_move = move;
-        controller->stats->mvleft = controller->stats->mvtot-move_index;
-        if (controller->uci && controller->stats->elapsed_time > 300) {
+        stats.mvleft = stats.mvtot-move_index;
+        if (master() && controller->uci && controller->elapsed_time > 300) {
             controller->uciSendInfos(board, move, move_index, iterationDepth);
         }
 #ifdef _TRACE
@@ -1445,11 +1412,11 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         if (in_check) {
             if (mg.moveCount() == 0) {           // mate
                 node->best_score = -(Constants::MATE);
-                if (!srcOpts.multipv) controller->stats->state = Checkmate;
+                if (!srcOpts.multipv) stats.state = Checkmate;
             }
         }
         else {                                    // stalemate
-            if (!srcOpts.multipv) controller->stats->state = Stalemate;
+            if (!srcOpts.multipv) stats.state = Stalemate;
 #ifdef _TRACE
             cout << "stalemate!" << endl;
 #endif
@@ -1464,15 +1431,16 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     }
 #ifdef MOVE_ORDER_STATS
     if (node->num_try && node->best_score > node->alpha) {
-        controller->stats->move_order_count++;
+        stats.move_order_count++;
         if (node->best_count<4) {
-            controller->stats->move_order[node->best_count]++;
+            stats.move_order[node->best_count]++;
         }
     }
 #endif
     ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
-    controller->stats->num_nodes += nodeAccumulator;
+    stats.num_nodes += nodeAccumulator;
     nodeAccumulator = 0;
+    results.copy(stats);
     return node->best_score;
 }
 
@@ -1534,7 +1502,7 @@ score_t Search::quiesce(int ply,int depth)
    //
    ASSERT(ply < Constants::MaxPly);
    if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
-      controller->stats->num_nodes += nodeAccumulator;
+      stats.num_nodes += nodeAccumulator;
       nodeAccumulator = 0;
 #ifdef SMP_STATS
       --controller->sample_counter;
@@ -1551,7 +1519,7 @@ score_t Search::quiesce(int ply,int depth)
    }
    ASSERT(depth<=0);
 #ifdef SEARCH_STATS
-   controller->stats->num_qnodes++;
+   stats.num_qnodes++;
 #endif
    int rep_count;
    if (terminate) return node->alpha;
@@ -1601,13 +1569,13 @@ score_t Search::quiesce(int ply,int depth)
    result = controller->hashTable.searchHash(board,hash,
                                              ply,tt_depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
-   controller->stats->hash_searches++;
+   stats.hash_searches++;
 #endif
    bool hashHit = (result != HashEntry::NoHit);
    if (hashHit) {
       // a valid hashtable entry was found
 #ifdef SEARCH_STATS
-      controller->stats->hash_hits++;
+      stats.hash_hits++;
 #endif
       node->staticEval = hashEntry.staticValue();
       hashValue = hashEntry.getValue();
@@ -2185,7 +2153,7 @@ int Search::calcExtensions(const Board &board,
           board.isPinned(board.oppositeSide(),move)) {
           node->extensions |= CHECK;
 #ifdef SEARCH_STATS
-          controller->stats->check_extensions++;
+          stats.check_extensions++;
 #endif
           extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
@@ -2198,7 +2166,7 @@ int Search::calcExtensions(const Board &board,
       node->extensions |= PAWN_PUSH;
       extend += PAWN_PUSH_EXTENSION;
 #ifdef SEARCH_STATS
-      controller->stats->pawn_extensions++;
+      stats.pawn_extensions++;
 #endif
    }
    else if (TypeOfMove(move) == Normal &&
@@ -2209,7 +2177,7 @@ int Search::calcExtensions(const Board &board,
       node->extensions |= CAPTURE;
       extend += CAPTURE_EXTENSION;
 #ifdef SEARCH_STATS
-      ++controller->stats->capture_extensions;
+      ++stats.capture_extensions;
 #endif
    }
    if (extend) {
@@ -2231,7 +2199,7 @@ int Search::calcExtensions(const Board &board,
            if (extend <= -DEPTH_INCREMENT) {
                node->extensions |= LMR;
 #ifdef SEARCH_STATS
-               ++controller->stats->reduced;
+               ++stats.reduced;
 #endif
            } else {
                // do not reduce < 1 ply
@@ -2255,7 +2223,7 @@ int Search::calcExtensions(const Board &board,
          GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
          moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
 #ifdef SEARCH_STATS
-         ++controller->stats->lmp;
+         ++stats.lmp;
 #endif
 #ifdef _TRACE
          indent(node->ply); cout << "LMP: pruned" << endl;
@@ -2272,7 +2240,7 @@ int Search::calcExtensions(const Board &board,
          }
          if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-            controller->stats->futility_pruning++;
+            ++stats.futility_pruning;
 #endif
 #ifdef _TRACE
             indent(node->ply); cout << "futility: pruned" << endl;
@@ -2294,7 +2262,7 @@ int Search::calcExtensions(const Board &board,
        if (swap == Constants::INVALID_SCORE) swap = seeSign(board,move,0);
        if (!swap) {
 #ifdef SEARCH_STATS
-          ++controller->stats->see_pruning;
+          ++stats.see_pruning;
 #endif
           return PRUNE;
        }
@@ -2317,20 +2285,19 @@ score_t Search::search()
     node->best_count = 0;
 #endif
 #ifdef SEARCH_STATS
-    ++controller->stats->reg_nodes;
+    ++stats.reg_nodes;
 #endif
     int ply = node->ply;
     int depth = node->depth;
     ASSERT(ply < Constants::MaxPly);
     if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
-        controller->stats->num_nodes += nodeAccumulator;
+        stats.num_nodes += nodeAccumulator;
         nodeAccumulator = 0;
 #if defined(SMP_STATS)
         // sample thread usage
-        Statistics *stats = controller->stats;
         if (--controller->sample_counter <=0) {
-           stats->samples++;
-           stats->threads += controller->pool->activeCount();
+           controller->samples++;
+           controller->threads += controller->pool->activeCount();
            controller->sample_counter = SAMPLE_INTERVAL;
         }
 #endif
@@ -2402,13 +2369,13 @@ score_t Search::search()
        result = controller->hashTable.searchHash(board,board.hashCode(rep_count),
                                                  ply,depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
-       controller->stats->hash_searches++;
+       stats.hash_searches++;
 #endif
        hashHit = result != HashEntry::NoHit;
     }
     if (hashHit) {
 #ifdef SEARCH_STATS
-        controller->stats->hash_hits++;
+         stats.hash_hits++;
 #endif
          // always accept a full-depth entry (cached tb hit)
          if (!hashEntry.tb()) {
@@ -2509,11 +2476,11 @@ score_t Search::search()
     }
 #ifdef SYZYGY_TBS
     if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT))) {
-       controller->stats->tb_probes++;
+       stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
        if (tb_hit) {
-            controller->stats->tb_hits++;
+            stats.tb_hits++;
 #ifdef _TRACE
             if (master()) {
                 indent(ply); cout << "EGTB hit: score " << tb_score << endl;
@@ -2604,7 +2571,7 @@ score_t Search::search()
           indent(ply); cout << "static null pruned" << endl;
 #endif
 #ifdef SEARCH_STATS
-          ++controller->stats->static_null_pruning;
+          ++stats.static_null_pruning;
 #endif
           node->best_score = node->eval - margin;
           goto hash_insert;
@@ -2627,7 +2594,7 @@ score_t Search::search()
                 indent(ply); cout << "razored node, score=" << v << endl;
 #endif
 #ifdef SEARCH_STATS
-                controller->stats->razored++;
+                stats.razored++;
 #endif
                 node->best_score = v;
                 goto hash_insert;
@@ -2715,7 +2682,7 @@ score_t Search::search()
                         }
 #endif
 #ifdef SEARCH_STATS
-                        controller->stats->null_cuts++;
+                        stats.null_cuts++;
 #endif
                         // Do not return a mate score from the null move search.
                         node->best_score = nscore >= Constants::MATE-ply ? node->beta :
@@ -2972,7 +2939,7 @@ score_t Search::search()
             if (IsUsed(move)) continue;
 #endif
 #ifdef SEARCH_STATS
-            ++controller->stats->moves_searched;
+            ++stats.moves_searched;
 #endif
             if (Capture(move)==King) {
                 return -Illegal;                  // previous move was illegal
@@ -2997,7 +2964,7 @@ score_t Search::search()
                extend = DEPTH_INCREMENT;
                node->extensions |= SINGULAR_EXT;
 #ifdef SEARCH_STATS
-               ++controller->stats->singular_extensions;
+               ++stats.singular_extensions;
 #endif
             }
             else {
@@ -3224,10 +3191,10 @@ score_t Search::search()
     search_end2:
 #ifdef MOVE_ORDER_STATS
     if (node->num_try && node->best_score != node->alpha) {
-        controller->stats->move_order_count++;
+        stats.move_order_count++;
         ASSERT(node->best_count>=0);
         if (node->best_count<4) {
-            controller->stats->move_order[node->best_count]++;
+            stats.move_order[node->best_count]++;
         }
     }
 #endif
@@ -3256,10 +3223,10 @@ int Search::updateRootMove(const Board &board,
          parentNode->pv_length = 1;
          parentNode->cutoff++;
          parentNode->best_score = score;
+         updateStats(board, parentNode, iterationDepth,
+                     parentNode->best_score,
+                     parentNode->alpha,parentNode->beta,multipv_count);
          if (mainThread()) {
-            controller->updateStats(board, parentNode, iterationDepth,
-                                    parentNode->best_score,
-                                    parentNode->alpha,parentNode->beta,multipv_count);
             if (controller->uci && !srcOpts.multipv) {
                cout << "info score ";
                Scoring::printScoreUCI(score,cout);
@@ -3269,11 +3236,11 @@ int Search::updateRootMove(const Board &board,
          return 1;  // signal cutoff
       }
       updatePV(board,parentNode,(node+1),move,0);
+      updateStats(board, parentNode, iterationDepth,
+                  parentNode->best_score,
+                  parentNode->alpha,parentNode->beta,
+                  multipv_count);
       if (mainThread()) {
-         controller->updateStats(board, parentNode, iterationDepth,
-                                 parentNode->best_score,
-                                 parentNode->alpha,parentNode->beta,
-                                 multipv_count);
          if (move_index>1) {
             // best move has changed, show new best move
             showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta,0);
