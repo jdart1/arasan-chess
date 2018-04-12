@@ -588,6 +588,8 @@ void SearchController::updateStats(const Board &board, Search::Results &results)
     }
 #endif
     // Sum all counters across the threads
+    stats->tb_probes = stats->tb_hits = 
+        stats->num_nodes = 0ULL;
     for (int i = 0; i < options.search.ncpus; i++) {
        Statistics &s = pool->data[i]->work->stats;
        stats->tb_probes += s.tb_probes;
@@ -769,7 +771,10 @@ int failhigh,int complete)
             }
         }
         if (master() && controller->post_function) {
-            controller->post_function(stats);
+           // Make sure stats has current node and tb counts
+           // across all threads
+           controller->updateNodeCounts();
+           controller->post_function(*controller->stats);
         }
     }
 }
@@ -3337,6 +3342,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
        ns[i].singularMove = NullMove;
     }
 #endif
+    stats.clear();
     results.clear();
     
     // Rest of new node initialization is done in searchSMP().

@@ -463,6 +463,17 @@ public:
          return 0.0;
    }
 
+   void updateNodeCounts() {
+      stats->tb_probes = stats->tb_hits = 
+         stats->num_nodes = 0ULL;
+      for (unsigned i = 0; i < pool->nThreads; i++) {
+         const Statistics &s = pool->data[i]->work->stats;
+         stats->tb_probes += s.tb_probes;
+         stats->tb_hits += s.tb_hits;
+         stats->num_nodes += s.num_nodes;
+      }
+   }
+
 private:
 
     // pointer to function, called to output status during
