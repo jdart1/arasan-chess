@@ -190,18 +190,6 @@ public:
           completedDepth = 0;
           alpha = beta = 0;
        }
-/*
-       void copy(NodeInfo *node, int depth) {
-          best_score = node->best_score;
-          best_move = node->best;
-          alpha = node->alpha;
-          beta = node->beta;
-          completedDepth = depth;
-          pv_length = node->pv_length;
-          ASSERT(pv_length<Constants::MaxPly);
-          memcpy(pv,node->pv,pv_length*sizeof(Move));
-       }
-*/
        void copy(const Statistics &stats) {
           best_score = stats.value;
           display_value = stats.display_value;

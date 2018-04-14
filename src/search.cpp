@@ -538,14 +538,6 @@ Move SearchController::findBestMove(
       cout << (flush);
       cout.flags(original_flags);
    }
-#ifdef UCI_LOG
-   ucilog << "out of search" << endl << (flush);
-#endif
-   if (talkLevel == Trace) {
-      cout << "# exiting root search, move = ";
-      MoveImage(best,cout);
-      cout << endl;
-   }
    return best;
 }
 
@@ -567,16 +559,9 @@ void SearchController::setThreadCount(int threads) {
 
 void SearchController::updateStats(const Board &board, Search::Results &results) 
 {
-    stats->value = stats->display_value = results.best_score;
+    stats->value = results.best_score;
+    stats->display_value = results.display_value;
     stats->depth = results.completedDepth;
-    // if failing low, keep the current value for display purposes,
-    // not the bottom of the window
-    // TBD
-    /*
-    if (stats->value > results.alpha) {
-       stats->display_value = stats->value;
-    }
-    */
 #ifdef SYZYGY_TBS
     // Correct if necessary the display value, used for score
     // output and resign decisions, based on the tb information:
@@ -620,17 +605,23 @@ void SearchController::updateStats(const Board &board, Search::Results &results)
        for (j = 0; j < 4; j++) stats->move_order[j] += s.move_order[j];
 #endif       
     }
-
     // note: retain previous best line if we do not have one here
+    for (int i = 0; i < Constants::MaxPly; i++) {
+       stats->best_line[i] = NullMove;
+    }
     if (results.pv_length == 0) {
 #ifdef _TRACE
         cout << "# warning: pv is null\n";
 #endif
         return;
     }
-    stats->updatePV(board,results.pv,results.pv_length,results.completedDepth,
-                    static_cast<bool>(uci),age,hashTable);
-
+    else {
+       //stats->updatePV(board,results.pv,results.pv_length,results.completedDepth,
+       //                static_cast<bool>(uci),age,hashTable);
+       for (int i = 0; i < results.pv_length; i++) {
+          stats->best_line[i] = results.pv[i];
+       }
+    }
 }
 
 void SearchController::clearHashTables()
@@ -1199,7 +1190,6 @@ Move Search::ply0_search()
          }
       }
    }
-
 #ifdef UCI_LOG
    if (master()) {
          ucilog << "out of search loop, move= " << endl << (flush);
@@ -1207,11 +1197,7 @@ Move Search::ply0_search()
          ucilog << endl;
    }
 #endif
-   if (talkLevel == Trace) {
-      cout << "# exiting root search, move = ";
-      MoveImage(node->best,cout);
-      cout << endl;
-   }
+   results.copy(stats);
    return node->best;
 }
 
@@ -1445,7 +1431,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
     stats.num_nodes += nodeAccumulator;
     nodeAccumulator = 0;
-    results.copy(stats);
     return node->best_score;
 }
 
