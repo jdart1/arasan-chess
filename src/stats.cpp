@@ -21,7 +21,7 @@ void Statistics::clear()
    value = 0;
    tb_value = Constants::INVALID_SCORE;
    fromBook = false;
-   complete = 0;
+   complete = false;
    int i;
    best_line_image.clear();
    for (i = 0; i < Constants::MaxPly; i++) {
@@ -29,8 +29,8 @@ void Statistics::clear()
    }
    multipv_count = 0;
    multipv_limit = 1;
-   failhigh = faillow = 0;
-   depth = 0;
+   failHigh = failLow = false;
+   depth = completedDepth = 0;
    num_nodes = (uint64_t)0;
    display_value = Constants::INVALID_SCORE;
 #ifdef SEARCH_STATS

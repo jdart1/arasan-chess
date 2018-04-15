@@ -662,8 +662,8 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    s << " multipv " << (multipv == 0 ? 1 : multipv);
    s << " depth " << depth << " score ";
    Scoring::printScoreUCI(score,s);
-   if (stats.failhigh) s << " lowerbound";
-   if (stats.faillow) s << " upperbound";
+   if (stats.failHigh) s << " lowerbound";
+   if (stats.failLow) s << " upperbound";
    s << " time " << time << " nodes " << nodes;
    if (time>30) s << " nps " << (long)((1000L*nodes)/time);
    if (tb_hits) {

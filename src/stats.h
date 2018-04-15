@@ -24,13 +24,13 @@ struct Statistics
    score_t display_value;
    score_t tb_value;
    bool fromBook;
-   int complete; // if at end of iteration
+   bool complete; // if at end of iteration
    int multipv_count; // only for UCI
    int multipv_limit; // only for UCI
-   int failhigh, faillow;
+   bool failHigh, failLow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   unsigned depth;
+   unsigned depth, completedDepth;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes

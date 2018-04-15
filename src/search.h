@@ -151,59 +151,6 @@ public:
        return ti->index == 0;
     }
 
-    // Container for essential search results
-    struct Results {
-       score_t best_score, display_value;
-       Move best_move;
-       int completedDepth;
-       int alpha,beta;
-       int pv_length;
-       Move pv[Constants::MaxPly];
-       Results() {
-          clear();
-       }
-       Results(const Results &r):
-          best_score(r.best_score),
-          display_value(r.display_value),
-          completedDepth(r.completedDepth),
-          alpha(r.alpha),
-          beta(r.beta),
-          pv_length(r.pv_length) {
-          ASSERT(pv_length<Constants::MaxPly);
-          memcpy(pv,r.pv,pv_length*sizeof(Move));
-       }
-       Results & operator = (const Results &r) {
-          best_score = r.best_score;
-          display_value = r.display_value;
-          completedDepth = r.completedDepth;
-          alpha = r.alpha;
-          beta = r.beta;
-          pv_length = r.pv_length;
-          ASSERT(pv_length<Constants::MaxPly);
-          memcpy(pv,r.pv,pv_length*sizeof(Move));
-          return *this;
-       }
-       void clear()  {
-          best_score = display_value = Constants::INVALID_SCORE;
-          best_move = NullMove;
-          pv_length = 0;
-          completedDepth = 0;
-          alpha = beta = 0;
-       }
-       void copy(const Statistics &stats) {
-          best_score = stats.value;
-          display_value = stats.display_value;
-          best_move = stats.best_line[0];
-          completedDepth = stats.depth;
-          pv_length = 0;
-          while (!IsNull(stats.best_line[pv_length])) {
-             pv[pv_length] = stats.best_line[pv_length];
-             ++pv_length;
-          }
-          ASSERT(pv_length<Constants::MaxPly);
-       }
-    } results;
-
 protected:
 
     enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
@@ -232,8 +179,7 @@ protected:
 
     int checkTime(const Board &board,int ply);
 
-    void showStatus(const Board &board, Move best,int faillow,
-                    int failhigh,int complete);
+    void showStatus(const Board &board, Move best, bool faillow, bool failhigh);
 
     score_t tbScoreAdjust(const Board &board,
                           score_t score, int tb_hit, score_t tb_score) const;
@@ -451,16 +397,7 @@ public:
          return 0.0;
    }
 
-   void updateNodeCounts() {
-      stats->tb_probes = stats->tb_hits = 
-         stats->num_nodes = 0ULL;
-      for (unsigned i = 0; i < pool->nThreads; i++) {
-         const Statistics &s = pool->data[i]->work->stats;
-         stats->tb_probes += s.tb_probes;
-         stats->tb_hits += s.tb_hits;
-         stats->num_nodes += s.num_nodes;
-      }
-   }
+   void updateGlobalStats(const Statistics &);
 
 private:
 
@@ -472,8 +409,6 @@ private:
 
     // check console input
     int check_input(const Board &);
-
-    void updateStats(const Board &, Search::Results &res);
 
     unsigned random(unsigned max) {
        std::uniform_int_distribution<unsigned> dist(0,max);
