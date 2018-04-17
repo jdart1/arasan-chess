@@ -25,8 +25,8 @@ struct Statistics
    score_t tb_value;
    bool fromBook;
    bool complete; // if at end of iteration
-   int multipv_count; // only for UCI
-   int multipv_limit; // only for UCI
+   unsigned multipv_count; // only for UCI
+   unsigned multipv_limit; // only for UCI
    bool failHigh, failLow;
    Move best_line[Constants::MaxPly];
    string best_line_image;

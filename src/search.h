@@ -225,15 +225,14 @@ protected:
     void setTalkLevelFromController();
 
     void updateStats(const Board &, NodeInfo *node,int iteration_depth,
-		     score_t score, score_t alpha, score_t beta,
-                     int multipv_count);
+		     score_t score, score_t alpha, score_t beta);
 
     void updatePVinStats(Move *pv, int pv_length, int iteration_depth);
 
     SearchController *controller;
     Board board;
     Statistics stats;
-    int iterationDepth, completedDepth;
+    int iterationDepth;
     SearchContext context;
     int terminate;
     uint64_t nodeCount;
@@ -248,7 +247,6 @@ protected:
     ColorType computerSide;
     score_t contempt;
     TalkLevel talkLevel;
-    int multipv_count;
 };
 
 class SearchController {

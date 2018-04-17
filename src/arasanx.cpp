@@ -701,8 +701,8 @@ static void CDECL post_output(const Statistics &stats) {
        if (uci) {
            if (options.search.multipv > 1) {
                // output stats only when multipv array has been filled
-               if (stats.multipv_count+1 == stats.multipv_limit) {
-                   for (int i = 0; i < stats.multipv_limit; i++) {
+               if (stats.multipv_count == stats.multipv_limit) {
+                   for (unsigned i = 0; i < stats.multipv_limit; i++) {
                        uciOut(stats.multi_pvs[i].depth,
                               stats.multi_pvs[i].score,
                               stats.multi_pvs[i].time,

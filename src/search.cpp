@@ -306,8 +306,6 @@ Move SearchController::findBestMove(
    // Generate the ply 0 moves here:
    RootMoveGenerator mg(board,&(rootSearch->context),NullMove,
       talkLevel == Trace);
-   stats->multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
-
    if (mg.moveCount() == 0) {
       // Checkmate or statemate
       if (board.inCheck()) {
@@ -657,7 +655,7 @@ bool failhigh)
     if (terminate)
         return;
     int ply = stats.depth;
-    if (master() && talkLevel == Debug) {
+    if (talkLevel == Debug) {
         // This is the output for the "test" command in verbose mode
         std::ios_base::fmtflags original_flags = cout.flags();
         cout.setf(ios::fixed);
@@ -677,20 +675,10 @@ bool failhigh)
         cout.flags(original_flags);
     }
     // Post during ponder if UCI
-    if ((!controller->background || controller->uci)) {
-        if (srcOpts.multipv > 1) {
-            // Accumulate multiple pvs until we are ready to output
-            // them.
-            stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
-            if (stats.multipv_count >= stats.multipv_limit) {
-                stats.sortMultiPVs();
-            }
-        }
-        if (master() && controller->post_function) {
-           // Update controller statistics from main thread stats:
-           controller->updateGlobalStats(stats);
-           controller->post_function(*(controller->stats));
-        }
+    if ((!controller->background || controller->uci) && controller->post_function) {
+       // Update controller statistics from main thread stats:
+       controller->updateGlobalStats(stats);
+       controller->post_function(*(controller->stats));
     }
 }
 
@@ -766,10 +754,9 @@ void Search::setTalkLevelFromController() {
 }
 
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
-                         score_t score, score_t alpha, score_t beta, int multipv_count)
+                         score_t score, score_t alpha, score_t beta) 
 {
    //stats.elapsed_time = getElapsedTime(startTime,getCurrentTime());
-    stats.multipv_count = multipv_count;
     ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
     stats.value = score;
     stats.depth = iteration_depth;
@@ -820,7 +807,7 @@ Move Search::ply0_search()
    controller->failLowFactor = 0;
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
-   completedDepth = 0;
+   stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
    for (iterationDepth = 1;
         iterationDepth <= controller->ply_limit && !terminate;
         iterationDepth++) {
@@ -832,22 +819,21 @@ Move Search::ply0_search()
          }
       }
       vector<Move> excluded(controller->exclude);
-      stats.multipv_count = 0;
-      for (multipv_count=0;
-           multipv_count < controller->stats->multipv_limit && !terminate;
-           multipv_count++) {
+      for (stats.multipv_count = 0;
+           stats.multipv_count < stats.multipv_limit && !terminate;
+           stats.multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
-         /* TBD: multi-pv
-         if (srcOpts.multipv > 1) controller->stats->clearPV();
-         if (multipv_count) {
-             excluded.push_back(controller->stats->multi_pvs[multipv_count-1].best);
-             if (iterationDepth > 1) {
-                 // set value to previous iteration's value
-                 value = controller->stats->multi_pvs[multipv_count].score;
-             }
+         if (srcOpts.multipv > 1) stats.clearPV();
+         if (stats.multipv_count) {
+            // Exclude the previous best move from the current
+            // search, so we will select a different one.
+            excluded.push_back(stats.multi_pvs[stats.multipv_count-1].best);
+            if (iterationDepth > 1) {
+               // set value to previous iteration's value
+               value = stats.multi_pvs[stats.multipv_count].score;
+            }
          }
-         */
          if (iterationDepth <= 1) {
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
@@ -865,7 +851,6 @@ Move Search::ply0_search()
          }
          int fails = 0;
          int faillows = 0;
-         stats.failLow = stats.failHigh = false;
          do {
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
@@ -879,8 +864,8 @@ Move Search::ply0_search()
             cout << "iteration " << iterationDepth << " result: " <<
                value << endl;
 #endif
-            updateStats(board, node,iterationDepth,
-                        value,lo_window,hi_window,multipv_count);
+            updateStats(board, node, iterationDepth,
+                        value, lo_window, hi_window);
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
@@ -937,11 +922,11 @@ Move Search::ply0_search()
             if (mainThread() && !stats.failLow && controller->time_added) {
                controller->time_added = 0;
                if (talkLevel == Trace) {
-                   cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
+                  cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
                }
             }
             if (stats.failHigh) {
-               if (mainThread()) showStatus(board, node->best, stats.failLow, stats.failHigh);
+               if (mainThread() && stats.multipv_limit == 1) showStatus(board, node->best, stats.failLow, stats.failHigh);
 #ifdef _TRACE
                cout << "# ply 0 high cutoff, re-searching ... value=";
                Scoring::printScore(value,cout);
@@ -963,11 +948,11 @@ Move Search::ply0_search()
                      aspirationWindow += 2*options.search.easy_threshold;
                   }
                   hi_window = std::min<score_t>(Constants::MATE-iterationDepth-1,
-                                        lo_window + aspirationWindow);
+                                                lo_window + aspirationWindow);
                }
             }
             else if (stats.failLow) {
-               if (mainThread()) showStatus(board, node->best, stats.failLow, stats.failHigh);
+               if (mainThread() && stats.multipv_limit == 1) showStatus(board, node->best, stats.failLow, stats.failHigh);
                // time adjustment
                if (controller->xtra_time > 0 &&
                    controller->time_target != INFINITE_TIME) {
@@ -981,9 +966,9 @@ Move Search::ply0_search()
                   }
                }
                if (talkLevel == Trace) {
-                   cout << "# ply 0 fail low, re-searching ... value=";
-                   Scoring::printScore(value,cout);
-                   cout << " fails=" << fails+1 << endl;
+                  cout << "# ply 0 fail low, re-searching ... value=";
+                  Scoring::printScore(value,cout);
+                  cout << " fails=" << fails+1 << endl;
                }
 #ifdef _TRACE
                cout << "# ply 0 fail low, re-searching ... value=";
@@ -1012,83 +997,30 @@ Move Search::ply0_search()
                   lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
                }
             }
-		 } while (!terminate && (stats.failLow || stats.failHigh));
+         } while (!terminate && (stats.failLow || stats.failHigh));
          if (faillows) {
             controller->failLowFactor += (1<<faillows)*iterationDepth/2;
          }
          // search value should now be in bounds (unless we are
          // terminating)
-         stats.completedDepth = iterationDepth;
          if (!terminate) {
-            if (mainThread()) showStatus(board, node->best, false, false);
-/*
-            if (fail_low_root_extend) {
-               // We extended time to get the fail-low resolved. Now
-               // we have a score.
-               fail_low_root_extend = false;
-               // Continue searching based on how bad the fail-low was
-               controller->time_added = controller->xtra_time*std::min<int>(100,controller->failLowFactor)/100;
-               if (talkLevel == Trace) {
-                    cout << "# fail low resolved, new time target = " <<
-                        controller->getTimeLimit() << endl;
-               }
+            stats.completedDepth = iterationDepth;
+            if (srcOpts.multipv > 1) {
+               // Accumulate multiple pvs until we are ready to output
+               // them.
+               stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
             }
-            else if (fail_high_root_extend) {
-               // We extended the time to get the fail high resolved,
-               // but it is resolved now, so reduce time limit again.
-               controller->time_added = 0;
-               fail_high_root_extend = false;
-               if (talkLevel == Trace) {
-                  cout << "# resetting time_added - fail high is resolved" << endl;
-               }}
-*/
-         }
-/* TBD easy move
-         if (!MovesEqual(node->best,easyMove)) {
-            depth_at_pv_change = iterationDepth;}
-*/
 #ifdef _TRACE
-         cout << iteration_depth << " ply search result: ";
-         MoveImage(node->best,cout);
-         cout << " value = ";
-         Scoring::printScore(value,cout);
-         cout << endl;
+            cout << iteration_depth << " ply search result: ";
+            MoveImage(node->best,cout);
+            cout << " value = ";
+            Scoring::printScore(value,cout);
+            cout << endl;
 #endif
-// TBD         last_score = value;
-/* TBD easy move
-         if (!controller->background &&
-             !controller->time_added &&
-             !easy_adjust &&
-             (controller->controller->elapsed_time >
-              (unsigned)controller->time_target/3) &&
-             depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
-             MovesEqual(easyMove,node->best) &&
-             !faillows) {
-            easy_adjust = true;
-            if (talkLevel == Trace) {
-               cout << "# easy move, adjusting time lower" << endl;
-            }
-            controller->time_target /= 3;
-         }
-*/
-         if (!terminate) {
-            completedDepth = iterationDepth;
-         }
-         if (!controller->uci || controller->typeOfSearch == TimeLimit) {
-            if (value <= iterationDepth - Constants::MATE) {
-               // We're either checkmated or we certainly will be, so
-               // quit searching.
-               if (talkLevel == Trace)
-                  cout << "# terminating, low score" << endl;
-#ifdef _TRACE
-               cout << "terminating, low score" << endl;
-#endif
-               controller->terminateNow();
-               break;
-            }
-            else if (value >= Constants::MATE - iterationDepth - 1) {
-               // found a forced mate, terminate
-               if (iterationDepth>=2) {
+            if (!controller->uci || controller->typeOfSearch == TimeLimit) {
+               if (value <= iterationDepth - Constants::MATE) {
+                  // We're either checkmated or we certainly will be, so
+                  // quit searching.
                   if (talkLevel == Trace)
                      cout << "# terminating, low score" << endl;
 #ifdef _TRACE
@@ -1101,23 +1033,41 @@ Move Search::ply0_search()
                   // found a forced mate, terminate
                   if (iterationDepth>=2) {
                      if (talkLevel == Trace)
-                        cout << "# terminating, mate score" << endl;
+                        cout << "# terminating, low score" << endl;
 #ifdef _TRACE
-                     cout << "terminating, mate score" << endl;
+                     cout << "terminating, low score" << endl;
 #endif
                      controller->terminateNow();
                      break;
                   }
+                  else if (value >= Constants::MATE - iterationDepth - 1) {
+                     // found a forced mate, terminate
+                     if (iterationDepth>=2) {
+                        if (talkLevel == Trace)
+                           cout << "# terminating, mate score" << endl;
+#ifdef _TRACE
+                        cout << "terminating, mate score" << endl;
+#endif
+                        controller->terminateNow();
+                        break;
+                     }
+                  }
                }
             }
          }
+      } // end multi-pv loop
+      if (stats.multipv_count) {
+         stats.sortMultiPVs();
       }
-   }
+      if (mainThread()) {
+         showStatus(board, node->best, false, false);
+      }
+   } // end depth iteration loop
 #ifdef UCI_LOG
    if (master()) {
-         ucilog << "out of search loop, move= " << endl << (flush);
-         MoveImage(node->best,ucilog);
-         ucilog << endl;
+      ucilog << "out of search loop, move= " << endl << (flush);
+      MoveImage(node->best,ucilog);
+      ucilog << endl;
    }
 #endif
    return node->best;
@@ -3174,7 +3124,7 @@ int Search::updateRootMove(const Board &board,
          parentNode->best_score = score;
          updateStats(board, parentNode, iterationDepth,
                      parentNode->best_score,
-                     parentNode->alpha,parentNode->beta,multipv_count);
+                     parentNode->alpha,parentNode->beta);
          if (mainThread()) {
             if (controller->uci && !srcOpts.multipv) {
                cout << "info score ";
@@ -3187,9 +3137,8 @@ int Search::updateRootMove(const Board &board,
       updatePV(board,parentNode,(node+1),move,0);
       updateStats(board, parentNode, iterationDepth,
                   parentNode->best_score,
-                  parentNode->alpha,parentNode->beta,
-                  multipv_count);
-      if (mainThread()) {
+                  parentNode->alpha,parentNode->beta);
+      if (mainThread() && srcOpts.multipv == 1) {
          if (move_index>1) {
             // best move has changed, show new best move
             showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta);
