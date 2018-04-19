@@ -457,6 +457,7 @@ Move SearchController::findBestMove(
              (threadStats.value >= stats->value ||
               threadStats.value >= Constants::MATE_RANGE)) {
             updateGlobalStats(threadStats);
+            best = threadStats.best_line[0];
          }
       }
    }
