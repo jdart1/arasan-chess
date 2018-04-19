@@ -382,9 +382,11 @@ Move SearchController::findBestMove(
    }
    initialValue = value;
    depth_adjust = 0;
-/* TBD : strength reduction, easy move
    easyMove = NullMove;
+   depth_at_pv_change = 0;
+   easy_adjust = false;
    easyScore = value;
+/* TBD : strength reduction
    waitTime = 0;
    // Reduce strength but not in analysis mode:
    if (srcOpts.strength < 100 && (typeOfSearch ==
@@ -437,20 +439,29 @@ Move SearchController::findBestMove(
    rootSearch->init(rootStack,pool->mainThread());
    Move best = rootSearch->ply0_search();
 
-   // Wait for thread completion
+   // Wait for all threads to complete
    pool->waitAll();
 
-   updateGlobalStats(pool->data[0]->work->stats);
-   // TBD multipv?
+   if (talkLevel == Trace) {
+      cout << "# thread 0 score=" << rootSearch->stats.value << " pv=" << rootSearch->stats.best_line_image << endl;
+   }
+
+   updateGlobalStats(rootSearch->stats);
    if (options.search.multipv == 1) {
-	   for (int thread = 1; thread < options.search.ncpus; thread++) {
-		   Statistics &threadStats = pool->data[thread]->work->stats;
-		   if (threadStats.completedDepth > stats->completedDepth &&
-			   (threadStats.value >= stats->value ||
-				   threadStats.value >= Constants::MATE_RANGE)) {
-			   updateGlobalStats(threadStats);
-		   }
-	   }
+      for (int thread = 1; thread < options.search.ncpus; thread++) {
+         Statistics &threadStats = pool->data[thread]->work->stats;
+         if (talkLevel == Trace) {
+            cout << "# thread " << thread << " score=" << threadStats.value << " pv=" << threadStats.best_line_image << endl;
+         }
+         if (threadStats.completedDepth > stats->completedDepth &&
+             (threadStats.value >= stats->value ||
+              threadStats.value >= Constants::MATE_RANGE)) {
+            updateGlobalStats(threadStats);
+         }
+      }
+   }
+   if (talkLevel == Trace) {
+      cout << "# best thread: score=" << stats->value << " pv=" << stats->best_line_image << endl;
    }
 
    // search done (all threads), set status and report statistics
@@ -1010,13 +1021,57 @@ Move Search::ply0_search()
                // them.
                stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
             }
+
+            if (mainThread()) {
+               if (iterationDepth == MoveGenerator::EASY_PLIES) {
+                  auto list = mg.getMoveList();
+                  // Note: do not do "easy move" if capturing the last piece in
+                  // the endgame .. this can be tricky as the resulting pawn
+                  // endgame may be lost.
+                  if (list.size() > 1 &&
+                      (list[0].score >= list[1].score + (Params::PAWN_VALUE*options.search.easy_threshold)/100) &&
+                      TypeOfMove(node->best) == Normal &&
+                      (Capture(node->best) == Empty || !(Capture(node->best) != Pawn &&
+                                                         board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
+                                                         board.getMaterial(board.sideToMove()).pieceCount() <= 1))) {
+                     controller->easyMove = node->best;
+                     controller->easyScore = list[0].score;
+                     if (talkLevel == Trace) {
+                        cout << "#easy move: ";
+                        MoveImage(controller->easyMove,cout);
+                        cout << endl;
+                     }
+                  }
+               }
+               else if (iterationDepth > MoveGenerator::EASY_PLIES && !MovesEqual(node->best,controller->easyMove)) {
+                  controller->depth_at_pv_change = iterationDepth;
+               }
+            }
 #ifdef _TRACE
-            cout << iteration_depth << " ply search result: ";
+            cout << iterationDepth << " ply search result: ";
             MoveImage(node->best,cout);
             cout << " value = ";
             Scoring::printScore(value,cout);
             cout << endl;
 #endif
+            // Moves that look good at low depth and continue to be
+            // stably selected can be searched for less time.
+            if (mainThread() &&
+                !controller->background &&
+                (controller->typeOfSearch == TimeLimit && controller->time_target != INFINITE_TIME) &&
+                !controller->time_added &&
+                !controller->easy_adjust &&
+                (controller->elapsed_time > (unsigned)controller->time_target/3) &&
+                controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
+                MovesEqual(controller->easyMove,node->best) &&
+                !faillows) {
+               controller->easy_adjust = true;
+               if (talkLevel == Trace) {
+                  cout << "# easy move, adjusting time lower" << endl;
+               }
+               controller->time_target /= 3;
+            }
+
             if (!controller->uci || controller->typeOfSearch == TimeLimit) {
                if (value <= iterationDepth - Constants::MATE) {
                   // We're either checkmated or we certainly will be, so
@@ -1105,27 +1160,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     }
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude);
-
-/* TBD easy move
-    if (iterationDepth == MoveGenerator::EASY_PLIES+1) {
-        auto list = mg.getMoveList();
-        // Note: do not do "easy move" if capturing the last piece in
-        // the endgame .. this can be tricky as the resulting pawn
-        // endgame may be lost.
-        if (list.size() > 1 && (list[0].score >= list[1].score + (Params::PAWN_VALUE*options.search.easy_threshold)/100) && TypeOfMove(node->best) == Normal &&
-            (Capture(node->best) == Empty || !(Capture(node->best) != Pawn &&
-                                               board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-                                               board.getMaterial(board.sideToMove()).pieceCount() <= 1))) {
-           easyMove = node->best;
-           easyScore = list[0].score;
-           if (talkLevel == Trace) {
-              cout << "#easy move: ";
-              MoveImage(easyMove,cout);
-              cout << endl;
-           }
-        }
-    }
-*/
 
     //
     // Search the next ply
