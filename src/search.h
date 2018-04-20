@@ -136,8 +136,6 @@ public:
     static double func( double x );
 #endif
 
-    void terminateSlaveSearches();
-
     // main entry point for top-level search; non-main threads enter here
     Move ply0_search();
 
@@ -227,7 +225,8 @@ protected:
     void updateStats(const Board &, NodeInfo *node,int iteration_depth,
 		     score_t score, score_t alpha, score_t beta);
 
-    void updatePVinStats(Move *pv, int pv_length, int iteration_depth);
+    void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
+
 
     SearchController *controller;
     Board board;
@@ -329,8 +328,6 @@ public:
         xtra_time = xtra;
     }
 
-    int wasTerminated() const;
-
     void setContempt(score_t contempt);
 
     // Note: should not call this while searching
@@ -413,9 +410,6 @@ private:
        return dist(random_engine);
     }
 
-    void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
-
-
     int uci;
     int age;
     TalkLevel talkLevel;
@@ -462,8 +456,9 @@ private:
     bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
     int fail_high_root;
     score_t last_score;
-    int waitTime;
+    int waitTime; // for strength feature
     int depth_adjust; // for strength feature
+    unsigned select_subopt; // for strength feature
     int iteration_value[Constants::MaxPly];
     std::mt19937_64 random_engine;
 

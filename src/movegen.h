@@ -241,6 +241,16 @@ class RootMoveGenerator : public MoveGenerator
       // enumerate the nodes for a "depth" ply search (for testing).
       static uint64_t perft(Board &, int depth);
 
+      score_t getScore(Move m) const {
+          for (auto it = moveList.begin();it != moveList.end();it++) {
+              if (MovesEqual((*it).move,m)) {
+                  return (*it).score;
+              }
+          }
+          return Constants::INVALID_SCORE;
+      }
+
+
    protected:
 
       struct MoveEntry

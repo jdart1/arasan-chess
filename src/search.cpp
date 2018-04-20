@@ -319,6 +319,48 @@ Move SearchController::findBestMove(
       return NullMove;
    }
 
+   waitTime = 0;
+
+   // Implement strength reduction if enabled. But do not reduce
+   // strength in analysis mode.
+   if (options.search.strength < 100 && (background || time_target != INFINITE_TIME)) {
+      const int mgCount = mg.moveCount();
+      const double factor = 1.0/ply_limit + (100-options.search.strength)/250.0;
+      if (background) {
+         waitTime = 0;
+      } else {
+         const int max = int(0.3F*time_target/mgCount);
+         // wait time is in milliseconds
+         waitTime = int((max*factor));
+         if (talkLevel == Trace) {
+            cout << "# waitTime=" << waitTime << endl;
+         }
+      }
+      select_subopt = random(1024);
+      // adjust time check interval since we are lowering nps
+      Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
+      if (options.search.strength <= 95) {
+         const double limit = pow(2.1,options.search.strength/25.0)-0.25;
+         double int_limit;
+         double frac_limit = modf(limit,&int_limit);
+         int new_ply_limit = std::max(1,int(int_limit));
+         if (board.getMaterial(White).materialLevel() +
+             board.getMaterial(Black).materialLevel() < 16 &&
+             options.search.strength > 10) {
+            // increase ply limit in endgames
+            new_ply_limit += std::min<int>(2,1+new_ply_limit/8);
+         }
+         this->ply_limit = std::min<int>(new_ply_limit, ply_limit);
+         if (limit > 1.0) {
+            depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
+         }
+         if (talkLevel == Trace) {
+            cout << "# ply limit =" << this->ply_limit << endl;
+            cout << "# depth adjust =" << depth_adjust << endl;
+         }
+      }
+   }
+
    time_check_counter = Time_Check_Interval;
 
    score_t value = Constants::INVALID_SCORE;
@@ -386,55 +428,12 @@ Move SearchController::findBestMove(
    depth_at_pv_change = 0;
    easy_adjust = false;
    easyScore = value;
-/* TBD : strength reduction
-   waitTime = 0;
-   // Reduce strength but not in analysis mode:
-   if (srcOpts.strength < 100 && (typeOfSearch ==
-                                  FixedDepth ||
-                                  time_target != INFINITE_TIME)) {
-       int mgCount = mg.moveCount();
-       if (mgCount) {
-           const double factor = 1.0/ply_limit + (100-srcOpts.strength)/250.0;
-           const int max = int(0.3F*time_target/mgCount);
-           // wait time is in milliseconds
-           waitTime = int((max*factor));
-           if (talkLevel == Trace) {
-               cout << "# waitTime=" << waitTime << endl;
-<           }
-           // adjust time check interval since we are lowering nps
-           Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
-           if (srcOpts.strength <= 95) {
-               const double limit = pow(2.1,srcOpts.strength/25.0)-0.25;
-               double int_limit;
-               double frac_limit = modf(limit,&int_limit);
-               int ply_limit = std::max(1,int(int_limit));
-               if (board.getMaterial(White).materialLevel() +
-                   board.getMaterial(Black).materialLevel() < 16 &&
-                   srcOpts.strength > 10) {
-                   // increase ply limit in endgames
-                   ply_limit += std::min<int>(2,1+ply_limit/8);
-               }
-               ply_limit = std::min<int>(ply_limit,
-                                                 ply_limit);
-               if (limit > 1.0) {
-                  depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
-               }
-               if (talkLevel == Trace) {
-                   cout << "# ply limit =" << ply_limit << endl;
-                   cout << "# depth adjust =" << depth_adjust << endl;
-               }
-           }
-       }
-   }
-
-*/
    stats->value = stats->display_value = value;
 
    // Start all searches
    pool->unblockAll();
 
    // Start searching in the main thread
-   rootSearch = pool->rootSearch();
    NodeStack rootStack;
    rootSearch->init(rootStack,pool->mainThread());
    Move best = rootSearch->ply0_search();
@@ -475,19 +474,6 @@ Move SearchController::findBestMove(
          state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
       }
-   }
-   if (options.search.strength < 100) {
-       score_t val = stats->display_value;
-       Move m = best;
-       suboptimal(mg,best,val);
-       if (!MovesEqual(best,m)) {
-           best = m;
-           stats->display_value = stats->value = val;
-           stats->best_line[0] = m;
-           stats->best_line[1] = NullMove;
-           Notation::image(board,m,
-                           uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,stats->best_line_image);
-       }
    }
 
    if (talkLevel == Debug) {
@@ -552,10 +538,6 @@ void SearchController::setContempt(score_t c)
 
     // propagate rating diff to searches
     pool->forEachSearch<&Search::setContemptFromController>();
-}
-
-int SearchController::wasTerminated() const {
-   return rootSearch->wasTerminated();
 }
 
 void SearchController::setThreadCount(int threads) {
@@ -698,11 +680,6 @@ score_t Search::drawScore(const Board & board) const {
    return controller->drawScore(board);
 }
 
-void Search::terminateSlaveSearches()
-{
-   // TBD
-}
-
 #ifdef SYZYGY_TBS
 score_t Search::tbScoreAdjust(const Board &board,
                     score_t value,int tb_hit,score_t tb_score) const 
@@ -802,6 +779,45 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     stats.updatePV(board,node->pv,node->pv_length,iteration_depth,controller->uci,
                    controller->age,
                    controller->hashTable);
+}
+
+void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
+    if (mg.moveCount() < 2) {
+        return;
+    }
+    mg.reorderByScore();
+    unsigned threshold_base = unsigned(750.0/(1.0 + 0.25*pow(srcOpts.strength/10.0,2.0)));
+    const unsigned r = controller->select_subopt;
+    // In reduced strength mode sometimes, deliberately choose a move
+    // that is not the best
+    int ord;
+    score_t first_val = val;
+    for (int i = 0; i <= 4; i++) {
+        Move move = (board.checkStatus() == InCheck ? mg.nextEvasion(ord) :
+                  mg.nextMove(ord));
+        if (IsNull(move)) break;
+        score_t score = mg.getScore(move);
+        if (i > 0) {
+           unsigned threshold;
+           if (score > val || first_val-score > 10*Params::PAWN_VALUE) {
+              threshold = 0;
+           }
+           else {
+              double diff = exp((first_val-score)/(3.0*Params::PAWN_VALUE))-1.0;
+              threshold = unsigned(threshold_base/(2*diff+i));
+           }
+           if (r < threshold) {
+              if (mainThread() && controller->talkLevel == Trace) {
+                 cout << "# suboptimal: index= " << i <<
+                    " score=" << score << " val=" << first_val <<
+                    " threshold=" << threshold <<
+                    " r=" << r << endl;
+              }
+              m = move;
+              val = score;
+           }
+        }
+    }
 }
 
 Move Search::ply0_search() 
@@ -1126,6 +1142,19 @@ Move Search::ply0_search()
       ucilog << endl;
    }
 #endif
+   if (options.search.strength < 100 && stats.completedDepth <= (unsigned)MoveGenerator::EASY_PLIES) {
+      score_t val = stats.display_value;
+      Move best = node->best;
+      suboptimal(mg,best,val);
+      if (!MovesEqual(node->best,best)) {
+           node->best = best;
+           stats.display_value = stats.value = val;
+           stats.best_line[0] = best;
+           stats.best_line[1] = NullMove;
+           Notation::image(board,best,
+                           controller->uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,stats.best_line_image);
+      }
+   }
    return node->best;
 }
 
@@ -1287,13 +1316,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               break;
            }
         }
-        // TBD fail_high_root = 0;
-        /* TBD : strength reduction
-        if (waitTime) {
+        if (controller->waitTime) {
             // we are in reduced strength mode, waste some time
-            sleep(waitTime);
+			std::this_thread::sleep_for(std::chrono::milliseconds(controller->waitTime));
         }
-        */
         if (!wide) {
            hibound = node->best_score + 1;  // zero-width window
         }
@@ -1339,58 +1365,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     stats.num_nodes += nodeAccumulator;
     nodeAccumulator = 0;
     return node->best_score;
-}
-
-void SearchController::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
-    if (mg.moveCount() < 2) {
-        return;
-    }
-    mg.reorderByScore();
-    unsigned threshold_base = unsigned(750.0/(1.0 + 0.25*pow(options.search.strength/10.0,2.0)));
-    const unsigned r = random(1024);
-    // In reduced strength mode sometimes, deliberately choose a move
-    // that is not the best
-    int ord;
-    Board  board(initialBoard);
-    BoardState state(board.state);
-    score_t first_val = val;
-    for (int i = 0; i <= 4; i++) {
-        Move move = (board.checkStatus() == InCheck ? mg.nextEvasion(ord) :
-                  mg.nextMove(ord));
-        if (IsNull(move)) break;
-        // For this search do not reduce strength
-        int tmp = options.search.strength;
-        rootSearch->srcOpts.strength = 100;
-        // TBD node->last_move = move;
-        board.doMove(move);
-        int n = std::max(3,ply_limit-2);
-        score_t score = -rootSearch->search(-Constants::MATE,Constants::MATE,
-                                1,n*DEPTH_INCREMENT);
-        rootSearch->srcOpts.strength = tmp;
-        board.undoMove(move,state);
-        if (i == 0) {
-           first_val = score;
-        } else {
-           unsigned threshold;
-           if (score > val || val-score > 10*Params::PAWN_VALUE) {
-              threshold = 0;
-           }
-           else {
-              double diff = exp((val-score)/(3.0*Params::PAWN_VALUE))-1.0;
-              threshold = unsigned(threshold_base/(2*diff+i));
-           }
-           if (r < threshold) {
-              if (talkLevel == Trace) {
-                 cout << "# suboptimal: index= " << i <<
-                    " score=" << score << " val=" << first_val <<
-                    " threshold=" << threshold <<
-                    " r=" << r << endl;
-              }
-              m = move;
-              val = score;
-           }
-        }
-    }
 }
 
 void SearchController::updateGlobalStats(const Statistics &mainStats) {
