@@ -823,9 +823,7 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
 Move Search::ply0_search() 
 {
 // TBD: time mgmt
-//   easy_adjust = false;
 //   fail_high_root_extend = fail_low_root_extend = false;
-// TBD    score_t last_score = -Constants::MATE;
    node->best = NullMove;
    // Incrementally search the board to greater depths - stop when
    // ply limit, time limit, interrupt, or a terminating condition
@@ -984,7 +982,7 @@ Move Search::ply0_search()
                // time adjustment
                if (controller->xtra_time > 0 &&
                    controller->time_target != INFINITE_TIME) {
-                  if (mainThread() && stats.failLow) {
+                  if (mainThread()) {
                      // root move is failing low, extend time until
                      // fail-low is resolved
                      controller->time_added = controller->xtra_time;
