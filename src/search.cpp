@@ -453,8 +453,8 @@ Move SearchController::findBestMove(
          if (talkLevel == Trace) {
             cout << "# thread " << thread << " score=" << threadStats.value << " pv=" << threadStats.best_line_image << endl;
          }
-         if (threadStats.completedDepth > stats->completedDepth &&
-             (threadStats.value >= stats->value ||
+         if (threadStats.value > stats->value &&
+             (threadStats.completedDepth >= stats->completedDepth ||
               threadStats.value >= Constants::MATE_RANGE)) {
             updateGlobalStats(threadStats);
             best = threadStats.best_line[0];
