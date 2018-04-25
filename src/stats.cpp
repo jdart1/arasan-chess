@@ -54,12 +54,12 @@ Statistics::Statistics(const Statistics &s)
       capture_extensions = s.capture_extensions;
       pawn_extensions = s.pawn_extensions;
       evasion_extensions = s.evasion_extensions;
-      singular_extensions = s.singlular_extensions;
+      singular_extensions = s.singular_extensions;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
       see_pruning = s.see_pruning;
-      hash_hits = s.hash_hits.load();
+      hash_hits = s.hash_hits;
       hash_searches = s.hash_searches;
 #endif
       num_nodes = s.num_nodes.load();
@@ -112,12 +112,12 @@ Statistics & Statistics::operator = (const Statistics &s)
       capture_extensions = s.capture_extensions;
       pawn_extensions = s.pawn_extensions;
       evasion_extensions = s.evasion_extensions;
-      singular_extensions = s.singlular_extensions;
+      singular_extensions = s.singular_extensions;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
       see_pruning = s.see_pruning;
-      hash_hits = s.hash_hits.load();
+      hash_hits = s.hash_hits;
       hash_searches = s.hash_searches;
 #endif
       num_nodes = s.num_nodes.load();

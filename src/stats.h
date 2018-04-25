@@ -51,7 +51,7 @@ struct Statistics
    uint64_t lmp;
    uint64_t history_pruning;
    uint64_t see_pruning;
-   uint64_t hash_hits>
+   uint64_t hash_hits;
    uint64_t hash_searches;
 #endif
    // atomic because may need to be read during a search:
