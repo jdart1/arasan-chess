@@ -15,6 +15,122 @@ Statistics::~Statistics()
 {
 }
 
+// Copy constructor
+// Needed because some members are atomic.
+// Note: we only copy Statistics after search completion,
+// so there is no multithreaded access then.
+Statistics::Statistics(const Statistics &s) 
+{
+   if (this != &s) {
+      state = s.state;
+      value = s.value;
+      display_value = s.display_value;
+      tb_value = s.tb_value;
+      fromBook = s.fromBook;
+      complete = s.complete;
+      multipv_count = s.multipv_count;
+      multipv_limit = s.multipv_limit;
+      int i = 0;
+      do {
+         best_line[i] = s.best_line[i];
+         i++;
+      } while (i<Constants::MaxPly && !IsNull(best_line[i-1]));
+      best_line_image = s.best_line_image;
+      depth = s.depth;
+      completedDepth = s.completedDepth;
+      mvtot = s.mvtot;
+      mvleft = s.mvleft;
+      tb_probes = s.tb_probes;
+      tb_hits = s.tb_hits.load();
+#ifdef SEARCH_STATS
+      num_qnodes = s.num_qnodes;
+      reg_nodes = s.reg_nodes;
+      moves_searched = s.moves_searched;
+      futility_pruning = s.futility_pruning;
+      static_null_pruning = s.static_null_pruning;
+      null_cuts = s.null_cuts;
+      razored = s.razored;
+      check_extensions = s.check_extensions;
+      capture_extensions = s.capture_extensions;
+      pawn_extensions = s.pawn_extensions;
+      evasion_extensions = s.evasion_extensions;
+      singular_extensions = s.singlular_extensions;
+      reduced = s.reduced;
+      lmp = s.lmp;
+      history_pruning = s.history_pruning;
+      see_pruning = s.see_pruning;
+      hash_hits = s.hash_hits.load();
+      hash_searches = s.hash_searches;
+#endif
+      num_nodes = s.num_nodes.load();
+#ifdef MOVE_ORDER_STATS
+      move_order = s.move_order;
+      move_order_count = s.move_order_count;
+#endif
+      end_of_game = s.end_of_game;
+      multi_pvs = s.multi_pvs;
+   }
+}
+
+
+// Assignment operator
+// Needed because some members are atomic.
+// Note: we only copy Statistics after search completion,
+// so there is no multithreaded access then.
+Statistics & Statistics::operator = (const Statistics &s)
+{
+   if (this != &s) {
+      state = s.state;
+      value = s.value;
+      display_value = s.display_value;
+      tb_value = s.tb_value;
+      fromBook = s.fromBook;
+      complete = s.complete;
+      multipv_count = s.multipv_count;
+      multipv_limit = s.multipv_limit;
+      int i = 0;
+      do {
+         best_line[i] = s.best_line[i];
+         i++;
+      } while (i<Constants::MaxPly && !IsNull(best_line[i-1]));
+      best_line_image = s.best_line_image;
+      depth = s.depth;
+      completedDepth = s.completedDepth;
+      mvtot = s.mvtot;
+      mvleft = s.mvleft;
+      tb_probes = s.tb_probes;
+      tb_hits = s.tb_hits.load();
+#ifdef SEARCH_STATS
+      num_qnodes = s.num_qnodes;
+      reg_nodes = s.reg_nodes;
+      moves_searched = s.moves_searched;
+      futility_pruning = s.futility_pruning;
+      static_null_pruning = s.static_null_pruning;
+      null_cuts = s.null_cuts;
+      razored = s.razored;
+      check_extensions = s.check_extensions;
+      capture_extensions = s.capture_extensions;
+      pawn_extensions = s.pawn_extensions;
+      evasion_extensions = s.evasion_extensions;
+      singular_extensions = s.singlular_extensions;
+      reduced = s.reduced;
+      lmp = s.lmp;
+      history_pruning = s.history_pruning;
+      see_pruning = s.see_pruning;
+      hash_hits = s.hash_hits.load();
+      hash_searches = s.hash_searches;
+#endif
+      num_nodes = s.num_nodes.load();
+#ifdef MOVE_ORDER_STATS
+      move_order = s.move_order;
+      move_order_count = s.move_order_count;
+#endif
+      end_of_game = s.end_of_game;
+      multi_pvs = s.multi_pvs;
+   }
+   return *this;
+}
+
 void Statistics::clear()
 {
    state = NormalState;
@@ -36,7 +152,7 @@ void Statistics::clear()
 #ifdef SEARCH_STATS
    num_qnodes = reg_nodes = moves_searched = static_null_pruning =
        razored = reduced = (uint64_t)0;
-   hash_hits = hash_searches = futility_pruning = null_cuts = lmp = (uint64_t)0;
+   hash_hits = hash_searches = futility_pruning = null_cuts = (uint64_t)0;
    history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
      pawn_extensions = evasion_extensions = singular_extensions = 0L;

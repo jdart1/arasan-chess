@@ -683,7 +683,7 @@ score_t Search::drawScore(const Board & board) const {
 
 #ifdef SYZYGY_TBS
 score_t Search::tbScoreAdjust(const Board &board,
-                    score_t value,int tb_hit,score_t tb_score) const 
+                    score_t value,int tb_hit,score_t tb_score) const
 {
 #ifdef _TRACE
     cout << "tb score adjust: input=";
@@ -744,7 +744,7 @@ void Search::setTalkLevelFromController() {
 }
 
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
-                         score_t score, score_t alpha, score_t beta) 
+                         score_t score, score_t alpha, score_t beta)
 {
    //stats.elapsed_time = getElapsedTime(startTime,getCurrentTime());
     ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
@@ -821,7 +821,7 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
     }
 }
 
-Move Search::ply0_search() 
+Move Search::ply0_search()
 {
    node->best = NullMove;
    // Incrementally search the board to greater depths - stop when
@@ -1410,14 +1410,27 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 
 void SearchController::updateGlobalStats(const Statistics &mainStats) {
     *stats = mainStats;
-    stats->tb_probes = stats->tb_hits = 
+    // clear all counters
+    stats->tb_probes = stats->tb_hits =
       stats->num_nodes = 0ULL;
-    // Sum node counts and tb hits across threads
+#ifdef SEARCH_STATS
+    stats->num_qnodes = stats->reg_nodes = stats->moves_searched = stats->static_null_pruning =
+       stats->razored = stats->reduced = (uint64_t)0;
+    stats->hash_hits = stats->hash_searches = stats->futility_pruning = stats->null_cuts = (uint64_t)0;
+    stats->history_pruning = stats->lmp = stats->see_pruning = (uint64_t)0;
+    stats->check_extensions = stats->capture_extensions =
+     stats->pawn_extensions = stats->evasion_extensions = stats->singular_extensions = 0L;
+#endif
+#ifdef MOVE_ORDER_STATS
+    stats->move_order_count = 0;
+    for (int i = 0; i < 4; i++) stats->move_order[i] = 0;
+#endif
+    // Sum all counters across threads
     for (unsigned i = 0; i < pool->nThreads; i++) {
-      const Statistics &s = pool->data[i]->work->stats;
-      stats->tb_probes += s.tb_probes;
-      stats->tb_hits += s.tb_hits;
-      stats->num_nodes += s.num_nodes;
+       const Statistics &s = pool->data[i]->work->stats;
+       stats->tb_probes += s.tb_probes;
+       stats->tb_hits += s.tb_hits;
+       stats->num_nodes += s.num_nodes;
 #ifdef SEARCH_STATS
        stats->num_qnodes += s.num_qnodes;
        stats->reg_nodes += s.reg_nodes;
@@ -1440,8 +1453,8 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
 #endif
 #ifdef MOVE_ORDER_STATS
        stats->move_order_count += s.move_order_count;
-       for (j = 0; j < 4; j++) stats->move_order[j] += s.move_order[j];
-#endif       
+       for (int i = 0; i < 4; i++) stats->move_order[i] += s.move_order[i];
+#endif
     }
 }
 
@@ -3286,7 +3299,7 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     }
 #endif
     stats.clear();
-    
+
     // Clear killer since the side to move may have been different
     // in the previous use of this class.
     context.clearKiller();

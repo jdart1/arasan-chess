@@ -322,3 +322,21 @@ int ThreadPool::activeCount() const {
    return Bitboard(activeMask & availableMask).bitCount();
 }
 
+uint64_t ThreadPool::totalNodes() const 
+{
+   uint64_t total = 0ULL;
+   for (unsigned i = 0; i < nThreads; i++) {
+      total += data[i]->work->stats.num_nodes;
+   }
+   return total;
+}
+
+uint64_t ThreadPool::totalHits() const 
+{
+   uint64_t total = 0ULL;
+   for (unsigned i = 0; i < nThreads; i++) {
+      total += data[i]->work->stats.tb_hits;
+   }
+   return total;
+}
+

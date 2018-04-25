@@ -384,7 +384,7 @@ public:
     uint64_t getElapsedTime() const {
        return elapsed_time;
     }
-   
+
    double getCpuPercentage() const {
       if (samples)
          return (100.0*threads)/samples;
@@ -393,6 +393,15 @@ public:
    }
 
    void updateGlobalStats(const Statistics &);
+
+   uint64_t totalNodes() const {
+      return pool->totalNodes();
+   }
+
+   uint64_t totalHits() const {
+      return pool->totalHits();
+   }
+
 
 private:
 

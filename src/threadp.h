@@ -121,6 +121,10 @@ public:
    }
 #endif
 
+   uint64_t totalNodes() const;
+
+   uint64_t totalHits() const;
+
 private:
    void shutDown();
 
