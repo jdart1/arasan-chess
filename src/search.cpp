@@ -618,7 +618,6 @@ int Search::checkTime(const Board &board,int ply) {
        return 1; // already stopped search
     }
 
-    Statistics *stats = controller->stats;
     CLOCK_TYPE current_time = getCurrentTime();
     controller->elapsed_time = getElapsedTime(controller->startTime,current_time);
     if (controller->typeOfSearch == FixedTime) {
@@ -635,10 +634,12 @@ int Search::checkTime(const Board &board,int ply) {
        }
     }
     if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 2000) {
+        controller->updateGlobalStats(stats);
+        const uint64_t total_nodes = controller->totalNodes();
         cout << "info";
         if (controller->elapsed_time>300) cout << " nps " <<
-                (long)((1000L*stats->num_nodes)/controller->elapsed_time);
-        cout << " nodes " << stats->num_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
+        (long)((1000L*total_nodes)/controller->elapsed_time);
+        cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
         controller->last_time = current_time;
     }
     return 0;
@@ -932,7 +933,7 @@ Move Search::ply0_search()
                break;
             }
             else {
-               if (checkTime(board,0)) {
+               if (mainThread() && checkTime(board,0)) {
                   if (talkLevel == Trace)
                      cout << "# time up" << endl;
                   controller->terminateNow();
@@ -1471,7 +1472,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       if (--controller->time_check_counter <= 0) {
          controller->time_check_counter = Time_Check_Interval;
-         if (checkTime(board,ply)) {
+         if (mainThread() && checkTime(board,ply)) {
             if (talkLevel == Trace) {
                cout << "# terminating, time up" << endl;
             }
@@ -2265,7 +2266,7 @@ score_t Search::search()
 #endif
         if (--controller->time_check_counter <= 0) {
             controller->time_check_counter = Time_Check_Interval;
-            if (checkTime(board,ply)) {
+            if (mainThread() && checkTime(board,ply)) {
                if (talkLevel == Trace) {
                   cout << "# terminating, time up" << endl;
                }

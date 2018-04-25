@@ -57,7 +57,7 @@ class HashEntry {
       }
 
       int empty() const {
-         return hc == 0x0ULL;
+         return getEffectiveHash() == 0x0ULL;
       }
 
       void clear() {
