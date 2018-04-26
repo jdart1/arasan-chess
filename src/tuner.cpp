@@ -563,18 +563,12 @@ static void bishopAndPawns(const Board &board,ColorType side,
    }
    if ((whitePawns + blackPawns > 4) && (ourPawns > oppPawns + 2))
    {
-#ifdef EVAL_DEBUG
-      Scores tmp = scores;
-#endif
       grads[Tune::BAD_BISHOP_MID] += tune_params.scale(inc*(ourPawns - oppPawns),Tune::BAD_BISHOP_MID,mLevel);
       grads[Tune::BAD_BISHOP_END] += tune_params.scale(inc*(ourPawns - oppPawns),Tune::BAD_BISHOP_END,mLevel);
    }
    const int totalOppPawns = oppPawnData.b_square_pawns + oppPawnData.w_square_pawns;
    if (totalOppPawns) {
       // penalize pawns on same color square as opposing single Bishop
-#ifdef EVAL_DEBUG
-      int tmp = opp_scores.end;
-#endif
       grads[Tune::BISHOP_PAWN_PLACEMENT_END] -=
          tune_params.scale(inc*((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns))/ totalOppPawns, Tune::BISHOP_PAWN_PLACEMENT_END,board.getMaterial(side).materialLevel());
    }

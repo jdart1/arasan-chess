@@ -30,6 +30,8 @@ Statistics::Statistics(const Statistics &s)
       complete = s.complete;
       multipv_count = s.multipv_count;
       multipv_limit = s.multipv_limit;
+      failHigh = s.failHigh;
+      failLow = s.failLow;
       int i = 0;
       do {
          best_line[i] = s.best_line[i];
@@ -88,6 +90,8 @@ Statistics & Statistics::operator = (const Statistics &s)
       complete = s.complete;
       multipv_count = s.multipv_count;
       multipv_limit = s.multipv_limit;
+      failHigh = s.failHigh;
+      failLow = s.failLow;
       int i = 0;
       do {
          best_line[i] = s.best_line[i];
@@ -196,7 +200,7 @@ void Statistics::updatePV(const Board &board, Move *moves, int pv_length, int it
    int i = 0;
    best_line_image.clear();
    stringstream sstr;
-   while (i < pv_length && !IsNull(moves[i])) {
+   while (i < pv_length && i<Constants::MaxPly-1 && !IsNull(moves[i])) {
       ASSERT(i<Constants::MaxPly);
       best_line[i] = moves[i];
       ASSERT(legalMove(board_copy,best_line[i]));

@@ -234,7 +234,6 @@ protected:
     int iterationDepth;
     SearchContext context;
     int terminate;
-    uint64_t nodeCount;
     int nodeAccumulator;
     NodeInfo *node; // pointer into NodeStack array (external to class)
     Scoring scoring;
@@ -385,12 +384,14 @@ public:
        return elapsed_time;
     }
 
-   double getCpuPercentage() const {
+#ifdef SMP_STATS
+	double getCpuPercentage() const {
       if (samples)
          return (100.0*threads)/samples;
       else
          return 0.0;
    }
+#endif
 
    void updateGlobalStats(const Statistics &);
 

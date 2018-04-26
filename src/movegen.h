@@ -163,7 +163,7 @@ class MoveGenerator
       Move prevMove;
       Bitboard king_attacks;                      // for evasions
       int num_attacks;                            // for evasions
-      Square source;                              // for evasions;
+      Square source;                              // for evasions
       Move *batch;
       Move losers[100];
       Move moves[Constants::MaxMoves];

@@ -33,14 +33,14 @@ void Hash::initHash(size_t bytes)
          hash_init_done++;
          return;
       }
-      int hashPower;
+      unsigned hashPower;
       for (hashPower = 1; hashPower < 32; hashPower++) {
-        if (((size_t)1 << hashPower) > hashSize) {
+        if ((1ULL << hashPower) > hashSize) {
             hashPower--;
             break;
         }
       }
-      hashSize = (size_t)1 << hashPower;
+      hashSize = 1ULL << hashPower;
       hashMask = (uint64_t)(hashSize-1);
       size_t hashSizePlus = hashSize + MaxRehash;
       ALIGNED_MALLOC(hashTable,
