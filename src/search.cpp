@@ -3244,6 +3244,7 @@ void Search::updatePV(const Board &board, Move m, int ply)
 #ifdef _TRACE
     if (master()) {
        indent(ply); cout << "update_pv, ply " << ply << endl;
+       Board board_copy(board);
        for (int i = ply; i < node->pv_length+ply; i++) {
           if (ply == 0) {
              MoveImage(node->pv[i],cout); cout << " " << (flush);
