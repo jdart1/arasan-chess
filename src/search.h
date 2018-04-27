@@ -465,11 +465,9 @@ private:
     int depth_at_pv_change;
     bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
     int fail_high_root;
-    score_t last_score;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature
-    int iteration_value[Constants::MaxPly];
     std::mt19937_64 random_engine;
 
     uint64_t elapsed_time; // in milliseconds
