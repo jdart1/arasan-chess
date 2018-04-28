@@ -38,7 +38,7 @@ Options::SearchOptions::SearchOptions() :
       multipv(1),
       ncpus(1),
       easy_plies(3),
-      easy_threshold(10*Params::PAWN_VALUE)
+      easy_threshold(200) // centipawns
 #ifdef NUMA
       ,
       set_processor_affinity(0),

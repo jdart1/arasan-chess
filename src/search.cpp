@@ -48,6 +48,7 @@ static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
+static const int WIDE_WINDOW = 10*Params::PAWN_VALUE;
 #ifdef SINGULAR_EXTENSION
 static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
@@ -872,8 +873,8 @@ Move Search::ply0_search()
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
          } else if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-            lo_window = std::max<score_t>(-Constants::MATE,value - options.search.easy_threshold);
-            hi_window = std::min<score_t>(Constants::MATE,value + options.search.easy_threshold + aspirationWindow/2);
+            lo_window = std::max<score_t>(-Constants::MATE,value - WIDE_WINDOW);
+            hi_window = std::min<score_t>(Constants::MATE,value + WIDE_WINDOW + aspirationWindow/2);
          } else {
             lo_window = std::max<score_t>(-Constants::MATE,value - aspirationWindow/2);
             hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
@@ -1016,7 +1017,7 @@ Move Search::ply0_search()
                   hi_window = Constants::MATE-iterationDepth-1;
                } else {
                   if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-                     aspirationWindow += 2*options.search.easy_threshold;
+                     aspirationWindow += 2*WIDE_WINDOW;
                   }
                   hi_window = std::min<score_t>(Constants::MATE-iterationDepth-1,
                                                 lo_window + aspirationWindow);
@@ -1066,7 +1067,7 @@ Move Search::ply0_search()
                   lo_window = iterationDepth-Constants::MATE-1;
                } else {
                   if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-                     aspirationWindow += 2*options.search.easy_threshold;
+                     aspirationWindow += 2*WIDE_WINDOW;
                   }
                   lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
                }
