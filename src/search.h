@@ -235,6 +235,7 @@ protected:
     SearchContext context;
     int terminate;
     int nodeAccumulator;
+    bool fail_high_root;
     NodeInfo *node; // pointer into NodeStack array (external to class)
     Scoring scoring;
     ThreadInfo *ti; // thread now running this search
@@ -464,7 +465,6 @@ private:
     score_t easyScore;
     int depth_at_pv_change;
     bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
-    int fail_high_root;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature

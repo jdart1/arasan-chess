@@ -627,6 +627,13 @@ int Search::checkTime(const Board &board,int ply) {
        }
     }
     else if (controller->typeOfSearch == TimeLimit) {
+       // Extend time if failing high
+       if (controller->xtra_time > 0 &&
+           controller->time_target != INFINITE_TIME &&
+           !controller->time_added &&
+           fail_high_root) {
+          controller->time_added = controller->xtra_time;
+       }
        if (controller->elapsed_time > controller->getTimeLimit()) {
           if (talkLevel == Trace) {
              cout << "# terminating, max time reached" << endl;
@@ -971,10 +978,14 @@ Move Search::ply0_search()
                if (controller->xtra_time > 0 &&
                    controller->time_target != INFINITE_TIME) {
                   if (mainThread()) {
-                     // root move is failing low, extend time until
-                     // fail-low is resolved
+                     // root move is failing high, extend time until
+                     // fail-high is resolved
                      controller->time_added = controller->xtra_time;
                      controller->fail_high_root_extend = true;
+                     // We may have initially extended time in the
+                     // search when first detecting fail-high. If so,
+                     // reset that flag here.
+                     fail_high_root = false;
                      if (talkLevel == Trace) {
                         cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
                      }
@@ -1254,9 +1265,11 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 
     int move_index = 0;
     score_t hibound = beta;
-    // TBD
-    // fail_high_root = 0;
     while (!node->cutoff && !terminate) {
+        if (mainThread() && talkLevel == Trace && fail_high_root) {
+           cout << "# resetting fail_high_root" << endl;
+        }
+        fail_high_root = false;
         Move move;
         if ((move = mg.nextMove(move_index))==NullMove) break;
         if (IsUsed(move) || IsExcluded(move) ||
@@ -1318,9 +1331,13 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                !((node+1)->flags & EXACT) &&
                !terminate) {
            // We failed to get a cutoff and must re-search
-           // Set flag if we may be getting a new best move:
-           // TBD
-           // fail_high_root++;
+           // Set flag to extend search time
+           if (mainThread()) {
+              fail_high_root = true;
+              if (talkLevel == Trace) {
+                 cout << "# researching at root, extending time" << endl;
+              }
+           }
 #ifdef _TRACE
            cout << "window = [" << -hibound << "," << node->best_score
                 << "]" << endl;
@@ -1347,16 +1364,21 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         if (wide) {
            mg.setScore(move,try_score);
         }
+        // We have now resolved the fail-high if there is one.
         if (try_score > node->best_score && !terminate) {
            if (updateRootMove(board,node,node,move,try_score,move_index)) {
               // beta cutoff
               // ensure we send UCI output .. even in case of quick
               // termination due to checkmate or whatever
               if (master() && !srcOpts.multipv) controller->uciSendInfos(board, move, move_index, iterationDepth);
-              // don't reset this until after the PV update, in case
-              // it causes us to terminate:
-              // TBD fail_high_root = 0;
+              // keep fail_high_root true so we don't terminate
               break;
+           }
+        }
+        if (mainThread()) {
+           fail_high_root = false;
+           if (talkLevel == Trace && fail_high_root) {
+              cout << "# resetting fail_high_root" << endl;
            }
         }
         if (controller->waitTime) {
