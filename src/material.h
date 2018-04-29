@@ -210,7 +210,6 @@ class Material
 	uint32_t level;
     int count;
     static const int32_t masks[8];
-    static const int32_t masks2[8];
     static const int32_t levels[8];
 };
 

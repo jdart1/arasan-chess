@@ -2623,10 +2623,8 @@ void Params::write(ostream &o, const string &comment)
       tune_params.getParam(i,param);
       const string str(param.name);
 
-      for (string::const_iterator it = str.begin();
-           it != str.end();
-           it++) {
-         o << (char)toupper((int)*it);
+      for (auto it : str) {
+         o << (char)toupper((int)it);
       }
       o << " = " << std::round(param.current) << ";" << endl;
    }

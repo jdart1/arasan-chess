@@ -1561,11 +1561,10 @@ score_t Search::quiesce(int ply,int depth)
    }
    Move hashMove = NullMove;
    score_t hashValue;
-   HashEntry::ValueType result = HashEntry::NoHit;
    HashEntry hashEntry;
    // Note: we copy the hash entry .. so mods by another thread do not
    // alter the copy
-   result = controller->hashTable.searchHash(board,hash,
+   HashEntry::ValueType result = controller->hashTable.searchHash(board,hash,
                                              ply,tt_depth,controller->age,hashEntry);
 #ifdef SEARCH_STATS
    stats.hash_searches++;
@@ -1758,12 +1757,11 @@ score_t Search::quiesce(int ply,int depth)
    }
    else {
       // not in check
-      bool had_eval = false;
       // Establish a default score.  This score is returned if no
       // captures are generated, or if no captures generate a better
       // score (since we generally can choose whether or not to capture).
       ASSERT(node->eval == Constants::INVALID_SCORE);
-      had_eval = node->staticEval != Constants::INVALID_SCORE;
+      bool had_eval = node->staticEval != Constants::INVALID_SCORE;
       if (had_eval) {
           node->eval = node->staticEval;
           ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
