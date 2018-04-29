@@ -1256,6 +1256,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     } else {
        mg.reset();
     }
+    stats.mvtot = mg.moveCount();
+
     // if in N-variation mode, exclude any moves we have searched already
     mg.exclude(exclude);
 
