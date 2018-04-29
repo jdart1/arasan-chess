@@ -890,8 +890,11 @@ Move Search::ply0_search()
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
             if (mainThread()) {
-               cout << "iteration " << iterationDepth << " window = [" <<
-                  lo_window << "," << hi_window << "]" << endl;
+               cout << "iteration " << iterationDepth << " window = [";
+               Scoring::printScore(lo_window,cout);
+               cout << ',';
+               Scoring::printScore(hi_window,cout);
+               cout << ']' << endl;
             }
 #endif
             value = ply0_search(mg, lo_window, hi_window, iterationDepth,
@@ -899,7 +902,9 @@ Move Search::ply0_search()
                                 excluded,controller->include);
 #ifdef _TRACE
             if (mainThread()) {
-               cout << "iteration " << iterationDepth << " result: " << value << endl;
+               cout << "iteration " << iterationDepth << " result: ";
+               Scoring::printScore(value,cout);
+               cout << endl;
             }
 #endif
             updateStats(board, node, iterationDepth,
@@ -1060,11 +1065,19 @@ Move Search::ply0_search()
                   }
                   aspirationWindow = Constants::MATE;
                }
+               else if (Scoring::mateScore(value)) {
+                  // We got a mate score so don't bother doing any
+                  // more aspiration steps, just widen to the max.
+                  aspirationWindow = Constants::MATE;
+               }
                else {
                   aspirationWindow = ASPIRATION_WINDOW[++fails];
                }
                if (aspirationWindow == Constants::MATE) {
-                  lo_window = iterationDepth-Constants::MATE-1;
+                  // We can miss shallow mates but then find them in
+                  // later iterations. Set the window to -Mate1 so we
+                  // will never fail low and not get a pv.
+                  lo_window = 1-Constants::MATE;
                } else {
                   if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                      aspirationWindow += 2*WIDE_WINDOW;
@@ -1289,7 +1302,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         cout << " (" << move_index << "/" << mg.moveCount();
         cout << ")" << endl;
 #endif
-        node->last_move = move;
         node->extensions = 0;
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         int extend = calcExtensions(board,node,node,in_check_after_move,
