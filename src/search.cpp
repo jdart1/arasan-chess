@@ -372,6 +372,7 @@ Move SearchController::findBestMove(
    options.search.tb_probe_in_search = 1;
    updateSearchOptions();
    tb_score = Constants::INVALID_SCORE;
+   tb_root_probes = tb_root_hits = 0;
    if (options.search.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -383,6 +384,7 @@ Move SearchController::findBestMove(
          // will be in the set to search, even if some are losing moves.
          std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
          tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
+         tb_root_probes++;
          if (tb_hit) {
             // restrict the search to moves that preserve the
             // win or draw, if there is one.
@@ -409,9 +411,7 @@ Move SearchController::findBestMove(
                options.search.tb_probe_in_search = 0;
                updateSearchOptions();
             }
-         }
-         if (tb_hit) {
-            stats->tb_hits++;
+            tb_root_hits++;
             if (talkLevel == Trace) {
                cout << "# tb hit, score=";
                Scoring::printScore(value,cout);
@@ -1449,9 +1449,11 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 
 void SearchController::updateGlobalStats(const Statistics &mainStats) {
     *stats = mainStats;
+    // Make sure the root probe is counted
+    stats->tb_probes = tb_root_probes;
+    stats->tb_hits = tb_root_hits;
     // clear all counters
-    stats->tb_probes = stats->tb_hits =
-      stats->num_nodes = 0ULL;
+    stats->num_nodes = 0ULL;
 #ifdef SEARCH_STATS
     stats->num_qnodes = stats->reg_nodes = stats->moves_searched = stats->static_null_pruning =
        stats->razored = stats->reduced = (uint64_t)0;
@@ -2089,11 +2091,11 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         score_t value = node->best_score;
         HashEntry::ValueType val_type;
         // Adjust mate scores to reflect current ply.
-        if (value <= -Constants::MATE_RANGE) {
+        if (value <= -Constants::TABLEBASE_WIN) {
              value -= node->ply;
              val_type = HashEntry::Valid;
         }
-        else if (value >= Constants::MATE_RANGE) {
+        else if (value >= Constants::TABLEBASE_WIN) {
              value += node->ply;
              val_type = HashEntry::Valid;
         }
@@ -2120,8 +2122,9 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         if (master()) {
             indent(node->ply);
             cout << "storing type=" << type_chars[val_type] <<
-                " ply=" << node->ply << " depth=" << depth << " value=" << value <<
-                " move=";
+               " ply=" << node->ply << " depth=" << depth << " value=";
+            Scoring::printScore(value,cout);
+            cout << " move=";
             MoveImage(node->best,cout);
             cout << endl;
         }
@@ -2129,7 +2132,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         controller->hashTable.storeHash(hash, depth,
             controller->age,
             val_type,
-            node->best_score, node->staticEval,
+            value, node->staticEval,
             0,
             node->best);
     }
@@ -2400,10 +2403,10 @@ score_t Search::search()
                 // If this is a mate score, adjust it to reflect the
                 // current ply depth.
                 //
-                if (hashValue >= Constants::MATE_RANGE) {
+                if (hashValue >= Constants::TABLEBASE_WIN) {
                     hashValue -= ply;
                 }
-                else if (hashValue <= -Constants::MATE_RANGE) {
+                else if (hashValue <= -Constants::TABLEBASE_WIN) {
                     hashValue += ply;
                 }
                 if (node->inBounds(hashValue)) {

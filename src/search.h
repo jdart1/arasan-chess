@@ -450,6 +450,7 @@ private:
     bool active;
     LockDefine(split_calc_lock);
     Search *rootSearch;
+    int tb_root_probes, tb_root_hits;
 
     vector<Move> include;
     vector<Move> exclude;
