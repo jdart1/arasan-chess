@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2015, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015, 2017-2018 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -8,6 +8,7 @@
 #ifdef _DEBUG
 #include "legal.h"
 #endif
+#include <climits>
 #include <cstddef>
 
 extern const hash_t rep_codes[3];
@@ -241,7 +242,7 @@ class Hash {
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = nullptr;
-        ASSERT(value >= -Constants::MATE && value <= Constants::MATE);
+        ASSERT(value >= SHRT_MIN && value <= SHRT_MAX);
         // Of the positions that hash to the same locations
         // as this one, find the best one to replace.
         score_t maxScore = score_t(-Constants::MaxPly*DEPTH_INCREMENT);

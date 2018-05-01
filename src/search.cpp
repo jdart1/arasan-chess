@@ -1583,11 +1583,11 @@ score_t Search::quiesce(int ply,int depth)
       hashValue = hashEntry.getValue();
       // If this is a mate score, adjust it to reflect the
       // current ply depth.
-      if (hashValue >= Constants::TABLEBASE_WIN) {
-         hashValue -= ply;
+      if (hashValue >= Constants::MATE_RANGE) {
+         hashValue -= ply - 1;
       }
-      else if (hashValue <= -Constants::TABLEBASE_WIN) {
-         hashValue += ply;
+      else if (hashValue <= -Constants::MATE_RANGE) {
+         hashValue += ply - 1;
       }
       switch (result) {
       case HashEntry::Valid:
@@ -2091,12 +2091,12 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         score_t value = node->best_score;
         HashEntry::ValueType val_type;
         // Adjust mate scores to reflect current ply.
-        if (value <= -Constants::TABLEBASE_WIN) {
-             value -= node->ply;
+        if (value <= -Constants::MATE_RANGE) {
+             value -= node->ply - 1;
              val_type = HashEntry::Valid;
         }
-        else if (value >= Constants::TABLEBASE_WIN) {
-             value += node->ply;
+        else if (value >= Constants::MATE_RANGE) {
+             value += node->ply - 1;
              val_type = HashEntry::Valid;
         }
         else {
@@ -2403,11 +2403,11 @@ score_t Search::search()
                 // If this is a mate score, adjust it to reflect the
                 // current ply depth.
                 //
-                if (hashValue >= Constants::TABLEBASE_WIN) {
-                    hashValue -= ply;
+                if (hashValue >= Constants::MATE_RANGE) {
+                    hashValue -= ply - 1;
                 }
-                else if (hashValue <= -Constants::TABLEBASE_WIN) {
-                    hashValue += ply;
+                else if (hashValue <= -Constants::MATE_RANGE) {
+                    hashValue += ply - 1;
                 }
                 if (node->inBounds(hashValue)) {
                     // parent node will consider this a new best line

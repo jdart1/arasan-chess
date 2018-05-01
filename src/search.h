@@ -15,7 +15,7 @@ extern "C" {
 #include <time.h>
 };
 #include <random>
-#include <set>
+#include <vector>
 using namespace std;
 
 class MoveGenerator;
@@ -188,6 +188,7 @@ protected:
 
     FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
+        ASSERT(ply<Constants::MaxPly);
         ++node;
         node->alpha = node->best_score = alpha;
         node->beta = beta;
@@ -202,8 +203,10 @@ protected:
     }
 
     FORCEINLINE void PUSHQ(score_t alpha, score_t beta, int ply) {
+        ASSERT(ply<Constants::MaxPly);
         ++node;
         node->flags = 0;
+        node->ply = ply;
         node->alpha = node->best_score = alpha;
         node->beta = beta;
         node->best = NullMove;

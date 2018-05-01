@@ -9,7 +9,7 @@ class Constants
 public:	
 
 enum {MaxPly = 62};
-enum {MATE = 32767 };
+enum {MATE = 32000 };
 enum {MATE_RANGE = MATE-256 };
 enum {TABLEBASE_WIN = MATE_RANGE-256};
 enum {BITBASE_WIN = MATE_RANGE-1000};
