@@ -839,7 +839,7 @@ Move Search::ply0_search()
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
-   controller->failLowFactor = 0;
+   if (mainThread()) controller->failLowFactor = 0;
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
    stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
@@ -1086,8 +1086,8 @@ Move Search::ply0_search()
                }
             }
          } while (!terminate && (stats.failLow || stats.failHigh));
-         if (faillows) {
-            controller->failLowFactor += (1<<faillows)*iterationDepth/2;
+         if (mainThread() && faillows) {
+            controller->failLowFactor += (1<<(faillows-1))*iterationDepth;
          }
          // search value should now be in bounds (unless we are
          // terminating)
@@ -1143,7 +1143,8 @@ Move Search::ply0_search()
                 (controller->elapsed_time > (unsigned)controller->time_target/3) &&
                 controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
                 MovesEqual(controller->easyMove,node->best) &&
-                !faillows) {
+                !controller->failLowFactor <= 2*iterationDepth &&
+                !stats.failLow) {
                controller->easy_adjust = true;
                if (talkLevel == Trace) {
                   cout << "# easy move, adjusting time lower" << endl;
