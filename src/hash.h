@@ -5,9 +5,7 @@
 
 #include "chess.h"
 #include "board.h"
-#ifdef _DEBUG
 #include "legal.h"
-#endif
 #include <climits>
 #include <cstddef>
 
