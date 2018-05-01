@@ -111,8 +111,9 @@ class HashEntry {
       }
 
       Move bestMove(const Board &b) const {
-         if (contents.start == InvalidSquare)
-            return NullMove;
+		 if (!validMoveQuick(b, (Square)contents.start, (Square)contents.dest)) {
+			return NullMove;
+		 }
          else {
             return CreateMove(b,(Square)contents.start,(Square)contents.dest,
                (PieceType)contents.promotion);
