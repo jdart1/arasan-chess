@@ -1143,7 +1143,7 @@ Move Search::ply0_search()
                 (controller->elapsed_time > (unsigned)controller->time_target/3) &&
                 controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
                 MovesEqual(controller->easyMove,node->best) &&
-                !controller->failLowFactor <= 2*iterationDepth &&
+                (controller->failLowFactor <= 2*iterationDepth) &&
                 !stats.failLow) {
                controller->easy_adjust = true;
                if (talkLevel == Trace) {
