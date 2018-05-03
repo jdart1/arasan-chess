@@ -18,12 +18,8 @@ const int MoveGenerator::EASY_PLIES = 3;
 
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
-   Move tmp = moves[j];
-   moves[j] = moves[i];
-   moves[i] = tmp;
-   int scoreTmp = scores[j];
-   scores[j] = scores[i];
-   scores[i] = scoreTmp;
+   std::swap(moves[i],moves[j]);
+   std::swap(scores[i],scores[j]);
 }
 
 void MoveGenerator::sortMoves(Move moves[], int scores[], int n) {
@@ -104,10 +100,7 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
       // If this is the first sort, use SEE to sort move list.
       // Else, if in the "easy move" part of the search leave the scores
       // intact: they are set according to the search results.
-      for (auto it = moveList.begin();
-           it != moveList.end();
-           it++) {
-           MoveEntry &m = *it;
+      for (MoveEntry &m : moveList) {
            ClearUsed(m.move);
            if (initial) {
               // sort winning captures first
