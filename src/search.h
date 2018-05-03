@@ -157,18 +157,18 @@ protected:
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8, PROBCUT=16 };
 
     int calcExtensions(const Board &board,
-                       NodeInfo *node, NodeInfo *parentNode,
+                       NodeInfo *node,
                        CheckStatusType in_check_after_move,
                        int moveIndex,
                        Move move);
 
     void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
 
-    int updateRootMove(const Board &board, NodeInfo *parentNode,
+    int updateRootMove(const Board &board,
                        NodeInfo *node, Move move, score_t score, int move_index);
 
     int updateMove(const Board &,
-                   NodeInfo *parentNode, NodeInfo* myNode, Move move,
+                   NodeInfo* myNode, Move move,
                    score_t score, int ply, int depth);
 
     void updatePV(const Board &, Move m, int ply);

@@ -1211,6 +1211,7 @@ Move Search::ply0_search()
       ucilog << endl;
    }
 #endif
+   // In reduced-strength mode, sometimes play s suboptimal move
    if (options.search.strength < 100 && stats.completedDepth <= (unsigned)MoveGenerator::EASY_PLIES) {
       score_t val = stats.display_value;
       Move best = node->best;
@@ -1307,7 +1308,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #endif
         node->extensions = 0;
         CheckStatusType in_check_after_move = board.wouldCheck(move);
-        int extend = calcExtensions(board,node,node,in_check_after_move,
+        int extend = calcExtensions(board,node,in_check_after_move,
                                     move_index,
                                     move);
         if (extend == PRUNE) {
@@ -1382,7 +1383,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
         // We have now resolved the fail-high if there is one.
         if (try_score > node->best_score && !terminate) {
-           if (updateRootMove(board,node,node,move,try_score,move_index)) {
+           if (updateRootMove(board,node,move,try_score,move_index)) {
               // beta cutoff
               // ensure we send UCI output .. even in case of quick
               // termination due to checkmate or whatever
@@ -2140,7 +2141,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
 }
 
 int Search::calcExtensions(const Board &board,
-                           NodeInfo *node, NodeInfo *parentNode,
+                           NodeInfo *node,
                            CheckStatusType in_check_after_move,
                            int moveIndex,
                            Move move) {
@@ -2214,11 +2215,11 @@ int Search::calcExtensions(const Board &board,
    // for pruning decisions, use depth after LMR
    const int predictedDepth = depth + extend;
 
-   pruneOk &= !node->PV() && parentNode->num_try &&
+   pruneOk &= !node->PV() && node->num_try &&
        Capture(move) == Empty &&
        TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5) &&
-       !Scoring::mateScore(parentNode->alpha);
+       !Scoring::mateScore(node->alpha);
 
    if (pruneOk) {
       // do not use predictedDepth for LMP
@@ -2237,7 +2238,7 @@ int Search::calcExtensions(const Board &board,
       if (predictedDepth <= FUTILITY_DEPTH) {
          // Threshold was formerly increased with the move index
          // but this tests worse now.
-          score_t threshold = parentNode->beta - futilityMargin(predictedDepth);
+          score_t threshold = node->beta - futilityMargin(predictedDepth);
          if (node->eval == Constants::INVALID_SCORE) {
             node->eval = node->staticEval = scoring.evalu8(board);
          }
@@ -2255,7 +2256,7 @@ int Search::calcExtensions(const Board &board,
    // See pruning. Losing captures and moves that put pieces en prise
    // are pruned at low depths. Losing checks can be pruned.
    if (predictedDepth <= SEE_PRUNING_DEPTH &&
-       !node->PV() && parentNode->num_try &&
+       !node->PV() && node->num_try &&
        !Scoring::mateScore(node->alpha) &&
        board.checkStatus() == NotInCheck &&
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
@@ -2881,7 +2882,7 @@ score_t Search::search()
             !IsNull(hashMove) &&
             std::abs(hashValue) < Constants::MATE_RANGE &&
             result != HashEntry::UpperBound &&
-            calcExtensions(board,node,node,board.wouldCheck(hashMove),
+            calcExtensions(board,node,board.wouldCheck(hashMove),
                            0,hashMove) < DEPTH_INCREMENT &&
             validMove(board,hashMove)) {
            // Search all moves but the hash move at reduced depth. If all
@@ -2971,7 +2972,7 @@ score_t Search::search()
 #endif
             }
             else {
-               extend = calcExtensions(board,node,node,in_check_after_move,
+               extend = calcExtensions(board,node,in_check_after_move,
                                         move_index,move);
             }
             if (extend == PRUNE) {
@@ -3062,7 +3063,7 @@ score_t Search::search()
             node->done[node->num_try++] = move;
             ASSERT(node->num_try<Constants::MaxMoves);
             if (try_score > node->best_score) {
-                if (updateMove(board,node,node,move,try_score,ply,depth)) {
+                if (updateMove(board,node,move,try_score,ply,depth)) {
                    // cutoff
                    break;
                 }
@@ -3207,28 +3208,28 @@ score_t Search::search()
 }
 
 int Search::updateRootMove(const Board &board,
-                           NodeInfo *parentNode, NodeInfo *node,
+                           NodeInfo *node,
                            Move move, score_t score, int move_index)
 {
-   if (score > parentNode->best_score)  {
-      parentNode->best = move;
-      parentNode->best_score = score;
+   if (score > node->best_score)  {
+      node->best = move;
+      node->best_score = score;
 #ifdef MOVE_ORDER_STATS
-      parentNode->best_count = node->num_try-1;
+      node->best_count = node->num_try-1;
 #endif
-      if (score >= parentNode->beta) {
+      if (score >= node->beta) {
 #ifdef _TRACE
          if (master())
              cout << "ply 0 beta cutoff" << endl;
 #endif
          // set pv to this move so it is searched first the next time
-         parentNode->pv[0] = move;
-         parentNode->pv_length = 1;
-         parentNode->cutoff++;
-         parentNode->best_score = score;
-         updateStats(board, parentNode, iterationDepth,
-                     parentNode->best_score,
-                     parentNode->alpha,parentNode->beta);
+         node->pv[0] = move;
+         node->pv_length = 1;
+         node->cutoff++;
+         node->best_score = score;
+         updateStats(board, node, iterationDepth,
+                     node->best_score,
+                     node->alpha,node->beta);
          if (mainThread()) {
             if (controller->uci && !srcOpts.multipv) {
                cout << "info score ";
@@ -3238,41 +3239,41 @@ int Search::updateRootMove(const Board &board,
          }
          return 1;  // signal cutoff
       }
-      updatePV(board,parentNode,(node+1),move,0);
-      updateStats(board, parentNode, iterationDepth,
-                  parentNode->best_score,
-                  parentNode->alpha,parentNode->beta);
+      updatePV(board,node,(node+1),move,0);
+      updateStats(board, node, iterationDepth,
+                  node->best_score,
+                  node->alpha,node->beta);
       if (mainThread() && srcOpts.multipv == 1) {
          if (move_index>1) {
             // best move has changed, show new best move
-            showStatus(board,move,score <= parentNode->alpha,score >= parentNode->beta);
+            showStatus(board,move,score <= node->alpha,score >= node->beta);
          }
       }
    }
    return 0;   // no cutoff
 }
 
-int Search::updateMove(const Board &board, NodeInfo *parentNode, NodeInfo *node, Move move, score_t score, int ply, int depth)
+int Search::updateMove(const Board &board, NodeInfo *node, Move move, score_t score, int ply, int depth)
 {
    int cutoff = 0;
-   parentNode->best_score = score;
-   parentNode->best = move;
+   node->best_score = score;
+   node->best = move;
 #ifdef MOVE_ORDER_STATS
-   parentNode->best_count = parentNode->num_try-1;
+   node->best_count = node->num_try-1;
 #endif
-   if (score >= parentNode->beta) {
+   if (score >= node->beta) {
 #ifdef _TRACE
       if (master()) {
          indent(ply); cout << "beta cutoff" << endl;
       }
 #endif
-      parentNode->cutoff++;
+      node->cutoff++;
       cutoff++;
    }
    else {
-      parentNode->best_score = score;
+      node->best_score = score;
       // update pv from slave node to master
-      updatePV(board,parentNode,(node+1),move,ply);
+      updatePV(board,node,(node+1),move,ply);
    }
    return cutoff;
 }
