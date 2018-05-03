@@ -1166,33 +1166,17 @@ Move Search::ply0_search()
                   controller->terminateNow();
                   break;
                }
-               else if (value >= Constants::MATE - iterationDepth - 1) {
+               else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
                   // found a forced mate, terminate
-                  if (iterationDepth>=2) {
-                     if (mainThread()) {
-                        if (talkLevel == Trace)
-                           cout << "# terminating, low score" << endl;
+                  if (mainThread()) {
+                     if (talkLevel == Trace)
+                        cout << "# terminating, low score" << endl;
 #ifdef _TRACE
-                        cout << "terminating, low score" << endl;
+                     cout << "terminating, low score" << endl;
 #endif
-                     }
-                     controller->terminateNow();
-                     break;
                   }
-                  else if (value >= Constants::MATE - iterationDepth - 1) {
-                     // found a forced mate, terminate
-                     if (iterationDepth>=2) {
-                        if (mainThread()) {
-                           if (talkLevel == Trace)
-                              cout << "# terminating, mate score" << endl;
-#ifdef _TRACE
-                           cout << "terminating, mate score" << endl;
-#endif
-                        }
-                        controller->terminateNow();
-                        break;
-                     }
-                  }
+                  controller->terminateNow();
+                  break;
                }
             }
          }
