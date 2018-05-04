@@ -141,8 +141,8 @@ static int testSee() {
     struct SeeData {
        string fen;
        Move move;
-       int result;
-       SeeData(const char *fenStr, const char *moveStr, int res) :
+       score_t result;
+       SeeData(const char *fenStr, const char *moveStr, score_t res) :
           fen(fenStr), move(NullMove), result(res) {
           if (!BoardIO::readFEN(board, fenStr)) {
              cerr << "warning: testSee: error in FEN: " << fenStr << endl;
@@ -188,10 +188,27 @@ static int testSee() {
     int errs = 0;
     for (int i = 0; i < 25; i++) {
        const SeeData &data = seeData[i];
-       int result = see(data.board,data.move);
+       score_t result = see(data.board,data.move);
        if (result != data.result) {
           cerr << "see: error in case " << i << endl;
           ++errs;
+       }
+
+       score_t threshold;
+       if (i%2==0) {
+          threshold = data.result;
+          result = seeSign(data.board,data.move,threshold);
+          if (result == 0) {
+             cerr << "seeSign: error in case " << i << endl;
+             ++errs;
+          }
+       } else {
+          threshold = data.result+1;
+          result = seeSign(data.board,data.move,threshold);
+          if (result != 0) {
+             cerr << "seeSign: error in case " << i << endl;
+             ++errs;
+          }
        }
     }
     return errs;

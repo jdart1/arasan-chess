@@ -157,8 +157,8 @@ void RootMoveGenerator::exclude(const vector<Move> &excluded)
 {
    for (int i = 0; i < batch_count; i++) {
       ClearUsed(moveList[i].move);
-      for (auto it = excluded.begin(); it != excluded.end(); it++) {
-         if (MovesEqual(moveList[i].move,*it)) {
+      for (auto it : excluded) {
+         if (MovesEqual(moveList[i].move,it)) {
             SetUsed(moveList[i].move);
          }
       }
@@ -194,10 +194,11 @@ void RootMoveGenerator::exclude(Move exclude) {
 
 void RootMoveGenerator::reorderByScore() {
    reset();
-   if (moveList.size() <= 1)
+   if (moveList.size() <= 1) {
       return;
-   for (unsigned i = 0; i < moveList.size(); i++) {
-      ClearUsed(moveList[i].move);
+   }
+   for (auto it : moveList) {
+      ClearUsed(it.move);
    }
    std::sort(moveList.begin(),moveList.end(),
              [](const MoveEntry &a, const MoveEntry &b)

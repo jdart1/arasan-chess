@@ -606,9 +606,6 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     setSearchOptions();
 }
 
-Search::~Search() {
-}
-
 int Search::checkTime(const Board &board,int ply) {
     if (controller->stopped) {
         controller->terminateNow();

@@ -83,7 +83,7 @@ public:
 
     Search(SearchController *c, ThreadInfo *ti);
 
-    virtual ~Search();
+    virtual ~Search() = default;
 
     void init(NodeStack &ns, ThreadInfo *child_ti);
 

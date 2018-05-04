@@ -1,5 +1,5 @@
-// Copyright 1996, 1997, 2000, 2008, 2013, 2017 by Jon Dart.
-//  All Rights Reserved.
+// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2018 by Jon Dart.
+// All Rights Reserved.
 
 #include "see.h"
 #include "params.h"
@@ -14,19 +14,19 @@ static Square minAttacker(const Board &board, Bitboard atcks, ColorType side) {
    if (side == White)
    {
       Bitboard retval(atcks & board.pawn_bits[White]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.knight_bits[White]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.bishop_bits[White]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.rook_bits[White]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.queen_bits[White]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       if (atcks.isSet(board.kingSquare(White)))
         return board.kingSquare(White);
@@ -36,19 +36,19 @@ static Square minAttacker(const Board &board, Bitboard atcks, ColorType side) {
    else
    {
       Bitboard retval(atcks & board.pawn_bits[Black]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.knight_bits[Black]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.bishop_bits[Black]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.rook_bits[Black]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       retval = (atcks & board.queen_bits[Black]);
-      if (!retval.isClear())
+      if (retval)
          return retval.firstOne();
       if (atcks.isSet(board.kingSquare(Black)))
         return board.kingSquare(Black);
@@ -69,7 +69,6 @@ score_t see( const Board &board, Move move ) {
    ColorType oside = OppositeColor(side);
    Square square = DestSquare(move);
    Square attack_square = StartSquare(move);
-   Piece attacker = board[attack_square];
    Piece on_square = (TypeOfMove(move) == EnPassant) ? 
        MakePiece(Pawn,oside) : board[square];
    Bitboard opp_attacks(board.calcAttacks(square,oside));
@@ -80,7 +79,7 @@ score_t see( const Board &board, Move move ) {
 #endif
        return Params::Gain(move);
    }
-   score_t score_list[20];
+   array<score_t,20> score_list;
    score_t swap_score = 0;
    score_t gain;
    Bitboard attacks[2]; 
@@ -91,7 +90,7 @@ score_t see( const Board &board, Move move ) {
 
    for (;;) {
       last_attack_sq[side] = attack_square; 
-      attacker = board[attack_square];
+      Piece attacker = board[attack_square];
 #ifdef ATTACK_TRACE
       cout << " " << PieceImage(TypeOfPiece(attacker))
            << " on " <<
@@ -173,7 +172,6 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
    ColorType oside = OppositeColor(side);
    Square square = DestSquare(move);
    Square attack_square = StartSquare(move);
-   Piece attacker = board[attack_square];
    Piece on_square = (TypeOfMove(move) == EnPassant) ? 
        MakePiece(Pawn,oside) : board[square];
    Bitboard opp_attacks(board.calcAttacks(square,oside));
@@ -195,7 +193,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
 
    for (;;) {
       last_attack_sq[side] = attack_square; 
-      attacker = board[attack_square];
+      Piece attacker = board[attack_square];
 #ifdef ATTACK_TRACE
       cout << " " << PieceImage(TypeOfPiece(attacker))
            << " on " <<
