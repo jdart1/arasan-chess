@@ -764,7 +764,7 @@ static int testEPD()
    {
        string epd;
        pairvect correct;
-       Case(string e, const pairvect &corr):
+       Case(const string &e, const pairvect &corr):
            epd(e),correct(corr)
            {
            }

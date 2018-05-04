@@ -307,7 +307,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
    // skip positions with very large scores (including mate scores)
    if (fabs(score/Params::PAWN_VALUE)<30.0) {
       pvBoard = board;
-      for (int len = 0; !IsNull(stats.best_line[len]) && len < MAX_PV_LENGTH; len++) {
+      for (int len = 0; len < MAX_PV_LENGTH && !IsNull(stats.best_line[len]); len++) {
          pvBoard.doMove(stats.best_line[len]);
       }
       // skip KPK positions (evaluated by bitbases)

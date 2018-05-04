@@ -170,10 +170,6 @@ class MoveGenerator
       Move killer1,killer2;
       int master;
 
-      inline void setMove( Square source, Square dest,
-         PieceType promotion,
-         Move *moves, unsigned &NumMoves);
-
 };
 
 class RootMoveGenerator : public MoveGenerator

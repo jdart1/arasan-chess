@@ -92,7 +92,7 @@ void Options::setMemoryOption(size_t &value, const string &valueString) {
      value = (size_t)val*mult;
 }
 
-static void set_boolean_option(string name,string valueString,int &value) {
+static void set_boolean_option(const string &name,const string &valueString,int &value) {
   if (valueString == "true")
     value = 1;
   else if (valueString == "false")
