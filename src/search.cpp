@@ -149,7 +149,6 @@ SearchController::SearchController()
     sample_counter = SAMPLE_INTERVAL;
 #endif
     random_engine.seed(getRandomSeed());
-    LockInit(split_calc_lock);
     pool = new ThreadPool(this,options.search.ncpus);
 
     ThreadInfo *ti = pool->mainThread();
@@ -187,7 +186,6 @@ SearchController::SearchController()
 SearchController::~SearchController() {
    delete pool;
    hashTable.freeHash();
-   LockFree(split_calc_lock);
 }
 
 void SearchController::terminateNow() {
