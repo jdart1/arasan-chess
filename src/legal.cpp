@@ -1,4 +1,4 @@
-// Copyright 1998, 2005, 2008, 2017 by Jon Dart. All Rights Reserved.
+// Copyright 1998, 2005, 2008, 2017-2018 by Jon Dart. All Rights Reserved.
 
 #include "legal.h"
 #include "movegen.h"
@@ -17,9 +17,9 @@ int validMove(const Board &board, Move move)
    else if (TypeOfMove(move) == EnPassant) {
       Square dest2 = dest+incr[board.sideToMove()];
       if (board.enPassantSq() == InvalidSquare || dest2 != board.enPassantSq() || board[dest2] != MakePiece(Pawn,board.oppositeSide()))
-         return 0;
-   } else
-   if (Capture(move) != TypeOfPiece(board[dest]) || board[dest] != MakePiece(Capture(move),board.oppositeSide())) {
+      return 0;
+   }
+   else if (Capture(move) != TypeOfPiece(board[dest]) || board[dest] != MakePiece(Capture(move),board.oppositeSide())) {
       return 0;
    }
    switch(pieceMoved) {
@@ -89,6 +89,16 @@ int validMove(const Board &board, Move move)
          break;
    }
    return 0;
+}
+
+int validMoveQuick(const Board &board, Square start, Square dest)
+{
+	if (!OnBoard(start) || !OnBoard(dest) || (board[start] != EmptyPiece &&
+		PieceColor(board[start]) != board.sideToMove()) ||
+		(board[dest] != EmptyPiece && PieceColor(board[dest]) == board.sideToMove())) {
+		return 0;
+	}
+	return 1;
 }
 
 int legalMove(const Board &board, Square start,

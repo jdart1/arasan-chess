@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017 by Jon Dart.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2018 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _LOG_H
@@ -111,6 +111,7 @@ public:
                   const Move &emove,
                   const string &move_image,
                   const Statistics *stats,
+                  uint64_t elapsed_time,
                   int toFile);
 
    // remove the most recently added move to the log.

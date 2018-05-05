@@ -13,7 +13,6 @@ using namespace std;
 
 class SearchContext;
 struct NodeInfo;
-struct SplitPoint;
 
 class MoveGenerator
 {
@@ -79,11 +78,6 @@ class MoveGenerator
 
       // Generate the next check evasion, NullMove if none left
       virtual Move nextEvasion(int &order);
-
-      virtual Move nextMove(SplitPoint *,int &order);
-      virtual Move nextEvasion(SplitPoint *, int &order);
-
-      virtual int generateAllMoves(NodeInfo *, SplitPoint *);
 
       // Generate only non-capturing moves.
       int generateNonCaptures(Move *moves);
@@ -169,22 +163,17 @@ class MoveGenerator
       Move prevMove;
       Bitboard king_attacks;                      // for evasions
       int num_attacks;                            // for evasions
-      Square source;                              // for evasions;
+      Square source;                              // for evasions
       Move *batch;
       Move losers[100];
       Move moves[Constants::MaxMoves];
       Move killer1,killer2;
       int master;
 
-      inline void setMove( Square source, Square dest,
-         PieceType promotion,
-         Move *moves, unsigned &NumMoves);
-
 };
 
 class RootMoveGenerator : public MoveGenerator
 {
-   friend class RootSearch;
    friend class Search;
 
    public:
@@ -213,7 +202,6 @@ class RootMoveGenerator : public MoveGenerator
 
       using MoveGenerator::nextMove;
       using MoveGenerator::nextEvasion;
-      virtual int generateAllMoves(NodeInfo *, SplitPoint *);
 
       virtual int more() const
       {
@@ -248,6 +236,16 @@ class RootMoveGenerator : public MoveGenerator
 
       // enumerate the nodes for a "depth" ply search (for testing).
       static uint64_t perft(Board &, int depth);
+
+      score_t getScore(Move m) const {
+          for (auto it = moveList.begin();it != moveList.end();it++) {
+              if (MovesEqual((*it).move,m)) {
+                  return (*it).score;
+              }
+          }
+          return Constants::INVALID_SCORE;
+      }
+
 
    protected:
 

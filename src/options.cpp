@@ -9,6 +9,7 @@
 #include <iterator>
 
 #include "constant.h"
+#include "params.h"
 
 #include <cmath>
 
@@ -37,7 +38,7 @@ Options::SearchOptions::SearchOptions() :
       multipv(1),
       ncpus(1),
       easy_plies(3),
-      easy_threshold(200)
+      easy_threshold(200) // centipawns
 #ifdef NUMA
       ,
       set_processor_affinity(0),
@@ -91,7 +92,7 @@ void Options::setMemoryOption(size_t &value, const string &valueString) {
      value = (size_t)val*mult;
 }
 
-static void set_boolean_option(string name,string valueString,int &value) {
+static void set_boolean_option(const string &name,const string &valueString,int &value) {
   if (valueString == "true")
     value = 1;
   else if (valueString == "false")

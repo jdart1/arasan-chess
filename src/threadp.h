@@ -12,19 +12,19 @@
 #include <array>
 #include <bitset>
 #include <functional>
+#include <mutex>
 
 using namespace std;
 
 class Search;
 class SearchController;
 struct NodeInfo;
-struct SplitPoint;
 
 class ThreadPool;
 
 struct ThreadInfo : public ThreadControl {
  
-   enum State { Idle, Working, Terminating };
+   enum State { Starting, Idle, Working, Terminating };
    ThreadInfo(ThreadPool *,int i);
    virtual ~ThreadInfo();
    void start();
@@ -51,24 +51,8 @@ public:
 
    virtual ~ThreadPool();
 
-   ThreadInfo *mainThread() const {
-     return data[0];
-   }
-
-   // obtain an idle thread if possible, returns 
-   // non-null if successful
-   ThreadInfo *checkOut(Search *,NodeInfo *,int ply,int depth);
-
-   // Do a quick check for thread availability (w/o locking)
-   int checkAvailable() {
-      return (activeMask & availableMask) != availableMask;
-   }
-
    // Threads that are waiting for work execute this function
-   static void idle_loop(ThreadInfo *ti, const SplitPoint *split = nullptr);
-
-   // return a thread to the pool
-   void checkIn(ThreadInfo *);
+   static void idle_loop(ThreadInfo *ti);
 
    int activeCount() const;
 
@@ -86,6 +70,20 @@ public:
       unlock();
    }
 
+   void unblockAll() {
+     // No need to unblock thread 0: that is the main thread
+     for (unsigned i = 1; i < nThreads; i++) {
+       data[i]->signal();
+     }
+   }
+
+   void waitAll() {
+      if (nThreads>1) {
+         std::unique_lock<std::mutex> lock(cvm);
+		 cv.wait(lock, [] {return (activeMask & ~1ULL) == 0ULL; });
+      }
+   }
+
    SearchController *getController() const {
      return controller;
    }
@@ -96,6 +94,14 @@ public:
 
    void unlock() {
      Unlock(poolLock);
+   }
+
+   Search *rootSearch() const {
+      return data[0]->work;
+   }
+
+   ThreadInfo *mainThread() const {
+      return data[0];
    }
 
 #ifdef NUMA
@@ -115,6 +121,10 @@ public:
    }
 #endif
 
+   uint64_t totalNodes() const;
+
+   uint64_t totalHits() const;
+
 private:
    void shutDown();
 
@@ -123,6 +133,10 @@ private:
    SearchController *controller;
    unsigned nThreads;
    std::array<ThreadInfo *,Constants::MaxCPUs> data;
+
+   // Used for signaling/waiting all threads completion:
+   std::mutex cvm;
+   std::condition_variable cv;
 
    // mask of thread status - 0 if idle, 1 if active
    static uint64_t activeMask;

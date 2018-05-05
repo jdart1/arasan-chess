@@ -1,11 +1,13 @@
-// Copyright 1994-2009, 2012-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2009, 2012-2018 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
 
 #include "chess.h"
 #include "constant.h"
+#include "hash.h"
 #include <array>
+#include <atomic>
 #include <string>
 using namespace std;
 
@@ -16,25 +18,25 @@ enum StateType {NormalState,Terminated,Check,Checkmate,
 // during and after completion.
 struct Statistics
 {
-  static const unsigned MAX_PV = 10;
+   static const unsigned MAX_PV = 10;
 
    StateType state;
    score_t value;
    score_t display_value;
    score_t tb_value;
    bool fromBook;
-   int complete; // if at end of iteration
-   int multipv_count; // only for UCI
-   int multipv_limit; // only for UCI
-   int failhigh, faillow;
+   bool complete; // if at end of iteration
+   unsigned multipv_count; // only for UCI
+   unsigned multipv_limit; // only for UCI
+   bool failHigh, failLow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   uint64_t elapsed_time; // in milliseconds
-   unsigned depth;
+   unsigned depth, completedDepth;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes
-   uint64_t tb_hits;   // tablebase hits
+   // atomic because may need to be read during a search:
+   atomic<uint64_t> tb_hits;   // tablebase hits
 #ifdef SEARCH_STATS
    uint64_t num_qnodes;
    uint64_t reg_nodes;
@@ -49,17 +51,13 @@ struct Statistics
    uint64_t lmp;
    uint64_t history_pruning;
    uint64_t see_pruning;
-   uint64_t hash_hits, hash_searches;
+   uint64_t hash_hits;
+   uint64_t hash_searches;
 #endif
-   uint64_t num_nodes;
-   uint64_t splits;
-   uint64_t last_split_sample;
-   CLOCK_TYPE last_split_time;
-#ifdef SMP_STATS
-   uint64_t samples, threads;
-#endif
+   // atomic because may need to be read during a search:
+   atomic<uint64_t> num_nodes;
 #ifdef MOVE_ORDER_STATS
-   int move_order[4];
+   array<int,4> move_order;
    int move_order_count;
 #endif
    int end_of_game;
@@ -82,7 +80,7 @@ struct Statistics
 
       MultiPVEntry(const Statistics &stats)
         : depth(stats.depth),score(stats.display_value),
-          time(stats.elapsed_time),nodes(stats.num_nodes),
+          /* TBD time(stats.elapsed_time),*/nodes(stats.num_nodes),
           tb_hits(stats.tb_hits) {
             best_line_image = stats.best_line_image;
             best = stats.best_line[0];
@@ -93,7 +91,13 @@ struct Statistics
    array<MultiPVEntry,MAX_PV> multi_pvs;
 
    Statistics();
+
    virtual ~Statistics();
+
+   Statistics(const Statistics &);
+
+   Statistics & operator = (const Statistics &);
+
    void clear();
 
    void clearPV() {
@@ -106,7 +110,10 @@ struct Statistics
 
    void sortMultiPVs();
 
-   void printNPS(ostream &);
+   static void printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time);
+
+   void updatePV(const Board &board, Move *moves, int pv_length, int iteration_depth,
+                 bool uci, int age, Hash &hashTable);
 
 };
 

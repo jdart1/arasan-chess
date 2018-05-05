@@ -1,7 +1,7 @@
-Rank Name                         Elo    +    - games score oppo. draws 
-   1 Stockfish-2.2               2426    6    6  8000   54%  2401   35% 
-   2 Pedone-1.7                  2416    6    6  8000   52%  2401   35% 
-   3 Texel-1.06                  2409    6    6  8000   51%  2401   34% 
-   4 Arasan v20.4.1-25-g4e63f58  2401    4    4 40000   50%  2400   36% 
-   5 Nemorino-3-dev              2389    6    6  8000   48%  2401   34% 
-   6 Arasan-20.0                 2358    6    6  8000   43%  2401   44% 
+Rank Name             Elo    +    - games score oppo. draws 
+   1 Stockfish-2.2   2428    6    6  8000   56%  2386   33% 
+   2 Texel-1.06      2416    6    6  8000   55%  2386   34% 
+   3 Pedone-1.7      2415    6    6  8000   54%  2386   33% 
+   4 Nemorino-3-dev  2400    6    6  8000   52%  2386   32% 
+   5 Arasan TCEC12   2386    3    4 40000   47%  2403   35% 
+   6 Arasan-20.0     2355    6    6  8000   45%  2386   43% 

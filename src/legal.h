@@ -1,4 +1,4 @@
-// Copyright 1998, 2008 by Jon Dart.  All Rights Reserved.
+// Copyright 1998, 2008, 2018 by Jon Dart.  All Rights Reserved.
 
 #ifndef LEGAL_MOVE
 #define LEGAL_MOVE
@@ -7,7 +7,10 @@
 
 // checks for validity (not the same as strict legality - 
 // may pass moves into check, assuming search will find these).
-extern int validMove(const Board &board, Move killer);
+extern int validMove(const Board &board, Move move);
+
+// faster/less thorough version of validMove
+extern int validMoveQuick(const Board &board, Square start, Square dest);
 
 extern int legalMove(const Board &board, Square start,
                       Square dest);
