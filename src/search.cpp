@@ -464,7 +464,7 @@ Move SearchController::findBestMove(
    if (talkLevel == Trace) {
       cout << "# best thread: score=" << stats->value << " pv=" << stats->best_line_image << endl;
    }
-   ASSERT(!IsNull(best.best_line[0]));
+   ASSERT(!IsNull(best));
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
