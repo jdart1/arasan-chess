@@ -453,6 +453,7 @@ Move SearchController::findBestMove(
             cout << "# thread " << thread << " score=" << threadStats.value << " pv=" << threadStats.best_line_image << endl;
          }
          if (threadStats.value > stats->value &&
+             !IsNull(threadStats.best_line[0]) &&
              (threadStats.completedDepth >= stats->completedDepth ||
               threadStats.value >= Constants::MATE_RANGE)) {
             updateGlobalStats(threadStats);
@@ -463,6 +464,7 @@ Move SearchController::findBestMove(
    if (talkLevel == Trace) {
       cout << "# best thread: score=" << stats->value << " pv=" << stats->best_line_image << endl;
    }
+   ASSERT(!IsNull(best.best_line[0]));
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
