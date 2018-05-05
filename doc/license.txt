@@ -35,18 +35,6 @@ Copyright 1994-2018 by Jon Dart
 -----------------------------------------------------------------------------
 Notes: 
 
-The source code for Arasan includes optional support for both Gaviota
-and Nalimov tablebases. Nalimov tablebase support requires use of the
-egtb.cpp file, which is copyrighted by Eugene Nalimov, and the tbdecode.h
-file, copyrighted by Andrew Katatch. These files are no longer distributed
-with the Arasan source. However, Arasan binaries provided by Jon Dart
-include the Nalimov tablebase support.
-
-Gaviota tablebase probing code is available separately, under the same
-license used by the Arasan chess engine, from
-http://sites.google.com/site/gaviotachessengine/Home/endgame-tablebases-1
-or from arasanchess.org.
-
 The Arasan user interface, source of which is in the "gui" directory
 of the Windows source archive, relies on copyrighted chess fonts and
 is not included under this license.

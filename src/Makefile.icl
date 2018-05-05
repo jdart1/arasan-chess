@@ -1,7 +1,7 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 20.4.1
+VERSION = 20.5
 #
 #TARGET = win32
 TARGET = win64
@@ -124,29 +124,19 @@ tuning: dirs $(BUILD)\tuner.exe
 
 utils: $(BUILD)\pgnselect.exe $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe
 
-!IfDef NALIMOV_TBS
-TB_OBJS = $(BUILD)\nalimov.obj
-TB_TUNE_OBJS = $(TUNE_BUILD)\nalimov.obj
-TB_PROFILE_OBJS = $(PROFILE)\nalimov.obj
-TB_PGO_OBJS = $(PGO_BUILD)\nalimov.obj
-CFLAGS = $(CFLAGS) -DNALIMOV_TBS
-!Endif
 !IfDef SYZYGY_TBS
-CFLAGS = $(CFLAGS) -DSYZYGY_TBS
-STB_FLAGS = /TP $(CFLAGS)
-TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
-TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(BUILD_TUNE)\syzygy.obj $(BUILD_TUNE)\tbprobe.obj
-TB_PGO_OBJS = $(TB_PGO_OBJS) $(PGO_BUILD)\syzygy.obj $(PGO_BUILD)\tbprobe.obj
-TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
-CFLAGS = $(CFLAGS) -DSYZYGY_TBS
-STB_FLAGS = /TP $(CFLAGS)
+CFLAGS = $(CFLAGS) -I. -DSYZYGY_TBS
+STB_FLAGS = /TP -I. $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
+TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
+TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(TUNE_BUILD)\syzygy.obj $(TUNE_BUILD)\tbprobe.obj
+TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
 $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+$(TUNE_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
-$(PGO_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
-	$(CL) $(STB_PROFILE_FLAGS) $(PROF_USE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
 
 # Linker flags

@@ -1,4 +1,4 @@
-// Copyright 1987-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2018 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -314,7 +314,7 @@ void SearchController::setThreadSplitDepth(int depth) {
    pool->forEachSearch<&Search::setSplitDepthFromController>();
 }
 
-void SearchController::updateStats(NodeInfo *node, int iteration_depth,
+void SearchController::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
                                    score_t score, score_t alpha, score_t beta)
 {
     stats->elapsed_time = getElapsedTime(startTime,getCurrentTime());
@@ -324,12 +324,22 @@ void SearchController::updateStats(NodeInfo *node, int iteration_depth,
     stats->depth = iteration_depth;
     // if failing low, keep the current value for display purposes,
     // not the bottom of the window
-    if (stats->value > alpha) {
+    if (stats->value > alpha && stats->tb_value == Constants::INVALID_SCORE) {
        stats->display_value = stats->value;
     }
     if (talkLevel == Trace && stats->elapsed_time >= 5) {
        cout << "# elapsed time=" << stats->elapsed_time << " target=" << getTimeLimit() << endl;
     }
+#ifdef SYZYGY_TBS
+    // Correct if necessary the display value, used for score
+    // output and resign decisions, based on the tb information:
+    if (stats->tb_value != Constants::INVALID_SCORE) {
+       stats->display_value = root()->tbScoreAdjust(board,
+                                                    stats->value,
+                                                    1,
+                                                    stats->tb_value);
+    }
+#endif
     //stats->state = state;
     Board board_copy(rootSearch->getInitialBoard());
 
@@ -698,7 +708,6 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    easy_adjust = false;
    fail_high_root_extend = fail_low_root_extend = false;
    last_score = -Constants::MATE;
-   node->best = NullMove;
    if (scoring.isLegalDraw(board) && !controller->uci &&
        !(controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) {
       // If it's a legal draw situation before we even move, then
@@ -713,20 +722,36 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
       controller->stats->value = drawScore(board);
       return NullMove;
    }
-   // Generate the ply 0 moves here:
-   RootMoveGenerator mg(board,&context,NullMove,
-      talkLevel == Trace);
-   if (controller->uci) {
-       controller->stats->multipv_limit = std::min<int>(mg.moveCount(),srcOpts.multipv);
-   }
-   controller->time_check_counter = Time_Check_Interval;
+   node->best = node->pv[0] = NullMove;
+   int depth_at_pv_change = 0;
 
-   score_t value = Constants::INVALID_SCORE;
 #ifdef SYZYGY_TBS
    int tb_hit = 0, tb_pieces = 0;
    options.search.tb_probe_in_search = 1;
    controller->updateSearchOptions();
    score_t tb_score = Constants::INVALID_SCORE;
+#endif
+   score_t value = Constants::INVALID_SCORE;
+   
+   // Generate the ply 0 moves here:
+   RootMoveGenerator mg(board,&context,NullMove,
+      talkLevel == Trace);
+   if (mg.moveCount() == 0) {
+	   // Checkmate or statemate
+	   if (board.inCheck()) {
+		   controller->stats->state = Checkmate;
+		   controller->stats->value = controller->stats->display_value = -Constants::MATE;
+	   }
+	   else {
+		   controller->stats->state = Stalemate;
+		   controller->stats->value = controller->stats->display_value = drawScore(board);
+	   }
+	   goto search_end;
+   }
+   controller->stats->multipv_limit = std::min<int>(mg.moveCount(), srcOpts.multipv);
+   controller->time_check_counter = Time_Check_Interval;
+
+#ifdef SYZYGY_TBS
    if (srcOpts.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
@@ -829,8 +854,6 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
-   node->best = node->pv[0] = NullMove;
-   int depth_at_pv_change = 0;
    controller->failLowFactor = 0;
    for (iteration_depth = 1;
         iteration_depth <= controller->ply_limit && !terminate;
@@ -884,23 +907,16 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             cout << "iteration " << iteration_depth << " result: " <<
                value << endl;
 #endif
-            controller->updateStats(node,iteration_depth,
+            controller->updateStats(board, node,iteration_depth,
                                     value,lo_window,hi_window);
-#ifdef SYZYGY_TBS
-            // Correct if necessary the display value, used for score
-            // output and resign decisions, based on the tb information:
-            controller->stats->display_value = tbScoreAdjust(board,
-                                                      controller->stats->display_value,
-                                                      tb_hit,
-                                                      tb_score);
-#endif
             // check for forced move, but only at depth 2
             // (so we get a ponder move if possible). But exit immediately
             // if a tb hit because deeper search will hit the q-search and
             // the score will be inaccurate. Do not terminate here if a
             // resign score is returned (search deeper to get an accurate
             // score). Do not exit in analysis mode.
-            if (!(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
+            if (controller->typeOfSearch != FixedDepth &&
+                !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
                 (iteration_depth >= 2) &&
                 (!srcOpts.can_resign ||
@@ -1060,27 +1076,29 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
             }
             controller->time_target /= 3;
          }
-         if (value <= iteration_depth - Constants::MATE) {
-            // We're either checkmated or we certainly will be, so
-            // quit searching.
-            if (talkLevel == Trace)
-               cout << "# terminating, low score" << endl;
-#ifdef _TRACE
-            cout << "terminating, low score" << endl;
-#endif
-            controller->terminateNow();
-            break;
-         }
-         else if (value >= Constants::MATE - iteration_depth - 1) {
-            // found a forced mate, terminate
-            if (iteration_depth>=2) {
+         if (!controller->uci || controller->typeOfSearch == TimeLimit) {
+            if (value <= iteration_depth - Constants::MATE) {
+               // We're either checkmated or we certainly will be, so
+               // quit searching.
                if (talkLevel == Trace)
-                  cout << "# terminating, mate score" << endl;
+                  cout << "# terminating, low score" << endl;
 #ifdef _TRACE
-               cout << "terminating, mate score" << endl;
+               cout << "terminating, low score" << endl;
 #endif
                controller->terminateNow();
                break;
+            }
+            else if (value >= Constants::MATE - iteration_depth - 1) {
+               // found a forced mate, terminate
+               if (iteration_depth>=2) {
+                  if (talkLevel == Trace)
+                     cout << "# terminating, mate score" << endl;
+#ifdef _TRACE
+                  cout << "terminating, mate score" << endl;
+#endif
+                  controller->terminateNow();
+                  break;
+               }
             }
          }
       }
@@ -1089,6 +1107,7 @@ Move RootSearch::ply0_search(const vector<Move> &exclude,
 #ifdef UCI_LOG
    ucilog << "out of search loop " << endl << (flush);
 #endif
+search_end:
    // search done, set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
    Statistics *stats = controller->stats;
@@ -3210,7 +3229,7 @@ int Search::updateRootMove(const Board &board,
          parentNode->pv_length = 1;
          parentNode->cutoff++;
          parentNode->best_score = score;
-         controller->updateStats(parentNode, controller->getIterationDepth(),
+         controller->updateStats(board, parentNode, controller->getIterationDepth(),
                             parentNode->best_score,
                             parentNode->alpha,parentNode->beta);
          if (controller->uci && !srcOpts.multipv) {
@@ -3221,7 +3240,7 @@ int Search::updateRootMove(const Board &board,
          return 1;  // signal cutoff
       }
       updatePV(board,parentNode,(node+1),move,0);
-      controller->updateStats(parentNode, controller->getIterationDepth(),
+      controller->updateStats(board, parentNode, controller->getIterationDepth(),
                               parentNode->best_score,
                               parentNode->alpha,parentNode->beta);
       if (move_index>1) {

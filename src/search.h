@@ -1,4 +1,4 @@
-// Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2018 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -248,7 +248,7 @@ private:
     // check console input
     int check_input(const Board &);
 
-    void updateStats(NodeInfo *node,int iteration_depth,
+    void updateStats(const Board &, NodeInfo *node,int iteration_depth,
 		     score_t score, score_t alpha, score_t beta);
 
     int uci;
