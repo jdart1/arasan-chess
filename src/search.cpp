@@ -396,9 +396,9 @@ Move SearchController::findBestMove(
             } else {
 #ifdef _TRACE
                cout << "filtered moves from Syzygy:";
-               for (auto it = moves.begin(); it != moves.end(); it++) {
+               for (auto it : moves) {
                   cout << ' ';;
-                  Notation::image(board,*it,Notation::OutputFormat::SAN,cout);
+                  Notation::image(board,it,Notation::OutputFormat::SAN,cout);
                }
                cout << endl;
 #endif
@@ -452,7 +452,7 @@ Move SearchController::findBestMove(
          if (talkLevel == Trace) {
             cout << "# thread " << thread << " score=" << threadStats.value << " pv=" << threadStats.best_line_image << endl;
          }
-         if (threadStats.value > stats->value &&
+         if (threadStats.display_value > stats->display_value &&
              !IsNull(threadStats.best_line[0]) &&
              (threadStats.completedDepth >= stats->completedDepth ||
               threadStats.value >= Constants::MATE_RANGE)) {
