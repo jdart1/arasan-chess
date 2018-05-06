@@ -7,6 +7,7 @@
 #include "debug.h"
 
 #include <algorithm>
+#include <array>
 
 //#define ATTACK_TRACE
 
@@ -149,9 +150,9 @@ score_t see( const Board &board, Move move ) {
    // minimax over the score list 
    for (int i = count-1; i > 0; --i) {
        if (i % 2 == 0) {
-           score_list[i-1] = max(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::max<score_t>(score_list[i],score_list[i-1]);
        } else {
-           score_list[i-1] = min(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::min<score_t>(score_list[i],score_list[i-1]);
        }
    }
 #ifdef ATTACK_TRACE
@@ -283,9 +284,9 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
    // minimax over the score list 
    for (int i = count-1; i > 0; --i) {
        if (i % 2 == 0) {
-           score_list[i-1] = max(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::max<score_t>(score_list[i],score_list[i-1]);
        } else {
-           score_list[i-1] = min(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::min<score_t>(score_list[i],score_list[i-1]);
        }
    }
 #ifdef ATTACK_TRACE
