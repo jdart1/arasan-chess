@@ -375,8 +375,7 @@ Move SearchController::findBestMove(
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
       tb_pieces = wMat.men() + bMat.men();
-      if(tb_pieces <= EGTBMenCount) {
-         stats->tb_probes++;
+      if(tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
          set<Move> moves;
          // If include set is non-empty, ensure all "include" moves
          // will be in the set to search, even if some are losing moves.
@@ -2460,7 +2459,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT))) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) && board.state.moveCount == 0 && !board.castlingPossible()) {
        stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);

@@ -65,8 +65,7 @@ int SyzygyTb::probe_root(const Board &b, score_t &score, set<Move> &rootMoves)
                                    (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
                                    (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
                                    b.state.moveCount,
-                                   (int)b.castleStatus(White)<3 ||
-                                   (int)b.castleStatus(Black)<3,
+                                   b.castlingPossible(),
                                    b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
                                    b.sideToMove() == White,
                                    results);
@@ -115,7 +114,7 @@ int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)
                                    b.state.moveCount,
                                    (int)b.castleStatus(White)<3 ||
                                    (int)b.castleStatus(Black)<3,
-                                   b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
+                                   b.castlingPossible(),
                                    b.sideToMove() == White);
 
    if (result == TB_RESULT_FAILED) {
