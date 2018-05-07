@@ -233,8 +233,9 @@ Move SearchController::findBestMove(
     std::copy(exclude.begin(),exclude.end(),this->exclude.begin());
     std::copy(include.begin(),include.end(),this->include.begin());
 
-    time_added = 0;
     fail_high_root_extend = fail_low_root_extend = false;
+    fail_high_root = false;
+    fail_low_bonus_time = (uint64_t)0;
     this->xtra_time = xtra_time;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
@@ -624,13 +625,6 @@ int Search::checkTime(const Board &board,int ply) {
        }
     }
     else if (controller->typeOfSearch == TimeLimit) {
-       // Extend time if failing high
-       if (controller->xtra_time > 0 &&
-           controller->time_target != INFINITE_TIME &&
-           !controller->time_added &&
-           fail_high_root) {
-          controller->time_added = controller->xtra_time;
-       }
        if (controller->elapsed_time > controller->getTimeLimit()) {
           if (talkLevel == Trace) {
              cout << "# terminating, max time reached" << endl;
@@ -958,16 +952,38 @@ Move Search::ply0_search()
             stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
             stats.failLow = value <= lo_window  && (lo_window > iterationDepth-Constants::MATE);
             // reset time if no longer failing low
-            if (mainThread() && controller->time_added) {
+            if (mainThread()) {
+               if (stats.failLow) {
+                  if (faillows < 2)
+                     controller->failLowFactor += iterationDepth;
+                  else
+                     controller->failLowFactor += (1<<(faillows-1))*iterationDepth;
+                  if (!controller->background &&
+                      (controller->typeOfSearch == TimeLimit && controller->time_target != INFINITE_TIME) &&
+                      controller->xtra_time &&
+                      (controller->elapsed_time > (unsigned)controller->time_target/3) &&
+                      controller->failLowFactor > 2*iterationDepth) {
+                     // If we have failed low, extend time based on bad
+                     // and how recent the fail-low(s) were.
+                     auto factor = std::min<float>(1.0F,controller->failLowFactor/(10.0F*iterationDepth));
+                     controller->fail_low_bonus_time =
+                        static_cast<uint64_t>(controller->xtra_time*factor);
+                     if (talkLevel == Trace) {
+                        std::ios_base::fmtflags original_flags = cout.flags();
+                        cout << "# iteration " << iterationDepth <<
+                           " failLowFactor=" << controller->failLowFactor << endl;
+                        cout << "# setting fail low bonus time to " << fixed << setprecision(2) << 100.0*factor << " % of max" << endl;
+                        cout.flags(original_flags);
+                     }
+                  }
+               }
                if (controller->fail_low_root_extend && !stats.failLow) {
-                  controller->time_added = 0;
                   controller->fail_low_root_extend = false;
                   if (talkLevel == Trace) {
                      cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
                   }
                }
                else if (controller->fail_high_root_extend && !stats.failHigh) {
-                  controller->time_added = 0;
                   controller->fail_high_root_extend = false;
                   if (talkLevel == Trace) {
                      cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
@@ -982,12 +998,11 @@ Move Search::ply0_search()
                   if (mainThread()) {
                      // root move is failing high, extend time until
                      // fail-high is resolved
-                     controller->time_added = controller->xtra_time;
                      controller->fail_high_root_extend = true;
                      // We may have initially extended time in the
                      // search when first detecting fail-high. If so,
                      // reset that flag here.
-                     fail_high_root = false;
+                     controller->fail_high_root = false;
                      if (talkLevel == Trace) {
                         cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
                      }
@@ -1032,7 +1047,6 @@ Move Search::ply0_search()
                   if (mainThread()) {
                      // root move is failing low, extend time until
                      // fail-low is resolved
-                     controller->time_added = controller->xtra_time;
                      controller->fail_low_root_extend = true;
                      if (talkLevel == Trace) {
                         cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
@@ -1082,9 +1096,6 @@ Move Search::ply0_search()
                }
             }
          } while (!terminate && (stats.failLow || stats.failHigh));
-         if (mainThread() && faillows) {
-            controller->failLowFactor += (1<<(faillows-1))*iterationDepth;
-         }
          // search value should now be in bounds (unless we are
          // terminating)
          if (!terminate) {
@@ -1129,23 +1140,25 @@ Move Search::ply0_search()
                cout << endl;
             }
 #endif
-            // Moves that look good at low depth and continue to be
-            // stably selected can be searched for less time.
             if (mainThread() &&
                 !controller->background &&
                 (controller->typeOfSearch == TimeLimit && controller->time_target != INFINITE_TIME) &&
-                !controller->time_added &&
-                !controller->easy_adjust &&
-                (controller->elapsed_time > (unsigned)controller->time_target/3) &&
-                controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
-                MovesEqual(controller->easyMove,node->best) &&
-                (controller->failLowFactor <= 2*iterationDepth) &&
-                !stats.failLow) {
-               controller->easy_adjust = true;
-               if (talkLevel == Trace) {
-                  cout << "# easy move, adjusting time lower" << endl;
+                controller->xtra_time &&
+                (controller->elapsed_time > (unsigned)controller->time_target/3)) {
+               if (!controller->getExtraTime() &&
+                   !controller->easy_adjust &&
+                   controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
+                   MovesEqual(controller->easyMove,node->best) &&
+                   (controller->failLowFactor <= 2*iterationDepth) &&
+                   !stats.failLow) {
+                  // Moves that look good at low depth and continue to be
+                  // stably selected can be searched for less time.
+                  controller->easy_adjust = true;
+                  if (talkLevel == Trace) {
+                     cout << "# easy move, adjusting time lower" << endl;
+                  }
+                  controller->time_target /= 3;
                }
-               controller->time_target /= 3;
             }
 
             if (!controller->uci || controller->typeOfSearch == TimeLimit) {
@@ -1264,10 +1277,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     int move_index = 0;
     score_t hibound = beta;
     while (!node->cutoff && !terminate) {
-        if (mainThread() && talkLevel == Trace && fail_high_root) {
+        if (mainThread() && talkLevel == Trace && controller->fail_high_root) {
            cout << "# resetting fail_high_root" << endl;
         }
-        fail_high_root = false;
+        controller->fail_high_root = false;
         Move move;
         if ((move = mg.nextMove(move_index))==NullMove) break;
         if (IsUsed(move) || IsExcluded(move) ||
@@ -1328,9 +1341,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                !((node+1)->flags & EXACT) &&
                !terminate) {
            // We failed to get a cutoff and must re-search
-           // Set flag to extend search time
-           if (mainThread()) {
-              fail_high_root = true;
+           // Set flag to extend search time (if not extended already)
+           if (mainThread() && controller->time_target != INFINITE_TIME) {
+              controller->fail_high_root = true;
               if (talkLevel == Trace) {
                  cout << "# researching at root, extending time" << endl;
               }
@@ -1373,10 +1386,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
         }
         if (mainThread()) {
-           fail_high_root = false;
-           if (talkLevel == Trace && fail_high_root) {
+           if (talkLevel == Trace && controller->fail_high_root) {
               cout << "# resetting fail_high_root" << endl;
            }
+           controller->fail_high_root = false;
         }
         if (controller->waitTime) {
             // we are in reduced strength mode, waste some time

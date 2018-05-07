@@ -14,6 +14,7 @@ extern "C" {
 #include <memory.h>
 #include <time.h>
 };
+#include <atomic>
 #include <random>
 #include <vector>
 using namespace std;
@@ -238,7 +239,6 @@ protected:
     SearchContext context;
     int terminate;
     int nodeAccumulator;
-    bool fail_high_root;
     NodeInfo *node; // pointer into NodeStack array (external to class)
     Scoring scoring;
     ThreadInfo *ti; // thread now running this search
@@ -283,8 +283,16 @@ public:
         Statistics &stats,
         TalkLevel t);
 
+    uint64_t getExtraTime() const {
+       uint64_t extension = fail_low_bonus_time;
+       if (fail_low_root_extend || fail_high_root || fail_high_root_extend) {
+          extension += xtra_time;
+       }
+       return std::min<uint64_t>(xtra_time,extension);
+    }
+
     uint64_t getTimeLimit() const {
-        return time_target + time_added;
+       return time_target + getExtraTime();
     }
 
     uint64_t getMaxTime() const {
@@ -430,8 +438,7 @@ private:
     // time limit is nominal time limit in centiseconds
     // time target is actual time to search in centiseconds
     uint64_t time_limit, time_target;
-    uint64_t time_added;
-    // Amount of time we can add if score is dropping:
+    // Max amount of time we can add if score is dropping:
     uint64_t xtra_time;
     int ply_limit;
     int background;
@@ -467,7 +474,8 @@ private:
     Move easyMove;
     score_t easyScore;
     int depth_at_pv_change;
-    bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
+    bool easy_adjust, fail_high_root_extend, fail_low_root_extend, fail_high_root;
+    atomic<uint64_t> fail_low_bonus_time;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature
