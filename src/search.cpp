@@ -1809,7 +1809,7 @@ score_t Search::quiesce(int ply,int depth)
                                                node->best_score,
                                                node->staticEval,
                                                0,
-                                               node->best);
+                                               hashMove);
             }
             return node->eval;
          }
@@ -1822,15 +1822,6 @@ score_t Search::quiesce(int ply,int depth)
       // Isn't really a loop: but we code this way so can use
       // break to exit the following block.
       while (!IsNull(hashMove)) {
-         if (Capture(hashMove) == King) {
-#ifdef _TRACE
-            if (master()) {
-               indent(ply);
-               cout << "previous move illegal, exiting qsearch" << endl;
-            }
-#endif
-            return -Illegal;
-         }
          node->last_move = hashMove;
 #ifdef _TRACE
          if (master()) {
