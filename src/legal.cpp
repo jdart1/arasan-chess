@@ -91,22 +91,12 @@ int validMove(const Board &board, Move move)
    return 0;
 }
 
-int validMoveQuick(const Board &board, Square start, Square dest)
-{
-	if (!OnBoard(start) || !OnBoard(dest) || (board[start] != EmptyPiece &&
-		PieceColor(board[start]) != board.sideToMove()) ||
-		(board[dest] != EmptyPiece && PieceColor(board[dest]) == board.sideToMove())) {
-		return 0;
-	}
-	return 1;
-}
-
 int legalMove(const Board &board, Square start,
                Square dest)
 {
    // do a little basic sanity checking:
   if (!OnBoard(start) || !OnBoard(dest) || IsEmptyPiece(board[start])) {
-    cout << "fails sanity" << endl;
+      cout << "fails sanity" << endl;
       return 0;
   }
 

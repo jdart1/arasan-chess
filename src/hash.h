@@ -109,13 +109,9 @@ class HashEntry {
       }
 
       Move bestMove(const Board &b) const {
-		 if (!validMoveQuick(b, (Square)contents.start, (Square)contents.dest)) {
-			return NullMove;
-		 }
-         else {
-            return CreateMove(b,(Square)contents.start,(Square)contents.dest,
+         Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
                (PieceType)contents.promotion);
-         }
+         return validMove(b,m) ? m : NullMove;
       }
 
       bool avoidNull(int null_depth, score_t beta) const {

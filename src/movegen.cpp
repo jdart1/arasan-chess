@@ -751,8 +751,6 @@ hashMove(pvMove),
 prevMove(prvMove),
 master(trace)
 {
-   // Verify hash move before use
-   if (!validMove(board,hashMove)) hashMove = NullMove;
 }
 
 

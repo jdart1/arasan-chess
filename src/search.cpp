@@ -1821,7 +1821,7 @@ score_t Search::quiesce(int ply,int depth)
       Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
       // Isn't really a loop: but we code this way so can use
       // break to exit the following block.
-      while (!IsNull(hashMove) && validMove(board,hashMove)) {
+      while (!IsNull(hashMove)) {
          if (Capture(hashMove) == King) {
 #ifdef _TRACE
             if (master()) {
@@ -2697,7 +2697,7 @@ score_t Search::search()
        const score_t threshold = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const int nu_depth = depth - 4*DEPTH_INCREMENT;
        BoardState state(board.state);
-       if (!IsNull(hashMove) && Capture(hashMove) > Pawn && node->eval + Params::Gain(hashMove) >= threshold - PROBCUT_MARGIN2 && validMove(board,hashMove) && seeSign(board,hashMove,PROBCUT_MARGIN)) {
+       if (!IsNull(hashMove) && Capture(hashMove) > Pawn && node->eval + Params::Gain(hashMove) >= threshold - PROBCUT_MARGIN2 && seeSign(board,hashMove,PROBCUT_MARGIN)) {
 #ifdef _TRACE
            indent(ply);
            cout << "Probcut: trying " << ply << ". ";
@@ -2876,8 +2876,7 @@ score_t Search::search()
             std::abs(hashValue) < Constants::MATE_RANGE &&
             result != HashEntry::UpperBound &&
             calcExtensions(board,node,board.wouldCheck(hashMove),
-                           0,hashMove) < DEPTH_INCREMENT &&
-            validMove(board,hashMove)) {
+                           0,hashMove) < DEPTH_INCREMENT) {
            // Search all moves but the hash move at reduced depth. If all
            // fail low with a score significantly below the hash
            // move's score, then consider the hash move as "singular" and
