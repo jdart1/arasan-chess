@@ -674,7 +674,7 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    if (stats.failHigh) s << " lowerbound";
    if (stats.failLow) s << " upperbound";
    s << " time " << time << " nodes " << nodes;
-   if (time>30) s << " nps " << (long)((1000L*nodes)/time);
+   if (time>300) s << " nps " << (long)((1000L*nodes)/time);
    if (tb_hits) {
       s << " tbhits " << tb_hits;
    }
