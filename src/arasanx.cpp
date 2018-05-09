@@ -396,6 +396,15 @@ static void parseLevel(const string &cmd) {
   incr = int(1000*floatincr);
 }
 
+static void sendPong(const string &arg)
+{
+   // extract digits
+   stringstream digits(arg);
+   int pingValue;
+   digits >> pingValue;
+   cout << "pong " << pingValue << (flush) << endl;
+}
+
 static void process_st_command(const string &cmd_args)
 {
    stringstream s(cmd_args);
@@ -976,7 +985,7 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
 
 // Search using the current board position.
 //
-static Move search(SearchController *searcher, Board &board, 
+static Move search(SearchController *searcher, Board &board,
                    const vector<Move> &movesToSearch, Statistics &stats, bool infinite)
 {
     last_stats.clear();
@@ -1820,8 +1829,14 @@ static void check_command(const string &cmd, int &terminate)
     }
     else if (cmd_word == "ping") {
         // new for Winboard 4.2
-        // do not respond until the search completes.
-        add_pending(cmd);
+        if (pondering) {
+           // protocol requires immediate response if pondering
+           sendPong(cmd.substr(4));
+        }
+        else {
+           // do not respond until the search completes.
+           add_pending(cmd);
+        }
     }
     else if (cmd == "hint") {
         doHint();
@@ -1999,7 +2014,7 @@ static void check_command(const string &cmd, int &terminate)
 
 // for support of the "test" command
 static Move test_search(Board &board, int ply_limit,
-                        int time_limit, 
+                        int time_limit,
                         Statistics &stats, const vector<Move> &excludes) {
    Move move = NullMove;
    solution_time = -1;
@@ -3013,11 +3028,7 @@ static bool do_command(const string &cmd, Board &board) {
         computer = 1;
     }
     else if (cmd_word == "ping") {
-        // extract digits
-        stringstream digits(cmd.substr(4));
-        int pingValue;
-        digits >> pingValue;
-        cout << "pong " << pingValue << (flush) << endl;
+        sendPong(cmd.substr(4));
     }
     else if (cmd_word == "ics") {
         hostname = cmd_args;
