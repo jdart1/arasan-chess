@@ -217,26 +217,25 @@ Move SearchController::findBestMove(
 Move SearchController::findBestMove(
    const Board &board,
    SearchType srcType,
-   int time_limit,
-   int xtra_time,
-   int ply_limit,
-   int background,
+   int search_time_limit,
+   int search_xtra_time,
+   int search_ply_limit,
+   int isBackground,
    int isUCI,
    Statistics &stat_buf,
    TalkLevel t,
-   const vector<Move> &exclude,
-   const vector<Move> &include)
+   const vector<Move> &moves_to_exclude,
+   const vector<Move> &moves_to_include)
 {
-    this->typeOfSearch = srcType;
-    this->initialBoard = board;
-    this->time_limit = time_target = time_limit;
-    std::copy(exclude.begin(),exclude.end(),this->exclude.begin());
-    std::copy(include.begin(),include.end(),this->include.begin());
-
+    typeOfSearch = srcType;
+    initialBoard = board;
+    time_limit = time_target = search_time_limit;
+    exclude = moves_to_exclude;
+    include = moves_to_include;
     fail_high_root_extend = fail_low_root_extend = false;
     fail_high_root = false;
     fail_low_bonus_time = (uint64_t)0;
-    this->xtra_time = xtra_time;
+    xtra_time = search_xtra_time;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
     }
@@ -244,11 +243,11 @@ Move SearchController::findBestMove(
         ply_limit = std::min<int>(ply_limit,Constants::MaxPly-1);
         ply_limit = std::max<int>(1,ply_limit);
     }
-    this->ply_limit = ply_limit;
-    this->background = background;
-    this->uci = isUCI;
-    this->talkLevel = t;
-    this->stats = &stat_buf;
+    ply_limit = search_ply_limit;
+    background = isBackground;
+    uci = isUCI;
+    talkLevel = t;
+    stats = &stat_buf;
 #ifdef SMP_STATS
     samples = threads = 0L;
 #endif
@@ -351,12 +350,12 @@ Move SearchController::findBestMove(
             // increase ply limit in endgames
             new_ply_limit += std::min<int>(2,1+new_ply_limit/8);
          }
-         this->ply_limit = std::min<int>(new_ply_limit, ply_limit);
+         ply_limit = std::min<int>(new_ply_limit, ply_limit);
          if (limit > 1.0) {
             depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
          }
          if (talkLevel == Trace) {
-            cout << "# ply limit =" << this->ply_limit << endl;
+            cout << "# ply limit =" << ply_limit << endl;
             cout << "# depth adjust =" << depth_adjust << endl;
          }
       }
