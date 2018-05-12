@@ -10,6 +10,7 @@
 
 uint64_t ThreadPool::activeMask = 0ULL;
 uint64_t ThreadPool::availableMask = 0ULL;
+uint64_t ThreadPool::completedMask = 0ULL;
 #ifdef NUMA
 bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 #endif
@@ -96,11 +97,11 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       ti->pool->lock();
       // remove thread from active list and set state back to Idle
       activeMask &= ~(1ULL << ti->index);
-      if ((activeMask & ~1ULL) == 0ULL) {
-         // unblock thread waiting on completion
-         {
-            std::lock_guard<std::mutex> (ti->pool->cvm);
-         }
+      // mark search completed
+      completedMask |= 1ULL << ti->index;
+      if ((completedMask & ~1ULL) == (availableMask & ~1ULL)) {
+         // All threads complete, unblock thread waiting on completion
+         std::lock_guard<std::mutex> (ti->pool->cvm);
          ti->pool->cv.notify_one();
       }
       ti->state = ThreadInfo::Idle;

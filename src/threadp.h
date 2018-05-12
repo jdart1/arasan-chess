@@ -71,16 +71,17 @@ public:
    }
 
    void unblockAll() {
-     // No need to unblock thread 0: that is the main thread
-     for (unsigned i = 1; i < nThreads; i++) {
-       data[i]->signal();
-     }
+      // No need to unblock thread 0: that is the main thread
+      for (unsigned i = 1; i < nThreads; i++) {
+         data[i]->signal();
+      }
+      completedMask = 0ULL;
    }
 
    void waitAll() {
       if (nThreads>1) {
          std::unique_lock<std::mutex> lock(cvm);
-		 cv.wait(lock, [] {return (activeMask & ~1ULL) == 0ULL; });
+         cv.wait(lock, []{ return (completedMask & ~1ULL) == (availableMask & ~1ULL); });
       }
    }
 
@@ -141,6 +142,7 @@ private:
    // mask of thread status - 0 if idle, 1 if active
    static uint64_t activeMask;
    static uint64_t availableMask;
+   static uint64_t completedMask;
 
 #ifndef _WIN32
    pthread_attr_t stackSizeAttrib;
