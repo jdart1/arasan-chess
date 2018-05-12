@@ -411,7 +411,7 @@ Move SearchController::findBestMove(
             tb_root_hits++;
             if (talkLevel == Trace) {
                cout << "# tb hit, score=";
-               Scoring::printScore(value,cout);
+               Scoring::printScore(tb_score,cout);
                cout << endl;
             }
          }
