@@ -248,6 +248,7 @@ protected:
     Options::SearchOptions srcOpts;
     ColorType computerSide;
     score_t contempt;
+    int age;
     TalkLevel talkLevel;
 };
 

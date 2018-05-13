@@ -272,9 +272,6 @@ Move SearchController::findBestMove(
     }
 #endif
 
-    // propagate controller variables to searches
-    pool->forEachSearch<&Search::setVariablesFromController>();
-
     stats->clear();
 
     // Positions are stored in the hashtable with an "age" to identify
@@ -282,6 +279,9 @@ Move SearchController::findBestMove(
     // "older" ones. Update the age here since we are starting a
     // new search.
     age = (age + 1) % 256;
+
+    // propagate controller variables to searches
+    pool->forEachSearch<&Search::setVariablesFromController>();
 
     // reset terminate flag on all threads
     clearStopFlags();
@@ -732,6 +732,7 @@ void Search::setVariablesFromController() {
    computerSide = controller->computerSide;
    talkLevel = controller->talkLevel;
    contempt = controller->contempt;
+   age = controller->age;
 }
 
 void Search::setContemptFromController() {
@@ -777,7 +778,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     node->best = node->pv[0];                     // ensure "best" is non-null
     ASSERT(!IsNull(node->best));
     stats.updatePV(board,node->pv,node->pv_length,iteration_depth,controller->uci,
-                   controller->age,
+                   age,
                    controller->hashTable);
 }
 
@@ -1563,7 +1564,7 @@ score_t Search::quiesce(int ply,int depth)
    // Note: we copy the hash entry .. so mods by another thread do not
    // alter the copy
    HashEntry::ValueType result = controller->hashTable.searchHash(board,hash,
-                                             ply,tt_depth,controller->age,hashEntry);
+                                                                  ply,tt_depth,age,hashEntry);
 #ifdef SEARCH_STATS
    stats.hash_searches++;
 #endif
@@ -1803,7 +1804,7 @@ score_t Search::quiesce(int ply,int depth)
             // store eval in hash table if not already fetched from there
             if (!had_eval) {
                controller->hashTable.storeHash(hash, tt_depth,
-                                               controller->age,
+                                               age,
                                                HashEntry::Eval,
                                                node->best_score,
                                                node->staticEval,
@@ -2115,7 +2116,7 @@ void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int dept
         }
 #endif
         controller->hashTable.storeHash(hash, depth,
-            controller->age,
+            age,
             val_type,
             value, node->staticEval,
             0,
@@ -2354,7 +2355,7 @@ score_t Search::search()
        // Note: we copy the hash entry .. so mods by another thread do not
        // alter the copy
        result = controller->hashTable.searchHash(board,board.hashCode(rep_count),
-                                                 ply,depth,controller->age,hashEntry);
+                                                 ply,depth,age,hashEntry);
 #ifdef SEARCH_STATS
        stats.hash_searches++;
 #endif
@@ -2492,7 +2493,7 @@ score_t Search::search()
             // search depths, so effectively its depth is infinite.
             controller->hashTable.storeHash(board.hashCode(rep_count),
                 (Constants::MaxPly-1)*DEPTH_INCREMENT,
-                controller->age,
+                age,
                 HashEntry::Valid,
                 score,
                 Constants::INVALID_SCORE,
@@ -3167,7 +3168,7 @@ score_t Search::search()
 #endif
         const hash_t hashCode = board.hashCode(rep_count);
         controller->hashTable.storeHash(hashCode, depth,
-                                        controller->age,
+                                        age,
                                         val_type,
                                         node->best_score,
                                         node->staticEval,
