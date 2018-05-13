@@ -3098,6 +3098,10 @@ static bool do_command(const string &cmd, Board &board) {
         save_game();
         game_end = 1;
         gameMoves->removeAll();
+        // Note: xboard may not send "new" before starting a new
+        // game, at least in offline mode (-cp). To be safe,
+        // execute "new" now, so we are ready for another game.
+        do_command("new",board);
     }
     else if (cmd == "savegame") {
     }
@@ -3463,7 +3467,6 @@ int CDECL main(int argc, char **argv) {
                 ++memorySet;
                 break;
             case 't':
-                //++arg;
                 doTrace = true;
                 break;
             default:
