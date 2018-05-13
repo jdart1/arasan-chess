@@ -760,15 +760,15 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     // output and resign decisions, based on the tb information:
     if (stats.tb_value != Constants::INVALID_SCORE) {
        stats.display_value = tbScoreAdjust(board,
-                                            stats.value,
-                                            1,
-                                            stats.tb_value);
+                                           stats.value,
+                                           1,
+                                           stats.tb_value);
     }
 #endif
     // note: retain previous best line if we do not have one here
     if (IsNull(node->pv[0])) {
 #ifdef _TRACE
-        cout << "# warning: pv is null\n";
+        if (mainThread()) cout << "# warning: pv is null\n";
 #endif
         return;
     }
@@ -3325,6 +3325,11 @@ void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     }
 #endif
     stats.clear();
+
+#ifdef SYZYGY_TBS
+    // Propagate tb value from controller to stats
+    stats.tb_value = controller->tb_score;
+#endif
 
     // Clear killer since the side to move may have been different
     // in the previous use of this class.
