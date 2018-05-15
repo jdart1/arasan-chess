@@ -13,7 +13,9 @@
 #include "scoring.h"
 #include "search.h"
 #include "globals.h"
-
+#ifdef SYZYGY_TBS
+#include "syzygy.h"
+#endif
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -1109,6 +1111,55 @@ static int testPerft()
    return errs;
 }
 
+#ifdef SYZYGY_TBS
+static int testTB()
+{
+   struct Case
+   {
+      Case(const string &s, score_t res) :
+         fen(s), result(res)
+         {
+         }
+      string fen;
+      score_t result;
+   };
+   static array<Case,5> cases = {
+       Case("8/B3k3/1n6/8/3K4/7B/8/8 b - - 0 1",Constants::TABLEBASE_WIN),
+       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 w - - 0 1",0),
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE),
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE),
+       Case("1K3b2/8/5k1p/8/2N5/8/8/8 w - - 0 1",-Constants::TABLEBASE_WIN)
+      };
+
+   int errs = 0;
+   delayedInit();
+   if (EGTBMenCount < 5) {
+      cerr << "TB tests skipped: no 5-man TBs found" << endl;
+      return 0;
+   }
+   int caseid = 0;
+   for (auto it : cases) {
+      Board board;
+      if (!BoardIO::readFEN(board, it.fen.c_str())) {
+         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it.fen << endl;
+         ++errs;
+      }
+      set<Move> moves;
+      score_t score;
+      if (SyzygyTb::probe_root(board,score,moves)) {
+         if (score != it.result) {
+            cerr << "testTB: case " << caseid << " bad result" << endl;
+            ++errs;
+         }
+      } else {
+         cerr << "testTB: case " << caseid << " no result from TBs" << endl;
+         ++errs;
+      }
+      ++caseid;
+   }
+   return errs;
+}
+#endif
 
 int doUnit() {
 
