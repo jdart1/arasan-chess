@@ -71,7 +71,6 @@ TUNE_FLAGS := -DTUNE
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
-DEBUG = -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
