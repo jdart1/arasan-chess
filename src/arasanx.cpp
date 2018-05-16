@@ -36,6 +36,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <unordered_set>
 
 extern "C"
 {
@@ -75,6 +76,8 @@ static bool computer_plays_white = false;
 static string opponent_name;
 static bool ics = false;
 static int forceMode = 0, analyzeMode = 0;
+static bool editMode = false;
+static ColorType side = White; // for edit mode
 static int moves = 40;                            /* moves in a time control bloc */
 static Board *ponder_board = nullptr, *main_board = nullptr;
 static bool ponder_move_ok = false;
@@ -809,87 +812,87 @@ static int CDECL terminate(const Statistics &stats)
 }
 
 
-// handle editing the chessboard (Winboard mode)
-static void edit_board(istream &fin, Board &board)
+// handle commands in edit mode (Winboard protocol)
+static void edit_mode_cmds(Board &board,ColorType &side,const string &cmd, const string &cmd_args)
 {
-    for (int i = 0; i < 64; i++)
-        board.setContents(EmptyPiece,i);
-    static char buf[80];
-    static const char pieces[]="PNBRQKpnbrqk";
-    ColorType side = White;
-    while (fin.getline(buf,80)) {
-        if (strcmp(buf,"white") == 0)
-            side = White;
-        else if (strcmp(buf,"black")==0)
-            side = Black;
-        else if (*buf == '#') {
-            for (int i = 0; i < 64; i++)
-                board.setContents(EmptyPiece,i);
-        }
-        else if (strcmp(buf,"c")==0)
-            side = OppositeColor(side);
-        else if (strcmp(buf,".")==0)
-            break;
-        else {
-            if (strchr(pieces,buf[0])) {
-                char c = tolower(buf[0]);
-               Piece p = EmptyPiece;
-               switch (c) {
-               case 'p':
-                   p = MakePiece(Pawn,side);
-                   break;
-               case 'n':
-                   p = MakePiece(Knight,side);
-                   break;
-               case 'b':
-                   p = MakePiece(Bishop,side);
-                   break;
-               case 'r':
-                   p = MakePiece(Rook,side);
-                   break;
-               case 'q':
-                   p = MakePiece(Queen,side);
-                   break;
-               case 'k':
-                   p = MakePiece(King,side);
-                   break;
-               default:
-                   break;
-                }
-
-                if (p != EmptyPiece) {
-                    Square sq = SquareValue(buf+1);
-                    if (!IsInvalid(sq))
-                        board.setContents(p,sq);
-                }
-            }
-        }
+    unordered_set<char> pieces({'P','N','B','R','Q','K','p','n','b','r','q','k'});
+    if (cmd == "white") {
+       side = White;
     }
-    board.setSecondaryVars();
-    // edit doesn't set the castle status, so try to deduce it
-    // from the piece positions
-    if (board.kingSquare(White) == chess::E1) {
-       if (board[chess::A1] == WhiteRook &&
-           board[chess::H1] == WhiteRook)
-            board.setCastleStatus(CanCastleEitherSide,White);
-       else if (board[chess::A1] == WhiteRook)
-            board.setCastleStatus(CanCastleQSide,White);
-       else if (board[chess::H1] == WhiteRook)
-            board.setCastleStatus(CanCastleKSide,White);
+    else if (cmd == "black") {
+       side = Black;
     }
-    else
-        board.setCastleStatus(CantCastleEitherSide,White);
-    if (board.kingSquare(Black) == chess::E8) {
-       if (board[chess::A8] == BlackRook &&
-           board[chess::H8] == BlackRook)
-            board.setCastleStatus(CanCastleEitherSide,Black);
-       else if (board[chess::A8] == BlackRook)
-            board.setCastleStatus(CanCastleQSide,Black);
-       else if (board[chess::H8] == BlackRook)
-            board.setCastleStatus(CanCastleKSide,Black);
+    else if (cmd == "#") {
+       for (int i = 0; i < 64; i++) {
+          board.setContents(EmptyPiece,i);
+       }
     }
-    else
-        board.setCastleStatus(CantCastleEitherSide,Black);
+    else if (cmd == "c") {
+       side = OppositeColor(side);
+    }
+    else if (cmd == ".") {
+       editMode = false;
+       board.setSecondaryVars();
+       // edit doesn't set the castle status, so try to deduce it
+       // from the piece positions
+       if (board.kingSquare(White) == chess::E1) {
+          if (board[chess::A1] == WhiteRook &&
+              board[chess::H1] == WhiteRook)
+             board.setCastleStatus(CanCastleEitherSide,White);
+          else if (board[chess::A1] == WhiteRook)
+             board.setCastleStatus(CanCastleQSide,White);
+          else if (board[chess::H1] == WhiteRook)
+             board.setCastleStatus(CanCastleKSide,White);
+       }
+       else
+          board.setCastleStatus(CantCastleEitherSide,White);
+       if (board.kingSquare(Black) == chess::E8) {
+          if (board[chess::A8] == BlackRook &&
+              board[chess::H8] == BlackRook)
+             board.setCastleStatus(CanCastleEitherSide,Black);
+          else if (board[chess::A8] == BlackRook)
+             board.setCastleStatus(CanCastleQSide,Black);
+          else if (board[chess::H8] == BlackRook)
+             board.setCastleStatus(CanCastleKSide,Black);
+       }
+       else {
+          board.setCastleStatus(CantCastleEitherSide,Black);
+       }
+    }
+    else {
+       if (cmd.length()>0 && pieces.count(cmd[0])) {
+          char c = tolower(cmd[0]);
+          Piece p = EmptyPiece;
+          switch (c) {
+          case 'p':
+             p = MakePiece(Pawn,side);
+             break;
+          case 'n':
+             p = MakePiece(Knight,side);
+             break;
+          case 'b':
+             p = MakePiece(Bishop,side);
+             break;
+          case 'r':
+             p = MakePiece(Rook,side);
+             break;
+          case 'q':
+             p = MakePiece(Queen,side);
+             break;
+          case 'k':
+             p = MakePiece(King,side);
+             break;
+          default:
+             break;
+          }
+          if (p != EmptyPiece) {
+             Square sq = SquareValue(cmd.substr(1));
+             if (!IsInvalid(sq)) {
+                board.setContents(p,sq);
+             }
+          }
+       }
+    }
 }
 
 
@@ -2616,6 +2619,9 @@ static bool do_command(const string &cmd, Board &board) {
             }
         }
     }
+    else if (editMode) {
+       edit_mode_cmds(board,side,cmd_word,cmd_args);
+    }
     else if (cmd_word == "test") {
         string filename;
         ofstream *out_file = nullptr;
@@ -3142,7 +3148,12 @@ static bool do_command(const string &cmd, Board &board) {
         loadgame(board,file);
     }
     else if (cmd == "edit") {
-        edit_board(cin,board);
+       for (int i = 0; i < 64; i++) {
+          board.setContents(EmptyPiece,i);
+       }
+       board.setSecondaryVars();
+       side = White;
+       editMode = true;
     }
     else if (cmd == "analyze") {
         analyzeMode = 1;
