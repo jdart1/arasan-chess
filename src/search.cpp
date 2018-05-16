@@ -1166,8 +1166,9 @@ Move Search::ply0_search()
                   // We're either checkmated or we certainly will be, so
                   // quit searching.
                   if (mainThread()) {
-                     if (talkLevel == Trace)
+                     if (talkLevel == Trace) {
                         cout << "# terminating, low score" << endl;
+                     }
 #ifdef _TRACE
                      cout << "terminating, low score" << endl;
 #endif
@@ -1178,10 +1179,11 @@ Move Search::ply0_search()
                else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
                   // found a forced mate, terminate
                   if (mainThread()) {
-                     if (talkLevel == Trace)
-                        cout << "# terminating, low score" << endl;
+                     if (talkLevel == Trace) {
+                        cout << "# terminating, high score" << endl;
+                     }
 #ifdef _TRACE
-                     cout << "terminating, low score" << endl;
+                     cout << "terminating, high score" << endl;
 #endif
                   }
                   controller->terminateNow();
