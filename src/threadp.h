@@ -81,8 +81,10 @@ public:
    void waitAll() {
       if (nThreads>1) {
          std::unique_lock<std::mutex> lock(cvm);
-         cv.wait(lock, []{ return (completedMask & ~1ULL) == (availableMask & ~1ULL); });
+         cv.wait(lock, [this]{ return notified; });
       }
+      // reset notified flag
+      notified = false;
    }
 
    SearchController *getController() const {
@@ -143,6 +145,7 @@ private:
    static uint64_t activeMask;
    static uint64_t availableMask;
    static uint64_t completedMask;
+   bool notified;
 
 #ifndef _WIN32
    pthread_attr_t stackSizeAttrib;

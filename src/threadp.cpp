@@ -97,12 +97,15 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       ti->pool->lock();
       // remove thread from active list and set state back to Idle
       activeMask &= ~(1ULL << ti->index);
-      // mark search completed
-      completedMask |= 1ULL << ti->index;
-      if ((completedMask & ~1ULL) == (availableMask & ~1ULL)) {
-         // All threads complete, unblock thread waiting on completion
+      {
          std::lock_guard<std::mutex> (ti->pool->cvm);
-         ti->pool->cv.notify_one();
+         // mark search completed
+         completedMask |= 1ULL << ti->index;
+         if ((completedMask & ~1ULL) == (availableMask & ~1ULL)) {
+            // All threads complete, unblock thread waiting on completion
+            ti->pool->notified = true;
+            ti->pool->cv.notify_one();
+         }
       }
       ti->state = ThreadInfo::Idle;
       ti->pool->unlock();
@@ -177,7 +180,7 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 }
 
  ThreadPool::ThreadPool(SearchController *ctrl, int n) :
-    controller(ctrl), nThreads(n) {
+    controller(ctrl), nThreads(n), notified(false) {
    LockInit(poolLock);
    for (int i = 0; i < Constants::MaxCPUs; i++) {
       data[i] = nullptr;
