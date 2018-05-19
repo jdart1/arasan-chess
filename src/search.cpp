@@ -595,8 +595,8 @@ void SearchController::resizeHash(size_t newSize) {
 
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),
-	iterationDepth(0),
-	terminate(0),
+    iterationDepth(0),
+    terminate(0),
     nodeAccumulator(0),
     node(nullptr),
     ti(threadInfo),
