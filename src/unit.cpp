@@ -1036,6 +1036,38 @@ static int testHash() {
     return errs;
 }
 
+static int testRep()
+{
+    const string fen = "8/B2nk3/8/8/3K4/7B/8/8 w - - 0 2";
+    const array <string,4> moves = {"Ke4","Kf7","Kd4","Ke7"};
+
+    int errs = 0;
+    Board board;
+    if (!BoardIO::readFEN(board, fen)) {
+       cerr << "testRep: error in FEN: " << fen << endl;
+       return ++errs;
+    }
+    for (auto mvstr : moves) {
+       Move move = Notation::value(board,board.sideToMove(),
+                                   Notation::InputFormat::SAN,
+                                   mvstr);
+       if (IsNull(move)) {
+          cerr << "testRep: error in move parsing" << endl;
+          return ++errs;
+       }
+       board.doMove(move);
+    }
+    if (board.repCount() != 1) {
+       cerr << "testRep: repCount incorrect" << endl;
+       ++errs;
+    }
+    if (!board.anyRep()) {
+       cerr << "testRep: anyRep incorrect" << endl;
+       ++errs;
+    }
+    return errs;
+}
+
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
@@ -1124,9 +1156,9 @@ static int testTB()
       score_t result;
    };
    static array<Case,5> cases = {
-       Case("8/B3k3/1n6/8/3K4/7B/8/8 b - - 0 1",Constants::TABLEBASE_WIN),
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN),
        Case("8/8/5k1q/8/3K4/8/2Q5/4B3 w - - 0 1",0),
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE),
+       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE),
        Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE),
        Case("1K3b2/8/5k1p/8/2N5/8/8/8 w - - 0 1",-Constants::TABLEBASE_WIN)
       };
@@ -1138,6 +1170,8 @@ static int testTB()
       return 0;
    }
    int caseid = 0;
+   int temp = options.search.syzygy_50_move_rule;
+   options.search.syzygy_50_move_rule = 1;
    for (auto it : cases) {
       Board board;
       if (!BoardIO::readFEN(board, it.fen.c_str())) {
@@ -1148,7 +1182,11 @@ static int testTB()
       score_t score;
       if (SyzygyTb::probe_root(board,score,moves)) {
          if (score != it.result) {
-            cerr << "testTB: case " << caseid << " bad result" << endl;
+            cerr << "testTB: case " << caseid << " expected ";
+            Scoring::printScore(it.result,cout);
+            cout << ", got ";
+            Scoring::printScore(score,cout);
+            cout << endl;
             ++errs;
          }
       } else {
@@ -1157,6 +1195,7 @@ static int testTB()
       }
       ++caseid;
    }
+   options.search.syzygy_50_move_rule = temp;
    return errs;
 }
 #endif
@@ -1176,6 +1215,10 @@ int doUnit() {
    errs += testCheckStatus();
    errs += testEPD();
    errs += testHash();
+   errs += testRep();
    errs += testPerft();
+#ifdef SYZYGY_TBS
+   errs += testTB();
+#endif
    return errs;
 }
