@@ -6,6 +6,7 @@
 #include "types.h"
 #include "constant.h"
 #include "debug.h"
+#include <unordered_set>
 
 class Board;
 
@@ -388,5 +389,21 @@ FORCEINLINE int IsNull(Move move) {
 	
 extern void MoveImage(Move m,ostream &out);
 
+struct MoveHash 
+{
+   size_t operator() (const Move &move) const 
+   {
+      return std::hash<uint32_t>()(((union MoveUnion*)&move)->split.lopart);
+   }
+};
+
+struct MoveCmp
+{
+   bool operator() (const Move &move1, const Move &move2) const {
+      return MovesEqual(move1,move2);
+   }
+};
+
+typedef unordered_set<Move,MoveHash,MoveCmp> MoveSet;
 
 #endif

@@ -1,4 +1,4 @@
-// Copyright 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018 by Jon Dart. All Rights Reserved.
 #include "syzygy.h"
 #include "constant.h"
 #include "debug.h"
@@ -49,7 +49,7 @@ int SyzygyTb::initTB(const string &path)
       return TB_LARGEST;
 }
 
-int SyzygyTb::probe_root(const Board &b, score_t &score, set<Move> &rootMoves)
+int SyzygyTb::probe_root(const Board &b, score_t &score, MoveSet &rootMoves)
 {
    score = 0;
    unsigned results[TB_MAX_MOVES];

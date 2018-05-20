@@ -206,7 +206,7 @@ Move SearchController::findBestMove(
    TalkLevel t)
 {
     active = true;
-    vector<Move> excludes, includes;
+    MoveSet excludes, includes;
     Move result = findBestMove(board,srcType,time_limit,xtra_time,ply_limit,
                                background, isUCI, stat_buf, t, excludes, includes);
     active = false;
@@ -224,8 +224,8 @@ Move SearchController::findBestMove(
    int isUCI,
    Statistics &stat_buf,
    TalkLevel t,
-   const vector<Move> &moves_to_exclude,
-   const vector<Move> &moves_to_include)
+   const MoveSet &moves_to_exclude,
+   const MoveSet &moves_to_include)
 {
     typeOfSearch = srcType;
     initialBoard = board;
@@ -376,10 +376,7 @@ Move SearchController::findBestMove(
       const Material &bMat = board.getMaterial(Black);
       tb_pieces = wMat.men() + bMat.men();
       if(tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
-         set<Move> moves;
-         // If include set is non-empty, ensure all "include" moves
-         // will be in the set to search, even if some are losing moves.
-         std::copy(include.begin(), include.end(), std::inserter(moves, moves.end()));
+         MoveSet moves;
          tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
          tb_root_probes++;
          if (tb_hit) {
@@ -401,6 +398,12 @@ Move SearchController::findBestMove(
                }
                cout << endl;
 #endif
+               // Insert all filtered moves from the tablebase probe
+               // into the include list. Note if the include list was
+               // non-empty to begin with, this may mean some losing
+               // moves are included.
+               std::copy(moves.begin(), moves.end(), std::inserter(include, include.end()));
+
                // Note: do not set the value - search values are based
                // on DTM not DTZ.
                stats->tb_value = tb_score;
@@ -410,8 +413,14 @@ Move SearchController::findBestMove(
             }
             tb_root_hits++;
             if (talkLevel == Trace) {
-               cout << "# tb hit, score=";
+               cout << "# " << board << " tb hit, score=";
                Scoring::printScore(tb_score,cout);
+               cout << endl;
+               cout << "# filtered moves from Syzygy:";
+               for (auto it : moves) {
+                  cout << ' ';;
+                  Notation::image(board,it,Notation::OutputFormat::SAN,cout);
+               }
                cout << endl;
             }
          }
@@ -843,7 +852,7 @@ Move Search::ply0_search()
             continue;
          }
       }
-      vector<Move> excluded(controller->exclude);
+      MoveSet excluded(controller->exclude);
       for (stats.multipv_count = 0;
            stats.multipv_count < stats.multipv_limit && !terminate;
            stats.multipv_count++) {
@@ -853,7 +862,7 @@ Move Search::ply0_search()
          if (stats.multipv_count) {
             // Exclude the previous best move from the current
             // search, so we will select a different one.
-            excluded.push_back(stats.multi_pvs[stats.multipv_count-1].best);
+            excluded.emplace(stats.multi_pvs[stats.multipv_count-1].best);
             if (iterationDepth > 1) {
                // set value to previous iteration's value
                value = stats.multi_pvs[stats.multipv_count].score;
@@ -1226,8 +1235,8 @@ Move Search::ply0_search()
 score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         int iterationDepth,
                         int depth,
-                        const vector<Move> &exclude,
-                        const vector<Move> &include)
+                        const MoveSet &exclude,
+                        const MoveSet &include)
 {
     // implements alpha/beta search for the top most ply.  We use
     // the negascout algorithm.
@@ -1252,6 +1261,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
        mg.reorder(node->best,iterationDepth,false);
     } else {
        mg.reset();
+    }
+    if (include.size()) {
+       mg.filter(include);
     }
     stats.mvtot = mg.moveCount();
 

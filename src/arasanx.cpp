@@ -989,7 +989,7 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
 // Search using the current board position.
 //
 static Move search(SearchController *searcher, Board &board,
-                   const vector<Move> &movesToSearch, Statistics &stats, bool infinite)
+                   const MoveSet &movesToSearch, Statistics &stats, bool infinite)
 {
     last_stats.clear();
     last_score = Constants::MATE;
@@ -1010,10 +1010,16 @@ static Move search(SearchController *searcher, Board &board,
         // no book move
         stats.clear();
         TalkLevel level = Silent;
-        if (verbose && !uci) level = Debug;
-        else if (doTrace) level = Trace;
-        else level = Silent;
-        vector<Move> excludes;
+        if (verbose && !uci) {
+           level = Debug;
+        }
+        else if (doTrace) {
+           level = Trace;
+        }
+        else {
+           level = Silent;
+        }
+        MoveSet excludes;
         if (srctype == FixedDepth) {
             move = searcher->findBestMove(board,
                 srctype,
@@ -2018,11 +2024,11 @@ static void check_command(const string &cmd, int &terminate)
 // for support of the "test" command
 static Move test_search(Board &board, int ply_limit,
                         int time_limit,
-                        Statistics &stats, const vector<Move> &excludes) {
+                        Statistics &stats, const MoveSet &excludes) {
    Move move = NullMove;
    solution_time = -1;
 
-   vector<Move> includes;
+   MoveSet includes;
    SearchType type;
    if (ply_limit != 0) {
       type = FixedDepth;
@@ -2162,13 +2168,13 @@ static void do_test(string test_file, int depth_limit, int time_limit)
             cout << endl;
          }
          srctype = FixedTime;
-         vector <Move> excludes;
+         MoveSet excludes;
          total_tests++;
          for (int index = 0; index < moves_to_search; index++) {
             searcher->clearHashTables();
             Move result = test_search(board,depth_limit,time_limit,stats,excludes);
             if (IsNull(result)) break;
-            excludes.push_back(result);
+            excludes.insert(result);
             int correct = solution_time >=0;
             if (index == 0) {
                 // only put solutions in summary at end if they are
@@ -2752,7 +2758,7 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
                 score_t tbscore;
                 if (options.search.use_tablebases) {
-                   set<Move> rootMoves;
+                   MoveSet rootMoves;
                    if (SyzygyTb::probe_root(board,tbscore,rootMoves)) {
                       cout << "score = ";
                       if (tbscore == -SyzygyTb::CURSED_SCORE)
@@ -2800,7 +2806,7 @@ static bool do_command(const string &cmd, Board &board) {
         stringstream ss(cmd_args);
         istream_iterator<string> it(ss);
         istream_iterator<string> eos;
-        vector<Move> movesToSearch;
+        MoveSet movesToSearch;
         while (it != eos) {
             option = *it++;
             if (option == "wtime") {
@@ -2881,7 +2887,7 @@ static bool do_command(const string &cmd, Board &board) {
                         // illegal move, or end of move list
                         break;
                     } else {
-                        movesToSearch.push_back(m);
+                        movesToSearch.insert(m);
                     }
                 }
             }
@@ -3170,7 +3176,7 @@ static bool do_command(const string &cmd, Board &board) {
         // set the side flag here - do not rely on the deprecated
         // "white" and "black" commands.
         computer_plays_white = board.sideToMove() == White;
-        vector<Move> movesToSearch;
+        MoveSet movesToSearch;
         Move reply = search(searcher,board,movesToSearch,stats,false);
         if (!forceMode) send_move(board,reply,stats);
     }
@@ -3341,7 +3347,7 @@ static bool do_command(const string &cmd, Board &board) {
                }
                else {
                   predicted_move = ponder_move = NullMove;
-                  vector<Move> movesToSearch;
+                  MoveSet movesToSearch;
                   reply = search(searcher,board,movesToSearch,stats,false);
                   // Note: we may know the game has ended here before
                   // we get confirmation from Winboard. So be sure

@@ -16,7 +16,6 @@ extern "C" {
 };
 #include <atomic>
 #include <random>
-#include <vector>
 using namespace std;
 
 class MoveGenerator;
@@ -143,8 +142,8 @@ public:
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth,
                         int depth,
-                        const vector<Move> &exclude,
-                        const vector<Move> &include);
+                        const MoveSet &exclude,
+                        const MoveSet &include);
 
     bool mainThread() const {
        return ti->index == 0;
@@ -270,8 +269,8 @@ public:
         int isUCI,
         Statistics &stat_buf,
         TalkLevel t,
-        const vector<Move> &exclude,
-        const vector<Move> &include);
+        const MoveSet &exclude,
+        const MoveSet &include);
 
     Move findBestMove(
         const Board &board,
@@ -462,8 +461,8 @@ private:
     Search *rootSearch;
     int tb_root_probes, tb_root_hits;
 
-    vector<Move> include;
-    vector<Move> exclude;
+    MoveSet include;
+    MoveSet exclude;
 
 #ifdef SYZYGY_TBS
     int tb_hit;

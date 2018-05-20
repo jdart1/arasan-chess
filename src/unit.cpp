@@ -1178,7 +1178,7 @@ static int testTB()
          cerr << "testTB: error in test case " << caseid << " error in FEN: " << it.fen << endl;
          ++errs;
       }
-      set<Move> moves;
+      MoveSet moves;
       score_t score;
       if (SyzygyTb::probe_root(board,score,moves)) {
          if (score != it.result) {

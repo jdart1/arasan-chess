@@ -1,4 +1,4 @@
-// Copyright 1994-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2018 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -153,19 +153,17 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 }
 
 
-void RootMoveGenerator::exclude(const vector<Move> &excluded)
+void RootMoveGenerator::exclude(const MoveSet &excluded)
 {
    for (int i = 0; i < batch_count; i++) {
       ClearUsed(moveList[i].move);
-      for (auto it : excluded) {
-         if (MovesEqual(moveList[i].move,it)) {
-            SetUsed(moveList[i].move);
-         }
+      if (excluded.find(moveList[i].move) != excluded.end()) {
+         SetUsed(moveList[i].move);
       }
    }
 }
 
-void RootMoveGenerator::filter(const set<Move> &include) 
+void RootMoveGenerator::filter(const MoveSet &include) 
 {
    excluded = 0;
    for (int i = 0; i < batch_count; i++) {

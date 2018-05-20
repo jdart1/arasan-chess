@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2018 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -219,10 +219,10 @@ class RootMoveGenerator : public MoveGenerator
 
       void suboptimal(int strength, Move &m, int &val);
 
-      void exclude(const vector<Move> &excluded);
+      void exclude(const MoveSet &excluded);
 
       // include only moves in the set
-      void filter(const set<Move> &exclude);
+      void filter(const MoveSet &exclude);
 
       void exclude(Move);
 
