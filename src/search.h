@@ -112,8 +112,6 @@ public:
         return node;
     }
 
-    int master() const { return ti->index == 0; }
-
     void stop() {
         terminate = 1;
     }

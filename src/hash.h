@@ -71,6 +71,18 @@ class HashEntry {
          return score_t(contents.value);
       }
 
+      // Get value correcting mate scores for ply
+      score_t getValue(int ply) const {
+         score_t hashValue = score_t(contents.value);
+         if (hashValue >= Constants::MATE_RANGE) {
+           hashValue -= ply - 1;
+         }
+         else if (hashValue <= -Constants::MATE_RANGE) {
+           hashValue += ply - 1;
+         }
+         return hashValue;
+      }
+
       score_t staticValue() const {
           // assumes 2's complement machine
           unsigned bits = unsigned(hc & STATIC_VALUE_MASK);

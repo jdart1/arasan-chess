@@ -84,9 +84,11 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    }
    reorder(pvMove,0,true);
 #ifdef _TRACE
-   cout << "root moves:" << endl;
-   for (auto it = moveList.begin(); it != moveList.end(); it++) {
-      MoveImage(it->move,cout); cout << endl;
+   if (master) {
+      cout << "root moves:" << endl;
+      for (auto it : moveList) {
+         MoveImage(it.move,cout); cout << endl;
+      }
    }
 #endif
    batch_count = j;
