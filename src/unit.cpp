@@ -1180,7 +1180,7 @@ static int testTB()
       }
       MoveSet moves;
       score_t score;
-      if (SyzygyTb::probe_root(board,score,moves)) {
+      if (SyzygyTb::probe_root(board,score,moves)>=0) {
          if (score != it.result) {
             cerr << "testTB: case " << caseid << " expected ";
             Scoring::printScore(it.result,cout);

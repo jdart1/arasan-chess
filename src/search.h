@@ -463,7 +463,7 @@ private:
     MoveSet exclude;
 
 #ifdef SYZYGY_TBS
-    int tb_hit;
+    int tb_hit, tb_dtz;
     score_t tb_score;
 #endif
 

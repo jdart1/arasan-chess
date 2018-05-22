@@ -71,7 +71,7 @@ int SyzygyTb::probe_root(const Board &b, score_t &score, MoveSet &rootMoves)
                                    results);
 
    if (result == TB_RESULT_FAILED) {
-      return 0;
+      return -1;
    }
 
    const unsigned wdl = TB_GET_WDL(result);
@@ -82,19 +82,19 @@ int SyzygyTb::probe_root(const Board &b, score_t &score, MoveSet &rootMoves)
        // suggested tb move that minimizes DTZ.
        // Otherwise the engine may repeat the position again.
        rootMoves.insert(getMove(b,result));
-       return 1;
-   }
-   // In positions w/o repetition, return a move list containing
-   // moves that preserved the WDL value. These will be searched.
-   unsigned res;
-   for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
-      const unsigned moveWdl = TB_GET_WDL(res);
-      if (moveWdl >= wdl) {
-         // move is ok, i.e. preserves WDL value
-         rootMoves.insert(getMove(b,res));
+   } else {
+      // In positions w/o repetition, return a move list containing
+      // moves that preserved the WDL value. These will be searched.
+      unsigned res;
+      for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
+         const unsigned moveWdl = TB_GET_WDL(res);
+         if (moveWdl >= wdl) {
+            // move is ok, i.e. preserves WDL value
+            rootMoves.insert(getMove(b,res));
+         }
       }
    }
-   return 1;
+   return TB_GET_DTZ(result);
 }
 
 int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)

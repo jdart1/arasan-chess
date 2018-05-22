@@ -371,13 +371,15 @@ Move SearchController::findBestMove(
    updateSearchOptions();
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
+   tb_dtz = 0;
    if (options.search.use_tablebases) {
       const Material &wMat = board.getMaterial(White);
       const Material &bMat = board.getMaterial(Black);
       tb_pieces = wMat.men() + bMat.men();
       if(tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
          MoveSet moves;
-         tb_hit = SyzygyTb::probe_root(board, tb_score, moves);
+         tb_dtz = SyzygyTb::probe_root(board, tb_score, moves);
+         tb_hit = tb_dtz >= 0;
          tb_root_probes++;
          if (tb_hit) {
             // restrict the search to moves that preserve the
@@ -493,20 +495,26 @@ Move SearchController::findBestMove(
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
    if (!uci && !stats->end_of_game && options.search.can_resign) {
-#ifdef SYZYGY_TBS
-      const score_t mdiff = board.getMaterial(board.sideToMove()).value() -
-          board.getMaterial(board.oppositeSide()).value();
-#endif
+      const Material &ourMat = board.getMaterial(board.sideToMove());
+      const Material &oppMat = board.getMaterial(board.oppositeSide());
       if (stats->display_value != Constants::INVALID_SCORE &&
+          !Scoring::mateScore(stats->display_value) &&
+          (100*stats->display_value)/Params::PAWN_VALUE <= options.search.resign_threshold &&
+          // don't resign KBN or KBB vs K unless near mate
+          !(ourMat.kingOnly () && !oppMat.hasPawns() &&
+            (oppMat.pieceBits() == Material::KBN ||
+             oppMat.pieceBits() == Material::KBB)) &&
+          // don't resign KQ vs KR unless near mate
+          !(!ourMat.hasPawns() && !oppMat.hasPawns() &&
+            (oppMat.pieceBits() == Material::KR ||
+             oppMat.pieceBits() == Material::KQ))
 #ifdef SYZYGY_TBS
-          // Don't resign a tb lost position unless we are far
-          // behind in material - because distance to mate may
-          // be large and the opponent can err.
-          (stats->display_value != -Constants::TABLEBASE_WIN ||
-           (board.getMaterial(board.sideToMove()).kingOnly () && mdiff <= -Params::ROOK_VALUE) ||
-           mdiff <= -Params::QUEEN_VALUE) &&
+          // Don't resign a tb lost position with large dtz,
+          // unless we have a mate score, because the opponent can err
+          // if not using TBs.
+          && (stats->display_value != -Constants::TABLEBASE_WIN || tb_dtz < 30)
 #endif
-         (100*stats->display_value)/Params::PAWN_VALUE <= options.search.resign_threshold) {
+         ) {
          state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
       }
