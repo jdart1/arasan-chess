@@ -1,4 +1,4 @@
-post 20.3
+post 20.5
 
 Android build, support cross-compilation
 
@@ -17,10 +17,14 @@ New book format (
 LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database)
 LevelDB, RocksDB
 
+Keep separate win and draw percentages, scale draw score by contempt
+value.
+
 Dropout expansion
 
 better book selection - see
 http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+Use a proper statiscal method - multi-armed bandits?
 
 Allow tuner to use mini-batches
 
@@ -28,8 +32,9 @@ outpost calc - looks wonky/interacts with PST.
 
 losses on time - tune time mgmt when very near time limit
 
-Multi-core scaling sucks! LazySMP?
+Further LazySMP improvements
 http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
+
 for NUMA: memory striping for hash. Rebind memory on thread resize
 
 pin-aware SEE (Stockfish idea)
