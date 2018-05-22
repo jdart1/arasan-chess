@@ -498,14 +498,15 @@ Move SearchController::findBestMove(
       const Material &ourMat = board.getMaterial(board.sideToMove());
       const Material &oppMat = board.getMaterial(board.oppositeSide());
       if (stats->display_value != Constants::INVALID_SCORE &&
-          !Scoring::mateScore(stats->display_value) &&
           (100*stats->display_value)/Params::PAWN_VALUE <= options.search.resign_threshold &&
           // don't resign KBN or KBB vs K unless near mate
-          !(ourMat.kingOnly () && !oppMat.hasPawns() &&
+          !(stats->display_value > -Constants::MATE &&
+            ourMat.kingOnly () && !oppMat.hasPawns() &&
             (oppMat.pieceBits() == Material::KBN ||
              oppMat.pieceBits() == Material::KBB)) &&
           // don't resign KQ vs KR unless near mate
-          !(!ourMat.hasPawns() && !oppMat.hasPawns() &&
+          !(stats->display_value > -Constants::MATE &&
+            !ourMat.hasPawns() && !oppMat.hasPawns() &&
             (oppMat.pieceBits() == Material::KR ||
              oppMat.pieceBits() == Material::KQ))
 #ifdef SYZYGY_TBS
