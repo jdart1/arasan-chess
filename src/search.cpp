@@ -493,7 +493,19 @@ Move SearchController::findBestMove(
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
    if (!uci && !stats->end_of_game && options.search.can_resign) {
+#ifdef SYZYGY_TBS
+      const score_t mdiff = board.getMaterial(board.sideToMove()).value() -
+          board.getMaterial(board.oppositeSide()).value();
+#endif
       if (stats->display_value != Constants::INVALID_SCORE &&
+#ifdef SYZYGY_TBS
+          // Don't resign a tb lost position unless we are far
+          // behind in material - because distance to mate may
+          // be large and the opponent can err.
+          (stats->display_value != -Constants::TABLEBASE_WIN ||
+           (board.getMaterial(board.sideToMove()).kingOnly () && mdiff <= -Params::ROOK_VALUE) ||
+           mdiff <= -Params::QUEEN_VALUE) &&
+#endif
          (100*stats->display_value)/Params::PAWN_VALUE <= options.search.resign_threshold) {
          state = Resigns;
          stats->end_of_game = end_of_game[(int)state];
