@@ -880,6 +880,9 @@ Move Search::ply0_search()
    if (mainThread()) controller->failLowFactor = 0;
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
+   if (controller->include.size()) {
+      mg.filter(controller->include);
+   }
    stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
    for (iterationDepth = 1;
         iterationDepth <= controller->ply_limit && !terminate;
@@ -1141,13 +1144,11 @@ Move Search::ply0_search()
             if (!terminate && controller->typeOfSearch != FixedDepth &&
                 !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
-                !(stats.failLow || stats.failHigh) &&
-                (iterationDepth >= 2) &&
-                (!srcOpts.can_resign ||
-                 (stats.display_value >
-                  srcOpts.resign_threshold))) {
-               if (mainThread() && talkLevel == Trace)
+                iterationDepth >= 2 &&
+                !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
+               if (mainThread() && talkLevel == Trace) {
                   cout << "# single legal move, terminating" << endl;
+               }
                controller->terminateNow();
             }
          } while (!terminate && (stats.failLow || stats.failHigh));
