@@ -448,6 +448,10 @@ Move SearchController::findBestMove(
    rootSearch->init(rootStack,pool->mainThread());
    Move best = rootSearch->ply0_search();
 
+   if (talkLevel == Trace) {
+      cout << "# waiting for thread completion" << endl;
+   }
+
    // Wait for all threads to complete
    pool->waitAll();
 

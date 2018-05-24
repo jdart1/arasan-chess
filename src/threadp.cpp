@@ -8,9 +8,6 @@
 #include <fcntl.h>
 #endif
 
-uint64_t ThreadPool::activeMask = 0ULL;
-uint64_t ThreadPool::availableMask = 0ULL;
-uint64_t ThreadPool::completedMask = 0ULL;
 #ifdef NUMA
 bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 #endif
@@ -74,7 +71,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       }
       ASSERT(ti->work);
       ti->pool->lock();
-      activeMask |= (1ULL << ti->index);
+      ti->pool->activeMask |= (1ULL << ti->index);
       ti->state = ThreadInfo::Working;
       ti->pool->unlock();
       NodeStack searchStack; // stack on which search will be done
@@ -96,14 +93,13 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
 #endif
       ti->pool->lock();
       // remove thread from active list and set state back to Idle
-      activeMask &= ~(1ULL << ti->index);
+      ti->pool->activeMask &= ~(1ULL << ti->index);
       {
          std::lock_guard<std::mutex> (ti->pool->cvm);
          // mark search completed
-         completedMask |= 1ULL << ti->index;
-         if ((completedMask & ~1ULL) == (availableMask & ~1ULL)) {
+         ti->pool->completedMask |= 1ULL << ti->index;
+         if (ti->pool->allCompleted()) {
             // All threads complete, unblock thread waiting on completion
-            ti->pool->notified = true;
             ti->pool->cv.notify_one();
          }
       }
@@ -180,7 +176,11 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 }
 
  ThreadPool::ThreadPool(SearchController *ctrl, int n) :
-    controller(ctrl), nThreads(n), notified(false) {
+    controller(ctrl), nThreads(n),
+    activeMask(0ULL),
+    availableMask(0ULL),
+    completedMask(0ULL) {
+
    LockInit(poolLock);
    for (int i = 0; i < Constants::MaxCPUs; i++) {
       data[i] = nullptr;
