@@ -452,7 +452,9 @@ Move SearchController::findBestMove(
    pool->waitAll();
 
    if (talkLevel == Trace) {
-      cout << "# thread 0 score=" << rootSearch->stats.value << " pv=" << rootSearch->stats.best_line_image << endl;
+      cout << "# thread 0 score=";
+      Scoring::printScore(rootSearch->stats.display_value,cout);
+      cout << " pv=" << rootSearch->stats.best_line_image << endl;
    }
 
    updateGlobalStats(rootSearch->stats);
@@ -461,7 +463,7 @@ Move SearchController::findBestMove(
          Statistics &threadStats = pool->data[thread]->work->stats;
          if (talkLevel == Trace) {
             cout << "# thread " << thread << " score=";
-            Scoring::printScore(threadStats.value,cout);
+            Scoring::printScore(threadStats.display_value,cout);
             cout << " pv=" << threadStats.best_line_image << endl;
          }
 #ifdef _TRACE
