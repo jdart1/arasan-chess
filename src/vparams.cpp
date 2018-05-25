@@ -1,4 +1,4 @@
-// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
 //
 // definitions of scoring parameters, non-const for tuning
 
@@ -116,8 +116,8 @@ score_t Params::PP_OPP_PIECE_BLOCK[2][21];
 score_t Params::DOUBLED_PAWNS[2][8];
 score_t Params::TRIPLED_PAWNS[2][8];
 score_t Params::ISOLATED_PAWN[2][8];
-score_t Params::KNIGHT_OUTPOST[2][64][2];
-score_t Params::BISHOP_OUTPOST[2][64][2];
+score_t Params::KNIGHT_OUTPOST[2][2];
+score_t Params::BISHOP_OUTPOST[2][2];
 score_t Params::KNIGHT_MOBILITY[9];
 score_t Params::BISHOP_MOBILITY[15];
 score_t Params::ROOK_MOBILITY[2][15];
