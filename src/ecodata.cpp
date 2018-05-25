@@ -1434,8 +1434,7 @@ const struct ECOData eco_codes[] =
 {"E20", 0xee50a7938a064bc8ULL ,"Nimzo-Indian Defense"},
 {"E20", 0x8c7180055f81dd4fULL ,"Nimzo-Indian Defense"},
 {"E20", 0xb57ef8ec7836b52aULL ,"Nimzo-Indian Defense"},
-{"E20", 0x44d6f8b2ed294b9eULL ,"Nimzo-Indian D"},
-{"efense", 0xae2ff225d5d007cfULL ,""},
+{"E20", 0x44d6f8b2ed294b9eULL ,"Nimzo-Indian Defense"},
 {"E20", 0x1577a93c886ec351ULL ,"Nimzo-Indian Defense"},
 {"E20", 0xb1d6b15a9e773abbULL ,"Nimzo-Indian Defense"},
 {"E20", 0xa3d393a89bdd7d61ULL ,"Nimzo-Indian Defense"},
