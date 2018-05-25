@@ -1522,7 +1522,7 @@ static void output_solution(const string &cmd, double obj)
    stringstream comment;
    comment << "Generated " << timestr << " by " << cmd << endl;
    if (obj != 0) {
-      comment << "Final objective value: " << obj << endl;
+      comment << "// Final objective value: " << obj << endl;
    }
    Params::write(param_out,comment.str());
    param_out << endl;
