@@ -405,17 +405,6 @@ static int map_to_pst(int i, ColorType side)
    return 4*(r-1) + f - 1;
 }
 
-// map square to outpost index, returns -1 if no mapping
-static int map_to_outpost(int i, ColorType side)
-{
-   int r = Rank(i,side);
-   int f = File(i);
-   if (r < 5) return -1;
-   r -= 5;
-   if (f > 4) f = 9-f;
-   return r*4 + f - 1;
-}
-
 static inline int FileOpen(const Board &board, int file) {
    return !TEST_MASK((board.pawn_bits[White] | board.pawn_bits[Black]), Attacks::file_mask[file - 1]);
 }
@@ -730,13 +719,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       i = map_to_pst(sq,side);
       grads[Tune::KNIGHT_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KNIGHT_PST_MIDGAME+i,mLevel);
       grads[Tune::KNIGHT_PST_ENDGAME+i] += tune_params.scale(inc,Tune::KNIGHT_PST_ENDGAME+i,mLevel);
-      i = map_to_outpost(sq,side);
-      ASSERT(i<16);
       if (s.outpost(board,sq,side)) {
-         int defenders = s.outpost_defenders(board,sq,side) != 0;
-         int index = Tune::KNIGHT_OUTPOST + defenders*32 + 2*i;
+         int defenders = std::min<int>(1,s.outpost_defenders(board,sq,side));
+         int index = Tune::KNIGHT_OUTPOST_MIDGAME + defenders;
          grads[index] += tune_params.scale(inc,index,mLevel);
-         index++;
+         index += 2;
          grads[index] += tune_params.scale(inc,index,mLevel);
       }
       Bitboard kattacks(knattacks & nearKing);
@@ -776,13 +763,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int i = map_to_pst(sq,side);
       grads[Tune::BISHOP_PST_MIDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_MIDGAME+i,mLevel);
       grads[Tune::BISHOP_PST_ENDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_ENDGAME+i,mLevel);
-      i = map_to_outpost(sq,side);
-      ASSERT(i<16);
       if (s.outpost(board,sq,side)) {
-         int defenders = s.outpost_defenders(board,sq,side) != 0;
-         int index = Tune::BISHOP_OUTPOST + defenders*32 + 2*i;
+         int defenders = std::min<int>(1,s.outpost_defenders(board,sq,side));
+         ASSERT(defenders<3);
+         int index = Tune::BISHOP_OUTPOST_MIDGAME + defenders;
          grads[index] += tune_params.scale(inc,index,mLevel);
-         index++;
+         index += 2;
          grads[index] += tune_params.scale(inc,index,mLevel);
       }
       if (!deep_endgame) {

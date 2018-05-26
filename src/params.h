@@ -1,4 +1,4 @@
-// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PARAMS_H
 #define _PARAMS_H
@@ -179,9 +179,9 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD QUEEN_MOBILITY[2][24];
     static PARAM_MOD KING_MOBILITY_ENDGAME[5];
 
-    // outpost scores
-    static PARAM_MOD KNIGHT_OUTPOST[2][64][2];
-    static PARAM_MOD BISHOP_OUTPOST[2][64][2];
+    // outpost scores [phase][defended]
+    static PARAM_MOD KNIGHT_OUTPOST[2][2];
+    static PARAM_MOD BISHOP_OUTPOST[2][2];
 
     // not tuned presently (fixed)
     static const int MATERIAL_SCALE[32];

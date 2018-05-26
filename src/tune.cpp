@@ -1,4 +1,4 @@
-// Copyright 2014-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2014-2018 by Jon Dart. All Rights Reserved.
 #include "tune.h"
 #include "chess.h"
 #include "attacks.h"
@@ -14,7 +14,7 @@ extern "C" {
 #define VAL(x) (Params::PAWN_VALUE*x)
 
 static const score_t MOBILITY_RANGE = VAL(0.333);
-static const score_t OUTPOST_RANGE = VAL(0.5);
+static const score_t OUTPOST_RANGE = VAL(0.65);
 static const score_t PST_RANGE = VAL(1.0);
 static const score_t PP_BLOCK_RANGE = VAL(0.333);
 static const score_t TRADE_DOWN_RANGE = VAL(0.333);
@@ -48,22 +48,6 @@ static void apply_to_pst(int i,score_t val,score_t arr[])
     int f = 1+(i%4);
     ASSERT(OnBoard(MakeSquare(f,r,White)));
     arr[MakeSquare(f,r,White)] = arr[MakeSquare(9-f,r,White)] = val;
-}
-
-static int map_from_outpost(int i)
-{
-   int r = 5+(i/4);
-   int f = 1+(i%4);
-   ASSERT(OnBoard(MakeSquare(f,r,White)));
-   return MakeSquare(f,r,White);
-}
-
-static void apply_to_outpost(int i,int p,int stage,score_t val,score_t arr[2][64][2])
-{
-   int r = 5+(i/4);
-   int f = 1+(i%4);
-   ASSERT(OnBoard(MakeSquare(f,r,White)));
-   arr[p][MakeSquare(f,r,White)][stage] = arr[p][MakeSquare(9-f,r,White)][stage] = val;
 }
 
 Tune::Tune()
@@ -251,29 +235,6 @@ Tune::Tune()
         Tune::TuneParam(Tune::ISOLATED_PAWN_END3,"isolated_pawn_end3",VAL(-0.07),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1),
         Tune::TuneParam(Tune::ISOLATED_PAWN_END4,"isolated_pawn_end4",VAL(-0.1),VAL(-0.25),VAL(0),Tune::TuneParam::Endgame,1)
     };
-
-   // boostrap values - maybe not optimal
-   static const score_t KNIGHT_OUTPOST_INIT[64] =
-      {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       VAL(0.01), VAL(0.03), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.03), VAL(0.01),
-       VAL(0.01), VAL(0.04), VAL(0.09), VAL(0.140), VAL(0.140), VAL(0.090), VAL(0.04),VAL(0.01),
-       VAL(0.01), VAL(0.04), VAL(0.09),VAL(0.140), VAL(0.140),VAL(0.09),VAL(0.04), VAL(0.01),
-       VAL(0.01), VAL(0.03), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.06), VAL(0.03), VAL(0.01),
-       VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01)
-      };
-
-   static const score_t BISHOP_OUTPOST_INIT[64] = 
-      {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       0 ,0 ,0 ,0 ,0 ,0 ,0 ,0,
-       VAL(0.01), VAL(0.02), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.02), VAL(0.10),
-       VAL(0.01), VAL(0.03), VAL(0.07), VAL(0.110), VAL(0.110), VAL(0.07), VAL(0.03), VAL(0.01),
-       VAL(0.01), VAL(0.03), VAL(0.07), VAL(0.110), VAL(0.110), VAL(0.07), VAL(0.03), VAL(0.01),
-       VAL(0.01), VAL(0.01), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.05), VAL(0.01), VAL(0.10),
-       VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01), VAL(0.01)
-      };
 
    static const score_t TRADE_DOWN_INIT[16] = {VAL(0.688), VAL(0.645), VAL(0.602), VAL(0.559), VAL(0.516), VAL(0.473), VAL(0.430), VAL(0.387), VAL(0.344), VAL(0.301), VAL(0.258), VAL(0.215), VAL(0.172), VAL(0.129), VAL(0.086), 0};
    static const score_t KNIGHT_MOBILITY_INIT[9] = {VAL(-0.180), VAL(-0.07), VAL(-0.02), 0, VAL(0.02), VAL(0.05), VAL(0.07), VAL(0.1), VAL(0.12)};
@@ -475,30 +436,34 @@ Tune::Tune()
       tune_params.push_back(TuneParam(i++,name.str(),KING_MOBILITY_ENDGAME_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,Tune::TuneParam::Endgame,1));
    }
    // outposts
-   ASSERT(i==KNIGHT_OUTPOST);
+   ASSERT(i==KNIGHT_OUTPOST_MIDGAME);
    for (int p = 0; p < 2; p++) {
-      for (int s = 0; s < 16; s++) {
-          for (int stage = 0; stage < 2; stage++) {
-              stringstream name;
-              name << "knight_outpost" << p << '_' << s << "_" << (stage == 0 ? "mid" : "end");
-              score_t val = KNIGHT_OUTPOST_INIT[map_from_outpost(s)];
-              if (p == 0) val /= 2;
-              tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,
-                                              stage == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
-          }
+      for (int d = 0; d < 2; d++) {
+         stringstream name;
+         name << "knight_outpost";
+         if (p == 0) {
+            name << "_mid";
+         }
+         else {
+            name << "_end";
+         }
+         name << d;
+         tune_params.push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,p == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
       }
    }
-   ASSERT(i==BISHOP_OUTPOST);
+   ASSERT(i==BISHOP_OUTPOST_MIDGAME);
    for (int p = 0; p < 2; p++) {
-      for (int s = 0; s < 16; s++) {
-          for (int stage = 0; stage < 2; stage++) {
-              stringstream name;
-              name << "bishop_outpost" << p << '_' << s << "_" << (stage == 0 ? "mid" : "end");
-              score_t val = BISHOP_OUTPOST_INIT[map_from_outpost(s)];
-              if (p == 0) val /= 2;
-              tune_params.push_back(TuneParam(i++,name.str(),val,0,OUTPOST_RANGE,
-                                              stage == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
-          }
+      for (int d = 0; d < 2; d++) {
+         stringstream name;
+         name << "bishop_outpost";
+         if (p == 0) {
+            name << "_mid";
+         }
+         else {
+            name << "_end";
+         }
+         name << d;
+         tune_params.push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,p == 0 ? Tune::TuneParam::Midgame : Tune::TuneParam::Endgame,1));
       }
    }
    // add trade down
@@ -786,23 +751,12 @@ void Tune::applyParams() const
       apply_to_pst(i,PARAM(KING_PST_MIDGAME+i),Params::KING_PST[0]);
       apply_to_pst(i,PARAM(KING_PST_ENDGAME+i),Params::KING_PST[1]);
    }
-   int index = 0;
-   for (int p = 0; p < 2; p++) {
-      for (int i = 0; i < 16; i++) {
-          for (int stage = 0; stage < 2; stage++,index++) {
-              apply_to_outpost(i,p,stage,PARAM(KNIGHT_OUTPOST+index),Params::KNIGHT_OUTPOST);
-          }
-      }
+   for (int i = 0; i < 2; i++) {
+      Params::KNIGHT_OUTPOST[0][i] = PARAM(KNIGHT_OUTPOST_MIDGAME+i);
+      Params::KNIGHT_OUTPOST[1][i] = PARAM(KNIGHT_OUTPOST_ENDGAME+i);
+      Params::BISHOP_OUTPOST[0][i] = PARAM(BISHOP_OUTPOST_MIDGAME+i);
+      Params::BISHOP_OUTPOST[1][i] = PARAM(BISHOP_OUTPOST_ENDGAME+i);
    }
-   index = 0;
-   for (int p = 0; p < 2; p++) {
-      for (int i = 0; i < 16; i++) {
-          for (int stage = 0; stage < 2; stage++, index++) {
-              apply_to_outpost(i,p,stage,PARAM(BISHOP_OUTPOST+index),Params::BISHOP_OUTPOST);
-          }
-      }
-   }
-
 }
 
 void Tune::writeX0(ostream &o)

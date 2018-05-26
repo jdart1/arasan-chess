@@ -800,9 +800,8 @@ score_t Scoring::outpost(const Board &board,
                      Square sq, ColorType side) const
 {
    return Rank(sq,side) > 4 && ((side == White) ?
-                                 !TEST_MASK(outpostW[sq], board.pawn_bits[Black]) :
-                                 !TEST_MASK(outpostB[sq], board.pawn_bits[White]));
-
+                                Bitboard(outpostW[sq] & board.pawn_bits[Black]).isClear() :
+                                Bitboard(outpostB[sq] & board.pawn_bits[White]).isClear());
 }
 
 template <ColorType bishopColor>
@@ -888,10 +887,10 @@ void Scoring::pieceScore(const Board &board,
 #endif
             scores.any += mobl;
             if (outpost(board,sq,side)) {
-               int defenders = outpost_defenders(board,sq,side) != 0;
-               score_t outpost_score_mid = Params::KNIGHT_OUTPOST[defenders][scoreSq][0];
+               auto defenders = std::min<int>(1,outpost_defenders(board,sq,side));
+               score_t outpost_score_mid = Params::KNIGHT_OUTPOST[Midgame][defenders];
                scores.mid += outpost_score_mid;
-               score_t outpost_score_end = Params::KNIGHT_OUTPOST[defenders][scoreSq][1];
+               score_t outpost_score_end = Params::KNIGHT_OUTPOST[Endgame][defenders];
                scores.end += outpost_score_end;
 #ifdef EVAL_DEBUG
                cout << "knight outpost (defenders=" <<
@@ -945,10 +944,10 @@ void Scoring::pieceScore(const Board &board,
                }
             }
             if (outpost(board,sq,side)) {
-               int defenders = outpost_defenders(board,sq,side) != 0;
-               score_t outpost_score_mid = Params::BISHOP_OUTPOST[defenders][scoreSq][0];
+               auto defenders = std::min<int>(1,outpost_defenders(board,sq,side));
+               score_t outpost_score_mid = Params::BISHOP_OUTPOST[Midgame][defenders];
                scores.mid += outpost_score_mid;
-               score_t outpost_score_end = Params::BISHOP_OUTPOST[defenders][scoreSq][1];
+               score_t outpost_score_end = Params::BISHOP_OUTPOST[Endgame][defenders];
                scores.end += outpost_score_end;
 #ifdef EVAL_DEBUG
                cout << "bishop outpost (defenders=" <<
@@ -1746,7 +1745,7 @@ score_t Scoring::materialScore(const Board &board) const {
 score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    score_t score;
-    
+
    if ((score = tryBitbase(board)) != Constants::INVALID_SCORE) {
        return score;
    }
@@ -2594,7 +2593,7 @@ static void print_array(ostream & o,score_t mid[], score_t end[], int size)
 
 void Params::write(ostream &o, const string &comment)
 {
-   o << "// Copyright 2015-2017 by Jon Dart. All Rights Reserved." << endl;
+   o << "// Copyright 2015-2018 by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
    o << "// " << comment << endl;
    o << "//" << endl;
@@ -2684,28 +2683,10 @@ void Params::write(ostream &o, const string &comment)
    o << "const int Params::KING_MOBILITY_ENDGAME[5] = ";
    print_array(o,Params::KING_MOBILITY_ENDGAME,5);
    o << endl;
-   o << "const int Params::KNIGHT_OUTPOST[2][64][2] = {";
-   for (int p = 0; p < 2; p++) {
-       o << "{";
-       for (int sq = 0; sq < 64; sq++) {
-           print_array(o,Params::KNIGHT_OUTPOST[p][sq],2,0);
-           if (sq < 63) o << ",";
-       }
-       o << "}";
-       if (p < 1) o << ",";
-   }
-   o << "};" << endl;
-   o << "const int Params::BISHOP_OUTPOST[2][64][2] = {";
-   for (int p = 0; p < 2; p++) {
-       o << "{";
-       for (int sq = 0; sq < 64; sq++) {
-           print_array(o,Params::BISHOP_OUTPOST[p][sq],2,0);
-           if (sq < 63) o << ",";
-       }
-       o << "}";
-       if (p < 1) o << ",";
-   }
-   o << "};" << endl;
+   o << "const int Params::KNIGHT_OUTPOST[2][2] = ";
+   print_array(o,Params::KNIGHT_OUTPOST[0],Params::KNIGHT_OUTPOST[1],2);
+   o << "const int Params::BISHOP_OUTPOST[2][2] = ";
+   print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
    o << endl;
 }
 #endif
