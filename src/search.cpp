@@ -681,7 +681,7 @@ int Search::checkTime(const Board &board,int ply) {
           return 1;
        }
     }
-    if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 2000) {
+    if (mainThread() && controller->uci && getElapsedTime(controller->last_time,current_time) >= 2000) {
         controller->updateGlobalStats(stats);
         const uint64_t total_nodes = controller->totalNodes();
         cout << "info";
@@ -1129,7 +1129,7 @@ Move Search::ply0_search()
             }
             // check time after adjustments above
             if (!terminate) {
-               if (mainThread() && checkTime(board,0)) {
+               if (checkTime(board,0)) {
                   if (talkLevel == Trace) {
                      cout << "# time up" << endl;
                   }
@@ -1599,7 +1599,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       if (--controller->time_check_counter <= 0) {
          controller->time_check_counter = Time_Check_Interval;
-         if (mainThread() && checkTime(board,ply)) {
+         if (checkTime(board,ply)) {
             if (talkLevel == Trace) {
                cout << "# terminating, time up" << endl;
             }
@@ -2384,7 +2384,7 @@ score_t Search::search()
 #endif
         if (--controller->time_check_counter <= 0) {
             controller->time_check_counter = Time_Check_Interval;
-            if (mainThread() && checkTime(board,ply)) {
+            if (checkTime(board,ply)) {
                if (talkLevel == Trace) {
                   cout << "# terminating, time up" << endl;
                }
