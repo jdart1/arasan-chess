@@ -84,13 +84,6 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       }
 #endif
       ti->work->ply0_search();
-#ifdef _THREAD_TRACE
-      {
-      std::ostringstream s;
-      s << "search completed, thread " << ti->index;
-      log(s.str());
-      }
-#endif
       ti->pool->lock();
       // remove thread from active list and set state back to Idle
       ti->pool->activeMask &= ~(1ULL << ti->index);
