@@ -5,11 +5,8 @@
 #include "scoring.h"
 
 #include <algorithm>
-
-extern "C" {
-#include <math.h>
-#include <string.h>
-};
+#include <cmath>
+#include <cstring>
 
 #define VAL(x) (Params::PAWN_VALUE*x)
 
