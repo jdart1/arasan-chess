@@ -1,4 +1,4 @@
-// Copyright 2005-2013, 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2013, 2016-2018 by Jon Dart. All Rights Reserved.
 
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
@@ -71,19 +71,14 @@ public:
    }
 
    void unblockAll() {
+      completedMask = 0ULL;
       // No need to unblock thread 0: that is the main thread
       for (unsigned i = 1; i < nThreads; i++) {
          data[i]->signal();
       }
-      completedMask = 0ULL;
    }
 
-   void waitAll() {
-      if (nThreads>1) {
-         std::unique_lock<std::mutex> lock(cvm);
-         cv.wait(lock, [this]{ return allCompleted(); });
-      }
-   }
+   void waitAll();
 
    SearchController *getController() const {
      return controller;
