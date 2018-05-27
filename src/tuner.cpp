@@ -261,26 +261,20 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     return deriv;
 }
 
-static double norm_val(const TuneParam &p)
-{
-   double mid = (p.range())/2.0;
-   return (double(p.current)-mid)/p.range();
-}
-
 static double calc_penalty()
 {
    // apply L2-regularization to the tuning parameters
    double l2 = 0.0;
    if (regularize) {
-      for (auto p : tune_params) {
+      for (TuneParam p : tune_params) {
          // apply penalty only for parameters being tuned
          if (p.tunable) {
             if (p.range()==0) {
                cerr << "warning: param " << p.name << " has zero range" << endl;
                continue;
             }
-            // normalize the values since their ranges differ
-            l2 += lambda*norm_val(p)*norm_val(p);
+            p.scale();
+            l2 += lambda*(p.current-0.5)*(p.current-0.5);
          }
       }
    }
@@ -1366,34 +1360,35 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       double dv = data0.grads[i];
       const TuneParam &p = tune_params[i];
-      score_t val = p.current;
+      // do learning on scaled value:
+      score_t val = p.scaled();
       if (regularize && p.tunable) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
          // we don't regularize them.
-         dv += 2*lambda*norm_val(p);
+         dv += 2*lambda*(val-0.5);
       }
       if (dv != 0.0 && p.tunable) {
          score_t istep = 1;
          if (method == OptimMethod::AdaGrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
-            double istep = ADAGRAD_STEP_SIZE*p.range()*adjusted_grad;
-            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
+            double istep = ADAGRAD_STEP_SIZE*adjusted_grad;
+            val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - istep));
          } else if (method == OptimMethod::ADAM) {
             m[i] = ADAM_BETA1*m[i] + (1.0-ADAM_BETA1)*dv;
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
             double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
-            double step_size = ADAM_ALPHA*p.range();
+            double step_size = ADAM_ALPHA;
             istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
-            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
+            val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - istep));
          } else {
             // Simple adaptive rate method with momentum, similar to
             // "bold driver" algorithm.
             if (iterations == 1) {
-               step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE*p.range());
+               step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE);
             }
             else if (std::signbit(prev_gradient[i]*dv)) {
                // gradient changed signs
@@ -1403,14 +1398,15 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             }
             istep = step_sizes[i];
             if ( dv > 0.0) {
-               val = std::max<score_t>(p.min_value,val - istep);
+               val = std::max<score_t>(0.0,val - istep);
             }
             else if (dv < 0.0) {
-               val = std::min<score_t>(p.max_value,val + istep);
+               val = std::min<score_t>(1.0,val + istep);
             }
             prev_gradient[i] = dv;
          }
-         tune_params[i].current = val;
+         // re-scale
+         tune_params[i].scale(val);
       }
    }
 }

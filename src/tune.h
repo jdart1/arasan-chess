@@ -33,6 +33,9 @@ struct TuneParam {
    void scale(score_t val) {
       current = val*range() + min_value;
    }
+   void scale() {
+      current = current*range() + min_value;
+   }
 };
 
 class Tune : public vector<TuneParam> {
