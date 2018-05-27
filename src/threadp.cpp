@@ -1,4 +1,4 @@
-// Copyright 2005-2010, 2012, 2013, 2016-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2010, 2012, 2013, 2016-2018 by Jon Dart. All Rights Reserved.
 
 #include "threadp.h"
 #include "search.h"
@@ -98,6 +98,15 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
          std::lock_guard<std::mutex> (ti->pool->cvm);
          // mark search completed
          ti->pool->completedMask |= 1ULL << ti->index;
+#ifdef _THREAD_TRACE
+         {
+            std::ostringstream s;
+            s << "# thread " << ti->index << " completed, mask=" << (hex) <<
+
+               ti->pool->completedMask << (dec) << endl;
+            log(s.str());
+         }
+#endif
          if (ti->pool->allCompleted()) {
             // All threads complete, unblock thread waiting on completion
             ti->pool->cv.notify_one();
@@ -105,6 +114,22 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       }
       ti->state = ThreadInfo::Idle;
       ti->pool->unlock();
+   }
+}
+
+void ThreadPool::waitAll()
+{
+   if (nThreads>1) {
+      std::unique_lock<std::mutex> lock(cvm);
+#ifdef _THREAD_TRACE
+      {
+         std::ostringstream s;
+         s << "# waitAll: completed mask= " << (hex) <<
+            completedMask << (dec) << endl;
+         log(s.str());
+      }
+#endif
+      cv.wait(lock, [this]{ return allCompleted(); });
    }
 }
 
@@ -273,7 +298,7 @@ void ThreadPool::shutDown() {
        void *value_ptr;
        pthread_join(p->thread_id,&value_ptr);
 #endif
-       // Free thread data 
+       // Free thread data
        delete p;
     }
     // now free main thread data
@@ -326,7 +351,7 @@ int ThreadPool::activeCount() const {
    return Bitboard(activeMask & availableMask).bitCount();
 }
 
-uint64_t ThreadPool::totalNodes() const 
+uint64_t ThreadPool::totalNodes() const
 {
    uint64_t total = 0ULL;
    for (unsigned i = 0; i < nThreads; i++) {
@@ -335,7 +360,7 @@ uint64_t ThreadPool::totalNodes() const
    return total;
 }
 
-uint64_t ThreadPool::totalHits() const 
+uint64_t ThreadPool::totalHits() const
 {
    uint64_t total = 0ULL;
    for (unsigned i = 0; i < nThreads; i++) {
