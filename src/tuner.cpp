@@ -1,4 +1,4 @@
-// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -261,7 +261,7 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     return deriv;
 }
 
-static double norm_val(const Tune::TuneParam &p)
+static double norm_val(const TuneParam &p)
 {
    double mid = (p.range())/2.0;
    return (double(p.current)-mid)/p.range();
@@ -272,9 +272,7 @@ static double calc_penalty()
    // apply L2-regularization to the tuning parameters
    double l2 = 0.0;
    if (regularize) {
-      for (int i = 0; i < tune_params.numTuningParams(); i++) {
-         Tune::TuneParam p;
-         tune_params.getParam(i,p);
+      for (auto p : tune_params) {
          // apply penalty only for parameters being tuned
          if (p.tunable) {
             if (p.range()==0) {
@@ -1250,7 +1248,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
    update_deriv_vector(s, board, Black, derivs, -inc);
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       if (derivs[i] != 0.0 && tune_params[i].tunable) {
-         Tune::TuneParam p = tune_params[i];
+         TuneParam p = tune_params[i];
          score_t val = p.current;
          const score_t range = p.range();
          score_t delta;
@@ -1264,7 +1262,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
 
          // increase by delta
          score_t newval = val + delta;
-         tune_params.updateParamValue(i,newval);
+         tune_params[i].current = newval;
          tune_params.applyParams();
          score_t newEval = s.evalu8(board,false);
          if (board.sideToMove() == Black) newEval = -newEval;
@@ -1277,13 +1275,13 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
 
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
-            tune_params.updateParamValue(i,val);
+            tune_params[i].current = val;
             tune_params.applyParams();
             s.evalu8(board,false);
-            tune_params.updateParamValue(i,newval);
+            tune_params[i].current = newval;
             tune_params.applyParams();
             s.evalu8(board,false);
-            tune_params.updateParamValue(i,val);
+            tune_params[i].current = val;
             tune_params.applyParams();
          }
          // Test derivative of sigmoid computation too
@@ -1299,7 +1297,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          }
 */
          // restore old value
-         tune_params.updateParamValue(i,val);
+         tune_params[i].current = val;
          tune_params.applyParams();
       }
    }
@@ -1367,8 +1365,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
 {
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       double dv = data0.grads[i];
-      Tune::TuneParam p;
-      tune_params.getParam(i,p);
+      const TuneParam &p = tune_params[i];
       score_t val = p.current;
       if (regularize && p.tunable) {
          // add the derivative of the regularization term. Note:
@@ -1413,7 +1410,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             }
             prev_gradient[i] = dv;
          }
-         tune_params.updateParamValue(i,val);
+         tune_params[i].current = val;
       }
    }
 }
@@ -1777,9 +1774,7 @@ int CDECL main(int argc, char **argv)
 
     cout << "parameter count: " << tune_params.numTuningParams() << " (";
     int tunable = 0;
-    for (int i = 0; i < tune_params.numTuningParams(); i++) {
-       Tune::TuneParam p;
-       tune_params.getParam(i,p);
+    for (const TuneParam &p : tune_params) {
        if (p.tunable) ++tunable;
     }
     cout << tunable << " tunable)" << endl;

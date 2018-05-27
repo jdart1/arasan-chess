@@ -2618,14 +2618,10 @@ void Params::write(ostream &o, const string &comment)
    int start = Tune::KING_COVER_BASE;
    for (int i = start; i < start+tune_params.paramArraySize(); i++) {
       o << "const int Params::";
-      Tune::TuneParam param;
-      tune_params.getParam(i,param);
-      const string str(param.name);
-
-      for (auto it : str) {
+      for (auto it : tune_params[i].name) {
          o << (char)toupper((int)it);
       }
-      o << " = " << std::round(param.current) << ";" << endl;
+      o << " = " << std::round(tune_params[i].current) << ";" << endl;
    }
    o << "const int Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);

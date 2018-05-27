@@ -8,36 +8,36 @@
 #include <string>
 #include <vector>
 
-class Tune {
+struct TuneParam {
+   int index;
+   string name;
+   score_t current;
+   score_t min_value;
+   score_t max_value;
+   enum Scaling {None, Midgame, Endgame, Any};
+   Scaling scaling;
+   int tunable;
+
+   TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
+      index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
+   }
+   TuneParam():
+      index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
+   }
+   score_t range() const {
+      return max_value - min_value;
+   }
+   score_t scaled() const {
+      return (current - min_value)/range();
+   };
+   void scale(score_t val) {
+      current = val*range() + min_value;
+   }
+};
+
+class Tune : public vector<TuneParam> {
 
  public:
-
-  struct TuneParam {
-    int index;
-    string name;
-    score_t current;
-    score_t min_value;
-    score_t max_value;
-    enum Scaling {None, Midgame, Endgame, Any};
-    Scaling scaling;
-    int tunable;
-
-  TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
-    index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
-    }
-    TuneParam():
-    index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
-    }
-    score_t range() const {
-      return max_value - min_value;
-    }
-    score_t scaled() const {
-      return (current - min_value)/range();
-    };
-    void scale(score_t val) {
-      current = val*range() + min_value;
-    }
-  };
 
   Tune();
 
@@ -274,20 +274,6 @@ class Tune {
   // read parameter values from a stream
   void readX0(istream &);
 
-  void getParam(int index, TuneParam &param) const;
-
-  TuneParam &operator [] (const int i) {
-    return tune_params[i];
-  }
-
-  const TuneParam &operator [] (const int i) const {
-    return tune_params[i];
-  }
-
-  score_t getParamValue(int index) const;
-
-  void updateParamValue(int index, score_t value);
-
   int findParamByName(const string &name) const;
 
   static const int NUM_MISC_PARAMS = 177;
@@ -295,10 +281,6 @@ class Tune {
   double scale(score_t value,int index,int materialLevel) const;
 
   score_t kingAttackSigmoid(score_t weight) const;
-
-private:
-
-  vector<TuneParam> tune_params;
 
 };
 #endif
