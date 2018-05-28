@@ -74,7 +74,7 @@ class SearchController;
 typedef void (CDECL *PostFunction)(const Statistics &);
 typedef int (CDECL *TerminateFunction)(const Statistics &);
 
-class Search : public ThreadControl {
+class Search {
 
     friend class ThreadPool;
     friend class SearchController;
