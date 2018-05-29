@@ -1477,7 +1477,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
         if (controller->waitTime) {
             // we are in reduced strength mode, waste some time
-			std::this_thread::sleep_for(std::chrono::milliseconds(controller->waitTime));
+            std::this_thread::sleep_for(std::chrono::milliseconds(controller->waitTime));
         }
         if (!wide) {
            hibound = node->best_score + 1;  // zero-width window
