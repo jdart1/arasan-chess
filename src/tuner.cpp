@@ -97,7 +97,6 @@ static string cmdline;
 
 LockDefine(file_lock);
 LockDefine(data_lock);
-LockDefine(hash_lock);
 
 #ifdef _POSIX_VERSION
 static pthread_attr_t stackSizeAttrib;
@@ -657,7 +656,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
            }
        }
    };
-   
+
    grads[Tune::KING_PST_MIDGAME+ksq_map] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+ksq_map,mLevel);
 
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
@@ -1520,7 +1519,6 @@ static void learn()
 {
    LockInit(data_lock);
    LockInit(file_lock);
-   LockInit(hash_lock);
 #ifdef _MSC_VER
    double best = 1.0e10;
 #else
@@ -1592,7 +1590,6 @@ static void learn()
 
    LockFree(data_lock);
    LockFree(file_lock);
-   LockFree(hash_lock);
 }
 
 int CDECL main(int argc, char **argv)
