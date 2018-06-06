@@ -13,7 +13,7 @@
 static const score_t MOBILITY_RANGE = VAL(0.333);
 static const score_t OUTPOST_RANGE = VAL(0.65);
 static const score_t PST_RANGE = VAL(1.0);
-static const score_t PP_BLOCK_RANGE = VAL(0.333);
+static const score_t PP_BLOCK_RANGE = VAL(0.5);
 static const score_t TRADE_DOWN_RANGE = VAL(0.333);
 static const score_t THREAT_RANGE = VAL(0.75);
 static const score_t ENDGAME_KING_POS_RANGE = VAL(0.75);
@@ -306,7 +306,7 @@ Tune::Tune()
    };
 
    const score_t PP_OWN_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.060),VAL(-0.060),VAL(-0.060),VAL(-0.075),VAL(-0.075),VAL(-0.090)},{VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.172),VAL(-0.172),VAL(-0.172),VAL(-0.215),VAL(-0.215),VAL(-0.258)}};
-   const score_t PP_OPP_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.171),VAL(-0.085),VAL(-0.057),VAL(-0.042),VAL(-0.034),VAL(-0.028),VAL(-0.190),VAL(-0.095),VAL(-0.063),VAL(-0.047),VAL(-0.038),VAL(-0.217),VAL(-0.108),VAL(-0.072),VAL(-0.54),VAL(-0.251),VAL(-0.125),VAL(-0.083),VAL(-0.361),VAL(-0.180),VAL(-0.569)},{VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.204),VAL(-0.204),VAL(-0.204),VAL(-0.276),VAL(-0.276),VAL(-0.374)}};
+   const score_t PP_OPP_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.171),VAL(-0.085),VAL(-0.057),VAL(-0.042),VAL(-0.034),VAL(-0.028),VAL(-0.190),VAL(-0.095),VAL(-0.063),VAL(-0.047),VAL(-0.038),VAL(-0.217),VAL(-0.108),VAL(-0.072),VAL(-0.5),VAL(-0.251),VAL(-0.125),VAL(-0.083),VAL(-0.361),VAL(-0.180),VAL(-0.5)},{VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.204),VAL(-0.204),VAL(-0.204),VAL(-0.276),VAL(-0.276),VAL(-0.374)}};
 
    int i = 0;
    for (;i < NUM_MISC_PARAMS; i++) {
@@ -498,32 +498,33 @@ Tune::Tune()
 
 void Tune::checkParams() const
 {
-#ifdef _DEBUG
    if (NUM_MISC_PARAMS != KING_OPP_PASSER_DISTANCE) {
       cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_OPP_PASSER_DISTANCE << endl;
    }
-   for (int i = 0; i<NUM_MISC_PARAMS; i++) {
-      if (tune_params[i].index != i)
-         cerr << "warning: index mismatch in Tune::tune_params at position " << i << ", param " << tune_params[i].name << endl;
-      if (tune_params[i].current < tune_params[i].min_value) {
-         cerr << "warning: param " << tune_params[i].name << " has current < min" << endl;
+   int i = 0;
+   for (const TuneParam &p : (*this)) {
+      if (p.index != i) {
+         cerr << "warning: index mismatch in Tune::(*this) at position " << i << ", param " << p.name << endl;
       }
-      if (tune_params[i].current > tune_params[i].max_value) {
-         cerr << "warning: param " << tune_params[i].name << " has current > max" << endl;
+      ++i;
+      if (p.current < p.min_value) {
+         cerr << "warning: param " << p.name << " has current < min" << endl;
       }
-      if (tune_params[i].min_value > tune_params[i].max_value) {
-         cerr << "warning: param " << tune_params[i].name << " has min>max" << endl;
+      if (p.current > p.max_value) {
+         cerr << "warning: param " << p.name << " has current > max" << endl;
+      }
+      if (p.min_value > p.max_value) {
+         cerr << "warning: param " << p.name << " has min>max" << endl;
       }
 /*
-      if (tune_params[i].min_value == tune_params[i].current) {
-         cerr << "warning: param " << tune_params[i].name << " tuned to min value (" << tune_params[i].current << ")." << endl;
+      if (p.min_value == p.current) {
+         cerr << "warning: param " << p.name << " tuned to min value (" << p.current << ")." << endl;
       }
-      if (tune_params[i].max_value == tune_params[i].current) {
-         cerr << "warning: param " << tune_params[i].name << " tuned to max value (" << tune_params[i].current << ")." << endl;
+      if (p.max_value == p.current) {
+         cerr << "warning: param " << p.name << " tuned to max value (" << p.current << ")." << endl;
       }
 */
    }
-#endif
 }
 
 void Tune::applyParams() const
