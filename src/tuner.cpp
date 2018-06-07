@@ -1360,7 +1360,8 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
       const int i = p.index;
       // do learning on scaled value:
       score_t val = p.scaled();
-      double dv = data0.grads[i];
+      // correct gradient so it reflects scaled x
+      double dv = data0.grads[i]*p.range();
       if (regularize && p.tunable) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
