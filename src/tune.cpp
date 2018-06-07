@@ -13,7 +13,7 @@
 static const score_t MOBILITY_RANGE = VAL(0.333);
 static const score_t OUTPOST_RANGE = VAL(0.65);
 static const score_t PST_RANGE = VAL(1.0);
-static const score_t PP_BLOCK_RANGE = VAL(0.5);
+static const score_t PP_BLOCK_RANGE = VAL(0.75);
 static const score_t TRADE_DOWN_RANGE = VAL(0.333);
 static const score_t THREAT_RANGE = VAL(0.75);
 static const score_t ENDGAME_KING_POS_RANGE = VAL(0.75);

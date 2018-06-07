@@ -1,32 +1,32 @@
 // Copyright 2015-2018 by Jon Dart. All Rights Reserved.
 // This is a generated file. Do not edit.
-// Generated 25-May-2018 05:21:17 by tuner -n 175 -R 25 -c 24 /home/jdart/chess/epd/big5.epd
-// Final objective value: 0.0760207
+// Generated 06-Jun-2018 04:32:39 by tuner -n 175 -R 25 -c 24 /home/jdart/chess/epd/big5.epd
+// Final objective value: 0.0759694
 
 //
 
 #include "params.h"
 
-const int Params::RB_ADJUST[6] = {53, -6, 89, 39, 31, 61};
-const int Params::RBN_ADJUST[6] = {64, -19, 26, -11, -37, -32};
-const int Params::QR_ADJUST[5] = {21, 73, 24, -37, -96};
-const int Params::KN_VS_PAWN_ADJUST[3] = {0, -291, -165};
-const int Params::CASTLING[6] = {13, -38, -25, 0, 4, -18};
-const int Params::KING_COVER[6][4] = {{11, 21, 14, 12},
+const int Params::RB_ADJUST[6] = {54, -6, 89, 39, 31, 61};
+const int Params::RBN_ADJUST[6] = {64, -19, 26, -13, -37, -32};
+const int Params::QR_ADJUST[5] = {22, 72, 25, -34, -96};
+const int Params::KN_VS_PAWN_ADJUST[3] = {0, -293, -165};
+const int Params::CASTLING[6] = {13, -38, -24, 0, 5, -18};
+const int Params::KING_COVER[6][4] = {{11, 22, 14, 12},
 {5, 9, 6, 5},
-{-6, -13, -8, -7},
-{-6, -11, -7, -6},
+{-6, -12, -8, -7},
+{-5, -10, -7, -6},
 {-9, -18, -11, -10},
-{-18, -37, -24, -21}};
+{-18, -35, -23, -20}};
 const int Params::KING_COVER_BASE = -13;
 const int Params::KING_DISTANCE_BASIS = 40;
 const int Params::KING_DISTANCE_MULT = 10;
 const int Params::PIN_MULTIPLIER_MID = 79;
-const int Params::PIN_MULTIPLIER_END = 83;
+const int Params::PIN_MULTIPLIER_END = 82;
 const int Params::KRMINOR_VS_R = 0;
 const int Params::KRMINOR_VS_R_NO_PAWNS = -184;
 const int Params::KQMINOR_VS_Q = 0;
-const int Params::KQMINOR_VS_Q_NO_PAWNS = -150;
+const int Params::KQMINOR_VS_Q_NO_PAWNS = -148;
 const int Params::MINOR_FOR_PAWNS = 40;
 const int Params::ENDGAME_PAWN_ADVANTAGE = 32;
 const int Params::PAWN_ENDGAME1 = 40;
@@ -40,28 +40,28 @@ const int Params::ROOK_ATTACK_BOOST = 21;
 const int Params::ROOK_ATTACK_BOOST2 = 33;
 const int Params::QUEEN_ATTACK_FACTOR = 50;
 const int Params::QUEEN_ATTACK_BOOST = 44;
-const int Params::QUEEN_ATTACK_BOOST2 = 54;
+const int Params::QUEEN_ATTACK_BOOST2 = 53;
 const int Params::KING_ATTACK_COVER_BOOST_BASE = 9;
-const int Params::KING_ATTACK_COVER_BOOST_SLOPE = 158;
-const int Params::PAWN_THREAT_ON_PIECE_MID = 2;
+const int Params::KING_ATTACK_COVER_BOOST_SLOPE = 163;
+const int Params::PAWN_THREAT_ON_PIECE_MID = 3;
 const int Params::PAWN_THREAT_ON_PIECE_END = 12;
 const int Params::PIECE_THREAT_MM_MID = 32;
 const int Params::PIECE_THREAT_MR_MID = 88;
 const int Params::PIECE_THREAT_MQ_MID = 68;
-const int Params::PIECE_THREAT_MM_END = 30;
+const int Params::PIECE_THREAT_MM_END = 31;
 const int Params::PIECE_THREAT_MR_END = 74;
 const int Params::PIECE_THREAT_MQ_END = 96;
 const int Params::MINOR_PAWN_THREAT_MID = 9;
 const int Params::MINOR_PAWN_THREAT_END = 24;
-const int Params::PIECE_THREAT_RM_MID = 19;
+const int Params::PIECE_THREAT_RM_MID = 20;
 const int Params::PIECE_THREAT_RR_MID = 3;
-const int Params::PIECE_THREAT_RQ_MID = 94;
-const int Params::PIECE_THREAT_RM_END = 31;
-const int Params::PIECE_THREAT_RR_END = 1;
+const int Params::PIECE_THREAT_RQ_MID = 93;
+const int Params::PIECE_THREAT_RM_END = 30;
+const int Params::PIECE_THREAT_RR_END = 0;
 const int Params::PIECE_THREAT_RQ_END = 96;
 const int Params::ROOK_PAWN_THREAT_MID = 15;
-const int Params::ROOK_PAWN_THREAT_END = 28;
-const int Params::ENDGAME_KING_THREAT = 40;
+const int Params::ROOK_PAWN_THREAT_END = 27;
+const int Params::ENDGAME_KING_THREAT = 39;
 const int Params::BISHOP_TRAPPED = -188;
 const int Params::BISHOP_PAIR_MID = 33;
 const int Params::BISHOP_PAIR_END = 57;
@@ -84,45 +84,45 @@ const int Params::TWO_ROOKS_ON_7TH_END = 68;
 const int Params::ROOK_ON_OPEN_FILE_MID = 28;
 const int Params::ROOK_ON_OPEN_FILE_END = 16;
 const int Params::ROOK_BEHIND_PP_MID = 0;
-const int Params::ROOK_BEHIND_PP_END = 13;
+const int Params::ROOK_BEHIND_PP_END = 20;
 const int Params::QUEEN_OUT = -31;
-const int Params::PAWN_SIDE_BONUS = 16;
-const int Params::KING_OWN_PAWN_DISTANCE = 10;
+const int Params::PAWN_SIDE_BONUS = 17;
+const int Params::KING_OWN_PAWN_DISTANCE = 11;
 const int Params::KING_OPP_PAWN_DISTANCE = 4;
-const int Params::QUEENING_SQUARE_CONTROL_MID = 60;
-const int Params::QUEENING_SQUARE_CONTROL_END = 48;
-const int Params::QUEENING_SQUARE_OPP_CONTROL_MID = -21;
-const int Params::QUEENING_SQUARE_OPP_CONTROL_END = -44;
+const int Params::QUEENING_SQUARE_CONTROL_MID = 59;
+const int Params::QUEENING_SQUARE_CONTROL_END = 47;
+const int Params::QUEENING_SQUARE_OPP_CONTROL_MID = -22;
+const int Params::QUEENING_SQUARE_OPP_CONTROL_END = -41;
 const int Params::WRONG_COLOR_BISHOP = 0;
 const int Params::SIDE_PROTECTED_PAWN = -6;
-const int Params::KING_OPP_PASSER_DISTANCE[6] = {0, 0, 22, 51, 86, 96};
-const int Params::KING_POSITION_LOW_MATERIAL[3] ={294, 218, 153};
-const int Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE] = {-2, -1, -1, -1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 18, 19, 21, 22, 24, 26, 28, 30, 33, 35, 38, 41, 43, 46, 50, 53, 56, 60, 64, 68, 73, 77, 82, 87, 92, 97, 103, 109, 115, 122, 128, 135, 142, 150, 157, 165, 173, 181, 190, 199, 208, 217, 226, 236, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 374, 384, 393, 403, 412, 421, 430, 438, 447, 455, 463, 470, 478, 485, 492, 498, 505, 511, 517, 523, 528, 533, 538, 543, 548, 552, 556, 560, 564, 567, 571, 574, 577, 580, 583, 585, 588, 590, 592, 594, 596, 598, 600, 602, 603, 605, 606, 607, 608, 610, 611, 612, 613, 614, 614, 615, 616, 617, 617, 618, 619, 619, 620, 620, 621};
+const int Params::KING_OPP_PASSER_DISTANCE[6] = {0, 0, 23, 53, 86, 96};
+const int Params::KING_POSITION_LOW_MATERIAL[3] ={286, 208, 146};
+const int Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE] = {-2, -1, -1, -1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 11, 13, 14, 15, 17, 18, 20, 21, 23, 25, 27, 29, 31, 34, 36, 39, 41, 44, 47, 51, 54, 58, 61, 65, 69, 74, 78, 83, 88, 94, 99, 105, 111, 117, 123, 130, 137, 144, 152, 159, 167, 175, 184, 192, 201, 210, 219, 229, 238, 248, 258, 267, 277, 287, 298, 308, 318, 328, 338, 348, 358, 368, 378, 387, 397, 406, 415, 424, 433, 442, 450, 458, 466, 474, 481, 489, 495, 502, 509, 515, 521, 527, 532, 537, 542, 547, 552, 556, 560, 564, 568, 572, 575, 578, 581, 584, 587, 590, 592, 594, 597, 599, 601, 603, 604, 606, 608, 609, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 621, 622, 623, 623, 624, 624, 625, 625};
 const int Params::TRADE_DOWN[8] = {45, 40, 34, 29, 23, 18, 12, 7};
-const int Params::PASSED_PAWN[2][8] = {{0, 0, 0, 0, 0, 27, 98, 135}, {0, 0, 0, 0, 18, 68, 149, 224}};
-const int Params::PASSED_PAWN_FILE_ADJUST[8] = {80, 82, 80, 75, 75, 80, 82, 80};
+const int Params::PASSED_PAWN[2][8] = {{0, 0, 0, 0, 0, 25, 99, 162}, {0, 0, 0, 0, 17, 65, 145, 224}};
+const int Params::PASSED_PAWN_FILE_ADJUST[8] = {85, 87, 84, 80, 80, 84, 87, 85};
 const int Params::POTENTIAL_PASSER[2][8] = {{0, 0, 0, 0, 0, 10, 96, 0}, {0, 0, 0, 0, 0, 16, 96, 0}};
-const int Params::CONNECTED_PASSER[2][8] = {{0, 0, 0, 0, 12, 94, 218, 288}, {0, 0, 0, 0, 43, 92, 256, 320}};
-const int Params::ADJACENT_PASSER[2][8] = {{0, 0, 0, 12, 0, 24, 90, 173}, {0, 0, 0, 8, 13, 28, 57, 56}};
-const int Params::PP_OWN_PIECE_BLOCK[2][21] = {{-41, -36, -38, -20, -34, -8, -27, -29, -11, -26, -33, -31, 0, -18, -32, -41, -8, -43, -25, -43, 0}, {0, 0, -1, -9, -18, -7, -1, -14, -13, -25, -26, -6, -5, -8, -15, -18, -16, -27, -43, -43, -43}};
-const int Params::PP_OPP_PIECE_BLOCK[2][21] = {{-43, -43, -43, -43, -43, -43, -43, -43, -31, -35, -36, -43, -12, -1, -8, -29, 0, 0, -43, -23, -43}, {-15, -13, 0, -6, -9, -4, -23, -11, -13, -7, -10, -27, -10, -3, -0, -43, -19, -11, -43, -37, -43}};
-const int Params::DOUBLED_PAWNS[2][8] = {{-44, 0, -19, -16, -16, -19, 0, -44}, {-45, -21, -27, -21, -21, -27, -21, -45}};
-const int Params::TRIPLED_PAWNS[2][8] = {{0, -28, -5, -8, -8, -5, -28, 0}, {-32, -64, -30, -44, -44, -30, -64, -32}};
-const int Params::ISOLATED_PAWN[2][8] = {{0, 0, -14, -17, -17, -14, 0, 0}, {-4, -8, -10, -17, -17, -10, -8, -4}};
+const int Params::CONNECTED_PASSER[2][8] = {{0, 0, 2, 3, 12, 96, 212, 288}, {0, 0, 0, 0, 43, 90, 247, 320}};
+const int Params::ADJACENT_PASSER[2][8] = {{0, 0, 0, 22, 4, 25, 88, 157}, {0, 0, 0, 7, 13, 29, 57, 55}};
+const int Params::PP_OWN_PIECE_BLOCK[2][21] = {{-44, -39, -43, -20, -41, -7, -28, -32, -14, -31, -45, -32, 0, -20, -40, -41, -8, -54, -33, -96, 0}, {0, 0, -0, -10, -17, -15, -0, -14, -14, -26, -27, -6, -5, -9, -16, -20, -18, -29, -66, -58, -91}};
+const int Params::PP_OPP_PIECE_BLOCK[2][21] = {{-76, -69, -68, -56, -55, -53, -64, -58, -33, -38, -39, -49, -14, -1, -8, -28, 0, 0, -55, -30, -96}, {-12, -11, 0, -4, -8, -4, -22, -10, -13, -8, -10, -28, -11, -5, -2, -50, -21, -15, -67, -49, -96}};
+const int Params::DOUBLED_PAWNS[2][8] = {{-44, 0, -20, -16, -16, -20, 0, -44}, {-44, -20, -27, -21, -21, -27, -20, -44}};
+const int Params::TRIPLED_PAWNS[2][8] = {{0, -28, -5, -9, -9, -5, -28, 0}, {-9, -64, -29, -45, -45, -29, -64, -9}};
+const int Params::ISOLATED_PAWN[2][8] = {{0, 0, -13, -16, -16, -13, 0, 0}, {-4, -8, -10, -17, -17, -10, -8, -4}};
 
-const int Params::KNIGHT_PST[2][64] = {{-78, -26, -7, -8, -8, -7, -26, -78, -21, -27, -19, 3, 3, -19, -27, -21, -39, -17, 2, 21, 21, 2, -17, -39, -18, -3, 16, 17, 17, 16, -3, -18, -33, -17, 14, 10, 10, 14, -17, -33, -61, -46, -14, -4, -4, -14, -46, -61, -108, -85, -35, -29, -29, -35, -85, -108, -128, -128, -128, -128, -128, -128, -128, -128}, {-65, -48, -34, -32, -32, -34, -48, -65, -42, -29, -26, -20, -20, -26, -29, -42, -48, -31, -23, 0, 0, -23, -31, -48, -23, -16, 7, 14, 14, 7, -16, -23, -32, -23, -2, 2, 2, -2, -23, -32, -48, -33, -15, -7, -7, -15, -33, -48, -72, -46, -41, -31, -31, -41, -46, -72, -128, -69, -71, -55, -55, -71, -69, -128}};
-const int Params::BISHOP_PST[2][64] = {{9, 41, 26, 22, 22, 26, 41, 9, 28, 37, 33, 25, 25, 33, 37, 28, 8, 33, 33, 26, 26, 33, 33, 8, -2, 5, 15, 32, 32, 15, 5, -2, -41, -17, -11, 13, 13, -11, -17, -41, -0, -38, -54, -35, -35, -54, -38, -0, -45, -71, -66, -105, -105, -66, -71, -45, -33, -77, -128, -128, -128, -128, -77, -33}, {-21, -3, -1, -5, -5, -1, -3, -21, -2, 1, -1, 6, 6, -1, 1, -2, -6, 4, 10, 13, 13, 10, 4, -6, -8, 4, 15, 20, 20, 15, 4, -8, -26, -12, -9, -0, -0, -9, -12, -26, -1, -17, -15, -15, -15, -15, -17, -1, -14, -14, -28, -30, -30, -28, -14, -14, -8, -8, -8, -29, -29, -8, -8, -8}};
-const int Params::ROOK_PST[2][64] = {{-73, -59, -53, -51, -51, -53, -59, -73, -84, -59, -54, -51, -51, -54, -59, -84, -79, -57, -59, -60, -60, -59, -57, -79, -80, -64, -64, -55, -55, -64, -64, -80, -59, -48, -41, -33, -33, -41, -48, -59, -48, -22, -27, -13, -13, -27, -22, -48, -47, -54, -21, -17, -17, -21, -54, -47, -39, -35, -118, -82, -82, -118, -35, -39}, {-13, -11, -4, -9, -9, -4, -11, -13, -17, -14, -6, -6, -6, -6, -14, -17, -17, -9, -6, -7, -7, -6, -9, -17, -8, 4, 7, 2, 2, 7, 4, -8, 8, 10, 16, 12, 12, 16, 10, 8, 13, 21, 22, 21, 21, 22, 21, 13, 3, 8, 14, 14, 14, 14, 8, 3, 27, 29, 29, 24, 24, 29, 29, 27}};
-const int Params::QUEEN_PST[2][64] = {{31, 34, 33, 43, 43, 33, 34, 31, 29, 41, 45, 48, 48, 45, 41, 29, 24, 38, 45, 35, 35, 45, 38, 24, 36, 44, 43, 45, 45, 43, 44, 36, 38, 40, 47, 52, 52, 47, 40, 38, 28, 36, 52, 49, 49, 52, 36, 28, 15, 6, 30, 25, 25, 30, 6, 15, 19, 28, 7, 6, 6, 7, 28, 19}, {-39, -48, -38, -25, -25, -38, -48, -39, -25, -28, -21, -4, -4, -21, -28, -25, -11, 11, 21, 16, 16, 21, 11, -11, 10, 30, 40, 45, 45, 40, 30, 10, 24, 55, 63, 79, 79, 63, 55, 24, 24, 56, 81, 89, 89, 81, 56, 24, 44, 56, 85, 98, 98, 85, 56, 44, 14, 28, 30, 33, 33, 30, 28, 14}};
-const int Params::KING_PST[2][64] = {{33, 52, 4, 18, 18, 4, 52, 33, 72, 70, 38, 53, 53, 38, 70, 72, 3, 35, -27, -67, -67, -27, 35, 3, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -127, -101, -128, -128, -128, -128, -101, -127, -113, 128, -128, -128, -128, -128, 128, -113, -47, -128, 128, -128, -128, 128, -128, -47}, {-76, -73, -76, -79, -79, -76, -73, -76, -61, -66, -71, -69, -69, -71, -66, -61, -68, -70, -65, -63, -63, -65, -70, -68, -65, -59, -52, -50, -50, -52, -59, -65, -49, -41, -34, -33, -33, -34, -41, -49, -43, -32, -27, -26, -26, -27, -32, -43, -47, -37, -33, -34, -34, -33, -37, -47, -78, -54, -50, -52, -52, -50, -54, -78}};
+const int Params::KNIGHT_PST[2][64] = {{-78, -27, -8, -9, -9, -8, -27, -78, -22, -28, -20, 2, 2, -20, -28, -22, -40, -18, 1, 20, 20, 1, -18, -40, -20, -4, 15, 15, 15, 15, -4, -20, -35, -18, 13, 9, 9, 13, -18, -35, -63, -47, -14, -5, -5, -14, -47, -63, -106, -84, -35, -29, -29, -35, -84, -106, -128, -128, -128, -128, -128, -128, -128, -128}, {-70, -48, -33, -31, -31, -33, -48, -70, -43, -29, -25, -19, -19, -25, -29, -43, -47, -30, -22, 1, 1, -22, -30, -47, -22, -15, 8, 15, 15, 8, -15, -22, -31, -22, -1, 3, 3, -1, -22, -31, -47, -32, -14, -6, -6, -14, -32, -47, -72, -46, -41, -30, -30, -41, -46, -72, -128, -68, -69, -54, -54, -69, -68, -128}};
+const int Params::BISHOP_PST[2][64] = {{8, 40, 25, 21, 21, 25, 40, 8, 27, 36, 32, 24, 24, 32, 36, 27, 6, 32, 32, 25, 25, 32, 32, 6, -3, 4, 14, 31, 31, 14, 4, -3, -42, -18, -12, 12, 12, -12, -18, -42, -2, -39, -55, -36, -36, -55, -39, -2, -45, -73, -67, -105, -105, -67, -73, -45, -35, -76, -128, -128, -128, -128, -76, -35}, {-20, -2, -0, -4, -4, -0, -2, -20, -3, 1, -1, 6, 6, -1, 1, -3, -6, 4, 11, 14, 14, 11, 4, -6, -7, 5, 16, 21, 21, 16, 5, -7, -24, -11, -9, 1, 1, -9, -11, -24, -0, -16, -14, -14, -14, -14, -16, -0, -13, -13, -27, -29, -29, -27, -13, -13, -7, -6, -6, -28, -28, -6, -6, -7}};
+const int Params::ROOK_PST[2][64] = {{-74, -60, -54, -51, -51, -54, -60, -74, -85, -60, -55, -52, -52, -55, -60, -85, -80, -58, -60, -61, -61, -60, -58, -80, -83, -66, -65, -56, -56, -65, -66, -83, -62, -50, -42, -34, -34, -42, -50, -62, -51, -23, -27, -15, -15, -27, -23, -51, -48, -55, -23, -18, -18, -23, -55, -48, -40, -37, -118, -84, -84, -118, -37, -40}, {-12, -11, -4, -9, -9, -4, -11, -12, -17, -13, -5, -5, -5, -5, -13, -17, -16, -8, -5, -5, -5, -5, -8, -16, -5, 6, 9, 4, 4, 9, 6, -5, 11, 12, 18, 14, 14, 18, 12, 11, 16, 23, 24, 23, 23, 24, 23, 16, 7, 11, 16, 16, 16, 16, 11, 7, 30, 32, 32, 26, 26, 32, 32, 30}};
+const int Params::QUEEN_PST[2][64] = {{30, 34, 33, 43, 43, 33, 34, 30, 29, 41, 45, 48, 48, 45, 41, 29, 24, 38, 45, 36, 36, 45, 38, 24, 36, 43, 43, 44, 44, 43, 43, 36, 38, 40, 46, 51, 51, 46, 40, 38, 28, 36, 51, 49, 49, 51, 36, 28, 17, 6, 30, 25, 25, 30, 6, 17, 19, 28, 9, 6, 6, 9, 28, 19}, {-39, -48, -37, -25, -25, -37, -48, -39, -26, -28, -20, -3, -3, -20, -28, -26, -10, 12, 22, 17, 17, 22, 12, -10, 12, 31, 41, 47, 47, 41, 31, 12, 26, 56, 63, 80, 80, 63, 56, 26, 27, 56, 82, 89, 89, 82, 56, 27, 46, 57, 86, 98, 98, 86, 57, 46, 18, 31, 34, 38, 38, 34, 31, 18}};
+const int Params::KING_PST[2][64] = {{33, 52, 5, 19, 19, 5, 52, 33, 73, 71, 38, 54, 54, 38, 71, 73, 8, 38, -22, -64, -64, -22, 38, 8, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -128, -121, -111, -128, -128, -128, -128, -111, -121, -50, 128, -128, -128, -128, -128, 128, -50, -128, -128, 128, -128, -128, 128, -128, -128}, {-79, -76, -79, -83, -83, -79, -76, -79, -63, -69, -74, -72, -72, -74, -69, -63, -71, -72, -68, -66, -66, -68, -72, -71, -67, -61, -54, -52, -52, -54, -61, -67, -51, -43, -35, -34, -34, -35, -43, -51, -44, -33, -27, -26, -26, -27, -33, -44, -48, -38, -34, -34, -34, -34, -38, -48, -78, -54, -50, -53, -53, -50, -54, -78}};
 
-const int Params::KNIGHT_MOBILITY[9] = {-65, -27, -9, 2, 10, 19, 22, 20, 14};
-const int Params::BISHOP_MOBILITY[15] = {-43, -25, -12, -3, 7, 15, 19, 22, 27, 30, 30, 35, 40, 22, 12};
-const int Params::ROOK_MOBILITY[2][15] = {{-43, -28, -18, -14, -12, -6, -1, 8, 12, 17, 19, 21, 35, 35, 33}, {-43, -34, -15, 0, 13, 19, 21, 23, 30, 34, 38, 43, 43, 37, 30}};
-const int Params::QUEEN_MOBILITY[2][24] = {{-43, -16, -10, -3, 3, 9, 15, 19, 24, 29, 30, 32, 33, 34, 36, 40, 41, 43, 43, 43, 43, 43, 43, 43}, {-43, -43, -43, -43, -24, -10, 10, 14, 25, 23, 29, 35, 35, 39, 42, 41, 43, 43, 43, 42, 43, 43, 38, 28}};
-const int Params::KING_MOBILITY_ENDGAME[5] = {-43, -15, 6, 16, 19};
+const int Params::KNIGHT_MOBILITY[9] = {-65, -27, -9, 2, 10, 19, 21, 20, 14};
+const int Params::BISHOP_MOBILITY[15] = {-43, -25, -12, -3, 7, 14, 19, 22, 27, 30, 30, 35, 40, 23, 12};
+const int Params::ROOK_MOBILITY[2][15] = {{-43, -28, -18, -14, -12, -6, -1, 8, 12, 17, 18, 21, 35, 36, 33}, {-43, -36, -17, -2, 12, 18, 20, 23, 30, 34, 38, 43, 43, 36, 29}};
+const int Params::QUEEN_MOBILITY[2][24] = {{-43, -17, -11, -3, 3, 8, 14, 19, 23, 28, 29, 32, 33, 34, 35, 39, 42, 43, 43, 43, 43, 43, 43, 43}, {-43, -43, -43, -43, -26, -12, 9, 12, 24, 22, 29, 35, 35, 39, 42, 40, 43, 43, 43, 43, 43, 43, 37, 29}};
+const int Params::KING_MOBILITY_ENDGAME[5] = {-43, -15, 6, 17, 20};
 
-const int Params::KNIGHT_OUTPOST[2][2] = {{29, 61}, {17, 28}};
-const int Params::BISHOP_OUTPOST[2][2] = {{36, 61}, {33, 24}};
+const int Params::KNIGHT_OUTPOST[2][2] = {{29, 61}, {17, 29}};
+const int Params::BISHOP_OUTPOST[2][2] = {{36, 61}, {33, 25}};
 
 
