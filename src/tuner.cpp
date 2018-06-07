@@ -1356,11 +1356,11 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
                           vector<double> &step_sizes /* for adaptive */,
                           int iterations)
 {
-   for (int i = 0; i < tune_params.numTuningParams(); i++) {
-      double dv = data0.grads[i];
-      const TuneParam &p = tune_params[i];
+   for (TuneParam &p : tune_params) {
+      const int i = p.index;
       // do learning on scaled value:
       score_t val = p.scaled();
+      double dv = data0.grads[i];
       if (regularize && p.tunable) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
@@ -1405,7 +1405,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             prev_gradient[i] = dv;
          }
          // re-scale
-         tune_params[i].scale(val);
+         p.scale(val);
       }
    }
 }
