@@ -282,9 +282,16 @@ public:
         TalkLevel t);
 
     uint64_t getExtraTime() const {
+       // time awarded for previous fail-low:
        uint64_t extension = fail_low_bonus_time;
-       if (fail_low_root_extend || fail_high_root || fail_high_root_extend) {
+       if (fail_low_root_extend) {
+          // presently failing low, allow up to max extra time
           extension += xtra_time;
+       }
+       else if (fail_high_root || fail_high_root_extend) {
+          // extend time for fail high, but less than for
+          // failing low
+          extension += xtra_time/2;
        }
        return std::min<uint64_t>(xtra_time,extension);
     }
