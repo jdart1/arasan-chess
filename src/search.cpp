@@ -1017,7 +1017,7 @@ Move Search::ply0_search()
                else if (controller->fail_high_root_extend && !stats.failHigh) {
                   controller->fail_high_root_extend = false;
                   if (talkLevel == Trace) {
-                     cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
+                     cout << "# resetting time added due to root fail high, new target=" << controller->getTimeLimit() << endl;
                   }
                }
             }
