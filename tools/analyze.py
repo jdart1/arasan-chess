@@ -52,7 +52,7 @@ class MyInfoHandler(chess.uci.InfoHandler):
         global results
         global position
         global options
-        print(line)
+#        print(line)
         match = MyInfoHandler.pat.search(line)
         if match != None:
             parts = match.group().split()
@@ -202,7 +202,7 @@ def main(argv = None):
                continue
            m = pat.search(line)
            if m == None:
-               print("error: invalid FEN in line: %s" % line, file=sys.stderr)
+               print("error: invalid FEN in line: %s" % line, file=sys.stderr, flush=True)
            else:    
                print()
                print(line)
@@ -217,7 +217,7 @@ def main(argv = None):
                         try:
                            san_moves.append(position.board.san(move))
                         except:
-                           print(key + " solution move " + str(i) + " could not be parsed",file=sys.stderr)
+                           print(key + " solution move " + str(i) + " could not be parsed",file=sys.stderr, flush=True)
                      i = i + 1                                 
                      position.ops[key] = san_moves
 
@@ -227,10 +227,10 @@ def main(argv = None):
                search(engine,position.board,position.ops,time)
                if (done and results.bestmove != None):
                   if correct(results.bestmove,position):
-                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds")
+                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds", flush=True)
                      solved = solved + 1
                   else:
-                     print("-- not solved")
+                     print("-- not solved", flush=True)
     engine.quit()
     print()
     print("solved: " + str(solved))
