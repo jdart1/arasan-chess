@@ -1,4 +1,4 @@
-// Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2018 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -21,8 +21,8 @@ extern "C"
 #include <climits>
 #include <iomanip>
 
-//#define PAWN_DEBUG
-//#define EVAL_DEBUG
+#define PAWN_DEBUG
+#define EVAL_DEBUG
 //#define ATTACK_DEBUG
 
 const int Params:: MATERIAL_SCALE[32] =
@@ -1154,9 +1154,8 @@ void Scoring::pieceScore(const Board &board,
    allAttacks |= oppPawnData.opponent_pawn_attacks;
    allAttacks |= Attacks::king_attacks[kp];
    if (early_endgame) {
-      int mobl = Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied &
-                  ~allAttacks).bitCount();
-      opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[std::min<int>(4,mobl)];
+      int mobl = std::min<int>(4,Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied & ~allAttacks).bitCount());
+      opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[mobl];
 #ifdef EVAL_DEBUG
       cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << endl;
 #endif
