@@ -47,7 +47,7 @@ static const int PV_CHECK_EXTENSION = 3*DEPTH_INCREMENT/4;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const int WIDE_WINDOW = 10*Params::PAWN_VALUE;
+static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
 #ifdef SINGULAR_EXTENSION
 static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
 #endif
@@ -2850,10 +2850,7 @@ score_t Search::search()
                 SetPhase(moves[i],MoveGenerator::WINNING_CAPTURE_PHASE);
                 node->last_move = moves[i];
                 node->num_try++;
-                //int extension = 0;
-                //if (board.checkStatus() == InCheck) extension += DEPTH_INCREMENT;
-                int value = -search(-threshold-1, -threshold,
-                                    ply+1, nu_depth, PROBCUT);
+                score_t value = -search(-threshold-1, -threshold, ply+1, nu_depth, PROBCUT);
 #ifdef _TRACE
                 if (mainThread()) {
                    indent(ply);
