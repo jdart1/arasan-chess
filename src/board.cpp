@@ -707,7 +707,7 @@ void Board::doMove( Move move )
             switch (TypeOfPiece(capture)) {
             case Empty: break;
             case Pawn:
-                   ASSERT(pawn_bits[White].isSet(target));
+               ASSERT(pawn_bits[White].isSet(target));
                pawn_bits[White].clear(target);
                Xor(pawnHashCodeW, target, capture);
                if (moveType == EnPassant)
