@@ -21,8 +21,8 @@ extern "C"
 #include <climits>
 #include <iomanip>
 
-#define PAWN_DEBUG
-#define EVAL_DEBUG
+//#define PAWN_DEBUG
+//#define EVAL_DEBUG
 //#define ATTACK_DEBUG
 
 const int Params:: MATERIAL_SCALE[32] =
