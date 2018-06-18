@@ -1074,10 +1074,10 @@ static Move search(SearchController *searcher, Board &board,
     }
     else {
         if (ics || uci) {
-            vector< pair<Move,int> > choices;
+            vector< Move > choices;
             int moveCount = 0;
             if (options.book.book_enabled) {
-                moveCount = openingBook.book_moves(board,choices);
+               moveCount = openingBook.book_moves(board,choices,false);
             }
             stringstream s;
             if (uci)
@@ -1087,9 +1087,7 @@ static Move search(SearchController *searcher, Board &board,
             else
                 s << "tellics whisper book moves: (";
             for (int i=0;i<moveCount;i++) {
-                Notation::image(board,choices[i].first,Notation::OutputFormat::SAN,s);
-                s << ' ';
-                s << (int)(100.0*choices[i].second/(float)book::MAX_WEIGHT + 0.5F);
+                Notation::image(board,choices[i],Notation::OutputFormat::SAN,s);
                 if (i < moveCount-1)
                     s << ", ";
             }
@@ -1372,10 +1370,10 @@ static Move analyze(SearchController &searcher, Board &board, Statistics &stats)
 
 static void doHint() {
     // try book move first
-    vector < pair<Move,int> > moves;
+    vector<Move> moves;
     unsigned count = 0;
     if (options.book.book_enabled) {
-        count = openingBook.book_moves(*main_board,moves);
+        count = openingBook.book_moves(*main_board,moves,false);
     }
     if (count > 0) {
         if (count == 1)
@@ -1383,7 +1381,7 @@ static void doHint() {
         else
             cout << "Book moves: ";
         for (unsigned i = 0; i<count; i++) {
-            Notation::image(*main_board,moves[i].first,Notation::OutputFormat::SAN,cout);
+            Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,cout);
             if (i<count-1) cout << ' ';
         }
         cout << endl;
@@ -1679,8 +1677,10 @@ static void processWinboardOptions(const string &args) {
     if (doTrace) {
         cout << "# setting option " << name << "=" << value << endl;
     }
-    if (name == "Book selectivity") {
-        Options::setOption<int>(value,options.book.selectivity);
+    if (name == "Favor frequent book moves") {
+        Options::setOption<int>(value,options.book.frequency);
+    } else if (name == "Favor best book moves") {
+        Options::setOption<int>(value,options.book.scoring);
     } else if (name == "Can resign") {
         setCheckOption(value,options.search.can_resign);
     } else if (name == "Position learning") {
@@ -2407,8 +2407,10 @@ static bool do_command(const string &cmd, Board &board) {
 #endif
         cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << endl;
         cout << "option name OwnBook type check default true" << endl;
-        cout << "option name Book selectivity type spin default " <<
-            options.book.selectivity << " min 0 max 100" << endl;
+        cout << "option name Favor frequent book moves type spin default " <<
+            options.book.frequency << " min 0 max 100" << endl;
+        cout << "option name Favor best book moves type spin default " <<
+            options.book.scoring << " min 0 max 100" << endl;
         cout << "option name Threads type spin default " <<
             options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << endl;
@@ -2498,8 +2500,11 @@ static bool do_command(const string &cmd, Board &board) {
         else if (uciOptionCompare(name,"OwnBook")) {
             options.book.book_enabled = (value == "true");
         }
-        else if (uciOptionCompare(name,"Book selectivity")) {
-            Options::setOption<int>(value,options.book.selectivity);
+        else if (uciOptionCompare(name,"Favor frequent book moves")) {
+            Options::setOption<int>(value,options.book.frequency);
+        }
+        else if (uciOptionCompare(name,"Favor best book moves")) {
+            Options::setOption<int>(value,options.book.scoring);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
@@ -3010,9 +3015,10 @@ static bool do_command(const string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         cout << " egt=\"syzygy\"";
 #endif
-        // custom option for book selectivity
-        cout << " option=\"Book selectivity -spin " <<
-            options.book.selectivity << " 1 100\"";
+        cout << " option=\"Favor frequent book moves -spin " <<
+            options.book.frequency << " 1 100\"";
+        cout << " option=\"Favor best book moves -spin " <<
+            options.book.scoring << " 1 100\"";
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
         cout << " option=\"Position learning -check " <<
@@ -3050,11 +3056,11 @@ static bool do_command(const string &cmd, Board &board) {
     }
     else if (cmd == "bk") {
         // list book moves
-	vector < pair<Move,int> > moves;
+	vector<Move> moves;
         int count = 0;
         delayedInit(); // to allow "bk" before "new"
         if (options.book.book_enabled) {
-            count = openingBook.book_moves(*main_board,moves);
+            count = openingBook.book_moves(*main_board,moves,true);
         }
         if (count == 0) {
             cout << '\t' << "No book moves for this position." << endl
@@ -3064,7 +3070,7 @@ static bool do_command(const string &cmd, Board &board) {
             cout << " book moves:" << endl;
             for (int i = 0; i<count; i++) {
                 cout << '\t';
-                Notation::image(*main_board,moves[i].first,Notation::OutputFormat::SAN,cout);
+                Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,cout);
                 cout << endl;
             }
             cout << endl;

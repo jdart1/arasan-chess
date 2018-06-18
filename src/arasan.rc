@@ -25,12 +25,15 @@ store_games=true
 # Set this option false to disable the opening book
 book.book_enabled=true
 #
-# Book selectivity. Generally move selection is based on learning, 
-# frequency, and win/loss info, plus some random selection among
-# moves. Lower selectivity numbers will result in more randomness
-# in move selection. Selectivity=0 is the most random setting,
-# selectivity=100 is the most selective setting.
-book.selectivity=50
+# Book frequency factor (0-100).
+# Higher frequency numbers cause the book to focus more on frequently
+# played moves, and drop moves with low play counts.
+book.frequency=50
+#
+# Book scoring factor (0-100).
+# Higher scoring numbers cause the book to focus more on the best moves
+# and suppress playing of suboptimal moves.
+book.scoring=50
 #
 # Book random option. Values:
 # 0 = Arasan will not select moves that have zero weight or only
