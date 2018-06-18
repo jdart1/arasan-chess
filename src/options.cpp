@@ -50,7 +50,7 @@ Options::SearchOptions::SearchOptions() :
 
 template <class T>
 int Options::setOption(const string &name,
-                        const string &valueString, T &value) {
+                       const string &valueString, T &value) {
     if (!Options::setOption<T>(valueString,value)) {
         cerr << "warning: invalid value for option " << name << endl;
         return 0;
@@ -120,8 +120,13 @@ void Options::set_option(const string &name, const string &value) {
   else if (name == "book.book_enabled") {
     set_boolean_option(name,value,book.book_enabled);
   }
-  else if (name == "book.selectivity") {
-     setOption<int>(name,value,book.selectivity);
+  else if (name == "book.frequency") {
+     setOption<int>(name,value,book.frequency);
+     book.frequency = std::min<int>(100,std::max<int>(0,book.frequency));
+  }
+  else if (name == "book.scoring") {
+     setOption<int>(name,value,book.scoring);
+     book.scoring = std::min<int>(100,std::max<int>(0,book.scoring));
   }
   else if (name == "book.random") {
      setOption<int>(name,value,book.random);

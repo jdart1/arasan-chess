@@ -1077,7 +1077,7 @@ static Move search(SearchController *searcher, Board &board,
             vector< Move > choices;
             int moveCount = 0;
             if (options.book.book_enabled) {
-               moveCount = openingBook.book_moves(board,choices,false);
+               moveCount = openingBook.book_moves(board,choices);
             }
             stringstream s;
             if (uci)
@@ -1373,7 +1373,7 @@ static void doHint() {
     vector<Move> moves;
     unsigned count = 0;
     if (options.book.book_enabled) {
-        count = openingBook.book_moves(*main_board,moves,false);
+        count = openingBook.book_moves(*main_board,moves);
     }
     if (count > 0) {
         if (count == 1)
@@ -3057,10 +3057,10 @@ static bool do_command(const string &cmd, Board &board) {
     else if (cmd == "bk") {
         // list book moves
 	vector<Move> moves;
-        int count = 0;
+        unsigned count = 0;
         delayedInit(); // to allow "bk" before "new"
         if (options.book.book_enabled) {
-            count = openingBook.book_moves(*main_board,moves,true);
+            count = openingBook.book_moves(*main_board,moves);
         }
         if (count == 0) {
             cout << '\t' << "No book moves for this position." << endl
@@ -3068,7 +3068,7 @@ static bool do_command(const string &cmd, Board &board) {
         }
         else {
             cout << " book moves:" << endl;
-            for (int i = 0; i<count; i++) {
+            for (unsigned i = 0; i<count; i++) {
                 cout << '\t';
                 Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,cout);
                 cout << endl;

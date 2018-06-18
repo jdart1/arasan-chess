@@ -33,24 +33,23 @@ class BookReader
     }
                 
     // Randomly pick a move for board position "b". 
-    Move pick( const Board &b);
+    Move pick( const Board &b, score_t contempt = 0 );
 
-    // Return a vector of all book moves and associated scores,
-    // for a given position.
+    // Return a vector of all book moves for a given position.
     // Returns number of moves found.
-    int book_moves(const Board &b, vector< pair<Move,int> > &results);
+    unsigned book_moves(const Board &b, vector< Move> &results);
 
 protected:
                
+    static constexpr unsigned OUTCOMES = 3;
+
     // Return the move data structures for a given board position.
     // Return value is # of entries retrieved, -1 if error.
     int lookup(const Board &board, vector<book::DataEntry> &results);
 
-    int filterAndNormalize(const Board &board,
-                           vector<book::DataEntry> &rawMoves,
-                           vector< pair<Move,int> > &moves);
-
-    Move pickRandom(const Board &b, const vector< pair<Move,int> > &moves);
+    double calcReward(const std::array<double,OUTCOMES> &sample, score_t contempt = 0) const noexcept;
+   
+    double sample_dirichlet(const book::DataEntry &info, score_t contempt = 0);
 
     ifstream book_file;
     book::BookHeader hdr;

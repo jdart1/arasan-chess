@@ -1,4 +1,4 @@
-// Copyright 2014, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 2014, 2017-2018 by Jon Dart.  All Rights Reserved.
 
 #include "bookwrit.h"
 #include <fstream>
@@ -16,7 +16,7 @@ BookWriter::~BookWriter() {
 }
                 
 void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
-                     int32_t count) {
+                     uint32_t win, uint32_t loss, uint32_t draw) {
    const int index_page = (int)(hashCode % index_pages);
    // fetch index page, allocate if necessary
    book::IndexPage *idx = index[index_page];
@@ -36,7 +36,9 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
    de.index = moveIndex;
    de.next = book::NO_NEXT;
    de.weight = weight;
-   de.count = count;
+   de.win = win;
+   de.loss = loss;
+   de.draw = draw;
    if (found == -1) {
       // get last data page
       book::DataPage *dp;
@@ -167,7 +169,9 @@ int BookWriter::write(const char* pathName) {
       for (int j = 0; j < book::DATA_PAGE_SIZE; j++) {
          dp->data[j].next = (uint16_t)swapEndian16((byte*)&dp->data[j].next);
          dp->data[j].weight = (uint16_t)swapEndian16((byte*)&dp->data[j].weight);
-         dp->data[j].count = (uint32_t)swapEndian32((byte*)&dp->data[j].count);
+         dp->data[j].win = (uint32_t)swapEndian32((byte*)&dp->data[j].win);
+         dp->data[j].loss = (uint32_t)swapEndian32((byte*)&dp->data[j].loss);
+         dp->data[j].draw = (uint32_t)swapEndian32((byte*)&dp->data[j].draw);
       }
       book_file.write((char*)dp, sizeof(book::DataPage));
       if (book_file.fail()) return -1;

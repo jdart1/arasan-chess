@@ -33,7 +33,7 @@ class BookWriter {
                 
         // add a move to the file.
         void add(const hash_t hashCode, byte moveIndex, uint16_t weight,
-                 int32_t count);
+                 uint32_t win, uint32_t loss, uint32_t draw);
 
         // Write book contents out to the designated path. Returns 0
         // if no errors, -1 if error
