@@ -15,7 +15,7 @@ BookWriter::~BookWriter() {
    delete [] index;
 }
                 
-void BookWriter::add(const hash_t hashCode, byte moveIndex, uint16_t weight,
+void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
                      uint32_t win, uint32_t loss, uint32_t draw) {
    const int index_page = (int)(hashCode % index_pages);
    // fetch index page, allocate if necessary
@@ -168,7 +168,6 @@ int BookWriter::write(const char* pathName) {
       dp->num_free = (uint32_t)swapEndian32((byte*)&dp->num_free);
       for (int j = 0; j < book::DATA_PAGE_SIZE; j++) {
          dp->data[j].next = (uint16_t)swapEndian16((byte*)&dp->data[j].next);
-         dp->data[j].weight = (uint16_t)swapEndian16((byte*)&dp->data[j].weight);
          dp->data[j].win = (uint32_t)swapEndian32((byte*)&dp->data[j].win);
          dp->data[j].loss = (uint32_t)swapEndian32((byte*)&dp->data[j].loss);
          dp->data[j].draw = (uint32_t)swapEndian32((byte*)&dp->data[j].draw);

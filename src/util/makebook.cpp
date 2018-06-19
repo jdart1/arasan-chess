@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2018 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // a text file.
@@ -113,7 +113,6 @@ BEGIN_PACKED_STRUCT
     PositionEval eval;
     MoveEval moveEval;
     unsigned rec; // explicit weight if any
-    int relativeFreq, winWeight;
     uint32_t count;
     byte move_index;
     uint16_t weight;
@@ -129,7 +128,6 @@ BookEntry::BookEntry( unsigned r, PositionEval ev,
                        BookEntry *nxt, bool first_file)
     :next(nxt), first(first_file), white_win_loss(0),
      eval(ev), moveEval(mev), rec(r),
-     relativeFreq(0),winWeight(0),
      count(1),
      move_index(mv_indx), weight(0)
 {
@@ -144,42 +142,16 @@ BookEntry::BookEntry( unsigned r, PositionEval ev,
 
 static unordered_map <uint64_t, BookEntry *>* hashTable = nullptr;
 
-// Compute a recommended relative weight for a set of book
-// moves from a given position
+// Set the weight field for all the book moves.
 static void computeWeights(const hash_t hashCode, BookEntry *be)
 {
    int total = 0;
 
    // compute total frequency for eligible moves
    BookEntry *p;
-   for (p = be; p; p = p->next) {
-      if ((p->count >= minFrequency) || p->first) {
-          total += p->count;
-      }
-   }
-   if (total == 0) return;
-   int bestWinWeight = -1;
    const int black_to_move = BoardHash::sideToMove(hashCode) == Black;
    for (p = be; p; p = p->next) {
-       p->relativeFreq = book::MAX_WEIGHT*(p->count)/total;
-       int winloss;
-       if (black_to_move) {
-           winloss = (-p->white_win_loss*100)/(int)(p->count);
-       }
-       else {
-           // white is on move
-           winloss = (p->white_win_loss*100)/(int)(p->count);
-       }
-       p->winWeight = (winloss+100)/2;
-       if (p->winWeight > bestWinWeight) bestWinWeight = p->winWeight;
-#ifdef _TRACE
-       cout << "index " << (int)p->move_index << " win weight=" << p->winWeight << endl;
-#endif
-   }
-   // Now compute the weights
-   int totalWeight = 0;
-   for (p = be; p; p = p->next) {
-      int w;
+      int w = p->first ? int(book::MAX_EVAL)/2 : int(book::NO_RECOMMEND);
 #ifdef _TRACE
       cout << "index: " << (int)p->move_index << " ";
 #endif
@@ -197,93 +169,37 @@ static void computeWeights(const hash_t hashCode, BookEntry *be)
          cout << "avoid move: " << w << endl;
 #endif
       }
+      else if (p->moveEval == QUESTIONABLE_MOVE) {
+         w = int(0.4*book::MAX_WEIGHT);
+      }
+      else if (p->moveEval == GOOD_MOVE) {
+         w = int(0.6**book::MAX_WEIGHT);
+#ifdef _TRACE
+         cout << "good move: " << w << endl;
+#endif
+      }
       else if (p->moveEval == VERY_GOOD_MOVE) {
          w = book::MAX_WEIGHT;
 #ifdef _TRACE
          cout << "best move: " << w << endl;
 #endif
       }
-      else {
-#ifdef _TRACE
-          cout << "count=" << p->count << " moveEval=" <<
-              (int)p->moveEval << " posEval=" << (int)p->eval << endl;
-#endif
-          if (p->first && p->count < (unsigned)std::max<int>(2,minFrequency) &&
-              (p->moveEval != NO_MOVE_EVAL || p->eval != NO_POSITION_EVAL)) {
-             // This move is in the first annotated book file but
-             // occurs elsewhere with very low frequency. If we have
-             // information about it from an annotation, start
-             // it with a neutral eval and modify that based on
-             // the annotation (even if it has 0 winning results).
-             // If however there is no NAG associated with the move,
-             // use the win/loss frequency to set the weight as usual.
-             w = book::MAX_WEIGHT/2;
-#ifdef _TRACE
-             cout << "using neutral eval, w=" << w << endl;
-#endif
-         }
-         else if (bestWinWeight == 0) {
-#ifdef _TRACE
-             cout << "bestWinWeight = 0, so w=0" << endl;
-#endif
-             w = 0;
+      else if (p->first && p->eval != NO_POSITION_EVAL) {
+         // if there is an eval (from a NAG) for the position, use
+         // that to modify the weight. Note though position evals
+         // are generally at the end of a line, and we do not want
+         // to modify high-frequency moves, because the basic book
+         // is incomplete and there will be branches between those
+         // moves and the eval point.
+         // Note: ev is range -4..4
+         const int ev = (int)p->eval-(int)EQUAL_POSITION;
+         const int div = 1 + p->count/10;
+         if (black_to_move) {
+            w = w*(100-25*ev/div)/100;
          } else {
-             int winWeight = p->winWeight;
-             if (winWeight <= 9*bestWinWeight/10) {
-                // moves that are relatively worse than the best move
-                // get bumped lower in weight
-                winWeight = winWeight*winWeight/bestWinWeight;
-             }
-             w = (p->relativeFreq*winWeight)/50;
+            w = w*(100+25*ev/div)/100;
          }
-#ifdef _TRACE
-         cout << " computed weight=" << w << endl;
-         int w1 = w;
-#endif
-         if (p->moveEval != NO_MOVE_EVAL) {
-            // if there is an eval (from a NAG) for the move, use that
-            // to modify the weight
-            const int ev = (int)p->moveEval-(int)NEUTRAL_EVAL-1;
-            // move evals are -1..2
-            w = w*(100-25*ev)/100;
-         }
-         else if (p->eval != NO_POSITION_EVAL) {
-            // if there is an eval (from a NAG) for the position, use
-            // that to modify the weight. Note though position evals
-            // are generally at the end of a line, and we do not want
-            // to modify high-frequency moves, because the basic book
-            // is incomplete and there will be branches between those
-            // moves and the eval point.
-            // Note: ev is range -4..4
-            const int ev = (int)p->eval-(int)EQUAL_POSITION;
-            const int div = 1 + p->count/10;
-            if (black_to_move) {
-                w = w*(100-25*ev/div)/100;
-            } else {
-                w = w*(100+25*ev/div)/100;
-            }
-         }
-#ifdef _TRACE
-         if (w1 != w) cout << "adjusted weight: " << w << endl;
-#endif
       }
-      // This weight is not normalized yet, so allow it to exceed max weight
-      w = std::min<int>(w,2*book::MAX_WEIGHT);
-      p->weight = w;
-      totalWeight += w;
-   }
-   // last pass: normalize the weights
-   for (p = be; p; p = p->next) {
-      if (totalWeight) {
-         p->weight = p->weight*book::MAX_WEIGHT/totalWeight;
-      }
-      else {
-         // no moves have non-zero weight
-         p->weight = 0;
-      }
-#ifdef _TRACE
-      cout << "index " << (int)p->move_index << " normalized weight: " << p->weight << endl;
-#endif
    }
 }
 
