@@ -19,19 +19,21 @@ extern "C" {
   #include <windows.h>
 #endif
 
+//#define _TRACE
+
 #ifdef _TRACE
 #include "notation.h"
 #endif
 
 static constexpr unsigned NUM_SAMPLES = 50;
 
-static double contemptFactor(score_t contempt) 
+static double contemptFactor(score_t contempt)
 {
    return 1.0/(1.0+exp(-0.75*contempt/Params::PAWN_VALUE));
 }
 
 BookReader::BookReader()
-{                 
+{
    // seed the random number generator
    engine.seed(getRandomSeed());
 }
@@ -77,7 +79,8 @@ struct Stats
 {
    Move move;
    std::array<double,NUM_SAMPLES> samples;
-   double weight = 0.0;
+   double weight = 0.0; // computed weight
+   double weightAdjust = 1.0; // adjustment factor from book PGN
 };
 
 Move BookReader::pick(const Board &b, score_t contempt) {
@@ -109,7 +112,7 @@ Move BookReader::pick(const Board &b, score_t contempt) {
       if (count > maxCount) maxCount = count;
    }
 
-   // Remove infrequent moves
+   // Remove infrequent moves and zero-weight moves.
    filterByFreq(rawMoves);
    //
    // Prepare to compute weights
@@ -118,6 +121,9 @@ Move BookReader::pick(const Board &b, score_t contempt) {
    for (const book::DataEntry &info : rawMoves) {
       Stats stat;
       stat.move = move_list[info.index];
+      if (info.weight != book::NO_RECOMMEND) {
+         stat.weightAdjust = double(2*info.weight)/book::MAX_WEIGHT;
+      }
       // compute a bunch of random samples for each move.
       for (unsigned i = 0; i < NUM_SAMPLES; i++) {
          stat.samples[i] = sample_dirichlet(info);
@@ -164,22 +170,20 @@ Move BookReader::pick(const Board &b, score_t contempt) {
    // book, and find the sum of corrected weights.
    double weightSum = 0.0;
    for (auto & s : stats) {
-      if (s.weight != book::NO_RECOMMEND) {
-         s.weight *= double(2*s.weight)/book::MAX_WEIGHT;
-      }
 #ifdef _TRACE
       Notation::image(b,s.move,Notation::OutputFormat::SAN,cout);
-      cout << " " << " weight=" << s.weight << endl;
-#endif      
-      weightSum += s.weight;
+      cout << " " << " weight=" << s.weight << " adjust=" << s.weightAdjust <<
+         " adjusted=" << s.weight*s.weightAdjust << endl;
+#endif
+      weightSum += s.weight*s.weightAdjust;
    }
-      
+
    // Randomly pick a move based on weights
    std::uniform_real_distribution<double> dist(0,weightSum);
    double rand = dist(engine);
    double sum = 0.0;
    for (auto & s : stats) {
-      sum += s.weight;
+      sum += s.weight*s.weightAdjust;
       if (rand <= sum) {
          return s.move;
       }
@@ -298,7 +302,7 @@ double BookReader::sample_dirichlet(const book::DataEntry &info, score_t contemp
    return calcReward(sample,contempt);
 }
 
-void BookReader::filterByFreq(vector<book::DataEntry> &results) 
+void BookReader::filterByFreq(vector<book::DataEntry> &results)
 {
    const double freqThreshold = 1.0/(1.0 + exp((50.0-options.book.frequency)/10.0));
 
@@ -313,11 +317,16 @@ void BookReader::filterByFreq(vector<book::DataEntry> &results)
    }
    // In reduced-strength mode, "dumb down" the opening book by
    // omitting moves with low counts. Also apply a relative
-   // frequency test based on the book frequency option.
+   // frequency test based on the book frequency option. Don't remove
+   // moves from the "steering" book unless they have zero weight
+   // ("don't play" moves).
    auto new_end = std::remove_if(results.begin(),results.end(),
-                  [&](const book::DataEntry &info) -> bool {
-                     return (info.count() < minCount || double(info.count())/maxCount < freqThreshold);
-                  });
+                                 [&](const book::DataEntry &info) -> bool {
+                                    return
+                                       info.weight == 0 || (info.weight == book::NO_RECOMMEND &&
+                                       (info.count() < minCount ||
+                                        double(info.count())/maxCount < freqThreshold));
+                                 });
    if (results.end() != new_end) {
       results.erase(new_end,results.end());
    }
