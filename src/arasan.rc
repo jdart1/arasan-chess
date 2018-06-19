@@ -35,13 +35,6 @@ book.frequency=5
 # and suppress playing of suboptimal moves.
 book.scoring=50
 #
-# Book random option. Values:
-# 0 = Arasan will not select moves that have zero weight or only
-# lead to losses.
-# 1 = Arasan will allow moves to be selected that have zero
-# weight or only losing games.
-book.random=0
-#
 # Learning
 #
 # True to enable storage & use of position values, false to disable

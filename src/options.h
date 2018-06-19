@@ -18,12 +18,10 @@ class Options
     BookOptions()
        : frequency(10),
          scoring(50), 
-         random(0),
          book_enabled(1)
     { }
 
     int frequency, scoring;
-    int random;
     int book_enabled;
   } book;
 

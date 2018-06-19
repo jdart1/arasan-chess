@@ -128,9 +128,6 @@ void Options::set_option(const string &name, const string &value) {
      setOption<int>(name,value,book.scoring);
      book.scoring = std::min<int>(100,std::max<int>(0,book.scoring));
   }
-  else if (name == "book.random") {
-     setOption<int>(name,value,book.random);
-  }
   else if (name == "learning.position_learning") {
     set_boolean_option(name,value,learning.position_learning);
   }
