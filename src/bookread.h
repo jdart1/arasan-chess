@@ -51,6 +51,8 @@ protected:
    
     double sample_dirichlet(const book::DataEntry &info, score_t contempt = 0);
 
+    void filterByFreq(vector<book::DataEntry> &);
+
     ifstream book_file;
     book::BookHeader hdr;
 

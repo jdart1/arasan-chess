@@ -109,25 +109,13 @@ Move BookReader::pick(const Board &b, score_t contempt) {
       if (count > maxCount) maxCount = count;
    }
 
-   unsigned minCount = 0;
-   if (options.search.strength < 100) {
-      minCount = (uint32_t)1<<((100-options.search.strength)/10);
-   }
-
+   // Remove infrequent moves
+   filterByFreq(rawMoves);
    //
-   // Filer by frequency and prepare to compute weights
+   // Prepare to compute weights
    //
    vector<Stats> stats;
-
-   const double freqThreshold = 1.0/(1.0 + exp((50.0-options.book.frequency)/10.0));
-
    for (const book::DataEntry &info : rawMoves) {
-      if (info.count() < minCount || double(info.count())/maxCount < freqThreshold) {
-         // In reduced-strength mode, "dumb down" the opening book by
-         // omitting moves with low counts. Also apply a relative
-         // frequency test based on the book frequency option.
-         continue;
-      }
       Stats stat;
       stat.move = move_list[info.index];
       // compute a bunch of random samples for each move.
@@ -200,6 +188,7 @@ Move BookReader::pick(const Board &b, score_t contempt) {
    return NullMove;
 }
 
+
 unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
    vector <book::DataEntry> results;
    // Don't return a book move if we have repeated this position
@@ -216,7 +205,9 @@ unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
       Move move_list[Constants::MaxMoves];
       RootMoveGenerator mg(b);
       (void)mg.generateAllMoves(move_list,1 /* repeatable */);
+      filterByFreq(results);
       moves.resize(results.size());
+
       // TBD: sort, filter
       std::transform(results.begin(),results.end(),moves.begin(),
                      [&](const book::DataEntry &entr) -> Move {
@@ -307,3 +298,27 @@ double BookReader::sample_dirichlet(const book::DataEntry &info, score_t contemp
    return calcReward(sample,contempt);
 }
 
+void BookReader::filterByFreq(vector<book::DataEntry> &results) 
+{
+   const double freqThreshold = 1.0/(1.0 + exp((50.0-options.book.frequency)/10.0));
+
+   unsigned minCount = 0;
+   if (options.search.strength < 100) {
+      minCount = (uint32_t)1<<((100-options.search.strength)/10);
+   }
+   unsigned maxCount = 0;
+   for (const book::DataEntry &info : results) {
+      unsigned count = info.count();
+      if (count > maxCount) maxCount = count;
+   }
+   // In reduced-strength mode, "dumb down" the opening book by
+   // omitting moves with low counts. Also apply a relative
+   // frequency test based on the book frequency option.
+   auto new_end = std::remove_if(results.begin(),results.end(),
+                  [&](const book::DataEntry &info) -> bool {
+                     return (info.count() < minCount || double(info.count())/maxCount < freqThreshold);
+                  });
+   if (results.end() != new_end) {
+      results.erase(new_end,results.end());
+   }
+}
