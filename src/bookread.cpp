@@ -19,8 +19,6 @@ extern "C" {
   #include <windows.h>
 #endif
 
-#define _TRACE
-
 #ifdef _TRACE
 #include "notation.h"
 #endif
@@ -174,9 +172,13 @@ Move BookReader::pick(const Board &b, score_t contempt) {
       }
    }
 
-   // Find the sum of weights
+   // Correct the weights based on any explicit move weighting in the
+   // book, and find the sum of corrected weights.
    double weightSum = 0.0;
    for (auto & s : stats) {
+      if (s.weight != book::NO_RECOMMEND) {
+         s.weight *= double(2*s.weight)/book::MAX_WEIGHT;
+      }
 #ifdef _TRACE
       Notation::image(b,s.move,Notation::OutputFormat::SAN,cout);
       cout << " " << " weight=" << s.weight << endl;
