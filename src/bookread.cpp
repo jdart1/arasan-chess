@@ -78,6 +78,9 @@ struct Stats
    std::array<double,NUM_SAMPLES> samples;
    double weight = 0.0; // computed weight
    double weightAdjust = 1.0; // adjustment factor from book PGN
+#ifdef _TRACE
+   unsigned w,l,d;
+#endif
 };
 
 Move BookReader::pick(const Board &b, score_t contempt) {
@@ -118,6 +121,12 @@ Move BookReader::pick(const Board &b, score_t contempt) {
    for (const book::DataEntry &info : rawMoves) {
       Stats stat;
       stat.move = move_list[info.index];
+#ifdef _TRACE
+      stat.w = info.win;
+      stat.l = info.loss;
+      stat.d = info.draw;
+#endif
+
       if (info.weight != book::NO_RECOMMEND) {
          stat.weightAdjust = double(2*info.weight)/book::MAX_WEIGHT;
       }
@@ -169,7 +178,11 @@ Move BookReader::pick(const Board &b, score_t contempt) {
    for (auto & s : stats) {
 #ifdef _TRACE
       Notation::image(b,s.move,Notation::OutputFormat::SAN,cout);
-      cout << " " << " weight=" << s.weight << " adjust=" << s.weightAdjust <<
+      array<double,OUTCOMES> outcomes = { double(s.w), double(s.l), double(s.d) };
+      cout << " " << "w: " << s.w << " l:" << s.l <<
+         " d:" << s.d << " score=" << calcReward(outcomes,contempt) <<
+         " weight=" << s.weight << " adjust=" <<
+         s.weightAdjust <<
          " adjusted=" << s.weight*s.weightAdjust << endl;
 #endif
       weightSum += s.weight*s.weightAdjust;
