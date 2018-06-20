@@ -25,11 +25,6 @@
 #include <vector>
 using namespace std;
 
-extern "C"{
-#include <ctype.h>
-#include <math.h>
-};
-
 enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
 

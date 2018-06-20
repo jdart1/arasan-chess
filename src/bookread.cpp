@@ -8,11 +8,8 @@
 #include "globals.h"
 #include "debug.h"
 #include "params.h"
-extern "C" {
-#include <string.h>
-#include <math.h>
-};
 #include <algorithm>
+#include <cmath>
 #include <iostream> // for debugging
 #include <assert.h>
 #ifdef _WIN32

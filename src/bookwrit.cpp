@@ -161,8 +161,7 @@ int BookWriter::write(const char* pathName) {
       book_file.write((char*)ip, sizeof(book::IndexPage));
       if (book_file.fail()) return -1;
    }
-   for (unsigned i = 0; i < data.size(); i++) {
-      book::DataPage *dp = data[i];
+   for (book::DataPage *dp : data) {
       // correct for endianness before disk write
       dp->free_list = (uint32_t)swapEndian32((byte*)&dp->free_list);
       dp->num_free = (uint32_t)swapEndian32((byte*)&dp->num_free);
