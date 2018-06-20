@@ -346,6 +346,10 @@ public:
 
     void setContempt(score_t contempt);
 
+    score_t getContempt() const noexcept {
+       return contempt;
+    }
+
     // Note: should not call this while searching
     void setThreadCount(int threads);
 
