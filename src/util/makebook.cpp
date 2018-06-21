@@ -17,13 +17,19 @@
 #include "attacks.h"
 #include "globals.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
-#include <unordered_map>
+#include <regex>
 #include <stack>
+#include <unordered_map>
 #include <vector>
 using namespace std;
+
+extern "C"{
+#include <ctype.h>
+#include <math.h>
+};
 
 enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
@@ -113,7 +119,7 @@ BEGIN_PACKED_STRUCT
     byte move_index;
     uint16_t weight;
 
-    uint32_t count() const 
+    uint32_t count() const
     {
        return win + loss + draw;
     }
@@ -139,7 +145,7 @@ BookEntry::BookEntry( ColorType side, unsigned r, PositionEval ev,
    updateWinLoss(side,result);
 }
 
-void BookEntry::updateWinLoss( ColorType side, ResultType result ) 
+void BookEntry::updateWinLoss( ColorType side, ResultType result )
 {
    if (side == White) {
       if (result == White_Win) {
@@ -165,7 +171,7 @@ void BookEntry::updateWinLoss( ColorType side, ResultType result )
    }
 }
 
-byte BookEntry::computeWeight() const 
+byte BookEntry::computeWeight() const
 {
    if (rec != book::NO_RECOMMEND) {
       return rec*book::MAX_WEIGHT/100;
@@ -361,6 +367,8 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
       varStack[var++] = Variation(board,0);
       Variation &topVar = varStack[0];
 
+      const auto commentRegex = std::regex("^\\{[\\n\\r\\s]*([\\S]*)[\\n\\r\\s]*\\}$");
+      const auto weightRegex = std::regex("^weight:([\\d]+).*$");
 
       Board p1,p2;
       for (;;) {
@@ -428,24 +436,18 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
              }
          }
          else if (tok.type == ChessIO::Comment) {
-            string comment(tok.val);
-            if (comment.length() > 0 && comment[0] == '{') {
-                string::iterator it = comment.begin()+1;
-                // remove initial brace & leading spaces after it
-                while (it != comment.end() &&
-#ifdef __CYGWIN__
-		       (((unsigned char)(*it))<=0x7f) &&
-#else
-		       isascii(*it) &&
-#endif
-		       isspace(*it)) it++;
-                comment = string(it,comment.end());
-            }
-            if (comment.length() >= 8 && comment.substr(0,7) == "weight:") {
-               stringstream s(tok.val.substr(8));
+            // strip braces and leading/trailing whitespace
+            string comment = std::regex_replace(tok.val,commentRegex,"$1");
+            // extract weight value if any
+            std::smatch match;
+            if (std::regex_match(comment,match,weightRegex) && match.size()) {
+               stringstream s(match[1].str());
                int num;
                s >> num;
-               if (s.good()) {
+               if (s.bad() || s.fail()) {
+                  cerr << "Warning: failed to parse weight comment: " << tok.val << ", ignored" << endl;
+               }
+               else {
                   // get last move and set its recommendation
                   if (num >=0 && num <=100) {
                       if (varStack[var-1].moves.size()) {
