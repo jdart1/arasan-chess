@@ -24,11 +24,6 @@
 
 static constexpr unsigned NUM_SAMPLES = 50;
 
-static double contemptFactor(score_t contempt)
-{
-   return 1.0/(1.0+exp(-0.75*contempt/Params::PAWN_VALUE));
-}
-
 BookReader::BookReader()
 {
    // seed the random number generator
@@ -179,7 +174,7 @@ Move BookReader::pick(const Board &b, score_t contempt) {
 #ifdef _TRACE
       Notation::image(b,s.move,Notation::OutputFormat::SAN,cout);
       array<double,OUTCOMES> outcomes = { double(s.w), double(s.l), double(s.d) };
-      cout << " " << "w: " << s.w << " l:" << s.l <<
+      cout << " " << "w:" << s.w << " l:" << s.l <<
          " d:" << s.d << " score=" << calcReward(outcomes,contempt) <<
          " weight=" << s.weight << " adjust=" <<
          s.weightAdjust <<
@@ -285,7 +280,7 @@ double BookReader::calcReward(const std::array<double,OUTCOMES> &sample, score_t
    double win = sample[0];
    double loss = sample[1];
    double draw = sample[2];
-   double val = 1.0*win + (0.5-contemptFactor(contempt))*draw;
+   double val = 1.0*win + contemptFactor(contempt)*draw;
    double sum = win + loss + draw;
    if (sum == 0.0) {
       return 0.0;

@@ -1,4 +1,4 @@
-// Copyright 1992, 1995, 2013, 2014, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1995, 2013, 2014, 2017-2018 by Jon Dart.  All Rights Reserved.
 
 #ifndef _BOOK_READER_H
 #define _BOOK_READER_H
@@ -52,6 +52,10 @@ protected:
     double sample_dirichlet(const book::DataEntry &info, score_t contempt = 0);
 
     void filterByFreq(vector<book::DataEntry> &);
+
+    double contemptFactor(score_t contempt) {
+       return 1.0/(1.0+exp(-0.75*contempt/Params::PAWN_VALUE));
+    }
 
     ifstream book_file;
     book::BookHeader hdr;
