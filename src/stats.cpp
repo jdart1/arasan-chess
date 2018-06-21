@@ -2,7 +2,6 @@
 
 #include "stats.h"
 #include "notation.h"
-#include "scoring.h"
 #include <algorithm>
 #include <iomanip>
 
@@ -191,55 +190,3 @@ void Statistics::printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time) 
    }
    s.flags(original_flags);
 }
-
-
-void Statistics::updatePV(const Board &board, Move *moves, int pv_length, int iteration_depth, bool uci,
-                          int age, Hash &hashTable) {
-   Board board_copy(board);
-   best_line[0] = NullMove;
-   int i = 0;
-   best_line_image.clear();
-   stringstream sstr;
-   while (i < pv_length && i<Constants::MaxPly-1 && !IsNull(moves[i])) {
-      ASSERT(i<Constants::MaxPly);
-      best_line[i] = moves[i];
-      ASSERT(legalMove(board_copy,best_line[i]));
-      if (i!=0) sstr << ' ';
-      Notation::image(board_copy,best_line[i],
-                      uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,sstr);
-      int len = (int)sstr.tellg();
-      // limit the length
-      if (len > 250) {
-         break;
-      }
-      board_copy.doMove(best_line[i]);
-      ++i;
-      int rep_count;
-      if (Scoring::isDraw(board_copy,rep_count,0)) {
-         break;
-      }
-      if (pv_length < 2) {
-         // get the next move from the hash table, if possible
-         // (for pondering)
-         HashEntry entry;
-         HashEntry::ValueType result =
-            hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
-                                 0,age,
-                                 iteration_depth,entry);
-         if (result != HashEntry::NoHit) {
-            Move hashMove = entry.bestMove(board_copy);
-            if (!IsNull(hashMove)) {
-               best_line[i] = hashMove;
-               if (i!=0) sstr << ' ';
-               Notation::image(board_copy,hashMove,
-                               uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,sstr);
-               ++i;
-            }
-            break;
-         }
-      }
-   }
-   best_line[i] = NullMove;
-   best_line_image = sstr.str();
-}
-

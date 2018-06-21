@@ -830,9 +830,56 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     }
     node->best = node->pv[0];                     // ensure "best" is non-null
     ASSERT(!IsNull(node->best));
-    stats.updatePV(board,node->pv,node->pv_length,iteration_depth,controller->uci,
-                   age,
-                   controller->hashTable);
+    Board board_copy(board);
+    stats.best_line[0] = NullMove;
+    int i = 0;
+    stats.best_line_image.clear();
+    stringstream sstr;
+    const Move *moves = node->pv;
+    while (i < node->pv_length && i<Constants::MaxPly-1 && !IsNull(moves[i])) {
+       ASSERT(i<Constants::MaxPly);
+       Move move = moves[i];
+       stats.best_line[i] = move;
+       ASSERT(legalMove(board_copy,move));
+       if (i!=0) {
+          sstr << ' ';
+       }
+       Notation::image(board_copy, move,
+                       controller->uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,sstr);
+       int len = (int)sstr.tellg();
+       // limit the length
+       if (len > 250) {
+          break;
+       }
+       board_copy.doMove(move);
+       ++i;
+       int rep_count;
+       if (Scoring::isDraw(board_copy,rep_count,0)) {
+          break;
+       }
+       if (node->pv_length < 2) {
+          // get the next move from the hash table, if possible
+          // (for pondering)
+          HashEntry entry;
+          HashEntry::ValueType result =
+             controller->hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
+                                              0,age,
+                                              iteration_depth,entry);
+          if (result != HashEntry::NoHit) {
+             Move hashMove = entry.bestMove(board_copy);
+             if (!IsNull(hashMove)) {
+                stats.best_line[i] = hashMove;
+                if (i!=0) sstr << ' ';
+                Notation::image(board_copy,hashMove,
+                                controller->uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,sstr);
+                ++i;
+             }
+             break;
+          }
+       }
+    }
+    stats.best_line[i] = NullMove;
+    stats.best_line_image = sstr.str();
 }
 
 void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {

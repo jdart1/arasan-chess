@@ -112,9 +112,6 @@ struct Statistics
 
    static void printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time);
 
-   void updatePV(const Board &board, Move *moves, int pv_length, int iteration_depth,
-                 bool uci, int age, Hash &hashTable);
-
 };
 
 #endif
