@@ -309,7 +309,7 @@ double BookReader::sample_dirichlet(const book::DataEntry &info, score_t contemp
 
 void BookReader::filterByFreq(vector<book::DataEntry> &results)
 {
-   const double freqThreshold = 1.0/(1.0 + exp((50.0-options.book.frequency)/10.0));
+   const double freqThreshold = pow(10.0,(options.book.frequency-100.0)/40.0);
 
    unsigned minCount = 0;
    if (options.search.strength < 100) {

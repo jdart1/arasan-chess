@@ -28,7 +28,7 @@ book.book_enabled=true
 # Book frequency factor (0-100).
 # Higher frequency numbers cause the book to focus more on frequently
 # played moves, and drop moves with low play counts.
-book.frequency=5
+book.frequency=50
 #
 # Book scoring factor (0-100).
 # Higher scoring numbers cause the book to focus more on the best moves
