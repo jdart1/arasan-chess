@@ -216,8 +216,7 @@ unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
       (void)mg.generateAllMoves(move_list,1 /* repeatable */);
       filterByFreq(results);
       moves.resize(results.size());
-
-      // TBD: sort, filter
+      std::sort(results.begin(),results.end());
       std::transform(results.begin(),results.end(),moves.begin(),
                      [&](const book::DataEntry &entr) -> Move {
                         return move_list[entr.index];});

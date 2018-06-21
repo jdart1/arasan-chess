@@ -82,7 +82,11 @@ BEGIN_PACKED_STRUCT
     unsigned count() const {
        return win + loss + draw;
     }
-   
+
+    // ordering by decreasing frequency
+    bool operator < (const DataEntry &entr) const noexcept {
+       return entr.count() < count();
+    }
 END_PACKED_STRUCT
 
 struct DataPage
