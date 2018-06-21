@@ -53,7 +53,7 @@ protected:
 
     void filterByFreq(vector<book::DataEntry> &);
 
-    double contemptFactor(score_t contempt) {
+    double contemptFactor(score_t contempt) const noexcept {
        return 1.0/(1.0+exp(-0.75*contempt/Params::PAWN_VALUE));
     }
 
