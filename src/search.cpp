@@ -680,14 +680,16 @@ int Search::checkTime(const Board &board,int ply) {
           return 1;
        }
     }
-    if (mainThread() && controller->uci && getElapsedTime(controller->last_time,current_time) >= 2000) {
-        controller->updateGlobalStats(stats);
-        const uint64_t total_nodes = controller->totalNodes();
-        cout << "info";
-        if (controller->elapsed_time>300) cout << " nps " <<
-        (long)((1000L*total_nodes)/controller->elapsed_time);
-        cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
-        controller->last_time = current_time;
+    if (mainThread()) {
+       controller->updateGlobalStats(stats);
+       if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 3000) {
+           const uint64_t total_nodes = controller->totalNodes();
+           cout << "info";
+           if (controller->elapsed_time>300) cout << " nps " <<
+               (long)((1000L*total_nodes)/controller->elapsed_time);
+           cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << endl;
+           controller->last_time = current_time;
+       }
     }
     return 0;
 }
@@ -1212,7 +1214,9 @@ Move Search::ply0_search()
                // them.
                stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
             }
-
+            else if (mainThread()) {
+               showStatus(board, node->best, false, false);
+            }
             if (mainThread()) {
                if (iterationDepth == MoveGenerator::EASY_PLIES) {
                   auto list = mg.getMoveList();
