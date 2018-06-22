@@ -1214,9 +1214,6 @@ Move Search::ply0_search()
                // them.
                stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
             }
-            else if (mainThread()) {
-               showStatus(board, node->best, false, false);
-            }
             if (mainThread()) {
                if (iterationDepth == MoveGenerator::EASY_PLIES) {
                   auto list = mg.getMoveList();
