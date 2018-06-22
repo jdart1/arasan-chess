@@ -764,12 +764,12 @@ static void CDECL post_test(const Statistics &stats)
    Move best = stats.best_line[0];
    if (!IsNull(best) && max_depth < 256) {
       int ply = stats.depth-1;
-         search_progress[max_depth].move = best;
-         search_progress[max_depth].value = stats.value;
-         search_progress[max_depth].time = searcher->getElapsedTime();
-         search_progress[max_depth].depth = ply;
-         search_progress[max_depth].num_nodes = stats.num_nodes;
-         max_depth++;
+      search_progress[max_depth].move = best;
+      search_progress[max_depth].value = stats.value;
+      search_progress[max_depth].time = searcher->getElapsedTime();
+      search_progress[max_depth].depth = ply;
+      search_progress[max_depth].num_nodes = stats.num_nodes;
+      max_depth++;
    }
    int ok;
    if (avoid) {
