@@ -121,13 +121,14 @@ Move BookReader::pick(const Board &b, score_t contempt) {
       stat.l = info.loss;
       stat.d = info.draw;
 #endif
-
       if (info.weight != book::NO_RECOMMEND) {
          stat.weightAdjust = double(2*info.weight)/book::MAX_WEIGHT;
       }
       // compute a bunch of random samples for each move.
       for (unsigned i = 0; i < NUM_SAMPLES; i++) {
          stat.samples[i] = sample_dirichlet(info);
+         // add a small bonus for very frequent moves
+         stat.samples[i] += 0.05*log10(double(info.count()))*options.book.frequency/100;
       }
       stats.push_back(stat);
    }
