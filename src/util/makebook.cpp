@@ -176,7 +176,7 @@ byte BookEntry::computeWeight() const
    if (rec != book::NO_RECOMMEND) {
       return rec*book::MAX_WEIGHT/100;
    }
-   if (moveEval != book::NO_RECOMMEND) {
+   else if (moveEval != book::NO_RECOMMEND) {
       return MoveEvalValues[moveEval];
    }
    else if (eval != NO_POSITION_EVAL) {
