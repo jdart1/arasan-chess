@@ -128,7 +128,7 @@ Move BookReader::pick(const Board &b, score_t contempt) {
       for (unsigned i = 0; i < NUM_SAMPLES; i++) {
          stat.samples[i] = sample_dirichlet(info);
          // add a small bonus for very frequent moves
-         stat.samples[i] += 0.05*log10(double(info.count()))*options.book.frequency/100;
+         stat.samples[i] += 0.1*log10(double(info.count()))*options.book.frequency/100;
       }
       stats.push_back(stat);
    }
