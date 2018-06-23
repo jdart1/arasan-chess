@@ -1,3 +1,31 @@
+Changes in Arasan 21.0:
+ 1) Implement LazySMP instead of YBWC for multi-threading (major re-structuring).
+ 2) Stricter/earlier validity checking on hash move.
+ 3) When failing low with a mate score, widen the aspiration window all
+    the way to -Mate1. Fixes Github issue #16.
+ 4) Improvements to time management. When failing low, extend time based on
+    how bad & how recent the fail low(s) were. When failing high, extend
+    time but less than for a fail-low.
+ 5) When storing a hash entry that is an eval score, store the hash move
+    also, if there is one. Remove an unnecessary test in qsearch.
+ 6) In Winboard mode, send a response to "ping" immediately when pondering. 
+ 7) Fix regression in "go searchmoves" command (Github issue #17).
+ 8) Reset search status (by calling "new" internally) after receiving
+    "result." Fixes issues when running matches offline under xboard,
+    which may start a new game w/o sending "new."
+ 9) Fixes to Winboard edit mode.
+ 10) Don't resign lost tb positions unless far behind in material.
+ 11) Apply filtering to root moves before forced move detection. Change
+     forced move logic - terminate even if failing high/low.
+ 12) Simplify outpost scoring.
+ 13) Changes to book move selection logic and associated options.
+ 14) Fix a possible bug in handling of weight comments in makebook utility.
+ 15) Fix output of objective value from tuner. Bug fix in scaling of gradient -
+     makes convergence faster.
+ 16) Increase propcut min depth.
+ 17) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
+     tests.
+
 Changes in Arasan 20.5:
  1) Have tuner output objective value to params file.
  2) Bug fix in more() function of RootMoveGenerator.

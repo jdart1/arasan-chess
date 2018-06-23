@@ -1,4 +1,4 @@
-post 20.5
+post 21.0
 
 Android build, support cross-compilation
 
@@ -10,25 +10,16 @@ singular extensions
 implement UCI_Opponent
 
 change reduction based on node type
-change redudction based on "improving" test (Stockfish)
+change reduction based on "improving" test (Stockfish)
        - neither works so far
 
-New book format (
+New book format? (
 LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database)
 LevelDB, RocksDB
 
-Keep separate win and draw percentages, scale draw score by contempt
-value.
-
-Dropout expansion
-
-better book selection - see
-http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
-Use a proper statiscal method - multi-armed bandits?
+Book learning. Dropout expansion?
 
 Allow tuner to use mini-batches
-
-outpost calc - looks wonky/interacts with PST.
 
 losses on time - tune time mgmt when very near time limit
 

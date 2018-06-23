@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 20.4</title>
+<title>Arasan Programmer's Guide - version 21.0</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 20.4</h1>
+<h1>Arasan Programmer's Guide - version 21.0</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -54,7 +54,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  20.4
+  21.0
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     book    - text files for opening book and ECO recognizer
@@ -184,10 +184,9 @@ putting a comment with the string "weight: " followed by a numeric value
 after a move. Weights are between 0 and 100. A weight of 0
 means that the computer will never play the move, but will respond to
 it if it is played by its opponent. The higher the weight, the more
-often the computer will choose the move compared to the other
-alternatives in the book. By default, if no weight is specified,
-moves get a weight computed from the overall frequency and win/loss
-ratio for each move.</p>
+often the computer will choose the move. By default, if no weight is specified,
+moves are selected at runtime based on win/loss/draw statistics and the
+move frequency.</p>
 
 <p>PGN files can also have numeric annotation glyphs (best to use
 an editing program such as ChessBase to insert these). If present these
@@ -200,35 +199,52 @@ have the following meaning in the context of "makebook:"</p>
 ?? - a blunder, do not play it.
 </pre>
 <br/>
-<p>The "normal" weighting is computed from the move's frequency plus
-win/loss percentage, except that if a move is in the first annotated
-file but rarely occurs elsewhere it is given a neutral default
-weight that can be further modified by annotations.</p>
-
 <p>Glyphs can also be used to assign an evaluation to the end of an
 opening line and if so this evaluation modifies the weighting of
 moves along that line.</p>
-
-<p>Arasan comes with a modest-sized book that was built from a
-combination of a small hand-tuned book file (basic.pgn) and a fairly large
+<p>Formerly relative book weights were stored in the book file. Now
+generally they are not: except for special first PGN file, move records
+only store the win/loss/draw statistics for the move. Some selection
+logic is applied at runtime (see bookread.cpp), as follows (this is somewhat
+inspired by Thompson sampling - see references):</p>
+  <ol>
+    <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
+    <li>Perform a bunch of samples from the prior distribution of win/loss/draw statistics of the remaining moves. Each sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics. The result is n sample sets, each containing stats for m book moves.</li>
+    <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all m book moves in all n sample sets. A slight score bonus is given for very frequent moves (depending on the book frequency option).</li>
+    <li>Over all the sample sets, compute a derived score for each move. This score is based on giving a bonus of 1.0 for each time the move had the best result score, and a declining bonus for each time the move was not best, but was within a set tolerance of the best moves's result score.</li>
+    <li>If an explict weight or move eval is coded into the book input file, use that to modify the derived weights in the previous step.</li>
+    <li>Finally, a move is randomly selected using the derived scores as weights.</li>
+</ol>
+<p>There are two options (settable in arasan.rc) that control the move selection:</p>
+<ul>
+<li>book.frequency controls the threshold for dropping infrequent moves (step 1 above) and
+the frequency bonus (in step 3).
+It is set on a scale of 0-100, with 0 allowing more infrequent moves and 100 selecting
+only the most frequent moves.</li>
+<li>book.scoring controls the threshold for accepting moves that score worse than the
+best move (step 4 above). It is set on a scale of 0-100, with 0 being most tolerant of
+worse moves and 100 selecting the best move always.</li>
+</ul>
+<p>
+Arasan comes with a modest-sized book that was built from a
+combination of a fairly small hand-tuned book file (basic.pgn) and a fairly large
 collection of high-quality human and computer games. There are over
-500,000 moves in the book. </p>
-
+500,000 moves in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
 <pre>
-makebook -n 100 -o book.bin basic.pgn big.pgn
+makebook -n 100 -m 4 -o book.bin basic.pgn big.pgn
 </pre>
 <br/>
 <p>The -n parameter to makebook specifies how many "index pages" are in the
 binary book file. You may have to experiment with this parameter. Too
 small a value will cause an error building the book. Too large a value
 will waste space by creating a bigger book.bin than is required.</p>
-
 <p>You can also specific the "-m" parameter to makebook with a number,
 to set a minimum number of times that a move must be played in a
-game collection to be included in the book. The default book shipped
-with arasan was built with "-m 4". Other options include:</p>
+game collection to be included in the book (does not apply to the first
+PGN file). The default book shipped
+with Arasan was built with "-m 4". Other options include:</p>
 <ul>
 <li>-p &lt;number&gt; - sets maximum ply depth for moves extracted from a PGN file</li>
 <li>-o &lt;filename&gt; - sets output file name (default book.bin)</li>
@@ -1141,18 +1157,16 @@ well, even without tablebases.</p>
 thread during
 searching, enabling it to make use of multi-processor machines and
 multi-core CPUs. Version 10.0 was the first version to have this fully
-working.</p>
+implemented.</p>
 
 <p>A pre-requisite for implementing multi-threading is that global
 data structures that are accessed for read & write be made safe
-for parallel access. This is done by using critical sections (under
-Windows) and spinlocks (under Linux).</p>
+for parallel access, usually using locking.</p>
 
 <p>However, locking has a performance overhead and is generally
 infeasible to do on a per-node basis. Arasan now does not lock the
 main hash table, to avoid this penalty, but uses a lockless hashing
-mechanism as described earlier. Other less frequently used data
-structures are locked, however.</p>
+mechanism as described earlier.</p>
 
 <p>My first attempt at implementing multi-threading used the ABDADA
 algorithm (see Weill's article). This is simple to implement since it
@@ -1162,60 +1176,29 @@ interferes with its normal usage as storage for scores and best moves
 from previously visited nodes. Consequently, the hash hit rate
 was reduced and multi processors did not achieve much of a speedup.</p>
 
-<p>The current implementation in Arasan uses what is called the Young
+<p>Arasan then implemented what is called the Young
 Brothers Wait concept (YBWC). This algorithm was described in Feldmann's
 Ph.D. thesis (see References) and several related publications in the
 early 1990s.</p>
 
-<p>Arasan's implementation is based on a thread pool that is created at
-program start. This pool controls n threads, where n is the number of
-processors or cores available. These threads run continuously, saving
-the overhead of having to create and destroy threads during the
-search. However, a thread may or may not be assigned to a node in the
-search tree. If it is not assigned, its state is set to "Idle" and it
-is blocked on a synchronization object (an Event object under Windows;
-a semaphore under Linux).</p>
-
-<p>There are three primitive operations available on the thread pool:
-"checkOut" obtains a thread if possible and sets its state to
-"Working". "start" then assigns work to a thread - this work is to
-search a given node of the search tree. "checkIn" makes the thread
-"Idle" again and de-associates it from the node, making it available
-to do another search.</p>
-
-<p>Multiple threads are used only after the principal variation has been
-searched, since the search bounds are not well known until the p.v.
-has been completed.</p>
-
-<p>After the p.v. is done, the search function checks if one or more
-threads are available. If there is an available thread, the board
-state and other essential information are cloned and the cloned state
-is given to function Search::searchSMP, which will perform the search
-in parallel.</p>
-
-<p>A NodeInfo structure in the search routine keeps track of which
-threads are actively searching nodes below the current node. In
-addition, there is an array of SplitPoint structures in each Search
-class instance - this has all the points in the search history
-where a split has occurred from the current thread.</p>
-
-<p>After conclusion of a parallel search, searchSMP will return, and
-will free up the Search class instance and associated thread to
-search another node.</p>
-
-<p>It is possible that the main search completes before its dependent
-searches in other threads. In that case, the main search thread will
-make itself available to slave threads that it has started, assisting
-their work until all slave threads complete (this is known as
-the "helpful master" concept).</p>
-
-<p>It is also possible that a cutoff will occur during the search, in
-which case all dependent threads need to be terminated - their values
-do not matter to the search result. In this case, we tell the threads
-to stop first and then wait for them to actually stop.  Thus in any
-case, when the search routine exits, no threads that it starts are
-active anymore.</p>
-
+<p>Arasan's current implementation uses what is called LazySMP. This
+has been implemented in several strong engines including Stockfish. It is
+somewhat similar to ABDADA conceptually. It entails letting each thread
+search from the root position using a standard alpha-beta aspiration
+search. No synchronization across the threads is done. Practically the only
+shared data structure is the global hash table. Threads in each
+iteration are started at somewhat different search depths, which
+helps avoid having them visit exactly the same nodes. The first thread
+is treated somewhat differently from the others: only it is allowed to
+output search progress updates, and its fail high/fail low history is
+used when making time control decisions. Each thread maintains its own
+Statistics structure, which holds interim search results. When a search
+termination condition (such as time up) is reached, all threads will be
+set back to idle and returned to the wait loop in the thread pool. The
+individual search results from each thread are then examined. The
+best result from all threads is the one that is returned as the overall
+search result, with the caveat that the result chosen must also have a
+final search depth not less than other threads.</p>
 
 <h2>Windows user interface</h2>
 
@@ -1288,10 +1271,10 @@ Chess and Cognition. New York: Springer-Verlag.
 Proceedings of the 1996 ACM 24th annual conference on Computer science, pp.
 131-138.
 </p>
+<p>Wikipedia: <a href="https://en.wikipedia.org/wiki/Thompson_sampling" target="_blank">Thompson sampling</a>.</p>
 <p>Winboard forum, discussion <a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=5997" target="_blank">"A Faster Magic Move Bitboard Generator?"</a></p>
 <p>Zobrist, A. L. (1970). "A new hashing method with applications for game
 playing," Technical report 88, Computer Science Department, University
 of Wisconsin.</p>
-
 
 </body>

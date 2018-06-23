@@ -1,8 +1,8 @@
 #
-# Gnu Makefile for Arasan 20.5
+# Gnu Makefile for Arasan 21.0
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 20.5
+VERSION = 21.0
 
 # paths, modify as needed:
 
