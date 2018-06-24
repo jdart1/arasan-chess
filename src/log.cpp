@@ -229,7 +229,6 @@ void Log::reset()
 
 void Log::clear()
 {
-   write_eol();
    entries.clear();
    my_current = 0;
 }
@@ -240,8 +239,8 @@ void Log::write_header()
    if (enabled && log_file.is_open()) {
       static char header1[] = "Arasan version ";
       static char header2[] = "   move          time     depth\tnodes\tvalue\tpredicted";
-      log_file << header1 << Arasan_Version << " game log" << endl;
-      log_file << header2 << (flush) << endl;
+      log_file << endl << header1 << Arasan_Version << " game log" << endl;
+      log_file << header2 << endl << (flush);
    }
 }
 

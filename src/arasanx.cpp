@@ -2976,8 +2976,9 @@ static bool do_command(const string &cmd, Board &board) {
     else if (cmd == "new") {
         if (!analyzeMode) save_game();
         board.reset();
+        bool wasEmpty = theLog->num_moves() == 0;
         theLog->clear();
-        if (!uci) theLog->write_header();
+        if (!uci && !wasEmpty) theLog->write_header();
         computer_plays_white = false;
         // Note: "new" does not reset analyze mode
         forceMode = 0;
