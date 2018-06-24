@@ -571,8 +571,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Square okp = board.kingSquare(oside);
    int pin_count = 0;
    score_t attackWeight = 0;
-   int attackCount = 0;
-   int majorAttackCount = 0;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
@@ -719,7 +717,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       Bitboard kattacks(knattacks & nearKing);
       if (kattacks) {
-         attackCount++;
          attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
          attackTypes[0]++;
          if (kattacks & (kattacks-1)) {
@@ -765,7 +762,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (!deep_endgame) {
          Bitboard kattacks(battacks & nearKing);
          if (kattacks) {
-            attackCount++;
             attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
             attackTypes[0]++;
             if (kattacks & (kattacks - 1)) {
@@ -777,7 +773,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             // possible stacked attackers
             kattacks = board.bishopAttacks(sq, side) & nearKing;
             if (kattacks) {
-               attackCount++;
                attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
                attackTypes[0]++;
                if (kattacks & (kattacks - 1)) {
@@ -829,8 +824,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          Bitboard rattacks2(board.rookAttacks(sq, side));
          Bitboard attacks(rattacks2 & nearKing);
          if (attacks) {
-            attackCount++;
-            majorAttackCount++;
             attackWeight += tune_params[Tune::ROOK_ATTACK_FACTOR].current;
             attackTypes[Tune::ROOK_ATTACK_FACTOR-
                         Tune::MINOR_ATTACK_FACTOR]++;
@@ -888,8 +881,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
 
          if (kattacks) {
-            attackCount++;
-            majorAttackCount++;
             attackWeight += tune_params[Tune::QUEEN_ATTACK_FACTOR].current;
 #ifdef EVAL_DEBUG
             int tmp = attackWeight;

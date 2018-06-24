@@ -863,8 +863,6 @@ void Scoring::pieceScore(const Board &board,
    const Bitboard &nearKing(kingProximity[oside][okp]);
    Bitboard allAttacks, minorAttacks, rookAttacks;
    score_t attackWeight = 0;
-   int attackCount = 0;
-   int majorAttackCount = 0;
    Square sq;
 
    while(b.iterate(sq))
@@ -908,7 +906,6 @@ void Scoring::pieceScore(const Board &board,
                   if (kattacks & (kattacks-1)) {
                      attackWeight += PARAM(MINOR_ATTACK_BOOST);
                   }
-                  attackCount++;
                }
             }
             break;
@@ -929,7 +926,6 @@ void Scoring::pieceScore(const Board &board,
                   if (kattacks & (kattacks - 1)) {
                      attackWeight += PARAM(MINOR_ATTACK_BOOST);
                   }
-                  attackCount++;
                }
                else if (battacks & board.queen_bits[side]) {
                   // possible stacked attackers
@@ -939,7 +935,6 @@ void Scoring::pieceScore(const Board &board,
                      if (kattacks & (kattacks - 1)) {
                         attackWeight += PARAM(MINOR_ATTACK_BOOST);
                      }
-                     attackCount++;
                   }
                }
             }
@@ -1011,8 +1006,6 @@ void Scoring::pieceScore(const Board &board,
                Bitboard attacks(rattacks2 & nearKing);
                if (attacks) {
                   attackWeight += PARAM(ROOK_ATTACK_FACTOR);
-                  attackCount++;
-                  majorAttackCount++;
                   Bitboard attacks2(attacks & kingNearProximity[okp]);
                   if (attacks2) {
                      attacks2 &= (attacks2 - 1);
@@ -1076,8 +1069,6 @@ void Scoring::pieceScore(const Board &board,
 
                if (kattacks) {
                   attackWeight += PARAM(QUEEN_ATTACK_FACTOR);
-                  attackCount++;
-                  majorAttackCount++;
 #ifdef EVAL_DEBUG
                   int tmp = attackWeight;
 #endif
@@ -1173,7 +1164,6 @@ void Scoring::pieceScore(const Board &board,
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << oppCover << endl;
       cout << " pawn proximity=" << proximity << endl;
-      cout << " attackCount=" << attackCount << endl;
       cout << " attackWeight=" << attackWeight << endl;
       cout << " index=" << index << endl;
       cout << " pin_count=" << pin_count << endl;
