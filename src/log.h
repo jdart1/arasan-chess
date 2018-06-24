@@ -29,51 +29,48 @@ public:
             int depth);
 
    LogEntry() : my_image(""),
-     my_fromBook(false),
-     my_score((score_t)0),
-     my_depth(0),
-     my_result("") {
+                my_fromBook(false),
+                my_score((score_t)0),
+                my_depth(0),
+                my_result("") {
    }
 
    virtual ~LogEntry();
 
    const Move &move() const {
-       return my_move;
+      return my_move;
    }
 
    const char *image() const {
-       return my_image.c_str();
+      return my_image.c_str();
    }
 
    const BoardState &state() const {
-       return my_state;
+      return my_state;
    }
 
    const string & result() const {
-       return my_result;
+      return my_result;
    }
 
    void setResult( const char *result) {
-       my_result = result;
+      my_result = result;
    }
 
    score_t score() const {
-        return my_score;
+      return my_score;
    }
 
    int depth() const {
-       return my_depth;
+      return my_depth;
    }
 
    bool fromBook() const {
       return my_fromBook;
    }
 
-   int operator == ( const LogEntry &l ) const;
-   int operator != ( const LogEntry &l ) const;
-
-   bool operator < (const LogEntry &le) const {
-       return my_state.hashCode < le.my_state.hashCode;
+   bool operator < (const LogEntry &le) const noexcept {
+      return my_state.hashCode < le.my_state.hashCode;
    }
 
 private:
@@ -89,11 +86,9 @@ private:
 
 class Log
 {
-   // Maintains a log of moves made in the game so far.  Unlike the
-   // Move_Array (see movearr.h), moves are not added and removed
-   // during the search process.  The log maintains a size, which
-   // is the total number of moves ever added, and a current position,
-   // which is normally == to its size, but may be less if the
+   // Maintains a log of moves made in the game so far. The log maintains
+   // a size, which is the total number of moves ever added, and a current
+   // position, which is normally == to its size, but may be less if the
    // user has "taken back" moves.
 
 public:
@@ -115,26 +110,23 @@ public:
                   int toFile);
 
    // remove the most recently added move to the log.
-   void remove_move()
-      {
-         if (my_current) {
-            entries.pop_back();
-            --my_current;
-         }
+   void remove_move() {
+      if (my_current) {
+         entries.pop_back();
+         --my_current;
       }
+   }
 
    // Return the number of the last move made.  "Backing up"
    // through the moves changes current w/o changing num_moves.
-   unsigned current() const
-      {
-         return my_current;
-      }
+   unsigned current() const noexcept {
+      return my_current;
+   }
 
    // Return the total number of moves made.
-   unsigned num_moves() const
-      {
-         return (unsigned)entries.size();
-      }
+   unsigned num_moves() const noexcept {
+      return (unsigned)entries.size();
+   }
 
    // Decrement the "current" move by one.
    int back_up();
@@ -150,10 +142,9 @@ public:
    const Move &last_move() const;
 
    // return the nth move in the log.  0 <= n <= num_moves - 1.
-   const Move &move( int n ) const
-      {
-         return entries[n].move();
-      }
+   const Move &move( int n ) const {
+      return entries[n].move();
+   }
 
    // remove everything from the log
    void clear();
@@ -172,7 +163,7 @@ public:
 
    GameResult getResult() const;
 
-   void getResultAsString(string & result) const {
+   void getResultAsString(string & result) const noexcept {
       result = empty() ? "*" : entries.back().result();
    }
 
