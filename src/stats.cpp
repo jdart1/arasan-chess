@@ -54,7 +54,6 @@ Statistics::Statistics(const Statistics &s)
       check_extensions = s.check_extensions;
       capture_extensions = s.capture_extensions;
       pawn_extensions = s.pawn_extensions;
-      evasion_extensions = s.evasion_extensions;
       singular_extensions = s.singular_extensions;
       reduced = s.reduced;
       lmp = s.lmp;
@@ -114,7 +113,6 @@ Statistics & Statistics::operator = (const Statistics &s)
       check_extensions = s.check_extensions;
       capture_extensions = s.capture_extensions;
       pawn_extensions = s.pawn_extensions;
-      evasion_extensions = s.evasion_extensions;
       singular_extensions = s.singular_extensions;
       reduced = s.reduced;
       lmp = s.lmp;
@@ -158,7 +156,7 @@ void Statistics::clear()
    hash_hits = hash_searches = futility_pruning = null_cuts = (uint64_t)0;
    history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
-     pawn_extensions = evasion_extensions = singular_extensions = 0L;
+     pawn_extensions = singular_extensions = 0L;
 #endif
    end_of_game = 0;
    mvleft = mvtot = 0;

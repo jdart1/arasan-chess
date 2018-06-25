@@ -569,7 +569,6 @@ Move SearchController::findBestMove(
       cout << ' ' << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "% reduced" << endl;
       cout << "extensions: " <<
          100.0*stats->check_extensions/stats->moves_searched << "% check, " <<
-         100.0*stats->evasion_extensions/stats->moves_searched << "% evasions, " <<
          100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
          100.0*stats->pawn_extensions/stats->moves_searched << "% pawn, " <<
          100.0*stats->singular_extensions/stats->moves_searched << "% singular" << endl;
@@ -1594,7 +1593,7 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
     stats->hash_hits = stats->hash_searches = stats->futility_pruning = stats->null_cuts = (uint64_t)0;
     stats->history_pruning = stats->lmp = stats->see_pruning = (uint64_t)0;
     stats->check_extensions = stats->capture_extensions =
-     stats->pawn_extensions = stats->evasion_extensions = stats->singular_extensions = 0L;
+     stats->pawn_extensions = stats->singular_extensions = 0L;
 #endif
 #ifdef MOVE_ORDER_STATS
     stats->move_order_count = 0;
@@ -1617,7 +1616,6 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
        stats->check_extensions += s.check_extensions;
        stats->capture_extensions += s.capture_extensions;
        stats->pawn_extensions += s.pawn_extensions;
-       stats->evasion_extensions += s.evasion_extensions;
        stats->singular_extensions += s.singular_extensions;
        stats->reduced += s.reduced;
        stats->lmp += s.lmp;
