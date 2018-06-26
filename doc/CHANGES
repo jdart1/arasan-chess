@@ -18,12 +18,14 @@ Changes in Arasan 21.0:
  11) Apply filtering to root moves before forced move detection. Change
      forced move logic - terminate even if failing high/low.
  12) Simplify outpost scoring.
- 13) Changes to book move selection logic and associated options.
- 14) Fix a possible bug in handling of weight comments in makebook utility.
- 15) Fix output of objective value from tuner. Bug fix in scaling of gradient -
+ 13) Add scoring terms to encourage own piece proximity to King when King is
+     under attack.
+ 14) Changes to book move selection logic and associated options.
+ 15) Fix a possible bug in handling of weight comments in makebook utility.
+ 16) Fix output of objective value from tuner. Bug fix in scaling of gradient -
      makes convergence faster.
- 16) Increase propcut min depth.
- 17) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
+ 17) Increase propcut min depth.
+ 18) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
      tests.
 
 Changes in Arasan 20.5:

@@ -41,6 +41,12 @@ score_t Params::ROOK_ATTACK_BOOST = 8;
 score_t Params::QUEEN_ATTACK_FACTOR = 52;
 score_t Params::QUEEN_ATTACK_BOOST = 28;
 score_t Params::QUEEN_ATTACK_BOOST2 = 12;
+score_t Params::OWN_PIECE_KING_PROXIMITY_MIN = 12;
+score_t Params::OWN_PIECE_KING_PROXIMITY_MAX = 50;
+score_t Params::OWN_MINOR_KING_PROXIMITY = 10;
+score_t Params::OWN_ROOK_KING_PROXIMITY = 20;
+score_t Params::OWN_QUEEN_KING_PROXIMITY = 10;
+
 score_t Params::KING_ATTACK_COVER_BOOST_BASE;
 score_t Params::KING_ATTACK_COVER_BOOST_SLOPE;
 score_t Params::PAWN_THREAT_ON_PIECE_MID = -50;

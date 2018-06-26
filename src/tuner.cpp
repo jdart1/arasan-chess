@@ -73,7 +73,7 @@ static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 0.01;
 static const double PARAM1 = 0.75;
 // step size relative to parameter range:
-static const double ADAM_ALPHA = 0.01;
+static const double ADAM_ALPHA = 0.015;
 static const double ADAM_BETA1 = 0.9;
 static const double ADAM_BETA2 = 0.999;
 static const double ADAM_EPSILON = 1.0e-8;
@@ -571,6 +571,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Square okp = board.kingSquare(oside);
    int pin_count = 0;
    score_t attackWeight = 0;
+   int simpleAttackWeight = 0;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
@@ -717,10 +718,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       Bitboard kattacks(knattacks & nearKing);
       if (kattacks) {
+         simpleAttackWeight += 4;
          attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
          attackTypes[0]++;
          if (kattacks & (kattacks-1)) {
             attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+            simpleAttackWeight += 4;
             attackTypes[1]++;
          }
       }
@@ -763,9 +766,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          Bitboard kattacks(battacks & nearKing);
          if (kattacks) {
             attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+            simpleAttackWeight += 4;
             attackTypes[0]++;
             if (kattacks & (kattacks - 1)) {
                attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+               simpleAttackWeight += 4;
                attackTypes[1]++;
             }
          }
@@ -774,9 +779,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             kattacks = board.bishopAttacks(sq, side) & nearKing;
             if (kattacks) {
                attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+               simpleAttackWeight += 4;
                attackTypes[0]++;
                if (kattacks & (kattacks - 1)) {
                   attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+                  simpleAttackWeight += 4;
                   attackTypes[1]++;
                }
             }
@@ -825,6 +832,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          Bitboard attacks(rattacks2 & nearKing);
          if (attacks) {
             attackWeight += tune_params[Tune::ROOK_ATTACK_FACTOR].current;
+            simpleAttackWeight += 6;
             attackTypes[Tune::ROOK_ATTACK_FACTOR-
                         Tune::MINOR_ATTACK_FACTOR]++;
             Bitboard attacks2(attacks & Scoring::kingNearProximity[okp]);
@@ -833,11 +841,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                if (attacks2) {
                   // rook attacks at least 2 squares near king
                   attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST].current;
+                  simpleAttackWeight += 3;
                   attackTypes[Tune::ROOK_ATTACK_BOOST-
                               Tune::MINOR_ATTACK_FACTOR]++;
                   attacks2 &= (attacks2 - 1);
                   if (attacks2) {
                      attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST2].current;
+                     simpleAttackWeight += 4;
                      attackTypes[Tune::ROOK_ATTACK_BOOST2-
                                  Tune::MINOR_ATTACK_FACTOR]++;
                   }
@@ -882,6 +892,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 
          if (kattacks) {
             attackWeight += tune_params[Tune::QUEEN_ATTACK_FACTOR].current;
+            simpleAttackWeight += 6;
 #ifdef EVAL_DEBUG
             int tmp = attackWeight;
 #endif
@@ -893,11 +904,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                if (nearAttacks) {
                   attackWeight += tune_params[Tune::QUEEN_ATTACK_BOOST].current;
+                  simpleAttackWeight += 6;
                   attackTypes[Tune::QUEEN_ATTACK_BOOST-
                               Tune::MINOR_ATTACK_FACTOR]++;
                   nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                   if (nearAttacks) {
                      attackWeight += tune_params[Tune::QUEEN_ATTACK_BOOST2].current;
+                     simpleAttackWeight += 7;
                      attackTypes[Tune::QUEEN_ATTACK_BOOST2-
                                  Tune::MINOR_ATTACK_FACTOR]++;
                   }
@@ -1157,6 +1170,28 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
+
+      if (simpleAttackWeight >= tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MIN].current) {
+         double factor = std::min<score_t>((score_t)simpleAttackWeight,tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MAX].current)/32.0;
+         // Opposing side is under attack, evaluate its own pieces'
+         // proximity to their King
+         int minorProx = Bitboard(nearKing & (board.knight_bits[oside] | board.bishop_bits[oside])).bitCountOpt();
+         if (minorProx>2) minorProx -= (minorProx-2)/2;
+         int rookProx = Bitboard(nearKing & board.rook_bits[oside]).bitCountOpt();
+         Bitboard qbits(board.queen_bits[oside]);
+         Square sq;
+         int queenProx = 0;
+         while (qbits.iterate(sq)) {
+            queenProx += 4-Scoring::distance(okp,sq);
+         }
+         grads[Tune::OWN_MINOR_KING_PROXIMITY] -=
+               tune_params.scale(inc*minorProx*factor,Tune::OWN_MINOR_KING_PROXIMITY,ourMatLevel);
+         grads[Tune::OWN_ROOK_KING_PROXIMITY] -=
+               tune_params.scale(inc*rookProx*factor,Tune::OWN_ROOK_KING_PROXIMITY,ourMatLevel);
+         grads[Tune::OWN_QUEEN_KING_PROXIMITY] -=
+               tune_params.scale(inc*queenProx*factor,Tune::OWN_QUEEN_KING_PROXIMITY,ourMatLevel);
+      }
+
       // compute the gradient of the scale
       double k = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current/1000.0;
       double x = exp(k*(scale_index-tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current));
@@ -1247,7 +1282,9 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
          // increase by delta
          score_t newval = val + delta;
          tune_params[i].current = newval;
-         tune_params.applyParams();
+         // don't check parameter range as we may possibly exceed
+         // max/min here
+         tune_params.applyParams(false);
          score_t newEval = s.evalu8(board,false);
          if (board.sideToMove() == Black) newEval = -newEval;
          // compare predicted new value from gradient with
@@ -1260,29 +1297,17 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
             tune_params[i].current = val;
-            tune_params.applyParams();
+            tune_params.applyParams(false);
             s.evalu8(board,false);
             tune_params[i].current = newval;
-            tune_params.applyParams();
+            tune_params.applyParams(false);
             s.evalu8(board,false);
             tune_params[i].current = val;
-            tune_params.applyParams();
+            tune_params.applyParams(false);
          }
-         // Test derivative of sigmoid computation too
-/*
-         double dT = computeTexelDeriv(eval,result,White);
-         double baseError = computeErrorTexel(eval,result,White);
-         double newError = computeErrorTexel(newEval,result,White);
-         double predictedError = baseError + dT*(newEval-eval);
-         double estDeriv = (newError-baseError)/(newEval-eval);
-         if (fabs(predictedError-newError) > 1e-4) {
-             cerr << "warning: param " << p.name << " eval=" << eval << " newEval=" << newEval << " result=" << result << " dT=" << dT << " estDeriv= " << estDeriv << " base=" << baseError << " predicted=" << predictedError << " actual="
- << newError << endl;
-         }
-*/
          // restore old value
          tune_params[i].current = val;
-         tune_params.applyParams();
+         tune_params.applyParams(false);
       }
    }
 }

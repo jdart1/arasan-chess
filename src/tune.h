@@ -96,6 +96,11 @@ class Tune : public vector<TuneParam> {
     QUEEN_ATTACK_BOOST2,
     KING_ATTACK_COVER_BOOST_BASE,
     KING_ATTACK_COVER_BOOST_SLOPE,
+    OWN_PIECE_KING_PROXIMITY_MIN,
+    OWN_PIECE_KING_PROXIMITY_MAX,
+    OWN_MINOR_KING_PROXIMITY,
+    OWN_ROOK_KING_PROXIMITY,
+    OWN_QUEEN_KING_PROXIMITY,
     PAWN_THREAT_ON_PIECE_MID,
     PAWN_THREAT_ON_PIECE_END,
     PIECE_THREAT_MM_MID,
@@ -265,7 +270,7 @@ class Tune : public vector<TuneParam> {
 
   // initialize scoring parameters from the current tuned parameter
   // set
-  void applyParams() const;
+  void applyParams(bool check = true) const;
 
   // check current param settings against bounds and verify indexes
   // in internal array
@@ -279,7 +284,7 @@ class Tune : public vector<TuneParam> {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 177;
+  static const int NUM_MISC_PARAMS = 182;
 
   double scale(score_t value,int index,int materialLevel) const;
 
