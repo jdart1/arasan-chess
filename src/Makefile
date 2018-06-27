@@ -149,10 +149,11 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
+GCC_MIN_VERSION = 4.9
+GCCNEW := $(shell expr `$(CC) -dumpversion` \>= $(GCC_MIN_VERSION))
 
 ifeq "$(GCCNEW)" "1"
-# options for GCC 4.7 or higher:
+# options for GCC
 CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
@@ -161,7 +162,7 @@ LTO	= -flto
 GTB_OPT := -Ofast $(SSE) -DNDEBUG
 endif
 else
-$(error GCC version < 4.7 not supported)
+$(error GCC version < $(GCC_MIN_VERSION) not supported)
 endif
 
 endif

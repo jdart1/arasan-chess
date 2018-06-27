@@ -11,7 +11,7 @@ git submodule update --init --recursive
 in your repository directory.
 
 Arasan now requires a modern compiler with C++11 features (although
-not necessarily complete C++11 support). Gcc 4.7 or above is
+not necessarily complete C++11 support). Gcc 4.9 or above is
 recommended for building Arasan (on Mac OS, use clang).
 
 There is a makefile in the src directory. In most cases, just typing
