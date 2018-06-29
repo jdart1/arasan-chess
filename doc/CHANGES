@@ -25,7 +25,8 @@ Changes in Arasan 21.0:
  16) Fix output of objective value from tuner. Bug fix in scaling of gradient -
      makes convergence faster.
  17) Increase propcut min depth.
- 18) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
+ 18) Fixes to Winboard "memory" command.
+ 19) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
      tests.
 
 Changes in Arasan 20.5:

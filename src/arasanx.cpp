@@ -1228,7 +1228,7 @@ static void send_move(Board &board, Move &move, Statistics
         ucilog << "bestmove 0000" << endl;
 #endif
         // must always send a "bestmove" command even if no move is available, to
-        // acknolwedge the previous "stop" command.
+        // acknowledge the previous "stop" command.
         cout << "bestmove 0000" << endl;
     } else {
         if (doTrace) cout << "# warning : move is null" << endl;
@@ -3247,19 +3247,24 @@ static bool do_command(const string &cmd, Board &board) {
         // Setting -H on the Arasan command line takes precedence over
         // what the GUI sets
         if (!memorySet) {
-           // set memory size in MB
-           stringstream ss(cmd_args);
-           int mbs;
-           if((ss >> mbs).fail()) {
-               cerr << "invalid value following 'memory'" << endl;
-           } else {
+            // set memory size in MB
+            stringstream ss(cmd_args);
+            uint64_t mbs;
+            ss >> mbs;
+            if (ss.fail() || ss.bad()) {
+               cout << "# invalid value following 'memory'" << endl;
+            } else {
+               size_t mb_size = mbs*1024L*1024L;
                if (doTrace) {
-                  cout << "# setting hash size to " << options.search.hash_table_size << " MB" << endl;
+                   cout << "# setting hash size to " << mb_size << " bytes " << endl << (flush);
                }
-               options.search.hash_table_size = (size_t)(mbs*1024L*1024L);
+               options.search.hash_table_size = mb_size;
                searcher->updateSearchOptions();
                searcher->resizeHash(options.search.hash_table_size);
            }
+        }
+        else {
+            cout << "# warning: memory command ignored due to -H on command line" << endl;
         }
     }
     else if  (cmd_word == "egtpath") {
