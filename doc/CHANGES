@@ -24,7 +24,7 @@ Changes in Arasan 21.0:
  15) Fix a possible bug in handling of weight comments in makebook utility.
  16) Fix output of objective value from tuner. Bug fix in scaling of gradient -
      makes convergence faster.
- 17) Increase propcut min depth.
+ 17) Increase probcut min depth.
  18) Fixes to Winboard "memory" command.
  19) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
      tests.
