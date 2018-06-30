@@ -57,8 +57,6 @@ static const score_t PROBCUT_MARGIN2 = int(0.33*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static const double LMR_BASE[2] = {0.5,0.3};
 static const double LMR_DIV[2] = {1.8,2.5};
-static const int MAX_SPLIT_DEPTH=16*DEPTH_INCREMENT;
-static const int MIN_SPLIT_DEPTH=5*DEPTH_INCREMENT;
 
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
