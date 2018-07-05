@@ -1104,7 +1104,9 @@ int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckC
    // Now non-discovered checks
    Bitboard pieces(board.occupied[board.sideToMove()]);
    pieces &= ~board.pawn_bits[board.sideToMove()];
-   while (pieces.iterate(loc) && !discoveredCheckCandidates.isSet(loc)) {
+   pieces &= ~disc;
+   pieces &= ~board.pawn_bits[board.sideToMove()];
+   while (pieces.iterate(loc)) {
       switch(TypeOfPiece(board[loc])) {
          case Knight:
          {
