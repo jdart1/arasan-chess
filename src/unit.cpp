@@ -1068,6 +1068,184 @@ static int testRep()
     return errs;
 }
 
+static int testMoveGen() 
+{
+    // Some basic tests for move generation, including routines used
+    // in the qsearch (not tested by perft).
+
+    enum MgType {Root, Standard, QsNoCheck, QsCheck};
+
+    struct Case
+    {
+        string fen;
+        string moves[4];
+        Case(const string &f, const string &rm, const string &m, const string &qsn, const string &qs) :
+            fen(f), moves({rm, m, qsn, qs})
+            {
+            };
+    };
+
+    static const array<Case,6> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
+                                              "Qxf6 Qg7 Kh7",
+                                              "Qxf6 Qg7 Kh7",
+                                              "Qxf6 Qg7 Kh7",
+                                              "Qxf6 Qg7 Kh7"),
+                                         Case("3k4/3p4/8/r7/K7/8/8/8 w - - 0 3",
+                                              "Kxa5 Kb4 Kb3",
+                                              "Kxa5 Kb4 Kb3",
+                                              "Kxa5 Kb4 Kb3",
+                                              "Kxa5 Kb4 Kb3"),
+                                         Case("5rk1/2p3pp/3N4/2pP4/5P1q/P3P1r1/1BQ2nP1/4RR1K w - - 0 32",
+                                              "Kg1",
+                                              "Kg1",
+                                              "Kg1",
+                                              "Kg1"),
+                                         Case("5nk1/4P1pp/p7/3R4/1b6/4BPP1/6KP/q7 w - - 0 38",
+                                              "e8=Q e8=R e8=B e8=N exf8=Q+ exf8=N exf8=R+ exf8=B Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4",
+                                              "e8=Q exf8=Q+ exf8=N e8=N Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4 Kf1 Kg1 Kh1",
+                                              "e8=Q exf8=Q+ exf8=N e8=N",
+                                              "e8=Q exf8=Q+ exf8=N e8=N"),
+                                         Case("8/1r6/ppbpkpRp/5r1P/P1P1n3/1P4PB/6KP/4R3 b - - 0 32",
+                                              "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4",
+                                              "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+ Kd5 Rf1 Rf3 Rf4 Ra5 Rb5 Rc5 Rd5 Re5 Rg5",
+                                              "Bxa4 Rxh5 Nxg3+",
+                                              "Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+"),
+                                         Case("1k6/7R/2P3Kp/7P/8/8/5r2/8 w - - 0 81",
+                                              "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+",
+                                              "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+ Kg5 Kf7 Kf6 Kf5",
+                                              "Kxh6 Rxh6",
+                                              "Kxh6 Rxh6 Rh8+ Rb7+ c7")
+    };
+
+    struct MoveKey
+    {
+        MoveKey(const Move &m) :
+            move(m),generated(false)
+            {
+            }
+        Move move;
+        bool generated;
+    };
+
+    int errs = 0;
+    int casenum = 0;
+    for (const Case &c : cases) {
+        ++casenum;
+        Board board;
+        if (!BoardIO::readFEN(board, c.fen)) {
+            cerr << "testMoveGen: error in case " << casenum << " fen." << endl;
+            ++errs;
+        }
+        else {
+            std::array<std::vector<MoveKey>,4> correct;
+
+            auto parseMoves = [&casenum, &board, &errs] (const string &moves, std::vector<MoveKey> &out) {
+                stringstream s(moves);
+                while (!s.eof()) {
+                    string movestr;
+                    s >> movestr;
+                    Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,movestr,false);
+                    if (IsNull(m)) {
+                        cerr << "testMoveGen: invalid result move, case " << casenum << " (" << movestr << ")" << endl;
+                        ++errs;
+                    } else {
+                        out.push_back(MoveKey(m));
+                    }
+                }
+            };
+
+            for (int i = 0; i < 4; i++) {
+                parseMoves(c.moves[i],correct[i]);
+            }
+            auto doMg = [&casenum, &board, &errs] (MoveGenerator &mg, vector<MoveKey> &correct, MgType type)
+                {
+                    for (auto &c : correct) {
+                        c.generated = false;
+                    }
+                    Move gen;
+                    int order = 0;
+                    static const string ids[4] = { "root", "standard", "qs_nochecks", "qs_checks"
+                    };
+                    const string id = ids[(int)type];
+                    Move moves[Constants::MaxMoves];
+                    unsigned move_index = 0, num_moves = 0;
+                    if ((type == QsNoCheck || type == QsCheck)) {
+                        if (board.checkStatus() == InCheck) {
+                            // only test movegen when not in check for
+                            // qsearch (otherwise is the same as
+                            // regular evasion generation)
+                            return;
+                        }
+                        num_moves = mg.generateCaptures(moves);
+                        if (type == QsCheck) {
+                            ColorType oside = board.oppositeSide();
+                            Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
+                            num_moves += mg.generateChecks(moves+num_moves,disc);
+                        }
+                    }
+                    for (;;) {
+                        if (type == QsNoCheck || type == QsCheck) {
+                            if (move_index >= num_moves) {
+                                gen = NullMove;
+                            }
+                            else {
+                                gen = moves[move_index++];
+                            }
+                        }
+                        else if (board.checkStatus() == InCheck) {
+                            gen = mg.nextEvasion(order);
+                        } else {
+                            gen = mg.nextMove(order);
+                        }
+                        if (IsNull(gen)) break;
+                        auto it = std::find_if(correct.begin(), correct.end(),[&] (const MoveKey &m) -> int
+                                               {return MovesEqual(gen,m.move);});
+                        if (it == correct.end()) {
+                            cerr << "testMoveGen: unexpected result move, " << id << " case " << casenum << " (";
+                            MoveImage(gen,cerr);
+                            cerr << ")" << endl;
+                            ++errs;
+                        } else if (correct[it-correct.begin()].generated) {
+                            cerr << "testMoveGen: duplicate move: " << id << " case " << casenum << " (";
+                            MoveImage(gen,cerr);
+                            cerr << ")" << endl;
+                            ++errs;
+                        } else {
+                            correct[it-correct.begin()].generated = true;
+                        }
+                    }
+                    auto err2 = std::find_if(correct.begin(),correct.end(),[](const MoveKey &r) {
+                            return !r.generated;});
+                    if (err2 != correct.end()) {
+                        stringstream mvlist;
+                        unsigned err_count = 0;
+                        for (;err2 != correct.end();err2++) {
+                            ++errs;
+                            mvlist << ' ';
+                            Notation::image(board,err2->move,Notation::OutputFormat::SAN,mvlist);
+                            ++err_count;
+                        }
+                        cerr << "testMoveGen: error in " << id << " case " << casenum << ": " << err_count << " expected move(s) not generated:" <<
+                            mvlist.str() << endl;
+                    }
+                };
+
+            RootMoveGenerator rmg(board);
+
+            doMg(rmg,correct[0],Root);
+
+            MoveGenerator mg(board,nullptr,1);
+
+            doMg(mg,correct[1],Standard);
+
+            doMg(mg,correct[2],QsNoCheck);
+
+            doMg(mg,correct[3],QsCheck);
+        }
+    }
+    return errs;
+}
+
 static int testPerft()
 {
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
@@ -1216,6 +1394,7 @@ int doUnit() {
    errs += testEPD();
    errs += testHash();
    errs += testRep();
+   errs += testMoveGen();
    errs += testPerft();
 #ifdef SYZYGY_TBS
    errs += testTB();

@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2013, 2017 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8 by Jon Dart.
 // All Rights Reserved.
 
 #include "notation.h"
@@ -145,7 +145,7 @@ static int is_file(char c) {
 }
 
 
-Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image) 
+Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image, bool checkLegal) 
 {
     if (format == InputFormat::UCI) {
         if (image.length() >= 4) {
@@ -346,7 +346,7 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
                    Move emove = CreateMove(board,maybe,dest,
                                            promotion);
                    board_copy.doMove(emove);
-                   if (!board_copy.anyAttacks(
+                   if (!checkLegal || !board_copy.anyAttacks(
                           board_copy.kingSquare(board_copy.oppositeSide()),
                           board_copy.sideToMove())) {
                       ++dups;
