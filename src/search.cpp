@@ -1372,7 +1372,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->pv[0] = NullMove;
     node->pv_length = 0;
     node->cutoff = 0;
-    node->extensions = 0;
     node->num_try = 0;                            // # of legal moves tried
     node->alpha = alpha;
     node->beta = beta;
@@ -1411,7 +1410,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            cout << ")" << endl;
         }
 #endif
-        node->extensions = 0;
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         int extend = calcExtensions(board,node,in_check_after_move,
                                     move_index,
@@ -1478,7 +1476,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               hibound = node->beta;
            }
            if (extend < 0) {
-              extend = node->extensions = 0;
+              extend = 0;
            }
            if (depth+extend-DEPTH_INCREMENT > 0)
               try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
@@ -2263,7 +2261,6 @@ int Search::calcExtensions(const Board &board,
                            Move move) {
    // see if we should apply any extensions at this node.
    int depth = node->depth;
-   node->extensions = 0;
    int extend = 0;
    int pruneOk = board.checkStatus() != InCheck;
    score_t swap = Constants::INVALID_SCORE;
@@ -2271,7 +2268,6 @@ int Search::calcExtensions(const Board &board,
       // extend if check does not lose material or is a discovered check
       if ((swap = seeSign(board,move,0)) ||
           board.isPinned(board.oppositeSide(),move)) {
-          node->extensions |= CHECK;
 #ifdef SEARCH_STATS
           stats.check_extensions++;
 #endif
@@ -2283,7 +2279,6 @@ int Search::calcExtensions(const Board &board,
       }
    }
    if (passedPawnPush(board,move)) {
-      node->extensions |= PAWN_PUSH;
       extend += PAWN_PUSH_EXTENSION;
 #ifdef SEARCH_STATS
       stats.pawn_extensions++;
@@ -2294,7 +2289,6 @@ int Search::calcExtensions(const Board &board,
             board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
             board.getMaterial(board.sideToMove()).noPieces()) {
       // Capture of last piece in endgame.
-      node->extensions |= CAPTURE;
       extend += CAPTURE_EXTENSION;
 #ifdef SEARCH_STATS
       ++stats.capture_extensions;
@@ -2317,7 +2311,6 @@ int Search::calcExtensions(const Board &board,
            extend += hist*DEPTH_INCREMENT;
            extend = std::max(extend,1-depth);
            if (extend <= -DEPTH_INCREMENT) {
-               node->extensions |= LMR;
 #ifdef SEARCH_STATS
                ++stats.reduced;
 #endif
@@ -3091,7 +3084,6 @@ score_t Search::search()
             if (singularExtend &&
                 GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
                extend = DEPTH_INCREMENT;
-               node->extensions |= SINGULAR_EXT;
 #ifdef SEARCH_STATS
                ++stats.singular_extensions;
 #endif
@@ -3154,7 +3146,7 @@ score_t Search::search()
                   hibound = node->beta;
                }
                if (extend < 0) {
-                  extend = node->extensions = 0;
+                  extend = 0;
                }
                if (depth+extend-DEPTH_INCREMENT > 0)
                  try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
