@@ -164,7 +164,10 @@ SearchController::SearchController()
     for (int i = 3; i < 64; i++) {
       cout << "--- i=" << i << endl;
       for (int m=0; m<64; m++) {
-         cout << m << " " << 1.0*LMR_REDUCTION[i][m]/DEPTH_INCREMENT << endl;
+         cout << m << " " <<
+         1.0*LMR_REDUCTION[0][i][m]/DEPTH_INCREMENT << ' ' <<
+         1.0*LMR_REDUCTION[1][i][m]/DEPTH_INCREMENT << ' ' <<
+         endl;
       }}
 
  */
@@ -2299,7 +2302,7 @@ int Search::calcExtensions(const Board &board,
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
        !passedPawnMove(board,move,6)) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
-       if (!node->PV() && !improving && extend<-DEPTH_INCREMENT) {
+       if (!node->PV() && !improving) {
            extend -= DEPTH_INCREMENT;
        }
        if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
