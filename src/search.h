@@ -154,6 +154,7 @@ protected:
                        NodeInfo *node,
                        CheckStatusType in_check_after_move,
                        int moveIndex,
+                       int improving,
                        Move move);
 
     void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);

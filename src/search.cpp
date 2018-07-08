@@ -55,9 +55,8 @@ static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
 static const score_t PROBCUT_MARGIN2 = int(0.33*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
-static const double LMR_BASE[2] = {0.5,0.3};
-static const double LMR_DIV[2] = {1.8,2.5};
-
+static constexpr double LMR_BASE[2] = {0.5, 0.3};
+static constexpr double LMR_DIV[2] = {1.8,2.25};
 #ifdef SINGULAR_EXTENSION
 static int singularExtensionMargin(int depth)
 {
@@ -77,17 +76,17 @@ static const int LMP_DEPTH=10;
 
 static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93};
 
-static const score_t RAZOR_MARGIN1 = score_t(0.9*Params::PAWN_VALUE);
-static const score_t RAZOR_MARGIN2 = score_t(2.75*Params::PAWN_VALUE);
+static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE);
+static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
 static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
 
-static const score_t FUTILITY_MARGIN_BASE = (score_t)(0.25*Params::PAWN_VALUE);
-static const score_t FUTILITY_MARGIN_SLOPE = (score_t)(0.5*Params::PAWN_VALUE);
-static const score_t FUTILITY_MARGIN_SLOPE2 = (score_t)(0.2*Params::PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params::PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.5*Params::PAWN_VALUE);
+static const score_t FUTILITY_MARGIN_SLOPE2 = static_cast<score_t>(0.2*Params::PAWN_VALUE);
 
 static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
-static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = score_t(0.6*Params::PAWN_VALUE);
+static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -151,32 +150,24 @@ SearchController::SearchController()
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     for (int d = 0; d < 64; d++) {
-      for (int moves = 0; moves < 64; moves++) {
-        LMR_REDUCTION[0][d][moves] =
-           LMR_REDUCTION[1][d][moves] = 0;
-        if (d > 2 && moves > 0) {
-           // Formula similar to Protector & Toga. Last modified Aug. 2016.
-           const double f = log((double)d) * log((double)moves+1);
-           for (int i = 0; i < 2; i++) {
-              const double reduction = LMR_BASE[i] + f/LMR_DIV[i];
-              int r = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
-              // do not reduce into the qsearch:
-              r = std::min<int>(r,d*DEPTH_INCREMENT-1);
-              // do not do reductions < 1 ply
-              if (r < DEPTH_INCREMENT) r = 0;
-              LMR_REDUCTION[i][d][moves] = r;
-           }
+        for (int moves = 0; moves < 64; moves++) {
+            for (int p = 0; p < 2; p++) {
+                LMR_REDUCTION[p][d][moves] = 0;
+                if (d > 0 && moves > 0) {
+                    const double reduction = LMR_BASE[p] + log(d) * log(moves) / LMR_DIV[p];
+                    LMR_REDUCTION[p][d][moves] = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
+                }
+            }
         }
-      }
     }
 /*
     for (int i = 3; i < 64; i++) {
       cout << "--- i=" << i << endl;
       for (int m=0; m<64; m++) {
-      cout << m << " " << 1.0*LMR_REDUCTION[0][i][m]/DEPTH_INCREMENT << ' ' << 1.0*LMR_REDUCTION[1][i][m]/DEPTH_INCREMENT << endl;
-      }
-    }
-*/
+         cout << m << " " << 1.0*LMR_REDUCTION[i][m]/DEPTH_INCREMENT << endl;
+      }}
+
+ */
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -1413,6 +1404,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         int extend = calcExtensions(board,node,in_check_after_move,
                                     move_index,
+                                    1,
                                     move);
         if (extend == PRUNE) {
 #ifdef _TRACE
@@ -2258,11 +2250,13 @@ int Search::calcExtensions(const Board &board,
                            NodeInfo *node,
                            CheckStatusType in_check_after_move,
                            int moveIndex,
+                           int improving,
                            Move move) {
    // see if we should apply any extensions at this node.
    int depth = node->depth;
    int extend = 0;
    int pruneOk = board.checkStatus() != InCheck;
+
    score_t swap = Constants::INVALID_SCORE;
    if (in_check_after_move == InCheck) { // move is a checking move
       // extend if check does not lose material or is a discovered check
@@ -2301,23 +2295,29 @@ int Search::calcExtensions(const Board &board,
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() &&
-       (board.checkStatus() == InCheck ? GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE : GetPhase(move) == MoveGenerator::HISTORY_PHASE) &&
+       !CaptureOrPromotion(move) &&
+       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
        !passedPawnMove(board,move,6)) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
-       if (extend) {
-           // history based reductions
-           int hist = context.scoreForOrdering(move,(node->ply == 0) ? NullMove\
-                                               : (node-1)->last_move,board.sideToMove())/128;
-           extend += hist*DEPTH_INCREMENT;
-           extend = std::max(extend,1-depth);
-           if (extend <= -DEPTH_INCREMENT) {
+       if (!node->PV() && !improving && extend<-DEPTH_INCREMENT) {
+           extend -= DEPTH_INCREMENT;
+       }
+       if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+           // killer or refutation move
+           extend += DEPTH_INCREMENT;
+       }
+       // history based reductions
+       int hist = context.scoreForOrdering(move,(node->ply == 0) ? NullMove\
+                                           : (node-1)->last_move,board.sideToMove())/128;
+       extend += hist*DEPTH_INCREMENT;
+       extend = std::max(extend,1-depth);
+       if (extend <= -DEPTH_INCREMENT) {
 #ifdef SEARCH_STATS
-               ++stats.reduced;
+           ++stats.reduced;
 #endif
-           } else {
-               // do not reduce < 1 ply
-               extend = 0;
-           }
+       } else {
+           // do not reduce < 1 ply
+           extend = 0;
        }
    }
 
@@ -2666,6 +2666,11 @@ score_t Search::search()
         !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
+    const int improving = ply < 2 ||
+       node->staticEval >= (node-2)->staticEval ||
+       node->staticEval == Constants::INVALID_SCORE ||
+       (node-2)->staticEval == Constants::INVALID_SCORE;
+
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.
@@ -3002,7 +3007,7 @@ score_t Search::search()
             std::abs(hashValue) < Constants::MATE_RANGE &&
             result != HashEntry::UpperBound &&
             calcExtensions(board,node,board.wouldCheck(hashMove),
-                           0,hashMove) < DEPTH_INCREMENT) {
+                           0,improving,hashMove) < DEPTH_INCREMENT) {
            // Search all moves but the hash move at reduced depth. If all
            // fail low with a score significantly below the hash
            // move's score, then consider the hash move as "singular" and
@@ -3089,8 +3094,8 @@ score_t Search::search()
 #endif
             }
             else {
-               extend = calcExtensions(board,node,in_check_after_move,
-                                        move_index,move);
+               extend = calcExtensions(board, node,in_check_after_move,
+                                       move_index, improving, move);
             }
             if (extend == PRUNE) {
 #ifdef _TRACE
