@@ -1078,11 +1078,11 @@ static int testMoveGen()
     struct Case
     {
         string fen;
-        string moves[4];
+        std::array<string,4> moves;
         Case(const string &f, const string &rm, const string &m, const string &qsn, const string &qs) :
-            fen(f), moves({rm, m, qsn, qs})
-            {
-            };
+           fen(f), moves({rm, m, qsn, qs})
+          {
+          };
     };
 
     static const array<Case,6> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
