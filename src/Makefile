@@ -26,10 +26,6 @@ BOOK    = ../book
 TESTS   = ../tests
 # installation directory (default)
 INSTALL = /usr/local/bin
-# location of the Gaviota tablebase source code (if used)
-GTB=michiguel-Gaviota-Tablebases-161d6cb
-# location of the Nalimov tablebase source code (if used)
-TB=tb
 # location of the Syzygy tablebase source code (Fathom) (if used)
 STB=syzygy/src
 # compile in NUMA support
@@ -52,11 +48,6 @@ endif
 ifdef SYZYGY_TBS
 CFLAGS := $(CFLAGS) -DSYZYGY_TBS
 endif
-
-# Build the GTB sources into a separate object dir.
-GTB_BUILD	= ../build/gtb
-# GTB is built as a separate library due to problems with PGO
-GTB_LIBNAME     = libgtb.a
 
 # SMP flags (note: we do not support a non-SMP build anymore)
 SMPFLAGS = -DSMP -DSMP_STATS
