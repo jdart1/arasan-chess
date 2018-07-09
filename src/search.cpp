@@ -49,7 +49,7 @@ static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
 #ifdef SINGULAR_EXTENSION
-static const int SINGULAR_EXTENSION_DEPTH = 6*DEPTH_INCREMENT;
+static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 #endif
 static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
@@ -58,10 +58,9 @@ static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
 #ifdef SINGULAR_EXTENSION
-static int singularExtensionMargin(int depth)
+static score_t singularExtensionMargin(int depth)
 {
-//   return (depth*Params::PAWN_VALUE)/(100*DEPTH_INCREMENT);
-   return Params::PAWN_VALUE/4;
+    return 2*depth/DEPTH_INCREMENT;
 }
 
 static int singularExtensionDepth(int depth)
