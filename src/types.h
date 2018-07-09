@@ -22,27 +22,11 @@
 #endif
 
 extern "C" {
-#include <stddef.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <sys/types.h>
-#include <stdio.h>
-#if defined(__linux__) || defined(__GLIBC__)
-#include <endian.h>
-#include <byteswap.h>
-#endif
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
-#include <mmsystem.h>
-#include <malloc.h>
 #else
 #include <pthread.h>
-#ifdef _MAC
-#include <sys/ipc.h>
-#include <sys/param.h>
-#endif
 #endif
 };
 
