@@ -1085,7 +1085,7 @@ static int testMoveGen()
           };
     };
 
-    static const array<Case,6> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
+    static const array<Case,7> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
                                               "Qxf6 Qg7 Kh7",
                                               "Qxf6 Qg7 Kh7",
                                               "Qxf6 Qg7 Kh7",
@@ -1114,7 +1114,12 @@ static int testMoveGen()
                                               "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+",
                                               "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+ Kg5 Kf7 Kf6 Kf5",
                                               "Kxh6 Rxh6",
-                                              "Kxh6 Rxh6 Rh8+ Rb7+ c7")
+                                              "Kxh6 Rxh6 Rh8+ Rb7+ c7+"),
+                                         Case("8/r5k1/1p1q3p/2pPp1pP/2P3Q1/1R6/5PPK/8 b - - 0 43",
+                                              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5",
+                                              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5 Kg6",
+                                              "Qxd5",
+                                              "Qxd5 e4+")
     };
 
     struct MoveKey
