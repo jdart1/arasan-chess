@@ -300,7 +300,7 @@ void ThreadPool::shutDown() {
     Unlock(poolLock);
 }
 
-void ThreadPool::resize(unsigned n, SearchController *controller) {
+void ThreadPool::resize(unsigned n) {
     if (n >= 1 && n < Constants::MaxCPUs && n != nThreads) {
         lock();
 #ifdef NUMA

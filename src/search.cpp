@@ -581,7 +581,7 @@ void SearchController::setContempt(score_t c)
 }
 
 void SearchController::setThreadCount(int threads) {
-   pool->resize(threads,this);
+   pool->resize(threads);
 }
 
 void SearchController::clearHashTables()
@@ -602,7 +602,7 @@ void SearchController::clearStopFlags() {
 void SearchController::updateSearchOptions() {
     // pool size is part of search options and may have changed,
     // so adjust that first:
-    pool->resize(options.search.ncpus,this);
+    pool->resize(options.search.ncpus);
     // update each search thread's local copy of the options:
     pool->forEachSearch<&Search::setSearchOptions>();
 }

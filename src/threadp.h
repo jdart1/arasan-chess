@@ -57,7 +57,7 @@ public:
    int activeCount() const;
 
    // resize the thread pool
-   void resize(unsigned n, SearchController *);
+   void resize(unsigned n);
 
    template <void (Search::*fn)()>
       void forEachSearch() {
