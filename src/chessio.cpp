@@ -8,6 +8,7 @@
 #include "constant.h"
 
 #include <algorithm>
+#include <cstring>
 #include <sstream>
 using namespace std;
 
