@@ -6,9 +6,7 @@
 // of the opening book (BOOK.BIN)
 
 #include "types.h"
-extern "C" {
-#include <memory.h>
-};
+#include <cstring>
 
 namespace book {
 

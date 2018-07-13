@@ -10,12 +10,6 @@
 #ifdef TUNE
 #include "tune.h"
 #endif
-extern "C"
-{
-#include <stdlib.h>
-#include <math.h>
-#include <ctype.h>
-};
 #include <cstddef>
 #include <algorithm>
 #include <climits>
