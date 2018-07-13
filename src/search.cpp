@@ -2734,7 +2734,7 @@ score_t Search::search()
         board.state.moveCount <= 98) {
         int nu_depth;
         // R=3 + some depth-dependent increment
-        nu_depth = depth - 4*DEPTH_INCREMENT - depth/6;
+        nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
 
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
