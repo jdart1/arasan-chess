@@ -632,6 +632,74 @@ void SearchController::resizeHash(size_t newSize) {
    hashTable.resizeHash(newSize);
 }
 
+void SearchController::adjustTime(const Statistics &stats, int iterationDepth, int faillows) {
+    // Update fail low tracker
+    if (faillows) {
+        failLowFactor += (1<<(faillows-1))*iterationDepth;
+    }
+    // Adjust time based on bad and how recent the
+    // fail-low(s) were. Do this before resetting the
+    // temporary time extension the latest fail low may
+    // have triggered.
+    if (!background &&
+        typeOfSearch == TimeLimit &&
+        time_target != INFINITE_TIME &&
+        xtra_time &&
+        elapsed_time > (unsigned)time_target/3 &&
+        failLowFactor > 2*iterationDepth) {
+        auto factor = std::min<float>(1.0F,failLowFactor/(10.0F*iterationDepth));
+        uint64_t old_bonus_time = fail_low_bonus_time;
+        fail_low_bonus_time = static_cast<uint64_t>(xtra_time*factor);
+        if (talkLevel == Trace && old_bonus_time != fail_low_bonus_time) {
+            std::ios_base::fmtflags original_flags = cout.flags();
+            cout << "# iteration " << iterationDepth <<
+                " failLowFactor=" << failLowFactor << endl;
+            cout << "# setting fail low bonus time to " << fixed << setprecision(2) << 100.0*factor << " % of max" << endl;
+            cout.flags(original_flags);
+        }
+    }
+    // reset time if no longer failing low/high
+    if (fail_low_root_extend && !stats.failLow) {
+        fail_low_root_extend = false;
+        if (talkLevel == Trace) {
+            cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
+        }
+    }
+    else if (fail_high_root_extend && !stats.failHigh) {
+        fail_high_root_extend = false;
+        if (talkLevel == Trace) {
+            cout << "# resetting time added due to root fail high, new target=" << getTimeLimit() << endl;
+        }
+    }
+    if (stats.failHigh) {
+        // time adjustment
+        if (xtra_time > 0 &&
+            time_target != INFINITE_TIME) {
+            // root move is failing high, extend time until
+            // fail-high is resolved
+            fail_high_root_extend = true;
+            // We may have initially extended time in the
+            // search when first detecting fail-high. If so,
+            // reset that flag here.
+            fail_high_root = false;
+            if (talkLevel == Trace) {
+                cout << "# adding time due to root fail high, new target=" << getTimeLimit() << endl;
+            }
+        }
+    }
+    if (stats.failLow) {
+        if (xtra_time > 0 &&
+            time_target != INFINITE_TIME) {
+            // root move is failing low, extend time until
+            // fail-low is resolved
+            fail_low_root_extend = true;
+            if (talkLevel == Trace) {
+                cout << "# adding time due to root fail low, new target=" << getTimeLimit() << endl;
+            }
+        }
+    }
+}
+
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),
     iterationDepth(0),
@@ -921,7 +989,9 @@ Move Search::ply0_search()
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
-   if (mainThread()) controller->failLowFactor = 0;
+   if (mainThread()) {
+       controller->failLowFactor = 0;
+   }
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
    if (controller->include.size()) {
@@ -971,7 +1041,7 @@ Move Search::ply0_search()
             cout << " terminate=" << terminate << endl;
          }
          int fails = 0;
-         int faillows = 0;
+         int faillows = 0, failhighs = 0;
          do {
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
@@ -1021,164 +1091,114 @@ Move Search::ply0_search()
             }
             stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
             stats.failLow = value <= lo_window  && (lo_window > iterationDepth-Constants::MATE);
-            // reset time if no longer failing low
-            if (mainThread()) {
-               if (stats.failLow) {
-                  if (faillows < 2)
-                     controller->failLowFactor += iterationDepth;
-                  else
-                     controller->failLowFactor += (1<<(faillows-1))*iterationDepth;
-                  if (!controller->background &&
-                      (controller->typeOfSearch == TimeLimit && controller->time_target != INFINITE_TIME) &&
-                      controller->xtra_time &&
-                      (controller->elapsed_time > (unsigned)controller->time_target/3) &&
-                      controller->failLowFactor > 2*iterationDepth) {
-                     // If we have failed low, extend time based on bad
-                     // and how recent the fail-low(s) were.
-                     auto factor = std::min<float>(1.0F,controller->failLowFactor/(10.0F*iterationDepth));
-                     controller->fail_low_bonus_time =
-                        static_cast<uint64_t>(controller->xtra_time*factor);
-                     if (talkLevel == Trace) {
-                        std::ios_base::fmtflags original_flags = cout.flags();
-                        cout << "# iteration " << iterationDepth <<
-                           " failLowFactor=" << controller->failLowFactor << endl;
-                        cout << "# setting fail low bonus time to " << fixed << setprecision(2) << 100.0*factor << " % of max" << endl;
-                        cout.flags(original_flags);
-                     }
-                  }
-               }
-               if (controller->fail_low_root_extend && !stats.failLow) {
-                  controller->fail_low_root_extend = false;
-                  if (talkLevel == Trace) {
-                     cout << "# resetting time added due to root fail low, new target=" << controller->getTimeLimit() << endl;
-                  }
-               }
-               else if (controller->fail_high_root_extend && !stats.failHigh) {
-                  controller->fail_high_root_extend = false;
-                  if (talkLevel == Trace) {
-                     cout << "# resetting time added due to root fail high, new target=" << controller->getTimeLimit() << endl;
-                  }
-               }
+            if (stats.failLow) {
+                faillows++;
             }
+            else if (stats.failHigh) {
+                failhighs++;
+            }
+            if (mainThread()) {
+                // Peform any adjustment of the time allocation based
+                // on search status and history
+                controller->adjustTime(stats,iterationDepth,std::max<int>(0,faillows-failhighs));
+            }
+            // Show status (if main thread) and adjust aspiration
+            // window as needed
             if (stats.failHigh) {
-               if (mainThread() && stats.multipv_limit == 1) showStatus(board, node->best, stats.failLow, stats.failHigh);
-               // time adjustment
-               if (controller->xtra_time > 0 &&
-                   controller->time_target != INFINITE_TIME) {
-                  if (mainThread()) {
-                     // root move is failing high, extend time until
-                     // fail-high is resolved
-                     controller->fail_high_root_extend = true;
-                     // We may have initially extended time in the
-                     // search when first detecting fail-high. If so,
-                     // reset that flag here.
-                     controller->fail_high_root = false;
-                     if (talkLevel == Trace) {
-                        cout << "# adding time due to root fail high, new target=" << controller->getTimeLimit() << endl;
-                     }
-                  }
-               }
-               if (mainThread() && talkLevel == Trace) {
-                  cout << "# ply 0 fail high, re-searching ... value=";
-                  Scoring::printScore(value,cout);
-                  cout << " fails=" << fails+1 << endl;
-               }
+                if (mainThread()) {
+                    if (stats.multipv_limit == 1) {
+                        showStatus(board, node->best, stats.failLow, stats.failHigh);
+                    }
+                    if (talkLevel == Trace) {
+                        cout << "# ply 0 fail high, re-searching ... value=";
+                        Scoring::printScore(value,cout);
+                        cout << " fails=" << fails+1 << endl;
+                    }
 #ifdef _TRACE
-               if (mainThread()) {
-                  cout << "# ply 0 high cutoff, re-searching ... value=";
-                  Scoring::printScore(value,cout);
-                  cout << " fails=" << fails+1 << endl;
-               }
+                    cout << "# ply 0 high cutoff, re-searching ... value=";
+                    Scoring::printScore(value,cout);
+                    cout << " fails=" << fails+1 << endl;
 #endif
-               if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
-                  if (talkLevel == Trace) {
-                     cout << "# warning, too many aspiration window steps" << endl;
-                  }
-                  aspirationWindow = Constants::MATE;
-               }
-               else {
-                  aspirationWindow = ASPIRATION_WINDOW[++fails];
-               }
-               if (aspirationWindow == Constants::MATE) {
-                  hi_window = Constants::MATE-iterationDepth-1;
-               } else {
-                  if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-                     aspirationWindow += 2*WIDE_WINDOW;
-                  }
-                  hi_window = std::min<score_t>(Constants::MATE-iterationDepth-1,
-                                                lo_window + aspirationWindow);
-               }
+                }
+                if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
+                    if (talkLevel == Trace) {
+                        cout << "# warning, too many aspiration window steps" << endl;
+                    }
+                    aspirationWindow = Constants::MATE;
+                }
+                else {
+                    aspirationWindow = ASPIRATION_WINDOW[++fails];
+                }
+                if (aspirationWindow == Constants::MATE) {
+                    hi_window = Constants::MATE-iterationDepth-1;
+                } else {
+                    if (iterationDepth <= MoveGenerator::EASY_PLIES) {
+                        aspirationWindow += 2*WIDE_WINDOW;
+                    }
+                    hi_window = std::min<score_t>(Constants::MATE-iterationDepth-1,
+                                                  lo_window + aspirationWindow);
+                }
             }
             else if (stats.failLow) {
-               if (mainThread() && stats.multipv_limit == 1) showStatus(board, node->best, stats.failLow, stats.failHigh);
-               // time adjustment
-               if (controller->xtra_time > 0 &&
-                   controller->time_target != INFINITE_TIME) {
-                  if (mainThread()) {
-                     // root move is failing low, extend time until
-                     // fail-low is resolved
-                     controller->fail_low_root_extend = true;
-                     if (talkLevel == Trace) {
-                        cout << "# adding time due to root fail low, new target=" << controller->getTimeLimit() << endl;
-                     }
-                  }
-               }
-               if (mainThread() && talkLevel == Trace) {
-                  cout << "# ply 0 fail low, re-searching ... value=";
-                  Scoring::printScore(value,cout);
-                  cout << " fails=" << fails+1 << endl;
-               }
+                if (mainThread()) {
+                    if (stats.multipv_limit == 1) {
+                        showStatus(board, node->best, stats.failLow, stats.failHigh);
+                    }
+                    if (talkLevel == Trace) {
+                        cout << "# ply 0 fail low, re-searching ... value=";
+                        Scoring::printScore(value,cout);
+                        cout << " fails=" << fails+1 << endl;
+                    }
 #ifdef _TRACE
-               if (mainThread()) {
-                  cout << "# ply 0 fail low, re-searching ... value=";
-                  Scoring::printScore(value,cout);
-                  cout << " fails=" << fails+1 << endl;
-               }
+                    cout << "# ply 0 fail low, re-searching ... value=";
+                    Scoring::printScore(value,cout);
+                    cout << " fails=" << fails+1 << endl;
 #endif
-               faillows++;
-               // continue loop with lower bound
-               if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
-                  // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
-                  // search to continue, but set the lower bound to the bottom of the range.
-                  if (talkLevel == Trace) {
-                     cout << "# warning, too many aspiration window steps" << endl;
-                  }
-                  aspirationWindow = Constants::MATE;
-               }
-               else if (Scoring::mateScore(value)) {
-                  // We got a mate score so don't bother doing any
-                  // more aspiration steps, just widen to the max.
-                  aspirationWindow = Constants::MATE;
-               }
-               else {
-                  aspirationWindow = ASPIRATION_WINDOW[++fails];
-               }
-               if (aspirationWindow == Constants::MATE) {
-                  // We can miss shallow mates but then find them in
-                  // later iterations. Set the window to -Mate1 so we
-                  // will never fail low and not get a pv.
-                  lo_window = 1-Constants::MATE;
-               } else {
-                  if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-                     aspirationWindow += 2*WIDE_WINDOW;
-                  }
-                  lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
-               }
+                }
+                // continue loop with lower bound
+                if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
+                    // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
+                    // search to continue, but set the lower bound to the bottom of the range.
+                    if (mainThread() && talkLevel == Trace) {
+                        cout << "# warning, too many aspiration window steps" << endl;
+                    }
+                    aspirationWindow = Constants::MATE;
+                }
+                else if (Scoring::mateScore(value)) {
+                    // We got a mate score so don't bother doing any
+                    // more aspiration steps, just widen to the max.
+                    aspirationWindow = Constants::MATE;
+                }
+                else {
+                    aspirationWindow = ASPIRATION_WINDOW[++fails];
+                }
+                if (aspirationWindow == Constants::MATE) {
+                    // We can miss shallow mates but then find them in
+                    // later iterations. Set the window to -Mate1 so we
+                    // will never fail low and not get a pv.
+                    lo_window = 1-Constants::MATE;
+                } else {
+                    if (iterationDepth <= MoveGenerator::EASY_PLIES) {
+                        aspirationWindow += 2*WIDE_WINDOW;
+                    }
+                    lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
+                }
             }
-            // check time after adjustments above
+            // check time after adjustments have been made
             if (!terminate) {
-               if (checkTime(board,0)) {
-                  if (talkLevel == Trace) {
-                     cout << "# time up" << endl;
-                  }
-                  controller->terminateNow();
-               }
-               else if (controller->terminate_function &&
-                        controller->terminate_function(stats)) {
-                  if (talkLevel == Trace)
-                     cout << "# terminating due to program or user input" << endl;
-                  controller->terminateNow();
-               }
+                if (checkTime(board,0)) {
+                    if (talkLevel == Trace) {
+                        cout << "# time up" << endl;
+                    }
+                    controller->terminateNow();
+                }
+                else if (controller->terminate_function &&
+                         controller->terminate_function(stats)) {
+                    if (talkLevel == Trace) {
+                        cout << "# terminating due to program or user input" << endl;
+                    }
+                    controller->terminateNow();
+                }
             }
             // check for forced move, but only at depth 2 (so we get a
             // ponder move if possible).

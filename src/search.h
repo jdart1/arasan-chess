@@ -421,6 +421,9 @@ public:
       return pool->totalHits();
    }
 
+   // Adjust time usage after a root search iteration has completed (possibly with
+   // a fail high or fail low). Called from main thread.
+   void adjustTime(const Statistics &stats, int iterationDepth, int faillows);
 
 private:
 
