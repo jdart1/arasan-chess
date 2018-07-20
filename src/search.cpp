@@ -658,19 +658,6 @@ void SearchController::adjustTime(const Statistics &stats, int iterationDepth, i
             cout.flags(original_flags);
         }
     }
-    // reset time if no longer failing low/high
-    if (fail_low_root_extend && !stats.failLow) {
-        fail_low_root_extend = false;
-        if (talkLevel == Trace) {
-            cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
-        }
-    }
-    else if (fail_high_root_extend && !stats.failHigh) {
-        fail_high_root_extend = false;
-        if (talkLevel == Trace) {
-            cout << "# resetting time added due to root fail high, new target=" << getTimeLimit() << endl;
-        }
-    }
     if (stats.failHigh) {
         // time adjustment
         if (xtra_time > 0 &&
@@ -687,6 +674,12 @@ void SearchController::adjustTime(const Statistics &stats, int iterationDepth, i
             }
         }
     }
+    else if (fail_high_root_extend) {
+        fail_high_root_extend = false;
+        if (talkLevel == Trace) {
+            cout << "# resetting time added due to root fail high, new target=" << getTimeLimit() << endl;
+        }
+    }
     if (stats.failLow) {
         if (xtra_time > 0 &&
             time_target != INFINITE_TIME) {
@@ -696,6 +689,12 @@ void SearchController::adjustTime(const Statistics &stats, int iterationDepth, i
             if (talkLevel == Trace) {
                 cout << "# adding time due to root fail low, new target=" << getTimeLimit() << endl;
             }
+        }
+    }
+    else if (fail_low_root_extend) {
+        fail_low_root_extend = false;
+        if (talkLevel == Trace) {
+            cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
         }
     }
 }
