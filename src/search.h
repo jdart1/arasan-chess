@@ -280,7 +280,7 @@ public:
 
     uint64_t getExtraTime() const {
        // time awarded for previous fail-low:
-       uint64_t extension = fail_low_bonus_time;
+       uint64_t extension = bonus_time;
        if (fail_low_root_extend) {
           // presently failing low, allow up to max extra time
           extension += xtra_time;
@@ -421,9 +421,14 @@ public:
       return pool->totalHits();
    }
 
+   // Adjust time usage after root fail high or fail low. A temporary
+   // time extension is done to allow resolution of the fail high/low.
+   // Called from main thread.
+   void adjustTimeIfOutOfBounds(const Statistics &stats);
+
    // Adjust time usage after a root search iteration has completed (possibly with
-   // a fail high or fail low). Called from main thread.
-   void adjustTime(const Statistics &stats, int iterationDepth, int faillows);
+   // one or more fail high/fail lows). Called from main thread.
+   void adjustTime(const Statistics &stats);
 
 private:
 
@@ -456,7 +461,6 @@ private:
     bool stopped;
     SearchType typeOfSearch;
     int time_check_counter;
-    int failLowFactor;
 #ifdef SMP_STATS
     int sample_counter;
 #endif
@@ -473,6 +477,22 @@ private:
     MoveSet include;
     MoveSet exclude;
 
+    struct SearchHistory
+    {
+        Move pv;
+        score_t score;
+
+        SearchHistory() : pv(NullMove), score(Constants::INVALID_SCORE)
+        {
+        }
+
+        SearchHistory(Move m, score_t value) : pv(m), score(value)
+        {
+        }
+    };
+
+    array<SearchHistory,Constants::MaxPly> rootSearchHistory;
+
 #ifdef SYZYGY_TBS
     int tb_hit, tb_dtz;
     score_t tb_score;
@@ -484,7 +504,7 @@ private:
     score_t easyScore;
     int depth_at_pv_change;
     bool easy_adjust, fail_high_root_extend, fail_low_root_extend, fail_high_root;
-    atomic<uint64_t> fail_low_bonus_time;
+    atomic<uint64_t> bonus_time;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature

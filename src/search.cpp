@@ -224,7 +224,7 @@ Move SearchController::findBestMove(
     include = moves_to_include;
     fail_high_root_extend = fail_low_root_extend = false;
     fail_high_root = false;
-    fail_low_bonus_time = (uint64_t)0;
+    bonus_time = (uint64_t)0;
     xtra_time = search_xtra_time;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
@@ -632,36 +632,10 @@ void SearchController::resizeHash(size_t newSize) {
    hashTable.resizeHash(newSize);
 }
 
-void SearchController::adjustTime(const Statistics &stats, int iterationDepth, int faillows) {
-    // Update fail low tracker
-    if (faillows) {
-        failLowFactor += (1<<(faillows-1))*iterationDepth;
-    }
-    // Adjust time based on bad and how recent the
-    // fail-low(s) were. Do this before resetting the
-    // temporary time extension the latest fail low may
-    // have triggered.
-    if (!background &&
-        typeOfSearch == TimeLimit &&
-        time_target != INFINITE_TIME &&
-        xtra_time &&
-        elapsed_time > (unsigned)time_target/3 &&
-        failLowFactor > 2*iterationDepth) {
-        auto factor = std::min<float>(1.0F,failLowFactor/(10.0F*iterationDepth));
-        uint64_t old_bonus_time = fail_low_bonus_time;
-        fail_low_bonus_time = static_cast<uint64_t>(xtra_time*factor);
-        if (talkLevel == Trace && old_bonus_time != fail_low_bonus_time) {
-            std::ios_base::fmtflags original_flags = cout.flags();
-            cout << "# iteration " << iterationDepth <<
-                " failLowFactor=" << failLowFactor << endl;
-            cout << "# setting fail low bonus time to " << fixed << setprecision(2) << 100.0*factor << " % of max" << endl;
-            cout.flags(original_flags);
-        }
-    }
+void SearchController::adjustTimeIfOutOfBounds(const Statistics &stats) {
     if (stats.failHigh) {
         // time adjustment
-        if (xtra_time > 0 &&
-            time_target != INFINITE_TIME) {
+        if (xtra_time > 0 && time_target != INFINITE_TIME) {
             // root move is failing high, extend time until
             // fail-high is resolved
             fail_high_root_extend = true;
@@ -681,8 +655,7 @@ void SearchController::adjustTime(const Statistics &stats, int iterationDepth, i
         }
     }
     if (stats.failLow) {
-        if (xtra_time > 0 &&
-            time_target != INFINITE_TIME) {
+        if (xtra_time > 0 && time_target != INFINITE_TIME) {
             // root move is failing low, extend time until
             // fail-low is resolved
             fail_low_root_extend = true;
@@ -695,6 +668,41 @@ void SearchController::adjustTime(const Statistics &stats, int iterationDepth, i
         fail_low_root_extend = false;
         if (talkLevel == Trace) {
             cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
+        }
+    }
+}
+
+void SearchController::adjustTime(const Statistics &stats) {
+    // Adjust time based on bad and how recent the fail-low(s) were.
+    if (!background &&
+        typeOfSearch == TimeLimit &&
+        time_target != INFINITE_TIME &&
+        xtra_time &&
+        elapsed_time > (unsigned)time_target/3) {
+        // Look back over the past few iterations
+        Move pv = stats.best_line[0];
+        int pvChangeFactor = 0;
+        score_t score = stats.display_value;
+        score_t old_score = score;
+        for (int depth = int(stats.depth)-2; depth >= 0 && depth>int(stats.depth)-6; --depth) {
+            if (!MovesEqual(rootSearchHistory[depth].pv,pv)) {
+                pvChangeFactor++;
+            }
+            old_score = rootSearchHistory[depth].score;
+            pv = rootSearchHistory[depth].pv;
+        }
+        double scoreChange = std::max(0.0,(old_score-score)/(1.0*Params::PAWN_VALUE));
+        double factor = std::min<double>(1.0,(pvChangeFactor/2.0 + scoreChange)/2.0);
+        uint64_t old_bonus_time = bonus_time;
+        // Increase the time limit if pv has changed recently and/or
+        // score is dropping over the past few iterations.
+        bonus_time = static_cast<uint64_t>(xtra_time*factor);
+        if (talkLevel == Trace && old_bonus_time != bonus_time) {
+            std::ios_base::fmtflags original_flags = cout.flags();
+            cout << "# iteration " << stats.depth << " scoreChange=" << scoreChange << " pvChangeFactor=" <<
+                pvChangeFactor << endl;
+            cout << "# setting fail low bonus time to " << fixed << setprecision(2) << 100.0*factor << " % of max" << endl;
+            cout.flags(original_flags);
         }
     }
 }
@@ -988,9 +996,6 @@ Move Search::ply0_search()
    // is reached.
    // Search the first few iterations with a wide window - for easy
    // move detection.
-   if (mainThread()) {
-       controller->failLowFactor = 0;
-   }
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
    if (controller->include.size()) {
@@ -1097,9 +1102,12 @@ Move Search::ply0_search()
                 failhighs++;
             }
             if (mainThread()) {
-                // Peform any adjustment of the time allocation based
+                // store root search history entry
+                controller->rootSearchHistory[iterationDepth-1] = SearchController::SearchHistory(
+                    node->best, stats.display_value);
+                // Peform any temporary adjustment of the time allocation based
                 // on search status and history
-                controller->adjustTime(stats,iterationDepth,std::max<int>(0,faillows-failhighs));
+                controller->adjustTimeIfOutOfBounds(stats);
             }
             // Show status (if main thread) and adjust aspiration
             // window as needed
@@ -1217,6 +1225,11 @@ Move Search::ply0_search()
          } while (!terminate && (stats.failLow || stats.failHigh));
          // search value should now be in bounds (unless we are terminating)
          if (!terminate) {
+            if (mainThread()) {
+                // Peform any adjustment of the time allocation based
+                // on search status and history
+                controller->adjustTime(stats);
+            }
             stats.completedDepth = iterationDepth;
             if (srcOpts.multipv > 1) {
                // Accumulate multiple pvs until we are ready to output
@@ -1266,7 +1279,6 @@ Move Search::ply0_search()
                    !controller->easy_adjust &&
                    controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
                    MovesEqual(controller->easyMove,node->best) &&
-                   (controller->failLowFactor <= 2*iterationDepth) &&
                    !stats.failLow) {
                   // Moves that look good at low depth and continue to be
                   // stably selected can be searched for less time.
