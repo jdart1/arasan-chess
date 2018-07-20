@@ -16,6 +16,8 @@ bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 static const size_t THREAD_STACK_SIZE = 8*1024*1024;
 #endif
 
+#define _THREAD_TRACE
+
 #ifdef _THREAD_TRACE
 static lock_t io_lock;
 

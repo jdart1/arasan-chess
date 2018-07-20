@@ -922,8 +922,8 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
           // (for pondering)
           HashEntry entry;
           HashEntry::ValueType result =
-             controller->hashTable.searchHash(board_copy,board_copy.hashCode(rep_count),
-                                              0,age,
+             controller->hashTable.searchHash(board_copy.hashCode(rep_count),
+                                              age,
                                               iteration_depth,entry);
           if (result != HashEntry::NoHit) {
              Move hashMove = entry.bestMove(board_copy);
@@ -1710,8 +1710,8 @@ score_t Search::quiesce(int ply,int depth)
    HashEntry hashEntry;
    // Note: we copy the hash entry .. so mods by another thread do not
    // alter the copy
-   HashEntry::ValueType result = controller->hashTable.searchHash(board,hash,
-                                                                  ply,tt_depth,age,hashEntry);
+   HashEntry::ValueType result = controller->hashTable.searchHash(hash,
+                                                                  tt_depth,age,hashEntry);
 #ifdef SEARCH_STATS
    stats.hash_searches++;
 #endif
@@ -2505,8 +2505,8 @@ score_t Search::search()
        // be cached.
        // Note: we copy the hash entry .. so mods by another thread do not
        // alter the copy
-       result = controller->hashTable.searchHash(board,board.hashCode(rep_count),
-                                                 ply,depth,age,hashEntry);
+       result = controller->hashTable.searchHash(board.hashCode(rep_count),
+                                                 depth,age,hashEntry);
 #ifdef SEARCH_STATS
        stats.hash_searches++;
 #endif

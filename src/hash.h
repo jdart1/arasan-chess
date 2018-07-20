@@ -195,11 +195,10 @@ class Hash {
     // in-memory hash table
     void loadLearnInfo();
 
-    HashEntry::ValueType searchHash(const Board& b,hash_t hashCode,
-                                              int ply,
-                                              int depth, unsigned age,
-                                              HashEntry &he
-                                              ) {
+    HashEntry::ValueType searchHash(hash_t hashCode,
+                                    int depth, unsigned age,
+                                    HashEntry &he)
+    {
         if (!hashSize) return HashEntry::NoHit;
         int probe = (int)(hashCode & hashMask);
 

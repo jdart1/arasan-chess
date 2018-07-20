@@ -839,7 +839,7 @@ static int testHash() {
     HashEntry he;
     Move m;
 
-    HashEntry::ValueType val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he);
+    HashEntry::ValueType val = hashTable.searchHash(board.hashCode(), 1, 1, he);
     if (val == HashEntry::NoHit) {
        ++errs;
        cerr << "testHash case 1: not found" << endl;
@@ -876,7 +876,7 @@ static int testHash() {
     hashTable.storeHash(board.hashCode(),2,1,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
 
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he);
+    val = hashTable.searchHash(board.hashCode(), 1, 1, he);
     if (val == HashEntry::NoHit) {
        ++errs;
        cerr << "testHash case 2: not found" << endl;
@@ -896,7 +896,7 @@ static int testHash() {
     hashTable.storeHash(board.hashCode(),2,2,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
     // search should update age
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 3, he);
+    val = hashTable.searchHash(board.hashCode(), 1, 3, he);
     if (val == HashEntry::NoHit) {
        ++errs;
        cerr << "testHash case 3: not found" << endl;
@@ -921,7 +921,7 @@ static int testHash() {
 
     HashEntry he2;
 
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he2);
+    val = hashTable.searchHash(board.hashCode(), 1, 1, he2);
 
     if (val == HashEntry::NoHit) {
        ++errs;
@@ -954,7 +954,7 @@ static int testHash() {
 
     HashEntry he3;
 
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he3);
+    val = hashTable.searchHash(board.hashCode(), 1, 1, he3);
 
     if (val == HashEntry::NoHit) {
        ++errs;
@@ -992,7 +992,7 @@ static int testHash() {
     hashTable.storeHash(board.hashCode(),1,10,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Constants::INVALID_SCORE,HashEntry::LEARNED_MASK,m);
 
     HashEntry he4;
-    val = hashTable.searchHash(board, board.hashCode(), 1, -1, 10, he4);
+    val = hashTable.searchHash(board.hashCode(), -1, 10, he4);
 
     if (val == HashEntry::NoHit) {
        ++errs;
@@ -1021,7 +1021,7 @@ static int testHash() {
     }
 
     // search with higher depth should return invalid entry
-    val = hashTable.searchHash(board, board.hashCode(), 1, 2, 10, he4);
+    val = hashTable.searchHash(board.hashCode(), 2, 10, he4);
     if (val != HashEntry::Invalid) {
         ++errs;
         cerr << "testHash case 6: expected invalid entry" << endl;
