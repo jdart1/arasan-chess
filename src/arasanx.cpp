@@ -1705,6 +1705,10 @@ static void processWinboardOptions(const string &args) {
           searcher->rebind();
        }
 #endif
+    } else if (name == "Move overhead") {
+        Options::setOption<int>(value,options.search.move_overhead);
+    } else if (name == "Minimum search time") {
+        Options::setOption<int>(value,options.search.minimum_search_time);
     }
 #ifdef TUNE
     else {
@@ -2424,6 +2428,10 @@ static bool do_command(const string &cmd, Board &board) {
            options.search.affinity_offset << " min 0 max " <<
            Constants::MaxCPUs << endl;
 #endif
+        cout << "option name Move overhead type spin default " <<
+            30 << " min 0 max 1000" << endl;
+        cout << "option name Minimum search time type spin default " <<
+            10 << " min 0 max 1000" << endl;
         cout << "uciok" << endl;
         return true;
     }
@@ -2562,6 +2570,12 @@ static bool do_command(const string &cmd, Board &board) {
            }
         }
 #endif
+        else if (uciOptionCompare(name,"Move overhead")) {
+           Options::setOption<int>(value,options.search.move_overhead);
+        }
+        else if (uciOptionCompare(name,"Minimum search time")) {
+           Options::setOption<int>(value,options.search.minimum_search_time);
+        }
 #ifdef TUNE
         else {
            setTuningParam(name,value);
@@ -3033,6 +3047,8 @@ static bool do_command(const string &cmd, Board &board) {
         cout << " option=\"Affinity offset\" -spin " <<
            options.search.affinity_offset << " 0 " << Constants::MaxCPUs << endl;
 #endif
+        cout << " option=\"Move overhead\" -spin " << 30 << " 0 1000" << endl;
+        cout << " option=\"Minimum search time\" -spin " << 10 << " 0 1000" << endl;
         cout << " myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
         // set done = 0 because it may take some time to initialize tablebases.
         cout << "feature done=0" << endl;

@@ -42,7 +42,9 @@ Options::SearchOptions::SearchOptions() :
 #ifdef NUMA
       ,
       set_processor_affinity(0),
-      affinity_offset(0)
+      affinity_offset(0),
+      move_overhead(15),
+      minimum_search_time(10)
 #endif
 {
 }
@@ -180,6 +182,12 @@ void Options::set_option(const string &name, const string &value) {
     setOption<int>(name,value,search.affinity_offset);
   }
 #endif
+  else if (name == "search.move_overhead") {
+    setOption<int>(name,value,search.move_overhead);
+  }
+  else if (name == "search.minimum_search_time") {
+    setOption<int>(name,value,search.minimum_search_time);
+  }
   else
     cerr << "warning: unrecognized option name: " << name << endl;
 }
