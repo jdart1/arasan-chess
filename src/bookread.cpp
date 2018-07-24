@@ -12,9 +12,6 @@
 #include <cmath>
 #include <iostream> // for debugging
 #include <assert.h>
-#ifdef _WIN32
-  #include <windows.h>
-#endif
 
 //#define _TRACE
 
