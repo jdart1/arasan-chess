@@ -278,23 +278,20 @@ public:
         Statistics &stats,
         TalkLevel t);
 
-    uint64_t getExtraTime() const {
-       // time awarded for previous fail-low:
-       uint64_t extension = bonus_time;
+    uint64_t getTimeLimit() const {
+       // time boost/decrease based on search history:
+       int64_t extension = bonus_time;
        if (fail_low_root_extend) {
           // presently failing low, allow up to max extra time
-          extension += xtra_time;
+          extension += int64_t(xtra_time);
        }
        else if (fail_high_root || fail_high_root_extend) {
           // extend time for fail high, but less than for
           // failing low
-          extension += xtra_time/2;
+          extension += int64_t(xtra_time)/2;
        }
-       return std::min<uint64_t>(xtra_time,extension);
-    }
-
-    uint64_t getTimeLimit() const {
-       return time_target + getExtraTime();
+       extension = std::max<int64_t>(-int64_t(time_target),std::min<int64_t>(int64_t(xtra_time),extension));
+       return uint64_t(int64_t(time_target) + extension);
     }
 
     uint64_t getMaxTime() const {
@@ -500,11 +497,8 @@ private:
 
     Board initialBoard;
     score_t initialValue;
-    Move easyMove;
-    score_t easyScore;
-    int depth_at_pv_change;
-    bool easy_adjust, fail_high_root_extend, fail_low_root_extend, fail_high_root;
-    atomic<uint64_t> bonus_time;
+    bool fail_high_root_extend, fail_low_root_extend, fail_high_root;
+    atomic<int64_t> bonus_time;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature

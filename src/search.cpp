@@ -224,7 +224,7 @@ Move SearchController::findBestMove(
     include = moves_to_include;
     fail_high_root_extend = fail_low_root_extend = false;
     fail_high_root = false;
-    bonus_time = (uint64_t)0;
+    bonus_time = (int64_t)0;
     xtra_time = search_xtra_time;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
@@ -424,10 +424,6 @@ Move SearchController::findBestMove(
    }
    initialValue = value;
    depth_adjust = 0;
-   easyMove = NullMove;
-   depth_at_pv_change = 0;
-   easy_adjust = false;
-   easyScore = value;
    stats->value = stats->display_value = value;
 
    // Start all searches
@@ -673,7 +669,9 @@ void SearchController::adjustTimeIfOutOfBounds(const Statistics &stats) {
 }
 
 void SearchController::adjustTime(const Statistics &stats) {
-    // Adjust time based on bad and how recent the fail-low(s) were.
+    // Increase the time limit if pv has changed recently and/or score
+    // is dropping over the past few iterations. Decrease limit if
+    // score seems stable and is not dropping.
     if (!background &&
         typeOfSearch == TimeLimit &&
         time_target != INFINITE_TIME &&
@@ -684,24 +682,35 @@ void SearchController::adjustTime(const Statistics &stats) {
         int pvChangeFactor = 0;
         score_t score = stats.display_value;
         score_t old_score = score;
+        bool decreased = false;
         for (int depth = int(stats.depth)-2; depth >= 0 && depth>int(stats.depth)-6; --depth) {
             if (!MovesEqual(rootSearchHistory[depth].pv,pv)) {
                 pvChangeFactor++;
             }
             old_score = rootSearchHistory[depth].score;
             pv = rootSearchHistory[depth].pv;
+            if (old_score>score) {
+                decreased = true;
+            }
         }
         double scoreChange = std::max(0.0,(old_score-score)/(1.0*Params::PAWN_VALUE));
         double factor = std::min<double>(1.0,(pvChangeFactor/2.0 + scoreChange)/2.0);
-        uint64_t old_bonus_time = bonus_time;
-        // Increase the time limit if pv has changed recently and/or
-        // score is dropping over the past few iterations.
-        bonus_time = static_cast<uint64_t>(xtra_time*factor);
+        int64_t old_bonus_time = bonus_time;
+        bonus_time = static_cast<int64_t>(xtra_time*factor);
+        if (bonus_time==0 && !decreased && score<old_score+Params::PAWN_VALUE/2 && pvChangeFactor == 0) {
+            // score is stable, non-decreasing, and PV has not changed
+            // recently
+            bonus_time = -int64_t(time_target)/3;
+        }
         if (talkLevel == Trace && old_bonus_time != bonus_time) {
             std::ios_base::fmtflags original_flags = cout.flags();
             cout << "# iteration " << stats.depth << " scoreChange=" << scoreChange << " pvChangeFactor=" <<
                 pvChangeFactor << endl;
-            cout << "# setting fail low bonus time to " << fixed << setprecision(2) << 100.0*factor << " % of max" << endl;
+            if (bonus_time>=0) {
+                cout << "# setting bonus time to " << fixed << setprecision(2) << bonus_time/xtra_time << " % of max" << endl;
+            } else {
+                cout << "# reducing time by " << -bonus_time << " ms." << endl;
+            }
             cout.flags(original_flags);
         }
     }
@@ -1236,31 +1245,6 @@ Move Search::ply0_search()
                // them.
                stats.multi_pvs[stats.multipv_count] = Statistics::MultiPVEntry(stats);
             }
-            if (mainThread()) {
-               if (iterationDepth == MoveGenerator::EASY_PLIES) {
-                  auto list = mg.getMoveList();
-                  // Note: do not do "easy move" if capturing the last piece in
-                  // the endgame .. this can be tricky as the resulting pawn
-                  // endgame may be lost.
-                  if (list.size() > 1 &&
-                      (list[0].score >= list[1].score + (Params::PAWN_VALUE*options.search.easy_threshold)/100) &&
-                      TypeOfMove(node->best) == Normal &&
-                      (Capture(node->best) == Empty || !(Capture(node->best) != Pawn &&
-                                                         board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-                                                         board.getMaterial(board.sideToMove()).pieceCount() <= 1))) {
-                     controller->easyMove = node->best;
-                     controller->easyScore = list[0].score;
-                     if (talkLevel == Trace) {
-                        cout << "#easy move: ";
-                        MoveImage(controller->easyMove,cout);
-                        cout << endl;
-                     }
-                  }
-               }
-               else if (iterationDepth > MoveGenerator::EASY_PLIES && !MovesEqual(node->best,controller->easyMove)) {
-                  controller->depth_at_pv_change = iterationDepth;
-               }
-            }
 #ifdef _TRACE
             if (mainThread()) {
                cout << iterationDepth << " ply search result: ";
@@ -1270,26 +1254,6 @@ Move Search::ply0_search()
                cout << endl;
             }
 #endif
-            if (mainThread() &&
-                !controller->background &&
-                (controller->typeOfSearch == TimeLimit && controller->time_target != INFINITE_TIME) &&
-                controller->xtra_time &&
-                (controller->elapsed_time > (unsigned)controller->time_target/3)) {
-               if (!controller->getExtraTime() &&
-                   !controller->easy_adjust &&
-                   controller->depth_at_pv_change <= MoveGenerator::EASY_PLIES &&
-                   MovesEqual(controller->easyMove,node->best) &&
-                   !stats.failLow) {
-                  // Moves that look good at low depth and continue to be
-                  // stably selected can be searched for less time.
-                  controller->easy_adjust = true;
-                  if (talkLevel == Trace) {
-                     cout << "# easy move, adjusting time lower" << endl;
-                  }
-                  controller->time_target /= 3;
-               }
-            }
-
             if (!controller->uci || controller->typeOfSearch == TimeLimit) {
                if (value <= iterationDepth - Constants::MATE) {
                   // We're either checkmated or we certainly will be, so
