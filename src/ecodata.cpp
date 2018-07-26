@@ -125,6 +125,7 @@ const struct ECOData eco_codes[] =
 {"A27", 0x4682982f073c3c73ULL ,"English Opening"},
 {"A27", 0xbf8df329049d077aULL ,"English Opening"},
 {"A28", 0xb2c589ffd6ab4783ULL ,"English, Four Knights"},
+{"A28", 0x2927c812428f045bULL ,"English, Four Knights"},
 {"A28", 0x2c59d775143801ddULL ,"English, Four Knights"},
 {"A29", 0x4ebbc4732d586c5bULL ,"English, Four Knights"},
 {"A29", 0x6654dcf14d855982ULL ,"English, Four Knights"},
@@ -242,6 +243,7 @@ const struct ECOData eco_codes[] =
 {"A48", 0x429cc405354cbd9aULL ,"Torre Attack"},
 {"A49", 0x1ac8be550bff418eULL ,"Queen Pawn"},
 {"A50", 0x714ca03417c7ea0bULL ,""},
+{"A50", 0x8c18a3c4db6b5203ULL ,""},
 {"A51", 0xb2e6826efadd959bULL ,"Budapest Defense"},
 {"A51", 0xc06dbc280c489708ULL ,"Budapest, Fajarowicz Gambit"},
 {"A51", 0xe565ade39e2f027cULL ,"Budapest Defense"},
@@ -647,7 +649,7 @@ const struct ECOData eco_codes[] =
 {"B80", 0xd34a2a95f681258dULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B80", 0xeaf54c1e23940077ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B80", 0x1b44f755bad8f0eULL ,"Sicilian Defense, Scheveningen Variation"},
-{"B80", 0x1846146983658962ULL ,"Sicilian Defense, Scheveningen Variation"},
+{"B80", 0x1846146983658962ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B80", 0x90638e42dbe0ce17ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B80", 0x38ac61f516b49f3eULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B81", 0x7ed183b80d079fe6ULL ,"Sicilian Defense, Keres Attack"},
@@ -1453,8 +1455,7 @@ const struct ECOData eco_codes[] =
 {"E20", 0xee50a7938a064bc8ULL ,"Nimzo-Indian Defense"},
 {"E20", 0x8c7180055f81dd4fULL ,"Nimzo-Indian Defense"},
 {"E20", 0xb57ef8ec7836b52aULL ,"Nimzo-Indian Defense"},
-{"E20", 0x44d6f8b2ed294b9eULL ,"Nimzo-Indian D"},
-{"efense", 0xae2ff225d5d007cfULL ,""},
+{"E20", 0x44d6f8b2ed294b9eULL ,"Nimzo-Indian Defense"},
 {"E20", 0x1577a93c886ec351ULL ,"Nimzo-Indian Defense"},
 {"E20", 0xb1d6b15a9e773abbULL ,"Nimzo-Indian Defense"},
 {"E20", 0xa3d393a89bdd7d61ULL ,"Nimzo-Indian Defense"},
