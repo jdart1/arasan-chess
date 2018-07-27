@@ -676,31 +676,43 @@ void SearchController::adjustTime(const Statistics &stats) {
         typeOfSearch == TimeLimit &&
         time_target != INFINITE_TIME &&
         xtra_time &&
+        stats.depth > 6 &&
         elapsed_time > (unsigned)time_target/3) {
         // Look back over the past few iterations
         Move pv = stats.best_line[0];
         int pvChangeFactor = 0;
         score_t score = stats.display_value;
         score_t old_score = score;
-        bool decreased = false;
         for (int depth = int(stats.depth)-2; depth >= 0 && depth>int(stats.depth)-6; --depth) {
             if (!MovesEqual(rootSearchHistory[depth].pv,pv)) {
                 pvChangeFactor++;
             }
             old_score = rootSearchHistory[depth].score;
             pv = rootSearchHistory[depth].pv;
-            if (old_score>score) {
-                decreased = true;
-            }
         }
         double scoreChange = std::max(0.0,(old_score-score)/(1.0*Params::PAWN_VALUE));
         double factor = std::min<double>(1.0,(pvChangeFactor/2.0 + scoreChange)/2.0);
         int64_t old_bonus_time = bonus_time;
         bonus_time = static_cast<int64_t>(xtra_time*factor);
-        if (bonus_time==0 && !decreased && score<old_score+Params::PAWN_VALUE/2 && pvChangeFactor == 0) {
-            // score is stable, non-decreasing, and PV has not changed
-            // recently
-            bonus_time = -int64_t(time_target)/3;
+        if (bonus_time==0 && pvChangeFactor == 0 && score>=old_score) {
+            // We have not changed pv recently, score is not dropping,
+            // and thinking time was not increased. See if we can
+            // reduce the time target.
+            int pvChangeDepth = 0;
+            int increasedScoreDepth = 0;
+            for (int depth = int(stats.depth)-2; depth > 0; --depth) {
+                if (pvChangeDepth == 0 && !MovesEqual(rootSearchHistory[depth].pv,pv)) {
+                    pvChangeDepth = depth;
+                }
+                old_score = rootSearchHistory[depth].score;
+                if (increasedScoreDepth == 0 && old_score > score) {
+                    increasedScoreDepth = depth;
+                }
+                pv = rootSearchHistory[depth].pv;
+            }
+            factor = 0.5*(2*stats.depth-4-pvChangeDepth-increasedScoreDepth)/stats.depth;
+            ASSERT(factor<=1.0);
+            bonus_time = -static_cast<int64_t>(std::floor(factor*time_target/3));
         }
         if (talkLevel == Trace && old_bonus_time != bonus_time) {
             std::ios_base::fmtflags original_flags = cout.flags();
@@ -709,6 +721,7 @@ void SearchController::adjustTime(const Statistics &stats) {
             if (bonus_time>=0) {
                 cout << "# setting bonus time to " << fixed << setprecision(2) << bonus_time/xtra_time << " % of max" << endl;
             } else {
+                cout << "# factor=" << fixed << setprecision(2) << factor << endl;
                 cout << "# reducing time by " << -bonus_time << " ms." << endl;
             }
             cout.flags(original_flags);
