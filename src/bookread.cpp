@@ -289,19 +289,22 @@ double BookReader::calcReward(const std::array<double,OUTCOMES> &sample, score_t
 
 double BookReader::sample_dirichlet(const book::DataEntry &info, score_t contempt)
 {
-   std::array<double,OUTCOMES> sample;
-   double sum = 0.0;
-   unsigned i = 0;
-   array<unsigned,OUTCOMES> counts = { info.win, info.loss, info.draw };
-   for (unsigned a : counts) {
-      std::gamma_distribution<double> dist(a,1.0);
-      double s = dist(engine);
-      sample[i++] = s;
-      sum += s;
-   }
-   std::transform(sample.begin(), sample.end(), sample.begin(),[&](const double x) -> double { return x/sum;
-      });
-   return calcReward(sample,contempt);
+    std::array<double,OUTCOMES> sample;
+    double sum = 0.0;
+    unsigned i = 0;
+    array<unsigned,OUTCOMES> counts = { info.win, info.loss, info.draw };
+    for (unsigned a : counts) {
+        double s = 0.0;
+        if (a) {
+            std::gamma_distribution<double> dist(a, 1.0);
+            s = dist(engine);
+        }
+        sample[i++] = s;
+        sum += s;
+    }
+    std::transform(sample.begin(), sample.end(), sample.begin(),[&](const double x) -> double { return x/sum;
+        });
+    return calcReward(sample,contempt);
 }
 
 void BookReader::filterByFreq(vector<book::DataEntry> &results)
