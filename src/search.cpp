@@ -2383,15 +2383,20 @@ int Search::calcExtensions(const Board &board,
        !Scoring::mateScore(node->alpha) &&
        board.checkStatus() == NotInCheck &&
        GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-       if (GetPhase(move) == MoveGenerator::LOSERS_PHASE) {
-           swap = 0;
-       }
-       if (swap == Constants::INVALID_SCORE) swap = seeSign(board,move,0);
-       if (!swap) {
+       if (depth <= DEPTH_INCREMENT) {
+           if (GetPhase(move) == MoveGenerator::LOSERS_PHASE || swap == 0 ||
+               seeSign(board,move,0)==0) {
+               return PRUNE;
+           }
+       } else {
+           int p = predictedDepth/DEPTH_INCREMENT;
+           score_t margin = pruneOk ? -p*p*Params::PAWN_VALUE/3 : -p*Params::PAWN_VALUE;
+           if (!seeSign(board,move,margin)) {
 #ifdef SEARCH_STATS
-          ++stats.see_pruning;
+               ++stats.see_pruning;
 #endif
-          return PRUNE;
+               return PRUNE;
+           }
        }
    }
    return extend;
