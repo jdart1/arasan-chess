@@ -42,7 +42,7 @@ int BookReader::open(const char *pathName) {
         // read the header
         book_file.read((char*)&hdr,sizeof(book::BookHeader));
         if (book_file.bad()) {
-            cerr <<"failed to read header" << endl;
+            cerr << "error reading opening book" << endl;
             return -1;
         }
         // correct header for endian-ness
