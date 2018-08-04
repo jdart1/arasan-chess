@@ -132,7 +132,7 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
 
 SearchController::SearchController()
   : post_function(nullptr),
-    terminate_function(nullptr),
+    monitor_function(nullptr),
     age(1),
     talkLevel(Silent),
     stopped(false),
@@ -448,6 +448,7 @@ Move SearchController::findBestMove(
    }
 
    updateGlobalStats(rootSearch->stats);
+
    if (options.search.multipv == 1) {
       for (int thread = 1; thread < options.search.ncpus; thread++) {
          Statistics &threadStats = pool->data[thread]->work->stats;
@@ -767,6 +768,17 @@ int Search::checkTime(const Board &board,int ply) {
           return 1;
        }
     }
+
+    if ((mainThread() || controller->mainThreadCompleted()) &&
+        controller->monitor_function &&
+        controller->monitor_function(controller,stats)) {
+        if (talkLevel == Trace) {
+           cout << "# terminating due to program or user input" << endl;
+        }
+        controller->terminateNow();
+        return 1;
+    }
+
     if (mainThread()) {
        controller->updateGlobalStats(stats);
        if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 3000) {
@@ -1221,13 +1233,6 @@ Move Search::ply0_search()
                     }
                     controller->terminateNow();
                 }
-                else if (controller->terminate_function &&
-                         controller->terminate_function(stats)) {
-                    if (talkLevel == Trace) {
-                        cout << "# terminating due to program or user input" << endl;
-                    }
-                    controller->terminateNow();
-                }
             }
             // check for forced move, but only at depth 2 (so we get a
             // ponder move if possible).
@@ -1305,6 +1310,9 @@ Move Search::ply0_search()
          showStatus(board, node->best, false, false);
       }
    } // end depth iteration loop
+   if (talkLevel == Trace && mainThread() && iterationDepth >= controller->ply_limit) {
+       cout << "# exiting search due to max depth" << endl;
+   }
 #ifdef UCI_LOG
    if (mainThread()) {
       ucilog << "out of search loop, move= " << endl << (flush);

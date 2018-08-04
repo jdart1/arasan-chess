@@ -36,6 +36,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <queue>
 #include <unordered_set>
 
 extern "C"
@@ -90,7 +91,7 @@ static int last_time_target = INFINITE_TIME;
 static int computer_rating = 0;
 static int opponent_rating = 0;
 // stack of pending commands
-static list<string> pending;
+static queue<string> pending;
 static bool doTrace = false;
 static bool easy = false;
 static int game_end = 0;
@@ -124,6 +125,10 @@ static struct UciStrengthOpts
       {
       }
 } uciStrengthOpts;
+
+enum class PendingStatus { Nothing, GameEnd, Move };
+
+enum class AllPendingStatus { Nothing, Quit };
 
 #ifdef UCI_LOG
 extern fstream ucilog;
@@ -169,7 +174,7 @@ static void check_command(const string &, int &);
 static void add_pending(const string &cmd) {
     if (doTrace) cout << "# adding to pending list " << cmd << ", list size=" << pending.size() << endl;
     Lock(input_lock);
-    pending.push_back(cmd);
+    pending.push(cmd);
     Unlock(input_lock);
 }
 
@@ -213,6 +218,79 @@ static Move get_move(const string &cmd_word, const string &cmd_args) {
         cout << "# move text = " << move << endl;
     }
     return text_to_move(*main_board,move);
+}
+
+//
+// Do all pending commands in stack.
+// Return Quit if "quit" was seen.
+//
+static AllPendingStatus do_all_pending(Board &board)
+{
+    AllPendingStatus retVal = AllPendingStatus::Nothing;
+    if (doTrace) cout << "# in do_all_pending" << endl;
+    while (!pending.empty()) {
+        Lock(input_lock);
+        string cmd(pending.front());
+        pending.pop();
+        Unlock(input_lock);
+        if (doTrace) {
+            cout << "# pending command(a): " << cmd << endl;
+        }
+#ifdef UCI_LOG
+        ucilog << "do_all_pending: " << cmd << (flush) << endl;
+#endif
+        if (cmd.substr(0,4) == "quit") {
+            retVal = AllPendingStatus::Quit;
+            break;
+        }
+        do_command(cmd,board);
+    }
+    if (doTrace) cout << "# out of do_all_pending, list size=" << pending.size() << endl;
+    return retVal;
+}
+
+//
+// Check for user move, resign or result in pending stack.
+// If found, return (1 if user move, 2 if game end command)
+// and do not dequeue command. Otherwise return 0.
+//
+static PendingStatus check_pending(Board &board) {
+    if (doTrace) cout << "# in check_pending" << endl;
+    PendingStatus retVal = PendingStatus::Nothing;
+    Lock(input_lock);
+    while (!pending.empty()) {
+        const string cmd = pending.front();
+        string cmd_word, cmd_args;
+        split_cmd(cmd,cmd_word,cmd_args);
+        if (cmd == "result" ||
+            cmd == "new" ||
+            cmd == "quit" ||
+            cmd == "resign") {
+                if (doTrace) cout << "# game end signal in pending stack" << endl;
+                retVal = PendingStatus::GameEnd;
+                break;
+        }
+        else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
+            if (doTrace) cout << "# move in pending stack" << endl;
+            retVal = PendingStatus::Move;
+            break;
+        }
+        else {                                      // might as well execute this
+#ifdef UCI_LOG
+            ucilog << "calling do_command from check_pending" << (flush) << endl;
+#endif
+            if (doTrace) cout << "# calling do_command from check_pending" << (flush) << endl;
+            // dequeue command
+            if (doTrace) cout << "# removing " << cmd << endl;
+            pending.pop();
+            Unlock(input_lock);
+            // execute command
+            do_command(cmd,board);
+            Lock(input_lock);
+        }
+    }
+    Unlock(input_lock);
+    return retVal;
 }
 
 // forward declaration
@@ -401,11 +479,7 @@ static void parseLevel(const string &cmd) {
 
 static void sendPong(const string &arg)
 {
-   // extract digits
-   stringstream digits(arg);
-   int pingValue;
-   digits >> pingValue;
-   cout << "pong " << pingValue << (flush) << endl;
+    cout << "pong " << arg << endl << (flush);
 }
 
 static void process_st_command(const string &cmd_args)
@@ -746,6 +820,33 @@ static void CDECL post_output(const Statistics &stats) {
    }
 }
 
+static void checkPing(const SearchController *controller) {
+    if (!uci) {
+        Lock(input_lock);
+        while (!pending.empty()) {
+        string cmd, args;
+            split_cmd(pending.front(),cmd,args);
+            if (cmd == "ping") {
+                sendPong(args);
+                pending.pop();
+            } else {
+                break;
+            }
+        }
+        Unlock(input_lock);
+    }
+}
+
+static int monitor(const SearchController *s, const Statistics &) {
+    // We used to use the monitor feature to poll for user input, but
+    // this is no longer done since there is a separate input thread.
+    // However, this is used to monitor for a ping received during the
+    // ponder search.
+    if (s->isBackgroundSearch()) {
+        checkPing(s);
+    }
+    return 0;
+}
 
 static int solution_match(Move result) {
    for (int i = 0; i < std::min<int>(10,solution_move_count); i++) {
@@ -755,7 +856,6 @@ static int solution_match(Move result) {
    }
    return 0;
 }
-
 
 // this function is called with "post" results during a test
 // suite run.
@@ -805,12 +905,11 @@ static void CDECL post_test(const Statistics &stats)
 }
 
 
-static int CDECL terminate(const Statistics &stats)
+static int CDECL terminate(const SearchController *s, const Statistics &stats)
 {
    post_test(stats);
    return early_exit;
 }
-
 
 // handle commands in edit mode (Winboard protocol)
 static void edit_mode_cmds(Board &board,ColorType &side,const string &cmd, const string &cmd_args)
@@ -934,45 +1033,48 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
         // in reduced strength mode, limit the ponder search time
         // (do not ponder indefinitely)
         if (options.search.strength < 100) {
-           time_target = last_time_target;
-           if (doTrace) cout << "# limiting ponder time to " <<
-                           time_target << endl;
+            time_target = last_time_target;
+            if (doTrace) cout << "# limiting ponder time to " <<
+                             time_target << endl;
         }
         if (doTrace) {
-           cout << "# starting to ponder" << endl;
+            cout << "# starting to ponder" << endl;
         }
         if (srctype == FixedDepth) {
-           ponder_move = searcher->findBestMove(
-              uci ? *main_board : *ponder_board,
-              srctype,
-              0,
-              0,
-              ply_limit, true, uci,
-              ponder_stats,
-              (doTrace) ? Trace : Silent);
+            ponder_move = searcher->findBestMove(
+                uci ? *main_board : *ponder_board,
+                srctype,
+                0,
+                0,
+                ply_limit, true, uci,
+                ponder_stats,
+                (doTrace) ? Trace : Silent);
         }
         else {
-           ponder_move = searcher->findBestMove(
-              uci ? *main_board : *ponder_board,
-              FixedTime,
-              time_target,
-              0,            /* extra time allowed */
-              Constants::MaxPly,           /* ply limit */
-              true,         /* background */
-              uci,
-              ponder_stats,
-              (doTrace) ? Trace : Silent);
+            ponder_move = searcher->findBestMove(
+                uci ? *main_board : *ponder_board,
+                FixedTime,
+                time_target,
+                0,            /* extra time allowed */
+                Constants::MaxPly,           /* ply limit */
+                true,         /* background */
+                uci,
+                ponder_stats,
+                (doTrace) ? Trace : Silent);
         }
-        pondering--;
         if (doTrace) {
-           cout << "# done pondering" << endl;
+            cout << "# done pondering" << endl;
         }
-        last_computer_move = ponder_move;
-        last_computer_stats = ponder_stats;
-        // Clean up the global move array, if we got no ponder hit.
-        if (!uci && gameMoves->num_moves() > 0 && gameMoves->last().wasPonder()) {
-            gameMoves->remove_move();
-        }
+        // Ensure "ping" response is set if ping was received while
+        // searching:
+        checkPing(searcher);
+    }
+    pondering--;
+    last_computer_move = ponder_move;
+    last_computer_stats = ponder_stats;
+    // Clean up the global move array, if we got no ponder hit.
+    if (!uci && gameMoves->num_moves() > 0 && gameMoves->last().wasPonder()) {
+        gameMoves->remove_move();
     }
     if (doTrace) {
         cout << "# ponder move = ";
@@ -1427,82 +1529,6 @@ static void doHint() {
 }
 
 
-//
-// Do all pending commands in stack.
-// Return 1 if "new" command was executed, 2 if "quit" was seen.
-//
-static int do_all_pending(Board &board)
-{
-    int retVal = 0;
-    if (doTrace) cout << "# in do_all_pending" << endl;
-    while (!pending.empty()) {
-        Lock(input_lock);
-        string cmd = pending.front();
-        pending.pop_front();
-        Unlock(input_lock);
-        if (doTrace) {
-            cout << "# pending command(a): " << cmd << endl;
-        }
-#ifdef UCI_LOG
-        ucilog << "do_all_pending: " << cmd << (flush) << endl;
-#endif
-        if (cmd.substr(0,3) == "new")
-            retVal = 1;
-        else if (cmd.substr(0,4) == "quit") {
-            retVal = 2;
-            break;
-        }
-        do_command(cmd,board);
-    }
-    if (doTrace) cout << "# out of do_all_pending, list size=" << pending.size() << endl;
-    return retVal;
-}
-
-
-//
-// Check for user move, resign or result in pending stack.
-// If found, return (1 if user move, 2 if game end command)
-// and do not dequeue command. Otherwise return 0.
-//
-static int check_pending(Board &board) {
-    if (doTrace) cout << "# in check_pending" << endl;
-    int retVal = 0;
-    Lock(input_lock);
-    while (!pending.empty()) {
-        const string cmd = pending.front();
-        string cmd_word, cmd_args;
-        split_cmd(cmd,cmd_word,cmd_args);
-        if (cmd == "result" ||
-            cmd == "new" ||
-            cmd == "quit" ||
-            cmd == "resign") {
-                if (doTrace) cout << "# game end signal in pending stack" << endl;
-                retVal = 1;                                // game end
-                break;
-        }
-        else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
-            if (doTrace) cout << "# move in pending stack" << endl;
-            retVal = 2;
-            break;
-        }
-        else {                                      // might as well execute this
-#ifdef UCI_LOG
-            ucilog << "calling do_command from check_pending" << (flush) << endl;
-#endif
-            if (doTrace) cout << "# calling do_command from check_pending" << (flush) << endl;
-            // dequeue command
-            if (doTrace) cout << "# removing " << cmd << endl;
-            pending.pop_front();
-            Unlock(input_lock);
-            // execute command
-            do_command(cmd,board);
-            Lock(input_lock);
-        }
-    }
-    Unlock(input_lock);
-    return retVal;
-}
-
 static void analyze_output(const Statistics &stats) {
     // output search status
     cout << "stat01: " <<
@@ -1518,10 +1544,11 @@ static void analyze(Board &board)
         Board previous(board);
         analyze(*searcher,board,stats);
         if (doTrace) cout << "# analysis mode: out of search" << endl;
-        // If we did "quit" while searching, exit analysis mode now
         // Process commands received while searching; exit loop
         // if "quit" seen.
-        if (do_all_pending(board)==2) break;
+        if (do_all_pending(board)==AllPendingStatus::Quit) {
+            break;
+        }
         while (board == previous && analyzeMode) {
             // The user has given us no new position to search. We probably
             // got here because the search has terminated early, due to
@@ -1537,7 +1564,7 @@ static void analyze(Board &board)
             while (!pending.empty()) {
                 Lock(input_lock);
                 string cmd (pending.front());
-                pending.pop_front();
+                pending.pop();
                 Unlock(input_lock);
                 string cmd_word, cmd_arg;
                 split_cmd(cmd,cmd_word,cmd_arg);
@@ -1842,14 +1869,12 @@ static void check_command(const string &cmd, int &terminate)
     }
     else if (cmd_word == "ping") {
         // new for Winboard 4.2
-        if (pondering) {
-           // protocol requires immediate response if pondering
-           sendPong(cmd.substr(4));
-        }
-        else {
-           // do not respond until the search completes.
-           add_pending(cmd);
-        }
+        // The protocol requires an immediate response if we are
+        // pondering, but don't respond in this thread, because the
+        // output may be overlayed with search output (especialy
+        // if debug tracing is on). Put it on the pending stack and
+        // the search will pick it up.
+        add_pending(cmd);
     }
     else if (cmd == "hint") {
         doHint();
@@ -2726,13 +2751,13 @@ static bool do_command(const string &cmd, Board &board) {
                 else {
                    do_command("new",board);
                    PostFunction old_post = searcher->registerPostFunction(post_test);
-                   TerminateFunction old_terminate = searcher->registerTerminateFunction(terminate);
+                   MonitorFunction old_monitor = searcher->registerMonitorFunction(terminate);
                    Options tmp = options;
                    options.book.book_enabled = 0;
                    options.learning.position_learning = 0;
                    do_test(filename,max_depth,max_time);
                    searcher->registerPostFunction(old_post);
-                   searcher->registerTerminateFunction(old_terminate);
+                   searcher->registerMonitorFunction(old_monitor);
                    options = tmp;
                    cout << "test complete" << endl;
                 }
@@ -3063,7 +3088,8 @@ static bool do_command(const string &cmd, Board &board) {
         computer = 1;
     }
     else if (cmd_word == "ping") {
-        sendPong(cmd.substr(4));
+        // not in a search, so send "pong" immediately
+        sendPong(cmd_args);
     }
     else if (cmd_word == "ics") {
         hostname = cmd_args;
@@ -3388,7 +3414,7 @@ static bool do_command(const string &cmd, Board &board) {
                   }
                }
                // Check for game end conditions like resign, draw acceptance, etc:
-               if (check_pending(board)==1) {
+               if (check_pending(board)==PendingStatus::GameEnd) {
                   game_end = true;
                } else if (!forceMode) {
                   // call send_move even if game_end = true because we
@@ -3398,18 +3424,18 @@ static bool do_command(const string &cmd, Board &board) {
             }
             while (!forceMode && !analyzeMode && !game_end && !result_pending && !easy && time_target >= 100 /* 0.1 second */) {
                ponder_move_ok = false;
-               int result;
+               PendingStatus result;
                // check pending commands again before pondering in case
                // we have a resign or draw, or a move has come in (no
                // good pondering if the opponent has replied already).
-               if ((result = check_pending(board)) != 0) {
-                   return result == 1;
+               if ((result = check_pending(board)) != PendingStatus::Nothing) {
+                   return true;
                }
                ponder(board,reply,stats.best_line[1],uci);
                // check again for game-ending commands before we process
                // ponder result
-               if (check_pending(board)==1) {
-                  return 1;                       // game end signal seen
+               if (check_pending(board)==PendingStatus::GameEnd) {
+                   return true;
                }
                // We are done pondering. If we got a ponder hit
                // (opponent made our predicted move), then we are ready
@@ -3559,6 +3585,7 @@ int CDECL main(int argc, char **argv) {
     searcher = new SearchController();
 
     searcher->registerPostFunction(post_output);
+    searcher->registerMonitorFunction(monitor);
 
     while(!polling_terminated) {
         if (inputSem.wait()) {
@@ -3570,13 +3597,12 @@ int CDECL main(int argc, char **argv) {
         while (!pending.empty() && !polling_terminated) {
             Lock(input_lock);
             string cmd (pending.front());
-            pending.pop_front();
+            pending.pop();
 #ifdef UCI_LOG
             ucilog << "got cmd (main): " << cmd << endl;
 #endif
             if (doTrace) {
                 cout << "# got cmd (main): "  << cmd << endl;
-                //cout << "# pending size = " << pending.size() << endl;
             }
             Unlock(input_lock);
 #ifdef UCI_LOG
@@ -3584,7 +3610,7 @@ int CDECL main(int argc, char **argv) {
 #endif
             if (doTrace) cout << "# calling do_command(main):" << cmd << (flush) << endl;
             if (!do_command(cmd,board)) {
-                if (doTrace) cout << "#terminating .. " << endl;
+                if (doTrace) cout << "# exiting polling loop" << endl;
                 polling_terminated++;
             }
         }

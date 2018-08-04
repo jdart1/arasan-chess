@@ -122,9 +122,13 @@ public:
    uint64_t totalHits() const;
 
    bool allCompleted() const {
-     return (completedMask & ~1ULL) == (availableMask & ~1ULL);
+       return (completedMask & ~1ULL) == (availableMask & ~1ULL);
    }
 
+   bool isCompleted(unsigned index) const {
+       return (completedMask & (1ULL << index)) != 0ULL;
+   }
+    
 private:
    void shutDown();
 

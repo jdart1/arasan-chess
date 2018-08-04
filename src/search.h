@@ -15,6 +15,7 @@ extern "C" {
 #include <time.h>
 };
 #include <atomic>
+#include <list>
 #include <random>
 using namespace std;
 
@@ -71,7 +72,7 @@ enum SearchType { FixedDepth, TimeLimit, FixedTime };
 class SearchController;
 
 typedef void (CDECL *PostFunction)(const Statistics &);
-typedef int (CDECL *TerminateFunction)(const Statistics &);
+typedef int (CDECL *MonitorFunction)(const SearchController *,const Statistics &);
 
 class Search {
 
@@ -300,15 +301,22 @@ public:
 
     void terminateNow();
 
+    // Set a "post" function that will be called from the
+    // search to output status data (for Winboard; also used
+    // in test mode). Returns the previous function instance.
     PostFunction registerPostFunction(PostFunction post) {
         PostFunction tmp = post_function;
         post_function = post;
         return tmp;
     }
 
-    TerminateFunction registerTerminateFunction(TerminateFunction term) {
-        TerminateFunction tmp = terminate_function;
-        terminate_function = term;
+    // Set a "monitor" function that will be called during the
+    // search. This function returns 1 if the search should
+    // terminate. This function returns the previous function
+    // instance.
+    MonitorFunction registerMonitorFunction(MonitorFunction func) {
+        MonitorFunction tmp = monitor_function;
+        monitor_function = func;
         return tmp;
     }
 
@@ -330,6 +338,10 @@ public:
 
     void setBackground(int b) {
         background = b;
+    }
+
+    bool isBackgroundSearch() const noexcept {
+        return background != 0;
     }
 
     void setTimeLimit(uint64_t limit,uint64_t xtra) {
@@ -427,13 +439,17 @@ public:
    // one or more fail high/fail lows). Called from main thread.
    void adjustTime(const Statistics &stats);
 
+   bool mainThreadCompleted() const noexcept {
+       return pool->isCompleted(0);
+   }
+
 private:
 
     // pointer to function, called to output status during
     // a search.
-    void (CDECL *post_function)(const Statistics &);
+    PostFunction post_function;
 
-    int (CDECL *terminate_function)(const Statistics &);
+    MonitorFunction monitor_function;
 
     // check console input
     int check_input(const Board &);
