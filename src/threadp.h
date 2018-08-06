@@ -3,13 +3,14 @@
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
 
-#include "types.h"
+#include "bitboard.h"
 #include "threadc.h"
 #include "constant.h"
 #ifdef NUMA
 #include "topo.h"
 #endif
 #include <array>
+#include <atomic>
 #include <bitset>
 #include <functional>
 #include <mutex>
@@ -122,13 +123,17 @@ public:
    uint64_t totalHits() const;
 
    bool allCompleted() const {
-       return (completedMask & ~1ULL) == (availableMask & ~1ULL);
+       return Bitboard(completedMask).bitCount() == nThreads;
    }
 
    bool isCompleted(unsigned index) const {
        return (completedMask & (1ULL << index)) != 0ULL;
    }
     
+   void setCompleted(unsigned index) {
+       completedMask |= (1ULL << index);
+   }
+
 private:
    void shutDown();
 
@@ -138,14 +143,10 @@ private:
    unsigned nThreads;
    std::array<ThreadInfo *,Constants::MaxCPUs> data;
 
-   // Used for signaling/waiting all threads completion:
-   std::mutex cvm;
-   std::condition_variable cv;
-
    // mask of thread status - 0 if idle, 1 if active
-   uint64_t activeMask;
-   uint64_t availableMask;
-   uint64_t completedMask;
+   atomic<uint64_t> activeMask;
+   atomic<uint64_t> availableMask;
+   atomic<uint64_t> completedMask;
 
 #ifndef _WIN32
    pthread_attr_t stackSizeAttrib;

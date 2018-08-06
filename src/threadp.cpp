@@ -22,17 +22,17 @@ static const size_t THREAD_STACK_SIZE = 8*1024*1024;
 static lock_t io_lock;
 
 void log(const string &s) {
-  Lock(io_lock);
-  puts(s.c_str());
-  fflush(stdout);
-  Unlock(io_lock);
+    Lock(io_lock);
+    puts(s.c_str());
+    fflush(stdout);
+    Unlock(io_lock);
 }
 void log(const string &s,int param) {
-  std::ostringstream out;
-  out << s;
-  out << ": ";
-  out << param << '\0';
-  log(out.str());
+    std::ostringstream out;
+    out << s;
+    out << ": ";
+    out << param << '\0';
+    log(out.str());
 }
 #endif
 
@@ -87,26 +87,19 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
 #endif
       ti->work->ply0_search();
       ti->pool->lock();
+      // Mark thread completed
+      ti->pool->completedMask |= (1ULL << ti->index);
+#ifdef _THREAD_TRACE
+      {
+           std::ostringstream s;
+           s << "# thread " << ti->index << " completed, mask=" << (hex) <<
+
+           ti->pool->completedMask << (dec) << endl;
+           log(s.str());
+      }
+#endif
       // remove thread from active list and set state back to Idle
       ti->pool->activeMask &= ~(1ULL << ti->index);
-      {
-         std::lock_guard<std::mutex> (ti->pool->cvm);
-         // mark search completed
-         ti->pool->completedMask |= 1ULL << ti->index;
-#ifdef _THREAD_TRACE
-         {
-            std::ostringstream s;
-            s << "# thread " << ti->index << " completed, mask=" << (hex) <<
-
-               ti->pool->completedMask << (dec) << endl;
-            log(s.str());
-         }
-#endif
-         if (ti->pool->allCompleted()) {
-            // All threads complete, unblock thread waiting on completion
-            ti->pool->cv.notify_one();
-         }
-      }
       ti->state = ThreadInfo::Idle;
       ti->pool->unlock();
    }
@@ -115,16 +108,20 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
 void ThreadPool::waitAll()
 {
    if (nThreads>1) {
-      std::unique_lock<std::mutex> lock(cvm);
+      // Mark thread 0 (waiter) complete.
+      setCompleted(0);
 #ifdef _THREAD_TRACE
       {
          std::ostringstream s;
-         s << "# waitAll: completed mask= " << (hex) <<
-            completedMask << (dec) << endl;
+         s << "waitAll: completed mask=" << (hex) <<
+             completedMask << (dec) << " count=" << Bitboard(completedMask).bitCount() << endl;
          log(s.str());
       }
 #endif
-      cv.wait(lock, [this]{ return allCompleted(); });
+      // TBD: use conditional variable/wait here
+      while (!allCompleted()) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      }
    }
 }
 
