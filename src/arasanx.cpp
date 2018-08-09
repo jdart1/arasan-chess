@@ -251,8 +251,7 @@ static AllPendingStatus do_all_pending(Board &board)
 
 //
 // Check for user move, resign or result in pending stack.
-// If found, return (1 if user move, 2 if game end command)
-// and do not dequeue command. Otherwise return 0.
+// If found, return status and do not dequeue command.
 //
 static PendingStatus check_pending(Board &board) {
     if (doTrace) cout << "# in check_pending" << endl;
