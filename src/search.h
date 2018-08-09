@@ -433,11 +433,11 @@ public:
    // Adjust time usage after root fail high or fail low. A temporary
    // time extension is done to allow resolution of the fail high/low.
    // Called from main thread.
-   void adjustTimeIfOutOfBounds(const Statistics &stats);
+   void outOfBoundsTimeAdjust(const Statistics &stats);
 
    // Adjust time usage after a root search iteration has completed (possibly with
    // one or more fail high/fail lows). Called from main thread.
-   void adjustTime(const Statistics &stats);
+   void historyBasedTimeAdjust(const Statistics &stats);
 
    bool mainThreadCompleted() const noexcept {
        return pool->isCompleted(0);

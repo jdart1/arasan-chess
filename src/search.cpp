@@ -629,7 +629,7 @@ void SearchController::resizeHash(size_t newSize) {
    hashTable.resizeHash(newSize);
 }
 
-void SearchController::adjustTimeIfOutOfBounds(const Statistics &stats) {
+void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
     if (stats.failHigh) {
         // time adjustment
         if (xtra_time > 0 && time_target != INFINITE_TIME) {
@@ -669,7 +669,7 @@ void SearchController::adjustTimeIfOutOfBounds(const Statistics &stats) {
     }
 }
 
-void SearchController::adjustTime(const Statistics &stats) {
+void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
     // Increase the time limit if pv has changed recently and/or score
     // is dropping over the past few iterations. Decrease limit if
     // score seems stable and is not dropping.
@@ -1141,7 +1141,7 @@ Move Search::ply0_search()
                     node->best, stats.display_value);
                 // Peform any temporary adjustment of the time allocation based
                 // on search status and history
-                controller->adjustTimeIfOutOfBounds(stats);
+                controller->outOfBoundsTimeAdjust(stats);
             }
             // Show status (if main thread) and adjust aspiration
             // window as needed
@@ -1255,7 +1255,7 @@ Move Search::ply0_search()
             if (mainThread()) {
                 // Peform any adjustment of the time allocation based
                 // on search status and history
-                controller->adjustTime(stats);
+                controller->historyBasedTimeAdjust(stats);
             }
             stats.completedDepth = iterationDepth;
             if (srcOpts.multipv > 1) {
