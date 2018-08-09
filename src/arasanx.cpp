@@ -820,12 +820,25 @@ static void CDECL post_output(const Statistics &stats) {
    }
 }
 
-static void checkPing(const SearchController *controller) {
-    if (!uci) {
-        Lock(input_lock);
-        while (!pending.empty()) {
+// Check for pending commands in the stack (called from main
+// search thread).
+static void checkPendingInSearch(const SearchController *controller) {
+    Lock(input_lock);
+    while (!pending.empty()) {
         string cmd, args;
-            split_cmd(pending.front(),cmd,args);
+        split_cmd(pending.front(),cmd,args);
+        if (uci) {
+            // check for "ponderhit". It is possible this was sent
+            // very soon after "go ponder" but before pondering actually
+            // started. If so it will be in the pending stack.
+            if (cmd == "ponderhit") {
+                int terminate;
+                check_command(cmd,terminate);
+                pending.pop();
+                break;
+            }
+        }
+        else {
             if (cmd == "ping") {
                 sendPong(args);
                 pending.pop();
@@ -833,17 +846,17 @@ static void checkPing(const SearchController *controller) {
                 break;
             }
         }
-        Unlock(input_lock);
-    }
+   }
+   Unlock(input_lock);
 }
 
 static int monitor(const SearchController *s, const Statistics &) {
     // We used to use the monitor feature to poll for user input, but
     // this is no longer done since there is a separate input thread.
-    // However, this is used to monitor for a ping received during the
-    // ponder search.
+    // However, this is used to monitor for a couple commands that
+    // must be processed during a ponder search.
     if (s->isBackgroundSearch()) {
-        checkPing(s);
+        checkPendingInSearch(s);
     }
     return 0;
 }
@@ -1023,7 +1036,6 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
             // remove this move.
             //
             gameMoves->add_move(board,previous_state,predicted_reply,"",true);
-            // Start a search for the reply
         }
 #ifdef UCI_LOG
         ucilog << "starting ponder search" << (flush) << endl;
@@ -1067,7 +1079,9 @@ static void ponder(Board &board, Move move, Move predicted_reply, int uci)
         }
         // Ensure "ping" response is set if ping was received while
         // searching:
-        checkPing(searcher);
+        if (!uci) {
+            checkPendingInSearch(searcher);
+        }
     }
     pondering--;
     last_computer_move = ponder_move;
