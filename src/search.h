@@ -72,7 +72,7 @@ enum SearchType { FixedDepth, TimeLimit, FixedTime };
 class SearchController;
 
 typedef void (CDECL *PostFunction)(const Statistics &);
-typedef int (CDECL *MonitorFunction)(const SearchController *,const Statistics &);
+typedef int (CDECL *MonitorFunction)(SearchController *,const Statistics &);
 
 class Search {
 
@@ -365,10 +365,6 @@ public:
 
     void uciSendInfos(const Board &, Move move, int move_index, int depth);
 
-    bool isActive() const {
-        return active;
-    }
-
     void stop() {
         stopped = true;
     }
@@ -483,7 +479,6 @@ private:
     CLOCK_TYPE startTime;
     CLOCK_TYPE last_time;
     ThreadPool *pool;
-    bool active;
     Search *rootSearch;
     int tb_root_probes, tb_root_hits;
 

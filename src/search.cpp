@@ -136,8 +136,7 @@ SearchController::SearchController()
     age(1),
     talkLevel(Silent),
     stopped(false),
-    contempt(0),
-    active(false)
+    contempt(0)
 {
 
 #ifdef SMP_STATS
@@ -195,11 +194,9 @@ Move SearchController::findBestMove(
    Statistics &stat_buf,
    TalkLevel t)
 {
-    active = true;
     MoveSet excludes, includes;
     Move result = findBestMove(board,srcType,time_limit,xtra_time,ply_limit,
                                background, isUCI, stat_buf, t, excludes, includes);
-    active = false;
     return result;
 }
 
