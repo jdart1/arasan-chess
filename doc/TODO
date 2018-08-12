@@ -9,13 +9,13 @@ singular extensions
 
 implement UCI_Opponent
 
-change reduction based on node type
-change reduction based on "improving" test (Stockfish)
-       - neither works so far
+change reduction/pruning based on node type
+change pruning based on "improving" test (Stockfish)
+       - neither works so far (but improving status used for LMR now)
 
 New book format? (
-LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database)
-LevelDB, RocksDB
+LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database.
+Or LevelDB, RocksDB).
 
 Book learning. Dropout expansion?
 
@@ -36,5 +36,8 @@ Consider L1 regularization for tuner, possibly with smooth approximation (http:/
 Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper.
 http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf
 
+Improve nps on high core counts (like TCEC). One sub-project of this is
+to improve thread depth distribution logic, see:
+http://talkchess.com/forum3/viewtopic.php?f=7&t=68154. 
 
 
