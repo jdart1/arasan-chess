@@ -2,37 +2,39 @@
 // Handles Winboard/xboard/UCI protocol.
 // Copyright 1997-2018 by Jon Dart. All Rights Reserved.
 //
+#include "attacks.h"
+#include "bitboard.h"
+#include "bitprobe.h"
 #include "board.h"
-#include "movegen.h"
-#include "search.h"
+#include "boardio.h"
+#include "calctime.h"
+#include "chessio.h"
+#include "eco.h"
+#include "globals.h"
+#include "learn.h"
+#include "legal.h"
+#include "log.h"
 #include "movearr.h"
+#include "movegen.h"
 #include "notation.h"
 #include "scoring.h"
-#include "chessio.h"
-#include "bitboard.h"
-#include "attacks.h"
-#include "globals.h"
-#include "log.h"
-#include "calctime.h"
-#include "eco.h"
-#include "learn.h"
-#include "boardio.h"
-#include "legal.h"
-#include "bitprobe.h"
-#ifdef UNIT_TESTS
-#include "unit.h"
+#include "search.h"
+#ifdef SYZYGY_TBS
+#include "syzygy.h"
 #endif
 #include "tester.h"
 #ifdef TUNE
 #include "tune.h"
 #endif
-#ifdef SYZYGY_TBS
-#include "syzygy.h"
+#ifdef UNIT_TESTS
+#include "unit.h"
 #endif
 
-#include <cstddef>
 #include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstddef>
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -44,17 +46,10 @@ using namespace std::placeholders;
 
 extern "C"
 {
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <time.h>
 #include <signal.h>
 #ifdef _WIN32
 #include <io.h>
 #else
-#include <errno.h>
-#include <unistd.h>
 #include <sys/select.h>
 #endif
 };
