@@ -15,6 +15,7 @@ extern "C" {
 #include <time.h>
 };
 #include <atomic>
+#include <functional>
 #include <list>
 #include <random>
 using namespace std;
@@ -70,9 +71,6 @@ enum TalkLevel { Silent, Debug, Whisper, Trace };
 enum SearchType { FixedDepth, TimeLimit, FixedTime };
 
 class SearchController;
-
-typedef void (CDECL *PostFunction)(const Statistics &);
-typedef int (CDECL *MonitorFunction)(SearchController *,const Statistics &);
 
 class Search {
 
@@ -254,6 +252,9 @@ public:
     SearchController();
 
     ~SearchController();
+
+    typedef std::function<void(const Statistics &)> PostFunction;
+    typedef std::function<int(SearchController *,const Statistics &)> MonitorFunction;
 
     Move findBestMove(
         const Board &board,

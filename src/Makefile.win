@@ -147,7 +147,7 @@ LDFLAGS = $(LDFLAGS) /subsystem:console,5.01
 LDFLAGS = $(LDFLAGS) /subsystem:console
 !Endif
 
-ARASANX_OBJS = $(BUILD)\arasanx.obj \
+ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
@@ -177,7 +177,7 @@ $(TUNE_BUILD)\learn.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
-ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
+ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj $(PROFILE)\tester.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \

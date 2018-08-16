@@ -61,7 +61,7 @@ PGO_RUN_FLAGS = -H 64M
 TUNE_FLAGS := -DTUNE
 
 #PROF     = -pg
-#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -276,7 +276,7 @@ ifeq ("$(findstring UNIT_TESTS,$(CFLAGS))","UNIT_TESTS")
 UNIT_TEST_SRC:=unit.cpp
 endif
 
-ARASANX_SOURCES = arasanx.cpp globals.cpp  \
+ARASANX_SOURCES = arasanx.cpp tester.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \

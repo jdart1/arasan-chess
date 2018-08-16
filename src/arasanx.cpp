@@ -22,6 +22,7 @@
 #ifdef UNIT_TESTS
 #include "unit.h"
 #endif
+#include "tester.h"
 #ifdef TUNE
 #include "tune.h"
 #endif
@@ -38,6 +39,8 @@
 #include <iterator>
 #include <queue>
 #include <unordered_set>
+
+using namespace std::placeholders;
 
 extern "C"
 {
@@ -136,36 +139,6 @@ enum class AllPendingStatus { Nothing, Quit };
 #ifdef UCI_LOG
 extern fstream ucilog;
 #endif
-
-// profile
-uint64_t total_nodes = 0L;
-int total_correct = 0L;
-int total_tests = 0L;
-uint64_t total_time = 0L;
-int early_exit_plies = Constants::MaxPly;
-int early_exit = 0;
-int solution_move_count = 0;
-time_t solution_time = 0;
-uint64_t solution_nodes = (uint64_t)0;
-int last_iteration_depth = -1;
-int iterations_correct = 0;
-int moves_to_search = 1;
-int flip = 0;
-array<Move,10> solution_moves;
-bool avoid = false;
-vector<int> solution_times;
-static uint64_t nodes_to_find_total;
-static int depth_to_find_total;
-static uint64_t time_to_find_total;
-static int max_depth;
-static struct
-{
-   Move move;
-   score_t value;
-   time_t time;
-   int depth;
-   uint64_t num_nodes;
-} search_progress[256];
 
 static string cmd_buf;
 static ThreadControl inputSem;
@@ -754,18 +727,6 @@ static void move_image(const Board &board, Move m, ostream &buf, int uci) {
 }
 
 
-static void print_nodes(uint64_t nodes, ostream &out) {
-   if (nodes >= 1000000) {
-      cout << (float)(nodes)/1000000.0 << "M";
-   }
-   else if (nodes >= 1000) {
-      cout << (float)(nodes)/1000.0 << "K";
-   }
-   else
-      cout << nodes;
-}
-
-
 static void uciOut(int depth, score_t score, time_t time,
 uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    stringstream s;
@@ -802,7 +763,7 @@ static void uciOut(const Statistics &stats) {
 }
 
 
-static void CDECL post_output(const Statistics &stats) {
+static void post_output(const Statistics &stats) {
    last_score = stats.value;
    score_t score = stats.display_value;
    if (score == Constants::INVALID_SCORE) {
@@ -898,69 +859,6 @@ static int monitor(SearchController *s, const Statistics &) {
         checkPendingInSearch(s);
     }
     return 0;
-}
-
-static int solution_match(Move result) {
-   for (int i = 0; i < std::min<int>(10,solution_move_count); i++) {
-      if (MovesEqual(solution_moves[i],result)) {
-         return 1;
-      }
-   }
-   return 0;
-}
-
-// this function is called with "post" results during a test
-// suite run.
-static void CDECL post_test(const Statistics &stats)
-{
-   Move best = stats.best_line[0];
-   if (!IsNull(best) && max_depth < 256) {
-      int ply = stats.depth-1;
-      search_progress[max_depth].move = best;
-      search_progress[max_depth].value = stats.value;
-      search_progress[max_depth].time = searcher->getElapsedTime();
-      search_progress[max_depth].depth = ply;
-      search_progress[max_depth].num_nodes = stats.num_nodes;
-      max_depth++;
-   }
-   int ok;
-   if (avoid) {
-      // note: doesn't handle multiple "am" moves
-      ok = !MovesEqual(solution_moves[0],best);
-   }
-   else {
-      ok = solution_match(best);
-   }
-   if (ok) {
-      if ((int)stats.depth > last_iteration_depth) {
-         // Wait 2 sec before counting iterations correct, unless
-         // we found a mate
-         if (searcher->getElapsedTime() >= 200 ||
-             stats.value > Constants::MATE_RANGE) {
-            ++iterations_correct;
-         }
-         last_iteration_depth = stats.depth;
-      }
-      if (iterations_correct >= early_exit_plies)
-         early_exit = 1;
-      if (solution_time == -1) {
-         solution_time = searcher->getElapsedTime();
-         solution_nodes = stats.num_nodes;
-      }
-      return;
-   }
-   else {
-      solution_time = -1;   // not solved yet, or has moved off
-                            // solution
-   }
-   iterations_correct = 0;
-}
-
-
-static int CDECL terminate(SearchController *s, const Statistics &stats)
-{
-   post_test(stats);
-   return early_exit;
 }
 
 // handle commands in edit mode (Winboard protocol)
@@ -1220,14 +1118,6 @@ static Move search(SearchController *searcher, Board &board,
             cout << endl;
         }
         last_stats = stats;
-        if (!forceMode) {
-            if (testing) {
-                post_test(stats);
-            }
-            else {
-                post_output(stats);
-            }
-        }
     }
     else {
         if (ics || uci) {
@@ -2111,270 +2001,6 @@ static void check_command(const string &cmd, int &terminate)
 }
 
 
-// for support of the "test" command
-static Move test_search(Board &board, int ply_limit,
-                        int time_limit,
-                        Statistics &stats, const MoveSet &excludes) {
-   Move move = NullMove;
-   solution_time = -1;
-
-   MoveSet includes;
-   SearchType type;
-   if (ply_limit != 0) {
-      type = FixedDepth;
-      time_limit = INFINITE_TIME;
-   }
-   else {
-      type = FixedTime;
-      ply_limit = Constants::MaxPly;
-   }
-   prepareSearch(false);
-   move = searcher->findBestMove(board,
-      type,
-      time_limit, 0, ply_limit,
-      0, 0, stats,
-      verbose ? Debug : Silent,
-      excludes, includes);
-   finishSearch();
-   if (excludes.size())
-      cout << "result(" << excludes.size()+1 << "):";
-   else
-      cout << "result:";
-   cout << '\t';
-   Notation::image(board,move,Notation::OutputFormat::SAN,cout);
-   cout << "\tscore: ";
-   Scoring::printScore(stats.display_value,cout);
-   cout <<  '\t';
-   total_time += searcher->getElapsedTime();
-   total_nodes += stats.num_nodes;
-   gameMoves->removeAll();
-   return move;
-}
-
-
-static void do_test(string test_file, int depth_limit, int time_limit)
-{
-   delayedInit();
-   int tmp = options.book.book_enabled;
-   options.book.book_enabled = 0;
-   total_nodes = (uint64_t)0;
-   total_correct = total_tests = 0;
-   total_time = (uint64_t)0;
-   nodes_to_find_total = (uint64_t)0;
-   depth_to_find_total = 0;
-   time_to_find_total = (uint64_t)0;
-
-   solution_times.clear();
-   Board board;
-   ifstream pos_file( test_file.c_str(), ios::in);
-   if (!pos_file) {
-      cout << "Failed to open EPD file." << endl;
-         return;
-   }
-   string buf;
-   while (!pos_file.eof()) {
-      std::getline(pos_file,buf);
-      if (!pos_file) {
-         cout << "Error reading EPD file." << endl;
-         return;
-      }
-      // Try to parse this line as an EPD command.
-      stringstream stream(buf);
-      string id, comment;
-      EPDRecord epd_rec;
-      if (!ChessIO::readEPDRecord(stream,board,epd_rec)) break;
-      if (epd_rec.hasError()) {
-         cerr << "error in EPD record ";
-         if (id.length()>0) cerr << id;
-         cerr << ": ";
-         cerr << epd_rec.getError();
-         cerr << endl;
-      }
-      else {
-         solution_move_count = 0;
-         int illegal=0;
-         id = "";
-         for (unsigned i = 0; i < epd_rec.getSize(); i++) {
-            string key, val;
-            epd_rec.getData(i,key,val);
-            if (key == "bm" || key == "am") {
-               Move m;
-               stringstream s(val);
-               while (!s.eof()) {
-                  string moveStr;
-                  // skips spaces
-                  s >> moveStr;
-                  if (s.bad() || s.fail() || !moveStr.length()) {
-                      cerr << "error reading solution move " << val << endl;
-                      break;
-                  }
-                  m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,moveStr);
-                  if (IsNull(m)) {
-                     ++illegal;
-                  }
-                  else if (solution_move_count < 10) {
-                     solution_moves[solution_move_count++] = m;
-                  }
-                  avoid = (key == "am");
-               }
-            }
-            else if (key == "id") {
-               id = val;
-            }
-            else if (key == "c0") {
-               comment = val;
-            }
-         }
-         if (illegal) {
-            cerr << "illegal or invalid solution move(s) for EPD record ";
-            if (id.length()>0) cerr << id;
-            cerr << endl;
-            continue;
-         }
-         else if (!solution_move_count) {
-            cerr << "no solution move(s) for EPD record ";
-            if (id.length()>0) cerr << id;
-            cerr << endl;
-            continue;
-         }
-         last_iteration_depth = -1;
-         iterations_correct = 0;
-         early_exit = 0;
-         solution_time = -1;
-         max_depth = 0;
-         testing = 1;
-         cout << id << ' ';
-         if (comment.length()) cout << comment << ' ';
-         if (avoid) {
-            cout << "am ";
-            Notation::image(board,solution_moves[0],Notation::OutputFormat::SAN,cout);
-            cout << endl;
-         }
-         else {
-            cout << "bm";
-            for (int i = 0; i < solution_move_count; i++) {
-               cout << ' ';
-               Notation::image(board,solution_moves[i],Notation::OutputFormat::SAN,cout);
-            }
-            cout << endl;
-         }
-         srctype = FixedTime;
-         MoveSet excludes;
-         total_tests++;
-         for (int index = 0; index < moves_to_search; index++) {
-            searcher->clearHashTables();
-            Move result = test_search(board,depth_limit,time_limit,stats,excludes);
-            if (IsNull(result)) break;
-            excludes.insert(result);
-            int correct = solution_time >=0;
-            if (index == 0) {
-                // only put solutions in summary at end if they are
-                // made on the first search attempt.
-                solution_times.push_back((int)solution_time);
-                if (correct) total_correct++;
-            }
-            std::ios_base::fmtflags original_flags = cout.flags();
-            cout << setprecision(4);
-            if (correct) {
-               cout << "\t++ solved in " << (float)solution_time/1000.0 <<
-                  " sec. (";
-               print_nodes(solution_nodes,cout);
-            }
-            else {
-               cout << "\t** not solved in " <<
-                  (float)searcher->getElapsedTime()/1000.0 << " secs. (";
-               print_nodes(stats.num_nodes,cout);
-            }
-            cout << " nodes)" << endl;
-            cout.flags(original_flags);
-            cout << stats.best_line_image << endl;
-            if (index == 0 && correct && max_depth>0) {
-               uint64_t nodes_to_find = (uint64_t)0;
-               int depth_to_find = 0;
-               time_t time_to_find = 0;
-               for (int i=max_depth-1;i>=0;i--) {
-                  if (avoid) {
-                     if (MovesEqual(search_progress[i].move,result)) {
-                        nodes_to_find = search_progress[i+1].num_nodes;
-                        time_to_find = search_progress[i+1].time;
-                        depth_to_find = search_progress[i+1].depth;
-                        break;
-                     }
-                  }
-                  else {
-                     if (!solution_match(search_progress[i].move)) {
-                        nodes_to_find = search_progress[i+1].num_nodes;
-                        time_to_find = search_progress[i+1].time;
-                        depth_to_find = search_progress[i+1].depth;
-                        break;
-                     }
-                  }
-               }
-               nodes_to_find_total += nodes_to_find;
-               depth_to_find_total += depth_to_find;
-               time_to_find_total += time_to_find;
-            }
-         }
-      }
-
-      int c;
-      while (!pos_file.eof()) {
-         c = pos_file.get();
-         if (!isspace(c) && c != '\n') {
-            if (!pos_file.eof()) {
-               pos_file.putback(c);
-            }
-            break;
-         }
-      }
-   }
-   pos_file.close();
-   cout << endl << "solution times:" << endl;
-   cout << "         ";
-   unsigned i = 0;
-   for (i = 0; i < 10; i++)
-      cout << i << "      ";
-   cout << endl;
-   double score = 0.0;
-   for (i = 0; i < solution_times.size(); i++) {
-      char digits[15];
-      if (i == 0) {
-         sprintf(digits,"% 4d |       ",i);
-         cout << endl << digits;
-      }
-      else if ((i+1) % 10 == 0) {
-         sprintf(digits,"% 4d |",(i+1)/10);
-         cout << endl << digits;
-      }
-      if (solution_times[i] == -1) {
-         cout << "  ***  ";
-      }
-      else {
-         sprintf(digits,"%6.2f ",solution_times[i]/1000.0);
-         cout << digits;
-         score += (float)time_limit/1000.0 - solution_times[i]/1000.0;
-      }
-   }
-   cout << endl << endl << "correct : " << total_correct << '/' <<
-   total_tests << endl;
-   if (total_correct) {
-      string avg = "";
-      if (total_correct > 1) avg = "avg. ";
-      cout << avg << "nodes to solution : ";
-      uint64_t avg_nodes = nodes_to_find_total/total_correct;
-      if (avg_nodes > 1000000L) {
-         cout << (float)(avg_nodes)/1000000.0 << "M" << endl;
-      }
-      else {
-         cout << (float)(avg_nodes)/1000.0 << "K" << endl;
-      }
-      cout << avg << "depth to solution : " << (float)(depth_to_find_total)/total_correct << endl;
-      cout << avg << "time to solution  : " << (float)(time_to_find_total)/(1000.0*total_correct) << " sec." << endl;
-   }
-   options.book.book_enabled = tmp;
-   testing = 0;
-}
-
 static uint64_t perft(Board &board, int depth) {
    if (depth == 0) return 1;
 
@@ -2741,20 +2367,17 @@ static bool do_command(const string &cmd, Board &board) {
         stringstream s(cmd_args);
         istream_iterator<string> it(s);
         istream_iterator<string> eos;
+        Tester::TestOptions opts;
         if (it != eos) {
             filename = *it++;
             if (it != eos) {
-                early_exit_plies = Constants::MaxPly;
-                moves_to_search = 1;
-                verbose = 0;
-                int max_depth = 0, max_time = 0;
                 while (it != eos) {
                     if (*it == "-d") {
                         if (++it == eos) {
                             cerr << "expected number after -d" << endl;
                         } else {
                             stringstream num(*it);
-                            num >> max_depth;
+                            num >> opts.depth_limit;
                             it++;
                         }
                     }
@@ -2763,14 +2386,14 @@ static bool do_command(const string &cmd, Board &board) {
                             cerr << "expected number after -t" << endl;
                         } else {
                             stringstream num(*it);
-                            num >> max_time;
-                            max_time *= 1000; // convert sections to ms
+                            num >> opts.time_limit;
+                            opts.time_limit *= 1000; // convert seconds to ms
                             it++;
                         }
                     }
                     else if (*it == "-v") {
                         it++;
-                        ++verbose;
+                        opts.verbose = true;
                         continue;
                     }
                     else if (*it == "-x") {
@@ -2778,7 +2401,7 @@ static bool do_command(const string &cmd, Board &board) {
                             cerr << "expected number after -x" << endl;
                         } else {
                             stringstream num(*it);
-                            num >> early_exit_plies;
+                            num >> opts.early_exit_plies;
                             it++;
                         }
                     }
@@ -2787,7 +2410,7 @@ static bool do_command(const string &cmd, Board &board) {
                             cerr << "Expected number after -N" << endl;
                         } else {
                             stringstream num(*it);
-                            num >> moves_to_search;
+                            num >> opts.moves_to_search;
                             it++;
                         }
                     }
@@ -2795,10 +2418,10 @@ static bool do_command(const string &cmd, Board &board) {
                         if (++it == eos) {
                             cerr << "Expected filename after -o" << endl;
                         } else {
-                           out_file = new ofstream((*it).c_str(), ios::out | ios::trunc);
-                           // redirect stdout
-                           cout.rdbuf(out_file->rdbuf());
-                           break;
+                            out_file = new ofstream((*it).c_str(), ios::out | ios::trunc);
+                            // redirect stdout
+                            cout.rdbuf(out_file->rdbuf());
+                            break;
                         }
                     } else if ((*it)[0] == '-') {
                         cerr << "unexpected switch: " << *it << endl;
@@ -2807,26 +2430,19 @@ static bool do_command(const string &cmd, Board &board) {
                         break;
                     }
                 }
-                if (max_time == 0 && max_depth == 0) {
-                   cerr << "error: time (-t) or depth (-d) must be specified" << endl;
+                if (opts.depth_limit == 0 && opts.time_limit == 0) {
+                    cerr << "error: time (-t) or depth (-d) must be specified" << endl;
                 }
                 else {
-                   do_command("new",board);
-                   PostFunction old_post = searcher->registerPostFunction(post_test);
-                   MonitorFunction old_monitor = searcher->registerMonitorFunction(terminate);
-                   Options tmp = options;
-                   options.book.book_enabled = 0;
-                   options.learning.position_learning = 0;
-                   do_test(filename,max_depth,max_time);
-                   searcher->registerPostFunction(old_post);
-                   searcher->registerMonitorFunction(old_monitor);
-                   options = tmp;
-                   cout << "test complete" << endl;
+                    do_command("new",board);
+                    Tester tester;
+                    tester.do_test(searcher,filename,opts);
+                    cout << "test complete" << endl;
                 }
                 if (out_file) {
-                   out_file->close();
-                   delete out_file;
-                   cout.rdbuf(sbuf);               // restore console output
+                    out_file->close();
+                    delete out_file;
+                    cout.rdbuf(sbuf);               // restore console output
                 }
             }
             else
@@ -3097,7 +2713,6 @@ static bool do_command(const string &cmd, Board &board) {
         pondering = 0;
         ponder_move_ok = false;
         start_fen.clear();
-        searcher->registerPostFunction(post_output);
         delayedInit();
         searcher->clearHashTables();
 #ifdef TUNE
@@ -3645,9 +3260,8 @@ int CDECL main(int argc, char **argv) {
 #endif
 
     searcher = new SearchController();
-
-    searcher->registerPostFunction(post_output);
-    searcher->registerMonitorFunction(monitor);
+    searcher->registerPostFunction(std::bind(post_output,_1));
+    searcher->registerMonitorFunction(std::bind(monitor,_1,_2));
 
     while(!polling_terminated) {
         if (inputSem.wait()) {
