@@ -276,8 +276,8 @@ ifeq ("$(findstring UNIT_TESTS,$(CFLAGS))","UNIT_TESTS")
 UNIT_TEST_SRC:=unit.cpp
 endif
 
-ARASANX_SOURCES = arasanx.cpp tester.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
+ARASANX_SOURCES = arasanx.cpp tester.cpp protocol.cpp \
+globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 params.cpp scoring.cpp see.cpp \

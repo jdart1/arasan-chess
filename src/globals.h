@@ -10,6 +10,7 @@
 #include "log.h"
 #include "bookread.h"
 #include "movearr.h"
+#include "threadc.h"
 #ifdef TUNE
 #include "tune.h"
 #endif
@@ -26,6 +27,8 @@ extern lock_t input_lock;
 #ifdef TUNE
 extern Tune tune_params;
 #endif
+extern bool polling_terminated;
+extern ThreadControl inputSem;
 
 // KPK bitbases:
 extern CACHE_ALIGN const byte baseKPKW[24576];

@@ -25,6 +25,8 @@ BookReader openingBook;
 Log *theLog = nullptr;
 string learnFileName;
 LockDefine(input_lock);
+bool polling_terminated;
+ThreadControl inputSem;
 #ifdef TUNE
 Tune tune_params;
 #endif
@@ -64,6 +66,7 @@ string derivePath(const char *base, const char *fileName) {
 int initGlobals(const char *pathName, bool initLog) {
    programPath = pathName;
    gameMoves = new MoveArray();
+   polling_terminated = false;
    if (initLog) {
        theLog = new Log();
        theLog->clear();
