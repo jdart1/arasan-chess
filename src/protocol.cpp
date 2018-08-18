@@ -810,7 +810,7 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &side,const string &cmd, co
     }
 }
 
-void Protocol::ponder(Board &board, Move move, Move predicted_reply, int uci)
+void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
 {
     ponder_move_ok = false;
     ponder_move = NullMove;
@@ -1941,8 +1941,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     string cmd_word, cmd_args;
     split_cmd(cmd, cmd_word, cmd_args);
     if (cmd == "uci") {
-        uci = 1;
-        verbose = 1;                       // TBD: fixed for now
+        uci = true;
+        verbose = true; // TBD: fixed for now
         // Learning is disabled because we don't have full game history w/ scores
         options.learning.position_learning = 0;
         cout << "id name " << "Arasan " << Arasan_Version;

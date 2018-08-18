@@ -121,7 +121,7 @@ private:
     void edit_mode_cmds(Board &board,ColorType &side,const string &cmd, const string &cmd_args);
 
     // do a ponder search
-    void ponder(Board &board, Move move, Move predicted_reply, int uci);
+    void ponder(Board &board, Move move, Move predicted_reply, bool uci);
 
     // foreground search using the current board position.
     Move search(SearchController *searcher, Board &board,
@@ -238,7 +238,7 @@ private:
     int ply_limit;
     string start_fen;
 
-    int uci;                               // non-zero for UCI mode
+    bool uci;
     int movestogo;
     bool ponderhit;
     // set true if waiting for "ponderhit" or "stop"
