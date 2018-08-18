@@ -677,6 +677,7 @@ void Protocol::post_output(const Statistics &stats) {
 
 void Protocol::checkPendingInSearch(SearchController *controller) {
     while (1) {
+        Lock(input_lock);
         if (pending.empty()) {
             Unlock(input_lock);
             break;
