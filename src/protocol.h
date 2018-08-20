@@ -7,7 +7,7 @@
 #include "board.h"
 #include "eco.h"
 #include "search.h"
-#include <queue>
+#include <vector>
 
 using namespace std;
 
@@ -113,6 +113,11 @@ private:
     // search thread).
     void checkPendingInSearch(SearchController *controller);
 
+    // Process a command during search. Return true if processed
+    // (should be removed from pending stack. Also sets exit flag
+    // if processing should terminate.
+    bool processPendingInSearch(SearchController *controller, const string &cmd, bool &exit);
+
     // Callback from search - handle any pending commands and return 1
     // if search should terminate
     int monitor(SearchController *s, const Statistics &);
@@ -184,12 +189,6 @@ private:
     // Execute a command, return false if program should terminate.
     bool do_command(const string &cmd, Board &board);
 
-    // Handle a command received while searching.  terminate is set
-    // true if the search should stop.  Some commands are executed,
-    // some are placed on the pending stack to be executed after
-    // the search completes.
-    void check_command(const string &cmd, int &terminate);
-
     bool verbose;
     bool post;
     SearchController *searcher;
@@ -224,7 +223,7 @@ private:
     int computer_rating;
     int opponent_rating;
     // stack of pending commands, received but not yet executed:
-    queue<string> pending;
+    vector<string> pending;
     bool doTrace; // true if -t on command line
     bool easy; // set if no pondering
     bool game_end;
