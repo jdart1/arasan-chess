@@ -553,10 +553,13 @@ Move SearchController::findBestMove(
       cout << ' ' << setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "% SEE" << endl;
       cout << ' ' << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "% reduced" << endl;
       cout << "extensions: " <<
-         100.0*stats->check_extensions/stats->moves_searched << "% check, " <<
-         100.0*stats->capture_extensions/stats->moves_searched << "% capture, " <<
-         100.0*stats->pawn_extensions/stats->moves_searched << "% pawn, " <<
-         100.0*stats->singular_extensions/stats->moves_searched << "% singular" << endl;
+          stats->check_extensions << " (" << 100.0*stats->check_extensions/stats->moves_searched << "%) check, " <<
+          stats->capture_extensions << " (" << 100.0*stats->capture_extensions/stats->moves_searched << "%) capture, " <<
+          stats->pawn_extensions << " (" << 100.0*stats->pawn_extensions/stats->moves_searched << "%) pawn";
+#ifdef SINGULAR_EXTENSION
+      cout << ", " << stats->singular_extensions << " (" << 100.0*stats->singular_extensions/stats->moves_searched << "%) singular";
+#endif
+      cout << endl;
 #endif
       cout << stats->tb_probes << " tablebase probes, " <<
          stats->tb_hits << " tablebase hits" << endl;
