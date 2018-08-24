@@ -228,6 +228,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
         if (!IsNull(hashMove)) {
            ord = order++;
            ASSERT(ord<Constants::MaxMoves);
+           SetPhase(hashMove,HASH_MOVE_PHASE);
            return hashMove;
         }
         ++phase;

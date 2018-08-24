@@ -38,7 +38,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define VERIFY_NULL_SEARCH
 #define STATIC_NULL_PRUNING
 #define RAZORING
-//#define SINGULAR_EXTENSION
+#define SINGULAR_EXTENSION
 
 static const int FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
@@ -57,6 +57,7 @@ static const score_t PROBCUT_MARGIN2 = int(0.33*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
+
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
 {
@@ -557,7 +558,8 @@ Move SearchController::findBestMove(
           stats->capture_extensions << " (" << 100.0*stats->capture_extensions/stats->moves_searched << "%) capture, " <<
           stats->pawn_extensions << " (" << 100.0*stats->pawn_extensions/stats->moves_searched << "%) pawn";
 #ifdef SINGULAR_EXTENSION
-      cout << ", " << stats->singular_extensions << " (" << 100.0*stats->singular_extensions/stats->moves_searched << "%) singular";
+      cout << ", " << stats->singular_extensions << " (" << 100.0*stats->singular_extensions/stats->moves_searched << "%) singular" << endl;
+      cout << stats->singular_searches << " singular searches done";
 #endif
       cout << endl;
 #endif
@@ -3022,15 +3024,15 @@ score_t Search::search()
     {
         bool singularExtend = false;
 #ifdef SINGULAR_EXTENSION
-        if (depth >= SINGULAR_EXTENSION_DEPTH &&
+        if (ply > 0 &&
+            depth >= SINGULAR_EXTENSION_DEPTH &&
             !(node->flags & SINGULAR) &&
             hashHit &&
-            hashEntry.depth() >= depth - 3*DEPTH_INCREMENT &&
-            !IsNull(hashMove) &&
-            std::abs(hashValue) < Constants::MATE_RANGE &&
-            result != HashEntry::UpperBound &&
-            calcExtensions(board,node,board.wouldCheck(hashMove),
-                           0,improving,hashMove) < DEPTH_INCREMENT) {
+            result == HashEntry::LowerBound &&
+            !IsNull(hashMove)) {
+#ifdef SEARCH_STATS
+            ++stats.singular_searches;
+#endif
            // Search all moves but the hash move at reduced depth. If all
            // fail low with a score significantly below the hash
            // move's score, then consider the hash move as "singular" and
@@ -3060,9 +3062,9 @@ score_t Search::search()
            node->num_try = 0;
            node->cutoff = 0;
            node->depth = depth;
+           node->singularMove = NullMove;
            node->alpha = node->best_score = old_alpha;
            node->beta = old_beta;
-           node->singularMove = NullMove;
            node->last_move = NullMove;
            node->best = NullMove;
            node->pv[ply] = NullMove;

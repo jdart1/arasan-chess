@@ -55,6 +55,7 @@ Statistics::Statistics(const Statistics &s)
       capture_extensions = s.capture_extensions;
       pawn_extensions = s.pawn_extensions;
       singular_extensions = s.singular_extensions;
+      singular_searches = s.singular_searches;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
@@ -114,6 +115,7 @@ Statistics & Statistics::operator = (const Statistics &s)
       capture_extensions = s.capture_extensions;
       pawn_extensions = s.pawn_extensions;
       singular_extensions = s.singular_extensions;
+      singular_searches = s.singular_searches;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
@@ -152,7 +154,7 @@ void Statistics::clear()
    display_value = Constants::INVALID_SCORE;
 #ifdef SEARCH_STATS
    num_qnodes = reg_nodes = moves_searched = static_null_pruning =
-       razored = reduced = (uint64_t)0;
+       razored = reduced = singular_searches = (uint64_t)0;
    hash_hits = hash_searches = futility_pruning = null_cuts = (uint64_t)0;
    history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
