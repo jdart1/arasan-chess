@@ -232,7 +232,8 @@ Move SearchController::findBestMove(
         ply_limit = std::max<int>(1,ply_limit);
     }
     ply_limit = search_ply_limit;
-    background = isBackground;
+    background = isBackground != 0;
+    is_searching = true;
     uci = isUCI;
     talkLevel = t;
     stats = &stat_buf;
@@ -568,6 +569,9 @@ Move SearchController::findBestMove(
       cout << (flush);
       cout.flags(original_flags);
    }
+
+   is_searching = false;
+
    return best;
 }
 

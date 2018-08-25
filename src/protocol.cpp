@@ -83,9 +83,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       ponderhit(false),
       uciWaitState(false),
       cpusSet(cpus_set),
-      memorySet(memory_set),
-      searching(false),
-      pondering(false)
+      memorySet(memory_set)
 {
     ecoCoder = new ECO();
     searcher = new SearchController();
@@ -287,21 +285,6 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
     }
     Unlock(input_lock);
     return retVal;
-}
-
-void Protocol::prepareSearch(bool backg)
-{
-    Lock(input_lock);
-    searching = true;
-    pondering = backg;
-    Unlock(input_lock);
-}
-
-void Protocol::finishSearch()
-{
-    Lock(input_lock);
-    searching = pondering = false;
-    Unlock(input_lock);
 }
 
 void Protocol::parseLevel(const string &cmd) {
@@ -714,7 +697,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
             // continue the search in non-ponder mode
             if (srctype != FixedDepth) {
                 // Compute how much longer we must search
-                ColorType side = searcher->getComputerSide();
+                ColorType side = controller->getComputerSide();
                 time_target =
                     (srctype == FixedTime) ? time_limit :
                     calcTimeLimit(movestogo,
@@ -727,11 +710,10 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                     theLog->write(s.str().c_str()); theLog->write_eol();
                     cout << "# time_target = " << time_target << endl;
                 }
-                searcher->setTimeLimit(time_target,calc_extra_time(side));
+                controller->setTimeLimit(time_target,calc_extra_time(side));
             }
-            searcher->setTalkLevel(Whisper);
-            searcher->setBackground(false);
-            pondering = false;
+            controller->setTalkLevel(Whisper);
+            controller->setBackground(false);
             // Since we have shifted to foreground mode, show the current
             // search statistics:
             post_output(ponder_stats);
@@ -747,7 +729,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
             // Most other commands do not terminate the search. Execute them
             // now. (technically, according the UCI spec, setoption is not
             // allowed during search: but UIs such as ChessBase assume it is).
-            Board &board = pondering ? *ponder_board : *main_board;
+            Board &board = controller->pondering() ? *ponder_board : *main_board;
             exit = do_command(cmd,board);
             return true;
         }
@@ -788,7 +770,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         // new for Winboard 4.2
         // The protocol requires an immediate response if we are
         // pondering.
-        if (controller->isBackgroundSearch()) {
+        if (controller->pondering()) {
             sendPong(cmd_args);
             return true;
         } else {
@@ -818,7 +800,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
              cmd == "hard") {
         // Some of these commands are not expected during a search
         // but we process them anyway. They do not stop the search.
-        do_command(cmd,searcher->isBackgroundSearch() ? *ponder_board : *main_board);
+        do_command(cmd,controller->pondering() ? *ponder_board : *main_board);
         return true;
     }
     else if (cmd == "resign" || cmd_word == "result") {
@@ -830,7 +812,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         // set the state to Terminated - this is a signal that
         // regardless of the search result, we should not send
         // a move, because the UI has terminated the game.
-        if (pondering) {
+        if (controller->pondering()) {
             ponder_stats.state = Terminated;
         } else {
             stats.state = Terminated;
@@ -873,7 +855,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 MoveImage(last_move,cout);
                 cout << endl;
             }
-            if (forceMode || analyzeMode || !pondering) {
+            if (forceMode || analyzeMode || !controller->pondering()) {
                 controller->terminateNow();
                 return false;
             }
@@ -890,7 +872,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 ponder_move_ok = true;
                 if (srctype != FixedDepth) {
                     // Compute how much longer we must search
-                    ColorType side = searcher->getComputerSide();
+                    ColorType side = controller->getComputerSide();
                     time_target =
                         (srctype == FixedTime) ? time_limit :
                         (uci ? calcTimeLimit(movestogo,
@@ -902,10 +884,10 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                         cout << "# time_target = " << time_target << endl;
                         cout << "# xtra time = " << calc_extra_time(side) << endl;
                     }
-                    searcher->setTimeLimit(time_target,calc_extra_time(side));
+                    controller->setTimeLimit(time_target,calc_extra_time(side));
                 }
-                searcher->setTalkLevel(Whisper);
-                searcher->setBackground(false);
+                controller->setTalkLevel(Whisper);
+                controller->setBackground(false);
                 post_output(ponder_stats);
                 return true;
             }
@@ -1053,7 +1035,6 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         if (doTrace) {
             cout << "# starting to ponder" << endl;
         }
-        prepareSearch(true);
         if (srctype == FixedDepth) {
             ponder_move = searcher->findBestMove(
                 uci ? *main_board : *ponder_board,
@@ -1076,7 +1057,6 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 ponder_stats,
                 (doTrace) ? Trace : Silent);
         }
-        finishSearch();
         if (doTrace) {
             cout << "# done pondering" << endl;
         }
@@ -1135,7 +1115,6 @@ Move Protocol::search(SearchController *searcher, Board &board,
            level = Silent;
         }
         MoveSet excludes;
-        prepareSearch(false);
         if (srctype == FixedDepth) {
             move = searcher->findBestMove(board,
                 srctype,
@@ -1173,7 +1152,6 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 excludes,
                 movesToSearch);
         }
-        finishSearch();
         if (doTrace) {
             cout << "# search done : move = ";
             MoveImage(move,cout);
@@ -1450,9 +1428,9 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
     last_score = Constants::MATE;
 
     stats.clear();
-    if (doTrace)
+    if (doTrace) {
         cout << "# entering analysis search" << endl;
-    prepareSearch(false);
+    }
     Move move = searcher.findBestMove(board,
         FixedTime,
         INFINITE_TIME,
@@ -1465,7 +1443,6 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
         MoveImage(move,cout);
         cout << endl;
     }
-    finishSearch();
 
     last_stats = stats;
     post_output(stats);
@@ -1512,12 +1489,11 @@ void Protocol::doHint() {
     // no ponder move or book move. If we are already pondering but
     // have no ponder move we could wait a while for a ponder result,
     // but we just return for now.
-    if (searching && pondering) return;
+    if (searcher->pondering()) return;
     if (doTrace) cout << "# computing hint" << endl;
 
     Statistics tmp;
     // do low-depth search for hint move
-    prepareSearch(false);
     Move move = searcher->findBestMove(*main_board,
         FixedDepth,
         0,
@@ -1525,7 +1501,6 @@ void Protocol::doHint() {
         4, false, uci,
         tmp,
         (doTrace) ? Trace : Silent);
-    finishSearch();
     if (!IsNull(move)) {
         cout << "Hint: ";
         Notation::image(*main_board,move,Notation::OutputFormat::SAN,cout);
@@ -2087,7 +2062,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             last_move_image.clear();
             gameMoves->removeAll();
             predicted_move = NullMove;
-            pondering = false;
             ponder_move_ok = false;
         }
         size_t movepos = cmd_args.find("moves");
@@ -2459,7 +2433,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         last_move_image.clear();
         gameMoves->removeAll();
         predicted_move = NullMove;
-        pondering = false;
         ponder_move_ok = false;
         start_fen.clear();
         delayedInit();

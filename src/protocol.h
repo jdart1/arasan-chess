@@ -31,12 +31,12 @@ public:
         return doTrace;
     }
 
-    bool isSearching() const noexcept {
-        return searching;
-    }
-
     bool hasPending() const noexcept {
         return pending.size() > 0;
+    }
+
+    bool isSearching() const noexcept {
+        return searcher->searching();
     }
 
 private:
@@ -65,9 +65,6 @@ private:
     // Check for user move, resign or result in pending stack.
     // If found, return status and do not dequeue command.
     PendingStatus check_pending(Board &board);
-
-    void prepareSearch(bool backg);
-    void finishSearch();
 
     // handle Winboard "level" command
     void parseLevel(const string &cmd);
@@ -245,8 +242,6 @@ private:
     string test_file;
     bool cpusSet; // true if cmd line specifies -c
     bool memorySet; // true if cmd line specifies -H
-    bool searching;
-    bool pondering;
 
     struct UciStrengthOpts
     {

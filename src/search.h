@@ -337,12 +337,16 @@ public:
 
     void updateSearchOptions();
 
-    void setBackground(int b) {
+    void setBackground(bool b) {
         background = b;
     }
 
-    bool isBackgroundSearch() const noexcept {
-        return background != 0;
+    bool pondering() const noexcept {
+        return is_searching && background;
+    }
+
+    bool searching() const noexcept {
+        return is_searching;
     }
 
     void setTimeLimit(uint64_t limit,uint64_t xtra) {
@@ -465,7 +469,8 @@ private:
     // Max amount of time we can add if score is dropping:
     uint64_t xtra_time;
     int ply_limit;
-    int background;
+    atomic<bool> background;
+    atomic<bool> is_searching;
     // flag for UCI. When set the search will terminate at the
     // next time check interval:
     bool stopped;
