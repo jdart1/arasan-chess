@@ -38,16 +38,24 @@ public:
 
     static const int HISTORY_MAX = 1<<16;
 
-    using CmhArray = std::array<std::array<int, 64>, 6>;
+    template<class T>
+    using PieceTypeToArray = std::array<std::array<T, 64>, 6>;
 
-    using CmhMatrix = std::array< std::array< CmhArray, 64>, 6 >;
+    template<class T>
+    using PieceToArray = std::array<std::array<T, 64>, 16>;
 
-    Move getRefutation(Move prev) const {
-        return refutations[refutationKey(prev)];
+    using CmhArray = PieceTypeToArray<int>;
+
+    using CmhMatrix = PieceTypeToArray<CmhArray>;
+
+    using CmArray = PieceToArray<Move>;
+
+    Move getCounterMove(Move prev) const {
+        return counterMoves[PieceMoved(prev)][DestSquare(prev)];
     }
 
-    void setRefutation(Move prev, Move ref) {
-        refutations[refutationKey(prev)] = ref;
+    void setCounterMove(Move prev, Move counter) {
+        counterMoves[PieceMoved(prev)][DestSquare(prev)] = counter;
     }
 
 private:
@@ -55,15 +63,7 @@ private:
         int32_t val;
     } history[16][64];
 
-    static const int REFUTATION_TABLE_SIZE = 16*64;
-
-    static int refutationKey(Move ref) {
-        int key = ((int)PieceMoved(ref) << 6) | (int)DestSquare(ref);
-        ASSERT(key<REFUTATION_TABLE_SIZE);
-        return key;
-    }
-
-    array<Move,REFUTATION_TABLE_SIZE> refutations;
+    CmArray counterMoves;
 
     CmhMatrix *counterMoveHistory;
 

@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2017 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2017-2018 by Jon Dart. All Rights Reserved.
 
 #include "searchc.h"
 #include "search.h"
@@ -20,7 +20,11 @@ void SearchContext::clear() {
             history[i][j].val = 0;
         }
     }
-    for (int i = 0; i < REFUTATION_TABLE_SIZE; i++) refutations[i] = NullMove;
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 64; j++) {
+            counterMoves[i][j] = NullMove;
+        }
+    }
     // clear counter move history
     for (int i = 0; i < 6; i++)
         for (int j = 0; j < 64; j++)

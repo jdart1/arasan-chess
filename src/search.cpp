@@ -3277,7 +3277,7 @@ score_t Search::search()
         board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
         if (node->ply > 0) {
-           context.setRefutation((node-1)->last_move,node->best);
+            context.setCounterMove((node-1)->last_move,node->best);
         }
         context.updateStats(board,node,node->best,
                             depth,

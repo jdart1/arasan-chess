@@ -354,17 +354,14 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
             }
          }
          break;
-         case REFUTATION_PHASE:
+         case COUNTER_MOVE_PHASE:
          break;
          case HISTORY_PHASE:
          {
             numMoves = generateNonCaptures(moves);
             if (numMoves) {
-               Move ref;
-               if (context)
-                  ref = context->getRefutation(prevMove);
-               else
-                  ref = NullMove;
+               Move counter(context ? context->getCounterMove(prevMove) :
+                             NullMove);
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
                   scores[i] = 0;
@@ -381,11 +378,11 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   if (context) {
                       scores[i] = context->scoreForOrdering(moves[i],prevMove,board.sideToMove());
                   }
-                  if (MovesEqual(ref,moves[i])) {
-                     // score refutation much higher
+                  if (MovesEqual(counter,moves[i])) {
+                     // score counter move much higher
                      scores[i] = 2*SearchContext::HISTORY_MAX;
                      // and put in separate phase
-                     SetPhase(moves[i],REFUTATION_PHASE);
+                     SetPhase(moves[i],COUNTER_MOVE_PHASE);
                   }
                }
                if (numMoves > 1) {
