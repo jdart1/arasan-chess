@@ -8,6 +8,9 @@
 #include "options.h"
 #include "protocol.h"
 #include "threadc.h"
+#ifdef UNIT_TESTS
+#include "unit.h"
+#endif
 
 #include <cctype>
 #include <iostream>
