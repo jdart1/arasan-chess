@@ -360,8 +360,8 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          {
             numMoves = generateNonCaptures(moves);
             if (numMoves) {
-               Move counter(context ? context->getCounterMove(prevMove) :
-                             NullMove);
+               Move counter(context ? context->getCounterMove(board,prevMove) :
+                            NullMove);
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
                   scores[i] = 0;

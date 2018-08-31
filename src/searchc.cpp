@@ -4,12 +4,16 @@
 #include "search.h"
 
 SearchContext::SearchContext() {
-   counterMoveHistory = new CmhMatrix;
+   history = new PieceToArray<int>();
+   counterMoves = new PieceToArray<Move>();
+   counterMoveHistory = new PieceTypeToMatrix<int>();
    clear();
 }
 
 SearchContext::~SearchContext()
 {
+   delete history;
+   delete counterMoves;
    delete counterMoveHistory;
 }
 
@@ -17,98 +21,70 @@ void SearchContext::clear() {
     clearKiller();
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 64; j++) {
-            history[i][j].val = 0;
+            (*history)[i][j] = 0;
         }
     }
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 64; j++) {
-            counterMoves[i][j] = NullMove;
+            (*counterMoves)[i][j] = NullMove;
         }
     }
     // clear counter move history
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 8; i++)
         for (int j = 0; j < 64; j++)
-            for (int k = 0; k < 6; k++)
+            for (int k = 0; k < 8; k++)
                 for (int l = 0; l < 64; l++)
                     (*counterMoveHistory)[i][j][k][l] = 0;
 }
 
 void SearchContext::clearKiller() {
    for (int i = 0; i < Constants::MaxPly; i++) {
-      Killers1[i] = Killers2[i] = NullMove;
+      killers1[i] = killers2[i] = NullMove;
    }
-}
-
-void SearchContext::setKiller(const Move & move,unsigned ply) {
-   if (!MovesEqual(move,Killers1[ply])) {
-      Killers2[ply] = Killers1[ply];
-   }
-   Killers1[ply] = move;
-}
-
-void SearchContext::getKillers(unsigned ply,Move &k1,Move &k2) const {
-   k1 = Killers1[ply]; k2 = Killers2[ply];
 }
 
 static const int MAX_HISTORY_DEPTH = 15;
 static const int HISTORY_DIVISOR = 64;
 
-void SearchContext::addBonus(int &val,int depth,int bonus)
+int SearchContext::bonus(int depth) const noexcept
 {
-    val = val*depth/HISTORY_DIVISOR;
-    val += bonus;
-    val = std::min<int>(HISTORY_MAX-1,val);
+    const int d = std::min(MAX_HISTORY_DEPTH,depth/DEPTH_INCREMENT);
+    return d*d;
 }
 
-void SearchContext::addPenalty(int &val,int depth,int bonus)
+void SearchContext::update(int &val,int depth,int bonus)
 {
-     val = val*depth/HISTORY_DIVISOR;
-     val -= bonus;
-     val = std::max<int>(1-HISTORY_MAX,val);
+    val = val*depth/HISTORY_DIVISOR + bonus;
 }
 
-void SearchContext::updateStats(const Board &board, NodeInfo *parentNode, Move best, int depth, ColorType side)
+void SearchContext::updateStats(const Board &board, NodeInfo *node)
 {
     // sanity checks
+    Move best = node->best;
     ASSERT(!IsNull(best));
     ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
-    depth = std::min(MAX_HISTORY_DEPTH,depth/DEPTH_INCREMENT);
-    const int bonus = depth*depth;
-    if (parentNode && parentNode->num_try) {
-        for (int i=0; i<parentNode->num_try; i++) {
-            ASSERT(i<Constants::MaxMoves);
-            // safe to access this here because it is after slave thread
-            // completion:
-            const Move m = parentNode->done[i];
-            if (!CaptureOrPromotion(m)) {
-                auto update = [&](int &val) {
+    const int b = bonus(node->depth);
+    for (int i=0; i<node->num_try; i++) {
+        ASSERT(i<Constants::MaxMoves);
+        const Move m = node->done[i];
+        if (!CaptureOrPromotion(m)) {
+            auto updateHist = [&](int &val) {
                 if (MovesEqual(best,m)) {
-                    addBonus(val,depth,bonus);
+                    update(val,node->depth,b);
                 }
                 else {
-                    addPenalty(val,depth,bonus);
+                    update(val,node->depth,-b);
                 }
-                };
+            };
 
-                update(history[MakePiece(PieceMoved(m),side)][DestSquare(m)].val);
-                if (parentNode->ply > 0) {
-                    Move lastMove = (parentNode-1)->last_move;
-                    if (!IsNull(lastMove)) {
-                       update((*counterMoveHistory)[PieceMoved(lastMove)-1][DestSquare(lastMove)][PieceMoved(m)-1][DestSquare(m)]);
-                    }
-
+            updateHist((*history)[MakePiece(PieceMoved(m),board.sideToMove())][DestSquare(m)]);
+            if (node->ply > 0) {
+                Move lastMove = (node-1)->last_move;
+                if (!IsNull(lastMove)) {
+                    updateHist((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)]);
                 }
+
             }
-        }
-    } else {
-        int &val = history[MakePiece(PieceMoved(best),side)][DestSquare(best)].val;
-        addBonus(val,depth,bonus);
-        if (parentNode && parentNode->ply > 0) {
-           Move lastMove = (parentNode-1)->last_move;
-		   if (!IsNull(lastMove)) {
-			  val = (*counterMoveHistory)[PieceMoved(lastMove) - 1][DestSquare(lastMove)][PieceMoved(best) - 1][DestSquare(best)];
-			  addBonus(val, depth, bonus);
-		   }
         }
     }
 }

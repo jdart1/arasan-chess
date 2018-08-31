@@ -1569,8 +1569,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
              board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
-        context.updateStats(board, node, node->best, 0,
-                            board.sideToMove());
+        context.updateStats(board, node);
     }
 #ifdef MOVE_ORDER_STATS
     if (node->num_try && node->best_score > node->alpha) {
@@ -2595,11 +2594,10 @@ score_t Search::search()
                     }
 #endif
                     if (board.checkStatus() != InCheck) {
-                       Move best = hashEntry.bestMove(board);
+                       Move best = node->best = hashEntry.bestMove(board);
                        if (!IsNull(best) && !CaptureOrPromotion(best)) {
-                           context.updateStats(board, node, best,
-                                               node->depth, board.sideToMove());
-                          context.setKiller(best, node->ply);
+                           context.updateStats(board, node);
+                           context.setKiller(best, node->ply);
                        }
                     }
                     return hashValue;                     // cutoff
@@ -3277,11 +3275,9 @@ score_t Search::search()
         board.checkStatus() != InCheck) {
         context.setKiller((const Move)node->best, node->ply);
         if (node->ply > 0) {
-            context.setCounterMove((node-1)->last_move,node->best);
+            context.setCounterMove(board,(node-1)->last_move,node->best);
         }
-        context.updateStats(board,node,node->best,
-                            depth,
-                            board.sideToMove());
+        context.updateStats(board,node);
     }
 
     // don't insert into the hash table if we are terminating - we may

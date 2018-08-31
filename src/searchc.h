@@ -3,6 +3,7 @@
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
 
+#include "board.h"
 #include "constant.h"
 #include "chess.h"
 
@@ -20,56 +21,68 @@ public:
     void clear();
 
     void clearKiller();
-    void setKiller(const Move & move,unsigned ply);
-    void getKillers(unsigned ply,Move &k1,Move &k2) const;
 
-    Move Killers1[Constants::MaxPly];
-    Move Killers2[Constants::MaxPly];
+    void setKiller(const Move & move,unsigned ply)
+    {
+        if (!MovesEqual(move,killers1[ply])) {
+           killers2[ply] = killers1[ply];
+        }
+        killers1[ply] = move;
+    }
 
-    int scoreForOrdering (Move m, Move prevMove, ColorType side) const {
-        int score = history[MakePiece(PieceMoved(m),side)][DestSquare(m)].val;
+    void getKillers(unsigned ply,Move &k1,Move &k2) const noexcept
+    {
+        k1 = killers1[ply]; k2 = killers2[ply];
+    }
+
+    int scoreForOrdering (Move m, Move prevMove, ColorType side) const noexcept {
+        int score = (*history)[MakePiece(PieceMoved(m),side)][DestSquare(m)];
         if (!IsNull(prevMove))
-           score += (*counterMoveHistory)[PieceMoved(prevMove)-1][DestSquare(prevMove)][PieceMoved(m)-1][DestSquare(m)];
+           score += (*counterMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
         return score;
     }
 
-    void updateStats(const Board &,
-                     NodeInfo *parentNode, Move best, int depth, ColorType side);
+    void updateStats(const Board &, NodeInfo *parentNode);
 
     static const int HISTORY_MAX = 1<<16;
 
     template<class T>
-    using PieceTypeToArray = std::array<std::array<T, 64>, 6>;
-
-    template<class T>
     using PieceToArray = std::array<std::array<T, 64>, 16>;
 
-    using CmhArray = PieceTypeToArray<int>;
+    template<class T>
+    using PieceTypeToArray = std::array<std::array<T, 64>, 8>;
 
-    using CmhMatrix = PieceTypeToArray<CmhArray>;
+    template<class T>
+    using PieceTypeToMatrix = PieceTypeToArray< PieceTypeToArray<T> >;
 
-    using CmArray = PieceToArray<Move>;
+    // not used currently
+    template<class T>
+    using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
 
-    Move getCounterMove(Move prev) const {
-        return counterMoves[PieceMoved(prev)][DestSquare(prev)];
+    Move getCounterMove(const Board &board, Move prev) const {
+        ColorType oside = board.oppositeSide();
+        return (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)];
     }
 
-    void setCounterMove(Move prev, Move counter) {
-        counterMoves[PieceMoved(prev)][DestSquare(prev)] = counter;
+    void setCounterMove(const Board &board, Move prev, Move counter) {
+        ColorType oside = board.oppositeSide();
+        (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)] = counter;
     }
 
 private:
-    struct HistoryEntry {
-        int32_t val;
-    } history[16][64];
 
-    CmArray counterMoves;
+    Move killers1[Constants::MaxPly];
+    Move killers2[Constants::MaxPly];
 
-    CmhMatrix *counterMoveHistory;
+    PieceToArray<int> *history;
 
-    void addBonus(int &val,int depth,int bonus);
+    PieceToArray<Move> *counterMoves;
 
-    void addPenalty(int &val,int depth,int bonus);
+    PieceTypeToMatrix<int> *counterMoveHistory;
+
+    int bonus(int depth) const noexcept;
+
+    void update(int &val,int depth,int bonus);
 };
 
 #endif
