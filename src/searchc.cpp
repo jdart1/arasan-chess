@@ -43,6 +43,22 @@ void SearchContext::clearKiller() {
    }
 }
 
+int SearchContext::scoreForOrdering (Move m, NodeInfo *node, ColorType side) const noexcept
+{
+    int score = (*history)[MakePiece(PieceMoved(m),side)][DestSquare(m)];
+    if (node->ply>0 && !IsNull((node-1)->last_move)) {
+        Move prevMove = (node-1)->last_move;
+        score += (*counterMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
+    }
+/*
+    if (node->ply>1 && !IsNull((node-2)->last_move)) {
+        Move prevMove = (node-2)->last_move;
+        score += (*fuHistory)[PieceMoved(prevMove)-1][DestSquare(prevMove)][PieceMoved(m)-1][DestSquare(m)];
+    }
+*/
+    return std::min<int>(HISTORY_MAX,std::max<int>(-HISTORY_MAX,score));
+}
+
 static const int MAX_HISTORY_DEPTH = 15;
 static const int HISTORY_DIVISOR = 64;
 

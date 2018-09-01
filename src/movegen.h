@@ -27,9 +27,9 @@ class MoveGenerator
 
       MoveGenerator( const Board &,
          SearchContext *sc = nullptr,
+         NodeInfo *node = nullptr,
          unsigned ply = 0,
          Move pvMove = NullMove,
-         Move prevMove = NullMove,                     
          int trace = 0);
 
       // Generate the next move, in sorted order, NullMove if none left
@@ -155,12 +155,12 @@ class MoveGenerator
 
       const Board &board;
       SearchContext *context;
+      NodeInfo *node;
       int ply;
       int moves_generated;
       int losers_count,index,order,batch_count,forced;
       Phase phase;
       Move hashMove;
-      Move prevMove;
       Bitboard king_attacks;                      // for evasions
       int num_attacks;                            // for evasions
       Square source;                              // for evasions

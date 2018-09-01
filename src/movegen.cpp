@@ -48,7 +48,7 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
                                      SearchContext *s,
                                      Move pvMove,
                                      int trace)
-   : MoveGenerator(board,s,0,pvMove,NullMove,trace),
+    : MoveGenerator(board,s,nullptr,0,pvMove,trace),
      excluded(0)
 {
    batch = moves;
@@ -360,7 +360,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          {
             numMoves = generateNonCaptures(moves);
             if (numMoves) {
-               Move counter(context ? context->getCounterMove(board,prevMove) :
+               Move counter(context && node && ply > 0 ? context->getCounterMove(board,(node-1)->last_move) :
                             NullMove);
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
@@ -375,14 +375,14 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                      continue;
                   }
                   SetPhase(moves[i],HISTORY_PHASE);
-                  if (context) {
-                      scores[i] = context->scoreForOrdering(moves[i],prevMove,board.sideToMove());
-                  }
                   if (MovesEqual(counter,moves[i])) {
                      // score counter move much higher
                      scores[i] = 2*SearchContext::HISTORY_MAX;
                      // and put in separate phase
                      SetPhase(moves[i],COUNTER_MOVE_PHASE);
+                  }
+                  else if (context && node) {
+                     scores[i] = context->scoreForOrdering(moves[i],node,board.sideToMove());
                   }
                }
                if (numMoves > 1) {
@@ -731,23 +731,21 @@ int MoveGenerator::generateCaptures(Move * moves, const Bitboard &targets)
 
 
 MoveGenerator::MoveGenerator( const Board &ABoard,
-SearchContext *s,
-unsigned curr_ply, Move pvMove, Move prvMove,
-int trace)
-:
-board(ABoard),
-context(s),
-ply(curr_ply),
-moves_generated(0),
-losers_count(0),
-index(0),
-order(0),
-batch_count(0),
-forced(0),
-phase(START_PHASE),
-hashMove(pvMove),
-prevMove(prvMove),
-master(trace)
+                              SearchContext *s, NodeInfo *n, unsigned curr_ply, Move pvMove,
+                              int trace)
+    : board(ABoard),
+      context(s),
+      node(n),
+      ply(curr_ply),
+      moves_generated(0),
+      losers_count(0),
+      index(0),
+      order(0),
+      batch_count(0),
+      forced(0),
+      phase(START_PHASE),
+      hashMove(pvMove),
+      master(trace)
 {
 }
 

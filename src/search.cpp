@@ -293,8 +293,7 @@ Move SearchController::findBestMove(
    }
    Search *rootSearch = pool->rootSearch();
    // Generate the ply 0 moves here:
-   RootMoveGenerator mg(board,&(rootSearch->context),NullMove,
-      talkLevel == Trace);
+   RootMoveGenerator mg(board,&(rootSearch->context),NullMove,talkLevel == Trace);
    if (mg.moveCount() == 0) {
       // Checkmate or statemate
       if (board.inCheck()) {
@@ -1805,7 +1804,7 @@ score_t Search::quiesce(int ply,int depth)
          return -Illegal;
       }
       score_t try_score;
-      MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, mainThread());
+      MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
       Move move;
       BoardState state = board.state;
       node->num_try = 0;
@@ -2023,8 +2022,8 @@ score_t Search::quiesce(int ply,int depth)
          break;
       }
       {
-         MoveGenerator mg(board, &context, ply,
-                          NullMove, (node-1)->last_move, mainThread());
+         MoveGenerator mg(board, &context, node, ply,
+                          NullMove, mainThread());
          Move *moves = (Move*)node->done;
          // generate all the capture moves
          int move_count = mg.generateCaptures(moves,board.occupied[oside]);
@@ -2319,27 +2318,29 @@ int Search::calcExtensions(const Board &board,
    // generation can be searched with reduced depth.
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() &&
        !CaptureOrPromotion(move) &&
-       GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE &&
        !passedPawnMove(board,move,6)) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
        if (!node->PV() && !improving) {
            extend -= DEPTH_INCREMENT;
        }
-       if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
-           // killer or refutation move
-           extend += DEPTH_INCREMENT;
+       if (node->ply > 0) {
+           if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+               // killer or refutation move
+               extend += DEPTH_INCREMENT;
+           }
+           // history based reductions
+           extend += std::min(2*DEPTH_INCREMENT,
+                              std::max(-2*DEPTH_INCREMENT,
+                                       DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/128));
        }
-       // history based reductions
-       int hist = context.scoreForOrdering(move,(node->ply == 0) ? NullMove\
-                                           : (node-1)->last_move,board.sideToMove())/128;
-       extend += hist*DEPTH_INCREMENT;
+       // Don't reduce so far we go into the qsearch:
        extend = std::max(extend,1-depth);
        if (extend <= -DEPTH_INCREMENT) {
 #ifdef SEARCH_STATS
            ++stats.reduced;
 #endif
        } else {
-           // do not reduce < 1 ply
+           // do not extend here or reduce < 1 ply
            extend = 0;
        }
    }
@@ -2893,7 +2894,7 @@ score_t Search::search()
     probcut_search:
        {
           Move moves[40];
-          MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, mainThread());
+          MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
           // skip pawn captures because they will be below threshold
           int moveCount = mg.generateCaptures(moves,board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
           for (int i = 0; i<moveCount; i++) {
@@ -3073,7 +3074,7 @@ score_t Search::search()
            node->pv_length = 0;
         }
 #endif
-        MoveGenerator mg(board, &context, ply, hashMove, (node-1)->last_move, mainThread());
+        MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
         BoardState state(board.state);
         score_t try_score;
         //

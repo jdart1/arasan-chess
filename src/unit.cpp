@@ -1239,7 +1239,7 @@ static int testMoveGen()
 
             doMg(rmg,correct[0],Root);
 
-            MoveGenerator mg(board,nullptr,1);
+            MoveGenerator mg(board,nullptr,nullptr,1);
 
             doMg(mg,correct[1],Standard);
 

@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2016-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016-2018 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
@@ -35,12 +35,7 @@ public:
         k1 = killers1[ply]; k2 = killers2[ply];
     }
 
-    int scoreForOrdering (Move m, Move prevMove, ColorType side) const noexcept {
-        int score = (*history)[MakePiece(PieceMoved(m),side)][DestSquare(m)];
-        if (!IsNull(prevMove))
-           score += (*counterMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
-        return score;
-    }
+    int scoreForOrdering (Move m, NodeInfo *, ColorType side) const noexcept;
 
     void updateStats(const Board &, NodeInfo *parentNode);
 
