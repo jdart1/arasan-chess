@@ -3,10 +3,13 @@
 #include "searchc.h"
 #include "search.h"
 
+const int SearchContext::HISTORY_MAX = std::numeric_limits<int>::max();
+
 SearchContext::SearchContext() {
    history = new PieceToArray<int>();
    counterMoves = new PieceToArray<Move>();
    counterMoveHistory = new PieceTypeToMatrix<int>();
+   fuMoveHistory = new PieceTypeToMatrix<int>();
    clear();
 }
 
@@ -15,6 +18,7 @@ SearchContext::~SearchContext()
    delete history;
    delete counterMoves;
    delete counterMoveHistory;
+   delete fuMoveHistory;
 }
 
 void SearchContext::clear() {
@@ -33,8 +37,10 @@ void SearchContext::clear() {
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 64; j++)
             for (int k = 0; k < 8; k++)
-                for (int l = 0; l < 64; l++)
+                for (int l = 0; l < 64; l++) {
                     (*counterMoveHistory)[i][j][k][l] = 0;
+                    (*fuMoveHistory)[i][j][k][l] = 0;
+                }
 }
 
 void SearchContext::clearKiller() {
@@ -50,27 +56,25 @@ int SearchContext::scoreForOrdering (Move m, NodeInfo *node, ColorType side) con
         Move prevMove = (node-1)->last_move;
         score += (*counterMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
     }
-/*
     if (node->ply>1 && !IsNull((node-2)->last_move)) {
         Move prevMove = (node-2)->last_move;
-        score += (*fuHistory)[PieceMoved(prevMove)-1][DestSquare(prevMove)][PieceMoved(m)-1][DestSquare(m)];
+        score += (*fuMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
     }
-*/
     return std::min<int>(HISTORY_MAX,std::max<int>(-HISTORY_MAX,score));
 }
 
-static const int MAX_HISTORY_DEPTH = 15;
-static const int HISTORY_DIVISOR = 64;
+static constexpr int MAX_HISTORY_DEPTH = 15;
+static constexpr int HISTORY_DIVISOR = 768;
 
 int SearchContext::bonus(int depth) const noexcept
 {
-    const int d = std::min(MAX_HISTORY_DEPTH,depth/DEPTH_INCREMENT);
-    return d*d;
+    const int d = depth/DEPTH_INCREMENT;
+    return d <= MAX_HISTORY_DEPTH ? d*d : 0;
 }
 
 void SearchContext::update(int &val,int depth,int bonus)
 {
-    val = val*depth/HISTORY_DIVISOR + bonus;
+    val += 32*bonus - val*std::abs(bonus)/HISTORY_DIVISOR;
 }
 
 void SearchContext::updateStats(const Board &board, NodeInfo *node)
@@ -99,7 +103,12 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node)
                 if (!IsNull(lastMove)) {
                     updateHist((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)]);
                 }
-
+                if (node->ply > 1) {
+                    Move lastMove = (node-2)->last_move;
+                    if (!IsNull(lastMove)) {
+                        updateHist((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)]);
+                    }
+                }
             }
         }
     }

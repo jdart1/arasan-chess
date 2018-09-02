@@ -377,7 +377,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   SetPhase(moves[i],HISTORY_PHASE);
                   if (MovesEqual(counter,moves[i])) {
                      // score counter move much higher
-                     scores[i] = 2*SearchContext::HISTORY_MAX;
+                     scores[i] = SearchContext::HISTORY_MAX;
                      // and put in separate phase
                      SetPhase(moves[i],COUNTER_MOVE_PHASE);
                   }

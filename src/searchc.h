@@ -39,7 +39,7 @@ public:
 
     void updateStats(const Board &, NodeInfo *parentNode);
 
-    static const int HISTORY_MAX = 1<<16;
+    static const int HISTORY_MAX;
 
     template<class T>
     using PieceToArray = std::array<std::array<T, 64>, 16>;
@@ -73,7 +73,7 @@ private:
 
     PieceToArray<Move> *counterMoves;
 
-    PieceTypeToMatrix<int> *counterMoveHistory;
+    PieceTypeToMatrix<int> *counterMoveHistory, *fuMoveHistory;
 
     int bonus(int depth) const noexcept;
 
