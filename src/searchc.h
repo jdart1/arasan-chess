@@ -50,7 +50,6 @@ public:
     template<class T>
     using PieceTypeToMatrix = PieceTypeToArray< PieceTypeToArray<T> >;
 
-    // not used currently
     template<class T>
     using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
 
@@ -69,7 +68,7 @@ private:
     Move killers1[Constants::MaxPly];
     Move killers2[Constants::MaxPly];
 
-    PieceToArray<int> *history;
+    ButterflyArray<int> *history;
 
     PieceToArray<Move> *counterMoves;
 

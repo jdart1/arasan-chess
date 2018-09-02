@@ -6,7 +6,7 @@
 const int SearchContext::HISTORY_MAX = std::numeric_limits<int>::max();
 
 SearchContext::SearchContext() {
-   history = new PieceToArray<int>();
+   history = new ButterflyArray<int>();
    counterMoves = new PieceToArray<Move>();
    counterMoveHistory = new PieceTypeToMatrix<int>();
    fuMoveHistory = new PieceTypeToMatrix<int>();
@@ -23,11 +23,12 @@ SearchContext::~SearchContext()
 
 void SearchContext::clear() {
     clearKiller();
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 64; j++) {
-            (*history)[i][j] = 0;
+    for (int side = 0; side < 2; side++)
+        for (int i = 0; i < 64; i++) {
+            for (int j = 0; j < 64; j++) {
+                (*history)[side][i][j] = 0;
+            }
         }
-    }
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 64; j++) {
             (*counterMoves)[i][j] = NullMove;
@@ -51,7 +52,7 @@ void SearchContext::clearKiller() {
 
 int SearchContext::scoreForOrdering (Move m, NodeInfo *node, ColorType side) const noexcept
 {
-    int score = (*history)[MakePiece(PieceMoved(m),side)][DestSquare(m)];
+    int score = (*history)[side][StartSquare(m)][DestSquare(m)];
     if (node->ply>0 && !IsNull((node-1)->last_move)) {
         Move prevMove = (node-1)->last_move;
         score += (*counterMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
@@ -97,7 +98,7 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node)
                 }
             };
 
-            updateHist((*history)[MakePiece(PieceMoved(m),board.sideToMove())][DestSquare(m)]);
+            updateHist((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)]);
             if (node->ply > 0) {
                 Move lastMove = (node-1)->last_move;
                 if (!IsNull(lastMove)) {
