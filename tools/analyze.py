@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+# Copyright 2017-2018 by Jon Dart. All Rights Reserved.
+#
 import re, sys, subprocess, time, chess, chess.uci
 
 class Options:
@@ -14,6 +16,7 @@ class Results:
    # the current position's results indexed by multipv index
    infos = {}
    solution_time = 0
+   solution_nodes = 0
    bestmove = None
 
 class Position:
@@ -79,6 +82,14 @@ class MyInfoHandler(chess.uci.InfoHandler):
               time_str = rest[0:j]
            else:
               time_str = rest[0:]
+        if " nodes " in result:
+           i = result.find(" nodes ")
+           rest = result[i+7:]
+           if " " in rest:
+              j = rest.find(" ")
+              node_str = rest[0:j]
+           else:
+              node_str = rest[0:]
         # obtain the current bm from the pv
         if " pv " in result:
             i = result.find(" pv ")
@@ -92,8 +103,11 @@ class MyInfoHandler(chess.uci.InfoHandler):
             if correct(m,position):
                if (results.solution_time == 0):
                   results.solution_time = int(time_str)
+               if (results.solution_nodes == 0):
+                  results.solution_nodes = int(node_str)
             else:
                results.solution_time = 0
+               results.solution_nodes = 0
 
     def on_bestmove(self,bestm,ponder):
         global results
@@ -222,12 +236,13 @@ def main(argv = None):
                      position.ops[key] = san_moves
 
                results.solution_time = 0
+               results.solution_nodes = 0
                results.bestmove = None
                results.infos = {}
                search(engine,position.board,position.ops,time)
                if (done and results.bestmove != None):
                   if correct(results.bestmove,position):
-                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds", flush=True)
+                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds (" + str(results.solution_nodes) + " nodes)",flush=True)
                      solved = solved + 1
                   else:
                      print("-- not solved", flush=True)
