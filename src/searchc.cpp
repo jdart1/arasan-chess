@@ -64,18 +64,20 @@ int SearchContext::scoreForOrdering (Move m, NodeInfo *node, ColorType side) con
     return std::min<int>(HISTORY_MAX,std::max<int>(-HISTORY_MAX,score));
 }
 
-static constexpr int MAX_HISTORY_DEPTH = 15;
+static constexpr int MAX_HISTORY_DEPTH = 17;
+static constexpr int MAIN_HISTORY_DIVISOR = 324;
 static constexpr int HISTORY_DIVISOR = 768;
 
 int SearchContext::bonus(int depth) const noexcept
 {
     const int d = depth/DEPTH_INCREMENT;
-    return d <= MAX_HISTORY_DEPTH ? d*d : 0;
+    return d <= MAX_HISTORY_DEPTH ? d*d + 2*d : 0;
 }
 
-void SearchContext::update(int &val,int depth,int bonus)
+void SearchContext::update(int &val, int bonus, int divisor)
 {
-    val += 32*bonus - val*std::abs(bonus)/HISTORY_DIVISOR;
+    ASSERT(std::abs<int>(bonus) < divisor);
+    val += 32*bonus - val*std::abs(bonus)/divisor;
 }
 
 void SearchContext::updateStats(const Board &board, NodeInfo *node)
@@ -89,25 +91,25 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node)
         ASSERT(i<Constants::MaxMoves);
         const Move m = node->done[i];
         if (!CaptureOrPromotion(m)) {
-            auto updateHist = [&](int &val) {
+            auto updateHist = [&](int &val, int divisor) {
                 if (MovesEqual(best,m)) {
-                    update(val,node->depth,b);
+                    update(val,b,divisor);
                 }
                 else {
-                    update(val,node->depth,-b);
+                    update(val,-b,divisor);
                 }
             };
 
-            updateHist((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)]);
+            updateHist((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)],MAIN_HISTORY_DIVISOR);
             if (node->ply > 0) {
                 Move lastMove = (node-1)->last_move;
                 if (!IsNull(lastMove)) {
-                    updateHist((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)]);
+                    updateHist((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)],HISTORY_DIVISOR);
                 }
                 if (node->ply > 1) {
                     Move lastMove = (node-2)->last_move;
                     if (!IsNull(lastMove)) {
-                        updateHist((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)]);
+                        updateHist((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)],HISTORY_DIVISOR);
                     }
                 }
             }

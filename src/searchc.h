@@ -76,7 +76,7 @@ private:
 
     int bonus(int depth) const noexcept;
 
-    void update(int &val,int depth,int bonus);
+    void update(int &val, int bonus, int divisor);
 };
 
 #endif
