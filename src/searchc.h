@@ -39,7 +39,7 @@ public:
 
     void updateStats(const Board &, NodeInfo *parentNode);
 
-    static const int HISTORY_MAX = 1<<16;
+    static const int HISTORY_MAX;
 
     template<class T>
     using PieceToArray = std::array<std::array<T, 64>, 16>;
@@ -50,7 +50,6 @@ public:
     template<class T>
     using PieceTypeToMatrix = PieceTypeToArray< PieceTypeToArray<T> >;
 
-    // not used currently
     template<class T>
     using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
 
@@ -69,15 +68,15 @@ private:
     Move killers1[Constants::MaxPly];
     Move killers2[Constants::MaxPly];
 
-    PieceToArray<int> *history;
+    ButterflyArray<int> *history;
 
     PieceToArray<Move> *counterMoves;
 
-    PieceTypeToMatrix<int> *counterMoveHistory;
+    PieceTypeToMatrix<int> *counterMoveHistory, *fuMoveHistory;
 
     int bonus(int depth) const noexcept;
 
-    void update(int &val,int depth,int bonus);
+    void update(int &val, int bonus, int divisor);
 };
 
 #endif
