@@ -112,7 +112,7 @@ PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
 
 else
 
-ifeq ("$(CC)","clang")
+ifeq ("$(findstring clang,$(CC))","clang")
 
 CPP     := $(CC)
 LD      := $(CC)
@@ -123,7 +123,7 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
+CFLAGS  := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
