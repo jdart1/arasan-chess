@@ -233,7 +233,6 @@ Move SearchController::findBestMove(
     }
     ply_limit = search_ply_limit;
     background = isBackground != 0;
-    is_searching = true;
     uci = isUCI;
     talkLevel = t;
     stats = &stat_buf;
@@ -307,6 +306,8 @@ Move SearchController::findBestMove(
       return NullMove;
    }
 
+   // Set this only after early termination conditions checked (above);
+   is_searching = true;
    waitTime = 0;
 
    // Implement strength reduction if enabled. But do not reduce
