@@ -821,7 +821,9 @@ bool failhigh)
         }
         cout << '\t';
         Scoring::printScore(stats.display_value,cout);
-        cout << '\t' << stats.num_nodes << endl;
+        // Note: must access controller's stats to get node count
+        // across all threads:
+        cout << '\t' << controller->getGlobalStats().num_nodes << endl;
         cout.flags(original_flags);
     }
     // Post during ponder if UCI

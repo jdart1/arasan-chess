@@ -123,7 +123,7 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
                 auto old_post = searcher->registerPostFunction(
                     std::bind(&Tester::post_test,this,_1,searcher,std::cref(opts),std::ref(testStats)));
                 auto old_monitor = searcher->registerMonitorFunction(
-                    std::bind(&Tester::terminate,this,_1,_2,std::cref(opts),std::ref(testStats)));
+                    std::bind(&Tester::monitor,this,_1,_2,std::cref(opts),std::ref(testStats)));
 
                 MoveSet includes;
                 Move result = searcher->findBestMove(board,
@@ -261,7 +261,7 @@ bool Tester::solution_match(const vector<Move> &solution_moves,
     return avoid ? !match : match;
 }
 
-// this function is called with "post" results during a test
+// This function is called with "post," i.e. intermediate search, results during a test
 // suite run.
 void Tester::post_test(const Statistics &stats,
                        SearchController *searcher,
@@ -275,11 +275,13 @@ void Tester::post_test(const Statistics &stats,
         if (sp.empty() ||
             !MovesEqual(sp.back().move,best) ||
             sp.back().depth != ply) {
+            // Note: must use global stats from controller to get
+            // total node count across threads
             sp.push_back(TestStatus::SearchProgress(best,
                                                     stats.value,
                                                     searcher->getElapsedTime(),
                                                     ply,
-                                                    stats.num_nodes));
+                                                    searcher->getGlobalStats().num_nodes));
         }
     }
     if (solution_match(testStats.solution_moves,best,testStats.avoid)) {
@@ -307,8 +309,8 @@ void Tester::post_test(const Statistics &stats,
     }
 }
 
-int Tester::terminate(SearchController *s, const Statistics &stats, const TestOptions &opts,
-                        TestStatus &testStats)
+int Tester::monitor(SearchController *s, const Statistics &stats, const TestOptions &opts,
+                    TestStatus &testStats)
 {
     post_test(stats, s, opts, testStats);
     return testStats.early_exit;

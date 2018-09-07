@@ -106,14 +106,14 @@ private:
     bool solution_match(const vector<Move> &solution_moves,
                         Move result, bool avoid) const noexcept;
 
-    // monitor function, called from search
+    // "post" function, called from search
     void post_test(const Statistics &stats, SearchController *searcher,
                    const TestOptions &opts,
                    TestStatus &testStats);
 
-    // terminate function, called from search
-    int CDECL terminate(SearchController *s, const Statistics &stats, const TestOptions &opts,
-                        TestStatus &testStats);
+    // monitor function, called from search
+    int monitor(SearchController *s, const Statistics &stats, const TestOptions &opts,
+                TestStatus &testStats);
 
     void print_nodes(uint64_t nodes, ostream &out);
 

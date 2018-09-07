@@ -444,6 +444,10 @@ public:
        return pool->isCompleted(0);
    }
 
+   const Statistics &getGlobalStats() const noexcept {
+       return *stats;
+   }
+
 private:
 
     // pointer to function, called to output status during
