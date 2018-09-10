@@ -180,6 +180,8 @@ protected:
 
     score_t razorMargin(int depth) const;
 
+    score_t seePruningMargin(int depth, bool quiet) const;
+
     FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
         ASSERT(ply<Constants::MaxPly);
