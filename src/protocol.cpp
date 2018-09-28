@@ -834,7 +834,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         controller->terminateNow();
         return true;
     }
-    else if (cmd == "time" || cmd == "otim") {
+    else if (cmd_word == "time" || cmd_word == "otim") {
         // ignore in search, defer until search completion
         return false;
     }
