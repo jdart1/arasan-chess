@@ -789,6 +789,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
              cmd_word == "st" ||
              cmd_word == "sd" ||
              cmd_word == "time" ||
+             cmd_word == "otim" ||
              cmd_word == "rating" ||
              cmd_word == "option" ||
              cmd_word == "name" ||
@@ -833,10 +834,6 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         forceMode = true;
         controller->terminateNow();
         return true;
-    }
-    else if (cmd_word == "time" || cmd_word == "otim") {
-        // ignore in search, defer until search completion
-        return false;
     }
     else {
         // Try to parse command as a move
