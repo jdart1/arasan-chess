@@ -76,7 +76,7 @@ int SearchContext::bonus(int depth) const noexcept
 
 void SearchContext::update(int &val, int bonus, int divisor)
 {
-    ASSERT(std::abs<int>(bonus) < divisor);
+    ASSERT(std::abs(bonus) < divisor);
     val += 32*bonus - val*std::abs(bonus)/divisor;
 }
 
