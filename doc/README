@@ -1,4 +1,4 @@
-Arasan Chess 21.0 Readme
+Arasan Chess 21.1 Readme
 
 This readme file contains information about Arasan, a chess-playing
 program. Versions of Arasan are available for Linux, Windows and MacOS.
@@ -52,10 +52,10 @@ Using xboard as a user interface
 To play a game against the Arasan chess engine using xboard, start
 xboard with the -fcp switch (short for -firstChessProgram), like this:
 
-   xboard -cp -fcp "/usr/bin/arasan-21.0/arasanx -H 100M -c 2"
+   xboard -cp -fcp "/usr/bin/arasan-21.1/arasanx -H 100M -c 2"
 
 You need to specify the full path to where arasanx is installed (usually
-/usr/local/bin/arasan-21.0).
+/usr/local/bin/arasan-21.1).
 
 Arasanx recognizes a -H switch that can be used to specify the hash
 table size in bytes ('K', 'M', or 'G' can be used to indicate

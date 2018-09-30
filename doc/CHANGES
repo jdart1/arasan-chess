@@ -1,4 +1,23 @@
-Changes in Arasan 21.0:
+Changes in Arasan 21.1:
+ 1) Fix bug in generateCaptures.
+ 2) Change depth resoltion and check extension.
+ 3) Use improving status to adjust LMR values (like Stockfish). Adjust LMR
+    logic.
+ 4) More depth-dependent reduction in null move search.
+ 5) Improvements to time management.
+ 6) Add move overhead option.
+ 7) Do see pruning at higher depths, with a margin (idea from Stockfish).
+ 8) Don't use conditional variable/mutex for handling the wait for
+    all threads to complete at search end. Instead, just poll in the
+    main thread.
+ 9) Major cleanup of UCI/Winboard protocol code. Fix some race conditions
+    that could cause engine to not respond in rare cases.
+ 10) Enable singular extensions.
+ 11) Restructe history code and implement "follow up history" (Ethereal's
+     term), similar to Stockfish continuation history.
+ 12) Convert main history table to butterfly boards.
+ 
+Changes in Arasan 21.0 (June 2018):
  1) Implement LazySMP instead of YBWC for multi-threading (major re-structuring).
  2) Stricter/earlier validity checking on hash move.
  3) When failing low with a mate score, widen the aspiration window all

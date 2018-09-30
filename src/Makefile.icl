@@ -1,7 +1,7 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 21.0
+VERSION = 21.1
 #
 #TARGET = win32
 TARGET = win64

@@ -348,7 +348,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\release\arasanx-64.exe</OutputFile>
-      <Version>20.5</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -497,7 +497,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\arasanx-64.exe</OutputFile>
-      <Version>20.5</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\arasanx-64.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -523,7 +523,7 @@
     </ClCompile>
     <Link>
       <OutputFile>..\win64\debug\arasanx-64-popcnt.exe</OutputFile>
-      <Version>20.5</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -549,7 +549,7 @@
     </ClCompile>
     <Link>
       <OutputFile>..\win64\debug\arasanx-64-bmi2.exe</OutputFile>
-      <Version>21.0</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <StackReserveSize>4000000</StackReserveSize>
@@ -578,7 +578,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\tuner.exe</OutputFile>
-      <Version>20.5</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\tuner.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -608,7 +608,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;user32.lib</AdditionalDependencies>
       <OutputFile>..\win64\debug\tuner.exe</OutputFile>
-      <Version>21.0</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\tuner.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -682,7 +682,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\debug\makebook.exe</OutputFile>
-      <Version>20.5</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\makebook.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -707,7 +707,7 @@
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win64\debug\pgnselect.exe</OutputFile>
-      <Version>20.5</Version>
+      <Version>21.1</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win64\debug\makebook.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
