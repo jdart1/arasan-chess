@@ -470,6 +470,10 @@ Move SearchController::findBestMove(
          }
       }
    }
+   // Output a final post message
+   if ((!background || uci) && post_function) {
+       post_function(*stats);
+   }
 #ifdef _TRACE
    cout << "# best thread: score=";
    Scoring::printScore(stats->value,cout);
@@ -826,10 +830,10 @@ bool failhigh)
         cout << '\t' << controller->getGlobalStats().num_nodes << endl;
         cout.flags(original_flags);
     }
+    // Update controller statistics from main thread stats:
+    controller->updateGlobalStats(stats);
     // Post during ponder if UCI
     if ((!controller->background || controller->uci) && controller->post_function) {
-       // Update controller statistics from main thread stats:
-       controller->updateGlobalStats(stats);
        controller->post_function(*(controller->stats));
     }
 }
