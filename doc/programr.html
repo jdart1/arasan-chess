@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 21.0</title>
+<title>Arasan Programmer's Guide - version 21.1</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 21.0</h1>
+<h1>Arasan Programmer's Guide - version 21.1</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -54,7 +54,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  21.0
+  21.1
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     book    - text files for opening book and ECO recognizer
@@ -839,6 +839,7 @@ on the theory that this pawn may soon promote.</li>
 </li>
 <li>If a safe capture is done and the last opponent
 piece has been captured, the search is extended.</li>
+<li>Arasan now implements <a href="https://www.chessprogramming.org/Singular_Extensions" target="_blank">singular extensions</a>. If a hash move exists and is a lower bound, and if a shallow-depth search shows that all moves except the hash move have low scores, then the hash move is considered "singular." Singular moves are searched with greater depth.</li>
 </ol>
 <p>
 Note that since Arasan 5.0, most extensions can be a fraction of a full
@@ -930,17 +931,15 @@ types of pruning.</p>
 <p>
 The final part of search() checks to see if checkmate or stalemate
 occurred, updates the hash table, and maintains the best variation.
-It also updates history scores, but only if the best move is
-not a promotion or capture. The best move from the search gets
-a history bonus.
-The remaining moves are given a penalty.
-Scores are maintained in a table (per thread) that
-is indexed by piece type and destination square.
-In addition, Arasan now maintains a countermove history table (idea
-from Stockfish). This is
-indexed by the piece type from the previous move, previous dest square, current
-move's piece type, and current move's dest square. Both history and
-countermove history scores are used in move ordering.
+It also updates history scores, but only if the best move is not a
+promotion or capture. The best move from the search gets a history
+bonus.  The remaining moves are given a penalty.  Scores are
+maintained in a table (per thread) that is indexed by side, source square
+and destination square.  In addition, Arasan now maintains a countermove
+history table and a "follow up" history" a.k.a. continuation history
+table (ideas from Stockfish). All history tables are used in move
+ordering and history values are a factor in computing the amount of
+late move reduction.
 </p>
 <p>
 When the search terminates at ply 0, it updates the "Statistics"
