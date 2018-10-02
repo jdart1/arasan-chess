@@ -1,6 +1,6 @@
 Changes in Arasan 21.1:
  1) Fix bug in generateCaptures.
- 2) Change depth resoltion and check extension.
+ 2) Change depth resolution and check extension.
  3) Use improving status to adjust LMR values (like Stockfish). Adjust LMR
     logic.
  4) More depth-dependent reduction in null move search.
@@ -13,7 +13,7 @@ Changes in Arasan 21.1:
  9) Major cleanup of UCI/Winboard protocol code. Fix some race conditions
     that could cause engine to not respond in rare cases.
  10) Enable singular extensions.
- 11) Restructe history code and implement "follow up history" (Ethereal's
+ 11) Restructure history code and implement "follow up history" (Ethereal's
      term), similar to Stockfish continuation history.
  12) Convert main history table to butterfly boards.
  
