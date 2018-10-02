@@ -8,8 +8,7 @@ static const int DEFAULT_MOVES_TO_TC = 35;
 static const float PONDER_FACTOR = 1.3F;
 static const int GAME_TIME_RESERVE = 75; // try to keep this amt of time in reserve
 
-int calcTimeLimit(int moves, float minutes, int incr,
-                  int time_left, int opp_time, bool ponderHit, int trace)
+int calcTimeLimit(int moves, int incr, int time_left, bool ponderHit, int trace)
 {
     int moves_in_game = gameMoves->num_moves()/2;  // full moves, not half-moves
     int moves_left;
@@ -18,13 +17,13 @@ int calcTimeLimit(int moves, float minutes, int incr,
     } else {
         moves_left = moves-(moves_in_game % moves);
     }
-    return calcTimeLimit(moves_left,incr,time_left,opp_time,ponderHit,trace);
+    return calcTimeLimitUCI(moves_left,incr,time_left,ponderHit,trace);
 }
 
 
 // UCI version
-int calcTimeLimit(int movestogo, int incr,
-                  int time_left, int opp_time, bool ponderHit, int trace)
+int calcTimeLimitUCI(int movestogo, int incr,
+                     int time_left, bool ponderHit, int trace)
 {
     if (trace) cout << "# movestogo=" << movestogo << " time_left=" << time_left << endl;
     if (movestogo == 0) movestogo = DEFAULT_MOVES_TO_TC;

@@ -156,20 +156,18 @@ protected:
                        int improving,
                        Move move);
 
-    void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
+    void storeHash(hash_t hash, Move hash_move, int depth);
 
     int updateRootMove(const Board &board,
                        NodeInfo *node, Move move, score_t score, int move_index);
 
-    int updateMove(const Board &,
-                   NodeInfo* myNode, Move move,
-                   score_t score, int ply, int depth);
+    int updateMove(NodeInfo* myNode, Move move, score_t score, int ply);
 
     void updatePV(const Board &, Move m, int ply);
 
     void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
 
-    int checkTime(const Board &board,int ply);
+    int checkTime();
 
     void showStatus(const Board &board, Move best, bool faillow, bool failhigh);
 
@@ -222,7 +220,7 @@ protected:
     void setTalkLevelFromController();
 
     void updateStats(const Board &, NodeInfo *node,int iteration_depth,
-		     score_t score, score_t alpha, score_t beta);
+		     score_t score, score_t alpha);
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 

@@ -90,11 +90,7 @@ Move BookReader::pick(const Board &b, score_t contempt) {
 
    Move move_list[Constants::MaxMoves];
    RootMoveGenerator mg(b);
-#ifdef _DEBUG
-   const unsigned max = mg.generateAllMoves(move_list,1 /* repeatable */);
-#else
    (void)mg.generateAllMoves(move_list,1 /* repeatable */);
-#endif
    // compute total and max count
    uint64_t totalCount = 0;
    unsigned maxCount = 0;

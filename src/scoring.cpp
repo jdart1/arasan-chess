@@ -799,7 +799,7 @@ score_t Scoring::outpost(const Board &board,
 }
 
 template <ColorType bishopColor>
-void Scoring::scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores)
+void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores)
 {
    int whitePawns = ourPawnData.w_square_pawns;
    int blackPawns = ourPawnData.b_square_pawns;
@@ -1129,10 +1129,10 @@ void Scoring::pieceScore(const Board &board,
    const int bishopCount = board.getMaterial(side).bishopCount();
    if (bishopCount == 1) {
       if (TEST_MASK(Board::white_squares, board.bishop_bits[side])) {
-         scoreBishopAndPawns<White>(board,side,ourPawnData,oppPawnData,scores,opp_scores);
+         scoreBishopAndPawns<White>(ourPawnData,oppPawnData,scores,opp_scores);
       }
       else {
-         scoreBishopAndPawns<Black>(board,side,ourPawnData,oppPawnData,scores,opp_scores);
+         scoreBishopAndPawns<Black>(ourPawnData,oppPawnData,scores,opp_scores);
       }
    }
    else if (bishopCount >= 2) {
@@ -1709,8 +1709,7 @@ void Scoring::calcPawnData(const Board &board,
 #endif
 }
 
-void Scoring::evalOutsidePassers(const Board &board,
-                                 PawnHashEntry &pawnEntry) {
+void Scoring::evalOutsidePassers(PawnHashEntry &pawnEntry) {
    byte all_pawns = pawnEntry.wPawnData.pawn_file_mask | pawnEntry.bPawnData.pawn_file_mask;
    pawnEntry.wPawnData.outside = is_outside[pawnEntry.wPawnData.passer_file_mask][all_pawns];
    pawnEntry.bPawnData.outside = is_outside[pawnEntry.bPawnData.passer_file_mask][all_pawns];
@@ -1722,7 +1721,7 @@ void Scoring::calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry) {
    // pawn position not found, calculate the data we need
    calcPawnData(board, White, pawnEntry.wPawnData);
    calcPawnData(board, Black, pawnEntry.bPawnData);
-   evalOutsidePassers(board, pawnEntry);
+   evalOutsidePassers(pawnEntry);
    pawnEntry.hc = board.pawnHash();
 }
 
@@ -1778,8 +1777,8 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    Scores wScores, bScores;
 
-   KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(White),pawnEntry.pawnData(Black),useCache);
-   KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(Black),pawnEntry.pawnData(White),useCache);
+   KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(Black),useCache);
+   KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(White),useCache);
    score_t whiteCover = whiteKPEntry.cover == Constants::INVALID_SCORE ? 0 : whiteKPEntry.cover;
    score_t blackCover = blackKPEntry.cover == Constants::INVALID_SCORE ? 0 : blackKPEntry.cover;
 
@@ -2153,7 +2152,7 @@ int Scoring::specialCaseEndgame(const Board &board,
    return 0;
 }
 
-void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,                                            const PawnHashEntry::PawnData &ourPawnData,
+void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,
                                       const PawnHashEntry::PawnData &oppPawnData,
                                       KingPawnHashEntry &entry)
 {
@@ -2271,9 +2270,8 @@ Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board, bool useCache) 
 
 template <ColorType side>
 Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
-                                                const PawnHashEntry::PawnData &ourPawnData,
                                                 const PawnHashEntry::PawnData &oppPawnData,
-bool useCache)
+                                                bool useCache)
 {
    hash_t kphash = BoardHash::kingPawnHash(board,side);
    KingPawnHashEntry &entry = kingPawnHashTable[side][kphash % KING_PAWN_HASH_SIZE];
@@ -2287,7 +2285,7 @@ bool useCache)
          entry.cover = Constants::INVALID_SCORE;
       }
       if (needEndgame) {
-         calcKingEndgamePosition(board,side,ourPawnData,oppPawnData,entry);
+         calcKingEndgamePosition(board,side,oppPawnData,entry);
       } else {
          entry.king_endgame_position = Constants::INVALID_SCORE;
       }
@@ -2298,14 +2296,14 @@ bool useCache)
          calcCover<side>(board,entry);
       }
       if (needEndgame && entry.king_endgame_position == Constants::INVALID_SCORE) {
-         calcKingEndgamePosition(board,side,ourPawnData,oppPawnData,entry);
+         calcKingEndgamePosition(board,side,oppPawnData,entry);
       }
 #ifdef _DEBUG
       // cached entry better = computed entry
       KingPawnHashEntry entry2;
       entry2.cover = entry2.king_endgame_position = 0;
       calcCover<side>(board,entry2);
-      calcKingEndgamePosition(board,side,ourPawnData,oppPawnData,entry2);
+      calcKingEndgamePosition(board,side,oppPawnData,entry2);
       if (needCover && entry.cover != entry2.cover) {
          cout << board << endl;
          cout << "mLevel=" << mLevel << endl;

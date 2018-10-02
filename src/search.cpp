@@ -615,6 +615,7 @@ void SearchController::updateSearchOptions() {
 }
 
 void SearchController::setTalkLevel(TalkLevel t) {
+    talkLevel = t;
     pool->forEachSearch<&Search::setTalkLevelFromController>();
 }
 
@@ -754,7 +755,7 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     setSearchOptions();
 }
 
-int Search::checkTime(const Board &board,int ply) {
+int Search::checkTime() {
     if (controller->stopped) {
         controller->terminateNow();
     }
@@ -916,7 +917,7 @@ void Search::setTalkLevelFromController() {
 }
 
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
-                         score_t score, score_t alpha, score_t beta)
+                         score_t score, score_t alpha)
 {
    //stats.elapsed_time = getElapsedTime(startTime,getCurrentTime());
     ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
@@ -1116,8 +1117,7 @@ Move Search::ply0_search()
             // leave the search stats intact (with the previous
             // iteration's pv and score).
             if (!terminate || stats.mvleft != stats.mvtot) {
-               updateStats(board, node, iterationDepth,
-                           value, lo_window, hi_window);
+               updateStats(board, node, iterationDepth, value, lo_window);
             }
 #ifdef _TRACE
             if (mainThread()) {
@@ -1245,7 +1245,7 @@ Move Search::ply0_search()
             }
             // check time after adjustments have been made
             if (!terminate) {
-                if (checkTime(board,0)) {
+                if (checkTime()) {
                     if (talkLevel == Trace) {
                         cout << "# time up" << endl;
                     }
@@ -1668,7 +1668,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       if (--controller->time_check_counter <= 0) {
          controller->time_check_counter = Time_Check_Interval;
-         if (checkTime(board,ply)) {
+         if (checkTime()) {
             if (talkLevel == Trace) {
                cout << "# terminating, time up" << endl;
             }
@@ -1908,7 +1908,7 @@ score_t Search::quiesce(int ply,int depth)
         ASSERT(0);
       }
       ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
-      storeHash(board,hash,node->best,tt_depth);
+      storeHash(hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
             updatePV(board,node->best,ply);
@@ -2221,7 +2221,7 @@ score_t Search::quiesce(int ply,int depth)
       }
    search_end:
       ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
-      storeHash(board,hash,node->best,tt_depth);
+      storeHash(hash,node->best,tt_depth);
       if (node->inBounds(node->best_score)) {
          if (!IsNull(node->best)) {
             updatePV(board,node->best,ply);
@@ -2231,7 +2231,7 @@ score_t Search::quiesce(int ply,int depth)
    }
 }
 
-void Search::storeHash(const Board &board, hash_t hash, Move hash_move, int depth) {
+void Search::storeHash(hash_t hash, Move hash_move, int depth) {
    // don't insert into the hash table if we are terminating - we may
    // not have an accurate score.
    if (!terminate) {
@@ -2464,7 +2464,7 @@ score_t Search::search()
 #endif
         if (--controller->time_check_counter <= 0) {
             controller->time_check_counter = Time_Check_Interval;
-            if (checkTime(board,ply)) {
+            if (checkTime()) {
                if (talkLevel == Trace) {
                   cout << "# terminating, time up" << endl;
                }
@@ -3233,7 +3233,7 @@ score_t Search::search()
             node->done[node->num_try++] = move;
             ASSERT(node->num_try<Constants::MaxMoves);
             if (try_score > node->best_score) {
-                if (updateMove(board,node,move,try_score,ply,depth)) {
+                if (updateMove(node,move,try_score,ply)) {
                    // cutoff
                    break;
                 }
@@ -3398,7 +3398,7 @@ int Search::updateRootMove(const Board &board,
          node->best_score = score;
          updateStats(board, node, iterationDepth,
                      node->best_score,
-                     node->alpha,node->beta);
+                     node->alpha);
          if (mainThread()) {
             if (controller->uci && !srcOpts.multipv) {
                cout << "info score ";
@@ -3411,7 +3411,7 @@ int Search::updateRootMove(const Board &board,
       updatePV(board,node,(node+1),move,0);
       updateStats(board, node, iterationDepth,
                   node->best_score,
-                  node->alpha,node->beta);
+                  node->alpha);
       if (mainThread() && srcOpts.multipv == 1) {
          if (move_index>1) {
             // best move has changed, show new best move
@@ -3422,7 +3422,7 @@ int Search::updateRootMove(const Board &board,
    return 0;   // no cutoff
 }
 
-int Search::updateMove(const Board &board, NodeInfo *node, Move move, score_t score, int ply, int depth)
+int Search::updateMove(NodeInfo *node, Move move, score_t score, int ply)
 {
    int cutoff = 0;
    node->best_score = score;
@@ -3441,7 +3441,6 @@ int Search::updateMove(const Board &board, NodeInfo *node, Move move, score_t sc
    }
    else {
       node->best_score = score;
-      // update pv from slave node to master
       updatePV(board,node,(node+1),move,ply);
    }
    return cutoff;
@@ -3467,7 +3466,7 @@ void Search::updatePV(const Board &board, Move m, int ply)
 }
 
 
-void Search::updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply)
+void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Move move, int ply)
 {
 #ifdef _TRACE
     if (mainThread()) {

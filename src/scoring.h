@@ -1,4 +1,4 @@
-// Copyright 1992-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2018 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -154,7 +154,6 @@ class Scoring
 
     template <ColorType side>
       KingPawnHashEntry &getKPEntry(const Board &board,
-                        const PawnHashEntry::PawnData &ourPawnData,
                         const PawnHashEntry::PawnData &oppPawnData,
                         bool useCache);
 
@@ -216,7 +215,7 @@ class Scoring
     score_t adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
 
     template <ColorType bishopColor>
-      void scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
+      void scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
 
    template <ColorType side>
     void pieceScore(const Board &board,
@@ -245,12 +244,10 @@ class Scoring
 			   PawnHashEntry::PawnData &entr);
 
     void calcKingEndgamePosition(const Board &board,ColorType side,
-                                 const PawnHashEntry::PawnData &ourPawnData,
                                  const PawnHashEntry::PawnData &oppPawnData,
                                  KingPawnHashEntry &entry);
 
-    void evalOutsidePassers(const Board &board,
-			    PawnHashEntry &pawnEntry);
+    void evalOutsidePassers(PawnHashEntry &pawnEntry);
 
     void calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry);
 

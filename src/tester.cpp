@@ -318,13 +318,13 @@ int Tester::monitor(SearchController *s, const Statistics &stats, const TestOpti
 
 void Tester::print_nodes(uint64_t nodes, ostream &out) {
     if (nodes >= 1000000) {
-        cout << (float)(nodes)/1000000.0 << "M";
+        out << (float)(nodes)/1000000.0 << "M";
     }
     else if (nodes >= 1000) {
-        cout << (float)(nodes)/1000.0 << "K";
+        out << (float)(nodes)/1000.0 << "K";
     }
     else
-        cout << nodes;
+        out << nodes;
 }
 
 

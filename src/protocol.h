@@ -120,7 +120,7 @@ private:
     int monitor(SearchController *s, const Statistics &);
 
     // handle commands in edit mode (Winboard protocol)
-    void edit_mode_cmds(Board &board,ColorType &side,const string &cmd, const string &cmd_args);
+    void edit_mode_cmds(Board &board,ColorType &side,const string &cmd);
 
     // do a ponder search
     void ponder(Board &board, Move move, Move predicted_reply, bool uci);

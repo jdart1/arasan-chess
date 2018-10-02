@@ -700,9 +700,9 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 ColorType side = controller->getComputerSide();
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    calcTimeLimit(movestogo,
-                                  side == White ? winc : binc,
-                                  time_left, opp_time, !easy, doTrace);
+                    calcTimeLimitUCI(movestogo,
+                                     side == White ? winc : binc,
+                                     time_left, !easy, doTrace);
                 if (doTrace) {
                     stringstream s;
                     s << "time_left=" << time_left << " opp_time=" << opp_time << " time_target=" <<
@@ -872,11 +872,11 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                     ColorType side = controller->getComputerSide();
                     time_target =
                         (srctype == FixedTime) ? time_limit :
-                        (uci ? calcTimeLimit(movestogo,
-                                             getIncrUCI(side),
-                                             time_left, opp_time,
-                                             true, doTrace)
-                         : calcTimeLimit(moves, minutes, incr, time_left, opp_time, true, doTrace));
+                        (uci ? calcTimeLimitUCI(movestogo,
+                                                getIncrUCI(side),
+                                                time_left,
+                                                true, doTrace)
+                         : calcTimeLimit(moves, incr, time_left, true, doTrace));
                     if (doTrace) {
                         cout << "# time_target = " << time_target << endl;
                         cout << "# xtra time = " << calc_extra_time(side) << endl;
@@ -907,7 +907,7 @@ int Protocol::monitor(SearchController *s, const Statistics &) {
     return 0;
 }
 
-void Protocol::edit_mode_cmds(Board &board,ColorType &side,const string &cmd, const string &cmd_args)
+void Protocol::edit_mode_cmds(Board &board,ColorType &side,const string &cmd)
 {
     unordered_set<char> pieces({'P','N','B','R','Q','K','p','n','b','r','q','k'});
     if (cmd == "white") {
@@ -1094,7 +1094,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
     // is specified and using "own book." Currently we force a search
     // in this case and ignore the book moves.
     if (!infinite && options.book.book_enabled && movesToSearch.empty()) {
-       move = openingBook.pick(board,searcher->getContempt());
+        move = openingBook.pick(board,searcher->getContempt());
         if (!IsNull(move)) stats.fromBook = true;
     }
 
@@ -1129,10 +1129,10 @@ Move Protocol::search(SearchController *searcher, Board &board,
             } else {
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    (uci ? calcTimeLimit(movestogo,
-                                         getIncrUCI(board.sideToMove()),
-                                         time_left, opp_time, false, doTrace)
-                     : calcTimeLimit(moves, minutes, incr, time_left, opp_time, false, doTrace));
+                    (uci ? calcTimeLimitUCI(movestogo,
+                                            getIncrUCI(board.sideToMove()),
+                                            time_left, false, doTrace)
+                     : calcTimeLimit(moves, incr, time_left, false, doTrace));
                 last_time_target = time_target;
             }
             if (doTrace) {
@@ -2071,7 +2071,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         }
     }
     else if (editMode) {
-       edit_mode_cmds(board,side,cmd_word,cmd_args);
+       edit_mode_cmds(board,side,cmd_word);
     }
     else if (cmd_word == "test") {
         string filename;

@@ -44,8 +44,7 @@ class Notation {
                        bool checkLegal = true);
 
  protected:
-    static Move parseCastling( const Board &b,
-                               ColorType color, const string &moveStr);
+    static Move parseCastling(ColorType color, const string &moveStr);
 };
 
 #endif
