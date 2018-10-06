@@ -26,14 +26,14 @@ class ThreadPool;
 struct ThreadInfo : public ThreadControl {
  
    enum State { Starting, Idle, Working, Terminating };
-   ThreadInfo(ThreadPool *,int i);
+   ThreadInfo(ThreadPool *,unsigned i);
    virtual ~ThreadInfo();
    void start();
    atomic<State> state;
    Search *work;
    ThreadPool *pool;
    THREAD thread_id;
-   int index;
+   unsigned index;
    int operator == (const ThreadInfo &ti) const {
        return index == ti.index;
    }
@@ -48,7 +48,7 @@ class ThreadPool {
 public:
 
    // create a thread pool with n threads
-   ThreadPool(SearchController *,int n);
+   ThreadPool(SearchController *,unsigned n);
 
    virtual ~ThreadPool();
 
@@ -122,16 +122,24 @@ public:
 
    uint64_t totalHits() const;
 
-   bool allCompleted() const {
-       return Bitboard(completedMask).bitCount() == nThreads;
+   bool allCompleted() {
+       lock();
+       bool val = completedMask.count() == nThreads;
+       unlock();
+       return val;
    }
 
-   bool isCompleted(unsigned index) const {
-       return (completedMask & (1ULL << index)) != 0ULL;
+   bool isCompleted(unsigned index) {
+       lock();
+       bool val = completedMask.test(index);
+       unlock();
+       return val;
    }
     
    void setCompleted(unsigned index) {
-       completedMask |= (1ULL << index);
+       lock();
+       completedMask.set(static_cast<size_t>(index));
+       unlock();
    }
 
 private:
@@ -144,9 +152,7 @@ private:
    std::array<ThreadInfo *,Constants::MaxCPUs> data;
 
    // mask of thread status - 0 if idle, 1 if active
-   atomic<uint64_t> activeMask;
-   atomic<uint64_t> availableMask;
-   atomic<uint64_t> completedMask;
+   std::bitset<Constants::MaxCPUs> activeMask, availableMask, completedMask;
 
 #ifndef _WIN32
    pthread_attr_t stackSizeAttrib;

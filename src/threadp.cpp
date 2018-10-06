@@ -88,18 +88,17 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       ti->work->ply0_search();
       ti->pool->lock();
       // Mark thread completed
-      ti->pool->completedMask |= (1ULL << ti->index);
+      ti->pool->completedMask.set(ti->index);
 #ifdef _THREAD_TRACE
       {
            std::ostringstream s;
-           s << "# thread " << ti->index << " completed, mask=" << (hex) <<
-
-           ti->pool->completedMask << (dec) << endl;
+           s << "# thread " << ti->index << " completed, mask=" << 
+           ti->pool->completedMask << endl;
            log(s.str());
       }
 #endif
       // remove thread from active list and set state back to Idle
-      ti->pool->activeMask &= ~(1ULL << ti->index);
+      ti->pool->activeMask.reset(ti->index);
       ti->state = ThreadInfo::Idle;
       ti->pool->unlock();
    }
@@ -113,8 +112,8 @@ void ThreadPool::waitAll()
 #ifdef _THREAD_TRACE
       {
          std::ostringstream s;
-         s << "waitAll: completed mask=" << (hex) <<
-             completedMask << (dec) << " count=" << Bitboard(completedMask).bitCount() << endl;
+         s << "waitAll: completed mask=" <<
+             completedMask << " count=" << completedMask.count() << endl;
          log(s.str());
       }
 #endif
@@ -156,7 +155,7 @@ void ThreadInfo::start() {
     signal();
 }
 
-ThreadInfo::ThreadInfo(ThreadPool *p, int i)
+ThreadInfo::ThreadInfo(ThreadPool *p, unsigned i)
  : state(Starting),
 #ifdef _WIN32
    thread_id(nullptr),
@@ -192,11 +191,8 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
 #endif
 }
 
- ThreadPool::ThreadPool(SearchController *ctrl, int n) :
-    controller(ctrl), nThreads(n),
-    activeMask(0ULL),
-    availableMask(0ULL),
-    completedMask(0ULL) {
+ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
+    controller(ctrl), nThreads(n) {
 
    LockInit(poolLock);
    for (int i = 0; i < Constants::MaxCPUs; i++) {
@@ -231,7 +227,7 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
   LockInit(io_lock);
 #endif
    LockInit(poolLock);
-   for (int i = 0; i < n; i++) {
+   for (unsigned i = 0; i < n; i++) {
       ThreadInfo *p = new ThreadInfo(this,i);
       if (i==0) {
          p->work = new Search(controller,p);
@@ -243,15 +239,18 @@ ThreadInfo::ThreadInfo(ThreadPool *p, int i)
       }
       data[i] = p;
    }
-   activeMask = 1ULL;
-   availableMask = (n == 64) ? 0xffffffffffffffffULL :
-      (1ULL << n)-1;
+   activeMask.set(1);
+   for (size_t i = 0; i < n; i++) {
+       availableMask.set(i);
+   }
    // Wait for all threads to start up
    while (n >1) {
-       int cnt = 0;
-       for (int i = 1; i < n; i++)
-          if (data[i]->state == ThreadInfo::Idle)
+       unsigned cnt = 0;
+       for (unsigned i = 1; i < n; i++) {
+           if (data[i]->state == ThreadInfo::Idle) {
              ++cnt;
+           }
+       }
        if (cnt==n-1) break;
    }
 }
@@ -335,12 +334,17 @@ void ThreadPool::resize(unsigned n) {
         unlock();
     }
     ASSERT(nThreads == n);
-    availableMask = (n == 64) ? 0xffffffffffffffffULL :
-       (1ULL << n)-1;
+    for (size_t i = 0; i < Constants::MaxCPUs; i++) {
+        if (i < n) {
+            availableMask.set(i);
+        } else {
+            availableMask.reset(i);
+        }
+    }
 }
 
 int ThreadPool::activeCount() const {
-   return Bitboard(activeMask & availableMask).bitCount();
+    return (activeMask & availableMask).count();
 }
 
 uint64_t ThreadPool::totalNodes() const
