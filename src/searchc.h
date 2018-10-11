@@ -55,12 +55,14 @@ public:
 
     Move getCounterMove(const Board &board, Move prev) const {
         ColorType oside = board.oppositeSide();
-        return (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)];
+        return IsNull(prev) ? NullMove : (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)];
     }
 
     void setCounterMove(const Board &board, Move prev, Move counter) {
-        ColorType oside = board.oppositeSide();
-        (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)] = counter;
+		if (!IsNull(prev)) {
+			ColorType oside = board.oppositeSide();
+			(*counterMoves)[MakePiece(PieceMoved(prev), oside)][DestSquare(prev)] = counter;
+		}
     }
 
 private:
