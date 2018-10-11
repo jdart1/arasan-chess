@@ -224,12 +224,35 @@ int CDECL main(int argc, char **argv) {
     polling_terminated = false;
     DWORD id;
     pollingThreadHandle = CreateThread(NULL,0,
-        inputPoll,p,
-        0,
-        &id);
+                                       inputPoll,p,
+                                       0,
+                                       &id);
+    if (pollingThreadHandle == NULL) {
+        int nError = GetLastError();
+        LPSTR errMsg = NULL;
+
+        int nChars = FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+            NULL,
+            nError,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  // Default language
+            errMsg,
+            512,
+            NULL
+            );
+        if (nChars) {
+            printf("Input thread failed to start: %s\n", errMsg);
+        }
+        else {
+            printf("Input thread failed to start, error code %d\n", nError);
+        }
+        LocalFree(errMsg);
+        exit(-1);
+    }
 #else
     if (pthread_create(&pollingThreadHandle, NULL, inputPoll, p)) {
         perror("input thread creation failed");
+        exit(-1);
     }
 #endif
 
