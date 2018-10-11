@@ -133,11 +133,27 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
 
 SearchController::SearchController()
   : post_function(nullptr),
-    monitor_function(nullptr),
-    age(1),
-    talkLevel(Silent),
-    stopped(false),
-    contempt(0)
+	monitor_function(nullptr),
+	uci(false),
+	age(1),
+	talkLevel(Silent),
+	time_limit(0),
+	ply_limit(0),
+	background(false),
+	is_searching(false),
+	stopped(false),
+	typeOfSearch(TimeLimit),
+	time_check_counter(0),
+#ifdef SMP_STATS
+	sample_counter(0),
+#endif
+	stats(NULL),
+	computerSide(White),
+	contempt(0),
+	pool(nullptr),
+	rootSearch(nullptr),
+	tb_root_probes(0),
+	tb_root_hits(0)
 {
 
 #ifdef SMP_STATS
