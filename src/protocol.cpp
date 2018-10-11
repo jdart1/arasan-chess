@@ -1690,23 +1690,14 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<int>(value,options.search.strength);
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
-       setCheckOption(value,options.search.set_processor_affinity);
        int tmp = options.search.set_processor_affinity;
+       setCheckOption(value,options.search.set_processor_affinity);
        if (tmp != options.search.set_processor_affinity) {
-          if (options.search.set_processor_affinity) {
-             searcher->rebind();
-          } else {
-             searcher->unbind();
-          }
-       }
-    } else if (name == "Affinity offset") {
-       int tmp = options.search.affinity_offset;
-       Options::setOption<int>(value,options.search.affinity_offset);
-       if (tmp != options.search.affinity_offset) {
-          searcher->rebind();
+           searcher->recalcBindings();
        }
 #endif
-    } else if (name == "Move overhead") {
+    }
+    else if (name == "Move overhead") {
         Options::setOption<int>(value,options.search.move_overhead);
     }
 #ifdef TUNE
@@ -1856,9 +1847,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 #ifdef NUMA
         cout << "option name Set processor affinity type check default " <<
            (options.search.set_processor_affinity ? "true" : "false") << endl;
-        cout << "option name Affinity offset type spin default " <<
-           options.search.affinity_offset << " min 0 max " <<
-           Constants::MaxCPUs << endl;
 #endif
         cout << "option name Move overhead type spin default " <<
             30 << " min 0 max 1000" << endl;
@@ -1985,18 +1973,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
            int tmp = options.search.set_processor_affinity;
            options.search.set_processor_affinity = (value == "true");
            if (tmp != options.search.set_processor_affinity) {
-              if (options.search.set_processor_affinity) {
-                 searcher->rebind();
-              } else {
-                 searcher->unbind();
-              }
-           }
-        }
-        else if (uciOptionCompare(name,"Affinity offset")) {
-           int tmp = options.search.affinity_offset;
-           Options::setOption<int>(value,options.search.affinity_offset);
-           if (tmp != options.search.affinity_offset) {
-              searcher->rebind();
+               searcher->recalcBindings();
            }
         }
 #endif
@@ -2457,9 +2434,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 #ifdef NUMA
         cout << " option=\"Set processor affinity -check " <<
             options.search.set_processor_affinity << "\"" << endl;
-        // TBD: limit to actual detected # of CPUs
-        cout << " option=\"Affinity offset -spin " <<
-            options.search.affinity_offset << " 0 " << Constants::MaxCPUs << "\"" << endl;
 #endif
         cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"" << endl;
         cout << " myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;

@@ -398,16 +398,6 @@ public:
       return 0;
    }
 
-#ifdef NUMA
-    void rebind() {
-        pool->rebind();
-    }
-
-    void unbind() {
-        pool->unbind();
-    }
-#endif
-
     uint64_t getElapsedTime() const {
        return elapsed_time;
     }
@@ -447,6 +437,12 @@ public:
    const Statistics &getGlobalStats() const noexcept {
        return *stats;
    }
+
+#ifdef NUMA
+   void recalcBindings() {
+       pool->recalcBindings();
+   }
+#endif
 
 private:
 

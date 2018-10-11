@@ -42,7 +42,6 @@ Options::SearchOptions::SearchOptions() :
 #ifdef NUMA
       ,
       set_processor_affinity(0),
-      affinity_offset(0),
       move_overhead(15),
       minimum_search_time(10)
 #endif
@@ -177,9 +176,6 @@ void Options::set_option(const string &name, const string &value) {
 #ifdef NUMA
   else if (name == "search.set_processor_affinity") {
     set_boolean_option(name,value,search.set_processor_affinity);
-  }
-  else if (name == "search.affinity_offset") {
-    setOption<int>(name,value,search.affinity_offset);
   }
 #endif
   else if (name == "search.move_overhead") {

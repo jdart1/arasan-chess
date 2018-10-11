@@ -25,9 +25,9 @@ STB=syzygy
 # enable NUMA support
 #NUMA=1
 
-# location of hwloc library
-HWLOC64=c:\chess\hwloc-win64-build-1.11.3
-HWLOC32=c:\chess\hwloc-win32-build-1.11.3
+# location of hwloc library (needed if NUMA enabled)
+HWLOC64=E:\chess\hwloc-win64-build-2.0.2
+HWLOC32=E:\chess\hwloc-win32-build-2.0.2
 
 !If "$(TARGET)" == "win64"
 !Ifndef ARASANX
@@ -94,13 +94,13 @@ INTEL64 = /Wp64
 INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
-CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
+CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /GR- /DUSE_INTRINSICS /DUSE_ASM /DNDEBUG
 !Else
 # Intel C++ defs, release build (IA32)
 CL       = icl
 LD       = xilink
-CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
+CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /Oy- /Gr /GR- /DUSE_INTRINSICS /DUSE_ASM /DNDEBUG
 !Endif
 

@@ -30,8 +30,8 @@ INSTALL = /usr/local/bin
 STB=syzygy/src
 # compile in NUMA support
 #NUMA=1
-# location of hwloc library (required for NUMA)
-HWLOC64=/home/jdart/chess/hwloc-build-1.11.3
+# location of hwloc library (required if compiled with NUMA support)
+HWLOC64=/home/jdart/chess/hwloc-2.0.2
 # directory for utility programs
 UTIL = util
 

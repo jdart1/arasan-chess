@@ -103,18 +103,13 @@ public:
 
 #ifdef NUMA
    int bind(int index) {
-     return topo.bind(index);
+     return topo.bind(data[index]);
    }
 
-   void rebind() {
+   void recalcBindings() {
+     topo.recalc();
      // set flags so threads will be rebound
      rebindMask.set();
-   }
-
-   void unbind() {
-     topo.reset();
-     // set flags so threads will be rebound
-     rebind();
    }
 #endif
 

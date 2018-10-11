@@ -214,30 +214,29 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
       }
    }
 #endif
-#ifdef NUMA
-   cout << topo.description() << endl;
-   rebindMask.set();
-   // bind main thread
-   if (bind(0)) {
-      cerr << "Warning: bind to CPU failed for thread 0" << endl;
-   }
-   rebindMask.set(0,0);
-#endif
 #ifdef _THREAD_TRACE
   LockInit(io_lock);
 #endif
    LockInit(poolLock);
    for (unsigned i = 0; i < n; i++) {
-      ThreadInfo *p = new ThreadInfo(this,i);
+#ifdef NUMA
+      rebindMask.set(i);
+#endif
+      ThreadInfo *p = data[i] = new ThreadInfo(this,i);
       if (i==0) {
          p->work = new Search(controller,p);
          p->work->ti = p;
+#ifdef NUMA
+         // bind main thread
+         if (bind(0)) {
+             cerr << "Warning: bind to CPU failed for thread 0" << endl;
+         }
+#endif
       }
       else {
          // defer search creation until thread starts
          //p->work = new Search(controller,p);
       }
-      data[i] = p;
    }
    activeMask.set(1);
    for (size_t i = 0; i < n; i++) {

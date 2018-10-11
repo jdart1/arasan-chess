@@ -46,7 +46,6 @@ class Options
    int easy_threshold; // wide search width in centipawns
 #ifdef NUMA
    int set_processor_affinity; // lock threads to processors
-   int affinity_offset; // offset: first processor to use for affinity
 #endif
    int move_overhead; // in milliseconds
    int minimum_search_time; // in milliseconds
