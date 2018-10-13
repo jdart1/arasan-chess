@@ -142,7 +142,7 @@ $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 # Linker flags
 LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
  
-ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\protocol.obj \
+ARASANX_OBJS = $(BUILD)\arasanx.obj \
 $(BUILD)\tester.obj $(BUILD)\protocol.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
@@ -173,7 +173,7 @@ $(TUNE_BUILD)\learn.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
-ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj $(PGO_BUILD)\protocol.obj \
+ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
 $(PGO_BUILD)\tester.obj $(PGO_BUILD)\protocol.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
 $(PGO_BUILD)\board.obj $(PGO_BUILD)\boardio.obj $(PGO_BUILD)\options.obj \
@@ -190,6 +190,7 @@ $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
 $(PGO_BUILD)\unit.obj $(TB_PGO_OBJS) $(NUMA_PGO_OBJS)
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
+$(POPCNT_BUILD)\protocol.obj $(POPCNT_BUILD)\tester.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
 $(POPCNT_BUILD)\board.obj $(POPCNT_BUILD)\boardio.obj $(POPCNT_BUILD)\options.obj \
 $(POPCNT_BUILD)\chess.obj $(POPCNT_BUILD)\material.obj $(POPCNT_BUILD)\movegen.obj \
@@ -205,6 +206,7 @@ $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.
 $(POPCNT_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ARASANX_BMI2_OBJS = $(BMI2_BUILD)\arasanx.obj \
+$(BMI2_BUILD)\protocol.obj $(BMI2_BUILD)\tester.obj \
 $(BMI2_BUILD)\attacks.obj $(BMI2_BUILD)\bhash.obj $(BMI2_BUILD)\bitboard.obj \
 $(BMI2_BUILD)\board.obj $(BMI2_BUILD)\boardio.obj $(BMI2_BUILD)\options.obj \
 $(BMI2_BUILD)\chess.obj $(BMI2_BUILD)\material.obj $(BMI2_BUILD)\movegen.obj \
@@ -220,6 +222,7 @@ $(BMI2_BUILD)\ecodata.obj $(BMI2_BUILD)\threadp.obj $(BMI2_BUILD)\threadc.obj \
 $(BMI2_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
+$(PROFILE)\protocol.obj $(PROFILE)\tester.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \
