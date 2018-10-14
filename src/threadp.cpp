@@ -238,7 +238,8 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
          //p->work = new Search(controller,p);
       }
    }
-   activeMask.set(1);
+   // Thread 0 (main thread) is always active:
+   activeMask.set(0);
    for (size_t i = 0; i < n; i++) {
        availableMask.set(i);
    }
