@@ -2310,19 +2310,20 @@ int Search::calcExtensions(const Board &board,
    bool quiet = Capture(move) == Empty && TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5);
 
+   const int lmpCount = depth/DEPTH_INCREMENT <= LMP_DEPTH ? 
+       LMP_MOVE_COUNT[depth/DEPTH_INCREMENT] : Constants::MaxMoves;
    score_t swap = Constants::INVALID_SCORE;
    if (in_check_after_move == InCheck) { // move is a checking move
-      // extend if check does not lose material or is a discovered check
       if ((swap = seeSign(board,move,0)) ||
           board.isPinned(board.oppositeSide(),move)) {
+          // check does not lose material or is a discovered check
 #ifdef SEARCH_STATS
           stats.check_extensions++;
 #endif
-          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-      }
-      else {
-         // Note: bad checks can be reduced or pruned (SEE pruning only)
-         quiet = false;
+          if (moveIndex < lmpCount) {
+              extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+          }
+          quiet = false;
       }
    }
    if (passedPawnPush(board,move)) {
@@ -2385,9 +2386,8 @@ int Search::calcExtensions(const Board &board,
    if (pruneOk) {
        if (quiet) {
            // do not use predictedDepth for LMP
-           if(depth/DEPTH_INCREMENT <= LMP_DEPTH &&
-              GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
-              moveIndex >= LMP_MOVE_COUNT[depth/DEPTH_INCREMENT]) {
+           if(GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
+              moveIndex >= lmpCount) {
 #ifdef SEARCH_STATS
                ++stats.lmp;
 #endif
