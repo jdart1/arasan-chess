@@ -3075,7 +3075,7 @@ score_t Search::search()
            // implemented in the Ippo* series of engines (and
            // presumably in Rybka), and also now in Stockfish, Komodo,
            // Texel, Protector, etc.
-           score_t nu_beta = hashValue - singularExtensionMargin(depth);
+           score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
            int nu_depth = singularExtensionDepth(depth);
            // save current bounds & flags
            score_t old_alpha = node->alpha;
@@ -3513,9 +3513,10 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
 // Initialize a Search instance to prepare it for searching in a
 // particular thread. This is called from the thread in which the
 // search will execute.
-void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
+void Search::init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *slave_ti) {
     this->board = controller->initialBoard;
     node = ns;
+    ASSERT(node);
     nodeAccumulator = 0;
     ti = slave_ti;
     node->ply = 0;

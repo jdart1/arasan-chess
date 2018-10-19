@@ -83,7 +83,7 @@ public:
 
     virtual ~Search() = default;
 
-    void init(NodeStack &ns, ThreadInfo *child_ti);
+    void init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
                    int ply, int depth, int flags = 0) {
