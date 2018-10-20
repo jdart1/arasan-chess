@@ -350,9 +350,9 @@ void Protocol::process_st_command(const string &cmd_args)
    time_limit = int(time_limit_sec * 1000 - std::min<int>(int(time_limit_sec*100),100));
 }
 
-int Protocol::contemptFromRatings(int computer_rating,int opponent_rating) {
-   int rdiff = computer_rating-opponent_rating;
-   return (Params::PAWN_VALUE*rdiff)/350;
+score_t Protocol::contemptFromRatings(int computer_rating,int opponent_rating) {
+   const int rdiff = computer_rating-opponent_rating;
+   return static_cast<score_t>(4*Params::PAWN_VALUE*(1.0/(1.0+exp(-rdiff/400.0)) - 0.5));
 }
 
 int Protocol::getIncrUCI(const ColorType side) {
@@ -2620,7 +2620,13 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         stringstream args(cmd_args);
         args >> computer_rating;
         args >> opponent_rating;
-        if (searcher) searcher->setContempt(contemptFromRatings(computer_rating,opponent_rating));
+        score_t contempt = contemptFromRatings(computer_rating,opponent_rating);
+        if (doTrace) {
+            cout << "# contempt (calculated from ratings) = ";
+            Scoring::printScore(contempt,cout);
+            cout << endl;
+        }
+        if (searcher) searcher->setContempt(contempt);
     }
     else if (cmd == "computer") {
         computer = 1;

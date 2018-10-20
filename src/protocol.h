@@ -77,7 +77,7 @@ private:
 
     // In Winboard mode, on the chess server, compute a contempt value
     // from ratings
-    int contemptFromRatings(int computer_rating,int opponent_rating);
+    score_t contemptFromRatings(int computer_rating,int opponent_rating);
 
     // return the UCI increment for "side"
     int getIncrUCI(const ColorType side);
