@@ -176,6 +176,8 @@ protected:
 
     score_t futilityMargin(int depth) const;
 
+    int lmpCount(int depth, int improving) const;
+
     score_t razorMargin(int depth) const;
 
     score_t seePruningMargin(int depth, bool quiet) const;

@@ -72,9 +72,10 @@ static int singularExtensionDepth(int depth)
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-static const int LMP_DEPTH=10;
+static const int LMP_DEPTH=13;
 
-static const int LMP_MOVE_COUNT[11] = {3, 3, 5, 9, 15, 23, 33, 45, 59, 75, 93};
+static const int LMP_MOVE_COUNT[2][14] = {{3, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119},
+                                          {3, 5, 8, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145}};
 
 static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE);
 static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
@@ -903,6 +904,12 @@ score_t Search::futilityMargin(int depth) const
 {
     int d = std::max(depth,int(1.5*DEPTH_INCREMENT));
     return FUTILITY_MARGIN_BASE + d*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT + d*d*FUTILITY_MARGIN_SLOPE2/(DEPTH_INCREMENT*DEPTH_INCREMENT);
+}
+
+int Search::lmpCount(int depth, int improving) const
+{
+    return depth/DEPTH_INCREMENT <= LMP_DEPTH ?
+        LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] : Constants::MaxMoves;
 }
 
 score_t Search::razorMargin(int depth) const
@@ -2310,8 +2317,7 @@ int Search::calcExtensions(const Board &board,
    bool quiet = Capture(move) == Empty && TypeOfMove(move) == Normal &&
        !passedPawnMove(board,move,5);
 
-   const int lmpCount = depth/DEPTH_INCREMENT <= LMP_DEPTH ? 
-       LMP_MOVE_COUNT[depth/DEPTH_INCREMENT] : Constants::MaxMoves;
+   const int lmpThreshold = lmpCount(depth,improving);
    score_t swap = Constants::INVALID_SCORE;
    if (in_check_after_move == InCheck) { // move is a checking move
       if ((swap = seeSign(board,move,0)) ||
@@ -2320,7 +2326,7 @@ int Search::calcExtensions(const Board &board,
 #ifdef SEARCH_STATS
           stats.check_extensions++;
 #endif
-          if (moveIndex < lmpCount) {
+          if (moveIndex < lmpThreshold) {
               extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
           }
           quiet = false;
@@ -2387,7 +2393,7 @@ int Search::calcExtensions(const Board &board,
        if (quiet) {
            // do not use predictedDepth for LMP
            if(GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
-              moveIndex >= lmpCount) {
+              moveIndex >= lmpThreshold) {
 #ifdef SEARCH_STATS
                ++stats.lmp;
 #endif
