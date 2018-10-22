@@ -40,4 +40,8 @@ https://github.com/mcostalba/Stockfish/commit/90ce24b11ea080f923e1b5d37470e2ca98
 
 16. Windows GUI badly needs a rewrite, better graphics.
 
+17. Make logging work better under UCI.
+
+18. Implement position learning in UCI mode.
+
 
