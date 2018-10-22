@@ -23,7 +23,7 @@ post 21.0
 
 9. Occasionally there are losses on time - tune time mgmt when very near time limit.
 
-10. Arasan seems to use less time than many opponents opponents do, at least in Winboard mode with ponder on.
+10. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on.
 
 11. Further LazySMP improvements:
    a. see http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
