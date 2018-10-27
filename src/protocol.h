@@ -67,7 +67,7 @@ private:
     PendingStatus check_pending(Board &board);
 
     // handle Winboard "level" command
-    void parseLevel(const string &cmd);
+    void parseLevel(const string &cmd, int &moves, float &minutes, int &incr);
 
     // respond to a Winboard "ping" command
     void sendPong(const string &arg);

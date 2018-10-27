@@ -34,6 +34,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <regex>
 #include <unordered_set>
 
 using namespace std::placeholders;
@@ -57,7 +58,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       analyzeMode(false),
       editMode(false),
       side(White),
-      moves(40),
+      moves(0),
       ponder_board(new Board()),
       main_board(new Board(board)),
       ponder_move_ok(false),
@@ -287,33 +288,64 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
     return retVal;
 }
 
-void Protocol::parseLevel(const string &cmd) {
-    float time1, time2, floatincr;
-    stringstream ss(cmd);
-    istream_iterator<string> it(ss);
-    string movesStr, minutesStr, incrStr;
-    movesStr = *it++;
-    minutesStr = *it++;
-    incrStr = *it;
-    size_t colon;
-    if ((colon=minutesStr.find(":")) != string::npos) {
-        minutesStr.replace(colon,1," ");
-        stringstream nums(minutesStr);
-        istream_iterator<float> it2(nums);
-        time1 = *it2++;
-        time2 = *it2;
-        minutes = time1 + time2/60;
+void Protocol::parseLevel(const string &cmd, int &moves, float &minutes, int &incr)
+{
+    // not exact for decimal values, so must still check for validity
+    const auto pattern = std::regex("^(\\d+)\\s+(\\d+)(\\:([\\d\\.]+))?\\s+([\\d\\.]+)$");
+
+    std::smatch match;
+    string movesStr, minutesStr, secondsStr, incStr;
+    if (std::regex_match(cmd,match,pattern)) {
+        // first result is the whole string matched
+        auto it = match.begin()+1;
+        movesStr = *it++;
+        minutesStr = *it++;
+        if (match.size() > 4) {
+            it++; // outer group
+            secondsStr = *it++; // inner group has seconds
+        }
+        incStr = *it;
     } else {
-        stringstream nums(minutesStr);
-        nums >> minutes;
+        cerr << "error parsing level command." << endl;
+        return;
+    }
+
+    float time1, time2, floatincr;
+
+    stringstream nums(minutesStr);
+    nums >> time1;
+    if (nums.bad()) {
+       cerr << "error in time field" << endl;
+       return;
+    }
+    else if (secondsStr.size()) {
+        stringstream nums2(secondsStr);
+        nums2 >> time2;
+        if (nums2.bad()) {
+            cerr << "error in time field" << endl;
+            return;
+        } else {
+            minutes = time1 + time2/60;
+        }
+    } else {
+        minutes = time1;
     }
     stringstream movesStream(movesStr);
     movesStream >> moves;
-    stringstream incStream(incrStr);
+    if (movesStream.bad()) {
+        cerr << "error in move field" << endl;
+        return;
+    }
+
+    stringstream incStream(incStr);
     incStream >> floatincr;
-    // Winboard increment is in seconds, convert to our
-    // internal value (milliseconds).
-    incr = int(1000*floatincr);
+    if (incStream.bad()) {
+        cerr << "error in increment field" << endl;
+    } else {
+        // Winboard increment is in seconds, convert to our
+        // internal value (milliseconds).
+        incr = int(1000*floatincr);
+    }
 }
 
 void Protocol::dispatchCmd(const string &cmd) {
@@ -521,6 +553,9 @@ void Protocol::save_game() {
           headers.push_back(ChessIO::Header("FEN",start_fen));
       }
       stringstream timec;
+      if (moves != 0) {
+          timec << moves << '/';
+      }
       timec << minutes*60;
       string timestr = timec.str();
       if (incr) {
@@ -670,7 +705,7 @@ void Protocol::checkPendingInSearch(SearchController *controller) {
     Unlock(input_lock);
 }
 
-bool Protocol::processPendingInSearch(SearchController *controller, const string &cmd, bool &exit) 
+bool Protocol::processPendingInSearch(SearchController *controller, const string &cmd, bool &exit)
 {
     if (doTrace) {
         cout << "# command in search: " << cmd << endl;
@@ -2484,7 +2519,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (cmd == "depth") {
     }
     else if (cmd_word == "level") {
-        parseLevel(cmd_args);
+        parseLevel(cmd_args, moves, minutes, incr);
         srctype = TimeLimit;
     }
     else if (cmd_word == "st") {
