@@ -7,14 +7,14 @@
 // Calculate the recommended time to search.
 // incr = increment in milliseconds
 // time_left = side to move time left in millseconds
-// ponderHit = true if we are moving after a ponder hit
+// ponder = true if pondering enabled
 // trace = 1 if tracing on, 0 if off
 // Returns: search time in milliseconds 
 extern int calcTimeLimit(int moves, int incr, 
-      int time_left, bool ponderHit, int trace);
+      int time_left, bool ponder, int trace);
 
 // UCI version
 extern int calcTimeLimitUCI(int movestogo, int incr, 
-      int time_left, bool ponderHit, int trace);
+      int time_left, bool ponder, int trace);
 
 #endif
