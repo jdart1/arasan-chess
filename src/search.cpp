@@ -133,28 +133,36 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
 }
 
 SearchController::SearchController()
-  : post_function(nullptr),
-	monitor_function(nullptr),
-	uci(false),
-	age(1),
-	talkLevel(Silent),
-	time_limit(0),
-	ply_limit(0),
-	background(false),
-	is_searching(false),
-	stopped(false),
-	typeOfSearch(TimeLimit),
-	time_check_counter(0),
+    : post_function(nullptr),
+      monitor_function(nullptr),
+      uci(false),
+      age(1),
+      talkLevel(Silent),
+      time_limit(0),
+      time_target(0),
+      xtra_time(0),
+      bonus_time(0),
+      fail_high_root_extend(false),
+      fail_low_root_extend(false),
+      fail_high_root(false),
+      searchHistoryBoostFactor(0.0),
+      searchHistoryReductionFactor(1.0),
+      ply_limit(0),
+      background(false),
+      is_searching(false),
+      stopped(false),
+      typeOfSearch(TimeLimit),
+      time_check_counter(0),
 #ifdef SMP_STATS
-	sample_counter(0),
+      sample_counter(0),
 #endif
-	stats(NULL),
-	computerSide(White),
-	contempt(0),
-	pool(nullptr),
-	rootSearch(nullptr),
-	tb_root_probes(0),
-	tb_root_hits(0)
+      stats(NULL),
+      computerSide(White),
+      contempt(0),
+      pool(nullptr),
+      rootSearch(nullptr),
+      tb_root_probes(0),
+      tb_root_hits(0)
 {
 
 #ifdef SMP_STATS
@@ -241,6 +249,8 @@ Move SearchController::findBestMove(
     fail_high_root = false;
     bonus_time = (int64_t)0;
     xtra_time = search_xtra_time;
+    searchHistoryBoostFactor = 0.0;
+    searchHistoryReductionFactor = 1.0;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
     }
@@ -658,40 +668,39 @@ void SearchController::resizeHash(size_t newSize) {
 }
 
 void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
+    // Set flags to extend search time based on search status.
+    // Note: do this even if in ponder search, so when we get a ponder
+    // hit the flags will be set properly and will be applied to the
+    // time target.
     if (stats.failHigh) {
-        // time adjustment
-        if (xtra_time > 0 && time_target != INFINITE_TIME) {
-            // root move is failing high, extend time until
-            // fail-high is resolved
-            fail_high_root_extend = true;
-            // We may have initially extended time in the
-            // search when first detecting fail-high. If so,
-            // reset that flag here.
-            fail_high_root = false;
-            if (talkLevel == Trace) {
-                cout << "# adding time due to root fail high, new target=" << getTimeLimit() << endl;
-            }
+        // root move is failing high, extend time until
+        // fail-high is resolved
+        fail_high_root_extend = true;
+        // We may have initially extended time in the
+        // search when first detecting fail-high. If so,
+        // reset that flag here.
+        fail_high_root = false;
+        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
+            cout << "# adding time due to root fail high, new target=" << getTimeLimit() << endl;
         }
     }
     else if (fail_high_root_extend) {
         fail_high_root_extend = false;
-        if (talkLevel == Trace) {
+        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
             cout << "# resetting time added due to root fail high, new target=" << getTimeLimit() << endl;
         }
     }
     if (stats.failLow) {
-        if (xtra_time > 0 && time_target != INFINITE_TIME) {
-            // root move is failing low, extend time until
-            // fail-low is resolved
-            fail_low_root_extend = true;
-            if (talkLevel == Trace) {
-                cout << "# adding time due to root fail low, new target=" << getTimeLimit() << endl;
-            }
+        // root move is failing low, extend time until
+        // fail-low is resolved
+        fail_low_root_extend = true;
+        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
+            cout << "# adding time due to root fail low, new target=" << getTimeLimit() << endl;
         }
     }
     else if (fail_low_root_extend) {
         fail_low_root_extend = false;
-        if (talkLevel == Trace) {
+        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
             cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
         }
     }
@@ -700,13 +709,10 @@ void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
 void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
     // Increase the time limit if pv has changed recently and/or score
     // is dropping over the past few iterations. Decrease limit if
-    // score seems stable and is not dropping.
-    if (!background &&
-        typeOfSearch == TimeLimit &&
-        time_target != INFINITE_TIME &&
-        xtra_time &&
-        stats.depth > 6 &&
-        elapsed_time > (unsigned)time_target/3) {
+    // score seems stable and is not dropping. Note: we calculate the
+    // adjustment even if in a ponder search, so we can apply it later
+    // if a ponder hit occurs.
+    if (stats.depth > 6) {
         // Look back over the past few iterations
         Move pv = stats.best_line[0];
         int pvChangeFactor = 0;
@@ -720,10 +726,8 @@ void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
             pv = rootSearchHistory[depth].pv;
         }
         double scoreChange = std::max(0.0,(old_score-score)/(1.0*Params::PAWN_VALUE));
-        double factor = std::min<double>(1.0,(pvChangeFactor/2.0 + scoreChange)/2.0);
-        int64_t old_bonus_time = bonus_time;
-        bonus_time = static_cast<int64_t>(xtra_time*factor);
-        if (bonus_time==0 && pvChangeFactor == 0 && score>=old_score) {
+        searchHistoryBoostFactor = std::min<double>(1.0,(pvChangeFactor/2.0 + scoreChange)/2.0);
+        if (searchHistoryBoostFactor==0.0 && pvChangeFactor == 0 && score>=old_score) {
             // We have not changed pv recently, score is not dropping,
             // and thinking time was not increased. See if we can
             // reduce the time target.
@@ -739,21 +743,23 @@ void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
                 }
                 pv = rootSearchHistory[depth].pv;
             }
-            factor = 0.5*(2*stats.depth-4-pvChangeDepth-increasedScoreDepth)/stats.depth;
-            ASSERT(factor<=1.0);
-            bonus_time = -static_cast<int64_t>(std::floor(factor*time_target/3));
+            searchHistoryReductionFactor = 0.5*(2*stats.depth-4-pvChangeDepth-increasedScoreDepth)/stats.depth;
+            ASSERT(searchHistoryFactor<=1.0);
         }
-        if (talkLevel == Trace && old_bonus_time != bonus_time) {
-            std::ios_base::fmtflags original_flags = cout.flags();
-            cout << "# iteration " << stats.depth << " scoreChange=" << scoreChange << " pvChangeFactor=" <<
-                pvChangeFactor << endl;
-            if (bonus_time>=0) {
-                cout << "# setting bonus time to " << fixed << setprecision(2) << bonus_time/xtra_time << " % of max" << endl;
-            } else {
-                cout << "# factor=" << fixed << setprecision(2) << factor << endl;
-                cout << "# reducing time by " << -bonus_time << " ms." << endl;
-            }
-            cout.flags(original_flags);
+    }
+}
+
+// Apply search history factor to adjust time control
+void SearchController::applySearchHistoryFactors() {
+    if (!background &&
+        typeOfSearch == TimeLimit &&
+        time_target != INFINITE_TIME &&
+        xtra_time &&
+        elapsed_time > (unsigned)time_target/3) {
+        if (searchHistoryBoostFactor) {
+            bonus_time = static_cast<int64_t>(xtra_time*searchHistoryBoostFactor);
+        } else {
+            bonus_time = -static_cast<int64_t>(std::floor(searchHistoryReductionFactor*time_target/3));
         }
     }
 }
@@ -1297,6 +1303,7 @@ Move Search::ply0_search()
                 // Peform any adjustment of the time allocation based
                 // on search status and history
                 controller->historyBasedTimeAdjust(stats);
+                controller->applySearchHistoryFactors();
             }
             stats.completedDepth = iterationDepth;
             if (srcOpts.multipv > 1) {

@@ -283,19 +283,23 @@ public:
         TalkLevel t);
 
     uint64_t getTimeLimit() const {
-       // time boost/decrease based on search history:
-       int64_t extension = bonus_time;
-       if (fail_low_root_extend) {
-          // presently failing low, allow up to max extra time
-          extension += int64_t(xtra_time);
-       }
-       else if (fail_high_root || fail_high_root_extend) {
-          // extend time for fail high, but less than for
-          // failing low
-          extension += int64_t(xtra_time)/2;
-       }
-       extension = std::max<int64_t>(-int64_t(time_target),std::min<int64_t>(int64_t(xtra_time),extension));
-       return uint64_t(int64_t(time_target) + extension);
+        if (typeOfSearch == TimeLimit && time_limit != INFINITE_TIME) {
+            // time boost/decrease based on search history:
+            int64_t extension = bonus_time;
+            if (fail_low_root_extend) {
+                // presently failing low, allow up to max extra time
+                extension += int64_t(xtra_time);
+            }
+            else if (fail_high_root || fail_high_root_extend) {
+                // extend time for fail high, but less than for
+                // failing low
+                extension += int64_t(xtra_time)/2;
+            }
+            extension = std::max<int64_t>(-int64_t(time_target),std::min<int64_t>(int64_t(xtra_time),extension));
+            return uint64_t(int64_t(time_target) + extension);
+        } else {
+            return time_limit;
+        }
     }
 
     uint64_t getMaxTime() const {
@@ -355,6 +359,8 @@ public:
         typeOfSearch = TimeLimit;
         time_limit = time_target = limit;
         xtra_time = xtra;
+        // re-calculate bonus time
+        applySearchHistoryFactors();
     }
 
     void setContempt(score_t contempt);
@@ -428,9 +434,13 @@ public:
    // Called from main thread.
    void outOfBoundsTimeAdjust(const Statistics &stats);
 
-   // Adjust time usage after a root search iteration has completed (possibly with
-   // one or more fail high/fail lows). Called from main thread.
+   // Calculate the time adjustment after a root search iteration has
+   // completed (possibly with one or more fail high/fail lows).
+   // Called from main thread.
    void historyBasedTimeAdjust(const Statistics &stats);
+
+   // Apply search history factors to adjust time control
+   void applySearchHistoryFactors();
 
    bool mainThreadCompleted() const noexcept {
        return pool->isCompleted(0);
@@ -470,6 +480,10 @@ private:
     uint64_t time_limit, time_target;
     // Max amount of time we can add if score is dropping:
     uint64_t xtra_time;
+    atomic<int64_t> bonus_time;
+    bool fail_high_root_extend, fail_low_root_extend, fail_high_root;
+    // Factors to use to adjust time up/down based on search history:
+    double searchHistoryBoostFactor, searchHistoryReductionFactor;
     int ply_limit;
     atomic<bool> background;
     atomic<bool> is_searching;
@@ -516,8 +530,6 @@ private:
 
     Board initialBoard;
     score_t initialValue;
-    bool fail_high_root_extend, fail_low_root_extend, fail_high_root;
-    atomic<int64_t> bonus_time;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature
