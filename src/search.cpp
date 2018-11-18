@@ -470,6 +470,8 @@ Move SearchController::findBestMove(
    if (talkLevel == Trace) {
       cout << "# thread 0 score=";
       Scoring::printScore(rootSearch->stats.display_value,cout);
+      cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
+         (int)stats->failLow;
       cout << " pv=" << rootSearch->stats.best_line_image << endl;
    }
 
@@ -481,11 +483,15 @@ Move SearchController::findBestMove(
          if (talkLevel == Trace) {
             cout << "# thread " << thread << " score=";
             Scoring::printScore(threadStats.display_value,cout);
+            cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
+                  (int)stats->failLow;
             cout << " pv=" << threadStats.best_line_image << endl;
          }
 #ifdef _TRACE
          cout << "# thread " << thread << " score=";
          Scoring::printScore(threadStats.value,cout);
+         cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
+             (int)stats->failLow;
          cout << " pv=" << threadStats.best_line_image << endl;
 #endif
          if (threadStats.display_value > stats->display_value &&
@@ -501,6 +507,32 @@ Move SearchController::findBestMove(
    if ((!background || uci) && post_function) {
        post_function(*stats);
    }
+   if (IsNull(stats->best_line[1])) {
+       // try to get ponder move from hash table
+       if (talkLevel == Trace) {
+          cout << "# trying to extend pv" << endl;
+       }
+       Board board_copy(board);
+       board_copy.doMove(best);
+       HashEntry entry;
+       HashEntry::ValueType result =
+           hashTable.searchHash(board_copy.hashCode(board_copy.repCount(3)),
+                               age,
+                               0,entry);
+       if (result != HashEntry::NoHit) {
+          Move hashMove = entry.bestMove(board_copy);
+          if (!IsNull(hashMove)) {
+              stats->best_line[1] = hashMove;
+              stats->best_line[2] = NullMove;
+              string hashMoveImage;
+              Notation::image(board_copy,hashMove,Notation::OutputFormat::SAN,hashMoveImage);
+              if (talkLevel == Trace) {
+                  cout << "# extending pv" << endl;
+              }
+              stats->best_line_image = stats->best_line_image + " " + hashMoveImage;
+          }
+       }
+   }
 #ifdef _TRACE
    cout << "# best thread: score=";
    Scoring::printScore(stats->value,cout);
@@ -509,6 +541,7 @@ Move SearchController::findBestMove(
    if (talkLevel == Trace) {
       cout << "# best thread: score=";
       Scoring::printScore(stats->value,cout);
+      cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       cout << " pv=" << stats->best_line_image << endl;
    }
    ASSERT(!IsNull(best));
@@ -952,11 +985,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
     stats.value = score;
     stats.depth = iteration_depth;
-    // if failing low, keep the current value for display purposes,
-    // not the bottom of the window
-    if (stats.value > alpha && stats.tb_value == Constants::INVALID_SCORE) {
-       stats.display_value = stats.value;
-    }
+    stats.display_value = stats.value;
 #ifdef SYZYGY_TBS
     // Correct if necessary the display value, used for score
     // output and resign decisions, based on the tb information:
