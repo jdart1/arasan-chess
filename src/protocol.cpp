@@ -2481,7 +2481,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.search.set_processor_affinity << "\"" << endl;
 #endif
         cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"" << endl;
-        cout << " myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
+        cout << "myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
         // set done = 0 because it may take some time to initialize tablebases.
         cout << "feature done=0" << endl;
         delayedInit();
