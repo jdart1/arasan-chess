@@ -573,7 +573,7 @@ Move SearchController::findBestMove(
 #endif
          ) {
          state = Resigns;
-         stats->end_of_game = end_of_game[(int)state];
+         stats->end_of_game = true;
       }
    }
 

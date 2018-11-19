@@ -804,8 +804,11 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
     else if (cmd_word == "ping") {
         // new for Winboard 4.2
         // The protocol requires an immediate response if we are
-        // pondering.
-        if (controller->pondering()) {
+        // pondering. However, if a command to terminate the search
+        // has already been received but the ponder search is still going,
+        // queue the "ping" command until the ponder search is
+        // actually terminated.
+        if (controller->pondering() && ponder_stats.state != Terminated) {
             sendPong(cmd_args);
             return true;
         } else {
@@ -861,7 +864,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
              cmd == "go" || cmd == "exit" || cmd == "white" ||
              cmd == "black" || cmd == "playother") {
         // These commands terminate the search. They are processed
-        // after earch completion.
+        // after search completion.
         controller->terminateNow();
         return false;
     }
@@ -1250,8 +1253,38 @@ int Protocol::isDraw(const Board &board, Statistics &last_stats, string &reason)
    return 0;
 }
 
+static void kibitz(SearchController *searcher, bool computer, Statistics &last_stats, bool multithread) {
+    if (computer)
+        cout << "tellics kibitz ";
+    else
+        cout << "tellics whisper ";
+    std::ios_base::fmtflags original_flags = cout.flags();
+    cout << "time=" << fixed << setprecision(2) <<
+        (float)searcher->getElapsedTime()/1000.0 << " sec. score=";
+    Scoring::printScore(last_stats.display_value,cout);
+    cout << " depth=" << last_stats.depth;
+    if (searcher->getElapsedTime() > 0) {
+        cout << " nps=";
+        Statistics::printNPS(cout,last_stats.num_nodes,searcher->getElapsedTime());
+    }
+    if (last_stats.tb_hits) {
+        cout << " egtb=" << last_stats.tb_hits << '/' << last_stats.tb_probes;
+    }
+#if defined(SMP_STATS)
+    if (multithread) {
+        cout << " cpu=" << fixed << setprecision(2) <<
+            searcher->getCpuPercentage() << '%';
+    }
+#endif
+    if (last_stats.best_line_image.length()) {
+        cout << " pv: " << last_stats.best_line_image;
+    }
+    cout.flags(original_flags);
+    cout << endl;
+}
+
 void Protocol::send_move(Board &board, Move &move, Statistics
-                      &stats) {
+                         &stats) {
     // In case of multi-pv, make sure the high-scoring move is
     // sent as best move.
     if (stats.multipv_limit > 1) {
@@ -1259,153 +1292,131 @@ void Protocol::send_move(Board &board, Move &move, Statistics
     }
     last_move = move;
     last_stats = stats;
+    ColorType sideToMove = board.sideToMove();
     if (stats.state == Terminated) {
-        // Winboard has already set the game result. We should
-        // not send a move or try to set the result.
+        // A ponder search was interrupted because Winboard set the
+        // game result. We should not send a move or try to set the result.
         return;
     }
-    ColorType sideToMove = board.sideToMove();
-    if (!uci) {
-        string reason;
-        if (isDraw(board,last_stats,reason)) {
-            // A draw position exists before we even move (probably
-            // because the opponent did not claim the draw).
-            // Send the result command to claim the draw.
-            if (doTrace) {
-               cout << "# claiming draw before move";
-               if (reason.length()) cout << " (" << reason << ")";
-               cout << endl;
-            }
-            cout << "1/2-1/2 {" << reason << "}" << endl;
-            // Wait for Winboard to send a "result" command before
-            // actually concluding it's a draw.
-            // Set flag to indicate we are waiting.
-            result_pending = true;
-            return;
-        }
-    }
-    if (!IsNull(move)) {
-        stringstream img;
-        Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
-        last_move_image = img.str();
-        theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
-        // Perform learning (if enabled):
-        learn(board,board.repCount());
-        stringstream movebuf;
-        move_image(board,last_move,movebuf,uci);
-
-        if (uci) {
-#ifdef UCI_LOG
-            ucilog << "bestmove " << movebuf.str();
-#endif
-            cout << "bestmove " << movebuf.str();
-            if (!easy && !IsNull(stats.best_line[1])) {
-                stringstream ponderbuf;
-                move_image(board,stats.best_line[1],ponderbuf,uci);
-                cout << " ponder " << ponderbuf.str();
-#ifdef UCI_LOG
-                ucilog << " ponder " << ponderbuf.str();
-#endif
-            }
-            cout << endl << (flush);
-#ifdef UCI_LOG
-            ucilog << endl << (flush);
-#endif
-        }
-        else { // Winboard
-            // Execute the move and prepare to ponder.
-            BoardState previous_state = board.state;
-            board.doMove(last_move);
-            gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
-
-            *ponder_board = board;
-
+    else if (!game_end) {
+        if (!uci) {
             string reason;
             if (isDraw(board,last_stats,reason)) {
-                // It will be a draw after we move (by rule).
-                // Following the current protocol standard, send
-                // "offer draw" and then send the move (formerly
-                // we would send the move then send the result,
-                // which is incorrect).
-                cout << "offer draw" << endl;
+                // A draw position exists before we even move (probably
+                // because the opponent did not claim the draw).
+                // Send the result command to claim the draw.
+                if (doTrace) {
+                    cout << "# claiming draw before move";
+                    if (reason.length()) cout << " (" << reason << ")";
+                    cout << endl;
+                }
+                cout << "1/2-1/2 {" << reason << "}" << endl;
+                // Wait for Winboard to send a "result" command before
+                // actually concluding it's a draw.
+                // Set flag to indicate we are waiting.
+                result_pending = true;
+                return;
             }
-            if (xboard42) {
-                cout << "move " << movebuf.str() << endl;
-            }
-            else {
-                cout << gameMoves->num_moves()/2 << ". ... ";
-                cout << movebuf.str() << endl;
-            }
-            cout << (flush);
         }
-    }
-    else if (uci) {
+        if (!IsNull(move)) {
+            stringstream img;
+            Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
+            last_move_image = img.str();
+            theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
+            // Perform learning (if enabled):
+            learn(board,board.repCount());
+            stringstream movebuf;
+            move_image(board,last_move,movebuf,uci);
+
+            if (uci) {
 #ifdef UCI_LOG
-        ucilog << "bestmove 0000" << endl;
+                ucilog << "bestmove " << movebuf.str();
 #endif
-        // must always send a "bestmove" command even if no move is available, to
-        // acknowledge the previous "stop" command.
-        cout << "bestmove 0000" << endl;
-    } else {
-        if (doTrace) cout << "# warning : move is null" << endl;
-    }
-    if (ics && time_target >= 3000 && stats.display_value != Constants::INVALID_SCORE) {
-        if (computer)
-            cout << "tellics kibitz ";
-        else
-            cout << "tellics whisper ";
-        std::ios_base::fmtflags original_flags = cout.flags();
-        cout << "time=" << fixed << setprecision(2) <<
-            (float)searcher->getElapsedTime()/1000.0 << " sec. score=";
-        Scoring::printScore(last_stats.display_value,cout);
-        cout << " depth=" << last_stats.depth;
-        if (searcher->getElapsedTime() > 0) {
-            cout << " nps=";
-            Statistics::printNPS(cout,last_stats.num_nodes,searcher->getElapsedTime());
-        }
-        if (last_stats.tb_hits) {
-            cout << " egtb=" << last_stats.tb_hits << '/' << last_stats.tb_probes;
-        }
-#if defined(SMP_STATS)
-        if (options.search.ncpus>1) {
-            cout << " cpu=" << fixed << setprecision(2) <<
-               searcher->getCpuPercentage() << '%';
-        }
+                cout << "bestmove " << movebuf.str();
+                if (!easy && !IsNull(stats.best_line[1])) {
+                    stringstream ponderbuf;
+                    move_image(board,stats.best_line[1],ponderbuf,uci);
+                    cout << " ponder " << ponderbuf.str();
+#ifdef UCI_LOG
+                    ucilog << " ponder " << ponderbuf.str();
 #endif
-        if (last_stats.best_line_image.length() && !game_end) {
-            cout << " pv: " << last_stats.best_line_image;
+                }
+                cout << endl << (flush);
+#ifdef UCI_LOG
+                ucilog << endl << (flush);
+#endif
+            }
+            else { // Winboard
+                // Execute the move and prepare to ponder.
+                BoardState previous_state = board.state;
+                board.doMove(last_move);
+                gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
+
+                *ponder_board = board;
+
+                string reason;
+                if (isDraw(board,last_stats,reason)) {
+                    // It will be a draw after we move (by rule).
+                    // Following the current protocol standard, send
+                    // "offer draw" and then send the move (formerly
+                    // we would send the move then send the result,
+                    // which is incorrect).
+                    cout << "offer draw" << endl;
+                }
+                if (xboard42) {
+                    cout << "move " << movebuf.str() << endl;
+                }
+                else {
+                    cout << gameMoves->num_moves()/2 << ". ... ";
+                    cout << movebuf.str() << endl;
+                }
+                cout << (flush);
+            }
         }
-        cout.flags(original_flags);
-        cout << endl;
+        else if (uci) {
+#ifdef UCI_LOG
+            ucilog << "bestmove 0000" << endl;
+#endif
+            // must always send a "bestmove" command even if no move is available, to
+            // acknowledge the previous "stop" command.
+            cout << "bestmove 0000" << endl;
+        } else {
+            if (doTrace) cout << "# warning : move is null" << endl;
+        }
+        if (ics && time_target >= 3000 && stats.display_value != Constants::INVALID_SCORE) {
+            kibitz(searcher,computer,last_stats,options.search.ncpus>1);
+        }
     }
     if (uci) return; // With UCI, GUI is in charge of game end detection
     // We already checked for draws, check now for other game end
     // conditions.
-    if (last_stats.value >= Constants::MATE-1) {
-        if (doTrace) cout << "# last_score = mate" << endl;
-        if (sideToMove == White) {
-            theLog->setResult("1-0");
-            cout << "1-0 {White mates}" << endl;
+    if (!game_end) {
+        if (last_stats.value >= Constants::MATE-1) {
+            if (doTrace) cout << "# last_score = mate" << endl;
+            if (sideToMove == White) {
+                theLog->setResult("1-0");
+                cout << "1-0 {White mates}" << endl;
+            }
+            else {
+                theLog->setResult("0-1");
+                cout << "0-1 {Black mates}" << endl;
+            }
+            game_end = true;
         }
-        else {
-            theLog->setResult("0-1");
-            cout << "0-1 {Black mates}" << endl;
+        else if (last_stats.state == Checkmate) {
+            if (doTrace) cout << "# state = Checkmate" << endl;
+            if (sideToMove == White) {
+                theLog->setResult("0-1");
+                cout << "0-1 {Black mates}" << endl;
+            }
+            else {
+                theLog->setResult("1-0");
+                cout << "1-0 {White mates}" << endl;
+            }
+            game_end = true;
         }
-        game_end = 1;
     }
-    else if (last_stats.state == Checkmate) {
-        if (doTrace) cout << "# state = Checkmate" << endl;
-        if (sideToMove == White) {
-            theLog->setResult("0-1");
-            cout << "0-1 {Black mates}" << endl;
-        }
-        else {
-            theLog->setResult("1-0");
-            cout << "1-0 {White mates}" << endl;
-        }
-        game_end = 1;
-    }
-    else if (last_stats.state == Resigns) {
+    if (last_stats.state == Resigns) {
         // Don't resign a zero-increment game if the opponent is short
         // on time
         if (!(incr == 0 && opp_time < 2000)) {
@@ -1419,11 +1430,10 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                 theLog->setResult("1-0 {Black resigns}");
                 cout << "1-0 {Black resigns}" << endl;
             }
-            game_end = 1;
+            game_end = true;
         }
         else {   // reset flag - we're not resigning
-            stats.end_of_game = 0;
-            game_end = 0;
+            stats.end_of_game = game_end = false;
         }
     }
 }
@@ -1464,12 +1474,12 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
         cout << "# entering analysis search" << endl;
     }
     Move move = searcher.findBestMove(board,
-        FixedTime,
-        INFINITE_TIME,
-        0,
-        Constants::MaxPly, false, uci,
-        stats,
-        Whisper);
+                                      FixedTime,
+                                      INFINITE_TIME,
+                                      0,
+                                      Constants::MaxPly, false, uci,
+                                      stats,
+                                      Whisper);
     if (doTrace) {
         cout << "# search done : move = ";
         MoveImage(move,cout);
@@ -1629,7 +1639,7 @@ void Protocol::undo( Board &board)
     }
     // In case we have backed up from the end of the game, reset
     // the "game end" flag.
-    game_end = 0;
+    game_end = false;
 }
 
 void Protocol::setCheckOption(const string &value, int &dest) {
@@ -2340,7 +2350,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 }
             }
         }
-        forceMode = 0;
+        forceMode = false;
         // Some GUIs such as Fritz send tablebase options after
         // "isready" and so it is possible tablebases and book are
         // not initialized. Make sure they are before we execute
@@ -2554,7 +2564,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         // Game has ended
         theLog->setResult(cmd_args.c_str());
         save_game();
-        game_end = 1;
+        game_end = true;
         gameMoves->removeAll();
         // Note: xboard may not send "new" before starting a new
         // game, at least in offline mode (-cp). To be safe,
@@ -2618,13 +2628,15 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         analyze_output(stats);
     }
     else if (cmd == "go") {
-        forceMode = 0;
+        forceMode = false;
         // set the side flag here - do not rely on the deprecated
         // "white" and "black" commands.
         computer_plays_white = board.sideToMove() == White;
         MoveSet movesToSearch;
         Move reply = search(searcher,board,movesToSearch,stats,false);
-        if (!forceMode) send_move(board,reply,stats);
+        if (!forceMode) {
+            send_move(board,reply,stats);
+        }
     }
     else if (cmd == "easy") {
         easy = true;
@@ -2635,13 +2647,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (cmd == "white" || cmd == "black") {
         computer_plays_white = (cmd == "white");
     }
-    /**   else if (cmd == "playother") {
-          computer_plays_white = !computer_plays_white;
-          forceMode = 0;
-          int tmp = opp_time;
-          opp_time = time_left;
-          time_left = tmp;
-    }**/
     else if (cmd_word == "name") {
         // We've received the name of our opponent.
         opponent_name = cmd_args;
@@ -2649,7 +2654,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (cmd == "bogus" || cmd == "accepted") {
     }
     else if (cmd == "force") {
-        forceMode = 1;
+        forceMode = true;
     }
     else if (cmd_word == "rating") {
         stringstream args(cmd_args);
@@ -2767,7 +2772,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         if ((move = text_to_move(board,movetext)) != NullMove) {
             if (game_end) {
                 if (forceMode)
-                    game_end = 0;
+                    game_end = false;
                 else {
                     if (doTrace) cout << "# ignoring move " << movetext << " received after game end" << endl;
                     return true;
