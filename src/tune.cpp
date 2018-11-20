@@ -162,22 +162,22 @@ Tune::Tune()
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",250,128,300,TuneParam::Endgame,1),
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",225,128,300,TuneParam::Endgame,1),
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL2,"king_position_low_material2",130,128,256,TuneParam::Endgame,1),
-        TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",VAL(0.06),VAL(0),VAL(0.3),TuneParam::Midgame,1),
-        TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",VAL(0.11),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",VAL(0.18),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::PASSED_PAWN_MID5,"passed_pawn_mid5",VAL(0.27),VAL(0),VAL(0.75),TuneParam::Midgame,1),
-        TuneParam(Tune::PASSED_PAWN_MID6,"passed_pawn_mid6",VAL(0.7),VAL(0.3),VAL(1.0),TuneParam::Midgame,1),
-        TuneParam(Tune::PASSED_PAWN_MID7,"passed_pawn_mid7",VAL(1.1),VAL(0.5),VAL(1.75),TuneParam::Midgame,1),
-        TuneParam(Tune::PASSED_PAWN_END2,"passed_pawn_end2",VAL(0.09),VAL(0),VAL(0.3),TuneParam::Endgame,1),
-        TuneParam(Tune::PASSED_PAWN_END3,"passed_pawn_end3",VAL(0.16),VAL(0),VAL(0.5),TuneParam::Endgame,1),
-        TuneParam(Tune::PASSED_PAWN_END4,"passed_pawn_end4",VAL(0.28),VAL(0),VAL(0.5),TuneParam::Endgame,1),
-        TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",VAL(0.42),VAL(0),VAL(0.75),TuneParam::Endgame,1),
-        TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",VAL(0.84),VAL(0.5),VAL(1.25),TuneParam::Endgame,1),
-        TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",VAL(1.4),VAL(0.5),VAL(1.75),TuneParam::Endgame,1),
+        TuneParam(Tune::PASSED_PAWN_MID2,"passed_pawn_mid2",VAL(0.0),VAL(0),VAL(0.3),TuneParam::Midgame,1),
+        TuneParam(Tune::PASSED_PAWN_MID3,"passed_pawn_mid3",VAL(0.0),VAL(0),VAL(0.5),TuneParam::Midgame,1),
+        TuneParam(Tune::PASSED_PAWN_MID4,"passed_pawn_mid4",VAL(0.0),VAL(0),VAL(0.5),TuneParam::Midgame,1),
+        TuneParam(Tune::PASSED_PAWN_MID5,"passed_pawn_mid5",VAL(0.3),VAL(0),VAL(0.75),TuneParam::Midgame,1),
+        TuneParam(Tune::PASSED_PAWN_MID6,"passed_pawn_mid6",VAL(0.8),VAL(0.3),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::PASSED_PAWN_MID7,"passed_pawn_mid7",VAL(1.25),VAL(0.5),VAL(1.75),TuneParam::Midgame,1),
+        TuneParam(Tune::PASSED_PAWN_END2,"passed_pawn_end2",VAL(0.0),VAL(0),VAL(0.3),TuneParam::Endgame,1),
+        TuneParam(Tune::PASSED_PAWN_END3,"passed_pawn_end3",VAL(0.0),VAL(0),VAL(0.5),TuneParam::Endgame,1),
+        TuneParam(Tune::PASSED_PAWN_END4,"passed_pawn_end4",VAL(0.0),VAL(0),VAL(0.5),TuneParam::Endgame,1),
+        TuneParam(Tune::PASSED_PAWN_END5,"passed_pawn_end5",VAL(0.6),VAL(0),VAL(0.75),TuneParam::Endgame,1),
+        TuneParam(Tune::PASSED_PAWN_END6,"passed_pawn_end6",VAL(1.1),VAL(0.5),VAL(1.25),TuneParam::Endgame,1),
+        TuneParam(Tune::PASSED_PAWN_END7,"passed_pawn_end7",VAL(1.75),VAL(0.5),VAL(2.25),TuneParam::Endgame,1),
         TuneParam(Tune::PASSED_PAWN_FILE_ADJUST1,"passed_pawn_file_adjust1",64,48,96,TuneParam::Any,1),
         TuneParam(Tune::PASSED_PAWN_FILE_ADJUST2,"passed_pawn_file_adjust2",64,48,96,TuneParam::Any,1),
         TuneParam(Tune::PASSED_PAWN_FILE_ADJUST3,"passed_pawn_file_adjust3",64,48,96,TuneParam::Any,1),
-        TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",64,48,80,TuneParam::Any,1),
+        TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",64,48,80,TuneParam::Any,0),
         TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",VAL(0.026),VAL(0),VAL(0.2),TuneParam::Midgame,1),
         TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",VAL(0.037),VAL(0),VAL(0.25),TuneParam::Midgame,1),
         TuneParam(Tune::POTENTIAL_PASSER_MID4,"potential_passer_mid4",VAL(0.075),VAL(0),VAL(0.3),TuneParam::Midgame,1),
@@ -310,8 +310,10 @@ Tune::Tune()
        }
    };
 
-   const score_t PP_OWN_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.060),VAL(-0.060),VAL(-0.060),VAL(-0.075),VAL(-0.075),VAL(-0.090)},{VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.172),VAL(-0.172),VAL(-0.172),VAL(-0.215),VAL(-0.215),VAL(-0.258)}};
-   const score_t PP_OPP_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.171),VAL(-0.085),VAL(-0.057),VAL(-0.042),VAL(-0.034),VAL(-0.028),VAL(-0.190),VAL(-0.095),VAL(-0.063),VAL(-0.047),VAL(-0.038),VAL(-0.217),VAL(-0.108),VAL(-0.072),VAL(-0.5),VAL(-0.251),VAL(-0.125),VAL(-0.083),VAL(-0.361),VAL(-0.180),VAL(-0.5)},{VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.204),VAL(-0.204),VAL(-0.204),VAL(-0.276),VAL(-0.276),VAL(-0.374)}};
+   static const score_t PP_OWN_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.060),VAL(-0.060),VAL(-0.060),VAL(-0.075),VAL(-0.075),VAL(-0.090)},{VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.172),VAL(-0.172),VAL(-0.172),VAL(-0.215),VAL(-0.215),VAL(-0.258)}};
+   static const score_t PP_OPP_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.171),VAL(-0.085),VAL(-0.057),VAL(-0.042),VAL(-0.034),VAL(-0.028),VAL(-0.190),VAL(-0.095),VAL(-0.063),VAL(-0.047),VAL(-0.038),VAL(-0.217),VAL(-0.108),VAL(-0.072),VAL(-0.5),VAL(-0.251),VAL(-0.125),VAL(-0.083),VAL(-0.361),VAL(-0.180),VAL(-0.5)},{VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.204),VAL(-0.204),VAL(-0.204),VAL(-0.276),VAL(-0.276),VAL(-0.374)}};
+
+   static const score_t KING_OPP_PASSER_DISTANCE_INIT[6] = {0, 0, VAL(0.2), VAL(0.4), VAL(0.6), VAL(0.7)};
 
    int i = 0;
    for (;i < NUM_MISC_PARAMS; i++) {
@@ -323,7 +325,7 @@ Tune::Tune()
    for (int x = 0; x < 6; x++) {
       stringstream name;
       name << "king_opp_passer_distance_rank" << x+2;
-      push_back(TuneParam(i++,name.str(),10+x*10,0,ENDGAME_KING_POS_RANGE,TuneParam::Endgame,1));
+      push_back(TuneParam(i++,name.str(),KING_OPP_PASSER_DISTANCE_INIT[x],0,ENDGAME_KING_POS_RANGE,TuneParam::Endgame,1));
    }
    ASSERT(i==PP_OWN_PIECE_BLOCK_MID);
    // add passed pawn block tables

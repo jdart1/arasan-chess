@@ -96,6 +96,8 @@ ifeq ($(LBITS),64)
 endif
 ARASANX := arasanx-$(LBITS)
 
+TUNER := tuner
+
 ifeq ("$(CC)","icc")
 # Intel C++ compiler
 CPP     = icc
@@ -169,7 +171,10 @@ endif
 
 default: dirs $(EXPORT)/$(ARASANX)
 
-tuning: dirs $(EXPORT)/tuner
+tuning: dirs $(EXPORT)/$(TUNER)
+
+tuning-popcnt: dirs
+	@$(MAKE) TUNER=$(TUNER)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 tuning
 
 utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
 
@@ -188,7 +193,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROF_DATA)/*.dyn $(PROF_DATA)/*.profraw $(PROF_DATA)/*.profdata
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess pgnselect ecocoder
+	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder
 
 dirs:
 	mkdir -p $(BUILD)
@@ -378,8 +383,8 @@ $(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
 $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/tuner:  $(TUNER_OBJS)
-	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
+$(EXPORT)/$(TUNER):  $(TUNER_OBJS)
+	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
