@@ -257,7 +257,7 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
         const string cmd(pending.front());
         string cmd_word, cmd_args;
         split_cmd(cmd,cmd_word,cmd_args);
-        if (cmd == "result" ||
+        if (cmd_word == "result" ||
             cmd == "new" ||
             cmd == "quit" ||
             cmd == "resign") {
