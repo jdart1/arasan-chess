@@ -171,7 +171,6 @@ void Protocol::poll(bool &polling_terminated)
 }
 
 void Protocol::add_pending(const string &cmd) {
-    if (doTrace) cout << "# adding to pending list " << cmd << ", list size=" << pending.size() << endl;
     Lock(input_lock);
     pending.push_back(cmd);
     Unlock(input_lock);
