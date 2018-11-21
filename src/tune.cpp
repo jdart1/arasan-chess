@@ -10,7 +10,7 @@
 
 #define VAL(x) (Params::PAWN_VALUE*x)
 
-static const score_t MOBILITY_RANGE = VAL(0.333);
+static const score_t MOBILITY_RANGE = VAL(0.75);
 static const score_t OUTPOST_RANGE = VAL(0.65);
 static const score_t PST_RANGE = VAL(1.0);
 static const score_t PP_BLOCK_RANGE = VAL(0.65);
@@ -64,8 +64,8 @@ Tune::Tune()
         TuneParam(Tune::CASTLING4,"castling4",VAL(0.2),VAL(0),VAL(0.5),TuneParam::Midgame,1),
         TuneParam(Tune::CASTLING5,"castling5",VAL(-0.28),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_SCALE_MAX,"king_attack_scale_max",VAL(5.0),VAL(3.5),VAL(6.5),TuneParam::Midgame,1),
-        TuneParam(Tune::KING_ATTACK_SCALE_INFLECT,"king_attack_scale_inflect",85,60,120,TuneParam::Midgame,1),
-        TuneParam(Tune::KING_ATTACK_SCALE_FACTOR,"king_attack_scale_factor",54,33,150,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_ATTACK_SCALE_INFLECT,"king_attack_scale_inflect",80,60,120,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_ATTACK_SCALE_FACTOR,"king_attack_scale_factor",60,33,150,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_SCALE_BIAS,"king_attack_scale_bias",VAL(-0.048),VAL(-0.2),0,TuneParam::Any,0),
         TuneParam(Tune::KING_COVER1,"king_cover1",VAL(0.05),VAL(0),KING_COVER_RANGE/2,TuneParam::Midgame,1),
         TuneParam(Tune::KING_COVER2,"king_cover2",VAL(-0.1),-2*KING_COVER_RANGE/3,2*KING_COVER_RANGE/3,TuneParam::Midgame,1),
@@ -73,10 +73,10 @@ Tune::Tune()
         TuneParam(Tune::KING_COVER4,"king_cover4",VAL(-0.2),-KING_COVER_RANGE,0,TuneParam::Midgame,1),
         TuneParam(Tune::KING_FILE_HALF_OPEN,"king_file_half_open",VAL(-0.2),-KING_COVER_RANGE,0,TuneParam::Midgame,1),
         TuneParam(Tune::KING_FILE_OPEN,"king_file_open",VAL(-0.285),-KING_COVER_RANGE,0,TuneParam::Midgame,1),
-        TuneParam(Tune::KING_COVER_FILE_FACTOR0,"king_cover_file_factor0",64,48,96,TuneParam::Midgame,1),
-        TuneParam(Tune::KING_COVER_FILE_FACTOR1,"king_cover_file_factor1",64,48,96,TuneParam::Midgame,1),
-        TuneParam(Tune::KING_COVER_FILE_FACTOR2,"king_cover_file_factor2",50,32,96,TuneParam::Midgame,1),
-        TuneParam(Tune::KING_COVER_FILE_FACTOR3,"king_cover_file_factor3",40,32,96,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_COVER_FILE_FACTOR0,"king_cover_file_factor0",48,32,128,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_COVER_FILE_FACTOR1,"king_cover_file_factor1",96,32,128,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_COVER_FILE_FACTOR2,"king_cover_file_factor2",60,32,128,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_COVER_FILE_FACTOR3,"king_cover_file_factor3",64,32,128,TuneParam::Midgame,0),
         TuneParam(Tune::KING_COVER_BASE,"king_cover_base",VAL(-0.1),-KING_COVER_RANGE,0,TuneParam::Midgame,0),
         TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",VAL(0.312),VAL(0.2),VAL(0.4),TuneParam::Endgame,0),
         TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",VAL(0.077),VAL(0.04),VAL(0.12),TuneParam::Endgame,0),
@@ -90,22 +90,22 @@ Tune::Tune()
         TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",VAL(0.03),VAL(0),VAL(0.25),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",VAL(0.3),VAL(0),VAL(0.5),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",VAL(0.06),0,VAL(0.5),TuneParam::Any,1),
-        TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",14,0,20,TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",14,0,20,TuneParam::Midgame,1),
-        TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",25,10,45,TuneParam::Midgame,1),
-        TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",35,5,70,TuneParam::Midgame,1),
-        TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",31,12,75,TuneParam::Midgame,1),
+        TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",7,0,20,TuneParam::Midgame,1),
+        TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",7,0,20,TuneParam::Midgame,1),
+        TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",45,10,45,TuneParam::Midgame,1),
+        TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,5,70,TuneParam::Midgame,1),
+        TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",60,12,75,TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",34,0,75,TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ATTACK_BOOST2,"rook_attack_boost2",34,0,75,TuneParam::Midgame,1),
-        TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",33,20,75,TuneParam::Midgame,1),
-        TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",50,0,100,TuneParam::Midgame,1),
-        TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",50,0,100,TuneParam::Midgame,1),
+        TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",60,20,75,TuneParam::Midgame,1),
+        TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",40,0,100,TuneParam::Midgame,1),
+        TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",60,0,100,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_COVER_BOOST_BASE,"king_attack_cover_boost_base",6,4,30,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_COVER_BOOST_SLOPE,"king_attack_cover_boost_slope",140,40,300,TuneParam::Midgame,1),
         TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MIN,"own_piece_king_proximity_min",12,0,50,TuneParam::Any,0),
         TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MAX,"own_piece_king_proximity_max",36,0,70,TuneParam::Any,0),
         TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Midgame,1),
-        TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.1),VAL(0),VAL(0.5),TuneParam::Midgame,1),
+        TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.2),VAL(0),VAL(0.5),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_QUEEN_KING_PROXIMITY,"own_queen_king_proximity",VAL(0.05),VAL(0),VAL(0.3),TuneParam::Midgame,1),
         TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",VAL(0.05),VAL(0),VAL(0.75),TuneParam::Midgame,1),
         TuneParam(Tune::PAWN_THREAT_ON_PIECE_END,"pawn_threat_on_piece_end",VAL(0.05),0,VAL(0.75),TuneParam::Endgame,1),
@@ -143,8 +143,8 @@ Tune::Tune()
         TuneParam(Tune::PAWN_CENTER_SCORE_MID,"pawn_center_score_mid",VAL(0.02),VAL(0),VAL(0.1),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_7TH_MID,"rook_on_7th_mid",VAL(0.235),VAL(0),VAL(0.8),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_7TH_END,"rook_on_7th_end",VAL(0.25),VAL(0),VAL(0.8),TuneParam::Endgame,1),
-        TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",VAL(0.25),VAL(0),VAL(0.8),TuneParam::Midgame,1),
-        TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",VAL(0.25),VAL(0),VAL(0.8),TuneParam::Endgame,1),
+        TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",VAL(0.15),VAL(0),VAL(0.8),TuneParam::Midgame,1),
+        TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",VAL(0.4),VAL(0),VAL(0.8),TuneParam::Endgame,1),
         TuneParam(Tune::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",VAL(0.17),VAL(0),VAL(0.6),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",VAL(0.18),VAL(0),VAL(0.6),TuneParam::Endgame,1),
         TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",VAL(0.025),0,VAL(0.25),TuneParam::Midgame,1),
@@ -190,10 +190,10 @@ Tune::Tune()
         TuneParam(Tune::POTENTIAL_PASSER_END6,"potential_passer_end6",VAL(0.36),VAL(0),VAL(0.75),TuneParam::Endgame,1),
         TuneParam(Tune::CONNECTED_PASSER_MID2,"connected_passer_mid2",VAL(0),VAL(0),VAL(0.25),TuneParam::Midgame,1),
         TuneParam(Tune::CONNECTED_PASSER_MID3,"connected_passer_mid3",VAL(0.08),VAL(0),VAL(0.3),TuneParam::Midgame,1),
-        TuneParam(Tune::CONNECTED_PASSER_MID4,"connected_passer_mid4",VAL(0.2),VAL(0),VAL(0.4),TuneParam::Midgame,1),
-        TuneParam(Tune::CONNECTED_PASSER_MID5,"connected_passer_mid5",VAL(0.227),VAL(0),VAL(0.75),TuneParam::Midgame,1),
-        TuneParam(Tune::CONNECTED_PASSER_MID6,"connected_passer_mid6",VAL(0.5),VAL(0.1),VAL(1.75),TuneParam::Midgame,1),
-        TuneParam(Tune::CONNECTED_PASSER_MID7,"connected_passer_mid7",VAL(0.77),VAL(0.25),VAL(2.25),TuneParam::Midgame,1),
+        TuneParam(Tune::CONNECTED_PASSER_MID4,"connected_passer_mid4",VAL(0.3),VAL(0),VAL(0.5),TuneParam::Midgame,1),
+        TuneParam(Tune::CONNECTED_PASSER_MID5,"connected_passer_mid5",VAL(0.6),VAL(0),VAL(0.8),TuneParam::Midgame,1),
+        TuneParam(Tune::CONNECTED_PASSER_MID6,"connected_passer_mid6",VAL(1.75),VAL(0.1),VAL(2.5),TuneParam::Midgame,1),
+        TuneParam(Tune::CONNECTED_PASSER_MID7,"connected_passer_mid7",VAL(2.0),VAL(0.25),VAL(2.5),TuneParam::Midgame,1),
         TuneParam(Tune::CONNECTED_PASSER_END2,"connected_passer_end2",VAL(0),VAL(0),VAL(0.25),TuneParam::Endgame,1),
         TuneParam(Tune::CONNECTED_PASSER_END3,"connected_passer_end3",VAL(0.08),VAL(0),VAL(0.3),TuneParam::Endgame,1),
         TuneParam(Tune::CONNECTED_PASSER_END4,"connected_passer_end4",VAL(0.2),VAL(0),VAL(0.4),TuneParam::Endgame,1),
@@ -224,10 +224,10 @@ Tune::Tune()
         TuneParam(Tune::TRIPLED_PAWNS_MID2,"tripled_pawns_mid2",VAL(-0.1),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::TRIPLED_PAWNS_MID3,"tripled_pawns_mid3",VAL(-0.16),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::TRIPLED_PAWNS_MID4,"tripled_pawns_mid4",VAL(-0.2),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
-        TuneParam(Tune::TRIPLED_PAWNS_END1,"tripled_pawns_end1",VAL(-0.07),VAL(-0.5),VAL(0),TuneParam::Endgame,1),
-        TuneParam(Tune::TRIPLED_PAWNS_END2,"tripled_pawns_end2",VAL(-0.1),VAL(-0.5),VAL(0),TuneParam::Endgame,1),
-        TuneParam(Tune::TRIPLED_PAWNS_END3,"tripled_pawns_end3",VAL(-0.16),VAL(-0.5),VAL(0),TuneParam::Endgame,1),
-        TuneParam(Tune::TRIPLED_PAWNS_END4,"tripled_pawns_end4",VAL(-0.2),VAL(-0.5),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::TRIPLED_PAWNS_END1,"tripled_pawns_end1",VAL(-0.25),VAL(-0.75),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::TRIPLED_PAWNS_END2,"tripled_pawns_end2",VAL(-0.25),VAL(-0.75),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::TRIPLED_PAWNS_END3,"tripled_pawns_end3",VAL(-0.5),VAL(-0.75),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::TRIPLED_PAWNS_END4,"tripled_pawns_end4",VAL(-0.5),VAL(-0.75),VAL(0),TuneParam::Endgame,1),
         TuneParam(Tune::ISOLATED_PAWN_MID1,"isolated_pawn_mid1",VAL(-0.07),VAL(-0.25),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::ISOLATED_PAWN_MID2,"isolated_pawn_mid2",VAL(-0.07),VAL(-0.25),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::ISOLATED_PAWN_MID3,"isolated_pawn_mid3",VAL(-0.07),VAL(-0.25),VAL(0),TuneParam::Midgame,1),
@@ -238,7 +238,7 @@ Tune::Tune()
         TuneParam(Tune::ISOLATED_PAWN_END4,"isolated_pawn_end4",VAL(-0.1),VAL(-0.25),VAL(0),TuneParam::Endgame,1)
     };
 
-   static const score_t TRADE_DOWN_INIT[16] = {VAL(0.688), VAL(0.645), VAL(0.602), VAL(0.559), VAL(0.516), VAL(0.473), VAL(0.430), VAL(0.387), VAL(0.344), VAL(0.301), VAL(0.258), VAL(0.215), VAL(0.172), VAL(0.129), VAL(0.086), 0};
+   static const score_t TRADE_DOWN_INIT[8] = {45, 40, 34, 29, 23, 18, 12, 7};
    static const score_t KNIGHT_MOBILITY_INIT[9] = {VAL(-0.180), VAL(-0.07), VAL(-0.02), 0, VAL(0.02), VAL(0.05), VAL(0.07), VAL(0.1), VAL(0.12)};
    static const score_t BISHOP_MOBILITY_INIT[15] = {VAL(-0.2), VAL(-0.11), VAL(-.07), -VAL(0.03), 0, VAL(0.03), VAL(0.06), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09)};
    static const score_t ROOK_MOBILITY_INIT[2][15] = {{VAL(-0.22), VAL(-0.12), VAL(-0.08), VAL(-0.03), 0, VAL(0.03), VAL(0.07), VAL(0.1), VAL(0.12), VAL(0.14), VAL(0.17), VAL(0.19), VAL(0.21), VAL(0.23), VAL(0.24)}, {VAL(-0.3), VAL(-0.17), VAL(-0.11), VAL(-0.05), 0, VAL(0.05), VAL(0.09), VAL(0.14), VAL(0.17), VAL(0.2), VAL(0.23), VAL(0.26), VAL(0.29), VAL(0.31), VAL(0.32)}};
@@ -395,7 +395,7 @@ Tune::Tune()
       stringstream name;
       name << "knight_mobility" << m;
       const score_t val = KNIGHT_MOBILITY_INIT[m];
-      push_back(TuneParam(i++,name.str(),val,val-MOBILITY_RANGE,val+MOBILITY_RANGE,TuneParam::Any,1));
+      push_back(TuneParam(i++,name.str(),val,-MOBILITY_RANGE,+MOBILITY_RANGE,TuneParam::Any,1));
    }
    ASSERT(i==BISHOP_MOBILITY);
    for (int m = 0; m < 15; m++) {
