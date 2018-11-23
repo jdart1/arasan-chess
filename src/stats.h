@@ -28,10 +28,11 @@ struct Statistics
    bool complete; // if at end of iteration
    unsigned multipv_count; // only for UCI
    unsigned multipv_limit; // only for UCI
-   bool failHigh, failLow;
+   atomic<bool> failHigh, failLow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   unsigned depth, completedDepth;
+   unsigned depth;
+   atomic<unsigned> completedDepth;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes

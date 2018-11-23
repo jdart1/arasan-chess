@@ -29,8 +29,8 @@ Statistics::Statistics(const Statistics &s)
       complete = s.complete;
       multipv_count = s.multipv_count;
       multipv_limit = s.multipv_limit;
-      failHigh = s.failHigh;
-      failLow = s.failLow;
+      failHigh = s.failHigh.load();
+      failLow = s.failLow.load();
       int i = 0;
       do {
          best_line[i] = s.best_line[i];
@@ -38,7 +38,7 @@ Statistics::Statistics(const Statistics &s)
       } while (i<Constants::MaxPly && !IsNull(best_line[i-1]));
       best_line_image = s.best_line_image;
       depth = s.depth;
-      completedDepth = s.completedDepth;
+      completedDepth = s.completedDepth.load();
       mvtot = s.mvtot;
       mvleft = s.mvleft;
       tb_probes = s.tb_probes;
@@ -89,8 +89,8 @@ Statistics & Statistics::operator = (const Statistics &s)
       complete = s.complete;
       multipv_count = s.multipv_count;
       multipv_limit = s.multipv_limit;
-      failHigh = s.failHigh;
-      failLow = s.failLow;
+      failHigh = s.failHigh.load();
+      failLow = s.failLow.load();
       int i = 0;
       do {
          best_line[i] = s.best_line[i];
@@ -98,7 +98,7 @@ Statistics & Statistics::operator = (const Statistics &s)
       } while (i<Constants::MaxPly && !IsNull(best_line[i-1]));
       best_line_image = s.best_line_image;
       depth = s.depth;
-      completedDepth = s.completedDepth;
+      completedDepth = s.completedDepth.load();
       mvtot = s.mvtot;
       mvleft = s.mvleft;
       tb_probes = s.tb_probes;

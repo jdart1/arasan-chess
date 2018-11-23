@@ -478,60 +478,13 @@ Move SearchController::findBestMove(
    updateGlobalStats(rootSearch->stats);
 
    if (options.search.multipv == 1) {
-      for (int thread = 1; thread < options.search.ncpus; thread++) {
-         Statistics &threadStats = pool->data[thread]->work->stats;
-         if (talkLevel == Trace) {
-            cout << "# thread " << thread << " score=";
-            Scoring::printScore(threadStats.display_value,cout);
-            cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
-                  (int)stats->failLow;
-            cout << " pv=" << threadStats.best_line_image << endl;
-         }
-#ifdef _TRACE
-         cout << "# thread " << thread << " score=";
-         Scoring::printScore(threadStats.value,cout);
-         cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
-             (int)stats->failLow;
-         cout << " pv=" << threadStats.best_line_image << endl;
-#endif
-         if (threadStats.display_value > stats->display_value &&
-             !IsNull(threadStats.best_line[0]) &&
-             (threadStats.completedDepth >= stats->completedDepth ||
-              threadStats.value >= Constants::MATE_RANGE)) {
-            updateGlobalStats(threadStats);
-            best = threadStats.best_line[0];
-         }
-      }
+       Statistics &bestStats = getBestThreadStats(talkLevel == Trace);
+       updateGlobalStats(bestStats);
+       best = bestStats.best_line[0];
    }
    // Output a final post message
    if ((!background || uci) && post_function) {
        post_function(*stats);
-   }
-   if (IsNull(stats->best_line[1])) {
-       // try to get ponder move from hash table
-       if (talkLevel == Trace) {
-          cout << "# trying to extend pv" << endl;
-       }
-       Board board_copy(board);
-       board_copy.doMove(best);
-       HashEntry entry;
-       HashEntry::ValueType result =
-           hashTable.searchHash(board_copy.hashCode(board_copy.repCount(3)),
-                               age,
-                               0,entry);
-       if (result != HashEntry::NoHit) {
-          Move hashMove = entry.bestMove(board_copy);
-          if (!IsNull(hashMove)) {
-              stats->best_line[1] = hashMove;
-              stats->best_line[2] = NullMove;
-              string hashMoveImage;
-              Notation::image(board_copy,hashMove,Notation::OutputFormat::SAN,hashMoveImage);
-              if (talkLevel == Trace) {
-                  cout << "# extending pv" << endl;
-              }
-              stats->best_line_image = stats->best_line_image + " " + hashMoveImage;
-          }
-       }
    }
 #ifdef _TRACE
    cout << "# best thread: score=";
@@ -539,7 +492,7 @@ Move SearchController::findBestMove(
    cout << " pv=" << stats->best_line_image << endl;
 #endif
    if (talkLevel == Trace) {
-      cout << "# best thread: score=";
+      cout << "# best thread: depth= " << stats->completedDepth <<  " score=";
       Scoring::printScore(stats->value,cout);
       cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       cout << " pv=" << stats->best_line_image << endl;
@@ -732,9 +685,19 @@ void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
         }
     }
     else if (fail_low_root_extend) {
-        fail_low_root_extend = false;
+        // This thread is no longer failing low. But peek at the other
+        // threads to see if there is a currently better candidate
+        // thread that is failing low. If so delay resetting fail
+        // low time extension.
+        Statistics &bestStats = getBestThreadStats(false);
+        fail_low_root_extend = bestStats.failLow;
         if (talkLevel == Trace && typeOfSearch == TimeLimit) {
-            cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
+            if (fail_low_root_extend) {
+                cout << "# best thread still failing low, keep current time target" << endl;
+            }
+            else {
+                cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
+            }
         }
     }
 }
@@ -793,6 +756,9 @@ void SearchController::applySearchHistoryFactors() {
             bonus_time = static_cast<int64_t>(xtra_time*searchHistoryBoostFactor);
         } else {
             bonus_time = -static_cast<int64_t>(std::floor(searchHistoryReductionFactor*time_target/3));
+        }
+        if (talkLevel == Trace && typeOfSearch == TimeLimit && bonus_time) {
+            cout << "# bonus time=" << bonus_time << endl;
         }
     }
 }
@@ -981,7 +947,6 @@ void Search::setTalkLevelFromController() {
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
                          score_t score, score_t alpha)
 {
-   //stats.elapsed_time = getElapsedTime(startTime,getCurrentTime());
     ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
     stats.value = score;
     stats.depth = iteration_depth;
@@ -1712,6 +1677,38 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
        for (int i = 0; i < 4; i++) stats->move_order[i] += s.move_order[i];
 #endif
     }
+}
+
+Statistics &SearchController::getBestThreadStats(bool trace) const
+{
+    Statistics &best = *stats;
+    for (int thread = 1; thread < options.search.ncpus; thread++) {
+        Statistics &threadStats = pool->data[thread]->work->stats;
+        if (trace) {
+            cout << "# thread " << thread << " depth=" <<
+                threadStats.completedDepth << " score=";
+            Scoring::printScore(threadStats.display_value,cout);
+            cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
+                (int)stats->failLow;
+            cout << " pv=" << threadStats.best_line_image << endl;
+        }
+#ifdef _TRACE
+        if (trace) {
+            cout << "# thread " << thread << " score=";
+            Scoring::printScore(threadStats.value,cout);
+            cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
+                (int)stats->failLow;
+            cout << " pv=" << threadStats.best_line_image << endl;
+        }
+#endif
+        if (threadStats.display_value > best.display_value &&
+            !IsNull(threadStats.best_line[0]) &&
+            (threadStats.completedDepth >= best.completedDepth ||
+             threadStats.value >= Constants::MATE_RANGE)) {
+            best = threadStats;
+        }
+    }
+    return best;
 }
 
 score_t Search::quiesce(int ply,int depth)
