@@ -719,7 +719,7 @@ void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
                 pv = rootSearchHistory[depth].pv;
             }
             searchHistoryReductionFactor = 0.5*(2*stats.depth-4-pvChangeDepth-increasedScoreDepth)/stats.depth;
-            ASSERT(searchHistoryFactor<=1.0);
+            ASSERT(searchHistoryReductionFactor<=1.0);
         }
     }
 }
