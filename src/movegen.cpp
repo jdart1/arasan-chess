@@ -142,7 +142,6 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
              pvIndex = i;
          }
       } 
-      ASSERT(pvIndex != -1);
       if (pvIndex > 0) {
           // put the hash move first and move all other moves down
           MoveEntry pvEntry(moveList[pvIndex]);
