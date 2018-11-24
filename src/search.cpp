@@ -1057,16 +1057,20 @@ Move Search::ply0_search()
       mg.filter(controller->include);
    }
    stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
-   for (iterationDepth = 1;
+   int skip = 0;
+   if (srcOpts.ncpus > 1 && controller->ply_limit>4) {
+#ifdef _WIN32
+       DWORD dws;
+       _BitScanReverse(&dws,(unsigned long)ti->index+1);
+       skip = (int)dws;
+#else
+       skip = __builtin_ctz (ti->index+1);
+#endif
+       skip = std::min<int>(std::min<int>(controller->ply_limit-1,skip),8);
+   }
+   for (iterationDepth = skip+1;
         iterationDepth <= controller->ply_limit && !terminate;
         iterationDepth++) {
-      if (!mainThread()) {
-         // distribute search depths across the threads
-         // TBD: better way to do this?
-         if (srcOpts.ncpus > 1 && ((iterationDepth + ti->index) % 2 == 0)) {
-            continue;
-         }
-      }
       MoveSet excluded(controller->exclude);
       for (stats.multipv_count = 0;
            stats.multipv_count < stats.multipv_limit && !terminate;
