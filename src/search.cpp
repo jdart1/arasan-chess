@@ -658,7 +658,9 @@ void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
     // Note: do this even if in ponder search, so when we get a ponder
     // hit the flags will be set properly and will be applied to the
     // time target.
-    if (stats.failHigh) {
+    // First find the current best search thread
+    Statistics &bestStats = getBestThreadStats(false);
+    if (bestStats.failHigh) {
         // root move is failing high, extend time until
         // fail-high is resolved
         fail_high_root_extend = true;
@@ -666,39 +668,16 @@ void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
         // search when first detecting fail-high. If so,
         // reset that flag here.
         fail_high_root = false;
-        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
-            cout << "# adding time due to root fail high, new target=" << getTimeLimit() << endl;
-        }
     }
     else if (fail_high_root_extend) {
         fail_high_root_extend = false;
-        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
-            cout << "# resetting time added due to root fail high, new target=" << getTimeLimit() << endl;
-        }
     }
-    if (stats.failLow) {
-        // root move is failing low, extend time until
-        // fail-low is resolved
+    if (bestStats.failLow) {
+        // root move is failing low, extend time until fail-low is resolved
         fail_low_root_extend = true;
-        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
-            cout << "# adding time due to root fail low, new target=" << getTimeLimit() << endl;
-        }
     }
     else if (fail_low_root_extend) {
-        // This thread is no longer failing low. But peek at the other
-        // threads to see if there is a currently better candidate
-        // thread that is failing low. If so delay resetting fail
-        // low time extension.
-        Statistics &bestStats = getBestThreadStats(false);
-        fail_low_root_extend = bestStats.failLow;
-        if (talkLevel == Trace && typeOfSearch == TimeLimit) {
-            if (fail_low_root_extend) {
-                cout << "# best thread still failing low, keep current time target" << endl;
-            }
-            else {
-                cout << "# resetting time added due to root fail low, new target=" << getTimeLimit() << endl;
-            }
-        }
+        fail_low_root_extend = false;
     }
 }
 
@@ -1176,14 +1155,15 @@ Move Search::ply0_search()
             else if (stats.failHigh) {
                 failhighs++;
             }
+            // store root search history entry
             if (mainThread()) {
-                // store root search history entry
                 controller->rootSearchHistory[iterationDepth-1] = SearchController::SearchHistory(
                     node->best, stats.display_value);
-                // Peform any temporary adjustment of the time allocation based
-                // on search status and history
-                controller->outOfBoundsTimeAdjust(stats);
             }
+            // Peform any temporary adjustment of the time allocation based
+            // on search status (fail high/low). Note: all threads call this;
+            // adjustment is based on the current best search thread.
+            controller->outOfBoundsTimeAdjust(stats);
             // Show status (if main thread) and adjust aspiration
             // window as needed
             if (stats.failHigh) {
@@ -1641,7 +1621,7 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
     stats->hash_hits = stats->hash_searches = stats->futility_pruning = stats->null_cuts = (uint64_t)0;
     stats->history_pruning = stats->lmp = stats->see_pruning = (uint64_t)0;
     stats->check_extensions = stats->capture_extensions =
-     stats->pawn_extensions = stats->singular_extensions = 0L;
+    stats->pawn_extensions = stats->singular_extensions = 0L;
 #endif
 #ifdef MOVE_ORDER_STATS
     stats->move_order_count = 0;
@@ -1688,19 +1668,10 @@ Statistics &SearchController::getBestThreadStats(bool trace) const
             cout << "# thread " << thread << " depth=" <<
                 threadStats.completedDepth << " score=";
             Scoring::printScore(threadStats.display_value,cout);
-            cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
-                (int)stats->failLow;
+            cout << " failHigh=" << (int)threadStats.failHigh << " failLow=" <<
+                (int)threadStats.failLow;
             cout << " pv=" << threadStats.best_line_image << endl;
         }
-#ifdef _TRACE
-        if (trace) {
-            cout << "# thread " << thread << " score=";
-            Scoring::printScore(threadStats.value,cout);
-            cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
-                (int)stats->failLow;
-            cout << " pv=" << threadStats.best_line_image << endl;
-        }
-#endif
         if (threadStats.display_value > best.display_value &&
             !IsNull(threadStats.best_line[0]) &&
             (threadStats.completedDepth >= best.completedDepth ||
