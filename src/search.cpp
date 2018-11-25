@@ -475,12 +475,12 @@ Move SearchController::findBestMove(
       cout << " pv=" << rootSearch->stats.best_line_image << endl;
    }
 
-   updateGlobalStats(rootSearch->stats);
-
    if (options.search.multipv == 1) {
-       Statistics &bestStats = getBestThreadStats(talkLevel == Trace);
-       updateGlobalStats(bestStats);
-       best = bestStats.best_line[0];
+       Statistics *bestStats = getBestThreadStats(talkLevel == Trace);
+       updateGlobalStats(*bestStats);
+       best = bestStats->best_line[0];
+   } else {
+       updateGlobalStats(rootSearch->stats);
    }
    // Output a final post message
    if ((!background || uci) && post_function) {
@@ -659,8 +659,8 @@ void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
     // hit the flags will be set properly and will be applied to the
     // time target.
     // First find the current best search thread
-    Statistics &bestStats = getBestThreadStats(false);
-    if (bestStats.failHigh) {
+    Statistics *bestStats = getBestThreadStats(false);
+    if (bestStats->failHigh) {
         // root move is failing high, extend time until
         // fail-high is resolved
         fail_high_root_extend = true;
@@ -672,7 +672,7 @@ void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
     else if (fail_high_root_extend) {
         fail_high_root_extend = false;
     }
-    if (bestStats.failLow) {
+    if (bestStats->failLow) {
         // root move is failing low, extend time until fail-low is resolved
         fail_low_root_extend = true;
     }
@@ -1663,9 +1663,9 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
     }
 }
 
-Statistics &SearchController::getBestThreadStats(bool trace) const
+Statistics *SearchController::getBestThreadStats(bool trace) const
 {
-    Statistics &best = *stats;
+    Statistics * best = stats;
     for (int thread = 1; thread < options.search.ncpus; thread++) {
         Statistics &threadStats = pool->data[thread]->work->stats;
         if (trace) {
@@ -1676,11 +1676,11 @@ Statistics &SearchController::getBestThreadStats(bool trace) const
                 (int)threadStats.failLow;
             cout << " pv=" << threadStats.best_line_image << endl;
         }
-        if (threadStats.display_value > best.display_value &&
+        if (threadStats.display_value > best->display_value &&
             !IsNull(threadStats.best_line[0]) &&
-            (threadStats.completedDepth >= best.completedDepth ||
+            (threadStats.completedDepth >= best->completedDepth ||
              threadStats.value >= Constants::MATE_RANGE)) {
-            best = threadStats;
+            best = &threadStats;
         }
     }
     return best;

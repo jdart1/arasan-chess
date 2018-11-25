@@ -421,7 +421,7 @@ public:
 
    void updateGlobalStats(const Statistics &);
 
-   Statistics & getBestThreadStats(bool trace) const;
+   Statistics * getBestThreadStats(bool trace) const;
 
    uint64_t totalNodes() const {
       return pool->totalNodes();
