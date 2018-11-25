@@ -68,7 +68,6 @@ int Topology::computeSet()
         hwloc_const_cpuset_t allowed = hwloc_topology_get_allowed_cpuset(topo);
         // each thread can be allocated on any node:
         for (int i = 0; i < n; i++) {
-            hwloc_bitmap_free(cpuset[i]);
 #ifdef _WIN32
             // under Windows we must allocate threads in a processor group,
             // and so the allowed CPUs cannot cross a 64-bit boundary
@@ -85,6 +84,7 @@ int Topology::computeSet()
                 }
             }
             hwloc_bitmap_copy(cpuset[i],allowed_group);
+            hwloc_bitmap_free(allowed_group);
 #else
             hwloc_bitmap_copy(cpuset[i],allowed);
 #endif
@@ -106,7 +106,6 @@ int Topology::init() {
     for (int i = 0; i < Constants::MaxCPUs; i++) {
         cpuset[i] = hwloc_bitmap_alloc();
     }
-
     if (hwloc_topology_init(&topo)) {
         return 1;
     }
