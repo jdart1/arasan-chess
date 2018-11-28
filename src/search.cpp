@@ -468,11 +468,12 @@ Move SearchController::findBestMove(
    pool->waitAll();
 
    if (talkLevel == Trace) {
-      cout << "# thread 0 score=";
-      Scoring::printScore(rootSearch->stats.display_value,cout);
-      cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
-         (int)stats->failLow;
-      cout << " pv=" << rootSearch->stats.best_line_image << endl;
+       cout << "# thread 0 depth=" << rootSearch->stats.completedDepth <<
+           " score=";
+       Scoring::printScore(rootSearch->stats.display_value,cout);
+       cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
+           (int)stats->failLow;
+       cout << " pv=" << rootSearch->stats.best_line_image << endl;
    }
 
    if (options.search.multipv == 1) {
@@ -1123,7 +1124,7 @@ Move Search::ply0_search()
             // leave the search stats intact (with the previous
             // iteration's pv and score).
             if (!terminate || stats.mvleft != stats.mvtot) {
-               updateStats(board, node, iterationDepth, value, lo_window);
+                updateStats(board, node, iterationDepth, value, lo_window);
             }
 #ifdef _TRACE
             if (mainThread()) {
@@ -1267,7 +1268,7 @@ Move Search::ply0_search()
             if (!terminate && controller->typeOfSearch != FixedDepth &&
                 !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
-                iterationDepth >= 2 &&
+                iterationDepth+skip >= 2 &&
                 !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
                if (mainThread() && talkLevel == Trace) {
                   cout << "# single legal move, terminating" << endl;
@@ -1676,10 +1677,11 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
                 (int)threadStats.failLow;
             cout << " pv=" << threadStats.best_line_image << endl;
         }
-        if (threadStats.display_value > best->display_value &&
-            !IsNull(threadStats.best_line[0]) &&
+        if (IsNull(best->best_line[0]) ||
+            (threadStats.display_value > best->display_value &&
+             !IsNull(threadStats.best_line[0]) &&
             (threadStats.completedDepth >= best->completedDepth ||
-             threadStats.value >= Constants::MATE_RANGE)) {
+             threadStats.value >= Constants::MATE_RANGE))) {
             best = &threadStats;
         }
     }
