@@ -819,7 +819,7 @@ void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,con
       scores.mid += PARAM(BAD_BISHOP_MID) * (ourPawns - oppPawns);
       scores.end += PARAM(BAD_BISHOP_END) * (ourPawns - oppPawns);
 #ifdef EVAL_DEBUG
-      cout << "bad bishop (" << ColorImage(ourSide) << "): (" <<
+      cout << "bad bishop (" << ColorImage(bishopColor) << "): (" <<
          scores.mid - tmp.mid << "," << scores.end - tmp.end <<
          ")" << endl;
 #endif
@@ -832,7 +832,7 @@ void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,con
 #endif
       opp_scores.end += ((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns) * PARAM(BISHOP_PAWN_PLACEMENT_END))/ totalOppPawns;
 #ifdef EVAL_DEBUG
-      cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(ourSide)) << "): " << opp_scores.end - tmp << endl;
+      cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(bishopColor)) << "): " << opp_scores.end - tmp << endl;
 #endif
    }
 }
