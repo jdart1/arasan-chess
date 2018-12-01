@@ -77,12 +77,6 @@ int initGlobals(const char *pathName, bool initLog) {
    ucilog.open(derivePath("ucilog").c_str(),ios::out|ios::app);
    ucilog << "starting up" << endl;
 #endif
-#if defined(_MSC_VER) && (_MSC_VER <1800)
-   tb_init_map[Options::TbType::None] =
-       tb_init_map[Options::TbType::NalimovTb] =
-       tb_init_map[Options::TbType::GaviotaTb] =
-       tb_init_map[Options::TbType::SyzygyTb] = false;
-#endif
    return 1;
 }
 
