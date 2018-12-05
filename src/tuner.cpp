@@ -296,6 +296,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
                                     Silent);
    score = stats.value;
    // skip positions with very large scores (including mate scores)
+
    if (fabs(score/Params::PAWN_VALUE)<30.0) {
       pvBoard = board;
       for (int len = 0; len < MAX_PV_LENGTH && !IsNull(stats.best_line[len]); len++) {
@@ -307,6 +308,12 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
           (pvBoard.getMaterial(Black).kingOnly() &&
            pvBoard.getMaterial(White).infobits() == Material::KP)) {
          return 0;
+      }
+      else if (stats.state == Stalemate) {
+          return 0;
+      }
+      else if (Scoring::materialDraw(board) || Scoring::theoreticalDraw(board)) {
+          return 0;
       }
       return 1;
    }
@@ -370,15 +377,13 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          if (!atcks.isClear()) continue;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
-             if (fabs(score) < 30.0*Params::PAWN_VALUE) {
-                 double func_value = computeErrorTexel(board, score, result, board.sideToMove());
-                 pdata.target += func_value;
-                 stringstream fen;
-                 fen << pvBoard;
-                 Lock(data_lock);
-                 positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
-                 Unlock(data_lock);
-             }
+             double func_value = computeErrorTexel(board, score, result, board.sideToMove());
+             pdata.target += func_value;
+             stringstream fen;
+             fen << pvBoard;
+             Lock(data_lock);
+             positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
+             Unlock(data_lock);
          }
       } catch(std::bad_alloc) {
          cerr << "out of memory" << endl;
