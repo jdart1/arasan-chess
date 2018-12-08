@@ -470,6 +470,16 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,p == 0 ? TuneParam::Midgame : TuneParam::Endgame,1));
       }
    }
+   ASSERT(i==PAWN_STORM);
+   for (int b = 0; b < 2; b++) {
+       for (int a = 0; a < 2; a++) {
+           for (int d = 0; d < 4; d++) {
+               stringstream name;
+               name << "pawn_storm" << i-PAWN_STORM;
+               push_back(TuneParam(i++,name.str(),-(4-d)*VAL(0.1),-VAL(1.0),0,TuneParam::Midgame,1));
+           }
+       }
+   }
    // add trade down
    ASSERT(i==TRADE_DOWN);
    for (int p = 0; p < 8; p++) {
@@ -767,6 +777,17 @@ void Tune::applyParams(bool check) const
       Params::KNIGHT_OUTPOST[1][i] = PARAM(KNIGHT_OUTPOST_ENDGAME+i);
       Params::BISHOP_OUTPOST[0][i] = PARAM(BISHOP_OUTPOST_MIDGAME+i);
       Params::BISHOP_OUTPOST[1][i] = PARAM(BISHOP_OUTPOST_ENDGAME+i);
+   }
+   {
+       int i = 0;
+       for (int b = 0; b < 2; b++) {
+           for (int a = 0; a < 2; a++) {
+               for (int d = 0; d < 4; d++) {
+                   Params::PAWN_STORM[b][a][d] = PARAM(PAWN_STORM+i);
+                   ++i;
+               }
+           }
+       }
    }
 }
 

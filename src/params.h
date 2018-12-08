@@ -189,6 +189,8 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD KNIGHT_OUTPOST[2][2];
     static PARAM_MOD BISHOP_OUTPOST[2][2];
 
+    static PARAM_MOD PAWN_STORM[2][2][4];
+
     // not tuned presently (fixed)
     static const int MATERIAL_SCALE[32];
     static const int MIDGAME_THRESHOLD;

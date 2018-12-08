@@ -798,6 +798,61 @@ score_t Scoring::outpost(const Board &board,
                                 Bitboard(outpostB[sq] & board.pawn_bits[White]).isClear());
 }
 
+template<ColorType side>
+void Scoring::calcStorm(const Board &board, KingPawnHashEntry &coverEntry) {
+   coverEntry.storm = 0;
+   Square kp = board.kingSquare(side);
+   const int krank = Rank(kp,side);
+   int file = File(kp);
+   if (file == chess::AFILE) file++;
+   if (file == chess::HFILE) file--;
+#ifdef TUNE
+   coverEntry.storm_indices.fill(-1);
+   int i = 0;
+#endif
+   Square psquares[3] = {InvalidSquare, InvalidSquare, InvalidSquare};
+   for (int f = file-1; f <= file+1; f++) {
+       int blocked = 0;
+       Square sq = MakeSquare(f,Rank(kp,White),White);
+       Square pawnsq;
+       int dist = 7;
+       if (side == White) {
+           pawnsq = (Attacks::file_mask_up[sq] & board.pawn_bits[Black]).firstOne();
+           if (pawnsq != InvalidSquare) {
+               dist = Rank(pawnsq,side) - krank;
+               blocked = board[pawnsq-8] == WhitePawn;
+           }
+       } else {
+           pawnsq = (Attacks::file_mask_down[sq] & board.pawn_bits[White]).lastOne();
+           if (pawnsq != InvalidSquare) {
+               dist = Rank(pawnsq,side)-krank;
+               blocked = board[pawnsq+8] == BlackPawn;
+           }
+       }
+       if (dist <= 4) {
+           psquares[f-file+1] = pawnsq;
+           int adjacent = 0;
+           if (f > file-1 && psquares[f-file] != InvalidSquare &&
+               std::abs(Rank(psquares[f-file],side)-Rank(pawnsq,side)<=1)) {
+               // an adjacent pawn is also "storming"
+               adjacent++;
+           }
+#if defined(EVAL_DEBUG) || defined TUNE
+           const int index = 8*blocked + 4*adjacent + dist - 1;
+#endif
+           score_t score = PARAM(PAWN_STORM)[blocked][adjacent][dist-1];
+#ifdef EVAL_DEBUG
+       cout << ColorImage(side) << " : file " << char('A'+f-1) << " dist " << dist << " blocked=" << blocked << " adjacent=" << adjacent << " score=" << score << " index=" << index << endl;
+
+#endif
+           coverEntry.storm += score;
+#ifdef TUNE
+           coverEntry.storm_indices[i++] = index;
+#endif
+       }
+   }
+}
+
 template <ColorType bishopColor>
 void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores)
 {
@@ -832,7 +887,7 @@ void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,con
 #endif
       opp_scores.end += ((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns) * PARAM(BISHOP_PAWN_PLACEMENT_END))/ totalOppPawns;
 #ifdef EVAL_DEBUG
-      cout << "Bishop pawn placement: (" << ColorImage(OppositeColor(bishopColor)) << "): " << opp_scores.end - tmp << endl;
+      cout << "bishop pawn placement: (" << ColorImage(OppositeColor(bishopColor)) << "): " << opp_scores.end - tmp << endl;
 #endif
    }
 }
@@ -1779,8 +1834,10 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(Black),useCache);
    KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(White),useCache);
-   score_t whiteCover = whiteKPEntry.cover == Constants::INVALID_SCORE ? 0 : whiteKPEntry.cover;
-   score_t blackCover = blackKPEntry.cover == Constants::INVALID_SCORE ? 0 : blackKPEntry.cover;
+   const score_t whiteCover = whiteKPEntry.cover == Constants::INVALID_SCORE ? 0 : whiteKPEntry.cover;
+   const score_t blackCover = blackKPEntry.cover == Constants::INVALID_SCORE ? 0 : blackKPEntry.cover;
+   const score_t whiteStorm = whiteKPEntry.storm == Constants::INVALID_SCORE ? 0 : whiteKPEntry.storm;
+   const score_t blackStorm = blackKPEntry.storm == Constants::INVALID_SCORE ? 0 : blackKPEntry.storm;
 
    const int w_materialLevel = board.getMaterial(White).materialLevel();
    const int b_materialLevel = board.getMaterial(Black).materialLevel();
@@ -1829,8 +1886,10 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    if (posEval) {
        // compute positional scores
-       positionalScore<White>(board, pawnEntry, whiteCover, blackCover, wScores, bScores);
-       positionalScore<Black>(board, pawnEntry, blackCover, whiteCover, bScores, wScores);
+       positionalScore<White>(board, pawnEntry, whiteCover, blackCover, whiteStorm,
+                              wScores, bScores);
+       positionalScore<Black>(board, pawnEntry, blackCover, whiteCover, blackStorm,
+                              bScores, wScores);
    }
 
 #ifdef EVAL_DEBUG
@@ -2276,13 +2335,14 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
    hash_t kphash = BoardHash::kingPawnHash(board,side);
    KingPawnHashEntry &entry = kingPawnHashTable[side][kphash % KING_PAWN_HASH_SIZE];
    int mLevel = board.getMaterial(OppositeColor(side)).materialLevel();
-   bool needCover = mLevel >= PARAM(MIDGAME_THRESHOLD);
+   bool needCover = mLevel > PARAM(MIDGAME_THRESHOLD);
    bool needEndgame = mLevel <= PARAM(ENDGAME_THRESHOLD);
    if (!useCache || (entry.hc != kphash)) {
       if (needCover) {
          calcCover<side>(board,entry);
+         calcStorm<side>(board,entry);
       } else {
-         entry.cover = Constants::INVALID_SCORE;
+         entry.cover = entry.storm = Constants::INVALID_SCORE;
       }
       if (needEndgame) {
          calcKingEndgamePosition(board,side,oppPawnData,entry);
@@ -2294,6 +2354,7 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
    else {
       if (needCover && entry.cover == Constants::INVALID_SCORE) {
          calcCover<side>(board,entry);
+         calcStorm<side>(board,entry);
       }
       if (needEndgame && entry.king_endgame_position == Constants::INVALID_SCORE) {
          calcKingEndgamePosition(board,side,oppPawnData,entry);
@@ -2303,12 +2364,15 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
       KingPawnHashEntry entry2;
       entry2.cover = entry2.king_endgame_position = 0;
       calcCover<side>(board,entry2);
+      calcStorm<side>(board,entry2);
       calcKingEndgamePosition(board,side,oppPawnData,entry2);
-      if (needCover && entry.cover != entry2.cover) {
+      if (needCover && ((entry.cover != entry2.cover) || (entry.storm != entry2.storm))) {
          cout << board << endl;
          cout << "mLevel=" << mLevel << endl;
          cout << "cover1=" << entry.cover << " cover2=" << entry2.cover << endl;
+         cout << "storm1=" << entry.storm << " storm2=" << entry2.storm << endl;
          ASSERT(entry.cover == entry2.cover);
+         ASSERT(entry.storm == entry2.storm);
       }
 
       if (needEndgame && entry.king_endgame_position != entry2.king_endgame_position) {
@@ -2322,7 +2386,7 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
 
 
 template<ColorType side>
-void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, score_t ownCover, score_t oppCover, Scores &scores, Scores &oppScores) {
+void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, score_t ownCover, score_t oppCover, score_t ownStorm, Scores &scores, Scores &oppScores) {
    const ColorType oside = OppositeColor(side);
 
 #ifdef EVAL_DEBUG
@@ -2359,6 +2423,13 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
 
    // add penalty for damaged king cover
    scores.mid += ownCover;
+
+   // and pawn storm
+   scores.mid += ownStorm;
+
+#ifdef EVAL_DEBUG
+   cout << ColorImage(side) << " pawn storm: " << ownStorm << endl;
+#endif
 
    pieceScore<side> (board, pawnEntry.pawnData(side),
                      pawnEntry.pawnData(oside), oppCover, scores, oppScores,
@@ -2697,5 +2768,17 @@ void Params::write(ostream &o, const string &comment)
    o << "const int Params::BISHOP_OUTPOST[2][2] = ";
    print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
    o << endl;
+   o << "const int Params::PAWN_STORM[2][2][4] = {";
+   for (int b = 0; b < 2; b++) {
+       o << '{';
+       for (int a = 0; a < 2; a++) {
+           print_array(o,Params::PAWN_STORM[b][a],4,0);
+           if (a == 0) o << ',';
+       }
+       o << '}';
+       if (b == 0) o << ',' << endl;
+   }
+   o << "};" << endl;
 }
+
 #endif
