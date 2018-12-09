@@ -1268,7 +1268,7 @@ void Scoring::pieceScore(const Board &board,
       opp_scores.mid -= kattack;
    }
 
-   if (pin_count) scores.end += PARAM(PIN_MULTIPLIER_END) * pin_count;
+   if (pin_count) opp_scores.end -= PARAM(PIN_MULTIPLIER_END) * pin_count;
    const Bitboard & opa = ourPawnData.opponent_pawn_attacks;
    // bonus for pawn threats against pieces
    int pawnThreats = Bitboard(oppPawnData.opponent_pawn_attacks & board.occupied[side] & ~board.pawn_bits[side]).bitCountOpt();
@@ -1276,7 +1276,6 @@ void Scoring::pieceScore(const Board &board,
       scores.mid += PARAM(PAWN_THREAT_ON_PIECE_MID)*pawnThreats;
       scores.end += PARAM(PAWN_THREAT_ON_PIECE_END)*pawnThreats;
    }
-   //Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
    const Bitboard unsafePawns = oppPawnData.weak_pawns;
    // penalize threats by pieces against pieces or pawns
    if (minorAttacks) {
