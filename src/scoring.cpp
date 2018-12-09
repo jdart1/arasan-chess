@@ -833,7 +833,7 @@ void Scoring::calcStorm(const Board &board, KingPawnHashEntry &coverEntry) {
            psquares[f-file+1] = pawnsq;
            int adjacent = 0;
            if (f > file-1 && psquares[f-file] != InvalidSquare &&
-               std::abs(Rank(psquares[f-file],side)-Rank(pawnsq,side)<=1)) {
+               std::abs(Rank(psquares[f-file],side)-Rank(pawnsq,side))<=1) {
                // an adjacent pawn is also "storming"
                adjacent++;
            }
