@@ -939,7 +939,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    if (pin_count && !deep_endgame) {
-       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
+       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,mLevel)*pin_count;
    }
    if (pin_count) {
        grads[Tune::PIN_MULTIPLIER_END] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_END,mLevel)*pin_count;
