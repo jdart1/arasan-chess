@@ -585,7 +585,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Material &oppmat = board.getMaterial(oside);
    const int mLevel = oppmat.materialLevel();
    const int ourMatLevel = ourmat.materialLevel();
-   const bool midgame = ourMatLevel > Params::MIDGAME_THRESHOLD;
    const bool deep_endgame = ourMatLevel <= Params::MIDGAME_THRESHOLD;
    const bool early_endgame = ourMatLevel <= Params::ENDGAME_THRESHOLD;
 
@@ -669,20 +668,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    if (side == White) {
       s.calcCover<White>(board,ourKpe);
       s.calcCover<Black>(board,oppKpe);
-      s.calcStorm<White>(board,ourKpe);
    }
    else {
       s.calcCover<Black>(board,ourKpe);
       s.calcCover<White>(board,oppKpe);
-      s.calcStorm<Black>(board,ourKpe);
-   }
-   if (midgame) {
-       for (auto it : ourKpe.storm_indices) {
-           if (it >= 0) {
-               ASSERT(it<48);
-               grads[Tune::PAWN_STORM+it] += tune_params.scale(inc,Tune::PAWN_STORM+it,mLevel);
-           }
-       }
    }
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
@@ -939,7 +928,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    if (pin_count && !deep_endgame) {
-       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,mLevel)*pin_count;
+       grads[Tune::PIN_MULTIPLIER_MID] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_MID,board.getMaterial(side).materialLevel())*pin_count;
    }
    if (pin_count) {
        grads[Tune::PIN_MULTIPLIER_END] += tune_params.scale(inc,Tune::PIN_MULTIPLIER_END,mLevel)*pin_count;

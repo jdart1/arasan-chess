@@ -124,7 +124,6 @@ score_t Params::TRIPLED_PAWNS[2][8];
 score_t Params::ISOLATED_PAWN[2][8];
 score_t Params::KNIGHT_OUTPOST[2][2];
 score_t Params::BISHOP_OUTPOST[2][2];
-score_t Params::PAWN_STORM[2][2][4];
 score_t Params::KNIGHT_MOBILITY[9];
 score_t Params::BISHOP_MOBILITY[15];
 score_t Params::ROOK_MOBILITY[2][15];

@@ -138,15 +138,13 @@ class Scoring
        hash_t hc;
 #ifdef TUNE
        score_t cover;
-       score_t storm;
        score_t king_endgame_position;
 #else
-       int32_t cover, storm;
+       int32_t cover;
        int32_t king_endgame_position;
 #endif
 #ifdef TUNE
        float counts[6][4];
-       array<int,4> storm_indices;
 #endif
     };
 
@@ -166,9 +164,6 @@ class Scoring
     // Public, for use by the tuner.
     template <ColorType side>
     void calcCover(const Board &board, KingPawnHashEntry &cover);
-
-    template <ColorType side>
-    void calcStorm(const Board &board, KingPawnHashEntry &cover);
 
 #ifdef TUNE
     score_t kingAttackSigmoid(score_t weight) const;
@@ -208,9 +203,7 @@ class Scoring
     template <ColorType side>
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
-                            score_t ownCover,
-                            score_t oppCover,
-                            score_t ownStorm,
+                            score_t ownCover, score_t oppCover,
                             Scores &scores,
                             Scores &oppScores);
 

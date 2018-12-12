@@ -80,8 +80,8 @@ Tune::Tune()
         TuneParam(Tune::KING_COVER_BASE,"king_cover_base",VAL(-0.1),-KING_COVER_RANGE,0,TuneParam::Midgame,0),
         TuneParam(Tune::KING_DISTANCE_BASIS,"king_distance_basis",VAL(0.312),VAL(0.2),VAL(0.4),TuneParam::Endgame,0),
         TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",VAL(0.077),VAL(0.04),VAL(0.12),TuneParam::Endgame,0),
-        TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",VAL(0.7),0,VAL(1.0),TuneParam::Midgame,1),
-        TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",VAL(0.7),0,VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",VAL(0.227),0,VAL(0.75),TuneParam::Midgame,1),
+        TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",VAL(0.289),0,VAL(0.750),TuneParam::Endgame,1),
         TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",VAL(-0.1),VAL(-0.5),VAL(0),TuneParam::Any,1),
         TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",VAL(-0.5),VAL(-2.0),VAL(0),TuneParam::Any,1),
         TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",VAL(-0.1),VAL(-0.5),VAL(0),TuneParam::Any,1),
@@ -470,16 +470,6 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,p == 0 ? TuneParam::Midgame : TuneParam::Endgame,1));
       }
    }
-   ASSERT(i==PAWN_STORM);
-   for (int b = 0; b < 2; b++) {
-       for (int a = 0; a < 2; a++) {
-           for (int d = 0; d < 4; d++) {
-               stringstream name;
-               name << "pawn_storm" << i-PAWN_STORM;
-               push_back(TuneParam(i++,name.str(),-(4-d)*VAL(0.1),-VAL(1.0),0,TuneParam::Midgame,1));
-           }
-       }
-   }
    // add trade down
    ASSERT(i==TRADE_DOWN);
    for (int p = 0; p < 8; p++) {
@@ -777,17 +767,6 @@ void Tune::applyParams(bool check) const
       Params::KNIGHT_OUTPOST[1][i] = PARAM(KNIGHT_OUTPOST_ENDGAME+i);
       Params::BISHOP_OUTPOST[0][i] = PARAM(BISHOP_OUTPOST_MIDGAME+i);
       Params::BISHOP_OUTPOST[1][i] = PARAM(BISHOP_OUTPOST_ENDGAME+i);
-   }
-   {
-       int i = 0;
-       for (int b = 0; b < 2; b++) {
-           for (int a = 0; a < 2; a++) {
-               for (int d = 0; d < 4; d++) {
-                   Params::PAWN_STORM[b][a][d] = PARAM(PAWN_STORM+i);
-                   ++i;
-               }
-           }
-       }
    }
 }
 
