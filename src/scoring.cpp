@@ -33,7 +33,7 @@ const int Params::ENDGAME_THRESHOLD = 23;
 
 CACHE_ALIGN Bitboard Scoring::kingProximity[2][64];
 CACHE_ALIGN Bitboard Scoring::kingNearProximity[64];
-CACHE_ALIGN Bitboard Scoring::kingPawnProximity[2][64];
+CACHE_ALIGN Bitboard Scoring::kingPawnProximity[3][2][64];
 
 static score_t VAL(double x) { return score_t(Params::PAWN_VALUE*x); }
 
@@ -98,13 +98,14 @@ template<ColorType side> void Scoring::initProximity(Square i) {
    if (File(i) == 1) kp += 1;
    kingProximity[side][i] = Attacks::king_attacks[kp];
    kingProximity[side][i].set(kp);
-   const int r = Rank(i, side);
-   if (r <= 6) {
-      kingProximity[side][i].set(MakeSquare(File(kp) - 1, r + 2, side));
-      kingProximity[side][i].set(MakeSquare(File(kp), r + 2, side));
-      kingProximity[side][i].set(MakeSquare(File(kp) + 1, r + 2, side));
+   kingPawnProximity[0][side][i] = kingProximity[side][i];
+   int z = 1;
+   int krank = Rank(kp,side);
+   for (r = krank+3; r <= std::min(8,krank+4); r++, z++) {
+       for (int f = File(kp)-1; f <= File(kp)+1; f++) {
+           kingPawnProximity[z][side][i].set(MakeSquare(f, r, side));
+       }
    }
-   kingPawnProximity[side][i] = kingProximity[side][i];
 
    Square sq;
    Bitboard tmp(kingProximity[side][i]);
