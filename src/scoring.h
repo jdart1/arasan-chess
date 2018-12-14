@@ -16,7 +16,7 @@ class Scoring
     // This class does static evaluation of chess positions.
 
     public:
-		
+
     enum {Midgame = 0, Endgame = 1};
 
     static void init();
@@ -26,15 +26,15 @@ class Scoring
     Scoring();
 
     ~Scoring();
-        
+
     // evaluate "board" from the perspective of the side to move.
     score_t evalu8( const Board &board, bool useCache = true );
 
     // checks for legal draws plus certain other theoretically
     // draw positions
     static int isDraw(const Board &board);
-        
-    // checks for draw by repetition (returning repetition count) + 
+
+    // checks for draw by repetition (returning repetition count) +
     // other draw situations as in isDraw above.
     static int isDraw( const Board &board, int &rep_count, int ply);
 
@@ -102,7 +102,7 @@ class Scoring
 
     static CACHE_ALIGN Bitboard kingProximity[2][64];
     static CACHE_ALIGN Bitboard kingNearProximity[64];
-    static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
+    static CACHE_ALIGN Bitboard kingPawnProximity[2][3][64];
 
     struct PawnHashEntry {
 
@@ -138,13 +138,13 @@ class Scoring
        hash_t hc;
 #ifdef TUNE
        score_t cover;
+       score_t storm;
        score_t king_endgame_position;
-#else
-       int32_t cover;
-       int32_t king_endgame_position;
-#endif
-#ifdef TUNE
        float counts[6][4];
+       array<int,3> storm_counts;
+#else
+       int32_t cover, storm;
+       int32_t king_endgame_position;
 #endif
     };
 
@@ -164,6 +164,9 @@ class Scoring
     // Public, for use by the tuner.
     template <ColorType side>
     void calcCover(const Board &board, KingPawnHashEntry &cover);
+
+    template <ColorType side>
+    void calcStorm(const Board &board, KingPawnHashEntry &cover);
 
 #ifdef TUNE
     score_t kingAttackSigmoid(score_t weight) const;
@@ -203,7 +206,9 @@ class Scoring
     template <ColorType side>
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
-                            score_t ownCover, score_t oppCover,
+                            score_t ownCover,
+                            score_t oppCover,
+                            score_t ownStorm,
                             Scores &scores,
                             Scores &oppScores);
 
@@ -221,7 +226,7 @@ class Scoring
     void pieceScore(const Board &board,
                     const PawnHashEntry::PawnData &ourPawnData,
 		    const PawnHashEntry::PawnData &oppPawnData,
-                    score_t cover, Scores &, Scores &opp_scores,
+                    score_t cover, score_t storm, Scores &, Scores &opp_scores,
                     bool early_endgame,
                     bool deep_endgame);
 
@@ -270,6 +275,4 @@ class Scoring
 };
 
 #endif
-
-
 

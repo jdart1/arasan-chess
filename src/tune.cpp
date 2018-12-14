@@ -92,6 +92,7 @@ Tune::Tune()
         TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",VAL(0.06),0,VAL(0.5),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",7,0,20,TuneParam::Midgame,1),
         TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",7,0,20,TuneParam::Midgame,1),
+        TuneParam(Tune::PAWN_ATTACK_FACTOR3,"pawn_attack_factor3",4,0,20,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",45,10,45,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,5,70,TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",60,12,75,TuneParam::Midgame,1),
@@ -575,6 +576,7 @@ void Tune::applyParams(bool check) const
    Params::PAWN_ENDGAME2 = PARAM(PAWN_ENDGAME2);
    Params::PAWN_ATTACK_FACTOR1 = PARAM(PAWN_ATTACK_FACTOR1);
    Params::PAWN_ATTACK_FACTOR2 = PARAM(PAWN_ATTACK_FACTOR2);
+   Params::PAWN_ATTACK_FACTOR3 = PARAM(PAWN_ATTACK_FACTOR3);
    Params::MINOR_ATTACK_FACTOR = PARAM(MINOR_ATTACK_FACTOR);
    Params::MINOR_ATTACK_BOOST = PARAM(MINOR_ATTACK_BOOST);
    Params::ROOK_ATTACK_FACTOR = PARAM(ROOK_ATTACK_FACTOR);

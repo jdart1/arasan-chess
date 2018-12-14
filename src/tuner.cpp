@@ -666,12 +666,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
    if (side == White) {
-      s.calcCover<White>(board,ourKpe);
-      s.calcCover<Black>(board,oppKpe);
-   }
-   else {
-      s.calcCover<Black>(board,ourKpe);
-      s.calcCover<White>(board,oppKpe);
+       s.calcCover<White>(board,ourKpe);
+       s.calcCover<Black>(board,oppKpe);
+       s.calcStorm<Black>(board,oppKpe);
+   } else {
+       s.calcCover<Black>(board,ourKpe);
+       s.calcCover<White>(board,oppKpe);
+       s.calcStorm<White>(board,oppKpe);
    }
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
@@ -1169,9 +1170,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    if (!deep_endgame) {
-      int proximity = Bitboard(Scoring::kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
-      attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
+      attackWeight += oppKpe.storm;
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
@@ -1211,9 +1210,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::KING_ATTACK_SCALE_MAX] +=
           tune_params.scale(inc*max_grad,Tune::KING_ATTACK_SCALE_MAX,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR1] +=
-         tune_params.scale(inc*scale_grad*proximity/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
+         tune_params.scale(inc*scale_grad*oppKpe.storm_counts[0]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
       grads[Tune::PAWN_ATTACK_FACTOR2] +=
-         tune_params.scale(inc*scale_grad*pawnAttacks/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
+         tune_params.scale(inc*scale_grad*oppKpe.storm_counts[1]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
+      grads[Tune::PAWN_ATTACK_FACTOR3] +=
+         tune_params.scale(inc*scale_grad*oppKpe.storm_counts[2]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR3,ourMatLevel);
+
       // compute partial derivatives for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;
            i <= Tune::QUEEN_ATTACK_BOOST2;

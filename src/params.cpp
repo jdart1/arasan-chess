@@ -33,6 +33,7 @@ const int Params::PAWN_ENDGAME1 = 38;
 const int Params::PAWN_ENDGAME2 = 0;
 const int Params::PAWN_ATTACK_FACTOR1 = 6;
 const int Params::PAWN_ATTACK_FACTOR2 = 8;
+const int Params::PAWN_ATTACK_FACTOR3 = 4;
 const int Params::MINOR_ATTACK_FACTOR = 44;
 const int Params::MINOR_ATTACK_BOOST = 43;
 const int Params::ROOK_ATTACK_FACTOR = 60;
