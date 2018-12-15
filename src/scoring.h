@@ -162,11 +162,9 @@ class Scoring
     static int distance(Square sq1, Square sq);
 
     // Public, for use by the tuner.
-    template <ColorType side>
-    void calcCover(const Board &board, KingPawnHashEntry &cover);
+    void calcCover(const Board &board, ColorType side, KingPawnHashEntry &cover);
 
-    template <ColorType side>
-    void calcStorm(const Board &board, KingPawnHashEntry &cover);
+    void calcStorm(const Board &board, ColorType side, KingPawnHashEntry &cover);
 
 #ifdef TUNE
     score_t kingAttackSigmoid(score_t weight) const;
@@ -230,19 +228,17 @@ class Scoring
                     bool early_endgame,
                     bool deep_endgame);
 
-    template <ColorType side>
 #ifdef TUNE
-    static score_t calcCover(const Board &board, int file, int rank, int (&counts)[6][4]);
+    static score_t calcCover(const Board &board, ColorType side, int file, int rank, int (&counts)[6][4]);
 #else
-    static score_t calcCover(const Board &board, int file, int rank);
+    static score_t calcCover(const Board &board, ColorType side, int file, int rank);
 #endif
 
     // Compute king cover for King on square 'kp' of color 'side'
-    template <ColorType side>
 #ifdef TUNE
-    static score_t calcCover(const Board &board, Square kp, int (&counts)[6][4]);
+    static score_t calcCover(const Board &board, ColorType side, Square kp, int (&counts)[6][4]);
 #else
-    static score_t calcCover(const Board &board, Square kp);
+    static score_t calcCover(const Board &board, ColorType side, Square kp);
 #endif
 
     void calcPawnData(const Board &board, ColorType side,

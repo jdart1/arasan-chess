@@ -665,15 +665,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
 
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
-   if (side == White) {
-       s.calcCover<White>(board,ourKpe);
-       s.calcCover<Black>(board,oppKpe);
-       s.calcStorm<Black>(board,oppKpe);
-   } else {
-       s.calcCover<Black>(board,ourKpe);
-       s.calcCover<White>(board,oppKpe);
-       s.calcStorm<White>(board,oppKpe);
-   }
+   s.calcCover(board,side,ourKpe);
+   s.calcCover(board,OppositeColor(side),oppKpe);
+   s.calcStorm(board,OppositeColor(side),oppKpe);
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
    array<int,8> attackTypes;

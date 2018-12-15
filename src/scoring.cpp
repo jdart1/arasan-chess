@@ -572,12 +572,10 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
     return score;
 }
 
-template<ColorType side>
 #ifdef TUNE
-score_t Scoring::calcCover(const Board &board, int file, int rank, int (&counts)[6][4])
-{
+score_t Scoring::calcCover(const Board &board, ColorType side, int file, int rank, int (&counts)[6][4]) {
 #else
-score_t Scoring::calcCover(const Board &board, int file, int rank) {
+score_t Scoring::calcCover(const Board &board, ColorType side, int file, int rank) {
 #endif
    Square sq, pawn;
    score_t cover = PARAM(KING_COVER_BASE);
@@ -603,7 +601,7 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
       }
       else {
          pawn = pawns.firstOne();
-         const int rank = Rank<side>(pawn);
+         const int rank = Rank(pawn,side);
          ASSERT(rank >= 2);
          const int rank_dist = std::min<int>(3,rank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
@@ -630,7 +628,7 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
       }
       else {
          pawn = pawns.lastOne();
-         const int rank = Rank<side>(pawn);
+         const int rank = Rank(pawn,side);
          ASSERT(rank >= 2);
          const int rank_dist = std::min<int>(3,rank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
@@ -643,11 +641,10 @@ score_t Scoring::calcCover(const Board &board, int file, int rank) {
 }
 
 // Calculate a king cover score
-template<ColorType side>
 #ifdef TUNE
-score_t Scoring::calcCover(const Board &board, Square kp, int (&counts)[6][4]) {
+score_t Scoring::calcCover(const Board &board, ColorType side, Square kp, int (&counts)[6][4]) {
 #else
-score_t Scoring::calcCover(const Board &board, Square kp) {
+score_t Scoring::calcCover(const Board &board, ColorType side, Square kp) {
 #endif
    score_t cover = 0;
    int kpfile = File(kp);
@@ -655,27 +652,27 @@ score_t Scoring::calcCover(const Board &board, Square kp) {
    if (kpfile > 5) {
       for(int i = 6; i <= 8; i++) {
 #ifdef TUNE
-         cover += calcCover<side> (board, i, rank, counts);
+         cover += calcCover(board, side, i, rank, counts);
 #else
-         cover += calcCover<side> (board, i, rank);
+         cover += calcCover(board, side, i, rank);
 #endif
       }
    }
    else if (kpfile < 4) {
       for(int i = 1; i <= 3; i++) {
 #ifdef TUNE
-         cover += calcCover<side> (board, i, rank, counts);
+         cover += calcCover(board, side, i, rank, counts);
 #else
-         cover += calcCover<side> (board, i, rank);
+         cover += calcCover(board, side, i, rank);
 #endif
       }
    }
    else {
       for(int i = kpfile - 1; i <= kpfile + 1; i++) {
 #ifdef TUNE
-         cover += calcCover<side> (board, i, rank, counts);
+         cover += calcCover(board, side, i, rank, counts);
 #else
-         cover += calcCover<side> (board, i, rank);
+         cover += calcCover(board, side, i, rank);
 #endif
       }
    }
@@ -683,8 +680,7 @@ score_t Scoring::calcCover(const Board &board, Square kp) {
    return cover;
 }
 
-template<ColorType side>
-void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
+void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &coverEntry) {
    Square kp = board.kingSquare(side);
 
 #ifdef TUNE
@@ -711,20 +707,20 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
          king_cover[i][j] = kside_cover[i][j] = qside_cover[i][j] = 0;
       }
    }
-   score_t cover = calcCover<side> (board, kp, king_cover);
+   score_t cover = calcCover(board, side, kp, king_cover);
 #else
-   score_t cover = calcCover<side> (board, kp);
+   score_t cover = calcCover(board, side, kp);
 #endif
    switch(board.castleStatus(side))
    {
    case CanCastleEitherSide:
       {
 #ifdef TUNE
-         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
-         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
+         score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8, kside_cover);
+         score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8, qside_cover);
 #else
-         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
-         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
+         score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8);
+         score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8);
 #endif
          coverEntry.cover = (cover * 2) / 3 + std::min<score_t>(k_cover, q_cover) / 3;
 #ifdef TUNE
@@ -743,9 +739,9 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    case CanCastleKSide:
       {
 #ifdef TUNE
-         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8, kside_cover);
+         score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8, kside_cover);
 #else
-         score_t k_cover = calcCover<side> (board, side == White ? chess::G1 : chess::G8);
+         score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8);
 #endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
 #ifdef TUNE
@@ -763,9 +759,9 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    case CanCastleQSide:
       {
 #ifdef TUNE
-         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8, qside_cover);
+         score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8, qside_cover);
 #else
-         score_t q_cover = calcCover<side> (board, side == White ? chess::B1 : chess::B8);
+         score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8);
 #endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
 #ifdef TUNE
@@ -792,8 +788,7 @@ void Scoring::calcCover(const Board &board, KingPawnHashEntry &coverEntry) {
    }
 }
 
-template<ColorType side>
-void Scoring::calcStorm(const Board &board, KingPawnHashEntry &coverEntry) {
+void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &coverEntry) {
    const Bitboard &pawns = board.pawn_bits[OppositeColor(side)];
    Square ksq = board.kingSquare(side);
    int count = Bitboard(kingPawnProximity[side][0][ksq] & pawns).bitCount();
@@ -2308,8 +2303,8 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
    bool needEndgame = mLevel <= PARAM(ENDGAME_THRESHOLD);
    if (!useCache || (entry.hc != kphash)) {
       if (needCover) {
-         calcCover<side>(board,entry);
-         calcStorm<side>(board,entry);
+         calcCover(board,side,entry);
+         calcStorm(board,side,entry);
       } else {
          entry.cover = entry.storm = Constants::INVALID_SCORE;
       }
@@ -2322,8 +2317,8 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
    }
    else {
       if (needCover && entry.cover == Constants::INVALID_SCORE) {
-         calcCover<side>(board,entry);
-         calcStorm<side>(board,entry);
+         calcCover(board,side,entry);
+         calcStorm(board,side,entry);
       }
       if (needEndgame && entry.king_endgame_position == Constants::INVALID_SCORE) {
          calcKingEndgamePosition(board,side,oppPawnData,entry);
@@ -2332,8 +2327,8 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
       // cached entry better = computed entry
       KingPawnHashEntry entry2;
       entry2.cover = entry2.king_endgame_position = 0;
-      calcCover<side>(board,entry2);
-      calcStorm<side>(board,entry2);
+      calcCover(board,side,entry2);
+      calcStorm(board,side,entry2);
       calcKingEndgamePosition(board,side,oppPawnData,entry2);
       if (needCover && ((entry.cover != entry2.cover) || (entry.storm != entry2.storm))) {
          cout << board << endl;
