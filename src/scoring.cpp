@@ -33,7 +33,9 @@ const int Params::ENDGAME_THRESHOLD = 23;
 
 CACHE_ALIGN Bitboard Scoring::kingProximity[2][64];
 CACHE_ALIGN Bitboard Scoring::kingNearProximity[64];
-CACHE_ALIGN Bitboard Scoring::kingPawnProximity[2][3][64];
+CACHE_ALIGN Bitboard Scoring::kingPawnProximity[2][3][64]; // side,
+                                                           // zone,
+                                                           // square
 
 static score_t VAL(double x) { return score_t(Params::PAWN_VALUE*x); }
 
@@ -97,21 +99,20 @@ template<ColorType side> void Scoring::initProximity(Square i) {
    if (File(i) == 8) kp -= 1;
    if (File(i) == 1) kp += 1;
    int kpfile = File(kp);
-   int kprank = Rank(kp,side);
    kingProximity[side][i] = Attacks::king_attacks[kp];
    kingProximity[side][i].set(kp);
-   const int r = Rank(i, side);
-   if (r <= 6) {
-      kingProximity[side][i].set(MakeSquare(File(kp) - 1, r + 2, side));
-      kingProximity[side][i].set(MakeSquare(File(kp), r + 2, side));
-      kingProximity[side][i].set(MakeSquare(File(kp) + 1, r + 2, side));
-   }
+   int r = Rank(i, side);
    kingPawnProximity[side][0][i] = kingProximity[side][i];
-
-   for (int f=kpfile-1; f <= kpfile+1; f++) {
-       int z = 1;
-       for (int r=std::min<int>(8,kprank+3); r <= std::min<int>(8,kprank+4); r++, z++) {
-           kingPawnProximity[side][z][i].set(MakeSquare(f,r,side));
+   if (r <= 6) {
+       for (int f=kpfile-1; f <= kpfile+1; f++) {
+           Square sq = MakeSquare(f,r+2,side);
+           kingPawnProximity[side][1][i].set(sq);
+           kingProximity[side][i].set(sq);
+       }
+   }
+   if (r+3 <= 8) {
+       for (int f=kpfile-1; f <= kpfile+1; f++) {
+           kingPawnProximity[side][2][i].set(MakeSquare(f,r+3,side));
        }
    }
 }
@@ -789,25 +790,31 @@ void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &c
 }
 
 void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &coverEntry) {
-   const Bitboard &pawns = board.pawn_bits[OppositeColor(side)];
-   Square ksq = board.kingSquare(side);
-   int count = Bitboard(kingPawnProximity[side][0][ksq] & pawns).bitCount();
-   coverEntry.storm = count*PARAM(PAWN_ATTACK_FACTOR1);
+    const Bitboard &pawns = board.pawn_bits[OppositeColor(side)];
+    Square ksq = board.kingSquare(side);
+    coverEntry.storm = 0;
 #ifdef TUNE
-   coverEntry.storm_counts[0] = count;
+    coverEntry.storm_counts.fill(0);
 #endif
-   count = Bitboard(kingPawnProximity[side][1][ksq] & pawns).bitCount();
-   coverEntry.storm += count*PARAM(PAWN_ATTACK_FACTOR2);
+    for (int zone = 0; zone < 3; zone++) {
+        Bitboard b(kingPawnProximity[side][zone][ksq] & pawns);
+        Square sq;
+        while (b.iterate(sq)) {
+            int blocked;
+            if (side == White) {
+                blocked = (board[sq-8] == WhitePawn);
+            } else {
+                blocked = (board[sq+8] == BlackPawn);
+            }
+            coverEntry.storm += PARAM(PAWN_ATTACK_FACTOR)[blocked][zone];
+//            cout << ColorImage(side) << " " << SquareImage(sq) << " blocked=" << blocked << " zone=" << zone << endl;
 #ifdef TUNE
-   coverEntry.storm_counts[1] = count;
+            coverEntry.storm_counts[blocked*3+zone]++;
 #endif
-   count = Bitboard(kingPawnProximity[side][2][ksq] & pawns).bitCount();
-   coverEntry.storm += count*PARAM(PAWN_ATTACK_FACTOR3);
-#ifdef TUNE
-   coverEntry.storm_counts[2] = count;
-#endif
+        }
+    }
 #ifdef EVAL_DEBUG
-   cout << ColorImage(side) << " storm = " << coverEntry.storm << endl;
+    cout << ColorImage(side) << " storm = " << coverEntry.storm << endl;
 #endif
 }
 
@@ -1850,9 +1857,9 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    if (posEval) {
        // compute positional scores
-       positionalScore<White>(board, pawnEntry, whiteCover, blackCover, whiteStorm,
+       positionalScore<White>(board, pawnEntry, whiteCover, blackCover, blackStorm,
                               wScores, bScores);
-       positionalScore<Black>(board, pawnEntry, blackCover, whiteCover, blackStorm,
+       positionalScore<Black>(board, pawnEntry, blackCover, whiteCover, whiteStorm,
                               bScores, wScores);
    }
 
@@ -2724,6 +2731,9 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::KNIGHT_OUTPOST[0],Params::KNIGHT_OUTPOST[1],2);
    o << "const int Params::BISHOP_OUTPOST[2][2] = ";
    print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
+   o << endl;
+   o << "const int Params::PAWN_ATTACK_FACTOR[2][3] = ";
+   print_array(o,Params::PAWN_ATTACK_FACTOR[0],Params::PAWN_ATTACK_FACTOR[1],3);
    o << endl;
 }
 
