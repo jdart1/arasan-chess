@@ -102,7 +102,7 @@ class Scoring
 
     static CACHE_ALIGN Bitboard kingProximity[2][64];
     static CACHE_ALIGN Bitboard kingNearProximity[64];
-    static CACHE_ALIGN Bitboard kingPawnProximity[2][3][64];
+    static CACHE_ALIGN Bitboard kingPawnProximity[2][4][64];
 
     struct PawnHashEntry {
 
@@ -141,7 +141,7 @@ class Scoring
        score_t storm;
        score_t king_endgame_position;
        float counts[6][4];
-       array<int,3> storm_counts;
+       array<int,8> storm_counts;
 #else
        int32_t cover, storm;
        int32_t king_endgame_position;

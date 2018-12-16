@@ -1203,12 +1203,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       double max_grad = 1/(1+(1/x));
       grads[Tune::KING_ATTACK_SCALE_MAX] +=
           tune_params.scale(inc*max_grad,Tune::KING_ATTACK_SCALE_MAX,ourMatLevel);
-      grads[Tune::PAWN_ATTACK_FACTOR1] +=
-         tune_params.scale(inc*scale_grad*oppKpe.storm_counts[0]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
-      grads[Tune::PAWN_ATTACK_FACTOR2] +=
-         tune_params.scale(inc*scale_grad*oppKpe.storm_counts[1]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
-      grads[Tune::PAWN_ATTACK_FACTOR3] +=
-         tune_params.scale(inc*scale_grad*oppKpe.storm_counts[2]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR3,ourMatLevel);
+      for (int i=0; i <8; i++) {
+          grads[Tune::PAWN_ATTACK_FACTOR+i] +=
+              tune_params.scale(inc*scale_grad*oppKpe.storm_counts[i]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR+i,ourMatLevel);
+      }
 
       // compute partial derivatives for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;

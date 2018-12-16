@@ -84,9 +84,6 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD ENDGAME_PAWN_ADVANTAGE;
     static PARAM_MOD PAWN_ENDGAME1;
     static PARAM_MOD PAWN_ENDGAME2;
-    static PARAM_MOD PAWN_ATTACK_FACTOR1;
-    static PARAM_MOD PAWN_ATTACK_FACTOR2;
-    static PARAM_MOD PAWN_ATTACK_FACTOR3;
     static PARAM_MOD MINOR_ATTACK_FACTOR;
     static PARAM_MOD MINOR_ATTACK_BOOST;
     static PARAM_MOD ROOK_ATTACK_FACTOR;
@@ -189,6 +186,8 @@ BEGIN_PACKED_STRUCT
     // outpost scores [phase][defended]
     static PARAM_MOD KNIGHT_OUTPOST[2][2];
     static PARAM_MOD BISHOP_OUTPOST[2][2];
+
+    static PARAM_MOD PAWN_ATTACK_FACTOR[2][4];
 
     // not tuned presently (fixed)
     static const int MATERIAL_SCALE[32];

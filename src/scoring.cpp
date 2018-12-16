@@ -33,7 +33,7 @@ const int Params::ENDGAME_THRESHOLD = 23;
 
 CACHE_ALIGN Bitboard Scoring::kingProximity[2][64];
 CACHE_ALIGN Bitboard Scoring::kingNearProximity[64];
-CACHE_ALIGN Bitboard Scoring::kingPawnProximity[2][3][64]; // side,
+CACHE_ALIGN Bitboard Scoring::kingPawnProximity[2][4][64]; // side,
                                                            // zone,
                                                            // square
 
@@ -98,21 +98,20 @@ template<ColorType side> void Scoring::initProximity(Square i) {
    Square kp = i;
    if (File(i) == 8) kp -= 1;
    if (File(i) == 1) kp += 1;
-   int kpfile = File(kp);
+   const int kpfile = File(kp);
+   const int kprank = Rank(i,side);
    kingProximity[side][i] = Attacks::king_attacks[kp];
    kingProximity[side][i].set(kp);
-   int r = Rank(i, side);
    kingPawnProximity[side][0][i] = kingProximity[side][i];
-   if (r <= 6) {
-       for (int f=kpfile-1; f <= kpfile+1; f++) {
-           Square sq = MakeSquare(f,r+2,side);
-           kingPawnProximity[side][1][i].set(sq);
-           kingProximity[side][i].set(sq);
-       }
+   if (kprank > 1) {
+       kingPawnProximity[side][0][i] &= ~Attacks::rank_mask[side == White ? kprank-2 : 9-kprank];
    }
-   if (r+3 <= 8) {
+   int z = 1;
+   for (int r = kprank+2; r <= std::min(8,kprank+4); r++, z++) {
        for (int f=kpfile-1; f <= kpfile+1; f++) {
-           kingPawnProximity[side][2][i].set(MakeSquare(f,r+3,side));
+           Square sq = MakeSquare(f,r,side);
+           kingPawnProximity[side][z][i].set(sq);
+           if (z == 1) kingProximity[side][i].set(sq);
        }
    }
 }
@@ -796,7 +795,7 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
 #ifdef TUNE
     coverEntry.storm_counts.fill(0);
 #endif
-    for (int zone = 0; zone < 3; zone++) {
+    for (int zone = 0; zone < 4; zone++) {
         Bitboard b(kingPawnProximity[side][zone][ksq] & pawns);
         Square sq;
         while (b.iterate(sq)) {
@@ -807,9 +806,11 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
                 blocked = (board[sq+8] == BlackPawn);
             }
             coverEntry.storm += PARAM(PAWN_ATTACK_FACTOR)[blocked][zone];
-//            cout << ColorImage(side) << " " << SquareImage(sq) << " blocked=" << blocked << " zone=" << zone << endl;
+#ifdef EVAL_DEBUG
+            cout << "storm: " << ColorImage(side) << " " << SquareImage(sq) << " blocked=" << blocked << " zone=" << zone << endl;
+#endif
 #ifdef TUNE
-            coverEntry.storm_counts[blocked*3+zone]++;
+            coverEntry.storm_counts[blocked*4+zone]++;
 #endif
         }
     }
@@ -2732,8 +2733,8 @@ void Params::write(ostream &o, const string &comment)
    o << "const int Params::BISHOP_OUTPOST[2][2] = ";
    print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
    o << endl;
-   o << "const int Params::PAWN_ATTACK_FACTOR[2][3] = ";
-   print_array(o,Params::PAWN_ATTACK_FACTOR[0],Params::PAWN_ATTACK_FACTOR[1],3);
+   o << "const int Params::PAWN_ATTACK_FACTOR[2][4] = ";
+   print_array(o,Params::PAWN_ATTACK_FACTOR[0],Params::PAWN_ATTACK_FACTOR[1],4);
    o << endl;
 }
 

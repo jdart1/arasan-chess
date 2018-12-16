@@ -90,9 +90,6 @@ Tune::Tune()
         TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",VAL(0.03),VAL(0),VAL(0.25),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",VAL(0.3),VAL(0),VAL(0.5),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",VAL(0.06),0,VAL(0.5),TuneParam::Any,1),
-        TuneParam(Tune::PAWN_ATTACK_FACTOR1,"pawn_attack_factor1",15,0,30,TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_ATTACK_FACTOR2,"pawn_attack_factor2",15,0,30,TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_ATTACK_FACTOR3,"pawn_attack_factor3",4,0,30,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",45,20,100,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,0,100,TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",60,20,100,TuneParam::Midgame,1),
@@ -502,6 +499,18 @@ Tune::Tune()
       score_t val = init[p];
       push_back(TuneParam(i++,name.str(),val,val-score_t(0.75*Params::PAWN_VALUE),val+score_t(0.75*Params::PAWN_VALUE),TuneParam::Any,1));
    }
+   ASSERT(i==PAWN_ATTACK_FACTOR);
+   for (int b=0; b<2; b++) {
+       for (int zone=0; zone<4; zone++) {
+           stringstream name;
+           name << "pawn_attack_factor";
+           if (b) name << "_blocked";
+           name << zone;
+           int val = b ? 15 : 30;
+           if (zone>=2) val /= 2;
+           push_back(TuneParam(i++,name.str(),val,0,40,TuneParam::Any,1));
+       }
+   }
 }
 
 void Tune::checkParams() const
@@ -574,9 +583,6 @@ void Tune::applyParams(bool check) const
    Params::ENDGAME_PAWN_ADVANTAGE = PARAM(ENDGAME_PAWN_ADVANTAGE);
    Params::PAWN_ENDGAME1 = PARAM(PAWN_ENDGAME1);
    Params::PAWN_ENDGAME2 = PARAM(PAWN_ENDGAME2);
-   Params::PAWN_ATTACK_FACTOR1 = PARAM(PAWN_ATTACK_FACTOR1);
-   Params::PAWN_ATTACK_FACTOR2 = PARAM(PAWN_ATTACK_FACTOR2);
-   Params::PAWN_ATTACK_FACTOR3 = PARAM(PAWN_ATTACK_FACTOR3);
    Params::MINOR_ATTACK_FACTOR = PARAM(MINOR_ATTACK_FACTOR);
    Params::MINOR_ATTACK_BOOST = PARAM(MINOR_ATTACK_BOOST);
    Params::ROOK_ATTACK_FACTOR = PARAM(ROOK_ATTACK_FACTOR);
@@ -661,6 +667,11 @@ void Tune::applyParams(bool check) const
    }
    for (int i = 0; i < 5; i++) {
       Params::QR_ADJUST[i] = PARAM(QR_ADJUST+i);
+   }
+   for (int b = 0; b < 2; b++) {
+       for (int i = 0; i < 3; i++) {
+           Params::PAWN_ATTACK_FACTOR[b][i] = PARAM(PAWN_ATTACK_FACTOR+b*3+i);
+       }
    }
    for (int i = 0; i < Params::KING_ATTACK_SCALE_SIZE; i++) {
        int x = int(PARAM(KING_ATTACK_SCALE_BIAS) +
