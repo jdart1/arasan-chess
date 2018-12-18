@@ -139,11 +139,13 @@ class Scoring
 #ifdef TUNE
        score_t cover;
        score_t storm;
+       score_t pawn_attacks;
        score_t king_endgame_position;
        float counts[6][4];
-       array<int,8> storm_counts;
+       int pawn_attack_count;
+       array<int,4> storm_counts;
 #else
-       int32_t cover, storm;
+       int32_t cover, storm, pawn_attacks;
        int32_t king_endgame_position;
 #endif
     };
@@ -154,6 +156,7 @@ class Scoring
 
     template <ColorType side>
       KingPawnHashEntry &getKPEntry(const Board &board,
+                        const PawnHashEntry::PawnData &ourPawnData,
                         const PawnHashEntry::PawnData &oppPawnData,
                         bool useCache);
 
@@ -164,7 +167,7 @@ class Scoring
     // Public, for use by the tuner.
     void calcCover(const Board &board, ColorType side, KingPawnHashEntry &cover);
 
-    void calcStorm(const Board &board, ColorType side, KingPawnHashEntry &cover);
+    void calcStorm(const Board &board, ColorType side, KingPawnHashEntry &cover, const Bitboard &oppPawnAttacks);
 
 #ifdef TUNE
     score_t kingAttackSigmoid(score_t weight) const;
@@ -204,9 +207,8 @@ class Scoring
     template <ColorType side>
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
-                            score_t ownCover,
-                            score_t oppCover,
-                            score_t ownStorm,
+                            const KingPawnHashEntry &ourKPEntry,
+                            const KingPawnHashEntry &oppKPEntry,
                             Scores &scores,
                             Scores &oppScores);
 
@@ -224,7 +226,9 @@ class Scoring
     void pieceScore(const Board &board,
                     const PawnHashEntry::PawnData &ourPawnData,
 		    const PawnHashEntry::PawnData &oppPawnData,
-                    score_t cover, score_t storm, Scores &, Scores &opp_scores,
+                    const KingPawnHashEntry &ourKPEntry,
+                    const KingPawnHashEntry &oppKPEntry,
+                    Scores &, Scores &opp_scores,
                     bool early_endgame,
                     bool deep_endgame);
 

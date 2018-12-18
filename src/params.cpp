@@ -31,6 +31,7 @@ const int Params::MINOR_FOR_PAWNS = 60;
 const int Params::ENDGAME_PAWN_ADVANTAGE = 31;
 const int Params::PAWN_ENDGAME1 = 48;
 const int Params::PAWN_ENDGAME2 = 0;
+const int Params::PAWN_ATTACK_FACTOR = 8;
 const int Params::MINOR_ATTACK_FACTOR = 43;
 const int Params::MINOR_ATTACK_BOOST = 51;
 const int Params::ROOK_ATTACK_FACTOR = 66;
@@ -128,6 +129,6 @@ const int Params::KING_MOBILITY_ENDGAME[5] = {-62, -29, -9, 3, 10};
 const int Params::KNIGHT_OUTPOST[2][2] = {{13, 47}, {20, 32}};
 const int Params::BISHOP_OUTPOST[2][2] = {{38, 70}, {35, 28}};
 
-const int Params::PAWN_ATTACK_FACTOR[2][4] = {{0, 40, 35, 0}, {15, 40, 0, 0}};
+const int Params::PAWN_STORM[2][2] = {{8, 4}, {8,4}};
 
 

@@ -578,6 +578,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    score_t attackWeight = 0;
    int simpleAttackWeight = 0;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
+   const Bitboard our_pawn_attacks(board.allPawnAttacks(side));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
    const Scoring::PawnHashEntry::PawnData oppPawnData = pawn_entr.pawnData(oside);
@@ -667,7 +668,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
    s.calcCover(board,side,ourKpe);
    s.calcCover(board,OppositeColor(side),oppKpe);
-   s.calcStorm(board,OppositeColor(side),oppKpe);
+   s.calcStorm(board,OppositeColor(side),oppKpe,our_pawn_attacks);
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
    array<int,8> attackTypes;
@@ -916,9 +917,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                   }
                }
             }
-#ifdef EVAL_DEBUG
-            if (attackWeight - tmp) cout << "queen attack boost= " << attackWeight - tmp << endl;
-#endif
          }
       }
    }
@@ -1164,7 +1162,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    if (!deep_endgame) {
-      attackWeight += oppKpe.storm;
+      attackWeight += oppKpe.storm + oppKpe.pawn_attacks;
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
@@ -1203,9 +1201,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       double max_grad = 1/(1+(1/x));
       grads[Tune::KING_ATTACK_SCALE_MAX] +=
           tune_params.scale(inc*max_grad,Tune::KING_ATTACK_SCALE_MAX,ourMatLevel);
-      for (int i=0; i <8; i++) {
-          grads[Tune::PAWN_ATTACK_FACTOR+i] +=
-              tune_params.scale(inc*scale_grad*oppKpe.storm_counts[i]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR+i,ourMatLevel);
+      grads[Tune::PAWN_ATTACK_FACTOR] +=
+          tune_params.scale(inc*scale_grad*oppKpe.pawn_attack_count/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR,ourMatLevel);
+
+      for (int i=0; i < 4; i++) {
+          grads[Tune::PAWN_STORM+i] +=
+              tune_params.scale(inc*scale_grad*oppKpe.storm_counts[i]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_STORM+i,ourMatLevel);
       }
 
       // compute partial derivatives for attack factors
@@ -1295,9 +1296,11 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
 
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
+            cout << "--old val" << endl;
             tune_params[i].current = val;
             tune_params.applyParams(false);
             s.evalu8(board,false);
+            cout << "--new val" << endl;
             tune_params[i].current = newval;
             tune_params.applyParams(false);
             s.evalu8(board,false);

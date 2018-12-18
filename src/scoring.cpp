@@ -19,7 +19,7 @@
 //#define EVAL_DEBUG
 //#define ATTACK_DEBUG
 
-const int Params:: MATERIAL_SCALE[32] =
+const int Params::MATERIAL_SCALE[32] =
 {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 24, 36, 48, 60, 72, 84, 96,
    108, 116, 120, 128, 128, 128, 128, 128, 128, 128, 128
@@ -102,16 +102,22 @@ template<ColorType side> void Scoring::initProximity(Square i) {
    const int kprank = Rank(i,side);
    kingProximity[side][i] = Attacks::king_attacks[kp];
    kingProximity[side][i].set(kp);
-   kingPawnProximity[side][0][i] = kingProximity[side][i];
-   if (kprank > 1) {
-       kingPawnProximity[side][0][i] &= ~Attacks::rank_mask[side == White ? kprank-2 : 9-kprank];
+   if (kprank <= 6) {
+       for (int f=kpfile-1; f <= kpfile+1; f++) {
+           kingProximity[side][i].set(MakeSquare(f,kprank+2,side));
+       }
    }
+
+   kingPawnProximity[side][0][i] = Attacks::king_attacks[i];
+   kingPawnProximity[side][0][i].set(i);
+//   if (kprank > 1) {
+//       kingPawnProximity[side][0][i] &= ~Attacks::rank_mask[side == White ? kprank-2 : 9-kprank];
+//   }
    int z = 1;
-   for (int r = kprank+2; r <= std::min(8,kprank+4); r++, z++) {
+   for (int r = kprank+3; r <= std::min(8,kprank+5); r++, z++) {
        for (int f=kpfile-1; f <= kpfile+1; f++) {
            Square sq = MakeSquare(f,r,side);
            kingPawnProximity[side][z][i].set(sq);
-           if (z == 1) kingProximity[side][i].set(sq);
        }
    }
 }
@@ -788,14 +794,18 @@ void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &c
    }
 }
 
-void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &coverEntry) {
+void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &coverEntry,
+    const Bitboard &oppPawnAttacks) {
     const Bitboard &pawns = board.pawn_bits[OppositeColor(side)];
     Square ksq = board.kingSquare(side);
     coverEntry.storm = 0;
+    const int pawn_attack_count = Bitboard(oppPawnAttacks & kingPawnProximity[side][0][ksq]).bitCount();
 #ifdef TUNE
     coverEntry.storm_counts.fill(0);
+    coverEntry.pawn_attack_count = pawn_attack_count;
 #endif
-    for (int zone = 0; zone < 4; zone++) {
+    coverEntry.pawn_attacks = PARAM(PAWN_ATTACK_FACTOR)*pawn_attack_count;
+    for (int zone = 1; zone < 3; zone++) {
         Bitboard b(kingPawnProximity[side][zone][ksq] & pawns);
         Square sq;
         while (b.iterate(sq)) {
@@ -805,17 +815,17 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
             } else {
                 blocked = (board[sq+8] == BlackPawn);
             }
-            coverEntry.storm += PARAM(PAWN_ATTACK_FACTOR)[blocked][zone];
+            coverEntry.storm += PARAM(PAWN_STORM)[zone-1][blocked];
 #ifdef EVAL_DEBUG
             cout << "storm: " << ColorImage(side) << " " << SquareImage(sq) << " blocked=" << blocked << " zone=" << zone << endl;
 #endif
 #ifdef TUNE
-            coverEntry.storm_counts[blocked*4+zone]++;
+            coverEntry.storm_counts[(zone-1)*2+blocked]++;
 #endif
         }
     }
 #ifdef EVAL_DEBUG
-    cout << ColorImage(side) << " storm = " << coverEntry.storm << endl;
+    cout << ColorImage(side) << " storm = " << coverEntry.storm << " pawn_attacks=" << coverEntry.pawn_attacks << endl;
 #endif
 }
 
@@ -871,14 +881,16 @@ template<ColorType side>
 void Scoring::pieceScore(const Board &board,
                          const PawnHashEntry::PawnData &ourPawnData,
                          const PawnHashEntry::PawnData &oppPawnData,
-                         score_t oppCover,
-                         score_t storm,
+                         const KingPawnHashEntry &ourKPEntry,
+                         const KingPawnHashEntry &oppKPEntry,
                          Scores &scores,
                          Scores &opp_scores,
                          bool early_endgame,
                          bool deep_endgame) {
    Bitboard b(board.occupied[side] &~board.pawn_bits[side]);
    b.clear(board.kingSquare(side));
+
+   score_t oppCover = oppKPEntry.cover == Constants::INVALID_SCORE ? 0 : oppKPEntry.cover;
 
    int pin_count = 0;
    Square kp = board.kingSquare(side);
@@ -1189,8 +1201,8 @@ void Scoring::pieceScore(const Board &board,
 #endif
    }
    if (!deep_endgame) {
-      // add in pawn attacks (from king/pawn hash table)
-      attackWeight += storm;
+      // add in pawn attack measure (from king/pawn hash table)
+      attackWeight += oppKPEntry.pawn_attacks + oppKPEntry.storm;
       // add "boost" factor due to damaged king cover
       attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/Params::PAWN_VALUE;
 
@@ -1804,12 +1816,10 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    Scores wScores, bScores;
 
-   KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(Black),useCache);
-   KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(White),useCache);
-   const score_t whiteCover = whiteKPEntry.cover == Constants::INVALID_SCORE ? 0 : whiteKPEntry.cover;
-   const score_t blackCover = blackKPEntry.cover == Constants::INVALID_SCORE ? 0 : blackKPEntry.cover;
-   const score_t whiteStorm = whiteKPEntry.storm == Constants::INVALID_SCORE ? 0 : whiteKPEntry.storm;
-   const score_t blackStorm = blackKPEntry.storm == Constants::INVALID_SCORE ? 0 : blackKPEntry.storm;
+   KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(White),
+                                                       pawnEntry.pawnData(Black),useCache);
+   KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(Black),
+                                                       pawnEntry.pawnData(White),useCache);
 
    const int w_materialLevel = board.getMaterial(White).materialLevel();
    const int b_materialLevel = board.getMaterial(Black).materialLevel();
@@ -1858,9 +1868,9 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    if (posEval) {
        // compute positional scores
-       positionalScore<White>(board, pawnEntry, whiteCover, blackCover, blackStorm,
+       positionalScore<White>(board, pawnEntry, whiteKPEntry, blackKPEntry,
                               wScores, bScores);
-       positionalScore<Black>(board, pawnEntry, blackCover, whiteCover, whiteStorm,
+       positionalScore<Black>(board, pawnEntry, blackKPEntry, whiteKPEntry,
                               bScores, wScores);
    }
 
@@ -2301,6 +2311,7 @@ Scoring::PawnHashEntry & Scoring::pawnEntry (const Board &board, bool useCache) 
 
 template <ColorType side>
 Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
+                                                const PawnHashEntry::PawnData &ourPawnData,
                                                 const PawnHashEntry::PawnData &oppPawnData,
                                                 bool useCache)
 {
@@ -2312,7 +2323,7 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
    if (!useCache || (entry.hc != kphash)) {
       if (needCover) {
          calcCover(board,side,entry);
-         calcStorm(board,side,entry);
+         calcStorm(board,side,entry,ourPawnData.opponent_pawn_attacks);
       } else {
          entry.cover = entry.storm = Constants::INVALID_SCORE;
       }
@@ -2326,7 +2337,7 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
    else {
       if (needCover && entry.cover == Constants::INVALID_SCORE) {
          calcCover(board,side,entry);
-         calcStorm(board,side,entry);
+         calcStorm(board,side,entry,ourPawnData.opponent_pawn_attacks);
       }
       if (needEndgame && entry.king_endgame_position == Constants::INVALID_SCORE) {
          calcKingEndgamePosition(board,side,oppPawnData,entry);
@@ -2336,7 +2347,7 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
       KingPawnHashEntry entry2;
       entry2.cover = entry2.king_endgame_position = 0;
       calcCover(board,side,entry2);
-      calcStorm(board,side,entry2);
+      calcStorm(board,side,entry2,ourPawnData.opponent_pawn_attacks);
       calcKingEndgamePosition(board,side,oppPawnData,entry2);
       if (needCover && ((entry.cover != entry2.cover) || (entry.storm != entry2.storm))) {
          cout << board << endl;
@@ -2358,7 +2369,10 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
 
 
 template<ColorType side>
-void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry, score_t ownCover, score_t oppCover, score_t oppStorm, Scores &scores, Scores &oppScores) {
+void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry,
+                              const KingPawnHashEntry &ourKPEntry,
+                              const KingPawnHashEntry &oppKPEntry,
+                              Scores &scores, Scores &oppScores) {
    const ColorType oside = OppositeColor(side);
 
 #ifdef EVAL_DEBUG
@@ -2394,10 +2408,10 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    }
 
    // add penalty for damaged king cover
-   scores.mid += ownCover;
+   scores.mid += (ourKPEntry.cover == Constants::INVALID_SCORE ? 0 : ourKPEntry.cover);
 
    pieceScore<side> (board, pawnEntry.pawnData(side),
-                     pawnEntry.pawnData(oside), oppCover, oppStorm, scores, oppScores,
+                     pawnEntry.pawnData(oside), ourKPEntry, oppKPEntry, scores, oppScores,
                      board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD),
                      board.getMaterial(side).materialLevel() <= PARAM(MIDGAME_THRESHOLD));
 }
@@ -2716,7 +2730,6 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::QUEEN_PST[0],Params::QUEEN_PST[1],64);
    o << "const int Params::KING_PST[2][64] = ";
    print_array(o,Params::KING_PST[0],Params::KING_PST[1],64);
-   o << endl;
    o << "const int Params::KNIGHT_MOBILITY[9] = ";
    print_array(o,Params::KNIGHT_MOBILITY,9);
    o << "const int Params::BISHOP_MOBILITY[15] = ";
@@ -2727,14 +2740,12 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::QUEEN_MOBILITY[0],Params::QUEEN_MOBILITY[1],24);
    o << "const int Params::KING_MOBILITY_ENDGAME[5] = ";
    print_array(o,Params::KING_MOBILITY_ENDGAME,5);
-   o << endl;
    o << "const int Params::KNIGHT_OUTPOST[2][2] = ";
    print_array(o,Params::KNIGHT_OUTPOST[0],Params::KNIGHT_OUTPOST[1],2);
    o << "const int Params::BISHOP_OUTPOST[2][2] = ";
    print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
-   o << endl;
-   o << "const int Params::PAWN_ATTACK_FACTOR[2][4] = ";
-   print_array(o,Params::PAWN_ATTACK_FACTOR[0],Params::PAWN_ATTACK_FACTOR[1],4);
+   o << "const int Params::PAWN_STORM[2][2] = ";
+   print_array(o,Params::PAWN_STORM[0],Params::PAWN_STORM[1],2);
    o << endl;
 }
 

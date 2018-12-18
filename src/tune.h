@@ -84,6 +84,7 @@ class Tune : public vector<TuneParam> {
     ENDGAME_PAWN_ADVANTAGE,
     PAWN_ENDGAME1,
     PAWN_ENDGAME2,
+    PAWN_ATTACK_FACTOR,
     MINOR_ATTACK_FACTOR,
     MINOR_ATTACK_BOOST,
     ROOK_ATTACK_FACTOR,
@@ -259,7 +260,7 @@ class Tune : public vector<TuneParam> {
     RB_ADJUST = TRADE_DOWN + 8,
     RBN_ADJUST = RB_ADJUST + 6,
     QR_ADJUST = RBN_ADJUST + 6,
-    PAWN_ATTACK_FACTOR = QR_ADJUST+5
+    PAWN_STORM = QR_ADJUST+5
   };
    
   int numTuningParams() const;
@@ -283,7 +284,7 @@ class Tune : public vector<TuneParam> {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 180;
+  static const int NUM_MISC_PARAMS = 181;
 
   double scale(score_t value,int index,int materialLevel) const;
 
