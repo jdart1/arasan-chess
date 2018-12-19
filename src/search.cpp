@@ -1686,11 +1686,15 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     std::unique_lock<std::mutex> lock(search_count_mtx);
     const int ncpus = options.search.ncpus;
     if (current_depth == 0) {
-        d += (thread_id % 2);
+        d += (thread_id % 2) + (thread_id % 8);
     }
     else if (ncpus>1) {
-        while (d < Constants::MaxPly-1 && d < current_depth+6 &&
-               search_counts[d+1] >= unsigned(ncpus)/(ncpus < 4 ? 2 : 4)) {
+        int div =  2;
+        if (ncpus >= 4) div *= 2;
+        if (ncpus >= 8) div++;
+        if (ncpus >= 16) div++;
+        while (d < Constants::MaxPly-1 && d < current_depth+8 &&
+               search_counts[d+1] >= unsigned(ncpus)/div) {
             ++d;
         }
     }
