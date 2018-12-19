@@ -269,20 +269,14 @@ void Tester::post_test(const Statistics &stats,
                        TestStatus &testStats)
 {
     Move best = stats.best_line[0];
-    if (!IsNull(best)) {
-        int ply = stats.depth-1;
-        auto &sp = testStats.search_progress;
-        if (sp.empty() ||
-            !MovesEqual(sp.back().move,best) ||
-            sp.back().depth != ply) {
-            // Note: must use global stats from controller to get
-            // total node count across threads
-            sp.push_back(TestStatus::SearchProgress(best,
-                                                    stats.value,
-                                                    searcher->getElapsedTime(),
-                                                    ply,
-                                                    searcher->getGlobalStats().num_nodes));
-        }
+    auto &sp = testStats.search_progress;
+    if (sp.empty() ||
+        !MovesEqual(sp.back().move,best)) {
+        sp.push_back(TestStatus::SearchProgress(best,
+                                                stats.value,
+                                                searcher->getElapsedTime(),
+                                                stats.depth,
+                                                stats.num_nodes));
     }
     if (solution_match(testStats.solution_moves,best,testStats.avoid)) {
         if ((int)stats.depth > testStats.last_iteration_depth) {
