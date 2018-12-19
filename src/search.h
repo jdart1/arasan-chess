@@ -474,6 +474,8 @@ private:
        return dist(random_engine);
     }
 
+    unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id);
+
     int uci;
     int age;
     TalkLevel talkLevel;
@@ -538,6 +540,9 @@ private:
     std::mt19937_64 random_engine;
 
     uint64_t elapsed_time; // in milliseconds
+    std::array <unsigned, Constants::MaxPly> search_counts;
+    std::mutex search_count_mtx;
+
 #ifdef SMP_STATS
     uint64_t samples, threads;
 #endif

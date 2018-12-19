@@ -251,6 +251,8 @@ Move SearchController::findBestMove(
     xtra_time = search_xtra_time;
     searchHistoryBoostFactor = 0.0;
     searchHistoryReductionFactor = 1.0;
+    search_counts.fill(0);
+    search_counts[0] = options.search.ncpus;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
     }
@@ -1058,20 +1060,10 @@ Move Search::ply0_search()
       mg.filter(controller->include);
    }
    stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
-   int skip = 0;
-   if (srcOpts.ncpus > 1 && controller->ply_limit>4) {
-#ifdef _WIN32
-       DWORD dws;
-       _BitScanReverse(&dws,(unsigned long)ti->index+1);
-       skip = (int)dws;
-#else
-       skip = __builtin_ctz (ti->index+1);
-#endif
-       skip = std::min<int>(std::min<int>(controller->ply_limit-1,skip),8);
-   }
-   for (iterationDepth = skip+1;
+   iterationDepth = 0;
+   for (iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index);
         iterationDepth <= controller->ply_limit && !terminate;
-        iterationDepth++) {
+        iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index)) {
       MoveSet excluded(controller->exclude);
       for (stats.multipv_count = 0;
            stats.multipv_count < stats.multipv_limit && !terminate;
@@ -1268,7 +1260,7 @@ Move Search::ply0_search()
             if (!terminate && controller->typeOfSearch != FixedDepth &&
                 !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
                 mg.moveCount() == 1 &&
-                iterationDepth+skip >= 2 &&
+                iterationDepth >= 2 &&
                 !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
                if (mainThread() && talkLevel == Trace) {
                   cout << "# single legal move, terminating" << endl;
@@ -1686,6 +1678,25 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
         }
     }
     return best;
+}
+
+unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thread_id)
+{
+    unsigned d = current_depth+1;
+    std::unique_lock<std::mutex> lock(search_count_mtx);
+    const int ncpus = options.search.ncpus;
+    if (current_depth == 0) {
+        d += (thread_id % 2);
+    }
+    else if (ncpus>1) {
+        while (d < Constants::MaxPly-1 && d < current_depth+6 &&
+               search_counts[d+1] >= unsigned(ncpus)/(ncpus < 4 ? 2 : 4)) {
+            ++d;
+        }
+    }
+    search_counts[current_depth]--;
+    search_counts[d]++;
+    return d;
 }
 
 score_t Search::quiesce(int ply,int depth)
