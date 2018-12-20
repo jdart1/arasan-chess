@@ -23,11 +23,11 @@ post 21.0
 
 9. Occasionally there are losses on time - tune time mgmt when very near time limit.
 
-10. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on.
+10. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on. (This has been at least partialy addresed).
 
 11. Further LazySMP improvements:
    a. see http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
-   b. improve thread depth distribution logic, see: http://talkchess.com/forum3/viewtopic.php?f=7&t=68154.
+   b. improve thread depth distribution logic, see: http://talkchess.com/forum3/viewtopic.php?f=7&t=68154. - done, needs more testing though.
 
 12. Build release binaries with NUMA support. Windows at least should use static version of hwloc library if possible.
 
