@@ -474,7 +474,8 @@ private:
        return dist(random_engine);
     }
 
-    unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id);
+    unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
+        unsigned max_depth);
 
     int uci;
     int age;
