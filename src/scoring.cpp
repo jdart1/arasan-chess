@@ -107,14 +107,8 @@ template<ColorType side> void Scoring::initProximity(Square i) {
            kingProximity[side][i].set(MakeSquare(f,kprank+2,side));
        }
    }
-
-   kingPawnProximity[side][0][i] = Attacks::king_attacks[i];
-   kingPawnProximity[side][0][i].set(i);
-//   if (kprank > 1) {
-//       kingPawnProximity[side][0][i] &= ~Attacks::rank_mask[side == White ? kprank-2 : 9-kprank];
-//   }
-   int z = 1;
-   for (int r = kprank+3; r <= std::min(8,kprank+5); r++, z++) {
+   int z = 0;
+   for (int r = kprank+1; r <= std::min(8,kprank+5); r++, z++) {
        for (int f=kpfile-1; f <= kpfile+1; f++) {
            Square sq = MakeSquare(f,r,side);
            kingPawnProximity[side][z][i].set(sq);
@@ -794,9 +788,19 @@ void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &c
    }
 }
 
+static int is_blocked(const Board &board, Square sq, ColorType side) 
+{
+    if (side == Black) {
+        return (board[sq-8] == WhitePawn);
+    } else {
+        return (board[sq+8] == BlackPawn);
+    }
+}
+
 void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &coverEntry,
     const Bitboard &oppPawnAttacks) {
-    const Bitboard &pawns = board.pawn_bits[OppositeColor(side)];
+    const ColorType oside = OppositeColor(side);
+    const Bitboard &pawns = board.pawn_bits[oside];
     Square ksq = board.kingSquare(side);
     coverEntry.storm = 0;
     const int pawn_attack_count = Bitboard(oppPawnAttacks & kingPawnProximity[side][0][ksq]).bitCount();
@@ -805,22 +809,17 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
     coverEntry.pawn_attack_count = pawn_attack_count;
 #endif
     coverEntry.pawn_attacks = PARAM(PAWN_ATTACK_FACTOR)*pawn_attack_count;
-    for (int zone = 1; zone < 3; zone++) {
+    for (int zone = 0; zone < 4; zone++) {
         Bitboard b(kingPawnProximity[side][zone][ksq] & pawns);
         Square sq;
         while (b.iterate(sq)) {
-            int blocked;
-            if (side == White) {
-                blocked = (board[sq-8] == WhitePawn);
-            } else {
-                blocked = (board[sq+8] == BlackPawn);
-            }
-            coverEntry.storm += PARAM(PAWN_STORM)[zone-1][blocked];
+            int blocked = is_blocked(board,sq,oside);
+            coverEntry.storm += PARAM(PAWN_STORM)[zone][blocked];
 #ifdef EVAL_DEBUG
             cout << "storm: " << ColorImage(side) << " " << SquareImage(sq) << " blocked=" << blocked << " zone=" << zone << endl;
 #endif
 #ifdef TUNE
-            coverEntry.storm_counts[(zone-1)*2+blocked]++;
+            coverEntry.storm_counts[zone*2+blocked]++;
 #endif
         }
     }
@@ -2744,9 +2743,12 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::KNIGHT_OUTPOST[0],Params::KNIGHT_OUTPOST[1],2);
    o << "const int Params::BISHOP_OUTPOST[2][2] = ";
    print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
-   o << "const int Params::PAWN_STORM[2][2] = ";
-   print_array(o,Params::PAWN_STORM[0],Params::PAWN_STORM[1],2);
-   o << endl;
+   o << "const int Params::PAWN_STORM[4][2] = {";
+   for (int z = 0; z < 4; z++) {
+       print_array(o,Params::PAWN_STORM[z],2,0);
+       if (z < 3) o << ',';
+   }
+   o << "};" << endl;
 }
 
 #endif

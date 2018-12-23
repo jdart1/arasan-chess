@@ -1204,7 +1204,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       grads[Tune::PAWN_ATTACK_FACTOR] +=
           tune_params.scale(inc*scale_grad*oppKpe.pawn_attack_count/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR,ourMatLevel);
 
-      for (int i=0; i < 4; i++) {
+      for (int i=0; i < 8; i++) {
           grads[Tune::PAWN_STORM+i] +=
               tune_params.scale(inc*scale_grad*oppKpe.storm_counts[i]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_STORM+i,ourMatLevel);
       }

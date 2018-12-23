@@ -143,7 +143,7 @@ class Scoring
        score_t king_endgame_position;
        float counts[6][4];
        int pawn_attack_count;
-       array<int,4> storm_counts;
+       array<int,8> storm_counts;
 #else
        int32_t cover, storm, pawn_attacks;
        int32_t king_endgame_position;

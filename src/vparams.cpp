@@ -128,5 +128,5 @@ score_t Params::BISHOP_MOBILITY[15];
 score_t Params::ROOK_MOBILITY[2][15];
 score_t Params::QUEEN_MOBILITY[2][24];
 score_t Params::KING_MOBILITY_ENDGAME[5];
-score_t Params::PAWN_STORM[2][2];
+score_t Params::PAWN_STORM[4][2];
 
