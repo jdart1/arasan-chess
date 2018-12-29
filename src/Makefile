@@ -60,6 +60,12 @@ PGO_RUN_FLAGS = -H 64M
 
 TUNE_FLAGS := -DTUNE
 
+ifdef NUMA
+NUMA_OBJS=$(BUILD)/topo.o
+NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
+NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
+endif
+
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
@@ -95,6 +101,12 @@ ifeq ($(LBITS),64)
    CFLAGS := $(CFLAGS) -D_64BIT
 endif
 ARASANX := arasanx-$(LBITS)
+ifdef NUMA
+ARASANX := $(ARASANX)-numa
+endif
+ifdef BUILD_TYPE
+ARASANX := $(ARASANX)-$(BUILD_TYPE)
+endif
 
 TUNER := tuner
 
@@ -240,29 +252,24 @@ profiled: dirs
 	@$(MAKE) PASS=2 profile
 
 popcnt-profiled: dirs
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile-run
-	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile-run
+	@$(MAKE) PASS=2 BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
 
 popcnt: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2
+	@$(MAKE) BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2
 
 bmi2: dirs
 	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2
 
 bmi2-profiled: dirs
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile-run
-	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile-run
+	@$(MAKE) PASS=2 BUILD_TYPE=bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
 
 TB_SOURCES=
 TB_OBJS=
 TB_LIBS=
-ifdef NUMA
-NUMA_OBJS=$(BUILD)/topo.o
-NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
-NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
-endif
 
 ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c

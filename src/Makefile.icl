@@ -1,7 +1,7 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 21.1
+VERSION = 21.2
 #
 #TARGET = win32
 TARGET = win64
@@ -32,12 +32,18 @@ HWLOC32=E:\chess\hwloc-win32-build-2.0.2
 !If "$(TARGET)" == "win64"
 !Ifndef ARASANX
 ARASANX = arasanx-64
+!Ifdef NUMA
+ARASANX = $(ARASANX)-numa
+!Endif
 !Endif
 ARCH=/D_WIN64
 HWLOC=$(HWLOC64)
 !Else
 !Ifndef ARASANX
 ARASANX = arasanx-32
+!Ifdef NUMA
+ARASANX = $(ARASANX)-numa
+!Endif
 !Endif
 HWLOC=$(HWLOC32)
 !Endif
