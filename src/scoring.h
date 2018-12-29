@@ -8,6 +8,10 @@
 #include "attacks.h"
 #include "params.h"
 
+#ifdef TUNE
+#include <array>
+#endif
+
 #include <iostream>
 using namespace std;
 
