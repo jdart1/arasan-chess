@@ -1061,11 +1061,9 @@ Move Search::ply0_search()
    }
    stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
    iterationDepth = 0;
-   for (iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
-            controller->ply_limit);
-        iterationDepth <= controller->ply_limit && !terminate;
-        iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
-            controller->ply_limit)) {
+   while ((iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
+                                                        controller->ply_limit)) <= controller->ply_limit &&
+          !terminate) {
       MoveSet excluded(controller->exclude);
       for (stats.multipv_count = 0;
            stats.multipv_count < stats.multipv_limit && !terminate;
@@ -1686,21 +1684,19 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     unsigned max_depth)
 {
     unsigned d = current_depth+1;
+    const unsigned ncpus = unsigned(options.search.ncpus);
     std::unique_lock<std::mutex> lock(search_count_mtx);
-    const int ncpus = options.search.ncpus;
-    if (current_depth == 0) {
-        if (d < max_depth) d += (thread_id % 2);
-        if (d < max_depth) d += (thread_id % 8);
-    }
-    else if (ncpus>1) {
-        int div =  2;
-        if (ncpus >= 4) div *= 2;
-        if (ncpus >= 8) div++;
-        if (ncpus >= 16) div++;
-        while (d < Constants::MaxPly-1 && d <
-               std::min(max_depth,current_depth+8) &&
-               search_counts[d+1] >= unsigned(ncpus)/div) {
-            ++d;
+    if (thread_id > 0) {
+        if (current_depth == 0) {
+            if (d < max_depth) d += (thread_id % 2);
+            if (d < max_depth) d += (thread_id % 8);
+        } else {
+            unsigned inc = 0;
+            while (inc <= 8 && d < max_depth &&
+                   search_counts[d] >= ncpus/(2+inc)) {
+                ++d;
+                ++inc;
+            }
         }
     }
     search_counts[current_depth]--;
