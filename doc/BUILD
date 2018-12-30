@@ -42,9 +42,14 @@ make clean profiled
 enabled PGO build, or bmi2-profiled for a BMI2 compatible profiled
 build).
 
+Defining NUMA in the Makefile will build a version that has support
+for NUMA (Non-Uniform Memory Access) machines. NUMA support relies
+on the hwloc library (version 2.0 or higher).
+
 The Arasan engine binary is named "arasanx-32", "arasanx-64",
 "arasanx-64-popcnt", or "arasanx-64-bmi2," depending on the
-architecture and build flags used.
+architecture and build flags used. "-numa" is added for a NUMA
+build.
 
 Limited testing has been done on other OSs and architectures other
 than x32 and amd64.  However, the code is believed to be portable. Two
@@ -61,5 +66,5 @@ installed and its path set in the Makefile (or passed to it) in the
 variable GIT_ARCHIVE_ALL_PATH. And that tool calls "git archive" so
 "make release" needs to be run from within a git repository.
 
-"make install" will install Arasan binaries into /usr/local/bin/arasan-21.0.
+"make install" will install Arasan binaries into /usr/local/bin/arasan-21.2.
 (You will need to be root, or use sudo, to execute "make install"). 

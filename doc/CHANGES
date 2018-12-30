@@ -1,4 +1,27 @@
-Changes in Arasan 21.1:
+Changes in Arasan 21.2:
+ 1) Add support for >64 cores.
+ 2) Rework NUMA support to use hwloc 2.x API. Add code to handle Windows
+    processor groups (not really tested at present).
+ 3) Bug fix: don't access counter move arrays when previous move was null.
+ 4) Fix bug in thread usage reporting.
+ 5) Bug fix: beta could be outside MATE score range during singular search.
+ 6) Don't do check extension if outside late move pruning limit (like
+    Stockfish).
+ 7) Make LMP dependent on improving flag.
+ 8) Set contempt based on ratings with sigmoid function: avoids
+    excessively large contempt values.
+ 9) Improvements in time management.
+ 10) Fixes in Winboard protocol.
+ 11) Suppress trace information from the polling thread: fixes issues when
+    running with trace flag (-t) on.
+ 12) Fix thread selection logic at end of search so that main search is not
+    selected if it does not have a PV.
+ 13) Add some scoring for pawn storms (pawn advances near opposing
+    king).
+ 14) Changes to "lazy SMP" thread depth distribution.
+ 15) Fix node count & time reporting for "test" command.
+
+Changes in Arasan 21.1 (Oct. 2018):
  1) Fix bug in generateCaptures.
  2) Change depth resolution and check extension.
  3) Use improving status to adjust LMR values (like Stockfish). Adjust LMR
