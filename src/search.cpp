@@ -1688,14 +1688,18 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     std::unique_lock<std::mutex> lock(search_count_mtx);
     if (thread_id > 0) {
         if (current_depth == 0) {
-            if (d < max_depth) d += (thread_id % 2);
-            if (d < max_depth) d += (thread_id % 8);
+            if (d < max_depth) d += ((thread_id+1) % 2 == 0);
+            if (d < max_depth) d += ((thread_id+1) % 4 == 0);
         } else {
-            unsigned inc = 0;
-            while (inc <= 8 && d < max_depth &&
-                   search_counts[d] >= ncpus/(2+inc)) {
-                ++d;
-                ++inc;
+            unsigned inc = 1;
+            while (inc < 8 && d < max_depth) {
+                unsigned threshold = ncpus/(1<<inc);
+                if (threshold == 0 || search_counts[d] < threshold) {
+                    break;
+                } else {
+                    ++d;
+                    ++inc;
+                }
             }
         }
     }
