@@ -31,7 +31,7 @@ STB=syzygy/src
 # compile in NUMA support
 #NUMA=1
 # location of hwloc library (required if compiled with NUMA support)
-HWLOC64=/home/jdart/chess/hwloc-2.0.2
+HWLOC64=/home/jdart/chess/hwloc-2.0.3
 # directory for utility programs
 UTIL = util
 
