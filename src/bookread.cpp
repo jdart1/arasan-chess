@@ -75,7 +75,7 @@ struct Stats
 #endif
 };
 
-Move BookReader::pick(const Board &b, score_t contempt) {
+Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
    cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
 #endif

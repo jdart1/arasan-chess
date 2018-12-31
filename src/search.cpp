@@ -656,7 +656,7 @@ void SearchController::resizeHash(size_t newSize) {
    hashTable.resizeHash(newSize);
 }
 
-void SearchController::outOfBoundsTimeAdjust(const Statistics &stats) {
+void SearchController::outOfBoundsTimeAdjust() {
     // Set flags to extend search time based on search status.
     // Note: do this even if in ponder search, so when we get a ponder
     // hit the flags will be set properly and will be applied to the
@@ -927,7 +927,7 @@ void Search::setTalkLevelFromController() {
 }
 
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
-                         score_t score, score_t alpha)
+                         score_t score)
 {
     ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
     stats.value = score;
@@ -1116,7 +1116,7 @@ Move Search::ply0_search()
             // leave the search stats intact (with the previous
             // iteration's pv and score).
             if (!terminate || stats.mvleft != stats.mvtot) {
-                updateStats(board, node, iterationDepth, value, lo_window);
+                updateStats(board, node, iterationDepth, value);
             }
 #ifdef _TRACE
             if (mainThread()) {
@@ -1160,7 +1160,7 @@ Move Search::ply0_search()
             // Peform any temporary adjustment of the time allocation based
             // on search status (fail high/low). Note: all threads call this;
             // adjustment is based on the current best search thread.
-            controller->outOfBoundsTimeAdjust(stats);
+            controller->outOfBoundsTimeAdjust();
             // Show status (if main thread) and adjust aspiration
             // window as needed
             if (stats.failHigh) {
@@ -3449,8 +3449,7 @@ int Search::updateRootMove(const Board &board,
          node->cutoff++;
          node->best_score = score;
          updateStats(board, node, iterationDepth,
-                     node->best_score,
-                     node->alpha);
+                     node->best_score);
          if (mainThread()) {
             if (controller->uci && !srcOpts.multipv) {
                cout << "info score ";
@@ -3462,8 +3461,7 @@ int Search::updateRootMove(const Board &board,
       }
       updatePV(board,node,(node+1),move,0);
       updateStats(board, node, iterationDepth,
-                  node->best_score,
-                  node->alpha);
+                  node->best_score);
       if (mainThread() && srcOpts.multipv == 1) {
          if (move_index>1) {
             // best move has changed, show new best move

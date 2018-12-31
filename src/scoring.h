@@ -230,7 +230,6 @@ class Scoring
     void pieceScore(const Board &board,
                     const PawnHashEntry::PawnData &ourPawnData,
 		    const PawnHashEntry::PawnData &oppPawnData,
-                    const KingPawnHashEntry &ourKPEntry,
                     const KingPawnHashEntry &oppKPEntry,
                     Scores &, Scores &opp_scores,
                     bool early_endgame,

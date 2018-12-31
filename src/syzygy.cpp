@@ -28,7 +28,7 @@ static PieceType getPromotion(unsigned res)
       }
 }
 
-static const Move getMove(const Board &b, unsigned res) {
+static Move getMove(const Board &b, unsigned res) {
     const unsigned ep = TB_GET_EP(res);
     const PieceType promoteTo = getPromotion(res);
     // Note: castling not possible

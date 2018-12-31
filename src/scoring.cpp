@@ -880,7 +880,6 @@ template<ColorType side>
 void Scoring::pieceScore(const Board &board,
                          const PawnHashEntry::PawnData &ourPawnData,
                          const PawnHashEntry::PawnData &oppPawnData,
-                         const KingPawnHashEntry &ourKPEntry,
                          const KingPawnHashEntry &oppKPEntry,
                          Scores &scores,
                          Scores &opp_scores,
@@ -2410,7 +2409,7 @@ void Scoring::positionalScore(const Board &board, const PawnHashEntry &pawnEntry
    scores.mid += (ourKPEntry.cover == Constants::INVALID_SCORE ? 0 : ourKPEntry.cover);
 
    pieceScore<side> (board, pawnEntry.pawnData(side),
-                     pawnEntry.pawnData(oside), ourKPEntry, oppKPEntry, scores, oppScores,
+                     pawnEntry.pawnData(oside), oppKPEntry, scores, oppScores,
                      board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD),
                      board.getMaterial(side).materialLevel() <= PARAM(MIDGAME_THRESHOLD));
 }

@@ -33,7 +33,7 @@ class BookReader
     }
                 
     // Randomly pick a move for board position "b". 
-    Move pick( const Board &b, score_t contempt);
+    Move pick( const Board &b);
 
     // Return a vector of all book moves for a given position.
     // Returns number of moves found.

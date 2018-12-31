@@ -1131,7 +1131,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
     // is specified and using "own book." Currently we force a search
     // in this case and ignore the book moves.
     if (!infinite && options.book.book_enabled && movesToSearch.empty()) {
-        move = openingBook.pick(board,searcher->getContempt());
+        move = openingBook.pick(board);
         if (!IsNull(move)) stats.fromBook = true;
     }
 

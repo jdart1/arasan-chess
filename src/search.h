@@ -222,7 +222,7 @@ protected:
     void setTalkLevelFromController();
 
     void updateStats(const Board &, NodeInfo *node,int iteration_depth,
-		     score_t score, score_t alpha);
+		     score_t score);
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 
@@ -434,7 +434,7 @@ public:
    // Adjust time usage after root fail high or fail low. A temporary
    // time extension is done to allow resolution of the fail high/low.
    // Called from main thread.
-   void outOfBoundsTimeAdjust(const Statistics &stats);
+   void outOfBoundsTimeAdjust();
 
    // Calculate the time adjustment after a root search iteration has
    // completed (possibly with one or more fail high/fail lows).
