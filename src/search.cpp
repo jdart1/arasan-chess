@@ -1703,8 +1703,10 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
             }
         }
     }
-    search_counts[current_depth]--;
-    search_counts[d]++;
+    if (d<Constants::MaxPly) {
+        search_counts[current_depth]--;
+        search_counts[d]++;
+    }
     return d;
 }
 
