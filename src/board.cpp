@@ -701,7 +701,7 @@ void Board::doMove( Move move )
          if (capture != EmptyPiece)
          {
             state.moveCount = 0;
-            ASSERT(target != InvalidSquare);
+            ASSERT(OnBoard(target));
             occupied[White].clear(target);
             Xor(state.hashCode, target, capture);
             switch (TypeOfPiece(capture)) {
