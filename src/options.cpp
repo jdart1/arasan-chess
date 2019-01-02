@@ -38,13 +38,12 @@ Options::SearchOptions::SearchOptions() :
       multipv(1),
       ncpus(1),
       easy_plies(3),
-      easy_threshold(200) // centipawns
+      easy_threshold(200), // centipawns
 #ifdef NUMA
-      ,
       set_processor_affinity(0),
+#endif
       move_overhead(15),
       minimum_search_time(10)
-#endif
 {
 }
 

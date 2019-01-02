@@ -754,6 +754,7 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     ti(threadInfo),
     computerSide(White),
     contempt(0),
+    age(0),
     talkLevel(c->getTalkLevel()) {
     // Note: context was cleared in its constructor
     setSearchOptions();
