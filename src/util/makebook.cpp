@@ -1,7 +1,7 @@
 // Copyright 1996-2004, 2012-2018 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
-// a text file.
+// one or more PGN input files.
 
 // The book file is a binary file consisting of a header followed
 // by one or more "index pages" and then by one or more "data pages."
