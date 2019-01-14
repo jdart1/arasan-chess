@@ -1,4 +1,4 @@
-// Copyright 1992-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2019 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -34,12 +34,10 @@ class Scoring
     // evaluate "board" from the perspective of the side to move.
     score_t evalu8( const Board &board, bool useCache = true );
 
-    // checks for legal draws plus certain other theoretically
-    // draw positions
-    static int isDraw(const Board &board);
-
     // checks for draw by repetition (returning repetition count) +
-    // other draw situations as in isDraw above.
+    // other draw situations. It is intended to be called from the
+    // interior of the search. It does not strictly detect legal
+    // draws: use isLegalDraw for that.
     static int isDraw( const Board &board, int &rep_count, int ply);
 
     static int repetitionDraw( const Board &board );
@@ -47,6 +45,8 @@ class Scoring
     static int materialDraw( const Board &board ) {
         return board.materialDraw();
     }
+
+    static int fiftyMoveDraw(const Board &board);
 
     // Check only for legal draws
     static int isLegalDraw(const Board &board);

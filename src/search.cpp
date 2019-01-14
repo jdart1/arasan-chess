@@ -1,4 +1,4 @@
-// Copyright 1987-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2019 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -979,8 +979,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
        }
        board_copy.doMove(move);
        ++i;
-       int rep_count;
-       if (Scoring::isDraw(board_copy,rep_count,0)) {
+       if (Scoring::isLegalDraw(board_copy)) {
           break;
        }
        if (node->pv_length < 2) {
@@ -988,9 +987,9 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
           // (for pondering)
           HashEntry entry;
           HashEntry::ValueType result =
-             controller->hashTable.searchHash(board_copy.hashCode(rep_count),
-                                              age,
-                                              iteration_depth,entry);
+              controller->hashTable.searchHash(board_copy.hashCode(board.repCount(2)),
+                                               age,
+                                               iteration_depth,entry);
           if (result != HashEntry::NoHit) {
              Move hashMove = entry.bestMove(board_copy);
              if (!IsNull(hashMove)) {
@@ -1746,7 +1745,7 @@ score_t Search::quiesce(int ply,int depth)
       return scoring.evalu8(board);
    }
    else if (Scoring::isDraw(board,rep_count,ply)) {
-	  // Verify previous move was legal
+      // Verify previous move was legal
       if (!board.wasLegal((node-1)->last_move)) {
          return -Illegal;
       }

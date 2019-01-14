@@ -1,4 +1,4 @@
-// Copyright 1994-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2019 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -788,7 +788,7 @@ void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &c
    }
 }
 
-static int is_blocked(const Board &board, Square sq, ColorType side) 
+static int is_blocked(const Board &board, Square sq, ColorType side)
 {
     if (side == Black) {
         return (board[sq-8] == WhitePawn);
@@ -2499,33 +2499,8 @@ int Scoring::repetitionDraw(const Board &board) {
    return board.repCount() >= 2;
 }
 
-int Scoring::isLegalDraw(const Board &board) {
-   return repetitionDraw(board) || board.materialDraw();
-}
-
-int Scoring::isDraw(const Board &board) {
-   return(repetitionDraw(board) || board.materialDraw() || theoreticalDraw(board));
-}
-
-int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
-
-   // First check for draw by repetition
-   int entries = board.state.moveCount - 2;
-   rep_count = 0;
-
-   // follow rule Crafty uses: 2 repeats if ply<=2, 1 otherwise:
-   if (entries >= 0) {
-      const int target = (ply <= 2) ? 2 : 1;
-      for(hash_t * rep_list = board.repListHead - 3; entries >= 0; rep_list -= 2, entries -= 2) {
-         if (*rep_list == board.hashCode()) {
-            rep_count++;
-            if (rep_count >= target) {
-               return 1;
-            }
-         }
-      }
-   }
-
+int Scoring::fiftyMoveDraw(const Board &board)
+{
    // check the 50 move rule
    if (board.state.moveCount >= 100) {
       if (board.checkStatus() == InCheck) {
@@ -2539,18 +2514,33 @@ int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
          return 1;
       }
    }
+   return 0;
+}
 
-   if
-   (
-      board.getMaterial(White).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)
-   && board.getMaterial(Black).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)
-   ) {
+int Scoring::isLegalDraw(const Board &board) {
+   return repetitionDraw(board) || board.materialDraw() || fiftyMoveDraw(board);
+}
 
-      // check for insufficient material and other drawing situations
-      return Scoring::isDraw(board);
+int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
+
+   // First check for draw by repetition
+   rep_count = 0;
+
+   // follow rule Crafty uses: 2 repeats if ply<=2, 1 otherwise:
+   const int target = (ply <= 2) ? 2 : 1;
+   if ((rep_count=board.repCount(target))>=target) {
+      return 1;
    }
-   else
+   else if (fiftyMoveDraw(board)) {
+      return 1;
+   }
+   else if (board.getMaterial(White).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2) &&
+            board.getMaterial(Black).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) {
+      // check for insufficient material and other drawing situations
+      return materialDraw(board) || theoreticalDraw(board);
+   } else {
       return 0;
+   }
 }
 
 void Scoring::printScore(score_t score, ostream &str) {

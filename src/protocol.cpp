@@ -1,4 +1,4 @@
-// Copyright 1997-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2019 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -2234,7 +2234,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                     cout << endl;
                 }
                 Scoring::init();
-                if (Scoring::isDraw(board)) {
+                if (Scoring::isLegalDraw(board)) {
                      cout << "position evaluates to draw (statically)" << endl;
                 }
                 Scoring *s = new Scoring();

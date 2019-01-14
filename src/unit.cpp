@@ -1,4 +1,4 @@
-// Copyright 2013-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2019 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -564,20 +564,32 @@ static int testBitbases() {
 
 static int testDrawEval() {
     // verify detection of KBP and other draw situations
-    const int DRAW_CASES = 12;
-    static const string draw_fens[DRAW_CASES] = {
-        "k7/8/P7/B7/1K6/8/8/8 w - - 0 1", // KBP draw
-        "8/8/8/1k6/b7/p7/8/K7 b - - 0 1", // KBP draw
-        "8/8/8/8/7b/4k2p/8/6K1 b - - 0 1", // KBP draw
-        "8/7k/4B3/8/6KP/8/8/8 b - - 0 3", // KBP draw
-        "8/8/2KN3k/8/3N4/8/8/8 w - - 0 1", // KNN draw
-        "8/8/2KN3k/8/3N4/8/8/8 w - - 0 1", // KNN draw
-        "8/8/8/3n4/8/2kn3K/8/8 b - - 0 1", // KNN draw
-        "8/8/2K4k/8/3N4/8/8/8 w - - 0 1", // KN draw
-        "8/8/8/3n4/8/2k4K/8/8 b - - 0 1", // KN draw
-        "8/8/8/8/8/2k4K/8/8 b - - 0 1", // KK draw
-        "8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1", // KB vs KB draw (same color)
-        "8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1" // KBPP draw
+    const int DRAW_CASES = 13;
+    struct DrawCase
+    {
+        DrawCase(const string &f, int legal_draw) :
+            fen(f), legal(legal_draw)
+            {
+            }
+
+        string fen;
+        int legal;
+    };
+
+    static const DrawCase draw_cases[DRAW_CASES] = {
+        DrawCase("k7/8/P7/B7/1K6/8/8/8 w - - 0 1",0), // KBP draw
+        DrawCase("8/8/8/1k6/b7/p7/8/K7 b - - 0 1",0), // KBP draw
+        DrawCase("8/8/8/8/7b/4k2p/8/6K1 b - - 0 1",0), // KBP draw
+        DrawCase("8/7k/4B3/8/6KP/8/8/8 b - - 0 3",0), // KBP draw
+        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",0), // KNN draw
+        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",0), // KNN draw
+        DrawCase("8/8/8/3n4/8/2kn3K/8/8 b - - 0 1",0), // KNN draw
+        DrawCase("8/8/2K4k/8/3N4/8/8/8 w - - 0 1",1), // KN draw
+        DrawCase("8/8/8/3n4/8/2k4K/8/8 b - - 0 1",1), // KN draw
+        DrawCase("8/3K4/8/8/2b5/8/3k4/8 w - - 0 1",1), // KB draw
+        DrawCase("8/8/8/8/8/2k4K/8/8 b - - 0 1",1), // KK draw
+        DrawCase("8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1",1), // KB vs KB draw (same color)
+        DrawCase("8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1",0) // KBPP draw
         // technically these are draws but not recognized yet:
         //"8/8/8/1k6/b7/p7/8/2K5 b - - 0 1", // KBP draw
         // 8/5k2/8/5B2/8/6KP/8/8 w - - 0 1 // KBP draw
@@ -597,14 +609,18 @@ static int testDrawEval() {
 #endif
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
-        if (!BoardIO::readFEN(board, draw_fens[i].c_str())) {
-            cerr << "testDrawEval draw case " << i << " error in FEN: " << draw_fens[i] << endl;
+        if (!BoardIO::readFEN(board, draw_cases[i].fen.c_str())) {
+            cerr << "testDrawEval draw case " << i << " error in FEN " << endl;
             ++errs;
             continue;
         }
         Scoring *s = new Scoring();
-        if (!s->isDraw(board)) {
-            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_fens[i] << endl;
+        if (s->isLegalDraw(board) != draw_cases[i].legal) {
+            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
+            ++errs;
+        }
+        if (!draw_cases[i].legal && !s->theoreticalDraw(board)) {
+            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
             ++errs;
         }
 	delete s;
@@ -617,7 +633,7 @@ static int testDrawEval() {
             continue;
         }
         Scoring *s = new Scoring();
-        if (s->isDraw(board)) {
+        if (s->isLegalDraw(board) || s->theoreticalDraw(board)) {
             cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
             ++errs;
         }
@@ -1049,28 +1065,38 @@ static int testRep()
        cerr << "testRep: error in FEN: " << fen << endl;
        return ++errs;
     }
-    for (auto mvstr : moves) {
-       Move move = Notation::value(board,board.sideToMove(),
-                                   Notation::InputFormat::SAN,
-                                   mvstr);
-       if (IsNull(move)) {
-          cerr << "testRep: error in move parsing" << endl;
-          return ++errs;
-       }
-       board.doMove(move);
-    }
-    if (board.repCount() != 1) {
-       cerr << "testRep: repCount incorrect" << endl;
-       ++errs;
-    }
-    if (!board.anyRep()) {
-       cerr << "testRep: anyRep incorrect" << endl;
-       ++errs;
+    for (int reps = 1; reps <= 2; reps++) {
+        for (auto mvstr : moves) {
+            Move move = Notation::value(board,board.sideToMove(),
+                                        Notation::InputFormat::SAN,
+                                        mvstr);
+            if (IsNull(move)) {
+                cerr << "testRep: error in move parsing" << endl;
+                return ++errs;
+            }
+            board.doMove(move);
+        }
+        if (board.repCount(reps) != reps) {
+            cerr << "testRep: repCount incorrect" << endl;
+            ++errs;
+        }
+        if (reps>1 && board.repCount(1) != 1) {
+            cerr << "testRep: repCount incorrect" << endl;
+            ++errs;
+        }
+        if (!board.anyRep()) {
+            cerr << "testRep: anyRep incorrect" << endl;
+            ++errs;
+        }
+        if ((reps > 1) != Scoring::isLegalDraw(board)) {
+            cerr << "testRep: error in Scoring::isLegalDraw" << endl;
+            ++errs;
+        }
     }
     return errs;
 }
 
-static int testMoveGen() 
+static int testMoveGen()
 {
     // Some basic tests for move generation, including routines used
     // in the qsearch (not tested by perft).
