@@ -166,7 +166,8 @@ int CDECL main(int argc, char **argv)
                         last_score = 10000.0F;
                      }
                      else if (result == "1/2-1/2" &&
-                              Scoring::isDraw(board)) {
+                              (Scoring::isLegalDraw(board) ||
+                               Scoring::theoreticalDraw(board))) {
                         last_score = 0.0;
                      } else {
                         stats.clear();
