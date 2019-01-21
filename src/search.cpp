@@ -1852,11 +1852,22 @@ score_t Search::quiesce(int ply,int depth)
       } // end switch
       // Note: hash move may be usable even if score is not usable
       hashMove = hashEntry.bestMove(board);
-   }
-   if (tt_depth == HashEntry::QSEARCH_NO_CHECK_DEPTH && !(inCheck || CaptureOrPromotion(hashMove))) {
-      // don't fetch a non-capture/promotion checking move from the
-      // hash table if we aren't at a depth where checks are allowed.
-      hashMove = NullMove;
+      // Ensure the hash move if any, meets the conditions for this
+      // depth in the q-search:
+      if (!IsNull(hashMove) && hashEntry.depth() != tt_depth && !inCheck) {
+          if (tt_depth == HashEntry::QSEARCH_NO_CHECK_DEPTH) {
+              if (!CaptureOrPromotion(hashMove)) {
+                  hashMove = NullMove;
+              }
+          } else {
+              if (!
+                  (CaptureOrPromotion(hashMove) ||
+                   ((node->eval >= node->alpha - 2*Params::PAWN_VALUE) &&
+                    board.wouldCheck(hashMove)))) {
+                 hashMove = NullMove;
+              }
+          }
+      }
    }
    if (inCheck) {
 #ifdef _TRACE
@@ -2036,9 +2047,7 @@ score_t Search::quiesce(int ply,int depth)
       BoardState state(board.state);
       const ColorType oside = board.oppositeSide();
       Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
-      // Isn't really a loop: but we code this way so can use
-      // break to exit the following block.
-      while (!IsNull(hashMove)) {
+      if (!IsNull(hashMove)) {
          node->last_move = hashMove;
 #ifdef _TRACE
          if (mainThread()) {
@@ -2048,24 +2057,6 @@ score_t Search::quiesce(int ply,int depth)
             cout << endl;
          }
 #endif
-         if (!board.wouldCheck(hashMove) &&
-             !passedPawnPush(board,hashMove) &&
-             node->beta > -Constants::TABLEBASE_WIN &&
-             (Capture(hashMove) == Pawn || board.getMaterial(oside).pieceCount() > 1)) {
-            const score_t optScore = Params::Gain(hashMove) + QSEARCH_FORWARD_PRUNE_MARGIN + node->eval;
-            if (optScore < node->best_score) {
-#ifdef _TRACE
-               if (mainThread()) {
-                  indent(ply); cout << "pruned (futility)" << endl;
-               }
-#endif
-               node->best_score = std::max<score_t>(node->best_score,optScore);
-               break;
-            }
-         }
-         // Don't do see pruning for the hash move. The hash move
-         // already passed a SEE test, although possibly with
-         // different bounds. Doing SEE here tests worse.
          board.doMove(hashMove);
          ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
          try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
@@ -2088,7 +2079,6 @@ score_t Search::quiesce(int ply,int depth)
                   goto search_end;              // mating move found
             }
          }
-         break;
       }
       {
          MoveGenerator mg(board, &context, node, ply,
