@@ -2176,8 +2176,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
          }
          // Do checks in qsearch
-         if ((node->eval >= node->alpha - 2*Params::PAWN_VALUE) &&
-             (depth >= 1-srcOpts.checks_in_qsearch)) {
+         if (depth >= 1-srcOpts.checks_in_qsearch) {
             move_count = mg.generateChecks(moves,disc);
             move_index = 0;
 #ifdef _TRACE
