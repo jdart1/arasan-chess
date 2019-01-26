@@ -1359,19 +1359,29 @@ static int testTB()
 {
    struct Case
    {
-      Case(const string &s, score_t res) :
-         fen(s), result(res)
+       Case(const string &s, score_t res, const string &mvs):
+           fen(s), result(res), moves(mvs)
          {
          }
       string fen;
       score_t result;
+      string moves;
    };
-   static array<Case,5> cases = {
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN),
-       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 w - - 0 1",0),
-       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE),
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE),
-       Case("1K3b2/8/5k1p/8/2N5/8/8/8 w - - 0 1",-Constants::TABLEBASE_WIN)
+   static array<Case,8> cases = {
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
+           "Nd6+"),
+       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
+           "Qf4+, Kf7, Ke7, Kg7, Qg5, Qg7, Qf8, Qg6, Qh5, Qh3, Qh1, Qh8"),
+       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE,"Ne4"),
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE,
+            "c4, Kc7, Kd7, Kd8"),
+       Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,
+            "Ra8, Rb8"),
+       Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,
+            "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
+       Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,"exf6"),
+       Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,
+            "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R")
       };
 
    int errs = 0;
@@ -1388,21 +1398,65 @@ static int testTB()
       if (!BoardIO::readFEN(board, it.fen.c_str())) {
          cerr << "testTB: error in test case " << caseid << " error in FEN: " << it.fen << endl;
          ++errs;
+         continue;
       }
       MoveSet moves;
       score_t score;
       if (SyzygyTb::probe_root(board,score,moves)>=0) {
          if (score != it.result) {
             cerr << "testTB: case " << caseid << " expected ";
-            Scoring::printScore(it.result,cout);
-            cout << ", got ";
-            Scoring::printScore(score,cout);
-            cout << endl;
+            Scoring::printScore(it.result,cerr);
+            cerr << ", got ";
+            Scoring::printScore(score,cerr);
+            cerr << endl;
             ++errs;
+         }
+         stringstream s(it.moves);
+         char movechars[10];
+         string movestr;
+         MoveSet goodmoves;
+         while (s.getline(movechars, 10, ',')) {
+             movestr = movechars;
+             movestr = movestr.erase(0 , movestr.find_first_not_of(' '));
+             movestr = movestr.erase(movestr.find_last_not_of(' ') + 1);
+             Move m = Notation::value(board,board.sideToMove(),
+                                      Notation::InputFormat::SAN,
+                                      movestr,true);
+             goodmoves.insert(m);
+         }
+         if (goodmoves != moves) {
+             cerr << "testTB: case " << caseid << ": set mismatch" << endl;
+             cerr << "expected: ";
+             for (const auto &m : goodmoves) {
+                 MoveImage(m,cerr);
+                 cerr << ' ';
+             }
+             cerr << endl << "got: ";
+             for (const auto &m : moves) {
+                 MoveImage(m,cerr);
+                 cerr << ' ';
+             }
+             cerr << endl;
+             ++errs;
          }
       } else {
          cerr << "testTB: case " << caseid << " no result from TBs" << endl;
          ++errs;
+      }
+      // ensure move count is zero otherwise probe_wdl will fail
+      board.state.moveCount = 0;
+      if (SyzygyTb::probe_wdl(board,score,true)) {
+         if (score != it.result) {
+            cerr << "testTB: case " << caseid << " expected WDL score ";
+            Scoring::printScore(it.result,cerr);
+            cerr << ", got ";
+            Scoring::printScore(score,cerr);
+            cerr << endl;
+            ++errs;
+          }
+      } else {
+          cerr << "testTB: case " << caseid << ": WDL probe failed." << endl;
+          ++errs;
       }
       ++caseid;
    }

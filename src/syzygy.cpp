@@ -66,7 +66,12 @@ int SyzygyTb::probe_root(const Board &b, score_t &score, MoveSet &rootMoves)
                                    (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
                                    b.state.moveCount,
                                    b.castlingPossible(),
-                                   b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
+                                   // Fathom expects 0 if no e.p.,
+                                   // e.p. target square for capture
+                                   // otherwise
+                                   b.enPassantSq()==InvalidSquare ? 0 :
+                                     (b.enPassantSq() +
+                                      ((b.sideToMove() == White) ? 8 : -8)),
                                    b.sideToMove() == White,
                                    results);
 
@@ -112,9 +117,13 @@ int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)
                                    (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
                                    (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
                                    b.state.moveCount,
-                                   (int)b.castleStatus(White)<3 ||
-                                   (int)b.castleStatus(Black)<3,
                                    b.castlingPossible(),
+                                   // Fathom expects 0 if no e.p.,
+                                   // e.p. target square for capture
+                                   // otherwise
+                                   b.enPassantSq()==InvalidSquare ? 0 :
+                                     (b.enPassantSq() +
+                                      ((b.sideToMove() == White) ? 8 : -8)),
                                    b.sideToMove() == White);
 
    if (result == TB_RESULT_FAILED) {
