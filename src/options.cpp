@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
@@ -121,12 +121,16 @@ void Options::set_option(const string &name, const string &value) {
     set_boolean_option(name,value,book.book_enabled);
   }
   else if (name == "book.frequency") {
-     setOption<int>(name,value,book.frequency);
-     book.frequency = std::min<int>(100,std::max<int>(0,book.frequency));
+     setOption<unsigned>(name,value,book.frequency);
+     book.frequency = std::min<unsigned>(100,std::max<unsigned>(0,book.frequency));
+  }
+  else if (name == "book.weighting") {
+     setOption<unsigned>(name,value,book.weighting);
+     book.weighting = std::min<unsigned>(100,std::max<unsigned>(0,book.weighting));
   }
   else if (name == "book.scoring") {
-     setOption<int>(name,value,book.scoring);
-     book.scoring = std::min<int>(100,std::max<int>(0,book.scoring));
+     setOption<unsigned>(name,value,book.scoring);
+     book.scoring = std::min<unsigned>(100,std::max<unsigned>(0,book.scoring));
   }
   else if (name == "learning.position_learning") {
     set_boolean_option(name,value,learning.position_learning);

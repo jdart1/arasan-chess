@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2018 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -64,133 +64,62 @@ void BookReader::close() {
     }
 }
 
-struct Stats
-{
-   Move move;
-   std::array<double,NUM_SAMPLES> samples;
-   double weight = 0.0; // computed weight
-   double weightAdjust = 1.0; // adjustment factor from book PGN
-#ifdef _TRACE
-   unsigned w,l,d;
-#endif
-};
-
 Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
    cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
 #endif
-   vector < pair<Move,int> > results;
    vector <book::DataEntry> rawMoves;
+   vector < pair<Move,int> > results;
    if (b.repCount() > 0) {
       return NullMove;
    }
    else if (lookup(b,rawMoves) <= 0) {
       return NullMove;
    }
-
    Move move_list[Constants::MaxMoves];
    RootMoveGenerator mg(b);
    (void)mg.generateAllMoves(move_list,1 /* repeatable */);
-   // compute total and max count
-   uint64_t totalCount = 0;
-   unsigned maxCount = 0;
-   for (const book::DataEntry &info : rawMoves) {
-      unsigned count = info.count();
-      totalCount += count;
-      if (count > maxCount) maxCount = count;
-   }
 
    // Remove infrequent moves and zero-weight moves.
    filterByFreq(rawMoves);
    //
-   // Prepare to compute weights
+   // Compute the best move. We use a modified version of Thompson
+   // sampling. Rewards for each move are based on a random (Dirichlet
+   // distribution) sample drawn from the win/loss/draw statistics.
+   // This is modified by any explicit weight, a frequency bonus,
+   // and an additional random factor.
    //
-   vector<Stats> stats;
+   double maxReward = -1e9;
+   Move bestMove = NullMove;
    for (const book::DataEntry &info : rawMoves) {
-      Stats stat;
-      stat.move = move_list[info.index];
-#ifdef _TRACE
-      stat.w = info.win;
-      stat.l = info.loss;
-      stat.d = info.draw;
-#endif
+      array<double,OUTCOMES> counts;
+      counts[0] = info.win;
+      counts[1] = info.loss;
+      counts[2] = info.draw;
       if (info.weight != book::NO_RECOMMEND) {
-         stat.weightAdjust = double(2*info.weight)/book::MAX_WEIGHT;
+          const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
+          // make fake win/loss/draw counts to be added to the real counts
+          counts[0] += options.book.weighting*weightAdjust*info.count()/100;
+          counts[1] += (1.0-weightAdjust)*options.book.weighting*info.count()/100;
       }
-      // compute a bunch of random samples for each move.
-      for (unsigned i = 0; i < NUM_SAMPLES; i++) {
-         stat.samples[i] = sample_dirichlet(info);
-         // add a small bonus for very frequent moves
-         stat.samples[i] += 0.1*log10(double(info.count()))*options.book.frequency/100;
-      }
-      stats.push_back(stat);
-   }
-
-   if (stats.empty()) {
-      return NullMove;
-   }
-
-   double tolerance = 0.25*(100.0-options.book.scoring)/100.0;
-
-   // Now compute weights for each move. This is based on the move's
-   // ranking relative to other moves over the whole sample set.
-   for (unsigned i = 0; i < NUM_SAMPLES; i++) {
-      unsigned best_index = 0, index = 0;
-      double best = -1e4;
-      for (auto &s : stats) {
-         if (s.samples[i] > best) {
-            best = s.samples[i];
-            best_index = index;
-         }
-         ++index;
-      }
-      unsigned j = 0;
-      for (auto &s : stats) {
-         // A move gets a score of 1 when it is the best in a random
-         // sample, a declining score if it is not best but in
-         // tolerance, and a zero score if out of tolerance.
-         if (j==best_index) {
-            s.weight += 1.0;
-         } else {
-            double x = (best-s.samples[i])/tolerance;
-            if (x <=1.0) {
-               s.weight += 1.0-x;
-            }
-         }
-         ++j;
+      // compute a sample based on the count distribution and
+      // calculate its reward
+      auto reward = sample_dirichlet(counts);
+      // add a small bonus for very frequent moves. Note: moves
+      // with weights below neutral get less of a frequency bonus.
+      double reduce = std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT);
+      reward += 0.1*log10(double(info.count()))*reduce*options.book.frequency/100;
+      // add a random amount based on tolerance parameter
+      int tolerance = 100 - int(options.book.scoring);
+      std::normal_distribution<double> dist(0,0.1*tolerance/100);
+      reward += dist(engine);
+      if (reward > maxReward) {
+          maxReward = reward;
+          bestMove = move_list[info.index];
       }
    }
-
-   // Correct the weights based on any explicit move weighting in the
-   // book, and find the sum of corrected weights.
-   double weightSum = 0.0;
-   for (auto & s : stats) {
-#ifdef _TRACE
-      Notation::image(b,s.move,Notation::OutputFormat::SAN,cout);
-      array<double,OUTCOMES> outcomes = { double(s.w), double(s.l), double(s.d) };
-      cout << " " << "w:" << s.w << " l:" << s.l <<
-         " d:" << s.d << " score=" << calcReward(outcomes,contempt) <<
-         " weight=" << s.weight << " adjust=" <<
-         s.weightAdjust <<
-         " adjusted=" << s.weight*s.weightAdjust << endl;
-#endif
-      weightSum += s.weight*s.weightAdjust;
-   }
-
-   // Randomly pick a move based on weights
-   std::uniform_real_distribution<double> dist(0,weightSum);
-   double rand = dist(engine);
-   double sum = 0.0;
-   for (auto & s : stats) {
-      sum += s.weight*s.weightAdjust;
-      if (rand <= sum) {
-         return s.move;
-      }
-   }
-   // Shouldn't get here
-   return NullMove;
+   return bestMove;
 }
-
 
 unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
    vector <book::DataEntry> results;
@@ -283,15 +212,14 @@ double BookReader::calcReward(const std::array<double,OUTCOMES> &sample, score_t
    }
 }
 
-double BookReader::sample_dirichlet(const book::DataEntry &info, score_t contempt)
+double BookReader::sample_dirichlet(const array<double,OUTCOMES> &counts, score_t contempt)
 {
     std::array<double,OUTCOMES> sample;
     double sum = 0.0;
     unsigned i = 0;
-    array<unsigned,OUTCOMES> counts = { info.win, info.loss, info.draw };
-    for (unsigned a : counts) {
+    for (double a : counts) {
         double s = 0.0;
-        if (a) {
+        if (a != 0.0) {
             std::gamma_distribution<double> dist(a, 1.0);
             s = dist(engine);
         }
@@ -326,7 +254,7 @@ void BookReader::filterByFreq(vector<book::DataEntry> &results)
                                     return
                                        info.weight == 0 || (info.weight == book::NO_RECOMMEND &&
                                        (info.count() < minCount ||
-                                        double(info.count())/maxCount < freqThreshold));
+                                        double(info.count())/maxCount <= freqThreshold));
                                  });
    if (results.end() != new_end) {
       results.erase(new_end,results.end());

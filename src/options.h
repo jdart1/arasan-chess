@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2019 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -16,12 +16,13 @@ class Options
 
   struct BookOptions {
     BookOptions()
-       : frequency(10),
-         scoring(50), 
+       : frequency(50),
+         weighting(50),
+         scoring(50),
          book_enabled(1)
     { }
 
-    int frequency, scoring;
+    unsigned frequency, weighting, scoring;
     int book_enabled;
   } book;
 

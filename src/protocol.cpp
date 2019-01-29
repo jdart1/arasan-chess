@@ -1723,9 +1723,11 @@ void Protocol::processWinboardOptions(const string &args) {
         cout << "# setting option " << name << "=" << value << endl;
     }
     if (name == "Favor frequent book moves") {
-        Options::setOption<int>(value,options.book.frequency);
+        Options::setOption<unsigned>(value,options.book.frequency);
+    } else if (name == "Favor high-weighted book moves") {
+        Options::setOption<unsigned>(value,options.book.weighting);
     } else if (name == "Favor best book moves") {
-        Options::setOption<int>(value,options.book.scoring);
+        Options::setOption<unsigned>(value,options.book.scoring);
     } else if (name == "Can resign") {
         setCheckOption(value,options.search.can_resign);
     } else if (name == "Position learning") {
@@ -1882,6 +1884,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.frequency << " min 0 max 100" << endl;
         cout << "option name Favor best book moves type spin default " <<
             options.book.scoring << " min 0 max 100" << endl;
+        cout << "option name Favor high-weighted book moves type spin default " <<
+            options.book.weighting << " min 0 max 100" << endl;
         cout << "option name Threads type spin default " <<
             options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << endl;
@@ -1971,10 +1975,13 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.book_enabled = (value == "true");
         }
         else if (uciOptionCompare(name,"Favor frequent book moves")) {
-            Options::setOption<int>(value,options.book.frequency);
+            Options::setOption<unsigned>(value,options.book.frequency);
         }
         else if (uciOptionCompare(name,"Favor best book moves")) {
-            Options::setOption<int>(value,options.book.scoring);
+            Options::setOption<unsigned>(value,options.book.scoring);
+        }
+        else if (uciOptionCompare(name,"Favor high-weighted book moves")) {
+            Options::setOption<unsigned>(value,options.book.weighting);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
@@ -2469,6 +2476,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.frequency << " 1 100\"";
         cout << " option=\"Favor best book moves -spin " <<
             options.book.scoring << " 1 100\"";
+        cout << " option=\"Favor high-weighted book moves -spin " <<
+            options.book.weighting << " 1 100\"";
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
         cout << " option=\"Position learning -check " <<

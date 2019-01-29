@@ -49,7 +49,7 @@ protected:
 
     double calcReward(const std::array<double,OUTCOMES> &sample, score_t contempt = 0) const noexcept;
    
-    double sample_dirichlet(const book::DataEntry &info, score_t contempt = 0);
+    double sample_dirichlet(const std::array<double,OUTCOMES> &counts, score_t contempt = 0);
 
     void filterByFreq(vector<book::DataEntry> &);
 
