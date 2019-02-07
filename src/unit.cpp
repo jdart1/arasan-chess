@@ -1354,6 +1354,83 @@ static int testPerft()
    return errs;
 }
 
+static int testSearch()
+
+{
+   struct Case
+   {
+       Case(const string &s, score_t res, bool min_score = false):
+           epd(s), score(res), minimum(min_score)
+         {
+         }
+       string epd;
+       score_t score;
+       bool minimum;
+   };
+
+   static array<Case,7> cases = {
+       Case("8/kp6/p7/P4Q2/6pp/4q3/8/7K w - - bm Qf2;",0), //"WCSAC 836, Pilnik-Reshevsky, 1942"
+       Case("1k1r2r1/ppq4p/4Q3/1B2np2/2P1p3/P7/2P1RPPR/2B1K3 b - - bm Nf3+",Constants::MATE-5), // "Ragozin-Botvinnik, 1936"
+       Case("7b/2R2Prk/6qp/3B2pn/8/5PP1/5P2/6K1 w - - bm f8=N#;",Constants::MATE-1), //"test for underpromotion"
+
+       Case("5R2/3P2k1/5Np1/6P1/3n1P1p/8/4pKP1/1r6 w - - bm Rg8+;",2*Params::PAWN_VALUE,true),// "Petursson-Damljanovic, New York op 1988 (underpromotion, not at root)"
+       Case("7n/Q2K1k1p/6pB/3N2P1/8/8/8/4r3 b - - bm Re7+;",0), //"test for stalemate"
+       Case("K7/P7/8/5R2/1r4k1/6pp/8/8 w - - bm Rg5+;",0), // "stalemate, not at root"
+       Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // "draw
+   };
+
+   static const int DEPTH=10;
+
+   SearchController *searcher = new SearchController();
+   Statistics stats;
+   int errs = 0, caseid =0;
+   for (const Case &acase : cases) {
+       stringstream s(acase.epd);
+       Board board;
+       EPDRecord rec;
+       ChessIO::readEPDRecord(s,board,rec);
+       stats.clear();
+       Move m = searcher->findBestMove(board,
+                              FixedDepth,
+                              999999,
+                              0,            /* extra time allowed */
+                              DEPTH,        /* ply limit */
+                              false,        /* background */
+                              false,        /* UCI */
+                              stats,
+                              Silent);
+       score_t score = stats.value;
+       string bm;
+       if (rec.getVal("bm",bm)) {
+           string result;
+           Notation::image(board,m,Notation::OutputFormat::SAN,result);
+//           cout << caseid << " " << result << " " << score << " ";
+//           Scoring::printScore(score,cout);
+//           cout << endl;
+           if (result != bm) {
+               cerr << "error in search, case " << caseid << ": incorrect move" << endl;
+               ++errs;
+           }
+           if (acase.minimum) {
+               if (score < acase.score) {
+                   cerr << "error in search, case " << caseid << ": incorrect score" << endl;
+                   ++errs;
+               }
+           }
+           else if (score != acase.score) {
+               cerr << "error in search, case " << caseid << ": incorrect score" << endl;
+               ++errs;
+           }
+       } else {
+           cerr << "error in search, case " << caseid << ": missing bm" << endl;
+       }
+       ++caseid;
+   }
+   delete searcher;
+   return errs;
+}
+
+
 #ifdef SYZYGY_TBS
 static int testTB()
 {
@@ -1483,6 +1560,7 @@ int doUnit() {
    errs += testRep();
    errs += testMoveGen();
    errs += testPerft();
+   errs += testSearch();
 #ifdef SYZYGY_TBS
    errs += testTB();
 #endif
