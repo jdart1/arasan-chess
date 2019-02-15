@@ -108,7 +108,7 @@ template<ColorType side> void Scoring::initProximity(Square i) {
        }
    }
    int z = 0;
-   for (int r = kprank+1; r <= std::min(8,kprank+5); r++, z++) {
+   for (int r = kprank+1; r <= std::min(8,kprank+4); r++, z++) {
        for (int f=kpfile-1; f <= kpfile+1; f++) {
            Square sq = MakeSquare(f,r,side);
            kingPawnProximity[side][z][i].set(sq);
