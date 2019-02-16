@@ -1360,23 +1360,31 @@ static int testSearch()
    struct Case
    {
        Case(const string &s, score_t res, bool min_score = false):
-           epd(s), score(res), minimum(min_score)
+           epd(s), score(res)
          {
          }
        string epd;
        score_t score;
-       bool minimum;
    };
 
-   static array<Case,7> cases = {
-       Case("8/kp6/p7/P4Q2/6pp/4q3/8/7K w - - bm Qf2;",0), //"WCSAC 836, Pilnik-Reshevsky, 1942"
-       Case("1k1r2r1/ppq4p/4Q3/1B2np2/2P1p3/P7/2P1RPPR/2B1K3 b - - bm Nf3+",Constants::MATE-5), // "Ragozin-Botvinnik, 1936"
-       Case("7b/2R2Prk/6qp/3B2pn/8/5PP1/5P2/6K1 w - - bm f8=N#;",Constants::MATE-1), //"test for underpromotion"
-
-       Case("5R2/3P2k1/5Np1/6P1/3n1P1p/8/4pKP1/1r6 w - - bm Rg8+;",2*Params::PAWN_VALUE,true),// "Petursson-Damljanovic, New York op 1988 (underpromotion, not at root)"
+   static array<Case,10> cases = {
+       // WCSAC 836, Pilnik-Reshevsky, 1942
+       Case("8/kp6/p7/P4Q2/6pp/4q3/8/7K w - - bm Qf2;",0),
+       // "Ragozin-Botvinnik, 1936
+       Case("1k1r2r1/ppq4p/4Q3/1B2np2/2P1p3/P7/2P1RPPR/2B1K3 b - - bm Nf3+",Constants::MATE-5),
+       // test for underpromotion
+       Case("7b/2R2Prk/6qp/3B2pn/8/5PP1/5P2/6K1 w - - bm f8=N#;",Constants::MATE-1),
+       // Petursson-Damljanovic, New York op 1988 (underpromotion, not at root)
+       Case("5R2/3P2k1/5Np1/6P1/3n1P1p/8/4pKP1/1r6 w - - bm Rg8+;",Constants::INVALID_SCORE),
        Case("7n/Q2K1k1p/6pB/3N2P1/8/8/8/4r3 b - - bm Re7+;",0), //"test for stalemate"
        Case("K7/P7/8/5R2/1r4k1/6pp/8/8 w - - bm Rg5+;",0), // "stalemate, not at root"
        Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // "draw
+       // Evans-Browne, USA 1971
+       Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
+       // WAC 026
+       Case("3r2k1/1p1b1pp1/pq5p/8/3NR3/2PQ3P/PP3PP1/6K1 b - - bm Bf5",Constants::INVALID_SCORE),
+       // WAC 040
+       Case("3r1r1k/1p4pp/p4p2/8/1PQR4/6Pq/P3PP2/2R3K1 b - - bm Rc8",Constants::INVALID_SCORE)
    };
 
    static const int DEPTH=10;
@@ -1411,7 +1419,7 @@ static int testSearch()
                cerr << "error in search, case " << caseid << ": incorrect move" << endl;
                ++errs;
            }
-           if (acase.minimum) {
+           if (score != Constants::INVALID_SCORE) {
                if (score < acase.score) {
                    cerr << "error in search, case " << caseid << ": incorrect score" << endl;
                    ++errs;
