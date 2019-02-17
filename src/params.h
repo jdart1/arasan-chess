@@ -28,8 +28,8 @@ BEGIN_PACKED_STRUCT
     static constexpr score_t PAWN_VALUE = (score_t)128;
     static constexpr score_t BISHOP_VALUE = (score_t)(3.25*PAWN_VALUE);
     static constexpr score_t KNIGHT_VALUE = (score_t)(3.25*PAWN_VALUE);
-    static constexpr score_t ROOK_VALUE = (score_t)5*PAWN_VALUE;
-    static constexpr score_t QUEEN_VALUE = (score_t)(9.75*PAWN_VALUE);
+    static constexpr score_t ROOK_VALUE = (score_t)(5.4*PAWN_VALUE);
+    static constexpr score_t QUEEN_VALUE = (score_t)(10.7*PAWN_VALUE);
     static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
 
     static FORCEINLINE score_t PieceValue( PieceType pieceType ) {
