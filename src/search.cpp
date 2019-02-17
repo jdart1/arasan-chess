@@ -300,7 +300,8 @@ Move SearchController::findBestMove(
     // propagate controller variables to searches
     pool->forEachSearch<&Search::setVariablesFromController>();
 
-    // reset terminate flag on all threads
+    // reset global stop flag and terminate flag on all threads
+    setStop(false);
     clearStopFlags();
 
     startTime = last_time = getCurrentTime();
@@ -1334,9 +1335,9 @@ Move Search::ply0_search()
    }
 #ifdef UCI_LOG
    if (mainThread()) {
-      ucilog << "out of search loop, move= " << endl << (flush);
+      ucilog << "out of search loop, move= ";
       MoveImage(node->best,ucilog);
-      ucilog << endl;
+      ucilog << endl << (flush);
    }
 #endif
    // In reduced-strength mode, sometimes play s suboptimal move
