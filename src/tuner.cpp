@@ -456,9 +456,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           // we have extra minor (but not only a minor)
           if (oppmat.pieceBits() == Material::KR) {
              // KR + minor vs KR - draw w. no pawns so lower score
-             if (ourmat.hasPawns()) {
-                grads[Tune::KRMINOR_VS_R] += inc;
-             } else {
+             if (!ourmat.hasPawns()) {
                 grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
              }
              // do not apply trade down or pawn bonus
@@ -468,9 +466,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                    ourmat.pieceBits() == Material::KQB) &&
                    oppmat.pieceBits() == Material::KQ) {
               // Q + minor vs Q is a draw, generally
-             if (ourmat.hasPawns()) {
-                grads[Tune::KQMINOR_VS_Q] += inc;
-             } else {
+             if (!ourmat.hasPawns()) {
                 grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
              }
              // do not apply trade down or pawn bonus
@@ -1005,16 +1001,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                      tune_params.scale(inc,Tune::QUEENING_SQUARE_OPP_CONTROL_MID,mLevel);
                  grads[Tune::QUEENING_SQUARE_OPP_CONTROL_END] +=
                      tune_params.scale(inc,Tune::QUEENING_SQUARE_OPP_CONTROL_END,mLevel);
-             }
-         }
-
-         if (board.getMaterial(side).materialLevel()<=9 &&
-             board.bishop_bits[side]) {
-             Bitboard mask = SquareColor(queenSq) == White ? Board::white_squares : Board::black_squares;
-             if (!(mask & board.bishop_bits[side])) {
-                 // we have a Bishop but it can't cover the queening square
-                 grads[Tune::WRONG_COLOR_BISHOP] +=
-                     tune_params.scale(inc,Tune::WRONG_COLOR_BISHOP,mLevel);
              }
          }
       }

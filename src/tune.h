@@ -76,9 +76,7 @@ class Tune : public vector<TuneParam> {
     KING_DISTANCE_MULT,
     PIN_MULTIPLIER_MID,
     PIN_MULTIPLIER_END,
-    KRMINOR_VS_R,
     KRMINOR_VS_R_NO_PAWNS,
-    KQMINOR_VS_Q,
     KQMINOR_VS_Q_NO_PAWNS,
     MINOR_FOR_PAWNS,
     ENDGAME_PAWN_ADVANTAGE,
@@ -150,7 +148,6 @@ class Tune : public vector<TuneParam> {
     QUEENING_SQUARE_CONTROL_END,
     QUEENING_SQUARE_OPP_CONTROL_MID,
     QUEENING_SQUARE_OPP_CONTROL_END,
-    WRONG_COLOR_BISHOP,
     SIDE_PROTECTED_PAWN,
     KING_POSITION_LOW_MATERIAL0,
     KING_POSITION_LOW_MATERIAL1,
@@ -284,7 +281,7 @@ class Tune : public vector<TuneParam> {
 
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 181;
+  static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-KN_VS_PAWN_ADJUST0;
 
   double scale(score_t value,int index,int materialLevel) const;
 

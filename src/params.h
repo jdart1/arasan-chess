@@ -1,4 +1,4 @@
-// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PARAMS_H
 #define _PARAMS_H
@@ -76,9 +76,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD PIN_MULTIPLIER_MID;
     static PARAM_MOD PIN_MULTIPLIER_END;
     static PARAM_MOD ROOK_VS_PAWNS;
-    static PARAM_MOD KRMINOR_VS_R;
     static PARAM_MOD KRMINOR_VS_R_NO_PAWNS;
-    static PARAM_MOD KQMINOR_VS_Q;
     static PARAM_MOD KQMINOR_VS_Q_NO_PAWNS;
     static PARAM_MOD MINOR_FOR_PAWNS;
     static PARAM_MOD ENDGAME_PAWN_ADVANTAGE;
@@ -151,7 +149,6 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD QUEENING_SQUARE_CONTROL_END;
     static PARAM_MOD QUEENING_SQUARE_OPP_CONTROL_MID;
     static PARAM_MOD QUEENING_SQUARE_OPP_CONTROL_END;
-    static PARAM_MOD WRONG_COLOR_BISHOP;
     static PARAM_MOD SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.

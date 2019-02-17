@@ -391,9 +391,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           // we have extra minor (but not only a minor)
           if (oppmat.pieceBits() == Material::KR) {
              // KR + minor vs KR - draw w. no pawns so lower score
-             if (ourmat.hasPawns()) {
-                score += PARAM(KRMINOR_VS_R);
-             } else {
+             if (!ourmat.hasPawns()) {
                 score += PARAM(KRMINOR_VS_R_NO_PAWNS);
              }
              // do not apply trade down or pawn bonus
@@ -403,9 +401,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                    ourmat.pieceBits() == Material::KQB) &&
                    oppmat.pieceBits() == Material::KQ) {
               // Q + minor vs Q is a draw, generally
-             if (ourmat.hasPawns()) {
-                score += PARAM(KQMINOR_VS_Q);
-             } else {
+             if (!ourmat.hasPawns()) {
                 score += PARAM(KQMINOR_VS_Q_NO_PAWNS);
              }
              // do not apply trade down or pawn bonus
@@ -2079,13 +2075,6 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
           if (oppAtcks) {
               scores.mid += PARAM(QUEENING_SQUARE_OPP_CONTROL_MID);
               scores.end += PARAM(QUEENING_SQUARE_OPP_CONTROL_END);
-          }
-      }
-      if (board.getMaterial(side).materialLevel()<=9 &&
-          board.bishop_bits[side]) {
-          Bitboard mask = SquareColor(queenSq) == White ? Board::white_squares : Board::black_squares;
-          if (!(mask & board.bishop_bits[side])) {
-              scores.end += PARAM(WRONG_COLOR_BISHOP);
           }
       }
    }

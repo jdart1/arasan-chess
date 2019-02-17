@@ -82,9 +82,7 @@ Tune::Tune()
         TuneParam(Tune::KING_DISTANCE_MULT,"king_distance_mult",VAL(0.077),VAL(0.04),VAL(0.12),TuneParam::Endgame,0),
         TuneParam(Tune::PIN_MULTIPLIER_MID,"pin_multiplier_mid",VAL(0.227),0,VAL(0.75),TuneParam::Midgame,1),
         TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",VAL(0.289),0,VAL(0.750),TuneParam::Endgame,1),
-        TuneParam(Tune::KRMINOR_VS_R,"krminor_vs_r",VAL(-0.1),VAL(-0.5),VAL(0),TuneParam::Any,1),
         TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",VAL(-0.5),VAL(-2.0),VAL(0),TuneParam::Any,1),
-        TuneParam(Tune::KQMINOR_VS_Q,"kqminor_vs_q",VAL(-0.1),VAL(-0.5),VAL(0),TuneParam::Any,1),
         TuneParam(Tune::KQMINOR_VS_Q_NO_PAWNS,"kqminor_vs_q_no_pawns",VAL(-0.5),VAL(-3.0),0,TuneParam::Any,1),
         TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",VAL(0.5),0,VAL(0.75),TuneParam::Any,1),
         TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",VAL(0.03),VAL(0),VAL(0.25),TuneParam::Any,1),
@@ -156,7 +154,6 @@ Tune::Tune()
         TuneParam(Tune::QUEENING_SQUARE_CONTROL_END,"queening_square_control_end",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Endgame,1),
         TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_MID,"queening_square_opp_control_mid",VAL(-0.2),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_END,"queening_square_opp_control_end",VAL(-0.4),VAL(-0.6),VAL(0),TuneParam::Endgame,1),
-        TuneParam(Tune::WRONG_COLOR_BISHOP,"wrong_color_bishop",VAL(0),VAL(-0.5),VAL(0),TuneParam::Endgame,1),
         TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",VAL(-0.05),VAL(-0.25),VAL(0),TuneParam::Endgame,1),
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",250,128,300,TuneParam::Endgame,1),
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",225,128,300,TuneParam::Endgame,1),
@@ -576,9 +573,7 @@ void Tune::applyParams(bool check) const
    Params::KING_DISTANCE_MULT = PARAM(KING_DISTANCE_MULT);
    Params::PIN_MULTIPLIER_MID = PARAM(PIN_MULTIPLIER_MID);
    Params::PIN_MULTIPLIER_END = PARAM(PIN_MULTIPLIER_END);
-   Params::KRMINOR_VS_R = PARAM(KRMINOR_VS_R);
    Params::KRMINOR_VS_R_NO_PAWNS = PARAM(KRMINOR_VS_R_NO_PAWNS);
-   Params::KQMINOR_VS_Q = PARAM(KQMINOR_VS_Q);
    Params::KQMINOR_VS_Q_NO_PAWNS = PARAM(KQMINOR_VS_Q_NO_PAWNS);
    Params::MINOR_FOR_PAWNS = PARAM(MINOR_FOR_PAWNS);
    Params::ENDGAME_PAWN_ADVANTAGE = PARAM(ENDGAME_PAWN_ADVANTAGE);
@@ -650,7 +645,6 @@ void Tune::applyParams(bool check) const
    Params::QUEENING_SQUARE_CONTROL_END = PARAM(QUEENING_SQUARE_CONTROL_END);
    Params::QUEENING_SQUARE_OPP_CONTROL_MID = PARAM(QUEENING_SQUARE_OPP_CONTROL_MID);
    Params::QUEENING_SQUARE_OPP_CONTROL_END = PARAM(QUEENING_SQUARE_OPP_CONTROL_END);
-   Params::WRONG_COLOR_BISHOP = PARAM(WRONG_COLOR_BISHOP);
    Params::SIDE_PROTECTED_PAWN = PARAM(SIDE_PROTECTED_PAWN);
    for (int i = 0; i < 6; i++) {
       Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);
