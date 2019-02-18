@@ -28,7 +28,6 @@ score_t Params::KQMINOR_VS_Q_NO_PAWNS = -500;
 score_t Params::MINOR_FOR_PAWNS = 250;
 score_t Params::ENDGAME_PAWN_ADVANTAGE = 100;
 score_t Params::PAWN_ENDGAME1 = 200;
-score_t Params::PAWN_ENDGAME2 = 300;
 score_t Params::PAWN_ATTACK_FACTOR = 4;
 score_t Params::MINOR_ATTACK_FACTOR = 4;
 score_t Params::MINOR_ATTACK_BOOST = 4;
@@ -106,7 +105,6 @@ score_t Params::KING_PST[2][64];
 
 // The following tables are computed from tuning parameters.
 score_t Params::KING_POSITION_LOW_MATERIAL[3];
-score_t Params::TRADE_DOWN[8];
 score_t Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE];
 score_t Params::PASSED_PAWN[2][8];
 score_t Params::PASSED_PAWN_FILE_ADJUST[8] = {0,0,0,0,0,0,0,0};

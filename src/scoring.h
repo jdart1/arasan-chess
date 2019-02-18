@@ -164,8 +164,6 @@ class Scoring
                         const PawnHashEntry::PawnData &oppPawnData,
                         bool useCache);
 
-    static int tradeDownIndex(const Material &ourmat, const Material &oppmat);
-
     static int distance(Square sq1, Square sq);
 
     // Public, for use by the tuner.

@@ -14,7 +14,6 @@ static const score_t MOBILITY_RANGE = VAL(0.75);
 static const score_t OUTPOST_RANGE = VAL(0.65);
 static const score_t PST_RANGE = VAL(1.0);
 static const score_t PP_BLOCK_RANGE = VAL(0.65);
-static const score_t TRADE_DOWN_RANGE = VAL(0.333);
 static const score_t THREAT_RANGE = VAL(0.75);
 static const score_t ENDGAME_KING_POS_RANGE = VAL(0.75);
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
@@ -87,7 +86,6 @@ Tune::Tune()
         TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",VAL(0.5),0,VAL(0.75),TuneParam::Any,1),
         TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",VAL(0.03),VAL(0),VAL(0.25),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",VAL(0.3),VAL(0),VAL(0.5),TuneParam::Any,1),
-        TuneParam(Tune::PAWN_ENDGAME2,"pawn_endgame2",VAL(0.06),0,VAL(0.5),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ATTACK_FACTOR,"pawn_attack_factor",8,0,100,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",45,20,100,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,0,100,TuneParam::Midgame,1),
@@ -234,7 +232,6 @@ Tune::Tune()
         TuneParam(Tune::ISOLATED_PAWN_END4,"isolated_pawn_end4",VAL(-0.1),VAL(-0.25),VAL(0),TuneParam::Endgame,1)
     };
 
-   static const score_t TRADE_DOWN_INIT[8] = {45, 40, 34, 29, 23, 18, 12, 7};
    static const score_t KNIGHT_MOBILITY_INIT[9] = {VAL(-0.180), VAL(-0.07), VAL(-0.02), 0, VAL(0.02), VAL(0.05), VAL(0.07), VAL(0.1), VAL(0.12)};
    static const score_t BISHOP_MOBILITY_INIT[15] = {VAL(-0.2), VAL(-0.11), VAL(-.07), -VAL(0.03), 0, VAL(0.03), VAL(0.06), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09), VAL(0.09)};
    static const score_t ROOK_MOBILITY_INIT[2][15] = {{VAL(-0.22), VAL(-0.12), VAL(-0.08), VAL(-0.03), 0, VAL(0.03), VAL(0.07), VAL(0.1), VAL(0.12), VAL(0.14), VAL(0.17), VAL(0.19), VAL(0.21), VAL(0.23), VAL(0.24)}, {VAL(-0.3), VAL(-0.17), VAL(-0.11), VAL(-0.05), 0, VAL(0.05), VAL(0.09), VAL(0.14), VAL(0.17), VAL(0.2), VAL(0.23), VAL(0.26), VAL(0.29), VAL(0.31), VAL(0.32)}};
@@ -466,14 +463,6 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,p == 0 ? TuneParam::Midgame : TuneParam::Endgame,1));
       }
    }
-   // add trade down
-   ASSERT(i==TRADE_DOWN);
-   for (int p = 0; p < 8; p++) {
-      stringstream name;
-      name << "trade_down" << p;
-      score_t val = TRADE_DOWN_INIT[p];
-      push_back(TuneParam(i++,name.str(),val,std::max<score_t>(0,val-TRADE_DOWN_RANGE),val+TRADE_DOWN_RANGE,TuneParam::Any,1));
-   }
    ASSERT(i==RB_ADJUST);
    for (int p = 0; p < 6; p++) {
       stringstream name;
@@ -578,7 +567,6 @@ void Tune::applyParams(bool check) const
    Params::MINOR_FOR_PAWNS = PARAM(MINOR_FOR_PAWNS);
    Params::ENDGAME_PAWN_ADVANTAGE = PARAM(ENDGAME_PAWN_ADVANTAGE);
    Params::PAWN_ENDGAME1 = PARAM(PAWN_ENDGAME1);
-   Params::PAWN_ENDGAME2 = PARAM(PAWN_ENDGAME2);
    Params::PAWN_ATTACK_FACTOR = PARAM(PAWN_ATTACK_FACTOR);
    Params::MINOR_ATTACK_FACTOR = PARAM(MINOR_ATTACK_FACTOR);
    Params::MINOR_ATTACK_BOOST = PARAM(MINOR_ATTACK_BOOST);
@@ -651,9 +639,6 @@ void Tune::applyParams(bool check) const
    }
    for (int i = 0; i < 3; i++) {
       Params::KING_POSITION_LOW_MATERIAL[i] = PARAM(KING_POSITION_LOW_MATERIAL0+i);
-   }
-   for (int i = 0; i < 8; i++) {
-      Params::TRADE_DOWN[i] = PARAM(TRADE_DOWN+i);
    }
    for (int i = 0; i < 6; i++) {
       Params::RB_ADJUST[i] = PARAM(RB_ADJUST+i);

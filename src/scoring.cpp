@@ -324,17 +324,6 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
-int Scoring::tradeDownIndex(const Material &ourmat, const Material &oppmat)
-{
-   int index = -1;
-   const score_t mdiff = ourmat.value() - oppmat.value();
-   if (oppmat.materialLevel() < 16 && mdiff >= 3*Params::PAWN_VALUE) {
-      // Encourage trading pieces when we are ahead in material.
-      index = oppmat.materialLevel()/2;
-   }
-   return index;
-}
-
 score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
 {
     const Material &ourmat = board.getMaterial(side);
@@ -441,12 +430,6 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     if (score-tmp)
        cout << "material imbalance (" << ColorImage(side) << ") = " << score-tmp << endl;
 #endif
-    // Encourage trading pieces (but not pawns) when we are ahead in material.
-    int index = tradeDownIndex(ourmat,oppmat);
-    if (index >=0) {
-       ASSERT(index<8);
-       score += mdiff*APARAM(TRADE_DOWN,index)/4096;
-    }
     if (ourmat.materialLevel() < 16) {
 #ifdef EVAL_DEBUG
        tmp = score;
@@ -462,7 +445,6 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
           const int ourp = ourmat.pawnCount();
           if (ourp >= 3) adj += PARAM(PAWN_ENDGAME1);
           if (ourp >= 2) adj += PARAM(PAWN_ENDGAME1);
-          if (ourp >= 1) adj += PARAM(PAWN_ENDGAME2);
        }
        score += (4-ourmat.materialLevel()/4)*adj/4;
 #ifdef EVAL_DEBUG
@@ -2669,8 +2651,6 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::KING_POSITION_LOW_MATERIAL,3);
    o << "const int Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE] = ";
    print_array(o,Params::KING_ATTACK_SCALE,Params::KING_ATTACK_SCALE_SIZE);
-   o << "const int Params::TRADE_DOWN[8] = ";
-   print_array(o,Params::TRADE_DOWN,8);
    o << "const int Params::PASSED_PAWN[2][8] = ";
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
    score_t file_adjust[8];

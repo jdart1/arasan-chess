@@ -154,7 +154,6 @@ BEGIN_PACKED_STRUCT
     // The following tables are computed from tuning parameters.
     static PARAM_MOD KING_OPP_PASSER_DISTANCE[6];
     static PARAM_MOD KING_POSITION_LOW_MATERIAL[3];
-    static PARAM_MOD TRADE_DOWN[8];
     static PARAM_MOD KING_ATTACK_SCALE[KING_ATTACK_SCALE_SIZE];
     static PARAM_MOD PASSED_PAWN[2][8];
     static PARAM_MOD PASSED_PAWN_FILE_ADJUST[8];
