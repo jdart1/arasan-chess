@@ -59,10 +59,10 @@ public:
     }
 
     void setCounterMove(const Board &board, Move prev, Move counter) {
-		if (!IsNull(prev)) {
-			ColorType oside = board.oppositeSide();
-			(*counterMoves)[MakePiece(PieceMoved(prev), oside)][DestSquare(prev)] = counter;
-		}
+        if (!IsNull(prev)) {
+            ColorType oside = board.oppositeSide();
+            (*counterMoves)[MakePiece(PieceMoved(prev), oside)][DestSquare(prev)] = counter;
+        }
     }
 
 private:
