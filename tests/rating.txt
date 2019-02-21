@@ -1,7 +1,7 @@
-Rank Name                     Elo    +    - games score oppo. draws 
-   1 Stockfish-3             2450    6    6  8000   60%  2380   31% 
-   2 Texel-1.07              2426    6    6  7998   57%  2380   33% 
-   3 Senpai-2.0              2414    6    6  8000   55%  2380   33% 
-   4 Arasan CCC5-8-g3ed63af  2380    3    4 39998   47%  2404   35% 
-   5 Pedone-1.7              2369    6    6  8000   48%  2380   33% 
-   6 Arasan-21.0             2361    6    6  8000   47%  2380   46% 
+Rank Name                      Elo    +    - games score oppo. draws 
+   1 Stockfish-3              2445    6    6  8000   59%  2385   30% 
+   2 Texel-1.07               2420    6    6  8000   55%  2385   34% 
+   3 Senpai-2.0               2414    6    6  8000   54%  2385   34% 
+   4 Arasan CCC5-12-g6b2adc9  2385    4    4 40000   47%  2403   35% 
+   5 Pedone-1.7               2373    6    6  8000   48%  2385   32% 
+   6 Arasan-21.0              2363    6    6  8000   46%  2385   45% 

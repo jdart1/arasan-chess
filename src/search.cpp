@@ -2376,8 +2376,10 @@ int Search::calcExtensions(const Board &board,
 
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
+   int pruneDepth = depth;
    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && quiet) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
+       pruneDepth = depth + extend;
        if (!node->PV() && !improving) {
            extend -= DEPTH_INCREMENT;
        }
@@ -2403,17 +2405,21 @@ int Search::calcExtensions(const Board &board,
        }
    }
 
-   // for pruning decisions, use depth after LMR
-   const int predictedDepth = depth + extend;
-
-   bool pruneOk = !node->PV() &&
+   bool pruneOk = node->ply > 0 &&
        node->num_try &&
        board.checkStatus() == NotInCheck &&
        node->best_score > -Constants::MATE_RANGE;
 
    if (pruneOk) {
+       // for pruning decisions, use modified depth but not the same as
+       // LMR depth (idea from Laser)
+       if (node->PV()) {
+           pruneDepth = std::max<int>(0,pruneDepth+DEPTH_INCREMENT);
+       } else if (!improving) {
+           pruneDepth -= DEPTH_INCREMENT;
+       }
        if (quiet) {
-           // do not use predictedDepth for LMP
+           // do not use pruneDepth for LMP
            if(GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
               moveIndex >= lmpThreshold) {
 #ifdef SEARCH_STATS
@@ -2427,10 +2433,10 @@ int Search::calcExtensions(const Board &board,
                return PRUNE;
            }
            // futility pruning, enabled at low depths
-           if (predictedDepth <= FUTILITY_DEPTH) {
+           if (pruneDepth <= FUTILITY_DEPTH) {
                // Threshold was formerly increased with the move index
                // but this tests worse now.
-               score_t threshold = node->beta - futilityMargin(predictedDepth);
+               score_t threshold = node->beta - futilityMargin(pruneDepth);
                if (node->eval == Constants::INVALID_SCORE) {
                    node->eval = node->staticEval = scoring.evalu8(board);
                }
@@ -2447,12 +2453,13 @@ int Search::calcExtensions(const Board &board,
                }
            }
        }
-       int seeDepth = quiet ? predictedDepth : depth;
+       const int seeDepth = quiet ? pruneDepth : depth;
        // SEE pruning for quiet moves. Losing captures and moves that put pieces en prise
        // are pruned at low depths. Losing checks can be pruned.
        if (seeDepth <= SEE_PRUNING_DEPTH &&
+           node->ply > 0 &&
            GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-           const score_t margin = seePruningMargin(seeDepth,pruneOk);
+           const score_t margin = seePruningMargin(seeDepth,quiet);
            bool seePrune;
            if (margin >= -Params::PAWN_VALUE/3 && swap != Constants::INVALID_SCORE) {
                seePrune = !swap;
