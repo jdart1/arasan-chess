@@ -2472,7 +2472,7 @@ int Search::calcExtensions(const Board &board,
 #endif
 #ifdef _TRACE
                if (mainThread()) {
-                   indent(node->ply); cout << "futility: pruned" << endl;
+                   indent(node->ply); cout << "SEE: pruned" << endl;
                }
 #endif
                return PRUNE;
