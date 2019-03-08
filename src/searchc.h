@@ -8,12 +8,15 @@
 #include "chess.h"
 
 #include <array>
+#include <limits>
 
 struct NodeInfo;
 class Board;
 
 class SearchContext {
 public:
+    static constexpr int HISTORY_MAX = std::numeric_limits<int>::max();
+
     SearchContext();
 
     virtual ~SearchContext();
@@ -38,8 +41,6 @@ public:
     int scoreForOrdering (Move m, NodeInfo *, ColorType side) const noexcept;
 
     void updateStats(const Board &, NodeInfo *parentNode);
-
-    static const int HISTORY_MAX;
 
     template<class T>
     using PieceToArray = std::array<std::array<T, 64>, 16>;

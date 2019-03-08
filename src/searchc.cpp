@@ -3,8 +3,6 @@
 #include "searchc.h"
 #include "search.h"
 
-const int SearchContext::HISTORY_MAX = std::numeric_limits<int>::max();
-
 SearchContext::SearchContext() {
    history = new ButterflyArray<int>();
    counterMoves = new PieceToArray<Move>();
@@ -61,7 +59,7 @@ int SearchContext::scoreForOrdering (Move m, NodeInfo *node, ColorType side) con
         Move prevMove = (node-2)->last_move;
         score += (*fuMoveHistory)[PieceMoved(prevMove)][DestSquare(prevMove)][PieceMoved(m)][DestSquare(m)];
     }
-    return std::min<int>(HISTORY_MAX,std::max<int>(-HISTORY_MAX,score));
+    return score;
 }
 
 static constexpr int MAX_HISTORY_DEPTH = 17;

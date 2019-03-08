@@ -2396,7 +2396,7 @@ int Search::calcExtensions(const Board &board,
            // history based reductions
            extend += std::min(2*DEPTH_INCREMENT,
                               std::max(-2*DEPTH_INCREMENT,
-                                       DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/3500));
+                                       DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/5000));
        }
        // Don't reduce so far we go into the qsearch:
        extend = std::max(extend,1-depth);
