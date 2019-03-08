@@ -32,7 +32,8 @@ struct NodeInfo {
     score_t best_score;
     score_t alpha, beta;
     int cutoff;
-    int num_try;
+    int num_quiets;
+    int num_legal;
     int flags;
     Move singularMove;
     Move best;
@@ -40,7 +41,7 @@ struct NodeInfo {
     score_t eval, staticEval;
     Move pv[Constants::MaxPly];
     int pv_length;
-    Move done[Constants::MaxMoves];
+    Move quiets[Constants::MaxMoves];
 #ifdef MOVE_ORDER_STATS
     int best_count;
 #endif
@@ -190,7 +191,7 @@ protected:
         node->beta = beta;
         node->flags = flags;
         node->best = NullMove;
-        node->num_try = 0;
+        node->num_quiets = node->num_legal = 0;
         node->ply = ply;
         node->depth = depth;
         node->cutoff = 0;

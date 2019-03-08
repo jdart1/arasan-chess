@@ -1401,7 +1401,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->pv[0] = NullMove;
     node->pv_length = 0;
     node->cutoff = 0;
-    node->num_try = 0;                            // # of legal moves tried
+    node->num_quiets = node->num_legal = 0;
     node->alpha = alpha;
     node->beta = beta;
     node->best_score = node->alpha;
@@ -1428,6 +1428,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             continue;     // skip move
         }
         node->last_move = move;
+        if (!CaptureOrPromotion(move)) {
+            node->quiets[node->num_quiets++] = move;
+        }
+        node->num_legal++; // all generated moves are legal at ply 0
         if (mainThread() && controller->uci && controller->elapsed_time > 300) {
             controller->uciSendInfos(board, move, move_index, iterationDepth);
         }
@@ -1455,7 +1459,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
         board.doMove(move);
         setCheckStatus(board,in_check_after_move);
-        node->done[node->num_try++] = move;
         score_t lobound = wide ? node->alpha : node->best_score;
 #ifdef _TRACE
         if (mainThread()) {
@@ -1562,7 +1565,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     if (node->cutoff) {
         return node->best_score;
     }
-    if (node->num_try == 0) {
+    if (node->num_legal == 0) {
         // no moves were tried
         if (in_check) {
             if (mg.moveCount() == 0) {           // mate
@@ -1586,7 +1589,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         context.updateStats(board, node);
     }
 #ifdef MOVE_ORDER_STATS
-    if (node->num_try && node->best_score > node->alpha) {
+    if (node->num_legal && node->best_score > node->alpha) {
         stats.move_order_count++;
         if (node->best_count<4) {
             stats.move_order[node->best_count]++;
@@ -1888,7 +1891,7 @@ score_t Search::quiesce(int ply,int depth)
       MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
       Move move;
       BoardState state = board.state;
-      node->num_try = 0;
+      node->num_legal = 0;
       int noncaps = 0;
       int moveIndex = 0;
       while ((move = mg.nextEvasion(moveIndex)) != NullMove) {
@@ -1939,7 +1942,7 @@ score_t Search::quiesce(int ply,int depth)
                cout << ' ' << try_score << endl;
             }
 #endif
-            node->num_try++;
+            node->num_legal++;
             if (try_score > node->best_score) {
                node->best_score = try_score;
                node->best = move;
@@ -1959,7 +1962,7 @@ score_t Search::quiesce(int ply,int depth)
          }
 #endif
       }
-      if (node->num_try == 0) { // no legal evasions, so this is checkmate
+      if (node->num_legal == 0) { // no legal evasions, so this is checkmate
 #ifdef _TRACE
          if (mainThread()) {
             indent(ply); cout << "checkmate!" << endl;
@@ -2084,7 +2087,9 @@ score_t Search::quiesce(int ply,int depth)
       {
          MoveGenerator mg(board, &context, node, ply,
                           NullMove, mainThread());
-         Move *moves = (Move*)node->done;
+         // Use the "quiets" array to hold the capture moves, since we
+         // don't use it for history update purposes in the qsearch.
+         Move *moves = (Move*)node->quiets;
          // generate all the capture moves
          int move_count = mg.generateCaptures(moves,board.occupied[oside]);
          mg.initialSortCaptures(moves, move_count);
@@ -2406,7 +2411,7 @@ int Search::calcExtensions(const Board &board,
    }
 
    bool pruneOk = node->ply > 0 &&
-       node->num_try &&
+       node->num_legal &&
        board.checkStatus() == NotInCheck &&
        node->best_score > -Constants::MATE_RANGE;
 
@@ -2660,13 +2665,6 @@ score_t Search::search()
                             " value = " << hashValue << endl;
                     }
 #endif
-                    if (board.checkStatus() != InCheck) {
-                       Move best = node->best = hashEntry.bestMove(board);
-                       if (!IsNull(best) && !CaptureOrPromotion(best)) {
-                           context.updateStats(board, node);
-                           context.setKiller(best, node->ply);
-                       }
-                    }
                     return hashValue;                     // cutoff
                 }
                 break;
@@ -2928,7 +2926,7 @@ score_t Search::search()
            }
            SetPhase(hashMove,MoveGenerator::WINNING_CAPTURE_PHASE);
            node->last_move = hashMove;
-           node->num_try++;
+           node->num_legal++;
            //int extension = 0;
            //if (board.checkStatus() == InCheck) extension += DEPTH_INCREMENT;
            score_t value = -search(-threshold-1, -threshold,
@@ -2985,7 +2983,7 @@ score_t Search::search()
                 }
                 SetPhase(moves[i],MoveGenerator::WINNING_CAPTURE_PHASE);
                 node->last_move = moves[i];
-                node->num_try++;
+                node->num_legal++;
                 score_t value = -search(-threshold-1, -threshold, ply+1, nu_depth, PROBCUT);
 #ifdef _TRACE
                 if (mainThread()) {
@@ -3013,7 +3011,7 @@ score_t Search::search()
              }
           }
        }
-       node->num_try = 0;
+       node->num_legal = 0;
        node->last_move = NullMove;
     }
 
@@ -3049,7 +3047,7 @@ score_t Search::search()
         hashMove = node->best;
         // reset key params
         node->flags = old_flags;
-        node->num_try = 0;
+        node->num_legal = node->num_quiets = 0;
         node->cutoff = 0;
         node->depth = depth;
         node->alpha = node->best_score = alpha;
@@ -3128,7 +3126,7 @@ score_t Search::search()
            (node+1)->pv[ply+1] = NullMove;
            (node+1)->pv_length = 0;
            node->flags = old_flags;
-           node->num_try = 0;
+           node->num_legal = node->num_quiets = 0;
            node->cutoff = 0;
            node->depth = depth;
            node->singularMove = NullMove;
@@ -3150,7 +3148,7 @@ score_t Search::search()
         int first = 1;
 #endif
         while (!node->cutoff && !terminate) {
-            score_t hibound = node->num_try == 0 ? node->beta : node->best_score +1;
+            score_t hibound = node->num_legal == 0 ? node->beta : node->best_score +1;
             Move move;
             move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
@@ -3178,6 +3176,10 @@ score_t Search::search()
             }
 #endif
             node->last_move = move;
+            if (!CaptureOrPromotion(move)) {
+                ASSERT(node->num_quiets<Constants::MaxMoves);
+                node->quiets[node->num_quiets++] = move;
+            }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int extend;
             if (singularExtend &&
@@ -3228,6 +3230,7 @@ score_t Search::search()
                 board.undoMove(move,state);
                 continue;
             }
+            node->num_legal++;
             while (try_score > node->best_score &&
                (extend < 0 || hibound < node->beta) &&
                 !((node+1)->flags & EXACT) &&
@@ -3280,9 +3283,6 @@ score_t Search::search()
 #endif
                break;
             }
-            ASSERT(node->num_try<Constants::MaxMoves);
-            node->done[node->num_try++] = move;
-            ASSERT(node->num_try<Constants::MaxMoves);
             if (try_score > node->best_score) {
                 if (updateMove(node,move,try_score,ply)) {
                    // cutoff
@@ -3304,8 +3304,8 @@ score_t Search::search()
             node->best_score = node->alpha;
             goto search_end2;
         }
-        if (node->num_try == 0) {
-            // no moves were tried
+        if (node->num_legal == 0) {
+            // no legal moves
            if (node->flags & SINGULAR) {
               // Do not return mate or stalemate, because we have
               // a valid hash move. Return a fail low score.
@@ -3413,7 +3413,7 @@ score_t Search::search()
     }
     search_end2:
 #ifdef MOVE_ORDER_STATS
-    if (node->num_try && node->best_score != node->alpha) {
+    if (node->num_legal && node->best_score != node->alpha) {
         stats.move_order_count++;
         ASSERT(node->best_count>=0);
         if (node->best_count<4) {
@@ -3434,7 +3434,7 @@ int Search::updateRootMove(const Board &board,
       node->best = move;
       node->best_score = score;
 #ifdef MOVE_ORDER_STATS
-      node->best_count = node->num_try-1;
+      node->best_count = node->num_legal-1;
 #endif
       if (score >= node->beta) {
 #ifdef _TRACE
@@ -3477,7 +3477,7 @@ int Search::updateMove(NodeInfo *node, Move move, score_t score, int ply)
    node->best_score = score;
    node->best = move;
 #ifdef MOVE_ORDER_STATS
-   node->best_count = node->num_try-1;
+   node->best_count = node->num_legal-1;
 #endif
    if (score >= node->beta) {
 #ifdef _TRACE

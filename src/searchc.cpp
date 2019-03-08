@@ -87,30 +87,28 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node)
     ASSERT(!IsNull(best));
     ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
     const int b = bonus(node->depth);
-    for (int i=0; i<node->num_try; i++) {
-        ASSERT(i<Constants::MaxMoves);
-        const Move m = node->done[i];
-        if (!CaptureOrPromotion(m)) {
-            auto updateHist = [&](int &val, int divisor) {
-                if (MovesEqual(best,m)) {
-                    update(val,b,divisor);
-                }
-                else {
-                    update(val,-b,divisor);
-                }
-            };
+    ASSERT(node->num_quiets<Constants::MaxMoves);
+    for (int i=0; i<node->num_quiets; i++) {
+        const Move m = node->quiets[i];
+        auto updateHist = [&](int &val, int divisor) {
+            if (MovesEqual(best,m)) {
+                update(val,b,divisor);
+            }
+            else {
+                update(val,-b,divisor);
+            }
+        };
 
-            updateHist((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)],MAIN_HISTORY_DIVISOR);
-            if (node->ply > 0) {
-                Move lastMove = (node-1)->last_move;
+        updateHist((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)],MAIN_HISTORY_DIVISOR);
+        if (node->ply > 0) {
+            Move lastMove = (node-1)->last_move;
+            if (!IsNull(lastMove)) {
+                updateHist((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)],HISTORY_DIVISOR);
+            }
+            if (node->ply > 1) {
+                Move lastMove = (node-2)->last_move;
                 if (!IsNull(lastMove)) {
-                    updateHist((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)],HISTORY_DIVISOR);
-                }
-                if (node->ply > 1) {
-                    Move lastMove = (node-2)->last_move;
-                    if (!IsNull(lastMove)) {
-                        updateHist((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)],HISTORY_DIVISOR);
-                    }
+                    updateHist((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(lastMove)][PieceMoved(m)][DestSquare(m)],HISTORY_DIVISOR);
                 }
             }
         }
