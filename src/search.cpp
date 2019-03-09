@@ -40,7 +40,8 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define SINGULAR_EXTENSION
 
-static const int FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
+static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
+static const int FUTILITY_HISTORY_THRESHOLD[2] = {12000, 6000};
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
@@ -81,9 +82,9 @@ static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE
 static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
 static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
 
-static const score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params::PAWN_VALUE);
-static const score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.5*Params::PAWN_VALUE);
-static const score_t FUTILITY_MARGIN_SLOPE2 = static_cast<score_t>(0.2*Params::PAWN_VALUE);
+static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0*Params::PAWN_VALUE);
+static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
+static constexpr score_t FUTILITY_MARGIN_SLOPE2 = static_cast<score_t>(0*Params::PAWN_VALUE);
 
 static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
@@ -2437,8 +2438,10 @@ int Search::calcExtensions(const Board &board,
 #endif
                return PRUNE;
            }
-           // futility pruning, enabled at low depths
-           if (pruneDepth <= FUTILITY_DEPTH) {
+           // futility pruning, enabled at low depths. Do not prune
+           // moves with good history.
+           if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
+                   FUTILITY_HISTORY_THRESHOLD[improving]){
                // Threshold was formerly increased with the move index
                // but this tests worse now.
                score_t threshold = node->beta - futilityMargin(pruneDepth);
@@ -2459,8 +2462,8 @@ int Search::calcExtensions(const Board &board,
            }
        }
        const int seeDepth = quiet ? pruneDepth : depth;
-       // SEE pruning for quiet moves. Losing captures and moves that put pieces en prise
-       // are pruned at low depths. Losing checks can be pruned.
+       // SEE pruning. Losing captures and checks and moves that put pieces en prise
+       // are pruned at low depths.
        if (seeDepth <= SEE_PRUNING_DEPTH &&
            node->ply > 0 &&
            GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
