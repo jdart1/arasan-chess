@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016-2019 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
@@ -65,6 +65,12 @@ public:
             (*counterMoves)[MakePiece(PieceMoved(prev), oside)][DestSquare(prev)] = counter;
         }
     }
+
+    // get counter move history
+    int getCmHistory(NodeInfo *node, Move move) const noexcept;
+
+    // get follow up move history
+    int getFuHistory(NodeInfo *node, Move move) const noexcept;
 
 private:
 

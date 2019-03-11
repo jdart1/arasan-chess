@@ -113,3 +113,20 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node)
     }
 }
 
+int SearchContext::getCmHistory(NodeInfo *node, Move move) const noexcept
+{
+    if (node->ply == 0 || IsNull((node-1)->last_move)) {
+        return 0;
+    }
+    Move prev((node-1)->last_move);
+    return (*counterMoveHistory)[PieceMoved(prev)][DestSquare(prev)][PieceMoved(move)][DestSquare(move)];
+}
+
+int SearchContext::getFuHistory(NodeInfo *node, Move move) const noexcept
+{
+    if (node->ply < 2 || IsNull((node-2)->last_move)) {
+        return 0;
+    }
+    Move prev((node-2)->last_move);
+    return (*fuMoveHistory)[PieceMoved(prev)][DestSquare(prev)][PieceMoved(move)][DestSquare(move)];
+}

@@ -42,6 +42,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {12000, 6000};
+static const int HISTORY_PRUNING_THRESHOLD[2] = {-1000, -2000};
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
@@ -2435,6 +2436,20 @@ int Search::calcExtensions(const Board &board,
                if (mainThread()) {
                    indent(node->ply); cout << "LMP: pruned" << endl;
                }
+#endif
+               return PRUNE;
+           }
+           // History pruning.
+           if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
+               context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
+               context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
+#ifdef _TRACE
+               if (mainThread()) {
+                   indent(node->ply); cout << "history: pruned" << endl;
+               }
+#endif
+#ifdef SEARCH_STATS
+               ++stats.history_pruning;
 #endif
                return PRUNE;
            }
