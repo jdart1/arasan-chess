@@ -1376,9 +1376,9 @@ static int testSearch()
        Case("7b/2R2Prk/6qp/3B2pn/8/5PP1/5P2/6K1 w - - bm f8=N#;",Constants::MATE-1),
        // Petursson-Damljanovic, New York op 1988 (underpromotion, not at root)
        Case("5R2/3P2k1/5Np1/6P1/3n1P1p/8/4pKP1/1r6 w - - bm Rg8+;",Constants::INVALID_SCORE),
-       Case("7n/Q2K1k1p/6pB/3N2P1/8/8/8/4r3 b - - bm Re7+;",0), //"test for stalemate"
-       Case("K7/P7/8/5R2/1r4k1/6pp/8/8 w - - bm Rg5+;",0), // "stalemate, not at root"
-       Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // "draw
+       Case("7n/Q2K1k1p/6pB/3N2P1/8/8/8/4r3 b - - bm Re7+;",0), // stalemate
+       Case("8/7k/3p4/3B2Q1/p7/P7/1K4PP/5q2 b - - bm Qf6+;",0), // stalemate, not at root
+       Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // draw
        // Evans-Browne, USA 1971
        Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
        // WAC 026
@@ -1407,7 +1407,7 @@ static int testSearch()
                               false,        /* UCI */
                               stats,
                               Silent);
-       score_t score = stats.value;
+       score_t score = stats.display_value;
        string bm;
        if (rec.getVal("bm",bm)) {
            string result;
@@ -1419,15 +1419,15 @@ static int testSearch()
                cerr << "error in search, case " << caseid << ": incorrect move" << endl;
                ++errs;
            }
-           if (score != Constants::INVALID_SCORE) {
+           if (acase.score != Constants::INVALID_SCORE) {
                if (score < acase.score) {
-                   cerr << "error in search, case " << caseid << ": incorrect score" << endl;
+                   cerr << "error in search, case " << caseid << ": incorrect score (expected ";
+                   Scoring::printScore(acase.score,cerr);
+                   cerr << ", got ";
+                   Scoring::printScore(score,cerr);
+                   cerr << ")" << endl;
                    ++errs;
                }
-           }
-           else if (score != acase.score) {
-               cerr << "error in search, case " << caseid << ": incorrect score" << endl;
-               ++errs;
            }
        } else {
            cerr << "error in search, case " << caseid << ": missing bm" << endl;
