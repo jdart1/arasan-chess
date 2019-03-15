@@ -1,4 +1,4 @@
-// Copyright 1994-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2019 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -207,7 +207,7 @@ void RootMoveGenerator::reorderByScore() {
       );
 }
 
-int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
+void MoveGenerator::initialSortCaptures (Move *moves,int captures) {
    if (captures > 1) {
       int scores[40];
       ASSERT(captures < 40);
@@ -216,7 +216,6 @@ int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
       }
       sortMoves(moves,scores,captures);
    }
-   return captures;
 }
 
 
@@ -323,9 +322,9 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          }
          case WINNING_CAPTURE_PHASE:
          {
-            int captures = MoveGenerator::generateCaptures(moves);
+            numMoves = MoveGenerator::generateCaptures(moves);
+            initialSortCaptures(moves,numMoves);
             index = 0;
-            numMoves = initialSortCaptures(moves,captures);
             break;
          }
          case KILLER1_PHASE:

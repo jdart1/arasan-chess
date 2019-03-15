@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2019 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -140,7 +140,7 @@ class MoveGenerator
           return (Phase)((union MoveUnion*)&(move))->contents.phase;
       }
 
-      int initialSortCaptures(Move *moves, int captures);
+      void initialSortCaptures(Move *moves, int captures);
 
       static const int EASY_PLIES;
 
