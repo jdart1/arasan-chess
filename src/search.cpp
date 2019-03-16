@@ -54,7 +54,7 @@ static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
 static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 #endif
 static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
-static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
+static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
