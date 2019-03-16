@@ -55,7 +55,6 @@ static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 #endif
 static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = 2*Params::PAWN_VALUE;
-static const score_t PROBCUT_MARGIN2 = int(0.33*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
@@ -2922,14 +2921,17 @@ score_t Search::search()
         }
     }
 
-    // ProbCut
+    // ProbCut. Try to find a capture move that is signficantly above
+    // beta, based on a limited-depth search. If found assume that a
+    // regular depth search would cause beta cutoff, too.
     if (!node->PV() && board.checkStatus() == NotInCheck &&
         depth >= PROBCUT_DEPTH &&
         node->beta < Constants::MATE_RANGE) {
-       const score_t threshold = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
+       const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
+       const score_t needed_gain = probcut_beta - node->staticEval;
        const int nu_depth = depth - 4*DEPTH_INCREMENT;
        BoardState state(board.state);
-       if (!IsNull(hashMove) && Capture(hashMove) > Pawn && node->eval + Params::Gain(hashMove) >= threshold - PROBCUT_MARGIN2 && seeSign(board,hashMove,PROBCUT_MARGIN)) {
+       if (!IsNull(hashMove) && seeSign(board,hashMove,needed_gain)) {
 #ifdef _TRACE
           if (mainThread()) {
              indent(ply);
@@ -2945,9 +2947,7 @@ score_t Search::search()
            SetPhase(hashMove,MoveGenerator::WINNING_CAPTURE_PHASE);
            node->last_move = hashMove;
            node->num_legal++;
-           //int extension = 0;
-           //if (board.checkStatus() == InCheck) extension += DEPTH_INCREMENT;
-           score_t value = -search(-threshold-1, -threshold,
+           score_t value = -search(-probcut_beta-1, -probcut_beta,
                                    ply+1, nu_depth, PROBCUT);
 #ifdef _TRACE
            if (mainThread()) {
@@ -2958,10 +2958,7 @@ score_t Search::search()
            }
 #endif
            board.undoMove(hashMove,state);
-           if (value != Illegal && value > threshold) {
-               // We have found a good capture .. so assume this
-               // refutes the previous move and do not search
-               // further
+           if (value != Illegal && value > probcut_beta) {
 #ifdef _TRACE
               if (mainThread()) {
                  indent(ply);
@@ -2979,6 +2976,7 @@ score_t Search::search()
           MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
           // skip pawn captures because they will be below threshold
           int moveCount = mg.generateCaptures(moves,board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
+          mg.initialSortCaptures(moves,moveCount);
           for (int i = 0; i<moveCount; i++) {
              if (MovesEqual(hashMove,moves[i])) {
                 continue;
@@ -2986,7 +2984,7 @@ score_t Search::search()
              else if (Capture(moves[i])==King) {
                 return -Illegal;                  // previous move was illegal
              }
-             else if (node->eval + Params::Gain(moves[i]) >= threshold - PROBCUT_MARGIN2 && seeSign(board,moves[i],threshold)) {
+             else if (seeSign(board,moves[i],needed_gain)) {
 #ifdef _TRACE
                 if (mainThread()) {
                    indent(ply);
@@ -3002,7 +3000,7 @@ score_t Search::search()
                 SetPhase(moves[i],MoveGenerator::WINNING_CAPTURE_PHASE);
                 node->last_move = moves[i];
                 node->num_legal++;
-                score_t value = -search(-threshold-1, -threshold, ply+1, nu_depth, PROBCUT);
+                score_t value = -search(-probcut_beta-1, -probcut_beta, ply+1, nu_depth, PROBCUT);
 #ifdef _TRACE
                 if (mainThread()) {
                    indent(ply);
@@ -3012,10 +3010,7 @@ score_t Search::search()
                 }
 #endif
                 board.undoMove(moves[i],state);
-                if (value != Illegal && value > threshold) {
-                   // We have found a good capture .. so assume this
-                   // refutes the previous move and do not search
-                   // further
+                if (value != Illegal && value > probcut_beta) {
 #ifdef _TRACE
                    if (mainThread()) {
                       indent(ply);
