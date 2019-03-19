@@ -911,7 +911,7 @@ score_t Search::razorMargin(int depth) const
 score_t Search::seePruningMargin(int depth, bool quiet) const
 {
     int p = depth/DEPTH_INCREMENT;
-    return quiet ? -p*Params::PAWN_VALUE : -p*p*Params::PAWN_VALUE/3;
+    return quiet ? -p*Params::PAWN_VALUE : -p*p*int(0.2*Params::PAWN_VALUE);
 }
 
 void Search::setVariablesFromController() {
