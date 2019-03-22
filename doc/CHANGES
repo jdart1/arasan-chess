@@ -1,4 +1,27 @@
-Changes in Arasan 21.2:
+Changes in Arasan 21.3:
+ 1) Fix possible array overflow in search.
+ 2) Clean up draw code; fix bug where 2-fold repetition at root caused
+    draw to be signalled.
+ 3) When a hash hit occurs in the qsearch, do a more correct check
+    that the hash move meets conditiions for the current phase of
+    the search, before using it. Also: remove pruning for hash
+    moves in qsearch.
+ 4) Remove eval test before doing checks in qsearch.
+ 5) Simplify book selection logic. Add an additional option for
+    controlling how important explicit book weights are.
+ 6) Fix bounds overflow in king proximity table.
+ 7) Remove some scoring parameters that were tuned to zero or near-zero.
+ 8) Reset controller stop flag before search. Fixes issue #21.
+ 9) For pruning decisions, use modified depth but not the same as
+    LMR depth (idea from Laser). Allow pruning of non-root PV nodes.
+ 10) Store history scores on all moves including pruned ones.
+ 11) Use counter move and follow-up history for pruning like Stockfish.
+ 12) Omit futility pruning for moves with good history.
+ 13) Fixes/simplifications to ProbCut code. Reduce ProbCut margin.
+ 14) Adjust SEE pruning margin for non-quiet moves.
+ 15) Assorted code cleanup. Add unit tests for search.
+
+Changes in Arasan 21.2 (Dec. 2018):
  1) Add support for >64 cores.
  2) Rework NUMA support to use hwloc 2.x API. Add code to handle Windows
     processor groups (not really tested at present).
