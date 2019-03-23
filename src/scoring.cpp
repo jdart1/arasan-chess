@@ -1196,7 +1196,7 @@ void Scoring::pieceScore(const Board &board,
          while (qbits.iterate(sq)) {
             queenProx += 4-distance(okp,sq);
          }
-         opp_scores.mid += std::min<int>(simpleAttackWeight,PARAM(OWN_PIECE_KING_PROXIMITY_MAX))*
+         opp_scores.mid += std::min<score_t>(simpleAttackWeight,PARAM(OWN_PIECE_KING_PROXIMITY_MAX))*
             (PARAM(OWN_MINOR_KING_PROXIMITY)*minorProx +
              PARAM(OWN_ROOK_KING_PROXIMITY)*rookProx +
              PARAM(OWN_QUEEN_KING_PROXIMITY)*queenProx)/32;
