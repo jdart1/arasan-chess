@@ -4,6 +4,14 @@
 #include "debug.h"
 #include "bitboard.h"
 
+// To avoid conflict with Gaviota tablebases:
+#define tb_init syzygy_tb_init
+extern "C"
+{
+#include "syzygy/src/tbprobe.h"
+};
+#undef tb_init
+
 extern unsigned TB_LARGEST;
 
 const score_t SyzygyTb::CURSED_SCORE = (score_t)1;

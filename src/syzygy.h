@@ -3,13 +3,6 @@
 #define _SYZYGY_H_
 
 #include "board.h"
-// To avoid conflict with Gaviota tablebases:
-#define tb_init syzygy_tb_init
-extern "C"
-{
-#include "syzygy/src/tbprobe.h"
-};
-#undef tb_init
 
 // Support for Syzygy tablebases. Interfaces between Arasan
 // datatypes and the "Fathom" probing code by Roland de Man.
