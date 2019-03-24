@@ -1,6 +1,0 @@
-Rank Name                       Elo    +    - games score oppo. draws 
-   1 Stockfish-2.2-4CPU        2448   21   21   400   54%  2428   54% 
-   2 Arasan TCEC12-9-gec6d930  2428   11   11  1596   56%  2393   51% 
-   3 Texel-1.06-4CPU           2407   22   22   399   46%  2428   48% 
-   4 Pedone-1.7-4CPU           2369   22   22   397   40%  2428   45% 
-   5 Arasan-20.0-4CPU          2348   21   22   400   36%  2428   56% 
