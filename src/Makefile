@@ -1,8 +1,8 @@
 #
-# Gnu Makefile for Arasan 21.2
+# Gnu Makefile for Arasan 21.3
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 21.2
+VERSION = 21.3
 
 # paths, modify as needed:
 
@@ -141,7 +141,6 @@ CFLAGS  := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
-GTB_OPT := -O3 $(SSE) -DNDEBUG
 endif
 
 else
@@ -164,7 +163,6 @@ BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
 LTO	= -flto
-GTB_OPT := -Ofast $(SSE) -DNDEBUG
 endif
 else
 $(error GCC version < $(GCC_MIN_VERSION) not supported)
