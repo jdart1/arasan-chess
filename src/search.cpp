@@ -2424,7 +2424,7 @@ int Search::calcExtensions(const Board &board,
        } else if (!improving) {
            pruneDepth -= DEPTH_INCREMENT;
        }
-       if (quiet) {
+       if (quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
            // do not use pruneDepth for LMP
            if(GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
               moveIndex >= lmpThreshold) {
