@@ -773,6 +773,7 @@ int Search::checkTime() {
 
     CLOCK_TYPE current_time = getCurrentTime();
     controller->elapsed_time = getElapsedTime(controller->startTime,current_time);
+
     if (controller->typeOfSearch == FixedTime) {
        if (controller->elapsed_time >= controller->time_target) {
           return 1;
@@ -1674,12 +1675,14 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
                 (int)threadStats.failLow;
             cout << " pv=" << threadStats.best_line_image << endl;
         }
-        if (IsNull(best->best_line[0]) ||
-            (threadStats.display_value > best->display_value &&
-             !IsNull(threadStats.best_line[0]) &&
-            (threadStats.completedDepth >= best->completedDepth ||
-             threadStats.value >= Constants::MATE_RANGE))) {
-            best = &threadStats;
+        if (!IsNull(threadStats.best_line[0])) {
+            if (IsNull(best->best_line[0]) ||
+                (threadStats.display_value > best->display_value &&
+                (threadStats.completedDepth >= best->completedDepth ||
+                 threadStats.value >= Constants::MATE_RANGE))) {
+                best = &threadStats;
+            }
+
         }
     }
     return best;
