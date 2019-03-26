@@ -1236,6 +1236,7 @@ const struct ECOData eco_codes[] =
 {"D36", 0x4701bd6750b911bcULL ,"QGD, Exchange Variation"},
 {"D36", 0x51e6c598f6aed7c3ULL ,"QGD, Exchange Variation"},
 {"D36", 0x41eaefdea503616bULL ,"QGD, Exchange Variation"},
+{"D36", 0x49a148423fe6c358ULL ,"QGD, Exchange Variation"},
 {"D36", 0xc62d79cf822ea959ULL ,"QGD, Exchange Variation"},
 {"D37", 0x6054f214d70af39dULL ,"Queen's Gambit Declined"},
 {"D37", 0x6671a3fcb06d495eULL ,"Queen's Gambit Declined"},
