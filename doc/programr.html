@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 21.2</title>
+<title>Arasan Programmer's Guide - version 21.3</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
-<link rel="stylesheet" href="style.css" type="text/css"/>
+<link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 21.2</h1>
+<h1>Arasan Programmer's Guide - version 21.3</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -54,7 +54,7 @@ following other console programs:</p>
 <br/>
 <pre>
 arasan
-  21.2
+  21.3
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     book    - text files for opening book and ECO recognizer
@@ -205,21 +205,17 @@ moves along that line.</p>
 <p>Formerly relative book weights were stored in the book file. Now
 generally they are not: except for special first PGN file, move records
 only store the win/loss/draw statistics for the move. Some selection
-logic is applied at runtime (see bookread.cpp). The move selection is
-based on Thompson sampling (see references), which somewhat randomly
-selects moves based on their win/loss/draw statistics.
-Move selection takes into account the contempt value, if set, so that
-drawing moves get a higher score if playing a higher-rated opponent.</p>
-<p>
-In addition,
-a small tunable bonus is given for more frequent moves. Also, since
-Thompson sampling will tend to eventually select only the best move
-even if only slightly worse moves are available, a small tunable random
-factor is added to the move scores and this will cause more
-variation in the selected moves.
-</p>
-<p>There are three options (settable in arasan.rc and through Winboard or UCI options)
-  that control the move selection:</p>
+logic is applied at runtime (see bookread.cpp), as follows (this is somewhat
+inspired by Thompson sampling - see references):</p>
+  <ol>
+    <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
+    <li>Perform a bunch of samples from the prior distribution of win/loss/draw statistics of the remaining moves. Each sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics. The result is n sample sets, each containing stats for m book moves.</li>
+    <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all m book moves in all n sample sets. A slight score bonus is given for very frequent moves (depending on the book frequency option).</li>
+    <li>Over all the sample sets, compute a derived score for each move. This score is based on giving a bonus of 1.0 for each time the move had the best result score, and a declining bonus for each time the move was not best, but was within a set tolerance of the best moves's result score.</li>
+    <li>If an explict weight or move eval is coded into the book input file, use that to modify the derived weights in the previous step.</li>
+    <li>Finally, a move is randomly selected using the derived scores as weights.</li>
+</ol>
+<p>There are two options (settable in arasan.rc) that control the move selection:</p>
 <ul>
 <li>book.frequency controls the threshold for dropping infrequent moves (step 1 above) and
 the frequency bonus (in step 3).
@@ -228,10 +224,6 @@ only the most frequent moves.</li>
 <li>book.scoring controls the threshold for accepting moves that score worse than the
 best move (step 4 above). It is set on a scale of 0-100, with 0 being most tolerant of
 worse moves and 100 selecting the best move always.</li>
-<li>book.weighting controls the degree to which manually tuned weights in the book influence
-the move selection. It is set on a scale of 0-100, with 0 meaning book weights are not used,
-and 100 giving maximum effect to the book weights (note, however, that moves with a 0 weight, meaning
-"don't play," are in any case not selected).</li>
 </ul>
 <p>
 Arasan comes with a modest-sized book that was built from a
@@ -913,7 +905,7 @@ Futility pruning in Arasan is similar to that described by Ernst Heinz
 for the program Dark Thought. It allows some moves to not be searched,
 if it determined that the side to move is behind in material and the
 move to be made is not likely to gain enough material to be worth
-considering.</p>
+considering. But moves with good history scores are not pruned.</p>
 <p>
 Futility pruning is applied at relatively low search
 depths before the quiescence search and during the quiescence search.
@@ -931,6 +923,9 @@ winning captures, and killer moves) and are relatively late in the
 move order can be pruned away. The theory is that if we have not
 already achieved a cutoff searching more moves is not likely to
 produce one.</p>
+<p>Another pruning method recently implemented is based on
+countermove and follow-up history scores. Quiet moves with bad history
+scores are pruned at low depths.</p>
 <p>
 In addition at depths just before the quiescence search, moves that
 appear to lose material based on a static exchange analysis are
@@ -941,7 +936,7 @@ The final part of search() checks to see if checkmate or stalemate
 occurred, updates the hash table, and maintains the best variation.
 It also updates history scores, but only if the best move is not a
 promotion or capture. The best move from the search gets a history
-bonus.  The remaining moves are given a penalty.  Scores are
+bonus. The remaining moves are given a penalty. Scores are
 maintained in a table (per thread) that is indexed by side, source square
 and destination square.  In addition, Arasan now maintains a countermove
 history table and a "follow up" history" a.k.a. continuation history
@@ -1060,7 +1055,7 @@ allocated on a per-thread basis (each thread has its own tables).</p>
 </ol>
 
 <p>The positional score is typically within the range of plus or minus
-the value of a pawn (128), but can be greater in some circumstances.</p>
+the value of a pawn (1000), but can be greater in some circumstances.</p>
 
 <p>Pawn structure scoring is done in two stages. First, the pawn hash
 table is probed to get the score for the position. If the position

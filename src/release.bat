@@ -12,7 +12,7 @@ pushd ..
 7z u -tzip -orelease %1 gui\fonts\*.zip
 7z u -tzip -orelease %1 prj\prj.sln prj\prj.vcxproj
 7z u -tzip -orelease %1 book\basic.pgn book\eco
-7z u -tzip -orelease %1 doc\programr.html doc\style.css
+7z u -tzip -orelease %1 doc\programr.html doc\style_pg.css
 7z u -tzip -orelease %1 doc\*license*.txt
 7z u -tzip -orelease %1 doc\readme.txt
 7z u -tzip -orelease %1 doc\TODO doc\CHANGES

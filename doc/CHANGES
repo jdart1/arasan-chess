@@ -19,7 +19,8 @@ Changes in Arasan 21.3:
  12) Omit futility pruning for moves with good history.
  13) Fixes/simplifications to ProbCut code. Reduce ProbCut margin.
  14) Adjust SEE pruning margin for non-quiet moves.
- 15) Assorted code cleanup. Add unit tests for search.
+ 15) Don't do quiet move pruning if side to move has no pieces.
+ 16) Assorted code cleanup. Add unit tests for search.
 
 Changes in Arasan 21.2 (Dec. 2018):
  1) Add support for >64 cores.

@@ -1,8 +1,8 @@
 #
-# Gnu Makefile for Arasan 21.3
+# Gnu Makefile for Arasan 21.2
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 21.3
+VERSION = 21.2
 
 # paths, modify as needed:
 
