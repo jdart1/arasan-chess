@@ -1295,7 +1295,7 @@ Move Search::ply0_search()
             }
 #endif
             if (!controller->uci || controller->typeOfSearch == TimeLimit) {
-               if (value <= iterationDepth - Constants::MATE) {
+                if (value <= iterationDepth - Constants::MATE && !IsNull(stats.best_line[0])) {
                   // We're either checkmated or we certainly will be, so
                   // quit searching.
                   if (mainThread()) {
