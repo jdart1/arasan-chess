@@ -209,27 +209,32 @@ logic is applied at runtime (see bookread.cpp), as follows (this is somewhat
 inspired by Thompson sampling - see references):</p>
   <ol>
     <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
-    <li>Perform a bunch of samples from the prior distribution of win/loss/draw statistics of the remaining moves. Each sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics. The result is n sample sets, each containing stats for m book moves.</li>
-    <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all m book moves in all n sample sets. A slight score bonus is given for very frequent moves (depending on the book frequency option).</li>
-    <li>Over all the sample sets, compute a derived score for each move. This score is based on giving a bonus of 1.0 for each time the move had the best result score, and a declining bonus for each time the move was not best, but was within a set tolerance of the best moves's result score.</li>
-    <li>If an explict weight or move eval is coded into the book input file, use that to modify the derived weights in the previous step.</li>
-    <li>Finally, a move is randomly selected using the derived scores as weights.</li>
+    <li>If a manually configured weight or position eval is present in the book, adjust the win/loss/draw statistics in way that skews them based on the weight/eval.</li>
+    <li>Perform a random sample from the prior distribution of win/loss/draw statistics for each move. The sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics.</li>
+    <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all book moves. A slight score bonus is given for very frequent moves (depending on the book frequency option).</li>
+    <li>Add a further random factor to the score.</li>
+    <li>Pick the move with the highest result score.</li>
 </ol>
-<p>There are two options (settable in arasan.rc) that control the move selection:</p>
+<p>There are three options (settable in arasan.rc) that control the move selection:</p>
 <ul>
 <li>book.frequency controls the threshold for dropping infrequent moves (step 1 above) and
-the frequency bonus (in step 3).
+the frequency bonus (in step 4).
 It is set on a scale of 0-100, with 0 allowing more infrequent moves and 100 selecting
 only the most frequent moves.</li>
-<li>book.scoring controls the threshold for accepting moves that score worse than the
-best move (step 4 above). It is set on a scale of 0-100, with 0 being most tolerant of
+<li>book.scoring controls the standard deviation for the random sample in step 5. 
+The higher this is the more tolerant the program will be of book moves whose actual
+statistics are poor. It is set on a scale of 0-100, with 0 being most tolerant of
 worse moves and 100 selecting the best move always.</li>
+<li>book.weighting controls the degree to which manually-configured weights influence
+the move selection. It is on a scale of 0-100, with 0 causing the manual weights to
+have the least effect and 100 causing them to have the maximum effect.
+</li>  
 </ul>
 <p>
-Arasan comes with a modest-sized book that was built from a
+Arasan comes with a book that was built from a
 combination of a fairly small hand-tuned book file (basic.pgn) and a fairly large
 collection of high-quality human and computer games. There are over
-500,000 moves in the book.</p>
+700,000 moves in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
 <pre>
