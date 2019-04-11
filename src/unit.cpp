@@ -1452,7 +1452,7 @@ static int testTB()
       score_t result;
       string moves;
    };
-   static array<Case,8> cases = {
+   static array<Case,14> cases = {
        Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
            "Nd6+"),
        Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
@@ -1466,7 +1466,15 @@ static int testTB()
             "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
        Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,"exf6"),
        Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,
-            "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R")
+            "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R"),
+       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",Constants::MATE,""),
+       Case("7k/8/6Q1/p7/P7/3K4/8/8 b - - 0 1",0,""), // stalemate
+       Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0, "Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
+       Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,
+            "Rg6, Kc6, Rh4, Kc5, d6, Ra4, dxe6, Re4, Rg3, Rc4"),
+       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,
+            "Kd2, Ke2, Rd8"),
+       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,"Qd8+")
       };
 
    int errs = 0;
@@ -1474,6 +1482,12 @@ static int testTB()
    if (EGTBMenCount < 5) {
       cerr << "TB tests skipped: no 5-man TBs found" << endl;
       return 0;
+   }
+   if (EGTBMenCount < 6) {
+      cerr << "6-man TB tests skipped: no 6-man TBs found" << endl;
+   }
+   if (EGTBMenCount < 7) {
+      cerr << "7-man TB tests skipped: no 7-man TBs found" << endl;
    }
    int caseid = 0;
    int temp = options.search.syzygy_50_move_rule;
@@ -1487,7 +1501,10 @@ static int testTB()
       }
       MoveSet moves;
       score_t score;
-      if (SyzygyTb::probe_root(board,score,moves)>=0) {
+      int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
+      if (men > EGTBMenCount) {
+          continue;
+      } else if (SyzygyTb::probe_root(board,score,moves)>=0) {
          if (score != it.result) {
             cerr << "testTB: case " << caseid << " expected ";
             Scoring::printScore(it.result,cerr);
