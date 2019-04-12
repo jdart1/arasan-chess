@@ -31,6 +31,7 @@
 
 #include "types.h"
 #include "bitboard.h"
+#include "constant.h"
 
 /****************************************************************************/
 /* BUILD CONFIG:                                                            */
@@ -99,6 +100,21 @@
  * (recommended if using C++ and compiler supports it).
  */
 #define TB_USE_ATOMIC
+
+/***************************************************************************/
+/* SCORING CONSTANTS                                                       */
+/***************************************************************************/
+/*
+ * Fathom can produce scores for tablebase moves. These depend on the
+ * value of a pawn, and the magnitude of mate scores. The following
+ * constants are representative values but will likely need
+ * modification to adapt to an engine's own internal score values.
+ */
+#define TB_VALUE_PAWN 128  /* value of pawn in endgame */
+#define TB_VALUE_MATE Constants::MATE
+#define TB_VALUE_INFINITE 32767 /* value above all normal score values */
+#define TB_VALUE_DRAW 0
+#define TB_MAX_MATE_PLY 256
 
 /***************************************************************************/
 /* ENGINE INTEGRATION CONFIG                                               */

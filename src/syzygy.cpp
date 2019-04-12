@@ -4,13 +4,7 @@
 #include "debug.h"
 #include "bitboard.h"
 
-// To avoid conflict with Gaviota tablebases:
-#define tb_init syzygy_tb_init
-extern "C"
-{
 #include "syzygy/src/tbprobe.h"
-};
-#undef tb_init
 
 extern unsigned TB_LARGEST;
 
@@ -50,7 +44,7 @@ static Move getMove(const Board &b, unsigned res) {
 
 int SyzygyTb::initTB(const string &path)
 {
-   bool ok = syzygy_tb_init(path.c_str());
+   bool ok = tb_init(path.c_str());
    if (!ok)
       return 0;
    else
