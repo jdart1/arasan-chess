@@ -398,7 +398,7 @@ Move SearchController::findBestMove(
       tb_pieces = wMat.men() + bMat.men();
       if(tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
          MoveSet moves;
-         tb_dtz = SyzygyTb::probe_root(board, tb_score, moves);
+         tb_dtz = SyzygyTb::probe_root(board, board.anyRep(), tb_score, moves);
          tb_hit = tb_dtz >= 0;
          tb_root_probes++;
          if (tb_hit) {

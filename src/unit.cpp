@@ -17,6 +17,7 @@
 #include "syzygy.h"
 #endif
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <set>
 #include <string>
@@ -1452,7 +1453,8 @@ static int testTB()
       score_t result;
       string moves;
    };
-   static array<Case,14> cases = {
+
+   static array<Case,15> cases = {
        Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
            "Nd6+"),
        Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
@@ -1462,6 +1464,8 @@ static int testTB()
             "c4, Kc7, Kd7, Kd8"),
        Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,
             "Ra8, Rb8"),
+       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,
+            "Nc1#, Nc3#"),
        Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,
             "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
        Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,"exf6"),
@@ -1499,12 +1503,25 @@ static int testTB()
          ++errs;
          continue;
       }
+      // set half-move count from FEN
+      auto pos = it.fen.find_last_of('-');
+      if (pos != string::npos) {
+          stringstream s;
+          for (size_t i = pos+2; i < it.fen.length() && isdigit(it.fen[i]); i++) {
+              s << it.fen[i];
+          }
+          int hmc;
+          s >> hmc;
+          if (!s.bad()) {
+              board.state.moveCount = hmc;
+          }
+      }
       MoveSet moves;
       score_t score;
       int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
       if (men > EGTBMenCount) {
           continue;
-      } else if (SyzygyTb::probe_root(board,score,moves)>=0) {
+      } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
          if (score != it.result) {
             cerr << "testTB: case " << caseid << " expected ";
             Scoring::printScore(it.result,cerr);

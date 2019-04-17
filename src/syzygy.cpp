@@ -1,4 +1,4 @@
-// Copyright 2016, 2018 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019 by Jon Dart. All Rights Reserved.
 #include "syzygy.h"
 #include "constant.h"
 #include "debug.h"
@@ -51,7 +51,7 @@ int SyzygyTb::initTB(const string &path)
       return TB_LARGEST;
 }
 
-int SyzygyTb::probe_root(const Board &b, score_t &score, MoveSet &rootMoves)
+int SyzygyTb::probe_root(const Board &b, bool hasRepeated, score_t &score, MoveSet &rootMoves)
 {
    score = 0;
    unsigned results[TB_MAX_MOVES];
@@ -84,7 +84,7 @@ int SyzygyTb::probe_root(const Board &b, score_t &score, MoveSet &rootMoves)
    const unsigned wdl = TB_GET_WDL(result);
    ASSERT(wdl<5);
    score = valueMap[wdl];
-   if (b.anyRep()) {
+   if (hasRepeated) {
        // In case of repetition, fall back to making the single
        // suggested tb move that minimizes DTZ.
        // Otherwise the engine may repeat the position again.

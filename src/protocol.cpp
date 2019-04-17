@@ -2222,7 +2222,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 score_t tbscore;
                 if (options.search.use_tablebases) {
                    MoveSet rootMoves;
-                   if (SyzygyTb::probe_root(board,tbscore,rootMoves) >= 0) {
+                   if (SyzygyTb::probe_root(board,board.anyRep(),tbscore,rootMoves) >= 0) {
                       cout << "score = ";
                       if (tbscore == -SyzygyTb::CURSED_SCORE)
                          cout << "draw (Cursed Loss)";
