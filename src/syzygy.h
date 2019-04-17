@@ -1,4 +1,4 @@
-// Copyright 2016, 2018 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019 by Jon Dart. All Rights Reserved.
 #ifndef _SYZYGY_H_
 #define _SYZYGY_H_
 
@@ -23,7 +23,7 @@ struct SyzygyTb {
     // the draw or win.
     // Returns the minimum DTZ value if score was obtained,
     // -1 if not.
-    static int probe_root(const Board &b, score_t &score, MoveSet &rootMoves);
+    static int probe_root(const Board &b, bool hasRepeated, score_t &score, MoveSet &rootMoves);
 
     // Probe the wdl tablebases (not at root).
     // Return 1 if score was obtained,

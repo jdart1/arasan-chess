@@ -18,6 +18,7 @@
 #endif
 #include <algorithm>
 #include <iostream>
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -1452,7 +1453,8 @@ static int testTB()
       score_t result;
       string moves;
    };
-   static array<Case,14> cases = {
+
+   static array<Case,15> cases = {
        Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
            "Nd6+"),
        Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
@@ -1462,6 +1464,8 @@ static int testTB()
             "c4, Kc7, Kd7, Kd8"),
        Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,
             "Ra8, Rb8"),
+       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,
+            "Nc1#, Nc3#"),
        Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,
             "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
        Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,"exf6"),
@@ -1492,28 +1496,43 @@ static int testTB()
    int caseid = 0;
    int temp = options.search.syzygy_50_move_rule;
    options.search.syzygy_50_move_rule = 1;
-   for (auto it : cases) {
+   const auto count_pattern = std::regex("^.* (\\d+)\\s(\\d+)$");
+   for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
       Board board;
-      if (!BoardIO::readFEN(board, it.fen.c_str())) {
-         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it.fen << endl;
+      if (!BoardIO::readFEN(board, it->fen.c_str())) {
+         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << endl;
          ++errs;
          continue;
+      }
+      // set half-move count from FEN
+      std::smatch match;
+      if (std::regex_match(it->fen,match,count_pattern)) {
+          auto pos = it->fen.find_last_of('-');
+          if (pos != string::npos) {
+              auto it = match.begin()+1;
+              stringstream s(*it);
+              int hmc;
+              s >> hmc;
+              if (!s.bad()) {
+                  board.state.moveCount = hmc;
+              }
+          }
       }
       MoveSet moves;
       score_t score;
       int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
       if (men > EGTBMenCount) {
           continue;
-      } else if (SyzygyTb::probe_root(board,score,moves)>=0) {
-         if (score != it.result) {
+      } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
+         if (score != it->result) {
             cerr << "testTB: case " << caseid << " expected ";
-            Scoring::printScore(it.result,cerr);
+            Scoring::printScore(it->result,cerr);
             cerr << ", got ";
             Scoring::printScore(score,cerr);
             cerr << endl;
             ++errs;
          }
-         stringstream s(it.moves);
+         stringstream s(it->moves);
          char movechars[10];
          string movestr;
          MoveSet goodmoves;
@@ -1548,9 +1567,9 @@ static int testTB()
       // ensure move count is zero otherwise probe_wdl will fail
       board.state.moveCount = 0;
       if (SyzygyTb::probe_wdl(board,score,true)) {
-         if (score != it.result) {
+         if (score != it->result) {
             cerr << "testTB: case " << caseid << " expected WDL score ";
-            Scoring::printScore(it.result,cerr);
+            Scoring::printScore(it->result,cerr);
             cerr << ", got ";
             Scoring::printScore(score,cerr);
             cerr << endl;
@@ -1560,7 +1579,6 @@ static int testTB()
           cerr << "testTB: case " << caseid << ": WDL probe failed." << endl;
           ++errs;
       }
-      ++caseid;
    }
    options.search.syzygy_50_move_rule = temp;
    return errs;
