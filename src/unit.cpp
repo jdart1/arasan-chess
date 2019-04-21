@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -1496,24 +1497,26 @@ static int testTB()
    int caseid = 0;
    int temp = options.search.syzygy_50_move_rule;
    options.search.syzygy_50_move_rule = 1;
-   for (auto it : cases) {
+   const auto count_pattern = std::regex("^.* (\\d+)\\s(\\d+)$");
+   for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
       Board board;
-      if (!BoardIO::readFEN(board, it.fen.c_str())) {
-         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it.fen << endl;
+      if (!BoardIO::readFEN(board, it->fen.c_str())) {
+         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << endl;
          ++errs;
          continue;
       }
       // set half-move count from FEN
-      auto pos = it.fen.find_last_of('-');
-      if (pos != string::npos) {
-          stringstream s;
-          for (size_t i = pos+2; i < it.fen.length() && isdigit(it.fen[i]); i++) {
-              s << it.fen[i];
-          }
-          int hmc;
-          s >> hmc;
-          if (!s.bad()) {
-              board.state.moveCount = hmc;
+      std::smatch match;
+      if (std::regex_match(it->fen,match,count_pattern)) {
+          auto pos = it->fen.find_last_of('-');
+          if (pos != string::npos) {
+              auto it = match.begin()+1;
+              stringstream s(*it);
+              int hmc;
+              s >> hmc;
+              if (!s.bad()) {
+                  board.state.moveCount = hmc;
+              }
           }
       }
       MoveSet moves;
@@ -1522,15 +1525,15 @@ static int testTB()
       if (men > EGTBMenCount) {
           continue;
       } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
-         if (score != it.result) {
+         if (score != it->result) {
             cerr << "testTB: case " << caseid << " expected ";
-            Scoring::printScore(it.result,cerr);
+            Scoring::printScore(it->result,cerr);
             cerr << ", got ";
             Scoring::printScore(score,cerr);
             cerr << endl;
             ++errs;
          }
-         stringstream s(it.moves);
+         stringstream s(it->moves);
          char movechars[10];
          string movestr;
          MoveSet goodmoves;
@@ -1565,9 +1568,9 @@ static int testTB()
       // ensure move count is zero otherwise probe_wdl will fail
       board.state.moveCount = 0;
       if (SyzygyTb::probe_wdl(board,score,true)) {
-         if (score != it.result) {
+         if (score != it->result) {
             cerr << "testTB: case " << caseid << " expected WDL score ";
-            Scoring::printScore(it.result,cerr);
+            Scoring::printScore(it->result,cerr);
             cerr << ", got ";
             Scoring::printScore(score,cerr);
             cerr << endl;
@@ -1577,7 +1580,6 @@ static int testTB()
           cerr << "testTB: case " << caseid << ": WDL probe failed." << endl;
           ++errs;
       }
-      ++caseid;
    }
    options.search.syzygy_50_move_rule = temp;
    return errs;

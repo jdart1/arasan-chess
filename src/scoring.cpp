@@ -124,65 +124,54 @@ void Scoring::initBitboards() {
       initProximity<Black>(i);
       int rank = Rank(i, White);
       int file = File(i);
-      for(r = rank - 1; r > 1; r--) {
-         Square sq2 = MakeSquare(file, r, White);
-         if (file != 8) {
-            sq2 = MakeSquare(file + 1, r, White);
-            backwardW[i].set((int) sq2);
-         }
+      Square sq;
 
+      for(r = rank - 1; r > 1; r--) {
+         if (file != 8) {
+            backwardW[i].set(MakeSquare(file + 1, r, White));
+         }
          if (file != 1) {
-            sq2 = MakeSquare(file - 1, r, White);
-            backwardW[i].set((int) sq2);
+            backwardW[i].set(MakeSquare(file - 1, r, White));
          }
       }
 
       for(r = rank + 1; r < 8; r++) {
-         Square sq2 = MakeSquare(file, r, White);
-         passedW[i].set(sq2);
+         passedW[i].set(MakeSquare(file, r, White));
          if (file != 8) {
-            sq2 = MakeSquare(file + 1, r, White);
-            passedW[i].set(sq2);
-            outpostW[i].set(sq2);
+            sq = MakeSquare(file + 1, r, White);
+            passedW[i].set(sq);
+            outpostW[i].set(sq);
          }
-
          if (file != 1) {
-            sq2 = MakeSquare(file - 1, r, White);
-            passedW[i].set(sq2);
-            outpostW[i].set(sq2);
+            sq = MakeSquare(file - 1, r, White);
+            passedW[i].set(sq);
+            outpostW[i].set(sq);
          }
       }
 
       rank = Rank(i, Black);
       for(r = rank - 1; r > 1; r--) {
-         Square sq2 = MakeSquare(file, r, Black);
          if (file != 8) {
-            sq2 = MakeSquare(file + 1, r, Black);
-            backwardB[i].set(sq2);
+            backwardB[i].set(MakeSquare(file + 1, r, Black));
          }
-
          if (file != 1) {
-            sq2 = MakeSquare(file - 1, r, Black);
-            backwardB[i].set(sq2);
+            backwardB[i].set(MakeSquare(file - 1, r, Black));
          }
       }
 
       for(r = rank + 1; r < 8; r++) {
-         Square sq2 = MakeSquare(file, r, Black);
-         passedB[i].set((int) sq2);
+         passedB[i].set(MakeSquare(file, r, Black));
          if (file != 8) {
-            sq2 = MakeSquare(file + 1, r, Black);
-            passedB[i].set(sq2);
-            outpostB[i].set(sq2);
+            sq = MakeSquare(file + 1, r, Black);
+            passedB[i].set(sq);
+            outpostB[i].set(sq);
          }
-
          if (file != 1) {
-            sq2 = MakeSquare(file - 1, r, Black);
-            passedB[i].set(sq2);
-            outpostB[i].set(sq2);
+            sq = MakeSquare(file - 1, r, Black);
+            passedB[i].set(sq);
+            outpostB[i].set(sq);
          }
       }
-
    }
 
    int x;
