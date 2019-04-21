@@ -1455,7 +1455,7 @@ static int testTB()
       string moves;
    };
 
-   static array<Case,15> cases = {
+   static array<Case,16> cases = {
        Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
            "Nd6+"),
        Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
@@ -1477,6 +1477,9 @@ static int testTB()
        Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0, "Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
        Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,
             "Rg6, Kc6, Rh4, Kc5, d6, Ra4, dxe6, Re4, Rg3, Rc4"),
+       // en-passant as only capture
+       Case("5K1k/3R4/8/8/6Pp/7P/8/8 b - g3 0 1",-Constants::TABLEBASE_WIN,
+            "hxg3"),
        Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,
             "Kd2, Ke2, Rd8"),
        Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,"Qd8+")
