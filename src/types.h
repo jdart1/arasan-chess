@@ -1,4 +1,4 @@
-// Copyright 1993-2009, 2012-2014, 2016-2017 by Jon Dart.
+// Copyright 1993-2009, 2012-2014, 2016-2018 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _TYPES_H
@@ -22,27 +22,10 @@
 #endif
 
 extern "C" {
-#include <stddef.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <sys/types.h>
-#include <stdio.h>
-#if defined(__linux__) || defined(__GLIBC__)
-#include <endian.h>
-#include <byteswap.h>
-#endif
 #ifdef _WIN32
-#define NOMINMAX
 #include <windows.h>
-#include <mmsystem.h>
-#include <malloc.h>
 #else
 #include <pthread.h>
-#ifdef _MAC
-#include <sys/ipc.h>
-#include <sys/param.h>
-#endif
 #endif
 };
 
@@ -191,7 +174,7 @@ inline uint64_t getRandomSeed() {
 #elif defined(USE_SPINLOCK)
 class Spinlock {
   atomic_flag locked = ATOMIC_FLAG_INIT;
-        
+
  public:
   Spinlock() {
   }
@@ -201,7 +184,7 @@ class Spinlock {
   {
     while (locked.test_and_set(std::memory_order_acquire)) { ; }
   }
-         
+
   void unlock()
   {
     locked.clear(std::memory_order_release);
@@ -258,7 +241,7 @@ __pragma(pack(push,1))
 __pragma(pack(pop)) \
 };
 #else
-#define BEGIN_PACKED_STRUCT { 
+#define BEGIN_PACKED_STRUCT {
 #define END_PACKED_STRUCT \
 } \
 __attribute__((__packed__));

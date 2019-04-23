@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2019 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -21,15 +21,15 @@ class MoveGenerator
       enum Phase
       {
          START_PHASE, HASH_MOVE_PHASE, WINNING_CAPTURE_PHASE,
-         KILLER1_PHASE, KILLER2_PHASE, REFUTATION_PHASE, HISTORY_PHASE,
+         KILLER1_PHASE, KILLER2_PHASE, COUNTER_MOVE_PHASE, HISTORY_PHASE,
          LOSERS_PHASE, LAST_PHASE
       };
 
       MoveGenerator( const Board &,
          SearchContext *sc = nullptr,
+         NodeInfo *node = nullptr,
          unsigned ply = 0,
          Move pvMove = NullMove,
-         Move prevMove = NullMove,                     
          int trace = 0);
 
       // Generate the next move, in sorted order, NullMove if none left
@@ -140,7 +140,7 @@ class MoveGenerator
           return (Phase)((union MoveUnion*)&(move))->contents.phase;
       }
 
-      int initialSortCaptures(Move *moves, int captures);
+      void initialSortCaptures(Move *moves, int captures);
 
       static const int EASY_PLIES;
 
@@ -155,12 +155,12 @@ class MoveGenerator
 
       const Board &board;
       SearchContext *context;
+      NodeInfo *node;
       int ply;
       int moves_generated;
       int losers_count,index,order,batch_count,forced;
       Phase phase;
       Move hashMove;
-      Move prevMove;
       Bitboard king_attacks;                      // for evasions
       int num_attacks;                            // for evasions
       Square source;                              // for evasions
@@ -219,10 +219,10 @@ class RootMoveGenerator : public MoveGenerator
 
       void suboptimal(int strength, Move &m, int &val);
 
-      void exclude(const vector<Move> &excluded);
+      void exclude(const MoveSet &excluded);
 
       // include only moves in the set
-      void filter(const set<Move> &exclude);
+      void filter(const MoveSet &exclude);
 
       void exclude(Move);
 
@@ -237,13 +237,13 @@ class RootMoveGenerator : public MoveGenerator
       // enumerate the nodes for a "depth" ply search (for testing).
       static uint64_t perft(Board &, int depth);
 
-      score_t getScore(Move m) const {
-          for (auto it = moveList.begin();it != moveList.end();it++) {
-              if (MovesEqual((*it).move,m)) {
-                  return (*it).score;
-              }
-          }
-          return Constants::INVALID_SCORE;
+      score_t getScore(Move m) const noexcept {
+         for (auto &it : moveList) {
+            if (MovesEqual(it.move,m)) {
+               return it.score;
+            }
+         }
+         return Constants::INVALID_SCORE;
       }
 
 
@@ -259,10 +259,10 @@ class RootMoveGenerator : public MoveGenerator
           return moveList;
       }
 
-      void setScore(Move m, score_t score) {
-          for (auto it = moveList.begin();it != moveList.end();it++) {
-              if (MovesEqual((*it).move,m)) {
-                  (*it).score = (int)score;
+      void setScore(Move m, score_t score) noexcept {
+         for (auto &it : moveList) {
+              if (MovesEqual(it.move,m)) {
+                  it.score = (int)score;
                   break;
               }
           }

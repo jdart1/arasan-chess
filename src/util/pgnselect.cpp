@@ -94,7 +94,8 @@ static int ok_to_insert(const Board &board, SearchController *searcher, Statisti
                 board.getMaterial(Black).infobits() == Material::KP) ||
                (board.getMaterial(Black).kingOnly() &&
                 board.getMaterial(White).infobits() == Material::KP)) &&
-              !Scoring::isDraw(board) &&
+              !Scoring::isLegalDraw(board) &&
+              !Scoring::theoreticalDraw(board) &&
                positions->count(board.hashCode()) == 0 &&
                (board.getMaterial(White).men() + board.getMaterial(Black).men() > 5);
    if (ok) {

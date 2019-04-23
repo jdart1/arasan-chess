@@ -1,4 +1,4 @@
-// Copyright 2016, 2017 by Jon Dart. All Rights Reserved.
+// Copyright 2016-2018 by Jon Dart. All Rights Reserved.
 
 #ifndef _TUNE_H
 #define _TUNE_H
@@ -8,36 +8,39 @@
 #include <string>
 #include <vector>
 
-class Tune {
+struct TuneParam {
+   int index;
+   string name;
+   score_t current;
+   score_t min_value;
+   score_t max_value;
+   enum Scaling {None, Midgame, Endgame, Any};
+   Scaling scaling;
+   int tunable;
+
+   TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
+      index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
+   }
+   TuneParam():
+      index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
+   }
+   score_t range() const {
+      return max_value - min_value;
+   }
+   score_t scaled() const {
+      return (current - min_value)/range();
+   };
+   void scale(score_t val) {
+      current = val*range() + min_value;
+   }
+   void scale() {
+      current = current*range() + min_value;
+   }
+};
+
+class Tune : public vector<TuneParam> {
 
  public:
-
-  struct TuneParam {
-    int index;
-    string name;
-    score_t current;
-    score_t min_value;
-    score_t max_value;
-    enum Scaling {None, Midgame, Endgame, Any};
-    Scaling scaling;
-    int tunable;
-
-  TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
-    index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
-    }
-    TuneParam():
-    index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
-    }
-    score_t range() const {
-      return max_value - min_value;
-    }
-    score_t scaled() const {
-      return (current - min_value)/range();
-    };
-    void scale(score_t val) {
-      current = val*range() + min_value;
-    }
-  };
 
   Tune();
 
@@ -73,16 +76,12 @@ class Tune {
     KING_DISTANCE_MULT,
     PIN_MULTIPLIER_MID,
     PIN_MULTIPLIER_END,
-    KRMINOR_VS_R,
     KRMINOR_VS_R_NO_PAWNS,
-    KQMINOR_VS_Q,
     KQMINOR_VS_Q_NO_PAWNS,
     MINOR_FOR_PAWNS,
     ENDGAME_PAWN_ADVANTAGE,
     PAWN_ENDGAME1,
-    PAWN_ENDGAME2,
-    PAWN_ATTACK_FACTOR1,
-    PAWN_ATTACK_FACTOR2,
+    PAWN_ATTACK_FACTOR,
     MINOR_ATTACK_FACTOR,
     MINOR_ATTACK_BOOST,
     ROOK_ATTACK_FACTOR,
@@ -93,6 +92,11 @@ class Tune {
     QUEEN_ATTACK_BOOST2,
     KING_ATTACK_COVER_BOOST_BASE,
     KING_ATTACK_COVER_BOOST_SLOPE,
+    OWN_PIECE_KING_PROXIMITY_MIN,
+    OWN_PIECE_KING_PROXIMITY_MAX,
+    OWN_MINOR_KING_PROXIMITY,
+    OWN_ROOK_KING_PROXIMITY,
+    OWN_QUEEN_KING_PROXIMITY,
     PAWN_THREAT_ON_PIECE_MID,
     PAWN_THREAT_ON_PIECE_END,
     PIECE_THREAT_MM_MID,
@@ -143,7 +147,6 @@ class Tune {
     QUEENING_SQUARE_CONTROL_END,
     QUEENING_SQUARE_OPP_CONTROL_MID,
     QUEENING_SQUARE_OPP_CONTROL_END,
-    WRONG_COLOR_BISHOP,
     SIDE_PROTECTED_PAWN,
     KING_POSITION_LOW_MATERIAL0,
     KING_POSITION_LOW_MATERIAL1,
@@ -245,12 +248,14 @@ class Tune {
     QUEEN_MOBILITY_MIDGAME = ROOK_MOBILITY_ENDGAME+15,
     QUEEN_MOBILITY_ENDGAME = QUEEN_MOBILITY_MIDGAME+24,
     KING_MOBILITY_ENDGAME = QUEEN_MOBILITY_ENDGAME+24,
-    KNIGHT_OUTPOST = KING_MOBILITY_ENDGAME+5,
-    BISHOP_OUTPOST = KNIGHT_OUTPOST+64,
-    TRADE_DOWN = BISHOP_OUTPOST+64,
-    RB_ADJUST = TRADE_DOWN + 8,
+    KNIGHT_OUTPOST_MIDGAME = KING_MOBILITY_ENDGAME+5,
+    KNIGHT_OUTPOST_ENDGAME = KNIGHT_OUTPOST_MIDGAME+2,
+    BISHOP_OUTPOST_MIDGAME = KNIGHT_OUTPOST_ENDGAME+2,
+    BISHOP_OUTPOST_ENDGAME = BISHOP_OUTPOST_MIDGAME+2,
+    RB_ADJUST = BISHOP_OUTPOST_ENDGAME+2,
     RBN_ADJUST = RB_ADJUST + 6,
-    QR_ADJUST = RBN_ADJUST + 6
+    QR_ADJUST = RBN_ADJUST + 6,
+    PAWN_STORM = QR_ADJUST+5
   };
    
   int numTuningParams() const;
@@ -260,7 +265,7 @@ class Tune {
 
   // initialize scoring parameters from the current tuned parameter
   // set
-  void applyParams() const;
+  void applyParams(bool check = true) const;
 
   // check current param settings against bounds and verify indexes
   // in internal array
@@ -272,31 +277,13 @@ class Tune {
   // read parameter values from a stream
   void readX0(istream &);
 
-  void getParam(int index, TuneParam &param) const;
-
-  TuneParam &operator [] (const int i) {
-    return tune_params[i];
-  }
-
-  const TuneParam &operator [] (const int i) const {
-    return tune_params[i];
-  }
-
-  score_t getParamValue(int index) const;
-
-  void updateParamValue(int index, score_t value);
-
   int findParamByName(const string &name) const;
 
-  static const int NUM_MISC_PARAMS = 177;
+  static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-KN_VS_PAWN_ADJUST0;
 
   double scale(score_t value,int index,int materialLevel) const;
 
   score_t kingAttackSigmoid(score_t weight) const;
-
-private:
-
-  vector<TuneParam> tune_params;
 
 };
 #endif

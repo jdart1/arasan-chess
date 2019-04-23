@@ -1,4 +1,4 @@
-// Copyright 1994-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2019 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -48,7 +48,7 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
                                      SearchContext *s,
                                      Move pvMove,
                                      int trace)
-   : MoveGenerator(board,s,0,pvMove,NullMove,trace),
+    : MoveGenerator(board,s,nullptr,0,pvMove,trace),
      excluded(0)
 {
    batch = moves;
@@ -84,9 +84,11 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    }
    reorder(pvMove,0,true);
 #ifdef _TRACE
-   cout << "root moves:" << endl;
-   for (auto it = moveList.begin(); it != moveList.end(); it++) {
-      MoveImage(it->move,cout); cout << endl;
+   if (master) {
+      cout << "root moves:" << endl;
+      for (auto it : moveList) {
+         MoveImage(it.move,cout); cout << endl;
+      }
    }
 #endif
    batch_count = j;
@@ -140,7 +142,6 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
              pvIndex = i;
          }
       } 
-      ASSERT(pvIndex != -1);
       if (pvIndex > 0) {
           // put the hash move first and move all other moves down
           MoveEntry pvEntry(moveList[pvIndex]);
@@ -153,19 +154,17 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
 }
 
 
-void RootMoveGenerator::exclude(const vector<Move> &excluded)
+void RootMoveGenerator::exclude(const MoveSet &excluded)
 {
    for (int i = 0; i < batch_count; i++) {
       ClearUsed(moveList[i].move);
-      for (auto it : excluded) {
-         if (MovesEqual(moveList[i].move,it)) {
-            SetUsed(moveList[i].move);
-         }
+      if (excluded.find(moveList[i].move) != excluded.end()) {
+         SetUsed(moveList[i].move);
       }
    }
 }
 
-void RootMoveGenerator::filter(const set<Move> &include) 
+void RootMoveGenerator::filter(const MoveSet &include) 
 {
    excluded = 0;
    for (int i = 0; i < batch_count; i++) {
@@ -208,7 +207,7 @@ void RootMoveGenerator::reorderByScore() {
       );
 }
 
-int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
+void MoveGenerator::initialSortCaptures (Move *moves,int captures) {
    if (captures > 1) {
       int scores[40];
       ASSERT(captures < 40);
@@ -217,7 +216,6 @@ int MoveGenerator::initialSortCaptures (Move *moves,int captures) {
       }
       sortMoves(moves,scores,captures);
    }
-   return captures;
 }
 
 
@@ -228,6 +226,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
         if (!IsNull(hashMove)) {
            ord = order++;
            ASSERT(ord<Constants::MaxMoves);
+           SetPhase(hashMove,HASH_MOVE_PHASE);
            return hashMove;
         }
         ++phase;
@@ -323,9 +322,9 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          }
          case WINNING_CAPTURE_PHASE:
          {
-            int captures = MoveGenerator::generateCaptures(moves);
+            numMoves = MoveGenerator::generateCaptures(moves);
+            initialSortCaptures(moves,numMoves);
             index = 0;
-            numMoves = initialSortCaptures(moves,captures);
             break;
          }
          case KILLER1_PHASE:
@@ -353,17 +352,14 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
             }
          }
          break;
-         case REFUTATION_PHASE:
+         case COUNTER_MOVE_PHASE:
          break;
          case HISTORY_PHASE:
          {
             numMoves = generateNonCaptures(moves);
             if (numMoves) {
-               Move ref;
-               if (context)
-                  ref = context->getRefutation(prevMove);
-               else
-                  ref = NullMove;
+               Move counter(context && node && ply > 0 ? context->getCounterMove(board,(node-1)->last_move) :
+                            NullMove);
                int scores[Constants::MaxMoves];
                for (int i = 0; i < numMoves; i++) {
                   scores[i] = 0;
@@ -377,14 +373,14 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                      continue;
                   }
                   SetPhase(moves[i],HISTORY_PHASE);
-                  if (context) {
-                      scores[i] = context->scoreForOrdering(moves[i],prevMove,board.sideToMove());
-                  }
-                  if (MovesEqual(ref,moves[i])) {
-                     // score refutation much higher
-                     scores[i] = 2*SearchContext::HISTORY_MAX;
+                  if (MovesEqual(counter,moves[i])) {
+                     // score counter move much higher
+                     scores[i] = SearchContext::HISTORY_MAX;
                      // and put in separate phase
-                     SetPhase(moves[i],REFUTATION_PHASE);
+                     SetPhase(moves[i],COUNTER_MOVE_PHASE);
+                  }
+                  else if (context && node) {
+                     scores[i] = context->scoreForOrdering(moves[i],node,board.sideToMove());
                   }
                }
                if (numMoves > 1) {
@@ -733,26 +729,22 @@ int MoveGenerator::generateCaptures(Move * moves, const Bitboard &targets)
 
 
 MoveGenerator::MoveGenerator( const Board &ABoard,
-SearchContext *s,
-unsigned curr_ply, Move pvMove, Move prvMove,
-int trace)
-:
-board(ABoard),
-context(s),
-ply(curr_ply),
-moves_generated(0),
-losers_count(0),
-index(0),
-order(0),
-batch_count(0),
-forced(0),
-phase(START_PHASE),
-hashMove(pvMove),
-prevMove(prvMove),
-master(trace)
+                              SearchContext *s, NodeInfo *n, unsigned curr_ply, Move pvMove,
+                              int trace)
+    : board(ABoard),
+      context(s),
+      node(n),
+      ply(curr_ply),
+      moves_generated(0),
+      losers_count(0),
+      index(0),
+      order(0),
+      batch_count(0),
+      forced(0),
+      phase(START_PHASE),
+      hashMove(pvMove),
+      master(trace)
 {
-   // Verify hash move before use
-   if (!validMove(board,hashMove)) hashMove = NullMove;
 }
 
 
@@ -1106,7 +1098,9 @@ int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckC
    // Now non-discovered checks
    Bitboard pieces(board.occupied[board.sideToMove()]);
    pieces &= ~board.pawn_bits[board.sideToMove()];
-   while (pieces.iterate(loc) && !discoveredCheckCandidates.isSet(loc)) {
+   pieces &= ~disc;
+   pieces &= ~board.pawn_bits[board.sideToMove()];
+   while (pieces.iterate(loc)) {
       switch(TypeOfPiece(board[loc])) {
          case Knight:
          {

@@ -1,8 +1,8 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2017 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION=20.5
-LINK_VERSION=20.5
+VERSION=21.3
+LINK_VERSION=21.3
 #
 #TARGET = win32
 TARGET = win64
@@ -25,19 +25,27 @@ STB=syzygy/src
 # enable NUMA support
 #NUMA=1
 
-# location of hwloc library
-HWLOC64=c:\chess\hwloc-win64-build-1.11.3
-HWLOC32=c:\chess\hwloc-win32-build-1.11.3
+# location of hwloc library (needed if NUMA enabled)
+HWLOC64=E:\chess\hwloc-win64-build-2.0.3
+HWLOC32=E:\chess\hwloc-win32-build-2.0.3
 
-!Ifndef ARASANX
 !If "$(TARGET)" == "win64"
+!Ifndef ARASANX
 ARASANX = arasanx-64
+!Ifdef NUMA
+ARASANX = $(ARASANX)-numa
+!Endif
+!Endif
 ARCH=/D_WIN64
 HWLOC=$(HWLOC64)
 !Else
+!Ifndef ARASANX
 ARASANX = arasanx-32
-HWLOC=$(HWLOC32)
+!Ifdef NUMA
+ARASANX = $(ARASANX)-numa
 !Endif
+!Endif
+HWLOC=$(HWLOC32)
 !Endif
 
 !Ifdef DEBUG
@@ -62,7 +70,7 @@ CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
 CFLAGS=$(CFLAGS) /DNUMA /I$(HWLOC)/include
 NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
-NUMA_PROFILE_OBJS=$(PROFILE_BUILD)/topo.obj
+NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
 
@@ -88,7 +96,7 @@ LD=link
 CL=cl
 
 # Visual Studio defs (Visual Studio 2012 or later recommended)
-CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
+CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
 BMI2_FLAGS = -DBMI2
 !Ifndef DEBUG
@@ -147,7 +155,8 @@ LDFLAGS = $(LDFLAGS) /subsystem:console,5.01
 LDFLAGS = $(LDFLAGS) /subsystem:console
 !Endif
 
-ARASANX_OBJS = $(BUILD)\arasanx.obj \
+ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
+$(BUILD)\protocol.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
@@ -177,7 +186,8 @@ $(TUNE_BUILD)\learn.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
-ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
+ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj $(PROFILE)\tester.obj \
+$(PROFILE)\protocol.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \

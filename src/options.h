@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2019 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -16,13 +16,13 @@ class Options
 
   struct BookOptions {
     BookOptions()
-      : selectivity(50),
-        random(0),
-        book_enabled(1)
+       : frequency(50),
+         weighting(50),
+         scoring(50),
+         book_enabled(1)
     { }
 
-    int selectivity;
-    int random;
+    unsigned frequency, weighting, scoring;
     int book_enabled;
   } book;
 
@@ -47,8 +47,9 @@ class Options
    int easy_threshold; // wide search width in centipawns
 #ifdef NUMA
    int set_processor_affinity; // lock threads to processors
-   int affinity_offset; // offset: first processor to use for affinity
 #endif
+   int move_overhead; // in milliseconds
+   int minimum_search_time; // in milliseconds
   } search;
 
    struct LearningOptions {

@@ -1,20 +1,20 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright 2016-2017 by Jon Dart. All Rights Reserved.
+# Copyright 2016-2018 by Jon Dart. All Rights Reserved.
 # This code is under the MIT license: see doc directory.
 #
 # Tool to run matches that add score records (with c2 tag) to an EPD
-# input file.
+# input file. Uses cutechess-cli for matches.
 # Usage:
-# python3 label_positions.py [-c cores] [-e engine] [-t time control] [-o options] epd_file
+# python3 label_positions.py [-c cores] [-e engine] [-t time control] [-p game file] [-o options] epd_file
 # Note: this has only been tested on Linux. May need mods for other platforms.
 
 import re, sys, subprocess, tempfile, time, threading
 from subprocess import Popen, PIPE, call
 
 # Path to the cutechess-cli executable.
-cutechess_cli_path = '/home/jdart/chess/cutechess-gui-0.9.4/projects/cli'
+cutechess_cli_path = '/home/jdart/chess/cutechess-cli'
 
 SHELL='/bin/bash'
 
@@ -25,6 +25,7 @@ class Options:
    tc = "0.10+0.1"
    cores = 1
    extra_options = "option.SyzygyPath=/home/jdart/chess/syzygy option.Hash=128"
+   save_game_file = None
 
 file_lock = threading.RLock()
 
@@ -43,7 +44,7 @@ class RunGames:
          m = pat.search(line)
          if m == None:
             print("error: invalid FEN in line: %s" % line, file=sys.stderr)
-         else:     
+         else:
             self.run_game(line)
 
    def run_game(self,epd):
@@ -58,6 +59,8 @@ class RunGames:
       try:
           fcp = Options.engine_name
           options = "-openings file=%s format=epd -each tc=%s %s" % (temp_file_name,Options.tc,Options.extra_options)
+          if (Options.save_game_file != None):
+             options = options + " -pgnout " + Options.save_game_file
           cutechess_args = ' -engine conf=%s -engine conf=%s %s' % (fcp, fcp, options)
           command = '%s/%s %s' % (cutechess_cli_path, 'cutechess-cli', cutechess_args)
 
@@ -82,20 +85,30 @@ class RunGames:
               return 2
           # Convert Cutechess-cli's result into a numeric score.
           # Note that only one game should be played
-          result = 0
-          result_pat = re.compile("^Score of.+\[([0-9\.]+)\]*")
+          # output is like "Finished game 1 (stockfish-dev vs stockfish-dev): 0-1 {Black mates}"
+          result_pat = re.compile("^Finished game \\d+ \\(.+\\): ([0-2\\-\\/\\*]+).+$")
+          value = 0.5
+          matched = False
           for lin in output.splitlines():
               line = lin.decode('utf-8')
               match = result_pat.match(line)
               if (match != None):
                  result = match.group(1)
+                 matched = True
                  if (result == "*"):
                      print('The game did not terminate properly',file=sys.stderr)
                      break
-          output_lock.acquire()                 
-          # output epd + result
-          print(epd + ' ' + RESULT_KEY + ' "' + str(result) + '";')
-          output_lock.release()
+                 elif (result == "0-1"):
+                     value = 0.0
+                 elif (result == "1-0"):
+                     value = 1.0
+          if (matched):
+              output_lock.acquire()
+              # output epd + result
+              print(epd + ' ' + RESULT_KEY + ' "' + str(value) + '";')
+              output_lock.release()
+          else:
+              print('No result found',file=sys.stderr)
       finally:
           call('rm ' + temp_file_name,shell=True)
 
@@ -128,6 +141,11 @@ def main(argv = None):
             arg = arg + 1
             if (arg < len(argv)):
                 Options.extra_options = argv[arg]
+                arg = arg + 1
+        elif (argv[arg][1] == 'p'):
+            arg = arg + 1
+            if (arg < len(argv)):
+                Options.save_game_file = argv[arg]
                 arg = arg + 1
         elif (argv[arg][1] == 't'):
             arg = arg + 1

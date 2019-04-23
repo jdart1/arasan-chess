@@ -28,10 +28,11 @@ struct Statistics
    bool complete; // if at end of iteration
    unsigned multipv_count; // only for UCI
    unsigned multipv_limit; // only for UCI
-   bool failHigh, failLow;
+   atomic<bool> failHigh, failLow;
    Move best_line[Constants::MaxPly];
    string best_line_image;
-   unsigned depth, completedDepth;
+   unsigned depth;
+   atomic<unsigned> completedDepth;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes
@@ -46,7 +47,8 @@ struct Statistics
    uint64_t null_cuts;
    uint64_t razored;
    uint64_t check_extensions, capture_extensions,
-     pawn_extensions, evasion_extensions, singular_extensions;
+     pawn_extensions, singular_extensions;
+   uint64_t singular_searches;
    uint64_t reduced;
    uint64_t lmp;
    uint64_t history_pruning;
@@ -80,7 +82,7 @@ struct Statistics
 
       MultiPVEntry(const Statistics &stats)
         : depth(stats.depth),score(stats.display_value),
-          /* TBD time(stats.elapsed_time),*/nodes(stats.num_nodes),
+          nodes(stats.num_nodes),
           tb_hits(stats.tb_hits) {
             best_line_image = stats.best_line_image;
             best = stats.best_line[0];
@@ -111,9 +113,6 @@ struct Statistics
    void sortMultiPVs();
 
    static void printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time);
-
-   void updatePV(const Board &board, Move *moves, int pv_length, int iteration_depth,
-                 bool uci, int age, Hash &hashTable);
 
 };
 

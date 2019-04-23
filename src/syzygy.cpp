@@ -1,8 +1,10 @@
-// Copyright 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019 by Jon Dart. All Rights Reserved.
 #include "syzygy.h"
 #include "constant.h"
 #include "debug.h"
 #include "bitboard.h"
+
+#include "syzygy/src/tbprobe.h"
 
 extern unsigned TB_LARGEST;
 
@@ -28,7 +30,7 @@ static PieceType getPromotion(unsigned res)
       }
 }
 
-static const Move getMove(const Board &b, unsigned res) {
+static Move getMove(const Board &b, unsigned res) {
     const unsigned ep = TB_GET_EP(res);
     const PieceType promoteTo = getPromotion(res);
     // Note: castling not possible
@@ -42,14 +44,14 @@ static const Move getMove(const Board &b, unsigned res) {
 
 int SyzygyTb::initTB(const string &path)
 {
-   bool ok = syzygy_tb_init(path.c_str());
+   bool ok = tb_init(path.c_str());
    if (!ok)
       return 0;
    else
       return TB_LARGEST;
 }
 
-int SyzygyTb::probe_root(const Board &b, score_t &score, set<Move> &rootMoves)
+int SyzygyTb::probe_root(const Board &b, bool hasRepeated, score_t &score, MoveSet &rootMoves)
 {
    score = 0;
    unsigned results[TB_MAX_MOVES];
@@ -65,37 +67,41 @@ int SyzygyTb::probe_root(const Board &b, score_t &score, set<Move> &rootMoves)
                                    (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
                                    (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
                                    b.state.moveCount,
-                                   (int)b.castleStatus(White)<3 ||
-                                   (int)b.castleStatus(Black)<3,
-                                   b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
+                                   b.castlingPossible(),
+                                   // Fathom expects 0 if no e.p.,
+                                   // e.p. target square for capture
+                                   // otherwise
+                                   b.enPassantSq()==InvalidSquare ? 0 :
+                                     (b.enPassantSq() +
+                                      ((b.sideToMove() == White) ? 8 : -8)),
                                    b.sideToMove() == White,
                                    results);
 
    if (result == TB_RESULT_FAILED) {
-      return 0;
+      return -1;
    }
 
    const unsigned wdl = TB_GET_WDL(result);
    ASSERT(wdl<5);
    score = valueMap[wdl];
-   if (b.anyRep()) {
+   if (hasRepeated) {
        // In case of repetition, fall back to making the single
        // suggested tb move that minimizes DTZ.
        // Otherwise the engine may repeat the position again.
        rootMoves.insert(getMove(b,result));
-       return 1;
-   }
-   // In positions w/o repetition, return a move list containing
-   // moves that preserved the WDL value. These will be searched.
-   unsigned res;
-   for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
-      const unsigned moveWdl = TB_GET_WDL(res);
-      if (moveWdl >= wdl) {
-         // move is ok, i.e. preserves WDL value
-         rootMoves.insert(getMove(b,res));
+   } else {
+      // In positions w/o repetition, return a move list containing
+      // moves that preserved the WDL value. These will be searched.
+      unsigned res;
+      for (int i = 0; (res = results[i]) != TB_RESULT_FAILED; i++) {
+         const unsigned moveWdl = TB_GET_WDL(res);
+         if (moveWdl >= wdl) {
+            // move is ok, i.e. preserves WDL value
+            rootMoves.insert(getMove(b,res));
+         }
       }
    }
-   return 1;
+   return TB_GET_DTZ(result);
 }
 
 int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)
@@ -113,9 +119,13 @@ int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)
                                    (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
                                    (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
                                    b.state.moveCount,
-                                   (int)b.castleStatus(White)<3 ||
-                                   (int)b.castleStatus(Black)<3,
-                                   b.enPassantSq()==InvalidSquare ? 0 : b.enPassantSq(),
+                                   b.castlingPossible(),
+                                   // Fathom expects 0 if no e.p.,
+                                   // e.p. target square for capture
+                                   // otherwise
+                                   b.enPassantSq()==InvalidSquare ? 0 :
+                                     (b.enPassantSq() +
+                                      ((b.sideToMove() == White) ? 8 : -8)),
                                    b.sideToMove() == White);
 
    if (result == TB_RESULT_FAILED) {

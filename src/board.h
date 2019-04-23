@@ -81,10 +81,10 @@ public:
    
    void setCastleStatus( CastleType t, ColorType side );
 
-   int castled(ColorType side) const
+   // True if either side can castle
+   bool castlingPossible() const
    {
-      return state.castleStatus[side] == CastledKSide ||
-             state.castleStatus[side] == CastledQSide;
+      return castleStatus(White)<3 || castleStatus(Black)<3;
    }
 
    // side to move         

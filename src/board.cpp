@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2018 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -701,13 +701,13 @@ void Board::doMove( Move move )
          if (capture != EmptyPiece)
          {
             state.moveCount = 0;
-            ASSERT(target != InvalidSquare);
+            ASSERT(OnBoard(target));
             occupied[White].clear(target);
             Xor(state.hashCode, target, capture);
             switch (TypeOfPiece(capture)) {
             case Empty: break;
             case Pawn:
-                   ASSERT(pawn_bits[White].isSet(target));
+               ASSERT(pawn_bits[White].isSet(target));
                pawn_bits[White].clear(target);
                Xor(pawnHashCodeW, target, capture);
                if (moveType == EnPassant)
@@ -2020,39 +2020,34 @@ ostream & operator << (ostream &o, const Board &board)
 }
 
 int Board::discAttackDiag(Square sq, Square ksq, ColorType side) const {
-    Bitboard pinners((bishop_bits[side] | queen_bits[side]) &
-                 Attacks::diag_mask[ksq]);
-    Square pinner;
-    while (pinners.iterate(pinner)) {
-        if (clear(pinner,ksq)) {
-           return 1;
+    Bitboard mask(Attacks::diag_mask[ksq]);
+    if (mask.isSet(sq)) {
+        Bitboard attackers((bishop_bits[side] | queen_bits[side]) & mask);
+        Square attacker;
+        while (attackers.iterate(attacker)) {
+            if (clear(attacker,ksq)) {
+                return 1;
+            }
         }
     }
     return 0;
 }
 
 int Board::discAttackRankFile(Square sq, Square ksq, ColorType side) const {
-    Bitboard pinners((rook_bits[side] | queen_bits[side]) &
-       Attacks::rank_file_mask[ksq]);
-    Square pinner;
-    while (pinners.iterate(pinner)) {
-        if (clear(pinner,ksq)) {
-           return 1;
+    Bitboard mask(Attacks::rank_file_mask[ksq]);
+    if (mask.isSet(sq)) {
+        Bitboard attackers((rook_bits[side] | queen_bits[side]) & mask);
+        Square attacker;
+        while (attackers.iterate(attacker)) {
+            if (clear(attacker,ksq)) {
+                return 1;
+            }
         }
     }
     return 0;
 }
 
 int Board::discAttack(Square sq, Square ksq, ColorType side) const {
-    Bitboard pinners( ((rook_bits[side] | queen_bits[side]) &
-                 Attacks::rank_file_mask[ksq]) |
-                ((bishop_bits[side] | queen_bits[side]) &
-                 Attacks::diag_mask[ksq]));
-    Square pinner;
-    while (pinners.iterate(pinner)) {
-        if (clear(pinner,ksq)) {
-           return 1;
-        }
-    }
-    return 0;
+    return discAttackRankFile(sq, ksq, side) ||
+        discAttackDiag(sq,ksq,side);
 }

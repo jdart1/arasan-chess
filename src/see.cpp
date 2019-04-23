@@ -1,4 +1,4 @@
-// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2018 by Jon Dart.
+// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2019 by Jon Dart.
 // All Rights Reserved.
 
 #include "see.h"
@@ -7,6 +7,7 @@
 #include "debug.h"
 
 #include <algorithm>
+#include <array>
 
 //#define ATTACK_TRACE
 
@@ -149,9 +150,9 @@ score_t see( const Board &board, Move move ) {
    // minimax over the score list 
    for (int i = count-1; i > 0; --i) {
        if (i % 2 == 0) {
-           score_list[i-1] = max(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::max<score_t>(score_list[i],score_list[i-1]);
        } else {
-           score_list[i-1] = min(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::min<score_t>(score_list[i],score_list[i-1]);
        }
    }
 #ifdef ATTACK_TRACE
@@ -167,6 +168,14 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
    MoveImage(move,cout);
    cout << endl;
 #endif
+   if (Params::Gain(move) < threshold) {
+       // Even capturing the target piece "for free" would
+       // not get us up to the threshold
+#ifdef ATTACK_TRACE
+       cout << "threshold test failed, return 0" << endl;
+#endif
+       return 0;
+   }
    ColorType my_side = PieceColor(board[StartSquare(move)]);
    ColorType side = my_side;
    ColorType oside = OppositeColor(side);
@@ -178,9 +187,9 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
    if (opp_attacks.isClear()) {
        // piece is undefended
 #ifdef ATTACK_TRACE
-       cout << "undefended, returning " << (Params::Gain(move) >= threshold) << endl;
+       cout << "undefended, returning 1"<< endl;
 #endif
-       return Params::Gain(move) >= threshold;
+       return 1;
    }
    score_t score_list[20];
    score_t swap_score = 0;
@@ -283,9 +292,9 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
    // minimax over the score list 
    for (int i = count-1; i > 0; --i) {
        if (i % 2 == 0) {
-           score_list[i-1] = max(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::max<score_t>(score_list[i],score_list[i-1]);
        } else {
-           score_list[i-1] = min(score_list[i],score_list[i-1]);
+          score_list[i-1] = std::min<score_t>(score_list[i],score_list[i-1]);
        }
    }
 #ifdef ATTACK_TRACE

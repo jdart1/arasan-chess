@@ -25,6 +25,8 @@ BookReader openingBook;
 Log *theLog = nullptr;
 string learnFileName;
 LockDefine(input_lock);
+bool polling_terminated;
+ThreadControl inputSem;
 #ifdef TUNE
 Tune tune_params;
 #endif
@@ -64,6 +66,7 @@ string derivePath(const char *base, const char *fileName) {
 int initGlobals(const char *pathName, bool initLog) {
    programPath = pathName;
    gameMoves = new MoveArray();
+   polling_terminated = false;
    if (initLog) {
        theLog = new Log();
        theLog->clear();
@@ -73,12 +76,6 @@ int initGlobals(const char *pathName, bool initLog) {
 #ifdef UCI_LOG
    ucilog.open(derivePath("ucilog").c_str(),ios::out|ios::app);
    ucilog << "starting up" << endl;
-#endif
-#if defined(_MSC_VER) && (_MSC_VER <1800)
-   tb_init_map[Options::TbType::None] =
-       tb_init_map[Options::TbType::NalimovTb] =
-       tb_init_map[Options::TbType::GaviotaTb] =
-       tb_init_map[Options::TbType::SyzygyTb] = false;
 #endif
    return 1;
 }

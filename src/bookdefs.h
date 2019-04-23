@@ -1,4 +1,4 @@
-// Copyright 1996-2014 by Jon Dart.  All Rights Reserved
+// Copyright 1996-2014, 2018 by Jon Dart.  All Rights Reserved
 #ifndef __BOOKDEFS_H__
 #define __BOOKDEFS_H__
 
@@ -6,20 +6,18 @@
 // of the opening book (BOOK.BIN)
 
 #include "types.h"
-extern "C" {
-#include <memory.h>
-};
+#include <cstring>
 
 namespace book {
 
-const int BOOK_VERSION = 14;
+const int BOOK_VERSION = 15;
 
 const int INDEX_PAGE_SIZE = 1024;
-const int DATA_PAGE_SIZE = 1024;
+const int DATA_PAGE_SIZE = 2048;
 const uint16_t NO_NEXT = 65535;
 const uint16_t INVALID_INDEX = 65535;
-const unsigned NO_RECOMMEND = 1025;
-const int MAX_WEIGHT = 1024;
+const byte NO_RECOMMEND = 255;
+const byte MAX_WEIGHT = 254;
 
 #ifdef __INTEL_COMPILER
 #pragma pack(push,1)
@@ -75,9 +73,18 @@ END_PACKED_STRUCT
 struct DataEntry
 BEGIN_PACKED_STRUCT 
     byte index;
+    byte weight; // a priori weight, NO_RECOMMEND if not set
     uint16_t next;
-    uint16_t weight;
-    uint32_t count;
+    uint32_t win, loss ,draw;
+
+    unsigned count() const {
+       return win + loss + draw;
+    }
+
+    // ordering by decreasing frequency
+    bool operator < (const DataEntry &entr) const noexcept {
+       return entr.count() < count();
+    }
 END_PACKED_STRUCT
 
 struct DataPage

@@ -71,6 +71,18 @@ class HashEntry {
          return score_t(contents.value);
       }
 
+      // Get value correcting mate scores for ply
+      score_t getValue(int ply) const {
+         score_t hashValue = score_t(contents.value);
+         if (hashValue >= Constants::MATE_RANGE) {
+           hashValue -= ply - 1;
+         }
+         else if (hashValue <= -Constants::MATE_RANGE) {
+           hashValue += ply - 1;
+         }
+         return hashValue;
+      }
+
       score_t staticValue() const {
           // assumes 2's complement machine
           unsigned bits = unsigned(hc & STATIC_VALUE_MASK);
@@ -109,13 +121,9 @@ class HashEntry {
       }
 
       Move bestMove(const Board &b) const {
-		 if (!validMoveQuick(b, (Square)contents.start, (Square)contents.dest)) {
-			return NullMove;
-		 }
-         else {
-            return CreateMove(b,(Square)contents.start,(Square)contents.dest,
+         Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
                (PieceType)contents.promotion);
-         }
+         return validMove(b,m) ? m : NullMove;
       }
 
       bool avoidNull(int null_depth, score_t beta) const {
@@ -187,11 +195,10 @@ class Hash {
     // in-memory hash table
     void loadLearnInfo();
 
-    HashEntry::ValueType searchHash(const Board& b,hash_t hashCode,
-                                              int ply,
-                                              int depth, unsigned age,
-                                              HashEntry &he
-                                              ) {
+    HashEntry::ValueType searchHash(hash_t hashCode,
+                                    int depth, unsigned age,
+                                    HashEntry &he)
+    {
         if (!hashSize) return HashEntry::NoHit;
         int probe = (int)(hashCode & hashMask);
 

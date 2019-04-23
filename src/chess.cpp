@@ -5,6 +5,7 @@
 #include "board.h"
 #include "bitboard.h"
 #include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 
@@ -255,20 +256,22 @@ static MoveType get_move_type(const Board &board, Square start, Square dest)
 
 Move CreateMove(const Board &board, Square start, Square dest, PieceType promotion )
 {
-   if (IsInvalid(start))
+   if (!OnBoard(start) || !OnBoard(dest))
    {
-        return NullMove;
+      return NullMove;
    }
    MoveType type = get_move_type(board,start,dest);
    PieceType piece_moved = TypeOfPiece(board[start]);
-   ASSERT(piece_moved != Empty);
-   PieceType capture;
-   if (type == EnPassant)
-     capture = Pawn;
-   else
-     capture = TypeOfPiece(board[dest]);
-
-   MoveUnion mu(start,dest,piece_moved,promotion,capture,type);
-   return (Move)mu;
+   if (piece_moved == Empty) {
+      return NullMove;
+   } else {
+      PieceType capture;
+      if (type == EnPassant)
+         capture = Pawn;
+      else
+         capture = TypeOfPiece(board[dest]);
+      MoveUnion mu(start,dest,piece_moved,promotion,capture,type);
+      return (Move)mu;
+   }
 }	
 

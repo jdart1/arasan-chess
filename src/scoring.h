@@ -1,4 +1,4 @@
-// Copyright 1992-2017 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2019 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -8,6 +8,10 @@
 #include "attacks.h"
 #include "params.h"
 
+#ifdef TUNE
+#include <array>
+#endif
+
 #include <iostream>
 using namespace std;
 
@@ -16,7 +20,7 @@ class Scoring
     // This class does static evaluation of chess positions.
 
     public:
-		
+
     enum {Midgame = 0, Endgame = 1};
 
     static void init();
@@ -26,16 +30,14 @@ class Scoring
     Scoring();
 
     ~Scoring();
-        
+
     // evaluate "board" from the perspective of the side to move.
     score_t evalu8( const Board &board, bool useCache = true );
 
-    // checks for legal draws plus certain other theoretically
-    // draw positions
-    static int isDraw(const Board &board);
-        
-    // checks for draw by repetition (returning repetition count) + 
-    // other draw situations as in isDraw above.
+    // checks for draw by repetition (returning repetition count) +
+    // other draw situations. It is intended to be called from the
+    // interior of the search. It does not strictly detect legal
+    // draws: use isLegalDraw for that.
     static int isDraw( const Board &board, int &rep_count, int ply);
 
     static int repetitionDraw( const Board &board );
@@ -43,6 +45,8 @@ class Scoring
     static int materialDraw( const Board &board ) {
         return board.materialDraw();
     }
+
+    static int fiftyMoveDraw(const Board &board);
 
     // Check only for legal draws
     static int isLegalDraw(const Board &board);
@@ -102,7 +106,7 @@ class Scoring
 
     static CACHE_ALIGN Bitboard kingProximity[2][64];
     static CACHE_ALIGN Bitboard kingNearProximity[64];
-    static CACHE_ALIGN Bitboard kingPawnProximity[2][64];
+    static CACHE_ALIGN Bitboard kingPawnProximity[2][4][64];
 
     struct PawnHashEntry {
 
@@ -138,13 +142,15 @@ class Scoring
        hash_t hc;
 #ifdef TUNE
        score_t cover;
+       score_t storm;
+       score_t pawn_attacks;
        score_t king_endgame_position;
-#else
-       int32_t cover;
-       int32_t king_endgame_position;
-#endif
-#ifdef TUNE
        float counts[6][4];
+       int pawn_attack_count;
+       array<int,8> storm_counts;
+#else
+       int32_t cover, storm, pawn_attacks;
+       int32_t king_endgame_position;
 #endif
     };
 
@@ -158,13 +164,12 @@ class Scoring
                         const PawnHashEntry::PawnData &oppPawnData,
                         bool useCache);
 
-    static int tradeDownIndex(const Material &ourmat, const Material &oppmat);
-
     static int distance(Square sq1, Square sq);
 
     // Public, for use by the tuner.
-    template <ColorType side>
-    void calcCover(const Board &board, KingPawnHashEntry &cover);
+    void calcCover(const Board &board, ColorType side, KingPawnHashEntry &cover);
+
+    void calcStorm(const Board &board, ColorType side, KingPawnHashEntry &cover, const Bitboard &oppPawnAttacks);
 
 #ifdef TUNE
     score_t kingAttackSigmoid(score_t weight) const;
@@ -204,7 +209,8 @@ class Scoring
     template <ColorType side>
      void  positionalScore( const Board &board,
                             const PawnHashEntry &pawnEntry,
-                            score_t ownCover, score_t oppCover,
+                            const KingPawnHashEntry &ourKPEntry,
+                            const KingPawnHashEntry &oppKPEntry,
                             Scores &scores,
                             Scores &oppScores);
 
@@ -216,41 +222,38 @@ class Scoring
     score_t adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
 
     template <ColorType bishopColor>
-      void scoreBishopAndPawns(const Board &board,ColorType ourSide,const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
+      void scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
 
    template <ColorType side>
     void pieceScore(const Board &board,
                     const PawnHashEntry::PawnData &ourPawnData,
 		    const PawnHashEntry::PawnData &oppPawnData,
-                    score_t cover, Scores &, Scores &opp_scores,
+                    const KingPawnHashEntry &oppKPEntry,
+                    Scores &, Scores &opp_scores,
                     bool early_endgame,
                     bool deep_endgame);
 
-    template <ColorType side>
 #ifdef TUNE
-    static score_t calcCover(const Board &board, int file, int rank, int (&counts)[6][4]);
+    static score_t calcCover(const Board &board, ColorType side, int file, int rank, int (&counts)[6][4]);
 #else
-    static score_t calcCover(const Board &board, int file, int rank);
+    static score_t calcCover(const Board &board, ColorType side, int file, int rank);
 #endif
 
     // Compute king cover for King on square 'kp' of color 'side'
-    template <ColorType side>
 #ifdef TUNE
-    static score_t calcCover(const Board &board, Square kp, int (&counts)[6][4]);
+    static score_t calcCover(const Board &board, ColorType side, Square kp, int (&counts)[6][4]);
 #else
-    static score_t calcCover(const Board &board, Square kp);
+    static score_t calcCover(const Board &board, ColorType side, Square kp);
 #endif
 
     void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);
 
     void calcKingEndgamePosition(const Board &board,ColorType side,
-                                 const PawnHashEntry::PawnData &ourPawnData,
                                  const PawnHashEntry::PawnData &oppPawnData,
                                  KingPawnHashEntry &entry);
 
-    void evalOutsidePassers(const Board &board,
-			    PawnHashEntry &pawnEntry);
+    void evalOutsidePassers(PawnHashEntry &pawnEntry);
 
     void calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry);
 
@@ -273,6 +276,4 @@ class Scoring
 };
 
 #endif
-
-
 

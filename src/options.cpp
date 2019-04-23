@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
@@ -38,19 +38,19 @@ Options::SearchOptions::SearchOptions() :
       multipv(1),
       ncpus(1),
       easy_plies(3),
-      easy_threshold(200) // centipawns
+      easy_threshold(200), // centipawns
 #ifdef NUMA
-      ,
       set_processor_affinity(0),
-      affinity_offset(0)
 #endif
+      move_overhead(15),
+      minimum_search_time(10)
 {
 }
 
 
 template <class T>
 int Options::setOption(const string &name,
-                        const string &valueString, T &value) {
+                       const string &valueString, T &value) {
     if (!Options::setOption<T>(valueString,value)) {
         cerr << "warning: invalid value for option " << name << endl;
         return 0;
@@ -120,11 +120,17 @@ void Options::set_option(const string &name, const string &value) {
   else if (name == "book.book_enabled") {
     set_boolean_option(name,value,book.book_enabled);
   }
-  else if (name == "book.selectivity") {
-     setOption<int>(name,value,book.selectivity);
+  else if (name == "book.frequency") {
+     setOption<unsigned>(name,value,book.frequency);
+     book.frequency = std::min<unsigned>(100,std::max<unsigned>(0,book.frequency));
   }
-  else if (name == "book.random") {
-     setOption<int>(name,value,book.random);
+  else if (name == "book.weighting") {
+     setOption<unsigned>(name,value,book.weighting);
+     book.weighting = std::min<unsigned>(100,std::max<unsigned>(0,book.weighting));
+  }
+  else if (name == "book.scoring") {
+     setOption<unsigned>(name,value,book.scoring);
+     book.scoring = std::min<unsigned>(100,std::max<unsigned>(0,book.scoring));
   }
   else if (name == "learning.position_learning") {
     set_boolean_option(name,value,learning.position_learning);
@@ -174,10 +180,13 @@ void Options::set_option(const string &name, const string &value) {
   else if (name == "search.set_processor_affinity") {
     set_boolean_option(name,value,search.set_processor_affinity);
   }
-  else if (name == "search.affinity_offset") {
-    setOption<int>(name,value,search.affinity_offset);
-  }
 #endif
+  else if (name == "search.move_overhead") {
+    setOption<int>(name,value,search.move_overhead);
+  }
+  else if (name == "search.minimum_search_time") {
+    setOption<int>(name,value,search.minimum_search_time);
+  }
   else
     cerr << "warning: unrecognized option name: " << name << endl;
 }

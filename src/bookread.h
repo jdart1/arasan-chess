@@ -1,4 +1,4 @@
-// Copyright 1992, 1995, 2013, 2014, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1995, 2013, 2014, 2017-2018 by Jon Dart.  All Rights Reserved.
 
 #ifndef _BOOK_READER_H
 #define _BOOK_READER_H
@@ -35,22 +35,27 @@ class BookReader
     // Randomly pick a move for board position "b". 
     Move pick( const Board &b);
 
-    // Return a vector of all book moves and associated scores,
-    // for a given position.
+    // Return a vector of all book moves for a given position.
     // Returns number of moves found.
-    int book_moves(const Board &b, vector< pair<Move,int> > &results);
+    unsigned book_moves(const Board &b, vector< Move> &results);
 
 protected:
                
+    static constexpr unsigned OUTCOMES = 3;
+
     // Return the move data structures for a given board position.
     // Return value is # of entries retrieved, -1 if error.
     int lookup(const Board &board, vector<book::DataEntry> &results);
 
-    int filterAndNormalize(const Board &board,
-                           vector<book::DataEntry> &rawMoves,
-                           vector< pair<Move,int> > &moves);
+    double calcReward(const std::array<double,OUTCOMES> &sample, score_t contempt = 0) const noexcept;
+   
+    double sample_dirichlet(const std::array<double,OUTCOMES> &counts, score_t contempt = 0);
 
-    Move pickRandom(const Board &b, const vector< pair<Move,int> > &moves);
+    void filterByFreq(vector<book::DataEntry> &);
+
+    double contemptFactor(score_t contempt) const noexcept {
+       return 1.0/(1.0+exp(-0.75*contempt/Params::PAWN_VALUE));
+    }
 
     ifstream book_file;
     book::BookHeader hdr;

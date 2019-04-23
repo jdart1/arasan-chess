@@ -1,18 +1,22 @@
-// Copyright 2006-2008, 2016-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016-2019 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
 
+#include "board.h"
 #include "constant.h"
 #include "chess.h"
 
 #include <array>
+#include <limits>
 
 struct NodeInfo;
 class Board;
 
 class SearchContext {
 public:
+    static constexpr int HISTORY_MAX = std::numeric_limits<int>::max();
+
     SearchContext();
 
     virtual ~SearchContext();
@@ -20,56 +24,68 @@ public:
     void clear();
 
     void clearKiller();
-    void setKiller(const Move & move,unsigned ply);
-    void getKillers(unsigned ply,Move &k1,Move &k2) const;
 
-    Move Killers1[Constants::MaxPly];
-    Move Killers2[Constants::MaxPly];
-
-    int scoreForOrdering (Move m, Move prevMove, ColorType side) const {
-        int score = history[MakePiece(PieceMoved(m),side)][DestSquare(m)].val;
-        if (!IsNull(prevMove))
-           score += (*counterMoveHistory)[PieceMoved(prevMove)-1][DestSquare(prevMove)][PieceMoved(m)-1][DestSquare(m)];
-        return score;
+    void setKiller(const Move & move,unsigned ply)
+    {
+        if (!MovesEqual(move,killers1[ply])) {
+           killers2[ply] = killers1[ply];
+        }
+        killers1[ply] = move;
     }
 
-    void updateStats(const Board &,
-                     NodeInfo *parentNode, Move best, int depth, ColorType side);
-
-    static const int HISTORY_MAX = 1<<16;
-
-    using CmhArray = std::array<std::array<int, 64>, 6>;
-
-    using CmhMatrix = std::array< std::array< CmhArray, 64>, 6 >;
-
-    Move getRefutation(Move prev) const {
-        return refutations[refutationKey(prev)];
+    void getKillers(unsigned ply,Move &k1,Move &k2) const noexcept
+    {
+        k1 = killers1[ply]; k2 = killers2[ply];
     }
 
-    void setRefutation(Move prev, Move ref) {
-        refutations[refutationKey(prev)] = ref;
+    int scoreForOrdering (Move m, NodeInfo *, ColorType side) const noexcept;
+
+    void updateStats(const Board &, NodeInfo *parentNode);
+
+    template<class T>
+    using PieceToArray = std::array<std::array<T, 64>, 16>;
+
+    template<class T>
+    using PieceTypeToArray = std::array<std::array<T, 64>, 8>;
+
+    template<class T>
+    using PieceTypeToMatrix = PieceTypeToArray< PieceTypeToArray<T> >;
+
+    template<class T>
+    using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
+
+    Move getCounterMove(const Board &board, Move prev) const {
+        ColorType oside = board.oppositeSide();
+        return IsNull(prev) ? NullMove : (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)];
     }
+
+    void setCounterMove(const Board &board, Move prev, Move counter) {
+        if (!IsNull(prev)) {
+            ColorType oside = board.oppositeSide();
+            (*counterMoves)[MakePiece(PieceMoved(prev), oside)][DestSquare(prev)] = counter;
+        }
+    }
+
+    // get counter move history
+    int getCmHistory(NodeInfo *node, Move move) const noexcept;
+
+    // get follow up move history
+    int getFuHistory(NodeInfo *node, Move move) const noexcept;
 
 private:
-    struct HistoryEntry {
-        int32_t val;
-    } history[16][64];
 
-    static const int REFUTATION_TABLE_SIZE = 16*64;
+    Move killers1[Constants::MaxPly];
+    Move killers2[Constants::MaxPly];
 
-    static int refutationKey(Move ref) {
-        int key = ((int)PieceMoved(ref) << 6) | (int)DestSquare(ref);
-        ASSERT(key<REFUTATION_TABLE_SIZE);
-        return key;
-    }
+    ButterflyArray<int> *history;
 
-    array<Move,REFUTATION_TABLE_SIZE> refutations;
+    PieceToArray<Move> *counterMoves;
 
-    CmhMatrix *counterMoveHistory;
+    PieceTypeToMatrix<int> *counterMoveHistory, *fuMoveHistory;
 
-    void addBonus(int &val,int depth,int bonus);
+    int bonus(int depth) const noexcept;
 
-    void addPenalty(int &val,int depth,int bonus);
+    void update(int &val, int bonus, int divisor);
 };
 
 #endif

@@ -1,8 +1,8 @@
 #
-# Gnu Makefile for Arasan 20.5
+# Gnu Makefile for Arasan 21.3
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 20.5
+VERSION = 21.3
 
 # paths, modify as needed:
 
@@ -26,16 +26,12 @@ BOOK    = ../book
 TESTS   = ../tests
 # installation directory (default)
 INSTALL = /usr/local/bin
-# location of the Gaviota tablebase source code (if used)
-GTB=michiguel-Gaviota-Tablebases-161d6cb
-# location of the Nalimov tablebase source code (if used)
-TB=tb
 # location of the Syzygy tablebase source code (Fathom) (if used)
 STB=syzygy/src
 # compile in NUMA support
 #NUMA=1
-# location of hwloc library (required for NUMA)
-HWLOC64=/home/jdart/chess/hwloc-build-1.11.3
+# location of hwloc library (required if compiled with NUMA support)
+HWLOC64=/home/jdart/chess/hwloc-2.0.3
 # directory for utility programs
 UTIL = util
 
@@ -53,11 +49,6 @@ ifdef SYZYGY_TBS
 CFLAGS := $(CFLAGS) -DSYZYGY_TBS
 endif
 
-# Build the GTB sources into a separate object dir.
-GTB_BUILD	= ../build/gtb
-# GTB is built as a separate library due to problems with PGO
-GTB_LIBNAME     = libgtb.a
-
 # SMP flags (note: we do not support a non-SMP build anymore)
 SMPFLAGS = -DSMP -DSMP_STATS
 SMPLIB   = -lpthread
@@ -68,6 +59,12 @@ BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2
 PGO_RUN_FLAGS = -H 64M
 
 TUNE_FLAGS := -DTUNE
+
+ifdef NUMA
+NUMA_OBJS=$(BUILD)/topo.o
+NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
+NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
+endif
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
@@ -104,6 +101,14 @@ ifeq ($(LBITS),64)
    CFLAGS := $(CFLAGS) -D_64BIT
 endif
 ARASANX := arasanx-$(LBITS)
+ifdef NUMA
+ARASANX := $(ARASANX)-numa
+endif
+ifdef BUILD_TYPE
+ARASANX := $(ARASANX)-$(BUILD_TYPE)
+endif
+
+TUNER := tuner
 
 ifeq ("$(CC)","icc")
 # Intel C++ compiler
@@ -121,7 +126,7 @@ PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
 
 else
 
-ifeq ("$(CC)","clang")
+ifeq ("$(findstring clang,$(CC))","clang")
 
 CPP     := $(CC)
 LD      := $(CC)
@@ -132,11 +137,10 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-CFLAGS  := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
+CFLAGS  := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT     = -O3 -fno-rtti  $(SSE) -DNDEBUG
-GTB_OPT := -O3 $(SSE) -DNDEBUG
 endif
 
 else
@@ -149,19 +153,19 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-GCCNEW  := $(shell expr `gcc -dumpversion | sed -e "s/\.//"` \>= 47)
+GCC_MIN_VERSION = 4.9
+GCCNEW := $(shell expr `$(CC) -dumpversion` \>= $(GCC_MIN_VERSION))
 
 ifeq "$(GCCNEW)" "1"
-# options for GCC 4.7 or higher:
+# options for GCC
 CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 OPT	= -Ofast -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
 LTO	= -flto
-GTB_OPT := -Ofast $(SSE) -DNDEBUG
 endif
 else
-$(error GCC version < 4.7 not supported)
+$(error GCC version < $(GCC_MIN_VERSION) not supported)
 endif
 
 endif
@@ -177,7 +181,10 @@ endif
 
 default: dirs $(EXPORT)/$(ARASANX)
 
-tuning: dirs $(EXPORT)/tuner
+tuning: dirs $(EXPORT)/$(TUNER)
+
+tuning-popcnt: dirs
+	@$(MAKE) TUNER=$(TUNER)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 tuning
 
 utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
 
@@ -196,7 +203,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROF_DATA)/*.dyn $(PROF_DATA)/*.profraw $(PROF_DATA)/*.profdata
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess pgnselect ecocoder
+	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder
 
 dirs:
 	mkdir -p $(BUILD)
@@ -238,31 +245,29 @@ else
 endif
 
 profiled: dirs
-	@$(MAKE) PASS=1 profile profile-run
+	@$(MAKE) PASS=1 profile
+	@$(MAKE) PASS=1 profile-run
 	@$(MAKE) PASS=2 profile
 
 popcnt-profiled: dirs
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile profile-run
-	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile-run
+	@$(MAKE) PASS=2 BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
 
 popcnt: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2
+	@$(MAKE) BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2
 
 bmi2: dirs
 	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2
 
 bmi2-profiled: dirs
-	@$(MAKE) PASS=1 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile profile-run
-	@$(MAKE) PASS=2 ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile-run
+	@$(MAKE) PASS=2 BUILD_TYPE=bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
 
 TB_SOURCES=
 TB_OBJS=
 TB_LIBS=
-ifdef NUMA
-NUMA_OBJS=$(BUILD)/topo.o
-NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
-NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
-endif
 
 ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
@@ -277,8 +282,15 @@ $(TUNE_BUILD)/%.o: $(STB)/%.c
 	$(CC) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 endif
 
-ARASANX_SOURCES = arasanx.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
+ifeq ("$(findstring UNIT_TESTS,$(DEBUG))","UNIT_TESTS")
+UNIT_TEST_SRC:=unit.cpp
+endif
+ifeq ("$(findstring UNIT_TESTS,$(CFLAGS))","UNIT_TESTS")
+UNIT_TEST_SRC:=unit.cpp
+endif
+
+ARASANX_SOURCES = arasanx.cpp tester.cpp protocol.cpp \
+globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 params.cpp scoring.cpp see.cpp \
@@ -286,7 +298,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
+stats.cpp threadp.cpp threadc.cpp $(UNIT_TEST_SRC)
 
 MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -331,7 +343,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp log.cpp search.cpp \
 searchc.cpp learn.cpp movegen.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp unit.cpp
+stats.cpp threadp.cpp threadc.cpp $(UNIT_TEST_SRC)
 
 PGNSELECT_SOURCES = pgnselect.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -342,7 +354,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp unit.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp $(UNIT_TEST_SRC)
 
 PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -353,7 +365,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp unit.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp $(UNIT_TEST_SRC)
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
@@ -379,8 +391,8 @@ $(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
 $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/tuner:  $(TUNER_OBJS)
-	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/tuner -lstdc++ $(LIBS) $(SMPLIB)
+$(EXPORT)/$(TUNER):  $(TUNER_OBJS)
+	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx

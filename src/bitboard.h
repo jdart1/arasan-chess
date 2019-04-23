@@ -241,13 +241,6 @@ class Bitboard
        return b.data != data;
     }
 
-    // extract the bits for the nth rank (from the Black side)
-    unsigned rank_bits(int n) const
-    {
-       byte *p = (byte*)&data;
-       return (unsigned)p[n];
-    }
-
     // return the number of bits set
     FORCEINLINE unsigned int bitCount() const
     {

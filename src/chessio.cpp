@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2012-2014, 2017  by Jon Dart.
+// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018  by Jon Dart.
 // All Rights Reserved.
 
 #include "chessio.h"
@@ -8,12 +8,8 @@
 #include "constant.h"
 
 #include <algorithm>
+#include <cstring>
 #include <sstream>
-using namespace std;
-
-#ifdef _WIN32
-#include <time.h>
-#endif
 
 using namespace std;
 

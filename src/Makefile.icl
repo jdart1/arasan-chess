@@ -1,7 +1,7 @@
 # Arasan Makefile for use with NMAKE and Intel C++ on the Windows platform
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION = 20.5
+VERSION = 21.3
 #
 #TARGET = win32
 TARGET = win64
@@ -25,19 +25,25 @@ STB=syzygy
 # enable NUMA support
 #NUMA=1
 
-# location of hwloc library
-HWLOC64=c:\chess\hwloc-win64-build-1.11.3
-HWLOC32=c:\chess\hwloc-win32-build-1.11.3
+# location of hwloc library (needed if NUMA enabled)
+HWLOC64=E:\chess\hwloc-win64-build-2.0.3
+HWLOC32=E:\chess\hwloc-win32-build-2.0.3
 
 !If "$(TARGET)" == "win64"
 !Ifndef ARASANX
 ARASANX = arasanx-64
+!Ifdef NUMA
+ARASANX = $(ARASANX)-numa
+!Endif
 !Endif
 ARCH=/D_WIN64
 HWLOC=$(HWLOC64)
 !Else
 !Ifndef ARASANX
 ARASANX = arasanx-32
+!Ifdef NUMA
+ARASANX = $(ARASANX)-numa
+!Endif
 !Endif
 HWLOC=$(HWLOC32)
 !Endif
@@ -66,7 +72,7 @@ CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_
 CFLAGS=$(CFLAGS) /DNUMA /I$(HWLOC)/include
 NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
-NUMA_PROFILE_OBJS=$(PROFILE_BUILD)/topo.obj
+NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
 
@@ -94,13 +100,13 @@ INTEL64 = /Wp64
 INTEL64LIB = bufferoverflowU.lib
 CL       = icl
 LD       = xilink
-CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
+CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /GR- /DUSE_INTRINSICS /DUSE_ASM /DNDEBUG
 !Else
 # Intel C++ defs, release build (IA32)
 CL       = icl
 LD       = xilink
-CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
+CFLAGS = /Qstd=c++11 /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX $(TRACE) $(SMP) $(DEBUG) $(INTEL64) /EHsc $(CFLAGS)
 OPT = /O3 /Ob2 /Oy- /Gr /GR- /DUSE_INTRINSICS /DUSE_ASM /DNDEBUG
 !Endif
 
@@ -143,6 +149,7 @@ $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
 LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /subsystem:console /incremental:no /opt:ref /stack:4000000 /version:$(VERSION)
  
 ARASANX_OBJS = $(BUILD)\arasanx.obj \
+$(BUILD)\tester.obj $(BUILD)\protocol.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
@@ -173,6 +180,7 @@ $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
 ARASANX_PGO_OBJS = $(PGO_BUILD)\arasanx.obj \
+$(PGO_BUILD)\tester.obj $(PGO_BUILD)\protocol.obj \
 $(PGO_BUILD)\attacks.obj $(PGO_BUILD)\bhash.obj $(PGO_BUILD)\bitboard.obj \
 $(PGO_BUILD)\board.obj $(PGO_BUILD)\boardio.obj $(PGO_BUILD)\options.obj \
 $(PGO_BUILD)\chess.obj $(PGO_BUILD)\material.obj $(PGO_BUILD)\movegen.obj \
@@ -188,6 +196,7 @@ $(PGO_BUILD)\ecodata.obj $(PGO_BUILD)\threadp.obj $(PGO_BUILD)\threadc.obj \
 $(PGO_BUILD)\unit.obj $(TB_PGO_OBJS) $(NUMA_PGO_OBJS)
 
 ARASANX_POPCNT_OBJS = $(POPCNT_BUILD)\arasanx.obj \
+$(POPCNT_BUILD)\protocol.obj $(POPCNT_BUILD)\tester.obj \
 $(POPCNT_BUILD)\attacks.obj $(POPCNT_BUILD)\bhash.obj $(POPCNT_BUILD)\bitboard.obj \
 $(POPCNT_BUILD)\board.obj $(POPCNT_BUILD)\boardio.obj $(POPCNT_BUILD)\options.obj \
 $(POPCNT_BUILD)\chess.obj $(POPCNT_BUILD)\material.obj $(POPCNT_BUILD)\movegen.obj \
@@ -203,6 +212,7 @@ $(POPCNT_BUILD)\ecodata.obj $(POPCNT_BUILD)\threadp.obj $(POPCNT_BUILD)\threadc.
 $(POPCNT_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ARASANX_BMI2_OBJS = $(BMI2_BUILD)\arasanx.obj \
+$(BMI2_BUILD)\protocol.obj $(BMI2_BUILD)\tester.obj \
 $(BMI2_BUILD)\attacks.obj $(BMI2_BUILD)\bhash.obj $(BMI2_BUILD)\bitboard.obj \
 $(BMI2_BUILD)\board.obj $(BMI2_BUILD)\boardio.obj $(BMI2_BUILD)\options.obj \
 $(BMI2_BUILD)\chess.obj $(BMI2_BUILD)\material.obj $(BMI2_BUILD)\movegen.obj \
@@ -218,6 +228,7 @@ $(BMI2_BUILD)\ecodata.obj $(BMI2_BUILD)\threadp.obj $(BMI2_BUILD)\threadc.obj \
 $(BMI2_BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj \
+$(PROFILE)\protocol.obj $(PROFILE)\tester.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \

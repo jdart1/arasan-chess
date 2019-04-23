@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -7,19 +7,22 @@
 #include "movegen.h"
 #include "globals.h"
 #include "debug.h"
-extern "C" {
-#include <string.h>
-#include <math.h>
-};
+#include "params.h"
 #include <algorithm>
+#include <cmath>
 #include <iostream> // for debugging
 #include <assert.h>
-#ifdef _WIN32
-  #include <windows.h>
+
+//#define _TRACE
+
+#ifdef _TRACE
+#include "notation.h"
 #endif
 
+static constexpr unsigned NUM_SAMPLES = 50;
+
 BookReader::BookReader()
-{                 
+{
    // seed the random number generator
    engine.seed(getRandomSeed());
 }
@@ -39,7 +42,7 @@ int BookReader::open(const char *pathName) {
         // read the header
         book_file.read((char*)&hdr,sizeof(book::BookHeader));
         if (book_file.bad()) {
-            cerr <<"failed to read header" << endl;
+            cerr << "error reading opening book" << endl;
             return -1;
         }
         // correct header for endian-ness
@@ -61,142 +64,64 @@ void BookReader::close() {
     }
 }
 
-// Determine the weighting a book move will receive. Moves with higher weights
-// will be played more often.
-//
-static int getWeight(const book::DataEntry &data) {
-   // If strength reduction is enabled, "dumb down" the opening book
-   // by pruning away infrequent moves.
-   if (options.search.strength < 100 && data.count <
-       (uint32_t)1<<((100-options.search.strength)/10)) {
-       return 0;
-   }
-   return data.weight;
-}
-
-int BookReader::filterAndNormalize(const Board &board,
-                                   vector<book::DataEntry> &rawMoves,
-                                   vector< pair<Move,int> > &moves) {
-   //
-   // Build a list of candidate moves.
-   //
-   vector< pair<book::DataEntry,int> > candidates;
-   for (unsigned i = 0; i < rawMoves.size(); i++) {
-       int score = getWeight(rawMoves[i]);
-       if (score > 0) {
-           candidates.push_back(pair<book::DataEntry,int>(
-                                                          rawMoves[i],score));
-       }
-   }
-#ifdef _TRACE
-   cout << "candidate_count = " << candidates.size() << endl;
-#endif
-   if (candidates.size() == 0) return 0;
-
-   // Sort by descending weights
-   for (unsigned i=1; i<candidates.size(); i++) {
-      const int key = candidates[i].second;
-      pair<book::DataEntry,int> tmp = candidates[i];
-      int j = i-1;
-      for (; j >= 0 && candidates[j].second < key; j--) {
-         candidates[j+1] = candidates[j];
-      }
-      candidates[j+1] = tmp;
-   }
-
-   const int maxWeight = candidates[0].second;
-   int total_weight = 0;
-   for (unsigned i=0; i<candidates.size(); i++) {
-      int weight = candidates[i].second;
-      // apply selectivity value. If selectivity > 50, decrease
-      // weights of moves besides the best move(s). If selectivity <
-      // 50, increase weights of moves besides the best move(s).
-#ifdef _TRACE
-      cout << " orig weight=" << candidates[i].second;
-#endif      
-      if (maxWeight != weight) {
-         if (options.book.selectivity > 50) {
-            weight = int(weight*(1.0 - 2.0*double(options.book.selectivity-50)/100));
-         } else if (options.book.selectivity < 50) {
-            weight = std::min<int>(maxWeight,int(weight*(1.0 + double(50-options.book.selectivity)/12.0)));
-         }
-         // based on selectivity value, drop very low scoring moves
-         if (weight < options.book.selectivity*maxWeight/1000) {
-             weight = 0;
-         }
-      }
-      candidates[i].second = weight;
-      total_weight += candidates[i].second;
-#ifdef _TRACE
-      cout << " adjusted weight=" << candidates[i].second << endl;
-#endif      
-   }
-
-   Move move_list[Constants::MaxMoves];
-   MoveGenerator mg(board);
-   const unsigned max = (unsigned)mg.generateAllMoves(move_list,1 /* repeatable */);
-
-   if (total_weight) {
-      // Convert move indexes to moves and normalize weight values.
-      // Remove 0-weighted moves.
-      for (unsigned i=0; i<candidates.size(); i++) {
-         const unsigned index = (unsigned)candidates[i].first.index;
-         ASSERT(index < max);
-         const int normalizedWeight = (book::MAX_WEIGHT*candidates[i].second)/total_weight;
-         if (normalizedWeight && index < max) {
-            moves.push_back( pair<Move,int> (
-                                move_list[index],
-                                normalizedWeight));
-         }
-      }
-   }
-   return (int)moves.size();
-}
-
 Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
    cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
 #endif
+   vector <book::DataEntry> rawMoves;
    vector < pair<Move,int> > results;
-   if (book_moves(b, results) <= 0)
+   if (b.repCount() > 0) {
       return NullMove;
-   else
-     return pickRandom(b,results);
-}
+   }
+   else if (lookup(b,rawMoves) <= 0) {
+      return NullMove;
+   }
+   Move move_list[Constants::MaxMoves];
+   RootMoveGenerator mg(b);
+   (void)mg.generateAllMoves(move_list,1 /* repeatable */);
 
-Move BookReader::pickRandom(const Board &b, 
-                            const vector< pair<Move,int> > &moves)
-{
-   int total_weight = 0;
-   const int n = (int)moves.size();
-   for (int i = 0; i < n; i++) total_weight += moves[i].second;
-   // If total_weight is 0, no moves have non-zero weights.
-   if (total_weight == 0) return NullMove;
-   std::uniform_int_distribution<unsigned> dist(0,total_weight);
-   unsigned nRand = dist(engine);
-   unsigned weight = 0;
-   // Randomly pick from the available moves.  Prefer moves
-   // with high weights.
-   for (int i=0; i < n; i++) 
-   {
-      int w = moves[i].second;
-      weight += w;
-      if (nRand <= weight)
-      {
-#ifdef _TRACE
-         cout << "selecting ";
-         MoveImage(moves[i].first,cout);
-         cout << endl;
-#endif
-         return moves[i].first;
+   // Remove infrequent moves and zero-weight moves.
+   filterByFreq(rawMoves);
+   //
+   // Compute the best move. We use a modified version of Thompson
+   // sampling. Rewards for each move are based on a random (Dirichlet
+   // distribution) sample drawn from the win/loss/draw statistics.
+   // This is modified by any explicit weight, a frequency bonus,
+   // and an additional random factor.
+   //
+   double maxReward = -1e9;
+   Move bestMove = NullMove;
+   for (const book::DataEntry &info : rawMoves) {
+      array<double,OUTCOMES> counts;
+      counts[0] = info.win;
+      counts[1] = info.loss;
+      counts[2] = info.draw;
+      if (info.weight != book::NO_RECOMMEND) {
+          const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
+          // make fake win/loss/draw counts to be added to the real counts
+          counts[0] += options.book.weighting*weightAdjust*info.count()/100;
+          counts[1] += (1.0-weightAdjust)*options.book.weighting*info.count()/100;
+      }
+      // compute a sample based on the count distribution and
+      // calculate its reward
+      auto reward = sample_dirichlet(counts);
+      // add a small bonus for very frequent moves. Note: moves
+      // with weights below neutral get less of a frequency bonus.
+      double reduce = std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT);
+      reward += 0.1*log10(double(info.count()))*reduce*options.book.frequency/100;
+      // add a random amount based on tolerance parameter
+      int tolerance = 100 - int(options.book.scoring);
+      std::normal_distribution<double> dist(0,0.1*tolerance/100);
+      reward += dist(engine);
+      if (reward > maxReward) {
+          maxReward = reward;
+          bestMove = move_list[info.index];
       }
    }
-   // should never get here
-   assert(0);
-   return NullMove;
+   return bestMove;
 }
 
-int BookReader::book_moves(const Board &b, vector< pair<Move,int> > &moves) {
+unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
    vector <book::DataEntry> results;
    // Don't return a book move if we have repeated this position
    // before .. make the program to search to see if the repetition
@@ -209,10 +134,18 @@ int BookReader::book_moves(const Board &b, vector< pair<Move,int> > &moves) {
       return 0;
    }
    else {
-       return filterAndNormalize(b,results,moves);
+      Move move_list[Constants::MaxMoves];
+      RootMoveGenerator mg(b);
+      (void)mg.generateAllMoves(move_list,1 /* repeatable */);
+      filterByFreq(results);
+      moves.resize(results.size());
+      std::sort(results.begin(),results.end());
+      std::transform(results.begin(),results.end(),moves.begin(),
+                     [&](const book::DataEntry &entr) -> Move {
+                        return move_list[entr.index];});
    }
+   return static_cast<unsigned>(moves.size());
 }
-
 
 int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    // fetch the index page
@@ -253,11 +186,77 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
        ASSERT(loc.index < book::DATA_PAGE_SIZE);
        book::DataEntry &bookEntry = data.data[loc.index];
        bookEntry.next = swapEndian16((byte*)&bookEntry.next);
-       bookEntry.weight = swapEndian16((byte*)&bookEntry.weight);
-       bookEntry.count = swapEndian32((byte*)&bookEntry.count);
+       bookEntry.weight = bookEntry.weight;
+       bookEntry.win = swapEndian32((byte*)&bookEntry.win);
+       bookEntry.loss = swapEndian32((byte*)&bookEntry.loss);
+       bookEntry.draw = swapEndian32((byte*)&bookEntry.draw);
        results.push_back(bookEntry);
        loc.index = bookEntry.next;
    }
    return (int)results.size();
 }
 
+double BookReader::calcReward(const std::array<double,OUTCOMES> &sample, score_t contempt) const noexcept
+{
+   // calculate reward for a single sample (note outcomes are doubles)
+   double win = sample[0];
+   double loss = sample[1];
+   double draw = sample[2];
+   double val = 1.0*win + contemptFactor(contempt)*draw;
+   double sum = win + loss + draw;
+   if (sum == 0.0) {
+      return 0.0;
+   }
+   else {
+      return val/sum;
+   }
+}
+
+double BookReader::sample_dirichlet(const array<double,OUTCOMES> &counts, score_t contempt)
+{
+    std::array<double,OUTCOMES> sample;
+    double sum = 0.0;
+    unsigned i = 0;
+    for (double a : counts) {
+        double s = 0.0;
+        if (a != 0.0) {
+            std::gamma_distribution<double> dist(a, 1.0);
+            s = dist(engine);
+        }
+        sample[i++] = s;
+        sum += s;
+    }
+    std::transform(sample.begin(), sample.end(), sample.begin(),[&](const double x) -> double { return x/sum;
+        });
+    return calcReward(sample,contempt);
+}
+
+void BookReader::filterByFreq(vector<book::DataEntry> &results)
+{
+   const double freqThreshold = pow(10.0,(options.book.frequency-100.0)/40.0);
+
+   unsigned minCount = 0;
+   if (options.search.strength < 100) {
+      minCount = (uint32_t)1<<((100-options.search.strength)/10);
+   }
+   unsigned maxCount = 0;
+   for (const book::DataEntry &info : results) {
+      unsigned count = info.count();
+      if (count > maxCount) maxCount = count;
+   }
+   // In reduced-strength mode, "dumb down" the opening book by
+   // omitting moves with low counts. Also apply a relative
+   // frequency test based on the book frequency option. Don't remove
+   // moves from the "steering" book unless they have zero weight
+   // ("don't play" moves).
+   auto new_end = std::remove_if(results.begin(),results.end(),
+                                 [&](const book::DataEntry &info) -> bool {
+                                    return
+                                       info.weight == 0 || (info.weight == book::NO_RECOMMEND &&
+                                       (info.count() < minCount ||
+                                        double(info.count())/maxCount <= freqThreshold));
+                                 });
+   if (results.end() != new_end) {
+      results.erase(new_end,results.end());
+   }
+}

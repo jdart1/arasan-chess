@@ -1,4 +1,4 @@
-// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -73,7 +73,7 @@ static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 static const double ADAGRAD_STEP_SIZE = 0.01;
 static const double PARAM1 = 0.75;
 // step size relative to parameter range:
-static const double ADAM_ALPHA = 0.01;
+static const double ADAM_ALPHA = 0.015;
 static const double ADAM_BETA1 = 0.9;
 static const double ADAM_BETA2 = 0.999;
 static const double ADAM_EPSILON = 1.0e-8;
@@ -97,7 +97,6 @@ static string cmdline;
 
 LockDefine(file_lock);
 LockDefine(data_lock);
-LockDefine(hash_lock);
 
 #ifdef _POSIX_VERSION
 static pthread_attr_t stackSizeAttrib;
@@ -261,28 +260,20 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
     return deriv;
 }
 
-static double norm_val(const Tune::TuneParam &p)
-{
-   double mid = (p.range())/2.0;
-   return (double(p.current)-mid)/p.range();
-}
-
 static double calc_penalty()
 {
    // apply L2-regularization to the tuning parameters
    double l2 = 0.0;
    if (regularize) {
-      for (int i = 0; i < tune_params.numTuningParams(); i++) {
-         Tune::TuneParam p;
-         tune_params.getParam(i,p);
+      for (TuneParam p : tune_params) {
          // apply penalty only for parameters being tuned
          if (p.tunable) {
             if (p.range()==0) {
                cerr << "warning: param " << p.name << " has zero range" << endl;
                continue;
             }
-            // normalize the values since their ranges differ
-            l2 += lambda*norm_val(p)*norm_val(p);
+            p.scale();
+            l2 += lambda*(p.current-0.5)*(p.current-0.5);
          }
       }
    }
@@ -305,6 +296,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
                                     Silent);
    score = stats.value;
    // skip positions with very large scores (including mate scores)
+
    if (fabs(score/Params::PAWN_VALUE)<30.0) {
       pvBoard = board;
       for (int len = 0; len < MAX_PV_LENGTH && !IsNull(stats.best_line[len]); len++) {
@@ -316,6 +308,12 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
           (pvBoard.getMaterial(Black).kingOnly() &&
            pvBoard.getMaterial(White).infobits() == Material::KP)) {
          return 0;
+      }
+      else if (stats.state == Stalemate) {
+          return 0;
+      }
+      else if (Scoring::materialDraw(board) || Scoring::theoreticalDraw(board)) {
+          return 0;
       }
       return 1;
    }
@@ -379,15 +377,13 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          if (!atcks.isClear()) continue;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
-             if (fabs(score) < 30.0*Params::PAWN_VALUE) {
-                 double func_value = computeErrorTexel(board, score, result, board.sideToMove());
-                 pdata.target += func_value;
-                 stringstream fen;
-                 fen << pvBoard;
-                 Lock(data_lock);
-                 positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
-                 Unlock(data_lock);
-             }
+             double func_value = computeErrorTexel(board, score, result, board.sideToMove());
+             pdata.target += func_value;
+             stringstream fen;
+             fen << pvBoard;
+             Lock(data_lock);
+             positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
+             Unlock(data_lock);
          }
       } catch(std::bad_alloc) {
          cerr << "out of memory" << endl;
@@ -403,17 +399,6 @@ static int map_to_pst(int i, ColorType side)
    int f = File(i);
    if (f > 4) f = 9-f;
    return 4*(r-1) + f - 1;
-}
-
-// map square to outpost index, returns -1 if no mapping
-static int map_to_outpost(int i, ColorType side)
-{
-   int r = Rank(i,side);
-   int f = File(i);
-   if (r < 5) return -1;
-   r -= 5;
-   if (f > 4) f = 9-f;
-   return r*4 + f - 1;
 }
 
 static inline int FileOpen(const Board &board, int file) {
@@ -447,11 +432,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
-    const score_t mdiff = ourmat.value() - oppmat.value();
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
-    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
-       return;
-    }
 
     const uint32_t pieces = ourmat.pieceBits();
     if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
@@ -471,9 +452,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           // we have extra minor (but not only a minor)
           if (oppmat.pieceBits() == Material::KR) {
              // KR + minor vs KR - draw w. no pawns so lower score
-             if (ourmat.hasPawns()) {
-                grads[Tune::KRMINOR_VS_R] += inc;
-             } else {
+             if (!ourmat.hasPawns()) {
                 grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
              }
              // do not apply trade down or pawn bonus
@@ -483,9 +462,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                    ourmat.pieceBits() == Material::KQB) &&
                    oppmat.pieceBits() == Material::KQ) {
               // Q + minor vs Q is a draw, generally
-             if (ourmat.hasPawns()) {
-                grads[Tune::KQMINOR_VS_Q] += inc;
-             } else {
+             if (!ourmat.hasPawns()) {
                 grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
              }
              // do not apply trade down or pawn bonus
@@ -521,10 +498,6 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     default:
         break;
     }
-    int index = Scoring::tradeDownIndex(ourmat,oppmat);
-    if (index != -1) {
-       grads[Tune::TRADE_DOWN+index] += inc*mdiff/4096;
-    }
     if (ourmat.materialLevel() < 16) {
        if (pawnDiff > 0 && pieceDiff >= 0) {
           // better to have more pawns in endgame (if we have not
@@ -536,9 +509,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
           // bonus for last few pawns - to discourage trade
           const int ourp = ourmat.pawnCount();
           int factor1 = (ourp >= 3) + (ourp >= 2);
-          int factor2 = (ourp >=1);
           grads[Tune::PAWN_ENDGAME1] += inc*factor1*(4-ourmat.materialLevel()/4)/4;
-          grads[Tune::PAWN_ENDGAME2] += inc*factor2*(4-ourmat.materialLevel()/4)/4;
        }
     }
 
@@ -591,9 +562,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    const Square okp = board.kingSquare(oside);
    int pin_count = 0;
    score_t attackWeight = 0;
-   int attackCount = 0;
-   int majorAttackCount = 0;
+   int simpleAttackWeight = 0;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
+   const Bitboard our_pawn_attacks(board.allPawnAttacks(side));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
    const Scoring::PawnHashEntry::PawnData oppPawnData = pawn_entr.pawnData(oside);
@@ -676,19 +647,14 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
            }
        }
    };
-   
+
    grads[Tune::KING_PST_MIDGAME+ksq_map] += tune_params.scale(inc,Tune::KING_PST_MIDGAME+ksq_map,mLevel);
 
    const Bitboard &nearKing(Scoring::kingProximity[oside][okp]);
    Scoring::KingPawnHashEntry oppKpe,ourKpe;
-   if (side == White) {
-      s.calcCover<White>(board,ourKpe);
-      s.calcCover<Black>(board,oppKpe);
-   }
-   else {
-      s.calcCover<Black>(board,ourKpe);
-      s.calcCover<White>(board,oppKpe);
-   }
+   s.calcCover(board,side,ourKpe);
+   s.calcCover(board,OppositeColor(side),oppKpe);
+   s.calcStorm(board,OppositeColor(side),oppKpe,our_pawn_attacks);
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
    array<int,8> attackTypes;
@@ -730,22 +696,21 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       i = map_to_pst(sq,side);
       grads[Tune::KNIGHT_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KNIGHT_PST_MIDGAME+i,mLevel);
       grads[Tune::KNIGHT_PST_ENDGAME+i] += tune_params.scale(inc,Tune::KNIGHT_PST_ENDGAME+i,mLevel);
-      i = map_to_outpost(sq,side);
-      ASSERT(i<16);
       if (s.outpost(board,sq,side)) {
-         int defenders = s.outpost_defenders(board,sq,side) != 0;
-         int index = Tune::KNIGHT_OUTPOST + defenders*32 + 2*i;
+         int defenders = std::min<int>(1,s.outpost_defenders(board,sq,side));
+         int index = Tune::KNIGHT_OUTPOST_MIDGAME + defenders;
          grads[index] += tune_params.scale(inc,index,mLevel);
-         index++;
+         index += 2;
          grads[index] += tune_params.scale(inc,index,mLevel);
       }
       Bitboard kattacks(knattacks & nearKing);
       if (kattacks) {
-         attackCount++;
+         simpleAttackWeight += 4;
          attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
          attackTypes[0]++;
          if (kattacks & (kattacks-1)) {
             attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+            simpleAttackWeight += 4;
             attackTypes[1]++;
          }
       }
@@ -776,23 +741,23 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       int i = map_to_pst(sq,side);
       grads[Tune::BISHOP_PST_MIDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_MIDGAME+i,mLevel);
       grads[Tune::BISHOP_PST_ENDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_ENDGAME+i,mLevel);
-      i = map_to_outpost(sq,side);
-      ASSERT(i<16);
       if (s.outpost(board,sq,side)) {
-         int defenders = s.outpost_defenders(board,sq,side) != 0;
-         int index = Tune::BISHOP_OUTPOST + defenders*32 + 2*i;
+         int defenders = std::min<int>(1,s.outpost_defenders(board,sq,side));
+         ASSERT(defenders<3);
+         int index = Tune::BISHOP_OUTPOST_MIDGAME + defenders;
          grads[index] += tune_params.scale(inc,index,mLevel);
-         index++;
+         index += 2;
          grads[index] += tune_params.scale(inc,index,mLevel);
       }
       if (!deep_endgame) {
          Bitboard kattacks(battacks & nearKing);
          if (kattacks) {
-            attackCount++;
             attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+            simpleAttackWeight += 4;
             attackTypes[0]++;
             if (kattacks & (kattacks - 1)) {
                attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+               simpleAttackWeight += 4;
                attackTypes[1]++;
             }
          }
@@ -800,11 +765,12 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             // possible stacked attackers
             kattacks = board.bishopAttacks(sq, side) & nearKing;
             if (kattacks) {
-               attackCount++;
                attackWeight += tune_params[Tune::MINOR_ATTACK_FACTOR].current;
+               simpleAttackWeight += 4;
                attackTypes[0]++;
                if (kattacks & (kattacks - 1)) {
                   attackWeight += tune_params[Tune::MINOR_ATTACK_BOOST].current;
+                  simpleAttackWeight += 4;
                   attackTypes[1]++;
                }
             }
@@ -852,9 +818,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          Bitboard rattacks2(board.rookAttacks(sq, side));
          Bitboard attacks(rattacks2 & nearKing);
          if (attacks) {
-            attackCount++;
-            majorAttackCount++;
             attackWeight += tune_params[Tune::ROOK_ATTACK_FACTOR].current;
+            simpleAttackWeight += 6;
             attackTypes[Tune::ROOK_ATTACK_FACTOR-
                         Tune::MINOR_ATTACK_FACTOR]++;
             Bitboard attacks2(attacks & Scoring::kingNearProximity[okp]);
@@ -863,11 +828,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                if (attacks2) {
                   // rook attacks at least 2 squares near king
                   attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST].current;
+                  simpleAttackWeight += 3;
                   attackTypes[Tune::ROOK_ATTACK_BOOST-
                               Tune::MINOR_ATTACK_FACTOR]++;
                   attacks2 &= (attacks2 - 1);
                   if (attacks2) {
                      attackWeight += tune_params[Tune::ROOK_ATTACK_BOOST2].current;
+                     simpleAttackWeight += 4;
                      attackTypes[Tune::ROOK_ATTACK_BOOST2-
                                  Tune::MINOR_ATTACK_FACTOR]++;
                   }
@@ -911,9 +878,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
 
          if (kattacks) {
-            attackCount++;
-            majorAttackCount++;
             attackWeight += tune_params[Tune::QUEEN_ATTACK_FACTOR].current;
+            simpleAttackWeight += 6;
 #ifdef EVAL_DEBUG
             int tmp = attackWeight;
 #endif
@@ -925,19 +891,18 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                nearAttacks &= (nearAttacks - 1);      // clear 1st bit
                if (nearAttacks) {
                   attackWeight += tune_params[Tune::QUEEN_ATTACK_BOOST].current;
+                  simpleAttackWeight += 6;
                   attackTypes[Tune::QUEEN_ATTACK_BOOST-
                               Tune::MINOR_ATTACK_FACTOR]++;
                   nearAttacks &= (nearAttacks - 1);   // clear 1st bit
                   if (nearAttacks) {
                      attackWeight += tune_params[Tune::QUEEN_ATTACK_BOOST2].current;
+                     simpleAttackWeight += 7;
                      attackTypes[Tune::QUEEN_ATTACK_BOOST2-
                                  Tune::MINOR_ATTACK_FACTOR]++;
                   }
                }
             }
-#ifdef EVAL_DEBUG
-            if (attackWeight - tmp) cout << "queen attack boost= " << attackWeight - tmp << endl;
-#endif
          }
       }
    }
@@ -1026,16 +991,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
                      tune_params.scale(inc,Tune::QUEENING_SQUARE_OPP_CONTROL_MID,mLevel);
                  grads[Tune::QUEENING_SQUARE_OPP_CONTROL_END] +=
                      tune_params.scale(inc,Tune::QUEENING_SQUARE_OPP_CONTROL_END,mLevel);
-             }
-         }
-
-         if (board.getMaterial(side).materialLevel()<=9 &&
-             board.bishop_bits[side]) {
-             Bitboard mask = SquareColor(queenSq) == White ? Board::white_squares : Board::black_squares;
-             if (!(mask & board.bishop_bits[side])) {
-                 // we have a Bishop but it can't cover the queening square
-                 grads[Tune::WRONG_COLOR_BISHOP] +=
-                     tune_params.scale(inc,Tune::WRONG_COLOR_BISHOP,mLevel);
              }
          }
       }
@@ -1183,12 +1138,32 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
    }
    if (!deep_endgame) {
-      int proximity = Bitboard(Scoring::kingPawnProximity[oside][okp] & board.pawn_bits[side]).bitCount();
-      int pawnAttacks = Bitboard(oppPawnData.opponent_pawn_attacks & nearKing).bitCount();
-      attackWeight += tune_params[Tune::PAWN_ATTACK_FACTOR1].current*proximity + tune_params[Tune::PAWN_ATTACK_FACTOR2].current*pawnAttacks;
+      attackWeight += oppKpe.storm + oppKpe.pawn_attacks;
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
+
+      if (simpleAttackWeight >= tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MIN].current) {
+         double factor = std::min<score_t>((score_t)simpleAttackWeight,tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MAX].current)/32.0;
+         // Opposing side is under attack, evaluate its own pieces'
+         // proximity to their King
+         int minorProx = Bitboard(nearKing & (board.knight_bits[oside] | board.bishop_bits[oside])).bitCountOpt();
+         if (minorProx>2) minorProx -= (minorProx-2)/2;
+         int rookProx = Bitboard(nearKing & board.rook_bits[oside]).bitCountOpt();
+         Bitboard qbits(board.queen_bits[oside]);
+         Square sq;
+         int queenProx = 0;
+         while (qbits.iterate(sq)) {
+            queenProx += 4-Scoring::distance(okp,sq);
+         }
+         grads[Tune::OWN_MINOR_KING_PROXIMITY] -=
+               tune_params.scale(inc*minorProx*factor,Tune::OWN_MINOR_KING_PROXIMITY,ourMatLevel);
+         grads[Tune::OWN_ROOK_KING_PROXIMITY] -=
+               tune_params.scale(inc*rookProx*factor,Tune::OWN_ROOK_KING_PROXIMITY,ourMatLevel);
+         grads[Tune::OWN_QUEEN_KING_PROXIMITY] -=
+               tune_params.scale(inc*queenProx*factor,Tune::OWN_QUEEN_KING_PROXIMITY,ourMatLevel);
+      }
+
       // compute the gradient of the scale
       double k = tune_params[Tune::KING_ATTACK_SCALE_FACTOR].current/1000.0;
       double x = exp(k*(scale_index-tune_params[Tune::KING_ATTACK_SCALE_INFLECT].current));
@@ -1202,10 +1177,14 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       double max_grad = 1/(1+(1/x));
       grads[Tune::KING_ATTACK_SCALE_MAX] +=
           tune_params.scale(inc*max_grad,Tune::KING_ATTACK_SCALE_MAX,ourMatLevel);
-      grads[Tune::PAWN_ATTACK_FACTOR1] +=
-         tune_params.scale(inc*scale_grad*proximity/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR1,ourMatLevel);
-      grads[Tune::PAWN_ATTACK_FACTOR2] +=
-         tune_params.scale(inc*scale_grad*pawnAttacks/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR2,ourMatLevel);
+      grads[Tune::PAWN_ATTACK_FACTOR] +=
+          tune_params.scale(inc*scale_grad*oppKpe.pawn_attack_count/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR,ourMatLevel);
+
+      for (int i=0; i < 8; i++) {
+          grads[Tune::PAWN_STORM+i] +=
+              tune_params.scale(inc*scale_grad*oppKpe.storm_counts[i]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_STORM+i,ourMatLevel);
+      }
+
       // compute partial derivatives for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;
            i <= Tune::QUEEN_ATTACK_BOOST2;
@@ -1264,7 +1243,7 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
    update_deriv_vector(s, board, Black, derivs, -inc);
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       if (derivs[i] != 0.0 && tune_params[i].tunable) {
-         Tune::TuneParam p = tune_params[i];
+         TuneParam p = tune_params[i];
          score_t val = p.current;
          const score_t range = p.range();
          score_t delta;
@@ -1278,8 +1257,10 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
 
          // increase by delta
          score_t newval = val + delta;
-         tune_params.updateParamValue(i,newval);
-         tune_params.applyParams();
+         tune_params[i].current = newval;
+         // don't check parameter range as we may possibly exceed
+         // max/min here
+         tune_params.applyParams(false);
          score_t newEval = s.evalu8(board,false);
          if (board.sideToMove() == Black) newEval = -newEval;
          // compare predicted new value from gradient with
@@ -1291,30 +1272,20 @@ void validateGradient(Scoring &s, const Board &board, double eval, double result
 
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
-            tune_params.updateParamValue(i,val);
-            tune_params.applyParams();
+            cout << "--old val" << endl;
+            tune_params[i].current = val;
+            tune_params.applyParams(false);
             s.evalu8(board,false);
-            tune_params.updateParamValue(i,newval);
-            tune_params.applyParams();
+            cout << "--new val" << endl;
+            tune_params[i].current = newval;
+            tune_params.applyParams(false);
             s.evalu8(board,false);
-            tune_params.updateParamValue(i,val);
-            tune_params.applyParams();
+            tune_params[i].current = val;
+            tune_params.applyParams(false);
          }
-         // Test derivative of sigmoid computation too
-/*
-         double dT = computeTexelDeriv(eval,result,White);
-         double baseError = computeErrorTexel(eval,result,White);
-         double newError = computeErrorTexel(newEval,result,White);
-         double predictedError = baseError + dT*(newEval-eval);
-         double estDeriv = (newError-baseError)/(newEval-eval);
-         if (fabs(predictedError-newError) > 1e-4) {
-             cerr << "warning: param " << p.name << " eval=" << eval << " newEval=" << newEval << " result=" << result << " dT=" << dT << " estDeriv= " << estDeriv << " base=" << baseError << " predicted=" << predictedError << " actual="
- << newError << endl;
-         }
-*/
          // restore old value
-         tune_params.updateParamValue(i,val);
-         tune_params.applyParams();
+         tune_params[i].current = val;
+         tune_params.applyParams(false);
       }
    }
 }
@@ -1379,38 +1350,39 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
                           vector<double> &step_sizes /* for adaptive */,
                           int iterations)
 {
-   for (int i = 0; i < tune_params.numTuningParams(); i++) {
-      double dv = data0.grads[i];
-      Tune::TuneParam p;
-      tune_params.getParam(i,p);
-      score_t val = p.current;
+   for (TuneParam &p : tune_params) {
+      const int i = p.index;
+      // do learning on scaled value:
+      score_t val = p.scaled();
+      // correct gradient so it reflects scaled x
+      double dv = data0.grads[i]*p.range();
       if (regularize && p.tunable) {
          // add the derivative of the regularization term. Note:
          // non-tunable parameters will have derivative zero and
          // we don't regularize them.
-         dv += 2*lambda*norm_val(p);
+         dv += 2*lambda*(val-0.5);
       }
       if (dv != 0.0 && p.tunable) {
          score_t istep = 1;
          if (method == OptimMethod::AdaGrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
-            double istep = ADAGRAD_STEP_SIZE*p.range()*adjusted_grad;
-            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
+            double istep = ADAGRAD_STEP_SIZE*adjusted_grad;
+            val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - istep));
          } else if (method == OptimMethod::ADAM) {
             m[i] = ADAM_BETA1*m[i] + (1.0-ADAM_BETA1)*dv;
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
             double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
-            double step_size = ADAM_ALPHA*p.range();
+            double step_size = ADAM_ALPHA;
             istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
 //            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
-            val = std::max<score_t>(p.min_value,std::min<score_t>(p.max_value,val - istep));
+            val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - istep));
          } else {
             // Simple adaptive rate method with momentum, similar to
             // "bold driver" algorithm.
             if (iterations == 1) {
-               step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE*p.range());
+               step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE);
             }
             else if (std::signbit(prev_gradient[i]*dv)) {
                // gradient changed signs
@@ -1420,14 +1392,15 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             }
             istep = step_sizes[i];
             if ( dv > 0.0) {
-               val = std::max<score_t>(p.min_value,val - istep);
+               val = std::max<score_t>(0.0,val - istep);
             }
             else if (dv < 0.0) {
-               val = std::min<score_t>(p.max_value,val + istep);
+               val = std::min<score_t>(1.0,val + istep);
             }
             prev_gradient[i] = dv;
          }
-         tune_params.updateParamValue(i,val);
+         // re-scale
+         p.scale(val);
       }
    }
 }
@@ -1522,7 +1495,7 @@ static void output_solution(const string &cmd, double obj)
    stringstream comment;
    comment << "Generated " << timestr << " by " << cmd << endl;
    if (obj != 0) {
-      comment << "Final objective value: " << obj << endl;
+      comment << "// Final objective value: " << obj << endl;
    }
    Params::write(param_out,comment.str());
    param_out << endl;
@@ -1541,7 +1514,6 @@ static void learn()
 {
    LockInit(data_lock);
    LockInit(file_lock);
-   LockInit(hash_lock);
 #ifdef _MSC_VER
    double best = 1.0e10;
 #else
@@ -1613,7 +1585,6 @@ static void learn()
 
    LockFree(data_lock);
    LockFree(file_lock);
-   LockFree(hash_lock);
 }
 
 int CDECL main(int argc, char **argv)
@@ -1791,9 +1762,7 @@ int CDECL main(int argc, char **argv)
 
     cout << "parameter count: " << tune_params.numTuningParams() << " (";
     int tunable = 0;
-    for (int i = 0; i < tune_params.numTuningParams(); i++) {
-       Tune::TuneParam p;
-       tune_params.getParam(i,p);
+    for (const TuneParam &p : tune_params) {
        if (p.tunable) ++tunable;
     }
     cout << tunable << " tunable)" << endl;

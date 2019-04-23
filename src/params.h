@@ -1,4 +1,4 @@
-// Copyright 2015-2017 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PARAMS_H
 #define _PARAMS_H
@@ -28,8 +28,8 @@ BEGIN_PACKED_STRUCT
     static constexpr score_t PAWN_VALUE = (score_t)128;
     static constexpr score_t BISHOP_VALUE = (score_t)(3.25*PAWN_VALUE);
     static constexpr score_t KNIGHT_VALUE = (score_t)(3.25*PAWN_VALUE);
-    static constexpr score_t ROOK_VALUE = (score_t)5*PAWN_VALUE;
-    static constexpr score_t QUEEN_VALUE = (score_t)(9.75*PAWN_VALUE);
+    static constexpr score_t ROOK_VALUE = (score_t)(5.4*PAWN_VALUE);
+    static constexpr score_t QUEEN_VALUE = (score_t)(10.7*PAWN_VALUE);
     static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
 
     static FORCEINLINE score_t PieceValue( PieceType pieceType ) {
@@ -76,16 +76,13 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD PIN_MULTIPLIER_MID;
     static PARAM_MOD PIN_MULTIPLIER_END;
     static PARAM_MOD ROOK_VS_PAWNS;
-    static PARAM_MOD KRMINOR_VS_R;
     static PARAM_MOD KRMINOR_VS_R_NO_PAWNS;
-    static PARAM_MOD KQMINOR_VS_Q;
     static PARAM_MOD KQMINOR_VS_Q_NO_PAWNS;
     static PARAM_MOD MINOR_FOR_PAWNS;
     static PARAM_MOD ENDGAME_PAWN_ADVANTAGE;
     static PARAM_MOD PAWN_ENDGAME1;
     static PARAM_MOD PAWN_ENDGAME2;
-    static PARAM_MOD PAWN_ATTACK_FACTOR1;
-    static PARAM_MOD PAWN_ATTACK_FACTOR2;
+    static PARAM_MOD PAWN_ATTACK_FACTOR;
     static PARAM_MOD MINOR_ATTACK_FACTOR;
     static PARAM_MOD MINOR_ATTACK_BOOST;
     static PARAM_MOD ROOK_ATTACK_FACTOR;
@@ -94,6 +91,12 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD QUEEN_ATTACK_FACTOR;
     static PARAM_MOD QUEEN_ATTACK_BOOST;
     static PARAM_MOD QUEEN_ATTACK_BOOST2;
+    static PARAM_MOD OWN_PIECE_KING_PROXIMITY_MIN;
+    static PARAM_MOD OWN_PIECE_KING_PROXIMITY_MAX;
+    static PARAM_MOD OWN_MINOR_KING_PROXIMITY;
+    static PARAM_MOD OWN_ROOK_KING_PROXIMITY;
+    static PARAM_MOD OWN_QUEEN_KING_PROXIMITY;
+
     static PARAM_MOD KING_ATTACK_COVER_BOOST_BASE;
     static PARAM_MOD KING_ATTACK_COVER_BOOST_SLOPE;
     static PARAM_MOD PAWN_THREAT_ON_PIECE_MID;
@@ -146,13 +149,11 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD QUEENING_SQUARE_CONTROL_END;
     static PARAM_MOD QUEENING_SQUARE_OPP_CONTROL_MID;
     static PARAM_MOD QUEENING_SQUARE_OPP_CONTROL_END;
-    static PARAM_MOD WRONG_COLOR_BISHOP;
     static PARAM_MOD SIDE_PROTECTED_PAWN;
 
     // The following tables are computed from tuning parameters.
     static PARAM_MOD KING_OPP_PASSER_DISTANCE[6];
     static PARAM_MOD KING_POSITION_LOW_MATERIAL[3];
-    static PARAM_MOD TRADE_DOWN[8];
     static PARAM_MOD KING_ATTACK_SCALE[KING_ATTACK_SCALE_SIZE];
     static PARAM_MOD PASSED_PAWN[2][8];
     static PARAM_MOD PASSED_PAWN_FILE_ADJUST[8];
@@ -179,9 +180,11 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD QUEEN_MOBILITY[2][24];
     static PARAM_MOD KING_MOBILITY_ENDGAME[5];
 
-    // outpost scores
-    static PARAM_MOD KNIGHT_OUTPOST[2][64][2];
-    static PARAM_MOD BISHOP_OUTPOST[2][64][2];
+    // outpost scores [phase][defended]
+    static PARAM_MOD KNIGHT_OUTPOST[2][2];
+    static PARAM_MOD BISHOP_OUTPOST[2][2];
+
+    static PARAM_MOD PAWN_STORM[4][2];
 
     // not tuned presently (fixed)
     static const int MATERIAL_SCALE[32];

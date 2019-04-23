@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2012, 2013, 2017 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2012, 2013, 2017-8 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _NOTATION_H
@@ -35,13 +35,16 @@ class Notation {
     // Returns NullMove if the string cannot be parsed or if the
     // move is ambiguous.  Note: a successful return value does not
     // necessarily mean the move is legal.
+    //
+    // If checkLegal = false, relax even an incomplete legality check
+    // (allows move into check).
     static Move value( const Board &b, 
                        ColorType color, InputFormat format,
-                       const string &str);
+                       const string &str,
+                       bool checkLegal = true);
 
  protected:
-    static Move parseCastling( const Board &b,
-                               ColorType color, const string &moveStr);
+    static Move parseCastling(ColorType color, const string &moveStr);
 };
 
 #endif

@@ -1,44 +1,47 @@
-post 20.3
+post 21.0
 
-Android build, support cross-compilation
+1. Android build, support cross-compilation
 
-Revisit IID conditions
-Consider IID even when hash move is present but depth is low (Gull)
+2. Use CMAKE to avoid need for different Makefiles.
 
-singular extensions
+3. Revisit IID conditions. Consider IID even when hash move is present but depth is low (Gull)
 
-implement UCI_Opponent
+4. implement UCI_Opponent
 
-change reduction based on node type
-change redudction based on "improving" test (Stockfish)
-       - neither works so far
+5. change reduction/pruning based on node type - does not work so far.
 
-New book format (
-LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database)
-LevelDB, RocksDB
+6. New book format? (LMBD - https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database. Or LevelDB, RocksDB).
 
-Dropout expansion
+7. Book learning. Dropout expansion? Implement aa sytem for learning from self-play games.
 
-better book selection - see
-http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+8. Tuner ideas:
+    a.  Allow tuner to use mini-batches.
+    b.  Look into SVRG for optimization (https://papers.nips.cc/paper/4937-accelerating-stochastic-gradient-descent-using-predictive-variance-reduction.pdf).
+    c.  Experiment with regulatization (currently not used).
+    d.  Consider L1 regularization for tuner, possibly with smooth approximation (http://pages.cs.wisc.edu/~gfung/GeneralL1/L1_approx_bounds.pdf)
+    e.  Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper (http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf).
 
-Allow tuner to use mini-batches
+9. Occasionally there are losses on time - tune time mgmt when very near time limit.
 
-outpost calc - looks wonky/interacts with PST.
+10. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on. (This has been at least partialy addresed).
 
-losses on time - tune time mgmt when very near time limit
+11. Further LazySMP improvements:
+   a. see http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
+   b. improve thread depth distribution logic, see: http://talkchess.com/forum3/viewtopic.php?f=7&t=68154. - done, needs more testing though.
 
-Multi-core scaling sucks! LazySMP?
-http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
-for NUMA: memory striping for hash. Rebind memory on thread resize
+12. Build release binaries with NUMA support. Windows at least should use static version of hwloc library if possible.
 
-pin-aware SEE (Stockfish idea)
+13. for NUMA: consider memory striping for hash. Rebind memory on thread resize.
+
+14. pin-aware SEE (Stockfish idea)
 https://github.com/mcostalba/Stockfish/commit/90ce24b11ea080f923e1b5d37470e2ca98f4d98b
 
-Consider L1 regularization for tuner, possibly with smooth approximation (http://pages.cs.wisc.edu/~gfung/GeneralL1/L1_approx_bounds.pdf)
+15. See if protocol module can be further simplified/slimmed down.
 
-Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper.
-http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf
+16. Windows GUI badly needs a rewrite, better graphics.
 
+17. Make logging work better under UCI.
 
+18. Implement position learning in UCI mode.
 
+19. Engine code does not compile with C++-17 due to std::byte conflict with the byte typedef in types.h.

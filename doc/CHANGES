@@ -1,3 +1,100 @@
+Changes in Arasan 21.3:
+ 1) Fix possible array overflow in search.
+ 2) Clean up draw code; fix bug where 2-fold repetition at root caused
+    draw to be signalled.
+ 3) When a hash hit occurs in the qsearch, do a more correct check
+    that the hash move meets conditiions for the current phase of
+    the search, before using it. Also: remove pruning for hash
+    moves in qsearch.
+ 4) Remove eval test before doing checks in qsearch.
+ 5) Simplify book selection logic. Add an additional option for
+    controlling how important explicit book weights are.
+ 6) Fix bounds overflow in king proximity table.
+ 7) Remove some scoring parameters that were tuned to zero or near-zero.
+ 8) Reset controller stop flag before search. Fixes issue #21.
+ 9) For pruning decisions, use modified depth but not the same as
+    LMR depth (idea from Laser). Allow pruning of non-root PV nodes.
+ 10) Store history scores on all moves including pruned ones.
+ 11) Use counter move and follow-up history for pruning like Stockfish.
+ 12) Omit futility pruning for moves with good history.
+ 13) Fixes/simplifications to ProbCut code. Reduce ProbCut margin.
+ 14) Adjust SEE pruning margin for non-quiet moves.
+ 15) Don't do quiet move pruning if side to move has no pieces.
+ 16) Assorted code cleanup. Add unit tests for search.
+
+Changes in Arasan 21.2 (Dec. 2018):
+ 1) Add support for >64 cores.
+ 2) Rework NUMA support to use hwloc 2.x API. Add code to handle Windows
+    processor groups (not really tested at present).
+ 3) Bug fix: don't access counter move arrays when previous move was null.
+ 4) Fix bug in thread usage reporting.
+ 5) Bug fix: beta could be outside MATE score range during singular search.
+ 6) Don't do check extension if outside late move pruning limit (like
+    Stockfish).
+ 7) Make LMP dependent on improving flag.
+ 8) Set contempt based on ratings with sigmoid function: avoids
+    excessively large contempt values.
+ 9) Improvements in time management.
+ 10) Fixes in Winboard protocol.
+ 11) Suppress trace information from the polling thread: fixes issues when
+    running with trace flag (-t) on.
+ 12) Fix thread selection logic at end of search so that main search is not
+    selected if it does not have a PV.
+ 13) Add some scoring for pawn storms (pawn advances near opposing
+    king).
+ 14) Changes to "lazy SMP" thread depth distribution.
+ 15) Fix node count & time reporting for "test" command.
+
+Changes in Arasan 21.1 (Oct. 2018):
+ 1) Fix bug in generateCaptures.
+ 2) Change depth resolution and check extension.
+ 3) Use improving status to adjust LMR values (like Stockfish). Adjust LMR
+    logic.
+ 4) More depth-dependent reduction in null move search.
+ 5) Improvements to time management.
+ 6) Add move overhead option.
+ 7) Do see pruning at higher depths, with a margin (idea from Stockfish).
+ 8) Don't use conditional variable/mutex for handling the wait for
+    all threads to complete at search end. Instead, just poll in the
+    main thread.
+ 9) Major cleanup of UCI/Winboard protocol code. Fix some race conditions
+    that could cause engine to not respond in rare cases.
+ 10) Enable singular extensions.
+ 11) Restructure history code and implement "follow up history" (Ethereal's
+     term), similar to Stockfish continuation history.
+ 12) Convert main history table to butterfly boards.
+ 
+Changes in Arasan 21.0 (June 2018):
+ 1) Implement LazySMP instead of YBWC for multi-threading (major re-structuring).
+ 2) Stricter/earlier validity checking on hash move.
+ 3) When failing low with a mate score, widen the aspiration window all
+    the way to -Mate1. Fixes Github issue #16.
+ 4) Improvements to time management. When failing low, extend time based on
+    how bad & how recent the fail low(s) were. When failing high, extend
+    time but less than for a fail-low.
+ 5) When storing a hash entry that is an eval score, store the hash move
+    also, if there is one. Remove an unnecessary test in qsearch.
+ 6) In Winboard mode, send a response to "ping" immediately when pondering. 
+ 7) Fix regression in "go searchmoves" command (Github issue #17).
+ 8) Reset search status (by calling "new" internally) after receiving
+    "result." Fixes issues when running matches offline under xboard,
+    which may start a new game w/o sending "new."
+ 9) Fixes to Winboard edit mode.
+ 10) Don't resign lost tb positions unless far behind in material.
+ 11) Apply filtering to root moves before forced move detection. Change
+     forced move logic - terminate even if failing high/low.
+ 12) Simplify outpost scoring.
+ 13) Add scoring terms to encourage own piece proximity to King when King is
+     under attack.
+ 14) Changes to book move selection logic and associated options.
+ 15) Fix a possible bug in handling of weight comments in makebook utility.
+ 16) Fix output of objective value from tuner. Bug fix in scaling of gradient -
+     makes convergence faster.
+ 17) Increase probcut min depth.
+ 18) Fixes to Winboard "memory" command.
+ 19) Quite a bit of code cleanup and conversion to C++11 style. Add some unit
+     tests.
+
 Changes in Arasan 20.5:
  1) Have tuner output objective value to params file.
  2) Bug fix in more() function of RootMoveGenerator.

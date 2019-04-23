@@ -14,8 +14,10 @@ extern "C" {
 #include <memory.h>
 #include <time.h>
 };
+#include <atomic>
+#include <functional>
+#include <list>
 #include <random>
-#include <vector>
 using namespace std;
 
 class MoveGenerator;
@@ -30,16 +32,16 @@ struct NodeInfo {
     score_t best_score;
     score_t alpha, beta;
     int cutoff;
-    int num_try;
+    int num_quiets;
+    int num_legal;
     int flags;
     Move singularMove;
     Move best;
     Move last_move;
-    int extensions; // mask of extensions
     score_t eval, staticEval;
     Move pv[Constants::MaxPly];
     int pv_length;
-    Move done[Constants::MaxMoves];
+    Move quiets[Constants::MaxMoves];
 #ifdef MOVE_ORDER_STATS
     int best_count;
 #endif
@@ -71,10 +73,7 @@ enum SearchType { FixedDepth, TimeLimit, FixedTime };
 
 class SearchController;
 
-typedef void (CDECL *PostFunction)(const Statistics &);
-typedef int (CDECL *TerminateFunction)(const Statistics &);
-
-class Search : public ThreadControl {
+class Search {
 
     friend class ThreadPool;
     friend class SearchController;
@@ -85,7 +84,7 @@ public:
 
     virtual ~Search() = default;
 
-    void init(NodeStack &ns, ThreadInfo *child_ti);
+    void init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
                    int ply, int depth, int flags = 0) {
@@ -111,8 +110,6 @@ public:
     NodeInfo * getNode() const {
         return node;
     }
-
-    int master() const { return ti->index == 0; }
 
     void stop() {
         terminate = 1;
@@ -142,8 +139,8 @@ public:
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth,
                         int depth,
-                        const vector<Move> &exclude,
-                        const vector<Move> &include);
+                        const MoveSet &exclude,
+                        const MoveSet &include);
 
     bool mainThread() const {
        return ti->index == 0;
@@ -151,31 +148,27 @@ public:
 
 protected:
 
-    enum Extension_Type { RECAPTURE=1, CHECK=2, PAWN_PUSH=4, CAPTURE=8,
-                          FORCED=16, LMR=64, SINGULAR_EXT=128 };
-
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, SINGULAR=8, PROBCUT=16 };
 
     int calcExtensions(const Board &board,
                        NodeInfo *node,
                        CheckStatusType in_check_after_move,
                        int moveIndex,
+                       int improving,
                        Move move);
 
-    void storeHash(const Board &board, hash_t hash, Move hash_move, int depth);
+    void storeHash(hash_t hash, Move hash_move, int depth);
 
     int updateRootMove(const Board &board,
                        NodeInfo *node, Move move, score_t score, int move_index);
 
-    int updateMove(const Board &,
-                   NodeInfo* myNode, Move move,
-                   score_t score, int ply, int depth);
+    int updateMove(NodeInfo* myNode, Move move, score_t score, int ply);
 
     void updatePV(const Board &, Move m, int ply);
 
     void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
 
-    int checkTime(const Board &board,int ply);
+    int checkTime();
 
     void showStatus(const Board &board, Move best, bool faillow, bool failhigh);
 
@@ -184,7 +177,11 @@ protected:
 
     score_t futilityMargin(int depth) const;
 
+    int lmpCount(int depth, int improving) const;
+
     score_t razorMargin(int depth) const;
+
+    score_t seePruningMargin(int depth, bool quiet) const;
 
     FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
@@ -194,7 +191,7 @@ protected:
         node->beta = beta;
         node->flags = flags;
         node->best = NullMove;
-        node->num_try = 0;
+        node->num_quiets = node->num_legal = 0;
         node->ply = ply;
         node->depth = depth;
         node->cutoff = 0;
@@ -226,7 +223,7 @@ protected:
     void setTalkLevelFromController();
 
     void updateStats(const Board &, NodeInfo *node,int iteration_depth,
-		     score_t score, score_t alpha, score_t beta);
+		     score_t score);
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 
@@ -238,7 +235,6 @@ protected:
     SearchContext context;
     int terminate;
     int nodeAccumulator;
-    bool fail_high_root;
     NodeInfo *node; // pointer into NodeStack array (external to class)
     Scoring scoring;
     ThreadInfo *ti; // thread now running this search
@@ -248,6 +244,7 @@ protected:
     Options::SearchOptions srcOpts;
     ColorType computerSide;
     score_t contempt;
+    int age;
     TalkLevel talkLevel;
 };
 
@@ -259,6 +256,9 @@ public:
 
     ~SearchController();
 
+    typedef std::function<void(const Statistics &)> PostFunction;
+    typedef std::function<int(SearchController *,const Statistics &)> MonitorFunction;
+
     Move findBestMove(
         const Board &board,
         SearchType srcType,
@@ -269,8 +269,8 @@ public:
         int isUCI,
         Statistics &stat_buf,
         TalkLevel t,
-        const vector<Move> &exclude,
-        const vector<Move> &include);
+        const MoveSet &exclude,
+        const MoveSet &include);
 
     Move findBestMove(
         const Board &board,
@@ -284,7 +284,23 @@ public:
         TalkLevel t);
 
     uint64_t getTimeLimit() const {
-        return time_target + time_added;
+        if (typeOfSearch == TimeLimit && time_limit != INFINITE_TIME) {
+            // time boost/decrease based on search history:
+            int64_t extension = bonus_time;
+            if (fail_low_root_extend) {
+                // presently failing low, allow up to max extra time
+                extension += int64_t(xtra_time);
+            }
+            else if (fail_high_root || fail_high_root_extend) {
+                // extend time for fail high, but less than for
+                // failing low
+                extension += int64_t(xtra_time)/2;
+            }
+            extension = std::max<int64_t>(-int64_t(time_target),std::min<int64_t>(int64_t(xtra_time),extension));
+            return uint64_t(int64_t(time_target) + extension);
+        } else {
+            return time_limit;
+        }
     }
 
     uint64_t getMaxTime() const {
@@ -293,15 +309,22 @@ public:
 
     void terminateNow();
 
+    // Set a "post" function that will be called from the
+    // search to output status data (for Winboard; also used
+    // in test mode). Returns the previous function instance.
     PostFunction registerPostFunction(PostFunction post) {
         PostFunction tmp = post_function;
         post_function = post;
         return tmp;
     }
 
-    TerminateFunction registerTerminateFunction(TerminateFunction term) {
-        TerminateFunction tmp = terminate_function;
-        terminate_function = term;
+    // Set a "monitor" function that will be called during the
+    // search. This function returns 1 if the search should
+    // terminate. This function returns the previous function
+    // instance.
+    MonitorFunction registerMonitorFunction(MonitorFunction func) {
+        MonitorFunction tmp = monitor_function;
+        monitor_function = func;
         return tmp;
     }
 
@@ -321,17 +344,31 @@ public:
 
     void updateSearchOptions();
 
-    void setBackground(int b) {
+    void setBackground(bool b) {
         background = b;
+    }
+
+    bool pondering() const noexcept {
+        return is_searching && background;
+    }
+
+    bool searching() const noexcept {
+        return is_searching;
     }
 
     void setTimeLimit(uint64_t limit,uint64_t xtra) {
         typeOfSearch = TimeLimit;
         time_limit = time_target = limit;
         xtra_time = xtra;
+        // re-calculate bonus time
+        applySearchHistoryFactors();
     }
 
     void setContempt(score_t contempt);
+
+    score_t getContempt() const noexcept {
+       return contempt;
+    }
 
     // Note: should not call this while searching
     void setThreadCount(int threads);
@@ -341,10 +378,6 @@ public:
     }
 
     void uciSendInfos(const Board &, Move move, int move_index, int depth);
-
-    bool isActive() const {
-        return active;
-    }
 
     void stop() {
         stopped = true;
@@ -374,16 +407,6 @@ public:
       return 0;
    }
 
-#ifdef NUMA
-    void rebind() {
-        pool->rebind();
-    }
-
-    void unbind() {
-        pool->unbind();
-    }
-#endif
-
     uint64_t getElapsedTime() const {
        return elapsed_time;
     }
@@ -399,6 +422,8 @@ public:
 
    void updateGlobalStats(const Statistics &);
 
+   Statistics * getBestThreadStats(bool trace) const;
+
    uint64_t totalNodes() const {
       return pool->totalNodes();
    }
@@ -407,14 +432,40 @@ public:
       return pool->totalHits();
    }
 
+   // Adjust time usage after root fail high or fail low. A temporary
+   // time extension is done to allow resolution of the fail high/low.
+   // Called from main thread.
+   void outOfBoundsTimeAdjust();
+
+   // Calculate the time adjustment after a root search iteration has
+   // completed (possibly with one or more fail high/fail lows).
+   // Called from main thread.
+   void historyBasedTimeAdjust(const Statistics &stats);
+
+   // Apply search history factors to adjust time control
+   void applySearchHistoryFactors();
+
+   bool mainThreadCompleted() const noexcept {
+       return pool->isCompleted(0);
+   }
+
+   const Statistics &getGlobalStats() const noexcept {
+       return *stats;
+   }
+
+#ifdef NUMA
+   void recalcBindings() {
+       pool->recalcBindings();
+   }
+#endif
 
 private:
 
     // pointer to function, called to output status during
     // a search.
-    void (CDECL *post_function)(const Statistics &);
+    PostFunction post_function;
 
-    int (CDECL *terminate_function)(const Statistics &);
+    MonitorFunction monitor_function;
 
     // check console input
     int check_input(const Board &);
@@ -424,23 +475,29 @@ private:
        return dist(random_engine);
     }
 
+    unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
+        unsigned max_depth);
+
     int uci;
     int age;
     TalkLevel talkLevel;
     // time limit is nominal time limit in centiseconds
     // time target is actual time to search in centiseconds
     uint64_t time_limit, time_target;
-    uint64_t time_added;
-    // Amount of time we can add if score is dropping:
+    // Max amount of time we can add if score is dropping:
     uint64_t xtra_time;
+    atomic<int64_t> bonus_time;
+    bool fail_high_root_extend, fail_low_root_extend, fail_high_root;
+    // Factors to use to adjust time up/down based on search history:
+    double searchHistoryBoostFactor, searchHistoryReductionFactor;
     int ply_limit;
-    int background;
+    atomic<bool> background;
+    atomic<bool> is_searching;
     // flag for UCI. When set the search will terminate at the
     // next time check interval:
     bool stopped;
     SearchType typeOfSearch;
     int time_check_counter;
-    int failLowFactor;
 #ifdef SMP_STATS
     int sample_counter;
 #endif
@@ -450,30 +507,44 @@ private:
     CLOCK_TYPE startTime;
     CLOCK_TYPE last_time;
     ThreadPool *pool;
-    bool active;
     Search *rootSearch;
     int tb_root_probes, tb_root_hits;
 
-    vector<Move> include;
-    vector<Move> exclude;
+    MoveSet include;
+    MoveSet exclude;
+
+    struct SearchHistory
+    {
+        Move pv;
+        score_t score;
+
+        SearchHistory() : pv(NullMove), score(Constants::INVALID_SCORE)
+        {
+        }
+
+        SearchHistory(Move m, score_t value) : pv(m), score(value)
+        {
+        }
+    };
+
+    array<SearchHistory,Constants::MaxPly> rootSearchHistory;
 
 #ifdef SYZYGY_TBS
-    int tb_hit;
+    int tb_hit, tb_dtz;
     score_t tb_score;
 #endif
 
     Board initialBoard;
     score_t initialValue;
-    Move easyMove;
-    score_t easyScore;
-    int depth_at_pv_change;
-    bool easy_adjust, fail_high_root_extend, fail_low_root_extend;
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature
     std::mt19937_64 random_engine;
 
     uint64_t elapsed_time; // in milliseconds
+    std::array <unsigned, Constants::MaxPly> search_counts;
+    std::mutex search_count_mtx;
+
 #ifdef SMP_STATS
     uint64_t samples, threads;
 #endif

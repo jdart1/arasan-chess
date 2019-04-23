@@ -1,128 +1,115 @@
-// Copyright 2016 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018 by Jon Dart. All Rights Reserved.
 #include "topo.h"
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 
+using namespace std;
+
 #include "globals.h"
-extern "C" {
-#include "hwloc/helper.h"
-};
 
 Topology::Topology()
 {
-   int ret = init();
-   if (ret) {
-      std::cout << "error initializing topology" << std::endl;
-   }
-   else {
-      computeSet();
-   }
+    int ret = init();
+    if (ret) {
+        cout << "error initializing topology" << std::endl;
+    }
+    else {
+        cout << description() << endl;
+        computeSet();
+    }
 }
 
 Topology::~Topology()
 {
-   cleanup();
+    cleanup();
 }
 
 std::string Topology::description() const {
-   int socks = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_SOCKET);
-   int cores = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_CORE);
-   int cpus  = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_PU);
-   std::stringstream s;
-   s << "detected " << socks << " socket(s), " <<
-      cores << " core(s), " << cpus << " logical processing units.";
-   return s.str();
+    int socks = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_SOCKET);
+    int cores = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_CORE);
+    int cpus  = hwloc_get_nbobjs_by_type(topo, HWLOC_OBJ_PU);
+    std::stringstream s;
+    s << "detected " << socks << " socket(s), " <<
+        cores << " core(s), " << cpus << " logical processing units.";
+    return s.str();
 }
 
-int Topology::bind(int index)
+int Topology::bind(ThreadInfo *thread)
 {
-   if (!options.search.set_processor_affinity) {
-      return 0;
-   }
-   hwloc_obj_t core = hwloc_get_obj_inside_cpuset_by_type(topo,
-                                                          set,
-                                                          HWLOC_OBJ_CORE,
-                                                          index);
-   if (!core) {
-      return -1;
-   }
-   int result;
-   // bind to only a single PU within the core
-   hwloc_cpuset_t bind_set = hwloc_bitmap_dup(core->allowed_cpuset);
-   hwloc_bitmap_singlify(bind_set);
-   result = hwloc_set_cpubind(topo,bind_set,HWLOC_CPUBIND_STRICT | HWLOC_CPUBIND_THREAD);
-#ifdef _TRACE
-   char buf[100];
-   hwloc_bitmap_snprintf(buf,100,bind_set);
-   std::cout << "bound thread " << index << " to " << buf << std::endl;
-#endif
-   hwloc_bitmap_free(bind_set);
-   if (result) {
-      return result;
-   }
-   return result;
-}
-
-static void accum(hwloc_obj_t obj,hwloc_cpuset_t set, int &count,
-                  int offset, int n)
-{
-   // do a depth-first traversal of the tree, which will place cpus
-   // together that share common parent(s).
-   for (unsigned i = 0; i < obj->arity; i++) {
-      if (obj->children[i]->type == HWLOC_OBJ_CORE) {
-         if (count >= offset && count < n) {
-            // TBD: hyperthreading may cause > 1 bit to be set here
-            hwloc_bitmap_or(set,set,obj->children[i]->allowed_cpuset);
-         }
-         ++count;
-         // do not traverse below CPU level
-      } else {
-         accum(obj->children[i],set,count,offset,n);
-      }
-
-   }
+    return hwloc_set_thread_cpubind(topo,thread->thread_id,cpuset[thread->index],HWLOC_CPUBIND_THREAD | HWLOC_CPUBIND_STRICT);
 }
 
 void Topology::recalc() {
-   cleanup();
-   init();
-   computeSet();
+    cleanup();
+    init();
+    computeSet();
 }
 
-void Topology::reset() {
-   hwloc_obj_t root = hwloc_get_root_obj(topo);
-   hwloc_bitmap_free(set);
-   set = hwloc_bitmap_dup(root->allowed_cpuset);
-}
-
-void Topology::computeSet()
+int Topology::computeSet()
 {
-   const int n = options.search.ncpus;
-   const int offset = options.search.affinity_offset;
-   hwloc_obj_t root = hwloc_get_root_obj(topo);
-   if (hwloc_bitmap_weight(root->allowed_cpuset) < n + offset) {
-      std::cerr << "warning: available CPUs < requested core count + offset (" <<
-         n+offset << ")" << std::endl;
-   }
-   int count = 0;
-   hwloc_bitmap_zero(set);
-   accum(root,set,count,offset,n);
+    const int n = options.search.ncpus;
+
+    if (options.search.set_processor_affinity) {
+        hwloc_obj_t root = hwloc_get_root_obj(topo);
+        int result = hwloc_distrib(topo, &root, 1, cpuset, n,  std::numeric_limits<int>::max(), static_cast<unsigned long>(0));
+        if (result) {
+            cerr << "hwloc_distrib failed" << endl;
+            return -1;
+        }
+        // hwloc_distrib may return a range of cpus on which threads can be
+        // allocated. Use hwloc_bitmap_singlify here to assign each thread
+        // to a unique CPU, minimizing migration costs.
+        for (int i = 0; i < n; i++) {
+            hwloc_bitmap_singlify(cpuset[i]);
+        }
+    } else {
+        hwloc_const_cpuset_t allowed = hwloc_topology_get_allowed_cpuset(topo);
+        // each thread can be allocated on any node:
+        for (int i = 0; i < n; i++) {
+#ifdef _WIN32
+            // under Windows we must allocate threads in a processor group,
+            // and so the allowed CPUs cannot cross a 64-bit boundary
+            auto allowed_group = hwloc_bitmap_dup(allowed);
+            int first = hwloc_bitmap_first(allowed_group);
+            int last = hwloc_bitmap_last(allowed_group);
+            if (first == -1 || last == -1) {
+                cerr << "no avaialable CPUS" << endl;
+                return -1;
+            }
+            for (int j = first; j < last; j++) {
+                if (j < i/64 || j >= 64*(1+i/64)) {
+                    hwloc_bitmap_clr(allowed_group,j);
+                }
+            }
+            hwloc_bitmap_copy(cpuset[i],allowed_group);
+            hwloc_bitmap_free(allowed_group);
+#else
+            hwloc_bitmap_copy(cpuset[i],allowed);
+#endif
+        }
+    }
+    return 0;
 }
 
 
 void Topology::cleanup()
 {
-   hwloc_topology_destroy(topo);
-   hwloc_bitmap_free(set);
+    hwloc_topology_destroy(topo);
+    for (int i = 0; i < Constants::MaxCPUs; i++) {
+        hwloc_bitmap_free(cpuset[i]);
+    }
 }
 
 int Topology::init() {
-   set = hwloc_bitmap_alloc();
-   if (hwloc_topology_init(&topo)) {
-      return 1;
-   }
-   return hwloc_topology_load(topo);
+    for (int i = 0; i < Constants::MaxCPUs; i++) {
+        cpuset[i] = hwloc_bitmap_alloc();
+    }
+    if (hwloc_topology_init(&topo)) {
+        return 1;
+    }
+    return hwloc_topology_load(topo);
 }
 
 

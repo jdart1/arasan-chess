@@ -1,4 +1,4 @@
-// Copyright 2013-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2019 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -13,9 +13,12 @@
 #include "scoring.h"
 #include "search.h"
 #include "globals.h"
-
+#ifdef SYZYGY_TBS
+#include "syzygy.h"
+#endif
 #include <algorithm>
 #include <iostream>
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -451,7 +454,7 @@ static const string pgn_test = "[Event \"?\"]"
 
 static int testEval() {
     // verify eval results are symmetrical (White/Black)
-    const int CASES = 41;
+    const int CASES = 43;
     static const string fens[CASES] = {
         "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
         "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
@@ -493,7 +496,9 @@ static int testEval() {
         "8/8/8/1K6/3N4/k5p1/6N1/8 b - - 0 92",
         "1r5k/3nbp2/1r2b1pP/3np3/2B1R3/1NN4q/1PPB2R1/1K3Q2 b - - 0 31",
         "8/6pk/6p1/4r3/1Qp5/4qPpP/6P1/6RK b - - 0 44",
-        "2k5/1p1b1p2/5n2/p1p1pP2/2PnPq2/3P2r1/PP3QB1/3R1RK1 b - - 0 36"
+        "2k5/1p1b1p2/5n2/p1p1pP2/2PnPq2/3P2r1/PP3QB1/3R1RK1 b - - 0 36",
+        "1r5k/3nbp2/1r2b1pP/3np3/2B1R3/1NN4q/1PPB2R1/1K3Q2 b - - 0 1",
+        "4q3/4Pp2/5P2/1p1N2k1/p5Pn/7P/2B5/5QK1 b - - 0 48"
     };
 
     int errs = 0;
@@ -560,20 +565,32 @@ static int testBitbases() {
 
 static int testDrawEval() {
     // verify detection of KBP and other draw situations
-    const int DRAW_CASES = 12;
-    static const string draw_fens[DRAW_CASES] = {
-        "k7/8/P7/B7/1K6/8/8/8 w - - 0 1", // KBP draw
-        "8/8/8/1k6/b7/p7/8/K7 b - - 0 1", // KBP draw
-        "8/8/8/8/7b/4k2p/8/6K1 b - - 0 1", // KBP draw
-        "8/7k/4B3/8/6KP/8/8/8 b - - 0 3", // KBP draw
-        "8/8/2KN3k/8/3N4/8/8/8 w - - 0 1", // KNN draw
-        "8/8/2KN3k/8/3N4/8/8/8 w - - 0 1", // KNN draw
-        "8/8/8/3n4/8/2kn3K/8/8 b - - 0 1", // KNN draw
-        "8/8/2K4k/8/3N4/8/8/8 w - - 0 1", // KN draw
-        "8/8/8/3n4/8/2k4K/8/8 b - - 0 1", // KN draw
-        "8/8/8/8/8/2k4K/8/8 b - - 0 1", // KK draw
-        "8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1", // KB vs KB draw (same color)
-        "8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1" // KBPP draw
+    const int DRAW_CASES = 13;
+    struct DrawCase
+    {
+        DrawCase(const string &f, int legal_draw) :
+            fen(f), legal(legal_draw)
+            {
+            }
+
+        string fen;
+        int legal;
+    };
+
+    static const DrawCase draw_cases[DRAW_CASES] = {
+        DrawCase("k7/8/P7/B7/1K6/8/8/8 w - - 0 1",0), // KBP draw
+        DrawCase("8/8/8/1k6/b7/p7/8/K7 b - - 0 1",0), // KBP draw
+        DrawCase("8/8/8/8/7b/4k2p/8/6K1 b - - 0 1",0), // KBP draw
+        DrawCase("8/7k/4B3/8/6KP/8/8/8 b - - 0 3",0), // KBP draw
+        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",0), // KNN draw
+        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",0), // KNN draw
+        DrawCase("8/8/8/3n4/8/2kn3K/8/8 b - - 0 1",0), // KNN draw
+        DrawCase("8/8/2K4k/8/3N4/8/8/8 w - - 0 1",1), // KN draw
+        DrawCase("8/8/8/3n4/8/2k4K/8/8 b - - 0 1",1), // KN draw
+        DrawCase("8/3K4/8/8/2b5/8/3k4/8 w - - 0 1",1), // KB draw
+        DrawCase("8/8/8/8/8/2k4K/8/8 b - - 0 1",1), // KK draw
+        DrawCase("8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1",1), // KB vs KB draw (same color)
+        DrawCase("8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1",0) // KBPP draw
         // technically these are draws but not recognized yet:
         //"8/8/8/1k6/b7/p7/8/2K5 b - - 0 1", // KBP draw
         // 8/5k2/8/5B2/8/6KP/8/8 w - - 0 1 // KBP draw
@@ -593,14 +610,18 @@ static int testDrawEval() {
 #endif
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
-        if (!BoardIO::readFEN(board, draw_fens[i].c_str())) {
-            cerr << "testDrawEval draw case " << i << " error in FEN: " << draw_fens[i] << endl;
+        if (!BoardIO::readFEN(board, draw_cases[i].fen.c_str())) {
+            cerr << "testDrawEval draw case " << i << " error in FEN " << endl;
             ++errs;
             continue;
         }
         Scoring *s = new Scoring();
-        if (!s->isDraw(board)) {
-            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_fens[i] << endl;
+        if (s->isLegalDraw(board) != draw_cases[i].legal) {
+            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
+            ++errs;
+        }
+        if (!draw_cases[i].legal && !s->theoreticalDraw(board)) {
+            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
             ++errs;
         }
 	delete s;
@@ -613,7 +634,7 @@ static int testDrawEval() {
             continue;
         }
         Scoring *s = new Scoring();
-        if (s->isDraw(board)) {
+        if (s->isLegalDraw(board) || s->theoreticalDraw(board)) {
             cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
             ++errs;
         }
@@ -837,7 +858,7 @@ static int testHash() {
     HashEntry he;
     Move m;
 
-    HashEntry::ValueType val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he);
+    HashEntry::ValueType val = hashTable.searchHash(board.hashCode(), 1, 1, he);
     if (val == HashEntry::NoHit) {
        ++errs;
        cerr << "testHash case 1: not found" << endl;
@@ -874,7 +895,7 @@ static int testHash() {
     hashTable.storeHash(board.hashCode(),2,1,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
 
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he);
+    val = hashTable.searchHash(board.hashCode(), 1, 1, he);
     if (val == HashEntry::NoHit) {
        ++errs;
        cerr << "testHash case 2: not found" << endl;
@@ -894,7 +915,7 @@ static int testHash() {
     hashTable.storeHash(board.hashCode(),2,2,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
     // search should update age
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 3, he);
+    val = hashTable.searchHash(board.hashCode(), 1, 3, he);
     if (val == HashEntry::NoHit) {
        ++errs;
        cerr << "testHash case 3: not found" << endl;
@@ -919,7 +940,7 @@ static int testHash() {
 
     HashEntry he2;
 
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he2);
+    val = hashTable.searchHash(board.hashCode(), 1, 1, he2);
 
     if (val == HashEntry::NoHit) {
        ++errs;
@@ -952,7 +973,7 @@ static int testHash() {
 
     HashEntry he3;
 
-    val = hashTable.searchHash(board, board.hashCode(), 1, 1, 1, he3);
+    val = hashTable.searchHash(board.hashCode(), 1, 1, he3);
 
     if (val == HashEntry::NoHit) {
        ++errs;
@@ -990,7 +1011,7 @@ static int testHash() {
     hashTable.storeHash(board.hashCode(),1,10,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Constants::INVALID_SCORE,HashEntry::LEARNED_MASK,m);
 
     HashEntry he4;
-    val = hashTable.searchHash(board, board.hashCode(), 1, -1, 10, he4);
+    val = hashTable.searchHash(board.hashCode(), -1, 10, he4);
 
     if (val == HashEntry::NoHit) {
        ++errs;
@@ -1019,7 +1040,7 @@ static int testHash() {
     }
 
     // search with higher depth should return invalid entry
-    val = hashTable.searchHash(board, board.hashCode(), 1, 2, 10, he4);
+    val = hashTable.searchHash(board.hashCode(), 2, 10, he4);
     if (val != HashEntry::Invalid) {
         ++errs;
         cerr << "testHash case 6: expected invalid entry" << endl;
@@ -1031,6 +1052,231 @@ static int testHash() {
     }
 
     options.learning.position_learning = tmp;
+    return errs;
+}
+
+static int testRep()
+{
+    const string fen = "8/B2nk3/8/8/3K4/7B/8/8 w - - 0 2";
+    const array <string,4> moves = {"Ke4","Kf7","Kd4","Ke7"};
+
+    int errs = 0;
+    Board board;
+    if (!BoardIO::readFEN(board, fen)) {
+       cerr << "testRep: error in FEN: " << fen << endl;
+       return ++errs;
+    }
+    for (int reps = 1; reps <= 2; reps++) {
+        for (auto mvstr : moves) {
+            Move move = Notation::value(board,board.sideToMove(),
+                                        Notation::InputFormat::SAN,
+                                        mvstr);
+            if (IsNull(move)) {
+                cerr << "testRep: error in move parsing" << endl;
+                return ++errs;
+            }
+            board.doMove(move);
+        }
+        if (board.repCount(reps) != reps) {
+            cerr << "testRep: repCount incorrect" << endl;
+            ++errs;
+        }
+        if (reps>1 && board.repCount(1) != 1) {
+            cerr << "testRep: repCount incorrect" << endl;
+            ++errs;
+        }
+        if (!board.anyRep()) {
+            cerr << "testRep: anyRep incorrect" << endl;
+            ++errs;
+        }
+        if ((reps > 1) != Scoring::isLegalDraw(board)) {
+            cerr << "testRep: error in Scoring::isLegalDraw" << endl;
+            ++errs;
+        }
+    }
+    return errs;
+}
+
+static int testMoveGen()
+{
+    // Some basic tests for move generation, including routines used
+    // in the qsearch (not tested by perft).
+
+    enum MgType {Root, Standard, QsNoCheck, QsCheck};
+
+    struct Case
+    {
+        string fen;
+        std::array<string,4> moves;
+        Case(const string &f, const string &rm, const string &m, const string &qsn, const string &qs) :
+           fen(f), moves({rm, m, qsn, qs})
+          {
+          };
+    };
+
+    static const array<Case,7> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
+                                              "Qxf6 Qg7 Kh7",
+                                              "Qxf6 Qg7 Kh7",
+                                              "Qxf6 Qg7 Kh7",
+                                              "Qxf6 Qg7 Kh7"),
+                                         Case("3k4/3p4/8/r7/K7/8/8/8 w - - 0 3",
+                                              "Kxa5 Kb4 Kb3",
+                                              "Kxa5 Kb4 Kb3",
+                                              "Kxa5 Kb4 Kb3",
+                                              "Kxa5 Kb4 Kb3"),
+                                         Case("5rk1/2p3pp/3N4/2pP4/5P1q/P3P1r1/1BQ2nP1/4RR1K w - - 0 32",
+                                              "Kg1",
+                                              "Kg1",
+                                              "Kg1",
+                                              "Kg1"),
+                                         Case("5nk1/4P1pp/p7/3R4/1b6/4BPP1/6KP/q7 w - - 0 38",
+                                              "e8=Q e8=R e8=B e8=N exf8=Q+ exf8=N exf8=R+ exf8=B Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4",
+                                              "e8=Q exf8=Q+ exf8=N e8=N Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4 Kf1 Kg1 Kh1",
+                                              "e8=Q exf8=Q+ exf8=N e8=N",
+                                              "e8=Q exf8=Q+ exf8=N e8=N"),
+                                         Case("8/1r6/ppbpkpRp/5r1P/P1P1n3/1P4PB/6KP/4R3 b - - 0 32",
+                                              "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4",
+                                              "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+ Kd5 Rf1 Rf3 Rf4 Ra5 Rb5 Rc5 Rd5 Re5 Rg5",
+                                              "Bxa4 Rxh5 Nxg3+",
+                                              "Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+"),
+                                         Case("1k6/7R/2P3Kp/7P/8/8/5r2/8 w - - 0 81",
+                                              "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+",
+                                              "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+ Kg5 Kf7 Kf6 Kf5",
+                                              "Kxh6 Rxh6",
+                                              "Kxh6 Rxh6 Rh8+ Rb7+ c7+"),
+                                         Case("8/r5k1/1p1q3p/2pPp1pP/2P3Q1/1R6/5PPK/8 b - - 0 43",
+                                              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5",
+                                              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5 Kg6",
+                                              "Qxd5",
+                                              "Qxd5 e4+")
+    };
+
+    struct MoveKey
+    {
+        MoveKey(const Move &m) :
+            move(m),generated(false)
+            {
+            }
+        Move move;
+        bool generated;
+    };
+
+    int errs = 0;
+    int casenum = 0;
+    for (const Case &c : cases) {
+        ++casenum;
+        Board board;
+        if (!BoardIO::readFEN(board, c.fen)) {
+            cerr << "testMoveGen: error in case " << casenum << " fen." << endl;
+            ++errs;
+        }
+        else {
+            std::array<std::vector<MoveKey>,4> correct;
+
+            auto parseMoves = [&casenum, &board, &errs] (const string &moves, std::vector<MoveKey> &out) {
+                stringstream s(moves);
+                while (!s.eof()) {
+                    string movestr;
+                    s >> movestr;
+                    Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,movestr,false);
+                    if (IsNull(m)) {
+                        cerr << "testMoveGen: invalid result move, case " << casenum << " (" << movestr << ")" << endl;
+                        ++errs;
+                    } else {
+                        out.push_back(MoveKey(m));
+                    }
+                }
+            };
+
+            for (int i = 0; i < 4; i++) {
+                parseMoves(c.moves[i],correct[i]);
+            }
+            auto doMg = [&casenum, &board, &errs] (MoveGenerator &mg, vector<MoveKey> &correct, MgType type)
+                {
+                    for (auto &c : correct) {
+                        c.generated = false;
+                    }
+                    Move gen;
+                    int order = 0;
+                    static const string ids[4] = { "root", "standard", "qs_nochecks", "qs_checks"
+                    };
+                    const string id = ids[(int)type];
+                    Move moves[Constants::MaxMoves];
+                    unsigned move_index = 0, num_moves = 0;
+                    if ((type == QsNoCheck || type == QsCheck)) {
+                        if (board.checkStatus() == InCheck) {
+                            // only test movegen when not in check for
+                            // qsearch (otherwise is the same as
+                            // regular evasion generation)
+                            return;
+                        }
+                        num_moves = mg.generateCaptures(moves);
+                        if (type == QsCheck) {
+                            ColorType oside = board.oppositeSide();
+                            Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
+                            num_moves += mg.generateChecks(moves+num_moves,disc);
+                        }
+                    }
+                    for (;;) {
+                        if (type == QsNoCheck || type == QsCheck) {
+                            if (move_index >= num_moves) {
+                                gen = NullMove;
+                            }
+                            else {
+                                gen = moves[move_index++];
+                            }
+                        }
+                        else if (board.checkStatus() == InCheck) {
+                            gen = mg.nextEvasion(order);
+                        } else {
+                            gen = mg.nextMove(order);
+                        }
+                        if (IsNull(gen)) break;
+                        auto it = std::find_if(correct.begin(), correct.end(),[&] (const MoveKey &m) -> int
+                                               {return MovesEqual(gen,m.move);});
+                        if (it == correct.end()) {
+                            cerr << "testMoveGen: unexpected result move, " << id << " case " << casenum << " (";
+                            MoveImage(gen,cerr);
+                            cerr << ")" << endl;
+                            ++errs;
+                        } else if (correct[it-correct.begin()].generated) {
+                            cerr << "testMoveGen: duplicate move: " << id << " case " << casenum << " (";
+                            MoveImage(gen,cerr);
+                            cerr << ")" << endl;
+                            ++errs;
+                        } else {
+                            correct[it-correct.begin()].generated = true;
+                        }
+                    }
+                    auto err2 = std::find_if(correct.begin(),correct.end(),[](const MoveKey &r) {
+                            return !r.generated;});
+                    if (err2 != correct.end()) {
+                        stringstream mvlist;
+                        unsigned err_count = 0;
+                        for (;err2 != correct.end();err2++) {
+                            ++errs;
+                            mvlist << ' ';
+                            Notation::image(board,err2->move,Notation::OutputFormat::SAN,mvlist);
+                            ++err_count;
+                        }
+                        cerr << "testMoveGen: error in " << id << " case " << casenum << ": " << err_count << " expected move(s) not generated:" <<
+                            mvlist.str() << endl;
+                    }
+                };
+
+            RootMoveGenerator rmg(board);
+
+            doMg(rmg,correct[0],Root);
+
+            MoveGenerator mg(board,nullptr,nullptr,1);
+
+            doMg(mg,correct[1],Standard);
+
+            doMg(mg,correct[2],QsNoCheck);
+
+            doMg(mg,correct[3],QsCheck);
+        }
+    }
     return errs;
 }
 
@@ -1109,6 +1355,235 @@ static int testPerft()
    return errs;
 }
 
+static int testSearch()
+
+{
+   struct Case
+   {
+       Case(const string &s, score_t res, bool min_score = false):
+           epd(s), score(res)
+         {
+         }
+       string epd;
+       score_t score;
+   };
+
+   static array<Case,10> cases = {
+       // WCSAC 836, Pilnik-Reshevsky, 1942
+       Case("8/kp6/p7/P4Q2/6pp/4q3/8/7K w - - bm Qf2;",0),
+       // "Ragozin-Botvinnik, 1936
+       Case("1k1r2r1/ppq4p/4Q3/1B2np2/2P1p3/P7/2P1RPPR/2B1K3 b - - bm Nf3+",Constants::MATE-5),
+       // test for underpromotion
+       Case("7b/2R2Prk/6qp/3B2pn/8/5PP1/5P2/6K1 w - - bm f8=N#;",Constants::MATE-1),
+       // Petursson-Damljanovic, New York op 1988 (underpromotion, not at root)
+       Case("5R2/3P2k1/5Np1/6P1/3n1P1p/8/4pKP1/1r6 w - - bm Rg8+;",Constants::INVALID_SCORE),
+       Case("7n/Q2K1k1p/6pB/3N2P1/8/8/8/4r3 b - - bm Re7+;",0), // stalemate
+       Case("8/7k/3p4/3B2Q1/p7/P7/1K4PP/5q2 b - - bm Qf6+;",0), // stalemate, not at root
+       Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // draw
+       // Evans-Browne, USA 1971
+       Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
+       // WAC 026
+       Case("3r2k1/1p1b1pp1/pq5p/8/3NR3/2PQ3P/PP3PP1/6K1 b - - bm Bf5",Constants::INVALID_SCORE),
+       // WAC 040
+       Case("3r1r1k/1p4pp/p4p2/8/1PQR4/6Pq/P3PP2/2R3K1 b - - bm Rc8",Constants::INVALID_SCORE)
+   };
+
+   static const int DEPTH=10;
+
+   SearchController *searcher = new SearchController();
+   Statistics stats;
+   int errs = 0, caseid =0;
+   for (const Case &acase : cases) {
+       stringstream s(acase.epd);
+       Board board;
+       EPDRecord rec;
+       ChessIO::readEPDRecord(s,board,rec);
+       stats.clear();
+       Move m = searcher->findBestMove(board,
+                              FixedDepth,
+                              999999,
+                              0,            /* extra time allowed */
+                              DEPTH,        /* ply limit */
+                              false,        /* background */
+                              false,        /* UCI */
+                              stats,
+                              Silent);
+       score_t score = stats.display_value;
+       string bm;
+       if (rec.getVal("bm",bm)) {
+           string result;
+           Notation::image(board,m,Notation::OutputFormat::SAN,result);
+//           cout << caseid << " " << result << " " << score << " ";
+//           Scoring::printScore(score,cout);
+//           cout << endl;
+           if (result != bm) {
+               cerr << "error in search, case " << caseid << ": incorrect move" << endl;
+               ++errs;
+           }
+           if (acase.score != Constants::INVALID_SCORE) {
+               if (score < acase.score) {
+                   cerr << "error in search, case " << caseid << ": incorrect score (expected ";
+                   Scoring::printScore(acase.score,cerr);
+                   cerr << ", got ";
+                   Scoring::printScore(score,cerr);
+                   cerr << ")" << endl;
+                   ++errs;
+               }
+           }
+       } else {
+           cerr << "error in search, case " << caseid << ": missing bm" << endl;
+       }
+       ++caseid;
+   }
+   delete searcher;
+   return errs;
+}
+
+
+#ifdef SYZYGY_TBS
+static int testTB()
+{
+   struct Case
+   {
+       Case(const string &s, score_t res, const string &mvs):
+           fen(s), result(res), moves(mvs)
+         {
+         }
+      string fen;
+      score_t result;
+      string moves;
+   };
+
+   static array<Case,15> cases = {
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
+           "Nd6+"),
+       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
+           "Qf4+, Kf7, Ke7, Kg7, Qg5, Qg7, Qf8, Qg6, Qh5, Qh3, Qh1, Qh8"),
+       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE,"Ne4"),
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE,
+            "c4, Kc7, Kd7, Kd8"),
+       Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,
+            "Ra8, Rb8"),
+       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,
+            "Nc1#, Nc3#"),
+       Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,
+            "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
+       Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,"exf6"),
+       Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,
+            "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R"),
+       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",Constants::MATE,""),
+       Case("7k/8/6Q1/p7/P7/3K4/8/8 b - - 0 1",0,""), // stalemate
+       Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0, "Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
+       Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,
+            "Rg6, Kc6, Rh4, Kc5, d6, Ra4, dxe6, Re4, Rg3, Rc4"),
+       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,
+            "Kd2, Ke2, Rd8"),
+       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,"Qd8+")
+      };
+
+   int errs = 0;
+   delayedInit();
+   if (EGTBMenCount < 5) {
+      cerr << "TB tests skipped: no 5-man TBs found" << endl;
+      return 0;
+   }
+   if (EGTBMenCount < 6) {
+      cerr << "6-man TB tests skipped: no 6-man TBs found" << endl;
+   }
+   if (EGTBMenCount < 7) {
+      cerr << "7-man TB tests skipped: no 7-man TBs found" << endl;
+   }
+   int caseid = 0;
+   int temp = options.search.syzygy_50_move_rule;
+   options.search.syzygy_50_move_rule = 1;
+   const auto count_pattern = std::regex("^.* (\\d+)\\s(\\d+)$");
+   for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
+      Board board;
+      if (!BoardIO::readFEN(board, it->fen.c_str())) {
+         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << endl;
+         ++errs;
+         continue;
+      }
+      // set half-move count from FEN
+      std::smatch match;
+      if (std::regex_match(it->fen,match,count_pattern)) {
+          auto pos = it->fen.find_last_of('-');
+          if (pos != string::npos) {
+              auto it = match.begin()+1;
+              stringstream s(*it);
+              int hmc;
+              s >> hmc;
+              if (!s.bad()) {
+                  board.state.moveCount = hmc;
+              }
+          }
+      }
+      MoveSet moves;
+      score_t score;
+      int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
+      if (men > EGTBMenCount) {
+          continue;
+      } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
+         if (score != it->result) {
+            cerr << "testTB: case " << caseid << " expected ";
+            Scoring::printScore(it->result,cerr);
+            cerr << ", got ";
+            Scoring::printScore(score,cerr);
+            cerr << endl;
+            ++errs;
+         }
+         stringstream s(it->moves);
+         char movechars[10];
+         string movestr;
+         MoveSet goodmoves;
+         while (s.getline(movechars, 10, ',')) {
+             movestr = movechars;
+             movestr = movestr.erase(0 , movestr.find_first_not_of(' '));
+             movestr = movestr.erase(movestr.find_last_not_of(' ') + 1);
+             Move m = Notation::value(board,board.sideToMove(),
+                                      Notation::InputFormat::SAN,
+                                      movestr,true);
+             goodmoves.insert(m);
+         }
+         if (goodmoves != moves) {
+             cerr << "testTB: case " << caseid << ": set mismatch" << endl;
+             cerr << "expected: ";
+             for (const auto &m : goodmoves) {
+                 MoveImage(m,cerr);
+                 cerr << ' ';
+             }
+             cerr << endl << "got: ";
+             for (const auto &m : moves) {
+                 MoveImage(m,cerr);
+                 cerr << ' ';
+             }
+             cerr << endl;
+             ++errs;
+         }
+      } else {
+         cerr << "testTB: case " << caseid << " no result from TBs" << endl;
+         ++errs;
+      }
+      // ensure move count is zero otherwise probe_wdl will fail
+      board.state.moveCount = 0;
+      if (SyzygyTb::probe_wdl(board,score,true)) {
+         if (score != it->result) {
+            cerr << "testTB: case " << caseid << " expected WDL score ";
+            Scoring::printScore(it->result,cerr);
+            cerr << ", got ";
+            Scoring::printScore(score,cerr);
+            cerr << endl;
+            ++errs;
+          }
+      } else {
+          cerr << "testTB: case " << caseid << ": WDL probe failed." << endl;
+          ++errs;
+      }
+   }
+   options.search.syzygy_50_move_rule = temp;
+   return errs;
+}
+#endif
 
 int doUnit() {
 
@@ -1125,6 +1600,12 @@ int doUnit() {
    errs += testCheckStatus();
    errs += testEPD();
    errs += testHash();
+   errs += testRep();
+   errs += testMoveGen();
    errs += testPerft();
+   errs += testSearch();
+#ifdef SYZYGY_TBS
+   errs += testTB();
+#endif
    return errs;
 }
