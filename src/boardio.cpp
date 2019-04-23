@@ -158,16 +158,9 @@ int BoardIO::readFEN(Board &board, const string &buf)
    ASSERT(board.state.moveCount+1<Board::RepListSize);
    board.repList[board.state.moveCount++] = board.hashCode();
 
-   // if board has no kings, clear king-related structures
-   if (board.contents[board.kingPos[White]]!=WhiteKing) {
-     board.kingPos[White] = InvalidSquare;
-     board.state.castleStatus[White] = CantCastleEitherSide;
-     board.material[White].removePiece(King);
-   }
-   if (board.contents[board.kingPos[Black]]!=BlackKing) {
-     board.kingPos[Black] = InvalidSquare;
-     board.state.castleStatus[Black] = CantCastleEitherSide;
-     board.material[Black].removePiece(King);
+   if (board.kingPos[White] == InvalidSquare ||
+       board.kingPos[Black] == InvalidSquare) {
+     return 0;
    }
    
    return 1;
