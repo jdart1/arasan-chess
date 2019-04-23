@@ -158,6 +158,11 @@ int BoardIO::readFEN(Board &board, const string &buf)
    ASSERT(board.state.moveCount+1<Board::RepListSize);
    board.repList[board.state.moveCount++] = board.hashCode();
 
+   if (board.kingPos[White] == InvalidSquare ||
+       board.kingPos[Black] == InvalidSquare) {
+     return 0;
+   }
+   
    return 1;
 }
 
