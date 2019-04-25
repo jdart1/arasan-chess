@@ -86,6 +86,8 @@ void Board::setSecondaryVars()
    occupied[White].clear();
    occupied[Black].clear();
    allOccupied.clear();
+   kingPos[White] = InvalidSquare;
+   kingPos[Black] = InvalidSquare;
    for (i=0;i<64;i++)
    {
       Square sq(i);
