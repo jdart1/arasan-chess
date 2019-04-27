@@ -2357,10 +2357,7 @@ int Search::calcExtensions(const Board &board,
 #ifdef SEARCH_STATS
           stats.check_extensions++;
 #endif
-          if (moveIndex < lmpThreshold) {
-              extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-          }
-          quiet = false;
+          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
       }
    }
    if (passedPawnPush(board,move)) {
@@ -2379,9 +2376,7 @@ int Search::calcExtensions(const Board &board,
       ++stats.capture_extensions;
 #endif
    }
-   if (extend) {
-      return std::min<int>(extend,DEPTH_INCREMENT);
-   }
+   extend = std::min<int>(extend,DEPTH_INCREMENT);
 
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
@@ -2427,7 +2422,7 @@ int Search::calcExtensions(const Board &board,
        } else if (!improving) {
            pruneDepth -= DEPTH_INCREMENT;
        }
-       if (quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
+       if (in_check_after_move != InCheck && quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
            // do not use pruneDepth for LMP
            if(GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
               moveIndex >= lmpThreshold) {
@@ -2482,6 +2477,7 @@ int Search::calcExtensions(const Board &board,
        // SEE pruning. Losing captures and checks and moves that put pieces en prise
        // are pruned at low depths.
        if (seeDepth <= SEE_PRUNING_DEPTH &&
+           //    extend <= 0 &&
            node->ply > 0 &&
            GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
            const score_t margin = seePruningMargin(seeDepth,quiet);
