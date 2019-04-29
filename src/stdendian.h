@@ -1,3 +1,5 @@
+#ifndef _STDENDIAN_H_
+#define _STDENDIAN_H_
 /* from https://gist.github.com/michaeljclark/3b4fd912f6fa8bb598b3 */
 /* modified to use functions not macros for bswap */
 /* and added a fix for Cygwin */
@@ -280,3 +282,4 @@ printf("htole64(%016llx) %016llx\n", 0xf0e0d0c0b0a09080ULL, htole64(0xf0e0d0c0b0
 }
 
 */
+#endif
