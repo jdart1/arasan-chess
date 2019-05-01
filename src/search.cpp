@@ -2345,8 +2345,7 @@ int Search::calcExtensions(const Board &board,
    // see if we should apply any extensions at this node.
    int depth = node->depth;
    int extend = 0;
-   bool quiet = Capture(move) == Empty && TypeOfMove(move) == Normal &&
-       !passedPawnMove(board,move,5);
+   bool quiet = !CaptureOrPromotion(move);
 
    const int lmpThreshold = lmpCount(depth,improving);
    score_t swap = Constants::INVALID_SCORE;
