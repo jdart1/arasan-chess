@@ -40,6 +40,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define SINGULAR_EXTENSION
 
+static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {12000, 6000};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {-500, -1500};
@@ -3029,14 +3030,9 @@ score_t Search::search()
     // Use "internal iterative deepening" to get an initial move to try if
     // there is no hash move .. an idea from Crafty (previously used by
     // Hitech).
-    if (IsNull(hashMove) &&
-        (depth >= (node->PV() ? 4*DEPTH_INCREMENT : 6*DEPTH_INCREMENT)) &&
-        (node->PV() ||
-         (board.checkStatus() == NotInCheck &&
-          node->eval >= node->beta - Params::PAWN_VALUE))) {
-        int d;
-        d = depth/2;
-        if (!node->PV()) d-=DEPTH_INCREMENT;
+    if (IsNull(hashMove) && depth >= IID_DEPTH[node->PV()]) {
+        // reduced depth for search
+        const int d = depth - IID_DEPTH[node->PV()] + DEPTH_INCREMENT;
 #ifdef _TRACE
         if (mainThread()) {
             indent(ply); cout << "== start IID, depth = " << d
