@@ -3098,6 +3098,11 @@ score_t Search::search()
             cout << endl;
         }
 #endif
+        if (iid_score <= node->alpha && node->eval > node->alpha) { // upper bound
+            node->eval = iid_score;
+        } else if (iid_score >= node->beta && node->eval < node->beta) { // lower bound
+            node->eval = iid_score;
+        }
     }
     {
         bool singularExtend = false;
