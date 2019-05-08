@@ -2589,6 +2589,7 @@ score_t Search::search()
 #ifdef SINGULAR_EXTENSION
     else if (node->flags & SINGULAR) {
         hashMove = node->singularMove;
+        ASSERT(!IsNulL(hashMove));
         result = HashEntry::Invalid;
     }
 #endif
@@ -2925,6 +2926,7 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() && board.checkStatus() == NotInCheck &&
         depth >= PROBCUT_DEPTH &&
+        !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) &&
         node->beta < Constants::MATE_RANGE) {
        const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const score_t needed_gain = probcut_beta - node->staticEval;
@@ -3103,12 +3105,14 @@ score_t Search::search()
     {
         bool singularExtend = false;
 #ifdef SINGULAR_EXTENSION
-        if (ply > 0 &&
-            depth >= SINGULAR_EXTENSION_DEPTH &&
-            !(node->flags & SINGULAR) &&
+        if (depth >= SINGULAR_EXTENSION_DEPTH &&
+            ply > 0 &&
             hashHit &&
             result == HashEntry::LowerBound &&
-            !IsNull(hashMove)) {
+            !IsNull(hashMove) &&
+            !Scoring::mateScore(hashValue) &&
+            !(node->flags & SINGULAR) &&
+            hashEntry.depth() >= depth - 3*DEPTH_INCREMENT) {
 #ifdef SEARCH_STATS
             ++stats.singular_searches;
 #endif
@@ -3165,7 +3169,9 @@ score_t Search::search()
             move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
 #ifdef SINGULAR_EXTENSION
-            if (IsUsed(move) || MovesEqual(node->singularMove,move)) continue;
+            if (IsUsed(move) || ((node->flags & SINGULAR) && MovesEqual(node->singularMove,move))) {
+                continue;
+            }
 #else
             if (IsUsed(move)) continue;
 #endif
