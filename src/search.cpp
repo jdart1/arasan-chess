@@ -2692,7 +2692,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) && board.state.moveCount == 0 && !board.castlingPossible()) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR)) && board.state.moveCount == 0 && !board.castlingPossible()) {
        stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
@@ -2772,7 +2772,7 @@ score_t Search::search()
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) &&
+        !(node->flags & (IID|VERIFY|SINGULAR)) &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
     const int improving = ply < 2 ||
@@ -2926,11 +2926,10 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() && board.checkStatus() == NotInCheck &&
         depth >= PROBCUT_DEPTH &&
-        !(node->flags & (IID|VERIFY|SINGULAR|PROBCUT)) &&
         node->beta < Constants::MATE_RANGE) {
        const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const score_t needed_gain = probcut_beta - node->staticEval;
-       const int nu_depth = depth - 3*DEPTH_INCREMENT - depth/(4*DEPTH_INCREMENT);
+       const int nu_depth = depth - 3*DEPTH_INCREMENT - depth/4;
        BoardState state(board.state);
        if (!IsNull(hashMove) && seeSign(board,hashMove,needed_gain)) {
 #ifdef _TRACE
