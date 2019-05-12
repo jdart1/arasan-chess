@@ -3124,6 +3124,10 @@ score_t Search::search()
                if (IsNull(move)) break;
                if (MovesEqual(move,hashMove)) continue;
                board.doMove(move);
+               if (!board.wasLegal(move)) {
+                   board.undoMove(move,state);
+                   continue;
+               }
                score_t value = -search(-nu_beta-1,-nu_beta,node->ply+1,nu_depth);
                board.undoMove(move,state);
                if (value > nu_beta) {
