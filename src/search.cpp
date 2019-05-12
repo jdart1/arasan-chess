@@ -2586,13 +2586,6 @@ score_t Search::search()
        // already did hash probe, with no hit
        result = HashEntry::NoHit;
     }
-#ifdef SINGULAR_EXTENSION
-    else if (node->flags & SINGULAR) {
-        hashMove = node->singularMove;
-        ASSERT(!IsNulL(hashMove));
-        result = HashEntry::Invalid;
-    }
-#endif
     else {
        // Search the hash table to see if we have hit this
        // position before.
@@ -2692,7 +2685,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR)) && board.state.moveCount == 0 && !board.castlingPossible()) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY)) && board.state.moveCount == 0 && !board.castlingPossible()) {
        stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
@@ -2749,30 +2742,29 @@ score_t Search::search()
 #ifdef _TRACE
     if (mainThread() && in_check) { indent(ply); cout << "in_check=" << in_check << endl;}
 #endif
-    // Note: for a singular search, leave the eval and staticEval
-    // fields alone: they have already been set.
-    if (!(node->flags & SINGULAR)) {
-       node->eval = node->staticEval = Constants::INVALID_SCORE;
-       if (hashHit) {
-          // Use the cached static value if possible
-          node->eval = node->staticEval = hashEntry.staticValue();
-       }
-       if (node->eval == Constants::INVALID_SCORE) {
-          node->eval = node->staticEval = scoring.evalu8(board);
-       }
-       if (hashHit) {
-          // Use the transposition table entry to provide a better score
-          // for pruning decisions, if possible
-          if (result == (hashValue > node->eval ? HashEntry::LowerBound :
-                         HashEntry::UpperBound)) {
-             node->eval = hashValue;
-          }
-       }
+    // Compute (if needed) and store the static evaluation for the current
+    // position and also update node->eval with an improved evaluation
+    // from the hash table, if possible.
+    node->eval = node->staticEval = Constants::INVALID_SCORE;
+    if (hashHit) {
+        // Use the cached static value if possible
+        node->eval = node->staticEval = hashEntry.staticValue();
+    }
+    if (node->eval == Constants::INVALID_SCORE) {
+        node->eval = node->staticEval = scoring.evalu8(board);
+    }
+    if (hashHit) {
+        // Use the transposition table entry to provide a better score
+        // for pruning decisions, if possible
+        if (result == (hashValue > node->eval ? HashEntry::LowerBound :
+                       HashEntry::UpperBound)) {
+            node->eval = hashValue;
+        }
     }
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        !(node->flags & (IID|VERIFY|SINGULAR)) &&
+        !(node->flags & (IID|VERIFY)) &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
     const int improving = ply < 2 ||
@@ -2948,7 +2940,7 @@ score_t Search::search()
            node->last_move = hashMove;
            node->num_legal++;
            score_t value = -search(-probcut_beta-1, -probcut_beta,
-                                   ply+1, nu_depth, PROBCUT);
+                                   ply+1, nu_depth);
 #ifdef _TRACE
            if (mainThread()) {
               indent(ply);
@@ -3000,7 +2992,7 @@ score_t Search::search()
                 SetPhase(moves[i],MoveGenerator::WINNING_CAPTURE_PHASE);
                 node->last_move = moves[i];
                 node->num_legal++;
-                score_t value = -search(-probcut_beta-1, -probcut_beta, ply+1, nu_depth, PROBCUT);
+                score_t value = -search(-probcut_beta-1, -probcut_beta, ply+1, nu_depth);
 #ifdef _TRACE
                 if (mainThread()) {
                    indent(ply);
@@ -3103,6 +3095,7 @@ score_t Search::search()
     }
     {
         bool singularExtend = false;
+        BoardState state(board.state);
 #ifdef SINGULAR_EXTENSION
         if (depth >= SINGULAR_EXTENSION_DEPTH &&
             ply > 0 &&
@@ -3110,7 +3103,6 @@ score_t Search::search()
             result == HashEntry::LowerBound &&
             !IsNull(hashMove) &&
             !Scoring::mateScore(hashValue) &&
-            !(node->flags & SINGULAR) &&
             hashEntry.depth() >= depth - 3*DEPTH_INCREMENT) {
 #ifdef SEARCH_STATS
             ++stats.singular_searches;
@@ -3125,36 +3117,24 @@ score_t Search::search()
            // Texel, Protector, etc.
            score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
            int nu_depth = singularExtensionDepth(depth);
-           // save current bounds & flags
-           score_t old_alpha = node->alpha;
-           score_t old_beta = node->beta;
-           int old_flags = node->flags;
-           node->depth = nu_depth;
-           node->singularMove = hashMove;
-           node->alpha = nu_beta-1;
-           node->beta = nu_beta;
-           node->flags |= SINGULAR;
-           // perform a search w/o pushing down the node stack
-           int singularScore = search();
-           singularExtend = singularScore <= nu_beta-1;
-           // reset all params
-           (node+1)->pv[ply+1] = NullMove;
-           (node+1)->pv_length = 0;
-           node->flags = old_flags;
-           node->num_legal = node->num_quiets = 0;
-           node->cutoff = 0;
-           node->depth = depth;
-           node->singularMove = NullMove;
-           node->alpha = node->best_score = old_alpha;
-           node->beta = old_beta;
-           node->last_move = NullMove;
-           node->best = NullMove;
-           node->pv[ply] = NullMove;
-           node->pv_length = 0;
+           MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
+           singularExtend = true;
+           for (;;) {
+               Move move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
+               if (IsNull(move)) break;
+               if (MovesEqual(move,hashMove)) continue;
+               board.doMove(move);
+               score_t value = -search(-nu_beta-1,-nu_beta,node->ply+1,nu_depth);
+               board.undoMove(move,state);
+               if (value > nu_beta) {
+                   // hash move is not singular
+                   singularExtend = false;
+                   break;
+               }
+           }
         }
 #endif
         MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
-        BoardState state(board.state);
         score_t try_score;
         //
         // Now we are ready to loop through the moves from this position
@@ -3167,13 +3147,7 @@ score_t Search::search()
             Move move;
             move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
-#ifdef SINGULAR_EXTENSION
-            if (IsUsed(move) || ((node->flags & SINGULAR) && MovesEqual(node->singularMove,move))) {
-                continue;
-            }
-#else
             if (IsUsed(move)) continue;
-#endif
 #ifdef SEARCH_STATS
             ++stats.moves_searched;
 #endif
@@ -3199,8 +3173,7 @@ score_t Search::search()
             }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int extend;
-            if (singularExtend &&
-                GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
+            if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
                extend = DEPTH_INCREMENT;
 #ifdef SEARCH_STATS
                ++stats.singular_extensions;
@@ -3323,36 +3296,30 @@ score_t Search::search()
         }
         if (node->num_legal == 0) {
             // no legal moves
-           if (node->flags & SINGULAR) {
-              // Do not return mate or stalemate, because we have
-              // a valid hash move. Return a fail low score.
-              return node->alpha;
-           } else {
 #ifdef _DEBUG
-              RootMoveGenerator rmg(board);
-              ASSERT(rmg.moveCount() == 0);
+            RootMoveGenerator rmg(board);
+            ASSERT(rmg.moveCount() == 0);
 #endif
-              if (in_check) {
+            if (in_check) {
 #ifdef _TRACE
-                 if (mainThread()) {
+                if (mainThread()) {
                     indent(ply); cout << "mate" << endl;
-                 }
+                }
 #endif
-                 node->best_score = -(Constants::MATE - ply);
-                 node->flags |= EXACT;
-                 goto search_end2;
-              }
-              else {                                // stalemate
+                node->best_score = -(Constants::MATE - ply);
+                node->flags |= EXACT;
+                goto search_end2;
+            }
+            else {                                // stalemate
 #ifdef _TRACE
-                 if (mainThread()) {
+                if (mainThread()) {
                     indent(ply); cout << "stalemate!" << endl;
-                 }
+                }
 #endif
-                 node->best_score = drawScore(board);
-                 node->flags |= EXACT;
-                 return node->best_score;
-              }
-           }
+                node->best_score = drawScore(board);
+                node->flags |= EXACT;
+                return node->best_score;
+            }
         }
     }
     if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
@@ -3367,7 +3334,7 @@ score_t Search::search()
     // don't insert into the hash table if we are terminating - we may
     // not have an accurate score.
  hash_insert:
-    if (!terminate && !(node->flags & SINGULAR)) {
+    if (!terminate) {
         if (IsNull(node->best)) node->best = hashMove;
         // store the position in the hash table, if there's room
         score_t value = node->best_score;
