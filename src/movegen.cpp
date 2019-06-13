@@ -3,8 +3,10 @@
 #include "movegen.h"
 #include "attacks.h"
 #include "debug.h"
+#include "globals.h"
 #include "search.h"
 #include "legal.h"
+#include "syzygy.h"
 #include <cstddef>
 #include <iostream>
 #include <fstream>
@@ -54,9 +56,7 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    batch = moves;
    batch_count = MoveGenerator::generateAllMoves(batch,0);
    for (int i=0; i < batch_count; i++) {
-      MoveEntry me;
-      me.move = batch[i];
-      me.score = 0;
+      RootMove me(batch[i],-Constants::MATE,0,0);
       moveList.push_back(me);
    }
    int j = batch_count;
@@ -95,14 +95,14 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    phase = LAST_PHASE;
 }
 
-void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
+void RootMoveGenerator::reorder(Move pvMove, score_t pvScore, int depth, bool initial)
 {
    reset();
    if (initial || depth <= EASY_PLIES) {
-      // If this is the first sort, use SEE to sort move list.
-      // Else, if in the "easy move" part of the search leave the scores
-      // intact: they are set according to the search results.
-      for (MoveEntry &m : moveList) {
+      // If this is the first sort, use SEE to assign scores to moves.
+      // Else, if in the "easy move" part of the search use the scores
+      // from the previous iteration to sort (do not reset them).
+      for (RootMove &m : moveList) {
            ClearUsed(m.move);
            if (initial) {
               // sort winning captures first
@@ -124,35 +124,45 @@ void RootMoveGenerator::reorder(Move pvMove,int depth,bool initial)
               }
            }
       }
-      if (moveList.size() > 1) {
-         std::stable_sort(moveList.begin(),moveList.end(),
-                          [](const MoveEntry &a, const MoveEntry &b)
-                          {
-                             return a.score > b.score;
-                          }
-            );
-      }
    }
    else {
-      int pvIndex = -1;
-      for (unsigned i = 0; i < moveList.size(); i++) {
-         ClearUsed(moveList[i].move);
-         // save the hash move index
-         if (MovesEqual(moveList[i].move,pvMove)) {
-             pvIndex = i;
+      for (auto &m : moveList) {
+         ClearUsed(m.move);
+         // ensure the PV move is ordered first
+         if (MovesEqual(m.move,pvMove)) {
+             m.score = pvScore;
+         } else {
+             m.score = -Constants::MATE;
          }
-      } 
-      if (pvIndex > 0) {
-          // put the hash move first and move all other moves down
-          MoveEntry pvEntry(moveList[pvIndex]);
-          for (unsigned j = pvIndex; j > 0; --j) {
-              moveList[j] = moveList[j-1];
-          }
-          moveList[0] = pvEntry;
       }
+   }
+   if (moveList.size() > 1) {
+       std::stable_sort(moveList.begin(),moveList.end(),
+                        [](const RootMove &a, const RootMove &b)
+                        {
+                            return (a.tbRank != b.tbRank) ? a.tbRank > b.tbRank :
+                                ((a.tbScore != b.tbScore) ? a.tbScore > b.tbScore :
+                                 a.score > b.score);
+                        }
+           );
    }
 }
 
+void RootMoveGenerator::reorderByScore() {
+   reset();
+   if (moveList.size() <= 1) {
+      return;
+   }
+   for (auto it : moveList) {
+      ClearUsed(it.move);
+   }
+   std::sort(moveList.begin(),moveList.end(),
+             [](const RootMove &a, const RootMove &b)
+             {
+                return a.score > b.score;
+             }
+      );
+}
 
 void RootMoveGenerator::exclude(const MoveSet &excluded)
 {
@@ -164,7 +174,7 @@ void RootMoveGenerator::exclude(const MoveSet &excluded)
    }
 }
 
-void RootMoveGenerator::filter(const MoveSet &include) 
+void RootMoveGenerator::filter(const MoveSet &include)
 {
    excluded = 0;
    for (int i = 0; i < batch_count; i++) {
@@ -191,22 +201,6 @@ void RootMoveGenerator::exclude(Move exclude) {
    }
 }
 
-void RootMoveGenerator::reorderByScore() {
-   reset();
-   if (moveList.size() <= 1) {
-      return;
-   }
-   for (auto it : moveList) {
-      ClearUsed(it.move);
-   }
-   std::sort(moveList.begin(),moveList.end(),
-             [](const MoveEntry &a, const MoveEntry &b)
-             {
-                return a.score > b.score;
-             }
-      );
-}
-
 void MoveGenerator::initialSortCaptures (Move *moves,int captures) {
    if (captures > 1) {
       int scores[40];
@@ -221,7 +215,7 @@ void MoveGenerator::initialSortCaptures (Move *moves,int captures) {
 
 Move MoveGenerator::nextEvasion(int &ord) {
    if (batch_count==0) {
-     if (phase == START_PHASE) {      
+     if (phase == START_PHASE) {
         ++phase;
         if (!IsNull(hashMove)) {
            ord = order++;
@@ -230,7 +224,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
            return hashMove;
         }
         ++phase;
-     } 
+     }
      batch_count = generateEvasions(moves);
      if (batch_count == 0) {
         return NullMove;
@@ -244,7 +238,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
              // make this the 1st move
              scores[i] = Constants::MATE;
              SetPhase(moves[i],HASH_MOVE_PHASE);
-             if (i) swap(moves,scores,0,i);   
+             if (i) swap(moves,scores,0,i);
              ++poscaps;
              // bump index so we will skip this move
              ++index;
@@ -503,7 +497,7 @@ int MoveGenerator::generateNonCaptures(Move *moves)
       Bitboard pawns(board.pawn_bits[Black]);
       pawns.shr8();
         // exclude promotions
-      pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);     
+      pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
       Square sq;
       while (pawns.iterate(sq)) {
          moves[numMoves++] = CreateMove(sq+8,sq,Pawn);
@@ -1250,5 +1244,29 @@ uint64_t RootMoveGenerator::perft(Board &b, int depth) {
       }
    }
    return nodes;
+}
+
+int RootMoveGenerator::rank_root_moves()
+{
+#ifdef SYZYGY_TBS
+    const Material &wMat = board.getMaterial(White);
+    const Material &bMat = board.getMaterial(Black);
+    int tb_pieces = wMat.men() + bMat.men();
+    int tb_hit = 0;
+    if (tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
+        tb_hit = SyzygyTb::rank_root_moves(board,
+                                           board.anyRep(),
+                                           options.search.syzygy_50_move_rule,
+                                           moveList);
+    }
+    if (tb_hit) {
+        // Sort moves on descending rank returned by Fathom
+        std::stable_sort(moveList.begin(),moveList.end(),
+                         [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
+    }
+    return tb_hit;
+#else
+    return 0;
+#endif
 }
 

@@ -51,6 +51,84 @@ int SyzygyTb::initTB(const string &path)
       return TB_LARGEST;
 }
 
+int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveList &rootMoves)
+{
+    
+    // Fathom move list
+    TbRootMoves tbMoves;
+
+    Bitboard king_bits;
+    king_bits.set(b.kingSquare(White));
+    king_bits.set(b.kingSquare(Black));
+
+    // Try to rank moves using DTZ tables.
+    int hit = tb_probe_root_dtz((uint64_t)(b.occupied[White]),
+                                (uint64_t)(b.occupied[Black]),
+                                (uint64_t)king_bits,
+                                (uint64_t)(b.queen_bits[Black] | b.queen_bits[White]),
+                                (uint64_t)(b.rook_bits[Black] | b.rook_bits[White]),
+                                (uint64_t)(b.bishop_bits[Black] | b.bishop_bits[White]),
+                                (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
+                                (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
+                                b.state.moveCount,
+                                b.castlingPossible(),
+                                // Fathom expects 0 if no e.p.,
+                                // e.p. target square for capture
+                                // otherwise
+                                b.enPassantSq()==InvalidSquare ? 0 :
+                                (b.enPassantSq() +
+                                 ((b.sideToMove() == White) ? 8 : -8)),
+                                b.sideToMove() == White,
+                                hasRepeated,
+                                useRule50,
+                                &tbMoves);
+
+    if (!hit) {
+        // Some or all DTZ tables are missing.
+        // Try to rank moves using WDL tables as fallback.
+        hit = tb_probe_root_wdl((uint64_t)(b.occupied[White]),
+                                (uint64_t)(b.occupied[Black]),
+                                (uint64_t)king_bits,
+                                (uint64_t)(b.queen_bits[Black] | b.queen_bits[White]),
+                                (uint64_t)(b.rook_bits[Black] | b.rook_bits[White]),
+                                (uint64_t)(b.bishop_bits[Black] | b.bishop_bits[White]),
+                                (uint64_t)(b.knight_bits[Black] | b.knight_bits[White]),
+                                (uint64_t)(b.pawn_bits[Black] | b.pawn_bits[White]),
+                                b.state.moveCount,
+                                b.castlingPossible(),
+                                // Fathom expects 0 if no e.p.,
+                                // e.p. target square for capture
+                                // otherwise
+                                b.enPassantSq()==InvalidSquare ? 0 :
+                                (b.enPassantSq() +
+                                 ((b.sideToMove() == White) ? 8 : -8)),
+                                b.sideToMove() == White,
+                                useRule50,
+                                &tbMoves);
+    }
+
+    if (hit) {
+        rootMoves.clear();
+        for (unsigned i = 0; i < tbMoves.size; i++) {
+            const TbRootMove &tbMove = tbMoves.moves[i];
+            // Convert from Fathom move type to Arasan type
+            rootMoves.push_back(RootMove(CreateMove(b,
+                                                    TB_MOVE_FROM(tbMove.move),
+                                                    TB_MOVE_TO(tbMove.move),
+                                                    PieceType(TB_MOVE_PROMOTES(tbMove.move))),
+                                         0,
+                                         tbMove.tbRank,
+                                         tbMove.tbScore));
+        }
+        return 1;
+    } else {
+        for (auto &rootMove : rootMoves) {
+            rootMove.tbRank = rootMove.tbScore = 0;
+        }
+        return 0;
+    }
+}
+
 int SyzygyTb::probe_root(const Board &b, bool hasRepeated, score_t &score, MoveSet &rootMoves)
 {
    score = 0;

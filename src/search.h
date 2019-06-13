@@ -536,6 +536,7 @@ private:
 
     Board initialBoard;
     score_t initialValue;
+    RootMoveList rootMoves; // ranked root moves
     int waitTime; // for strength feature
     int depth_adjust; // for strength feature
     unsigned select_subopt; // for strength feature

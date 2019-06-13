@@ -382,72 +382,36 @@ Move SearchController::findBestMove(
       }
    }
 
+   // Store a copy of the ranked root move list
+   rootMoves.clear();
+   for (const RootMove &rm : mg.getMoveList()) rootMoves.push_back(rm);
+
    time_check_counter = Time_Check_Interval;
 
    score_t value = Constants::INVALID_SCORE;
 #ifdef SYZYGY_TBS
    tb_hit = 0;
-   int tb_pieces = 0;
    options.search.tb_probe_in_search = 1;
    updateSearchOptions();
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
-   tb_dtz = 0;
    if (options.search.use_tablebases) {
-      const Material &wMat = board.getMaterial(White);
-      const Material &bMat = board.getMaterial(Black);
-      tb_pieces = wMat.men() + bMat.men();
-      if(tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
-         MoveSet moves;
-         tb_dtz = SyzygyTb::probe_root(board, board.anyRep(), tb_score, moves);
-         tb_hit = tb_dtz >= 0;
-         tb_root_probes++;
-         if (tb_hit) {
-            // restrict the search to moves that preserve the
-            // win or draw, if there is one.
-            mg.filter(moves);
-            if (mg.moveCount() == 0) {
-               // should not happen
-               if (talkLevel == Trace) {
-                  cout << "# warning: no moves after Syzygy move filtering" << endl;
-               }
-               tb_hit = 0;
-            } else {
-#ifdef _TRACE
-               cout << "filtered moves from Syzygy:";
-               for (auto it : moves) {
-                  cout << ' ';;
-                  Notation::image(board,it,Notation::OutputFormat::SAN,cout);
-               }
-               cout << endl;
-#endif
-               // Insert all filtered moves from the tablebase probe
-               // into the include list. Note if the include list was
-               // non-empty to begin with, this may mean some losing
-               // moves are included.
-               std::copy(moves.begin(), moves.end(), std::inserter(include, include.end()));
-
-               // Note: do not set the value - search values are based
-               // on DTM not DTZ.
-               stats->tb_value = tb_score;
-               // do not probe in the search
-               options.search.tb_probe_in_search = 0;
-               updateSearchOptions();
-            }
-            tb_root_hits++;
-            if (talkLevel == Trace) {
-               cout << "# " << board << " tb hit, score=";
+       tb_hit = mg.rank_root_moves();
+       if (tb_hit) {
+           tb_root_probes += rootMoves.size();
+           tb_root_hits += rootMoves.size();
+           // Store the tb value but do not use it set the search score - search values are based
+           // on DTM not DTZ.
+           stats->tb_value = rootMoves[0].score;
+           // do not probe in the search
+           options.search.tb_probe_in_search = 0;
+           updateSearchOptions();
+           if (talkLevel == Trace) {
+               cout << "# " << board << " root tb hit, score=";
                Scoring::printScore(tb_score,cout);
                cout << endl;
-               cout << "# filtered moves from Syzygy:";
-               for (auto it : moves) {
-                  cout << ' ';;
-                  Notation::image(board,it,Notation::OutputFormat::SAN,cout);
-               }
-               cout << endl;
-            }
-         }
-      }
+           }
+       }
    }
 #endif
    if (value == Constants::INVALID_SCORE) {
@@ -1060,6 +1024,13 @@ Move Search::ply0_search()
    // move detection.
    score_t value = controller->initialValue;
    RootMoveGenerator mg(controller->initialBoard,&context);
+   // Copy move list from controller. This contains the tb
+   // ranks/scores. (A bit nasty because we modiy mg's internal
+   // state).
+   ASSERT(controller->rootMoves.size() == mg.getMoveList().size());
+   std::copy(controller->rootMoves.begin(),
+             controller->rootMoves.end(),
+             mg.getMoveList().begin());
    if (controller->include.size()) {
       mg.filter(controller->include);
    }
@@ -1386,7 +1357,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     //
     // Re-sort the ply 0 moves and re-init move generator.
     if (iterationDepth>1) {
-       mg.reorder(node->best,iterationDepth,false);
+       mg.reorder(node->best,node->best_score,iterationDepth,false);
     } else {
        mg.reset();
     }
@@ -1529,7 +1500,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
         board.undoMove(move,save_state);
         if (wide) {
-           mg.setScore(move,try_score);
+           mg.setScore(move_index,try_score);
         }
         // We have now resolved the fail-high if there is one.
         if (try_score > node->best_score && !terminate) {

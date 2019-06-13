@@ -25,6 +25,10 @@ struct SyzygyTb {
     // -1 if not.
     static int probe_root(const Board &b, bool hasRepeated, score_t &score, MoveSet &rootMoves);
 
+    // Probe the tablebases and return a score and rank for each root move.
+    // Returns 1 on success, 0 if not all probes succeeded.
+    static int rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveList &rootMoves);
+
     // Probe the wdl tablebases (not at root).
     // Return 1 if score was obtained,
     // 0 if not. "score" is the score for the position.

@@ -175,6 +175,7 @@ class MoveGenerator
 class RootMoveGenerator : public MoveGenerator
 {
    friend class Search;
+   friend class SearchController;
 
    public:
       RootMoveGenerator(const Board &board,
@@ -208,7 +209,7 @@ class RootMoveGenerator : public MoveGenerator
          return index < batch_count;
       }
 
-      void reorder(Move pvMove, int depth, bool initial = false);
+      void reorder(Move pvMove, score_t pvScore, int depth, bool initial = false);
 
       void reorderByScore();
 
@@ -246,30 +247,26 @@ class RootMoveGenerator : public MoveGenerator
          return Constants::INVALID_SCORE;
       }
 
+      // Rank the root moves using tablebases. Returns 1 if
+      // successful, 0 if not
+      int rank_root_moves();
 
    protected:
 
-      struct MoveEntry
-      {
-         Move move;
-         int score;
-      };
-
-      vector <MoveEntry> &getMoveList() {
+      vector <RootMove> &getMoveList() {
           return moveList;
       }
 
-      void setScore(Move m, score_t score) noexcept {
-         for (auto &it : moveList) {
-              if (MovesEqual(it.move,m)) {
-                  it.score = (int)score;
-                  break;
-              }
-          }
+      void setScore(int move_index, score_t score) noexcept {
+          moveList[move_index].score = score;
+      }
+
+      void resetScores() noexcept {
+          for (auto &m : moveList) m.score = -Constants::MATE;
       }
 
    private:
-      vector<MoveEntry> moveList;
+      vector<RootMove> moveList;
       int excluded;
 
 };

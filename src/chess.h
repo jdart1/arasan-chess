@@ -1,4 +1,4 @@
-// Copyright 1994-2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017, 2019 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -6,6 +6,7 @@
 #include "types.h"
 #include "constant.h"
 #include "debug.h"
+#include <vector>
 #include <unordered_set>
 
 class Board;
@@ -33,9 +34,9 @@ extern const int Ranks[8][2];
 FORCEINLINE Square MakeSquare( int file, int rank, ColorType side ) {
   return ((side == White) ? ((rank-1)*8 + file - 1) : (55 - (rank-1)*8 + file));
 }
-    
+
 // returns "rank" from the perspective of "side". 1 = 1st
-// rank for side, 8 = last rank.	    
+// rank for side, 8 = last rank.
 template <ColorType side>
 static FORCEINLINE int Rank(Square square) {
    return side == White ? 1+square/8 : 8 - square/8;
@@ -50,7 +51,7 @@ static FORCEINLINE int Rank(Square square, ColorType side) {
 
 // returns file.  Queen rook file = 1, King rook file = 8.
 #define File(square) (square%8+1)
-	    
+
 #define OnBoard(square) ((square & ~0x3f) == 0)
 
 #define OnEdge(square) Edge[square]
@@ -58,24 +59,24 @@ static FORCEINLINE int Rank(Square square, ColorType side) {
 #define InCenter(square) Center[square]
 
 #define InCorner(square) Corners[square]
-    
+
 #define IsInvalid(square) (square == InvalidSquare)
-    
+
 FORCEINLINE ColorType SquareColor(Square square) {
   return ((ColorType)Colors[square]);
 }
-    
+
 // Parse a square value in algebraic notation (e.g. "g7") and
 // return a corresponding Square type.
 extern Square SquareValue(const char *p);
 extern Square SquareValue(const string &s);
 extern Square SquareValue(char file, char rank);
-    
+
 extern char FileImage(Square sq);
 
 extern char RankImage(Square sq);
 
-extern char *SquareImage(Square sq); 
+extern char *SquareImage(Square sq);
 
 // direction pawns move, by color
 static const int Direction[2] = {1,-1};
@@ -179,14 +180,14 @@ enum Piece {
 enum PieceType { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
 
 extern const int _sliders[16];
-extern const Piece _pieces[8][2];	   
+extern const Piece _pieces[8][2];
 
-FORCEINLINE int Sliding(Piece p) 
+FORCEINLINE int Sliding(Piece p)
 {
    return _sliders[p];
 }
 
-FORCEINLINE int Sliding(PieceType p) 
+FORCEINLINE int Sliding(PieceType p)
 {
    return _sliders[p];
 }
@@ -202,11 +203,11 @@ FORCEINLINE Piece MakeWhitePiece( PieceType type ) {
 FORCEINLINE Piece MakeBlackPiece( PieceType type ) {
   return (Piece)((int)type + 8);
 }
-    
+
 FORCEINLINE PieceType TypeOfPiece( Piece piece ) {
   return ((PieceType)((int)piece & 7));
 }
-   
+
 FORCEINLINE ColorType PieceColor( Piece piece ) {
   return ((ColorType)((int)piece > 8));
 }
@@ -218,7 +219,7 @@ FORCEINLINE ColorType ColorOfPiece( Piece piece ) {
 FORCEINLINE int IsEmptyPiece( Piece piece ) {
   return (piece == EmptyPiece);
 }
-   
+
 extern PieceType PieceCharValue( char );
 
 // 1-character representation of piece
@@ -279,9 +280,9 @@ union MoveUnion
    }
 
    MoveUnion(Square start, Square dest, PieceType pieceMoved,
-	     PieceType promotion, 
+	     PieceType promotion,
              PieceType capture, MoveType type,
-	     int flags = 0) 
+	     int flags = 0)
    {
      contents.start = start;
      contents.dest = dest;
@@ -301,7 +302,7 @@ FORCEINLINE Move CreateMove(Square start, Square dest, PieceType pieceMoved,
 		       ((uint64_t)promotion << 24) |
 		       ((uint64_t)capture << 32) |
 		       ((uint64_t)type << 40)));
-}	
+}
 
 #define NullMove CreateMove(InvalidSquare,InvalidSquare,Empty)
 
@@ -386,12 +387,12 @@ FORCEINLINE int IsPromotion(Move move) {
 FORCEINLINE int IsNull(Move move) {
     return (move == NullMove);
 }
-	
+
 extern void MoveImage(Move m,ostream &out);
 
-struct MoveHash 
+struct MoveHash
 {
-   size_t operator() (const Move &move) const 
+   size_t operator() (const Move &move) const
    {
       return std::hash<uint32_t>()(((union MoveUnion*)&move)->split.lopart);
    }
@@ -405,5 +406,21 @@ struct MoveCmp
 };
 
 typedef unordered_set<Move,MoveHash,MoveCmp> MoveSet;
+
+struct RootMove 
+{
+    Move move;
+    score_t score;
+    score_t tbRank;
+    score_t tbScore;
+
+RootMove(Move m, score_t s, score_t r, score_t ts) :
+    move(m), score(s), tbRank(r), tbScore(ts)
+    {
+    }
+
+};
+
+typedef std::vector<RootMove> RootMoveList;
 
 #endif
