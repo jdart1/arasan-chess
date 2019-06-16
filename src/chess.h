@@ -308,7 +308,7 @@ FORCEINLINE Move CreateMove(Square start, Square dest, PieceType pieceMoved,
 
 extern Move CreateMove(const Board &board, Square start, Square dest, PieceType promotion );
 
-FORCEINLINE unsigned Flags(Move &move) {
+FORCEINLINE unsigned Flags(const Move &move) {
   return (unsigned)((union MoveUnion*)&(move))->contents.flags;
 }
 
@@ -418,7 +418,6 @@ RootMove(Move m, score_t s, score_t r, score_t ts) :
     move(m), score(s), tbRank(r), tbScore(ts)
     {
     }
-
 };
 
 typedef std::vector<RootMove> RootMoveList;

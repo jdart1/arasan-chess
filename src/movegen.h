@@ -7,6 +7,7 @@
 #include "constant.h"
 #include "params.h"
 #include "see.h"
+#include <algorithm>
 #include <set>
 #include <vector>
 using namespace std;
@@ -183,6 +184,9 @@ class RootMoveGenerator : public MoveGenerator
          Move pvMove = NullMove,
          int trace = 0);
 
+      RootMoveGenerator(const RootMoveGenerator &mg,
+                        SearchContext *s);
+
       // Generate the next move, in sorted order, NullMove if none left
       virtual Move nextMove(int &ord) {
          ASSERT(index<=batch_count);
@@ -222,8 +226,8 @@ class RootMoveGenerator : public MoveGenerator
 
       void exclude(const MoveSet &excluded);
 
-      // include only moves in the set
-      void filter(const MoveSet &exclude);
+      // restrict moves we will search
+      void filter(const MoveSet &include);
 
       void exclude(Move);
 
@@ -253,7 +257,7 @@ class RootMoveGenerator : public MoveGenerator
 
    protected:
 
-      vector <RootMove> &getMoveList() {
+      const vector <RootMove> &getMoveList() const {
           return moveList;
       }
 

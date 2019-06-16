@@ -324,8 +324,8 @@ Move SearchController::findBestMove(
    }
    Search *rootSearch = pool->rootSearch();
    // Generate the ply 0 moves here:
-   RootMoveGenerator mg(board,&(rootSearch->context),NullMove,talkLevel == Trace);
-   if (mg.moveCount() == 0) {
+   mg = new RootMoveGenerator(board,&(rootSearch->context),NullMove,talkLevel == Trace);
+   if (mg->moveCount() == 0) {
       // Checkmate or statemate
       if (board.inCheck()) {
          stats->state = Checkmate;
@@ -335,6 +335,7 @@ Move SearchController::findBestMove(
          stats->state = Stalemate;
          stats->value = stats->display_value = drawScore(board);
       }
+      delete mg;
       return NullMove;
    }
 
@@ -345,7 +346,7 @@ Move SearchController::findBestMove(
    // Implement strength reduction if enabled. But do not reduce
    // strength in analysis mode.
    if (options.search.strength < 100 && (background || time_target != INFINITE_TIME)) {
-      const int mgCount = mg.moveCount();
+      const int mgCount = mg->moveCount();
       const double factor = 1.0/ply_limit + (100-options.search.strength)/250.0;
       if (background) {
          waitTime = 0;
@@ -382,10 +383,6 @@ Move SearchController::findBestMove(
       }
    }
 
-   // Store a copy of the ranked root move list
-   rootMoves.clear();
-   for (const RootMove &rm : mg.getMoveList()) rootMoves.push_back(rm);
-
    time_check_counter = Time_Check_Interval;
 
    score_t value = Constants::INVALID_SCORE;
@@ -396,13 +393,13 @@ Move SearchController::findBestMove(
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
    if (options.search.use_tablebases) {
-       tb_hit = mg.rank_root_moves();
+       tb_hit = mg->rank_root_moves();
        if (tb_hit) {
-           tb_root_probes += rootMoves.size();
-           tb_root_hits += rootMoves.size();
+           tb_root_probes += mg->moveCount();
+           tb_root_hits += mg->moveCount();
            // Store the tb value but do not use it set the search score - search values are based
            // on DTM not DTZ.
-           stats->tb_value = rootMoves[0].score;
+           stats->tb_value = mg->getMoveList()[0].tbScore;
            // do not probe in the search
            options.search.tb_probe_in_search = 0;
            updateSearchOptions();
@@ -414,6 +411,19 @@ Move SearchController::findBestMove(
        }
    }
 #endif
+   // Limit moves we will search.
+   mg->filter(include);
+#ifdef _TRACE
+   cout << "filtered root moves:";
+   for (const RootMove &m : mg->getMoveList()) {
+       if (!(Flags(m.move) & Excluded)) {
+           cout << ' ';
+           Notation::image(board,m.move,Notation::OutputFormat::SAN,cout);
+       }
+   }
+   cout << endl;
+#endif
+
    if (value == Constants::INVALID_SCORE) {
       value = 0;
    }
@@ -435,6 +445,9 @@ Move SearchController::findBestMove(
 
    // Wait for all threads to complete
    pool->waitAll();
+
+   // We are finished with the move generator - can delete
+   delete mg;
 
    if (talkLevel == Trace) {
        cout << "# thread 0 depth=" << rootSearch->stats.completedDepth <<
@@ -1023,17 +1036,9 @@ Move Search::ply0_search()
    // Search the first few iterations with a wide window - for easy
    // move detection.
    score_t value = controller->initialValue;
-   RootMoveGenerator mg(controller->initialBoard,&context);
-   // Copy move list from controller. This contains the tb
-   // ranks/scores. (A bit nasty because we modiy mg's internal
-   // state).
-   ASSERT(controller->rootMoves.size() == mg.getMoveList().size());
-   std::copy(controller->rootMoves.begin(),
-             controller->rootMoves.end(),
-             mg.getMoveList().begin());
-   if (controller->include.size()) {
-      mg.filter(controller->include);
-   }
+   // Initialize this thread's move generator from the controller's,
+   // which will have the ranked, sorted, filtered move list.
+   RootMoveGenerator mg(*(controller->mg),&context);
    stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
    iterationDepth = 0;
    while ((iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
@@ -1361,9 +1366,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     } else {
        mg.reset();
     }
-    if (include.size()) {
-       mg.filter(include);
-    }
     stats.mvtot = stats.mvleft = mg.moveCount();
 
     // if in N-variation mode, exclude any moves we have searched already
@@ -1395,9 +1397,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         controller->fail_high_root = false;
         Move move;
         if ((move = mg.nextMove(move_index))==NullMove) break;
-        if (IsUsed(move) || IsExcluded(move) ||
-            (!include.empty() && include.end() == std::find_if(include.begin(),
-             include.end(),[&move](const Move &m) {return MovesEqual(m,move);}))) {
+        if (IsUsed(move) || IsExcluded(move)) {
             --stats.mvleft;
             continue;     // skip move
         }

@@ -95,6 +95,20 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    phase = LAST_PHASE;
 }
 
+RootMoveGenerator::RootMoveGenerator(const RootMoveGenerator &mg,
+                                     SearchContext *s)
+    : MoveGenerator(mg.board,s,nullptr,0,mg.hashMove,0)
+{
+   batch = moves;
+   batch_count = mg.batch_count;
+
+   for (const RootMove &rm : mg.moveList) {
+      moveList.push_back(rm);
+   }
+   phase = LAST_PHASE;
+   excluded = mg.excluded;
+}
+
 void RootMoveGenerator::reorder(Move pvMove, score_t pvScore, int depth, bool initial)
 {
    reset();
@@ -136,13 +150,12 @@ void RootMoveGenerator::reorder(Move pvMove, score_t pvScore, int depth, bool in
          }
       }
    }
+   // Sort by score - top scorer (PV) will always be first
    if (moveList.size() > 1) {
        std::stable_sort(moveList.begin(),moveList.end(),
                         [](const RootMove &a, const RootMove &b)
                         {
-                            return (a.tbRank != b.tbRank) ? a.tbRank > b.tbRank :
-                                ((a.tbScore != b.tbScore) ? a.tbScore > b.tbScore :
-                                 a.score > b.score);
+                            return (a.score > b.score);
                         }
            );
    }
@@ -177,14 +190,20 @@ void RootMoveGenerator::exclude(const MoveSet &excluded)
 void RootMoveGenerator::filter(const MoveSet &include)
 {
    excluded = 0;
-   for (int i = 0; i < batch_count; i++) {
+   score_t top_rank = batch_count == 0 ? 0 : moveList[0].tbRank;
+   for (unsigned i = 0; i < unsigned(batch_count); i++) {
       Move m = moveList[i].move;
-      // include list has neither flags nor phase set, so
-      // clear these before compare
-      SetPhase(m,(Phase)0);
-      SetFlags(m,(byte)0);
-      if (include.find(m) == include.end()) {
-          // Note: use the Excluded flag, since the Used flag
+      int rank = moveList[i].tbRank;
+       bool exclude;
+      if (include.size()) {
+          // Exclude moves not in include set
+          exclude = include.find(m) == include.end();
+      } else {
+          // Exclude inferior ranked tb moves
+          exclude = rank < top_rank;
+      }
+      if (exclude) {
+          // Exclude move. Note: use the Excluded flag, since the Used flag
           // is reset each iteration
           SetExcluded(moveList[i].move);
           ++excluded;
