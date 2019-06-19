@@ -177,7 +177,7 @@ protected:
 
     score_t futilityMargin(int depth) const;
 
-    int lmpCount(int depth, int improving) const;
+    int lmpCount(int depth, int improving, int pv) const;
 
     score_t razorMargin(int depth) const;
 
