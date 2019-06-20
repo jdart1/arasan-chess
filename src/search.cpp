@@ -878,7 +878,7 @@ score_t Search::futilityMargin(int depth) const
 int Search::lmpCount(int depth, int improving, int pv) const
 {
     return depth/DEPTH_INCREMENT <= LMP_DEPTH ?
-        LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] + (pv ? 2*DEPTH_INCREMENT + depth/(4*DEPTH_INCREMENT) : 0) : Constants::MaxMoves;
+        LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] + (pv ? 2*DEPTH_INCREMENT + depth/(2*DEPTH_INCREMENT) : 0) : Constants::MaxMoves;
 }
 
 score_t Search::razorMargin(int depth) const
