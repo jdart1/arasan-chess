@@ -16,7 +16,7 @@ static const score_t valueMapNo50[5] = {-Constants::TABLEBASE_WIN, -Constants::T
 
 static PieceType getPromotion(unsigned res)
 {
-      switch (TB_GET_PROMOTES(res)) {
+      switch (res) {
       case TB_PROMOTES_QUEEN:
          return Queen;
       case TB_PROMOTES_ROOK:
@@ -32,7 +32,7 @@ static PieceType getPromotion(unsigned res)
 
 static Move getMove(const Board &b, unsigned res) {
     const unsigned ep = TB_GET_EP(res);
-    const PieceType promoteTo = getPromotion(res);
+    const PieceType promoteTo = getPromotion(TB_GET_PROMOTES(res));
     // Note: castling not possible
     return CreateMove(TB_GET_FROM(res),
                       TB_GET_TO(res),
@@ -112,10 +112,10 @@ int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, 
         for (unsigned i = 0; i < tbMoves.size; i++) {
             const TbRootMove &tbMove = tbMoves.moves[i];
             // Convert from Fathom move type to Arasan type
-            rootMoves.push_back(RootMove(CreateMove(b,
-                                                    TB_MOVE_FROM(tbMove.move),
-                                                    TB_MOVE_TO(tbMove.move),
-                                                    PieceType(TB_MOVE_PROMOTES(tbMove.move))),
+            Move m = CreateMove(b,TB_MOVE_FROM(tbMove.move),
+                                  TB_MOVE_TO(tbMove.move),
+                                  getPromotion(TB_MOVE_PROMOTES(tbMove.move)));
+            rootMoves.push_back(RootMove(m,
                                          0,
                                          tbMove.tbRank,
                                          tbMove.tbScore));
