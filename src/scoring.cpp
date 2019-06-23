@@ -365,35 +365,30 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
     case 0: {
-       if (ourmat.minorCount() == oppmat.minorCount()+1) {
-          // we have extra minor (but not only a minor)
-          if (oppmat.pieceBits() == Material::KR) {
-             // KR + minor vs KR - draw w. no pawns so lower score
-             if (!ourmat.hasPawns()) {
-                score += PARAM(KRMINOR_VS_R_NO_PAWNS);
-             }
-             // do not apply trade down or pawn bonus
-             return score;
-          }
-          else if ((ourmat.pieceBits() == Material::KQN ||
-                   ourmat.pieceBits() == Material::KQB) &&
-                   oppmat.pieceBits() == Material::KQ) {
-              // Q + minor vs Q is a draw, generally
-             if (!ourmat.hasPawns()) {
-                score += PARAM(KQMINOR_VS_Q_NO_PAWNS);
-             }
-             // do not apply trade down or pawn bonus
-             return score;
-          } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
-             // Knight or Bishop traded for pawns. Bonus for piece.
-             score += PARAM(MINOR_FOR_PAWNS);
-          }
+        if (ourmat.minorCount() == oppmat.minorCount()+1) {
+            // we have extra minor (but not only a minor)
+            if (!ourmat.hasPawns()) {
+                // If we have no pawns, penalize being ahead but
+                // in a drawish material configuration.
+                if (oppmat.pieceBits() == Material::KR) {
+                    // KR + minor vs KR - draw w. no pawns so lower score
+                    score += PARAM(KRMINOR_VS_R_NO_PAWNS);
+                }
+                else if ((ourmat.pieceBits() == Material::KQN ||
+                          ourmat.pieceBits() == Material::KQB) &&
+                         oppmat.pieceBits() == Material::KQ) {
+                    score += PARAM(KQMINOR_VS_Q_NO_PAWNS);
+                }
+            } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
+                // Knight or Bishop traded for pawns. Bonus for piece.
+                score += PARAM(MINOR_FOR_PAWNS);
+            }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
-             ourmat.rookCount() == oppmat.rookCount() - 2) {
+                  ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-           score += APARAM(QR_ADJUST,std::min<int>(4,ourmat.minorCount()));
+            score += APARAM(QR_ADJUST,std::min<int>(4,ourmat.minorCount()));
         }
         break;
     }

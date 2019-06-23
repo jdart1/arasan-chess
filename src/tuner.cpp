@@ -448,35 +448,29 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     int majorDiff = ourmat.majorCount() - oppmat.majorCount();
     switch(majorDiff) {
     case 0: {
-       if (ourmat.minorCount() == oppmat.minorCount()+1) {
-          // we have extra minor (but not only a minor)
-          if (oppmat.pieceBits() == Material::KR) {
-             // KR + minor vs KR - draw w. no pawns so lower score
-             if (!ourmat.hasPawns()) {
-                grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
-             }
-             // do not apply trade down or pawn bonus
-             return;
-          }
-          else if ((ourmat.pieceBits() == Material::KQN ||
-                   ourmat.pieceBits() == Material::KQB) &&
-                   oppmat.pieceBits() == Material::KQ) {
-              // Q + minor vs Q is a draw, generally
-             if (!ourmat.hasPawns()) {
-                grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
-             }
-             // do not apply trade down or pawn bonus
-             return;
-          } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
-             // Knight or Bishop traded for pawns. Bonus for piece
-             grads[Tune::MINOR_FOR_PAWNS] += inc;
-          }
+        if (ourmat.minorCount() == oppmat.minorCount()+1) {
+            // we have extra minor (but not only a minor)
+            if (!ourmat.hasPawns()) {
+                if (oppmat.pieceBits() == Material::KR) {
+                    grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
+
+                }
+                else if ((ourmat.pieceBits() == Material::KQN ||
+                          ourmat.pieceBits() == Material::KQB) &&
+                         oppmat.pieceBits() == Material::KQ) {
+                    // Q + minor vs Q is a draw, generally
+                    grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
+                } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
+                    // Knight or Bishop traded for pawns. Bonus for piece
+                    grads[Tune::MINOR_FOR_PAWNS] += inc;
+                }
+            }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
-                 ourmat.rookCount() == oppmat.rookCount() - 2) {
-           // Queen vs. Rooks
-           // Queen is better with minors on board (per Kaufman)
-           grads[Tune::QR_ADJUST+std::min<int>(4,ourmat.minorCount())] += inc;
+                  ourmat.rookCount() == oppmat.rookCount() - 2) {
+            // Queen vs. Rooks
+            // Queen is better with minors on board (per Kaufman)
+            grads[Tune::QR_ADJUST+std::min<int>(4,ourmat.minorCount())] += inc;
         }
         break;
     }
