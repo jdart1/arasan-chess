@@ -2743,6 +2743,9 @@ score_t Search::search()
        node->staticEval == Constants::INVALID_SCORE ||
        (node-2)->staticEval == Constants::INVALID_SCORE;
 
+    // Reset killer moves for children (idea from Ethereal)
+    context.clearKillers(node->ply+1);
+
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.

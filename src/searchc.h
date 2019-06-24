@@ -33,6 +33,11 @@ public:
         killers1[ply] = move;
     }
 
+    void clearKillers(unsigned ply) {
+        killers1[ply] = killers2[ply] = NullMove;
+    }
+    
+
     void getKillers(unsigned ply,Move &k1,Move &k2) const noexcept
     {
         k1 = killers1[ply]; k2 = killers2[ply];
@@ -74,8 +79,8 @@ public:
 
 private:
 
-    Move killers1[Constants::MaxPly];
-    Move killers2[Constants::MaxPly];
+    Move killers1[Constants::MaxPly+2];
+    Move killers2[Constants::MaxPly+2];
 
     ButterflyArray<int> *history;
 

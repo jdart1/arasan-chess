@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2017-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2017-2019 by Jon Dart. All Rights Reserved.
 
 #include "searchc.h"
 #include "search.h"
@@ -43,7 +43,7 @@ void SearchContext::clear() {
 }
 
 void SearchContext::clearKiller() {
-   for (int i = 0; i < Constants::MaxPly; i++) {
+   for (int i = 0; i < Constants::MaxPly+2; i++) {
       killers1[i] = killers2[i] = NullMove;
    }
 }
