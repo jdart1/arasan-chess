@@ -56,6 +56,9 @@ Tune::Tune()
         TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,VAL(-0.25),VAL(0.25),TuneParam::Any,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",VAL(-2.4),VAL(-3.6),VAL(-1.2),TuneParam::Any,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",VAL(-1.5),VAL(-2.0),VAL(-1.0),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS0,"minor_for_pawns0",VAL(0.4),0,VAL(1.0),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS1,"minor_for_pawns1",VAL(0.5),0,VAL(1.0),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS2,"minor_for_pawns2",VAL(0.5),0,VAL(1.0),TuneParam::Any,1),
         TuneParam(Tune::CASTLING0,"castling0",0,VAL(-0.1),VAL(0.1),TuneParam::Midgame,1),
         TuneParam(Tune::CASTLING1,"castling1",VAL(-0.07),VAL(-0.3),0,TuneParam::Midgame,1),
         TuneParam(Tune::CASTLING2,"castling2",VAL(-0.1),VAL(-0.3),0,TuneParam::Midgame,1),
@@ -83,7 +86,6 @@ Tune::Tune()
         TuneParam(Tune::PIN_MULTIPLIER_END,"pin_multiplier_end",VAL(0.289),0,VAL(0.750),TuneParam::Endgame,1),
         TuneParam(Tune::KRMINOR_VS_R_NO_PAWNS,"krminor_vs_r_no_pawns",VAL(-0.5),VAL(-2.0),VAL(0),TuneParam::Any,1),
         TuneParam(Tune::KQMINOR_VS_Q_NO_PAWNS,"kqminor_vs_q_no_pawns",VAL(-0.5),VAL(-3.0),0,TuneParam::Any,1),
-        TuneParam(Tune::MINOR_FOR_PAWNS,"minor_for_pawns",VAL(0.5),0,VAL(0.75),TuneParam::Any,1),
         TuneParam(Tune::ENDGAME_PAWN_ADVANTAGE,"endgame_pawn_advantage",VAL(0.03),VAL(0),VAL(0.25),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ENDGAME1,"pawn_endgame1",VAL(0.3),VAL(0),VAL(0.5),TuneParam::Any,1),
         TuneParam(Tune::PAWN_ATTACK_FACTOR,"pawn_attack_factor",8,0,100,TuneParam::Midgame,1),
@@ -542,6 +544,10 @@ void Tune::applyParams(bool check) const
    for (i = 0; i < 3; i++) {
       *dest++ = (*this)[j++].current;
    }
+   dest = Params::MINOR_FOR_PAWNS;
+   for (i = 0; i < 3; i++) {
+      *dest++ = (*this)[j++].current;
+   }
    dest = Params::CASTLING;
    for (i = 0; i < 6; i++) {
       *dest++ = (*this)[j++].current;
@@ -564,7 +570,6 @@ void Tune::applyParams(bool check) const
    Params::PIN_MULTIPLIER_END = PARAM(PIN_MULTIPLIER_END);
    Params::KRMINOR_VS_R_NO_PAWNS = PARAM(KRMINOR_VS_R_NO_PAWNS);
    Params::KQMINOR_VS_Q_NO_PAWNS = PARAM(KQMINOR_VS_Q_NO_PAWNS);
-   Params::MINOR_FOR_PAWNS = PARAM(MINOR_FOR_PAWNS);
    Params::ENDGAME_PAWN_ADVANTAGE = PARAM(ENDGAME_PAWN_ADVANTAGE);
    Params::PAWN_ENDGAME1 = PARAM(PAWN_ENDGAME1);
    Params::PAWN_ATTACK_FACTOR = PARAM(PAWN_ATTACK_FACTOR);

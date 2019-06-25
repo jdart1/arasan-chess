@@ -9,6 +9,7 @@ score_t Params::RB_ADJUST[6];
 score_t Params::RBN_ADJUST[6];
 score_t Params::QR_ADJUST[5];
 score_t Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
+score_t Params::MINOR_FOR_PAWNS[3] = {-30, -20, -10};
 score_t Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
 #ifdef TUNE
 score_t Params::KING_ATTACK_SCALE_MAX;
@@ -25,7 +26,6 @@ score_t Params::PIN_MULTIPLIER_END = 300;
 score_t Params::ROOK_VS_PAWNS = 333;
 score_t Params::KRMINOR_VS_R_NO_PAWNS = -500;
 score_t Params::KQMINOR_VS_Q_NO_PAWNS = -500;
-score_t Params::MINOR_FOR_PAWNS = 250;
 score_t Params::ENDGAME_PAWN_ADVANTAGE = 100;
 score_t Params::PAWN_ENDGAME1 = 200;
 score_t Params::PAWN_ATTACK_FACTOR = 4;

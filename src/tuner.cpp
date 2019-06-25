@@ -460,10 +460,10 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                          oppmat.pieceBits() == Material::KQ) {
                     // Q + minor vs Q is a draw, generally
                     grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
-                } else if (oppmat.pieceValue() > Params::ROOK_VALUE) {
-                    // Knight or Bishop traded for pawns. Bonus for piece
-                    grads[Tune::MINOR_FOR_PAWNS] += inc;
                 }
+            } else if (oppmat.pawnCount() > ourmat.pawnCount()) {
+                // Knight or Bishop traded for pawns. Bonus for piece
+                grads[Tune::MINOR_FOR_PAWNS0+std::min(ourmat.majorCount(),2)] += inc;
             }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
