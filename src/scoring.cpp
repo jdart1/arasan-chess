@@ -381,7 +381,7 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 }
             } else if (oppmat.pawnCount() > ourmat.pawnCount()) {
                 // Knight or Bishop traded for pawns. Bonus for piece.
-                score += APARAM(MINOR_FOR_PAWNS,std::min(ourmat.majorCount(),2));
+                score += APARAM(MINOR_FOR_PAWNS,std::min(ourmat.materialLevel()/4,5));
             }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
@@ -2613,8 +2613,8 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::QR_ADJUST,5);
    o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
-   o << "const int Params::MINOR_FOR_PAWNS[3] = ";
-   print_array(o,Params::MINOR_FOR_PAWNS,3);
+   o << "const int Params::MINOR_FOR_PAWNS[6] = ";
+   print_array(o,Params::MINOR_FOR_PAWNS,6);
    o << "const int Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
    o << "const int Params::KING_COVER[6][4] = {";

@@ -9,7 +9,7 @@ score_t Params::RB_ADJUST[6];
 score_t Params::RBN_ADJUST[6];
 score_t Params::QR_ADJUST[5];
 score_t Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
-score_t Params::MINOR_FOR_PAWNS[3] = {-30, -20, -10};
+score_t Params::MINOR_FOR_PAWNS[6] = {68, 75, 115, 115, 115, 115};
 score_t Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
 #ifdef TUNE
 score_t Params::KING_ATTACK_SCALE_MAX;

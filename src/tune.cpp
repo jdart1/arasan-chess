@@ -58,7 +58,10 @@ Tune::Tune()
         TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",VAL(-1.5),VAL(-2.0),VAL(-1.0),TuneParam::Any,1),
         TuneParam(Tune::MINOR_FOR_PAWNS0,"minor_for_pawns0",VAL(0.4),0,VAL(1.0),TuneParam::Any,1),
         TuneParam(Tune::MINOR_FOR_PAWNS1,"minor_for_pawns1",VAL(0.5),0,VAL(1.0),TuneParam::Any,1),
-        TuneParam(Tune::MINOR_FOR_PAWNS2,"minor_for_pawns2",VAL(0.5),0,VAL(1.0),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS2,"minor_for_pawns2",VAL(0.6),0,VAL(1.0),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS3,"minor_for_pawns3",VAL(0.7),0,VAL(1.0),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS4,"minor_for_pawns4",VAL(0.8),0,VAL(1.1),TuneParam::Any,1),
+        TuneParam(Tune::MINOR_FOR_PAWNS5,"minor_for_pawns5",VAL(0.9),0,VAL(1.2),TuneParam::Any,1),
         TuneParam(Tune::CASTLING0,"castling0",0,VAL(-0.1),VAL(0.1),TuneParam::Midgame,1),
         TuneParam(Tune::CASTLING1,"castling1",VAL(-0.07),VAL(-0.3),0,TuneParam::Midgame,1),
         TuneParam(Tune::CASTLING2,"castling2",VAL(-0.1),VAL(-0.3),0,TuneParam::Midgame,1),
@@ -545,7 +548,7 @@ void Tune::applyParams(bool check) const
       *dest++ = (*this)[j++].current;
    }
    dest = Params::MINOR_FOR_PAWNS;
-   for (i = 0; i < 3; i++) {
+   for (i = 0; i < 6; i++) {
       *dest++ = (*this)[j++].current;
    }
    dest = Params::CASTLING;

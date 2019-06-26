@@ -463,7 +463,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                 }
             } else if (oppmat.pawnCount() > ourmat.pawnCount()) {
                 // Knight or Bishop traded for pawns. Bonus for piece
-                grads[Tune::MINOR_FOR_PAWNS0+std::min(ourmat.majorCount(),2)] += inc;
+                grads[Tune::MINOR_FOR_PAWNS0+std::min(ourmat.materialLevel()/4,5)] += inc;
             }
         }
         else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
