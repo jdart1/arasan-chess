@@ -3,6 +3,7 @@
 #include "constant.h"
 #include "debug.h"
 #include "bitboard.h"
+#include <algorithm>
 
 #include "syzygy/src/tbprobe.h"
 
@@ -53,7 +54,7 @@ int SyzygyTb::initTB(const string &path)
 
 int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveList &rootMoves)
 {
-    
+
     // Fathom move list
     TbRootMoves tbMoves;
 
@@ -119,7 +120,15 @@ int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, 
                                          0,
                                          tbMove.tbRank,
                                          tbMove.tbScore));
+
         }
+        std::sort(rootMoves.begin(),rootMoves.end(),
+             [](const RootMove &a, const RootMove &b)
+             {
+                 return a.tbRank == b.tbRank ? (a.tbScore > b.tbScore) :
+                     (a.tbRank > b.tbRank);
+             }
+        );
         return 1;
     } else {
         for (auto &rootMove : rootMoves) {

@@ -397,9 +397,10 @@ Move SearchController::findBestMove(
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
            tb_root_hits += mg->moveCount();
+           tb_score = mg->getMoveList()[0].tbRank;
            // Store the tb value but do not use it set the search score - search values are based
            // on DTM not DTZ.
-           stats->tb_value = mg->getMoveList()[0].tbScore;
+           stats->tb_value = tb_score;
            // do not probe in the search
            options.search.tb_probe_in_search = 0;
            updateSearchOptions();
