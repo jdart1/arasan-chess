@@ -397,7 +397,7 @@ Move SearchController::findBestMove(
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
            tb_root_hits += mg->moveCount();
-           tb_score = mg->getMoveList()[0].tbRank;
+           tb_score = mg->getMoveList()[0].tbScore;
            // Store the tb value but do not use it set the search score - search values are based
            // on DTM not DTZ.
            stats->tb_value = tb_score;
@@ -851,7 +851,7 @@ score_t Search::tbScoreAdjust(const Board &board,
       else if (tb_score == 0 || std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
          output = drawScore(board);
       }
-      else {
+      else if (tb_score == -Constants::TABLEBASE_WIN) {
          // loss
          output = -Constants::TABLEBASE_WIN;
       }

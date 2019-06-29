@@ -114,7 +114,10 @@
 #define TB_VALUE_MATE Constants::MATE
 #define TB_VALUE_INFINITE 32767 /* value above all normal score values */
 #define TB_VALUE_DRAW 0
-#define TB_MAX_MATE_PLY 256
+// Fathom returns TB_VALUE_MATE-TB_MAX_MATE_PLY-1 as a tablebase win
+// score. Set the mate ply cosntant here so that equates to our
+// Constants::TABLEBASE_WIN
+#define TB_MAX_MATE_PLY 511
 
 /***************************************************************************/
 /* ENGINE INTEGRATION CONFIG                                               */
