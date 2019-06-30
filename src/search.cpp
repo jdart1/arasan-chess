@@ -841,7 +841,7 @@ score_t Search::tbScoreAdjust(const Board &board,
       cout << endl;
    }
 #endif
-   score_t output;
+   score_t output = value;
    if (tb_hit && !Scoring::mateScore(value)) {
       // If a Syzygy tablebase hit set the score based on that. But
       // don't override a mate score found with search.
@@ -855,9 +855,6 @@ score_t Search::tbScoreAdjust(const Board &board,
          // loss
          output = -Constants::TABLEBASE_WIN;
       }
-   }
-   else {
-      output = value;
    }
 #ifdef _TRACE
    if (mainThread()) {
