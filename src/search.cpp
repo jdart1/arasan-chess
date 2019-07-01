@@ -2893,7 +2893,7 @@ score_t Search::search()
         node->beta < Constants::MATE_RANGE) {
        const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const score_t needed_gain = probcut_beta - node->staticEval;
-       const int nu_depth = depth - 3*DEPTH_INCREMENT - depth/4;
+       const int nu_depth = depth - 4*DEPTH_INCREMENT;
        BoardState state(board.state);
        if (!IsNull(hashMove) && seeSign(board,hashMove,needed_gain)) {
 #ifdef _TRACE
