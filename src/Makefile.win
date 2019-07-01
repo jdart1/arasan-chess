@@ -1,8 +1,8 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2018 by Jon Dart. All Rights Reserved.
 #
-VERSION=21.3
-LINK_VERSION=21.3
+VERSION=21.4
+LINK_VERSION=21.4
 #
 #TARGET = win32
 TARGET = win64
@@ -96,7 +96,7 @@ LD=link
 CL=cl
 
 # Visual Studio defs (Visual Studio 2012 or later recommended)
-CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W3 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
+CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W2 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
 BMI2_FLAGS = -DBMI2
 !Ifndef DEBUG
