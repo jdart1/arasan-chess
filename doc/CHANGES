@@ -1,4 +1,17 @@
-Changes in Arasan 21.3:
+Changes in Arasan 21.4:
+ 1) Update to use latest Fathom library with 7-man tb support.
+ 2) Use Fathom ranking API for tb moves at root.
+ 3) Changes to extension logic.
+ 4) Use IID score to improve eval value for pruning, as is done with
+    hash scores.
+ 5) Change IID conditions.
+ 6) Fixes to singular extension code and rewrite to make it simpler.
+ 7) Allow pre-search pruning when in ProbCut search.
+ 8) Adjust LMP pruning thresholds, use higher threshold for PV nodes.
+ 9) Change material scoring for minors vs pawns. Re-tune params.
+ 10) Clear killers for successor nodes in search (idea from Ethereal).
+
+Changes in Arasan 21.3 (Mar. 2019):
  1) Fix possible array overflow in search.
  2) Clean up draw code; fix bug where 2-fold repetition at root caused
     draw to be signalled.
