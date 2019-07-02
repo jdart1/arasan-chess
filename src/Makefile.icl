@@ -137,11 +137,11 @@ STB_PROFILE_FLAGS = $(STB_FLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(TUNE_BUILD)\syzygy.obj $(TUNE_BUILD)\tbprobe.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
-$(BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+$(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
-$(TUNE_BUILD)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+$(TUNE_BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
-$(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c $(STB)\tbcore.c
+$(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
 
