@@ -26,8 +26,8 @@ STB=syzygy
 #NUMA=1
 
 # location of hwloc library (needed if NUMA enabled)
-HWLOC64=E:\chess\hwloc-win64-build-2.0.3
-HWLOC32=E:\chess\hwloc-win32-build-2.0.3
+HWLOC64=E:\chess\hwloc-win64-build-2.0.4
+HWLOC32=E:\chess\hwloc-win32-build-2.0.4
 
 !If "$(TARGET)" == "win64"
 !Ifndef ARASANX
