@@ -114,8 +114,8 @@ for details.
 ICS Support
 
 Arasan can also be used to make the program play on an Internet chess
-server (it isn't designed to allow humans to play on a server - there
-are other and better programs for that.).
+server. (It isn't designed to allow humans to play on a server - there
+are other and better programs for that.)
 
 To make Arasan play on a server, you need an interface program, since
 arasanx itself has no ability to connect to the Internet. xboard
@@ -148,9 +148,8 @@ Chess GUIs will override the arasan.rc settings, so if using a GUI you
 should if possible set the tablebase path and related options in the
 GUI.
 
-The Arasan distribution does not come with any tablebase files. You
-Syzygy tablebases can be found at
-http://kirill-kryukov.com/chess/tablebases-online/.
+The Arasan distribution does not come with any tablebase files. Syzygy
+tablebases can be found at http://kirill-kryukov.com/chess/tablebases-online/.
 
 
 UCI
