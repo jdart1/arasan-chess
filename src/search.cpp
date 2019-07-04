@@ -2890,6 +2890,7 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() && board.checkStatus() == NotInCheck &&
         depth >= PROBCUT_DEPTH &&
+        (!(node->flags & PROBCUT) || depth >= 8*DEPTH_INCREMENT) &&
         node->beta < Constants::MATE_RANGE) {
        const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const score_t needed_gain = probcut_beta - node->staticEval;
@@ -2912,7 +2913,7 @@ score_t Search::search()
            node->last_move = hashMove;
            node->num_legal++;
            score_t value = -search(-probcut_beta-1, -probcut_beta,
-                                   ply+1, nu_depth);
+                                   ply+1, nu_depth, PROBCUT);
 #ifdef _TRACE
            if (mainThread()) {
               indent(ply);

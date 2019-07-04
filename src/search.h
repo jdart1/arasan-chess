@@ -148,7 +148,7 @@ public:
 
 protected:
 
-    enum SearchFlags { IID=1, VERIFY=2, EXACT=4 };
+    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8 };
 
     int calcExtensions(const Board &board,
                        NodeInfo *node,
