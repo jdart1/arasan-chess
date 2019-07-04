@@ -1,10 +1,10 @@
-// Copyright 2014, 2017-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 2014, 2017-2019 by Jon Dart.  All Rights Reserved.
 
 #include "bookwrit.h"
 #include <fstream>
 
-BookWriter::BookWriter(int i) :
-   index_pages(i) {
+BookWriter::BookWriter(int pages) :
+   index_pages(pages) {
    index = new book::IndexPage *[index_pages];
    for (int i = 0; i < index_pages; i++) {
       index[i] = nullptr; // no index page allocated yet
@@ -62,7 +62,8 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
       dp->num_free--;
       // add index entry
       if (idx->next_free < book::INDEX_PAGE_SIZE) {
-         idx->index[idx->next_free++] = book::IndexEntry(hashCode,dataPage,dataIndex);
+          idx->index[idx->next_free++] = book::IndexEntry(hashCode,static_cast<uint16_t>(dataPage),
+                                                          static_cast<uint16_t>(dataIndex));
       } else {
          throw BookFullException();
       }
@@ -88,10 +89,10 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
          if (dp->num_free) {
             // add new data entry to this page
             int nextFree = dp->data[dp->free_list].next;
-            int insert = dp->free_list;
+            unsigned insert = (unsigned)dp->free_list;
             // link new entry to the end of the existing move chain
             ASSERT(endOfChain != insert);
-            dp->data[endOfChain].next = insert;
+            dp->data[endOfChain].next = static_cast<uint16_t>(insert);
             // put new data into data page
             dp->data[insert] = de;
             dp->free_list = nextFree;
@@ -106,15 +107,15 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
             // save existing head of the data chain in the old page.
             int oldDataIndex = existingIndex.index;
             // update index to point to new page
-            existingIndex.page = (uint16_t)data.size()-1;
-            existingIndex.index = newDp->free_list;
+            existingIndex.page = static_cast<uint16_t>(data.size()-1);
+            existingIndex.index = static_cast<uint16_t>(newDp->free_list);
             book::DataPage *oldDp = dp;
             // transfer entries from old to new page
             while (oldDataIndex != book::NO_NEXT) {
                book::DataEntry &oldDe = dp->data[oldDataIndex];
                ASSERT(newDp->free_list < book::DATA_PAGE_SIZE);
                book::DataEntry &newDe = newDp->data[newDp->free_list];
-               int nextFree = newDe.next;
+               unsigned nextFree = (unsigned)newDe.next;
                // update new page with old data
                newDe = oldDe;
                if (oldDe.next != book::NO_NEXT) {
@@ -122,7 +123,7 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
                    // make the next pointer go to the next
                    // free slot - we will allocate that
                    // in the next pass thru the loop.
-                   newDe.next = nextFree;
+                   newDe.next = static_cast<uint16_t>(nextFree);
                }
                // update new page free list
                newDp->free_list = nextFree;
@@ -130,7 +131,7 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
                newDp->num_free--;
                oldDataIndex = oldDe.next;
                // link old data item into old page free list
-               oldDe.next = oldDp->free_list;
+               oldDe.next = static_cast<uint16_t>(oldDp->free_list);
                oldDp->free_list = oldDataIndex;
                oldDp->num_free++;
             }

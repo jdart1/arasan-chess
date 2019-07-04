@@ -19,8 +19,6 @@
 #include "notation.h"
 #endif
 
-static constexpr unsigned NUM_SAMPLES = 50;
-
 BookReader::BookReader()
 {
    // seed the random number generator

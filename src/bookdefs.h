@@ -95,8 +95,8 @@ BEGIN_PACKED_STRUCT
     DataPage() : free_list(0), num_free(DATA_PAGE_SIZE) {
         // create the free list and link all entries into it
         memset(data,'\0',sizeof(DataEntry)*DATA_PAGE_SIZE);
-        for (int i = 0; i < DATA_PAGE_SIZE-1; i++) {
-            data[i].next = i+1;
+        for (unsigned i = 0; i < DATA_PAGE_SIZE-1; i++) {
+            data[i].next = static_cast<uint16_t>(i+1);
         }
         data[DATA_PAGE_SIZE-1].next = NO_NEXT;
     }

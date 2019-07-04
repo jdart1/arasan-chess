@@ -74,9 +74,9 @@ public:
    // update all fields of the board, based on the piece positions.
    void setSecondaryVars();
 
-   CastleType castleStatus( ColorType side ) const
+   CastleType castleStatus( ColorType c ) const
    {
-       return state.castleStatus[side];        
+       return state.castleStatus[c];        
    }
    
    void setCastleStatus( CastleType t, ColorType side );
@@ -100,9 +100,9 @@ public:
      side = color;
    }
    
-   const Material &getMaterial( ColorType side ) const
+   const Material &getMaterial( ColorType c ) const
    {
-       return material[side];
+       return material[c];
    }
    
    hash_t pawnHash() const {
@@ -133,8 +133,8 @@ public:
        state.checkStatus = s;
    }
 
-   Square kingSquare(ColorType side) const {
-        return kingPos[side];           
+   Square kingSquare(ColorType c) const {
+        return kingPos[c];           
    }
            
    hash_t hashCode() const {

@@ -1,4 +1,4 @@
-// Copyright 1994, 1996, 2005, 2008 by Jon Dart
+// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019 by Jon Dart
 
 #include "bitboard.h"
 
@@ -94,7 +94,7 @@ void Bitboard::init()
      MagicTable32[index] = i;
    }
 #endif
-   for (int i = 0; i < 256; i++) {
+   for (i = 0; i < 256; i++) {
      int mask = 128;
      int msb = 7;
      msbTable[i] = 0;

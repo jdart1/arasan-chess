@@ -282,15 +282,15 @@ union MoveUnion
    MoveUnion(Square start, Square dest, PieceType pieceMoved,
 	     PieceType promotion,
              PieceType capture, MoveType type,
-	     int flags = 0)
+	     unsigned flags = 0)
    {
-     contents.start = start;
-     contents.dest = dest;
-     contents.piece_moved = pieceMoved;
-     contents.promotion = promotion;
-     contents.capture = capture;
-     contents.type = type;
-     contents.flags = flags;
+     contents.start = (byte) start;
+     contents.dest = (byte) dest;
+     contents.piece_moved = (byte) pieceMoved;
+     contents.promotion = (byte) promotion;
+     contents.capture = (byte) capture;
+     contents.type = (byte) type;
+     contents.flags = (byte) flags;
    }
 };
 

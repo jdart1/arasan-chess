@@ -100,8 +100,8 @@ class MoveGenerator
 
       // Only generates captures, promotions, and check evasions.
       //
-      int generateCaptures( Move *moves ) {
-          return generateCaptures(moves, board.occupied[board.oppositeSide()]);
+      int generateCaptures( Move *moveList ) {
+          return generateCaptures(moveList, board.occupied[board.oppositeSide()]);
       }
 
       // Return a list of the moves that may be used to escape
@@ -130,13 +130,12 @@ class MoveGenerator
 
       static void sortMoves(Move moves[], int scores[], int n);
 
-      inline void SetPhase(Move &move,Phase phase)
+      inline void SetPhase(Move &move, Phase p)
       {
-          ((union MoveUnion*)&(move))->contents.phase = (byte)phase;
+          ((union MoveUnion*)&(move))->contents.phase = (byte)p;
       }
 
-
-      inline Phase GetPhase(const Move &move)
+      inline Phase GetPhase(const Move &move) const
       {
           return (Phase)((union MoveUnion*)&(move))->contents.phase;
       }
@@ -201,8 +200,8 @@ class RootMoveGenerator : public MoveGenerator
       }
 
       // Generate the next check evasion, NullMove if none left
-      virtual Move nextEvasion(int &order) {
-         return nextMove(order);
+      virtual Move nextEvasion(int &ord) {
+         return nextMove(ord);
       }
 
       using MoveGenerator::nextMove;

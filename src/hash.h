@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2015, 2017-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015, 2017-2019 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -37,7 +37,7 @@ class HashEntry {
           contents.start = contents.dest = InvalidSquare;
           contents.promotion = Empty;
           contents.start = InvalidSquare;
-          contents.value = Constants::INVALID_SCORE;
+          contents.value = (stored_score_t) Constants::INVALID_SCORE;
           setEffectiveHash(0,Constants::INVALID_SCORE);
       }
 
@@ -46,11 +46,11 @@ class HashEntry {
                 Move bestMove = NullMove) {
          ASSERT(depth+2 >= 0 && depth+2 < 256);
          contents.depth = (byte)(depth+2);
-         contents.age = age;
-         contents.flags = type | flags;
-         contents.start = StartSquare(bestMove);
-         contents.dest = DestSquare(bestMove);
-         contents.promotion = PromoteTo(bestMove);
+         contents.age = (byte) age;
+         contents.flags = (byte) (type | flags);
+         contents.start = (byte) StartSquare(bestMove);
+         contents.dest = (byte) DestSquare(bestMove);
+         contents.promotion = (byte) PromoteTo(bestMove);
          contents.value = stored_score_t(val);
          setEffectiveHash(hash,staticValue);
       }
@@ -92,8 +92,8 @@ class HashEntry {
               return score_t(bits & 0x7fff);
       }
 
-      void setValue(score_t val) {
-         contents.value = (stored_score_t)val;
+      void setValue(score_t score) {
+         contents.value = (stored_score_t) score;
       }
 
       ValueType type() const {
@@ -105,7 +105,7 @@ class HashEntry {
       }
 
       void setAge(unsigned age) {
-         contents.age = age;
+         contents.age = (byte) age;
       }
 
       int learned() const {
@@ -240,7 +240,7 @@ class Hash {
                           HashEntry::ValueType type,
                           score_t value,
                           score_t staticValue,
-                          int flags,
+                          unsigned flags,
                           Move best_move) {
 
         if (!hashSize) return;
@@ -282,7 +282,7 @@ class Hash {
                hashFree--;
             }
             *best = HashEntry(hashCode, value,
-                              staticValue, depth, type, age, flags, best_move);
+                              staticValue, depth, type, age, (byte)flags, best_move);
        }
     }
 
