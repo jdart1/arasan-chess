@@ -753,28 +753,33 @@ int Search::checkTime() {
     CLOCK_TYPE current_time = getCurrentTime();
     controller->elapsed_time = getElapsedTime(controller->startTime,current_time);
 
-    if (controller->typeOfSearch == FixedTime) {
-       if (controller->elapsed_time >= controller->time_target) {
-          return 1;
-       }
-    }
-    else if (controller->typeOfSearch == TimeLimit) {
-       if (controller->elapsed_time > controller->getTimeLimit()) {
-          if (talkLevel == Trace) {
-             cout << "# terminating, max time reached" << endl;
+    // Do not allow time-based termination if the search has not
+    // completed even one iteration, since we may be failing low and
+    // have no move
+    if (controller->stats->completedDepth > 0) {
+       if (controller->typeOfSearch == FixedTime) {
+          if (controller->elapsed_time >= controller->time_target) {
+             return 1;
           }
-          return 1;
+       }
+       else if (controller->typeOfSearch == TimeLimit) {
+          if (controller->elapsed_time > controller->getTimeLimit()) {
+             if (talkLevel == Trace) {
+                cout << "# terminating, max time reached" << endl;
+             }
+             return 1;
+          }
        }
     }
 
     if ((mainThread() || controller->mainThreadCompleted()) &&
-        controller->monitor_function &&
-        controller->monitor_function(controller,stats)) {
-        if (talkLevel == Trace) {
-           cout << "# terminating due to program or user input" << endl;
-        }
-        controller->terminateNow();
-        return 1;
+       controller->monitor_function &&
+       controller->monitor_function(controller,stats)) {
+       if (talkLevel == Trace) {
+          cout << "# terminating due to program or user input" << endl;
+       }
+       controller->terminateNow();
+       return 1;
     }
 
     if (mainThread()) {
@@ -1221,7 +1226,8 @@ Move Search::ply0_search()
                     lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
                 }
             }
-            // check time after adjustments have been made
+            // check time after adjustments have been made. Do not
+            // allow time-based exit without one completed iteration though.
             if (!terminate) {
                 if (checkTime()) {
                     if (talkLevel == Trace) {
@@ -1601,11 +1607,16 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
     for (int i = 0; i < 4; i++) stats->move_order[i] = 0;
 #endif
     // Sum all counters across threads
+    unsigned bestCompleted = 0;
+    stats->completedDepth = 0;
     for (unsigned i = 0; i < pool->nThreads; i++) {
        const Statistics &s = pool->data[i]->work->stats;
        stats->tb_probes += s.tb_probes;
        stats->tb_hits += s.tb_hits;
        stats->num_nodes += s.num_nodes;
+       if (s.completedDepth > bestCompleted) {
+           stats->completedDepth = bestCompleted = s.completedDepth;
+       }
 #ifdef SEARCH_STATS
        stats->num_qnodes += s.num_qnodes;
        stats->reg_nodes += s.reg_nodes;
@@ -2890,11 +2901,11 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() && board.checkStatus() == NotInCheck &&
         depth >= PROBCUT_DEPTH &&
-        (!(node->flags & PROBCUT) || depth >= 8*DEPTH_INCREMENT) &&
+        (!(node->flags & PROBCUT) || depth >= 9*DEPTH_INCREMENT) &&
         node->beta < Constants::MATE_RANGE) {
        const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const score_t needed_gain = probcut_beta - node->staticEval;
-       const int nu_depth = depth - 4*DEPTH_INCREMENT;
+       const int nu_depth = depth - 4*DEPTH_INCREMENT - depth/8;
        BoardState state(board.state);
        if (!IsNull(hashMove) && seeSign(board,hashMove,needed_gain)) {
 #ifdef _TRACE
