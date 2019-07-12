@@ -5,6 +5,7 @@
 #include "notation.h"
 #include "movegen.h"
 #include "hash.h"
+#include "protocol.h"
 #include "see.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
@@ -20,11 +21,6 @@
 #include <iomanip>
 #include <list>
 #include <vector>
-
-#ifdef UCI_LOG
-#include <fstream>
-extern fstream ucilog;
-#endif
 
 static const int ASPIRATION_WINDOW[] =
     {(int)(0.375*Params::PAWN_VALUE),
@@ -139,7 +135,7 @@ SearchController::SearchController()
       monitor_function(nullptr),
       uci(false),
       age(1),
-      talkLevel(Silent),
+      talkLevel(TalkLevel::Silent),
       time_limit(0),
       time_target(0),
       xtra_time(0),
@@ -206,8 +202,8 @@ SearchController::~SearchController() {
 }
 
 void SearchController::terminateNow() {
-    if (talkLevel == Trace)
-        cout << "# terminating search (controller)" << endl;
+    if (debugOut())
+        cout << debugPrefix() << "terminating search (controller)" << endl;
     stopAllThreads();
 }
 
@@ -315,8 +311,8 @@ Move SearchController::findBestMove(
       // this in analysis mode: return a move if possible. Also do
       // a search in all cases for UCI, since the engine cannot
       // claim draw and some interfaces may expect a move.)
-      if (talkLevel == Trace) {
-          cout << "# skipping search, draw" << endl;
+      if (debugOut()) {
+          cout << debugPrefix() << "skipping search, draw" << endl;
       }
       stats->state = Draw;
       stats->value = drawScore(board);
@@ -324,7 +320,7 @@ Move SearchController::findBestMove(
    }
    Search *rootSearch = pool->rootSearch();
    // Generate the ply 0 moves here:
-   mg = new RootMoveGenerator(board,&(rootSearch->context),NullMove,talkLevel == Trace);
+   mg = new RootMoveGenerator(board,&(rootSearch->context),NullMove,debugOut());
    if (mg->moveCount() == 0) {
       // Checkmate or statemate
       if (board.inCheck()) {
@@ -354,8 +350,8 @@ Move SearchController::findBestMove(
          const int max = int(0.3F*time_target/mgCount);
          // wait time is in milliseconds
          waitTime = int((max*factor));
-         if (talkLevel == Trace) {
-            cout << "# waitTime=" << waitTime << endl;
+         if (debugOut()) {
+            cout << debugPrefix() << "waitTime=" << waitTime << endl;
          }
       }
       select_subopt = random(1024);
@@ -376,9 +372,9 @@ Move SearchController::findBestMove(
          if (limit > 1.0) {
             depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
          }
-         if (talkLevel == Trace) {
-            cout << "# ply limit =" << ply_limit << endl;
-            cout << "# depth adjust =" << depth_adjust << endl;
+         if (debugOut()) {
+            cout << debugPrefix() << "ply limit =" << ply_limit << endl;
+            cout << debugPrefix() << "depth adjust =" << depth_adjust << endl;
          }
       }
    }
@@ -404,8 +400,8 @@ Move SearchController::findBestMove(
            // do not probe in the search
            options.search.tb_probe_in_search = 0;
            updateSearchOptions();
-           if (talkLevel == Trace) {
-               cout << "# " << board << " root tb hit, score=";
+           if (debugOut()) {
+               cout << debugPrefix() << board << " root tb hit, score=";
                Scoring::printScore(tb_score,cout);
                cout << endl;
            }
@@ -440,8 +436,8 @@ Move SearchController::findBestMove(
    rootSearch->init(rootStack,pool->mainThread());
    Move best = rootSearch->ply0_search();
 
-   if (talkLevel == Trace) {
-      cout << "# waiting for thread completion" << endl;
+   if (debugOut()) {
+      cout << debugPrefix() << "waiting for thread completion" << endl;
    }
 
    // Wait for all threads to complete
@@ -450,8 +446,8 @@ Move SearchController::findBestMove(
    // We are finished with the move generator - can delete
    delete mg;
 
-   if (talkLevel == Trace) {
-       cout << "# thread 0 depth=" << rootSearch->stats.completedDepth <<
+   if (debugOut()) {
+       cout << debugPrefix() << "thread 0 depth=" << rootSearch->stats.completedDepth <<
            " score=";
        Scoring::printScore(rootSearch->stats.display_value,cout);
        cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
@@ -460,7 +456,7 @@ Move SearchController::findBestMove(
    }
 
    if (options.search.multipv == 1) {
-       Statistics *bestStats = getBestThreadStats(talkLevel == Trace);
+       Statistics *bestStats = getBestThreadStats(debugOut());
        updateGlobalStats(*bestStats);
        best = bestStats->best_line[0];
    } else {
@@ -471,12 +467,12 @@ Move SearchController::findBestMove(
        post_function(*stats);
    }
 #ifdef _TRACE
-   cout << "# best thread: score=";
+   cout << debugPrefix() << "best thread: score=";
    Scoring::printScore(stats->value,cout);
    cout << " pv=" << stats->best_line_image << endl;
 #endif
-   if (talkLevel == Trace) {
-      cout << "# best thread: depth= " << stats->completedDepth <<  " score=";
+   if (debugOut()) {
+      cout << debugPrefix() << "best thread: depth= " << stats->completedDepth <<  " score=";
       Scoring::printScore(stats->value,cout);
       cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       cout << " pv=" << stats->best_line_image << endl;
@@ -514,7 +510,7 @@ Move SearchController::findBestMove(
       }
    }
 
-   if (talkLevel == Debug) {
+   if (talkLevel == TalkLevel::Test) {
       std::ios_base::fmtflags original_flags = cout.flags();
       cout.setf(ios::fixed);
       cout << setprecision(2);
@@ -623,13 +619,6 @@ void SearchController::uciSendInfos(const Board &board, Move move, int move_inde
       Notation::image(board,move,Notation::OutputFormat::UCI,cout);
       cout << " currmovenumber " << move_index;
       cout << endl << (flush);
-#ifdef UCI_LOG
-      ucilog << "info depth " << depth;
-      ucilog << " currmove ";
-      Notation::image(board,move,Notation::OutputFormat::UCI,ucilog);
-      ucilog << " currmovenumber " << move_index;
-      ucilog << endl << (flush);
-#endif
    }
 }
 
@@ -720,8 +709,8 @@ void SearchController::applySearchHistoryFactors() {
         } else {
             bonus_time = -static_cast<int64_t>(std::floor(searchHistoryReductionFactor*time_target/3));
         }
-        if (talkLevel == Trace && typeOfSearch == TimeLimit && bonus_time) {
-            cout << "# bonus time=" << bonus_time << endl;
+        if (debugOut() && typeOfSearch == TimeLimit && bonus_time) {
+            cout << debugPrefix() << "bonus time=" << bonus_time << endl;
         }
     }
 }
@@ -746,7 +735,7 @@ int Search::checkTime() {
         controller->terminateNow();
     }
     if (terminate) {
-       if (talkLevel==Trace) cout << "# check time, already terminated" << endl;
+       if (debugOut()) cout << debugPrefix() << "check time, already terminated" << endl;
        return 1; // already stopped search
     }
 
@@ -764,8 +753,8 @@ int Search::checkTime() {
        }
        else if (controller->typeOfSearch == TimeLimit) {
           if (controller->elapsed_time > controller->getTimeLimit()) {
-             if (talkLevel == Trace) {
-                cout << "# terminating, max time reached" << endl;
+             if (debugOut()) {
+                cout << debugPrefix() << "terminating, max time reached" << endl;
              }
              return 1;
           }
@@ -775,8 +764,8 @@ int Search::checkTime() {
     if ((mainThread() || controller->mainThreadCompleted()) &&
        controller->monitor_function &&
        controller->monitor_function(controller,stats)) {
-       if (talkLevel == Trace) {
-          cout << "# terminating due to program or user input" << endl;
+       if (debugOut()) {
+          cout << debugPrefix() << "terminating due to program or user input" << endl;
        }
        controller->terminateNow();
        return 1;
@@ -802,7 +791,7 @@ bool failhigh)
     if (terminate)
         return;
     int ply = stats.depth;
-    if (talkLevel == Debug) {
+    if (talkLevel == TalkLevel::Test) {
         // This is the output for the "test" command in verbose mode
         std::ios_base::fmtflags original_flags = cout.flags();
         cout.setf(ios::fixed);
@@ -931,7 +920,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     // note: retain previous best line if we do not have one here
     if (IsNull(node->pv[0])) {
 #ifdef _TRACE
-        if (mainThread()) cout << "# warning: pv is null\n";
+        if (mainThread()) cout << debugPrefix() << "warning: pv is null\n";
 #endif
         return;
     }
@@ -1017,8 +1006,8 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
               threshold = unsigned(threshold_base/(2*diff+i));
            }
            if (r < threshold) {
-              if (mainThread() && controller->talkLevel == Trace) {
-                 cout << "# suboptimal: index= " << i <<
+              if (mainThread() && controller->debugOut()) {
+                 cout << debugPrefix() << "suboptimal: index= " << i <<
                     " score=" << score << " val=" << first_val <<
                     " threshold=" << threshold <<
                     " r=" << r << endl;
@@ -1073,8 +1062,8 @@ Move Search::ply0_search()
             lo_window = std::max<score_t>(-Constants::MATE,value - aspirationWindow/2);
             hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
          }
-         if (mainThread() && talkLevel == Trace && controller->background) {
-            cout << "# " << iterationDepth << ". move=";
+         if (mainThread() && debugOut() && controller->background) {
+            cout << debugPrefix() << iterationDepth << ". move=";
             MoveImage(node->best,cout); cout << " score=";
             Scoring::printScore(node->best_score,cout);
             cout << " terminate=" << terminate << endl;
@@ -1112,8 +1101,8 @@ Move Search::ply0_search()
 #endif
             StateType &state = stats.state;
             if (!terminate && (state == Checkmate || state == Stalemate)) {
-               if (mainThread() && talkLevel == Trace)
-                  cout << "# terminating due to checkmate or statemate, state="
+               if (mainThread() && debugOut())
+                  cout << debugPrefix() << "terminating due to checkmate or statemate, state="
                        << (int)state << endl;
                controller->terminateNow();
                break;
@@ -1123,8 +1112,8 @@ Move Search::ply0_search()
                if ((int)controller->time_limit - (int)controller->elapsed_time < 100) {
                   Time_Check_Interval /= 2;
                }
-               if (mainThread() && talkLevel == Trace) {
-                  cout << "# time check interval=" << Time_Check_Interval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << endl;
+               if (mainThread() && debugOut()) {
+                  cout << debugPrefix() << "time check interval=" << Time_Check_Interval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << endl;
                }
             }
             stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
@@ -1151,20 +1140,20 @@ Move Search::ply0_search()
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
                     }
-                    if (talkLevel == Trace) {
-                        cout << "# ply 0 fail high, re-searching ... value=";
+                    if (debugOut()) {
+                        cout << debugPrefix() << "ply 0 fail high, re-searching ... value=";
                         Scoring::printScore(value,cout);
                         cout << " fails=" << fails+1 << endl;
                     }
 #ifdef _TRACE
-                    cout << "# ply 0 high cutoff, re-searching ... value=";
+                    cout << debugPrefix() << "ply 0 high cutoff, re-searching ... value=";
                     Scoring::printScore(value,cout);
                     cout << " fails=" << fails+1 << endl;
 #endif
                 }
                 if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
-                    if (talkLevel == Trace) {
-                        cout << "# warning, too many aspiration window steps" << endl;
+                    if (debugOut()) {
+                        cout << debugPrefix() << "warning, too many aspiration window steps" << endl;
                     }
                     aspirationWindow = Constants::MATE;
                 }
@@ -1186,13 +1175,13 @@ Move Search::ply0_search()
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
                     }
-                    if (talkLevel == Trace) {
-                        cout << "# ply 0 fail low, re-searching ... value=";
+                    if (debugOut()) {
+                        cout << debugPrefix() << "ply 0 fail low, re-searching ... value=";
                         Scoring::printScore(value,cout);
                         cout << " fails=" << fails+1 << endl;
                     }
 #ifdef _TRACE
-                    cout << "# ply 0 fail low, re-searching ... value=";
+                    cout << debugPrefix() << "ply 0 fail low, re-searching ... value=";
                     Scoring::printScore(value,cout);
                     cout << " fails=" << fails+1 << endl;
 #endif
@@ -1201,8 +1190,8 @@ Move Search::ply0_search()
                 if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
                     // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
                     // search to continue, but set the lower bound to the bottom of the range.
-                    if (mainThread() && talkLevel == Trace) {
-                        cout << "# warning, too many aspiration window steps" << endl;
+                    if (mainThread() && debugOut()) {
+                        cout << debugPrefix() << "warning, too many aspiration window steps" << endl;
                     }
                     aspirationWindow = Constants::MATE;
                 }
@@ -1230,8 +1219,8 @@ Move Search::ply0_search()
             // allow time-based exit without one completed iteration though.
             if (!terminate) {
                 if (checkTime()) {
-                    if (talkLevel == Trace) {
-                        cout << "# time up" << endl;
+                    if (debugOut()) {
+                        cout << debugPrefix() << "time up" << endl;
                     }
                     controller->terminateNow();
                 }
@@ -1246,8 +1235,8 @@ Move Search::ply0_search()
                 mg.moveCount() == 1 &&
                 iterationDepth >= 2 &&
                 !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
-               if (mainThread() && talkLevel == Trace) {
-                  cout << "# single legal move, terminating" << endl;
+               if (mainThread() && debugOut()) {
+                  cout << debugPrefix() << "single legal move, terminating" << endl;
                }
                controller->terminateNow();
             }
@@ -1280,8 +1269,8 @@ Move Search::ply0_search()
                   // We're either checkmated or we certainly will be, so
                   // quit searching.
                   if (mainThread()) {
-                     if (talkLevel == Trace) {
-                        cout << "# terminating, low score" << endl;
+                     if (debugOut()) {
+                        cout << debugPrefix() << "terminating, low score" << endl;
                      }
 #ifdef _TRACE
                      cout << "terminating, low score" << endl;
@@ -1293,8 +1282,8 @@ Move Search::ply0_search()
                else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
                   // found a forced mate, terminate
                   if (mainThread()) {
-                     if (talkLevel == Trace) {
-                        cout << "# terminating, high score" << endl;
+                     if (debugOut()) {
+                        cout << debugPrefix() << "terminating, high score" << endl;
                      }
 #ifdef _TRACE
                      cout << "terminating, high score" << endl;
@@ -1313,16 +1302,14 @@ Move Search::ply0_search()
          showStatus(board, node->best, false, false);
       }
    } // end depth iteration loop
-   if (talkLevel == Trace && mainThread() && iterationDepth >= controller->ply_limit) {
-       cout << "# exiting search due to max depth" << endl;
+   if (debugOut() && mainThread() && iterationDepth >= controller->ply_limit) {
+       cout << debugPrefix() << "exiting search due to max depth" << endl;
    }
-#ifdef UCI_LOG
-   if (mainThread()) {
-      ucilog << "out of search loop, move= ";
-      MoveImage(node->best,ucilog);
-      ucilog << endl << (flush);
+   if (mainThread() && debugOut()) {
+      cout << debugPrefix() << "out of search loop, move= ";
+      MoveImage(node->best,cout);
+      cout << endl << (flush);
    }
-#endif
    // In reduced-strength mode, sometimes play s suboptimal move
    if (options.search.strength < 100 && stats.completedDepth <= (unsigned)MoveGenerator::EASY_PLIES) {
       score_t val = stats.display_value;
@@ -1395,8 +1382,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     int move_index = 0;
     score_t hibound = beta;
     while (!node->cutoff && !terminate) {
-        if (mainThread() && talkLevel == Trace && controller->fail_high_root) {
-           cout << "# resetting fail_high_root" << endl;
+        if (mainThread() && debugOut() && controller->fail_high_root) {
+           cout << debugPrefix() << "resetting fail_high_root" << endl;
         }
         controller->fail_high_root = false;
         Move move;
@@ -1472,8 +1459,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            // Set flag to extend search time (if not extended already)
            if (mainThread() && controller->time_target != INFINITE_TIME) {
               controller->fail_high_root = true;
-              if (talkLevel == Trace) {
-                 cout << "# researching at root, extending time" << endl;
+              if (debugOut()) {
+                 cout << debugPrefix() << "researching at root, extending time" << endl;
               }
            }
 #ifdef _TRACE
@@ -1518,8 +1505,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
         }
         if (mainThread()) {
-           if (talkLevel == Trace && controller->fail_high_root) {
-              cout << "# resetting fail_high_root" << endl;
+           if (debugOut() && controller->fail_high_root) {
+              cout << debugPrefix() << "resetting fail_high_root" << endl;
            }
            controller->fail_high_root = false;
         }
@@ -1577,7 +1564,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #ifdef _DEBUG
     if (node->best_score < -Constants::MATE ||
         node->best_score > Constants::MATE) {
-        cout << "# " << board << endl;
+        cout << debugPrefix() << board << endl;
         ASSERT(0);
     }
 #endif
@@ -1649,7 +1636,7 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
     for (int thread = 1; thread < options.search.ncpus; thread++) {
         Statistics &threadStats = pool->data[thread]->work->stats;
         if (trace) {
-            cout << "# thread " << thread << " depth=" <<
+            cout << debugPrefix() << "thread " << thread << " depth=" <<
                 threadStats.completedDepth << " score=";
             Scoring::printScore(threadStats.display_value,cout);
             cout << " failHigh=" << (int)threadStats.failHigh << " failLow=" <<
@@ -1699,6 +1686,11 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     return d;
 }
 
+const char *SearchController::debugPrefix() const noexcept
+{
+    return uci ? Protocol::UCI_DEBUG_PREFIX : Protocol::CECP_DEBUG_PREFIX;
+}
+
 score_t Search::quiesce(int ply,int depth)
 {
    // recursive function, implements quiescence search.
@@ -1713,8 +1705,8 @@ score_t Search::quiesce(int ply,int depth)
       if (--controller->time_check_counter <= 0) {
          controller->time_check_counter = Time_Check_Interval;
          if (checkTime()) {
-            if (talkLevel == Trace) {
-               cout << "# terminating, time up" << endl;
+            if (debugOut()) {
+               cout << debugPrefix() << "terminating, time up" << endl;
             }
             controller->terminateNow();   // signal all searches to end
          }
@@ -1959,7 +1951,7 @@ score_t Search::quiesce(int ply,int depth)
       }
       if (node->best_score < -Constants::MATE ||
         node->best_score > Constants::MATE) {
-        cout << "# " << board << endl;
+        cout << debugPrefix() << board << endl;
         ASSERT(0);
       }
       ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
@@ -2517,8 +2509,8 @@ score_t Search::search()
         if (--controller->time_check_counter <= 0) {
             controller->time_check_counter = Time_Check_Interval;
             if (checkTime()) {
-               if (talkLevel == Trace) {
-                  cout << "# terminating, time up" << endl;
+               if (debugOut()) {
+                  cout << debugPrefix() << "terminating, time up" << endl;
                }
                controller->terminateNow();   // signal all searches to end
             }
@@ -2712,8 +2704,8 @@ score_t Search::search()
         (board.checkStatus((node-1)->last_move) == InCheck);
 #ifdef _DEBUG
     if (in_check != board.inCheck()) {
-	   cout << "# " << board << endl;
-	   cout << "# move=";
+	   cout << debugPrefix() << board << endl;
+	   cout << debugPrefix() << "move=";
 	   MoveImage((node-1)->last_move,cout);
 	   cout << endl;
 	   ASSERT(0);
@@ -3552,3 +3544,7 @@ void Search::setSearchOptions() {
    srcOpts = options.search;
 }
 
+const char * Search::debugPrefix() const noexcept
+{
+    return controller->debugPrefix();
+}

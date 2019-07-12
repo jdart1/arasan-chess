@@ -130,7 +130,7 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
                                   type,
                                   time_limit, 0, depth_limit,
                                   0, 0, stats,
-                                  opts.verbose ? Debug : Silent,
+                                  opts.verbose ? TalkLevel::Test : TalkLevel::Silent,
                                   excludes, includes);
                 if (excludes.size())
                     cout << "result(" << excludes.size()+1 << "):";

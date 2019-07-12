@@ -1,4 +1,4 @@
-// Copyright 1994-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2019 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -63,11 +63,13 @@ struct NodeInfo {
 typedef NodeInfo NodeStack[Constants::MaxPly];
 
 // There are 4 levels of verbosity.  Silent mode does no output to
-// the console - it is used by the Windows GUI. Debug level is
-// used to output debug info. Whisper is used to "whisper"
-// comments on a chess server. "Trace" is used in trace mode
-// (-t) of the chess server client.
-enum TalkLevel { Silent, Debug, Whisper, Trace };
+// the console - it is used by the Windows GUI. Test level is
+// used for verbose output from the "test" command. Whisper is
+// used to "whisper" comments on a chess server. "Debug" is used
+// when -t is added to the command line or UCI debug mode has been
+// enabled. It generates debug output to cout prefixed with '#' for
+// Winboard or "info " for UCI.
+enum class TalkLevel { Silent, Test, Whisper, Debug };
 
 enum SearchType { FixedDepth, TimeLimit, FixedTime };
 
@@ -145,6 +147,12 @@ public:
     bool mainThread() const {
        return ti->index == 0;
     }
+
+    bool debugOut() const noexcept {
+        return talkLevel == TalkLevel::Debug;
+    }
+
+    const char * debugPrefix() const noexcept;
 
 protected:
 
@@ -245,7 +253,7 @@ protected:
     ColorType computerSide;
     score_t contempt;
     int age;
-    TalkLevel talkLevel;
+    TalkLevel talkLevel; // copy of controller's talkLevel
 };
 
 class SearchController {
@@ -458,6 +466,12 @@ public:
        pool->recalcBindings();
    }
 #endif
+
+   bool debugOut() const noexcept {
+      return talkLevel == TalkLevel::Debug;
+   }
+
+   const char *debugPrefix() const noexcept;
 
 private:
 

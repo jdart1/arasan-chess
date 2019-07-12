@@ -1,4 +1,4 @@
- // Copyrightgg 1996-2012, 2014, 2016-2018 by Jon Dart.  All Rights Reserved.
+ // Copyright 1996-2012, 2014, 2016-2019 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -37,10 +37,6 @@ static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
 
-#ifdef UCI_LOG
-fstream ucilog;
-#endif
-
 string programPath;
 
 string derivePath(const char *fileName) {
@@ -73,10 +69,6 @@ int initGlobals(const char *pathName, bool initLog) {
        theLog->write_header();
    }
    LockInit(input_lock);
-#ifdef UCI_LOG
-   ucilog.open(derivePath("ucilog").c_str(),ios::out|ios::app);
-   ucilog << "starting up" << endl;
-#endif
    return 1;
 }
 
@@ -86,9 +78,6 @@ void CDECL cleanupGlobals(void) {
    delete theLog;
    LockFree(input_lock);
    Scoring::cleanup();
-#ifdef UCI_LOG
-    ucilog.close();
-#endif
 #ifdef GAVIOTA_TBS
    GaviotaTb::freeTB();
 #endif
@@ -125,9 +114,6 @@ void delayedInit() {
           stringstream msg;
           msg << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << endl;
           cerr << msg.str();
-#ifdef UCI_LOG
-          ucilog << msg.str();
-#endif
        }
     }
 #endif

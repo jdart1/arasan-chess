@@ -1408,7 +1408,7 @@ static int testSearch()
                               false,        /* background */
                               false,        /* UCI */
                               stats,
-                              Silent);
+                              TalkLevel::Silent);
        score_t score = stats.display_value;
        string bm;
        if (rec.getVal("bm",bm)) {

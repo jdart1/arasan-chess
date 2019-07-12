@@ -37,6 +37,9 @@
 #include <regex>
 #include <unordered_set>
 
+const char * Protocol::UCI_DEBUG_PREFIX = "info ";
+const char * Protocol::CECP_DEBUG_PREFIX = "# ";
+
 using namespace std::placeholders;
 
 Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set, bool memory_set)
@@ -120,17 +123,10 @@ Protocol::~Protocol()
     }
 }
 
-#ifdef UCI_LOG
-extern fstream ucilog;
-#endif
-
 void Protocol::poll(bool &polling_terminated)
 {
     while(!polling_terminated) {
         if (inputSem.wait()) {
-#ifdef UCI_LOG
-            ucilog << "wait interrupted" << endl << (flush);
-#endif
             break;
         }
         while (!polling_terminated) {
@@ -143,19 +139,13 @@ void Protocol::poll(bool &polling_terminated)
                 Unlock(input_lock);
                 break;
             }
-#ifdef UCI_LOG
-            ucilog << "got cmd (main): " << cmd << endl;
-#endif
             if (doTrace) {
-                cout << "# got cmd (main): "  << cmd << endl;
+                cout << debugPrefix() << "got cmd (main): "  << cmd << endl;
             }
             Unlock(input_lock);
-#ifdef UCI_LOG
-            ucilog << "calling do_command(main):" << cmd << (flush) << endl;
-#endif
-            if (doTrace) cout << "# calling do_command(main):" << cmd << (flush) << endl;
+            if (doTrace) cout << debugPrefix() << "calling do_command(main):" << cmd << (flush) << endl;
             if (!do_command(cmd,*main_board)) {
-                if (doTrace) cout << "# exiting polling loop" << endl;
+                if (doTrace) cout << debugPrefix() << "exiting polling loop" << endl;
                 polling_terminated = true;
             }
         }
@@ -163,11 +153,8 @@ void Protocol::poll(bool &polling_terminated)
     // handle termination.
     save_game();
     if (doTrace) {
-        cout << "# terminating" << endl;
+        cout << debugPrefix() << "terminating" << endl;
     }
-#ifdef UCI_LOG
-    ucilog << "terminating" << endl << (flush);
-#endif
 }
 
 void Protocol::add_pending(const string &cmd) {
@@ -213,7 +200,7 @@ Move Protocol::get_move(const string &cmd_word, const string &cmd_args) {
     while (it != move.end() && !isalpha(*it)) it++;
     move.erase(move.begin(),it);
     if (doTrace) {
-        cout << "# move text = " << move << endl;
+        cout << debugPrefix() << "move text = " << move << endl;
     }
     return text_to_move(*main_board,move);
 }
@@ -221,7 +208,7 @@ Move Protocol::get_move(const string &cmd_word, const string &cmd_args) {
 Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
 {
     AllPendingStatus retVal = AllPendingStatus::Nothing;
-    if (doTrace) cout << "# in do_all_pending" << endl;
+    if (doTrace) cout << debugPrefix() << "in do_all_pending" << endl;
     while (true) {
         Lock(input_lock);
         if (pending.empty()) {
@@ -232,11 +219,8 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
         pending.erase(pending.begin());
         Unlock(input_lock);
         if (doTrace) {
-            cout << "# pending command(a): " << cmd << endl;
+            cout << debugPrefix() << "pending command(a): " << cmd << endl;
         }
-#ifdef UCI_LOG
-        ucilog << "do_all_pending: " << cmd << (flush) << endl;
-#endif
         if (cmd == "quit") {
             retVal = AllPendingStatus::Quit;
             break;
@@ -244,13 +228,13 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
         do_command(cmd,board);
     }
     if (doTrace) {
-        cout << "# out of do_all_pending, list size=" << pending.size() << endl;
+        cout << debugPrefix() << "out of do_all_pending, list size=" << pending.size() << endl;
     }
     return retVal;
 }
 
 Protocol::PendingStatus Protocol::check_pending(Board &board) {
-    if (doTrace) cout << "# in check_pending" << endl;
+    if (doTrace) cout << debugPrefix() << "in check_pending" << endl;
     PendingStatus retVal = PendingStatus::Nothing;
     Lock(input_lock);
     while (!pending.empty()) {
@@ -261,21 +245,18 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
             cmd == "new" ||
             cmd == "quit" ||
             cmd == "resign") {
-                if (doTrace) cout << "# game end signal in pending stack" << endl;
+                if (doTrace) cout << debugPrefix() << "game end signal in pending stack" << endl;
                 retVal = PendingStatus::GameEnd;
                 break;
         }
         else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
-            if (doTrace) cout << "# move in pending stack" << endl;
+            if (doTrace) cout << debugPrefix() << "move in pending stack" << endl;
             retVal = PendingStatus::Move;
             break;
         }
         else {  // might as well execute this
-#ifdef UCI_LOG
-            ucilog << "calling do_command from check_pending" << (flush) << endl;
-#endif
             if (doTrace) {
-                cout << "# calling do_command from check_pending" << (flush) << endl;
+                cout << debugPrefix() << "calling do_command from check_pending" << (flush) << endl;
             }
             // remove command from pending stack
             pending.erase(pending.begin());
@@ -372,7 +353,7 @@ void Protocol::process_st_command(const string &cmd_args)
    // we allow fractional seconds although UI may not support it
    s >> time_limit_sec;
    if (s.bad() || time_limit_sec <= 0.0) {
-      cout << "# illegal value for st command: " << cmd_args << endl;
+      cout << debugPrefix() << "illegal value for st command: " << cmd_args << endl;
       return;
    } else {
       srctype = FixedTime;
@@ -392,7 +373,7 @@ int Protocol::getIncrUCI(const ColorType side) {
 
 bool Protocol::accept_draw(Board &board) {
    if (doTrace)
-      cout << "# in accept_draw" << endl;
+      cout << debugPrefix() << "in accept_draw" << endl;
    // Code to handle draw offers.
    int rating_diff = opponent_rating - computer_rating;
    // ignore draw if we have just started searching
@@ -412,7 +393,7 @@ bool Protocol::accept_draw(Board &board) {
    if (ourmat.noPawns() && ourmat.value() <= Params::KING_VALUE + Params::BISHOP_VALUE) {
       // We don't have mating material
       if (doTrace)
-         cout << "# no mating material, accept draw" << endl;
+         cout << debugPrefix() << "no mating material, accept draw" << endl;
       return true;
    }
    // accept a draw in pawnless endings with even material, unless
@@ -422,7 +403,7 @@ bool Protocol::accept_draw(Board &board) {
       (std::abs(ourmat.value() - oppmat.value()) < Params::PAWN_VALUE/2) &&
       last_score < Params::PAWN_VALUE) {
       if (doTrace)
-         cout << "# pawnless ending, accept draw" << endl;
+         cout << debugPrefix() << "pawnless ending, accept draw" << endl;
       return true;
    }
 #ifdef SYZYGY_TBS
@@ -431,12 +412,12 @@ bool Protocol::accept_draw(Board &board) {
    if(options.search.use_tablebases &&
       wMat.men() + bMat.men() <= EGTBMenCount) {
       if (doTrace)
-         cout << "# checking tablebases .." << endl;
+         cout << debugPrefix() << "checking tablebases .." << endl;
       // accept a draw when the tablebases say it's a draw
       score_t tbscore;
       if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
          if (doTrace) {
-            cout << "# tablebase score says draw" << endl;
+            cout << debugPrefix() << "tablebase score says draw" << endl;
          }
          return true;
       }
@@ -447,17 +428,17 @@ bool Protocol::accept_draw(Board &board) {
    // accept a draw if our score is negative .. how much negative
    // depends on opponent rating.
    if (doTrace)
-      cout << "# checking draw score .." << endl;
+      cout << debugPrefix() << "checking draw score .." << endl;
    ColorType tmp = board.sideToMove();
    board.setSideToMove(side);
    score_t draw_score = searcher->drawScore(board);
    board.setSideToMove(tmp);
    const score_t threshold = Params::PAWN_VALUE/4;
    if (doTrace) {
-      cout << "# rating_diff = " << rating_diff << endl;
-      cout << "# draw_score = " << draw_score << endl;
-      cout << "# last_score = " << last_score << endl;
-      cout << "# threshold = " << threshold << endl;
+      cout << debugPrefix() << "rating_diff = " << rating_diff << endl;
+      cout << debugPrefix() << "draw_score = " << draw_score << endl;
+      cout << debugPrefix() << "last_score = " << last_score << endl;
+      cout << debugPrefix() << "threshold = " << threshold << endl;
    }
    return draw_score-last_score > threshold;
 }
@@ -508,17 +489,17 @@ void Protocol::do_help() {
 
 void Protocol::save_game() {
    if (uci) return;                               // not supported
-   if (doTrace) cout << "# in save_game" << endl;
-   if (doTrace) cout << "# game_moves=" << gameMoves->num_moves() << endl;
+   if (doTrace) cout << debugPrefix() << "in save_game" << endl;
+   if (doTrace) cout << debugPrefix() << "game_moves=" << gameMoves->num_moves() << endl;
    if (gameMoves->num_moves() == 0 || !options.store_games) {
-      if (doTrace) cout << "# out of save_game" << endl;
+      if (doTrace) cout << debugPrefix() << "out of save_game" << endl;
       return;
    }
    if (game_file) {
       vector<ChessIO::Header> headers;
       string opening_name, eco;
       if (ecoCoder) {
-         if (doTrace) cout << "# calling classify" << endl;
+         if (doTrace) cout << debugPrefix() << "calling classify" << endl;
          ecoCoder->classify(*gameMoves,eco,opening_name);
          headers.push_back(ChessIO::Header("ECO",eco));
       }
@@ -588,7 +569,7 @@ void Protocol::save_game() {
          result,
          headers);
    }
-   if (doTrace) cout << "# out of save_game" << endl;
+   if (doTrace) cout << debugPrefix() << "out of save_game" << endl;
 }
 
 
@@ -633,9 +614,6 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    if (doTrace) {
       theLog->write(s.str().c_str()); theLog->write_eol();
    }
-#ifdef UCI_LOG
-   ucilog << s.str() << endl;
-#endif
 }
 
 
@@ -707,16 +685,13 @@ void Protocol::checkPendingInSearch(SearchController *controller) {
 bool Protocol::processPendingInSearch(SearchController *controller, const string &cmd, bool &exit)
 {
     if (doTrace) {
-        cout << "# command in search: " << cmd << endl;
+        cout << debugPrefix() << "command in search: " << cmd << endl;
     }
     string cmd_word, cmd_args;
     // extract first word of command:
     split_cmd(cmd,cmd_word,cmd_args);
     exit = false;
     if (uci) {
-#ifdef UCI_LOG
-        ucilog << "checkPendingInSearch: " << cmd << (flush) << endl;
-#endif
         if (cmd == "quit") {
             controller->terminateNow();
             exit = true;
@@ -742,11 +717,11 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                     s << "time_left=" << time_left << " opp_time=" << opp_time << " time_target=" <<
                         time_target << '\0';
                     theLog->write(s.str().c_str()); theLog->write_eol();
-                    cout << "# time_target = " << time_target << endl;
+                    cout << debugPrefix() << "time_target = " << time_target << endl;
                 }
                 controller->setTimeLimit(time_target,calc_extra_time(side));
             }
-            controller->setTalkLevel(Whisper);
+            controller->setTalkLevel(TalkLevel::Whisper);
             controller->setBackground(false);
             // Since we have shifted to foreground mode, show the current
             // search statistics:
@@ -796,7 +771,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
     else if (cmd == "?") {
         // Winboard 3.6 or higher sends this to terminate a search
         // in progress
-        if (doTrace) cout << "# ? received: terminating." << endl;
+        if (doTrace) cout << debugPrefix() << "? received: terminating." << endl;
         controller->terminateNow();
         return true;
     }
@@ -844,7 +819,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
     else if (cmd == "resign" || cmd_word == "result") {
         game_end = true;
         if (doTrace) {
-            cout << "# received_result: " << cmd << endl;
+            cout << debugPrefix() << "received_result: " << cmd << endl;
         }
         controller->terminateNow();
         // set the state to Terminated - this is a signal that
@@ -877,13 +852,13 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         Move rmove = get_move(cmd_word, cmd_args);
         if (IsNull(rmove)) {
             if (doTrace) {
-                cout << "# cmd in search not procesesed: " << cmd << " (expected move)";
+                cout << debugPrefix() << "cmd in search not procesesed: " << cmd << " (expected move)";
             }
             return false;
         } else {
             last_move = rmove;
             if (doTrace) {
-                cout << "# predicted move = ";
+                cout << debugPrefix() << "predicted move = ";
                 MoveImage(predicted_move,cout);
                 cout << " last move = ";
                 MoveImage(last_move,cout);
@@ -897,7 +872,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                      MovesEqual(predicted_move,last_move)) {
                 // ponder hit
                 if (doTrace) {
-                    cout << "# ponder ok" << endl;
+                    cout << debugPrefix() << "ponder ok" << endl;
                 }
                 execute_move(*main_board,last_move);
                 // We predicted the opponent's move, so we need to
@@ -915,18 +890,18 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                                                 true, doTrace)
                          : calcTimeLimit(moves, incr, time_left, true, doTrace));
                     if (doTrace) {
-                        cout << "# time_target = " << time_target << endl;
-                        cout << "# xtra time = " << calc_extra_time(side) << endl;
+                        cout << debugPrefix() << "time_target = " << time_target << endl;
+                        cout << debugPrefix() << "xtra time = " << calc_extra_time(side) << endl;
                     }
                     controller->setTimeLimit(time_target,calc_extra_time(side));
                 }
-                controller->setTalkLevel(Whisper);
+                controller->setTalkLevel(TalkLevel::Whisper);
                 controller->setBackground(false);
                 post_output(ponder_stats);
                 return true;
             }
             else {
-                if (doTrace) cout << "# ponder not ok" << endl;
+                if (doTrace) cout << debugPrefix() << "ponder not ok" << endl;
                 // We can't use the results of pondering because we
                 // did not predict the opponent's move.  Stop the
                 // search and then execute the move.
@@ -1032,7 +1007,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
     ponder_move = NullMove;
     ponder_stats.clear();
     if (doTrace) {
-       cout << "# in ponder(), move = ";
+       cout << debugPrefix() << "in ponder(), move = ";
        MoveImage(move,cout);
        cout << " predicted reply = ";
        MoveImage(predicted_reply,cout);
@@ -1055,19 +1030,16 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
             //
             gameMoves->add_move(board,previous_state,predicted_reply,"",true);
         }
-#ifdef UCI_LOG
-        ucilog << "starting ponder search" << (flush) << endl;
-#endif
         int time_target = INFINITE_TIME;
         // in reduced strength mode, limit the ponder search time
         // (do not ponder indefinitely)
         if (options.search.strength < 100) {
             time_target = last_time_target;
-            if (doTrace) cout << "# limiting ponder time to " <<
+            if (doTrace) cout << debugPrefix() << "limiting ponder time to " <<
                              time_target << endl;
         }
         if (doTrace) {
-            cout << "# starting to ponder" << endl;
+            cout << debugPrefix() << "starting to ponder" << endl;
         }
         if (srctype == FixedDepth) {
             ponder_move = searcher->findBestMove(
@@ -1077,7 +1049,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 0,
                 ply_limit, true, uci,
                 ponder_stats,
-                (doTrace) ? Trace : Silent);
+                (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         else {
             ponder_move = searcher->findBestMove(
@@ -1089,10 +1061,10 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 true,         /* background */
                 uci,
                 ponder_stats,
-                (doTrace) ? Trace : Silent);
+                (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         if (doTrace) {
-            cout << "# done pondering" << endl;
+            cout << debugPrefix() << "done pondering" << endl;
         }
         // Ensure "ping" response is set if ping was received while
         // searching:
@@ -1107,14 +1079,11 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         gameMoves->remove_move();
     }
     if (doTrace) {
-        cout << "# ponder move = ";
+        cout << debugPrefix() << "ponder move = ";
         MoveImage(ponder_move,cout);
         cout << endl;
-        cout << "# out of ponder()" << endl;
+        cout << debugPrefix() << "out of ponder()" << endl;
     }
-#ifdef UCI_LOG
-    ucilog << "out of ponder()" << endl << (flush);
-#endif
 }
 
 Move Protocol::search(SearchController *searcher, Board &board,
@@ -1123,7 +1092,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
     last_stats.clear();
     last_score = Constants::MATE;
     ponder_move = NullMove;
-    if (doTrace) cout << "# in search()" << endl;
+    if (doTrace) cout << debugPrefix() << "in search()" << endl;
 
     Move move = NullMove;
     stats.fromBook = false;
@@ -1138,15 +1107,12 @@ Move Protocol::search(SearchController *searcher, Board &board,
     if (IsNull(move)) {
         // no book move
         stats.clear();
-        TalkLevel level = Silent;
+        TalkLevel level = TalkLevel::Silent;
         if (verbose && !uci) {
-           level = Debug;
+           level = TalkLevel::Test;
         }
         else if (doTrace) {
-           level = Trace;
-        }
-        else {
-           level = Silent;
+           level = TalkLevel::Debug;
         }
         MoveSet excludes;
         if (srctype == FixedDepth) {
@@ -1173,8 +1139,8 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 last_time_target = time_target;
             }
             if (doTrace) {
-                cout << "# entering search, time_target = " << time_target << endl;
-                cout << "# xtra time = " << calc_extra_time(board.sideToMove()) << endl;
+                cout << debugPrefix() << "entering search, time_target = " << time_target << endl;
+                cout << debugPrefix() << "xtra time = " << calc_extra_time(board.sideToMove()) << endl;
             }
             move = searcher->findBestMove(board,
                 srctype,
@@ -1187,7 +1153,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 movesToSearch);
         }
         if (doTrace) {
-            cout << "# search done : move = ";
+            cout << debugPrefix() << "search done : move = ";
             MoveImage(move,cout);
             cout << endl;
         }
@@ -1225,24 +1191,24 @@ Move Protocol::search(SearchController *searcher, Board &board,
 
 int Protocol::isDraw(const Board &board, Statistics &last_stats, string &reason) {
    if (last_stats.state == Stalemate) {
-       if (doTrace) cout << "# stalemate" << endl;
+       if (doTrace) cout << debugPrefix() << "stalemate" << endl;
        reason = "Stalemate";
        return 1;
    }
    else if (last_stats.value < Constants::MATE-1 &&
             board.state.moveCount >= 100) {
        // Note: do not count as draw if we have checkmated opponent!
-       if (doTrace) cout << "# 50 move draw" << endl;
+       if (doTrace) cout << debugPrefix() << "50 move draw" << endl;
        reason = "50 move draw";
        return 1;
    }
    else if (Scoring::materialDraw(board)) {
-       if (doTrace) cout << "# material draw" << endl;
+       if (doTrace) cout << debugPrefix() << "material draw" << endl;
        reason = "Insufficient material";
        return 1;
    }
    else if (Scoring::repetitionDraw(board)) {
-       if (doTrace) cout << "# repetition draw" << endl;
+       if (doTrace) cout << debugPrefix() << "repetition draw" << endl;
        reason = "Repetition";
        return 1;
    }
@@ -1305,7 +1271,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                 // because the opponent did not claim the draw).
                 // Send the result command to claim the draw.
                 if (doTrace) {
-                    cout << "# claiming draw before move";
+                    cout << debugPrefix() << "claiming draw before move";
                     if (reason.length()) cout << " (" << reason << ")";
                     cout << endl;
                 }
@@ -1328,22 +1294,13 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             move_image(board,last_move,movebuf,uci);
 
             if (uci) {
-#ifdef UCI_LOG
-                ucilog << "bestmove " << movebuf.str();
-#endif
                 cout << "bestmove " << movebuf.str();
                 if (!easy && !IsNull(stats.best_line[1])) {
                     stringstream ponderbuf;
                     move_image(board,stats.best_line[1],ponderbuf,uci);
                     cout << " ponder " << ponderbuf.str();
-#ifdef UCI_LOG
-                    ucilog << " ponder " << ponderbuf.str();
-#endif
                 }
                 cout << endl << (flush);
-#ifdef UCI_LOG
-                ucilog << endl << (flush);
-#endif
             }
             else { // Winboard
                 // Execute the move and prepare to ponder.
@@ -1373,14 +1330,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             }
         }
         else if (uci) {
-#ifdef UCI_LOG
-            ucilog << "bestmove 0000" << endl;
-#endif
             // must always send a "bestmove" command even if no move is available, to
             // acknowledge the previous "stop" command.
             cout << "bestmove 0000" << endl;
         } else {
-            if (doTrace) cout << "# warning : move is null" << endl;
+            if (doTrace) cout << debugPrefix() << "warning : move is null" << endl;
         }
         if (ics && time_target >= 3000 && stats.display_value != Constants::INVALID_SCORE) {
             kibitz(searcher,computer,last_stats,options.search.ncpus>1);
@@ -1391,7 +1345,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
     // conditions.
     if (!game_end) {
         if (last_stats.value >= Constants::MATE-1) {
-            if (doTrace) cout << "# last_score = mate" << endl;
+            if (doTrace) cout << debugPrefix() << "last_score = mate" << endl;
             if (sideToMove == White) {
                 theLog->setResult("1-0");
                 cout << "1-0 {White mates}" << endl;
@@ -1403,7 +1357,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             game_end = true;
         }
         else if (last_stats.state == Checkmate) {
-            if (doTrace) cout << "# state = Checkmate" << endl;
+            if (doTrace) cout << debugPrefix() << "state = Checkmate" << endl;
             if (sideToMove == White) {
                 theLog->setResult("0-1");
                 cout << "0-1 {Black mates}" << endl;
@@ -1439,26 +1393,17 @@ void Protocol::send_move(Board &board, Move &move, Statistics
 
 void Protocol::processCmdInWaitState(const string &cmd) {
     if (doTrace) {
-        cout << "# got command in wait state: " << cmd << (flush) << endl;
+        cout << debugPrefix() << "got command in wait state: " << cmd << (flush) << endl;
     }
-#ifdef UCI_LOG
-    ucilog << "got command in wait state: " << cmd << (flush) << endl;
-#endif
     // we expect a "stop" or "ponderhit"
     if (cmd == "ponderhit" || cmd == "stop") {
         send_move(*main_board,last_computer_move,last_computer_stats);
         uciWaitState = false;
     } else if (cmd == "quit") {
-#ifdef UCI_LOG
-        ucilog << "received quit" << endl;
-#endif
         uciWaitState = false;
         polling_terminated = true;
     } else if (cmd == "ucinewgame") {
         // Arena at least can send this w/o "stop"
-#ifdef UCI_LOG
-        ucilog << "received ucinewgame" << endl;
-#endif
         uciWaitState = false;
     }
 }
@@ -1470,7 +1415,7 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
 
     stats.clear();
     if (doTrace) {
-        cout << "# entering analysis search" << endl;
+        cout << debugPrefix() << "entering analysis search" << endl;
     }
     Move move = searcher.findBestMove(board,
                                       FixedTime,
@@ -1478,9 +1423,9 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
                                       0,
                                       Constants::MaxPly, false, uci,
                                       stats,
-                                      Whisper);
+                                      TalkLevel::Whisper);
     if (doTrace) {
-        cout << "# search done : move = ";
+        cout << debugPrefix() << "search done : move = ";
         MoveImage(move,cout);
         cout << endl;
     }
@@ -1531,7 +1476,7 @@ void Protocol::doHint() {
     // have no ponder move we could wait a while for a ponder result,
     // but we just return for now.
     if (searcher->pondering()) return;
-    if (doTrace) cout << "# computing hint" << endl;
+    if (doTrace) cout << debugPrefix() << "computing hint" << endl;
 
     Statistics tmp;
     // do low-depth search for hint move
@@ -1541,7 +1486,7 @@ void Protocol::doHint() {
         0,
         4, false, uci,
         tmp,
-        (doTrace) ? Trace : Silent);
+        (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
     if (!IsNull(move)) {
         cout << "Hint: ";
         Notation::image(*main_board,move,Notation::OutputFormat::SAN,cout);
@@ -1558,11 +1503,11 @@ void Protocol::analyze_output(const Statistics &stats) {
 
 void Protocol::analyze(Board &board)
 {
-    if (doTrace) cout << "# entering analysis mode" << endl;
+    if (doTrace) cout << debugPrefix() << "entering analysis mode" << endl;
     while (analyzeMode) {
         Board previous(board);
         analyze(*searcher,board,stats);
-        if (doTrace) cout << "# analysis mode: out of search" << endl;
+        if (doTrace) cout << debugPrefix() << "analysis mode: out of search" << endl;
         // Process commands received while searching; exit loop
         // if "quit" seen.
         if (do_all_pending(board)==AllPendingStatus::Quit) {
@@ -1573,11 +1518,8 @@ void Protocol::analyze(Board &board)
             // got here because the search has terminated early, due to
             // forced move, forced mate, tablebase hit, or hitting the max
             // ply depth. Wait here for more input.
-            if (doTrace) cout << "# analysis mode: wait for input" << endl;
+            if (doTrace) cout << debugPrefix() << "analysis mode: wait for input" << endl;
             if (inputSem.wait()) {
-#ifdef UCI_LOG
-                ucilog << "wait interrupted" << endl << (flush);
-#endif
                 break;
             }
             while (!pending.empty()) {
@@ -1588,7 +1530,7 @@ void Protocol::analyze(Board &board)
                 string cmd_word, cmd_arg;
                 split_cmd(cmd,cmd_word,cmd_arg);
 #ifdef _TRACE
-                cout << "# processing cmd in analysis mode: " << cmd << endl;
+                cout << debugPrefix() << "processing cmd in analysis mode: " << cmd << endl;
 #endif
                 if (cmd == "undo" || cmd == "setboard") {
                     do_command(cmd,board);
@@ -1616,7 +1558,7 @@ void Protocol::analyze(Board &board)
             }
         }
     }
-    if (doTrace) cout << "# exiting analysis mode" << endl;
+    if (doTrace) cout << debugPrefix() << "exiting analysis mode" << endl;
 }
 
 void Protocol::undo( Board &board)
@@ -1654,7 +1596,7 @@ void Protocol::setCheckOption(const string &value, int &dest) {
 void Protocol::execute_move(Board &board,Move m)
 {
     if (doTrace) {
-        cout << "# execute_move: ";
+        cout << debugPrefix() << "execute_move: ";
         MoveImage(m,cout);
         cout << endl;
     }
@@ -1720,7 +1662,7 @@ void Protocol::processWinboardOptions(const string &args) {
     value = value.erase(value.find_last_not_of(' ') + 1);
     // handle option settings
     if (doTrace) {
-        cout << "# setting option " << name << "=" << value << endl;
+        cout << debugPrefix() << "setting option " << name << "=" << value << endl;
     }
     if (name == "Favor frequent book moves") {
         Options::setOption<unsigned>(value,options.book.frequency);
@@ -1752,7 +1694,7 @@ void Protocol::processWinboardOptions(const string &args) {
     }
 #else
     else {
-       cout << "# Warning: invalid option name \"" << name << "\"" << endl;
+       cout << debugPrefix() << "Warning: invalid option name \"" << name << "\"" << endl;
    }
 #endif
    searcher->updateSearchOptions();
@@ -1839,11 +1781,8 @@ bool Protocol::uciOptionCompare(const string &a, const string &b) {
 }
 
 bool Protocol::do_command(const string &cmd, Board &board) {
-#ifdef UCI_LOG
-    ucilog << "gui: " << cmd << (flush) << endl;
-#endif
     if (doTrace) {
-        cout << "# do_command: " << cmd << endl;
+        cout << debugPrefix() << "do_command: " << cmd << endl;
     }
     if (doTrace && uci) {
         theLog->write(cmd.c_str()); theLog->write_eol();
@@ -2049,9 +1988,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (uci && cmd == "isready") {
         delayedInit();
         cout << "readyok" << endl;
-#ifdef UCI_LOG
-        ucilog << "readyok" << endl;
-#endif
     }
     else if (uci && cmd_word == "position") {
         ponder_move = NullMove;
@@ -2067,10 +2003,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 valid = BoardIO::readFEN(board, fen);
             }
             if (!valid) {
-                if (doTrace) cout << "# warning: invalid fen!" << endl;
-#ifdef UCI_LOG
-                ucilog << "warning: invalid FEN!" << endl;
-#endif
+                if (doTrace) cout << debugPrefix() << "warning: invalid fen!" << endl;
             }
             // clear some global vars
             stats.clear();
@@ -2096,6 +2029,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                    gameMoves->add_move(board,previous_state,m,"",false);
                 }
             }
+        }
+    }
+    else if (uci && cmd_word == "debug") {
+        if (cmd_args == "on") {
+            doTrace = true;
+        }
+        else if (cmd_args == "off") {
+            doTrace = false;
         }
     }
     else if (editMode) {
@@ -2370,11 +2311,11 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             // for ponderhit before sending. But also send the move if
             // we were stopped - this is the "handshake" that tells the
             // UI we received the stop.
-#ifdef UCI_LOG
-            ucilog << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
-            Notation::image(board,ponder_move,Notation::OutputFormat::SAN,ucilog);
-            ucilog << (flush) << endl;
-#endif
+            if (doTrace) {
+                cout << debugPrefix() << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
+                Notation::image(board,ponder_move,Notation::OutputFormat::SAN,cout);
+                cout << (flush) << endl;
+            }
             if (ponderhit || searcher->wasStopped()) {
                 // ensure we send an "info" command - may not have been
                 // sent if the previous move was forced or a tb hit.
@@ -2387,22 +2328,22 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 // We completed pondering early - the protocol requires
                 // that we delay sending the move until "ponderhit" or
                 // "stop" is received
-#ifdef UCI_LOG
-                ucilog << "entering wait state" << endl << (flush);
-#endif
+                if (doTrace) {
+                    cout << debugPrefix() << "entering wait state" << endl << (flush);
+                }
                 uciWaitState = true;
             }
         }
         else {
-#ifdef UCI_LOG
-            CLOCK_TYPE startTime = getCurrentTime();
-            ucilog << "starting search" << (flush) << endl;
-#endif
+            CLOCK_TYPE startTime;
+            if (doTrace) {
+                startTime = getCurrentTime();
+                cout << debugPrefix() << "starting search" << (flush) << endl;
+            }
             best_move = search(searcher,board,movesToSearch,stats,infinite);
-
-#ifdef UCI_LOG
-            ucilog << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
-#endif
+            if (doTrace) {
+                cout << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
+            }
             if (infinite && !searcher->wasStopped()) {
                 // ensure we send some info in analysis mode:
                 post_output(stats);
@@ -2461,7 +2402,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         if (!analyzeMode && ics) {
            cout << "kib Hello from Arasan " << Arasan_Version << endl;
         }
-        if (doTrace) cout << "# finished 'new' processing" << endl;
+        if (doTrace) cout << debugPrefix() << "finished 'new' processing" << endl;
     }
     else if (cmd == "random" || cmd_word == "variant") {
         // ignore
@@ -2494,9 +2435,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         cout << "feature done=0" << endl;
         delayedInit();
         cout << "feature done=1" << endl;
-#ifdef UCI_LOG
-        ucilog << "feature done=1" << endl;
-#endif
         xboard42 = true;
     }
     else if (cmd == "computer") {
@@ -2590,12 +2528,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     }
     else if (cmd == "resign") {
         // our opponent has resigned
-        cout << "# setting log result" << endl;
+        cout << debugPrefix() << "setting log result" << endl;
         if (computer_plays_white)
             theLog->setResult("0-1");
         else
             theLog->setResult("1-0");
-        cout << "# set log result" << endl;
+        cout << debugPrefix() << "set log result" << endl;
     }
     else if (cmd == "draw") {
         // "draw" command. Requires winboard 3.6 or higher.
@@ -2604,7 +2542,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             cout << "offer draw" << endl;
         }
         else if (doTrace) {
-            cout << "# draw declined" << endl;
+            cout << debugPrefix() << "draw declined" << endl;
         }
     }
     else if (cmd_word == "setboard") {
@@ -2670,7 +2608,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         args >> opponent_rating;
         score_t contempt = contemptFromRatings(computer_rating,opponent_rating);
         if (doTrace) {
-            cout << "# contempt (calculated from ratings) = ";
+            cout << debugPrefix() << "contempt (calculated from ratings) = ";
             Scoring::printScore(contempt,cout);
             cout << endl;
         }
@@ -2693,7 +2631,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                cerr << "invalid value following 'cores'" << endl;
            } else {
               if (doTrace) {
-                 cout << "# setting cores to " << options.search.ncpus << endl;
+                 cout << debugPrefix() << "setting cores to " << options.search.ncpus << endl;
               }
               options.search.ncpus = std::min<int>(options.search.ncpus,Constants::MaxCPUs);
               searcher->updateSearchOptions();
@@ -2710,11 +2648,11 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             uint64_t mbs;
             ss >> mbs;
             if (ss.fail() || ss.bad()) {
-               cout << "# invalid value following 'memory'" << endl;
+               cout << debugPrefix() << "invalid value following 'memory'" << endl;
             } else {
                size_t mb_size = mbs*1024L*1024L;
                if (doTrace) {
-                   cout << "# setting hash size to " << mb_size << " bytes " << endl << (flush);
+                   cout << debugPrefix() << "setting hash size to " << mb_size << " bytes " << endl << (flush);
                }
                options.search.hash_table_size = mb_size;
                searcher->updateSearchOptions();
@@ -2722,7 +2660,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
            }
         }
         else {
-            cout << "# warning: memory command ignored due to -H on command line" << endl;
+            cout << debugPrefix() << "warning: memory command ignored due to -H on command line" << endl;
         }
     }
     else if  (cmd_word == "egtpath") {
@@ -2747,7 +2685,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         // Unload existing tb set if in use and if path has changed
         if (options.tbPath() != path) {
-           if (doTrace) cout << "# unloading tablebases" << endl;
+           if (doTrace) cout << debugPrefix() << "unloading tablebases" << endl;
            unloadTb();
         }
         // Set the tablebase options. But do not initialize the
@@ -2757,7 +2695,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         options.search.use_tablebases = 1;
         options.search.syzygy_path = path;
         if (doTrace) {
-           cout << "# setting Syzygy tb path to " << options.search.syzygy_path << endl;
+           cout << debugPrefix() << "setting Syzygy tb path to " << options.search.syzygy_path << endl;
         }
 #endif
     }
@@ -2774,7 +2712,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         while (it != movetext.end() && !isalpha(*it)) it++;
         movetext.erase(movetext.begin(),it);
         if (doTrace) {
-            cout << "# move text = " << movetext << endl;
+            cout << debugPrefix() << "move text = " << movetext << endl;
         }
         Move move;
         if ((move = text_to_move(board,movetext)) != NullMove) {
@@ -2782,12 +2720,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 if (forceMode)
                     game_end = false;
                 else {
-                    if (doTrace) cout << "# ignoring move " << movetext << " received after game end" << endl;
+                    if (doTrace) cout << debugPrefix() << "ignoring move " << movetext << " received after game end" << endl;
                     return true;
                 }
             }
             if (doTrace) {
-                cout << "# got move: " << movetext << endl;
+                cout << debugPrefix() << "got move: " << movetext << endl;
             }
             // make the move on the board
             execute_move(board,move);
@@ -2802,9 +2740,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                if (MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
                   // We completed pondering already and we got a reply to
                   // this move (e.g. might be a forced reply).
-                  if (doTrace) cout << "# pondering complete already" << endl;
+                  if (doTrace) cout << debugPrefix() << "pondering complete already" << endl;
                   if (doTrace) {
-                     cout << "# sending ponder move ";
+                     cout << debugPrefix() << "sending ponder move ";
                      MoveImage(ponder_move,cout);
                      cout << endl << (flush);
                   }
@@ -2812,7 +2750,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   stats = ponder_stats;
                   post_output(stats);
                   game_end = game_end || stats.end_of_game;
-                  if (doTrace) cout << "# game_end = " << game_end << endl;
+                  if (doTrace) cout << debugPrefix() << "game_end = " << game_end << endl;
                   predicted_move = ponder_move = NullMove;
                }
                else {
@@ -2825,8 +2763,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   // start pondering after the game is over.
                   game_end = game_end || stats.end_of_game;
                   if (doTrace) {
-                     cout << "# state = " << stats.state << endl;
-                     cout << "# game_end = " << game_end  << endl;
+                     cout << debugPrefix() << "state = " << stats.state << endl;
+                     cout << debugPrefix() << "game_end = " << game_end  << endl;
                   }
                }
                // Check for game end conditions like resign, draw acceptance, et
@@ -2863,7 +2801,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                    && !forceMode && !analyzeMode) {
                   // we got a reply from pondering
                   if (doTrace) {
-                     cout << "# sending ponder move" << endl;
+                     cout << debugPrefix() << "sending ponder move" << endl;
                   }
                   stats = ponder_stats;
                   send_move(board,ponder_move,stats);
@@ -2874,7 +2812,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   // move from "stats".
                }
                else {
-                  if (doTrace) cout << "# ponder failed, exiting ponder loop" << endl;
+                  if (doTrace) cout << debugPrefix() << "ponder failed, exiting ponder loop" << endl;
                   ponder_move = NullMove;
                   // Leave ponder loop. If we were interrupted by
                   // "usermove" we will ponder again immediately;

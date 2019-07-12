@@ -79,18 +79,12 @@ static DWORD WINAPI inputPoll(void *x) {
          bSuccess = ReadFile(hStdin, buf, 1024, &dwRead, NULL);
          if (! bSuccess || dwRead == 0) {
             if (p->traceOn()) cout << "# read error from input pipe" << endl;
-#ifdef UCI_LOG
-            ucilog << "read error from input pipe" << endl << (flush);
-#endif
             break;
 	 }
       }
       processCmdChars(p,buf,(int)dwRead);
    }
    if (p->traceOn()) cout << "input polling thread terminated" << endl;
-#ifdef UCI_LOG
-    ucilog << "input polling thread terminated" << endl << (flush);
-#endif
    return 0;
 }
 

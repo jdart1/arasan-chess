@@ -1,5 +1,5 @@
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2019 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
@@ -38,6 +38,13 @@ public:
     bool isSearching() const noexcept {
         return searcher->searching();
     }
+
+    const char * debugPrefix() const {
+        return uci ? UCI_DEBUG_PREFIX : CECP_DEBUG_PREFIX;
+    }
+
+    static const char * UCI_DEBUG_PREFIX;
+    static const char * CECP_DEBUG_PREFIX;
 
 private:
 
