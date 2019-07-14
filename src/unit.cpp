@@ -1211,11 +1211,11 @@ static int testMoveGen()
                             // regular evasion generation)
                             return;
                         }
-                        num_moves = mg.generateCaptures(moves);
+                        num_moves = mg::generateCaptures(board, moves, false);
                         if (type == QsCheck) {
                             ColorType oside = board.oppositeSide();
                             Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
-                            num_moves += mg.generateChecks(moves+num_moves,disc);
+                            num_moves += mg::generateChecks(board,moves+num_moves,disc);
                         }
                     }
                     for (;;) {

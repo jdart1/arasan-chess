@@ -24,28 +24,6 @@ static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
    std::swap(scores[i],scores[j]);
 }
 
-void MoveGenerator::sortMoves(Move moves[], int scores[], int n) {
-    if (n == 2) {
-        if (scores[1] > scores[0]) {
-           swap(moves,scores,0,1);
-        }
-    } else if (n>1) {
-       // insertion sort
-       for (int i = 1; i < n; i++) {
-          int key = scores[i];
-          Move m = moves[i];
-          int j = i-1;
-          for (; j >= 0 && scores[j] < key; j--) {
-              moves[j+1] = moves[j];
-              scores[j+1] = scores[j];
-          }
-          moves[j+1] = m;
-          scores[j+1] = key;
-       }
-    }
-}
-
-
 RootMoveGenerator::RootMoveGenerator(const Board &board,
                                      SearchContext *s,
                                      Move pvMove,
@@ -220,18 +198,6 @@ void RootMoveGenerator::exclude(Move exclude) {
    }
 }
 
-void MoveGenerator::initialSortCaptures (Move *moves,int captures) {
-   if (captures > 1) {
-      int scores[40];
-      ASSERT(captures < 40);
-      for (int i = index; i < index+captures; i++) {
-          scores[i] = int(Params::MVV_LVA(moves[i]));
-      }
-      sortMoves(moves,scores,captures);
-   }
-}
-
-
 Move MoveGenerator::nextEvasion(int &ord) {
    if (batch_count==0) {
      if (phase == START_PHASE) {
@@ -284,9 +250,9 @@ Move MoveGenerator::nextEvasion(int &ord) {
           }
        }
        if (poscaps > 1) {
-          sortMoves(moves,scores,negcaps ? batch_count : poscaps);
+          mg::sortMoves(moves,scores,negcaps ? batch_count : poscaps);
        } else if (negcaps) {
-          sortMoves(moves,scores,batch_count);
+          mg::sortMoves(moves,scores,batch_count);
        }
      }
      else if (MovesEqual(moves[0],hashMove)) {
@@ -335,8 +301,8 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          }
          case WINNING_CAPTURE_PHASE:
          {
-            numMoves = MoveGenerator::generateCaptures(moves);
-            initialSortCaptures(moves,numMoves);
+            numMoves = mg::generateCaptures(board,moves,ply==0);
+            mg::initialSortCaptures(moves,numMoves);
             index = 0;
             break;
          }
@@ -369,7 +335,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          break;
          case HISTORY_PHASE:
          {
-            numMoves = generateNonCaptures(moves);
+            numMoves = mg::generateNonCaptures(board,moves);
             if (numMoves) {
                Move counter(context && node && ply > 0 ? context->getCounterMove(board,(node-1)->last_move) :
                             NullMove);
@@ -397,7 +363,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   }
                }
                if (numMoves > 1) {
-                  sortMoves(moves,scores,numMoves);
+                  mg::sortMoves(moves,scores,numMoves);
                }
             }
             index = 0;
@@ -424,323 +390,6 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
 }
 
 
-int MoveGenerator::generateNonCaptures(Move *moves)
-{
-   int numMoves = 0;
-   // castling moves
-   const ColorType side = board.sideToMove();
-   CastleType CS = board.castleStatus(side);
-   if ((CS == CanCastleEitherSide) ||
-   (CS == CanCastleKSide)) {
-      const Square kp = board.kingSquare(side);
-#ifdef _DEBUG
-      if (side == White) {
-         ASSERT(kp == chess::E1);
-         ASSERT(board[kp+3] == WhiteRook);
-      }
-      else {
-         ASSERT(kp == chess::E8);
-         ASSERT(board[kp+3] == BlackRook);
-      }
-#endif
-      if (board[kp + 1] == EmptyPiece &&
-         board[kp + 2] == EmptyPiece &&
-         board.checkStatus() == NotInCheck &&
-         !board.anyAttacks(kp + 1,OppositeColor(side)) &&
-         !board.anyAttacks(kp + 2,OppositeColor(side)))
-         // can castle
-         moves[numMoves++] = CreateMove(kp, kp+2, King, Empty,
-            Empty, KCastle);
-   }
-   if ((CS == CanCastleEitherSide) ||
-   (CS == CanCastleQSide)) {
-      const Square kp = board.kingSquare(side);
-      if (board[kp - 1] == EmptyPiece &&
-         board[kp - 2] == EmptyPiece &&
-         board[kp - 3] == EmptyPiece &&
-         board.checkStatus() == NotInCheck  &&
-         !board.anyAttacks(kp - 1,OppositeColor(side)) &&
-         !board.anyAttacks(kp - 2,OppositeColor(side)))
-         // can castle
-         moves[numMoves++] = CreateMove(kp, kp-2, King, Empty,
-            Empty, QCastle);
-   }
-   // non-pawn moves:
-   Square start,dest;
-   Bitboard dests;
-   Bitboard knights(board.knight_bits[side]);
-   while (knights.iterate(start)) {
-      dests = Attacks::knight_attacks[start] & ~board.allOccupied;
-      while (dests.iterate(dest)) {
-         moves[numMoves++] =
-             CreateMove(start,dest,Knight);
-      }
-   }
-   start = board.kingSquare(side);
-   dests = Attacks::king_attacks[start] & ~board.allOccupied &
-               ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())];
-   while (dests.iterate(dest)) {
-      moves[numMoves++] =
-        CreateMove(start,dest,King);
-   }
-   Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
-   while (bishops.iterate(start)) {
-      Bitboard dests(board.bishopAttacks(start) & ~board.allOccupied);
-      while (dests.iterate(dest)) {
-         moves[numMoves++] =
-            CreateMove(start,dest,TypeOfPiece(board[start]));
-      }
-   }
-   Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
-   while (rooks.iterate(start)) {
-      Bitboard dests(board.rookAttacks(start) & ~board.allOccupied);
-      while (dests.iterate(dest)) {
-          moves[numMoves++] =
-            CreateMove(start,dest,TypeOfPiece(board[start]));
-      }
-   }
-   // pawn moves
-   if (board.sideToMove() == White) {
-      Bitboard pawns(board.pawn_bits[White]);
-      pawns.shl8();
-        // exclude promotions
-      pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
-      Square sq;
-      while (pawns.iterate(sq)) {
-         moves[numMoves++] = CreateMove(sq-8,sq,Pawn);
-         if (Rank<White>(sq)==3 && board[sq+8] == EmptyPiece)
-            moves[numMoves++] = CreateMove(sq-8,sq+8,Pawn);
-      }
-   }
-   else {
-      Bitboard pawns(board.pawn_bits[Black]);
-      pawns.shr8();
-        // exclude promotions
-      pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
-      Square sq;
-      while (pawns.iterate(sq)) {
-         moves[numMoves++] = CreateMove(sq+8,sq,Pawn);
-         if (Rank<Black>(sq)==3 && board[sq-8] == EmptyPiece)
-            moves[numMoves++] = CreateMove(sq+8,sq-8,Pawn);
-      }
-   }
-   return numMoves;
-}
-
-
-int MoveGenerator::generateCaptures(Move * moves, const Bitboard &targets)
-{
-   int numMoves = 0;
-
-   if (board.sideToMove() == White) {
-      Bitboard pawns(board.pawn_bits[White]);
-      Bitboard pawns1 = pawns;
-      pawns1.shl(7);
-      pawns1 &= ~0x8080808080808080ULL;
-      pawns1 &= board.occupied[Black];
-      Square dest;
-      while (pawns1.iterate(dest)) {
-         Square start = dest-7;
-         if (Rank<White>(start) == 7) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
-            if (ply == 0) {
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
-            }
-         }
-         else if (targets.isSet(dest)) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
-         }
-      }
-      pawns1 = pawns;
-      pawns1.shl(9);
-      pawns1 &= ~0x0101010101010101ULL;
-      pawns1 &= board.occupied[Black];
-      while (pawns1.iterate(dest)) {
-         Square start = dest-9;
-         if (Rank<White>(start) == 7) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
-            if (ply == 0) {
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
-            }
-         }
-         else if (targets.isSet(dest)) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
-         }
-      }
-      pawns1 = pawns;
-      pawns1 &= Attacks::rank_mask[6];
-      pawns1.shl8();
-      pawns1 &= ~board.allOccupied;
-      while (pawns1.iterate(dest)) {
-         Square start = dest - 8;
-         moves[numMoves++] =
-            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
-         moves[numMoves++] =
-            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
-         if (ply == 0) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
-         }
-      }
-      Square epsq = board.enPassantSq();
-      if (!IsInvalid(epsq) && targets.isSet(epsq)) {
-         ASSERT(TypeOfPiece(board[epsq])==Pawn);
-         if (File(epsq) != 8 && board[epsq + 1] == WhitePawn) {
-            dest = epsq + 8;
-            if (board[dest] == EmptyPiece)
-               moves[numMoves++] =
-                  CreateMove(epsq+1,dest,Pawn,Pawn,Empty,
-                  EnPassant);
-         }
-         if (File(epsq) != 1 && board[epsq - 1] == WhitePawn) {
-            dest = epsq + 8;
-            if (board[dest] == EmptyPiece)
-               moves[numMoves++] =
-                  CreateMove(epsq-1,dest,Pawn,Pawn,Empty,
-                  EnPassant);
-         }
-      }
-   }
-   else {
-      Bitboard pawns(board.pawn_bits[Black]);
-      Bitboard pawns1 = pawns;
-      pawns1.shr(7);
-      pawns1 &= ~0x0101010101010101ULL;
-      pawns1 &= board.occupied[White];
-      Square dest;
-      while (pawns1.iterate(dest)) {
-         Square start = dest+7;
-         if (Rank<Black>(start) == 7) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
-            if (ply == 0) {
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
-            }
-         }
-         else if (targets.isSet(dest)) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
-         }
-      }
-      pawns1 = pawns;
-      pawns1.shr(9);
-      pawns1 &= ~0x8080808080808080ULL;
-      pawns1 &= board.occupied[White];
-      while (pawns1.iterate(dest)) {
-         Square start = dest+9;
-         if (Rank<Black>(start) == 7) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
-            if (ply == 0) {
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
-               moves[numMoves++] =
-                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
-            }
-         }
-         else if (targets.isSet(dest)) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
-         }
-      }
-      pawns1 = pawns;
-      pawns1 &= Attacks::rank_mask[1];
-      pawns1.shr8();
-      pawns1 &= ~board.allOccupied;
-      while (pawns1.iterate(dest)) {
-         Square start = dest + 8;
-         moves[numMoves++] =
-            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
-         moves[numMoves++] =
-            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
-         if (ply == 0) {
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
-            moves[numMoves++] =
-               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
-         }
-      }
-      Square epsq = board.enPassantSq();
-      if (!IsInvalid(epsq) && targets.isSet(epsq)) {
-         ASSERT(TypeOfPiece(board[epsq])==Pawn);
-         if (File(epsq) != 8 && board[epsq + 1] == BlackPawn) {
-            dest = epsq - 8;
-            if (board[dest] == EmptyPiece)
-               moves[numMoves++] =
-                  CreateMove(epsq+1,dest,Pawn,Pawn,Empty,
-                  EnPassant);
-         }
-         if (File(epsq) != 1 && board[epsq - 1] == BlackPawn) {
-            dest = epsq - 8;
-            if (board[dest] == EmptyPiece)
-               moves[numMoves++] =
-                  CreateMove(epsq-1,dest,Pawn,Pawn,Empty,
-                  EnPassant);
-         }
-      }
-   }
-   const ColorType side = board.sideToMove();
-   Bitboard knights(board.knight_bits[side]);
-   Square start, dest;
-   while (knights.iterate(start)) {
-      Bitboard dests(Attacks::knight_attacks[start] & targets);
-      while (dests.iterate(dest)) {
-         moves[numMoves++] =
-            CreateMove(start,dest,Knight,TypeOfPiece(board[dest]));
-     }
-   }
-   Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
-   while (bishops.iterate(start)) {
-      Bitboard dests(board.bishopAttacks(start) & targets);
-      Square dest;
-      while (dests.iterate(dest)) {
-         moves[numMoves++] =
-           CreateMove(start,dest,TypeOfPiece(board[start]),TypeOfPiece(board[dest]));
-      }
-   }
-   Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
-   while (rooks.iterate(start)) {
-      Bitboard dests(board.rookAttacks(start) & targets);
-      Square dest;
-      while (dests.iterate(dest)) {
-          moves[numMoves++] =
-             CreateMove(start,dest,
-                        TypeOfPiece(board[start]),TypeOfPiece(board[dest]));
-      }
-   }
-   start = board.kingSquare(side);
-   Bitboard dests(Attacks::king_attacks[start] & targets & ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())]);
-   while (dests.iterate(dest)) {
-      moves[numMoves++] =
-         CreateMove(start,dest,King,TypeOfPiece(board[dest]));
-   }
-   return numMoves;
-}
-
-
 MoveGenerator::MoveGenerator( const Board &ABoard,
                               SearchContext *s, NodeInfo *n, unsigned curr_ply, Move pvMove,
                               int trace)
@@ -761,13 +410,38 @@ MoveGenerator::MoveGenerator( const Board &ABoard,
 }
 
 
-int MoveGenerator::generateEvasions(Move * moves)
+int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
 {
-   int n = generateEvasionsCaptures(moves);
-   n += generateEvasionsNonCaptures(moves+n);
-   return n;
+   unsigned numMoves  = 0;
+   if (board.checkStatus() == InCheck) {
+      numMoves = generateEvasions(moves);
+   }
+   else {
+      numMoves += mg::generateCaptures(board,moves+numMoves,ply==0);
+      numMoves += mg::generateNonCaptures(board,moves+numMoves);
+   }
+   if (repeatable) {
+      int scores[Constants::MaxMoves];
+      for (unsigned i = 0; i < numMoves; i++) {
+         scores[i] = (int)StartSquare(moves[i]) + (int)(DestSquare(moves[i]) << 7);
+         switch (PromoteTo(moves[i])) {
+            case Queen:
+               scores[i] &= 0xB000;
+               break;
+            case Rook:
+               scores[i] &= 0x8000;
+               break;
+            case Bishop:
+               scores[i] &= 0x4000;
+               break;
+            default:
+               break;
+         }
+      }
+      mg::sortMoves(moves, scores, numMoves);
+   }
+   return numMoves;
 }
-
 
 int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
 {
@@ -921,7 +595,6 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
    return num_moves;
 }
 
-
 int MoveGenerator::generateEvasionsCaptures(Move * moves)
 {
    int num_moves = 0;
@@ -1003,9 +676,14 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
    return num_moves;
 }
 
+int MoveGenerator::generateEvasions(Move * moves)
+{
+    int n = generateEvasionsCaptures(moves);
+    n += generateEvasionsNonCaptures(moves+n);
+    return n;
+}
 
-int MoveGenerator::generateEvasions(Move * moves,
-const Bitboard &mask)
+int MoveGenerator::generateEvasions(Move * moves, const Bitboard &mask)
 {
    int num_moves = 0;
    Square kp = board.kingSquare(board.sideToMove());
@@ -1043,8 +721,369 @@ const Bitboard &mask)
    return num_moves;
 }
 
+uint64_t RootMoveGenerator::perft(Board &b, int depth) {
+   if (depth == 0) return 1;
 
-int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckCandidates) {
+   uint64_t nodes = 0ULL;
+   Move m;
+   RootMoveGenerator mg(b);
+   BoardState state = b.state;
+   int order;
+   while ((m = mg.nextMove(order)) != NullMove) {
+      if (depth > 1) {
+         b.doMove(m);
+         nodes += perft(b,depth-1);
+         b.undoMove(m,state);
+      } else {
+         // skip do/undo
+         nodes++;
+      }
+   }
+   return nodes;
+}
+
+int RootMoveGenerator::rank_root_moves()
+{
+#ifdef SYZYGY_TBS
+    const Material &wMat = board.getMaterial(White);
+    const Material &bMat = board.getMaterial(Black);
+    int tb_pieces = wMat.men() + bMat.men();
+    int tb_hit = 0;
+    if (tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
+        tb_hit = SyzygyTb::rank_root_moves(board,
+                                           board.anyRep(),
+                                           options.search.syzygy_50_move_rule,
+                                           moveList);
+    }
+    if (tb_hit) {
+        // Sort moves on descending rank returned by Fathom
+        std::stable_sort(moveList.begin(),moveList.end(),
+                         [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
+    }
+    return tb_hit;
+#else
+    return 0;
+#endif
+}
+
+int mg::generateNonCaptures(const Board &board, Move *moves)
+{
+   int numMoves = 0;
+   // castling moves
+   const ColorType side = board.sideToMove();
+   CastleType CS = board.castleStatus(side);
+   if ((CS == CanCastleEitherSide) ||
+   (CS == CanCastleKSide)) {
+      const Square kp = board.kingSquare(side);
+#ifdef _DEBUG
+      if (side == White) {
+         ASSERT(kp == chess::E1);
+         ASSERT(board[kp+3] == WhiteRook);
+      }
+      else {
+         ASSERT(kp == chess::E8);
+         ASSERT(board[kp+3] == BlackRook);
+      }
+#endif
+      if (board[kp + 1] == EmptyPiece &&
+         board[kp + 2] == EmptyPiece &&
+         board.checkStatus() == NotInCheck &&
+         !board.anyAttacks(kp + 1,OppositeColor(side)) &&
+         !board.anyAttacks(kp + 2,OppositeColor(side)))
+         // can castle
+         moves[numMoves++] = CreateMove(kp, kp+2, King, Empty,
+            Empty, KCastle);
+   }
+   if ((CS == CanCastleEitherSide) ||
+   (CS == CanCastleQSide)) {
+      const Square kp = board.kingSquare(side);
+      if (board[kp - 1] == EmptyPiece &&
+         board[kp - 2] == EmptyPiece &&
+         board[kp - 3] == EmptyPiece &&
+         board.checkStatus() == NotInCheck  &&
+         !board.anyAttacks(kp - 1,OppositeColor(side)) &&
+         !board.anyAttacks(kp - 2,OppositeColor(side)))
+         // can castle
+         moves[numMoves++] = CreateMove(kp, kp-2, King, Empty,
+            Empty, QCastle);
+   }
+   // non-pawn moves:
+   Square start,dest;
+   Bitboard dests;
+   Bitboard knights(board.knight_bits[side]);
+   while (knights.iterate(start)) {
+      dests = Attacks::knight_attacks[start] & ~board.allOccupied;
+      while (dests.iterate(dest)) {
+         moves[numMoves++] =
+             CreateMove(start,dest,Knight);
+      }
+   }
+   start = board.kingSquare(side);
+   dests = Attacks::king_attacks[start] & ~board.allOccupied &
+               ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())];
+   while (dests.iterate(dest)) {
+      moves[numMoves++] =
+        CreateMove(start,dest,King);
+   }
+   Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
+   while (bishops.iterate(start)) {
+      Bitboard dests(board.bishopAttacks(start) & ~board.allOccupied);
+      while (dests.iterate(dest)) {
+         moves[numMoves++] =
+            CreateMove(start,dest,TypeOfPiece(board[start]));
+      }
+   }
+   Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
+   while (rooks.iterate(start)) {
+      Bitboard dests(board.rookAttacks(start) & ~board.allOccupied);
+      while (dests.iterate(dest)) {
+          moves[numMoves++] =
+            CreateMove(start,dest,TypeOfPiece(board[start]));
+      }
+   }
+   // pawn moves
+   if (board.sideToMove() == White) {
+      Bitboard pawns(board.pawn_bits[White]);
+      pawns.shl8();
+        // exclude promotions
+      pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
+      Square sq;
+      while (pawns.iterate(sq)) {
+         moves[numMoves++] = CreateMove(sq-8,sq,Pawn);
+         if (Rank<White>(sq)==3 && board[sq+8] == EmptyPiece)
+            moves[numMoves++] = CreateMove(sq-8,sq+8,Pawn);
+      }
+   }
+   else {
+      Bitboard pawns(board.pawn_bits[Black]);
+      pawns.shr8();
+        // exclude promotions
+      pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
+      Square sq;
+      while (pawns.iterate(sq)) {
+         moves[numMoves++] = CreateMove(sq+8,sq,Pawn);
+         if (Rank<Black>(sq)==3 && board[sq-8] == EmptyPiece)
+            moves[numMoves++] = CreateMove(sq+8,sq-8,Pawn);
+      }
+   }
+   return numMoves;
+}
+
+
+int mg::generateCaptures(const Board &board, Move * moves, bool allPromotions, const Bitboard &targets)
+{
+   int numMoves = 0;
+
+   if (board.sideToMove() == White) {
+      Bitboard pawns(board.pawn_bits[White]);
+      Bitboard pawns1 = pawns;
+      pawns1.shl(7);
+      pawns1 &= ~0x8080808080808080ULL;
+      pawns1 &= board.occupied[Black];
+      Square dest;
+      while (pawns1.iterate(dest)) {
+         Square start = dest-7;
+         if (Rank<White>(start) == 7) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
+            if (allPromotions) {
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
+            }
+         }
+         else if (targets.isSet(dest)) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
+         }
+      }
+      pawns1 = pawns;
+      pawns1.shl(9);
+      pawns1 &= ~0x0101010101010101ULL;
+      pawns1 &= board.occupied[Black];
+      while (pawns1.iterate(dest)) {
+         Square start = dest-9;
+         if (Rank<White>(start) == 7) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
+            if (allPromotions) {
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
+            }
+         }
+         else if (targets.isSet(dest)) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
+         }
+      }
+      pawns1 = pawns;
+      pawns1 &= Attacks::rank_mask[6];
+      pawns1.shl8();
+      pawns1 &= ~board.allOccupied;
+      while (pawns1.iterate(dest)) {
+         Square start = dest - 8;
+         moves[numMoves++] =
+            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
+         moves[numMoves++] =
+            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
+         if (allPromotions) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
+         }
+      }
+      Square epsq = board.enPassantSq();
+      if (!IsInvalid(epsq) && targets.isSet(epsq)) {
+         ASSERT(TypeOfPiece(board[epsq])==Pawn);
+         if (File(epsq) != 8 && board[epsq + 1] == WhitePawn) {
+            dest = epsq + 8;
+            if (board[dest] == EmptyPiece)
+               moves[numMoves++] =
+                  CreateMove(epsq+1,dest,Pawn,Pawn,Empty,
+                  EnPassant);
+         }
+         if (File(epsq) != 1 && board[epsq - 1] == WhitePawn) {
+            dest = epsq + 8;
+            if (board[dest] == EmptyPiece)
+               moves[numMoves++] =
+                  CreateMove(epsq-1,dest,Pawn,Pawn,Empty,
+                  EnPassant);
+         }
+      }
+   }
+   else {
+      Bitboard pawns(board.pawn_bits[Black]);
+      Bitboard pawns1 = pawns;
+      pawns1.shr(7);
+      pawns1 &= ~0x0101010101010101ULL;
+      pawns1 &= board.occupied[White];
+      Square dest;
+      while (pawns1.iterate(dest)) {
+         Square start = dest+7;
+         if (Rank<Black>(start) == 7) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
+            if (allPromotions) {
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
+            }
+         }
+         else if (targets.isSet(dest)) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
+         }
+      }
+      pawns1 = pawns;
+      pawns1.shr(9);
+      pawns1 &= ~0x8080808080808080ULL;
+      pawns1 &= board.occupied[White];
+      while (pawns1.iterate(dest)) {
+         Square start = dest+9;
+         if (Rank<Black>(start) == 7) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
+            if (allPromotions) {
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
+               moves[numMoves++] =
+                  CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
+            }
+         }
+         else if (targets.isSet(dest)) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]));
+         }
+      }
+      pawns1 = pawns;
+      pawns1 &= Attacks::rank_mask[1];
+      pawns1.shr8();
+      pawns1 &= ~board.allOccupied;
+      while (pawns1.iterate(dest)) {
+         Square start = dest + 8;
+         moves[numMoves++] =
+            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Queen,Promotion);
+         moves[numMoves++] =
+            CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Knight,Promotion);
+         if (allPromotions) {
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Rook,Promotion);
+            moves[numMoves++] =
+               CreateMove(start,dest,Pawn,TypeOfPiece(board[dest]),Bishop,Promotion);
+         }
+      }
+      Square epsq = board.enPassantSq();
+      if (!IsInvalid(epsq) && targets.isSet(epsq)) {
+         ASSERT(TypeOfPiece(board[epsq])==Pawn);
+         if (File(epsq) != 8 && board[epsq + 1] == BlackPawn) {
+            dest = epsq - 8;
+            if (board[dest] == EmptyPiece)
+               moves[numMoves++] =
+                  CreateMove(epsq+1,dest,Pawn,Pawn,Empty,
+                  EnPassant);
+         }
+         if (File(epsq) != 1 && board[epsq - 1] == BlackPawn) {
+            dest = epsq - 8;
+            if (board[dest] == EmptyPiece)
+               moves[numMoves++] =
+                  CreateMove(epsq-1,dest,Pawn,Pawn,Empty,
+                  EnPassant);
+         }
+      }
+   }
+   const ColorType side = board.sideToMove();
+   Bitboard knights(board.knight_bits[side]);
+   Square start, dest;
+   while (knights.iterate(start)) {
+      Bitboard dests(Attacks::knight_attacks[start] & targets);
+      while (dests.iterate(dest)) {
+         moves[numMoves++] =
+            CreateMove(start,dest,Knight,TypeOfPiece(board[dest]));
+     }
+   }
+   Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
+   while (bishops.iterate(start)) {
+      Bitboard dests(board.bishopAttacks(start) & targets);
+      Square dest;
+      while (dests.iterate(dest)) {
+         moves[numMoves++] =
+           CreateMove(start,dest,TypeOfPiece(board[start]),TypeOfPiece(board[dest]));
+      }
+   }
+   Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
+   while (rooks.iterate(start)) {
+      Bitboard dests(board.rookAttacks(start) & targets);
+      Square dest;
+      while (dests.iterate(dest)) {
+          moves[numMoves++] =
+             CreateMove(start,dest,
+                        TypeOfPiece(board[start]),TypeOfPiece(board[dest]));
+      }
+   }
+   start = board.kingSquare(side);
+   Bitboard dests(Attacks::king_attacks[start] & targets & ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())]);
+   while (dests.iterate(dest)) {
+      moves[numMoves++] =
+         CreateMove(start,dest,King,TypeOfPiece(board[dest]));
+   }
+   return numMoves;
+}
+
+
+int mg::generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates) {
    // Note: doesn't at present generate castling moves that check
    ASSERT(board.checkStatus() == NotInCheck);
    const Square kp = board.kingSquare(board.oppositeSide());
@@ -1209,83 +1248,36 @@ int MoveGenerator::generateChecks(Move * moves, const Bitboard &discoveredCheckC
    return numMoves;
 }
 
-
-int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
-{
-   unsigned numMoves  = 0;
-   if (board.checkStatus() == InCheck) {
-      numMoves = generateEvasions(moves);
-   }
-   else {
-      numMoves += generateCaptures(moves+numMoves);
-      numMoves += generateNonCaptures(moves+numMoves);
-   }
-   if (repeatable) {
-      int scores[Constants::MaxMoves];
-      for (unsigned i = 0; i < numMoves; i++) {
-         scores[i] = (int)StartSquare(moves[i]) + (int)(DestSquare(moves[i]) << 7);
-         switch (PromoteTo(moves[i])) {
-            case Queen:
-               scores[i] &= 0xB000;
-               break;
-            case Rook:
-               scores[i] &= 0x8000;
-               break;
-            case Bishop:
-               scores[i] &= 0x4000;
-               break;
-            default:
-               break;
-         }
-      }
-      sortMoves(moves, scores, numMoves);
-   }
-   return numMoves;
-}
-
-
-uint64_t RootMoveGenerator::perft(Board &b, int depth) {
-   if (depth == 0) return 1;
-
-   uint64_t nodes = 0ULL;
-   Move m;
-   RootMoveGenerator mg(b);
-   BoardState state = b.state;
-   int order;
-   while ((m = mg.nextMove(order)) != NullMove) {
-      if (depth > 1) {
-         b.doMove(m);
-         nodes += perft(b,depth-1);
-         b.undoMove(m,state);
-      } else {
-         // skip do/undo
-         nodes++;
-      }
-   }
-   return nodes;
-}
-
-int RootMoveGenerator::rank_root_moves()
-{
-#ifdef SYZYGY_TBS
-    const Material &wMat = board.getMaterial(White);
-    const Material &bMat = board.getMaterial(Black);
-    int tb_pieces = wMat.men() + bMat.men();
-    int tb_hit = 0;
-    if (tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
-        tb_hit = SyzygyTb::rank_root_moves(board,
-                                           board.anyRep(),
-                                           options.search.syzygy_50_move_rule,
-                                           moveList);
+void mg::sortMoves(Move moves[], int scores[], int n) {
+    if (n == 2) {
+        if (scores[1] > scores[0]) {
+           swap(moves,scores,0,1);
+        }
+    } else if (n>1) {
+       // insertion sort
+       for (int i = 1; i < n; i++) {
+          int key = scores[i];
+          Move m = moves[i];
+          int j = i-1;
+          for (; j >= 0 && scores[j] < key; j--) {
+              moves[j+1] = moves[j];
+              scores[j+1] = scores[j];
+          }
+          moves[j+1] = m;
+          scores[j+1] = key;
+       }
     }
-    if (tb_hit) {
-        // Sort moves on descending rank returned by Fathom
-        std::stable_sort(moveList.begin(),moveList.end(),
-                         [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
-    }
-    return tb_hit;
-#else
-    return 0;
-#endif
 }
+
+void mg::initialSortCaptures (Move *moves,int captures) {
+   if (captures > 1) {
+      int scores[40];
+      ASSERT(captures < 40);
+      for (int i = 0; i < captures; i++) {
+          scores[i] = int(Params::MVV_LVA(moves[i]));
+      }
+      sortMoves(moves,scores,captures);
+   }
+}
+
 
