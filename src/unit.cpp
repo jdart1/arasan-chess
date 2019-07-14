@@ -1369,10 +1369,10 @@ static int testSearch()
        score_t score;
    };
 
-   static array<Case,10> cases = {
-       // WCSAC 836, Pilnik-Reshevsky, 1942
-       Case("8/kp6/p7/P4Q2/6pp/4q3/8/7K w - - bm Qf2;",0),
-       // "Ragozin-Botvinnik, 1936
+   static array<Case,8> cases = {
+       // Euwe-Alekhine, Amsterdam 1934 (sacrifice to draw)
+       Case("2Q2r1k/3n2pp/p7/4p1B1/P1Q5/2N5/2q2nPP/R5K1 b - - bm Nh3+",0),
+       // "Ragozin-Botvinnik, 1936 (mate in 3)
        Case("1k1r2r1/ppq4p/4Q3/1B2np2/2P1p3/P7/2P1RPPR/2B1K3 b - - bm Nf3+",Constants::MATE-5),
        // test for underpromotion
        Case("7b/2R2Prk/6qp/3B2pn/8/5PP1/5P2/6K1 w - - bm f8=N#;",Constants::MATE-1),
@@ -1381,12 +1381,8 @@ static int testSearch()
        Case("7n/Q2K1k1p/6pB/3N2P1/8/8/8/4r3 b - - bm Re7+;",0), // stalemate
        Case("8/7k/3p4/3B2Q1/p7/P7/1K4PP/5q2 b - - bm Qf6+;",0), // stalemate, not at root
        Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // draw
-       // Evans-Browne, USA 1971
-       Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
-       // WAC 026
-       Case("3r2k1/1p1b1pp1/pq5p/8/3NR3/2PQ3P/PP3PP1/6K1 b - - bm Bf5",Constants::INVALID_SCORE),
-       // WAC 040
-       Case("3r1r1k/1p4pp/p4p2/8/1PQR4/6Pq/P3PP2/2R3K1 b - - bm Rc8",Constants::INVALID_SCORE)
+       // Evans-Browne, USA 1971 (discovered attack)
+       Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE)
    };
 
    static const int DEPTH=10;
@@ -1414,11 +1410,9 @@ static int testSearch()
        if (rec.getVal("bm",bm)) {
            string result;
            Notation::image(board,m,Notation::OutputFormat::SAN,result);
-//           cout << caseid << " " << result << " " << score << " ";
-//           Scoring::printScore(score,cout);
-//           cout << endl;
            if (result != bm) {
-               cerr << "error in search, case " << caseid << ": incorrect move" << endl;
+               cerr << "error in search, case " << caseid << ": incorrect move (";
+               cerr << "expected " << bm << ", got " << result << ")" << endl;
                ++errs;
            }
            if (acase.score != Constants::INVALID_SCORE) {
