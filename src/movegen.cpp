@@ -410,7 +410,7 @@ MoveGenerator::MoveGenerator( const Board &ABoard,
 }
 
 
-int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
+unsigned MoveGenerator::generateAllMoves(Move *moves,int repeatable)
 {
    unsigned numMoves  = 0;
    if (board.checkStatus() == InCheck) {
@@ -443,9 +443,9 @@ int MoveGenerator::generateAllMoves(Move *moves,int repeatable)
    return numMoves;
 }
 
-int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
+unsigned MoveGenerator::generateEvasionsNonCaptures(Move * moves)
 {
-   int num_moves = 0;
+   unsigned num_moves = 0;
    const Square kp = board.kingSquare(board.sideToMove());
    if (num_attacks == 1) {
       // try to interpose a piece
@@ -595,9 +595,9 @@ int MoveGenerator::generateEvasionsNonCaptures(Move * moves)
    return num_moves;
 }
 
-int MoveGenerator::generateEvasionsCaptures(Move * moves)
+unsigned MoveGenerator::generateEvasionsCaptures(Move * moves)
 {
-   int num_moves = 0;
+   unsigned num_moves = 0;
    const Square kp = board.kingSquare(board.sideToMove());
    king_attacks = board.calcAttacks(kp, board.oppositeSide());
    if (king_attacks.isClear()) {
@@ -676,16 +676,16 @@ int MoveGenerator::generateEvasionsCaptures(Move * moves)
    return num_moves;
 }
 
-int MoveGenerator::generateEvasions(Move * moves)
+unsigned MoveGenerator::generateEvasions(Move * moves)
 {
-    int n = generateEvasionsCaptures(moves);
+    unsigned n = generateEvasionsCaptures(moves);
     n += generateEvasionsNonCaptures(moves+n);
     return n;
 }
 
-int MoveGenerator::generateEvasions(Move * moves, const Bitboard &mask)
+unsigned MoveGenerator::generateEvasions(Move * moves, const Bitboard &mask)
 {
-   int num_moves = 0;
+   unsigned num_moves = 0;
    Square kp = board.kingSquare(board.sideToMove());
    Bitboard b(Attacks::king_attacks[kp]);
    b &= ~board.allPawnAttacks(board.oppositeSide());
@@ -766,9 +766,9 @@ int RootMoveGenerator::rank_root_moves()
 #endif
 }
 
-int mg::generateNonCaptures(const Board &board, Move *moves)
+unsigned mg::generateNonCaptures(const Board &board, Move *moves)
 {
-   int numMoves = 0;
+   unsigned numMoves = 0;
    // castling moves
    const ColorType side = board.sideToMove();
    CastleType CS = board.castleStatus(side);
@@ -870,9 +870,9 @@ int mg::generateNonCaptures(const Board &board, Move *moves)
 }
 
 
-int mg::generateCaptures(const Board &board, Move * moves, bool allPromotions, const Bitboard &targets)
+unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotions, const Bitboard &targets)
 {
-   int numMoves = 0;
+   unsigned numMoves = 0;
 
    if (board.sideToMove() == White) {
       Bitboard pawns(board.pawn_bits[White]);
@@ -1083,12 +1083,12 @@ int mg::generateCaptures(const Board &board, Move * moves, bool allPromotions, c
 }
 
 
-int mg::generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates) {
+unsigned mg::generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates) {
    // Note: doesn't at present generate castling moves that check
    ASSERT(board.checkStatus() == NotInCheck);
    const Square kp = board.kingSquare(board.oppositeSide());
    Square loc;
-   int numMoves = 0;
+   unsigned numMoves = 0;
 
    // Discovered checks first.
    Bitboard disc(discoveredCheckCandidates);
@@ -1248,17 +1248,17 @@ int mg::generateChecks(const Board &board, Move * moves, const Bitboard &discove
    return numMoves;
 }
 
-void mg::sortMoves(Move moves[], int scores[], int n) {
+void mg::sortMoves(Move moves[], int scores[], unsigned n) {
     if (n == 2) {
         if (scores[1] > scores[0]) {
            swap(moves,scores,0,1);
         }
     } else if (n>1) {
        // insertion sort
-       for (int i = 1; i < n; i++) {
+       for (unsigned i = 1; i < n; i++) {
           int key = scores[i];
           Move m = moves[i];
-          int j = i-1;
+          int j = int(i)-1;
           for (; j >= 0 && scores[j] < key; j--) {
               moves[j+1] = moves[j];
               scores[j+1] = scores[j];
@@ -1269,11 +1269,11 @@ void mg::sortMoves(Move moves[], int scores[], int n) {
     }
 }
 
-void mg::initialSortCaptures (Move *moves,int captures) {
+void mg::initialSortCaptures (Move *moves,unsigned captures) {
    if (captures > 1) {
       int scores[40];
       ASSERT(captures < 40);
-      for (int i = 0; i < captures; i++) {
+      for (unsigned i = 0; i < captures; i++) {
           scores[i] = int(Params::MVV_LVA(moves[i]));
       }
       sortMoves(moves,scores,captures);

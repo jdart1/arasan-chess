@@ -20,24 +20,24 @@ namespace mg {
     // Only include captures on squares in the set "targets".
     // If allPromotions = true, generate all promotiions, otherwise
     // just Q + N.
-    extern int generateCaptures(const Board &board, Move *moves, bool allPromotions,
-                                const Bitboard &targets);
+    extern unsigned generateCaptures(const Board &board, Move *moves, bool allPromotions,
+                                     const Bitboard &targets);
 
     // Only generates captures, promotions, and check evasions.
     //
-    inline int generateCaptures(const Board &board, Move *moveList, bool allPromotions) {
+    inline unsigned generateCaptures(const Board &board, Move *moveList, bool allPromotions) {
         return generateCaptures(board, moveList, allPromotions, board.occupied[board.oppositeSide()]);
     }
 
     // Generate only non-capturing moves.
-    int generateNonCaptures(const Board &board, Move *moves);
+    unsigned generateNonCaptures(const Board &board, Move *moves);
 
     // Generate non-capturing checking moves
-    extern int generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates);
+    extern unsigned generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates);
 
-    extern void initialSortCaptures(Move *moves, int captures);
+    extern void initialSortCaptures(Move *moves, unsigned captures);
 
-    extern void sortMoves(Move moves[], int scores[], int n);
+    extern void sortMoves(Move moves[], int scores[], unsigned n);
 };
 
 class MoveGenerator
@@ -113,13 +113,13 @@ class MoveGenerator
       // involve moves into check.  However, if the side to move is in
       // check, then all moves returned are strictly legal.
       //
-      int generateAllMoves(Move *moves,int repeatable);
+      unsigned generateAllMoves(Move *moves,int repeatable);
 
       // Return a list of the moves that may be used to escape
       // check.  Unlike the regular move generation routine, all
       // moves are checked for legality.
       //
-      int generateEvasions(Move * moves);
+      unsigned generateEvasions(Move * moves);
 
       unsigned movesGenerated() const
       {
@@ -152,9 +152,9 @@ class MoveGenerator
 
       int getBatch(Move *&batch,int &index);
 
-      int generateEvasionsCaptures(Move * moves);
-      int generateEvasionsNonCaptures(Move * moves);
-      int generateEvasions(Move * moves, const Bitboard &mask);
+      unsigned generateEvasionsCaptures(Move * moves);
+      unsigned generateEvasionsNonCaptures(Move * moves);
+      unsigned generateEvasions(Move * moves, const Bitboard &mask);
 
       const Board &board;
       SearchContext *context;
