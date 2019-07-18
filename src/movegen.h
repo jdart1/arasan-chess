@@ -305,6 +305,7 @@ public:
         if (phase == 1) {
             ++phase;
             moveCount = mg::generateCaptures(board, moves, false, targets);
+            ASSERT(moveCount <= Constants::MaxCaptures);
             mg::initialSortCaptures(moves, moveCount);
         }
         while (index < moveCount) {
@@ -319,7 +320,7 @@ public:
 
 private:
     const Board &board;
-    Move moves[Constants::MaxMoves];
+    Move moves[Constants::MaxCaptures];
     unsigned index, moveCount;
     Move hashMove;
     Bitboard targets;
@@ -332,6 +333,7 @@ public:
     QSearchCheckGenerator(const Board &board, const Bitboard &pins):
         index(0) {
         moveCount = mg::generateChecks(board, moves, pins);
+        ASSERT(moveCount <= Constants::MaxChecks);
     }
     
     virtual ~QSearchCheckGenerator() {
@@ -345,7 +347,7 @@ public:
     }
 
 private:
-    Move moves[Constants::MaxMoves];
+    Move moves[Constants::MaxChecks];
     unsigned index, moveCount;
 };
 
