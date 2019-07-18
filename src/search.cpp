@@ -2303,24 +2303,30 @@ int Search::calcExtensions(const Board &board,
    // See if we do late move reduction. Moves in the history phase of move
    // generation can be searched with reduced depth.
    int pruneDepth = depth;
-   if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && quiet) {
+   if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpThreshold)) {
        extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
-       pruneDepth = depth + extend;
-       if (!node->PV() && !improving) {
-           extend -= DEPTH_INCREMENT;
+       if (!quiet) {
+           extend += DEPTH_INCREMENT;
        }
-       if (node->ply > 0) {
-           if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
-               // killer or refutation move
-               extend += DEPTH_INCREMENT;
+       else {
+           pruneDepth = depth + extend;
+           if (!node->PV() && !improving) {
+               extend -= DEPTH_INCREMENT;
            }
-           // history based reductions
-           extend += std::min(2*DEPTH_INCREMENT,
+           if (node->ply > 0) {
+               if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+                   // killer or refutation move
+                   extend += DEPTH_INCREMENT;
+               }
+               // history based reductions
+               extend += std::min(2*DEPTH_INCREMENT,
                               std::max(-2*DEPTH_INCREMENT,
                                        DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/5000));
+           }
        }
        // Don't reduce so far we go into the qsearch:
        extend = std::max(extend,1-depth);
+       // Don't reduce < 1 ply
        if (extend <= -DEPTH_INCREMENT) {
 #ifdef SEARCH_STATS
            ++stats.reduced;
