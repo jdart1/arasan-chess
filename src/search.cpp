@@ -1861,7 +1861,7 @@ score_t Search::quiesce(int ply,int depth)
        // would detect this by finding the King can be captured, but if in
        // check we only generate evasions and will not find this).
        ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
-       if (!board.wasLegal((node-1)->last_move)) {
+       if (depth < 0 && !board.wasLegal((node-1)->last_move)) {
            return -Illegal;
        }
        score_t try_score;
