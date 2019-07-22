@@ -147,7 +147,11 @@ else
 LTO := -flto
 endif
 OPT     = -O3 $(LTO) -fno-rtti  $(SSE) -DNDEBUG
-LDFLAGS := $(LDFLAGS) -fuse-ld=gold $(LTO)
+LDFLAGS := $(LDFLAGS) $(OPT)
+ifneq ("darwin","$(findstring darwin,$(OSTYPE))")
+# "Gold" not support on darwin
+LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+endif
 endif
 
 else
@@ -181,10 +185,10 @@ endif
 ifeq ("darwin","$(findstring darwin,$(OSTYPE))")
 CFLAGS := -D_MAC $(CFLAGS)
 LDFLAGS := $(LDFLAGS)
-LLVM-PROFDATA := xcrun $(LLVM_PROFDATA)
+LLVM_PROFDATA := xcrun $(LLVM_PROFDATA)
 else
 LIBS := $(LIBS) -lrt
-LLVM-PROFDATA := $(LLVM_PROFDATA)
+LLVM_PROFDATA := $(LLVM_PROFDATA)
 endif
 
 default: dirs $(EXPORT)/$(ARASANX)
