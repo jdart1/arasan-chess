@@ -1726,10 +1726,6 @@ score_t Search::quiesce(int ply,int depth)
       return scoring.evalu8(board);
    }
    else if (Scoring::isDraw(board,rep_count,ply)) {
-      // Verify previous move was legal
-      if (!board.wasLegal((node-1)->last_move)) {
-         return -Illegal;
-      }
 #ifdef _TRACE
       if (mainThread()) {
          indent(ply); cout << "draw!" << endl;
@@ -1856,14 +1852,7 @@ score_t Search::quiesce(int ply,int depth)
            indent(ply); cout << "in_check=1" << endl;
        }
 #endif
-       // If last move was a checking move, ensure that in making it we did
-       // not move a pinned piece or move the king into check (normally we
-       // would detect this by finding the King can be captured, but if in
-       // check we only generate evasions and will not find this).
        ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
-       if (depth < 0 && !board.wasLegal((node-1)->last_move)) {
-           return -Illegal;
-       }
        score_t try_score;
        MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
        Move move;
@@ -1907,6 +1896,10 @@ score_t Search::quiesce(int ply,int depth)
            }
            node->last_move = move;
            board.doMove(move);
+           if (!board.wasLegal(move)) {
+               board.undoMove(move,state);
+               continue;
+           }
            ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
            try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
            board.undoMove(move,state);
@@ -2004,11 +1997,6 @@ score_t Search::quiesce(int ply,int depth)
                    indent(ply); cout << "**CUTOFF**" << endl;
                }
 #endif
-               // check legality of prev move but not at depth == 0 (because
-               // regular search checked already)
-               if (depth < 0 && !board.wasLegal((node-1)->last_move)) {
-                   return -Illegal;
-               }
                ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
                // store eval in hash table if not already fetched from there
                if (!had_eval) {
@@ -2082,6 +2070,10 @@ score_t Search::quiesce(int ply,int depth)
             
            node->last_move = move;
            board.doMove(move);
+           if (!board.wasLegal(move)) {
+               board.undoMove(move,state);
+               continue;
+           }
            try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
            board.undoMove(move,state);
            if (try_score != Illegal) {
