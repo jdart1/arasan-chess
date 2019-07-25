@@ -1,4 +1,4 @@
-// Copyright 2005-2010, 2012, 2013, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2010, 2012, 2013, 2016-2019 by Jon Dart. All Rights Reserved.
 
 #include "threadp.h"
 #include "search.h"
@@ -148,7 +148,6 @@ ThreadInfo::~ThreadInfo() {
 }
 
 void ThreadInfo::start() {
-    ASSERT(index>=0);
 #ifdef _THREAD_TRACE
     log("start",index);
 #endif

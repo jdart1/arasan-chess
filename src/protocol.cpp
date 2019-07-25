@@ -47,6 +47,8 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       post(false),
       searcher(nullptr),
       last_move(NullMove),
+      last_move_image("(null)"),
+      last_computer_move(NullMove),
       game_file(nullptr),
       time_left(0),
       opp_time(0),

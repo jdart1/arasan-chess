@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2018 by Jon Dart.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2019 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _LOG_H
@@ -28,7 +28,8 @@ public:
             score_t score,
             int depth);
 
-   LogEntry() : my_image(""),
+    LogEntry() : my_move(NullMove),
+                my_image(""),
                 my_fromBook(false),
                 my_score((score_t)0),
                 my_depth(0),

@@ -2079,6 +2079,7 @@ int Scoring::specialCaseEndgame(const Board &board,
          Square oppkp = board.kingSquare(oside);
          Bitboard bishops(board.bishop_bits[side]);
          Square sq = bishops.firstOne();
+         ASSERT(!IsInvalid(sq));
 
          // try to force king to a corner where mate is possible.
          if (SquareColor(sq) == Black) {
@@ -2430,6 +2431,9 @@ int Scoring::theoreticalDraw(const Board &board) {
             Square kp = board.kingSquare(side);
             Square kp2 = board.kingSquare(OppositeColor(side));
             Square psq = (board.pawn_bits[side].firstOne());
+            ASSERT(OnBoard(kp));
+            ASSERT(OnBoard(kp2));
+            ASSERT(OnBoard(psq));
             return lookupBitbase(kp, psq, kp2, side, board.sideToMove()) == 0;
         }
         else {
@@ -2535,6 +2539,7 @@ score_t Scoring::tryBitbase(const Board &board) {
    const Material &bMat = board.getMaterial(Black);
    if ((unsigned) wMat.infobits() == Material::KP && bMat.kingOnly()) {
       Square passer = board.pawn_bits[White].firstOne();
+      ASSERT(!IsInvalid(passer));
       if (lookupBitbase(board.kingSquare(White), passer, board.kingSquare(Black), White, board.sideToMove())) {
          return board.sideToMove() == White ? Constants::BITBASE_WIN :
               -Constants::BITBASE_WIN;

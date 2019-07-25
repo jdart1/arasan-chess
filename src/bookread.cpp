@@ -183,8 +183,8 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    while(loc.index != book::NO_NEXT) {
        ASSERT(loc.index < book::DATA_PAGE_SIZE);
        book::DataEntry &bookEntry = data.data[loc.index];
+       // correct multi-byte values for endianess:
        bookEntry.next = swapEndian16((byte*)&bookEntry.next);
-       bookEntry.weight = bookEntry.weight;
        bookEntry.win = swapEndian32((byte*)&bookEntry.win);
        bookEntry.loss = swapEndian32((byte*)&bookEntry.loss);
        bookEntry.draw = swapEndian32((byte*)&bookEntry.draw);

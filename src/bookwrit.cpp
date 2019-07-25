@@ -72,9 +72,9 @@ void BookWriter::add(const hash_t hashCode, byte moveIndex, byte weight,
       book::IndexEntry &existingIndex = idx->index[found];
       book::DataPage *dp = data[existingIndex.page];
       // See if the move we are adding is in the book already
-      int foundIndex = 0;
-      int endOfChain = existingIndex.index;
-      int dataIndex = existingIndex.index;
+      unsigned foundIndex = 0;
+      unsigned endOfChain = existingIndex.index;
+      unsigned dataIndex = existingIndex.index;
       while (dataIndex != book::NO_NEXT) {
          book::DataEntry &existingDe = dp->data[dataIndex];
          if (de.index == existingDe.index) {

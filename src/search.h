@@ -26,7 +26,24 @@ struct NodeInfo;
 
 // Per-node info, part of search history stack
 struct NodeInfo {
-    NodeInfo() : cutoff(0),best(NullMove)
+    NodeInfo() : best_score(Constants::INVALID_SCORE),
+                 alpha(Constants::INVALID_SCORE),
+                 beta(Constants::INVALID_SCORE),
+                 cutoff(0),
+                 num_quiets(0),
+                 num_legal(0),
+                 flags(0),
+                 singularMove(NullMove),
+                 best(NullMove),
+                 last_move(NullMove),
+                 eval(Constants::INVALID_SCORE),
+                 staticEval(Constants::INVALID_SCORE),
+                 pv_length(0),
+#ifdef MOVE_ORDER_STATS
+                 best_count(0),
+#endif
+                 ply(0),
+                 depth(0)
         {
         }
     score_t best_score;

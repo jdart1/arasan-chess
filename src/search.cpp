@@ -131,7 +131,8 @@ static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
 }
 
 SearchController::SearchController()
-    : post_function(nullptr),
+    :
+      post_function(nullptr),
       monitor_function(nullptr),
       uci(false),
       age(1),
@@ -160,7 +161,19 @@ SearchController::SearchController()
       pool(nullptr),
       rootSearch(nullptr),
       tb_root_probes(0),
-      tb_root_hits(0)
+      tb_root_hits(0),
+#ifdef SYZYGY_TBS
+      tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
+#endif
+      initialValue(Constants::INVALID_SCORE),
+      mg(NULL),
+      waitTime(0),
+      depth_adjust(0),
+      select_subopt(0),
+      elapsed_time(0)
+#ifdef SMP_STATS
+      , samples(0), threads(0)
+#endif
 {
 
 #ifdef SMP_STATS
@@ -903,7 +916,7 @@ void Search::setTalkLevelFromController() {
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
                          score_t score)
 {
-    ASSERT(stats.multipv_count >= 0 && (unsigned)stats.multipv_count < Statistics::MAX_PV);
+    ASSERT(stats.multipv_count < Statistics::MAX_PV);
     stats.value = score;
     stats.depth = iteration_depth;
     stats.display_value = stats.value;

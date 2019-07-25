@@ -169,7 +169,7 @@ GCCNEW := $(shell expr `$(CC) -dumpversion` \>= $(GCC_MIN_VERSION))
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
-CFLAGS := -std=c++11 -Wall -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+CFLAGS := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 ifndef DEBUG
 LTO	= -flto
