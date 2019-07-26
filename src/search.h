@@ -63,7 +63,6 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
-    char pad[110];
 
     int PV() const {
         return (beta > alpha+1);
