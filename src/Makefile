@@ -361,7 +361,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp log.cpp search.cpp \
 searchc.cpp learn.cpp movegen.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp $(UNIT_TEST_SRC)
+stats.cpp threadp.cpp threadc.cpp protocol.cpp
 
 PGNSELECT_SOURCES = pgnselect.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \

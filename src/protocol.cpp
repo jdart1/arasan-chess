@@ -1626,7 +1626,7 @@ void Protocol::setTuningParam(const string &name, const string &value)
       int tmp;
       buf >> tmp;
       if (!buf.bad() && !buf.fail()) {
-         tune_params.updateParamValue(index,tmp);
+         tune_params[index].current = tmp;
          // apply params to Scoring module
          tune_params.applyParams();
       }

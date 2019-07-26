@@ -167,7 +167,7 @@ private:
     // make a move on the board, add to log and search history
     void execute_move(Board &board,Move m);
 
-#ifdef _TUNE
+#ifdef TUNE
     // Set a tuning parameter passed on the command line (used for
     // CLOP for example).
     void setTuningParam(const string &name, const string &value);

@@ -293,7 +293,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
                                     false,
                                     false,
                                     stats,
-                                    Silent);
+                                    TalkLevel::Silent);
    score = stats.value;
    // skip positions with very large scores (including mate scores)
 
