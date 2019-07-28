@@ -179,7 +179,7 @@ int CDECL main(int argc, char **argv)
                                                false,         /* background */
                                                false, /* UCI */
                                                stats,
-                                               Silent);
+                                               TalkLevel::Silent);
                      
                         last_score = float(stats.value)/Params::PAWN_VALUE;
                      }

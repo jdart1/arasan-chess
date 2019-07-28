@@ -1,4 +1,4 @@
-// Copyright 2016, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 2016, 2017, 2019 by Jon Dart.  All Rights Reserved.
 
 // Utility to extract selected positions from PGN files into an EPD file.
 
@@ -84,7 +84,7 @@ static int score(SearchController *searcher,const Board &board,
                           false,        /* background */
                           false, /* UCI */
                           stats,
-                          Silent);
+                          TalkLevel::Silent);
 
    return stats.value;
 }
@@ -300,8 +300,8 @@ int CDECL main(int argc, char **argv)
                               // verify actually is quiet
                               RootMoveGenerator mg(board);
                               Move moves[Constants::MaxMoves];
-                              int n = mg.generateCaptures(moves);
-                              for (int i = 0; i < n; i++) {
+                              unsigned n = mg::generateCaptures(board,moves,true,board.occupied[board.oppositeSide()]);
+                              for (unsigned i = 0; i < n; i++) {
                                  if (see(board,moves[i])>0) {
                                     ok = false;
                                     break;
