@@ -176,6 +176,7 @@ $(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\log.obj \
 $(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
 $(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
 $(TUNE_BUILD)\learn.obj \
+$(TUNE_BUILD)\protocol.obj $(TUNE_BUILD)\tester.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
@@ -254,6 +255,8 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\learn.obj $(BUILD)\legal.obj \
+$(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\eco.obj $(BUILD)\ecodoata.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
@@ -267,6 +270,8 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\legal.obj $(BUILD)\learn.obj \
+$(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\eco.obj $(BUILD)\ecodoata.obj \
 $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
 
 ECOCODER_OBJS = $(BUILD)\ecocoder.obj \
@@ -280,6 +285,8 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
 $(BUILD)\legal.obj \
+$(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\eco.obj $(BUILD)\ecodoata.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(BUILD)\eco.obj $(BUILD)\ecodata.obj $(TB_OBJS) \
 $(NUMA_OBJS)
@@ -295,6 +302,8 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
 $(BUILD)\legal.obj \
+$(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\eco.obj $(BUILD)\ecodoata.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
@@ -309,6 +318,8 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
 $(BUILD)\legal.obj \
+$(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\eco.obj $(BUILD)\ecodoata.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 

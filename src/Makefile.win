@@ -211,9 +211,10 @@ $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
 $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\learn.obj \
-$(BUILD)\legal.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
-$(NUMA_OBJS)
+$(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
+$(BUILD)\learn.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
+$(TB_OBJS) $(NUMA_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -224,10 +225,11 @@ $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj  \
-$(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
-$(NUMA_OBJS)
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
+$(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
+$(BUILD)\learn.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
+$(TB_OBJS) $(NUMA_OBJS)
 
 ECOCODER_OBJS = $(BUILD)\ecocoder.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -238,11 +240,11 @@ $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj \
-$(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\eco.obj $(BUILD)\ecodata.obj $(TB_OBJS) \
-$(NUMA_OBJS)
+$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
+$(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
+$(BUILD)\learn.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
+$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
+$(TB_OBJS) $(NUMA_OBJS)
 
 PGNSELECT_OBJS = $(BUILD)\pgnselect.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -252,9 +254,10 @@ $(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\eco.obj \
+$(BUILD)\ecodata.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
+$(BUILD)\legal.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
@@ -266,9 +269,10 @@ $(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\eco.obj \
+$(BUILD)\ecodata.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
+$(BUILD)\legal.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
@@ -280,9 +284,10 @@ $(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj \
-$(BUILD)\legal.obj \
+$(BUILD)\movearr.obj $(BUILD)\log.obj $(BUILD)\eco.obj \
+$(BUILD)\ecodata.obj \
+$(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
+$(BUILD)\legal.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
 $(BUILD)\learn.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj $(TB_OBJS) \
 $(NUMA_OBJS)
 
