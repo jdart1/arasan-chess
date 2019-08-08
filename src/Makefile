@@ -412,7 +412,7 @@ $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/$(TUNER):  $(TUNER_OBJS)
-	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
