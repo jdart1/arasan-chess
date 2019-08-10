@@ -1544,9 +1544,9 @@ const Bitboard Board::rookAttacks(Square sq,ColorType side) const {
 
 const Bitboard Board::bishopAttacks(Square sq,ColorType side) const {
    Board &b = (Board&)*this;
-   b.allOccupied &= ~queen_bits[side];
+   b.allOccupied &= ~(queen_bits[side] | bishop_bits[side]);
    Bitboard attacks(bishopAttacks(sq));
-   b.allOccupied |= queen_bits[side];
+   b.allOccupied |= (queen_bits[side] | bishop_bits[side]);
    return attacks;
 }
 
