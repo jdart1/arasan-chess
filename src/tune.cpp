@@ -96,12 +96,12 @@ Tune::Tune()
         TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,0,100,TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ATTACK_FACTOR,"rook_attack_factor",60,20,100,TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ATTACK_BOOST,"rook_attack_boost",34,0,100,TuneParam::Midgame,1),
-        TuneParam(Tune::ROOK_ATTACK_BOOST2,"rook_attack_boost2",34,0,100,TuneParam::Midgame,1),
         TuneParam(Tune::QUEEN_ATTACK_FACTOR,"queen_attack_factor",60,40,100,TuneParam::Midgame,1),
         TuneParam(Tune::QUEEN_ATTACK_BOOST,"queen_attack_boost",40,0,100,TuneParam::Midgame,1),
-        TuneParam(Tune::QUEEN_ATTACK_BOOST2,"queen_attack_boost2",60,0,100,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_COVER_BOOST_BASE,"king_attack_cover_boost_base",6,4,30,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_COVER_BOOST_SLOPE,"king_attack_cover_boost_slope",140,40,300,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_ATTACK_COUNT,"king_attack_count",6,0,60,TuneParam::Midgame,1),
+        TuneParam(Tune::KING_ATTACK_SQUARES,"king_attack_squares",6,0,60,TuneParam::Midgame,1),
         TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MIN,"own_piece_king_proximity_min",12,0,50,TuneParam::Any,0),
         TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MAX,"own_piece_king_proximity_max",36,0,70,TuneParam::Any,0),
         TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Midgame,1),
@@ -580,17 +580,17 @@ void Tune::applyParams(bool check) const
    Params::MINOR_ATTACK_BOOST = PARAM(MINOR_ATTACK_BOOST);
    Params::ROOK_ATTACK_FACTOR = PARAM(ROOK_ATTACK_FACTOR);
    Params::ROOK_ATTACK_BOOST = PARAM(ROOK_ATTACK_BOOST);
-   Params::ROOK_ATTACK_BOOST2 = PARAM(ROOK_ATTACK_BOOST2);
+   Params::QUEEN_ATTACK_FACTOR = PARAM(QUEEN_ATTACK_FACTOR);
+   Params::QUEEN_ATTACK_BOOST = PARAM(QUEEN_ATTACK_BOOST);
    Params::KING_ATTACK_COVER_BOOST_BASE = PARAM(KING_ATTACK_COVER_BOOST_BASE);
    Params::KING_ATTACK_COVER_BOOST_SLOPE = PARAM(KING_ATTACK_COVER_BOOST_SLOPE);
+   Params::KING_ATTACK_COUNT = PARAM(KING_ATTACK_COUNT);
+   Params::KING_ATTACK_SQUARES = PARAM(KING_ATTACK_SQUARES);
    Params::OWN_PIECE_KING_PROXIMITY_MIN = PARAM(OWN_PIECE_KING_PROXIMITY_MIN);
    Params::OWN_PIECE_KING_PROXIMITY_MAX = PARAM(OWN_PIECE_KING_PROXIMITY_MAX);
    Params::OWN_MINOR_KING_PROXIMITY = PARAM(OWN_MINOR_KING_PROXIMITY);
    Params::OWN_ROOK_KING_PROXIMITY = PARAM(OWN_ROOK_KING_PROXIMITY);
    Params::OWN_QUEEN_KING_PROXIMITY = PARAM(OWN_QUEEN_KING_PROXIMITY);
-   Params::QUEEN_ATTACK_FACTOR = PARAM(QUEEN_ATTACK_FACTOR);
-   Params::QUEEN_ATTACK_BOOST = PARAM(QUEEN_ATTACK_BOOST);
-   Params::QUEEN_ATTACK_BOOST2 = PARAM(QUEEN_ATTACK_BOOST2);
    Params::PAWN_THREAT_ON_PIECE_MID = PARAM(PAWN_THREAT_ON_PIECE_MID);
    Params::PAWN_THREAT_ON_PIECE_END = PARAM(PAWN_THREAT_ON_PIECE_END);
    Params::PIECE_THREAT_MM_MID = PARAM(PIECE_THREAT_MM_MID);

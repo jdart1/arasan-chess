@@ -860,6 +860,8 @@ void Scoring::pieceScore(const Board &board,
    Bitboard allAttacks, minorAttacks, rookAttacks;
    score_t attackWeight = 0;
    int simpleAttackWeight = 0;
+   unsigned kingAttackCount = 0;
+   Bitboard kingAttackSquares;
    Square sq;
 
    while(b.iterate(sq))
@@ -899,12 +901,12 @@ void Scoring::pieceScore(const Board &board,
             if (!deep_endgame) {
                Bitboard kattacks(knattacks & nearKing);
                if (kattacks) {
-                  simpleAttackWeight += 4;
-                  attackWeight += PARAM(MINOR_ATTACK_FACTOR);
-                  if (kattacks & (kattacks-1)) {
-                     attackWeight += PARAM(MINOR_ATTACK_BOOST);
-                     simpleAttackWeight += 4;
-                  }
+                  int count = kattacks.bitCountOpt();
+                  attackWeight += PARAM(MINOR_ATTACK_FACTOR) +
+                      PARAM(MINOR_ATTACK_BOOST)*(count-1);
+                  simpleAttackWeight += 4 + 2*std::max<int>(0,count-1);
+                  ++kingAttackCount;
+                  kingAttackSquares |= (knattacks & nearKing);
                }
             }
             break;
@@ -920,25 +922,16 @@ void Scoring::pieceScore(const Board &board,
             minorAttacks |= battacks;
             if (!deep_endgame) {
                Bitboard kattacks(battacks & nearKing);
-               if (kattacks) {
-                  attackWeight += PARAM(MINOR_ATTACK_FACTOR);
-                  simpleAttackWeight += 4;
-                  if (kattacks & (kattacks - 1)) {
-                     attackWeight += PARAM(MINOR_ATTACK_BOOST);
-                     simpleAttackWeight += 4;
-                  }
+               if (!kattacks && (battacks & board.queen_bits[side])) {
+                   kattacks = board.bishopAttacks(sq, side) & nearKing;
                }
-               else if (battacks & board.queen_bits[side]) {
-                  // possible stacked attackers
-                  kattacks = board.bishopAttacks(sq, side) & nearKing;
-                  if (kattacks) {
-                     attackWeight += PARAM(MINOR_ATTACK_FACTOR);
-                     simpleAttackWeight += 4;
-                     if (kattacks & (kattacks - 1)) {
-                        attackWeight += PARAM(MINOR_ATTACK_BOOST);
-                        simpleAttackWeight += 4;
-                     }
-                  }
+               if (kattacks) {
+                   int count = kattacks.bitCountOpt();
+                   attackWeight += PARAM(MINOR_ATTACK_FACTOR) +
+                       PARAM(MINOR_ATTACK_BOOST)*(count-1);
+                   simpleAttackWeight += 4 + 2*std::max<int>(0,count-1);
+                   ++kingAttackCount;
+                   kingAttackSquares |= kattacks;
                }
             }
             if (outpost(board,sq,side)) {
@@ -1006,23 +999,14 @@ void Scoring::pieceScore(const Board &board,
                ", " << PARAM(ROOK_MOBILITY)[Endgame][mobl] << ")" << endl;
 #endif
             if (!deep_endgame) {
-               Bitboard attacks(rattacks2 & nearKing);
-               if (attacks) {
-                  attackWeight += PARAM(ROOK_ATTACK_FACTOR);
-                  simpleAttackWeight += 6;
-                  Bitboard attacks2(attacks & kingNearProximity[okp]);
-                  if (attacks2) {
-                     attacks2 &= (attacks2 - 1);
-                     if (attacks2) {
-                        attackWeight += PARAM(ROOK_ATTACK_BOOST);
-                        simpleAttackWeight += 3;
-                        attacks2 &= (attacks2 - 1);
-                        if (attacks2) {
-                           attackWeight += PARAM(ROOK_ATTACK_BOOST2);
-                           simpleAttackWeight += 4;
-                        }
-                     }
-                  }
+               Bitboard kattacks(rattacks2 & nearKing);
+               if (kattacks) {
+                   int boost = std::max<int>(0,Bitboard(kattacks & kingNearProximity[okp]).bitCountOpt()-1);
+                   attackWeight += PARAM(ROOK_ATTACK_FACTOR) +
+                       PARAM(ROOK_ATTACK_BOOST)*boost;
+                   simpleAttackWeight += 6 + 3*boost;
+                   ++kingAttackCount;
+                   kingAttackSquares |= kattacks;
                }
             }
             if (board.pinOnRankOrFile(sq, okp, oside)) {
@@ -1063,39 +1047,22 @@ void Scoring::pieceScore(const Board &board,
                }
 
                kattacks = battacks & nearKing;
-               if (!kattacks) {
+               if (!kattacks && (battacks & (board.bishop_bits[side] | board.queen_bits[side]))) {
                   kattacks = board.bishopAttacks(sq, side) & nearKing;
                }
                if (rattacks & nearKing) {
                   kattacks |= (rattacks & nearKing);
                }
-               else {
+               else if (rattacks & (board.queen_bits[side] | board.rook_bits[side])) {
                   kattacks |= (board.rookAttacks(sq, side) & nearKing);
                }
-
                if (kattacks) {
-                  attackWeight += PARAM(QUEEN_ATTACK_FACTOR);
-                  simpleAttackWeight += 6;
-#ifdef EVAL_DEBUG
-                  int tmp = attackWeight;
-#endif
-                  // bonus if Queen attacks multiple squares near King:
-                  Bitboard nearAttacks(kattacks & kingNearProximity[okp]);
-                  if (nearAttacks) {
-                     nearAttacks &= (nearAttacks - 1);      // clear 1st bit
-                     if (nearAttacks) {
-                        attackWeight += PARAM(QUEEN_ATTACK_BOOST);
-                        simpleAttackWeight += 6;
-                        nearAttacks &= (nearAttacks - 1);   // clear 1st bit
-                        if (nearAttacks) {
-                           attackWeight += PARAM(QUEEN_ATTACK_BOOST2);
-                           simpleAttackWeight += 7;
-                        }
-                     }
-                  }
-#ifdef EVAL_DEBUG
-                  if (attackWeight - tmp) cout << "queen attack boost= " << attackWeight - tmp << endl;
-#endif
+                   int boost = std::max<int>(0,Bitboard(kattacks & kingNearProximity[okp]).bitCountOpt()-1);
+                   attackWeight += PARAM(QUEEN_ATTACK_FACTOR) +
+                       PARAM(QUEEN_ATTACK_BOOST)*boost;
+                   simpleAttackWeight += 6 + 3*boost;
+                   ++kingAttackCount;
+                   kingAttackSquares |= kattacks;
                }
             }
 
@@ -1166,6 +1133,11 @@ void Scoring::pieceScore(const Board &board,
       // add "boost" factor due to damaged king cover
       attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/Params::PAWN_VALUE;
 
+      kingAttackSquares |= (nearKing & (ourPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
+
+      attackWeight += PARAM(KING_ATTACK_COUNT)*kingAttackCount +
+          PARAM(KING_ATTACK_SQUARES)*kingAttackSquares.bitCount();
+      
       const score_t index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 
       if (simpleAttackWeight > PARAM(OWN_PIECE_KING_PROXIMITY_MIN)) {
