@@ -9,6 +9,7 @@
 #include "movegen.h"
 #ifdef TUNE
 #include "tune.h"
+#include <ctime>
 #endif
 #include <cstddef>
 #include <algorithm>
@@ -2576,7 +2577,11 @@ static void print_array(ostream & o,score_t mid[], score_t end[], int size)
 
 void Params::write(ostream &o, const string &comment)
 {
-   o << "// Copyright 2015-2018 by Jon Dart. All Rights Reserved." << endl;
+   time_t rawtime;
+   struct tm * tminfo;
+   time (&rawtime);
+   tminfo = localtime (&rawtime);
+   o << "// Copyright 2015-" << tminfo->tm_year+1900 << " by Jon Dart. All Rights Reserved." << endl;
    o << "// This is a generated file. Do not edit." << endl;
    o << "// " << comment << endl;
    o << "//" << endl;
