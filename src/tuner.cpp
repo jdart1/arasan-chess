@@ -1,4 +1,4 @@
-// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -327,6 +327,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
    pdata.clear();
    // iterate for each position in file
    uint64_t line = 0;
+   char buf[256];
    while (!pos_file.eof() && pos_file.good()) {
       try {
          Board board, pvBoard;
@@ -334,12 +335,16 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          EPDRecord rec;
          Lock(file_lock);
          ++line;
-         if (!ChessIO::readEPDRecord(pos_file,board,rec)) {
-            // EOF
-            Unlock(file_lock);
-            break;
+         pos_file.getline(buf,256);
+         if (!pos_file.good()) {
+             Unlock(file_lock);
+             break;
          }
          Unlock(file_lock);
+         std::stringstream input(buf);
+         if (!ChessIO::readEPDRecord(input,board,rec)) {
+            break;
+         }
          if (rec.hasError()) {
             cerr << "error in EPD record, line " << line << ": " << rec.getError() << endl;
             continue;
