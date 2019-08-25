@@ -1134,7 +1134,7 @@ void Scoring::pieceScore(const Board &board,
       // add "boost" factor due to damaged king cover
       attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/Params::PAWN_VALUE;
 
-      kingAttackSquares |= (nearKing & (ourPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
+      kingAttackSquares |= (nearKing & (oppPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
 
       attackWeight += PARAM(KING_ATTACK_COUNT)*kingAttackCount +
           PARAM(KING_ATTACK_SQUARES)*kingAttackSquares.bitCount();
@@ -1162,6 +1162,8 @@ void Scoring::pieceScore(const Board &board,
 #ifdef ATTACK_DEBUG
       cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
       cout << " cover= " << oppCover << endl;
+      cout << " king attack count=" << kingAttackCount << endl;
+      cout << " king squares=" << kingAttackSquares.bitCount() << endl;
       cout << " attackWeight=" << attackWeight << endl;
       cout << " index=" << index << endl;
       cout << " pin_count=" << pin_count << endl;

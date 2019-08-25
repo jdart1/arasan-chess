@@ -1101,7 +1101,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    if (!deep_endgame) {
       attackWeight += oppKpe.storm + oppKpe.pawn_attacks;
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
-      kingAttackSquares |= (nearKing & (ourPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
+      kingAttackSquares |= (nearKing & (oppPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
       attackWeight += tune_params[Tune::KING_ATTACK_COUNT].current*kingAttackCount +
           tune_params[Tune::KING_ATTACK_SQUARES].current*kingAttackSquares.bitCount();
 
