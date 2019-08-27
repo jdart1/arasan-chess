@@ -1105,7 +1105,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       allAttacks |= Attacks::king_attacks[kp];
       Bitboard kingAttackSquares(Scoring::kingNearProximity[okp] & allAttacks);
       attackWeight += tune_params[Tune::KING_ATTACK_COUNT].current*kingAttackCount +
-          tune_params[Tune::KING_ATTACK_SQUARES].current*kingAttackSquares.bitCount();
+      8*tune_params[Tune::KING_ATTACK_SQUARES].current*kingAttackSquares.bitCount()/Scoring::kingNearProximity[okp].bitCount();
 
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
@@ -1162,7 +1162,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          }
       }
       grads[Tune::KING_ATTACK_COUNT] += tune_params.scale((inc*scale_grad*kingAttackCount)/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_COUNT,ourMatLevel);
-      grads[Tune::KING_ATTACK_SQUARES] += tune_params.scale((inc*scale_grad*kingAttackSquares.bitCount())/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::KING_ATTACK_SQUARES,ourMatLevel);
+      grads[Tune::KING_ATTACK_SQUARES] += tune_params.scale((8*inc*scale_grad*kingAttackSquares.bitCount())/(Scoring::kingNearProximity[okp].bitCount()*Params::KING_ATTACK_FACTOR_RESOLUTION),Tune::KING_ATTACK_SQUARES,ourMatLevel);
    
       double boost_slope_grad = -oppCover*scale_grad/(128*Params::KING_ATTACK_FACTOR_RESOLUTION);
       grads[Tune::KING_ATTACK_COVER_BOOST_SLOPE] +=

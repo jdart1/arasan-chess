@@ -1132,7 +1132,7 @@ void Scoring::pieceScore(const Board &board,
       Bitboard kingAttackSquares(kingNearProximity[okp] & allAttacks);
 
       attackWeight += PARAM(KING_ATTACK_COUNT)*kingAttackCount +
-          PARAM(KING_ATTACK_SQUARES)*kingAttackSquares.bitCount();
+          8*PARAM(KING_ATTACK_SQUARES)*kingAttackSquares.bitCount()/kingNearProximity[okp].bitCount();
       
       const score_t index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 
