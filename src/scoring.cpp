@@ -862,7 +862,6 @@ void Scoring::pieceScore(const Board &board,
    score_t attackWeight = 0;
    int simpleAttackWeight = 0;
    unsigned kingAttackCount = 0;
-   Bitboard kingAttackSquares;
    Square sq;
 
    while(b.iterate(sq))
@@ -907,7 +906,6 @@ void Scoring::pieceScore(const Board &board,
                       PARAM(MINOR_ATTACK_BOOST)*(count-1);
                   simpleAttackWeight += 4 + 2*std::max<int>(0,count-1);
                   ++kingAttackCount;
-                  kingAttackSquares |= (knattacks & nearKing);
                }
             }
             break;
@@ -932,7 +930,6 @@ void Scoring::pieceScore(const Board &board,
                        PARAM(MINOR_ATTACK_BOOST)*(count-1);
                    simpleAttackWeight += 4 + 2*std::max<int>(0,count-1);
                    ++kingAttackCount;
-                   kingAttackSquares |= kattacks;
                }
             }
             if (outpost(board,sq,side)) {
@@ -1007,7 +1004,6 @@ void Scoring::pieceScore(const Board &board,
                        PARAM(ROOK_ATTACK_BOOST)*boost;
                    simpleAttackWeight += 6 + 3*boost;
                    ++kingAttackCount;
-                   kingAttackSquares |= kattacks;
                }
             }
             if (board.pinOnRankOrFile(sq, okp, oside)) {
@@ -1063,7 +1059,6 @@ void Scoring::pieceScore(const Board &board,
                        PARAM(QUEEN_ATTACK_BOOST)*boost;
                    simpleAttackWeight += 6 + 3*boost;
                    ++kingAttackCount;
-                   kingAttackSquares |= kattacks;
                }
             }
 
@@ -1134,7 +1129,7 @@ void Scoring::pieceScore(const Board &board,
       // add "boost" factor due to damaged king cover
       attackWeight += PARAM(KING_ATTACK_COVER_BOOST_BASE) - oppCover*PARAM(KING_ATTACK_COVER_BOOST_SLOPE)/Params::PAWN_VALUE;
 
-      kingAttackSquares |= (nearKing & (oppPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
+      Bitboard kingAttackSquares(kingNearProximity[okp] & allAttacks);
 
       attackWeight += PARAM(KING_ATTACK_COUNT)*kingAttackCount +
           PARAM(KING_ATTACK_SQUARES)*kingAttackSquares.bitCount();

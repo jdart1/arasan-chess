@@ -562,8 +562,8 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    int pin_count = 0;
    score_t attackWeight = 0;
    int simpleAttackWeight = 0;
+   Bitboard allAttacks;
    unsigned kingAttackCount = 0;
-   Bitboard kingAttackSquares;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Bitboard our_pawn_attacks(board.allPawnAttacks(side));
    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
@@ -690,6 +690,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    Square sq = InvalidSquare;
    while (knight_bits.iterate(sq)) {
       const Bitboard &knattacks = Attacks::knight_attacks[sq];
+      allAttacks |= knattacks;
       minorAttacks |= knattacks;
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::KNIGHT_MOBILITY+mobl] += tune_params.scale(inc,Tune::KNIGHT_MOBILITY+mobl,mLevel);
@@ -713,7 +714,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
           attackTypes[0]++;
           attackTypes[1] += (count-1);
           ++kingAttackCount;
-          kingAttackSquares |= kattacks;
       }
    }
    Bitboard bishop_bits(board.bishop_bits[side]);
@@ -752,6 +752,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       }
       if (!deep_endgame) {
           Bitboard kattacks(battacks & nearKing);
+          allAttacks |= battacks;
           if (!kattacks && (battacks & (board.bishop_bits[side] | board.queen_bits[side]))) {
               kattacks = board.bishopAttacks(sq, side) & nearKing;
           }
@@ -763,7 +764,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
               attackTypes[0]++;
               attackTypes[1] += (count-1);
               ++kingAttackCount;
-              kingAttackSquares |= kattacks;
          }
       }
    }
@@ -807,6 +807,7 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
       if (!deep_endgame) {
          Bitboard rattacks2(board.rookAttacks(sq, side));
          Bitboard kattacks(rattacks2 & nearKing);
+         allAttacks |= rookAttacks;
          if (kattacks) {
              int boost = std::max<int>(0,Bitboard(kattacks & Scoring::kingNearProximity[okp]).bitCountOpt()-1);
              attackWeight += tune_params[Tune::ROOK_ATTACK_FACTOR].current +
@@ -817,7 +818,6 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
              attackTypes[Tune::ROOK_ATTACK_BOOST-
                          Tune::MINOR_ATTACK_FACTOR] += boost;
              ++kingAttackCount;
-             kingAttackSquares |= kattacks;
          }
       }
    }
@@ -853,13 +853,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
          else if (rattacks & (board.queen_bits[side] | board.rook_bits[side])) {
              kattacks |= (board.rookAttacks(sq, side) & nearKing);
          }
+         allAttacks |= kattacks;
          if (kattacks) {
              int boost = std::max<int>(0,Bitboard(kattacks & Scoring::kingNearProximity[okp]).bitCountOpt()-1);
              attackWeight += tune_params[Tune::QUEEN_ATTACK_FACTOR].current +
                  boost*tune_params[Tune::QUEEN_ATTACK_BOOST].current;
              simpleAttackWeight += 6 + 3*boost;
              ++kingAttackCount;
-             kingAttackSquares |= kattacks;
              attackTypes[Tune::QUEEN_ATTACK_FACTOR-
                          Tune::MINOR_ATTACK_FACTOR]++;
              attackTypes[Tune::QUEEN_ATTACK_BOOST-
@@ -1101,7 +1101,9 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
    if (!deep_endgame) {
       attackWeight += oppKpe.storm + oppKpe.pawn_attacks;
       attackWeight += tune_params[Tune::KING_ATTACK_COVER_BOOST_BASE].current - oppCover*tune_params[Tune::KING_ATTACK_COVER_BOOST_SLOPE].current/Params::PAWN_VALUE;
-      kingAttackSquares |= (nearKing & (oppPawnData.opponent_pawn_attacks | Attacks::king_attacks[kp]));
+      allAttacks |= oppPawnData.opponent_pawn_attacks;
+      allAttacks |= Attacks::king_attacks[kp];
+      Bitboard kingAttackSquares(Scoring::kingNearProximity[okp] & allAttacks);
       attackWeight += tune_params[Tune::KING_ATTACK_COUNT].current*kingAttackCount +
           tune_params[Tune::KING_ATTACK_SQUARES].current*kingAttackSquares.bitCount();
 
