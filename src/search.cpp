@@ -1096,7 +1096,7 @@ Move Search::ply0_search()
 #endif
             value = ply0_search(mg, lo_window, hi_window, iterationDepth,
                                 DEPTH_INCREMENT*iterationDepth + controller->depth_adjust,
-                                excluded,controller->include);
+                                excluded);
             // If we did not even search one move in this iteration,
             // leave the search stats intact (with the previous
             // iteration's pv and score).
@@ -1343,8 +1343,7 @@ Move Search::ply0_search()
 score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         int iterationDepth,
                         int depth,
-                        const MoveSet &exclude,
-                        const MoveSet &include)
+                        const MoveSet &exclude)
 {
     // implements alpha/beta search for the top most ply.  We use
     // the negascout algorithm.

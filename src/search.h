@@ -157,8 +157,7 @@ public:
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth,
                         int depth,
-                        const MoveSet &exclude,
-                        const MoveSet &include);
+                        const MoveSet &exclude);
 
     bool mainThread() const {
        return ti->index == 0;
