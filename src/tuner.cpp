@@ -1022,15 +1022,15 @@ static void update_deriv_vector(Scoring &s, const Board &board, ColorType side,
             tune_params.scale(inc*pawn_entr.pawnData(side).weakopen,Tune::WEAK_ON_OPEN_FILE_END,mLevel);
    }
    const Bitboard & opa = opponent_pawn_attacks;
-   // bonus for pawn threats against pieces
-   int pawnThreats = Bitboard(oppPawnData.opponent_pawn_attacks & board.occupied[side] & ~board.pawn_bits[side]).bitCountOpt();
+   const Bitboard & pa = oppPawnData.opponent_pawn_attacks;
+   // bonus for pawn threats against enemy pieces
+   int pawnThreats = Bitboard(pa & board.occupied[oside] & ~board.pawn_bits[oside]).bitCountOpt();
    if (pawnThreats) {
       grads[Tune::PAWN_THREAT_ON_PIECE_MID] +=
          tune_params.scale(inc*pawnThreats,Tune::PAWN_THREAT_ON_PIECE_MID,mLevel);
       grads[Tune::PAWN_THREAT_ON_PIECE_END] +=
          tune_params.scale(inc*pawnThreats,Tune::PAWN_THREAT_ON_PIECE_END,mLevel);
    }
-   //Bitboard unsafePawns(board.pawn_bits[oside] & ~opa);
    const Bitboard unsafePawns = oppPawnData.weak_pawns;
    // penalize threats by pieces against pieces or pawns
    if (minorAttacks) {
