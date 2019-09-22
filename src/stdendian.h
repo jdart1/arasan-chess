@@ -12,9 +12,9 @@
  *     BYTE_ORDER         this macro shall have a value equal to one
  *                        of the *_ENDIAN macros in this header.
  *     LITTLE_ENDIAN      if BYTE_ORDER == LITTLE_ENDIAN, the host
- *                        byte order is from least significant to
+ *                        uint8_t order is from least significant to
  *                        most significant.
- *     BIG_ENDIAN         if BYTE_ORDER == BIG_ENDIAN, the host byte
+ *     BIG_ENDIAN         if BYTE_ORDER == BIG_ENDIAN, the host uint8_t
  *                        order is from most significant to least
  *                        significant.
  *
@@ -149,7 +149,7 @@
 
 /* Unknown */
 #if !__ENDIAN_DEFINED
-#error Could not determine CPU byte order
+#error Could not determine CPU uint8_t order
 #endif
 
 /* POSIX - http://austingroupbugs.net/view.php?id=162 */

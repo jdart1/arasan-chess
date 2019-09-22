@@ -374,7 +374,8 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
+tester.cpp
 
 PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -385,12 +386,13 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
+tester.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
-MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(NUMA_OBJS)
+MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBS) $(NUMA_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)

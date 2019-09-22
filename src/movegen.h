@@ -138,7 +138,7 @@ class MoveGenerator
 
       inline void SetPhase(Move &move, Phase p)
       {
-          ((union MoveUnion*)&(move))->contents.phase = (byte)p;
+          ((union MoveUnion*)&(move))->contents.phase = (uint8_t)p;
       }
 
       inline Phase GetPhase(const Move &move) const
@@ -365,7 +365,7 @@ inline MoveGenerator::Phase operator++(MoveGenerator::Phase &phase, int)
 
 inline void SetPhase(Move &move,MoveGenerator::Phase phase)
 {
-   ((union MoveUnion*)&(move))->contents.phase = (byte)phase;
+   ((union MoveUnion*)&(move))->contents.phase = (uint8_t)phase;
 }
 
 

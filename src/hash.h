@@ -42,15 +42,15 @@ class HashEntry {
       }
 
       HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
-         ValueType type, unsigned age, byte flags = 0,
+         ValueType type, unsigned age, uint8_t flags = 0,
                 Move bestMove = NullMove) {
          ASSERT(depth+2 >= 0 && depth+2 < 256);
-         contents.depth = (byte)(depth+2);
-         contents.age = (byte) age;
-         contents.flags = (byte) (type | flags);
-         contents.start = (byte) StartSquare(bestMove);
-         contents.dest = (byte) DestSquare(bestMove);
-         contents.promotion = (byte) PromoteTo(bestMove);
+         contents.depth = (uint8_t)(depth+2);
+         contents.age = (uint8_t) age;
+         contents.flags = (uint8_t) (type | flags);
+         contents.start = (uint8_t) StartSquare(bestMove);
+         contents.dest = (uint8_t) DestSquare(bestMove);
+         contents.promotion = (uint8_t) PromoteTo(bestMove);
          contents.value = stored_score_t(val);
          setEffectiveHash(hash,staticValue);
       }
@@ -105,7 +105,7 @@ class HashEntry {
       }
 
       void setAge(unsigned age) {
-         contents.age = (byte) age;
+         contents.age = (uint8_t) age;
       }
 
       int learned() const {
@@ -116,7 +116,7 @@ class HashEntry {
          return (int)((contents.flags & TB_MASK) != 0);
       }
 
-      byte flags() const {
+      uint8_t flags() const {
           return contents.flags;
       }
 
@@ -158,9 +158,9 @@ class HashEntry {
       struct Contents
       BEGIN_PACKED_STRUCT
         stored_score_t value;
-        byte depth;
-        byte age;
-        byte flags;
+        uint8_t depth;
+        uint8_t age;
+        uint8_t flags;
         signed char start, dest, promotion;
       END_PACKED_STRUCT
 
@@ -282,7 +282,7 @@ class Hash {
                hashFree--;
             }
             *best = HashEntry(hashCode, value,
-                              staticValue, depth, type, age, (byte)flags, best_move);
+                              staticValue, depth, type, age, (uint8_t)flags, best_move);
        }
     }
 

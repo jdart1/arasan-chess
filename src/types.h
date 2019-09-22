@@ -35,7 +35,6 @@ extern "C" {
 #include <chrono>
 #include <thread>
 
-typedef uint8_t byte;
 typedef uint64_t hash_t;
 
 #include <iostream>
@@ -209,15 +208,15 @@ class Spinlock {
 #endif
 
 #if _BYTE_ORDER == _BIG_ENDIAN
-FORCEINLINE uint64_t swapEndian64(const byte *input) {
+FORCEINLINE uint64_t swapEndian64(const uint8_t *input) {
   return bswap64((uint64_t*)input);
 }
 
-FORCEINLINE uint32_t swapEndian32(const byte *input) {
+FORCEINLINE uint32_t swapEndian32(const uint8_t *input) {
   return bswap32((uint64_t*)input);
 }
 
-FORCEINLINE uint16_t swapEndian16(const byte *input) {
+FORCEINLINE uint16_t swapEndian16(const uint8_t *input) {
   return bswap16((uint64_t*)input);
 }
 

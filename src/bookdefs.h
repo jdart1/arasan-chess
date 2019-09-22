@@ -16,8 +16,8 @@ const int INDEX_PAGE_SIZE = 1024;
 const int DATA_PAGE_SIZE = 2048;
 const uint16_t NO_NEXT = 65535;
 const uint16_t INVALID_INDEX = 65535;
-const byte NO_RECOMMEND = 255;
-const byte MAX_WEIGHT = 254;
+const uint8_t NO_RECOMMEND = 255;
+const uint8_t MAX_WEIGHT = 254;
 
 #ifdef __INTEL_COMPILER
 #pragma pack(push,1)
@@ -26,7 +26,7 @@ const byte MAX_WEIGHT = 254;
 // Header of the opening book.
 struct BookHeader
 BEGIN_PACKED_STRUCT
-   byte version;
+   uint8_t version;
    uint16_t num_index_pages;
    BookHeader() : version(0), num_index_pages(0) {
    }
@@ -72,8 +72,8 @@ END_PACKED_STRUCT
 // Entry in a data page
 struct DataEntry
 BEGIN_PACKED_STRUCT 
-    byte index;
-    byte weight; // a priori weight, NO_RECOMMEND if not set
+    uint8_t index;
+    uint8_t weight; // a priori weight, NO_RECOMMEND if not set
     uint16_t next;
     uint32_t win, loss ,draw;
 

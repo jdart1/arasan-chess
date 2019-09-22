@@ -42,4 +42,4 @@ https://github.com/mcostalba/Stockfish/commit/90ce24b11ea080f923e1b5d37470e2ca98
 
 17. Implement position learning in UCI mode.
 
-18. Engine code does not compile with C++-17 due to std::byte conflict with the byte typedef in types.h.
+

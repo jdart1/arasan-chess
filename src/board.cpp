@@ -164,7 +164,7 @@ Board::Board()
 Board::Board(const Board &b)
 {
    // Copy all contents except the repetition list
-   memcpy(&contents,&b.contents,(byte*)repList-(byte*)&contents);
+   memcpy(&contents,&b.contents,(uint8_t*)repList-(uint8_t*)&contents);
    // Copy the repetition table
    int rep_entries = (int)(b.repListHead - b.repList);
    ASSERT(rep_entries>=0 && rep_entries<RepListSize);
@@ -179,7 +179,7 @@ Board &Board::operator = (const Board &b)
    if (&b != this)
    {
       // Copy all contents except the repetition list
-      memcpy(&contents,&b.contents,(byte*)repList-(byte*)&contents);
+      memcpy(&contents,&b.contents,(uint8_t*)repList-(uint8_t*)&contents);
       // Copy the repetition table
       int rep_entries = (int)(b.repListHead - b.repList);
       if (rep_entries) {

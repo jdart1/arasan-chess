@@ -65,9 +65,9 @@ class Bitboard
        struct bytes
        {
 #if _BYTE_ORDER == _BIG_ENDIAN
-          byte b8,b7,b6,b5,b4,b3,b2,b1;
+          uint8_t b8,b7,b6,b5,b4,b3,b2,b1;
 #else
-          byte b1,b2,b3,b4,b5,b6,b7,b8;
+          uint8_t b1,b2,b3,b4,b5,b6,b7,b8;
 #endif
        };
        union conv
@@ -98,7 +98,7 @@ class Bitboard
        return data;
     }
 
-    byte byte_value() const
+    uint8_t uint8_t_value() const
     {
        return ((conv*)&data)->val4.b1;
     }
@@ -202,7 +202,7 @@ class Bitboard
 #if defined(_64BIT)
         data >>= 8;
 #else
-        byte b = ((conv*)&data)->val4.b5;
+        uint8_t b = ((conv*)&data)->val4.b5;
         ((conv*)&data)->val2.hival >>= 8;
         ((conv*)&data)->val2.loval >>= 8;
         ((conv*)&data)->val4.b4 = b;
@@ -224,7 +224,7 @@ class Bitboard
 #if defined(_64BIT)
         data <<= 8;
 #else
-        byte b = ((conv*)&data)->val4.b4;
+        uint8_t b = ((conv*)&data)->val4.b4;
         ((conv*)&data)->val2.loval <<= 8;
         ((conv*)&data)->val2.hival <<= 8;
         ((conv*)&data)->val4.b5 = b;

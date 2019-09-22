@@ -11,7 +11,7 @@ static int getIndex(Square pawnSq, Square kingSq, Square oppKingSq) {
   return ((((pawnSq-8)<<6) | kingSq)<<6)| oppKingSq;
 }
 
-int lookupBitbase(const byte *base, int index) {
+int lookupBitbase(const uint8_t *base, int index) {
    ASSERT(index<24576*8);
    return (base[index/8] & (1<<(index%8))) != 0;
 }
@@ -61,8 +61,8 @@ int lookupBitbase(const Board &board) {
 
 /*
 void generateBitBase() {
-   byte * bKPKW = new byte[24576];
-   byte * bKPKB = new byte[24576];
+   uint8_t * bKPKW = new uint8_t[24576];
+   uint8_t * bKPKB = new uint8_t[24576];
    memset(bKPKW,'\0',24576);
    memset(bKPKB,'\0',24576);
    extern int distances[64][64];
@@ -83,33 +83,33 @@ void generateBitBase() {
             b.setSecondaryVars();
             int score;
             int index = getIndex(pawnsq,wsq,bsq);
-            int bytei = index/8;
-            if (bytei>=24576) cout << "error" << endl;
-            ASSERT(bytei<24576);
+            int uint8_ti = index/8;
+            if (uint8_ti>=24576) cout << "error" << endl;
+            ASSERT(uint8_ti<24576);
             if (probe_tb(b, score, 0)) {
                if (score>0) {
-                  bKPKW[bytei] |= 1<<(index%8);
+                  bKPKW[uint8_ti] |= 1<<(index%8);
                }
             }
             else cout << b << endl;
             b.setSideToMove(Black);
             if (probe_tb(b, score, 0)) {
                if (score<0) {
-                  bKPKB[bytei] |= 1<<(index%8);
+                  bKPKB[uint8_ti] |= 1<<(index%8);
                }
             }
             else cout << b << endl;
          }
       }
    }
-   cout << "const CACHE_ALIGN byte baseKPKW[24576] = {" << endl;
+   cout << "const CACHE_ALIGN uint8_t baseKPKW[24576] = {" << endl;
    for (int i = 0; i < 24576; i++) {
        cout << " 0x" << (hex) << (unsigned int)bKPKW[i];
        if (i != 24575) cout << ",";
        if (((i+1) % 12) == 0) cout << endl;
    }
    cout << "};" << endl;
-   cout << "const CACHE_ALIGN byte baseKPKB[24576] = {" << endl;
+   cout << "const CACHE_ALIGN uint8_t baseKPKB[24576] = {" << endl;
    for (int i = 0; i < 24576; i++) {
        cout << " 0x" << (hex) << (unsigned int)bKPKB[i];
        if (i != 24575) cout << ",";

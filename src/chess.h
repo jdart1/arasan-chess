@@ -237,23 +237,23 @@ union MoveUnion
    {
 #if _BYTE_ORDER == _BIG_ENDIAN
         // invert order so moves have the same numeric 64-bit value as on little-endian arch
-        byte phase;
-        byte flags;
-        byte type;
-        byte capture;
-        byte promotion;
-        byte piece_moved;
-        byte dest;
-        byte start;
+        uint8_t phase;
+        uint8_t flags;
+        uint8_t type;
+        uint8_t capture;
+        uint8_t promotion;
+        uint8_t piece_moved;
+        uint8_t dest;
+        uint8_t start;
 #else
-        byte start;
-	byte dest;
-        byte piece_moved;
-        byte promotion;
-        byte capture;
-        byte type;
-        byte flags;
-        byte phase;
+        uint8_t start;
+	uint8_t dest;
+        uint8_t piece_moved;
+        uint8_t promotion;
+        uint8_t capture;
+        uint8_t type;
+        uint8_t flags;
+        uint8_t phase;
 #endif
    } contents;
 
@@ -284,13 +284,13 @@ union MoveUnion
              PieceType capture, MoveType type,
 	     unsigned flags = 0)
    {
-     contents.start = (byte) start;
-     contents.dest = (byte) dest;
-     contents.piece_moved = (byte) pieceMoved;
-     contents.promotion = (byte) promotion;
-     contents.capture = (byte) capture;
-     contents.type = (byte) type;
-     contents.flags = (byte) flags;
+     contents.start = (uint8_t) start;
+     contents.dest = (uint8_t) dest;
+     contents.piece_moved = (uint8_t) pieceMoved;
+     contents.promotion = (uint8_t) promotion;
+     contents.capture = (uint8_t) capture;
+     contents.type = (uint8_t) type;
+     contents.flags = (uint8_t) flags;
    }
 };
 
@@ -312,7 +312,7 @@ FORCEINLINE unsigned Flags(const Move &move) {
   return (unsigned)((union MoveUnion*)&(move))->contents.flags;
 }
 
-FORCEINLINE void SetFlags(Move &move,byte flags) {
+FORCEINLINE void SetFlags(Move &move,uint8_t flags) {
   ((union MoveUnion*)&(move))->contents.flags = flags;
 }
 
@@ -341,7 +341,7 @@ FORCEINLINE void ClearExcluded(Move &move) {
 }
 
 FORCEINLINE void SetType(Move &move, MoveType t) {
-  ((union MoveUnion*)&(move))->contents.type |= (byte)t;
+  ((union MoveUnion*)&(move))->contents.type |= (uint8_t)t;
 }
 
 FORCEINLINE MoveType TypeOfMove(Move move) {
@@ -365,7 +365,7 @@ FORCEINLINE PieceType PromoteTo(Move move) {
 }
 
 FORCEINLINE void SetPromotion(Move &move,PieceType p) {
-    ((union MoveUnion*)&(move))->contents.promotion = (byte)p;
+    ((union MoveUnion*)&(move))->contents.promotion = (uint8_t)p;
 }
 
 FORCEINLINE PieceType PieceMoved(Move move) {

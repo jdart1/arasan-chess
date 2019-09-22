@@ -44,7 +44,7 @@ int BookReader::open(const char *pathName) {
             return -1;
         }
         // correct header for endian-ness
-        hdr.num_index_pages = swapEndian16((byte*)&hdr.num_index_pages);
+        hdr.num_index_pages = swapEndian16((uint8_t*)&hdr.num_index_pages);
         // verify book version is correct
         if (hdr.version != book::BOOK_VERSION) {
             cerr << "expected book version " << book::BOOK_VERSION << ", got " << (unsigned)hdr.version << endl;
@@ -156,15 +156,15 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    book_file.read((char*)&index,sizeof(book::IndexPage));
    if (book_file.fail()) return -1;
    // correct for endianness
-   index.next_free = swapEndian32((byte*)&index.next_free);
+   index.next_free = swapEndian32((uint8_t*)&index.next_free);
    book::BookLocation loc(0,book::INVALID_INDEX);
    for (unsigned i = 0; i < index.next_free; i++) {
       // correct for endianness
-      uint64_t indexHashCode = (uint64_t)(swapEndian64((byte*)&index.index[i].hashCode));
+      uint64_t indexHashCode = (uint64_t)(swapEndian64((uint8_t*)&index.index[i].hashCode));
       if (indexHashCode == board.hashCode()) {
          // correct for endianness
-         index.index[i].page = (uint16_t)(swapEndian16((byte*)&index.index[i].page));
-         index.index[i].index = (uint16_t)(swapEndian16((byte*)&index.index[i].index));
+         index.index[i].page = (uint16_t)(swapEndian16((uint8_t*)&index.index[i].page));
+         index.index[i].index = (uint16_t)(swapEndian16((uint8_t*)&index.index[i].index));
          loc = index.index[i];
          break;
       }
@@ -183,11 +183,11 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    while(loc.index != book::NO_NEXT) {
        ASSERT(loc.index < book::DATA_PAGE_SIZE);
        book::DataEntry &bookEntry = data.data[loc.index];
-       // correct multi-byte values for endianess:
-       bookEntry.next = swapEndian16((byte*)&bookEntry.next);
-       bookEntry.win = swapEndian32((byte*)&bookEntry.win);
-       bookEntry.loss = swapEndian32((byte*)&bookEntry.loss);
-       bookEntry.draw = swapEndian32((byte*)&bookEntry.draw);
+       // correct multi-uint8_t values for endianess:
+       bookEntry.next = swapEndian16((uint8_t*)&bookEntry.next);
+       bookEntry.win = swapEndian32((uint8_t*)&bookEntry.win);
+       bookEntry.loss = swapEndian32((uint8_t*)&bookEntry.loss);
+       bookEntry.draw = swapEndian32((uint8_t*)&bookEntry.draw);
        results.push_back(bookEntry);
        loc.index = bookEntry.next;
    }

@@ -58,7 +58,7 @@ enum PositionEval {NO_POSITION_EVAL,
 static unordered_map<string, MoveEval> moveEvals;
 static unordered_map<string, PositionEval> positionEvals;
 
-static const byte MoveEvalValues[] = { book::NO_RECOMMEND, 0, 0, book::MAX_WEIGHT/3,
+static const uint8_t MoveEvalValues[] = { book::NO_RECOMMEND, 0, 0, book::MAX_WEIGHT/3,
                                        book::MAX_WEIGHT/2, 4*book::MAX_WEIGHT/6,
                                        5*book::MAX_WEIGHT/6, book::MAX_WEIGHT };
 
@@ -107,7 +107,7 @@ BEGIN_PACKED_STRUCT
     BookEntry( ColorType side,
                unsigned rec, PositionEval ev,
                MoveEval mev, ResultType result,
-               byte mv_indx,
+               uint8_t mv_indx,
                BookEntry *nxt, bool first);
 
     BookEntry *next;
@@ -116,7 +116,7 @@ BEGIN_PACKED_STRUCT
     MoveEval moveEval;
     unsigned rec; // explicit weight if any
     uint32_t win,loss,draw;
-    byte move_index;
+    uint8_t move_index;
     uint16_t weight;
 
     uint32_t count() const
@@ -126,7 +126,7 @@ BEGIN_PACKED_STRUCT
 
     void updateWinLoss( ColorType side, ResultType result );
 
-    byte computeWeight() const;
+    uint8_t computeWeight() const;
 END_PACKED_STRUCT
 
 #ifdef __INTEL_COMPILER
@@ -135,7 +135,7 @@ END_PACKED_STRUCT
 
 BookEntry::BookEntry( ColorType side, unsigned r, PositionEval ev,
                        MoveEval mev,
-                       ResultType result, byte mv_indx,
+                       ResultType result, uint8_t mv_indx,
                        BookEntry *nxt, bool first_file)
     :next(nxt), first(first_file),
      eval(ev), moveEval(mev), rec(r),
@@ -171,7 +171,7 @@ void BookEntry::updateWinLoss( ColorType side, ResultType result )
    }
 }
 
-byte BookEntry::computeWeight() const
+uint8_t BookEntry::computeWeight() const
 {
    if (rec != book::NO_RECOMMEND) {
       return rec*book::MAX_WEIGHT/100;
@@ -183,7 +183,7 @@ byte BookEntry::computeWeight() const
       int w = int(book::MAX_WEIGHT)/2;
       int intEval = (int)eval - (int)EQUAL_POSITION;
       int wmod = int(w*(1.0+intEval/4.0));
-      return (byte)std::max<int>(0,std::min<int>((int)book::MAX_WEIGHT,wmod));
+      return (uint8_t)std::max<int>(0,std::min<int>((int)book::MAX_WEIGHT,wmod));
    }
    else {
       return book::NO_RECOMMEND;

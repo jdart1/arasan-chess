@@ -76,7 +76,7 @@ static CACHE_ALIGN Bitboard outpostW[64], outpostB[64];
 static const Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
 static Bitboard left_side_mask[8], right_side_mask[8];
 static Bitboard isolated_file_mask[8];
-static byte is_outside[256][256];
+static uint8_t is_outside[256][256];
 
 int Scoring::distance(Square sq1, Square sq2)
 {
@@ -186,10 +186,10 @@ void Scoring::initBitboards() {
 
    int first_bit[256];
    int last_bit[256];
-   byte near_left[8];
-   byte near_right[8];
-   byte right_mask[8];
-   byte left_mask[8];
+   uint8_t near_left[8];
+   uint8_t near_right[8];
+   uint8_t right_mask[8];
+   uint8_t left_mask[8];
    last_bit[0] = 0;
    for(int i = 1; i < 256; i++) {
       Bitboard b(i);
@@ -1679,7 +1679,7 @@ void Scoring::calcPawnData(const Board &board,
 }
 
 void Scoring::evalOutsidePassers(PawnHashEntry &pawnEntry) {
-   byte all_pawns = pawnEntry.wPawnData.pawn_file_mask | pawnEntry.bPawnData.pawn_file_mask;
+   uint8_t all_pawns = pawnEntry.wPawnData.pawn_file_mask | pawnEntry.bPawnData.pawn_file_mask;
    pawnEntry.wPawnData.outside = is_outside[pawnEntry.wPawnData.passer_file_mask][all_pawns];
    pawnEntry.bPawnData.outside = is_outside[pawnEntry.bPawnData.passer_file_mask][all_pawns];
    return;

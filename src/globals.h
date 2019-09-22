@@ -31,8 +31,8 @@ extern bool polling_terminated;
 extern ThreadControl inputSem;
 
 // KPK bitbases:
-extern CACHE_ALIGN const byte baseKPKW[24576];
-extern CACHE_ALIGN const byte baseKPKB[24576];
+extern CACHE_ALIGN const uint8_t baseKPKW[24576];
+extern CACHE_ALIGN const uint8_t baseKPKB[24576];
 
 #include <iostream>
 #ifdef _THREAD_TRACE

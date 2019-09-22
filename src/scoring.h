@@ -91,7 +91,7 @@ class Scoring
       static const int WEAK=128;
       static const int ISOLATED=256;
       uint16_t flags;
-      byte space_weight;
+      uint8_t space_weight;
       Square sq;
     };
 
@@ -116,10 +116,10 @@ class Scoring
            Bitboard passers;
            Bitboard opponent_pawn_attacks;
            Bitboard weak_pawns;
-	   byte weakopen;
-           byte pawn_file_mask;
-           byte passer_file_mask;
-           byte pad;
+	   uint8_t weakopen;
+           uint8_t pawn_file_mask;
+           uint8_t passer_file_mask;
+           uint8_t pad;
 #ifdef TUNE
            score_t endgame_score, midgame_score;
 #else
