@@ -1090,6 +1090,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
                   break;
                }
                break;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
             case EnPassant:
                target = dest - 8;
                ASSERT(OnBoard(target));
@@ -1098,6 +1100,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
             case Normal:
                pawn_bits[White].clear(dest);
                Xor(pawnHashCodeW,dest,WhitePawn);
+#pragma GCC diagnostic pop
             default:
                break;
             }
@@ -1205,6 +1208,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
                }
                break;
             }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
             case EnPassant:
                target = dest + 8;
                ASSERT(OnBoard(target));
@@ -1214,6 +1219,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
                pawn_bits[Black].clear(dest);
                Xor(pawnHashCodeB,dest,BlackPawn);
                break;
+#pragma GCC diagnostic pop
             default:
                break;
             }

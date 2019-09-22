@@ -3393,9 +3393,11 @@ void Search::updatePV(const Board &board, Move m, int ply)
 #endif
 }
 
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Move move, int ply)
 {
+#pragma GCC diagnostic pop
 #ifdef _TRACE
     if (mainThread()) {
         indent(ply); cout << "update_pv, ply " << ply << endl;
