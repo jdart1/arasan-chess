@@ -42,7 +42,7 @@ struct ThreadInfo : public ThreadControl {
    }
 };
 
-class ThreadPool {
+class ThreadPool : protected ThreadControl {
     friend class SearchController;
     friend struct ThreadInfo;
 public:
@@ -117,13 +117,6 @@ public:
 
    uint64_t totalHits() const;
 
-   bool allCompleted() {
-       lock();
-       bool val = completedMask.count() == nThreads;
-       unlock();
-       return val;
-   }
-
    bool isCompleted(unsigned index) {
        lock();
        bool val = completedMask.test(index);
@@ -134,6 +127,9 @@ public:
    void setCompleted(unsigned index) {
        lock();
        completedMask.set(static_cast<size_t>(index));
+       if (completedMask.count() == nThreads) {
+           signal();
+       }
        unlock();
    }
 

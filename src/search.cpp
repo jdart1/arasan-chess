@@ -448,6 +448,8 @@ Move SearchController::findBestMove(
    NodeStack rootStack;
    rootSearch->init(rootStack,pool->mainThread());
    Move best = rootSearch->ply0_search();
+   // Mark thread 0 complete.
+   pool->setCompleted(0);
 
    if (debugOut()) {
       cout << debugPrefix() << "waiting for thread completion" << endl;

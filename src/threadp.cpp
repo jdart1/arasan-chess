@@ -106,9 +106,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
 
 void ThreadPool::waitAll()
 {
-   if (nThreads>1) {
-      // Mark thread 0 (waiter) complete.
-      setCompleted(0);
+   if (nThreads>1 && wouldWait()) {
 #ifdef _THREAD_TRACE
       {
          std::ostringstream s;
@@ -117,10 +115,8 @@ void ThreadPool::waitAll()
          log(s.str());
       }
 #endif
-      // TBD: use conditional variable/wait here
-      while (!allCompleted()) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(5));
-      }
+      // Wait for class condition variable to be signalled
+      wait();
    }
 }
 
