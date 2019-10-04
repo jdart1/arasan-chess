@@ -23,8 +23,7 @@ static lock_t io_lock;
 
 void log(const string &s) {
     Lock(io_lock);
-    puts(s.c_str());
-    fflush(stdout);
+    cout << s.c_str() << endl << (flush);
     Unlock(io_lock);
 }
 void log(const string &s,int param) {
@@ -45,17 +44,18 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       log(s.str());
       }
 #endif
-      ti->pool->lock();
+      ThreadPool *pool = ti->pool;
+      pool->lock();
       ti->state = ThreadInfo::Idle;
 #ifdef NUMA
       if (rebindMask.test(ti->index)) {
-         if (ti->pool->bind(ti->index)) {
+         if (pool->bind(ti->index)) {
             cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
          }
          rebindMask.reset(ti->index);
       }
 #endif
-      ti->pool->unlock();
+      pool->unlock();
       int result;
       if ((result = ti->wait()) != 0) {
          if (result == -1) continue; // was interrupted
@@ -72,10 +72,10 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
           break;
       }
       ASSERT(ti->work);
-      ti->pool->lock();
-      ti->pool->activeMask |= (1ULL << ti->index);
+      pool->lock();
+      pool->activeMask |= (1ULL << ti->index);
       ti->state = ThreadInfo::Working;
-      ti->pool->unlock();
+      pool->unlock();
       NodeStack searchStack; // stack on which search will be done
       ti->work->init(searchStack, ti);
 #ifdef _THREAD_TRACE
@@ -86,38 +86,42 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       }
 #endif
       ti->work->ply0_search();
-      ti->pool->lock();
+      pool->lock();
       // Mark thread completed
-      ti->pool->completedMask.set(ti->index);
+      pool->completedMask.set(ti->index);
 #ifdef _THREAD_TRACE
       {
            std::ostringstream s;
            s << "# thread " << ti->index << " completed, mask=" << 
-           ti->pool->completedMask << endl;
+           pool->completedMask << endl;
            log(s.str());
       }
 #endif
       // remove thread from active list and set state back to Idle
-      ti->pool->activeMask.reset(ti->index);
+      pool->activeMask.reset(ti->index);
       ti->state = ThreadInfo::Idle;
-      ti->pool->unlock();
+      // signal waiter if all threads done
+      if (pool->allCompleted()) {
+          pool->signal();
+      }
+      pool->unlock();
    }
 }
 
 void ThreadPool::waitAll()
 {
-   if (nThreads>1 && wouldWait()) {
+    if (nThreads>1) {
 #ifdef _THREAD_TRACE
-      {
-         std::ostringstream s;
-         s << "waitAll: completed mask=" <<
-             completedMask << " count=" << completedMask.count() << endl;
-         log(s.str());
-      }
+        {
+            std::ostringstream s;
+            s << "waitAll: completed mask=" <<
+                completedMask << " count=" << completedMask.count() << endl;
+            log(s.str());
+        }
 #endif
-      // Wait for class condition variable to be signalled
-      wait();
-   }
+        // Wait for class condition variable to be signalled
+        wait();
+    }
 }
 
 #ifdef _WIN32

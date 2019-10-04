@@ -24,7 +24,7 @@ struct NodeInfo;
 class ThreadPool;
 
 struct ThreadInfo : public ThreadControl {
- 
+
    enum State { Starting, Idle, Working, Terminating };
    ThreadInfo(ThreadPool *,unsigned i);
    virtual ~ThreadInfo();
@@ -123,7 +123,7 @@ public:
        unlock();
        return val;
    }
-    
+
    void setCompleted(unsigned index) {
        lock();
        completedMask.set(static_cast<size_t>(index));
@@ -134,6 +134,11 @@ public:
    }
 
 private:
+   // Note: does not lock
+   bool allCompleted() const {
+       return completedMask.count() == nThreads;
+   }
+
    void shutDown();
 
    // lock for the class.
