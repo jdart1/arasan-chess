@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005, 2013, 2015 by Jon Dart.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019 by Jon Dart.
 // All Rights Reserved.
 
 #include "types.h"
@@ -21,7 +21,7 @@ enum CastleType { CanCastleEitherSide,
                   CastledKSide,
                   CastledQSide,
                   CantCastleEitherSide};
-          
+
 enum CheckStatusType { NotInCheck, InCheck, CheckUnknown };
 
 struct BoardState {
@@ -35,19 +35,19 @@ struct BoardState {
 class Board
 {
    // This class encapsulates the chess board, and provides functions
-   // for making and undoing moves.          
+   // for making and undoing moves.
 
-public: 
+public:
 
    friend class BoardIO;
    friend class Scoring;
-   
+
    // creates a board set up in its initial position, White to move.
    Board();
-           
+
   ~Board();
-  
-   // Copy constructor and assignment operator  
+
+   // Copy constructor and assignment operator
    Board(const Board &);
    Board &operator = (const Board &);
 
@@ -56,7 +56,7 @@ public:
 
    // remove all pieces
    void makeEmpty();
-           
+
 #ifdef _DEBUG
    const Piece &operator[]( const Square sq ) const;
 #else
@@ -70,15 +70,15 @@ public:
    {
        contents[sq] = p;
    }
-   
+
    // update all fields of the board, based on the piece positions.
    void setSecondaryVars();
 
    CastleType castleStatus( ColorType c ) const
    {
-       return state.castleStatus[c];        
+       return state.castleStatus[c];
    }
-   
+
    void setCastleStatus( CastleType t, ColorType side );
 
    // True if either side can castle
@@ -87,24 +87,24 @@ public:
       return castleStatus(White)<3 || castleStatus(Black)<3;
    }
 
-   // side to move         
+   // side to move
    ColorType sideToMove() const  {
-     return side;  
+     return side;
    }
-   
+
    ColorType oppositeSide() const {
        return OppositeColor(side);
    }
-   
+
    void setSideToMove( ColorType color ) {
      side = color;
    }
-   
+
    const Material &getMaterial( ColorType c ) const
    {
        return material[c];
    }
-   
+
    hash_t pawnHash() const {
       return pawnHashCodeW ^ pawnHashCodeB;
    }
@@ -112,7 +112,7 @@ public:
    Square enPassantSq() const {
       return state.enPassantSq;
    }
-           
+
    CheckStatusType checkStatus() const {
      if (state.checkStatus != CheckUnknown) {
          return state.checkStatus;
@@ -120,7 +120,7 @@ public:
          return getCheckStatus();
      }
     }
-   
+
    // returns InCheck if the previous move caused check to the opponent
    // (call after the move is made).
    CheckStatusType checkStatus(Move lastMove) const;
@@ -128,37 +128,37 @@ public:
    // returns InCheck if the move could cause check to the opponent
    // after being made (call before the move is made).
    CheckStatusType wouldCheck(Move lastMove) const;
-   
+
    void setCheckStatus(CheckStatusType s) {
        state.checkStatus = s;
    }
 
    Square kingSquare(ColorType c) const {
-        return kingPos[c];           
+        return kingPos[c];
    }
-           
+
    hash_t hashCode() const {
        return state.hashCode;
    }
-   
+
    // returns a hash code factoring in the position repetition count
    hash_t hashCode(int rep_count) const {
        return state.hashCode ^ rep_codes[rep_count];
    }
-   
+
    // returns what hash code will be after move
    hash_t hashCode( Move m ) const;
 
    int operator == ( const Board &b ) {
        return state.hashCode == b.hashCode();
    }
-   
+
    // set a bitmap of squares that lie in a straight line between
    // sq1 and sq2
    void between( Square sq1, Square sq2, Bitboard &result) const {
       result = Attacks::betweenSquares[sq1][sq2];
    }
-   
+
    // returns "true" if there is a clear path between sq1 and sq2
    int clear( Square sq1, Square sq2 ) const {
       return Attacks::directions[sq1][sq2] &&
@@ -173,7 +173,7 @@ public:
 
    // undoes a previous move.
    void undoMove( Move rmove, const BoardState &stat );
-   
+
    // undoes a previous null move.
    void undoNull(const BoardState &oldState) {
       state = oldState;
@@ -202,22 +202,27 @@ public:
 
    // Return a bit vector of all pieces of color "side" that attack "sq".
    Bitboard calcAttacks(Square sq, ColorType side) const;
-   
+
    // Return a bit vector of all pieces of color "side" that can move to
    // unoccupied "sq".
    Bitboard calcBlocks(Square sq, ColorType side) const;
-   
+
    // Return location of a piece of color "side" that attacks "square" in
    // direction "dir" (InvalidSquare if no such piece).
-   Square getDirectionalAttack(Square sq, int dir, ColorType side) const; 
-   
+   Square getDirectionalAttack(Square sq, int dir, ColorType side) const;
+
    // Return all squares attacked by pawns of color "side".
-   Bitboard allPawnAttacks(ColorType side) const;
+   Bitboard allPawnAttacks(ColorType side) const {
+       return allPawnAttacks(side,pawn_bits[side]);
+   }
+
+   // Return all squares attacked by pawns on the specified bit board
+   Bitboard allPawnAttacks(ColorType side, Bitboard pawns) const;
 
    FORCEINLINE const Bitboard rookAttacks(Square sq) const {
      return Attacks::rookAttacks(sq,allOccupied);
    }
-   
+
    // Get rook attacks considering same-side rook/queen as "transparent"
    const Bitboard rookAttacks(Square sq,ColorType side) const;
 
@@ -367,7 +372,7 @@ public:
    private:
 
    static const int RepListSize = 1024;
-           
+
    ALIGN_VAR(16) Piece contents[64];
    Square kingPos[2];
    Material material[2];
@@ -405,13 +410,13 @@ private:
    void setAll(ColorType color, Square sq) {
      allOccupied.set(sq);
      occupied[color].set(sq);
-   } 
+   }
 
    void clearAll(ColorType color, Square sq) {
      allOccupied.clear(sq);
      occupied[color].clear(sq);
-   } 
-           
+   }
+
    int pinCheck(Square pinner, Square okp, const Bitboard &mask) const {
      Bitboard btwn;
      between(pinner,okp,btwn);

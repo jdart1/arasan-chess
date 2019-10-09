@@ -1,4 +1,4 @@
-// Copyright 2014-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2014-2019 by Jon Dart. All Rights Reserved.
 #include "tune.h"
 #include "chess.h"
 #include "attacks.h"
@@ -107,24 +107,6 @@ Tune::Tune()
         TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.2),VAL(0),VAL(0.5),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_QUEEN_KING_PROXIMITY,"own_queen_king_proximity",VAL(0.05),VAL(0),VAL(0.3),TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_THREAT_ON_PIECE_MID,"pawn_threat_on_piece_mid",VAL(0.6),VAL(0),THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_THREAT_ON_PIECE_END,"pawn_threat_on_piece_end",VAL(0.6),0,THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::PIECE_THREAT_MM_MID,"piece_threat_mm_mid",VAL(0.25),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PIECE_THREAT_MR_MID,"piece_threat_mr_mid",VAL(0.6),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PIECE_THREAT_MQ_MID,"piece_threat_mq_mid",VAL(0.6),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PIECE_THREAT_MM_END,"piece_threat_mm_end",VAL(0.25),0,THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::PIECE_THREAT_MR_END,"piece_threat_mr_end",VAL(0.6),VAL(0),THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::PIECE_THREAT_MQ_END,"piece_threat_mq_end",VAL(0.6),0,THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::MINOR_PAWN_THREAT_MID,"minor_pawn_threat_mid",VAL(0.07),0,VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::MINOR_PAWN_THREAT_END,"minor_pawn_threat_end",VAL(0.15),0,VAL(0.5),TuneParam::Endgame,1),
-        TuneParam(Tune::PIECE_THREAT_RM_MID,"piece_threat_rm_mid",VAL(0.15),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PIECE_THREAT_RR_MID,"piece_threat_rr_mid",VAL(0.15),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PIECE_THREAT_RQ_MID,"piece_threat_rq_mid",VAL(0.7),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PIECE_THREAT_RM_END,"piece_threat_rm_end",VAL(0.1),0,THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::PIECE_THREAT_RR_END,"piece_threat_rr_end",VAL(0.2),0,THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::PIECE_THREAT_RQ_END,"piece_threat_rq_end",VAL(0.7),0,THREAT_RANGE,TuneParam::Endgame,1),
-        TuneParam(Tune::ROOK_PAWN_THREAT_MID,"rook_pawn_threat_mid",VAL(0.1),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::ROOK_PAWN_THREAT_END,"rook_pawn_threat_end",VAL(0.2),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",VAL(0.35),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",VAL(-1.47),VAL(-2.0),VAL(-0.4)),
         TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",VAL(0.447),VAL(0.1),VAL(0.6),TuneParam::Midgame,1),
@@ -387,6 +369,48 @@ Tune::Tune()
          }
       }
    }
+   ASSERT(i==THREAT_BY_PAWN);
+   for (int phase = 0; phase < 2; phase++) {
+       for (int j = 0; j < 4; j++) {
+           stringstream name;
+           name << "threat_by_pawn" << j;
+           if (phase == 0) {
+               name << "_mid";
+           }
+           else {
+               name << "_end";
+           }
+           push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,scales[phase],1));
+       }
+   }
+   ASSERT(i==THREAT_BY_MINOR);
+   for (int phase = 0; phase < 2; phase++) {
+       for (int j = 0; j < 4; j++) {
+           stringstream name;
+           name << "threat_by_minor" << j;
+           if (phase == 0) {
+               name << "_mid";
+           }
+           else {
+               name << "_end";
+           }
+           push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,scales[phase],1));
+       }
+   }
+   ASSERT(i==THREAT_BY_ROOK);
+   for (int phase = 0; phase < 2; phase++) {
+       for (int j = 0; j < 4; j++) {
+           stringstream name;
+           name << "threat_by_rook" << j;
+           if (phase == 0) {
+               name << "_mid";
+           }
+           else {
+               name << "_end";
+           }
+           push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,scales[phase],1));
+       }
+   }
    // add mobility
    ASSERT(i==KNIGHT_MOBILITY);
    for (int m = 0; m < 9; m++) {
@@ -591,24 +615,6 @@ void Tune::applyParams(bool check) const
    Params::OWN_MINOR_KING_PROXIMITY = PARAM(OWN_MINOR_KING_PROXIMITY);
    Params::OWN_ROOK_KING_PROXIMITY = PARAM(OWN_ROOK_KING_PROXIMITY);
    Params::OWN_QUEEN_KING_PROXIMITY = PARAM(OWN_QUEEN_KING_PROXIMITY);
-   Params::PAWN_THREAT_ON_PIECE_MID = PARAM(PAWN_THREAT_ON_PIECE_MID);
-   Params::PAWN_THREAT_ON_PIECE_END = PARAM(PAWN_THREAT_ON_PIECE_END);
-   Params::PIECE_THREAT_MM_MID = PARAM(PIECE_THREAT_MM_MID);
-   Params::PIECE_THREAT_MR_MID = PARAM(PIECE_THREAT_MR_MID);
-   Params::PIECE_THREAT_MQ_MID = PARAM(PIECE_THREAT_MQ_MID);
-   Params::PIECE_THREAT_MM_END = PARAM(PIECE_THREAT_MM_END);
-   Params::PIECE_THREAT_MR_END = PARAM(PIECE_THREAT_MR_END);
-   Params::PIECE_THREAT_MQ_END = PARAM(PIECE_THREAT_MQ_END);
-   Params::MINOR_PAWN_THREAT_MID = PARAM(MINOR_PAWN_THREAT_MID);
-   Params::MINOR_PAWN_THREAT_END = PARAM(MINOR_PAWN_THREAT_END);
-   Params::PIECE_THREAT_RM_MID = PARAM(PIECE_THREAT_RM_MID);
-   Params::PIECE_THREAT_RR_MID = PARAM(PIECE_THREAT_RR_MID);
-   Params::PIECE_THREAT_RQ_MID = PARAM(PIECE_THREAT_RQ_MID);
-   Params::PIECE_THREAT_RM_END = PARAM(PIECE_THREAT_RM_END);
-   Params::PIECE_THREAT_RR_END = PARAM(PIECE_THREAT_RR_END);
-   Params::PIECE_THREAT_RQ_END = PARAM(PIECE_THREAT_RQ_END);
-   Params::ROOK_PAWN_THREAT_MID = PARAM(ROOK_PAWN_THREAT_MID);
-   Params::ROOK_PAWN_THREAT_END = PARAM(ROOK_PAWN_THREAT_END);
    Params::ENDGAME_KING_THREAT = PARAM(ENDGAME_KING_THREAT);
    Params::BISHOP_TRAPPED = PARAM(BISHOP_TRAPPED);
    Params::BISHOP_PAIR_MID = PARAM(BISHOP_PAIR_MID);
@@ -721,6 +727,23 @@ void Tune::applyParams(bool check) const
          Params::ISOLATED_PAWN[Scoring::Endgame][7-i] =
          PARAM(ISOLATED_PAWN_END1+i);
    }
+
+   for (int p = 0; p < 2; p++) {
+      for (int i = 0; i < 4; i++) {
+          Params::THREAT_BY_PAWN[p][i] = PARAM(THREAT_BY_PAWN+4*p+i);
+      }
+   }
+   for (int p = 0; p < 2; p++) {
+      for (int i = 0; i < 4; i++) {
+          Params::THREAT_BY_MINOR[p][i] = PARAM(THREAT_BY_MINOR+4*p+i);
+      }
+   }
+   for (int p = 0; p < 2; p++) {
+      for (int i = 0; i < 4; i++) {
+          Params::THREAT_BY_ROOK[p][i] = PARAM(THREAT_BY_ROOK+4*p+i);
+      }
+   }
+
    for (int p = 0; p < 2; p++) {
       for (int i = 0; i < 21; i++) {
          Params::PP_OWN_PIECE_BLOCK[p][i] =

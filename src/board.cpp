@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2019 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -1516,27 +1516,25 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    }
 }
 
-Bitboard Board::allPawnAttacks( ColorType side) const
+Bitboard Board::allPawnAttacks(ColorType side, Bitboard pawns) const
 {
    if (side == Black)
    {
-      Bitboard pawns1(pawn_bits[Black]);
-      Bitboard pawns2(pawns1);
-      pawns1.shr(7);
-      pawns1 &= Bitboard(~0x0101010101010101ULL);
+      Bitboard pawns2(pawns);
+      pawns.shr(7);
+      pawns &= Bitboard(~0x0101010101010101ULL);
       pawns2.shr(9);
       pawns2 &= Bitboard(~0x8080808080808080ULL);
-      return (pawns1 | pawns2);
+      return (pawns | pawns2);
    }
    else
    {
-      Bitboard pawns1(pawn_bits[White]);
-      Bitboard pawns2(pawns1);
-      pawns1.shl(7);
-      pawns1 &= Bitboard(~0x8080808080808080ULL);
+      Bitboard pawns2(pawns);
+      pawns.shl(7);
+      pawns &= Bitboard(~0x8080808080808080ULL);
       pawns2.shl(9);
       pawns2 &= Bitboard(~0x0101010101010101ULL);
-      return (pawns1 | pawns2);
+      return (pawns | pawns2);
    }
 }
 

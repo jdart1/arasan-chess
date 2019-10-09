@@ -1,4 +1,4 @@
-// Copyright 2015-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
 //
 // definitions of scoring parameters, non-const for tuning
 
@@ -45,24 +45,6 @@ score_t Params::KING_ATTACK_COVER_BOOST_BASE;
 score_t Params::KING_ATTACK_COVER_BOOST_SLOPE;
 score_t Params::KING_ATTACK_COUNT = 6;
 score_t Params::KING_ATTACK_SQUARES = 6;
-score_t Params::PAWN_THREAT_ON_PIECE_MID = -50;
-score_t Params::PAWN_THREAT_ON_PIECE_END = -50;
-score_t Params::PIECE_THREAT_MM_MID = -50;
-score_t Params::PIECE_THREAT_MR_MID = -50;
-score_t Params::PIECE_THREAT_MQ_MID = -50;
-score_t Params::PIECE_THREAT_MM_END = -50;
-score_t Params::PIECE_THREAT_MR_END = -50;
-score_t Params::PIECE_THREAT_MQ_END = -50;
-score_t Params::MINOR_PAWN_THREAT_MID = -50;
-score_t Params::MINOR_PAWN_THREAT_END = -50;
-score_t Params::PIECE_THREAT_RM_MID = -50;
-score_t Params::PIECE_THREAT_RR_MID = -50;
-score_t Params::PIECE_THREAT_RQ_MID = -50;
-score_t Params::PIECE_THREAT_RM_END = -50;
-score_t Params::PIECE_THREAT_RR_END = -50;
-score_t Params::PIECE_THREAT_RQ_END = -50;
-score_t Params::ROOK_PAWN_THREAT_MID = -50;
-score_t Params::ROOK_PAWN_THREAT_END = -50;
 score_t Params::ENDGAME_KING_THREAT = -50;
 score_t Params::BISHOP_TRAPPED = -1470;
 score_t Params::BISHOP_PAIR_MID = 420;
@@ -116,6 +98,9 @@ score_t Params::PP_OPP_PIECE_BLOCK[2][21];
 score_t Params::DOUBLED_PAWNS[2][8];
 score_t Params::TRIPLED_PAWNS[2][8];
 score_t Params::ISOLATED_PAWN[2][8];
+score_t Params::THREAT_BY_PAWN[2][4];
+score_t Params::THREAT_BY_MINOR[2][4];
+score_t Params::THREAT_BY_ROOK[2][4];
 score_t Params::KNIGHT_OUTPOST[2][2];
 score_t Params::BISHOP_OUTPOST[2][2];
 score_t Params::KNIGHT_MOBILITY[9];
