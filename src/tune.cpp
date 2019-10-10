@@ -107,6 +107,8 @@ Tune::Tune()
         TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.2),VAL(0),VAL(0.5),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_QUEEN_KING_PROXIMITY,"own_queen_king_proximity",VAL(0.05),VAL(0),VAL(0.3),TuneParam::Midgame,1),
+        TuneParam(Tune::PAWN_PUSH_THREAT_MID,"pawn_push_threat_mid",VAL(0.15),0,THREAT_RANGE,TuneParam::Midgame,1),
+        TuneParam(Tune::PAWN_PUSH_THREAT_END,"pawn_push_threat_end",VAL(0.15),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",VAL(0.35),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",VAL(-1.47),VAL(-2.0),VAL(-0.4)),
         TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",VAL(0.447),VAL(0.1),VAL(0.6),TuneParam::Midgame,1),
@@ -615,6 +617,8 @@ void Tune::applyParams(bool check) const
    Params::OWN_MINOR_KING_PROXIMITY = PARAM(OWN_MINOR_KING_PROXIMITY);
    Params::OWN_ROOK_KING_PROXIMITY = PARAM(OWN_ROOK_KING_PROXIMITY);
    Params::OWN_QUEEN_KING_PROXIMITY = PARAM(OWN_QUEEN_KING_PROXIMITY);
+   Params::PAWN_PUSH_THREAT_MID = PARAM(PAWN_PUSH_THREAT_MID);
+   Params::PAWN_PUSH_THREAT_END = PARAM(PAWN_PUSH_THREAT_END);
    Params::ENDGAME_KING_THREAT = PARAM(ENDGAME_KING_THREAT);
    Params::BISHOP_TRAPPED = PARAM(BISHOP_TRAPPED);
    Params::BISHOP_PAIR_MID = PARAM(BISHOP_PAIR_MID);

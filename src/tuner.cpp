@@ -1175,7 +1175,41 @@ void calc_threat_deriv(Scoring &s, const Board &board,ColorType side, vector<dou
        grads[Tune::THREAT_BY_ROOK+4+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_ROOK+4+TypeOfPiece(board[sq])-1,mLevel);
    }
-
+   // Pawn push threats as in Stockfish/Ethereal
+   // compute pawn push destination square bitboard
+   Bitboard pawns;
+   Bitboard mask();
+   if (side == White) {
+       pawns = board.pawn_bits[White];
+       pawns.shl8();
+       // exclude promotions
+       pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
+       Square sq;
+       Bitboard pawns2(pawns & Attacks::rank_mask[1]);
+       while (pawns2.iterate(sq)) {
+           if (board[sq+8] == EmptyPiece)
+               pawns.set(sq+8);
+       }
+   }
+   else {
+       pawns = board.pawn_bits[Black];
+       pawns.shr8();
+       // exclude promotions
+       pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
+       Square sq;
+       Bitboard pawns2(pawns & Attacks::rank_mask[6]);
+       while (pawns2.iterate(sq)) {
+           if (board[sq-8] == EmptyPiece)
+               pawns.set(sq-8);
+       }
+   }
+   int pawnPushThreats = Bitboard(board.allPawnAttacks(side,pawns) & safe & ~ai.pawnAttacks[oside] & nonPawns).bitCountOpt();
+   if (pawnPushThreats) {
+       grads[Tune::PAWN_PUSH_THREAT_MID] +=
+           tune_params.scale(inc*pawnPushThreats,Tune::PAWN_PUSH_THREAT_MID,mLevel);
+       grads[Tune::PAWN_PUSH_THREAT_END] +=
+           tune_params.scale(inc*pawnPushThreats,Tune::PAWN_PUSH_THREAT_END,mLevel);
+   }
    if (board.getMaterial(side).materialLevel() <= Params::ENDGAME_THRESHOLD) {
       Bitboard kattacks(Attacks::king_attacks[board.kingSquare(side)] & board.occupied[oside] & weak);
       if (kattacks) {

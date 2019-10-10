@@ -1238,54 +1238,85 @@ void Scoring::threatScore(const Board &board,
                           const AttackInfo &ai,
                           Scores &scores)
 {
-   const bool earlyEndgame = board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD);
+    const bool earlyEndgame = board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD);
 
-   const ColorType oside = OppositeColor(side);
-   const Bitboard & pa = ai.pawnAttacks[side];
+    const ColorType oside = OppositeColor(side);
+    const Bitboard & pa = ai.pawnAttacks[side];
 
-   const Bitboard oppMinors(board.knight_bits[oside] | board.bishop_bits[oside]);
-   const Bitboard ourMinors(board.knight_bits[side] | board.bishop_bits[side]);
+    const Bitboard oppMinors(board.knight_bits[oside] | board.bishop_bits[oside]);
+    const Bitboard ourMinors(board.knight_bits[side] | board.bishop_bits[side]);
 
-   // bonus for threats against enemy pieces
+    // bonus for threats against enemy pieces
 
-   const Bitboard weak((ai.allAttacks[side] & ~ai.allAttacks[oside]) |
-                       (ai.attackedBy2[side] & ~ai.attackedBy2[oside] & ~ai.pawnAttacks[oside]));
+    const Bitboard weak((ai.allAttacks[side] & ~ai.allAttacks[oside]) |
+                        (ai.attackedBy2[side] & ~ai.attackedBy2[oside] & ~ai.pawnAttacks[oside]));
 
-   Bitboard stronglyProtected(ai.pawnAttacks[oside] | (ai.attackedBy2[side] & ~ai.attackedBy2[oside]));
+    Bitboard stronglyProtected(ai.pawnAttacks[oside] | (ai.attackedBy2[side] & ~ai.attackedBy2[oside]));
 
-   Bitboard nonPawns(board.occupied[oside] & ~board.pawn_bits[oside]);
+    Bitboard nonPawns(board.occupied[oside] & ~board.pawn_bits[oside]);
 
-   Bitboard safe(~ai.allAttacks[oside] | ai.allAttacks[side]);
+    Bitboard safe(~ai.allAttacks[oside] | ai.allAttacks[side]);
 
-   Bitboard targets(nonPawns | (board.pawn_bits[oside] & ~stronglyProtected));
-   targets.clear(board.kingSquare(oside));
+    Bitboard targets(nonPawns | (board.pawn_bits[oside] & ~stronglyProtected));
+    targets.clear(board.kingSquare(oside));
 
-   // Threats by safe pawns
-   Bitboard pawnThreats(board.allPawnAttacks(side,board.pawn_bits[side] & safe) & nonPawns);
-   Square sq;
-   while (pawnThreats.iterate(sq)) {
-       scores.mid += Params::THREAT_BY_PAWN[Midgame][TypeOfPiece(board[sq])-1];
-       scores.end += Params::THREAT_BY_PAWN[Endgame][TypeOfPiece(board[sq])-1];
-   }
-   // minor attacks on pieces and pawns not pawn defended
-   Bitboard minorAttacks(ai.minorAttacks[side] & targets);
-   while (minorAttacks.iterate(sq)) {
-       scores.mid += Params::THREAT_BY_MINOR[Midgame][TypeOfPiece(board[sq])-1];
-       scores.end += Params::THREAT_BY_MINOR[Endgame][TypeOfPiece(board[sq])-1];
-   }
-   // rook attacks on pieces and pawns not pawn defended
-   Bitboard rookAttacks(ai.rookAttacks[side] & targets);
-   while (rookAttacks.iterate(sq)) {
-       scores.mid += Params::THREAT_BY_ROOK[Midgame][TypeOfPiece(board[sq])-1];
-       scores.end += Params::THREAT_BY_ROOK[Endgame][TypeOfPiece(board[sq])-1];
-   }
-   if (earlyEndgame) {
-      // King attacks on undefended or poorly defended pawns or pieces
-      Bitboard kattacks(Attacks::king_attacks[board.kingSquare(side)] & board.occupied[oside] & weak);
-      if (kattacks) {
-         scores.end += kattacks.bitCountOpt()*PARAM(ENDGAME_KING_THREAT);
-      }
-   }
+    // Threats by safe pawns
+    Bitboard pawnThreats(board.allPawnAttacks(side,board.pawn_bits[side] & safe) & nonPawns);
+    Square sq;
+    while (pawnThreats.iterate(sq)) {
+        scores.mid += Params::THREAT_BY_PAWN[Midgame][TypeOfPiece(board[sq])-1];
+        scores.end += Params::THREAT_BY_PAWN[Endgame][TypeOfPiece(board[sq])-1];
+    }
+    // minor attacks on pieces and pawns not pawn defended
+    Bitboard minorAttacks(ai.minorAttacks[side] & targets);
+    while (minorAttacks.iterate(sq)) {
+        scores.mid += Params::THREAT_BY_MINOR[Midgame][TypeOfPiece(board[sq])-1];
+        scores.end += Params::THREAT_BY_MINOR[Endgame][TypeOfPiece(board[sq])-1];
+    }
+    // rook attacks on pieces and pawns not pawn defended
+    Bitboard rookAttacks(ai.rookAttacks[side] & targets);
+    while (rookAttacks.iterate(sq)) {
+        scores.mid += Params::THREAT_BY_ROOK[Midgame][TypeOfPiece(board[sq])-1];
+        scores.end += Params::THREAT_BY_ROOK[Endgame][TypeOfPiece(board[sq])-1];
+    }
+    // Pawn push threats as in Stockfish/Ethereal
+    // compute pawn push destination square bitboard
+    Bitboard pawns;
+    Bitboard mask();
+    if (side == White) {
+        pawns = board.pawn_bits[White];
+        pawns.shl8();
+        // exclude promotions
+        pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
+        Square sq;
+        Bitboard pawns2(pawns & Attacks::rank_mask[1]);
+        while (pawns2.iterate(sq)) {
+            if (board[sq+8] == EmptyPiece)
+                pawns.set(sq+8);
+        }
+    }
+    else {
+        pawns = board.pawn_bits[Black];
+        pawns.shr8();
+        // exclude promotions
+        pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
+        Square sq;
+        Bitboard pawns2(pawns & Attacks::rank_mask[6]);
+        while (pawns2.iterate(sq)) {
+            if (board[sq-8] == EmptyPiece)
+                pawns.set(sq-8);
+        }
+    }
+    int pawnPushThreats = Bitboard(board.allPawnAttacks(side,pawns) & safe & ~ai.pawnAttacks[oside] & nonPawns).bitCountOpt();
+    scores.end += PARAM(PAWN_PUSH_THREAT_END)*pawnPushThreats;
+    scores.mid += PARAM(PAWN_PUSH_THREAT_MID)*pawnPushThreats;
+    if (earlyEndgame) {
+        // King attacks on undefended or poorly defended pawns or pieces
+        Bitboard kattacks(Attacks::king_attacks[board.kingSquare(side)] & board.occupied[oside] & weak);
+        if (kattacks) {
+            scores.end += kattacks.bitCountOpt()*PARAM(ENDGAME_KING_THREAT);
+        }
+    }
 }
 
 void Scoring::calcPawnData(const Board &board,

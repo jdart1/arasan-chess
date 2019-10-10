@@ -45,6 +45,8 @@ score_t Params::KING_ATTACK_COVER_BOOST_BASE;
 score_t Params::KING_ATTACK_COVER_BOOST_SLOPE;
 score_t Params::KING_ATTACK_COUNT = 6;
 score_t Params::KING_ATTACK_SQUARES = 6;
+score_t Params::PAWN_PUSH_THREAT_MID = 20;
+score_t Params::PAWN_PUSH_THREAT_END = 20;
 score_t Params::ENDGAME_KING_THREAT = -50;
 score_t Params::BISHOP_TRAPPED = -1470;
 score_t Params::BISHOP_PAIR_MID = 420;
