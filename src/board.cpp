@@ -62,6 +62,7 @@ void Board::setupInitialBoard() {
    initialBoard->state.enPassantSq = InvalidSquare;
    initialBoard->state.castleStatus[White] = initialBoard->state.castleStatus[Black] = CanCastleEitherSide;
    initialBoard->state.moveCount = 0;
+   initialBoard->state.movesFromNull = 0;
    initialBoard->repListHead = initialBoard->repList;
    initialBoard->setSecondaryVars();
    *(initialBoard->repListHead)++ = initialBoard->hashCode();
@@ -253,7 +254,10 @@ static FORCEINLINE void Xor(hash_t &h,Square sq,Piece piece) {
 void Board::doNull()
 {
    state.checkStatus = CheckUnknown;
-   state.moveCount++;
+   // We can't reset the halfmove counter because we might overwrite
+   // existing entries in the repList then. But we keep separate
+   // track of how far we are from a null move (idea from Stockfish).
+   state.movesFromNull = 0;
    if (state.enPassantSq != InvalidSquare)
    {
        state.hashCode ^= ep_codes[state.enPassantSq];
@@ -273,6 +277,7 @@ void Board::doMove( Move move )
    ASSERT(state.hashCode == BoardHash::hashCode(*this));
    state.checkStatus = CheckUnknown;
    ++state.moveCount;
+   ++state.movesFromNull;
    if (state.enPassantSq != InvalidSquare)
    {
        state.hashCode ^= ep_codes[state.enPassantSq];
@@ -1872,7 +1877,7 @@ static void set_bad( istream &i )
 
 int Board::repCount(int target) const
 {
-    int entries = state.moveCount - 2;
+    int entries = std::min<int>(state.movesFromNull,state.moveCount) - 2;
     if (entries <= 0) return 0;
     hash_t to_match = hashCode();
     int count = 0;

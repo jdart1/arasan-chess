@@ -28,6 +28,7 @@ struct BoardState {
    hash_t hashCode;
    Square enPassantSq;
    int moveCount;
+   int movesFromNull;
    CheckStatusType checkStatus;
    CastleType castleStatus[2];
 };

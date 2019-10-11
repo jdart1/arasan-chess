@@ -2775,7 +2775,7 @@ score_t Search::search()
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
-            BoardState state = board.state;
+            BoardState state(board.state);
             board.doNull();
 #ifdef _TRACE
             if (mainThread()) {
