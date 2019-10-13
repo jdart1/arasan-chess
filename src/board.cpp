@@ -7,9 +7,10 @@
 #include "debug.h"
 #include "boardio.h"
 #include "bhash.h"
-#include <ctype.h>
 #include <memory.h>
+#include <algorithm>
 #include <assert.h>
+#include <cctype>
 #include <cstddef>
 #include <iostream>
 #include <unordered_set>
