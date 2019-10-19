@@ -576,16 +576,11 @@ void Protocol::save_game() {
 
 
 int Protocol::calc_extra_time(const ColorType side) {
-   // Determine if we are allowed to use any time beyond
-   // the normal time target.
-   int inc = (uci ? getIncrUCI(side) : incr);
-   if (srctype == FixedTime || srctype == FixedDepth)
-      return 0;
-   if ((inc == 0 && time_left > time_target*10) ||
-      (inc > 0 && time_left > time_target*6))
-      return int(time_target*2.5);
-   else
-      return 0;
+   if (srctype == TimeLimit) {
+       return timeMgmt::calcExtraTime(time_left,time_target,(uci ? getIncrUCI(side) : incr));
+   } else {
+       return 0;
+   }
 }
 
 
@@ -711,7 +706,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 ColorType side = controller->getComputerSide();
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    calcTimeLimitUCI(movestogo,
+                    timeMgmt::calcTimeLimitUCI(movestogo,
                                      side == White ? winc : binc,
                                      time_left, !easy, doTrace);
                 if (doTrace) {
@@ -886,11 +881,11 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                     ColorType side = controller->getComputerSide();
                     time_target =
                         (srctype == FixedTime) ? time_limit :
-                        (uci ? calcTimeLimitUCI(movestogo,
+                        (uci ? timeMgmt::calcTimeLimitUCI(movestogo,
                                                 getIncrUCI(side),
                                                 time_left,
                                                 true, doTrace)
-                         : calcTimeLimit(moves, incr, time_left, true, doTrace));
+                         : timeMgmt::calcTimeLimit(moves, incr, time_left, true, doTrace));
                     if (doTrace) {
                         cout << debugPrefix() << "time_target = " << time_target << endl;
                         cout << debugPrefix() << "xtra time = " << calc_extra_time(side) << endl;
@@ -1134,10 +1129,10 @@ Move Protocol::search(SearchController *searcher, Board &board,
             } else {
                 time_target =
                     (srctype == FixedTime) ? time_limit :
-                    (uci ? calcTimeLimitUCI(movestogo,
+                    (uci ? timeMgmt::calcTimeLimitUCI(movestogo,
                                             getIncrUCI(board.sideToMove()),
                                             time_left, false, doTrace)
-                     : calcTimeLimit(moves, incr, time_left, false, doTrace));
+                     : timeMgmt::calcTimeLimit(moves, incr, time_left, false, doTrace));
                 last_time_target = time_target;
             }
             if (doTrace) {
