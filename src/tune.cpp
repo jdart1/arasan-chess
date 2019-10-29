@@ -16,6 +16,7 @@ static const score_t PST_RANGE = VAL(1.0);
 static const score_t PP_BLOCK_RANGE = VAL(0.65);
 static const score_t THREAT_RANGE = VAL(0.75);
 static const score_t ENDGAME_KING_POS_RANGE = VAL(0.75);
+static const score_t SPAN_CONTROL_RANGE = VAL(0.75);
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 int Tune::numTuningParams() const
@@ -137,10 +138,6 @@ Tune::Tune()
         TuneParam(Tune::PAWN_SIDE_BONUS,"pawn_side_bonus",VAL(0.125),VAL(0),VAL(0.5),TuneParam::Endgame,1),
         TuneParam(Tune::KING_OWN_PAWN_DISTANCE,"king_own_pawn_distance",VAL(0.075),VAL(0),VAL(0.5),TuneParam::Endgame,1),
         TuneParam(Tune::KING_OPP_PAWN_DISTANCE,"king_opp_pawn_distance",VAL(0.02),VAL(0),VAL(0.5),TuneParam::Endgame,1),
-        TuneParam(Tune::QUEENING_SQUARE_CONTROL_MID,"queening_square_control_mid",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Midgame,1),
-        TuneParam(Tune::QUEENING_SQUARE_CONTROL_END,"queening_square_control_end",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Endgame,1),
-        TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_MID,"queening_square_opp_control_mid",VAL(-0.2),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
-        TuneParam(Tune::QUEENING_SQUARE_OPP_CONTROL_END,"queening_square_opp_control_end",VAL(-0.4),VAL(-0.6),VAL(0),TuneParam::Endgame,1),
         TuneParam(Tune::SIDE_PROTECTED_PAWN,"side_protected_pawn",VAL(-0.05),VAL(-0.25),VAL(0),TuneParam::Endgame,1),
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL0,"king_position_low_material0",250,128,300,TuneParam::Endgame,1),
         TuneParam(Tune::KING_POSITION_LOW_MATERIAL1,"king_position_low_material1",225,128,300,TuneParam::Endgame,1),
@@ -195,6 +192,42 @@ Tune::Tune()
         TuneParam(Tune::ADJACENT_PASSER_END5,"adjacent_passer_end5",VAL(0.15),VAL(0),VAL(0.5),TuneParam::Endgame,1),
         TuneParam(Tune::ADJACENT_PASSER_END6,"adjacent_passer_end6",VAL(0.3),VAL(0),VAL(1.0),TuneParam::Endgame,1),
         TuneParam(Tune::ADJACENT_PASSER_END7,"adjacent_passer_end7",VAL(0.7),VAL(0.15),VAL(1.5),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_MID2,"queening_path_clear_mid2",VAL(0.1),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_MID3,"queening_path_clear_mid3",VAL(0.2),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_MID4,"queening_path_clear_mid4",VAL(0.3),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_MID5,"queening_path_clear_mid5",VAL(0.4),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_MID6,"queening_path_clear_mid6",VAL(0.5),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_MID7,"queening_path_clear_mid7",VAL(0.6),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_END2,"queening_path_clear_end2",VAL(0.1),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_END3,"queening_path_clear_end3",VAL(0.2),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_END4,"queening_path_clear_end4",VAL(0.3),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_END5,"queening_path_clear_end5",VAL(0.4),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_END6,"queening_path_clear_end6",VAL(0.5),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CLEAR_END7,"queening_path_clear_end7",VAL(0.6),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::PP_OWN_PIECE_BLOCK_MID5,"pp_own_piece_block_mid5",-VAL(0.2),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::PP_OWN_PIECE_BLOCK_MID6,"pp_own_piece_block_mid6",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::PP_OWN_PIECE_BLOCK_MID7,"pp_own_piece_block_mid7",-VAL(0.4),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::PP_OWN_PIECE_BLOCK_END5,"pp_own_piece_block_end5",-VAL(0.2),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::PP_OWN_PIECE_BLOCK_END6,"pp_own_piece_block_end6",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::PP_OWN_PIECE_BLOCK_END7,"pp_own_piece_block_end7",-VAL(0.4),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::PP_OPP_PIECE_BLOCK_MID5,"pp_opp_piece_block_mid5",-VAL(0.2),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::PP_OPP_PIECE_BLOCK_MID6,"pp_opp_piece_block_mid6",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::PP_OPP_PIECE_BLOCK_MID7,"pp_opp_piece_block_mid7",-VAL(0.4),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::PP_OPP_PIECE_BLOCK_END5,"pp_opp_piece_block_end5",-VAL(0.2),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::PP_OPP_PIECE_BLOCK_END6,"pp_opp_piece_block_end6",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::PP_OPP_PIECE_BLOCK_END7,"pp_opp_piece_block_end7",-VAL(0.4),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CONTROL_MID5,"queening_path_control_mid5",VAL(0.2),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CONTROL_MID6,"queening_path_control_mid6",VAL(0.3),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CONTROL_MID7,"queening_path_control_mid7",VAL(0.4),VAL(0),VAL(1.0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_CONTROL_END5,"queening_path_control_end5",VAL(0.2),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CONTROL_END6,"queening_path_control_end6",VAL(0.3),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_CONTROL_END7,"queening_path_control_end7",VAL(0.4),VAL(0),VAL(1.0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_OPP_CONTROL_MID5,"queening_path_opp_control_mid5",-VAL(0.2),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_OPP_CONTROL_MID6,"queening_path_opp_control_mid6",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_OPP_CONTROL_MID7,"queening_path_opp_control_mid7",-VAL(0.4),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::QUEENING_PATH_OPP_CONTROL_END5,"queening_path_opp_control_end5",-VAL(0.2),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_OPP_CONTROL_END6,"queening_path_opp_control_end6",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
+        TuneParam(Tune::QUEENING_PATH_OPP_CONTROL_END7,"queening_path_opp_control_end7",-VAL(0.4),-VAL(1.0),VAL(0),TuneParam::Endgame,1),
         TuneParam(Tune::DOUBLED_PAWNS_MID1,"doubled_pawns_mid1",VAL(-0.05),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::DOUBLED_PAWNS_MID2,"doubled_pawns_mid2",VAL(-0.06),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::DOUBLED_PAWNS_MID3,"doubled_pawns_mid3",VAL(-0.08),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
@@ -292,9 +325,6 @@ Tune::Tune()
        }
    };
 
-   static const score_t PP_OWN_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.015),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.030),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.045),VAL(-0.060),VAL(-0.060),VAL(-0.060),VAL(-0.075),VAL(-0.075),VAL(-0.090)},{VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.043),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.086),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.129),VAL(-0.172),VAL(-0.172),VAL(-0.172),VAL(-0.215),VAL(-0.215),VAL(-0.258)}};
-   static const score_t PP_OPP_PIECE_BLOCK_INIT[2][21] = {{VAL(-0.171),VAL(-0.085),VAL(-0.057),VAL(-0.042),VAL(-0.034),VAL(-0.028),VAL(-0.190),VAL(-0.095),VAL(-0.063),VAL(-0.047),VAL(-0.038),VAL(-0.217),VAL(-0.108),VAL(-0.072),VAL(-0.5),VAL(-0.251),VAL(-0.125),VAL(-0.083),VAL(-0.361),VAL(-0.180),VAL(-0.5)},{VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.147),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.159),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.180),VAL(-0.204),VAL(-0.204),VAL(-0.204),VAL(-0.276),VAL(-0.276),VAL(-0.374)}};
-
    static const score_t KING_OPP_PASSER_DISTANCE_INIT[6] = {0, 0, VAL(0.2), VAL(0.4), VAL(0.6), VAL(0.7)};
 
    int i = 0;
@@ -308,34 +338,6 @@ Tune::Tune()
       stringstream name;
       name << "king_opp_passer_distance_rank" << x+2;
       push_back(TuneParam(i++,name.str(),KING_OPP_PASSER_DISTANCE_INIT[x],0,ENDGAME_KING_POS_RANGE,TuneParam::Endgame,1));
-   }
-   ASSERT(i==PP_OWN_PIECE_BLOCK_MID);
-   // add passed pawn block tables
-   for (int phase = 0; phase < 2; phase++) {
-      for (int x = 0; x < 21; x++) {
-         stringstream name;
-         name << "pp_own_piece_block";
-         if (phase == 0)
-            name << "_mid";
-         else
-            name << "_end";
-         name << x;
-         score_t val = PP_OWN_PIECE_BLOCK_INIT[phase][x];
-         push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
-      }
-   }
-   for (int phase = 0; phase < 2; phase++) {
-      for (int x = 0; x < 21; x++) {
-         stringstream name;
-         name << "pp_opp_piece_block";
-         if (phase == 0)
-            name << "_mid";
-         else
-            name << "_end";
-         name << x;
-         score_t val = PP_OPP_PIECE_BLOCK_INIT[phase][x];
-         push_back(TuneParam(i++,name.str(),val,-PP_BLOCK_RANGE,0,scales[phase],1));
-      }
    }
 
    static const string names[] =
@@ -647,10 +649,6 @@ void Tune::applyParams(bool check) const
    Params::PAWN_SIDE_BONUS = PARAM(PAWN_SIDE_BONUS);
    Params::KING_OWN_PAWN_DISTANCE = PARAM(KING_OWN_PAWN_DISTANCE);
    Params::KING_OPP_PAWN_DISTANCE = PARAM(KING_OPP_PAWN_DISTANCE);
-   Params::QUEENING_SQUARE_CONTROL_MID = PARAM(QUEENING_SQUARE_CONTROL_MID);
-   Params::QUEENING_SQUARE_CONTROL_END = PARAM(QUEENING_SQUARE_CONTROL_END);
-   Params::QUEENING_SQUARE_OPP_CONTROL_MID = PARAM(QUEENING_SQUARE_OPP_CONTROL_MID);
-   Params::QUEENING_SQUARE_OPP_CONTROL_END = PARAM(QUEENING_SQUARE_OPP_CONTROL_END);
    Params::SIDE_PROTECTED_PAWN = PARAM(SIDE_PROTECTED_PAWN);
    for (int i = 0; i < 6; i++) {
       Params::KING_OPP_PASSER_DISTANCE[i] = PARAM(KING_OPP_PASSER_DISTANCE+i);
@@ -705,6 +703,20 @@ void Tune::applyParams(bool check) const
       Params::ADJACENT_PASSER[Scoring::Midgame][i] = PARAM(ADJACENT_PASSER_MID2+i-2);
       Params::ADJACENT_PASSER[Scoring::Endgame][i] = PARAM(ADJACENT_PASSER_END2+i-2);
    }
+   for (int i = 0; i < 6; i++) {
+      Params::QUEENING_PATH_CLEAR[Scoring::Midgame][i] = PARAM(QUEENING_PATH_CLEAR_MID2+i);
+      Params::QUEENING_PATH_CLEAR[Scoring::Endgame][i] = PARAM(QUEENING_PATH_CLEAR_END2+i);
+   }
+   for (int i = 0; i < 3; i++) {
+      Params::PP_OWN_PIECE_BLOCK[Scoring::Midgame][i] = PARAM(PP_OWN_PIECE_BLOCK_MID5+i);
+      Params::PP_OWN_PIECE_BLOCK[Scoring::Endgame][i] = PARAM(PP_OWN_PIECE_BLOCK_END5+i);
+      Params::PP_OPP_PIECE_BLOCK[Scoring::Midgame][i] = PARAM(PP_OPP_PIECE_BLOCK_MID5+i);
+      Params::PP_OPP_PIECE_BLOCK[Scoring::Endgame][i] = PARAM(PP_OPP_PIECE_BLOCK_END5+i);
+      Params::QUEENING_PATH_CONTROL[Scoring::Midgame][i] = PARAM(QUEENING_PATH_CONTROL_MID5+i);
+      Params::QUEENING_PATH_CONTROL[Scoring::Endgame][i] = PARAM(QUEENING_PATH_CONTROL_END5+i);
+      Params::QUEENING_PATH_OPP_CONTROL[Scoring::Midgame][i] = PARAM(QUEENING_PATH_OPP_CONTROL_MID5+i);
+      Params::QUEENING_PATH_OPP_CONTROL[Scoring::Endgame][i] = PARAM(QUEENING_PATH_OPP_CONTROL_END5+i);
+   }
    memset(Params::DOUBLED_PAWNS[0],'\0',sizeof(score_t)*8);
    memset(Params::DOUBLED_PAWNS[1],'\0',sizeof(score_t)*8);
    memset(Params::TRIPLED_PAWNS[0],'\0',sizeof(score_t)*8);
@@ -747,20 +759,6 @@ void Tune::applyParams(bool check) const
           Params::THREAT_BY_ROOK[p][i] = PARAM(THREAT_BY_ROOK+4*p+i);
       }
    }
-
-   for (int p = 0; p < 2; p++) {
-      for (int i = 0; i < 21; i++) {
-         Params::PP_OWN_PIECE_BLOCK[p][i] =
-            p == 0 ?
-            PARAM(PP_OWN_PIECE_BLOCK_MID+i) :
-            PARAM(PP_OWN_PIECE_BLOCK_END+i);
-         Params::PP_OPP_PIECE_BLOCK[p][i] =
-            p == 0 ?
-            PARAM(PP_OPP_PIECE_BLOCK_MID+i) :
-            PARAM(PP_OPP_PIECE_BLOCK_END+i);
-      }
-   }
-
    for (int i = 0; i < 9; i++) {
       Params::KNIGHT_MOBILITY[i] = PARAM(KNIGHT_MOBILITY+i);
    }

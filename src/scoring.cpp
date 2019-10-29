@@ -856,8 +856,6 @@ void Scoring::positionalScore(const Board &board,
 #ifdef EVAL_DEBUG
    cout << "scores for " << ColorImage(side) << ":" << endl;
 #endif
-   pawnScore(board, side, pawnEntry.pawnData(side), scores);
-
    // outside passed pawn scoring, based on cached pawn data
    if (pawnEntry.pawnData(side).outside && !pawnEntry.pawnData(oside).outside) {
       scores.mid += PARAM(OUTSIDE_PASSER_MID);
@@ -1241,7 +1239,6 @@ void Scoring::threatScore(const Board &board,
     const bool earlyEndgame = board.getMaterial(side).materialLevel() <= PARAM(ENDGAME_THRESHOLD);
 
     const ColorType oside = OppositeColor(side);
-    const Bitboard & pa = ai.pawnAttacks[side];
 
     const Bitboard oppMinors(board.knight_bits[oside] | board.bishop_bits[oside]);
     const Bitboard ourMinors(board.knight_bits[side] | board.bishop_bits[side]);
@@ -1885,6 +1882,9 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
        // now that we have attack info, calculate threat scores
        threatScore<White>(board, ai, wScores);
        threatScore<Black>(board, ai, bScores);
+       // And also pawn scores, which use the attack info
+       pawnScore(board, White, pawnEntry.pawnData(White), ai, wScores);
+       pawnScore(board, Black, pawnEntry.pawnData(Black), ai, bScores);
    }
 
 #ifdef EVAL_DEBUG
@@ -1932,33 +1932,13 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    return score;
 }
 
-static int pp_block_index(Square passer, Square blocker, ColorType side)
-{
-   int dist = Rank(blocker,side)-Rank(passer,side)-1;
-   ASSERT(dist>=0);
-   static const int offsets[6] = {0,6,11,15,18,20};
-   ASSERT(Rank(passer,side)>=2);
-   int index = offsets[Rank(passer,side)-2]+dist;
-   ASSERT(index>=0 && index<21);
-   return index;
-}
-
-static Square nextBlocker(const Board &board, ColorType side, Square sq)
-{
-   const Bitboard &mask = (side == White) ? Attacks::file_mask_up[sq] :
-      Attacks::file_mask_down[sq];
-   Bitboard occ(mask & board.allOccupied);
-   if (!occ) return InvalidSquare;
-   if (side == White)
-      return occ.firstOne();
-   else
-      return occ.lastOne();
-}
-
-void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry::PawnData &pawnData, Scores &scores) {
+void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry::PawnData &pawnData,
+                        const AttackInfo &ai, Scores &scores) {
 #ifdef PAWN_DEBUG
    Scores tmp(scores);
 #endif
+   const ColorType oside = OppositeColor(side);
+
    scores.mid += pawnData.midgame_score;
    scores.end += pawnData.endgame_score;
 
@@ -2019,45 +1999,6 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
       const int file = File(sq);
       const int rank = Rank(sq,side);
-      Square blocker;
-      blocker = nextBlocker(board,side,sq);
-      if (blocker != InvalidSquare) {
-         const int index = pp_block_index(sq,blocker,side);
-         if (board.occupied[side].isSet(blocker)) {
-            score_t mid_penalty = Params::PP_OWN_PIECE_BLOCK[Midgame][index];
-            score_t end_penalty = Params::PP_OWN_PIECE_BLOCK[Endgame][index];
-            scores.mid += mid_penalty;
-            scores.end += end_penalty;
-#ifdef PAWN_DEBUG
-            cout <<
-               ColorImage(side) <<
-               " passed pawn on " <<
-               SquareImage(sq);
-            cout << " blocked by piece on " <<
-               SquareImage(blocker) << ", score= (" << mid_penalty << ", " <<
-               end_penalty << ")" << endl;
-#endif
-         }
-         else {
-            score_t mid_penalty = Params::PP_OPP_PIECE_BLOCK[Midgame][index];
-            score_t end_penalty = Params::PP_OPP_PIECE_BLOCK[Endgame][index];
-            scores.mid += mid_penalty;
-            scores.end += end_penalty;
-#ifdef PAWN_DEBUG
-            cout <<
-               ColorImage(side) <<
-               " passed pawn on " <<
-               SquareImage(sq);
-            cout << " blocked by piece on " <<
-               SquareImage(blocker) << ", score= (" << mid_penalty << ", " <<
-               end_penalty << ")" << endl;
-#endif
-         }
-      }
-#ifdef PAWN_DEBUG
-      score_t mid_tmp = scores.mid;
-      score_t end_tmp = scores.end;
-#endif
       if (board.rook_bits[side] & Attacks::file_mask[file-1]) {
           Bitboard atcks = (side == White) ? board.fileAttacksDown(sq) :
               board.fileAttacksUp(sq);
@@ -2077,23 +2018,30 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             scores.end - end_tmp << ")" << endl;
       }
 #endif
-      Square queenSq = MakeSquare(file,8,side);
-      if (rank >= 6) {
-          // evaluate control of Queening square
-          Bitboard ahead = (side == White) ? Attacks::file_mask_up[file-1] :
-              Attacks::file_mask_down[file-1];
-          Bitboard atcks(board.calcAttacks(queenSq,side));
-          // don't count pawn attacks because connected passer
-          // score gives bonus for that. Also no bonus for
-          // pieces that block queening path.
-          if (atcks & ~board.pawn_bits[side] & ~ahead) {
-              scores.mid += PARAM(QUEENING_SQUARE_CONTROL_MID);
-              scores.end += PARAM(QUEENING_SQUARE_CONTROL_END);
-          }
-          Bitboard oppAtcks(board.calcAttacks(queenSq,OppositeColor(side)));
-          if (oppAtcks) {
-              scores.mid += PARAM(QUEENING_SQUARE_OPP_CONTROL_MID);
-              scores.end += PARAM(QUEENING_SQUARE_OPP_CONTROL_END);
+      Bitboard ahead = (side == White) ? Attacks::file_mask_up[file-1] :
+         Attacks::file_mask_down[file-1];
+      if (!(ai.allAttacks[oside] & ahead) && !(board.allOccupied & ahead)) {
+          scores.mid += PARAM(QUEENING_PATH_CLEAR)[Midgame][rank-2];
+          scores.end += PARAM(QUEENING_PATH_CLEAR)[Endgame][rank-2];
+      }
+      if (rank >= 5) {
+          // evaluate control of next square to advance to
+          Square pathSq = MakeSquare(file, rank+1, side);
+          if (board.occupied[side].isSet(pathSq)) {
+              scores.mid += PARAM(PP_OWN_PIECE_BLOCK)[Midgame][rank-5];
+              scores.end += PARAM(PP_OWN_PIECE_BLOCK)[Endgame][rank-5];
+          } else if (board.occupied[oside].isSet(pathSq)) {
+              scores.mid += PARAM(PP_OPP_PIECE_BLOCK)[Midgame][rank-5];
+              scores.end += PARAM(PP_OPP_PIECE_BLOCK)[Endgame][rank-5];
+          } else {
+              if (ai.allAttacks[side].isSet(pathSq)) {
+                  scores.mid += PARAM(QUEENING_PATH_CONTROL)[Midgame][rank-5];
+                  scores.end += PARAM(QUEENING_PATH_CONTROL)[Endgame][rank-5];
+              }
+              if (ai.allAttacks[oside].isSet(pathSq)) {
+                  scores.mid += PARAM(QUEENING_PATH_OPP_CONTROL)[Midgame][rank-5];
+                  scores.end += PARAM(QUEENING_PATH_OPP_CONTROL)[Endgame][rank-5];
+              }
           }
       }
    }
@@ -2666,10 +2614,16 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
    o << "const int Params::ADJACENT_PASSER[2][8] = ";
    print_array(o,Params::ADJACENT_PASSER[0], Params::ADJACENT_PASSER[1], 8);
-   o << "const int Params::PP_OWN_PIECE_BLOCK[2][21] = ";
-   print_array(o,Params::PP_OWN_PIECE_BLOCK[0], Params::PP_OWN_PIECE_BLOCK[1], 21);
-   o << "const int Params::PP_OPP_PIECE_BLOCK[2][21] = ";
-   print_array(o,Params::PP_OPP_PIECE_BLOCK[0], Params::PP_OPP_PIECE_BLOCK[1], 21);
+   o << "const int Params::QUEENING_PATH_CLEAR[2][6] = ";
+   print_array(o,Params::QUEENING_PATH_CLEAR[0], Params::QUEENING_PATH_CLEAR[1], 6);
+   o << "const int Params::PP_OWN_PIECE_BLOCK[2][3] = ";
+   print_array(o,Params::PP_OWN_PIECE_BLOCK[0], Params::PP_OWN_PIECE_BLOCK[1], 3);
+   o << "const int Params::PP_OPP_PIECE_BLOCK[2][3] = ";
+   print_array(o,Params::PP_OPP_PIECE_BLOCK[0], Params::PP_OPP_PIECE_BLOCK[1], 3);
+   o << "const int Params::QUEENING_PATH_CONTROL[2][3] = ";
+   print_array(o,Params::QUEENING_PATH_CONTROL[0], Params::QUEENING_PATH_CONTROL[1], 3);
+   o << "const int Params::QUEENING_PATH_OPP_CONTROL[2][3] = ";
+   print_array(o,Params::QUEENING_PATH_OPP_CONTROL[0], Params::QUEENING_PATH_OPP_CONTROL[1], 3);
    o << "const int Params::DOUBLED_PAWNS[2][8] = ";
    print_array(o,Params::DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
    o << "const int Params::TRIPLED_PAWNS[2][8] = ";

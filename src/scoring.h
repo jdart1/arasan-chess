@@ -266,7 +266,9 @@ class Scoring
     void calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry);
 
     void pawnScore(const Board &board, ColorType side,
-		  const PawnHashEntry::PawnData &oppPawnData, Scores &);
+                   const PawnHashEntry::PawnData &pawnData,
+                   const AttackInfo &ai,
+                   Scores &);
 
     template <ColorType side>
       void scoreEndgame(const Board &,score_t k_pos,Scores &);
