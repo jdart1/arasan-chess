@@ -103,11 +103,10 @@ Tune::Tune()
         TuneParam(Tune::KING_ATTACK_COVER_BOOST_SLOPE,"king_attack_cover_boost_slope",140,40,300,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_COUNT,"king_attack_count",6,0,60,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_SQUARES,"king_attack_squares",6,0,60,TuneParam::Midgame,1),
-        TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MIN,"own_piece_king_proximity_min",12,0,50,TuneParam::Any,0),
-        TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MAX,"own_piece_king_proximity_max",36,0,70,TuneParam::Any,0),
-        TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.5),VAL(0),VAL(0.75),TuneParam::Midgame,1),
-        TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.2),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::OWN_QUEEN_KING_PROXIMITY,"own_queen_king_proximity",VAL(0.05),VAL(0),VAL(0.3),TuneParam::Midgame,1),
+        TuneParam(Tune::OWN_PIECE_KING_PROXIMITY_MIN,"own_piece_king_proximity_min",4,0,10,TuneParam::Any,0),
+        TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.7),VAL(0),VAL(1.2),TuneParam::Midgame,1),
+        TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.1),VAL(0),VAL(0.5),TuneParam::Midgame,1),
+        TuneParam(Tune::OWN_QUEEN_KING_PROXIMITY,"own_queen_king_proximity",VAL(0.1),VAL(0),VAL(0.5),TuneParam::Midgame,1),
         TuneParam(Tune::PAWN_PUSH_THREAT_MID,"pawn_push_threat_mid",VAL(0.15),0,THREAT_RANGE,TuneParam::Midgame,1),
         TuneParam(Tune::PAWN_PUSH_THREAT_END,"pawn_push_threat_end",VAL(0.15),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",VAL(0.35),0,THREAT_RANGE,TuneParam::Endgame,1),
@@ -339,9 +338,18 @@ Tune::Tune()
       name << "king_opp_passer_distance_rank" << x+2;
       push_back(TuneParam(i++,name.str(),KING_OPP_PASSER_DISTANCE_INIT[x],0,ENDGAME_KING_POS_RANGE,TuneParam::Endgame,1));
    }
-
+   ASSERT(i==OWN_PIECE_KING_PROXIMITY_MULT);
+   int mult = -16;
+   for (int x = 0; x < 16; x++) {
+      stringstream name;
+      name << "own_piece_king_proximity_mult" << x;
+      push_back(TuneParam(i++,name.str(),mult<0 ? 0 : mult,0,64,TuneParam::Midgame,x>=4 && mult<64));
+      mult += 8;
+      if (mult > 64) mult = 64;
+   }
    static const string names[] =
       {"knight_pst","bishop_pst","rook_pst","queen_pst","king_pst"};
+
    // add PSTs
    ASSERT(i == KNIGHT_PST_MIDGAME);
    for (int n = 0; n < 5; n++) {
@@ -615,7 +623,6 @@ void Tune::applyParams(bool check) const
    Params::KING_ATTACK_COUNT = PARAM(KING_ATTACK_COUNT);
    Params::KING_ATTACK_SQUARES = PARAM(KING_ATTACK_SQUARES);
    Params::OWN_PIECE_KING_PROXIMITY_MIN = PARAM(OWN_PIECE_KING_PROXIMITY_MIN);
-   Params::OWN_PIECE_KING_PROXIMITY_MAX = PARAM(OWN_PIECE_KING_PROXIMITY_MAX);
    Params::OWN_MINOR_KING_PROXIMITY = PARAM(OWN_MINOR_KING_PROXIMITY);
    Params::OWN_ROOK_KING_PROXIMITY = PARAM(OWN_ROOK_KING_PROXIMITY);
    Params::OWN_QUEEN_KING_PROXIMITY = PARAM(OWN_QUEEN_KING_PROXIMITY);
@@ -674,6 +681,9 @@ void Tune::applyParams(bool check) const
        int x = int(PARAM(KING_ATTACK_SCALE_BIAS) +
            std::round(PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(i-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0))));
        Params::KING_ATTACK_SCALE[i] = x;
+   }
+   for (int i = 0; i<16; i++) {
+       Params::OWN_PIECE_KING_PROXIMITY_MULT[i] = PARAM(OWN_PIECE_KING_PROXIMITY_MULT+i);
    }
    memset(Params::PASSED_PAWN[0],'\0',sizeof(score_t)*8);
    memset(Params::PASSED_PAWN[1],'\0',sizeof(score_t)*8);

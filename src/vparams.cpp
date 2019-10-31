@@ -36,7 +36,6 @@ score_t Params::ROOK_ATTACK_BOOST = 8;
 score_t Params::QUEEN_ATTACK_FACTOR = 52;
 score_t Params::QUEEN_ATTACK_BOOST = 28;
 score_t Params::OWN_PIECE_KING_PROXIMITY_MIN = 12;
-score_t Params::OWN_PIECE_KING_PROXIMITY_MAX = 50;
 score_t Params::OWN_MINOR_KING_PROXIMITY = 10;
 score_t Params::OWN_ROOK_KING_PROXIMITY = 20;
 score_t Params::OWN_QUEEN_KING_PROXIMITY = 10;
@@ -86,6 +85,7 @@ score_t Params::KING_PST[2][64];
 // The following tables are computed from tuning parameters.
 score_t Params::KING_POSITION_LOW_MATERIAL[3];
 score_t Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE];
+score_t Params::OWN_PIECE_KING_PROXIMITY_MULT[16];
 score_t Params::PASSED_PAWN[2][8];
 score_t Params::PASSED_PAWN_FILE_ADJUST[8] = {0,0,0,0,0,0,0,0};
 score_t Params::POTENTIAL_PASSER[2][8];

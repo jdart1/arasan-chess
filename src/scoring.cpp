@@ -1046,7 +1046,7 @@ void Scoring::positionalScore(const Board &board,
                    int boost = std::max<int>(0,Bitboard(kattacks & kingNearProximity[okp]).bitCountOpt()-1);
                    attackWeight += PARAM(ROOK_ATTACK_FACTOR) +
                        PARAM(ROOK_ATTACK_BOOST)*boost;
-                   simpleAttackWeight += 6 + 3*boost;
+                   simpleAttackWeight += 5 + 3*boost;
                    ++kingAttackCount;
                }
             }
@@ -1102,7 +1102,7 @@ void Scoring::positionalScore(const Board &board,
                    int boost = std::max<int>(0,Bitboard(kattacks & kingNearProximity[okp]).bitCountOpt()-1);
                    attackWeight += PARAM(QUEEN_ATTACK_FACTOR) +
                        PARAM(QUEEN_ATTACK_BOOST)*boost;
-                   simpleAttackWeight += 6 + 3*boost;
+                   simpleAttackWeight += 6 + 4*boost;
                    ++kingAttackCount;
                }
             }
@@ -1182,7 +1182,8 @@ void Scoring::positionalScore(const Board &board,
 
       const score_t index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 
-      if (simpleAttackWeight > PARAM(OWN_PIECE_KING_PROXIMITY_MIN)) {
+      simpleAttackWeight /= 2;
+      if (simpleAttackWeight >= PARAM(OWN_PIECE_KING_PROXIMITY_MIN)) {
          // Opposing side is under attack, evaluate its own pieces'
          // proximity to their King
          int minorProx = Bitboard(nearKing & (board.knight_bits[oside] | board.bishop_bits[oside])).bitCountOpt();
@@ -1194,10 +1195,10 @@ void Scoring::positionalScore(const Board &board,
          while (qbits.iterate(sq)) {
             queenProx += 4-distance(okp,sq);
          }
-         opp_scores.mid += std::min<score_t>(simpleAttackWeight,PARAM(OWN_PIECE_KING_PROXIMITY_MAX))*
+         opp_scores.mid += PARAM(OWN_PIECE_KING_PROXIMITY_MULT)[std::min<int>(15,simpleAttackWeight)]*
             (PARAM(OWN_MINOR_KING_PROXIMITY)*minorProx +
              PARAM(OWN_ROOK_KING_PROXIMITY)*rookProx +
-             PARAM(OWN_QUEEN_KING_PROXIMITY)*queenProx)/32;
+             PARAM(OWN_QUEEN_KING_PROXIMITY)*queenProx)/64;
       }
 
 #ifdef ATTACK_DEBUG
@@ -2599,6 +2600,8 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::KING_POSITION_LOW_MATERIAL,3);
    o << "const int Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE] = ";
    print_array(o,Params::KING_ATTACK_SCALE,Params::KING_ATTACK_SCALE_SIZE);
+   o << "const int Params::OWN_PIECE_KING_PROXIMITY_MULT[16] = ";
+   print_array(o,Params::OWN_PIECE_KING_PROXIMITY_MULT,16);
    o << "const int Params::PASSED_PAWN[2][8] = ";
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
    score_t file_adjust[8];

@@ -789,7 +789,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
              int boost = std::max<int>(0,Bitboard(kattacks & Scoring::kingNearProximity[okp]).bitCountOpt()-1);
              attackWeight += tune_params[Tune::ROOK_ATTACK_FACTOR].current +
                 boost*tune_params[Tune::ROOK_ATTACK_BOOST].current;
-             simpleAttackWeight += 6 + 3*boost;
+             simpleAttackWeight += 5 + 3*boost;
              attackTypes[Tune::ROOK_ATTACK_FACTOR-
                          Tune::MINOR_ATTACK_FACTOR]++;
              attackTypes[Tune::ROOK_ATTACK_BOOST-
@@ -838,7 +838,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
              int boost = std::max<int>(0,Bitboard(kattacks & Scoring::kingNearProximity[okp]).bitCountOpt()-1);
              attackWeight += tune_params[Tune::QUEEN_ATTACK_FACTOR].current +
                  boost*tune_params[Tune::QUEEN_ATTACK_BOOST].current;
-             simpleAttackWeight += 6 + 3*boost;
+             simpleAttackWeight += 6 + 4*boost;
              ++kingAttackCount;
              attackTypes[Tune::QUEEN_ATTACK_FACTOR-
                          Tune::MINOR_ATTACK_FACTOR]++;
@@ -887,8 +887,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       // king safety tuning
       const score_t scale_index = std::max<score_t>(0,attackWeight/Params::KING_ATTACK_FACTOR_RESOLUTION);
 
+      simpleAttackWeight /= 2;
       if (simpleAttackWeight >= tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MIN].current) {
-         double factor = std::min<score_t>((score_t)simpleAttackWeight,tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MAX].current)/32.0;
          // Opposing side is under attack, evaluate its own pieces'
          // proximity to their King
          int minorProx = Bitboard(nearKing & (board.knight_bits[oside] | board.bishop_bits[oside])).bitCountOpt();
@@ -900,12 +900,19 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
          while (qbits.iterate(sq)) {
             queenProx += 4-Scoring::distance(okp,sq);
          }
+         score_t factor = tune_params[Tune::OWN_PIECE_KING_PROXIMITY_MULT+std::min<int>(15,simpleAttackWeight)].current/64.0;
          grads[Tune::OWN_MINOR_KING_PROXIMITY] -=
                tune_params.scale(inc*minorProx*factor,Tune::OWN_MINOR_KING_PROXIMITY,ourMatLevel);
          grads[Tune::OWN_ROOK_KING_PROXIMITY] -=
                tune_params.scale(inc*rookProx*factor,Tune::OWN_ROOK_KING_PROXIMITY,ourMatLevel);
          grads[Tune::OWN_QUEEN_KING_PROXIMITY] -=
                tune_params.scale(inc*queenProx*factor,Tune::OWN_QUEEN_KING_PROXIMITY,ourMatLevel);
+         // gradient of multiplier
+         score_t prox = minorProx*tune_params[Tune::OWN_MINOR_KING_PROXIMITY].current +
+             rookProx*tune_params[Tune::OWN_ROOK_KING_PROXIMITY].current +
+             queenProx*tune_params[Tune::OWN_QUEEN_KING_PROXIMITY].current;
+         grads[Tune::OWN_PIECE_KING_PROXIMITY_MULT+std::min<int>(15,simpleAttackWeight)] +=
+             tune_params.scale(-inc*prox/64.0,Tune::OWN_PIECE_KING_PROXIMITY_MULT+std::min<int>(15,simpleAttackWeight),ourMatLevel);
       }
 
       // compute the gradient of the scale
