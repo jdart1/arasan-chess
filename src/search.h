@@ -78,6 +78,47 @@ struct NodeInfo {
 
 typedef NodeInfo NodeStack[Constants::MaxPly];
 
+// Helper class to save/restore key node parameters
+class NodeState 
+{
+public:
+    NodeState(NodeInfo *node) 
+        : n(node),
+          alpha(node->alpha),
+          beta(node->beta),
+          ply(node->ply),
+          depth(node->depth),
+          flags(node->flags)
+        {
+        }
+
+    ~NodeState() {
+        // reset saved parameters
+        n->alpha = alpha;
+        n->beta = beta;
+        n->depth = depth;
+        n->flags = flags;
+        // reset other parameters to pre-search state
+        n->best_score = alpha;
+        n->cutoff = 0;
+        n->num_quiets = n->num_legal = 0;
+        n->singularMove = n->best = n->last_move = NullMove;
+        (n+1)->pv[ply+1] = NullMove;
+        (n+1)->pv_length = 0;
+        n->pv[ply] = NullMove;
+        n->pv_length = 0;
+#ifdef MOVE_ORDER_STATS
+        n->best_count = 0;
+#endif
+    }
+
+private:
+    NodeInfo *n;
+    score_t alpha, beta;
+    int ply, depth, flags;
+};
+
+
 // There are 4 levels of verbosity.  Silent mode does no output to
 // the console - it is used by the Windows GUI. Test level is
 // used for verbose output from the "test" command. Whisper is
@@ -171,7 +212,7 @@ public:
 
 protected:
 
-    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8 };
+    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8, SINGULAR=16 };
 
     int calcExtensions(const Board &board,
                        NodeInfo *node,
