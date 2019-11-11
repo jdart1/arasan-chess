@@ -1280,7 +1280,6 @@ void Scoring::threatScore(const Board &board,
     // Pawn push threats as in Stockfish/Ethereal
     // compute pawn push destination square bitboard
     Bitboard pawns;
-    Bitboard mask();
     if (side == White) {
         pawns = board.pawn_bits[White];
         pawns.shl8();
@@ -2000,6 +1999,10 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 
       const int file = File(sq);
       const int rank = Rank(sq,side);
+#ifdef EVAL_DEBUG
+      const score_t mid_tmp = scores.mid;
+      const score_t end_tmp = scores.end;
+#endif
       if (board.rook_bits[side] & Attacks::file_mask[file-1]) {
           Bitboard atcks = (side == White) ? board.fileAttacksDown(sq) :
               board.fileAttacksUp(sq);
