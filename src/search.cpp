@@ -1167,9 +1167,6 @@ Move Search::ply0_search()
 #endif
                 }
                 if (fails+1 >= ASPIRATION_WINDOW_STEPS) {
-                    if (debugOut()) {
-                        cout << debugPrefix() << "warning, too many aspiration window steps" << endl;
-                    }
                     aspirationWindow = Constants::MATE;
                 }
                 else {
