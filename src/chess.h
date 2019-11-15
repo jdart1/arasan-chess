@@ -182,16 +182,6 @@ enum PieceType { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
 extern const int _sliders[16];
 extern const Piece _pieces[8][2];
 
-FORCEINLINE int Sliding(Piece p)
-{
-   return _sliders[p];
-}
-
-FORCEINLINE int Sliding(PieceType p)
-{
-   return _sliders[p];
-}
-
 FORCEINLINE Piece MakePiece( PieceType type, ColorType color ) {
   return _pieces[type][color];
 }
@@ -206,6 +196,16 @@ FORCEINLINE Piece MakeBlackPiece( PieceType type ) {
 
 FORCEINLINE PieceType TypeOfPiece( Piece piece ) {
   return ((PieceType)((int)piece & 7));
+}
+
+FORCEINLINE int Sliding(Piece p)
+{
+   return _sliders[TypeOfPiece(p)];
+}
+
+FORCEINLINE int Sliding(PieceType p)
+{
+   return _sliders[p];
 }
 
 FORCEINLINE ColorType PieceColor( Piece piece ) {

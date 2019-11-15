@@ -662,6 +662,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    while (knight_bits.iterate(sq)) {
       const Bitboard &knattacks = Attacks::knight_attacks[sq];
       ai.allAttacks[side] |= knattacks;
+      ai.knightAttacks[side] |= knattacks;
       ai.minorAttacks[side] |= knattacks;
       ai.attackedBy2[side] |= (knattacks & ai.allAttacks[side]);
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
@@ -709,6 +710,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       }
       Bitboard battacks(board.bishopAttacks(sq));
       ai.allAttacks[side] |= battacks;
+      ai.bishopAttacks[side] |= battacks;
       ai.minorAttacks[side] |= battacks;
       ai.attackedBy2[side] |= (battacks & ai.allAttacks[side]);
       int mobl = Bitboard(board.bishopAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
@@ -994,42 +996,58 @@ void calc_threat_deriv(Scoring &s, const Board &board,ColorType side, vector<dou
    const Bitboard oppMinors(board.knight_bits[oside] | board.bishop_bits[oside]);
    const Bitboard ourMinors(board.knight_bits[side] | board.bishop_bits[side]);
    const int mLevel = board.getMaterial(oside).materialLevel();
-   const Bitboard weak((ai.allAttacks[side] & ~ai.allAttacks[oside]) |
-                       (ai.attackedBy2[side] & ~ai.attackedBy2[oside] & ~ai.pawnAttacks[oside]));
-
-   Bitboard stronglyProtected(ai.pawnAttacks[oside] | (ai.attackedBy2[side] & ~ai.attackedBy2[oside]));
+   const Bitboard weak((ai.allAttacks[side] & ~ai.allAttacks[oside]) | ~ai.pawnAttacks[oside]);
 
    Bitboard nonPawns(board.occupied[oside] & ~board.pawn_bits[oside]);
 
    Bitboard safe(~ai.allAttacks[oside] | ai.allAttacks[side]);
 
-   Bitboard targets(nonPawns | (board.pawn_bits[oside] & ~stronglyProtected));
+   Bitboard targets(board.occupied[oside] & weak);
    targets.clear(board.kingSquare(oside));
+
+   Bitboard weakPawns(board.pawn_bits[oside] & weak);
+
+   Bitboard weakMinors((board.knight_bits[oside] | board.bishop_bits[oside]) & weak);
 
    // Threats by safe pawns
    Bitboard pawnThreats(board.allPawnAttacks(side,board.pawn_bits[side] & safe) & nonPawns);
    Square sq;
    while (pawnThreats.iterate(sq)) {
-       grads[Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-1] +=
+       ASSERT(TypeOfPiece(board[sq]) > Pawn);
+       ASSERT(Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-2 < Tune::THREAT_BY_KNIGHT);
+       grads[Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-2] +=
            tune_params.scale(inc,Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-1,mLevel);
-       grads[Tune::THREAT_BY_PAWN+4+TypeOfPiece(board[sq])-1] +=
-           tune_params.scale(inc,Tune::THREAT_BY_PAWN+4+TypeOfPiece(board[sq])-1,mLevel);
+       ASSERT(Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-2 < Tune::THREAT_BY_KNIGHT);
+       grads[Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-2] +=
+           tune_params.scale(inc,Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-1,mLevel);
    }
-   // minor attacks on pieces and pawns not pawn defended
-   Bitboard minorAttacks(ai.minorAttacks[side] & targets);
-   while (minorAttacks.iterate(sq)) {
-       grads[Tune::THREAT_BY_MINOR+TypeOfPiece(board[sq])-1] +=
-           tune_params.scale(inc,Tune::THREAT_BY_MINOR+TypeOfPiece(board[sq])-1,mLevel);
-       grads[Tune::THREAT_BY_MINOR+4+TypeOfPiece(board[sq])-1] +=
-           tune_params.scale(inc,Tune::THREAT_BY_MINOR+4+TypeOfPiece(board[sq])-1,mLevel);
+   Bitboard knightAttacks(ai.knightAttacks[side] & (weakMinors| board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
+   while (knightAttacks.iterate(sq)) {
+       ASSERT(Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_BISHOP);
+       grads[Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1] +=
+           tune_params.scale(inc,Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1,mLevel);
+       ASSERT(Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_BISHOP);
+       grads[Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1] +=
+           tune_params.scale(inc,Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1,mLevel);
+    }
+    Bitboard bishopAttacks(ai.bishopAttacks[side] & (weakMinors | board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
+    while (bishopAttacks.iterate(sq)) {
+       ASSERT(Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_ROOK);
+       grads[Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1] +=
+           tune_params.scale(inc,Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1,mLevel);
+       ASSERT(Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_ROOK);
+       grads[Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1] +=
+           tune_params.scale(inc,Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1,mLevel);
    }
    // rook attacks on pieces and pawns not pawn defended
-   Bitboard rookAttacks(ai.rookAttacks[side] & targets);
+   Bitboard rookAttacks(ai.rookAttacks[side] & (board.queen_bits[oside] | targets));
    while (rookAttacks.iterate(sq)) {
+       ASSERT(Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1 < Tune::KNIGHT_MOBILITY);
        grads[Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1,mLevel);
-       grads[Tune::THREAT_BY_ROOK+4+TypeOfPiece(board[sq])-1] +=
-           tune_params.scale(inc,Tune::THREAT_BY_ROOK+4+TypeOfPiece(board[sq])-1,mLevel);
+       ASSERT(Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1 < Tune::KNIGHT_MOBILITY);
+       grads[Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1] +=
+           tune_params.scale(inc,Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1,mLevel);
    }
    // Pawn push threats as in Stockfish/Ethereal
    // compute pawn push destination square bitboard

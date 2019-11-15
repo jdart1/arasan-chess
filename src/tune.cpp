@@ -14,7 +14,7 @@ static const score_t MOBILITY_RANGE = VAL(0.75);
 static const score_t OUTPOST_RANGE = VAL(0.65);
 static const score_t PST_RANGE = VAL(1.0);
 static const score_t PP_BLOCK_RANGE = VAL(0.65);
-static const score_t THREAT_RANGE = VAL(0.75);
+static const score_t THREAT_RANGE = VAL(1.0);
 static const score_t ENDGAME_KING_POS_RANGE = VAL(0.75);
 static const score_t SPAN_CONTROL_RANGE = VAL(0.75);
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
@@ -107,8 +107,8 @@ Tune::Tune()
         TuneParam(Tune::OWN_MINOR_KING_PROXIMITY,"own_minor_king_proximity",VAL(0.7),VAL(0),VAL(1.2),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_ROOK_KING_PROXIMITY,"own_rook_king_proximity",VAL(0.1),VAL(0),VAL(0.5),TuneParam::Midgame,1),
         TuneParam(Tune::OWN_QUEEN_KING_PROXIMITY,"own_queen_king_proximity",VAL(0.1),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_PUSH_THREAT_MID,"pawn_push_threat_mid",VAL(0.15),0,THREAT_RANGE,TuneParam::Midgame,1),
-        TuneParam(Tune::PAWN_PUSH_THREAT_END,"pawn_push_threat_end",VAL(0.15),0,THREAT_RANGE,TuneParam::Endgame,1),
+        TuneParam(Tune::PAWN_PUSH_THREAT_MID,"pawn_push_threat_mid",VAL(0.2),0,THREAT_RANGE,TuneParam::Midgame,1),
+        TuneParam(Tune::PAWN_PUSH_THREAT_END,"pawn_push_threat_end",VAL(0.2),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::ENDGAME_KING_THREAT,"endgame_king_threat",VAL(0.35),0,THREAT_RANGE,TuneParam::Endgame,1),
         TuneParam(Tune::BISHOP_TRAPPED,"bishop_trapped",VAL(-1.47),VAL(-2.0),VAL(-0.4)),
         TuneParam(Tune::BISHOP_PAIR_MID,"bishop_pair_mid",VAL(0.447),VAL(0.1),VAL(0.6),TuneParam::Midgame,1),
@@ -383,7 +383,7 @@ Tune::Tune()
    }
    ASSERT(i==THREAT_BY_PAWN);
    for (int phase = 0; phase < 2; phase++) {
-       for (int j = 0; j < 4; j++) {
+       for (int j = 0; j < 5; j++) {
            stringstream name;
            name << "threat_by_pawn" << j;
            if (phase == 0) {
@@ -395,23 +395,37 @@ Tune::Tune()
            push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,scales[phase],1));
        }
    }
-   ASSERT(i==THREAT_BY_MINOR);
+   ASSERT(i==THREAT_BY_KNIGHT);
    for (int phase = 0; phase < 2; phase++) {
-       for (int j = 0; j < 4; j++) {
+       for (int j = 0; j < 5; j++) {
            stringstream name;
-           name << "threat_by_minor" << j;
+           name << "threat_by_knight" << j;
            if (phase == 0) {
                name << "_mid";
            }
            else {
                name << "_end";
            }
-           push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,scales[phase],1));
+           push_back(TuneParam(i++,name.str(),phase ? VAL(0.4) : VAL(0.6),0,THREAT_RANGE,scales[phase],1));
+       }
+   }
+   ASSERT(i==THREAT_BY_BISHOP);
+   for (int phase = 0; phase < 2; phase++) {
+       for (int j = 0; j < 5; j++) {
+           stringstream name;
+           name << "threat_by_bishop" << j;
+           if (phase == 0) {
+               name << "_mid";
+           }
+           else {
+               name << "_end";
+           }
+           push_back(TuneParam(i++,name.str(),phase ? VAL(0.4) : VAL(0.6),0,THREAT_RANGE,scales[phase],1));
        }
    }
    ASSERT(i==THREAT_BY_ROOK);
    for (int phase = 0; phase < 2; phase++) {
-       for (int j = 0; j < 4; j++) {
+       for (int j = 0; j < 5; j++) {
            stringstream name;
            name << "threat_by_rook" << j;
            if (phase == 0) {
@@ -420,7 +434,7 @@ Tune::Tune()
            else {
                name << "_end";
            }
-           push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,scales[phase],1));
+           push_back(TuneParam(i++,name.str(),phase ? VAL(0.4) : VAL(0.7),0,THREAT_RANGE,scales[phase],1));
        }
    }
    // add mobility
@@ -755,18 +769,11 @@ void Tune::applyParams(bool check) const
    }
 
    for (int p = 0; p < 2; p++) {
-      for (int i = 0; i < 4; i++) {
-          Params::THREAT_BY_PAWN[p][i] = PARAM(THREAT_BY_PAWN+4*p+i);
-      }
-   }
-   for (int p = 0; p < 2; p++) {
-      for (int i = 0; i < 4; i++) {
-          Params::THREAT_BY_MINOR[p][i] = PARAM(THREAT_BY_MINOR+4*p+i);
-      }
-   }
-   for (int p = 0; p < 2; p++) {
-      for (int i = 0; i < 4; i++) {
-          Params::THREAT_BY_ROOK[p][i] = PARAM(THREAT_BY_ROOK+4*p+i);
+      for (int i = 0; i < 5; i++) {
+          Params::THREAT_BY_PAWN[p][i] = PARAM(THREAT_BY_PAWN+5*p+i);
+          Params::THREAT_BY_KNIGHT[p][i] = PARAM(THREAT_BY_KNIGHT+5*p+i);
+          Params::THREAT_BY_BISHOP[p][i] = PARAM(THREAT_BY_BISHOP+5*p+i);
+          Params::THREAT_BY_ROOK[p][i] = PARAM(THREAT_BY_ROOK+5*p+i);
       }
    }
    for (int i = 0; i < 9; i++) {

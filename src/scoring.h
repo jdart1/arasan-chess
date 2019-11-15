@@ -208,6 +208,8 @@ class Scoring
     {
         Bitboard allAttacks[2];
         Bitboard pawnAttacks[2];
+        Bitboard knightAttacks[2];
+        Bitboard bishopAttacks[2];
         Bitboard minorAttacks[2];
         Bitboard rookAttacks[2];
         Bitboard queenAttacks[2];

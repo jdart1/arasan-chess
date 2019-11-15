@@ -150,9 +150,10 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD ISOLATED_PAWN[2][8];
 
     // Threat scoring
-    static PARAM_MOD THREAT_BY_PAWN[2][4];
-    static PARAM_MOD THREAT_BY_MINOR[2][4];
-    static PARAM_MOD THREAT_BY_ROOK[2][4];
+    static PARAM_MOD THREAT_BY_PAWN[2][5];
+    static PARAM_MOD THREAT_BY_KNIGHT[2][5];
+    static PARAM_MOD THREAT_BY_BISHOP[2][5];
+    static PARAM_MOD THREAT_BY_ROOK[2][5];
 
     // Piece/square tables
     static PARAM_MOD KNIGHT_PST[2][64];
