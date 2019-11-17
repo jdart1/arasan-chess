@@ -73,14 +73,16 @@ class RunGames:
               return 2
 
           try:
-             output, errs = process.communicate(timeout=180)
+             output, errs = process.communicate(timeout=240)
           except subprocess.TimeoutExpired:
              process.kill()
-             print("cutechess timed out, was killed",file=sys.stderr)
+             print("cutechess-cli timed out, was killed",file=sys.stderr)
              output, errs = process.communicate()
+             return 2
           if process.returncode != 0:
-              for line in errs.splitlines():
-                  print(line,file=sys.stderr)
+              if errs != None:
+                  for line in errs.splitlines():
+                      print(line,file=sys.stderr)
               print('Could not execute command: %s' % command,file=sys.stderr)
               return 2
           # Convert Cutechess-cli's result into a numeric score.
