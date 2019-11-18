@@ -408,6 +408,13 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
         // Q vs RB or RN is already dealt with by piece values
         break;
     }
+    case 2:
+        if (ourmat.hasQueen() && ourmat.rookCount() == oppmat.rookCount() &&
+            oppmat.minorCount()-ourmat.minorCount() == 3) {
+            // Queen vs. 3 minors
+            score += APARAM(QUEEN_VS_3MINORS,std::min<int>(3,(ourmat.materialLevel()-9)/2));
+        }
+        break;
     default:
         break;
     }
@@ -470,6 +477,10 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
                  oppmat.infobits() == Material::KR) {
             // won for the stronger side
             score += 2*Params::PAWN_VALUE;
+        } else if (oppmat.infobits() == Material::KBBN ||
+                   oppmat.infobits() == Material::KBNN) {
+            // draw
+            score -= mdiff;
         }
     }
     else if (ourmat.infobits() == Material::KR) {
@@ -2586,6 +2597,8 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
    o << "const int Params::MINOR_FOR_PAWNS[6] = ";
    print_array(o,Params::MINOR_FOR_PAWNS,6);
+   o << "const int Params::QUEEN_VS_3MINORS[4] = ";
+   print_array(o,Params::QUEEN_VS_3MINORS,4);
    o << "const int Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
    o << "const int Params::KING_COVER[6][4] = {";

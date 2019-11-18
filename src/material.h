@@ -25,6 +25,8 @@ class Material
     enum {KRN = 0x101010};
     enum {KRBN = 0x101110};
     enum {KNN = 0x100020};
+    enum {KBNN = 0x100120};
+    enum {KBBN = 0x100210};
     enum {KRR = 0x102000};
     enum {KB  = 0x100100};
     enum {KN  = 0x100010};

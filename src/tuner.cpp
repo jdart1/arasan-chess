@@ -472,6 +472,12 @@ static void adjustMaterialScore(const Board &board, ColorType side,
         // Q vs RB or RN is already dealt with by piece values
         break;
     }
+    case 2:    
+        if (ourmat.hasQueen() && ourmat.rookCount() == oppmat.rookCount() &&
+            oppmat.minorCount()-ourmat.minorCount() == 3) {
+            // Queen vs. 3 minors
+            grads[Tune::QUEEN_VS_3MINORS0+std::min<int>(3,(ourmat.materialLevel()-9)/2)] += inc;
+        }
     default:
         break;
     }
