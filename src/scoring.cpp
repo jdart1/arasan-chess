@@ -484,23 +484,11 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
         }
     }
     else if (ourmat.infobits() == Material::KR) {
-        if (oppmat.infobits() == Material::KBN) { // close to even
-            score += (Params::KNIGHT_VALUE+Params::BISHOP_VALUE-Params::ROOK_VALUE)-Params::PAWN_VALUE/4;
-        }
-                                                  // even
-        else if (oppmat.infobits() == Material::KB) {
+        if (oppmat.infobits() == Material::KB) {
             score -= (Params::ROOK_VALUE-Params::BISHOP_VALUE);
         }
         else if (oppmat.infobits() == Material::KN) {
             score -= (Params::ROOK_VALUE-Params::KNIGHT_VALUE)-Params::PAWN_VALUE/4;
-        }
-        else if (oppmat.infobits() == Material::KRB) {
-           // even
-           score += Params::BISHOP_VALUE;
-        }
-        else if (oppmat.infobits() == Material::KRN) {
-           // even
-           score += Params::KNIGHT_VALUE;
         }
     }
     else if (ourmat.infobits() == Material::KRR) {
