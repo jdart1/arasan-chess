@@ -530,6 +530,11 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
                 oppmat.infobits() == Material::KR)) {
        // draw
        score -= mdiff;
+    } else if (ourmat.infobits() == Material::KQR &&
+               (oppmat.infobits() == Material::KQB ||
+                oppmat.infobits() == Material::KQN)) {
+        // draw
+        score -= mdiff;
     }
     return score;
 }

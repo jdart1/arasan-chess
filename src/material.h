@@ -34,6 +34,7 @@ class Material
     enum {KQ  = 0x110000};
     enum {KQN = 0x110010};
     enum {KQB = 0x110100};
+    enum {KQR = 0x111000};
 
     enum {PieceMask = 0x1ffff0};
         
