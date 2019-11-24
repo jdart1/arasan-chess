@@ -14,7 +14,7 @@
 #
 # Copyright 2019 by Jon Dart. All Rights Reserved.
 #
-import asyncio, sys, subprocess, time, chess, chess.engine, chess.uci, chess.pgn
+import asyncio, sys, subprocess, time, chess, chess.engine, chess.pgn
 
 class Options:
    engine_name = 'stockfish'
