@@ -924,10 +924,12 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       grads[Tune::PAWN_ATTACK_FACTOR] +=
           tune_params.scale(inc*scale_grad*oppKpe.pawn_attack_count/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_ATTACK_FACTOR,ourMatLevel);
 
-      for (int i=0; i < 8; i++) {
-          grads[Tune::PAWN_STORM+i] +=
-              tune_params.scale(inc*scale_grad*oppKpe.storm_counts[i]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_STORM+i,ourMatLevel);
-      }
+      int storm_index = 0;
+      for (int b = 0; b < 2; b++)
+          for (int f = 0; f < 4; f++)
+              for (int d = 0; d < 5; d++, storm_index++)
+                  grads[Tune::PAWN_STORM+storm_index] +=
+                      tune_params.scale(inc*scale_grad*oppKpe.storm_counts[b][f][d]/Params::KING_ATTACK_FACTOR_RESOLUTION,Tune::PAWN_STORM+storm_index,ourMatLevel);
 
       // compute partial derivatives for attack factors
       for (int i = Tune::MINOR_ATTACK_FACTOR;

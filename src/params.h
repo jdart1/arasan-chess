@@ -174,7 +174,8 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD KNIGHT_OUTPOST[2][2];
     static PARAM_MOD BISHOP_OUTPOST[2][2];
 
-    static PARAM_MOD PAWN_STORM[4][2];
+    // pawn storm [blocked][file][distance]
+    static PARAM_MOD PAWN_STORM[2][4][5];
 
     // not tuned presently (fixed)
     static const int MATERIAL_SCALE[32];

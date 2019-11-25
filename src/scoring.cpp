@@ -767,30 +767,43 @@ static int is_blocked(const Board &board, Square sq, ColorType side)
 void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &coverEntry,
     const Bitboard &oppPawnAttacks) {
     const ColorType oside = OppositeColor(side);
-    const Bitboard &pawns = board.pawn_bits[oside];
     Square ksq = board.kingSquare(side);
+    int krank = Rank(ksq,side);
+    int kfile = File(ksq);
+    if (kfile == 1) kfile = 2;
+    if (kfile == 8) kfile = 7;
     coverEntry.storm = 0;
     const int pawn_attack_count = Bitboard(oppPawnAttacks & kingPawnProximity[side][0][ksq]).bitCount();
 #ifdef TUNE
-    coverEntry.storm_counts.fill(0);
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 4; j++)
+            for (int k = 0; k < 5; k++)
+                coverEntry.storm_counts[i][j][k] = 0;
     coverEntry.pawn_attack_count = pawn_attack_count;
 #endif
     coverEntry.pawn_attacks = PARAM(PAWN_ATTACK_FACTOR)*pawn_attack_count;
-    for (int zone = 0; zone < 4; zone++) {
-        Bitboard b(kingPawnProximity[side][zone][ksq] & pawns);
-        Square sq;
-        while (b.iterate(sq)) {
-            int blocked = is_blocked(board,sq,oside);
-            coverEntry.storm += PARAM(PAWN_STORM)[zone][blocked];
-#ifdef EVAL_DEBUG
-            cout << "storm: " << ColorImage(side) << " " << SquareImage(sq) << " blocked=" << blocked << " zone=" << zone << endl;
+    for (int file = std::max<int>(1,kfile-1); file <= std::min<int>(8,kfile+1); file++) {
+        // find nearest enemy pawn at or above King
+        Square sq = MakeSquare(file,krank,side);
+        Square opp_pawn = side == White ?
+            (board.pawn_bits[oside] & Attacks::file_mask_up[sq]).firstOne() :
+            (board.pawn_bits[oside] & Attacks::file_mask_down[sq]).lastOne();
+        if (opp_pawn != InvalidSquare) {
+            const int opp_dist = Rank(opp_pawn,side) - krank;
+            if (opp_dist < 5) {
+                const int folded_file = file > 4 ? 8 - file : file-1;
+                const int blocked = is_blocked(board,opp_pawn,oside);
+                coverEntry.storm += PARAM(PAWN_STORM)[blocked][folded_file][opp_dist];
+#ifdef PAWN_DEBUG
+                cout << "storm: " << ColorImage(side) << " " << SquareImage(opp_pawn) << " blocked=" << blocked << endl;
 #endif
 #ifdef TUNE
-            coverEntry.storm_counts[zone*2+blocked]++;
+                coverEntry.storm_counts[blocked][folded_file][opp_dist]++;
 #endif
+            }
         }
     }
-#ifdef EVAL_DEBUG
+#ifdef PAWN_DEBUG
     cout << ColorImage(side) << " storm = " << coverEntry.storm << " pawn_attacks=" << coverEntry.pawn_attacks << endl;
 #endif
 }
@@ -2023,7 +2036,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             scores.end += PARAM(ROOK_BEHIND_PP_END);
          }
       }
-#ifdef PAWN_DEBUG
+#ifdef EVAL_DEBUG
       if ((mid_tmp != scores.mid) ||
           (end_tmp != scores.end)) {
          cout << "rook/passed pawn placement (" << ColorImage(side) << ") (";
@@ -2680,10 +2693,15 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::KNIGHT_OUTPOST[0],Params::KNIGHT_OUTPOST[1],2);
    o << "const int Params::BISHOP_OUTPOST[2][2] = ";
    print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
-   o << "const int Params::PAWN_STORM[4][2] = {";
-   for (int z = 0; z < 4; z++) {
-       print_array(o,Params::PAWN_STORM[z],2,0);
-       if (z < 3) o << ',';
+   o << "const int Params::PAWN_STORM[2][4][5] = {";
+   for (int b = 0; b < 2; b++) {
+       o << '{';
+       for (int f = 0; f < 4; f++) {
+           print_array(o,Params::PAWN_STORM[b][f],5,0);
+           if (f < 3) o << ',';
+       }
+       o << '}';
+       if (b < 1) o << ',';
    }
    o << "};" << endl;
 }

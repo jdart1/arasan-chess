@@ -546,15 +546,18 @@ Tune::Tune()
       push_back(TuneParam(i++,name.str(),val,val-score_t(0.75*Params::PAWN_VALUE),val+score_t(0.75*Params::PAWN_VALUE),TuneParam::Any,1));
    }
    ASSERT(i==PAWN_STORM);
-   for (int zone=0; zone<4; zone++) {
-       for (int b=0; b<2; b++) {
-           stringstream name;
-           name << "pawn_storm";
-           name << zone;
-           if (b) name << "_blocked";
-           int val = (4-zone)*4;
-           if (b) val /= 2;
-           push_back(TuneParam(i++,name.str(),val,0,50,TuneParam::Midgame,1));
+   for (int b=0; b<2; b++) {
+       for (int file=0; file<4; file++) {
+           for (int dist=0; dist<5; dist++) {
+               stringstream name;
+               name << "pawn_storm";
+               name << file;
+               name << '_' << dist;
+               if (b) name << "_blocked";
+               int val = (4-dist)*5;
+               if (b) val /= 2;
+               push_back(TuneParam(i++,name.str(),val,-VAL(0.5),VAL(0.5),TuneParam::Midgame,1));
+           }
        }
    }
 }
@@ -694,9 +697,12 @@ void Tune::applyParams(bool check) const
    for (int i = 0; i < 5; i++) {
       Params::QR_ADJUST[i] = PARAM(QR_ADJUST+i);
    }
-   for (int i = 0; i < 4; i++) {
-       for (int b = 0; b < 2; b++) {
-           Params::PAWN_STORM[i][b] = PARAM(PAWN_STORM+i*2+b);
+   int storm_index = 0;
+   for (int b = 0; b < 2; b++) {
+       for (int f = 0; f < 4; f++) {
+           for (int d = 0; d < 5; d++, storm_index++) {
+               Params::PAWN_STORM[b][f][d] = PARAM(PAWN_STORM+storm_index);
+           }
        }
    }
    for (int i = 0; i < Params::KING_ATTACK_SCALE_SIZE; i++) {
