@@ -70,7 +70,7 @@ one for GNU make.</p>
 
 <h2>Building Under Windows</h2>
 
-<p>The release binaries for Arasan were built with Visual Studio 2017
+<p>The release binaries for Arasan were built with Visual Studio 2019
 Community Edition. The engine binaries were built from
 the command-line using NMAKE, and the Arasan GUI was built with the
 Visual Studio project file.
@@ -135,7 +135,7 @@ though.
 
 <h3>Other build methods</h3>
 <ol>
-<li>The Windows source distribution includes Visual C++ 2017 solution
+<li>The Windows source distribution includes Visual C++ 2019 solution
 files for the chess engine and tools and GUI in
 directories "prj" and "gui", respectively. But I use the "prj" solution
 file mostly for debugging, not for building the final release.</li>
@@ -234,7 +234,7 @@ have the least effect and 100 causing them to have the maximum effect.
 Arasan comes with a book that was built from a
 combination of a fairly small hand-tuned book file (basic.pgn) and a fairly large
 collection of high-quality human and computer games. There are over
-700,000 moves in the book.</p>
+800,000 moves in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
 <pre>
@@ -317,14 +317,13 @@ any of these checks fail, an error box will be displayed with the
 assertion that failed.</p>
 
 <p>At runtime, adding the "-t" (trace) flag to the arasanx executable will
-cause it to output trace messages (beginning with '#') detailing its
-internal operations. This is mostly for Winboard/xboard. These messages
-will show up in the Winboard debug log if Winboard is started with the
-"-debugMode true" flag.</p>
-
-<p>If the source is compiled with /DUCI_LOG, then a similar log file 
-named "ucilog" is produced on disk when running in UCI mode. This however
-doesn't have exactly the same information shown by "-t".</p>
+cause it to output trace messages detailing its nternal operations. Trace
+messages are formatted approprately depending on
+the protocol (UCI or winboard). For Winboard, these messages
+will show up in the debug log if Winboard is started with the
+"-debugMode true" flag. For UCI engines, the debug output will appear as
+"info" output and will for example be recorded by cutechess-cli if the
+-debug option is specified.</p>
 
 <p>The chess engine supports a couple of commands to aid with testing. 
 The "eval" command followed by a filename will read the file (assumed
@@ -1273,12 +1272,12 @@ New York: Springer-Verlag.
 <p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.
 </p>
+<p>Thompson, William R. "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples". Biometrika, 25(3–4):285–294, 1933</p>
 <p>Wegner, Zach (2011) <a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&p=423024&t=40333&sid=7048574dbf26d14dfc7479d6fe9c2f23" target="_blank">Haswell New Instructions</a>.</p>
 <p>Weill, Jean-Christophe (1996). "The ABDADA Distributed Search Algorithm"
 Proceedings of the 1996 ACM 24th annual conference on Computer science, pp.
 131-138.
 </p>
-<p>Wikipedia: <a href="https://en.wikipedia.org/wiki/Thompson_sampling" target="_blank">Thompson sampling</a>.</p>
 <p>Winboard forum, discussion <a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=5997" target="_blank">"A Faster Magic Move Bitboard Generator?"</a></p>
 <p>Zobrist, A. L. (1970). "A new hashing method with applications for game
 playing," Technical report 88, Computer Science Department, University
