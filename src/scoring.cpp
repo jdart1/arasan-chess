@@ -2022,8 +2022,8 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       const int file = File(sq);
       const int rank = Rank(sq,side);
 #ifdef EVAL_DEBUG
-      const score_t mid_tmp = scores.mid;
-      const score_t end_tmp = scores.end;
+      score_t mid_tmp = scores.mid;
+      score_t end_tmp = scores.end;
 #endif
       if (board.rook_bits[side] & Attacks::file_mask[file-1]) {
           Bitboard atcks = (side == White) ? board.fileAttacksDown(sq) :
@@ -2044,12 +2044,26 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
             scores.end - end_tmp << ")" << endl;
       }
 #endif
-      Bitboard ahead = (side == White) ? Attacks::file_mask_up[file-1] :
-         Attacks::file_mask_down[file-1];
+      Bitboard ahead = (side == White) ? Attacks::file_mask_up[sq] :
+         Attacks::file_mask_down[sq];
+#ifdef EVAL_DEBUG
+      mid_tmp = scores.mid;
+      end_tmp = scores.end;
+#endif
       if (!(ai.allAttacks[oside] & ahead) && !(board.allOccupied & ahead)) {
           scores.mid += PARAM(QUEENING_PATH_CLEAR)[Midgame][rank-2];
           scores.end += PARAM(QUEENING_PATH_CLEAR)[Endgame][rank-2];
       }
+#ifdef EVAL_DEBUG
+      if ((mid_tmp != scores.mid) ||
+          (end_tmp != scores.end)) {
+         cout << "queening path clear (" << ColorImage(side) << ") (";
+         cout << scores.mid - mid_tmp << ", " <<
+            scores.end - end_tmp << ")" << endl;
+      }
+      mid_tmp = scores.mid;
+      end_tmp = scores.end;
+#endif
       if (rank >= 5) {
           // evaluate control of next square to advance to
           Square pathSq = MakeSquare(file, rank+1, side);
@@ -2070,6 +2084,16 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
               }
           }
       }
+#ifdef EVAL_DEBUG
+      if ((mid_tmp != scores.mid) ||
+          (end_tmp != scores.end)) {
+         cout << "queening path control (" << ColorImage(side) << ") (";
+         cout << scores.mid - mid_tmp << ", " <<
+            scores.end - end_tmp << ")" << endl;
+      }
+      mid_tmp = scores.mid;
+      end_tmp = scores.end;
+#endif
    }
 
 #ifdef PAWN_DEBUG

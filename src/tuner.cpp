@@ -1134,8 +1134,8 @@ void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vector<doub
                 }
             }
             // evaluate control of Queening path
-            Bitboard ahead = (side == White) ? Attacks::file_mask_up[file-1] :
-                Attacks::file_mask_down[file-1];
+            Bitboard ahead = (side == White) ? Attacks::file_mask_up[sq] :
+                Attacks::file_mask_down[sq];
             if (!(ai.allAttacks[oside] & ahead) && !(board.allOccupied & ahead)) {
                 grads[Tune::QUEENING_PATH_CLEAR_MID2+rank-2] +=
                     tune_params.scale(inc,Tune::QUEENING_PATH_CLEAR_MID2+rank-2,mLevel);
