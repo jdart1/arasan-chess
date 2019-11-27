@@ -2691,16 +2691,16 @@ score_t Search::search()
             node->eval = hashValue;
         }
     }
+    ASSERT(node->staticEval != Constants::INVALID_SCORE);
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
         !(node->flags & (IID|VERIFY|SINGULAR)) &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
-    const int improving = ply < 2 ||
-       node->staticEval >= (node-2)->staticEval ||
-       node->staticEval == Constants::INVALID_SCORE ||
-       (node-2)->staticEval == Constants::INVALID_SCORE;
+    const int improving = ply >= 3 && !in_check &&
+        (node-2)->staticEval != Constants::INVALID_SCORE &&
+        (node->staticEval >= (node-2)->staticEval);
 
     // Reset killer moves for children (idea from Ethereal)
     context.clearKillers(node->ply+1);
