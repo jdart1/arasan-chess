@@ -59,7 +59,7 @@ def process_info(info,results):
        print("no multiv")
        return
    if "time" in result:
-      time_str = result["time"]
+      time = result["time"]
    if "nodes" in result:
       node_str = result["nodes"]
    if "pv" in result:
@@ -67,9 +67,10 @@ def process_info(info,results):
       # get current bm from the pv
       move = pv_str[0]
       if correct(move,position):
-          if (results.solution_time == 0):
-              results.solution_time = int(time_str)
-          if (results.solution_nodes == 0):
+          if (time != None and results.solution_time == 0):
+              # convert to milliseconds
+              results.solution_time = int(1000*time)
+          if (node_str != None and results.solution_nodes == 0):
               results.solution_nodes = int(node_str)
       else:
           # solution was found but now a different move is selected
