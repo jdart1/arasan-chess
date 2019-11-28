@@ -46,7 +46,7 @@ def correct(bestmove,position):
           return True
        return False
 
-def process_info(info):
+def process_info(info,results):
    multipv = None
    if "multipv" in info:
       multipv = int(info["multipv"])
@@ -71,9 +71,10 @@ def process_info(info):
               results.solution_time = int(time_str)
           if (results.solution_nodes == 0):
               results.solution_nodes = int(node_str)
-          else:
-              results.solution_time = 0
-              results.solution_nodes = 0
+      else:
+          # solution was found but now a different move is selected
+          results.solution_time = 0
+          results.solution_nodes = 0
 
 def init(engine,options):
     # note: multipv not set here
@@ -187,28 +188,28 @@ def main(argv = None):
                with engine.analysis(board=position.board,
                                     limit=chess.engine.Limit(time=options.search_time),multipv=options.multi_pv_value) as analysis:
                   for info in analysis:
-                     process_info(info)
+                     process_info(info,results)
                # print last group of results
-               group = 0
                for i in range(1,options.multi_pv_value+1):
+                   group = 0
                    infos = results.infos[i]
                    for key in ["depth","seldepth","multipv","score","nodes",
                                "nps","hashfull","tbhits","time","pv"]:
-                       #print( str(infos[key]))
-                       if (group != 0):
-                          print(" ",end="")
-                       print(key + " ",end="")
-                       if (key == "pv"):
-                          fen = position.board.fen()
-                          for m in infos[key]:
-                             san = position.board.san(m)
-                             print(san,end="")
-                             print(" ",end="")
-                             position.board.push(m)
-                          # restore board
-                          position.board.set_fen(fen)
-                       else:
-                          print(infos[key],end="")
+                       if key in infos:
+                           if (group != 0):
+                              print(" ",end="")
+                           print(key + " ",end="")
+                           if (key == "pv"):
+                              fen = position.board.fen()
+                              for m in infos[key]:
+                                  san = position.board.san(m)
+                                  print(san,end="")
+                                  print(" ",end="")
+                                  position.board.push(m)
+                              # restore board
+                              position.board.set_fen(fen)
+                           else:
+                              print(infos[key],end="")
                        group = group + 1
                    print()
 
@@ -221,7 +222,7 @@ def main(argv = None):
                      solved = solved + 1
                   else:
                      print("-- not solved", flush=True)
-    engine_instance.quit()
+    engine.quit()
     print()
     print("solved: " + str(solved))
 
