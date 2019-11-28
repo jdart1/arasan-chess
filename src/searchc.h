@@ -90,7 +90,7 @@ private:
 
     int bonus(int depth) const noexcept;
 
-    void update(int &val, int bonus, int divisor);
+    void update(int &val, int bonus, int divisor, bool is_best);
 };
 
 #endif
