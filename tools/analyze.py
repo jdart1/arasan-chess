@@ -58,7 +58,6 @@ def process_info(info,results):
    try:
       result = results.infos[1]
    except KeyError:
-       print("no multiv")
        return
    if "time" in result:
       time = result["time"]
@@ -224,14 +223,17 @@ def main(argv = None):
                   tried = tried + 1
                   if correct(results.bestmove,position):
                      solved = solved + 1
-                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds (" + str(results.solution_nodes) + " nodes)")
-                     print("solved: " + str(solved) + " out of " + str(tried) + ";  " + str(round(solved * 100 /tried,1)) + "%", flush=True)
+                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds ("
+                            + str(results.solution_nodes)
+                            + " nodes)" + " (" + str(solved) + " out of " + str(tried) + " solved, "
+                            + str(round(solved * 100 /tried,1)) + "%)", flush=True)
+
                   else:
-                     print("-- not solved")
-                     print("solved: " + str(solved) + " out of " + str(tried) + ";  " + str(round(solved * 100 /tried,1)) + "%", flush=True)
+                     print("-- not solved" + " (" + str(solved) + " out of " + str(tried) + " solved, "
+                            + str(round(solved * 100 /tried,1)) + "%)", flush=True)
     engine.quit()
     print()
-    print("RUN COMPLETED - solved: " + str(solved) + " out of " + str(tried) + ";  " + str(round(solved * 100 /tried,1)) + "%")
+    print("RUN COMPLETED - " + str(solved) + " out of " + str(tried) + " solved (" + str(round(solved * 100 /tried,1)) + "%)")
 
 if __name__ == "__main__":
     sys.exit(main())
