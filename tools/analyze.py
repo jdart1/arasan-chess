@@ -11,6 +11,7 @@ class Options:
    search_time = 60
    cores = 1
    hash_size = 4000
+   syzygy = '/syzygypath'
 
 class Results:
    # the current position's results indexed by multipv index
@@ -33,6 +34,7 @@ position = Position()
 done = False
 
 solved = 0
+tried = 0
 
 def correct(bestmove,position):
     if not ('bm' in position.ops) and not ('am' in position.ops):
@@ -56,7 +58,6 @@ def process_info(info,results):
    try:
       result = results.infos[1]
    except KeyError:
-       print("no multiv")
        return
    if "time" in result:
       time = result["time"]
@@ -79,7 +80,7 @@ def process_info(info,results):
 
 def init(engine,options):
     # note: multipv not set here
-    engine.configure({'Hash': options.hash_size, 'Threads': options.cores})
+    engine.configure({'Hash': options.hash_size, 'Syzygypath': options.syzygy, 'Threads': options.cores})
     print("engine ready")
 
 def main(argv = None):
@@ -87,6 +88,7 @@ def main(argv = None):
     global results
     global position
     global solved
+    global tried
 
     engine = None
 
@@ -218,14 +220,20 @@ def main(argv = None):
                if (pv != None):
                   results.bestmove = pv[0]
                if (results.bestmove != None):
+                  tried = tried + 1
                   if correct(results.bestmove,position):
-                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds (" + str(results.solution_nodes) + " nodes)",flush=True)
                      solved = solved + 1
+                     print("++ solved in " + str(results.solution_time/1000.0) + " seconds ("
+                            + str(results.solution_nodes)
+                            + " nodes)" + " (" + str(solved) + " out of " + str(tried) + " solved, "
+                            + str(round(solved * 100 /tried,1)) + "%)", flush=True)
+
                   else:
-                     print("-- not solved", flush=True)
+                     print("-- not solved" + " (" + str(solved) + " out of " + str(tried) + " solved, "
+                            + str(round(solved * 100 /tried,1)) + "%)", flush=True)
     engine.quit()
     print()
-    print("solved: " + str(solved))
+    print("RUN COMPLETED - " + str(solved) + " out of " + str(tried) + " solved (" + str(round(solved * 100 /tried,1)) + "%)")
 
 if __name__ == "__main__":
     sys.exit(main())
