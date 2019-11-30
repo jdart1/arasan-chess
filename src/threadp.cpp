@@ -194,9 +194,7 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
     controller(ctrl), nThreads(n) {
 
    LockInit(poolLock);
-   for (int i = 0; i < Constants::MaxCPUs; i++) {
-      data[i] = nullptr;
-   }
+   data.fill(nullptr);
 #ifndef _WIN32
    if (pthread_attr_init (&stackSizeAttrib)) {
       perror("pthread_attr_init");
@@ -343,7 +341,7 @@ void ThreadPool::resize(unsigned n) {
 }
 
 int ThreadPool::activeCount() const {
-    return (activeMask & availableMask).count();
+    return static_cast<int>((activeMask & availableMask).count());
 }
 
 uint64_t ThreadPool::totalNodes() const
