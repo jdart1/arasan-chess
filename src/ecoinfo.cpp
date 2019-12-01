@@ -1,6 +1,8 @@
 // Copyright 1994 by Jon Dart.
 #include "ecoinfo.h"
 
+#include <cstring>
+
 ECO_Info::ECO_Info()
 {
 }
