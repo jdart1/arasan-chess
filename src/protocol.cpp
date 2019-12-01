@@ -704,11 +704,13 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
             if (srctype != FixedDepth) {
                 // Compute how much longer we must search
                 ColorType side = controller->getComputerSide();
+                if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                                 movestogo << endl;
                 time_target =
                     (srctype == FixedTime) ? time_limit :
                     timeMgmt::calcTimeLimitUCI(movestogo,
                                      side == White ? winc : binc,
-                                     time_left, !easy, doTrace);
+                                     time_left, !easy);
                 if (doTrace) {
                     stringstream s;
                     s << "time_left=" << time_left << " opp_time=" << opp_time << " time_target=" <<
@@ -879,13 +881,15 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 if (srctype != FixedDepth) {
                     // Compute how much longer we must search
                     ColorType side = controller->getComputerSide();
+                    if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                                     movestogo << endl;
                     time_target =
                         (srctype == FixedTime) ? time_limit :
                         (uci ? timeMgmt::calcTimeLimitUCI(movestogo,
                                                 getIncrUCI(side),
                                                 time_left,
-                                                true, doTrace)
-                         : timeMgmt::calcTimeLimit(moves, incr, time_left, true, doTrace));
+                                                true)
+                         : timeMgmt::calcTimeLimit(moves, incr, time_left, true));
                     if (doTrace) {
                         cout << debugPrefix() << "time_target = " << time_target << endl;
                         cout << debugPrefix() << "xtra time = " << calc_extra_time(side) << endl;
@@ -1127,12 +1131,14 @@ Move Protocol::search(SearchController *searcher, Board &board,
             if (infinite) {
                 time_target = INFINITE_TIME;
             } else {
+                if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                                 movestogo << endl;
                 time_target =
                     (srctype == FixedTime) ? time_limit :
                     (uci ? timeMgmt::calcTimeLimitUCI(movestogo,
                                             getIncrUCI(board.sideToMove()),
-                                            time_left, false, doTrace)
-                     : timeMgmt::calcTimeLimit(moves, incr, time_left, false, doTrace));
+                                            time_left, false)
+                     : timeMgmt::calcTimeLimit(moves, incr, time_left, false));
                 last_time_target = time_target;
             }
             if (doTrace) {

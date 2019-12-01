@@ -13,11 +13,11 @@ namespace timeMgmt {
 // trace = 1 if tracing on, 0 if off
 // Returns: search time in milliseconds 
 extern int calcTimeLimit(int moves, int incr, 
-      int time_left, bool ponder, int trace);
+      int time_left, bool ponder);
 
 // UCI version
 extern int calcTimeLimitUCI(int movestogo, int incr, 
-      int time_left, bool ponder, int trace);
+      int time_left, bool ponder);
 
 // Determine if we are allowed to use any time beyond the normal
 // time target
