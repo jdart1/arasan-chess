@@ -99,7 +99,7 @@ async def main(argv = None):
           # game result
           result = g.headers['Result']
           if (result == None or result == "*"):
-             ok = false
+             ok = False
           else:
              if (result == "0-1"):
                  ok = (score <= -options.win_threshold)
@@ -109,7 +109,7 @@ async def main(argv = None):
                  ok = (abs(score) <= options.draw_threshold)
              else:
                  print("Invalid game result %s" % result,file=sys.stderr)
-                 ok = false
+                 ok = False
           if ok:
              g.accept(chess.pgn.FileExporter(sys.stdout))     
     finally:    
