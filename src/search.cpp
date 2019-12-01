@@ -38,7 +38,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
-static const int FUTILITY_HISTORY_THRESHOLD[2] = {12000, 6000};
+static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
@@ -2381,8 +2381,8 @@ int Search::calcExtensions(const Board &board,
            }
            // futility pruning, enabled at low depths. Do not prune
            // moves with good history.
-           if (pruneDepth <= FUTILITY_DEPTH /* && context.scoreForOrdering(move,node,board.sideToMove())<
-                   FUTILITY_HISTORY_THRESHOLD[improving]*/){
+           if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
+                   FUTILITY_HISTORY_THRESHOLD[improving]){
                // Threshold was formerly increased with the move index
                // but this tests worse now.
                score_t threshold = node->beta - futilityMargin(pruneDepth);
