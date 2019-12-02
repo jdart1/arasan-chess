@@ -1,11 +1,11 @@
-Arasan 21.4 test results, 64-bit BMI2 build, 5-man Syzygy tbs
+Arasan 22.0 test results, 64-bit BMI2 build, 5-man Syzygy tbs
 Hardware: i7-6700k @ 4GHz (4 cores), 8GB hash, xUbuntu x64
 
-arasan20  60 seconds/move	137/200
-ecmgcp	  10 seconds/move       168/183
-iq4       10 seconds/move       161/183
-wacnew    10 seconds/move       297/300
-pet       60 seconds/move       44/48
-eet       60 seconds/move       92/100
-bt2630	  900 seconds/move      29/30	rating = 2600
-lapuce2   600 seconds/move      34/35	rating = 2920
+arasan20  60 seconds/move	125/200
+ecmgcp	  10 seconds/move       162/183
+iq4       10 seconds/move       166/183
+wacnew    10 seconds/move       298/300
+pet       60 seconds/move       43/48
+eet       60 seconds/move       91/100
+bt2630	  900 seconds/move      28/30	rating = 2570
+lapuce2   600 seconds/move      33/35	rating = 2890
