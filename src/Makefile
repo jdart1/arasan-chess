@@ -1,8 +1,8 @@
 #
-# Gnu Makefile for Arasan 21.4
-# Copyright 2004-2018 by Jon Dart. All Rights Reserved.
+# Gnu Makefile for Arasan 22.0
+# Copyright 2004-2019 by Jon Dart. All Rights Reserved.
 #
-VERSION = 21.4
+VERSION = 22.0
 
 # paths, modify as needed:
 
@@ -201,14 +201,6 @@ tuning-popcnt: dirs
 	@$(MAKE) TUNER=$(TUNER)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 tuning
 
 utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
-
-# Solaris target: note only GCC is supported
-sparc-solaris:
-	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= LIBS='$(LIBS)' CFLAGS='$(CFLAGS)' all
-
-# Arm target on Arm host with GCC
-arm-linux:
-	@$(MAKE) CC=g++ OPT='$(OPT)' SSE= CFLAGS='$(CFLAGS)' all
 
 clean: dirs
 	rm -f $(BUILD)/*.o

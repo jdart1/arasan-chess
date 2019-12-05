@@ -1,3 +1,41 @@
+Changes in Arasan 22.0:
+ 1) Makefile fixes: add -flto to optimized builds. Fix PGO builds with clang.
+    Don't use gold linker on MacOS (fixes #24).
+ 2) Don't allow termination due to hitting a time limit until at least
+    one thread has completed an entire search iteration (to prevent
+    failing low and having no move).
+ 3) Remove UCI logging feature (enabled with -DUCI_LOG). Support runtime
+    debugging under UCI via the "debug" command.
+ 4) Allow LMR of capture/promotions past LMP threshold, with less
+    reduction.
+ 5) Change bishop attack function w. transparency so that both Queens
+    and Bishops are considered transparent. Re-tune.
+ 6) Simplify and modify king safety.
+ 7) Performance fix for tuner: Reduce locking by reading line under lock then parsing EPD.
+ 8) Remove byte typedef, to allow compilation under C++17.
+ 9) Use condition variable instead of polling to wait for threads to complete.
+ 10) Re-work threat scoring. Calculate full attack info for both sides
+    before doing threat scoring. Change calculation of threats, now
+    similar to Stockfish. Add scoring for threats by pawn push to safe squares.
+ 11) Fixes for repetition detection after null move: keep separate counter
+    for plies from last null move, as in Stockfish.
+ 12) Changes to time management.
+ 13) Eval changes including passers, own pieces protecting king under attack, pawn
+     storm.
+ 14) Fixes to singular extension code. Revert back to calling search recursively
+    to do singular search. 
+ 15) Bug fixes in matreiral scoring: 
+    a. Don't apply material score corrections for pawnless endgames twice (once
+    for each side).
+    b. Exclude special-case endgames with non-tunable params from tuning.
+ 16) Score pawnless Q vs R + minor as draw.
+ 17) Change piece values. Re-tune.
+ 18) Update tools to be compatible with latest python-chess.
+ 19) don't set improving = true if in check or if previous ply score not avaialble
+ 20) Change history score calculation (similar to Laser). Modify history
+     pruning thresholds.
+ 21) Add Cmake support (WIP).
+
 Changes in Arasan 21.4:
  1) Update to use latest Fathom library with 7-man tb support.
  2) Use Fathom ranking API for tb moves at root.
