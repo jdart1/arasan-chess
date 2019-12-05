@@ -95,7 +95,7 @@ installed and its path set in the Makefile (or passed to it) in the
 variable GIT_ARCHIVE_ALL_PATH. And that tool calls "git archive" so
 "make release" needs to be run from within a git repository.
 
-"make install" will install Arasan binaries into /usr/local/bin/arasan-<version>.0.
+"make install" will install Arasan binaries into /usr/local/bin/arasan-\<version>.
 (You will need to be root, or use sudo, to execute "make install"). 
 
 # Building on Windows
