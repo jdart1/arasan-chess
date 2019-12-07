@@ -1561,7 +1561,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     }
     else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
              board.checkStatus() != InCheck) {
-        context.setKiller((const Move)node->best, node->ply);
+        context.setKiller(node->best, node->ply);
         context.updateStats(board, node);
     }
 #ifdef MOVE_ORDER_STATS
@@ -3200,7 +3200,7 @@ score_t Search::search()
     }
     if (!(node->flags & SINGULAR) && !IsNull(node->best) && !CaptureOrPromotion(node->best) &&
         board.checkStatus() != InCheck) {
-        context.setKiller((const Move)node->best, node->ply);
+        context.setKiller(node->best, node->ply);
         if (node->ply > 0) {
             context.setCounterMove(board,(node-1)->last_move,node->best);
         }
