@@ -183,3 +183,4 @@ or support [MingW](http://mingw.org/).
 
 There is a CMakeLists.txt file in the source directory, for building with [CMake](https://cmake.org/).
 This should be considered somewhat experimental. It does not currently support PGO.
+It does support [cross-compliation for Android]](https://developer.android.com/ndk/guides/cmake#android_platform).
