@@ -1,8 +1,8 @@
 post 21.0
 
-1. Android build, support cross-compilation
+1. Android build, support cross-compilation (now supported via CMake)
 
-2. Use CMAKE to avoid need for different Makefiles.
+2. Use CMAKE to avoid need for different Makefiles (done).
 
 3. Revisit IID conditions. Consider IID even when hash move is present but depth is low (Gull)
 
@@ -21,7 +21,7 @@ post 21.0
     d.  Consider L1 regularization for tuner, possibly with smooth approximation (http://pages.cs.wisc.edu/~gfung/GeneralL1/L1_approx_bounds.pdf)
     e.  Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper (http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf).
 
-9. Occasionally there are losses on time - tune time mgmt when very near time limit.
+9. Occasionally there are losses on time - tune time mgmt when very near time limit (fixed this for moves/minute types of TC).
 
 10. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on. (This has been at least partialy addresed).
 

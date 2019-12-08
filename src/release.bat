@@ -1,6 +1,8 @@
 pushd ..
+7z u -tzip -orelease %1 README.md
 7z u -tzip -orelease %1 src\*.cpp
-7z u -tzip -orelease %1 src\*.h src\*.cpp src\*.c src\Makefile src\Makefile.icl
+7z u -tzip -orelease %1 src\*.h src\*.cpp src\*.c src\Makefile
+7z u -tzip -orelease %1 src\CMakeLists.txt
 7z u -tzip -orelease %1 src\release.bat
 7z u -tzip -orelease %1 src\syzygy\*.*
 7z u -tzip -orelease %1 src\syzygy\src\*.*
@@ -14,8 +16,7 @@ pushd ..
 7z u -tzip -orelease %1 book\basic.pgn book\eco
 7z u -tzip -orelease %1 doc\programr.html doc\style_pg.css
 7z u -tzip -orelease %1 doc\*license*.txt
-7z u -tzip -orelease %1 doc\readme.txt
-7z u -tzip -orelease %1 doc\TODO doc\CHANGES
+7z u -tzip -orelease %1 doc\TODO doc\CHANGES doc\BUILD.md
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd
 7z u -tzip -orelease %1 tests\arasan20.epd tests\pet.epd tests\prof
 7z u -tzip -orelease %1 tests\eet.epd

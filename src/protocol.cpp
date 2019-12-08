@@ -1675,6 +1675,8 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<unsigned>(value,options.book.scoring);
     } else if (name == "Can resign") {
         setCheckOption(value,options.search.can_resign);
+    } else if (name == "Resign threshold") {
+        Options::setOption<int>(value,options.search.resign_threshold);
     } else if (name == "Position learning") {
         setCheckOption(value,options.learning.position_learning);
     } else if (name == "Strength") {
@@ -2424,6 +2426,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.weighting << " 1 100\"";
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
+        cout << " option=\"Resign threshold -spin " <<
+            options.search.resign_threshold << "-1000 0" << "\"";
         cout << " option=\"Position learning -check " <<
             options.learning.position_learning << "\"";
         // strength option (new for 14.2)

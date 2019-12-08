@@ -15,7 +15,7 @@ Following is a sketch of the Arasan source directory tree:
 
 ```
 arasan
-  <version>
+  \<version>
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     book    - text files for opening book and ECO recognizer
@@ -35,7 +35,7 @@ Arasan now requires a modern compiler with C++11 features (although
 not necessarily complete C++11 support).
 
 Limited testing has been done on other OSs and architectures other
-than x32 and amd64.  However, the code is believed to be portable.
+than x32 and amd64.  However, the code is designed to be portable.
 In particular, there is support for big-endian architectures.
 
 # Building on Linux or Mac
@@ -100,10 +100,9 @@ variable GIT_ARCHIVE_ALL_PATH. And that tool calls "git archive" so
 
 # Building on Windows
 
-The release binaries for Arasan were built with Visual Studio 2019
-Community Edition. The engine binaries were built from
+The release engine binaries for Arasan were built built from
 the command-line using NMAKE, and the Arasan GUI was built with the
-Visual Studio project file.
+Visual Studio Community Edition, using the project file.
 
 ## Recommended build method
 
@@ -131,8 +130,8 @@ The following targets are defined in the makefile:
 - release: builds the release zip file for Windows
 
 Release binaries from a build are placed in the
-"<target>\Release" directory, where <target> is "win32" or "win64",
-while the debug objects and binaries are put into "<target>\Debug".
+"\<target>\Release" directory, where <target> is "win32" or "win64",
+while the debug objects and binaries are put into "\<target>\Debug".
 
 The default target is 64-bit Windows. For a 32-bit build, edit the
 Makefile to select TARGET=win32 and run the same build commands.
@@ -147,16 +146,6 @@ reliable way to get it that I have found is to uninstall all recent
 Visual Studio versions, install Visual C++ 2012 Professional
 (available from my.visualstudio.com), and then re-install any more
 recent Visual Studio release you may have.
-
-## Building with Intel C++
-
-You can also use the Intel C++ compiler but a recent version is
-required, at least version 13.0.  Use the alternate Makefile if your
-compiler is Intel C++, like this:
-
-nmake -f Makefile.icl popcnt-profiled
-
-Note: Intel C++ does not support Windows Xp.
 
 ## Building the Arasan Windows GUI
 
