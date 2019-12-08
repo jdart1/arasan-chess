@@ -24,7 +24,7 @@ Changes in Arasan 22.0:
      storm.
  14) Fixes to singular extension code. Revert back to calling search recursively
     to do singular search. 
- 15) Bug fixes in matreiral scoring: 
+ 15) Bug fixes in material scoring: 
     a. Don't apply material score corrections for pawnless endgames twice (once
     for each side).
     b. Exclude special-case endgames with non-tunable params from tuning.
