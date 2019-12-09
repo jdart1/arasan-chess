@@ -182,7 +182,7 @@ $(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \
 $(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\log.obj \
 $(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
 $(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
-$(TUNE_BUILD)\learn.obj \
+$(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\protocol.obj $(TUNE_BUILD)\tester.obj \
 $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\threadc.obj \
 $(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
