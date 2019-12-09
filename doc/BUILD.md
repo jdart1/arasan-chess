@@ -91,8 +91,8 @@ build.
 Note: "make release" will build the release tarball and place it in the
 release subdirectory. This target uses a Python tool git-archive-all
 (https://github.com/Kentzo/git-archive-all), which needs to be
-installed and its path set in the Makefile (or passed to it) in the
-variable GIT_ARCHIVE_ALL_PATH. And that tool calls "git archive" so
+installed and its path set in the Makefile (or passed to it in the
+variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive" so
 "make release" needs to be run from within a git repository.
 
 "make install" will install Arasan binaries into /usr/local/bin/arasan-\<version>.
