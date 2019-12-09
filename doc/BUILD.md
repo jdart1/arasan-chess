@@ -15,7 +15,7 @@ Following is a sketch of the Arasan source directory tree:
 
 ```
 arasan
-  \<version>
+  <version>
     src     - source code for the chess engine and related tools
     gui     - source code for the Arasan user interface (Windows only)
     book    - text files for opening book and ECO recognizer
@@ -172,4 +172,4 @@ or support [MingW](http://mingw.org/).
 
 There is a CMakeLists.txt file in the source directory, for building with [CMake](https://cmake.org/).
 This should be considered somewhat experimental. It does not currently support PGO.
-It does support [cross-compliation for Android]](https://developer.android.com/ndk/guides/cmake#android_platform).
+It does support [cross-compliation for Android](https://developer.android.com/ndk/guides/cmake#android_platform).
