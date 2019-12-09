@@ -724,6 +724,7 @@ const struct ECOData eco_codes[] =
 {"B82", 0x73d6edf64ca7cb01ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B82", 0xff89c46163405449ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B82", 0x126dbdc502905c7dULL ,"Sicilian Defense, Scheveningen Variation"},
+{"B82", 0xcf2c2330c2e3015ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B83", 0x131eefeb267d0f66ULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B83", 0x909be2653548d1fdULL ,"Sicilian Defense, Scheveningen Variation"},
 {"B83", 0xbec732b24a62e2dcULL ,"Sicilian Defense, Scheveningen Variation"},
