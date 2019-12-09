@@ -143,7 +143,7 @@ So if using a GUI you should if possible set the tablebase path and related
 options in the GUI, not in the file.
 
 The Arasan distribution does not come with any tablebase files. Syzygy
-tablebases can be downloaded from https://https://syzygy-tables.info/.
+tablebases can be downloaded from https://syzygy-tables.info/.
 
 ## Programming and build information
 
