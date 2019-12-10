@@ -31,6 +31,14 @@ one for GNU make.
 
 Syzygy tablebase support is enabled by default.
 
+The Syzygy probing code is now imported as a submodule from
+jdart1/Fathom. So to obtain this code in your source tree, you
+should issue the command:
+
+git submodule update --init --recursive
+
+in your repository directory.
+
 Arasan now requires a modern compiler with C++11 features (although
 not necessarily complete C++11 support).
 
@@ -41,14 +49,6 @@ In particular, there is support for big-endian architectures.
 # Building on Linux or Mac
 
 Gcc 4.9 or above is recommended for building Arasan (on Mac OS, use clang).
-
-The Syzygy probing code is now imported as a submodule from
-jdart1/Fathom. So to obtain this code in your source tree, you
-should issue the command:
-
-git submodule update --init --recursive
-
-in your repository directory.
 
 There is a makefile in the src directory. In most cases, just typing
 "make" should automatically select the correct target architecture and
