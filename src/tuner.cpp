@@ -62,12 +62,10 @@ static int pv_recalc_interval = 16;
 static double lambda = 6E-5;
 
 static const int MAX_PV_LENGTH = 256;
-static const int NUM_RESULT = 8;
 static const int MAX_CORES = 64;
 static const int THREAD_STACK_SIZE = 12*1024*1024;
 static const int LEARNING_SEARCH_DEPTH = 1;
 // L2-regularization factor
-static const int MIN_PLY = 16;
 static const double ADAGRAD_FUDGE_FACTOR = 1.0e-9;
 // step size relative to parameter range:
 static const double ADAGRAD_STEP_SIZE = 0.01;
@@ -205,7 +203,7 @@ double result_val(const string &res)
 }
 
 // value is eval in pawn units; res is result string for game
-static double computeErrorTexel(const Board &board,double value,double result,const ColorType side)
+static double computeErrorTexel(double value, double result, const ColorType side)
 {
    value /= Params::PAWN_VALUE;
 
@@ -321,8 +319,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
       return 0;
 }
 
-
-static void parse1(ThreadData &td, Parse1Data &pdata, int id)
+static void parse1(ThreadData &td, Parse1Data &pdata)
 {
    pdata.clear();
    // iterate for each position in file
@@ -382,7 +379,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata, int id)
          if (!atcks.isClear()) continue;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
-             double func_value = computeErrorTexel(board, score, result, board.sideToMove());
+             double func_value = computeErrorTexel(score, result, board.sideToMove());
              pdata.target += func_value;
              stringstream fen;
              fen << pvBoard;
@@ -983,11 +980,9 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    }
 }
 
-void calc_threat_deriv(Scoring &s, const Board &board,ColorType side, vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
+static void calc_threat_deriv(const Board &board,ColorType side, vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
 {
    const ColorType oside = OppositeColor(side);
-   const Bitboard oppMinors(board.knight_bits[oside] | board.bishop_bits[oside]);
-   const Bitboard ourMinors(board.knight_bits[side] | board.bishop_bits[side]);
    const int mLevel = board.getMaterial(oside).materialLevel();
    const Bitboard weak((ai.allAttacks[side] & ~ai.allAttacks[oside]) | ~ai.pawnAttacks[oside]);
 
@@ -1044,8 +1039,7 @@ void calc_threat_deriv(Scoring &s, const Board &board,ColorType side, vector<dou
    }
    // Pawn push threats as in Stockfish/Ethereal
    // compute pawn push destination square bitboard
-   Bitboard pawns;
-   Bitboard mask();
+   Bitboard pawns, mask;
    if (side == White) {
        pawns = board.pawn_bits[White];
        pawns.shl8();
@@ -1087,7 +1081,7 @@ void calc_threat_deriv(Scoring &s, const Board &board,ColorType side, vector<dou
    }
 }
 
-void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
+static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
 {
     const int mLevel = board.getMaterial(OppositeColor(side)).materialLevel();
     const ColorType oside = OppositeColor(side);
@@ -1252,13 +1246,13 @@ static void update_deriv_vector(Scoring &s, const Board &board, vector<double> &
     }
     calc_deriv(s,board,White,grads,inc,atcks);
     calc_deriv(s,board,Black,grads,-inc,atcks);
-    calc_threat_deriv(s,board,White,grads,inc,atcks);
-    calc_threat_deriv(s,board,Black,grads,-inc,atcks);
+    calc_threat_deriv(board,White,grads,inc,atcks);
+    calc_threat_deriv(board,Black,grads,-inc,atcks);
     calc_pawns_deriv(s,board,White,grads,inc,atcks);
     calc_pawns_deriv(s,board,Black,grads,-inc,atcks);
 }
 
-void validateGradient(Scoring &s, const Board &board, double eval, double result) {
+static void validateGradient(Scoring &s, const Board &board, double eval) {
    vector<double> derivs(tune_params.numTuningParams(),0.0);
    double inc = 1.0;
    if (board.sideToMove() == Black) eval = -eval;
@@ -1329,7 +1323,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
        return;
    }
 
-   double func_value = computeErrorTexel(board,record_value,result,board.sideToMove());
+   double func_value = computeErrorTexel(record_value,result,board.sideToMove());
    // compute the change in loss function per delta in eval
    double dT = computeTexelDeriv(record_value,result,board.sideToMove());
    // multiply the derivative by the x (feature) value, scaled if necessary
@@ -1338,7 +1332,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
    data.target += func_value;
    data.count++;
    if (validate) {
-      validateGradient(s, board, record_value, result);
+      validateGradient(s, board, record_value);
    }
    return;
 }
@@ -1456,7 +1450,7 @@ static void threadp(ThreadData *td)
    // perform work based on phase
    if (td->phase == Phase1) {
       if (verbose) cout << "starting phase 1, thread " << td->index << endl;
-      parse1(*td,data1[td->index],td->index);
+      parse1(*td,data1[td->index]);
    } else {
       if (verbose) cout << "starting phase 2, thread " << td->index << endl;
       parse2(*td,data2[td->index]);
@@ -1594,7 +1588,7 @@ static void learn()
       }
       data2[0].target /= data2[0].count;
       const double obj = data2[0].target + calc_penalty();
-      cout << "pass 2 target=" << data2[0].target << " penalty=" << calc_penalty
+      cout << "target=" << data2[0].target << " penalty=" << calc_penalty
 () << " objective=" << obj << endl;
       data2[0].target += calc_penalty();
       if (data2[0].target < best) {
