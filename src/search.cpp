@@ -115,21 +115,6 @@ static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
             Rank(DestSquare(move),board.sideToMove()) == 7);
 }
 
-static int FORCEINLINE passedPawnMove(const Board &board, Move move, int rank) {
-  extern CACHE_ALIGN Bitboard passedW[64];
-  extern CACHE_ALIGN Bitboard passedB[64];
-  if (PieceMoved(move) == Pawn && Rank(DestSquare(move),board.sideToMove()) >= rank) {
-    if (board.sideToMove() == White) {
-        return Bitboard(board.pawn_bits[Black] & passedW[DestSquare(move)]).isClear();
-    }
-    else {
-        return Bitboard(board.pawn_bits[White] & passedB[DestSquare(move)]).isClear();
-    }
-  }
-  else
-    return 0;
-}
-
 SearchController::SearchController()
     :
       post_function(nullptr),
