@@ -1164,13 +1164,6 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
                 }
             }
         }
-        if (pds[i].flags & Scoring::PawnDetail::POTENTIAL_PASSER) {
-            ASSERT(Rank(pds[i].sq,side)<7);
-            grads[Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2] +=
-                tune_params.scale(inc,Tune::POTENTIAL_PASSER_MID2+Rank(pds[i].sq,side)-2,mLevel);
-            grads[Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2] +=
-                tune_params.scale(inc,Tune::POTENTIAL_PASSER_END2+Rank(pds[i].sq,side)-2,mLevel);
-        }
         if (pds[i].flags & Scoring::PawnDetail::DOUBLED) {
             int f = File(pds[i].sq);
             if (f > 4) f = 9-f;

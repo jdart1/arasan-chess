@@ -160,16 +160,6 @@ Tune::Tune()
         TuneParam(Tune::PASSED_PAWN_FILE_ADJUST2,"passed_pawn_file_adjust2",64,48,96,TuneParam::Any,1),
         TuneParam(Tune::PASSED_PAWN_FILE_ADJUST3,"passed_pawn_file_adjust3",64,48,96,TuneParam::Any,1),
         TuneParam(Tune::PASSED_PAWN_FILE_ADJUST4,"passed_pawn_file_adjust4",64,48,80,TuneParam::Any,0),
-        TuneParam(Tune::POTENTIAL_PASSER_MID2,"potential_passer_mid2",VAL(0.026),VAL(0),VAL(0.2),TuneParam::Midgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_MID3,"potential_passer_mid3",VAL(0.037),VAL(0),VAL(0.25),TuneParam::Midgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_MID4,"potential_passer_mid4",VAL(0.075),VAL(0),VAL(0.3),TuneParam::Midgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_MID5,"potential_passer_mid5",VAL(0.075),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_MID6,"potential_passer_mid6",VAL(0.236),VAL(0),VAL(0.75),TuneParam::Midgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_END2,"potential_passer_end2",VAL(0.04),VAL(0),VAL(0.2),TuneParam::Endgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_END3,"potential_passer_end3",VAL(0.056),VAL(0),VAL(0.25),TuneParam::Endgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_END4,"potential_passer_end4",VAL(0.115),VAL(0),VAL(0.3),TuneParam::Endgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_END5,"potential_passer_end5",VAL(0.115),VAL(0),VAL(0.5),TuneParam::Endgame,1),
-        TuneParam(Tune::POTENTIAL_PASSER_END6,"potential_passer_end6",VAL(0.36),VAL(0),VAL(0.75),TuneParam::Endgame,1),
         TuneParam(Tune::CONNECTED_PASSER_MID2,"connected_passer_mid2",VAL(0),VAL(0),VAL(0.25),TuneParam::Midgame,1),
         TuneParam(Tune::CONNECTED_PASSER_MID3,"connected_passer_mid3",VAL(0.08),VAL(0),VAL(0.3),TuneParam::Midgame,1),
         TuneParam(Tune::CONNECTED_PASSER_MID4,"connected_passer_mid4",VAL(0.3),VAL(0),VAL(0.5),TuneParam::Midgame,1),
@@ -721,12 +711,6 @@ void Tune::applyParams(bool check) const
    for (int i = 0; i < 4; i++) {
       Params::PASSED_PAWN_FILE_ADJUST[i] =
       Params::PASSED_PAWN_FILE_ADJUST[7-i] = PARAM(PASSED_PAWN_FILE_ADJUST1+i);
-   }
-   memset(Params::POTENTIAL_PASSER[0],'\0',sizeof(score_t)*8);
-   memset(Params::POTENTIAL_PASSER[1],'\0',sizeof(score_t)*8);
-   for (int i = 2; i < 7; i++) {
-      Params::POTENTIAL_PASSER[Scoring::Midgame][i] = PARAM(POTENTIAL_PASSER_MID2+i-2);
-      Params::POTENTIAL_PASSER[Scoring::Endgame][i] = PARAM(POTENTIAL_PASSER_END2+i-2);
    }
    memset(Params::CONNECTED_PASSER[0],'\0',sizeof(score_t)*8);
    memset(Params::CONNECTED_PASSER[1],'\0',sizeof(score_t)*8);

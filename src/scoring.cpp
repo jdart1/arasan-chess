@@ -1365,7 +1365,9 @@ void Scoring::calcPawnData(const Board &board,
       details[count].flags = 0;
       details[count].space_weight = 0;
       ASSERT(count<8);
+#ifdef TUNE
       PawnDetail &td = details[count++];
+#endif
 #ifdef PAWN_DEBUG
       int mid_tmp = entr.midgame_score;
       int end_tmp = entr.endgame_score;
@@ -1410,13 +1412,6 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             cout << " passed";
 #endif
-            /*
-            td.flags |= PawnDetail::POTENTIAL_PASSER;
-            // Doubled but potentially passed pawn.
-            // Don't score as passed but give "potential passer" bonus
-            entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
-            entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
-            */
             passed = 0;
          }
 
@@ -1525,159 +1520,6 @@ void Scoring::calcPawnData(const Board &board,
          entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[File(sq)-1]/64;
          entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[File(sq)-1]/64;
          entr.passers.set(sq);
-      }
-      else {
-         int potential = 0;
-
-         // not passed, check for potential passer
-         Bitboard allPawns(board.pawn_bits[White] | board.pawn_bits[Black]);
-         int diff;
-         Square dup = InvalidSquare;
-         if (side == White) {
-            Bitboard ahead(board.pawn_bits[Black] & passedW[sq]);
-            if (!(ahead & Attacks::file_mask[file - 1])) {
-               int blocker1 = file == 1 ? 0 : !Bitboard(ahead & Attacks::file_mask[file - 2]).isClear();
-               int blocker2 = file == 8 ? 0 : !Bitboard(ahead & Attacks::file_mask[file]).isClear();
-               if ((blocker1 ^ blocker2) == 1) {
-
-                  // We are blocked by one or more pawns on an adjacent file
-                  diff = blocker1 ? -1 : 1;
-                  ASSERT(diff != 0);
-                  potential = 1;
-
-                  int bPawns = 0, wPawns = 0;
-                  for(int file = File(sq) + diff; file >= 1 && file <= 8 && potential; file += diff) {
-                     Bitboard pawns(allPawns &Attacks::file_mask[file - 1]);
-                     if (pawns.isClear()) break;             // no pawns on file
-                     Square pawn;
-                     int wFilePawns = 0, bFilePawns = 0;
-                     while((pawn = pawns.lastOne()) != InvalidSquare) {
-                        if (PieceColor(board[pawn]) == Black) {
-                           if (wFilePawns) break;
-                           bFilePawns++;
-                        }
-                        else {
-
-                           // check for another potential passer that
-                           // shares the same blocker(s) as this one
-                           int aDup = diff == 1 ? potentialMinus.isSet(pawn) : potentialPlus.isSet(pawn);
-                           if (aDup) {
-                              dup = pawn;
-                           }
-
-                           wFilePawns++;
-                        }
-
-                        pawns.clear(pawn);
-                     }
-
-                     wPawns += wFilePawns;
-                     bPawns += bFilePawns;
-                     if (bPawns > wPawns + 1) break;
-                  }
-
-                  potential = wPawns >= bPawns;
-               }
-            }
-         }
-         else {
-            Bitboard ahead(board.pawn_bits[White] & passedB[sq]);
-            if (!(ahead & Attacks::file_mask[file - 1])) {
-               int blocker1 = file == 1 ? 0 : !Bitboard(ahead & Attacks::file_mask[file - 2]).isClear();
-               int blocker2 = file == 8 ? 0 : !Bitboard(ahead & Attacks::file_mask[file]).isClear();
-               if ((blocker1 ^ blocker2) == 1) {
-
-                  // We are blocked by one or more pawns on an adjacent file
-                  diff = blocker1 ? -1 : 1;
-                  ASSERT(diff != 0);
-                  potential = 1;
-
-                  int bPawns = 0, wPawns = 0;
-                  for(int file = File(sq) + diff; file >= 1 && file <= 8 && potential; file += diff) {
-                     Bitboard pawns(allPawns &Attacks::file_mask[file - 1]);
-                     if (pawns.isClear()) break;             // no pawns on file
-                     Square pawn;
-                     int wFilePawns = 0, bFilePawns = 0;
-                     while((pawn = pawns.firstOne()) != InvalidSquare) {
-                        if (PieceColor(board[pawn]) == White) {
-                           if (bFilePawns) break;
-                           wFilePawns++;
-                        }
-                        else {
-                           bFilePawns++;
-
-                           // check for another potential passer that
-                           // shares the same blocker(s) as this one
-                           int aDup = diff == 1 ? potentialMinus.isSet(pawn) : potentialPlus.isSet(pawn);
-                           if (aDup) {
-                              dup = pawn;
-                           }
-                        }
-
-                        pawns.clear(pawn);
-                     }
-
-                     wPawns += wFilePawns;
-                     bPawns += bFilePawns;
-                     if (wPawns > bPawns + 1) break;
-                  }
-
-                  potential = bPawns >= wPawns;
-               }
-            }
-         }
-
-         if (potential) {
-#ifdef PAWN_DEBUG
-            cout << " potential passer";
-#endif
-            if (diff > 0) {
-               potentialPlus.set(sq);
-            }
-            else {
-               potentialMinus.set(sq);
-            }
-
-            if (dup != InvalidSquare) {
-#ifdef PAWN_DEBUG
-               cout << " (dup)";
-#endif
-               int rankdup = Rank(dup, side);
-
-               // Two potential passers share the same blocker(s).
-               // Score according to the most advanced one.
-               if (rank > rankdup) {
-#ifdef TUNE
-                  td.flags |= PawnDetail::POTENTIAL_PASSER;
-#endif
-                  int i = 0;
-#ifdef _DEBUG
-                  bool found = false;
-#endif
-                  for (; i < count; i++) {
-                     if (details[i].sq == dup) {
-#ifdef _DEBUG
-                        found = true;
-#endif
-                        break;
-                     }
-                  }
-                  ASSERT(found);
-                  entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
-                  entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
-                  if (details[i].flags & PawnDetail::POTENTIAL_PASSER) {
-                      details[i].flags &= ~PawnDetail::POTENTIAL_PASSER;
-                      entr.midgame_score -= PARAM(POTENTIAL_PASSER)[Midgame][rankdup];
-                      entr.endgame_score -= PARAM(POTENTIAL_PASSER)[Endgame][rankdup];
-                  }
-               }
-            }
-            else {
-               td.flags |= PawnDetail::POTENTIAL_PASSER;
-               entr.midgame_score += PARAM(POTENTIAL_PASSER)[Midgame][rank];
-               entr.endgame_score += PARAM(POTENTIAL_PASSER)[Endgame][rank];
-            }
-         }
       }
 
       int duo = 0;
@@ -2662,8 +2504,6 @@ void Params::write(ostream &o, const string &comment)
    }
    o << "const int Params::PASSED_PAWN_FILE_ADJUST[8] = ";
    print_array(o,file_adjust,8);
-   o << "const int Params::POTENTIAL_PASSER[2][8] = ";
-   print_array(o,Params::POTENTIAL_PASSER[0], Params::POTENTIAL_PASSER[1], 8);
    o << "const int Params::CONNECTED_PASSER[2][8] = ";
    print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
    o << "const int Params::ADJACENT_PASSER[2][8] = ";

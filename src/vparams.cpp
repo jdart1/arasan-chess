@@ -89,7 +89,6 @@ score_t Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE];
 score_t Params::OWN_PIECE_KING_PROXIMITY_MULT[16];
 score_t Params::PASSED_PAWN[2][8];
 score_t Params::PASSED_PAWN_FILE_ADJUST[8] = {0,0,0,0,0,0,0,0};
-score_t Params::POTENTIAL_PASSER[2][8];
 score_t Params::CONNECTED_PASSER[2][8];
 score_t Params::ADJACENT_PASSER[2][8];
 score_t Params::QUEENING_PATH_CLEAR[2][6];
