@@ -2748,9 +2748,14 @@ score_t Search::search()
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
-        // R=3 + some depth-dependent increment
-        nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
-
+        int mLevel = board.getMaterial(board.sideToMove()).materialLevel();
+        if (mLevel > 3) {
+            // R=3 + some depth-dependent increment.
+            nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
+        } else {
+            // Less reduction if side to move has only a minor.
+            nu_depth = depth - 7*DEPTH_INCREMENT/2 - depth/6;
+        }
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
