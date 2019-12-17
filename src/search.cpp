@@ -2687,6 +2687,7 @@ score_t Search::search()
 
     // Reset killer moves for children (idea from Ethereal)
     context.clearKillers(node->ply+1);
+    const int mLevel = board.getMaterial(board.sideToMove()).materialLevel();
 
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, aka reverse futility pruning,
@@ -2742,19 +2743,18 @@ score_t Search::search()
     // zugzwang is a possibility. Do not do null move if this is an
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
-    if (pruneOk && depth >= DEPTH_INCREMENT &&
+    if (pruneOk && depth >= DEPTH_INCREMENT+(mLevel<=3)*3*DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
-        int mLevel = board.getMaterial(board.sideToMove()).materialLevel();
         if (mLevel > 3) {
             // R=3 + some depth-dependent increment.
             nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
         } else {
             // Less reduction if side to move has only a minor.
-            nu_depth = depth - 7*DEPTH_INCREMENT/2 - depth/6;
+            nu_depth = depth - (3+(depth>10))*DEPTH_INCREMENT;
         }
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
