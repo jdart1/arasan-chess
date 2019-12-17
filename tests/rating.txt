@@ -5,4 +5,3 @@ Rank Name                        Elo    +    - games score oppo. draws
    4 Critter-1.6a               2401    7    7  4800   52%  2387   42%
    5 Arasan v22.0.0-7-g14c067d  2387    4    4 24000   48%  2403   43%
    6 Arasan-21.3                2306    7    7  4800   36%  2387   50%
-
