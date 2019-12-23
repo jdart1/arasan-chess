@@ -32,8 +32,8 @@ one for GNU make.
 Syzygy tablebase support is enabled by default.
 
 The Syzygy probing code is now imported as a submodule from
-jdart1/Fathom. So to obtain this code in your source tree, you
-should issue the command:
+jdart1/Fathom. So if building Arasan from a git respository, issue the
+following command to pull the Syzygy code into your source tree:
 
 git submodule update --init --recursive
 
@@ -53,7 +53,7 @@ Gcc 4.9 or above is recommended for building Arasan (on Mac OS, use clang).
 There is a makefile in the src directory. In most cases, just typing
 "make" should automatically select the correct target architecture and
 OS (note: assumes target and host are the same). By default it builds
-all executables. All binaries are placed in the "bin" subdirectory.
+only the chess engine. Binaries are placed in the "bin" subdirectory.
 
 To select the Intel compiler instead of gcc, define the variable CC with
 this command:
@@ -72,7 +72,7 @@ The following targets are defined in the makefile:
 - bmi2-profiled: PGO build of the chess engine, with BMI2 support (includes POPCNT)
 - tuning: builds the parameter tuning program
 - tuning-popcnt: builds the parameter tuning program with POPCNT support
-- utils: builds utility programs including "makebook".
+- utils: builds utility programs including "makebook"
 - release: builds the release tarball
 - install: installs the chess engine on the system (requires root or sudo)
 
@@ -113,9 +113,6 @@ Studio Community Edition is free for use on open-source projects and
 has all the features you need. You need a recent version with C++ 11
 support. Visual Studio 2012 and later should work.</p>
 
-As of version 19.0, Arasan includes Syzygy tablebase support
-by default.
-
 The following targets are defined in the makefile:
 
 - default: builds just the chess engine, with no POPCNT or BMI2 support
@@ -149,12 +146,15 @@ recent Visual Studio release you may have.
 
 ## Building the Arasan Windows GUI
 
-To build the Arasan native Windows GUI, use the Visual C++ solution file
-in the "gui" subdirectory. (The command-line Makefile does not build the
-GUI). You cannot build the GUI with the Express Edition of Visual C++,
-because it lacks the required MFC libraries. The Community Edition is ok,
-though. By default the GUI solution file builds a XP-compatible build so
-it requires the Windows SDK 7.1A to be installed.
+Source for Arasan's native Windows GUI is included in the Windows source archives
+downloadable from [arasanchess.org](https://www.arasanchess.org).
+
+To build the GUI, use the Visual C++ solution file in the "gui"
+subdirectory. (The command-line Makefile does not build the GUI). You
+cannot build the GUI with the Express Edition of Visual C++, because
+it lacks the required MFC libraries. The Community Edition is ok,
+though. By default the GUI solution file builds a XP-compatible build
+so it requires the Windows SDK 7.1A to be installed.
 
 ## Other build methods
 
