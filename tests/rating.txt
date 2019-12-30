@@ -1,7 +1,7 @@
-Rank Name                        Elo    +    - games score oppo. draws
-   1 Laser-1.7                  2458    7    7  4800   61%  2387   44%
-   2 Stockfish-DD               2425    8    7  4800   56%  2387   42%
-   3 Komodo-6                   2424    7    7  4800   56%  2387   40%
-   4 Critter-1.6a               2401    7    7  4800   52%  2387   42%
-   5 Arasan v22.0.0-7-g14c067d  2387    4    4 24000   48%  2403   43%
-   6 Arasan-21.3                2306    7    7  4800   36%  2387   50%
+Rank Name                         Elo    +    - games score oppo. draws 
+   1 Laser-1.7                   2454    7    7  4800   61%  2386   44% 
+   2 Stockfish-DD                2433    7    7  4800   58%  2386   42% 
+   3 Komodo-6                    2422    7    8  4800   56%  2386   40% 
+   4 Critter-1.6a                2397    7    7  4800   52%  2386   43% 
+   5 Arasan v22.0.0-10-g5593dd8  2386    4    4 24000   47%  2403   44% 
+   6 Arasan-21.3                 2308    7    7  4800   37%  2386   52% 

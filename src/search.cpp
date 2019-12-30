@@ -2743,7 +2743,7 @@ score_t Search::search()
     // zugzwang is a possibility. Do not do null move if this is an
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
-    if (pruneOk && depth >= DEPTH_INCREMENT+(mLevel<=3)*3*DEPTH_INCREMENT &&
+    if (pruneOk && depth >= DEPTH_INCREMENT && (mLevel > 3 || depth >= 5*DEPTH_INCREMENT) &&
         !IsNull((node-1)->last_move) &&
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
@@ -2754,7 +2754,7 @@ score_t Search::search()
             nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
         } else {
             // Less reduction if side to move has only a minor.
-            nu_depth = depth - (3+(depth>10))*DEPTH_INCREMENT;
+            nu_depth = depth - (3+(depth>5*DEPTH_INCREMENT))*DEPTH_INCREMENT;
         }
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
