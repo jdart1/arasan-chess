@@ -1,4 +1,4 @@
-// Copyright 1992-2019 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2020 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -80,6 +80,7 @@ class Scoring
       return (Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]).bitCountOpt();
     }
 
+#ifdef TUNE
     struct PawnDetail {
       static const int PASSED=1;
       static const int POTENTIAL_PASSER=2;
@@ -97,7 +98,6 @@ class Scoring
 
     typedef PawnDetail PawnDetails[8];
 
-#ifdef TUNE
     static const int PAWN_HASH_SIZE = 8096;
 #else
     static const int PAWN_HASH_SIZE = 16384;
@@ -129,8 +129,8 @@ class Scoring
            int outside;
 #ifdef TUNE
          int center_pawn_factor;
-#endif
          PawnDetail details[8];
+#endif
        } wPawnData, bPawnData;
 
        const PawnData &pawnData(ColorType side) const {

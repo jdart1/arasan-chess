@@ -1,4 +1,4 @@
-// Copyright 1994-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2020 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -1357,15 +1357,17 @@ void Scoring::calcPawnData(const Board &board,
    Bitboard bi(board.pawn_bits[side]);
    Bitboard potentialPlus, potentialMinus;
    Square sq;
+#ifdef TUNE
    int count = 0;
+#endif
    while(bi.iterate(sq))
    {
+#ifdef TUNE
       PawnDetails &details = entr.details;
       details[count].sq = sq;
       details[count].flags = 0;
       details[count].space_weight = 0;
       ASSERT(count<8);
-#ifdef TUNE
       PawnDetail &td = details[count++];
 #endif
 #ifdef PAWN_DEBUG
