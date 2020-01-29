@@ -1,4 +1,4 @@
-// Copyright 1994-2008, 2013-2014, 2017 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2013-2014, 2017-2018. 2020 by Jon Dart. All Rights Reserved.
 
 #include "chess.h"
 #include "debug.h"
@@ -184,6 +184,12 @@ const int _sliders[16] =
 { 0, 0, 0, 1, 1, 1, 0, 0,
   0, 0, 0, 1, 1, 1, 0, 0 };
 
+bool validPiece(Piece p)
+{
+    static constexpr int valid[16] = {1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,0};
+    return ((int)p)<16 && valid[(int)p];
+}
+
 static const char Images[] = "?PNBRQK?";
 
 PieceType PieceCharValue( char c )
@@ -273,5 +279,5 @@ Move CreateMove(const Board &board, Square start, Square dest, PieceType promoti
       MoveUnion mu(start,dest,piece_moved,promotion,capture,type);
       return (Move)mu;
    }
-}	
+}
 

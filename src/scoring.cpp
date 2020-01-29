@@ -1278,24 +1278,28 @@ void Scoring::threatScore(const Board &board,
     Bitboard pawnThreats(board.allPawnAttacks(side,board.pawn_bits[side] & safe) & nonPawns);
     Square sq;
     while (pawnThreats.iterate(sq)) {
+        ASSERT(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_PAWN[Midgame][TypeOfPiece(board[sq])-2];
         scores.end += Params::THREAT_BY_PAWN[Endgame][TypeOfPiece(board[sq])-2];
     }
     // Knight attacks on Bishops, higher-valued pieces and weak pieces
     Bitboard knightAttacks(ai.knightAttacks[side] & (weakMinors | board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
     while (knightAttacks.iterate(sq)) {
+        ASSERT(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_KNIGHT[Midgame][TypeOfPiece(board[sq])-1];
         scores.end += Params::THREAT_BY_KNIGHT[Endgame][TypeOfPiece(board[sq])-1];
     }
     // Bishop attacks on Knights, higher-valued pieces and weak pieces
     Bitboard bishopAttacks(ai.bishopAttacks[side] & (weakMinors | board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
     while (bishopAttacks.iterate(sq)) {
+        ASSERT(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_BISHOP[Midgame][TypeOfPiece(board[sq])-1];
         scores.end += Params::THREAT_BY_BISHOP[Endgame][TypeOfPiece(board[sq])-1];
     }
     // rook attacks on queens and weak pieces
     Bitboard rookAttacks(ai.rookAttacks[side] & (board.queen_bits[oside] | targets));
     while (rookAttacks.iterate(sq)) {
+        ASSERT(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_ROOK[Midgame][TypeOfPiece(board[sq])-1];
         scores.end += Params::THREAT_BY_ROOK[Endgame][TypeOfPiece(board[sq])-1];
     }

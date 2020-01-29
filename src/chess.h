@@ -177,6 +177,8 @@ enum Piece {
   BlackKing = 14
 };
 
+extern bool validPiece(Piece p);
+
 enum PieceType { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
 
 extern const int _sliders[16];
