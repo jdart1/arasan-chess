@@ -65,9 +65,9 @@ int validMove(const Board &board, Move move)
                board.checkStatus() != InCheck &&
                !board.anyAttacks(kp - 1,board.oppositeSide()) &&
                !board.anyAttacks(kp - 2,board.oppositeSide());
+         } else {
+            return Attacks::king_attacks[start].isSet(dest);
          }
-         else
-            return 1;
       }
       case Rook:
       {
