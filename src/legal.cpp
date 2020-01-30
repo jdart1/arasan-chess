@@ -133,8 +133,7 @@ int legalMove(const Board &board, Square start,
       }
    }
    if (!found) {
-     //cout << "not found" << endl;
-     return 0;
+      return 0;
    }
    else
    {
@@ -144,8 +143,7 @@ int legalMove(const Board &board, Square start,
       board_copy.doMove(emove);
       int val = !board_copy.anyAttacks(
                   board_copy.kingSquare(side),OppositeColor(side));
-     if (!val) cout << "king en prise" << endl;
-     return val;
+      return val;
    }
 }
 

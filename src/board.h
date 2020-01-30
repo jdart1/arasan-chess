@@ -291,7 +291,7 @@ public:
 
    // Return true if previous move was legal (did not involve a move into
    // check)
-   int wasLegal(Move lastMove) const;
+   int wasLegal(Move lastMove, bool evastion = false) const;
 
    // True if moving from 'source' to 'dest' uncovers an attack by 'side' on
    // 'target'

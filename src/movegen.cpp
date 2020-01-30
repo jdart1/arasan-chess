@@ -14,6 +14,8 @@
 #include <cmath>
 using namespace std;
 
+//#define _TRACE
+
 extern const int Direction[2];
 
 const int MoveGenerator::EASY_PLIES = 3;

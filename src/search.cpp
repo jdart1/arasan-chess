@@ -22,6 +22,8 @@
 #include <list>
 #include <vector>
 
+//#define _TRACE
+
 static const int ASPIRATION_WINDOW[] =
     {(int)(0.375*Params::PAWN_VALUE),
      (int)(0.75*Params::PAWN_VALUE),
@@ -1776,6 +1778,7 @@ score_t Search::quiesce(int ply,int depth)
                " value = " << hashValue << endl;
          }
 #endif
+/* not safe to do w/o legality check
          if (node->inBounds(hashValue)) {
             // parent node will consider this a new best line
             hashMove = hashEntry.bestMove(board);
@@ -1791,6 +1794,7 @@ score_t Search::quiesce(int ply,int depth)
             }
 #endif
          }
+*/
          return hashValue;
       case HashEntry::UpperBound:
          if (hashValue <= node->alpha) {
@@ -1892,7 +1896,7 @@ score_t Search::quiesce(int ply,int depth)
            }
            node->last_move = move;
            board.doMove(move);
-           if (!board.wasLegal(move)) {
+           if (!board.wasLegal(move,true)) {
                board.undoMove(move,state);
                continue;
            }
@@ -2063,7 +2067,7 @@ score_t Search::quiesce(int ply,int depth)
                    continue;
                }
            }
-            
+
            node->last_move = move;
            board.doMove(move);
            if (!board.wasLegal(move)) {
@@ -2851,6 +2855,11 @@ score_t Search::search()
           Move move;
           while (!IsNull(move = mg.nextMove())) {
              if (Capture(move)==King) {
+#ifdef _TRACE
+                 if (mainThread()) {
+                     cout << "Probcut: previous move illegal" << endl;
+                 }
+#endif
                  return -Illegal;                  // previous move was illegal
              }
              else if (MovesEqual(move,node->singularMove)) {
@@ -3012,11 +3021,6 @@ score_t Search::search()
 #ifdef SEARCH_STATS
             ++stats.moves_searched;
 #endif
-            if (Capture(move)==King) {
-                return -Illegal;                  // previous move was illegal
-            }
-            ASSERT(DestSquare(move) != InvalidSquare);
-            ASSERT(StartSquare(move) != InvalidSquare);
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply);
@@ -3027,6 +3031,17 @@ score_t Search::search()
                 cout << " d:" << depth << endl;
             }
 #endif
+            if (Capture(move)==King) {
+#ifdef _TRACE
+                if (mainThread()) {
+                     indent(ply);
+                     cout << "king capture, previous move illegal" << endl;
+                }
+#endif
+                return -Illegal;                  // previous move was illegal
+            }
+            ASSERT(DestSquare(move) != InvalidSquare);
+            ASSERT(StartSquare(move) != InvalidSquare);
             node->last_move = move;
             if (!CaptureOrPromotion(move)) {
                 ASSERT(node->num_quiets<Constants::MaxMoves);
@@ -3045,15 +3060,10 @@ score_t Search::search()
                                        move_index, improving, move);
             }
             if (extend == PRUNE) {
-#ifdef _TRACE
-              if (mainThread()) {
-                indent(ply); cout << "fwd pruned." << endl;
-              }
-#endif
-              continue;
+                continue;
             }
             board.doMove(move);
-            if (!in_check && !board.wasLegal(move)) {
+            if (!board.wasLegal(move,in_check)) {
                   ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
 #ifdef _TRACE
                if (mainThread()) {

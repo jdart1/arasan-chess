@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "boardio.h"
 #include "bhash.h"
+#include "movegen.h"
 #include <memory.h>
 #include <algorithm>
 #include <assert.h>
@@ -1828,9 +1829,18 @@ CheckStatusType Board::wouldCheck(Move lastMove) const {
    return NotInCheck;
 }
 
-int Board::wasLegal(Move lastMove) const {
+int Board::wasLegal(Move lastMove, bool evasion) const {
     if (IsNull(lastMove)) return 1;
     Square kp = kingSquare(oppositeSide());
+    if (evasion) {
+        if (GetPhase(lastMove) == MoveGenerator::HASH_MOVE_PHASE) {
+            // Ensure that the hash move does actually evade check
+            return !anyAttacks(kp,sideToMove());
+        } else {
+            // Non-hash move legality is ensured by move generator.
+            return 1;
+        }
+    }
     switch (TypeOfMove(lastMove)) {
        case QCastle:
        case KCastle:
@@ -1840,7 +1850,7 @@ int Board::wasLegal(Move lastMove) const {
        default:
          break;
     }
-    if (PieceMoved(lastMove)==King) {
+    if (PieceMoved(lastMove)) {
        return !anyAttacks(kp,sideToMove());
     }
     else {
