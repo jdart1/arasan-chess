@@ -1,4 +1,4 @@
-// Copyright 1997-2019 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2020 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -2427,7 +2427,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
         cout << " option=\"Resign threshold -spin " <<
-            options.search.resign_threshold << "-1000 0" << "\"";
+            options.search.resign_threshold << " -1000 0" << "\"";
         cout << " option=\"Position learning -check " <<
             options.learning.position_learning << "\"";
         // strength option (new for 14.2)
