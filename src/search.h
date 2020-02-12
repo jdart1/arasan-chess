@@ -253,14 +253,6 @@ protected:
     score_t tbScoreAdjust(const Board &board,
                           score_t score, int tb_hit, score_t tb_score) const;
 
-    score_t futilityMargin(int depth) const;
-
-    int lmpCount(int depth, int improving, int pv) const;
-
-    score_t razorMargin(int depth) const;
-
-    score_t seePruningMargin(int depth, bool quiet) const;
-
     FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
                           int ply, int depth) {
         ASSERT(ply<Constants::MaxPly);

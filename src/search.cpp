@@ -864,24 +864,24 @@ score_t Search::tbScoreAdjust(const Board &board,
 }
 #endif
 
-score_t Search::futilityMargin(int depth) const
+static score_t futilityMargin(int depth)
 {
     return std::max(depth,int(1.5*DEPTH_INCREMENT))*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT;
 }
 
-int Search::lmpCount(int depth, int improving, int pv) const
+static int lmpCount(int depth, int improving)
 {
     return depth/DEPTH_INCREMENT <= LMP_DEPTH ?
-        LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] + (pv ? 2*DEPTH_INCREMENT + depth/(2*DEPTH_INCREMENT) : 0) : Constants::MaxMoves;
+        LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] : Constants::MaxMoves;
 }
 
-score_t Search::razorMargin(int depth) const
+static score_t razorMargin(int depth)
 {
     return(depth<=DEPTH_INCREMENT) ?
         RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
 }
 
-score_t Search::seePruningMargin(int depth, bool quiet) const
+static score_t seePruningMargin(int depth, bool quiet)
 {
     int p = depth/DEPTH_INCREMENT;
     return quiet ? -p*Params::PAWN_VALUE : -p*p*int(0.2*Params::PAWN_VALUE);
@@ -2275,7 +2275,7 @@ int Search::prune(const Board &board,
         if (in_check_after_move != InCheck && quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
             // do not use pruneDepth for LMP
             if (GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
-                moveIndex > lmpCount(depth,improving,node->PV())) {
+                moveIndex > lmpCount(depth,improving)) {
 #ifdef SEARCH_STATS
                 ++stats.lmp;
 #endif
@@ -2399,7 +2399,7 @@ int Search::reduce(const Board &board,
 
     // See if we do late move reduction. Moves in the history phase of move
     // generation can be searched with reduced depth.
-    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving,node->PV()))) {
+    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
         extend -= lmr(node,depth,moveIndex);
         if (!quiet) {
             extend += DEPTH_INCREMENT;
