@@ -81,9 +81,7 @@ static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE
 static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
 static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
 
-static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0*Params::PAWN_VALUE);
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
-static constexpr score_t FUTILITY_MARGIN_SLOPE2 = static_cast<score_t>(0*Params::PAWN_VALUE);
 
 static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
@@ -100,7 +98,6 @@ static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 static int Time_Check_Interval;
 
 static const int Illegal = Constants::INVALID_SCORE;
-static const int PRUNE = -Constants::MATE;
 
 static void setCheckStatus(Board &board, CheckStatusType s)
 {
@@ -115,6 +112,10 @@ static void setCheckStatus(Board &board, CheckStatusType s)
 static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
     return (PieceMoved(move) == Pawn &&
             Rank(DestSquare(move),board.sideToMove()) == 7);
+}
+
+static int lmr(NodeInfo *node, int depth, int moveIndex) {
+    return LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
 }
 
 SearchController::SearchController()
@@ -865,8 +866,7 @@ score_t Search::tbScoreAdjust(const Board &board,
 
 score_t Search::futilityMargin(int depth) const
 {
-    int d = std::max(depth,int(1.5*DEPTH_INCREMENT));
-    return FUTILITY_MARGIN_BASE + d*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT + d*d*FUTILITY_MARGIN_SLOPE2/(DEPTH_INCREMENT*DEPTH_INCREMENT);
+    return std::max(depth,int(1.5*DEPTH_INCREMENT))*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT;
 }
 
 int Search::lmpCount(int depth, int improving, int pv) const
@@ -1407,18 +1407,23 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
 #endif
         CheckStatusType in_check_after_move = board.wouldCheck(move);
-        int extend = calcExtensions(board,node,in_check_after_move,
-                                    move_index,
-                                    1,
-                                    move);
-        if (extend == PRUNE) {
-#ifdef _TRACE
-           if (mainThread()) {
-              cout << "fwd pruned." << endl;
-           }
+        node->swap = Constants::INVALID_SCORE;
+        // calculate extensions/reductions. No pruning at ply 0.
+        int depthMod  = extend(board, node, in_check_after_move, move) +
+            reduce(board, node, move_index, 1, move);
+        if (depthMod < 0) {
+            // don't reduce into the q-search
+            depthMod = std::max<int>(depthMod,DEPTH_INCREMENT-depth+1);
+            if (depthMod > -DEPTH_INCREMENT) {
+                // do not reduce < 1 ply
+                depthMod = 0;
+            } else {
+#ifdef SEARCH_STATS
+                ++stats.reduced;
 #endif
-           --stats.mvleft;
-           continue;
+            }
+        } else {
+            depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
         }
         board.doMove(move);
         setCheckStatus(board,in_check_after_move);
@@ -1429,9 +1434,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               "]" << endl;
         }
 #endif
-        if (depth+extend-DEPTH_INCREMENT > 0) {
+        if (depth + depthMod - DEPTH_INCREMENT > 0) {
            try_score = -search(-hibound, -lobound,
-                               1, depth+extend-DEPTH_INCREMENT);
+                               1, depth + depthMod - DEPTH_INCREMENT);
         }
         else {
            try_score = -quiesce(-hibound, -lobound, 1, 0);
@@ -1450,7 +1455,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
 #endif
         while (try_score > node->best_score &&
-               (extend < 0 || hibound < node->beta) &&
+               (depthMod < 0 || hibound < node->beta) &&
                !((node+1)->flags & EXACT) &&
                !terminate) {
            // We failed to get a cutoff and must re-search
@@ -1468,14 +1473,14 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               cout << "score = " << try_score << " - no cutoff, researching .." << endl;
            }
 #endif
-           if (extend >= -DEPTH_INCREMENT) {
+           if (depthMod >= -DEPTH_INCREMENT) {
               hibound = node->beta;
            }
-           if (extend < 0) {
-              extend = 0;
+           if (depthMod < 0) {
+              depthMod = 0;
            }
-           if (depth+extend-DEPTH_INCREMENT > 0)
-              try_score=-search(-hibound,-lobound,1,depth+extend-DEPTH_INCREMENT);
+           if (depth+depthMod-DEPTH_INCREMENT > 0)
+              try_score=-search(-hibound,-lobound,1,depth+depthMod-DEPTH_INCREMENT);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
 #ifdef _TRACE
@@ -2251,174 +2256,169 @@ void Search::storeHash(hash_t hash, Move hash_move, int depth) {
    }
 }
 
-int Search::calcExtensions(const Board &board,
-                           NodeInfo *node,
-                           CheckStatusType in_check_after_move,
-                           int moveIndex,
-                           int improving,
-                           Move move) {
-   // see if we should apply any extensions at this node.
-   int depth = node->depth;
-   int extend = 0;
-   bool quiet = !CaptureOrPromotion(move);
-
-   const int lmpThreshold = lmpCount(depth,improving,node->PV());
-   score_t swap = Constants::INVALID_SCORE;
-   if (in_check_after_move == InCheck) { // move is a checking move
-      if ((swap = seeSign(board,move,0)) ||
-          board.isPinned(board.oppositeSide(),move)) {
-          // check does not lose material or is a discovered check
+int Search::prune(const Board &board,
+                  NodeInfo *node,
+                  CheckStatusType in_check_after_move,
+                  int moveIndex,
+                  int improving,
+                  Move move) {
+    ASSERT(node->swap == Constants::INVALID_SCORE);
+    ASSERT(node->ply > 0);
+    if (node->num_legal &&
+        board.checkStatus() == NotInCheck &&
+        node->best_score > -Constants::MATE_RANGE) {
+        const bool quiet = !CaptureOrPromotion(move);
+        int depth = node->depth;
+        // for pruning decisions, use modified depth but not the same as
+        // LMR depth (idea from Laser)
+        const int pruneDepth = quiet ? depth - lmr(node,depth,moveIndex) : depth;
+        if (in_check_after_move != InCheck && quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
+            // do not use pruneDepth for LMP
+            if (GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
+                moveIndex > lmpCount(depth,improving,node->PV())) {
 #ifdef SEARCH_STATS
-          stats.check_extensions++;
-#endif
-          extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
-      }
-   }
-   if (passedPawnPush(board,move)) {
-      extend += PAWN_PUSH_EXTENSION;
-#ifdef SEARCH_STATS
-      stats.pawn_extensions++;
-#endif
-   }
-   else if (TypeOfMove(move) == Normal &&
-            Capture(move) != Empty && Capture(move) != Pawn &&
-            board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
-            board.getMaterial(board.sideToMove()).noPieces()) {
-      // Capture of last piece in endgame.
-      extend += CAPTURE_EXTENSION;
-#ifdef SEARCH_STATS
-      ++stats.capture_extensions;
-#endif
-   }
-   extend = std::min<int>(extend,DEPTH_INCREMENT);
-
-   // See if we do late move reduction. Moves in the history phase of move
-   // generation can be searched with reduced depth.
-   int pruneDepth = depth;
-   if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpThreshold)) {
-       extend -= LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
-       if (!quiet) {
-           extend += DEPTH_INCREMENT;
-       }
-       else {
-           pruneDepth = depth + extend;
-           if (!node->PV() && !improving) {
-               extend -= DEPTH_INCREMENT;
-           }
-           if (node->ply > 0) {
-               if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
-                   // killer or refutation move
-                   extend += DEPTH_INCREMENT;
-               }
-               // reduce less for good history
-               extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
-           }
-       }
-       // Don't reduce so far we go into the qsearch:
-       extend = std::max(extend,1-depth);
-       // Don't reduce < 1 ply
-       if (extend <= -DEPTH_INCREMENT) {
-#ifdef SEARCH_STATS
-           ++stats.reduced;
-#endif
-       } else {
-           // do not extend here or reduce < 1 ply
-           extend = 0;
-       }
-   }
-
-   bool pruneOk = node->ply > 0 &&
-       node->num_legal &&
-       board.checkStatus() == NotInCheck &&
-       node->best_score > -Constants::MATE_RANGE;
-
-   if (pruneOk) {
-       // for pruning decisions, use modified depth but not the same as
-       // LMR depth (idea from Laser)
-       if (node->PV()) {
-           pruneDepth = std::max<int>(0,pruneDepth+DEPTH_INCREMENT);
-       } else if (!improving) {
-           pruneDepth -= DEPTH_INCREMENT;
-       }
-       if (in_check_after_move != InCheck && quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
-           // do not use pruneDepth for LMP
-           if(GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
-              moveIndex > lmpThreshold) {
-#ifdef SEARCH_STATS
-               ++stats.lmp;
+                ++stats.lmp;
 #endif
 #ifdef _TRACE
-               if (mainThread()) {
-                   indent(node->ply); cout << "LMP: pruned" << endl;
-               }
+                if (mainThread()) {
+                    indent(node->ply); cout << "LMP: pruned" << endl;
+                }
 #endif
-               return PRUNE;
-           }
-           // History pruning.
-           if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
-               context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
-               context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
+                return 1;
+            }
+            // History pruning.
+            if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
+                context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
+                context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
 #ifdef _TRACE
-               if (mainThread()) {
-                   indent(node->ply); cout << "history: pruned" << endl;
-               }
+                if (mainThread()) {
+                    indent(node->ply); cout << "history: pruned" << endl;
+                }
 #endif
 #ifdef SEARCH_STATS
-               ++stats.history_pruning;
+                ++stats.history_pruning;
 #endif
-               return PRUNE;
-           }
-           // futility pruning, enabled at low depths. Do not prune
-           // moves with good history.
-           if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
-                   FUTILITY_HISTORY_THRESHOLD[improving]){
-               // Threshold was formerly increased with the move index
-               // but this tests worse now.
-               score_t threshold = node->beta - futilityMargin(pruneDepth);
-               if (node->eval == Constants::INVALID_SCORE) {
-                   node->eval = node->staticEval = scoring.evalu8(board);
-               }
-               if (node->eval < threshold) {
+                return 1;
+            }
+            // futility pruning, enabled at low depths. Do not prune
+            // moves with good history.
+            if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
+                FUTILITY_HISTORY_THRESHOLD[improving]){
+                // Threshold was formerly increased with the move index
+                // but this tests worse now.
+                score_t threshold = node->beta - futilityMargin(pruneDepth);
+                if (node->eval == Constants::INVALID_SCORE) {
+                    node->eval = node->staticEval = scoring.evalu8(board);
+                }
+                if (node->eval < threshold) {
 #ifdef SEARCH_STATS
-                   ++stats.futility_pruning;
+                    ++stats.futility_pruning;
 #endif
 #ifdef _TRACE
-                   if (mainThread()) {
-                       indent(node->ply); cout << "futility: pruned" << endl;
-                   }
+                    if (mainThread()) {
+                        indent(node->ply); cout << "futility: pruned" << endl;
+                    }
 #endif
-                   return PRUNE;
-               }
-           }
-       }
-       const int seeDepth = quiet ? pruneDepth : depth;
-       // SEE pruning. Losing captures and checks and moves that put pieces en prise
-       // are pruned at low depths.
-       if (seeDepth <= SEE_PRUNING_DEPTH &&
-           //    extend <= 0 &&
-           node->ply > 0 &&
-           GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-           const score_t margin = seePruningMargin(seeDepth,quiet);
-           bool seePrune;
-           if (margin >= -Params::PAWN_VALUE/3 && swap != Constants::INVALID_SCORE) {
-               seePrune = !swap;
-           } else {
-               seePrune = !seeSign(board,move,margin);
-           }
-           if (seePrune) {
+                    return 1;
+                }
+            }
+        }
+        const int seeDepth = quiet ? pruneDepth : depth;
+        // SEE pruning. Losing captures and checks and moves that put pieces en prise
+        // are pruned at low depths.
+        if (seeDepth <= SEE_PRUNING_DEPTH &&
+            //    extend <= 0 &&
+            node->ply > 0 &&
+            GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
+            const score_t margin = seePruningMargin(seeDepth,quiet);
+            bool seePrune;
+            if (margin >= -Params::PAWN_VALUE/3 && node->swap != Constants::INVALID_SCORE) {
+                seePrune = !node->swap;
+            } else {
+                seePrune = !seeSign(board,move,margin);
+            }
+            if (seePrune) {
 #ifdef SEARCH_STATS
-               ++stats.see_pruning;
+                ++stats.see_pruning;
 #endif
 #ifdef _TRACE
-               if (mainThread()) {
-                   indent(node->ply); cout << "SEE: pruned" << endl;
-               }
+                if (mainThread()) {
+                    indent(node->ply); cout << "SEE: pruned" << endl;
+                }
 #endif
-               return PRUNE;
-           }
-       }
-   }
-   return extend;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int Search::extend(const Board &board,
+                   NodeInfo *node,
+                   CheckStatusType in_check_after_move,
+                   Move move) {
+    // see if we should apply any extensions at this node.
+    int extend = 0;
+
+    if (in_check_after_move == InCheck &&
+        ((node->swap = seeSign(board,move,0)) ||
+         board.isPinned(board.oppositeSide(),move))) {
+        // check does not lose material or is a discovered check
+#ifdef SEARCH_STATS
+        stats.check_extensions++;
+#endif
+        extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+    }
+    if (passedPawnPush(board,move)) {
+        extend += PAWN_PUSH_EXTENSION;
+#ifdef SEARCH_STATS
+        stats.pawn_extensions++;
+#endif
+    }
+    else if (TypeOfMove(move) == Normal &&
+             Capture(move) != Empty && Capture(move) != Pawn &&
+             board.getMaterial(board.oppositeSide()).pieceCount() == 1 &&
+             board.getMaterial(board.sideToMove()).noPieces()) {
+        // Capture of last piece in endgame.
+        extend += CAPTURE_EXTENSION;
+#ifdef SEARCH_STATS
+        ++stats.capture_extensions;
+#endif
+    }
+    return std::min<int>(extend,DEPTH_INCREMENT);
+}
+
+int Search::reduce(const Board &board,
+                   NodeInfo *node,
+                   int moveIndex,
+                   int improving,
+                   Move move) {
+    int depth = node->depth;
+    int extend = 0;
+    const bool quiet = !CaptureOrPromotion(move);
+
+    // See if we do late move reduction. Moves in the history phase of move
+    // generation can be searched with reduced depth.
+    if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving,node->PV()))) {
+        extend -= lmr(node,depth,moveIndex);
+        if (!quiet) {
+            extend += DEPTH_INCREMENT;
+        }
+        else {
+            if (!node->PV() && !improving) {
+                extend -= DEPTH_INCREMENT;
+            }
+            if (node->ply > 0) {
+                if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+                    // killer or refutation move
+                    extend += DEPTH_INCREMENT;
+                }
+                // reduce less for good history
+                extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
+            }
+        }
+    }
+    return std::min<int>(0,extend);
 }
 
 // Recursive function, implements alpha/beta search below ply 0 but
@@ -3048,20 +3048,21 @@ score_t Search::search()
                 node->quiets[node->num_quiets++] = move;
             }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
-            int extend;
+            int depthMod = 0;
+            node->swap = Constants::INVALID_SCORE;
             if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
-               extend = DEPTH_INCREMENT;
+               depthMod = DEPTH_INCREMENT;
 #ifdef SEARCH_STATS
                ++stats.singular_extensions;
 #endif
             }
-            else {
-               extend = calcExtensions(board, node,in_check_after_move,
-                                       move_index, improving, move);
-            }
-            if (extend == PRUNE) {
+            else if (prune(board, node, in_check_after_move,
+                           move_index, improving, move)) {
                 continue;
             }
+            depthMod = (depthMod > 0 ? depthMod : extend(
+                    board, node, in_check_after_move, move)) +
+                reduce(board, node, move_index, improving, move);
             board.doMove(move);
             if (!board.wasLegal(move,in_check)) {
                   ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
@@ -3074,9 +3075,23 @@ score_t Search::search()
                continue;
             }
             setCheckStatus(board, in_check_after_move);
-            if (depth+extend-DEPTH_INCREMENT > 0) {
+            if (depthMod < 0) {
+                // don't reduce into the q-search
+                depthMod = std::max<int>(depthMod,DEPTH_INCREMENT-depth+1);
+                if (depthMod > -DEPTH_INCREMENT) {
+                    // do not reduce < 1 ply
+                    depthMod = 0;
+                } else {
+#ifdef SEARCH_STATS
+                    ++stats.reduced;
+#endif
+                }
+            } else {
+                depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
+            }
+            if (depth + depthMod - DEPTH_INCREMENT > 0) {
                 try_score = -search(-hibound, -node->best_score,
-                    ply+1, depth+extend-DEPTH_INCREMENT);
+                    ply+1, depth + depthMod - DEPTH_INCREMENT);
             }
             else {
                 try_score = -quiesce(-hibound, -node->best_score,
@@ -3093,7 +3108,7 @@ score_t Search::search()
             }
             node->num_legal++;
             while (try_score > node->best_score &&
-               (extend < 0 || hibound < node->beta) &&
+               (depthMod < 0 || hibound < node->beta) &&
                 !((node+1)->flags & EXACT) &&
                 !terminate) {
                // We failed to get a cutoff and must re-search
@@ -3105,14 +3120,14 @@ score_t Search::search()
                     indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
-               if (extend >= -DEPTH_INCREMENT) {
+               if (depthMod >= -DEPTH_INCREMENT) {
                   hibound = node->beta;
                }
-               if (extend < 0) {
-                  extend = 0;
+               if (depthMod < 0) {
+                   depthMod = 0;
                }
-               if (depth+extend-DEPTH_INCREMENT > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,depth+extend-DEPTH_INCREMENT);
+               if (depth+depthMod-DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
 #ifdef _TRACE

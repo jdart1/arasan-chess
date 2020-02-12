@@ -43,7 +43,8 @@ struct NodeInfo {
                  best_count(0),
 #endif
                  ply(0),
-                 depth(0)
+                 depth(0),
+                 swap(Constants::INVALID_SCORE)
         {
         }
     score_t best_score;
@@ -63,6 +64,7 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
+    score_t swap;
 
     int PV() const {
         return (beta > alpha+1);
@@ -214,12 +216,24 @@ protected:
 
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8, SINGULAR=16 };
 
-    int calcExtensions(const Board &board,
-                       NodeInfo *node,
-                       CheckStatusType in_check_after_move,
-                       int moveIndex,
-                       int improving,
-                       Move move);
+    // Return true if move can be pruned (not called at root)
+    int prune(const Board &board,
+              NodeInfo *node,
+              CheckStatusType in_check_after_move,
+              int moveIndex,
+              int improving,
+              Move move);
+
+    int extend(const Board &board,
+               NodeInfo *node,
+               CheckStatusType in_check_after_move,
+               Move move);
+
+    int reduce(const Board &board,
+               NodeInfo *node,
+               int moveIndex,
+               int improving,
+               Move move);
 
     void storeHash(hash_t hash, Move hash_move, int depth);
 
