@@ -1850,12 +1850,7 @@ int Board::wasLegal(Move lastMove, bool evasion) const {
        default:
          break;
     }
-    if (PieceMoved(lastMove)) {
-       return !anyAttacks(kp,sideToMove());
-    }
-    else {
-       return !isPinned(oppositeSide(),lastMove);
-    }
+    return !anyAttacks(kp,sideToMove());
 }
 
 
