@@ -72,32 +72,30 @@ static int singularExtensionDepth(int depth)
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-static const int LMP_DEPTH=13;
+static constexpr int LMP_DEPTH=13;
 
-static const int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
-                                          {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
+static constexpr int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
+                                              {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
-static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE);
-static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
-static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
+static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(0.9*Params::PAWN_VALUE);
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
-static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
+static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
-static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+static constexpr score_t QSEARCH_FORWARD_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
-static const int NODE_ACCUM_THRESHOLD = 16;
+static constexpr int NODE_ACCUM_THRESHOLD = 16;
 
 #ifdef SMP_STATS
-static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
+static constexpr int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 #endif
 
 static int Time_Check_Interval;
 
-static const int Illegal = Constants::INVALID_SCORE;
+static constexpr int Illegal = Constants::INVALID_SCORE;
 
 static void setCheckStatus(Board &board, CheckStatusType s)
 {
@@ -877,8 +875,7 @@ static int lmpCount(int depth, int improving)
 
 static score_t razorMargin(int depth)
 {
-    return(depth<=DEPTH_INCREMENT) ?
-        RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
+    return RAZOR_MARGIN_SLOPE*depth/DEPTH_INCREMENT;
 }
 
 static score_t seePruningMargin(int depth, bool quiet)
