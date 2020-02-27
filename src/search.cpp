@@ -66,7 +66,7 @@ static score_t singularExtensionMargin(int depth)
 
 static int singularExtensionDepth(int depth)
 {
-   return depth/2;
+   return depth/2 - DEPTH_INCREMENT;
 }
 #endif
 
@@ -2497,7 +2497,7 @@ score_t Search::search()
     HashEntry::ValueType result;
     bool hashHit = false;
     score_t hashValue = Constants::INVALID_SCORE;
-    if (node->flags & (IID | SINGULAR)) {
+    if (node->flags & IID) {
        result = HashEntry::NoHit;
     }
     else {
@@ -2599,7 +2599,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY|SINGULAR)) && board.state.moveCount == 0 && !board.castlingPossible()) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY)) && board.state.moveCount == 0 && !board.castlingPossible()) {
        stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
@@ -2679,7 +2679,7 @@ score_t Search::search()
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        !(node->flags & (IID|VERIFY|SINGULAR)) &&
+        (node->flags & (IID|VERIFY)) == 0 &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
     const int improving = ply >= 3 && !in_check &&
@@ -2840,7 +2840,7 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() && board.checkStatus() == NotInCheck &&
         depth >= PROBCUT_DEPTH &&
-        (!(node->flags & PROBCUT) || depth >= 9*DEPTH_INCREMENT) &&
+        ((node->flags & PROBCUT)==0 || depth >= 9*DEPTH_INCREMENT) &&
         node->beta < Constants::MATE_RANGE) {
        const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
        const score_t needed_gain = probcut_beta - node->staticEval;
@@ -2858,9 +2858,6 @@ score_t Search::search()
                  }
 #endif
                  return -Illegal;                  // previous move was illegal
-             }
-             else if (MovesEqual(move,node->singularMove)) {
-                 continue;
              }
              else if (seeSign(board,move,needed_gain)) {
 #ifdef _TRACE
@@ -2975,30 +2972,56 @@ score_t Search::search()
             hashHit &&
             result == HashEntry::LowerBound &&
             !IsNull(hashMove) &&
-            !(node->flags & SINGULAR) &&
             !Scoring::mateScore(hashValue) &&
             hashEntry.depth() >= depth - 3*DEPTH_INCREMENT) {
 #ifdef SEARCH_STATS
             ++stats.singular_searches;
 #endif
-            // Search all moves but the hash move at reduced depth. If all
-            // fail low with a score significantly below the hash
-            // move's score, then consider the hash move as "singular" and
-            // extend its search depth.
-            // This hash-based "singular extension" has been
-            // implemented in the Ippo* series of engines (and
-            // presumably in Rybka), and also now in Stockfish, Komodo,
-            // Texel, Protector, etc.
-            NodeState state(node); // save current state
-            node->flags |= SINGULAR;
-            node->depth = singularExtensionDepth(depth);
-            node->singularMove = hashMove;
-            score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
-            node->alpha = nu_beta-1;
-            node->beta = nu_beta;
-            score_t value = search();
-            singularExtend = (value < nu_beta);
-            // Node state is reset on block end
+            // Verify hash move legal
+            board.doMove(hashMove);
+            const bool legal = board.wasLegal(hashMove);
+            board.undoMove(hashMove,state);
+            if (legal) {
+                // Search all moves but the hash move at reduced depth. If all
+                // fail low with a score significantly below the hash
+                // move's score, then consider the hash move as "singular" and
+                // extend its search depth.
+                // This hash-based "singular extension" has been
+                // implemented in the Ippo* series of engines (and
+                // presumably in Rybka), and also now in Stockfish, Komodo,
+                // Texel, Protector, etc.
+                score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
+                NodeState ns(node);
+                MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
+                singularExtend = true;
+                int move_index = 0;
+                const int depth = singularExtensionDepth(depth);
+                node->num_legal = 0;
+                for (;;) {
+                    Move move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
+                    if (IsNull(move)) break;
+                    if (IsUsed(move) || MovesEqual(hashMove,move)) continue;
+                    board.doMove(move);
+                    if (!board.wasLegal(move,in_check)) {
+                        board.undoMove(move,state);
+                        continue;
+                    }
+                    ++node->num_legal;
+                    if (!in_check && !CaptureOrPromotion(move) && GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
+                        if (node->num_legal >= lmpCount(depth,true)) {
+                            // skip late quiets
+                            board.undoMove(move,state);
+                            continue;
+                        }
+                    }
+                    score_t value = -search(-nu_beta,-nu_beta+11,node->ply+1,depth);
+                    board.undoMove(move,state);
+                    if (value >= nu_beta) {
+                        singularExtend = false;
+                        break; // hash move is not singular
+                    }
+                }
+            }
         }
 #endif
         MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
@@ -3014,7 +3037,7 @@ score_t Search::search()
             Move move;
             move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
-            if (IsUsed(move) || MovesEqual(node->singularMove,move)) continue;
+            if (IsUsed(move)) continue;
 #ifdef SEARCH_STATS
             ++stats.moves_searched;
 #endif
@@ -3179,16 +3202,7 @@ score_t Search::search()
         }
         if (node->num_legal == 0) {
             // no legal moves
-#ifdef _DEBUG
-            if (!(node->flags & SINGULAR)) {
-                RootMoveGenerator rmg(board);
-                ASSERT(rmg.moveCount() == 0);
-            }
-#endif
-            if (node->flags & SINGULAR) {
-                node->best_score = node->alpha;
-            }
-            else if (in_check) {
+            if (in_check) {
 #ifdef _TRACE
                 if (mainThread()) {
                     indent(ply); cout << "mate" << endl;
@@ -3210,7 +3224,7 @@ score_t Search::search()
             }
         }
     }
-    if (!(node->flags & SINGULAR) && !IsNull(node->best) && !CaptureOrPromotion(node->best) &&
+    if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
         board.checkStatus() != InCheck) {
         context.setKiller(node->best, node->ply);
         if (node->ply > 0) {
@@ -3222,7 +3236,7 @@ score_t Search::search()
     // don't insert into the hash table if we are terminating - we may
     // not have an accurate score.
  hash_insert:
-    if (!terminate && !(node->flags & SINGULAR)) {
+    if (!terminate) {
         if (IsNull(node->best)) node->best = hashMove;
         // store the position in the hash table, if there's room
         score_t value = node->best_score;
@@ -3428,11 +3442,6 @@ void Search::init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *slave_ti) {
     ti = slave_ti;
     node->ply = 0;
     // depth will be set later
-#ifdef SINGULAR_EXTENSION
-    for (int i = 0; i < Constants::MaxPly; i++) {
-       ns[i].singularMove = NullMove;
-    }
-#endif
     stats.clear();
 
 #ifdef SYZYGY_TBS

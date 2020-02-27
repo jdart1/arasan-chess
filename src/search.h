@@ -33,7 +33,6 @@ struct NodeInfo {
                  num_quiets(0),
                  num_legal(0),
                  flags(0),
-                 singularMove(NullMove),
                  best(NullMove),
                  last_move(NullMove),
                  eval(Constants::INVALID_SCORE),
@@ -53,7 +52,6 @@ struct NodeInfo {
     int num_quiets;
     int num_legal;
     int flags;
-    Move singularMove;
     Move best;
     Move last_move;
     score_t eval, staticEval;
@@ -104,7 +102,7 @@ public:
         n->best_score = alpha;
         n->cutoff = 0;
         n->num_quiets = n->num_legal = 0;
-        n->singularMove = n->best = n->last_move = NullMove;
+        n->best = n->last_move = NullMove;
         (n+1)->pv[ply+1] = NullMove;
         (n+1)->pv_length = 0;
         n->pv[ply] = NullMove;
@@ -214,7 +212,7 @@ public:
 
 protected:
 
-    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8, SINGULAR=16 };
+    enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8 };
 
     // Return true if move can be pruned (not called at root)
     int prune(const Board &board,
