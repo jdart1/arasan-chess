@@ -2921,24 +2921,23 @@ score_t Search::search()
         // Note: we do not push down the node stack because we want this
         // search to have all the same parameters (including ply) as the
         // current search, just reduced depth + the IID flag set.
+        // Save state here: exit from block resets node state.
         NodeState state(node);
         node->flags |= IID;
         node->depth = d;
-        score_t iid_score = -search();
-        int iid_flags = node->flags;
+        score_t iid_score = search();
         // set hash move to IID search result (may still be null)
         hashMove = node->best;
-        if (iid_score == Illegal || iid_flags & EXACT) {
-            // previous move was illegal or was an exact score
+        if (iid_score == -Illegal || ((node->flags) & EXACT)) {
+            // previous move was illegal or search gave an exact score
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply);
                 cout << "== exact result from IID" << endl;
             }
 #endif
-            return -iid_score;
+            return iid_score;
         }
-        // Exit from block resets node state
         if (terminate) {
             return node->alpha;
         }
