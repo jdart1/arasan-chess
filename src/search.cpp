@@ -1068,7 +1068,7 @@ Move Search::ply0_search()
             cout << " terminate=" << terminate << endl;
          }
          int fails = 0;
-         int faillows = 0, failhighs = 0;
+         int faillows = 0, failhighs = 0, failHighResearch = 0;
          do {
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
@@ -1080,8 +1080,10 @@ Move Search::ply0_search()
                cout << ']' << endl;
             }
 #endif
+            // Note: re-search fail highs with reduced depth (idea
+            // from Stockfish/Ethereal)
             value = ply0_search(mg, lo_window, hi_window, iterationDepth,
-                                DEPTH_INCREMENT*iterationDepth + controller->depth_adjust,
+                                std::max<int>(DEPTH_INCREMENT,DEPTH_INCREMENT*iterationDepth + controller->depth_adjust - failHighResearch*DEPTH_INCREMENT),
                                 excluded);
             // If we did not even search one move in this iteration,
             // leave the search stats intact (with the previous
@@ -1135,6 +1137,7 @@ Move Search::ply0_search()
             // Show status (if main thread) and adjust aspiration
             // window as needed
             if (stats.failHigh) {
+                ++failHighResearch;
                 if (mainThread()) {
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
@@ -1167,6 +1170,7 @@ Move Search::ply0_search()
                 }
             }
             else if (stats.failLow) {
+                failHighResearch = 0;
                 if (mainThread()) {
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
