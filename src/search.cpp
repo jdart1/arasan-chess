@@ -61,7 +61,7 @@ static constexpr double LMR_DIV[2] = {1.8,2.25};
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
 {
-    return 2*depth/DEPTH_INCREMENT;
+    return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
 }
 
 static int singularExtensionDepth(int depth)
