@@ -1,5 +1,5 @@
 // Main module for Arasan chess engine.
-// Copyright 1997-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2020 by Jon Dart. All Rights Reserved.
 //
 
 #include "types.h"
@@ -175,7 +175,7 @@ int CDECL main(int argc, char **argv) {
                     exit(-1);
                 }
                 break;
-            case 'f': 
+            case 'f':
             {
                 ++arg;
                 cout << "loading " << argv[arg] << endl;
@@ -270,7 +270,7 @@ int CDECL main(int argc, char **argv) {
 #endif
 
     p->poll(polling_terminated);
-    
+
 #ifdef _WIN32
     TerminateThread(pollingThreadHandle,0);
 #else
