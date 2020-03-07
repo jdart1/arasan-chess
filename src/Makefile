@@ -97,6 +97,9 @@ CFLAGS := $(CFLAGS) -I$(HWLOC64)/include
 LIBS := -lhwloc $(LIBS)
 endif
 
+ifdef EXE
+ARASANX := $(EXE)
+else
 ifeq ($(LBITS),64)
    CFLAGS := $(CFLAGS) -D_64BIT
 endif
@@ -106,6 +109,7 @@ ARASANX := $(ARASANX)-numa
 endif
 ifdef BUILD_TYPE
 ARASANX := $(ARASANX)-$(BUILD_TYPE)
+endif
 endif
 
 TUNER := tuner
@@ -301,7 +305,7 @@ ifeq ("$(findstring UNIT_TESTS,$(CFLAGS))","UNIT_TESTS")
 UNIT_TEST_SRC:=unit.cpp
 endif
 
-ARASANX_SOURCES = arasanx.cpp tester.cpp protocol.cpp \
+ARASANX_SOURCES = arasanx.cpp tester.cpp bench.cpp protocol.cpp \
 globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
@@ -431,7 +435,7 @@ endif
 endif
 
 profile-run:
-	$(PROFILE)/arasanx $(PGO_RUN_FLAGS) <../tests/prof
+	$(PROFILE)/arasanx $(PGO_RUN_FLAGS) bench
 	rm $(PROFILE)/*.o
 	rm -f $(PROFILE)/arasanx $(EXPORT)/arasanx
 

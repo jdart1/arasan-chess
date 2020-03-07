@@ -3,6 +3,7 @@
 #include "protocol.h"
 
 #include "attacks.h"
+#include "bench.h"
 #include "bitprobe.h"
 #include "boardio.h"
 #include "calctime.h"
@@ -831,7 +832,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         }
         return false;
     }
-    else if (cmd == "new" || cmd == "test" ||
+    else if (cmd == "new" || cmd == "test" || cmd == "bench" ||
              cmd == "edit" || cmd == "remove" || cmd == "undo" ||
              cmd_word == "setboard" || cmd == "analyze" ||
              cmd == "go" || cmd == "exit" || cmd == "white" ||
@@ -2046,6 +2047,11 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     }
     else if (editMode) {
        edit_mode_cmds(board,side,cmd_word);
+    }
+    else if (cmd_word == "bench") {
+       Bench b;
+       Bench::Results res = b.bench(true);
+       cout << res;
     }
     else if (cmd_word == "test") {
         string filename;

@@ -169,7 +169,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BULD)\bench.obj $(BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
 
 TUNER_OBJS = $(TUNE_BUILD)\tuner.obj \
 $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
@@ -199,7 +199,8 @@ $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj \
-$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\unit.obj $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\build.obj \
+$(PROFILE)\unit.obj $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
