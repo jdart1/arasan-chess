@@ -1,4 +1,4 @@
-// Copyright 1987-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2020 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -44,8 +44,7 @@ static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
-static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
-static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
+static const int CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
@@ -1474,11 +1473,12 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               cout << "score = " << try_score << " - no cutoff, researching .." << endl;
            }
 #endif
-           if (depthMod >= -DEPTH_INCREMENT) {
-              hibound = node->beta;
-           }
            if (depthMod < 0) {
-              depthMod = 0;
+               depthMod = 0;
+           } else {
+               // search (or in the case of LMR, re-search) with
+               // zero window failed high. So widen window.
+               hibound = node->beta;
            }
            if (depth+depthMod-DEPTH_INCREMENT > 0)
               try_score=-search(-hibound,-lobound,1,depth+depthMod-DEPTH_INCREMENT);
@@ -2368,7 +2368,7 @@ int Search::extend(const Board &board,
 #ifdef SEARCH_STATS
         stats.check_extensions++;
 #endif
-        extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+        extend += CHECK_EXTENSION;
     }
     if (passedPawnPush(board,move)) {
         extend += PAWN_PUSH_EXTENSION;
@@ -3143,12 +3143,14 @@ score_t Search::search()
                     indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
-               if (depthMod >= -DEPTH_INCREMENT) {
-                  hibound = node->beta;
-               }
                if (depthMod < 0) {
                    depthMod = 0;
+               } else {
+                   // search (or in the case of LMR, re-search) with
+                   // zero window failed high. So widen window.
+                   hibound = node->beta;
                }
+
                if (depth+depthMod-DEPTH_INCREMENT > 0)
                  try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
                else

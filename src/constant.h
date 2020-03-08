@@ -25,7 +25,7 @@ const int INFINITE_TIME = 9999999;
 
 #define STRINGIFY(x) #x
 #define MAKE_STR(x) STRINGIFY(x)
-constexpr int DEPTH_INCREMENT = 2;
+constexpr int DEPTH_INCREMENT = 1;
 #define Arasan_Version MAKE_STR(ARASAN_VERSION)
 #define Arasan_Copyright "Copyright 1994-2020 by Jon Dart. All Rights Reserved."
 
