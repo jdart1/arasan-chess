@@ -2998,7 +2998,7 @@ score_t Search::search()
                 MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
                 singularExtend = true;
                 int move_index = 0;
-                const int depth = singularExtensionDepth(depth);
+                const int nu_depth = singularExtensionDepth(depth);
                 node->num_legal = 0;
                 for (;;) {
                     Move move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
@@ -3011,13 +3011,13 @@ score_t Search::search()
                     }
                     ++node->num_legal;
                     if (!in_check && !CaptureOrPromotion(move) && GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-                        if (node->num_legal >= lmpCount(depth,true)) {
+                        if (node->num_legal >= lmpCount(nu_depth,true)) {
                             // skip late quiets
                             board.undoMove(move,state);
                             continue;
                         }
                     }
-                    score_t value = -search(-nu_beta,-nu_beta+11,node->ply+1,depth);
+                    score_t value = -search(-nu_beta,-nu_beta+11,node->ply+1,nu_depth);
                     board.undoMove(move,state);
                     if (value >= nu_beta) {
                         singularExtend = false;
