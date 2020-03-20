@@ -2,3 +2,6 @@
 	path = src/syzygy
 	url = https://github.com/jdart1/Fathom
         ignore = dirty
+[submodule "tools/stats"]
+	path = tools/stats
+	url = https://www.github.com/jdart1/stats
