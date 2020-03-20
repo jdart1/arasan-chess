@@ -747,6 +747,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\attacks.cpp" />
+    <ClCompile Include="..\src\bench.cpp" />
     <ClCompile Include="..\src\bhash.cpp" />
     <ClCompile Include="..\src\bitboard.cpp" />
     <ClCompile Include="..\src\bitprobe.cpp" />
