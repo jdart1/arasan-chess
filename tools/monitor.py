@@ -5,7 +5,7 @@
 #
 import json, sys, subprocess, math, time, threading
 from subprocess import Popen, PIPE, call
-# copy of Fishtest stats module
+# copy of Fishtest stats module fromm http://www.github.com/jdart1/stats
 # copy because it is a nested package in Fishtest
 from stats import stat_util
 
@@ -55,6 +55,8 @@ class Monitor:
       global scores, STOP_SCRIPT, ELO_MODEL, POLL_INTERVAL
       alpha = 0.05
       beta = 0.05
+      LA=math.log(beta/(1-alpha))
+      LB=math.log((1-beta)/alpha)
       result = ""
       while(limit > 0 or len(result)==0):
          games = 0
@@ -74,23 +76,18 @@ class Monitor:
          R['wins'] = scores[1]
          R['losses'] = scores[0]
          R['draws'] = scores[2]
-         result = stat_util.SPRT_elo(R,alpha,beta,0.05,0,5.0,ELO_MODEL)
-         LLR = result['LLR']
-         LA=math.log(beta/(1-alpha))
-         LB=math.log((1-beta)/alpha)
+         stat_result = stat_util.SPRT_elo(R,alpha,beta,0.05,0,5.0,ELO_MODEL)
+         LLR = float(stat_result['LLR'])
          print("LLR=" + "{0:.2f}".format(round(LLR,2)) + " [" + \
                "{0:.2f}".format(round(LA,2)) + "," + \
                "{0:.2f}".format(round(LB,2)) + "] (" + str(games) + " games)")
-         haveResult = True
          if LLR>LB:
              result = 'H1'
          elif LLR<LA:
              result = 'H0'
-         else:
-             haveResult = False
-         if haveResult:
+         if len(result)>0:
              print("result=" + result)
-         if (haveResult or (limit > 0 and games >= limit)):
+         if ((len(result)>0) or (limit > 0 and games >= limit)):
              break
       subprocess.call(STOP_SCRIPT,shell=True)
 
@@ -98,7 +95,7 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv[1:]
 
-    limit = 0
+    limit = 1000000
     arg = 0
     while ((arg < len(argv)) and (argv[arg][0:1] == '-')):
         if (argv[arg][1] == 'n'):
