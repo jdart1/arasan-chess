@@ -32,7 +32,7 @@ def main(argv = None):
     global cutechess_cli_path
     dir = cutechess_cli_path
 
-    pat = re.compile('^.+\/match([0-9]+)\.log$')
+    pat = re.compile('^.+\/match[0-9]*\.log$')
     score_pat = re.compile('^Score.+: ([0-9]+) \- ([0-9]+) \- ([0-9]+).+$')
 
     filenames = next(os.walk(dir))[2]

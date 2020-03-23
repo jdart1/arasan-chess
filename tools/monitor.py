@@ -43,12 +43,15 @@ class Monitor:
 
       proc = Popen(cmd + REMOTE_EXEC_SCRIPT, stdout=PIPE, shell=True)
       status_stdout = proc.communicate()[0]
+#      print("host="+host)
+#      tmp = [scores[0], scores[1], scores[2]]
       for line in status_stdout.splitlines():
 #         print("received " + line.decode())
          i = 0
          for chunk in line.decode().split(" "):
             scores[i] = scores[i] + int(chunk)
             i = i + 1
+#      print("scores=      " + str(scores[0]-tmp[0]) + " " + str(scores[1]-tmp[1]) + " " + str(scores[2]-tmp[2]))
       proc.wait()
 
    def run(self,machines,limit):
@@ -69,13 +72,11 @@ class Monitor:
             games = games + scores[i]
          if (games == 0):
             continue
-         # Note: scores are W L D but from the perspective of the
-         # base version. So L W D from the perspective of the version
-         # being tested
          R = {}
-         R['wins'] = scores[1]
-         R['losses'] = scores[0]
+         R['wins'] = scores[0]
+         R['losses'] = scores[1]
          R['draws'] = scores[2]
+         print("W/L/D=" + str(R['wins']) + '/' + str(R['losses'])+ '/' + str(R['draws']))
          stat_result = stat_util.SPRT_elo(R,alpha,beta,0.05,0,5.0,ELO_MODEL)
          LLR = float(stat_result['LLR'])
          print("LLR=" + "{0:.2f}".format(round(LLR,2)) + " [" + \
