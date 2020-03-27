@@ -5,3 +5,4 @@
 [submodule "tools/stats"]
 	path = tools/stats
 	url = https://www.github.com/jdart1/stats
+        ignore = dirty
