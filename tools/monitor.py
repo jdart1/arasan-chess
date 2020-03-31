@@ -30,7 +30,7 @@ POLL_INTERVAL = 180
 
 scores = [0,0,0]
 
-ELO_MODEL='logistic'
+ELO_MODEL='BayesElo'
 
 class Monitor:
 
@@ -81,7 +81,7 @@ class Monitor:
          LLR = float(stat_result['LLR'])
          print("LLR=" + "{0:.2f}".format(round(LLR,2)) + " [" + \
                "{0:.2f}".format(round(LA,2)) + "," + \
-               "{0:.2f}".format(round(LB,2)) + "] (" + str(games) + " games)")
+               "{0:.2f}".format(round(LB,2)) + "] " + str(games) + " games elo=" + "{0:.1f}".format(round(stat_result['elo'],2)))
          if LLR>LB:
              result = 'H1'
          elif LLR<LA:
