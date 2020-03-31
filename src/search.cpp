@@ -54,8 +54,8 @@ static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
-static constexpr double LMR_BASE[2] = {0.5, 0.3};
-static constexpr double LMR_DIV[2] = {1.8,2.25};
+static constexpr double LMR_BASE = 1.0;
+static constexpr double LMR_DIV = 2.0;
 
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
@@ -69,7 +69,7 @@ static int singularExtensionDepth(int depth)
 }
 #endif
 
-static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
+static int CACHE_ALIGN LMR_REDUCTION[64][64];
 
 static constexpr int LMP_DEPTH=13;
 
@@ -111,8 +111,8 @@ static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
             Rank(DestSquare(move),board.sideToMove()) == 7);
 }
 
-static int lmr(NodeInfo *node, int depth, int moveIndex) {
-    return LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
+static int lmr(int depth, int moveIndex) {
+    return LMR_REDUCTION[depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
 }
 
 SearchController::SearchController()
@@ -171,26 +171,11 @@ SearchController::SearchController()
     ti->state = ThreadInfo::Working;
     for (int d = 0; d < 64; d++) {
         for (int moves = 0; moves < 64; moves++) {
-            for (int p = 0; p < 2; p++) {
-                LMR_REDUCTION[p][d][moves] = 0;
-                if (d > 0 && moves > 0) {
-                    const double reduction = LMR_BASE[p] + log(d) * log(moves) / LMR_DIV[p];
-                    LMR_REDUCTION[p][d][moves] = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
-                }
+            if (d > 0 && moves > 0) {
+                LMR_REDUCTION[d][moves] = static_cast<int>(LMR_BASE + log(d) * log(moves) / LMR_DIV);
             }
         }
     }
-/*
-    for (int i = 3; i < 64; i++) {
-      cout << "--- i=" << i << endl;
-      for (int m=0; m<64; m++) {
-         cout << m << " " <<
-         1.0*LMR_REDUCTION[0][i][m]/DEPTH_INCREMENT << ' ' <<
-         1.0*LMR_REDUCTION[1][i][m]/DEPTH_INCREMENT << ' ' <<
-         endl;
-      }}
-
- */
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -2272,7 +2257,7 @@ int Search::prune(const Board &board,
         int depth = node->depth;
         // for pruning decisions, use modified depth but not the same as
         // LMR depth (idea from Laser)
-        const int pruneDepth = quiet ? depth - lmr(node,depth,moveIndex) : depth;
+        const int pruneDepth = quiet ? std::min<int>(depth,depth - lmr(depth,moveIndex) + node->PV()*DEPTH_INCREMENT) : depth;
         if (in_check_after_move != InCheck && quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
             // do not use pruneDepth for LMP
             if (GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
@@ -2401,22 +2386,19 @@ int Search::reduce(const Board &board,
     // See if we do late move reduction. Moves in the history phase of move
     // generation can be searched with reduced depth.
     if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
-        extend -= lmr(node,depth,moveIndex);
+        extend -= lmr(depth,moveIndex);
         if (!quiet) {
-            extend += DEPTH_INCREMENT;
+            depth += DEPTH_INCREMENT;
         }
-        else {
-            if (!node->PV() && !improving) {
-                extend -= DEPTH_INCREMENT;
+        if (node->ply > 0) {
+            if (!improving) extend -= DEPTH_INCREMENT;
+            if (extend<0 && node->PV()) extend += 2*DEPTH_INCREMENT;
+            if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+                // killer or refutation move
+                extend += DEPTH_INCREMENT;
             }
-            if (node->ply > 0) {
-                if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
-                    // killer or refutation move
-                    extend += DEPTH_INCREMENT;
-                }
-                // reduce less for good history
-                extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
-            }
+            // reduce less for good history
+            extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
         }
     }
     return std::min<int>(0,extend);
