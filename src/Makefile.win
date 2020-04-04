@@ -343,7 +343,7 @@ utils: dirs $(BUILD)\pgnselect.exe
 
 profile-run: dirs
     del $(PROFDATA)\*.pgc
-    $(PROFILE)\$(ARASANX) $(PROF_RUN_FLAGS) <..\tests\prof
+    $(PROFILE)\$(ARASANX) $(PROF_RUN_FLAGS) bench
 
 profile-optimized: $(ARASANX_PROFILE_OBJS)
     copy /y $(PROFILE)\*.pgc $(PGO_BUILD)
