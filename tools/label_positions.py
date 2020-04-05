@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright 2016-2018 by Jon Dart. All Rights Reserved.
+# Copyright 2016-2018, 2020 by Jon Dart. All Rights Reserved.
 # This code is under the MIT license: see doc directory.
 #
 # Tool to run matches that add score records (with c2 tag) to an EPD
@@ -45,7 +45,7 @@ class RunGames:
          if m == None:
             print("error: invalid FEN in line: %s" % line, file=sys.stderr)
          else:
-            self.run_game(line)
+            self.run_game(m.group())
 
    def run_game(self,epd):
       # create temp file for EPD
