@@ -42,7 +42,7 @@ static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
-static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
+static const int RAZOR_DEPTH = 2*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 static const int CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
@@ -76,7 +76,9 @@ static constexpr int LMP_DEPTH=13;
 static constexpr int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
                                               {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
-static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(0.9*Params::PAWN_VALUE);
+static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.25*Params::PAWN_VALUE);
+
+static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(0.0*Params::PAWN_VALUE);
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
@@ -857,10 +859,12 @@ static int lmpCount(int depth, int improving)
         LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] : Constants::MaxMoves;
 }
 
+#ifdef RAZORING
 static score_t razorMargin(int depth)
 {
-    return RAZOR_MARGIN_SLOPE*depth/DEPTH_INCREMENT;
+    return RAZOR_MARGIN + RAZOR_MARGIN_SLOPE*depth/DEPTH_INCREMENT;
 }
+#endif
 
 static score_t seePruningMargin(int depth, bool quiet)
 {
