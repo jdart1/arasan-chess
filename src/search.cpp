@@ -2276,40 +2276,42 @@ int Search::prune(const Board &board,
 #endif
                 return 1;
             }
-            // History pruning.
-            if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
-                context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
-                context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
-#ifdef _TRACE
-                if (mainThread()) {
-                    indent(node->ply); cout << "history: pruned" << endl;
-                }
-#endif
-#ifdef SEARCH_STATS
-                ++stats.history_pruning;
-#endif
-                return 1;
-            }
-            // futility pruning, enabled at low depths. Do not prune
-            // moves with good history.
-            if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
-                FUTILITY_HISTORY_THRESHOLD[improving]){
-                // Threshold was formerly increased with the move index
-                // but this tests worse now.
-                score_t threshold = node->beta - futilityMargin(pruneDepth);
-                if (node->eval == Constants::INVALID_SCORE) {
-                    node->eval = node->staticEval = scoring.evalu8(board);
-                }
-                if (node->eval < threshold) {
-#ifdef SEARCH_STATS
-                    ++stats.futility_pruning;
-#endif
+            if (quiet) {
+                // History pruning.
+                if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
+                    context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
+                    context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
 #ifdef _TRACE
                     if (mainThread()) {
-                        indent(node->ply); cout << "futility: pruned" << endl;
+                        indent(node->ply); cout << "history: pruned" << endl;
                     }
 #endif
+#ifdef SEARCH_STATS
+                    ++stats.history_pruning;
+#endif
                     return 1;
+                }
+                // futility pruning, enabled at low depths. Do not prune
+                // moves with good history.
+                if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
+                    FUTILITY_HISTORY_THRESHOLD[improving]){
+                    // Threshold was formerly increased with the move index
+                    // but this tests worse now.
+                    score_t threshold = node->beta - futilityMargin(pruneDepth);
+                    if (node->eval == Constants::INVALID_SCORE) {
+                        node->eval = node->staticEval = scoring.evalu8(board);
+                    }
+                    if (node->eval < threshold) {
+#ifdef SEARCH_STATS
+                        ++stats.futility_pruning;
+#endif
+#ifdef _TRACE
+                        if (mainThread()) {
+                            indent(node->ply); cout << "futility: pruned" << endl;
+                        }
+#endif
+                        return 1;
+                    }
                 }
             }
         }
