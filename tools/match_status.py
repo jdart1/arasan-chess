@@ -1,12 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import re, os, sys, time
+# Copyright 2017, 2020 by Jon Dart. All Rights Reserved.
+#
+import re, os, os.path, sys, time
 
 # checks status of cutechess match on a host
 
 # Cutechess bin directory
 cutechess_cli_path = '/home/jdart/chess/cutechess-cli'
+
+# Log file
+log_file_name = 'match.log'
+
+MAX_RESULTS = 100000
 
 def read_last(filename, BUFSIZE=4096):
     f = open(filename, "r")
@@ -29,35 +36,52 @@ def read_last(filename, BUFSIZE=4096):
        return lines
 
 def main(argv = None):
-    global cutechess_cli_path
-    dir = cutechess_cli_path
+    global cutechess_cli_path, log_file_name, MAX_RESULTS
 
-    pat = re.compile('^.+\/match[0-9]*\.log$')
-    score_pat = re.compile('^Score.+: ([0-9]+) \- ([0-9]+) \- ([0-9]+).+$')
-
-    filenames = next(os.walk(dir))[2]
-    sums = [0,0,0]
+    n = [0,0,0,0,0]
     results = {}
     index = 0
-    for fn in filenames:
-       path = dir + '/' + fn 
-       if (pat.match(path) != None): 
-#           print (path)
-           lines = read_last(path)
-           if (lines != None):
-               for aline in lines:
-                   mat = score_pat.match(aline)
-                   if (mat != None):
-                       results[index] = mat.groups()
-                       index = index + 1
-                       break
+    path = cutechess_cli_path + '/' + log_file_name
 
-    for key in results.keys():
-        scores = results[key]
-        for i in range(0,3):
-            sums[i] = sums[i] + int(scores[i])
+    INVALID = -1
 
-    print("%s %s %s" % (str(sums[0]), str(sums[1]), str(sums[2])))
+    if (os.path.isfile(path) == None):
+        print(str(n))
+        exit(-1)
+
+    #Finished game 14 (Arasan-Base vs XboardEngine): 1-0 {Black resigns}
+    pat=re.compile("^Finished game ([0-9]+) \(.+\): ([0-9-\/]+) {(.*)}")
+
+    results = []
+    for i in range(MAX_RESULTS):
+        results.append(INVALID)
+
+    with open(path) as f:
+        maxgame = 0
+        for line in f:
+            m = pat.match(line)
+            if m != None:
+                game = int(m.group(1))
+                result = m.group(2)
+                result_kind = m.group(3)
+                if (result_kind.find('disconnect') != -1 or result_kind.find('stall') != -1):
+                    continue
+                r = 0.5
+                if (result == "0-1"):
+                   r = 0
+                elif (result == "1-0"):
+                   r = 1
+                results[game] = int(2*r)
+                if (game>maxgame):
+                    maxgame = game
+        for game in range(0,maxgame,2):
+            p = [results[game+1],results[game+2]]
+            if p[0] != INVALID and p[1] != INVALID:
+                idx = p[0] + (2-p[1])
+                n[idx] = n[idx] + 1
+    for i in range(0,4):
+        print(n[i],end=" ")
+    print(n[4])
 
 if __name__ == "__main__":
     sys.exit(main())
