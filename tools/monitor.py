@@ -86,17 +86,6 @@ class Monitor:
                   "{0:.2f}".format(round(LA,2)) + "," + \
                   "{0:.2f}".format(round(LB,2)) + "] " + str(games) + " elo: " + "{0:.2f}".format(round(elo,2)) +
                   " [%.2f,%.2f]" % (results['ci'][0],results['ci'][1]))
-
-#            W = scores[0]
-#            L = scores[1]
-#            D = scores[2]
-#            print("W/L/D=" + str(scores[0]) + '/' + str(scores[1])+ '/' + str(scores[2]))
-#            LA=math.log(beta/(1-alpha))
-#            LB=math.log((1-beta)/alpha)
-#            LLR = self.SPRT(W,L,D,0,5.0)
-#            print("LLR=" + "{0:.2f}".format(round(LLR,2)) + " [" + \
-#                  "{0:.2f}".format(round(LA,2)) + "," + \
-#                  "{0:.2f}".format(round(LB,2)) + "] " + str(games))
             if LLR>LB:
                 result = 'H1'
             elif LLR<LA:
