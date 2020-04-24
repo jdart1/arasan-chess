@@ -2393,9 +2393,6 @@ int Search::reduce(const Board &board,
     // generation can be searched with reduced depth.
     if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
         extend -= lmr(depth,moveIndex);
-        if (!quiet) {
-            depth += DEPTH_INCREMENT;
-        }
         if (node->ply > 0) {
             if (!improving) extend -= DEPTH_INCREMENT;
             if (extend<0 && node->PV()) extend += 2*DEPTH_INCREMENT;
