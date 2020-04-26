@@ -1,4 +1,4 @@
-// Copyright 1994-2019 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2020 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -217,8 +217,8 @@ Move MoveGenerator::nextEvasion(int &ord) {
         return NullMove;
      }
      else if (batch_count > 1) {
-       int scores[40];
-       ASSERT(batch_count < 40);
+       int scores[Constants::MaxCaptures];
+       ASSERT(batch_count < Constants::MaxCaptures);
        int poscaps = 0, negcaps = 0;
        for (int i = 0; i < batch_count; i++) {
           if (MovesEqual(moves[i],hashMove)) {
@@ -1269,8 +1269,8 @@ void mg::sortMoves(Move moves[], int scores[], unsigned n) {
 
 void mg::initialSortCaptures (Move *moves,unsigned captures) {
    if (captures > 1) {
-      int scores[40];
-      ASSERT(captures < 40);
+      int scores[Constants::MaxCaptures];
+      ASSERT(captures < Constants::MaxCaptures);
       for (unsigned i = 0; i < captures; i++) {
           scores[i] = int(Params::MVV_LVA(moves[i]));
       }
