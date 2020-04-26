@@ -26,8 +26,6 @@ MATCH_STATUS_SCRIPT = 'python3 /home/jdart/tools/match_status.py'
 # script to stop matches
 STOP_SCRIPT = '/home/jdart/tools/stop-all'
 
-POLL_INTERVAL = 180
-
 class Monitor:
 
     scores = [0,0,0,0,0]
@@ -41,51 +39,50 @@ class Monitor:
 
         proc = Popen(cmd + MATCH_STATUS_SCRIPT, stdout=PIPE, shell=True)
         status_stdout = proc.communicate()[0]
-        #      print("host="+host)
-        #      tmp = [scores[0], scores[1], scores[2]]
         for line in status_stdout.splitlines():
-            #         print("received " + line.decode())
            i = 0
            for chunk in line.decode().split(" "):
                scores[i] = scores[i] + int(chunk)
                i = i + 1
-               #      print("scores=      " + str(scores[0]-tmp[0]) + " " + str(scores[1]-tmp[1]) + " " + str(scores[2]-tmp[2]))
         proc.wait()
 
-    def run(self,machines,limit):
-        global STOP_SCRIPT, POLL_INTERVAL
+    def run(self,machines,limit,poll_interval):
+        global STOP_SCRIPT
         result = ""
         alpha = 0.05
         beta = 0.05
+        elo0 = -0.5
+        elo1 = 1.5
         while(limit > 0 or len(result)==0):
             games = 0
-            time.sleep(POLL_INTERVAL)
+            time.sleep(poll_interval)
             for i in range(0,5):
                  self.scores[i] = 0
             for host in machines:
                  self.get_status(host['hostname'],self.scores)
+            self.scores = [665,4413,8938,4490,680]
             for i in range(0,4):
                  print(str(self.scores[i]),end=" ")
             print(str(self.scores[4]))
             # get count of games - each score is for a pair so must mult x2
+            score = 0.0;
             for i in range(0,5):
                 games = games + 2*self.scores[i]
+                score += i*self.scores[i]/2.0;
             if (games == 0):
                 continue
-            # L, D, W
-            s = sprt.sprt()
-            s.set_state(self.scores)
-            results = s.analytics()
-#            LLR=results['LLR']
+            score = 100.0*score/games
             scores_reg=LLRcalc.regularize(self.scores)
-            LLR=LLRcalc.LLR_logistic(0,5.0,scores_reg)
-            elo=results['elo']
-            LA=results['a']
-            LB=results['b']
-            print("LLR=" + "{0:.2f}".format(round(LLR,2)) + " [" + \
-                  "{0:.2f}".format(round(LA,2)) + "," + \
-                  "{0:.2f}".format(round(LB,2)) + "] " + str(games) + " elo: " + "{0:.2f}".format(round(elo,2)) +
-                  " [%.2f,%.2f]" % (results['ci'][0],results['ci'][1]))
+            s = sprt.sprt()
+            s.set_state(scores_reg)
+            a5=s.analytics()
+            LA=a5['a']
+            LB=a5['b']
+            LLR=LLRcalc.LLR_logistic(elo0,elo1,self.scores)
+            stats = []
+            for stat in (LLR,LA,LB,score):
+                 stats.append("{0:.2f}".format(round(stat,2)))
+            print('LLR=%s [%s, %s] %d games, score: %s%%' %(stats[0], stats[1], stats[2], games, stats[3]))
             if LLR>LB:
                 result = 'H1'
             elif LLR<LA:
@@ -100,7 +97,8 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv[1:]
 
-    limit = 1000000
+    limit = 25000
+    poll_interval = 180
     arg = 0
     while ((arg < len(argv)) and (argv[arg][0:1] == '-')):
         if (argv[arg][1] == 'n'):
@@ -114,6 +112,18 @@ def main(argv = None):
                 arg = arg + 1
             else:
                print("expected number after -n")
+               return
+        elif (argv[arg][1] == 'p'):
+            arg = arg + 1
+            if (arg < len(argv)):
+                try:
+                    poll_interval = int(argv[arg])
+                except exceptions.ValueError:
+                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
+                    return
+                arg = arg + 1
+            else:
+               print("expected number after -p")
                return
         else:
             print("Unrecognized switch: " + argv[arg], file=sys.stderr)
@@ -136,7 +146,7 @@ def main(argv = None):
 
     # start thread
     mon = Monitor()
-    t = threading.Thread(target=mon.run,args=(machines,limit,))
+    t = threading.Thread(target=mon.run,args=(machines,limit,poll_interval,))
     t.start()
 
 if __name__ == "__main__":
