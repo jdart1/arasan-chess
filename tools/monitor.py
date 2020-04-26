@@ -51,8 +51,8 @@ class Monitor:
         result = ""
         alpha = 0.05
         beta = 0.05
-        elo0 = -0.5
-        elo1 = 1.5
+        elo0 = 0.0
+        elo1 = 3.0
         while(limit > 0 or len(result)==0):
             games = 0
             time.sleep(poll_interval)
@@ -60,7 +60,6 @@ class Monitor:
                  self.scores[i] = 0
             for host in machines:
                  self.get_status(host['hostname'],self.scores)
-            self.scores = [665,4413,8938,4490,680]
             for i in range(0,4):
                  print(str(self.scores[i]),end=" ")
             print(str(self.scores[4]))
