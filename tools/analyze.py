@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright 2017-2019 by Jon Dart. All Rights Reserved.
+# Copyright 2017-2020 by Jon Dart. All Rights Reserved.
 #
-import re, sys, subprocess, time, chess, chess.engine, traceback
+import argparse, re, sys, subprocess, time, chess, chess.engine, traceback
 
 class Options:
-   engine_name = 'stockfish'
-   multi_pv_value = 3
-   search_time = 60
+   engine = 'stockfish'
+   multipv = 3
+   time = 60
    cores = 1
-   hash_size = 4000
+   hash = 4000
    syzygy = '/syzygypath'
 
 class Results:
@@ -53,7 +53,7 @@ def process_info(info,results):
    if "multipv" in info:
       multipv = int(info["multipv"])
       results.infos[multipv] = info
-   elif options.multi_pv_value == 1:
+   elif options.multipv == 1:
       results.infos[1] = info
    try:
       result = results.infos[1]
@@ -80,7 +80,7 @@ def process_info(info,results):
 
 def init(engine,options):
     # note: multipv not set here
-    engine.configure({'Hash': options.hash_size, 'Syzygypath': options.syzygy, 'Threads': options.cores})
+    engine.configure({'Hash': options.hash, 'Syzygypath': options.syzygy, 'Threads': options.cores})
     print("engine ready")
 
 def main(argv = None):
@@ -95,70 +95,31 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv[1:]
 
-    arg = 0
-    while ((arg < len(argv)) and (argv[arg][0:1] == '-')):
-        if (argv[arg][1] == 'c'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                try:
-                    options.cores = int(argv[arg])
-                except exceptions.ValueError:
-                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
-                    return 2
-        elif (argv[arg][1] == 't'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                try:
-                    options.search_time = int(argv[arg])
-                except exceptions.ValueError:
-                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
-                    return 2
-        elif (argv[arg][1] == 'e'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                options.engine_name = argv[arg]
-        elif (argv[arg][1] == 'H'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                try:
-                    options.hash_size = int(argv[arg])
-                except exceptions.ValueError:
-                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
-                    return 2
-        elif (argv[arg][1] == 'm'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                try:
-                    options.multi_pv_value = int(argv[arg])
-                except exceptions.ValueError:
-                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
-                    return 2
-        else:
-            print("Unrecognized switch: " + argv[arg], file=sys.stderr)
-            return
-        arg = arg + 1
-
-    time = options.search_time*1000
-
-    if (arg >= len(argv)):
-        print("Expected a filename to analyze.", file=sys.stderr)
-        return
+    parser = argparse.ArgumentParser(description="run test suite using UCI engine")
+    parser.add_argument("-e", "--engine", type=str,help="engine path")
+    parser.add_argument("-c", "--cores", type=int, help="number of cores")
+    parser.add_argument("-m", "--multipv", type=int, help="number of lines to search/display")
+    parser.add_argument("-s", "--syzygy", type=str,help="Syzygy tablebase path")
+    parser.add_argument("-t", "--time", type=int,help="search time in seconds")
+    parser.add_argument("-H", "--hash", type=int,help="hash size in kilobytes")
+    parser.add_argument('filename',help="filename to analyze")
+    parser.parse_args(namespace=options)
 
     try:
-        engine = chess.engine.SimpleEngine.popen_uci(options.engine_name)
+        engine = chess.engine.SimpleEngine.popen_uci(options.engine)
     except FileNotFoundError:
-       print("engine executable " + options.engine_name + " not found", file=sys.stderr)
+       print("engine executable " + options.engine + " not found", file=sys.stderr)
        return
     except:
        print(traceback.format_exc(), file=sys.stderr)
-       print("failed to start child process " + options.engine_name, file=sys.stderr)
+       print("failed to start child process " + options.engine, file=sys.stderr)
        return
 
     init(engine,options)
 
     pat = re.compile('^(([pnbrqkPNBRQK1-8])+\/)+([pnbrqkPNBRQK1-8])+ [wb]+ [\-kqKQ]+ [\-a-h1-8]+')
 
-    with open(argv[arg]) as f:
+    with open(options.filename) as f:
         for line in f:
            # skip blank lines
            if len(line.strip())==0:
@@ -189,11 +150,11 @@ def main(argv = None):
                results.bestmove = None
                results.infos = {}
                with engine.analysis(board=position.board,
-                                    limit=chess.engine.Limit(time=options.search_time),multipv=options.multi_pv_value) as analysis:
+                                    limit=chess.engine.Limit(time=options.time),multipv=options.multipv) as analysis:
                   for info in analysis:
                      process_info(info,results)
                # print last group of results
-               for i in range(1,options.multi_pv_value+1):
+               for i in range(1,options.multipv+1):
                    group = 0
                    infos = results.infos[i]
                    for key in ["depth","seldepth","multipv","score","nodes",
