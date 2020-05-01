@@ -869,7 +869,7 @@ static score_t razorMargin(int depth)
 static score_t seePruningMargin(int depth, bool quiet)
 {
     int p = depth/DEPTH_INCREMENT;
-    return quiet ? -p*Params::PAWN_VALUE : -p*p*int(0.2*Params::PAWN_VALUE);
+    return quiet ? -p*Params::PAWN_VALUE : -p*p*score_t(0.2*Params::PAWN_VALUE);
 }
 
 void Search::setVariablesFromController() {
@@ -2276,53 +2276,49 @@ int Search::prune(const Board &board,
 #endif
                 return 1;
             }
-            if (quiet) {
-                // History pruning.
-                if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
-                    context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
-                    context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
+            // History pruning.
+            if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
+                context.getCmHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving] &&
+                context.getFuHistory(node,move)<HISTORY_PRUNING_THRESHOLD[improving]) {
 #ifdef _TRACE
-                    if (mainThread()) {
-                        indent(node->ply); cout << "history: pruned" << endl;
-                    }
+                if (mainThread()) {
+                    indent(node->ply); cout << "history: pruned" << endl;
+                }
 #endif
 #ifdef SEARCH_STATS
-                    ++stats.history_pruning;
+                ++stats.history_pruning;
+#endif
+                return 1;
+            }
+            // futility pruning, enabled at low depths. Do not prune
+            // moves with good history.
+            if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
+                FUTILITY_HISTORY_THRESHOLD[improving]){
+                // Threshold was formerly increased with the move index
+                // but this tests worse now.
+                score_t threshold = node->beta - futilityMargin(pruneDepth);
+                if (node->eval == Constants::INVALID_SCORE) {
+                    node->eval = node->staticEval = scoring.evalu8(board);
+                }
+                if (node->eval < threshold) {
+#ifdef SEARCH_STATS
+                    ++stats.futility_pruning;
+#endif
+#ifdef _TRACE
+                    if (mainThread()) {
+                        indent(node->ply); cout << "futility: pruned" << endl;
+                    }
 #endif
                     return 1;
                 }
-                // futility pruning, enabled at low depths. Do not prune
-                // moves with good history.
-                if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(move,node,board.sideToMove())<
-                    FUTILITY_HISTORY_THRESHOLD[improving]){
-                    // Threshold was formerly increased with the move index
-                    // but this tests worse now.
-                    score_t threshold = node->beta - futilityMargin(pruneDepth);
-                    if (node->eval == Constants::INVALID_SCORE) {
-                        node->eval = node->staticEval = scoring.evalu8(board);
-                    }
-                    if (node->eval < threshold) {
-#ifdef SEARCH_STATS
-                        ++stats.futility_pruning;
-#endif
-#ifdef _TRACE
-                        if (mainThread()) {
-                            indent(node->ply); cout << "futility: pruned" << endl;
-                        }
-#endif
-                        return 1;
-                    }
-                }
             }
         }
-        const int seeDepth = quiet ? pruneDepth : depth;
         // SEE pruning. Losing captures and checks and moves that put pieces en prise
         // are pruned at low depths.
-        if (seeDepth <= SEE_PRUNING_DEPTH &&
-            //    extend <= 0 &&
+        if (pruneDepth <= SEE_PRUNING_DEPTH &&
             node->ply > 0 &&
             GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-            const score_t margin = seePruningMargin(seeDepth,quiet);
+            const score_t margin = seePruningMargin(pruneDepth,quiet);
             bool seePrune;
             if (margin >= -Params::PAWN_VALUE/3 && node->swap != Constants::INVALID_SCORE) {
                 seePrune = !node->swap;
