@@ -3,7 +3,7 @@
 
 # Copyright 2019, 2020 by Jon Dart. All Rights Reserved.
 #
-import json, sys, subprocess, math, time, threading
+import argparse, json, sys, subprocess, math, time, threading
 from subprocess import Popen, PIPE, call
 # copy of Fishtest stats module fromm http://www.github.com/jdart1/stats
 # copy because it is a nested package in Fishtest
@@ -46,7 +46,7 @@ class Monitor:
                i = i + 1
         proc.wait()
 
-    def run(self,machines,limit,poll_interval):
+    def run(self,machines,limit,poll_interval,elo_run):
         global STOP_SCRIPT
         result = ""
         alpha = 0.05
@@ -71,23 +71,32 @@ class Monitor:
             if (games == 0):
                 continue
             score = 100.0*score/games
-            scores_reg=LLRcalc.regularize(self.scores)
-            s = sprt.sprt()
-            s.set_state(scores_reg)
-            a5=s.analytics()
-            LA=a5['a']
-            LB=a5['b']
-            LLR=LLRcalc.LLR_logistic(elo0,elo1,self.scores)
-            stats = []
-            for stat in (LLR,LA,LB,score):
-                 stats.append("{0:.2f}".format(round(stat,2)))
-            print('LLR=%s [%s, %s] %d games, score: %s%%' %(stats[0], stats[1], stats[2], games, stats[3]))
-            if LLR>LB:
-                result = 'H1'
-            elif LLR<LA:
-                result = 'H0'
-            if len(result)>0:
-                print("result=" + result)
+
+            if elo_run:
+                print(str(games) + " games, score: " + "{0:.2f}".format(round(score,2)) + "%%")
+                elo, elo95, los = stat_util.get_elo(self.scores)
+                eloInfo = 'ELO: %.2f +-%.1f (95%%)' % (elo, elo95)
+                losInfo = 'LOS: %.1f%%' % (los * 100)
+                print(eloInfo)
+                print(losInfo)
+            else:    
+                scores_reg=LLRcalc.regularize(self.scores)
+                s = sprt.sprt()
+                s.set_state(scores_reg)
+                a5=s.analytics()
+                LA=a5['a']
+                LB=a5['b']
+                LLR=LLRcalc.LLR_logistic(elo0,elo1,self.scores)
+                stats = []
+                for stat in (LLR,LA,LB,score):
+                     stats.append("{0:.2f}".format(round(stat,2)))
+                print('LLR=%s [%s, %s] %d games, score: %s%%' %(stats[0], stats[1], stats[2], games, stats[3]))
+                if LLR>LB:
+                    result = 'H1'
+                elif LLR<LA:
+                    result = 'H0'
+                if len(result)>0:
+                    print("result=" + result)
             if ((len(result)>0) or (limit > 0 and games >= limit)):
                 break
         subprocess.call(STOP_SCRIPT,shell=True)
@@ -96,37 +105,21 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv[1:]
 
-    limit = 25000
-    poll_interval = 180
-    arg = 0
-    while ((arg < len(argv)) and (argv[arg][0:1] == '-')):
-        if (argv[arg][1] == 'n'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                try:
-                    limit = int(argv[arg])
-                except exceptions.ValueError:
-                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
-                    return
-                arg = arg + 1
-            else:
-               print("expected number after -n")
-               return
-        elif (argv[arg][1] == 'p'):
-            arg = arg + 1
-            if (arg < len(argv)):
-                try:
-                    poll_interval = int(argv[arg])
-                except exceptions.ValueError:
-                    print(('Invalid value for parameter %s: %s' % (argv[i], argv[i + 1])),file=sys.stderr)
-                    return
-                arg = arg + 1
-            else:
-               print("expected number after -p")
-               return
-        else:
-            print("Unrecognized switch: " + argv[arg], file=sys.stderr)
-            return
+    class Options:
+        number = 25000
+        poll = 180
+        elo = False
+
+    options = Options()
+
+    if argv is None:
+        argv = sys.argv[1:]
+
+    parser = argparse.ArgumentParser(description="monitor match results on multiple machines")
+    parser.add_argument("-e", "--elo", help="just report ELO, do not run SPRT",action='store_true')
+    parser.add_argument("-n", "--number", type=int, help="limit on number of games")
+    parser.add_argument("-p", "--poll", type=int, help="polling interval (seconds)")
+    parser.parse_args(namespace=options)
 
     try:
         with open('machines.json', 'r') as machineFile:
@@ -145,7 +138,7 @@ def main(argv = None):
 
     # start thread
     mon = Monitor()
-    t = threading.Thread(target=mon.run,args=(machines,limit,poll_interval,))
+    t = threading.Thread(target=mon.run,args=(machines,options.number,options.poll,options.elo,))
     t.start()
 
 if __name__ == "__main__":
