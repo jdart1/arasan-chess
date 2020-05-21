@@ -44,7 +44,8 @@ static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 static const int RAZOR_DEPTH = 2*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
-static const int CHECK_EXTENSION = DEPTH_INCREMENT;
+static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
+static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
@@ -2355,7 +2356,7 @@ int Search::extend(const Board &board,
 #ifdef SEARCH_STATS
         stats.check_extensions++;
 #endif
-        extend += CHECK_EXTENSION;
+        extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
     }
     if (passedPawnPush(board,move)) {
         extend += PAWN_PUSH_EXTENSION;
@@ -3131,7 +3132,6 @@ score_t Search::search()
                    // zero window failed high. So widen window.
                    hibound = node->beta;
                }
-
                if (depth+depthMod-DEPTH_INCREMENT > 0)
                  try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
                else
