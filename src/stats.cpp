@@ -179,17 +179,15 @@ void Statistics::sortMultiPVs() {
                   return a.display_value > b.display_value; });
     // promote the stats from the best line (after sorting) to the
     // main stats structure
-    if (multipv_count) {
-        value = multi_pvs[0].value;
-        display_value = multi_pvs[0].display_value;
-        tb_value = multi_pvs[0].tb_value;
-        fromBook = multi_pvs[0].fromBook;
-        complete = multi_pvs[0].complete;
-        best_line = multi_pvs[0].best_line;
-        best_line_image = multi_pvs[0].best_line_image;
-        depth = multi_pvs[0].depth;
-        completedDepth = multi_pvs[0].completedDepth;
-    }
+    value = multi_pvs[0].value;
+    display_value = multi_pvs[0].display_value;
+    tb_value = multi_pvs[0].tb_value;
+    fromBook = multi_pvs[0].fromBook;
+    complete = multi_pvs[0].complete;
+    best_line = multi_pvs[0].best_line;
+    best_line_image = multi_pvs[0].best_line_image;
+    depth = multi_pvs[0].depth;
+    completedDepth = multi_pvs[0].completedDepth;
 }
 
 void Statistics::printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time) {

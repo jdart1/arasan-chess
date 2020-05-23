@@ -1287,7 +1287,7 @@ Move Search::ply0_search()
             }
          }
       } // end multi-pv loop
-      if (stats.multipv_count) {
+      if (stats.multipv_limit>1) {
          stats.sortMultiPVs();
       }
       if (mainThread()) {
