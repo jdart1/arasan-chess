@@ -1,4 +1,4 @@
-// Copyright 1994-2008, 2012, 2013, 2017-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2012, 2013, 2017-2018, 2020 by Jon Dart. All Rights Reserved.
 
 #include "stats.h"
 #include "notation.h"
@@ -136,22 +136,9 @@ Statistics & Statistics::operator = (const Statistics &s)
 
 void Statistics::clear()
 {
-   state = NormalState;
-   value = 0;
-   tb_value = Constants::INVALID_SCORE;
-   fromBook = false;
-   complete = false;
-   int i;
-   best_line_image.clear();
-   for (i = 0; i < Constants::MaxPly; i++) {
-        best_line[i] = NullMove;
-   }
    multipv_count = 0;
    multipv_limit = 1;
-   failHigh = failLow = false;
-   depth = completedDepth = 0;
    num_nodes = (uint64_t)0;
-   display_value = Constants::INVALID_SCORE;
 #ifdef SEARCH_STATS
    num_qnodes = reg_nodes = moves_searched = static_null_pruning =
        razored = reduced = singular_searches = (uint64_t)0;
@@ -160,21 +147,49 @@ void Statistics::clear()
    check_extensions = capture_extensions =
      pawn_extensions = singular_extensions = 0L;
 #endif
-   end_of_game = 0;
-   mvleft = mvtot = 0;
    tb_probes = tb_hits = (uint64_t)0;
+   state = NormalState;
+   end_of_game = 0;
 #ifdef MOVE_ORDER_STATS
    move_order_count = 0;
    for (i = 0; i < 4; i++) move_order[i]=0;
 #endif
+   clearSearchState();
+}
+
+
+void Statistics::clearSearchState() 
+{
+   value = 0;
+   tb_value = Constants::INVALID_SCORE;
+   fromBook = false;
+   complete = false;
+   clearPV();
+   failHigh = failLow = false;
+   depth = completedDepth = 0;
+   display_value = Constants::INVALID_SCORE;
+   mvleft = mvtot = 0;
 }
 
 void Statistics::sortMultiPVs() {
-   // Ensure Multi PVs are in descending order by score (may not
-   // happen automatically, esp. when finding mate scores).
+    // Ensure Multi PVs are in descending order by score (may not
+    // happen automatically, esp. when finding mate scores).
     std::sort(multi_pvs.begin(), multi_pvs.begin()+multipv_limit,
               [] (const MultiPVEntry &a, const MultiPVEntry &b) {
-                  return a.score > b.score; });
+                  return a.display_value > b.display_value; });
+    // promote the stats from the best line (after sorting) to the
+    // main stats structure
+    if (multipv_count) {
+        value = multi_pvs[0].value;
+        display_value = multi_pvs[0].display_value;
+        tb_value = multi_pvs[0].tb_value;
+        fromBook = multi_pvs[0].fromBook;
+        complete = multi_pvs[0].complete;
+        best_line = multi_pvs[0].best_line;
+        best_line_image = multi_pvs[0].best_line_image;
+        depth = multi_pvs[0].depth;
+        completedDepth = multi_pvs[0].completedDepth;
+    }
 }
 
 void Statistics::printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time) {

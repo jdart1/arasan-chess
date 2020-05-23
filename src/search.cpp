@@ -1030,14 +1030,17 @@ Move Search::ply0_search()
            stats.multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
-         if (srcOpts.multipv > 1) stats.clearPV();
+
+         if (srcOpts.multipv > 1) {
+             stats.clearSearchState();
+         }
          if (stats.multipv_count) {
             // Exclude the previous best move from the current
             // search, so we will select a different one.
             excluded.emplace(stats.multi_pvs[stats.multipv_count-1].best);
             if (iterationDepth > 1) {
                // set value to previous iteration's value
-               value = stats.multi_pvs[stats.multipv_count].score;
+               value = stats.multi_pvs[stats.multipv_count].display_value;
             }
          }
          if (iterationDepth <= 1) {

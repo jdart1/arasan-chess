@@ -1,4 +1,4 @@
-// Copyright 1994-2009, 2012-2018 by Jon Dart. All Rights Reserved.
+ // Copyright 1994-2009, 2012-2018, 2020 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
@@ -21,18 +21,20 @@ struct Statistics
    static const unsigned MAX_PV = 10;
 
    StateType state;
+
    score_t value;
    score_t display_value;
    score_t tb_value;
    bool fromBook;
    bool complete; // if at end of iteration
-   unsigned multipv_count; // only for UCI
-   unsigned multipv_limit; // only for UCI
-   atomic<bool> failHigh, failLow;
-   Move best_line[Constants::MaxPly];
+   array <Move,Constants::MaxPly> best_line;
    string best_line_image;
    unsigned depth;
    atomic<unsigned> completedDepth;
+
+   unsigned multipv_count; // only for UCI
+   unsigned multipv_limit; // only for UCI
+   atomic<bool> failHigh, failLow;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes
@@ -64,30 +66,42 @@ struct Statistics
 #endif
    int end_of_game;
 
-   struct MultiPVEntry {
-      int depth;
-      score_t score;
-      uint64_t time;
-      uint64_t nodes;
-      uint64_t tb_hits;
-      string best_line_image;
-      Move best;
-      MultiPVEntry() : depth(0),
-                        score(0),
-                        time(0),
-                        nodes(0),
-                        tb_hits(0),
-                        best_line_image(""),
-                        best(NullMove){}
+    struct MultiPVEntry {
 
-      MultiPVEntry(const Statistics &stats)
-        : depth(stats.depth),score(stats.display_value),
-          nodes(stats.num_nodes),
-          tb_hits(stats.tb_hits) {
-            best_line_image = stats.best_line_image;
-            best = stats.best_line[0];
-      }
+        score_t value;
+        score_t display_value;
+        score_t tb_value;
+        bool fromBook;
+        bool complete; // if at end of iteration
+        array <Move,Constants::MaxPly> best_line;
+        string best_line_image;
+        unsigned depth;
+        unsigned completedDepth;
 
+        Move best;
+        MultiPVEntry() : value(0),
+                         display_value(0),
+                         tb_value(0),
+                         fromBook(false),
+                         complete(false),
+                         best_line_image(""),
+                         depth(0),
+                         completedDepth(0),
+                         best(NullMove){}
+
+        MultiPVEntry(const Statistics &stats) :
+              value(stats.value),
+              display_value(stats.display_value),
+              tb_value(stats.tb_value),
+              fromBook(stats.fromBook),
+              complete(stats.complete),
+              best_line(stats.best_line),
+              best_line_image(stats.best_line_image),
+              depth(stats.depth),
+              completedDepth(stats.completedDepth),
+              best(stats.best_line[0])
+            {
+            }
    };
 
    array<MultiPVEntry,MAX_PV> multi_pvs;
@@ -102,12 +116,11 @@ struct Statistics
 
    void clear();
 
+   void clearSearchState();
+
    void clearPV() {
-      int i;
       best_line_image.clear();
-      for (i = 0; i < Constants::MaxPly; i++) {
-         best_line[i] = NullMove;
-      }
+      best_line.fill(NullMove);
    }
 
    void sortMultiPVs();

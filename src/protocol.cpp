@@ -635,10 +635,10 @@ void Protocol::post_output(const Statistics &stats) {
                if (stats.multipv_count == stats.multipv_limit) {
                    for (unsigned i = 0; i < stats.multipv_limit; i++) {
                        uciOut(stats.multi_pvs[i].depth,
-                              stats.multi_pvs[i].score,
-                              stats.multi_pvs[i].time,
-                              stats.multi_pvs[i].nodes,
-                              stats.multi_pvs[i].tb_hits,
+                              stats.multi_pvs[i].display_value,
+                              searcher->getElapsedTime(),
+                              stats.num_nodes,
+                              stats.tb_hits,
                               stats.multi_pvs[i].best_line_image,
                               i+1);
                    }
@@ -1301,6 +1301,13 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                 cout << "bestmove " << movebuf.str();
                 if (!easy && !IsNull(stats.best_line[1])) {
                     stringstream ponderbuf;
+#ifdef _DEBUG
+                    BoardState s(board.state);
+                    board.doMove(move);
+                    // ensure ponder move is legal
+                    ASSERT(legalMove(board,stats.best_line[1]));
+                    board.undoMove(move,s);
+#endif
                     move_image(board,stats.best_line[1],ponderbuf,uci);
                     cout << " ponder " << ponderbuf.str();
                 }
@@ -1938,7 +1945,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             stats.multipv_count = 0;
             // migrate current stats to 1st Multi-PV table entry:
             stats.multi_pvs[0] =
-              Statistics::MultiPVEntry(stats);
+                Statistics::MultiPVEntry(stats);
         }
         else if (uciOptionCompare(name,"Threads")) {
             int threads = options.search.ncpus;
