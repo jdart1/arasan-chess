@@ -2971,7 +2971,9 @@ score_t Search::search()
             board.doMove(hashMove);
             const bool legal = board.wasLegal(hashMove);
             board.undoMove(hashMove,state);
-            if (legal) {
+            if (!legal) {
+                hashMove = NullMove;
+            } else {
                 // Search all moves but the hash move at reduced depth. If all
                 // fail low with a score significantly below the hash
                 // move's score, then consider the hash move as "singular" and
@@ -3004,7 +3006,8 @@ score_t Search::search()
                             continue;
                         }
                     }
-                    score_t value = -search(-nu_beta,-nu_beta+11,node->ply+1,nu_depth);
+                    ASSERT(nu_depth>DEPTH_INCREMENT);
+                    score_t value = -search(-nu_beta,-nu_beta+1,node->ply+1,nu_depth-DEPTH_INCREMENT);
                     board.undoMove(move,state);
                     if (value >= nu_beta) {
                         singularExtend = false;
