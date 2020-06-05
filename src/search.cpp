@@ -1,4 +1,4 @@
-// Copyright 1987-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2019 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -42,7 +42,7 @@ static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
-static const int RAZOR_DEPTH = 2*DEPTH_INCREMENT;
+static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
@@ -55,8 +55,8 @@ static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
-static constexpr double LMR_BASE = 1.0;
-static constexpr double LMR_DIV = 2.0;
+static constexpr double LMR_BASE[2] = {0.5, 0.3};
+static constexpr double LMR_DIV[2] = {1.8,2.25};
 
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
@@ -70,34 +70,34 @@ static int singularExtensionDepth(int depth)
 }
 #endif
 
-static int CACHE_ALIGN LMR_REDUCTION[64][64];
+static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-static constexpr int LMP_DEPTH=13;
+static const int LMP_DEPTH=13;
 
-static constexpr int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
-                                              {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
+static const int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
+                                          {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
-static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.25*Params::PAWN_VALUE);
-
-static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(0.0*Params::PAWN_VALUE);
+static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE);
+static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
+static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
-static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
+static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
-static constexpr score_t QSEARCH_FORWARD_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+static const score_t QSEARCH_FORWARD_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
-static constexpr int NODE_ACCUM_THRESHOLD = 16;
+static const int NODE_ACCUM_THRESHOLD = 16;
 
 #ifdef SMP_STATS
-static constexpr int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
+static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 #endif
 
 static int Time_Check_Interval;
 
-static constexpr int Illegal = Constants::INVALID_SCORE;
+static const int Illegal = Constants::INVALID_SCORE;
 
 static void setCheckStatus(Board &board, CheckStatusType s)
 {
@@ -114,8 +114,8 @@ static int FORCEINLINE passedPawnPush(const Board &board, Move move) {
             Rank(DestSquare(move),board.sideToMove()) == 7);
 }
 
-static int lmr(int depth, int moveIndex) {
-    return LMR_REDUCTION[depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
+static int lmr(NodeInfo *node, int depth, int moveIndex) {
+    return LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
 }
 
 SearchController::SearchController()
@@ -174,11 +174,26 @@ SearchController::SearchController()
     ti->state = ThreadInfo::Working;
     for (int d = 0; d < 64; d++) {
         for (int moves = 0; moves < 64; moves++) {
-            if (d > 0 && moves > 0) {
-                LMR_REDUCTION[d][moves] = static_cast<int>(LMR_BASE + log(d) * log(moves) / LMR_DIV);
+            for (int p = 0; p < 2; p++) {
+                LMR_REDUCTION[p][d][moves] = 0;
+                if (d > 0 && moves > 0) {
+                    const double reduction = LMR_BASE[p] + log(d) * log(moves) / LMR_DIV[p];
+                    LMR_REDUCTION[p][d][moves] = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
+                }
             }
         }
     }
+/*
+    for (int i = 3; i < 64; i++) {
+      cout << "--- i=" << i << endl;
+      for (int m=0; m<64; m++) {
+         cout << m << " " <<
+         1.0*LMR_REDUCTION[0][i][m]/DEPTH_INCREMENT << ' ' <<
+         1.0*LMR_REDUCTION[1][i][m]/DEPTH_INCREMENT << ' ' <<
+         endl;
+      }}
+
+ */
     hashTable.initHash((size_t)(options.search.hash_table_size));
 }
 
@@ -860,17 +875,16 @@ static int lmpCount(int depth, int improving)
         LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] : Constants::MaxMoves;
 }
 
-#ifdef RAZORING
 static score_t razorMargin(int depth)
 {
-    return RAZOR_MARGIN + RAZOR_MARGIN_SLOPE*depth/DEPTH_INCREMENT;
+    return(depth<=DEPTH_INCREMENT) ?
+        RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
 }
-#endif
 
 static score_t seePruningMargin(int depth, bool quiet)
 {
     int p = depth/DEPTH_INCREMENT;
-    return quiet ? -p*Params::PAWN_VALUE : -p*p*score_t(0.2*Params::PAWN_VALUE);
+    return quiet ? -p*Params::PAWN_VALUE : -p*p*int(0.2*Params::PAWN_VALUE);
 }
 
 void Search::setVariablesFromController() {
@@ -1060,7 +1074,7 @@ Move Search::ply0_search()
             cout << " terminate=" << terminate << endl;
          }
          int fails = 0;
-         int faillows = 0, failhighs = 0, failHighResearch = 0;
+         int faillows = 0, failhighs = 0;
          do {
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
@@ -1072,10 +1086,8 @@ Move Search::ply0_search()
                cout << ']' << endl;
             }
 #endif
-            // Note: re-search fail highs with reduced depth (idea
-            // from Stockfish/Ethereal)
             value = ply0_search(mg, lo_window, hi_window, iterationDepth,
-                                std::max<int>(DEPTH_INCREMENT,DEPTH_INCREMENT*iterationDepth + controller->depth_adjust - failHighResearch*DEPTH_INCREMENT),
+                                DEPTH_INCREMENT*iterationDepth + controller->depth_adjust,
                                 excluded);
             // If we did not even search one move in this iteration,
             // leave the search stats intact (with the previous
@@ -1129,7 +1141,6 @@ Move Search::ply0_search()
             // Show status (if main thread) and adjust aspiration
             // window as needed
             if (stats.failHigh) {
-                ++failHighResearch;
                 if (mainThread()) {
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
@@ -1162,7 +1173,6 @@ Move Search::ply0_search()
                 }
             }
             else if (stats.failLow) {
-                failHighResearch = 0;
                 if (mainThread()) {
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
@@ -1405,8 +1415,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         int depthMod  = extend(board, node, in_check_after_move, move) +
             reduce(board, node, move_index, 1, move);
         if (depthMod < 0) {
-            // don't reduce into the q-search
-            depthMod = std::max<int>(depthMod,DEPTH_INCREMENT-depth+1);
             if (depthMod > -DEPTH_INCREMENT) {
                 // do not reduce < 1 ply
                 depthMod = 0;
@@ -1466,12 +1474,11 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               cout << "score = " << try_score << " - no cutoff, researching .." << endl;
            }
 #endif
+           if (depthMod >= -DEPTH_INCREMENT) {
+              hibound = node->beta;
+           }
            if (depthMod < 0) {
-               depthMod = 0;
-           } else {
-               // search (or in the case of LMR, re-search) with
-               // zero window failed high. So widen window.
-               hibound = node->beta;
+              depthMod = 0;
            }
            if (depth+depthMod-DEPTH_INCREMENT > 0)
               try_score=-search(-hibound,-lobound,1,depth+depthMod-DEPTH_INCREMENT);
@@ -2265,7 +2272,7 @@ int Search::prune(const Board &board,
         int depth = node->depth;
         // for pruning decisions, use modified depth but not the same as
         // LMR depth (idea from Laser)
-        const int pruneDepth = quiet ? std::min<int>(depth,depth - lmr(depth,moveIndex) + node->PV()*DEPTH_INCREMENT) : depth;
+        const int pruneDepth = quiet ? depth - lmr(node,depth,moveIndex) : depth;
         if (in_check_after_move != InCheck && quiet && board.getMaterial(board.sideToMove()).hasPieces()) {
             // do not use pruneDepth for LMP
             if (GetPhase(move) >= MoveGenerator::HISTORY_PHASE &&
@@ -2317,12 +2324,14 @@ int Search::prune(const Board &board,
                 }
             }
         }
+        const int seeDepth = quiet ? pruneDepth : depth;
         // SEE pruning. Losing captures and checks and moves that put pieces en prise
         // are pruned at low depths.
-        if (pruneDepth <= SEE_PRUNING_DEPTH &&
+        if (seeDepth <= SEE_PRUNING_DEPTH &&
+            //    extend <= 0 &&
             node->ply > 0 &&
             GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-            const score_t margin = seePruningMargin(pruneDepth,quiet);
+            const score_t margin = seePruningMargin(seeDepth,quiet);
             bool seePrune;
             if (margin >= -Params::PAWN_VALUE/3 && node->swap != Constants::INVALID_SCORE) {
                 seePrune = !node->swap;
@@ -2392,16 +2401,22 @@ int Search::reduce(const Board &board,
     // See if we do late move reduction. Moves in the history phase of move
     // generation can be searched with reduced depth.
     if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
-        extend -= lmr(depth,moveIndex);
-        if (node->ply > 0) {
-            if (!improving) extend -= DEPTH_INCREMENT;
-            if (extend<0 && node->PV()) extend += 2*DEPTH_INCREMENT;
-            if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
-                // killer or refutation move
-                extend += DEPTH_INCREMENT;
+        extend -= lmr(node,depth,moveIndex);
+        if (!quiet) {
+            extend += DEPTH_INCREMENT;
+        }
+        else {
+            if (!node->PV() && !improving) {
+                extend -= DEPTH_INCREMENT;
             }
-            // reduce less for good history
-            extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
+            if (node->ply > 0) {
+                if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
+                    // killer or refutation move
+                    extend += DEPTH_INCREMENT;
+                }
+                // reduce less for good history
+                extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
+            }
         }
     }
     return std::min<int>(0,extend);
@@ -2588,7 +2603,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && (node->flags & IID)==0 && board.state.moveCount == 0 && !board.castlingPossible()) {
+    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY)) && board.state.moveCount == 0 && !board.castlingPossible()) {
        stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
@@ -2668,7 +2683,7 @@ score_t Search::search()
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        (node->flags & IID) == 0 &&
+        (node->flags & (IID|VERIFY)) == 0 &&
         board.getMaterial(board.sideToMove()).hasPieces();
 
     const int improving = ply >= 3 && !in_check &&
@@ -2677,7 +2692,6 @@ score_t Search::search()
 
     // Reset killer moves for children (idea from Ethereal)
     context.clearKillers(node->ply+1);
-    const int mLevel = board.getMaterial(board.sideToMove()).materialLevel();
 
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, aka reverse futility pruning,
@@ -2733,19 +2747,15 @@ score_t Search::search()
     // zugzwang is a possibility. Do not do null move if this is an
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
-    if (pruneOk && depth >= DEPTH_INCREMENT && (mLevel > 3 || depth >= 5*DEPTH_INCREMENT) &&
+    if (pruneOk && depth >= DEPTH_INCREMENT &&
         !IsNull((node-1)->last_move) &&
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         int nu_depth;
-        if (mLevel > 3) {
-            // R=3 + some depth-dependent increment.
-            nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
-        } else {
-            // Less reduction if side to move has only a minor.
-            nu_depth = depth - (3+(depth>5*DEPTH_INCREMENT))*DEPTH_INCREMENT;
-        }
+        // R=3 + some depth-dependent increment
+        nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
+
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
@@ -2945,12 +2955,10 @@ score_t Search::search()
             cout << endl;
         }
 #endif
-        if (!hashHit || hashEntry.depth() < d) {
-            if (iid_score <= node->alpha && node->eval > node->alpha) { // upper bound
-                node->eval = iid_score;
-            } else if (iid_score >= node->beta && node->eval < node->beta) { // lower bound
-                node->eval = iid_score;
-            }
+        if (iid_score <= node->alpha && node->eval > node->alpha) { // upper bound
+            node->eval = iid_score;
+        } else if (iid_score >= node->beta && node->eval < node->beta) { // lower bound
+            node->eval = iid_score;
         }
     }
     {
@@ -3089,8 +3097,6 @@ score_t Search::search()
             }
             setCheckStatus(board, in_check_after_move);
             if (depthMod < 0) {
-                // don't reduce into the q-search
-                depthMod = std::max<int>(depthMod,DEPTH_INCREMENT-depth+1);
                 if (depthMod > -DEPTH_INCREMENT) {
                     // do not reduce < 1 ply
                     depthMod = 0;
@@ -3133,12 +3139,11 @@ score_t Search::search()
                     indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
+               if (depthMod >= -DEPTH_INCREMENT) {
+                  hibound = node->beta;
+               }
                if (depthMod < 0) {
                    depthMod = 0;
-               } else {
-                   // search (or in the case of LMR, re-search) with
-                   // zero window failed high. So widen window.
-                   hibound = node->beta;
                }
                if (depth+depthMod-DEPTH_INCREMENT > 0)
                  try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
