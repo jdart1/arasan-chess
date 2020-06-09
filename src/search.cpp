@@ -1,4 +1,4 @@
-// Copyright 1987-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2020 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -3077,13 +3077,15 @@ score_t Search::search()
                ++stats.singular_extensions;
 #endif
             }
-            else if (prune(board, node, in_check_after_move,
-                           move_index, improving, move)) {
-                continue;
+            else {
+                if (prune(board, node, in_check_after_move,
+                          move_index, improving, move)) {
+                    continue;
+                }
+                depthMod = (depthMod > 0 ? depthMod : extend(
+                                board, node, in_check_after_move, move)) +
+                    reduce(board, node, move_index, improving, move);
             }
-            depthMod = (depthMod > 0 ? depthMod : extend(
-                    board, node, in_check_after_move, move)) +
-                reduce(board, node, move_index, improving, move);
             board.doMove(move);
             if (!board.wasLegal(move,in_check)) {
                   ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
