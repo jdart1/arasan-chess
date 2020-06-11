@@ -42,7 +42,7 @@ static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
-static const int RAZOR_DEPTH = 3*DEPTH_INCREMENT;
+static const int RAZOR_DEPTH = DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
@@ -77,9 +77,8 @@ static const int LMP_DEPTH=13;
 static const int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
                                           {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
-static const score_t RAZOR_MARGIN1 = static_cast<score_t>(0.9*Params::PAWN_VALUE);
-static const score_t RAZOR_MARGIN2 = static_cast<score_t>(2.75*Params::PAWN_VALUE);
-static const int RAZOR_MARGIN_DEPTH_FACTOR = 6;
+static const score_t RAZOR_MARGIN = static_cast<score_t>(3.0*Params::PAWN_VALUE);
+static const score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::PAWN_VALUE);
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
@@ -877,8 +876,7 @@ static int lmpCount(int depth, int improving)
 
 static score_t razorMargin(int depth)
 {
-    return(depth<=DEPTH_INCREMENT) ?
-        RAZOR_MARGIN1 : RAZOR_MARGIN2 + (Params::PAWN_VALUE*depth)/(RAZOR_MARGIN_DEPTH_FACTOR*DEPTH_INCREMENT);
+    return RAZOR_MARGIN + (std::max<int>(DEPTH_INCREMENT,depth)/DEPTH_INCREMENT)*RAZOR_MARGIN_SLOPE;
 }
 
 static score_t seePruningMargin(int depth, bool quiet)
@@ -2717,27 +2715,23 @@ score_t Search::search()
 #endif
 
 #ifdef RAZORING
-    // razoring as in Glaurung & Toga
-    if (pruneOk && node->beta < Constants::MATE_RANGE &&
-        depth <= RAZOR_DEPTH) {
-        const score_t threshold = node->beta - razorMargin(depth);
+    // razoring as in Stockfish
+    if (pruneOk && depth <= RAZOR_DEPTH) {
         ASSERT(node->eval != Constants::INVALID_SCORE);
-        if (node->eval < threshold) {
+        if (node->eval < node->beta - razorMargin(depth)) {
             // Note: use threshold as the bounds here, not beta, as
             // was done in Toga 3.0:
-            score_t v = quiesce(threshold-1,threshold,ply+1,0);
-            if (v != -Illegal && v < threshold) {
+            score_t v = quiesce(node->alpha,node->beta,ply+1,0);
 #ifdef _TRACE
-               if (mainThread()) {
-                  indent(ply); cout << "razored node, score=" << v << endl;
-               }
+            if (mainThread()) {
+               indent(ply); cout << "razored node, score=" << v << endl;
+            }
 #endif
 #ifdef SEARCH_STATS
                 stats.razored++;
 #endif
-                node->best_score = v;
-                goto hash_insert;
-            }
+            node->best_score = v;
+            return v;
         }
     }
 #endif
