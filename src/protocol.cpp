@@ -443,7 +443,7 @@ bool Protocol::accept_draw(Board &board) {
       cout << debugPrefix() << "last_score = " << last_score << endl;
       cout << debugPrefix() << "threshold = " << threshold << endl;
    }
-   return draw_score-last_score > threshold;
+   return draw_score > threshold && last_score <= draw_score;
 }
 
 
