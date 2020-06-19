@@ -2396,8 +2396,7 @@ int Search::reduce(const Board &board,
     int extend = 0;
     const bool quiet = !CaptureOrPromotion(move);
 
-    // See if we do late move reduction. Moves in the history phase of move
-    // generation can be searched with reduced depth.
+    // See if we do late move reduction.
     if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
         extend -= lmr(node,depth,moveIndex);
         if (!quiet) {
