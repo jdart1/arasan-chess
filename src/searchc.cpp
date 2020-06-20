@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2017-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2017-2020 by Jon Dart. All Rights Reserved.
 
 #include "searchc.h"
 #include "search.h"
@@ -80,14 +80,15 @@ void SearchContext::update(int &val, int bonus, int divisor, bool is_best)
 void SearchContext::updateStats(const Board &board, NodeInfo *node)
 {
     // sanity checks
-    Move best = node->best;
     ASSERT(!IsNull(best));
     ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
-    const int b = bonus(node->depth);
     ASSERT(node->num_quiets<Constants::MaxMoves);
+    // Do not update on fail high of 1st quiet and low depth (idea from Ethereal).
+    if (node->num_quiets == 1 && node->depth <= 3*DEPTH_INCREMENT) return;
+    const int b = bonus(node->depth);
     for (int i=0; i<node->num_quiets; i++) {
         const Move m = node->quiets[i];
-        const bool is_best = MovesEqual(m,best);
+        const bool is_best = MovesEqual(m,node->best);
         update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)],b,HISTORY_DIVISOR,is_best);
         if (node->ply > 0) {
             Move lastMove = (node-1)->last_move;
