@@ -3071,12 +3071,10 @@ score_t Search::search()
 #endif
             }
             else {
-                if (prune(board, node, in_check_after_move,
-                          move_index, improving, move)) {
+                if (prune(board, node, in_check_after_move, move_index, improving, move)) {
                     continue;
                 }
-                depthMod = (depthMod > 0 ? depthMod : extend(
-                                board, node, in_check_after_move, move)) +
+                depthMod = extend(board, node, in_check_after_move, move) +
                     reduce(board, node, move_index, improving, move);
             }
             board.doMove(move);
