@@ -871,7 +871,7 @@ static score_t futilityMargin(int depth)
 static int lmpCount(int depth, int improving)
 {
     return depth/DEPTH_INCREMENT <= LMP_DEPTH ?
-        LMP_MOVE_COUNT[improving][depth/DEPTH_INCREMENT] : Constants::MaxMoves;
+        LMP_MOVE_COUNT[improving][std::max(DEPTH_INCREMENT,depth)/DEPTH_INCREMENT] : Constants::MaxMoves;
 }
 
 static score_t razorMargin(int depth)
