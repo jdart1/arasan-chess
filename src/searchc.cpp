@@ -80,8 +80,8 @@ void SearchContext::update(int &val, int bonus, int divisor, bool is_best)
 void SearchContext::updateStats(const Board &board, NodeInfo *node)
 {
     // sanity checks
-    ASSERT(!IsNull(best));
-    ASSERT(OnBoard(StartSquare(best)) && OnBoard(DestSquare(best)));
+    ASSERT(!IsNull(node->best));
+    ASSERT(OnBoard(StartSquare(node->best)) && OnBoard(DestSquare(node->best)));
     ASSERT(node->num_quiets<Constants::MaxMoves);
     // Do not update on fail high of 1st quiet and low depth (idea from Ethereal).
     if (node->num_quiets == 1 && node->depth <= 3*DEPTH_INCREMENT) return;
