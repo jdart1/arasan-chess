@@ -1599,6 +1599,7 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
     unsigned bestCompleted = 0;
     stats->completedDepth = 0;
     for (unsigned i = 0; i < pool->nThreads; i++) {
+       if (pool->data[i]->work == nullptr) continue;
        const Statistics &s = pool->data[i]->work->stats;
        stats->tb_probes += s.tb_probes;
        stats->tb_hits += s.tb_hits;
@@ -1636,6 +1637,7 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
 {
     Statistics * best = stats;
     for (int thread = 1; thread < options.search.ncpus; thread++) {
+        if (pool->data[thread]->work == nullptr) continue;
         Statistics &threadStats = pool->data[thread]->work->stats;
         if (trace) {
             cout << debugPrefix() << "thread " << thread << " depth=" <<
