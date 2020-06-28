@@ -114,6 +114,7 @@ class MoveGenerator
                      return move;
                  } else {
                      SetPhase(move,LOSERS_PHASE);
+                     ASSERT(losers_count < Constants::MaxCaptures);
                      losers[losers_count++] = move;
                  }
              }
@@ -188,7 +189,7 @@ class MoveGenerator
       Move hashMove;
       mg::EvasionInfo info;
       Move *batch;
-      Move losers[100];
+      Move losers[Constants::MaxCaptures];
       Move moves[Constants::MaxMoves];
       Move killer1,killer2;
       int master;
