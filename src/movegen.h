@@ -107,21 +107,14 @@ class MoveGenerator
                      // already did this one
                      continue;
                  }
-                 if (Params::Gain(move)-Params::PieceValue(Capture(move))<=0) {
-                    if (seeSign(board,move,0)) {
-                         SetPhase(move,WINNING_CAPTURE_PHASE);
-                         ord = order++;
-                         ASSERT(ord<Constants::MaxMoves);
-                         return move;
-                     } else {
-                         SetPhase(move,LOSERS_PHASE);
-                         losers[losers_count++] = move;
-                     }
-                 } else {
+                 if (seeSign(board,move,0)) {
                      SetPhase(move,WINNING_CAPTURE_PHASE);
                      ord = order++;
                      ASSERT(ord<Constants::MaxMoves);
                      return move;
+                 } else {
+                     SetPhase(move,LOSERS_PHASE);
+                     losers[losers_count++] = move;
                  }
              }
              // no winning captures, do next phase

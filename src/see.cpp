@@ -1,4 +1,4 @@
-// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2019 by Jon Dart.
+// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2020 by Jon Dart.
 // All Rights Reserved.
 
 #include "see.h"
@@ -175,6 +175,13 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
        cout << "threshold test failed, return 0" << endl;
 #endif
        return 0;
+   } else if (!IsPromotion(move) &&
+              (Params::Gain(move) - Params::PieceValue(PieceMoved(move)) >= threshold)) {
+       // Even the loss of the capturing piece would still leave us >= threshold
+#ifdef ATTACK_TRACE
+       cout << "threshold test succeeded, return 1" << endl;
+#endif
+       return 1;
    }
    ColorType my_side = PieceColor(board[StartSquare(move)]);
    ColorType side = my_side;
