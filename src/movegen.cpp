@@ -212,7 +212,8 @@ Move MoveGenerator::nextEvasion(int &ord) {
         }
         ++phase;
      }
-     batch_count = generateEvasions(moves);
+     info.init(board);
+     batch_count = mg::generateEvasions(board, info, moves);
      if (batch_count == 0) {
         return NullMove;
      }
@@ -407,12 +408,12 @@ MoveGenerator::MoveGenerator( const Board &ABoard,
 {
 }
 
-
 unsigned MoveGenerator::generateAllMoves(Move *moves,int repeatable)
 {
    unsigned numMoves  = 0;
    if (board.checkStatus() == InCheck) {
-      numMoves = generateEvasions(moves);
+       info.init(board);
+       numMoves = mg::generateEvasions(board, info, moves);
    }
    else {
       numMoves += mg::generateCaptures(board,moves+numMoves,ply==0);
@@ -439,284 +440,6 @@ unsigned MoveGenerator::generateAllMoves(Move *moves,int repeatable)
       mg::sortMoves(moves, scores, numMoves);
    }
    return numMoves;
-}
-
-unsigned MoveGenerator::generateEvasionsNonCaptures(Move * moves)
-{
-   unsigned num_moves = 0;
-   const Square kp = board.kingSquare(board.sideToMove());
-   if (num_attacks == 1) {
-      // try to interpose a piece
-      if (Sliding(board[source])) {
-         Bitboard btwn_squares;
-         board.between(source,kp,btwn_squares);
-         if (!btwn_squares.isClear()) {
-            // blocking pawn moves
-            if (board.sideToMove() == White) {
-               Bitboard pawns(board.pawn_bits[White]);
-               pawns.shl8();
-               pawns &= ~board.allOccupied;
-               Bitboard pawns1(pawns);
-               pawns &= btwn_squares;
-               Square sq;
-               while (pawns.iterate(sq)) {
-                  if (!board.isPinned(board.sideToMove(), sq-8, sq)) {
-                     if (Rank<White>(sq) == 8) {
-                        // interposition is a promotion
-                        moves[num_moves++] = CreateMove(
-                           sq-8, sq, Pawn, Empty, Queen, Promotion);
-                        moves[num_moves++] = CreateMove(
-                           sq-8, sq, Pawn, Empty, Rook, Promotion);
-                        moves[num_moves++] = CreateMove(
-                           sq-8, sq, Pawn, Empty, Knight, Promotion);
-                        moves[num_moves++] = CreateMove(
-                           sq-8, sq, Pawn, Empty, Bishop, Promotion);
-                     }
-                     else {
-                        moves[num_moves++] = CreateMove(sq-8, sq, Pawn, Empty);
-                     }
-                  }
-               }
-               pawns1 &= Attacks::rank_mask[2];
-               if (!pawns1.isClear()) {
-                  pawns1.shl8();
-                  pawns1 &= ~board.allOccupied;
-                  pawns1 &= btwn_squares;
-                  while (pawns1.iterate(sq)) {
-                     if (!board.isPinned(White, sq-16, sq))
-                        moves[num_moves++] = CreateMove(sq-16,sq,Pawn,Empty);
-                  }
-               }
-            }
-            else {
-               Bitboard pawns(board.pawn_bits[Black]);
-               pawns.shr8();
-               pawns &= ~board.allOccupied;
-               Bitboard pawns1(pawns);
-               pawns &= btwn_squares;
-               Square sq;
-               while (pawns.iterate(sq)) {
-                  if (!board.isPinned(Black, sq+8, sq)) {
-                     if (Rank<Black>(sq) == 8) {
-                        // interposition is a promotion
-                        moves[num_moves++] = CreateMove(
-                           sq+8, sq, Pawn, Empty, Queen, Promotion);
-                        moves[num_moves++] = CreateMove(
-                           sq+8, sq, Pawn, Empty, Rook, Promotion);
-                        moves[num_moves++] = CreateMove(
-                           sq+8, sq, Pawn, Empty, Knight, Promotion);
-                        moves[num_moves++] = CreateMove(
-                           sq+8, sq, Pawn, Empty, Bishop, Promotion);
-                     }
-                     else {
-                        moves[num_moves++] = CreateMove(sq+8, sq, Pawn, Empty);
-                     }
-                  }
-               }
-               pawns1 &= Attacks::rank_mask[5];
-               if (!pawns1.isClear()) {
-                  pawns1.shr8();
-                  pawns1 &= ~board.allOccupied;
-                  pawns1 &= btwn_squares;
-                  while (pawns1.iterate(sq)) {
-                     if (!board.isPinned(board.sideToMove(), sq+16, sq))
-                        moves[num_moves++] = CreateMove(sq+16,sq,Pawn,Empty);
-                  }
-               }
-            }
-            // other blocking pieces
-            Bitboard pieces(board.occupied[board.sideToMove()]);
-            pieces &= ~board.pawn_bits[board.sideToMove()];
-            Square loc;
-            while (pieces.iterate(loc)) {
-               switch (TypeOfPiece(board[loc])) {
-                  case Empty:
-                  case Pawn:
-                     break;
-                  case Knight:
-                  {
-                    Bitboard dests(Attacks::knight_attacks[loc] & btwn_squares);
-                     Square sq;
-                     while (dests.iterate(sq)) {
-                        if (!board.isPinned(board.sideToMove(), loc, sq))
-                           moves[num_moves++] =
-                              CreateMove(loc,sq,Knight,TypeOfPiece(board[sq]));
-                     }
-                  }
-                  break;
-                  case Bishop:
-                  {
-                     Square dest;
-                     Bitboard dests(board.bishopAttacks(loc) & btwn_squares);
-                     while (dests.iterate(dest)) {
-                        if (board.clear(loc,dest) &&
-                           !board.isPinned(board.sideToMove(), loc, dest))
-                           moves[num_moves++] =
-                              CreateMove(loc,dest,Bishop,TypeOfPiece(board[dest]));
-                     }
-                  }
-                  break;
-                  case Rook:
-                  {
-                     Square dest;
-                     Bitboard dests(board.rookAttacks(loc) & btwn_squares);
-                     while (dests.iterate(dest)) {
-                        if (board.clear(loc,dest) && !board.isPinned(board.sideToMove(), loc, dest)) {
-                           moves[num_moves++] =
-                              CreateMove(loc,dest,Rook,TypeOfPiece(board[dest]));
-                        }
-                     }
-                  }
-                  break;
-                  case Queen:
-                  {
-                     Square dest;
-                     Bitboard dests(board.rookAttacks(loc)|board.bishopAttacks(loc));
-                     dests &= btwn_squares;
-                     while (dests.iterate(dest)) {
-                        if (board.clear(loc,dest) &&
-                           !board.isPinned(board.sideToMove(), loc, dest))
-                           moves[num_moves++] =
-                              CreateMove(loc,dest,Queen,TypeOfPiece(board[dest]));
-                     }
-                  }
-                  break;
-                  case King:
-                     break;
-               }
-            }
-         }
-      }
-   }
-   // generate evasive moves that do not capture
-   num_moves += generateEvasions(moves+num_moves,~board.allOccupied);
-   return num_moves;
-}
-
-unsigned MoveGenerator::generateEvasionsCaptures(Move * moves)
-{
-   unsigned num_moves = 0;
-   const Square kp = board.kingSquare(board.sideToMove());
-   king_attacks = board.calcAttacks(kp, board.oppositeSide());
-   if (king_attacks.isClear()) {
-      cout << board << endl;
-      ASSERT(0);
-   }
-   num_attacks = king_attacks.bitCountOpt();
-   if (num_attacks == 1) {
-      // try to capture checking piece
-      source = (Square)king_attacks.firstOne();
-
-      ASSERT(source != InvalidSquare);
-      Bitboard atcks(board.calcAttacks(source,board.sideToMove()));
-      Square sq;
-      const PieceType sourcePiece = TypeOfPiece(board[source]);
-      while (atcks.iterate(sq)) {
-         PieceType capturingPiece = TypeOfPiece(board[sq]);
-         if (capturingPiece == King) {
-            // We can capture with the king only if the piece
-            // checking us is undefended.  But always allow a
-            // capture *of* the king - for illegal move detection.
-            if (TypeOfPiece(board[source]) == King ||
-            !board.anyAttacks(source, board.oppositeSide())) {
-               moves[num_moves++] = CreateMove(sq, source,
-                  King, sourcePiece);
-            }
-         }
-         else {
-            if (!board.isPinned(board.sideToMove(), sq, source)) {
-               if (capturingPiece == Pawn &&
-                   Rank(source,board.sideToMove()) == 8) {
-                  moves[num_moves++] = CreateMove(
-                     sq, source, Pawn, sourcePiece, Queen, Promotion);
-                  moves[num_moves++] = CreateMove(
-                     sq, source, Pawn, sourcePiece, Rook, Promotion);
-                  moves[num_moves++] = CreateMove(
-                     sq, source, Pawn, sourcePiece, Knight, Promotion);
-                  moves[num_moves++] = CreateMove(
-                     sq, source, Pawn, sourcePiece, Bishop, Promotion);
-               }
-               else {
-                  moves[num_moves++] = CreateMove(sq, source, capturingPiece, sourcePiece);
-               }
-            }
-         }
-      }
-      // Attacks::calcAttacks does not return en passant captures, so try
-      // this as a special case
-      if (board.enPassantSq() == source) {
-         Square dest = source + 8 * Direction[board.sideToMove()];
-         Piece myPawn = MakePiece(Pawn,board.sideToMove());
-         if (File(source) != 8 && board[source + 1] == myPawn) {
-            Piece tmp = board[source];
-            Piece &place = (Piece &)board[source];
-            place = EmptyPiece;                   // imagine me gone
-            if (!board.isPinned(board.sideToMove(), source + 1, dest))
-               moves[num_moves++] = CreateMove(source + 1, dest, Pawn,
-                  Pawn, Empty, EnPassant);
-            place = tmp;
-         }
-         if (File(source) != 1 && board[source - 1] == myPawn) {
-            Piece tmp = board[source];
-            Piece &place = (Piece &)board[source];
-            place = EmptyPiece;                   // imagine me gone
-            if (!board.isPinned(board.sideToMove(), source - 1, dest))
-               moves[num_moves++] = CreateMove(source - 1, dest, Pawn, Pawn,
-                  Empty, EnPassant);
-            place = tmp;
-         }
-      }
-   }
-   // try evasions that capture pieces beside the attacker
-   num_moves += generateEvasions(moves+num_moves,
-      board.occupied[board.oppositeSide()]);
-
-   return num_moves;
-}
-
-unsigned MoveGenerator::generateEvasions(Move * moves)
-{
-    unsigned n = generateEvasionsCaptures(moves);
-    n += generateEvasionsNonCaptures(moves+n);
-    return n;
-}
-
-unsigned MoveGenerator::generateEvasions(Move * moves, const Bitboard &mask)
-{
-   unsigned num_moves = 0;
-   Square kp = board.kingSquare(board.sideToMove());
-   Bitboard b(Attacks::king_attacks[kp]);
-   b &= ~board.allPawnAttacks(board.oppositeSide());
-   b &= ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())];
-   b &= mask;
-   Square sq;
-   while (b.iterate(sq)) {
-      if (num_attacks > 1 || sq != source) {
-         // We need to do some extra checking, since the board
-         // info on attacks reflects the state before the move,
-         // and we need to be sure that the destination square
-         // is not attacked after the move.
-         int illegal = 0;
-         Bitboard it(king_attacks);
-         Square atck_sq;
-         while (it.iterate(atck_sq)) {
-            Piece attacker = board[atck_sq];
-            if (Sliding(attacker)) {
-               int dir = Attacks::directions[atck_sq][sq];
-               // check for movement in the direction of the
-               // attacker:
-               if (dir != 0 && (kp + dir == sq)) {
-                  illegal = 1;
-                  break;
-               }
-            }
-         }
-         if (!illegal && !board.anyAttacks(sq, board.oppositeSide())) {
-            moves[num_moves++] = CreateMove(kp, sq, King, TypeOfPiece(board[sq]));
-         }
-      }
-   }
-   return num_moves;
 }
 
 uint64_t RootMoveGenerator::perft(Board &b, int depth) {
@@ -1276,6 +999,275 @@ void mg::initialSortCaptures (Move *moves,unsigned captures) {
       }
       sortMoves(moves,scores,captures);
    }
+}
+
+unsigned mg::generateEvasionsNonCaptures(const Board &board, const mg::EvasionInfo &info, Move * moves)
+{
+   unsigned num_moves = 0;
+   const Square kp = board.kingSquare(board.sideToMove());
+   if (info.num_attacks == 1) {
+      // try to interpose a piece
+      const Square &source = info.source;
+      if (Sliding(board[source])) {
+         Bitboard btwn_squares;
+         board.between(source,kp,btwn_squares);
+         if (!btwn_squares.isClear()) {
+            // blocking pawn moves
+            if (board.sideToMove() == White) {
+               Bitboard pawns(board.pawn_bits[White]);
+               pawns.shl8();
+               pawns &= ~board.allOccupied;
+               Bitboard pawns1(pawns);
+               pawns &= btwn_squares;
+               Square sq;
+               while (pawns.iterate(sq)) {
+                  if (!board.isPinned(board.sideToMove(), sq-8, sq)) {
+                     if (Rank<White>(sq) == 8) {
+                        // interposition is a promotion
+                        moves[num_moves++] = CreateMove(
+                           sq-8, sq, Pawn, Empty, Queen, Promotion);
+                        moves[num_moves++] = CreateMove(
+                           sq-8, sq, Pawn, Empty, Rook, Promotion);
+                        moves[num_moves++] = CreateMove(
+                           sq-8, sq, Pawn, Empty, Knight, Promotion);
+                        moves[num_moves++] = CreateMove(
+                           sq-8, sq, Pawn, Empty, Bishop, Promotion);
+                     }
+                     else {
+                        moves[num_moves++] = CreateMove(sq-8, sq, Pawn, Empty);
+                     }
+                  }
+               }
+               pawns1 &= Attacks::rank_mask[2];
+               if (!pawns1.isClear()) {
+                  pawns1.shl8();
+                  pawns1 &= ~board.allOccupied;
+                  pawns1 &= btwn_squares;
+                  while (pawns1.iterate(sq)) {
+                     if (!board.isPinned(White, sq-16, sq))
+                        moves[num_moves++] = CreateMove(sq-16,sq,Pawn,Empty);
+                  }
+               }
+            }
+            else {
+               Bitboard pawns(board.pawn_bits[Black]);
+               pawns.shr8();
+               pawns &= ~board.allOccupied;
+               Bitboard pawns1(pawns);
+               pawns &= btwn_squares;
+               Square sq;
+               while (pawns.iterate(sq)) {
+                  if (!board.isPinned(Black, sq+8, sq)) {
+                     if (Rank<Black>(sq) == 8) {
+                        // interposition is a promotion
+                        moves[num_moves++] = CreateMove(
+                           sq+8, sq, Pawn, Empty, Queen, Promotion);
+                        moves[num_moves++] = CreateMove(
+                           sq+8, sq, Pawn, Empty, Rook, Promotion);
+                        moves[num_moves++] = CreateMove(
+                           sq+8, sq, Pawn, Empty, Knight, Promotion);
+                        moves[num_moves++] = CreateMove(
+                           sq+8, sq, Pawn, Empty, Bishop, Promotion);
+                     }
+                     else {
+                        moves[num_moves++] = CreateMove(sq+8, sq, Pawn, Empty);
+                     }
+                  }
+               }
+               pawns1 &= Attacks::rank_mask[5];
+               if (!pawns1.isClear()) {
+                  pawns1.shr8();
+                  pawns1 &= ~board.allOccupied;
+                  pawns1 &= btwn_squares;
+                  while (pawns1.iterate(sq)) {
+                     if (!board.isPinned(board.sideToMove(), sq+16, sq))
+                        moves[num_moves++] = CreateMove(sq+16,sq,Pawn,Empty);
+                  }
+               }
+            }
+            // other blocking pieces
+            Bitboard pieces(board.occupied[board.sideToMove()]);
+            pieces &= ~board.pawn_bits[board.sideToMove()];
+            Square loc;
+            while (pieces.iterate(loc)) {
+               switch (TypeOfPiece(board[loc])) {
+                  case Empty:
+                  case Pawn:
+                     break;
+                  case Knight:
+                  {
+                    Bitboard dests(Attacks::knight_attacks[loc] & btwn_squares);
+                     Square sq;
+                     while (dests.iterate(sq)) {
+                        if (!board.isPinned(board.sideToMove(), loc, sq))
+                           moves[num_moves++] =
+                              CreateMove(loc,sq,Knight,TypeOfPiece(board[sq]));
+                     }
+                  }
+                  break;
+                  case Bishop:
+                  {
+                     Square dest;
+                     Bitboard dests(board.bishopAttacks(loc) & btwn_squares);
+                     while (dests.iterate(dest)) {
+                        if (board.clear(loc,dest) &&
+                           !board.isPinned(board.sideToMove(), loc, dest))
+                           moves[num_moves++] =
+                              CreateMove(loc,dest,Bishop,TypeOfPiece(board[dest]));
+                     }
+                  }
+                  break;
+                  case Rook:
+                  {
+                     Square dest;
+                     Bitboard dests(board.rookAttacks(loc) & btwn_squares);
+                     while (dests.iterate(dest)) {
+                        if (board.clear(loc,dest) && !board.isPinned(board.sideToMove(), loc, dest)) {
+                           moves[num_moves++] =
+                              CreateMove(loc,dest,Rook,TypeOfPiece(board[dest]));
+                        }
+                     }
+                  }
+                  break;
+                  case Queen:
+                  {
+                     Square dest;
+                     Bitboard dests(board.rookAttacks(loc)|board.bishopAttacks(loc));
+                     dests &= btwn_squares;
+                     while (dests.iterate(dest)) {
+                        if (board.clear(loc,dest) &&
+                           !board.isPinned(board.sideToMove(), loc, dest))
+                           moves[num_moves++] =
+                              CreateMove(loc,dest,Queen,TypeOfPiece(board[dest]));
+                     }
+                  }
+                  break;
+                  case King:
+                     break;
+               }
+            }
+         }
+      }
+   }
+   // generate evasive moves that do not capture
+   num_moves += generateEvasions(board, info, moves+num_moves,~board.allOccupied);
+   return num_moves;
+}
+
+unsigned mg::generateEvasionsCaptures(const Board &board, const mg::EvasionInfo &info, Move * moves)
+{
+   unsigned num_moves = 0;
+   if (info.num_attacks == 1) {
+      const Square &source = info.source;
+      ASSERT(source != InvalidSquare);
+      Bitboard atcks(board.calcAttacks(source,board.sideToMove()));
+      Square sq;
+      const PieceType sourcePiece = TypeOfPiece(board[source]);
+      while (atcks.iterate(sq)) {
+         PieceType capturingPiece = TypeOfPiece(board[sq]);
+         if (capturingPiece == King) {
+            // We can capture with the king only if the piece
+            // checking us is undefended.  But always allow a
+            // capture *of* the king - for illegal move detection.
+            if (TypeOfPiece(board[source]) == King ||
+            !board.anyAttacks(source, board.oppositeSide())) {
+               moves[num_moves++] = CreateMove(sq, source,
+                  King, sourcePiece);
+            }
+         }
+         else {
+            if (!board.isPinned(board.sideToMove(), sq, source)) {
+               if (capturingPiece == Pawn &&
+                   Rank(source,board.sideToMove()) == 8) {
+                  moves[num_moves++] = CreateMove(
+                     sq, source, Pawn, sourcePiece, Queen, Promotion);
+                  moves[num_moves++] = CreateMove(
+                     sq, source, Pawn, sourcePiece, Rook, Promotion);
+                  moves[num_moves++] = CreateMove(
+                     sq, source, Pawn, sourcePiece, Knight, Promotion);
+                  moves[num_moves++] = CreateMove(
+                     sq, source, Pawn, sourcePiece, Bishop, Promotion);
+               }
+               else {
+                  moves[num_moves++] = CreateMove(sq, source, capturingPiece, sourcePiece);
+               }
+            }
+         }
+      }
+      // Attacks::calcAttacks does not return en passant captures, so try
+      // this as a special case
+      if (board.enPassantSq() == source) {
+         Square dest = source + 8 * Direction[board.sideToMove()];
+         Piece myPawn = MakePiece(Pawn,board.sideToMove());
+         if (File(source) != 8 && board[source + 1] == myPawn) {
+            Piece tmp = board[source];
+            Piece &place = (Piece &)board[source];
+            place = EmptyPiece;                   // imagine me gone
+            if (!board.isPinned(board.sideToMove(), source + 1, dest))
+               moves[num_moves++] = CreateMove(source + 1, dest, Pawn,
+                  Pawn, Empty, EnPassant);
+            place = tmp;
+         }
+         if (File(source) != 1 && board[source - 1] == myPawn) {
+            Piece tmp = board[source];
+            Piece &place = (Piece &)board[source];
+            place = EmptyPiece;                   // imagine me gone
+            if (!board.isPinned(board.sideToMove(), source - 1, dest))
+               moves[num_moves++] = CreateMove(source - 1, dest, Pawn, Pawn,
+                  Empty, EnPassant);
+            place = tmp;
+         }
+      }
+   }
+   // try evasions that capture pieces beside the attacker
+   num_moves += generateEvasions(board, info, moves+num_moves, board.occupied[board.oppositeSide()]);
+
+   return num_moves;
+}
+
+unsigned mg::generateEvasions(const Board &board, const mg::EvasionInfo &info, Move * moves)
+{
+    unsigned n = generateEvasionsCaptures(board, info, moves);
+    n += generateEvasionsNonCaptures(board, info, moves+n);
+    return n;
+}
+
+unsigned mg::generateEvasions(const Board &board, const mg::EvasionInfo &info, Move * moves, const Bitboard &mask)
+{
+   unsigned num_moves = 0;
+   Square kp = board.kingSquare(board.sideToMove());
+   Bitboard b(Attacks::king_attacks[kp]);
+   b &= ~board.allPawnAttacks(board.oppositeSide());
+   b &= ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())];
+   b &= mask;
+   Square sq;
+   while (b.iterate(sq)) {
+      if (info.num_attacks > 1 || sq != info.source) {
+         // We need to do some extra checking, since the board
+         // info on attacks reflects the state before the move,
+         // and we need to be sure that the destination square
+         // is not attacked after the move.
+         int illegal = 0;
+         Bitboard it(info.king_attacks);
+         Square atck_sq;
+         while (it.iterate(atck_sq)) {
+            Piece attacker = board[atck_sq];
+            if (Sliding(attacker)) {
+               int dir = Attacks::directions[atck_sq][sq];
+               // check for movement in the direction of the
+               // attacker:
+               if (dir != 0 && (kp + dir == sq)) {
+                  illegal = 1;
+                  break;
+               }
+            }
+         }
+         if (!illegal && !board.anyAttacks(sq, board.oppositeSide())) {
+            moves[num_moves++] = CreateMove(kp, sq, King, TypeOfPiece(board[sq]));
+         }
+      }
+   }
+   return num_moves;
 }
 
 

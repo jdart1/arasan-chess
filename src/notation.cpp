@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020 by Jon Dart.
 // All Rights Reserved.
 
 #include "notation.h"
@@ -132,8 +132,8 @@ void Notation::image(const Board & b, const Move & m, OutputFormat format, ostre
    board_copy.doMove(m);
    if (board_copy.checkStatus() == InCheck) {
       Move moves[Constants::MaxMoves];
-      MoveGenerator mg(board_copy);
-      if (mg.generateEvasions(moves))
+      mg::EvasionInfo info(board_copy);
+      if (mg::generateEvasions(board_copy, info, moves))
          image << '+';
       else
          image << '#';                        // mate

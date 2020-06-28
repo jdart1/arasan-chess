@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2019 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2020 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -34,6 +34,39 @@ namespace mg {
 
     // Generate non-capturing checking moves
     extern unsigned generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates);
+
+    struct EvasionInfo
+    {
+        Bitboard king_attacks;
+        int num_attacks;
+        Square source;
+
+        void init(const Board &board) {
+            king_attacks = board.calcAttacks(board.kingSquare(board.sideToMove()), board.oppositeSide());
+#ifdef _DEBUG
+            if (king_attacks.isClear()) {
+                ASSERT(0);
+            }
+#endif
+            num_attacks = king_attacks.bitCountOpt();
+            if (num_attacks == 1) {
+                source = king_attacks.firstOne();
+            }
+        }
+        
+        EvasionInfo() : num_attacks(0), source(InvalidSquare) {
+        }
+
+        EvasionInfo(const Board &board) {
+            init(board);
+        }
+        
+    };
+
+    extern unsigned generateEvasionsCaptures(const Board &board, const EvasionInfo &info, Move * moves);
+    extern unsigned generateEvasionsNonCaptures(const Board &board, const EvasionInfo &info, Move * moves);
+    extern unsigned generateEvasions(const Board &board, const EvasionInfo &info, Move * moves);
+    extern unsigned generateEvasions(const Board &board, const EvasionInfo &info, Move * moves, const Bitboard &mask);
 
     extern void initialSortCaptures(Move *moves, unsigned captures);
 
@@ -152,10 +185,6 @@ class MoveGenerator
 
       int getBatch(Move *&batch,int &index);
 
-      unsigned generateEvasionsCaptures(Move * moves);
-      unsigned generateEvasionsNonCaptures(Move * moves);
-      unsigned generateEvasions(Move * moves, const Bitboard &mask);
-
       const Board &board;
       SearchContext *context;
       NodeInfo *node;
@@ -164,9 +193,7 @@ class MoveGenerator
       int losers_count,index,order,batch_count,forced;
       Phase phase;
       Move hashMove;
-      Bitboard king_attacks;                      // for evasions
-      int num_attacks;                            // for evasions
-      Square source;                              // for evasions
+      mg::EvasionInfo info;
       Move *batch;
       Move losers[100];
       Move moves[Constants::MaxMoves];
@@ -309,11 +336,10 @@ public:
             mg::initialSortCaptures(moves, moveCount);
         }
         while (index < moveCount) {
-            if (MovesEqual(moves[index], hashMove)) {
-                ++index;
-                continue;
+            const Move &move = moves[index++];
+            if (!MovesEqual(move, hashMove)) {
+                return move;
             }
-            return moves[index++];
         }
         return NullMove;
     }
@@ -349,6 +375,55 @@ public:
 private:
     Move moves[Constants::MaxChecks];
     unsigned index, moveCount;
+};
+
+class ProbCutMoveGenerator 
+{
+public:
+    // Move generation is restricted to captures onto "tgts".
+    ProbCutMoveGenerator(const Board &b, Move hash, const Bitboard &tgts) :
+        board(b), index(0), moveCount(0), hashMove(hash), targets(tgts), phase(0)
+    {
+    }
+    
+    virtual ~ProbCutMoveGenerator() {
+    }
+    
+    Move nextMove() {
+        if (phase == 0) {
+            ++phase;
+            if (!IsNull(hashMove) &&
+                (IsPromotion(hashMove) || targets.isSet(DestSquare(hashMove)))) {
+                return hashMove;
+            }
+        }
+        if (phase == 1) {
+            ++phase;
+            if (board.checkStatus() == InCheck) {
+                mg::EvasionInfo info(board);
+                moveCount = mg::generateEvasionsCaptures(board, info, moves);
+            } else {
+                moveCount = mg::generateCaptures(board, moves, false, targets);
+            }
+            ASSERT(moveCount <= Constants::MaxCaptures);
+            mg::initialSortCaptures(moves, moveCount);
+        }
+        while (index < moveCount) {
+            const Move &move = moves[index++];
+            if (!MovesEqual(move, hashMove)) {
+                return move;
+            }
+        }
+        return NullMove;
+    }
+
+private:
+    const Board &board;
+    Move moves[Constants::MaxCaptures];
+    unsigned index, moveCount;
+    Move hashMove;
+    Bitboard targets;
+    int phase;
 };
 
 inline MoveGenerator::Phase operator++(MoveGenerator::Phase &phase)
