@@ -42,6 +42,8 @@ kilobytes, megabyates or gigabytes).
 
 - -c: specifies the number of threads to use (default is 1).
 
+- -f: specifies a position file (FEN) to load on startup
+
 - -t: shows some debugging output in the UI window or log file. To
 enable debug output, you also need to use the "-debugMode true" switch
 if using xboard/Winboard, or the "debug=true" option if using Arasan
@@ -53,6 +55,9 @@ Note: when using Arasan with a GUI or other interface program, usually
 hash size and thread count are set in the interface. But the -H and -c
 switches, if specified on the arasanx command line, take precedence
 over those passed to Arasan via a GUI.
+
+If the word "bench" is specified on the command line, then Arasan will
+run the bench command (for performance reporting) and then exit.
 
 ## Option file (arasan.rc)
 
