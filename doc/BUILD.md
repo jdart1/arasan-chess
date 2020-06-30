@@ -81,7 +81,8 @@ instructions, and require a 64-bit compile.
 
 Defining NUMA in the Makefile will build a version that has support
 for NUMA (Non-Uniform Memory Access) machines. NUMA support relies
-on the hwloc library (version 2.0 or higher).
+on the hwloc library (version 2.0 or higher. Note: the MSVC build
+does not currently work with hwloc releases past 2.0.4).
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64",
 "arasanx-64-popcnt", or "arasanx-64-bmi2," depending on the
