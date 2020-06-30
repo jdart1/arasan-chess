@@ -1,8 +1,8 @@
 #
-# Gnu Makefile for Arasan 22.0
-# Copyright 2004-2019 by Jon Dart. All Rights Reserved.
+# Gnu Makefile for Arasan
+# Copyright 2004-2020 by Jon Dart. All Rights Reserved.
 #
-VERSION = 22.0
+VERSION = 22.1
 
 # paths, modify as needed:
 
@@ -30,8 +30,9 @@ INSTALL = /usr/local/bin
 STB=syzygy/src
 # compile in NUMA support
 #NUMA=1
-# location of hwloc library (required if compiled with NUMA support)
-HWLOC64=/home/jdart/chess/hwloc-2.0.4
+# location of HWLOC library (for NUMA support)
+HWLOC=/usr/local
+#
 # directory for utility programs
 UTIL = util
 
@@ -43,7 +44,7 @@ SYZYGY_TBS = 1
 
 CFLAGS = -I.
 ifdef NUMA
-CFLAGS := $(CFLAGS) -DNUMA
+CFLAGS := $(CFLAGS) -DNUMA -I$(HWLOC)/include
 endif
 ifdef SYZYGY_TBS
 CFLAGS := $(CFLAGS) -DSYZYGY_TBS
@@ -93,7 +94,7 @@ LBITS := $(shell getconf LONG_BIT)
 LIBS := -lc -lm
 
 ifdef NUMA
-CFLAGS := $(CFLAGS) -I$(HWLOC64)/include
+CFLAGS := $(CFLAGS)
 LIBS := -lhwloc $(LIBS)
 endif
 
@@ -176,7 +177,7 @@ ifeq "$(GCCNEW)" "1"
 CFLAGS := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 SMPFLAGS := $(SMPFLAGS) -pthread
-LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+LDFLAGS := $(LDFLAGS) -fuse-ld=gold -L$(HWLOC)/lib
 ifndef DEBUG
 LTO	= -flto
 OPT	= -Ofast $(LTO) -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG

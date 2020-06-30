@@ -85,7 +85,7 @@ options.h params.cpp params.h protocol.cpp protocol.h scoring.cpp
 scoring.h searchc.cpp searchc.h search.cpp search.h see.cpp see.h
 stats.cpp stats.h stdendian.h syzygy.cpp syzygy.h tbconfig.h
 tester.cpp tester.h threadc.cpp threadc.h threadp.cpp threadp.h
-types.h ${EXTRA_SRC})
+types.h bench.cpp ${EXTRA_SRC})
 
 add_executable (tuner EXCLUDE_FROM_ALL attacks.cpp attacks.h bhash.cpp bhash.h
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h

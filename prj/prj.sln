@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "prj", "prj.vcxproj", "{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}"
 EndProject
@@ -13,6 +13,8 @@ Global
 		ArasanX_Bmi2_Debug|x64 = ArasanX_Bmi2_Debug|x64
 		ArasanX_Debug|Win32 = ArasanX_Debug|Win32
 		ArasanX_Debug|x64 = ArasanX_Debug|x64
+		Arasanx_Numa_Bmi2_Debug|Win32 = Arasanx_Numa_Bmi2_Debug|Win32
+		Arasanx_Numa_Bmi2_Debug|x64 = Arasanx_Numa_Bmi2_Debug|x64
 		ArasanX_Popcnt_Debug|Win32 = ArasanX_Popcnt_Debug|Win32
 		ArasanX_Popcnt_Debug|x64 = ArasanX_Popcnt_Debug|x64
 		ArasanX_Release|Win32 = ArasanX_Release|Win32
@@ -35,6 +37,10 @@ Global
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|Win32.Build.0 = ArasanX_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|x64.ActiveCfg = ArasanX_Popcnt_Debug|x64
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|x64.Build.0 = ArasanX_Popcnt_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Arasanx_Numa_Bmi2_Debug|Win32.ActiveCfg = Arasanx_Numa_Bmi2_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Arasanx_Numa_Bmi2_Debug|Win32.Build.0 = Arasanx_Numa_Bmi2_Debug|Win32
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Arasanx_Numa_Bmi2_Debug|x64.ActiveCfg = Arasanx_Numa_Bmi2_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Arasanx_Numa_Bmi2_Debug|x64.Build.0 = Arasanx_Numa_Bmi2_Debug|x64
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Popcnt_Debug|Win32.ActiveCfg = ArasanX_Popcnt_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Popcnt_Debug|Win32.Build.0 = ArasanX_Popcnt_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Popcnt_Debug|x64.ActiveCfg = ArasanX_Popcnt_Debug|x64
@@ -64,7 +70,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {390B9693-D2D9-47E5-80BF-FD0406B9A0D2}
 		AMDCaProjectFile = C:\arasan\11.5\prj\CodeAnalyst\prj.caw
+		SolutionGuid = {390B9693-D2D9-47E5-80BF-FD0406B9A0D2}
 	EndGlobalSection
 EndGlobal

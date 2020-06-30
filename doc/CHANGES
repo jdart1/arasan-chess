@@ -1,4 +1,24 @@
-Changes in Arasan 22.0:
+Changes in Arasan 22.1
+ 1) Remove potential passer scoring.
+ 2) Tighten validation of hash/killer moves
+ 3) Fix Resign threshold option (CECP mode)
+ 4) Simplify lmp threshold computation. No longer different for PV.
+ 5) Modify formula for lmp count. Do not allow 0 as depth index.
+ 6) Increase razor margin and reduce razoring depth.
+ 7) Fixes to singular search code. Verify hash move before doing a singular search.
+ 8) If singular extension is triggered, do not compute any additional extension, or reduction.
+ 9) Implement bench command. Use bench command for PGO.
+ 10) Update test tools to use pentanomial model for SPRT.
+ 11) MultiPV bug fixes, including a fix for bad ponder move output in MultiPV mode.
+ 12) Fix accept draw logic (CECP mode)
+ 13) Do not update history on fail high of 1st quiet and low depth (idea from Ethereal).
+ 14) Fix possible crash: when iterating through the search threads,ensure any that have
+ a null "work" pointer are skipped.
+ 15) Allow ProbCut while in check, and restrict recursive Probcut
+ 16) Optimization in seeSign() function
+ 17) Misc. code cleanup
+ 
+Changes in Arasan 22.0 (Dec. 2019):
  1) Makefile fixes: add -flto to optimized builds. Fix PGO builds with clang.
     Don't use gold linker on MacOS (fixes #24).
  2) Don't allow termination due to hitting a time limit until at least

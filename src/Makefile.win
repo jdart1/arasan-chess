@@ -1,8 +1,8 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2020 by Jon Dart. All Rights Reserved.
 #
-VERSION=22.0
-LINK_VERSION=22.0
+VERSION=22.1
+LINK_VERSION=22.1
 #
 #TARGET = win32
 TARGET = win64
@@ -296,7 +296,7 @@ $(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
 
 {$(UTIL)}.cpp{$(BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) -I. /c /Fo$@ $<
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) -I. /c /Fo$@ $<
 
 {}.cpp{$(TUNE_BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
