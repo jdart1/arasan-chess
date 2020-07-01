@@ -1,5 +1,5 @@
 (C) 2013-2015 Ronald de Man (original code) (C) 2015 basil (new modifications)
-(C) 2016-2017 Jon Dart
+(C) 2016-2020 Jon Dart
 
 Ronald de Man's original code can be "redistributed and/or modified without restrictions".
 
