@@ -7,7 +7,9 @@ pushd ..
 7z u -tzip -orelease %1 src\syzygy\*.*
 7z u -tzip -orelease %1 src\syzygy\src\*.*
 7z u -tzip -orelease %1 src\util\*.*
-7z u -tzip -orelease %1 tools\*.*
+7z u -tzip -orelease %1 tools\README tools\analyze.py tools\label_positions.py
+7z u -tzip -orelease %1 tools\match.py tools\match_status.py tools\monitor.py
+7z u -tzip -orelease %1 tools\playchess.py tools\stats\README.md tools\stats\*.py
 7z u -tzip -orelease %1 gui\*.h gui\*.cpp  gui\gui.rc gui\res\*.*
 7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj
 7z u -tzip -orelease %1 gui\fonts\*.zip
