@@ -10,7 +10,7 @@ Arasan is multi-platform (Windows, Linux, Mac OS, Unix) and supports multi-threa
 
 ## Copyright, license
 
-Arasan 22.0 copyright 1994-2019 by Jon Dart. All Rights Reserved.
+Copyright 1994-2020 by Jon Dart. All Rights Reserved.
 
 Arasan is licensed under the MIT License. See license.txt in the doc directory.
 
