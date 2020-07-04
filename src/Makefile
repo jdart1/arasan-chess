@@ -170,7 +170,8 @@ PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
 GCC_MIN_VERSION = 4.9
-GCCNEW := $(shell expr `$(CC) -dumpversion` \>= $(GCC_MIN_VERSION))
+GCCVER := $(shell expr `$(CC) -dumpversion`)
+GCCNEW := $(shell awk 'BEGIN{print $(GCCVER) >= 4.9}')
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
@@ -183,7 +184,7 @@ LTO	= -flto
 OPT	= -Ofast $(LTO) -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
 endif
 else
-$(error GCC version < $(GCC_MIN_VERSION) not supported)
+$(error GCC version is $(GCCVER): versions < $(GCC_MIN_VERSION) not supported)
 endif
 
 endif
