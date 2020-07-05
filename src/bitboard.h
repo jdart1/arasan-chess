@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2010-2013, 2015-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2008, 2010-2013, 2015-2020 by Jon Dart.  All Rights Reserved.
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
@@ -93,6 +93,10 @@ class Bitboard
       ((conv*)&data)->val2.loval = lo;
     }
 
+    Bitboard(const Bitboard &) = default;
+
+    ~Bitboard() = default;
+
     operator uint64_t() const
     {
        return data;
@@ -154,10 +158,7 @@ class Bitboard
     int FORCEINLINE isClear()const {
         return (data == (uint64_t)0);
     }
-    Bitboard &operator = (const Bitboard &b) {
-      data = b.data;
-      return *this;
-    }
+    Bitboard &operator = (const Bitboard &b) = default;
 
     Bitboard operator & (const Bitboard &src) const {
       return Bitboard(data & src.data);
