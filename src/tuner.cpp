@@ -1,4 +1,4 @@
-// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2020 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -77,8 +77,8 @@ static const double ADAM_BETA2 = 0.999;
 static const double ADAM_EPSILON = 1.0e-8;
 
 static const double ADAPTIVE_STEP_BASE = 0.04;
-static const double ADAPTIVE_STEP_FACTOR1 = 0.2;
-static const double ADAPTIVE_STEP_FACTOR2 = 0.8;
+static const double ADAPTIVE_STEP_FACTOR1 = 1.025;
+static const double ADAPTIVE_STEP_FACTOR2 = 0.5;
 
 static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
@@ -1391,13 +1391,13 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             // Simple adaptive rate method with momentum, similar to
             // "bold driver" algorithm.
             if (iterations == 1) {
-               step_sizes[i] = std::max<double>(1.0,ADAPTIVE_STEP_BASE);
+               step_sizes[i] = ADAPTIVE_STEP_BASE;
             }
             else if (std::signbit(prev_gradient[i]*dv)) {
                // gradient changed signs
                step_sizes[i] = step_sizes[i]*ADAPTIVE_STEP_FACTOR2;
             } else {
-               step_sizes[i] = step_sizes[i] + ADAPTIVE_STEP_FACTOR1;
+               step_sizes[i] = step_sizes[i]*ADAPTIVE_STEP_FACTOR1;
             }
             istep = step_sizes[i];
             if ( dv > 0.0) {
