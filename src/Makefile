@@ -40,7 +40,7 @@ UTIL = util
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
 
 # set to enable compliation with Syzygy tablebase support
-SYZYGY_TBS = 1
+SYZYGY_TBS := 1
 
 CFLAGS = -I.
 ifdef NUMA
@@ -327,30 +327,26 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
+tester.cpp bench.cpp
 
-MAKEECO_SOURCES = makeeco.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
-params.cpp scoring.cpp see.cpp \
+MAKEECO_SOURCES = makeeco.cpp globals.cpp board.cpp boardio.cpp \
+material.cpp chess.cpp attacks.cpp bitboard.cpp chessio.cpp \
+epdrec.cpp bhash.cpp params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp hash.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp
+bookread.cpp bookwrit.cpp log.cpp search.cpp searchc.cpp \
+learn.cpp movegen.cpp hash.cpp legal.cpp stats.cpp \
+calctime.cpp eco.cpp ecodata.cpp threadp.cpp threadc.cpp \
+protocol.cpp tester.cpp bench.cpp
 
-ECOCODER_SOURCES = ecocoder.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp \
-params.cpp scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp hash.cpp legal.cpp \
-eco.cpp ecodata.cpp \
-stats.cpp threadp.cpp threadc.cpp
+ECOCODER_SOURCES = ecocoder.cpp globals.cpp board.cpp \
+boardio.cpp material.cpp chess.cpp attacks.cpp bitboard.cpp \
+chessio.cpp epdrec.cpp bhash.cpp params.cpp scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp bookread.cpp \
+bookwrit.cpp log.cpp search.cpp searchc.cpp learn.cpp \
+movegen.cpp hash.cpp legal.cpp eco.cpp ecodata.cpp \
+stats.cpp calctime.cpp threadp.cpp threadc.cpp protocol.cpp \
+tester.cpp bench.cpp
 
 TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -374,7 +370,7 @@ bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
 legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp
+tester.cpp bench.cpp
 
 PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -386,12 +382,12 @@ bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
 legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp
+tester.cpp bench.cpp
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
-MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBS) $(NUMA_OBJS) $(TB_LIBS)
+MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
