@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2020 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -8,6 +8,7 @@
 // These data structures are defined in bookdefs.h.
 
 #include "board.h"
+#include "boardio.h"
 #include "bookdefs.h"
 #include "bookwrit.h"
 #include "bhash.h"
@@ -19,6 +20,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <stack>
@@ -31,6 +33,7 @@ extern "C"{
 #include <math.h>
 };
 
+enum class OutputType { Binary, Json };
 enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
 
@@ -39,6 +42,7 @@ static unsigned indexPages = 1;                    // default
 // max ply depth processed for PGN games
 static int maxPly = 70;
 static bool verbose = false;
+static OutputType output_type = OutputType::Binary;
 
 enum MoveEval {NO_MOVE_EVAL,
                BLUNDER_MOVE,POOR_MOVE,QUESTIONABLE_MOVE,NEUTRAL_EVAL,
@@ -133,6 +137,29 @@ END_PACKED_STRUCT
 #pragma pack(pop)
 #endif
 
+class BookEntryJson : public BookEntry
+{
+   public:
+    BookEntryJson( Board b, ColorType side,
+               unsigned rec, PositionEval ev,
+               MoveEval mev, ResultType result,
+               uint8_t idx,
+               const string &move,
+               BookEntryJson *nxt, bool first) :
+        BookEntry(side, rec, ev, mev, result, idx, nxt, first)
+        {
+            strncpy(movestr,move.c_str(),8);
+            stringstream s;
+            BoardIO::writeFEN(b,s,1);
+            fen = s.str();
+        }
+
+
+    char movestr[8];
+    string fen;
+
+};
+
 BookEntry::BookEntry( ColorType side, unsigned r, PositionEval ev,
                        MoveEval mev,
                        ResultType result, uint8_t mv_indx,
@@ -199,7 +226,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
 {
 #ifdef _TRACE
    cout << "adding move ";
-   Notation::image(board,m.move,Notation::SAN_OUT,cout);
+   Notation::image(board,m.move,Notation::OutputFormat::SAN,cout);
    cout << endl;
 #endif
    const int move_index = m.index;
@@ -214,9 +241,17 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
        // position not found in hashtable
        BookEntry *new_entry;
        try {
-          new_entry = new BookEntry(board.sideToMove(), recommend,
+           if (output_type == OutputType::Json) {
+               string movestr;
+               Notation::image(board,m.move,Notation::OutputFormat::SAN,movestr);
+               new_entry = new BookEntryJson(board, board.sideToMove(), recommend,
+                                    var.eval, m.moveEval, var.result,
+                                    move_index, movestr, nullptr, is_first_file);
+           } else {
+               new_entry = new BookEntry(board.sideToMove(), recommend,
                                     var.eval, m.moveEval, var.result,
                                     move_index, nullptr, is_first_file);
+           }
        } catch(std::bad_alloc) {
           cerr << "out of memory!" << endl;
           exit(-1);
@@ -258,9 +293,11 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
             Bitboard(board.hashCode()).lovalue() << (dec) <<
             " index = " << (int)move_index <<
             " first = " << (int)is_first_file <<
-            " winloss=" << p->white_win_loss <<
+            " win=" << p->win <<
+            " loss=" << p->loss <<
+            " draw=" << p->draw <<
             " rec=" << p->rec <<
-            " pos. eval=" << (int)p->eval <<
+            " eval=" << (int)p->eval <<
             " moveEval=" << (int)p->moveEval <<
             " count=" << p->count() << endl;
 #endif
@@ -276,9 +313,17 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
 #endif
          BookEntry *new_entry;
          try {
-            new_entry = new BookEntry(board.sideToMove(), recommend,
-                                      var.eval, m.moveEval, var.result,
-                                      move_index, be, is_first_file);
+           if (output_type == OutputType::Json) {
+               string movestr;
+               Notation::image(board,m.move,Notation::OutputFormat::SAN,movestr);
+               new_entry = new BookEntryJson(board, board.sideToMove(), recommend,
+                                             var.eval, m.moveEval, var.result,
+                                             move_index, movestr, (BookEntryJson*)be, is_first_file);
+           } else {
+               new_entry = new BookEntry(board.sideToMove(), recommend,
+                                    var.eval, m.moveEval, var.result,
+                                    move_index, be, is_first_file);
+           }
          } catch(std::bad_alloc) {
             cerr << "out of memory!" << endl;
             exit(-1);
@@ -287,7 +332,6 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
       }
    }
 }
-
 
 // convert a move to an index based on the order the move generator
 // provides. Return -1 if move is not in generated list, hence is illegal.
@@ -546,6 +590,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
 static void usage() {
     cerr << "Usage:" << endl;
     cerr << "makebook -n <pages> -p <max play> -h <hash size>" << endl;
+    cerr << "         -t <binary | json>" << endl;
     cerr << "         -m <min frequency> -o <output file> <input file(s)>" << endl;
 }
 
@@ -613,6 +658,17 @@ int CDECL main(int argc, char **argv)
                ++arg;
                minFrequency = (unsigned)atoi(argv[arg]);
                break;
+            case 't':
+               ++arg;
+               if (strcmp(argv[arg],"binary") == 0)
+                   output_type = OutputType::Binary;
+               else if (strcmp(argv[arg],"json") == 0)
+                   output_type = OutputType::Json;
+               else {
+                   cerr << "Invalid output type: " << argv[arg] << endl;
+                   exit(-1);
+               }
+               break;
             case 'v':
                 verbose = true;
                 break;
@@ -643,10 +699,10 @@ int CDECL main(int argc, char **argv)
 
       infile.open(book_name.c_str(), ios::in);
       if (!infile.good()) {
-         cerr << "Can't open book file: " << book_name << endl;
+         cerr << "Can't open input file: " << book_name << endl;
          return -1;
       }
-      if (verbose) cout << "processing " << book_name << endl;
+      if (verbose) cerr << "processing " << book_name << endl;
       int result = do_pgn(infile, book_name, first);
       first = false;
       infile.close();
@@ -654,43 +710,87 @@ int CDECL main(int argc, char **argv)
    }
 
    // Iterate through the hash table, picking out moves that meet
-   // the "minFrequency" test. Also at this stage we compute move
-   // weights.
-   if (verbose) cout << "PGN processing complete." << endl;
-   BookWriter writer(indexPages);
+   // the "minFrequency" test.
+   if (verbose) cerr << "PGN processing complete." << endl;
    uint32_t total_moves = 0;
    unsigned long positions = 0;
-   for (const auto &it : *hashTable) {
-       const BookEntry* be = it.second;
-       // Note: it.first is the hash code
+   if (output_type == OutputType::Binary) {
+       BookWriter writer(indexPages);
+       for (const auto &it : *hashTable) {
+           // Note: it.first is the hash code
 #ifdef _TRACE
-       cout << "h:" << (hex) << it.first << (dec) << endl;
+           cout << "h:" << (hex) << it.first << (dec) << endl;
 #endif
-       int added = 0;
-       while (be) {
-           if ((be->count() >= minFrequency) || be->first) {
-               ++added;
-               try {
-                   writer.add(it.first, be->move_index,
-                              be->computeWeight(), be->win, be->loss, be->draw);
-               } catch(BookFullException &ex) {
-                   cerr << ex.what() << endl;
-                   return -1;
+           int added = 0;
+           for (auto be = (BookEntry*)it.second; be != nullptr; be = be->next) {
+               if ((be->count() >= minFrequency) || be->first) {
+                   ++added;
+                   try {
+                       writer.add(it.first, be->move_index,
+                                  be->computeWeight(), be->win, be->loss, be->draw);
+                   } catch(BookFullException &ex) {
+                       cerr << ex.what() << endl;
+                       return -1;
+                   }
+                   total_moves++;
                }
-               total_moves++;
            }
-           be = be->next;
+           if (added) ++positions;
        }
-       if (added) ++positions;
+       if (verbose) cerr << "writing .." << endl;
+       if (writer.write(output_name.c_str())) {
+           cerr << "error writing book" << endl;
+           return -1;
+       }
+       cerr << "book capacity is about " << indexPages*book::INDEX_PAGE_SIZE << " positions." << endl;
+   } else {
+       for (const auto &it : *hashTable) {
+           BookEntryJson* be = (BookEntryJson*)it.second;
+           // Note: it.first is the hash code
+#ifdef _TRACE
+           cout << "h:" << (hex) << it.first << (dec) << endl;
+#endif
+           int added = 0;
+           vector<string> json_moves;
+           string fen = be->fen;
+           int total_count = 0;
+           for (auto be = it.second; be; be = be->next) {
+               total_count += be->count();
+           }
+           for (auto be = (BookEntryJson*)it.second; be != nullptr; be = (BookEntryJson*)be->next) {
+                if ((be->count() >= minFrequency) || be->first) {
+                   ++added;
+                   stringstream s;
+                   s << "{\"san\":\"" <<
+                       be->movestr << "\",\"win\":" <<
+                       be->win << ",\"loss\":" << be->loss <<
+                       ",\"draw\":" << be->draw;
+                   int weight = be->computeWeight();
+                   if (weight != book::NO_RECOMMEND) {
+                       std::ios_base::fmtflags original_flags = cout.flags();
+                       s << setprecision(2);
+                       s << ",\"weight\":" << 100.0*weight/book::MAX_WEIGHT;
+                       s.flags(original_flags);
+                   }
+                   s << "}";
+                   json_moves.push_back(s.str());
+                   total_moves++;
+               }
+           }
+           if (json_moves.size()>0) {
+               cout << "{\"fen\":\"" << fen << "\",\"moves\":[";
+               cout << (flush);
+               for (unsigned i = 0; i<json_moves.size(); i++) {
+                   cout << json_moves[i];
+                   if (i+1 < json_moves.size()) {
+                       cout << ',';
+                   }
+               }
+               cout << "]}" << endl;
+           }
+           if (added) ++positions;
+       }
    }
-   if (verbose) cout << "writing .." << endl;
-   if (writer.write(output_name.c_str())) {
-       cerr << "error writing book" << endl;
-       return -1;
-   }
-   else {
-       cout << positions << " positions, " << total_moves << " total moves in book." << endl;
-       cout << "book capacity is about " << indexPages*book::INDEX_PAGE_SIZE << " positions." << endl;
-       return 0;
-   }
+   cerr << positions << " positions, " << total_moves << " total moves in book." << endl;
+   return 0;
 }
