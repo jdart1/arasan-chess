@@ -67,7 +67,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       moves(0),
       ponder_board(new Board()),
       main_board(new Board(board)),
-      ponder_move_ok(false),
+      ponder_status(PonderStatus::None),
       predicted_move(NullMove),
       ponder_move(NullMove),
       best_move(NullMove),
@@ -700,7 +700,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
             // continue doing the ponder search but adjust the time
             // limit.
             ponderhit = true;
-            ponder_move_ok = true;
+            ponder_status = PonderStatus::Hit;
             // continue the search in non-ponder mode
             if (srctype != FixedDepth) {
                 // Compute how much longer we must search
@@ -852,7 +852,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         Move rmove = get_move(cmd_word, cmd_args);
         if (IsNull(rmove)) {
             if (doTrace) {
-                cout << debugPrefix() << "cmd in search not procesesed: " << cmd << " (expected move)";
+                cout << debugPrefix() << "cmd in search not processed: " << cmd << " (expected move)";
             }
             return false;
         } else {
@@ -868,9 +868,9 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 controller->terminateNow();
                 return false;
             }
-            else if (!IsNull(predicted_move) &&
-                     MovesEqual(predicted_move,last_move)) {
-                // ponder hit
+            else if (!IsNull(predicted_move) && MovesEqual(predicted_move,last_move)) {
+                // A move arrived during a ponder search and it was
+                // the predicted move, in other words we got a ponder hit.
                 if (doTrace) {
                     cout << debugPrefix() << "ponder ok" << endl;
                 }
@@ -878,7 +878,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 // We predicted the opponent's move, so we need to
                 // continue doing the ponder search but adjust the time
                 // limit.
-                ponder_move_ok = true;
+                ponder_status = PonderStatus::Hit;
                 if (srctype != FixedDepth) {
                     // Compute how much longer we must search
                     ColorType side = controller->getComputerSide();
@@ -907,7 +907,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 // We can't use the results of pondering because we
                 // did not predict the opponent's move.  Stop the
                 // search and then execute the move.
-                ponder_move_ok = false;
+                ponder_status = PonderStatus::NoHit;
                 controller->terminateNow();
                 return false;
             }
@@ -1005,7 +1005,7 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &side,const string &cmd)
 
 void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
 {
-    ponder_move_ok = false;
+    ponder_status = PonderStatus::None;
     ponder_move = NullMove;
     ponder_stats.clear();
     if (doTrace) {
@@ -1043,6 +1043,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         if (doTrace) {
             cout << debugPrefix() << "starting to ponder" << endl;
         }
+        ponder_status = PonderStatus::Pending;
         if (srctype == FixedDepth) {
             ponder_move = searcher->findBestMove(
                 uci ? *main_board : *ponder_board,
@@ -2026,7 +2027,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             last_move_image.clear();
             gameMoves->removeAll();
             predicted_move = NullMove;
-            ponder_move_ok = false;
+            ponder_status = PonderStatus::None;
         }
         size_t movepos = cmd_args.find("moves");
         if (movepos != string::npos) {
@@ -2223,7 +2224,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (uci && cmd_word == "go") {
         string option;
         srctype = TimeLimit;
-        int do_ponder = 0;
+        bool do_ponder = false;
         movestogo = 0;
         bool infinite = false;
         stringstream ss(cmd_args);
@@ -2299,7 +2300,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 }
             }
             else if (option == "ponder") {
-                ++do_ponder;
+                do_ponder = true;
                 ponderhit = false;
             }
             else if (option == "searchmoves") {
@@ -2345,11 +2346,35 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             else {
                 // We completed pondering early - the protocol requires
                 // that we delay sending the move until "ponderhit" or
-                // "stop" is received
+                // "stop" is received.
                 if (doTrace) {
+                    cout << debugPrefix() << "ponder stopped early" << endl;
+                }
+                Lock(input_lock);
+                // To avoid races, check with the input mutux locked
+                // that we do not now have ponderhit or stop in the
+                // pending stack
+                vector<string> newPending(pending);
+                uciWaitState = true;
+                for (const std::string &cmd : pending) {
+                    if (cmd == "stop" || cmd == "ponderhit") {
+                        uciWaitState = false;
+                    } else {
+                        newPending.push_back(cmd);
+                    }
+                }
+                pending = newPending;
+                if (!uciWaitState) {
+                    cout << debugPrefix() << "ponderhit in stack, sending move" << endl << (flush);
+                    uciOut(ponder_stats);
+                    send_move(board,ponder_move,ponder_stats);
+                    ponder_move = NullMove;
+                    ponderhit = false;
+                }
+                else if (doTrace) {
                     cout << debugPrefix() << "entering wait state" << endl << (flush);
                 }
-                uciWaitState = true;
+                Unlock(input_lock);
             }
         }
         else {
@@ -2410,7 +2435,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         last_move_image.clear();
         gameMoves->removeAll();
         predicted_move = NullMove;
-        ponder_move_ok = false;
+        ponder_status = PonderStatus::None;
         start_fen.clear();
         delayedInit();
         searcher->clearHashTables();
@@ -2757,7 +2782,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             if (!forceMode && !analyzeMode) {
                // determine what to do with the pondering result, if
                // there is one.
-               if (MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
+               if (ponder_status == PonderStatus::Pending &&
+                   MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
                   // We completed pondering already and we got a reply to
                   // this move (e.g. might be a forced reply).
                   if (doTrace) cout << debugPrefix() << "pondering complete already" << endl;
@@ -2775,6 +2801,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                }
                else {
                   predicted_move = ponder_move = NullMove;
+                  ponder_status = PonderStatus::None;
                   MoveSet movesToSearch;
                   reply = search(searcher,board,movesToSearch,stats,false);
                   // Note: we may know the game has ended here before
@@ -2797,7 +2824,6 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                }
             }
             while (!forceMode && !analyzeMode && !game_end && !result_pending && !easy && time_target >= 100 /* 0.1 second */) {
-               ponder_move_ok = false;
                PendingStatus result;
                // check pending commands again before pondering in case
                // we have a resign or draw, or a move has come in (no
@@ -2814,10 +2840,18 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                if (analyzeMode || forceMode) {
                    break;
                }
+               if (doTrace) {
+                     cout << debugPrefix() << "ponder_status=";
+                     if (ponder_status == PonderStatus::Hit) cout << "Hit";
+                     else if (ponder_status == PonderStatus::NoHit) cout << "NoHit";
+                     else if (ponder_status == PonderStatus::None) cout << "None";
+                     else cout << "Pending";
+                     cout << endl;
+               }
                // We are done pondering. If we got a ponder hit
                // (opponent made our predicted move), then we are ready
                // to move now.
-               if (ponder_move_ok && !IsNull(ponder_move) && !game_end
+               if (ponder_status == PonderStatus::Hit && !IsNull(ponder_move) && !game_end
                    && !forceMode && !analyzeMode) {
                   // we got a reply from pondering
                   if (doTrace) {
@@ -2832,15 +2866,21 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   // move from "stats".
                }
                else {
-                  if (doTrace) cout << debugPrefix() << "ponder failed, exiting ponder loop" << endl;
-                  ponder_move = NullMove;
-                  // Leave ponder loop. If we were interrupted by
-                  // "usermove" we will ponder again immediately;
-                  // otherwise we completed pondering early and
-                  // will wait for the next opponent move.
-                  break;
+                  // Ponder move is not usuable, or at least not
+                  // immediately. Exit the loop.
+                  // if status is "Pending," we completed pondering early
+                  // and may be able to use the pondering move later.
+                  if (ponder_status == PonderStatus::Pending) {
+                      if (doTrace) {
+                          cout << debugPrefix() << "exiting ponder loop" << endl;
+                      }
+                      break;
+                  }
                }
             }
+        }
+        if (doTrace) {
+            cout << debugPrefix() << "out of ponder loop" << endl;
         }
     }
     return true;

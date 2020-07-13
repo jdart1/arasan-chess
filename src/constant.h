@@ -1,4 +1,4 @@
-// Copyright 1994-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2020 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CONSTANT_H
 #define _CONSTANT_H
@@ -21,7 +21,7 @@ enum {MaxCPUs = 256};
 
 };
 
-const int INFINITE_TIME = 9999999;
+constexpr int INFINITE_TIME = 1e8;
 
 #define STRINGIFY(x) #x
 #define MAKE_STR(x) STRINGIFY(x)

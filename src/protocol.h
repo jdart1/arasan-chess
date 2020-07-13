@@ -1,5 +1,5 @@
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2019 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2020 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
@@ -193,6 +193,11 @@ private:
     // Execute a command, return false if program should terminate.
     bool do_command(const string &cmd, Board &board);
 
+    // Result from pondering. Hit = predicted opponent move,
+    // NoHit = did not predict opponent move, Pending =
+    // opponent move not received yet.
+    enum class PonderStatus {None, Hit, NoHit, Pending};
+
     bool verbose;
     bool post;
     SearchController *searcher;
@@ -218,7 +223,7 @@ private:
     ColorType side;
     int moves;
     Board *ponder_board, *main_board;
-    bool ponder_move_ok;
+    PonderStatus ponder_status;
     Move predicted_move;
     Move ponder_move, best_move;
     Statistics stats, last_stats, ponder_stats;
