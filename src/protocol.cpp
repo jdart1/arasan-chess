@@ -2823,7 +2823,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   send_move(board,reply,stats);
                }
             }
-            while (!forceMode && !analyzeMode && !game_end && !result_pending && !easy && time_target >= 100 /* 0.1 second */) {
+            while (!forceMode && !analyzeMode && !game_end && !result_pending && !easy && time_target >= 100 /* 0.1 second */ &&
+                   !IsNull(stats.best_line[1])) {
                PendingStatus result;
                // check pending commands again before pondering in case
                // we have a resign or draw, or a move has come in (no
