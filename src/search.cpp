@@ -44,8 +44,7 @@ static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 static const int RAZOR_DEPTH = DEPTH_INCREMENT;
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
-static const int PV_CHECK_EXTENSION = DEPTH_INCREMENT;
-static const int NONPV_CHECK_EXTENSION = DEPTH_INCREMENT/2;
+static const int CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
@@ -2361,16 +2360,14 @@ int Search::extend(const Board &board,
     // see if we should apply any extensions at this node.
     int extend = 0;
 
-    if (in_check_after_move == InCheck &&
-        ((node->swap = seeSign(board,move,0)) ||
-         board.isPinned(board.oppositeSide(),move))) {
+    if (in_check_after_move == InCheck) {
         // check does not lose material or is a discovered check
 #ifdef SEARCH_STATS
         stats.check_extensions++;
 #endif
-        extend += node->PV() ? PV_CHECK_EXTENSION : NONPV_CHECK_EXTENSION;
+        extend += CHECK_EXTENSION;
     }
-    if (passedPawnPush(board,move)) {
+    else if (passedPawnPush(board,move)) {
         extend += PAWN_PUSH_EXTENSION;
 #ifdef SEARCH_STATS
         stats.pawn_extensions++;
