@@ -180,8 +180,8 @@ def main(argv = None):
                pv = results.infos[1].get("pv")
                if (pv != None):
                   results.bestmove = pv[0]
+               tried = tried + 1
                if (results.bestmove != None):
-                  tried = tried + 1
                   if correct(results.bestmove,position):
                      solved = solved + 1
                      print("++ solved in " + str(results.solution_time/1000.0) + " seconds ("
@@ -192,6 +192,8 @@ def main(argv = None):
                   else:
                      print("-- not solved" + " (" + str(solved) + " out of " + str(tried) + " solved, "
                             + str(round(solved * 100 /tried,1)) + "%)", flush=True)
+               else:
+                   print("warning: best move == None for position " + str(tried),file=sys.stderr)
     engine.quit()
     print()
     print("RUN COMPLETED - " + str(solved) + " out of " + str(tried) + " solved (" + str(round(solved * 100 /tried,1)) + "%)")
