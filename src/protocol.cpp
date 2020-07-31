@@ -847,6 +847,11 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         controller->terminateNow();
         return true;
     }
+    else if (cmd_word == "ics") {
+        // ICC can send during a search
+        hostname = cmd_args;
+        return true;
+    }
     else {
         // Try to parse command as a move
         Move rmove = get_move(cmd_word, cmd_args);
