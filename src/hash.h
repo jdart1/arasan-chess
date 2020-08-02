@@ -13,168 +13,184 @@ extern const hash_t rep_codes[3];
 
 class HashEntry {
 
-	public:
+public:
 
-      // Contents of the flag field
-      enum {
-         TYPE_MASK = 0x7,
-         TB_MASK = 0x08,
-         LEARNED_MASK = 0x10
-      };
+    // Contents of the flag field
+    enum {
+        TYPE_MASK = 0x7,
+        TB_MASK = 0x08,
+        LEARNED_MASK = 0x10
+    };
 
-      static const int QSEARCH_CHECK_DEPTH = -1;
-      static const int QSEARCH_NO_CHECK_DEPTH = -2;
+    static const int QSEARCH_CHECK_DEPTH = -1;
+    static const int QSEARCH_NO_CHECK_DEPTH = -2;
 
-      // Only the first 4 values are actually stored - Invalid indicates
-      // a hash hit with inadequate depth; NoHit indicates failure to find
-      // a hash match.
-      enum ValueType { Valid, UpperBound, LowerBound, Eval, Invalid, NoHit };
+    // Only the first 4 values are actually stored - Invalid indicates
+    // a hash hit with inadequate depth; NoHit indicates failure to find
+    // a hash match.
+    enum ValueType { Valid, UpperBound, LowerBound, Eval, Invalid, NoHit };
 
     HashEntry() {
-          contents.depth = 0;
-          contents.age = 0;
-          contents.flags = Eval;
-          contents.start = contents.dest = InvalidSquare;
-          contents.promotion = Empty;
-          contents.start = InvalidSquare;
-          contents.value = (stored_score_t) Constants::INVALID_SCORE;
-          setEffectiveHash(0,Constants::INVALID_SCORE);
-      }
+        contents.depth = 0;
+        contents.age = 0;
+        contents.flags = Eval;
+        contents.start = contents.dest = InvalidSquare;
+        contents.promotion = Empty;
+        contents.start = InvalidSquare;
+        contents.value = (stored_score_t) Constants::INVALID_SCORE;
+        setEffectiveHash(0,Constants::INVALID_SCORE);
+    }
 
-      HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
-         ValueType type, unsigned age, uint8_t flags = 0,
-                Move bestMove = NullMove) {
-         ASSERT(depth+2 >= 0 && depth+2 < 256);
-         contents.depth = (uint8_t)(depth+2);
-         contents.age = (uint8_t) age;
-         contents.flags = (uint8_t) (type | flags);
-         contents.start = (uint8_t) StartSquare(bestMove);
-         contents.dest = (uint8_t) DestSquare(bestMove);
-         contents.promotion = (uint8_t) PromoteTo(bestMove);
-         contents.value = stored_score_t(val);
-         setEffectiveHash(hash,staticValue);
-      }
+    HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
+              ValueType type, unsigned age, uint8_t flags = 0,
+              Move bestMove = NullMove) {
+        ASSERT(depth+2 >= 0 && depth+2 < 256);
+        contents.depth = (uint8_t)(depth+2);
+        contents.age = (uint8_t) age;
+        contents.flags = (uint8_t) (type | flags);
+        contents.start = (uint8_t) StartSquare(bestMove);
+        contents.dest = (uint8_t) DestSquare(bestMove);
+        contents.promotion = (uint8_t) PromoteTo(bestMove);
+        contents.value = stored_score_t(val);
+        setEffectiveHash(hash,staticValue);
+    }
 
-      int empty() const {
-         return getEffectiveHash() == 0x0ULL;
-      }
+    int empty() const {
+        return getEffectiveHash() == 0x0ULL;
+    }
 
-      void clear() {
+    void clear() {
         hc = 0x0ULL;
-      }
+    }
 
-      int depth() const {
-         return (int)contents.depth - 2;
-      }
+    int depth() const {
+        return (int)contents.depth - 2;
+    }
 
-      score_t getValue() const {
-         return score_t(contents.value);
-      }
+    score_t getValue() const {
+        return score_t(contents.value);
+    }
 
-      // Get value correcting mate scores for ply
-      score_t getValue(int ply) const {
-         score_t hashValue = score_t(contents.value);
-         if (hashValue >= Constants::MATE_RANGE) {
-           hashValue -= ply - 1;
-         }
-         else if (hashValue <= -Constants::MATE_RANGE) {
-           hashValue += ply - 1;
-         }
-         return hashValue;
-      }
+    // Get value correcting mate scores for ply
+    static score_t hashValueToScore(score_t hashValue, int ply) {
+        if (hashValue != Constants::INVALID_SCORE) {
+           if (hashValue >= Constants::MATE_RANGE) {
+              hashValue -= ply - 1;
+           }
+           else if (hashValue <= -Constants::MATE_RANGE) {
+              hashValue += ply - 1;
+           }
+        }
+        return hashValue;
+    }
 
-      score_t staticValue() const {
-          // assumes 2's complement machine
-          unsigned bits = unsigned(hc & STATIC_VALUE_MASK);
-          if (bits & 0x8000)
-              return score_t(-32768 + (bits & 0x7fff));
-          else
-              return score_t(bits & 0x7fff);
-      }
+    // Get value to store given scoer
+    static score_t scoreToHashValue(score_t score, int ply) {
+        if (score == Constants::INVALID_SCORE) {
+            return score;
+        }
+        else if (score <= -Constants::MATE_RANGE) {
+            return score - (ply - 1);
+        }
+        else if (score >= Constants::MATE_RANGE) {
+            return score + (ply - 1);
+        } else {
+            return score;
+        }
+    }
 
-      void setValue(score_t score) {
-         contents.value = (stored_score_t) score;
-      }
+    score_t staticValue() const {
+        // assumes 2's complement machine
+        unsigned bits = unsigned(hc & STATIC_VALUE_MASK);
+        if (bits & 0x8000)
+            return score_t(-32768 + (bits & 0x7fff));
+        else
+            return score_t(bits & 0x7fff);
+    }
 
-      ValueType type() const {
-         return (ValueType)(contents.flags & TYPE_MASK);
-      }
+    void setValue(score_t score) {
+        contents.value = (stored_score_t) score;
+    }
 
-      unsigned age() const {
-         return (int)contents.age;
-      }
+    ValueType type() const {
+        return (ValueType)(contents.flags & TYPE_MASK);
+    }
 
-      void setAge(unsigned age) {
-         contents.age = (uint8_t) age;
-      }
+    unsigned age() const {
+        return (int)contents.age;
+    }
 
-      int learned() const {
-         return (int)((contents.flags & LEARNED_MASK) != 0);
-      }
+    void setAge(unsigned age) {
+        contents.age = (uint8_t) age;
+    }
 
-      int tb() const {
-         return (int)((contents.flags & TB_MASK) != 0);
-      }
+    int learned() const {
+        return (int)((contents.flags & LEARNED_MASK) != 0);
+    }
 
-      uint8_t flags() const {
-          return contents.flags;
-      }
+    int tb() const {
+        return (int)((contents.flags & TB_MASK) != 0);
+    }
 
-      Move bestMove(const Board &b) const {
-         Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
-               (PieceType)contents.promotion);
-         return validMove(b,m) ? m : NullMove;
-      }
+    uint8_t flags() const {
+        return contents.flags;
+    }
 
-      bool avoidNull(int null_depth, score_t beta) const {
-         return type() == UpperBound && depth() >= null_depth &&
-              getValue() < beta;
-      }
+    Move bestMove(const Board &b) const {
+        Move m = CreateMove(b,(Square)contents.start,(Square)contents.dest,
+                            (PieceType)contents.promotion);
+        return validMove(b,m) ? m : NullMove;
+    }
 
-      int operator == (const hash_t hash) const {
-         return getEffectiveHash() == (hash & HASH_MASK);
-      }
+    bool avoidNull(int null_depth, score_t beta) const {
+        return type() == UpperBound && depth() >= null_depth &&
+            getValue() < beta;
+    }
 
-      int operator != (const hash_t hash) const {
-         return getEffectiveHash() != (hash & HASH_MASK);
-      }
+    int operator == (const hash_t hash) const {
+        return getEffectiveHash() == (hash & HASH_MASK);
+    }
 
-      hash_t getEffectiveHash() const {
-         return (hc ^ val) & HASH_MASK;
-      }
+    int operator != (const hash_t hash) const {
+        return getEffectiveHash() != (hash & HASH_MASK);
+    }
 
-      void setEffectiveHash(hash_t hash, score_t static_score) {
-         hc = ((hash ^ val) & HASH_MASK) | (uint16_t)static_score;
-      }
+    hash_t getEffectiveHash() const {
+        return (hc ^ val) & HASH_MASK;
+    }
 
-   protected:
+    void setEffectiveHash(hash_t hash, score_t static_score) {
+        hc = ((hash ^ val) & HASH_MASK) | (uint16_t)static_score;
+    }
 
-      static const hash_t HASH_MASK = 0xffffffffffff0000;
-      static const hash_t STATIC_VALUE_MASK = ~HASH_MASK;
+protected:
+
+    static const hash_t HASH_MASK = 0xffffffffffff0000;
+    static const hash_t STATIC_VALUE_MASK = ~HASH_MASK;
 
 #ifdef __INTEL_COMPILER
 #pragma pack(push,1)
 #endif
-      struct Contents
-      BEGIN_PACKED_STRUCT
-        stored_score_t value;
-        uint8_t depth;
-        uint8_t age;
-        uint8_t flags;
-        signed char start, dest, promotion;
-      END_PACKED_STRUCT
+    struct Contents
+    BEGIN_PACKED_STRUCT
+    stored_score_t value;
+    uint8_t depth;
+    uint8_t age;
+    uint8_t flags;
+    signed char start, dest, promotion;
+    END_PACKED_STRUCT
 
 #ifdef __INTEL_COMPILER
 #pragma pack(pop)
 #endif
-      union
-      {
-          Contents contents;
-          uint64_t val;
-      };
+    union
+    {
+        Contents contents;
+        uint64_t val;
+    };
 
-      // static value is packed in the low-order hash bits
-      uint64_t hc;
+    // static value is packed in the low-order hash bits
+    uint64_t hc;
 };
 
 class Hash {
@@ -235,13 +251,14 @@ class Hash {
         }
     }
 
-    void storeHash(hash_t hashCode, const int depth,
-                          unsigned age,
-                          HashEntry::ValueType type,
-                          score_t value,
-                          score_t staticValue,
-                          unsigned flags,
-                          Move best_move) {
+    void storeHash(hash_t hashCode,
+                   const int depth,
+                   unsigned age,
+                   HashEntry::ValueType type,
+                   score_t value,
+                   score_t staticValue,
+                   unsigned flags,
+                   Move best_move) {
 
         if (!hashSize) return;
         int probe = (int)(hashCode & hashMask);

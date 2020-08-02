@@ -1755,7 +1755,7 @@ score_t Search::quiesce(int ply,int depth)
       tt_depth = HashEntry::QSEARCH_NO_CHECK_DEPTH;
    }
    Move hashMove = NullMove;
-   score_t hashValue;
+   score_t hashValue = Constants::INVALID_SCORE;
    HashEntry hashEntry;
    // Note: we copy the hash entry .. so mods by another thread do not
    // alter the copy
@@ -1771,7 +1771,7 @@ score_t Search::quiesce(int ply,int depth)
       stats.hash_hits++;
 #endif
       node->staticEval = hashEntry.staticValue();
-      hashValue = hashEntry.getValue(ply);
+      hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
       switch (result) {
       case HashEntry::Valid:
 #ifdef _TRACE
@@ -1783,23 +1783,6 @@ score_t Search::quiesce(int ply,int depth)
                " value = " << hashValue << endl;
          }
 #endif
-/* not safe to do w/o legality check
-         if (node->inBounds(hashValue)) {
-            // parent node will consider this a new best line
-            hashMove = hashEntry.bestMove(board);
-            if (!IsNull(hashMove)) {
-               node->pv[ply] = hashMove;
-               node->pv_length = 1;
-            }
-#ifdef _TRACE
-            if (mainThread()) {
-               indent(ply); cout << "best line[ply][ply] = ";
-               MoveImage(hashMove,cout);
-               cout << endl;
-            }
-#endif
-         }
-*/
          return hashValue;
       case HashEntry::UpperBound:
          if (hashValue <= node->alpha) {
@@ -1978,7 +1961,7 @@ score_t Search::quiesce(int ply,int depth)
        if (hashHit) {
            // Use the transposition table entry to provide a better score
            // for pruning decisions, if possible
-           const score_t hashValue = hashEntry.getValue(ply);
+           const score_t hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
            if (result == (hashValue > node->eval ? HashEntry::LowerBound :
                           HashEntry::UpperBound)) {
                node->eval = hashValue;
@@ -2008,7 +1991,7 @@ score_t Search::quiesce(int ply,int depth)
                    controller->hashTable.storeHash(hash, tt_depth,
                                                    age,
                                                    HashEntry::Eval,
-                                                   node->best_score,
+                                                   HashEntry::scoreToHashValue(node->best_score,node->ply),
                                                    node->staticEval,
                                                    0,
                                                    hashMove);
@@ -2240,17 +2223,13 @@ void Search::storeHash(hash_t hash, Move hash_move, int depth) {
          cout << endl;
       }
 #endif
-      // Adjust mate scores to reflect current ply.
-      if (value <= -Constants::MATE_RANGE) {
-         value -= node->ply - 1;
-      }
-      else if (value >= Constants::MATE_RANGE) {
-         value += node->ply - 1;
-      }
-      controller->hashTable.storeHash(hash, depth,
+      // Note: adjust mate scores to reflect current ply.
+      controller->hashTable.storeHash(hash,
+                                      depth,
                                       age,
                                       val_type,
-                                      value, node->staticEval,
+                                      HashEntry::scoreToHashValue(value,node->ply),
+                                      node->staticEval,
                                       0,
                                       node->best);
    }
@@ -2527,7 +2506,7 @@ score_t Search::search()
                result = HashEntry::Invalid;
             }
         }
-        hashValue = hashEntry.getValue(ply);
+        hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
         switch (result) {
             case HashEntry::Valid:
 #ifdef _TRACE
@@ -2610,15 +2589,6 @@ score_t Search::search()
                 indent(ply); cout << "EGTB hit: score " << tb_score << endl;
             }
 #endif
-            score_t score = tb_score;
-            // insert TB info in hash table. Adjust mate scores for
-            // plies from root. Note: do not adjust TABLEBASE_WIN scores.
-            if (score <= -Constants::MATE_RANGE) {
-                score -= ply;
-            }
-            else if (score >= Constants::MATE_RANGE) {
-                score += ply;
-            }
 #ifdef _TRACE
             if (mainThread() && tb_score != score) {
                 indent(ply); cout << "adjusted score " << score << endl;
@@ -2631,7 +2601,7 @@ score_t Search::search()
                 (Constants::MaxPly-1)*DEPTH_INCREMENT,
                 age,
                 HashEntry::Valid,
-                score,
+                HashEntry::scoreToHashValue(tb_score,node->ply),
                 Constants::INVALID_SCORE,
                 HashEntry::TB_MASK,
                 NullMove);
@@ -3231,16 +3201,6 @@ score_t Search::search()
         // store the position in the hash table, if there's room
         score_t value = node->best_score;
         HashEntry::ValueType val_type;
-        // Adjust mate scores to reflect current ply. But only
-        // if the score is in bounds.
-        if (value > node->alpha && value < node->beta) {
-            if (value <= -Constants::MATE_RANGE) {
-                value -= ply;
-            }
-            else if (value >= Constants::MATE_RANGE) {
-                value += ply;
-            }
-        }
 #ifdef _TRACE
         char typeChar;
 #endif
@@ -3282,7 +3242,7 @@ score_t Search::search()
         controller->hashTable.storeHash(hashCode, depth,
                                         age,
                                         val_type,
-                                        node->best_score,
+                                        HashEntry::scoreToHashValue(value,node->ply),
                                         node->staticEval,
                                         0,
                                         node->best);
