@@ -1380,10 +1380,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     int move_index = 0;
     score_t hibound = beta;
     while (!node->cutoff && !terminate) {
-        if (mainThread() && debugOut() && controller->fail_high_root) {
-           cout << debugPrefix() << "resetting fail_high_root" << endl;
-        }
-        controller->fail_high_root = false;
         Move move;
         if ((move = mg.nextMove(move_index))==NullMove) break;
         if (IsUsed(move) || IsExcluded(move)) {
