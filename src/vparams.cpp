@@ -24,7 +24,6 @@ score_t Params::KING_DISTANCE_BASIS = 320;
 score_t Params::KING_DISTANCE_MULT = 80;
 score_t Params::PIN_MULTIPLIER_MID = 200;
 score_t Params::PIN_MULTIPLIER_END = 300;
-score_t Params::ROOK_VS_PAWNS = 333;
 score_t Params::KRMINOR_VS_R_NO_PAWNS = -500;
 score_t Params::KQMINOR_VS_Q_NO_PAWNS = -500;
 score_t Params::ENDGAME_PAWN_ADVANTAGE = 100;
