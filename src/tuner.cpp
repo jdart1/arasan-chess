@@ -412,9 +412,14 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
-    const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
+    const int mLevel = oppmat.materialLevel();
 
     const uint32_t pieces = ourmat.pieceBits();
+    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
+        // Bishop endgame: drawish
+        return;
+    }
+
     if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
         // Knight or Bishop vs pawns
         if (ourmat.pawnCount() == 0) {
@@ -422,35 +427,48 @@ static void adjustMaterialScore(const Board &board, ColorType side,
             // opponent has 1-2 pawns we are not so bad
             int index = std::min<int>(2,oppmat.pawnCount());
             grads[Tune::KN_VS_PAWN_ADJUST0+index] += inc;
+            return;
+        } else if (oppmat.pawnCount() == 0) {
+            if (pieces == Material::KN && ourmat.pawnCount() == 1) {
+                return;
+            }
         }
-        return;
+        else if (pieces == Material::KB && ourmat.pawnCount() == 1) {
+            int wrongBishop = (side == White) ? Scoring::KBPDraw<White>(board) : Scoring::KBPDraw<Black>(board);
+            if (wrongBishop) {
+                return;
+            }
+        }
     }
-    int majorDiff = ourmat.majorCount() - oppmat.majorCount();
-    switch(majorDiff) {
+    switch(ourmat.majorCount() - oppmat.majorCount()) {
     case 0: {
-        if (ourmat.minorCount() == oppmat.minorCount()+1) {
-            // we have extra minor (but not only a minor)
+        if (ourmat.queenCount() == oppmat.queenCount() &&
+            ourmat.minorCount() == oppmat.minorCount()+1) {
             if (!ourmat.hasPawns()) {
                 if (oppmat.pieceBits() == Material::KR) {
                     grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
-
+                    return;
                 }
                 else if ((ourmat.pieceBits() == Material::KQN ||
                           ourmat.pieceBits() == Material::KQB) &&
                          oppmat.pieceBits() == Material::KQ) {
                     // Q + minor vs Q is a draw, generally
                     grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
+                    return;
                 }
             } else if (oppmat.pawnCount() > ourmat.pawnCount()) {
                 // Knight or Bishop traded for pawns. Bonus for piece
-                grads[Tune::MINOR_FOR_PAWNS0+std::min(ourmat.materialLevel()/4,5)] += inc;
+                grads[Tune::MINOR_FOR_PAWNS_MIDGAME] += tune_params.scale(inc,Tune::MINOR_FOR_PAWNS_MIDGAME,mLevel);
+                grads[Tune::MINOR_FOR_PAWNS_ENDGAME] += tune_params.scale(inc,Tune::MINOR_FOR_PAWNS_ENDGAME,mLevel);
+
             }
         }
-        else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
-                  ourmat.rookCount() == oppmat.rookCount() - 2) {
+        if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
+             ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-            grads[Tune::QR_ADJUST+std::min<int>(4,ourmat.minorCount())] += inc;
+            grads[Tune::QR_ADJUST_MIDGAME] += tune_params.scale(inc,Tune::QR_ADJUST_MIDGAME,mLevel);
+            grads[Tune::QR_ADJUST_ENDGAME] += tune_params.scale(inc,Tune::QR_ADJUST_ENDGAME,mLevel);
         }
         break;
     }
@@ -459,11 +477,14 @@ static void adjustMaterialScore(const Board &board, ColorType side,
             if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-                grads[Tune::RB_ADJUST+std::min<int>(5,ourmat.materialLevel()/2-2)] += inc;
+                grads[Tune::RB_ADJUST_MIDGAME] += tune_params.scale(inc,Tune::RB_ADJUST_MIDGAME,mLevel);
+                grads[Tune::RB_ADJUST_ENDGAME] += tune_params.scale(inc,Tune::RB_ADJUST_ENDGAME,mLevel);
+
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               grads[Tune::RBN_ADJUST+std::min<int>(5,ourmat.materialLevel()/2-2)] += inc;
+                grads[Tune::RBN_ADJUST_MIDGAME] += tune_params.scale(inc,Tune::RBN_ADJUST_MIDGAME,mLevel);
+                grads[Tune::RBN_ADJUST_ENDGAME] += tune_params.scale(inc,Tune::RBN_ADJUST_ENDGAME,mLevel);
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -473,26 +494,21 @@ static void adjustMaterialScore(const Board &board, ColorType side,
         if (ourmat.hasQueen() && ourmat.rookCount() == oppmat.rookCount() &&
             oppmat.minorCount()-ourmat.minorCount() == 3) {
             // Queen vs. 3 minors
-            grads[Tune::QUEEN_VS_3MINORS0+std::min<int>(3,(ourmat.materialLevel()-9)/2)] += inc;
+            grads[Tune::Q_VS_3MINORS_MIDGAME] += tune_params.scale(inc,Tune::Q_VS_3MINORS_MIDGAME,mLevel);
+            grads[Tune::Q_VS_3MINORS_ENDGAME] += tune_params.scale(inc,Tune::Q_VS_3MINORS_ENDGAME,mLevel);
         }
     default:
         break;
     }
     if (ourmat.materialLevel() < 16) {
-       if (pawnDiff > 0 && pieceDiff >= 0) {
-          // better to have more pawns in endgame (if we have not
-          // traded pieces for pawns).
-          grads[Tune::ENDGAME_PAWN_ADVANTAGE] +=
-             inc*(4-ourmat.materialLevel()/4)*std::min<int>(2,pawnDiff)/4;
-       }
-       if (pieceDiff > 0) {
-          // bonus for last few pawns - to discourage trade
-          const int ourp = ourmat.pawnCount();
-          int factor1 = (ourp >= 3) + (ourp >= 2);
-          grads[Tune::PAWN_ENDGAME1] += inc*factor1*(4-ourmat.materialLevel()/4)/4;
-       }
+        const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
+        if (pieceDiff > 0) {
+            // encourage trading pieces but not pawns.
+            grads[Tune::TRADE_DOWN1] += inc*(4-ourmat.materialLevel()/4);
+            grads[Tune::TRADE_DOWN2] += inc*(pieceDiff >= 5)*(4-ourmat.materialLevel()/4);
+            grads[Tune::TRADE_DOWN3] += inc*std::min(3,ourmat.pawnCount())*(4-ourmat.materialLevel()/4);
+        }
     }
-
 }
 
 template<ColorType bishopColor>
@@ -622,7 +638,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
 
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
-      adjustMaterialScore(board,side,grads,inc);
+       adjustMaterialScore(board,side,grads,inc);
    }
    if (side == White) {
       if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
@@ -1091,6 +1107,7 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
     for (int i = 0; i < pawns; i++) {
         ASSERT(OnBoard(pds[i].sq));
         grads[Tune::SPACE] += inc*pds[i].space_weight;
+        grads[Tune::PAWN_ENDGAME_ADJUST] += tune_params.scale(inc,Tune::PAWN_ENDGAME_ADJUST,mLevel);
         if (pds[i].flags & Scoring::PawnDetail::PASSED) {
             const Square sq = pds[i].sq;
             const int rank = Rank(sq, side);

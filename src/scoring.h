@@ -70,9 +70,6 @@ class Scoring
 
     void clearHashTables();
 
-    // return a material score
-    score_t materialScore( const Board &board ) const;
-
     score_t outpost(const Board &board, Square sq, ColorType side) const;
 
     int outpost_defenders(const Board &board,
@@ -217,6 +214,9 @@ class Scoring
         Bitboard attackedBy2[2];
     };
 
+    template<ColorType side>
+      static int KBPDraw(const Board &board);
+
  private:
 
     template <ColorType side>
@@ -231,9 +231,9 @@ class Scoring
     template <ColorType side>
         static int theoreticalDraw(const Board &board);
 
-    score_t adjustMaterialScore(const Board &board, ColorType side) const;
+    void adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const;
 
-    score_t adjustMaterialScoreNoPawns(const Board &board, ColorType side) const;
+    void adjustMaterialScoreNoPawns(const Board &board, ColorType side, Scores &scores) const;
 
     template <ColorType bishopColor>
       void scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,const PawnHashEntry::PawnData &oppPawnData,Scores &scores,Scores &opp_scores);
@@ -276,9 +276,6 @@ class Scoring
       void scoreEndgame(const Board &,score_t k_pos,Scores &);
 
     score_t kingDistanceScore(const Board &) const;
-
-    template<ColorType side>
-      static int KBPDraw(const Board &board);
 
     static void initBitboards();
 

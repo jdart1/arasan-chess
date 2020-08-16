@@ -314,25 +314,21 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
-score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
+void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const 
 {
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
-    score_t score = 0;
-#ifdef EVAL_DEBUG
-    score_t tmp = score;
-#endif
-    const score_t mdiff = ourmat.value() - oppmat.value();
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
         // Bishop endgame: drawish
        if (pawnDiff > 0 && std::abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4) {
+           const score_t mdiff = ourmat.value() - oppmat.value();
 #ifdef EVAL_DEBUG
           cout << "bishop endgame adjust: " << -mdiff/4 << endl;
 #endif
-          score -= mdiff/4;
+          scores.any -= mdiff/4;
        }
-       return score;
+       return;
     }
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     const uint32_t pieces = ourmat.pieceBits();
@@ -341,11 +337,12 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
         if (ourmat.pawnCount() == 0) {
             // no mating material. We can't be better but if
             // opponent has 1-2 pawns we are not so bad
-            score += APARAM(KN_VS_PAWN_ADJUST,std::min<int>(2,oppmat.pawnCount()));
+            scores.any += APARAM(KN_VS_PAWN_ADJUST,std::min<int>(2,oppmat.pawnCount()));
         } else if (oppmat.pawnCount() == 0) {
             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
-                score -= Params::KNIGHT_VALUE;
+                scores.any -= Params::KNIGHT_VALUE;
+                return;
             }
         }
         else if (pieces == Material::KB && ourmat.pawnCount() == 1) {
@@ -355,41 +352,46 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
                 // and rook pawn. Opponent may or may not have
                 // pawns. We likely can't do better than draw, so
                 // reduce score.
-                score -= Params::BISHOP_VALUE;
+                scores.any -= Params::BISHOP_VALUE;
+                return;
             }
         }
-#ifdef EVAL_DEBUG
-        cout << "minor piece adjustment (" << ColorImage(side) << ") = " << score << endl;
-#endif
-        return score;
     }
-    int majorDiff = ourmat.majorCount() - oppmat.majorCount();
-    switch(majorDiff) {
+    switch(ourmat.majorCount() - oppmat.majorCount()) {
     case 0: {
-        if (ourmat.minorCount() == oppmat.minorCount()+1) {
-            // we have extra minor (but not only a minor)
+        if (ourmat.queenCount() == oppmat.queenCount() &&
+            ourmat.minorCount() == oppmat.minorCount()+1) {
+            // we have extra minor
             if (!ourmat.hasPawns()) {
                 // If we have no pawns, penalize being ahead but
                 // in a drawish material configuration.
                 if (oppmat.pieceBits() == Material::KR) {
                     // KR + minor vs KR - draw w. no pawns so lower score
-                    score += PARAM(KRMINOR_VS_R_NO_PAWNS);
+                    scores.any += PARAM(KRMINOR_VS_R_NO_PAWNS);
+                    return;
                 }
                 else if ((ourmat.pieceBits() == Material::KQN ||
                           ourmat.pieceBits() == Material::KQB) &&
                          oppmat.pieceBits() == Material::KQ) {
-                    score += PARAM(KQMINOR_VS_Q_NO_PAWNS);
+                    scores.any += PARAM(KQMINOR_VS_Q_NO_PAWNS);
+                    return;
                 }
             } else if (oppmat.pawnCount() > ourmat.pawnCount()) {
                 // Knight or Bishop traded for pawns. Bonus for piece.
-                score += APARAM(MINOR_FOR_PAWNS,std::min(ourmat.materialLevel()/4,5));
+                scores.mid += PARAM(MINOR_FOR_PAWNS_MIDGAME);
+                scores.end += PARAM(MINOR_FOR_PAWNS_ENDGAME);
+#ifdef EVAL_DEBUG
+                cout << "minors vs pawns (" << ColorImage(side) << "): (" << 
+                    PARAM(MINOR_FOR_PAWNS_MIDGAME) << "," << PARAM(MINOR_FOR_PAWNS_ENDGAME) << ")" << endl;
+#endif            
             }
         }
-        else if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
+        if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
                   ourmat.rookCount() == oppmat.rookCount() - 2) {
             // Queen vs. Rooks
             // Queen is better with minors on board (per Kaufman)
-            score += APARAM(QR_ADJUST,std::min<int>(4,ourmat.minorCount()));
+            scores.mid += PARAM(QR_ADJUST_MIDGAME);
+            scores.end += PARAM(QR_ADJUST_ENDGAME);
         }
         break;
     }
@@ -398,11 +400,13 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
             if (ourmat.minorCount() == oppmat.minorCount() - 1) {
                 // Rook vs. minor
                 // not as bad w. fewer pieces
-               score += APARAM(RB_ADJUST,std::min<int>(5,ourmat.materialLevel()/2-2));
+                scores.mid += PARAM(RB_ADJUST_MIDGAME);
+                scores.end += PARAM(RB_ADJUST_ENDGAME);
             }
             else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
                 // bad trade - Rook for two minors, but not as bad w. fewer pieces
-               score += APARAM(RBN_ADJUST,std::min<int>(5,ourmat.materialLevel()/2-2));
+                scores.mid += PARAM(RBN_ADJUST_MIDGAME);
+                scores.end += PARAM(RBN_ADJUST_ENDGAME);
             }
         }
         // Q vs RB or RN is already dealt with by piece values
@@ -412,44 +416,27 @@ score_t Scoring::adjustMaterialScore(const Board &board, ColorType side) const
         if (ourmat.hasQueen() && ourmat.rookCount() == oppmat.rookCount() &&
             oppmat.minorCount()-ourmat.minorCount() == 3) {
             // Queen vs. 3 minors
-            score += APARAM(QUEEN_VS_3MINORS,std::min<int>(3,(ourmat.materialLevel()-9)/2));
+            scores.mid += PARAM(Q_VS_3MINORS_MIDGAME);
+            scores.end += PARAM(Q_VS_3MINORS_ENDGAME);
         }
         break;
     default:
         break;
     }
-#ifdef EVAL_DEBUG
-    if (score-tmp)
-       cout << "material imbalance (" << ColorImage(side) << ") = " << score-tmp << endl;
-#endif
     if (ourmat.materialLevel() < 16) {
-#ifdef EVAL_DEBUG
-       tmp = score;
-#endif
-       score_t adj = 0;
-       if (pawnDiff > 0 && pieceDiff >= 0) {
-          // better to have more pawns in endgame (if we have not
-          // traded pieces for pawns).
-          adj += PARAM(ENDGAME_PAWN_ADVANTAGE)*std::min<int>(2,pawnDiff);
-       }
-       if (pieceDiff > 0) {
-          // bonus for last few pawns - to discourage trade
-          const int ourp = ourmat.pawnCount();
-          if (ourp >= 3) adj += PARAM(PAWN_ENDGAME1);
-          if (ourp >= 2) adj += PARAM(PAWN_ENDGAME1);
-       }
-       score += (4-ourmat.materialLevel()/4)*adj/4;
-#ifdef EVAL_DEBUG
-       if (score-tmp) {
-          cout << "pawn adjust (" << ColorImage(side) << ") = " << score-tmp << endl;
-       }
-#endif
+        const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
+        if (pieceDiff > 0) {
+            // encourage trading pieces but not pawns.
+            score_t adj = 0;
+            adj += PARAM(TRADE_DOWN1) + (pieceDiff >= 5)*PARAM(TRADE_DOWN2);
+            adj += std::min(3,ourmat.pawnCount())*PARAM(TRADE_DOWN3);
+            scores.any += adj*(4-ourmat.materialLevel()/4);
+        }
     }
-    return score;
 }
 
 
-score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side ) const
+void Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side, Scores &scores) const
 {
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
@@ -536,7 +523,7 @@ score_t Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side 
         // draw
         score -= mdiff;
     }
-    return score;
+    scores.any += score;
 }
 
 #ifdef TUNE
@@ -1387,6 +1374,8 @@ void Scoring::calcPawnData(const Board &board,
          entr.b_square_pawns++;
       entr.pawn_file_mask |= (1 << (file - 1));
 
+      entr.endgame_score += PARAM(PAWN_ENDGAME_ADJUST);
+
       int backward = 0;
       int passed = 0;
       int weak = 0;
@@ -1588,7 +1577,7 @@ void Scoring::calcPawnData(const Board &board,
       }
       entr.midgame_score += cp_score.mid;
       entr.endgame_score += cp_score.end;
-#ifdef EVAL_DEBUG
+#ifdef PAWN_DEBUG
       if (cp_score.mid || cp_score.end) {
          cout << "connected passer score, square " << SquareImage(sq);
          cout << " = (" << cp_score.mid << ", " << cp_score.end << ")" << endl;
@@ -1638,37 +1627,6 @@ void Scoring::calcPawnEntry(const Board &board, PawnHashEntry &pawnEntry) {
    pawnEntry.hc = board.pawnHash();
 }
 
-score_t Scoring::materialScore(const Board &board) const {
-    const ColorType side = board.sideToMove();
-    const Material &ourmat = board.getMaterial(side);
-    const Material &oppmat = board.getMaterial(OppositeColor(side));
-    const int mdiff =  (int)(ourmat.value() - oppmat.value());
-#ifdef EVAL_DEBUG
-    cout << "mdiff=" << mdiff << endl;
-
-#endif
-    score_t adjust = 0;
-    if (ourmat.infobits() != oppmat.infobits()) {
-        if (ourmat.noPawns() && oppmat.noPawns()) {
-            adjust += adjustMaterialScoreNoPawns(board,side) -
-               adjustMaterialScoreNoPawns(board,OppositeColor(side));
-        }
-        else {
-            adjust += adjustMaterialScore(board,side) -
-               adjustMaterialScore(board,OppositeColor(side));
-        }
-    }
-#ifdef EVAL_DEBUG
-    if (adjust) cout << "material score adjustment = " << adjust << endl;
-#endif
-    const score_t matScore = mdiff + adjust;
-#ifdef EVAL_DEBUG
-    cout << "adjusted material score = " << matScore << endl;
-#endif
-    return matScore;
-}
-
-
 score_t Scoring::evalu8(const Board &board, bool useCache) {
 
    score_t score;
@@ -1677,8 +1635,33 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
        return score;
    }
 
-   const score_t matScore = materialScore(board);
+   Scores wScores, bScores;
+   const Material &wMat = board.getMaterial(White);
+   const Material &bMat = board.getMaterial(Black);
 
+   const int w_materialLevel = wMat.materialLevel();
+   const int b_materialLevel = bMat.materialLevel();
+
+#ifdef EVAL_DEBUG
+   const score_t mdiff =  (int)(wMat.value() - bMat.value());
+   cout << "material difference=" << (board.sideToMove() == White ? mdiff : -mdiff) << endl;
+#endif
+   wScores.any = wMat.value();                                      
+   bScores.any = bMat.value();                                      
+   if (wMat.infobits() != bMat.infobits()) {
+       if (wMat.noPawns() && bMat.noPawns()) {
+           adjustMaterialScoreNoPawns(board,White,wScores);
+           adjustMaterialScoreNoPawns(board,Black,bScores);
+       }
+       else {
+           adjustMaterialScore(board,White,wScores);
+           adjustMaterialScore(board,Black,bScores);
+       }
+   }
+#ifdef EVAL_DEBUG
+   score_t adjusted = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);                                      
+   cout << "adjusted material score = " << (board.sideToMove() == White ? adjusted : -adjusted) << endl;
+#endif
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
 
    PawnHashEntry &pawnEntry = pawnHashTable[pawnHash % PAWN_HASH_SIZE];
@@ -1688,15 +1671,10 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
       calcPawnEntry(board, pawnEntry);
    }
 
-   Scores wScores, bScores;
-
    KingPawnHashEntry &whiteKPEntry = getKPEntry<White>(board,pawnEntry.pawnData(White),
                                                        pawnEntry.pawnData(Black),useCache);
    KingPawnHashEntry &blackKPEntry = getKPEntry<Black>(board,pawnEntry.pawnData(Black),
                                                        pawnEntry.pawnData(White),useCache);
-
-   const int w_materialLevel = board.getMaterial(White).materialLevel();
-   const int b_materialLevel = board.getMaterial(Black).materialLevel();
 
    bool posEval = true;
 
@@ -1777,12 +1755,6 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
       // "flatten" positional score values
       score = score * std::max<int>(100,options.search.strength*options.search.strength) / 10000;
    }
-
-   // add material score, which is from the perspective of the side to move
-   if (board.sideToMove() == White)
-      score += matScore;
-   else
-      score -= matScore;
 
    if (board.sideToMove() == Black) {
       score = -score;
@@ -1943,7 +1915,6 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       end_tmp = scores.end;
 #endif
    }
-
 #ifdef PAWN_DEBUG
    cout << ColorImage(side) << " pawn score: " << endl;
    cout << " general = " << scores.any-tmp.any << endl;
@@ -2465,18 +2436,8 @@ void Params::write(ostream &o, const string &comment)
    o << "//" << endl;
    o << endl << "#include \"params.h\"" << endl;
    o << endl;
-   o << "const int Params::RB_ADJUST[6] = ";
-   print_array(o,Params::RB_ADJUST,6);
-   o << "const int Params::RBN_ADJUST[6] = ";
-   print_array(o,Params::RBN_ADJUST,6);
-   o << "const int Params::QR_ADJUST[5] = ";
-   print_array(o,Params::QR_ADJUST,5);
    o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
-   o << "const int Params::MINOR_FOR_PAWNS[6] = ";
-   print_array(o,Params::MINOR_FOR_PAWNS,6);
-   o << "const int Params::QUEEN_VS_3MINORS[4] = ";
-   print_array(o,Params::QUEEN_VS_3MINORS,4);
    o << "const int Params::CASTLING[6] = ";
    print_array(o,Params::CASTLING,6);
    o << "const int Params::KING_COVER[6][4] = {";

@@ -1,16 +1,13 @@
-// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2020 by Jon Dart. All Rights Reserved.
 //
 // definitions of scoring parameters, non-const for tuning
 
 #include "params.h"
 
 // These have a 1-1 mapping to the tuning parameters
-score_t Params::RB_ADJUST[6];
-score_t Params::RBN_ADJUST[6];
-score_t Params::QR_ADJUST[5];
 score_t Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
-score_t Params::MINOR_FOR_PAWNS[6] = {68, 75, 115, 115, 115, 115};
-score_t Params::QUEEN_VS_3MINORS[4];
+score_t Params::MINOR_FOR_PAWNS_MIDGAME = -20;
+score_t Params::MINOR_FOR_PAWNS_ENDGAME = -30;
 score_t Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
 #ifdef TUNE
 score_t Params::KING_ATTACK_SCALE_MAX;
@@ -24,10 +21,20 @@ score_t Params::KING_DISTANCE_BASIS = 320;
 score_t Params::KING_DISTANCE_MULT = 80;
 score_t Params::PIN_MULTIPLIER_MID = 200;
 score_t Params::PIN_MULTIPLIER_END = 300;
+score_t Params::RB_ADJUST_MIDGAME = -20;
+score_t Params::RB_ADJUST_ENDGAME = -30;
+score_t Params::RBN_ADJUST_MIDGAME = -20;
+score_t Params::RBN_ADJUST_ENDGAME = -30;
+score_t Params::QR_ADJUST_MIDGAME = -20;
+score_t Params::QR_ADJUST_ENDGAME = -30;
+score_t Params::Q_VS_3MINORS_MIDGAME = -20;
+score_t Params::Q_VS_3MINORS_ENDGAME = -30;
 score_t Params::KRMINOR_VS_R_NO_PAWNS = -500;
 score_t Params::KQMINOR_VS_Q_NO_PAWNS = -500;
-score_t Params::ENDGAME_PAWN_ADVANTAGE = 100;
-score_t Params::PAWN_ENDGAME1 = 200;
+score_t Params::TRADE_DOWN1 = 10;
+score_t Params::TRADE_DOWN2 = 10;
+score_t Params::TRADE_DOWN3 = 10;
+score_t Params::PAWN_ENDGAME_ADJUST = 8;
 score_t Params::PAWN_ATTACK_FACTOR = 4;
 score_t Params::MINOR_ATTACK_FACTOR = 4;
 score_t Params::MINOR_ATTACK_BOOST = 4;
