@@ -1037,7 +1037,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
             //
             gameMoves->add_move(board,previous_state,predicted_reply,"",true);
         }
-        int time_target = INFINITE_TIME;
+        time_target = INFINITE_TIME;
         // in reduced strength mode, limit the ponder search time
         // (do not ponder indefinitely)
         if (options.search.strength < 100) {
@@ -1229,33 +1229,32 @@ int Protocol::isDraw(const Board &board, Statistics &last_stats, string &reason)
 }
 
 static void kibitz(SearchController *searcher, bool computer, Statistics &last_stats, bool multithread) {
+    stringstream s;
     if (computer)
-        cout << "tellics kibitz ";
+        s << "tellics kibitz ";
     else
-        cout << "tellics whisper ";
-    std::ios_base::fmtflags original_flags = cout.flags();
-    cout << "time=" << fixed << setprecision(2) <<
+        s << "tellics whisper ";
+    s << "time=" << fixed << setprecision(2) <<
         (float)searcher->getElapsedTime()/1000.0 << " sec. score=";
-    Scoring::printScore(last_stats.display_value,cout);
-    cout << " depth=" << last_stats.depth;
+    Scoring::printScore(last_stats.display_value,s);
+    s << " depth=" << last_stats.depth;
     if (searcher->getElapsedTime() > 0) {
-        cout << " nps=";
-        Statistics::printNPS(cout,last_stats.num_nodes,searcher->getElapsedTime());
+        s << " nps=";
+        Statistics::printNPS(s,last_stats.num_nodes,searcher->getElapsedTime());
     }
     if (last_stats.tb_hits) {
-        cout << " egtb=" << last_stats.tb_hits << '/' << last_stats.tb_probes;
+        s << " egtb=" << last_stats.tb_hits << '/' << last_stats.tb_probes;
     }
 #if defined(SMP_STATS)
     if (multithread) {
-        cout << " cpu=" << fixed << setprecision(2) <<
+        s << " cpu=" << fixed << setprecision(2) <<
             searcher->getCpuPercentage() << '%';
     }
 #endif
     if (last_stats.best_line_image.length()) {
-        cout << " pv: " << last_stats.best_line_image;
+        s << " pv: " << last_stats.best_line_image;
     }
-    cout.flags(original_flags);
-    cout << endl;
+    cout << s.str() << endl;
 }
 
 void Protocol::send_move(Board &board, Move &move, Statistics
@@ -1353,7 +1352,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         } else {
             if (doTrace) cout << debugPrefix() << "warning : move is null" << endl;
         }
-        if (ics && time_target >= 3000 && stats.display_value != Constants::INVALID_SCORE) {
+        if (ics && time_target >= 250 && stats.display_value != Constants::INVALID_SCORE) {
             kibitz(searcher,computer,last_stats,options.search.ncpus>1);
         }
     }
