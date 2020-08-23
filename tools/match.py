@@ -12,7 +12,7 @@ from executor.ssh.client import RemoteCommand
 # NPS value (in Mnps) that results in actual time control
 # equalling nominal time control. Equivalent to 1-core performance
 # on a Xeon 2690v3.
-NPS_BASE = 1.54
+NPS_BASE = 1.33
 # command to run matches on a single machine, local or remote
 REMOTE_MATCH_DIR = "/home/jdart/chess/cutechess-cli"
 REMOTE_MATCH_CMD = "/home/jdart/chess/cutechess-cli/match-sprt"
