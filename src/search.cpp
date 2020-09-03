@@ -1044,15 +1044,17 @@ Move Search::ply0_search()
 
          if (srcOpts.multipv > 1) {
              stats.clearSearchState();
+             if (iterationDepth > 1) {
+                 // set value to previous iteration's value
+                 value = stats.multi_pvs[stats.multipv_count].display_value;
+             } else {
+                 value = controller->initialValue;
+             }
          }
          if (stats.multipv_count) {
             // Exclude the previous best move from the current
             // search, so we will select a different one.
             excluded.emplace(stats.multi_pvs[stats.multipv_count-1].best);
-            if (iterationDepth > 1) {
-               // set value to previous iteration's value
-               value = stats.multi_pvs[stats.multipv_count].display_value;
-            }
          }
          if (iterationDepth <= 1) {
             lo_window = -Constants::MATE;
@@ -1065,10 +1067,14 @@ Move Search::ply0_search()
             hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
          }
          if (mainThread() && debugOut() && controller->background) {
-            cout << debugPrefix() << iterationDepth << ". move=";
-            MoveImage(node->best,cout); cout << " score=";
-            Scoring::printScore(node->best_score,cout);
-            cout << " terminate=" << terminate << endl;
+             cout << debugPrefix();
+             if (srcOpts.multipv > 1) {
+                 cout << " multipv=" << stats.multipv_count << ": ";
+             }
+             cout << iterationDepth << ". move=";
+             MoveImage(node->best,cout); cout << " score=";
+             Scoring::printScore(node->best_score,cout);
+             cout << " terminate=" << terminate << endl;
          }
          int fails = 0;
          int faillows = 0, failhighs = 0;
@@ -1295,7 +1301,8 @@ Move Search::ply0_search()
          }
       } // end multi-pv loop
       if (stats.multipv_limit>1) {
-         stats.sortMultiPVs();
+          // keep lines in score order
+          stats.sortMultiPVs();
       }
       if (mainThread()) {
          showStatus(board, node->best, false, false);
@@ -2329,7 +2336,7 @@ int Search::prune(const Board &board,
 }
 
 int Search::extend(const Board &board,
-                   NodeInfo *node,
+                   NodeInfo */*node*/,
                    CheckStatusType in_check_after_move,
                    Move move) {
     // see if we should apply any extensions at this node.
@@ -2583,11 +2590,6 @@ score_t Search::search()
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply); cout << "EGTB hit: score " << tb_score << endl;
-            }
-#endif
-#ifdef _TRACE
-            if (mainThread() && tb_score != score) {
-                indent(ply); cout << "adjusted score " << score << endl;
             }
 #endif
             // Put it in with a large depth so we will not
