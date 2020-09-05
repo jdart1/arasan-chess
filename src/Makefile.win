@@ -99,6 +99,7 @@ CL=cl
 CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W2 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
 POPCNT_FLAGS = -DUSE_POPCNT
 BMI2_FLAGS = -DBMI2
+AVX2_FLAGS = -DBMI2 /arch:AVX2
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 !If "$(PLATFORM)" == "XP"
@@ -362,6 +363,16 @@ bmi2: dirs
 	SET CFLAGS=$(POPCNT_FLAGS) $(BMI2_FLAGS)
 	set ARASANX=$(ARASANX)-bmi2
 	nmake
+
+avx2: dirs
+	SET CFLAGS=$(POPCNT_FLAGS) $(AVX2_FLAGS)
+	set ARASANX=$(ARASANX)-avx2
+	nmake
+
+avx2-profiled:
+	SET CFLAGS=$(POPCNT_FLAGS) $(AVX2_FLAGS)
+	SET ARASANX=$(ARASANX)-avx2
+	nmake profile-build
 
 profiled: profile-build
 

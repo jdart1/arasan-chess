@@ -54,8 +54,9 @@ endif
 SMPFLAGS = -DSMP -DSMP_STATS
 SMPLIB   = -lpthread
 
-POPCNT_FLAGS := -DUSE_POPCNT -msse2 -msse3 -msse4.1 -msse4.2 -mpopcnt
+POPCNT_FLAGS := -DUSE_POPCNT -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
+AVX2_FLAGS := $(BMI2_FLAGS) -mavx2
 
 PGO_RUN_FLAGS = -H 64M
 
@@ -87,14 +88,13 @@ endif
 CFLAGS := $(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
 
 ifeq ("$(ARCH)","x86_64")
-SSE=-msse3
+CFLAGS := $(CFLAGS) -msse2 -msse3
 endif
 
 LBITS := $(shell getconf LONG_BIT)
 LIBS := -lc -lm
 
 ifdef NUMA
-CFLAGS := $(CFLAGS)
 LIBS := -lhwloc $(LIBS)
 endif
 
@@ -122,8 +122,8 @@ LD      = icc
 AR      = xiar
 CFLAGS  := $(CFLAGS) -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
 ifndef DEBUG
-OPT     = -O3 -fno-rtti $(SSE) -DNDEBUG
-GTB_OPT := -O3 -fno-rtti $(SSE) -DNDEBUG
+OPT     = -O3 -fno-rtti -DNDEBUG
+GTB_OPT := -O3 -fno-rtti -DNDEBUG
 endif
 
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
@@ -142,8 +142,7 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-CFLAGS  := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(SSE) $(CFLAGS)
-BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
+CFLAGS  := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 ifndef DEBUG
 # use LTO only if no PGO
 ifdef PGO
@@ -151,7 +150,7 @@ LTO :=
 else
 LTO := -flto
 endif
-OPT     = -O3 $(LTO) -fno-rtti  $(SSE) -DNDEBUG
+OPT     = -O3 $(LTO) -fno-rtti -DNDEBUG
 LDFLAGS := $(LDFLAGS) $(OPT)
 ifneq ("darwin","$(findstring darwin,$(OSTYPE))")
 # "Gold" not supported on darwin
@@ -176,12 +175,11 @@ GCCNEW := $(shell awk 'BEGIN{print $(GCCVER) >= 4.9}')
 ifeq "$(GCCNEW)" "1"
 # options for GCC
 CFLAGS := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
-BMI2_FLAGS := $(BMI2_FLAGS) -mbmi2
 SMPFLAGS := $(SMPFLAGS) -pthread
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold -L$(HWLOC)/lib
 ifndef DEBUG
 LTO	= -flto
-OPT	= -Ofast $(LTO) -fno-rtti -fno-enforce-eh-specs $(SSE) -DNDEBUG
+OPT	= -Ofast $(LTO) -fno-rtti -fno-enforce-eh-specs -DNDEBUG
 endif
 else
 $(error GCC version is $(GCCVER): versions < $(GCC_MIN_VERSION) not supported)
@@ -204,7 +202,7 @@ default: dirs $(EXPORT)/$(ARASANX)
 tuning: dirs $(EXPORT)/$(TUNER)
 
 tuning-popcnt: dirs
-	@$(MAKE) TUNER=$(TUNER)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 tuning
+	@$(MAKE) TUNER=$(TUNER)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' tuning
 
 utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
 
@@ -262,26 +260,37 @@ endif
 	@$(MAKE) PASS=2 profile
 
 popcnt-profiled: dirs
-	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
-	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile-run
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' profile
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' profile-run
 ifeq ("$(findstring clang,$(CC))","clang")
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
 endif
-	@$(MAKE) PASS=2 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=2 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' profile
 
 popcnt: dirs
-	@$(MAKE) BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' SSE=-msse4.2
+	@$(MAKE) BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)'
 
 bmi2: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2
+	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)'
+
+avx2: dirs
+	@$(MAKE) ARASANX=$(ARASANX)-avx2 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)'
 
 bmi2-profiled: dirs
-	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
-	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile-run
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' profile
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' profile-run
 ifeq ("$(findstring clang,$(CC))","clang")
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
 endif
-	@$(MAKE) PASS=2 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' SSE=-msse4.2 profile
+	@$(MAKE) PASS=2 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' profile
+
+avx2-profiled: dirs
+	@$(MAKE) PASS=1 BUILD_TYPE=avx2 PGO=1 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)' profile
+	@$(MAKE) PASS=1 BUILD_TYPE=avx2 PGO=1 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)' profile-run
+ifeq ("$(findstring clang,$(CC))","clang")
+	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
+endif
+	@$(MAKE) PASS=2 BUILD_TYPE=avx2 PGO=1 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)' profile
 
 TB_SOURCES=
 TB_OBJS=
