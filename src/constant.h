@@ -21,7 +21,7 @@ enum {MaxCPUs = 256};
 
 };
 
-constexpr int INFINITE_TIME = 1e8;
+constexpr int INFINITE_TIME = 100000000;
 
 #define STRINGIFY(x) #x
 #define MAKE_STR(x) STRINGIFY(x)
