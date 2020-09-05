@@ -54,8 +54,8 @@ endif
 SMPFLAGS = -DSMP -DSMP_STATS
 SMPLIB   = -lpthread
 
-POPCNT_FLAGS := -DUSE_POPCNT -msse4.2
-BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2
+POPCNT_FLAGS := -DUSE_POPCNT -msse2 -msse3 -msse4.1 -msse4.2 -mpopcnt
+BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 
 PGO_RUN_FLAGS = -H 64M
 
