@@ -15,7 +15,8 @@
 
 static void usage() 
 {
-   cerr << "playchess -t <time limit (sec.)> -min <min ply> -e <min ELO> pgn_file(s)" << endl;
+   cerr << "playchess [-t <time limit (sec.)>] [-x] [-min <min ply>] [-e <min ELO>] pgn_file(s)" << endl;
+   cerr << "-x outputs games that do not pass criteria" << endl;
 }
 
 int CDECL main(int argc, char **argv)
@@ -40,9 +41,10 @@ int CDECL main(int argc, char **argv)
    int minELO = 0;
    // time limit in ms.
    int timeLimit = 5000;
+   bool x_flag = false;
 
    if (argc ==1) {
-      cerr << "usage: playchess.exe -t <search time> -m <min ELO> <input file>" << endl;
+      usage();
       return -1;
    }
    else {
@@ -70,6 +72,9 @@ int CDECL main(int argc, char **argv)
          }
          else if (strcmp(argv[arg],"-e")==0) {
             processInt(minELO,"e");
+         }
+         else if (strcmp(argv[arg],"-x")==0) {
+            x_flag = true;
          }
          else {
             usage();
@@ -181,7 +186,7 @@ int CDECL main(int argc, char **argv)
                                                stats,
                                                TalkLevel::Silent);
                      
-                        last_score = float(stats.value)/Params::PAWN_VALUE;
+                        last_score = float(stats.display_value)/Params::PAWN_VALUE;
                      }
                      if (board.sideToMove() != White) last_score = -last_score;
                      done = true;
@@ -190,20 +195,24 @@ int CDECL main(int argc, char **argv)
                      break;
                   } // end switch
                }
+               if (!valid) continue;
+
+               bool ok = true;
+
                // done with a game
                if (moves.num_moves() < (unsigned)minMoves || !valid) {
-                  continue;
+                   ok = false;
                }
-               if (strcmp(result.c_str(),"1/2-1/2")==0) {
+               else if (strcmp(result.c_str(),"1/2-1/2")==0) {
                   if (last_score >=1.0 || last_score <=-1.0) {
-                     continue;
+                      ok = false;
                   }
                }
                else if (strcmp(result.c_str(),"1-0")==0) {
-                  if (last_score <= 1.5) continue;
+                   if (last_score <= 1.5) ok = false;
                }
                else if (strcmp(result.c_str(),"0-1")==0) {
-                  if (last_score >= -1.5) continue;
+                   if (last_score >= -1.5) ok = false;
                }
 
                string eco;
@@ -219,14 +228,18 @@ int CDECL main(int argc, char **argv)
                         if (sscanf(whiteELOStr.c_str(),"%d",&whiteElo) &&
                             sscanf(blackELOStr.c_str(),"%d",&blackElo)) {
                            if (whiteElo < minELO || blackElo < minELO)
-                              continue;
+                               ok = false;
                         }
                      }
                      else                            // no ELO info available
-                        continue;
+                         ok = false;
                   }
-                  ChessIO::store_pgn(cout, moves, result, hdrs);
                }
+
+               if (x_flag) ok = !ok;
+               if (!ok) continue;
+
+               ChessIO::store_pgn(cout, moves, result, hdrs);
             }
             pgn_file.close();
          }
