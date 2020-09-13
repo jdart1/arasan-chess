@@ -201,8 +201,6 @@ SearchController::~SearchController() {
 }
 
 void SearchController::terminateNow() {
-    if (debugOut())
-        cout << debugPrefix() << "terminating search (controller)" << endl;
     stopAllThreads();
 }
 
