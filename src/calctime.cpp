@@ -1,4 +1,4 @@
-// Copyright 1997, 1998, 1999, 2012-2013, 2017-2019 by Jon Dart. All Rights Reserved.
+// Copyright 1997, 1998, 1999, 2012-2013, 2017-2020 by Jon Dart. All Rights Reserved.
 #include "calctime.h"
 #include "globals.h"
 
@@ -11,7 +11,8 @@ static const int EXTRA_TIME_FACTOR_NO_INC = 12;
 static const double EXTRA_TIME_MULT = 2.5;
 static const int MOVES_TO_GO_THRESHOLD = 6;
 
-int timeMgmt::calcTimeLimit(int moves, int incr, int time_left, bool ponder)
+void timeMgmt::calcTimeLimit(int moves, int incr,
+                             int time_left, bool ponder, bool ics, timeMgmt::Times &times)
 {
     int moves_in_game = gameMoves->num_moves()/2;  // full moves, not half-moves
     int moves_left;
@@ -20,13 +21,12 @@ int timeMgmt::calcTimeLimit(int moves, int incr, int time_left, bool ponder)
     } else {
         moves_left = moves-(moves_in_game % moves);
     }
-    return calcTimeLimitUCI(moves_left,incr,time_left,ponder);
+    calcTimeLimitUCI(moves_left,incr,time_left,ponder,ics,times);
 }
 
-
 // UCI version
-int timeMgmt::calcTimeLimitUCI(int movestogo, int incr,
-                               int time_left, bool ponder)
+void timeMgmt::calcTimeLimitUCI(int movestogo, int incr,
+                                int time_left, bool ponder, bool /*ics*/, timeMgmt::Times &times)
 {
     if (movestogo == 0) movestogo = DEFAULT_MOVES_TO_TC;
     double factor = 1.0;
@@ -44,15 +44,13 @@ int timeMgmt::calcTimeLimitUCI(int movestogo, int incr,
     time_target = std::min<int>(time_left - options.search.move_overhead,time_target);
 
     // enforce minimum search time
-    return std::max<int>(time_target,options.search.minimum_search_time);
-}
+    times.time_target = time_target = std::max<int>(time_target,options.search.minimum_search_time);
 
-int timeMgmt::calcExtraTime(int time_left, int time_target, int inc) {
-    if (inc == 0 && time_left < time_target*EXTRA_TIME_FACTOR_NO_INC) {
-        return std::max<int>(0,int(-EXTRA_TIME_MULT*time_target + 2*(EXTRA_TIME_MULT/EXTRA_TIME_FACTOR_NO_INC)*time_left));
-    } else if (inc > 0 && time_left < time_target*EXTRA_TIME_FACTOR_INC) {
-        return std::max<int>(0,int(-EXTRA_TIME_MULT*time_target + 2*(EXTRA_TIME_MULT/EXTRA_TIME_FACTOR_INC)*time_left));
+    if (incr == 0 && time_left < time_target*EXTRA_TIME_FACTOR_NO_INC) {
+        times.extra_time = std::max<int>(0,int(-EXTRA_TIME_MULT*time_target + 2*(EXTRA_TIME_MULT/EXTRA_TIME_FACTOR_NO_INC)*time_left));
+    } else if (incr > 0 && time_left < time_target*EXTRA_TIME_FACTOR_INC) {
+        times.extra_time = std::max<int>(0,int(-EXTRA_TIME_MULT*time_target + 2*(EXTRA_TIME_MULT/EXTRA_TIME_FACTOR_INC)*time_left));
     } else {
-        return int(EXTRA_TIME_MULT*time_target);
+        times.extra_time = int(EXTRA_TIME_MULT*time_target);
     }
 }

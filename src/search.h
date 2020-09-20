@@ -563,7 +563,8 @@ private:
     atomic<int64_t> bonus_time;
     bool fail_high_root_extend, fail_low_root_extend, fail_high_root;
     // Factors to use to adjust time up/down based on search history:
-    double searchHistoryBoostFactor, searchHistoryReductionFactor;
+    double searchHistoryBoostFactor, searchHistoryReductionFactor, maxBoostFactor;
+    int maxBoostDepth;
     int ply_limit;
     atomic<bool> background;
     atomic<bool> is_searching;

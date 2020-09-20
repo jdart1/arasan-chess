@@ -5,6 +5,7 @@
 #define _PROTOCOL_H
 
 #include "board.h"
+#include "calctime.h"
 #include "eco.h"
 #include "search.h"
 #include <vector>
@@ -95,10 +96,6 @@ private:
     // issue some help text to the console
     void do_help();
 
-    // compute "extra time" that may added to the nominal search time
-    // if search conditions warrant.
-    int calc_extra_time(const ColorType side);
-
     // Format and output a move in the right format (UCI/Winboard)
     void move_image(const Board &board, Move m, ostream &buf, bool uci);
 
@@ -128,6 +125,8 @@ private:
 
     // handle commands in edit mode (Winboard protocol)
     void edit_mode_cmds(Board &board,ColorType &side,const string &cmd);
+
+    void calcTimes(bool pondering, ColorType side, timeMgmt::Times &times);
 
     // do a ponder search
     void ponder(Board &board, Move move, Move predicted_reply, bool uci);

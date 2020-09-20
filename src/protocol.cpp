@@ -575,16 +575,6 @@ void Protocol::save_game() {
    if (doTrace) cout << debugPrefix() << "out of save_game" << endl;
 }
 
-
-int Protocol::calc_extra_time(const ColorType side) {
-   if (srctype == TimeLimit) {
-       return timeMgmt::calcExtraTime(time_left,time_target,(uci ? getIncrUCI(side) : incr));
-   } else {
-       return 0;
-   }
-}
-
-
 void Protocol::move_image(const Board &board, Move m, ostream &buf, bool uci) {
     Notation::image(board,m,uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::WB,buf);
 }
@@ -703,23 +693,17 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
             ponder_status = PonderStatus::Hit;
             // continue the search in non-ponder mode
             if (srctype != FixedDepth) {
-                // Compute how much longer we must search
-                ColorType side = controller->getComputerSide();
-                if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
-                                 movestogo << endl;
-                time_target =
-                    (srctype == FixedTime) ? time_limit :
-                    timeMgmt::calcTimeLimitUCI(movestogo,
-                                     side == White ? winc : binc,
-                                     time_left, !easy);
                 if (doTrace) {
                     stringstream s;
-                    s << "time_left=" << time_left << " opp_time=" << opp_time << " time_target=" <<
-                        time_target << '\0';
-                    theLog->write(s.str().c_str()); theLog->write_eol();
-                    cout << debugPrefix() << "time_target = " << time_target << endl;
+                    s << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                        movestogo << " time_left=" << time_left << " opp_time=" << opp_time << '\0';
+                    cout << s.str() << endl << (flush);
                 }
-                controller->setTimeLimit(time_target,calc_extra_time(side));
+                // Compute how much longer we must search
+                timeMgmt::Times times;
+                calcTimes(true,controller->getComputerSide(),times);
+                time_target = last_time_target = times.time_target;
+                controller->setTimeLimit(times.time_target,times.extra_time);
             }
             controller->setTalkLevel(TalkLevel::Whisper);
             controller->setBackground(false);
@@ -885,22 +869,10 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 // limit.
                 ponder_status = PonderStatus::Hit;
                 if (srctype != FixedDepth) {
-                    // Compute how much longer we must search
-                    ColorType side = controller->getComputerSide();
-                    if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
-                                     movestogo << endl;
-                    time_target =
-                        (srctype == FixedTime) ? time_limit :
-                        (uci ? timeMgmt::calcTimeLimitUCI(movestogo,
-                                                getIncrUCI(side),
-                                                time_left,
-                                                true)
-                         : timeMgmt::calcTimeLimit(moves, incr, time_left, true));
-                    if (doTrace) {
-                        cout << debugPrefix() << "time_target = " << time_target << endl;
-                        cout << debugPrefix() << "xtra time = " << calc_extra_time(side) << endl;
-                    }
-                    controller->setTimeLimit(time_target,calc_extra_time(side));
+                    timeMgmt::Times times;
+                    calcTimes(true,controller->getComputerSide(),times);
+                    time_target = last_time_target = times.time_target;
+                    controller->setTimeLimit(times.time_target,times.extra_time);
                 }
                 controller->setTalkLevel(TalkLevel::Whisper);
                 controller->setBackground(false);
@@ -1008,6 +980,27 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &side,const string &cmd)
     }
 }
 
+void Protocol::calcTimes(bool pondering, ColorType side, timeMgmt::Times &times) 
+{
+    if (srctype == FixedTime) {
+        times.time_target = time_limit;
+        times.extra_time = 0;
+    } else if (uci) {
+        timeMgmt::calcTimeLimitUCI(movestogo,
+                                   getIncrUCI(side),
+                                   time_left,
+                                   pondering,
+                                   ics,
+                                   times);
+    } else {
+        timeMgmt::calcTimeLimit(moves, incr, time_left, pondering, ics, times);
+    }
+    if (doTrace) {
+        cout << debugPrefix() << "time_target = " << times.time_target << endl;
+        cout << debugPrefix() << "xtra time = " << times.extra_time << endl;
+    }
+}
+
 void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
 {
     ponder_status = PonderStatus::None;
@@ -1060,6 +1053,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         else {
+            time_target = last_time_target = INFINITE_TIME;
             ponder_move = searcher->findBestMove(
                 uci ? *main_board : *ponder_board,
                 FixedTime,
@@ -1135,27 +1129,20 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 movesToSearch);
         }
         else {
+            timeMgmt::Times times;
             if (infinite) {
-                time_target = INFINITE_TIME;
+                times.time_target = INFINITE_TIME;
+                times.extra_time = 0;
             } else {
                 if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
                                  movestogo << endl;
-                time_target =
-                    (srctype == FixedTime) ? time_limit :
-                    (uci ? timeMgmt::calcTimeLimitUCI(movestogo,
-                                            getIncrUCI(board.sideToMove()),
-                                            time_left, false)
-                     : timeMgmt::calcTimeLimit(moves, incr, time_left, false));
-                last_time_target = time_target;
+                calcTimes(false,board.sideToMove(),times);
             }
-            if (doTrace) {
-                cout << debugPrefix() << "entering search, time_target = " << time_target << endl;
-                cout << debugPrefix() << "xtra time = " << calc_extra_time(board.sideToMove()) << endl;
-            }
+            time_target = last_time_target = times.time_target;
             move = searcher->findBestMove(board,
                 srctype,
-                time_target,
-                calc_extra_time(board.sideToMove()),
+                times.time_target,
+                times.extra_time,
                 Constants::MaxPly, false, uci,
                 stats,
                 level,
@@ -1177,12 +1164,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
                moveCount = openingBook.book_moves(board,choices);
             }
             stringstream s;
-            if (uci)
-                s << "info string book moves: (";
-            else if (computer)
-                s << "tellics kibitz book moves: (";
-            else
-                s << "tellics whisper book moves: (";
+            s << "book moves (";
             for (int i=0;i<moveCount;i++) {
                 Notation::image(board,choices[i],Notation::OutputFormat::SAN,s);
                 if (i < moveCount-1)
@@ -1190,7 +1172,15 @@ Move Protocol::search(SearchController *searcher, Board &board,
             }
             s << "), choosing ";
             Notation::image(board,move,Notation::OutputFormat::SAN,s);
-            cout << s.str() << endl;
+            if (uci) {
+                cout << "info string " << s.str() << endl;
+            }
+            if (ics) {
+                if (computer)
+                    cout << "tellics kibitz " << s.str() << endl;
+                else
+                    cout << "tellics whisper " << s.str() << endl;
+            }
         }
         stats.clear();
     }
@@ -1352,7 +1342,8 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         } else {
             if (doTrace) cout << debugPrefix() << "warning : move is null" << endl;
         }
-        if (ics && time_target >= 250 && stats.display_value != Constants::INVALID_SCORE) {
+        if (ics && ((srctype == FixedDepth && searcher->getElapsedTime() >= 250) || time_target >= 250) &&
+            stats.display_value != Constants::INVALID_SCORE) {
             kibitz(searcher,computer,last_stats,options.search.ncpus>1);
         }
     }

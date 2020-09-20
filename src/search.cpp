@@ -131,7 +131,9 @@ SearchController::SearchController()
       fail_low_root_extend(false),
       fail_high_root(false),
       searchHistoryBoostFactor(0.0),
-      searchHistoryReductionFactor(1.0),
+      searchHistoryReductionFactor(0.0),
+      maxBoostFactor(-1.0),
+      maxBoostDepth(0),
       ply_limit(0),
       background(false),
       is_searching(false),
@@ -244,8 +246,9 @@ Move SearchController::findBestMove(
     fail_high_root = false;
     bonus_time = (int64_t)0;
     xtra_time = search_xtra_time;
-    searchHistoryBoostFactor = 0.0;
-    searchHistoryReductionFactor = 1.0;
+    searchHistoryBoostFactor = searchHistoryReductionFactor = 0.0;
+    maxBoostFactor = -1.0;
+    maxBoostDepth = 0;
     search_counts.fill(0);
     search_counts[0] = options.search.ncpus;
     if (srcType == FixedTime || srcType == TimeLimit) {
@@ -471,7 +474,7 @@ Move SearchController::findBestMove(
    cout << " pv=" << stats->best_line_image << endl;
 #endif
    if (debugOut()) {
-      cout << debugPrefix() << "best thread: depth= " << stats->completedDepth <<  " score=";
+      cout << debugPrefix() << "best thread: depth=" << stats->completedDepth <<  " score=";
       Scoring::printScore(stats->value,cout);
       cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       cout << " pv=" << stats->best_line_image << endl;
@@ -659,39 +662,38 @@ void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
     // score seems stable and is not dropping. Note: we calculate the
     // adjustment even if in a ponder search, so we can apply it later
     // if a ponder hit occurs.
-    if (stats.depth > 6) {
+    if (int(stats.depth) > MoveGenerator::EASY_PLIES+6) {
         // Look back over the past few iterations
         Move pv = stats.best_line[0];
-        int pvChangeFactor = 0;
-        score_t score = stats.display_value;
-        score_t old_score = score;
-        for (int depth = int(stats.depth)-2; depth >= 0 && depth>int(stats.depth)-6; --depth) {
+        double pvChangeFactor = 0.0;
+        const score_t score = stats.display_value;
+        score_t max_score = -Constants::MATE;
+        int divisor = 1;
+        for (int depth = int(stats.depth)-2; depth >= 0 && depth>=int(stats.depth)-6; --depth, divisor *= 2) {
             if (!MovesEqual(rootSearchHistory[depth].pv,pv)) {
-                pvChangeFactor++;
+                pvChangeFactor += 1.0/divisor;
             }
-            old_score = rootSearchHistory[depth].score;
+            score_t old_score = rootSearchHistory[depth].score;
+            if (old_score > max_score) {
+                max_score = old_score;
+            }
             pv = rootSearchHistory[depth].pv;
         }
-        double scoreChange = std::max(0.0,(old_score-score)/(1.0*Params::PAWN_VALUE));
-        searchHistoryBoostFactor = std::min<double>(1.0,(pvChangeFactor/2.0 + scoreChange)/2.0);
-        if (searchHistoryBoostFactor==0.0 && pvChangeFactor == 0 && score>=old_score) {
+        score_t score_diff = std::max<score_t>(0,max_score-score-score_t(0.1*Params::PAWN_VALUE));
+        double scoreChange = std::max<double>(0.0,score_diff/(1.0*Params::PAWN_VALUE));
+        searchHistoryBoostFactor = std::min<double>(1.0,0.25*pvChangeFactor + scoreChange*(1.5 + 0.25*pvChangeFactor));
+        searchHistoryReductionFactor = 0.0;
+        if (searchHistoryBoostFactor > maxBoostFactor) {
+            maxBoostFactor = searchHistoryBoostFactor;
+            maxBoostDepth = stats.depth;
+        }
+        if (searchHistoryBoostFactor==0.0 && maxBoostFactor<0.25) {
             // We have not changed pv recently, score is not dropping,
             // and thinking time was not increased. See if we can
             // reduce the time target.
-            int pvChangeDepth = 0;
-            int increasedScoreDepth = 0;
-            for (int depth = int(stats.depth)-2; depth > 0; --depth) {
-                if (pvChangeDepth == 0 && !MovesEqual(rootSearchHistory[depth].pv,pv)) {
-                    pvChangeDepth = depth;
-                }
-                old_score = rootSearchHistory[depth].score;
-                if (increasedScoreDepth == 0 && old_score > score) {
-                    increasedScoreDepth = depth;
-                }
-                pv = rootSearchHistory[depth].pv;
-            }
-            searchHistoryReductionFactor = 0.5*(2*stats.depth-4-pvChangeDepth-increasedScoreDepth)/stats.depth;
+            searchHistoryReductionFactor = 1.0-maxBoostFactor-0.75*double(maxBoostDepth)/stats.depth;
             ASSERT(searchHistoryReductionFactor<=1.0);
+            ASSERT(searchHistoryReductionFactor>=0.0);
         }
     }
 }
@@ -706,7 +708,7 @@ void SearchController::applySearchHistoryFactors() {
         if (searchHistoryBoostFactor) {
             bonus_time = static_cast<int64_t>(xtra_time*searchHistoryBoostFactor);
         } else {
-            bonus_time = -static_cast<int64_t>(std::floor(searchHistoryReductionFactor*time_target/3));
+            bonus_time = -static_cast<int64_t>(std::floor(searchHistoryReductionFactor*elapsed_time/3));
         }
         if (debugOut() && typeOfSearch == TimeLimit && bonus_time) {
             cout << debugPrefix() << "bonus time=" << bonus_time << endl;
@@ -1251,6 +1253,10 @@ Move Search::ply0_search()
                 // on search status and history
                 controller->historyBasedTimeAdjust(stats);
                 controller->applySearchHistoryFactors();
+                if (debugOut() && (controller->searchHistoryBoostFactor != 0 || controller->searchHistoryReductionFactor !=0)) {
+                    cout << debugPrefix() << "searchHistoryBoostFactor=" << controller->searchHistoryBoostFactor <<
+                        " searchHistoryReductionFactor=" << controller->searchHistoryReductionFactor << endl;
+                }
             }
             stats.completedDepth = iterationDepth;
             if (srcOpts.multipv > 1) {
@@ -1269,18 +1275,18 @@ Move Search::ply0_search()
 #endif
             if (!controller->uci || controller->typeOfSearch == TimeLimit) {
                 if (value <= iterationDepth - Constants::MATE && !IsNull(stats.best_line[0])) {
-                  // We're either checkmated or we certainly will be, so
-                  // quit searching.
-                  if (mainThread()) {
-                     if (debugOut()) {
-                        cout << debugPrefix() << "terminating, low score" << endl;
-                     }
+                    // We're either checkmated or we certainly will be, so
+                    // quit searching.
+                    if (mainThread()) {
+                        if (debugOut()) {
+                            cout << debugPrefix() << "terminating, low score" << endl;
+                        }
 #ifdef _TRACE
-                     cout << "terminating, low score" << endl;
+                        cout << "terminating, low score" << endl;
 #endif
-                  }
-                  controller->terminateNow();
-                  break;
+                    }
+                    controller->terminateNow();
+                    break;
                }
                else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
                   // found a forced mate, terminate
