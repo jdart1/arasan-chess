@@ -57,12 +57,6 @@ Tune::Tune()
         TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,VAL(-0.5),VAL(0.5),TuneParam::Any,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",VAL(-1.5),VAL(-2.5),VAL(1.0),TuneParam::Any,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",VAL(0),VAL(-2.5),VAL(1.0),TuneParam::Any,1),
-        TuneParam(Tune::CASTLING0,"castling0",0,VAL(-0.1),VAL(0.1),TuneParam::Midgame,1),
-        TuneParam(Tune::CASTLING1,"castling1",VAL(-0.07),VAL(-0.3),0,TuneParam::Midgame,1),
-        TuneParam(Tune::CASTLING2,"castling2",VAL(-0.1),VAL(-0.3),0,TuneParam::Midgame,1),
-        TuneParam(Tune::CASTLING3,"castling3",VAL(0.28),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::CASTLING4,"castling4",VAL(0.2),VAL(0),VAL(0.5),TuneParam::Midgame,1),
-        TuneParam(Tune::CASTLING5,"castling5",VAL(-0.28),VAL(-0.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_SCALE_MAX,"king_attack_scale_max",VAL(5.0),VAL(3.5),VAL(6.5),TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_SCALE_INFLECT,"king_attack_scale_inflect",80,60,120,TuneParam::Midgame,1),
         TuneParam(Tune::KING_ATTACK_SCALE_FACTOR,"king_attack_scale_factor",60,33,150,TuneParam::Midgame,1),
@@ -135,6 +129,7 @@ Tune::Tune()
         TuneParam(Tune::ROOK_ON_7TH_END,"rook_on_7th_end",VAL(0.25),VAL(0),VAL(0.8),TuneParam::Endgame,1),
         TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",VAL(0.15),VAL(0),VAL(0.8),TuneParam::Midgame,1),
         TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",VAL(0.4),VAL(0),VAL(0.8),TuneParam::Endgame,1),
+        TuneParam(Tune::TRAPPED_ROOK_NO_CASTLE,"trapped_rook_no_castle",-VAL(0.8),-VAL(1.5),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",VAL(0.17),VAL(0),VAL(0.6),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",VAL(0.18),VAL(0),VAL(0.6),TuneParam::Endgame,1),
         TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",VAL(0.025),0,VAL(0.25),TuneParam::Midgame,1),
@@ -573,10 +568,6 @@ void Tune::applyParams(bool check) const
    for (i = 0; i < 3; i++) {
       *dest++ = (*this)[j++].current;
    }
-   dest = Params::CASTLING;
-   for (i = 0; i < 6; i++) {
-      *dest++ = (*this)[j++].current;
-   }
    Params::KING_ATTACK_SCALE_MAX = PARAM(Tune::KING_ATTACK_SCALE_MAX);
    Params::KING_ATTACK_SCALE_INFLECT = PARAM(Tune::KING_ATTACK_SCALE_INFLECT);
    Params::KING_ATTACK_SCALE_FACTOR = PARAM(Tune::KING_ATTACK_SCALE_FACTOR);
@@ -646,6 +637,7 @@ void Tune::applyParams(bool check) const
    Params::ROOK_ON_7TH_END = PARAM(ROOK_ON_7TH_END);
    Params::TWO_ROOKS_ON_7TH_MID = PARAM(TWO_ROOKS_ON_7TH_MID);
    Params::TWO_ROOKS_ON_7TH_END = PARAM(TWO_ROOKS_ON_7TH_END);
+   Params::TRAPPED_ROOK_NO_CASTLE = PARAM(TRAPPED_ROOK_NO_CASTLE);
    Params::ROOK_ON_OPEN_FILE_MID = PARAM(ROOK_ON_OPEN_FILE_MID);
    Params::ROOK_ON_OPEN_FILE_END = PARAM(ROOK_ON_OPEN_FILE_END);
    Params::ROOK_BEHIND_PP_MID = PARAM(ROOK_BEHIND_PP_MID);

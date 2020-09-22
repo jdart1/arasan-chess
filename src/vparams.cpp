@@ -8,7 +8,6 @@
 score_t Params::KN_VS_PAWN_ADJUST[3] = {0, -2400, -1500};
 score_t Params::MINOR_FOR_PAWNS_MIDGAME = -20;
 score_t Params::MINOR_FOR_PAWNS_ENDGAME = -30;
-score_t Params::CASTLING[6] = {0, -70, -100, 280, 200, -280};
 #ifdef TUNE
 score_t Params::KING_ATTACK_SCALE_MAX;
 score_t Params::KING_ATTACK_SCALE_INFLECT;
@@ -73,6 +72,7 @@ score_t Params::ROOK_ON_7TH_MID = 260;
 score_t Params::ROOK_ON_7TH_END = 260;
 score_t Params::TWO_ROOKS_ON_7TH_MID = 570;
 score_t Params::TWO_ROOKS_ON_7TH_END = 660;
+score_t Params::TRAPPED_ROOK_NO_CASTLE = -100;
 score_t Params::ROOK_ON_OPEN_FILE_MID = 200;
 score_t Params::ROOK_ON_OPEN_FILE_END = 200;
 score_t Params::ROOK_BEHIND_PP_MID = 50;

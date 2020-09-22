@@ -91,7 +91,6 @@ int BoardIO::readFEN(Board &board, const string &buf)
    c = *bp;
    if (c == '-')
    {
-      // TBD: should try to infer if castling has occurred?
       board.state.castleStatus[White] = 
       board.state.castleStatus[Black] = CantCastleEitherSide;
       bp++;

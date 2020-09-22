@@ -1,4 +1,4 @@
-// Copyright 1992-2014 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2014, 2020 by Jon Dart. All Rights Reserved.
 
 #include "bhash.h"
 #include "bitboard.h"
@@ -329,19 +329,12 @@ const CACHE_ALIGN hash_t ep_codes[64] =
     0xe44d10652981f134ULL
 };
 
-// Note: because FEN encodes only 4 of the 6 possible
-// castling statuses, we hash the last 3 statuses with
-// the same constant.
 const hash_t w_castle_status[6] =
 {
     0x85f1af3aaa504b75ULL,
     0xc9a1e5942f5e4cdcULL,
     0xdd3b5d06f7548d85ULL,
-    //    0x50ad020f21fc48caULL,
-    //    0xd405c049530c5a3bULL,
     0xd62f296d208bec0cULL,
-    0xd62f296d208bec0cULL,
-    0xd62f296d208bec0cULL
 };
 
 const hash_t b_castle_status[6] =
@@ -349,11 +342,7 @@ const hash_t b_castle_status[6] =
     0x21972535ec9936ddULL,
     0x8a0fc3066cfd4750ULL,
     0xbb01866ba905e867ULL,
-    //    0x0002d3e5a1b68fc0ULL,
-    //    0x29a2e109eecf5116ULL,
     0x021c4564829a7b92ULL,
-    0x021c4564829a7b92ULL,
-    0x021c4564829a7b92ULL
 };
 
 hash_t BoardHash::hashCode( const Board &board)

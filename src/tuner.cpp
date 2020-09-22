@@ -80,7 +80,6 @@ static const double ADAPTIVE_STEP_BASE = 0.04;
 static const double ADAPTIVE_STEP_FACTOR1 = 1.025;
 static const double ADAPTIVE_STEP_FACTOR2 = 0.5;
 
-static const char *CASTLE_STATUS_KEY = "c1";
 static const char *RESULT_KEY = "c2";
 
 enum class Objective {
@@ -347,22 +346,6 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
             continue;
          }
          string val;
-         if (rec.getVal(CASTLE_STATUS_KEY,val)) {
-            // trim quotes
-            val.erase(std::remove( val.begin(), val.end(), '\"' ),val.end());
-            stringstream vstream(val);
-            unsigned wstatus = 5, bstatus = 5;
-            vstream >> wstatus;
-            vstream >> bstatus;
-            if (!vstream.bad() && !vstream.fail() && wstatus <= 5 &&
-                bstatus <= 5) {
-               board.setCastleStatus((CastleType)wstatus,White);
-               board.setCastleStatus((CastleType)bstatus,Black);
-            } else {
-               cerr << "error parsing castling status";
-               continue;
-            }
-         }
          if (rec.getVal(RESULT_KEY,val)) {
             // trim quotes
             val.erase(std::remove( val.begin(), val.end(), '\"' ),val.end());
@@ -659,8 +642,6 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       }
    }
 
-   grads[Tune::CASTLING0+(int)board.castleStatus(side)] +=
-      tune_params.scale(inc,Tune::CASTLING0+(int)board.castleStatus(side),mLevel);
    Bitboard knight_bits(board.knight_bits[side]);
    Square sq = InvalidSquare;
    while (knight_bits.iterate(sq)) {
@@ -761,6 +742,14 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       int mobl = Bitboard(rattacks2 &~board.allOccupied & ~opponent_pawn_attacks).bitCount();
       grads[Tune::ROOK_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::ROOK_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_ENDGAME+mobl,mLevel);
+      if (mobl <= 3){
+          int kfile = File(board.kingSquare(side));
+          int file = File(sq);
+          // penalty for Rook trapped by King, as in Stockfish
+          if ((kfile < chess::EFILE) == (file < kfile) && !board.canCastle(side)) {
+              grads[Tune::TRAPPED_ROOK_NO_CASTLE] += tune_params.scale(inc,Tune::TRAPPED_ROOK_NO_CASTLE,mLevel);
+          }
+      }
       int i = map_to_pst(sq,side);
       grads[Tune::ROOK_PST_MIDGAME+i] += tune_params.scale(inc,Tune::ROOK_PST_MIDGAME+i,mLevel);
       grads[Tune::ROOK_PST_ENDGAME+i] += tune_params.scale(inc,Tune::ROOK_PST_ENDGAME+i,mLevel);

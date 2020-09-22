@@ -57,8 +57,6 @@ static std::mt19937_64 random_engine;
 
 static unordered_map<hash_t,double> *positions;
 
-static const char *CASTLE_STATUS_KEY = "c1";
-
 static const int SEARCH_DEPTH = 2;
 
 static void show_usage()
@@ -311,11 +309,6 @@ int CDECL main(int argc, char **argv)
 
                            if (ok) {
                               EPDRecord rec;
-                              stringstream cs_string;
-                              cs_string << "\"" << (int)board.castleStatus(White) << ' ' <<
-                                 (int)board.castleStatus(Black) << "\"";
-                              string key(CASTLE_STATUS_KEY);
-                              rec.add(key,cs_string.str().c_str());
                               ChessIO::writeEPDRecord(cout,board,rec);
                               next += selOptions.minSampleDistance + (rand() % (selOptions.sampleInterval - selOptions.minSampleDistance));
                            }

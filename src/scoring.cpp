@@ -871,12 +871,6 @@ void Scoring::positionalScore(const Board &board,
 #endif
    }
 
-   // Penalize loss of castling.
-   score_t castling = APARAM(CASTLING,(int)board.castleStatus(side));
-   scores.mid += castling;
-#ifdef EVAL_DEBUG
-   cout << "castling score: " << castling << endl;
-#endif
    for(int i = 0; i < 4; i++) {
       if (BISHOP_TRAP_PATTERN[side][i].bishopMask & board.bishop_bits[side]
           && BISHOP_TRAP_PATTERN[side][i].pawnMask & board.pawn_bits[oside]) {
@@ -1047,6 +1041,13 @@ void Scoring::positionalScore(const Board &board,
                ", " << PARAM(ROOK_MOBILITY)[Endgame][mobl] << ")" << endl;
 #endif
             if (!deep_endgame) {
+               if (mobl <= 3){
+                  int kfile = File(board.kingSquare(side));
+                  // penalty for Rook trapped by King, as in Stockfish
+                  if ((kfile < chess::EFILE) == (file < kfile) && !board.canCastle(side)) {
+                      scores.mid += PARAM(TRAPPED_ROOK_NO_CASTLE);
+                  }
+               }
                Bitboard kattacks(rattacks2 & nearKing);
                if (kattacks) {
                    int boost = std::max<int>(0,Bitboard(kattacks & kingNearProximity[okp]).bitCountOpt()-1);
@@ -2438,8 +2439,6 @@ void Params::write(ostream &o, const string &comment)
    o << endl;
    o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
-   o << "const int Params::CASTLING[6] = ";
-   print_array(o,Params::CASTLING,6);
    o << "const int Params::KING_COVER[6][4] = {";
    for (int i = 0; i < 6; i++) {
       print_array(o,Params::KING_COVER[i],4,0);

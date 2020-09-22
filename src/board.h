@@ -18,8 +18,6 @@ extern const hash_t rep_codes[3];
 enum CastleType { CanCastleEitherSide,
                   CanCastleKSide,
                   CanCastleQSide,
-                  CastledKSide,
-                  CastledQSide,
                   CantCastleEitherSide};
 
 enum CheckStatusType { NotInCheck, InCheck, CheckUnknown };
@@ -86,6 +84,12 @@ public:
    bool castlingPossible() const
    {
       return castleStatus(White)<3 || castleStatus(Black)<3;
+   }
+
+   // True if side can castle
+   bool canCastle(ColorType) const
+   {
+      return castleStatus(side)<3;
    }
 
    // side to move
