@@ -129,7 +129,8 @@ Tune::Tune()
         TuneParam(Tune::ROOK_ON_7TH_END,"rook_on_7th_end",VAL(0.25),VAL(0),VAL(0.8),TuneParam::Endgame,1),
         TuneParam(Tune::TWO_ROOKS_ON_7TH_MID,"two_rooks_on_7th_mid",VAL(0.15),VAL(0),VAL(0.8),TuneParam::Midgame,1),
         TuneParam(Tune::TWO_ROOKS_ON_7TH_END,"two_rooks_on_7th_end",VAL(0.4),VAL(0),VAL(0.8),TuneParam::Endgame,1),
-        TuneParam(Tune::TRAPPED_ROOK_NO_CASTLE,"trapped_rook_no_castle",-VAL(0.8),-VAL(1.5),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::TRAPPED_ROOK,"trapped_rook",-VAL(0.3),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
+        TuneParam(Tune::TRAPPED_ROOK_NO_CASTLE,"trapped_rook_no_castle",-VAL(0.6),-VAL(1.0),VAL(0),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_OPEN_FILE_MID,"rook_on_open_file_mid",VAL(0.17),VAL(0),VAL(0.6),TuneParam::Midgame,1),
         TuneParam(Tune::ROOK_ON_OPEN_FILE_END,"rook_on_open_file_end",VAL(0.18),VAL(0),VAL(0.6),TuneParam::Endgame,1),
         TuneParam(Tune::ROOK_BEHIND_PP_MID,"rook_behind_pp_mid",VAL(0.025),0,VAL(0.25),TuneParam::Midgame,1),
@@ -295,14 +296,14 @@ Tune::Tune()
        };
 
    static const score_t KING_PST_INIT[2][64] = {
-       {0, 0, 0, 0, 0, 0, 0, 0,
+       {VAL(0.1), VAL(0.2), VAL(-0.2), VAL(0), VAL(0), VAL(-0.2), VAL(0.2), VAL(0.1),
         0, 0, 0, 0, 0, 0, 0, 0,
         VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06), VAL(-0.06),
         VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
         VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
-        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
-        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36),
-        VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36), VAL(-0.36)
+        VAL(-0.5), VAL(-0.5), VAL(-0.5), VAL(-0.5), VAL(-0.5), VAL(-0.5), VAL(-0.5), VAL(-0.5),
+        VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9),
+        VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9), VAL(-0.9)
        },
        {VAL(-0.280), VAL(-0.230), VAL(-0.180), VAL(-0.130), VAL(-0.130), VAL(-0.180), VAL(-0.230), VAL(-0.280),
         VAL(-0.220), VAL(-0.170), VAL(-0.120), VAL(-0.070), VAL(-0.070), VAL(-0.120), VAL(-0.170), VAL(-0.220),
@@ -637,6 +638,7 @@ void Tune::applyParams(bool check) const
    Params::ROOK_ON_7TH_END = PARAM(ROOK_ON_7TH_END);
    Params::TWO_ROOKS_ON_7TH_MID = PARAM(TWO_ROOKS_ON_7TH_MID);
    Params::TWO_ROOKS_ON_7TH_END = PARAM(TWO_ROOKS_ON_7TH_END);
+   Params::TRAPPED_ROOK = PARAM(TRAPPED_ROOK);
    Params::TRAPPED_ROOK_NO_CASTLE = PARAM(TRAPPED_ROOK_NO_CASTLE);
    Params::ROOK_ON_OPEN_FILE_MID = PARAM(ROOK_ON_OPEN_FILE_MID);
    Params::ROOK_ON_OPEN_FILE_END = PARAM(ROOK_ON_OPEN_FILE_END);

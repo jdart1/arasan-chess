@@ -742,12 +742,16 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       int mobl = Bitboard(rattacks2 &~board.allOccupied & ~opponent_pawn_attacks).bitCount();
       grads[Tune::ROOK_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::ROOK_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::ROOK_MOBILITY_ENDGAME+mobl,mLevel);
-      if (mobl <= 3){
-          int kfile = File(board.kingSquare(side));
-          int file = File(sq);
-          // penalty for Rook trapped by King, as in Stockfish
-          if ((kfile < chess::EFILE) == (file < kfile) && !board.canCastle(side)) {
-              grads[Tune::TRAPPED_ROOK_NO_CASTLE] += tune_params.scale(inc,Tune::TRAPPED_ROOK_NO_CASTLE,mLevel);
+      int kfile = File(kp);
+      int file = File(sq);
+      if (!deep_endgame && mobl <= 5 && Rank(kp,side)==1 && Rank(sq,side)==1 && (kfile < chess::EFILE) == (file < kfile)) {
+          int hmobl = (board.rankAttacks(sq) & ~board.allOccupied).bitCountOpt();
+          // penalty for Rook trapped by King, similar to Stockfish
+          if (hmobl <= 3) {
+              if (board.canCastle(side))
+                  grads[Tune::TRAPPED_ROOK] += tune_params.scale(inc,Tune::TRAPPED_ROOK,mLevel);
+              else
+                  grads[Tune::TRAPPED_ROOK_NO_CASTLE] += tune_params.scale(inc,Tune::TRAPPED_ROOK_NO_CASTLE,mLevel);
           }
       }
       int i = map_to_pst(sq,side);

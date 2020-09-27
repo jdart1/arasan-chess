@@ -123,6 +123,7 @@ class Tune : public vector<TuneParam> {
     ROOK_ON_7TH_END,
     TWO_ROOKS_ON_7TH_MID,
     TWO_ROOKS_ON_7TH_END,
+    TRAPPED_ROOK,
     TRAPPED_ROOK_NO_CASTLE,
     ROOK_ON_OPEN_FILE_MID,
     ROOK_ON_OPEN_FILE_END,

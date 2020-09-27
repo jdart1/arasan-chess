@@ -1041,11 +1041,16 @@ void Scoring::positionalScore(const Board &board,
                ", " << PARAM(ROOK_MOBILITY)[Endgame][mobl] << ")" << endl;
 #endif
             if (!deep_endgame) {
-               if (mobl <= 3){
-                  int kfile = File(board.kingSquare(side));
-                  // penalty for Rook trapped by King, as in Stockfish
-                  if ((kfile < chess::EFILE) == (file < kfile) && !board.canCastle(side)) {
-                      scores.mid += PARAM(TRAPPED_ROOK_NO_CASTLE);
+               int kfile = File(kp);
+               if (mobl <= 5 && Rank(kp,side)==1 && Rank(sq,side)==1 && (kfile < chess::EFILE) == (file < kfile)) {
+                  int hmobl = (board.rankAttacks(sq) & ~board.allOccupied).bitCountOpt();
+                  // penalty for Rook trapped by King, similar to Stockfish
+                  if (hmobl <= 3) {
+                      if (board.canCastle(side)) {
+                          scores.mid += PARAM(TRAPPED_ROOK);
+                      } else {
+                          scores.mid += PARAM(TRAPPED_ROOK_NO_CASTLE);
+                      }
                   }
                }
                Bitboard kattacks(rattacks2 & nearKing);
