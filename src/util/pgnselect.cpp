@@ -1,4 +1,4 @@
-// Copyright 2016, 2017, 2019 by Jon Dart.  All Rights Reserved.
+// Copyright 2016, 2017, 2019-2020 by Jon Dart.  All Rights Reserved.
 
 // Utility to extract selected positions from PGN files into an EPD file.
 
@@ -33,19 +33,23 @@ using namespace std;
 
 static struct SelectOptions
 {
-   int minPly;
-   int maxPly;
-   int sampleInterval;
-   int minSampleDistance;
+   unsigned minPly;
+   unsigned maxPly;
+   unsigned minGamePly;
+   unsigned samplesPerGame;
+   unsigned maxRetries;
+   unsigned minSampleDistance;
    bool randomMoves;
    int maxScore;
    int quiesce;
 
    SelectOptions() :
-      minPly(20),
+      minPly(25),
       maxPly(150),
-      sampleInterval(16),
-      minSampleDistance(3),
+      minGamePly(36),
+      samplesPerGame(2),
+      maxRetries(6),
+      minSampleDistance(8),
       randomMoves(false),
       maxScore(30*Params::PAWN_VALUE),
       quiesce(0)
@@ -57,17 +61,17 @@ static std::mt19937_64 random_engine;
 
 static unordered_map<hash_t,double> *positions;
 
-static const int SEARCH_DEPTH = 2;
+static const int SEARCH_DEPTH = 12;
 
 static void show_usage()
 {
    cerr << "Usage: pgnselect [options] pgn_file" << endl;
    cerr << "Options:" << endl;
+   cerr << "-d <int> - min ply distance between samples" << endl;
    cerr << "-max <int> - max ply to sample" << endl;
    cerr << "-min <int> - min ply to sample" << endl;
-   cerr << "-d <int> - min ply distance between samples" << endl;
+   cerr << "-n <int> - samples per game" << endl;
    cerr << "-r - insert random moves" << endl;
-   cerr << "-s <int> - set sample interval (plies)" << endl;
 }
 
 static int score(SearchController *searcher,const Board &board,
@@ -87,28 +91,97 @@ static int score(SearchController *searcher,const Board &board,
    return stats.value;
 }
 
-static int ok_to_insert(const Board &board, SearchController *searcher, Statistics &stats) {
-   int ok = !((board.getMaterial(White).kingOnly() &&
-                board.getMaterial(Black).infobits() == Material::KP) ||
-               (board.getMaterial(Black).kingOnly() &&
-                board.getMaterial(White).infobits() == Material::KP)) &&
-              !Scoring::isLegalDraw(board) &&
-              !Scoring::theoreticalDraw(board) &&
-               positions->count(board.hashCode()) == 0 &&
-               (board.getMaterial(White).men() + board.getMaterial(Black).men() > 5);
-   if (ok) {
-      int val = std::abs(score(searcher,board,stats));
-      if (val > selOptions.maxScore) {
-          ok = false;
-      }
-      else {
-          std::normal_distribution<double> dist(0,double(5*Params::PAWN_VALUE));
-          // favor positions with more moderate scores
-          ok = val <= 5*Params::PAWN_VALUE ||
-               val >= std::round(std::abs(dist(random_engine)));
-      }
-   }
-   return ok;
+static bool exclude(const Board &board) {
+    return ((board.getMaterial(White).kingOnly() &&
+              board.getMaterial(Black).infobits() == Material::KP) ||
+           (board.getMaterial(Black).kingOnly() &&
+              board.getMaterial(White).infobits() == Material::KP)) ||
+        Scoring::isLegalDraw(board) ||
+        Scoring::theoreticalDraw(board);
+}
+
+static bool ok_to_sample(const Board &board, SearchController *searcher, Statistics &stats, string &fen) 
+{
+    // omit KPK and drawn positions
+    if (exclude(board)) {
+        return false;
+    }
+    else {
+        int val = std::abs(score(searcher,board,stats));
+        if (val > selOptions.maxScore) {
+            return false;
+        }
+        else if (selOptions.quiesce) {
+            // obtain the quiet position at the end of the
+            // PV
+            Board tmp(board);
+            for (int len = 0; !IsNull(stats.best_line[len]) && len < Constants::MaxPly; len++) {
+                tmp.doMove(stats.best_line[len]);
+            }
+            if (exclude(tmp)) {
+                return false;
+            }
+            else {
+                // verify actually is quiet
+                RootMoveGenerator mg(tmp);
+                Move moves[Constants::MaxMoves];
+                unsigned n = mg::generateCaptures(tmp,moves,true,board.occupied[board.oppositeSide()]);
+                for (unsigned i = 0; i < n; i++) {
+                    if (see(tmp,moves[i])>0) {
+                        return false;
+                    }
+                }
+                // update FEN to reflect quiet position
+                stringstream s;
+                BoardIO::writeFEN(tmp,s,0);
+                fen = s.str();
+            }
+        }
+    }
+    return true;
+}
+
+static void sample(vector<string> &positions,SearchController *searcher, Statistics &stats) 
+{
+    const int count = int(positions.size());
+    if (count <= 0) return;
+    const unsigned sampleTarget = std::min<unsigned>(selOptions.samplesPerGame,count/selOptions.minSampleDistance);
+    std::uniform_int_distribution<unsigned> dist(0,unsigned(count-1));
+    vector<unsigned> sampled;
+    for (unsigned i = 0; i < selOptions.maxRetries && sampled.size() < sampleTarget; i++) {
+        unsigned idx = dist(random_engine);
+        // verify idx is not wihin minSampleDistance of an existing
+        // sample
+        bool close = false;
+        for (const unsigned &i : sampled) {
+            if (static_cast<unsigned>(std::abs(static_cast<int>(i)-static_cast<int>(idx))) < selOptions.minSampleDistance) {
+                close = true;
+                continue;
+            }
+        }
+        if (close) continue; // re-sample
+        string fen(positions[idx]);
+        Board board;
+        (void)BoardIO::readFEN(board,fen);
+        if (selOptions.randomMoves) {
+            RootMoveGenerator mg(board);
+            Move allmoves[Constants::MaxMoves];
+            Move move;
+            int count = 0;
+            while (!IsNull(move = mg.nextMove(count))) {
+                allmoves[count++] = move;
+            }
+            if (count > 1) {
+                std::uniform_int_distribution<unsigned> move_dist(0,unsigned(count-1));
+                Move randomMove = allmoves[move_dist(random_engine)];
+                board.doMove(randomMove);
+            }
+        }
+        if (ok_to_sample(board,searcher,stats,fen)) {
+            cout << fen << endl;
+            sampled.push_back(idx);
+        }
+    }
 }
 
 int CDECL main(int argc, char **argv)
@@ -136,17 +209,17 @@ int CDECL main(int argc, char **argv)
    else
    {
       int arg = 1;
-      auto processInt = [&arg, &argc, &argv](int &opt, const string &name) {
+      auto processInt = [&arg, &argc, &argv](unsigned &opt, const string &name) {
          if (++arg < argc) {
             stringstream s(argv[arg]);
             s >> opt;
             if (s.bad() || s.fail()) {
-               cerr << "expected integer after -" << name << endl;
+               cerr << "expected number after -" << name << endl;
                exit(-1);
             }
          }
          else {
-            cerr << "expected integer after -" << name << endl;
+            cerr << "expected number after -" << name << endl;
             exit(-1);
          }
       };
@@ -163,8 +236,8 @@ int CDECL main(int argc, char **argv)
          else if (strcmp(argv[arg], "-min") == 0) {
             processInt(selOptions.minPly, "-min");
          }
-         else if (strcmp(argv[arg], "-s") == 0) {
-            processInt(selOptions.sampleInterval, "-s");
+         else if (strcmp(argv[arg], "-n") == 0) {
+            processInt(selOptions.samplesPerGame, "-s");
          }
          else if (strcmp(argv[arg], "-q") == 0) {
             selOptions.quiesce++;
@@ -196,6 +269,7 @@ int CDECL main(int argc, char **argv)
       {
          vector<ChessIO::Header> hdrs;
          bool quit = false;
+         vector<string> positions;
          while (!quit && !pgn_file.eof()) {
             long first;
             MoveArray moves;
@@ -224,9 +298,8 @@ int CDECL main(int argc, char **argv)
             bool ok = true;
             bool done = false;
             bool exit = false;
-            int ply = 0;
-            std::uniform_int_distribution<unsigned> dist(0, selOptions.sampleInterval - 1);
-            int next = selOptions.minPly + dist(random_engine);
+            unsigned ply = 0;
+            positions.clear();
             while (ok && !exit) {
                ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
                string num;
@@ -265,58 +338,12 @@ int CDECL main(int argc, char **argv)
                      Notation::image(board, m, Notation::OutputFormat::SAN, img);
                      moves.add_move(board, bs, m, img, false);
                      board.doMove(m);
-                     ++ply;
-                     if (ply >= next && ply <= selOptions.maxPly) {
-                        BoardState state(board.state);
-                        Move randomMove = NullMove;
-                        if (selOptions.randomMoves) {
-                           RootMoveGenerator mg(board);
-                           Move allmoves[Constants::MaxMoves];
-                           Move move;
-                           int count = 0;
-                           while (!IsNull(move = mg.nextMove(count))) {
-                              allmoves[count] = move;
-                           }
-                           if (count > 1) {
-                              std::uniform_int_distribution<unsigned> move_dist(0,count-1);
-                              randomMove = allmoves[move_dist(random_engine)];
-                              board.doMove(randomMove);
-                           }
-                        }
-
-                        // omit KPK and drawn positions
-                        bool ok = ok_to_insert(board,searcher,stats);
-                        if (ok) {
-                           Board tmp(board);
-                           if (selOptions.quiesce) {
-                              // obtain the quiet position at the end of the
-                              // PV
-                              for (int len = 0; !IsNull(stats.best_line[len]) && len < Constants::MaxPly; len++) {
-                                 board.doMove(stats.best_line[len]);
-                              }
-                              ok = ok_to_insert(board,searcher,stats);
-                              // verify actually is quiet
-                              RootMoveGenerator mg(board);
-                              Move moves[Constants::MaxMoves];
-                              unsigned n = mg::generateCaptures(board,moves,true,board.occupied[board.oppositeSide()]);
-                              for (unsigned i = 0; i < n; i++) {
-                                 if (see(board,moves[i])>0) {
-                                    ok = false;
-                                    break;
-                                 }
-                              }
-                           }
-
-                           if (ok) {
-                              EPDRecord rec;
-                              ChessIO::writeEPDRecord(cout,board,rec);
-                              next += selOptions.minSampleDistance + (rand() % (selOptions.sampleInterval - selOptions.minSampleDistance));
-                           }
-                           board = tmp;
-                        }
-                        if (!IsNull(randomMove)) {
-                           board.undoMove(randomMove,state);
-                        }
+                     if (++ply>=selOptions.minPly) {
+                         if (ply<selOptions.maxPly) {
+                             stringstream s;
+                             BoardIO::writeFEN(board,s,0);
+                             positions.push_back(s.str());
+                         }
                      }
                   }
                   side = OppositeColor(side);
@@ -348,6 +375,9 @@ int CDECL main(int argc, char **argv)
                default:
                   break;
                } // end switch
+            } // end of game
+            if (ply >= selOptions.minGamePly) {
+               sample(positions,searcher,stats);
             }
          }
 
