@@ -176,7 +176,7 @@ TUNER_OBJS = $(TUNE_BUILD)\tuner.obj \
 $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
 $(TUNE_BUILD)\board.obj $(TUNE_BUILD)\boardio.obj $(TUNE_BUILD)\options.obj \
 $(TUNE_BUILD)\chess.obj $(TUNE_BUILD)\material.obj $(TUNE_BUILD)\movegen.obj \
-$(TUNE_BUILD)\vparams.obj $(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
+$(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\searchc.obj \
 $(TUNE_BUILD)\see.obj $(TUNE_BUILD)\globals.obj $(TUNE_BUILD)\search.obj \
 $(TUNE_BUILD)\notation.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\stats.obj \
 $(TUNE_BUILD)\bitprobe.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\chessio.obj \

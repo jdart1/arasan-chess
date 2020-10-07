@@ -113,8 +113,7 @@ notation.cpp notation.h options.cpp options.h params.h
 protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
 search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
 syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h tune.h tune.cpp tuner.cpp types.h
-vparams.cpp ${EXTRA_SRC})
+threadc.h threadp.cpp threadp.h tune.h tune.cpp tuner.cpp types.h ${EXTRA_SRC})
 
 add_executable (pgnselect EXCLUDE_FROM_ALL util/pgnselect.cpp attacks.cpp attacks.h bhash.cpp bhash.h
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h

@@ -101,18 +101,12 @@ static pthread_attr_t stackSizeAttrib;
 
 struct PosInfo
 {
-   PosInfo(const string &pos, int ws, int bs, double res)
-      :position(pos),wstatus(ws),bstatus(bs),result(res)
-      {
-      }
-
    PosInfo(const string &pos, double res)
-      :position(pos),wstatus(5),bstatus(5),result(res)
+      :position(pos),result(res)
       {
       }
 
    string position;
-   int wstatus,bstatus;
    double result;
 };
 
@@ -318,12 +312,29 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
       return 0;
 }
 
+static bool isQuiet(const Board &board)
+{
+    // verify actually is quiet
+    RootMoveGenerator mg(board);
+    Move moves[Constants::MaxMoves];
+    unsigned n = mg::generateCaptures(board,moves,true,board.occupied[board.oppositeSide()]);
+    for (unsigned i = 0; i < n; i++) {
+        if (see(board,moves[i])>0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
 static void parse1(ThreadData &td, Parse1Data &pdata)
 {
    pdata.clear();
    // iterate for each position in file
    uint64_t line = 0;
    char buf[256];
+   ofstream output("filtered.epd");
    while (!pos_file.eof() && pos_file.good()) {
       try {
          Board board, pvBoard;
@@ -360,6 +371,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
          Bitboard atcks = board.calcAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove());
          // If king can be captured, position is illegal
          if (!atcks.isClear()) continue;
+         if (isQuiet(board)) output << buf << endl;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
              double func_value = computeErrorTexel(score, result, board.sideToMove());
@@ -367,7 +379,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
              stringstream fen;
              fen << pvBoard;
              Lock(data_lock);
-             positions.push_back(new PosInfo(fen.str(),pvBoard.castleStatus(White),pvBoard.castleStatus(Black),result));
+             positions.push_back(new PosInfo(fen.str(),result));
              Unlock(data_lock);
          }
       } catch(std::bad_alloc) {
@@ -375,15 +387,6 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
          exit(-1);
       }
    }
-}
-
-// returns index into PST corresponding to square "i"
-static int map_to_pst(int i, ColorType side)
-{
-   int r = Rank(i,side);
-   int f = File(i);
-   if (f > 4) f = 9-f;
-   return 4*(r-1) + f - 1;
 }
 
 static inline int FileOpen(const Board &board, int file) {
@@ -473,7 +476,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
         // Q vs RB or RN is already dealt with by piece values
         break;
     }
-    case 2:    
+    case 2:
         if (ourmat.hasQueen() && ourmat.rookCount() == oppmat.rookCount() &&
             oppmat.minorCount()-ourmat.minorCount() == 3) {
             // Queen vs. 3 minors
@@ -524,6 +527,12 @@ static void bishopAndPawns(const Board &board,ColorType side,
    }
 }
 
+// returns index into PST corresponding to square "i"
+static  int square_to_pst(Square i, ColorType side) {
+   if (side == Black) i = 63 - i;
+   return 4*(Rank(i,White)-1) + Params::foldFile(File(i));
+}
+
 static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<double> &grads,
                        double inc,
                        Scoring::AttackInfo &ai)
@@ -550,7 +559,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    ai.allAttacks[side] |= our_pawn_attacks;
 
    Square ksq = board.kingSquare(side);
-   int ksq_map = map_to_pst(ksq,side);
+   int ksq_map = square_to_pst(ksq,side);
    Bitboard all_pawns(board.pawn_bits[White] | board.pawn_bits[Black]);
    if (mLevel <= Params::ENDGAME_THRESHOLD && all_pawns) {
        const int pieces = board.getMaterial(side).pieceCount();
@@ -652,8 +661,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       ai.attackedBy2[side] |= (knattacks & ai.allAttacks[side]);
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::KNIGHT_MOBILITY+mobl] += tune_params.scale(inc,Tune::KNIGHT_MOBILITY+mobl,mLevel);
-      int i;
-      i = map_to_pst(sq,side);
+      int i = square_to_pst(sq,side);
       grads[Tune::KNIGHT_PST_MIDGAME+i] += tune_params.scale(inc,Tune::KNIGHT_PST_MIDGAME+i,mLevel);
       grads[Tune::KNIGHT_PST_ENDGAME+i] += tune_params.scale(inc,Tune::KNIGHT_PST_ENDGAME+i,mLevel);
       if (s.outpost(board,sq,side)) {
@@ -700,7 +708,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       ai.attackedBy2[side] |= (battacks & ai.allAttacks[side]);
       int mobl = Bitboard(board.bishopAttacks(sq) &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::BISHOP_MOBILITY+mobl] += tune_params.scale(inc,Tune::BISHOP_MOBILITY+mobl,mLevel);
-      int i = map_to_pst(sq,side);
+      int i = square_to_pst(sq,side);
       grads[Tune::BISHOP_PST_MIDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_MIDGAME+i,mLevel);
       grads[Tune::BISHOP_PST_ENDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_ENDGAME+i,mLevel);
       if (s.outpost(board,sq,side)) {
@@ -754,7 +762,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
                   grads[Tune::TRAPPED_ROOK_NO_CASTLE] += tune_params.scale(inc,Tune::TRAPPED_ROOK_NO_CASTLE,mLevel);
           }
       }
-      int i = map_to_pst(sq,side);
+      int i = square_to_pst(sq,side);
       grads[Tune::ROOK_PST_MIDGAME+i] += tune_params.scale(inc,Tune::ROOK_PST_MIDGAME+i,mLevel);
       grads[Tune::ROOK_PST_ENDGAME+i] += tune_params.scale(inc,Tune::ROOK_PST_ENDGAME+i,mLevel);
       if (Rank(sq,side) == 7 && (Rank(board.kingSquare(oside),side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
@@ -812,7 +820,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       int mobl = std::min<int>(23,Bitboard(qattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount());
       grads[Tune::QUEEN_MOBILITY_MIDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_MIDGAME+mobl,mLevel);
       grads[Tune::QUEEN_MOBILITY_ENDGAME+mobl] += tune_params.scale(inc,Tune::QUEEN_MOBILITY_ENDGAME+mobl,mLevel);
-      int i = map_to_pst(sq,side);
+      int i = square_to_pst(sq,side);
       grads[Tune::QUEEN_PST_MIDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_MIDGAME+i,mLevel);
       grads[Tune::QUEEN_PST_ENDGAME+i] += tune_params.scale(inc,Tune::QUEEN_PST_ENDGAME+i,mLevel);
       if (!deep_endgame) {
@@ -1105,8 +1113,7 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
             const Square sq = pds[i].sq;
             const int rank = Rank(sq, side);
             const int file = File(sq);
-            const int f = file-1;
-            const int index = f < 4 ? f : 7-f;
+            const int index = Params::foldFile(file);
             const score_t factor = tune_params[Tune::PASSED_PAWN_FILE_ADJUST1+index].current/64.0;
 
             grads[Tune::PASSED_PAWN_MID2+rank-2] +=
@@ -1174,29 +1181,26 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
                 }
             }
         }
+        int f = File(pds[i].sq);
+        const auto fileIndex = f > 4 ? 7 - f : f-1;
         if (pds[i].flags & Scoring::PawnDetail::DOUBLED) {
-            int f = File(pds[i].sq);
-            if (f > 4) f = 9-f;
             grads[Tune::DOUBLED_PAWNS_MID1+f-1] +=
-                tune_params.scale(inc,Tune::DOUBLED_PAWNS_MID1+f-1,mLevel);
+                tune_params.scale(inc,Tune::DOUBLED_PAWNS_MID1+fileIndex,mLevel);
             grads[Tune::DOUBLED_PAWNS_END1+f-1] +=
-                tune_params.scale(inc,Tune::DOUBLED_PAWNS_END1+f-1,mLevel);
+                tune_params.scale(inc,Tune::DOUBLED_PAWNS_END1+fileIndex,mLevel);
         }
         if (pds[i].flags & Scoring::PawnDetail::TRIPLED) {
-            int f = File(pds[i].sq);
             if (f > 4) f = 9-f;
             grads[Tune::TRIPLED_PAWNS_MID1+f-1] +=
-                tune_params.scale(inc,Tune::TRIPLED_PAWNS_MID1+f-1,mLevel);
+                tune_params.scale(inc,Tune::TRIPLED_PAWNS_MID1+fileIndex,mLevel);
             grads[Tune::TRIPLED_PAWNS_END1+f-1] +=
-                tune_params.scale(inc,Tune::TRIPLED_PAWNS_END1+f-1,mLevel);
+                tune_params.scale(inc,Tune::TRIPLED_PAWNS_END1+fileIndex,mLevel);
         }
         if (pds[i].flags & Scoring::PawnDetail::ISOLATED) {
-            int f = File(pds[i].sq);
-            if (f > 4) f = 9-f;
             grads[Tune::ISOLATED_PAWN_MID1+f-1] +=
-                tune_params.scale(inc,Tune::ISOLATED_PAWN_MID1+f-1,mLevel);
+                tune_params.scale(inc,Tune::ISOLATED_PAWN_MID1+fileIndex,mLevel);
             grads[Tune::ISOLATED_PAWN_END1+f-1] +=
-                tune_params.scale(inc,Tune::ISOLATED_PAWN_END1+f-1,mLevel);
+                tune_params.scale(inc,Tune::ISOLATED_PAWN_END1+fileIndex,mLevel);
         }
         if (pds[i].flags & Scoring::PawnDetail::WEAK) {
             grads[Tune::WEAK_PAWN_MID] +=
@@ -1354,8 +1358,6 @@ static void parse2(ThreadData &td, Parse2Data &data)
       Board board;
       stringstream pos(p->position);
       pos >> board;
-      board.setCastleStatus((CastleType)p->wstatus,White);
-      board.setCastleStatus((CastleType)p->bstatus,Black);
       calc_derivative(*s, data, board, p->result);
    }
    delete s;

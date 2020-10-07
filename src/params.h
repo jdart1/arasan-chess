@@ -1,4 +1,4 @@
-// Copyright 2015-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2020 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PARAMS_H
 #define _PARAMS_H
@@ -14,12 +14,7 @@
 #define PARAM_MOD const score_t
 #endif
 
-#ifdef __INTEL_COMPILER
-#pragma pack(push,1)
-#endif
-
-struct Params 
-BEGIN_PACKED_STRUCT
+struct Params  {
     
     static const int KING_ATTACK_SCALE_SIZE = 150;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
@@ -144,7 +139,7 @@ BEGIN_PACKED_STRUCT
     static PARAM_MOD KING_ATTACK_SCALE[KING_ATTACK_SCALE_SIZE];
     static PARAM_MOD OWN_PIECE_KING_PROXIMITY_MULT[16];
     static PARAM_MOD PASSED_PAWN[2][8];
-    static PARAM_MOD PASSED_PAWN_FILE_ADJUST[8];
+    static PARAM_MOD PASSED_PAWN_FILE_ADJUST[4];
     static PARAM_MOD CONNECTED_PASSER[2][8];
     static PARAM_MOD ADJACENT_PASSER[2][8];
     static PARAM_MOD QUEENING_PATH_CLEAR[2][6];
@@ -188,13 +183,13 @@ BEGIN_PACKED_STRUCT
     static const int MIDGAME_THRESHOLD;
     static const int ENDGAME_THRESHOLD;
 
+    static inline int foldFile(int f) {
+        return f > 4 ? 8-f : f-1;
+    }
+
 #ifdef TUNE
     static void write(ostream &, const string &comment);
 #endif
-END_PACKED_STRUCT
-
-#ifdef __INTEL_COMPILER
-#pragma pack(pop)
-#endif
+};
 
 #endif

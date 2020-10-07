@@ -14,15 +14,16 @@ struct TuneParam {
    score_t current;
    score_t min_value;
    score_t max_value;
+   score_t *param;
    enum Scaling {None, Midgame, Endgame, Any};
    Scaling scaling;
    int tunable;
 
-   TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, Scaling s = None,int t = 0) :
-      index(i),name(n),current(c),min_value(minv),max_value(maxv),scaling(s),tunable(t) {
+   TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, score_t *p = nullptr, Scaling s = None, int t = 0) :
+       index(i),name(n),current(c),min_value(minv),max_value(maxv),param(p),scaling(s),tunable(t) {
    }
    TuneParam():
-      index(-1), name(""), current(0), min_value(0), max_value(0),scaling(None),tunable(0) {
+       index(-1), name(""), current(0), min_value(0), max_value(0), param(nullptr), scaling(None), tunable(0) {
    }
    score_t range() const {
       return max_value - min_value;

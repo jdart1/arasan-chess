@@ -361,7 +361,7 @@ TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-vparams.cpp scoring.cpp see.cpp \
+scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp log.cpp search.cpp \
 searchc.cpp learn.cpp movegen.cpp \

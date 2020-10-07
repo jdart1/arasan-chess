@@ -534,11 +534,10 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
    Square sq, pawn;
    score_t cover = PARAM(KING_COVER_BASE);
    if (rank > 2) return cover;
-   const int f = file > 4 ? 8 - file : file - 1;
-   Bitboard pawns;
+   const int f = Params::foldFile(file);
    sq = MakeSquare(file, 1, side);
    if (side == White) {
-      pawns = Attacks::file_mask_up[sq] & board.pawn_bits[White];
+      Bitboard pawns(Attacks::file_mask_up[sq] & board.pawn_bits[White]);
       if (!pawns) {
          if (FileOpen(board, file)) {
             cover += PARAM(KING_COVER)[5][f];
@@ -565,7 +564,7 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       }
    }
    else {
-      pawns = Attacks::file_mask_down[sq] & board.pawn_bits[Black];
+      Bitboard pawns(Attacks::file_mask_down[sq] & board.pawn_bits[Black]);
       if (!pawns) {
          if (FileOpen(board, file)) {
             cover += PARAM(KING_COVER)[5][f];
@@ -909,13 +908,13 @@ void Scoring::positionalScore(const Board &board,
 #ifdef EVAL_DEBUG
       Scores tmp = scores;
 #endif
-      Square scoreSq = (side == White) ? sq : 63 - sq;
+      const Square pstSq = (side == White) ? sq : 63 - sq;
       switch(TypeOfPiece(board[sq]))
       {
       case Knight:
          {
-            scores.mid += PARAM(KNIGHT_PST)[Midgame][scoreSq];
-            scores.end += PARAM(KNIGHT_PST)[Endgame][scoreSq];
+            scores.mid += PARAM(KNIGHT_PST)[Midgame][pstSq];
+            scores.end += PARAM(KNIGHT_PST)[Endgame][pstSq];
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
             const score_t mobl = PARAM(KNIGHT_MOBILITY)[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
@@ -954,8 +953,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Bishop:
          {
-            scores.mid += PARAM(BISHOP_PST)[Midgame][scoreSq];
-            scores.end += PARAM(BISHOP_PST)[Endgame][scoreSq];
+            scores.mid += PARAM(BISHOP_PST)[Midgame][pstSq];
+            scores.end += PARAM(BISHOP_PST)[Endgame][pstSq];
 
             const Bitboard battacks(board.bishopAttacks(sq));
             ai.allAttacks[side] |= battacks;
@@ -1002,8 +1001,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Rook:
          {
-            scores.mid += PARAM(ROOK_PST)[Midgame][scoreSq];
-            scores.end += PARAM(ROOK_PST)[Endgame][scoreSq];
+            scores.mid += PARAM(ROOK_PST)[Midgame][pstSq];
+            scores.end += PARAM(ROOK_PST)[Endgame][pstSq];
             const Bitboard rattacks(board.rookAttacks(sq));
             const int r = Rank(sq, side);
             if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
@@ -1070,8 +1069,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Queen:
          {
-            scores.mid += PARAM(QUEEN_PST)[Midgame][scoreSq];
-            scores.end += PARAM(QUEEN_PST)[Endgame][scoreSq];
+            scores.mid += PARAM(QUEEN_PST)[Midgame][pstSq];
+            scores.end += PARAM(QUEEN_PST)[Endgame][pstSq];
             int qmobl = 0;
             Bitboard battacks(board.bishopAttacks(sq));
             Bitboard qmobility(battacks);
@@ -1169,7 +1168,7 @@ void Scoring::positionalScore(const Board &board,
          scores.mid - tmp.mid << ", " << scores.end - tmp.end << ")" << endl;
 #endif
    }
-   scores.mid += PARAM(KING_PST)[Midgame][(side == White) ? kp : 63 - kp];
+   scores.mid += PARAM(KING_PST)[Midgame][side == White ? kp : 63 - kp];
 
    ai.allAttacks[side] |= Attacks::king_attacks[kp];
    ai.attackedBy2[side] |= (Attacks::king_attacks[kp] & ai.allAttacks[side]);
@@ -1405,6 +1404,7 @@ void Scoring::calcPawnData(const Board &board,
       }
 
       isolated = !TEST_MASK(isolated_file_mask[file - 1], board.pawn_bits[side]);
+      const auto fileIndex = Params::foldFile(file);
       if (doubles) {
 #ifdef PAWN_DEBUG
          cout << " doubled";
@@ -1424,22 +1424,22 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef TUNE
             td.flags |= PawnDetail::TRIPLED;
 #endif
-            entr.midgame_score += PARAM(TRIPLED_PAWNS)[Midgame][file - 1];
-            entr.endgame_score += PARAM(TRIPLED_PAWNS)[Endgame][file - 1];
+            entr.midgame_score += PARAM(TRIPLED_PAWNS)[Midgame][fileIndex];
+            entr.endgame_score += PARAM(TRIPLED_PAWNS)[Endgame][fileIndex];
          }
          else {
 #ifdef TUNE
             td.flags |= PawnDetail::DOUBLED;
 #endif
-            entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][file - 1];
-            entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][file - 1];
+            entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][fileIndex];
+            entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][fileIndex];
          }
          doubled++;
       }
 
       if (isolated && !passed) {
-         entr.midgame_score += PARAM(ISOLATED_PAWN)[Midgame][file-1];
-         entr.endgame_score += PARAM(ISOLATED_PAWN)[Endgame][file-1];
+         entr.midgame_score += PARAM(ISOLATED_PAWN)[Midgame][fileIndex];
+         entr.endgame_score += PARAM(ISOLATED_PAWN)[Endgame][fileIndex];
 #ifdef PAWN_DEBUG
          cout << " isolated";
 #endif
@@ -1518,8 +1518,9 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef TUNE
          td.flags |= PawnDetail::PASSED;
 #endif
-         entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[File(sq)-1]/64;
-         entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[File(sq)-1]/64;
+         int f = Params::foldFile(file);
+         entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[f]/64;
+         entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[f]/64;
          entr.passers.set(sq);
       }
 
@@ -2038,8 +2039,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,
 
    // Evaluate king position. Big bonus for centralizing king or
    // moving it forward in the endgame.
-   Square scoreSq = (side == White) ? kp : (63-kp);
-   score_t k_pos = PARAM(KING_PST)[Endgame][scoreSq];
+   score_t k_pos = PARAM(KING_PST)[Endgame][(side == White) ? kp : 63 - kp];
    score_t k_pos_adj = 0;
 
    // If all pawns are on same side, bonus for King being on the
@@ -2468,13 +2468,8 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::OWN_PIECE_KING_PROXIMITY_MULT,16);
    o << "const int Params::PASSED_PAWN[2][8] = ";
    print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
-   score_t file_adjust[8];
-   for (int i = 0; i < 8; i++) {
-      int j = i < 4 ? i : 7-i;
-      file_adjust[i] = tune_params[Tune::PASSED_PAWN_FILE_ADJUST1+j].current;
-   }
-   o << "const int Params::PASSED_PAWN_FILE_ADJUST[8] = ";
-   print_array(o,file_adjust,8);
+   o << "const int Params::PASSED_PAWN_FILE_ADJUST[4] = ";
+   print_array(o,Params::PASSED_PAWN_FILE_ADJUST,4);
    o << "const int Params::CONNECTED_PASSER[2][8] = ";
    print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
    o << "const int Params::ADJACENT_PASSER[2][8] = ";
