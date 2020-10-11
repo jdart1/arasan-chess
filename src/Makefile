@@ -168,21 +168,22 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-GCC_MIN_VERSION = 4.9
-GCCVER := $(shell expr `$(CC) -dumpversion`)
-GCCNEW := $(shell awk 'BEGIN{print $(GCCVER) >= 4.9}')
+GCCMINVERION = 4.9
+# Get 1st two digits of full GCC version
+GCCVER := $(shell expr `$(CC) -dumpfullversion | awk -F. '{printf "%s.%s\n", $$1, $$2}'`)
+GCCNEW := $(shell awk 'BEGIN{print $GCCVER >= $GCCMINVERSION}')
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
 CFLAGS := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
 SMPFLAGS := $(SMPFLAGS) -pthread
-LDFLAGS := $(LDFLAGS) -fuse-ld=gold -L$(HWLOC)/lib
+LDFLAGS := $(LDFLAGS) -fuse-ld=gold
 ifndef DEBUG
 LTO	= -flto
 OPT	= -Ofast $(LTO) -fno-rtti -fno-enforce-eh-specs -DNDEBUG
 endif
 else
-$(error GCC version is $(GCCVER): versions < $(GCC_MIN_VERSION) not supported)
+$(error GCC version is $(GCCVER): versions < $(GCCMINVERSION) not supported)
 endif
 
 endif
@@ -195,6 +196,10 @@ LLVM_PROFDATA := xcrun $(LLVM_PROFDATA)
 else
 LIBS := $(LIBS) -lrt
 LLVM_PROFDATA := $(LLVM_PROFDATA)
+endif
+
+ifdef NUMA
+LDFLAGS := $(LDFLAGS) -L$(HWLOC)/lib
 endif
 
 default: dirs $(EXPORT)/$(ARASANX)
