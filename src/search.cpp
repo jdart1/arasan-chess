@@ -3336,31 +3336,16 @@ int Search::updateMove(NodeInfo *node, Move move, score_t score, int ply)
 void Search::updatePV(const Board &board, Move m, int ply)
 {
     updatePV(board,node,(node+1),m,ply);
-#ifdef _TRACE
-    if (mainThread()) {
-       indent(ply); cout << "update_pv, ply " << ply << endl;
-       Board board_copy(board);
-       for (int i = ply; i < node->pv_length+ply; i++) {
-          if (ply == 0) {
-             MoveImage(node->pv[i],cout); cout << " " << (flush);
-          }
-          ASSERT(legalMove(board_copy,node->pv[i]));
-          board_copy.doMove(node->pv[i]);
-       }
-       cout << endl;
-    }
-#endif
 }
 
+#ifndef _MSC_VER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
 void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Move move, int ply)
 {
+#ifndef _MSC_VER
 #pragma GCC diagnostic pop
-#ifdef _TRACE
-    if (mainThread()) {
-        indent(ply); cout << "update_pv, ply " << ply << endl;
-    }
 #endif
     node->pv[ply] = move;
     if (fromNode->pv_length) {
@@ -3368,18 +3353,29 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
             sizeof(Move)*fromNode->pv_length);
     }
     node->pv_length = fromNode->pv_length+1;
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(_TRACE)
+#ifdef _TRACE
+    if (mainThread() && node->pv_length>0) {
+        indent(ply); cout << "PV: ";
+    }
+#endif
     Board board_copy(board);
     for (int i = ply; i < node->pv_length+ply; i++) {
         ASSERT(i<Constants::MaxPly);
 #ifdef _TRACE
         if (mainThread()) {
-            MoveImage(node->pv[i],cout); cout << " " << (flush);
+            MoveImage(node->pv[i],cout);
+            cout << ' ';
         }
 #endif
         ASSERT(legalMove(board_copy,node->pv[i]));
         board_copy.doMove(node->pv[i]);
     }
+#ifdef _TRACE
+    if (mainThread() && node->pv_length>0) {
+        cout << endl;
+    }
+#endif
 #endif
 }
 
