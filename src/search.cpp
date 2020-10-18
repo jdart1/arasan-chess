@@ -1576,7 +1576,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         ASSERT(0);
     }
 #endif
-    ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
     stats.num_nodes += nodeAccumulator;
     nodeAccumulator = 0;
     return node->best_score;
@@ -1937,12 +1936,13 @@ score_t Search::quiesce(int ply,int depth)
            (node+1)->pv_length=0; // no PV from this point
            node->flags |= EXACT;
        }
+#ifdef _DEBUG
        if (node->best_score < -Constants::MATE ||
            node->best_score > Constants::MATE) {
            cout << debugPrefix() << board << endl;
            ASSERT(0);
        }
-       ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
+#endif
        storeHash(hash,node->best,tt_depth);
        if (node->inBounds(node->best_score)) {
            if (!IsNull(node->best)) {
