@@ -1700,6 +1700,18 @@ const char *SearchController::debugPrefix() const noexcept
     return uci ? Protocol::UCI_DEBUG_PREFIX : Protocol::CECP_DEBUG_PREFIX;
 }
 
+#ifdef _TRACE
+static void traceHash(char type, NodeInfo *node, score_t hashValue, const HashEntry &hashEntry) 
+{
+    indent(node->ply);
+    cout << "hash cutoff, type = " << type <<
+        " alpha = " << node->alpha <<
+        " beta = " << node->beta <<
+        " value = " << hashValue <<
+        " depth = " << hashEntry.depth() << endl;
+}
+#endif
+
 score_t Search::quiesce(int ply,int depth)
 {
    // recursive function, implements quiescence search.
@@ -1782,11 +1794,7 @@ score_t Search::quiesce(int ply,int depth)
       case HashEntry::Valid:
 #ifdef _TRACE
          if (mainThread()) {
-            indent(ply);
-            cout << "hash cutoff, type = E" <<
-               " alpha = " << node->alpha <<
-               " beta = " << node->beta <<
-               " value = " << hashValue << endl;
+             traceHash('E',node,hashValue,hashEntry);
          }
 #endif
          return hashValue;
@@ -1794,11 +1802,7 @@ score_t Search::quiesce(int ply,int depth)
          if (hashValue <= node->alpha) {
 #ifdef _TRACE
             if (mainThread()) {
-               indent(ply);
-               cout << "hash cutoff, type = U" <<
-                  " alpha = " << node->alpha <<
-                  " beta = " << node->beta <<
-                  " value = " << hashValue << endl;
+               traceHash('U',node,hashValue,hashEntry);
             }
 #endif
             return hashValue;                     // cutoff
@@ -1808,11 +1812,7 @@ score_t Search::quiesce(int ply,int depth)
          if (hashValue >= node->beta) {
 #ifdef _TRACE
             if (mainThread()) {
-               indent(ply);
-               cout << "hash cutoff, type = L" <<
-                  " alpha = " << node->alpha <<
-                  " beta = " << node->beta <<
-                  " value = " << hashValue << endl;
+               traceHash('L',node,hashValue,hashEntry);
             }
 #endif
             return hashValue;                     // cutoff
@@ -2518,11 +2518,7 @@ score_t Search::search()
             case HashEntry::Valid:
 #ifdef _TRACE
                 if (mainThread()) {
-                    indent(ply);
-                    cout << "hash cutoff, type = E" <<
-                        " alpha = " << node->alpha <<
-                        " beta = " << node->beta <<
-                        " value = " << hashValue << endl;
+                    traceHash('E',node,hashValue,hashEntry);
                 }
 #endif
                 if (node->inBounds(hashValue)) {
@@ -2534,8 +2530,7 @@ score_t Search::search()
                     }
 #ifdef _DEBUG
                     if (!IsNull(hashMove) && !legalMove(board,hashMove)) {
-                       cout << '#' << board << endl << (flush);
-                       cout << '#';
+                       cout << board << endl << (flush);
                        MoveImage(hashMove,cout);
                        cout << endl << (flush);
                     }
@@ -2554,11 +2549,7 @@ score_t Search::search()
                 if (hashValue <= node->alpha) {
 #ifdef _TRACE
                     if (mainThread()) {
-                        indent(ply);
-                        cout << "hash cutoff, type = U" <<
-                            " alpha = " << node->alpha <<
-                            " beta = " << node->beta <<
-                            " value = " << hashValue << endl;
+                        traceHash('U',node,hashValue,hashEntry);
                     }
 #endif
                     return hashValue;                     // cutoff
@@ -2568,11 +2559,7 @@ score_t Search::search()
                 if (hashValue >= node->beta) {
 #ifdef _TRACE
                     if (mainThread()) {
-                        indent(ply);
-                        cout << "hash cutoff, type = L" <<
-                            " alpha = " << node->alpha <<
-                            " beta = " << node->beta <<
-                            " value = " << hashValue << endl;
+                        traceHash('L',node,hashValue,hashEntry);
                     }
 #endif
                     return hashValue;                     // cutoff
