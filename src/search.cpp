@@ -2347,7 +2347,6 @@ int Search::extend(const Board &board,
     int extend = 0;
 
     if (in_check_after_move == InCheck) {
-        // check does not lose material or is a discovered check
 #ifdef SEARCH_STATS
         stats.check_extensions++;
 #endif
