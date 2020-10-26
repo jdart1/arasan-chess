@@ -65,7 +65,7 @@ public:
       lock();
       for (unsigned i = 0; i < nThreads; i++) {
           if (data[i] && data[i]->work) {
-              std::mem_fun<void,Search>(fn)(data[i]->work);
+              std::mem_fn(fn)(data[i]->work);
           }
       }
       unlock();
