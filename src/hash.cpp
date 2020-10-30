@@ -1,4 +1,4 @@
-// Copyright 1999-2005, 2011, 2012, 2014 Jon Dart. All Rights Reserved.
+// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020 Jon Dart. All Rights Reserved.
 
 #include "hash.h"
 #include "debug.h"
@@ -27,18 +27,18 @@ Hash::Hash() {
 void Hash::initHash(size_t bytes)
 {
    if (!hash_init_done) {
-      hashSize = (int)(bytes/sizeof(HashEntry));
+      hashSize = bytes/sizeof(HashEntry);
       if (!hashSize) {
          hashMask = 0;
          hash_init_done++;
          return;
       }
       unsigned hashPower;
-      for (hashPower = 1; hashPower < 32; hashPower++) {
-        if ((1ULL << hashPower) > hashSize) {
-            hashPower--;
-            break;
-        }
+      for (hashPower = 1; hashPower < 64; hashPower++) {
+          if ((1ULL << hashPower) > hashSize) {
+              hashPower--;
+              break;
+          }
       }
       hashSize = 1ULL << hashPower;
       hashMask = (uint64_t)(hashSize-1);
