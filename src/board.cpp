@@ -1868,7 +1868,7 @@ static void set_bad( istream &i )
    i.clear( ios::badbit | i.rdstate() );
 }
 
-int Board::repCount(int target) const
+int Board::repCount(int target) const noexcept
 {
     int entries = std::min<int>(state.movesFromNull,state.moveCount) - 2;
     if (entries <= 0) return 0;
@@ -1890,7 +1890,7 @@ int Board::repCount(int target) const
    return count;
 }
 
-int Board::anyRep() const
+bool Board::anyRep() const noexcept
 {
    int entries = state.moveCount;
    // If only 2 entries side to move is different so the
@@ -1905,6 +1905,23 @@ int Board::anyRep() const
       }
    }
    return 0;
+}
+
+bool Board::fiftyMoveDraw() const noexcept {
+   // check the 50 move rule
+   if (state.moveCount >= 100) {
+      if (checkStatus() == InCheck) {
+
+         // must verify side to move is not checkmated
+         MoveGenerator mg(*this);
+         Move moves[Constants::MaxMoves];
+         return(mg.generateAllMoves(moves, 0) > 0);
+      }
+      else {
+         return true;
+      }
+   }
+   return false;
 }
 
 Bitboard Board::getPinned(Square ksq, ColorType pinnerSide, ColorType pinnedSide) const {
@@ -1929,24 +1946,20 @@ Bitboard Board::getPinned(Square ksq, ColorType pinnerSide, ColorType pinnedSide
     return result;
 }
 
-int Board::materialDraw() const {
+bool Board::materialDraw() const noexcept {
     // check for insufficient material per FIDE Rules of Chess
     const Material &mat1 = getMaterial(White);
     const Material &mat2 = getMaterial(Black);
     if (mat1.pawnCount() || mat2.pawnCount()) {
-        return 0 ;
+        return false;
     }
     if ((mat1.value() <= Params::KING_VALUE + Params::BISHOP_VALUE) &&
-    (mat2.value() <= Params::KING_VALUE + Params::BISHOP_VALUE)) {
-        if (mat1.kingOnly() || mat2.kingOnly())
+        (mat2.value() <= Params::KING_VALUE + Params::BISHOP_VALUE)) {
+        if (mat1.kingOnly() || mat2.kingOnly()) {
             // K vs K, or K vs KN, or K vs KB
-            return 1;
-        else if (mat1.infobits() == Material::KN &&
-        mat2.infobits() == Material::KN) {
-            // KN vs KN
-            return 0;
+            return true;
         }
-        else {                                    /* KBKB */
+        else if (mat1.infobits() == Material::KB && mat2.infobits() == Material::KB) {
             // drawn if same-color bishops
             if (TEST_MASK(bishop_bits[White],black_squares))
                 return TEST_MASK(bishop_bits[Black],black_squares);
@@ -1954,7 +1967,7 @@ int Board::materialDraw() const {
                 return TEST_MASK(bishop_bits[Black],white_squares);
         }
     }
-    return 0 /*FALSE*/;
+    return false;
 }
 
 void Board::flip() {

@@ -617,7 +617,7 @@ static int testDrawEval() {
             continue;
         }
         Scoring *s = new Scoring();
-        if (s->isLegalDraw(board) != draw_cases[i].legal) {
+        if (board.isLegalDraw() != draw_cases[i].legal) {
             cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
             ++errs;
         }
@@ -635,7 +635,7 @@ static int testDrawEval() {
             continue;
         }
         Scoring *s = new Scoring();
-        if (s->isLegalDraw(board) || s->theoreticalDraw(board)) {
+        if (board.isLegalDraw() || s->theoreticalDraw(board)) {
             cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
             ++errs;
         }
@@ -1090,8 +1090,8 @@ static int testRep()
             cerr << "testRep: anyRep incorrect" << endl;
             ++errs;
         }
-        if ((reps > 1) != Scoring::isLegalDraw(board)) {
-            cerr << "testRep: error in Scoring::isLegalDraw" << endl;
+        if ((reps > 1) != board.isLegalDraw()) {
+            cerr << "testRep: error in isLegalDraw" << endl;
             ++errs;
         }
     }
@@ -1361,7 +1361,7 @@ static int testSearch()
 {
    struct Case
    {
-       Case(const string &s, score_t res, bool min_score = false):
+       Case(const string &s, score_t res):
            epd(s), score(res)
          {
          }

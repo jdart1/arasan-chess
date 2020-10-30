@@ -2235,7 +2235,7 @@ int Scoring::KBPDraw(const Board &board) {
    return 0;
 }
 
-int Scoring::theoreticalDraw(const Board &board) {
+bool Scoring::theoreticalDraw(const Board &board) {
     if (board.getMaterial(White).value() >
         board.getMaterial(Black).value())
         return theoreticalDraw<White>(board);
@@ -2243,12 +2243,12 @@ int Scoring::theoreticalDraw(const Board &board) {
              board.getMaterial(Black).value())
         return theoreticalDraw<Black>(board);
     else
-        return 0;
+        return false;
 }
 
 // check for theoretical draws ("side" has the greater material)
 template <ColorType side>
-int Scoring::theoreticalDraw(const Board &board) {
+bool Scoring::theoreticalDraw(const Board &board) {
     const Material &mat1 = board.getMaterial(side);
     const Material &mat2 = board.getMaterial(OppositeColor(side));
     if (mat1.value() > Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) return 0;
@@ -2265,7 +2265,7 @@ int Scoring::theoreticalDraw(const Board &board) {
             return lookupBitbase(kp, psq, kp2, side, board.sideToMove()) == 0;
         }
         else {
-            return 0;
+            return false;
         }
     }
     // Check for wrong bishop + rook pawn(s) vs king.  Not very common but
@@ -2282,33 +2282,7 @@ int Scoring::theoreticalDraw(const Board &board) {
     }
 }
 
-int Scoring::repetitionDraw(const Board &board) {
-   return board.repCount() >= 2;
-}
-
-int Scoring::fiftyMoveDraw(const Board &board)
-{
-   // check the 50 move rule
-   if (board.state.moveCount >= 100) {
-      if (board.checkStatus() == InCheck) {
-
-         // must verify side to move is not checkmated
-         MoveGenerator mg(board);
-         Move moves[Constants::MaxMoves];
-         return(mg.generateAllMoves(moves, 0) > 0);
-      }
-      else {
-         return 1;
-      }
-   }
-   return 0;
-}
-
-int Scoring::isLegalDraw(const Board &board) {
-   return repetitionDraw(board) || board.materialDraw() || fiftyMoveDraw(board);
-}
-
-int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
+bool Scoring::isDraw(const Board &board, int &rep_count, int ply) {
 
    // First check for draw by repetition
    rep_count = 0;
@@ -2316,17 +2290,17 @@ int Scoring::isDraw(const Board &board, int &rep_count, int ply) {
    // follow rule Crafty uses: 2 repeats if ply<=2, 1 otherwise:
    const int target = (ply <= 2) ? 2 : 1;
    if ((rep_count=board.repCount(target))>=target) {
-      return 1;
+      return true;
    }
-   else if (fiftyMoveDraw(board)) {
-      return 1;
+   else if (board.fiftyMoveDraw()) {
+      return true;
    }
    else if (board.getMaterial(White).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2) &&
             board.getMaterial(Black).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) {
       // check for insufficient material and other drawing situations
-      return materialDraw(board) || theoreticalDraw(board);
+      return board.materialDraw() || theoreticalDraw(board);
    } else {
-      return 0;
+      return false;
    }
 }
 

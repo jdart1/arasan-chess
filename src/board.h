@@ -357,14 +357,26 @@ public:
    Bitboard getPinned(Square ksq, ColorType pinnerSide, ColorType pinnedSide) const;
 
    // Get repetition count, stop if "target" count reached
-   int repCount(int target = 2) const;
+   int repCount(int target = 2) const noexcept;
 
    // Return true if there has been a repetition since the last
    // move that reset the 50-move counter.
-   int anyRep() const;
+   bool anyRep() const noexcept;
 
-   // Return true if current position is material draw
-   int materialDraw() const;
+   // return true if legal draw by repetition (3 repetitions)
+   bool repetitionDraw() const noexcept {
+      return repCount(2)==2;
+   }
+
+   // Return true if draw by 50-move rule
+   bool fiftyMoveDraw() const noexcept;
+
+   // Return true if current position is legal draw by insufficient material
+   bool materialDraw() const noexcept;
+
+   bool isLegalDraw() const noexcept  {
+      return repetitionDraw() || materialDraw() || fiftyMoveDraw();
+   }
 
    static const Bitboard white_squares, black_squares;
 

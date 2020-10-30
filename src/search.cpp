@@ -304,7 +304,7 @@ Move SearchController::findBestMove(
 
     startTime = last_time = getCurrentTime();
 
-    if (Scoring::isLegalDraw(board) && !uci &&
+    if (board.isLegalDraw() && !uci &&
        !(typeOfSearch == FixedTime && time_target == INFINITE_TIME)) {
       // If it's a legal draw situation before we even move, then
       // just return a draw score and don't search. (But don't do
@@ -951,7 +951,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
        }
        board_copy.doMove(move);
        ++i;
-       if (Scoring::isLegalDraw(board_copy)) {
+       if (board_copy.isLegalDraw()) {
           break;
        }
        if (node->pv_length < 2) {

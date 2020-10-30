@@ -38,20 +38,10 @@ class Scoring
     // other draw situations. It is intended to be called from the
     // interior of the search. It does not strictly detect legal
     // draws: use isLegalDraw for that.
-    static int isDraw( const Board &board, int &rep_count, int ply);
+    static bool isDraw( const Board &board, int &rep_count, int ply);
 
-    static int repetitionDraw( const Board &board );
-
-    static int materialDraw( const Board &board ) {
-        return board.materialDraw();
-    }
-
-    static int fiftyMoveDraw(const Board &board);
-
-    // Check only for legal draws
-    static int isLegalDraw(const Board &board);
-
-    static int theoreticalDraw(const Board &board);
+    // Check for legal draws and certain other drawish situations
+    static bool theoreticalDraw(const Board &board);
 
     // Turn a score into a formatted string (mate scores are
     // shown like +Mate6).
@@ -229,7 +219,7 @@ class Scoring
                             Scores &oppScores);
 
     template <ColorType side>
-        static int theoreticalDraw(const Board &board);
+        static bool theoreticalDraw(const Board &board);
 
     void adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const;
 

@@ -1202,12 +1202,12 @@ int Protocol::isDraw(const Board &board, Statistics &last_stats, string &reason)
        reason = "50 move draw";
        return 1;
    }
-   else if (Scoring::materialDraw(board)) {
+   else if (board.materialDraw()) {
        if (doTrace) cout << debugPrefix() << "material draw" << endl;
        reason = "Insufficient material";
        return 1;
    }
-   else if (Scoring::repetitionDraw(board)) {
+   else if (board.repetitionDraw()) {
        if (doTrace) cout << debugPrefix() << "repetition draw" << endl;
        reason = "Repetition";
        return 1;
@@ -2196,7 +2196,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                     cout << endl;
                 }
                 Scoring::init();
-                if (Scoring::isLegalDraw(board)) {
+                if (board.isLegalDraw()) {
                      cout << "position evaluates to draw (statically)" << endl;
                 }
                 Scoring *s = new Scoring();
