@@ -76,8 +76,8 @@ static const int LMP_DEPTH=13;
 static const int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
                                           {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
-static const score_t RAZOR_MARGIN = static_cast<score_t>(3.0*Params::PAWN_VALUE);
-static const score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.75*Params::PAWN_VALUE);
+static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::PAWN_VALUE);
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
@@ -2637,8 +2637,7 @@ score_t Search::search()
 
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        (node->flags & (IID|VERIFY)) == 0 &&
-        board.getMaterial(board.sideToMove()).hasPieces();
+        (node->flags & (IID|VERIFY)) == 0;
 
     const int improving = ply >= 3 && !in_check &&
         (node-2)->staticEval != Constants::INVALID_SCORE &&
@@ -2672,7 +2671,7 @@ score_t Search::search()
 
 #ifdef RAZORING
     // razoring as in Stockfish
-    if (pruneOk && depth <= RAZOR_DEPTH) {
+    if (pruneOk && depth <= RAZOR_DEPTH && board.getMaterial(board.sideToMove()).hasPieces()) {
         ASSERT(node->eval != Constants::INVALID_SCORE);
         if (node->eval < node->beta - razorMargin(depth)) {
             // Note: use threshold as the bounds here, not beta, as
@@ -2697,14 +2696,18 @@ score_t Search::search()
     // zugzwang is a possibility. Do not do null move if this is an
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
-    if (pruneOk && depth >= DEPTH_INCREMENT &&
+    if (pruneOk &&
+        (depth >= DEPTH_INCREMENT) &&
         !IsNull((node-1)->last_move) &&
+        board.getMaterial(board.sideToMove()).hasPieces() &&
+        node->eval >= node->beta &&
+        node->staticEval >= node->eval &&
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
-        int nu_depth;
-        // R=3 + some depth-dependent increment
-        nu_depth = depth - 4*DEPTH_INCREMENT - depth/4;
+        // R=2 + some depth- and score-dependent increment
+        int lowMat = board.getMaterial(board.sideToMove()).materialLevel() < 9;
+        int nu_depth = depth - 3*DEPTH_INCREMENT - depth/(4+2*lowMat) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
 
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
