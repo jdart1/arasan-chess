@@ -1230,23 +1230,24 @@ Move Search::ply0_search()
                     controller->terminateNow();
                 }
             }
-            // check for forced move, but only at depth 2 (so we get a
-            // ponder move if possible).
-            // Do not terminate here if a resign score is returned
-            // (search deeper to get an accurate score). Do not exit
-            // in analysis mode.
-            if (!terminate && controller->typeOfSearch != FixedDepth &&
-                !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
-                mg.moveCount() == 1 &&
-                iterationDepth >= 2 &&
-                !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
-               if (mainThread() && debugOut()) {
-                  cout << debugPrefix() << "single legal move, terminating" << endl;
-               }
-               controller->terminateNow();
-            }
          } while (!terminate && (stats.failLow || stats.failHigh));
-         // search value should now be in bounds (unless we are terminating)
+         // Search value should now be in bounds (unless we are terminating)
+
+         // Check for forced move, but only at depth 2 (so we get a
+         // ponder move if possible).
+         // Do not terminate here if a resign score is returned
+         // (search deeper to get an accurate score). Do not exit
+         // in analysis mode.
+         if (!terminate && controller->typeOfSearch != FixedDepth &&
+             !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
+             mg.moveCount() == 1 &&
+             iterationDepth >= 2 &&
+             !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
+             if (mainThread() && debugOut()) {
+                 cout << debugPrefix() << "single legal move, terminating" << endl;
+             }
+             controller->terminateNow();
+         }
          if (!terminate) {
             if (mainThread()) {
                 // Peform any adjustment of the time allocation based
