@@ -2706,9 +2706,11 @@ score_t Search::search()
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
-        // R=2 + some depth- and score-dependent increment
-        int lowMat = board.getMaterial(board.sideToMove()).materialLevel() < 9;
-        int nu_depth = depth - 3*DEPTH_INCREMENT - depth/(4+2*lowMat) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
+        // Fixed reduction + some depth- and score-dependent
+        // increment. Decrease reduction somewhat when mateiral
+        // is low.
+        int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 9;
+        int nu_depth = depth - 3*DEPTH_INCREMENT - !lowMat*DEPTH_INCREMENT/2 - depth/(4+2*lowMat) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
 
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
