@@ -1,4 +1,4 @@
-// Copyright 2010, 2011, 2012, 2017 by Jon Dart. All Rights Reserved.
+// Copyright 2010, 2011, 2012, 2017, 2020 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "notation.h"
 #include "legal.h"
@@ -171,7 +171,7 @@ int CDECL main(int argc, char **argv)
                         last_score = 10000.0F;
                      }
                      else if (result == "1/2-1/2" &&
-                              (Scoring::isLegalDraw(board) ||
+                              (board.isLegalDraw() ||
                                Scoring::theoreticalDraw(board))) {
                         last_score = 0.0;
                      } else {

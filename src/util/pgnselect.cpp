@@ -96,7 +96,7 @@ static bool exclude(const Board &board) {
               board.getMaterial(Black).infobits() == Material::KP) ||
            (board.getMaterial(Black).kingOnly() &&
               board.getMaterial(White).infobits() == Material::KP)) ||
-        Scoring::isLegalDraw(board) ||
+        board.isLegalDraw() ||
         Scoring::theoreticalDraw(board);
 }
 
