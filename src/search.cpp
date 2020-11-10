@@ -37,6 +37,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define STATIC_NULL_PRUNING
 #define RAZORING
 #define SINGULAR_EXTENSION
+#define MULTICUT
 
 static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
@@ -63,7 +64,7 @@ static score_t singularExtensionMargin(int depth)
     return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
 }
 
-static int singularExtensionDepth(int depth)
+static int singularSearchDepth(int depth)
 {
    return depth/2 - DEPTH_INCREMENT;
 }
@@ -1387,6 +1388,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #endif
     node->ply = 0;
     node->depth = depth;
+    node->excluded = NullMove;
     node->eval = Constants::INVALID_SCORE;
 
     int move_index = 0;
@@ -1702,7 +1704,7 @@ const char *SearchController::debugPrefix() const noexcept
 }
 
 #ifdef _TRACE
-static void traceHash(char type, NodeInfo *node, score_t hashValue, const HashEntry &hashEntry) 
+static void traceHash(char type, NodeInfo *node, score_t hashValue, const HashEntry &hashEntry)
 {
     indent(node->ply);
     cout << "hash cutoff, type = " << type <<
@@ -1928,14 +1930,18 @@ score_t Search::quiesce(int ply,int depth)
 #endif
        }
        if (node->num_legal == 0) { // no legal evasions, so this is checkmate
-#ifdef _TRACE
-           if (mainThread()) {
-               indent(ply); cout << "checkmate!" << endl;
-           }
-#endif
-           node->best_score = -(Constants::MATE - ply);
            (node+1)->pv_length=0; // no PV from this point
-           node->flags |= EXACT;
+           if (!IsNull(node->excluded)) {
+               node->best_score = node->alpha;
+           } else {
+#ifdef _TRACE
+               if (mainThread()) {
+                   indent(ply); cout << "checkmate!" << endl;
+               }
+#endif
+               node->best_score = -(Constants::MATE - ply);
+               node->flags |= EXACT;
+           }
        }
 #ifdef _DEBUG
        if (node->best_score < -Constants::MATE ||
@@ -2483,7 +2489,7 @@ score_t Search::search()
     HashEntry::ValueType result;
     bool hashHit = false;
     score_t hashValue = Constants::INVALID_SCORE;
-    if (node->flags & IID) {
+    if ((node->flags & IID) || !IsNull(node->excluded)) {
        result = HashEntry::NoHit;
     }
     else {
@@ -2636,8 +2642,10 @@ score_t Search::search()
     }
     ASSERT(node->staticEval != Constants::INVALID_SCORE);
 
+    // pre-search pruning conditions
     const bool pruneOk = !in_check &&
         !node->PV() &&
+        IsNull(node->excluded) &&
         (node->flags & (IID|VERIFY)) == 0;
 
     const int improving = ply >= 3 && !in_check &&
@@ -2795,6 +2803,7 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() &&
         depth >= PROBCUT_DEPTH &&
+        IsNull(node->excluded) &&
         ((node->flags & PROBCUT)==0 || depth >= 9*DEPTH_INCREMENT) &&
         node->beta < Constants::MATE_RANGE) {
         const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
@@ -2853,6 +2862,7 @@ score_t Search::search()
                 }
             }
         }
+
         node->num_legal = 0;
         node->last_move = NullMove;
     }
@@ -2922,6 +2932,7 @@ score_t Search::search()
 #ifdef SINGULAR_EXTENSION
         if (depth >= SINGULAR_EXTENSION_DEPTH &&
             ply > 0 &&
+            IsNull(node->excluded) &&
             hashHit &&
             result == HashEntry::LowerBound &&
             !IsNull(hashMove) &&
@@ -2945,38 +2956,43 @@ score_t Search::search()
                 // implemented in the Ippo* series of engines (and
                 // presumably in Rybka), and also now in Stockfish, Komodo,
                 // Texel, Protector, etc.
-                score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
                 NodeState ns(node);
-                MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
-                singularExtend = true;
-                int move_index = 0;
-                const int nu_depth = singularExtensionDepth(depth);
-                node->num_legal = 0;
-                for (;;) {
-                    Move move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
-                    if (IsNull(move)) break;
-                    if (IsUsed(move) || MovesEqual(hashMove,move)) continue;
-                    board.doMove(move);
-                    if (!board.wasLegal(move,in_check)) {
-                        board.undoMove(move,state);
-                        continue;
-                    }
-                    ++node->num_legal;
-                    if (!in_check && !CaptureOrPromotion(move) && GetPhase(move) >= MoveGenerator::HISTORY_PHASE) {
-                        if (node->num_legal >= lmpCount(nu_depth,true)) {
-                            // skip late quiets
-                            board.undoMove(move,state);
-                            continue;
-                        }
-                    }
-                    ASSERT(nu_depth>DEPTH_INCREMENT);
-                    score_t value = -search(-nu_beta,-nu_beta+1,node->ply+1,nu_depth-DEPTH_INCREMENT);
-                    board.undoMove(move,state);
-                    if (value >= nu_beta) {
-                        singularExtend = false;
-                        break; // hash move is not singular
-                    }
+                score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
+                score_t result = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
+                if (result < nu_beta) {
+#ifdef _TRACE
+                    indent(ply); cout << "singular extension" << endl;
+                    singularExtend = true;
+#endif
+#ifdef SEARCH_STATS
+                    ++stats->singular_extensions;
+#endif
+#ifdef MULTICUT
+                } else if (nu_beta >= node->beta) {
+                    // We have completed the singular search but the hash
+                    // move was not found to be singular. Cutoff if the
+                    // singular beta is >= the high search window
+                    // ("Multi-cut" pruning).
+                    return nu_beta;
                 }
+/*
+                else if (hashValue >= node->beta) {
+                    // Another form of pruning, used in Stockfish.
+                    // If the earch fails high, even without the
+                    // hashMove included, then cut off.
+                    result = search(node->beta-1,node->beta,node->ply+1,(depth+3)/2,0,node->excluded);
+                    if (result >= node->beta) {
+#ifdef _TRACE
+                        indent(ply); cout << "non-hash move failed high: cutoff" << endl;
+#endif
+                        return node->beta;
+                    }
+
+                }
+*/
+#else
+                }
+#endif
             }
         }
 #endif
@@ -2993,7 +3009,7 @@ score_t Search::search()
             Move move;
             move = in_check ? mg.nextEvasion(move_index) : mg.nextMove(move_index);
             if (IsNull(move)) break;
-            if (IsUsed(move)) continue;
+            if (IsUsed(move) || MovesEqual(move,node->excluded)) continue;
 #ifdef SEARCH_STATS
             ++stats.moves_searched;
 #endif
@@ -3190,7 +3206,7 @@ score_t Search::search()
     // don't insert into the hash table if we are terminating - we may
     // not have an accurate score.
  hash_insert:
-    if (!terminate) {
+    if (!terminate && IsNull(node->excluded)) {
         if (IsNull(node->best)) node->best = hashMove;
         // store the position in the hash table, if there's room
         score_t value = node->best_score;

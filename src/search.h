@@ -35,6 +35,7 @@ struct NodeInfo {
                  flags(0),
                  best(NullMove),
                  last_move(NullMove),
+                 excluded(NullMove),
                  eval(Constants::INVALID_SCORE),
                  staticEval(Constants::INVALID_SCORE),
                  pv_length(0),
@@ -54,6 +55,7 @@ struct NodeInfo {
     int flags;
     Move best;
     Move last_move;
+    Move excluded;
     score_t eval, staticEval;
     Move pv[Constants::MaxPly];
     int pv_length;
@@ -146,8 +148,8 @@ public:
     void init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
-                   int ply, int depth, int flags = 0) {
-        PUSH(alpha,beta,flags,ply,depth);
+                   int ply, int depth, int flags = 0, Move exclude = NullMove) {
+        PUSH(alpha,beta,ply,depth,flags,exclude);
         return POP(search());
     }
 
@@ -251,13 +253,14 @@ protected:
     score_t tbScoreAdjust(const Board &board,
                           score_t score, int tb_hit, score_t tb_score) const;
 
-    FORCEINLINE void PUSH(score_t alpha, score_t beta, int flags,
-                          int ply, int depth) {
+    FORCEINLINE void PUSH(score_t alpha, score_t beta,
+                          int ply, int depth, int flags, Move exclude) {
         ASSERT(ply<Constants::MaxPly);
         ++node;
         node->alpha = node->best_score = alpha;
         node->beta = beta;
         node->flags = flags;
+        node->excluded = exclude;
         node->best = NullMove;
         node->num_quiets = node->num_legal = 0;
         node->ply = ply;
