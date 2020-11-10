@@ -548,6 +548,7 @@ Move SearchController::findBestMove(
       cout << ' ' << setprecision(2) << 100.0*stats->razored/stats->reg_nodes << "% razoring" << endl;
       cout << ' ' << setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "% static null pruning" << endl;
       cout << ' ' << setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "% null cuts" << endl;
+      cout << ' ' << setprecision(2) << 100.0*stats->multicut/stats->reg_nodes << "% multicut" << endl;
       cout << "search pruning: " << endl;
       cout << ' ' << setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "% futility" << endl;
       cout << ' ' << setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "% history" << endl;
@@ -2965,7 +2966,7 @@ score_t Search::search()
                     singularExtend = true;
 #endif
 #ifdef SEARCH_STATS
-                    ++stats->singular_extensions;
+                    ++stats.singular_extensions;
 #endif
 #ifdef MULTICUT
                 } else if (nu_beta >= node->beta) {
@@ -2973,6 +2974,9 @@ score_t Search::search()
                     // move was not found to be singular. Cutoff if the
                     // singular beta is >= the high search window
                     // ("Multi-cut" pruning).
+#ifdef SEARCH_STATS
+                    ++stats.multicut;
+#endif
                     return nu_beta;
                 }
 /*

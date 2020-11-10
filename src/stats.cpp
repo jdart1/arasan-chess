@@ -56,6 +56,7 @@ Statistics::Statistics(const Statistics &s)
       pawn_extensions = s.pawn_extensions;
       singular_extensions = s.singular_extensions;
       singular_searches = s.singular_searches;
+      multicut = s.multicut;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
@@ -116,6 +117,7 @@ Statistics & Statistics::operator = (const Statistics &s)
       pawn_extensions = s.pawn_extensions;
       singular_extensions = s.singular_extensions;
       singular_searches = s.singular_searches;
+      multicut = s.multicut;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;

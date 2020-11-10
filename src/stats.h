@@ -51,6 +51,7 @@ struct Statistics
    uint64_t check_extensions, capture_extensions,
      pawn_extensions, singular_extensions;
    uint64_t singular_searches;
+   uint64_t multicut;
    uint64_t reduced;
    uint64_t lmp;
    uint64_t history_pruning;
