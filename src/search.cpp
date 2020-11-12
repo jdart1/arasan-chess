@@ -38,6 +38,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define SINGULAR_EXTENSION
 #define MULTICUT
+#define NON_SINGULAR_PRUNING
 
 static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
@@ -545,16 +546,17 @@ Move SearchController::findBestMove(
 #endif
 #ifdef SEARCH_STATS
       cout << "pre-search pruning: " << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->razored/stats->reg_nodes << "% razoring" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "% static null pruning" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "% null cuts" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->multicut/stats->reg_nodes << "% multicut" << endl;
+      cout << ' ' << stats->razored << " (" << setprecision(2) << 100.0*stats->razored/stats->reg_nodes << "%) razoring" << endl;
+      cout << ' ' << stats->static_null_pruning << " (" << setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "%) static null pruning" << endl;
+      cout << ' ' << stats->null_cuts << " (" << setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "%) null cuts" << endl;
+      cout << ' ' << stats->multicut << " (" << setprecision(2) << 100.0*stats->multicut/stats->reg_nodes << "%) multicut" << endl;
+      cout << ' ' << stats->non_singular_pruning << " (" << setprecision(2) << 100.0*stats->non_singular_pruning/stats->reg_nodes << "%) non-singular pruning" << endl;
       cout << "search pruning: " << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "% futility" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "% history" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "% lmp" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "% SEE" << endl;
-      cout << ' ' << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "% reduced" << endl;
+      cout << ' ' << stats->futility_pruning << " (" << setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "%) futility" << endl;
+      cout << ' ' << stats->history_pruning << " (" << setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "%) history" << endl;
+      cout << ' ' << stats->lmp << " (" << setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "%) lmp" << endl;
+      cout << ' ' << stats->see_pruning << " (" << setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "%) SEE" << endl;
+      cout << ' ' << stats->reduced << "( " << setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << endl;
       cout << "extensions: " <<
           stats->check_extensions << " (" << 100.0*stats->check_extensions/stats->moves_searched << "%) check, " <<
           stats->capture_extensions << " (" << 100.0*stats->capture_extensions/stats->moves_searched << "%) capture, " <<
@@ -2979,25 +2981,28 @@ score_t Search::search()
 #endif
                     return nu_beta;
                 }
-/*
+#ifdef NON_SINGULAR_PRUNING
                 else if (hashValue >= node->beta) {
                     // Another form of pruning, used in Stockfish.
                     // If the earch fails high, even without the
                     // hashMove included, then cut off.
-                    result = search(node->beta-1,node->beta,node->ply+1,(depth+3)/2,0,node->excluded);
+                    result = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,node->excluded);
                     if (result >= node->beta) {
 #ifdef _TRACE
                         indent(ply); cout << "non-hash move failed high: cutoff" << endl;
+#endif
+#ifdef SEARCH_STATS
+                        ++stats.non_singular_pruning;
 #endif
                         return node->beta;
                     }
 
                 }
-*/
 #else
                 }
 #endif
-            }
+#endif
+        }
         }
 #endif
         MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());

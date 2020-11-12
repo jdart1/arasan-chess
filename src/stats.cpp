@@ -57,6 +57,7 @@ Statistics::Statistics(const Statistics &s)
       singular_extensions = s.singular_extensions;
       singular_searches = s.singular_searches;
       multicut = s.multicut;
+      non_singular_pruning = s.non_singular_pruning;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
@@ -118,6 +119,7 @@ Statistics & Statistics::operator = (const Statistics &s)
       singular_extensions = s.singular_extensions;
       singular_searches = s.singular_searches;
       multicut = s.multicut;
+      non_singular_pruning = s.non_singular_pruning;
       reduced = s.reduced;
       lmp = s.lmp;
       history_pruning = s.history_pruning;
@@ -148,6 +150,7 @@ void Statistics::clear()
    history_pruning = lmp = see_pruning = (uint64_t)0;
    check_extensions = capture_extensions =
      pawn_extensions = singular_extensions = 0L;
+   multicut = non_singular_pruning = 0L;
 #endif
    tb_probes = tb_hits = (uint64_t)0;
    state = NormalState;
