@@ -132,6 +132,16 @@ PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
 else
 
 ifeq ("$(findstring clang,$(CC))","clang")
+CLANG := 1
+else
+# detect 'cc' aliased to 'clang'
+IS_CLANG := $(shell $(CC) -v  2>&1 >/dev/null | cat)
+ifeq ("$(findstring clang,$(IS_CLANG))","clang")
+CLANG := 1
+endif
+endif
+
+ifdef CLANG
 
 CPP     := $(CC)
 LD      := $(CC)
