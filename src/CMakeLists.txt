@@ -13,20 +13,33 @@ set (CMAKE_CXX_STANDARD 11)
 include(CheckIPOSupported)
 check_ipo_supported()
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 # options
-option(SYZYGY_TBS "SYZYGY_TBS" ON)
-option(64BIT "64BIT" ON)
-option(AVX2 "AVX2" OFF)
-option(BMI2 "BMI2" OFF)
-option(POPCNT "POPCNT" OFF)
-option(NUMA "NUMA" OFF)
+option(SYZYGY_TBS "Syzygy tablebsse support" ON)
+option(64BIT "64-bit target" ON)
+option(AVX2 "Use AVX2 instructions" OFF)
+option(BMI2 "Use BMI2 instructions" OFF)
+option(POPCNT "Use POPCNT instruction" OFF)
+option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
+option(UNIT_TESTS "unit tests run on startup" OFF)
 
 set(EXE_NAME arasanx)
 
 add_compile_definitions(SMP SMP_STATS)
 
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_compile_definitions(_DEBUG)
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+    add_compile_definitions(_MAC)
+endif()
+
 if(MSVC)
-add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS)
 endif(MSVC)
 
 if(NUMA)
@@ -200,7 +213,4 @@ set_target_properties(${EXE_NAME} tuner playchess pgnselect makebook makeeco eco
 add_custom_target(utils)
 
 add_dependencies(utils playchess pgnselect makeeco ecocoder makebook)
-
-
-
 
