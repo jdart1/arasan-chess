@@ -31,13 +31,12 @@ one for GNU make.
 
 Syzygy tablebase support is enabled by default.
 
-The Syzygy probing code is now imported as a submodule from
-jdart1/Fathom. So if building Arasan from a git respository, issue the
-following command to pull the Syzygy code into your source tree:
+Syzygy support and some of the Python scripts in the tools
+subdirectory rely on imported submodules. So if building Arasan from a
+git respository, issue the following command within your git directory
+to pull these dependencies into your your source tree:
 
 git submodule update --init --recursive
-
-in your repository directory.
 
 Arasan now requires a modern compiler with C++11 features (although
 not necessarily complete C++11 support).
@@ -48,41 +47,43 @@ In particular, there is support for big-endian architectures.
 
 # Building on Linux or Mac
 
-Gcc 4.9 or above is recommended for building Arasan (on Mac OS, use clang).
-
-There is a makefile in the src directory. In most cases, just typing
-"make" should automatically select the correct target architecture and
-OS (note: assumes target and host are the same). By default it builds
-only the chess engine. Binaries are placed in the "bin" subdirectory.
-
-To select the Intel compiler instead of gcc, define the variable CC with
-this command:
-
-export CC=icc
-
-"clang" is also supported (set CC=clang to use).
+There is a makefile in the src directory.
 
 The following targets are defined in the makefile:
 
 - default: builds just the chess engine, with no POPCNT or BMI2 support
 - popcnt: builds just the chess engine, with POPCNT support
 - bmi2: builds just the chess engine, with BMI2 support (includes POPCNT)
+- avx2: builds just the chess engine, with AVX2 + BMI2 + POPCNT
 - profiled: PGO build with no POPCNT or BMI2 support
 - popcnt-profiled: PGO build of the chess engine, with POPCNT support
 - bmi2-profiled: PGO build of the chess engine, with BMI2 support (includes POPCNT)
+- avx2-profiled: PGO build of the chess engine, with AVX2 + BMI2 + POPCNT
 - tuning: builds the parameter tuning program
 - tuning-popcnt: builds the parameter tuning program with POPCNT support
 - utils: builds utility programs including "makebook"
 - release: builds the release tarball
 - install: installs the chess engine on the system (requires root or sudo)
 
-Note: POPCNT and BMI2 builds will only work on recent x64 CPUs that support these
-instructions, and require a 64-bit compile.
+Note: POPCNT, BMI2, and AVX2 builds will only work on recent x64 CPUs that
+support these instructions, and require a 64-bit compile.
+
+ In most cases, the Makefile should automatically select the correct
+target architecture and OS (note: assumes target and host are the
+same). By default it builds only the chess engine. Binaries are placed
+in the "bin" subdirectory.
+
+If necessary, you can specify the compiler by passing the CC variable
+on the command line, and CXXFLAGS can also be used to pass additional
+flags. So for example to make an AVX2 build of Arasan using gcc-10
+with c++20 support, do:
+
+make CC=gcc-10 CXXFLAGS=-std=c++20 avx2
 
 Defining NUMA in the Makefile will build a version that has support
 for NUMA (Non-Uniform Memory Access) machines. NUMA support relies
-on the hwloc library (version 2.0 or higher. Note: the MSVC build
-does not currently work with hwloc releases past 2.0.4).
+on the hwloc library version 2.0 or higher. Note: you must have a
+compatible hwloc library in the library search path at runtime.
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64",
 "arasanx-64-popcnt", or "arasanx-64-bmi2," depending on the
@@ -119,9 +120,11 @@ The following targets are defined in the makefile:
 - default: builds just the chess engine, with no POPCNT or BMI2 support
 - popcnt: builds just the chess engine, with POPCNT support
 - bmi2: builds just the chess engine, with BMI2 support (includes POPCNT)
+- avx2: builds just the chess engine, with AVX2 + BMI2 + POPCNT
 - profiled: PGO build with no POPCNT or BMI2 support
 - popcnt-profiled: PGO build of the chess engine, with POPCNT support
 - bmi2-profiled: PGO build of the chess engine, with BMI2 support (includes POPCNT)
+- avx2-profiled: PGO build with AVX2 + BMI2 + POPCNT
 - tuning: builds the parameter tuning program
 - tuning-popcnt: builds the parameter tuning program with POPCNT support
 - utils: builds utility programs including "makebook".
@@ -160,17 +163,19 @@ so it requires the Windows SDK 7.1A to be installed.
 ## Other build methods
 
 The Windows source distribution includes Visual C++ 2019 solution
-files for the chess engine and tools and GUI in
-directories "prj" and "gui", respectively. But I use the "prj" solution
-file mostly for debugging, not for building the final release.
+files for the chess engine and tools and GUI in directories "prj" and
+"gui", respectively. But I use the "prj" solution file mostly for
+debugging, not for building the final release.
 
-Arasan can also be built using the Cygwin development tools, which simulate
-a Linux environment under Windows. Use
-the Linux source package for building with Cygwin. I do not currently recommend
-or support [MingW](http://mingw.org/).
+Arasan can also be built using the Cygwin development tools, which
+simulate a Linux environment under Windows. Use the Linux source
+package for building with Cygwin. I do not currently recommend or
+support [MingW](http://mingw.org/).
 
 # CMake
 
-There is a CMakeLists.txt file in the source directory, for building with [CMake](https://cmake.org/).
-This should be considered somewhat experimental. It does not currently support PGO.
-It does support [cross-compliation for Android](https://developer.android.com/ndk/guides/cmake#android_platform).
+There is a CMakeLists.txt file in the source directory, for building
+with [CMake](https://cmake.org/).  This should be considered somewhat
+experimental. It does not currently support PGO.  It does support
+[cross-compliation for
+Android](https://developer.android.com/ndk/guides/cmake#android_platform).
