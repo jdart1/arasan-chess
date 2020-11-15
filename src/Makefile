@@ -42,19 +42,22 @@ GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
 # set to enable compliation with Syzygy tablebase support
 SYZYGY_TBS := 1
 
-CFLAGS = -I.
+FLAGS = -I.
 ifdef NUMA
-CFLAGS := $(CFLAGS) -DNUMA -I$(HWLOC)/include
+FLAGS := $(FLAGS) -DNUMA -I$(HWLOC)/include
 endif
 ifdef SYZYGY_TBS
-CFLAGS := $(CFLAGS) -DSYZYGY_TBS
+FLAGS := $(FLAGS) -DSYZYGY_TBS
 endif
 
 # SMP flags (note: we do not support a non-SMP build anymore)
 SMPFLAGS = -DSMP -DSMP_STATS
 SMPLIB   = -lpthread
 
-POPCNT_FLAGS := -DUSE_POPCNT -msse4.1 -msse4.2 -mpopcnt
+POPCNT_FLAGS := -DUSE_POPCNT
+ifeq ("$(ARCH)","x86_64")
+POPCNT_FLAGS := -msse4.1 -msse4.2 -mpopcnt
+endif
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := $(BMI2_FLAGS) -mavx2
 
@@ -85,10 +88,10 @@ ARASAN_VERSION ?= $(shell git describe --tags --always)
 else
 ARASAN_VERSION ?= $(VERSION)
 endif
-CFLAGS := $(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
+FLAGS := $(FLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
 
 ifeq ("$(ARCH)","x86_64")
-CFLAGS := $(CFLAGS) -msse2 -msse3
+FLAGS := $(FLAGS) -msse2 -msse3
 endif
 
 LBITS := $(shell getconf LONG_BIT)
@@ -102,7 +105,7 @@ ifdef EXE
 ARASANX := $(EXE)
 else
 ifeq ($(LBITS),64)
-   CFLAGS := $(CFLAGS) -D_64BIT
+   FLAGS := $(FLAGS) -D_64BIT
 endif
 ARASANX := arasanx-$(LBITS)
 ifdef NUMA
@@ -120,7 +123,7 @@ ifeq ("$(CC)","icc")
 CPP     = icc
 LD      = icc
 AR      = xiar
-CFLAGS  := $(CFLAGS) -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
+FLAGS  := $(FLAGS) -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
 ifndef DEBUG
 OPT     = -O3 -fno-rtti -DNDEBUG
 GTB_OPT := -O3 -fno-rtti -DNDEBUG
@@ -131,17 +134,26 @@ PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
 
 else
 
-ifeq ("$(findstring clang,$(CC))","clang")
+ifneq (,$(findstring clang,$(CC)))
 CLANG := 1
 else
 # detect 'cc' aliased to 'clang'
-IS_CLANG := $(shell $(CC) -v  2>&1 >/dev/null | cat)
-ifeq ("$(findstring clang,$(IS_CLANG))","clang")
+CC_VERSION := $(shell $(CC) -v  2>&1 >/dev/null | cat)
+ifneq (,$(findstring clang,$(CC_VERSION)))
 CLANG := 1
+else
+ifneq (,$(findstring oneAPI,$(CC_VERSION)))
+# new Intel compiler, based on clang
+CLANG := 1
+endif
 endif
 endif
 
 ifdef CLANG
+
+# get up to 2 version digts
+GCCVER := $(shell $(CC) -dumpversion | perl -lane 'print $$1 if /^([0-9]+?(\.[0-9]+)).*$$/')
+GCC6 := $(shell echo '$(GCCVER) >= 6.0' | bc)
 
 CPP     := $(CC)
 LD      := $(CC)
@@ -152,7 +164,10 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-CFLAGS  := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+ifeq "$(GCC6)" "0"
+FLAGS := -std=c++11 $(FLAGS)
+endif
+FLAGS := -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifndef DEBUG
 # use LTO only if no PGO
 ifdef PGO
@@ -178,14 +193,19 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-GCCMINVERION = 4.9
+GCCMINVERSION := 4.9
 # Get 1st two digits of full GCC version
 GCCVER := $(shell expr `$(CC) -dumpfullversion | awk -F. '{printf "%s.%s\n", $$1, $$2}'`)
-GCCNEW := $(shell awk 'BEGIN{print $GCCVER >= $GCCMINVERSION}')
+GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
+GCC6 := $(shell echo '$(GCCVER) >= 6.0' | bc)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
-CFLAGS := -std=c++11 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(CFLAGS)
+FLAGS := -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
+ifeq "$(GCC6)" "0"
+# GCC not at least version 6, so c++11 support must be enabled explicitly
+FLAGS := $(FLAGS) -std=c++11
+endif
 SMPFLAGS := $(SMPFLAGS) -pthread
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold
 ifndef DEBUG
@@ -200,7 +220,7 @@ endif
 endif
 
 ifeq ("darwin","$(findstring darwin,$(OSTYPE))")
-CFLAGS := -D_MAC $(CFLAGS)
+FLAGS := -D_MAC $(FLAGS)
 LDFLAGS := $(LDFLAGS)
 LLVM_PROFDATA := xcrun $(LLVM_PROFDATA)
 else
@@ -217,7 +237,7 @@ default: dirs $(EXPORT)/$(ARASANX)
 tuning: dirs $(EXPORT)/$(TUNER)
 
 tuning-popcnt: dirs
-	@$(MAKE) TUNER=$(TUNER)-popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' tuning
+	@$(MAKE) TUNER=$(TUNER)-popcnt FLAGS='$(FLAGS) $(POPCNT_FLAGS)' tuning
 
 utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
 
@@ -251,61 +271,61 @@ install: all
 	chmod u+s $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 
 $(BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(CXXFLAGS) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(BUILD)/%.o: $(UTIL)/%.cpp
-	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(CXXFLAGS) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(CXXFLAGS) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
-	$(CPP) $(PROF_GEN) $(OPT) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(CXXFLAGS) $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 else
-	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(CFLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
+	$(CPP) $(CXXFLAGS) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(FLAGS) $(SMPFLAGS) $(DEBUG) -c -o $@ $<
 endif
 
 profiled: dirs
 	@$(MAKE) PASS=1 profile
 	@$(MAKE) PASS=1 profile-run
-ifeq ("$(findstring clang,$(CC))","clang")
+ifdef CLANG
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
 endif
 	@$(MAKE) PASS=2 profile
 
 popcnt-profiled: dirs
-	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' profile
-	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' profile-run
-ifeq ("$(findstring clang,$(CC))","clang")
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 FLAGS='$(FLAGS) $(POPCNT_FLAGS)' profile
+	@$(MAKE) PASS=1 BUILD_TYPE=popcnt PGO=1 FLAGS='$(FLAGS) $(POPCNT_FLAGS)' profile-run
+ifdef CLANG
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
 endif
-	@$(MAKE) PASS=2 BUILD_TYPE=popcnt PGO=1 CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)' profile
+	@$(MAKE) PASS=2 BUILD_TYPE=popcnt PGO=1 FLAGS='$(FLAGS) $(POPCNT_FLAGS)' profile
 
 popcnt: dirs
-	@$(MAKE) BUILD_TYPE=popcnt CFLAGS='$(CFLAGS) $(POPCNT_FLAGS)'
+	@$(MAKE) BUILD_TYPE=popcnt FLAGS='$(FLAGS) $(POPCNT_FLAGS)'
 
 bmi2: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-bmi2 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)'
+	@$(MAKE) ARASANX=$(ARASANX)-bmi2 FLAGS='$(FLAGS) $(BMI2_FLAGS)'
 
 avx2: dirs
-	@$(MAKE) ARASANX=$(ARASANX)-avx2 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)'
+	@$(MAKE) ARASANX=$(ARASANX)-avx2 FLAGS='$(FLAGS) $(AVX2_FLAGS)'
 
 bmi2-profiled: dirs
-	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' profile
-	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' profile-run
-ifeq ("$(findstring clang,$(CC))","clang")
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 FLAGS='$(FLAGS) $(BMI2_FLAGS)' profile
+	@$(MAKE) PASS=1 BUILD_TYPE=bmi2 PGO=1 FLAGS='$(FLAGS) $(BMI2_FLAGS)' profile-run
+ifdef CLANG
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
 endif
-	@$(MAKE) PASS=2 BUILD_TYPE=bmi2 PGO=1 CFLAGS='$(CFLAGS) $(BMI2_FLAGS)' profile
+	@$(MAKE) PASS=2 BUILD_TYPE=bmi2 PGO=1 FLAGS='$(FLAGS) $(BMI2_FLAGS)' profile
 
 avx2-profiled: dirs
-	@$(MAKE) PASS=1 BUILD_TYPE=avx2 PGO=1 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)' profile
-	@$(MAKE) PASS=1 BUILD_TYPE=avx2 PGO=1 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)' profile-run
-ifeq ("$(findstring clang,$(CC))","clang")
+	@$(MAKE) PASS=1 BUILD_TYPE=avx2 PGO=1 FLAGS='$(FLAGS) $(AVX2_FLAGS)' profile
+	@$(MAKE) PASS=1 BUILD_TYPE=avx2 PGO=1 FLAGS='$(FLAGS) $(AVX2_FLAGS)' profile-run
+ifdef CLANG
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
 endif
-	@$(MAKE) PASS=2 BUILD_TYPE=avx2 PGO=1 CFLAGS='$(CFLAGS) $(AVX2_FLAGS)' profile
+	@$(MAKE) PASS=2 BUILD_TYPE=avx2 PGO=1 FLAGS='$(FLAGS) $(AVX2_FLAGS)' profile
 
 TB_SOURCES=
 TB_OBJS=
@@ -315,19 +335,19 @@ ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
 TB_TUNE_OBJS := $(TB_OBJS) $(TUNE_BUILD)/syzygy.o $(TUNE_BUILD)/tbprobe.o
 TB_OBJS := $(TB_OBJS) $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
-STB_FLAGS := -x c++ $(CFLAGS)
+STB_FLAGS := -x c++ $(FLAGS)
 $(BUILD)/%.o: $(STB)/%.c
-	$(CC) $(STB_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
+	$(CC) $(CXXFLAGS) $(STB_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
 
 $(TUNE_BUILD)/%.o: $(STB)/%.c
-	$(CC) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
+	$(CC) $(CXXFLAGS) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 endif
 
 ifeq ("$(findstring UNIT_TESTS,$(DEBUG))","UNIT_TESTS")
 UNIT_TEST_SRC:=unit.cpp
 endif
-ifeq ("$(findstring UNIT_TESTS,$(CFLAGS))","UNIT_TESTS")
+ifeq ("$(findstring UNIT_TESTS,$(CXXFLAGS))","UNIT_TESTS")
 UNIT_TEST_SRC:=unit.cpp
 endif
 
@@ -418,22 +438,22 @@ PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_O
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/ecocoder:  $(ECOCODER_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(ECOCODER_OBJS) $(DEBUG) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(ECOCODER_OBJS) $(DEBUG) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/$(TUNER):  $(TUNER_OBJS)
-	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
@@ -452,7 +472,7 @@ $(EXPORT)/$(ARASANX):  $(ARASANX_PROFILE_OBJS)
 else
 # non-PGO build
 $(EXPORT)/$(ARASANX):  $(ARASANX_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(ARASANX_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX) -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(ARASANX_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX) -lstdc++ $(LIBS) $(SMPLIB)
 endif
 endif
 

@@ -4,13 +4,16 @@
 
 #include "types.h"
 #include <iostream>
+#ifdef __cpp_lib_bitops
+#include <bit>
+#endif
 #if defined (USE_INTRINSICS) && defined(_WIN32) && !defined(__MINGW32__)
 #include <intrin.h>
 #if defined(USE_POPCNT) && (_MSC_VER >= 1500) && defined(_64BIT)
 #include <nmmintrin.h>
 #endif
-#endif 
-#if defined(USE_ASM) && defined(__x86_64__) 
+#endif
+#if defined(USE_ASM) && defined(__x86_64__)
 #include <string.h>
 // Inline ASM
 static FORCEINLINE unsigned int _bitScanForwardAsm(const uint64_t bits)
@@ -44,12 +47,12 @@ class Bitboard
 #define GETBIT64(x) (uint64_t)(((int64_t)x)&-((int64_t)x))
 #define GETBIT32(x) (uint32_t)(((int32_t)x)&-((int32_t)x))
 
-    public:	
+    public:
 
        struct ints
        {
 #if _BYTE_ORDER == _BIG_ENDIAN
-          uint32_t hival,loval; 
+          uint32_t hival,loval;
 #else
           uint32_t loval,hival;
 #endif
@@ -82,7 +85,7 @@ class Bitboard
     : data(0)
     {
     }
-    
+
     Bitboard(uint64_t n)
     : data(n)
     {
@@ -106,21 +109,22 @@ class Bitboard
     {
        return ((conv*)&data)->val4.b1;
     }
-    
+
     uint32_t FORCEINLINE hivalue() const
     {
       return ((conv*)(this))->val2.hival;
     }
-    
+
     uint32_t FORCEINLINE lovalue() const
     {
       return ((conv*)(this))->val2.loval;
     }
-    
+
     void clear()
     {
        data = 0;
     }
+
     void set(int n)
     {
 #if defined(_WIN64) && defined(_MSC_VER) && defined(USE_INTRINSICS)
@@ -131,6 +135,7 @@ class Bitboard
        data |= mask[n];
 #endif
     }
+
     void FORCEINLINE clear(int n)
     {
 #if defined(_WIN64) && defined(_MSC_VER) && defined(USE_INTRINSICS)
@@ -141,10 +146,12 @@ class Bitboard
        data &= ~mask[n];
 #endif
     }
+
     void setClear(const Bitboard &b)
     {
         data ^= b.data;
     }
+
     int FORCEINLINE isSet(int n) const
     {
 #if defined(_WIN64) & defined(USE_INTRINSICS)
@@ -155,35 +162,44 @@ class Bitboard
         return ((data & mask[n]) != (uint64_t)0);
 #endif
     }
+
     int FORCEINLINE isClear()const {
         return (data == (uint64_t)0);
     }
+
     Bitboard &operator = (const Bitboard &b) = default;
 
     Bitboard operator & (const Bitboard &src) const {
       return Bitboard(data & src.data);
     }
+
     Bitboard operator & (uint64_t src) const {
       return Bitboard(data & src);
     }
+
     const Bitboard & operator &= (const Bitboard &src) {
       data &= src.data;
       return *this;
     }
+
     const Bitboard & operator &= (uint64_t src) {
       data &= src;
       return *this;
     }
+
     Bitboard operator | (const Bitboard &src) const {
       return Bitboard(data | src.data);
     }
+
     Bitboard operator | (uint64_t src) const {
       return Bitboard(data | src);
     }
+
     const Bitboard & operator |= (const Bitboard &src) {
       data |= src.data;
       return *this;
     }
+
     const Bitboard & operator |= (uint64_t src) {
       data |= src;
       return *this;
@@ -193,9 +209,9 @@ class Bitboard
         data = data >> n;
     }
 
-    static inline Bitboard shr(const Bitboard &src, int n) 
+    static inline Bitboard shr(const Bitboard &src, int n)
     {
-        return Bitboard(src.data >> n);    
+        return Bitboard(src.data >> n);
     }
 
     void shr8()
@@ -217,7 +233,7 @@ class Bitboard
 
     void shl(int n)
     {
-        data = data << n;    
+        data = data << n;
     }
 
     void shl8()
@@ -231,7 +247,7 @@ class Bitboard
         ((conv*)&data)->val4.b5 = b;
 #endif
     }
-    
+
     int operator == (const Bitboard &b) const
     {
        return b.data == data;
@@ -245,6 +261,9 @@ class Bitboard
     // return the number of bits set
     FORCEINLINE unsigned int bitCount() const
     {
+#ifdef __cpp_lib_bitops
+        return std::popcount<uint64_t>(data);
+#endif
 #if defined(__INTEL_COMPILER) && defined(USE_INTRINSICS)
 #ifdef _64BIT
 #ifdef USE_POPCNT
@@ -256,7 +275,7 @@ class Bitboard
 #else
       return _popcnt32(lovalue()) + _popcnt32(hivalue());
 #endif
-#elif defined(_MSC_VER) && _MSC_VER >= 1500 && defined(USE_INTRINSICS) 
+#elif defined(_MSC_VER) && _MSC_VER >= 1500 && defined(USE_INTRINSICS)
 #ifdef _64BIT
 #ifdef USE_POPCNT
       return (int)_mm_popcnt_u64(data);
@@ -280,7 +299,7 @@ class Bitboard
       return genericPopcnt(data);
 #endif
     }
-    
+
     // optimized bit count for low number of bits set
     FORCEINLINE unsigned int bitCountOpt() const {
 #ifdef USE_POPCNT
@@ -291,27 +310,35 @@ class Bitboard
         for (count=0; tmp; count++)
            tmp &= tmp-1;
         return count;
-#endif        
+#endif
     }
 
     FORCEINLINE unsigned int singleBitSet() const {
+#ifdef __cpp_lib_bitops
+        return (unsigned int)std::has_single_bit<uint64_t>(data);
+#else
 #ifdef USE_POPCNT
        return bitCount() == 1;
 #else
        return data != (uint64_t)0 && ((data & (data-1)) == (uint64_t)0);
 #endif
+#endif
     }
 
     FORCEINLINE Square firstOne() const {
+#ifdef __cpp_lib_bitops
+      int zeros = std::countr_zero<uint64_t>(data);
+      return zeros==64 ? InvalidSquare : zeros;
+#else
 #ifdef _64BIT
-#if defined(USE_ASM) && defined(__x86_64__) 
+#if defined(USE_ASM) && defined(__x86_64__)
       if (data==0) return InvalidSquare;
       return _bitScanForwardAsm(data);
 #elif defined(_WIN64) && defined(_MSC_VER) && defined(USE_INTRINSICS)
       DWORD index;
       if (_BitScanForward64(&index,data))
         return (Square)index;
-      else 
+      else
         return InvalidSquare;
 #elif defined(USE_INTRINSICS) && defined(__INTEL_COMPILER)
       if (lovalue()) {
@@ -320,7 +347,7 @@ class Bitboard
          return _bit_scan_forward(hivalue())+32;
       } else {
          return InvalidSquare;
-      }  
+      }
 #elif defined(USE_INTRINSICS) && defined(__GNUC__)
       int tmp = __builtin_ffsll(data);
       if (tmp == 0) return InvalidSquare;
@@ -346,7 +373,7 @@ class Bitboard
          return _bit_scan_forward(hivalue())+32;
       } else {
          return InvalidSquare;
-      }  
+      }
 #elif defined(USE_INTRINSICS) && defined(__GNUC__)
       int tmp = __builtin_ffs(lovalue());
       if (tmp) return tmp-1;
@@ -363,9 +390,14 @@ class Bitboard
         return MagicTable32[(GETBIT32(hivalue())*MAGIC32)>>27]+32;
 #endif
 #endif
+#endif
     }
-    
+
     FORCEINLINE Square lastOne() const {
+#ifdef __cpp_lib_bitops
+      int zeros = countl_zero<uint64_t>(data);
+      return zeros==64 ? InvalidSquare : 63-zeros;
+#else
 #ifdef _64BIT
 #if defined(USE_ASM) && defined(__x86_64__)
       if (data==0) return InvalidSquare;
@@ -374,7 +406,7 @@ class Bitboard
       DWORD index;
       if (_BitScanReverse64(&index,data))
         return (Square)index;
-      else 
+      else
         return InvalidSquare;
 #elif defined(USE_INTRINSICS) && defined(__INTEL_COMPILER)
       if (hivalue()) {
@@ -383,7 +415,7 @@ class Bitboard
          return _bit_scan_reverse(lovalue());
       } else {
          return InvalidSquare;
-      }  
+      }
 #elif defined(USE_INTRINSICS) && defined(__GNUC__)
       if (data==0) return InvalidSquare;
       else return 63-__builtin_clzll(data);
@@ -422,7 +454,7 @@ class Bitboard
          return _bit_scan_reverse(lovalue());
       } else {
          return InvalidSquare;
-      }  
+      }
 #elif defined(USE_INTRINSICS) && defined(__GNUC__)
       if (hivalue()) return 63-__builtin_clz(hivalue());
       else if (lovalue()) return 31-__builtin_clz(lovalue());
@@ -447,112 +479,23 @@ class Bitboard
       return bias + msbTable[(int)x];
 #endif
 #endif
+#endif
     }
-    
+
 
     FORCEINLINE int iterate(Square &sq) {
-#ifdef _64BIT
-#if defined(USE_ASM) && defined(__x86_64__)
-      if (data==(uint64_t)0) return 0;
-      int tmp = _bitScanForwardAsm(data);
-      clear(tmp);
-      sq = tmp;
-#elif defined(USE_INTRINSICS) && defined(_MSC_VER)
-      if (!_BitScanForward64((DWORD*)&sq,data)) {
-         return 0;
-      }
-      else {
-         _bittestandreset64((LONG64*)&data,(DWORD)sq);
-         return 1;
-      }
-#elif defined(USE_INTRINSICS) && defined(__INTEL_COMPILER)
-      int tmp;
-      if (!lovalue()) {
-         tmp = _bit_scan_forward(lovalue());
-         clear(tmp);
-         sq = tmp;
-      else if (!hivalue()) {
-         tmp = _bit_scan_forward(hivalue())+32;
-         clear(tmp);
-         sq = tmp;
-      } else {
-         return 0;
-      }  
-#elif defined(USE_INTRINSICS) && defined(__GNUC__)
-      int first = __builtin_ffsll(data);
-      if (first == 0) return 0;
-      sq = first-1;
-      clear(sq);
-#else
-      // generic 64-bit code
-      if (data == 0) return 0;
-      uint64_t tmp = (uint64_t)GETBIT64(data);
-      sq = MagicTable64[(tmp*MAGIC64)>>58];
-      // clear bit we will return
-      data &= ~tmp;
-#endif
-#else // 32-bit code
-#if defined(USE_INTRINSICS) && defined(_MSC_VER)
-      unsigned long idx;
-      unsigned int* pbb = (unsigned int*)&data;
-      if (_BitScanForward(&idx, *pbb )) {
-         *pbb = *pbb & (*pbb - 1);
-         sq =(Square)idx;
-	 return 1;
-      }
-      pbb++;
-      if (!_BitScanForward(&idx, *pbb)) return 0;
-      *pbb = *pbb & (*pbb - 1);
-      sq =(Square)idx + 32;
-#elif defined(USE_INTRINSICS) && defined(__INTEL_COMPILER)
-      int tmp;
-      if (!lovalue()) {
-         tmp = _bit_scan_forward(lovalue());
-         clear(tmp);
-         sq = tmp;
-      else if (!hivalue()) {
-         tmp = _bit_scan_forward(hivalue())+32;
-         clear(tmp);
-         sq = tmp;
-      } else {
-         return 0;
-      }  
-#elif defined(USE_INTRINSICS) && defined(__GNUC__)
-      int first = __builtin_ffs(lovalue());
-      if (first) {
-         sq = first-1;
-         clear(sq);
-      } else {
-        first = __builtin_ffs(hivalue());
-        if (first) {
-           sq = first+31;
-           clear(sq);
-        } else {
-          return 0;
+        if (!data) {
+            return 0;
         }
-      }
-#else
-      if (data == 0) return 0;
-      // use De Bruijn multiplication code from Lasse Hansen (fairly slow
-      // compared to hardware instructions)
-      uint32_t tmp;
-      if (lovalue()) {
-        tmp = GETBIT32(lovalue());
-        sq = MagicTable32[(tmp*MAGIC32)>>27];
-        ((conv*)&data)->val2.loval &= ~tmp;
-      }
-      else {
-        tmp = GETBIT32(hivalue());
-        sq = MagicTable32[(tmp*MAGIC32)>>27]+32;
-        ((conv*)&data)->val2.hival &= ~tmp;
-      }
-#endif
-#endif
-      return 1;
+        else {
+            sq = firstOne();
+            clear(sq);
+            return 1;
+        }
     }
-    
+
     static void init();
-    
+
     static void cleanup();
 
     static CACHE_ALIGN int MagicTable32[32];
@@ -560,7 +503,7 @@ class Bitboard
     static CACHE_ALIGN int MagicTable64[64];
 #endif
     static CACHE_ALIGN const uint64_t mask[64];
-    
+
     uint64_t data;
 
     private:
@@ -577,7 +520,7 @@ class Bitboard
       x = (x & 0x5555555555555555ULL) + ((x >>  1) & 0x5555555555555555ULL);
       x = (x & 0x3333333333333333ULL) + ((x >>  2) & 0x3333333333333333ULL);
       x = (x & 0x0F0F0F0F0F0F0F0FULL) + ((x >>  4) & 0x0F0F0F0F0F0F0F0FULL);
-      return (((uint32_t)(x >> 32)) * 0x01010101 >> 24) + 
+      return (((uint32_t)(x >> 32)) * 0x01010101 >> 24) +
         (((uint32_t)(x      )) * 0x01010101 >> 24);
     }
 };
