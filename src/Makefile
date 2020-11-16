@@ -50,21 +50,6 @@ ifdef SYZYGY_TBS
 FLAGS := $(FLAGS) -DSYZYGY_TBS
 endif
 
-# SMP flags (note: we do not support a non-SMP build anymore)
-SMPFLAGS = -DSMP -DSMP_STATS
-SMPLIB   = -lpthread
-
-POPCNT_FLAGS := -DUSE_POPCNT
-ifeq ("$(ARCH)","x86_64")
-POPCNT_FLAGS := -msse4.1 -msse4.2 -mpopcnt
-endif
-BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
-AVX2_FLAGS := $(BMI2_FLAGS) -mavx2
-
-PGO_RUN_FLAGS = -H 64M
-
-TUNE_FLAGS := -DTUNE
-
 ifdef NUMA
 NUMA_OBJS=$(BUILD)/topo.o
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
@@ -81,6 +66,21 @@ ifndef OSTYPE
 OSTYPE       := $(UNAME)
 endif
 ARCH         := $(shell uname -m)
+
+# SMP flags (note: we do not support a non-SMP build anymore)
+SMPFLAGS = -DSMP -DSMP_STATS
+SMPLIB   = -lpthread
+
+POPCNT_FLAGS := -DUSE_POPCNT
+ifeq ("$(ARCH)","x86_64")
+POPCNT_FLAGS := -msse4.1 -msse4.2 -mpopcnt
+endif
+BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
+AVX2_FLAGS := $(BMI2_FLAGS) -mavx2
+
+PGO_RUN_FLAGS = -H 64M
+
+TUNE_FLAGS := -DTUNE
 
 IN_GIT := $(shell git rev-parse --is-inside-work-tree)
 ifeq ("$(IN_GIT)","true")
