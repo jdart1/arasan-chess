@@ -2987,8 +2987,8 @@ score_t Search::search()
                 else if (hashValue >= node->beta) {
                     // Another form of pruning, used in Stockfish.
                     // If the earch fails high, even without the
-                    // hashMove included, then cut off.
-                    result = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,node->excluded);
+                    // hash move included, then cut off.
+                    result = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,hashMove);
                     if (result >= node->beta) {
 #ifdef _TRACE
                         indent(ply); cout << "non-hash move failed high: cutoff" << endl;
