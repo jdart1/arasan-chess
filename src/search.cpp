@@ -2971,7 +2971,8 @@ score_t Search::search()
                     ++stats.singular_extensions;
 #endif
 #ifdef MULTICUT
-                } else if (nu_beta >= node->beta) {
+                }
+                else if (nu_beta >= node->beta) {
                     // We have completed the singular search but the hash
                     // move was not found to be singular. Cutoff if the
                     // singular beta is >= the high search window
@@ -2980,8 +2981,9 @@ score_t Search::search()
                     ++stats.multicut;
 #endif
                     return nu_beta;
-                }
+#endif
 #ifdef NON_SINGULAR_PRUNING
+                }
                 else if (hashValue >= node->beta) {
                     // Another form of pruning, used in Stockfish.
                     // If the earch fails high, even without the
@@ -2997,12 +2999,9 @@ score_t Search::search()
                         return node->beta;
                     }
 
-                }
-#else
-                }
 #endif
-#endif
-        }
+                }
+            }
         }
 #endif
         MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
