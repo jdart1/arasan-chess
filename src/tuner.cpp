@@ -303,7 +303,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
       else if (stats.state == Stalemate) {
           return 0;
       }
-      else if (Scoring::materialDraw(board) || Scoring::theoreticalDraw(board)) {
+      else if (board.materialDraw() || Scoring::theoreticalDraw(board)) {
           return 0;
       }
       return 1;
@@ -371,9 +371,9 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
          Bitboard atcks = board.calcAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove());
          // If king can be captured, position is illegal
          if (!atcks.isClear()) continue;
-         if (isQuiet(board)) output << buf << endl;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
+             if (validate && !isQuiet(pvBoard)) output << board << "  /  " << pvBoard << endl;
              double func_value = computeErrorTexel(score, result, board.sideToMove());
              pdata.target += func_value;
              stringstream fen;
