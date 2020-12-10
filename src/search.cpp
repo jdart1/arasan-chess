@@ -2302,7 +2302,7 @@ int Search::prune(const Board &board,
                 FUTILITY_HISTORY_THRESHOLD[improving]){
                 // Threshold was formerly increased with the move index
                 // but this tests worse now.
-                score_t threshold = node->beta - futilityMargin(pruneDepth);
+                score_t threshold = node->alpha - futilityMargin(pruneDepth);
                 if (node->eval == Constants::INVALID_SCORE) {
                     node->eval = node->staticEval = scoring.evalu8(board);
                 }
