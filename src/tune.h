@@ -1,4 +1,4 @@
-// Copyright 2016-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2016-2020 by Jon Dart. All Rights Reserved.
 
 #ifndef _TUNE_H
 #define _TUNE_H
@@ -49,9 +49,6 @@ class Tune : public vector<TuneParam> {
   }
 
   enum {
-    KN_VS_PAWN_ADJUST0,
-    KN_VS_PAWN_ADJUST1,
-    KN_VS_PAWN_ADJUST2,
     KING_ATTACK_SCALE_MAX,
     KING_ATTACK_SCALE_INFLECT,
     KING_ATTACK_SCALE_FACTOR,
@@ -71,21 +68,15 @@ class Tune : public vector<TuneParam> {
     KING_DISTANCE_MULT,
     PIN_MULTIPLIER_MID,
     PIN_MULTIPLIER_END,
-    MINOR_FOR_PAWNS_MIDGAME,
-    MINOR_FOR_PAWNS_ENDGAME,
+    OPP_COLORED_BISHOPS_SCALE,
+    SAME_COLORED_BISHOPS_SCALE,
+    SINGLE_MINOR_NO_PAWNS,
     RB_ADJUST_MIDGAME,
     RB_ADJUST_ENDGAME,
     RBN_ADJUST_MIDGAME,
     RBN_ADJUST_ENDGAME,
-    QR_ADJUST_MIDGAME,
-    QR_ADJUST_ENDGAME,
-    Q_VS_3MINORS_MIDGAME,
-    Q_VS_3MINORS_ENDGAME,
-    KRMINOR_VS_R_NO_PAWNS,
-    KQMINOR_VS_Q_NO_PAWNS,
-    TRADE_DOWN1,
-    TRADE_DOWN2,
-    TRADE_DOWN3,
+    PIECE_TRADE_DOWN,
+    PAWN_TRADE_DOWN,
     PAWN_ENDGAME_ADJUST,
     PAWN_ATTACK_FACTOR,
     MINOR_ATTACK_FACTOR,
@@ -290,7 +281,7 @@ class Tune : public vector<TuneParam> {
 
   int findParamByName(const string &name) const;
 
-  static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-KN_VS_PAWN_ADJUST0;
+  static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-KING_ATTACK_SCALE_MAX;
 
   double scale(score_t value,int index,int materialLevel) const;
 

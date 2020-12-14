@@ -373,7 +373,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
          if (!atcks.isClear()) continue;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
-             if (validate && !isQuiet(pvBoard)) output << board << "  /  " << pvBoard << endl;
+             if (!isQuiet(pvBoard)) continue;
              double func_value = computeErrorTexel(score, result, board.sideToMove());
              pdata.target += func_value;
              stringstream fen;
@@ -395,24 +395,33 @@ static inline int FileOpen(const Board &board, int file) {
 
 static void adjustMaterialScore(const Board &board, ColorType side,
                                 vector<double> &grads, double inc) {
+    const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
-    const Material &oppmat = board.getMaterial(OppositeColor(side));
+    const Material &oppmat = board.getMaterial(oside);
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const score_t pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
     const int mLevel = oppmat.materialLevel();
-
     const uint32_t pieces = ourmat.pieceBits();
-    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
-        // Bishop endgame: drawish
+    score_t mdiff = ourmat.value() - oppmat.value();
+    if (pawnDiff > 0 && ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB &&
+        !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
+        !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
+        // Bishop endgame
+        if ((Board::white_squares && board.bishop_bits[White]) !=
+            (Board::white_squares && board.bishop_bits[Black])) {
+          grads[Tune::OPP_COLORED_BISHOPS_SCALE] -= inc*mdiff/64;
+        } else {
+          grads[Tune::SAME_COLORED_BISHOPS_SCALE] -= inc*mdiff/64;
+        }
         return;
     }
-
-    if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
+    if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB) &&
+        !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
+        !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
         // Knight or Bishop vs pawns
         if (ourmat.pawnCount() == 0) {
-            // no mating material. We can't be better but if
-            // opponent has 1-2 pawns we are not so bad
-            int index = std::min<int>(2,oppmat.pawnCount());
-            grads[Tune::KN_VS_PAWN_ADJUST0+index] += inc;
+            // no mating material.
+            grads[Tune::SINGLE_MINOR_NO_PAWNS] += inc;
             return;
         } else if (oppmat.pawnCount() == 0) {
             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
@@ -426,73 +435,29 @@ static void adjustMaterialScore(const Board &board, ColorType side,
             }
         }
     }
-    switch(ourmat.majorCount() - oppmat.majorCount()) {
-    case 0: {
-        if (ourmat.queenCount() == oppmat.queenCount() &&
-            ourmat.minorCount() == oppmat.minorCount()+1) {
-            if (!ourmat.hasPawns()) {
-                if (oppmat.pieceBits() == Material::KR) {
-                    grads[Tune::KRMINOR_VS_R_NO_PAWNS] += inc;
-                    return;
-                }
-                else if ((ourmat.pieceBits() == Material::KQN ||
-                          ourmat.pieceBits() == Material::KQB) &&
-                         oppmat.pieceBits() == Material::KQ) {
-                    // Q + minor vs Q is a draw, generally
-                    grads[Tune::KQMINOR_VS_Q_NO_PAWNS] += inc;
-                    return;
-                }
-            } else if (oppmat.pawnCount() > ourmat.pawnCount()) {
-                // Knight or Bishop traded for pawns. Bonus for piece
-                grads[Tune::MINOR_FOR_PAWNS_MIDGAME] += tune_params.scale(inc,Tune::MINOR_FOR_PAWNS_MIDGAME,mLevel);
-                grads[Tune::MINOR_FOR_PAWNS_ENDGAME] += tune_params.scale(inc,Tune::MINOR_FOR_PAWNS_ENDGAME,mLevel);
-
-            }
+    const int m = oppmat.materialLevel();
+    double mid_scale = m/32.0;
+    double end_scale = (32-m)/32.0;
+    if (ourmat.majorCount() - oppmat.majorCount() == 1 &&
+        ourmat.rookCount() == oppmat.rookCount()+1) {
+        if (ourmat.minorCount() == oppmat.minorCount() - 1) {
+            // Rook vs. minor
+            grads[Tune::RB_ADJUST_MIDGAME] += tune_params.scale(inc*mid_scale,Tune::RB_ADJUST_MIDGAME,mLevel);
+            grads[Tune::RB_ADJUST_ENDGAME] += tune_params.scale(inc*end_scale,Tune::RB_ADJUST_ENDGAME,mLevel);
         }
-        if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
-             ourmat.rookCount() == oppmat.rookCount() - 2) {
-            // Queen vs. Rooks
-            // Queen is better with minors on board (per Kaufman)
-            grads[Tune::QR_ADJUST_MIDGAME] += tune_params.scale(inc,Tune::QR_ADJUST_MIDGAME,mLevel);
-            grads[Tune::QR_ADJUST_ENDGAME] += tune_params.scale(inc,Tune::QR_ADJUST_ENDGAME,mLevel);
+        else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
+            // bad trade - Rook for two minors, but not as bad w. fewer pieces
+            grads[Tune::RBN_ADJUST_MIDGAME] += tune_params.scale(inc*mid_scale,Tune::RBN_ADJUST_MIDGAME,mLevel);
+            grads[Tune::RBN_ADJUST_ENDGAME] += tune_params.scale(inc*end_scale,Tune::RBN_ADJUST_ENDGAME,mLevel);
         }
-        break;
     }
-    case 1: {
-        if (ourmat.rookCount() == oppmat.rookCount()+1) {
-            if (ourmat.minorCount() == oppmat.minorCount() - 1) {
-                // Rook vs. minor
-                // not as bad w. fewer pieces
-                grads[Tune::RB_ADJUST_MIDGAME] += tune_params.scale(inc,Tune::RB_ADJUST_MIDGAME,mLevel);
-                grads[Tune::RB_ADJUST_ENDGAME] += tune_params.scale(inc,Tune::RB_ADJUST_ENDGAME,mLevel);
-
-            }
-            else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
-                // bad trade - Rook for two minors, but not as bad w. fewer pieces
-                grads[Tune::RBN_ADJUST_MIDGAME] += tune_params.scale(inc,Tune::RBN_ADJUST_MIDGAME,mLevel);
-                grads[Tune::RBN_ADJUST_ENDGAME] += tune_params.scale(inc,Tune::RBN_ADJUST_ENDGAME,mLevel);
-            }
+    if (oppmat.materialLevel() < 16) {
+        const score_t grad = inc*end_scale;
+        if (ourmat.materialLevel() > oppmat.materialLevel() && pawnDiff >= 0) {
+            grads[Tune::PIECE_TRADE_DOWN] += grad;
         }
-        // Q vs RB or RN is already dealt with by piece values
-        break;
-    }
-    case 2:
-        if (ourmat.hasQueen() && ourmat.rookCount() == oppmat.rookCount() &&
-            oppmat.minorCount()-ourmat.minorCount() == 3) {
-            // Queen vs. 3 minors
-            grads[Tune::Q_VS_3MINORS_MIDGAME] += tune_params.scale(inc,Tune::Q_VS_3MINORS_MIDGAME,mLevel);
-            grads[Tune::Q_VS_3MINORS_ENDGAME] += tune_params.scale(inc,Tune::Q_VS_3MINORS_ENDGAME,mLevel);
-        }
-    default:
-        break;
-    }
-    if (ourmat.materialLevel() < 16) {
-        const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
-        if (pieceDiff > 0) {
-            // encourage trading pieces but not pawns.
-            grads[Tune::TRADE_DOWN1] += inc*(4-ourmat.materialLevel()/4);
-            grads[Tune::TRADE_DOWN2] += inc*(pieceDiff >= 5)*(4-ourmat.materialLevel()/4);
-            grads[Tune::TRADE_DOWN3] += inc*std::min(3,ourmat.pawnCount())*(4-ourmat.materialLevel()/4);
+        if (ourmat.noPawns()) {
+            grads[Tune::PAWN_TRADE_DOWN] += grad;
         }
     }
 }
