@@ -316,34 +316,28 @@ Scoring::~Scoring() {
 
 void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const 
 {
-    const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
-    const Material &oppmat = board.getMaterial(oside);
+    const Material &oppmat = board.getMaterial(OppositeColor(side));
     const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
-    const score_t mdiff = ourmat.value() - oppmat.value();
-    if (pawnDiff > 0 && ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB &&
-        !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
-        !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
-       // Bishop endgame, drawish
-       if ((Board::white_squares && board.bishop_bits[White]) !=
-            (Board::white_squares && board.bishop_bits[Black])) {
-           // opposite-colored bishops
-           scores.any -= PARAM(OPP_COLORED_BISHOPS_SCALE)*mdiff/64;
-       } else {
-           scores.any -= PARAM(SAME_COLORED_BISHOPS_SCALE)*mdiff/64;
+    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
+        // Bishop endgame: drawish
+       if (pawnDiff > 0 && std::abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4) {
+           const score_t mdiff = ourmat.value() - oppmat.value();
+#ifdef EVAL_DEBUG
+          cout << "bishop endgame adjust: " << -mdiff/4 << endl;
+#endif
+          scores.any -= mdiff/4;
        }
        return;
     }
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     const uint32_t pieces = ourmat.pieceBits();
-    if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB) &&
-        !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
-        !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
+    if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
         // Knight or Bishop vs pawns
         if (ourmat.pawnCount() == 0) {
-            // no mating material
-            scores.any += PARAM(SINGLE_MINOR_NO_PAWNS);
-            return;
+            // no mating material. We can't be better but if
+            // opponent has 1-2 pawns we are not so bad
+            scores.any += APARAM(KN_VS_PAWN_ADJUST,std::min<int>(2,oppmat.pawnCount()));
         } else if (oppmat.pawnCount() == 0) {
             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
@@ -363,22 +357,7 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
             }
         }
     }
-    score_t adj_mid = 0, adj_end = 0;
-    if (ourmat.majorCount() - oppmat.majorCount() == 1 &&
-        ourmat.rookCount() == oppmat.rookCount()+1) {
-        if (ourmat.minorCount() == oppmat.minorCount() - 1) {
-            // Rook vs. minor
-            // not as bad w. fewer pieces
-            adj_mid += PARAM(RB_ADJUST_MIDGAME);
-            adj_end += PARAM(RB_ADJUST_ENDGAME);
-        }
-        else if (ourmat.minorCount() == oppmat.minorCount() - 2) {
-            // bad trade - Rook for two minors, but not as bad w. fewer pieces
-            adj_mid += PARAM(RBN_ADJUST_MIDGAME);
-            adj_end += PARAM(RBN_ADJUST_ENDGAME);
-        }
-    }
-/*
+    switch(ourmat.majorCount() - oppmat.majorCount()) {
     case 0: {
         if (ourmat.queenCount() == oppmat.queenCount() &&
             ourmat.minorCount() == oppmat.minorCount()+1) {
@@ -444,18 +423,16 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
     default:
         break;
     }
-*/
-    if (oppmat.materialLevel() < 16) {
-        if (ourmat.materialLevel() > oppmat.materialLevel() && pawnDiff >= 0) {
-            adj_end += PARAM(PIECE_TRADE_DOWN);
-        }
-        if (ourmat.noPawns()) {
-            // Penalty for having no pawns
-            adj_end += PARAM(PAWN_TRADE_DOWN);
+    if (ourmat.materialLevel() < 16) {
+        const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
+        if (pieceDiff > 0) {
+            // encourage trading pieces but not pawns.
+            score_t adj = 0;
+            adj += PARAM(TRADE_DOWN1) + (pieceDiff >= 5)*PARAM(TRADE_DOWN2);
+            adj += std::min(3,ourmat.pawnCount())*PARAM(TRADE_DOWN3);
+            scores.any += adj*(4-ourmat.materialLevel()/4);
         }
     }
-    int m = oppmat.materialLevel();
-    scores.any += (adj_mid*m + adj_end*(32-m))/32;
 }
 
 
@@ -2439,6 +2416,8 @@ void Params::write(ostream &o, const string &comment)
    o << "//" << endl;
    o << endl << "#include \"params.h\"" << endl;
    o << endl;
+   o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
+   print_array(o,Params::KN_VS_PAWN_ADJUST,3);
    o << "const int Params::KING_COVER[6][4] = {";
    for (int i = 0; i < 6; i++) {
       print_array(o,Params::KING_COVER[i],4,0);

@@ -21,10 +21,10 @@ struct Params  {
 
     // Currently piece values are fixed
     static constexpr score_t PAWN_VALUE = (score_t)128;
-    static constexpr score_t BISHOP_VALUE = (score_t)(4.3*PAWN_VALUE);
-    static constexpr score_t KNIGHT_VALUE = (score_t)(4.3*PAWN_VALUE);
-    static constexpr score_t ROOK_VALUE = (score_t)(6.75*PAWN_VALUE);
-    static constexpr score_t QUEEN_VALUE = (score_t)(12.75*PAWN_VALUE);
+    static constexpr score_t BISHOP_VALUE = (score_t)(3.25*PAWN_VALUE);
+    static constexpr score_t KNIGHT_VALUE = (score_t)(3.25*PAWN_VALUE);
+    static constexpr score_t ROOK_VALUE = (score_t)(5.0*PAWN_VALUE);
+    static constexpr score_t QUEEN_VALUE = (score_t)(10.15*PAWN_VALUE);
     static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
 
     static FORCEINLINE score_t PieceValue( PieceType pieceType ) {
@@ -53,6 +53,17 @@ struct Params  {
         return 8*Gain(move) - PieceValue(PieceMoved(move));
     }
 
+    static PARAM_MOD KN_VS_PAWN_ADJUST[3];
+    static PARAM_MOD MINOR_FOR_PAWNS_MIDGAME;
+    static PARAM_MOD MINOR_FOR_PAWNS_ENDGAME;
+    static PARAM_MOD RB_ADJUST_MIDGAME;
+    static PARAM_MOD RB_ADJUST_ENDGAME;
+    static PARAM_MOD RBN_ADJUST_MIDGAME;
+    static PARAM_MOD RBN_ADJUST_ENDGAME;
+    static PARAM_MOD QR_ADJUST_MIDGAME;
+    static PARAM_MOD QR_ADJUST_ENDGAME;
+    static PARAM_MOD Q_VS_3MINORS_MIDGAME;
+    static PARAM_MOD Q_VS_3MINORS_ENDGAME;
     static PARAM_MOD CASTLING[6];
 #ifdef TUNE
     static PARAM_MOD KING_ATTACK_SCALE_MAX;
@@ -66,15 +77,11 @@ struct Params  {
     static PARAM_MOD KING_DISTANCE_MULT;
     static PARAM_MOD PIN_MULTIPLIER_MID;
     static PARAM_MOD PIN_MULTIPLIER_END;
-    static PARAM_MOD OPP_COLORED_BISHOPS_SCALE;
-    static PARAM_MOD SAME_COLORED_BISHOPS_SCALE;
-    static PARAM_MOD SINGLE_MINOR_NO_PAWNS;
-    static PARAM_MOD RB_ADJUST_MIDGAME;
-    static PARAM_MOD RB_ADJUST_ENDGAME;
-    static PARAM_MOD RBN_ADJUST_MIDGAME;
-    static PARAM_MOD RBN_ADJUST_ENDGAME;
-    static PARAM_MOD PIECE_TRADE_DOWN;
-    static PARAM_MOD PAWN_TRADE_DOWN;
+    static PARAM_MOD KRMINOR_VS_R_NO_PAWNS;
+    static PARAM_MOD KQMINOR_VS_Q_NO_PAWNS;
+    static PARAM_MOD TRADE_DOWN1;
+    static PARAM_MOD TRADE_DOWN2;
+    static PARAM_MOD TRADE_DOWN3;
     static PARAM_MOD PAWN_ENDGAME_ADJUST;
     static PARAM_MOD PAWN_ATTACK_FACTOR;
     static PARAM_MOD MINOR_ATTACK_FACTOR;
