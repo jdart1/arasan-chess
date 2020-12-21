@@ -569,29 +569,29 @@ static int testDrawEval() {
     const int DRAW_CASES = 13;
     struct DrawCase
     {
-        DrawCase(const string &f, int legal_draw) :
+        DrawCase(const string &f, bool legal_draw) :
             fen(f), legal(legal_draw)
             {
             }
 
         string fen;
-        int legal;
+        bool legal;
     };
 
     static const DrawCase draw_cases[DRAW_CASES] = {
-        DrawCase("k7/8/P7/B7/1K6/8/8/8 w - - 0 1",0), // KBP draw
-        DrawCase("8/8/8/1k6/b7/p7/8/K7 b - - 0 1",0), // KBP draw
-        DrawCase("8/8/8/8/7b/4k2p/8/6K1 b - - 0 1",0), // KBP draw
-        DrawCase("8/7k/4B3/8/6KP/8/8/8 b - - 0 3",0), // KBP draw
-        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",0), // KNN draw
-        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",0), // KNN draw
-        DrawCase("8/8/8/3n4/8/2kn3K/8/8 b - - 0 1",0), // KNN draw
-        DrawCase("8/8/2K4k/8/3N4/8/8/8 w - - 0 1",1), // KN draw
-        DrawCase("8/8/8/3n4/8/2k4K/8/8 b - - 0 1",1), // KN draw
-        DrawCase("8/3K4/8/8/2b5/8/3k4/8 w - - 0 1",1), // KB draw
-        DrawCase("8/8/8/8/8/2k4K/8/8 b - - 0 1",1), // KK draw
-        DrawCase("8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1",1), // KB vs KB draw (same color)
-        DrawCase("8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1",0) // KBPP draw
+        DrawCase("k7/8/P7/B7/1K6/8/8/8 w - - 0 1",false), // KBP draw
+        DrawCase("8/8/8/1k6/b7/p7/8/K7 b - - 0 1",false), // KBP draw
+        DrawCase("8/8/8/8/7b/4k2p/8/6K1 b - - 0 1",false), // KBP draw
+        DrawCase("8/7k/4B3/8/6KP/8/8/8 b - - 0 3",false), // KBP draw
+        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",false), // KNN draw
+        DrawCase("8/8/2KN3k/8/3N4/8/8/8 w - - 0 1",false), // KNN draw
+        DrawCase("8/8/8/3n4/8/2kn3K/8/8 b - - 0 1",false), // KNN draw
+        DrawCase("8/8/2K4k/8/3N4/8/8/8 w - - 0 1",true), // KN draw
+        DrawCase("8/8/8/3n4/8/2k4K/8/8 b - - 0 1",true), // KN draw
+        DrawCase("8/3K4/8/8/2b5/8/3k4/8 w - - 0 1",true), // KB draw
+        DrawCase("8/8/8/8/8/2k4K/8/8 b - - 0 1",true), // KK draw
+        DrawCase("8/8/8/2B1b3/8/2k4K/8/8 b - - 0 1",true), // KB vs KB draw (same color)
+        DrawCase("8/6k1/8/7P/3K4/8/4B2P/8 w - - 0 1",false) // KBPP draw
         // technically these are draws but not recognized yet:
         //"8/8/8/1k6/b7/p7/8/2K5 b - - 0 1", // KBP draw
         // 8/5k2/8/5B2/8/6KP/8/8 w - - 0 1 // KBP draw

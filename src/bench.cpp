@@ -38,7 +38,7 @@ static const std::array<std::string,25> epds = {
 
 Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
 {
-    int tmp_hash = options.search.hash_table_size;
+    auto tmp_hash = options.search.hash_table_size;
     int tmp_cores = options.search.ncpus;
     options.search.hash_table_size = hashSize;
     options.search.ncpus = std::min<int>(cores,Constants::MaxCPUs);
