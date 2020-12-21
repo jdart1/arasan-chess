@@ -316,20 +316,9 @@ Scoring::~Scoring() {
 
 void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const 
 {
+    const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
-    const Material &oppmat = board.getMaterial(OppositeColor(side));
-    const int pawnDiff = ourmat.pawnCount() - oppmat.pawnCount();
-    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
-        // Bishop endgame: drawish
-       if (pawnDiff > 0 && std::abs(ourmat.pawnCount() - oppmat.pawnCount()) < 4) {
-           const score_t mdiff = ourmat.value() - oppmat.value();
-#ifdef EVAL_DEBUG
-          cout << "bishop endgame adjust: " << -mdiff/4 << endl;
-#endif
-          scores.any -= mdiff/4;
-       }
-       return;
-    }
+    const Material &oppmat = board.getMaterial(oside);
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     const uint32_t pieces = ourmat.pieceBits();
     if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
@@ -356,6 +345,13 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
                 return;
             }
         }
+    }
+    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB &&
+        !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
+        !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
+        // Bishop endgame: drawish
+        scores.any -= (ourmat.value() - oppmat.value())/2;
+        return;
     }
     switch(ourmat.majorCount() - oppmat.majorCount()) {
     case 0: {

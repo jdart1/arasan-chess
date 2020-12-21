@@ -373,7 +373,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
          if (!atcks.isClear()) continue;
          score_t score;
          if (make_pv(td,board,pvBoard,score)) {
-             if (validate && !isQuiet(pvBoard)) output << board << "  /  " << pvBoard << endl;
+             if (!isQuiet(pvBoard)) continue;
              double func_value = computeErrorTexel(score, result, board.sideToMove());
              pdata.target += func_value;
              stringstream fen;
@@ -395,17 +395,13 @@ static inline int FileOpen(const Board &board, int file) {
 
 static void adjustMaterialScore(const Board &board, ColorType side,
                                 vector<double> &grads, double inc) {
+    const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
-    const Material &oppmat = board.getMaterial(OppositeColor(side));
+    const Material &oppmat = board.getMaterial(oside);
     const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
     const int mLevel = oppmat.materialLevel();
 
     const uint32_t pieces = ourmat.pieceBits();
-    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB) {
-        // Bishop endgame: drawish
-        return;
-    }
-
     if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
         // Knight or Bishop vs pawns
         if (ourmat.pawnCount() == 0) {
@@ -425,6 +421,12 @@ static void adjustMaterialScore(const Board &board, ColorType side,
                 return;
             }
         }
+    }
+    if (ourmat.pieceBits() == Material::KB && oppmat.pieceBits() == Material::KB &&
+        !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
+        !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
+        // Bishop endgame: drawish
+        return;
     }
     switch(ourmat.majorCount() - oppmat.majorCount()) {
     case 0: {
