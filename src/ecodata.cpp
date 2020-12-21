@@ -1161,7 +1161,7 @@ const struct ECOData eco_codes[] =
 {"D00", 0x86c1d4570a49d395ULL ,"BDG: Bogoljubow Defense"},
 {"D00", 0xaa24fa56ae85cf84ULL ,"BDG: Teichmann Defense"},
 {"D00", 0x499590d082633ffbULL ,"Morris Gambit"},
-{"D00", 0x6e02bcf01c254bf0ULL ,"Queen Pawn, Jobava-Prié Attack"},
+{"D00", 0x6e02bcf01c254bf0ULL ,"Queen Pawn, Jobava-Prie Attack"},
 {"D01", 0xf9b5fa8ef1727be1ULL ,"Veresov Opening"},
 {"D01", 0x5d9fcd523432ac2dULL ,"Veresov Opening"},
 {"D01", 0xeb3bf7c62781121dULL ,"Veresov Opening"},
