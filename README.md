@@ -28,7 +28,10 @@ Mac). This is the version installed with the Windows GUI.
 4. arasanx-64-bmi2 - requires a more modern x86 processor with BMI2 instructions,
 as well as POPCNT.
 
-5. arasanx-64-numa-bmi2 - BMI2 executable with support for NUMA (Non-
+5. arasanx-64-avx2 - requires x86 AVX2 instruction support in addition to BMI2
+and POPCNT.
+
+In addition it is possible to build a version with support for NUMA (Non-
 Uniform Memory Access) systems - generally these are large multi-CPU systems.
 NUMA-enabled versions of Arasan require the HWLOC library version 2.0
 or higher: see https://www.open-mpi.org/software/hwloc/v2.0/.
