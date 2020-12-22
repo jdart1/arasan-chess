@@ -234,10 +234,10 @@ int CDECL main(int argc, char **argv)
             processInt(selOptions.maxPly, "max");
          }
          else if (strcmp(argv[arg], "-min") == 0) {
-            processInt(selOptions.minPly, "-min");
+            processInt(selOptions.minPly, "min");
          }
          else if (strcmp(argv[arg], "-n") == 0) {
-            processInt(selOptions.samplesPerGame, "-s");
+            processInt(selOptions.samplesPerGame, "n");
          }
          else if (strcmp(argv[arg], "-q") == 0) {
             selOptions.quiesce++;
