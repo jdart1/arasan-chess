@@ -125,7 +125,7 @@ have the least effect and 100 causing them to have the maximum effect.
 Arasan comes with a book that was built from a
 combination of a fairly small hand-tuned book file (basic.pgn) and a fairly large
 collection of high-quality human and computer games. There are over
-800,000 moves in the book.</p>
+750,000 moves in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
 <pre>
@@ -313,26 +313,19 @@ and verify the perft test over a set of positions.</p>
 <p>The Makefile has a "tuning" target that builds a "tuner" executable
 that when run will generate the parameter file (params.cpp) containing
 evaluation weights used by the Arasan scoring module.</p>
-<p>The tuner implements a variant of the <a href="https://chessprogramming.org/Texel%27s_Tuning_Method">Texel tuning method</a>, based
-on logistic regression. 
-(Formerly Arasan also supported a tuning method called MMTO described by Hoki
-  and Kaneko (see references), but the current version no longer does).</p>
+<p>The tuner implements a variant of
+the <a href="https://chessprogramming.org/Texel%27s_Tuning_Method">Texel
+tuning method</a>, based on logistic regression.  (Formerly Arasan
+also supported a tuning method called MMTO described by Hoki and
+Kaneko (see references), but the current version no longer does).</p>
 <p>
-The input file should be a EPD
-(Extended Position Description) file with a
-diverse set of positions. These do not have to be quiescent (i.e. can
-have possible captures, checks and/or promotions). The tuner program expects each position to have two EPD tags:</p>
-<ul>
-<li>The "c1" tag should hold the Arasan castling status (see board.h) as
-two integers, the first for the White side and the second for Black. For
-example c1 "0 0" means both sides can castle either side. (This tag is
-needed because Arasan scores positions based not just on whether castling
-is possible, but whether it has occurred).
-</li>
-<li>
-The "c2" tag holds the game result as one of the following strings: "0.0" (Black win), "0.5" (draw), or "1.0" (White win).
-</li>
-</ul>
+The input file should be a EPD (Extended Position Description) file
+with a diverse set of positions. These do not have to be quiescent
+(i.e. can have possible captures, checks and/or promotions). The tuner
+program expects each position to have a "c2" EPD tag with the value
+being the game result as one of the following strings: "0.0" (Black
+win), "0.5" (draw), or "1.0" (White win).
+</p>
 <p>The "tuner" program expects an EPD file to be specified on the command
 line. For each position it will conduct a shallow-depth
   search. The principal variation (PV) from this search will end in a
@@ -382,38 +375,40 @@ also supports the AdaGrad method (see Duchi et. al.) and the ADAM method (see Ki
 <p>The Arasan source distribution contains some tools used for
 generating the labeled EPD file used for parameter tuning.</p>
 <p>One program is called "pgnselect," located in the "util" subdirectory.
-This program reads a PGN input file and produces EPD output to stdout.
-The EPD output is based on a randomly selected 
+This program reads a PGN input file and produces FEN output to stdout.
+The FEN output is based on a randomly selected 
 subset of the positions encountered during
 the game. If the -r flag is used, then for each sampled position, a
 randomly selected legal move will be made (this trick was used in the
 neural-network based program "Giraffe" (see references). It produces
 more varied and unbalanced positions that just game sampling would).
-The EPD output will contain the "c1" tag with the castling status, but
-no result tag.
 <p>Other switches supported by the "pgnselect" program:</p>
 <ul>
 <li>-max &lt;int&gt; - max ply to sample (default: 150)</li>
 <li>-min &lt;int&gt; - min ply to sample (default: 30)</li>
-<li>-d &lt;int&gt; - min ply distance between samples (default: 3)</li>
+<li>-d &lt;int&gt; - min ply distance between samples (default: 8)</li>
+<li>-n &lt;int&gt; - max samples per game (default: 2)</li>
 <li>-r - insert random moves</li>
+<li>-q - obtain and output quiescent positions using search</li>
 <li>-s &lt;int&gt; -  max ply distance between samples</li>
 </ul>
 <p>There is also a Python 3 script in the "tools" subdirectory called
-"label_positions.py". This will take as input the EPD produced from
+"label_positions.py". This will take as input the FEN produced from
 "pgnselect" and then will label each position with a game result,
 based on a game in which both sides are played by a selected chess engine at a short time control.</p>
 <p>
 The label_positions script relies on <a href="https://github.com/cutechess/cutechess" target="_blank">cutechess-cli</a> being installed and the path
 to that executable must be set in the script. Note: it has only been
 tested on Linux, although it should work on Windows, too.</p>
-<p>The script takes two command-line switches:</p>
+<p>The script takes several command-line switches:</p>
 <ul>
-<li>-e &lt;name&gt; - name of the chess program in the "engines.json" file that cutechess-cli uses.</li>
 <li>-c &lt;cores&gt; - number of concurrent matches to run</li>
+<li>-e &lt;name&gt; - name of the chess program in the "engines.json" file that cutechess-cli uses.</li>
+<li>-o &lt;options&gt; - extra options to pass to the engine.</li>
+<li>-t &lt;tc&gt; - time control for the games.</li>
 </ul>
 <p>
-Following the switches the EPD file path should be specified. Output
+Following the switches the input FEN file path should be specified. Output
 from the script goes to stdout; errors are written to stderr.
 </p>
 

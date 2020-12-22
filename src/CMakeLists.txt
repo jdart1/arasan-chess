@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project(arasan)
 
-add_compile_definitions(ARASAN_VERSION=22.1)
+add_compile_definitions(ARASAN_VERSION=22.2)
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)

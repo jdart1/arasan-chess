@@ -1,4 +1,25 @@
-Changes in Arasan 22.1
+Changes in Arasan 22.2:
+ 1) Cleanups and fixes in Makefile + CMakeLists.txt. Fix GCC version detection.
+ Better detection of clang compiler. Support Intel oneAPI complier.
+ 2) Bug fixes in protocol class for cases where ponder search terminates early.
+ 3) Make check extension always 1 ply + make it unconditional.
+ 4) Bug fixes in hashing/retrieval of mate scores.
+ 5) Changes to material imbalance scoring.
+ 6) Fix bug preventing kibitzing of search info on chess servers.
+ 7) Update to latest Fathom.
+ 8) Bug fix: in MultiPV mode: apply correct aspiration window to search.
+ 9) Support optimization for AVX2 capable processors.
+ 10) Changes to time management code.
+ 11) Stop scoring based on casting history, add instead "trapped rook" eval term
+ as in Stockfish.
+ 12) Clean up/simplify parameter tuning code.
+ 13) Fix improper hash table size computation for large hash sizes (>32G).
+ 14) Changes to pruning code including null move.
+ 15) Bug fix: Move check for forced move in search out of fail high/fail low loop.
+ 16) Simplify/modify singular extension code. Add multi-cut pruning.
+ 17) Add support for C++ 20 bit operations.
+ 
+Changes in Arasan 22.1 (July 2020):
  1) Remove potential passer scoring.
  2) Tighten validation of hash/killer moves
  3) Fix Resign threshold option (CECP mode)
