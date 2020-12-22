@@ -10,7 +10,7 @@ Changes in Arasan 22.2:
  8) Bug fix: in MultiPV mode: apply correct aspiration window to search.
  9) Support optimization for AVX2 capable processors.
  10) Changes to time management code.
- 11) Stop scoring based on casting history, add instead "trapped rook" eval term
+ 11) Stop scoring based on castling history, add instead "trapped rook" eval term
  as in Stockfish.
  12) Clean up/simplify parameter tuning code.
  13) Fix improper hash table size computation for large hash sizes (>32G).
