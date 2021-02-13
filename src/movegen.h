@@ -71,7 +71,7 @@ namespace mg {
     extern void initialSortCaptures(Move *moves, unsigned captures);
 
     extern void sortMoves(Move moves[], int scores[], unsigned n);
-};
+}
 
 class MoveGenerator
 {

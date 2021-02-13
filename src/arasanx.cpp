@@ -29,7 +29,7 @@ extern "C"
 #include <unistd.h>
 #include <sys/select.h>
 #endif
-};
+}
 using namespace std;
 
 static THREAD pollingThreadHandle;

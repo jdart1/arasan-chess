@@ -27,7 +27,7 @@ extern "C" {
 #else
 #include <pthread.h>
 #endif
-};
+}
 
 #include "stdendian.h"
 
@@ -82,7 +82,7 @@ extern "C" {
   #include <sys/types.h>
   #include <sys/times.h>
   #include <unistd.h>
-};
+}
 #endif
 
 #include <sstream>

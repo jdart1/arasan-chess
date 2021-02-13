@@ -106,6 +106,6 @@ END_PACKED_STRUCT
 #pragma pack(pop)
 #endif
 
-};
+}
 
 #endif

@@ -14,7 +14,7 @@ extern "C"
 #endif
 #include <memory.h>
 #include <stddef.h>
-};
+}
 
 Hash::Hash() {
    hashTable = nullptr;

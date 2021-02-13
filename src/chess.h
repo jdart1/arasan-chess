@@ -159,7 +159,7 @@ namespace chess {
   static const int FFILE=6;
   static const int GFILE=7;
   static const int HFILE=8;
-};
+}
 
 enum Piece {
   EmptyPiece = 0,

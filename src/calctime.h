@@ -26,6 +26,6 @@ extern void calcTimeLimit(int moves, int incr,
 extern void calcTimeLimitUCI(int movestogo, int incr,
                              int time_left, bool ponder, bool ics, Times &times);
 
-};
+}
 
 #endif

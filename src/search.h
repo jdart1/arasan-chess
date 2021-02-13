@@ -13,7 +13,7 @@
 extern "C" {
 #include <memory.h>
 #include <time.h>
-};
+}
 #include <atomic>
 #include <functional>
 #include <list>
