@@ -1422,8 +1422,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         node->swap = Constants::INVALID_SCORE;
         // calculate extensions/reductions. No pruning at ply 0.
-        int depthMod  = extend(board, node, in_check_after_move, move) +
-            reduce(board, node, move_index, 1, move);
+        int depthMod = extend(board, node, in_check_after_move, move) + reduce(board, node, move_index, 1, move);
         if (depthMod < 0) {
             if (depthMod > -DEPTH_INCREMENT) {
                 // do not reduce < 1 ply
@@ -1465,12 +1464,23 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            cout << endl;
         }
 #endif
-        while (try_score > node->best_score &&
-               (depthMod < 0 || hibound < node->beta) &&
-               !((node+1)->flags & EXACT) &&
-               !terminate) {
-           // We failed to get a cutoff and must re-search
-           // Set flag to extend search time (if not extended already)
+        if (try_score > node->best_score && depthMod < 0 && !terminate) {
+           // We failed to get a cutoff, so re-search with no reduction.
+           controller->fail_high_root = true;
+           if (depth-DEPTH_INCREMENT > 0)
+              try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
+           else
+              try_score=-quiesce(-hibound,-lobound,1,0);
+#ifdef _TRACE
+           if (mainThread()) {
+              cout << "0. ";
+              MoveImage(move,cout);
+              cout << ' ' << try_score;
+              cout << endl;
+           }
+#endif
+        }
+        if (try_score > node->best_score && hibound < node->beta && !terminate) {
            if (mainThread() && controller->time_target != INFINITE_TIME) {
               controller->fail_high_root = true;
               if (debugOut()) {
@@ -1484,25 +1494,20 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               cout << "score = " << try_score << " - no cutoff, researching .." << endl;
            }
 #endif
-           if (depthMod >= -DEPTH_INCREMENT) {
-              hibound = node->beta;
-           }
-           if (depthMod < 0) {
-              depthMod = 0;
-           }
-           if (depth+depthMod-DEPTH_INCREMENT > 0)
-              try_score=-search(-hibound,-lobound,1,depth+depthMod-DEPTH_INCREMENT);
+           hibound = node->beta;
+           if (depth-DEPTH_INCREMENT > 0)
+              try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
-#ifdef _TRACE
-           if (mainThread()) {
-              cout << "0. ";
-              MoveImage(move,cout);
-              cout << ' ' << try_score;
-              cout << endl;
-           }
-#endif
         }
+#ifdef _TRACE
+        if (mainThread()) {
+            cout << "0. ";
+            MoveImage(move,cout);
+            cout << ' ' << try_score;
+            cout << endl;
+        }
+#endif
         board.undoMove(move,save_state);
         if (wide) {
            mg.setScore(move_index,try_score);
@@ -2070,7 +2075,7 @@ score_t Search::quiesce(int ply,int depth)
 
 #endif
                    continue;
-               }
+                }
            }
 
            node->last_move = move;
@@ -2709,7 +2714,7 @@ score_t Search::search()
     // IID search, because it will only help us get a cutoff, not a move.
     // Also avoid null move near the 50-move draw limit.
     if (pruneOk &&
-        (depth >= DEPTH_INCREMENT) &&
+        (depth >= 2*DEPTH_INCREMENT) &&
         !IsNull((node-1)->last_move) &&
         board.getMaterial(board.sideToMove()).hasPieces() &&
         node->eval >= node->beta &&
@@ -3105,10 +3110,7 @@ score_t Search::search()
                 continue;
             }
             node->num_legal++;
-            while (try_score > node->best_score &&
-               (depthMod < 0 || hibound < node->beta) &&
-                !((node+1)->flags & EXACT) &&
-                !terminate) {
+            if (try_score > node->best_score && depthMod < 0 && !terminate) {
                // We failed to get a cutoff and must re-search
 #ifdef _TRACE
                if (mainThread()) {
@@ -3118,24 +3120,27 @@ score_t Search::search()
                     indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
-               if (depthMod >= -DEPTH_INCREMENT) {
-                  hibound = node->beta;
-               }
-               if (depthMod < 0) {
-                   depthMod = 0;
-               }
-               if (depth+depthMod-DEPTH_INCREMENT > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
+               // re-search with no reduction
+               if (depth+DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
+            }
+            if (try_score > node->best_score && hibound < node->beta && !terminate) {
+               // widen window
+               hibound = node->beta;
 #ifdef _TRACE
                if (mainThread()) {
-                  indent(ply);
-                  cout << ply << ". ";
+                  indent(ply); cout << ply << ". ";
                   MoveImage(move,cout);
-                  cout << ' ' << try_score << endl;
+                  cout << " score = " << try_score << " - no cutoff, researching .." << endl;
+                    indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
+               if (depth+DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
+               else
+                 try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
             board.undoMove(move,state);
 #ifdef _TRACE
