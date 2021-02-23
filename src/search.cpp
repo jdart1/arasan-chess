@@ -1422,8 +1422,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         node->swap = Constants::INVALID_SCORE;
         // calculate extensions/reductions. No pruning at ply 0.
-        int depthMod = extend(board, node, in_check_after_move, move) + reduce(board, node, move_index, 1, move) +
-                              reduce(board, node, move_index, 0, move);
+        int depthMod = extend(board, node, in_check_after_move, move) + reduce(board, node, move_index, 1, move);
         if (depthMod < 0) {
             if (depthMod > -DEPTH_INCREMENT) {
                 // do not reduce < 1 ply
