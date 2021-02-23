@@ -58,6 +58,7 @@ endif
 
 #PROF     = -pg
 #DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+DEBUG   = -g -D_DEBUG=1 
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -239,7 +240,8 @@ tuning: dirs $(EXPORT)/$(TUNER)
 tuning-popcnt: dirs
 	@$(MAKE) TUNER=$(TUNER)-popcnt FLAGS='$(FLAGS) $(POPCNT_FLAGS)' tuning
 
-utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder
+utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
+$(EXPORT)/selfplay
 
 clean: dirs
 	rm -f $(BUILD)/*.o
@@ -248,7 +250,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROF_DATA)/*.dyn $(PROF_DATA)/*.profraw $(PROF_DATA)/*.profdata
-	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder
+	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder selfplay
 
 dirs:
 	mkdir -p $(BUILD)
@@ -428,6 +430,18 @@ movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
 legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
 tester.cpp bench.cpp
 
+SELFPLAY_SOURCES = selfplay.cpp globals.cpp  \
+board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+params.cpp scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+log.cpp search.cpp searchc.cpp learn.cpp \
+movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
+legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
+tester.cpp bench.cpp
+
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
@@ -436,6 +450,7 @@ MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS)
 ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
@@ -451,6 +466,9 @@ $(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
 
 $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
+
+$(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
+	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/$(TUNER):  $(TUNER_OBJS)
 	cd $(TUNE_BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
