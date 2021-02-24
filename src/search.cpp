@@ -3123,7 +3123,7 @@ score_t Search::search()
                }
 #endif
                // re-search with no reduction
-               if (depth+DEPTH_INCREMENT > 0)
+               if (depth-DEPTH_INCREMENT > 0)
                   try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
                else
                   try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
@@ -3139,7 +3139,7 @@ score_t Search::search()
                     indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
-               if (depth+depthMod+DEPTH_INCREMENT > 0)
+               if (depth+depthMod-DEPTH_INCREMENT > 0)
                  try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
