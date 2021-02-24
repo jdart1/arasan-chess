@@ -1466,6 +1466,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #endif
         if (try_score > node->best_score && depthMod < 0 && !terminate) {
            // We failed to get a cutoff, so re-search with no reduction.
+           depthMod = 0;
            controller->fail_high_root = true;
            if (depth-DEPTH_INCREMENT > 0)
               try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
@@ -1495,8 +1496,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
 #endif
            hibound = node->beta;
-           if (depth-DEPTH_INCREMENT > 0)
-              try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
+           if (depth+depthMod-DEPTH_INCREMENT > 0)
+              try_score=-search(-hibound,-lobound,1,depth+depthMod-DEPTH_INCREMENT);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
         }
@@ -3112,6 +3113,7 @@ score_t Search::search()
             node->num_legal++;
             if (try_score > node->best_score && depthMod < 0 && !terminate) {
                // We failed to get a cutoff and must re-search
+               depthMod = 0;
 #ifdef _TRACE
                if (mainThread()) {
                   indent(ply); cout << ply << ". ";
@@ -3122,9 +3124,9 @@ score_t Search::search()
 #endif
                // re-search with no reduction
                if (depth+DEPTH_INCREMENT > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
+                  try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
                else
-                 try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
+                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
             if (try_score > node->best_score && hibound < node->beta && !terminate) {
                // widen window
@@ -3137,8 +3139,8 @@ score_t Search::search()
                     indent(ply); cout << "window = [" << node->best_score << "," << hibound << "]" << endl;
                }
 #endif
-               if (depth+DEPTH_INCREMENT > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
+               if (depth+depthMod+DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
