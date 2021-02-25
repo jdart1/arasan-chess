@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 #include <random>
 #include <string>
 #include <vector>
@@ -29,6 +30,46 @@ static ECO ecoCoder;
 
 static const char *RESULT_TAG = "c1";
 
+class SelfPlayHashTable {
+
+public:
+
+  SelfPlayHashTable() : used_hashes(new HashArray()) {
+    init_hash();
+  }
+
+  virtual ~SelfPlayHashTable() {
+    delete used_hashes;
+  }
+
+  bool check_and_replace_hash(hash_t new_hash) const noexcept {
+    size_t index = new_hash & (HASH_TABLE_FOR_UNIQUENESS_SIZE - 1);
+    hash_t &h = (*used_hashes)[index];
+    std::unique_lock<std::mutex> lock(mtx);
+    if (h == new_hash) {
+      return true;
+    }
+    else {
+      h = new_hash;
+      return false;
+    }
+  }
+
+private:  
+  static constexpr size_t HASH_TABLE_FOR_UNIQUENESS_SIZE = 64*1024*1024; // entries
+
+  using HashArray = std::array<hash_t,HASH_TABLE_FOR_UNIQUENESS_SIZE>;
+
+  HashArray *used_hashes;
+
+  std::mutex mtx;
+
+  void init_hash() {
+     for (hash_t &h : *used_hashes) h = 0ULL;
+  }
+
+} sp_hash_table;
+
 LockDefine(outputLock);
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
@@ -36,7 +77,7 @@ static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 struct SelfPlayOptions 
 {
     unsigned minOutPly = 8;
-    unsigned maxOutPly = 300;
+    unsigned maxOutPly = 400;
     unsigned cores = 1;
     unsigned gameCount = 1000000000;
     unsigned depthLimit = 9;
@@ -151,20 +192,22 @@ static void selfplay(SearchController *searcher)
                 }
             }
             if (!IsNull(m)) {
-                BoardState previous_state(board.state);
-                board.doMove(m);
-                if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly) {
+              BoardState previous_state(board.state);
+              board.doMove(m);
+              if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
+                  if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly) {
                     std::stringstream s;
                     BoardIO::writeFEN(board,s,0);
                     fens.push_back(s.str());
-                }
-                if (sp_options.saveGames) {
+                  }
+                  if (sp_options.saveGames) {
                     string image;
                     Notation::image(board,m,Notation::OutputFormat::SAN,image);
                     gameMoves->add_move(board,previous_state,m,image,false);
+                  }
                 }
             } else {
-                // unexpeted null move
+                // unexpected null move
                 if (!terminated && !adjudicated) break;
             }
         }
