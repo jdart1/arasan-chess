@@ -91,6 +91,8 @@ struct SelfPlayOptions
     unsigned maxBookPly = 8;
     unsigned sampleInterval = 16;
     unsigned maxSamplePerPhase = 4;
+    bool randomize = true;
+    unsigned randomizeEvery = 40;
 } sp_options;
 
 struct ThreadData
@@ -139,10 +141,30 @@ static void saveGame(const string &result, ofstream &file)
     Unlock(outputLock);
 }
 
+static Move randomMove(const Board &board, Statistics &stats, ThreadData &td) {
+    RootMoveGenerator mg(board);
+    unsigned n = mg.moveCount();
+    if (n == 0) {
+      if (board.checkStatus() == InCheck) stats.state = Checkmate;
+      else stats.state = Stalemate;
+      return NullMove;
+    }
+    std::uniform_int_distribution<unsigned> dist(0,n-1);
+    unsigned pick = dist(td.engine);
+    Move m = NullMove;
+    int ord = 0;
+    for (unsigned i = 0; i <= pick; ++i) {
+      m = (board.checkStatus() == InCheck) ? mg.nextEvasion(ord) : mg.nextMove(ord);
+    }
+    assert(!IsNull(m));
+    return m;
+}
+
 static void selfplay(ThreadData &td)
 {
     SearchController *searcher = td.searcher;
     std::uniform_int_distribution<unsigned> dist(1,sp_options.outputPlyFrequency);
+    std::uniform_int_distribution<unsigned> rand_dist(1,sp_options.randomizeEvery);
     for (unsigned i = 0; i < sp_options.gameCount; i++) {
         if (sp_options.saveGames) {
             gameMoves->removeAll();
@@ -161,6 +183,13 @@ static void selfplay(ThreadData &td)
                 m = openingBook.pick(board);
             }
             if (IsNull(m)) {
+              if (rand_dist(td.engine) == sp_options.randomizeEvery) {
+                m = randomMove(board,stats,td);
+                // TBD: we don't associate any prior FENS with the current
+                // game result after a random move. Stockfish though does do this.
+                fens.clear();
+              }
+              else {
                 m = searcher->findBestMove(board,
                                            FixedDepth,
                                            INFINITE_TIME,
@@ -170,6 +199,7 @@ static void selfplay(ThreadData &td)
                                            false, // uci
                                            stats,
                                            TalkLevel::Silent);
+              }
             }
             scores.push_back(stats.display_value);
             if (stats.state == Resigns || stats.state == Checkmate) {
