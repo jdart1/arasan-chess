@@ -42,7 +42,7 @@ public:
     delete used_hashes;
   }
 
-  bool check_and_replace_hash(hash_t new_hash) const noexcept {
+  bool check_and_replace_hash(hash_t new_hash) {
     size_t index = new_hash & (HASH_TABLE_FOR_UNIQUENESS_SIZE - 1);
     hash_t &h = (*used_hashes)[index];
     std::unique_lock<std::mutex> lock(mtx);
@@ -55,7 +55,7 @@ public:
     }
   }
 
-private:  
+private:
   static constexpr size_t HASH_TABLE_FOR_UNIQUENESS_SIZE = 64*1024*1024; // entries
 
   using HashArray = std::array<hash_t,HASH_TABLE_FOR_UNIQUENESS_SIZE>;
@@ -74,7 +74,7 @@ LockDefine(outputLock);
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
-struct SelfPlayOptions 
+struct SelfPlayOptions
 {
     unsigned minOutPly = 8;
     unsigned maxOutPly = 400;
@@ -82,6 +82,7 @@ struct SelfPlayOptions
     unsigned gameCount = 1000000000;
     unsigned depthLimit = 9;
     bool adjudicateDraw = true;
+    unsigned outputPlyFrequency = 10; // output every 10th move
     unsigned drawAdjudicationMoves = 5;
     unsigned drawAdjudicationMinPly = 100;
     std::string posFileName = "positions.epd";
@@ -92,14 +93,15 @@ struct SelfPlayOptions
     unsigned maxSamplePerPhase = 4;
 } sp_options;
 
-struct ThreadData 
+struct ThreadData
 {
     unsigned index = 0;
     std::thread thread;
     SearchController *searcher = nullptr;
+    std::mt19937 engine;
 } threadDatas[Constants::MaxCPUs];
 
-static void saveGame(const string &result, ofstream &file) 
+static void saveGame(const string &result, ofstream &file)
 {
     std::vector<ChessIO::Header> headers;
     headers.push_back(ChessIO::Header("Event","?"));
@@ -110,7 +112,7 @@ static void saveGame(const string &result, ofstream &file)
     hostname[size] = '\0';
 #else
     gethostname(hostname,256);
-#endif    
+#endif
     if (*hostname) {
         headers.push_back(ChessIO::Header("Site",hostname));
     } else {
@@ -137,8 +139,10 @@ static void saveGame(const string &result, ofstream &file)
     Unlock(outputLock);
 }
 
-static void selfplay(SearchController *searcher) 
+static void selfplay(ThreadData &td)
 {
+    SearchController *searcher = td.searcher;
+    std::uniform_int_distribution<unsigned> dist(1,sp_options.outputPlyFrequency);
     for (unsigned i = 0; i < sp_options.gameCount; i++) {
         if (sp_options.saveGames) {
             gameMoves->removeAll();
@@ -195,7 +199,8 @@ static void selfplay(SearchController *searcher)
               BoardState previous_state(board.state);
               board.doMove(m);
               if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
-                  if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly) {
+                  if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly &&
+                      (dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
                     std::stringstream s;
                     BoardIO::writeFEN(board,s,0);
                     fens.push_back(s.str());
@@ -258,7 +263,7 @@ static void threadp(ThreadData *td)
       cerr << "out of memory, thread " << td->index << endl;
       return;
    }
-   selfplay(td->searcher);
+   selfplay(*td);
    delete td->searcher;
 }
 
@@ -274,6 +279,7 @@ static void init_threads()
    for (unsigned i = 0; i < sp_options.cores; i++) {
       threadDatas[i].index = i;
       threadDatas[i].searcher = nullptr;
+      threadDatas[i].engine.seed(getRandomSeed());
    }
 }
 
@@ -322,7 +328,7 @@ int CDECL main(int argc, char **argv)
               return -1;
           }
           sp_options.cores = std::min<int>(Constants::MaxCPUs,sp_options.cores);
-          
+
       }
       else if (strcmp(argv[arg], "-n") == 0) {
           stringstream s(argv[++arg]);
@@ -344,7 +350,7 @@ int CDECL main(int argc, char **argv)
 
    delete pos_out_file;
    delete game_out_file;
-   
+
    return 0;
 }
 
