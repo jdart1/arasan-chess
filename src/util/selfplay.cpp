@@ -72,6 +72,7 @@ private:
 } sp_hash_table;
 
 LockDefine(outputLock);
+LockDefine(bookLock);
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
@@ -101,10 +102,11 @@ struct ThreadData
     unsigned index = 0;
     std::thread thread;
     SearchController *searcher = nullptr;
+    MoveArray gameMoves;
     std::mt19937 engine;
 } threadDatas[Constants::MaxCPUs];
 
-static void saveGame(const string &result, ofstream &file)
+static void saveGame(ThreadData &td,const string &result, ofstream &file)
 {
     std::vector<ChessIO::Header> headers;
     headers.push_back(ChessIO::Header("Event","?"));
@@ -132,11 +134,11 @@ static void saveGame(const string &result, ofstream &file)
     headers.push_back(ChessIO::Header("White",s.str()));
     headers.push_back(ChessIO::Header("Black",s.str()));
     std::string opening_name, eco;
-    ecoCoder.classify(*gameMoves,eco,opening_name);
-    headers.push_back(ChessIO::Header("ECO",eco));
+    ecoCoder.classify(td.gameMoves,eco,opening_name);
     headers.push_back(ChessIO::Header("Result",result));
+    headers.push_back(ChessIO::Header("ECO",eco));
     Lock(outputLock);
-    ChessIO::store_pgn(file, *gameMoves,
+    ChessIO::store_pgn(file, td.gameMoves,
                        result,
                        headers);
     Unlock(outputLock);
@@ -168,7 +170,7 @@ static void selfplay(ThreadData &td)
     std::uniform_int_distribution<unsigned> rand_dist(1,sp_options.randomizeEvery);
     for (unsigned i = 0; i < sp_options.gameCount; i++) {
         if (sp_options.saveGames) {
-            gameMoves->removeAll();
+            td.gameMoves.removeAll();
         }
         bool adjudicated = false, terminated = false;
         Statistics stats;
@@ -181,7 +183,9 @@ static void selfplay(ThreadData &td)
             stats.clear();
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
+                Lock(bookLock);
                 m = openingBook.pick(board);
+                Unlock(bookLock);
             }
             if (IsNull(m)) {
               if (rand_dist(td.engine) == sp_options.randomizeEvery) {
@@ -234,7 +238,7 @@ static void selfplay(ThreadData &td)
               BoardState previous_state(board.state);
               board.doMove(m);
               if (sp_options.saveGames) {
-                  gameMoves->add_move(board,previous_state,m,image,false);
+                  td.gameMoves.add_move(board,previous_state,m,image,false);
               }
               if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
                   if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly &&
@@ -257,7 +261,7 @@ static void selfplay(ThreadData &td)
                 resultStr = "0-1";
             else
                 resultStr = "1/2-1/2";
-            saveGame(resultStr,*game_out_file);
+            saveGame(td,resultStr,*game_out_file);
         }
         for (const std::string &fen : fens) {
             string resultStr;
@@ -345,6 +349,7 @@ int CDECL main(int argc, char **argv)
       cerr << "Initialized tablebases" << endl;
    }
    LockInit(outputLock);
+   LockInit(bookLock);
 
    options.search.hash_table_size = 64*1024*1024;
    options.book.frequency = 10;
@@ -380,6 +385,7 @@ int CDECL main(int argc, char **argv)
    init_threads();
    launch_threads();
    LockFree(outputLock);
+   LockFree(bookLock);
 
    delete pos_out_file;
    delete game_out_file;
