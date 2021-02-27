@@ -5,6 +5,7 @@
 #include "eco.h"
 #include "chessio.h"
 #include "notation.h"
+#include "movegen.h"
 #include "search.h"
 #include <cstdio>
 #include <iostream>
@@ -87,7 +88,7 @@ struct SelfPlayOptions
     unsigned drawAdjudicationMinPly = 100;
     std::string posFileName = "positions.epd";
     std::string gameFileName = "games.pgn";
-    bool saveGames = false;
+    bool saveGames = true;
     unsigned maxBookPly = 8;
     unsigned sampleInterval = 16;
     unsigned maxSamplePerPhase = 4;
@@ -226,8 +227,15 @@ static void selfplay(ThreadData &td)
                 }
             }
             if (!IsNull(m)) {
+              string image;
+              if (sp_options.saveGames) {
+                Notation::image(board,m,Notation::OutputFormat::SAN,image);
+              }
               BoardState previous_state(board.state);
               board.doMove(m);
+              if (sp_options.saveGames) {
+                  gameMoves->add_move(board,previous_state,m,image,false);
+              }
               if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
                   if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly &&
                       (dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
@@ -235,12 +243,7 @@ static void selfplay(ThreadData &td)
                     BoardIO::writeFEN(board,s,0);
                     fens.push_back(s.str());
                   }
-                  if (sp_options.saveGames) {
-                    string image;
-                    Notation::image(board,m,Notation::OutputFormat::SAN,image);
-                    gameMoves->add_move(board,previous_state,m,image,false);
-                  }
-                }
+              }
             } else {
                 // unexpected null move
                 if (!terminated && !adjudicated) break;
