@@ -21,6 +21,8 @@ extern "C" {
 }
 #endif
 
+// Utility to generate training positions from Arasan self-play games
+
 static constexpr int THREAD_STACK_SIZE = 8*1024*1024;
 
 #ifndef _WIN32
@@ -71,6 +73,14 @@ private:
 
 } sp_hash_table;
 
+struct OutputData {
+  std::string fen;
+  score_t score;
+  unsigned ply;
+  unsigned move50Count;
+  Move move;
+};
+
 LockDefine(outputLock);
 LockDefine(bookLock);
 
@@ -78,23 +88,23 @@ static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
 struct SelfPlayOptions
 {
+    enum class OutputFormat {Epd, Bin};
     unsigned minOutPly = 8;
     unsigned maxOutPly = 400;
     unsigned cores = 1;
     unsigned gameCount = 1000000000;
     unsigned depthLimit = 9;
     bool adjudicateDraw = true;
-    unsigned outputPlyFrequency = 10; // output every 10th move
+    unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationMoves = 5;
     unsigned drawAdjudicationMinPly = 100;
     std::string posFileName = "positions.epd";
     std::string gameFileName = "games.pgn";
-    bool saveGames = true;
+    bool saveGames = false;
     unsigned maxBookPly = 8;
-    unsigned sampleInterval = 16;
-    unsigned maxSamplePerPhase = 4;
     bool randomize = true;
-    unsigned randomizeEvery = 40;
+    unsigned randomizeRange = 10;
+    OutputFormat format = OutputFormat::Bin;
 } sp_options;
 
 struct ThreadData
@@ -167,18 +177,18 @@ static void selfplay(ThreadData &td)
 {
     SearchController *searcher = td.searcher;
     std::uniform_int_distribution<unsigned> dist(1,sp_options.outputPlyFrequency);
-    std::uniform_int_distribution<unsigned> rand_dist(1,sp_options.randomizeEvery);
+    std::uniform_int_distribution<unsigned> rand_dist(1,sp_options.randomizeRange);
     for (unsigned i = 0; i < sp_options.gameCount; i++) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
         }
-        bool adjudicated = false, terminated = false;
+        bool adjudicated = false, terminated = false, didRandom = false;
         Statistics stats;
         Board board;
         std::vector<score_t> scores;
         unsigned ply = 0;
         enum class Result {WhiteWin, BlackWin, Draw} result;
-        std::vector<std::string> fens;
+        std::vector<OutputData> output;
         for (;!adjudicated && !terminated;++ply) {
             stats.clear();
             Move m = NullMove;
@@ -187,12 +197,15 @@ static void selfplay(ThreadData &td)
                 m = openingBook.pick(board);
                 Unlock(bookLock);
             }
+            score_t score = 0;
             if (IsNull(m)) {
-              if (rand_dist(td.engine) == sp_options.randomizeEvery) {
+              if (sp_options.randomize && !didRandom && ply + sp_options.maxBookPly < sp_options.randomizeRange &&
+                  rand_dist(td.engine) == sp_options.randomizeRange) {
                 m = randomMove(board,stats,td);
+                didRandom = true;
                 // TBD: we don't associate any prior FENS with the current
                 // game result after a random move. Stockfish though does do this.
-                fens.clear();
+                output.clear();
               }
               else {
                 m = searcher->findBestMove(board,
@@ -204,9 +217,10 @@ static void selfplay(ThreadData &td)
                                            false, // uci
                                            stats,
                                            TalkLevel::Silent);
+                 score = stats.display_value;
               }
             }
-            scores.push_back(stats.display_value);
+            scores.push_back(score);
             if (stats.state == Resigns || stats.state == Checkmate) {
                 result = board.sideToMove() == White ? Result::BlackWin : Result::WhiteWin;
                 terminated = true;
@@ -231,22 +245,28 @@ static void selfplay(ThreadData &td)
                 }
             }
             if (!IsNull(m)) {
-              string image;
+              std::string image;
               if (sp_options.saveGames) {
                 Notation::image(board,m,Notation::OutputFormat::SAN,image);
-              }
-              BoardState previous_state(board.state);
-              board.doMove(m);
-              if (sp_options.saveGames) {
-                  td.gameMoves.add_move(board,previous_state,m,image,false);
               }
               if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
                   if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly &&
                       (dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
                     std::stringstream s;
                     BoardIO::writeFEN(board,s,0);
-                    fens.push_back(s.str());
+                    OutputData data;
+                    data.fen = s.str();
+                    data.score = score;
+                    data.ply = ply;
+                    data.move = m;
+                    data.move50Count = board.state.moveCount;
+                    output.push_back(data);
                   }
+              }
+              BoardState previousState(board.state);
+              board.doMove(m);
+              if (sp_options.saveGames) {
+                  td.gameMoves.add_move(board,previousState,m,image,false);
               }
             } else {
                 // unexpected null move
@@ -263,7 +283,8 @@ static void selfplay(ThreadData &td)
                 resultStr = "1/2-1/2";
             saveGame(td,resultStr,*game_out_file);
         }
-        for (const std::string &fen : fens) {
+        for (const OutputData &data : output) {
+          if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
             string resultStr;
             if (result == Result::WhiteWin)
                 resultStr = "1.0";
@@ -271,7 +292,11 @@ static void selfplay(ThreadData &td)
                 resultStr = "0.0";
             else
                 resultStr = "0.5";
-            *pos_out_file << fen << ' ' << RESULT_TAG << " \"" << resultStr << "\";" << endl;
+            *pos_out_file << data.fen << ' ' << RESULT_TAG << " \"" << resultStr << "\";" << endl;
+          }
+          else {
+            // bin format : TBD
+          }
         }
     }
 }
@@ -373,6 +398,14 @@ int CDECL main(int argc, char **argv)
           s >> sp_options.gameCount;
           if (s.bad()) {
               cerr << "error in game count after -n" << endl;
+              return -1;
+          }
+      }
+      else if (strcmp(argv[arg], "-d") == 0) {
+          stringstream s(argv[++arg]);
+          s >> sp_options.depthLimit;
+          if (s.bad()) {
+              cerr << "error in depth limit after -d" << endl;
               return -1;
           }
       }
