@@ -1,29 +1,29 @@
 // Copyright 2021 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
-#include "globals.h"
-#include "eco.h"
 #include "chessio.h"
-#include "notation.h"
+#include "eco.h"
+#include "globals.h"
 #include "movegen.h"
+#include "notation.h"
 #include "search.h"
 #include <cstdio>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <mutex>
 #include <random>
 #include <string>
 #include <vector>
 #ifndef _MSC_VER
 extern "C" {
-    #include <time.h>
-    #include <unistd.h>
+#include <time.h>
+#include <unistd.h>
 }
 #endif
 
 // Utility to generate training positions from Arasan self-play games
 
-static constexpr int THREAD_STACK_SIZE = 8*1024*1024;
+static constexpr int THREAD_STACK_SIZE = 8 * 1024 * 1024;
 
 #ifndef _WIN32
 static pthread_attr_t stackSizeAttrib;
@@ -35,50 +35,46 @@ static const char *RESULT_TAG = "c1";
 
 class SelfPlayHashTable {
 
-public:
+  public:
+    SelfPlayHashTable() : used_hashes(new HashArray()) { init_hash(); }
 
-  SelfPlayHashTable() : used_hashes(new HashArray()) {
-    init_hash();
-  }
+    virtual ~SelfPlayHashTable() { delete used_hashes; }
 
-  virtual ~SelfPlayHashTable() {
-    delete used_hashes;
-  }
-
-  bool check_and_replace_hash(hash_t new_hash) {
-    size_t index = new_hash & (HASH_TABLE_FOR_UNIQUENESS_SIZE - 1);
-    hash_t &h = (*used_hashes)[index];
-    std::unique_lock<std::mutex> lock(mtx);
-    if (h == new_hash) {
-      return true;
+    bool check_and_replace_hash(hash_t new_hash) {
+        size_t index = new_hash & (HASH_TABLE_FOR_UNIQUENESS_SIZE - 1);
+        hash_t &h = (*used_hashes)[index];
+        std::unique_lock<std::mutex> lock(mtx);
+        if (h == new_hash) {
+            return true;
+        } else {
+            h = new_hash;
+            return false;
+        }
     }
-    else {
-      h = new_hash;
-      return false;
+
+  private:
+    static constexpr size_t HASH_TABLE_FOR_UNIQUENESS_SIZE =
+        64 * 1024 * 1024; // entries
+
+    using HashArray = std::array<hash_t, HASH_TABLE_FOR_UNIQUENESS_SIZE>;
+
+    HashArray *used_hashes;
+
+    std::mutex mtx;
+
+    void init_hash() {
+        for (hash_t &h : *used_hashes)
+            h = 0ULL;
     }
-  }
-
-private:
-  static constexpr size_t HASH_TABLE_FOR_UNIQUENESS_SIZE = 64*1024*1024; // entries
-
-  using HashArray = std::array<hash_t,HASH_TABLE_FOR_UNIQUENESS_SIZE>;
-
-  HashArray *used_hashes;
-
-  std::mutex mtx;
-
-  void init_hash() {
-     for (hash_t &h : *used_hashes) h = 0ULL;
-  }
 
 } sp_hash_table;
 
 struct OutputData {
-  std::string fen;
-  score_t score;
-  unsigned ply;
-  unsigned move50Count;
-  Move move;
+    std::string fen;
+    score_t score;
+    unsigned ply;
+    unsigned move50Count;
+    Move move;
 };
 
 LockDefine(outputLock);
@@ -86,9 +82,8 @@ LockDefine(bookLock);
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
-struct SelfPlayOptions
-{
-    enum class OutputFormat {Epd, Bin};
+struct SelfPlayOptions {
+    enum class OutputFormat { Epd, Bin };
     unsigned minOutPly = 8;
     unsigned maxOutPly = 400;
     unsigned cores = 1;
@@ -107,8 +102,7 @@ struct SelfPlayOptions
     OutputFormat format = OutputFormat::Bin;
 } sp_options;
 
-struct ThreadData
-{
+struct ThreadData {
     unsigned index = 0;
     std::thread thread;
     SearchController *searcher = nullptr;
@@ -116,68 +110,187 @@ struct ThreadData
     std::mt19937 engine;
 } threadDatas[Constants::MaxCPUs];
 
-static void saveGame(ThreadData &td,const string &result, ofstream &file)
-{
+static void saveGame(ThreadData &td, const string &result, ofstream &file) {
     std::vector<ChessIO::Header> headers;
-    headers.push_back(ChessIO::Header("Event","?"));
+    headers.push_back(ChessIO::Header("Event", "?"));
     char hostname[256];
 #ifdef _MSC_VER
     DWORD size = 256;
-    GetComputerName(hostname,&size);
+    GetComputerName(hostname, &size);
     hostname[size] = '\0';
 #else
-    gethostname(hostname,256);
+    gethostname(hostname, 256);
 #endif
     if (*hostname) {
-        headers.push_back(ChessIO::Header("Site",hostname));
+        headers.push_back(ChessIO::Header("Site", hostname));
     } else {
-        headers.push_back(ChessIO::Header("Site","?"));
+        headers.push_back(ChessIO::Header("Site", "?"));
     }
     char dateStr[15];
     time_t tm = time(NULL);
     struct tm *t = localtime(&tm);
-    sprintf(dateStr,"%4d.%02d.%02d",t->tm_year+1900,t->tm_mon+1,t->tm_mday);
-    headers.push_back(ChessIO::Header("Date",dateStr));
-    headers.push_back(ChessIO::Header("Round","?"));
+    sprintf(dateStr, "%4d.%02d.%02d", t->tm_year + 1900, t->tm_mon + 1,
+            t->tm_mday);
+    headers.push_back(ChessIO::Header("Date", dateStr));
+    headers.push_back(ChessIO::Header("Round", "?"));
     std::stringstream s;
     s << "Arasan " << Arasan_Version;
-    headers.push_back(ChessIO::Header("White",s.str()));
-    headers.push_back(ChessIO::Header("Black",s.str()));
+    headers.push_back(ChessIO::Header("White", s.str()));
+    headers.push_back(ChessIO::Header("Black", s.str()));
     std::string opening_name, eco;
-    ecoCoder.classify(td.gameMoves,eco,opening_name);
-    headers.push_back(ChessIO::Header("Result",result));
-    headers.push_back(ChessIO::Header("ECO",eco));
+    ecoCoder.classify(td.gameMoves, eco, opening_name);
+    headers.push_back(ChessIO::Header("Result", result));
+    headers.push_back(ChessIO::Header("ECO", eco));
     Lock(outputLock);
-    ChessIO::store_pgn(file, td.gameMoves,
-                       result,
-                       headers);
+    ChessIO::store_pgn(file, td.gameMoves, result, headers);
     Unlock(outputLock);
 }
+
+class binEncoder {
+
+  using OutputType = std::array<uint8_t,32>;
+
+  public:
+    static unsigned output(const OutputData &data, int result,
+                           OutputType &out) {
+        unsigned pos = 0;
+        out.fill(0);
+        pos = 0; // bit count
+        Board board;
+        BoardIO::readFEN(board, data.fen);
+        pos = encode_bit(out, board.sideToMove() == White, pos);
+        pos = encode_bits(out, board.kingSquare(White), 6, pos);
+        pos = encode_bits(out, board.kingSquare(Black), 6, pos);
+        // Encode board (minus Kings)
+        pos = encode_board(out, board, pos);
+        CastleType wcs = board.castleStatus(White);
+        CastleType bcs = board.castleStatus(White);
+        pos = encode_bit(
+            out, wcs == CanCastleKSide || wcs == CanCastleEitherSide, pos);
+        pos = encode_bit(
+            out, wcs == CanCastleQSide || wcs == CanCastleEitherSide, pos);
+        pos = encode_bit(
+            out, bcs == CanCastleKSide || bcs == CanCastleEitherSide, pos);
+        pos = encode_bit(
+            out, bcs == CanCastleQSide || bcs == CanCastleEitherSide, pos);
+        Square epsq = board.enPassantSq();
+        if (epsq == InvalidSquare) {
+            pos = encode_bit(out, 0, pos);
+        } else {
+            pos = encode_bit(out, 1, pos);
+            pos = encode_bits(out, epsq, 6, pos);
+        }
+        // 6 bits for Stockfish compatibility:
+        pos = encode_bits(out, data.move50Count, 6, pos);
+        pos = encode_bits(out, 2 * (data.ply / 2), 8, pos);
+        pos = encode_bits(out, (2 * (data.ply / 2)) >> 8, 8, pos);
+        // 7th bit of 50-move counter used by pytorch trainer
+        pos = encode_bit(out, data.move50Count & 0x40, pos);
+        // score. Note: Arasan scores are always from side to moves's POV
+        pos = encode_bits(out, data.score, 16, pos);
+        pos = encode_move(out, board.sideToMove(), data.move, pos);
+        pos = encode_bits(out, data.ply, 16, pos);
+        pos = encode_bits(out, result, 8, pos);
+        assert(pos % 8 == 0);
+        out[pos / 8] = 0xff;
+        return pos;
+    }
+
+  private:
+    static inline unsigned encode_bit(OutputType &out, unsigned bit,
+                                      unsigned pos) {
+        if (bit) {
+            out[pos / 8] |= (1 << (pos % 8));
+        }
+        return ++pos;
+    }
+
+    static inline unsigned encode_bits(OutputType &out, unsigned bits,
+                                       unsigned size, unsigned pos) {
+        for (unsigned i = 0; i < size; i++) {
+            pos = encode_bit(out, bits & (1 << i), pos);
+        }
+        return pos;
+    }
+
+    static unsigned encode_board(OutputType &out, const Board &b, unsigned pos) {
+        static constexpr unsigned HUFFMAN_TABLE[] = {0, 1, 3, 5, 7, 9};
+        for (unsigned rank = 0; rank < 8; ++rank) {
+            for (unsigned file = 0; file < 8; ++file) {
+                Square sq = 56 - rank * 8 + file;
+                const Piece &p = b[sq];
+                if (IsEmptyPiece(p)) {
+                    ++pos; // 1 bit
+                } else if (TypeOfPiece(p) != King) {
+                    pos =
+                        encode_bits(out, HUFFMAN_TABLE[TypeOfPiece(p)], 4, pos);
+                    pos = encode_bit(out, PieceColor(p) == Black, pos);
+                }
+            }
+        }
+        return encode_bits(out, pos, static_cast<uint16_t>(HUFFMAN_TABLE[0]), 1);
+    }
+
+    static unsigned encode_move(OutputType &out, ColorType side, const Move move, unsigned pos) {
+
+        Square from = StartSquare(move);
+        Square to = DestSquare(move);
+        uint16_t data = 0;
+        switch (TypeOfMove(move)) {
+        case KCastle:
+            to = (side == White) ? 7 : 63;
+            data |= 3 << 14;
+            break;
+        case QCastle:
+            to = (side == White) ? 0 : 56;
+            data |= 3 << 14;
+            break;
+        case Promotion:
+            data |= (PromoteTo(move) - 2) << 12;
+            data |= 1 << 14;
+            break;
+        case EnPassant:
+            data |= 2 << 14;
+            break;
+        case Normal:
+            break;
+        default:
+            break;
+        }
+        data |= to;
+        data |= (from << 6);
+        return encode_bits(out, data, 16, pos);
+    }
+};
 
 static Move randomMove(const Board &board, Statistics &stats, ThreadData &td) {
     RootMoveGenerator mg(board);
     unsigned n = mg.moveCount();
     if (n == 0) {
-      if (board.checkStatus() == InCheck) stats.state = Checkmate;
-      else stats.state = Stalemate;
-      return NullMove;
+        if (board.checkStatus() == InCheck)
+            stats.state = Checkmate;
+        else
+            stats.state = Stalemate;
+        return NullMove;
     }
-    std::uniform_int_distribution<unsigned> dist(0,n-1);
+    std::uniform_int_distribution<unsigned> dist(0, n - 1);
     unsigned pick = dist(td.engine);
     Move m = NullMove;
     int ord = 0;
     for (unsigned i = 0; i <= pick; ++i) {
-      m = (board.checkStatus() == InCheck) ? mg.nextEvasion(ord) : mg.nextMove(ord);
+        m = (board.checkStatus() == InCheck) ? mg.nextEvasion(ord)
+                                             : mg.nextMove(ord);
     }
     assert(!IsNull(m));
     return m;
 }
 
-static void selfplay(ThreadData &td)
-{
+static void selfplay(ThreadData &td) {
     SearchController *searcher = td.searcher;
-    std::uniform_int_distribution<unsigned> dist(1,sp_options.outputPlyFrequency);
-    std::uniform_int_distribution<unsigned> rand_dist(1,sp_options.randomizeRange);
+    std::uniform_int_distribution<unsigned> dist(1,
+                                                 sp_options.outputPlyFrequency);
+    std::uniform_int_distribution<unsigned> rand_dist(
+        1, sp_options.randomizeRange);
     for (unsigned i = 0; i < sp_options.gameCount; i++) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
@@ -187,9 +300,9 @@ static void selfplay(ThreadData &td)
         Board board;
         std::vector<score_t> scores;
         unsigned ply = 0;
-        enum class Result {WhiteWin, BlackWin, Draw} result;
+        enum class Result { WhiteWin, BlackWin, Draw } result;
         std::vector<OutputData> output;
-        for (;!adjudicated && !terminated;++ply) {
+        for (; !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
@@ -199,30 +312,29 @@ static void selfplay(ThreadData &td)
             }
             score_t score = 0;
             if (IsNull(m)) {
-              if (sp_options.randomize && !didRandom && ply + sp_options.maxBookPly < sp_options.randomizeRange &&
-                  rand_dist(td.engine) == sp_options.randomizeRange) {
-                m = randomMove(board,stats,td);
-                didRandom = true;
-                // TBD: we don't associate any prior FENS with the current
-                // game result after a random move. Stockfish though does do this.
-                output.clear();
-              }
-              else {
-                m = searcher->findBestMove(board,
-                                           FixedDepth,
-                                           INFINITE_TIME,
-                                           0, // extra time
-                                           sp_options.depthLimit,
-                                           false, // background
-                                           false, // uci
-                                           stats,
-                                           TalkLevel::Silent);
-                 score = stats.display_value;
-              }
+                if (sp_options.randomize && !didRandom &&
+                    ply + sp_options.maxBookPly < sp_options.randomizeRange &&
+                    rand_dist(td.engine) == sp_options.randomizeRange) {
+                    m = randomMove(board, stats, td);
+                    didRandom = true;
+                    // TBD: we don't associate any prior FENS with the current
+                    // game result after a random move. Stockfish though does do
+                    // this.
+                    output.clear();
+                } else {
+                    m = searcher->findBestMove(board, FixedDepth, INFINITE_TIME,
+                                               0, // extra time
+                                               sp_options.depthLimit,
+                                               false, // background
+                                               false, // uci
+                                               stats, TalkLevel::Silent);
+                    score = stats.display_value;
+                }
             }
             scores.push_back(score);
             if (stats.state == Resigns || stats.state == Checkmate) {
-                result = board.sideToMove() == White ? Result::BlackWin : Result::WhiteWin;
+                result = board.sideToMove() == White ? Result::BlackWin
+                                                     : Result::WhiteWin;
                 terminated = true;
             }
             if (stats.state == Draw || stats.state == Stalemate) {
@@ -232,9 +344,10 @@ static void selfplay(ThreadData &td)
             if (!terminated && sp_options.adjudicateDraw &&
                 ply >= sp_options.drawAdjudicationMinPly &&
                 scores.size() >= sp_options.drawAdjudicationMoves) {
-                unsigned count = scores.size()-1;
+                unsigned count = scores.size() - 1;
                 while (count) {
-                    if (scores[i] != 0) break;
+                    if (scores[i] != 0)
+                        break;
                     --count;
                 }
                 if (count == 0) {
@@ -245,32 +358,37 @@ static void selfplay(ThreadData &td)
                 }
             }
             if (!IsNull(m)) {
-              std::string image;
-              if (sp_options.saveGames) {
-                Notation::image(board,m,Notation::OutputFormat::SAN,image);
-              }
-              if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
-                  if (ply >= sp_options.minOutPly && ply <= sp_options.maxOutPly &&
-                      (dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
-                    std::stringstream s;
-                    BoardIO::writeFEN(board,s,0);
-                    OutputData data;
-                    data.fen = s.str();
-                    data.score = score;
-                    data.ply = ply;
-                    data.move = m;
-                    data.move50Count = board.state.moveCount;
-                    output.push_back(data);
-                  }
-              }
-              BoardState previousState(board.state);
-              board.doMove(m);
-              if (sp_options.saveGames) {
-                  td.gameMoves.add_move(board,previousState,m,image,false);
-              }
+                std::string image;
+                if (sp_options.saveGames) {
+                    Notation::image(board, m, Notation::OutputFormat::SAN,
+                                    image);
+                }
+                if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
+                    if (ply >= sp_options.minOutPly &&
+                        ply <= sp_options.maxOutPly &&
+                        (dist(td.engine) % sp_options.outputPlyFrequency) ==
+                            0) {
+                        std::stringstream s;
+                        BoardIO::writeFEN(board, s, 0);
+                        OutputData data;
+                        data.fen = s.str();
+                        data.score = score;
+                        data.ply = ply;
+                        data.move = m;
+                        data.move50Count = board.state.moveCount;
+                        output.push_back(data);
+                    }
+                }
+                BoardState previousState(board.state);
+                board.doMove(m);
+                if (sp_options.saveGames) {
+                    td.gameMoves.add_move(board, previousState, m, image,
+                                          false);
+                }
             } else {
                 // unexpected null move
-                if (!terminated && !adjudicated) break;
+                if (!terminated && !adjudicated)
+                    break;
             }
         }
         if (sp_options.saveGames) {
@@ -281,148 +399,144 @@ static void selfplay(ThreadData &td)
                 resultStr = "0-1";
             else
                 resultStr = "1/2-1/2";
-            saveGame(td,resultStr,*game_out_file);
+            saveGame(td, resultStr, *game_out_file);
         }
         for (const OutputData &data : output) {
-          if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
-            string resultStr;
-            if (result == Result::WhiteWin)
-                resultStr = "1.0";
-            else if (result == Result::BlackWin)
-                resultStr = "0.0";
-            else
-                resultStr = "0.5";
-            *pos_out_file << data.fen << ' ' << RESULT_TAG << " \"" << resultStr << "\";" << endl;
-          }
-          else {
-            // bin format : TBD
-          }
+            if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
+                string resultStr;
+                if (result == Result::WhiteWin)
+                    resultStr = "1.0";
+                else if (result == Result::BlackWin)
+                    resultStr = "0.0";
+                else
+                    resultStr = "0.5";
+                *pos_out_file << data.fen << ' ' << RESULT_TAG << " \""
+                              << resultStr << "\";" << endl;
+            } else {
+                // bin format : TBD
+            }
         }
     }
 }
 
-static void threadp(ThreadData *td)
-{
-   // set stack size for Linux/Mac
+static void threadp(ThreadData *td) {
+    // set stack size for Linux/Mac
 #ifdef _POSIX_VERSION
-   size_t stackSize;
-   if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
+    size_t stackSize;
+    if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
         perror("pthread_attr_getstacksize");
         return;
-   }
-   if (stackSize < THREAD_STACK_SIZE) {
-      if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
-         perror("error setting thread stack size");
-         return;
-      }
-   }
+    }
+    if (stackSize < THREAD_STACK_SIZE) {
+        if (pthread_attr_setstacksize(&stackSizeAttrib, THREAD_STACK_SIZE)) {
+            perror("error setting thread stack size");
+            return;
+        }
+    }
 #endif
 
-   // allocate controller in the thread
-   try {
-      td->searcher = new SearchController();
-   } catch(std::bad_alloc) {
-      cerr << "out of memory, thread " << td->index << endl;
-      return;
-   }
-   selfplay(*td);
-   delete td->searcher;
+    // allocate controller in the thread
+    try {
+        td->searcher = new SearchController();
+    } catch (std::bad_alloc) {
+        cerr << "out of memory, thread " << td->index << endl;
+        return;
+    }
+    selfplay(*td);
+    delete td->searcher;
 }
 
-static void init_threads()
-{
-   // prepare threads
+static void init_threads() {
+    // prepare threads
 #ifdef _POSIX_VERSION
-   if (pthread_attr_init (&stackSizeAttrib)) {
-      perror("pthread_attr_init");
-      return;
-   }
+    if (pthread_attr_init(&stackSizeAttrib)) {
+        perror("pthread_attr_init");
+        return;
+    }
 #endif
-   for (unsigned i = 0; i < sp_options.cores; i++) {
-      threadDatas[i].index = i;
-      threadDatas[i].searcher = nullptr;
-      threadDatas[i].engine.seed(getRandomSeed());
-   }
+    for (unsigned i = 0; i < sp_options.cores; i++) {
+        threadDatas[i].index = i;
+        threadDatas[i].searcher = nullptr;
+        threadDatas[i].engine.seed(getRandomSeed());
+    }
 }
 
-static void launch_threads()
-{
-   for (unsigned i = 0; i < sp_options.cores; i++) {
-      threadDatas[i].index = i;
-      threadDatas[i].thread = std::thread(threadp,&threadDatas[i]);
-   }
-   // wait for all searchers done
-   for (unsigned i = 0; i < sp_options.cores; i++) {
-      threadDatas[i].thread.join();
-   }
+static void launch_threads() {
+    for (unsigned i = 0; i < sp_options.cores; i++) {
+        threadDatas[i].index = i;
+        threadDatas[i].thread = std::thread(threadp, &threadDatas[i]);
+    }
+    // wait for all searchers done
+    for (unsigned i = 0; i < sp_options.cores; i++) {
+        threadDatas[i].thread.join();
+    }
 }
 
 // Generates labeled FEN positions for training from self-play games
-int CDECL main(int argc, char **argv)
-{
-   Bitboard::init();
-   initOptions(argv[0]);
-   Attacks::init();
-   Scoring::init();
-   if (!initGlobals(argv[0], false)) {
-      cleanupGlobals();
-      exit(-1);
-   }
-   atexit(cleanupGlobals);
-   delayedInit();
-   if (EGTBMenCount) {
-      cerr << "Initialized tablebases" << endl;
-   }
-   LockInit(outputLock);
-   LockInit(bookLock);
+int CDECL main(int argc, char **argv) {
+    Bitboard::init();
+    initOptions(argv[0]);
+    Attacks::init();
+    Scoring::init();
+    if (!initGlobals(argv[0], false)) {
+        cleanupGlobals();
+        exit(-1);
+    }
+    atexit(cleanupGlobals);
+    delayedInit();
+    if (EGTBMenCount) {
+        cerr << "Initialized tablebases" << endl;
+    }
+    LockInit(outputLock);
+    LockInit(bookLock);
 
-   options.search.hash_table_size = 64*1024*1024;
-   options.book.frequency = 10;
-   options.book.weighting = 0;
-   options.book.scoring = 0;
+    options.search.hash_table_size = 64 * 1024 * 1024;
+    options.book.frequency = 10;
+    options.book.weighting = 0;
+    options.book.scoring = 0;
 
-   int arg = 1;
-   for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
-      if (strcmp(argv[arg], "-c") == 0) {
-          stringstream s(argv[++arg]);
-          s >> sp_options.cores;
-          if (s.bad()) {
-              cerr << "error in core count after -c" << endl;
-              return -1;
-          }
-          sp_options.cores = std::min<int>(Constants::MaxCPUs,sp_options.cores);
+    int arg = 1;
+    for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
+        if (strcmp(argv[arg], "-c") == 0) {
+            stringstream s(argv[++arg]);
+            s >> sp_options.cores;
+            if (s.bad()) {
+                cerr << "error in core count after -c" << endl;
+                return -1;
+            }
+            sp_options.cores =
+                std::min<int>(Constants::MaxCPUs, sp_options.cores);
 
-      }
-      else if (strcmp(argv[arg], "-n") == 0) {
-          stringstream s(argv[++arg]);
-          s >> sp_options.gameCount;
-          if (s.bad()) {
-              cerr << "error in game count after -n" << endl;
-              return -1;
-          }
-      }
-      else if (strcmp(argv[arg], "-d") == 0) {
-          stringstream s(argv[++arg]);
-          s >> sp_options.depthLimit;
-          if (s.bad()) {
-              cerr << "error in depth limit after -d" << endl;
-              return -1;
-          }
-      }
-   }
+        } else if (strcmp(argv[arg], "-n") == 0) {
+            stringstream s(argv[++arg]);
+            s >> sp_options.gameCount;
+            if (s.bad()) {
+                cerr << "error in game count after -n" << endl;
+                return -1;
+            }
+        } else if (strcmp(argv[arg], "-d") == 0) {
+            stringstream s(argv[++arg]);
+            s >> sp_options.depthLimit;
+            if (s.bad()) {
+                cerr << "error in depth limit after -d" << endl;
+                return -1;
+            }
+        }
+    }
 
-   pos_out_file = new std::ofstream(sp_options.posFileName,ios::out | ios::app);
-   if (sp_options.saveGames)
-       game_out_file = new std::ofstream(sp_options.gameFileName,ios::out | ios::app);
+    pos_out_file =
+        new std::ofstream(sp_options.posFileName, ios::out | ios::app);
+    if (sp_options.saveGames)
+        game_out_file =
+            new std::ofstream(sp_options.gameFileName, ios::out | ios::app);
 
-   init_threads();
-   launch_threads();
-   LockFree(outputLock);
-   LockFree(bookLock);
+    init_threads();
+    launch_threads();
+    LockFree(outputLock);
+    LockFree(bookLock);
 
-   delete pos_out_file;
-   delete game_out_file;
+    delete pos_out_file;
+    delete game_out_file;
 
-   return 0;
+    return 0;
 }
-
