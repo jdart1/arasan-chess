@@ -74,6 +74,7 @@ struct OutputData {
     score_t score;
     unsigned ply;
     unsigned move50Count;
+    ColorType stm;
     Move move;
 };
 
@@ -93,7 +94,7 @@ struct SelfPlayOptions {
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationMoves = 5;
     unsigned drawAdjudicationMinPly = 100;
-    std::string posFileName = "positions.epd";
+    std::string posFileName = "positions";
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
     unsigned maxBookPly = 8;
@@ -148,56 +149,59 @@ static void saveGame(ThreadData &td, const string &result, ofstream &file) {
 
 class binEncoder {
 
-  using OutputType = std::array<uint8_t,32>;
+  using PosOutputType = std::array<uint8_t,32>;
 
   public:
-    static unsigned output(const OutputData &data, int result,
-                           OutputType &out) {
+    static void output(const OutputData &data, int result,
+                       ostream &out) {
+        PosOutputType posData;
         unsigned pos = 0;
-        out.fill(0);
+        posData.fill(0);
         pos = 0; // bit count
         Board board;
         BoardIO::readFEN(board, data.fen);
-        pos = encode_bit(out, board.sideToMove() == White, pos);
-        pos = encode_bits(out, board.kingSquare(White), 6, pos);
-        pos = encode_bits(out, board.kingSquare(Black), 6, pos);
+        pos = encode_bit(posData, board.sideToMove() == White, pos);
+        pos = encode_bits(posData, board.kingSquare(White), 6, pos);
+        pos = encode_bits(posData, board.kingSquare(Black), 6, pos);
         // Encode board (minus Kings)
-        pos = encode_board(out, board, pos);
+        pos = encode_board(posData, board, pos);
         CastleType wcs = board.castleStatus(White);
         CastleType bcs = board.castleStatus(White);
         pos = encode_bit(
-            out, wcs == CanCastleKSide || wcs == CanCastleEitherSide, pos);
+            posData, wcs == CanCastleKSide || wcs == CanCastleEitherSide, pos);
         pos = encode_bit(
-            out, wcs == CanCastleQSide || wcs == CanCastleEitherSide, pos);
+            posData, wcs == CanCastleQSide || wcs == CanCastleEitherSide, pos);
         pos = encode_bit(
-            out, bcs == CanCastleKSide || bcs == CanCastleEitherSide, pos);
+            posData, bcs == CanCastleKSide || bcs == CanCastleEitherSide, pos);
         pos = encode_bit(
-            out, bcs == CanCastleQSide || bcs == CanCastleEitherSide, pos);
+            posData, bcs == CanCastleQSide || bcs == CanCastleEitherSide, pos);
         Square epsq = board.enPassantSq();
         if (epsq == InvalidSquare) {
-            pos = encode_bit(out, 0, pos);
+            pos = encode_bit(posData, 0, pos);
         } else {
-            pos = encode_bit(out, 1, pos);
-            pos = encode_bits(out, epsq, 6, pos);
+            pos = encode_bit(posData, 1, pos);
+            pos = encode_bits(posData, epsq, 6, pos);
         }
         // 6 bits for Stockfish compatibility:
-        pos = encode_bits(out, data.move50Count, 6, pos);
-        pos = encode_bits(out, 2 * (data.ply / 2), 8, pos);
-        pos = encode_bits(out, (2 * (data.ply / 2)) >> 8, 8, pos);
+        pos = encode_bits(posData, data.move50Count, 6, pos);
+        pos = encode_bits(posData, 2 * (data.ply / 2), 8, pos);
+        pos = encode_bits(posData, (2 * (data.ply / 2)) >> 8, 8, pos);
         // 7th bit of 50-move counter used by pytorch trainer
-        pos = encode_bit(out, data.move50Count & 0x40, pos);
+        pos = encode_bit(posData, data.move50Count & 0x40, pos);
+        assert(pos <= 256);
+        // output position
+        out << posData.data();
         // score. Note: Arasan scores are always from side to moves's POV
-        pos = encode_bits(out, data.score, 16, pos);
-        pos = encode_move(out, board.sideToMove(), data.move, pos);
-        pos = encode_bits(out, data.ply, 16, pos);
-        pos = encode_bits(out, result, 8, pos);
-        assert(pos % 8 == 0);
-        out[pos / 8] = 0xff;
-        return pos;
+        out << int16_t(data.score);
+        uint16_t encoded = encode_move(board.sideToMove(), data.move, pos);
+        out << encoded;
+        out << uint16_t(data.ply);
+        out << uint8_t(result);
+        out << uint8_t(0xff);
     }
 
   private:
-    static inline unsigned encode_bit(OutputType &out, unsigned bit,
+    static inline unsigned encode_bit(PosOutputType &out, unsigned bit,
                                       unsigned pos) {
         if (bit) {
             out[pos / 8] |= (1 << (pos % 8));
@@ -205,7 +209,7 @@ class binEncoder {
         return ++pos;
     }
 
-    static inline unsigned encode_bits(OutputType &out, unsigned bits,
+    static inline unsigned encode_bits(PosOutputType &out, unsigned bits,
                                        unsigned size, unsigned pos) {
         for (unsigned i = 0; i < size; i++) {
             pos = encode_bit(out, bits & (1 << i), pos);
@@ -213,7 +217,7 @@ class binEncoder {
         return pos;
     }
 
-    static unsigned encode_board(OutputType &out, const Board &b, unsigned pos) {
+    static unsigned encode_board(PosOutputType &out, const Board &b, unsigned pos) {
         static constexpr unsigned HUFFMAN_TABLE[] = {0, 1, 3, 5, 7, 9};
         for (unsigned rank = 0; rank < 8; ++rank) {
             for (unsigned file = 0; file < 8; ++file) {
@@ -231,7 +235,7 @@ class binEncoder {
         return encode_bits(out, pos, static_cast<uint16_t>(HUFFMAN_TABLE[0]), 1);
     }
 
-    static unsigned encode_move(OutputType &out, ColorType side, const Move move, unsigned pos) {
+    static uint16_t encode_move(ColorType side, const Move move, unsigned pos) {
 
         Square from = StartSquare(move);
         Square to = DestSquare(move);
@@ -259,7 +263,7 @@ class binEncoder {
         }
         data |= to;
         data |= (from << 6);
-        return encode_bits(out, data, 16, pos);
+        return data;
     }
 };
 
@@ -375,6 +379,7 @@ static void selfplay(ThreadData &td) {
                         data.score = score;
                         data.ply = ply;
                         data.move = m;
+                        data.stm = board.sideToMove();
                         data.move50Count = board.state.moveCount;
                         output.push_back(data);
                     }
@@ -413,7 +418,14 @@ static void selfplay(ThreadData &td) {
                 *pos_out_file << data.fen << ' ' << RESULT_TAG << " \""
                               << resultStr << "\";" << endl;
             } else {
-                // bin format : TBD
+                int resultVal; // result from side to move POV
+                if (result == Result::WhiteWin)
+                  resultVal = data.stm == White ? 1 : -1;
+                else if (result == Result::BlackWin)
+                  resultVal = data.stm == Black ? 1 : -1;
+                else
+                  resultVal = 0;
+                binEncoder::output(data, resultVal, *pos_out_file);
             }
         }
     }
@@ -521,11 +533,20 @@ int CDECL main(int argc, char **argv) {
                 cerr << "error in depth limit after -d" << endl;
                 return -1;
             }
+        } else if (strcmp(argv[arg], "-o") == 0) {
+            if (arg+1 >= argc)
+                cerr << "expected file name after -o" << endl;
+                return -1;
+            }
+            sp_options.posFileName = argv[++arg];
         }
     }
 
-    pos_out_file =
-        new std::ofstream(sp_options.posFileName, ios::out | ios::app);
+    auto flags = ios::out | ios::app;
+    if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
+      flags |= ios::binary;
+    }
+    pos_out_file = new std::ofstream(sp_options.posFileName, flags);
     if (sp_options.saveGames)
         game_out_file =
             new std::ofstream(sp_options.gameFileName, ios::out | ios::app);
