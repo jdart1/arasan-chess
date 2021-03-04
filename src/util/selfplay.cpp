@@ -161,13 +161,9 @@ class binEncoder {
         Board board;
         BoardIO::readFEN(board, data.fen);
         pos = encode_bit(posData, board.sideToMove() == Black, pos);
-        std::cerr << "stm " << int(board.sideToMove()) << std::endl;
         pos = encode_bits(posData, board.kingSquare(White), 6, pos);
-        std::cerr << "ks (White) " << int(board.kingSquare(White)) << std::endl;
         pos = encode_bits(posData, board.kingSquare(Black), 6, pos);
-        std::cerr << "ks (Black) " << int(board.kingSquare(Black)) << std::endl;
         // Encode board (minus Kings)
-        std::cerr << "fen " << data.fen << std::endl;
         pos = encode_board(posData, board, pos);
         CastleType wcs = board.castleStatus(White);
         CastleType bcs = board.castleStatus(Black);
@@ -183,15 +179,12 @@ class binEncoder {
         if (epsq == InvalidSquare) {
             ++pos;
         } else {
-            std::cerr << "ep " << int(epsq) << std::endl;
             pos = encode_bit(posData, 1, pos);
             pos = encode_bits(posData, epsq, 6, pos);
         }
-        std::cerr << "move50 " << int(data.move50Count) << std::endl;
         // 6 bits for Stockfish compatibility:
         pos = encode_bits(posData, data.move50Count, 6, pos);
         // fullmove counter
-        std::cerr << "fm " << int(2*(data.ply/2)) << std::endl;
         pos = encode_bits(posData, 2 * (data.ply / 2), 8, pos);
         // next 8 bits of fullmove counter
         pos = encode_bits(posData, (2 * (data.ply / 2)) >> 8, 8, pos);
@@ -200,20 +193,12 @@ class binEncoder {
         assert(pos <= 256);
         // output position
         out.write(reinterpret_cast<const char*>(posData.data()),32);
-        std::cerr << "position 32 " << out.tellp() << std::endl;
         // score. Note: Arasan scores are always from side to moves's POV
         serialize<int16_t>(out,static_cast<int16_t>(data.score));
-        std::cerr << "score " << int(data.score) << std::endl;
         serialize<uint16_t>(out,encode_move(board.sideToMove(), data.move));
-        std::cerr << "move ";
-        MoveImage(data.move,std::cerr);
-        std::cout<< std::endl;
         serialize<uint16_t>(out,static_cast<uint16_t>(data.ply));
-        std::cerr << "ply " << int(data.ply) << std::endl;
         serialize<int8_t>(out,static_cast<int8_t>(result));
-        std::cerr << "result " << int(result) << std::endl;
         serialize<uint8_t>(out,static_cast<uint8_t>(0xff));
-        std::cerr << "position " << out.tellp() << std::endl;
     }
 
   private:
