@@ -21,6 +21,8 @@ extern "C" {
 }
 #endif
 
+using namespace std::placeholders;
+
 // Utility to generate training positions from Arasan self-play games
 
 static constexpr int THREAD_STACK_SIZE = 8 * 1024 * 1024;
@@ -100,6 +102,8 @@ struct SelfPlayOptions {
     unsigned maxBookPly = 8;
     bool randomize = true;
     unsigned randomizeRange = 10;
+    bool semiRandomize = true;
+    unsigned semiRandomizeInterval = 20;
     OutputFormat format = OutputFormat::Bin;
 } sp_options;
 
@@ -149,11 +153,10 @@ static void saveGame(ThreadData &td, const string &result, ofstream &file) {
 
 class binEncoder {
 
-  using PosOutputType = std::array<uint8_t,32>;
+    using PosOutputType = std::array<uint8_t, 32>;
 
   public:
-    static void output(const OutputData &data, int result,
-                       ostream &out) {
+    static void output(const OutputData &data, int result, ostream &out) {
         PosOutputType posData;
         unsigned pos = 0;
         posData.fill(0);
@@ -179,8 +182,11 @@ class binEncoder {
         if (epsq == InvalidSquare) {
             ++pos;
         } else {
+            // Arasan's internal en passant square is not what Stockfish/FEN
+            // expect, correct here:
+            Square target = (board.sideToMove() == White) ? epsq + 8 : epsq - 8;
             pos = encode_bit(posData, 1, pos);
-            pos = encode_bits(posData, epsq, 6, pos);
+            pos = encode_bits(posData, target, 6, pos);
         }
         // 6 bits for Stockfish compatibility:
         pos = encode_bits(posData, data.move50Count, 6, pos);
@@ -189,16 +195,19 @@ class binEncoder {
         // next 8 bits of fullmove counter
         pos = encode_bits(posData, (2 * (data.ply / 2)) >> 8, 8, pos);
         // 7th bit of 50-move counter
-        pos = encode_bit(posData, data.move50Count>>6, pos);
+        pos = encode_bit(posData, data.move50Count >> 6, pos);
         assert(pos <= 256);
         // output position
-        out.write(reinterpret_cast<const char*>(posData.data()),32);
-        // score. Note: Arasan scores are always from side to moves's POV
-        serialize<int16_t>(out,static_cast<int16_t>(data.score));
-        serialize<uint16_t>(out,encode_move(board.sideToMove(), data.move));
-        serialize<uint16_t>(out,static_cast<uint16_t>(data.ply));
-        serialize<int8_t>(out,static_cast<int8_t>(result));
-        serialize<uint8_t>(out,static_cast<uint8_t>(0xff));
+        out.write(reinterpret_cast<const char *>(posData.data()), 32);
+        // score. Note: Arasan scores are always from side to moves's POV. Note:
+        // we normalize scores to centipawns here; not sure that's necessary
+        // though.
+        serialize<int16_t>(
+            out, static_cast<int16_t>(100 * data.score / Params::PAWN_VALUE));
+        serialize<uint16_t>(out, encode_move(board.sideToMove(), data.move));
+        serialize<uint16_t>(out, static_cast<uint16_t>(data.ply));
+        serialize<int8_t>(out, static_cast<int8_t>(result));
+        serialize<uint8_t>(out, static_cast<uint8_t>(0xff));
     }
 
   private:
@@ -207,7 +216,7 @@ class binEncoder {
         if (bit) {
             out[pos / 8] |= (1 << (pos % 8));
         }
-        return pos+1;
+        return pos + 1;
     }
 
     static inline unsigned encode_bits(PosOutputType &out, unsigned bits,
@@ -218,8 +227,9 @@ class binEncoder {
         return pos;
     }
 
-    static unsigned encode_board(PosOutputType &out, const Board &b, unsigned pos) {
-        static const std::array<unsigned,6> HUFFMAN_TABLE = {0, 1, 3, 5, 7, 9};
+    static unsigned encode_board(PosOutputType &out, const Board &b,
+                                 unsigned pos) {
+        static const std::array<unsigned, 6> HUFFMAN_TABLE = {0, 1, 3, 5, 7, 9};
         for (unsigned rank = 0; rank < 8; ++rank) {
             for (unsigned file = 0; file < 8; ++file) {
                 Square sq = 56 - rank * 8 + file;
@@ -227,7 +237,7 @@ class binEncoder {
                 if (IsEmptyPiece(p)) {
                     ++pos; // 1 bit
                 } else if (TypeOfPiece(p) != King) {
-                    assert(HUFFMAN_TABLE[TypeOfPiece(p)]<=9);
+                    assert(HUFFMAN_TABLE[TypeOfPiece(p)] <= 9);
                     pos =
                         encode_bits(out, HUFFMAN_TABLE[TypeOfPiece(p)], 4, pos);
                     pos = encode_bit(out, PieceColor(p) == Black, pos);
@@ -268,27 +278,31 @@ class binEncoder {
         return data;
     }
 
-    template <typename T>
-    static void serialize(ostream & o, const T &data) {
-      char out[sizeof(T)];
-      for (unsigned i = 0; i < sizeof(data)*8; i++) {
-        if (data & (1<<i)) {
-            out[i / 8] |= (1 << (i % 8));
+    template <typename T> static void serialize(ostream &o, const T &data) {
+        char out[sizeof(T)];
+        for (unsigned i = 0; i < sizeof(data) * 8; i++) {
+            if (data & (1 << i)) {
+                out[i / 8] |= (1 << (i % 8));
+            }
         }
-      }
-      o.write(out,sizeof(T));
+        o.write(out, sizeof(T));
     }
-  
 };
 
 static Move randomMove(const Board &board, Statistics &stats, ThreadData &td) {
     RootMoveGenerator mg(board);
     unsigned n = mg.moveCount();
     if (n == 0) {
-        if (board.checkStatus() == InCheck)
+        if (board.isLegalDraw()) {
+            stats.state = Draw;
+            stats.display_value = 0;
+        } else if (board.checkStatus() == InCheck) {
             stats.state = Checkmate;
-        else
+            stats.display_value = -Constants::MATE;
+        } else {
             stats.state = Stalemate;
+            stats.display_value = 0;
+        }
         return NullMove;
     }
     std::uniform_int_distribution<unsigned> dist(0, n - 1);
@@ -303,12 +317,42 @@ static Move randomMove(const Board &board, Statistics &stats, ThreadData &td) {
     return m;
 }
 
+class Monitor {
+  public:
+    Monitor(uint64_t limit) : nodeTarget(limit) {}
+    virtual ~Monitor() = default;
+    int nodeMonitor(SearchController *, const Statistics &stats) {
+        return (stats.num_nodes >= nodeTarget);
+    }
+
+  private:
+    uint64_t nodeTarget;
+};
+
+static Move semiRandomMove(const Board &board, Statistics &stats,
+                           ThreadData &td, uint64_t nodeTarget) {
+    Monitor monitor(nodeTarget);
+    auto oldMonitor = td.searcher->registerMonitorFunction(
+        std::bind(&Monitor::nodeMonitor, &monitor, _1, _2));
+    Move m = td.searcher->findBestMove(board, FixedDepth, INFINITE_TIME,
+                                       0, // extra time
+                                       sp_options.depthLimit + 2,
+                                       false, // background
+                                       false, // uci
+                                       stats, TalkLevel::Silent);
+    td.searcher->registerMonitorFunction(oldMonitor);
+    assert(!(stats.state == NormalState && IsNull(m)));
+    return m;
+}
+
 static void selfplay(ThreadData &td) {
     SearchController *searcher = td.searcher;
     std::uniform_int_distribution<unsigned> dist(1,
                                                  sp_options.outputPlyFrequency);
     std::uniform_int_distribution<unsigned> rand_dist(
         1, sp_options.randomizeRange);
+    std::uniform_int_distribution<unsigned> rand2_dist(
+        1, sp_options.semiRandomizeInterval);
     for (unsigned i = 0; i < sp_options.gameCount; i++) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
@@ -316,10 +360,12 @@ static void selfplay(ThreadData &td) {
         bool adjudicated = false, terminated = false, didRandom = false;
         Statistics stats;
         Board board;
-        std::vector<score_t> scores;
+        unsigned zero_score_count = 0;
         unsigned ply = 0;
         enum class Result { WhiteWin, BlackWin, Draw } result;
         std::vector<OutputData> output;
+        uint64_t prevNodes = 0ULL;
+        unsigned prevDepth = 0;
         for (; !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
@@ -330,7 +376,9 @@ static void selfplay(ThreadData &td) {
             }
             score_t score = 0;
             if (IsNull(m)) {
-                if (sp_options.randomize && !didRandom &&
+                // Don't randomize if in TB range
+                bool skipRandom = int(board.men()) <= EGTBMenCount;
+                if (sp_options.randomize && !didRandom && !skipRandom &&
                     ply + sp_options.maxBookPly < sp_options.randomizeRange &&
                     rand_dist(td.engine) == sp_options.randomizeRange) {
                     m = randomMove(board, stats, td);
@@ -339,6 +387,25 @@ static void selfplay(ThreadData &td) {
                     // game result after a random move. Stockfish though does do
                     // this.
                     output.clear();
+                    // We have no score from a random move, so reset the
+                    // adjudication counter
+                    zero_score_count = 0;
+                } else if (sp_options.semiRandomize && !skipRandom &&
+                           prevNodes && prevDepth >= sp_options.depthLimit &&
+                           rand2_dist(td.engine) ==
+                               sp_options.semiRandomizeInterval) {
+                    std::uniform_int_distribution<uint64_t> node_dist(
+                        uint64_t(0.7 * prevNodes), uint64_t(1.3 * prevNodes));
+                    uint64_t limit = node_dist(td.engine);
+                    std::cerr << "iimit=" << limit << std::endl;
+                    m = semiRandomMove(board, stats, td, limit);
+                    score = stats.display_value;
+                    //prevNodes = stats.num_nodes;
+                    //prevDepth = stats.depth;
+                    if (score == 0)
+                        ++zero_score_count;
+                    else
+                        zero_score_count = 0;
                 } else {
                     m = searcher->findBestMove(board, FixedDepth, INFINITE_TIME,
                                                0, // extra time
@@ -347,9 +414,14 @@ static void selfplay(ThreadData &td) {
                                                false, // uci
                                                stats, TalkLevel::Silent);
                     score = stats.display_value;
+                    prevNodes = stats.num_nodes;
+                    prevDepth = stats.depth;
+                    if (score == 0)
+                        ++zero_score_count;
+                    else
+                        zero_score_count = 0;
                 }
             }
-            scores.push_back(score);
             if (stats.state == Resigns || stats.state == Checkmate) {
                 result = board.sideToMove() == White ? Result::BlackWin
                                                      : Result::WhiteWin;
@@ -361,19 +433,11 @@ static void selfplay(ThreadData &td) {
             }
             if (!terminated && sp_options.adjudicateDraw &&
                 ply >= sp_options.drawAdjudicationMinPly &&
-                scores.size() >= sp_options.drawAdjudicationMoves) {
-                unsigned count = scores.size() - 1;
-                while (count) {
-                    if (scores[i] != 0)
-                        break;
-                    --count;
-                }
-                if (count == 0) {
-                    // adjudicate draw
-                    stats.state = Draw;
-                    result = Result::Draw;
-                    adjudicated = true;
-                }
+                zero_score_count >= sp_options.drawAdjudicationMoves) {
+                // adjudicate draw
+                stats.state = Draw;
+                result = Result::Draw;
+                adjudicated = true;
             }
             if (!IsNull(m)) {
                 std::string image;
@@ -434,11 +498,11 @@ static void selfplay(ThreadData &td) {
             } else {
                 int resultVal; // result from side to move POV
                 if (result == Result::WhiteWin)
-                  resultVal = data.stm == White ? 1 : -1;
+                    resultVal = data.stm == White ? 1 : -1;
                 else if (result == Result::BlackWin)
-                  resultVal = data.stm == Black ? 1 : -1;
+                    resultVal = data.stm == Black ? 1 : -1;
                 else
-                  resultVal = 0;
+                    resultVal = 0;
                 binEncoder::output(data, resultVal, *pos_out_file);
             }
         }
@@ -548,7 +612,7 @@ int CDECL main(int argc, char **argv) {
                 return -1;
             }
         } else if (strcmp(argv[arg], "-o") == 0) {
-            if (arg+1 >= argc) {
+            if (arg + 1 >= argc) {
                 cerr << "expected file name after -o" << endl;
                 return -1;
             }
@@ -558,7 +622,7 @@ int CDECL main(int argc, char **argv) {
 
     auto flags = ios::out | ios::app;
     if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
-      flags |= ios::binary;
+        flags |= ios::binary;
     }
     pos_out_file = new std::ofstream(sp_options.posFileName, flags);
     if (sp_options.saveGames)

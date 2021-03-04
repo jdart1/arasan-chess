@@ -391,7 +391,13 @@ Move SearchController::findBestMove(
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
    if (options.search.use_tablebases) {
+       // Lock because the following calls is not thread-safe. In normal use
+       // we don't need to worry about this, but it is possible there are
+       // two concurrent SearchController instances in a program, in which case
+       // it matters.
+       Lock(syzygy_lock);
        tb_hit = mg->rank_root_moves();
+       Unlock(syzygy_lock);
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
            tb_root_hits += mg->moveCount();
@@ -481,7 +487,13 @@ Move SearchController::findBestMove(
       cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       cout << " pv=" << stats->best_line_image << endl;
    }
-   ASSERT(!IsNull(best));
+   if (IsNull(best)) {
+      cerr << debugPrefix() << "best thread: depth=" << stats->completedDepth <<  " score=";
+      Scoring::printScore(stats->value,cerr);
+      cerr << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
+      cerr << " pv=" << stats->best_line_image << endl;
+      cerr << board << endl;
+   }
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};

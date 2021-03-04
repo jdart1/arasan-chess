@@ -389,6 +389,10 @@ public:
    // calculate the check status
    CheckStatusType getCheckStatus() const;
 
+   unsigned men() const noexcept {
+      return getMaterial(White).men() + getMaterial(Black).men();
+   }
+
    private:
 
    static const int RepListSize = 1024;
