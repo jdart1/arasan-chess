@@ -322,7 +322,7 @@ class Monitor {
     Monitor(uint64_t limit) : nodeTarget(limit) {}
     virtual ~Monitor() = default;
     int nodeMonitor(SearchController *, const Statistics &stats) {
-        return (stats.num_nodes >= nodeTarget);
+        return (stats.completedDepth > 0 && stats.num_nodes >= nodeTarget);
     }
 
   private:
@@ -397,7 +397,6 @@ static void selfplay(ThreadData &td) {
                     std::uniform_int_distribution<uint64_t> node_dist(
                         uint64_t(0.7 * prevNodes), uint64_t(1.3 * prevNodes));
                     uint64_t limit = node_dist(td.engine);
-                    std::cerr << "iimit=" << limit << std::endl;
                     m = semiRandomMove(board, stats, td, limit);
                     score = stats.display_value;
                     //prevNodes = stats.num_nodes;
