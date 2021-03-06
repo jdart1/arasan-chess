@@ -87,6 +87,7 @@ void CDECL cleanupGlobals(void) {
    LockFree(syzygy_lock);
 #endif   
    Scoring::cleanup();
+   Board::cleanup();
 }
 
 void initOptions(const char *pathName) {

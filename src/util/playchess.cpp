@@ -1,4 +1,4 @@
-// Copyright 2010, 2011, 2012, 2017, 2020 by Jon Dart. All Rights Reserved.
+// Copyright 2010, 2011, 2012, 2017, 2020-2021 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "notation.h"
 #include "legal.h"
@@ -22,9 +22,11 @@ static void usage()
 int CDECL main(int argc, char **argv)
 {
    Bitboard::init();
+   Board::init();
    initOptions(argv[0]);
    Attacks::init();
    Scoring::init();
+    Search::init();
    options.search.hash_table_size = 64*1024*1024;
    if (!initGlobals(argv[0], false)) {
       cleanupGlobals();

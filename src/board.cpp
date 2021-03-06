@@ -70,6 +70,16 @@ void Board::setupInitialBoard() {
    *(initialBoard->repListHead)++ = initialBoard->hashCode();
 }
 
+void Board::init() {
+   if (!initialBoard) {
+       setupInitialBoard();
+   }
+}
+
+void Board::cleanup() {
+  delete initialBoard;
+}
+
 void Board::setSecondaryVars()
 {
    int i;
@@ -148,9 +158,7 @@ void Board::setCastleStatus( CastleType t, ColorType side )
 
 void Board::reset()
 {
-   if (!initialBoard) {
-       setupInitialBoard();
-   }
+   assert(initialBoard);
    *this = *initialBoard;
 }
 

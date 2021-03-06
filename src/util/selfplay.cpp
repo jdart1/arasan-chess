@@ -85,6 +85,8 @@ LockDefine(bookLock);
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
+static atomic<unsigned> gameCounter(0);
+
 struct SelfPlayOptions {
     enum class OutputFormat { Epd, Bin };
     unsigned minOutPly = 8;
@@ -353,7 +355,7 @@ static void selfplay(ThreadData &td) {
         1, sp_options.randomizeRange);
     std::uniform_int_distribution<unsigned> rand2_dist(
         1, sp_options.semiRandomizeInterval);
-    for (unsigned i = 0; i < sp_options.gameCount; i++) {
+    for (;gameCounter < sp_options.gameCount;++gameCounter) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
         }
@@ -362,7 +364,7 @@ static void selfplay(ThreadData &td) {
         Board board;
         unsigned zero_score_count = 0;
         unsigned ply = 0;
-        enum class Result { WhiteWin, BlackWin, Draw } result;
+        enum class Result { WhiteWin, BlackWin, Draw } result = Result::Draw;
         std::vector<OutputData> output;
         uint64_t prevNodes = 0ULL;
         unsigned prevDepth = 0;
@@ -564,9 +566,11 @@ static void launch_threads() {
 // Generates labeled FEN positions for training from self-play games
 int CDECL main(int argc, char **argv) {
     Bitboard::init();
+    Board::init();
     initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
+    Search::init();
     if (!initGlobals(argv[0], false)) {
         cleanupGlobals();
         exit(-1);

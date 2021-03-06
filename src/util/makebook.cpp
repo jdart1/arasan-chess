@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2021 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -599,6 +599,7 @@ int CDECL main(int argc, char **argv)
    string book_name;
 
    Bitboard::init();
+   Board::init();
    initOptions(argv[0]);
    Attacks::init();
    Scoring::init();

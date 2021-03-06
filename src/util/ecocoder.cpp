@@ -1,4 +1,4 @@
-// Copyright 1996, 2013, 2014, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 1996, 2013, 2014, 2017, 2021 by Jon Dart.  All Rights Reserved.
 
 // Utility to add ECO codes to PGN game files.
 
@@ -37,6 +37,7 @@ static void show_usage()
 int CDECL main(int argc, char **argv)
 {
    Bitboard::init();
+   Board::init();
    Attacks::init();
    Scoring::init();
    if (!initGlobals(argv[0], false)) {

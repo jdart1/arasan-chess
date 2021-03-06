@@ -29,7 +29,6 @@ Options::SearchOptions::SearchOptions() :
       resign_threshold(-500),
 #ifdef SYZYGY_TBS
       use_tablebases(0),
-      tb_probe_in_search(1),
       syzygy_path("syzygy"),
       syzygy_50_move_rule(1),
       syzygy_probe_depth(4),

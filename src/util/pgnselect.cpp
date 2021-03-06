@@ -1,4 +1,4 @@
-// Copyright 2016, 2017, 2019-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 2016, 2017, 2019-2021 by Jon Dart.  All Rights Reserved.
 
 // Utility to extract selected positions from PGN files into an EPD file.
 
@@ -187,8 +187,10 @@ static void sample(vector<string> &positions,SearchController *searcher, Statist
 int CDECL main(int argc, char **argv)
 {
    Bitboard::init();
+   Board::init();
    Attacks::init();
    Scoring::init();
+   Search::init();
    if (!initGlobals(argv[0], false)) {
       cleanupGlobals();
       exit(-1);

@@ -50,6 +50,11 @@ public:
    Board(const Board &);
    Board &operator = (const Board &);
 
+   // Global one-time initialization
+   static void init();
+
+   static void cleanup(); 
+
    // resets board to initial position
    void reset();
 
@@ -389,7 +394,7 @@ public:
    // calculate the check status
    CheckStatusType getCheckStatus() const;
 
-   unsigned men() const noexcept {
+   int  men() const noexcept {
       return getMaterial(White).men() + getMaterial(Black).men();
    }
 

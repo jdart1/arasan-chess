@@ -35,7 +35,6 @@ class Options
    int resign_threshold;
 #ifdef SYZYGY_TBS
    int use_tablebases;
-   int tb_probe_in_search;
    string syzygy_path;
    int syzygy_50_move_rule;
    int syzygy_probe_depth;
