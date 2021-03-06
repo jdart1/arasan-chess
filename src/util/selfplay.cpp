@@ -98,14 +98,14 @@ struct SelfPlayOptions {
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationMoves = 5;
     unsigned drawAdjudicationMinPly = 100;
-    std::string posFileName = "positions";
+    std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
     unsigned maxBookPly = 8;
     bool randomize = true;
     unsigned randomizeRange = 10;
     bool semiRandomize = true;
-    unsigned semiRandomizeInterval = 20;
+    unsigned semiRandomizeInterval = 15;
     OutputFormat format = OutputFormat::Bin;
 } sp_options;
 
@@ -621,6 +621,10 @@ int CDECL main(int argc, char **argv) {
             }
             sp_options.posFileName = argv[++arg];
         }
+    }
+
+    if (sp_options.posFileName == "") {
+        sp_options.posFileName = sp_options.format == SelfPlayOptions::OutputFormat::Bin ? "positions.bin" : "positions.epd";
     }
 
     auto flags = ios::out | ios::app;
