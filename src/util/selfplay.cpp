@@ -494,8 +494,10 @@ static void selfplay(ThreadData &td) {
                     resultStr = "0.0";
                 else
                     resultStr = "0.5";
+                Lock(outputLock);
                 *pos_out_file << data.fen << ' ' << RESULT_TAG << " \""
                               << resultStr << "\";" << endl;
+                Unlock(outputLock);
             } else {
                 int resultVal; // result from side to move POV
                 if (result == Result::WhiteWin)
@@ -504,7 +506,9 @@ static void selfplay(ThreadData &td) {
                     resultVal = data.stm == Black ? 1 : -1;
                 else
                     resultVal = 0;
+                Lock(outputLock);
                 binEncoder::output(data, resultVal, *pos_out_file);
+                Unlock(outputLock);
             }
         }
     }
