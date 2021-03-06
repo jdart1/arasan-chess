@@ -355,7 +355,7 @@ static void selfplay(ThreadData &td) {
         1, sp_options.randomizeRange);
     std::uniform_int_distribution<unsigned> rand2_dist(
         1, sp_options.semiRandomizeInterval);
-    for (;gameCounter < sp_options.gameCount;++gameCounter) {
+    for (; gameCounter < sp_options.gameCount; ++gameCounter) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
         }
@@ -401,8 +401,8 @@ static void selfplay(ThreadData &td) {
                     uint64_t limit = node_dist(td.engine);
                     m = semiRandomMove(board, stats, td, limit);
                     score = stats.display_value;
-                    //prevNodes = stats.num_nodes;
-                    //prevDepth = stats.depth;
+                    // prevNodes = stats.num_nodes;
+                    // prevDepth = stats.depth;
                     if (score == 0)
                         ++zero_score_count;
                     else
@@ -616,17 +616,45 @@ int CDECL main(int argc, char **argv) {
                 cerr << "error in depth limit after -d" << endl;
                 return -1;
             }
+        } else if (strcmp(argv[arg], "-f") == 0) {
+            if (arg + 1 >= argc) {
+                cerr << "expected bin or epd after -f" << endl;
+                return -1;
+            }
+            string fmt(argv[++arg]);
+            if (fmt == "bin")
+                sp_options.format = SelfPlayOptions::OutputFormat::Bin;
+            else if (fmt == "epd")
+                sp_options.format = SelfPlayOptions::OutputFormat::Epd;
+            else {
+                cerr << "expected bin or epd after -f" << endl;
+                return -1;
+            }
         } else if (strcmp(argv[arg], "-o") == 0) {
             if (arg + 1 >= argc) {
                 cerr << "expected file name after -o" << endl;
                 return -1;
             }
             sp_options.posFileName = argv[++arg];
+        } else if (strcmp(argv[arg], "-m") == 0) {
+            if (arg + 1 >= argc) {
+                cerr << "expected number after -m" << endl;
+                return -1;
+            }
+            stringstream s(argv[++arg]);
+            s >> sp_options.outputPlyFrequency;
+            if (s.bad()) {
+                cerr << "error: expected number after -m" << endl;
+                return -1;
+            }
         }
     }
 
     if (sp_options.posFileName == "") {
-        sp_options.posFileName = sp_options.format == SelfPlayOptions::OutputFormat::Bin ? "positions.bin" : "positions.epd";
+        sp_options.posFileName =
+            sp_options.format == SelfPlayOptions::OutputFormat::Bin
+                ? "positions.bin"
+                : "positions.epd";
     }
 
     auto flags = ios::out | ios::app;
