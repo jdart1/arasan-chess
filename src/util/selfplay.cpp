@@ -587,6 +587,8 @@ int CDECL main(int argc, char **argv) {
     options.book.frequency = 10;
     options.book.weighting = 0;
     options.book.scoring = 0;
+    options.learning.position_learning = 0;
+    options.search.can_resign = 1;
 
     int arg = 1;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
