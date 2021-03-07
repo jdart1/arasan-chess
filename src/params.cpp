@@ -7,6 +7,16 @@
 
 #include "params.h"
 
+const int PAWN_VALUE_MIDGAME = 128;
+const int PAWN_VALUE_ENDGAME = 144;
+const int KNIGHT_VALUE_MIDGAME = int(4.0*PAWN_VALUE_MIDGAME);
+const int KNIGHT_VALUE_ENDGAME = int(4.0)*PAWN_VALUE_MIDGAME);
+const int BISHOP_VALUE_MIDGAME = int(4.0*PAWN_VALUE_MIDGAME);
+const int BISHOP_VALUE_ENDGAME = int(4.0*PAWN_VALUE_MIDGAME);
+const int ROOK_VALUE_MIDGAME = int(6.0*PAWN_VALUE_MIDGAME);
+const int ROOK_VALUE_ENDGAME = int(6.0*PAWN_VALUE_MIDGAME);
+const int QUEEN_VALUE_MIDGAME = int(12.0*PAWN_VALUE_MIDGAME);
+const int QUEEN_VALUE_ENDGAME  = int(12.0*PAWN_VALUE_MIDGAME);
 const int Params::KN_VS_PAWN_ADJUST[3] = {0, -107, 57};
 const int Params::KING_COVER[6][4] = {{8, 23, 15, 15},
 {1, 4, 2, 3},

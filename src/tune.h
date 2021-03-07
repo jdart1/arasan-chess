@@ -49,6 +49,16 @@ class Tune : public vector<TuneParam> {
   }
 
   enum {
+    PAWN_VALUE_MIDGAME,
+    PAWN_VALUE_ENDGAME,
+    KNIGHT_VALUE_MIDGAME,
+    KNIGHT_VALUE_ENDGAME,
+    BISHOP_VALUE_MIDGAME,
+    BISHOP_VALUE_ENDGAME,
+    ROOK_VALUE_MIDGAME,
+    ROOK_VALUE_ENDGAME,
+    QUEEN_VALUE_MIDGAME,
+    QUEEN_VALUE_ENDGAME,
     KN_VS_PAWN_ADJUST0,
     KN_VS_PAWN_ADJUST1,
     KN_VS_PAWN_ADJUST2,
@@ -290,7 +300,7 @@ class Tune : public vector<TuneParam> {
 
   int findParamByName(const string &name) const;
 
-  static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-KN_VS_PAWN_ADJUST0;
+  static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-PAWN_VALUE_MIDGAME;
 
   double scale(score_t value,int index,int materialLevel) const;
 
