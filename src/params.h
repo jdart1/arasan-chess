@@ -22,30 +22,17 @@ struct Params  {
     static constexpr score_t PAWN_VALUE = (score_t)128; // midgame pawn value
     static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
 
-    static FORCEINLINE score_t PieceValue( PieceType pieceType ) {
-        switch(pieceType) {
-        case Empty: return 0;
-        case Pawn: return PAWN_VALUE;
-        case Knight: return KNIGHT_VALUE;
-        case Bishop: return BISHOP_VALUE;
-        case Rook: return ROOK_VALUE;
-        case Queen: return QUEEN_VALUE;
-        case King: return KING_VALUE;
-        default: return 0;
-        }
-    }
-
-    static FORCEINLINE score_t PieceValue( Piece piece ) {
-        return PieceValue(TypeOfPiece(piece));
-    }
+    static constexpr score_t SEE_PIECE_VALUES[] = {0, PAWN_VALUE, score_t(4.3*PAWN_VALUE),
+      score_t(4.3*PAWN_VALUE), score_t(6.0*PAWN_VALUE), score_t(12.0*PAWN_VALUE), score_t(32*PAWN_VALUE) };
 
     static FORCEINLINE score_t Gain(Move move) {
-        return ((TypeOfMove(move) == Promotion) ?
-                PieceValue(Capture(move)) + PieceValue(PromoteTo(move)) - PAWN_VALUE : PieceValue(Capture(move)));
+        return (TypeOfMove(move) == Promotion) ?
+                SEE_PIECE_VALUES[Capture(move)] + SEE_PIECE_VALUES[PromoteTo(move)] - SEE_PIECE_VALUES[Pawn] :
+                SEE_PIECE_VALUES[Capture(move)];
     }
 
     static FORCEINLINE score_t MVV_LVA(Move move) {
-        return 8*Gain(move) - PieceValue(PieceMoved(move));
+        return 8*Gain(move) - SEE_PIECE_VALUES[PieceMoved(move)];
     }
 
     static PARAM_MOD PAWN_VALUE_MIDGAME;

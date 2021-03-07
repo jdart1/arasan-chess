@@ -1,4 +1,4 @@
-// Copyright 1994, 2014, 2017, 2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 2014, 2017, 2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _MATERIAL_H
 #define _MATERIAL_H
@@ -12,7 +12,7 @@ class Material
     friend class Board;
  public:
  Material():
-    info(0), total(0), level(0), count(0)
+    info(0), level(0), count(0)
       {
       }
 	
@@ -41,7 +41,6 @@ class Material
     FORCEINLINE void addPiece(const PieceType p)
     {
         info += masks[(int)p];
-        total += (stored_score_t)Params::PieceValue(p);
         level += levels[(int)p];
         count++;
     }
@@ -49,8 +48,6 @@ class Material
     FORCEINLINE void removePiece(const PieceType p)
     {
         info -= masks[(int)p];
-        ASSERT(total >= (stored_score_t)Params::PieceValue(p));
-        total -= (stored_score_t)Params::PieceValue(p);
         ASSERT(level >= levels[(int)p]);
         level -= levels[(int)p];
         ASSERT(count>0);
@@ -60,27 +57,15 @@ class Material
     FORCEINLINE void addPawn()
     {
         info += masks[(int)Pawn];
-        total += (stored_score_t)Params::PAWN_VALUE;
         ++count; 
     }
 
     FORCEINLINE void removePawn()
     {
         info -= masks[(int)Pawn];
-        total -= (stored_score_t)Params::PAWN_VALUE;
         --count;
     }
 
-    // return the total material value:
-    score_t value() const {
-       return (score_t)total;
-    }
-	
-    // return value of pieces (excluding pawns)
-    score_t pieceValue() const {
-       return (score_t)(total - (stored_score_t)Params::PAWN_VALUE*pawnCount());
-    }
-	
     uint32_t infobits() const	{
         return info;
     }
@@ -206,11 +191,9 @@ class Material
  private:
     void clear() {
         info = level = count = 0;
-        total = 0;
     }
 
     uint32_t info;
-    stored_score_t total;
     uint32_t level;
     int count;
     static const int32_t masks[8];
