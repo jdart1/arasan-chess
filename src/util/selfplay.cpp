@@ -33,7 +33,7 @@ static pthread_attr_t stackSizeAttrib;
 
 static ECO ecoCoder;
 
-static const char *RESULT_TAG = "c1";
+static const char *RESULT_TAG = "c2";
 
 class SelfPlayHashTable {
 
