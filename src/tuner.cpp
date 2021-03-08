@@ -398,7 +398,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(oside);
-    const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
     const int mLevel = oppmat.materialLevel();
 
     const uint32_t pieces = ourmat.pieceBits();
@@ -630,6 +630,9 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    array<int,8> attackTypes;
    for (int i = 0; i < 8; i++) attackTypes[i] = 0;
 
+   grads[Tune::PAWN_VALUE_MIDGAME] += ourmat.pawnCount()*tune_params.scale(inc,Tune::PAWN_VALUE_MIDGAME,mLevel);
+   grads[Tune::PAWN_VALUE_ENDGAME] += ourmat.pawnCount()*tune_params.scale(inc,Tune::PAWN_VALUE_ENDGAME,mLevel);
+
    if (ourmat.infobits() != oppmat.infobits() &&
        (ourmat.hasPawns() || oppmat.hasPawns())) {
        adjustMaterialScore(board,side,grads,inc);
@@ -661,6 +664,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       ai.knightAttacks[side] |= knattacks;
       ai.minorAttacks[side] |= knattacks;
       ai.attackedBy2[side] |= (knattacks & ai.allAttacks[side]);
+      grads[Tune::KNIGHT_VALUE_MIDGAME] += tune_params.scale(inc,Tune::KNIGHT_VALUE_MIDGAME,mLevel);
+      grads[Tune::KNIGHT_VALUE_ENDGAME] += tune_params.scale(inc,Tune::KNIGHT_VALUE_ENDGAME,mLevel);
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::KNIGHT_MOBILITY+mobl] += tune_params.scale(inc,Tune::KNIGHT_MOBILITY+mobl,mLevel);
       int i = square_to_pst(sq,side);
@@ -703,6 +708,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       if (board.pinOnDiag(sq, okp, oside)) {
          pin_count++;
       }
+      grads[Tune::BISHOP_VALUE_MIDGAME] += tune_params.scale(inc,Tune::BISHOP_VALUE_MIDGAME,mLevel);
+      grads[Tune::BISHOP_VALUE_ENDGAME] += tune_params.scale(inc,Tune::BISHOP_VALUE_ENDGAME,mLevel);
       Bitboard battacks(board.bishopAttacks(sq));
       ai.allAttacks[side] |= battacks;
       ai.bishopAttacks[side] |= battacks;
@@ -743,6 +750,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       if (board.pinOnRankOrFile(sq, okp, oside)) {
          pin_count++;
       }
+      grads[Tune::ROOK_VALUE_MIDGAME] += tune_params.scale(inc,Tune::ROOK_VALUE_MIDGAME,mLevel);
+      grads[Tune::ROOK_VALUE_ENDGAME] += tune_params.scale(inc,Tune::ROOK_VALUE_ENDGAME,mLevel);
       Bitboard rookAttacks(board.rookAttacks(sq));
       ai.allAttacks[side] |= rookAttacks;
       ai.rookAttacks[side] |= rookAttacks;
@@ -809,6 +818,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    }
    Bitboard queen_bits(board.queen_bits[side]);
    while (queen_bits.iterate(sq)) {
+      grads[Tune::QUEEN_VALUE_MIDGAME] += tune_params.scale(inc,Tune::QUEEN_VALUE_MIDGAME,mLevel);
+      grads[Tune::QUEEN_VALUE_ENDGAME] += tune_params.scale(inc,Tune::QUEEN_VALUE_ENDGAME,mLevel);
       if (board.pinOnDiag(sq, okp, oside)) {
          pin_count++;
       }
