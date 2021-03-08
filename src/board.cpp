@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2021 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -1970,7 +1970,7 @@ bool Board::materialDraw() const noexcept {
         return false;
     }
     if ((mat1.kingOnly() || mat1.infobits() == Material::KB || mat1.infobits() == Material::KN) &&
-        (mat1.kingOnly() || mat1.infobits() == Material::KB || mat1.infobits() == Material::KN)) {
+        (mat2.kingOnly() || mat2.infobits() == Material::KB || mat2.infobits() == Material::KN)) {
         if (mat1.kingOnly() || mat2.kingOnly()) {
             // K vs K, or K vs KN, or K vs KB
             return true;
