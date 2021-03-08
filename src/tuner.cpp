@@ -1623,6 +1623,7 @@ static void learn()
 int CDECL main(int argc, char **argv)
 {
     Bitboard::init();
+    Board::init();
     initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
