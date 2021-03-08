@@ -109,7 +109,7 @@ score_t see( const Board &board, Move move ) {
           }
           else {
              // assume Queen promotion
-             gain += Params::QUEEN_VALUE-Params::PAWN_VALUE;
+             gain += Params::SEE_PIECE_VALUES[Queen] - Params::SEE_PIECE_VALUES[Pawn];
              on_square = MakePiece(Queen,side);
           }
       }
@@ -176,7 +176,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
 #endif
        return 0;
    } else if (!IsPromotion(move) &&
-              (Params::Gain(move) - Params::SEE_PIECE_VALUES[TypeOfPiece(PieceMoved(move))] >= threshold)) {
+              (Params::Gain(move) - Params::SEE_PIECE_VALUES[PieceMoved(move)] >= threshold)) {
        // Even the loss of the capturing piece would still leave us >= threshold
 #ifdef ATTACK_TRACE
        cout << "threshold test succeeded, return 1" << endl;
@@ -227,7 +227,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
           }
           else {
              // assume Queen promotion
-             gain += Params::QUEEN_VALUE-Params::PAWN_VALUE;
+             gain += Params::SEE_PIECE_VALUES[Queen] - Params::SEE_PIECE_VALUES[Pawn];
              on_square = MakePiece(Queen,side);
           }
       }

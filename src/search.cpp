@@ -1,4 +1,4 @@
-// Copyright 1987-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2021 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -2078,7 +2078,7 @@ score_t Search::quiesce(int ply,int depth)
                }
                // See pruning
                score_t neededGain = node->best_score - node->eval - QSEARCH_FORWARD_PRUNE_MARGIN;
-               if (Params::PieceValue(Capture(move)) - Params::PieceValue(PieceMoved(move)) <= neededGain &&
+               if (Params::SEE_PIECE_VALUES[Capture(move)] - Params::SEE_PIECE_VALUES[PieceMoved(move)] <= neededGain &&
                    node->beta > -Constants::TABLEBASE_WIN &&
                    !passedPawnPush(board,move) &&
                    !disc.isSet(StartSquare(move)) &&

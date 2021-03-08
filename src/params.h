@@ -22,8 +22,7 @@ struct Params  {
     static constexpr score_t PAWN_VALUE = (score_t)128; // midgame pawn value
     static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
 
-    static constexpr score_t SEE_PIECE_VALUES[] = {0, PAWN_VALUE, score_t(4.3*PAWN_VALUE),
-      score_t(4.3*PAWN_VALUE), score_t(6.0*PAWN_VALUE), score_t(12.0*PAWN_VALUE), score_t(32*PAWN_VALUE) };
+    static const score_t SEE_PIECE_VALUES[7];
 
     static FORCEINLINE score_t Gain(Move move) {
         return (TypeOfMove(move) == Promotion) ?
