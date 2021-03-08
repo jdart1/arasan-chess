@@ -96,7 +96,6 @@ class Tune : public vector<TuneParam> {
     TRADE_DOWN1,
     TRADE_DOWN2,
     TRADE_DOWN3,
-    PAWN_ENDGAME_ADJUST,
     PAWN_ATTACK_FACTOR,
     MINOR_ATTACK_FACTOR,
     MINOR_ATTACK_BOOST,

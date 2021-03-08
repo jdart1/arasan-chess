@@ -188,6 +188,10 @@ class Material
         return (level > 31) ? 31 : level;
     }
 
+    // rough count of material (incl. pawns) in pawn units
+    int totalMaterialLevel() const {
+       return level + pawnCount();
+    }
  private:
     void clear() {
         info = level = count = 0;

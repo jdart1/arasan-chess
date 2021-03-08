@@ -1110,7 +1110,6 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
     for (int i = 0; i < pawns; i++) {
         ASSERT(OnBoard(pds[i].sq));
         grads[Tune::SPACE] += inc*pds[i].space_weight;
-        grads[Tune::PAWN_ENDGAME_ADJUST] += tune_params.scale(inc,Tune::PAWN_ENDGAME_ADJUST,mLevel);
         if (pds[i].flags & Scoring::PawnDetail::PASSED) {
             const Square sq = pds[i].sq;
             const int rank = Rank(sq, side);

@@ -7,16 +7,16 @@
 
 #include "params.h"
 
-const int PAWN_VALUE_MIDGAME = 128;
-const int PAWN_VALUE_ENDGAME = 144;
-const int KNIGHT_VALUE_MIDGAME = int(4.0*PAWN_VALUE_MIDGAME);
-const int KNIGHT_VALUE_ENDGAME = int(4.0)*PAWN_VALUE_MIDGAME);
-const int BISHOP_VALUE_MIDGAME = int(4.0*PAWN_VALUE_MIDGAME);
-const int BISHOP_VALUE_ENDGAME = int(4.0*PAWN_VALUE_MIDGAME);
-const int ROOK_VALUE_MIDGAME = int(6.0*PAWN_VALUE_MIDGAME);
-const int ROOK_VALUE_ENDGAME = int(6.0*PAWN_VALUE_MIDGAME);
-const int QUEEN_VALUE_MIDGAME = int(12.0*PAWN_VALUE_MIDGAME);
-const int QUEEN_VALUE_ENDGAME  = int(12.0*PAWN_VALUE_MIDGAME);
+const int Params::PAWN_VALUE_MIDGAME = 128;
+const int Params::PAWN_VALUE_ENDGAME = 144;
+const int Params::KNIGHT_VALUE_MIDGAME = int(4.0*Params::PAWN_VALUE);
+const int Params::KNIGHT_VALUE_ENDGAME = int(4.0*Params::PAWN_VALUE);
+const int Params::BISHOP_VALUE_MIDGAME = int(4.0*Params::PAWN_VALUE);
+const int Params::BISHOP_VALUE_ENDGAME = int(4.0*Params::PAWN_VALUE);
+const int Params::ROOK_VALUE_MIDGAME = int(6.0*Params::PAWN_VALUE);
+const int Params::ROOK_VALUE_ENDGAME = int(6.0*Params::PAWN_VALUE);
+const int Params::QUEEN_VALUE_MIDGAME = int(12.0*Params::PAWN_VALUE);
+const int Params::QUEEN_VALUE_ENDGAME  = int(12.0*Params::PAWN_VALUE);
 const int Params::KN_VS_PAWN_ADJUST[3] = {0, -107, 57};
 const int Params::KING_COVER[6][4] = {{8, 23, 15, 15},
 {1, 4, 2, 3},
@@ -44,7 +44,6 @@ const int Params::KQMINOR_VS_Q_NO_PAWNS = -152;
 const int Params::TRADE_DOWN1 = -15;
 const int Params::TRADE_DOWN2 = 71;
 const int Params::TRADE_DOWN3 = 20;
-const int Params::PAWN_ENDGAME_ADJUST = 25;
 const int Params::PAWN_ATTACK_FACTOR = 17;
 const int Params::MINOR_ATTACK_FACTOR = 46;
 const int Params::MINOR_ATTACK_BOOST = 22;

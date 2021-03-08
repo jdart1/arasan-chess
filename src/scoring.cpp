@@ -909,8 +909,8 @@ void Scoring::positionalScore(const Board &board,
       {
       case Knight:
          {
-            scores.mid += PARAM(KNIGHT_PST)[Midgame][pstSq];
-            scores.end += PARAM(KNIGHT_PST)[Endgame][pstSq];
+            scores.mid += PARAM(KNIGHT_PST)[Midgame][pstSq] + PARAM(KNIGHT_VALUE_MIDGAME);
+            scores.end += PARAM(KNIGHT_PST)[Endgame][pstSq] + PARAM(KNIGHT_VALUE_ENDGAME);
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
             const score_t mobl = PARAM(KNIGHT_MOBILITY)[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
@@ -949,8 +949,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Bishop:
          {
-            scores.mid += PARAM(BISHOP_PST)[Midgame][pstSq];
-            scores.end += PARAM(BISHOP_PST)[Endgame][pstSq];
+            scores.mid += PARAM(BISHOP_PST)[Midgame][pstSq] + PARAM(BISHOP_VALUE_MIDGAME);
+            scores.end += PARAM(BISHOP_PST)[Endgame][pstSq] + PARAM(BISHOP_VALUE_ENDGAME);
 
             const Bitboard battacks(board.bishopAttacks(sq));
             ai.allAttacks[side] |= battacks;
@@ -997,8 +997,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Rook:
          {
-            scores.mid += PARAM(ROOK_PST)[Midgame][pstSq];
-            scores.end += PARAM(ROOK_PST)[Endgame][pstSq];
+            scores.mid += PARAM(ROOK_PST)[Midgame][pstSq] + PARAM(ROOK_VALUE_MIDGAME);
+            scores.end += PARAM(ROOK_PST)[Endgame][pstSq] + PARAM(ROOK_VALUE_ENDGAME);
             const Bitboard rattacks(board.rookAttacks(sq));
             const int r = Rank(sq, side);
             if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
@@ -1065,8 +1065,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Queen:
          {
-            scores.mid += PARAM(QUEEN_PST)[Midgame][pstSq];
-            scores.end += PARAM(QUEEN_PST)[Endgame][pstSq];
+            scores.mid += PARAM(QUEEN_PST)[Midgame][pstSq] + PARAM(QUEEN_VALUE_MIDGAME);
+            scores.end += PARAM(QUEEN_PST)[Endgame][pstSq] + PARAM(QUEEN_VALUE_ENDGAME);
             int qmobl = 0;
             Bitboard battacks(board.bishopAttacks(sq));
             Bitboard qmobility(battacks);
@@ -1375,7 +1375,8 @@ void Scoring::calcPawnData(const Board &board,
          entr.b_square_pawns++;
       entr.pawn_file_mask |= (1 << (file - 1));
 
-      entr.endgame_score += PARAM(PAWN_ENDGAME_ADJUST);
+      entr.midgame_score += PARAM(PAWN_VALUE_MIDGAME);
+      entr.endgame_score += PARAM(PAWN_VALUE_ENDGAME);
 
       int backward = 0;
       int passed = 0;
@@ -1649,8 +1650,6 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    const score_t mdiff =  (int)(wMat.value() - bMat.value());
    cout << "material difference=" << (board.sideToMove() == White ? mdiff : -mdiff) << endl;
 #endif
-   wScores.any = wMat.value();                                      
-   bScores.any = bMat.value();                                      
    if (wMat.infobits() != bMat.infobits()) {
        if (wMat.noPawns() && bMat.noPawns()) {
            adjustMaterialScoreNoPawns(board,White,wScores);
@@ -2232,11 +2231,11 @@ int Scoring::KBPDraw(const Board &board) {
 }
 
 bool Scoring::theoreticalDraw(const Board &board) {
-    if (board.getMaterial(White).value() >
-        board.getMaterial(Black).value())
+    if (board.getMaterial(White).totalMaterialLevel() >
+        board.getMaterial(Black).totalMaterialLevel())
         return theoreticalDraw<White>(board);
-    else if (board.getMaterial(White).value() <
-             board.getMaterial(Black).value())
+    else if (board.getMaterial(White).totalMaterialLevel() <
+             board.getMaterial(Black).totalMaterialLevel())
         return theoreticalDraw<Black>(board);
     else
         return false;
@@ -2247,7 +2246,7 @@ template <ColorType side>
 bool Scoring::theoreticalDraw(const Board &board) {
     const Material &mat1 = board.getMaterial(side);
     const Material &mat2 = board.getMaterial(OppositeColor(side));
-    if (mat1.value() > Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) return 0;
+    if (mat1.materialLevel() > 6) return false;
 
     // Check for K + P vs rook pawn
     if (mat1.infobits() == Material::KP && mat2.kingOnly()) {
@@ -2271,10 +2270,10 @@ bool Scoring::theoreticalDraw(const Board &board) {
     }
     // check for KNN vs K
     else if (mat1.infobits() == Material::KNN && mat2.kingOnly()) {
-        return 1;
+        return true;
     }
     else {
-        return 0;
+        return false;
     }
 }
 
@@ -2291,8 +2290,8 @@ bool Scoring::isDraw(const Board &board, int &rep_count, int ply) {
    else if (board.fiftyMoveDraw()) {
       return true;
    }
-   else if (board.getMaterial(White).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2) &&
-            board.getMaterial(Black).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) {
+   else if (board.getMaterial(White).materialLevel() <= 6 &&
+            board.getMaterial(Black).materialLevel() <= 6) {
       // check for insufficient material and other drawing situations
       return board.materialDraw() || theoreticalDraw(board);
    } else {

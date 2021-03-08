@@ -58,7 +58,6 @@ score_t Params::KQMINOR_VS_Q_NO_PAWNS;
 score_t Params::TRADE_DOWN1;
 score_t Params::TRADE_DOWN2;
 score_t Params::TRADE_DOWN3;
-score_t Params::PAWN_ENDGAME_ADJUST;
 score_t Params::PAWN_ATTACK_FACTOR;
 score_t Params::MINOR_ATTACK_FACTOR;
 score_t Params::MINOR_ATTACK_BOOST;
@@ -205,7 +204,6 @@ Tune::Tune()
         TuneParam(Tune::TRADE_DOWN1,"trade_down1",VAL(0.3),VAL(-0.5),VAL(0.75),&Params::TRADE_DOWN1,TuneParam::Any,1),
         TuneParam(Tune::TRADE_DOWN2,"trade_down2",VAL(0.3),VAL(0),VAL(0.75),&Params::TRADE_DOWN2,TuneParam::Any,1),
         TuneParam(Tune::TRADE_DOWN3,"trade_down3",VAL(0.1),VAL(0),VAL(0.75),&Params::TRADE_DOWN3,TuneParam::Any,1),
-        TuneParam(Tune::PAWN_ENDGAME_ADJUST,"pawn_endgame_adjust",VAL(0.1),VAL(0),VAL(0.5),&Params::PAWN_ENDGAME_ADJUST,TuneParam::Endgame,1),
         TuneParam(Tune::PAWN_ATTACK_FACTOR,"pawn_attack_factor",8,0,100,&Params::PAWN_ATTACK_FACTOR,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",45,20,100,&Params::MINOR_ATTACK_FACTOR,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,0,100,&Params::MINOR_ATTACK_BOOST,TuneParam::Midgame,1),
