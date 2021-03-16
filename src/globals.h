@@ -1,4 +1,4 @@
-// Copyright 1994-2005, 2014-2016 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2005, 2014-2016, 2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _GLOBALS_H
 #define _GLOBALS_H
@@ -24,6 +24,9 @@ extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
 extern lock_t input_lock;
+#ifdef SYZYGY_TBS
+extern lock_t syzygy_lock;
+#endif
 #ifdef TUNE
 extern Tune tune_params;
 #endif

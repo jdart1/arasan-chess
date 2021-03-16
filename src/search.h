@@ -145,6 +145,9 @@ public:
 
     virtual ~Search() = default;
 
+    // one-time startup initialization
+    static void init();
+
     void init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
@@ -576,6 +579,7 @@ private:
     bool stopped;
     SearchType typeOfSearch;
     int time_check_counter;
+    int timeCheckInterval;
 #ifdef SMP_STATS
     int sample_counter;
 #endif
@@ -587,6 +591,7 @@ private:
     ThreadPool *pool;
     Search *rootSearch;
     int tb_root_probes, tb_root_hits;
+    bool tb_probe_in_search;
 
     MoveSet include;
     MoveSet exclude;

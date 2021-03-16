@@ -95,8 +95,6 @@ static const int NODE_ACCUM_THRESHOLD = 16;
 static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 #endif
 
-static int Time_Check_Interval;
-
 static const int Illegal = Constants::INVALID_SCORE;
 
 static void setCheckStatus(Board &board, CheckStatusType s)
@@ -152,6 +150,7 @@ SearchController::SearchController()
       rootSearch(nullptr),
       tb_root_probes(0),
       tb_root_hits(0),
+      tb_probe_in_search(true),
 #ifdef SYZYGY_TBS
       tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
 #endif
@@ -174,6 +173,15 @@ SearchController::SearchController()
 
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
+    hashTable.initHash((size_t)(options.search.hash_table_size));
+}
+
+SearchController::~SearchController() {
+   delete pool;
+   hashTable.freeHash();
+}
+
+void Search::init() {
     for (int d = 0; d < 64; d++) {
         for (int moves = 0; moves < 64; moves++) {
             for (int p = 0; p < 2; p++) {
@@ -196,12 +204,6 @@ SearchController::SearchController()
       }}
 
  */
-    hashTable.initHash((size_t)(options.search.hash_table_size));
-}
-
-SearchController::~SearchController() {
-   delete pool;
-   hashTable.freeHash();
 }
 
 void SearchController::terminateNow() {
@@ -270,15 +272,16 @@ Move SearchController::findBestMove(
 #endif
     elapsed_time = 0ULL;
 
-    Time_Check_Interval = 4096/NODE_ACCUM_THRESHOLD;
+    timeCheckInterval = 4096/NODE_ACCUM_THRESHOLD;
     // reduce time check interval if time limit is very short (<1 sec)
     if (srcType == TimeLimit) {
        if (time_limit < 100) {
-          Time_Check_Interval = 1024/NODE_ACCUM_THRESHOLD;
+          timeCheckInterval = 1024/NODE_ACCUM_THRESHOLD;
        } else if (time_limit < 1000) {
-          Time_Check_Interval = 2048/NODE_ACCUM_THRESHOLD;
+          timeCheckInterval = 2048/NODE_ACCUM_THRESHOLD;
        }
     }
+    tb_probe_in_search = true;
     computerSide = board.sideToMove();
 
 #ifdef NUMA
@@ -320,7 +323,7 @@ Move SearchController::findBestMove(
       stats->value = drawScore(board);
       return NullMove;
    }
-   Search *rootSearch = pool->rootSearch();
+   rootSearch = pool->rootSearch();
    // Generate the ply 0 moves here:
    mg = new RootMoveGenerator(board,&(rootSearch->context),NullMove,debugOut());
    if (mg->moveCount() == 0) {
@@ -358,7 +361,7 @@ Move SearchController::findBestMove(
       }
       select_subopt = random(1024);
       // adjust time check interval since we are lowering nps
-      Time_Check_Interval = std::max<int>(1,Time_Check_Interval / (1+8*int(factor)));
+      timeCheckInterval = std::max<int>(1,timeCheckInterval / (1+8*int(factor)));
       if (options.search.strength <= 95) {
          const double limit = pow(2.1,options.search.strength/25.0)-0.25;
          double int_limit;
@@ -381,17 +384,22 @@ Move SearchController::findBestMove(
       }
    }
 
-   time_check_counter = Time_Check_Interval;
+   time_check_counter = timeCheckInterval;
 
    score_t value = Constants::INVALID_SCORE;
 #ifdef SYZYGY_TBS
    tb_hit = 0;
-   options.search.tb_probe_in_search = 1;
    updateSearchOptions();
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
    if (options.search.use_tablebases) {
+       // Lock because the following calls is not thread-safe. In normal use
+       // we don't need to worry about this, but it is possible there are
+       // two concurrent SearchController instances in a program, in which case
+       // it matters.
+       Lock(syzygy_lock);
        tb_hit = mg->rank_root_moves();
+       Unlock(syzygy_lock);
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
            tb_root_hits += mg->moveCount();
@@ -400,7 +408,7 @@ Move SearchController::findBestMove(
            // on DTM not DTZ.
            stats->tb_value = tb_score;
            // do not probe in the search
-           options.search.tb_probe_in_search = 0;
+           tb_probe_in_search = false;
            updateSearchOptions();
            if (debugOut()) {
                cout << debugPrefix() << board << " root tb hit, score=";
@@ -481,7 +489,13 @@ Move SearchController::findBestMove(
       cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       cout << " pv=" << stats->best_line_image << endl;
    }
-   ASSERT(!IsNull(best));
+   if (IsNull(best)) {
+      cerr << debugPrefix() << "best thread: depth=" << stats->completedDepth <<  " score=";
+      Scoring::printScore(stats->value,cerr);
+      cerr << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
+      cerr << " pv=" << stats->best_line_image << endl;
+      cerr << board << endl;
+   }
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
@@ -1120,12 +1134,12 @@ Move Search::ply0_search()
                break;
             }
             if (controller->elapsed_time > 200) {
-               Time_Check_Interval = int((20L*stats.num_nodes)/(controller->elapsed_time*NODE_ACCUM_THRESHOLD));
+               controller->timeCheckInterval = int((20L*stats.num_nodes)/(controller->elapsed_time*NODE_ACCUM_THRESHOLD));
                if ((int)controller->time_limit - (int)controller->elapsed_time < 100) {
-                  Time_Check_Interval /= 2;
+                  controller->timeCheckInterval /= 2;
                }
                if (mainThread() && debugOut()) {
-                  cout << debugPrefix() << "time check interval=" << Time_Check_Interval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << endl;
+                  cout << debugPrefix() << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << endl;
                }
             }
             stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
@@ -1736,7 +1750,7 @@ score_t Search::quiesce(int ply,int depth)
       --controller->sample_counter;
 #endif
       if (--controller->time_check_counter <= 0) {
-         controller->time_check_counter = Time_Check_Interval;
+         controller->time_check_counter = controller->timeCheckInterval;
          if (checkTime()) {
             if (debugOut()) {
                cout << debugPrefix() << "terminating, time up" << endl;
@@ -2451,7 +2465,7 @@ score_t Search::search()
         }
 #endif
         if (--controller->time_check_counter <= 0) {
-            controller->time_check_counter = Time_Check_Interval;
+            controller->time_check_counter = controller->timeCheckInterval;
             if (checkTime()) {
                if (debugOut()) {
                   cout << debugPrefix() << "terminating, time up" << endl;
@@ -2487,10 +2501,8 @@ score_t Search::search()
     using_tb = 0;
 #ifdef SYZYGY_TBS
     if (srcOpts.use_tablebases) {
-        const Material &wMat = board.getMaterial(White);
-        const Material &bMat = board.getMaterial(Black);
-        using_tb = (wMat.men() + bMat.men() <= EGTBMenCount) &&
-            srcOpts.tb_probe_in_search &&
+        using_tb = board.men() <= EGTBMenCount &&
+            controller->tb_probe_in_search &&
             node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth;
     }
 #endif
@@ -2726,10 +2738,9 @@ score_t Search::search()
         // Fixed reduction + some depth- and score-dependent
         // increment. Decrease reduction somewhat when material
         // is low.
-        int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 9;
-        int lowMat2 = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
+        const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 9;
+        const int lowMat2 = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
         int nu_depth = depth - 3*DEPTH_INCREMENT - (lowMat ? 0 : DEPTH_INCREMENT/2) - depth/(4+2*lowMat+2*lowMat2) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
-
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;

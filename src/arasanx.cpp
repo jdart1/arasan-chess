@@ -1,5 +1,5 @@
 // Main module for Arasan chess engine.
-// Copyright 1997-2018, 2020 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2020-2021 by Jon Dart. All Rights Reserved.
 //
 
 #include "types.h"
@@ -148,9 +148,11 @@ int CDECL main(int argc, char **argv) {
     std::cin.rdbuf()->pubsetbuf(NULL, 0);
 
     Bitboard::init();
+    Board::init();
     initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
+    Search::init();
     if (!initGlobals(argv[0], true)) {
         cleanupGlobals();
         exit(-1);

@@ -1,4 +1,4 @@
- // Copyright 1996-2012, 2014, 2016-2019 by Jon Dart.  All Rights Reserved.
+ // Copyright 1996-2012, 2014, 2016-2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -25,6 +25,9 @@ BookReader openingBook;
 Log *theLog = nullptr;
 string learnFileName;
 LockDefine(input_lock);
+#ifdef SYZYGY_TBS
+LockDefine(syzygy_lock);
+#endif
 bool polling_terminated;
 ThreadControl inputSem;
 #ifdef TUNE
@@ -69,6 +72,9 @@ int initGlobals(const char *pathName, bool initLog) {
        theLog->write_header();
    }
    LockInit(input_lock);
+#ifdef SYZYGY_TBS
+   LockInit(syzygy_lock);
+#endif   
    return 1;
 }
 
@@ -77,10 +83,12 @@ void CDECL cleanupGlobals(void) {
    delete gameMoves;
    delete theLog;
    LockFree(input_lock);
+#ifdef SYZYGY_TBS
+   LockFree(syzygy_lock);
+#endif   
    Scoring::cleanup();
-#ifdef GAVIOTA_TBS
-   GaviotaTb::freeTB();
-#endif
+   Bitboard::cleanup();
+   Board::cleanup();
 }
 
 void initOptions(const char *pathName) {
