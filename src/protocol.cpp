@@ -1677,6 +1677,8 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<unsigned>(value,options.book.weighting);
     } else if (name == "Favor best book moves") {
         Options::setOption<unsigned>(value,options.book.scoring);
+    } else if (name == "Randomize book moves") {
+        Options::setOption<unsigned>(value,options.book.random);
     } else if (name == "Can resign") {
         setCheckOption(value,options.search.can_resign);
     } else if (name == "Resign threshold") {
@@ -1834,6 +1836,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.scoring << " min 0 max 100" << endl;
         cout << "option name Favor high-weighted book moves type spin default " <<
             options.book.weighting << " min 0 max 100" << endl;
+        cout << "option name Randomize book moves type spin default " <<
+            options.book.random << " min 0 max 100" << endl;
         cout << "option name Threads type spin default " <<
             options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << endl;
@@ -1930,6 +1934,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"Favor high-weighted book moves")) {
             Options::setOption<unsigned>(value,options.book.weighting);
+        }
+        else if (uciOptionCompare(name,"Randomize book moves")) {
+            Options::setOption<unsigned>(value,options.book.random);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
@@ -2457,6 +2464,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.scoring << " 1 100\"";
         cout << " option=\"Favor high-weighted book moves -spin " <<
             options.book.weighting << " 1 100\"";
+        cout << " option=\"Randomize book moves -spin " <<
+            options.book.random << " 1 100\"";
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
         cout << " option=\"Resign threshold -spin " <<

@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <fstream>
@@ -129,6 +129,10 @@ void Options::set_option(const string &name, const string &value) {
   }
   else if (name == "book.scoring") {
      setOption<unsigned>(name,value,book.scoring);
+     book.scoring = std::min<unsigned>(100,std::max<unsigned>(0,book.scoring));
+  }
+  else if (name == "book.random") {
+     setOption<unsigned>(name,value,book.random);
      book.scoring = std::min<unsigned>(100,std::max<unsigned>(0,book.scoring));
   }
   else if (name == "learning.position_learning") {

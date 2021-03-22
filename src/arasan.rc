@@ -40,6 +40,10 @@ book.weighting=50
 # that have high scores (based on win/loss/draw history).
 book.scoring=50
 #
+# Book random factor (0-100).
+# Higher values cause more randomness in move selection.
+book.random=50
+#
 # Learning
 #
 # True to enable storage & use of position values, false to disable

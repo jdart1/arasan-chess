@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -8,6 +8,7 @@
 #include "globals.h"
 #include "debug.h"
 #include "params.h"
+#include "notation.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream> // for debugging
@@ -90,27 +91,45 @@ Move BookReader::pick(const Board &b) {
    double maxReward = -1e9;
    Move bestMove = NullMove;
    for (const book::DataEntry &info : rawMoves) {
+#ifdef _TRACE
+      Notation::image(b,move_list[info.index],Notation::OutputFormat::SAN,cout);
+#endif
       array<double,OUTCOMES> counts;
       counts[0] = info.win;
       counts[1] = info.loss;
       counts[2] = info.draw;
-      if (info.weight != book::NO_RECOMMEND) {
-          const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
-          // make fake win/loss/draw counts to be added to the real counts
-          counts[0] += options.book.weighting*weightAdjust*info.count()/100;
-          counts[1] += (1.0-weightAdjust)*options.book.weighting*info.count()/100;
-      }
       // compute a sample based on the count distribution and
       // calculate its reward
-      auto reward = sample_dirichlet(counts);
+      auto reward = (sample_dirichlet(counts)*options.book.scoring)/50;
+#ifdef _TRACE
+      cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw) << "]";
+      cout << " reward=" << reward;
+#endif
+      if (info.weight != book::NO_RECOMMEND) {
+          // boost reward according to explicit weight
+          const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
+          reward = reward*(1.0+(2*(weightAdjust-0.5)*options.book.weighting)/100);
+#ifdef _TRACE
+          cout << " weightAdjust=" << weightAdjust << " new reward=" << reward;
+#endif
+      }
       // add a small bonus for very frequent moves. Note: moves
       // with weights below neutral get less of a frequency bonus.
-      double reduce = std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT);
+      double reduce = 1.0 - ((1.0-std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT))*options.book.weighting)/100;
       reward += 0.1*log10(double(info.count()))*reduce*options.book.frequency/100;
-      // add a random amount based on tolerance parameter
-      int tolerance = 100 - int(options.book.scoring);
-      std::normal_distribution<double> dist(0,0.1*tolerance/100);
-      reward += dist(engine);
+#ifdef _TRACE
+      cout << " after freq bonus: " << reward;
+#endif
+      // add a random amount based on randomness parameter
+      std::normal_distribution<double> dist(0,0.002*options.book.random);
+      double rand = dist(engine);
+#ifdef _TRACE
+      cout << " random: " << rand;
+#endif
+      reward += rand;
+#ifdef _TRACE
+      cout << " total: " << reward << endl;
+#endif
       if (reward > maxReward) {
           maxReward = reward;
           bestMove = move_list[info.index];

@@ -612,9 +612,10 @@ int CDECL main(int argc, char **argv) {
     LockInit(bookLock);
 
     options.search.hash_table_size = 64 * 1024 * 1024;
-    options.book.frequency = 10;
-    options.book.weighting = 0;
-    options.book.scoring = 0;
+    options.book.frequency = 25;
+    options.book.weighting = 10;
+    options.book.scoring = 25;
+    options.book.random = 100;
     options.learning.position_learning = 0;
     options.search.can_resign = 1;
     options.search.resign_threshold = -500;
