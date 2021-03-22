@@ -1,4 +1,4 @@
-// Copyright 1997-2020 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2021 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -714,7 +714,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         }
         else if ((cmd_word == "position" ||
                   cmd == "ucinewgame")) {
-            // These commands shcould end the search - we
+            // These commands should end the search - we
             // need to prepare to search a new position.
             controller->terminateNow();
             return false;
@@ -814,6 +814,9 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         } else {
             stats.state = Terminated;
         }
+        // Stop processing commands in the search monitor loop.
+        // Queued commands will be processed after search completion.
+        exit = true;
         return false;
     }
     else if (cmd == "new" || cmd == "test" || cmd == "bench" ||
