@@ -33,7 +33,7 @@ book.frequency=50
 # Book weighting factor (0-100).
 # Higher numbers cause the book to steer more strongly towards moves
 # that have high manually configured weights.
-book.weighting=50
+book.weighting=100
 #
 # Book scoring factor (0-100).
 # Higher numbers cause the book to steer more strongly towards moves
