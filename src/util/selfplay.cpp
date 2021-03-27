@@ -618,7 +618,7 @@ int CDECL main(int argc, char **argv) {
     options.book.random = 100;
     options.learning.position_learning = 0;
     options.search.can_resign = 1;
-    options.search.resign_threshold = -500;
+    options.search.resign_threshold = -3000;
 
     int arg = 1;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
