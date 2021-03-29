@@ -10,6 +10,9 @@
 #include "movegen.h"
 #include "threadp.h"
 #include "options.h"
+#ifdef NNUE
+#include "nnueintf.h"
+#endif
 extern "C" {
 #include <memory.h>
 #include <time.h>
@@ -65,6 +68,11 @@ struct NodeInfo {
 #endif
     int ply, depth;
     score_t swap;
+#ifdef NNUE
+    nnue::Network::AccumulatorType accum;
+    std::array<DirtyState, 3> dirty;
+    unsigned dirty_num;
+#endif  
 
     int PV() const {
         return (beta > alpha+1);
