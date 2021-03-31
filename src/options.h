@@ -43,6 +43,10 @@ class Options
    int strength; // 0 .. 100
    int multipv; // for UCI only
    int ncpus;
+#ifdef NNUE
+   int useNNUE;
+   string nnueFile;
+#endif    
    int easy_plies; // do wide search for "easy move" detection
    int easy_threshold; // wide search width in centipawns
 #ifdef NUMA

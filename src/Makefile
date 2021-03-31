@@ -123,7 +123,7 @@ ifeq ("$(CC)","icc")
 CPP     = icc
 LD      = icc
 AR      = xiar
-FLAGS  := $(FLAGS) -std=c++11 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
+FLAGS  := $(FLAGS) -std=c++17 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
 ifndef DEBUG
 OPT     = -O3 -fno-rtti -DNDEBUG
 GTB_OPT := -O3 -fno-rtti -DNDEBUG
@@ -153,7 +153,7 @@ ifdef CLANG
 
 # get up to 2 version digts
 GCCVER := $(shell $(CC) -dumpversion | perl -lane 'print $$1 if /^([0-9]+?(\.[0-9]+)).*$$/')
-GCC6 := $(shell echo '$(GCCVER) >= 6.0' | bc)
+GCC11 := $(shell echo '$(GCCVER) >= 11.0' | bc)
 
 CPP     := $(CC)
 LD      := $(CC)
@@ -164,8 +164,8 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-ifeq "$(GCC6)" "0"
-FLAGS := -std=c++11 $(FLAGS)
+ifneq "$(GCC11)" "1"
+FLAGS := -std=c++17 $(FLAGS)
 endif
 FLAGS := -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifndef DEBUG
@@ -193,18 +193,18 @@ AR      = ar
 PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
-GCCMINVERSION := 4.9
+GCCMINVERSION := 7
 # Get 1st two digits of full GCC version
 GCCVER := $(shell expr `$(CC) -dumpfullversion | awk -F. '{printf "%s.%s\n", $$1, $$2}'`)
+GCC11 := $(shell echo '$(GCCVER) >= 11.0' | bc)
 GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
-GCC6 := $(shell echo '$(GCCVER) >= 6.0' | bc)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
 FLAGS := -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
-ifeq "$(GCC6)" "0"
-# GCC not at least version 6, so c++11 support must be enabled explicitly
-FLAGS := $(FLAGS) -std=c++11
+ifneq "$(GCC11)" "1"
+# c++17 support must be enabled explicitly
+FLAGS := $(FLAGS) -std=c++17
 endif
 SMPFLAGS := $(SMPFLAGS) -pthread
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold
