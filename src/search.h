@@ -25,8 +25,6 @@ using namespace std;
 
 class MoveGenerator;
 
-struct NodeInfo;
-
 // Per-node info, part of search history stack
 struct NodeInfo {
     NodeInfo() : best_score(Constants::INVALID_SCORE),

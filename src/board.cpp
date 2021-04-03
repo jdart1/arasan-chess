@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2021 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -8,6 +8,10 @@
 #include "boardio.h"
 #include "bhash.h"
 #include "movegen.h"
+#ifdef NNUE
+#include "search.h"
+#include "nnueintf.h"
+#endif
 #include <memory.h>
 #include <algorithm>
 #include <assert.h>
@@ -15,6 +19,8 @@
 #include <cstddef>
 #include <iostream>
 #include <unordered_set>
+
+struct NodeInfo;
 
 using namespace std;
 
@@ -261,7 +267,7 @@ static FORCEINLINE void Xor(hash_t &h,Square sq,Piece piece) {
    h ^= hash_codes[sq][(int)piece];
 }
 
-void Board::doNull()
+void Board::doNull(NodeInfo *node)
 {
    state.checkStatus = CheckUnknown;
    // We can't reset the halfmove counter because we might overwrite
@@ -277,17 +283,27 @@ void Board::doNull()
    side = oppositeSide();
    state.hashCode = BoardHash::setSideToMove(state.hashCode,side);
    *repListHead++ = state.hashCode;
+#ifdef NNUE
+   if (node) {
+      (node+1)->dirty_num = 0;
+      (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+   }
+#endif
    ASSERT(repListHead-repList < (int)RepListSize);
    ASSERT(state.hashCode == BoardHash::hashCode(*this));
 }
 
-void Board::doMove( Move move )
+void Board::doMove( Move move, NodeInfo *node )
 {
    ASSERT(!IsNull(move));
    ASSERT(state.hashCode == BoardHash::hashCode(*this));
    state.checkStatus = CheckUnknown;
    ++state.moveCount;
    ++state.movesFromNull;
+#ifdef NNUE
+   (node+1)->dirty_num = 1;
+   (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+#endif
    if (state.enPassantSq != InvalidSquare)
    {
        state.hashCode ^= ep_codes[state.enPassantSq];
@@ -341,6 +357,17 @@ void Board::doMove( Move move )
          clearAll(White,oldrooksq);
          setAll(White,newkp);
          setAll(White,newrooksq);
+#ifdef NNUE
+         if (node) {
+             (node+1)->dirty_num = 2;
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::WhiteRook);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+                                             static_cast<nnue::Square>(newkp),
+                                             nnue::WhiteKing);
+         }
+#endif
       }
       else if (moveType == QCastle)
       {
@@ -370,6 +397,17 @@ void Board::doMove( Move move )
          clearAll(White,oldrooksq);
          setAll(White,newkp);
          setAll(White,newrooksq);
+#ifdef NNUE
+         if (node) {
+             (node+1)->dirty_num = 2;
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::WhiteRook);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+                                             static_cast<nnue::Square>(newkp),
+                                             nnue::WhiteKing);
+         }
+#endif
       }
       else // not castling
       {
@@ -378,6 +416,14 @@ void Board::doMove( Move move )
                              Bitboard::mask[dest]);
          Square target = dest; // where we captured
          Piece capture = contents[dest]; // what we captured
+#ifdef NNUE
+         if (node && moveType != Promotion) {
+             (node+1)->dirty_num = 1;
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(start),
+                                             static_cast<nnue::Square>(dest),
+                                             static_cast<nnue::Piece>(PieceMoved(move)));
+         }
+#endif
          switch (TypeOfPiece(contents[StartSquare(move)])) {
          case Empty: break;
          case Pawn:
@@ -421,6 +467,16 @@ void Board::doMove( Move move )
                default:
                   break;
                }
+#ifdef NNUE
+               if (node) {
+                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(start),
+                                                                     nnue::InvalidSquare,
+                                                                     nnue::WhitePawn);
+                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(nnue::InvalidSquare,
+                                                                     static_cast<nnue::Square>(dest),
+                                                                     static_cast<nnue::Piece>(MakePiece(PromoteTo(move),White)));
+               }
+#endif
                break;
             default:
                Xor(state.hashCode, start, WhitePawn );
@@ -483,6 +539,12 @@ void Board::doMove( Move move )
          contents[start] = EmptyPiece;
          if (capture != EmptyPiece)
          {
+#ifdef NNUE
+            if (node) {
+              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::EmptyPiece,
+                                                                  static_cast<nnue::Piece>(capture));
+            }
+#endif
             state.moveCount = 0;
             ASSERT(target != InvalidSquare);
             occupied[Black].clear(target);
@@ -567,6 +629,17 @@ void Board::doMove( Move move )
          clearAll(Black,oldrooksq);
          setAll(Black,newkp);
          setAll(Black,newrooksq);
+#ifdef NNUE
+         if (node) {
+             (node+1)->dirty_num = 2;
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::BlackRook);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+                                             static_cast<nnue::Square>(newkp),
+                                             nnue::BlackKing);
+         }
+#endif
       }
       else if (moveType == QCastle)
       {
@@ -596,6 +669,17 @@ void Board::doMove( Move move )
          clearAll(Black,oldrooksq);
          setAll(Black,newkp);
          setAll(Black,newrooksq);
+#ifdef NNUE
+         if (node) {
+             (node+1)->dirty_num = 2;
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::BlackRook);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+                                             static_cast<nnue::Square>(newkp),
+                                             nnue::BlackKing);
+         }
+#endif
       }
       else // not castling
       {
@@ -604,6 +688,14 @@ void Board::doMove( Move move )
                            Bitboard::mask[dest]);
          Square target = dest; // where we captured
          Piece capture = contents[dest]; // what we captured
+#ifdef NNUE
+         if (node && moveType != Promotion) {
+             (node+1)->dirty_num = 1;
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(start),
+                                             static_cast<nnue::Square>(dest),
+                                             static_cast<nnue::Piece>(PieceMoved(move)));
+         }
+#endif
          switch (TypeOfPiece(contents[StartSquare(move)])) {
          case Empty: break;
          case Pawn:
@@ -647,6 +739,16 @@ void Board::doMove( Move move )
                default:
                   break;
                }
+#ifdef NNUE
+               if (node) {
+                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(start),
+                                                                     nnue::InvalidSquare,
+                                                                     nnue::BlackPawn);
+                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(nnue::InvalidSquare,
+                                                                     static_cast<nnue::Square>(dest),
+                                                                     static_cast<nnue::Piece>(MakePiece(PromoteTo(move),Black)));
+               }
+#endif
                break;
             default:
                Xor(state.hashCode, start, BlackPawn );
@@ -709,6 +811,12 @@ void Board::doMove( Move move )
          contents[start] = EmptyPiece;
          if (capture != EmptyPiece)
          {
+#ifdef NNUE
+            if (node) {
+              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::EmptyPiece,
+                                                                  static_cast<nnue::Piece>(capture));
+            }
+#endif
             state.moveCount = 0;
             ASSERT(OnBoard(target));
             occupied[White].clear(target);

@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2020 by Jon Dart.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021 by Jon Dart.
 // All Rights Reserved.
 
 #include "types.h"
@@ -10,6 +10,8 @@
 #include "bitboard.h"
 #include "attacks.h"
 #include "material.h"
+
+struct NodeInfo;
 
 class Board;
 
@@ -175,16 +177,17 @@ public:
          Bitboard(allOccupied & Attacks::betweenSquares[sq1][sq2]).isClear();
    }
 
-   // makes a move
-   void doMove(Move m);
+   // Makes a move. If a node pointer is passed, it is updated with change
+   // info needed for incremental calc of NNUE.
+   void doMove(Move m, NodeInfo * node = nullptr);
 
-   // makes a null move
-   void doNull();
+   // Makes a null move
+   void doNull( NodeInfo *node = nullptr );
 
-   // undoes a previous move.
+   // Undoes a previous move.
    void undoMove( Move rmove, const BoardState &stat );
 
-   // undoes a previous null move.
+   // Undoes a previous null move.
    void undoNull(const BoardState &oldState) {
       state = oldState;
        --repListHead;
