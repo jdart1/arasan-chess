@@ -33,12 +33,18 @@ ThreadControl inputSem;
 #ifdef TUNE
 Tune tune_params;
 #endif
+#ifdef NNUE
+nnue::Network network;
+#endif
 
 static const char * LEARN_FILE_NAME = "arasan.lrn";
 
 static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
+
+// TBD: add version/hash?
+static const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
 
 string programPath;
 
@@ -74,7 +80,22 @@ int initGlobals(const char *pathName, bool initLog) {
    LockInit(input_lock);
 #ifdef SYZYGY_TBS
    LockInit(syzygy_lock);
+#endif
+#ifdef NNUE
+   string nnueFileName = derivePath(DEFAULT_NETWORK_NAME);
+   loadNetwork(nnueFileName);
 #endif   
+   return 1;
+}
+
+int loadNetwork(const std::string &fname) {
+   std::cerr << "loading " << fname << std::endl;
+   std::ifstream in(fname);
+   in >> network;
+   if (in.bad()) {
+       std::cerr << "warning: error loading network " << fname << std::endl << std::flush;
+       return 0;
+   }
    return 1;
 }
 

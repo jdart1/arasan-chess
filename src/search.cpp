@@ -1449,7 +1449,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         } else {
             depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
         }
-        board.doMove(move);
+        board.doMove(move,node);
         setCheckStatus(board,in_check_after_move);
         score_t lobound = wide ? node->alpha : node->best_score;
 #ifdef _TRACE
@@ -1915,7 +1915,7 @@ score_t Search::quiesce(int ply,int depth)
                continue;
            }
            node->last_move = move;
-           board.doMove(move);
+           board.doMove(move,node);
            if (!board.wasLegal(move,true)) {
                board.undoMove(move,state);
                continue;
@@ -2094,7 +2094,7 @@ score_t Search::quiesce(int ply,int depth)
            }
 
            node->last_move = move;
-           board.doMove(move);
+           board.doMove(move,node);
            if (!board.wasLegal(move)) {
                board.undoMove(move,state);
                continue;
@@ -2167,7 +2167,7 @@ score_t Search::quiesce(int ply,int depth)
                    continue;
                }
                node->last_move = move;
-               board.doMove(move);
+               board.doMove(move,node);
                // verify opposite side in check:
                ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
                // and verify quick check confirms it
@@ -2853,7 +2853,7 @@ score_t Search::search()
                 }
 #endif
                 SetPhase(move,MoveGenerator::WINNING_CAPTURE_PHASE);
-                board.doMove(move);
+                board.doMove(move,node);
                 if (!board.wasLegal(move)) {
                     board.undoMove(move,state);
                     continue;
@@ -3081,7 +3081,7 @@ score_t Search::search()
                 depthMod = extend(board, node, in_check_after_move, move) +
                     reduce(board, node, move_index, improving, move);
             }
-            board.doMove(move);
+            board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
                   ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
 #ifdef _TRACE

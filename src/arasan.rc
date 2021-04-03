@@ -82,4 +82,4 @@ search.use_tablebases=true
 # the tablebases are assumed to be in a "syzygy" directory
 # under the directory where Arasan is installed.
 #search.syzygy_path=/home/jdart/chess/syzygy
-#
+

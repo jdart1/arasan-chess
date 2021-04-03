@@ -1,4 +1,4 @@
-// Copyright 1994-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"

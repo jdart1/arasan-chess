@@ -1695,6 +1695,7 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<int>(value,options.search.useNNUE);
     } else if (name == "NNUE File") {
         Options::setOption<string>(value,options.search.nnueFile);
+        loadNetwork(options.search.nnueFile);
 #endif        
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
@@ -1993,6 +1994,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
            Options::setOption<string>(value,options.search.nnueFile);
+           loadNetwork(options.search.nnueFile);
 	}
 #endif
 #ifdef NUMA
