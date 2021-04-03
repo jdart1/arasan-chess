@@ -127,6 +127,7 @@ int CDECL main(int argc, char **argv)
 	 return -1;
    }
    Bitboard::init();
+   Board::init();
    initOptions(argv[0]);
    Attacks::init();
    Scoring::init();
