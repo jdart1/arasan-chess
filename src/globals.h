@@ -14,6 +14,9 @@
 #ifdef TUNE
 #include "tune.h"
 #endif
+#ifdef NNUE
+#include "nnue.h"
+#endif
 
 extern Options options;
 extern MoveArray *gameMoves;

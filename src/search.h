@@ -1,4 +1,4 @@
-// Copyright 1994-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -9,7 +9,7 @@
 #include "scoring.h"
 #include "movegen.h"
 #include "threadp.h"
-#include "options.h"
+#include "globals.h"
 #ifdef NNUE
 #include "nnueintf.h"
 #endif
@@ -307,6 +307,13 @@ protected:
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 
+    score_t evalu8(const Board &board) {
+       if (options.search.useNNUE) {
+          return scoring.evalu8NNUE(board,node);
+       } else {
+          return scoring.evalu8(board);
+       }
+    }
 
     SearchController *controller;
     Board board;

@@ -301,8 +301,10 @@ void Board::doMove( Move move, NodeInfo *node )
    ++state.moveCount;
    ++state.movesFromNull;
 #ifdef NNUE
-   (node+1)->dirty_num = 1;
-   (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+   if (node) {
+     (node+1)->dirty_num = 1;
+     (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+   }
 #endif
    if (state.enPassantSq != InvalidSquare)
    {

@@ -1,4 +1,4 @@
-// Copyright 1987-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2021 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -1770,7 +1770,7 @@ score_t Search::quiesce(int ply,int depth)
          return -Illegal;
       }
       node->flags |= EXACT;
-      return scoring.evalu8(board);
+      return evalu8(board);
    }
    else if (Scoring::isDraw(board,rep_count,ply)) {
 #ifdef _TRACE
@@ -1993,7 +1993,7 @@ score_t Search::quiesce(int ply,int depth)
            ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
        }
        if (node->eval == Constants::INVALID_SCORE) {
-           node->eval = node->staticEval = scoring.evalu8(board);
+           node->eval = node->staticEval = evalu8(board);
        }
        if (hashHit) {
            // Use the transposition table entry to provide a better score
@@ -2324,7 +2324,7 @@ int Search::prune(const Board &board,
                 // but this tests worse now.
                 score_t threshold = node->alpha - futilityMargin(pruneDepth);
                 if (node->eval == Constants::INVALID_SCORE) {
-                    node->eval = node->staticEval = scoring.evalu8(board);
+                    node->eval = node->staticEval = evalu8(board);
                 }
                 if (node->eval < threshold) {
 #ifdef SEARCH_STATS
@@ -2482,7 +2482,7 @@ score_t Search::search()
           return -Illegal;
        }
        node->flags |= EXACT;
-       return scoring.evalu8(board);
+       return evalu8(board);
     }
 
     if (Scoring::isDraw(board,rep_count,ply)) {
@@ -2651,7 +2651,7 @@ score_t Search::search()
         node->eval = node->staticEval = hashEntry.staticValue();
     }
     if (node->eval == Constants::INVALID_SCORE) {
-        node->eval = node->staticEval = scoring.evalu8(board);
+        node->eval = node->staticEval = evalu8(board);
     }
     if (hashHit) {
         // Use the transposition table entry to provide a better score
