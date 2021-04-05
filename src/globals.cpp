@@ -35,6 +35,7 @@ Tune tune_params;
 #endif
 #ifdef NNUE
 nnue::Network network;
+bool nnueInitDone = false;
 #endif
 
 static const char * LEARN_FILE_NAME = "arasan.lrn";
@@ -43,8 +44,10 @@ static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
 
+#ifdef NNUE
 // TBD: add version/hash?
-static const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
+const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
+#endif
 
 string programPath;
 
@@ -82,10 +85,12 @@ int initGlobals(const char *pathName, bool initLog) {
    LockInit(syzygy_lock);
 #endif
 #ifdef NNUE
-   string nnueFileName = derivePath(DEFAULT_NETWORK_NAME);
-   loadNetwork(nnueFileName);
+   if (options.search.nnueFile == "") {
+       // set default network path
+       options.search.nnueFile = derivePath(DEFAULT_NETWORK_NAME);
+   }
 #endif   
-   return 1;
+return 1;
 }
 
 int loadNetwork(const std::string &fname) {
@@ -146,6 +151,11 @@ void delayedInit() {
        }
     }
 #endif
+#ifdef NNUE
+    if (options.search.useNNUE && !nnueInitDone) {
+       nnueInitDone = loadNetwork(options.search.nnueFile) != 0;
+    }
+#endif   
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
         openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str());

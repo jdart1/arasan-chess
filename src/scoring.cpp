@@ -11,6 +11,10 @@
 #include "tune.h"
 #include <ctime>
 #endif
+#ifdef NNUE
+#include "nnueintf.h"
+#include "search.h" // for NodeInfo
+#endif
 #include <cstddef>
 #include <algorithm>
 #include <climits>
@@ -2369,6 +2373,21 @@ void Scoring::clearHashTables() {
       kingPawnHashTable[Black][i].hc = (hash_t)0;
    }
 }
+
+#ifdef NNUE
+score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
+   Position p(board,node);
+   ChessInterface intf(&p);
+   if (node) {
+      nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::White,node->accum);
+      nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::Black,node->accum);
+      return static_cast<score_t>(network.evaluate(node->accum));
+   }
+   else {
+      return static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(network,intf));
+   }
+}
+#endif      
 
 #ifdef TUNE
 #include "tune.h"

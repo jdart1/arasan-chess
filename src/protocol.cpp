@@ -1695,7 +1695,7 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<int>(value,options.search.useNNUE);
     } else if (name == "NNUE File") {
         Options::setOption<string>(value,options.search.nnueFile);
-        loadNetwork(options.search.nnueFile);
+        nnueInitDone = false; // force re-init
 #endif        
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
@@ -1994,7 +1994,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
            Options::setOption<string>(value,options.search.nnueFile);
-           loadNetwork(options.search.nnueFile);
+           nnueInitDone = false; // force re-init
 	}
 #endif
 #ifdef NUMA
@@ -2232,10 +2232,20 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 Scoring *s = new Scoring();
                 s->init();
                 cout << board << endl;
+#ifdef NNUE
+                cout << "NNUE score: ";
+                Scoring::printScore(s->evalu8NNUE(board),cout);
+                cout << endl;
+#endif                
                 Scoring::printScore(s->evalu8(board),cout);
                 cout << endl;
                 board.flip();
                 cout << board << endl;
+#ifdef NNUE
+                cout << "NNUE score: ";
+                Scoring::printScore(s->evalu8NNUE(board),cout);
+                cout << endl;
+#endif                
                 Scoring::printScore(s->evalu8(board),cout);
                 delete s;
                 cout << endl;

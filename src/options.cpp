@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "constant.h"
+#include "globals.h"
 #include "params.h"
 
 #include <cmath>

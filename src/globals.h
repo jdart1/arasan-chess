@@ -32,6 +32,7 @@ extern Tune tune_params;
 #endif
 #ifdef NNUE
 extern nnue::Network network;
+extern bool nnueInitDone;
 #endif
 extern bool polling_terminated;
 extern ThreadControl inputSem;
@@ -46,6 +47,8 @@ extern CACHE_ALIGN const uint8_t baseKPKB[24576];
 #endif
 
 extern bool tb_init_done(const Options::TbType);
+
+extern const char *DEFAULT_NETWORK_NAME;
 
 extern string derivePath(const char *fileName);
 extern string derivePath(const char *base, const char *fileName);
