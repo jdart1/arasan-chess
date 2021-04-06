@@ -302,8 +302,8 @@ void Board::doMove( Move move, NodeInfo *node )
    ++state.movesFromNull;
 #ifdef NNUE
    if (node) {
-     (node+1)->dirty_num = 1;
-     (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+       (node+1)->dirty_num = 0;
+       (node+1)->accum.setState(nnue::AccumulatorState::Empty);
    }
 #endif
    if (state.enPassantSq != InvalidSquare)
@@ -543,7 +543,7 @@ void Board::doMove( Move move, NodeInfo *node )
          {
 #ifdef NNUE
             if (node) {
-              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::EmptyPiece,
+              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::InvalidSquare,
                                                                   static_cast<nnue::Piece>(capture));
             }
 #endif
@@ -815,7 +815,7 @@ void Board::doMove( Move move, NodeInfo *node )
          {
 #ifdef NNUE
             if (node) {
-              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::EmptyPiece,
+              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::InvalidSquare,
                                                                   static_cast<nnue::Piece>(capture));
             }
 #endif
