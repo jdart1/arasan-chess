@@ -1,4 +1,4 @@
-// Copyright 1995, 2007, 2008, 2012-2014 by Jon Dart
+// Copyright 1995, 2007, 2008, 2012-2014, 2021 by Jon Dart
 // Stand-alone console executable to build "ecodata.cpp" file
 // from "eco" text file.
 
@@ -8,7 +8,8 @@
 #include "globals.h"
 #include <iostream>
 #include <fstream>
-#include <ctype.h>
+#include <cctype>
+#include <unordered_map>
 
 void charout(unsigned char c)
 {
@@ -45,7 +46,9 @@ static void write_64(hash_t h, ostream &out)
    out.flags(original_flags);
 }
 
-int do_eco(const string &eco_line)
+static std::unordered_map<hash_t,unsigned> hashes;
+
+int do_eco(const string &eco_line, unsigned line)
 {
     ColorType side = White;
     Board board;
@@ -106,9 +109,14 @@ int do_eco(const string &eco_line)
        side = OppositeColor(side);
     }
     if (code.length()) {
+        auto match = hashes.find(board.hashCode());
+        if (match != hashes.end()) {
+          cerr << "warning: duplicate hash, lines " << (*match).second << " & " << line << endl;
+        }
+        hashes.emplace(std::pair<hash_t,unsigned>(board.hashCode(),line));
         cout << '{' << '"' << code << '"' << ", ";
         write_64(board.hashCode(),cout);
-        cout << " ,";
+        cout << ", ";
         if (name.length())
             cout << '"' << name << '"';
         else
@@ -127,6 +135,7 @@ int CDECL main(int argc, char **argv)
 	 return -1;
    }
    Bitboard::init();
+   Board::init();
    initOptions(argv[0]);
    Attacks::init();
    Scoring::init();
@@ -150,12 +159,12 @@ int CDECL main(int argc, char **argv)
    cout << "{{" << '"' << "A00" << '"' << ", ";
    write_64(b.hashCode(),cout);
    cout << ", " << '"' << '"' << "}," << endl;
-   int lines = 1;
+   unsigned lines = 1;
    while (eco_file.good() && !eco_file.eof())
    {
        string eco_line;
        getline(eco_file,eco_line);
-       if (do_eco(eco_line)) {
+       if (do_eco(eco_line,lines)) {
            cerr << "error in ECO file, line " << lines << endl;
        }
        ++lines;

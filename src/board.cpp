@@ -77,7 +77,7 @@ void Board::init() {
 }
 
 void Board::cleanup() {
-  delete initialBoard;
+   free(reinterpret_cast<void*>(initialBoard));
 }
 
 void Board::setSecondaryVars()

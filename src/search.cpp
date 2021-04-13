@@ -323,7 +323,7 @@ Move SearchController::findBestMove(
       stats->value = drawScore(board);
       return NullMove;
    }
-   Search *rootSearch = pool->rootSearch();
+   rootSearch = pool->rootSearch();
    // Generate the ply 0 moves here:
    mg = new RootMoveGenerator(board,&(rootSearch->context),NullMove,debugOut());
    if (mg->moveCount() == 0) {
@@ -2736,11 +2736,11 @@ score_t Search::search()
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         // Fixed reduction + some depth- and score-dependent
-        // increment. Decrease reduction somewhat when mateiral
+        // increment. Decrease reduction somewhat when material
         // is low.
-        const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 5;
-        int nu_depth = depth - 3*DEPTH_INCREMENT - !lowMat*DEPTH_INCREMENT/2 - depth/(4+2*lowMat) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
-
+        const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 9;
+        const int lowMat2 = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
+        int nu_depth = depth - 3*DEPTH_INCREMENT - (lowMat ? 0 : DEPTH_INCREMENT/2) - depth/(4+2*lowMat+2*lowMat2) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;

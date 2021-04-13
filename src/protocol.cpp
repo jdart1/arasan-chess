@@ -1,4 +1,4 @@
-// Copyright 1997-2020 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2021 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -714,7 +714,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         }
         else if ((cmd_word == "position" ||
                   cmd == "ucinewgame")) {
-            // These commands shcould end the search - we
+            // These commands should end the search - we
             // need to prepare to search a new position.
             controller->terminateNow();
             return false;
@@ -814,6 +814,9 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         } else {
             stats.state = Terminated;
         }
+        // Stop processing commands in the search monitor loop.
+        // Queued commands will be processed after search completion.
+        exit = true;
         return false;
     }
     else if (cmd == "new" || cmd == "test" || cmd == "bench" ||
@@ -1677,6 +1680,8 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<unsigned>(value,options.book.weighting);
     } else if (name == "Favor best book moves") {
         Options::setOption<unsigned>(value,options.book.scoring);
+    } else if (name == "Randomize book moves") {
+        Options::setOption<unsigned>(value,options.book.random);
     } else if (name == "Can resign") {
         setCheckOption(value,options.search.can_resign);
     } else if (name == "Resign threshold") {
@@ -1834,6 +1839,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.scoring << " min 0 max 100" << endl;
         cout << "option name Favor high-weighted book moves type spin default " <<
             options.book.weighting << " min 0 max 100" << endl;
+        cout << "option name Randomize book moves type spin default " <<
+            options.book.random << " min 0 max 100" << endl;
         cout << "option name Threads type spin default " <<
             options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << endl;
@@ -1930,6 +1937,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"Favor high-weighted book moves")) {
             Options::setOption<unsigned>(value,options.book.weighting);
+        }
+        else if (uciOptionCompare(name,"Randomize book moves")) {
+            Options::setOption<unsigned>(value,options.book.random);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,options.search.multipv);
@@ -2457,6 +2467,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.book.scoring << " 1 100\"";
         cout << " option=\"Favor high-weighted book moves -spin " <<
             options.book.weighting << " 1 100\"";
+        cout << " option=\"Randomize book moves -spin " <<
+            options.book.random << " 1 100\"";
         cout << " option=\"Can resign -check " <<
             options.search.can_resign << "\"";
         cout << " option=\"Resign threshold -spin " <<
