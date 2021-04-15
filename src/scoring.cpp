@@ -1652,10 +1652,6 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    const int w_materialLevel = wMat.materialLevel();
    const int b_materialLevel = bMat.materialLevel();
 
-#ifdef EVAL_DEBUG
-   const score_t mdiff =  (int)(wMat.value() - bMat.value());
-   cout << "material difference=" << (board.sideToMove() == White ? mdiff : -mdiff) << endl;
-#endif
    if (wMat.infobits() != bMat.infobits()) {
        if (wMat.noPawns() && bMat.noPawns()) {
            adjustMaterialScoreNoPawns(board,White,wScores);
@@ -2425,6 +2421,13 @@ void Params::write(ostream &o, const string &comment)
       if (i<5) o << "," << endl;
    }
    o << "};" << endl;
+   for (int i = Tune::PAWN_VALUE_MIDGAME; i <= Tune::QUEEN_VALUE_ENDGAME; i++) {
+      o << "const int Params::";
+      for (auto it : tune_params[i].name) {
+         o << (char)toupper((int)it);
+      }
+      o << " = " << std::round(tune_params[i].current) << ";" << endl;
+   }
    int start = Tune::KING_COVER_BASE;
    for (int i = start; i < start+tune_params.paramArraySize(); i++) {
       o << "const int Params::";

@@ -15,7 +15,7 @@ class Material
     info(0), level(0), count(0)
       {
       }
-	
+
     enum {K  = 0x100000};
     enum {KP = 0x100001};
     enum {KBP = 0x100101};
@@ -37,7 +37,7 @@ class Material
     enum {KQR = 0x111000};
 
     enum {PieceMask = 0x1ffff0};
-        
+
     FORCEINLINE void addPiece(const PieceType p)
     {
         info += masks[(int)p];
@@ -57,7 +57,7 @@ class Material
     FORCEINLINE void addPawn()
     {
         info += masks[(int)Pawn];
-        ++count; 
+        ++count;
     }
 
     FORCEINLINE void removePawn()
@@ -73,28 +73,28 @@ class Material
     uint32_t pieceBits() const {
         return info & PieceMask;
     }
-	
+
     // return the total number of pieces + pawns
     int men() const {
         return count;
     }
-        
+
     // return the number of pieces (excluding the King)
     int pieceCount() const {
         return count-pawnCount()-1;
     }
-        
+
     // return the number of pawns
     int pawnCount() const
     {
         return (info & 0xf);
     }
-        
+
     void clearPawns()
     {
         info &= ~0xf;
     }
-        
+
     int queenCount() const
     {
         return (info & 0xf0000) >> 16;
@@ -109,7 +109,7 @@ class Material
     {
         return (info & 0xf000) >> 12;
     }
-        
+
     int hasRook() const
     {
         return (info & 0xf000);
@@ -119,7 +119,7 @@ class Material
     {
         return (info & 0xf0) >> 4;
     }
-        
+
     int hasKnight() const
     {
         return (info & 0xf0);
@@ -135,12 +135,12 @@ class Material
         return (info & 0xf00);
     }
 
-    int minorCount() const 
+    int minorCount() const
     {
         return knightCount() + bishopCount();
     }
 
-    int majorCount() const 
+    int majorCount() const
     {
         return 2*queenCount() + rookCount();
     }
@@ -158,7 +158,7 @@ class Material
     {
         return (info & (0xffffffff-0x100000-0xf)) == 0;
     }
-        
+
     bool hasPieces() const
     {
         return !noPieces();
@@ -169,19 +169,19 @@ class Material
     {
         return (info & 0xf) == 0;
     }
-	
+
     // True if has pawns
     bool hasPawns() const
     {
         return (info & 0xf) != 0;
     }
-	
+
     // True if bare king:
     bool kingOnly() const
     {
         return (info & 0xfffff) == 0;
     }
-        
+
     // This provides a rough measure of the material
     // (used mostly for king safety calculation)
     int materialLevel() const {

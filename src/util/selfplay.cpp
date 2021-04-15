@@ -88,20 +88,13 @@ static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 static atomic<unsigned> gameCounter(0);
 
 struct SelfPlayOptions {
-<<<<<<< HEAD
-=======
     // Note: not all options are command-line settable, currently.
->>>>>>> master
     enum class OutputFormat { Epd, Bin };
     unsigned minOutPly = 8;
     unsigned maxOutPly = 400;
     unsigned cores = 1;
-<<<<<<< HEAD
-    unsigned gameCount = 1000000000;
-=======
     unsigned gameCount = 1000000;
     ;
->>>>>>> master
     unsigned depthLimit = 9;
     bool adjudicateDraw = true;
     unsigned outputPlyFrequency = 1; // output every nth move
@@ -214,19 +207,12 @@ class binEncoder {
         // we normalize scores to centipawns here; not sure that's necessary
         // though.
         serialize<int16_t>(
-<<<<<<< HEAD
-            out, static_cast<int16_t>(100 * data.score / Params::PAWN_VALUE));
-=======
             out, static_cast<int16_t>((100 * data.score) / Params::PAWN_VALUE));
->>>>>>> master
         serialize<uint16_t>(out, encode_move(board.sideToMove(), data.move));
         serialize<uint16_t>(out, static_cast<uint16_t>(data.ply));
         serialize<int8_t>(out, static_cast<int8_t>(result));
         serialize<uint8_t>(out, static_cast<uint8_t>(0xff));
-<<<<<<< HEAD
-=======
         assert(out.tellp() % 40 == 0);
->>>>>>> master
     }
 
   private:
@@ -267,28 +253,16 @@ class binEncoder {
     }
 
     static uint16_t encode_move(ColorType side, const Move move) {
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         Square from = StartSquare(move);
         Square to = DestSquare(move);
         uint16_t data = 0;
         switch (TypeOfMove(move)) {
         case KCastle:
-<<<<<<< HEAD
-            to = (side == White) ? 7 : 63;
-            data |= 3 << 14;
-            break;
-        case QCastle:
-            to = (side == White) ? 0 : 56;
-=======
             to = (side == White) ? chess::A1 : chess::H1;
             data |= 3 << 14;
             break;
         case QCastle:
             to = (side == White) ? chess::A1 : chess::H1;
->>>>>>> master
             data |= 3 << 14;
             break;
         case Promotion:
@@ -305,19 +279,6 @@ class binEncoder {
         }
         data |= to;
         data |= (from << 6);
-<<<<<<< HEAD
-        return data;
-    }
-
-    template <typename T> static void serialize(ostream &o, const T &data) {
-        char out[sizeof(T)];
-        for (unsigned i = 0; i < sizeof(data) * 8; i++) {
-            if (data & (1 << i)) {
-                out[i / 8] |= (1 << (i % 8));
-            }
-        }
-        o.write(out, sizeof(T));
-=======
         assert(from != to);
         assert(from < 64 && to < 64);
         return data;
@@ -345,7 +306,6 @@ class binEncoder {
             std::cerr << "unsuppored size for .bin seralization" << std::endl;
             break;
         } // end switch
->>>>>>> master
     }
 };
 
@@ -389,10 +349,7 @@ class Monitor {
     uint64_t nodeTarget;
 };
 
-<<<<<<< HEAD
-=======
 // Somewhat randomize moves by doing a fixed-node instead of fixed-depth search.
->>>>>>> master
 static Move semiRandomMove(const Board &board, Statistics &stats,
                            ThreadData &td, uint64_t nodeTarget) {
     Monitor monitor(nodeTarget);
@@ -458,21 +415,13 @@ static void selfplay(ThreadData &td) {
                            prevNodes && prevDepth >= sp_options.depthLimit &&
                            rand2_dist(td.engine) ==
                                sp_options.semiRandomizeInterval) {
-<<<<<<< HEAD
-=======
                     // Base the target node count on the node count for the
                     // previous search, but randomize it somewhat.
->>>>>>> master
                     std::uniform_int_distribution<uint64_t> node_dist(
                         uint64_t(0.7 * prevNodes), uint64_t(1.3 * prevNodes));
                     uint64_t limit = node_dist(td.engine);
                     m = semiRandomMove(board, stats, td, limit);
                     score = stats.display_value;
-<<<<<<< HEAD
-                    // prevNodes = stats.num_nodes;
-                    // prevDepth = stats.depth;
-=======
->>>>>>> master
                     if (score == 0)
                         ++zero_score_count;
                     else
@@ -492,32 +441,18 @@ static void selfplay(ThreadData &td) {
                     else
                         zero_score_count = 0;
                 }
-<<<<<<< HEAD
-=======
                 assert(IsNull(m) || legalMove(board, m));
->>>>>>> master
             }
             if (stats.state == Resigns || stats.state == Checkmate) {
                 result = board.sideToMove() == White ? Result::BlackWin
                                                      : Result::WhiteWin;
                 terminated = true;
-<<<<<<< HEAD
-            }
-            if (stats.state == Draw || stats.state == Stalemate) {
-                terminated = true;
-                result = Result::Draw;
-            }
-            if (!terminated && sp_options.adjudicateDraw &&
-                ply >= sp_options.drawAdjudicationMinPly &&
-                zero_score_count >= sp_options.drawAdjudicationMoves) {
-=======
             } else if (stats.state == Draw || stats.state == Stalemate) {
                 terminated = true;
                 result = Result::Draw;
             } else if (!terminated && sp_options.adjudicateDraw &&
                        ply >= sp_options.drawAdjudicationMinPly &&
                        zero_score_count >= sp_options.drawAdjudicationMoves) {
->>>>>>> master
                 // adjudicate draw
                 stats.state = Draw;
                 result = Result::Draw;
@@ -624,8 +559,6 @@ static void threadp(ThreadData *td) {
     delete td->searcher;
 }
 
-<<<<<<< HEAD
-=======
 static void usage() {
     std::cerr << "Usage:" << std::endl;
     std::cerr << "selfplay [-c cores] [-n games] [-o output file] [-m output "
@@ -633,7 +566,6 @@ static void usage() {
               << std::endl;
 }
 
->>>>>>> master
 static void init_threads() {
     // prepare threads
 #ifdef _POSIX_VERSION
@@ -660,10 +592,6 @@ static void launch_threads() {
     }
 }
 
-<<<<<<< HEAD
-// Generates labeled FEN positions for training from self-play games
-=======
->>>>>>> master
 int CDECL main(int argc, char **argv) {
     Bitboard::init();
     Board::init();
@@ -684,13 +612,6 @@ int CDECL main(int argc, char **argv) {
     LockInit(bookLock);
 
     options.search.hash_table_size = 64 * 1024 * 1024;
-<<<<<<< HEAD
-    options.book.frequency = 10;
-    options.book.weighting = 0;
-    options.book.scoring = 0;
-    options.learning.position_learning = 0;
-    options.search.can_resign = 1;
-=======
     options.book.frequency = 25;
     options.book.weighting = 10;
     options.book.scoring = 25;
@@ -698,7 +619,6 @@ int CDECL main(int argc, char **argv) {
     options.learning.position_learning = 0;
     options.search.can_resign = 1;
     options.search.resign_threshold = -3000;
->>>>>>> master
 
     int arg = 1;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
@@ -757,12 +677,9 @@ int CDECL main(int argc, char **argv) {
                 cerr << "error: expected number after -m" << endl;
                 return -1;
             }
-<<<<<<< HEAD
-=======
         } else {
             usage();
             return -1;
->>>>>>> master
         }
     }
 
