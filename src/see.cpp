@@ -1,4 +1,4 @@
-// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2020 by Jon Dart.
+// Copyright 1996, 1997, 2000, 2008, 2013, 2017-2021 by Jon Dart.
 // All Rights Reserved.
 
 #include "see.h"
@@ -100,16 +100,16 @@ score_t see( const Board &board, Move move ) {
            " takes " << PieceImage(TypeOfPiece(on_square))
            << endl;
 #endif
-      gain = Params::PieceValue(on_square);
+      gain = Params::SEE_PIECE_VALUES[TypeOfPiece(on_square)];
       if (TypeOfPiece(attacker) == Pawn && Rank(square,side) == 8) {
           if (count == 0) {
              // initial capture is a promotion (could be under-promotion)
-             gain += (Params::PieceValue(PromoteTo(move)) - Params::PAWN_VALUE);
+             gain += (Params::SEE_PIECE_VALUES[PromoteTo(move)] - Params::SEE_PIECE_VALUES[Pawn]);
              on_square = MakePiece(PromoteTo(move),side);
           }
           else {
              // assume Queen promotion
-             gain += Params::QUEEN_VALUE-Params::PAWN_VALUE;
+             gain += Params::SEE_PIECE_VALUES[Queen] - Params::SEE_PIECE_VALUES[Pawn];
              on_square = MakePiece(Queen,side);
           }
       }
@@ -176,7 +176,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
 #endif
        return 0;
    } else if (!IsPromotion(move) &&
-              (Params::Gain(move) - Params::PieceValue(PieceMoved(move)) >= threshold)) {
+              (Params::Gain(move) - Params::SEE_PIECE_VALUES[PieceMoved(move)] >= threshold)) {
        // Even the loss of the capturing piece would still leave us >= threshold
 #ifdef ATTACK_TRACE
        cout << "threshold test succeeded, return 1" << endl;
@@ -218,16 +218,16 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
            " takes " << PieceImage(TypeOfPiece(on_square))
            << endl;
 #endif
-      gain = Params::PieceValue(on_square);
+      gain = Params::SEE_PIECE_VALUES[TypeOfPiece(on_square)];
       if (TypeOfPiece(attacker) == Pawn && Rank(square,side) == 8) {
           if (count == 0) {
              // initial capture is a promotion (could be under-promotion)
-             gain += (Params::PieceValue(PromoteTo(move)) - Params::PAWN_VALUE);
+             gain += (Params::SEE_PIECE_VALUES[PromoteTo(move)] - Params::SEE_PIECE_VALUES[Pawn]);
              on_square = MakePiece(PromoteTo(move),side);
           }
           else {
              // assume Queen promotion
-             gain += Params::QUEEN_VALUE-Params::PAWN_VALUE;
+             gain += Params::SEE_PIECE_VALUES[Queen] - Params::SEE_PIECE_VALUES[Pawn];
              on_square = MakePiece(Queen,side);
           }
       }
@@ -257,7 +257,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
           // if we have a potential promotion).
           if ((Rank(square,side) != 8 ||
                !(attacks[side] & board.pawn_bits[side])) &&
-              swap_score + Params::PieceValue(on_square) < threshold) {
+              swap_score + Params::SEE_PIECE_VALUES[TypeOfPiece(on_square)] < threshold) {
               ASSERT(see(board,move) < threshold);
               return 0;
           }
@@ -271,7 +271,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
           // Futility: opponent capture cannot get us below threshold
           if ((Rank(square,side) != 8 ||
                !(attacks[side] & board.pawn_bits[side])) &&
-              swap_score - Params::PieceValue(on_square) >= threshold) {
+              swap_score - Params::SEE_PIECE_VALUES[TypeOfPiece(on_square)] >= threshold) {
               ASSERT(see(board,move) >= threshold);
               return 1;
           }

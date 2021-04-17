@@ -234,7 +234,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
           }
           if (CaptureOrPromotion(moves[i])) {
              score_t gain = Params::Gain(moves[i]);
-             score_t pieceVal = Params::PieceValue(PieceMoved(moves[i]));
+             score_t pieceVal = Params::SEE_PIECE_VALUES[PieceMoved(moves[i])];
              scores[i] = int(Params::MVV_LVA(moves[i]));
              if (gain-pieceVal > 0 || (scores[i] = (int)see(board,moves[i])) >= 0) {
                 ++poscaps;

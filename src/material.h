@@ -1,4 +1,4 @@
-// Copyright 1994, 2014, 2017, 2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 2014, 2017, 2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _MATERIAL_H
 #define _MATERIAL_H
@@ -12,10 +12,10 @@ class Material
     friend class Board;
  public:
  Material():
-    info(0), total(0), level(0), count(0)
+    info(0), level(0), count(0)
       {
       }
-	
+
     enum {K  = 0x100000};
     enum {KP = 0x100001};
     enum {KBP = 0x100101};
@@ -37,11 +37,10 @@ class Material
     enum {KQR = 0x111000};
 
     enum {PieceMask = 0x1ffff0};
-        
+
     FORCEINLINE void addPiece(const PieceType p)
     {
         info += masks[(int)p];
-        total += (stored_score_t)Params::PieceValue(p);
         level += levels[(int)p];
         count++;
     }
@@ -49,8 +48,6 @@ class Material
     FORCEINLINE void removePiece(const PieceType p)
     {
         info -= masks[(int)p];
-        ASSERT(total >= (stored_score_t)Params::PieceValue(p));
-        total -= (stored_score_t)Params::PieceValue(p);
         ASSERT(level >= levels[(int)p]);
         level -= levels[(int)p];
         ASSERT(count>0);
@@ -60,27 +57,15 @@ class Material
     FORCEINLINE void addPawn()
     {
         info += masks[(int)Pawn];
-        total += (stored_score_t)Params::PAWN_VALUE;
-        ++count; 
+        ++count;
     }
 
     FORCEINLINE void removePawn()
     {
         info -= masks[(int)Pawn];
-        total -= (stored_score_t)Params::PAWN_VALUE;
         --count;
     }
 
-    // return the total material value:
-    score_t value() const {
-       return (score_t)total;
-    }
-	
-    // return value of pieces (excluding pawns)
-    score_t pieceValue() const {
-       return (score_t)(total - (stored_score_t)Params::PAWN_VALUE*pawnCount());
-    }
-	
     uint32_t infobits() const	{
         return info;
     }
@@ -88,28 +73,28 @@ class Material
     uint32_t pieceBits() const {
         return info & PieceMask;
     }
-	
+
     // return the total number of pieces + pawns
     int men() const {
         return count;
     }
-        
+
     // return the number of pieces (excluding the King)
     int pieceCount() const {
         return count-pawnCount()-1;
     }
-        
+
     // return the number of pawns
     int pawnCount() const
     {
         return (info & 0xf);
     }
-        
+
     void clearPawns()
     {
         info &= ~0xf;
     }
-        
+
     int queenCount() const
     {
         return (info & 0xf0000) >> 16;
@@ -124,7 +109,7 @@ class Material
     {
         return (info & 0xf000) >> 12;
     }
-        
+
     int hasRook() const
     {
         return (info & 0xf000);
@@ -134,7 +119,7 @@ class Material
     {
         return (info & 0xf0) >> 4;
     }
-        
+
     int hasKnight() const
     {
         return (info & 0xf0);
@@ -150,12 +135,12 @@ class Material
         return (info & 0xf00);
     }
 
-    int minorCount() const 
+    int minorCount() const
     {
         return knightCount() + bishopCount();
     }
 
-    int majorCount() const 
+    int majorCount() const
     {
         return 2*queenCount() + rookCount();
     }
@@ -173,7 +158,7 @@ class Material
     {
         return (info & (0xffffffff-0x100000-0xf)) == 0;
     }
-        
+
     bool hasPieces() const
     {
         return !noPieces();
@@ -184,33 +169,35 @@ class Material
     {
         return (info & 0xf) == 0;
     }
-	
+
     // True if has pawns
     bool hasPawns() const
     {
         return (info & 0xf) != 0;
     }
-	
+
     // True if bare king:
     bool kingOnly() const
     {
         return (info & 0xfffff) == 0;
     }
-        
+
     // This provides a rough measure of the material
     // (used mostly for king safety calculation)
     int materialLevel() const {
         return (level > 31) ? 31 : level;
     }
 
+    // rough count of material (incl. pawns) in pawn units
+    int totalMaterialLevel() const {
+       return level + pawnCount();
+    }
  private:
     void clear() {
         info = level = count = 0;
-        total = 0;
     }
 
     uint32_t info;
-    stored_score_t total;
     uint32_t level;
     int count;
     static const int32_t masks[8];

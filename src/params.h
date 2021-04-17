@@ -19,40 +19,31 @@ struct Params  {
     static const int KING_ATTACK_SCALE_SIZE = 150;
     static const int KING_ATTACK_FACTOR_RESOLUTION = 4;
 
-    // Currently piece values are fixed
-    static constexpr score_t PAWN_VALUE = (score_t)128;
-    static constexpr score_t BISHOP_VALUE = (score_t)(3.25*PAWN_VALUE);
-    static constexpr score_t KNIGHT_VALUE = (score_t)(3.25*PAWN_VALUE);
-    static constexpr score_t ROOK_VALUE = (score_t)(5.0*PAWN_VALUE);
-    static constexpr score_t QUEEN_VALUE = (score_t)(10.15*PAWN_VALUE);
+    static constexpr score_t PAWN_VALUE = (score_t)128; // midgame pawn value
     static constexpr score_t KING_VALUE = (score_t)32*PAWN_VALUE;
 
-    static FORCEINLINE score_t PieceValue( PieceType pieceType ) {
-        switch(pieceType) {
-        case Empty: return 0;
-        case Pawn: return PAWN_VALUE;
-        case Knight: return KNIGHT_VALUE;
-        case Bishop: return BISHOP_VALUE;
-        case Rook: return ROOK_VALUE;
-        case Queen: return QUEEN_VALUE;
-        case King: return KING_VALUE;
-        default: return 0;
-        }
-    }
-
-    static FORCEINLINE score_t PieceValue( Piece piece ) {
-        return PieceValue(TypeOfPiece(piece));
-    }
+    static const score_t SEE_PIECE_VALUES[7];
 
     static FORCEINLINE score_t Gain(Move move) {
-        return ((TypeOfMove(move) == Promotion) ?
-                PieceValue(Capture(move)) + PieceValue(PromoteTo(move)) - PAWN_VALUE : PieceValue(Capture(move)));
+        return (TypeOfMove(move) == Promotion) ?
+                SEE_PIECE_VALUES[Capture(move)] + SEE_PIECE_VALUES[PromoteTo(move)] - SEE_PIECE_VALUES[Pawn] :
+                SEE_PIECE_VALUES[Capture(move)];
     }
 
     static FORCEINLINE score_t MVV_LVA(Move move) {
-        return 8*Gain(move) - PieceValue(PieceMoved(move));
+        return 8*Gain(move) - SEE_PIECE_VALUES[PieceMoved(move)];
     }
 
+    static PARAM_MOD PAWN_VALUE_MIDGAME;
+    static PARAM_MOD PAWN_VALUE_ENDGAME;
+    static PARAM_MOD KNIGHT_VALUE_MIDGAME;
+    static PARAM_MOD KNIGHT_VALUE_ENDGAME;
+    static PARAM_MOD BISHOP_VALUE_MIDGAME;
+    static PARAM_MOD BISHOP_VALUE_ENDGAME;
+    static PARAM_MOD ROOK_VALUE_MIDGAME;
+    static PARAM_MOD ROOK_VALUE_ENDGAME;
+    static PARAM_MOD QUEEN_VALUE_MIDGAME;
+    static PARAM_MOD QUEEN_VALUE_ENDGAME;
     static PARAM_MOD KN_VS_PAWN_ADJUST[3];
     static PARAM_MOD MINOR_FOR_PAWNS_MIDGAME;
     static PARAM_MOD MINOR_FOR_PAWNS_ENDGAME;
@@ -82,7 +73,6 @@ struct Params  {
     static PARAM_MOD TRADE_DOWN1;
     static PARAM_MOD TRADE_DOWN2;
     static PARAM_MOD TRADE_DOWN3;
-    static PARAM_MOD PAWN_ENDGAME_ADJUST;
     static PARAM_MOD PAWN_ATTACK_FACTOR;
     static PARAM_MOD MINOR_ATTACK_FACTOR;
     static PARAM_MOD MINOR_ATTACK_BOOST;

@@ -393,7 +393,8 @@ bool Protocol::accept_draw(Board &board) {
    const ColorType side = computer_plays_white ? White : Black;
    const Material &ourmat = board.getMaterial(side);
    const Material &oppmat = board.getMaterial(OppositeColor(side));
-   if (ourmat.noPawns() && ourmat.value() <= Params::KING_VALUE + Params::BISHOP_VALUE) {
+   if (ourmat.noPawns() && (ourmat.kingOnly() || ourmat.infobits() == Material::KB ||
+                            ourmat.infobits() == Material::KN)) {
       // We don't have mating material
       if (doTrace)
          cout << debugPrefix() << "no mating material, accept draw" << endl;
@@ -403,7 +404,6 @@ bool Protocol::accept_draw(Board &board) {
    // our score is way positive
    if (ourmat.noPawns() && oppmat.noPawns() &&
        ourmat.materialLevel() <= 5 &&
-      (std::abs(ourmat.value() - oppmat.value()) < Params::PAWN_VALUE/2) &&
       last_score < Params::PAWN_VALUE) {
       if (doTrace)
          cout << debugPrefix() << "pawnless ending, accept draw" << endl;

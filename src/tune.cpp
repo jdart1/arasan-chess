@@ -22,6 +22,16 @@ static const score_t KING_COVER_RANGE = score_t(0.35*Params::PAWN_VALUE);
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 // Non-const scoring parameters, modifiable by tuner
+score_t Params::PAWN_VALUE_MIDGAME;
+score_t Params::PAWN_VALUE_ENDGAME;
+score_t Params::KNIGHT_VALUE_MIDGAME;
+score_t Params::KNIGHT_VALUE_ENDGAME;
+score_t Params::BISHOP_VALUE_MIDGAME;
+score_t Params::BISHOP_VALUE_ENDGAME;
+score_t Params::ROOK_VALUE_MIDGAME;
+score_t Params::ROOK_VALUE_ENDGAME;
+score_t Params::QUEEN_VALUE_MIDGAME;
+score_t Params::QUEEN_VALUE_ENDGAME;
 score_t Params::KN_VS_PAWN_ADJUST[3];
 score_t Params::MINOR_FOR_PAWNS_MIDGAME;
 score_t Params::MINOR_FOR_PAWNS_ENDGAME;
@@ -48,7 +58,6 @@ score_t Params::KQMINOR_VS_Q_NO_PAWNS;
 score_t Params::TRADE_DOWN1;
 score_t Params::TRADE_DOWN2;
 score_t Params::TRADE_DOWN3;
-score_t Params::PAWN_ENDGAME_ADJUST;
 score_t Params::PAWN_ATTACK_FACTOR;
 score_t Params::MINOR_ATTACK_FACTOR;
 score_t Params::MINOR_ATTACK_BOOST;
@@ -148,6 +157,16 @@ Tune::Tune()
     // Tuning params for most parameters (except PSTs, mobility).
     // These are initialized to some reasonable but not optimal values.
     static TuneParam initial_params[Tune::NUM_MISC_PARAMS] = {
+        TuneParam(Tune::PAWN_VALUE_MIDGAME,"pawn_value_midgame",Params::PAWN_VALUE,100,200,&Params::PAWN_VALUE_MIDGAME,TuneParam::Midgame,0),
+        TuneParam(Tune::PAWN_VALUE_ENDGAME,"pawn_value_endgame",Params::PAWN_VALUE,100,200,&Params::PAWN_VALUE_ENDGAME,TuneParam::Endgame,1),
+        TuneParam(Tune::KNIGHT_VALUE_MIDGAME,"knight_value_midgame",score_t(4.0*Params::PAWN_VALUE),score_t(2.75*Params::PAWN_VALUE),score_t(4.5*Params::PAWN_VALUE),&Params::KNIGHT_VALUE_MIDGAME,TuneParam::Midgame,1),
+        TuneParam(Tune::KNIGHT_VALUE_ENDGAME,"knight_value_endgame",score_t(4.0*Params::PAWN_VALUE),score_t(2.75*Params::PAWN_VALUE),score_t(4.5*Params::PAWN_VALUE),&Params::KNIGHT_VALUE_ENDGAME,TuneParam::Endgame,1),
+        TuneParam(Tune::BISHOP_VALUE_MIDGAME,"bishop_value_midgame",score_t(4.0*Params::PAWN_VALUE),score_t(2.75*Params::PAWN_VALUE),score_t(4.5*Params::PAWN_VALUE),&Params::BISHOP_VALUE_MIDGAME,TuneParam::Midgame,1),
+        TuneParam(Tune::BISHOP_VALUE_ENDGAME,"bishop_value_endgame",score_t(4.0*Params::PAWN_VALUE),score_t(2.75*Params::PAWN_VALUE),score_t(4.5*Params::PAWN_VALUE),&Params::BISHOP_VALUE_ENDGAME,TuneParam::Endgame,1),
+        TuneParam(Tune::ROOK_VALUE_MIDGAME,"rook_value_midgame",score_t(6.0*Params::PAWN_VALUE),score_t(3.0*Params::PAWN_VALUE),score_t(7.0*Params::PAWN_VALUE),&Params::ROOK_VALUE_MIDGAME,TuneParam::Midgame,1),
+        TuneParam(Tune::ROOK_VALUE_ENDGAME,"rook_value_endgame",score_t(6.0*Params::PAWN_VALUE),score_t(3.0*Params::PAWN_VALUE),score_t(7.0*Params::PAWN_VALUE),&Params::ROOK_VALUE_ENDGAME,TuneParam::Endgame,1),
+        TuneParam(Tune::QUEEN_VALUE_MIDGAME,"queen_value_midgame",score_t(12.0*Params::PAWN_VALUE),score_t(9.0*Params::PAWN_VALUE),score_t(15.0*Params::PAWN_VALUE),&Params::QUEEN_VALUE_MIDGAME,TuneParam::Midgame,1),
+        TuneParam(Tune::QUEEN_VALUE_ENDGAME,"queen_value_endgame",score_t(12.0*Params::PAWN_VALUE),score_t(9.0*Params::PAWN_VALUE),score_t(15.0*Params::PAWN_VALUE),&Params::QUEEN_VALUE_ENDGAME,TuneParam::Endgame,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST0,"kn_vs_pawn_adjust0",0,VAL(-0.5),VAL(0.5),&Params::KN_VS_PAWN_ADJUST[0],TuneParam::Any,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST1,"kn_vs_pawn_adjust1",VAL(-1.5),VAL(-2.5),VAL(1.0),&Params::KN_VS_PAWN_ADJUST[1],TuneParam::Any,1),
         TuneParam(Tune::KN_VS_PAWN_ADJUST2,"kn_vs_pawn_adjust2",VAL(0),VAL(-2.5),VAL(1.0),&Params::KN_VS_PAWN_ADJUST[2],TuneParam::Any,1),
@@ -185,7 +204,6 @@ Tune::Tune()
         TuneParam(Tune::TRADE_DOWN1,"trade_down1",VAL(0.3),VAL(-0.5),VAL(0.75),&Params::TRADE_DOWN1,TuneParam::Any,1),
         TuneParam(Tune::TRADE_DOWN2,"trade_down2",VAL(0.3),VAL(0),VAL(0.75),&Params::TRADE_DOWN2,TuneParam::Any,1),
         TuneParam(Tune::TRADE_DOWN3,"trade_down3",VAL(0.1),VAL(0),VAL(0.75),&Params::TRADE_DOWN3,TuneParam::Any,1),
-        TuneParam(Tune::PAWN_ENDGAME_ADJUST,"pawn_endgame_adjust",VAL(0.1),VAL(0),VAL(0.5),&Params::PAWN_ENDGAME_ADJUST,TuneParam::Endgame,1),
         TuneParam(Tune::PAWN_ATTACK_FACTOR,"pawn_attack_factor",8,0,100,&Params::PAWN_ATTACK_FACTOR,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_FACTOR,"minor_attack_factor",45,20,100,&Params::MINOR_ATTACK_FACTOR,TuneParam::Midgame,1),
         TuneParam(Tune::MINOR_ATTACK_BOOST,"minor_attack_boost",40,0,100,&Params::MINOR_ATTACK_BOOST,TuneParam::Midgame,1),

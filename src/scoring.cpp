@@ -33,6 +33,9 @@ const int Params::MATERIAL_SCALE[32] =
 const int Params::MIDGAME_THRESHOLD = 12;
 const int Params::ENDGAME_THRESHOLD = 23;
 
+const score_t Params::SEE_PIECE_VALUES[7] = {0, Params::PAWN_VALUE, score_t(4.3*Params::PAWN_VALUE),
+      score_t(4.3*Params::PAWN_VALUE), score_t(6.0*Params::PAWN_VALUE), score_t(12.0*Params::PAWN_VALUE), score_t(32*Params::PAWN_VALUE) };
+
 #define PARAM(x) Params::x
 #define APARAM(x,index) Params::x[index]
 
@@ -323,7 +326,7 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
     const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(oside);
-    const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
     const uint32_t pieces = ourmat.pieceBits();
     if (pieceDiff > 0 && (pieces == Material::KN || pieces == Material::KB)) {
         // Knight or Bishop vs pawns
@@ -334,7 +337,7 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
         } else if (oppmat.pawnCount() == 0) {
             if (pieces == Material::KN && ourmat.pawnCount() == 1) {
                 // KNP vs K is a draw, generally
-                scores.any -= Params::KNIGHT_VALUE;
+                scores.any -= Params::KNIGHT_VALUE_ENDGAME;
                 return;
             }
         }
@@ -345,7 +348,7 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
                 // and rook pawn. Opponent may or may not have
                 // pawns. We likely can't do better than draw, so
                 // reduce score.
-                scores.any -= Params::BISHOP_VALUE;
+                scores.any -= Params::BISHOP_VALUE_ENDGAME;
                 return;
             }
         }
@@ -354,7 +357,7 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
         !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
         !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
         // Bishop endgame: drawish
-        scores.any -= (ourmat.value() - oppmat.value())/2;
+        scores.any -= Params::PAWN_VALUE_ENDGAME*(ourmat.pawnCount() - oppmat.pawnCount())/2;
         return;
     }
     switch(ourmat.majorCount() - oppmat.majorCount()) {
@@ -441,87 +444,90 @@ void Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side, Sc
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
-    const score_t mdiff = ourmat.value()-oppmat.value();
     score_t score = 0;
     if (ourmat.infobits() == Material::KQ) {
         if (oppmat.infobits() == Material::KRR) {
-            score -= (Params::QUEEN_VALUE-2*Params::ROOK_VALUE);  // even
+            score -= (Params::QUEEN_VALUE_ENDGAME-2*Params::ROOK_VALUE_ENDGAME);  // even
         }
         else if (oppmat.infobits() == Material::KRB) {
-           score -= Params::QUEEN_VALUE-(Params::ROOK_VALUE+Params::BISHOP_VALUE); // even
+           score -= Params::QUEEN_VALUE_ENDGAME-(Params::ROOK_VALUE_ENDGAME+Params::BISHOP_VALUE_ENDGAME); // even
         }
         else if (oppmat.infobits() == Material::KQB) {
-            score += Params::BISHOP_VALUE;  // even
+            score += Params::BISHOP_VALUE_ENDGAME;  // even
         }
         else if (oppmat.infobits() == Material::KQN) {
-            score += Params::KNIGHT_VALUE;  // even
+            score += Params::KNIGHT_VALUE_ENDGAME;  // even
         }
         else if (oppmat.infobits() == Material::KRN) { // close to even
-            score -= Params::QUEEN_VALUE-(Params::ROOK_VALUE+Params::BISHOP_VALUE)-Params::PAWN_VALUE/4;
+            score -= Params::QUEEN_VALUE_ENDGAME-(Params::ROOK_VALUE_ENDGAME+Params::BISHOP_VALUE_ENDGAME)-Params::PAWN_VALUE_ENDGAME/4;
         }
         else if (oppmat.infobits() == Material::KB ||
                  oppmat.infobits() == Material::KN ||
                  oppmat.infobits() == Material::KR) {
             // won for the stronger side
-            score += 2*Params::PAWN_VALUE;
-        } else if (oppmat.infobits() == Material::KBBN ||
-                   oppmat.infobits() == Material::KBNN) {
+            score += 2*Params::PAWN_VALUE_ENDGAME;
+        } else if (oppmat.infobits() == Material::KBBN) {
             // draw
-            score -= mdiff;
+            score -= Params::QUEEN_VALUE_ENDGAME - (2*Params::BISHOP_VALUE_ENDGAME + Params::KNIGHT_VALUE_ENDGAME);
+        } else if (oppmat.infobits() == Material::KBNN) {
+            // draw
+            score -= Params::QUEEN_VALUE_ENDGAME - (2*Params::KNIGHT_VALUE_ENDGAME + Params::BISHOP_VALUE_ENDGAME);
         }
     }
     else if (ourmat.infobits() == Material::KR) {
         if (oppmat.infobits() == Material::KB) {
-            score -= (Params::ROOK_VALUE-Params::BISHOP_VALUE);
+            score -= (Params::ROOK_VALUE_ENDGAME-Params::BISHOP_VALUE_ENDGAME);
         }
         else if (oppmat.infobits() == Material::KN) {
-            score -= (Params::ROOK_VALUE-Params::KNIGHT_VALUE)-Params::PAWN_VALUE/4;
+            score -= (Params::ROOK_VALUE_ENDGAME-Params::KNIGHT_VALUE_ENDGAME)-Params::PAWN_VALUE_ENDGAME/4;
         }
     }
     else if (ourmat.infobits() == Material::KRR) {
         if (oppmat.infobits() == Material::KRB) {
            // even
-           score -= Params::ROOK_VALUE-Params::BISHOP_VALUE;
+           score -= Params::ROOK_VALUE_ENDGAME-Params::BISHOP_VALUE_ENDGAME;
         }
         else if (oppmat.infobits() == Material::KRN) {
-           score -= Params::ROOK_VALUE-Params::KNIGHT_VALUE-Params::PAWN_VALUE/4;
+           score -= Params::ROOK_VALUE_ENDGAME-Params::KNIGHT_VALUE_ENDGAME-Params::PAWN_VALUE_ENDGAME/4;
         }
         else if (oppmat.infobits() == Material::KRBN) {
-           score += (Params::KNIGHT_VALUE+Params::BISHOP_VALUE-Params::ROOK_VALUE)-Params::PAWN_VALUE/4;
+           score += (Params::KNIGHT_VALUE_ENDGAME+Params::BISHOP_VALUE_ENDGAME-Params::ROOK_VALUE_ENDGAME)-Params::PAWN_VALUE_ENDGAME/4;
         }
     }
     else if (ourmat.infobits() == Material::KBB) {
        if (oppmat.infobits() == Material::KB) {
           // about 85% draw
-          score -= (mdiff-score_t(0.35*Params::PAWN_VALUE));
+          score -= (Params::BISHOP_VALUE_ENDGAME-score_t(0.35*Params::PAWN_VALUE_ENDGAME));
        }
        else if (oppmat.infobits() == Material::KN) {
           // about 50% draw, 50% won for Bishops
-          score -= score_t(1.5*Params::PAWN_VALUE);
+          score -= score_t(1.5*Params::PAWN_VALUE_ENDGAME);
        }
        else if (oppmat.infobits() == Material::KR) {
           // draw
-          score -= mdiff;
+          score -= (2*Params::BISHOP_VALUE_ENDGAME - Params::ROOK_VALUE_ENDGAME);
        }
     } else if (ourmat.infobits() == Material::KBN) {
        if (oppmat.infobits() == Material::KN ||
            oppmat.infobits() == Material::KB) {
           // about 75% draw, a little less if opponent has Bishop
-          score -= (Params::BISHOP_VALUE - score_t(0.6*Params::PAWN_VALUE) - (oppmat.hasBishop() ? score_t(0.15*Params::PAWN_VALUE) : 0));
+          score -= (Params::BISHOP_VALUE_ENDGAME - score_t(0.6*Params::PAWN_VALUE_ENDGAME) - (oppmat.hasBishop() ? score_t(0.15*Params::PAWN_VALUE_ENDGAME) : 0));
        } else if (oppmat.infobits() == Material::KR) {
-          score -= mdiff;
+          score -= (Params::KNIGHT_VALUE_ENDGAME + Params::BISHOP_VALUE_ENDGAME - Params::ROOK_VALUE_ENDGAME);
        }
     } else if (ourmat.infobits() == Material::KNN &&
                (oppmat.infobits() == Material::KN ||
                 oppmat.infobits() == Material::KB ||
                 oppmat.infobits() == Material::KR)) {
-       // draw
-       score -= mdiff;
+        // draw
+       score -= (2*Params::KNIGHT_VALUE_ENDGAME - oppmat.knightCount()*Params::KNIGHT_VALUE_ENDGAME -
+                 oppmat.bishopCount()*Params::BISHOP_VALUE_ENDGAME - oppmat.rookCount()*Params::ROOK_VALUE_ENDGAME);
     } else if (ourmat.infobits() == Material::KQR &&
                (oppmat.infobits() == Material::KQB ||
                 oppmat.infobits() == Material::KQN)) {
-        // draw
-        score -= mdiff;
+       // draw
+       score -= (Params::QUEEN_VALUE_ENDGAME + Params::ROOK_VALUE_ENDGAME - oppmat.knightCount()*Params::KNIGHT_VALUE_ENDGAME -
+                 oppmat.bishopCount()*Params::BISHOP_VALUE_ENDGAME);
     }
     scores.any += score;
 }
@@ -913,8 +919,8 @@ void Scoring::positionalScore(const Board &board,
       {
       case Knight:
          {
-            scores.mid += PARAM(KNIGHT_PST)[Midgame][pstSq];
-            scores.end += PARAM(KNIGHT_PST)[Endgame][pstSq];
+            scores.mid += PARAM(KNIGHT_PST)[Midgame][pstSq] + PARAM(KNIGHT_VALUE_MIDGAME);
+            scores.end += PARAM(KNIGHT_PST)[Endgame][pstSq] + PARAM(KNIGHT_VALUE_ENDGAME);
 
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
             const score_t mobl = PARAM(KNIGHT_MOBILITY)[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
@@ -953,8 +959,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Bishop:
          {
-            scores.mid += PARAM(BISHOP_PST)[Midgame][pstSq];
-            scores.end += PARAM(BISHOP_PST)[Endgame][pstSq];
+            scores.mid += PARAM(BISHOP_PST)[Midgame][pstSq] + PARAM(BISHOP_VALUE_MIDGAME);
+            scores.end += PARAM(BISHOP_PST)[Endgame][pstSq] + PARAM(BISHOP_VALUE_ENDGAME);
 
             const Bitboard battacks(board.bishopAttacks(sq));
             ai.allAttacks[side] |= battacks;
@@ -1001,8 +1007,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Rook:
          {
-            scores.mid += PARAM(ROOK_PST)[Midgame][pstSq];
-            scores.end += PARAM(ROOK_PST)[Endgame][pstSq];
+            scores.mid += PARAM(ROOK_PST)[Midgame][pstSq] + PARAM(ROOK_VALUE_MIDGAME);
+            scores.end += PARAM(ROOK_PST)[Endgame][pstSq] + PARAM(ROOK_VALUE_ENDGAME);
             const Bitboard rattacks(board.rookAttacks(sq));
             const int r = Rank(sq, side);
             if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
@@ -1069,8 +1075,8 @@ void Scoring::positionalScore(const Board &board,
 
       case Queen:
          {
-            scores.mid += PARAM(QUEEN_PST)[Midgame][pstSq];
-            scores.end += PARAM(QUEEN_PST)[Endgame][pstSq];
+            scores.mid += PARAM(QUEEN_PST)[Midgame][pstSq] + PARAM(QUEEN_VALUE_MIDGAME);
+            scores.end += PARAM(QUEEN_PST)[Endgame][pstSq] + PARAM(QUEEN_VALUE_ENDGAME);
             int qmobl = 0;
             Bitboard battacks(board.bishopAttacks(sq));
             Bitboard qmobility(battacks);
@@ -1379,7 +1385,8 @@ void Scoring::calcPawnData(const Board &board,
          entr.b_square_pawns++;
       entr.pawn_file_mask |= (1 << (file - 1));
 
-      entr.endgame_score += PARAM(PAWN_ENDGAME_ADJUST);
+      entr.midgame_score += PARAM(PAWN_VALUE_MIDGAME);
+      entr.endgame_score += PARAM(PAWN_VALUE_ENDGAME);
 
       int backward = 0;
       int passed = 0;
@@ -1649,12 +1656,6 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    const int w_materialLevel = wMat.materialLevel();
    const int b_materialLevel = bMat.materialLevel();
 
-#ifdef EVAL_DEBUG
-   const score_t mdiff =  (int)(wMat.value() - bMat.value());
-   cout << "material difference=" << (board.sideToMove() == White ? mdiff : -mdiff) << endl;
-#endif
-   wScores.any = wMat.value();                                      
-   bScores.any = bMat.value();                                      
    if (wMat.infobits() != bMat.infobits()) {
        if (wMat.noPawns() && bMat.noPawns()) {
            adjustMaterialScoreNoPawns(board,White,wScores);
@@ -2236,11 +2237,11 @@ int Scoring::KBPDraw(const Board &board) {
 }
 
 bool Scoring::theoreticalDraw(const Board &board) {
-    if (board.getMaterial(White).value() >
-        board.getMaterial(Black).value())
+    if (board.getMaterial(White).totalMaterialLevel() >
+        board.getMaterial(Black).totalMaterialLevel())
         return theoreticalDraw<White>(board);
-    else if (board.getMaterial(White).value() <
-             board.getMaterial(Black).value())
+    else if (board.getMaterial(White).totalMaterialLevel() <
+             board.getMaterial(Black).totalMaterialLevel())
         return theoreticalDraw<Black>(board);
     else
         return false;
@@ -2251,7 +2252,7 @@ template <ColorType side>
 bool Scoring::theoreticalDraw(const Board &board) {
     const Material &mat1 = board.getMaterial(side);
     const Material &mat2 = board.getMaterial(OppositeColor(side));
-    if (mat1.value() > Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) return 0;
+    if (mat1.materialLevel() > 6) return false;
 
     // Check for K + P vs rook pawn
     if (mat1.infobits() == Material::KP && mat2.kingOnly()) {
@@ -2275,10 +2276,10 @@ bool Scoring::theoreticalDraw(const Board &board) {
     }
     // check for KNN vs K
     else if (mat1.infobits() == Material::KNN && mat2.kingOnly()) {
-        return 1;
+        return true;
     }
     else {
-        return 0;
+        return false;
     }
 }
 
@@ -2295,8 +2296,8 @@ bool Scoring::isDraw(const Board &board, int &rep_count, int ply) {
    else if (board.fiftyMoveDraw()) {
       return true;
    }
-   else if (board.getMaterial(White).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2) &&
-            board.getMaterial(Black).value() <= Params::KING_VALUE + (Params::KNIGHT_VALUE * 2)) {
+   else if (board.getMaterial(White).materialLevel() <= 6 &&
+            board.getMaterial(Black).materialLevel() <= 6) {
       // check for insufficient material and other drawing situations
       return board.materialDraw() || theoreticalDraw(board);
    } else {
@@ -2439,6 +2440,13 @@ void Params::write(ostream &o, const string &comment)
       if (i<5) o << "," << endl;
    }
    o << "};" << endl;
+   for (int i = Tune::PAWN_VALUE_MIDGAME; i <= Tune::QUEEN_VALUE_ENDGAME; i++) {
+      o << "const int Params::";
+      for (auto it : tune_params[i].name) {
+         o << (char)toupper((int)it);
+      }
+      o << " = " << std::round(tune_params[i].current) << ";" << endl;
+   }
    int start = Tune::KING_COVER_BASE;
    for (int i = start; i < start+tune_params.paramArraySize(); i++) {
       o << "const int Params::";

@@ -2079,8 +2079,8 @@ bool Board::materialDraw() const noexcept {
     if (mat1.pawnCount() || mat2.pawnCount()) {
         return false;
     }
-    if ((mat1.value() <= Params::KING_VALUE + Params::BISHOP_VALUE) &&
-        (mat2.value() <= Params::KING_VALUE + Params::BISHOP_VALUE)) {
+    if ((mat1.kingOnly() || mat1.infobits() == Material::KB || mat1.infobits() == Material::KN) &&
+        (mat2.kingOnly() || mat2.infobits() == Material::KB || mat2.infobits() == Material::KN)) {
         if (mat1.kingOnly() || mat2.kingOnly()) {
             // K vs K, or K vs KN, or K vs KB
             return true;

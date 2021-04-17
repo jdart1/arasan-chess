@@ -398,7 +398,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
     const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(oside);
-    const score_t pieceDiff = ourmat.pieceValue() - oppmat.pieceValue();
+    const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
     const int mLevel = oppmat.materialLevel();
 
     const uint32_t pieces = ourmat.pieceBits();
@@ -426,6 +426,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
         !(Attacks::rank7mask[side] & board.pawn_bits[side]) &&
         !(Attacks::rank7mask[oside] & board.pawn_bits[oside]) ) {
         // Bishop endgame: drawish
+        grads[Tune::PAWN_VALUE_ENDGAME] -= inc*(ourmat.pawnCount() - oppmat.pawnCount())/2;
         return;
     }
     switch(ourmat.majorCount() - oppmat.majorCount()) {
@@ -496,6 +497,124 @@ static void adjustMaterialScore(const Board &board, ColorType side,
             grads[Tune::TRADE_DOWN2] += inc*(pieceDiff >= 5)*(4-ourmat.materialLevel()/4);
             grads[Tune::TRADE_DOWN3] += inc*std::min(3,ourmat.pawnCount())*(4-ourmat.materialLevel()/4);
         }
+    }
+}
+
+static void adjustMaterialScoreNoPawns(const Board &board, ColorType side,
+                                       vector<double> &grads, double inc) {
+    const Material &ourmat = board.getMaterial(side);
+    const Material &oppmat = board.getMaterial(OppositeColor(side));
+    if (ourmat.infobits() == Material::KQ) {
+        if (oppmat.infobits() == Material::KRR) {
+            grads[Tune::QUEEN_VALUE_ENDGAME] -= inc;
+            grads[Tune::ROOK_VALUE_ENDGAME] += 2*inc;
+        }
+        else if (oppmat.infobits() == Material::KRB) {
+            grads[Tune::QUEEN_VALUE_ENDGAME] -= inc;
+            grads[Tune::ROOK_VALUE_ENDGAME] += inc;
+            grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+        }
+        else if (oppmat.infobits() == Material::KQB) {
+            grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+        }
+        else if (oppmat.infobits() == Material::KQN) {
+            grads[Tune::KNIGHT_VALUE_ENDGAME] += inc;
+        }
+        else if (oppmat.infobits() == Material::KRN) { // close to even
+            grads[Tune::QUEEN_VALUE_ENDGAME] -= inc;
+            grads[Tune::ROOK_VALUE_ENDGAME] += inc;
+            grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+            grads[Tune::PAWN_VALUE_ENDGAME] += inc/4;
+        }
+        else if (oppmat.infobits() == Material::KB ||
+                 oppmat.infobits() == Material::KN ||
+                 oppmat.infobits() == Material::KR) {
+            // won for the stronger side
+            grads[Tune::PAWN_VALUE_ENDGAME] += 2*inc;
+        } else if (oppmat.infobits() == Material::KBBN) {
+            // draw
+            grads[Tune::QUEEN_VALUE_ENDGAME] -= inc;
+            grads[Tune::BISHOP_VALUE_ENDGAME] += 2*inc;
+            grads[Tune::KNIGHT_VALUE_ENDGAME] += inc;
+        } else if (oppmat.infobits() == Material::KBNN) {
+            // draw
+            grads[Tune::QUEEN_VALUE_ENDGAME] -= inc;
+            grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+            grads[Tune::KNIGHT_VALUE_ENDGAME] += 2*inc;
+        }
+    }
+    else if (ourmat.infobits() == Material::KR) {
+        if (oppmat.infobits() == Material::KB) {
+            grads[Tune::ROOK_VALUE_ENDGAME] -= inc;
+            grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+        }
+        else if (oppmat.infobits() == Material::KN) {
+            grads[Tune::ROOK_VALUE_ENDGAME] -= inc;
+            grads[Tune::KNIGHT_VALUE_ENDGAME] += inc;
+            grads[Tune::PAWN_VALUE_ENDGAME] += inc/4;
+        }
+    }
+    else if (ourmat.infobits() == Material::KRR) {
+        if (oppmat.infobits() == Material::KRB) {
+           // even
+           grads[Tune::ROOK_VALUE_ENDGAME] -= inc;
+           grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+        }
+        else if (oppmat.infobits() == Material::KRN) {
+           grads[Tune::ROOK_VALUE_ENDGAME] -= inc;
+           grads[Tune::KNIGHT_VALUE_ENDGAME] += inc;
+           grads[Tune::PAWN_VALUE_ENDGAME] += inc/4;
+        }
+        else if (oppmat.infobits() == Material::KRBN) {
+           grads[Tune::KNIGHT_VALUE_ENDGAME] -= inc;
+           grads[Tune::BISHOP_VALUE_ENDGAME] += inc;
+           grads[Tune::ROOK_VALUE_ENDGAME] -= inc;
+           grads[Tune::PAWN_VALUE_ENDGAME] -= inc/4;
+        }
+    }
+    else if (ourmat.infobits() == Material::KBB) {
+       if (oppmat.infobits() == Material::KB) {
+          // about 85% draw
+           grads[Tune::BISHOP_VALUE_ENDGAME] -= inc;
+           grads[Tune::PAWN_VALUE_ENDGAME] += 0.35*inc;
+       }
+       else if (oppmat.infobits() == Material::KN) {
+          // about 50% draw, 50% won for Bishops
+          grads[Tune::PAWN_VALUE_ENDGAME] -= 1.5*inc;
+       }
+       else if (oppmat.infobits() == Material::KR) {
+          // draw
+          grads[Tune::BISHOP_VALUE_ENDGAME] -= 2*inc;
+          grads[Tune::ROOK_VALUE_ENDGAME] += inc;
+       }
+    } else if (ourmat.infobits() == Material::KBN) {
+       if (oppmat.infobits() == Material::KN ||
+           oppmat.infobits() == Material::KB) {
+          grads[Tune::BISHOP_VALUE_ENDGAME] -= inc;
+          grads[Tune::PAWN_VALUE_ENDGAME] += 0.6*inc;
+          if (oppmat.hasBishop()) {
+            grads[Tune::PAWN_VALUE_ENDGAME] += 0.15*inc;
+          }
+       } else if (oppmat.infobits() == Material::KR) {
+          grads[Tune::KNIGHT_VALUE_ENDGAME] -= inc;
+          grads[Tune::BISHOP_VALUE_ENDGAME] -= inc;
+          grads[Tune::ROOK_VALUE_ENDGAME] += inc;
+       }
+    } else if (ourmat.infobits() == Material::KNN &&
+               (oppmat.infobits() == Material::KN ||
+                oppmat.infobits() == Material::KB ||
+                oppmat.infobits() == Material::KR)) {
+        // draw
+       grads[Tune::KNIGHT_VALUE_ENDGAME] -= (2-oppmat.knightCount())*inc;
+       grads[Tune::BISHOP_VALUE_ENDGAME] += oppmat.bishopCount()*inc;
+       grads[Tune::ROOK_VALUE_ENDGAME] += oppmat.rookCount()*inc;
+    } else if (ourmat.infobits() == Material::KQR &&
+               (oppmat.infobits() == Material::KQB ||
+                oppmat.infobits() == Material::KQN)) {
+       grads[Tune::QUEEN_VALUE_ENDGAME] -= inc;
+       grads[Tune::ROOK_VALUE_ENDGAME] -= inc;
+       grads[Tune::KNIGHT_VALUE_ENDGAME] += oppmat.knightCount()*inc;
+       grads[Tune::BISHOP_VALUE_ENDGAME] += oppmat.bishopCount()*inc;
     }
 }
 
@@ -630,9 +749,16 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    array<int,8> attackTypes;
    for (int i = 0; i < 8; i++) attackTypes[i] = 0;
 
-   if (ourmat.infobits() != oppmat.infobits() &&
-       (ourmat.hasPawns() || oppmat.hasPawns())) {
+   grads[Tune::PAWN_VALUE_MIDGAME] += ourmat.pawnCount()*tune_params.scale(inc,Tune::PAWN_VALUE_MIDGAME,mLevel);
+   grads[Tune::PAWN_VALUE_ENDGAME] += ourmat.pawnCount()*tune_params.scale(inc,Tune::PAWN_VALUE_ENDGAME,mLevel);
+
+   if (ourmat.infobits() != oppmat.infobits()) {
+     if (ourmat.hasPawns() || oppmat.hasPawns()) {
        adjustMaterialScore(board,side,grads,inc);
+     }
+     else {
+       adjustMaterialScoreNoPawns(board,side,grads,inc);
+     }
    }
    if (side == White) {
       if (board[chess::D2] == WhitePawn && board[chess::D3] > WhitePawn && board[chess::D3] < BlackPawn) {
@@ -661,6 +787,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       ai.knightAttacks[side] |= knattacks;
       ai.minorAttacks[side] |= knattacks;
       ai.attackedBy2[side] |= (knattacks & ai.allAttacks[side]);
+      grads[Tune::KNIGHT_VALUE_MIDGAME] += tune_params.scale(inc,Tune::KNIGHT_VALUE_MIDGAME,mLevel);
+      grads[Tune::KNIGHT_VALUE_ENDGAME] += tune_params.scale(inc,Tune::KNIGHT_VALUE_ENDGAME,mLevel);
       const int mobl = Bitboard(knattacks &~board.allOccupied &~opponent_pawn_attacks).bitCount();
       grads[Tune::KNIGHT_MOBILITY+mobl] += tune_params.scale(inc,Tune::KNIGHT_MOBILITY+mobl,mLevel);
       int i = square_to_pst(sq,side);
@@ -703,6 +831,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       if (board.pinOnDiag(sq, okp, oside)) {
          pin_count++;
       }
+      grads[Tune::BISHOP_VALUE_MIDGAME] += tune_params.scale(inc,Tune::BISHOP_VALUE_MIDGAME,mLevel);
+      grads[Tune::BISHOP_VALUE_ENDGAME] += tune_params.scale(inc,Tune::BISHOP_VALUE_ENDGAME,mLevel);
       Bitboard battacks(board.bishopAttacks(sq));
       ai.allAttacks[side] |= battacks;
       ai.bishopAttacks[side] |= battacks;
@@ -743,6 +873,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       if (board.pinOnRankOrFile(sq, okp, oside)) {
          pin_count++;
       }
+      grads[Tune::ROOK_VALUE_MIDGAME] += tune_params.scale(inc,Tune::ROOK_VALUE_MIDGAME,mLevel);
+      grads[Tune::ROOK_VALUE_ENDGAME] += tune_params.scale(inc,Tune::ROOK_VALUE_ENDGAME,mLevel);
       Bitboard rookAttacks(board.rookAttacks(sq));
       ai.allAttacks[side] |= rookAttacks;
       ai.rookAttacks[side] |= rookAttacks;
@@ -809,6 +941,8 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    }
    Bitboard queen_bits(board.queen_bits[side]);
    while (queen_bits.iterate(sq)) {
+      grads[Tune::QUEEN_VALUE_MIDGAME] += tune_params.scale(inc,Tune::QUEEN_VALUE_MIDGAME,mLevel);
+      grads[Tune::QUEEN_VALUE_ENDGAME] += tune_params.scale(inc,Tune::QUEEN_VALUE_ENDGAME,mLevel);
       if (board.pinOnDiag(sq, okp, oside)) {
          pin_count++;
       }
@@ -1110,7 +1244,6 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
     for (int i = 0; i < pawns; i++) {
         ASSERT(OnBoard(pds[i].sq));
         grads[Tune::SPACE] += inc*pds[i].space_weight;
-        grads[Tune::PAWN_ENDGAME_ADJUST] += tune_params.scale(inc,Tune::PAWN_ENDGAME_ADJUST,mLevel);
         if (pds[i].flags & Scoring::PawnDetail::PASSED) {
             const Square sq = pds[i].sq;
             const int rank = Rank(sq, side);
