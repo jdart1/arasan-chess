@@ -76,7 +76,7 @@ ifeq ("$(ARCH)","x86_64")
 POPCNT_FLAGS := -msse4.1 -msse4.2 -mpopcnt
 endif
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
-AVX2_FLAGS := $(BMI2_FLAGS) -mavx2
+AVX2_FLAGS := $(BMI2_FLAGS) -mavx2 -mfma
 
 PGO_RUN_FLAGS = -H 64M
 
