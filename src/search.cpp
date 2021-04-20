@@ -2541,60 +2541,54 @@ score_t Search::search()
             }
         }
         hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
-        switch (result) {
-            case HashEntry::Valid:
-#ifdef _TRACE
-                if (mainThread()) {
-                    traceHash('E',node,hashValue,hashEntry);
-                }
-#endif
-                if (node->inBounds(hashValue)) {
-                    // parent node will consider this a new best line
-                    hashMove = hashEntry.bestMove(board);
-                    if (!IsNull(hashMove)) {
-                        node->pv[ply] = hashMove;
-                        node->pv_length = 1;
-                    }
+        if (result == HashEntry::Valid) {
+          if (node->inBounds(hashValue)) {
+              // parent node will consider this a new best line
+              hashMove = hashEntry.bestMove(board);
+              if (!IsNull(hashMove)) {
+                  node->pv[ply] = hashMove;
+                  node->pv_length = 1;
+              }
 #ifdef _DEBUG
-                    if (!IsNull(hashMove) && !legalMove(board,hashMove)) {
-                       cout << board << endl << (flush);
-                       MoveImage(hashMove,cout);
-                       cout << endl << (flush);
-                    }
+              if (!IsNull(hashMove) && !legalMove(board,hashMove)) {
+                  cout << board << endl << (flush);
+                  MoveImage(hashMove,cout);
+                  cout << endl << (flush);
+              }
 #endif
 #ifdef _TRACE
-                    if (mainThread()) {
-                        indent(ply); cout << "best line[ply][ply] = ";
-                        MoveImage(hashMove,cout);
-                        cout << endl;
-                    }
+             if (mainThread()) {
+                  indent(ply); cout << "best line[ply][ply] = ";
+                  MoveImage(hashMove,cout);
+                  cout << endl;
+             }
 #endif
-                }
-                node->flags |= EXACT;
-                return hashValue;
-            case HashEntry::UpperBound:
-                if (hashValue <= node->alpha) {
+          }
+          return hashValue;
+        }
+        else {
+          bool cutoff = (result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+            (result == HashEntry::LowerBound && hashValue >= node->beta);
+          if (cutoff) {
 #ifdef _TRACE
-                    if (mainThread()) {
-                        traceHash('U',node,hashValue,hashEntry);
-                    }
+              if (mainThread()) {
+                traceHash(result == HashEntry::LowerBound ? 'L' : 'U',node,hashValue,hashEntry);
+              }
 #endif
-                    return hashValue;                     // cutoff
-                }
-                break;
-            case HashEntry::LowerBound:
-                if (hashValue >= node->beta) {
-#ifdef _TRACE
-                    if (mainThread()) {
-                        traceHash('L',node,hashValue,hashEntry);
-                    }
-#endif
-                    return hashValue;                     // cutoff
-                }
-                break;
-            default:
-                break;
-        } // end switch
+              if (!IsNull(hashMove) && !CaptureOrPromotion(hashMove)) {
+                  if (hashValue >= node->beta) {
+                      context.setKiller(hashMove,node->ply);
+                  }
+                  // history bonus for hash move generated beta cutoff,
+                  // penalty for hash move below alpha
+                  context.updateMove(board,node,hashMove,hashValue >= node->beta,hashValue <= node->alpha);
+              }
+              if (node->ply > 0 && (node-1)->num_legal <= 2 && !IsNull(node->last_move) && !CaptureOrPromotion(node->last_move)) {
+                  context.updateMove(board,node-1, hashMove,false,true);
+              }
+              return hashValue;
+          }
+        }
         // Note: hash move may be usable even if score is not usable
         hashMove = hashEntry.bestMove(board);
     }

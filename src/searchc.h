@@ -45,7 +45,10 @@ public:
 
     int scoreForOrdering (Move m, NodeInfo *, ColorType side) const noexcept;
 
-    void updateStats(const Board &, NodeInfo *parentNode);
+    void updateStats(const Board &, NodeInfo *node);
+
+    // update a single move's history
+    void updateMove(const Board &board, NodeInfo *node, Move m, bool positive, bool continuationOnly);
 
     template<class T>
     using PieceToArray = std::array<std::array<T, 64>, 16>;
