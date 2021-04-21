@@ -1,4 +1,4 @@
-// Copyright 1994-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -467,18 +467,22 @@ public:
 
     Hash hashTable;
 
-    score_t drawScore(const Board &board) {
+    score_t drawScore(const Board &board, const Statistics *stats = nullptr) {
       // if we know the opponent's rating (which will be the case if playing
       // on ICC in xboard mode), or if the user has set a contempt value
       // (in UCI mode), factor that into the draw score - a draw against
       // a high-rated opponent is good; a draw against a lower-rated one is bad.
+      // Add semi-random component to score to avoid 3-move rep blindness
+      // (idea from Stockfish)
+      score_t score = 0;
+      if (stats) score += (2 - (stats->num_nodes % 2));
       if (contempt) {
          if (board.sideToMove() == computerSide)
-            return -contempt;
+            score -= contempt;
          else
-            return contempt;
+            score += contempt;
       }
-      return 0;
+      return score;
    }
 
     uint64_t getElapsedTime() const {

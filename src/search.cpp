@@ -840,7 +840,7 @@ bool failhigh)
 }
 
 score_t Search::drawScore(const Board & board) const {
-   return controller->drawScore(board);
+    return controller->drawScore(board,&stats);
 }
 
 #ifdef SYZYGY_TBS
