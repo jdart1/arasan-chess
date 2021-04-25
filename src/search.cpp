@@ -2725,7 +2725,7 @@ score_t Search::search()
         !IsNull((node-1)->last_move) &&
         board.getMaterial(board.sideToMove()).hasPieces() &&
         node->eval >= node->beta &&
-        node->staticEval >= node->eval &&
+        node->eval >= node->staticEval &&
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
@@ -2734,7 +2734,7 @@ score_t Search::search()
         // is low.
         const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 9;
         const int lowMat2 = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
-        int nu_depth = depth - 3*DEPTH_INCREMENT - (lowMat ? 0 : DEPTH_INCREMENT/2) - depth/(4+2*lowMat+2*lowMat2) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/Params::PAWN_VALUE));
+        int nu_depth = depth - 4*DEPTH_INCREMENT + lowMat*DEPTH_INCREMENT/2 - depth/(4+2*lowMat+2*lowMat2) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/(2*Params::PAWN_VALUE)));
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;

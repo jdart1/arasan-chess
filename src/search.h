@@ -475,7 +475,7 @@ public:
       // Add semi-random component to score to avoid 3-move rep blindness
       // (idea from Stockfish)
       score_t score = 0;
-      if (stats) score += (2 - (stats->num_nodes % 2));
+      if (stats) score += (stats->num_nodes % 2) - 1;
       if (contempt) {
          if (board.sideToMove() == computerSide)
             score -= contempt;
