@@ -2820,66 +2820,79 @@ score_t Search::search()
         depth >= PROBCUT_DEPTH &&
         IsNull(node->excluded) &&
         ((node->flags & PROBCUT)==0 || depth >= 9*DEPTH_INCREMENT) &&
-        node->beta < Constants::MATE_RANGE) {
+        std::abs(node->beta) < Constants::MATE_RANGE) {
         const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
-        const score_t needed_gain = probcut_beta - node->staticEval;
         const int nu_depth = depth - 4*DEPTH_INCREMENT - depth/8;
-        BoardState state(board.state);
-        Move move;
-        // skip pawn captures because they will be below threshold
-        ProbCutMoveGenerator mg(board, hashMove, board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
-        while (!IsNull(move = mg.nextMove())) {
-            if (Capture(move)==King) {
+        const bool validHashValue = hashHit && hashEntry.depth() >= nu_depth + DEPTH_INCREMENT &&
+            hashValue != Constants::INVALID_SCORE;
+        if (!(validHashValue && result == HashEntry::UpperBound && hashValue < probcut_beta)) {
+            const score_t needed_gain = probcut_beta - node->staticEval;
+            BoardState state(board.state);
+            NodeState nstate(node);
+            Move move;
+            // skip pawn captures because they will be below threshold
+            ProbCutMoveGenerator mg(board, hashMove, board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
+            while (!IsNull(move = mg.nextMove())) {
+                if (Capture(move)==King) {
 #ifdef _TRACE
-                if (mainThread()) {
-                    cout << "Probcut: previous move illegal" << endl;
-                }
+                    if (mainThread()) {
+                        cout << "Probcut: previous move illegal" << endl;
+                    }
 #endif
-                return -Illegal;                  // previous move was illegal
-            }
-            else if (seeSign(board,move,needed_gain)) {
-#ifdef _TRACE
-                if (mainThread()) {
-                    indent(ply);
-                    cout << "Probcut: trying " << ply << ". ";
-                    MoveImage(move,cout);
-                    cout << endl;
+                    return -Illegal;                  // previous move was illegal
                 }
-#endif
-                SetPhase(move,MoveGenerator::WINNING_CAPTURE_PHASE);
-                board.doMove(move);
-                if (!board.wasLegal(move)) {
-                    board.undoMove(move,state);
-                    continue;
-                }
-                node->last_move = move;
-                node->num_legal++;
-                score_t value = -search(-probcut_beta-1, -probcut_beta, ply+1, nu_depth, node->flags | PROBCUT);
-#ifdef _TRACE
-                if (mainThread()) {
-                    indent(ply);
-                    cout << ply << ". ";
-                    MoveImage(move,cout);
-                    cout << " " << value << endl;
-                }
-#endif
-                board.undoMove(move,state);
-                if (value != Illegal && value > probcut_beta) {
+                else if (seeSign(board,move,needed_gain)) {
 #ifdef _TRACE
                     if (mainThread()) {
                         indent(ply);
-                        cout << "Probcut: cutoff" << endl;
+                        cout << "Probcut: trying " << ply << ". ";
+                        MoveImage(move,cout);
+                        cout << endl;
                     }
 #endif
-                    node->best_score = value;
-                    node->best = move;
-                    goto hash_insert;
+                    SetPhase(move,MoveGenerator::WINNING_CAPTURE_PHASE);
+                    board.doMove(move);
+                    if (!board.wasLegal(move)) {
+                        board.undoMove(move,state);
+                        continue;
+                    }
+                    node->last_move = move;
+                    node->num_legal++;
+                    score_t value = -search(-probcut_beta, -probcut_beta+1, ply+1, nu_depth, PROBCUT);
+#ifdef _TRACE
+                    if (mainThread()) {
+                        indent(ply);
+                        cout << ply << ". ";
+                        MoveImage(move,cout);
+                        cout << " " << value << endl;
+                    }
+#endif
+                    board.undoMove(move,state);
+                    if (value != Illegal && value >= probcut_beta) {
+#ifdef _TRACE
+                        if (mainThread()) {
+                            indent(ply);
+                            cout << "Probcut: cutoff" << endl;
+                        }
+#endif
+                        // store ProbCut result if there is not already a hash entry with
+                        // valid score & greater depth
+                        if (!(hashHit && hashEntry.depth() >= nu_depth + DEPTH_INCREMENT &&
+                              hashValue != Constants::INVALID_SCORE)) {
+                            controller->hashTable.storeHash(board.hashCode(rep_count),
+                                                            nu_depth + DEPTH_INCREMENT,
+                                                            age,
+                                                            HashEntry::LowerBound,
+                                                            HashEntry::scoreToHashValue(value,node->ply),
+                                                            node->staticEval,
+                                                            0,
+                                                            move);
+                        }
+                        return value;
+                    }
                 }
             }
         }
-
-        node->num_legal = 0;
-        node->last_move = NullMove;
     }
 
     // Use "internal iterative deepening" to get an initial move to try if
