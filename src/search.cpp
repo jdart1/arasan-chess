@@ -33,7 +33,6 @@ static const int ASPIRATION_WINDOW[] =
       Constants::MATE};
 static const int ASPIRATION_WINDOW_STEPS = 6;
 
-#define VERIFY_NULL_SEARCH
 #define STATIC_NULL_PRUNING
 #define RAZORING
 #define SINGULAR_EXTENSION
@@ -79,7 +78,10 @@ static const int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 6
                                           {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
 static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.75*Params::PAWN_VALUE);
+
 static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+
+static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params::PAWN_VALUE);
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
@@ -744,7 +746,8 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     computerSide(White),
     contempt(0),
     age(0),
-    talkLevel(c->getTalkLevel()) {
+    talkLevel(c->getTalkLevel())
+{
     // Note: context was cleared in its constructor
     setSearchOptions();
 }
@@ -882,7 +885,7 @@ score_t Search::tbScoreAdjust(const Board &board,
 
 static score_t futilityMargin(int depth)
 {
-    return std::max(depth,int(1.5*DEPTH_INCREMENT))*FUTILITY_MARGIN_SLOPE/DEPTH_INCREMENT;
+    return FUTILITY_MARGIN_BASE + std::max<int>(depth/DEPTH_INCREMENT,1)*FUTILITY_MARGIN_SLOPE;
 }
 
 static int lmpCount(int depth, int improving)
@@ -2593,7 +2596,7 @@ score_t Search::search()
         hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && !(node->flags & (IID|VERIFY)) && board.state.moveCount == 0 && !board.castlingPossible()) {
+    if (using_tb && rep_count==0 && !(node->flags & IID) && board.state.moveCount == 0 && !board.castlingPossible()) {
        stats.tb_probes++;
        score_t tb_score;
        int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
@@ -2660,8 +2663,8 @@ score_t Search::search()
     // pre-search pruning conditions
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        IsNull(node->excluded) &&
-        (node->flags & (IID|VERIFY)) == 0;
+        !(node->flags & (VERIFY|IID)) &&
+        IsNull(node->excluded);
 
     const int improving = ply >= 3 && !in_check &&
         (node-2)->staticEval != Constants::INVALID_SCORE &&
@@ -2673,22 +2676,20 @@ score_t Search::search()
 #ifdef STATIC_NULL_PRUNING
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.
-    if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH &&
-        node->beta < Constants::TABLEBASE_WIN) {
+    if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH) {
         const score_t margin = futilityMargin(depth);
-       const score_t threshold = node->beta+margin;
-       ASSERT(node->eval != Constants::INVALID_SCORE);
-       if (node->eval >= threshold) {
+        const score_t threshold = node->beta + margin;
+        ASSERT(node->eval != Constants::INVALID_SCORE);
+        if (node->eval >= threshold && node->eval < Constants::MATE_RANGE) {
 #ifdef _TRACE
-          if (mainThread()) {
-             indent(ply); cout << "static null pruned" << endl;
-          }
+           if (mainThread()) {
+              indent(ply); cout << "static null pruned" << endl;
+           }
 #endif
 #ifdef SEARCH_STATS
-          ++stats.static_null_pruning;
+           ++stats.static_null_pruning;
 #endif
-          node->best_score = node->eval - margin;
-          goto hash_insert;
+           return node->eval - margin;
        }
     }
 #endif
@@ -2732,9 +2733,8 @@ score_t Search::search()
         // Fixed reduction + some depth- and score-dependent
         // increment. Decrease reduction somewhat when material
         // is low.
-        const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 9;
-        const int lowMat2 = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
-        int nu_depth = depth - 4*DEPTH_INCREMENT + lowMat*DEPTH_INCREMENT/2 - depth/(4+2*lowMat+2*lowMat2) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/(2*Params::PAWN_VALUE)));
+        const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
+        int nu_depth = depth - 4*DEPTH_INCREMENT + (lowMat ? DEPTH_INCREMENT/2 : 0) - depth/(4+2*lowMat) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/(2*Params::PAWN_VALUE)));
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
@@ -2765,14 +2765,12 @@ score_t Search::search()
                 goto search_end2;
             }
             else if (nscore >= node->beta) {          // cutoff
-#ifdef VERIFY_NULL_SEARCH
-                if (depth >= 6*DEPTH_INCREMENT) {
+                // don't return mate scores from the null move search
+                if (nscore >= Constants::MATE_RANGE) nscore = node->beta;
+                if (nu_depth > 0 && (depth >= 6*DEPTH_INCREMENT)) {
                     // Verify null cutoff with reduced-depth search
                     // (idea from Dieter Buerssner)
-                    nu_depth = depth-5*DEPTH_INCREMENT;
-                    ASSERT(nu_depth > 0);
-                    nscore = search(node->alpha, node->beta,
-                                    ply+1, nu_depth, VERIFY);
+                    nscore = search(node->beta-1, node->beta, ply+1, nu_depth, VERIFY);
                     if (nscore == -Illegal) {
 #ifdef _TRACE
                        if (mainThread()) {
@@ -2792,23 +2790,18 @@ score_t Search::search()
                     }
 #endif
                 }
-                if (nscore >= node->beta)             // null cutoff
-#endif
-                    {
+                if (nscore >= node->beta) {            // null cutoff
 #ifdef _TRACE
-                        if (mainThread()) {
-                            indent(ply);
-                            cout << "**CUTOFF**" << endl;
-                        }
+                    if (mainThread()) {
+                         indent(ply);
+                         cout << "**CUTOFF**" << endl;
+                    }
 #endif
 #ifdef SEARCH_STATS
-                        stats.null_cuts++;
+                    stats.null_cuts++;
 #endif
-                        // Do not return a mate score from the null move search.
-                        node->best_score = nscore >= Constants::MATE-ply ? node->beta :
-                            nscore;
-                        goto hash_insert;
-                    }
+                    return nscore;
+                }
             }
         }
     }
@@ -3239,7 +3232,6 @@ score_t Search::search()
 
     // don't insert into the hash table if we are terminating - we may
     // not have an accurate score.
- hash_insert:
     if (!terminate && IsNull(node->excluded)) {
         if (IsNull(node->best)) node->best = hashMove;
         // store the position in the hash table, if there's room
@@ -3457,3 +3449,4 @@ const char * Search::debugPrefix() const noexcept
 {
     return controller->debugPrefix();
 }
+
