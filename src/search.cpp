@@ -2544,6 +2544,8 @@ score_t Search::search()
             }
         }
         hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
+        // Note: hash move may be usable even if score is not usable
+        hashMove = hashEntry.bestMove(board);
         if (result == HashEntry::Valid) {
           if (node->inBounds(hashValue)) {
               // parent node will consider this a new best line
@@ -2570,9 +2572,8 @@ score_t Search::search()
           return hashValue;
         }
         else {
-          bool cutoff = (result == HashEntry::UpperBound && hashValue <= node->alpha) ||
-            (result == HashEntry::LowerBound && hashValue >= node->beta);
-          if (cutoff) {
+          if ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+              (result == HashEntry::LowerBound && hashValue >= node->beta)) {
 #ifdef _TRACE
               if (mainThread()) {
                 traceHash(result == HashEntry::LowerBound ? 'L' : 'U',node,hashValue,hashEntry);
@@ -2587,13 +2588,11 @@ score_t Search::search()
                   context.updateMove(board,node,hashMove,hashValue >= node->beta,hashValue <= node->alpha);
               }
               if (node->ply > 0 && (node-1)->num_legal <= 2 && !IsNull(node->last_move) && !CaptureOrPromotion(node->last_move)) {
-                  context.updateMove(board,node-1, hashMove,false,true);
+                  context.updateMove(board,node-1,(node-1)->last_move,false,true);
               }
               return hashValue;
           }
         }
-        // Note: hash move may be usable even if score is not usable
-        hashMove = hashEntry.bestMove(board);
     }
 #ifdef SYZYGY_TBS
     if (using_tb && rep_count==0 && !(node->flags & IID) && board.state.moveCount == 0 && !board.castlingPossible()) {

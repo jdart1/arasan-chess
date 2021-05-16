@@ -89,34 +89,15 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node) {
     // Ethereal).
     if (node->num_quiets == 1 && node->depth <= 3 * DEPTH_INCREMENT)
         return;
-    const int b = bonus(node->depth);
     for (int i = 0; i < node->num_quiets; i++) {
         const Move m = node->quiets[i];
-        const bool is_best = MovesEqual(m, node->best);
-        update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)], b,
-               HISTORY_DIVISOR, is_best);
-        if (node->ply > 0) {
-            Move lastMove = (node - 1)->last_move;
-            if (!IsNull(lastMove)) {
-                update((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(
-                           lastMove)][PieceMoved(m)][DestSquare(m)],
-                       b, HISTORY_DIVISOR, is_best);
-            }
-            if (node->ply > 1) {
-                Move lastMove = (node - 2)->last_move;
-                if (!IsNull(lastMove)) {
-                    update((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(
-                               lastMove)][PieceMoved(m)][DestSquare(m)],
-                           b, HISTORY_DIVISOR, is_best);
-                }
-            }
-        }
+        updateMove(board,node,m,MovesEqual(m,node->best),false);
     }
 }
 
 void SearchContext::updateMove(const Board &board, NodeInfo *node, Move m,
                                bool positive, bool continuationOnly) {
-    const int b = positive ? bonus(node->depth) : -bonus(node->depth);
+    const int b = bonus(node->depth);
     if (!continuationOnly) update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)], b,
            HISTORY_DIVISOR, positive);
     if (node->ply > 0) {
