@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2017-2020 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2017-2021 by Jon Dart. All Rights Reserved.
 
 #include "searchc.h"
 #include "search.h"
@@ -98,8 +98,14 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node) {
 void SearchContext::updateMove(const Board &board, NodeInfo *node, Move m,
                                bool positive, bool continuationOnly) {
     const int b = bonus(node->depth);
-    if (!continuationOnly) update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)], b,
+    if (!continuationOnly) {
+        update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)], b,
            HISTORY_DIVISOR, positive);
+        if (positive && PieceMoved(m) != Pawn) {
+            update((*history)[board.sideToMove()][DestSquare(m)][StartSquare(m)], b,
+                   HISTORY_DIVISOR, false);
+        }
+    }
     if (node->ply > 0) {
         Move lastMove = (node - 1)->last_move;
         if (!IsNull(lastMove)) {
