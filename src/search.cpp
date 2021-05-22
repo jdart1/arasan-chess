@@ -1886,7 +1886,6 @@ score_t Search::quiesce(int ply,int depth)
            if (!node->PV() &&
                noncaps > std::max<int>(1+depth,0) &&
                !Scoring::mateScore(node->beta) &&
-               //!IsForced(move) && !IsForced2(move) &&
                !CaptureOrPromotion(move) &&
                board.wouldCheck(move) == NotInCheck) {
                // We have searched one or more legal non-capture evasions
