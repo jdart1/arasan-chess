@@ -1819,37 +1819,18 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       node->staticEval = hashEntry.staticValue();
       hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
-      switch (result) {
-      case HashEntry::Valid:
+      if (result == HashEntry::Valid ||
+           ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+            (result == HashEntry::LowerBound && hashValue >= node->beta))) {
+          // hash cutoff
 #ifdef _TRACE
-         if (mainThread()) {
-             traceHash('E',node,hashValue,hashEntry);
-         }
+          static constexpr char map[3] = {'E','U','L'};
+          if (mainThread()) {
+              traceHash(map[int(result)],node,hashValue,hashEntry);
+          }
 #endif
-         return hashValue;
-      case HashEntry::UpperBound:
-         if (hashValue <= node->alpha) {
-#ifdef _TRACE
-            if (mainThread()) {
-               traceHash('U',node,hashValue,hashEntry);
-            }
-#endif
-            return hashValue;                     // cutoff
-         }
-         break;
-      case HashEntry::LowerBound:
-         if (hashValue >= node->beta) {
-#ifdef _TRACE
-            if (mainThread()) {
-               traceHash('L',node,hashValue,hashEntry);
-            }
-#endif
-            return hashValue;                     // cutoff
-         }
-         break;
-      default:
-         break;
-      } // end switch
+          return hashValue;
+      }
       // Note: hash move may be usable even if score is not usable
       hashMove = hashEntry.bestMove(board);
       // Ensure the hash move if any, meets the conditions for this
