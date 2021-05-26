@@ -57,8 +57,7 @@ NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
 endif
 
 #PROF     = -pg
-#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
-#DEBUG   = -g -D_DEBUG=1 
+#DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
