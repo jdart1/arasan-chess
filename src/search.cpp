@@ -2025,7 +2025,6 @@ score_t Search::quiesce(int ply,int depth)
        const ColorType oside = board.oppositeSide();
        Bitboard disc(board.getPinned(board.kingSquare(oside),board.sideToMove(),board.sideToMove()));
        QSearchMoveGenerator mg(board,hashMove);
-       node->num_legal = 0;
        Move move;
        while (!IsNull(move=mg.nextMove())) {
            if (Capture(move) == King) {
@@ -2045,9 +2044,7 @@ score_t Search::quiesce(int ply,int depth)
                cout << endl;
            }
 #endif
-           if (//!node->PV() &&
-               // !MovesEqual(hashMove,move) &&*/
-               !IsPromotion(move) &&
+           if (!IsPromotion(move) &&
                !passedPawnPush(board,move) &&
                node->beta > -Constants::TABLEBASE_WIN) {
                // Futility pruning
@@ -2084,7 +2081,6 @@ score_t Search::quiesce(int ply,int depth)
            try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
            board.undoMove(move,state);
            if (try_score != Illegal) {
-               ++node->num_legal;
 #ifdef _TRACE
                if (mainThread()) {
                    indent(ply);
