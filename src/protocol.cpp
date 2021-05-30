@@ -2199,7 +2199,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                    }
                 }
 #endif
-                int score;
+                score_t score;
                 if ((score = Scoring::tryBitbase(board))!= Constants::INVALID_SCORE) {
                     cout << "bitbase score=";
                     Scoring::printScore(score,cout);
