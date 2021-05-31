@@ -9,7 +9,8 @@ following other console programs:
 - ecococder - adds ECO codes to a PGN file
 - pgnfilter - samples PGN files, writes EPD records to stdout
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
-- tuner  - automatically tunes scoring parameters
+- tuner - automatically tunes scoring parameters
+- selfplay - generates positions for NNUE tuning
 
 Following is a sketch of the Arasan source directory tree:
 
@@ -68,7 +69,10 @@ The following targets are defined in the makefile:
 Note: POPCNT, BMI2, and AVX2 builds will only work on recent x64 CPUs that
 support these instructions, and require a 64-bit compile.
 
- In most cases, the Makefile should automatically select the correct
+The Makefile requires the "bc" utility, available on most Linux distros.
+If using Cygwin, you should ensure you have installed this.
+
+In most cases, the Makefile should automatically select the correct
 target architecture and OS (note: assumes target and host are the
 same). By default it builds only the chess engine. Binaries are placed
 in the "bin" subdirectory.
@@ -140,13 +144,11 @@ Makefile to select TARGET=win32 and run the same build commands.
 ## Windows XP compatibility
 
 To make a XP-compatible build, edit the Makefile to set PLATFORM=XP.
-This requires installation of the Windows SDK version
-7.1A. Unfortunately, if you don't have the SDK installed already,
-there are known issues installing it under Windows 10. The most
-reliable way to get it that I have found is to uninstall all recent
-Visual Studio versions, install Visual C++ 2012 Professional
-(available from my.visualstudio.com), and then re-install any more
-recent Visual Studio release you may have.
+This requires installation of the Windows SDK version 7.1A. You can
+obtain this by running (or re-running, if needed) the Visual Studio
+2019 installer and selecting "MSVC v140 - VS2015 C++ Build tools"
+(not included by default). (Note Windows NT compilation support is
+deprecated and will be removed by Microsoft eventually).
 
 ## Building the Arasan Windows GUI
 
