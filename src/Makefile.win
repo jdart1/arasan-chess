@@ -1,14 +1,14 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2020 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2021 by Jon Dart. All Rights Reserved.
 #
-VERSION=22.2
-LINK_VERSION=22.2
+VERSION=22.3
+LINK_VERSION=22.3
 #
-TARGET = win32
-#TARGET = win64
+#TARGET = win32
+TARGET = win64
 
 # Set PLATFORM=XP for a Windows XP compatible build
-PLATFORM=XP
+PLATFORM=MODERN
 
 #TRACE=/D_TRACE 
 #DEBUG=/Zi -D_DEBUG -DUNIT_TESTS

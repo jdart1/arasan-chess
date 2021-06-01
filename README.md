@@ -10,7 +10,7 @@ Arasan is multi-platform (Windows, Linux, Mac OS, Unix) and supports multi-threa
 
 ## Copyright, license
 
-Copyright 1994-2020 by Jon Dart. All Rights Reserved.
+Copyright 1994-2021 by Jon Dart. All Rights Reserved.
 
 Arasan is licensed under the MIT License. See license.txt in the doc directory.
 
@@ -98,8 +98,10 @@ if installed. Default is true.
 favor selecting more frequent moves in the Arasan book.
 - Favor best book moves - value from 0 to 100, default 50. Higher values
 favor selecting better scoring moves in the Arasan book.
-- Favor high-weighted book moves - value from 0 to 100, default 50. Higher values
+- Favor high-weighted book moves - value from 0 to 100, default 100. Higher values
 favor selecting moves with positive manually set weights in the Arasan book.
+- Randomize book moves - value from 0 to 100, default 50. Higher values
+favor selecting moves with a greater degree of randomness.
 - UCI_LimitStrength - true or false, default false. True to limit the engine
 playing strength.
 - UCI_Elo - desired playing strength, settable from Elo 1000 to Elo 2600. This is
@@ -127,8 +129,10 @@ down 5 pawns in score value.
 favor selecting more frequent moves in the Arasan book.
 - Favor best book moves - value from 0 to 100, default 50. Higher values
 favor selecting better scoring moves in the Arasan book.
-- Favor high-weighted book moves - value from 0 to 100, default 50. Higher values
+- Favor high-weighted book moves - value from 0 to 100, default 100. Higher values
 favor selecting moves with positive manually set weights in the Arasan book.
+- Randomize book moves - value from 0 to 100, default 50. Higher values
+favor selecting moves with a greater degree of randomness.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
 - Strength - search strength, settable on a scale of 0 (weakest) to 100 (strongest)

@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 22.0</title>
+<title>Arasan Programmer's Guide - version 22.3</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 22.0</h1>
+<h1>Arasan Programmer's Guide - version 22.3</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -96,17 +96,17 @@ moves along that line.</p>
 <p>Formerly relative book weights were stored in the book file. Now
 generally they are not: except for special first PGN file, move records
 only store the win/loss/draw statistics for the move. Some selection
-logic is applied at runtime (see bookread.cpp), as follows (this is somewhat
-inspired by Thompson sampling - see references):</p>
+logic is applied at runtime (see bookread.cpp), as follows (based partly
+on Thompson sampling - see references):</p>
   <ol>
     <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
-    <li>If a manually configured weight or position eval is present in the book, adjust the win/loss/draw statistics in way that skews them based on the weight/eval.</li>
-    <li>Perform a random sample from the prior distribution of win/loss/draw statistics for each move. The sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics.</li>
-    <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all book moves. A slight score bonus is given for very frequent moves (depending on the book frequency option).</li>
-    <li>Add a further random factor to the score.</li>
-    <li>Pick the move with the highest result score.</li>
+    <li>Perform the Thompson sampling step: take a random sample from the prior distribution of win/loss/draw statistics for each move. The sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics.</li>
+    <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all book moves.
+    <li>A slight score bonus is given for very frequent moves (depending on the book frequency option).</li>
+    <li>Add a further normally distributed random factor to the score, in an amount based on the "book.random" parameter.</li>
+    <li>Pick the move with the highest score.</li>
 </ol>
-<p>There are three options (settable in arasan.rc) that control the move selection:</p>
+<p>There are four options (settable in arasan.rc) that control the move selection:</p>
 <ul>
 <li>book.frequency controls the threshold for dropping infrequent moves (step 1 above) and
 the frequency bonus (in step 4).
@@ -118,24 +118,29 @@ statistics are poor. It is set on a scale of 0-100, with 0 being most tolerant o
 worse moves and 100 selecting the best move always.</li>
 <li>book.weighting controls the degree to which manually-configured weights influence
 the move selection. It is on a scale of 0-100, with 0 causing the manual weights to
-have the least effect and 100 causing them to have the maximum effect.
+have the least effect and 100 causing them to have the maximum effect.</li>
+<li>book.random controls the amount of randomness added to computed move scores,
+on a scale of 0 to 100. Smaller values inject less randomness (although there
+will still be some random variation due to the Thompson sampling step in move selection).
 </li>  
 </ul>
 <p>
-Arasan comes with a book that was built from a
-combination of a fairly small hand-tuned book file (basic.pgn) and a fairly large
-collection of high-quality human and computer games. There are over
-750,000 moves in the book.</p>
+Arasan comes with a book that was built from a combination of a fairly
+small hand-tuned book file (basic.pgn) and a fairly large collection
+of high-quality human and computer games. There are over 750,000 moves
+in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
 <pre>
 makebook -n 100 -m 4 -o book.bin basic.pgn big.pgn
 </pre>
 <br/>
-<p>The -n parameter to makebook specifies how many "index pages" are in the
-binary book file. You may have to experiment with this parameter. Too
-small a value will cause an error building the book. Too large a value
-will waste space by creating a bigger book.bin than is required.</p>
+
+<p>The -n parameter to makebook specifies how many "index pages"
+are in the binary book file. You may have to experiment with this
+parameter. Too small a value will cause an error building the
+book. Too large a value will waste space by creating a bigger book.bin
+than is required.</p>
 <p>You can also specific the "-m" parameter to makebook with a number,
 to set a minimum number of times that a move must be played in a
 game collection to be included in the book (does not apply to the first
@@ -266,7 +271,7 @@ La Puce Echiquenne. This is another test that purports to estimate
 a program's rating. Standard procedure is to allow 10 minutes for
 each problem. See lapuce2.doc for the scoring procedure.</li>
 <li>
-arasan20.epd is a set of test positions from Arasan games, plus some
+arasan21.epd is a set of test positions from Arasan games, plus some
 from other sources. They range in difficulty, but most are non-trivial
 and some are quite hard. This is the latest version of the test
 suite. Some positions in this file are "avoid move" positions where
@@ -1130,7 +1135,7 @@ found at <a href="http://www.arasanchess.org">arasanchess.org</a></p>
 
 <h2>References</h2>
 
-<p>Buro, M. <a href="http://wiki.cs.pdx.edu/cs542/papers/buro/probcut.pdf" target="_blank">ProbCut: An Effective Selective Extension of the Alpha-Beta Algorithm</a>. ICCA Journal Vol. 18, No. 2, pp. 71-76 (1995).
+<p>Buro, M. (1995) <a href="http://wiki.cs.pdx.edu/cs542/papers/buro/probcut.pdf" target="_blank">ProbCut: An Effective Selective Extension of the Alpha-Beta Algorithm</a>. ICCA Journal Vol. 18, No. 2, pp. 71-76.
 <p>Chess Programming Wiki, topic <a href="http://chessprogramming.org/Magic_Bitboards" target="_blank">Magic Bitboards</a>.
 </p>
 <p><a href="http://craftychess.com/downloads/source">Crafty source code</a>.
@@ -1152,9 +1157,9 @@ New York: Springer-Verlag.
 </p>
 <p>Heinz, Ernst A. (1999). Scaleable Search in Computer Chess. Vieweg.
 </p>
-<p>Hoki, Kunihuto and Kaneko, Tomoyuki "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Artificial Intelligence Research 49 (2014) 527-568.</p>
+<p>Hoki, Kunihuto and Kaneko, Tomoyuki (2014) "Large-Scale Optimization for Evaluation Functions with Minimax Search," Journal of Artificial Intelligence Research 49, pp. 527-568.</p>
 <p>Kannan, Pradyumna (2007) <a href="http://www.pradu.us/old/Nov27_2008/Buzz/research/magic/Bitboards.pdf" target="_blank">Magic Move-Bitboard Generation in Computer Chess</a>.</p>
-<p>Kingman, Diederik P. and Ba, Jimmy Lei <a href="https://arxiv.org/pdf/1412.6980v8.pdf" target="_blank">ADAM: A Method For Stochastic Optimization</a>, ICLR 2015.</p>
+<p>Kingman, Diederik P. and Ba, Jimmy Lei (2015) <a href="https://arxiv.org/abs/1412.6980v9" target="_blank">ADAM: A Method For Stochastic Optimization</a>. Published as a conference paper at ICLR 2015.</p>
 <p>Lai, Matthew (2015) <a href="https://arxiv.org/abs/1509.01549" target="_blank">Giraffe: Using Deep Reinforcement Learning to Play Chess</a>. MSc Dissertation, Imperial College, London.</p>
 <p>Marsand, T. Anthony and Schaeffer, Jonathan (1990). Computers,
 Chess and Cognition. New York: Springer-Verlag.

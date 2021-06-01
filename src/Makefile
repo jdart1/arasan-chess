@@ -1,8 +1,8 @@
 #
 # Gnu Makefile for Arasan
-# Copyright 2004-2020 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2021 by Jon Dart. All Rights Reserved.
 #
-VERSION = 22.2
+VERSION = 22.3
 
 # paths, modify as needed:
 
@@ -57,7 +57,7 @@ NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
 endif
 
 #PROF     = -pg
-#DEBUG   = -g -D_DEBUG=1 -DUNIT_TESTS
+#DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -76,7 +76,7 @@ ifeq ("$(ARCH)","x86_64")
 POPCNT_FLAGS := -msse4.1 -msse4.2 -mpopcnt
 endif
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
-AVX2_FLAGS := $(BMI2_FLAGS) -mavx2
+AVX2_FLAGS := $(BMI2_FLAGS) -mavx2 -mfma
 
 PGO_RUN_FLAGS = -H 64M
 

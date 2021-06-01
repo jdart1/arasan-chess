@@ -1,8 +1,6 @@
-post 21.0
+1. NNUE support (in progress)
 
-1. Android build, support cross-compilation (now supported via CMake)
-
-2. Use CMAKE to avoid need for different Makefiles (done).
+2. Android build, support cross-compilation (now supported via CMake)
 
 3. Revisit IID conditions. Consider IID even when hash move is present but depth is low (Gull)
 
@@ -21,25 +19,23 @@ post 21.0
     d.  Consider L1 regularization for tuner, possibly with smooth approximation (http://pages.cs.wisc.edu/~gfung/GeneralL1/L1_approx_bounds.pdf)
     e.  Properly implement ordinal logistic regression in tuner. Consider using all-threshold as in Rennie paper (http://ttic.uchicago.edu/~nati/Publications/RennieSrebroIJCAI05.pdf).
 
-9. Occasionally there are losses on time - tune time mgmt when very near time limit (fixed this for moves/minute types of TC).
+9. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on. (This has been at least partialy addresed).
 
-10. Arasan seems to use less time than many opponents do, at least in Winboard mode with ponder on. (This has been at least partialy addresed).
-
-11. Further LazySMP improvements:
+10. Further LazySMP improvements:
    a. see http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
    b. improve thread depth distribution logic, see: http://talkchess.com/forum3/viewtopic.php?f=7&t=68154. - done, needs more testing though.
 
-12. for NUMA: consider memory striping for hash. Rebind memory on thread resize.
+11. for NUMA: consider memory striping for hash. Rebind memory on thread resize.
 
-13. pin-aware SEE (Stockfish idea)
+12. pin-aware SEE (Stockfish idea)
 https://github.com/mcostalba/Stockfish/commit/90ce24b11ea080f923e1b5d37470e2ca98f4d98b
 
-14. See if protocol module can be further simplified/slimmed down.
+13. See if protocol module can be further simplified/slimmed down.
 
-15. Windows GUI badly needs a rewrite, better graphics.
+14. Windows GUI badly needs a rewrite, better graphics.
 
-16. Make logging work better under UCI.
+15. Make logging work better under UCI.
 
-17. Implement position learning in UCI mode.
+16. Implement position learning in UCI mode.
 
 

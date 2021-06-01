@@ -1,4 +1,18 @@
-Changes in Arasan 22.2:
+Changes in Arasan 22.3:
+ 1) Change re-search logic.
+ 2) Add selfplay utility, to generate NNUE training positions.
+ 3) Changes to book selection logic.
+ 4) Allow piece values to be computed via Texel tuning, re-tune params.
+ 5) Add -mfma if avx2 enabled.
+ 6) Update history and killers on hash cutoff.
+ 7) Add small semi-random factor to draw score (idea from Stockfish).
+ 8) Various search changes to null move, ProbCut, futiliy pruning,
+ static null pruning.
+ 9) Some cleanup and bug fixes in history code.
+ 10) Simplify qsearch hash code, changes to qsearch forward pruning.
+ 11) Fixes to CMakeLists.txt and VC++ project files.
+
+Changes in Arasan 22.2 (Dec. 2020):
  1) Cleanups and fixes in Makefile + CMakeLists.txt. Fix GCC version detection.
  Better detection of clang compiler. Support Intel oneAPI complier.
  2) Bug fixes in protocol class for cases where ponder search terminates early.
