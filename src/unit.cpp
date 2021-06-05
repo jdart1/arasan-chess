@@ -1,4 +1,4 @@
-// Copyright 2013-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2019, 2021 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -1416,7 +1416,7 @@ static int testSearch()
                ++errs;
            }
            if (acase.score != Constants::INVALID_SCORE) {
-               if (score < acase.score) {
+               if (score != acase.score && !(acase.score==0 && std::abs(score-acase.score)<2)) {
                    cerr << "error in search, case " << caseid << ": incorrect score (expected ";
                    Scoring::printScore(acase.score,cerr);
                    cerr << ", got ";
