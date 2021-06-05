@@ -2807,6 +2807,7 @@ score_t Search::search()
                         cout << "Probcut: previous move illegal" << endl;
                     }
                     return -Illegal;                  // previous move was illegal
+#endif
                 }
                 else if (seeSign(board,move,needed_gain)) {
 #ifdef _TRACE
