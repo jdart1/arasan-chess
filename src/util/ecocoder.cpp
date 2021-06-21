@@ -13,6 +13,7 @@
 #include "movearr.h"
 #include "globals.h"
 #include "chessio.h"
+#include "scoring.h"
 
 extern "C"
 {

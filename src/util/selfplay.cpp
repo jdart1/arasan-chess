@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "movegen.h"
 #include "notation.h"
+#include "scoring.h"
 #include "search.h"
 #include <cstdio>
 #include <fstream>
@@ -102,10 +103,11 @@ struct SelfPlayOptions {
     unsigned drawAdjudicationMinPly = 100;
     std::string posFileName;
     std::string gameFileName = "games.pgn";
-    bool saveGames = false;
-    unsigned maxBookPly = 8;
+    bool saveGames = true;
+    unsigned maxBookPly = 0;
     bool randomize = true;
     unsigned randomizeRange = 10;
+    unsigned randomizeInterval = 1;
     bool semiRandomize = true;
     unsigned semiRandomizeInterval = 15;
     OutputFormat format = OutputFormat::Bin;
@@ -371,7 +373,7 @@ static void selfplay(ThreadData &td) {
     std::uniform_int_distribution<unsigned> dist(1,
                                                  sp_options.outputPlyFrequency);
     std::uniform_int_distribution<unsigned> rand_dist(
-        1, sp_options.randomizeRange);
+        1, sp_options.randomizeInterval);
     std::uniform_int_distribution<unsigned> rand2_dist(
         1, sp_options.semiRandomizeInterval);
     for (; gameCounter < sp_options.gameCount; ++gameCounter) {
@@ -399,9 +401,9 @@ static void selfplay(ThreadData &td) {
             if (IsNull(m)) {
                 // Don't randomize if in TB range
                 bool skipRandom = int(board.men()) <= EGTBMenCount;
-                if (sp_options.randomize && !didRandom && !skipRandom &&
+                if (sp_options.randomize &&
                     ply + sp_options.maxBookPly < sp_options.randomizeRange &&
-                    rand_dist(td.engine) == sp_options.randomizeRange) {
+                    rand_dist(td.engine) == sp_options.randomizeInterval) {
                     m = randomMove(board, stats, td);
                     didRandom = true;
                     // TBD: we don't associate any prior FENS with the current

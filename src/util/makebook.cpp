@@ -17,6 +17,7 @@
 #include "notation.h"
 #include "attacks.h"
 #include "globals.h"
+#include "scoring.h"
 
 #include <algorithm>
 #include <fstream>
