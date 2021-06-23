@@ -96,9 +96,9 @@ inline uint64_t getElapsedTime(const CLOCK_TYPE startTime,const CLOCK_TYPE endTi
   return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 }
 
-inline uint64_t getRandomSeed() {
+inline uint64_t getRandomSeed(unsigned index = 0) {
   return (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>
-    (std::chrono::system_clock::now().time_since_epoch()).count();
+    (std::chrono::system_clock::now().time_since_epoch()).count() + index;
 }
 
 #ifdef _WIN32

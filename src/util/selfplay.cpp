@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "movegen.h"
 #include "notation.h"
+#include "scoring.h"
 #include "search.h"
 #include <cstdio>
 #include <fstream>
@@ -93,9 +94,8 @@ struct SelfPlayOptions {
     unsigned minOutPly = 8;
     unsigned maxOutPly = 400;
     unsigned cores = 1;
-    unsigned gameCount = 1000000;
-    ;
-    unsigned depthLimit = 9;
+    unsigned gameCount = 10000000;
+    unsigned depthLimit = 6;
     bool adjudicateDraw = true;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationMoves = 5;
@@ -103,11 +103,15 @@ struct SelfPlayOptions {
     std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
-    unsigned maxBookPly = 8;
+    unsigned maxBookPly = 0;
     bool randomize = true;
     unsigned randomizeRange = 10;
+    unsigned randomizeInterval = 1;
+    bool useSee = true;
+    bool limitEarlyKingMoves = true;
     bool semiRandomize = true;
     unsigned semiRandomizeInterval = 15;
+    bool skipNonQuiet = true;
     OutputFormat format = OutputFormat::Bin;
 } sp_options;
 
@@ -309,8 +313,7 @@ class binEncoder {
     }
 };
 
-static Move randomMove(const Board &board, Statistics &stats, ThreadData &td) {
-    RootMoveGenerator mg(board);
+static Move randomMove(const Board &board, RootMoveGenerator &mg, Statistics &stats, ThreadData &td) {
     unsigned n = mg.moveCount();
     if (n == 0) {
         if (board.isLegalDraw()) {
@@ -371,14 +374,14 @@ static void selfplay(ThreadData &td) {
     std::uniform_int_distribution<unsigned> dist(1,
                                                  sp_options.outputPlyFrequency);
     std::uniform_int_distribution<unsigned> rand_dist(
-        1, sp_options.randomizeRange);
+        1, sp_options.randomizeInterval);
     std::uniform_int_distribution<unsigned> rand2_dist(
         1, sp_options.semiRandomizeInterval);
     for (; gameCounter < sp_options.gameCount; ++gameCounter) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
         }
-        bool adjudicated = false, terminated = false, didRandom = false;
+        bool adjudicated = false, terminated = false;
         Statistics stats;
         Board board;
         unsigned zero_score_count = 0;
@@ -399,11 +402,21 @@ static void selfplay(ThreadData &td) {
             if (IsNull(m)) {
                 // Don't randomize if in TB range
                 bool skipRandom = int(board.men()) <= EGTBMenCount;
-                if (sp_options.randomize && !didRandom && !skipRandom &&
+                if (sp_options.randomize &&
                     ply + sp_options.maxBookPly < sp_options.randomizeRange &&
-                    rand_dist(td.engine) == sp_options.randomizeRange) {
-                    m = randomMove(board, stats, td);
-                    didRandom = true;
+                    rand_dist(td.engine) == sp_options.randomizeInterval) {
+                    RootMoveGenerator mg(board);
+                    if (mg.moveCount() > 1 && (sp_options.useSee || sp_options.limitEarlyKingMoves)) {
+                        for (int i = 0; i < 10; i++) {
+                            m = randomMove(board, mg, stats, td);
+                            if (sp_options.useSee && !seeSign(board,m,0)) continue;
+                            if (sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                            break;
+                        }
+                    }
+                    else {
+                        m = randomMove(board, mg, stats, td);
+                    }
                     // TBD: we don't associate any prior FENS with the current
                     // game result after a random move. Stockfish though does do
                     // this.
@@ -464,7 +477,8 @@ static void selfplay(ThreadData &td) {
                     Notation::image(board, m, Notation::OutputFormat::SAN,
                                     image);
                 }
-                if (!sp_hash_table.check_and_replace_hash(board.hashCode())) {
+                if (!(sp_options.skipNonQuiet && CaptureOrPromotion(m)) &&
+                    !sp_hash_table.check_and_replace_hash(board.hashCode())) {
                     if (ply >= sp_options.minOutPly &&
                         ply <= sp_options.maxOutPly &&
                         (dist(td.engine) % sp_options.outputPlyFrequency) ==
@@ -577,7 +591,7 @@ static void init_threads() {
     for (unsigned i = 0; i < sp_options.cores; i++) {
         threadDatas[i].index = i;
         threadDatas[i].searcher = nullptr;
-        threadDatas[i].engine.seed(getRandomSeed());
+        threadDatas[i].engine.seed(getRandomSeed(i));
     }
 }
 
