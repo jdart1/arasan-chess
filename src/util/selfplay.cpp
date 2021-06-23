@@ -207,11 +207,8 @@ class binEncoder {
         assert(pos <= 256);
         // output position
         out.write(reinterpret_cast<const char *>(posData.data()), 32);
-        // score. Note: Arasan scores are always from side to moves's POV. Note:
-        // we normalize scores to centipawns here; not sure that's necessary
-        // though.
-        serialize<int16_t>(
-            out, static_cast<int16_t>((100 * data.score) / Params::PAWN_VALUE));
+        // score. Note: Arasan scores are always from side to moves's POV.
+        serialize<int16_t>(out, static_cast<int16_t>((data.score)));
         serialize<uint16_t>(out, encode_move(board.sideToMove(), data.move));
         serialize<uint16_t>(out, static_cast<uint16_t>(data.ply));
         serialize<int8_t>(out, static_cast<int8_t>(result));
