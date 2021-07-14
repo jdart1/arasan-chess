@@ -93,6 +93,7 @@ int initGlobals(const char *pathName, bool initLog) {
 return 1;
 }
 
+#ifdef NNUE
 int loadNetwork(const std::string &fname) {
    std::cerr << "loading " << fname << std::endl;
    std::ifstream in(fname);
@@ -103,6 +104,7 @@ int loadNetwork(const std::string &fname) {
    }
    return 1;
 }
+#endif
 
 void CDECL cleanupGlobals(void) {
    openingBook.close();

@@ -10,7 +10,7 @@
 #include <vector>
 using namespace std;
 
-class Statistics;
+struct Statistics;
 
 class Log;
 

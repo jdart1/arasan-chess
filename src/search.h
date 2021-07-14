@@ -12,6 +12,7 @@
 #include "globals.h"
 #ifdef NNUE
 #include "nnueintf.h"
+#include "options.h"
 #endif
 extern "C" {
 #include <memory.h>
@@ -308,11 +309,15 @@ protected:
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 
     score_t evalu8(const Board &board) {
-       if (options.search.useNNUE) {
+#ifdef NNUE
+      if (options.search.useNNUE) {
           return scoring.evalu8NNUE(board,node);
        } else {
           return scoring.evalu8(board);
        }
+#else
+       return scoring.evalu8(board);
+#endif
     }
 
     SearchController *controller;
