@@ -71,7 +71,7 @@ struct NodeInfo {
     nnue::Network::AccumulatorType accum;
     std::array<DirtyState, 3> dirty;
     unsigned dirty_num;
-#endif  
+#endif
 
     int PV() const {
         return (beta > alpha+1);
@@ -88,10 +88,10 @@ struct NodeInfo {
 typedef NodeInfo NodeStack[Constants::MaxPly];
 
 // Helper class to save/restore key node parameters
-class NodeState 
+class NodeState
 {
 public:
-    NodeState(NodeInfo *node) 
+    NodeState(NodeInfo *node)
         : n(node),
           alpha(node->alpha),
           beta(node->beta),
@@ -308,17 +308,7 @@ protected:
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 
-    score_t evalu8(const Board &board) {
-#ifdef NNUE
-      if (options.search.useNNUE) {
-          return scoring.evalu8NNUE(board,node);
-       } else {
-          return scoring.evalu8(board);
-       }
-#else
-       return scoring.evalu8(board);
-#endif
-    }
+    score_t evalu8(const Board &board);
 
     SearchController *controller;
     Board board;

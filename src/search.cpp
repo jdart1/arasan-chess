@@ -3425,3 +3425,25 @@ const char * Search::debugPrefix() const noexcept
     return controller->debugPrefix();
 }
 
+score_t Search::evalu8(const Board &board) {
+#ifdef NNUE
+    const Material &ourMat = board.getMaterial(board.sideToMove());
+    const Material &oppMat = board.getMaterial(board.oppositeSide());
+    bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
+    bool useClassical = imbalance ||
+        (ourMat.materialLevel() <= 10 &&
+         ourMat.pawnCount() <= 2 &&
+         oppMat.materialLevel() <= 10 &&
+         oppMat.pawnCount() <= 2);
+    if (!useClassical && options.search.useNNUE) {
+        return scoring.evalu8NNUE(board,node);
+    } else {
+        return scoring.evalu8(board);
+    }
+#else
+    return scoring.evalu8(board);
+#endif
+}
+
+
+
