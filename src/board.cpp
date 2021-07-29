@@ -423,7 +423,7 @@ void Board::doMove( Move move, NodeInfo *node )
              (node+1)->dirty_num = 1;
              (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(start),
                                              static_cast<nnue::Square>(dest),
-                                             static_cast<nnue::Piece>(PieceMoved(move)));
+                                             static_cast<nnue::Piece>(MakePiece(PieceMoved(move),White)));
          }
 #endif
          switch (TypeOfPiece(contents[StartSquare(move)])) {
@@ -695,7 +695,7 @@ void Board::doMove( Move move, NodeInfo *node )
              (node+1)->dirty_num = 1;
              (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(start),
                                              static_cast<nnue::Square>(dest),
-                                             static_cast<nnue::Piece>(PieceMoved(move)));
+                                             static_cast<nnue::Piece>(MakePiece(PieceMoved(move),Black)));
          }
 #endif
          switch (TypeOfPiece(contents[StartSquare(move)])) {

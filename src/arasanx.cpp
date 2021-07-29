@@ -267,6 +267,7 @@ int CDECL main(int argc, char **argv) {
 #endif
 
 #ifdef UNIT_TESTS
+    delayedInit(); // ensure all init is done including TBs, network
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl;
 #endif

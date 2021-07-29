@@ -1371,9 +1371,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     --controller->time_check_counter;
     nodeAccumulator++;
 
-#ifdef _TRACE
-    int in_pv = 1;
-#endif
     int in_check = 0;
 
     const bool wide = iterationDepth <= MoveGenerator::EASY_PLIES;
@@ -1473,16 +1470,14 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             board.undoMove(move,save_state);
             break;
         }
-#ifdef _TRACE
-        if (mainThread()) {
-           cout << "0. ";
-           MoveImage(move,cout);
-           cout << ' ' << try_score;
-           if (in_pv) cout << " (pv)";
-           cout << endl;
-        }
-#endif
         if (try_score > node->best_score && depthMod < 0 && !terminate) {
+#ifdef _TRACE
+           if (mainThread()) {
+              cout << "window = [" << -hibound << "," << -lobound
+                   << "]" << endl;
+              cout << "score = " << try_score << " - LMR cutoff, researching .." << endl;
+           }
+#endif
            // We failed to get a cutoff, so re-search with no reduction.
            depthMod = 0;
            controller->fail_high_root = true;
@@ -1490,14 +1485,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
-#ifdef _TRACE
-           if (mainThread()) {
-              cout << "0. ";
-              MoveImage(move,cout);
-              cout << ' ' << try_score;
-              cout << endl;
-           }
-#endif
         }
         if (try_score > node->best_score && hibound < node->beta && !terminate) {
            if (mainThread() && controller->time_target != INFINITE_TIME) {
@@ -1508,9 +1495,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
 #ifdef _TRACE
            if (mainThread()) {
-              cout << "window = [" << -hibound << "," << node->best_score
+              cout << "window = [" << -hibound << "," << -lobound
                    << "]" << endl;
-              cout << "score = " << try_score << " - no cutoff, researching .." << endl;
+              cout << "score = " << try_score << " - zero window cutoff, researching .." << endl;
            }
 #endif
            hibound = node->beta;
@@ -1560,9 +1547,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         if (!wide) {
            hibound = node->best_score + 1;  // zero-width window
         }
-#ifdef _TRACE
-        in_pv = 0;
-#endif
     }
 
     if (node->cutoff) {
@@ -2714,13 +2698,13 @@ score_t Search::search()
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
             BoardState state(board.state);
-            board.doNull();
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply);
                 cout << "trying " << ply << ". " << "(null)" << endl;
             }
 #endif
+            board.doNull(node);
             score_t nscore;
             if (nu_depth > 0)
                 nscore = -search(-node->beta, 1-node->beta,

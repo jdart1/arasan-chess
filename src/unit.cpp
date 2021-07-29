@@ -1434,6 +1434,45 @@ static int testSearch()
    return errs;
 }
 
+#ifdef NNUE
+static int testNNUE() {
+    int errs = 0;
+    // NNUE code has its own tests, but here we test state update in doMove/undoMove
+    const std::string fen("r1bq1r1k/p1pnbpp1/1p2p3/6p1/3PB3/5N2/PPPQ1PPP/2KR3R w - - 0 1");
+    const std::array<std::string,3> moves = {"g4","f5","Bxa8"};
+    Board board, start;
+    NodeStack nodes;
+    if (!BoardIO::readFEN(board, fen)) {
+        cerr << "warning: testNNUE: error in FEN" << endl;
+        return ++errs;
+    }
+    start = board;
+    Scoring s;
+    // make sure starting position has an eval
+    s.evalu8NNUE(board,nodes);
+    unsigned i = 0;
+    // update the board
+    for (const std::string &mv : moves) {
+        Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,mv,true);
+        assert(!IsNull(m));
+        nodes[i].ply = i;
+        board.doMove(m,nodes+i);
+        ++i;
+    }
+    // perform incremental eval
+    score_t endScore = s.evalu8NNUE(board,nodes+i);
+    // compare w. non-incremental
+    errs += endScore != s.evalu8NNUE(board);
+    if (errs) cout << "error in testNNUE - test 1" << endl;
+    board = start;
+    // test after null move
+    board.doNull(nodes);
+    endScore = s.evalu8NNUE(board,nodes+1);
+    errs += endScore != s.evalu8NNUE(board);
+    if (errs) cout << "error in testNNUE - test 2" << endl;
+    return errs;
+}
+#endif
 
 #ifdef SYZYGY_TBS
 static int testTB()
@@ -1601,8 +1640,11 @@ int doUnit() {
    errs += testHash();
    errs += testRep();
    errs += testMoveGen();
-   errs += testPerft();
-   errs += testSearch();
+   //   errs += testPerft();
+   //   errs += testSearch();
+#ifdef NNUE
+   errs += testNNUE();
+#endif
 #ifdef SYZYGY_TBS
    errs += testTB();
 #endif

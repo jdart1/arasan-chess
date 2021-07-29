@@ -25,7 +25,6 @@ struct Position {
    Position(const Board &b, NodeInfo *n) :
       board(b),node(n) {
    }
-   NodeInfo *prev() const noexcept;
    const Board &board;
    NodeInfo *node;
 };
@@ -34,9 +33,10 @@ struct Position {
 class ChessInterface {
 
   public:
-    ChessInterface(Position *p) : pos(p), stm(static_cast<nnue::Color>(p->board.sideToMove())) {}
+    ChessInterface(Position *p) : pos(p), stm(static_cast<nnue::Color>(p->board.sideToMove())),
+                                              nodeIndex(0) {}
 
-    ChessInterface(const ChessInterface &intf) : pos(intf.pos) {}
+    ChessInterface(const ChessInterface &intf) : pos(intf.pos), stm(intf.stm), nodeIndex(intf.nodeIndex) {}
 
     virtual ~ChessInterface() = default;
 
@@ -76,16 +76,18 @@ class ChessInterface {
                        nnue::Piece &p);
 
     // Change the state of this interface to the previous position.
-    // Note: only the node pointer changes. The board position does not. This is actually ok,
-    // because the only thing we need from the board is the king position, and no incremental
-    // update is done if the king position has changed.
-    void previous();
+    // Returns "false" if no previous position.
+    bool previous();
 
-  bool hasPrevious() const noexcept;
+    // Return the current node pointer.
+    NodeInfo *node() const noexcept;
+
+    bool hasPrevious() const noexcept;
 
   private:
     Position *pos;
     nnue::Color stm; // side to move
+    int nodeIndex;
 
     class Iterator {
       friend class ChessInterface;
@@ -141,12 +143,12 @@ class ChessInterface {
 
 inline bool operator==(const ChessInterface &intf,
                        const ChessInterface &other) {
-    return intf.pos == other.pos;
+    return intf.pos == other.pos && intf.nodeIndex == other.nodeIndex;
 }
 
 inline bool operator!=(const ChessInterface &intf,
                        const ChessInterface &other) {
-    return intf.pos == other.pos;
+    return intf.pos != other.pos || intf.nodeIndex != other.nodeIndex;;
 }
 
 #endif
