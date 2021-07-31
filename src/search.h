@@ -83,6 +83,12 @@ struct NodeInfo {
     int newBest(score_t score) const {
         return score > best_score && score < beta;
     }
+#ifdef NNUE
+    void clearNNUEState() {
+        accum.setEmpty();
+        dirty_num = 0;
+    }
+#endif
 };
 
 typedef NodeInfo NodeStack[Constants::MaxPly];

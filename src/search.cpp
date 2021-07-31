@@ -2658,8 +2658,9 @@ score_t Search::search()
     if (pruneOk && depth <= RAZOR_DEPTH && board.getMaterial(board.sideToMove()).hasPieces()) {
         ASSERT(node->eval != Constants::INVALID_SCORE);
         if (node->eval < node->beta - razorMargin(depth)) {
-            // Note: use threshold as the bounds here, not beta, as
-            // was done in Toga 3.0:
+#ifdef NNUE
+            (node+1)->clearNNUEState();
+#endif
             score_t v = quiesce(node->alpha,node->beta,ply+1,0);
 #ifdef _TRACE
             if (mainThread()) {
@@ -2729,6 +2730,15 @@ score_t Search::search()
                 if (nu_depth > 0 && (depth >= 6*DEPTH_INCREMENT)) {
                     // Verify null cutoff with reduced-depth search
                     // (idea from Dieter Buerssner)
+#ifdef _TRACE
+                    if (mainThread()) {
+                       indent(ply); cout << "verifying null move" << endl;
+                    }
+#endif
+#ifdef NNUE
+                    // entering a new node w/o a move, so reset next node state
+                    (node+1)->clearNNUEState();
+#endif
                     nscore = search(node->beta-1, node->beta, ply+1, nu_depth, VERIFY);
                     if (nscore == -Illegal) {
 #ifdef _TRACE
@@ -2803,7 +2813,7 @@ score_t Search::search()
                     }
 #endif
                     SetPhase(move,MoveGenerator::WINNING_CAPTURE_PHASE);
-                    board.doMove(move);
+                    board.doMove(move,node);
                     if (!board.wasLegal(move)) {
                         board.undoMove(move,state);
                         continue;
@@ -2861,15 +2871,11 @@ score_t Search::search()
 #endif
         // Call search routine at lower depth to get a 1st move to try.
         // ("Internal iterative deepening").
-        //
-        // Note: we do not push down the node stack because we want this
-        // search to have all the same parameters (including ply) as the
-        // current search, just reduced depth + the IID flag set.
-        // Save state here: exit from block resets node state.
-        NodeState state(node);
-        node->flags |= IID;
-        node->depth = d;
-        score_t iid_score = search();
+#ifdef NNUE
+        (node+1)->clearNNUEState();
+#endif
+        score_t iid_score = search(node->alpha,node->beta,node->ply,
+                                   d,node->flags | IID);
         // set hash move to IID search result (may still be null)
         hashMove = node->best;
         if (iid_score == -Illegal || ((node->flags) & EXACT)) {
@@ -2922,7 +2928,7 @@ score_t Search::search()
             ++stats.singular_searches;
 #endif
             // Verify hash move legal
-            board.doMove(hashMove);
+            board.doMove(hashMove,node);
             const bool legal = board.wasLegal(hashMove);
             board.undoMove(hashMove,state);
             if (!legal) {
@@ -3428,6 +3434,3 @@ score_t Search::evalu8(const Board &board) {
     return scoring.evalu8(board);
 #endif
 }
-
-
-

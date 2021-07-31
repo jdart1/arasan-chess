@@ -362,12 +362,12 @@ void Board::doMove( Move move, NodeInfo *node )
 #ifdef NNUE
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::WhiteRook);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
                                              static_cast<nnue::Square>(newkp),
                                              nnue::WhiteKing);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::WhiteRook);
          }
 #endif
       }
@@ -402,12 +402,12 @@ void Board::doMove( Move move, NodeInfo *node )
 #ifdef NNUE
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::WhiteRook);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
                                              static_cast<nnue::Square>(newkp),
                                              nnue::WhiteKing);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::WhiteRook);
          }
 #endif
       }
@@ -634,12 +634,12 @@ void Board::doMove( Move move, NodeInfo *node )
 #ifdef NNUE
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::BlackRook);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
                                              static_cast<nnue::Square>(newkp),
                                              nnue::BlackKing);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::BlackRook);
          }
 #endif
       }
@@ -674,12 +674,12 @@ void Board::doMove( Move move, NodeInfo *node )
 #ifdef NNUE
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::BlackRook);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(kp),
+             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
                                              static_cast<nnue::Square>(newkp),
                                              nnue::BlackKing);
+             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
+                                             static_cast<nnue::Square>(newrooksq),
+                                             nnue::BlackRook);
          }
 #endif
       }
