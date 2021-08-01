@@ -2380,10 +2380,12 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    Position p(board,node);
    ChessInterface intf(&p);
    if (node) {
+       /*
       if (node->ply && IsNull((node-1)->last_move) && node->staticEval != Constants::INVALID_SCORE) {
           // can just change sign
           return -node->staticEval;
       }
+       */
       nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::White);
       nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::Black);
 #ifdef _DEBUG
@@ -2396,6 +2398,7 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
           NodeInfo *n = node;
           while (n->ply) {
               --n;
+              cout << n->ply << " ";
               MoveImage(n->last_move,cout);
               cout << endl;
           }

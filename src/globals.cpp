@@ -155,7 +155,7 @@ void delayedInit() {
 #endif
 #ifdef NNUE
     if (options.search.useNNUE && !nnueInitDone) {
-       nnueInitDone = loadNetwork(options.search.nnueFile) != 0;
+        nnueInitDone = loadNetwork(derivePath(options.search.nnueFile.c_str())) != 0;
     }
 #endif   
     // also initialize the book here
