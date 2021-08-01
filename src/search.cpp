@@ -2944,6 +2944,9 @@ score_t Search::search()
                 // Texel, Protector, etc.
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
+#ifdef NNUE
+                node->clearNNUEState();
+#endif
                 score_t result = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
                 if (result < nu_beta) {
 #ifdef _TRACE
