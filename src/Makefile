@@ -209,8 +209,8 @@ endif
 SMPFLAGS := $(SMPFLAGS) -pthread
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold
 ifndef DEBUG
-LTO	= -flto
-OPT	= -Ofast $(LTO) -fno-rtti -fno-enforce-eh-specs -DNDEBUG
+OPT	= -Ofast -flto -fno-rtti -fno-enforce-eh-specs -DNDEBUG
+LDFLAGS := $(LDFLAGS) $(OPT)
 endif
 else
 $(error GCC version is $(GCCVER): versions < $(GCCMINVERSION) not supported)
