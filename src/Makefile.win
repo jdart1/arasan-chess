@@ -25,6 +25,9 @@ STB=syzygy/src
 # enable NUMA support
 #NUMA=1
 
+# enable NNUE support
+NNUE=1
+
 # location of hwloc library (needed if NUMA enabled)
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
@@ -73,6 +76,9 @@ NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
+!IfDef NNUE
+CFLAGS=$(CFLAGS) /DNNUE /Innue /std:c++17
+!Endif
 
 !Ifdef ARASAN_VERSION
 CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
@@ -100,6 +106,9 @@ CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /
 POPCNT_FLAGS = -DUSE_POPCNT
 BMI2_FLAGS = -DBMI2
 AVX2_FLAGS = -DBMI2 /arch:AVX2
+!Ifdef NNUE
+AVX2_FLAGS = $(AVX2_FLAGS) -DSIMD -DAVX2
+!Endif
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 !If "$(PLATFORM)" == "XP"
@@ -143,6 +152,10 @@ $(TUNE_BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
+!IfDef NNUE
+CFLAGS=$(CFLAGS) -Innue
+NNUE_OBJS = $(BUILD)\nnueintf.obj
+!Endif
 
 # Linker flags
 LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /incremental:no /opt:ref /stack:4000000 /version:$(LINK_VERSION)
@@ -170,7 +183,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
-$(BUILD)\unit.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\unit.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 TUNER_OBJS = $(TUNE_BUILD)\tuner.obj \
 $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bhash.obj $(TUNE_BUILD)\bitboard.obj \
@@ -186,7 +199,7 @@ $(TUNE_BUILD)\calctime.obj $(TUNE_BUILD)\legal.obj $(TUNE_BUILD)\eco.obj \
 $(TUNE_BUILD)\learn.obj $(TUNE_BUILD)\bench.obj $(TUNE_BUILD)\protocol.obj \
 $(TUNE_BUILD)\tester.obj $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\threadp.obj \
 $(TUNE_BUILD)\threadc.obj \
-$(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
+$(TUNE_BUILD)\tune.obj $(TB_TUNE_OBJS)  $(NNUE_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj $(PROFILE)\tester.obj \
 $(PROFILE)\protocol.obj \
@@ -216,7 +229,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj $(BUILD)\protocol.obj \
 $(BUILD)\tester.obj $(BUILD)\ecodata.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 MAKEECO_OBJS = $(BUILD)\makeeco.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -231,7 +244,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj $(BUILD)\protocol.obj \
 $(BUILD)\tester.obj $(BUILD)\ecodata.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 ECOCODER_OBJS = $(BUILD)\ecocoder.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -246,7 +259,7 @@ $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj $(BUILD)\protocol.obj \
 $(BUILD)\tester.obj $(BUILD)\ecodata.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 PGNSELECT_OBJS = $(BUILD)\pgnselect.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -261,7 +274,7 @@ $(BUILD)\ecodata.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
 $(BUILD)\legal.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 PLAYCHESS_OBJS = $(BUILD)\playchess.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -276,7 +289,7 @@ $(BUILD)\ecodata.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
 $(BUILD)\legal.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 SELFPLAY_OBJS = $(BUILD)\selfplay.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -291,7 +304,7 @@ $(BUILD)\ecodata.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
 $(BUILD)\legal.obj $(BUILD)\protocol.obj $(BUILD)\tester.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 EPDFILTER_OBJS = $(BUILD)\epdfilter.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -306,7 +319,7 @@ $(BUILD)\ecodata.obj \
 $(BUILD)\bookwrit.obj $(BUILD)\bookread.obj $(BUILD)\calctime.obj \
 $(BUILD)\legal.obj $(BUILD)\bench.obj $(BUILD)\protocol.obj \
 $(BUILD)\tester.obj $(BUILD)\learn.obj $(BUILD)\threadp.obj \
-$(BUILD)\threadc.obj $(TB_OBJS) $(NUMA_OBJS)
+$(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<

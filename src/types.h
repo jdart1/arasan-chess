@@ -23,7 +23,10 @@
 
 extern "C" {
 #ifdef _WIN32
+//  override byte to prevent clashes with <cstddef>
+#define byte win_byte_override
 #include <windows.h>
+#undef byte  
 #else
 #include <pthread.h>
 #endif
