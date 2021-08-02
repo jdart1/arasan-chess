@@ -96,7 +96,7 @@ return 1;
 #ifdef NNUE
 int loadNetwork(const std::string &fname) {
    std::cerr << "loading " << fname << std::endl;
-   std::ifstream in(fname);
+   std::ifstream in(fname,ios_base::in | ios_base::binary);
    in >> network;
    if (in.bad()) {
        std::cerr << "warning: error loading network " << fname << std::endl << std::flush;
