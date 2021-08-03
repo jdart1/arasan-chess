@@ -32,15 +32,14 @@ one for GNU make.
 
 Syzygy tablebase support is enabled by default.
 
-Syzygy support and some of the Python scripts in the tools
+Syzygy support, NNUE support,and some of the Python scripts in the tools
 subdirectory rely on imported submodules. So if building Arasan from a
 git respository, issue the following command within your git directory
 to pull these dependencies into your your source tree:
 
 git submodule update --init --recursive
 
-Arasan now requires a modern compiler with C++11 features (although
-not necessarily complete C++11 support).
+Arasan now requires a modern compiler with at least C++-17 support.
 
 Limited testing has been done on other OSs and architectures other
 than x32 and amd64.  However, the code is designed to be portable.
