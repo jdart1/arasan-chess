@@ -1990,8 +1990,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 	}
 #ifdef NNUE
         else if (uciOptionCompare(name,"Use NNUE")) {
-           int tmp = options.search.set_processor_affinity;
-           options.search.set_processor_affinity = (value == "true");
+           options.search.useNNUE = (value == "true");
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
            Options::setOption<string>(value,options.search.nnueFile);
