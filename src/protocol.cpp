@@ -1692,7 +1692,7 @@ void Protocol::processWinboardOptions(const string &args) {
         Options::setOption<int>(value,options.search.strength);
 #ifdef NNUE
     } else if (name == "Use NNUE") {
-        Options::setOption<int>(value,options.search.useNNUE);
+        setCheckOption(value,options.search.useNNUE);
     } else if (name == "NNUE File") {
         Options::setOption<string>(value,options.search.nnueFile);
         nnueInitDone = false; // force re-init
@@ -1990,7 +1990,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 	}
 #ifdef NNUE
         else if (uciOptionCompare(name,"Use NNUE")) {
-           Options::setOption<int>(value,options.search.useNNUE);
+           int tmp = options.search.set_processor_affinity;
+           options.search.set_processor_affinity = (value == "true");
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
            Options::setOption<string>(value,options.search.nnueFile);
