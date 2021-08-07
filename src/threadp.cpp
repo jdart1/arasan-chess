@@ -13,7 +13,7 @@ bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 #endif
 
 #ifndef _WIN32
-static const size_t THREAD_STACK_SIZE = 8*1024*1024;
+static constexpr size_t THREAD_STACK_SIZE = 4096*((4096+sizeof(NodeStack))/4096);
 #endif
 
 //#define _THREAD_TRACE

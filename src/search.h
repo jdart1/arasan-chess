@@ -91,7 +91,7 @@ struct NodeInfo {
 #endif
 };
 
-typedef NodeInfo NodeStack[Constants::MaxPly];
+typedef NodeInfo NodeStack[Constants::MaxPly+3];
 
 // Helper class to save/restore key node parameters
 class NodeState
@@ -161,7 +161,7 @@ public:
     // one-time startup initialization
     static void init();
 
-    void init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *child_ti);
+    void init(NodeStack &ns, ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
                    int ply, int depth, int flags = 0, Move exclude = NullMove) {

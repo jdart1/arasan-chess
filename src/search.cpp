@@ -3384,9 +3384,9 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
 // Initialize a Search instance to prepare it for searching in a
 // particular thread. This is called from the thread in which the
 // search will execute.
-void Search::init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *slave_ti) {
+void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     this->board = controller->initialBoard;
-    node = ns;
+    node = &(ns[0]);
     ASSERT(node);
     nodeAccumulator = 0;
     ti = slave_ti;
