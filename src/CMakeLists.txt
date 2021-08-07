@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
-add_compile_definitions(ARASAN_VERSION=22.2)
+add_compile_definitions(ARASAN_VERSION=23.0)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 17)
 
 include(CheckIPOSupported)
 check_ipo_supported()
@@ -25,6 +25,7 @@ option(BMI2 "Use BMI2 instructions" OFF)
 option(POPCNT "Use POPCNT instruction" OFF)
 option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
 option(UNIT_TESTS "unit tests run on startup" OFF)
+option(NNUE "Neural network support" ON)
 
 set(EXE_NAME arasanx)
 
@@ -58,6 +59,16 @@ if(SYZYGY_TBS)
     list(APPEND EXTRA_SRC ${STB}/tbprobe.c ${STB}/tbprobe.h)
     SET_SOURCE_FILES_PROPERTIES(${STB}/tbprobe.c PROPERTIES LANGUAGE CXX )
 endif(SYZYGY_TBS)
+
+if(NNUE)
+if (AVX2)
+    add_compile_definitions(SIMD)
+endif(AVX2)
+    add_compile_definitions(NNUE)
+    set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
+    include_directories(${NNUE_DIR})
+    list(APPEND EXTRA_SRC nnueintf.cpp)
+endif(NNUE)
 
 if(64BIT)
     set(EXE_NAME ${EXE_NAME}-64)
@@ -224,7 +235,6 @@ target_link_libraries(makeeco PRIVATE Threads::Threads)
 target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
-
 
 set_target_properties(${EXE_NAME} tuner playchess pgnselect makebook makeeco ecocoder selfplay PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
