@@ -15,7 +15,7 @@
 #include "tune.h"
 #endif
 #ifdef NNUE
-#include "nnue.h"
+#include "nnue/nnue.h"
 #endif
 
 extern Options options;
