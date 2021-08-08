@@ -573,7 +573,7 @@ static void threadp(ThreadData *td) {
 static void usage() {
     std::cerr << "Usage:" << std::endl;
     std::cerr << "selfplay [-c cores] [-n games] [-o output file] [-m output "
-                 "every m positions] [-d depth]"
+                 "every m positions] [-f output format (bin or epd)] [-d depth]"
               << std::endl;
 }
 
@@ -622,7 +622,7 @@ int CDECL main(int argc, char **argv) {
     LockInit(outputLock);
     LockInit(bookLock);
 
-    options.search.hash_table_size = 64 * 1024 * 1024;
+    options.search.hash_table_size = 128 * 1024 * 1024;
     options.book.frequency = 25;
     options.book.weighting = 10;
     options.book.scoring = 25;
