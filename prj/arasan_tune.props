@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <ARASAN_VERSION>23.0</ARASAN_VERSION>
+    <ARASAN_FEATURES>SMP;SMP_STATS;USE_INTRINSICS</ARASAN_FEATURES>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_WINDOWS;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;NOMINMAX</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="ARASAN_VERSION">
+      <Value>$(ARASAN_VERSION)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ARASAN_FEATURES">
+      <Value>$(ARASAN_FEATURES)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
