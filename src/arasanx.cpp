@@ -27,6 +27,7 @@ extern "C"
 #include <io.h>
 #else
 #include <unistd.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #endif
 }
@@ -158,6 +159,25 @@ int CDECL main(int argc, char **argv) {
         exit(-1);
     }
     atexit(cleanupGlobals);
+
+#ifndef _WIN32
+    struct rlimit rl;
+    constexpr rlim_t STACK_MAX = 65536 + sizeof(NodeStack)*(Constants::MaxPly+3);
+    auto result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0)
+    {
+        if (rl.rlim_cur < STACK_MAX)
+        {
+            rl.rlim_cur = STACK_MAX;
+            result = setrlimit(RLIMIT_STACK, &rl);
+            if (result)
+            {
+                cerr << "failed to increase stack size" << endl;
+                exit(-1);
+            }
+        }
+    }
+#endif
 
     Board board;
     int arg = 1;
