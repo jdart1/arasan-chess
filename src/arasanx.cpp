@@ -162,7 +162,7 @@ int CDECL main(int argc, char **argv) {
 
 #ifndef _WIN32
     struct rlimit rl;
-    constexpr rlim_t STACK_MAX = 65536 + sizeof(NodeStack)*(Constants::MaxPly+3);
+    const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
     auto result = getrlimit(RLIMIT_STACK, &rl);
     if (result == 0)
     {

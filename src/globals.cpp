@@ -2,12 +2,12 @@
 
 #include "globals.h"
 #include "hash.h"
-#include "bitprobe.h"
 #include "scoring.h"
-#include "bitbase.cpp"
+#include "search.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
+#include "bitbase.cpp"
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
@@ -43,6 +43,8 @@ static const char * LEARN_FILE_NAME = "arasan.lrn";
 static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
+
+const size_t LINUX_STACK_SIZE = 8*1024*1024;
 
 #ifdef NNUE
 // TBD: add version/hash?
