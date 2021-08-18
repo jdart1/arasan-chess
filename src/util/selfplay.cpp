@@ -585,10 +585,11 @@ static void init_threads() {
         return;
     }
 #endif
+    uint64_t seed = getRandomSeed();
     for (unsigned i = 0; i < sp_options.cores; i++) {
         threadDatas[i].index = i;
         threadDatas[i].searcher = nullptr;
-        threadDatas[i].engine.seed(getRandomSeed(i));
+        threadDatas[i].engine.seed(seed + i);
     }
 }
 
