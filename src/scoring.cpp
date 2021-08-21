@@ -15,6 +15,7 @@
 #include "nnueintf.h"
 #include "search.h" // for NodeInfo
 #endif
+#include <cassert>
 #include <cstddef>
 #include <algorithm>
 #include <climits>
@@ -561,7 +562,7 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       else {
          pawn = pawns.firstOne();
          const int rank = Rank(pawn,side);
-         ASSERT(rank >= 2);
+         assert(rank >= 2);
          const int rank_dist = std::min<int>(3,rank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
@@ -588,7 +589,7 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       else {
          pawn = pawns.lastOne();
          const int rank = Rank(pawn,side);
-         ASSERT(rank >= 2);
+         assert(rank >= 2);
          const int rank_dist = std::min<int>(3,rank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
@@ -1276,28 +1277,28 @@ void Scoring::threatScore(const Board &board,
     Bitboard pawnThreats(board.allPawnAttacks(side,board.pawn_bits[side] & safe) & nonPawns);
     Square sq;
     while (pawnThreats.iterate(sq)) {
-        ASSERT(TypeOfPiece(board[sq])!=Empty);
+        assert(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_PAWN[Midgame][TypeOfPiece(board[sq])-2];
         scores.end += Params::THREAT_BY_PAWN[Endgame][TypeOfPiece(board[sq])-2];
     }
     // Knight attacks on Bishops, higher-valued pieces and weak pieces
     Bitboard knightAttacks(ai.knightAttacks[side] & (weakMinors | board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
     while (knightAttacks.iterate(sq)) {
-        ASSERT(TypeOfPiece(board[sq])!=Empty);
+        assert(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_KNIGHT[Midgame][TypeOfPiece(board[sq])-1];
         scores.end += Params::THREAT_BY_KNIGHT[Endgame][TypeOfPiece(board[sq])-1];
     }
     // Bishop attacks on Knights, higher-valued pieces and weak pieces
     Bitboard bishopAttacks(ai.bishopAttacks[side] & (weakMinors | board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
     while (bishopAttacks.iterate(sq)) {
-        ASSERT(TypeOfPiece(board[sq])!=Empty);
+        assert(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_BISHOP[Midgame][TypeOfPiece(board[sq])-1];
         scores.end += Params::THREAT_BY_BISHOP[Endgame][TypeOfPiece(board[sq])-1];
     }
     // rook attacks on queens and weak pieces
     Bitboard rookAttacks(ai.rookAttacks[side] & (board.queen_bits[oside] | targets));
     while (rookAttacks.iterate(sq)) {
-        ASSERT(TypeOfPiece(board[sq])!=Empty);
+        assert(TypeOfPiece(board[sq])!=Empty);
         scores.mid += Params::THREAT_BY_ROOK[Midgame][TypeOfPiece(board[sq])-1];
         scores.end += Params::THREAT_BY_ROOK[Endgame][TypeOfPiece(board[sq])-1];
     }
@@ -1369,7 +1370,7 @@ void Scoring::calcPawnData(const Board &board,
       details[count].sq = sq;
       details[count].flags = 0;
       details[count].space_weight = 0;
-      ASSERT(count<8);
+      assert(count<8);
       PawnDetail &td = details[count++];
 #endif
 #ifdef PAWN_DEBUG
@@ -1697,7 +1698,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
           posEval = false;
       }
       else {
-          ASSERT(whiteKPEntry.king_endgame_position != Constants::INVALID_SCORE);
+          assert(whiteKPEntry.king_endgame_position != Constants::INVALID_SCORE);
           scoreEndgame<White>(board, whiteKPEntry.king_endgame_position,
                               wScores);
       }
@@ -1717,7 +1718,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
           posEval = false;
       }
       else {
-          ASSERT(blackKPEntry.king_endgame_position != Constants::INVALID_SCORE);
+          assert(blackKPEntry.king_endgame_position != Constants::INVALID_SCORE);
           scoreEndgame<Black>(board,
                               blackKPEntry.king_endgame_position, bScores);
 #ifdef EVAL_DEBUG
@@ -1775,7 +1776,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    if (std::abs(score) >= Constants::MATE) {
 #endif
       cout << board << endl;
-      ASSERT(0);
+      assert(0);
    }
 #endif
 
@@ -1845,7 +1846,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
    Square sq;
    Bitboard passers2(pawnData.passers);
    while(passers2.iterate(sq)) {
-      ASSERT(OnBoard(sq));
+      assert(OnBoard(sq));
 
       const int file = File(sq);
       const int rank = Rank(sq,side);
@@ -1957,7 +1958,7 @@ int Scoring::specialCaseEndgame(const Board &board,
          Square oppkp = board.kingSquare(oside);
          Bitboard bishops(board.bishop_bits[side]);
          Square sq = bishops.firstOne();
-         ASSERT(!IsInvalid(sq));
+         assert(!IsInvalid(sq));
 
          // try to force king to a corner where mate is possible.
          if (SquareColor(sq) == Black) {
@@ -2067,7 +2068,7 @@ void Scoring::calcKingEndgamePosition(const Board &board, ColorType side,
    it = board.pawn_bits[oside];
    while (it.iterate(sq)) {
       int rank = Rank(sq,oside);
-      ASSERT(rank>=2 && rank<8);
+      assert(rank>=2 && rank<8);
       k_pos_adj += (4-distance(kp,sq))*PARAM(KING_OPP_PAWN_DISTANCE);
       if (oppPawnData.passers.isSet(sq) && Rank(kp,oside)>=rank) {
          // Extra bonus for being near and ahead of passers, esp.
@@ -2185,13 +2186,13 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
          cout << "mLevel=" << mLevel << endl;
          cout << "cover1=" << entry.cover << " cover2=" << entry2.cover << endl;
          cout << "storm1=" << entry.storm << " storm2=" << entry2.storm << endl;
-         ASSERT(entry.cover == entry2.cover);
-         ASSERT(entry.storm == entry2.storm);
+         assert(entry.cover == entry2.cover);
+         assert(entry.storm == entry2.storm);
       }
 
       if (needEndgame && entry.king_endgame_position != entry2.king_endgame_position) {
          cout << board << endl;
-         ASSERT(entry.king_endgame_position == entry2.king_endgame_position);
+         assert(entry.king_endgame_position == entry2.king_endgame_position);
       }
 #endif
    }
@@ -2221,7 +2222,7 @@ int Scoring::KBPDraw(const Board &board) {
          Square okp = board.kingSquare(OppositeColor(side));
          Square kp = board.kingSquare(side);
          int pawn = (side == White) ? board.pawn_bits[side].lastOne() : board.pawn_bits[side].firstOne();
-         ASSERT(pawn != InvalidSquare);
+         assert(pawn != InvalidSquare);
 
          // This does not cover all drawing cases but many of them:
          if (Attacks::king_attacks[qsq].isSet(okp)
@@ -2260,9 +2261,9 @@ bool Scoring::theoreticalDraw(const Board &board) {
             Square kp = board.kingSquare(side);
             Square kp2 = board.kingSquare(OppositeColor(side));
             Square psq = (board.pawn_bits[side].firstOne());
-            ASSERT(OnBoard(kp));
-            ASSERT(OnBoard(kp2));
-            ASSERT(OnBoard(psq));
+            assert(OnBoard(kp));
+            assert(OnBoard(kp2));
+            assert(OnBoard(psq));
             return lookupBitbase(kp, psq, kp2, side, board.sideToMove()) == 0;
         }
         else {
@@ -2342,7 +2343,7 @@ score_t Scoring::tryBitbase(const Board &board) {
    const Material &bMat = board.getMaterial(Black);
    if ((unsigned) wMat.infobits() == Material::KP && bMat.kingOnly()) {
       Square passer = board.pawn_bits[White].firstOne();
-      ASSERT(!IsInvalid(passer));
+      assert(!IsInvalid(passer));
       if (lookupBitbase(board.kingSquare(White), passer, board.kingSquare(Black), White, board.sideToMove())) {
          return board.sideToMove() == White ? Constants::BITBASE_WIN :
               -Constants::BITBASE_WIN;

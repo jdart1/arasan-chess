@@ -4,7 +4,6 @@
 #include "chessio.h"
 #include "boardio.h"
 #include "epdrec.h"
-#include "debug.h"
 #include "constant.h"
 
 #include <algorithm>

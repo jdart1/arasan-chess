@@ -1,4 +1,4 @@
-// Copyright 2015-2020 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2021 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -10,6 +10,7 @@
 #include "tune.h"
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdio>
 #include <cmath>
 #include <ctime>
@@ -845,7 +846,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
       grads[Tune::BISHOP_PST_ENDGAME+i] += tune_params.scale(inc,Tune::BISHOP_PST_ENDGAME+i,mLevel);
       if (s.outpost(board,sq,side)) {
          int defenders = std::min<int>(1,s.outpost_defenders(board,sq,side));
-         ASSERT(defenders<3);
+         assert(defenders<3);
          int index = Tune::BISHOP_OUTPOST_MIDGAME + defenders;
          grads[index] += tune_params.scale(inc,index,mLevel);
          index += 2;
@@ -1154,39 +1155,39 @@ static void calc_threat_deriv(const Board &board,ColorType side, vector<double> 
    Bitboard pawnThreats(board.allPawnAttacks(side,board.pawn_bits[side] & safe) & nonPawns);
    Square sq;
    while (pawnThreats.iterate(sq)) {
-       ASSERT(TypeOfPiece(board[sq]) > Pawn);
-       ASSERT(Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-2 < Tune::THREAT_BY_KNIGHT);
+       assert(TypeOfPiece(board[sq]) > Pawn);
+       assert(Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-2 < Tune::THREAT_BY_KNIGHT);
        grads[Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-2] +=
            tune_params.scale(inc,Tune::THREAT_BY_PAWN+TypeOfPiece(board[sq])-1,mLevel);
-       ASSERT(Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-2 < Tune::THREAT_BY_KNIGHT);
+       assert(Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-2 < Tune::THREAT_BY_KNIGHT);
        grads[Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-2] +=
            tune_params.scale(inc,Tune::THREAT_BY_PAWN+5+TypeOfPiece(board[sq])-1,mLevel);
    }
    Bitboard knightAttacks(ai.knightAttacks[side] & (weakMinors| board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
    while (knightAttacks.iterate(sq)) {
-       ASSERT(Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_BISHOP);
+       assert(Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_BISHOP);
        grads[Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_KNIGHT+TypeOfPiece(board[sq])-1,mLevel);
-       ASSERT(Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_BISHOP);
+       assert(Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_BISHOP);
        grads[Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_KNIGHT+5+TypeOfPiece(board[sq])-1,mLevel);
     }
     Bitboard bishopAttacks(ai.bishopAttacks[side] & (weakMinors | board.rook_bits[oside] | board.queen_bits[oside] | weakPawns));
     while (bishopAttacks.iterate(sq)) {
-       ASSERT(Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_ROOK);
+       assert(Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_ROOK);
        grads[Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_BISHOP+TypeOfPiece(board[sq])-1,mLevel);
-       ASSERT(Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_ROOK);
+       assert(Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1 < Tune::THREAT_BY_ROOK);
        grads[Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_BISHOP+5+TypeOfPiece(board[sq])-1,mLevel);
    }
    // rook attacks on pieces and pawns not pawn defended
    Bitboard rookAttacks(ai.rookAttacks[side] & (board.queen_bits[oside] | targets));
    while (rookAttacks.iterate(sq)) {
-       ASSERT(Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1 < Tune::KNIGHT_MOBILITY);
+       assert(Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1 < Tune::KNIGHT_MOBILITY);
        grads[Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_ROOK+TypeOfPiece(board[sq])-1,mLevel);
-       ASSERT(Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1 < Tune::KNIGHT_MOBILITY);
+       assert(Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1 < Tune::KNIGHT_MOBILITY);
        grads[Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1] +=
            tune_params.scale(inc,Tune::THREAT_BY_ROOK+5+TypeOfPiece(board[sq])-1,mLevel);
    }
@@ -1242,7 +1243,7 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
     const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
     int pawns = board.pawn_bits[side].bitCount();
     for (int i = 0; i < pawns; i++) {
-        ASSERT(OnBoard(pds[i].sq));
+        assert(OnBoard(pds[i].sq));
         grads[Tune::SPACE] += inc*pds[i].space_weight;
         if (pds[i].flags & Scoring::PawnDetail::PASSED) {
             const Square sq = pds[i].sq;

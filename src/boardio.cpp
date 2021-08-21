@@ -1,8 +1,10 @@
-// Copyright 1997, 2008 by Jon Dart.  All Rights Reserved.
+// Copyright 1997, 2008, 2021 by Jon Dart.  All Rights Reserved.
 
 #include "boardio.h"
 #include "attacks.h"
 #include "bhash.h"
+
+#include <cassert>
 
 int BoardIO::readFEN(Board &board, const string &buf)
 {
@@ -154,7 +156,7 @@ int BoardIO::readFEN(Board &board, const string &buf)
    {
      return 0;
    }
-   ASSERT(board.state.moveCount+1<Board::RepListSize);
+   assert(board.state.moveCount+1<Board::RepListSize);
    board.repList[board.state.moveCount++] = board.hashCode();
 
    if (board.kingPos[White] == InvalidSquare ||

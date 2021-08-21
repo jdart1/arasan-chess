@@ -19,6 +19,7 @@ extern "C" {
 #include <time.h>
 }
 #include <atomic>
+#include <cassert>
 #include <functional>
 #include <list>
 #include <random>
@@ -271,7 +272,7 @@ protected:
 
     FORCEINLINE void PUSH(score_t alpha, score_t beta,
                           int ply, int depth, int flags, Move exclude) {
-        ASSERT(ply<Constants::MaxPly);
+        assert(ply<Constants::MaxPly);
         ++node;
         node->alpha = node->best_score = alpha;
         node->beta = beta;
@@ -287,7 +288,7 @@ protected:
     }
 
     FORCEINLINE void PUSHQ(score_t alpha, score_t beta, int ply) {
-        ASSERT(ply<Constants::MaxPly);
+        assert(ply<Constants::MaxPly);
         ++node;
         node->flags = 0;
         node->ply = ply;

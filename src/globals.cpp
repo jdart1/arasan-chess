@@ -9,8 +9,6 @@
 #endif
 #include "bitbase.cpp"
 
-#include <filesystem>
-
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
 
@@ -61,6 +59,7 @@ const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
 
 string programPath;
 
+#ifdef NNUE
 static bool absolutePath(const std::string &fileName) {
 #ifdef _WIN32
     auto pos = fileName.find(':');
@@ -74,6 +73,7 @@ static bool absolutePath(const std::string &fileName) {
 #endif
     return pos >= fileName.size() || fileName[pos] == PATH_CHAR;
 }
+#endif
 
 string derivePath(const std::string &fileName) {
    return derivePath(programPath,fileName);

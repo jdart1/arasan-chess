@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2020 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2021 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -7,7 +7,9 @@
 #include "constant.h"
 #include "params.h"
 #include "see.h"
+
 #include <algorithm>
+#include <cassert>
 #include <set>
 #include <vector>
 using namespace std;
@@ -45,7 +47,7 @@ namespace mg {
             king_attacks = board.calcAttacks(board.kingSquare(board.sideToMove()), board.oppositeSide());
 #ifdef _DEBUG
             if (king_attacks.isClear()) {
-                ASSERT(0);
+                assert(0);
             }
 #endif
             num_attacks = king_attacks.bitCountOpt();
@@ -110,11 +112,11 @@ class MoveGenerator
                  if (seeSign(board,move,0)) {
                      SetPhase(move,WINNING_CAPTURE_PHASE);
                      ord = order++;
-                     ASSERT(ord<Constants::MaxMoves);
+                     assert(ord<Constants::MaxMoves);
                      return move;
                  } else {
                      SetPhase(move,LOSERS_PHASE);
-                     ASSERT(losers_count < Constants::MaxCaptures);
+                     assert(losers_count < Constants::MaxCaptures);
                      losers[losers_count++] = move;
                  }
              }
@@ -122,7 +124,7 @@ class MoveGenerator
              return nextMove(ord);
          }
          ord = order++;
-         ASSERT(ord<Constants::MaxMoves);
+         assert(ord<Constants::MaxMoves);
          return batch[index++];
       }
 
@@ -212,10 +214,10 @@ class RootMoveGenerator : public MoveGenerator
 
       // Generate the next move, in sorted order, NullMove if none left
       virtual Move nextMove(int &ord) {
-         ASSERT(index<=batch_count);
+         assert(index<=batch_count);
          if (index < batch_count) {
             ord = order++;
-            ASSERT(ord<Constants::MaxMoves);
+            assert(ord<Constants::MaxMoves);
             return moveList[index++].move;
          }
          else {
@@ -326,7 +328,7 @@ public:
         if (phase == 1) {
             ++phase;
             moveCount = mg::generateCaptures(board, moves, false, targets);
-            ASSERT(moveCount <= Constants::MaxCaptures);
+            assert(moveCount <= Constants::MaxCaptures);
             mg::initialSortCaptures(moves, moveCount);
         }
         while (index < moveCount) {
@@ -353,7 +355,7 @@ public:
     QSearchCheckGenerator(const Board &board, const Bitboard &pins):
         index(0) {
         moveCount = mg::generateChecks(board, moves, pins);
-        ASSERT(moveCount <= Constants::MaxChecks);
+        assert(moveCount <= Constants::MaxChecks);
     }
     
     virtual ~QSearchCheckGenerator() {
@@ -399,7 +401,7 @@ public:
             } else {
                 moveCount = mg::generateCaptures(board, moves, false, targets);
             }
-            ASSERT(moveCount <= Constants::MaxCaptures);
+            assert(moveCount <= Constants::MaxCaptures);
             mg::initialSortCaptures(moves, moveCount);
         }
         while (index < moveCount) {

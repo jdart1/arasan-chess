@@ -1,11 +1,12 @@
-// Copyright 1994-2017, 2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017, 2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
 
 #include "types.h"
 #include "constant.h"
-#include "debug.h"
+
+#include <cassert>
 #include <vector>
 #include <unordered_set>
 
@@ -298,8 +299,8 @@ union MoveUnion
 
 FORCEINLINE Move CreateMove(Square start, Square dest, PieceType pieceMoved,
   PieceType capture=Empty, PieceType promotion=Empty, MoveType type=Normal) {
-  ASSERT((type == Promotion) == (promotion != Empty));
-  ASSERT((type == Promotion) == (pieceMoved == Pawn && (dest/8 == 0 || dest/8 == 7)));
+  assert((type == Promotion) == (promotion != Empty));
+  assert((type == Promotion) == (pieceMoved == Pawn && (dest/8 == 0 || dest/8 == 7)));
   return (Move)(uint64_t(start | (dest<<8) | (pieceMoved << 16) |
 		       ((uint64_t)promotion << 24) |
 		       ((uint64_t)capture << 32) |

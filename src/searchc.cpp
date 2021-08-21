@@ -3,6 +3,8 @@
 #include "searchc.h"
 #include "search.h"
 
+#include <cassert>
+
 SearchContext::SearchContext() {
     history = new ButterflyArray<int>();
     counterMoves = new PieceToArray<Move>();
@@ -82,9 +84,9 @@ void SearchContext::update(int &val, int bonus, int divisor, bool is_best) {
 
 void SearchContext::updateStats(const Board &board, NodeInfo *node) {
     // sanity checks
-    ASSERT(!IsNull(node->best));
-    ASSERT(OnBoard(StartSquare(node->best)) && OnBoard(DestSquare(node->best)));
-    ASSERT(node->num_quiets < Constants::MaxMoves);
+    assert(!IsNull(node->best));
+    assert(OnBoard(StartSquare(node->best)) && OnBoard(DestSquare(node->best)));
+    assert(node->num_quiets < Constants::MaxMoves);
     // Do not update on fail high of 1st quiet and low depth (idea from
     // Ethereal).
     if (node->num_quiets == 1 && node->depth <= 3 * DEPTH_INCREMENT)

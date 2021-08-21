@@ -1,10 +1,11 @@
-// Copyright 1997-2002, 2008, 2012, 2017 by Jon Dart. All Rights Reserved.a
+// Copyright 1997-2002, 2008, 2012, 2017, 2021 by Jon Dart. All Rights Reserved.a
 //
 #ifndef _MOVE_ARRAY_H
 #define _MOVE_ARRAY_H
 
 #include "board.h"
-#include "debug.h"
+
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -93,7 +94,7 @@ public:
 
     // return the nth move in the Move_Array.  0 <= n <= num_moves - 1.
     const Move &move( unsigned n ) const {
-        ASSERT(n<num_moves());
+        assert(n<num_moves());
         return entries[n].move();
     }
 
@@ -110,7 +111,7 @@ public:
     }
 
     const MoveRecord &last() const {
-        ASSERT(num_moves());
+        assert(num_moves());
         return entries.back();
     }
 

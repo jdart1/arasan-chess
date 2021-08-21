@@ -1,7 +1,6 @@
 // Copyright 1994-2008, 2013-2014, 2017-2018. 2020 by Jon Dart. All Rights Reserved.
 
 #include "chess.h"
-#include "debug.h"
 #include "board.h"
 #include "bitboard.h"
 #include <cstddef>

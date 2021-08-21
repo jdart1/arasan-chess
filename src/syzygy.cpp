@@ -1,9 +1,10 @@
-// Copyright 2016, 2018-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019, 2021 by Jon Dart. All Rights Reserved.
 #include "syzygy.h"
 #include "constant.h"
-#include "debug.h"
 #include "bitboard.h"
+
 #include <algorithm>
+#include <cassert>
 
 #include "syzygy/src/tbprobe.h"
 
@@ -169,7 +170,7 @@ int SyzygyTb::probe_root(const Board &b, bool hasRepeated, score_t &score, MoveS
    }
 
    const unsigned wdl = TB_GET_WDL(result);
-   ASSERT(wdl<5);
+   assert(wdl<5);
    score = valueMap[wdl];
    if (hasRepeated) {
        // In case of repetition, fall back to making the single
@@ -220,7 +221,7 @@ int SyzygyTb::probe_wdl(const Board &b, score_t &score, bool use50MoveRule)
    }
 
    unsigned wdl = TB_GET_WDL(result);
-   ASSERT(wdl<5);
+   assert(wdl<5);
    if (use50MoveRule)
       score = valueMap[wdl];
    else

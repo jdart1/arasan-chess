@@ -1,10 +1,12 @@
-// Copyright 2004, 2008, 2011 Jon Dart. All Rights Reserved.
+// Copyright 2004, 2008, 2011, 2021 Jon Dart. All Rights Reserved.
 //
 // This module interfaces with bitbases and other in-memory scoring
 // tables.
 
 #include "bitprobe.h"
 #include "globals.h"
+
+#include <cassert>
 #include <fstream>
 
 static int getIndex(Square pawnSq, Square kingSq, Square oppKingSq) {
@@ -12,7 +14,7 @@ static int getIndex(Square pawnSq, Square kingSq, Square oppKingSq) {
 }
 
 int lookupBitbase(const uint8_t *base, int index) {
-   ASSERT(index<24576*8);
+   assert(index<24576*8);
    return (base[index/8] & (1<<(index%8))) != 0;
 }
 
@@ -85,7 +87,7 @@ void generateBitBase() {
             int index = getIndex(pawnsq,wsq,bsq);
             int uint8_ti = index/8;
             if (uint8_ti>=24576) cout << "error" << endl;
-            ASSERT(uint8_ti<24576);
+            assert(uint8_ti<24576);
             if (probe_tb(b, score, 0)) {
                if (score>0) {
                   bKPKW[uint8_ti] |= 1<<(index%8);

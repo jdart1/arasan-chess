@@ -4,10 +4,10 @@
 #include "see.h"
 #include "params.h"
 #include "constant.h"
-#include "debug.h"
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 
 //#define ATTACK_TRACE
 
@@ -59,7 +59,7 @@ static Square minAttacker(const Board &board, Bitboard atcks, ColorType side) {
 }
 
 score_t see( const Board &board, Move move ) {
-   ASSERT(!IsNull(move));
+   assert(!IsNull(move));
 #ifdef ATTACK_TRACE
    cout << "see ";
    MoveImage(move,cout);
@@ -121,7 +121,7 @@ score_t see( const Board &board, Move move ) {
       else
           swap_score -= gain;
 
-      ASSERT(count < 20);
+      assert(count < 20);
       score_list[count++] = swap_score;
       // remove piece we used from attacks
       attacks[side].clear(attack_square);
@@ -146,7 +146,7 @@ score_t see( const Board &board, Move move ) {
           break;
       }
    }
-   ASSERT(count >= 1);
+   assert(count >= 1);
    // minimax over the score list 
    for (int i = count-1; i > 0; --i) {
        if (i % 2 == 0) {
@@ -162,7 +162,7 @@ score_t see( const Board &board, Move move ) {
 }
 
 score_t seeSign( const Board &board, Move move, score_t threshold ) {
-   ASSERT(!IsNull(move));
+   assert(!IsNull(move));
 #ifdef ATTACK_TRACE
    cout << "see ";
    MoveImage(move,cout);
@@ -239,7 +239,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
       else
           swap_score -= gain;
 
-      ASSERT(count < 20);
+      assert(count < 20);
       score_list[count++] = swap_score;
       // remove piece we used from attacks
       attacks[side].clear(attack_square);
@@ -249,7 +249,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
           // If it is our turn to move and we are above the threshold
           // then we can exit - if we capture it only improves the score.
           if (swap_score >= threshold) {
-              ASSERT(see(board,move) >= threshold);
+              assert(see(board,move) >= threshold);
               return 1;
           }
           // Futility: If capturing the opponent piece for free does
@@ -258,21 +258,21 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
           if ((Rank(square,side) != 8 ||
                !(attacks[side] & board.pawn_bits[side])) &&
               swap_score + Params::SEE_PIECE_VALUES[TypeOfPiece(on_square)] < threshold) {
-              ASSERT(see(board,move) < threshold);
+              assert(see(board,move) < threshold);
               return 0;
           }
       } else {
           // See if opponent already has captured enough that SEE is
           // below threshold
           if (swap_score < threshold) {
-              ASSERT(see(board,move) < threshold);
+              assert(see(board,move) < threshold);
               return 0;
           }
           // Futility: opponent capture cannot get us below threshold
           if ((Rank(square,side) != 8 ||
                !(attacks[side] & board.pawn_bits[side])) &&
               swap_score - Params::SEE_PIECE_VALUES[TypeOfPiece(on_square)] >= threshold) {
-              ASSERT(see(board,move) >= threshold);
+              assert(see(board,move) >= threshold);
               return 1;
           }
       }
@@ -295,7 +295,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
           break;
       }
    }
-   ASSERT(count >= 1);
+   assert(count >= 1);
    // minimax over the score list 
    for (int i = count-1; i > 0; --i) {
        if (i % 2 == 0) {
@@ -307,7 +307,7 @@ score_t seeSign( const Board &board, Move move, score_t threshold ) {
 #ifdef ATTACK_TRACE
    cout << "returning " << (score_list[0]>=threshold) << endl;
 #endif
-   ASSERT((score_list[0] >= threshold) == (see(board,move) >= threshold));
+   assert((score_list[0] >= threshold) == (see(board,move) >= threshold));
    return score_list[0] >= threshold;
 }
 

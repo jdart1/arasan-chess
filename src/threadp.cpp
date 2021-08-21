@@ -1,9 +1,11 @@
-// Copyright 2005-2010, 2012, 2013, 2016-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2010, 2012, 2013, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
 
 #include "threadp.h"
 #include "search.h"
 #include "globals.h"
 #ifndef _WIN32
+
+#include <cassert>
 #include <errno.h>
 #include <fcntl.h>
 #endif
@@ -67,7 +69,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       if (ti->state == ThreadInfo::Terminating) {
           break;
       }
-      ASSERT(ti->work);
+      assert(ti->work);
       pool->lock();
       pool->activeMask |= (1ULL << ti->index);
       ti->state = ThreadInfo::Working;
@@ -326,7 +328,7 @@ void ThreadPool::resize(unsigned n) {
         }
         unlock();
     }
-    ASSERT(nThreads == n);
+    assert(nThreads == n);
     for (size_t i = 0; i < Constants::MaxCPUs; i++) {
         if (i < n) {
             availableMask.set(i);

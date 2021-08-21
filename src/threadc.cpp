@@ -1,7 +1,6 @@
 // Copyright 2005-2010, 2012, 2013, 2016 by Jon Dart. All Rights Reserved.
 
 #include "threadc.h"
-#include "debug.h"
 #include <chrono>
 
 ThreadControl::ThreadControl() : state(0) /* locked */ {

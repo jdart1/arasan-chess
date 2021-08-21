@@ -4,8 +4,9 @@
 #define _MATERIAL_H
 
 #include "chess.h"
-#include "debug.h"
 #include "params.h"
+
+#include <cassert>
 
 class Material
 {
@@ -48,9 +49,9 @@ class Material
     FORCEINLINE void removePiece(const PieceType p)
     {
         info -= masks[(int)p];
-        ASSERT(level >= levels[(int)p]);
+        assert(level >= levels[(int)p]);
         level -= levels[(int)p];
-        ASSERT(count>0);
+        assert(count>0);
         count--;
     }
 

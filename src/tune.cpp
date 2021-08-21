@@ -1,4 +1,4 @@
-// Copyright 2014-2020 by Jon Dart. All Rights Reserved.
+// Copyright 2014-2021 by Jon Dart. All Rights Reserved.
 #include "tune.h"
 #include "chess.h"
 #include "attacks.h"
@@ -6,6 +6,7 @@
 #include "scoring.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 
@@ -379,13 +380,13 @@ Tune::Tune()
    }
    static const TuneParam::Scaling scales[2] = {TuneParam::Midgame,
                                                 TuneParam::Endgame};
-   ASSERT(i==KING_OPP_PASSER_DISTANCE);
+   assert(i==KING_OPP_PASSER_DISTANCE);
    for (int x = 0; x < 6; x++) {
       stringstream name;
       name << "king_opp_passer_distance_rank" << x+2;
       push_back(TuneParam(i++,name.str(),KING_OPP_PASSER_DISTANCE_INIT[x],0,ENDGAME_KING_POS_RANGE,&Params::KING_OPP_PASSER_DISTANCE[x],TuneParam::Endgame,1));
    }
-   ASSERT(i==OWN_PIECE_KING_PROXIMITY_MULT);
+   assert(i==OWN_PIECE_KING_PROXIMITY_MULT);
    int mult = -16;
    for (int x = 0; x < 16; x++) {
       stringstream name;
@@ -398,7 +399,7 @@ Tune::Tune()
       {"knight_pst","bishop_pst","rook_pst","queen_pst","king_pst"};
 
    // add PSTs
-   ASSERT(i == KNIGHT_PST_MIDGAME);
+   assert(i == KNIGHT_PST_MIDGAME);
    for (int n = 0; n < 5; n++) {
       for (int phase = 0; phase < 2; phase++) {
          for (int j = 0; j < 32; j++) {
@@ -440,7 +441,7 @@ Tune::Tune()
          }
       }
    }
-   ASSERT(i==THREAT_BY_PAWN);
+   assert(i==THREAT_BY_PAWN);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
            stringstream name;
@@ -454,7 +455,7 @@ Tune::Tune()
            push_back(TuneParam(i++,name.str(),VAL(0.5),0,THREAT_RANGE,&Params::THREAT_BY_PAWN[phase][j],scales[phase],1));
        }
    }
-   ASSERT(i==THREAT_BY_KNIGHT);
+   assert(i==THREAT_BY_KNIGHT);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
            stringstream name;
@@ -468,7 +469,7 @@ Tune::Tune()
            push_back(TuneParam(i++,name.str(),phase ? VAL(0.4) : VAL(0.6),0,THREAT_RANGE,&Params::THREAT_BY_KNIGHT[phase][j],scales[phase],1));
        }
    }
-   ASSERT(i==THREAT_BY_BISHOP);
+   assert(i==THREAT_BY_BISHOP);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
            stringstream name;
@@ -482,7 +483,7 @@ Tune::Tune()
            push_back(TuneParam(i++,name.str(),phase ? VAL(0.4) : VAL(0.6),0,THREAT_RANGE,&Params::THREAT_BY_BISHOP[phase][j],scales[phase],1));
        }
    }
-   ASSERT(i==THREAT_BY_ROOK);
+   assert(i==THREAT_BY_ROOK);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
            stringstream name;
@@ -497,20 +498,20 @@ Tune::Tune()
        }
    }
    // add mobility
-   ASSERT(i==KNIGHT_MOBILITY);
+   assert(i==KNIGHT_MOBILITY);
    for (int m = 0; m < 9; m++) {
       stringstream name;
       name << "knight_mobility" << m;
       const score_t val = KNIGHT_MOBILITY_INIT[m];
       push_back(TuneParam(i++,name.str(),val,-MOBILITY_RANGE,+MOBILITY_RANGE,&Params::KNIGHT_MOBILITY[m],TuneParam::Any,1));
    }
-   ASSERT(i==BISHOP_MOBILITY);
+   assert(i==BISHOP_MOBILITY);
    for (int m = 0; m < 15; m++) {
       stringstream name;
       name << "bishop_mobility" << m;
       push_back(TuneParam(i++,name.str(),BISHOP_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,&Params::BISHOP_MOBILITY[m],TuneParam::Any,1));
    }
-   ASSERT(i==ROOK_MOBILITY_MIDGAME);
+   assert(i==ROOK_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
       for (int m = 0; m < 15; m++) {
          stringstream name;
@@ -525,7 +526,7 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),ROOK_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,&Params::ROOK_MOBILITY[phase][m],scales[phase],1));
       }
    }
-   ASSERT(i==QUEEN_MOBILITY_MIDGAME);
+   assert(i==QUEEN_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
       for (int m = 0; m < 24; m++) {
          stringstream name;
@@ -540,14 +541,14 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),QUEEN_MOBILITY_INIT[phase][m],-MOBILITY_RANGE,MOBILITY_RANGE,&Params::QUEEN_MOBILITY[phase][m],scales[phase],1));
       }
    }
-   ASSERT(i==KING_MOBILITY_ENDGAME);
+   assert(i==KING_MOBILITY_ENDGAME);
    for (int m = 0; m < 5; m++) {
       stringstream name;
       name << "king_mobility_endgame" << m;
       push_back(TuneParam(i++,name.str(),KING_MOBILITY_ENDGAME_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,&Params::KING_MOBILITY_ENDGAME[m],TuneParam::Endgame,1));
    }
    // outposts
-   ASSERT(i==KNIGHT_OUTPOST_MIDGAME);
+   assert(i==KNIGHT_OUTPOST_MIDGAME);
    for (int p = 0; p < 2; p++) {
       for (int d = 0; d < 2; d++) {
          stringstream name;
@@ -562,7 +563,7 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,&Params::KNIGHT_OUTPOST[p][d],p == 0 ? TuneParam::Midgame : TuneParam::Endgame,1));
       }
    }
-   ASSERT(i==BISHOP_OUTPOST_MIDGAME);
+   assert(i==BISHOP_OUTPOST_MIDGAME);
    for (int p = 0; p < 2; p++) {
       for (int d = 0; d < 2; d++) {
          stringstream name;
@@ -577,7 +578,7 @@ Tune::Tune()
          push_back(TuneParam(i++,name.str(),OUTPOST_RANGE/2,0,OUTPOST_RANGE,&Params::BISHOP_OUTPOST[p][d],p == 0 ? TuneParam::Midgame : TuneParam::Endgame,1));
       }
    }
-   ASSERT(i==PAWN_STORM);
+   assert(i==PAWN_STORM);
    for (int b=0; b<2; b++) {
        for (int file=0; file<4; file++) {
            for (int dist=0; dist<5; dist++) {
@@ -721,7 +722,7 @@ int Tune::findParamByName(const string &name) const {
 
 double Tune::scale(score_t value,int index,int materialLevel) const
 {
-   ASSERT(materialLevel >= 0 && materialLevel<32);
+   assert(materialLevel >= 0 && materialLevel<32);
    switch ((*this)[index].scaling) {
    case TuneParam::Any:
       return value;

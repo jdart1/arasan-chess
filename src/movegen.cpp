@@ -1,12 +1,13 @@
-// Copyright 1994-2020 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2021 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
-#include "debug.h"
 #include "globals.h"
 #include "search.h"
 #include "legal.h"
 #include "syzygy.h"
+#include "trace.h"
+
 #include <cstddef>
 #include <iostream>
 #include <fstream>
@@ -206,7 +207,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
         ++phase;
         if (!IsNull(hashMove)) {
            ord = order++;
-           ASSERT(ord<Constants::MaxMoves);
+           assert(ord<Constants::MaxMoves);
            SetPhase(hashMove,HASH_MOVE_PHASE);
            return hashMove;
         }
@@ -219,7 +220,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
      }
      else if (batch_count > 1) {
        int scores[Constants::MaxCaptures];
-       ASSERT(batch_count < Constants::MaxCaptures);
+       assert(batch_count < Constants::MaxCaptures);
        int poscaps = 0, negcaps = 0;
        for (int i = 0; i < batch_count; i++) {
           if (MovesEqual(moves[i],hashMove)) {
@@ -265,7 +266,7 @@ Move MoveGenerator::nextEvasion(int &ord) {
    }
    if (index < batch_count) {
       ord = order++;
-      ASSERT(ord<Constants::MaxMoves);
+      assert(ord<Constants::MaxMoves);
       return moves[index++];
    }
    else
@@ -498,12 +499,12 @@ unsigned mg::generateNonCaptures(const Board &board, Move *moves)
       const Square kp = board.kingSquare(side);
 #ifdef _DEBUG
       if (side == White) {
-         ASSERT(kp == chess::E1);
-         ASSERT(board[kp+3] == WhiteRook);
+         assert(kp == chess::E1);
+         assert(board[kp+3] == WhiteRook);
       }
       else {
-         ASSERT(kp == chess::E8);
-         ASSERT(board[kp+3] == BlackRook);
+         assert(kp == chess::E8);
+         assert(board[kp+3] == BlackRook);
       }
 #endif
       if (board[kp + 1] == EmptyPiece &&
@@ -663,7 +664,7 @@ unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotio
       }
       Square epsq = board.enPassantSq();
       if (!IsInvalid(epsq) && targets.isSet(epsq)) {
-         ASSERT(TypeOfPiece(board[epsq])==Pawn);
+         assert(TypeOfPiece(board[epsq])==Pawn);
          if (File(epsq) != 8 && board[epsq + 1] == WhitePawn) {
             dest = epsq + 8;
             if (board[dest] == EmptyPiece)
@@ -748,7 +749,7 @@ unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotio
       }
       Square epsq = board.enPassantSq();
       if (!IsInvalid(epsq) && targets.isSet(epsq)) {
-         ASSERT(TypeOfPiece(board[epsq])==Pawn);
+         assert(TypeOfPiece(board[epsq])==Pawn);
          if (File(epsq) != 8 && board[epsq + 1] == BlackPawn) {
             dest = epsq - 8;
             if (board[dest] == EmptyPiece)
@@ -806,7 +807,7 @@ unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotio
 
 unsigned mg::generateChecks(const Board &board, Move * moves, const Bitboard &discoveredCheckCandidates) {
    // Note: doesn't at present generate castling moves that check
-   ASSERT(board.checkStatus() == NotInCheck);
+   assert(board.checkStatus() == NotInCheck);
    const Square kp = board.kingSquare(board.oppositeSide());
    Square loc;
    unsigned numMoves = 0;
@@ -817,7 +818,7 @@ unsigned mg::generateChecks(const Board &board, Move * moves, const Bitboard &di
       switch(TypeOfPiece(board[loc])) {
          case Pawn: {
             const int dir = Attacks::directions[loc][kp];
-            ASSERT(dir);
+            assert(dir);
             if (std::abs(dir) != 8) {
                // Pawn does not move in direction of pin
                const int step = (board.sideToMove() == White) ? 8 : -8;
@@ -993,7 +994,7 @@ void mg::sortMoves(Move moves[], int scores[], unsigned n) {
 void mg::initialSortCaptures (Move *moves,unsigned captures) {
    if (captures > 1) {
       int scores[Constants::MaxCaptures];
-      ASSERT(captures < Constants::MaxCaptures);
+      assert(captures < Constants::MaxCaptures);
       for (unsigned i = 0; i < captures; i++) {
           scores[i] = int(Params::MVV_LVA(moves[i]));
       }
@@ -1159,7 +1160,7 @@ unsigned mg::generateEvasionsCaptures(const Board &board, const mg::EvasionInfo 
    unsigned num_moves = 0;
    if (info.num_attacks == 1) {
       const Square &source = info.source;
-      ASSERT(source != InvalidSquare);
+      assert(source != InvalidSquare);
       Bitboard atcks(board.calcAttacks(source,board.sideToMove()));
       Square sq;
       const PieceType sourcePiece = TypeOfPiece(board[source]);

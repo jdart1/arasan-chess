@@ -1,11 +1,12 @@
-// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020-2021 by Jon Dart.
 // All Rights Reserved.
 
 #include "notation.h"
 #include "board.h"
 #include "movegen.h"
-#include "debug.h"
+
 #include <algorithm>
+#include <cassert>
 
 static void UCIMoveImage(const Move &move, ostream &image) {
     if (IsNull(move)) {
@@ -16,7 +17,7 @@ static void UCIMoveImage(const Move &move, ostream &image) {
         image << FileImage(DestSquare(move));
         image << RankImage(DestSquare(move));
         if (TypeOfMove(move) == Promotion) {
-            ASSERT(PromoteTo(move)<16);
+            assert(PromoteTo(move)<16);
             image << (char)tolower(PieceImage(PromoteTo(move)));
         }
     }
@@ -58,7 +59,7 @@ void Notation::image(const Board & b, const Move & m, OutputFormat format, ostre
    }
 
    PieceType p = PieceMoved(m);
-   ASSERT(p != Empty);
+   assert(p != Empty);
    if (TypeOfMove(m) == KCastle) {
        image << "O-O";
    }
@@ -188,7 +189,7 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
     }
     if (it == image.end() || !isalpha(*it)) return NullMove;
     string img(image,i); // string w/o leading spaces
-    ASSERT(img.length());
+    assert(img.length());
     it = img.begin();
     if (*it == 'O' || *it == '0') {
        // castling, we presume

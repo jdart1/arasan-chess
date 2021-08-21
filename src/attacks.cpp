@@ -1,7 +1,8 @@
-// Copyright 2008-2013, 2017 by Jon Dart.  All Rights Reserved.
+// Copyright 2008-2013, 2017, 2021 by Jon Dart.  All Rights Reserved.
 //
 #include "attacks.h"
-#include "debug.h"
+
+#include <cassert>
 
 const CACHE_ALIGN int Attacks::directions[64][64] =
 {
@@ -5468,7 +5469,7 @@ static Bitboard generateSlidingMoves(Square sq, const Bitboard &occ,
         if (!limits[i].edges.isSet(dest)) {
             do {
                 dest += dir;
-                ASSERT(OnBoard(dest));
+                assert(OnBoard(dest));
                 if (!excludeEdge ||
                     !limits[i].edges.isSet(dest)) moves.set(dest);
             } while (!limit.isSet(dest));
@@ -5529,7 +5530,7 @@ void Attacks::initMagicData() {
             if (occBits == 0) {
                bishopMagicData[sq].mask2 = atcks;
             }
-            ASSERT(b_index<107648);
+            assert(b_index<107648);
             magicmovesdb[b_index++] = uint16_t(_pext_u64(atcks, bishopMagicData[sq].mask2));
         }
 #else
@@ -5566,7 +5567,7 @@ void Attacks::initMagicData() {
             if (occBits == 0) {
                rookMagicData[sq].mask2 = atcks;
             }
-            ASSERT(b_index<107648);
+            assert(b_index<107648);
             magicmovesdb[r_index++] = uint16_t(_pext_u64(atcks, rookMagicData[sq].mask2));
         }
 #else

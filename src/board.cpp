@@ -4,7 +4,6 @@
 #include "chess.h"
 #include "board.h"
 #include "attacks.h"
-#include "debug.h"
 #include "boardio.h"
 #include "bhash.h"
 #include "movegen.h"
@@ -14,7 +13,7 @@
 #endif
 #include <memory.h>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cctype>
 #include <cstddef>
 #include <iostream>
@@ -184,7 +183,7 @@ Board::Board(const Board &b)
    memcpy(&contents,&b.contents,(uint8_t*)repList-(uint8_t*)&contents);
    // Copy the repetition table
    int rep_entries = (int)(b.repListHead - b.repList);
-   ASSERT(rep_entries>=0 && rep_entries<RepListSize);
+   assert(rep_entries>=0 && rep_entries<RepListSize);
    if (rep_entries) {
      memcpy(repList,b.repList,sizeof(hash_t)*rep_entries);
    }
@@ -214,7 +213,7 @@ Board::~Board()
 #ifdef _DEBUG
 const Piece &Board::operator[]( const Square sq ) const
 {
-   ASSERT(OnBoard(sq));
+   assert(OnBoard(sq));
    return contents[sq];
 }
 #endif
@@ -223,7 +222,7 @@ static inline CastleType UpdateCastleStatusW( CastleType cs, Square sq )
 // after a move of or capture of the rook on 'sq', update castle status
 // for 'side'
 {
-   ASSERT(cs<3);
+   assert(cs<3);
    if (sq == chess::A1) // Queen Rook moved or captured
    {
       if (cs == CanCastleEitherSide)
@@ -245,7 +244,7 @@ static inline CastleType UpdateCastleStatusB(CastleType cs, Square sq)
 // after a move of or capture of the rook on 'sq', update castle status
 // for 'side'
 {
-   ASSERT(cs<3);
+   assert(cs<3);
    if (sq == chess::A8) // Queen Rook moved or captured
    {
       if (cs == CanCastleEitherSide)
@@ -289,14 +288,14 @@ void Board::doNull(NodeInfo *node)
       (node+1)->accum.setState(nnue::AccumulatorState::Empty);
    }
 #endif
-   ASSERT(repListHead-repList < (int)RepListSize);
-   ASSERT(state.hashCode == BoardHash::hashCode(*this));
+   assert(repListHead-repList < (int)RepListSize);
+   assert(state.hashCode == BoardHash::hashCode(*this));
 }
 
 void Board::doMove( Move move, NodeInfo *node )
 {
-   ASSERT(!IsNull(move));
-   ASSERT(state.hashCode == BoardHash::hashCode(*this));
+   assert(!IsNull(move));
+   assert(state.hashCode == BoardHash::hashCode(*this));
    state.checkStatus = CheckUnknown;
    ++state.moveCount;
    ++state.movesFromNull;
@@ -314,18 +313,18 @@ void Board::doMove( Move move, NodeInfo *node )
    Square old_epsq = state.enPassantSq;
    state.enPassantSq = InvalidSquare;
 
-   ASSERT(PieceMoved(move) != Empty);
+   assert(PieceMoved(move) != Empty);
 
    const Square start = StartSquare(move);
    const Square dest = DestSquare(move);
    const MoveType moveType = TypeOfMove(move);
-   ASSERT(PieceMoved(move) == TypeOfPiece(contents[start]));
+   assert(PieceMoved(move) == TypeOfPiece(contents[start]));
 #ifdef _DEBUG
    if (Capture(move) != Empty) {
            if (TypeOfMove(move) == EnPassant) {
-                   ASSERT(contents[old_epsq] == MakePiece(Pawn,OppositeColor(side)));
+                   assert(contents[old_epsq] == MakePiece(Pawn,OppositeColor(side)));
            } else {
-                   ASSERT(contents[dest] == MakePiece(Capture(move),OppositeColor(side)));
+                   assert(contents[dest] == MakePiece(Capture(move),OppositeColor(side)));
            }
    }
 #endif
@@ -413,7 +412,7 @@ void Board::doMove( Move move, NodeInfo *node )
       }
       else // not castling
       {
-         ASSERT(contents[start] != EmptyPiece);
+         assert(contents[start] != EmptyPiece);
          const Bitboard bits(Bitboard::mask[start] |
                              Bitboard::mask[dest]);
          Square target = dest; // where we captured
@@ -438,7 +437,7 @@ void Board::doMove( Move move, NodeInfo *node )
                Xor(state.hashCode, dest, WhitePawn);
                Xor(pawnHashCodeW, start, WhitePawn);
                Xor(pawnHashCodeW, dest, WhitePawn);
-               ASSERT(dest - 8 == old_epsq);
+               assert(dest - 8 == old_epsq);
                target = old_epsq;
                capture = BlackPawn;
                contents[dest] = WhitePawn;
@@ -548,14 +547,14 @@ void Board::doMove( Move move, NodeInfo *node )
             }
 #endif
             state.moveCount = 0;
-            ASSERT(target != InvalidSquare);
+            assert(target != InvalidSquare);
             occupied[Black].clear(target);
             Xor(state.hashCode, target, capture);
             switch (TypeOfPiece(capture))
             {
             case Empty: break;
             case Pawn:
-               ASSERT(pawn_bits[Black].isSet(target));
+               assert(pawn_bits[Black].isSet(target));
                pawn_bits[Black].clear(target);
                Xor(pawnHashCodeB, target, capture);
                if (moveType == EnPassant)
@@ -587,7 +586,7 @@ void Board::doMove( Move move, NodeInfo *node )
                material[Black].removePiece(Queen);
                break;
             case King:
-               ASSERT(0);
+               assert(0);
                kingPos[Black] = InvalidSquare;
                state.castleStatus[Black] = CantCastleEitherSide;
                material[Black].removePiece(King);
@@ -685,7 +684,7 @@ void Board::doMove( Move move, NodeInfo *node )
       }
       else // not castling
       {
-         ASSERT(contents[start] != EmptyPiece);
+         assert(contents[start] != EmptyPiece);
          const Bitboard bits(Bitboard::mask[start] |
                            Bitboard::mask[dest]);
          Square target = dest; // where we captured
@@ -710,7 +709,7 @@ void Board::doMove( Move move, NodeInfo *node )
                Xor(state.hashCode, dest, BlackPawn);
                Xor(pawnHashCodeB, start, BlackPawn);
                Xor(pawnHashCodeB, dest, BlackPawn);
-               ASSERT(dest + 8 == old_epsq);
+               assert(dest + 8 == old_epsq);
                target = old_epsq;
                capture = WhitePawn;
                contents[dest] = BlackPawn;
@@ -820,13 +819,13 @@ void Board::doMove( Move move, NodeInfo *node )
             }
 #endif
             state.moveCount = 0;
-            ASSERT(OnBoard(target));
+            assert(OnBoard(target));
             occupied[White].clear(target);
             Xor(state.hashCode, target, capture);
             switch (TypeOfPiece(capture)) {
             case Empty: break;
             case Pawn:
-               ASSERT(pawn_bits[White].isSet(target));
+               assert(pawn_bits[White].isSet(target));
                pawn_bits[White].clear(target);
                Xor(pawnHashCodeW, target, capture);
                if (moveType == EnPassant)
@@ -858,7 +857,7 @@ void Board::doMove( Move move, NodeInfo *node )
                material[White].removePiece(Queen);
                break;
             case King:
-               ASSERT(0);
+               assert(0);
                kingPos[White] = InvalidSquare;
                state.castleStatus[White] = CantCastleEitherSide;
                material[White].removePiece(King);
@@ -875,32 +874,32 @@ void Board::doMove( Move move, NodeInfo *node )
    // changing side to move so flip those bits
    state.hashCode = BoardHash::setSideToMove(state.hashCode,oppositeSide());
    *repListHead++ = state.hashCode;
-   //ASSERT(pawn_hash(White) == BoardHash::pawnHash(*this),White);
-   ASSERT(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
+   //assert(pawn_hash(White) == BoardHash::pawnHash(*this),White);
+   assert(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
    side = oppositeSide();
-   ASSERT(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
+   assert(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
    allOccupied = occupied[White] | occupied[Black];
-   ASSERT(state.hashCode == BoardHash::hashCode(*this));
+   assert(state.hashCode == BoardHash::hashCode(*this));
 #if defined(_DEBUG) && defined(FULL_DEBUG)
    // verify correct updating of bitmaps:
    Board copy(*this);
    copy.setSecondaryVars();
-   ASSERT(pawn_bits[White] == copy.pawn_bits[White]);
-   ASSERT(knight_bits[White] == copy.knight_bits[White]);
-   ASSERT(bishop_bits[White] == copy.bishop_bits[White]);
-   ASSERT(rook_bits[White] == copy.rook_bits[White]);
-   ASSERT(queen_bits[White] == copy.queen_bits[White]);
-   ASSERT(occupied[White] == copy.occupied[White]);
-   ASSERT(pawn_bits[Black] == copy.pawn_bits[Black]);
-   ASSERT(knight_bits[Black] == copy.knight_bits[Black]);
-   ASSERT(bishop_bits[Black] == copy.bishop_bits[Black]);
-   ASSERT(rook_bits[Black] == copy.rook_bits[Black]);
-   ASSERT(queen_bits[Black] == copy.queen_bits[Black]);
-   ASSERT(occupied[Black] == copy.occupied[Black]);
-   ASSERT(contents[kingPos[White]]==WhiteKing);
-   ASSERT(contents[kingPos[Black]]==BlackKing);
-   ASSERT(validPiece(contents[start]));
-   ASSERT(validPiece(contents[dest]));
+   assert(pawn_bits[White] == copy.pawn_bits[White]);
+   assert(knight_bits[White] == copy.knight_bits[White]);
+   assert(bishop_bits[White] == copy.bishop_bits[White]);
+   assert(rook_bits[White] == copy.rook_bits[White]);
+   assert(queen_bits[White] == copy.queen_bits[White]);
+   assert(occupied[White] == copy.occupied[White]);
+   assert(pawn_bits[Black] == copy.pawn_bits[Black]);
+   assert(knight_bits[Black] == copy.knight_bits[Black]);
+   assert(bishop_bits[Black] == copy.bishop_bits[Black]);
+   assert(rook_bits[Black] == copy.rook_bits[Black]);
+   assert(queen_bits[Black] == copy.queen_bits[Black]);
+   assert(occupied[Black] == copy.occupied[Black]);
+   assert(contents[kingPos[White]]==WhiteKing);
+   assert(contents[kingPos[Black]]==BlackKing);
+   assert(validPiece(contents[start]));
+   assert(validPiece(contents[dest]));
 #endif
 }
 
@@ -1000,7 +999,7 @@ hash_t Board::hashCode( Move move ) const
          if (Capture(move) != Empty)
          {
             Piece cap = MakeBlackPiece(Capture(move));
-            ASSERT(OnBoard(target));
+            assert(OnBoard(target));
             Xor(newHash, target, cap);
             if (Capture(move) == Rook) {
                if ((int)state.castleStatus[Black]<3) {
@@ -1097,7 +1096,7 @@ hash_t Board::hashCode( Move move ) const
          if (Capture(move) != Empty)
          {
             Piece cap = MakeWhitePiece(Capture(move));
-            ASSERT(OnBoard(target));
+            assert(OnBoard(target));
             Xor(newHash, target, cap);
             if (Capture(move) == Rook) {
                if ((int)state.castleStatus[White]<3) {
@@ -1206,8 +1205,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
 #endif
             case EnPassant:
                target = dest - 8;
-               ASSERT(OnBoard(target));
-               ASSERT(contents[target]==EmptyPiece);
+               assert(OnBoard(target));
+               assert(contents[target]==EmptyPiece);
                // note: falls through to normal case
             case Normal:
                pawn_bits[White].clear(dest);
@@ -1247,7 +1246,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
             switch (Capture(move))
             {
             case Pawn:
-                           ASSERT(!pawn_bits[Black].isSet(target));
+                           assert(!pawn_bits[Black].isSet(target));
                pawn_bits[Black].set(target);
                Xor(pawnHashCodeB,target,BlackPawn);
                material[Black].addPawn();
@@ -1328,8 +1327,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
 #endif
             case EnPassant:
                target = dest + 8;
-               ASSERT(OnBoard(target));
-               ASSERT(contents[target]== EmptyPiece);
+               assert(OnBoard(target));
+               assert(contents[target]== EmptyPiece);
                // note: falls through to normal case
             case Normal:
                pawn_bits[Black].clear(dest);
@@ -1370,7 +1369,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
             switch (Capture(move))
             {
             case Pawn:
-                           ASSERT(!pawn_bits[White].isSet(target));
+                           assert(!pawn_bits[White].isSet(target));
                pawn_bits[White].set(target);
                Xor(pawnHashCodeW,target,WhitePawn);
                material[White].addPawn();
@@ -1403,32 +1402,32 @@ void Board::undoMove( Move move, const BoardState &old_state )
       }
    }
    state = old_state;
-   ASSERT(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
-   ASSERT(getMaterial(oppositeSide()).pawnCount() == (int)pawn_bits[oppositeSide()].bitCount());
+   assert(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
+   assert(getMaterial(oppositeSide()).pawnCount() == (int)pawn_bits[oppositeSide()].bitCount());
 
    --repListHead;
    allOccupied = Bitboard(occupied[White] | occupied[Black]);
-   ASSERT(state.hashCode == BoardHash::hashCode(*this));
+   assert(state.hashCode == BoardHash::hashCode(*this));
 #if defined(_DEBUG) && defined(FULL_DEBUG)
    // verify correct updating of bitmaps:
    Board copy = *this;
-   ASSERT(pawn_bits[White] == copy.pawn_bits[White]);
-   ASSERT(knight_bits[White] == copy.knight_bits[White]);
-   ASSERT(bishop_bits[White] == copy.bishop_bits[White]);
-   ASSERT(rook_bits[White] == copy.rook_bits[White]);
-   ASSERT(queen_bits[White] == copy.queen_bits[White]);
-   ASSERT(occupied[White] == copy.occupied[White]);
+   assert(pawn_bits[White] == copy.pawn_bits[White]);
+   assert(knight_bits[White] == copy.knight_bits[White]);
+   assert(bishop_bits[White] == copy.bishop_bits[White]);
+   assert(rook_bits[White] == copy.rook_bits[White]);
+   assert(queen_bits[White] == copy.queen_bits[White]);
+   assert(occupied[White] == copy.occupied[White]);
 
-   ASSERT(pawn_bits[Black] == copy.pawn_bits[Black]);
-   ASSERT(knight_bits[Black] == copy.knight_bits[Black]);
-   ASSERT(bishop_bits[Black] == copy.bishop_bits[Black]);
-   ASSERT(rook_bits[Black] == copy.rook_bits[Black]);
-   ASSERT(queen_bits[Black] == copy.queen_bits[Black]);
-   ASSERT(occupied[Black] == copy.occupied[Black]);
-   ASSERT(contents[kingPos[White]]==WhiteKing);
-   ASSERT(contents[kingPos[Black]]==BlackKing);
-   ASSERT(validPiece(contents[StartSquare(move)]));
-   ASSERT(validPiece(contents[DestSquare(move)]));
+   assert(pawn_bits[Black] == copy.pawn_bits[Black]);
+   assert(knight_bits[Black] == copy.knight_bits[Black]);
+   assert(bishop_bits[Black] == copy.bishop_bits[Black]);
+   assert(rook_bits[Black] == copy.rook_bits[Black]);
+   assert(queen_bits[Black] == copy.queen_bits[Black]);
+   assert(occupied[Black] == copy.occupied[Black]);
+   assert(contents[kingPos[White]]==WhiteKing);
+   assert(contents[kingPos[Black]]==BlackKing);
+   assert(validPiece(contents[StartSquare(move)]));
+   assert(validPiece(contents[DestSquare(move)]));
 #endif
 }
 
@@ -1501,7 +1500,7 @@ Bitboard Board::allAttacks(ColorType side) const
 
 Bitboard Board::calcAttacks(Square sq, ColorType side) const
 {
-   ASSERT(sq != InvalidSquare);
+   assert(sq != InvalidSquare);
 
    Bitboard retval;
 
@@ -1516,7 +1515,7 @@ Bitboard Board::calcAttacks(Square sq, ColorType side) const
 
 Bitboard Board::calcBlocks(Square sq, ColorType side) const
 {
-   ASSERT(sq != InvalidSquare);
+   assert(sq != InvalidSquare);
 
    Bitboard retval;
 
@@ -1968,9 +1967,9 @@ int Board::wasLegal(Move lastMove, bool evasion) const {
 // 'target'
 int Board::discoversAttack(Square source, Square dest, Square target, ColorType side) const
 {
-   ASSERT(OnBoard(source));
-   ASSERT(OnBoard(dest));
-   ASSERT(OnBoard(target));
+   assert(OnBoard(source));
+   assert(OnBoard(dest));
+   assert(OnBoard(target));
    const int dir = Attacks::directions[source][target];
    // check that source is in a line to the King
    if (dir == 0) return 0;

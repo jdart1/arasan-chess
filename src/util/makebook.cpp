@@ -20,6 +20,7 @@
 #include "scoring.h"
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -460,7 +461,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
              --var;
              // now reapply last move from the parent variation
              // (main line move)
-             ASSERT(var);
+             assert(var);
              Move mainLine = varStack[var-1].moves[varStack[var-1].moves.size()\
 -1].move;
              board.doMove(mainLine);
@@ -583,7 +584,7 @@ static int do_pgn(ifstream &infile, const string &book_name, bool firstFile)
       }
       processVar(topVar,firstFile);
       --var;
-      ASSERT(var == 0);
+      assert(var == 0);
    }
    return 0;
 }

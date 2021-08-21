@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2015, 2017-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015, 2017-2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -6,6 +6,7 @@
 #include "chess.h"
 #include "board.h"
 #include "legal.h"
+
 #include <climits>
 #include <cstddef>
 
@@ -44,7 +45,7 @@ public:
     HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
               ValueType type, unsigned age, uint8_t flags = 0,
               Move bestMove = NullMove) {
-        ASSERT(depth+2 >= 0 && depth+2 < 256);
+        assert(depth+2 >= 0 && depth+2 < 256);
         contents.depth = (uint8_t)(depth+2);
         contents.age = (uint8_t) age;
         contents.flags = (uint8_t) (type | flags);
@@ -265,7 +266,7 @@ class Hash {
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = nullptr;
-        ASSERT(value >= SHRT_MIN && value <= SHRT_MAX);
+        assert(value >= SHRT_MIN && value <= SHRT_MAX);
         // Of the positions that hash to the same locations
         // as this one, find the best one to replace.
         score_t maxScore = score_t(-Constants::MaxPly*DEPTH_INCREMENT);

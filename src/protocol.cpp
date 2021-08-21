@@ -29,8 +29,9 @@
 #include "unit.h"
 #endif
 
-#include <cstddef>
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -1023,7 +1024,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
             // position after our last move. Now make the move we predicted.
             //
             BoardState previous_state = ponder_board->state;
-            ASSERT(legalMove(*ponder_board,predicted_reply));
+            assert(legalMove(*ponder_board,predicted_reply));
             ponder_board->doMove(predicted_reply);
             //
             // We must also add this move to the global move list,
@@ -1303,7 +1304,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                     BoardState s(board.state);
                     board.doMove(move);
                     // ensure ponder move is legal
-                    ASSERT(legalMove(board,stats.best_line[1]));
+                    assert(legalMove(board,stats.best_line[1]));
                     board.undoMove(move,s);
 #endif
                     move_image(board,stats.best_line[1],ponderbuf,uci);

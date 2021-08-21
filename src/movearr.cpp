@@ -2,7 +2,6 @@
 //
 #include "movearr.h"
 #include "types.h"
-#include "debug.h"
 
 MoveRecord::MoveRecord(const Board &board, const BoardState &previous_state,
                        const Move &move, const string &image, bool ponder)

@@ -11,6 +11,8 @@
 #include "syzygy.h"
 #endif
 #include "legal.h"
+#include "trace.h"
+
 #ifndef _WIN32
 #include <errno.h>
 #endif
@@ -713,8 +715,8 @@ void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
             // and thinking time was not increased. See if we can
             // reduce the time target.
             searchHistoryReductionFactor = 1.0-maxBoostFactor-0.75*double(maxBoostDepth)/stats.depth;
-            ASSERT(searchHistoryReductionFactor<=1.0);
-            ASSERT(searchHistoryReductionFactor>=0.0);
+            assert(searchHistoryReductionFactor<=1.0);
+            assert(searchHistoryReductionFactor>=0.0);
         }
     }
 }
@@ -924,7 +926,7 @@ void Search::setTalkLevelFromController() {
 void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
                          score_t score)
 {
-    ASSERT(stats.multipv_count < Statistics::MAX_PV);
+    assert(stats.multipv_count < Statistics::MAX_PV);
     stats.value = score;
     stats.depth = iteration_depth;
     stats.display_value = stats.value;
@@ -949,7 +951,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
         return;
     }
     node->best = node->pv[0];                     // ensure "best" is non-null
-    ASSERT(!IsNull(node->best));
+    assert(!IsNull(node->best));
     Board board_copy(board);
     stats.best_line[0] = NullMove;
     int i = 0;
@@ -957,10 +959,10 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     stringstream sstr;
     const Move *moves = node->pv;
     while (i < node->pv_length && i<Constants::MaxPly-1 && !IsNull(moves[i])) {
-       ASSERT(i<Constants::MaxPly);
+       assert(i<Constants::MaxPly);
        Move move = moves[i];
        stats.best_line[i] = move;
-       ASSERT(legalMove(board_copy,move));
+       assert(legalMove(board_copy,move));
        if (i!=0) {
           sstr << ' ';
        }
@@ -1587,7 +1589,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     if (node->best_score < -Constants::MATE ||
         node->best_score > Constants::MATE) {
         cout << debugPrefix() << board << endl;
-        ASSERT(0);
+        assert(0);
     }
 #endif
     stats.num_nodes += nodeAccumulator;
@@ -1730,7 +1732,7 @@ score_t Search::quiesce(int ply,int depth)
 {
    // recursive function, implements quiescence search.
    //
-   ASSERT(ply < Constants::MaxPly);
+   assert(ply < Constants::MaxPly);
    if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
       stats.num_nodes += nodeAccumulator;
       nodeAccumulator = 0;
@@ -1747,7 +1749,7 @@ score_t Search::quiesce(int ply,int depth)
          }
       }
    }
-   ASSERT(depth<=0);
+   assert(depth<=0);
 #ifdef SEARCH_STATS
    stats.num_qnodes++;
 #endif
@@ -1841,7 +1843,7 @@ score_t Search::quiesce(int ply,int depth)
            indent(ply); cout << "in_check=1" << endl;
        }
 #endif
-       ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
+       assert(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
        score_t try_score;
        MoveGenerator mg(board, &context, node, ply, hashMove, mainThread());
        Move move;
@@ -1850,7 +1852,7 @@ score_t Search::quiesce(int ply,int depth)
        int noncaps = 0;
        int moveIndex = 0;
        while ((move = mg.nextEvasion(moveIndex)) != NullMove) {
-           ASSERT(OnBoard(StartSquare(move)));
+           assert(OnBoard(StartSquare(move)));
            if (Capture(move) == King) {
 #ifdef _TRACE
                if (mainThread()) {
@@ -1888,7 +1890,7 @@ score_t Search::quiesce(int ply,int depth)
                board.undoMove(move,state);
                continue;
            }
-           ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
+           assert(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
            try_score = -quiesce(-node->beta, -node->best_score, ply+1, depth-1);
            board.undoMove(move,state);
            if (try_score != Illegal) {
@@ -1938,7 +1940,7 @@ score_t Search::quiesce(int ply,int depth)
        if (node->best_score < -Constants::MATE ||
            node->best_score > Constants::MATE) {
            cout << debugPrefix() << board << endl;
-           ASSERT(0);
+           assert(0);
        }
 #endif
        storeHash(hash,node->best,tt_depth);
@@ -1954,11 +1956,11 @@ score_t Search::quiesce(int ply,int depth)
        // Establish a default score.  This score is returned if no
        // captures are generated, or if no captures generate a better
        // score (since we generally can choose whether or not to capture).
-       ASSERT(node->eval == Constants::INVALID_SCORE);
+       assert(node->eval == Constants::INVALID_SCORE);
        bool had_eval = node->staticEval != Constants::INVALID_SCORE;
        if (had_eval) {
            node->eval = node->staticEval;
-           ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
+           assert(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
        }
        if (node->eval == Constants::INVALID_SCORE) {
            node->eval = node->staticEval = evalu8(board);
@@ -1970,10 +1972,10 @@ score_t Search::quiesce(int ply,int depth)
            if (result == (hashValue > node->eval ? HashEntry::LowerBound :
                           HashEntry::UpperBound)) {
                node->eval = hashValue;
-               ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
+               assert(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
            }
        }
-       ASSERT(node->eval != Constants::INVALID_SCORE);
+       assert(node->eval != Constants::INVALID_SCORE);
 #ifdef _TRACE
        if (mainThread()) {
            indent(ply);
@@ -1990,7 +1992,7 @@ score_t Search::quiesce(int ply,int depth)
                    indent(ply); cout << "**CUTOFF**" << endl;
                }
 #endif
-               ASSERT(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
+               assert(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
                // store eval in hash table if not already fetched from there
                if (!had_eval) {
                    controller->hashTable.storeHash(hash, tt_depth,
@@ -2132,9 +2134,9 @@ score_t Search::quiesce(int ply,int depth)
                node->last_move = move;
                board.doMove(move,node);
                // verify opposite side in check:
-               ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
+               assert(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
                // and verify quick check confirms it
-               ASSERT(board.checkStatus(move)==InCheck);
+               assert(board.checkStatus(move)==InCheck);
                // We know the check status so set it, so it does not
                // have to be computed
                board.setCheckStatus(InCheck);
@@ -2177,7 +2179,7 @@ score_t Search::quiesce(int ply,int depth)
            }
        }
    search_end:
-       ASSERT(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
+       assert(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
        storeHash(hash,node->best,tt_depth);
        if (node->inBounds(node->best_score)) {
            if (!IsNull(node->best)) {
@@ -2241,8 +2243,8 @@ int Search::prune(const Board &board,
                   int moveIndex,
                   int improving,
                   Move move) {
-    ASSERT(node->swap == Constants::INVALID_SCORE);
-    ASSERT(node->ply > 0);
+    assert(node->swap == Constants::INVALID_SCORE);
+    assert(node->ply > 0);
     if (node->num_legal &&
         board.checkStatus() == NotInCheck &&
         node->best_score > -Constants::MATE_RANGE) {
@@ -2415,7 +2417,7 @@ score_t Search::search()
 #endif
     int ply = node->ply;
     int depth = node->depth;
-    ASSERT(ply < Constants::MaxPly);
+    assert(ply < Constants::MaxPly);
     if (++nodeAccumulator > NODE_ACCUM_THRESHOLD) {
         stats.num_nodes += nodeAccumulator;
         nodeAccumulator = 0;
@@ -2592,7 +2594,7 @@ score_t Search::search()
 	   cout << debugPrefix() << "move=";
 	   MoveImage((node-1)->last_move,cout);
 	   cout << endl;
-	   ASSERT(0);
+	   assert(0);
     }
 #endif
 #ifdef _TRACE
@@ -2617,7 +2619,7 @@ score_t Search::search()
             node->eval = hashValue;
         }
     }
-    ASSERT(node->staticEval != Constants::INVALID_SCORE);
+    assert(node->staticEval != Constants::INVALID_SCORE);
 
     // pre-search pruning conditions
     const bool pruneOk = !in_check &&
@@ -2638,7 +2640,7 @@ score_t Search::search()
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH) {
         const score_t margin = futilityMargin(depth);
         const score_t threshold = node->beta + margin;
-        ASSERT(node->eval != Constants::INVALID_SCORE);
+        assert(node->eval != Constants::INVALID_SCORE);
         if (node->eval >= threshold && node->eval < Constants::MATE_RANGE) {
 #ifdef _TRACE
            if (mainThread()) {
@@ -2656,7 +2658,7 @@ score_t Search::search()
 #ifdef RAZORING
     // razoring as in Stockfish
     if (pruneOk && depth <= RAZOR_DEPTH && board.getMaterial(board.sideToMove()).hasPieces()) {
-        ASSERT(node->eval != Constants::INVALID_SCORE);
+        assert(node->eval != Constants::INVALID_SCORE);
         if (node->eval < node->beta - razorMargin(depth)) {
 #ifdef NNUE
             (node+1)->clearNNUEState();
@@ -3026,11 +3028,11 @@ score_t Search::search()
 #endif
                 return -Illegal;                  // previous move was illegal
             }
-            ASSERT(DestSquare(move) != InvalidSquare);
-            ASSERT(StartSquare(move) != InvalidSquare);
+            assert(DestSquare(move) != InvalidSquare);
+            assert(StartSquare(move) != InvalidSquare);
             node->last_move = move;
             if (!CaptureOrPromotion(move)) {
-                ASSERT(node->num_quiets<Constants::MaxMoves);
+                assert(node->num_quiets<Constants::MaxMoves);
                 node->quiets[node->num_quiets++] = move;
             }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
@@ -3051,7 +3053,7 @@ score_t Search::search()
             }
             board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
-                  ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
+                  assert(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
 #ifdef _TRACE
                if (mainThread()) {
                   indent(ply); cout << "Illegal move!" << endl;
@@ -3255,14 +3257,14 @@ score_t Search::search()
 #ifdef MOVE_ORDER_STATS
     if (node->num_legal && node->best_score != node->alpha) {
         stats.move_order_count++;
-        ASSERT(node->best_count>=0);
+        assert(node->best_count>=0);
         if (node->best_count<4) {
             stats.move_order[node->best_count]++;
         }
     }
 #endif
     score_t score = node->best_score;
-    ASSERT(score >= -Constants::MATE && score <= Constants::MATE);
+    assert(score >= -Constants::MATE && score <= Constants::MATE);
     return score;
 }
 
@@ -3363,14 +3365,14 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
 #endif
     Board board_copy(board);
     for (int i = ply; i < node->pv_length+ply; i++) {
-        ASSERT(i<Constants::MaxPly);
+        assert(i<Constants::MaxPly);
 #ifdef _TRACE
         if (mainThread()) {
             MoveImage(node->pv[i],cout);
             cout << ' ';
         }
 #endif
-        ASSERT(legalMove(board_copy,node->pv[i]));
+        assert(legalMove(board_copy,node->pv[i]));
         board_copy.doMove(node->pv[i]);
     }
 #ifdef _TRACE
@@ -3387,7 +3389,7 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
 void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     this->board = controller->initialBoard;
     node = &(ns[0]);
-    ASSERT(node);
+    assert(node);
     nodeAccumulator = 0;
     ti = slave_ti;
     node->ply = 0;

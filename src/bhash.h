@@ -1,10 +1,11 @@
-// Copyright 1992-2015 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2015, 2021 by Jon Dart. All Rights Reserved.
 
 #ifndef _BOARDHASH_H_
 #define _BOARDHASH_H_
 
 #include "board.h"
-#include "debug.h"
+
+#include <cassert>
 
 extern const CACHE_ALIGN hash_t hash_codes[64][16];
 extern const CACHE_ALIGN hash_t ep_codes[64];
@@ -20,7 +21,7 @@ class BoardHash
         static hash_t pawnHash(const Board &, ColorType side);
 
         static FORCEINLINE hash_t Xor( hash_t h, const Square sq, const Piece piece ) {
-           ASSERT(OnBoard(sq));
+           assert(OnBoard(sq));
            return h ^ hash_codes[sq][(int)piece];
         }
 

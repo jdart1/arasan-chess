@@ -6,13 +6,13 @@
 #include "bookdefs.h"
 #include "movegen.h"
 #include "globals.h"
-#include "debug.h"
 #include "params.h"
 #include "notation.h"
+
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iostream> // for debugging
-#include <assert.h>
 
 //#define _TRACE
 
@@ -200,7 +200,7 @@ int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
    book_file.read((char*)&data,sizeof(book::DataPage));
    if (book_file.fail()) return -1;
    while(loc.index != book::NO_NEXT) {
-       ASSERT(loc.index < book::DATA_PAGE_SIZE);
+       assert(loc.index < book::DATA_PAGE_SIZE);
        book::DataEntry &bookEntry = data.data[loc.index];
        // correct multi-uint8_t values for endianess:
        bookEntry.next = swapEndian16((uint8_t*)&bookEntry.next);

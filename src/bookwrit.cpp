@@ -1,6 +1,7 @@
-// Copyright 2014, 2017-2019 by Jon Dart.  All Rights Reserved.
+// Copyright 2014, 2017-2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #include "bookwrit.h"
+#include <cassert>
 #include <fstream>
 
 BookWriter::BookWriter(int pages) :
@@ -56,7 +57,7 @@ void BookWriter::add(const hash_t hashCode, uint8_t moveIndex, uint8_t weight,
       // add data to page
       dataIndex = dp->free_list;
       int next = dp->data[dataIndex].next;
-      ASSERT(de.next != dataIndex);
+      assert(de.next != dataIndex);
       dp->data[dataIndex] = de;
       dp->free_list = next;
       dp->num_free--;
@@ -91,7 +92,7 @@ void BookWriter::add(const hash_t hashCode, uint8_t moveIndex, uint8_t weight,
             int nextFree = dp->data[dp->free_list].next;
             unsigned insert = (unsigned)dp->free_list;
             // link new entry to the end of the existing move chain
-            ASSERT(endOfChain != insert);
+            assert(endOfChain != insert);
             dp->data[endOfChain].next = static_cast<uint16_t>(insert);
             // put new data into data page
             dp->data[insert] = de;
@@ -113,7 +114,7 @@ void BookWriter::add(const hash_t hashCode, uint8_t moveIndex, uint8_t weight,
             // transfer entries from old to new page
             while (oldDataIndex != book::NO_NEXT) {
                book::DataEntry &oldDe = dp->data[oldDataIndex];
-               ASSERT(newDp->free_list < book::DATA_PAGE_SIZE);
+               assert(newDp->free_list < book::DATA_PAGE_SIZE);
                book::DataEntry &newDe = newDp->data[newDp->free_list];
                unsigned nextFree = (unsigned)newDe.next;
                // update new page with old data
@@ -127,7 +128,7 @@ void BookWriter::add(const hash_t hashCode, uint8_t moveIndex, uint8_t weight,
                }
                // update new page free list
                newDp->free_list = nextFree;
-               ASSERT(newDp->num_free > 0);
+               assert(newDp->num_free > 0);
                newDp->num_free--;
                oldDataIndex = oldDe.next;
                // link old data item into old page free list

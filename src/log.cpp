@@ -2,12 +2,13 @@
 #include "log.h"
 #include "notation.h"
 #include "globals.h"
-#include "debug.h"
 #include "scoring.h"
 #include "search.h"
 #ifdef _WIN32
 #include <io.h>
 #endif
+
+#include <cassert>
 #include <sstream>
 #include <iomanip>
 using namespace std;
@@ -171,7 +172,7 @@ void Log::add_move( Board &board, const Move &emove,
 
 
 const Move &Log::last_move() const {
-   ASSERT(current());
+   assert(current());
    return move(current()-1);
 }
 

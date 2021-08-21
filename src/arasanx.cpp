@@ -4,7 +4,6 @@
 
 #include "types.h"
 #include "bench.h"
-#include "debug.h"
 #include "globals.h"
 #include "options.h"
 #include "protocol.h"
