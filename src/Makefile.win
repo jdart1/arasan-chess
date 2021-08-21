@@ -32,33 +32,59 @@ NNUE=1
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
 
-!If "$(TARGET)" == "win64"
+CFLAGS = /std:c++17
+
+# build flags for different instruction sets
+POPCNT_FLAGS = -DUSE_POPCNT
+BMI2_FLAGS = -DBMI2
+AVX2_FLAGS = /arch:AVX2
+!Ifdef NNUE
+AVX2_FLAGS = $(AVX2_FLAGS) -DSIMD -DAVX2
+!Endif
+
+!If "$(BUILD_TYPE)" == "popcnt"
+CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
+!Else
+!If "$(BUILD_TYPE)" == "bmi2"
+CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(BMI2_FLAGS)
+!Else
+!If "$(BUILD_TYPE)" == "avx2"
+CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(BMI2_FLAGS) $(AVX2_FLAGS)
+!Endif
+!Endif
+!Endif
+
+# Set executable name
 !Ifndef ARASANX
+!If "$(TARGET)" == "win64"
 ARASANX = arasanx-64
+!Else
+ARASANX = arasanx-64
+!Endif
+!If "$(BUILD_TYPE)" != ""
+ARASANX = $(ARASANX)-$(BUILD_TYPE)
+!Endif
 !Ifdef NUMA
 ARASANX = $(ARASANX)-numa
 !Endif
 !Endif
+
+# Target-specific flags
+!If "$(TARGET)" == "win64"
 ARCH=/D_WIN64
 HWLOC=$(HWLOC64)
 !Else
-!Ifndef ARASANX
-ARASANX = arasanx-32
-!Ifdef NUMA
-ARASANX = $(ARASANX)-numa
-!Endif
-!Endif
 HWLOC=$(HWLOC32)
 !Endif
 
 !Ifdef DEBUG
-BUILD_TYPE=debug
+DEST_DIR=debug
 !Else
-BUILD_TYPE=release
+DEST_DIR=release
 !Endif
 
-BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)
-TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(BUILD_TYPE)-tune
+BUILD = $(BUILD_ROOT)\$(TARGET)\$(DEST_DIR)
+TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(DEST_DIR)-tune
 PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
 PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
 PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
@@ -77,7 +103,7 @@ NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
 !IfDef NNUE
-CFLAGS=$(CFLAGS) /DNNUE /Innue /std:c++17
+NNUE_FLAGS=/DNNUE /Innue
 !Endif
 
 !Ifdef ARASAN_VERSION
@@ -101,14 +127,8 @@ TUNE_FLAGS=-DTUNE
 LD=link
 CL=cl
 
-# Visual Studio defs (Visual Studio 2012 or later recommended)
-CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W2 $(TRACE) $(SMP) $(DEBUG) $(CFLAGS)
-POPCNT_FLAGS = -DUSE_POPCNT
-BMI2_FLAGS = -DBMI2
-AVX2_FLAGS = -DBMI2 /arch:AVX2
-!Ifdef NNUE
-AVX2_FLAGS = $(AVX2_FLAGS) -DSIMD -DAVX2
-!Endif
+# Visual Studio compile flags
+CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W2 $(TRACE) $(SMP)
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 !If "$(PLATFORM)" == "XP"
@@ -153,8 +173,8 @@ $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
 !IfDef NNUE
-CFLAGS=$(CFLAGS) -Innue
 NNUE_OBJS = $(BUILD)\nnueintf.obj
+NNUE_PROFILE_OBJS = $(PROFILE)\nnueintf.obj
 !Endif
 
 # Linker flags
@@ -214,7 +234,8 @@ $(PROFILE)\movearr.obj $(PROFILE)\log.obj \
 $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\bench.obj \
-$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj $(PROFILE)\unit.obj $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
+$(PROFILE)\threadp.obj $(PROFILE)\threadc.obj \
+$(PROFILE)\unit.obj $(NNUE_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
@@ -322,10 +343,10 @@ $(BUILD)\tester.obj $(BUILD)\learn.obj $(BUILD)\threadp.obj \
 $(BUILD)\threadc.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) /c /Fo$@ $<
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /c /Fo$@ $<
 
 {$(UTIL)}.cpp{$(BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(POPCNT_FLAGS) -I. /c /Fo$@ $<
+    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) -I. /c /Fo$@ $<
 
 {}.cpp{$(TUNE_BUILD)}.obj:
     $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
@@ -360,14 +381,6 @@ $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
 $(BUILD)\epdfilter.exe: dirs $(EPDFILTER_OBJS)
         $(LD) $(EPDFILTER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\epdfilter.exe
 
-!IfDef NALIMOV_TBS
-$(BUILD)\nalimov.obj: nalimov.cpp
-    $(CL) $(TB_FLAGS) /c /Fo$@ nalimov.cpp
-
-$(PROFILE)\nalimov.obj: nalimov.cpp
-    $(CL) $(TB_PROFILE_FLAGS) /c /Fo$@ nalimov.cpp
-!Endif
-
 $(PROFILE)\$(ARASANX).exe:  $(ARASANX_PROFILE_OBJS)
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PROFILE)\$(ARASANX).exe
 
@@ -385,37 +398,7 @@ profile-optimized: $(ARASANX_PROFILE_OBJS)
 
 profile-build: dirs profile profile-run profile-optimized 
 
-popcnt: dirs
-	SET CFLAGS=$(POPCNT_FLAGS)
-	set ARASANX=$(ARASANX)-popcnt
-	nmake
-
-bmi2: dirs
-	SET CFLAGS=$(POPCNT_FLAGS) $(BMI2_FLAGS)
-	set ARASANX=$(ARASANX)-bmi2
-	nmake
-
-avx2: dirs
-	SET CFLAGS=$(POPCNT_FLAGS) $(AVX2_FLAGS)
-	set ARASANX=$(ARASANX)-avx2
-	nmake
-
-avx2-profiled:
-	SET CFLAGS=$(POPCNT_FLAGS) $(AVX2_FLAGS)
-	SET ARASANX=$(ARASANX)-avx2
-	nmake profile-build
-
 profiled: profile-build
-
-popcnt-profiled:
-	SET CFLAGS=$(POPCNT_FLAGS)
-	SET ARASANX=$(ARASANX)-popcnt
-	nmake profile-build
-
-bmi2-profiled:
-	SET CFLAGS=$(POPCNT_FLAGS) $(BMI2_FLAGS)
-	SET ARASANX=$(ARASANX)-bmi2
-	nmake profile-build
 
 release: $(RELEASE) $(SOURCE_ARCHIVE)
 

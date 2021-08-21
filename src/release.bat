@@ -6,6 +6,7 @@ pushd ..
 7z u -tzip -orelease %1 src\release.bat
 7z u -tzip -orelease %1 src\syzygy\*.*
 7z u -tzip -orelease %1 src\syzygy\src\*.*
+7z u -tzip -r -orelease %1 src\nnue
 7z u -tzip -orelease %1 src\util\*.*
 7z u -tzip -orelease %1 tools\README tools\analyze.py tools\label_positions.py
 7z u -tzip -orelease %1 tools\match.py tools\match_status.py tools\monitor.py

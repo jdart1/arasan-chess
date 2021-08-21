@@ -129,18 +129,23 @@ support. Visual Studio 2012 and later should work.</p>
 
 The following targets are defined in the makefile:
 
-- default: builds just the chess engine, with no POPCNT or BMI2 support
-- popcnt: builds just the chess engine, with POPCNT support
-- bmi2: builds just the chess engine, with BMI2 support (includes POPCNT)
-- avx2: builds just the chess engine, with AVX2 + BMI2 + POPCNT
-- profiled: PGO build with no POPCNT or BMI2 support
-- popcnt-profiled: PGO build of the chess engine, with POPCNT support
-- bmi2-profiled: PGO build of the chess engine, with BMI2 support (includes POPCNT)
-- avx2-profiled: PGO build with AVX2 + BMI2 + POPCNT
+- default: builds just the chess engine
+- profiled: build the chess engine using PGO
 - tuning: builds the parameter tuning program
-- tuning-popcnt: builds the parameter tuning program with POPCNT support
-- utils: builds utility programs including "makebook".
+- utils: builds utility programs including "makebook"
 - release: builds the release zip file for Windows
+
+As with the Linux Makefile, you select the target instruction set
+by setting the BUILD_TYPE variable. For example: `make BUILD_TYPE=avx2`
+will build a version of the program with AVX2 support. Current build
+types supported are:
+
+- popcnt (implies also: sse3, sse4, sse4.1)
+- bmi2 (includes popcnt)
+- avx2 (includes bmi2)
+
+The default with no BUILD_TYPE set is a very generic executable that
+does not assume any advanced instruction set.
 
 Release binaries from a build are placed in the
 "\<target>\Release" directory, where <target> is "win32" or "win64",
