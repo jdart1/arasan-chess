@@ -97,11 +97,9 @@ return 1;
 
 #ifdef NNUE
 int loadNetwork(const std::string &fname) {
-   std::cerr << "loading " << fname << std::endl;
    std::ifstream in(fname,ios_base::in | ios_base::binary);
    in >> network;
-   if (in.bad()) {
-       std::cerr << "warning: error loading network " << fname << std::endl << std::flush;
+   if (!in.good()) {
        return 0;
    }
    return 1;
@@ -158,6 +156,12 @@ void delayedInit() {
 #ifdef NNUE
     if (options.search.useNNUE && !nnueInitDone) {
         nnueInitDone = loadNetwork(derivePath(options.search.nnueFile.c_str())) != 0;
+        if (nnueInitDone) {
+            std::cerr << "loaded network from file ";
+        } else {
+            std::cerr << "warning: failed to load network file ";
+        }
+        std::cerr << options.search.nnueFile << std::endl;
     }
 #endif   
     // also initialize the book here

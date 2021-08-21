@@ -3428,7 +3428,7 @@ score_t Search::evalu8(const Board &board) {
          ourMat.pawnCount() <= 2 &&
          oppMat.materialLevel() <= 10 &&
          oppMat.pawnCount() <= 2);
-    if (!useClassical && options.search.useNNUE) {
+    if (!useClassical && options.search.useNNUE && nnueInitDone) {
         return scoring.evalu8NNUE(board,node);
     } else {
         return scoring.evalu8(board);
