@@ -156,7 +156,7 @@ if that file is present.
 Arasan now supports chess evaluation utilizing a neural network. By
 default, the neural network file is expected to be in the same directory as the
 Arasan executable. A different location/file can be specified using UCI or
-CECP options, or by setting the <pre>search.nnueFile</pre> options in the
+CECP options, or by setting the `search.nnueFile` option in the
 arasan.rc file.
 
 ## Tablebases
