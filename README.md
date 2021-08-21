@@ -153,11 +153,14 @@ if that file is present.
 
 ## Neural Network
 
-Arasan now supports chess evaluation utilizing a neural network. By
-default, the neural network file is expected to be in the same directory as the
-Arasan executable. A different location/file can be specified using UCI or
+Arasan now supports chess evaluation utilizing a neural network. The
+neural network file is external to the program and is loaded at
+runtime. The file name for the network can be specified using UCI or
 CECP options, or by setting the `search.nnueFile` option in the
-arasan.rc file.
+arasan.rc file. There is a default network filename set there. In the
+options, if no directory path is part of the option or a relative path
+is used, the file is assumed to be in or relative to the same
+directory as the Arasan executable.
 
 ## Tablebases
 

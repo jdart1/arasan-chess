@@ -9,6 +9,8 @@
 #endif
 #include "bitbase.cpp"
 
+#include <filesystem>
+
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
 
@@ -17,6 +19,12 @@ bool tb_init_done()
    return tb_init;
 }
 int EGTBMenCount = 0;
+#endif
+
+#ifdef _WIN32
+static constexpr char PATH_CHAR = '\\';
+#else
+static constexpr char PATH_CHAR = '/';
 #endif
 
 MoveArray *gameMoves;
@@ -53,19 +61,29 @@ const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
 
 string programPath;
 
-string derivePath(const char *fileName) {
-   return derivePath(programPath.c_str(),fileName);
+static bool absolutePath(const std::string &fileName) {
+#ifdef _WIN32
+    auto pos = fileName.find(':');
+    if (pos == std::string::npos) {
+        pos = 0;
+    } else if (pos+1 < fileName.size()) {
+        ++pos;
+    }
+#else
+    size_t pos = 0;
+#endif
+    return pos >= fileName.size() || fileName[pos] == PATH_CHAR;
 }
 
-string derivePath(const char *base, const char *fileName) {
-    string result(base);
+string derivePath(const std::string &fileName) {
+   return derivePath(programPath,fileName);
+}
+
+string derivePath(const std::string &base, const std::string &fileName) {
+    std::string result(base);
     size_t pos;
-#ifdef _WIN32
-    pos = result.rfind('\\',string::npos);
-#else
-    pos = result.rfind('/',string::npos);
-#endif
-    if (pos == string::npos) {
+    pos = result.rfind(PATH_CHAR,std::string::npos);
+    if (pos == std::string::npos) {
       return fileName;
     }
     else {
@@ -91,7 +109,7 @@ int initGlobals(const char *pathName, bool initLog) {
        // set default network path
        options.search.nnueFile = derivePath(DEFAULT_NETWORK_NAME);
    }
-#endif   
+#endif
 return 1;
 }
 
@@ -113,7 +131,7 @@ void CDECL cleanupGlobals(void) {
    LockFree(input_lock);
 #ifdef SYZYGY_TBS
    LockFree(syzygy_lock);
-#endif   
+#endif
    Scoring::cleanup();
    Bitboard::cleanup();
    Board::cleanup();
@@ -155,15 +173,18 @@ void delayedInit() {
 #endif
 #ifdef NNUE
     if (options.search.useNNUE && !nnueInitDone) {
-        nnueInitDone = loadNetwork(derivePath(options.search.nnueFile.c_str())) != 0;
+        const std::string &nnuePath = options.search.nnueFile;
+        nnueInitDone = loadNetwork(absolutePath(nnuePath) ?
+                                   nnuePath.c_str() :
+                                   derivePath(nnuePath));
         if (nnueInitDone) {
             std::cerr << "loaded network from file ";
         } else {
             std::cerr << "warning: failed to load network file ";
         }
-        std::cerr << options.search.nnueFile << std::endl;
+        std::cerr << nnuePath << std::endl;
     }
-#endif   
+#endif
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
         openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str());

@@ -55,8 +55,8 @@ extern const char *DEFAULT_NETWORK_NAME;
 
 extern const size_t LINUX_STACK_SIZE;
 
-extern string derivePath(const char *fileName);
-extern string derivePath(const char *base, const char *fileName);
+extern string derivePath(const std::string &fileName);
+extern string derivePath(const std::string &base, const std::string &fileName);
 
 extern int loadNetwork(const std::string &filename);
 
