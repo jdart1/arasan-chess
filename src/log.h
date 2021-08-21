@@ -1,15 +1,16 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2019 by Jon Dart.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2019, 2021 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
 
 #include "board.h"
-#include "search.h"
 #include <fstream>
 #include <string>
 #include <vector>
 using namespace std;
+
+struct Statistics;
 
 class Log;
 

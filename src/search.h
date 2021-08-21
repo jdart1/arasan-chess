@@ -9,7 +9,11 @@
 #include "scoring.h"
 #include "movegen.h"
 #include "threadp.h"
+#include "globals.h"
+#ifdef NNUE
+#include "nnueintf.h"
 #include "options.h"
+#endif
 extern "C" {
 #include <memory.h>
 #include <time.h>
@@ -21,8 +25,6 @@ extern "C" {
 using namespace std;
 
 class MoveGenerator;
-
-struct NodeInfo;
 
 // Per-node info, part of search history stack
 struct NodeInfo {
@@ -65,6 +67,11 @@ struct NodeInfo {
 #endif
     int ply, depth;
     score_t swap;
+#ifdef NNUE
+    nnue::Network::AccumulatorType accum;
+    std::array<DirtyState, 3> dirty;
+    unsigned dirty_num;
+#endif
 
     int PV() const {
         return (beta > alpha+1);
@@ -76,15 +83,21 @@ struct NodeInfo {
     int newBest(score_t score) const {
         return score > best_score && score < beta;
     }
+#ifdef NNUE
+    void clearNNUEState() {
+        accum.setEmpty();
+        dirty_num = 0;
+    }
+#endif
 };
 
-typedef NodeInfo NodeStack[Constants::MaxPly];
+typedef NodeInfo NodeStack[Constants::MaxPly+3];
 
 // Helper class to save/restore key node parameters
-class NodeState 
+class NodeState
 {
 public:
-    NodeState(NodeInfo *node) 
+    NodeState(NodeInfo *node)
         : n(node),
           alpha(node->alpha),
           beta(node->beta),
@@ -148,7 +161,7 @@ public:
     // one-time startup initialization
     static void init();
 
-    void init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *child_ti);
+    void init(NodeStack &ns, ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
                    int ply, int depth, int flags = 0, Move exclude = NullMove) {
@@ -301,6 +314,7 @@ protected:
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
 
+    score_t evalu8(const Board &board);
 
     SearchController *controller;
     Board board;

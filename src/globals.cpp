@@ -2,12 +2,12 @@
 
 #include "globals.h"
 #include "hash.h"
-#include "bitprobe.h"
 #include "scoring.h"
-#include "bitbase.cpp"
+#include "search.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
+#include "bitbase.cpp"
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
@@ -33,12 +33,23 @@ ThreadControl inputSem;
 #ifdef TUNE
 Tune tune_params;
 #endif
+#ifdef NNUE
+nnue::Network network;
+bool nnueInitDone = false;
+#endif
 
 static const char * LEARN_FILE_NAME = "arasan.lrn";
 
 static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
+
+const size_t LINUX_STACK_SIZE = 8*1024*1024;
+
+#ifdef NNUE
+// TBD: add version/hash?
+const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
+#endif
 
 string programPath;
 
@@ -74,9 +85,26 @@ int initGlobals(const char *pathName, bool initLog) {
    LockInit(input_lock);
 #ifdef SYZYGY_TBS
    LockInit(syzygy_lock);
+#endif
+#ifdef NNUE
+   if (options.search.nnueFile == "") {
+       // set default network path
+       options.search.nnueFile = derivePath(DEFAULT_NETWORK_NAME);
+   }
 #endif   
+return 1;
+}
+
+#ifdef NNUE
+int loadNetwork(const std::string &fname) {
+   std::ifstream in(fname,ios_base::in | ios_base::binary);
+   in >> network;
+   if (!in.good()) {
+       return 0;
+   }
    return 1;
 }
+#endif
 
 void CDECL cleanupGlobals(void) {
    openingBook.close();
@@ -125,6 +153,17 @@ void delayedInit() {
        }
     }
 #endif
+#ifdef NNUE
+    if (options.search.useNNUE && !nnueInitDone) {
+        nnueInitDone = loadNetwork(derivePath(options.search.nnueFile.c_str())) != 0;
+        if (nnueInitDone) {
+            std::cerr << "loaded network from file ";
+        } else {
+            std::cerr << "warning: failed to load network file ";
+        }
+        std::cerr << options.search.nnueFile << std::endl;
+    }
+#endif   
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
         openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str());

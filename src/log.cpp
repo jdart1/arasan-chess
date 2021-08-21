@@ -1,11 +1,11 @@
-// Copyright 1994, 1995, 2000, 2008-2014, 2017-2018 by Jon Dart.  All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2008-2014, 2017-2018, 2021 by Jon Dart.  All Rights Reserved.
 #include "log.h"
 #include "notation.h"
 #include "globals.h"
 #include "debug.h"
 #include "scoring.h"
+#include "search.h"
 #ifdef _WIN32
-#include <windows.h>
 #include <io.h>
 #endif
 #include <sstream>

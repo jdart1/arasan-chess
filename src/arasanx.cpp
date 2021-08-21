@@ -27,6 +27,7 @@ extern "C"
 #include <io.h>
 #else
 #include <unistd.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #endif
 }
@@ -159,6 +160,25 @@ int CDECL main(int argc, char **argv) {
     }
     atexit(cleanupGlobals);
 
+#ifndef _WIN32
+    struct rlimit rl;
+    const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
+    auto result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0)
+    {
+        if (rl.rlim_cur < STACK_MAX)
+        {
+            rl.rlim_cur = STACK_MAX;
+            result = setrlimit(RLIMIT_STACK, &rl);
+            if (result)
+            {
+                cerr << "failed to increase stack size" << endl;
+                exit(-1);
+            }
+        }
+    }
+#endif
+
     Board board;
     int arg = 1;
 
@@ -267,6 +287,7 @@ int CDECL main(int argc, char **argv) {
 #endif
 
 #ifdef UNIT_TESTS
+    delayedInit(); // ensure all init is done including TBs, network
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl;
 #endif

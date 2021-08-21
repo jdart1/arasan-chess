@@ -6,6 +6,7 @@
 #include "notation.h"
 #include "legal.h"
 #include "globals.h"
+#include "scoring.h"
 #include <iostream>
 #include <fstream>
 #include <cctype>

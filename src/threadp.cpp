@@ -12,10 +12,6 @@
 bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 #endif
 
-#ifndef _WIN32
-static const size_t THREAD_STACK_SIZE = 8*1024*1024;
-#endif
-
 //#define _THREAD_TRACE
 
 #ifdef _THREAD_TRACE
@@ -205,8 +201,8 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
         perror("pthread_attr_getstacksize");
         return;
    }
-   if (stackSize < THREAD_STACK_SIZE) {
-      if (pthread_attr_setstacksize (&stackSizeAttrib, THREAD_STACK_SIZE)) {
+   if (stackSize < LINUX_STACK_SIZE) {
+      if (pthread_attr_setstacksize (&stackSizeAttrib, LINUX_STACK_SIZE)) {
          perror("error setting thread stack size");
       }
    }

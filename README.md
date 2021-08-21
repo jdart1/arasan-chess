@@ -111,6 +111,9 @@ cores.
 - Move overhead - value settable from 0 to 1000. This is a value in milliseconds
 that will be subtraced from the time available to make a move. It helps Arasan
 account for network or interface delays in calculating its time usage.
+- Use NNUE - use neural network evaluation. True or false.
+- NNUE File - the name of the neural network file to load. Currently assumed to be
+in the same directory as the Arasan engine executable.
 
 The defaults for many of these options are the values set in the arasan.rc file.
 
@@ -141,9 +144,20 @@ cores.
 - Move overhead - value settable from 0 to 1000. This is a value in milliseconds
 that will be subtraced from the time available to make a move. It helps Arasan
 account for network or interface delays in calculating its time usage.
+- Use NNUE - use neural network evaluation. True or false.
+- NNUE File - the name of the neural network file to load. Currently assumed to be
+in the same directory as the Arasan engine executable.
 
 Note: the defaults for all these options are taken from the values in arasan.rc,
 if that file is present.
+
+## Neural Network
+
+Arasan now supports chess evaluation utilizing a neural network. By
+default, the neural network file is expected to be in the same directory as the
+Arasan executable. A different location/file can be specified using UCI or
+CECP options, or by setting the <pre>search.nnueFile</pre> options in the
+arasan.rc file.
 
 ## Tablebases
 

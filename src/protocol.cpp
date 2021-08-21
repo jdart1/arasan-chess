@@ -1690,6 +1690,13 @@ void Protocol::processWinboardOptions(const string &args) {
         setCheckOption(value,options.learning.position_learning);
     } else if (name == "Strength") {
         Options::setOption<int>(value,options.search.strength);
+#ifdef NNUE
+    } else if (name == "Use NNUE") {
+        setCheckOption(value,options.search.useNNUE);
+    } else if (name == "NNUE File") {
+        Options::setOption<string>(value,options.search.nnueFile);
+        nnueInitDone = false; // force re-init
+#endif        
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
        int tmp = options.search.set_processor_affinity;
@@ -1847,6 +1854,10 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         cout << "option name UCI_LimitStrength type check default false" << endl;
         cout << "option name UCI_Elo type spin default " <<
             1000+options.search.strength*16 << " min 1000 max 2600" << endl;
+#ifdef NNUE
+        cout << "option name Use NNUE type check default true" << endl;
+        cout << "option name NNUE file type string" << endl;
+#endif
 #ifdef NUMA
         cout << "option name Set processor affinity type check default " <<
            (options.search.set_processor_affinity ? "true" : "false") << endl;
@@ -1977,6 +1988,15 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                }
             }
 	}
+#ifdef NNUE
+        else if (uciOptionCompare(name,"Use NNUE")) {
+           options.search.useNNUE = (value == "true");
+	}
+        else if (uciOptionCompare(name,"NNUE file")) {
+           Options::setOption<string>(value,options.search.nnueFile);
+           nnueInitDone = false; // force re-init
+	}
+#endif
 #ifdef NUMA
         else if (uciOptionCompare(name,"Set processor affinity")) {
            int tmp = options.search.set_processor_affinity;
@@ -2212,10 +2232,20 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 Scoring *s = new Scoring();
                 s->init();
                 cout << board << endl;
+#ifdef NNUE
+                cout << "NNUE score: ";
+                Scoring::printScore(s->evalu8NNUE(board),cout);
+                cout << endl;
+#endif                
                 Scoring::printScore(s->evalu8(board),cout);
                 cout << endl;
                 board.flip();
                 cout << board << endl;
+#ifdef NNUE
+                cout << "NNUE score: ";
+                Scoring::printScore(s->evalu8NNUE(board),cout);
+                cout << endl;
+#endif                
                 Scoring::printScore(s->evalu8(board),cout);
                 delete s;
                 cout << endl;
@@ -2477,6 +2507,10 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             options.learning.position_learning << "\"";
         // strength option (new for 14.2)
         cout << " option=\"Strength -spin " << options.search.strength << " 0 100\"";
+#ifdef NNUE
+        cout << " option=\"Use NNUE -check " << options.search.useNNUE << "\"";
+        cout << " option=\"NNUE file -string " << options.search.nnueFile << "\"";
+#endif
 #ifdef NUMA
         cout << " option=\"Set processor affinity -check " <<
             options.search.set_processor_affinity << "\"" << endl;

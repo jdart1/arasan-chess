@@ -6,6 +6,7 @@
 #include "bookdefs.h"
 #include "board.h"
 #include "hash.h"
+#include <array>
 #include <fstream>
 #include <random>
 #include <vector>

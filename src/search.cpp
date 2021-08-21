@@ -1371,9 +1371,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     --controller->time_check_counter;
     nodeAccumulator++;
 
-#ifdef _TRACE
-    int in_pv = 1;
-#endif
     int in_check = 0;
 
     const bool wide = iterationDepth <= MoveGenerator::EASY_PLIES;
@@ -1453,7 +1450,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         } else {
             depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
         }
-        board.doMove(move);
+        board.doMove(move,node);
         setCheckStatus(board,in_check_after_move);
         score_t lobound = wide ? node->alpha : node->best_score;
 #ifdef _TRACE
@@ -1473,16 +1470,14 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             board.undoMove(move,save_state);
             break;
         }
-#ifdef _TRACE
-        if (mainThread()) {
-           cout << "0. ";
-           MoveImage(move,cout);
-           cout << ' ' << try_score;
-           if (in_pv) cout << " (pv)";
-           cout << endl;
-        }
-#endif
         if (try_score > node->best_score && depthMod < 0 && !terminate) {
+#ifdef _TRACE
+           if (mainThread()) {
+              cout << "window = [" << -hibound << "," << -lobound
+                   << "]" << endl;
+              cout << "score = " << try_score << " - LMR cutoff, researching .." << endl;
+           }
+#endif
            // We failed to get a cutoff, so re-search with no reduction.
            depthMod = 0;
            controller->fail_high_root = true;
@@ -1490,14 +1485,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
-#ifdef _TRACE
-           if (mainThread()) {
-              cout << "0. ";
-              MoveImage(move,cout);
-              cout << ' ' << try_score;
-              cout << endl;
-           }
-#endif
         }
         if (try_score > node->best_score && hibound < node->beta && !terminate) {
            if (mainThread() && controller->time_target != INFINITE_TIME) {
@@ -1508,9 +1495,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
 #ifdef _TRACE
            if (mainThread()) {
-              cout << "window = [" << -hibound << "," << node->best_score
+              cout << "window = [" << -hibound << "," << -lobound
                    << "]" << endl;
-              cout << "score = " << try_score << " - no cutoff, researching .." << endl;
+              cout << "score = " << try_score << " - zero window cutoff, researching .." << endl;
            }
 #endif
            hibound = node->beta;
@@ -1560,9 +1547,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         if (!wide) {
            hibound = node->best_score + 1;  // zero-width window
         }
-#ifdef _TRACE
-        in_pv = 0;
-#endif
     }
 
     if (node->cutoff) {
@@ -1774,7 +1758,7 @@ score_t Search::quiesce(int ply,int depth)
          return -Illegal;
       }
       node->flags |= EXACT;
-      return scoring.evalu8(board);
+      return evalu8(board);
    }
    else if (Scoring::isDraw(board,rep_count,ply)) {
 #ifdef _TRACE
@@ -1899,7 +1883,7 @@ score_t Search::quiesce(int ply,int depth)
                continue;
            }
            node->last_move = move;
-           board.doMove(move);
+           board.doMove(move,node);
            if (!board.wasLegal(move,true)) {
                board.undoMove(move,state);
                continue;
@@ -1977,7 +1961,7 @@ score_t Search::quiesce(int ply,int depth)
            ASSERT(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
        }
        if (node->eval == Constants::INVALID_SCORE) {
-           node->eval = node->staticEval = scoring.evalu8(board);
+           node->eval = node->staticEval = evalu8(board);
        }
        if (hashHit) {
            // Use the transposition table entry to provide a better score
@@ -2073,7 +2057,7 @@ score_t Search::quiesce(int ply,int depth)
            }
 
            node->last_move = move;
-           board.doMove(move);
+           board.doMove(move,node);
            if (!board.wasLegal(move)) {
                board.undoMove(move,state);
                continue;
@@ -2146,7 +2130,7 @@ score_t Search::quiesce(int ply,int depth)
                    continue;
                }
                node->last_move = move;
-               board.doMove(move);
+               board.doMove(move,node);
                // verify opposite side in check:
                ASSERT(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
                // and verify quick check confirms it
@@ -2303,7 +2287,7 @@ int Search::prune(const Board &board,
                 // but this tests worse now.
                 score_t threshold = node->alpha - futilityMargin(pruneDepth);
                 if (node->eval == Constants::INVALID_SCORE) {
-                    node->eval = node->staticEval = scoring.evalu8(board);
+                    node->eval = node->staticEval = evalu8(board);
                 }
                 if (node->eval < threshold) {
 #ifdef SEARCH_STATS
@@ -2461,7 +2445,7 @@ score_t Search::search()
           return -Illegal;
        }
        node->flags |= EXACT;
-       return scoring.evalu8(board);
+       return evalu8(board);
     }
 
     if (Scoring::isDraw(board,rep_count,ply)) {
@@ -2623,7 +2607,7 @@ score_t Search::search()
         node->eval = node->staticEval = hashEntry.staticValue();
     }
     if (node->eval == Constants::INVALID_SCORE) {
-        node->eval = node->staticEval = scoring.evalu8(board);
+        node->eval = node->staticEval = evalu8(board);
     }
     if (hashHit) {
         // Use the transposition table entry to provide a better score
@@ -2674,8 +2658,9 @@ score_t Search::search()
     if (pruneOk && depth <= RAZOR_DEPTH && board.getMaterial(board.sideToMove()).hasPieces()) {
         ASSERT(node->eval != Constants::INVALID_SCORE);
         if (node->eval < node->beta - razorMargin(depth)) {
-            // Note: use threshold as the bounds here, not beta, as
-            // was done in Toga 3.0:
+#ifdef NNUE
+            (node+1)->clearNNUEState();
+#endif
             score_t v = quiesce(node->alpha,node->beta,ply+1,0);
 #ifdef _TRACE
             if (mainThread()) {
@@ -2714,13 +2699,13 @@ score_t Search::search()
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
             BoardState state(board.state);
-            board.doNull();
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply);
                 cout << "trying " << ply << ". " << "(null)" << endl;
             }
 #endif
+            board.doNull(node);
             score_t nscore;
             if (nu_depth > 0)
                 nscore = -search(-node->beta, 1-node->beta,
@@ -2745,6 +2730,15 @@ score_t Search::search()
                 if (nu_depth > 0 && (depth >= 6*DEPTH_INCREMENT)) {
                     // Verify null cutoff with reduced-depth search
                     // (idea from Dieter Buerssner)
+#ifdef _TRACE
+                    if (mainThread()) {
+                       indent(ply); cout << "verifying null move" << endl;
+                    }
+#endif
+#ifdef NNUE
+                    // entering a new node w/o a move, so reset next node state
+                    (node+1)->clearNNUEState();
+#endif
                     nscore = search(node->beta-1, node->beta, ply+1, nu_depth, VERIFY);
                     if (nscore == -Illegal) {
 #ifdef _TRACE
@@ -2806,8 +2800,8 @@ score_t Search::search()
                     if (mainThread()) {
                         cout << "Probcut: previous move illegal" << endl;
                     }
-#endif
                     return -Illegal;                  // previous move was illegal
+#endif
                 }
                 else if (seeSign(board,move,needed_gain)) {
 #ifdef _TRACE
@@ -2819,7 +2813,7 @@ score_t Search::search()
                     }
 #endif
                     SetPhase(move,MoveGenerator::WINNING_CAPTURE_PHASE);
-                    board.doMove(move);
+                    board.doMove(move,node);
                     if (!board.wasLegal(move)) {
                         board.undoMove(move,state);
                         continue;
@@ -2877,15 +2871,11 @@ score_t Search::search()
 #endif
         // Call search routine at lower depth to get a 1st move to try.
         // ("Internal iterative deepening").
-        //
-        // Note: we do not push down the node stack because we want this
-        // search to have all the same parameters (including ply) as the
-        // current search, just reduced depth + the IID flag set.
-        // Save state here: exit from block resets node state.
-        NodeState state(node);
-        node->flags |= IID;
-        node->depth = d;
-        score_t iid_score = search();
+#ifdef NNUE
+        (node+1)->clearNNUEState();
+#endif
+        score_t iid_score = search(node->alpha,node->beta,node->ply,
+                                   d,node->flags | IID);
         // set hash move to IID search result (may still be null)
         hashMove = node->best;
         if (iid_score == -Illegal || ((node->flags) & EXACT)) {
@@ -2938,7 +2928,7 @@ score_t Search::search()
             ++stats.singular_searches;
 #endif
             // Verify hash move legal
-            board.doMove(hashMove);
+            board.doMove(hashMove,node);
             const bool legal = board.wasLegal(hashMove);
             board.undoMove(hashMove,state);
             if (!legal) {
@@ -2954,6 +2944,9 @@ score_t Search::search()
                 // Texel, Protector, etc.
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
+#ifdef NNUE
+                node->clearNNUEState();
+#endif
                 score_t result = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
                 if (result < nu_beta) {
 #ifdef _TRACE
@@ -3056,7 +3049,7 @@ score_t Search::search()
                 depthMod = extend(board, node, in_check_after_move, move) +
                     reduce(board, node, move_index, improving, move);
             }
-            board.doMove(move);
+            board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
                   ASSERT(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
 #ifdef _TRACE
@@ -3391,9 +3384,9 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
 // Initialize a Search instance to prepare it for searching in a
 // particular thread. This is called from the thread in which the
 // search will execute.
-void Search::init(NodeInfo (&ns)[Constants::MaxPly], ThreadInfo *slave_ti) {
+void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
     this->board = controller->initialBoard;
-    node = ns;
+    node = &(ns[0]);
     ASSERT(node);
     nodeAccumulator = 0;
     ti = slave_ti;
@@ -3425,3 +3418,22 @@ const char * Search::debugPrefix() const noexcept
     return controller->debugPrefix();
 }
 
+score_t Search::evalu8(const Board &board) {
+#ifdef NNUE
+    const Material &ourMat = board.getMaterial(board.sideToMove());
+    const Material &oppMat = board.getMaterial(board.oppositeSide());
+    bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
+    bool useClassical = imbalance ||
+        (ourMat.materialLevel() <= 10 &&
+         ourMat.pawnCount() <= 2 &&
+         oppMat.materialLevel() <= 10 &&
+         oppMat.pawnCount() <= 2);
+    if (!useClassical && options.search.useNNUE && nnueInitDone) {
+        return scoring.evalu8NNUE(board,node);
+    } else {
+        return scoring.evalu8(board);
+    }
+#else
+    return scoring.evalu8(board);
+#endif
+}

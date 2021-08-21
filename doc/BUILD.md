@@ -32,15 +32,14 @@ one for GNU make.
 
 Syzygy tablebase support is enabled by default.
 
-Syzygy support and some of the Python scripts in the tools
+Syzygy support, NNUE support,and some of the Python scripts in the tools
 subdirectory rely on imported submodules. So if building Arasan from a
 git respository, issue the following command within your git directory
 to pull these dependencies into your your source tree:
 
 git submodule update --init --recursive
 
-Arasan now requires a modern compiler with C++11 features (although
-not necessarily complete C++11 support).
+Arasan now requires a modern compiler with at least C++-17 support.
 
 Limited testing has been done on other OSs and architectures other
 than x32 and amd64.  However, the code is designed to be portable.
@@ -50,25 +49,6 @@ In particular, there is support for big-endian architectures.
 
 There is a makefile in the src directory.
 
-The following targets are defined in the makefile:
-
-- default: builds just the chess engine, with no POPCNT or BMI2 support
-- popcnt: builds just the chess engine, with POPCNT support
-- bmi2: builds just the chess engine, with BMI2 support (includes POPCNT)
-- avx2: builds just the chess engine, with AVX2 + BMI2 + POPCNT
-- profiled: PGO build with no POPCNT or BMI2 support
-- popcnt-profiled: PGO build of the chess engine, with POPCNT support
-- bmi2-profiled: PGO build of the chess engine, with BMI2 support (includes POPCNT)
-- avx2-profiled: PGO build of the chess engine, with AVX2 + BMI2 + POPCNT
-- tuning: builds the parameter tuning program
-- tuning-popcnt: builds the parameter tuning program with POPCNT support
-- utils: builds utility programs including "makebook"
-- release: builds the release tarball
-- install: installs the chess engine on the system (requires root or sudo)
-
-Note: POPCNT, BMI2, and AVX2 builds will only work on recent x64 CPUs that
-support these instructions, and require a 64-bit compile.
-
 The Makefile requires the "bc" utility, available on most Linux distros.
 If using Cygwin, you should ensure you have installed this.
 
@@ -77,12 +57,40 @@ target architecture and OS (note: assumes target and host are the
 same). By default it builds only the chess engine. Binaries are placed
 in the "bin" subdirectory.
 
+The following targets are defined in the makefile:
+
+- default: builds just the chess engine
+- profiled: PGO build of the chess engine
+- tuning: builds the parameter tuning program
+- utils: builds utility programs including "makebook"
+- release: builds the release tarball
+- install: installs the chess engine on the system (requires root or sudo)
+
+The Makefile supports compilation for specific processor instruction sets.
+Supported instruction sets at present are:
+
+- popcnt (implies also: sse3, sse4, sse4.1)
+- bmi2 (includes popcnt)
+- avx2 (includes bmi2)
+
+The BUILD_TYPE variable can be used to specify the desired instruction
+set for the compilation: this works not just with the chess engine, but with
+the tuner and utiliies, also. For example:
+
+make BUILD_TYPE=avx2 utils
+
+will build the utilities with AVX2 support.
+
+Note: the instruction sets supported via BUILD_TYPE will
+only work on x86-64 CPUs that support these instructions, and require
+a 64-bit compile.
+
 If necessary, you can specify the compiler by passing the CC variable
 on the command line, and CXXFLAGS can also be used to pass additional
-flags. So for example to make an AVX2 build of Arasan using gcc-10
+flags. So for example to make an build of Arasan using gcc-10
 with c++20 support, do:
 
-make CC=gcc-10 CXXFLAGS=-std=c++20 avx2
+make CC=gcc-10 CXXFLAGS=-std=c++20
 
 Defining NUMA in the Makefile will build a version that has support
 for NUMA (Non-Uniform Memory Access) machines. NUMA support relies
@@ -90,8 +98,8 @@ on the hwloc library version 2.0 or higher. Note: you must have a
 compatible hwloc library in the library search path at runtime.
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64",
-"arasanx-64-popcnt", or "arasanx-64-bmi2," depending on the
-architecture and build flags used. "-numa" is added for a NUMA
+"arasanx-64-popcnt," "arasanx-64-bmi2," or "arasanx-64-avx2," depending on the
+architecture and instruction set selected. "-numa" is added for a NUMA
 build.
 
 Note: "make release" will build the release tarball and place it in the
@@ -178,6 +186,6 @@ support [MingW](http://mingw.org/).
 
 There is a CMakeLists.txt file in the source directory, for building
 with [CMake](https://cmake.org/).  This should be considered somewhat
-experimental. It does not currently support PGO.  It does support
+experimental. It does not currently support PGO. It does support
 [cross-compliation for
 Android](https://developer.android.com/ndk/guides/cmake#android_platform).

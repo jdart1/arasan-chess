@@ -23,7 +23,10 @@
 
 extern "C" {
 #ifdef _WIN32
+//  override byte to prevent clashes with <cstddef>
+#define byte win_byte_override
 #include <windows.h>
+#undef byte  
 #else
 #include <pthread.h>
 #endif
@@ -96,9 +99,9 @@ inline uint64_t getElapsedTime(const CLOCK_TYPE startTime,const CLOCK_TYPE endTi
   return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 }
 
-inline uint64_t getRandomSeed(unsigned index = 0) {
+inline uint64_t getRandomSeed() {
   return (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>
-    (std::chrono::system_clock::now().time_since_epoch()).count() + index;
+      (std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 #ifdef _WIN32

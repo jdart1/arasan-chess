@@ -1,4 +1,4 @@
-// Copyright 1994-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -10,6 +10,10 @@
 #ifdef TUNE
 #include "tune.h"
 #include <ctime>
+#endif
+#ifdef NNUE
+#include "nnueintf.h"
+#include "search.h" // for NodeInfo
 #endif
 #include <cstddef>
 #include <algorithm>
@@ -317,7 +321,7 @@ Scoring::Scoring() {
 Scoring::~Scoring() {
 }
 
-void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const 
+void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &scores) const
 {
     const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
@@ -380,9 +384,9 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
                 scores.mid += PARAM(MINOR_FOR_PAWNS_MIDGAME);
                 scores.end += PARAM(MINOR_FOR_PAWNS_ENDGAME);
 #ifdef EVAL_DEBUG
-                cout << "minors vs pawns (" << ColorImage(side) << "): (" << 
+                cout << "minors vs pawns (" << ColorImage(side) << "): (" <<
                     PARAM(MINOR_FOR_PAWNS_MIDGAME) << "," << PARAM(MINOR_FOR_PAWNS_ENDGAME) << ")" << endl;
-#endif            
+#endif
             }
         }
         if  (ourmat.queenCount() == oppmat.queenCount()+1 &&
@@ -1663,7 +1667,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
        }
    }
 #ifdef EVAL_DEBUG
-   score_t adjusted = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);                                      
+   score_t adjusted = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
    cout << "adjusted material score = " << (board.sideToMove() == White ? adjusted : -adjusted) << endl;
 #endif
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
@@ -2370,6 +2374,44 @@ void Scoring::clearHashTables() {
       kingPawnHashTable[Black][i].hc = (hash_t)0;
    }
 }
+
+#ifdef NNUE
+score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
+   Position p(board,node);
+   ChessInterface intf(&p);
+   if (node) {
+       /*
+      if (node->ply && IsNull((node-1)->last_move) && node->staticEval != Constants::INVALID_SCORE) {
+          // can just change sign
+          return -node->staticEval;
+      }
+       */
+      nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::White);
+      nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::Black);
+#ifdef _DEBUG
+      assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Lower) == nnue::AccumulatorState::Computed);
+      assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Upper) == nnue::AccumulatorState::Computed);
+      score_t score1 = static_cast<score_t>(network.evaluate(intf.getAccumulator()));
+      score_t score2 = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(network,intf));
+      if (score1 != score2) {
+          cout << board << endl;
+          NodeInfo *n = node;
+          while (n->ply) {
+              --n;
+              cout << n->ply << " ";
+              MoveImage(n->last_move,cout);
+              cout << endl;
+          }
+          assert(0);
+      }
+#endif
+      return static_cast<score_t>(network.evaluate(node->accum));
+   }
+   else {
+      return static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(network,intf));
+   }
+}
+#endif
 
 #ifdef TUNE
 #include "tune.h"
