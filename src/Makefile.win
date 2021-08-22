@@ -59,7 +59,7 @@ CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(BMI2_FLAGS) $(AVX2_FLAGS)
 !If "$(TARGET)" == "win64"
 ARASANX = arasanx-64
 !Else
-ARASANX = arasanx-64
+ARASANX = arasanx-32
 !Endif
 !If "$(BUILD_TYPE)" != ""
 ARASANX = $(ARASANX)-$(BUILD_TYPE)
