@@ -98,12 +98,12 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
     searcher->registerPostFunction(std::bind(&Protocol::post_output,this,_1));
     searcher->registerMonitorFunction(std::bind(&Protocol::monitor,this,_1,_2));
 
-    if (options.store_games) {
-        if (options.game_pathname == "") {
-            game_pathname = derivePath("games.pgn");
+    if (globals::options.store_games) {
+        if (globals::options.game_pathname == "") {
+            game_pathname = globals::derivePath("games.pgn");
         }
         else {
-            game_pathname = options.game_pathname;
+            game_pathname = globals::options.game_pathname;
         }
         game_file = new ofstream(game_pathname.c_str(),ios::out | ios::app);
         if (!game_file->good()) {
@@ -130,23 +130,23 @@ Protocol::~Protocol()
 void Protocol::poll(bool &polling_terminated)
 {
     while(!polling_terminated) {
-        if (inputSem.wait()) {
+        if (globals::inputSem.wait()) {
             break;
         }
         while (!polling_terminated) {
-            Lock(input_lock);
+            Lock(globals::input_lock);
             string cmd;
             if (hasPending()) {
                 cmd = pending.front();
                 pending.erase(pending.begin());
             } else {
-                Unlock(input_lock);
+                Unlock(globals::input_lock);
                 break;
             }
             if (doTrace) {
                 cout << debugPrefix() << "got cmd (main): "  << cmd << endl;
             }
-            Unlock(input_lock);
+            Unlock(globals::input_lock);
             if (doTrace) cout << debugPrefix() << "calling do_command(main):" << cmd << (flush) << endl;
             if (!do_command(cmd,*main_board)) {
                 if (doTrace) cout << debugPrefix() << "exiting polling loop" << endl;
@@ -162,9 +162,9 @@ void Protocol::poll(bool &polling_terminated)
 }
 
 void Protocol::add_pending(const string &cmd) {
-    Lock(input_lock);
+    Lock(globals::input_lock);
     pending.push_back(cmd);
-    Unlock(input_lock);
+    Unlock(globals::input_lock);
 }
 
 void Protocol::split_cmd(const string &cmd, string &cmd_word, string &cmd_args) {
@@ -214,14 +214,14 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
     AllPendingStatus retVal = AllPendingStatus::Nothing;
     if (doTrace) cout << debugPrefix() << "in do_all_pending" << endl;
     while (true) {
-        Lock(input_lock);
+        Lock(globals::input_lock);
         if (pending.empty()) {
-           Unlock(input_lock);
+           Unlock(globals::input_lock);
            break;
         }
         string cmd(pending.front());
         pending.erase(pending.begin());
-        Unlock(input_lock);
+        Unlock(globals::input_lock);
         if (doTrace) {
             cout << debugPrefix() << "pending command(a): " << cmd << endl;
         }
@@ -240,7 +240,7 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
 Protocol::PendingStatus Protocol::check_pending(Board &board) {
     if (doTrace) cout << debugPrefix() << "in check_pending" << endl;
     PendingStatus retVal = PendingStatus::Nothing;
-    Lock(input_lock);
+    Lock(globals::input_lock);
     while (!pending.empty()) {
         const string cmd(pending.front());
         string cmd_word, cmd_args;
@@ -268,7 +268,7 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
             do_command(cmd,board);
         }
     }
-    Unlock(input_lock);
+    Unlock(globals::input_lock);
     return retVal;
 }
 
@@ -413,8 +413,8 @@ bool Protocol::accept_draw(Board &board) {
 #ifdef SYZYGY_TBS
    const Material &wMat = board.getMaterial(White);
    const Material &bMat = board.getMaterial(Black);
-   if(options.search.use_tablebases &&
-      wMat.men() + bMat.men() <= EGTBMenCount) {
+   if(globals::options.search.use_tablebases &&
+      wMat.men() + bMat.men() <= globals::EGTBMenCount) {
       if (doTrace)
          cout << debugPrefix() << "checking tablebases .." << endl;
       // accept a draw when the tablebases say it's a draw
@@ -494,8 +494,8 @@ void Protocol::do_help() {
 void Protocol::save_game() {
    if (uci) return;                               // not supported
    if (doTrace) cout << debugPrefix() << "in save_game" << endl;
-   if (doTrace) cout << debugPrefix() << "game_moves=" << gameMoves->num_moves() << endl;
-   if (gameMoves->num_moves() == 0 || !options.store_games) {
+   if (doTrace) cout << debugPrefix() << "game_moves=" << globals::gameMoves->num_moves() << endl;
+   if (globals::gameMoves->num_moves() == 0 || !globals::options.store_games) {
       if (doTrace) cout << debugPrefix() << "out of save_game" << endl;
       return;
    }
@@ -504,7 +504,7 @@ void Protocol::save_game() {
       string opening_name, eco;
       if (ecoCoder) {
          if (doTrace) cout << debugPrefix() << "calling classify" << endl;
-         ecoCoder->classify(*gameMoves,eco,opening_name);
+         ecoCoder->classify(*globals::gameMoves,eco,opening_name);
          headers.push_back(ChessIO::Header("ECO",eco));
       }
       char crating[15];
@@ -567,8 +567,8 @@ void Protocol::save_game() {
       }
       headers.push_back(ChessIO::Header("TimeControl",timestr));
       string result;
-      theLog->getResultAsString(result);
-      ChessIO::store_pgn(*game_file, *gameMoves,
+      globals::theLog->getResultAsString(result);
+      ChessIO::store_pgn(*game_file, *globals::gameMoves,
          computer_plays_white ? White : Black,
          result,
          headers);
@@ -601,7 +601,7 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
    }
    cout << s.str() << endl;
    if (doTrace) {
-      theLog->write(s.str().c_str()); theLog->write_eol();
+      globals::theLog->write(s.str().c_str()); globals::theLog->write_eol();
    }
 }
 
@@ -621,7 +621,7 @@ void Protocol::post_output(const Statistics &stats) {
    }
    if (verbose) {
        if (uci) {
-           if (options.search.multipv > 1) {
+           if (globals::options.search.multipv > 1) {
                // output stats only when multipv array has been filled
                if (stats.multipv_count == stats.multipv_limit) {
                    for (unsigned i = 0; i < stats.multipv_limit; i++) {
@@ -658,7 +658,7 @@ void Protocol::checkPendingInSearch(SearchController *controller) {
     // termination, but their actual execution is delayed until after
     // search completion.
     // Note: typically the pending stack is very small during search.
-    Lock(input_lock);
+    Lock(globals::input_lock);
     auto it = pending.begin();
     bool exit = false;
     while (it != pending.end() && !exit) {
@@ -668,7 +668,7 @@ void Protocol::checkPendingInSearch(SearchController *controller) {
             it++;
         }
     }
-    Unlock(input_lock);
+    Unlock(globals::input_lock);
 }
 
 bool Protocol::processPendingInSearch(SearchController *controller, const string &cmd, bool &exit)
@@ -1032,12 +1032,12 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
             // though, that in case of a ponder miss we must later
             // remove this move.
             //
-            gameMoves->add_move(board,previous_state,predicted_reply,"",true);
+            globals::gameMoves->add_move(board,previous_state,predicted_reply,"",true);
         }
         time_target = INFINITE_TIME;
         // in reduced strength mode, limit the ponder search time
         // (do not ponder indefinitely)
-        if (options.search.strength < 100) {
+        if (globals::options.search.strength < 100) {
             time_target = last_time_target;
             if (doTrace) cout << debugPrefix() << "limiting ponder time to " <<
                              time_target << endl;
@@ -1081,8 +1081,8 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
     last_computer_move = ponder_move;
     last_computer_stats = ponder_stats;
     // Clean up the global move array, if we got no ponder hit.
-    if (!uci && gameMoves->num_moves() > 0 && gameMoves->last().wasPonder()) {
-        gameMoves->remove_move();
+    if (!uci && globals::gameMoves->num_moves() > 0 && globals::gameMoves->last().wasPonder()) {
+        globals::gameMoves->remove_move();
     }
     if (doTrace) {
         cout << debugPrefix() << "ponder move = ";
@@ -1105,8 +1105,8 @@ Move Protocol::search(SearchController *searcher, Board &board,
     // Note: not clear what the semantics should be when "searchmoves"
     // is specified and using "own book." Currently we force a search
     // in this case and ignore the book moves.
-    if (!infinite && options.book.book_enabled && movesToSearch.empty()) {
-        move = openingBook.pick(board);
+    if (!infinite && globals::options.book.book_enabled && movesToSearch.empty()) {
+        move = globals::openingBook.pick(board);
         if (!IsNull(move)) stats.fromBook = true;
     }
 
@@ -1164,8 +1164,8 @@ Move Protocol::search(SearchController *searcher, Board &board,
         if (ics || uci) {
             vector< Move > choices;
             int moveCount = 0;
-            if (options.book.book_enabled) {
-               moveCount = openingBook.book_moves(board,choices);
+            if (globals::options.book.book_enabled) {
+               moveCount = globals::openingBook.book_moves(board,choices);
             }
             stringstream s;
             s << "book moves (";
@@ -1290,7 +1290,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             stringstream img;
             Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
             last_move_image = img.str();
-            theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
+            globals::theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
             // Perform learning (if enabled):
             learn(board,board.repCount());
             stringstream movebuf;
@@ -1316,7 +1316,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                 // Execute the move and prepare to ponder.
                 BoardState previous_state = board.state;
                 board.doMove(last_move);
-                gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
+                globals::gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
 
                 *ponder_board = board;
 
@@ -1333,7 +1333,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                     cout << "move " << movebuf.str() << endl;
                 }
                 else {
-                    cout << gameMoves->num_moves()/2 << ". ... ";
+                    cout << globals::gameMoves->num_moves()/2 << ". ... ";
                     cout << movebuf.str() << endl;
                 }
                 cout << (flush);
@@ -1348,7 +1348,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         }
         if (ics && ((srctype == FixedDepth && searcher->getElapsedTime() >= 250) || time_target >= 250) &&
             stats.display_value != Constants::INVALID_SCORE) {
-            kibitz(searcher,computer,last_stats,options.search.ncpus>1);
+            kibitz(searcher,computer,last_stats,globals::options.search.ncpus>1);
         }
     }
     if (uci) return; // With UCI, GUI is in charge of game end detection
@@ -1358,11 +1358,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         if (last_stats.value >= Constants::MATE-1) {
             if (doTrace) cout << debugPrefix() << "last_score = mate" << endl;
             if (sideToMove == White) {
-                theLog->setResult("1-0");
+                globals::theLog->setResult("1-0");
                 cout << "1-0 {White mates}" << endl;
             }
             else {
-                theLog->setResult("0-1");
+                globals::theLog->setResult("0-1");
                 cout << "0-1 {Black mates}" << endl;
             }
             game_end = true;
@@ -1370,11 +1370,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         else if (last_stats.state == Checkmate) {
             if (doTrace) cout << debugPrefix() << "state = Checkmate" << endl;
             if (sideToMove == White) {
-                theLog->setResult("0-1");
+                globals::theLog->setResult("0-1");
                 cout << "0-1 {Black mates}" << endl;
             }
             else {
-                theLog->setResult("1-0");
+                globals::theLog->setResult("1-0");
                 cout << "1-0 {White mates}" << endl;
             }
             game_end = true;
@@ -1387,11 +1387,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             // Winboard passes the resign command to ICS, but ignores it
             // itself.
             if (computer_plays_white) {
-                theLog->setResult("0-1 {White resigns}");
+                globals::theLog->setResult("0-1 {White resigns}");
                 cout << "0-1 {White resigns}" << endl;
             }
             else {
-                theLog->setResult("1-0 {Black resigns}");
+                globals::theLog->setResult("1-0 {Black resigns}");
                 cout << "1-0 {Black resigns}" << endl;
             }
             game_end = true;
@@ -1412,7 +1412,7 @@ void Protocol::processCmdInWaitState(const string &cmd) {
         uciWaitState = false;
     } else if (cmd == "quit") {
         uciWaitState = false;
-        polling_terminated = true;
+        globals::polling_terminated = true;
     } else if (cmd == "ucinewgame") {
         // Arena at least can send this w/o "stop"
         uciWaitState = false;
@@ -1451,8 +1451,8 @@ void Protocol::doHint() {
     // try book move first
     vector<Move> moves;
     unsigned count = 0;
-    if (options.book.book_enabled) {
-        count = openingBook.book_moves(*main_board,moves);
+    if (globals::options.book.book_enabled) {
+        count = globals::openingBook.book_moves(*main_board,moves);
     }
     if (count > 0) {
         if (count == 1)
@@ -1530,14 +1530,14 @@ void Protocol::analyze(Board &board)
             // forced move, forced mate, tablebase hit, or hitting the max
             // ply depth. Wait here for more input.
             if (doTrace) cout << debugPrefix() << "analysis mode: wait for input" << endl;
-            if (inputSem.wait()) {
+            if (globals::inputSem.wait()) {
                 break;
             }
             while (!pending.empty()) {
-                Lock(input_lock);
+                Lock(globals::input_lock);
                 string cmd (pending.front());
                 pending.erase(pending.begin());
-                Unlock(input_lock);
+                Unlock(globals::input_lock);
                 string cmd_word, cmd_arg;
                 split_cmd(cmd,cmd_word,cmd_arg);
 #ifdef _TRACE
@@ -1574,16 +1574,16 @@ void Protocol::analyze(Board &board)
 
 void Protocol::undo( Board &board)
 {
-    if (theLog->current() < 1) return;             // ignore "undo"
+    if (globals::theLog->current() < 1) return;             // ignore "undo"
 
-    board.undoMove((*theLog)[theLog->current()-1].move(),
-        (*theLog)[theLog->current()-1].state());
-    theLog->back_up();
-    gameMoves->remove_move();
+    board.undoMove((*globals::theLog)[globals::theLog->current()-1].move(),
+        (*globals::theLog)[globals::theLog->current()-1].state());
+    globals::theLog->back_up();
+    globals::gameMoves->remove_move();
     last_stats.clear();
-    if (theLog->current()) {
-        last_move = (*theLog)[theLog->current()-1].move();
-        last_move_image = (*theLog)[theLog->current()-1].image();
+    if (globals::theLog->current()) {
+        last_move = (*globals::theLog)[globals::theLog->current()-1].move();
+        last_move_image = (*globals::theLog)[globals::theLog->current()-1].image();
     }
     else {
         last_move = NullMove;
@@ -1615,29 +1615,29 @@ void Protocol::execute_move(Board &board,Move m)
     stringstream img;
     Notation::image(board,m,Notation::OutputFormat::SAN,img);
     last_move_image = img.str();
-    theLog->add_move(board,m,last_move_image,nullptr,searcher->getElapsedTime(),true);
+    globals::theLog->add_move(board,m,last_move_image,nullptr,searcher->getElapsedTime(),true);
     BoardState previous_state = board.state;
     board.doMove(m);
     // If our last move added was the pondering move, replace it
-    if (gameMoves->num_moves() > 0 && gameMoves->last().wasPonder()) {
-        gameMoves->remove_move();
+    if (globals::gameMoves->num_moves() > 0 && globals::gameMoves->last().wasPonder()) {
+        globals::gameMoves->remove_move();
     }
-    gameMoves->add_move(board,previous_state,m,last_move_image,false);
+    globals::gameMoves->add_move(board,previous_state,m,last_move_image,false);
 }
 
 #ifdef TUNE
 void Protocol::setTuningParam(const string &name, const string &value)
 {
    // set named parameters that are in the tuning set
-   int index = tune_params.findParamByName(name);
+   int index = globals::tune_params.findParamByName(name);
    if (index > 0) {
       stringstream buf(value);
       int tmp;
       buf >> tmp;
       if (!buf.bad() && !buf.fail()) {
-         tune_params[index].current = tmp;
+         globals::tune_params[index].current = tmp;
          // apply params to Scoring module
-         tune_params.applyParams();
+         globals::tune_params.applyParams();
       }
       else {
          if (uci) cout << "info ";
@@ -1676,39 +1676,39 @@ void Protocol::processWinboardOptions(const string &args) {
         cout << debugPrefix() << "setting option " << name << "=" << value << endl;
     }
     if (name == "Favor frequent book moves") {
-        Options::setOption<unsigned>(value,options.book.frequency);
+        Options::setOption<unsigned>(value,globals::options.book.frequency);
     } else if (name == "Favor high-weighted book moves") {
-        Options::setOption<unsigned>(value,options.book.weighting);
+        Options::setOption<unsigned>(value,globals::options.book.weighting);
     } else if (name == "Favor best book moves") {
-        Options::setOption<unsigned>(value,options.book.scoring);
+        Options::setOption<unsigned>(value,globals::options.book.scoring);
     } else if (name == "Randomize book moves") {
-        Options::setOption<unsigned>(value,options.book.random);
+        Options::setOption<unsigned>(value,globals::options.book.random);
     } else if (name == "Can resign") {
-        setCheckOption(value,options.search.can_resign);
+        setCheckOption(value,globals::options.search.can_resign);
     } else if (name == "Resign threshold") {
-        Options::setOption<int>(value,options.search.resign_threshold);
+        Options::setOption<int>(value,globals::options.search.resign_threshold);
     } else if (name == "Position learning") {
-        setCheckOption(value,options.learning.position_learning);
+        setCheckOption(value,globals::options.learning.position_learning);
     } else if (name == "Strength") {
-        Options::setOption<int>(value,options.search.strength);
+        Options::setOption<int>(value,globals::options.search.strength);
 #ifdef NNUE
     } else if (name == "Use NNUE") {
-        setCheckOption(value,options.search.useNNUE);
+        setCheckOption(value,globals::options.search.useNNUE);
     } else if (name == "NNUE File") {
-        Options::setOption<string>(value,options.search.nnueFile);
-        nnueInitDone = false; // force re-init
+        Options::setOption<string>(value,globals::options.search.nnueFile);
+        globals::nnueInitDone = false; // force re-init
 #endif        
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
-       int tmp = options.search.set_processor_affinity;
-       setCheckOption(value,options.search.set_processor_affinity);
-       if (tmp != options.search.set_processor_affinity) {
+       int tmp = globals::options.search.set_processor_affinity;
+       setCheckOption(value,globals::options.search.set_processor_affinity);
+       if (tmp != globals::options.search.set_processor_affinity) {
            searcher->recalcBindings();
        }
 #endif
     }
     else if (name == "Move overhead") {
-        Options::setOption<int>(value,options.search.move_overhead);
+        Options::setOption<int>(value,globals::options.search.move_overhead);
     }
 #ifdef TUNE
     else {
@@ -1772,7 +1772,7 @@ void Protocol::loadgame(Board &board,ifstream &file) {
                 // parser is forgiving and will accept incorrect
                 // SAN. Convert it here to the correct form:
                 Notation::image(board,m,Notation::OutputFormat::SAN,image);
-                gameMoves->add_move(board,previous_state,m,image.c_str(),false);
+                globals::gameMoves->add_move(board,previous_state,m,image.c_str(),false);
                 board.doMove(m);
             }
             side = OppositeColor(side);
@@ -1807,7 +1807,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         cout << debugPrefix() << "do_command: " << cmd << endl;
     }
     if (doTrace && uci) {
-        theLog->write(cmd.c_str()); theLog->write_eol();
+        globals::theLog->write(cmd.c_str()); globals::theLog->write_eol();
     }
     string cmd_word, cmd_args;
     split_cmd(cmd, cmd_word, cmd_args);
@@ -1815,12 +1815,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         uci = true;
         verbose = true; // TBD: fixed for now
         // Learning is disabled because we don't have full game history w/ scores
-        options.learning.position_learning = 0;
+        globals::options.learning.position_learning = 0;
         cout << "id name " << "Arasan " << Arasan_Version;
         cout << endl;
         cout << "id author Jon Dart" << endl;
         cout << "option name Hash type spin default " <<
-            options.search.hash_table_size/(1024L*1024L) << " min 4 max " <<
+            globals::options.search.hash_table_size/(1024L*1024L) << " min 4 max " <<
 #ifdef _64BIT
             "64000" << endl;
 #else
@@ -1830,38 +1830,38 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         cout << "option name Contempt type spin default 0 min -200 max 200" << endl;
 #ifdef SYZYGY_TBS
         cout << "option name Use tablebases type check default ";
-        if (options.search.use_tablebases) cout << "true"; else cout << "false";
+        if (globals::options.search.use_tablebases) cout << "true"; else cout << "false";
         cout << endl;
         cout << "option name SyzygyTbPath type string default " <<
-            options.search.syzygy_path << endl;
+            globals::options.search.syzygy_path << endl;
         cout << "option name SyzygyUse50MoveRule type check default true" << endl;
         cout << "option name SyzygyProbeDepth type spin default " <<
-            options.search.syzygy_probe_depth <<
+            globals::options.search.syzygy_probe_depth <<
            " min 0 max 64" << endl;
 #endif
         cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << endl;
         cout << "option name OwnBook type check default true" << endl;
         cout << "option name Favor frequent book moves type spin default " <<
-            options.book.frequency << " min 0 max 100" << endl;
+            globals::options.book.frequency << " min 0 max 100" << endl;
         cout << "option name Favor best book moves type spin default " <<
-            options.book.scoring << " min 0 max 100" << endl;
+            globals::options.book.scoring << " min 0 max 100" << endl;
         cout << "option name Favor high-weighted book moves type spin default " <<
-            options.book.weighting << " min 0 max 100" << endl;
+            globals::options.book.weighting << " min 0 max 100" << endl;
         cout << "option name Randomize book moves type spin default " <<
-            options.book.random << " min 0 max 100" << endl;
+            globals::options.book.random << " min 0 max 100" << endl;
         cout << "option name Threads type spin default " <<
-            options.search.ncpus << " min 1 max " <<
+            globals::options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << endl;
         cout << "option name UCI_LimitStrength type check default false" << endl;
         cout << "option name UCI_Elo type spin default " <<
-            1000+options.search.strength*16 << " min 1000 max 2600" << endl;
+            1000+globals::options.search.strength*16 << " min 1000 max 2600" << endl;
 #ifdef NNUE
         cout << "option name Use NNUE type check default true" << endl;
         cout << "option name NNUE file type string" << endl;
 #endif
 #ifdef NUMA
         cout << "option name Set processor affinity type check default " <<
-           (options.search.set_processor_affinity ? "true" : "false") << endl;
+           (globals::options.search.set_processor_affinity ? "true" : "false") << endl;
 #endif
         cout << "option name Move overhead type spin default " <<
             30 << " min 0 max 1000" << endl;
@@ -1889,7 +1889,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         }
         if (uciOptionCompare(name,"Hash")) {
             if (!memorySet) {
-                size_t old = options.search.hash_table_size;
+                size_t old = globals::options.search.hash_table_size;
                 // size is in megabytes
                 stringstream buf(value);
                 int size;
@@ -1898,9 +1898,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                     cout << "info problem setting hash size to " << buf.str() << endl;
                 }
                 else {
-                    options.search.hash_table_size = (size_t)size*1024L*1024L;
-                    if (old != options.search.hash_table_size) {
-                       searcher->resizeHash(options.search.hash_table_size);
+                    globals::options.search.hash_table_size = (size_t)size*1024L*1024L;
+                    if (old != globals::options.search.hash_table_size) {
+                       searcher->resizeHash(globals::options.search.hash_table_size);
                     }
                 }
             }
@@ -1924,91 +1924,91 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         }
 #ifdef SYZYGY_TBS
         else if (uciOptionCompare(name,"Use tablebases")) {
-            options.search.use_tablebases = (value == "true");
+            globals::options.search.use_tablebases = (value == "true");
         }
         else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
-           unloadTb();
-           options.search.syzygy_path = value;
-           options.search.use_tablebases = 1;
+           globals::unloadTb();
+           globals::options.search.syzygy_path = value;
+           globals::options.search.use_tablebases = 1;
         }
         else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
-           options.search.syzygy_50_move_rule = (value == "true");
+           globals::options.search.syzygy_50_move_rule = (value == "true");
         }
         else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
-           Options::setOption<int>(value,options.search.syzygy_probe_depth);
+           Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
         }
 #endif
         else if (uciOptionCompare(name,"OwnBook")) {
-            options.book.book_enabled = (value == "true");
+            globals::options.book.book_enabled = (value == "true");
         }
         else if (uciOptionCompare(name,"Favor frequent book moves")) {
-            Options::setOption<unsigned>(value,options.book.frequency);
+            Options::setOption<unsigned>(value,globals::options.book.frequency);
         }
         else if (uciOptionCompare(name,"Favor best book moves")) {
-            Options::setOption<unsigned>(value,options.book.scoring);
+            Options::setOption<unsigned>(value,globals::options.book.scoring);
         }
         else if (uciOptionCompare(name,"Favor high-weighted book moves")) {
-            Options::setOption<unsigned>(value,options.book.weighting);
+            Options::setOption<unsigned>(value,globals::options.book.weighting);
         }
         else if (uciOptionCompare(name,"Randomize book moves")) {
-            Options::setOption<unsigned>(value,options.book.random);
+            Options::setOption<unsigned>(value,globals::options.book.random);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
-            Options::setOption<int>(value,options.search.multipv);
-            options.search.multipv = std::min<int>(Statistics::MAX_PV,options.search.multipv);
+            Options::setOption<int>(value,globals::options.search.multipv);
+            globals::options.search.multipv = std::min<int>(Statistics::MAX_PV,globals::options.search.multipv);
             // GUIs (Shredder at least) send 0 to turn multi-pv off: but
             // our option counts the # of lines to show, so we set it to
             // 1 in this case.
-            if (options.search.multipv == 0) options.search.multipv = 1;
+            if (globals::options.search.multipv == 0) globals::options.search.multipv = 1;
             stats.multipv_count = 0;
             // migrate current stats to 1st Multi-PV table entry:
             stats.multi_pvs[0] =
                 Statistics::MultiPVEntry(stats);
         }
         else if (uciOptionCompare(name,"Threads")) {
-            int threads = options.search.ncpus;
+            int threads = globals::options.search.ncpus;
             if (Options::setOption<int>(value,threads) && threads >0 && threads <= Constants::MaxCPUs) {
-                options.search.ncpus = threads;
-                searcher->setThreadCount(options.search.ncpus);
+                globals::options.search.ncpus = threads;
+                searcher->setThreadCount(globals::options.search.ncpus);
             }
         }
         else if (uciOptionCompare(name,"UCI_LimitStrength")) {
             uciStrengthOpts.limitStrength = (value == "true");
             if (uciStrengthOpts.limitStrength) {
-               options.setRating(uciStrengthOpts.eco);
+               globals::options.setRating(uciStrengthOpts.eco);
             } else {
                // reset to full strength
-               options.setRating(2600);
+               globals::options.setRating(2600);
             }
         } else if (uciOptionCompare(name,"UCI_Elo")) {
             int rating;
             if (Options::setOption<int>(value,rating)) {
                uciStrengthOpts.eco = rating;
                if (uciStrengthOpts.limitStrength) {
-                  options.setRating(rating);
+                  globals::options.setRating(rating);
                }
             }
 	}
 #ifdef NNUE
         else if (uciOptionCompare(name,"Use NNUE")) {
-           options.search.useNNUE = (value == "true");
+           globals::options.search.useNNUE = (value == "true");
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
-           Options::setOption<string>(value,options.search.nnueFile);
-           nnueInitDone = false; // force re-init
+           Options::setOption<string>(value,globals::options.search.nnueFile);
+           globals::nnueInitDone = false; // force re-init
 	}
 #endif
 #ifdef NUMA
         else if (uciOptionCompare(name,"Set processor affinity")) {
-           int tmp = options.search.set_processor_affinity;
-           options.search.set_processor_affinity = (value == "true");
-           if (tmp != options.search.set_processor_affinity) {
+           int tmp = globals::options.search.set_processor_affinity;
+           globals::options.search.set_processor_affinity = (value == "true");
+           if (tmp != globals::options.search.set_processor_affinity) {
                searcher->recalcBindings();
            }
         }
 #endif
         else if (uciOptionCompare(name,"Move overhead")) {
-           Options::setOption<int>(value,options.search.move_overhead);
+           Options::setOption<int>(value,globals::options.search.move_overhead);
         }
 #ifdef TUNE
         else {
@@ -2026,14 +2026,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         return true;
     }
     else if (uci && cmd == "isready") {
-        delayedInit();
+        globals::delayedInit();
         cout << "readyok" << endl;
     }
     else if (uci && cmd_word == "position") {
         ponder_move = NullMove;
         if (cmd_args.substr(0,8) == "startpos") {
             board.reset();
-            gameMoves->removeAll();
+            globals::gameMoves->removeAll();
         }
         else if (cmd_args.substr(0,3) == "fen") {
             string fen;
@@ -2051,7 +2051,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             last_stats.clear();
             last_move = NullMove;
             last_move_image.clear();
-            gameMoves->removeAll();
+            globals::gameMoves->removeAll();
             predicted_move = NullMove;
             ponder_status = PonderStatus::None;
         }
@@ -2066,7 +2066,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 if (!IsNull(m)) {
                    BoardState previous_state = board.state;
                    board.doMove(m);
-                   gameMoves->add_move(board,previous_state,m,"",false);
+                   globals::gameMoves->add_move(board,previous_state,m,"",false);
                 }
             }
         }
@@ -2203,10 +2203,10 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 cout << "File not found, or bad format." << endl;
             }
             else {
-                delayedInit();
+                globals::delayedInit();
 #ifdef SYZYGY_TBS
                 score_t tbscore;
-                if (options.search.use_tablebases) {
+                if (globals::options.search.use_tablebases) {
                    MoveSet rootMoves;
                    if (SyzygyTb::probe_root(board,board.anyRep(),tbscore,rootMoves) >= 0) {
                       cout << "score = ";
@@ -2357,7 +2357,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         // "isready" and so it is possible tablebases and book are
         // not initialized. Make sure they are before we execute
         // "go:"
-        delayedInit();
+        globals::delayedInit();
         if (do_ponder) {
             ponder(board,NullMove,NullMove,1);
             // We should not send the move unless we have received a
@@ -2386,7 +2386,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 if (doTrace) {
                     cout << debugPrefix() << "ponder stopped early" << endl;
                 }
-                Lock(input_lock);
+                Lock(globals::input_lock);
                 // To avoid races, check with the input mutux locked
                 // that we do not now have ponderhit or stop in the
                 // pending stack
@@ -2410,7 +2410,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 else if (doTrace) {
                     cout << debugPrefix() << "entering wait state" << endl << (flush);
                 }
-                Unlock(input_lock);
+                Unlock(globals::input_lock);
             }
         }
         else {
@@ -2455,9 +2455,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (cmd == "new") {
         if (!analyzeMode) save_game();
         board.reset();
-        bool wasEmpty = theLog->num_moves() == 0;
-        theLog->clear();
-        if (!uci && !wasEmpty) theLog->write_header();
+        bool wasEmpty = globals::theLog->num_moves() == 0;
+        globals::theLog->clear();
+        if (!uci && !wasEmpty) globals::theLog->write_header();
         computer_plays_white = false;
         // Note: "new" does not reset analyze mode
         forceMode = false;
@@ -2469,14 +2469,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         last_stats.clear();
         last_move = NullMove;
         last_move_image.clear();
-        gameMoves->removeAll();
+        globals::gameMoves->removeAll();
         predicted_move = NullMove;
         ponder_status = PonderStatus::None;
         start_fen.clear();
-        delayedInit();
+        globals::delayedInit();
         searcher->clearHashTables();
 #ifdef TUNE
-        tune_params.applyParams();
+        globals::tune_params.applyParams();
 #endif
         if (!analyzeMode && ics) {
            cout << "kib Hello from Arasan " << Arasan_Version << endl;
@@ -2493,34 +2493,34 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         cout << " egt=\"syzygy\"";
 #endif
         cout << " option=\"Favor frequent book moves -spin " <<
-            options.book.frequency << " 1 100\"";
+            globals::options.book.frequency << " 1 100\"";
         cout << " option=\"Favor best book moves -spin " <<
-            options.book.scoring << " 1 100\"";
+            globals::options.book.scoring << " 1 100\"";
         cout << " option=\"Favor high-weighted book moves -spin " <<
-            options.book.weighting << " 1 100\"";
+            globals::options.book.weighting << " 1 100\"";
         cout << " option=\"Randomize book moves -spin " <<
-            options.book.random << " 1 100\"";
+            globals::options.book.random << " 1 100\"";
         cout << " option=\"Can resign -check " <<
-            options.search.can_resign << "\"";
+            globals::options.search.can_resign << "\"";
         cout << " option=\"Resign threshold -spin " <<
-            options.search.resign_threshold << " -1000 0" << "\"";
+            globals::options.search.resign_threshold << " -1000 0" << "\"";
         cout << " option=\"Position learning -check " <<
-            options.learning.position_learning << "\"";
+            globals::options.learning.position_learning << "\"";
         // strength option (new for 14.2)
-        cout << " option=\"Strength -spin " << options.search.strength << " 0 100\"";
+        cout << " option=\"Strength -spin " << globals::options.search.strength << " 0 100\"";
 #ifdef NNUE
-        cout << " option=\"Use NNUE -check " << options.search.useNNUE << "\"";
-        cout << " option=\"NNUE file -string " << options.search.nnueFile << "\"";
+        cout << " option=\"Use NNUE -check " << globals::options.search.useNNUE << "\"";
+        cout << " option=\"NNUE file -string " << globals::options.search.nnueFile << "\"";
 #endif
 #ifdef NUMA
         cout << " option=\"Set processor affinity -check " <<
-            options.search.set_processor_affinity << "\"" << endl;
+            globals::options.search.set_processor_affinity << "\"" << endl;
 #endif
         cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"" << endl;
         cout << "myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
         // set done = 0 because it may take some time to initialize tablebases.
         cout << "feature done=0" << endl;
-        delayedInit();
+        globals::delayedInit();
         cout << "feature done=1" << endl;
         xboard42 = true;
     }
@@ -2541,9 +2541,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         // list book moves
 	vector<Move> moves;
         unsigned count = 0;
-        delayedInit(); // to allow "bk" before "new"
-        if (options.book.book_enabled) {
-            count = openingBook.book_moves(*main_board,moves);
+        globals::delayedInit(); // to allow "bk" before "new"
+        if (globals::options.book.book_enabled) {
+            count = globals::openingBook.book_moves(*main_board,moves);
         }
         if (count == 0) {
             cout << '\t' << "No book moves for this position." << endl
@@ -2595,10 +2595,10 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     }
     else if (cmd_word == "result") {
         // Game has ended
-        theLog->setResult(cmd_args.c_str());
+        globals::theLog->setResult(cmd_args.c_str());
         save_game();
         game_end = true;
-        gameMoves->removeAll();
+        globals::gameMoves->removeAll();
         // Note: xboard may not send "new" before starting a new
         // game, at least in offline mode (-cp). To be safe,
         // execute "new" now, so we are ready for another game.
@@ -2617,9 +2617,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         // our opponent has resigned
         cout << debugPrefix() << "setting log result" << endl;
         if (computer_plays_white)
-            theLog->setResult("0-1");
+            globals::theLog->setResult("0-1");
         else
-            theLog->setResult("1-0");
+            globals::theLog->setResult("1-0");
         cout << debugPrefix() << "set log result" << endl;
     }
     else if (cmd == "draw") {
@@ -2714,15 +2714,15 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         if (!cpusSet) {
            // set number of threads
            stringstream ss(cmd_args);
-           if((ss >> options.search.ncpus).fail()) {
+           if((ss >> globals::options.search.ncpus).fail()) {
                cerr << "invalid value following 'cores'" << endl;
            } else {
               if (doTrace) {
-                 cout << debugPrefix() << "setting cores to " << options.search.ncpus << endl;
+                 cout << debugPrefix() << "setting cores to " << globals::options.search.ncpus << endl;
               }
-              options.search.ncpus = std::min<int>(options.search.ncpus,Constants::MaxCPUs);
+              globals::options.search.ncpus = std::min<int>(globals::options.search.ncpus,Constants::MaxCPUs);
               searcher->updateSearchOptions();
-              searcher->setThreadCount(options.search.ncpus);
+              searcher->setThreadCount(globals::options.search.ncpus);
            }
         }
     }
@@ -2741,9 +2741,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                if (doTrace) {
                    cout << debugPrefix() << "setting hash size to " << mb_size << " bytes " << endl << (flush);
                }
-               options.search.hash_table_size = mb_size;
+               globals::options.search.hash_table_size = mb_size;
                searcher->updateSearchOptions();
-               searcher->resizeHash(options.search.hash_table_size);
+               searcher->resizeHash(globals::options.search.hash_table_size);
            }
         }
         else {
@@ -2771,18 +2771,18 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 #endif
 #ifdef SYZYGY_TBS
         // Unload existing tb set if in use and if path has changed
-        if (options.tbPath() != path) {
+        if (globals::options.tbPath() != path) {
            if (doTrace) cout << debugPrefix() << "unloading tablebases" << endl;
-           unloadTb();
+           globals::unloadTb();
         }
-        // Set the tablebase options. But do not initialize the
-        // tablebases here. Defer until delayedInit is called again.
+        // Set the tablebase globals::options. But do not initialize the
+        // tablebases here. Defer until globals::delayedInit is called again.
         // One reason to do this is that we may receive multiple
         // egtpath commands from Winboard.
-        options.search.use_tablebases = 1;
-        options.search.syzygy_path = path;
+        globals::options.search.use_tablebases = 1;
+        globals::options.search.syzygy_path = path;
         if (doTrace) {
-           cout << debugPrefix() << "setting Syzygy tb path to " << options.search.syzygy_path << endl;
+           cout << debugPrefix() << "setting Syzygy tb path to " << globals::options.search.syzygy_path << endl;
         }
 #endif
     }

@@ -308,7 +308,7 @@ void Scoring::initBitboards() {
 void Scoring::init() {
    initBitboards();
 #ifdef TUNE
-   tune_params.applyParams();
+   globals::tune_params.applyParams();
 #endif
 }
 
@@ -1760,9 +1760,9 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    // scale scores by game phase
    score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
 
-   if (options.search.strength < 100) {
+   if (globals::options.search.strength < 100) {
       // "flatten" positional score values
-      score = score * std::max<int>(100,options.search.strength*options.search.strength) / 10000;
+      score = score * std::max<int>(100,globals::options.search.strength*globals::options.search.strength) / 10000;
    }
 
    if (board.sideToMove() == Black) {
@@ -2387,13 +2387,13 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
           return -node->staticEval;
       }
        */
-      nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::White);
-      nnue::Evaluator<ChessInterface>::updateAccum(network,intf,nnue::Black);
+      nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::White);
+      nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::Black);
 #ifdef _DEBUG
       assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Lower) == nnue::AccumulatorState::Computed);
       assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Upper) == nnue::AccumulatorState::Computed);
-      score_t score1 = static_cast<score_t>(network.evaluate(intf.getAccumulator()));
-      score_t score2 = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(network,intf));
+      score_t score1 = static_cast<score_t>(globals::network.evaluate(intf.getAccumulator()));
+      score_t score2 = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
       if (score1 != score2) {
           cout << board << endl;
           NodeInfo *n = node;
@@ -2406,10 +2406,10 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
           assert(0);
       }
 #endif
-      return static_cast<score_t>(network.evaluate(node->accum));
+      return static_cast<score_t>(globals::network.evaluate(node->accum));
    }
    else {
-      return static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(network,intf));
+      return static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
    }
 }
 #endif
@@ -2466,18 +2466,18 @@ void Params::write(ostream &o, const string &comment)
    o << "};" << endl;
    for (int i = Tune::PAWN_VALUE_MIDGAME; i <= Tune::QUEEN_VALUE_ENDGAME; i++) {
       o << "const int Params::";
-      for (auto it : tune_params[i].name) {
+      for (auto it : globals::tune_params[i].name) {
          o << (char)toupper((int)it);
       }
-      o << " = " << std::round(tune_params[i].current) << ";" << endl;
+      o << " = " << std::round(globals::tune_params[i].current) << ";" << endl;
    }
    int start = Tune::KING_COVER_BASE;
-   for (int i = start; i < start+tune_params.paramArraySize(); i++) {
+   for (int i = start; i < start+globals::tune_params.paramArraySize(); i++) {
       o << "const int Params::";
-      for (auto it : tune_params[i].name) {
+      for (auto it : globals::tune_params[i].name) {
          o << (char)toupper((int)it);
       }
-      o << " = " << std::round(tune_params[i].current) << ";" << endl;
+      o << " = " << std::round(globals::tune_params[i].current) << ";" << endl;
    }
    o << "const int Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);

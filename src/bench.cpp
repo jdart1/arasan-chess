@@ -1,4 +1,4 @@
-// Copyright 2020 by Jon Dart. All Rights Reserved
+// Copyright 2020-2021 by Jon Dart. All Rights Reserved
 #include "bench.h"
 #include "globals.h"
 #include "notation.h"
@@ -38,22 +38,22 @@ static const std::array<std::string,25> epds = {
 
 Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
 {
-    auto tmp_hash = options.search.hash_table_size;
-    int tmp_cores = options.search.ncpus;
-    options.search.hash_table_size = hashSize;
-    options.search.ncpus = std::min<int>(cores,Constants::MaxCPUs);
+    auto tmp_hash = globals::options.search.hash_table_size;
+    int tmp_cores = globals::options.search.ncpus;
+    globals::options.search.hash_table_size = hashSize;
+    globals::options.search.ncpus = std::min<int>(cores,Constants::MaxCPUs);
 
     SearchController *searcher = new SearchController();
     searcher->updateSearchOptions();
-    searcher->setThreadCount(options.search.ncpus);
+    searcher->setThreadCount(globals::options.search.ncpus);
 
     Results results;
     for (string s : epds) {
         benchLine(searcher, s, results, depth, verbose);
     }
     delete searcher;
-    options.search.hash_table_size = tmp_hash;
-    options.search.ncpus = tmp_cores;
+    globals::options.search.hash_table_size = tmp_hash;
+    globals::options.search.ncpus = tmp_cores;
     return results;
 }
 

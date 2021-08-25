@@ -18,8 +18,8 @@
 extern "C"
 {
 #include <string.h>
-#include <ctype.h>
 };
+#include <cctype>
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -191,11 +191,11 @@ int CDECL main(int argc, char **argv)
    Attacks::init();
    Scoring::init();
    Search::init();
-   if (!initGlobals(argv[0], false)) {
-      cleanupGlobals();
-      exit(-1);
+   if (!globals::initGlobals(argv[0], false)) {
+       globals::cleanupGlobals();
+       exit(-1);
    }
-   atexit(cleanupGlobals);
+   atexit(globals::cleanupGlobals);
 
    random_engine.seed(getRandomSeed());
 
@@ -258,7 +258,7 @@ int CDECL main(int argc, char **argv)
       Statistics stats;
 
       // This ensures PVs are not terminated by a hash hit
-      options.search.hash_table_size = 0;
+      globals::options.search.hash_table_size = 0;
 
       ifstream pgn_file(argv[arg], ios::in);
       ColorType side;

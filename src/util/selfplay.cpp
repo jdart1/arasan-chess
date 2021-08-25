@@ -88,7 +88,7 @@ static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
 static atomic<unsigned> gameCounter(0);
 
-struct SelfPlayOptions {
+static struct SelfPlayOptions {
     // Note: not all options are command-line settable, currently.
     enum class OutputFormat { Epd, Bin };
     unsigned minOutPly = 8;
@@ -392,13 +392,13 @@ static void selfplay(ThreadData &td) {
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
                 Lock(bookLock);
-                m = openingBook.pick(board);
+                m = globals::openingBook.pick(board);
                 Unlock(bookLock);
             }
             score_t score = 0;
             if (IsNull(m)) {
                 // Don't randomize if in TB range
-                bool skipRandom = int(board.men()) <= EGTBMenCount;
+                bool skipRandom = int(board.men()) <= globals::EGTBMenCount;
                 if (sp_options.randomize &&
                     ply + sp_options.maxBookPly < sp_options.randomizeRange &&
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
@@ -607,30 +607,30 @@ static void launch_threads() {
 int CDECL main(int argc, char **argv) {
     Bitboard::init();
     Board::init();
-    initOptions(argv[0]);
+    globals::initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
     Search::init();
-    if (!initGlobals(argv[0], false)) {
-        cleanupGlobals();
+    if (!globals::initGlobals(argv[0], false)) {
+        globals::cleanupGlobals();
         exit(-1);
     }
-    atexit(cleanupGlobals);
-    delayedInit();
-    if (EGTBMenCount) {
+    atexit(globals::cleanupGlobals);
+    globals::delayedInit();
+    if (globals::EGTBMenCount) {
         cerr << "Initialized tablebases" << endl;
     }
     LockInit(outputLock);
     LockInit(bookLock);
 
-    options.search.hash_table_size = 128 * 1024 * 1024;
-    options.book.frequency = 25;
-    options.book.weighting = 10;
-    options.book.scoring = 25;
-    options.book.random = 100;
-    options.learning.position_learning = 0;
-    options.search.can_resign = 1;
-    options.search.resign_threshold = -3000;
+    globals::options.search.hash_table_size = 128 * 1024 * 1024;
+    globals::options.book.frequency = 25;
+    globals::options.book.weighting = 10;
+    globals::options.book.scoring = 25;
+    globals::options.book.random = 100;
+    globals::options.learning.position_learning = 0;
+    globals::options.search.can_resign = 1;
+    globals::options.search.resign_threshold = -3000;
 
     int arg = 1;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {

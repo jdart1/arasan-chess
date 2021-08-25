@@ -606,8 +606,8 @@ static int testDrawEval() {
     };
     int errs = 0;
 #ifdef SYZYGY_TBS
-    int tmp = options.search.use_tablebases;
-    options.search.use_tablebases = 0;
+    int tmp = globals::options.search.use_tablebases;
+    globals::options.search.use_tablebases = 0;
 #endif
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
@@ -642,7 +642,7 @@ static int testDrawEval() {
 	delete s;
     }
 #ifdef SYZYGY_TBS
-    options.search.use_tablebases = tmp;
+    globals::options.search.use_tablebases = tmp;
 #endif
     return errs;
 }
@@ -841,9 +841,9 @@ static int testHash() {
     string fen4 = "5bk1/p1p3p1/8/2p2QP1/8/1P6/PBP2PP1/3q2K1 w - -";
     Board board;
 
-    bool tmp = options.learning.position_learning;
+    bool tmp = globals::options.learning.position_learning;
     // Prevent learning data from being loaded into hashtable
-    options.learning.position_learning = false;
+    globals::options.learning.position_learning = false;
 
     Hash hashTable;
     hashTable.initHash(4000);
@@ -1052,7 +1052,7 @@ static int testHash() {
         cerr << "testHash case 6: expected valid move" << endl;
     }
 
-    options.learning.position_learning = tmp;
+    globals::options.learning.position_learning = tmp;
     return errs;
 }
 
@@ -1520,20 +1520,20 @@ static int testTB()
       };
 
    int errs = 0;
-   delayedInit();
-   if (EGTBMenCount < 5) {
+   globals::delayedInit();
+   if (globals::EGTBMenCount < 5) {
       cerr << "TB tests skipped: no 5-man TBs found" << endl;
       return 0;
    }
-   if (EGTBMenCount < 6) {
+   if (globals::EGTBMenCount < 6) {
       cerr << "6-man TB tests skipped: no 6-man TBs found" << endl;
    }
-   if (EGTBMenCount < 7) {
+   if (globals::EGTBMenCount < 7) {
       cerr << "7-man TB tests skipped: no 7-man TBs found" << endl;
    }
    int caseid = 0;
-   int temp = options.search.syzygy_50_move_rule;
-   options.search.syzygy_50_move_rule = 1;
+   int temp = globals::options.search.syzygy_50_move_rule;
+   globals::options.search.syzygy_50_move_rule = 1;
    const auto count_pattern = std::regex("^.* (\\d+)\\s(\\d+)$");
    for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
       Board board;
@@ -1559,7 +1559,7 @@ static int testTB()
       MoveSet moves;
       score_t score;
       int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
-      if (men > EGTBMenCount) {
+      if (men > globals::EGTBMenCount) {
           continue;
       } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
          if (score != it->result) {
@@ -1618,7 +1618,7 @@ static int testTB()
           ++errs;
       }
    }
-   options.search.syzygy_50_move_rule = temp;
+   globals::options.search.syzygy_50_move_rule = temp;
    return errs;
 }
 #endif

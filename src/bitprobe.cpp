@@ -22,15 +22,15 @@ int lookupBitbase(Square whiteK, Square whiteP, Square blackK,
    ColorType strongerSide, ColorType sideToMove) {
    if (strongerSide == White) {
       if (sideToMove == White)
-        return lookupBitbase(baseKPKW,getIndex(whiteP,whiteK,blackK));
+        return lookupBitbase(globals::baseKPKW,getIndex(whiteP,whiteK,blackK));
       else
-        return lookupBitbase(baseKPKB,getIndex(whiteP,whiteK,blackK));
+        return lookupBitbase(globals::baseKPKB,getIndex(whiteP,whiteK,blackK));
    }
    else {
       if (sideToMove == White)
-        return lookupBitbase(baseKPKB,getIndex(Flip[whiteP],Flip[whiteK],Flip[blackK]));
+        return lookupBitbase(globals::baseKPKB,getIndex(Flip[whiteP],Flip[whiteK],Flip[blackK]));
       else
-        return lookupBitbase(baseKPKW,getIndex(Flip[whiteP],Flip[whiteK],Flip[blackK]));
+        return lookupBitbase(globals::baseKPKW,getIndex(Flip[whiteP],Flip[whiteK],Flip[blackK]));
    }
 }
 
@@ -45,18 +45,18 @@ int lookupBitbase(const Board &board) {
      Square pawnSq = board.pawn_bits[White].firstOne();
      index = getIndex(pawnSq,board.kingSquare(White),board.kingSquare(Black));
      if (board.sideToMove() == Black)
-        return lookupBitbase(baseKPKB,index);
+        return lookupBitbase(globals::baseKPKB,index);
      else
-        return lookupBitbase(baseKPKW,index);
+        return lookupBitbase(globals::baseKPKW,index);
    }
    else if (bMat.infobits() == Material::KP &&
        wMat.kingOnly()) {
      Square pawnSq = board.pawn_bits[Black].firstOne();
      index = getIndex(pawnSq,board.kingSquare(Black),board.kingSquare(White));
      if (board.sideToMove() == Black)
-        return lookupBitbase(baseKPKW,index);
+        return lookupBitbase(globals::baseKPKW,index);
      else
-        return lookupBitbase(baseKPKB,index);
+        return lookupBitbase(globals::baseKPKB,index);
    }
    return NOHIT; // shouldn't get here
 }
@@ -104,14 +104,14 @@ void generateBitBase() {
          }
       }
    }
-   cout << "const CACHE_ALIGN uint8_t baseKPKW[24576] = {" << endl;
+   cout << "const CACHE_ALIGN uint8_t globals::baseKPKW[24576] = {" << endl;
    for (int i = 0; i < 24576; i++) {
        cout << " 0x" << (hex) << (unsigned int)bKPKW[i];
        if (i != 24575) cout << ",";
        if (((i+1) % 12) == 0) cout << endl;
    }
    cout << "};" << endl;
-   cout << "const CACHE_ALIGN uint8_t baseKPKB[24576] = {" << endl;
+   cout << "const CACHE_ALIGN uint8_t globals::baseKPKB[24576] = {" << endl;
    for (int i = 0; i < 24576; i++) {
        cout << " 0x" << (hex) << (unsigned int)bKPKB[i];
        if (i != 24575) cout << ",";

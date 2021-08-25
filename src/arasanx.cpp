@@ -50,11 +50,11 @@ static void processCmdChars(Protocol *p,char *buf,int len) {
             cmd_buf += c;
         }
     }
-    Lock(input_lock);
+    Lock(globals::input_lock);
     if (p->hasPending() && !p->isSearching()) {
-        inputSem.signal();
+        globals::inputSem.signal();
     }
-    Unlock(input_lock);
+    Unlock(globals::input_lock);
 }
 
 #ifdef _WIN32
@@ -64,7 +64,7 @@ static DWORD WINAPI inputPoll(void *x) {
    Protocol *p = static_cast<Protocol *>(x);
    if (p->traceOn()) cout << "# starting poll thread" << endl;
    char buf[1024];
-   while (!polling_terminated) {
+   while (!globals::polling_terminated) {
       BOOL bSuccess;
       DWORD dwRead;
       if (_isatty(_fileno(stdin))) {
@@ -96,7 +96,7 @@ static void * CDECL inputPoll(void *x) {
     if (p->traceOn()) cout << "# starting poll thread" << endl;
     static const int INPUT_BUF_SIZE = 1024;
     char buf[INPUT_BUF_SIZE];
-    while (!polling_terminated) {
+    while (!globals::polling_terminated) {
         fd_set readfds;
         struct timeval tv;
         int data;
@@ -149,19 +149,19 @@ int CDECL main(int argc, char **argv) {
 
     Bitboard::init();
     Board::init();
-    initOptions(argv[0]);
+    globals::initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
     Search::init();
-    if (!initGlobals(argv[0], true)) {
-        cleanupGlobals();
+    if (!globals::initGlobals(argv[0], true)) {
+        globals::cleanupGlobals();
         exit(-1);
     }
-    atexit(cleanupGlobals);
+    atexit(globals::cleanupGlobals);
 
 #ifndef _WIN32
     struct rlimit rl;
-    const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
+    const rlim_t STACK_MAX = static_cast<rlim_t>(globals::LINUX_STACK_SIZE);
     auto result = getrlimit(RLIMIT_STACK, &rl);
     if (result == 0)
     {
@@ -189,9 +189,9 @@ int CDECL main(int argc, char **argv) {
             switch (c) {
             case 'c':
                 ++arg;
-                options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
+                globals::options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
                 cpusSet = true;
-                if (options.search.ncpus<=0) {
+                if (globals::options.search.ncpus<=0) {
                     cerr << "-c parameter must be >=1" << endl;
                     exit(-1);
                 }
@@ -219,7 +219,7 @@ int CDECL main(int argc, char **argv) {
                 break;
             case 'H':
                 ++arg;
-                Options::setMemoryOption(options.search.hash_table_size,
+                Options::setMemoryOption(globals::options.search.hash_table_size,
                                          string(argv[arg]));
                 memorySet = true;
                 break;
@@ -286,17 +286,17 @@ int CDECL main(int argc, char **argv) {
 #endif
 
 #ifdef UNIT_TESTS
-    delayedInit(); // ensure all init is done including TBs, network
+    globals::delayedInit(); // ensure all init is done including TBs, network
     int errs = doUnit();
     cout << "Unit tests ran: " << errs << " error(s)" << endl;
 #endif
 
-    p->poll(polling_terminated);
+    p->poll(globals::polling_terminated);
 
 #ifdef _WIN32
     TerminateThread(pollingThreadHandle,0);
 #else
-    polling_terminated = true;
+    globals::polling_terminated = true;
     void *value_ptr;
     pthread_join(pollingThreadHandle,&value_ptr);
 #endif

@@ -23,21 +23,21 @@ int CDECL main(int argc, char **argv)
 {
    Bitboard::init();
    Board::init();
-   initOptions(argv[0]);
+   globals::initOptions(argv[0]);
    Attacks::init();
    Scoring::init();
-    Search::init();
-   options.search.hash_table_size = 64*1024*1024;
-   if (!initGlobals(argv[0], false)) {
-      cleanupGlobals();
-      exit(-1);
+   Search::init();
+   globals::options.search.hash_table_size = 64*1024*1024;
+   if (!globals::initGlobals(argv[0], false)) {
+       globals::cleanupGlobals();
+       exit(-1);
    }
-   atexit(cleanupGlobals);
-   delayedInit();
-   if (EGTBMenCount) {
+   atexit(globals::cleanupGlobals);
+   globals::delayedInit();
+   if (globals::EGTBMenCount) {
       cerr << "Initialized tablebases" << endl;
    }
-   options.book.book_enabled = options.log_enabled = 0;
+   globals::options.book.book_enabled = globals::options.log_enabled = 0;
 
    int minMoves = 30;
    int minELO = 0;

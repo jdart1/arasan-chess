@@ -100,7 +100,7 @@ Move BookReader::pick(const Board &b) {
       counts[2] = info.draw;
       // compute a sample based on the count distribution and
       // calculate its reward
-      auto reward = (sample_dirichlet(counts)*options.book.scoring)/50;
+      auto reward = (sample_dirichlet(counts)*globals::options.book.scoring)/50;
 #ifdef _TRACE
       cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw) << "]";
       cout << " reward=" << reward;
@@ -108,20 +108,20 @@ Move BookReader::pick(const Board &b) {
       if (info.weight != book::NO_RECOMMEND) {
           // boost reward according to explicit weight
           const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
-          reward = reward*(1.0+(2*(weightAdjust-0.5)*options.book.weighting)/100);
+          reward = reward*(1.0+(2*(weightAdjust-0.5)*globals::options.book.weighting)/100);
 #ifdef _TRACE
           cout << " weightAdjust=" << weightAdjust << " new reward=" << reward;
 #endif
       }
       // add a small bonus for very frequent moves. Note: moves
       // with weights below neutral get less of a frequency bonus.
-      double reduce = 1.0 - ((1.0-std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT))*options.book.weighting)/100;
-      reward += 0.1*log10(double(info.count()))*reduce*options.book.frequency/100;
+      double reduce = 1.0 - ((1.0-std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT))*globals::options.book.weighting)/100;
+      reward += 0.1*log10(double(info.count()))*reduce*globals::options.book.frequency/100;
 #ifdef _TRACE
       cout << " after freq bonus: " << reward;
 #endif
       // add a random amount based on randomness parameter
-      std::normal_distribution<double> dist(0,0.002*options.book.random);
+      std::normal_distribution<double> dist(0,0.002*globals::options.book.random);
       double rand = dist(engine);
 #ifdef _TRACE
       cout << " random: " << rand;
@@ -250,11 +250,11 @@ double BookReader::sample_dirichlet(const array<double,OUTCOMES> &counts, score_
 
 void BookReader::filterByFreq(vector<book::DataEntry> &results)
 {
-   const double freqThreshold = pow(10.0,(options.book.frequency-100.0)/40.0);
+   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/40.0);
 
    unsigned minCount = 0;
-   if (options.search.strength < 100) {
-      minCount = (uint32_t)1<<((100-options.search.strength)/10);
+   if (globals::options.search.strength < 100) {
+      minCount = (uint32_t)1<<((100-globals::options.search.strength)/10);
    }
    unsigned maxCount = 0;
    for (const book::DataEntry &info : results) {

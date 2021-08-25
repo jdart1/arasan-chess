@@ -602,14 +602,14 @@ int CDECL main(int argc, char **argv)
 
    Bitboard::init();
    Board::init();
-   initOptions(argv[0]);
+   globals::initOptions(argv[0]);
    Attacks::init();
    Scoring::init();
-   if (!initGlobals(argv[0], false)) {
-      cleanupGlobals();
+   if (!globals::initGlobals(argv[0], false)) {
+      globals::cleanupGlobals();
       exit(-1);
    }
-   atexit(cleanupGlobals);
+   atexit(globals::cleanupGlobals);
 
    hashTable =  new unordered_map< uint64_t, BookEntry*>;
    moveEvals.insert(std::pair<string,MoveEval>("$1",GOOD_MOVE));

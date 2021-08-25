@@ -12,11 +12,11 @@
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
 
-bool tb_init_done()
+bool globals::tb_init_done()
 {
    return tb_init;
 }
-int EGTBMenCount = 0;
+int globals::EGTBMenCount = 0;
 #endif
 
 #ifdef _WIN32
@@ -25,23 +25,23 @@ static constexpr char PATH_CHAR = '\\';
 static constexpr char PATH_CHAR = '/';
 #endif
 
-MoveArray *gameMoves;
-Options options;
-BookReader openingBook;
-Log *theLog = nullptr;
-string learnFileName;
-LockDefine(input_lock);
+MoveArray *globals::gameMoves;
+Options globals::options;
+BookReader globals::openingBook;
+Log *globals::theLog = nullptr;
+string globals::learnFileName;
+LockDefine(globals::input_lock);
 #ifdef SYZYGY_TBS
-LockDefine(syzygy_lock);
+LockDefine(globals::syzygy_lock);
 #endif
-bool polling_terminated;
-ThreadControl inputSem;
+bool globals::polling_terminated;
+ThreadControl globals::inputSem;
 #ifdef TUNE
-Tune tune_params;
+Tune globals::tune_params;
 #endif
 #ifdef NNUE
-nnue::Network network;
-bool nnueInitDone = false;
+nnue::Network globals::network;
+bool globals::nnueInitDone = false;
 #endif
 
 static const char * LEARN_FILE_NAME = "arasan.lrn";
@@ -50,16 +50,15 @@ static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
 
-const size_t LINUX_STACK_SIZE = 8*1024*1024;
+const size_t globals::LINUX_STACK_SIZE = 8*1024*1024;
+
+static string programPath;
 
 #ifdef NNUE
+
 // TBD: add version/hash?
-const char * DEFAULT_NETWORK_NAME = "arasan.nnue";
-#endif
+const char * globals::DEFAULT_NETWORK_NAME = "arasan.nnue";
 
-string programPath;
-
-#ifdef NNUE
 static bool absolutePath(const std::string &fileName) {
 #ifdef _WIN32
     auto pos = fileName.find(':');
@@ -75,11 +74,11 @@ static bool absolutePath(const std::string &fileName) {
 }
 #endif
 
-string derivePath(const std::string &fileName) {
+string globals::derivePath(const std::string &fileName) {
    return derivePath(programPath,fileName);
 }
 
-string derivePath(const std::string &base, const std::string &fileName) {
+string globals::derivePath(const std::string &base, const std::string &fileName) {
     std::string result(base);
     size_t pos;
     pos = result.rfind(PATH_CHAR,std::string::npos);
@@ -91,7 +90,7 @@ string derivePath(const std::string &base, const std::string &fileName) {
     }
 }
 
-int initGlobals(const char *pathName, bool initLog) {
+int globals::initGlobals(const char *pathName, bool initLog) {
    programPath = pathName;
    gameMoves = new MoveArray();
    polling_terminated = false;
@@ -114,7 +113,7 @@ return 1;
 }
 
 #ifdef NNUE
-int loadNetwork(const std::string &fname) {
+int globals::loadNetwork(const std::string &fname) {
    std::ifstream in(fname,ios_base::in | ios_base::binary);
    in >> network;
    if (!in.good()) {
@@ -124,7 +123,7 @@ int loadNetwork(const std::string &fname) {
 }
 #endif
 
-void CDECL cleanupGlobals(void) {
+void CDECL globals::cleanupGlobals(void) {
    openingBook.close();
    delete gameMoves;
    delete theLog;
@@ -137,7 +136,7 @@ void CDECL cleanupGlobals(void) {
    Board::cleanup();
 }
 
-void initOptions(const char *pathName) {
+void globals::initOptions(const char *pathName) {
     programPath = pathName;
     string rcPath = derivePath(RC_FILE_NAME);
     // try to read arasan.rc file
@@ -153,9 +152,9 @@ void initOptions(const char *pathName) {
     learnFileName = derivePath(LEARN_FILE_NAME);
 }
 
-void delayedInit() {
+void globals::delayedInit() {
 #ifdef SYZYGY_TBS
-   if (options.search.use_tablebases && !tb_init_done()) {
+    if (options.search.use_tablebases && !globals::tb_init_done()) {
        EGTBMenCount = 0;
        string path;
        if (options.search.syzygy_path == "") {
@@ -191,7 +190,7 @@ void delayedInit() {
     }
 }
 
-   void unloadTb() {
+void globals::unloadTb() {
 #ifdef SYZYGY_TBS
    if (tb_init_done()) {
       // Note: Syzygy code will free any existing memory if

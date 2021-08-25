@@ -32,8 +32,8 @@ extern "C" {
 
 // Parameter tuning code for Arasan.
 // Implements the "Texel" tuning method.
-//
-// Note: this file requires a C++11 compatible compiler/libraries.
+
+using globals::tune_params;
 
 static bool regularize = false;
 
@@ -1748,15 +1748,15 @@ int CDECL main(int argc, char **argv)
 {
     Bitboard::init();
     Board::init();
-    initOptions(argv[0]);
+    globals::initOptions(argv[0]);
     Attacks::init();
     Scoring::init();
-    if (!initGlobals(argv[0], false)) {
-        cleanupGlobals();
+    if (!globals::initGlobals(argv[0], false)) {
+        globals::cleanupGlobals();
         exit(-1);
     }
-    atexit(cleanupGlobals);
-    delayedInit();
+    atexit(globals::cleanupGlobals);
+    globals::delayedInit();
 
     string input_file;
 
@@ -1899,13 +1899,13 @@ int CDECL main(int argc, char **argv)
        }
     }
 
-    options.search.hash_table_size = 0;
-    options.search.easy_plies = 0;
-    options.learning.position_learning = 0;
-    options.book.book_enabled = options.log_enabled = 0;
-    options.learning.position_learning = false;
+    globals::options.search.hash_table_size = 0;
+    globals::options.search.easy_plies = 0;
+    globals::options.learning.position_learning = 0;
+    globals::options.book.book_enabled = globals::options.log_enabled = 0;
+    globals::options.learning.position_learning = false;
 #ifdef SYZYGY_TBS
-    options.search.use_tablebases = false;
+    globals::options.search.use_tablebases = false;
 #endif
     pos_file_name = argv[arg];
 

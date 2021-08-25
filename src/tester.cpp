@@ -1,4 +1,4 @@
-// Copyright 1997-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2021 by Jon Dart. All Rights Reserved.
 //
 #include "tester.h"
 #include "chessio.h"
@@ -23,11 +23,11 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
         depth_limit = Constants::MaxPly;
     }
     
-    Options tmp = options;
-    options.book.book_enabled = 0;
-    options.learning.position_learning = 0;
+    Options tmp(globals::options);
+    globals::options.book.book_enabled = 0;
+    globals::options.learning.position_learning = 0;
 
-    delayedInit();
+    globals::delayedInit();
 
     Board board;
     ifstream pos_file( test_file.c_str(), ios::in);
@@ -141,7 +141,7 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
                 cout << "\tscore: ";
                 Scoring::printScore(stats.display_value,cout);
                 cout <<  '\t';
-                gameMoves->removeAll();
+                globals::gameMoves->removeAll();
 
                 searcher->registerPostFunction(old_post);
                 searcher->registerMonitorFunction(old_monitor);
@@ -246,7 +246,7 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
         cout << avg << "depth to solution : " << (float)(testTotals.depth_to_find_total)/testTotals.total_correct << endl;
         cout << avg << "time to solution  : " << (float)(testTotals.time_to_find_total)/(1000.0*testTotals.total_correct) << " sec." << endl;
     }
-    options = tmp;
+    globals::options = tmp;
 }
 
 bool Tester::solution_match(const vector<Move> &solution_moves,

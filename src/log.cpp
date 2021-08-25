@@ -51,15 +51,15 @@ Log::Log()
    my_current = 0;
    enabled = 0;
    string log_path;
-   if (options.log_enabled) {
-      if (options.log_pathname == "") {
+   if (globals::options.log_enabled) {
+      if (globals::options.log_pathname == "") {
          // find the last part of the program pathname
-         log_path = derivePath(LOG_FILE_NAME);
+         log_path = globals::derivePath(LOG_FILE_NAME);
       }
       else {
-         log_path = options.log_pathname;
+         log_path = globals::options.log_pathname;
       }
-      if (options.log_append) {
+      if (globals::options.log_append) {
          log_file.open(log_path.c_str(),ios::out|ios::app);
       }
       else {

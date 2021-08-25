@@ -1,4 +1,4 @@
-// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020 Jon Dart. All Rights Reserved.
+// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020-2021 Jon Dart. All Rights Reserved.
 
 #include "hash.h"
 #include "constant.h"
@@ -76,7 +76,7 @@ void Hash::clearHash()
    for (size_t i = 0; i < hashSize; i++) {
        hashTable[i] = empty;
    }
-   if (options.learning.position_learning) {
+   if (globals::options.learning.position_learning) {
       loadLearnInfo();
     }
 }
@@ -84,9 +84,9 @@ void Hash::clearHash()
 
 void Hash::loadLearnInfo()
 {
-   if (hashSize && options.learning.position_learning) {
+   if (hashSize && globals::options.learning.position_learning) {
       ifstream plog;
-      plog.open(learnFileName.c_str(),ios_base::in);
+      plog.open(globals::learnFileName.c_str(),ios_base::in);
       while (plog.good() && !plog.eof()) {
          LearnRecord rec;
          if (getLearnRecord(plog,rec)) {

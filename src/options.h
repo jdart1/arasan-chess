@@ -12,8 +12,6 @@ using namespace std;
 class Options
 {
  public:
-  enum class TbType {None, NalimovTb, GaviotaTb, SyzygyTb};
-
   struct BookOptions {
     BookOptions()
        : frequency(50),
@@ -95,10 +93,6 @@ class Options
    }
 
    static void setMemoryOption(size_t &value, const string &valueString);
-
-   static TbType stringToTbType(const string &);
-
-   static string tbTypeToString(TbType);
 
    string tbPath() const;
 

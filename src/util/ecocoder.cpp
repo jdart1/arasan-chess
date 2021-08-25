@@ -41,11 +41,11 @@ int CDECL main(int argc, char **argv)
    Board::init();
    Attacks::init();
    Scoring::init();
-   if (!initGlobals(argv[0], false)) {
-      cleanupGlobals();
+   if (!globals::initGlobals(argv[0], false)) {
+      globals::cleanupGlobals();
       exit(-1);
    }
-   atexit(cleanupGlobals);
+   atexit(globals::cleanupGlobals);
 
    Board board;
    ECO eco;

@@ -18,11 +18,12 @@
 #include "nnue/nnue.h"
 #endif
 
+namespace globals {
+
 extern Options options;
 extern MoveArray *gameMoves;
 
 extern string learnFileName;
-extern string programPath;
 extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
@@ -46,10 +47,10 @@ extern CACHE_ALIGN const uint8_t baseKPKB[24576];
 
 #include <iostream>
 #ifdef _THREAD_TRACE
-#include <stdio.h>
+#include <cstdio>
 #endif
 
-extern bool tb_init_done(const Options::TbType);
+extern bool tb_init_done();
 
 extern const char *DEFAULT_NETWORK_NAME;
 
@@ -73,5 +74,7 @@ extern void delayedInit();
 
 // Attempt to unload the tablebases (if in use),
 extern void unloadTb();
+
+}
 
 #endif

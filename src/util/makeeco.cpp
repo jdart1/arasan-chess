@@ -137,14 +137,14 @@ int CDECL main(int argc, char **argv)
    }
    Bitboard::init();
    Board::init();
-   initOptions(argv[0]);
+   globals::initOptions(argv[0]);
    Attacks::init();
    Scoring::init();
-   if (!initGlobals(argv[0], false)) {
-       cleanupGlobals();
+   if (!globals::initGlobals(argv[0], false)) {
+       globals::cleanupGlobals();
        exit(-1);
    }
-   atexit(cleanupGlobals);
+   atexit(globals::cleanupGlobals);
    
    ifstream eco_file( argv[argc-1], ios::in);
    if (!eco_file.good())

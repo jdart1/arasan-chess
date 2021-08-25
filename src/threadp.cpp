@@ -203,8 +203,8 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
         perror("pthread_attr_getstacksize");
         return;
    }
-   if (stackSize < LINUX_STACK_SIZE) {
-      if (pthread_attr_setstacksize (&stackSizeAttrib, LINUX_STACK_SIZE)) {
+   if (stackSize < globals::LINUX_STACK_SIZE) {
+      if (pthread_attr_setstacksize (&stackSizeAttrib, globals::LINUX_STACK_SIZE)) {
          perror("error setting thread stack size");
       }
    }

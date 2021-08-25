@@ -471,10 +471,10 @@ int RootMoveGenerator::rank_root_moves()
     const Material &bMat = board.getMaterial(Black);
     int tb_pieces = wMat.men() + bMat.men();
     int tb_hit = 0;
-    if (tb_pieces <= EGTBMenCount && !board.castlingPossible()) {
+    if (tb_pieces <= globals::EGTBMenCount && !board.castlingPossible()) {
         tb_hit = SyzygyTb::rank_root_moves(board,
                                            board.anyRep(),
-                                           options.search.syzygy_50_move_rule,
+                                           globals::options.search.syzygy_50_move_rule,
                                            moveList);
     }
     if (tb_hit) {

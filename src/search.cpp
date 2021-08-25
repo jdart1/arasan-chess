@@ -174,11 +174,11 @@ SearchController::SearchController()
     sample_counter = SAMPLE_INTERVAL;
 #endif
     random_engine.seed(getRandomSeed());
-    pool = new ThreadPool(this,options.search.ncpus);
+    pool = new ThreadPool(this,globals::options.search.ncpus);
 
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
-    hashTable.initHash((size_t)(options.search.hash_table_size));
+    hashTable.initHash((size_t)(globals::options.search.hash_table_size));
 }
 
 SearchController::~SearchController() {
@@ -259,7 +259,7 @@ Move SearchController::findBestMove(
     maxBoostFactor = -1.0;
     maxBoostDepth = 0;
     search_counts.fill(0);
-    search_counts[0] = options.search.ncpus;
+    search_counts[0] = globals::options.search.ncpus;
     if (srcType == FixedTime || srcType == TimeLimit) {
         ply_limit = Constants::MaxPly-1;
     }
@@ -351,9 +351,9 @@ Move SearchController::findBestMove(
 
    // Implement strength reduction if enabled. But do not reduce
    // strength in analysis mode.
-   if (options.search.strength < 100 && (background || time_target != INFINITE_TIME)) {
+   if (globals::options.search.strength < 100 && (background || time_target != INFINITE_TIME)) {
       const int mgCount = mg->moveCount();
-      const double factor = 1.0/ply_limit + (100-options.search.strength)/250.0;
+      const double factor = 1.0/ply_limit + (100-globals::options.search.strength)/250.0;
       if (background) {
          waitTime = 0;
       } else {
@@ -367,14 +367,14 @@ Move SearchController::findBestMove(
       select_subopt = random(1024);
       // adjust time check interval since we are lowering nps
       timeCheckInterval = std::max<int>(1,timeCheckInterval / (1+8*int(factor)));
-      if (options.search.strength <= 95) {
-         const double limit = pow(2.1,options.search.strength/25.0)-0.25;
+      if (globals::options.search.strength <= 95) {
+         const double limit = pow(2.1,globals::options.search.strength/25.0)-0.25;
          double int_limit;
          double frac_limit = modf(limit,&int_limit);
          int new_ply_limit = std::max(1,int(int_limit));
          if (board.getMaterial(White).materialLevel() +
              board.getMaterial(Black).materialLevel() < 16 &&
-             options.search.strength > 10) {
+             globals::options.search.strength > 10) {
             // increase ply limit in endgames
             new_ply_limit += std::min<int>(2,1+new_ply_limit/8);
          }
@@ -397,14 +397,14 @@ Move SearchController::findBestMove(
    updateSearchOptions();
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
-   if (options.search.use_tablebases) {
+   if (globals::options.search.use_tablebases) {
        // Lock because the following calls is not thread-safe. In normal use
        // we don't need to worry about this, but it is possible there are
        // two concurrent SearchController instances in a program, in which case
        // it matters.
-       Lock(syzygy_lock);
+       Lock(globals::syzygy_lock);
        tb_hit = mg->rank_root_moves();
-       Unlock(syzygy_lock);
+       Unlock(globals::syzygy_lock);
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
            tb_root_hits += mg->moveCount();
@@ -472,7 +472,7 @@ Move SearchController::findBestMove(
        cout << " pv=" << rootSearch->stats.best_line_image << endl;
    }
 
-   if (options.search.multipv == 1) {
+   if (globals::options.search.multipv == 1) {
        Statistics *bestStats = getBestThreadStats(debugOut());
        updateGlobalStats(*bestStats);
        best = bestStats->best_line[0];
@@ -506,11 +506,11 @@ Move SearchController::findBestMove(
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
-   if (!uci && !stats->end_of_game && options.search.can_resign) {
+   if (!uci && !stats->end_of_game && globals::options.search.can_resign) {
       const Material &ourMat = board.getMaterial(board.sideToMove());
       const Material &oppMat = board.getMaterial(board.oppositeSide());
       if (stats->display_value != Constants::INVALID_SCORE &&
-          (100*stats->display_value)/Params::PAWN_VALUE <= options.search.resign_threshold &&
+          (100*stats->display_value)/Params::PAWN_VALUE <= globals::options.search.resign_threshold &&
           // don't resign KBN or KBB vs K unless near mate
           !(stats->display_value > -Constants::MATE &&
             ourMat.kingOnly () && !oppMat.hasPawns() &&
@@ -627,7 +627,7 @@ void SearchController::clearStopFlags() {
 void SearchController::updateSearchOptions() {
     // pool size is part of search options and may have changed,
     // so adjust that first:
-    pool->resize(options.search.ncpus);
+    pool->resize(globals::options.search.ncpus);
     // update each search thread's local copy of the options:
     pool->forEachSearch<&Search::setSearchOptions>();
 }
@@ -1054,7 +1054,7 @@ Move Search::ply0_search()
    // Initialize this thread's move generator from the controller's,
    // which will have the ranked, sorted, filtered move list.
    RootMoveGenerator mg(*(controller->mg),&context);
-   stats.multipv_limit = std::min<int>(mg.moveCount(),options.search.multipv);
+   stats.multipv_limit = std::min<int>(mg.moveCount(),globals::options.search.multipv);
    iterationDepth = 0;
    while ((iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
                                                         controller->ply_limit)) <= controller->ply_limit &&
@@ -1346,7 +1346,7 @@ Move Search::ply0_search()
       cout << endl << (flush);
    }
    // In reduced-strength mode, sometimes play s suboptimal move
-   if (options.search.strength < 100 && stats.completedDepth <= (unsigned)MoveGenerator::EASY_PLIES) {
+   if (globals::options.search.strength < 100 && stats.completedDepth <= (unsigned)MoveGenerator::EASY_PLIES) {
       score_t val = stats.display_value;
       Move best = node->best;
       suboptimal(mg,best,val);
@@ -1657,7 +1657,7 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
 Statistics *SearchController::getBestThreadStats(bool trace) const
 {
     Statistics * best = stats;
-    for (int thread = 1; thread < options.search.ncpus; thread++) {
+    for (int thread = 1; thread < globals::options.search.ncpus; thread++) {
         if (pool->data[thread]->work == nullptr) continue;
         Statistics &threadStats = pool->data[thread]->work->stats;
         if (trace) {
@@ -1685,7 +1685,7 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     unsigned max_depth)
 {
     unsigned d = current_depth+1;
-    const unsigned ncpus = unsigned(options.search.ncpus);
+    const unsigned ncpus = unsigned(globals::options.search.ncpus);
     std::unique_lock<std::mutex> lock(search_count_mtx);
     if (thread_id > 0) {
         if (current_depth == 0) {
@@ -2466,9 +2466,9 @@ score_t Search::search()
     using_tb = 0;
 #ifdef SYZYGY_TBS
     if (srcOpts.use_tablebases) {
-        using_tb = board.men() <= EGTBMenCount &&
+        using_tb = board.men() <= globals::EGTBMenCount &&
             controller->tb_probe_in_search &&
-            node->depth/DEPTH_INCREMENT >= options.search.syzygy_probe_depth;
+            node->depth/DEPTH_INCREMENT >= globals::options.search.syzygy_probe_depth;
     }
 #endif
     HashEntry hashEntry;
@@ -3412,7 +3412,7 @@ void Search::clearHashTables() {
 }
 
 void Search::setSearchOptions() {
-   srcOpts = options.search;
+   srcOpts = globals::options.search;
 }
 
 const char * Search::debugPrefix() const noexcept
@@ -3430,7 +3430,7 @@ score_t Search::evalu8(const Board &board) {
          ourMat.pawnCount() <= 2 &&
          oppMat.materialLevel() <= 10 &&
          oppMat.pawnCount() <= 2);
-    if (!useClassical && options.search.useNNUE && nnueInitDone) {
+    if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
         return scoring.evalu8NNUE(board,node);
     } else {
         return scoring.evalu8(board);
