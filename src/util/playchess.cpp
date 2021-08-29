@@ -8,7 +8,7 @@
 #include "search.h"
 #include <iostream>
 #include <fstream>
-#include <ctype.h>
+#include <cctype>
 
 // Filters PGN games and removes those for which the terminal
 // position's eval differs significantly from the game result.
@@ -17,6 +17,13 @@ static void usage()
 {
    std::cerr << "playchess [-t <time limit (sec.)>] [-x] [-min <min ply>] [-e <min ELO>] pgn_file(s)" << std::endl;
    std::cerr << "-x outputs games that do not pass criteria" << std::endl;
+}
+
+static std::string trim(std::string s) {
+    std::string res(s);
+    res.erase(0, res.find_first_not_of(' ') );
+    res.erase( res.find_last_not_of(' ') + 1);
+    return res;
 }
 
 int CDECL main(int argc, char **argv)
@@ -240,6 +247,11 @@ int CDECL main(int argc, char **argv)
 
                if (x_flag) ok = !ok;
                if (!ok) continue;
+
+               // trim header values
+               for (auto &hdr: hdrs) {
+                   hdr.second = trim(hdr.second);
+               }
 
                ChessIO::store_pgn(std::cout, moves, result, hdrs);
             }
