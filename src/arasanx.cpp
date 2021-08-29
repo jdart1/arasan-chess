@@ -279,7 +279,7 @@ int CDECL main(int argc, char **argv) {
         exit(-1);
     }
 #else
-    if (pthread_create(&globals::pollingThreadHandle, NULL, inputPoll, p)) {
+    if (pthread_create(&pollingThreadHandle, NULL, inputPoll, p)) {
         perror("input thread creation failed");
         exit(-1);
     }
