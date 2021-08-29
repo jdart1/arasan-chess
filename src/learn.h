@@ -1,4 +1,4 @@
-// Copyright 1994-2002, 2004, 2008-2009, 2014 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2002, 2004, 2008-2009, 2014, 2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _LEARN_H
 #define _LEARN_H
@@ -23,6 +23,6 @@ struct LearnRecord {
 };
 
 // Retrieve position learning info
-extern int getLearnRecord(istream &learnFile, LearnRecord &);
+extern int getLearnRecord(std::istream &learnFile, LearnRecord &);
 
 #endif

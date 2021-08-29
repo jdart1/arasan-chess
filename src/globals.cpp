@@ -29,7 +29,7 @@ MoveArray *globals::gameMoves;
 Options globals::options;
 BookReader globals::openingBook;
 Log *globals::theLog = nullptr;
-string globals::learnFileName;
+std::string globals::learnFileName;
 LockDefine(globals::input_lock);
 #ifdef SYZYGY_TBS
 LockDefine(globals::syzygy_lock);
@@ -52,7 +52,7 @@ static const char * RC_FILE_NAME = "arasan.rc";
 
 const size_t globals::LINUX_STACK_SIZE = 8*1024*1024;
 
-static string programPath;
+static std::string programPath;
 
 #ifdef NNUE
 
@@ -74,11 +74,11 @@ static bool absolutePath(const std::string &fileName) {
 }
 #endif
 
-string globals::derivePath(const std::string &fileName) {
+std::string globals::derivePath(const std::string &fileName) {
    return derivePath(programPath,fileName);
 }
 
-string globals::derivePath(const std::string &base, const std::string &fileName) {
+std::string globals::derivePath(const std::string &base, const std::string &fileName) {
     std::string result(base);
     size_t pos;
     pos = result.rfind(PATH_CHAR,std::string::npos);
@@ -114,7 +114,7 @@ return 1;
 
 #ifdef NNUE
 int globals::loadNetwork(const std::string &fname) {
-   std::ifstream in(fname,ios_base::in | ios_base::binary);
+   std::ifstream in(fname, std::ios_base::in | std::ios_base::binary);
    in >> network;
    if (!in.good()) {
        return 0;
@@ -138,7 +138,7 @@ void CDECL globals::cleanupGlobals(void) {
 
 void globals::initOptions(const char *pathName) {
     programPath = pathName;
-    string rcPath = derivePath(RC_FILE_NAME);
+    std::string rcPath(derivePath(RC_FILE_NAME));
     // try to read arasan.rc file
     options.init(rcPath);
 #ifndef _WIN32
@@ -156,7 +156,7 @@ void globals::delayedInit() {
 #ifdef SYZYGY_TBS
     if (options.search.use_tablebases && !globals::tb_init_done()) {
        EGTBMenCount = 0;
-       string path;
+       std::string path;
        if (options.search.syzygy_path == "") {
           options.search.syzygy_path=derivePath("syzygy");
        }
@@ -164,9 +164,9 @@ void globals::delayedInit() {
        EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
        tb_init = true;
        if (EGTBMenCount) {
-          stringstream msg;
-          msg << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << endl;
-          cerr << msg.str();
+          std::stringstream msg;
+          msg << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << std::endl;
+          std::cerr << msg.str();
        }
     }
 #endif

@@ -40,9 +40,6 @@ extern "C" {
 
 typedef uint64_t hash_t;
 
-#include <iostream>
-using namespace std;
-
 typedef std::chrono::high_resolution_clock::time_point CLOCK_TYPE;
 
 #ifdef TUNE
@@ -87,8 +84,6 @@ extern "C" {
   #include <unistd.h>
 }
 #endif
-
-#include <sstream>
 
 inline CLOCK_TYPE getCurrentTime() {
   return std::chrono::high_resolution_clock::now();
@@ -175,7 +170,7 @@ inline uint64_t getRandomSeed() {
 #define THREAD HANDLE
 #elif defined(USE_SPINLOCK)
 class Spinlock {
-  atomic_flag locked = ATOMIC_FLAG_INIT;
+    std::atomic_flag locked = ATOMIC_FLAG_INIT;
 
  public:
   Spinlock() {

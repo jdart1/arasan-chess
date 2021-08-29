@@ -80,7 +80,7 @@ score_t see( const Board &board, Move move ) {
 #endif
        return Params::Gain(move);
    }
-   array<score_t,20> score_list;
+   std::array<score_t,20> score_list;
    score_t swap_score = 0;
    score_t gain;
    Bitboard attacks[2]; 

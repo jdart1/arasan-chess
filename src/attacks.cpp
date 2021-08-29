@@ -5547,7 +5547,7 @@ void Attacks::initMagicData() {
             setBishopAttacks(sq,occ,generateBishopMoves(sq,occ));
             b_index++;
         }
-        if (b_index > 5248) cout << "error" << endl;
+        if (b_index > 5248) std::cout << "error" << std::endl;
 #endif
     }
 #ifdef BMI2
@@ -5586,7 +5586,7 @@ void Attacks::initMagicData() {
             setRookAttacks(sq,occ,generateRookMoves(sq,occ));
             r_index++;
         }
-        if (r_index > 102400) cout << "error" << endl;
+        if (r_index > 102400) std::cout << "error" << std::endl;
 #endif
     }
 }

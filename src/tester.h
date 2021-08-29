@@ -1,5 +1,5 @@
 // Support for the "test" command (for running test suites).
-// Copyright 1997-2018 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2021 by Jon Dart. All Rights Reserved.
 //
 #ifndef _TESTER_H
 #define _TESTER_H
@@ -7,8 +7,6 @@
 #include "search.h"
 
 #include <vector>
-
-using namespace std;
 
 class Tester 
 {
@@ -36,7 +34,7 @@ public:
     };
 
     // execute the "test" command
-    void do_test(SearchController *searcher, string test_file, const TestOptions &opts);
+    void do_test(SearchController *searcher, const std::string &test_file, const TestOptions &opts);
 
 private:
     // Status and configuration for one EPD test
@@ -46,7 +44,7 @@ private:
         time_t solution_time;
         uint64_t solution_nodes;
         int last_iteration_depth;
-        vector<Move> solution_moves;
+        std::vector<Move> solution_moves;
         bool avoid;
         int iterations_correct;
 
@@ -67,7 +65,7 @@ private:
             uint64_t num_nodes;
         };
 
-        vector<SearchProgress> search_progress;
+        std::vector<SearchProgress> search_progress;
 
         TestStatus():
             early_exit(0),
@@ -86,7 +84,7 @@ private:
         int total_correct;
         int total_tests;
         uint64_t total_time;
-        vector<int> solution_times;
+        std::vector<int> solution_times;
         uint64_t nodes_to_find_total;
         int depth_to_find_total;
         uint64_t time_to_find_total;
@@ -103,7 +101,7 @@ private:
             }
     };
 
-    bool solution_match(const vector<Move> &solution_moves,
+    bool solution_match(const std::vector<Move> &solution_moves,
                         Move result, bool avoid) const noexcept;
 
     // "post" function, called from search
@@ -115,7 +113,7 @@ private:
     int monitor(SearchController *s, const Statistics &stats, const TestOptions &opts,
                 TestStatus &testStats);
 
-    void print_nodes(uint64_t nodes, ostream &out);
+    void print_nodes(uint64_t nodes, std::ostream &out);
 
 };
 

@@ -1,4 +1,4 @@
-// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019 by Jon Dart
+// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019, 2021 by Jon Dart
 
 #include "bitboard.h"
 
@@ -113,9 +113,9 @@ void Bitboard::cleanup()
 {
 }
                                    
-ostream & operator << (ostream &o, const Bitboard &b)
+std::ostream & operator << (std::ostream &o, const Bitboard &b)
 {
-   o << (hex) << b.data << (dec);
+   o << (std::hex) << b.data << (std::dec);
    return o;
 }
 

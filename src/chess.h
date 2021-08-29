@@ -70,7 +70,7 @@ FORCEINLINE ColorType SquareColor(Square square) {
 // Parse a square value in algebraic notation (e.g. "g7") and
 // return a corresponding Square type.
 extern Square SquareValue(const char *p);
-extern Square SquareValue(const string &s);
+extern Square SquareValue(const std::string &s);
 extern Square SquareValue(char file, char rank);
 
 extern char FileImage(Square sq);
@@ -391,7 +391,7 @@ FORCEINLINE int IsNull(Move move) {
     return (move == NullMove);
 }
 
-extern void MoveImage(Move m,ostream &out);
+extern void MoveImage(Move m, std::ostream &out);
 
 struct MoveHash
 {
@@ -408,7 +408,7 @@ struct MoveCmp
    }
 };
 
-typedef unordered_set<Move,MoveHash,MoveCmp> MoveSet;
+typedef std::unordered_set<Move,MoveHash,MoveCmp> MoveSet;
 
 struct RootMove 
 {

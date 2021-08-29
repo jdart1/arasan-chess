@@ -6,7 +6,6 @@
 
 #include "chess.h"
 #include <iostream>
-using namespace std;
 
 class Board;
 
@@ -24,10 +23,10 @@ class Notation {
 
     // Writes a string image of a move to "result".
     // "b" must be the board position before the move is made.
-    static void image(const Board &b, const Move &m, OutputFormat format, ostream &result );
+    static void image(const Board &b, const Move &m, OutputFormat format, std::ostream &result );
 
     // Same as above, but output to a string instead of stream
-    static void image(const Board &b, const Move &m, OutputFormat format, string &result );
+    static void image(const Board &b, const Move &m, OutputFormat format, std::string &result );
 
     // Parse "str", assuming it contains a move for side "color",
     // Attempts to be liberal about allowing deviations from SAN.
@@ -40,11 +39,11 @@ class Notation {
     // (allows move into check).
     static Move value( const Board &b, 
                        ColorType color, InputFormat format,
-                       const string &str,
+                       const std::string &str,
                        bool checkLegal = true);
 
  protected:
-    static Move parseCastling(ColorType color, const string &moveStr);
+    static Move parseCastling(ColorType color, const std::string &moveStr);
 };
 
 #endif

@@ -15,8 +15,6 @@
 #include <functional>
 #include <mutex>
 
-using namespace std;
-
 class Search;
 class SearchController;
 struct NodeInfo;
@@ -29,7 +27,7 @@ struct ThreadInfo : public ThreadControl {
    ThreadInfo(ThreadPool *,unsigned i);
    virtual ~ThreadInfo();
    void start();
-   atomic<State> state;
+   std::atomic<State> state;
    Search *work;
    ThreadPool *pool;
    THREAD thread_id;
@@ -161,7 +159,7 @@ private:
 };
 
 #ifdef _THREAD_TRACE
-extern void log(const string &s);
-extern void log(const string &s,int param);
+extern void log(const std::string &s);
+extern void log(const std::string &s,int param);
 #endif
 #endif

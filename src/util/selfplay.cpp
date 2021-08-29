@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <mutex>
 #include <random>
 #include <string>
@@ -86,7 +87,7 @@ LockDefine(bookLock);
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
-static atomic<unsigned> gameCounter(0);
+static std::atomic<unsigned> gameCounter(0);
 
 static struct SelfPlayOptions {
     // Note: not all options are command-line settable, currently.
@@ -123,7 +124,7 @@ struct ThreadData {
     std::mt19937 engine;
 } threadDatas[Constants::MaxCPUs];
 
-static void saveGame(ThreadData &td, const string &result, ofstream &file) {
+static void saveGame(ThreadData &td, const std::string &result, std::ofstream &file) {
     std::vector<ChessIO::Header> headers;
     headers.push_back(ChessIO::Header("Event", "?"));
     char hostname[256];
@@ -164,7 +165,7 @@ class binEncoder {
     using PosOutputType = std::array<uint8_t, 32>;
 
   public:
-    static void output(const OutputData &data, int result, ostream &out) {
+    static void output(const OutputData &data, int result, std::ostream &out) {
         PosOutputType posData;
         unsigned pos = 0;
         posData.fill(0);
@@ -286,7 +287,7 @@ class binEncoder {
     }
 
     // serialize as little-endian
-    template <typename T> static void serialize(ostream &o, const T &data) {
+    template <typename T> static void serialize(std::ostream &o, const T &data) {
         switch (sizeof(T)) {
         case 1:
             o.write((char *)(&data), sizeof(T));
@@ -505,7 +506,7 @@ static void selfplay(ThreadData &td) {
             }
         }
         if (sp_options.saveGames) {
-            string resultStr;
+            std::string resultStr;
             if (result == Result::WhiteWin)
                 resultStr = "1-0";
             else if (result == Result::BlackWin)
@@ -516,7 +517,7 @@ static void selfplay(ThreadData &td) {
         }
         for (const OutputData &data : output) {
             if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
-                string resultStr;
+                std::string resultStr;
                 if (result == Result::WhiteWin)
                     resultStr = "1.0";
                 else if (result == Result::BlackWin)
@@ -525,7 +526,7 @@ static void selfplay(ThreadData &td) {
                     resultStr = "0.5";
                 Lock(outputLock);
                 *pos_out_file << data.fen << ' ' << RESULT_TAG << " \""
-                              << resultStr << "\";" << endl;
+                              << resultStr << "\";" << std::endl;
                 Unlock(outputLock);
             } else {
                 int resultVal; // result from side to move POV
@@ -563,7 +564,7 @@ static void threadp(ThreadData *td) {
     try {
         td->searcher = new SearchController();
     } catch (std::bad_alloc) {
-        cerr << "out of memory, thread " << td->index << endl;
+        std::cerr << "out of memory, thread " << td->index << std::endl;
         return;
     }
     selfplay(*td);
@@ -618,7 +619,7 @@ int CDECL main(int argc, char **argv) {
     atexit(globals::cleanupGlobals);
     globals::delayedInit();
     if (globals::EGTBMenCount) {
-        cerr << "Initialized tablebases" << endl;
+        std::cerr << "Initialized tablebases" << std::endl;
     }
     LockInit(outputLock);
     LockInit(bookLock);
@@ -635,58 +636,58 @@ int CDECL main(int argc, char **argv) {
     int arg = 1;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
         if (strcmp(argv[arg], "-c") == 0) {
-            stringstream s(argv[++arg]);
+            std::stringstream s(argv[++arg]);
             s >> sp_options.cores;
             if (s.bad()) {
-                cerr << "error in core count after -c" << endl;
+                std::cerr << "error in core count after -c" << std::endl;
                 return -1;
             }
             sp_options.cores =
                 std::min<int>(Constants::MaxCPUs, sp_options.cores);
 
         } else if (strcmp(argv[arg], "-n") == 0) {
-            stringstream s(argv[++arg]);
+            std::stringstream s(argv[++arg]);
             s >> sp_options.gameCount;
             if (s.bad()) {
-                cerr << "error in game count after -n" << endl;
+                std::cerr << "error in game count after -n" << std::endl;
                 return -1;
             }
         } else if (strcmp(argv[arg], "-d") == 0) {
-            stringstream s(argv[++arg]);
+            std::stringstream s(argv[++arg]);
             s >> sp_options.depthLimit;
             if (s.bad()) {
-                cerr << "error in depth limit after -d" << endl;
+                std::cerr << "error in depth limit after -d" << std::endl;
                 return -1;
             }
         } else if (strcmp(argv[arg], "-f") == 0) {
             if (arg + 1 >= argc) {
-                cerr << "expected bin or epd after -f" << endl;
+                std::cerr << "expected bin or epd after -f" << std::endl;
                 return -1;
             }
-            string fmt(argv[++arg]);
+            std::string fmt(argv[++arg]);
             if (fmt == "bin")
                 sp_options.format = SelfPlayOptions::OutputFormat::Bin;
             else if (fmt == "epd")
                 sp_options.format = SelfPlayOptions::OutputFormat::Epd;
             else {
-                cerr << "expected bin or epd after -f" << endl;
+                std::cerr << "expected bin or epd after -f" << std::endl;
                 return -1;
             }
         } else if (strcmp(argv[arg], "-o") == 0) {
             if (arg + 1 >= argc) {
-                cerr << "expected file name after -o" << endl;
+                std::cerr << "expected file name after -o" << std::endl;
                 return -1;
             }
             sp_options.posFileName = argv[++arg];
         } else if (strcmp(argv[arg], "-m") == 0) {
             if (arg + 1 >= argc) {
-                cerr << "expected number after -m" << endl;
+                std::cerr << "expected number after -m" << std::endl;
                 return -1;
             }
-            stringstream s(argv[++arg]);
+            std::stringstream s(argv[++arg]);
             s >> sp_options.outputPlyFrequency;
             if (s.bad()) {
-                cerr << "error: expected number after -m" << endl;
+                std::cerr << "error: expected number after -m" << std::endl;
                 return -1;
             }
         } else {
@@ -702,14 +703,14 @@ int CDECL main(int argc, char **argv) {
                 : "positions.epd";
     }
 
-    auto flags = ios::out | ios::app;
+    auto flags = std::ios::out | std::ios::app;
     if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
-        flags |= ios::binary;
+        flags |= std::ios::binary;
     }
     pos_out_file = new std::ofstream(sp_options.posFileName, flags);
     if (sp_options.saveGames)
         game_out_file =
-            new std::ofstream(sp_options.gameFileName, ios::out | ios::app);
+            new std::ofstream(sp_options.gameFileName, std::ios::out | std::ios::app);
 
     init_threads();
     launch_threads();

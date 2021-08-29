@@ -11,12 +11,11 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
-using namespace std;
 
 #define LOG_FILE_NAME "arasan.log"
 
 LogEntry::LogEntry(const BoardState &state, const Move &move,
-                   const string &move_image, bool fromBook,
+                   const std::string &move_image, bool fromBook,
                    score_t score, int depth)
 : my_state(state),
 my_move(move),
@@ -34,15 +33,15 @@ LogEntry::~LogEntry()
 }
 
 
-static void time_image(time_t time,ostream &s)
+static void time_image(time_t time, std::ostream &s)
 {
    time /= 1000;                                   // time is in millseconds
    int hrs = (int)(time / 3600);
    int mins = (int)((time - (hrs*3600))/60);
    int secs = (int)(time - (hrs*3600) - (mins*60));
-   s << fixed << setw(2) << setfill('0') << hrs << ':';
-   s << fixed << setw(2) << setfill('0') << mins << ':';
-   s << fixed << setw(2) << setfill('0') << secs;
+   s << std::fixed << std::setw(2) << std::setfill('0') << hrs << ':';
+   s << std::fixed << std::setw(2) << std::setfill('0') << mins << ':';
+   s << std::fixed << std::setw(2) << std::setfill('0') << secs;
 }
 
 
@@ -50,7 +49,7 @@ Log::Log()
 {
    my_current = 0;
    enabled = 0;
-   string log_path;
+   std::string log_path;
    if (globals::options.log_enabled) {
       if (globals::options.log_pathname == "") {
          // find the last part of the program pathname
@@ -60,16 +59,16 @@ Log::Log()
          log_path = globals::options.log_pathname;
       }
       if (globals::options.log_append) {
-         log_file.open(log_path.c_str(),ios::out|ios::app);
+         log_file.open(log_path.c_str(),std::ios::out|std::ios::app);
       }
       else {
-         log_file.open(log_path.c_str(),ios::out|ios::in|ios::trunc);
+         log_file.open(log_path.c_str(),std::ios::out|std::ios::in|std::ios::trunc);
       }
       if (!log_file.is_open() || !log_file.good()) {
 #ifdef _WIN32
          MessageBox(NULL,"Can't open log file.  Game moves will not be saved.","",MB_OK);
 #else
-         cerr << "Warning: Can't open log file : " << log_path << endl;
+         std::cerr << "Warning: Can't open log file : " << log_path << std::endl;
 #endif
       }
       else
@@ -87,7 +86,7 @@ Log::~Log()
 
 
 void Log::add_move( Board &board, const Move &emove,
-                    const string &move_image, const Statistics *stats,
+                    const std::string &move_image, const Statistics *stats,
                     uint64_t elapsed_time,
                     int toFile)
 {
@@ -116,7 +115,7 @@ void Log::add_move( Board &board, const Move &emove,
    if (entries.size() > my_current) {
        entries.resize(my_current);
    }
-   stringstream s;
+   std::stringstream s;
    s << (num_moves()-1)/2 + 1 << ". " << move_image;
    for (int len = (int)s.tellp(); len<15; len++) s << ' ';
    if (stats) {
@@ -128,14 +127,14 @@ void Log::add_move( Board &board, const Move &emove,
          time_image(elapsed_time,s);
          s << "     " << stats->depth << "\t" << stats->num_nodes << "\t";
          Scoring::printScore(stats->display_value,s);
-         const string &pv = stats->best_line_image;
+         const std::string &pv = stats->best_line_image;
          if (pv.length()) {
             s << '\t';
             // output up to 40 chars of the PV. Do not output the first
             // move, only the predicted continuation after that.
             size_t first_space = pv.find(' ');
-            if (first_space != string::npos) {
-                string shortPV = pv.substr(first_space+1, first_space+41);
+            if (first_space != std::string::npos) {
+                std::string shortPV = pv.substr(first_space+1, first_space+41);
                 size_t last_space = shortPV.find_last_of(' ');
                 s << shortPV.substr(0,last_space);
             }
@@ -167,7 +166,7 @@ void Log::add_move( Board &board, const Move &emove,
    }
    if (!enabled || !toFile || !log_file.is_open())
       return;
-   log_file << s.str() << endl << (flush);
+   log_file << s.str() << std::endl << std::flush;
 }
 
 
@@ -186,12 +185,12 @@ void Log::setResult(const char *result) {
 
 Log::GameResult Log::getResult() const {
    if (!empty()) {
-      const string &result = entries.back().result();
-      if (result.find("1/2-1/2") != string::npos)
+      const std::string &result = entries.back().result();
+      if (result.find("1/2-1/2") != std::string::npos)
         return DrawResult;
-      else if (result.find("1-0") != string::npos)
+      else if (result.find("1-0") != std::string::npos)
         return WhiteWin;
-      else if (result.find("0-1") != string::npos)
+      else if (result.find("0-1") != std::string::npos)
         return BlackWin;
       else
         return Incomplete;
@@ -240,8 +239,8 @@ void Log::write_header()
    if (enabled && log_file.is_open()) {
       static char header1[] = "Arasan version ";
       static char header2[] = "   move          time     depth\tnodes\tvalue\tpredicted";
-      log_file << endl << header1 << Arasan_Version << " game log" << endl;
-      log_file << header2 << endl << (flush);
+      log_file << std::endl << header1 << Arasan_Version << " game log" << std::endl;
+      log_file << header2 << std::endl << std::flush;
    }
 }
 
@@ -249,7 +248,7 @@ void Log::write_header()
 void Log::write(const char *s)
 {
    if (enabled && log_file.is_open()) {
-      log_file << s << (flush);
+      log_file << s << std::flush;
    }
 }
 
@@ -257,6 +256,6 @@ void Log::write(const char *s)
 void Log::write_eol()
 {
    if (enabled && log_file.is_open())
-      log_file << endl;
+      log_file << std::endl;
 }
 

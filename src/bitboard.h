@@ -42,7 +42,7 @@ static FORCEINLINE unsigned int _bitScanReverseAsm(const uint64_t bits)
 
 class Bitboard
 {
-       friend ostream & operator << (ostream &o, const Bitboard &b);
+    friend std::ostream & operator << (std::ostream &o, const Bitboard &b);
 
 #define GETBIT64(x) (uint64_t)(((int64_t)x)&-((int64_t)x))
 #define GETBIT32(x) (uint32_t)(((int32_t)x)&-((int32_t)x))

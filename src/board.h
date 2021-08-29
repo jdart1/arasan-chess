@@ -391,8 +391,8 @@ public:
    // flip the board position up/down and change side to move
    void flip();
 
-   friend istream & operator >> (istream &i, Board &board);
-   friend ostream & operator << (ostream &o, const Board &board);
+   friend std::istream & operator >> (std::istream &i, Board &board);
+   friend std::ostream & operator << (std::ostream &o, const Board &board);
 
    // calculate the check status
    CheckStatusType getCheckStatus() const;

@@ -1,4 +1,4 @@
-// Copyright 2016-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2016-2019, 2021 by Jon Dart. All Rights Reserved.
 
 #ifndef _TUNE_H
 #define _TUNE_H
@@ -10,7 +10,7 @@
 
 struct TuneParam {
    int index;
-   string name;
+   std::string name;
    score_t current;
    score_t min_value;
    score_t max_value;
@@ -19,7 +19,7 @@ struct TuneParam {
    Scaling scaling;
    int tunable;
 
-   TuneParam(int i, const string &n, score_t c, score_t minv, score_t maxv, score_t *p = nullptr, Scaling s = None, int t = 0) :
+   TuneParam(int i, const std::string &n, score_t c, score_t minv, score_t maxv, score_t *p = nullptr, Scaling s = None, int t = 0) :
        index(i),name(n),current(c),min_value(minv),max_value(maxv),param(p),scaling(s),tunable(t) {
    }
    TuneParam():
@@ -39,7 +39,7 @@ struct TuneParam {
    }
 };
 
-class Tune : public vector<TuneParam> {
+class Tune : public std::vector<TuneParam> {
 
  public:
 
@@ -277,7 +277,7 @@ class Tune : public vector<TuneParam> {
     BISHOP_OUTPOST_ENDGAME = BISHOP_OUTPOST_MIDGAME+2,
     PAWN_STORM = BISHOP_OUTPOST_ENDGAME+2
   };
-   
+
   int numTuningParams() const;
 
   // number of fixed parameters that map 1-1 to tuning paramaters
@@ -292,12 +292,12 @@ class Tune : public vector<TuneParam> {
   void checkParams() const;
 
   // write parameter values to a stream
-  void writeX0(ostream &);
+    void writeX0(std::ostream &);
 
   // read parameter values from a stream
-  void readX0(istream &);
+  void readX0(std::istream &);
 
-  int findParamByName(const string &name) const;
+  int findParamByName(const std::string &name) const;
 
   static constexpr int NUM_MISC_PARAMS = KING_OPP_PASSER_DISTANCE-PAWN_VALUE_MIDGAME;
 

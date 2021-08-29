@@ -45,13 +45,13 @@ static int iterations = 2;
 
 static int cores = 1;
 
-static string out_file_name="params.cpp";
+static std::string out_file_name="params.cpp";
 
-static string x0_file_name="x0";
+static std::string x0_file_name="x0";
 
-static string pos_file_name = "games.fen";
+static std::string pos_file_name = "games.fen";
 
-static ifstream pos_file;
+static std::ifstream pos_file;
 
 static bool verbose = false;
 static bool validate = false;
@@ -89,9 +89,9 @@ enum class Objective {
 
 static Objective obj = Objective::Msq;
 
-static atomic<int> phase2_game_index;
+static std::atomic<int> phase2_game_index;
 
-static string cmdline;
+static std::string cmdline;
 
 LockDefine(file_lock);
 LockDefine(data_lock);
@@ -102,16 +102,16 @@ static pthread_attr_t stackSizeAttrib;
 
 struct PosInfo
 {
-   PosInfo(const string &pos, double res)
+   PosInfo(const std::string &pos, double res)
       :position(pos),result(res)
       {
       }
 
-   string position;
+   std::string position;
    double result;
 };
 
-static vector<PosInfo *> positions;
+static std::vector<PosInfo *> positions;
 
 enum Phase {Phase1, Phase2};
 
@@ -140,7 +140,7 @@ struct Parse2Data
    unsigned int id;
 
    // holds accumulated derivatives for the scoring parameters:
-   vector <double> grads;
+   std::vector <double> grads;
    double target;
    size_t count;
 
@@ -159,20 +159,20 @@ static Parse2Data data2[MAX_CORES+1];
 
 static void usage()
 {
-   cerr << "Usage: tuner <options> <training file>" << endl;
-   cerr << "Options:" << endl;
-   cerr << " -c <cores>" << endl;
-   cerr << " -d just write out current parameters values to params.cpp" << endl;
-   cerr << " -f <ouput .cpp file>" << endl;
-   cerr << " -i <input parameter file>" << endl;
-   cerr << " -n <iterations>" << endl;
-   cerr << " -o adagrad|adam|adaptive select optimization method" << endl;
-   cerr << " -r <lambda> apply regularization" << endl;
-   cerr << " -t just compute objective against file with current parameters" << endl;
-   cerr << " -x <ouput parameter file>" << endl;
-   cerr << " -O log|msq|msqlog select objective type" << endl;
-   cerr << " -R <recalc interval> periodically recalulate PVs" << endl;
-   cerr << " -V validate gradient" << endl;
+   std::cerr << "Usage: tuner <options> <training file>" << std::endl;
+   std::cerr << "Options:" << std::endl;
+   std::cerr << " -c <cores>" << std::endl;
+   std::cerr << " -d just write out current parameters values to params.cpp" << std::endl;
+   std::cerr << " -f <ouput .cpp file>" << std::endl;
+   std::cerr << " -i <input parameter file>" << std::endl;
+   std::cerr << " -n <iterations>" << std::endl;
+   std::cerr << " -o adagrad|adam|adaptive select optimization method" << std::endl;
+   std::cerr << " -r <lambda> apply regularization" << std::endl;
+   std::cerr << " -t just compute objective against file with current parameters" << std::endl;
+   std::cerr << " -x <ouput parameter file>" << std::endl;
+   std::cerr << " -O log|msq|msqlog select objective type" << std::endl;
+   std::cerr << " -R <recalc interval> periodically recalulate PVs" << std::endl;
+   std::cerr << " -V validate gradient" << std::endl;
 }
 
 static double texelSigmoid(double val) {
@@ -180,7 +180,7 @@ static double texelSigmoid(double val) {
    return 1.0/(1.0+exp(-PARAM1*val));
 }
 
-double result_val(const string &res)
+double result_val(const std::string &res)
 {
    double result;
    if (res == "0-1")
@@ -190,13 +190,13 @@ double result_val(const string &res)
    else if (res == "1/2-1/2")
       result = 0.5;
    else {
-      cerr << "Missing or unrecognized result: " << res << endl;
+      std::cerr << "Missing or unrecognized result: " << res << std::endl;
       return 0.5;
    }
    return result;
 }
 
-// value is eval in pawn units; res is result string for game
+// value is eval in pawn units; res is result std::string for game
 static double computeErrorTexel(double value, double result, const ColorType side)
 {
    value /= Params::PAWN_VALUE;
@@ -261,7 +261,7 @@ static double calc_penalty()
          // apply penalty only for parameters being tuned
          if (p.tunable) {
             if (p.range()==0) {
-               cerr << "warning: param " << p.name << " has zero range" << endl;
+               std::cerr << "warning: param " << p.name << " has zero range" << std::endl;
                continue;
             }
             p.scale();
@@ -335,7 +335,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
    // iterate for each position in file
    uint64_t line = 0;
    char buf[256];
-   ofstream output("filtered.epd");
+   std::ofstream output("filtered.epd");
    while (!pos_file.eof() && pos_file.good()) {
       try {
          Board board, pvBoard;
@@ -354,17 +354,17 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
             break;
          }
          if (rec.hasError()) {
-            cerr << "error in EPD record, line " << line << ": " << rec.getError() << endl;
+            std::cerr << "error in EPD record, line " << line << ": " << rec.getError() << std::endl;
             continue;
          }
-         string val;
+         std::string val;
          if (rec.getVal(RESULT_KEY,val)) {
             // trim quotes
             val.erase(std::remove( val.begin(), val.end(), '\"' ),val.end());
-            stringstream rstream(val);
+            std::stringstream rstream(val);
             rstream >> result;
             if (rstream.bad() || rstream.fail()) {
-               cerr << "error parsing result";
+               std::cerr << "error parsing result";
                continue;
             }
          }
@@ -377,14 +377,14 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
              if (!isQuiet(pvBoard)) continue;
              double func_value = computeErrorTexel(score, result, board.sideToMove());
              pdata.target += func_value;
-             stringstream fen;
+             std::stringstream fen;
              fen << pvBoard;
              Lock(data_lock);
              positions.push_back(new PosInfo(fen.str(),result));
              Unlock(data_lock);
          }
       } catch(std::bad_alloc) {
-         cerr << "out of memory" << endl;
+         std::cerr << "out of memory" << std::endl;
          exit(-1);
       }
    }
@@ -395,7 +395,7 @@ static inline int FileOpen(const Board &board, int file) {
 }
 
 static void adjustMaterialScore(const Board &board, ColorType side,
-                                vector<double> &grads, double inc) {
+                                std::vector<double> &grads, double inc) {
     const ColorType oside = OppositeColor(side);
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(oside);
@@ -502,7 +502,7 @@ static void adjustMaterialScore(const Board &board, ColorType side,
 }
 
 static void adjustMaterialScoreNoPawns(const Board &board, ColorType side,
-                                       vector<double> &grads, double inc) {
+                                       std::vector<double> &grads, double inc) {
     const Material &ourmat = board.getMaterial(side);
     const Material &oppmat = board.getMaterial(OppositeColor(side));
     if (ourmat.infobits() == Material::KQ) {
@@ -623,7 +623,7 @@ template<ColorType bishopColor>
 static void bishopAndPawns(const Board &board,ColorType side,
                            const Scoring::PawnHashEntry::PawnData &ourPawnData,
                            const Scoring::PawnHashEntry::PawnData &oppPawnData,
-                    vector<double> &grads, double inc)
+                    std::vector<double> &grads, double inc)
 {
    int mLevel = board.getMaterial(OppositeColor(side)).materialLevel();
    int whitePawns = ourPawnData.w_square_pawns;
@@ -655,7 +655,7 @@ static  int square_to_pst(Square i, ColorType side) {
    return 4*(Rank(i,White)-1) + Params::foldFile(File(i));
 }
 
-static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<double> &grads,
+static void calc_deriv(Scoring &s, const Board &board, ColorType side, std::vector<double> &grads,
                        double inc,
                        Scoring::AttackInfo &ai)
 {
@@ -747,7 +747,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    s.calcStorm(board,OppositeColor(side),oppKpe,our_pawn_attacks);
    const score_t oppCover = oppKpe.cover;
    Bitboard minorAttacks, rookAttacks;
-   array<int,8> attackTypes;
+   std::array<int,8> attackTypes;
    for (int i = 0; i < 8; i++) attackTypes[i] = 0;
 
    grads[Tune::PAWN_VALUE_MIDGAME] += ourmat.pawnCount()*tune_params.scale(inc,Tune::PAWN_VALUE_MIDGAME,mLevel);
@@ -1134,7 +1134,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, vector<do
    }
 }
 
-static void calc_threat_deriv(const Board &board,ColorType side, vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
+static void calc_threat_deriv(const Board &board,ColorType side, std::vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
 {
    const ColorType oside = OppositeColor(side);
    const int mLevel = board.getMaterial(oside).materialLevel();
@@ -1235,7 +1235,7 @@ static void calc_threat_deriv(const Board &board,ColorType side, vector<double> 
    }
 }
 
-static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
+static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, std::vector<double> &grads, double inc, const Scoring::AttackInfo &ai)
 {
     const int mLevel = board.getMaterial(OppositeColor(side)).materialLevel();
     const ColorType oside = OppositeColor(side);
@@ -1359,14 +1359,14 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, vect
     }
 }
 
-// Updates a vector where each entry corresponds to a tunable
+// Updates a std::vector where each entry corresponds to a tunable
 // parameter. The update is based on a particular board position and
 // side and consists for each parameter the contribution of
 // the parameter to the overall score, i.e. its first partial derivative.
 //
 // Currently not all parameters can be related to the overall score
-// easily. For those parameters the vector entry is always zero.
-static void update_deriv_vector(Scoring &s, const Board &board, vector<double> &grads, double inc)
+// easily. For those parameters the std::vector entry is always zero.
+static void update_deriv_vector(Scoring &s, const Board &board, std::vector<double> &grads, double inc)
 {
 
     Scoring::AttackInfo atcks;
@@ -1396,10 +1396,10 @@ static void update_deriv_vector(Scoring &s, const Board &board, vector<double> &
 }
 
 static void validateGradient(Scoring &s, const Board &board, double eval) {
-   vector<double> derivs(tune_params.numTuningParams(),0.0);
+   std::vector<double> derivs(tune_params.numTuningParams(),0.0);
    double inc = 1.0;
    if (board.sideToMove() == Black) eval = -eval;
-   // compute the partial derivative vector for this position
+   // compute the partial derivative std::vector for this position
    update_deriv_vector(s, board, derivs, inc);
    for (int i = 0; i < tune_params.numTuningParams(); i++) {
       if (derivs[i] != 0.0 && tune_params[i].tunable) {
@@ -1427,16 +1427,16 @@ static void validateGradient(Scoring &s, const Board &board, double eval) {
          // actual value
          double predictedEval = eval + derivs[i]*delta;
          if (fabs(predictedEval - newEval)>5.0) {
-            cerr << board << endl;
-            cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(Black).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << newEval << endl;
+            std::cerr << board << std::endl;
+            std::cerr << "name=" << p.name << " mLevels=" << board.getMaterial(White).materialLevel() << " " << board.getMaterial(Black).materialLevel() << " delta=" << delta << " val=" << val << " newval=" << newval << " deriv=" << derivs[i] << " old score=" << eval << " predicted score=" << predictedEval << " actual score=" << newEval << std::endl;
 
             // The following code is useful when running under
             // gdb - it recomputes the before and after eval.
-            cout << "--old val" << endl;
+            std::cout << "--old val" << std::endl;
             tune_params[i].current = val;
             tune_params.applyParams(false);
             s.evalu8(board,false);
-            cout << "--new val" << endl;
+            std::cout << "--new val" << std::endl;
             tune_params[i].current = newval;
             tune_params.applyParams(false);
             s.evalu8(board,false);
@@ -1457,7 +1457,7 @@ static void validateGradient(Scoring &s, const Board &board, double eval) {
 static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, double result) {
 
 #ifdef _TRACE
-   cout << "game position " << board << endl;
+   std::cout << "game position " << board << std::endl;
 #endif
    double record_value = s.evalu8(board,!validate);
 
@@ -1486,25 +1486,25 @@ static void parse2(ThreadData &td, Parse2Data &data)
    Scoring *s = new Scoring();
    const size_t max = positions.size();
    for (;;) {
-      // obtain the next available posiion from the vector
+      // obtain the next available posiion from the std::vector
       size_t next = (size_t)phase2_game_index.fetch_add(1);
       if (next >= max) break;
-      if (verbose) cout << "game " << next << " thread " << td.index << endl;
+      if (verbose) std::cout << "game " << next << " thread " << td.index << std::endl;
       PosInfo *p = positions[next];
       Board board;
-      stringstream pos(p->position);
+      std::stringstream pos(p->position);
       pos >> board;
       calc_derivative(*s, data, board, p->result);
    }
    delete s;
-//   if (verbose) cout << "thread " << td.index << " complete.";
+//   if (verbose) std::cout << "thread " << td.index << " complete.";
 }
 
-static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient,
-                          vector<double> &m /* for ADAM */,
-                          vector<double> &v /* for ADAM */,
-                          vector<double> &prev_gradient /* for adaptive */,
-                          vector<double> &step_sizes /* for adaptive */,
+static void adjust_params(Parse2Data &data0, std::vector<double> &historical_gradient,
+                          std::vector<double> &m /* for ADAM */,
+                          std::vector<double> &v /* for ADAM */,
+                          std::vector<double> &prev_gradient /* for adaptive */,
+                          std::vector<double> &step_sizes /* for adaptive */,
                           int iterations)
 {
    for (TuneParam &p : tune_params) {
@@ -1533,7 +1533,7 @@ static void adjust_params(Parse2Data &data0, vector<double> &historical_gradient
             double v_hat = v[i]/(1.0-pow(ADAM_BETA2,iterations));
             double step_size = ADAM_ALPHA;
             istep = step_size*m_hat/(sqrt(v_hat)+ADAM_EPSILON);
-//            cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << endl;
+//            std::cout << "ADAM step[" << i << "]" << ADAM_ALPHA*m_hat/(sqrt(v_hat)+ADAM_EPSILON) << " " << istep << std::endl;
             val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - istep));
          } else {
             // Simple adaptive rate method with momentum, similar to
@@ -1583,17 +1583,17 @@ static void threadp(ThreadData *td)
    try {
       td->searcher = new SearchController();
    } catch(std::bad_alloc) {
-      cerr << "out of memory, thread " << td->index << endl;
+      std::cerr << "out of memory, thread " << td->index << std::endl;
       return;
    }
 
    td->searcher->clearHashTables();
    // perform work based on phase
    if (td->phase == Phase1) {
-      if (verbose) cout << "starting phase 1, thread " << td->index << endl;
+      if (verbose) std::cout << "starting phase 1, thread " << td->index << std::endl;
       parse1(*td,data1[td->index]);
    } else {
-      if (verbose) cout << "starting phase 2, thread " << td->index << endl;
+      if (verbose) std::cout << "starting phase 2, thread " << td->index << std::endl;
       parse2(*td,data2[td->index]);
    }
    delete td->searcher;
@@ -1617,16 +1617,16 @@ static void initThreads()
 
 static void launch_threads()
 {
-   if (verbose) cout << "launch_threads" << endl;
+   if (verbose) std::cout << "launch_threads" << std::endl;
    for (int i = 1; i <= cores; i++) {
       threads[i] = std::thread(threadp,&threadDatas[i]);
-      if (verbose) cout << "thread " << i << " created." << endl;
+      if (verbose) std::cout << "thread " << i << " created." << std::endl;
    }
    // wait for all searchers done
    for (int i = 1; i <= cores; i++) {
       threads[i].join();
    }
-   if (verbose) cout << "all searchers done" << endl;
+   if (verbose) std::cout << "all searchers done" << std::endl;
 }
 
 static void learn_parse(Phase p, int cores)
@@ -1635,34 +1635,34 @@ static void learn_parse(Phase p, int cores)
       threadDatas[i].phase = p;
    }
    launch_threads();
-   if (p == Phase1) cout << positions.size() << " positions read." << endl;
+   if (p == Phase1) std::cout << positions.size() << " positions read." << std::endl;
 }
 
-static void output_solution(const string &cmd, double obj)
+static void output_solution(const std::string &cmd, double obj)
 {
    tune_params.applyParams();
-   ofstream param_out(out_file_name.c_str(),ios::out | ios::trunc);
+   std::ofstream param_out(out_file_name.c_str(),std::ios::out | std::ios::trunc);
 
    time_t curr_time;
    char buffer[256];
    time(&curr_time);
    struct tm *timeinfo = localtime(&curr_time);
    strftime(buffer,256,"%d-%b-%Y %I:%M:%S",timeinfo);
-   string timestr(buffer);
-   stringstream comment;
-   comment << "Generated " << timestr << " by " << cmd << endl;
+   std::string timestr(buffer);
+   std::stringstream comment;
+   comment << "Generated " << timestr << " by " << cmd << std::endl;
    if (obj != 0) {
-      comment << "// Final objective value: " << obj << endl;
+      comment << "// Final objective value: " << obj << std::endl;
    }
    Params::write(param_out,comment.str());
-   param_out << endl;
+   param_out << std::endl;
    if (param_out.bad() || param_out.fail()) {
-      cerr << "error writing .cpp output file" << endl;
+      std::cerr << "error writing .cpp output file" << std::endl;
    }
-   ofstream x0_out(x0_file_name.c_str(),ios::out | ios::trunc);
+   std::ofstream x0_out(x0_file_name.c_str(),std::ios::out | std::ios::trunc);
    tune_params.writeX0(x0_out);
    if (x0_out.bad() || x0_out.fail()) {
-      cerr << "error writing parameters output file" << endl;
+      std::cerr << "error writing parameters output file" << std::endl;
    }
 }
 
@@ -1674,15 +1674,15 @@ static void learn()
 #ifdef _MSC_VER
    double best = 1.0e10;
 #else
-   double best = numeric_limits<double>::max();
+   double best = std::numeric_limits<double>::max();
 #endif
-   vector<double> historical_grad(tune_params.numTuningParams(),0.0);
-   vector<double> m(tune_params.numTuningParams(),0.0);
-   vector<double> v(tune_params.numTuningParams(),0.0);
-   vector<double> prev_gradient(tune_params.numTuningParams(),0.0);
-   vector<double> step_sizes(tune_params.numTuningParams(),0.0);
+   std::vector<double> historical_grad(tune_params.numTuningParams(),0.0);
+   std::vector<double> m(tune_params.numTuningParams(),0.0);
+   std::vector<double> v(tune_params.numTuningParams(),0.0);
+   std::vector<double> prev_gradient(tune_params.numTuningParams(),0.0);
+   std::vector<double> step_sizes(tune_params.numTuningParams(),0.0);
    for (int iter = 1; iter <= iterations; iter++) {
-      if (!test) cout << "iteration " << iter << endl;
+      if (!test) std::cout << "iteration " << iter << std::endl;
       tune_params.applyParams();
       for (int i = 0; i <= cores; i++) {
          data1[i].clear();
@@ -1690,7 +1690,7 @@ static void learn()
       }
       if (iter == 1 ||
           (recalc && ((iter-1) % pv_recalc_interval) == 0)) {
-         if (verbose) cout << "(re)calculating PVs" << endl;
+         if (verbose) std::cout << "(re)calculating PVs" << std::endl;
          // clean up data from previous pass
          while (!positions.empty()) {
             delete positions.back();
@@ -1703,19 +1703,19 @@ static void learn()
          }
          data1[0].target /= positions.size();
          if (test) {
-            cout << "objective=" << data1[0].target << endl;
+            std::cout << "objective=" << data1[0].target << std::endl;
             break;
          }
          if (verbose) {
-            cout << "target=" << data1[0].target << " penalty=" << calc_penalty() << endl;
+            std::cout << "target=" << data1[0].target << " penalty=" << calc_penalty() << std::endl;
          }
          data1[0].target += calc_penalty();
          if (verbose) {
-            cout << "pass 1 objective = " << data1[0].target << endl;
+            std::cout << "pass 1 objective = " << data1[0].target << std::endl;
          }
          // rewind position file
          pos_file.clear();
-         pos_file.seekg(0,ios::beg);
+         pos_file.seekg(0,std::ios::beg);
       }
       phase2_game_index = 0;
       learn_parse(Phase2, cores);
@@ -1729,12 +1729,12 @@ static void learn()
       }
       data2[0].target /= data2[0].count;
       const double obj = data2[0].target + calc_penalty();
-      cout << "target=" << data2[0].target << " penalty=" << calc_penalty
-() << " objective=" << obj << endl;
+      std::cout << "target=" << data2[0].target << " penalty=" << calc_penalty
+() << " objective=" << obj << std::endl;
       data2[0].target += calc_penalty();
       if (data2[0].target < best) {
          best = data2[0].target;
-         cout << "new best objective: " << best << endl;
+         std::cout << "new best objective: " << best << std::endl;
          output_solution(cmdline,obj);
       }
       adjust_params(data2[0],historical_grad,m,v,prev_gradient,step_sizes,iter);
@@ -1758,22 +1758,22 @@ int CDECL main(int argc, char **argv)
     atexit(globals::cleanupGlobals);
     globals::delayedInit();
 
-    string input_file;
+    std::string input_file;
 
     int arg = 0;
-    string x0_input_file_name;
+    std::string x0_input_file_name;
 
     int write_sol = 0;
 
     cmdline = "tuner";
 
     for (arg = 1; arg < argc; ++arg) {
-       cmdline += " " + string(argv[arg]);
+       cmdline += " " + std::string(argv[arg]);
     }
 
     for (arg = 1; arg < argc && argv[arg][0] == '-'; ++arg) {
        if (strcmp(argv[arg],"-d")==0) {
-          cerr << "writing initial solution" << endl;
+          std::cerr << "writing initial solution" << std::endl;
           ++write_sol;
        }
        else if (strcmp(argv[arg],"-f")==0) {
@@ -1787,10 +1787,10 @@ int CDECL main(int argc, char **argv)
        else if (strcmp(argv[arg],"-r")==0) {
           ++arg;
           if (arg < argc) {
-              stringstream s(argv[arg]);
+              std::stringstream s(argv[arg]);
               s >> lambda;
               if (s.bad() || s.fail()) {
-                  cerr << "expected real number after -r" << endl;
+                  std::cerr << "expected real number after -r" << std::endl;
               }
           }
           regularize = true;
@@ -1829,8 +1829,8 @@ int CDECL main(int argc, char **argv)
           else if (strcmp(argv[arg],"adaptive") == 0)
              method = OptimMethod::Adaptive;
           else {
-             cerr << "invalid optimization type: specify one of: ";
-             cerr << "adagrad, adam or adaptive." << endl;
+             std::cerr << "invalid optimization type: specify one of: ";
+             std::cerr << "adagrad, adam or adaptive." << std::endl;
              exit(-1);
           }
        }
@@ -1847,27 +1847,27 @@ int CDECL main(int argc, char **argv)
           else if (strcmp(argv[arg],"msqlog") == 0)
              obj = Objective::Msq;
           else {
-             cerr << "invalid objective type: specify one of: ";
-             cerr << "log, msq, or msqlog" << endl;
+             std::cerr << "invalid objective type: specify one of: ";
+             std::cerr << "log, msq, or msqlog" << std::endl;
              exit(-1);
           }
        }
        else if (strcmp(argv[arg],"-R")==0) {
           recalc = true;
           if (arg >= argc) {
-             cerr << "expected integer after -R" << endl;
+             std::cerr << "expected integer after -R" << std::endl;
              exit(-1);
           }
           pv_recalc_interval = atoi(argv[++arg]);
        } else {
-          cerr << "invalid option: " << argv[arg] << endl;
+          std::cerr << "invalid option: " << argv[arg] << std::endl;
           usage();
           exit(-1);
        }
     }
 
     if (test && write_sol) {
-       cerr << "error: -d and -t not compatible" << endl;
+       std::cerr << "error: -d and -t not compatible" << std::endl;
        usage();
        exit(-1);
     }
@@ -1878,20 +1878,20 @@ int CDECL main(int argc, char **argv)
     }
 
     if (validate && cores > 1) {
-       cerr << "error: validation (-V) does not work with multiple threads" << endl;
+       std::cerr << "error: validation (-V) does not work with multiple threads" << std::endl;
        exit(-1);
     }
 
     if (arg >= argc) {
-       cerr << "no file name specified" << endl;
+       std::cerr << "no file name specified" << std::endl;
        usage();
        exit(-1);
     }
 
     if (x0_input_file_name.length()) {
-       ifstream x0_input_file(x0_input_file_name.c_str());
+        std::ifstream x0_input_file(x0_input_file_name.c_str());
        if (x0_input_file.fail()) {
-          cerr << "error opening x0 input file: " << x0_input_file_name << endl;
+          std::cerr << "error opening x0 input file: " << x0_input_file_name << std::endl;
           exit(-1);
        } else {
           tune_params.readX0(x0_input_file);
@@ -1909,21 +1909,21 @@ int CDECL main(int argc, char **argv)
 #endif
     pos_file_name = argv[arg];
 
-    if (verbose) cout << "game file: " << pos_file_name << endl;
+    if (verbose) std::cout << "game file: " << pos_file_name << std::endl;
 
     pos_file.open(pos_file_name.c_str());
 
     if (pos_file.fail()) {
-       cerr << "failed to open file " << pos_file_name << endl;
+       std::cerr << "failed to open file " << pos_file_name << std::endl;
        exit(-1);
     }
 
-    cout << "parameter count: " << tune_params.numTuningParams() << " (";
+    std::cout << "parameter count: " << tune_params.numTuningParams() << " (";
     int tunable = 0;
     for (const TuneParam &p : tune_params) {
        if (p.tunable) ++tunable;
     }
-    cout << tunable << " tunable)" << endl;
+    std::cout << tunable << " tunable)" << std::endl;
 
     initThreads();
 

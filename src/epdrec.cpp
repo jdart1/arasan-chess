@@ -1,7 +1,7 @@
-// Copyright 1996, 2008, 2013 by Jon Dart. All Rights Reserved.
+// Copyright 1996, 2008, 2013, 2021 by Jon Dart. All Rights Reserved.
 //
 #include "epdrec.h"
-#include <string.h>
+#include <cstring>
 #include <iterator>
 
 EPDRecord::EPDRecord()
@@ -12,9 +12,9 @@ EPDRecord::~EPDRecord()
 {
 }
 
-bool EPDRecord::hasVal(const string &key) const
+bool EPDRecord::hasVal(const std::string &key) const
 {
-   list< pair<string,string> >::const_iterator it = cmds.begin();
+   pairlist::const_iterator it = cmds.begin();
    while (it != cmds.end())
    {
       if ((*it).first == key)
@@ -26,9 +26,9 @@ bool EPDRecord::hasVal(const string &key) const
    return false;
 }
 
-bool EPDRecord::getVal(const string &key, string &val) const
+bool EPDRecord::getVal(const std::string &key, std::string &val) const
 {
-   list< pair<string,string> >::const_iterator it = cmds.begin();
+   pairlist::const_iterator it = cmds.begin();
    while (it != cmds.end())
    {
       if ((*it).first == key)
@@ -41,9 +41,9 @@ bool EPDRecord::getVal(const string &key, string &val) const
    return false;
 }
 
-bool EPDRecord::getData(int i,string &key,string &val) const
+bool EPDRecord::getData(int i,std::string &key,std::string &val) const
 {
-   list< pair<string,string> >::const_iterator it = cmds.begin();
+   pairlist::const_iterator it = cmds.begin();
    int index = 0;
    while (it != cmds.end())
    {
@@ -59,9 +59,9 @@ bool EPDRecord::getData(int i,string &key,string &val) const
    return false;
 }
 
-void EPDRecord::add(const string &key, const string &value)
+void EPDRecord::add(const std::string &key, const std::string &value)
 {
-   cmds.push_back(pair<string,string>(key,value));
+    cmds.push_back(std::pair<std::string,std::string>(key,value));
 }
 
 void EPDRecord::clear() {

@@ -1,4 +1,4 @@
-// Copyright 1994, 2008 by Jon Dart
+// Copyright 1994, 2008, 2021 by Jon Dart
 #ifndef __ECO_H__
 #define __ECO_H__
 
@@ -7,8 +7,6 @@
 #include <string>
 #include <map>
 
-using namespace std;
-
 class ECO
 {
 public:
@@ -16,10 +14,10 @@ public:
     
     // Look up a game log, return its ECO code (in "result") and the
     // descriptive name of the opening (in "name"), if there is one.	    
-    void classify( const MoveArray &moves, string &result, string &name);
+    void classify( const MoveArray &moves, std::string &result, std::string &name);
         
 private:        
-    map <hash_t,const ECOData *> ht;
+    std::map <hash_t,const ECOData *> ht;
 };
 
 #endif

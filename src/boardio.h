@@ -7,8 +7,8 @@
 class BoardIO
 {
 public:
-    static int readFEN(Board &board, const string &buf);
-    static void writeFEN(const Board &board, ostream &out, int addMoveInfo);
+    static int readFEN(Board &board, const std::string &buf);
+    static void writeFEN(const Board &board, std::ostream &out, int addMoveInfo);
 
 };
 

@@ -178,7 +178,7 @@ struct Params  {
     }
 
 #ifdef TUNE
-    static void write(ostream &, const string &comment);
+    static void write(std::ostream &, const std::string &comment);
 #endif
 };
 

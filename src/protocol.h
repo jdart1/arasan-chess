@@ -10,8 +10,6 @@
 #include "search.h"
 #include <vector>
 
-using namespace std;
-
 // Handles Winboard/xboard/UCI protocol.
 class Protocol {
 
@@ -21,7 +19,7 @@ public:
     virtual ~Protocol();
 
     // Handle command
-    void dispatchCmd(const string &cmd);
+    void dispatchCmd(const std::string &cmd);
 
     // read input and dispatch commands
     void poll(bool &terminated);
@@ -54,17 +52,17 @@ private:
     enum class AllPendingStatus { Nothing, Quit };
 
     // add a command to the pending stack
-    void add_pending(const string &cmd);
+    void add_pending(const std::string &cmd);
 
     // split a command line into a verb (cmd_word) and arguments (cmd_args)
-    void split_cmd(const string &cmd, string &cmd_word, string &cmd_args);
+    void split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args);
 
     // Convert move text to Move type
-    Move text_to_move(const Board &board, const string &input);
+    Move text_to_move(const Board &board, const std::string &input);
 
     // Parse move input (may be preceded by "usermove" or may just be
     // move text)
-    Move get_move(const string &cmd_word, const string &cmd_args);
+    Move get_move(const std::string &cmd_word, const std::string &cmd_args);
 
     // Do all pending commands in stack.
     // Return Quit if "quit" was seen.
@@ -75,13 +73,13 @@ private:
     PendingStatus check_pending(Board &board);
 
     // handle Winboard "level" command
-    void parseLevel(const string &cmd, int &moves, float &minutes, int &incr);
+    void parseLevel(const std::string &cmd, int &moves, float &minutes, int &incr);
 
     // respond to a Winboard "ping" command
-    void sendPong(const string &arg);
+    void sendPong(const std::string &arg);
 
     // handle "st" (time control) from Winboard
-    void process_st_command(const string &cmd_args);
+    void process_st_command(const std::string &cmd_args);
 
     // In Winboard mode, on the chess server, compute a contempt value
     // from ratings
@@ -97,11 +95,11 @@ private:
     void do_help();
 
     // Format and output a move in the right format (UCI/Winboard)
-    void move_image(const Board &board, Move m, ostream &buf, bool uci);
+    void move_image(const Board &board, Move m, std::ostream &buf, bool uci);
 
     // output status for UCI ("info" output)
     void uciOut(int depth, score_t score, time_t time,
-                uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv);
+                uint64_t nodes, uint64_t tb_hits, const std::string &best_line_image, int multipv);
 
 
     // overload status output that gets info from Statistics
@@ -117,14 +115,14 @@ private:
     // Process a command during search. Return true if processed
     // (should be removed from pending stack. Also sets exit flag
     // if processing should terminate.
-    bool processPendingInSearch(SearchController *controller, const string &cmd, bool &exit);
+    bool processPendingInSearch(SearchController *controller, const std::string &cmd, bool &exit);
 
     // Callback from search - handle any pending commands and return 1
     // if search should terminate
     int monitor(SearchController *s, const Statistics &);
 
     // handle commands in edit mode (Winboard protocol)
-    void edit_mode_cmds(Board &board,ColorType &side,const string &cmd);
+    void edit_mode_cmds(Board &board,ColorType &side,const std::string &cmd);
 
     void calcTimes(bool pondering, ColorType side, timeMgmt::Times &times);
 
@@ -136,14 +134,14 @@ private:
                 const MoveSet &movesToSearch, Statistics &stats, bool infinite);
 
     // return true if current board position is a draw by the
-    // rules of chess. If so, also set the "reason" string
-    int isDraw(const Board &board, Statistics &last_stats, string &reason);
+    // rules of chess. If so, also set the "reason" std::string
+    int isDraw(const Board &board, Statistics &last_stats, std::string &reason);
 
     // Send a move to the UI
     void send_move(Board &board, Move &move, Statistics &);
 
     // handle a command when we are halted waiting for more UCI input
-    void processCmdInWaitState(const string &cmd);
+    void processCmdInWaitState(const std::string &cmd);
 
     // Find best move using the current board position.
     Move analyze(SearchController &searcher, Board &board, Statistics &stats);
@@ -161,7 +159,7 @@ private:
     void undo( Board &board);
 
     // set check tupe option for Winboard
-    void setCheckOption(const string &value, int &dest);
+    void setCheckOption(const std::string &value, int &dest);
 
     // make a move on the board, add to log and search history
     void execute_move(Board &board,Move m);
@@ -169,28 +167,28 @@ private:
 #ifdef TUNE
     // Set a tuning parameter passed on the command line (used for
     // CLOP for example).
-    void setTuningParam(const string &name, const string &value);
+    void setTuningParam(const std::string &name, const std::string &value);
 #endif
 
     // Process options for Winboard
-    void processWinboardOptions(const string &args);
+    void processWinboardOptions(const std::string &args);
 
     // Execute a perft test and return node count
     uint64_t perft(Board &board, int depth);
 
     // Set the board position from a file
-    void loadgame(Board &board,ifstream &file);
+    void loadgame(Board &board, std::ifstream &file);
 
 #ifdef SYZYGY_TBS
     // Validate a TB path sent from the UI (UCI)
-    bool validTbPath(const string &path);
+    bool validTbPath(const std::string &path);
 #endif
 
     // Case-insensitive compare for UCI options
-    bool uciOptionCompare(const string &a, const string &b);
+    bool uciOptionCompare(const std::string &a, const std::string &b);
 
     // Execute a command, return false if program should terminate.
-    bool do_command(const string &cmd, Board &board);
+    bool do_command(const std::string &cmd, Board &board);
 
     // Result from pondering. Hit = predicted opponent move,
     // NoHit = did not predict opponent move, Pending =
@@ -201,11 +199,11 @@ private:
     bool post;
     SearchController *searcher;
     Move last_move;
-    string last_move_image;
+    std::string last_move_image;
     Move last_computer_move;
     Statistics last_computer_stats;
-    string game_pathname;
-    ofstream *game_file;
+    std::string game_pathname;
+    std::ofstream *game_file;
     int time_left;
     int opp_time;
     float minutes;
@@ -214,7 +212,7 @@ private:
     int binc; // UCI increment
     bool computer;
     bool computer_plays_white;
-    string opponent_name;
+    std::string opponent_name;
     bool ics;
     bool forceMode;
     bool analyzeMode;
@@ -231,26 +229,26 @@ private:
     int computer_rating;
     int opponent_rating;
     // stack of pending commands, received but not yet executed:
-    vector<string> pending;
+    std::vector<std::string> pending;
     bool doTrace; // true if -t on command line
     bool easy; // set if no pondering
     bool game_end;
     bool result_pending;
     score_t last_score;
     ECO *ecoCoder;
-    string hostname;
+    std::string hostname;
     bool xboard42;
     SearchType srctype;
     int time_limit;
     int ply_limit;
-    string start_fen;
+    std::string start_fen;
 
     bool uci;
     int movestogo;
     bool ponderhit;
     // set true if waiting for "ponderhit" or "stop"
     bool uciWaitState;
-    string test_file;
+    std::string test_file;
     bool cpusSet; // true if cmd line specifies -c
     bool memorySet; // true if cmd line specifies -H
 

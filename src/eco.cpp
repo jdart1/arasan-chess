@@ -1,4 +1,4 @@
-// Copyright 1994, 2008 by Jon Dart
+// Copyright 1994, 2008, 2021 by Jon Dart
 
 #include "eco.h"
 
@@ -9,12 +9,12 @@ ECO::ECO()
    // fill up hash table
    for (const ECOData *d = eco_codes; d->eco; d++)
    {
-        map<hash_t,const ECOData *>::value_type p(d->hash_code,d);
+        std::map<hash_t,const ECOData *>::value_type p(d->hash_code,d);
         ht.insert(p);
    }
 }
 
-void ECO::classify( const MoveArray &moves, string &result, string &name)
+void ECO::classify( const MoveArray &moves, std::string &result, std::string &name)
 {
     // We take kind of a simple-minded approach to ECO classification.
     // Each ECO code is associated with a chess position.  We follow the
@@ -27,7 +27,7 @@ void ECO::classify( const MoveArray &moves, string &result, string &name)
     name = "";
     for ( unsigned i = 0; i < moves.num_moves(); i++)
     {
-        map<hash_t,const ECOData*>::const_iterator it =
+        std::map<hash_t,const ECOData*>::const_iterator it =
          ht.find(moves[i].hashcode());
         if (it != ht.end())
         {

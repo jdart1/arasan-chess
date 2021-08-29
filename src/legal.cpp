@@ -1,4 +1,4 @@
-// Copyright 1998, 2005, 2008, 2017-2018, 2020 by Jon Dart. All Rights Reserved.
+// Copyright 1998, 2005, 2008, 2017-2018, 2020-2021 by Jon Dart. All Rights Reserved.
 
 #include "legal.h"
 #include "movegen.h"
@@ -110,7 +110,7 @@ int legalMove(const Board &board, Square start,
 {
    // do a little basic sanity checking:
   if (!OnBoard(start) || !OnBoard(dest) || IsEmptyPiece(board[start])) {
-      cout << "fails sanity" << endl;
+      std::cout << "fails sanity" << std::endl;
       return 0;
   }
 

@@ -1,5 +1,5 @@
-// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2019, 2021 by Jon Dart.
-// All Rights Reserved.
+// Copyright 1994, 1995, 2000, 2009, 2013-2014, 2017-2019, 2021 by Jon
+// Dart.  All Rights Reserved.
 
 #ifndef _LOG_H
 #define _LOG_H
@@ -8,7 +8,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-using namespace std;
 
 struct Statistics;
 
@@ -24,7 +23,7 @@ public:
    // "move_image" is the string representation of the move.
    LogEntry(const BoardState &state,
             const Move &move,
-            const string &move_image,
+            const std::string &move_image,
             bool fromBook,
             score_t score,
             int depth);
@@ -51,7 +50,7 @@ public:
       return my_state;
    }
 
-   const string & result() const {
+   const std::string & result() const {
       return my_result;
    }
 
@@ -79,11 +78,11 @@ private:
 
    BoardState my_state;
    Move my_move;
-   string my_image;
+   std::string my_image;
    bool my_fromBook;
    score_t my_score;
    int my_depth;
-   string my_result;
+   std::string my_result;
 };
 
 class Log
@@ -106,7 +105,7 @@ public:
    // made.
    void add_move( Board &board,
                   const Move &emove,
-                  const string &move_image,
+                  const std::string &move_image,
                   const Statistics *stats,
                   uint64_t elapsed_time,
                   int toFile);
@@ -155,7 +154,7 @@ public:
 
    void write(const char *);
 
-   void write(const string &s) {
+   void write(const std::string &s) {
       write(s.c_str());
    }
 
@@ -165,7 +164,7 @@ public:
 
    GameResult getResult() const;
 
-   void getResultAsString(string & result) const noexcept {
+   void getResultAsString(std::string & result) const noexcept {
       result = empty() ? "*" : entries.back().result();
    }
 
@@ -183,10 +182,10 @@ public:
 
 private:
 
-   vector<LogEntry> entries;
+   std::vector<LogEntry> entries;
 
    unsigned my_current;
-   ofstream log_file;
+   std::ofstream log_file;
    int enabled;
 };
 

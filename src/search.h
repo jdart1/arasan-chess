@@ -21,9 +21,7 @@ extern "C" {
 #include <atomic>
 #include <cassert>
 #include <functional>
-#include <list>
 #include <random>
-using namespace std;
 
 class MoveGenerator;
 
@@ -585,14 +583,14 @@ private:
     uint64_t time_limit, time_target;
     // Max amount of time we can add if score is dropping:
     uint64_t xtra_time;
-    atomic<int64_t> bonus_time;
+    std::atomic<int64_t> bonus_time;
     bool fail_high_root_extend, fail_low_root_extend, fail_high_root;
     // Factors to use to adjust time up/down based on search history:
     double searchHistoryBoostFactor, searchHistoryReductionFactor, maxBoostFactor;
     int maxBoostDepth;
     int ply_limit;
-    atomic<bool> background;
-    atomic<bool> is_searching;
+    std::atomic<bool> background;
+    std::atomic<bool> is_searching;
     // flag for UCI. When set the search will terminate at the
     // next time check interval:
     bool stopped;
@@ -629,7 +627,7 @@ private:
         }
     };
 
-    array<SearchHistory,Constants::MaxPly> rootSearchHistory;
+    std::array<SearchHistory,Constants::MaxPly> rootSearchHistory;
 
 #ifdef SYZYGY_TBS
     int tb_hit, tb_dtz;

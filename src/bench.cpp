@@ -48,7 +48,7 @@ Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
     searcher->setThreadCount(globals::options.search.ncpus);
 
     Results results;
-    for (string s : epds) {
+    for (std::string s : epds) {
         benchLine(searcher, s, results, depth, verbose);
     }
     delete searcher;
@@ -60,26 +60,26 @@ Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
 void Bench::benchLine(SearchController *searcher, const std::string &epd, Bench::Results &results, int depthLimit, bool verbose)
 {
     std::stringstream stream(epd);
-    string id, comment;
+    std::string id, comment;
     EPDRecord epd_rec;
     Board board;
     if (!ChessIO::readEPDRecord(stream,board,epd_rec)) return;
     epd_rec.getVal("id",id);
     epd_rec.getVal("c0",comment);
     if (epd_rec.hasError()) {
-        cerr << "error in EPD record ";
-        if (id.length()>0) cerr << id;
-        cerr << ": ";
-        cerr << epd_rec.getError();
-        cerr << endl;
+        std::cerr << "error in EPD record ";
+        if (id.length()>0) std::cerr << id;
+        std::cerr << ": ";
+        std::cerr << epd_rec.getError();
+        std::cerr << std::endl;
     }
     else {
         if (verbose) {
             if (id.length()>0) {
-                cout << id << endl;;
+                std::cout << id << std::endl;;
             }
             else if (comment.length()>0) {
-                cout << comment << endl;
+                std::cout << comment << std::endl;
             }
         }
 
@@ -92,11 +92,11 @@ void Bench::benchLine(SearchController *searcher, const std::string &epd, Bench:
                                              verbose ? TalkLevel::Test : TalkLevel::Silent,
                                              excludes, includes);
         if (verbose) {
-            Notation::image(board,result,Notation::OutputFormat::SAN,cout);
-            cout << " Nodes: ";
-            cout << stats.num_nodes;
-            cout << " Time: ";
-            cout << searcher->getElapsedTime() << endl;
+            Notation::image(board,result,Notation::OutputFormat::SAN,std::cout);
+            std::cout << " Nodes: ";
+            std::cout << stats.num_nodes;
+            std::cout << " Time: ";
+            std::cout << searcher->getElapsedTime() << std::endl;
         }
         results.nodes += stats.num_nodes;
         results.time += searcher->getElapsedTime();
@@ -105,8 +105,8 @@ void Bench::benchLine(SearchController *searcher, const std::string &epd, Bench:
 
 std::ostream & operator << (std::ostream &o, const Bench::Results &results)
 {
-    o << "Time\t: " << results.time << endl;
-    o << "Nodes\t: " << results.nodes << endl;
-    o << "NPS\t: "  << 1000*results.nodes/results.time << endl;
+    o << "Time\t: " << results.time << std::endl;
+    o << "Nodes\t: " << results.nodes << std::endl;
+    o << "NPS\t: "  << 1000*results.nodes/results.time << std::endl;
     return o;
 }

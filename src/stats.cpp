@@ -1,4 +1,4 @@
-// Copyright 1994-2008, 2012, 2013, 2017-2018, 2020 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2012, 2013, 2017-2018, 2020-2021 by Jon Dart. All Rights Reserved.
 
 #include "stats.h"
 #include "notation.h"
@@ -195,11 +195,11 @@ void Statistics::sortMultiPVs() {
     completedDepth = multi_pvs[0].completedDepth;
 }
 
-void Statistics::printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time) {
+void Statistics::printNPS(std::ostream &s,uint64_t num_nodes, uint64_t elapsed_time) {
    double nps = ((float)num_nodes)/((float)elapsed_time);
    std::ios_base::fmtflags original_flags = s.flags();
-   s.setf(ios::fixed);
-   s << setprecision(2);
+   s.setf(std::ios::fixed);
+   s << std::setprecision(2);
    if (nps >= 1000.0) {
      s << nps/1000.0 << "M";
    }

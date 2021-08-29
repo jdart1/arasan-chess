@@ -142,7 +142,7 @@ void BookWriter::add(const hash_t hashCode, uint8_t moveIndex, uint8_t weight,
 }
 
 int BookWriter::write(const char* pathName) {
-   ofstream book_file(pathName, ios::out | ios::trunc | ios::binary);
+   std::ofstream book_file(pathName, std::ios::out | std::ios::trunc | std::ios::binary);
    book::BookHeader header;
    header.version = book::BOOK_VERSION;
    uint16_t pages = (uint16_t)index_pages;

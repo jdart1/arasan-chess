@@ -9,7 +9,6 @@
 #include <array>
 #include <atomic>
 #include <string>
-using namespace std;
 
 enum StateType {NormalState,Terminated,Check,Checkmate,
                 Stalemate,Draw,Resigns};
@@ -27,19 +26,19 @@ struct Statistics
    score_t tb_value;
    bool fromBook;
    bool complete; // if at end of iteration
-   array <Move,Constants::MaxPly> best_line;
-   string best_line_image;
+   std::array <Move,Constants::MaxPly> best_line;
+   std::string best_line_image;
    unsigned depth;
-   atomic<unsigned> completedDepth;
+   std::atomic<unsigned> completedDepth;
 
    unsigned multipv_count; // only for UCI
    unsigned multipv_limit; // only for UCI
-   atomic<bool> failHigh, failLow;
+   std::atomic<bool> failHigh, failLow;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth
    uint64_t tb_probes; // tablebase probes
    // atomic because may need to be read during a search:
-   atomic<uint64_t> tb_hits;   // tablebase hits
+   std::atomic<uint64_t> tb_hits;   // tablebase hits
 #ifdef SEARCH_STATS
    uint64_t num_qnodes;
    uint64_t reg_nodes;
@@ -61,7 +60,7 @@ struct Statistics
    uint64_t hash_searches;
 #endif
    // atomic because may need to be read during a search:
-   atomic<uint64_t> num_nodes;
+   std::atomic<uint64_t> num_nodes;
 #ifdef MOVE_ORDER_STATS
    array<int,4> move_order;
    int move_order_count;
@@ -75,8 +74,8 @@ struct Statistics
         score_t tb_value;
         bool fromBook;
         bool complete; // if at end of iteration
-        array <Move,Constants::MaxPly> best_line;
-        string best_line_image;
+        std::array <Move,Constants::MaxPly> best_line;
+        std::string best_line_image;
         unsigned depth;
         unsigned completedDepth;
 
@@ -106,7 +105,7 @@ struct Statistics
             }
    };
 
-   array<MultiPVEntry,MAX_PV> multi_pvs;
+   std::array<MultiPVEntry,MAX_PV> multi_pvs;
 
    Statistics();
 
@@ -127,7 +126,7 @@ struct Statistics
 
    void sortMultiPVs();
 
-   static void printNPS(ostream &s,uint64_t num_nodes, uint64_t elapsed_time);
+   static void printNPS(std::ostream &s,uint64_t num_nodes, uint64_t elapsed_time);
 
 };
 

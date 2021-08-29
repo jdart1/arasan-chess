@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
-using namespace std;
 
 #include "types.h"
 
@@ -34,7 +33,7 @@ class Options
    int resign_threshold;
 #ifdef SYZYGY_TBS
    int use_tablebases;
-   string syzygy_path;
+   std::string syzygy_path;
    int syzygy_50_move_rule;
    int syzygy_probe_depth;
 #endif
@@ -43,7 +42,7 @@ class Options
    int ncpus;
 #ifdef NNUE
    int useNNUE;
-   string nnueFile;
+   std::string nnueFile;
 #endif    
    int easy_plies; // do wide search for "easy move" detection
    int easy_threshold; // wide search width in centipawns
@@ -77,8 +76,8 @@ class Options
    }
 
    template <class T>
-   static int setOption(const string &value, T &dest) {
-       stringstream buf(value);
+   static int setOption(const std::string &value, T &dest) {
+       std::stringstream buf(value);
        T tmp;
        buf >> tmp;
        if (!buf.bad() && !buf.fail()) {
@@ -92,25 +91,25 @@ class Options
      search.strength = std::max<int>(0,std::min<int>(100,(rating-1000)/16));
    }
 
-   static void setMemoryOption(size_t &value, const string &valueString);
+   static void setMemoryOption(size_t &value, const std::string &valueString);
 
-   string tbPath() const;
+   std::string tbPath() const;
 
    // sets options based on a .rc file
-   int init(const string &optionsFile);
+   int init(const std::string &optionsFile);
 
    int log_enabled;
    int log_append;
    int store_games;
-   string log_pathname;
-   string game_pathname;
+   std::string log_pathname;
+   std::string game_pathname;
 
  private:
 
-   void set_option(const string &name,const string &value);
+   void set_option(const std::string &name,const std::string &value);
 
    template <class T>
-   int setOption(const string &name, const string &valueString, T &val);
+   int setOption(const std::string &name, const std::string &valueString, T &val);
 };
 
 #endif

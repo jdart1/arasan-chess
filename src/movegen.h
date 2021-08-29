@@ -10,9 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
-#include <set>
 #include <vector>
-using namespace std;
 
 class SearchContext;
 struct NodeInfo;
@@ -282,7 +280,7 @@ class RootMoveGenerator : public MoveGenerator
 
    protected:
 
-      const vector <RootMove> &getMoveList() const {
+      const std::vector <RootMove> &getMoveList() const {
           return moveList;
       }
 
@@ -295,7 +293,7 @@ class RootMoveGenerator : public MoveGenerator
       }
 
    private:
-      vector<RootMove> moveList;
+      std::vector<RootMove> moveList;
       int excluded;
 
 };

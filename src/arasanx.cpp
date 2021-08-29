@@ -14,6 +14,7 @@
 
 #include <cctype>
 #include <iostream>
+#include <fstream>
 #include <memory>
 
 extern "C"
@@ -30,10 +31,9 @@ extern "C"
 #include <sys/select.h>
 #endif
 }
-using namespace std;
 
 static THREAD pollingThreadHandle;
-static string cmd_buf;
+static std::string cmd_buf;
 
 static void processCmdChars(Protocol *p,char *buf,int len) {
     // try to parse the buffer into command lines
@@ -62,7 +62,7 @@ static void processCmdChars(Protocol *p,char *buf,int len) {
 static DWORD WINAPI inputPoll(void *x) {
    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
    Protocol *p = static_cast<Protocol *>(x);
-   if (p->traceOn()) cout << "# starting poll thread" << endl;
+   if (p->traceOn()) std::cout << "# starting poll thread" << std::endl;
    char buf[1024];
    while (!globals::polling_terminated) {
       BOOL bSuccess;
@@ -72,20 +72,20 @@ static DWORD WINAPI inputPoll(void *x) {
          // processing
          if (!SetConsoleMode(hStdin, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT |
                          ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT)) {
-            cerr << "SetConsoleMode failed" << endl;
+            std::cerr << "SetConsoleMode failed" << std::endl;
          }
          bSuccess = ReadConsole(hStdin, buf, 1024, &dwRead, NULL);
       }
       else {
          bSuccess = ReadFile(hStdin, buf, 1024, &dwRead, NULL);
          if (! bSuccess || dwRead == 0) {
-            if (p->traceOn()) cout << "# read error from input pipe" << endl;
+            if (p->traceOn()) std::cout << "# read error from input pipe" << std::endl;
             break;
 	 }
       }
       processCmdChars(p,buf,(int)dwRead);
    }
-   if (p->traceOn()) cout << "input polling thread terminated" << endl;
+   if (p->traceOn()) std::cout << "input polling thread terminated" << std::endl;
    return 0;
 }
 
@@ -93,7 +93,7 @@ static DWORD WINAPI inputPoll(void *x) {
 
 static void * CDECL inputPoll(void *x) {
     Protocol *p = static_cast<Protocol*>(x);
-    if (p->traceOn()) cout << "# starting poll thread" << endl;
+    if (p->traceOn()) std::cout << "# starting poll thread" << std::endl;
     static const int INPUT_BUF_SIZE = 1024;
     char buf[INPUT_BUF_SIZE];
     while (!globals::polling_terminated) {
@@ -129,7 +129,7 @@ static void * CDECL inputPoll(void *x) {
         }
     }
     if (p->traceOn()) {
-        cout << "input polling thread terminated" << endl;
+        std::cout << "input polling thread terminated" << std::endl;
     }
     return nullptr;
 }
@@ -140,7 +140,7 @@ int CDECL main(int argc, char **argv) {
     signal(SIGINT,SIG_IGN);
 
     // Show a message on the console
-    cout << "Arasan " Arasan_Version << ' ' << Arasan_Copyright << endl;
+    std::cout << "Arasan " Arasan_Version << ' ' << Arasan_Copyright << std::endl;
     // Must use unbuffered console
     setbuf(stdin,NULL);
     setbuf(stdout, NULL);
@@ -171,7 +171,7 @@ int CDECL main(int argc, char **argv) {
             result = setrlimit(RLIMIT_STACK, &rl);
             if (result)
             {
-                cerr << "failed to increase stack size" << endl;
+                std::cerr << "failed to increase stack size" << std::endl;
                 exit(-1);
             }
         }
@@ -192,20 +192,20 @@ int CDECL main(int argc, char **argv) {
                 globals::options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
                 cpusSet = true;
                 if (globals::options.search.ncpus<=0) {
-                    cerr << "-c parameter must be >=1" << endl;
+                    std::cerr << "-c parameter must be >=1" << std::endl;
                     exit(-1);
                 }
                 break;
             case 'f':
             {
                 ++arg;
-                cout << "loading " << argv[arg] << endl;
-                ifstream pos_file( argv[arg], ios::in);
+                std::cout << "loading " << argv[arg] << std::endl;
+                std::ifstream pos_file( argv[arg], std::ios::in);
                 if (pos_file.good()) {
                     pos_file >> board;
                 }
                 else {
-                    cerr << "file not found: " << argv[arg] << endl;
+                    std::cerr << "file not found: " << argv[arg] << std::endl;
                     return -1;
                 }
                 break;
@@ -214,21 +214,21 @@ int CDECL main(int argc, char **argv) {
                 if (strcmp(argv[arg]+1,"ics")==0)
                     ics = true;
                 else {
-                    cerr << "Warning: unknown option: " << argv[arg]+1 << endl;
+                    std::cerr << "Warning: unknown option: " << argv[arg]+1 << std::endl;
                 }
                 break;
             case 'H':
                 ++arg;
                 Options::setMemoryOption(globals::options.search.hash_table_size,
-                                         string(argv[arg]));
+                                         argv[arg]);
                 memorySet = true;
                 break;
             case 't':
                 trace = true;
                 break;
             default:
-                cerr << "Warning: unknown option: " << argv[arg]+1 <<
-                    endl;
+                std::cerr << "Warning: unknown option: " << argv[arg]+1 <<
+                    std::endl;
                 break;
             }
             ++arg;
@@ -238,10 +238,10 @@ int CDECL main(int argc, char **argv) {
         if (strcmp(argv[arg],"bench") == 0) {
             Bench b;
             Bench::Results res = b.bench(true);
-            cout << res;
+            std::cout << res;
             return 0;
         } else {
-            cerr << "unrecognized text on command line: " << argv[arg] << endl;
+            std::cerr << "unrecognized text on command line: " << argv[arg] << std::endl;
             return -1;
         }
     }
@@ -250,20 +250,20 @@ int CDECL main(int argc, char **argv) {
 
 #ifdef _WIN32
     // setup polling thread for input from engine
-    polling_terminated = false;
+    globals::polling_terminated = false;
     DWORD id;
     pollingThreadHandle = CreateThread(NULL,0,
                                        inputPoll,p,
                                        0,
                                        &id);
     if (pollingThreadHandle == NULL) {
-        int nError = GetLastError();
+        int nerror = GetLastError();
         LPSTR errMsg = NULL;
 
         int nChars = FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
             NULL,
-            nError,
+            nerror,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  // Default language
             errMsg,
             512,
@@ -273,13 +273,13 @@ int CDECL main(int argc, char **argv) {
             printf("Input thread failed to start: %s\n", errMsg);
         }
         else {
-            printf("Input thread failed to start, error code %d\n", nError);
+            printf("Input thread failed to start, error code %d\n", nerror);
         }
         LocalFree(errMsg);
         exit(-1);
     }
 #else
-    if (pthread_create(&pollingThreadHandle, NULL, inputPoll, p)) {
+    if (pthread_create(&globals::pollingThreadHandle, NULL, inputPoll, p)) {
         perror("input thread creation failed");
         exit(-1);
     }
@@ -288,7 +288,7 @@ int CDECL main(int argc, char **argv) {
 #ifdef UNIT_TESTS
     globals::delayedInit(); // ensure all init is done including TBs, network
     int errs = doUnit();
-    cout << "Unit tests ran: " << errs << " error(s)" << endl;
+    std::cout << "Unit tests ran: " << errs << " error(s)" << std::endl;
 #endif
 
     p->poll(globals::polling_terminated);

@@ -17,11 +17,10 @@
 #include <cctype>
 #include <cstddef>
 #include <iostream>
+#include <sstream>
 #include <unordered_set>
 
 struct NodeInfo;
-
-using namespace std;
 
 const Bitboard Board::black_squares(0xaa55aa55aa55aa55ULL);
 
@@ -1988,9 +1987,9 @@ int Board::discoversAttack(Square source, Square dest, Square target, ColorType 
    }
 }
 
-static void set_bad( istream &i )
+static void set_bad( std::istream &i )
 {
-   i.clear( ios::badbit | i.rdstate() );
+    i.clear( std::ios::badbit | i.rdstate() );
 }
 
 int Board::repCount(int target) const noexcept
@@ -2021,7 +2020,7 @@ bool Board::anyRep() const noexcept
    // If only 2 entries side to move is different so the
    // hash codes cannot match:
    if (entries < 3) return 0;
-   unordered_set<hash_t> codes;
+   std::unordered_set<hash_t> codes;
    for (hash_t *repList=repListHead-1;
       entries>0;
       repList--,entries--) {
@@ -2118,10 +2117,10 @@ void Board::flip() {
    setSecondaryVars();
 }
 
-istream & operator >> (istream &i, Board &board)
+std::istream & operator >> (std::istream &i, Board &board)
 {
    // read in a board position in Forsythe-Edwards (FEN) notation.
-   stringstream buf;
+   std::stringstream buf;
    char c = '\0';
 
    // skip leading spaces/newlines
@@ -2156,7 +2155,7 @@ istream & operator >> (istream &i, Board &board)
    return i;
 }
 
-ostream & operator << (ostream &o, const Board &board)
+std::ostream & operator << (std::ostream &o, const Board &board)
 {
    BoardIO::writeFEN(board,o,1);
    return o;

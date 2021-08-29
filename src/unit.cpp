@@ -24,19 +24,18 @@
 #include <string>
 #include <utility>
 
-using namespace std;
 using namespace chess;
 
 static int testIsPinned() {
 
     struct IsPinnedData {
-       string fen;
+       std::string fen;
        Square start, dest;
        int result;
        IsPinnedData(const char *fenStr, Square s, Square d, int res)
           : fen(fenStr), start(s), dest(d), result(res) {
           if (!BoardIO::readFEN(board, fenStr)) {
-             cerr << "error in FEN: " << fenStr << endl;
+             std::cerr << "error in FEN: " << fenStr << std::endl;
              return;
           }
        }
@@ -78,7 +77,7 @@ static int testIsPinned() {
     for (int i = 0; i<28; i++) {
        const IsPinnedData & data = cases[i];
        if (data.board.isPinned(data.board.sideToMove(),data.start, data.dest) != data.result) {
-          cerr << "isPinned: error in case " << i << endl;
+          std::cerr << "isPinned: error in case " << i << std::endl;
           ++errs;
        }
     }
@@ -88,11 +87,11 @@ static int testIsPinned() {
 static int testGetPinned() {
 
     struct GetPinnedData {
-       string fen;
-       set<Square> sqs;
+       std::string fen;
+        std::set<Square> sqs;
        GetPinnedData(const char *fenStr, const std::initializer_list<Square> &sqlist) : fen(fenStr) {
           if (!BoardIO::readFEN(board, fenStr)) {
-             cerr << "error in FEN: " << fenStr << endl;
+             std::cerr << "error in FEN: " << fenStr << std::endl;
              return;
           }
           std::for_each(sqlist.begin(), sqlist.end(),
@@ -123,16 +122,16 @@ static int testGetPinned() {
        const ColorType oside = board.oppositeSide();
        Bitboard b = board.getPinned(board.kingSquare(oside), side, oside);
        if (b.bitCount() != data.sqs.size()) {
-          cout << i << ' ' << b.bitCount() << ' ' << data.sqs.size() << endl;
-          cerr << "error in getPinned (count), case " << i << endl;
+          std::cout << i << ' ' << b.bitCount() << ' ' << data.sqs.size() << std::endl;
+          std::cerr << "error in getPinned (count), case " << i << std::endl;
           ++errs;
           continue;
        }
        Square sq;
        while (b.iterate(sq)) {
           if (data.sqs.count(sq) != 1) {
-             cerr << "error in getPinned, case " << i << ' ' <<
-                SquareImage(sq) << " not found" << endl;
+             std::cerr << "error in getPinned, case " << i << ' ' <<
+                SquareImage(sq) << " not found" << std::endl;
              ++errs;
           }
        }
@@ -143,19 +142,19 @@ static int testGetPinned() {
 static int testSee() {
 
     struct SeeData {
-       string fen;
+       std::string fen;
        Move move;
        score_t result;
        SeeData(const char *fenStr, const char *moveStr, score_t res) :
           fen(fenStr), move(NullMove), result(res) {
           if (!BoardIO::readFEN(board, fenStr)) {
-             cerr << "warning: testSee: error in FEN: " << fenStr << endl;
+             std::cerr << "warning: testSee: error in FEN: " << fenStr << std::endl;
              return;
           }
           move = Notation::value(board,board.sideToMove(),
                                  Notation::InputFormat::SAN,moveStr);
           if (IsNull(move)) {
-             cerr << "warning: testSee: error in move: " << moveStr << endl;
+             std::cerr << "warning: testSee: error in move: " << moveStr << std::endl;
           }
        }
        Board board;
@@ -194,7 +193,7 @@ static int testSee() {
        const SeeData &data = seeData[i];
        score_t result = see(data.board,data.move);
        if (result != data.result) {
-          cerr << "see: error in case " << i << endl;
+          std::cerr << "see: error in case " << i << std::endl;
           ++errs;
        }
 
@@ -203,14 +202,14 @@ static int testSee() {
           threshold = data.result;
           result = seeSign(data.board,data.move,threshold);
           if (result == 0) {
-             cerr << "seeSign: error in case " << i << endl;
+             std::cerr << "seeSign: error in case " << i << std::endl;
              ++errs;
           }
        } else {
           threshold = data.result+1;
           result = seeSign(data.board,data.move,threshold);
           if (result != 0) {
-             cerr << "seeSign: error in case " << i << endl;
+             std::cerr << "seeSign: error in case " << i << std::endl;
              ++errs;
           }
        }
@@ -221,11 +220,11 @@ static int testSee() {
 static int testNotation() {
 
     struct NotationData {
-       string fen,moveStr;
+       std::string fen,moveStr;
        NotationData(const char *fenStr, const char *s)
 		: fen(fenStr), moveStr(s) {
           if (!BoardIO::readFEN(board, fenStr)) {
-             cerr << "error in FEN: " << fenStr << endl;
+             std::cerr << "error in FEN: " << fenStr << std::endl;
              return;
           }
        }
@@ -259,109 +258,109 @@ static int testNotation() {
                                  Notation::InputFormat::SAN,
                                  notationData[i].moveStr);
         if (m == NullMove || !legalMove(notationData[i].board,m)) {
-           cout << "notation: error in case " << i << endl;
+           std::cout << "notation: error in case " << i << std::endl;
            ++errs;
         }
     }
     // Verify e.p. square is set correctly
     Board board;
-    stringstream s(notationData[15].fen);
+    std::stringstream s(notationData[15].fen);
     s >> board;
     if (board.enPassantSq() != B5) {
-        cerr << "notation: error in case 17" << endl;
+        std::cerr << "notation: error in case 17" << std::endl;
         ++errs;
     }
-    stringstream s2;
+    std::stringstream s2;
     s2 << board;
     if (s2.str() != notationData[15].fen) {
-        cerr << "notation: error in case 18" << endl;
+        std::cerr << "notation: error in case 18" << std::endl;
         ++errs;
     }
-    stringstream s3(notationData[16].fen);
+    std::stringstream s3(notationData[16].fen);
     s3 >> board;
     if (board.enPassantSq() != G4) {
-        cerr << "notation: error in case 19" << endl;
+        std::cerr << "notation: error in case 19" << std::endl;
         ++errs;
     }
-    stringstream s4;
+    std::stringstream s4;
     s4 << board;
     if (s4.str() != notationData[16].fen) {
-        cerr << "notation: error in case 20" << endl;
+        std::cerr << "notation: error in case 20" << std::endl;
         ++errs;
     }
     // verify flip() sets e.p. square correctly
     board.flip();
     if (board.enPassantSq() != G5) {
-        cout << "notation: error in case 21" << endl;
+        std::cout << "notation: error in case 21" << std::endl;
     }
     int casenum = 22;
     // Test WB and UCI formats
     for (int i = 0; i < 2; i++) {
         Notation::InputFormat fmt = (i == 0 ? Notation::InputFormat::WB :
                                      Notation::InputFormat::UCI);
-        string fenStr = "4Qnk1/pp1P1p2/6rp/8/3P4/r5BK/8/8 w - -";
+        std::string fenStr = "4Qnk1/pp1P1p2/6rp/8/3P4/r5BK/8/8 w - -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
-            cerr << "error in FEN: " << fenStr << endl;
+            std::cerr << "error in FEN: " << fenStr << std::endl;
             return ++errs;
         }
         Move m = Notation::value(board,White,fmt,"d7d8q");
         if (m == NullMove || StartSquare(m) != D7 || DestSquare(m) != D8 || PromoteTo(m) != Queen) {
-            cout << "notation: error in case " << casenum << endl;
+            std::cout << "notation: error in case " << casenum << std::endl;
             ++errs;
         }
         ++casenum;
         fenStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
-            cerr << "notation: error in FEN: " << fenStr << endl;
+            std::cerr << "notation: error in FEN: " << fenStr << std::endl;
             return ++errs;
         }
         m = Notation::value(board,White,fmt,"e2e4");
         if (m == NullMove || StartSquare(m) != E2 || DestSquare(m) != E4 || PromoteTo(m) != Empty) {
-            cout << "notation: error in case " << casenum << endl;
+            std::cout << "notation: error in case " << casenum << std::endl;
             ++errs;
         }
         ++casenum;
         fenStr = "r2qr1k1/p2n1pp1/1pb2b1p/3p4/8/1QNBPN2/PP3PPP/3RK2R w K -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
-            cerr << "notation: error in FEN: " << fenStr << endl;
+            std::cerr << "notation: error in FEN: " << fenStr << std::endl;
             return ++errs;
         }
         m = Notation::value(board,White,fmt,fmt == Notation::InputFormat::WB ? "O-O" : "e1g1");
         if (TypeOfMove(m) != KCastle) {
-            cout << "notation: error in case " << casenum << endl;
+            std::cout << "notation: error in case " << casenum << std::endl;
             ++errs;
         }
         ++casenum;
         fenStr = "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b kq -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
-            cerr << "notation: error in FEN: " << fenStr << endl;
+            std::cerr << "notation: error in FEN: " << fenStr << std::endl;
             return ++errs;
         }
         m = Notation::value(board,Black,fmt,fmt == Notation::InputFormat::WB ? "O-O" : "e8g8");
         if (TypeOfMove(m) != KCastle) {
-            cout << "notation: error in case " << casenum << endl;
+            std::cout << "notation: error in case " << casenum << std::endl;
             ++errs;
         }
         ++casenum;
         fenStr = "r2qkb1r/1p3pp1/p1bppn1p/8/4P3/2NB1Q2/PPPB1PPP/R3K2R w KQkq -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
-            cerr << "notation: error in FEN: " << fenStr << endl;
+            std::cerr << "notation: error in FEN: " << fenStr << std::endl;
             return ++errs;
         }
         m = Notation::value(board,White,fmt,fmt == Notation::InputFormat::WB ? "O-O-O" : "e1c1");
         if (TypeOfMove(m) != QCastle) {
-            cout << "notation: error in case " << casenum << endl;
+            std::cout << "notation: error in case " << casenum << std::endl;
             ++errs;
         }
         ++casenum;
         fenStr = "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b kq -";
         if (!BoardIO::readFEN(board, fenStr.c_str())) {
-            cerr << "notation: error in FEN: " << fenStr << endl;
+            std::cerr << "notation: error in FEN: " << fenStr << std::endl;
             return ++errs;
         }
         m = Notation::value(board,Black,fmt,fmt == Notation::InputFormat::WB ? "O-O-O" : "e8c8");
         if (TypeOfMove(m) != QCastle) {
-            cout << "notation: error in case " << casenum << endl;
+            std::cout << "notation: error in case " << casenum << std::endl;
             ++errs;
         }
         ++casenum;
@@ -371,7 +370,7 @@ static int testNotation() {
 }
 
 static int testPGN() {
-static const string pgn_test = "[Event \"?\"]"
+    static const std::string pgn_test = "[Event \"?\"]"
 "[Site \"chessclub.com\"]"
 "[Date \"2013.12.16\"]"
 "[Round \"?\"]"
@@ -389,29 +388,29 @@ static const string pgn_test = "[Event \"?\"]"
 "Nd3 Nb8 28. Nc5 Nd7 29. Nd3 {1/2-1/2 (29) Saglione,E (2547)-Ludgate,A (2515)"
 "ICCF 2010}) 8. h3 Na6 9. Bf4 *";
 
-      stringstream infile(pgn_test);
+      std::stringstream infile(pgn_test);
       long first;
-      vector <ChessIO::Header>hdrs;
+      std::vector <ChessIO::Header>hdrs;
       ChessIO::collect_headers(infile,hdrs,first);
       int errs = 0;
       if (hdrs.size() != 10) {
          ++errs;
-         cerr << "error in PGN test: header count" << endl;
+         std::cerr << "error in PGN test: header count" << std::endl;
       }
       ChessIO::Header firstHdr = hdrs[0];
       if (firstHdr.tag() != "Event") {
          ++errs;
-         cerr << "error in PGN test: bad tag" << endl;
+         std::cerr << "error in PGN test: bad tag" << std::endl;
       }
       if (firstHdr.value() != "?") {
          ++errs;
-         cerr << "error in PGN test: bad value" << endl;
+         std::cerr << "error in PGN test: bad value" << std::endl;
       }
 
       int var = 0;
       int seen = 0;
       for (;;) {
-         string num;
+         std::string num;
          ChessIO::Token tok = ChessIO::get_next_token(infile);
          if (tok.type == ChessIO::OpenVar) {
              seen |= 1;
@@ -423,20 +422,20 @@ static const string pgn_test = "[Event \"?\"]"
              seen |= 4;
              if (tok.val != "$1") {
                  ++errs;
-                 cout << "PGN test: NAG error" << endl;
+                 std::cout << "PGN test: NAG error" << std::endl;
              }
          } else if (tok.type == ChessIO::Comment) {
              seen |= 8;
              if (tok.val.substr(0,9) != "{1/2-1/2 ") {
                  ++errs;
-                 cout << "PGN test: comment error" << endl;
+                 std::cout << "PGN test: comment error" << std::endl;
              }
          }
          else if (tok.type == ChessIO::Result) {
              seen |= 16;
              if (tok.val != "*") {
                  ++errs;
-                 cout << "PGN test: result error" << endl;
+                 std::cout << "PGN test: result error" << std::endl;
              }
          }
          if (tok.type == ChessIO::Eof)
@@ -444,11 +443,11 @@ static const string pgn_test = "[Event \"?\"]"
       }
       if (var) {
           ++errs;
-          cout << "PGN test: variation not closed" << endl;
+          std::cout << "PGN test: variation not closed" << std::endl;
       }
       if (seen != 0x1f) {
           ++errs;
-          cout << "PGN test: missing tokens" << endl;
+          std::cout << "PGN test: missing tokens" << std::endl;
       }
       return errs;
 }
@@ -456,7 +455,7 @@ static const string pgn_test = "[Event \"?\"]"
 static int testEval() {
     // verify eval results are symmetrical (White/Black)
     const int CASES = 43;
-    static const string fens[CASES] = {
+    static const std::string fens[CASES] = {
         "8/4K3/8/1NR5/8/4k1r1/8/8 w - -",
         "8/4K3/8/1N6/6p1/4k2p/8/8 w - -",
         "8/4K3/8/1r6/6B1/4k2N/8/8 w - -",
@@ -506,7 +505,7 @@ static int testEval() {
     for (int i = 0; i < CASES; i++) {
         Board board;
         if (!BoardIO::readFEN(board, fens[i].c_str())) {
-            cerr << "testEval case " << i << " error in FEN: " << fens[i] << endl;
+            std::cerr << "testEval case " << i << " error in FEN: " << fens[i] << std::endl;
             ++errs;
             continue;
         }
@@ -516,7 +515,7 @@ static int testEval() {
         int eval2 = s->evalu8(board);
         if (eval1 != eval2) {
             ++errs;
-            cerr << "testEval case " << i << " eval mismatch" << endl;
+            std::cerr << "testEval case " << i << " eval mismatch" << std::endl;
         }
         delete s;
     }
@@ -528,11 +527,11 @@ static int testBitbases() {
     const int CASES = 8;
     struct Case
     {
-        Case(const string &f, int r)
+        Case(const std::string &f, int r)
             :fen(f),result(r)
             {
             }
-        string fen;
+        std::string fen;
         int result;
     };
 
@@ -552,11 +551,11 @@ static int testBitbases() {
     Board board;
     for (int i = 0; i<CASES; i++) {
         if (!BoardIO::readFEN(board, cases[i].fen.c_str())) {
-            cerr << "testBitbases: case " << i << " invalid FEN" << endl;
+            std::cerr << "testBitbases: case " << i << " invalid FEN" << std::endl;
             ++errs;
         } else {
             if (s->evalu8(board) != cases[i].result) {
-                cerr << "testBitbases: case " << i << " invalid result" << endl;
+                std::cerr << "testBitbases: case " << i << " invalid result" << std::endl;
                 ++errs;
             }
         }
@@ -569,12 +568,12 @@ static int testDrawEval() {
     const int DRAW_CASES = 13;
     struct DrawCase
     {
-        DrawCase(const string &f, bool legal_draw) :
+        DrawCase(const std::string &f, bool legal_draw) :
             fen(f), legal(legal_draw)
             {
             }
 
-        string fen;
+        std::string fen;
         bool legal;
     };
 
@@ -598,7 +597,7 @@ static int testDrawEval() {
     };
 
     const int NON_DRAW_CASES = 4;
-    static const string nondraw_fens[NON_DRAW_CASES] = {
+    static const std::string nondraw_fens[NON_DRAW_CASES] = {
         "8/7k/8/6B1/6KP/8/8/8 w - - 0 3", // KBP right-color pawn
         "8/3k3B/8/8/5K2/7P/8/8 b - - 0 1", // KBP opp king too far
         "6K1/8/6b1/6k1/8/6B1/8/8 w - - 0 1", // opp color bishops
@@ -612,17 +611,17 @@ static int testDrawEval() {
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
         if (!BoardIO::readFEN(board, draw_cases[i].fen.c_str())) {
-            cerr << "testDrawEval draw case " << i << " error in FEN " << endl;
+            std::cerr << "testDrawEval draw case " << i << " error in FEN " << std::endl;
             ++errs;
             continue;
         }
         Scoring *s = new Scoring();
         if (board.isLegalDraw() != draw_cases[i].legal) {
-            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
+            std::cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << std::endl;
             ++errs;
         }
         if (!draw_cases[i].legal && !s->theoreticalDraw(board)) {
-            cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << endl;
+            std::cerr << "testDrawEval: error in draw case " << i << " fen=" << draw_cases[i].fen << std::endl;
             ++errs;
         }
 	delete s;
@@ -630,13 +629,13 @@ static int testDrawEval() {
     for (int i = 0; i < NON_DRAW_CASES; i++) {
         Board board;
         if (!BoardIO::readFEN(board, nondraw_fens[i].c_str())) {
-            cerr << "testDrawEval non-draw case " << i << " error in FEN: " << nondraw_fens[i] << endl;
+            std::cerr << "testDrawEval non-draw case " << i << " error in FEN: " << nondraw_fens[i] << std::endl;
             ++errs;
             continue;
         }
         Scoring *s = new Scoring();
         if (board.isLegalDraw() || s->theoreticalDraw(board)) {
-            cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << endl;
+            std::cerr << "testDrawEval: error in non-draw case " << i << " fen=" << nondraw_fens[i] << std::endl;
             ++errs;
         }
 	delete s;
@@ -650,11 +649,11 @@ static int testDrawEval() {
 static int testWouldAttack() {
    static const struct TestCase
    {
-      string fen;
+      std::string fen;
       Square start, dest;
       Square target;
       int result;
-      TestCase(const string &s, Square st, Square d, Square t,int r) :
+      TestCase(const std::string &s, Square st, Square d, Square t,int r) :
          fen(s),start(st), dest(d), target(t), result(r)
          {
          }
@@ -675,13 +674,13 @@ static int testWouldAttack() {
       const TestCase &acase = cases[i];
         Board board;
         if (!BoardIO::readFEN(board, acase.fen.c_str())) {
-            cerr << "wouldAttack: error in test case " << i << " error in FEN: " << acase.fen << endl;
+            std::cerr << "wouldAttack: error in test case " << i << " error in FEN: " << acase.fen << std::endl;
             ++errs;
             continue;
         }
         Move m = CreateMove(acase.start,acase.dest,TypeOfPiece(board[acase.start]),TypeOfPiece(board[acase.dest]));
         if ((board.wouldAttack(m,acase.target) != 0) != acase.result) {
-           cerr << "wouldAttack: error in test case " << i << endl;
+           std::cerr << "wouldAttack: error in test case " << i << std::endl;
            ++errs;
         }
    }
@@ -691,10 +690,9 @@ static int testWouldAttack() {
 static int testCheckStatus() {
    static const struct TestCase
    {
-      string fen;
-      string move;
+      std::string fen, move;
       CheckStatusType result;
-       TestCase(const string &str, const string &m, CheckStatusType r):
+      TestCase(const std::string &str, const std::string &m, CheckStatusType r):
            fen(str),move(m),result(r)
          {
          }
@@ -725,62 +723,62 @@ static int testCheckStatus() {
       const TestCase &acase = cases[i];
       Board board;
       if (!BoardIO::readFEN(board, acase.fen.c_str())) {
-          cerr << "testCheckStatus: error in test case " << i << " error in FEN" << endl;
+          std::cerr << "testCheckStatus: error in test case " << i << " error in FEN" << std::endl;
           ++errs;
           continue;
       }
       Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,acase.move);
 	  if (IsNull(m)) {
-		  cerr << "testCheckStatus: error in test case " << i << " bad move" << endl;
+		  std::cerr << "testCheckStatus: error in test case " << i << " bad move" << std::endl;
 		  ++errs;
 		  continue;
 	  }
       CheckStatusType wouldCheckResult = board.wouldCheck(m);
       board.doMove(m);
       if (board.checkStatus(m) != acase.result) {
-          cerr << "testCheckStatus: error in test case " << i << " bad result" << endl;
+          std::cerr << "testCheckStatus: error in test case " << i << " bad result" << std::endl;
           ++errs;
       }
       if (board.checkStatus() != wouldCheckResult) {
-          cerr << "testCheckStatus: error in test case " << i << " wouldCheck result" << endl;
+          std::cerr << "testCheckStatus: error in test case " << i << " wouldCheck result" << std::endl;
           ++errs;
       }
       if (board.checkStatus() != acase.result) {
-          cerr << "testCheckStatus: error in test case " << i << " result mismatch" << endl;
+          std::cerr << "testCheckStatus: error in test case " << i << " result mismatch" << std::endl;
           ++errs;
       }
    }
    return errs;
 }
 
-static int testRec(const EPDRecord &rec, vector < pair<string,string> > correct)
+static int testRec(const EPDRecord &rec, std::vector < std::pair<std::string,std::string> > correct)
 {
    int errs = 0;
    if (rec.hasError()) {
-       cerr << "EPD test: error reading EPD record: " << rec.getError() << endl;
+       std::cerr << "EPD test: error reading EPD record: " << rec.getError() << std::endl;
       return ++errs;
    }
    if (rec.getSize() != correct.size()) {
-      cerr << "EPD test: expected size " << correct.size() << ", got " << rec.getSize() << endl;
+      std::cerr << "EPD test: expected size " << correct.size() << ", got " << rec.getSize() << std::endl;
       return ++errs;
    }
    unsigned i = 0;
    for (auto it = correct.begin(); it != correct.end(); it++, i++) {
-      const string &ckey = it->first;
-      const string &cval = it->second;
-      string key,val;
+      const std::string &ckey = it->first;
+      const std::string &cval = it->second;
+      std::string key,val;
       if (rec.getData(i,key,val)) {
           if (key != ckey) {
-              cerr << "EPD test: key mismatch" << endl;
+              std::cerr << "EPD test: key mismatch" << std::endl;
               ++errs;
           }
           if (val != cval) {
-              cerr << "EPD test: value mismatch" << endl;
+              std::cerr << "EPD test: value mismatch" << std::endl;
               ++errs;
           }
       }
       else {
-          cerr << "EPD test: failed to retrieve key " << i << endl;
+          std::cerr << "EPD test: failed to retrieve key " << i << std::endl;
           ++errs;
       }
    }
@@ -790,20 +788,22 @@ static int testRec(const EPDRecord &rec, vector < pair<string,string> > correct)
 
 static int testEPD()
 {
-   static string epd1 = "r1b1k2r/ppq3b1/2p1pp2/P2pPpNp/1P1P1P2/2P4P/6P1/RN1QR1K1 w kq - c1 \"3 0\"; c2 \"1.000\";\n";
-   static string epd2 = "8/6k1/5R2/K3p1P1/P3Pp2/8/nPb5/8 w - - bm Re6 Rf5; c0 \"Arasan-Crafty, test game 2017\";\n";
-   typedef vector < pair<string, string> > pairvect;
+   static std::string epd1 = "r1b1k2r/ppq3b1/2p1pp2/P2pPpNp/1P1P1P2/2P4P/6P1/RN1QR1K1 w kq - c1 \"3 0\"; c2 \"1.000\";\n";
+   static std::string epd2 = "8/6k1/5R2/K3p1P1/P3Pp2/8/nPb5/8 w - - bm Re6 Rf5; c0 \"Arasan-Crafty, test game 2017\";\n";
+   using stringpair = std::pair<std::string,std::string>;
+   using pairvect = std::vector<stringpair>;
+   
    pairvect correct1,correct2;
-   correct1.push_back(pair<string,string>("c1","\"3 0\""));
-   correct1.push_back(pair<string,string>("c2","\"1.000\""));
-   correct2.push_back(pair<string,string>("bm","Re6 Rf5"));
-   correct2.push_back(pair<string,string>("c0","\"Arasan-Crafty, test game 2017\""));
+   correct1.push_back(stringpair("c1","\"3 0\""));
+   correct1.push_back(stringpair("c2","\"1.000\""));
+   correct2.push_back(stringpair("bm","Re6 Rf5"));
+   correct2.push_back(stringpair("c0","\"Arasan-Crafty, test game 2017\""));
 
    struct Case
    {
-       string epd;
+       std::string epd;
        pairvect correct;
-       Case(const string &e, const pairvect &corr):
+       Case(const std::string &e, const pairvect &corr):
            epd(e),correct(corr)
            {
            }
@@ -814,20 +814,20 @@ static int testEPD()
    int errs = 0;
    for (int i = 0; i < 2; i++) {
        const Case &acase = cases[i];
-       stringstream s(acase.epd);
+       std::stringstream s(acase.epd);
        ChessIO::readEPDRecord(s,board,rec);
        errs += testRec(rec,acase.correct);
        if (errs) continue;
-       ostringstream out;
+       std::ostringstream out;
        ChessIO::writeEPDRecord(out,board,rec);
        errs += testRec(rec,acase.correct);
        if (out.str() != acase.epd) {
-           cerr << "EPD test: output string != input string" << endl;
+           std::cerr << "EPD test: output string != input string" << std::endl;
            ++errs;
        }
        rec.clear();
        if (rec.getSize() != 0) {
-           cerr << "EPD test: invalid size after clear" << endl;
+           std::cerr << "EPD test: invalid size after clear" << std::endl;
            ++errs;
        }
    }
@@ -835,10 +835,10 @@ static int testEPD()
 }
 
 static int testHash() {
-    string fen1 = "r2qk2r/ppp1b1pp/2n5/3p1p2/3Pn1b1/2PB1N2/PP3PPP/RNBQR1K1 w kq -";
-    string fen2 = "rn1q1rk1/ppp2ppp/3b1n2/3p2B1/3P2b1/2NB1N2/PPP2PPP/R2Q1RK1 b - -";
-    string fen3 = "2b2rk1/3P1pbp/p5q1/2r5/2N1pp2/1P5Q/P1B2PPP/3R1RK1 w - -";
-    string fen4 = "5bk1/p1p3p1/8/2p2QP1/8/1P6/PBP2PP1/3q2K1 w - -";
+    const std::string fen1("r2qk2r/ppp1b1pp/2n5/3p1p2/3Pn1b1/2PB1N2/PP3PPP/RNBQR1K1 w kq -");
+    const std::string fen2("rn1q1rk1/ppp2ppp/3b1n2/3p2B1/3P2b1/2NB1N2/PPP2PPP/R2Q1RK1 b - -");
+    const std::string fen3("2b2rk1/3P1pbp/p5q1/2r5/2N1pp2/1P5Q/P1B2PPP/3R1RK1 w - -");
+    const std::string fen4("5bk1/p1p3p1/8/2p2QP1/8/1P6/PBP2PP1/3q2K1 w - -");
     Board board;
 
     bool tmp = globals::options.learning.position_learning;
@@ -850,7 +850,7 @@ static int testHash() {
 
     int errs = 0;
     if (!BoardIO::readFEN(board, fen1)) {
-        cerr << "testHash: error in FEN: " << fen1 << endl;
+        std::cerr << "testHash: error in FEN: " << fen1 << std::endl;
         ++errs;
     }
     hashTable.storeHash(board.hashCode(),1,1,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
@@ -862,33 +862,33 @@ static int testHash() {
     HashEntry::ValueType val = hashTable.searchHash(board.hashCode(), 1, 1, he);
     if (val == HashEntry::NoHit) {
        ++errs;
-       cerr << "testHash case 1: not found" << endl;
+       std::cerr << "testHash case 1: not found" << std::endl;
     }
     else {
        if (val != HashEntry::Valid) {
           ++errs;
-          cerr << "testHash case 1: wrong type" << endl;
+          std::cerr << "testHash case 1: wrong type" << std::endl;
        }
        if (he.depth() != 1) {
           ++errs;
-          cerr << "testHash case 1: invalid depth" << endl;
+          std::cerr << "testHash case 1: invalid depth" << std::endl;
        }
        if (he.age() != 1) {
           ++errs;
-          cerr << "testHash case 1: invalid age" << endl;
+          std::cerr << "testHash case 1: invalid age" << std::endl;
        }
        if (he.getValue() != score_t(0.1*Params::PAWN_VALUE)) {
           ++errs;
-          cerr << "testHash case 1: invalid value" << endl;
+          std::cerr << "testHash case 1: invalid value" << std::endl;
        }
        if (he.staticValue() != score_t(0.2*Params::PAWN_VALUE)) {
           ++errs;
-          cerr << "testHash case 1: invalid static value" << endl;
+          std::cerr << "testHash case 1: invalid static value" << std::endl;
        }
        m = CreateMove(chess::D1,chess::B3,Queen);
        if (!MovesEqual(m,he.bestMove(board))) {
           ++errs;
-          cerr << "testHash case 1: invalid move" << endl;
+          std::cerr << "testHash case 1: invalid move" << std::endl;
        }
     }
 
@@ -899,16 +899,16 @@ static int testHash() {
     val = hashTable.searchHash(board.hashCode(), 1, 1, he);
     if (val == HashEntry::NoHit) {
        ++errs;
-       cerr << "testHash case 2: not found" << endl;
+       std::cerr << "testHash case 2: not found" << std::endl;
     }
     else {
        if (val != HashEntry::Valid) {
           ++errs;
-          cerr << "testHash case 2: wrong type" << endl;
+          std::cerr << "testHash case 2: wrong type" << std::endl;
        }
        if (he.depth() != 2) {
           ++errs;
-          cerr << "testHash case 2: invalid depth" << endl;
+          std::cerr << "testHash case 2: invalid depth" << std::endl;
        }
     }
 
@@ -919,21 +919,21 @@ static int testHash() {
     val = hashTable.searchHash(board.hashCode(), 1, 3, he);
     if (val == HashEntry::NoHit) {
        ++errs;
-       cerr << "testHash case 3: not found" << endl;
+       std::cerr << "testHash case 3: not found" << std::endl;
     }
     else {
        if (val != HashEntry::Valid) {
           ++errs;
-          cerr << "testHash case 3: wrong type" << endl;
+          std::cerr << "testHash case 3: wrong type" << std::endl;
        }
        if (he.age() != 3) {
           ++errs;
-          cerr << "testHash case 3: invalid age" << endl;
+          std::cerr << "testHash case 3: invalid age" << std::endl;
        }
     }
 
     if (!BoardIO::readFEN(board, fen2)) {
-        cerr << "testHash case 4: error in FEN: " << fen2 << endl;
+        std::cerr << "testHash case 4: error in FEN: " << fen2 << std::endl;
         ++errs;
     }
 
@@ -945,26 +945,26 @@ static int testHash() {
 
     if (val == HashEntry::NoHit) {
        ++errs;
-       cerr << "testHash case 4: not found" << endl;
+       std::cerr << "testHash case 4: not found" << std::endl;
     }
     else {
        if (val != HashEntry::LowerBound) {
           ++errs;
-          cerr << "testHash case 4: entry type invalid" << endl;
+          std::cerr << "testHash case 4: entry type invalid" << std::endl;
        }
        if (!IsNull(he2.bestMove(board))) {
           ++errs;
-          cerr << "testHash case 4: expected Nullmove" << endl;
+          std::cerr << "testHash case 4: expected Nullmove" << std::endl;
        }
        if (he2.staticValue() != Constants::INVALID_SCORE) {
           ++errs;
-          cerr << "testHash case 4: invalid static score" << endl;
+          std::cerr << "testHash case 4: invalid static score" << std::endl;
        }
 
     }
 
     if (!BoardIO::readFEN(board, fen3)) {
-       cerr << "testHash case 5: error in FEN: " << fen3 << endl;
+       std::cerr << "testHash case 5: error in FEN: " << fen3 << std::endl;
        ++errs;
     }
 
@@ -978,33 +978,33 @@ static int testHash() {
 
     if (val == HashEntry::NoHit) {
        ++errs;
-       cerr << "testHash case 5: not found" << endl;
+       std::cerr << "testHash case 5: not found" << std::endl;
     } else {
        if (val != HashEntry::UpperBound) {
           ++errs;
-          cerr << "testHash case 5: entry type invalid" << endl;
+          std::cerr << "testHash case 5: entry type invalid" << std::endl;
        }
        m = CreateMove(board,chess::D7,chess::C8,Queen);
        if (!MovesEqual(m,he3.bestMove(board))) {
           ++errs;
-          cerr << "testHash case 5: invalid move" << endl;
+          std::cerr << "testHash case 5: invalid move" << std::endl;
        }
        if (PieceMoved(he3.bestMove(board)) != Pawn) {
           ++errs;
-          cerr << "testHash case 5: invalid PieceMoved" << endl;
+          std::cerr << "testHash case 5: invalid PieceMoved" << std::endl;
        }
        if (PromoteTo(he3.bestMove(board)) != Queen) {
           ++errs;
-          cerr << "testHash case 5: invalid PromoteTo" << endl;
+          std::cerr << "testHash case 5: invalid PromoteTo" << std::endl;
        }
        if (Capture(he3.bestMove(board)) != Bishop) {
           ++errs;
-          cerr << "testHash case 5: invalid Capture" << endl;
+          std::cerr << "testHash case 5: invalid Capture" << std::endl;
        }
     }
 
     if (!BoardIO::readFEN(board, fen4)) {
-       cerr << "testHash case 6: error in FEN: " << fen4 << endl;
+       std::cerr << "testHash case 6: error in FEN: " << fen4 << std::endl;
        ++errs;
     }
 
@@ -1016,27 +1016,27 @@ static int testHash() {
 
     if (val == HashEntry::NoHit) {
        ++errs;
-       cerr << "testHash case 6: not found" << endl;
+       std::cerr << "testHash case 6: not found" << std::endl;
     } else {
        if (val != HashEntry::UpperBound) {
           ++errs;
-          cerr << "testHash case 6: entry type invalid" << endl;
+          std::cerr << "testHash case 6: entry type invalid" << std::endl;
        }
        if (he4.age() != 10) {
           ++errs;
-          cerr << "testHash case 6: invalid age" << endl;
+          std::cerr << "testHash case 6: invalid age" << std::endl;
        }
        if (he4.depth() != 1) {
           ++errs;
-          cerr << "testHash case 6: invalid depth" << endl;
+          std::cerr << "testHash case 6: invalid depth" << std::endl;
        }
        if (!MovesEqual(m,he4.bestMove(board))) {
           ++errs;
-          cerr << "testHash case 6: moves not equal" << endl;
+          std::cerr << "testHash case 6: moves not equal" << std::endl;
        }
        if (!he4.learned()) {
           ++errs;
-          cerr << "testHash case 6: learned flag not set" << endl;
+          std::cerr << "testHash case 6: learned flag not set" << std::endl;
        }
     }
 
@@ -1044,12 +1044,12 @@ static int testHash() {
     val = hashTable.searchHash(board.hashCode(), 2, 10, he4);
     if (val != HashEntry::Invalid) {
         ++errs;
-        cerr << "testHash case 6: expected invalid entry" << endl;
+        std::cerr << "testHash case 6: expected invalid entry" << std::endl;
     }
     // move should still be valid though
     if (!MovesEqual(m,he4.bestMove(board))) {
         ++errs;
-        cerr << "testHash case 6: expected valid move" << endl;
+        std::cerr << "testHash case 6: expected valid move" << std::endl;
     }
 
     globals::options.learning.position_learning = tmp;
@@ -1058,13 +1058,13 @@ static int testHash() {
 
 static int testRep()
 {
-    const string fen = "8/B2nk3/8/8/3K4/7B/8/8 w - - 0 2";
-    const array <string,4> moves = {"Ke4","Kf7","Kd4","Ke7"};
+    const std::string fen("8/B2nk3/8/8/3K4/7B/8/8 w - - 0 2");
+    const std::array <std::string,4> moves = {"Ke4","Kf7","Kd4","Ke7"};
 
     int errs = 0;
     Board board;
     if (!BoardIO::readFEN(board, fen)) {
-       cerr << "testRep: error in FEN: " << fen << endl;
+       std::cerr << "testRep: error in FEN: " << fen << std::endl;
        return ++errs;
     }
     for (int reps = 1; reps <= 2; reps++) {
@@ -1073,25 +1073,25 @@ static int testRep()
                                         Notation::InputFormat::SAN,
                                         mvstr);
             if (IsNull(move)) {
-                cerr << "testRep: error in move parsing" << endl;
+                std::cerr << "testRep: error in move parsing" << std::endl;
                 return ++errs;
             }
             board.doMove(move);
         }
         if (board.repCount(reps) != reps) {
-            cerr << "testRep: repCount incorrect" << endl;
+            std::cerr << "testRep: repCount incorrect" << std::endl;
             ++errs;
         }
         if (reps>1 && board.repCount(1) != 1) {
-            cerr << "testRep: repCount incorrect" << endl;
+            std::cerr << "testRep: repCount incorrect" << std::endl;
             ++errs;
         }
         if (!board.anyRep()) {
-            cerr << "testRep: anyRep incorrect" << endl;
+            std::cerr << "testRep: anyRep incorrect" << std::endl;
             ++errs;
         }
         if ((reps > 1) != board.isLegalDraw()) {
-            cerr << "testRep: error in isLegalDraw" << endl;
+            std::cerr << "testRep: error in isLegalDraw" << std::endl;
             ++errs;
         }
     }
@@ -1107,49 +1107,49 @@ static int testMoveGen()
 
     struct Case
     {
-        string fen;
-        std::array<string,4> moves;
-        Case(const string &f, const string &rm, const string &m, const string &qsn, const string &qs) :
+        std::string fen;
+        std::array<std::string,4> moves;
+        Case(const std::string &f, const std::string &rm, const std::string &m, const std::string &qsn, const std::string &qs) :
            fen(f), moves({rm, m, qsn, qs})
           {
           };
     };
 
-    static const array<Case,7> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
-                                              "Qxf6 Qg7 Kh7",
-                                              "Qxf6 Qg7 Kh7",
-                                              "Qxf6 Qg7 Kh7",
-                                              "Qxf6 Qg7 Kh7"),
-                                         Case("3k4/3p4/8/r7/K7/8/8/8 w - - 0 3",
-                                              "Kxa5 Kb4 Kb3",
-                                              "Kxa5 Kb4 Kb3",
-                                              "Kxa5 Kb4 Kb3",
-                                              "Kxa5 Kb4 Kb3"),
-                                         Case("5rk1/2p3pp/3N4/2pP4/5P1q/P3P1r1/1BQ2nP1/4RR1K w - - 0 32",
-                                              "Kg1",
-                                              "Kg1",
-                                              "Kg1",
-                                              "Kg1"),
-                                         Case("5nk1/4P1pp/p7/3R4/1b6/4BPP1/6KP/q7 w - - 0 38",
-                                              "e8=Q e8=R e8=B e8=N exf8=Q+ exf8=N exf8=R+ exf8=B Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4",
-                                              "e8=Q exf8=Q+ exf8=N e8=N Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4 Kf1 Kg1 Kh1",
-                                              "e8=Q exf8=Q+ exf8=N e8=N",
-                                              "e8=Q exf8=Q+ exf8=N e8=N"),
-                                         Case("8/1r6/ppbpkpRp/5r1P/P1P1n3/1P4PB/6KP/4R3 b - - 0 32",
-                                              "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4",
-                                              "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+ Kd5 Rf1 Rf3 Rf4 Ra5 Rb5 Rc5 Rd5 Re5 Rg5",
-                                              "Bxa4 Rxh5 Nxg3+",
-                                              "Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+"),
-                                         Case("1k6/7R/2P3Kp/7P/8/8/5r2/8 w - - 0 81",
-                                              "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+",
-                                              "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+ Kg5 Kf7 Kf6 Kf5",
-                                              "Kxh6 Rxh6",
-                                              "Kxh6 Rxh6 Rh8+ Rb7+ c7+"),
-                                         Case("8/r5k1/1p1q3p/2pPp1pP/2P3Q1/1R6/5PPK/8 b - - 0 43",
-                                              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5",
-                                              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5 Kg6",
-                                              "Qxd5",
-                                              "Qxd5 e4+")
+    static const std::array<Case,7> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
+                                                   "Qxf6 Qg7 Kh7",
+                                                   "Qxf6 Qg7 Kh7",
+                                                   "Qxf6 Qg7 Kh7",
+                                                   "Qxf6 Qg7 Kh7"),
+        Case("3k4/3p4/8/r7/K7/8/8/8 w - - 0 3",
+             "Kxa5 Kb4 Kb3",
+             "Kxa5 Kb4 Kb3",
+             "Kxa5 Kb4 Kb3",
+             "Kxa5 Kb4 Kb3"),
+        Case("5rk1/2p3pp/3N4/2pP4/5P1q/P3P1r1/1BQ2nP1/4RR1K w - - 0 32",
+             "Kg1",
+             "Kg1",
+             "Kg1",
+             "Kg1"),
+        Case("5nk1/4P1pp/p7/3R4/1b6/4BPP1/6KP/q7 w - - 0 38",
+             "e8=Q e8=R e8=B e8=N exf8=Q+ exf8=N exf8=R+ exf8=B Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4",
+             "e8=Q exf8=Q+ exf8=N e8=N Kf2 Kh3 Bc1 Bg1 Bd2 Bf2 Bd4 Bf4 Bc5 Bg5 Bb6 Bh6 Ba7 Rd1 Rd2 Rd3 Rd4 Ra5 Rb5 Rc5 Re5 Rf5 Rg5 Rh5 Rd6 Rd7 Rd8 h3 h4 f4 g4 Kf1 Kg1 Kh1",
+             "e8=Q exf8=Q+ exf8=N e8=N",
+             "e8=Q exf8=Q+ exf8=N e8=N"),
+        Case("8/1r6/ppbpkpRp/5r1P/P1P1n3/1P4PB/6KP/4R3 b - - 0 32",
+             "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4",
+             "Ke5 Kd7 Ke7 Kf7 Bb5 Bd5 Bd7 Be8 Ra7 Rc7 Rd7 Re7 Rf7 Rg7 Rh7 Rb8 a5 b5 d5 Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+ Kd5 Rf1 Rf3 Rf4 Ra5 Rb5 Rc5 Rd5 Re5 Rg5",
+             "Bxa4 Rxh5 Nxg3+",
+             "Bxa4 Rxh5 Nxg3+ Nc3+ Nc5+ Nd2+ Nf2+ Ng5+ Rf2+"),
+        Case("1k6/7R/2P3Kp/7P/8/8/5r2/8 w - - 0 81",
+             "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+",
+             "Kxh6 Rxh6 Kg7 Rh8+ Rg7 Rf7 Re7 Rd7 Rc7 Rb7+ Ra7 c7+ Kg5 Kf7 Kf6 Kf5",
+             "Kxh6 Rxh6",
+             "Kxh6 Rxh6 Rh8+ Rb7+ c7+"),
+        Case("8/r5k1/1p1q3p/2pPp1pP/2P3Q1/1R6/5PPK/8 b - - 0 43",
+             "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5",
+             "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5 Kg6",
+             "Qxd5",
+             "Qxd5 e4+")
     };
 
     struct MoveKey
@@ -1168,20 +1168,20 @@ static int testMoveGen()
         ++casenum;
         Board board;
         if (!BoardIO::readFEN(board, c.fen)) {
-            cerr << "testMoveGen: error in case " << casenum << " fen." << endl;
+            std::cerr << "testMoveGen: error in case " << casenum << " fen." << std::endl;
             ++errs;
         }
         else {
             std::array<std::vector<MoveKey>,4> correct;
 
-            auto parseMoves = [&casenum, &board, &errs] (const string &moves, std::vector<MoveKey> &out) {
-                stringstream s(moves);
+            auto parseMoves = [&casenum, &board, &errs] (const std::string &moves, std::vector<MoveKey> &out) {
+                std::stringstream s(moves);
                 while (!s.eof()) {
-                    string movestr;
+                    std::string movestr;
                     s >> movestr;
                     Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,movestr,false);
                     if (IsNull(m)) {
-                        cerr << "testMoveGen: invalid result move, case " << casenum << " (" << movestr << ")" << endl;
+                        std::cerr << "testMoveGen: invalid result move, case " << casenum << " (" << movestr << ")" << std::endl;
                         ++errs;
                     } else {
                         out.push_back(MoveKey(m));
@@ -1192,16 +1192,16 @@ static int testMoveGen()
             for (int i = 0; i < 4; i++) {
                 parseMoves(c.moves[i],correct[i]);
             }
-            auto doMg = [&casenum, &board, &errs] (MoveGenerator &mg, vector<MoveKey> &correct, MgType type)
+            auto doMg = [&casenum, &board, &errs] (MoveGenerator &mg, std::vector<MoveKey> &correct, MgType type)
                 {
                     for (auto &c : correct) {
                         c.generated = false;
                     }
                     Move gen;
                     int order = 0;
-                    static const string ids[4] = { "root", "standard", "qs_nochecks", "qs_checks"
+                    static const std::string ids[4] = { "root", "standard", "qs_nochecks", "qs_checks"
                     };
-                    const string id = ids[(int)type];
+                    const std::string id = ids[(int)type];
                     Move moves[Constants::MaxMoves];
                     unsigned move_index = 0, num_moves = 0;
                     if ((type == QsNoCheck || type == QsCheck)) {
@@ -1236,14 +1236,14 @@ static int testMoveGen()
                         auto it = std::find_if(correct.begin(), correct.end(),[&] (const MoveKey &m) -> int
                                                {return MovesEqual(gen,m.move);});
                         if (it == correct.end()) {
-                            cerr << "testMoveGen: unexpected result move, " << id << " case " << casenum << " (";
-                            MoveImage(gen,cerr);
-                            cerr << ")" << endl;
+                            std::cerr << "testMoveGen: unexpected result move, " << id << " case " << casenum << " (";
+                            MoveImage(gen,std::cerr);
+                            std::cerr << ")" << std::endl;
                             ++errs;
                         } else if (correct[it-correct.begin()].generated) {
-                            cerr << "testMoveGen: duplicate move: " << id << " case " << casenum << " (";
-                            MoveImage(gen,cerr);
-                            cerr << ")" << endl;
+                            std::cerr << "testMoveGen: duplicate move: " << id << " case " << casenum << " (";
+                            MoveImage(gen,std::cerr);
+                            std::cerr << ")" << std::endl;
                             ++errs;
                         } else {
                             correct[it-correct.begin()].generated = true;
@@ -1252,7 +1252,7 @@ static int testMoveGen()
                     auto err2 = std::find_if(correct.begin(),correct.end(),[](const MoveKey &r) {
                             return !r.generated;});
                     if (err2 != correct.end()) {
-                        stringstream mvlist;
+                        std::stringstream mvlist;
                         unsigned err_count = 0;
                         for (;err2 != correct.end();err2++) {
                             ++errs;
@@ -1260,8 +1260,8 @@ static int testMoveGen()
                             Notation::image(board,err2->move,Notation::OutputFormat::SAN,mvlist);
                             ++err_count;
                         }
-                        cerr << "testMoveGen: error in " << id << " case " << casenum << ": " << err_count << " expected move(s) not generated:" <<
-                            mvlist.str() << endl;
+                        std::cerr << "testMoveGen: error in " << id << " case " << casenum << ": " << err_count << " expected move(s) not generated:" <<
+                            mvlist.str() << std::endl;
                     }
                 };
 
@@ -1286,10 +1286,10 @@ static int testPerft()
    // Perft tests for move generator - thanks to Martin Sedlak & Steve Maugham
    static const struct TestCase
    {
-      string fen;
+      std::string fen;
       int depth;
       uint64_t result;
-      TestCase(const string &s, int d, uint64_t r) :
+      TestCase(const std::string &s, int d, uint64_t r) :
          fen(s),depth(d),result(r)
          {
          }
@@ -1343,13 +1343,13 @@ static int testPerft()
       Board board;
 
       if (!BoardIO::readFEN(board, acase.fen.c_str())) {
-         cerr << "testPerft: error in test case " << i << " error in FEN: " << acase.fen << endl;
+         std::cerr << "testPerft: error in test case " << i << " error in FEN: " << acase.fen << std::endl;
          ++errs;
          continue;
       }
       uint64_t result;
       if ((result = RootMoveGenerator::perft(board,acase.depth)) != acase.result) {
-         cerr << "testPerft: error in test case " << i << " wrong result: " << result << endl;
+         std::cerr << "testPerft: error in test case " << i << " wrong result: " << result << std::endl;
          ++errs;
       }
    }
@@ -1361,15 +1361,15 @@ static int testSearch()
 {
    struct Case
    {
-       Case(const string &s, score_t res):
+       Case(const std::string &s, score_t res):
            epd(s), score(res)
          {
          }
-       string epd;
+       std::string epd;
        score_t score;
    };
 
-   static array<Case,8> cases = {
+   static std::array<Case,8> cases = {
        // Euwe-Alekhine, Amsterdam 1934 (sacrifice to draw)
        Case("2Q2r1k/3n2pp/p7/4p1B1/P1Q5/2N5/2q2nPP/R5K1 b - - bm Nh3+",0),
        // "Ragozin-Botvinnik, 1936 (mate in 3)
@@ -1391,7 +1391,7 @@ static int testSearch()
    Statistics stats;
    int errs = 0, caseid =0;
    for (const Case &acase : cases) {
-       stringstream s(acase.epd);
+       std::stringstream s(acase.epd);
        Board board;
        EPDRecord rec;
        ChessIO::readEPDRecord(s,board,rec);
@@ -1406,27 +1406,27 @@ static int testSearch()
                               stats,
                               TalkLevel::Silent);
        score_t score = stats.display_value;
-       string bm;
+       std::string bm;
        if (rec.getVal("bm",bm)) {
-           string result;
+           std::string result;
            Notation::image(board,m,Notation::OutputFormat::SAN,result);
            if (result != bm) {
-               cerr << "error in search, case " << caseid << ": incorrect move (";
-               cerr << "expected " << bm << ", got " << result << ")" << endl;
+               std::cerr << "error in search, case " << caseid << ": incorrect move (";
+               std::cerr << "expected " << bm << ", got " << result << ")" << std::endl;
                ++errs;
            }
            if (acase.score != Constants::INVALID_SCORE) {
                if (score != acase.score && !(acase.score==0 && std::abs(score-acase.score)<2)) {
-                   cerr << "error in search, case " << caseid << ": incorrect score (expected ";
-                   Scoring::printScore(acase.score,cerr);
-                   cerr << ", got ";
-                   Scoring::printScore(score,cerr);
-                   cerr << ")" << endl;
+                   std::cerr << "error in search, case " << caseid << ": incorrect score (expected ";
+                   Scoring::printScore(acase.score,std::cerr);
+                   std::cerr << ", got ";
+                   Scoring::printScore(score,std::cerr);
+                   std::cerr << ")" << std::endl;
                    ++errs;
                }
            }
        } else {
-           cerr << "error in search, case " << caseid << ": missing bm" << endl;
+           std::cerr << "error in search, case " << caseid << ": missing bm" << std::endl;
        }
        ++caseid;
    }
@@ -1443,7 +1443,7 @@ static int testNNUE() {
     Board board, start;
     NodeStack nodes;
     if (!BoardIO::readFEN(board, fen)) {
-        cerr << "warning: testNNUE: error in FEN" << endl;
+        std::cerr << "warning: testNNUE: error in FEN" << std::endl;
         return ++errs;
     }
     start = board;
@@ -1463,13 +1463,13 @@ static int testNNUE() {
     score_t endScore = s.evalu8NNUE(board,nodes+i);
     // compare w. non-incremental
     errs += endScore != s.evalu8NNUE(board);
-    if (errs) cout << "error in testNNUE - test 1" << endl;
+    if (errs) std::cout << "error in testNNUE - test 1" << std::endl;
     board = start;
     // test after null move
     board.doNull(nodes);
     endScore = s.evalu8NNUE(board,nodes+1);
     errs += endScore != s.evalu8NNUE(board);
-    if (errs) cout << "error in testNNUE - test 2" << endl;
+    if (errs) std::cerr << "error in testNNUE - test 2" << std::endl;
     return errs;
 }
 #endif
@@ -1479,16 +1479,15 @@ static int testTB()
 {
    struct Case
    {
-       Case(const string &s, score_t res, const string &mvs):
-           fen(s), result(res), moves(mvs)
+       Case(const std::string &s, score_t res, const std::string &mvs):
+           fen(s), moves(mvs), result(res)
          {
          }
-      string fen;
-      score_t result;
-      string moves;
+       std::string fen, moves;
+       score_t result;
    };
 
-   static array<Case,17> cases = {
+   static std::array<Case,17> cases = {
        Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
            "Nd6+"),
        Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
@@ -1522,14 +1521,14 @@ static int testTB()
    int errs = 0;
    globals::delayedInit();
    if (globals::EGTBMenCount < 5) {
-      cerr << "TB tests skipped: no 5-man TBs found" << endl;
+      std::cerr << "TB tests skipped: no 5-man TBs found" << std::endl;
       return 0;
    }
    if (globals::EGTBMenCount < 6) {
-      cerr << "6-man TB tests skipped: no 6-man TBs found" << endl;
+      std::cerr << "6-man TB tests skipped: no 6-man TBs found" << std::endl;
    }
    if (globals::EGTBMenCount < 7) {
-      cerr << "7-man TB tests skipped: no 7-man TBs found" << endl;
+      std::cerr << "7-man TB tests skipped: no 7-man TBs found" << std::endl;
    }
    int caseid = 0;
    int temp = globals::options.search.syzygy_50_move_rule;
@@ -1538,7 +1537,7 @@ static int testTB()
    for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
       Board board;
       if (!BoardIO::readFEN(board, it->fen.c_str())) {
-         cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << endl;
+         std::cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << std::endl;
          ++errs;
          continue;
       }
@@ -1546,9 +1545,9 @@ static int testTB()
       std::smatch match;
       if (std::regex_match(it->fen,match,count_pattern)) {
           auto pos = it->fen.find_last_of('-');
-          if (pos != string::npos) {
+          if (pos != std::string::npos) {
               auto it = match.begin()+1;
-              stringstream s(*it);
+              std::stringstream s(*it);
               int hmc;
               s >> hmc;
               if (!s.bad()) {
@@ -1563,16 +1562,16 @@ static int testTB()
           continue;
       } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
          if (score != it->result) {
-            cerr << "testTB: case " << caseid << " expected ";
-            Scoring::printScore(it->result,cerr);
-            cerr << ", got ";
-            Scoring::printScore(score,cerr);
-            cerr << endl;
+            std::cerr << "testTB: case " << caseid << " expected ";
+            Scoring::printScore(it->result,std::cerr);
+            std::cerr << ", got ";
+            Scoring::printScore(score,std::cerr);
+            std::cerr << std::endl;
             ++errs;
          }
-         stringstream s(it->moves);
+         std::stringstream s(it->moves);
          char movechars[10];
-         string movestr;
+         std::string movestr;
          MoveSet goodmoves;
          while (s.getline(movechars, 10, ',')) {
              movestr = movechars;
@@ -1584,37 +1583,37 @@ static int testTB()
              goodmoves.insert(m);
          }
          if (goodmoves != moves) {
-             cerr << "testTB: case " << caseid << ": set mismatch" << endl;
-             cerr << "expected: ";
+             std::cerr << "testTB: case " << caseid << ": set mismatch" << std::endl;
+             std::cerr << "expected: ";
              for (const auto &m : goodmoves) {
-                 MoveImage(m,cerr);
-                 cerr << ' ';
+                 MoveImage(m,std::cerr);
+                 std::cerr << ' ';
              }
-             cerr << endl << "got: ";
+             std::cerr << std::endl << "got: ";
              for (const auto &m : moves) {
-                 MoveImage(m,cerr);
-                 cerr << ' ';
+                 MoveImage(m,std::cerr);
+                 std::cerr << ' ';
              }
-             cerr << endl;
+             std::cerr << std::endl;
              ++errs;
          }
       } else {
-         cerr << "testTB: case " << caseid << " no result from TBs" << endl;
+         std::cerr << "testTB: case " << caseid << " no result from TBs" << std::endl;
          ++errs;
       }
       // ensure move count is zero otherwise probe_wdl will fail
       board.state.moveCount = 0;
       if (SyzygyTb::probe_wdl(board,score,true)) {
          if (score != it->result) {
-            cerr << "testTB: case " << caseid << " expected WDL score ";
-            Scoring::printScore(it->result,cerr);
-            cerr << ", got ";
-            Scoring::printScore(score,cerr);
-            cerr << endl;
+            std::cerr << "testTB: case " << caseid << " expected WDL score ";
+            Scoring::printScore(it->result,std::cerr);
+            std::cerr << ", got ";
+            Scoring::printScore(score,std::cerr);
+            std::cerr << std::endl;
             ++errs;
           }
       } else {
-          cerr << "testTB: case " << caseid << ": WDL probe failed." << endl;
+          std::cerr << "testTB: case " << caseid << ": WDL probe failed." << std::endl;
           ++errs;
       }
    }
@@ -1640,8 +1639,8 @@ int doUnit() {
    errs += testHash();
    errs += testRep();
    errs += testMoveGen();
-   //   errs += testPerft();
-   //   errs += testSearch();
+   errs += testPerft();
+   errs += testSearch();
 #ifdef NNUE
    errs += testNNUE();
 #endif

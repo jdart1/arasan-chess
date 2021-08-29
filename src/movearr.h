@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 class MoveRecord
 {
     // holds info on a move made during the game or during a search
@@ -24,7 +22,7 @@ public:
 
     // "board" is the board position after the move.
     MoveRecord(const Board &board, const BoardState &previous_state,
-               const Move &move, const string &image, bool ponder);
+               const Move &move, const std::string &image, bool ponder);
 
     const Move &move() const {
         return my_move;
@@ -50,7 +48,7 @@ public:
         return my_hashcode != l.my_hashcode;
     }
 
-    const string & image () const {
+    const std::string & image () const {
         return my_image;
     }
 
@@ -63,7 +61,7 @@ private:
     Move my_move;
     hash_t my_hashcode;
     BoardState my_state;
-    string my_image;
+    std::string my_image;
     bool my_ponder; // true if move was added provisionally during a ponder operation
 };
 
@@ -80,7 +78,7 @@ public:
     // add a move to the Move_Array. "board" is the position after the
     // move is made.
     void add_move( const Board &board, const BoardState &previous_state,
-                   const Move &emove, const string &image, bool ponder );
+                   const Move &emove, const std::string &image, bool ponder );
 
     // remove the most recently added move to the Move_Array.
     void remove_move();
@@ -121,7 +119,7 @@ public:
 
 private:
 
-    vector<MoveRecord> entries;
+    std::vector<MoveRecord> entries;
 
 };
 

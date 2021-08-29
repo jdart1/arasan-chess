@@ -44,7 +44,7 @@ static Move getMove(const Board &b, unsigned res) {
                       ep ? EnPassant : (promoteTo != Empty ? Promotion : Normal));
 }
 
-int SyzygyTb::initTB(const string &path)
+int SyzygyTb::initTB(const std::string &path)
 {
    bool ok = tb_init(path.c_str());
    if (!ok)

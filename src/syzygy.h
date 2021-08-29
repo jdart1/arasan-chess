@@ -1,4 +1,4 @@
-// Copyright 2016, 2018-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019, 2021 by Jon Dart. All Rights Reserved.
 #ifndef _SYZYGY_H_
 #define _SYZYGY_H_
 
@@ -15,7 +15,7 @@ struct SyzygyTb {
     // path to the TB directories.
     // Returns the highest number of pieces that the tbs
     // support (3/4/5/6).
-    static int initTB(const string &path);
+    static int initTB(const std::string &path);
 
     // Probe the tablebases. "score" is the score for the position.
     // If found and the score is winning or drawing then

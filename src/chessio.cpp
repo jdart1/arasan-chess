@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018  by Jon Dart.
+// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018, 2021  by Jon Dart.
 // All Rights Reserved.
 
 #include "chessio.h"
@@ -10,8 +10,6 @@
 #include <cstring>
 #include <sstream>
 
-using namespace std;
-
 #define PGN_MARGIN 70
 #define MAX_TAG 255
 #define MAX_VAL 255
@@ -19,7 +17,7 @@ using namespace std;
 // This module handles reading and writing board and
 // game info.
 
-static int skip_space(istream &game_file)
+static int skip_space(std::istream &game_file)
 {
     int c = EOF;
     while (!game_file.eof()) {
@@ -32,20 +30,20 @@ static int skip_space(istream &game_file)
     return c;
 }
 
-void ChessIO::get_game_description(const vector<Header> &hdrs, string &descr, long id)
+void ChessIO::get_game_description(const std::vector<Header> &hdrs, std::string &descr, long id)
 {
-      stringstream s;
-      string tmp;
+      std::stringstream s;
+      std::string tmp;
       get_header(hdrs, "White", tmp);
-      string::size_type comma = tmp.find(',',0);
-      if (comma != string::npos)
+      std::string::size_type comma = tmp.find(',',0);
+      if (comma != std::string::npos)
       {
           tmp = tmp.substr(0,comma);
       }
       s << tmp << '-';
       get_header(hdrs, "Black", tmp);
       comma = tmp.find(',',0);
-      if (comma != string::npos)
+      if (comma != std::string::npos)
       {
           tmp = tmp.substr(0,comma);
       }
@@ -69,7 +67,7 @@ void ChessIO::get_game_description(const vector<Header> &hdrs, string &descr, lo
       descr = s.str();
 }
 
-int ChessIO::scan_pgn(istream &game_file, vector<string> &contents)
+int ChessIO::scan_pgn(std::istream &game_file, std::vector<std::string> &contents)
 {
     Board board;
     int c;
@@ -78,8 +76,8 @@ int ChessIO::scan_pgn(istream &game_file, vector<string> &contents)
     {
         // Collect the header:
         long first;
-        vector<Header> hdrs;
-        string eventStr;
+        std::vector<Header> hdrs;
+        std::string eventStr;
         collect_headers(game_file, hdrs, first);
         if (get_header(hdrs,"Event",eventStr))
         {
@@ -87,7 +85,7 @@ int ChessIO::scan_pgn(istream &game_file, vector<string> &contents)
            // description. Append the index to the game so the GUI
            // can navigate to the game when the user clicks on the
            // description.
-           string descr;
+           std::string descr;
            get_game_description(hdrs, descr, first);
            contents.push_back(descr);
         }
@@ -106,8 +104,8 @@ int ChessIO::scan_pgn(istream &game_file, vector<string> &contents)
 }
 
 
-int ChessIO::get_header(const vector<Header> &hdrs,
-  const string &key, string &val)
+int ChessIO::get_header(const std::vector<Header> &hdrs,
+                        const std::string &key, std::string &val)
 {
     val = "";
     for (auto it = hdrs.begin(); it != hdrs.end(); it++)
@@ -121,37 +119,37 @@ int ChessIO::get_header(const vector<Header> &hdrs,
     return 0;
 }
 
-void ChessIO::add_header(vector <Header> &hdrs,
-  const string &key, const string & val)
+void ChessIO::add_header(std::vector <Header> &hdrs,
+                         const std::string &key, const std::string & val)
 {
    hdrs.push_back(Header(key,val));
 }
 
-int ChessIO::load_fen(istream &ifs, Board &board)
+int ChessIO::load_fen(std::istream &ifs, Board &board)
 {
     ifs >> board;
     board.state.moveCount = 0;
     return ifs.good();
 }
 
-int ChessIO::store_fen( ostream &ofile, const Board &board)
+int ChessIO::store_fen( std::ostream &ofile, const Board &board)
 {
-    ofile << board << endl;
+    ofile << board << std::endl;
     return ofile.good();
 }
 
-int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
-                        const ColorType computer_side,
-                        const string &result,
-                        vector<Header> &headers)
+int ChessIO::store_pgn(std::ostream &ofile,MoveArray &moves,
+                       const ColorType computer_side,
+                       const std::string &result,
+                       std::vector<Header> &headers)
 {
     // Write standard PGN header.
 
-    string gameResult = result;
+    std::string gameResult = result;
     if (result.length() == 0)
        gameResult = "*";
-    string val;
-    vector <Header> newHeaders;
+    std::string val;
+    std::vector <Header> newHeaders;
     if (!get_header(headers, "Event", val))
        add_header(newHeaders,"Event","?");
     else
@@ -176,7 +174,7 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
     else
        add_header(newHeaders,"Round",val);
 
-    string name("Arasan ");
+    std::string name("Arasan ");
     name += Arasan_Version;
     if (computer_side == White)
     {
@@ -204,9 +202,9 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
     }
     // "Result" may contain a comment. Don't put this in the
     // PGN header.
-    string shortResult = gameResult;
-    string longResult = gameResult;
-    string::size_type space = gameResult.find(" ");
+    std::string shortResult = gameResult;
+    std::string longResult = gameResult;
+    std::string::size_type space = gameResult.find(" ");
     if (space >0 && space < MAX_PATH)
        shortResult = gameResult.erase(space);
     if (!get_header(headers,"Result",val))
@@ -234,49 +232,49 @@ int ChessIO::store_pgn(ostream &ofile,MoveArray &moves,
     return store_pgn(ofile,moves,longResult,newHeaders);
 }
 
-int ChessIO::store_pgn(ostream &ofile, MoveArray &moves,const string &result,
-                         vector<Header> &headers)
+int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves,const std::string &result,
+                         std::vector<Header> &headers)
 {
     for (auto it = headers.begin(); it != headers.end(); it++) {
        Header p = *it;
-       ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << endl;
+       ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << std::endl;
     }
-    ofile << endl;
+    ofile << std::endl;
 
     // Write game moves.
     unsigned len = moves.num_moves();
-    stringstream buf;
+    std::stringstream buf;
     for (unsigned i = 0; i < len; i++) {
         const MoveRecord &e = moves[i];
-        stringstream numbuf;
+        std::stringstream numbuf;
         if (i % 2 == 0) {
             numbuf << (i/2)+1 << ". ";
         }
         const int image_size = (int)e.image().length();
         if ((int)buf.tellp() + image_size + numbuf.str().length() + 1 >= PGN_MARGIN) {
-            ofile << buf.str() << endl;
+            ofile << buf.str() << std::endl;
             buf.str("");
         }
-        if (buf.tellp() != (streampos)0) {
+        if (buf.tellp() != (std::streampos)0) {
            buf << ' ';
         }
         buf << numbuf.str() << e.image();
     }
     if ((int)buf.tellp() + result.length() + 1 >= PGN_MARGIN) {
-        ofile << buf.str() << endl;
+        ofile << buf.str() << std::endl;
         buf.str("");
         buf << result;
     } else {
         buf << ' ' << result;
     }
-    ofile << buf.str() << endl;
+    ofile << buf.str() << std::endl;
     if (!ofile) {
         return 0;
     }
     return 1;
 }
 
-int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
+int ChessIO::readEPDRecord(std::istream &ifs, Board &board, EPDRecord &rec)
 {
     rec.clear();
     // read FEN description
@@ -291,12 +289,12 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
         return 1;
     }
     // read EPD commands
-    string commands, command;
+    std::string commands, command;
     getline(ifs,commands);
-    stringstream s(commands);
+    std::stringstream s(commands);
     while (getline(s,command,';')) {
        // each command should contain a verb and a value
-       string cmd,val;
+       std::string cmd,val;
        auto it = command.begin();
        auto end = command.end();
        // command does not have embedded spaces
@@ -310,18 +308,18 @@ int ChessIO::readEPDRecord(istream &ifs, Board &board, EPDRecord &rec)
     return 1;
 }
 
-void ChessIO::writeEPDRecord(ostream &ofs, Board &board, const EPDRecord &rec)
+void ChessIO::writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &rec)
 {
    BoardIO::writeFEN(board,ofs,0);
    for (unsigned i = 0; i < rec.getSize(); i++) {
-      string key,val;
+      std::string key,val;
       (void)rec.getData(i,key,val);
       ofs << ' ' << key << ' ' << val << ';';
    }
-   ofs << endl;
+   ofs << std::endl;
 }
 
-void ChessIO::collect_headers(istream &game_file,vector <Header>&hdrs, long &first)
+void ChessIO::collect_headers(std::istream &game_file,std::vector <Header>&hdrs, long &first)
 {
    first = -1L;
    int c;
@@ -354,7 +352,7 @@ void ChessIO::collect_headers(istream &game_file,vector <Header>&hdrs, long &fir
          {
             if (strcmp(tag,"vent") == 0)
             {
-               // It appears that there is a bug in iostream.
+               // It appears that there is a bug in std::ifstream.
                // Calling tellg (above) sometimes causes
                // a missing char when the next read occurs.
                // So we get a partial tag. This is a workaround.
@@ -386,10 +384,10 @@ void ChessIO::collect_headers(istream &game_file,vector <Header>&hdrs, long &fir
    }
 }
 
-ChessIO::Token ChessIO::get_next_token(istream &game_file) {
+ChessIO::Token ChessIO::get_next_token(std::istream &game_file) {
     TokenType tok = Unknown;
     int c = EOF;
-    string value;
+    std::string value;
     while (!game_file.eof()) {
       c = game_file.get();
       if (!isspace(c)) break;

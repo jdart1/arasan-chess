@@ -14,10 +14,8 @@
 
 #include <cmath>
 
-using namespace std;
-
 #ifdef SYZYGY_TBS
-string Options::tbPath() const { return search.syzygy_path; }
+std::string Options::tbPath() const { return search.syzygy_path; }
 #endif
 
 Options::SearchOptions::SearchOptions()
@@ -39,28 +37,28 @@ Options::SearchOptions::SearchOptions()
 }
 
 template <class T>
-int Options::setOption(const string &name, const string &valueString,
+int Options::setOption(const std::string &name, const std::string &valueString,
                        T &value) {
     if (!Options::setOption<T>(valueString, value)) {
-        cerr << "warning: invalid value for option " << name << endl;
+        std::cerr << "warning: invalid value for option " << name << std::endl;
         return 0;
     }
     return 1;
 }
 
-static void set_strength_option(const string &name, int &value,
-                                const string &valueString) {
+static void set_strength_option(const std::string &name, int &value,
+                                const std::string &valueString) {
     int tmp = value;
     if (sscanf(valueString.c_str(), "%d", &tmp) != 1 || tmp < 0 || tmp > 100) {
-        cerr << "warning: invalid value for option " << name
-             << " (expected integer 0..100)" << endl;
+        std::cerr << "warning: invalid value for option " << name
+             << " (expected integer 0..100)" << std::endl;
         return;
     }
     value = tmp;
 }
 
-void Options::setMemoryOption(size_t &value, const string &valueString) {
-    string s = valueString;
+void Options::setMemoryOption(size_t &value, const std::string &valueString) {
+    std::string s(valueString);
     auto it = s.end() - 1;
     size_t mult = 1L;
     if (*it == 'k' || *it == 'K') {
@@ -73,7 +71,7 @@ void Options::setMemoryOption(size_t &value, const string &valueString) {
         s.erase(it);
         mult = 1024L * 1024L * 1024L;
     }
-    stringstream ss(s);
+    std::stringstream ss(s);
     size_t val;
     if ((ss >> val).fail())
         return; // invalid value
@@ -81,18 +79,18 @@ void Options::setMemoryOption(size_t &value, const string &valueString) {
         value = (size_t)val * mult;
 }
 
-static void set_boolean_option(const string &name, const string &valueString,
+static void set_boolean_option(const std::string &name, const std::string &valueString,
                                int &value) {
     if (valueString == "true")
         value = 1;
     else if (valueString == "false")
         value = 0;
     else
-        cerr << "warning: invalid value for option " << name
-             << " (expected 'true' or 'false')" << endl;
+        std::cerr << "warning: invalid value for option " << name
+             << " (expected 'true' or 'false')" << std::endl;
 }
 
-void Options::set_option(const string &name, const string &value) {
+void Options::set_option(const std::string &name, const std::string &value) {
     if (name == "log.enabled") {
         set_boolean_option(name, value, log_enabled);
     } else if (name == "log.append") {
@@ -159,7 +157,7 @@ void Options::set_option(const string &name, const string &value) {
     else if (name == "search.useNNUE") {
         setOption<int>(name, value, search.useNNUE);
     } else if (name == "search.nnueFile") {
-        setOption<string>(name, value, search.nnueFile);
+        search.nnueFile = value;
     }
 #endif
 #ifdef NUMA
@@ -172,26 +170,26 @@ void Options::set_option(const string &name, const string &value) {
     } else if (name == "search.minimum_search_time") {
         setOption<int>(name, value, search.minimum_search_time);
     } else
-        cerr << "warning: unrecognized option name: " << name << endl;
+        std::cerr << "warning: unrecognized option name: " << name << std::endl;
 }
 
-int Options::init(const string &fileName) {
+int Options::init(const std::string &fileName) {
 
-    ifstream infile(fileName.c_str());
+    std::ifstream infile(fileName.c_str());
     if (!infile.good()) {
         return -1;
     }
-    string contents;
+    std::string contents;
     while (infile.good() && !infile.eof()) {
         getline(infile, contents);
-        string::const_iterator it = contents.begin();
+        auto it = contents.begin();
         while (it != contents.end() && isspace(*it))
             it++;
         if (it == contents.end())
             break;
         if (*it == '#')
             continue;
-        string name, value;
+        std::string name, value;
         while (it != contents.end() && *it != '=') {
             name += *it++;
         }

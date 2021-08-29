@@ -7,8 +7,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 
-static void UCIMoveImage(const Move &move, ostream &image) {
+static void UCIMoveImage(const Move &move, std::ostream &image) {
     if (IsNull(move)) {
         image << "NULL";
     } else {
@@ -23,13 +24,13 @@ static void UCIMoveImage(const Move &move, ostream &image) {
     }
 }
 
-void Notation::image(const Board &b, const Move &m, OutputFormat format, string &result ) {
-    stringstream buf;
+void Notation::image(const Board &b, const Move &m, OutputFormat format, std::string &result ) {
+    std::stringstream buf;
     image(b, m, format, buf);
     result = buf.str();
 }
 
-void Notation::image(const Board & b, const Move & m, OutputFormat format, ostream &image) {
+void Notation::image(const Board & b, const Move & m, OutputFormat format, std::ostream &image) {
    if (format == OutputFormat::UCI) {
       return UCIMoveImage(m,image);
    }
@@ -146,7 +147,7 @@ static int is_file(char c) {
 }
 
 
-Move Notation::value(const Board & board, ColorType side, InputFormat format, const string &image, bool checkLegal) 
+Move Notation::value(const Board & board, ColorType side, InputFormat format, const std::string &image, bool checkLegal) 
 {
     if (format == InputFormat::UCI) {
         if (image.length() >= 4) {
@@ -180,15 +181,15 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
     Square dest = InvalidSquare, start = InvalidSquare;
     int capture = 0;
 
-    stringstream s(image);
-    string::const_iterator it = image.begin();
+    std::stringstream s(image);
+    std::string::const_iterator it = image.begin();
     int i = 0;
     while (it != image.end() && isspace(*it)) {
         it++;
         i++;
     }
     if (it == image.end() || !isalpha(*it)) return NullMove;
-    string img(image,i); // string w/o leading spaces
+    std::string img(image,i); // string w/o leading spaces
     assert(img.length());
     it = img.begin();
     if (*it == 'O' || *it == '0') {
@@ -368,14 +369,14 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
        return NullMove;
 }
 
-Move Notation::parseCastling(ColorType color, const string &moveStr) {
+Move Notation::parseCastling(ColorType color, const std::string &moveStr) {
    // repair brain-dead variants of castling like "O-O-0"
-   string castle(moveStr);
+   std::string castle(moveStr);
    replace(castle.begin(), castle.end(), '0', 'O');
    size_t check = castle.find('+');
-   if (check != string::npos) castle.erase(check,1);
+   if (check != std::string::npos) castle.erase(check,1);
    size_t mate = castle.find('#');
-   if (mate != string::npos) castle.erase(mate,1);
+   if (mate != std::string::npos) castle.erase(mate,1);
    transform(castle.begin(), castle.end(), castle.begin(), ::toupper);
    if (castle == "O-O") {
       if (color == White)

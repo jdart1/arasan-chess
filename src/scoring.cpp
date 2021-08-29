@@ -385,8 +385,8 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
                 scores.mid += PARAM(MINOR_FOR_PAWNS_MIDGAME);
                 scores.end += PARAM(MINOR_FOR_PAWNS_ENDGAME);
 #ifdef EVAL_DEBUG
-                cout << "minors vs pawns (" << ColorImage(side) << "): (" <<
-                    PARAM(MINOR_FOR_PAWNS_MIDGAME) << "," << PARAM(MINOR_FOR_PAWNS_ENDGAME) << ")" << endl;
+                std::cout << "minors vs pawns (" << ColorImage(side) << "): (" <<
+                    PARAM(MINOR_FOR_PAWNS_MIDGAME) << "," << PARAM(MINOR_FOR_PAWNS_ENDGAME) << ")" << std::endl;
 #endif
             }
         }
@@ -788,7 +788,7 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
                 const int blocked = is_blocked(board,opp_pawn,oside);
                 coverEntry.storm += PARAM(PAWN_STORM)[blocked][folded_file][opp_dist];
 #ifdef PAWN_DEBUG
-                cout << "storm: " << ColorImage(side) << " " << SquareImage(opp_pawn) << " blocked=" << blocked << endl;
+                std::cout << "storm: " << ColorImage(side) << " " << SquareImage(opp_pawn) << " blocked=" << blocked << std::endl;
 #endif
 #ifdef TUNE
                 coverEntry.storm_counts[blocked][folded_file][opp_dist]++;
@@ -797,7 +797,7 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
         }
     }
 #ifdef PAWN_DEBUG
-    cout << ColorImage(side) << " storm = " << coverEntry.storm << " pawn_attacks=" << coverEntry.pawn_attacks << endl;
+    std::cout << ColorImage(side) << " storm = " << coverEntry.storm << " pawn_attacks=" << coverEntry.pawn_attacks << std::endl;
 #endif
 }
 
@@ -830,9 +830,9 @@ void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,con
       scores.mid += PARAM(BAD_BISHOP_MID) * (ourPawns - oppPawns);
       scores.end += PARAM(BAD_BISHOP_END) * (ourPawns - oppPawns);
 #ifdef EVAL_DEBUG
-      cout << "bad bishop (" << ColorImage(bishopColor) << "): (" <<
+      std::cout << "bad bishop (" << ColorImage(bishopColor) << "): (" <<
          scores.mid - tmp.mid << "," << scores.end - tmp.end <<
-         ")" << endl;
+         ")" << std::endl;
 #endif
    }
    const int totalOppPawns = oppPawnData.b_square_pawns + oppPawnData.w_square_pawns;
@@ -843,7 +843,7 @@ void Scoring::scoreBishopAndPawns(const PawnHashEntry::PawnData &ourPawnData,con
 #endif
       opp_scores.end += ((bishopColor == White ? oppPawnData.w_square_pawns : oppPawnData.b_square_pawns) * PARAM(BISHOP_PAWN_PLACEMENT_END))/ totalOppPawns;
 #ifdef EVAL_DEBUG
-      cout << "bishop pawn placement: (" << ColorImage(OppositeColor(bishopColor)) << "): " << opp_scores.end - tmp << endl;
+      std::cout << "bishop pawn placement: (" << ColorImage(OppositeColor(bishopColor)) << "): " << opp_scores.end - tmp << std::endl;
 #endif
    }
 }
@@ -864,16 +864,16 @@ void Scoring::positionalScore(const Board &board,
    const PawnHashEntry::PawnData &oppPawnData = pawnEntry.pawnData(oside);
 
 #ifdef EVAL_DEBUG
-   cout << "scores for " << ColorImage(side) << ":" << endl;
+   std::cout << "scores for " << ColorImage(side) << ":" << std::endl;
 #endif
    // outside passed pawn scoring, based on cached pawn data
    if (pawnEntry.pawnData(side).outside && !pawnEntry.pawnData(oside).outside) {
       scores.mid += PARAM(OUTSIDE_PASSER_MID);
       scores.end += PARAM(OUTSIDE_PASSER_END);
 #ifdef PAWN_DEBUG
-      cout << "outside passer (" << ColorImage(side) << "): (" <<
+      std::cout << "outside passer (" << ColorImage(side) << "): (" <<
          PARAM(OUTSIDE_PASSER_MID) << ", " <<
-         PARAM(OUTSIDE_PASSER_END) << ")" << endl;
+         PARAM(OUTSIDE_PASSER_END) << ")" << std::endl;
 #endif
    }
 
@@ -881,7 +881,7 @@ void Scoring::positionalScore(const Board &board,
       if (BISHOP_TRAP_PATTERN[side][i].bishopMask & board.bishop_bits[side]
           && BISHOP_TRAP_PATTERN[side][i].pawnMask & board.pawn_bits[oside]) {
 #ifdef EVAL_DEBUG
-         cout << "bishop trapped" << endl;
+         std::cout << "bishop trapped" << std::endl;
 #endif
          scores.any += PARAM(BISHOP_TRAPPED);
       }
@@ -926,7 +926,7 @@ void Scoring::positionalScore(const Board &board,
             const Bitboard &knattacks = Attacks::knight_attacks[sq];
             const score_t mobl = PARAM(KNIGHT_MOBILITY)[Bitboard(knattacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
-            cout << "knight moblility =" << mobl << endl;
+            std::cout << "knight moblility =" << mobl << std::endl;
 #endif
             scores.any += mobl;
             if (outpost(board,sq,side)) {
@@ -936,9 +936,9 @@ void Scoring::positionalScore(const Board &board,
                score_t outpost_score_end = Params::KNIGHT_OUTPOST[Endgame][defenders];
                scores.end += outpost_score_end;
 #ifdef EVAL_DEBUG
-               cout << "knight outpost (defenders=" <<
+               std::cout << "knight outpost (defenders=" <<
                    defenders << "): score (" << outpost_score_mid << ',' <<
-                   outpost_score_end << ')' << endl;
+                   outpost_score_end << ')' << std::endl;
 #endif
             }
             ai.allAttacks[side] |= knattacks;
@@ -988,9 +988,9 @@ void Scoring::positionalScore(const Board &board,
                score_t outpost_score_end = Params::BISHOP_OUTPOST[Endgame][defenders];
                scores.end += outpost_score_end;
 #ifdef EVAL_DEBUG
-               cout << "bishop outpost (defenders=" <<
+               std::cout << "bishop outpost (defenders=" <<
                    defenders << "): score (" << outpost_score_mid << ',' <<
-                   outpost_score_end << ')' << endl;
+                   outpost_score_end << ')' << std::endl;
 #endif
             }
 
@@ -1000,7 +1000,7 @@ void Scoring::positionalScore(const Board &board,
 
             const score_t mobl = PARAM(BISHOP_MOBILITY)[Bitboard(battacks &~board.allOccupied &~ourPawnData.opponent_pawn_attacks).bitCount()];
 #ifdef EVAL_DEBUG
-            cout << "bishop mobility (" << SquareImage(sq) << "): " << mobl << endl;
+            std::cout << "bishop mobility (" << SquareImage(sq) << "): " << mobl << std::endl;
 #endif
             scores.any += mobl;
             break;
@@ -1025,7 +1025,7 @@ void Scoring::positionalScore(const Board &board,
                   scores.end += PARAM(TWO_ROOKS_ON_7TH_END);
                }
 #ifdef EVAL_DEBUG
-               cout << "rook on 7th: (" << scores.mid-tmp.mid << ", " << scores.end-tmp.end << ")" << endl;
+               std::cout << "rook on 7th: (" << scores.mid-tmp.mid << ", " << scores.end-tmp.end << ")" << std::endl;
 #endif
             }
 
@@ -1043,8 +1043,8 @@ void Scoring::positionalScore(const Board &board,
             scores.mid += PARAM(ROOK_MOBILITY)[Midgame][mobl];
             scores.end += PARAM(ROOK_MOBILITY)[Endgame][mobl];
 #ifdef EVAL_DEBUG
-            cout << "rook mobility: (" << PARAM(ROOK_MOBILITY)[Midgame][mobl] <<
-               ", " << PARAM(ROOK_MOBILITY)[Endgame][mobl] << ")" << endl;
+            std::cout << "rook mobility: (" << PARAM(ROOK_MOBILITY)[Midgame][mobl] <<
+               ", " << PARAM(ROOK_MOBILITY)[Endgame][mobl] << ")" << std::endl;
 #endif
             if (!deep_endgame) {
                int kfile = File(kp);
@@ -1100,7 +1100,7 @@ void Scoring::positionalScore(const Board &board,
                   score_t queenOut = (PARAM(QUEEN_OUT) - (rank - 4) / 2) * (int) back.bitCount();
 #ifdef EVAL_DEBUG
                   if (queenOut) {
-                     cout << "premature Queen develop (" << ColorImage(side) << "): " << queenOut << endl;
+                     std::cout << "premature Queen develop (" << ColorImage(side) << "): " << queenOut << std::endl;
                   }
 #endif
                   scores.mid += queenOut;
@@ -1130,9 +1130,9 @@ void Scoring::positionalScore(const Board &board,
             scores.mid += PARAM(QUEEN_MOBILITY)[Midgame][qmobl];
             scores.end += PARAM(QUEEN_MOBILITY)[Endgame][qmobl];
 #ifdef EVAL_DEBUG
-            cout << "queen mobility (" <<
+            std::cout << "queen mobility (" <<
                PARAM(QUEEN_MOBILITY)[Midgame][qmobl] << ", " <<
-               PARAM(QUEEN_MOBILITY)[Endgame][qmobl] << ")" << endl;
+               PARAM(QUEEN_MOBILITY)[Endgame][qmobl] << ")" << std::endl;
 #endif
             if (board.pinOnRankOrFile(sq, okp, oside)) {
                pin_count++;
@@ -1145,12 +1145,12 @@ void Scoring::positionalScore(const Board &board,
       }
 
 #ifdef EVAL_DEBUG
-      cout <<
+      std::cout <<
          ColorImage(side) << ' ' << PieceImage(TypeOfPiece(board[sq])) <<
          " on " << SquareImage(sq) << ": " <<
          " mid=" << scores.mid -tmp.mid <<
          " endgame=" << scores.end - tmp.end <<
-         " any=" << scores.any - tmp.any << endl;
+         " any=" << scores.any - tmp.any << std::endl;
 #endif
    }
 
@@ -1171,8 +1171,8 @@ void Scoring::positionalScore(const Board &board,
       scores.mid += PARAM(BISHOP_PAIR_MID);
       scores.end += PARAM(BISHOP_PAIR_END);
 #ifdef EVAL_DEBUG
-      cout << "bishop pair (" << ColorImage(side) << "): (" <<
-         scores.mid - tmp.mid << ", " << scores.end - tmp.end << ")" << endl;
+      std::cout << "bishop pair (" << ColorImage(side) << "): (" <<
+         scores.mid - tmp.mid << ", " << scores.end - tmp.end << ")" << std::endl;
 #endif
    }
    scores.mid += PARAM(KING_PST)[Midgame][side == White ? kp : 63 - kp];
@@ -1184,7 +1184,7 @@ void Scoring::positionalScore(const Board &board,
       int mobl = std::min<int>(4,Bitboard(Attacks::king_attacks[okp] & ~board.allOccupied & ~ai.allAttacks[side]).bitCount());
       opp_scores.end += PARAM(KING_MOBILITY_ENDGAME)[mobl];
 #ifdef EVAL_DEBUG
-      cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << endl;
+      std::cout << ColorImage(oside) << " king mobility: " << PARAM(KING_MOBILITY_ENDGAME)[mobl] << std::endl;
 #endif
    }
    if (!deep_endgame) {
@@ -1220,13 +1220,13 @@ void Scoring::positionalScore(const Board &board,
       }
 
 #ifdef ATTACK_DEBUG
-      cout << ColorImage(side) << " piece attacks on opposing king:" << endl;
-      cout << " cover= " << oppCover << endl;
-      cout << " king attack count=" << kingAttackCount << endl;
-      cout << " king squares=" << kingAttackSquares.bitCount() << endl;
-      cout << " attackWeight=" << attackWeight << endl;
-      cout << " index=" << index << endl;
-      cout << " pin_count=" << pin_count << endl;
+      std::cout << ColorImage(side) << " piece attacks on opposing king:" << std::endl;
+      std::cout << " cover= " << oppCover << std::endl;
+      std::cout << " king attack count=" << kingAttackCount << std::endl;
+      std::cout << " king squares=" << kingAttackSquares.bitCount() << std::endl;
+      std::cout << " attackWeight=" << attackWeight << std::endl;
+      std::cout << " index=" << index << std::endl;
+      std::cout << " pin_count=" << pin_count << std::endl;
 #endif
 #ifdef TUNE
       score_t kattack = kingAttackSigmoid(index);
@@ -1234,13 +1234,13 @@ void Scoring::positionalScore(const Board &board,
       score_t kattack = PARAM(KING_ATTACK_SCALE)[std::min<int>(Params::KING_ATTACK_SCALE_SIZE-1,index)];
 #endif
 #ifdef ATTACK_DEBUG
-      cout << "scaled king attack score=  " << kattack << endl;
+      std::cout << "scaled king attack score=  " << kattack << std::endl;
 #endif
       if (pin_count) kattack += PARAM(PIN_MULTIPLIER_MID) * pin_count;
 #ifdef ATTACK_DEBUG
       Scores s;
       s.mid = kattack;
-      cout << " king attack score (" << ColorImage(side) << ") : " << kattack << " (pre-scaling), " << s.blend(board.getMaterial(side).materialLevel()) << " (scaled)" << endl;
+      std::cout << " king attack score (" << ColorImage(side) << ") : " << kattack << " (pre-scaling), " << s.blend(board.getMaterial(side).materialLevel()) << " (scaled)" << std::endl;
 #endif
       // decrement the opposing side's scores because we want to
       // scale king attacks by this side's material level.
@@ -1376,7 +1376,7 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
       int mid_tmp = entr.midgame_score;
       int end_tmp = entr.endgame_score;
-      cout << ColorImage(side) << " pawn on " << FileImage(sq) << RankImage(sq);
+      std::cout << ColorImage(side) << " pawn on " << FileImage(sq) << RankImage(sq);
 #endif
       int file = File(sq);
       int rank = Rank(sq, side);
@@ -1398,7 +1398,7 @@ void Scoring::calcPawnData(const Board &board,
 
       // Note: "backward" here means that the pawn in its current location
       // cannot be protected by a pawn of the same color. I.e. it has
-      // no friendly pawn on an adjacent file and earlier rank. This is
+      // no fristd::endly pawn on an adjacent file and earlier rank. This is
       // not though the customary definition of backwardness.
       if (side == White) {
          backward = !TEST_MASK(board.pawn_bits[side], backwardW[sq]);
@@ -1415,11 +1415,11 @@ void Scoring::calcPawnData(const Board &board,
       const auto fileIndex = Params::foldFile(file);
       if (doubles) {
 #ifdef PAWN_DEBUG
-         cout << " doubled";
+         std::cout << " doubled";
 #endif
          if (passed) {
 #ifdef PAWN_DEBUG
-            cout << " passed";
+            std::cout << " passed";
 #endif
             passed = 0;
          }
@@ -1427,7 +1427,7 @@ void Scoring::calcPawnData(const Board &board,
          if (doubles.bitCountOpt() > 1) {
             // tripled pawns
 #ifdef PAWN_DEBUG
-            cout << " tripled";
+            std::cout << " tripled";
 #endif
 #ifdef TUNE
             td.flags |= PawnDetail::TRIPLED;
@@ -1449,7 +1449,7 @@ void Scoring::calcPawnData(const Board &board,
          entr.midgame_score += PARAM(ISOLATED_PAWN)[Midgame][fileIndex];
          entr.endgame_score += PARAM(ISOLATED_PAWN)[Endgame][fileIndex];
 #ifdef PAWN_DEBUG
-         cout << " isolated";
+         std::cout << " isolated";
 #endif
 #ifdef TUNE
          td.flags |= PawnDetail::ISOLATED;
@@ -1495,7 +1495,7 @@ void Scoring::calcPawnData(const Board &board,
               int patcks = (attackers - defenders);
               if (patcks > 0) {
 #ifdef PAWN_DEBUG
-                  cout << " weak";
+                  std::cout << " weak";
 #endif
 #ifdef TUNE
                   td.flags |= PawnDetail::WEAK;
@@ -1512,7 +1512,7 @@ void Scoring::calcPawnData(const Board &board,
           if (!passed && !OnFile(board.pawn_bits[oside], file)) {
               entr.weakopen++;
 #ifdef PAWN_DEBUG
-              cout << " weak/open";
+              std::cout << " weak/open";
 #endif
           }
       }
@@ -1521,7 +1521,7 @@ void Scoring::calcPawnData(const Board &board,
          // note: doubled passed pawns were scored earlier, are not
          // considered passed.
 #ifdef PAWN_DEBUG
-         cout << " passed";
+         std::cout << " passed";
 #endif
 #ifdef TUNE
          td.flags |= PawnDetail::PASSED;
@@ -1536,7 +1536,7 @@ void Scoring::calcPawnData(const Board &board,
       if (rank > 3 && file != 8 && board[sq + 1] == our_pawn)
       {
 #ifdef PAWN_DEBUG
-         cout << " duo";
+         std::cout << " duo";
 #endif
          duo++;
       }
@@ -1545,7 +1545,7 @@ void Scoring::calcPawnData(const Board &board,
          int space = (rank - 3);
          if (duo) space *= 2;
 #ifdef PAWN_DEBUG
-         cout << " space=" << space*PARAM(SPACE);
+         std::cout << " space=" << space*PARAM(SPACE);
 #endif
 #ifdef TUNE
          td.space_weight += space;
@@ -1554,10 +1554,10 @@ void Scoring::calcPawnData(const Board &board,
          entr.endgame_score += space*PARAM(SPACE);
       }
 #ifdef PAWN_DEBUG
-      cout << " total = (" <<
+      std::cout << " total = (" <<
          entr.midgame_score - mid_tmp << ", " <<
          entr.endgame_score - end_tmp << ")" <<
-         endl;
+         std::endl;
 #endif
    }
 
@@ -1594,8 +1594,8 @@ void Scoring::calcPawnData(const Board &board,
       entr.endgame_score += cp_score.end;
 #ifdef PAWN_DEBUG
       if (cp_score.mid || cp_score.end) {
-         cout << "connected passer score, square " << SquareImage(sq);
-         cout << " = (" << cp_score.mid << ", " << cp_score.end << ")" << endl;
+         std::cout << "connected passer score, square " << SquareImage(sq);
+         std::cout << " = (" << cp_score.mid << ", " << cp_score.end << ")" << std::endl;
       }
 #endif
    }
@@ -1610,11 +1610,11 @@ void Scoring::calcPawnData(const Board &board,
 #endif
 #ifdef PAWN_DEBUG
    if (entr.midgame_score - tmp) {
-      cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << endl;
+      std::cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << std::endl;
    }
 #endif
 #ifdef PAWN_DEBUG
-   cout <<
+   std::cout <<
       "pawn score (" <<
       ColorImage(side) <<
       ") = (" <<
@@ -1622,7 +1622,7 @@ void Scoring::calcPawnData(const Board &board,
       ", " <<
       entr.endgame_score <<
       ')' <<
-      endl;
+      std::endl;
 #endif
 }
 
@@ -1669,7 +1669,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    }
 #ifdef EVAL_DEBUG
    score_t adjusted = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
-   cout << "adjusted material score = " << (board.sideToMove() == White ? adjusted : -adjusted) << endl;
+   std::cout << "adjusted material score = " << (board.sideToMove() == White ? adjusted : -adjusted) << std::endl;
 #endif
    const hash_t pawnHash = board.pawnHashCodeW ^ board.pawnHashCodeB;
 
@@ -1703,7 +1703,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
                               wScores);
       }
 #ifdef EVAL_DEBUG
-      cout << "endgame score (White)=" << wScores.end - tmp << endl;
+      std::cout << "endgame score (White)=" << wScores.end - tmp << std::endl;
 #endif
 
    }
@@ -1722,7 +1722,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
           scoreEndgame<Black>(board,
                               blackKPEntry.king_endgame_position, bScores);
 #ifdef EVAL_DEBUG
-          cout << "endgame score (Black)=" << bScores.end - tmp << endl;
+          std::cout << "endgame score (Black)=" << bScores.end - tmp << std::endl;
 #endif
       }
    }
@@ -1745,16 +1745,16 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    }
 
 #ifdef EVAL_DEBUG
-   cout << "White scores: " << endl;
-   cout << " general: " << wScores.any << endl;
-   cout << " midgame: " << wScores.mid << endl;
-   cout << " endgame: " << wScores.end << endl;
-   cout << " blend: " << wScores.blend(b_materialLevel) << endl;
-   cout << "Black scores: " << endl;
-   cout << " general: " << bScores.any << endl;
-   cout << " midgame: " << bScores.mid << endl;
-   cout << " endgame: " << bScores.end << endl;
-   cout << " blend: " << bScores.blend(w_materialLevel) << endl;
+   std::cout << "White scores: " << std::endl;
+   std::cout << " general: " << wScores.any << std::endl;
+   std::cout << " midgame: " << wScores.mid << std::endl;
+   std::cout << " endgame: " << wScores.end << std::endl;
+   std::cout << " blend: " << wScores.blend(b_materialLevel) << std::endl;
+   std::cout << "Black scores: " << std::endl;
+   std::cout << " general: " << bScores.any << std::endl;
+   std::cout << " midgame: " << bScores.mid << std::endl;
+   std::cout << " endgame: " << bScores.end << std::endl;
+   std::cout << " blend: " << bScores.blend(w_materialLevel) << std::endl;
 #endif
 
    // scale scores by game phase
@@ -1775,7 +1775,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
 #else
    if (std::abs(score) >= Constants::MATE) {
 #endif
-      cout << board << endl;
+      std::cout << board << std::endl;
       assert(0);
    }
 #endif
@@ -1803,9 +1803,9 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #ifdef PAWN_DEBUG
       if (mid_tmp != scores.mid ||
           end_tmp != scores.end) {
-         cout << "weak pawns on open file (" << ColorImage(side) << "): (";
-         cout << scores.mid - mid_tmp << ", ";
-         cout << scores.end - end_tmp << ")" << endl;
+         std::cout << "weak pawns on open file (" << ColorImage(side) << "): (";
+         std::cout << scores.mid - mid_tmp << ", ";
+         std::cout << scores.end - end_tmp << ")" << std::endl;
       }
 #endif
    }
@@ -1824,7 +1824,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
 #ifdef PAWN_DEBUG
       if (scores.mid - center_tmp) {
-         cout << "center pawn block (White): " << scores.mid - center_tmp << endl;
+         std::cout << "center pawn block (White): " << scores.mid - center_tmp << std::endl;
       }
 #endif
    }
@@ -1838,7 +1838,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
       }
 #ifdef PAWN_DEBUG
       if (scores.mid - center_tmp) {
-         cout << "center pawn block (Black): " << scores.mid - center_tmp << endl;
+         std::cout << "center pawn block (Black): " << scores.mid - center_tmp << std::endl;
       }
 #endif
    }
@@ -1859,7 +1859,7 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
               board.fileAttacksUp(sq);
           if (board.rook_bits[side] & atcks) {
 #ifdef EVAL_DEBUG
-            cout << "rook behind PP: " << SquareImage(sq) << endl;
+            std::cout << "rook behind PP: " << SquareImage(sq) << std::endl;
 #endif
             scores.mid += PARAM(ROOK_BEHIND_PP_MID);
             scores.end += PARAM(ROOK_BEHIND_PP_END);
@@ -1868,9 +1868,9 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #ifdef EVAL_DEBUG
       if ((mid_tmp != scores.mid) ||
           (end_tmp != scores.end)) {
-         cout << "rook/passed pawn placement (" << ColorImage(side) << ") (";
-         cout << scores.mid - mid_tmp << ", " <<
-            scores.end - end_tmp << ")" << endl;
+         std::cout << "rook/passed pawn placement (" << ColorImage(side) << ") (";
+         std::cout << scores.mid - mid_tmp << ", " <<
+            scores.end - end_tmp << ")" << std::endl;
       }
 #endif
       Bitboard ahead = (side == White) ? Attacks::file_mask_up[sq] :
@@ -1886,9 +1886,9 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #ifdef EVAL_DEBUG
       if ((mid_tmp != scores.mid) ||
           (end_tmp != scores.end)) {
-         cout << "queening path clear (" << ColorImage(side) << ") (";
-         cout << scores.mid - mid_tmp << ", " <<
-            scores.end - end_tmp << ")" << endl;
+         std::cout << "queening path clear (" << ColorImage(side) << ") (";
+         std::cout << scores.mid - mid_tmp << ", " <<
+            scores.end - end_tmp << ")" << std::endl;
       }
       mid_tmp = scores.mid;
       end_tmp = scores.end;
@@ -1916,25 +1916,25 @@ void Scoring::pawnScore(const Board &board, ColorType side, const PawnHashEntry:
 #ifdef EVAL_DEBUG
       if ((mid_tmp != scores.mid) ||
           (end_tmp != scores.end)) {
-         cout << "queening path control (" << ColorImage(side) << ") (";
-         cout << scores.mid - mid_tmp << ", " <<
-            scores.end - end_tmp << ")" << endl;
+         std::cout << "queening path control (" << ColorImage(side) << ") (";
+         std::cout << scores.mid - mid_tmp << ", " <<
+            scores.end - end_tmp << ")" << std::endl;
       }
       mid_tmp = scores.mid;
       end_tmp = scores.end;
 #endif
    }
 #ifdef PAWN_DEBUG
-   cout << ColorImage(side) << " pawn score: " << endl;
-   cout << " general = " << scores.any-tmp.any << endl;
-   cout << " midgame = " << scores.mid-tmp.mid << endl;
-   cout << " endgame = " << scores.end-tmp.end << endl;
+   std::cout << ColorImage(side) << " pawn score: " << std::endl;
+   std::cout << " general = " << scores.any-tmp.any << std::endl;
+   std::cout << " midgame = " << scores.mid-tmp.mid << std::endl;
+   std::cout << " endgame = " << scores.end-tmp.end << std::endl;
    Scores diff;
    diff.mid = scores.mid-tmp.mid;
    diff.end = scores.end-tmp.end;
    diff.any = scores.any-tmp.any;
 
-   cout << " blend = " << diff.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << endl;
+   std::cout << " blend = " << diff.blend(board.getMaterial(OppositeColor(side)).materialLevel()) << std::endl;
 #endif
 }
 
@@ -2100,8 +2100,8 @@ void Scoring::scoreEndgame(const Board &board,score_t k_pos,Scores &scores) {
       k_pos = (k_pos*PARAM(KING_POSITION_LOW_MATERIAL)[pieces])/128;
 #ifdef EVAL_DEBUG
       if (tmp - k_pos) {
-         cout << "king pos after reduced material bonus (" << ColorImage(side) << "): " <<
-            k_pos-tmp << endl;
+         std::cout << "king pos after reduced material bonus (" << ColorImage(side) << "): " <<
+            k_pos-tmp << std::endl;
       }
 #endif
    }
@@ -2126,8 +2126,8 @@ void Scoring::scoreEndgame(const Board &board,score_t k_pos,Scores &scores) {
    }
 #ifdef EVAL_DEBUG
    if (scores.end - tmp) {
-         cout << "side-protected pawns (" << ColorImage(side) << "): " <<
-            scores.end-tmp << endl;
+         std::cout << "side-protected pawns (" << ColorImage(side) << "): " <<
+            scores.end-tmp << std::endl;
    }
 #endif
 }
@@ -2182,16 +2182,16 @@ Scoring::KingPawnHashEntry &Scoring::getKPEntry(const Board &board,
       calcStorm(board,side,entry2,ourPawnData.opponent_pawn_attacks);
       calcKingEndgamePosition(board,side,oppPawnData,entry2);
       if (needCover && ((entry.cover != entry2.cover) || (entry.storm != entry2.storm))) {
-         cout << board << endl;
-         cout << "mLevel=" << mLevel << endl;
-         cout << "cover1=" << entry.cover << " cover2=" << entry2.cover << endl;
-         cout << "storm1=" << entry.storm << " storm2=" << entry2.storm << endl;
+         std::cout << board << std::endl;
+         std::cout << "mLevel=" << mLevel << std::endl;
+         std::cout << "cover1=" << entry.cover << " cover2=" << entry2.cover << std::endl;
+         std::cout << "storm1=" << entry.storm << " storm2=" << entry2.storm << std::endl;
          assert(entry.cover == entry2.cover);
          assert(entry.storm == entry2.storm);
       }
 
       if (needEndgame && entry.king_endgame_position != entry2.king_endgame_position) {
-         cout << board << endl;
+         std::cout << board << std::endl;
          assert(entry.king_endgame_position == entry2.king_endgame_position);
       }
 #endif
@@ -2306,7 +2306,7 @@ bool Scoring::isDraw(const Board &board, int &rep_count, int ply) {
    }
 }
 
-void Scoring::printScore(score_t score, ostream &str) {
+void Scoring::printScore(score_t score, std::ostream &str) {
    if (score <= -Constants::MATE_RANGE) {
       str << "-Mate" << int(Constants::MATE + score + 1) / 2;
    }
@@ -2322,12 +2322,12 @@ void Scoring::printScore(score_t score, ostream &str) {
    else {
       if (score >= 0) str << '+';
       std::ios_base::fmtflags original_flags = str.flags();
-      str << fixed << setprecision(2) << (score * 1.0) / double(Params::PAWN_VALUE);
+      str << std::fixed << std::setprecision(2) << (score * 1.0) / double(Params::PAWN_VALUE);
       str.flags(original_flags);
    }
 }
 
-void Scoring::printScoreUCI(score_t score, ostream &str) {
+void Scoring::printScoreUCI(score_t score, std::ostream &str) {
    if (score <= -Constants::MATE_RANGE) {
       str << "mate " << -int(Constants::MATE + score + 1) / 2;
    }
@@ -2395,13 +2395,13 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
       score_t score1 = static_cast<score_t>(globals::network.evaluate(intf.getAccumulator()));
       score_t score2 = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
       if (score1 != score2) {
-          cout << board << endl;
+          std::cout << board << std::endl;
           NodeInfo *n = node;
           while (n->ply) {
               --n;
-              cout << n->ply << " ";
-              MoveImage(n->last_move,cout);
-              cout << endl;
+              std::cout << n->ply << " ";
+              MoveImage(n->last_move,std::cout);
+              std::cout << std::endl;
           }
           assert(0);
       }
@@ -2423,7 +2423,7 @@ score_t Scoring::kingAttackSigmoid(score_t weight) const
         PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(weight-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0));
 }
 
-static void print_array(ostream & o,score_t arr[], int size, int add_semi = 1)
+static void print_array(std::ostream & o,score_t arr[], int size, int add_semi = 1)
 {
    o << "{";
    score_t *p = arr;
@@ -2432,44 +2432,44 @@ static void print_array(ostream & o,score_t arr[], int size, int add_semi = 1)
       o << std::round(*p++);
    }
    o << "}";
-   if (add_semi) o << ";" << endl;
+   if (add_semi) o << ";" << std::endl;
 }
 
-static void print_array(ostream & o,score_t mid[], score_t end[], int size)
+static void print_array(std::ostream & o,score_t mid[], score_t end[], int size)
 {
    o << "{";
    print_array(o,mid,size,0);
    o << ", ";
    print_array(o,end,size,0);
-   o << "};" << endl;
+   o << "};" << std::endl;
 }
 
-void Params::write(ostream &o, const string &comment)
+void Params::write(std::ostream &o, const std::string &comment)
 {
    time_t rawtime;
    struct tm * tminfo;
    time (&rawtime);
    tminfo = localtime (&rawtime);
-   o << "// Copyright 2015-" << tminfo->tm_year+1900 << " by Jon Dart. All Rights Reserved." << endl;
-   o << "// This is a generated file. Do not edit." << endl;
-   o << "// " << comment << endl;
-   o << "//" << endl;
-   o << endl << "#include \"params.h\"" << endl;
-   o << endl;
+   o << "// Copyright 2015-" << tminfo->tm_year+1900 << " by Jon Dart. All Rights Reserved." << std::endl;
+   o << "// This is a generated file. Do not edit." << std::endl;
+   o << "// " << comment << std::endl;
+   o << "//" << std::endl;
+   o << std::endl << "#include \"params.h\"" << std::endl;
+   o << std::endl;
    o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
    print_array(o,Params::KN_VS_PAWN_ADJUST,3);
    o << "const int Params::KING_COVER[6][4] = {";
    for (int i = 0; i < 6; i++) {
       print_array(o,Params::KING_COVER[i],4,0);
-      if (i<5) o << "," << endl;
+      if (i<5) o << "," << std::endl;
    }
-   o << "};" << endl;
+   o << "};" << std::endl;
    for (int i = Tune::PAWN_VALUE_MIDGAME; i <= Tune::QUEEN_VALUE_ENDGAME; i++) {
       o << "const int Params::";
       for (auto it : globals::tune_params[i].name) {
          o << (char)toupper((int)it);
       }
-      o << " = " << std::round(globals::tune_params[i].current) << ";" << endl;
+      o << " = " << std::round(globals::tune_params[i].current) << ";" << std::endl;
    }
    int start = Tune::KING_COVER_BASE;
    for (int i = start; i < start+globals::tune_params.paramArraySize(); i++) {
@@ -2477,7 +2477,7 @@ void Params::write(ostream &o, const string &comment)
       for (auto it : globals::tune_params[i].name) {
          o << (char)toupper((int)it);
       }
-      o << " = " << std::round(globals::tune_params[i].current) << ";" << endl;
+      o << " = " << std::round(globals::tune_params[i].current) << ";" << std::endl;
    }
    o << "const int Params::KING_OPP_PASSER_DISTANCE[6] = ";
    print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
@@ -2511,7 +2511,7 @@ void Params::write(ostream &o, const string &comment)
    print_array(o,Params::TRIPLED_PAWNS[0], Params::TRIPLED_PAWNS[1], 8);
    o << "const int Params::ISOLATED_PAWN[2][8] = ";
    print_array(o,Params:: ISOLATED_PAWN[0], Params::ISOLATED_PAWN[1], 8);
-   o << endl;
+   o << std::endl;
    o << "const int Params::THREAT_BY_PAWN[2][5] = ";
    print_array(o,Params::THREAT_BY_PAWN[0],Params::THREAT_BY_PAWN[1],5);
    o << "const int Params::THREAT_BY_KNIGHT[2][5] = ";
@@ -2554,7 +2554,7 @@ void Params::write(ostream &o, const string &comment)
        o << '}';
        if (b < 1) o << ',';
    }
-   o << "};" << endl;
+   o << "};" << std::endl;
 }
 
 #endif

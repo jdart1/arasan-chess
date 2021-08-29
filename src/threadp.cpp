@@ -19,12 +19,12 @@ bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 #ifdef _THREAD_TRACE
 static lock_t io_lock;
 
-void log(const string &s) {
+void log(const std::string &s) {
     Lock(io_lock);
-    cout << s.c_str() << endl << (flush);
+    std::cout << s.c_str() << std::endl << (flush);
     Unlock(io_lock);
 }
-void log(const string &s,int param) {
+void log(const std::string &s,int param) {
     std::ostringstream out;
     out << s;
     out << ": ";

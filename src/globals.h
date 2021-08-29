@@ -23,7 +23,7 @@ namespace globals {
 extern Options options;
 extern MoveArray *gameMoves;
 
-extern string learnFileName;
+extern std::string learnFileName;
 extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
@@ -56,8 +56,8 @@ extern const char *DEFAULT_NETWORK_NAME;
 
 extern const size_t LINUX_STACK_SIZE;
 
-extern string derivePath(const std::string &fileName);
-extern string derivePath(const std::string &base, const std::string &fileName);
+extern std::string derivePath(const std::string &fileName);
+extern std::string derivePath(const std::string &base, const std::string &fileName);
 
 extern int loadNetwork(const std::string &filename);
 

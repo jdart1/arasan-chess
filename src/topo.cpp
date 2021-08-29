@@ -5,8 +5,6 @@
 #include <limits>
 #include <sstream>
 
-using namespace std;
-
 #include "globals.h"
 
 Topology::Topology()

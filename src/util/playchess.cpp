@@ -15,8 +15,8 @@
 
 static void usage() 
 {
-   cerr << "playchess [-t <time limit (sec.)>] [-x] [-min <min ply>] [-e <min ELO>] pgn_file(s)" << endl;
-   cerr << "-x outputs games that do not pass criteria" << endl;
+   std::cerr << "playchess [-t <time limit (sec.)>] [-x] [-min <min ply>] [-e <min ELO>] pgn_file(s)" << std::endl;
+   std::cerr << "-x outputs games that do not pass criteria" << std::endl;
 }
 
 int CDECL main(int argc, char **argv)
@@ -35,7 +35,7 @@ int CDECL main(int argc, char **argv)
    atexit(globals::cleanupGlobals);
    globals::delayedInit();
    if (globals::EGTBMenCount) {
-      cerr << "Initialized tablebases" << endl;
+      std::cerr << "Initialized tablebases" << std::endl;
    }
    globals::options.book.book_enabled = globals::options.log_enabled = 0;
 
@@ -51,16 +51,16 @@ int CDECL main(int argc, char **argv)
    }
    else {
       int arg = 1;
-      auto processInt = [&arg,&argc,&argv] (int &opt, const string &name) {
+      auto processInt = [&arg,&argc,&argv] (int &opt, const std::string &name) {
          if (++arg < argc) {
-            stringstream s(argv[arg]);
+            std::stringstream s(argv[arg]);
             s >> opt;
             if (s.bad() || s.fail()) {
-               cerr << "expected integer after -" << name  << endl;
+               std::cerr << "expected integer after -" << name  << std::endl;
                exit(-1);
             }
          } else {
-            cerr << "expected integer after -" << name << endl;
+            std::cerr << "expected integer after -" << name << std::endl;
             exit(-1);
          }
       };
@@ -90,16 +90,16 @@ int CDECL main(int argc, char **argv)
       SearchController *searcher = new SearchController();
       Statistics stats;
       for (;arg < argc;arg++) {
-         ifstream pgn_file( argv[arg], ios::in);
+         std::ifstream pgn_file( argv[arg], std::ios::in);
          int c;
          ColorType side;
-         string result, white, black;
+         std::string result, white, black;
          if (!pgn_file.good()) {
-            cerr << "could not open file " << argv[arg] << endl;
+            std::cerr << "could not open file " << argv[arg] << std::endl;
             exit(-1);
          }
          else {
-            vector<ChessIO::Header> hdrs;
+            std::vector<ChessIO::Header> hdrs;
 
             Board board;
             while (!pgn_file.eof()) {
@@ -139,13 +139,13 @@ int CDECL main(int argc, char **argv)
                      if (IsNull(m) ||
                          !legalMove(board,StartSquare(m), DestSquare(m))) {
                         // echo to both stdout and stderr
-                        cerr << "Illegal move: " << tok.val << endl;
-                        cout << "Illegal move: " << tok.val << endl;
+                        std::cerr << "Illegal move: " << tok.val << std::endl;
+                        std::cout << "Illegal move: " << tok.val << std::endl;
                         valid = 0;
 
                      }
                      else if (valid) {
-                        string result;
+                        std::string result;
                         Notation::image(board,m,Notation::OutputFormat::SAN,result);
                         BoardState bs = board.state;
                         moves.add_move(board,bs,m,result,false);
@@ -161,7 +161,7 @@ int CDECL main(int argc, char **argv)
                      else if (strcmp(tok.val.c_str(),")")==0) {
                         --var;   
                      } else {
-                        cerr << "Unrecognized text: " << tok.val << endl;
+                        std::cerr << "Unrecognized text: " << tok.val << std::endl;
                         valid = 0;
                      }
                      break;
@@ -217,12 +217,12 @@ int CDECL main(int argc, char **argv)
                    if (last_score >= -1.5) ok = false;
                }
 
-               string eco;
+               std::string eco;
                ChessIO::get_header(hdrs,"ECO",eco);
 
                // output header
                if (valid) {
-                  string whiteELOStr,blackELOStr;
+                  std::string whiteELOStr,blackELOStr;
                   if (minELO > 0) {
                      if (ChessIO::get_header(hdrs,"WhiteElo",whiteELOStr) &&
                          ChessIO::get_header(hdrs,"BlackElo",blackELOStr)) {
@@ -241,7 +241,7 @@ int CDECL main(int argc, char **argv)
                if (x_flag) ok = !ok;
                if (!ok) continue;
 
-               ChessIO::store_pgn(cout, moves, result, hdrs);
+               ChessIO::store_pgn(std::cout, moves, result, hdrs);
             }
             pgn_file.close();
          }

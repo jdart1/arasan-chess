@@ -1,10 +1,10 @@
-// Copyright 1997-2002, 2008, 2012, 2017 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2002, 2008, 2012, 2017, 2021 by Jon Dart. All Rights Reserved.
 //
 #include "movearr.h"
 #include "types.h"
 
 MoveRecord::MoveRecord(const Board &board, const BoardState &previous_state,
-                       const Move &move, const string &image, bool ponder)
+                       const Move &move, const std::string &image, bool ponder)
   : my_move(move),my_hashcode(board.state.hashCode),my_state(previous_state),
     my_image(image), my_ponder(ponder)
 {
@@ -12,7 +12,7 @@ MoveRecord::MoveRecord(const Board &board, const BoardState &previous_state,
 
 void MoveArray::add_move( const Board &board, 
                           const BoardState &previous_state, const Move &move,
-                          const string &image, bool ponder) {
+                          const std::string &image, bool ponder) {
     MoveRecord entry( board, previous_state, move, image, ponder );
     append(entry);
 }

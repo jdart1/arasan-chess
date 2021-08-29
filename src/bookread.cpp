@@ -33,22 +33,22 @@ BookReader::~BookReader()
 
 int BookReader::open(const char *pathName) {
     if (book_file.is_open()) return 0;
-    book_file.open(pathName, ios_base::in | ios_base::binary);
+    book_file.open(pathName, std::ios_base::in | std::ios_base::binary);
     if (!book_file.is_open()) {
-        cerr <<"failed to open " << pathName << endl;
+        std::cerr <<"failed to open " << pathName << std::endl;
         return -1;
     } else {
         // read the header
         book_file.read((char*)&hdr,sizeof(book::BookHeader));
         if (book_file.bad()) {
-            cerr << "error reading opening book" << endl;
+            std::cerr << "error reading opening book" << std::endl;
             return -1;
         }
         // correct header for endian-ness
         hdr.num_index_pages = swapEndian16((uint8_t*)&hdr.num_index_pages);
         // verify book version is correct
         if (hdr.version != book::BOOK_VERSION) {
-            cerr << "expected book version " << book::BOOK_VERSION << ", got " << (unsigned)hdr.version << endl;
+            std::cerr << "expected book version " << book::BOOK_VERSION << ", got " << (unsigned)hdr.version << std::endl;
 			close();
             return -1;
         } else {
@@ -65,10 +65,10 @@ void BookReader::close() {
 
 Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
-   cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << endl;
+   cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << std::endl;
 #endif
-   vector <book::DataEntry> rawMoves;
-   vector < pair<Move,int> > results;
+   std::vector <book::DataEntry> rawMoves;
+   std::vector < std::pair<Move,int> > results;
    if (b.repCount() > 0) {
       return NullMove;
    }
@@ -94,7 +94,7 @@ Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
       Notation::image(b,move_list[info.index],Notation::OutputFormat::SAN,cout);
 #endif
-      array<double,OUTCOMES> counts;
+      std::array<double,OUTCOMES> counts;
       counts[0] = info.win;
       counts[1] = info.loss;
       counts[2] = info.draw;
@@ -128,7 +128,7 @@ Move BookReader::pick(const Board &b) {
 #endif
       reward += rand;
 #ifdef _TRACE
-      cout << " total: " << reward << endl;
+      cout << " total: " << reward << std::endl;
 #endif
       if (reward > maxReward) {
           maxReward = reward;
@@ -138,8 +138,8 @@ Move BookReader::pick(const Board &b) {
    return bestMove;
 }
 
-unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
-   vector <book::DataEntry> results;
+unsigned BookReader::book_moves(const Board &b, std::vector<Move> &moves) {
+    std::vector <book::DataEntry> results;
    // Don't return a book move if we have repeated this position
    // before .. make the program to search to see if the repetition
    // is desirable or not.
@@ -164,7 +164,7 @@ unsigned BookReader::book_moves(const Board &b, vector<Move> &moves) {
    return static_cast<unsigned>(moves.size());
 }
 
-int BookReader::lookup(const Board &board, vector<book::DataEntry> &results) {
+int BookReader::lookup(const Board &board, std::vector<book::DataEntry> &results) {
    // fetch the index page
    if (!is_open()) return -1;
    int probe = (int)(board.hashCode() % hdr.num_index_pages);
@@ -229,7 +229,7 @@ double BookReader::calcReward(const std::array<double,OUTCOMES> &sample, score_t
    }
 }
 
-double BookReader::sample_dirichlet(const array<double,OUTCOMES> &counts, score_t contempt)
+double BookReader::sample_dirichlet(const std::array<double,OUTCOMES> &counts, score_t contempt)
 {
     std::array<double,OUTCOMES> sample;
     double sum = 0.0;
@@ -248,7 +248,7 @@ double BookReader::sample_dirichlet(const array<double,OUTCOMES> &counts, score_
     return calcReward(sample,contempt);
 }
 
-void BookReader::filterByFreq(vector<book::DataEntry> &results)
+void BookReader::filterByFreq(std::vector<book::DataEntry> &results)
 {
    const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/40.0);
 

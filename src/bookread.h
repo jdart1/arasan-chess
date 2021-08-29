@@ -11,8 +11,6 @@
 #include <random>
 #include <vector>
 
-using namespace std;
-
 class BookReader
 {
     // provides read access to the opening book.
@@ -38,7 +36,7 @@ class BookReader
 
     // Return a vector of all book moves for a given position.
     // Returns number of moves found.
-    unsigned book_moves(const Board &b, vector< Move> &results);
+    unsigned book_moves(const Board &b, std::vector< Move> &results);
 
 protected:
                
@@ -46,19 +44,19 @@ protected:
 
     // Return the move data structures for a given board position.
     // Return value is # of entries retrieved, -1 if error.
-    int lookup(const Board &board, vector<book::DataEntry> &results);
+    int lookup(const Board &board, std::vector<book::DataEntry> &results);
 
     double calcReward(const std::array<double,OUTCOMES> &sample, score_t contempt = 0) const noexcept;
    
     double sample_dirichlet(const std::array<double,OUTCOMES> &counts, score_t contempt = 0);
 
-    void filterByFreq(vector<book::DataEntry> &);
+    void filterByFreq(std::vector<book::DataEntry> &);
 
     double contemptFactor(score_t contempt) const noexcept {
        return 1.0/(1.0+exp(-0.75*contempt/Params::PAWN_VALUE));
     }
 
-    ifstream book_file;
+    std::ifstream book_file;
     book::BookHeader hdr;
 
     std::mt19937_64 engine;

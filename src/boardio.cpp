@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-int BoardIO::readFEN(Board &board, const string &buf)
+int BoardIO::readFEN(Board &board, const std::string &buf)
 {
    board.reset();
    for (int i = 0; i < 64; i++)
@@ -15,9 +15,9 @@ int BoardIO::readFEN(Board &board, const string &buf)
    }
 
    char c;
-   string::const_iterator bp = buf.begin();
+   std::string::const_iterator bp = buf.begin();
    size_t first = buf.find_first_not_of(" \t");
-   if (first != string::npos) {
+   if (first != std::string::npos) {
       bp += first;
    }
    for (int line = 0; line < 8; line++)
@@ -167,7 +167,7 @@ int BoardIO::readFEN(Board &board, const string &buf)
    return 1;
 }
 
-void BoardIO::writeFEN( const Board &board, ostream &o, int addMoveInfo)
+void BoardIO::writeFEN( const Board &board, std::ostream &o, int addMoveInfo)
 {
    // write out the board in Forsythe-Edwards (FEN) notation.
    for (int i=1;i<=8;i++)

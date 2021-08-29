@@ -16,7 +16,6 @@ struct NodeInfo;
 #endif
 
 #include <iostream>
-using namespace std;
 
 class Scoring
 {
@@ -54,10 +53,10 @@ class Scoring
 
     // Turn a score into a formatted string (mate scores are
     // shown like +Mate6).
-    static void printScore( score_t score, ostream & );
+    static void printScore( score_t score, std::ostream & );
 
     // Output scores in the format required by the UCI protocol.
-    static void printScoreUCI( score_t score, ostream & );
+    static void printScoreUCI( score_t score, std::ostream & );
 
     static bool mateScore(score_t score) {
       return score != Constants::INVALID_SCORE &&

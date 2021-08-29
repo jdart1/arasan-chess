@@ -8,8 +8,6 @@
 #include <iostream>
 #include <iomanip>
 
-using namespace std;
-
 const int CACHE_ALIGN Files[64] =
 {
    1, 2, 3, 4, 5, 6, 7, 8,
@@ -128,11 +126,11 @@ Square SquareValue(const char *p )
     return MakeSquare(file,rank,White);
 }
 
-Square SquareValue(const string &str)
+Square SquareValue(const std::string &str)
 {
     int rank, file;
 
-    string::const_iterator it = str.begin();
+    std::string::const_iterator it = str.begin();
     if ((*it >= 'a') && (*it <= 'h'))
        file = *it - 'a' + 1;
     else
@@ -206,11 +204,11 @@ char PieceImage(const PieceType p)
     return Images[p];
 }
 
-void MoveImage(Move m,ostream &out) {
+void MoveImage(Move m, std::ostream &out) {
     char image[10];
     if (IsNull(m))
     {
-       cout << "(null)";
+       out << "(null)";
        return;
     }
     image[0] = FileImage(StartSquare(m));

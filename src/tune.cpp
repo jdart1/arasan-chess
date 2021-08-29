@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <sstream>
 
 #define VAL(x) (Params::PAWN_VALUE*x)
 
@@ -382,20 +383,20 @@ Tune::Tune()
                                                 TuneParam::Endgame};
    assert(i==KING_OPP_PASSER_DISTANCE);
    for (int x = 0; x < 6; x++) {
-      stringstream name;
+      std::stringstream name;
       name << "king_opp_passer_distance_rank" << x+2;
       push_back(TuneParam(i++,name.str(),KING_OPP_PASSER_DISTANCE_INIT[x],0,ENDGAME_KING_POS_RANGE,&Params::KING_OPP_PASSER_DISTANCE[x],TuneParam::Endgame,1));
    }
    assert(i==OWN_PIECE_KING_PROXIMITY_MULT);
    int mult = -16;
    for (int x = 0; x < 16; x++) {
-      stringstream name;
+      std::stringstream name;
       name << "own_piece_king_proximity_mult" << x;
       push_back(TuneParam(i++,name.str(),mult<0 ? 0 : mult,0,64,&Params::OWN_PIECE_KING_PROXIMITY_MULT[x],TuneParam::Midgame,x>=4 && mult<64));
       mult += 8;
       if (mult > 64) mult = 64;
    }
-   static const string names[] =
+   static const std::string names[] =
       {"knight_pst","bishop_pst","rook_pst","queen_pst","king_pst"};
 
    // add PSTs
@@ -403,7 +404,7 @@ Tune::Tune()
    for (int n = 0; n < 5; n++) {
       for (int phase = 0; phase < 2; phase++) {
          for (int j = 0; j < 32; j++) {
-            stringstream name;
+            std::stringstream name;
             name << names[n];
             if (phase == 0)
                name << "_mid";
@@ -444,7 +445,7 @@ Tune::Tune()
    assert(i==THREAT_BY_PAWN);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
-           stringstream name;
+           std::stringstream name;
            name << "threat_by_pawn" << j;
            if (phase == 0) {
                name << "_mid";
@@ -458,7 +459,7 @@ Tune::Tune()
    assert(i==THREAT_BY_KNIGHT);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
-           stringstream name;
+           std::stringstream name;
            name << "threat_by_knight" << j;
            if (phase == 0) {
                name << "_mid";
@@ -472,7 +473,7 @@ Tune::Tune()
    assert(i==THREAT_BY_BISHOP);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
-           stringstream name;
+           std::stringstream name;
            name << "threat_by_bishop" << j;
            if (phase == 0) {
                name << "_mid";
@@ -486,7 +487,7 @@ Tune::Tune()
    assert(i==THREAT_BY_ROOK);
    for (int phase = 0; phase < 2; phase++) {
        for (int j = 0; j < 5; j++) {
-           stringstream name;
+           std::stringstream name;
            name << "threat_by_rook" << j;
            if (phase == 0) {
                name << "_mid";
@@ -500,21 +501,21 @@ Tune::Tune()
    // add mobility
    assert(i==KNIGHT_MOBILITY);
    for (int m = 0; m < 9; m++) {
-      stringstream name;
+      std::stringstream name;
       name << "knight_mobility" << m;
       const score_t val = KNIGHT_MOBILITY_INIT[m];
       push_back(TuneParam(i++,name.str(),val,-MOBILITY_RANGE,+MOBILITY_RANGE,&Params::KNIGHT_MOBILITY[m],TuneParam::Any,1));
    }
    assert(i==BISHOP_MOBILITY);
    for (int m = 0; m < 15; m++) {
-      stringstream name;
+      std::stringstream name;
       name << "bishop_mobility" << m;
       push_back(TuneParam(i++,name.str(),BISHOP_MOBILITY_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,&Params::BISHOP_MOBILITY[m],TuneParam::Any,1));
    }
    assert(i==ROOK_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
       for (int m = 0; m < 15; m++) {
-         stringstream name;
+         std::stringstream name;
          name << "rook_mobility";
          if (phase == 0) {
             name << "_mid";
@@ -529,7 +530,7 @@ Tune::Tune()
    assert(i==QUEEN_MOBILITY_MIDGAME);
    for (int phase = 0; phase < 2; phase++) {
       for (int m = 0; m < 24; m++) {
-         stringstream name;
+         std::stringstream name;
          name << "queen_mobility";
          if (phase == 0) {
             name << "_mid";
@@ -543,7 +544,7 @@ Tune::Tune()
    }
    assert(i==KING_MOBILITY_ENDGAME);
    for (int m = 0; m < 5; m++) {
-      stringstream name;
+      std::stringstream name;
       name << "king_mobility_endgame" << m;
       push_back(TuneParam(i++,name.str(),KING_MOBILITY_ENDGAME_INIT[m],-MOBILITY_RANGE,MOBILITY_RANGE,&Params::KING_MOBILITY_ENDGAME[m],TuneParam::Endgame,1));
    }
@@ -551,7 +552,7 @@ Tune::Tune()
    assert(i==KNIGHT_OUTPOST_MIDGAME);
    for (int p = 0; p < 2; p++) {
       for (int d = 0; d < 2; d++) {
-         stringstream name;
+         std::stringstream name;
          name << "knight_outpost";
          if (p == 0) {
             name << "_mid";
@@ -566,7 +567,7 @@ Tune::Tune()
    assert(i==BISHOP_OUTPOST_MIDGAME);
    for (int p = 0; p < 2; p++) {
       for (int d = 0; d < 2; d++) {
-         stringstream name;
+         std::stringstream name;
          name << "bishop_outpost";
          if (p == 0) {
             name << "_mid";
@@ -582,7 +583,7 @@ Tune::Tune()
    for (int b=0; b<2; b++) {
        for (int file=0; file<4; file++) {
            for (int dist=0; dist<5; dist++) {
-               stringstream name;
+               std::stringstream name;
                name << "pawn_storm";
                name << file;
                name << '_' << dist;
@@ -596,29 +597,29 @@ Tune::Tune()
 void Tune::checkParams() const
 {
    if (NUM_MISC_PARAMS != KING_OPP_PASSER_DISTANCE) {
-      cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_OPP_PASSER_DISTANCE << endl;
+       std::cerr << "warning: NUM_MISC_PARAMS incorrect, should be " << KING_OPP_PASSER_DISTANCE << std::endl;
    }
    int i = 0;
    for (const TuneParam &p : (*this)) {
       if (p.index != i) {
-         cerr << "warning: index mismatch in Tune::(*this) at position " << i << ", param " << p.name << endl;
+         std::cerr << "warning: index mismatch in Tune::(*this) at position " << i << ", param " << p.name << std::endl;
       }
       ++i;
       if (p.current < p.min_value) {
-         cerr << "warning: param " << p.name << " has current < min" << endl;
+         std::cerr << "warning: param " << p.name << " has current < min" << std::endl;
       }
       if (p.current > p.max_value) {
-         cerr << "warning: param " << p.name << " has current > max" << endl;
+         std::cerr << "warning: param " << p.name << " has current > max" << std::endl;
       }
       if (p.min_value > p.max_value) {
-         cerr << "warning: param " << p.name << " has min>max" << endl;
+         std::cerr << "warning: param " << p.name << " has min>max" << std::endl;
       }
 /*
       if (p.min_value == p.current) {
-         cerr << "warning: param " << p.name << " tuned to min value (" << p.current << ")." << endl;
+         std::cerr << "warning: param " << p.name << " tuned to min value (" << p.current << ")." << std::endl;
       }
       if (p.max_value == p.current) {
-         cerr << "warning: param " << p.name << " tuned to max value (" << p.current << ")." << endl;
+         std::cerr << "warning: param " << p.name << " tuned to max value (" << p.current << ")." << std::endl;
       }
 */
    }
@@ -676,40 +677,40 @@ void Tune::applyParams(bool check) const
    }
 }
 
-void Tune::writeX0(ostream &o)
+void Tune::writeX0(std::ostream &o)
 {
    for (const TuneParam &p : *this) {
-      o << p.name << ' ' << p.current << endl;
+      o << p.name << ' ' << p.current << std::endl;
    }
-   o << endl;
+   o << std::endl;
 }
 
-void Tune::readX0(istream &is)
+void Tune::readX0(std::istream &is)
 {
    while (is.good()) {
-      string in;
+      std::string in;
       getline(is,in);
       size_t pos = in.find(' ');
-      if (pos == string::npos) continue;
-      const string name = in.substr(0,pos);
+      if (pos == std::string::npos) continue;
+      const std::string name = in.substr(0,pos);
       auto it = std::find_if(begin(),end(),[&name] (const TuneParam &p) { return p.name == name; });
       if (it == end()) {
-         cerr << "invalid param name found in input file: " << name << endl;
+         std::cerr << "invalid param name found in input file: " << name << std::endl;
       } else {
-         stringstream valstream(in.substr(pos+1,in.size()));
+         std::stringstream valstream(in.substr(pos+1,in.size()));
          score_t val;
          valstream >> val;
          if (!valstream.bad() && !valstream.fail()) {
             it->current = val;
          } else {
-            cerr << "error parsing value for parameter " << name << endl;
+            std::cerr << "error parsing value for parameter " << name << std::endl;
          }
       }
    }
 }
 
 // return index for parameter given name, -1 if not not found
-int Tune::findParamByName(const string &name) const {
+int Tune::findParamByName(const std::string &name) const {
    int i = 0;
    for (auto it : *this) {
       if (it.name == name) {

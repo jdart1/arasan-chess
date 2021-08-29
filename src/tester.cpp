@@ -9,7 +9,7 @@
 
 using namespace std::placeholders;
 
-void Tester::do_test(SearchController *searcher, string test_file, const TestOptions &opts)
+void Tester::do_test(SearchController *searcher, const std::string &test_file, const TestOptions &opts)
 {
     int depth_limit = opts.depth_limit;
     int time_limit = opts.time_limit;
@@ -30,48 +30,48 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
     globals::delayedInit();
 
     Board board;
-    ifstream pos_file( test_file.c_str(), ios::in);
+    std::ifstream pos_file( test_file.c_str(), std::ios::in);
     if (!pos_file) {
-        cout << "Failed to open EPD file." << endl;
+        std::cout << "Failed to open EPD file." << std::endl;
         return;
     }
     TestTotals testTotals;
 
-    string buf;
+    std::string buf;
     while (!pos_file.eof()) {
         std::getline(pos_file,buf);
         if (!pos_file) {
-            cout << "Error reading EPD file." << endl;
+            std::cout << "Error reading EPD file." << std::endl;
             return;
         }
         // Try to parse this line as an EPD command.
-        stringstream stream(buf);
-        string id, comment;
+        std::stringstream stream(buf);
+        std::string id, comment;
         EPDRecord epd_rec;
         if (!ChessIO::readEPDRecord(stream,board,epd_rec)) break;
         if (epd_rec.hasError()) {
-            cerr << "error in EPD record ";
-            if (id.length()>0) cerr << id;
-            cerr << ": ";
-            cerr << epd_rec.getError();
-            cerr << endl;
+            std::cerr << "error in EPD record ";
+            if (id.length()>0) std::cerr << id;
+            std::cerr << ": ";
+            std::cerr << epd_rec.getError();
+            std::cerr << std::endl;
         }
         else {
             TestStatus testStats;
             int illegal=0;
             id = "";
             for (unsigned i = 0; i < epd_rec.getSize(); i++) {
-                string key, val;
+                std::string key, val;
                 epd_rec.getData(i,key,val);
                 if (key == "bm" || key == "am") {
                     Move m;
-                    stringstream s(val);
+                    std::stringstream s(val);
                     while (!s.eof()) {
-                        string moveStr;
+                        std::string moveStr;
                         // skips spaces
                         s >> moveStr;
                         if (s.bad() || s.fail() || !moveStr.length()) {
-                            cerr << "error reading solution move " << val << endl;
+                            std::cerr << "error reading solution move " << val << std::endl;
                             break;
                         }
                         m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,moveStr);
@@ -91,30 +91,30 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
                 }
             }
             if (illegal) {
-                cerr << "illegal or invalid solution move(s) for EPD record ";
-                if (id.length()>0) cerr << id;
-                cerr << endl;
+                std::cerr << "illegal or invalid solution move(s) for EPD record ";
+                if (id.length()>0) std::cerr << id;
+                std::cerr << std::endl;
                 continue;
             }
             else if (testStats.solution_moves.size() == 0) {
-                cerr << "no solution move(s) for EPD record ";
-                if (id.length()>0) cerr << id;
-                cerr << endl;
+                std::cerr << "no solution move(s) for EPD record ";
+                if (id.length()>0) std::cerr << id;
+                std::cerr << std::endl;
                 continue;
             }
-            cout << id << ' ';
-            if (comment.length()) cout << comment << ' ';
+            std::cout << id << ' ';
+            if (comment.length()) std::cout << comment << ' ';
             if (testStats.avoid) {
-                cout << "am ";
+                std::cout << "am ";
             }
             else {
-                cout << "bm";
+                std::cout << "bm";
             }
             for (Move m : testStats.solution_moves) {
-                 cout << ' ';
-                 Notation::image(board,m,Notation::OutputFormat::SAN,cout);
+                std::cout << ' ';
+                Notation::image(board,m,Notation::OutputFormat::SAN,std::cout);
             }
-            cout << endl;
+            std::cout << std::endl;
             MoveSet excludes;
             testTotals.total_tests++;
             for (int index = 0; index < opts.moves_to_search; index++) {
@@ -133,14 +133,14 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
                                   opts.verbose ? TalkLevel::Test : TalkLevel::Silent,
                                   excludes, includes);
                 if (excludes.size())
-                    cout << "result(" << excludes.size()+1 << "):";
+                    std::cout << "result(" << excludes.size()+1 << "):";
                 else
-                    cout << "result:";
-                cout << '\t';
-                Notation::image(board,result,Notation::OutputFormat::SAN,cout);
-                cout << "\tscore: ";
-                Scoring::printScore(stats.display_value,cout);
-                cout <<  '\t';
+                    std::cout << "result:";
+                std::cout << '\t';
+                Notation::image(board,result,Notation::OutputFormat::SAN,std::cout);
+                std::cout << "\tscore: ";
+                Scoring::printScore(stats.display_value,std::cout);
+                std::cout <<  '\t';
                 globals::gameMoves->removeAll();
 
                 searcher->registerPostFunction(old_post);
@@ -161,21 +161,21 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
                         testTotals.total_correct++;
                     }
                 }
-                std::ios_base::fmtflags original_flags = cout.flags();
-                cout << setprecision(4);
+                std::ios_base::fmtflags original_flags = std::cout.flags();
+                std::cout << std::setprecision(4);
                 if (correct) {
-                    cout << "\t++ solved in " << (float)testStats.solution_time/1000.0 <<
+                    std::cout << "\t++ solved in " << (float)testStats.solution_time/1000.0 <<
                         " sec. (";
-                    print_nodes(testStats.solution_nodes,cout);
+                    print_nodes(testStats.solution_nodes,std::cout);
                 }
                 else {
-                    cout << "\t** not solved in " <<
+                    std::cout << "\t** not solved in " <<
                         (float)searcher->getElapsedTime()/1000.0 << " secs. (";
-                    print_nodes(stats.num_nodes,cout);
+                    print_nodes(stats.num_nodes,std::cout);
                 }
-                cout << " nodes)" << endl;
-                cout.flags(original_flags);
-                cout << stats.best_line_image << endl;
+                std::cout << " nodes)" << std::endl;
+                std::cout.flags(original_flags);
+                std::cout << stats.best_line_image << std::endl;
                 const auto &sp = testStats.search_progress;
                 if (index == 0 && correct) {
                     auto it = std::find_if(sp.rbegin(),sp.rend(),
@@ -204,52 +204,52 @@ void Tester::do_test(SearchController *searcher, string test_file, const TestOpt
         }
     }
     pos_file.close();
-    cout << endl << "solution times:" << endl;
-    cout << "         ";
+    std::cout << std::endl << "solution times:" << std::endl;
+    std::cout << "         ";
     unsigned i = 0;
     for (i = 0; i < 10; i++)
-        cout << i << "      ";
-    cout << endl;
+        std::cout << i << "      ";
+    std::cout << std::endl;
     double score = 0.0;
     for (i = 0; i < testTotals.solution_times.size(); i++) {
         char digits[15];
         if (i == 0) {
             sprintf(digits,"% 4d |       ",i);
-            cout << endl << digits;
+            std::cout << std::endl << digits;
         }
         else if ((i+1) % 10 == 0) {
             sprintf(digits,"% 4d |",(i+1)/10);
-            cout << endl << digits;
+            std::cout << std::endl << digits;
         }
         if (testTotals.solution_times[i] == -1) {
-            cout << "  ***  ";
+            std::cout << "  ***  ";
         }
         else {
             sprintf(digits,"%6.2f ",testTotals.solution_times[i]/1000.0);
-            cout << digits;
+            std::cout << digits;
             score += (float)time_limit/1000.0 - testTotals.solution_times[i]/1000.0;
         }
     }
-    cout << endl << endl << "correct : " << testTotals.total_correct << '/' <<
-        testTotals.total_tests << endl;
+    std::cout << std::endl << std::endl << "correct : " << testTotals.total_correct << '/' <<
+        testTotals.total_tests << std::endl;
     if (testTotals.total_correct) {
-        string avg = "";
+        std::string avg = "";
         if (testTotals.total_correct > 1) avg = "avg. ";
-        cout << avg << "nodes to solution : ";
+        std::cout << avg << "nodes to solution : ";
         uint64_t avg_nodes = testTotals.nodes_to_find_total/testTotals.total_correct;
         if (avg_nodes > 1000000L) {
-            cout << (float)(avg_nodes)/1000000.0 << "M" << endl;
+            std::cout << (float)(avg_nodes)/1000000.0 << "M" << std::endl;
         }
         else {
-            cout << (float)(avg_nodes)/1000.0 << "K" << endl;
+            std::cout << (float)(avg_nodes)/1000.0 << "K" << std::endl;
         }
-        cout << avg << "depth to solution : " << (float)(testTotals.depth_to_find_total)/testTotals.total_correct << endl;
-        cout << avg << "time to solution  : " << (float)(testTotals.time_to_find_total)/(1000.0*testTotals.total_correct) << " sec." << endl;
+        std::cout << avg << "depth to solution : " << (float)(testTotals.depth_to_find_total)/testTotals.total_correct << std::endl;
+        std::cout << avg << "time to solution  : " << (float)(testTotals.time_to_find_total)/(1000.0*testTotals.total_correct) << " sec." << std::endl;
     }
     globals::options = tmp;
 }
 
-bool Tester::solution_match(const vector<Move> &solution_moves,
+bool Tester::solution_match(const std::vector<Move> &solution_moves,
                             Move result, bool avoid) const noexcept {
     bool match = false;
     for (Move m : solution_moves) {
@@ -310,7 +310,7 @@ int Tester::monitor(SearchController *s, const Statistics &stats, const TestOpti
     return testStats.early_exit;
 }
 
-void Tester::print_nodes(uint64_t nodes, ostream &out) {
+void Tester::print_nodes(uint64_t nodes, std::ostream &out) {
     if (nodes >= 1000000) {
         out << (float)(nodes)/1000000.0 << "M";
     }

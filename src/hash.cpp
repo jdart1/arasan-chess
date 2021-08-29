@@ -46,7 +46,7 @@ void Hash::initHash(size_t bytes)
          HashEntry,
          sizeof(HashEntry)*hashSizePlus,128);
       if (hashTable == nullptr) {
-          cerr << "hash table allocation failed!" << endl;
+          std::cerr << "hash table allocation failed!" << std::endl;
           hashSize = 0;
       }
       clearHash();
@@ -85,8 +85,8 @@ void Hash::clearHash()
 void Hash::loadLearnInfo()
 {
    if (hashSize && globals::options.learning.position_learning) {
-      ifstream plog;
-      plog.open(globals::learnFileName.c_str(),ios_base::in);
+      std::ifstream plog;
+      plog.open(globals::learnFileName.c_str(),std::ios_base::in);
       while (plog.good() && !plog.eof()) {
          LearnRecord rec;
          if (getLearnRecord(plog,rec)) {

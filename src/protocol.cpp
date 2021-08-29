@@ -39,10 +39,10 @@
 #include <regex>
 #include <unordered_set>
 
+using namespace std::placeholders;
+
 const char * Protocol::UCI_DEBUG_PREFIX = "info ";
 const char * Protocol::CECP_DEBUG_PREFIX = "# ";
-
-using namespace std::placeholders;
 
 Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set, bool memory_set)
     : verbose(false),
@@ -105,9 +105,9 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
         else {
             game_pathname = globals::options.game_pathname;
         }
-        game_file = new ofstream(game_pathname.c_str(),ios::out | ios::app);
+        game_file = new std::ofstream(game_pathname.c_str(),std::ios::out | std::ios::app);
         if (!game_file->good()) {
-            cerr << "Warning: cannot open game file. Games will not be saved." << endl;
+            std::cerr << "Warning: cannot open game file. Games will not be saved." << std::endl;
             delete game_file;
             game_file = nullptr;
         }
@@ -135,7 +135,7 @@ void Protocol::poll(bool &polling_terminated)
         }
         while (!polling_terminated) {
             Lock(globals::input_lock);
-            string cmd;
+            std::string cmd;
             if (hasPending()) {
                 cmd = pending.front();
                 pending.erase(pending.begin());
@@ -144,12 +144,12 @@ void Protocol::poll(bool &polling_terminated)
                 break;
             }
             if (doTrace) {
-                cout << debugPrefix() << "got cmd (main): "  << cmd << endl;
+                std::cout << debugPrefix() << "got cmd (main): "  << cmd << std::endl;
             }
             Unlock(globals::input_lock);
-            if (doTrace) cout << debugPrefix() << "calling do_command(main):" << cmd << (flush) << endl;
+            if (doTrace) std::cout << debugPrefix() << "calling do_command(main):" << cmd << (std::flush) << std::endl;
             if (!do_command(cmd,*main_board)) {
-                if (doTrace) cout << debugPrefix() << "exiting polling loop" << endl;
+                if (doTrace) std::cout << debugPrefix() << "exiting polling loop" << std::endl;
                 polling_terminated = true;
             }
         }
@@ -157,27 +157,27 @@ void Protocol::poll(bool &polling_terminated)
     // handle termination.
     save_game();
     if (doTrace) {
-        cout << debugPrefix() << "terminating" << endl;
+        std::cout << debugPrefix() << "terminating" << std::endl;
     }
 }
 
-void Protocol::add_pending(const string &cmd) {
+void Protocol::add_pending(const std::string &cmd) {
     Lock(globals::input_lock);
     pending.push_back(cmd);
     Unlock(globals::input_lock);
 }
 
-void Protocol::split_cmd(const string &cmd, string &cmd_word, string &cmd_args) {
+void Protocol::split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args) {
    size_t space = cmd.find_first_of(' ');
    cmd_word = cmd.substr(0,space);
    cmd_args = cmd.substr(cmd_word.length());
    size_t start = cmd_args.find_first_not_of(' ');
-   if (start != string::npos) {
+   if (start != std::string::npos) {
       cmd_args.erase(0,start);
    }
 }
 
-Move Protocol::text_to_move(const Board &board, const string &input) {
+Move Protocol::text_to_move(const Board &board, const std::string &input) {
    // Try SAN
    Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,input);
    if (!IsNull(m)) return m;
@@ -191,8 +191,8 @@ Move Protocol::text_to_move(const Board &board, const string &input) {
    }
 }
 
-Move Protocol::get_move(const string &cmd_word, const string &cmd_args) {
-    string move;
+Move Protocol::get_move(const std::string &cmd_word, const std::string &cmd_args) {
+    std::string move;
     if (cmd_word == "usermove") {
         // new for Winboard 4.2
         move = cmd_args;
@@ -204,7 +204,7 @@ Move Protocol::get_move(const string &cmd_word, const string &cmd_args) {
     while (it != move.end() && !isalpha(*it)) it++;
     move.erase(move.begin(),it);
     if (doTrace) {
-        cout << debugPrefix() << "move text = " << move << endl;
+        std::cout << debugPrefix() << "move text = " << move << std::endl;
     }
     return text_to_move(*main_board,move);
 }
@@ -212,18 +212,18 @@ Move Protocol::get_move(const string &cmd_word, const string &cmd_args) {
 Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
 {
     AllPendingStatus retVal = AllPendingStatus::Nothing;
-    if (doTrace) cout << debugPrefix() << "in do_all_pending" << endl;
+    if (doTrace) std::cout << debugPrefix() << "in do_all_pending" << std::endl;
     while (true) {
         Lock(globals::input_lock);
         if (pending.empty()) {
            Unlock(globals::input_lock);
            break;
         }
-        string cmd(pending.front());
+        std::string cmd(pending.front());
         pending.erase(pending.begin());
         Unlock(globals::input_lock);
         if (doTrace) {
-            cout << debugPrefix() << "pending command(a): " << cmd << endl;
+            std::cout << debugPrefix() << "pending command(a): " << cmd << std::endl;
         }
         if (cmd == "quit") {
             retVal = AllPendingStatus::Quit;
@@ -232,35 +232,35 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
         do_command(cmd,board);
     }
     if (doTrace) {
-        cout << debugPrefix() << "out of do_all_pending, list size=" << pending.size() << endl;
+        std::cout << debugPrefix() << "out of do_all_pending, list size=" << pending.size() << std::endl;
     }
     return retVal;
 }
 
 Protocol::PendingStatus Protocol::check_pending(Board &board) {
-    if (doTrace) cout << debugPrefix() << "in check_pending" << endl;
+    if (doTrace) std::cout << debugPrefix() << "in check_pending" << std::endl;
     PendingStatus retVal = PendingStatus::Nothing;
     Lock(globals::input_lock);
     while (!pending.empty()) {
-        const string cmd(pending.front());
-        string cmd_word, cmd_args;
+        const std::string cmd(pending.front());
+        std::string cmd_word, cmd_args;
         split_cmd(cmd,cmd_word,cmd_args);
         if (cmd_word == "result" ||
             cmd == "new" ||
             cmd == "quit" ||
             cmd == "resign") {
-                if (doTrace) cout << debugPrefix() << "game end signal in pending stack" << endl;
+                if (doTrace) std::cout << debugPrefix() << "game end signal in pending stack" << std::endl;
                 retVal = PendingStatus::GameEnd;
                 break;
         }
         else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
-            if (doTrace) cout << debugPrefix() << "move in pending stack" << endl;
+            if (doTrace) std::cout << debugPrefix() << "move in pending stack" << std::endl;
             retVal = PendingStatus::Move;
             break;
         }
         else {  // might as well execute this
             if (doTrace) {
-                cout << debugPrefix() << "calling do_command from check_pending" << (flush) << endl;
+                std::cout << debugPrefix() << "calling do_command from check_pending" << (std::flush) << std::endl;
             }
             // remove command from pending stack
             pending.erase(pending.begin());
@@ -272,13 +272,13 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
     return retVal;
 }
 
-void Protocol::parseLevel(const string &cmd, int &moves, float &minutes, int &incr)
+void Protocol::parseLevel(const std::string &cmd, int &moves, float &minutes, int &incr)
 {
     // not exact for decimal values, so must still check for validity
     const auto pattern = std::regex("^(\\d+)\\s+(\\d+)(\\:([\\d\\.]+))?\\s+([\\d\\.]+)$");
 
     std::smatch match;
-    string movesStr, minutesStr, secondsStr, incStr;
+    std::string movesStr, minutesStr, secondsStr, incStr;
     if (std::regex_match(cmd,match,pattern)) {
         // first result is the whole string matched
         auto it = match.begin()+1;
@@ -290,23 +290,23 @@ void Protocol::parseLevel(const string &cmd, int &moves, float &minutes, int &in
         }
         incStr = *it;
     } else {
-        cerr << "error parsing level command." << endl;
+        std::cerr << "error parsing level command." << std::endl;
         return;
     }
 
     float time1, time2, floatincr;
 
-    stringstream nums(minutesStr);
+    std::stringstream nums(minutesStr);
     nums >> time1;
     if (nums.bad()) {
-       cerr << "error in time field" << endl;
+       std::cerr << "error in time field" << std::endl;
        return;
     }
     else if (secondsStr.size()) {
-        stringstream nums2(secondsStr);
+        std::stringstream nums2(secondsStr);
         nums2 >> time2;
         if (nums2.bad()) {
-            cerr << "error in time field" << endl;
+            std::cerr << "error in time field" << std::endl;
             return;
         } else {
             minutes = time1 + time2/60;
@@ -314,17 +314,17 @@ void Protocol::parseLevel(const string &cmd, int &moves, float &minutes, int &in
     } else {
         minutes = time1;
     }
-    stringstream movesStream(movesStr);
+    std::stringstream movesStream(movesStr);
     movesStream >> moves;
     if (movesStream.bad()) {
-        cerr << "error in move field" << endl;
+        std::cerr << "error in move field" << std::endl;
         return;
     }
 
-    stringstream incStream(incStr);
+    std::stringstream incStream(incStr);
     incStream >> floatincr;
     if (incStream.bad()) {
-        cerr << "error in increment field" << endl;
+        std::cerr << "error in increment field" << std::endl;
     } else {
         // Winboard increment is in seconds, convert to our
         // internal value (milliseconds).
@@ -332,7 +332,7 @@ void Protocol::parseLevel(const string &cmd, int &moves, float &minutes, int &in
     }
 }
 
-void Protocol::dispatchCmd(const string &cmd) {
+void Protocol::dispatchCmd(const std::string &cmd) {
     if (uciWaitState) {
         // We are in the wait state (meaning we had already stopped
         // searching), see if we should exit it now.
@@ -345,19 +345,19 @@ void Protocol::dispatchCmd(const string &cmd) {
     }
 }
 
-void Protocol::sendPong(const string &arg)
+void Protocol::sendPong(const std::string &arg)
 {
-    cout << "pong " << arg << endl << (flush);
+    std::cout << "pong " << arg << std::endl << (std::flush);
 }
 
-void Protocol::process_st_command(const string &cmd_args)
+void Protocol::process_st_command(const std::string &cmd_args)
 {
-   stringstream s(cmd_args);
+   std::stringstream s(cmd_args);
    float time_limit_sec;
    // we allow fractional seconds although UI may not support it
    s >> time_limit_sec;
    if (s.bad() || time_limit_sec <= 0.0) {
-      cout << debugPrefix() << "illegal value for st command: " << cmd_args << endl;
+      std::cout << debugPrefix() << "illegal value for st command: " << cmd_args << std::endl;
       return;
    } else {
       srctype = FixedTime;
@@ -377,7 +377,7 @@ int Protocol::getIncrUCI(const ColorType side) {
 
 bool Protocol::accept_draw(Board &board) {
    if (doTrace)
-      cout << debugPrefix() << "in accept_draw" << endl;
+      std::cout << debugPrefix() << "in accept_draw" << std::endl;
    // Code to handle draw offers.
    int rating_diff = opponent_rating - computer_rating;
    // ignore draw if we have just started searching
@@ -398,7 +398,7 @@ bool Protocol::accept_draw(Board &board) {
                             ourmat.infobits() == Material::KN)) {
       // We don't have mating material
       if (doTrace)
-         cout << debugPrefix() << "no mating material, accept draw" << endl;
+         std::cout << debugPrefix() << "no mating material, accept draw" << std::endl;
       return true;
    }
    // accept a draw in pawnless endings with even material, unless
@@ -407,7 +407,7 @@ bool Protocol::accept_draw(Board &board) {
        ourmat.materialLevel() <= 5 &&
       last_score < Params::PAWN_VALUE) {
       if (doTrace)
-         cout << debugPrefix() << "pawnless ending, accept draw" << endl;
+         std::cout << debugPrefix() << "pawnless ending, accept draw" << std::endl;
       return true;
    }
 #ifdef SYZYGY_TBS
@@ -416,12 +416,12 @@ bool Protocol::accept_draw(Board &board) {
    if(globals::options.search.use_tablebases &&
       wMat.men() + bMat.men() <= globals::EGTBMenCount) {
       if (doTrace)
-         cout << debugPrefix() << "checking tablebases .." << endl;
+         std::cout << debugPrefix() << "checking tablebases .." << std::endl;
       // accept a draw when the tablebases say it's a draw
       score_t tbscore;
       if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
          if (doTrace) {
-            cout << debugPrefix() << "tablebase score says draw" << endl;
+            std::cout << debugPrefix() << "tablebase score says draw" << std::endl;
          }
          return true;
       }
@@ -432,17 +432,17 @@ bool Protocol::accept_draw(Board &board) {
    // accept a draw if our score is negative .. how much negative
    // depends on opponent rating.
    if (doTrace)
-      cout << debugPrefix() << "checking draw score .." << endl;
+      std::cout << debugPrefix() << "checking draw score .." << std::endl;
    ColorType tmp = board.sideToMove();
    board.setSideToMove(side);
    score_t draw_score = searcher->drawScore(board);
    board.setSideToMove(tmp);
    const score_t threshold = Params::PAWN_VALUE/4;
    if (doTrace) {
-      cout << debugPrefix() << "rating_diff = " << rating_diff << endl;
-      cout << debugPrefix() << "draw_score = " << draw_score << endl;
-      cout << debugPrefix() << "last_score = " << last_score << endl;
-      cout << debugPrefix() << "threshold = " << threshold << endl;
+      std::cout << debugPrefix() << "rating_diff = " << rating_diff << std::endl;
+      std::cout << debugPrefix() << "draw_score = " << draw_score << std::endl;
+      std::cout << debugPrefix() << "last_score = " << last_score << std::endl;
+      std::cout << debugPrefix() << "threshold = " << threshold << std::endl;
    }
    return draw_score > threshold && last_score <= draw_score;
 }
@@ -452,58 +452,58 @@ void Protocol::do_help() {
 #ifndef _WIN32
    if (!isatty(1)) return;
 #endif
-   cout << "analyze:         enter Winboard analyze mode" << endl;
-   cout << "black:           set computer to play Black" << endl;
-   cout << "bk:              show book moves" << endl;
-   cout << "computer:        used to indicate the opponent is a computer" << endl;
-   cout << "draw:            offer a draw" << endl;
-   cout << "easy:            disable pondering" << endl;
-   cout << "edit:            enter Winboard edit mode" << endl;
-   cout << "force:           disable computer moving" << endl;
-   cout << "go:              start searching" << endl;
-   cout << "hard:            enable pondering" << endl;
-   cout << "hint:            compute a hint for the current position" << endl;
-   cout << "ics <hostname>:  set the name of the ICS host" << endl;
-   cout << "level <a b c>:   set the time control:" << endl;
-   cout << "  a -> moves to time control" << endl;
-   cout << "  b -> minutes per game" << endl;
-   cout << "  c -> increment in seconds" << endl;
-   cout << "name <string>:   set the name of the opponent" << endl;
-   cout << "new:             start a new game" << endl;
-   cout << "nopost:          disable output during search" << endl;
-   cout << "otim <int>:      set opponent time remaining (in centiseconds)" << endl;
-   cout << "post:            show output during search" << endl;
-   cout << "quit:            terminate the program" << endl;
-   cout << "remove:          back up a full move" << endl;
-   cout << "resign:          resign the current game" << endl;
-   cout << "result <string>: set the game result (0-1, 1/2-1/2 or 1-0)" << endl;
-   cout << "sd <x>:          limit thinking to depth x" << endl;
-   cout << "setboard <FEN>:  set board to a specified FEN string" << endl;
-   cout << "st <x>:          limit thinking to x seconds" << endl;
-   cout << "test <epd_file> -d <depth> -t <sec/move> <-x iter> <-N pvs> <-v>:  run test suite" << endl;
-   cout << "time <int>:      set computer time remaining (in centiseconds)" << endl;
-   cout << "undo:            back up a half move" << endl;
-   cout << "white:           set computer to play White" << endl;
-   cout << "test <file> <-t seconds> <-x # moves> <-v> <-o outfile>: "<< endl;
-   cout << "   - run an EPD testsuite" << endl;
-   cout << "eval <file>:     evaluate a FEN position." << endl;
-   cout << "perft <depth>:   compute perft value for a given depth" << endl;
+   std::cout << "analyze:         enter Winboard analyze mode" << std::endl;
+   std::cout << "black:           set computer to play Black" << std::endl;
+   std::cout << "bk:              show book moves" << std::endl;
+   std::cout << "computer:        used to indicate the opponent is a computer" << std::endl;
+   std::cout << "draw:            offer a draw" << std::endl;
+   std::cout << "easy:            disable pondering" << std::endl;
+   std::cout << "edit:            enter Winboard edit mode" << std::endl;
+   std::cout << "force:           disable computer moving" << std::endl;
+   std::cout << "go:              start searching" << std::endl;
+   std::cout << "hard:            enable pondering" << std::endl;
+   std::cout << "hint:            compute a hint for the current position" << std::endl;
+   std::cout << "ics <hostname>:  set the name of the ICS host" << std::endl;
+   std::cout << "level <a b c>:   set the time control:" << std::endl;
+   std::cout << "  a -> moves to time control" << std::endl;
+   std::cout << "  b -> minutes per game" << std::endl;
+   std::cout << "  c -> increment in seconds" << std::endl;
+   std::cout << "name <string>:   set the name of the opponent" << std::endl;
+   std::cout << "new:             start a new game" << std::endl;
+   std::cout << "nopost:          disable output during search" << std::endl;
+   std::cout << "otim <int>:      set opponent time remaining (in centiseconds)" << std::endl;
+   std::cout << "post:            show output during search" << std::endl;
+   std::cout << "quit:            terminate the program" << std::endl;
+   std::cout << "remove:          back up a full move" << std::endl;
+   std::cout << "resign:          resign the current game" << std::endl;
+   std::cout << "result <string>: set the game result (0-1, 1/2-1/2 or 1-0)" << std::endl;
+   std::cout << "sd <x>:          limit thinking to depth x" << std::endl;
+   std::cout << "setboard <FEN>:  set board to a specified FEN string" << std::endl;
+   std::cout << "st <x>:          limit thinking to x seconds" << std::endl;
+   std::cout << "test <epd_file> -d <depth> -t <sec/move> <-x iter> <-N pvs> <-v>:  run test suite" << std::endl;
+   std::cout << "time <int>:      set computer time remaining (in centiseconds)" << std::endl;
+   std::cout << "undo:            back up a half move" << std::endl;
+   std::cout << "white:           set computer to play White" << std::endl;
+   std::cout << "test <file> <-t seconds> <-x # moves> <-v> <-o outfile>: "<< std::endl;
+   std::cout << "   - run an EPD testsuite" << std::endl;
+   std::cout << "eval <file>:     evaluate a FEN position." << std::endl;
+   std::cout << "perft <depth>:   compute perft value for a given depth" << std::endl;
 }
 
 
 void Protocol::save_game() {
    if (uci) return;                               // not supported
-   if (doTrace) cout << debugPrefix() << "in save_game" << endl;
-   if (doTrace) cout << debugPrefix() << "game_moves=" << globals::gameMoves->num_moves() << endl;
+   if (doTrace) std::cout << debugPrefix() << "in save_game" << std::endl;
+   if (doTrace) std::cout << debugPrefix() << "game_moves=" << globals::gameMoves->num_moves() << std::endl;
    if (globals::gameMoves->num_moves() == 0 || !globals::options.store_games) {
-      if (doTrace) cout << debugPrefix() << "out of save_game" << endl;
+      if (doTrace) std::cout << debugPrefix() << "out of save_game" << std::endl;
       return;
    }
    if (game_file) {
-      vector<ChessIO::Header> headers;
-      string opening_name, eco;
+      std::vector<ChessIO::Header> headers;
+      std::string opening_name, eco;
       if (ecoCoder) {
-         if (doTrace) cout << debugPrefix() << "calling classify" << endl;
+         if (doTrace) std::cout << debugPrefix() << "calling classify" << std::endl;
          ecoCoder->classify(*globals::gameMoves,eco,opening_name);
          headers.push_back(ChessIO::Header("ECO",eco));
       }
@@ -536,17 +536,17 @@ void Protocol::save_game() {
          // we had a non-standard starting position for the game
           headers.push_back(ChessIO::Header("FEN",start_fen));
       }
-      stringstream timec;
+      std::stringstream timec;
       if (moves != 0) {
           timec << moves << '/';
       }
       timec << minutes*60;
-      string timestr = timec.str();
+      std::string timestr = timec.str();
       if (incr) {
-         timec << '+' << fixed << setprecision(2) << incr/1000.0F;
+         timec << '+' << std::fixed << std::setprecision(2) << incr/1000.0F;
          timestr = timec.str();
          size_t per = timestr.find('.');
-         if (per != string::npos) {
+         if (per != std::string::npos) {
              int eraseCount = 0;
              // remove trailing zeros and decimal pt if possible:
              for (auto it = timestr.end()-1; it != timestr.begin(); it--) {
@@ -566,23 +566,23 @@ void Protocol::save_game() {
           timestr = timec.str();
       }
       headers.push_back(ChessIO::Header("TimeControl",timestr));
-      string result;
+      std::string result;
       globals::theLog->getResultAsString(result);
       ChessIO::store_pgn(*game_file, *globals::gameMoves,
          computer_plays_white ? White : Black,
          result,
          headers);
    }
-   if (doTrace) cout << debugPrefix() << "out of save_game" << endl;
+   if (doTrace) std::cout << debugPrefix() << "out of save_game" << std::endl;
 }
 
-void Protocol::move_image(const Board &board, Move m, ostream &buf, bool uci) {
+void Protocol::move_image(const Board &board, Move m, std::ostream &buf, bool uci) {
     Notation::image(board,m,uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::WB,buf);
 }
 
 void Protocol::uciOut(int depth, score_t score, time_t time,
-uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
-   stringstream s;
+uint64_t nodes, uint64_t tb_hits, const std::string &best_line_image, int multipv) {
+   std::stringstream s;
    s << "info";
    s << " multipv " << (multipv == 0 ? 1 : multipv);
    s << " depth " << depth << " score ";
@@ -599,7 +599,7 @@ uint64_t nodes, uint64_t tb_hits, const string &best_line_image, int multipv) {
       s << " pv ";
       s << best_line_image;
    }
-   cout << s.str() << endl;
+   std::cout << s.str() << std::endl;
    if (doTrace) {
       globals::theLog->write(s.str().c_str()); globals::theLog->write_eol();
    }
@@ -642,11 +642,11 @@ void Protocol::post_output(const Statistics &stats) {
    }
    else if (post) {
        // "post" output for Winboard
-       cout << stats.depth << ' ' <<
+       std::cout << stats.depth << ' ' <<
            static_cast<int>((score*100)/Params::PAWN_VALUE) << ' ' <<
            searcher->getElapsedTime()/10 << ' ' <<
            stats.num_nodes << ' ' <<
-           stats.best_line_image << endl << (flush);
+           stats.best_line_image << std::endl << (std::flush);
    }
 }
 
@@ -671,12 +671,12 @@ void Protocol::checkPendingInSearch(SearchController *controller) {
     Unlock(globals::input_lock);
 }
 
-bool Protocol::processPendingInSearch(SearchController *controller, const string &cmd, bool &exit)
+bool Protocol::processPendingInSearch(SearchController *controller, const std::string &cmd, bool &exit)
 {
     if (doTrace) {
-        cout << debugPrefix() << "command in search: " << cmd << endl;
+        std::cout << debugPrefix() << "command in search: " << cmd << std::endl;
     }
-    string cmd_word, cmd_args;
+    std::string cmd_word, cmd_args;
     // extract first word of command:
     split_cmd(cmd,cmd_word,cmd_args);
     exit = false;
@@ -695,10 +695,10 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
             // continue the search in non-ponder mode
             if (srctype != FixedDepth) {
                 if (doTrace) {
-                    stringstream s;
+                    std::stringstream s;
                     s << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
                         movestogo << " time_left=" << time_left << " opp_time=" << opp_time << '\0';
-                    cout << s.str() << endl << (flush);
+                    std::cout << s.str() << std::endl << (std::flush);
                 }
                 // Compute how much longer we must search
                 timeMgmt::Times times;
@@ -756,7 +756,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
     else if (cmd == "?") {
         // Winboard 3.6 or higher sends this to terminate a search
         // in progress
-        if (doTrace) cout << debugPrefix() << "? received: terminating." << endl;
+        if (doTrace) std::cout << debugPrefix() << "? received: terminating." << std::endl;
         controller->terminateNow();
         return true;
     }
@@ -804,7 +804,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
     else if (cmd == "resign" || cmd_word == "result") {
         game_end = true;
         if (doTrace) {
-            cout << debugPrefix() << "received_result: " << cmd << endl;
+            std::cout << debugPrefix() << "received_result: " << cmd << std::endl;
         }
         controller->terminateNow();
         // set the state to Terminated - this is a signal that
@@ -845,17 +845,17 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
         Move rmove = get_move(cmd_word, cmd_args);
         if (IsNull(rmove)) {
             if (doTrace) {
-                cout << debugPrefix() << "cmd in search not processed: " << cmd << " (expected move)";
+                std::cout << debugPrefix() << "cmd in search not processed: " << cmd << " (expected move)";
             }
             return false;
         } else {
             last_move = rmove;
             if (doTrace) {
-                cout << debugPrefix() << "predicted move = ";
-                MoveImage(predicted_move,cout);
-                cout << " last move = ";
-                MoveImage(last_move,cout);
-                cout << endl;
+                std::cout << debugPrefix() << "predicted move = ";
+                MoveImage(predicted_move,std::cout);
+                std::cout << " last move = ";
+                MoveImage(last_move,std::cout);
+                std::cout << std::endl;
             }
             if (forceMode || analyzeMode || !controller->pondering()) {
                 controller->terminateNow();
@@ -865,7 +865,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 // A move arrived during a ponder search and it was
                 // the predicted move, in other words we got a ponder hit.
                 if (doTrace) {
-                    cout << debugPrefix() << "ponder ok" << endl;
+                    std::cout << debugPrefix() << "ponder ok" << std::endl;
                 }
                 execute_move(*main_board,last_move);
                 // We predicted the opponent's move, so we need to
@@ -884,7 +884,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const string
                 return true;
             }
             else {
-                if (doTrace) cout << debugPrefix() << "ponder not ok" << endl;
+                if (doTrace) std::cout << debugPrefix() << "ponder not ok" << std::endl;
                 // We can't use the results of pondering because we
                 // did not predict the opponent's move.  Stop the
                 // search and then execute the move.
@@ -902,9 +902,9 @@ int Protocol::monitor(SearchController *s, const Statistics &) {
     return 0;
 }
 
-void Protocol::edit_mode_cmds(Board &board,ColorType &side,const string &cmd)
+void Protocol::edit_mode_cmds(Board &board,ColorType &side,const std::string &cmd)
 {
-    unordered_set<char> pieces({'P','N','B','R','Q','K','p','n','b','r','q','k'});
+    std::unordered_set<char> pieces({'P','N','B','R','Q','K','p','n','b','r','q','k'});
     if (cmd == "white") {
        side = White;
     }
@@ -1000,8 +1000,8 @@ void Protocol::calcTimes(bool pondering, ColorType side, timeMgmt::Times &times)
         timeMgmt::calcTimeLimit(moves, incr, time_left, pondering, ics, times);
     }
     if (doTrace) {
-        cout << debugPrefix() << "time_target = " << times.time_target << endl;
-        cout << debugPrefix() << "xtra time = " << times.extra_time << endl;
+        std::cout << debugPrefix() << "time_target = " << times.time_target << std::endl;
+        std::cout << debugPrefix() << "xtra time = " << times.extra_time << std::endl;
     }
 }
 
@@ -1011,11 +1011,11 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
     ponder_move = NullMove;
     ponder_stats.clear();
     if (doTrace) {
-       cout << debugPrefix() << "in ponder(), move = ";
-       MoveImage(move,cout);
-       cout << " predicted reply = ";
-       MoveImage(predicted_reply,cout);
-       cout << endl;
+       std::cout << debugPrefix() << "in ponder(), move = ";
+       MoveImage(move,std::cout);
+       std::cout << " predicted reply = ";
+       MoveImage(predicted_reply,std::cout);
+       std::cout << std::endl;
     }
     if (uci || (!IsNull(move) && !IsNull(predicted_reply))) {
         if (!uci) {
@@ -1039,11 +1039,11 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         // (do not ponder indefinitely)
         if (globals::options.search.strength < 100) {
             time_target = last_time_target;
-            if (doTrace) cout << debugPrefix() << "limiting ponder time to " <<
-                             time_target << endl;
+            if (doTrace) std::cout << debugPrefix() << "limiting ponder time to " <<
+                             time_target << std::endl;
         }
         if (doTrace) {
-            cout << debugPrefix() << "starting to ponder" << endl;
+            std::cout << debugPrefix() << "starting to ponder" << std::endl;
         }
         ponder_status = PonderStatus::Pending;
         if (srctype == FixedDepth) {
@@ -1070,7 +1070,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         if (doTrace) {
-            cout << debugPrefix() << "done pondering" << endl;
+            std::cout << debugPrefix() << "done pondering" << std::endl;
         }
         // Ensure "ping" response is set if ping was received while
         // searching:
@@ -1085,10 +1085,10 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         globals::gameMoves->remove_move();
     }
     if (doTrace) {
-        cout << debugPrefix() << "ponder move = ";
-        MoveImage(ponder_move,cout);
-        cout << endl;
-        cout << debugPrefix() << "out of ponder()" << endl;
+        std::cout << debugPrefix() << "ponder move = ";
+        MoveImage(ponder_move,std::cout);
+        std::cout << std::endl;
+        std::cout << debugPrefix() << "out of ponder()" << std::endl;
     }
 }
 
@@ -1098,7 +1098,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
     last_stats.clear();
     last_score = Constants::MATE;
     ponder_move = NullMove;
-    if (doTrace) cout << debugPrefix() << "in search()" << endl;
+    if (doTrace) std::cout << debugPrefix() << "in search()" << std::endl;
 
     Move move = NullMove;
     stats.fromBook = false;
@@ -1138,8 +1138,8 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 times.time_target = INFINITE_TIME;
                 times.extra_time = 0;
             } else {
-                if (doTrace) cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
-                                 movestogo << endl;
+                if (doTrace) std::cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                                 movestogo << std::endl;
                 calcTimes(false,board.sideToMove(),times);
             }
             time_target = last_time_target = times.time_target;
@@ -1154,20 +1154,20 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 movesToSearch);
         }
         if (doTrace) {
-            cout << debugPrefix() << "search done : move = ";
-            MoveImage(move,cout);
-            cout << endl;
+            std::cout << debugPrefix() << "search done : move = ";
+            MoveImage(move,std::cout);
+            std::cout << std::endl;
         }
         last_stats = stats;
     }
     else {
         if (ics || uci) {
-            vector< Move > choices;
+            std::vector< Move > choices;
             int moveCount = 0;
             if (globals::options.book.book_enabled) {
                moveCount = globals::openingBook.book_moves(board,choices);
             }
-            stringstream s;
+            std::stringstream s;
             s << "book moves (";
             for (int i=0;i<moveCount;i++) {
                 Notation::image(board,choices[i],Notation::OutputFormat::SAN,s);
@@ -1177,13 +1177,13 @@ Move Protocol::search(SearchController *searcher, Board &board,
             s << "), choosing ";
             Notation::image(board,move,Notation::OutputFormat::SAN,s);
             if (uci) {
-                cout << "info string " << s.str() << endl;
+                std::cout << "info string " << s.str() << std::endl;
             }
             if (ics) {
                 if (computer)
-                    cout << "tellics kibitz " << s.str() << endl;
+                    std::cout << "tellics kibitz " << s.str() << std::endl;
                 else
-                    cout << "tellics whisper " << s.str() << endl;
+                    std::cout << "tellics whisper " << s.str() << std::endl;
             }
         }
         stats.clear();
@@ -1193,26 +1193,26 @@ Move Protocol::search(SearchController *searcher, Board &board,
     return move;
 }
 
-int Protocol::isDraw(const Board &board, Statistics &last_stats, string &reason) {
+int Protocol::isDraw(const Board &board, Statistics &last_stats, std::string &reason) {
    if (last_stats.state == Stalemate) {
-       if (doTrace) cout << debugPrefix() << "stalemate" << endl;
+       if (doTrace) std::cout << debugPrefix() << "stalemate" << std::endl;
        reason = "Stalemate";
        return 1;
    }
    else if (last_stats.value < Constants::MATE-1 &&
             board.state.moveCount >= 100) {
        // Note: do not count as draw if we have checkmated opponent!
-       if (doTrace) cout << debugPrefix() << "50 move draw" << endl;
+       if (doTrace) std::cout << debugPrefix() << "50 move draw" << std::endl;
        reason = "50 move draw";
        return 1;
    }
    else if (board.materialDraw()) {
-       if (doTrace) cout << debugPrefix() << "material draw" << endl;
+       if (doTrace) std::cout << debugPrefix() << "material draw" << std::endl;
        reason = "Insufficient material";
        return 1;
    }
    else if (board.repetitionDraw()) {
-       if (doTrace) cout << debugPrefix() << "repetition draw" << endl;
+       if (doTrace) std::cout << debugPrefix() << "repetition draw" << std::endl;
        reason = "Repetition";
        return 1;
    }
@@ -1223,12 +1223,12 @@ int Protocol::isDraw(const Board &board, Statistics &last_stats, string &reason)
 }
 
 static void kibitz(SearchController *searcher, bool computer, Statistics &last_stats, bool multithread) {
-    stringstream s;
+    std::stringstream s;
     if (computer)
         s << "tellics kibitz ";
     else
         s << "tellics whisper ";
-    s << "time=" << fixed << setprecision(2) <<
+    s << "time=" << std::fixed << std::setprecision(2) <<
         (float)searcher->getElapsedTime()/1000.0 << " sec. score=";
     Scoring::printScore(last_stats.display_value,s);
     s << " depth=" << last_stats.depth;
@@ -1241,14 +1241,14 @@ static void kibitz(SearchController *searcher, bool computer, Statistics &last_s
     }
 #if defined(SMP_STATS)
     if (multithread) {
-        s << " cpu=" << fixed << setprecision(2) <<
+        s << " cpu=" << std::fixed << std::setprecision(2) <<
             searcher->getCpuPercentage() << '%';
     }
 #endif
     if (last_stats.best_line_image.length()) {
         s << " pv: " << last_stats.best_line_image;
     }
-    cout << s.str() << endl;
+    std::cout << s.str() << std::endl;
 }
 
 void Protocol::send_move(Board &board, Move &move, Statistics
@@ -1268,17 +1268,17 @@ void Protocol::send_move(Board &board, Move &move, Statistics
     }
     else if (!game_end) {
         if (!uci) {
-            string reason;
+            std::string reason;
             if (isDraw(board,last_stats,reason)) {
                 // A draw position exists before we even move (probably
                 // because the opponent did not claim the draw).
                 // Send the result command to claim the draw.
                 if (doTrace) {
-                    cout << debugPrefix() << "claiming draw before move";
-                    if (reason.length()) cout << " (" << reason << ")";
-                    cout << endl;
+                    std::cout << debugPrefix() << "claiming draw before move";
+                    if (reason.length()) std::cout << " (" << reason << ")";
+                    std::cout << std::endl;
                 }
-                cout << "1/2-1/2 {" << reason << "}" << endl;
+                std::cout << "1/2-1/2 {" << reason << "}" << std::endl;
                 // Wait for Winboard to send a "result" command before
                 // actually concluding it's a draw.
                 // Set flag to indicate we are waiting.
@@ -1287,19 +1287,19 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             }
         }
         if (!IsNull(move)) {
-            stringstream img;
+            std::stringstream img;
             Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
             last_move_image = img.str();
             globals::theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
             // Perform learning (if enabled):
             learn(board,board.repCount());
-            stringstream movebuf;
+            std::stringstream movebuf;
             move_image(board,last_move,movebuf,uci);
 
             if (uci) {
-                cout << "bestmove " << movebuf.str();
+                std::cout << "bestmove " << movebuf.str();
                 if (!easy && !IsNull(stats.best_line[1])) {
-                    stringstream ponderbuf;
+                    std::stringstream ponderbuf;
 #ifdef _DEBUG
                     BoardState s(board.state);
                     board.doMove(move);
@@ -1308,9 +1308,9 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                     board.undoMove(move,s);
 #endif
                     move_image(board,stats.best_line[1],ponderbuf,uci);
-                    cout << " ponder " << ponderbuf.str();
+                    std::cout << " ponder " << ponderbuf.str();
                 }
-                cout << endl << (flush);
+                std::cout << std::endl << (std::flush);
             }
             else { // Winboard
                 // Execute the move and prepare to ponder.
@@ -1320,31 +1320,31 @@ void Protocol::send_move(Board &board, Move &move, Statistics
 
                 *ponder_board = board;
 
-                string reason;
+                std::string reason;
                 if (isDraw(board,last_stats,reason)) {
                     // It will be a draw after we move (by rule).
                     // Following the current protocol standard, send
                     // "offer draw" and then send the move (formerly
                     // we would send the move then send the result,
                     // which is incorrect).
-                    cout << "offer draw" << endl;
+                    std::cout << "offer draw" << std::endl;
                 }
                 if (xboard42) {
-                    cout << "move " << movebuf.str() << endl;
+                    std::cout << "move " << movebuf.str() << std::endl;
                 }
                 else {
-                    cout << globals::gameMoves->num_moves()/2 << ". ... ";
-                    cout << movebuf.str() << endl;
+                    std::cout << globals::gameMoves->num_moves()/2 << ". ... ";
+                    std::cout << movebuf.str() << std::endl;
                 }
-                cout << (flush);
+                std::cout << (std::flush);
             }
         }
         else if (uci) {
             // must always send a "bestmove" command even if no move is available, to
             // acknowledge the previous "stop" command.
-            cout << "bestmove 0000" << endl;
+            std::cout << "bestmove 0000" << std::endl;
         } else {
-            if (doTrace) cout << debugPrefix() << "warning : move is null" << endl;
+            if (doTrace) std::cout << debugPrefix() << "warning : move is null" << std::endl;
         }
         if (ics && ((srctype == FixedDepth && searcher->getElapsedTime() >= 250) || time_target >= 250) &&
             stats.display_value != Constants::INVALID_SCORE) {
@@ -1356,26 +1356,26 @@ void Protocol::send_move(Board &board, Move &move, Statistics
     // conditions.
     if (!game_end) {
         if (last_stats.value >= Constants::MATE-1) {
-            if (doTrace) cout << debugPrefix() << "last_score = mate" << endl;
+            if (doTrace) std::cout << debugPrefix() << "last_score = mate" << std::endl;
             if (sideToMove == White) {
                 globals::theLog->setResult("1-0");
-                cout << "1-0 {White mates}" << endl;
+                std::cout << "1-0 {White mates}" << std::endl;
             }
             else {
                 globals::theLog->setResult("0-1");
-                cout << "0-1 {Black mates}" << endl;
+                std::cout << "0-1 {Black mates}" << std::endl;
             }
             game_end = true;
         }
         else if (last_stats.state == Checkmate) {
-            if (doTrace) cout << debugPrefix() << "state = Checkmate" << endl;
+            if (doTrace) std::cout << debugPrefix() << "state = Checkmate" << std::endl;
             if (sideToMove == White) {
                 globals::theLog->setResult("0-1");
-                cout << "0-1 {Black mates}" << endl;
+                std::cout << "0-1 {Black mates}" << std::endl;
             }
             else {
                 globals::theLog->setResult("1-0");
-                cout << "1-0 {White mates}" << endl;
+                std::cout << "1-0 {White mates}" << std::endl;
             }
             game_end = true;
         }
@@ -1388,11 +1388,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             // itself.
             if (computer_plays_white) {
                 globals::theLog->setResult("0-1 {White resigns}");
-                cout << "0-1 {White resigns}" << endl;
+                std::cout << "0-1 {White resigns}" << std::endl;
             }
             else {
                 globals::theLog->setResult("1-0 {Black resigns}");
-                cout << "1-0 {Black resigns}" << endl;
+                std::cout << "1-0 {Black resigns}" << std::endl;
             }
             game_end = true;
         }
@@ -1402,9 +1402,9 @@ void Protocol::send_move(Board &board, Move &move, Statistics
     }
 }
 
-void Protocol::processCmdInWaitState(const string &cmd) {
+void Protocol::processCmdInWaitState(const std::string &cmd) {
     if (doTrace) {
-        cout << debugPrefix() << "got command in wait state: " << cmd << (flush) << endl;
+        std::cout << debugPrefix() << "got command in wait state: " << cmd << (std::flush) << std::endl;
     }
     // we expect a "stop" or "ponderhit"
     if (cmd == "ponderhit" || cmd == "stop") {
@@ -1426,7 +1426,7 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
 
     stats.clear();
     if (doTrace) {
-        cout << debugPrefix() << "entering analysis search" << endl;
+        std::cout << debugPrefix() << "entering analysis search" << std::endl;
     }
     Move move = searcher.findBestMove(board,
                                       FixedTime,
@@ -1436,9 +1436,9 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
                                       stats,
                                       TalkLevel::Whisper);
     if (doTrace) {
-        cout << debugPrefix() << "search done : move = ";
-        MoveImage(move,cout);
-        cout << endl;
+        std::cout << debugPrefix() << "search done : move = ";
+        MoveImage(move,std::cout);
+        std::cout << std::endl;
     }
 
     last_stats = stats;
@@ -1449,36 +1449,36 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
 
 void Protocol::doHint() {
     // try book move first
-    vector<Move> moves;
+    std::vector<Move> moves;
     unsigned count = 0;
     if (globals::options.book.book_enabled) {
         count = globals::openingBook.book_moves(*main_board,moves);
     }
     if (count > 0) {
         if (count == 1)
-            cout << "Book move: " ;
+            std::cout << "Book move: " ;
         else
-            cout << "Book moves: ";
+            std::cout << "Book moves: ";
         for (unsigned i = 0; i<count; i++) {
-            Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,cout);
-            if (i<count-1) cout << ' ';
+            Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,std::cout);
+            if (i<count-1) std::cout << ' ';
         }
-        cout << endl;
+        std::cout << std::endl;
         return;
     }
     else {
         // no book move, see if we have a ponder move
-        const string &img = last_stats.best_line_image;
+        const std::string &img = last_stats.best_line_image;
         if (img.length()) {
-            string::const_iterator it = img.begin();
+            std::string::const_iterator it = img.begin();
             while (it != img.end() && !isspace(*it)) it++;
-            string last_move;
+            std::string last_move;
             if (it != img.end()) {
                 it++;
                 while (it != img.end() && !isspace(*it)) last_move += *it++;
             }
             if (last_move.length()) {
-                cout << "Hint: " << last_move << endl;
+                std::cout << "Hint: " << last_move << std::endl;
                 return;
             }
         }
@@ -1487,7 +1487,7 @@ void Protocol::doHint() {
     // have no ponder move we could wait a while for a ponder result,
     // but we just return for now.
     if (searcher->pondering()) return;
-    if (doTrace) cout << debugPrefix() << "computing hint" << endl;
+    if (doTrace) std::cout << debugPrefix() << "computing hint" << std::endl;
 
     Statistics tmp;
     // do low-depth search for hint move
@@ -1499,26 +1499,26 @@ void Protocol::doHint() {
         tmp,
         (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
     if (!IsNull(move)) {
-        cout << "Hint: ";
-        Notation::image(*main_board,move,Notation::OutputFormat::SAN,cout);
-        cout << endl;
+        std::cout << "Hint: ";
+        Notation::image(*main_board,move,Notation::OutputFormat::SAN,std::cout);
+        std::cout << std::endl;
     }
 }
 
 void Protocol::analyze_output(const Statistics &stats) {
-    cout << "stat01: " <<
+    std::cout << "stat01: " <<
         searcher->getElapsedTime() << " " << stats.num_nodes << " " <<
         stats.depth << " " <<
-        stats.mvleft << " " << stats.mvtot << endl;
+        stats.mvleft << " " << stats.mvtot << std::endl;
 }
 
 void Protocol::analyze(Board &board)
 {
-    if (doTrace) cout << debugPrefix() << "entering analysis mode" << endl;
+    if (doTrace) std::cout << debugPrefix() << "entering analysis mode" << std::endl;
     while (analyzeMode) {
         Board previous(board);
         analyze(*searcher,board,stats);
-        if (doTrace) cout << debugPrefix() << "analysis mode: out of search" << endl;
+        if (doTrace) std::cout << debugPrefix() << "analysis mode: out of search" << std::endl;
         // Process commands received while searching; exit loop
         // if "quit" seen.
         if (do_all_pending(board)==AllPendingStatus::Quit) {
@@ -1529,19 +1529,19 @@ void Protocol::analyze(Board &board)
             // got here because the search has terminated early, due to
             // forced move, forced mate, tablebase hit, or hitting the max
             // ply depth. Wait here for more input.
-            if (doTrace) cout << debugPrefix() << "analysis mode: wait for input" << endl;
+            if (doTrace) std::cout << debugPrefix() << "analysis mode: wait for input" << std::endl;
             if (globals::inputSem.wait()) {
                 break;
             }
             while (!pending.empty()) {
                 Lock(globals::input_lock);
-                string cmd (pending.front());
+                std::string cmd (pending.front());
                 pending.erase(pending.begin());
                 Unlock(globals::input_lock);
-                string cmd_word, cmd_arg;
+                std::string cmd_word, cmd_arg;
                 split_cmd(cmd,cmd_word,cmd_arg);
 #ifdef _TRACE
-                cout << debugPrefix() << "processing cmd in analysis mode: " << cmd << endl;
+                std::cout << debugPrefix() << "processing cmd in analysis mode: " << cmd << std::endl;
 #endif
                 if (cmd == "undo" || cmd == "setboard") {
                     do_command(cmd,board);
@@ -1569,7 +1569,7 @@ void Protocol::analyze(Board &board)
             }
         }
     }
-    if (doTrace) cout << debugPrefix() << "exiting analysis mode" << endl;
+    if (doTrace) std::cout << debugPrefix() << "exiting analysis mode" << std::endl;
 }
 
 void Protocol::undo( Board &board)
@@ -1594,8 +1594,8 @@ void Protocol::undo( Board &board)
     game_end = false;
 }
 
-void Protocol::setCheckOption(const string &value, int &dest) {
-   stringstream buf(value);
+void Protocol::setCheckOption(const std::string &value, int &dest) {
+   std::stringstream buf(value);
    int tmp;
     buf >> tmp;
     if (!buf.bad() && !buf.fail()) {
@@ -1607,12 +1607,12 @@ void Protocol::setCheckOption(const string &value, int &dest) {
 void Protocol::execute_move(Board &board,Move m)
 {
     if (doTrace) {
-        cout << debugPrefix() << "execute_move: ";
-        MoveImage(m,cout);
-        cout << endl;
+        std::cout << debugPrefix() << "execute_move: ";
+        MoveImage(m,std::cout);
+        std::cout << std::endl;
     }
     last_move = m;
-    stringstream img;
+    std::stringstream img;
     Notation::image(board,m,Notation::OutputFormat::SAN,img);
     last_move_image = img.str();
     globals::theLog->add_move(board,m,last_move_image,nullptr,searcher->getElapsedTime(),true);
@@ -1626,12 +1626,12 @@ void Protocol::execute_move(Board &board,Move m)
 }
 
 #ifdef TUNE
-void Protocol::setTuningParam(const string &name, const string &value)
+void Protocol::setTuningParam(const std::string &name, const std::string &value)
 {
    // set named parameters that are in the tuning set
    int index = globals::tune_params.findParamByName(name);
    if (index > 0) {
-      stringstream buf(value);
+      std::stringstream buf(value);
       int tmp;
       buf >> tmp;
       if (!buf.bad() && !buf.fail()) {
@@ -1640,26 +1640,26 @@ void Protocol::setTuningParam(const string &name, const string &value)
          globals::tune_params.applyParams();
       }
       else {
-         if (uci) cout << "info ";
-         else cout << "#";
-         cout << "Warning: invalid value for option " <<
-            name << ": " << value << endl;
+         if (uci) std::cout << "info ";
+         else std::cout << "#";
+         std::cout << "Warning: invalid value for option " <<
+            name << ": " << value << std::endl;
          return;
       }
    }
    else {
-      if (uci) cout << "info ";
-      else cout << "#";
-      cout << "Warning: invalid option name \"" <<
-            name << "\"" << endl;
+      if (uci) std::cout << "info ";
+      else std::cout << "#";
+      std::cout << "Warning: invalid option name \"" <<
+            name << "\"" << std::endl;
    }
 }
 #endif
 
-void Protocol::processWinboardOptions(const string &args) {
-    string name, value;
+void Protocol::processWinboardOptions(const std::string &args) {
+    std::string name, value;
     size_t eq = args.find("=");
-    if (eq == string::npos) {
+    if (eq == std::string::npos) {
         // no value
         name = args;
     } else {
@@ -1673,7 +1673,7 @@ void Protocol::processWinboardOptions(const string &args) {
     value = value.erase(value.find_last_not_of(' ') + 1);
     // handle option settings
     if (doTrace) {
-        cout << debugPrefix() << "setting option " << name << "=" << value << endl;
+        std::cout << debugPrefix() << "setting option " << name << "=" << value << std::endl;
     }
     if (name == "Favor frequent book moves") {
         Options::setOption<unsigned>(value,globals::options.book.frequency);
@@ -1695,7 +1695,7 @@ void Protocol::processWinboardOptions(const string &args) {
     } else if (name == "Use NNUE") {
         setCheckOption(value,globals::options.search.useNNUE);
     } else if (name == "NNUE File") {
-        Options::setOption<string>(value,globals::options.search.nnueFile);
+        Options::setOption<std::string>(value,globals::options.search.nnueFile);
         globals::nnueInitDone = false; // force re-init
 #endif        
 #ifdef NUMA
@@ -1716,7 +1716,7 @@ void Protocol::processWinboardOptions(const string &args) {
     }
 #else
     else {
-       cout << debugPrefix() << "Warning: invalid option name \"" << name << "\"" << endl;
+       std::cout << debugPrefix() << "Warning: invalid option name \"" << name << "\"" << std::endl;
    }
 #endif
    searcher->updateSearchOptions();
@@ -1743,13 +1743,13 @@ uint64_t Protocol::perft(Board &board, int depth) {
    return nodes;
 }
 
-void Protocol::loadgame(Board &board,ifstream &file) {
-    vector<ChessIO::Header> hdrs(20);
+void Protocol::loadgame(Board &board, std::ifstream &file) {
+    std::vector<ChessIO::Header> hdrs(20);
     long first;
     ChessIO::collect_headers(file,hdrs,first);
     ColorType side = White;
     for (;;) {
-        string num;
+        std::string num;
         ChessIO::Token tok = ChessIO::get_next_token(file);
         if (tok.type == ChessIO::Eof)
             break;
@@ -1762,13 +1762,13 @@ void Protocol::loadgame(Board &board,ifstream &file) {
             if (IsNull(m) ||
                 !legalMove(board,StartSquare(m),
                            DestSquare(m))) {
-                cerr << "Illegal move" << endl;
+                std::cerr << "Illegal move" << std::endl;
                 break;
             }
             else {
                 BoardState previous_state = board.state;
-                string image;
-                // Don't use the current move string as the input
+                std::string image;
+                // Don't use the current move std::string as the input
                 // parser is forgiving and will accept incorrect
                 // SAN. Convert it here to the correct form:
                 Notation::image(board,m,Notation::OutputFormat::SAN,image);
@@ -1785,13 +1785,13 @@ void Protocol::loadgame(Board &board,ifstream &file) {
 
 
 #ifdef SYZYGY_TBS
-bool Protocol::validTbPath(const string &path) {
+bool Protocol::validTbPath(const std::string &path) {
    // Shredder at least sets path to "<empty>" for tb types that are disabled
    return path != "" && path != "<empty>";
 }
 #endif
 
-bool Protocol::uciOptionCompare(const string &a, const string &b) {
+bool Protocol::uciOptionCompare(const std::string &a, const std::string &b) {
    if (a.length() != b.length()) {
       return false;
    } else {
@@ -1802,82 +1802,82 @@ bool Protocol::uciOptionCompare(const string &a, const string &b) {
    }
 }
 
-bool Protocol::do_command(const string &cmd, Board &board) {
+bool Protocol::do_command(const std::string &cmd, Board &board) {
     if (doTrace) {
-        cout << debugPrefix() << "do_command: " << cmd << endl;
+        std::cout << debugPrefix() << "do_command: " << cmd << std::endl;
     }
     if (doTrace && uci) {
         globals::theLog->write(cmd.c_str()); globals::theLog->write_eol();
     }
-    string cmd_word, cmd_args;
+    std::string cmd_word, cmd_args;
     split_cmd(cmd, cmd_word, cmd_args);
     if (cmd == "uci") {
         uci = true;
         verbose = true; // TBD: fixed for now
         // Learning is disabled because we don't have full game history w/ scores
         globals::options.learning.position_learning = 0;
-        cout << "id name " << "Arasan " << Arasan_Version;
-        cout << endl;
-        cout << "id author Jon Dart" << endl;
-        cout << "option name Hash type spin default " <<
+        std::cout << "id name " << "Arasan " << Arasan_Version;
+        std::cout << std::endl;
+        std::cout << "id author Jon Dart" << std::endl;
+        std::cout << "option name Hash type spin default " <<
             globals::options.search.hash_table_size/(1024L*1024L) << " min 4 max " <<
 #ifdef _64BIT
-            "64000" << endl;
+            "64000" << std::endl;
 #else
-            "2000" << endl;
+            "2000" << std::endl;
 #endif
-        cout << "option name Ponder type check default true" << endl;
-        cout << "option name Contempt type spin default 0 min -200 max 200" << endl;
+        std::cout << "option name Ponder type check default true" << std::endl;
+        std::cout << "option name Contempt type spin default 0 min -200 max 200" << std::endl;
 #ifdef SYZYGY_TBS
-        cout << "option name Use tablebases type check default ";
-        if (globals::options.search.use_tablebases) cout << "true"; else cout << "false";
-        cout << endl;
-        cout << "option name SyzygyTbPath type string default " <<
-            globals::options.search.syzygy_path << endl;
-        cout << "option name SyzygyUse50MoveRule type check default true" << endl;
-        cout << "option name SyzygyProbeDepth type spin default " <<
+        std::cout << "option name Use tablebases type check default ";
+        if (globals::options.search.use_tablebases) std::cout << "true"; else std::cout << "false";
+        std::cout << std::endl;
+        std::cout << "option name SyzygyTbPath type string default " <<
+            globals::options.search.syzygy_path << std::endl;
+        std::cout << "option name SyzygyUse50MoveRule type check default true" << std::endl;
+        std::cout << "option name SyzygyProbeDepth type spin default " <<
             globals::options.search.syzygy_probe_depth <<
-           " min 0 max 64" << endl;
+           " min 0 max 64" << std::endl;
 #endif
-        cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << endl;
-        cout << "option name OwnBook type check default true" << endl;
-        cout << "option name Favor frequent book moves type spin default " <<
-            globals::options.book.frequency << " min 0 max 100" << endl;
-        cout << "option name Favor best book moves type spin default " <<
-            globals::options.book.scoring << " min 0 max 100" << endl;
-        cout << "option name Favor high-weighted book moves type spin default " <<
-            globals::options.book.weighting << " min 0 max 100" << endl;
-        cout << "option name Randomize book moves type spin default " <<
-            globals::options.book.random << " min 0 max 100" << endl;
-        cout << "option name Threads type spin default " <<
+        std::cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << std::endl;
+        std::cout << "option name OwnBook type check default true" << std::endl;
+        std::cout << "option name Favor frequent book moves type spin default " <<
+            globals::options.book.frequency << " min 0 max 100" << std::endl;
+        std::cout << "option name Favor best book moves type spin default " <<
+            globals::options.book.scoring << " min 0 max 100" << std::endl;
+        std::cout << "option name Favor high-weighted book moves type spin default " <<
+            globals::options.book.weighting << " min 0 max 100" << std::endl;
+        std::cout << "option name Randomize book moves type spin default " <<
+            globals::options.book.random << " min 0 max 100" << std::endl;
+        std::cout << "option name Threads type spin default " <<
             globals::options.search.ncpus << " min 1 max " <<
-            Constants::MaxCPUs << endl;
-        cout << "option name UCI_LimitStrength type check default false" << endl;
-        cout << "option name UCI_Elo type spin default " <<
-            1000+globals::options.search.strength*16 << " min 1000 max 2600" << endl;
+            Constants::MaxCPUs << std::endl;
+        std::cout << "option name UCI_LimitStrength type check default false" << std::endl;
+        std::cout << "option name UCI_Elo type spin default " <<
+            1000+globals::options.search.strength*16 << " min 1000 max 2600" << std::endl;
 #ifdef NNUE
-        cout << "option name Use NNUE type check default true" << endl;
-        cout << "option name NNUE file type string" << endl;
+        std::cout << "option name Use NNUE type check default true" << std::endl;
+        std::cout << "option name NNUE file type string" << std::endl;
 #endif
 #ifdef NUMA
-        cout << "option name Set processor affinity type check default " <<
-           (globals::options.search.set_processor_affinity ? "true" : "false") << endl;
+        std::cout << "option name Set processor affinity type check default " <<
+           (globals::options.search.set_processor_affinity ? "true" : "false") << std::endl;
 #endif
-        cout << "option name Move overhead type spin default " <<
-            30 << " min 0 max 1000" << endl;
-        cout << "uciok" << endl;
+        std::cout << "option name Move overhead type spin default " <<
+            30 << " min 0 max 1000" << std::endl;
+        std::cout << "uciok" << std::endl;
         return true;
     }
     else if (cmd == "quit") {
         return false;
     }
     else if (uci && cmd_word == "setoption") {
-        string name, value;
+        std::string name, value;
         size_t nam = cmd_args.find("name");
-        if (nam != string::npos) {
+        if (nam != std::string::npos) {
             // search for "value"
             size_t val = cmd_args.find(" value",nam+4);
-            if (val != string::npos) {
+            if (val != std::string::npos) {
                name = cmd_args.substr(nam+4,val-nam-4);
                // trim spaces
                name = name.erase(0 , name.find_first_not_of(' ') );
@@ -1891,11 +1891,11 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             if (!memorySet) {
                 size_t old = globals::options.search.hash_table_size;
                 // size is in megabytes
-                stringstream buf(value);
+                std::stringstream buf(value);
                 int size;
                 buf >> size;
                 if (buf.bad()) {
-                    cout << "info problem setting hash size to " << buf.str() << endl;
+                    std::cout << "info problem setting hash size to " << buf.str() << std::endl;
                 }
                 else {
                     globals::options.search.hash_table_size = (size_t)size*1024L*1024L;
@@ -1909,14 +1909,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             easy = !(value == "true");
         }
         else if (uciOptionCompare(name,"Contempt")) {
-            stringstream buf(value);
+            std::stringstream buf(value);
             int uciContempt;
             buf >> uciContempt;
             if (buf.bad()) {
-               cout << "info problem setting contempt value" << endl;
+               std::cout << "info problem setting contempt value" << std::endl;
             }
             else if (uciContempt < -200 || uciContempt > 200) {
-               cout << "invalid contempt value, must be >=-200, <= 200 centipawns" << endl;
+               std::cout << "invalid contempt value, must be >=-200, <= 200 centipawns" << std::endl;
             }
             else {
                searcher->setContempt(uciContempt);
@@ -1994,7 +1994,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
            globals::options.search.useNNUE = (value == "true");
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
-           Options::setOption<string>(value,globals::options.search.nnueFile);
+           Options::setOption<std::string>(value,globals::options.search.nnueFile);
            globals::nnueInitDone = false; // force re-init
 	}
 #endif
@@ -2016,7 +2016,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         }
 #else
         else {
-           cout << "info error: invalid option name \"" << name << "\"" << endl;
+           std::cout << "info error: invalid option name \"" << name << "\"" << std::endl;
         }
 #endif
         searcher->updateSearchOptions();
@@ -2027,7 +2027,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     }
     else if (uci && cmd == "isready") {
         globals::delayedInit();
-        cout << "readyok" << endl;
+        std::cout << "readyok" << std::endl;
     }
     else if (uci && cmd_word == "position") {
         ponder_move = NullMove;
@@ -2036,14 +2036,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             globals::gameMoves->removeAll();
         }
         else if (cmd_args.substr(0,3) == "fen") {
-            string fen;
+            std::string fen;
             int valid = 0;
             if (cmd_args.length() > 3) {
                 fen = cmd_args.substr(3);
                 valid = BoardIO::readFEN(board, fen);
             }
             if (!valid) {
-                if (doTrace) cout << debugPrefix() << "warning: invalid fen!" << endl;
+                if (doTrace) std::cout << debugPrefix() << "warning: invalid fen!" << std::endl;
             }
             // clear some global vars
             stats.clear();
@@ -2056,12 +2056,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             ponder_status = PonderStatus::None;
         }
         size_t movepos = cmd_args.find("moves");
-        if (movepos != string::npos) {
-            stringstream s(cmd_args.substr(movepos+5));
-            istream_iterator<string> it(s);
-            istream_iterator<string> eos;
+        if (movepos != std::string::npos) {
+            std::stringstream s(cmd_args.substr(movepos+5));
+            std::istream_iterator<std::string> it(s);
+            std::istream_iterator<std::string> eos;
             while (it != eos) {
-                string move(*it++);
+                std::string move(*it++);
                 Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::UCI,move);
                 if (!IsNull(m)) {
                    BoardState previous_state = board.state;
@@ -2085,15 +2085,15 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     else if (cmd_word == "bench") {
        Bench b;
        Bench::Results res = b.bench(true);
-       cout << res;
+       std::cout << res;
     }
     else if (cmd_word == "test") {
-        string filename;
-        ofstream *out_file = nullptr;
-        streambuf *sbuf = cout.rdbuf();
-        stringstream s(cmd_args);
-        istream_iterator<string> it(s);
-        istream_iterator<string> eos;
+        std::string filename;
+        std::ofstream *out_file = nullptr;
+        std::streambuf *sbuf = std::cout.rdbuf();
+        std::stringstream s(cmd_args);
+        std::istream_iterator<std::string> it(s);
+        std::istream_iterator<std::string> eos;
         Tester::TestOptions opts;
         if (it != eos) {
             filename = *it++;
@@ -2101,18 +2101,18 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 while (it != eos) {
                     if (*it == "-d") {
                         if (++it == eos) {
-                            cerr << "expected number after -d" << endl;
+                            std::cerr << "expected number after -d" << std::endl;
                         } else {
-                            stringstream num(*it);
+                            std::stringstream num(*it);
                             num >> opts.depth_limit;
                             it++;
                         }
                     }
                     else if (*it == "-t") {
                         if (++it == eos) {
-                            cerr << "expected number after -t" << endl;
+                            std::cerr << "expected number after -t" << std::endl;
                         } else {
-                            stringstream num(*it);
+                            std::stringstream num(*it);
                             num >> opts.time_limit;
                             opts.time_limit *= 1000; // convert seconds to ms
                             it++;
@@ -2125,82 +2125,82 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                     }
                     else if (*it == "-x") {
                         if (++it == eos) {
-                            cerr << "expected number after -x" << endl;
+                            std::cerr << "expected number after -x" << std::endl;
                         } else {
-                            stringstream num(*it);
+                            std::stringstream num(*it);
                             num >> opts.early_exit_plies;
                             it++;
                         }
                     }
                     else if (*it == "-N") {
                         if (++it == eos) {
-                            cerr << "Expected number after -N" << endl;
+                            std::cerr << "Expected number after -N" << std::endl;
                         } else {
-                            stringstream num(*it);
+                            std::stringstream num(*it);
                             num >> opts.moves_to_search;
                             it++;
                         }
                     }
                     else if (*it == "-o") {
                         if (++it == eos) {
-                            cerr << "Expected filename after -o" << endl;
+                            std::cerr << "Expected filename after -o" << std::endl;
                         } else {
-                            out_file = new ofstream((*it).c_str(), ios::out | ios::trunc);
+                            out_file = new std::ofstream((*it).c_str(), std::ios::out | std::ios::trunc);
                             // redirect stdout
-                            cout.rdbuf(out_file->rdbuf());
+                            std::cout.rdbuf(out_file->rdbuf());
                             break;
                         }
                     } else if ((*it)[0] == '-') {
-                        cerr << "unexpected switch: " << *it << endl;
+                        std::cerr << "unexpected switch: " << *it << std::endl;
                         it++;
                     } else {
                         break;
                     }
                 }
                 if (opts.depth_limit == 0 && opts.time_limit == 0) {
-                    cerr << "error: time (-t) or depth (-d) must be specified" << endl;
+                    std::cerr << "error: time (-t) or depth (-d) must be specified" << std::endl;
                 }
                 else {
                     do_command("new",board);
                     Tester tester;
                     tester.do_test(searcher,filename,opts);
-                    cout << "test complete" << endl;
+                    std::cout << "test complete" << std::endl;
                 }
                 if (out_file) {
                     out_file->close();
                     delete out_file;
-                    cout.rdbuf(sbuf);               // restore console output
+                    std::cout.rdbuf(sbuf);               // restore console output
                 }
             }
             else
-                cout << "invalid command" << endl;
+                std::cout << "invalid command" << std::endl;
         }
         else
-            cout << "invalid command" << endl;
+            std::cout << "invalid command" << std::endl;
     }
     else if (cmd_word == "perft") {
        if (cmd_args.length()) {
-          stringstream ss(cmd_args);
+          std::stringstream ss(cmd_args);
           int depth;
           if ((ss >> depth).fail()) {
-             cerr << "usage: perft <depth>" << endl;
+             std::cerr << "usage: perft <depth>" << std::endl;
           } else {
              Board b;
-             cout << "perft " << depth << " = " << perft(b,depth) << endl;
+             std::cout << "perft " << depth << " = " << perft(b,depth) << std::endl;
           }
        }
        else {
-          cerr << "usage: perft <depth>" << endl;
+          std::cerr << "usage: perft <depth>" << std::endl;
        }
     }
     else if (cmd_word == "eval") {
-        string filename;
+        std::string filename;
         if (cmd_args.length()) {
             filename = cmd_args;
-            ifstream pos_file( filename.c_str(), ios::in);
+            std::ifstream pos_file( filename.c_str(), std::ios::in);
             pos_file >> board;
             if (!pos_file.good()) {
-                cout << "File not found, or bad format." << endl;
+                std::cout << "File not found, or bad format." << std::endl;
             }
             else {
                 globals::delayedInit();
@@ -2209,47 +2209,47 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 if (globals::options.search.use_tablebases) {
                    MoveSet rootMoves;
                    if (SyzygyTb::probe_root(board,board.anyRep(),tbscore,rootMoves) >= 0) {
-                      cout << "score = ";
+                      std::cout << "score = ";
                       if (tbscore == -SyzygyTb::CURSED_SCORE)
-                         cout << "draw (Cursed Loss)";
+                         std::cout << "draw (Cursed Loss)";
                       else if (tbscore == -SyzygyTb::CURSED_SCORE)
-                         cout << "draw (Cursed Win)";
+                         std::cout << "draw (Cursed Win)";
                       else
-                         Scoring::printScore(tbscore,cout);
-                      cout << " (from Syzygy tablebases)" << endl;
+                         Scoring::printScore(tbscore,std::cout);
+                      std::cout << " (from Syzygy tablebases)" << std::endl;
                    }
                 }
 #endif
                 score_t score;
                 if ((score = Scoring::tryBitbase(board))!= Constants::INVALID_SCORE) {
-                    cout << "bitbase score=";
-                    Scoring::printScore(score,cout);
-                    cout << endl;
+                    std::cout << "bitbase score=";
+                    Scoring::printScore(score,std::cout);
+                    std::cout << std::endl;
                 }
                 Scoring::init();
                 if (board.isLegalDraw()) {
-                     cout << "position evaluates to draw (statically)" << endl;
+                     std::cout << "position evaluates to draw (statically)" << std::endl;
                 }
                 Scoring *s = new Scoring();
                 s->init();
-                cout << board << endl;
+                std::cout << board << std::endl;
 #ifdef NNUE
-                cout << "NNUE score: ";
-                Scoring::printScore(s->evalu8NNUE(board),cout);
-                cout << endl;
+                std::cout << "NNUE score: ";
+                Scoring::printScore(s->evalu8NNUE(board),std::cout);
+                std::cout << std::endl;
 #endif                
-                Scoring::printScore(s->evalu8(board),cout);
-                cout << endl;
+                Scoring::printScore(s->evalu8(board),std::cout);
+                std::cout << std::endl;
                 board.flip();
-                cout << board << endl;
+                std::cout << board << std::endl;
 #ifdef NNUE
-                cout << "NNUE score: ";
-                Scoring::printScore(s->evalu8NNUE(board),cout);
-                cout << endl;
+                std::cout << "NNUE score: ";
+                Scoring::printScore(s->evalu8NNUE(board),std::cout);
+                std::cout << std::endl;
 #endif                
-                Scoring::printScore(s->evalu8(board),cout);
+                Scoring::printScore(s->evalu8(board),std::cout);
                 delete s;
-                cout << endl;
+                std::cout << std::endl;
             }
         }
     }
@@ -2258,14 +2258,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         return true;
     }
     else if (uci && cmd_word == "go") {
-        string option;
+        std::string option;
         srctype = TimeLimit;
         bool do_ponder = false;
         movestogo = 0;
         bool infinite = false;
-        stringstream ss(cmd_args);
-        istream_iterator<string> it(ss);
-        istream_iterator<string> eos;
+        std::stringstream ss(cmd_args);
+        std::istream_iterator<std::string> it(ss);
+        std::istream_iterator<std::string> eos;
         MoveSet movesToSearch;
         while (it != eos) {
             option = *it++;
@@ -2324,11 +2324,11 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             }
             else if (option == "movetime") {
                 if (it == eos) break;
-                stringstream s(*it++);
+                std::stringstream s(*it++);
                 int srctime;
                 s >> srctime;
                 if (s.bad() || srctime < 0.0) {
-                    cerr << "movetime: invalid argument" << endl;
+                    std::cerr << "movetime: invalid argument" << std::endl;
                 } else {
                     srctype = FixedTime;
                     // set time limit (milliseconds)
@@ -2367,9 +2367,9 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             // we were stopped - this is the "handshake" that tells the
             // UI we received the stop.
             if (doTrace) {
-                cout << debugPrefix() << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
-                Notation::image(board,ponder_move,Notation::OutputFormat::SAN,cout);
-                cout << (flush) << endl;
+                std::cout << debugPrefix() << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
+                Notation::image(board,ponder_move,Notation::OutputFormat::SAN,std::cout);
+                std::cout << (std::flush) << std::endl;
             }
             if (ponderhit || searcher->wasStopped()) {
                 // ensure we send an "info" command - may not have been
@@ -2384,13 +2384,13 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 // that we delay sending the move until "ponderhit" or
                 // "stop" is received.
                 if (doTrace) {
-                    cout << debugPrefix() << "ponder stopped early" << endl;
+                    std::cout << debugPrefix() << "ponder stopped early" << std::endl;
                 }
                 Lock(globals::input_lock);
                 // To avoid races, check with the input mutux locked
                 // that we do not now have ponderhit or stop in the
                 // pending stack
-                vector<string> newPending(pending);
+                std::vector<std::string> newPending(pending);
                 uciWaitState = true;
                 for (const std::string &cmd : pending) {
                     if (cmd == "stop" || cmd == "ponderhit") {
@@ -2401,14 +2401,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 }
                 pending = newPending;
                 if (!uciWaitState) {
-                    cout << debugPrefix() << "ponderhit in stack, sending move" << endl << (flush);
+                    std::cout << debugPrefix() << "ponderhit in stack, sending move" << std::endl << (std::flush);
                     uciOut(ponder_stats);
                     send_move(board,ponder_move,ponder_stats);
                     ponder_move = NullMove;
                     ponderhit = false;
                 }
                 else if (doTrace) {
-                    cout << debugPrefix() << "entering wait state" << endl << (flush);
+                    std::cout << debugPrefix() << "entering wait state" << std::endl << (std::flush);
                 }
                 Unlock(globals::input_lock);
             }
@@ -2417,11 +2417,11 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             CLOCK_TYPE startTime;
             if (doTrace) {
                 startTime = getCurrentTime();
-                cout << debugPrefix() << "starting search" << (flush) << endl;
+                std::cout << debugPrefix() << "starting search" << (std::flush) << std::endl;
             }
             best_move = search(searcher,board,movesToSearch,stats,infinite);
             if (doTrace) {
-                cout << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (flush) << endl;
+                std::cout << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (std::flush) << std::endl;
             }
             if (infinite && !searcher->wasStopped()) {
                 // ensure we send some info in analysis mode:
@@ -2479,49 +2479,49 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         globals::tune_params.applyParams();
 #endif
         if (!analyzeMode && ics) {
-           cout << "kib Hello from Arasan " << Arasan_Version << endl;
+           std::cout << "kib Hello from Arasan " << Arasan_Version << std::endl;
         }
-        if (doTrace) cout << debugPrefix() << "finished 'new' processing" << endl;
+        if (doTrace) std::cout << debugPrefix() << "finished 'new' processing" << std::endl;
     }
     else if (cmd == "random" || cmd_word == "variant") {
         // ignore
     }
     else if (cmd_word == "protover") {
         // new in Winboard 4.2
-        cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
+        std::cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
 #ifdef SYZYGY_TBS
-        cout << " egt=\"syzygy\"";
+        std::cout << " egt=\"syzygy\"";
 #endif
-        cout << " option=\"Favor frequent book moves -spin " <<
+        std::cout << " option=\"Favor frequent book moves -spin " <<
             globals::options.book.frequency << " 1 100\"";
-        cout << " option=\"Favor best book moves -spin " <<
+        std::cout << " option=\"Favor best book moves -spin " <<
             globals::options.book.scoring << " 1 100\"";
-        cout << " option=\"Favor high-weighted book moves -spin " <<
+        std::cout << " option=\"Favor high-weighted book moves -spin " <<
             globals::options.book.weighting << " 1 100\"";
-        cout << " option=\"Randomize book moves -spin " <<
+        std::cout << " option=\"Randomize book moves -spin " <<
             globals::options.book.random << " 1 100\"";
-        cout << " option=\"Can resign -check " <<
+        std::cout << " option=\"Can resign -check " <<
             globals::options.search.can_resign << "\"";
-        cout << " option=\"Resign threshold -spin " <<
+        std::cout << " option=\"Resign threshold -spin " <<
             globals::options.search.resign_threshold << " -1000 0" << "\"";
-        cout << " option=\"Position learning -check " <<
+        std::cout << " option=\"Position learning -check " <<
             globals::options.learning.position_learning << "\"";
         // strength option (new for 14.2)
-        cout << " option=\"Strength -spin " << globals::options.search.strength << " 0 100\"";
+        std::cout << " option=\"Strength -spin " << globals::options.search.strength << " 0 100\"";
 #ifdef NNUE
-        cout << " option=\"Use NNUE -check " << globals::options.search.useNNUE << "\"";
-        cout << " option=\"NNUE file -string " << globals::options.search.nnueFile << "\"";
+        std::cout << " option=\"Use NNUE -check " << globals::options.search.useNNUE << "\"";
+        std::cout << " option=\"NNUE file -string " << globals::options.search.nnueFile << "\"";
 #endif
 #ifdef NUMA
-        cout << " option=\"Set processor affinity -check " <<
-            globals::options.search.set_processor_affinity << "\"" << endl;
+        std::cout << " option=\"Set processor affinity -check " <<
+            globals::options.search.set_processor_affinity << "\"" << std::endl;
 #endif
-        cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"" << endl;
-        cout << "myname=\"" << "Arasan " << Arasan_Version << "\"" << endl;
+        std::cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"" << std::endl;
+        std::cout << "myname=\"" << "Arasan " << Arasan_Version << "\"" << std::endl;
         // set done = 0 because it may take some time to initialize tablebases.
-        cout << "feature done=0" << endl;
+        std::cout << "feature done=0" << std::endl;
         globals::delayedInit();
-        cout << "feature done=1" << endl;
+        std::cout << "feature done=1" << std::endl;
         xboard42 = true;
     }
     else if (cmd == "computer") {
@@ -2539,24 +2539,24 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     }
     else if (cmd == "bk") {
         // list book moves
-	vector<Move> moves;
+	std::vector<Move> moves;
         unsigned count = 0;
         globals::delayedInit(); // to allow "bk" before "new"
         if (globals::options.book.book_enabled) {
             count = globals::openingBook.book_moves(*main_board,moves);
         }
         if (count == 0) {
-            cout << '\t' << "No book moves for this position." << endl
-                << endl;
+            std::cout << '\t' << "No book moves for this position." << std::endl
+                << std::endl;
         }
         else {
-            cout << " book moves:" << endl;
+            std::cout << " book moves:" << std::endl;
             for (unsigned i = 0; i<count; i++) {
-                cout << '\t';
-                Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,cout);
-                cout << endl;
+                std::cout << '\t';
+                Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,std::cout);
+                std::cout << std::endl;
             }
-            cout << endl;
+            std::cout << std::endl;
         }
     }
     else if (cmd == "depth") {
@@ -2569,21 +2569,21 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         process_st_command(cmd_args);
     }
     else if (cmd_word == "sd") {
-        stringstream s(cmd_args);
+        std::stringstream s(cmd_args);
         s >> ply_limit;
         srctype = FixedDepth;
     }
     else if (cmd_word == "time") {
         // my time left
         int t;
-        stringstream s(cmd_args);
+        std::stringstream s(cmd_args);
         s >> t;
         time_left = t*10; // convert from centiseconds to ms
     }
     else if (cmd_word == "otim") {
         // opponent's time left
         int t;
-        stringstream s(cmd_args);
+        std::stringstream s(cmd_args);
         s >> t;
         opp_time = t*10; // convert from centiseconds to ms
     }
@@ -2615,31 +2615,31 @@ bool Protocol::do_command(const string &cmd, Board &board) {
     }
     else if (cmd == "resign") {
         // our opponent has resigned
-        cout << debugPrefix() << "setting log result" << endl;
+        std::cout << debugPrefix() << "setting log result" << std::endl;
         if (computer_plays_white)
             globals::theLog->setResult("0-1");
         else
             globals::theLog->setResult("1-0");
-        cout << debugPrefix() << "set log result" << endl;
+        std::cout << debugPrefix() << "set log result" << std::endl;
     }
     else if (cmd == "draw") {
         // "draw" command. Requires winboard 3.6 or higher.
         if (accept_draw(board)) {
             // Notify opponent. don't assume draw is concluded yet.
-            cout << "offer draw" << endl;
+            std::cout << "offer draw" << std::endl;
         }
         else if (doTrace) {
-            cout << debugPrefix() << "draw declined" << endl;
+            std::cout << debugPrefix() << "draw declined" << std::endl;
         }
     }
     else if (cmd_word == "setboard") {
         start_fen = cmd_args;
-        stringstream s(start_fen,ios::in);
+        std::stringstream s(start_fen,std::ios::in);
         ChessIO::load_fen(s,board);
     }
     else if (cmd_word == "loadgame") {
-        string filename = cmd_args;
-        ifstream file(filename.c_str(),ios::in);
+        std::string filename = cmd_args;
+        std::ifstream file(filename.c_str(),std::ios::in);
         loadgame(board,file);
     }
     else if (cmd == "edit") {
@@ -2690,14 +2690,14 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         forceMode = true;
     }
     else if (cmd_word == "rating") {
-        stringstream args(cmd_args);
+        std::stringstream args(cmd_args);
         args >> computer_rating;
         args >> opponent_rating;
         score_t contempt = contemptFromRatings(computer_rating,opponent_rating);
         if (doTrace) {
-            cout << debugPrefix() << "contempt (calculated from ratings) = ";
-            Scoring::printScore(contempt,cout);
-            cout << endl;
+            std::cout << debugPrefix() << "contempt (calculated from ratings) = ";
+            Scoring::printScore(contempt,std::cout);
+            std::cout << std::endl;
         }
         if (searcher) searcher->setContempt(contempt);
     }
@@ -2713,12 +2713,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         // what the GUI sets
         if (!cpusSet) {
            // set number of threads
-           stringstream ss(cmd_args);
+           std::stringstream ss(cmd_args);
            if((ss >> globals::options.search.ncpus).fail()) {
-               cerr << "invalid value following 'cores'" << endl;
+               std::cerr << "invalid value following 'cores'" << std::endl;
            } else {
               if (doTrace) {
-                 cout << debugPrefix() << "setting cores to " << globals::options.search.ncpus << endl;
+                 std::cout << debugPrefix() << "setting cores to " << globals::options.search.ncpus << std::endl;
               }
               globals::options.search.ncpus = std::min<int>(globals::options.search.ncpus,Constants::MaxCPUs);
               searcher->updateSearchOptions();
@@ -2731,15 +2731,15 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         // what the GUI sets
         if (!memorySet) {
             // set memory size in MB
-            stringstream ss(cmd_args);
+            std::stringstream ss(cmd_args);
             uint64_t mbs;
             ss >> mbs;
             if (ss.fail() || ss.bad()) {
-               cout << debugPrefix() << "invalid value following 'memory'" << endl;
+               std::cout << debugPrefix() << "invalid value following 'memory'" << std::endl;
             } else {
                size_t mb_size = mbs*1024L*1024L;
                if (doTrace) {
-                   cout << debugPrefix() << "setting hash size to " << mb_size << " bytes " << endl << (flush);
+                   std::cout << debugPrefix() << "setting hash size to " << mb_size << " bytes " << std::endl << (std::flush);
                }
                globals::options.search.hash_table_size = mb_size;
                searcher->updateSearchOptions();
@@ -2747,21 +2747,21 @@ bool Protocol::do_command(const string &cmd, Board &board) {
            }
         }
         else {
-            cout << debugPrefix() << "warning: memory command ignored due to -H on command line" << endl;
+            std::cout << debugPrefix() << "warning: memory command ignored due to -H on command line" << std::endl;
         }
     }
     else if  (cmd_word == "egtpath") {
         size_t space = cmd_args.find_first_of(' ');
-        string type = cmd_args.substr(0,space);
+        std::string type = cmd_args.substr(0,space);
         transform(type.begin(), type.end(), type.begin(), ::tolower);
         if (type.length() > 0) {
            transform(type.begin(), type.begin()+1, type.begin(), ::toupper);
         }
-        string path;
-        if (space != string::npos) path = cmd_args.substr(space+1);
+        std::string path;
+        if (space != std::string::npos) path = cmd_args.substr(space+1);
 #ifdef _WIN32
         // path may be in Unix format. Convert.
-        string::iterator it = path.begin();
+        std::string::iterator it = path.begin();
         while (it != path.end()) {
              if (*it == '/') {
                  *it = '\\';
@@ -2772,7 +2772,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         // Unload existing tb set if in use and if path has changed
         if (globals::options.tbPath() != path) {
-           if (doTrace) cout << debugPrefix() << "unloading tablebases" << endl;
+           if (doTrace) std::cout << debugPrefix() << "unloading tablebases" << std::endl;
            globals::unloadTb();
         }
         // Set the tablebase globals::options. But do not initialize the
@@ -2782,24 +2782,24 @@ bool Protocol::do_command(const string &cmd, Board &board) {
         globals::options.search.use_tablebases = 1;
         globals::options.search.syzygy_path = path;
         if (doTrace) {
-           cout << debugPrefix() << "setting Syzygy tb path to " << globals::options.search.syzygy_path << endl;
+           std::cout << debugPrefix() << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
         }
 #endif
     }
     else {
         // see if it could be a move
-        string movetext;
+        std::string movetext;
         if (cmd_word == "usermove") {
             // new for Winboard 4.2
             movetext = cmd_args;
         } else {
             movetext = cmd;
         }
-        string::iterator it = movetext.begin();
+        auto it = movetext.begin();
         while (it != movetext.end() && !isalpha(*it)) it++;
         movetext.erase(movetext.begin(),it);
         if (doTrace) {
-            cout << debugPrefix() << "move text = " << movetext << endl;
+            std::cout << debugPrefix() << "move text = " << movetext << std::endl;
         }
         Move move;
         if ((move = text_to_move(board,movetext)) != NullMove) {
@@ -2807,12 +2807,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                 if (forceMode)
                     game_end = false;
                 else {
-                    if (doTrace) cout << debugPrefix() << "ignoring move " << movetext << " received after game end" << endl;
+                    if (doTrace) std::cout << debugPrefix() << "ignoring move " << movetext << " received after game end" << std::endl;
                     return true;
                 }
             }
             if (doTrace) {
-                cout << debugPrefix() << "got move: " << movetext << endl;
+                std::cout << debugPrefix() << "got move: " << movetext << std::endl;
             }
             // make the move on the board
             execute_move(board,move);
@@ -2828,17 +2828,17 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                    MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
                   // We completed pondering already and we got a reply to
                   // this move (e.g. might be a forced reply).
-                  if (doTrace) cout << debugPrefix() << "pondering complete already" << endl;
+                  if (doTrace) std::cout << debugPrefix() << "pondering complete already" << std::endl;
                   if (doTrace) {
-                     cout << debugPrefix() << "sending ponder move ";
-                     MoveImage(ponder_move,cout);
-                     cout << endl << (flush);
+                     std::cout << debugPrefix() << "sending ponder move ";
+                     MoveImage(ponder_move,std::cout);
+                     std::cout << std::endl << (std::flush);
                   }
                   reply = ponder_move;
                   stats = ponder_stats;
                   post_output(stats);
                   game_end = game_end || stats.end_of_game;
-                  if (doTrace) cout << debugPrefix() << "game_end = " << game_end << endl;
+                  if (doTrace) std::cout << debugPrefix() << "game_end = " << game_end << std::endl;
                   predicted_move = ponder_move = NullMove;
                }
                else {
@@ -2852,8 +2852,8 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   // start pondering after the game is over.
                   game_end = game_end || stats.end_of_game;
                   if (doTrace) {
-                     cout << debugPrefix() << "state = " << stats.state << endl;
-                     cout << debugPrefix() << "game_end = " << game_end  << endl;
+                     std::cout << debugPrefix() << "state = " << stats.state << std::endl;
+                     std::cout << debugPrefix() << "game_end = " << game_end  << std::endl;
                   }
                }
                // Check for game end conditions like resign, draw acceptance, et
@@ -2884,12 +2884,12 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                    break;
                }
                if (doTrace) {
-                     cout << debugPrefix() << "ponder_status=";
-                     if (ponder_status == PonderStatus::Hit) cout << "Hit";
-                     else if (ponder_status == PonderStatus::NoHit) cout << "NoHit";
-                     else if (ponder_status == PonderStatus::None) cout << "None";
-                     else cout << "Pending";
-                     cout << endl;
+                     std::cout << debugPrefix() << "ponder_status=";
+                     if (ponder_status == PonderStatus::Hit) std::cout << "Hit";
+                     else if (ponder_status == PonderStatus::NoHit) std::cout << "NoHit";
+                     else if (ponder_status == PonderStatus::None) std::cout << "None";
+                     else std::cout << "Pending";
+                     std::cout << std::endl;
                }
                // We are done pondering. If we got a ponder hit
                // (opponent made our predicted move), then we are ready
@@ -2898,7 +2898,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                    && !forceMode && !analyzeMode) {
                   // we got a reply from pondering
                   if (doTrace) {
-                     cout << debugPrefix() << "sending ponder move" << endl;
+                     std::cout << debugPrefix() << "sending ponder move" << std::endl;
                   }
                   stats = ponder_stats;
                   send_move(board,ponder_move,stats);
@@ -2915,7 +2915,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
                   // and may be able to use the pondering move later.
                   if (ponder_status == PonderStatus::Pending) {
                       if (doTrace) {
-                          cout << debugPrefix() << "exiting ponder loop" << endl;
+                          std::cout << debugPrefix() << "exiting ponder loop" << std::endl;
                       }
                       break;
                   }
@@ -2923,7 +2923,7 @@ bool Protocol::do_command(const string &cmd, Board &board) {
             }
         }
         if (doTrace) {
-            cout << debugPrefix() << "out of ponder loop" << endl;
+            std::cout << debugPrefix() << "out of ponder loop" << std::endl;
         }
     }
     return true;
