@@ -85,4 +85,4 @@ search.use_tablebases=true
 #
 # Location of the NNUE network file, relative to the Arasan
 # executable location
-search.nnueFile=arasan-d8-9-210820.nnue
+search.nnueFile=arasan-d8-9-20210827.nnue
