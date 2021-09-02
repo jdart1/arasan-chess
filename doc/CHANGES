@@ -1,12 +1,14 @@
 Changes in Arasan 23.0:
- 1) Adds NNUE evaluation
+ 1) Add NNUE evaluation
  2) Changes to Makefile: use BUILD_TYPE to select instruction set(s)
  3) Code cleanup: put globals into namespace. Remove TbType because we only support Syzygy tablebases now.
  4) Code cleanup: qualify imports from std namespace (remove "using namespace std").
  5) Code cleanup: remove ASSERT macro, replace with standard assert.
  6) Fixes/updates to selfplay utility for NN position generation.
  7) Fix unit tests to account for score variance in draw positions.
- 
+ 8) Fix for loading .rc file, book and network when program executable is
+ found via PATH traversal.
+
 Changes in Arasan 22.3:
  1) Change re-search logic.
  2) Add selfplay utility, to generate NNUE training positions.

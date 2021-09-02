@@ -1,4 +1,4 @@
- // Copyright 1996-2012, 2014, 2016-2019, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2012, 2014, 2016-2019, 2021 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -8,6 +8,18 @@
 #include "syzygy.h"
 #endif
 #include "bitbase.cpp"
+
+#ifdef _MAC
+extern "C" {
+#include <libproc.h>
+};
+#elif !defined (_MSC_VER)
+// assume Linux or similar
+extern "C" {
+#include <sys/types.h>
+#include <unistd.h>
+};
+#endif
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
@@ -52,13 +64,7 @@ static const char * RC_FILE_NAME = "arasan.rc";
 
 const size_t globals::LINUX_STACK_SIZE = 8*1024*1024;
 
-static std::string programPath;
-
 #ifdef NNUE
-
-// TBD: add version/hash?
-const char * globals::DEFAULT_NETWORK_NAME = "arasan.nnue";
-
 static bool absolutePath(const std::string &fileName) {
 #ifdef _WIN32
     auto pos = fileName.find(':');
@@ -74,8 +80,43 @@ static bool absolutePath(const std::string &fileName) {
 }
 #endif
 
+// Note argv[0] is the name of the command used to execute the
+// program. If the program was not executed from the directory
+// in which it is located, but was found through the PATH, then
+// this may not indicate the actual file location of the
+// executable.
+// This function returns the full path of the executable, the finding
+// of which is OS-dependent
+//
+static void getExecutablePath(std::string &path)
+{
+    path = "";
+#ifdef _WIN32
+    TCHAR szPath[MAX_PATH];
+    if(GetModuleFileName(NULL,szPath,MAX_PATH)) {
+        path = std::string(szPath);
+    }
+#elif defined(_MAC)
+    pid_t pid; int ret;
+    char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+    pathbuf[0] = '\0';
+    ret = proc_pidpath (prof_selfpid(), pathbuf, sizeof(pathbuf));
+    if ( ret > 0 ) {
+        path = std::string(pathbuf);
+    }
+#else
+    char result[ PATH_MAX ];
+    result[0] = '\0';
+    ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
+    path = std::string( result, (count > 0) ? count : 0 );
+#endif
+}
+
+
 std::string globals::derivePath(const std::string &fileName) {
-   return derivePath(programPath,fileName);
+    std::string path;
+    getExecutablePath(path);
+    return derivePath(path,fileName);
 }
 
 std::string globals::derivePath(const std::string &base, const std::string &fileName) {
@@ -90,8 +131,7 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     }
 }
 
-int globals::initGlobals(const char *pathName, bool initLog) {
-   programPath = pathName;
+int globals::initGlobals(bool initLog) {
    gameMoves = new MoveArray();
    polling_terminated = false;
    if (initLog) {
@@ -102,12 +142,6 @@ int globals::initGlobals(const char *pathName, bool initLog) {
    LockInit(input_lock);
 #ifdef SYZYGY_TBS
    LockInit(syzygy_lock);
-#endif
-#ifdef NNUE
-   if (options.search.nnueFile == "") {
-       // set default network path
-       options.search.nnueFile = derivePath(DEFAULT_NETWORK_NAME);
-   }
 #endif
 return 1;
 }
@@ -136,8 +170,7 @@ void CDECL globals::cleanupGlobals(void) {
    Board::cleanup();
 }
 
-void globals::initOptions(const char *pathName) {
-    programPath = pathName;
+void globals::initOptions() {
     std::string rcPath(derivePath(RC_FILE_NAME));
     // try to read arasan.rc file
     options.init(rcPath);
@@ -171,7 +204,7 @@ void globals::delayedInit() {
     }
 #endif
 #ifdef NNUE
-    if (options.search.useNNUE && !nnueInitDone) {
+    if (options.search.useNNUE && !nnueInitDone && options.search.nnueFile.size()) {
         const std::string &nnuePath = options.search.nnueFile;
         nnueInitDone = loadNetwork(absolutePath(nnuePath) ?
                                    nnuePath.c_str() :

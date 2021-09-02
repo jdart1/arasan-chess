@@ -602,10 +602,10 @@ int CDECL main(int argc, char **argv)
 
    Bitboard::init();
    Board::init();
-   globals::initOptions(argv[0]);
+   globals::initOptions();
    Attacks::init();
    Scoring::init();
-   if (!globals::initGlobals(argv[0], false)) {
+   if (!globals::initGlobals(false)) {
       globals::cleanupGlobals();
       exit(-1);
    }

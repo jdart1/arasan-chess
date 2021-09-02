@@ -61,11 +61,11 @@ extern std::string derivePath(const std::string &base, const std::string &fileNa
 
 extern int loadNetwork(const std::string &filename);
 
-extern int initGlobals(const char *pathName, bool initLog = true);
+extern int initGlobals(bool initLog = true);
 
 extern void CDECL cleanupGlobals(void);
 
-extern void initOptions(const char *pathName);
+extern void initOptions();
 
 // Perform actions that need to be done before a game but after
 // program startup (chiefly ones that depend on runtime options

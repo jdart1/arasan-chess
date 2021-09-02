@@ -30,12 +30,12 @@ int CDECL main(int argc, char **argv)
 {
    Bitboard::init();
    Board::init();
-   globals::initOptions(argv[0]);
+   globals::initOptions();
    Attacks::init();
    Scoring::init();
    Search::init();
    globals::options.search.hash_table_size = 64*1024*1024;
-   if (!globals::initGlobals(argv[0], false)) {
+   if (!globals::initGlobals(false)) {
        globals::cleanupGlobals();
        exit(-1);
    }
