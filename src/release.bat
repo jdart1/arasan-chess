@@ -11,8 +11,8 @@ pushd ..
 7z u -tzip -orelease %1 tools\README tools\analyze.py tools\label_positions.py
 7z u -tzip -orelease %1 tools\match.py tools\match_status.py tools\monitor.py
 7z u -tzip -orelease %1 tools\playchess.py tools\stats\README.md tools\stats\*.py
-7z u -tzip -orelease %1 gui\*.h gui\*.cpp  gui\gui.rc gui\res\*.*
-7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj
+7z u -tzip -orelease %1 gui\*.h gui\*.cpp gui\gui.rc gui\res\*.*
+7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj gui\arasan.props
 7z u -tzip -orelease %1 gui\fonts\*.zip
 7z u -tzip -orelease %1 prj\prj.sln prj\prj.vcxproj
 7z u -tzip -orelease %1 book\basic.pgn book\eco
@@ -20,12 +20,12 @@ pushd ..
 7z u -tzip -orelease %1 doc\*license*.txt
 7z u -tzip -orelease %1 doc\TODO doc\CHANGES doc\BUILD.md
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd
-7z u -tzip -orelease %1 tests\arasan20.epd tests\pet.epd tests\prof
+7z u -tzip -orelease %1 tests\arasan21.epd tests\pet.epd tests\prof
 7z u -tzip -orelease %1 tests\eet.epd
 7z u -tzip -orelease %1 tests\wacnew.epd tests\lapuce2.epd
 7z u -tzip -orelease %1 tests\lapuce2.doc tests\iq4.epd tests\prof.epd
 7z u -tzip -orelease %1 tests\eet.txt
-7z u -tzip -orelease %1 tests\RESULTS tests\rating.txt
+7z u -tzip -orelease %1 tests\RESULTS
 7z u -tzip -orelease %1 tests\tests.pl
 7z u -tzip -orelease %1 gui\help\*.*
 7z u -tzip -orelease %1 gui\help\html\*.*
