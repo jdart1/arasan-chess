@@ -155,7 +155,7 @@ void Options::set_option(const std::string &name, const std::string &value) {
     }
 #ifdef NNUE
     else if (name == "search.useNNUE") {
-        setOption<int>(name, value, search.useNNUE);
+        set_boolean_option(name, value, search.useNNUE);
     } else if (name == "search.nnueFile") {
         search.nnueFile = value;
     }
