@@ -9,7 +9,7 @@ Changes in Arasan 23.0:
  8) Fix for loading .rc file, book and network when program executable is
  found via PATH traversal.
 
-Changes in Arasan 22.3:
+Changes in Arasan 22.3 (May 2021):
  1) Change re-search logic.
  2) Add selfplay utility, to generate NNUE training positions.
  3) Changes to book selection logic.
