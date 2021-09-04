@@ -7,10 +7,11 @@
 #include "legal.h"
 #include "globals.h"
 #include "scoring.h"
+#include <cctype>
 #include <iostream>
 #include <fstream>
+#include <regex>
 #include <sstream>
-#include <cctype>
 #include <unordered_map>
 
 void charout(unsigned char c)
@@ -50,77 +51,64 @@ static void write_64(hash_t h, std::ostream &out)
 
 static std::unordered_map<hash_t,unsigned> hashes;
 
+static const auto pattern = std::regex("^([A-Z\\d]+)\\s+(.+[\\w\\d\\-\\+#])(\\s+\\\"([^\"]*).*)?$");
+
 int do_eco(const std::string &eco_line, unsigned line)
 {
+    if (eco_line.empty()) return 0;
+
     ColorType side = White;
     Board board;
     int movecount = 0;
-    std::string str(eco_line);
 
-    // Follow the opening line
-    std::string token, code, name, text;
-    int first_token = 1;
-    for (auto it = str.begin(); it != str.end();) {
-       // skip spaces
-       while (isspace(*it) && it != str.end()) it++;
-       if (it == str.end()) break;
-       // extract text
-       int first = 1;
-       int quoted = 0;
-       while (it != str.end() && (quoted ? (*it != '"') : !isspace(*it))) {
-           if (first && *it == '"') {
-               quoted++;
-               it++;
-               first = 0;
-               continue;
-           }
-           text += *it++;
-       }
-       if (first_token) {
-           code = text;
-           first_token = 0;
-           continue;
-       }
-       else if (quoted) {
-           name = text;
-           break;
-       } else if (text.length() == 0) {
-           break;
-       }
-       // skip numbers
-       if (isdigit(text[0])) continue;
-       if (!isalpha(text[0])) return -1;
-       // parse the move
-       Move m = Notation::value(board,side,Notation::InputFormat::SAN,text);
-       if (IsNull(m) ||
-       	   !legalMove(board,StartSquare(m),DestSquare(m)))
-       {
-           std::cerr << "Illegal or invalid move: " << text << std::endl;
-	   return -1;
-       }
-       else
-       {
-           ++movecount;
-	   board.doMove(m);
-       }
-       side = OppositeColor(side);
-    }
-    if (code.length()) {
-        auto match = hashes.find(board.hashCode());
-        if (match != hashes.end()) {
-          std::cerr << "warning: duplicate hash, lines " << (*match).second << " & " << line << std::endl;
+    // Parse the line
+    std::string code, name, moves, text;
+    std::smatch match;
+    if (std::regex_match(eco_line,match,pattern)) {
+        assert(match.size()>=3);
+        name = ""; // may be missing
+        code = match[1]; // first match is whole string
+        moves = match[2];
+        if (match.size() > 4) {
+            name = match[4]; // inner group
         }
-        hashes.emplace(std::pair<hash_t,unsigned>(board.hashCode(),line));
-        std::cout << '{' << '"' << code << '"' << ", ";
-        write_64(board.hashCode(),std::cout);
-        std::cout << ", ";
-        if (name.length())
-            std::cout << '"' << name << '"';
-        else
-            std::cout << '"' << '"';
-        std::cout << "},";
-        std::cout << std::endl;
+        // parse moves
+        std::stringstream s(moves);
+        while (s >> text) {
+            // skip numbers
+            if (isdigit(text[0])) continue;
+            // parse the move
+            Move m = Notation::value(board,side,Notation::InputFormat::SAN,text);
+            if (IsNull(m) ||
+                !legalMove(board,StartSquare(m),DestSquare(m)))
+            {
+                std::cerr << "Illegal or invalid move: " << text << std::endl;
+                return -1;
+            }
+            else {
+                ++movecount;
+                board.doMove(m);
+            }
+            side = OppositeColor(side);
+        }
+    } else {
+        std::cerr << "Failed to parse line " << line << std::endl;
+        return -1;
     }
+    auto hashMatch = hashes.find(board.hashCode());
+    if (hashMatch != hashes.end()) {
+       std::cerr << "warning: duplicate hash, lines " << (*hashMatch).second << " & " << line << std::endl;
+    }
+    hashes.emplace(std::pair<hash_t,unsigned>(board.hashCode(),line));
+    std::cout << '{' << '"' << code << '"' << ", ";
+    write_64(board.hashCode(),std::cout);
+    std::cout << ", ";
+    if (name.length())
+        std::cout << '"' << name << '"';
+    else
+        std::cout << '"' << '"';
+    std::cout << "},";
+    std::cout << std::endl;
     return 0;
 }
 
@@ -141,7 +129,7 @@ int CDECL main(int argc, char **argv)
        exit(-1);
    }
    atexit(globals::cleanupGlobals);
-   
+
    std::ifstream eco_file( argv[argc-1], std::ios::in);
    if (!eco_file.good())
    {
@@ -150,7 +138,7 @@ int CDECL main(int argc, char **argv)
    }
    Board b;
    std::cout << "// This is a machine-generated file.  Do not edit." << std::endl;
-   std::cout << std::endl;   
+   std::cout << std::endl;
    std::cout << "#include \"ecodata.h\"" << std::endl << std::endl;
    std::cout << "const struct ECOData eco_codes[] =" << std::endl;
    std::cout << "{{" << '"' << "A00" << '"' << ", ";
