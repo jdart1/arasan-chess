@@ -97,10 +97,9 @@ static void getExecutablePath(std::string &path)
         path = std::string(szPath);
     }
 #elif defined(_MAC)
-    pid_t pid; int ret;
     char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
     pathbuf[0] = '\0';
-    ret = proc_pidpath (prof_selfpid(), pathbuf, sizeof(pathbuf));
+    int ret = proc_pidpath (getpid(), pathbuf, sizeof(pathbuf));
     if ( ret > 0 ) {
         path = std::string(pathbuf);
     }
