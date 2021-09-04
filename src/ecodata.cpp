@@ -1606,8 +1606,7 @@ const struct ECOData eco_codes[] =
 {"E11", 0xc6d6a762caf345ccULL, "Bogo-Indian Defense"},
 {"E11", 0xf690a71f1fbac0b9ULL, "Bogo-Indian Defense"},
 {"E11", 0x9615eeacc828ba1eULL, "Bogo-Indian Defense"},
-Failed to parse line 1638
-error in ECO file, line 1638
+{"E11", 0x106dce2420932be4ULL, "Bogo-Indian Defense"},
 {"E11", 0x88a2cf160e34ba22ULL, "Bogo-Indian Defense"},
 {"E11", 0x38a7b480adc17af1ULL, "Bogo-Indian Defense"},
 {"E11", 0xd5ec8e0c9d13d6daULL, "Bogo-Indian Defense"},
