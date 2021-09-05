@@ -161,7 +161,9 @@ This requires installation of the Windows SDK version 7.1A. You can
 obtain this by running (or re-running, if needed) the Visual Studio
 2019 installer and selecting "MSVC v140 - VS2015 C++ Build tools"
 (not included by default). (Note Windows NT compilation support is
-deprecated and will be removed by Microsoft eventually).
+deprecated and will be removed by Microsoft eventually. Note also
+I no longer have a functioning XP machine and so compatibility of
+current builds of Arasan is not tested).
 
 ## Building the Arasan Windows GUI
 
