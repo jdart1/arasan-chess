@@ -1441,7 +1441,6 @@ static int testNNUE() {
     const std::string fen("r1bq1r1k/p1pnbpp1/1p2p3/6p1/3PB3/5N2/PPPQ1PPP/2KR3R w - - 0 1");
     const std::array<std::string,3> moves = {"g4","f5","Bxa8"};
     Board board, start;
-    NodeStack nodes;
     if (!BoardIO::readFEN(board, fen)) {
         std::cerr << "warning: testNNUE: error in FEN" << std::endl;
         return ++errs;
@@ -1449,6 +1448,7 @@ static int testNNUE() {
     start = board;
     Scoring s;
     // make sure starting position has an eval
+    NodeInfo *nodes = new Search::NodeStack;
     s.evalu8NNUE(board,nodes);
     unsigned i = 0;
     // update the board
@@ -1470,6 +1470,7 @@ static int testNNUE() {
     endScore = s.evalu8NNUE(board,nodes+1);
     errs += endScore != s.evalu8NNUE(board);
     if (errs) std::cerr << "error in testNNUE - test 2" << std::endl;
+    delete [] nodes;
     return errs;
 }
 #endif

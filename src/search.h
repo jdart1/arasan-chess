@@ -225,9 +225,11 @@ public:
 
     const char * debugPrefix() const noexcept;
 
-protected:
-
     constexpr static int SearchStackSize = Constants::MaxPly + 10;
+
+    using NodeStack = NodeInfo[SearchStackSize];
+
+protected:
 
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8 };
 
