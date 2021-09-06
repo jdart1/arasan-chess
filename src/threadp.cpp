@@ -74,16 +74,18 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
       pool->activeMask |= (1ULL << ti->index);
       ti->state = ThreadInfo::Working;
       pool->unlock();
-      NodeStack searchStack; // stack on which search will be done
+      // allocate stack on which search will be done
+      NodeInfo *searchStack = new NodeInfo[Search::SearchStackSize];
       ti->work->init(searchStack, ti);
 #ifdef _THREAD_TRACE
       {
-      std::ostringstream s;
-      s << "search starting, thread " << ti->index;
-      log(s.str());
+          std::ostringstream s;
+          s << "search starting, thread " << ti->index;
+          log(s.str());
       }
 #endif
       ti->work->ply0_search();
+      delete [] searchStack;
       pool->lock();
       // Mark thread completed
       pool->completedMask.set(ti->index);

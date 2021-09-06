@@ -2105,6 +2105,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                         } else {
                             std::stringstream num(*it);
                             num >> opts.depth_limit;
+                            opts.depth_limit = std::clamp<int>(opts.depth_limit,0,Constants::MaxPly);
                             it++;
                         }
                     }

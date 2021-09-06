@@ -445,9 +445,10 @@ Move SearchController::findBestMove(
    pool->unblockAll();
 
    // Start searching in the main thread
-   NodeStack rootStack;
+   NodeInfo *rootStack = new NodeInfo[Search::SearchStackSize];
    rootSearch->init(rootStack,pool->mainThread());
    Move best = rootSearch->ply0_search();
+   delete [] rootStack;
    // Mark thread 0 complete.
    pool->setCompleted(0);
 
@@ -957,7 +958,6 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     std::stringstream sstr;
     const Move *moves = node->pv;
     while (i < node->pv_length && i<Constants::MaxPly-1 && !IsNull(moves[i])) {
-       assert(i<Constants::MaxPly);
        Move move = moves[i];
        stats.best_line[i] = move;
        assert(legalMove(board_copy,move));
@@ -1753,7 +1753,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
    int rep_count;
    if (terminate) return node->alpha;
-   else if (ply >= Constants::MaxPly-1) {
+   else if (maxDepth(node)) {
       if (!board.wasLegal((node-1)->last_move)) {
          return -Illegal;
       }
@@ -2440,15 +2440,14 @@ score_t Search::search()
     if (terminate) {
         return node->alpha;
     }
-    else if (ply >= Constants::MaxPly-1) {
+    else if (maxDepth(node)) {
        if (!board.wasLegal((node-1)->last_move)) {
           return -Illegal;
        }
        node->flags |= EXACT;
        return evalu8(board);
     }
-
-    if (Scoring::isDraw(board,rep_count,ply)) {
+    else if (Scoring::isDraw(board,rep_count,ply)) {
         node->flags |= EXACT;
         if (!board.wasLegal((node-1)->last_move)) {
            return -Illegal;
@@ -2870,12 +2869,18 @@ score_t Search::search()
         }
 #endif
         // Call search routine at lower depth to get a 1st move to try.
-        // ("Internal iterative deepening").
 #ifdef NNUE
         (node+1)->clearNNUEState();
 #endif
-        score_t iid_score = search(node->alpha,node->beta,node->ply,
-                                   d,node->flags | IID);
+        //
+        // Note: we do not push down the node stack because we want this
+        // search to have all the same parameters (including ply) as the
+        // current search, just reduced depth + the IID flag set.
+        // Save state here: exit from block resets node state.
+        NodeState state(node);
+        node->flags |= IID;
+        node->depth = d;
+        score_t iid_score = search();
         // set hash move to IID search result (may still be null)
         hashMove = node->best;
         if (iid_score == -Illegal || ((node->flags) & EXACT)) {
@@ -2883,7 +2888,7 @@ score_t Search::search()
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply);
-                std::cout << "== exact result from IID" << std::endl;
+                cout << "== exact result from IID" << endl;
             }
 #endif
             return iid_score;
@@ -2893,17 +2898,17 @@ score_t Search::search()
         }
 #ifdef _TRACE
         if (mainThread()) {
-            indent(ply); std::cout << "== IID done.";
+            indent(ply); cout << "== IID done.";
         }
 #endif
 
 #ifdef _TRACE
         if (mainThread()) {
             if (!IsNull(hashMove)) {
-                indent(ply); std::cout << "  hashMove = ";
-                MoveImage(hashMove,std::cout);
+                indent(ply); cout << "  hashMove = ";
+                MoveImage(hashMove,cout);
             }
-            std::cout << std::endl;
+            cout << endl;
         }
 #endif
         if (iid_score <= node->alpha && node->eval > node->alpha) { // upper bound
@@ -3384,9 +3389,9 @@ void Search::updatePV(const Board &board, NodeInfo *node, NodeInfo *fromNode, Mo
 // Initialize a Search instance to prepare it for searching in a
 // particular thread. This is called from the thread in which the
 // search will execute.
-void Search::init(NodeStack &ns, ThreadInfo *slave_ti) {
+void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
     this->board = controller->initialBoard;
-    node = &(ns[0]);
+    node = nodeStack;
     assert(node);
     nodeAccumulator = 0;
     ti = slave_ti;

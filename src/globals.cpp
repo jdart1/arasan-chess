@@ -62,7 +62,7 @@ static const char * DEFAULT_BOOK_NAME = "book.bin";
 
 static const char * RC_FILE_NAME = "arasan.rc";
 
-const size_t globals::LINUX_STACK_SIZE = 8*1024*1024;
+const size_t globals::LINUX_STACK_SIZE = 2*1024*1024;
 
 #ifdef NNUE
 static bool absolutePath(const std::string &fileName) {

@@ -90,8 +90,6 @@ struct NodeInfo {
 #endif
 };
 
-typedef NodeInfo NodeStack[Constants::MaxPly+3];
-
 // Helper class to save/restore key node parameters
 class NodeState
 {
@@ -160,7 +158,7 @@ public:
     // one-time startup initialization
     static void init();
 
-    void init(NodeStack &ns, ThreadInfo *child_ti);
+    void init(NodeInfo *nodeStack, ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
                    int ply, int depth, int flags = 0, Move exclude = NullMove) {
@@ -228,6 +226,8 @@ public:
     const char * debugPrefix() const noexcept;
 
 protected:
+
+    constexpr static int SearchStackSize = Constants::MaxPly + 10;
 
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8 };
 
@@ -315,6 +315,10 @@ protected:
 
     score_t evalu8(const Board &board);
 
+    bool maxDepth(const NodeInfo *node) const noexcept {
+        return node->ply >= Constants::MaxPly-1;
+    }
+
     SearchController *controller;
     Board board;
     Statistics stats;
@@ -322,7 +326,7 @@ protected:
     SearchContext context;
     int terminate;
     int nodeAccumulator;
-    NodeInfo *node; // pointer into NodeStack array (external to class)
+    NodeInfo *node; // pointer into node stack (external to class)
     Scoring scoring;
     ThreadInfo *ti; // thread now running this search
     // The following variables are maintained as local copies of
