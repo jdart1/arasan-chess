@@ -1856,8 +1856,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name UCI_Elo type spin default " <<
             1000+globals::options.search.strength*16 << " min 1000 max 2600" << std::endl;
 #ifdef NNUE
-        std::cout << "option name Use NNUE type check default true" << std::endl;
-        std::cout << "option name NNUE file type string" << std::endl;
+        std::cout << "option name Use NNUE type check default " << (globals::options.search.useNNUE ? "true" : "false") << std::endl;
+        std::cout << "option name NNUE file type string default " << globals::options.search.nnueFile << std::endl;
 #endif
 #ifdef NUMA
         std::cout << "option name Set processor affinity type check default " <<

@@ -1,3 +1,6 @@
+Changes in Arasan 23.0.1:
+ 1) Fix default settings of NNUE options under UCI.
+
 Changes in Arasan 23.0:
  1) Add NNUE evaluation
  2) Changes to Makefile: use BUILD_TYPE to select instruction set(s)
@@ -6,8 +9,7 @@ Changes in Arasan 23.0:
  5) Code cleanup: remove ASSERT macro, replace with standard assert.
  6) Fixes/updates to selfplay utility for NN position generation.
  7) Fix unit tests to account for score variance in draw positions.
- 8) Fix for loading .rc file, book and network when program executable is
- found via PATH traversal.
+ 8) Fix for loading .rc file, book and network when program executable is found via PATH traversal.
 
 Changes in Arasan 22.3 (May 2021):
  1) Change re-search logic.
