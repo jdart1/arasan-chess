@@ -31,6 +31,10 @@ as well as POPCNT.
 5. arasanx-64-avx2 - requires x86 AVX2 instruction support in addition to BMI2
 and POPCNT.
 
+Note: currently only the arasanx-64-avx2 compile has support for using SIMD
+instructions in the neural network; other builds are likely to perform poorly
+when NNUE is enabled.
+
 In addition it is possible to build a version with support for NUMA (Non-
 Uniform Memory Access) systems - generally these are large multi-CPU systems.
 NUMA-enabled versions of Arasan require the HWLOC library version 2.0
