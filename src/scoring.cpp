@@ -1398,7 +1398,7 @@ void Scoring::calcPawnData(const Board &board,
 
       // Note: "backward" here means that the pawn in its current location
       // cannot be protected by a pawn of the same color. I.e. it has
-      // no fristd::endly pawn on an adjacent file and earlier rank. This is
+      // no friendly pawn on an adjacent file and earlier rank. This is
       // not though the customary definition of backwardness.
       if (side == White) {
          backward = !TEST_MASK(board.pawn_bits[side], backwardW[sq]);
