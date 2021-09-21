@@ -1366,7 +1366,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
                         const MoveSet &exclude)
 {
     // implements alpha/beta search for the top most ply.  We use
-    // the negasstd::cout algorithm.
+    // the negascout algorithm.
 
     --controller->time_check_counter;
     nodeAccumulator++;
