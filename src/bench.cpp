@@ -40,8 +40,13 @@ Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
 {
     auto tmp_hash = globals::options.search.hash_table_size;
     int tmp_cores = globals::options.search.ncpus;
+    int tmp_book = globals::options.book.book_enabled;
     globals::options.search.hash_table_size = hashSize;
     globals::options.search.ncpus = std::min<int>(cores,Constants::MaxCPUs);
+    globals::options.book.book_enabled = 0;
+
+    // ensure TBs and NNUE are initialized
+    globals::delayedInit();
 
     SearchController *searcher = new SearchController();
     searcher->updateSearchOptions();
@@ -54,6 +59,7 @@ Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
     delete searcher;
     globals::options.search.hash_table_size = tmp_hash;
     globals::options.search.ncpus = tmp_cores;
+    globals::options.book.book_enabled = tmp_book;
     return results;
 }
 
