@@ -16,24 +16,19 @@ Arasan is licensed under the MIT License. See license.txt in the doc directory.
 
 ## Program variants
 
-Several different binaries for Arasan are available:
+Several different binaries for Arasan can be built. The default
+executable (arasanx-32 for 32-bit operating systems, or arasanx-64 for
+64-bit ones) is designed to be runnable on most systems. It does
+assume SSE2 instructions are avaiable (these were introduced in 2000
+with the Pentium IV).
 
-1. arasanx-32 - version for 32-bit operating systems (not supported on Linux/
-Mac). This is the version installed with the Windows GUI.
+More optimized versions that assume more recent hardware include:
 
-2. arasanx-64 - generic version for 64-bit Linux/Mac/Windows.
+1. arasanx-64-modern - requires a x86 processor with POPCNT, SSSE3 and SSE4.1 instructions (Intel Nehalem or later,
+i.e. 2008 era or more recent).
 
-3. arasanx-64-popcnt - requires a x86 processor with the POPCNT instruction.
-
-4. arasanx-64-bmi2 - requires a more modern x86 processor with BMI2 instructions,
-as well as POPCNT.
-
-5. arasanx-64-avx2 - requires x86 AVX2 instruction support in addition to BMI2
-and POPCNT.
-
-Note: currently only the arasanx-64-avx2 compile has support for using SIMD
-instructions in the neural network; other builds are likely to perform poorly
-when NNUE is enabled.
+2. arasanx-64-avx2 - requires a more modern x86 processor with AVX2 and BMI2 instructions,
+as well as those required by the "modern" build.
 
 In addition it is possible to build a version with support for NUMA (Non-
 Uniform Memory Access) systems - generally these are large multi-CPU systems.

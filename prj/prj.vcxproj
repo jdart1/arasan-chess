@@ -1,36 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="ArasanX_Bmi2_Debug|Win32">
-      <Configuration>ArasanX_Bmi2_Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ArasanX_Bmi2_Debug|x64">
-      <Configuration>ArasanX_Bmi2_Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="ArasanX_Debug|Win32">
       <Configuration>ArasanX_Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ArasanX_Debug|x64">
       <Configuration>ArasanX_Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Arasanx_Numa_Bmi2_Debug|Win32">
-      <Configuration>Arasanx_Numa_Bmi2_Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Arasanx_Numa_Bmi2_Debug|x64">
-      <Configuration>Arasanx_Numa_Bmi2_Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ArasanX_Popcnt_Debug|Win32">
-      <Configuration>ArasanX_Popcnt_Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ArasanX_Popcnt_Debug|x64">
-      <Configuration>ArasanX_Popcnt_Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ArasanX_Release|Win32">
@@ -101,18 +77,6 @@
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
@@ -122,18 +86,6 @@
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
@@ -178,18 +130,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="arasan.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="arasan.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="arasan.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="arasan.props" />
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="arasan_tune.props" />
@@ -199,18 +139,6 @@
     <Import Project="arasan_tune.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="arasan.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="arasan.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="arasan.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="arasan.props" />
   </ImportGroup>
@@ -251,28 +179,7 @@
     <OutDir>..\win32\debug\</OutDir>
     <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
-    <TargetName>arasanx</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">
-    <OutDir>..\win32\debug\</OutDir>
-    <IntDir>..\win32\debug\</IntDir>
-    <LinkIncremental />
-    <TargetName>arasanx</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">
-    <OutDir>..\win32\debug\</OutDir>
-    <IntDir>..\win32\debug\</IntDir>
-    <LinkIncremental />
-    <TargetName>arasanx</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">
-    <OutDir>..\win32\debug\</OutDir>
-    <IntDir>..\win32\debug\</IntDir>
-    <LinkIncremental />
-    <TargetName>arasanx</TargetName>
+    <TargetName>arasanx-32</TargetName>
     <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">
@@ -296,29 +203,6 @@
     <IntDir>..\win64\Debug\</IntDir>
     <IncludePath>$(ICIncludeDir);$(IncludePath)</IncludePath>
     <SourcePath>$(VC_SourcePath)</SourcePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">
-    <LinkIncremental />
-    <TargetName>arasanx-64-popcnt</TargetName>
-    <OutDir>..\win64\Debug\</OutDir>
-    <IntDir>..\win64\Debug\</IntDir>
-    <IncludePath>$(ICIncludeDir);$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">
-    <LinkIncremental />
-    <TargetName>arasanx-64-bmi2</TargetName>
-    <OutDir>..\win64\Debug\</OutDir>
-    <IntDir>..\win64\Debug\</IntDir>
-    <IncludePath>$(ICIncludeDir);$(IncludePath)</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;F:\chess\hwloc-win64-build-2.0.2\lib</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">
-    <LinkIncremental />
-    <TargetName>arasanx-64-bmi2</TargetName>
-    <OutDir>..\win64\Debug\</OutDir>
-    <IntDir>..\win64\Debug\</IntDir>
-    <IncludePath>$(ICIncludeDir);$(IncludePath);F:\chess\hwloc-win64-build-2.2.0\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;F:\chess\hwloc-win64-build-2.2.0\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">
     <LinkIncremental />
@@ -369,7 +253,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);WIN32;NTDDI_VERSION=0x05010300;_WIN32_WINNT=0x0501;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);SIMD;SSE2;$(ARASAN_FEATURES);WIN32;NTDDI_VERSION=0x05010300;_WIN32_WINNT=0x0501;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -403,7 +287,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_WIN64;NDEBUG;USE_POPCNT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);SIMD;SSE2;_WIN64;NDEBUG;USE_POPCNT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -436,7 +320,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);SIMD;SSE2;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -445,90 +329,11 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\win32\debug\arasanx-32.exe</OutputFile>
-      <Version>$(ARASAN_LINK_VERSION)</Version>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
-      <SubSystem>Console</SubSystem>
-      <StackReserveSize>4000000</StackReserveSize>
-      <StackCommitSize>4000000</StackCommitSize>
-      <TargetMachine>MachineX86</TargetMachine>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\win32\debug\arasanx-32-popcnt.exe</OutputFile>
-      <Version>$(ARASAN_LINK_VERSION)</Version>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
-      <SubSystem>Console</SubSystem>
-      <StackReserveSize>4000000</StackReserveSize>
-      <StackCommitSize>4000000</StackCommitSize>
-      <TargetMachine>MachineX86</TargetMachine>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_DEBUG;BMI2;USE_POPCNT;$(ARASAN_FEATURES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\win32\debug\arasanx-32.exe</OutputFile>
-      <Version>$(ARASAN_LINK_VERSION)</Version>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
-      <SubSystem>Console</SubSystem>
-      <StackReserveSize>4000000</StackReserveSize>
-      <StackCommitSize>4000000</StackCommitSize>
-      <TargetMachine>MachineX86</TargetMachine>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">
-    <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\win32\debug\arasanx-32-bmi2-numa.exe</OutputFile>
       <Version>$(ARASAN_LINK_VERSION)</Version>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\win32\debug\arasanx.pdb</ProgramDatabaseFile>
@@ -542,7 +347,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);TUNE;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -596,7 +401,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_64BIT;_DEBUG;WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);SIMD;SSE2;_64BIT;_DEBUG;WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -621,101 +426,11 @@
       <StackCommitSize>4000000</StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_64BIT;_DEBUG;USE_POPCNT;WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
-      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <OmitFramePointers>No</OmitFramePointers>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-      <ShowIncludes>false</ShowIncludes>
-    </ClCompile>
-    <Link>
-      <OutputFile>..\win64\debug\arasanx-64-popcnt.exe</OutputFile>
-      <Version>$(ARASAN_LINK_VERSION)</Version>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <StackReserveSize>4000000</StackReserveSize>
-      <StackCommitSize>4000000</StackCommitSize>
-      <AdditionalDependencies>kernel32.lib;user32.lib;winmm.lib</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_64BIT;_DEBUG;USE_POPCNT;BMI2;WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
-      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
-      <OmitFramePointers>No</OmitFramePointers>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <ShowIncludes>false</ShowIncludes>
-    </ClCompile>
-    <Link>
-      <OutputFile>..\win64\debug\arasanx-64-bmi2.exe</OutputFile>
-      <Version>$(ARASAN_LINK_VERSION)</Version>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <StackReserveSize>4000000</StackReserveSize>
-      <StackCommitSize>4000000</StackCommitSize>
-      <AdditionalDependencies>kernel32.lib;user32.lib;winmm.lib;libhwloc.lib</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_64BIT;_DEBUG;USE_POPCNT;BMI2;WIN64;NUMA=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
-      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
-      <OmitFramePointers>No</OmitFramePointers>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-      <ShowIncludes>false</ShowIncludes>
-    </ClCompile>
-    <Link>
-      <OutputFile>..\win64\debug\arasanx-64-bmi2-numa.exe</OutputFile>
-      <Version>$(ARASAN_LINK_VERSION)</Version>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <StackReserveSize>4000000</StackReserveSize>
-      <StackCommitSize>4000000</StackCommitSize>
-      <AdditionalDependencies>kernel32.lib;user32.lib;winmm.lib;libhwloc.lib</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_64BIT;_DEBUG;FULL_DEBUG;TUNE;WIN64;USE_POPCNT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_64BIT;_DEBUG;FULL_DEBUG;WIN64;USE_POPCNT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -747,7 +462,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);TUNE;_64BIT;WIN64;USE_POPCNT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);$(ARASAN_FEATURES);_64BIT;WIN64;USE_POPCNT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -932,27 +647,15 @@
     <ClCompile Include="..\src\epdrec.cpp" />
     <ClCompile Include="..\src\globals.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">Disabled</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">Disabled</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">Disabled</Optimization>
@@ -979,11 +682,8 @@
     </ClCompile>
     <ClCompile Include="..\src\notation.cpp" />
     <ClCompile Include="..\src\options.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">_64BIT;_CONSOLE;NOMINMAX;_DEBUG;USE_POPCNT;BMI2;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">_64BIT;_CONSOLE;NOMINMAX;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">_64BIT;_CONSOLE;_DEBUG;USE_POPCNT;WIN64;_WINDOWS;NOMINMAX;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">_WIN64;NDEBUG;_WINDOWS;NOMINMAX;SMP;USE_INTRINSICS;USE_POPCNT;_CRT_SECURE_NO_DEPRECATE;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">_64BIT;_CONSOLE;NOMINMAX;_DEBUG;USE_POPCNT;BMI2;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=22.3;NUMA=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">WIN32;_CONSOLE;_WINDOWS;NOMINMAX;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">WIN32;_CONSOLE;_WINDOWS;NOMINMAX;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">;_64BIT;_DEBUG;FULL_DEBUG;TUNE;WIN64;_WINDOWS;NOMINMAX;SMP;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;TUNE;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -997,14 +697,9 @@
     <ClCompile Include="..\src\protocol.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\scoring.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;SEARCH_STATS;%(PreprocessorDefinitions);UNIT_TESTS</PreprocessorDefinitions>
     </ClCompile>
@@ -1024,19 +719,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">$(ProjectDir)\..\src</AdditionalIncludeDirectories>
@@ -1056,17 +745,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">
       </AdditionalIncludeDirectories>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</WholeProgramOptimization>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">CompileAsCpp</CompileAs>
@@ -1088,55 +771,38 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\threadc.cpp" />
-    <ClCompile Include="..\src\threadp.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">_64BIT;_CONSOLE;NOMINMAX;_DEBUG;USE_POPCNT;BMI2;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\src\threadp.cpp" />
     <ClCompile Include="..\src\topo.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\tune.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">;_64BIT;_DEBUG;WIN64;_WINDOWS;NOMINMAX;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_POPCNT;USE_INTRINSICS;SYZYGY_TBS=1;ARASAN_VERSION=21.2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\tuner.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">true</ExcludedFromBuild>
@@ -1153,29 +819,31 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\util\pgnselect.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Popcnt_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Arasanx_Numa_Bmi2_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Bmi2_Debug|Win32'">true</ExcludedFromBuild>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">$(ProjectDir)..\src</AdditionalIncludeDirectories>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">true</ExcludedFromBuild>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">false</MinimalRebuild>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">stdcpp17</LanguageStandard>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

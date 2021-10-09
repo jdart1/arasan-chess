@@ -1,11 +1,11 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2021 by Jon Dart. All Rights Reserved.
 #
-VERSION=23.0.1
+VERSION=23.0
 LINK_VERSION=23.0
 #
-#TARGET = win32
-TARGET = win64
+TARGET = win32
+#TARGET = win64
 
 # Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
@@ -32,25 +32,19 @@ NNUE=1
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
 
-CFLAGS = /std:c++17
+# assume SSE2 at least
+CFLAGS = /std:c++17 -DSIMD -DSSE2
 
 # build flags for different instruction sets
-POPCNT_FLAGS = -DUSE_POPCNT
-BMI2_FLAGS = -DBMI2
-AVX2_FLAGS = /arch:AVX2
-!Ifdef NNUE
-AVX2_FLAGS = $(AVX2_FLAGS) -DSIMD -DAVX2
-!Endif
+POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE4.1
+BMI2_FLAGS = -DBMI2 $(POPCNT_FLAGS)
+AVX2_FLAGS = $(BMI2_FLAGS) /arch:AVX2 -DAVX2
 
-!If "$(BUILD_TYPE)" == "popcnt"
+!If "$(BUILD_TYPE)" == "modern"
 CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
 !Else
-!If "$(BUILD_TYPE)" == "bmi2"
-CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(BMI2_FLAGS)
-!Else
 !If "$(BUILD_TYPE)" == "avx2"
-CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(BMI2_FLAGS) $(AVX2_FLAGS)
-!Endif
+CFLAGS=$(CFLAGS) $(AVX2_FLAGS)
 !Endif
 !Endif
 

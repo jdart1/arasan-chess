@@ -66,12 +66,17 @@ The following targets are defined in the makefile:
 - release: builds the release tarball
 - install: installs the chess engine on the system (requires root or sudo)
 
-The Makefile supports compilation for specific processor instruction sets.
+By default the Makefile will build a "generic" executable that will be
+relatively slow but run on practically all systems except very old
+ones. This generic compile currently assumes SSE2 support at least is
+present, for an x86 or x86_64 architecture.
+
+The Makefile supports compilation for more modern processor instruction sets.
+
 Supported instruction sets at present are:
 
-- popcnt (implies also: sse3, sse4, sse4.1)
-- bmi2 (includes popcnt)
-- avx2 (includes bmi2)
+- modern (implies support for: popcnt, ssse3, sse4.1)
+- avx2 (assumes also "modern" instructions, plus bmi2)
 
 The BUILD_TYPE variable can be used to specify the desired instruction
 set for the compilation: this works not just with the chess engine, but with
