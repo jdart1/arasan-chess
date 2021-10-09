@@ -50,7 +50,7 @@ class Attacks
 
      // arrays for "magic" attack generator
 
-#ifdef BMI2
+#if defined(BMI2) && defined(_64BIT)
      struct MagicData {
          uint16_t *data;
          Bitboard mask1;
@@ -130,7 +130,7 @@ class Attacks
      static void init();
 
  private:
-#ifndef BMI2
+#if !defined(BMI2) || !defined(_64BIT)
      static void setRookAttacks(Square sq,
                                 const Bitboard &occupied, const Bitboard &value) {
 #ifdef _64BIT

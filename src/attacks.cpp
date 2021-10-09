@@ -5434,7 +5434,7 @@ const CACHE_ALIGN Bitboard Attacks::b_magic[64]=
 CACHE_ALIGN Attacks::MagicData Attacks::bishopMagicData[64];
 CACHE_ALIGN Attacks::MagicData Attacks::rookMagicData[64];
 
-#ifdef BMI2
+#if defined(BMI2) && defined(_64BIT)
 CACHE_ALIGN uint16_t Attacks::magicmovesdb[107648];
 #else
 CACHE_ALIGN Bitboard Attacks::magicmovesbdb[5248];
@@ -5519,7 +5519,7 @@ static Bitboard generateOccupancy(const Bitboard &squares, const Bitboard &index
 void Attacks::initMagicData() {
     int b_index = 0;
     for (Square sq=0; sq<64; sq++)  {
-#ifdef BMI2
+#if defined(BMI2) && defined(_64BIT)
         bishopMagicData[sq].data = magicmovesdb+b_index;
         Bitboard mask1 = bishopMagicData[sq].mask1 = generateBishopMask(sq);
         const int numSquares = mask1.bitCount();
@@ -5550,13 +5550,13 @@ void Attacks::initMagicData() {
         if (b_index > 5248) std::cout << "error" << std::endl;
 #endif
     }
-#ifdef BMI2
+#if defined(BMI2) && defined(_64BIT)
     int r_index = b_index;
 #else
     int r_index = 0;
 #endif
     for (Square sq=0; sq < 64; sq++) {
-#ifdef BMI2
+#if defined(BMI2) && defined(_64BIT)
         rookMagicData[sq].data = magicmovesdb+r_index;
         Bitboard mask1 = rookMagicData[sq].mask1 = generateRookMask(sq);
         const int numSquares = mask1.bitCount();
