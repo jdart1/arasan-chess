@@ -103,7 +103,7 @@ on the hwloc library version 2.0 or higher. Note: you must have a
 compatible hwloc library in the library search path at runtime.
 
 The Arasan engine binary is named "arasanx-32", "arasanx-64",
-"arasanx-64-popcnt," "arasanx-64-bmi2," or "arasanx-64-avx2," depending on the
+"arasanx-64-modern," or "arasanx-64-avx2," depending on the
 architecture and instruction set selected. "-numa" is added for a NUMA
 build.
 
@@ -140,17 +140,17 @@ The following targets are defined in the makefile:
 - utils: builds utility programs including "makebook"
 - release: builds the release zip file for Windows
 
-As with the Linux Makefile, you select the target instruction set
-by setting the BUILD_TYPE variable. For example: `make BUILD_TYPE=avx2`
-will build a version of the program with AVX2 support. Current build
-types supported are:
+As with the Linux Makefile, you can select the target instruction set
+by setting the BUILD_TYPE variable. For example:
+`make BUILD_TYPE=avx2` will build a version of the program with AVX2
+support. Current build types supported are:
 
-- popcnt (implies also: sse3, sse4, sse4.1)
-- bmi2 (includes popcnt)
-- avx2 (includes bmi2)
+- modern (implies: sse3, sse4, sse4.1, popcnt)
+- avx2 (includes "modern" instruction sets)
 
 The default with no BUILD_TYPE set is a very generic executable that
-does not assume any advanced instruction set.
+does not assume any advanced instruction set, but does assume SSE2,
+available on all x86 processors since about 2000.
 
 Release binaries from a build are placed in the
 "\<target>\Release" directory, where <target> is "win32" or "win64",
