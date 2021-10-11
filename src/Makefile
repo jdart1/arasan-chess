@@ -164,10 +164,6 @@ endif
 
 ifdef CLANG
 
-# get up to 2 version digts
-GCCVER := $(shell $(CC) -dumpversion | perl -lane 'print $$1 if /^([0-9]+?(\.[0-9]+)).*$$/')
-GCC11 := $(shell echo '$(GCCVER) >= 11.0' | bc)
-
 CPP     := $(CC)
 LD      := $(CC)
 AR      = ar
@@ -177,10 +173,7 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-ifneq "$(GCC11)" "1"
-FLAGS := -std=c++17 $(FLAGS)
-endif
-FLAGS := -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
+FLAGS := -std=c++17 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifndef DEBUG
 # use LTO only if no PGO
 ifdef PGO
