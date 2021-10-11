@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iomanip>
 #include <sstream>
 
 #define PGN_MARGIN 70
@@ -160,12 +161,13 @@ int ChessIO::store_pgn(std::ostream &ofile,MoveArray &moves,
        add_header(newHeaders,"Site",val);
     if (!get_header(headers, "Date", val))
     {
-       char dateStr[15];
-       time_t tm = time(NULL);
-       struct tm *t = localtime(&tm);
-       sprintf(dateStr,"%4d.%02d.%02d",t->tm_year+1900,t->tm_mon+1,
-                        t->tm_mday);
-       add_header(newHeaders,"Date",dateStr);
+        time_t tm = time(NULL);
+        struct tm *t = localtime(&tm);
+        std::stringstream dateStr;
+        dateStr << std::setw(4) << t->tm_year+1900 << std::setw(1) << '.' <<
+            std::setw(2) << std::setfill('0') << t->tm_mon+1 << std::setw(1) << '.' <<
+            std::setw(2) << t->tm_mday;
+        add_header(newHeaders,"Date",dateStr.str());
     }
     else
        add_header(newHeaders,"Date",val);
