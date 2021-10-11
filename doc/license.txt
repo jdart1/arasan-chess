@@ -39,8 +39,8 @@ The Arasan user interface, source of which is in the "gui" directory
 of the Windows source archive, relies on copyrighted chess fonts and
 is not included under this license.
 
-The Arasan Windows GUI (binary and source) and Arasan chess engine
-binaries from Jon Dart may be freely distributed, provided that:
+The Arasan Windows GUI (binary and source) may be freely distributed,
+provided that:
 
 1. They are distributed in unmodified form.
 2. No more than a nominal fee is charged for copying or media.
