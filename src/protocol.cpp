@@ -73,7 +73,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       ponder_move(NullMove),
       best_move(NullMove),
       time_target(0),
-      last_time_target(INFINITE_TIME),
+      last_time_target(Constants::INFINITE_TIME),
       computer_rating(0),
       opponent_rating(0),
       doTrace(traceOn),
@@ -84,7 +84,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       ecoCoder(nullptr),
       xboard42(false),
       srctype(TimeLimit),
-      time_limit(INFINITE_TIME),
+      time_limit(Constants::INFINITE_TIME),
       ply_limit(Constants::MaxPly),
       uci(false),
       movestogo(0),
@@ -1034,7 +1034,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
             //
             globals::gameMoves->add_move(board,previous_state,predicted_reply,"",true);
         }
-        time_target = INFINITE_TIME;
+        time_target = Constants::INFINITE_TIME;
         // in reduced strength mode, limit the ponder search time
         // (do not ponder indefinitely)
         if (globals::options.search.strength < 100) {
@@ -1057,7 +1057,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         else {
-            time_target = last_time_target = INFINITE_TIME;
+            time_target = last_time_target = Constants::INFINITE_TIME;
             ponder_move = searcher->findBestMove(
                 uci ? *main_board : *ponder_board,
                 FixedTime,
@@ -1135,7 +1135,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
         else {
             timeMgmt::Times times;
             if (infinite) {
-                times.time_target = INFINITE_TIME;
+                times.time_target = Constants::INFINITE_TIME;
                 times.extra_time = 0;
             } else {
                 if (doTrace) std::cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
@@ -1430,7 +1430,7 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
     }
     Move move = searcher.findBestMove(board,
                                       FixedTime,
-                                      INFINITE_TIME,
+                                      Constants::INFINITE_TIME,
                                       0,
                                       Constants::MaxPly, false, uci,
                                       stats,
@@ -2294,7 +2294,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
             else if (option == "infinite") {
                 srctype = FixedTime;
-                time_limit = INFINITE_TIME;
+                time_limit = Constants::INFINITE_TIME;
                 infinite = true;
             }
             else if (option == "winc") {

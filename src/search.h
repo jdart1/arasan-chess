@@ -377,7 +377,7 @@ public:
         TalkLevel t);
 
     uint64_t getTimeLimit() const {
-        if (typeOfSearch == TimeLimit && time_limit != INFINITE_TIME) {
+        if (typeOfSearch == TimeLimit && time_limit != Constants::INFINITE_TIME) {
             // time boost/decrease based on search history:
             int64_t extension = bonus_time;
             if (fail_low_root_extend) {

@@ -26,7 +26,7 @@ public:
         
         TestOptions() :
             depth_limit(-1),
-            time_limit(INFINITE_TIME),
+            time_limit(Constants::INFINITE_TIME),
             early_exit_plies(Constants::MaxPly),
             moves_to_search(1),
             verbose(false) {

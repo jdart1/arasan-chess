@@ -16,7 +16,7 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
     SearchType type;
     if (depth_limit >= 0) {
         type = FixedDepth;
-        time_limit = INFINITE_TIME;
+        time_limit = Constants::INFINITE_TIME;
     }
     else {
         type = FixedTime;

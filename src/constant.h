@@ -1,12 +1,10 @@
-// Copyright 1994-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CONSTANT_H
 #define _CONSTANT_H
 
-class Constants
+struct Constants
 {
-
-public:	
 
 enum {MaxPly = 62};
 enum {MATE = 32000 };
@@ -19,9 +17,9 @@ enum {MaxCaptures = 40};
 enum {MaxChecks = 40};
 enum {MaxCPUs = 256};
 
-};
+static constexpr int INFINITE_TIME = 100000000;
 
-constexpr int INFINITE_TIME = 100000000;
+};
 
 #define STRINGIFY(x) #x
 #define MAKE_STR(x) STRINGIFY(x)

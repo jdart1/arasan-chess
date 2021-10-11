@@ -313,7 +313,7 @@ Move SearchController::findBestMove(
     startTime = last_time = getCurrentTime();
 
     if (board.isLegalDraw() && !uci &&
-       !(typeOfSearch == FixedTime && time_target == INFINITE_TIME)) {
+       !(typeOfSearch == FixedTime && time_target == Constants::INFINITE_TIME)) {
       // If it's a legal draw situation before we even move, then
       // just return a draw score and don't search. (But don't do
       // this in analysis mode: return a move if possible. Also do
@@ -349,7 +349,7 @@ Move SearchController::findBestMove(
 
    // Implement strength reduction if enabled. But do not reduce
    // strength in analysis mode.
-   if (globals::options.search.strength < 100 && (background || time_target != INFINITE_TIME)) {
+   if (globals::options.search.strength < 100 && (background || time_target != Constants::INFINITE_TIME)) {
       const int mgCount = mg->moveCount();
       const double factor = 1.0/ply_limit + (100-globals::options.search.strength)/250.0;
       if (background) {
@@ -724,7 +724,7 @@ void SearchController::historyBasedTimeAdjust(const Statistics &stats) {
 void SearchController::applySearchHistoryFactors() {
     if (!background &&
         typeOfSearch == TimeLimit &&
-        time_target != INFINITE_TIME &&
+        time_target != Constants::INFINITE_TIME &&
         xtra_time &&
         elapsed_time > (unsigned)time_target/3) {
         if (searchHistoryBoostFactor) {
@@ -1261,7 +1261,7 @@ Move Search::ply0_search()
          // (search deeper to get an accurate score). Do not exit
          // in analysis mode.
          if (!terminate && controller->typeOfSearch != FixedDepth &&
-             !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == INFINITE_TIME)) &&
+             !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == Constants::INFINITE_TIME)) &&
              mg.moveCount() == 1 &&
              iterationDepth >= 2 &&
              !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
@@ -1487,7 +1487,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               try_score=-quiesce(-hibound,-lobound,1,0);
         }
         if (try_score > node->best_score && hibound < node->beta && !terminate) {
-           if (mainThread() && controller->time_target != INFINITE_TIME) {
+           if (mainThread() && controller->time_target != Constants::INFINITE_TIME) {
               controller->fail_high_root = true;
               if (debugOut()) {
                  std::cout << debugPrefix() << "researching at root, extending time" << std::endl;
