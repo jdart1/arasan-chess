@@ -57,8 +57,7 @@ class SelfPlayHashTable {
     }
 
   private:
-    static constexpr size_t HASH_TABLE_FOR_UNIQUENESS_SIZE =
-        64 * 1024 * 1024; // entries
+    static constexpr size_t HASH_TABLE_FOR_UNIQUENESS_SIZE = 1ULL << 24; // entries
 
     using HashArray = std::array<hash_t, HASH_TABLE_FOR_UNIQUENESS_SIZE>;
 
@@ -356,7 +355,7 @@ static Move semiRandomMove(const Board &board, Statistics &stats,
     Monitor monitor(nodeTarget);
     auto oldMonitor = td.searcher->registerMonitorFunction(
         std::bind(&Monitor::nodeMonitor, &monitor, _1, _2));
-    Move m = td.searcher->findBestMove(board, FixedDepth, INFINITE_TIME,
+    Move m = td.searcher->findBestMove(board, FixedDepth, Constants::INFINITE_TIME,
                                        0, // extra time
                                        sp_options.depthLimit + 2,
                                        false, // background
@@ -438,7 +437,7 @@ static void selfplay(ThreadData &td) {
                     else
                         zero_score_count = 0;
                 } else {
-                    m = searcher->findBestMove(board, FixedDepth, INFINITE_TIME,
+                    m = searcher->findBestMove(board, FixedDepth, Constants::INFINITE_TIME,
                                                0, // extra time
                                                sp_options.depthLimit,
                                                false, // background
@@ -563,7 +562,7 @@ static void threadp(ThreadData *td) {
     // allocate controller in the thread
     try {
         td->searcher = new SearchController();
-    } catch (std::bad_alloc) {
+    } catch (std::bad_alloc &ex) {
         std::cerr << "out of memory, thread " << td->index << std::endl;
         return;
     }
@@ -631,7 +630,7 @@ int CDECL main(int argc, char **argv) {
     globals::options.book.random = 100;
     globals::options.learning.position_learning = 0;
     globals::options.search.can_resign = 1;
-    globals::options.search.resign_threshold = -3000;
+    globals::options.search.resign_threshold = -Params::PAWN_VALUE*30;
 
     int arg = 1;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
