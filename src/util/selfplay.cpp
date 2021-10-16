@@ -405,6 +405,7 @@ static void selfplay(ThreadData &td) {
                     RootMoveGenerator mg(board);
                     if (mg.moveCount() > 1 && (sp_options.useSee || sp_options.limitEarlyKingMoves)) {
                         for (int i = 0; i < 10; i++) {
+                            mg.reset();
                             m = randomMove(board, mg, stats, td);
                             if (sp_options.useSee && !seeSign(board,m,0)) continue;
                             if (sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
