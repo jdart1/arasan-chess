@@ -27,8 +27,6 @@ using namespace std::placeholders;
 
 // Utility to generate training positions from Arasan self-play games
 
-static constexpr int THREAD_STACK_SIZE = 8 * 1024 * 1024;
-
 #ifndef _WIN32
 static pthread_attr_t stackSizeAttrib;
 #endif
@@ -552,8 +550,8 @@ static void threadp(ThreadData *td) {
         perror("pthread_attr_getstacksize");
         return;
     }
-    if (stackSize < THREAD_STACK_SIZE) {
-        if (pthread_attr_setstacksize(&stackSizeAttrib, THREAD_STACK_SIZE)) {
+    if (stackSize < globals::LINUX_STACK_SIZE) {
+        if (pthread_attr_setstacksize(&stackSizeAttrib, globals::LINUX_STACK_SIZE)) {
             perror("error setting thread stack size");
             return;
         }
