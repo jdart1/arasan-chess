@@ -254,7 +254,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
                                     var.eval, m.moveEval, var.result,
                                     move_index, nullptr, is_first_file);
            }
-       } catch(std::bad_alloc) {
+       } catch(std::bad_alloc &ex) {
           cerr << "out of memory!" << endl;
           exit(-1);
        }
