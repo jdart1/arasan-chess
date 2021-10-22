@@ -1768,7 +1768,7 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
             else {
                 BoardState previous_state = board.state;
                 std::string image;
-                // Don't use the current move std::string as the input
+                // Don't use the current move string as the input
                 // parser is forgiving and will accept incorrect
                 // SAN. Convert it here to the correct form:
                 Notation::image(board,m,Notation::OutputFormat::SAN,image);
