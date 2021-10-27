@@ -27,7 +27,7 @@ Options::SearchOptions::SearchOptions()
 #endif
       strength(100), multipv(1), ncpus(1),
 #ifdef NNUE
-      useNNUE(1), nnueFile(""),
+      useNNUE(1), pureNNUE(0), nnueFile(""),
 #endif
       easy_plies(3), easy_threshold(200), // centipawns
 #ifdef NUMA

@@ -42,8 +42,9 @@ class Options
    int ncpus;
 #ifdef NNUE
    int useNNUE;
+   int pureNNUE;
    std::string nnueFile;
-#endif    
+#endif
    int easy_plies; // do wide search for "easy move" detection
    int easy_threshold; // wide search width in centipawns
 #ifdef NUMA
