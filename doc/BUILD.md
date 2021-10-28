@@ -75,8 +75,9 @@ The Makefile supports compilation for more modern processor instruction sets.
 
 Supported instruction sets at present are:
 
-- modern (implies support for: popcnt, ssse3, sse4.1)
-- avx2 (assumes also "modern" instructions, plus bmi2)
+- modern (implies support for: POPCNT, SSSE3, SSE4.1)
+- avx2 (assumes availabiity of AVX2 instruction set, plus "modern" instructions)
+- avx2-bmi2 (assumes avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
 
 The BUILD_TYPE variable can be used to specify the desired instruction
 set for the compilation: this works not just with the chess engine, but with
@@ -86,9 +87,9 @@ make BUILD_TYPE=avx2 utils
 
 will build the utilities with AVX2 support.
 
-Note: the instruction sets supported via BUILD_TYPE will
-only work on x86-64 CPUs that support these instructions, and require
-a 64-bit compile.
+Note: the instruction sets supported via BUILD_TYPE will only work on
+x86 or x86_64 CPUs that support these instructions, and the non-default settings
+work best with a 64-bit build.
 
 If necessary, you can specify the compiler by passing the CC variable
 on the command line, and CXXFLAGS can also be used to pass additional

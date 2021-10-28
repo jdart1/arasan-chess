@@ -80,7 +80,7 @@ ifeq ("$(ARCH)","x86_64")
 FLAGS := $(FLAGS) -DSIMD -DSSE2
 POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
-AVX2_FLAGS := $(BMI2_FLAGS) -DAVX2 -mavx2 -mfma
+AVX2_FLAGS := -DAVX2 -mavx2 -mfma
 endif
 
 ifeq ("$(BUILD_TYPE)","modern")
@@ -88,6 +88,10 @@ FLAGS := $(FLAGS) $(POPCNT_FLAGS)
 else
 ifeq ("$(BUILD_TYPE)","avx2")
 FLAGS := $(FLAGS) $(AVX2_FLAGS)
+else
+ifeq ("$(BUILD_TYPE)","avx2-bmi2")
+FLAGS := $(FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+endif
 endif
 endif
 

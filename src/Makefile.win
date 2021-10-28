@@ -4,8 +4,8 @@
 VERSION=23.0
 LINK_VERSION=23.0
 #
-TARGET = win32
-#TARGET = win64
+#TARGET = win32
+TARGET = win64
 
 # Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
@@ -38,13 +38,17 @@ CFLAGS = /std:c++17 -DSIMD -DSSE2
 # build flags for different instruction sets
 POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE4.1
 BMI2_FLAGS = -DBMI2 $(POPCNT_FLAGS)
-AVX2_FLAGS = $(BMI2_FLAGS) /arch:AVX2 -DAVX2
+AVX2_FLAGS = /arch:AVX2 -DAVX2
 
 !If "$(BUILD_TYPE)" == "modern"
 CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
 !Else
 !If "$(BUILD_TYPE)" == "avx2"
 CFLAGS=$(CFLAGS) $(AVX2_FLAGS)
+!Else
+!If "$(BUILD_TYPE)" == "avx2-bmi2"
+CFLAGS=$(CFLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+!Endif
 !Endif
 !Endif
 
