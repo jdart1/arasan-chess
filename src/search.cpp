@@ -2621,8 +2621,7 @@ score_t Search::search()
     // pre-search pruning conditions
     const bool pruneOk = !in_check &&
         !node->PV() &&
-        !(node->flags & (VERIFY|IID)) &&
-        IsNull(node->excluded);
+        !(node->flags & (VERIFY|IID));
 
     const int improving = ply >= 3 && !in_check &&
         (node-2)->staticEval != Constants::INVALID_SCORE &&
@@ -2684,6 +2683,7 @@ score_t Search::search()
         (depth >= 2*DEPTH_INCREMENT) &&
         !IsNull((node-1)->last_move) &&
         board.getMaterial(board.sideToMove()).hasPieces() &&
+        IsNull(node->excluded) &&
         node->eval >= node->beta &&
         node->eval >= node->staticEval &&
         ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
@@ -2779,7 +2779,6 @@ score_t Search::search()
     // regular depth search would cause beta cutoff, too.
     if (!node->PV() &&
         depth >= PROBCUT_DEPTH &&
-        IsNull(node->excluded) &&
         ((node->flags & PROBCUT)==0 || depth >= 9*DEPTH_INCREMENT) &&
         std::abs(node->beta) < Constants::MATE_RANGE) {
         const score_t probcut_beta = std::min<score_t>(Constants::MATE,node->beta + PROBCUT_MARGIN);
