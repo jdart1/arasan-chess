@@ -62,7 +62,6 @@ static void processCmdChars(Protocol *p,char *buf,int len) {
 static DWORD WINAPI inputPoll(void *x) {
    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
    Protocol *p = static_cast<Protocol *>(x);
-   if (p->traceOn()) std::cout << "# starting poll thread" << std::endl;
    char buf[1024];
    while (!globals::polling_terminated) {
       BOOL bSuccess;
@@ -93,7 +92,6 @@ static DWORD WINAPI inputPoll(void *x) {
 
 static void * CDECL inputPoll(void *x) {
     Protocol *p = static_cast<Protocol*>(x);
-    if (p->traceOn()) std::cout << "# starting poll thread" << std::endl;
     static const int INPUT_BUF_SIZE = 1024;
     char buf[INPUT_BUF_SIZE];
     while (!globals::polling_terminated) {
