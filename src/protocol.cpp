@@ -2751,21 +2751,15 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if  (cmd_word == "egtpath") {
         size_t space = cmd_args.find_first_of(' ');
         std::string type = cmd_args.substr(0,space);
-        transform(type.begin(), type.end(), type.begin(), ::tolower);
+        std::transform(type.begin(), type.end(), type.begin(), ::tolower);
         if (type.length() > 0) {
-           transform(type.begin(), type.begin()+1, type.begin(), ::toupper);
+            std::transform(type.begin(), type.begin()+1, type.begin(), ::toupper);
         }
         std::string path;
         if (space != std::string::npos) path = cmd_args.substr(space+1);
 #ifdef _WIN32
         // path may be in Unix format. Convert.
-        std::string::iterator it = path.begin();
-        while (it != path.end()) {
-             if (*it == '/') {
-                 *it = '\\';
-             }
-             it++;
-        }
+        std::replace(path.begin(), path.end(), '/', '\\');
 #endif
 #ifdef SYZYGY_TBS
         // Unload existing tb set if in use and if path has changed
