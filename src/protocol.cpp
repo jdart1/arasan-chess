@@ -507,30 +507,27 @@ void Protocol::save_game() {
          ecoCoder->classify(*globals::gameMoves,eco,opening_name);
          headers.push_back(ChessIO::Header("ECO",eco));
       }
-      char crating[15];
-      char orating[15];
-      sprintf(crating,"%d",computer_rating);
-      sprintf(orating,"%d",opponent_rating);
+      std::stringstream crating, orating;
+      crating << computer_rating;
+      orating << opponent_rating;
 
       if (hostname.length() > 0) {
           headers.push_back(ChessIO::Header("Site",hostname));
       }
 
       if (computer_plays_white) {
-         headers.push_back(ChessIO::Header("Black",
-            opponent_name.length() > 0 ? opponent_name : "?"));
+         headers.push_back(ChessIO::Header("Black",opponent_name.length() > 0 ? opponent_name : "?"));
          if (computer_rating)
-            headers.push_back(ChessIO::Header("WhiteElo",crating));
+             headers.push_back(ChessIO::Header("WhiteElo",crating.str()));
          if (opponent_rating)
-            headers.push_back(ChessIO::Header("BlackElo",orating));
+             headers.push_back(ChessIO::Header("BlackElo",orating.str()));
       }
       else {
-         headers.push_back(ChessIO::Header("White",
-            opponent_name.length() > 0 ? opponent_name : "?"));
+         headers.push_back(ChessIO::Header("White",opponent_name.length() > 0 ? opponent_name : "?"));
          if (opponent_rating)
-            headers.push_back(ChessIO::Header("WhiteElo",orating));
+             headers.push_back(ChessIO::Header("WhiteElo",orating.str()));
          if (computer_rating)
-            headers.push_back(ChessIO::Header("BlackElo",crating));
+             headers.push_back(ChessIO::Header("BlackElo",crating.str()));
       }
       if (start_fen.size()) {
          // we had a non-standard starting position for the game
