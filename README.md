@@ -33,7 +33,7 @@ Excavator through Zen2 processors.
 
 3. arasanx-64-avx2-bmi2 - requires a more modern x86 processor with AVX2 and BMI2 instructions,
 as well as those required by the "modern" build. Recommended for Intel Haswell or later processors
-and AMD processors more recent than Excavator.
+and AMD processors on the Zen3 architecture (Nov. 2020) or later.
 
 In addition it is possible to build a version with support for NUMA (Non-
 Uniform Memory Access) systems - generally these are large multi-CPU systems.
