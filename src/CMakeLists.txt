@@ -18,11 +18,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # options
-option(SYZYGY_TBS "Syzygy tablebsse support" ON)
+option(SYZYGY_TBS "Syzygy tablebase support" ON)
 option(64BIT "64-bit target" ON)
+option(MODERN "Use modern instructions" OFF)
+# AVX2 and BMI2 can be specified separately or together and imply also "modern"
 option(AVX2 "Use AVX2 instructions" OFF)
 option(BMI2 "Use BMI2 instructions" OFF)
-option(POPCNT "Use POPCNT instruction" OFF)
 option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
 option(UNIT_TESTS "unit tests run on startup" OFF)
 option(NNUE "Neural network support" ON)
@@ -61,9 +62,11 @@ if(SYZYGY_TBS)
 endif(SYZYGY_TBS)
 
 if(NNUE)
-if (AVX2)
+# SIMD only works on Intel/AMD architectures at present
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "86")
     add_compile_definitions(SIMD)
-endif(AVX2)
+    add_compile_definitions(SSE2)
+endif()
     add_compile_definitions(NNUE)
     set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
     include_directories(${NNUE_DIR})
@@ -72,7 +75,7 @@ endif(NNUE)
 
 if(64BIT)
     set(EXE_NAME ${EXE_NAME}-64)
-    add_compile_definitions(USE_64BIT)
+    add_compile_definitions(_64BIT)
 else()
     set(EXE_NAME ${EXE_NAME}-32)
 endif(64BIT)
@@ -81,32 +84,41 @@ if(UNIX AND NOT APPLE)
     add_link_options("-fuse-ld=gold")
 endif()
 
-if(POPCNT OR BMI2 OR AVX2)
+if(MODERN OR BMI2 OR AVX2)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(-mpopcnt -DUSE_POPCNT)
+        add_compile_options( -msse4.1 -msse4.2 -mpopcnt)
     endif()
+    add_compile_definitions(SSSE3)
+    add_compile_definitions(SSE41)
     add_compile_definitions(USE_POPCNT)
 endif()
 
-if(BMI2 OR AVX2)
+if(AVX2)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(/arch:AVX2)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-mavx2 -mfma)
+    endif()
+    add_compile_definitions(AVX2)
+endif(AVX2)
+
+if(BMI2)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-mbmi2 -msse4.2)
     endif()
     add_compile_definitions(BMI2)
 endif()
 
+if(MODERN)
+    set(EXE_NAME ${EXE_NAME}-modern)
+else()
 if(AVX2)
-    set(EXE_NAME ${EXE_NAME}-avx2)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        add_compile_options(/arch:AVX2)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(-mavx2)
-    endif()
-elseif(BMI2)
-    set(EXE_NAME ${EXE_NAME}-bmi2)
-elseif(POPCNT)
-    set(EXE_NAME ${EXE_NAME}-popcnt)
+     set(EXE_NAME ${EXE_NAME}-avx2)
 endif(AVX2)
+if(BMI2)
+    set(EXE_NAME ${EXE_NAME}-bmi2)
+endif(BMI2)
+endif(MODERN)
 
 if(NUMA)
     set(EXE_NAME ${EXE_NAME}-numa)
@@ -116,7 +128,7 @@ add_executable (${EXE_NAME} arasanx.cpp attacks.cpp attacks.h bench.h
 bench.cpp bhash.cpp bhash.h bitboard.cpp bitboard.h bitprobe.cpp
 bitprobe.h board.cpp board.h boardio.cpp boardio.h bookdefs.h
 bookread.cpp bookread.h bookwrit.cpp bookwrit.h calctime.cpp
-calctime.h chess.cpp chess.h chessio.cpp chessio.h constant.h debug.h
+calctime.h chess.cpp chess.h chessio.cpp chessio.h constant.h
 eco.cpp ecodata.cpp ecodata.h eco.h ecoinfo.cpp ecoinfo.h epdrec.cpp
 epdrec.h globals.cpp globals.h hash.cpp hash.h learn.cpp learn.h
 legal.cpp legal.h log.cpp log.h material.cpp material.h movearr.cpp
@@ -131,7 +143,7 @@ add_executable (tuner EXCLUDE_FROM_ALL attacks.cpp attacks.h bhash.cpp bhash.h
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
@@ -145,7 +157,7 @@ add_executable (pgnselect EXCLUDE_FROM_ALL util/pgnselect.cpp attacks.cpp attack
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
@@ -159,7 +171,7 @@ add_executable (playchess EXCLUDE_FROM_ALL util/playchess.cpp attacks.cpp attack
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
@@ -173,7 +185,7 @@ add_executable (makebook EXCLUDE_FROM_ALL util/makebook.cpp attacks.h attacks.cp
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
@@ -187,7 +199,7 @@ add_executable (ecocoder EXCLUDE_FROM_ALL util/ecocoder.cpp attacks.cpp attacks.
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
@@ -201,7 +213,7 @@ add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp attacks.cpp attacks.h 
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
@@ -215,7 +227,7 @@ add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp attacks.cpp attacks.
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h debug.h eco.cpp ecodata.cpp ecodata.h eco.h
+chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
