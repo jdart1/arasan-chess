@@ -18,20 +18,22 @@ Arasan is licensed under the MIT License. See license.txt in the doc directory.
 
 Several different binaries for Arasan can be built. The default
 executable (arasanx-32 for 32-bit operating systems, or arasanx-64 for
-64-bit ones) is designed to be runnable on most systems. x86 or x86_64 builds
+64-bit ones) is designed to be runnable on most systems. Default x86 or x86_64 builds
 assume SSE2 instructions are avaiable (these were introduced in 2000
 with the Pentium IV).
 
-More optimized versions that assume more recent hardware include:
+Other program variants include:
 
-1. arasanx-64-modern - requires a x86 processor with POPCNT, SSSE3 and SSE4.1 instructions (Intel Nehalem or later,
+1. arasanx-64-old - assumes no SIMD instructions, not even SSE2. Will run on very old x86 hardware.
+
+2. arasanx-64-modern - requires a x86 processor with POPCNT, SSSE3 and SSE4.1 instructions (Intel Nehalem or later,
 i.e. 2008 era or more recent).
 
-2. arasanx-64-avx2 - requires a more modern x86 processor with AVX2 instructions,
+3. arasanx-64-avx2 - requires a more modern x86 processor with AVX2 instructions,
 as well as those required by the "modern" build. Recommended for AMD
 Excavator through Zen2 processors.
 
-3. arasanx-64-avx2-bmi2 - requires a more modern x86 processor with AVX2 and BMI2 instructions,
+4. arasanx-64-avx2-bmi2 - requires a more modern x86 processor with AVX2 and BMI2 instructions,
 as well as those required by the "modern" build. Recommended for Intel Haswell or later processors
 and AMD processors on the Zen3 architecture (Nov. 2020) or later.
 

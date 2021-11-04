@@ -32,22 +32,25 @@ NNUE=1
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
 
-# assume SSE2 at least
-CFLAGS = /std:c++17 -DSIMD -DSSE2
+CFLAGS = /std:c++17
 
 # build flags for different instruction sets
 POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE4.1
 BMI2_FLAGS = -DBMI2 $(POPCNT_FLAGS)
 AVX2_FLAGS = /arch:AVX2 -DAVX2
 
+!IfDef BUILD_TYPE
+!If "$(BUILD_TYPE)" == "old"
+!Else
+CFLAGS = $(CFLAGS) -DSIMD -DSSE2
 !If "$(BUILD_TYPE)" == "modern"
 CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
-!Else
-!If "$(BUILD_TYPE)" == "avx2"
+!Else If "$(BUILD_TYPE)" == "avx2"
 CFLAGS=$(CFLAGS) $(AVX2_FLAGS)
-!Else
-!If "$(BUILD_TYPE)" == "avx2-bmi2"
+!Else If "$(BUILD_TYPE)" == "avx2-bmi2"
 CFLAGS=$(CFLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+!Else
+# TBD: would like to fail here, not clear how in NMAKE
 !Endif
 !Endif
 !Endif

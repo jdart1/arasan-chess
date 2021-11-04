@@ -37,7 +37,7 @@ subdirectory rely on imported submodules. So if building Arasan from a
 git respository, issue the following command within your git directory
 to pull these dependencies into your your source tree:
 
-git submodule update --init --recursive
+`git submodule update --init --recursive`
 
 Arasan now requires a modern compiler with at least C++-17 support.
 
@@ -71,10 +71,12 @@ relatively slow but run on practically all systems except very old
 ones. This generic compile currently assumes SSE2 support at least is
 present, for an x86 or x86_64 architecture.
 
-The Makefile supports compilation for more modern processor instruction sets.
+The Makefile supports compilation for other instruction sets by specifying
+the BUILD_TYPE variable.
 
 Supported instruction sets at present are:
 
+- old (assumes no SIMD instructions, not even SSE2)
 - modern (implies support for: POPCNT, SSSE3, SSE4.1)
 - avx2 (assumes availabiity of AVX2 instruction set, plus "modern" instructions)
 - avx2-bmi2 (assumes avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)

@@ -77,20 +77,23 @@ SMPLIB   = -lpthread
 POPCNT_FLAGS := -DUSE_POPCNT
 ifeq ("$(ARCH)","x86_64")
 # assume SSE2 at least is present
-FLAGS := $(FLAGS) -DSIMD -DSSE2
 POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
 endif
 
+ifdef BUILD_TYPE
+ifeq ("$(BUILD_TYPE)","old")
+else
+FLAGS := $(FLAGS) -DSIMD -DSSE2
 ifeq ("$(BUILD_TYPE)","modern")
 FLAGS := $(FLAGS) $(POPCNT_FLAGS)
-else
-ifeq ("$(BUILD_TYPE)","avx2")
+else ifeq ("$(BUILD_TYPE)","avx2")
 FLAGS := $(FLAGS) $(AVX2_FLAGS)
-else
-ifeq ("$(BUILD_TYPE)","avx2-bmi2")
+else ifeq ("$(BUILD_TYPE)","avx2-bmi2")
 FLAGS := $(FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+else
+$(error unrecognized BUILD_TYPE: should be one of: old modern avx2 avx2-bmi2)
 endif
 endif
 endif
@@ -204,6 +207,10 @@ PROF_GEN = -fprofile-generate -fprofile-dir=$(PROF_DATA)
 PROF_USE = -fprofile-use -fprofile-dir=$(PROF_DATA)
 
 GCCMINVERSION := 7
+# check for bc
+ifeq (, $(shell which bc))
+$(error "No 'bc' found in PATH, please install it")
+endif
 # Get 1st two digits of full GCC version
 GCCVER := $(shell expr `$(CC) -dumpfullversion | awk -F. '{printf "%s.%s\n", $$1, $$2}'`)
 GCC11 := $(shell echo '$(GCCVER) >= 11.0' | bc)
