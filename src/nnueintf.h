@@ -61,7 +61,7 @@ class ChessInterface {
 
     void setDirtyNum(unsigned num);
 
-    void getDirtyState(int index, nnue::Square &from,
+    void getDirtyState(size_t index, nnue::Square &from,
                        nnue::Square &to, nnue::Piece &p) const;
   
     // Iterator returning std::pair<Square, Piece>

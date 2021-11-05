@@ -12,7 +12,7 @@ nnue::Network::AccumulatorType &ChessInterface::getAccumulator() const
 
 unsigned ChessInterface::getDirtyNum() const { return node()->dirty_num; }
 
-void ChessInterface::getDirtyState(int index, nnue::Square &from,
+void ChessInterface::getDirtyState(size_t index, nnue::Square &from,
                                    nnue::Square &to, nnue::Piece &p) const {
     const DirtyState &state = node()->dirty[index];
     from = state.from;
