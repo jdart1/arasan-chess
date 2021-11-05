@@ -35,6 +35,7 @@ HWLOC32=E:\chess\hwloc-win32-build-2.0.4
 CFLAGS = /std:c++17
 
 # build flags for different instruction sets
+BASIC_SIMD_FLAGS = -DSIMD -DSSE2
 POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE4.1
 BMI2_FLAGS = -DBMI2 $(POPCNT_FLAGS)
 AVX2_FLAGS = /arch:AVX2 -DAVX2
@@ -42,7 +43,7 @@ AVX2_FLAGS = /arch:AVX2 -DAVX2
 !IfDef BUILD_TYPE
 !If "$(BUILD_TYPE)" == "old"
 !Else
-CFLAGS = $(CFLAGS) -DSIMD -DSSE2
+CFLAGS = $(CFLAGS) $(BASIC_SIMD_FLAGS)
 !If "$(BUILD_TYPE)" == "modern"
 CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
 !Else If "$(BUILD_TYPE)" == "avx2"
@@ -53,6 +54,9 @@ CFLAGS=$(CFLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
 # TBD: would like to fail here, not clear how in NMAKE
 !Endif
 !Endif
+!Else
+# default - no BUILD_TYPE defined
+CFLAGS = $(CFLAGS) $(BASIC_SIMD_FLAGS)
 !Endif
 
 # Set executable name

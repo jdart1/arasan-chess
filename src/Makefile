@@ -71,12 +71,12 @@ endif
 ARCH         := $(shell uname -m)
 
 # SMP flags (note: we do not support a non-SMP build anymore)
-SMPFLAGS = -DSMP -DSMP_STATS
+SMPFLAGS = -DSMP -DSMP_STATS -DUSE_INTRINSICS
 SMPLIB   = -lpthread
 
 POPCNT_FLAGS := -DUSE_POPCNT
 ifeq ("$(ARCH)","x86_64")
-# assume SSE2 at least is present
+BASIC_SIMD_FLAGS = -DSIMD -DSSE2
 POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
@@ -85,7 +85,7 @@ endif
 ifdef BUILD_TYPE
 ifeq ("$(BUILD_TYPE)","old")
 else
-FLAGS := $(FLAGS) -DSIMD -DSSE2
+FLAGS := $(FLAGS) $(BASIC_SIMD_FLAGS)
 ifeq ("$(BUILD_TYPE)","modern")
 FLAGS := $(FLAGS) $(POPCNT_FLAGS)
 else ifeq ("$(BUILD_TYPE)","avx2")
@@ -96,6 +96,9 @@ else
 $(error unrecognized BUILD_TYPE: should be one of: old modern avx2 avx2-bmi2)
 endif
 endif
+else
+# no BUILD_TYPE specified
+FLAGS := $(FLAGS) $(BASIC_SIMD_FLAGS)
 endif
 
 PGO_RUN_FLAGS = -H 64M
