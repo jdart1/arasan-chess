@@ -89,9 +89,9 @@ FLAGS := $(FLAGS) $(BASIC_SIMD_FLAGS)
 ifeq ("$(BUILD_TYPE)","modern")
 FLAGS := $(FLAGS) $(POPCNT_FLAGS)
 else ifeq ("$(BUILD_TYPE)","avx2")
-FLAGS := $(FLAGS) $(AVX2_FLAGS)
+FLAGS := $(FLAGS)  $(POPCNT_FLAGS) $(AVX2_FLAGS)
 else ifeq ("$(BUILD_TYPE)","avx2-bmi2")
-FLAGS := $(FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+FLAGS := $(FLAGS)  $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
 else
 $(error unrecognized BUILD_TYPE: should be one of: old modern avx2 avx2-bmi2)
 endif
@@ -347,36 +347,6 @@ log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC) $(UNIT_TEST_SRC)
 
-MAKEBOOK_SOURCES = makebook.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-params.cpp scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp bench.cpp $(NNUE_SRC)
-
-MAKEECO_SOURCES = makeeco.cpp globals.cpp board.cpp boardio.cpp \
-material.cpp chess.cpp attacks.cpp bitboard.cpp chessio.cpp \
-epdrec.cpp bhash.cpp params.cpp scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp log.cpp search.cpp searchc.cpp \
-learn.cpp movegen.cpp hash.cpp legal.cpp stats.cpp \
-calctime.cpp eco.cpp ecodata.cpp threadp.cpp threadc.cpp \
-protocol.cpp tester.cpp bench.cpp $(NNUE_SRC)
-
-ECOCODER_SOURCES = ecocoder.cpp globals.cpp board.cpp \
-boardio.cpp material.cpp chess.cpp attacks.cpp bitboard.cpp \
-chessio.cpp epdrec.cpp bhash.cpp params.cpp scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp bookread.cpp \
-bookwrit.cpp log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp hash.cpp legal.cpp eco.cpp ecodata.cpp \
-stats.cpp calctime.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp bench.cpp $(NNUE_SRC)
-
 TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -384,24 +354,20 @@ bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp log.cpp search.cpp \
-searchc.cpp learn.cpp movegen.cpp \
+searchc.cpp movegen.cpp learn.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp bench.cpp
+stats.cpp threadp.cpp threadc.cpp
 
 PGNSELECT_SOURCES = pgnselect.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
+board.cpp boardio.cpp material.cpp chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-params.cpp scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
+params.cpp scoring.cpp see.cpp movearr.cpp notation.cpp \
+options.cpp bitprobe.cpp bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp bench.cpp $(NNUE_SRC)
+legal.cpp stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
 
-PLAYCHESS_SOURCES = playchess.cpp globals.cpp  \
+UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
@@ -410,20 +376,19 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp bench.cpp $(NNUE_SRC)
+legal.cpp stats.cpp threadp.cpp threadc.cpp
 
-SELFPLAY_SOURCES = selfplay.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-params.cpp scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp protocol.cpp \
-tester.cpp bench.cpp $(NNUE_SRC)
+MAKEBOOK_SOURCES = makebook.cpp $(UTIL_SOURCES)
+
+MAKEECO_SOURCES = makeeco.cpp $(UTIL_SOURCES)
+
+ECOCODER_SOURCES = ecocoder.cpp $(UTIL_SOURCES)
+
+PGNSELECT_SOURCES = pgnselect.cpp $(UTIL_SOURCES) $(NNUE_SRC)
+
+PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES) $(NNUE_SRC)
+
+SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) $(NNUE_SRC)
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)

@@ -24,6 +24,8 @@
 
 //#define _TRACE
 
+static auto debugPrefix = globals::debugPrefix;
+
 static const int ASPIRATION_WINDOW[] =
     {(int)(0.375*Params::PAWN_VALUE),
      (int)(0.75*Params::PAWN_VALUE),
@@ -320,7 +322,7 @@ Move SearchController::findBestMove(
       // a search in all cases for UCI, since the engine cannot
       // claim draw and some interfaces may expect a move.)
       if (debugOut()) {
-          std::cout << debugPrefix() << "skipping search, draw" << std::endl;
+          std::cout << debugPrefix << "skipping search, draw" << std::endl;
       }
       stats->state = Draw;
       stats->value = drawScore(board);
@@ -359,7 +361,7 @@ Move SearchController::findBestMove(
          // wait time is in milliseconds
          waitTime = int((max*factor));
          if (debugOut()) {
-            std::cout << debugPrefix() << "waitTime=" << waitTime << std::endl;
+            std::cout << debugPrefix << "waitTime=" << waitTime << std::endl;
          }
       }
       select_subopt = random(1024);
@@ -381,8 +383,8 @@ Move SearchController::findBestMove(
             depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
          }
          if (debugOut()) {
-            std::cout << debugPrefix() << "ply limit =" << ply_limit << std::endl;
-            std::cout << debugPrefix() << "depth adjust =" << depth_adjust << std::endl;
+            std::cout << debugPrefix << "ply limit =" << ply_limit << std::endl;
+            std::cout << debugPrefix << "depth adjust =" << depth_adjust << std::endl;
          }
       }
    }
@@ -414,7 +416,7 @@ Move SearchController::findBestMove(
            tb_probe_in_search = false;
            updateSearchOptions();
            if (debugOut()) {
-               std::cout << debugPrefix() << board << " root tb hit, score=";
+               std::cout << debugPrefix << board << " root tb hit, score=";
                Scoring::printScore(tb_score,std::cout);
                std::cout << std::endl;
            }
@@ -453,7 +455,7 @@ Move SearchController::findBestMove(
    pool->setCompleted(0);
 
    if (debugOut()) {
-      std::cout << debugPrefix() << "waiting for thread completion" << std::endl;
+      std::cout << debugPrefix << "waiting for thread completion" << std::endl;
    }
 
    // Wait for all threads to complete
@@ -463,7 +465,7 @@ Move SearchController::findBestMove(
    delete mg;
 
    if (debugOut()) {
-       std::cout << debugPrefix() << "thread 0 depth=" << rootSearch->stats.completedDepth <<
+       std::cout << debugPrefix << "thread 0 depth=" << rootSearch->stats.completedDepth <<
            " score=";
        Scoring::printScore(rootSearch->stats.display_value,std::cout);
        std::cout << " failHigh=" << (int)stats->failHigh << " failLow=" <<
@@ -483,18 +485,18 @@ Move SearchController::findBestMove(
        post_function(*stats);
    }
 #ifdef _TRACE
-   std::cout << debugPrefix() << "best thread: score=";
+   std::cout << debugPrefix << "best thread: score=";
    Scoring::printScore(stats->value,std::cout);
    std::cout << " pv=" << stats->best_line_image << std::endl;
 #endif
    if (debugOut()) {
-      std::cout << debugPrefix() << "best thread: depth=" << stats->completedDepth <<  " score=";
+      std::cout << debugPrefix << "best thread: depth=" << stats->completedDepth <<  " score=";
       Scoring::printScore(stats->value,std::cout);
       std::cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       std::cout << " pv=" << stats->best_line_image << std::endl;
    }
    if (IsNull(best)) {
-      std::cerr << debugPrefix() << "best thread: depth=" << stats->completedDepth <<  " score=";
+      std::cerr << debugPrefix << "best thread: depth=" << stats->completedDepth <<  " score=";
       Scoring::printScore(stats->value,std::cerr);
       std::cerr << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       std::cerr << " pv=" << stats->best_line_image << std::endl;
@@ -733,7 +735,7 @@ void SearchController::applySearchHistoryFactors() {
             bonus_time = -static_cast<int64_t>(std::floor(searchHistoryReductionFactor*elapsed_time/3));
         }
         if (debugOut() && typeOfSearch == TimeLimit && bonus_time) {
-            std::cout << debugPrefix() << "bonus time=" << bonus_time << std::endl;
+            std::cout << debugPrefix << "bonus time=" << bonus_time << std::endl;
         }
     }
 }
@@ -759,7 +761,7 @@ int Search::checkTime() {
         controller->terminateNow();
     }
     if (terminate) {
-       if (debugOut()) std::cout << debugPrefix() << "check time, already terminated" << std::endl;
+       if (debugOut()) std::cout << debugPrefix << "check time, already terminated" << std::endl;
        return 1; // already stopped search
     }
 
@@ -778,7 +780,7 @@ int Search::checkTime() {
        else if (controller->typeOfSearch == TimeLimit) {
           if (controller->elapsed_time > controller->getTimeLimit()) {
              if (debugOut()) {
-                std::cout << debugPrefix() << "terminating, max time reached" << std::endl;
+                std::cout << debugPrefix << "terminating, max time reached" << std::endl;
              }
              return 1;
           }
@@ -789,7 +791,7 @@ int Search::checkTime() {
        controller->monitor_function &&
        controller->monitor_function(controller,stats)) {
        if (debugOut()) {
-          std::cout << debugPrefix() << "terminating due to program or user input" << std::endl;
+          std::cout << debugPrefix << "terminating due to program or user input" << std::endl;
        }
        controller->terminateNow();
        return 1;
@@ -942,7 +944,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     // note: retain previous best line if we do not have one here
     if (IsNull(node->pv[0])) {
 #ifdef _TRACE
-        if (mainThread()) std::cout << debugPrefix() << "warning: pv is null\n";
+        if (mainThread()) std::cout << debugPrefix << "warning: pv is null\n";
 #endif
         return;
     }
@@ -1028,7 +1030,7 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
            }
            if (r < threshold) {
               if (mainThread() && controller->debugOut()) {
-                 std::cout << debugPrefix() << "suboptimal: index= " << i <<
+                 std::cout << debugPrefix << "suboptimal: index= " << i <<
                     " score=" << score << " val=" << first_val <<
                     " threshold=" << threshold <<
                     " r=" << r << std::endl;
@@ -1089,7 +1091,7 @@ Move Search::ply0_search()
             hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
          }
          if (mainThread() && debugOut() && controller->background) {
-             std::cout << debugPrefix();
+             std::cout << debugPrefix;
              if (srcOpts.multipv > 1) {
                  std::cout << " multipv=" << stats.multipv_count << ": ";
              }
@@ -1132,7 +1134,7 @@ Move Search::ply0_search()
             StateType &state = stats.state;
             if (!terminate && (state == Checkmate || state == Stalemate)) {
                if (mainThread() && debugOut())
-                  std::cout << debugPrefix() << "terminating due to checkmate or statemate, state="
+                  std::cout << debugPrefix << "terminating due to checkmate or statemate, state="
                        << (int)state << std::endl;
                controller->terminateNow();
                break;
@@ -1143,7 +1145,7 @@ Move Search::ply0_search()
                   controller->timeCheckInterval /= 2;
                }
                if (mainThread() && debugOut()) {
-                  std::cout << debugPrefix() << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << std::endl;
+                  std::cout << debugPrefix << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << std::endl;
                }
             }
             stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
@@ -1171,12 +1173,12 @@ Move Search::ply0_search()
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
                     }
                     if (debugOut()) {
-                        std::cout << debugPrefix() << "ply 0 fail high, re-searching ... value=";
+                        std::cout << debugPrefix << "ply 0 fail high, re-searching ... value=";
                         Scoring::printScore(value,std::cout);
                         std::cout << " fails=" << fails+1 << std::endl;
                     }
 #ifdef _TRACE
-                    std::cout << debugPrefix() << "ply 0 high cutoff, re-searching ... value=";
+                    std::cout << debugPrefix << "ply 0 high cutoff, re-searching ... value=";
                     Scoring::printScore(value,std::cout);
                     std::cout << " fails=" << fails+1 << std::endl;
 #endif
@@ -1203,12 +1205,12 @@ Move Search::ply0_search()
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
                     }
                     if (debugOut()) {
-                        std::cout << debugPrefix() << "ply 0 fail low, re-searching ... value=";
+                        std::cout << debugPrefix << "ply 0 fail low, re-searching ... value=";
                         Scoring::printScore(value,std::cout);
                         std::cout << " fails=" << fails+1 << std::endl;
                     }
 #ifdef _TRACE
-                    std::cout << debugPrefix() << "ply 0 fail low, re-searching ... value=";
+                    std::cout << debugPrefix << "ply 0 fail low, re-searching ... value=";
                     Scoring::printScore(value,std::cout);
                     std::cout << " fails=" << fails+1 << std::endl;
 #endif
@@ -1218,7 +1220,7 @@ Move Search::ply0_search()
                     // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
                     // search to continue, but set the lower bound to the bottom of the range.
                     if (mainThread() && debugOut()) {
-                        std::cout << debugPrefix() << "warning, too many aspiration window steps" << std::endl;
+                        std::cout << debugPrefix << "warning, too many aspiration window steps" << std::endl;
                     }
                     aspirationWindow = Constants::MATE;
                 }
@@ -1247,7 +1249,7 @@ Move Search::ply0_search()
             if (!terminate) {
                 if (checkTime()) {
                     if (debugOut()) {
-                        std::cout << debugPrefix() << "time up" << std::endl;
+                        std::cout << debugPrefix << "time up" << std::endl;
                     }
                     controller->terminateNow();
                 }
@@ -1266,7 +1268,7 @@ Move Search::ply0_search()
              iterationDepth >= 2 &&
              !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
              if (mainThread() && debugOut()) {
-                 std::cout << debugPrefix() << "single legal move, terminating" << std::endl;
+                 std::cout << debugPrefix << "single legal move, terminating" << std::endl;
              }
              controller->terminateNow();
          }
@@ -1277,7 +1279,7 @@ Move Search::ply0_search()
                 controller->historyBasedTimeAdjust(stats);
                 controller->applySearchHistoryFactors();
                 if (debugOut() && (controller->searchHistoryBoostFactor != 0 || controller->searchHistoryReductionFactor !=0)) {
-                    std::cout << debugPrefix() << "searchHistoryBoostFactor=" << controller->searchHistoryBoostFactor <<
+                    std::cout << debugPrefix << "searchHistoryBoostFactor=" << controller->searchHistoryBoostFactor <<
                         " searchHistoryReductionFactor=" << controller->searchHistoryReductionFactor << std::endl;
                 }
             }
@@ -1302,7 +1304,7 @@ Move Search::ply0_search()
                     // quit searching.
                     if (mainThread()) {
                         if (debugOut()) {
-                            std::cout << debugPrefix() << "terminating, low score" << std::endl;
+                            std::cout << debugPrefix << "terminating, low score" << std::endl;
                         }
 #ifdef _TRACE
                         std::cout << "terminating, low score" << std::endl;
@@ -1315,7 +1317,7 @@ Move Search::ply0_search()
                   // found a forced mate, terminate
                   if (mainThread()) {
                      if (debugOut()) {
-                        std::cout << debugPrefix() << "terminating, high score" << std::endl;
+                        std::cout << debugPrefix << "terminating, high score" << std::endl;
                      }
 #ifdef _TRACE
                      std::cout << "terminating, high score" << std::endl;
@@ -1336,10 +1338,10 @@ Move Search::ply0_search()
       }
    } // end depth iteration loop
    if (debugOut() && mainThread() && iterationDepth >= controller->ply_limit) {
-       std::cout << debugPrefix() << "exiting search due to max depth" << std::endl;
+       std::cout << debugPrefix << "exiting search due to max depth" << std::endl;
    }
    if (mainThread() && debugOut()) {
-      std::cout << debugPrefix() << "out of search loop, move= ";
+      std::cout << debugPrefix << "out of search loop, move= ";
       MoveImage(node->best,std::cout);
       std::cout << std::endl << std::flush;
    }
@@ -1490,7 +1492,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            if (mainThread() && controller->time_target != Constants::INFINITE_TIME) {
               controller->fail_high_root = true;
               if (debugOut()) {
-                 std::cout << debugPrefix() << "researching at root, extending time" << std::endl;
+                 std::cout << debugPrefix << "researching at root, extending time" << std::endl;
               }
            }
 #ifdef _TRACE
@@ -1531,7 +1533,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
         if (mainThread()) {
            if (debugOut() && controller->fail_high_root) {
-              std::cout << debugPrefix() << "resetting fail_high_root" << std::endl;
+              std::cout << debugPrefix << "resetting fail_high_root" << std::endl;
            }
            controller->fail_high_root = false;
         }
@@ -1586,7 +1588,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #ifdef _DEBUG
     if (node->best_score < -Constants::MATE ||
         node->best_score > Constants::MATE) {
-        std::cout << debugPrefix() << board << std::endl;
+        std::cout << debugPrefix << board << std::endl;
         assert(0);
     }
 #endif
@@ -1659,7 +1661,7 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
         if (pool->data[thread]->work == nullptr) continue;
         Statistics &threadStats = pool->data[thread]->work->stats;
         if (trace) {
-            std::cout << debugPrefix() << "thread " << thread << " depth=" <<
+            std::cout << debugPrefix << "thread " << thread << " depth=" <<
                 threadStats.completedDepth << " score=";
             Scoring::printScore(threadStats.display_value,std::cout);
             std::cout << " failHigh=" << (int)threadStats.failHigh << " failLow=" <<
@@ -1709,11 +1711,6 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     return d;
 }
 
-const char *SearchController::debugPrefix() const noexcept
-{
-    return uci ? Protocol::UCI_DEBUG_PREFIX : Protocol::CECP_DEBUG_PREFIX;
-}
-
 #ifdef _TRACE
 static void traceHash(char type, NodeInfo *node, score_t hashValue, const HashEntry &hashEntry)
 {
@@ -1741,7 +1738,7 @@ score_t Search::quiesce(int ply,int depth)
          controller->time_check_counter = controller->timeCheckInterval;
          if (checkTime()) {
             if (debugOut()) {
-               std::cout << debugPrefix() << "terminating, time up" << std::endl;
+               std::cout << debugPrefix << "terminating, time up" << std::endl;
             }
             controller->terminateNow();   // signal all searches to end
          }
@@ -1937,7 +1934,7 @@ score_t Search::quiesce(int ply,int depth)
 #ifdef _DEBUG
        if (node->best_score < -Constants::MATE ||
            node->best_score > Constants::MATE) {
-           std::cout << debugPrefix() << board << std::endl;
+           std::cout << debugPrefix << board << std::endl;
            assert(0);
        }
 #endif
@@ -2431,7 +2428,7 @@ score_t Search::search()
             controller->time_check_counter = controller->timeCheckInterval;
             if (checkTime()) {
                if (debugOut()) {
-                  std::cout << debugPrefix() << "terminating, time up" << std::endl;
+                  std::cout << debugPrefix << "terminating, time up" << std::endl;
                }
                controller->terminateNow();   // signal all searches to end
             }
@@ -2587,8 +2584,8 @@ score_t Search::search()
         (board.checkStatus((node-1)->last_move) == InCheck);
 #ifdef _DEBUG
     if (in_check != board.inCheck()) {
-	   std::cout << debugPrefix() << board << std::endl;
-	   std::cout << debugPrefix() << "move=";
+	   std::cout << debugPrefix << board << std::endl;
+	   std::cout << debugPrefix << "move=";
 	   MoveImage((node-1)->last_move,std::cout);
 	   std::cout << std::endl;
 	   assert(0);
@@ -3415,11 +3412,6 @@ void Search::clearHashTables() {
 
 void Search::setSearchOptions() {
    srcOpts = globals::options.search;
-}
-
-const char * Search::debugPrefix() const noexcept
-{
-    return controller->debugPrefix();
 }
 
 score_t Search::evalu8(const Board &board) {

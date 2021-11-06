@@ -48,6 +48,7 @@ LockDefine(globals::syzygy_lock);
 #endif
 bool globals::polling_terminated;
 ThreadControl globals::inputSem;
+std::string globals::debugPrefix;
 #ifdef TUNE
 Tune globals::tune_params;
 #endif
@@ -187,38 +188,47 @@ void globals::initOptions() {
 void globals::delayedInit() {
 #ifdef SYZYGY_TBS
     if (options.search.use_tablebases && !globals::tb_init_done()) {
-       EGTBMenCount = 0;
-       std::string path;
-       if (options.search.syzygy_path == "") {
-          options.search.syzygy_path=derivePath("syzygy");
-       }
-       path = options.search.syzygy_path;
-       EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
-       tb_init = true;
-       if (EGTBMenCount) {
-          std::stringstream msg;
-          msg << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << std::endl;
-          std::cerr << msg.str();
-       }
+        EGTBMenCount = 0;
+        std::string path;
+        if (options.search.syzygy_path == "") {
+            options.search.syzygy_path=derivePath("syzygy");
+        }
+        path = options.search.syzygy_path;
+        EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
+        tb_init = true;
+        if (EGTBMenCount) {
+            std::stringstream msg;
+            msg << debugPrefix << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << std::endl;
+            std::cout << msg.str();
+        } else {
+            std::cout << debugPrefix << "warning: no Syzygy tablebases found, path may be missing or invalid" << std::endl;
+        }
     }
 #endif
 #ifdef NNUE
-    if (options.search.useNNUE && !nnueInitDone && options.search.nnueFile.size()) {
-        const std::string &nnuePath = options.search.nnueFile;
-        nnueInitDone = loadNetwork(absolutePath(nnuePath) ?
-                                   nnuePath.c_str() :
-                                   derivePath(nnuePath));
-        if (nnueInitDone) {
-            std::cerr << "loaded network from file ";
-        } else {
-            std::cerr << "warning: failed to load network file ";
+    if (options.search.useNNUE && !nnueInitDone) {
+        if (options.search.nnueFile.size()) {
+            const std::string &nnuePath = options.search.nnueFile;
+            nnueInitDone = loadNetwork(absolutePath(nnuePath) ?
+                                       nnuePath.c_str() :
+                                       derivePath(nnuePath));
+            if (nnueInitDone) {
+                std::cout << debugPrefix << "loaded network from file ";
+            } else {
+                std::cout << debugPrefix << "warning: failed to load network file ";
+            }
+            std::cout << nnuePath << std::endl;
         }
-        std::cerr << nnuePath << std::endl;
+        else {
+            std::cout << debugPrefix << "warning: no NNUE file path was set, network not loaded" << std::endl;
+        }
     }
 #endif
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
-        openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str());
+        if (openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str())) {
+            std::cout << debugPrefix << "warning: opening book not found or invalid" << std::endl;
+        }
     }
 }
 

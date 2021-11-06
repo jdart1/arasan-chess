@@ -40,6 +40,7 @@ extern bool nnueInitDone;
 #endif
 extern bool polling_terminated;
 extern ThreadControl inputSem;
+extern std::string debugPrefix;
 
 // KPK bitbases:
 extern CACHE_ALIGN const uint8_t baseKPKW[24576];

@@ -223,8 +223,6 @@ public:
         return talkLevel == TalkLevel::Debug;
     }
 
-    const char * debugPrefix() const noexcept;
-
     constexpr static int SearchStackSize = Constants::MaxPly + 10;
 
     using NodeStack = NodeInfo[SearchStackSize];
@@ -559,8 +557,6 @@ public:
    bool debugOut() const noexcept {
       return talkLevel == TalkLevel::Debug;
    }
-
-   const char *debugPrefix() const noexcept;
 
 private:
 

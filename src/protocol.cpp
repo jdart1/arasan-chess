@@ -91,7 +91,8 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       ponderhit(false),
       uciWaitState(false),
       cpusSet(cpus_set),
-      memorySet(memory_set)
+      memorySet(memory_set),
+      debugPrefix(globals::debugPrefix)
 {
     ecoCoder = new ECO();
     searcher = new SearchController();
@@ -144,12 +145,12 @@ void Protocol::poll(bool &polling_terminated)
                 break;
             }
             if (doTrace) {
-                std::cout << debugPrefix() << "got cmd (main): "  << cmd << std::endl;
+                std::cout << debugPrefix << "got cmd (main): "  << cmd << std::endl;
             }
             Unlock(globals::input_lock);
-            if (doTrace) std::cout << debugPrefix() << "calling do_command(main):" << cmd << (std::flush) << std::endl;
+            if (doTrace) std::cout << debugPrefix << "calling do_command(main):" << cmd << (std::flush) << std::endl;
             if (!do_command(cmd,*main_board)) {
-                if (doTrace) std::cout << debugPrefix() << "exiting polling loop" << std::endl;
+                if (doTrace) std::cout << debugPrefix << "exiting polling loop" << std::endl;
                 polling_terminated = true;
             }
         }
@@ -157,7 +158,7 @@ void Protocol::poll(bool &polling_terminated)
     // handle termination.
     save_game();
     if (doTrace) {
-        std::cout << debugPrefix() << "terminating" << std::endl;
+        std::cout << debugPrefix << "terminating" << std::endl;
     }
 }
 
@@ -204,7 +205,7 @@ Move Protocol::get_move(const std::string &cmd_word, const std::string &cmd_args
     while (it != move.end() && !isalpha(*it)) it++;
     move.erase(move.begin(),it);
     if (doTrace) {
-        std::cout << debugPrefix() << "move text = " << move << std::endl;
+        std::cout << debugPrefix << "move text = " << move << std::endl;
     }
     return text_to_move(*main_board,move);
 }
@@ -212,7 +213,7 @@ Move Protocol::get_move(const std::string &cmd_word, const std::string &cmd_args
 Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
 {
     AllPendingStatus retVal = AllPendingStatus::Nothing;
-    if (doTrace) std::cout << debugPrefix() << "in do_all_pending" << std::endl;
+    if (doTrace) std::cout << debugPrefix << "in do_all_pending" << std::endl;
     while (true) {
         Lock(globals::input_lock);
         if (pending.empty()) {
@@ -223,7 +224,7 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
         pending.erase(pending.begin());
         Unlock(globals::input_lock);
         if (doTrace) {
-            std::cout << debugPrefix() << "pending command(a): " << cmd << std::endl;
+            std::cout << debugPrefix << "pending command(a): " << cmd << std::endl;
         }
         if (cmd == "quit") {
             retVal = AllPendingStatus::Quit;
@@ -232,13 +233,13 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
         do_command(cmd,board);
     }
     if (doTrace) {
-        std::cout << debugPrefix() << "out of do_all_pending, list size=" << pending.size() << std::endl;
+        std::cout << debugPrefix << "out of do_all_pending, list size=" << pending.size() << std::endl;
     }
     return retVal;
 }
 
 Protocol::PendingStatus Protocol::check_pending(Board &board) {
-    if (doTrace) std::cout << debugPrefix() << "in check_pending" << std::endl;
+    if (doTrace) std::cout << debugPrefix << "in check_pending" << std::endl;
     PendingStatus retVal = PendingStatus::Nothing;
     Lock(globals::input_lock);
     while (!pending.empty()) {
@@ -249,18 +250,18 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
             cmd == "new" ||
             cmd == "quit" ||
             cmd == "resign") {
-                if (doTrace) std::cout << debugPrefix() << "game end signal in pending stack" << std::endl;
+                if (doTrace) std::cout << debugPrefix << "game end signal in pending stack" << std::endl;
                 retVal = PendingStatus::GameEnd;
                 break;
         }
         else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
-            if (doTrace) std::cout << debugPrefix() << "move in pending stack" << std::endl;
+            if (doTrace) std::cout << debugPrefix << "move in pending stack" << std::endl;
             retVal = PendingStatus::Move;
             break;
         }
         else {  // might as well execute this
             if (doTrace) {
-                std::cout << debugPrefix() << "calling do_command from check_pending" << (std::flush) << std::endl;
+                std::cout << debugPrefix << "calling do_command from check_pending" << (std::flush) << std::endl;
             }
             // remove command from pending stack
             pending.erase(pending.begin());
@@ -357,7 +358,7 @@ void Protocol::process_st_command(const std::string &cmd_args)
    // we allow fractional seconds although UI may not support it
    s >> time_limit_sec;
    if (s.bad() || time_limit_sec <= 0.0) {
-      std::cout << debugPrefix() << "illegal value for st command: " << cmd_args << std::endl;
+      std::cout << debugPrefix << "illegal value for st command: " << cmd_args << std::endl;
       return;
    } else {
       srctype = FixedTime;
@@ -377,7 +378,7 @@ int Protocol::getIncrUCI(const ColorType side) {
 
 bool Protocol::accept_draw(Board &board) {
    if (doTrace)
-      std::cout << debugPrefix() << "in accept_draw" << std::endl;
+      std::cout << debugPrefix << "in accept_draw" << std::endl;
    // Code to handle draw offers.
    int rating_diff = opponent_rating - computer_rating;
    // ignore draw if we have just started searching
@@ -398,7 +399,7 @@ bool Protocol::accept_draw(Board &board) {
                             ourmat.infobits() == Material::KN)) {
       // We don't have mating material
       if (doTrace)
-         std::cout << debugPrefix() << "no mating material, accept draw" << std::endl;
+         std::cout << debugPrefix << "no mating material, accept draw" << std::endl;
       return true;
    }
    // accept a draw in pawnless endings with even material, unless
@@ -407,7 +408,7 @@ bool Protocol::accept_draw(Board &board) {
        ourmat.materialLevel() <= 5 &&
       last_score < Params::PAWN_VALUE) {
       if (doTrace)
-         std::cout << debugPrefix() << "pawnless ending, accept draw" << std::endl;
+         std::cout << debugPrefix << "pawnless ending, accept draw" << std::endl;
       return true;
    }
 #ifdef SYZYGY_TBS
@@ -416,12 +417,12 @@ bool Protocol::accept_draw(Board &board) {
    if(globals::options.search.use_tablebases &&
       wMat.men() + bMat.men() <= globals::EGTBMenCount) {
       if (doTrace)
-         std::cout << debugPrefix() << "checking tablebases .." << std::endl;
+         std::cout << debugPrefix << "checking tablebases .." << std::endl;
       // accept a draw when the tablebases say it's a draw
       score_t tbscore;
       if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
          if (doTrace) {
-            std::cout << debugPrefix() << "tablebase score says draw" << std::endl;
+            std::cout << debugPrefix << "tablebase score says draw" << std::endl;
          }
          return true;
       }
@@ -432,17 +433,17 @@ bool Protocol::accept_draw(Board &board) {
    // accept a draw if our score is negative .. how much negative
    // depends on opponent rating.
    if (doTrace)
-      std::cout << debugPrefix() << "checking draw score .." << std::endl;
+      std::cout << debugPrefix << "checking draw score .." << std::endl;
    ColorType tmp = board.sideToMove();
    board.setSideToMove(side);
    score_t draw_score = searcher->drawScore(board);
    board.setSideToMove(tmp);
    const score_t threshold = Params::PAWN_VALUE/4;
    if (doTrace) {
-      std::cout << debugPrefix() << "rating_diff = " << rating_diff << std::endl;
-      std::cout << debugPrefix() << "draw_score = " << draw_score << std::endl;
-      std::cout << debugPrefix() << "last_score = " << last_score << std::endl;
-      std::cout << debugPrefix() << "threshold = " << threshold << std::endl;
+      std::cout << debugPrefix << "rating_diff = " << rating_diff << std::endl;
+      std::cout << debugPrefix << "draw_score = " << draw_score << std::endl;
+      std::cout << debugPrefix << "last_score = " << last_score << std::endl;
+      std::cout << debugPrefix << "threshold = " << threshold << std::endl;
    }
    return draw_score > threshold && last_score <= draw_score;
 }
@@ -493,17 +494,17 @@ void Protocol::do_help() {
 
 void Protocol::save_game() {
    if (uci) return;                               // not supported
-   if (doTrace) std::cout << debugPrefix() << "in save_game" << std::endl;
-   if (doTrace) std::cout << debugPrefix() << "game_moves=" << globals::gameMoves->num_moves() << std::endl;
+   if (doTrace) std::cout << debugPrefix << "in save_game" << std::endl;
+   if (doTrace) std::cout << debugPrefix << "game_moves=" << globals::gameMoves->num_moves() << std::endl;
    if (globals::gameMoves->num_moves() == 0 || !globals::options.store_games) {
-      if (doTrace) std::cout << debugPrefix() << "out of save_game" << std::endl;
+      if (doTrace) std::cout << debugPrefix << "out of save_game" << std::endl;
       return;
    }
    if (game_file) {
       std::vector<ChessIO::Header> headers;
       std::string opening_name, eco;
       if (ecoCoder) {
-         if (doTrace) std::cout << debugPrefix() << "calling classify" << std::endl;
+         if (doTrace) std::cout << debugPrefix << "calling classify" << std::endl;
          ecoCoder->classify(*globals::gameMoves,eco,opening_name);
          headers.push_back(ChessIO::Header("ECO",eco));
       }
@@ -570,7 +571,7 @@ void Protocol::save_game() {
          result,
          headers);
    }
-   if (doTrace) std::cout << debugPrefix() << "out of save_game" << std::endl;
+   if (doTrace) std::cout << debugPrefix << "out of save_game" << std::endl;
 }
 
 void Protocol::move_image(const Board &board, Move m, std::ostream &buf, bool uci) {
@@ -671,7 +672,7 @@ void Protocol::checkPendingInSearch(SearchController *controller) {
 bool Protocol::processPendingInSearch(SearchController *controller, const std::string &cmd, bool &exit)
 {
     if (doTrace) {
-        std::cout << debugPrefix() << "command in search: " << cmd << std::endl;
+        std::cout << debugPrefix << "command in search: " << cmd << std::endl;
     }
     std::string cmd_word, cmd_args;
     // extract first word of command:
@@ -693,7 +694,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
             if (srctype != FixedDepth) {
                 if (doTrace) {
                     std::stringstream s;
-                    s << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                    s << debugPrefix << " time_limit=" << time_limit << " movestogo=" <<
                         movestogo << " time_left=" << time_left << " opp_time=" << opp_time << '\0';
                     std::cout << s.str() << std::endl << (std::flush);
                 }
@@ -753,7 +754,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
     else if (cmd == "?") {
         // Winboard 3.6 or higher sends this to terminate a search
         // in progress
-        if (doTrace) std::cout << debugPrefix() << "? received: terminating." << std::endl;
+        if (doTrace) std::cout << debugPrefix << "? received: terminating." << std::endl;
         controller->terminateNow();
         return true;
     }
@@ -801,7 +802,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
     else if (cmd == "resign" || cmd_word == "result") {
         game_end = true;
         if (doTrace) {
-            std::cout << debugPrefix() << "received_result: " << cmd << std::endl;
+            std::cout << debugPrefix << "received_result: " << cmd << std::endl;
         }
         controller->terminateNow();
         // set the state to Terminated - this is a signal that
@@ -842,13 +843,13 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
         Move rmove = get_move(cmd_word, cmd_args);
         if (IsNull(rmove)) {
             if (doTrace) {
-                std::cout << debugPrefix() << "cmd in search not processed: " << cmd << " (expected move)";
+                std::cout << debugPrefix << "cmd in search not processed: " << cmd << " (expected move)";
             }
             return false;
         } else {
             last_move = rmove;
             if (doTrace) {
-                std::cout << debugPrefix() << "predicted move = ";
+                std::cout << debugPrefix << "predicted move = ";
                 MoveImage(predicted_move,std::cout);
                 std::cout << " last move = ";
                 MoveImage(last_move,std::cout);
@@ -862,7 +863,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
                 // A move arrived during a ponder search and it was
                 // the predicted move, in other words we got a ponder hit.
                 if (doTrace) {
-                    std::cout << debugPrefix() << "ponder ok" << std::endl;
+                    std::cout << debugPrefix << "ponder ok" << std::endl;
                 }
                 execute_move(*main_board,last_move);
                 // We predicted the opponent's move, so we need to
@@ -881,7 +882,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
                 return true;
             }
             else {
-                if (doTrace) std::cout << debugPrefix() << "ponder not ok" << std::endl;
+                if (doTrace) std::cout << debugPrefix << "ponder not ok" << std::endl;
                 // We can't use the results of pondering because we
                 // did not predict the opponent's move.  Stop the
                 // search and then execute the move.
@@ -997,8 +998,8 @@ void Protocol::calcTimes(bool pondering, ColorType side, timeMgmt::Times &times)
         timeMgmt::calcTimeLimit(moves, incr, time_left, pondering, ics, times);
     }
     if (doTrace) {
-        std::cout << debugPrefix() << "time_target = " << times.time_target << std::endl;
-        std::cout << debugPrefix() << "xtra time = " << times.extra_time << std::endl;
+        std::cout << debugPrefix << "time_target = " << times.time_target << std::endl;
+        std::cout << debugPrefix << "xtra time = " << times.extra_time << std::endl;
     }
 }
 
@@ -1008,7 +1009,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
     ponder_move = NullMove;
     ponder_stats.clear();
     if (doTrace) {
-       std::cout << debugPrefix() << "in ponder(), move = ";
+       std::cout << debugPrefix << "in ponder(), move = ";
        MoveImage(move,std::cout);
        std::cout << " predicted reply = ";
        MoveImage(predicted_reply,std::cout);
@@ -1036,11 +1037,11 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         // (do not ponder indefinitely)
         if (globals::options.search.strength < 100) {
             time_target = last_time_target;
-            if (doTrace) std::cout << debugPrefix() << "limiting ponder time to " <<
+            if (doTrace) std::cout << debugPrefix << "limiting ponder time to " <<
                              time_target << std::endl;
         }
         if (doTrace) {
-            std::cout << debugPrefix() << "starting to ponder" << std::endl;
+            std::cout << debugPrefix << "starting to ponder" << std::endl;
         }
         ponder_status = PonderStatus::Pending;
         if (srctype == FixedDepth) {
@@ -1067,7 +1068,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
                 (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         if (doTrace) {
-            std::cout << debugPrefix() << "done pondering" << std::endl;
+            std::cout << debugPrefix << "done pondering" << std::endl;
         }
         // Ensure "ping" response is set if ping was received while
         // searching:
@@ -1082,10 +1083,10 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         globals::gameMoves->remove_move();
     }
     if (doTrace) {
-        std::cout << debugPrefix() << "ponder move = ";
+        std::cout << debugPrefix << "ponder move = ";
         MoveImage(ponder_move,std::cout);
         std::cout << std::endl;
-        std::cout << debugPrefix() << "out of ponder()" << std::endl;
+        std::cout << debugPrefix << "out of ponder()" << std::endl;
     }
 }
 
@@ -1095,7 +1096,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
     last_stats.clear();
     last_score = Constants::MATE;
     ponder_move = NullMove;
-    if (doTrace) std::cout << debugPrefix() << "in search()" << std::endl;
+    if (doTrace) std::cout << debugPrefix << "in search()" << std::endl;
 
     Move move = NullMove;
     stats.fromBook = false;
@@ -1135,7 +1136,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 times.time_target = Constants::INFINITE_TIME;
                 times.extra_time = 0;
             } else {
-                if (doTrace) std::cout << debugPrefix() << " time_limit=" << time_limit << " movestogo=" <<
+                if (doTrace) std::cout << debugPrefix << " time_limit=" << time_limit << " movestogo=" <<
                                  movestogo << std::endl;
                 calcTimes(false,board.sideToMove(),times);
             }
@@ -1151,7 +1152,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 movesToSearch);
         }
         if (doTrace) {
-            std::cout << debugPrefix() << "search done : move = ";
+            std::cout << debugPrefix << "search done : move = ";
             MoveImage(move,std::cout);
             std::cout << std::endl;
         }
@@ -1192,24 +1193,24 @@ Move Protocol::search(SearchController *searcher, Board &board,
 
 int Protocol::isDraw(const Board &board, Statistics &last_stats, std::string &reason) {
    if (last_stats.state == Stalemate) {
-       if (doTrace) std::cout << debugPrefix() << "stalemate" << std::endl;
+       if (doTrace) std::cout << debugPrefix << "stalemate" << std::endl;
        reason = "Stalemate";
        return 1;
    }
    else if (last_stats.value < Constants::MATE-1 &&
             board.state.moveCount >= 100) {
        // Note: do not count as draw if we have checkmated opponent!
-       if (doTrace) std::cout << debugPrefix() << "50 move draw" << std::endl;
+       if (doTrace) std::cout << debugPrefix << "50 move draw" << std::endl;
        reason = "50 move draw";
        return 1;
    }
    else if (board.materialDraw()) {
-       if (doTrace) std::cout << debugPrefix() << "material draw" << std::endl;
+       if (doTrace) std::cout << debugPrefix << "material draw" << std::endl;
        reason = "Insufficient material";
        return 1;
    }
    else if (board.repetitionDraw()) {
-       if (doTrace) std::cout << debugPrefix() << "repetition draw" << std::endl;
+       if (doTrace) std::cout << debugPrefix << "repetition draw" << std::endl;
        reason = "Repetition";
        return 1;
    }
@@ -1271,7 +1272,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                 // because the opponent did not claim the draw).
                 // Send the result command to claim the draw.
                 if (doTrace) {
-                    std::cout << debugPrefix() << "claiming draw before move";
+                    std::cout << debugPrefix << "claiming draw before move";
                     if (reason.length()) std::cout << " (" << reason << ")";
                     std::cout << std::endl;
                 }
@@ -1341,7 +1342,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             // acknowledge the previous "stop" command.
             std::cout << "bestmove 0000" << std::endl;
         } else {
-            if (doTrace) std::cout << debugPrefix() << "warning : move is null" << std::endl;
+            if (doTrace) std::cout << debugPrefix << "warning : move is null" << std::endl;
         }
         if (ics && ((srctype == FixedDepth && searcher->getElapsedTime() >= 250) || time_target >= 250) &&
             stats.display_value != Constants::INVALID_SCORE) {
@@ -1353,7 +1354,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
     // conditions.
     if (!game_end) {
         if (last_stats.value >= Constants::MATE-1) {
-            if (doTrace) std::cout << debugPrefix() << "last_score = mate" << std::endl;
+            if (doTrace) std::cout << debugPrefix << "last_score = mate" << std::endl;
             if (sideToMove == White) {
                 globals::theLog->setResult("1-0");
                 std::cout << "1-0 {White mates}" << std::endl;
@@ -1365,7 +1366,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             game_end = true;
         }
         else if (last_stats.state == Checkmate) {
-            if (doTrace) std::cout << debugPrefix() << "state = Checkmate" << std::endl;
+            if (doTrace) std::cout << debugPrefix << "state = Checkmate" << std::endl;
             if (sideToMove == White) {
                 globals::theLog->setResult("0-1");
                 std::cout << "0-1 {Black mates}" << std::endl;
@@ -1401,7 +1402,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
 
 void Protocol::processCmdInWaitState(const std::string &cmd) {
     if (doTrace) {
-        std::cout << debugPrefix() << "got command in wait state: " << cmd << (std::flush) << std::endl;
+        std::cout << debugPrefix << "got command in wait state: " << cmd << (std::flush) << std::endl;
     }
     // we expect a "stop" or "ponderhit"
     if (cmd == "ponderhit" || cmd == "stop") {
@@ -1423,7 +1424,7 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
 
     stats.clear();
     if (doTrace) {
-        std::cout << debugPrefix() << "entering analysis search" << std::endl;
+        std::cout << debugPrefix << "entering analysis search" << std::endl;
     }
     Move move = searcher.findBestMove(board,
                                       FixedTime,
@@ -1433,7 +1434,7 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
                                       stats,
                                       TalkLevel::Whisper);
     if (doTrace) {
-        std::cout << debugPrefix() << "search done : move = ";
+        std::cout << debugPrefix << "search done : move = ";
         MoveImage(move,std::cout);
         std::cout << std::endl;
     }
@@ -1484,7 +1485,7 @@ void Protocol::doHint() {
     // have no ponder move we could wait a while for a ponder result,
     // but we just return for now.
     if (searcher->pondering()) return;
-    if (doTrace) std::cout << debugPrefix() << "computing hint" << std::endl;
+    if (doTrace) std::cout << debugPrefix << "computing hint" << std::endl;
 
     Statistics tmp;
     // do low-depth search for hint move
@@ -1511,11 +1512,11 @@ void Protocol::analyze_output(const Statistics &stats) {
 
 void Protocol::analyze(Board &board)
 {
-    if (doTrace) std::cout << debugPrefix() << "entering analysis mode" << std::endl;
+    if (doTrace) std::cout << debugPrefix << "entering analysis mode" << std::endl;
     while (analyzeMode) {
         Board previous(board);
         analyze(*searcher,board,stats);
-        if (doTrace) std::cout << debugPrefix() << "analysis mode: out of search" << std::endl;
+        if (doTrace) std::cout << debugPrefix << "analysis mode: out of search" << std::endl;
         // Process commands received while searching; exit loop
         // if "quit" seen.
         if (do_all_pending(board)==AllPendingStatus::Quit) {
@@ -1526,7 +1527,7 @@ void Protocol::analyze(Board &board)
             // got here because the search has terminated early, due to
             // forced move, forced mate, tablebase hit, or hitting the max
             // ply depth. Wait here for more input.
-            if (doTrace) std::cout << debugPrefix() << "analysis mode: wait for input" << std::endl;
+            if (doTrace) std::cout << debugPrefix << "analysis mode: wait for input" << std::endl;
             if (globals::inputSem.wait()) {
                 break;
             }
@@ -1538,7 +1539,7 @@ void Protocol::analyze(Board &board)
                 std::string cmd_word, cmd_arg;
                 split_cmd(cmd,cmd_word,cmd_arg);
 #ifdef _TRACE
-                std::cout << debugPrefix() << "processing cmd in analysis mode: " << cmd << std::endl;
+                std::cout << debugPrefix << "processing cmd in analysis mode: " << cmd << std::endl;
 #endif
                 if (cmd == "undo" || cmd == "setboard") {
                     do_command(cmd,board);
@@ -1566,7 +1567,7 @@ void Protocol::analyze(Board &board)
             }
         }
     }
-    if (doTrace) std::cout << debugPrefix() << "exiting analysis mode" << std::endl;
+    if (doTrace) std::cout << debugPrefix << "exiting analysis mode" << std::endl;
 }
 
 void Protocol::undo( Board &board)
@@ -1604,7 +1605,7 @@ void Protocol::setCheckOption(const std::string &value, int &dest) {
 void Protocol::execute_move(Board &board,Move m)
 {
     if (doTrace) {
-        std::cout << debugPrefix() << "execute_move: ";
+        std::cout << debugPrefix << "execute_move: ";
         MoveImage(m,std::cout);
         std::cout << std::endl;
     }
@@ -1670,7 +1671,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
     value = value.erase(value.find_last_not_of(' ') + 1);
     // handle option settings
     if (doTrace) {
-        std::cout << debugPrefix() << "setting option " << name << "=" << value << std::endl;
+        std::cout << debugPrefix << "setting option " << name << "=" << value << std::endl;
     }
     if (name == "Favor frequent book moves") {
         Options::setOption<unsigned>(value,globals::options.book.frequency);
@@ -1713,7 +1714,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
     }
 #else
     else {
-       std::cout << debugPrefix() << "Warning: invalid option name \"" << name << "\"" << std::endl;
+       std::cout << debugPrefix << "Warning: invalid option name \"" << name << "\"" << std::endl;
    }
 #endif
    searcher->updateSearchOptions();
@@ -1801,7 +1802,7 @@ bool Protocol::uciOptionCompare(const std::string &a, const std::string &b) {
 
 bool Protocol::do_command(const std::string &cmd, Board &board) {
     if (doTrace) {
-        std::cout << debugPrefix() << "do_command: " << cmd << std::endl;
+        std::cout << debugPrefix << "do_command: " << cmd << std::endl;
     }
     if (doTrace && uci) {
         globals::theLog->write(cmd.c_str()); globals::theLog->write_eol();
@@ -1810,6 +1811,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     split_cmd(cmd, cmd_word, cmd_args);
     if (cmd == "uci") {
         uci = true;
+        globals::debugPrefix = UCI_DEBUG_PREFIX;
         verbose = true; // TBD: fixed for now
         // Learning is disabled because we don't have full game history w/ scores
         globals::options.learning.position_learning = 0;
@@ -2040,7 +2042,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 valid = BoardIO::readFEN(board, fen);
             }
             if (!valid) {
-                if (doTrace) std::cout << debugPrefix() << "warning: invalid fen!" << std::endl;
+                if (doTrace) std::cout << debugPrefix << "warning: invalid fen!" << std::endl;
             }
             // clear some global vars
             stats.clear();
@@ -2365,7 +2367,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             // we were stopped - this is the "handshake" that tells the
             // UI we received the stop.
             if (doTrace) {
-                std::cout << debugPrefix() << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
+                std::cout << debugPrefix << "done pondering: stopped=" << (int)searcher->wasStopped() << " move=";
                 Notation::image(board,ponder_move,Notation::OutputFormat::SAN,std::cout);
                 std::cout << (std::flush) << std::endl;
             }
@@ -2382,7 +2384,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 // that we delay sending the move until "ponderhit" or
                 // "stop" is received.
                 if (doTrace) {
-                    std::cout << debugPrefix() << "ponder stopped early" << std::endl;
+                    std::cout << debugPrefix << "ponder stopped early" << std::endl;
                 }
                 Lock(globals::input_lock);
                 // To avoid races, check with the input mutux locked
@@ -2399,14 +2401,14 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 }
                 pending = newPending;
                 if (!uciWaitState) {
-                    std::cout << debugPrefix() << "ponderhit in stack, sending move" << std::endl << (std::flush);
+                    std::cout << debugPrefix << "ponderhit in stack, sending move" << std::endl << (std::flush);
                     uciOut(ponder_stats);
                     send_move(board,ponder_move,ponder_stats);
                     ponder_move = NullMove;
                     ponderhit = false;
                 }
                 else if (doTrace) {
-                    std::cout << debugPrefix() << "entering wait state" << std::endl << (std::flush);
+                    std::cout << debugPrefix << "entering wait state" << std::endl << (std::flush);
                 }
                 Unlock(globals::input_lock);
             }
@@ -2415,7 +2417,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             CLOCK_TYPE startTime;
             if (doTrace) {
                 startTime = getCurrentTime();
-                std::cout << debugPrefix() << "starting search" << (std::flush) << std::endl;
+                std::cout << debugPrefix << "starting search" << (std::flush) << std::endl;
             }
             best_move = search(searcher,board,movesToSearch,stats,infinite);
             if (doTrace) {
@@ -2451,6 +2453,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         return false;
     }
     else if (cmd == "new") {
+        globals::debugPrefix = CECP_DEBUG_PREFIX;
         if (!analyzeMode) save_game();
         board.reset();
         bool wasEmpty = globals::theLog->num_moves() == 0;
@@ -2479,12 +2482,13 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         if (!analyzeMode && ics) {
            std::cout << "kib Hello from Arasan " << Arasan_Version << std::endl;
         }
-        if (doTrace) std::cout << debugPrefix() << "finished 'new' processing" << std::endl;
+        if (doTrace) std::cout << debugPrefix << "finished 'new' processing" << std::endl;
     }
     else if (cmd == "random" || cmd_word == "variant") {
         // ignore
     }
     else if (cmd_word == "protover") {
+        globals::debugPrefix = CECP_DEBUG_PREFIX;
         // new in Winboard 4.2
         std::cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
 #ifdef SYZYGY_TBS
@@ -2613,12 +2617,12 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     }
     else if (cmd == "resign") {
         // our opponent has resigned
-        std::cout << debugPrefix() << "setting log result" << std::endl;
+        std::cout << debugPrefix << "setting log result" << std::endl;
         if (computer_plays_white)
             globals::theLog->setResult("0-1");
         else
             globals::theLog->setResult("1-0");
-        std::cout << debugPrefix() << "set log result" << std::endl;
+        std::cout << debugPrefix << "set log result" << std::endl;
     }
     else if (cmd == "draw") {
         // "draw" command. Requires winboard 3.6 or higher.
@@ -2627,7 +2631,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             std::cout << "offer draw" << std::endl;
         }
         else if (doTrace) {
-            std::cout << debugPrefix() << "draw declined" << std::endl;
+            std::cout << debugPrefix << "draw declined" << std::endl;
         }
     }
     else if (cmd_word == "setboard") {
@@ -2693,7 +2697,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         args >> opponent_rating;
         score_t contempt = contemptFromRatings(computer_rating,opponent_rating);
         if (doTrace) {
-            std::cout << debugPrefix() << "contempt (calculated from ratings) = ";
+            std::cout << debugPrefix << "contempt (calculated from ratings) = ";
             Scoring::printScore(contempt,std::cout);
             std::cout << std::endl;
         }
@@ -2716,7 +2720,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                std::cerr << "invalid value following 'cores'" << std::endl;
            } else {
               if (doTrace) {
-                 std::cout << debugPrefix() << "setting cores to " << globals::options.search.ncpus << std::endl;
+                 std::cout << debugPrefix << "setting cores to " << globals::options.search.ncpus << std::endl;
               }
               globals::options.search.ncpus = std::min<int>(globals::options.search.ncpus,Constants::MaxCPUs);
               searcher->updateSearchOptions();
@@ -2733,11 +2737,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             uint64_t mbs;
             ss >> mbs;
             if (ss.fail() || ss.bad()) {
-               std::cout << debugPrefix() << "invalid value following 'memory'" << std::endl;
+               std::cout << debugPrefix << "invalid value following 'memory'" << std::endl;
             } else {
                size_t mb_size = mbs*1024L*1024L;
                if (doTrace) {
-                   std::cout << debugPrefix() << "setting hash size to " << mb_size << " bytes " << std::endl << (std::flush);
+                   std::cout << debugPrefix << "setting hash size to " << mb_size << " bytes " << std::endl << (std::flush);
                }
                globals::options.search.hash_table_size = mb_size;
                searcher->updateSearchOptions();
@@ -2745,7 +2749,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
            }
         }
         else {
-            std::cout << debugPrefix() << "warning: memory command ignored due to -H on command line" << std::endl;
+            std::cout << debugPrefix << "warning: memory command ignored due to -H on command line" << std::endl;
         }
     }
     else if  (cmd_word == "egtpath") {
@@ -2764,7 +2768,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         // Unload existing tb set if in use and if path has changed
         if (globals::options.tbPath() != path) {
-           if (doTrace) std::cout << debugPrefix() << "unloading tablebases" << std::endl;
+           if (doTrace) std::cout << debugPrefix << "unloading tablebases" << std::endl;
            globals::unloadTb();
         }
         // Set the tablebase globals::options. But do not initialize the
@@ -2774,7 +2778,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         globals::options.search.use_tablebases = 1;
         globals::options.search.syzygy_path = path;
         if (doTrace) {
-           std::cout << debugPrefix() << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
+           std::cout << debugPrefix << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
         }
 #endif
     }
@@ -2791,7 +2795,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         while (it != movetext.end() && !isalpha(*it)) it++;
         movetext.erase(movetext.begin(),it);
         if (doTrace) {
-            std::cout << debugPrefix() << "move text = " << movetext << std::endl;
+            std::cout << debugPrefix << "move text = " << movetext << std::endl;
         }
         Move move;
         if ((move = text_to_move(board,movetext)) != NullMove) {
@@ -2799,12 +2803,12 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 if (forceMode)
                     game_end = false;
                 else {
-                    if (doTrace) std::cout << debugPrefix() << "ignoring move " << movetext << " received after game end" << std::endl;
+                    if (doTrace) std::cout << debugPrefix << "ignoring move " << movetext << " received after game end" << std::endl;
                     return true;
                 }
             }
             if (doTrace) {
-                std::cout << debugPrefix() << "got move: " << movetext << std::endl;
+                std::cout << debugPrefix << "got move: " << movetext << std::endl;
             }
             // make the move on the board
             execute_move(board,move);
@@ -2820,9 +2824,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                    MovesEqual(predicted_move,move) && !IsNull(ponder_move)) {
                   // We completed pondering already and we got a reply to
                   // this move (e.g. might be a forced reply).
-                  if (doTrace) std::cout << debugPrefix() << "pondering complete already" << std::endl;
+                  if (doTrace) std::cout << debugPrefix << "pondering complete already" << std::endl;
                   if (doTrace) {
-                     std::cout << debugPrefix() << "sending ponder move ";
+                     std::cout << debugPrefix << "sending ponder move ";
                      MoveImage(ponder_move,std::cout);
                      std::cout << std::endl << (std::flush);
                   }
@@ -2830,7 +2834,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   stats = ponder_stats;
                   post_output(stats);
                   game_end = game_end || stats.end_of_game;
-                  if (doTrace) std::cout << debugPrefix() << "game_end = " << game_end << std::endl;
+                  if (doTrace) std::cout << debugPrefix << "game_end = " << game_end << std::endl;
                   predicted_move = ponder_move = NullMove;
                }
                else {
@@ -2844,8 +2848,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   // start pondering after the game is over.
                   game_end = game_end || stats.end_of_game;
                   if (doTrace) {
-                     std::cout << debugPrefix() << "state = " << stats.state << std::endl;
-                     std::cout << debugPrefix() << "game_end = " << game_end  << std::endl;
+                     std::cout << debugPrefix << "state = " << stats.state << std::endl;
+                     std::cout << debugPrefix << "game_end = " << game_end  << std::endl;
                   }
                }
                // Check for game end conditions like resign, draw acceptance, et
@@ -2876,7 +2880,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                    break;
                }
                if (doTrace) {
-                     std::cout << debugPrefix() << "ponder_status=";
+                     std::cout << debugPrefix << "ponder_status=";
                      if (ponder_status == PonderStatus::Hit) std::cout << "Hit";
                      else if (ponder_status == PonderStatus::NoHit) std::cout << "NoHit";
                      else if (ponder_status == PonderStatus::None) std::cout << "None";
@@ -2890,7 +2894,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                    && !forceMode && !analyzeMode) {
                   // we got a reply from pondering
                   if (doTrace) {
-                     std::cout << debugPrefix() << "sending ponder move" << std::endl;
+                     std::cout << debugPrefix << "sending ponder move" << std::endl;
                   }
                   stats = ponder_stats;
                   send_move(board,ponder_move,stats);
@@ -2907,7 +2911,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   // and may be able to use the pondering move later.
                   if (ponder_status == PonderStatus::Pending) {
                       if (doTrace) {
-                          std::cout << debugPrefix() << "exiting ponder loop" << std::endl;
+                          std::cout << debugPrefix << "exiting ponder loop" << std::endl;
                       }
                       break;
                   }
@@ -2915,7 +2919,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
         }
         if (doTrace) {
-            std::cout << debugPrefix() << "out of ponder loop" << std::endl;
+            std::cout << debugPrefix << "out of ponder loop" << std::endl;
         }
     }
     return true;

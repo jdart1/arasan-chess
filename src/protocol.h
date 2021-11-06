@@ -38,14 +38,10 @@ public:
         return searcher->searching();
     }
 
-    const char * debugPrefix() const {
-        return uci ? UCI_DEBUG_PREFIX : CECP_DEBUG_PREFIX;
-    }
+private:
 
     static const char * UCI_DEBUG_PREFIX;
     static const char * CECP_DEBUG_PREFIX;
-
-private:
 
     enum class PendingStatus { Nothing, GameEnd, Move };
 
@@ -251,6 +247,7 @@ private:
     std::string test_file;
     bool cpusSet; // true if cmd line specifies -c
     bool memorySet; // true if cmd line specifies -H
+    std::string &debugPrefix;
 
     struct UciStrengthOpts
     {

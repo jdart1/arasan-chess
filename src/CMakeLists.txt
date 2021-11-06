@@ -158,7 +158,7 @@ search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
 syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
 threadc.h threadp.cpp threadp.h tune.h tune.cpp tuner.cpp types.h ${EXTRA_SRC})
 
-add_executable (pgnselect EXCLUDE_FROM_ALL util/pgnselect.cpp attacks.cpp attacks.h bhash.cpp bhash.h
+list(APPEND UTIL_SRC attacks.cpp attacks.h bhash.cpp bhash.h
 bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
@@ -166,81 +166,23 @@ chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.cpp params.h
-protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
+notation.cpp notation.h options.cpp options.h params.h
+scoring.cpp scoring.h searchc.cpp searchc.h
 search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
-syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
+syzygy.cpp syzygy.h tbconfig.h threadc.cpp
+threadc.h threadp.cpp threadp.h tune.h tune.cpp tuner.cpp types.h ${EXTRA_SRC})
 
-add_executable (playchess EXCLUDE_FROM_ALL util/playchess.cpp attacks.cpp attacks.h bhash.cpp bhash.h
-bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
-boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
-bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
-ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
-hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
-material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.cpp params.h
-protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
-search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
-syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
+add_executable (pgnselect EXCLUDE_FROM_ALL util/pgnselect.cpp ${UTIL_SRC})
 
-add_executable (makebook EXCLUDE_FROM_ALL util/makebook.cpp attacks.h attacks.cpp bhash.cpp bhash.h
-bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
-boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
-bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
-ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
-hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
-material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.cpp params.h
-protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
-search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
-syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
+add_executable (playchess EXCLUDE_FROM_ALL util/playchess.cpp ${UTIL_SRC})
 
-add_executable (ecocoder EXCLUDE_FROM_ALL util/ecocoder.cpp attacks.cpp attacks.h bhash.cpp bhash.h
-bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
-boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
-bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
-ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
-hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
-material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.cpp params.h
-protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
-search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
-syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
+add_executable (makebook EXCLUDE_FROM_ALL util/makebook.cpp ${UTIL_SRC})
 
-add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp attacks.cpp attacks.h bhash.cpp bhash.h
-bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
-boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
-bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
-ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
-hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
-material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.cpp params.h
-protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
-search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
-syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
+add_executable (ecocoder EXCLUDE_FROM_ALL util/ecocoder.cpp ${UTIL_SRC})
 
-add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp attacks.cpp attacks.h bhash.cpp bhash.h
-bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
-boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
-bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
-chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
-ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
-hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
-material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.cpp params.h
-protocol.cpp protocol.h scoring.cpp scoring.h searchc.cpp searchc.h
-search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
-syzygy.cpp syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp
-threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
+add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp ${UTIL_SRC})
+
+add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC})
 
 target_compile_options(tuner PUBLIC -DTUNE)
 

@@ -35,21 +35,17 @@ int BookReader::open(const char *pathName) {
     if (book_file.is_open()) return 0;
     book_file.open(pathName, std::ios_base::in | std::ios_base::binary);
     if (!book_file.is_open()) {
-        std::cerr <<"failed to open " << pathName << std::endl;
         return -1;
     } else {
         // read the header
         book_file.read((char*)&hdr,sizeof(book::BookHeader));
         if (book_file.bad()) {
-            std::cerr << "error reading opening book" << std::endl;
             return -1;
         }
         // correct header for endian-ness
         hdr.num_index_pages = swapEndian16((uint8_t*)&hdr.num_index_pages);
         // verify book version is correct
         if (hdr.version != book::BOOK_VERSION) {
-            std::cerr << "expected book version " << book::BOOK_VERSION << ", got " << (unsigned)hdr.version << std::endl;
-			close();
             return -1;
         } else {
             return 0;
