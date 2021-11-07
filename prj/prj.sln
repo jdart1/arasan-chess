@@ -25,12 +25,12 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|Win32.ActiveCfg = ArasanX_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|Win32.Build.0 = ArasanX_Debug|Win32
-		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|x64.ActiveCfg = ArasanX_Popcnt_Debug|x64
-		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|x64.Build.0 = ArasanX_Popcnt_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|x64.ActiveCfg = ArasanX_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Debug|x64.Build.0 = ArasanX_Debug|x64
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|Win32.ActiveCfg = ArasanX_Release|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|Win32.Build.0 = ArasanX_Release|Win32
-		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|x64.ActiveCfg = ArasanX_Popcnt_Debug|x64
-		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|x64.Build.0 = ArasanX_Popcnt_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|x64.ActiveCfg = ArasanX_Debug|x64
+		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.ArasanX_Release|x64.Build.0 = ArasanX_Debug|x64
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|Win32.ActiveCfg = Makebook_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|Win32.Build.0 = Makebook_Debug|Win32
 		{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}.Makebook_Debug|x64.ActiveCfg = Makebook_Debug|x64
@@ -52,7 +52,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {390B9693-D2D9-47E5-80BF-FD0406B9A0D2}
 		AMDCaProjectFile = C:\arasan\11.5\prj\CodeAnalyst\prj.caw
+		SolutionGuid = {390B9693-D2D9-47E5-80BF-FD0406B9A0D2}
 	EndGlobalSection
 EndGlobal
