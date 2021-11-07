@@ -9,10 +9,10 @@ Changes in Arasan 23.1:
  8) Fixes and cleanup to Makefiles, VC++ projects and CMakeLists.txt.
  9) Output error messages related to intialization to stdout not stderr, and use the appropriate prefix (e.g. "info" for UCI).
 
-Changes in Arasan 23.0.1:
+Changes in Arasan 23.0.1 (Sept. 2021):
  1) Fix default settings of NNUE options under UCI.
 
-Changes in Arasan 23.0:
+Changes in Arasan 23.0 (Sept. 2021):
  1) Add NNUE evaluation
  2) Changes to Makefile: use BUILD_TYPE to select instruction set(s)
  3) Code cleanup: put globals into namespace. Remove TbType because we only support Syzygy tablebases now.
