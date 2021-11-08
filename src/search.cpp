@@ -1220,7 +1220,7 @@ Move Search::ply0_search()
                     // TBD: Sometimes we can fail low after a bunch of fail highs. Allow the
                     // search to continue, but set the lower bound to the bottom of the range.
                     if (mainThread() && debugOut()) {
-                        std::cout << debugPrefix << "warning, too many aspiration window steps" << std::endl;
+                        std::cout << debugPrefix << "too many aspiration window steps, setting window to max width" << std::endl;
                     }
                     aspirationWindow = Constants::MATE;
                 }
