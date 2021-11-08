@@ -1335,6 +1335,7 @@ const struct ECOData eco_codes[] =
 {"D31", 0x184fe2831b82fd85ULL, "Queen's Gambit Declined"},
 {"D31", 0x7ef9a09e430a0655ULL, "Slav Defense, Marshall Gambit"},
 {"D31", 0xb012f94b542842d3ULL, "Semi-Slav Defense"},
+{"D31", 0xdd09a84779e2c2d9ULL, "Semi-Slav Defense"},
 {"D31", 0x76d8f00343abe7f2ULL, ""},
 {"D31", 0x133b9f7a5e8fa354ULL, "Queen's Gambit Declined"},
 {"D31", 0xfdc4e03b499cf49aULL, "Semi-Slav Defense"},
