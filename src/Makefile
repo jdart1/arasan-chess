@@ -280,9 +280,10 @@ release:
 	cd .. && $(GIT_ARCHIVE_ALL_PATH)/git_archive_all.py --prefix arasan-$(VERSION)/ release/arasan-$(VERSION).tar
 	gzip ../release/arasan-$(VERSION).tar
 
-install: all
+install: default
 	mkdir -p $(INSTALL)/arasan-$(VERSION)
 	cp $(EXPORT)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)
+	cp ../network/*.nnue $(INSTALL)/arasan-$(VERSION)
 	chmod 755 $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 	ln -s $(INSTALL)/arasan-$(VERSION)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)/arasanx
 	cp $(SRC)/arasan.rc $(INSTALL)/arasan-$(VERSION)

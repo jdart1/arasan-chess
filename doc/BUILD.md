@@ -42,7 +42,7 @@ to pull these dependencies into your your source tree:
 Arasan now requires a modern compiler with at least C++-17 support.
 
 Limited testing has been done on other OSs and architectures other
-than x32 and amd64.  However, the code is designed to be portable.
+than x86 and amd64.  However, the code is designed to be portable.
 In particular, there is support for big-endian architectures.
 
 # Building on Linux or Mac
@@ -105,16 +105,16 @@ for NUMA (Non-Uniform Memory Access) machines. NUMA support relies
 on the hwloc library version 2.0 or higher. Note: you must have a
 compatible hwloc library in the library search path at runtime.
 
-The Arasan engine binary is named "arasanx-32", "arasanx-64",
-"arasanx-64-modern," or "arasanx-64-avx2," depending on the
-architecture and instruction set selected. "-numa" is added for a NUMA
+The Arasan engine binary is named "arasanx-32" or "arasanx-64," followed
+by the instruction set selected at build time (if specified), so for example:
+"arasanx-64-avx2-bmi2."  "-numa" is added for a NUMA
 build.
 
 Note: "make release" will build the release tarball and place it in the
 release subdirectory. This target uses a Python tool git-archive-all
 (https://github.com/Kentzo/git-archive-all), which needs to be
 installed and its path set in the Makefile (or passed to it in the
-variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive" so
+variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive," so
 "make release" needs to be run from within a git repository.
 
 "make install" will install Arasan binaries into /usr/local/bin/arasan-\<version>.
