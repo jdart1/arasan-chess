@@ -2518,8 +2518,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << " option=\"Set processor affinity -check " <<
             globals::options.search.set_processor_affinity << "\"" << std::endl;
 #endif
-        std::cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"" << std::endl;
-        std::cout << "myname=\"" << "Arasan " << Arasan_Version << "\"" << std::endl;
+        std::cout << " option=\"Move overhead -spin " << 30 << " 0 1000\"";
+        std::cout << " myname=\"" << "Arasan " << Arasan_Version << "\"" << std::endl;
         // set done = 0 because it may take some time to initialize tablebases.
         std::cout << "feature done=0" << std::endl;
         globals::delayedInit();
