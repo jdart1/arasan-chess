@@ -37,7 +37,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define STATIC_NULL_PRUNING
 #define RAZORING
-#define SINGULAR_EXTENSION
+//#define SINGULAR_EXTENSION
 #define MULTICUT
 #define NON_SINGULAR_PRUNING
 
@@ -87,7 +87,10 @@ static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
 
-static const int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
+static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
+
+static constexpr int STATIC_NULL_MARGIN[2] = {static_cast<score_t>(0.75*Params::PAWN_VALUE),
+                                              static_cast<score_t>(0.5*Params::PAWN_VALUE)};
 
 static const score_t QSEARCH_FUTILITY_PRUNE_MARGIN = static_cast<score_t>(1.4*Params::PAWN_VALUE);
 static const score_t QSEARCH_SEE_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
@@ -576,7 +579,7 @@ Move SearchController::findBestMove(
       std::cout << ' ' << stats->history_pruning << " (" << std::setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "%) history" << std::endl;
       std::cout << ' ' << stats->lmp << " (" << std::setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "%) lmp" << std::endl;
       std::cout << ' ' << stats->see_pruning << " (" << std::setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "%) SEE" << std::endl;
-      std::cout << ' ' << stats->reduced << "( " << std::setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << std::endl;
+      std::cout << ' ' << stats->reduced << " (" << std::setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << std::endl;
       std::cout << "extensions: " <<
           stats->check_extensions << " (" << 100.0*stats->check_extensions/stats->moves_searched << "%) check, " <<
           stats->capture_extensions << " (" << 100.0*stats->capture_extensions/stats->moves_searched << "%) capture, " <<
@@ -890,6 +893,11 @@ score_t Search::tbScoreAdjust(const Board &board,
 static score_t futilityMargin(int depth)
 {
     return FUTILITY_MARGIN_BASE + std::max<int>(depth/DEPTH_INCREMENT,1)*FUTILITY_MARGIN_SLOPE;
+}
+
+static score_t staticFutilityMargin(int depth, int improving)
+{
+    return STATIC_NULL_MARGIN[improving]*std::max<int>(1,depth/DEPTH_INCREMENT);
 }
 
 static int lmpCount(int depth, int improving)
@@ -2631,7 +2639,7 @@ score_t Search::search()
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH) {
-        const score_t margin = futilityMargin(depth);
+        const score_t margin = staticFutilityMargin(depth,improving);
         const score_t threshold = node->beta + margin;
         assert(node->eval != Constants::INVALID_SCORE);
         if (node->eval >= threshold && node->eval < Constants::MATE_RANGE) {
@@ -2643,7 +2651,7 @@ score_t Search::search()
 #ifdef SEARCH_STATS
            ++stats.static_null_pruning;
 #endif
-           return node->eval - margin;
+           return node->eval;
        }
     }
 #endif
@@ -2952,8 +2960,8 @@ score_t Search::search()
                 if (result < nu_beta) {
 #ifdef _TRACE
                     indent(ply); std::cout << "singular extension" << std::endl;
-                    singularExtend = true;
 #endif
+                    singularExtend = true;
 #ifdef SEARCH_STATS
                     ++stats.singular_extensions;
 #endif
