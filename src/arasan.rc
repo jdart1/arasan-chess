@@ -88,4 +88,4 @@ search.useNNUE=true
 #
 # Location of the NNUE network file, relative to the Arasan
 # executable location
-search.nnueFile=arasan-d9-10-20211029.nnue
+search.nnueFile=arasan-d8-9-210820.nnue
