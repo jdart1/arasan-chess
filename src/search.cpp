@@ -37,9 +37,9 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define STATIC_NULL_PRUNING
 #define RAZORING
-//#define SINGULAR_EXTENSION
+#define SINGULAR_EXTENSION
 #define MULTICUT
-#define NON_SINGULAR_PRUNING
+#define NON_SINGULAR_EXTENSIONS
 
 static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
@@ -63,7 +63,7 @@ static constexpr double LMR_DIV[2] = {1.8,2.25};
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
 {
-    return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
+    return static_cast<score_t>(0.04*depth*Params::PAWN_VALUE/DEPTH_INCREMENT);
 }
 
 static int singularSearchDepth(int depth)
@@ -2922,20 +2922,17 @@ score_t Search::search()
         }
     }
     {
-        bool singularExtend = false;
+        int singularExtend = 0;
         BoardState state(board.state);
 #ifdef SINGULAR_EXTENSION
         if (depth >= SINGULAR_EXTENSION_DEPTH &&
             ply > 0 &&
             IsNull(node->excluded) &&
             hashHit &&
-            result == HashEntry::LowerBound &&
+            hashEntry.type() == HashEntry::LowerBound &&
             !IsNull(hashMove) &&
             !Scoring::mateScore(hashValue) &&
             hashEntry.depth() >= depth - 3*DEPTH_INCREMENT) {
-#ifdef SEARCH_STATS
-            ++stats.singular_searches;
-#endif
             // Verify hash move legal
             board.doMove(hashMove,node);
             const bool legal = board.wasLegal(hashMove);
@@ -2951,6 +2948,9 @@ score_t Search::search()
                 // implemented in the Ippo* series of engines (and
                 // presumably in Rybka), and also now in Stockfish, Komodo,
                 // Texel, Protector, etc.
+#ifdef SEARCH_STATS
+                ++stats.singular_searches;
+#endif
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
 #ifdef NNUE
@@ -2961,7 +2961,7 @@ score_t Search::search()
 #ifdef _TRACE
                     indent(ply); std::cout << "singular extension" << std::endl;
 #endif
-                    singularExtend = true;
+                    singularExtend = DEPTH_INCREMENT;
 #ifdef SEARCH_STATS
                     ++stats.singular_extensions;
 #endif
@@ -2977,19 +2977,18 @@ score_t Search::search()
 #endif
                     return nu_beta;
 #endif
-#ifdef NON_SINGULAR_PRUNING
+#ifdef NON_SINGULAR_EXTENSIONS
                 }
                 else if (hashValue >= node->beta) {
-                    // Another form of pruning, used in Stockfish.
-                    // If the earch fails high, even without the
-                    // hash move included, then cut off.
                     result = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,hashMove);
                     if (result >= node->beta) {
+                        // Another pruning idea from Stcckfish: prune if the search is >= beta
+                        // (note however current Stockfish reduces rather than prunes)
 #ifdef _TRACE
                         indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
 #endif
 #ifdef SEARCH_STATS
-                        ++stats.non_singular_pruning;
+                        ++stats.non_singular_extensions;
 #endif
                         return node->beta;
                     }
@@ -3045,8 +3044,9 @@ score_t Search::search()
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int depthMod = 0;
             node->swap = Constants::INVALID_SCORE;
+            int extension = 0;
             if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
-               depthMod = DEPTH_INCREMENT;
+               extension = singularExtend;
 #ifdef SEARCH_STATS
                ++stats.singular_extensions;
 #endif
@@ -3055,8 +3055,8 @@ score_t Search::search()
                 if (prune(board, node, in_check_after_move, move_index, improving, move)) {
                     continue;
                 }
-                depthMod = extend(board, node, in_check_after_move, move) +
-                    reduce(board, node, move_index, improving, move);
+                depthMod = reduce(board, node, move_index, improving, move);
+                extension = extend(board, node, in_check_after_move, move);
             }
             board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
@@ -3082,9 +3082,11 @@ score_t Search::search()
             } else {
                 depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
             }
-            if (depth + depthMod - DEPTH_INCREMENT > 0) {
+            int newDepth = depth - DEPTH_INCREMENT + extension;
+            // search with reductions
+            if (newDepth + depthMod > 0) {
                 try_score = -search(-hibound, -node->best_score,
-                    ply+1, depth + depthMod - DEPTH_INCREMENT);
+                                    ply+1, newDepth + depthMod);
             }
             else {
                 try_score = -quiesce(-hibound, -node->best_score,
@@ -3112,8 +3114,8 @@ score_t Search::search()
                }
 #endif
                // re-search with no reduction
-               if (depth-DEPTH_INCREMENT > 0)
-                  try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
+               if (newDepth > 0)
+                  try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
                else
                   try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
@@ -3128,8 +3130,8 @@ score_t Search::search()
                     indent(ply); std::cout << "window = [" << node->best_score << "," << hibound << "]" << std::endl;
                }
 #endif
-               if (depth+depthMod-DEPTH_INCREMENT > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
+               if (newDepth > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
