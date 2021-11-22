@@ -2453,7 +2453,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         return false;
     }
     else if (cmd == "new") {
-        globals::debugPrefix = CECP_DEBUG_PREFIX;
+        // Note: this is a CECP command but this code can be executed
+        // internally in UCI mode also.
         if (!analyzeMode) save_game();
         board.reset();
         bool wasEmpty = globals::theLog->num_moves() == 0;
