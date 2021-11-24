@@ -2892,7 +2892,7 @@ score_t Search::search()
 #ifdef _TRACE
             if (mainThread()) {
                 indent(ply);
-                cout << "== exact result from IID" << endl;
+                std::cout << "== exact result from IID" << std::endl;
             }
 #endif
             return iid_score;
@@ -2902,17 +2902,17 @@ score_t Search::search()
         }
 #ifdef _TRACE
         if (mainThread()) {
-            indent(ply); cout << "== IID done.";
+            indent(ply); std::cout << "== IID done.";
         }
 #endif
 
 #ifdef _TRACE
         if (mainThread()) {
             if (!IsNull(hashMove)) {
-                indent(ply); cout << "  hashMove = ";
-                MoveImage(hashMove,cout);
+                indent(ply); std::cout << "  hashMove = ";
+                MoveImage(hashMove,std::cout);
             }
-            cout << endl;
+            std::cout << std::endl;
         }
 #endif
         if (iid_score <= node->alpha && node->eval > node->alpha) { // upper bound
