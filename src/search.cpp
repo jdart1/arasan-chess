@@ -39,7 +39,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define RAZORING
 #define SINGULAR_EXTENSION
 #define MULTICUT
-#define NON_SINGULAR_EXTENSIONS
+#define NON_SINGULAR_PRUNING
 
 static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
@@ -63,7 +63,7 @@ static constexpr double LMR_DIV[2] = {1.8,2.25};
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
 {
-    return static_cast<score_t>(0.04*depth*Params::PAWN_VALUE/DEPTH_INCREMENT);
+    return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
 }
 
 static int singularSearchDepth(int depth)
@@ -579,7 +579,7 @@ Move SearchController::findBestMove(
       std::cout << ' ' << stats->history_pruning << " (" << std::setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "%) history" << std::endl;
       std::cout << ' ' << stats->lmp << " (" << std::setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "%) lmp" << std::endl;
       std::cout << ' ' << stats->see_pruning << " (" << std::setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "%) SEE" << std::endl;
-      std::cout << ' ' << stats->reduced << " (" << std::setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << std::endl;
+      std::cout << ' ' << stats->reduced << "( " << std::setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << std::endl;
       std::cout << "extensions: " <<
           stats->check_extensions << " (" << 100.0*stats->check_extensions/stats->moves_searched << "%) check, " <<
           stats->capture_extensions << " (" << 100.0*stats->capture_extensions/stats->moves_searched << "%) capture, " <<
@@ -895,10 +895,12 @@ static score_t futilityMargin(int depth)
     return FUTILITY_MARGIN_BASE + std::max<int>(depth/DEPTH_INCREMENT,1)*FUTILITY_MARGIN_SLOPE;
 }
 
-static score_t staticFutilityMargin(int depth, int improving)
+#ifdef STATIC_NULL_PRUNING
+static score_t staticNullPruningMargin(int depth, int improving)
 {
     return STATIC_NULL_MARGIN[improving]*std::max<int>(1,depth/DEPTH_INCREMENT);
 }
+#endif
 
 static int lmpCount(int depth, int improving)
 {
@@ -2307,14 +2309,13 @@ int Search::prune(const Board &board,
                 }
             }
         }
-        const int seeDepth = quiet ? pruneDepth : depth;
         // SEE pruning. Losing captures and checks and moves that put pieces en prise
         // are pruned at low depths.
-        if (seeDepth <= SEE_PRUNING_DEPTH &&
+        if (pruneDepth <= SEE_PRUNING_DEPTH &&
             //    extend <= 0 &&
             node->ply > 0 &&
             GetPhase(move) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-            const score_t margin = seePruningMargin(seeDepth,quiet);
+            const score_t margin = seePruningMargin(pruneDepth,quiet);
             bool seePrune;
             if (margin >= -Params::PAWN_VALUE/3 && node->swap != Constants::INVALID_SCORE) {
                 seePrune = !node->swap;
@@ -2639,7 +2640,7 @@ score_t Search::search()
     // static null pruning, aka reverse futility pruning,
     // as in Protector, Texel, etc.
     if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH) {
-        const score_t margin = staticFutilityMargin(depth,improving);
+        const score_t margin = staticNullPruningMargin(depth, improving);
         const score_t threshold = node->beta + margin;
         assert(node->eval != Constants::INVALID_SCORE);
         if (node->eval >= threshold && node->eval < Constants::MATE_RANGE) {
@@ -2651,7 +2652,7 @@ score_t Search::search()
 #ifdef SEARCH_STATS
            ++stats.static_null_pruning;
 #endif
-           return node->eval;
+           return node->eval - margin;
        }
     }
 #endif
@@ -2922,7 +2923,7 @@ score_t Search::search()
         }
     }
     {
-        int singularExtend = 0;
+        bool singularExtend = false;
         BoardState state(board.state);
 #ifdef SINGULAR_EXTENSION
         if (depth >= SINGULAR_EXTENSION_DEPTH &&
@@ -2961,7 +2962,7 @@ score_t Search::search()
 #ifdef _TRACE
                     indent(ply); std::cout << "singular extension" << std::endl;
 #endif
-                    singularExtend = DEPTH_INCREMENT;
+                    singularExtend = true;
 #ifdef SEARCH_STATS
                     ++stats.singular_extensions;
 #endif
@@ -2977,12 +2978,12 @@ score_t Search::search()
 #endif
                     return nu_beta;
 #endif
-#ifdef NON_SINGULAR_EXTENSIONS
+#ifdef NON_SINGULAR_PRUNING
                 }
                 else if (hashValue >= node->beta) {
                     result = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,hashMove);
                     if (result >= node->beta) {
-                        // Another pruning idea from Stcckfish: prune if the search is >= beta
+                        // Another pruning idea from Stockfish: prune if the search is >= beta
                         // (note however current Stockfish reduces rather than prunes)
 #ifdef _TRACE
                         indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
@@ -3044,19 +3045,18 @@ score_t Search::search()
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int depthMod = 0;
             node->swap = Constants::INVALID_SCORE;
-            int extension = 0;
             if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
-               extension = singularExtend;
+                depthMod = DEPTH_INCREMENT;
 #ifdef SEARCH_STATS
-               ++stats.singular_extensions;
+                ++stats.singular_extensions;
 #endif
             }
             else {
                 if (prune(board, node, in_check_after_move, move_index, improving, move)) {
                     continue;
                 }
-                depthMod = reduce(board, node, move_index, improving, move);
-                extension = extend(board, node, in_check_after_move, move);
+                depthMod = extend(board, node, in_check_after_move, move) +
+                    reduce(board, node, move_index, improving, move);
             }
             board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
@@ -3082,11 +3082,9 @@ score_t Search::search()
             } else {
                 depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
             }
-            int newDepth = depth - DEPTH_INCREMENT + extension;
-            // search with reductions
-            if (newDepth + depthMod > 0) {
+            if (depth + depthMod - DEPTH_INCREMENT > 0) {
                 try_score = -search(-hibound, -node->best_score,
-                                    ply+1, newDepth + depthMod);
+                    ply+1, depth + depthMod - DEPTH_INCREMENT);
             }
             else {
                 try_score = -quiesce(-hibound, -node->best_score,
@@ -3114,8 +3112,8 @@ score_t Search::search()
                }
 #endif
                // re-search with no reduction
-               if (newDepth > 0)
-                  try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
+               if (depth-DEPTH_INCREMENT > 0)
+                  try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
                else
                   try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
@@ -3130,8 +3128,8 @@ score_t Search::search()
                     indent(ply); std::cout << "window = [" << node->best_score << "," << hibound << "]" << std::endl;
                }
 #endif
-               if (newDepth > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
+               if (depth+depthMod-DEPTH_INCREMENT > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }

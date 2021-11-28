@@ -32,5 +32,3 @@ pushd ..
 7z u -tzip -orelease %1 gui\install\arasan.iss gui\install\readme.txt
 7z u -tzip -orelease %1 network\arasan-d9-10-20211029.nnue
 
-popd
-
