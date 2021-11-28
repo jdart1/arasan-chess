@@ -2989,7 +2989,7 @@ score_t Search::search()
                         indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
 #endif
 #ifdef SEARCH_STATS
-                        ++stats.non_singular_extensions;
+                        ++stats.non_singular_pruning;
 #endif
                         return node->beta;
                     }
