@@ -71,7 +71,7 @@ extern void initOptions();
 // Perform actions that need to be done before a game but after
 // program startup (chiefly ones that depend on runtime options
 // being set).
-extern void delayedInit();
+extern void delayedInit(bool verbose = true);
 
 // Attempt to unload the tablebases (if in use),
 extern void unloadTb();

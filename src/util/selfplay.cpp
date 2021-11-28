@@ -610,6 +610,7 @@ int CDECL main(int argc, char **argv) {
     Attacks::init();
     Scoring::init();
     Search::init();
+
     if (!globals::initGlobals(false)) {
         globals::cleanupGlobals();
         exit(-1);

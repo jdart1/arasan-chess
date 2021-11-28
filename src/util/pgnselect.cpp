@@ -196,6 +196,7 @@ int CDECL main(int argc, char **argv)
        exit(-1);
    }
    atexit(globals::cleanupGlobals);
+   globals::delayedInit(false);
 
    random_engine.seed(getRandomSeed());
 

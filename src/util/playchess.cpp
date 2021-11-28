@@ -40,11 +40,11 @@ int CDECL main(int argc, char **argv)
        exit(-1);
    }
    atexit(globals::cleanupGlobals);
-   globals::delayedInit();
+   globals::options.book.book_enabled = globals::options.log_enabled = 0;
+   globals::delayedInit(false);
    if (globals::EGTBMenCount) {
       std::cerr << "Initialized tablebases" << std::endl;
    }
-   globals::options.book.book_enabled = globals::options.log_enabled = 0;
 
    int minMoves = 30;
    int minELO = 0;
