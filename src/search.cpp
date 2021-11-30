@@ -13,10 +13,6 @@
 #include "legal.h"
 #include "trace.h"
 
-#ifndef _WIN32
-#include <errno.h>
-#endif
-
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
