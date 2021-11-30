@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
-add_compile_definitions(ARASAN_VERSION=23.1)
+add_compile_definitions(ARASAN_VERSION=23.2)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -77,7 +77,7 @@ else()
     set(EXE_NAME ${EXE_NAME}-32)
 endif(64BIT)
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT WIN32)
     add_link_options("-fuse-ld=gold")
 endif()
 

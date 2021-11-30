@@ -2,7 +2,7 @@
 # Gnu Makefile for Arasan
 # Copyright 2004-2021 by Jon Dart. All Rights Reserved.
 #
-VERSION = 23.1
+VERSION = 23.2
 
 # paths, modify as needed:
 
@@ -193,9 +193,11 @@ LTO := -flto
 endif
 OPT     = -O3 $(LTO) -fno-rtti -DNDEBUG
 LDFLAGS := $(LDFLAGS) $(OPT)
-ifneq ("darwin","$(findstring darwin,$(OSTYPE))")
-# "Gold" not supported on darwin
+ifeq ("$(findstring darwin,$(OSTYPE))",)
+ifeq ("$(findstring cygwin,$(OSTYPE))",)
+# "Gold" not supported on darwin or cygwin
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+endif
 endif
 endif
 
@@ -227,7 +229,11 @@ ifneq "$(GCC11)" "1"
 FLAGS := $(FLAGS) -std=c++17
 endif
 SMPFLAGS := $(SMPFLAGS) -pthread
+ifeq ("$(findstring darwin,$(OSTYPE))",)
+ifeq ("$(findstring cygwin,$(OSTYPE))",)
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+endif
+endif
 ifndef DEBUG
 OPT	= -Ofast -flto -fno-rtti -fno-enforce-eh-specs -DNDEBUG
 LDFLAGS := $(LDFLAGS) $(OPT)
