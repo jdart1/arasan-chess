@@ -1,4 +1,13 @@
-Changes in Arasan 23.1:
+Changes in Arasan 23.2:
+ 1) Fixes to singular extension code.
+ 2) Change static null pruning margins.
+ 3) Fix compile errs in tracing code.
+ 4) Don't reset debug prefix when executing "new" command.
+ 5) Fix myname feature (for CECP mode).
+ 6) Package correct network file for Windows.
+ 7) Build fixes for Cygwin
+
+Changes in Arasan 23.1 (Nov. 2021):
  1) Disable book when running the "bench" command. Ensure tablebases and NNUE are initialized before it runs.
  2) Support SIMD on older Intel/AMD chips. Default builds now assume at least SSE2 is available.
  3) Fix #34 - specify C++17 for clang.
@@ -7,7 +16,8 @@ Changes in Arasan 23.1:
  6) Singular extension changes. Allow some pre-search pruning during a singular search.
  7) Some code cleanup and refactoring.
  8) Fixes and cleanup to Makefiles, VC++ projects and CMakeLists.txt.
- 9) Output error messages related to intialization to stdout not stderr, and use the appropriate prefix (e.g. "info" for UCI).
+ 9) Output error and info messages related to intialization to stdout not stderr, and use the
+ appropriate prefix (e.g. "info" for UCI).
 
 Changes in Arasan 23.0.1 (Sept. 2021):
  1) Fix default settings of NNUE options under UCI.
