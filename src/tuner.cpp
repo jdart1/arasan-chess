@@ -93,8 +93,7 @@ static std::atomic<int> phase2_game_index;
 
 static std::string cmdline;
 
-LockDefine(file_lock);
-LockDefine(data_lock);
+std::mutex file_lock, data_lock;
 
 #ifdef _POSIX_VERSION
 static pthread_attr_t stackSizeAttrib;
@@ -341,14 +340,15 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
          Board board, pvBoard;
          double result = 0.0;
          EPDRecord rec;
-         Lock(file_lock);
-         ++line;
-         pos_file.getline(buf,256);
-         if (!pos_file.good()) {
-             Unlock(file_lock);
-             break;
+         {
+             std::unique_lock<std::mutex> lock(file_lock);
+             ++line;
+             pos_file.getline(buf,256);
+             if (!pos_file.good()) {
+                 Unlock(file_lock);
+                 break;
+             }
          }
-         Unlock(file_lock);
          std::stringstream input(buf);
          if (!ChessIO::readEPDRecord(input,board,rec)) {
             break;
@@ -379,9 +379,10 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
              pdata.target += func_value;
              std::stringstream fen;
              fen << pvBoard;
-             Lock(data_lock);
-             positions.push_back(new PosInfo(fen.str(),result));
-             Unlock(data_lock);
+             {
+                 std::unique_lock<std::mutex> lock(data_lock);
+                 positions.push_back(new PosInfo(fen.str(),result));
+             }
          }
       } catch(std::bad_alloc) {
          std::cerr << "out of memory" << std::endl;
@@ -1669,8 +1670,6 @@ static void output_solution(const std::string &cmd, double obj)
 
 static void learn()
 {
-   LockInit(data_lock);
-   LockInit(file_lock);
 #ifdef _MSC_VER
    double best = 1.0e10;
 #else
@@ -1739,9 +1738,6 @@ static void learn()
       }
       adjust_params(data2[0],historical_grad,m,v,prev_gradient,step_sizes,iter);
    }
-
-   LockFree(data_lock);
-   LockFree(file_lock);
 }
 
 int CDECL main(int argc, char **argv)

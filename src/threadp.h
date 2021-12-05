@@ -1,4 +1,4 @@
-// Copyright 2005-2013, 2016-2018 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2013, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
 
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
@@ -60,13 +60,12 @@ public:
 
    template <void (Search::*fn)()>
       void forEachSearch() {
-      lock();
+      std::unique_lock<std::mutex> lock(poolLock);
       for (unsigned i = 0; i < nThreads; i++) {
           if (data[i] && data[i]->work) {
               std::mem_fn(fn)(data[i]->work);
           }
       }
-      unlock();
    }
 
    void unblockAll() {
@@ -81,14 +80,6 @@ public:
 
    SearchController *getController() const {
      return controller;
-   }
-
-   void lock() {
-     Lock(poolLock);
-   }
-
-   void unlock() {
-     Unlock(poolLock);
    }
 
    Search *rootSearch() const {
@@ -116,19 +107,17 @@ public:
    uint64_t totalHits() const;
 
    bool isCompleted(unsigned index) {
-       lock();
+       std::unique_lock<std::mutex> lock(poolLock);
        bool val = completedMask.test(index);
-       unlock();
        return val;
    }
 
    void setCompleted(unsigned index) {
-       lock();
+       std::unique_lock<std::mutex> lock(poolLock);
        completedMask.set(static_cast<size_t>(index));
        if (completedMask.count() == nThreads) {
            signal();
        }
-       unlock();
    }
 
 private:
@@ -140,7 +129,7 @@ private:
    void shutDown();
 
    // lock for the class.
-   LockDefine(poolLock);
+   std::mutex poolLock;
    SearchController *controller;
    unsigned nThreads;
    std::array<ThreadInfo *,Constants::MaxCPUs> data;

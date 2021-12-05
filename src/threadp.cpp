@@ -17,12 +17,11 @@ bitset<Constants::MaxCPUs> ThreadPool::rebindMask;
 //#define _THREAD_TRACE
 
 #ifdef _THREAD_TRACE
-static lock_t io_lock;
+static std::mutex io_lock;
 
 void log(const std::string &s) {
-    Lock(io_lock);
+    std::unique_lock<std::mutex> lock(io_lock);
     std::cout << s.c_str() << std::endl << (flush);
-    Unlock(io_lock);
 }
 void log(const std::string &s,int param) {
     std::ostringstream out;
@@ -34,78 +33,81 @@ void log(const std::string &s,int param) {
 #endif
 
 void ThreadPool::idle_loop(ThreadInfo *ti) {
-   while (ti->state != ThreadInfo::Terminating) {
+    while (ti->state != ThreadInfo::Terminating) {
 #ifdef _THREAD_TRACE
-      {
-      std::ostringstream s;
-      s << "thread " << ti->index << " in idle loop" << '\0';
-      log(s.str());
-      }
+        {
+            std::ostringstream s;
+            s << "thread " << ti->index << " in idle loop" << '\0';
+            log(s.str());
+        }
 #endif
-      ThreadPool *pool = ti->pool;
-      pool->lock();
-      ti->state = ThreadInfo::Idle;
+        ThreadPool *pool = ti->pool;
+        {
+            std::unique_lock<std::mutex> lock(pool->poolLock);
+            ti->state = ThreadInfo::Idle;
 #ifdef NUMA
-      if (rebindMask.test(ti->index)) {
-         if (pool->bind(ti->index)) {
-            cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
-         }
-         rebindMask.reset(ti->index);
-      }
+            if (rebindMask.test(ti->index)) {
+                if (pool->bind(ti->index)) {
+                    cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
+                }
+                rebindMask.reset(ti->index);
+            }
 #endif
-      pool->unlock();
-      int result;
-      if ((result = ti->wait()) != 0) {
-         if (result == -1) continue; // was interrupted
-         else break;
-      }
+        }
+        int result;
+        if ((result = ti->wait()) != 0) {
+            if (result == -1) continue; // was interrupted
+            else break;
+        }
 #ifdef _THREAD_TRACE
-      log("unblocked",ti->index);
+        log("unblocked",ti->index);
 #endif
-      // We've been woken up. There are two possible reasons:
-      // 1. This thread is terminating.
-      // 2. This thread has been assigned some work.
-      //
-      if (ti->state == ThreadInfo::Terminating) {
-          break;
-      }
-      assert(ti->work);
-      pool->lock();
-      pool->activeMask |= (1ULL << ti->index);
-      ti->state = ThreadInfo::Working;
-      pool->unlock();
-      // allocate stack on which search will be done
-      NodeInfo *searchStack = new NodeInfo[Search::SearchStackSize];
-      ti->work->init(searchStack, ti);
+        // We've been woken up. There are two possible reasons:
+        // 1. This thread is terminating.
+        // 2. This thread has been assigned some work.
+        //
+        if (ti->state == ThreadInfo::Terminating) {
+            break;
+        }
+        assert(ti->work);
+        {
+            std::unique_lock<std::mutex> lock(pool->poolLock);
+            pool->activeMask |= (1ULL << ti->index);
+            ti->state = ThreadInfo::Working;
+        }
+        // allocate stack on which search will be done
+        NodeInfo *searchStack = new NodeInfo[Search::SearchStackSize];
+        ti->work->init(searchStack, ti);
 #ifdef _THREAD_TRACE
-      {
-          std::ostringstream s;
-          s << "search starting, thread " << ti->index;
-          log(s.str());
-      }
+        {
+            std::ostringstream s;
+            s << "search starting, thread " << ti->index;
+            log(s.str());
+        }
 #endif
-      ti->work->ply0_search();
-      delete [] searchStack;
-      pool->lock();
-      // Mark thread completed
-      pool->completedMask.set(ti->index);
+        ti->work->ply0_search();
+        delete [] searchStack;
+        {
+            std::unique_lock<std::mutex> lock(pool->poolLock);
+            // Mark thread completed
+            pool->completedMask.set(ti->index);
 #ifdef _THREAD_TRACE
-      {
-           std::ostringstream s;
-           s << "# thread " << ti->index << " completed, mask=" << 
-           pool->completedMask << endl;
-           log(s.str());
-      }
+            {
+                std::ostringstream s;
+                s << "# thread " << ti->index << " completed, mask=" <<
+                    pool->completedMask << endl;
+                log(s.str());
+            }
 #endif
-      // remove thread from active list and set state back to Idle
-      pool->activeMask.reset(ti->index);
-      ti->state = ThreadInfo::Idle;
-      // signal waiter if all threads done
-      if (pool->allCompleted()) {
-          pool->signal();
-      }
-      pool->unlock();
-   }
+            // remove thread from active list and set state back to Idle
+            pool->activeMask.reset(ti->index);
+            ti->state = ThreadInfo::Idle;
+            // signal waiter if all threads done
+            if (pool->allCompleted()) {
+                pool->signal();
+            }
+        }
+    }
 }
 
 void ThreadPool::waitAll()
@@ -193,7 +195,6 @@ ThreadInfo::ThreadInfo(ThreadPool *p, unsigned i)
 ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
     controller(ctrl), nThreads(n) {
 
-   LockInit(poolLock);
    data.fill(nullptr);
 #ifndef _WIN32
    if (pthread_attr_init (&stackSizeAttrib)) {
@@ -211,10 +212,6 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
       }
    }
 #endif
-#ifdef _THREAD_TRACE
-  LockInit(io_lock);
-#endif
-   LockInit(poolLock);
    for (unsigned i = 0; i < n; i++) {
 #ifdef NUMA
       rebindMask.set(i);
@@ -254,19 +251,15 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
 
 ThreadPool::~ThreadPool() {
    shutDown();
-#ifdef _THREAD_TRACE
-   LockFree(io_lock);
-#endif
 #ifndef _WIN32
    if (pthread_attr_destroy(&stackSizeAttrib)) {
       perror("pthread_attr_destroy");
    }
 #endif
-   LockFree(poolLock);
 }
 
 void ThreadPool::shutDown() {
-    Lock(poolLock);
+    std::unique_lock<std::mutex> lock(poolLock);
     ThreadInfo *p;
     // note: do not terminate thread 0 (main thread) in this loop
     for (unsigned i = 1; i < nThreads; i++) {
@@ -292,12 +285,11 @@ void ThreadPool::shutDown() {
     // now free main thread data
     delete data[0]->work;
     delete data[0]; // main thread structure
-    Unlock(poolLock);
 }
 
 void ThreadPool::resize(unsigned n) {
     if (n >= 1 && n < Constants::MaxCPUs && n != nThreads) {
-        lock();
+        std::unique_lock<std::mutex> lock(poolLock);
 #ifdef NUMA
         topo.recalc();
 #endif
@@ -328,7 +320,6 @@ void ThreadPool::resize(unsigned n) {
                 --nThreads;
             }
         }
-        unlock();
     }
     assert(nThreads == n);
     for (size_t i = 0; i < Constants::MaxCPUs; i++) {

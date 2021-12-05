@@ -42,9 +42,9 @@ Options globals::options;
 BookReader globals::openingBook;
 Log *globals::theLog = nullptr;
 std::string globals::learnFileName;
-LockDefine(globals::input_lock);
+std::mutex globals::input_lock;
 #ifdef SYZYGY_TBS
-LockDefine(globals::syzygy_lock);
+std::mutex globals::syzygy_lock;
 #endif
 bool globals::polling_terminated;
 ThreadControl globals::inputSem;
@@ -139,11 +139,7 @@ int globals::initGlobals(bool initLog) {
        theLog->clear();
        theLog->write_header();
    }
-   LockInit(input_lock);
-#ifdef SYZYGY_TBS
-   LockInit(syzygy_lock);
-#endif
-return 1;
+   return 1;
 }
 
 #ifdef NNUE
@@ -161,10 +157,6 @@ void CDECL globals::cleanupGlobals(void) {
    openingBook.close();
    delete gameMoves;
    delete theLog;
-   LockFree(input_lock);
-#ifdef SYZYGY_TBS
-   LockFree(syzygy_lock);
-#endif
    Scoring::cleanup();
    Bitboard::cleanup();
    Board::cleanup();

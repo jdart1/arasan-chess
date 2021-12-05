@@ -50,11 +50,12 @@ static void processCmdChars(Protocol *p,char *buf,int len) {
             cmd_buf += c;
         }
     }
-    Lock(globals::input_lock);
-    if (p->hasPending() && !p->isSearching()) {
-        globals::inputSem.signal();
+    {
+        std::unique_lock<std::mutex> lock(globals::input_lock);
+        if (p->hasPending() && !p->isSearching()) {
+            globals::inputSem.signal();
+        }
     }
-    Unlock(globals::input_lock);
 }
 
 #ifdef _WIN32

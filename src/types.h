@@ -1,25 +1,10 @@
-// Copyright 1993-2009, 2012-2014, 2016-2018 by Jon Dart.
+// Copyright 1993-2009, 2012-2014, 2016-2019, 2021 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _TYPES_H
 #define _TYPES_H
 
 // Types and macros for OS, machine, and compiler portability
-
-#define USE_SPINLOCK
-
-// Spinlock appears not to work under address sanitizer
-
-// Detect address sanitizer under clang
-#if defined(__has_feature)
-#  if __has_feature(address_sanitizer)
-#undef USE_SPINLOCK
-#endif
-#endif
-// Detect for gcc
-#ifdef __SANITIZE_ADDRESS__
-#undef USE_SPINLOCK
-#endif
 
 extern "C" {
 #ifdef _WIN32
@@ -37,6 +22,12 @@ extern "C" {
 #include <atomic>
 #include <chrono>
 #include <thread>
+
+#if defined(_WIN32) && !defined(CYGWIN)
+#define THREAD HANDLE
+#else
+#define THREAD pthread_t
+#endif
 
 typedef uint64_t hash_t;
 
@@ -157,52 +148,6 @@ inline uint64_t getRandomSeed() {
 #define ALIGN_VAR(n) __declspec(align(n))
 #else
 #define ALIGN_VAR(n)
-#endif
-
-// multithreading support.
-#ifdef _WIN32
-#define LockDefine(x) CRITICAL_SECTION x
-#define lock_t CRITICAL_SECTION
-#define LockInit(x) InitializeCriticalSection(&x)
-#define Lock(x) EnterCriticalSection(&x);
-#define Unlock(x) LeaveCriticalSection(&x);
-#define LockFree(x) DeleteCriticalSection(&x)
-#define THREAD HANDLE
-#elif defined(USE_SPINLOCK)
-class Spinlock {
-    std::atomic_flag locked = ATOMIC_FLAG_INIT;
-
- public:
-  Spinlock() {
-  }
-  virtual ~Spinlock() {
-  }
-  void lock()
-  {
-    while (locked.test_and_set(std::memory_order_acquire)) { ; }
-  }
-
-  void unlock()
-  {
-    locked.clear(std::memory_order_release);
-  }
-};
-#define LockDefine(x) Spinlock x
-#define lock_t Spinlock
-#define LockInit(x)
-#define Lock(x) x.lock()
-#define Unlock(x) x.unlock()
-#define LockFree(x)
-#define THREAD pthread_t
-#else
-#define LockDefine(x) std::mutex *x
-#define lock_t std::mutex *
-#define LockInit(x) x = new std::mutex
-#define Lock(x) x->lock()
-#define Unlock(x) x->unlock()
-#define LockFree(x) delete x
-#define THREAD pthread_t
-
 #endif
 
 #if _BYTE_ORDER == _BIG_ENDIAN

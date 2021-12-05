@@ -397,9 +397,10 @@ Move SearchController::findBestMove(
        // we don't need to worry about this, but it is possible there are
        // two concurrent SearchController instances in a program, in which case
        // it matters.
-       Lock(globals::syzygy_lock);
-       tb_hit = mg->rank_root_moves();
-       Unlock(globals::syzygy_lock);
+       {
+           std::unique_lock<std::mutex> lock(globals::syzygy_lock);
+           tb_hit = mg->rank_root_moves();
+       }
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
            tb_root_hits += mg->moveCount();

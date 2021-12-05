@@ -18,6 +18,9 @@
 #include "nnue/nnue.h"
 #endif
 
+#include <string>
+#include <mutex>
+
 namespace globals {
 
 extern Options options;
@@ -27,9 +30,9 @@ extern std::string learnFileName;
 extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
-extern lock_t input_lock;
+extern std::mutex input_lock;
 #ifdef SYZYGY_TBS
-extern lock_t syzygy_lock;
+extern std::mutex syzygy_lock;
 #endif
 #ifdef TUNE
 extern Tune tune_params;
