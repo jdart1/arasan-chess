@@ -345,7 +345,6 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
              ++line;
              pos_file.getline(buf,256);
              if (!pos_file.good()) {
-                 Unlock(file_lock);
                  break;
              }
          }

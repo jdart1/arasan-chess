@@ -79,8 +79,7 @@ struct OutputData {
     Move move;
 };
 
-LockDefine(outputLock);
-LockDefine(bookLock);
+std::mutex outputLock, bookLock;
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
@@ -152,9 +151,10 @@ static void saveGame(ThreadData &td, const std::string &result, std::ofstream &f
     ecoCoder.classify(td.gameMoves, eco, opening_name);
     headers.push_back(ChessIO::Header("Result", result));
     headers.push_back(ChessIO::Header("ECO", eco));
-    Lock(outputLock);
-    ChessIO::store_pgn(file, td.gameMoves, result, headers);
-    Unlock(outputLock);
+    {
+        std::unique_lock<std::mutex> lock(outputLock);
+        ChessIO::store_pgn(file, td.gameMoves, result, headers);
+    }
 }
 
 class binEncoder {
@@ -389,9 +389,8 @@ static void selfplay(ThreadData &td) {
             stats.clear();
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
-                Lock(bookLock);
+                std::unique_lock<std::mutex> lock(bookLock);
                 m = globals::openingBook.pick(board);
-                Unlock(bookLock);
             }
             score_t score = 0;
             if (IsNull(m)) {
@@ -522,10 +521,9 @@ static void selfplay(ThreadData &td) {
                     resultStr = "0.0";
                 else
                     resultStr = "0.5";
-                Lock(outputLock);
+                std::unique_lock<std::mutex> lock(outputLock);
                 *pos_out_file << data.fen << ' ' << RESULT_TAG << " \""
                               << resultStr << "\";" << std::endl;
-                Unlock(outputLock);
             } else {
                 int resultVal; // result from side to move POV
                 if (result == Result::WhiteWin)
@@ -534,9 +532,8 @@ static void selfplay(ThreadData &td) {
                     resultVal = data.stm == Black ? 1 : -1;
                 else
                     resultVal = 0;
-                Lock(outputLock);
+                std::unique_lock<std::mutex> lock(outputLock);
                 binEncoder::output(data, resultVal, *pos_out_file);
-                Unlock(outputLock);
             }
         }
     }
@@ -620,8 +617,6 @@ int CDECL main(int argc, char **argv) {
     if (globals::EGTBMenCount) {
         std::cerr << "Initialized tablebases" << std::endl;
     }
-    LockInit(outputLock);
-    LockInit(bookLock);
 
     globals::options.search.hash_table_size = 128 * 1024 * 1024;
     globals::options.book.frequency = 25;
@@ -715,8 +710,6 @@ int CDECL main(int argc, char **argv) {
 
     init_threads();
     launch_threads();
-    LockFree(outputLock);
-    LockFree(bookLock);
 
     delete pos_out_file;
     delete game_out_file;
