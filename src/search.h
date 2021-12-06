@@ -347,8 +347,8 @@ public:
 
     ~SearchController();
 
-    typedef std::function<void(const Statistics &)> PostFunction;
-    typedef std::function<int(SearchController *,const Statistics &)> MonitorFunction;
+    typedef std::function<void (const Statistics &)> PostFunction;
+    typedef std::function<bool (SearchController *,const Statistics &)> MonitorFunction;
 
     Move findBestMove(
         const Board &board,

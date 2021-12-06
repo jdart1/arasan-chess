@@ -30,7 +30,9 @@ extern std::string learnFileName;
 extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
+
 extern std::mutex input_lock;
+
 #ifdef SYZYGY_TBS
 extern std::mutex syzygy_lock;
 #endif
@@ -42,7 +44,6 @@ extern nnue::Network network;
 extern bool nnueInitDone;
 #endif
 extern bool polling_terminated;
-extern ThreadControl inputSem;
 extern std::string debugPrefix;
 
 // KPK bitbases:

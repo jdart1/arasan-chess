@@ -12,10 +12,8 @@
 #include "unit.h"
 #endif
 
-#include <cctype>
 #include <iostream>
 #include <fstream>
-#include <memory>
 
 extern "C"
 {
@@ -31,109 +29,6 @@ extern "C"
 #include <sys/select.h>
 #endif
 }
-
-static THREAD pollingThreadHandle;
-static std::string cmd_buf;
-
-static void processCmdChars(Protocol *p,char *buf,int len) {
-    // try to parse the buffer into command lines
-    for (int i = 0; i < len; i++) {
-        char c = buf[i];
-        if (c == '\r' || c == '\n') {
-            // handle CR + LF if present
-            if (i+1 < len && (buf[i+1] == '\r' || buf[i+1] == '\n')) i++;
-            if (cmd_buf.length()) {
-                p->dispatchCmd(cmd_buf);
-                cmd_buf.clear();
-            }
-        } else {
-            cmd_buf += c;
-        }
-    }
-    {
-        std::unique_lock<std::mutex> lock(globals::input_lock);
-        if (p->hasPending() && !p->isSearching()) {
-            globals::inputSem.signal();
-        }
-    }
-}
-
-#ifdef _WIN32
-
-static DWORD WINAPI inputPoll(void *x) {
-   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-   Protocol *p = static_cast<Protocol *>(x);
-   char buf[1024];
-   while (!globals::polling_terminated) {
-      BOOL bSuccess;
-      DWORD dwRead;
-      if (_isatty(_fileno(stdin))) {
-         // we are reading direct from the console, enable echo & control-char
-         // processing
-         if (!SetConsoleMode(hStdin, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT |
-                         ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT)) {
-            std::cerr << "SetConsoleMode failed" << std::endl;
-         }
-         bSuccess = ReadConsole(hStdin, buf, 1024, &dwRead, NULL);
-      }
-      else {
-         bSuccess = ReadFile(hStdin, buf, 1024, &dwRead, NULL);
-         if (! bSuccess || dwRead == 0) {
-            if (p->traceOn()) std::cout << "# read error from input pipe" << std::endl;
-            break;
-	 }
-      }
-      processCmdChars(p,buf,(int)dwRead);
-   }
-   if (p->traceOn()) std::cout << "input polling thread terminated" << std::endl;
-   return 0;
-}
-
-#else
-
-static void * CDECL inputPoll(void *x) {
-    Protocol *p = static_cast<Protocol*>(x);
-    static const int INPUT_BUF_SIZE = 1024;
-    char buf[INPUT_BUF_SIZE];
-    while (!globals::polling_terminated) {
-        fd_set readfds;
-        struct timeval tv;
-        int data;
-
-        FD_ZERO(&readfds);
-        FD_SET(STDIN_FILENO, &readfds);
-        // set a timeout so we can interrupt the polling thread
-        // with no input.
-        tv.tv_sec=2;
-        tv.tv_usec=0;
-        int ret = select(16, &readfds, 0, 0, &tv);
-        if (ret == 0) {
-            // no data available
-            continue;
-        } else if (ret == -1) {
-            perror("select");
-            continue;
-        }
-        data=FD_ISSET(STDIN_FILENO, &readfds);
-        if (data>0) {
-            // we have something to read
-            int bytes = read(STDIN_FILENO,buf,INPUT_BUF_SIZE);
-            if (bytes == -1) {
-                perror("input poll: read");
-                continue;
-            }
-            if (bytes) {
-                processCmdChars(p,buf,bytes);
-            }
-        }
-    }
-    if (p->traceOn()) {
-        std::cout << "input polling thread terminated" << std::endl;
-    }
-    return nullptr;
-}
-
-#endif
 
 int CDECL main(int argc, char **argv) {
     signal(SIGINT,SIG_IGN);
@@ -247,43 +142,6 @@ int CDECL main(int argc, char **argv) {
 
     Protocol *p = new Protocol(board,trace,ics,cpusSet,memorySet);
 
-#ifdef _WIN32
-    // setup polling thread for input from engine
-    globals::polling_terminated = false;
-    DWORD id;
-    pollingThreadHandle = CreateThread(NULL,0,
-                                       inputPoll,p,
-                                       0,
-                                       &id);
-    if (pollingThreadHandle == NULL) {
-        int nerror = GetLastError();
-        LPSTR errMsg = NULL;
-
-        int nChars = FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-            NULL,
-            nerror,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  // Default language
-            errMsg,
-            512,
-            NULL
-            );
-        if (nChars) {
-            printf("Input thread failed to start: %s\n", errMsg);
-        }
-        else {
-            printf("Input thread failed to start, error code %d\n", nerror);
-        }
-        LocalFree(errMsg);
-        exit(-1);
-    }
-#else
-    if (pthread_create(&pollingThreadHandle, NULL, inputPoll, p)) {
-        perror("input thread creation failed");
-        exit(-1);
-    }
-#endif
-
 #ifdef UNIT_TESTS
     globals::delayedInit(); // ensure all init is done including TBs, network
     int errs = doUnit();
@@ -292,13 +150,6 @@ int CDECL main(int argc, char **argv) {
 
     p->poll(globals::polling_terminated);
 
-#ifdef _WIN32
-    TerminateThread(pollingThreadHandle,0);
-#else
-    globals::polling_terminated = true;
-    void *value_ptr;
-    pthread_join(pollingThreadHandle,&value_ptr);
-#endif
     delete p;
     return 0;
 }

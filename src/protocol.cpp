@@ -128,27 +128,27 @@ Protocol::~Protocol()
     }
 }
 
+// Read from input, outside of the search
 void Protocol::poll(bool &polling_terminated)
 {
     while(!polling_terminated) {
-        if (globals::inputSem.wait()) {
-            break;
-        }
-        while (!polling_terminated) {
+        // execute pending commands before getting more input
+        do_all_pending(*main_board);
+        if (input.readInput(pending, inputMtx)) {
             std::string cmd;
             {
-                std::unique_lock<std::mutex> lock(globals::input_lock);
+                std::unique_lock<std::mutex> lock(inputMtx);
                 if (hasPending()) {
                     cmd = pending.front();
                     pending.erase(pending.begin());
-                } else {
+                    if (doTrace) {
+                        if (doTrace) std::cout << debugPrefix << "calling do_command(main):" << cmd << (std::flush) << std::endl;
+                    }
+                }
+                else {
                     break;
                 }
-                if (doTrace) {
-                    std::cout << debugPrefix << "got cmd (main): "  << cmd << std::endl;
-                }
             }
-            if (doTrace) std::cout << debugPrefix << "calling do_command(main):" << cmd << (std::flush) << std::endl;
             if (!do_command(cmd,*main_board)) {
                 if (doTrace) std::cout << debugPrefix << "exiting polling loop" << std::endl;
                 polling_terminated = true;
@@ -163,7 +163,7 @@ void Protocol::poll(bool &polling_terminated)
 }
 
 void Protocol::add_pending(const std::string &cmd) {
-    std::unique_lock<std::mutex> lock(globals::input_lock);
+    std::unique_lock<std::mutex> lock(inputMtx);
     pending.push_back(cmd);
 }
 
@@ -216,7 +216,7 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
     while (true) {
         std::string cmd;
         {
-            std::unique_lock<std::mutex> lock(globals::input_lock);
+            std::unique_lock<std::mutex>(inputMtx);
             if (pending.empty()) {
                 break;
             }
@@ -241,33 +241,38 @@ Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
 Protocol::PendingStatus Protocol::check_pending(Board &board) {
     if (doTrace) std::cout << debugPrefix << "in check_pending" << std::endl;
     PendingStatus retVal = PendingStatus::Nothing;
-    std::unique_lock<std::mutex> lock(globals::input_lock);
-    while (!pending.empty()) {
-        const std::string cmd(pending.front());
-        std::string cmd_word, cmd_args;
-        split_cmd(cmd,cmd_word,cmd_args);
-        if (cmd_word == "result" ||
-            cmd == "new" ||
-            cmd == "quit" ||
-            cmd == "resign") {
+    while (true) {
+        std::string cmd;
+        {
+            std::unique_lock<std::mutex> lock(inputMtx);
+            if (pending.empty()) break;
+            cmd = pending.front();
+            std::string cmd_word, cmd_args;
+            split_cmd(cmd,cmd_word,cmd_args);
+            if (cmd_word == "result" ||
+                cmd == "new" ||
+                cmd == "quit" ||
+                cmd == "resign") {
                 if (doTrace) std::cout << debugPrefix << "game end signal in pending stack" << std::endl;
                 retVal = PendingStatus::GameEnd;
                 break;
-        }
-        else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
-            if (doTrace) std::cout << debugPrefix << "move in pending stack" << std::endl;
-            retVal = PendingStatus::Move;
-            break;
-        }
-        else {  // might as well execute this
-            if (doTrace) {
-                std::cout << debugPrefix << "calling do_command from check_pending" << (std::flush) << std::endl;
             }
-            // remove command from pending stack
-            pending.erase(pending.begin());
-            // execute command
-            do_command(cmd,board);
+            else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
+                if (doTrace) std::cout << debugPrefix << "move in pending stack" << std::endl;
+                retVal = PendingStatus::Move;
+                break;
+            }
+            else {
+                // remove command from pending stack
+                if (doTrace) std::cout << debugPrefix << "erasing " << *(pending.begin()) << std::endl;
+                pending.erase(pending.begin());
+            }
         }
+        if (doTrace) {
+            std::cout << debugPrefix << "calling do_command from check_pending" << (std::flush) << std::endl;
+        }
+        // execute command after unlocking mutex
+        do_command(cmd,board);
     }
     return retVal;
 }
@@ -329,19 +334,6 @@ void Protocol::parseLevel(const std::string &cmd, int &moves, float &minutes, in
         // Winboard increment is in seconds, convert to our
         // internal value (milliseconds).
         incr = int(1000*floatincr);
-    }
-}
-
-void Protocol::dispatchCmd(const std::string &cmd) {
-    if (uciWaitState) {
-        // We are in the wait state (meaning we had already stopped
-        // searching), see if we should exit it now.
-        processCmdInWaitState(cmd);
-    }
-    else {
-        // Do not execute the command within the polling thread.
-        // Add it to the pending stack.
-        add_pending(cmd);
     }
 }
 
@@ -647,26 +639,6 @@ void Protocol::post_output(const Statistics &stats) {
    }
 }
 
-void Protocol::checkPendingInSearch(SearchController *controller) {
-    // Except for the special case of the UCI wait state, all commands
-    // received are queued in the pending stack. Examine the queue
-    // here in order. Some commands will be executed and removed from
-    // the stack. The rest may trigger events such as search
-    // termination, but their actual execution is delayed until after
-    // search completion.
-    // Note: typically the pending stack is very small during search.
-    std::unique_lock<std::mutex> lock(globals::input_lock);
-    auto it = pending.begin();
-    bool exit = false;
-    while (it != pending.end() && !exit) {
-        if (processPendingInSearch(controller,*it,exit)) {
-            it = pending.erase(it);
-        } else {
-            it++;
-        }
-    }
-}
-
 bool Protocol::processPendingInSearch(SearchController *controller, const std::string &cmd, bool &exit)
 {
     if (doTrace) {
@@ -692,7 +664,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
             if (srctype != FixedDepth) {
                 if (doTrace) {
                     std::stringstream s;
-                    s << debugPrefix << " time_limit=" << time_limit << " movestogo=" <<
+                    s << debugPrefix << "time_limit=" << time_limit << " movestogo=" <<
                         movestogo << " time_left=" << time_left << " opp_time=" << opp_time << '\0';
                     std::cout << s.str() << std::endl << (std::flush);
                 }
@@ -893,9 +865,28 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
     return false;
 }
 
-int Protocol::monitor(SearchController *s, const Statistics &) {
-    checkPendingInSearch(s);
-    return 0;
+bool Protocol::monitor(SearchController *s, const Statistics &) {
+    // check for input and examine commands if any were received
+    bool exit = false;
+    if (input.checkInput(pending, inputMtx)) {
+        // special case for wait state - check only for commands
+        // that may exit the wait state
+        std::unique_lock<std::mutex> lock(inputMtx);
+        while (uciWaitState && !pending.empty()) {
+            std::string cmd(pending.front());
+            pending.erase(pending.begin());
+            processCmdInWaitState(cmd);
+        }
+        auto it = pending.begin();
+        while (it != pending.end() && !exit) {
+            if (processPendingInSearch(s,*it,exit)) {
+                it = pending.erase(it);
+            } else {
+                it++;
+            }
+        }
+    }
+    return exit;
 }
 
 void Protocol::edit_mode_cmds(Board &board,ColorType &side,const std::string &cmd)
@@ -1071,7 +1062,22 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         // Ensure "ping" response is set if ping was received while
         // searching:
         if (!uci) {
-            checkPendingInSearch(searcher);
+            if (doTrace) {
+                std::cout << debugPrefix << "handling pending commands" << std::endl;
+            }
+            std::unique_lock<std::mutex>(inputMtx);
+            auto it = pending.begin();
+            bool exit = false;
+            while (it != pending.end() && !exit) {
+                if (doTrace) {
+                    std::cout << debugPrefix << "handling pending command: " << *it << std::endl;
+                }
+                if (processPendingInSearch(searcher,*it,exit)) {
+                    it = pending.erase(it);
+                } else {
+                    it++;
+                }
+            }
         }
     }
     last_computer_move = ponder_move;
@@ -1526,13 +1532,13 @@ void Protocol::analyze(Board &board)
             // forced move, forced mate, tablebase hit, or hitting the max
             // ply depth. Wait here for more input.
             if (doTrace) std::cout << debugPrefix << "analysis mode: wait for input" << std::endl;
-            if (globals::inputSem.wait()) {
+            if (!input.readInput(pending, inputMtx)) {
                 break;
             }
             while (!pending.empty()) {
                 std::string cmd;
                 {
-                    std::unique_lock<std::mutex> lock(globals::input_lock);
+                    std::unique_lock<std::mutex> lock(inputMtx);
                     cmd = pending.front();
                     pending.erase(pending.begin());
                 }
@@ -2384,12 +2390,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 // that we delay sending the move until "ponderhit" or
                 // "stop" is received.
                 if (doTrace) {
-                    std::cout << debugPrefix << "ponder stopped early" << std::endl;
+                    std::cout << debugPrefix << "ponder stopped early, entering wait state" << std::endl;
                 }
-                std::unique_lock<std::mutex> lock(globals::input_lock);
-                // To avoid races, check with the input mutux locked
-                // that we do not now have ponderhit or stop in the
-                // pending stack
+                // Check that we do not now have ponderhit or stop in the pending stack.
+                // To avoid races, check with the input mutex locked.
+                std::unique_lock<std::mutex> lock(inputMtx);
                 std::vector<std::string> newPending(pending);
                 uciWaitState = true;
                 for (const std::string &cmd : pending) {

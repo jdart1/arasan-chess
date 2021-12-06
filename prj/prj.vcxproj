@@ -54,7 +54,7 @@
     <ProjectGuid>{516F8592-0B78-4A04-A01D-AC43F7E2C8D9}</ProjectGuid>
     <RootNamespace>prj</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'" Label="Configuration">
@@ -221,14 +221,14 @@
     <EnableCppCoreCheck>true</EnableCppCoreCheck>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">
-    <OutDir>..\win32\debug</OutDir>
-    <IntDir>..\win32\debug</IntDir>
+    <OutDir>..\win32\debug\</OutDir>
+    <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
     <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">
-    <OutDir>..\win32\debug</OutDir>
-    <IntDir>..\win32\debug</IntDir>
+    <OutDir>..\win32\debug\</OutDir>
+    <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
     <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
@@ -608,6 +608,7 @@
     <ClInclude Include="..\src\constant.h" />
     <ClInclude Include="..\src\debug.h" />
     <ClInclude Include="..\src\hash.h" />
+    <ClInclude Include="..\src\input.h" />
     <ClInclude Include="..\src\material.h" />
     <ClInclude Include="..\src\movegen.h" />
     <ClInclude Include="..\src\nnueintf.h" />
@@ -674,6 +675,16 @@
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">UninitializedLocalUsageCheck</BasicRuntimeChecks>
     </ClCompile>
     <ClCompile Include="..\src\hash.cpp" />
+    <ClCompile Include="..\src\input.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\learn.cpp" />
     <ClCompile Include="..\src\legal.cpp" />
     <ClCompile Include="..\src\log.cpp" />

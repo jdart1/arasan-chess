@@ -1,5 +1,5 @@
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2020 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2021 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
@@ -7,7 +7,10 @@
 #include "board.h"
 #include "calctime.h"
 #include "eco.h"
+#include "input.h"
 #include "search.h"
+
+#include <mutex>
 #include <vector>
 
 // Handles Winboard/xboard/UCI protocol.
@@ -18,10 +21,7 @@ public:
 
     virtual ~Protocol();
 
-    // Handle command
-    void dispatchCmd(const std::string &cmd);
-
-    // read input and dispatch commands
+    // read input from stdin and dispatch commands
     void poll(bool &terminated);
 
     void save_game();
@@ -104,18 +104,14 @@ private:
     // Callback from search - generates status output to UI
     void post_output(const Statistics &stats);
 
-    // Check for pending commands in the stack (called from main
-    // search thread).
-    void checkPendingInSearch(SearchController *controller);
-
     // Process a command during search. Return true if processed
-    // (should be removed from pending stack. Also sets exit flag
+    // (should be removed from pending stack). Also sets exit flag
     // if processing should terminate.
     bool processPendingInSearch(SearchController *controller, const std::string &cmd, bool &exit);
 
-    // Callback from search - handle any pending commands and return 1
-    // if search should terminate
-    int monitor(SearchController *s, const Statistics &);
+    // Callback from search - check for input, handle any commands received.
+    // Returns true if search should terminate.
+    bool monitor(SearchController *s, const Statistics &);
 
     // handle commands in edit mode (Winboard protocol)
     void edit_mode_cmds(Board &board,ColorType &side,const std::string &cmd);
@@ -248,6 +244,9 @@ private:
     bool cpusSet; // true if cmd line specifies -c
     bool memorySet; // true if cmd line specifies -H
     std::string &debugPrefix;
+    std::mutex inputMtx;
+
+    Input input;
 
     struct UciStrengthOpts
     {

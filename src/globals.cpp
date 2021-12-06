@@ -42,12 +42,13 @@ Options globals::options;
 BookReader globals::openingBook;
 Log *globals::theLog = nullptr;
 std::string globals::learnFileName;
+
 std::mutex globals::input_lock;
+
 #ifdef SYZYGY_TBS
 std::mutex globals::syzygy_lock;
 #endif
 bool globals::polling_terminated;
-ThreadControl globals::inputSem;
 std::string globals::debugPrefix;
 #ifdef TUNE
 Tune globals::tune_params;

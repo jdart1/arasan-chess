@@ -344,7 +344,7 @@ UNIT_TEST_SRC:=unit.cpp
 endif
 
 ARASANX_SOURCES = arasanx.cpp tester.cpp bench.cpp protocol.cpp \
-globals.cpp board.cpp boardio.cpp material.cpp \
+input.cpp globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 params.cpp scoring.cpp see.cpp \
