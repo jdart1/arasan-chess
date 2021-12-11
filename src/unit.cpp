@@ -1475,6 +1475,21 @@ static int testNNUE() {
 }
 #endif
 
+static int testOptions() {
+    Options opts;
+    opts.book.book_enabled = false;
+    int errs = 0;
+    if (Options::setOption<bool>("true", opts.book.book_enabled)) {
+        errs += opts.book.book_enabled != true;
+    } else {
+        ++errs;
+    }
+    errs += Options::setOption<bool>("xxx", opts.book.book_enabled) != 0;
+    errs += opts.book.book_enabled != true;
+    if (errs) std::cerr << errs << " errors in testOptions" << std::endl;
+    return errs;
+}
+
 #ifdef SYZYGY_TBS
 static int testTB()
 {
@@ -1642,6 +1657,7 @@ int doUnit() {
    errs += testMoveGen();
    errs += testPerft();
    errs += testSearch();
+   errs += testOptions();
 #ifdef NNUE
    errs += testNNUE();
 #endif

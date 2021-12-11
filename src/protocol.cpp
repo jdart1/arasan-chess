@@ -131,16 +131,14 @@ Protocol::~Protocol()
 // Read from input, outside of the search
 void Protocol::poll(bool &polling_terminated)
 {
-    while(!polling_terminated) {
+    while (!polling_terminated) {
         // execute pending commands before getting more input
         if (!do_all_pending(*main_board)) {
-            polling_terminated = true;
+            break;
         }
-        else if (input.readInput(pending, inputMtx)) {
-            std::string cmd;
-            if (!do_all_pending(*main_board)) {
-                polling_terminated = true;
-            }
+        // blocking read
+        if (!input.readInput(pending, inputMtx)) {
+            polling_terminated = true;
         }
     }
     if (doTrace) std::cout << debugPrefix << "exited polling loop" << std::endl;
@@ -1569,15 +1567,6 @@ void Protocol::undo( Board &board)
     game_end = false;
 }
 
-void Protocol::setCheckOption(const std::string &value, int &dest) {
-   std::stringstream buf(value);
-   int tmp;
-    buf >> tmp;
-    if (!buf.bad() && !buf.fail()) {
-        dest = tmp != 0;
-    }
-}
-
 // Execute a move made by the opponent or in "force" mode.
 void Protocol::execute_move(Board &board,Move m)
 {
@@ -1659,16 +1648,16 @@ void Protocol::processWinboardOptions(const std::string &args) {
     } else if (name == "Randomize book moves") {
         Options::setOption<unsigned>(value,globals::options.book.random);
     } else if (name == "Can resign") {
-        setCheckOption(value,globals::options.search.can_resign);
+        Options::setOption<bool>(value,globals::options.search.can_resign);
     } else if (name == "Resign threshold") {
         Options::setOption<int>(value,globals::options.search.resign_threshold);
     } else if (name == "Position learning") {
-        setCheckOption(value,globals::options.learning.position_learning);
+        Options::setOption<bool>(value,globals::options.learning.position_learning);
     } else if (name == "Strength") {
         Options::setOption<int>(value,globals::options.search.strength);
 #ifdef NNUE
     } else if (name == "Use NNUE") {
-        setCheckOption(value,globals::options.search.useNNUE);
+        Options::setOption<bool>(value,globals::options.search.useNNUE);
     } else if (name == "NNUE File") {
         Options::setOption<std::string>(value,globals::options.search.nnueFile);
         globals::nnueInitDone = false; // force re-init
@@ -1676,7 +1665,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
        int tmp = globals::options.search.set_processor_affinity;
-       setCheckOption(value,globals::options.search.set_processor_affinity);
+       Options::setOption<bool>(value,globals::options.search.set_processor_affinity);
        if (tmp != globals::options.search.set_processor_affinity) {
            searcher->recalcBindings();
        }
@@ -1900,22 +1889,22 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
 #ifdef SYZYGY_TBS
         else if (uciOptionCompare(name,"Use tablebases")) {
-            globals::options.search.use_tablebases = (value == "true");
+           Options::setOption<bool>(value, globals::options.search.use_tablebases);
         }
         else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
            globals::unloadTb();
            globals::options.search.syzygy_path = value;
-           globals::options.search.use_tablebases = 1;
+           globals::options.search.use_tablebases = true;
         }
         else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
-           globals::options.search.syzygy_50_move_rule = (value == "true");
+            Options::setOption<bool>(value, globals::options.search.syzygy_50_move_rule);
         }
         else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
            Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
         }
 #endif
         else if (uciOptionCompare(name,"OwnBook")) {
-            globals::options.book.book_enabled = (value == "true");
+            Options::setOption<bool>(value, globals::options.book.book_enabled);
         }
         else if (uciOptionCompare(name,"Favor frequent book moves")) {
             Options::setOption<unsigned>(value,globals::options.book.frequency);
@@ -1949,7 +1938,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
         }
         else if (uciOptionCompare(name,"UCI_LimitStrength")) {
-            uciStrengthOpts.limitStrength = (value == "true");
+            Options::setOption<bool>(value, uciStrengthOpts.limitStrength);
             if (uciStrengthOpts.limitStrength) {
                globals::options.setRating(uciStrengthOpts.eco);
             } else {
@@ -1967,7 +1956,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 	}
 #ifdef NNUE
         else if (uciOptionCompare(name,"Use NNUE")) {
-           globals::options.search.useNNUE = (value == "true");
+           Options::setOption<bool>(value, globals::options.search.useNNUE);
 	}
         else if (uciOptionCompare(name,"NNUE file")) {
            Options::setOption<std::string>(value,globals::options.search.nnueFile);
@@ -1977,7 +1966,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #ifdef NUMA
         else if (uciOptionCompare(name,"Set processor affinity")) {
            int tmp = globals::options.search.set_processor_affinity;
-           globals::options.search.set_processor_affinity = (value == "true");
+           Options::setOption<bool>(value, globals::options.search.set_processor_affinity;
            if (tmp != globals::options.search.set_processor_affinity) {
                searcher->recalcBindings();
            }

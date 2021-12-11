@@ -623,8 +623,8 @@ int CDECL main(int argc, char **argv) {
     globals::options.book.weighting = 10;
     globals::options.book.scoring = 25;
     globals::options.book.random = 100;
-    globals::options.learning.position_learning = 0;
-    globals::options.search.can_resign = 1;
+    globals::options.learning.position_learning = false;
+    globals::options.search.can_resign = true;
     globals::options.search.resign_threshold = -Params::PAWN_VALUE*30;
 
     int arg = 1;

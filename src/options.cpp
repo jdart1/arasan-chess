@@ -19,19 +19,19 @@ std::string Options::tbPath() const { return search.syzygy_path; }
 #endif
 
 Options::SearchOptions::SearchOptions()
-    : checks_in_qsearch(1), hash_table_size(32 * 1024 * 1024), can_resign(1),
+    : checks_in_qsearch(1), hash_table_size(32 * 1024 * 1024), can_resign(true),
       resign_threshold(-500),
 #ifdef SYZYGY_TBS
-      use_tablebases(0), syzygy_path("syzygy"), syzygy_50_move_rule(1),
+      use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
       syzygy_probe_depth(4),
 #endif
       strength(100), multipv(1), ncpus(1),
 #ifdef NNUE
-      useNNUE(1), pureNNUE(0), nnueFile(""),
+      useNNUE(true), pureNNUE(false), nnueFile(""),
 #endif
       easy_plies(3), easy_threshold(200), // centipawns
 #ifdef NUMA
-      set_processor_affinity(0),
+      set_processor_affinity(false),
 #endif
       move_overhead(15), minimum_search_time(10) {
 }
@@ -79,30 +79,19 @@ void Options::setMemoryOption(size_t &value, const std::string &valueString) {
         value = (size_t)val * mult;
 }
 
-static void set_boolean_option(const std::string &name, const std::string &valueString,
-                               int &value) {
-    if (valueString == "true")
-        value = 1;
-    else if (valueString == "false")
-        value = 0;
-    else
-        std::cerr << "warning: invalid value for option " << name
-             << " (expected 'true' or 'false')" << std::endl;
-}
-
 void Options::set_option(const std::string &name, const std::string &value) {
     if (name == "log.enabled") {
-        set_boolean_option(name, value, log_enabled);
+        setOption<bool>(name, value, log_enabled);
     } else if (name == "log.append") {
-        set_boolean_option(name, value, log_append);
+        setOption<bool>(name, value, log_append);
     } else if (name == "log.pathName") {
         log_pathname = value;
     } else if (name == "store_games") {
-        set_boolean_option(name, value, store_games);
+        setOption<bool>(name, value, store_games);
     } else if (name == "game_pathname") {
         game_pathname = value;
     } else if (name == "book.book_enabled") {
-        set_boolean_option(name, value, book.book_enabled);
+        setOption<bool>(name, value, book.book_enabled);
     } else if (name == "book.frequency") {
         setOption<unsigned>(name, value, book.frequency);
         book.frequency =
@@ -120,7 +109,7 @@ void Options::set_option(const std::string &name, const std::string &value) {
         book.scoring =
             std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
     } else if (name == "learning.position_learning") {
-        set_boolean_option(name, value, learning.position_learning);
+        setOption<bool>(name, value, learning.position_learning);
     } else if (name == "learning.position_learning.threshold") {
         int tmp;
         if (setOption<int>(name, value, tmp)) {
@@ -131,7 +120,7 @@ void Options::set_option(const std::string &name, const std::string &value) {
     } else if (name == "search.checks_in_qsearch") {
         setOption<int>(name, value, search.checks_in_qsearch);
     } else if (name == "search.can_resign") {
-        set_boolean_option(name, value, search.can_resign);
+        setOption<bool>(name, value, search.can_resign);
     } else if (name == "search.resign_threshold") {
         setOption<int>(name, value, search.resign_threshold);
     } else if (name == "search.hash_table_size") {
@@ -139,11 +128,11 @@ void Options::set_option(const std::string &name, const std::string &value) {
     }
 #ifdef SYZYGY_TBS
     else if (name == "search.use_tablebases") {
-        set_boolean_option(name, value, search.use_tablebases);
+        setOption<bool>(name, value, search.use_tablebases);
     } else if (name == "search.syzygy_path") {
         search.syzygy_path = value;
     } else if (name == "search.syzygy_50_move_rule") {
-        setOption<int>(name, value, search.syzygy_50_move_rule);
+        setOption<bool>(name, value, search.syzygy_50_move_rule);
     } else if (name == "search.syzygy_probe_depth") {
         setOption<int>(name, value, search.syzygy_probe_depth);
     }
@@ -155,14 +144,14 @@ void Options::set_option(const std::string &name, const std::string &value) {
     }
 #ifdef NNUE
     else if (name == "search.useNNUE") {
-        set_boolean_option(name, value, search.useNNUE);
+        setOption<bool>(name, value, search.useNNUE);
     } else if (name == "search.nnueFile") {
         search.nnueFile = value;
     }
 #endif
 #ifdef NUMA
     else if (name == "search.set_processor_affinity") {
-        set_boolean_option(name, value, search.set_processor_affinity);
+        setOption<bool>(name, value, search.set_processor_affinity);
     }
 #endif
     else if (name == "search.move_overhead") {

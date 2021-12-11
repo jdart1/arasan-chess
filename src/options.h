@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <type_traits>
 
 #include "types.h"
 
@@ -17,11 +18,11 @@ class Options
          weighting(100),
          scoring(50),
          random(50),
-         book_enabled(1)
+         book_enabled(true)
     { }
 
     unsigned frequency, weighting, scoring, random;
-    int book_enabled;
+    bool book_enabled;
   } book;
 
   struct SearchOptions {
@@ -29,26 +30,26 @@ class Options
 
    int checks_in_qsearch;
    size_t hash_table_size;
-   int can_resign;
+   bool can_resign;
    int resign_threshold;
 #ifdef SYZYGY_TBS
-   int use_tablebases;
+   bool use_tablebases;
    std::string syzygy_path;
-   int syzygy_50_move_rule;
+   bool syzygy_50_move_rule;
    int syzygy_probe_depth;
 #endif
    int strength; // 0 .. 100
    int multipv; // for UCI only
    int ncpus;
 #ifdef NNUE
-   int useNNUE;
-   int pureNNUE;
+   bool useNNUE;
+   bool pureNNUE;
    std::string nnueFile;
 #endif
    int easy_plies; // do wide search for "easy move" detection
    int easy_threshold; // wide search width in centipawns
 #ifdef NUMA
-   int set_processor_affinity; // lock threads to processors
+   bool set_processor_affinity; // lock threads to processors
 #endif
    int move_overhead; // in milliseconds
    int minimum_search_time; // in milliseconds
@@ -56,12 +57,12 @@ class Options
 
    struct LearningOptions {
      LearningOptions()
-     : position_learning(1),
+     : position_learning(true),
        position_learning_threshold(33),
        position_learning_horizon(5),
        position_learning_minDepth(7)
      {}
-    int position_learning;
+    bool position_learning;
     int position_learning_threshold;
     int position_learning_horizon;
     int position_learning_minDepth;
@@ -70,26 +71,30 @@ class Options
 
    // Constructor, sets default options
    Options() :
-     log_enabled(0),
-     log_append(0),
-     store_games(1)
+     log_enabled(false),
+     log_append(false),
+     store_games(true)
    {
    }
 
    template <class T>
    static int setOption(const std::string &value, T &dest) {
-       std::stringstream buf(value);
-       T tmp;
-       buf >> tmp;
-       if (!buf.bad() && !buf.fail()) {
-           dest = tmp;
-           return 1;
-       }
-       return 0;
+      bool ok;
+      if constexpr (std::is_same<bool,T>::value) {
+         ok = value == "true" || value == "false";
+         if (ok) dest = value == "true";
+      } else {
+         std::stringstream buf(value);
+         T tmp;
+         buf >> tmp;
+         ok = !buf.bad() && !buf.fail();
+         if (ok) dest = tmp;
+      }
+      return ok;
    }
 
    void setRating(int rating) {
-     search.strength = std::max<int>(0,std::min<int>(100,(rating-1000)/16));
+      search.strength = std::max<int>(0,std::min<int>(100,(rating-1000)/16));
    }
 
    static void setMemoryOption(size_t &value, const std::string &valueString);
@@ -99,9 +104,9 @@ class Options
    // sets options based on a .rc file
    int init(const std::string &optionsFile);
 
-   int log_enabled;
-   int log_append;
-   int store_games;
+   bool log_enabled;
+   bool log_append;
+   bool store_games;
    std::string log_pathname;
    std::string game_pathname;
 

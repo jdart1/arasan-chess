@@ -1896,8 +1896,7 @@ int CDECL main(int argc, char **argv)
 
     globals::options.search.hash_table_size = 0;
     globals::options.search.easy_plies = 0;
-    globals::options.learning.position_learning = 0;
-    globals::options.book.book_enabled = globals::options.log_enabled = 0;
+    globals::options.book.book_enabled = globals::options.log_enabled = false;
     globals::options.learning.position_learning = false;
 #ifdef SYZYGY_TBS
     globals::options.search.use_tablebases = false;
