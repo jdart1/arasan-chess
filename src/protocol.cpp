@@ -133,38 +133,22 @@ void Protocol::poll(bool &polling_terminated)
 {
     while(!polling_terminated) {
         // execute pending commands before getting more input
-        do_all_pending(*main_board);
-        if (input.readInput(pending, inputMtx)) {
+        if (!do_all_pending(*main_board)) {
+            polling_terminated = true;
+        }
+        else if (input.readInput(pending, inputMtx)) {
             std::string cmd;
-            {
-                std::unique_lock<std::mutex> lock(inputMtx);
-                if (hasPending()) {
-                    cmd = pending.front();
-                    pending.erase(pending.begin());
-                    if (doTrace) {
-                        if (doTrace) std::cout << debugPrefix << "calling do_command(main):" << cmd << (std::flush) << std::endl;
-                    }
-                }
-                else {
-                    break;
-                }
-            }
-            if (!do_command(cmd,*main_board)) {
-                if (doTrace) std::cout << debugPrefix << "exiting polling loop" << std::endl;
+            if (!do_all_pending(*main_board)) {
                 polling_terminated = true;
             }
         }
     }
+    if (doTrace) std::cout << debugPrefix << "exited polling loop" << std::endl;
     // handle termination.
     save_game();
     if (doTrace) {
         std::cout << debugPrefix << "terminating" << std::endl;
     }
-}
-
-void Protocol::add_pending(const std::string &cmd) {
-    std::unique_lock<std::mutex> lock(inputMtx);
-    pending.push_back(cmd);
 }
 
 void Protocol::split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args) {
@@ -209,28 +193,20 @@ Move Protocol::get_move(const std::string &cmd_word, const std::string &cmd_args
     return text_to_move(*main_board,move);
 }
 
-Protocol::AllPendingStatus Protocol::do_all_pending(Board &board)
+bool Protocol::do_all_pending(Board &board)
 {
-    AllPendingStatus retVal = AllPendingStatus::Nothing;
+    bool retVal = true;
     if (doTrace) std::cout << debugPrefix << "in do_all_pending" << std::endl;
     while (true) {
         std::string cmd;
-        {
-            std::unique_lock<std::mutex>(inputMtx);
-            if (pending.empty()) {
-                break;
-            }
-            cmd = pending.front();
-            pending.erase(pending.begin());
-        }
+        if (!popPending(cmd)) break;
         if (doTrace) {
             std::cout << debugPrefix << "pending command(a): " << cmd << std::endl;
         }
-        if (cmd == "quit") {
-            retVal = AllPendingStatus::Quit;
+        if (!do_command(cmd,board)) {
+            retVal = false;
             break;
         }
-        do_command(cmd,board);
     }
     if (doTrace) {
         std::cout << debugPrefix << "out of do_all_pending, list size=" << pending.size() << std::endl;
@@ -1523,7 +1499,7 @@ void Protocol::analyze(Board &board)
         if (doTrace) std::cout << debugPrefix << "analysis mode: out of search" << std::endl;
         // Process commands received while searching; exit loop
         // if "quit" seen.
-        if (do_all_pending(board)==AllPendingStatus::Quit) {
+        if (!do_all_pending(board)) {
             break;
         }
         while (board == previous && analyzeMode) {
@@ -1535,14 +1511,9 @@ void Protocol::analyze(Board &board)
             if (!input.readInput(pending, inputMtx)) {
                 break;
             }
-            while (!pending.empty()) {
-                std::string cmd;
-                {
-                    std::unique_lock<std::mutex> lock(inputMtx);
-                    cmd = pending.front();
-                    pending.erase(pending.begin());
-                }
-                std::string cmd_word, cmd_arg;
+            while (true) {
+                std::string cmd, cmd_word, cmd_arg;
+                if (!popPending(cmd)) break;
                 split_cmd(cmd,cmd_word,cmd_arg);
 #ifdef _TRACE
                 std::cout << debugPrefix << "processing cmd in analysis mode: " << cmd << std::endl;

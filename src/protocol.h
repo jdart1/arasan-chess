@@ -45,10 +45,15 @@ private:
 
     enum class PendingStatus { Nothing, GameEnd, Move };
 
-    enum class AllPendingStatus { Nothing, Quit };
-
-    // add a command to the pending stack
-    void add_pending(const std::string &cmd);
+    bool popPending(std::string &cmd) {
+        std::unique_lock<std::mutex>(inputMtx);
+        if (pending.empty()) {
+            return false;
+        }
+        cmd = pending.front();
+        pending.erase(pending.begin());
+        return true;
+    }
 
     // split a command line into a verb (cmd_word) and arguments (cmd_args)
     void split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args);
@@ -61,8 +66,8 @@ private:
     Move get_move(const std::string &cmd_word, const std::string &cmd_args);
 
     // Do all pending commands in stack.
-    // Return Quit if "quit" was seen.
-    AllPendingStatus do_all_pending(Board &board);
+    // Return false if "quit" was seen.
+    bool do_all_pending(Board &board);
 
     // Check for user move, resign or result in pending stack.
     // If found, return status and do not dequeue command.
