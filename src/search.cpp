@@ -83,8 +83,8 @@ static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Param
 
 static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
-static constexpr int STATIC_NULL_MARGIN[2] = {static_cast<score_t>(0.75*Params::PAWN_VALUE),
-                                              static_cast<score_t>(0.5*Params::PAWN_VALUE)};
+static constexpr score_t STATIC_NULL_MARGIN[2] = {static_cast<score_t>(0.75*Params::PAWN_VALUE),
+    static_cast<score_t>(0.5*Params::PAWN_VALUE)};
 
 static const score_t QSEARCH_FUTILITY_PRUNE_MARGIN = static_cast<score_t>(1.4*Params::PAWN_VALUE);
 static const score_t QSEARCH_SEE_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);

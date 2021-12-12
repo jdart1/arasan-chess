@@ -291,7 +291,7 @@ void Board::doNull(NodeInfo *node)
    assert(state.hashCode == BoardHash::hashCode(*this));
 }
 
-void Board::doMove( Move move, NodeInfo *node )
+void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
 {
    assert(!IsNull(move));
    assert(state.hashCode == BoardHash::hashCode(*this));

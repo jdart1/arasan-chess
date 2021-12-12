@@ -302,7 +302,7 @@ $(BUILD)/%.o: $(UTIL)/%.cpp
 	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 
 $(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS) $(TUNE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
+	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS)  $(NNUE_FLAGS) $(TUNE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 
 $(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
