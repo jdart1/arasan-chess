@@ -363,16 +363,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp log.cpp search.cpp \
 searchc.cpp movegen.cpp learn.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp
-
-PGNSELECT_SOURCES = pgnselect.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-params.cpp scoring.cpp see.cpp movearr.cpp notation.cpp \
-options.cpp bitprobe.cpp bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
-movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
+stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
 
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -383,7 +374,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 log.cpp search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
 
 MAKEBOOK_SOURCES = makebook.cpp $(UTIL_SOURCES)
 
@@ -391,11 +382,11 @@ MAKEECO_SOURCES = makeeco.cpp $(UTIL_SOURCES)
 
 ECOCODER_SOURCES = ecocoder.cpp $(UTIL_SOURCES)
 
-PGNSELECT_SOURCES = pgnselect.cpp $(UTIL_SOURCES) $(NNUE_SRC)
+PGNSELECT_SOURCES = pgnselect.cpp $(UTIL_SOURCES)
 
-PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES) $(NNUE_SRC)
+PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
-SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) $(NNUE_SRC)
+SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES)
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
