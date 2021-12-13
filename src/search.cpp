@@ -1431,7 +1431,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         node->swap = Constants::INVALID_SCORE;
         // calculate extensions/reductions. No pruning at ply 0.
-        int depthMod = extend(board, node, in_check_after_move, move) + reduce(board, node, move_index, 1, move);
+        int depthMod = extend(board, node, in_check_after_move, move) - reduce(board, node, move_index, 1, move);
         if (depthMod < 0) {
             if (depthMod > -DEPTH_INCREMENT) {
                 // do not reduce < 1 ply
@@ -2358,30 +2358,30 @@ int Search::reduce(const Board &board,
                    int improving,
                    Move move) {
     int depth = node->depth;
-    int extend = 0;
+    int reduction = 0;
     const bool quiet = !CaptureOrPromotion(move);
 
     // See if we do late move reduction.
     if (depth >= LMR_DEPTH && moveIndex >= 1+2*node->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
-        extend -= lmr(node,depth,moveIndex);
+       reduction += lmr(node,depth,moveIndex);
         if (!quiet) {
-            extend += DEPTH_INCREMENT;
+            reduction -= DEPTH_INCREMENT;
         }
         else {
             if (!node->PV() && !improving) {
-                extend -= DEPTH_INCREMENT;
+                reduction += DEPTH_INCREMENT;
             }
             if (node->ply > 0) {
                 if (board.checkStatus() != InCheck && GetPhase(move) < MoveGenerator::HISTORY_PHASE) {
                     // killer or refutation move
-                    extend += DEPTH_INCREMENT;
+                    reduction -= DEPTH_INCREMENT;
                 }
                 // reduce less for good history
-                extend += std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
+                reduction -= std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,node,board.sideToMove())/512));
             }
         }
     }
-    return std::min<int>(0,extend);
+    return std::max<int>(0,reduction);
 }
 
 // Recursive function, implements alpha/beta search below ply 0 but
@@ -3037,7 +3037,7 @@ score_t Search::search()
                 if (prune(board, node, in_check_after_move, move_index, improving, move)) {
                     continue;
                 }
-                depthMod = extend(board, node, in_check_after_move, move) +
+                depthMod = extend(board, node, in_check_after_move, move) -
                     reduce(board, node, move_index, improving, move);
             }
             board.doMove(move,node);
