@@ -1431,19 +1431,12 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         CheckStatusType in_check_after_move = board.wouldCheck(move);
         node->swap = Constants::INVALID_SCORE;
         // calculate extensions/reductions. No pruning at ply 0.
-        int depthMod = extend(board, node, in_check_after_move, move) - reduce(board, node, move_index, 1, move);
-        if (depthMod < 0) {
-            if (depthMod > -DEPTH_INCREMENT) {
-                // do not reduce < 1 ply
-                depthMod = 0;
-            } else {
+        int extension = extend(board, node, in_check_after_move, move);
+        int newDepth = depth - DEPTH_INCREMENT + extension;
+        int reduction = reduce(board, node, move_index, 1, newDepth, move);
 #ifdef SEARCH_STATS
-                ++stats.reduced;
+        if (reduction) ++stats.reduced;
 #endif
-            }
-        } else {
-            depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
-        }
         board.doMove(move,node);
         setCheckStatus(board,in_check_after_move);
         score_t lobound = wide ? node->alpha : node->best_score;
@@ -1453,9 +1446,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
               "]" << std::endl;
         }
 #endif
-        if (depth + depthMod - DEPTH_INCREMENT > 0) {
+        if (newDepth - reduction > 0) {
            try_score = -search(-hibound, -lobound,
-                               1, depth + depthMod - DEPTH_INCREMENT);
+                               1, newDepth - reduction);
         }
         else {
            try_score = -quiesce(-hibound, -lobound, 1, 0);
@@ -1464,7 +1457,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             board.undoMove(move,save_state);
             break;
         }
-        if (try_score > node->best_score && depthMod < 0 && !terminate) {
+        if (try_score > node->best_score && reduction && !terminate) {
 #ifdef _TRACE
            if (mainThread()) {
               std::cout << "window = [" << -hibound << "," << -lobound
@@ -1473,10 +1466,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
 #endif
            // We failed to get a cutoff, so re-search with no reduction.
-           depthMod = 0;
            controller->fail_high_root = true;
-           if (depth-DEPTH_INCREMENT > 0)
-              try_score=-search(-hibound,-lobound,1,depth-DEPTH_INCREMENT);
+           if (newDepth > 0)
+              try_score=-search(-hibound,-lobound,1,newDepth);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
         }
@@ -1495,8 +1487,8 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            }
 #endif
            hibound = node->beta;
-           if (depth+depthMod-DEPTH_INCREMENT > 0)
-              try_score=-search(-hibound,-lobound,1,depth+depthMod-DEPTH_INCREMENT);
+           if (newDepth > 0)
+              try_score=-search(-hibound,-lobound,1,newDepth);
            else
               try_score=-quiesce(-hibound,-lobound,1,0);
         }
@@ -2356,6 +2348,7 @@ int Search::reduce(const Board &board,
                    NodeInfo *node,
                    int moveIndex,
                    int improving,
+                   int newDepth,
                    Move move) {
     int depth = node->depth;
     int reduction = 0;
@@ -2381,7 +2374,8 @@ int Search::reduce(const Board &board,
             }
         }
     }
-    return std::max<int>(0,reduction);
+    int r = std::min<int>(newDepth - DEPTH_INCREMENT,reduction);
+    return r < DEPTH_INCREMENT ? 0 : r;
 }
 
 // Recursive function, implements alpha/beta search below ply 0 but
@@ -3025,10 +3019,11 @@ score_t Search::search()
                 node->quiets[node->num_quiets++] = move;
             }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
-            int depthMod = 0;
+            int extension = 0, reduction = 0, newDepth = depth - DEPTH_INCREMENT;
             node->swap = Constants::INVALID_SCORE;
             if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
-                depthMod = DEPTH_INCREMENT;
+                extension = DEPTH_INCREMENT;
+                newDepth += extension;
 #ifdef SEARCH_STATS
                 ++stats.singular_extensions;
 #endif
@@ -3037,8 +3032,9 @@ score_t Search::search()
                 if (prune(board, node, in_check_after_move, move_index, improving, move)) {
                     continue;
                 }
-                depthMod = extend(board, node, in_check_after_move, move) -
-                    reduce(board, node, move_index, improving, move);
+                extension = extend(board, node, in_check_after_move, move);
+                newDepth += extension;
+                reduction = reduce(board, node, move_index, improving, newDepth, move);
             }
             board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
@@ -3052,21 +3048,12 @@ score_t Search::search()
                continue;
             }
             setCheckStatus(board, in_check_after_move);
-            if (depthMod < 0) {
-                if (depthMod > -DEPTH_INCREMENT) {
-                    // do not reduce < 1 ply
-                    depthMod = 0;
-                } else {
 #ifdef SEARCH_STATS
-                    ++stats.reduced;
+            if (reduction) ++stats.reduced;
 #endif
-                }
-            } else {
-                depthMod = std::min<int>(depthMod,DEPTH_INCREMENT);
-            }
-            if (depth + depthMod - DEPTH_INCREMENT > 0) {
+            if (newDepth - reduction > 0) {
                 try_score = -search(-hibound, -node->best_score,
-                    ply+1, depth + depthMod - DEPTH_INCREMENT);
+                    ply+1, newDepth - reduction);
             }
             else {
                 try_score = -quiesce(-hibound, -node->best_score,
@@ -3082,9 +3069,8 @@ score_t Search::search()
                 continue;
             }
             node->num_legal++;
-            if (try_score > node->best_score && depthMod < 0 && !terminate) {
+            if (try_score > node->best_score && reduction && !terminate) {
                // We failed to get a cutoff and must re-search
-               depthMod = 0;
 #ifdef _TRACE
                if (mainThread()) {
                   indent(ply); std::cout << ply << ". ";
@@ -3094,8 +3080,8 @@ score_t Search::search()
                }
 #endif
                // re-search with no reduction
-               if (depth-DEPTH_INCREMENT > 0)
-                  try_score=-search(-hibound, -node->best_score,ply+1,depth-DEPTH_INCREMENT);
+               if (newDepth > 0)
+                  try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
                else
                   try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }
@@ -3110,8 +3096,8 @@ score_t Search::search()
                     indent(ply); std::cout << "window = [" << node->best_score << "," << hibound << "]" << std::endl;
                }
 #endif
-               if (depth+depthMod-DEPTH_INCREMENT > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,depth+depthMod-DEPTH_INCREMENT);
+               if (newDepth > 0)
+                 try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
                else
                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
             }

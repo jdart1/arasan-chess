@@ -248,6 +248,7 @@ protected:
                NodeInfo *node,
                int moveIndex,
                int improving,
+               int newDepth,
                Move move);
 
     void storeHash(hash_t hash, Move hash_move, int depth);
