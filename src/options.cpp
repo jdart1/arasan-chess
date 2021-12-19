@@ -12,7 +12,9 @@
 #include "globals.h"
 #include "params.h"
 
+#include <cctype>
 #include <cmath>
+#include <regex>
 
 #ifdef SYZYGY_TBS
 std::string Options::tbPath() const { return search.syzygy_path; }
@@ -168,27 +170,22 @@ int Options::init(const std::string &fileName) {
     if (!infile.good()) {
         return -1;
     }
-    std::string contents;
+    const auto pattern = std::regex("^([^\\s]+)=([^\\s]+([^\\s]+\\w+)*?)\\s*$");
+    std::smatch match;
+    std::string name, value, line;
+    unsigned count = 0;
     while (infile.good() && !infile.eof()) {
-        getline(infile, contents);
-        auto it = contents.begin();
-        while (it != contents.end() && isspace(*it))
-            it++;
-        if (it == contents.end())
-            break;
-        if (*it == '#')
-            continue;
-        std::string name, value;
-        while (it != contents.end() && *it != '=') {
-            name += *it++;
-        }
-        if (it != contents.end())
-            it++;
-        while (it != contents.end() && !isspace(*it)) {
-            value += *it++;
-        }
-        if (name != "") {
+           getline(infile, line);
+        ++count;
+        if (!line.empty() && line[0] == '#') continue;
+        if (line.empty()) continue;
+        if (std::regex_match(line,match,pattern)) {
+            auto it = match.begin()+1;
+            name = *it++;
+            value = *it;
             set_option(name, value);
+        } else {
+            std::cerr << "warning: could not parse .rc line " << count << std::endl;
         }
     }
     return 0;
