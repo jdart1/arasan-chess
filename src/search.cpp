@@ -153,6 +153,7 @@ SearchController::SearchController()
       tb_root_probes(0),
       tb_root_hits(0),
       tb_probe_in_search(true),
+      monitorThread(0),
 #ifdef SYZYGY_TBS
       tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
 #endif
@@ -781,26 +782,36 @@ int Search::checkTime() {
        }
     }
 
-    if ((mainThread() || controller->mainThreadCompleted()) &&
-       controller->monitor_function &&
-       controller->monitor_function(controller,stats)) {
-       if (debugOut()) {
-          std::cout << globals::debugPrefix << "terminating due to program or user input" << std::endl;
-       }
-       controller->terminateNow();
-       return 1;
+    // The following code is always only executed by one of the threads
+    bool monitor = false;
+    if (controller->monitor_function) {
+        monitor = controller->isMonitorThread(ti->index);
+        if (!monitor) {
+            // ensure monitor thread is still active
+            if (controller->monitorThreadCompleted()) {
+                // monitor thread completed, appoint this the monitor thread
+                controller->setMonitorThread(ti->index);
+                monitor = true;
+            }
+        }
     }
-
-    if (mainThread()) {
-       controller->updateGlobalStats(stats);
-       if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 3000) {
-           const uint64_t total_nodes = controller->totalNodes();
-           std::cout << "info";
-           if (controller->elapsed_time>300) std::cout << " nps " <<
-               (long)((1000L*total_nodes)/controller->elapsed_time);
-           std::cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << std::endl;
-           controller->last_time = current_time;
-       }
+    if (monitor) {
+        if (controller->monitor_function(controller,stats)) {
+            if (debugOut()) {
+                std::cout << globals::debugPrefix << "terminating due to program or user input" << std::endl;
+            }
+            controller->terminateNow();
+            return 1;
+        }
+        controller->updateGlobalStats(stats);
+        if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 3000) {
+            const uint64_t total_nodes = controller->totalNodes();
+            std::cout << "info";
+            if (controller->elapsed_time>300) std::cout << " nps " <<
+                                                  (long)((1000L*total_nodes)/controller->elapsed_time);
+            std::cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << std::endl;
+            controller->last_time = current_time;
+        }
     }
     return 0;
 }

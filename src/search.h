@@ -545,6 +545,18 @@ public:
        return pool->isCompleted(0);
    }
 
+   bool isMonitorThread(unsigned id) const noexcept {
+       return id == monitorThread;
+   }
+
+   bool monitorThreadCompleted() const noexcept {
+       return pool->isCompleted(monitorThread);
+   }
+
+   void setMonitorThread(unsigned id) {
+       monitorThread = id;
+   }
+
    const Statistics &getGlobalStats() const noexcept {
        return *stats;
    }
@@ -612,6 +624,7 @@ private:
     Search *rootSearch;
     int tb_root_probes, tb_root_hits;
     bool tb_probe_in_search;
+    unsigned monitorThread;
 
     MoveSet include;
     MoveSet exclude;
