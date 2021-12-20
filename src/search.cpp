@@ -3403,15 +3403,13 @@ void Search::setSearchOptions() {
 
 score_t Search::evalu8(const Board &board) {
 #ifdef NNUE
+    return scoring.evalu8NNUE(board,node);
     const Material &ourMat = board.getMaterial(board.sideToMove());
     const Material &oppMat = board.getMaterial(board.oppositeSide());
-    bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
-    bool useClassical = !srcOpts.pureNNUE &&
-        (imbalance ||
-         (ourMat.materialLevel() <= 10 &&
-          ourMat.pawnCount() <= 2 &&
-          oppMat.materialLevel() <= 10 &&
-          oppMat.pawnCount() <= 2));
+    //bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
+    const bool useClassical = !srcOpts.pureNNUE &&
+        (//imbalance ||
+         ourMat.men() + oppMat.men() <= 7);
     if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
         return scoring.evalu8NNUE(board,node);
     } else {
