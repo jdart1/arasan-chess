@@ -83,7 +83,7 @@ std::mutex outputLock, bookLock;
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
-static std::atomic<unsigned> gameCounter(0);
+static std::atomic<unsigned> posCounter(0);
 
 static struct SelfPlayOptions {
     // Note: not all options are command-line settable, currently.
@@ -91,7 +91,7 @@ static struct SelfPlayOptions {
     unsigned minOutPly = 8;
     unsigned maxOutPly = 400;
     unsigned cores = 1;
-    unsigned gameCount = 10000000;
+    unsigned posCount = 10000000;
     unsigned depthLimit = 6;
     bool adjudicateDraw = true;
     unsigned outputPlyFrequency = 1; // output every nth move
@@ -372,7 +372,7 @@ static void selfplay(ThreadData &td) {
         1, sp_options.randomizeInterval);
     std::uniform_int_distribution<unsigned> rand2_dist(
         1, sp_options.semiRandomizeInterval);
-    for (; gameCounter < sp_options.gameCount; ++gameCounter) {
+    while (posCounter < sp_options.posCount) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
         }
@@ -513,6 +513,7 @@ static void selfplay(ThreadData &td) {
             saveGame(td, resultStr, *game_out_file);
         }
         for (const OutputData &data : output) {
+            if (posCounter >= sp_options.posCount++) break;
             if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
                 std::string resultStr;
                 if (result == Result::WhiteWin)
@@ -568,7 +569,7 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-c cores] [-n games] [-o output file] [-m output "
+    std::cerr << "selfplay [-c cores] [-n positions] [-o output file] [-m output "
                  "every m positions] [-f output format (bin or epd)] [-d depth]"
               << std::endl;
 }
@@ -641,9 +642,9 @@ int CDECL main(int argc, char **argv) {
 
         } else if (strcmp(argv[arg], "-n") == 0) {
             std::stringstream s(argv[++arg]);
-            s >> sp_options.gameCount;
+            s >> sp_options.posCount;
             if (s.bad()) {
-                std::cerr << "error in game count after -n" << std::endl;
+                std::cerr << "error in position count after -n" << std::endl;
                 return -1;
             }
         } else if (strcmp(argv[arg], "-d") == 0) {
@@ -699,7 +700,7 @@ int CDECL main(int argc, char **argv) {
                 : "positions.epd";
     }
 
-    auto flags = std::ios::out | std::ios::app;
+    auto flags = std::ios::out;
     if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
         flags |= std::ios::binary;
     }

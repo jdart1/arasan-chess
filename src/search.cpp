@@ -3411,7 +3411,8 @@ score_t Search::evalu8(const Board &board) {
         (//imbalance ||
          ourMat.men() + oppMat.men() <= 7);
     if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
-        return scoring.evalu8NNUE(board,node);
+        // scale eval
+        return Params::PAWN_VALUE*scoring.evalu8NNUE(board,node)/100;
     } else {
         return scoring.evalu8(board);
     }
