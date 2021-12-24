@@ -569,7 +569,7 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-c cores] [-n positions] [-o output file] [-m output "
+    std::cerr << "selfplay [-a (append)][-c cores] [-n positions] [-o output file] [-m output "
                  "every m positions] [-f output format (bin or epd)] [-d depth]"
               << std::endl;
 }
@@ -629,8 +629,12 @@ int CDECL main(int argc, char **argv) {
     globals::options.search.resign_threshold = -Params::PAWN_VALUE*30;
 
     int arg = 1;
+    bool append = false;
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
-        if (strcmp(argv[arg], "-c") == 0) {
+        if (strcmp(argv[arg], "-a") == 0) {
+            append = true;
+        }
+        else if (strcmp(argv[arg], "-c") == 0) {
             std::stringstream s(argv[++arg]);
             s >> sp_options.cores;
             if (s.bad()) {
@@ -703,6 +707,9 @@ int CDECL main(int argc, char **argv) {
     auto flags = std::ios::out;
     if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
         flags |= std::ios::binary;
+    }
+    if (append) {
+        flags |= std::ios::app;
     }
     pos_out_file = new std::ofstream(sp_options.posFileName, flags);
     if (sp_options.saveGames)
