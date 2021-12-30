@@ -513,7 +513,7 @@ static void selfplay(ThreadData &td) {
             saveGame(td, resultStr, *game_out_file);
         }
         for (const OutputData &data : output) {
-            if (posCounter >= sp_options.posCount++) break;
+            if (posCounter++ >= sp_options.posCount) break;
             if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
                 std::string resultStr;
                 if (result == Result::WhiteWin)
