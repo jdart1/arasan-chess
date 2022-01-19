@@ -80,6 +80,7 @@ Supported instruction sets at present are:
 - modern (implies support for: POPCNT, SSSE3, SSE4.1)
 - avx2 (assumes availabiity of AVX2 instruction set, plus "modern" instructions)
 - avx2-bmi2 (assumes avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
+- avx512 (assumes AVX512, plus avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
 
 The BUILD_TYPE variable can be used to specify the desired instruction
 set for the compilation: this works not just with the chess engine, but with

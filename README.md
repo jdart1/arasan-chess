@@ -37,6 +37,9 @@ Excavator through Zen2 processors.
 as well as those required by the "modern" build. Recommended for Intel Haswell or later processors
 and AMD processors on the Zen3 architecture (Nov. 2020) or later.
 
+5. arasanx-64-avx512 - requires a modern x86 processor with AVX512 instructions (Intel
+Skylake X and Cannon Lake, or later), as well as those required by the "avx2" build.
+
 In addition it is possible to build a version with support for NUMA (Non-
 Uniform Memory Access) systems - generally these are large multi-CPU systems.
 NUMA-enabled versions of Arasan require the HWLOC library version 2.0

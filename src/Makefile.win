@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2021 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2022 by Jon Dart. All Rights Reserved.
 #
 VERSION=23.2
 LINK_VERSION=23.2
@@ -38,7 +38,8 @@ CFLAGS = /std:c++17
 BASIC_SIMD_FLAGS = -DSIMD -DSSE2
 POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE4.1
 BMI2_FLAGS = -DBMI2 $(POPCNT_FLAGS)
-AVX2_FLAGS = /arch:AVX2 -DAVX2
+AVX2_FLAGS = -DAVX2
+AVX512_FLAGS = -DAVX512
 
 !IfDef BUILD_TYPE
 !If "$(BUILD_TYPE)" == "old"
@@ -49,7 +50,9 @@ CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
 !Else If "$(BUILD_TYPE)" == "avx2"
 CFLAGS=$(CFLAGS)  $(POPCNT_FLAGS) $(AVX2_FLAGS)
 !Else If "$(BUILD_TYPE)" == "avx2-bmi2"
-CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) /arch:AVX2
+!Else If "$(BUILD_TYPE)" == "avx512"
+CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) $(AVX512_FLAGS) /arch:AVX512
 !Else
 # TBD: would like to fail here, not clear how in NMAKE
 !Endif
