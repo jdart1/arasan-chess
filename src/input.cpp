@@ -56,7 +56,6 @@ bool Input::checkInput(std::vector<std::string> &cmds, std::mutex &mtx) {
     DWORD nchar;
     if (PeekNamedPipe(GetStdHandle(STD_INPUT_HANDLE), NULL, 0,
                       NULL, &nchar, NULL)) {
-         std::cerr << "got " << nchar << " chars" << std::endl;
          for (unsigned i = 0; i < nchar && buf_index < BUF_SIZE; i++) {
             buf[buf_index++] = getc(stdin);
          }
