@@ -38,6 +38,9 @@ UTIL = util
 # compile with NNUE support (except for tuner)
 NNUE = 1
 
+# default network
+NETWORK=arasan-d9-10-20220124.nnue
+
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
 
@@ -292,7 +295,7 @@ release:
 install: default
 	mkdir -p $(INSTALL)/arasan-$(VERSION)
 	cp $(EXPORT)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)
-	cp ../network/*.nnue $(INSTALL)/arasan-$(VERSION)
+	cp ../network/$(NETWORK) $(INSTALL)/arasan-$(VERSION)
 	chmod 755 $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 	ln -s $(INSTALL)/arasan-$(VERSION)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)/arasanx
 	cp $(SRC)/arasan.rc $(INSTALL)/arasan-$(VERSION)
