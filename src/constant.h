@@ -25,6 +25,6 @@ static constexpr int INFINITE_TIME = 100000000;
 #define MAKE_STR(x) STRINGIFY(x)
 constexpr int DEPTH_INCREMENT = 2;
 #define Arasan_Version MAKE_STR(ARASAN_VERSION)
-#define Arasan_Copyright "Copyright 1994-2021 by Jon Dart. All Rights Reserved."
+#define Arasan_Copyright "Copyright 1994-2022 by Jon Dart. All Rights Reserved."
 
 #endif
