@@ -1242,7 +1242,28 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         // game result. We should not send a move or try to set the result.
         return;
     }
-    else if (!game_end) {
+    else if (last_stats.state == Resigns) {
+        // Don't resign a zero-increment game if the opponent is short
+        // on time
+        if (srctype == TimeLimit && incr == 0 && opp_time < 2000) {
+            // reset flag - we're not resigning
+            stats.end_of_game = game_end = false;
+        }
+        else {
+            if (computer_plays_white) {
+                globals::theLog->setResult("0-1 {White resigns}");
+                std::cout << "0-1 {White resigns}" << std::endl;
+            }
+            else {
+                globals::theLog->setResult("1-0 {Black resigns}");
+                std::cout << "1-0 {Black resigns}" << std::endl;
+            }
+            game_end = true;
+            // Don't send the move
+            return;
+        }
+    }
+    if (!game_end) {
         if (!uci) {
             std::string reason;
             if (isDraw(board,last_stats,reason)) {
@@ -1354,26 +1375,6 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                 std::cout << "1-0 {White mates}" << std::endl;
             }
             game_end = true;
-        }
-    }
-    if (last_stats.state == Resigns) {
-        // Don't resign a zero-increment game if the opponent is short
-        // on time
-        if (!(incr == 0 && opp_time < 2000)) {
-            // Winboard passes the resign command to ICS, but ignores it
-            // itself.
-            if (computer_plays_white) {
-                globals::theLog->setResult("0-1 {White resigns}");
-                std::cout << "0-1 {White resigns}" << std::endl;
-            }
-            else {
-                globals::theLog->setResult("1-0 {Black resigns}");
-                std::cout << "1-0 {Black resigns}" << std::endl;
-            }
-            game_end = true;
-        }
-        else {   // reset flag - we're not resigning
-            stats.end_of_game = game_end = false;
         }
     }
 }
