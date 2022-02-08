@@ -3403,7 +3403,6 @@ void Search::setSearchOptions() {
 
 score_t Search::evalu8(const Board &board) {
 #ifdef NNUE
-    return scoring.evalu8NNUE(board,node);
     const Material &ourMat = board.getMaterial(board.sideToMove());
     const Material &oppMat = board.getMaterial(board.oppositeSide());
     //bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
@@ -3412,7 +3411,7 @@ score_t Search::evalu8(const Board &board) {
          ourMat.men() + oppMat.men() <= 7);
     if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
         // scale eval
-        return Params::PAWN_VALUE*scoring.evalu8NNUE(board,node)/100;
+        return scoring.evalu8NNUE(board,node);
     } else {
         return scoring.evalu8(board);
     }
