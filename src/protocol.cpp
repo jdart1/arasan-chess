@@ -1,4 +1,4 @@
-// Copyright 1997-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2022 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -1941,7 +1941,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         else if (uciOptionCompare(name,"UCI_LimitStrength")) {
             Options::setOption<bool>(value, uciStrengthOpts.limitStrength);
             if (uciStrengthOpts.limitStrength) {
-               globals::options.setRating(uciStrengthOpts.eco);
+               globals::options.setRating(uciStrengthOpts.elo);
             } else {
                // reset to full strength
                globals::options.setRating(2600);
@@ -1949,7 +1949,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         } else if (uciOptionCompare(name,"UCI_Elo")) {
             int rating;
             if (Options::setOption<int>(value,rating)) {
-               uciStrengthOpts.eco = rating;
+               uciStrengthOpts.elo = rating;
                if (uciStrengthOpts.limitStrength) {
                   globals::options.setRating(rating);
                }

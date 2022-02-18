@@ -1,5 +1,5 @@
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2022 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
@@ -256,7 +256,7 @@ private:
     struct UciStrengthOpts
     {
         bool limitStrength;
-        int eco;
+        int elo;
 
         UciStrengthOpts()
             : limitStrength(false),
