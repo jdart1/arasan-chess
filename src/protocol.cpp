@@ -1819,8 +1819,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << std::endl;
         std::cout << "option name UCI_LimitStrength type check default false" << std::endl;
-        std::cout << "option name UCI_Elo type spin default " <<
-            1000+globals::options.search.strength*16 << " min 1000 max 2600" << std::endl;
+        std::cout << "option name UCI_Elo type spin default " << globals::options.getRating(globals::options.search.strength) <<
+            " min " << Options::MIN_RATING << " max " << Options::MAX_RATING << std::endl;
 #ifdef NNUE
         std::cout << "option name Use NNUE type check default " << (globals::options.search.useNNUE ? "true" : "false") << std::endl;
         std::cout << "option name NNUE file type string default " << globals::options.search.nnueFile << std::endl;
@@ -1944,7 +1944,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                globals::options.setRating(uciStrengthOpts.elo);
             } else {
                // reset to full strength
-               globals::options.setRating(2600);
+               globals::options.setRating(Options::MAX_RATING);
             }
         } else if (uciOptionCompare(name,"UCI_Elo")) {
             int rating;

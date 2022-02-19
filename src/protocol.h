@@ -260,7 +260,7 @@ private:
 
         UciStrengthOpts()
             : limitStrength(false),
-              elo(2600)
+              elo(Options::MAX_RATING)
             {
             }
     } uciStrengthOpts;

@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2019, 2021-2022 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -11,7 +11,13 @@
 
 class Options
 {
+
+
  public:
+
+    static constexpr int MIN_RATING = 1000;
+    static constexpr int MAX_RATING = 3300;
+
   struct BookOptions {
     BookOptions()
        : frequency(50),
@@ -94,7 +100,15 @@ class Options
    }
 
    void setRating(int rating) {
-      search.strength = std::max<int>(0,std::min<int>(100,(rating-1000)/16));
+      search.strength = getStrength(rating);
+   }
+
+   int getStrength(int elo) const noexcept {
+      return std::max<int>(0,std::min<int>(100,100*(elo-MIN_RATING)/(MAX_RATING-MIN_RATING)));
+   }
+
+   int getRating(int strength) const noexcept {
+      return MIN_RATING + (strength)*(MAX_RATING-MIN_RATING)/100;
    }
 
    static void setMemoryOption(size_t &value, const std::string &valueString);
