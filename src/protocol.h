@@ -260,7 +260,7 @@ private:
 
         UciStrengthOpts()
             : limitStrength(false),
-              eco(2600)
+              elo(2600)
             {
             }
     } uciStrengthOpts;
