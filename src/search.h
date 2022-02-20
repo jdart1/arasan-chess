@@ -1,4 +1,4 @@
-// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2022 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -338,6 +338,7 @@ protected:
     score_t contempt;
     int age;
     TalkLevel talkLevel; // copy of controller's talkLevel
+    std::mt19937_64 random_engine;
 };
 
 class SearchController {
@@ -582,11 +583,6 @@ private:
     // check console input
     int check_input(const Board &);
 
-    unsigned random(unsigned max) {
-       std::uniform_int_distribution<unsigned> dist(0,max);
-       return dist(random_engine);
-    }
-
     unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
         unsigned max_depth);
 
@@ -653,10 +649,6 @@ private:
     Board initialBoard;
     score_t initialValue;
     RootMoveGenerator *mg;
-    int waitTime; // for strength feature
-    int depth_adjust; // for strength feature
-    unsigned select_subopt; // for strength feature
-    std::mt19937_64 random_engine;
 
     uint64_t elapsed_time; // in milliseconds
     std::array <unsigned, Constants::MaxPly> search_counts;

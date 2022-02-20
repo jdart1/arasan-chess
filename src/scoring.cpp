@@ -1760,11 +1760,6 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    // scale scores by game phase
    score = wScores.blend(b_materialLevel) - bScores.blend(w_materialLevel);
 
-   if (globals::options.search.strength < 100) {
-      // "flatten" positional score values
-      score = score * std::max<int>(100,globals::options.search.strength*globals::options.search.strength) / 10000;
-   }
-
    if (board.sideToMove() == Black) {
       score = -score;
    }

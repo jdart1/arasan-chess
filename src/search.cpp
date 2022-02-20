@@ -1,4 +1,4 @@
-// Copyright 1987-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2022 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -53,6 +53,20 @@ static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
 static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
+// These tables are for the strength reduction feature:
+static constexpr int STRENGTH_DEPTH_LIMITS[100] = {
+    1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,
+    3,3,3,3,4,4,4,4,4,5,5,5,5,5,6,6,6,6,6,7,
+    7,7,7,8,8,8,8,9,9,9,10,10,10,10,11,11,11,12,12,12,
+    13,13,13,13,14,14,14,15,15,16,16,16,17,17,17,18,18,19,19,19,
+    20,20,21,21,21,22,22,23,23,23,24,24,25,25,26,26,27,27,28,32};
+static constexpr int STRENGTH_MOVE_PRUNING[100] = {
+    1,1,2,2,2,4,4,4,6,6,8,8,10,10,12,12,14,16,16,18,
+    18,20,22,23,24,25,27,29,29,31,33,34,36,36,38,40,42,43,45,47,
+    49,50,52,54,56,57,59,61,63,64,66,68,70,71,73,75,77,80,82,83,
+    85,87,89,92,94,95,97,99,102,104,106,107,111,112,114,116,119,121,123,126,
+    128,129,133,134,136,139,141,144,146,148,151,153,156,158,161,163,166,168,171,173
+};
 
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
@@ -159,9 +173,6 @@ SearchController::SearchController()
 #endif
       initialValue(Constants::INVALID_SCORE),
       mg(NULL),
-      waitTime(0),
-      depth_adjust(0),
-      select_subopt(0),
       elapsed_time(0)
 #ifdef SMP_STATS
       , samples(0), threads(0)
@@ -171,7 +182,6 @@ SearchController::SearchController()
 #ifdef SMP_STATS
     sample_counter = SAMPLE_INTERVAL;
 #endif
-    random_engine.seed(getRandomSeed());
     pool = new ThreadPool(this,globals::options.search.ncpus);
 
     ThreadInfo *ti = pool->mainThread();
@@ -343,45 +353,23 @@ Move SearchController::findBestMove(
 
    // Set this only after early termination conditions checked (above);
    is_searching = true;
-   waitTime = 0;
 
    // Implement strength reduction if enabled. But do not reduce
    // strength in analysis mode.
    if (globals::options.search.strength < 100 && (background || time_target != Constants::INFINITE_TIME)) {
-      const int mgCount = mg->moveCount();
-      const double factor = 1.0/ply_limit + (100-globals::options.search.strength)/250.0;
-      if (background) {
-         waitTime = 0;
-      } else {
-         const int max = int(0.3F*time_target/mgCount);
-         // wait time is in milliseconds
-         waitTime = int((max*factor));
-         if (debugOut()) {
-             std::cout << globals::debugPrefix << "waitTime=" << waitTime << std::endl;
-         }
+      if (debugOut()) {
+          std::cout << globals::debugPrefix << "strength=" << globals::options.search.strength << std::endl;
       }
-      select_subopt = random(1024);
-      // adjust time check interval since we are lowering nps
-      timeCheckInterval = std::max<int>(1,timeCheckInterval / (1+8*int(factor)));
-      if (globals::options.search.strength <= 95) {
-         const double limit = pow(2.1,globals::options.search.strength/25.0)-0.25;
-         double int_limit;
-         double frac_limit = modf(limit,&int_limit);
-         int new_ply_limit = std::max(1,int(int_limit));
-         if (board.getMaterial(White).materialLevel() +
-             board.getMaterial(Black).materialLevel() < 16 &&
-             globals::options.search.strength > 10) {
-            // increase ply limit in endgames
-            new_ply_limit += std::min<int>(2,1+new_ply_limit/8);
-         }
-         ply_limit = std::min<int>(new_ply_limit, ply_limit);
-         if (limit > 1.0) {
-            depth_adjust = (int)std::round(DEPTH_INCREMENT*frac_limit);
-         }
-         if (debugOut()) {
-             std::cout << globals::debugPrefix << "ply limit =" << ply_limit << std::endl;
-             std::cout << globals::debugPrefix << "depth adjust =" << depth_adjust << std::endl;
-         }
+      int new_ply_limit = STRENGTH_DEPTH_LIMITS[globals::options.search.strength];
+      if (board.getMaterial(White).materialLevel() +
+          board.getMaterial(Black).materialLevel() < 16 &&
+          globals::options.search.strength > 10) {
+          // increase ply limit in endgames
+          new_ply_limit += std::min<int>(2,1+new_ply_limit/8);
+      }
+      ply_limit = std::min<int>(ply_limit,new_ply_limit);
+      if (debugOut()) {
+          std::cout << globals::debugPrefix << "ply limit=" << ply_limit << std::endl;
       }
    }
 
@@ -437,7 +425,6 @@ Move SearchController::findBestMove(
       value = 0;
    }
    initialValue = value;
-   depth_adjust = 0;
    stats->value = stats->display_value = value;
 
    // Start all searches
@@ -749,6 +736,7 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
 {
     // Note: context was cleared in its constructor
     setSearchOptions();
+    random_engine.seed(getRandomSeed());
 }
 
 int Search::checkTime() {
@@ -1020,36 +1008,36 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
         return;
     }
     mg.reorderByScore();
-    unsigned threshold_base = unsigned(750.0/(1.0 + 0.25*pow(srcOpts.strength/10.0,2.0)));
-    const unsigned r = controller->select_subopt;
+    const int &strength = globals::options.search.strength;
+    std::normal_distribution<double> dist(0.0,static_cast<score_t>(2.4*Params::PAWN_VALUE*(100-strength)/100.0));
+    score_t tolerance = std::max<int>(0,75-strength)*Params::PAWN_VALUE/150 + static_cast<score_t>(std::fabs(dist(random_engine)));
+    std::uniform_int_distribution<int> dist2(1,128);
+
     // In reduced strength mode sometimes, deliberately choose a move
     // that is not the best
     int ord;
-    score_t first_val = val;
-    for (int i = 0; i <= 4; i++) {
+    score_t best = val;
+    const int x = std::max<int>(0,100-strength-(strength*strength)/200);
+    for (int i = 0; i < 4; i++) {
         Move move = (board.checkStatus() == InCheck ? mg.nextEvasion(ord) :
                   mg.nextMove(ord));
         if (IsNull(move)) break;
-        score_t score = mg.getScore(move);
-        if (i > 0) {
-           unsigned threshold;
-           if (score > val || first_val-score > 10*Params::PAWN_VALUE) {
-              threshold = 0;
-           }
-           else {
-              double diff = exp((first_val-score)/(3.0*Params::PAWN_VALUE))-1.0;
-              threshold = unsigned(threshold_base/(2*diff+i));
-           }
-           if (r < threshold) {
-              if (mainThread() && controller->debugOut()) {
-                 std::cout << globals::debugPrefix << "suboptimal: index= " << i <<
-                    " score=" << score << " val=" << first_val <<
-                    " threshold=" << threshold <<
-                    " r=" << r << std::endl;
-              }
-              m = move;
-              val = score;
-           }
+        if (i == 0) {
+            best = mg.getScore(move);
+        }
+        else {
+            const score_t score = mg.getScore(move);
+            if ((best - score <= tolerance && dist2(random_engine) < x) ||
+                dist2(random_engine) < x/2) {
+                if (mainThread() && controller->debugOut()) {
+                    std::cout << globals::debugPrefix <<
+                        "suboptimal: index= " << i <<
+                        " diff=" << best - score <<
+                        " tolerance=" << tolerance << std::endl;
+                }
+            }
+            m = move;
+            val = score;
         }
     }
 }
@@ -1126,7 +1114,7 @@ Move Search::ply0_search()
             }
 #endif
             value = ply0_search(mg, lo_window, hi_window, iterationDepth,
-                                DEPTH_INCREMENT*iterationDepth + controller->depth_adjust,
+                                DEPTH_INCREMENT*iterationDepth,
                                 excluded);
             // If we did not even search one move in this iteration,
             // leave the search stats intact (with the previous
@@ -1348,8 +1336,8 @@ Move Search::ply0_search()
        MoveImage(node->best,std::cout);
        std::cout << std::endl << std::flush;
    }
-   // In reduced-strength mode, sometimes play s suboptimal move
-   if (globals::options.search.strength < 100 && stats.completedDepth <= (unsigned)MoveGenerator::EASY_PLIES) {
+   // In reduced-strength mode, sometimes play a suboptimal move
+   if (globals::options.search.strength < 100 && static_cast<int>(stats.completedDepth) <= MoveGenerator::EASY_PLIES) {
       score_t val = stats.display_value;
       Move best = node->best;
       suboptimal(mg,best,val);
@@ -1413,6 +1401,17 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->depth = depth;
     node->excluded = NullMove;
     node->eval = Constants::INVALID_SCORE;
+
+    const int &strength = globals::options.search.strength;
+    int pruneMoves = Constants::MaxMoves + 1;
+    if (strength <= 75) {
+        const auto mid = STRENGTH_MOVE_PRUNING[strength];
+        std::normal_distribution<double> dist(mid,mid/3);
+        std::uniform_int_distribution<int> dist2(1,std::max<int>(1,strength));
+        if (dist2(random_engine) < 30) {
+            pruneMoves = std::max<int>(1,std::lround(std::abs(dist(random_engine))));
+        }
+    }
 
     int move_index = 0;
     score_t hibound = beta;
@@ -1512,8 +1511,14 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
 #endif
         board.undoMove(move,save_state);
+        // at low strength settings, do not allow cutoff on late
+        // moves. We record their scores as alpha. Effectively
+        // they are pruned.
+        if (move_index >= pruneMoves && board.checkStatus() != InCheck) {
+            try_score = node->alpha;
+        }
         if (wide) {
-           mg.setScore(move_index,try_score);
+            mg.setScore(move_index,try_score);
         }
         // We have now resolved the fail-high if there is one.
         if (try_score > node->best_score && !terminate) {
@@ -1537,9 +1542,28 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            // so count it as analyzed
            --stats.mvleft;
         }
-        if (controller->waitTime) {
-            // we are in reduced strength mode, waste some time
-            std::this_thread::sleep_for(std::chrono::milliseconds(controller->waitTime));
+        if (globals::options.search.strength < 100 &&
+            controller->time_target != Constants::INFINITE_TIME &&
+            iterationDepth == controller->ply_limit &&
+            move_index < mg.moveCount()) {
+            // we are on the last iteration in reduced-strength mode,
+            // see if we should slow down
+            controller->elapsed_time = getElapsedTime(controller->startTime,getCurrentTime());
+            auto limit = controller->getTimeLimit();
+            if (controller->elapsed_time < 2*limit/3) {
+                // waste some time
+                int thisWait = 0, waitTime;
+                // sleep in increments if the wait time is long
+                while ((waitTime = (limit - controller->elapsed_time)/(4*(mg.moveCount()-move_index))) >= 50 && !terminate) {
+                    thisWait = std::min<int>(waitTime,1000);
+                    if (mainThread() && debugOut()) {
+                        std::cout << globals::debugPrefix << "index=" << move_index << " waiting for " << thisWait << " ms." << std::endl;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(thisWait));
+                    // check for input and update elapsed time
+                    checkTime();
+                }
+            }
         }
         if (!wide) {
            hibound = node->best_score + 1;  // zero-width window
@@ -3409,13 +3433,14 @@ score_t Search::evalu8(const Board &board) {
     const bool useClassical = !srcOpts.pureNNUE &&
         (//imbalance ||
          ourMat.men() + oppMat.men() <= 7);
+    score_t score;
     if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
-        // scale eval
-        return scoring.evalu8NNUE(board,node);
+        score = scoring.evalu8NNUE(board,node);
     } else {
-        return scoring.evalu8(board);
+        score = scoring.evalu8(board);
     }
 #else
-    return scoring.evalu8(board);
+    score = scoring.evalu8(board);
 #endif
+   return score;
 }
