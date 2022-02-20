@@ -2,7 +2,7 @@
 
 Arasan is a chess engine, that is, a console-based program that plays the game of chess.
 
-By itself, it has no graphical interface, but can be used together with interface programs such as [Winboard and xboard](https://www.gnu.org/software/xboard/). Arasan also has its own native Windows GUI (not hosted on github).
+By itself, it has no graphical interface, but can be used together with interface programs such as [Winboard and xboard](https://www.gnu.org/software/xboard/). Arasan also has its own Windows-only GUI (separate code base, distributed with the Windows releases, not hosted on Github).
 
 For communicating with a chess interface, Arasan supports either the standard [CECP](http://home.hccnet.nl/h.g.muller/engine-intf.html) protocol (version 2) or the [UCI](https://www.chessprogramming.org/Chess_Engine_Communication_Protocol) protocol. CECP is the native protocol used by Winboard and xboard. UCI-compatible chess interfaces include ChessBase and Fritz. [Arena](http://www.playwitharena.de/), a free interface, supports both protocols.
 
@@ -10,9 +10,9 @@ Arasan is multi-platform (Windows, Linux, Mac OS, Unix) and supports multi-threa
 
 ## Copyright, license
 
-Copyright 1994-2021 by Jon Dart. All Rights Reserved.
+Copyright 1994-2022 by Jon Dart. All Rights Reserved.
 
-Arasan is licensed under the MIT License. See license.txt in the doc directory.
+Arasan is licensed under the MIT License. See the LICENSE file.
 
 ## Program variants
 
@@ -76,8 +76,8 @@ run the bench command (for performance reporting) and then exit.
 Many aspects of Arasan's behavior can be modified by changing the
 arasan.rc file that is installed in the program directory. See comments
 in this file for details. If you do change it, I recommend retaining a
-backup copy so you can restore the default settings if you make a mis-
-take or later decide you don't like your changes. You don't have to use
+backup copy so you can restore the default settings if you make a mistake
+or later decide you don't like your changes. You don't have to use
 this file to configure Arasan. Most of the options in it can also be
 set from a GUI that understands the UCI or CECP protocol, although there
 are some settings that are only in the arasan.rc file presently.
@@ -187,6 +187,14 @@ tablebases can be downloaded from https://syzygy-tables.info/.
 
 See [BUILD.md](https://github.com/jdart1/arasan-chess/blob/master/doc/BUILD.md) for compilation instructions. See
 the [Programmer's Guide](https://arasanchess.org/programr.shtml) for additional technical information.
+
+## Related projects
+
+Arasan relies on the following other projects, also authored by or modified by Jon Dart:
+
+- [Fathom](https://github.com/jdart1/Fathom), Syzygy tablebase probing code (fork of [basil00/Fathom](https://github.com/basil00/Fathom))
+- [nnue](https://github.com/jdart1/nnue), Chess neural network reading code
+- [stats](https://www.github.com/jdart1/stats), Python module for SPRT computation (derived from [glinscott/fishtest](https://github.com/glinscott/fishtest))
 
 ## Additional information
 
