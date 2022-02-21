@@ -155,7 +155,7 @@ TB_FLAGS = $(CFLAGS) $(DEBUG) $(SMP) /Gr /O1 /GS- /I$(TB) /I.
 TB_PROFILE_FLAGS = $(TB_FLAGS)
 PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT)
 PROF_RUN_FLAGS = -H 64M $(PROF_RUN_SMP)
-PROF_LINK_FLAGS = /LTCG:PGINSTRUMENT /pgd:$(PROFILE)\arasanx.pgd
+PROF_LINK_FLAGS = /LTCG /GENPROFILE /pgd:$(PROFILE)\arasanx.pgd
 PROF_GEN_LD = link
 
 default: dirs $(BUILD)\$(ARASANX).exe
@@ -319,7 +319,7 @@ profile-optimized: $(ARASANX_PROFILE_OBJS)
     copy /y $(PROFILE)\*.pgc $(PGO_BUILD)
     copy /y $(PROFILE)\*.pgd $(PGO_BUILD)
     copy /y $(PROFILE)\*.obj $(PGO_BUILD)
-    $(LD) /ltcg:pgo /pgd:$(PGO_BUILD)\arasanx.pgd $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(BUILD)\$(ARASANX).exe
+    $(LD) /LTCG /USEPROFILE /pgd:$(PGO_BUILD)\arasanx.pgd $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(BUILD)\$(ARASANX).exe
 
 profile-build: dirs profile profile-run profile-optimized
 
