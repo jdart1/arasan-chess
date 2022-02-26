@@ -30,5 +30,5 @@ pushd ..
 7z u -tzip -orelease %1 gui\help\*.*
 7z u -tzip -orelease %1 gui\help\html\*.*
 7z u -tzip -orelease %1 gui\install\arasan.iss gui\install\readme.txt
-7z u -tzip -orelease %1 network\arasan-d9-10-20220216.nnue
+7z u -tzip -orelease %1 network\arasan-d10-20220226.bin
 
