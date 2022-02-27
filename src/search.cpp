@@ -55,18 +55,11 @@ static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
 // These tables are for the strength reduction feature:
 static constexpr int STRENGTH_DEPTH_LIMITS[100] = {
-    1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,
-    3,3,3,3,4,4,4,4,4,5,5,5,5,5,6,6,6,6,6,7,
-    7,7,7,8,8,8,8,9,9,9,10,10,10,10,11,11,11,12,12,12,
-    13,13,13,13,14,14,14,15,15,16,16,16,17,17,17,18,18,19,19,19,
-    20,20,21,21,21,22,22,23,23,23,24,24,25,25,26,26,27,27,28,32};
-static constexpr int STRENGTH_MOVE_PRUNING[100] = {
-    1,1,2,2,2,4,4,4,6,6,8,8,10,10,12,12,14,16,16,18,
-    18,20,22,23,24,25,27,29,29,31,33,34,36,36,38,40,42,43,45,47,
-    49,50,52,54,56,57,59,61,63,64,66,68,70,71,73,75,77,80,82,83,
-    85,87,89,92,94,95,97,99,102,104,106,107,111,112,114,116,119,121,123,126,
-    128,129,133,134,136,139,141,144,146,148,151,153,156,158,161,163,166,168,171,173
-};
+    1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,
+    2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,5,
+    5,5,5,5,6,6,6,6,7,7,7,8,8,8,9,9,10,10,11,11,
+    12,12,13,13,14,14,15,16,16,17,18,19,19,20,21,22,23,24,24,25,
+    26,28,29,30,31,32,33,35,36,36,36,36,36,36,36,37,37,37,37,37};
 
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
@@ -1027,8 +1020,9 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
         }
         else {
             const score_t score = mg.getScore(move);
-            if ((best - score <= tolerance && dist2(random_engine) < x) ||
-                dist2(random_engine) < x/2) {
+            const int r = dist2(random_engine);
+            if ((best - score <= tolerance && r < x) ||
+                r < x/(2+strength/10)) {
                 if (mainThread() && controller->debugOut()) {
                     std::cout << globals::debugPrefix <<
                         "suboptimal: index= " << i <<
@@ -1403,16 +1397,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->eval = Constants::INVALID_SCORE;
 
     const int &strength = globals::options.search.strength;
-    int pruneMoves = Constants::MaxMoves + 1;
-    if (strength <= 75) {
-        const auto mid = STRENGTH_MOVE_PRUNING[strength];
-        std::normal_distribution<double> dist(mid,mid/3);
-        std::uniform_int_distribution<int> dist2(1,std::max<int>(1,strength));
-        if (dist2(random_engine) < 30) {
-            pruneMoves = std::max<int>(1,std::lround(std::abs(dist(random_engine))));
-        }
-    }
-
     int move_index = 0;
     score_t hibound = beta;
     while (!node->cutoff && !terminate) {
@@ -1511,12 +1495,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
 #endif
         board.undoMove(move,save_state);
-        // at low strength settings, do not allow cutoff on late
-        // moves. We record their scores as alpha. Effectively
-        // they are pruned.
-        if (move_index >= pruneMoves && board.checkStatus() != InCheck) {
-            try_score = node->alpha;
-        }
         if (wide) {
             mg.setScore(move_index,try_score);
         }
