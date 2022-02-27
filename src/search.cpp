@@ -1396,7 +1396,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->excluded = NullMove;
     node->eval = Constants::INVALID_SCORE;
 
-    const int &strength = globals::options.search.strength;
     int move_index = 0;
     score_t hibound = beta;
     while (!node->cutoff && !terminate) {
