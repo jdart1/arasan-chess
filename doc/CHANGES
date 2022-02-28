@@ -1,3 +1,18 @@
+Changes in Arasan 23.3:
+ 1) Convert from using a separate polling thread to polling from the
+    search itself, as was done earlier in Arasan development.
+ 2) Fix build problem with utility programs
+ 3) Fixes for errors and warnings in build of tuner.
+ 4) Some code cleanup. Remove spinlocks, replace with std::mutex.
+ 5) Change how extensions/reductions are handled.
+ 6) Use regex to parse .rc file. Tolerate/ignore blank lines in the file.
+ 7) Shift to using pure NNUE rather than mixed classical/NNUE eval in imbalanced positions.
+ 8) Changes to selfplay utility: -n sets position count not game
+    count. Add -a flag to append to existing file.
+ 9) Add AVX512 support
+ 10) New network
+ 11) Changes/tuning to strength reduction feature.
+
 Changes in Arasan 23.2:
  1) Fixes to singular extension code.
  2) Change static null pruning margins.

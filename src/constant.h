@@ -1,4 +1,4 @@
-// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2022 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CONSTANT_H
 #define _CONSTANT_H

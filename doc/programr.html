@@ -2,18 +2,19 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 23.0</title>
+<title>Arasan Programmer's Guide - version 23.3</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 23.0</h1>
+<h1>Arasan Programmer's Guide - version 23.3</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
 
-<p>Usage of the source code is governed by the MIT license: see license.txt
-for details.</p>
+<p>Usage of the source code is governed by the MIT license: see the
+  <a href="https://www.github.com/jdart1/arasan-chess/blob/master/LICENSE" target="_blank">LICENSE
+file</a> for details.</p>
 
 <p>Arasan includes a console-based chess engine that be used with
 Winboard, a separately available interface for chess programs, or with
@@ -943,8 +944,8 @@ allocated on a per-thread basis (each thread has its own tables).</p>
 
 Arasan as of version 23.0 has both a "classical" evaluation function for
 chess positions and a neural network evaluation function. By default, both
-are used: the neural network for relatively balanced positions, and the
-classical eval for unbalanced positions and positions in the late endgame.</p>
+are used: the neural network for most positions,
+and the classical eval positions in the late endgame.</p>
 <p>The following text describes the classical evaluation function.</p>
 <p>There are roughly five main components to the positional score used by Arasan:</p>
 <ol>

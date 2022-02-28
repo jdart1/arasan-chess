@@ -2,7 +2,7 @@
 # Gnu Makefile for Arasan
 # Copyright 2004-2022 by Jon Dart. All Rights Reserved.
 #
-VERSION = 23.2
+VERSION = 23.3
 
 # paths, modify as needed:
 
@@ -39,7 +39,7 @@ UTIL = util
 NNUE = 1
 
 # default network
-NETWORK=arasan-d9-10-20220124.nnue
+NETWORK=arasan-d10-20220226.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
