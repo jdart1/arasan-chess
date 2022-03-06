@@ -1039,7 +1039,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
             if (doTrace) {
                 std::cout << debugPrefix << "handling pending commands" << std::endl;
             }
-            std::unique_lock<std::mutex>(inputMtx);
+            std::unique_lock<std::mutex> inputMtx;
             auto it = pending.begin();
             bool exit = false;
             while (it != pending.end() && !exit) {
