@@ -779,6 +779,7 @@ int Search::checkTime() {
             }
         }
     }
+    controller->pool->unlock();
     if (monitor) {
         if (controller->monitor_function(controller,stats)) {
             if (debugOut()) {
@@ -797,7 +798,6 @@ int Search::checkTime() {
             }
         }
     }
-    controller->pool->unlock();
     if (val) {
         controller->terminateNow();
     }
