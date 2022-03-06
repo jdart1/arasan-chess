@@ -765,11 +765,14 @@ int Search::checkTime() {
 
     // The following code is always only executed by one of the threads
     bool monitor = false;
+    int val = 0;
+    // Lock to prevent races when a thread is terminating
+    controller->pool->lock();
     if (controller->monitor_function) {
         monitor = controller->isMonitorThread(ti->index);
         if (!monitor) {
             // ensure monitor thread is still active
-            if (controller->monitorThreadCompleted()) {
+            if (controller->pool->isCompletedNoLock(ti->index)) {
                 // monitor thread completed, appoint this the monitor thread
                 controller->setMonitorThread(ti->index);
                 monitor = true;
@@ -781,20 +784,24 @@ int Search::checkTime() {
             if (debugOut()) {
                 std::cout << globals::debugPrefix << "terminating due to program or user input" << std::endl;
             }
-            controller->terminateNow();
-            return 1;
-        }
-        controller->updateGlobalStats(stats);
-        if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 3000) {
-            const uint64_t total_nodes = controller->totalNodes();
-            std::cout << "info";
-            if (controller->elapsed_time>300) std::cout << " nps " <<
-                                                  (long)((1000L*total_nodes)/controller->elapsed_time);
-            std::cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << std::endl;
-            controller->last_time = current_time;
+            val = 1;
+        } else {
+            controller->updateGlobalStats(stats);
+            if (controller->uci && getElapsedTime(controller->last_time,current_time) >= 3000) {
+                const uint64_t total_nodes = controller->totalNodes();
+                std::cout << "info";
+                if (controller->elapsed_time>300) std::cout << " nps " <<
+                                                      (long)((1000L*total_nodes)/controller->elapsed_time);
+                std::cout << " nodes " << total_nodes << " hashfull " << controller->hashTable.pctFull() << std::endl;
+                controller->last_time = current_time;
+            }
         }
     }
-    return 0;
+    controller->pool->unlock();
+    if (val) {
+        controller->terminateNow();
+    }
+    return val;
 }
 
 void Search::showStatus(const Board &board, Move best, bool faillow,

@@ -550,10 +550,6 @@ public:
        return id == monitorThread;
    }
 
-   bool monitorThreadCompleted() const noexcept {
-       return pool->isCompleted(monitorThread);
-   }
-
    void setMonitorThread(unsigned id) {
        monitorThread = id;
    }

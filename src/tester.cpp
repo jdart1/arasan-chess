@@ -117,13 +117,14 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
             std::cout << std::endl;
             MoveSet excludes;
             testTotals.total_tests++;
+            Statistics stats;
+            auto old_post = searcher->registerPostFunction(
+                std::bind(&Tester::post_test,this,_1,searcher,std::cref(opts),std::ref(testStats)));
+            auto old_monitor = searcher->registerMonitorFunction(
+                std::bind(&Tester::monitor,this,_1,_2,std::cref(opts),std::ref(testStats)));
             for (int index = 0; index < opts.moves_to_search; index++) {
                 searcher->clearHashTables();
-                Statistics stats;
-                auto old_post = searcher->registerPostFunction(
-                    std::bind(&Tester::post_test,this,_1,searcher,std::cref(opts),std::ref(testStats)));
-                auto old_monitor = searcher->registerMonitorFunction(
-                    std::bind(&Tester::monitor,this,_1,_2,std::cref(opts),std::ref(testStats)));
+                stats.clear();
 
                 MoveSet includes;
                 Move result = searcher->findBestMove(board,
@@ -142,9 +143,6 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
                 Scoring::printScore(stats.display_value,std::cout);
                 std::cout <<  '\t';
                 globals::gameMoves->removeAll();
-
-                searcher->registerPostFunction(old_post);
-                searcher->registerMonitorFunction(old_monitor);
 
                 if (IsNull(result)) break;
                 testTotals.total_time += searcher->getElapsedTime();
@@ -190,6 +188,8 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
                     }
                 }
             }
+            searcher->registerPostFunction(old_post);
+            searcher->registerMonitorFunction(old_monitor);
         }
 
         int c;

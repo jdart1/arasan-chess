@@ -1,4 +1,4 @@
-// Copyright 2005-2013, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2013, 2016-2019, 2021-2022 by Jon Dart. All Rights Reserved.
 
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
@@ -112,12 +112,24 @@ public:
        return val;
    }
 
+   bool isCompletedNoLock(unsigned index) {
+       return completedMask.test(index);
+   }
+
    void setCompleted(unsigned index) {
        std::unique_lock<std::mutex> lock(poolLock);
        completedMask.set(static_cast<size_t>(index));
        if (completedMask.count() == nThreads) {
            signal();
        }
+   }
+
+   void lock() {
+       poolLock.lock();
+   }
+
+   void unlock() {
+       poolLock.unlock();
    }
 
 private:
