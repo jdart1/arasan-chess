@@ -2332,7 +2332,7 @@ int Search::prune(const Board &board,
 }
 
 int Search::extend(const Board &board,
-                   NodeInfo */*node*/,
+                   NodeInfo * /*node*/,
                    CheckStatusType in_check_after_move,
                    Move move) {
     // see if we should apply any extensions at this node.
@@ -3410,6 +3410,7 @@ void Search::setSearchOptions() {
 }
 
 score_t Search::evalu8(const Board &board) {
+	score_t score;
 #ifdef NNUE
     const Material &ourMat = board.getMaterial(board.sideToMove());
     const Material &oppMat = board.getMaterial(board.oppositeSide());
@@ -3417,7 +3418,6 @@ score_t Search::evalu8(const Board &board) {
     const bool useClassical = !srcOpts.pureNNUE &&
         (//imbalance ||
          ourMat.men() + oppMat.men() <= 7);
-    score_t score;
     if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
         score = scoring.evalu8NNUE(board,node);
     } else {
