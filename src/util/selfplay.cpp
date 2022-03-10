@@ -1,4 +1,4 @@
-// Copyright 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2022 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "chessio.h"
@@ -704,12 +704,12 @@ int CDECL main(int argc, char **argv) {
                 : "positions.epd";
     }
 
-    auto flags = std::ios::out;
+    std::ios_base::openmode flags = std::ios::out;
     if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
-        flags |= std::ios::binary;
+        flags = flags | std::ios::binary;
     }
     if (append) {
-        flags |= std::ios::app;
+        flags = flags | std::ios::app;
     }
     pos_out_file = new std::ofstream(sp_options.posFileName, flags);
     if (sp_options.saveGames)
