@@ -1278,10 +1278,12 @@ Move Search::ply0_search()
                 // on search status and history
                 controller->historyBasedTimeAdjust(stats);
                 controller->applySearchHistoryFactors();
+                /*
                 if (debugOut() && (controller->searchHistoryBoostFactor != 0 || controller->searchHistoryReductionFactor !=0)) {
                     std::cout << globals::debugPrefix << "searchHistoryBoostFactor=" << controller->searchHistoryBoostFactor <<
                         " searchHistoryReductionFactor=" << controller->searchHistoryReductionFactor << std::endl;
                 }
+                */
             }
             stats.completedDepth = iterationDepth;
             if (srcOpts.multipv > 1) {
