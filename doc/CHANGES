@@ -13,7 +13,7 @@ Changes in Arasan 23.3:
  10) New network
  11) Changes/tuning to strength reduction feature.
 
-Changes in Arasan 23.2:
+Changes in Arasan 23.2 (Dec. 2021):
  1) Fixes to singular extension code.
  2) Change static null pruning margins.
  3) Fix compile errs in tracing code.
