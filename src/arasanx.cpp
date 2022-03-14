@@ -1,5 +1,5 @@
 // Main module for Arasan chess engine.
-// Copyright 1997-2018, 2020-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2020-2022 by Jon Dart. All Rights Reserved.
 //
 
 #include "types.h"
@@ -17,16 +17,10 @@
 
 extern "C"
 {
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
 #include <signal.h>
-#ifdef _WIN32
-#include <io.h>
-#else
-#include <unistd.h>
+#ifndef _WIN32
+#include <time.h>
 #include <sys/resource.h>
-#include <sys/select.h>
 #endif
 }
 
