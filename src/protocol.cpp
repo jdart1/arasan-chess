@@ -2652,7 +2652,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         // We've received the name of our opponent.
         opponent_name = cmd_args;
     }
-    else if (cmd == "bogus" || cmd == "accepted") {
+    else if (cmd == "bogus" || cmd_word == "accepted" || cmd_word == "rejected") {
     }
     else if (cmd == "force") {
         forceMode = true;
