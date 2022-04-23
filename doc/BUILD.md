@@ -195,8 +195,8 @@ debugging, not for building the final release.
 
 Arasan can also be built using the Cygwin development tools, which
 simulate a Linux environment under Windows. Use the Linux source
-package for building with Cygwin. I do not currently recommend or
-support [MingW](http://mingw.org/).
+package for building with Cygwin or [MSYS2](https://www.msys2.org/). I
+do not currently recommend or support [MingW](http://mingw.org/).
 
 # CMake
 

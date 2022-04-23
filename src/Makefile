@@ -64,6 +64,7 @@ endif
 
 #PROF     = -pg
 #DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
+DEBUG    = -g -D_DEBUG=1
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -201,8 +202,10 @@ OPT     = -O3 $(LTO) -fno-rtti -DNDEBUG
 LDFLAGS := $(LDFLAGS) $(OPT)
 ifeq ($(findstring darwin,$(OSTYPE)),)
 ifeq ($(findstring cygwin,$(OSTYPE)),)
+ifeq ($(findstring msys,$(OSTYPE)),)
 # "Gold" not supported on darwin or cygwin
- LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+endif
 endif
 endif
 endif
@@ -237,7 +240,9 @@ endif
 SMPFLAGS := $(SMPFLAGS) -pthread
 ifeq ($(findstring darwin,$(OSTYPE)),)
 ifeq ($(findstring cygwin,$(OSTYPE)),)
+ifeq ($(findstring msys,$(OSTYPE)),)
 LDFLAGS := $(LDFLAGS) -fuse-ld=gold
+endif
 endif
 endif
 ifndef DEBUG
