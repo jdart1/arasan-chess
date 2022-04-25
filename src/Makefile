@@ -64,7 +64,6 @@ endif
 
 #PROF     = -pg
 #DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
-DEBUG    = -g -D_DEBUG=1
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
