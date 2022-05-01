@@ -763,24 +763,9 @@ int Search::checkTime() {
        }
     }
 
-    // The following code is always only executed by one of the threads
-    bool monitor = false;
     int val = 0;
-    // Lock to prevent races when a thread is terminating
-    controller->pool->lock();
-    if (controller->monitor_function) {
-        monitor = controller->isMonitorThread(ti->index);
-        if (!monitor) {
-            // ensure monitor thread is still active
-            if (controller->pool->isCompletedNoLock(ti->index)) {
-                // monitor thread completed, appoint this the monitor thread
-                controller->setMonitorThread(ti->index);
-                monitor = true;
-            }
-        }
-    }
-    controller->pool->unlock();
-    if (monitor) {
+    // The following code is always only executed by one of the threads
+    if (controller->monitor_function && controller->isMonitorThread(ti->index)) {
         if (controller->monitor_function(controller,stats)) {
             if (debugOut()) {
                 std::cout << globals::debugPrefix << "terminating due to program or user input" << std::endl;
@@ -1331,6 +1316,16 @@ Move Search::ply0_search()
          showStatus(board, node->best, false, false);
       }
    } // end depth iteration loop
+   // Make sure we have an active monitor thread
+   if (controller->monitor_function && controller->isMonitorThread(ti->index)) {
+       for (unsigned i = 0; i < controller->pool->size(); ++i) {
+          if (i != ti->index && !controller->pool->isCompletedNoLock(i)) {
+              // appoint this the monitor thread
+              controller->setMonitorThread(i);
+              break;
+          }
+       }
+   }
    if (mainThread() && debugOut()) {
        if (iterationDepth >= controller->ply_limit) {
            std::cout << globals::debugPrefix << "exiting search due to max depth" << std::endl;

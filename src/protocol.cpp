@@ -195,13 +195,16 @@ bool Protocol::do_all_pending(Board &board)
 {
     bool retVal = true;
     if (doTrace) std::cout << debugPrefix << "in do_all_pending" << std::endl;
-    while (true) {
-        std::string cmd;
-        if (!popPending(cmd)) break;
+    std::string cmd;
+    while (!globals::polling_terminated && popPending(cmd)) {
         if (doTrace) {
             std::cout << debugPrefix << "pending command(a): " << cmd << std::endl;
         }
-        if (!do_command(cmd,board)) {
+        if (uciWaitState) {
+            // can get here if we completed pondering early
+            processCmdInWaitState(cmd);
+        }
+        else if (!do_command(cmd,board)) {
             retVal = false;
             break;
         }

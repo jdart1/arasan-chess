@@ -132,6 +132,10 @@ public:
        poolLock.unlock();
    }
 
+   unsigned size() const noexcept {
+       return nThreads;
+   }
+
 private:
    // Note: does not lock
    bool allCompleted() const {
