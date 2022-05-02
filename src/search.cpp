@@ -1318,6 +1318,7 @@ Move Search::ply0_search()
    } // end depth iteration loop
    // Make sure we have an active monitor thread
    if (controller->monitor_function && controller->isMonitorThread(ti->index)) {
+       controller->pool->lock();
        for (unsigned i = 0; i < controller->pool->size(); ++i) {
           if (i != ti->index && !controller->pool->isCompletedNoLock(i)) {
               // appoint this the monitor thread
@@ -1325,6 +1326,7 @@ Move Search::ply0_search()
               break;
           }
        }
+       controller->pool->unlock();
    }
    if (mainThread() && debugOut()) {
        if (iterationDepth >= controller->ply_limit) {
