@@ -30,7 +30,7 @@ static const int ASPIRATION_WINDOW[] =
 static const int ASPIRATION_WINDOW_STEPS = 6;
 
 #define STATIC_NULL_PRUNING
-#define RAZORING
+//#define RAZORING
 #define SINGULAR_EXTENSION
 #define MULTICUT
 #define NON_SINGULAR_PRUNING
@@ -2682,6 +2682,7 @@ score_t Search::search()
     if (pruneOk &&
         (depth >= 2*DEPTH_INCREMENT) &&
         !IsNull((node-1)->last_move) &&
+        (depth >= 4*DEPTH_INCREMENT || !CaptureOrPromotion((node-1)->last_move)) &&
         board.getMaterial(board.sideToMove()).hasPieces() &&
         IsNull(node->excluded) &&
         node->eval >= node->beta &&
