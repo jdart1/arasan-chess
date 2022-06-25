@@ -883,10 +883,12 @@ static int lmpCount(int depth, int improving)
         LMP_MOVE_COUNT[improving][std::max(DEPTH_INCREMENT,depth)/DEPTH_INCREMENT] : Constants::MaxMoves;
 }
 
+#ifdef RAZORING
 static score_t razorMargin(int depth)
 {
     return RAZOR_MARGIN + (std::max<int>(DEPTH_INCREMENT,depth)/DEPTH_INCREMENT)*RAZOR_MARGIN_SLOPE;
 }
+#endif
 
 static score_t seePruningMargin(int depth, bool quiet)
 {
