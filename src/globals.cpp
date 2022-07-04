@@ -1,4 +1,4 @@
-// Copyright 1996-2012, 2014, 2016-2019, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2012, 2014, 2016-2019, 2021-2022 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -14,10 +14,11 @@ extern "C" {
 #include <libproc.h>
 };
 #elif !defined (_MSC_VER)
-// assume Linux or similar
+// assume Unix-line system
 extern "C" {
 #include <sys/types.h>
 #include <unistd.h>
+#include <limits.h>
 };
 #endif
 
