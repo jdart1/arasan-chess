@@ -99,14 +99,83 @@ std::mutex file_lock, data_lock;
 static pthread_attr_t stackSizeAttrib;
 #endif
 
+struct MemoryBlock {
+    MemoryBlock(size_t size) :
+        max(size),
+        next(0),
+        contents(new char[size]) {
+    };
+
+    ~MemoryBlock() {
+        delete [] contents;
+    }
+
+    int available() const noexcept {
+        return int(max) - int(next);
+    }
+
+    char *store(const std::string &s) {
+        const int total = static_cast<int>(s.size() + 1);
+        if (available()<=total) {
+            return nullptr;
+        }
+        char *p = contents + next;
+        std::strncpy(p,s.c_str(),total);
+        next += total;
+        return p;
+    }
+
+    size_t max, next;
+    char *contents;
+};
+
+struct StringMemory {
+
+    StringMemory(size_t size) :
+        blockSize(size) {
+    }
+
+    ~StringMemory() {
+        clear();
+    }
+
+    void clear() {
+        for (auto &it : blocks) {
+            delete it;
+        }
+        blocks.clear();
+    }
+
+    char *store(const std::string &s) {
+        if (blocks.empty()) {
+            blocks.insert(blocks.end(),new MemoryBlock(blockSize));
+        }
+        char *p = blocks.back()->store(s);
+        if (p == nullptr) {
+            blocks.insert(blocks.end(),new MemoryBlock(blockSize));
+            // assume this will succeed
+            return blocks.back()->store(s);
+        }
+        return p;
+    }
+
+    size_t blockSize;
+    std::list<MemoryBlock *> blocks;
+
+};
+
+static constexpr size_t BLOCKSIZE = 16384;
+
+static StringMemory stringMem(BLOCKSIZE);
+
 struct PosInfo
 {
    PosInfo(const std::string &pos, double res)
-      :position(pos),result(res)
+      :position(stringMem.store(pos)),result(res)
       {
       }
 
-   std::string position;
+   char *position;
    double result;
 };
 
@@ -1694,6 +1763,7 @@ static void learn()
             delete positions.back();
             positions.pop_back();
          }
+         stringMem.clear();
          learn_parse(Phase1, cores);
          // sum results over workers into 1st data element
          for (int i = 1; i <= cores; i++) {
@@ -1896,6 +1966,9 @@ int CDECL main(int argc, char **argv)
 
     globals::options.search.hash_table_size = 0;
     globals::options.search.easy_plies = 0;
+#ifdef NNUE
+    globals::options.search.useNNUE = false;
+#endif
     globals::options.book.book_enabled = globals::options.log_enabled = false;
     globals::options.learning.position_learning = false;
 #ifdef SYZYGY_TBS
