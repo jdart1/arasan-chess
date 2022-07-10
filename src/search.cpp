@@ -470,13 +470,6 @@ Move SearchController::findBestMove(
       std::cout << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
       std::cout << " pv=" << stats->best_line_image << std::endl;
    }
-   if (IsNull(best)) {
-      std::cerr << globals::debugPrefix << "best thread: depth=" << stats->completedDepth <<  " score=";
-      Scoring::printScore(stats->value,std::cerr);
-      std::cerr << " fail high=" << (int)stats->failHigh << " fail low=" << stats->failLow;
-      std::cerr << " pv=" << stats->best_line_image << std::endl;
-      std::cerr << board << std::endl;
-   }
 
    // search done (all threads), set status and report statistics
    static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
