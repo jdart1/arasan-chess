@@ -303,10 +303,10 @@ void Tester::post_test(const Statistics &stats,
     }
 }
 
-int Tester::monitor(SearchController *s, const Statistics &stats, const TestOptions &opts,
-                    TestStatus &testStats)
-{
-    post_test(stats, s, opts, testStats);
+int Tester::monitor(SearchController * /*s*/,
+                    const Statistics & /*stats*/,
+                    const TestOptions & /*opts*/,
+                    TestStatus &testStats) {
     return testStats.early_exit;
 }
 

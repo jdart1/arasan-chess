@@ -455,10 +455,6 @@ Move SearchController::findBestMove(
    } else {
        updateGlobalStats(rootSearch->stats);
    }
-   // Output a final post message
-   if ((!background || uci) && post_function) {
-       post_function(*stats);
-   }
 #ifdef _TRACE
    std::cout << globals::debugPrefix << "best thread: score=";
    Scoring::printScore(stats->value,std::cout);
@@ -785,9 +781,9 @@ int Search::checkTime() {
 void Search::showStatus(const Board &board, Move best, bool faillow,
 bool failhigh)
 {
-    if (terminate)
-        return;
     int ply = stats.depth;
+    // Update controller statistics from main thread stats:
+    controller->updateGlobalStats(stats);
     if (talkLevel == TalkLevel::Test) {
         // This is the output for the "test" command in verbose mode
         std::ios_base::fmtflags original_flags = std::cout.flags();
@@ -809,8 +805,6 @@ bool failhigh)
         std::cout << '\t' << controller->getGlobalStats().num_nodes << std::endl;
         std::cout.flags(original_flags);
     }
-    // Update controller statistics from main thread stats:
-    controller->updateGlobalStats(stats);
     // Post during ponder if UCI
     if ((!controller->background || controller->uci) && controller->post_function) {
        controller->post_function(*(controller->stats));
@@ -1312,8 +1306,8 @@ Move Search::ply0_search()
       }
    } // end depth iteration loop
    // Make sure we have an active monitor thread
+   controller->pool->lock();
    if (controller->monitor_function && controller->isMonitorThread(ti->index)) {
-       controller->pool->lock();
        for (unsigned i = 0; i < controller->pool->size(); ++i) {
           if (i != ti->index && !controller->pool->isCompletedNoLock(i)) {
               // appoint this the monitor thread
@@ -1321,8 +1315,8 @@ Move Search::ply0_search()
               break;
           }
        }
-       controller->pool->unlock();
    }
+   controller->pool->unlock();
    if (mainThread() && debugOut()) {
        if (iterationDepth >= controller->ply_limit) {
            std::cout << globals::debugPrefix << "exiting search due to max depth" << std::endl;

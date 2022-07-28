@@ -86,9 +86,9 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
         }
 #endif
         ti->work->ply0_search();
-        delete [] searchStack;
         {
             std::unique_lock<std::mutex> lock(pool->poolLock);
+            delete [] searchStack;
             // Mark thread completed
             pool->completedMask.set(ti->index);
 #ifdef _THREAD_TRACE
