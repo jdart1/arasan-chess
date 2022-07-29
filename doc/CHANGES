@@ -1,4 +1,15 @@
-Changes in Arasan 23.3:
+Changes in Arasan 23.4:
+ 1) Ignore CECP "accepted" and "rejected" input from the interface
+ 2) Fixes for occasional stalls especially in UCI mode
+ 3) Null move condition changes. Remove razoring.
+ 4) Optimize tuner memory allocation. Disable NNUE when parameter turning for HCE.
+ 5) Network update, re-tune with lambda=0.75
+ 6) Code cleanup, including fixes for MSYS2 build
+ 7) Enhancements to AVX512 support
+ 8) GUI fix: make "Can resign" option work correctly
+ 9) Bug fixes for "test" command when run multithreaded
+
+Changes in Arasan 23.3 (Mar. 2022):
  1) Convert from using a separate polling thread to polling from the
     search itself, as was done earlier in Arasan development.
  2) Fix build problem with utility programs

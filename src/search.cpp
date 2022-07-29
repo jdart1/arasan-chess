@@ -39,7 +39,9 @@ static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
+#ifdef RAZORING
 static const int RAZOR_DEPTH = DEPTH_INCREMENT;
+#endif
 static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 static const int CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;

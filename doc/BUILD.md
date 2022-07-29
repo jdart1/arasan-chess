@@ -21,6 +21,7 @@ arasan
     gui     - source code for the Arasan user interface (Windows only)
     book    - text files for opening book and ECO recognizer
     doc     - documentation
+    network - network files
     tests   - test files and documentation
     tools   - misc. utility scripts
     prj     - Visual C++ project file and build directories (Windows)
@@ -42,7 +43,7 @@ to pull these dependencies into your your source tree:
 Arasan now requires a modern compiler with at least C++-17 support.
 
 Limited testing has been done on other OSs and architectures other
-than x86 and amd64.  However, the code is designed to be portable.
+than x86 and amd64. However, the code is designed to be portable.
 In particular, there is support for big-endian architectures.
 
 # Building on Linux or Mac
@@ -123,18 +124,14 @@ variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive," so
 
 # Building on Windows
 
-The release engine binaries for Arasan were built built from
-the command-line using NMAKE, and the Arasan GUI was built with the
-Visual Studio Community Edition, using the project file.
-
 ## Recommended build method
 
-I recommend building the engine with MSVC using the supplied makefile
+I recommend building the engine with MSVC and NMAKE, using the supplied makefile
 (named "Makefile" in the Windows source zip, or "Makefile.win" in the
 github repo). This is the most reliable and tested method. Visual
 Studio Community Edition is free for use on open-source projects and
-has all the features you need. You need a recent version with C++ 11
-support. Visual Studio 2012 and later should work.</p>
+includes the needed command-line tools. You need a recent version with C++ 17
+support.
 
 The following targets are defined in the makefile:
 
@@ -151,6 +148,7 @@ support. Current build types supported are:
 
 - modern (implies: sse3, sse4, sse4.1, popcnt)
 - avx2 (includes "modern" instruction sets)
+- avx512 (includes "avx2" and "modern" instruction sets)
 
 The default with no BUILD_TYPE set is a very generic executable that
 does not assume any advanced instruction set, but does assume SSE2,
@@ -174,6 +172,14 @@ deprecated and will be removed by Microsoft eventually. Note also
 I no longer have a functioning XP machine and so compatibility of
 current builds of Arasan is not tested).
 
+## Building the engine with Visual Studio
+
+The Windows source distribution includes Visual Studio solution
+files for the chess engine in the "prj" directory.
+But I use the engine "prj" solution file mostly for
+debugging, not for building the final release. Project files are
+less maintained/tested than the NMAKE Makefile.
+
 ## Building the Arasan Windows GUI
 
 Source for Arasan's native Windows GUI is included in the Windows source archives
@@ -181,17 +187,13 @@ downloadable from [arasanchess.org](https://www.arasanchess.org).
 
 To build the GUI, use the Visual C++ solution file in the "gui"
 subdirectory. (The command-line Makefile does not build the GUI). You
-cannot build the GUI with the Express Edition of Visual C++, because
-it lacks the required MFC libraries. The Community Edition is ok,
-though. By default the GUI solution file builds a XP-compatible build
-so it requires the Windows SDK 7.1A to be installed.
+will need a version of Visual Studio that includes
+the required MFC libraries. The Community Edition should work.
+By default the GUI solution file produces a XP-compatible build,
+so it requires the Windows SDK 7.1A to be installed. The Visual
+Studio installer can add this, but it is not installed by default.
 
-## Other build methods
-
-The Windows source distribution includes Visual C++ 2019 solution
-files for the chess engine and tools and GUI in directories "prj" and
-"gui", respectively. But I use the "prj" solution file mostly for
-debugging, not for building the final release.
+## Cygwin/MSYS
 
 Arasan can also be built using the Cygwin development tools, which
 simulate a Linux environment under Windows. Use the Linux source

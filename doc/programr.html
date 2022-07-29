@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 23.3</title>
+<title>Arasan Programmer's Guide - version 23.4</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 23.3</h1>
+<h1>Arasan Programmer's Guide - version 23.4</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -661,10 +661,6 @@ decide if the entire node can be pruned away, before doing any
 searching.
 The first of these is "static null pruning", which cuts off search for
 nodes that have very high scores.</p>
-
-<p>Arasan may then try "razoring". Razoring takes place when the static
-score is very low. In this case a quiesence search is done and the
-search terminates if that also produces a low score (alpha or below).</p>
 
 <p>If still no cutoff has occured, we then try a further trick to get a
 fast termination of the search. The side to move is changed without
