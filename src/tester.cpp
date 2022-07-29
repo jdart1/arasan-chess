@@ -133,6 +133,8 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
                                   0, 0, stats,
                                   opts.verbose ? TalkLevel::Test : TalkLevel::Silent,
                                   excludes, includes);
+                // ensure stats and search history are updated with latest results
+                post_test(stats, searcher, opts, testStats);
                 if (excludes.size())
                     std::cout << "result(" << excludes.size()+1 << "):";
                 else

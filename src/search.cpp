@@ -1283,7 +1283,6 @@ Move Search::ply0_search()
                     std::cout << "terminating, low score" << std::endl;
 #endif
                     controller->terminateNow();
-                    break;
                }
                else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
                    // found a forced mate, terminate
@@ -1292,7 +1291,6 @@ Move Search::ply0_search()
                    std::cout << "terminating, high score" << std::endl;
 #endif
                    controller->terminateNow();
-                   break;
                }
             }
          }
