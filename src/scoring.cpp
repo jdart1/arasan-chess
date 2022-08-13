@@ -2375,19 +2375,15 @@ void Scoring::clearHashTables() {
 score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    Position p(board,node);
    ChessInterface intf(&p);
+   score_t nnval;
+   const unsigned bucket = nnue::Evaluator<ChessInterface>::getBucket(intf);
    if (node) {
-       /*
-      if (node->ply && IsNull((node-1)->last_move) && node->staticEval != Constants::INVALID_SCORE) {
-          // can just change sign
-          return -node->staticEval;
-      }
-       */
       nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::White);
       nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::Black);
 #ifdef _DEBUG
       assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Lower) == nnue::AccumulatorState::Computed);
       assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Upper) == nnue::AccumulatorState::Computed);
-      score_t score1 = static_cast<score_t>(globals::network.evaluate(intf.getAccumulator()));
+      score_t score1 = static_cast<score_t>(globals::network.evaluate(intf.getAccumulator(),bucket));
       score_t score2 = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
       if (score1 != score2) {
           std::cout << board << std::endl;
@@ -2401,11 +2397,12 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
           assert(0);
       }
 #endif
-      return static_cast<score_t>(globals::network.evaluate(node->accum));
+      nnval = static_cast<score_t>(globals::network.evaluate(node->accum,bucket));
    }
    else {
-      return static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
+      nnval = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
    }
+   return nnval + node->accum.getPSQValue()/nnue::FV_SCALE;
 }
 #endif
 
