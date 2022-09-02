@@ -65,9 +65,9 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
    reorder(pvMove,0,true);
 #ifdef _TRACE
    if (master) {
-      cout << "root moves:" << endl;
+      std::cout << "root moves:" << std::endl;
       for (auto it : moveList) {
-         MoveImage(it.move,cout); cout << endl;
+         MoveImage(it.move,std::cout); std::cout << std::endl;
       }
    }
 #endif
@@ -281,7 +281,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
       phase++;
 #ifdef _TRACE
       if (master) {
-         indent(ply); cout << "phase = " << phase << endl;
+         indent(ply); std::cout << "phase = " << phase << std::endl;
       }
 #endif
       switch(phase) {
@@ -292,9 +292,9 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                SetPhase(*moves,phase);
 #ifdef _TRACE
                if (master) {
-                  indent(ply); cout << "hash move = ";
-                  MoveImage(hashMove,cout);
-                  cout << endl;
+                  indent(ply); std::cout << "hash move = ";
+                  MoveImage(hashMove,std::cout);
+                  std::cout << std::endl;
                }
 #endif
                index = 0;

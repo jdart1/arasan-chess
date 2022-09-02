@@ -1288,7 +1288,9 @@ Move Search::ply0_search()
                }
                else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
                    // found a forced mate, terminate
-                   if (mainThread() && debugOut()) std::cout << globals::debugPrefix << "terminating, high score" << std::endl;
+                   if (mainThread() && debugOut()) {
+                       std::cout << globals::debugPrefix << "terminating, high score" << std::endl;
+                   }
 #ifdef _TRACE
                    std::cout << "terminating, high score" << std::endl;
 #endif
@@ -2944,7 +2946,9 @@ score_t Search::search()
                 score_t result = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
                 if (result < nu_beta) {
 #ifdef _TRACE
-                    indent(ply); std::cout << "singular extension" << std::endl;
+                    if (mainThread()) {
+                        indent(ply); std::cout << "singular extension" << std::endl;
+                    }
 #endif
                     singularExtend = true;
 #ifdef SEARCH_STATS
@@ -2970,7 +2974,10 @@ score_t Search::search()
                         // Another pruning idea from Stockfish: prune if the search is >= beta
                         // (note however current Stockfish reduces rather than prunes)
 #ifdef _TRACE
-                        indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
+                        if (mainThread()) {
+                            indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
+                        }
+
 #endif
 #ifdef SEARCH_STATS
                         ++stats.non_singular_pruning;
