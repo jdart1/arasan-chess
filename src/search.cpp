@@ -1033,9 +1033,9 @@ Move Search::ply0_search()
    RootMoveGenerator mg(*(controller->mg),&context);
    stats.multipv_limit = std::min<int>(mg.moveCount(),globals::options.search.multipv);
    iterationDepth = 0;
-   while ((iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
-                                                        controller->ply_limit)) <= controller->ply_limit &&
-          !terminate) {
+   for (int nominalDepth = 1;(iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
+                                                       controller->ply_limit)) <= controller->ply_limit &&
+            !terminate; ++nominalDepth) {
       MoveSet excluded(controller->exclude);
       for (stats.multipv_count = 0;
            stats.multipv_count < stats.multipv_limit && !terminate;
@@ -1045,7 +1045,7 @@ Move Search::ply0_search()
 
          if (srcOpts.multipv > 1) {
              stats.clearSearchState();
-             if (iterationDepth > 1) {
+             if (nominalDepth > 1) {
                  // set value to previous iteration's value
                  value = stats.multi_pvs[stats.multipv_count].display_value;
              } else {
@@ -1124,8 +1124,8 @@ Move Search::ply0_search()
                   std::cout << globals::debugPrefix << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << std::endl;
                }
             }
-            stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-iterationDepth-1);
-            stats.failLow = value <= lo_window  && (lo_window > iterationDepth-Constants::MATE);
+            stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-nominalDepth-1);
+            stats.failLow = value <= lo_window  && (lo_window > nominalDepth-Constants::MATE);
             if (stats.failLow) {
                 faillows++;
             }
@@ -1166,12 +1166,12 @@ Move Search::ply0_search()
                     aspirationWindow = ASPIRATION_WINDOW[++fails];
                 }
                 if (aspirationWindow == Constants::MATE) {
-                    hi_window = Constants::MATE-iterationDepth-1;
+                    hi_window = Constants::MATE - nominalDepth - 1;
                 } else {
                     if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                         aspirationWindow += 2*WIDE_WINDOW;
                     }
-                    hi_window = std::min<score_t>(Constants::MATE-iterationDepth-1,
+                    hi_window = std::min<score_t>(Constants::MATE - nominalDepth - 1,
                                                   lo_window + aspirationWindow);
                 }
             }
@@ -1217,7 +1217,7 @@ Move Search::ply0_search()
                     if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                         aspirationWindow += 2*WIDE_WINDOW;
                     }
-                    lo_window = std::max<score_t>(iterationDepth-Constants::MATE,hi_window - aspirationWindow);
+                    lo_window = std::max<score_t>(nominalDepth-Constants::MATE,hi_window - aspirationWindow);
                 }
             }
             // check time after adjustments have been made. Do not
@@ -1277,7 +1277,9 @@ Move Search::ply0_search()
             }
 #endif
             if (!controller->uci || controller->typeOfSearch == TimeLimit) {
-                if (value <= iterationDepth - Constants::MATE && !IsNull(stats.best_line[0])) {
+                // Exit in case of forced checkmate.
+                // Note: use nominalDepth for bound, in case we skipped an iteration
+                if (value <= nominalDepth - Constants::MATE && !IsNull(stats.best_line[0])) {
                     // We're either checkmated or we certainly will be, so
                     // quit searching.
                     if (mainThread() && debugOut()) std::cout << globals::debugPrefix << "terminating, low score" << std::endl;
@@ -1286,11 +1288,16 @@ Move Search::ply0_search()
 #endif
                     controller->terminateNow();
                }
-               else if (value >= Constants::MATE - iterationDepth - 1 && iterationDepth>=2) {
+               else if (value >= Constants::MATE - nominalDepth - 1 && iterationDepth>=2) {
                    // found a forced mate, terminate
-                   if (mainThread() && debugOut()) std::cout << globals::debugPrefix << "terminating, high score" << std::endl;
+                   if (mainThread() && debugOut()) {
+                       std::cout << globals::debugPrefix << "terminating, high score" << std::endl;
+                   }
 #ifdef _TRACE
-                   std::cout << "terminating, high score" << std::endl;
+                   if (mainThread()) {
+                       std::cout << "terminating, high score" << std::endl;
+                       std::cout << "nominalDepth=" << nominalDepth << " value=" << value << " mate threshold=" << Constants::MATE - nominalDepth - 1 << std::endl;
+                   }
 #endif
                    controller->terminateNow();
                }
@@ -1675,6 +1682,8 @@ Statistics *SearchController::getBestThreadStats(bool trace) const
 unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thread_id,
     unsigned max_depth)
 {
+    // Vary the search depth by thread, to make it less likely threads are searching
+    // the same positions.
     unsigned d = current_depth+1;
     const unsigned ncpus = unsigned(globals::options.search.ncpus);
     std::unique_lock<std::mutex> lock(search_count_mtx);
@@ -2944,7 +2953,9 @@ score_t Search::search()
                 score_t result = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
                 if (result < nu_beta) {
 #ifdef _TRACE
-                    indent(ply); std::cout << "singular extension" << std::endl;
+                    if (mainThread()) {
+                        indent(ply); std::cout << "singular extension" << std::endl;
+                    }
 #endif
                     singularExtend = true;
 #ifdef SEARCH_STATS
@@ -2970,7 +2981,10 @@ score_t Search::search()
                         // Another pruning idea from Stockfish: prune if the search is >= beta
                         // (note however current Stockfish reduces rather than prunes)
 #ifdef _TRACE
-                        indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
+                        if (mainThread()) {
+                            indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
+                        }
+
 #endif
 #ifdef SEARCH_STATS
                         ++stats.non_singular_pruning;

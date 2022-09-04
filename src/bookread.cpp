@@ -61,7 +61,7 @@ void BookReader::close() {
 
 Move BookReader::pick(const Board &b) {
 #ifdef _TRACE
-   cout << "BookReader::pick - hash=" << (hex) << b.hashCode() << (dec) << std::endl;
+    std::cout << "BookReader::pick - hash=" << (std::hex) << b.hashCode() << (std::dec) << std::endl;
 #endif
    std::vector <book::DataEntry> rawMoves;
    std::vector < std::pair<Move,int> > results;
@@ -88,7 +88,7 @@ Move BookReader::pick(const Board &b) {
    Move bestMove = NullMove;
    for (const book::DataEntry &info : rawMoves) {
 #ifdef _TRACE
-      Notation::image(b,move_list[info.index],Notation::OutputFormat::SAN,cout);
+      Notation::image(b,move_list[info.index],Notation::OutputFormat::SAN,std::cout);
 #endif
       std::array<double,OUTCOMES> counts;
       counts[0] = info.win;
@@ -98,15 +98,15 @@ Move BookReader::pick(const Board &b) {
       // calculate its reward
       auto reward = (sample_dirichlet(counts)*globals::options.book.scoring)/50;
 #ifdef _TRACE
-      cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw) << "]";
-      cout << " reward=" << reward;
+      std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw) << "]";
+      std::cout << " reward=" << reward;
 #endif
       if (info.weight != book::NO_RECOMMEND) {
           // boost reward according to explicit weight
           const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
           reward = reward*(1.0+(2*(weightAdjust-0.5)*globals::options.book.weighting)/100);
 #ifdef _TRACE
-          cout << " weightAdjust=" << weightAdjust << " new reward=" << reward;
+          std::cout << " weightAdjust=" << weightAdjust << " new reward=" << reward;
 #endif
       }
       // add a small bonus for very frequent moves. Note: moves
@@ -114,17 +114,17 @@ Move BookReader::pick(const Board &b) {
       double reduce = 1.0 - ((1.0-std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT))*globals::options.book.weighting)/100;
       reward += 0.1*log10(double(info.count()))*reduce*globals::options.book.frequency/100;
 #ifdef _TRACE
-      cout << " after freq bonus: " << reward;
+      std::cout << " after freq bonus: " << reward;
 #endif
       // add a random amount based on randomness parameter
       std::normal_distribution<double> dist(0,0.002*globals::options.book.random);
       double rand = dist(engine);
 #ifdef _TRACE
-      cout << " random: " << rand;
+      std::cout << " random: " << rand;
 #endif
       reward += rand;
 #ifdef _TRACE
-      cout << " total: " << reward << std::endl;
+      std::cout << " total: " << reward << std::endl;
 #endif
       if (reward > maxReward) {
           maxReward = reward;
