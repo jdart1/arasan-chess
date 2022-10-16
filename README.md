@@ -19,7 +19,7 @@ Arasan is licensed under the MIT License. See the LICENSE file.
 Several different binaries for Arasan can be built. The default
 executable (arasanx-32 for 32-bit operating systems, or arasanx-64 for
 64-bit ones) is designed to be runnable on most systems. Default x86 or x86_64 builds
-assume SSE2 instructions are avaiable (these were introduced in 2000
+assume SSE2 instructions are available (these were introduced in 2000
 with the Pentium IV).
 
 Other program variants include:
