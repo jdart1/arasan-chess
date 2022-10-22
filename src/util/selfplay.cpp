@@ -23,13 +23,11 @@ extern "C" {
 }
 #endif
 
+static constexpr size_t LINUX_STACK_SIZE = 4*1024*1024;
+
 using namespace std::placeholders;
 
 // Utility to generate training positions from Arasan self-play games
-
-#ifndef _WIN32
-static pthread_attr_t stackSizeAttrib;
-#endif
 
 static ECO ecoCoder;
 
@@ -335,6 +333,13 @@ static Move randomMove(const Board &board, RootMoveGenerator &mg, Statistics &st
     return m;
 }
 
+static Move pick(const Move *moves, unsigned count, ThreadData &td) {
+    assert(count);
+    std::uniform_int_distribution<unsigned> dist(0, count-1);
+    int select = dist(td.engine);
+    return moves[select];
+}
+
 class Monitor {
   public:
     Monitor(uint64_t limit) : nodeTarget(limit) {}
@@ -401,12 +406,22 @@ static void selfplay(ThreadData &td) {
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
                     RootMoveGenerator mg(board);
                     if (mg.moveCount() > 1 && (sp_options.useSee || sp_options.limitEarlyKingMoves)) {
-                        for (int i = 0; i < 10; i++) {
-                            mg.reset();
-                            m = randomMove(board, mg, stats, td);
+                        Move candidates[Constants::MaxMoves], all[Constants::MaxMoves];
+                        bool inCheck = board.checkStatus() == InCheck;
+                        int index;
+                        unsigned i = 0, j = 0;
+                        while (!IsNull(m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
+                            assert(j<Constants::MaxMoves);
+                            all[j++] = m;
                             if (sp_options.useSee && !seeSign(board,m,0)) continue;
-                            if (sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
-                            break;
+                            if (!inCheck && sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                            assert(i<Constants::MaxMoves);
+                            candidates[i++] = m;
+                        }
+                        if (i) {
+                            m = pick(candidates,i,td);
+                        } else {
+                            m = pick(all,j,td);
                         }
                     }
                     else {
@@ -449,6 +464,9 @@ static void selfplay(ThreadData &td) {
                     else
                         zero_score_count = 0;
                 }
+                // std::cout << board << " ";
+                // MoveImage(m,std::cout);
+                // std::cout << std::endl;
                 assert(IsNull(m) || legalMove(board, m));
             }
             if (stats.state == Resigns || stats.state == Checkmate) {
@@ -491,6 +509,7 @@ static void selfplay(ThreadData &td) {
                     }
                 }
                 BoardState previousState(board.state);
+                assert(!IsNull(m));
                 board.doMove(m);
                 if (sp_options.saveGames) {
                     td.gameMoves.add_move(board, previousState, m, image,
@@ -498,8 +517,10 @@ static void selfplay(ThreadData &td) {
                 }
             } else {
                 // unexpected null move
-                if (!terminated && !adjudicated)
+                if (!terminated && !adjudicated) {
+                    std::cerr << "null move from search!" << std::endl;
                     break;
+                }
             }
         }
         if (sp_options.saveGames) {
@@ -541,21 +562,6 @@ static void selfplay(ThreadData &td) {
 }
 
 static void threadp(ThreadData *td) {
-    // set stack size for Linux/Mac
-#ifdef _POSIX_VERSION
-    size_t stackSize;
-    if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
-        perror("pthread_attr_getstacksize");
-        return;
-    }
-    if (stackSize < globals::LINUX_STACK_SIZE) {
-        if (pthread_attr_setstacksize(&stackSizeAttrib, globals::LINUX_STACK_SIZE)) {
-            perror("error setting thread stack size");
-            return;
-        }
-    }
-#endif
-
     // allocate controller in the thread
     try {
         td->searcher = new SearchController();
@@ -569,17 +575,30 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-a (append)][-c cores] [-n positions] [-o output file] [-m output "
-                 "every m positions] [-f output format (bin or epd)] [-d depth]"
+    std::cerr << "selfplay [-a (append)][-c cores] [-n positions] [-o output file] [-m output " \
+                 "every m positions] [-f output format (bin or epd)] [-g filename (save games)] [-d depth]"
               << std::endl;
 }
 
 static void init_threads() {
     // prepare threads
-#ifdef _POSIX_VERSION
+#ifndef _WIN32
+    pthread_attr_t stackSizeAttrib;
     if (pthread_attr_init(&stackSizeAttrib)) {
         perror("pthread_attr_init");
         return;
+    }
+    // set stack size for Linux/Mac
+    size_t stackSize;
+    if (pthread_attr_getstacksize(&stackSizeAttrib, &stackSize)) {
+        perror("pthread_attr_getstacksize");
+        return;
+    }
+    if (stackSize < LINUX_STACK_SIZE) {
+        if (pthread_attr_setstacksize(&stackSizeAttrib, LINUX_STACK_SIZE)) {
+            perror("error setting thread stack size");
+            return;
+        }
     }
 #endif
     uint64_t seed = getRandomSeed();
@@ -672,6 +691,13 @@ int CDECL main(int argc, char **argv) {
                 std::cerr << "expected bin or epd after -f" << std::endl;
                 return -1;
             }
+        } else if (strcmp(argv[arg], "-g") == 0) {
+            if (arg + 1 >= argc) {
+                std::cerr << "expected file name after -g" << std::endl;
+                return -1;
+            }
+            sp_options.gameFileName = argv[++arg];
+            sp_options.saveGames = true;
         } else if (strcmp(argv[arg], "-o") == 0) {
             if (arg + 1 >= argc) {
                 std::cerr << "expected file name after -o" << std::endl;
