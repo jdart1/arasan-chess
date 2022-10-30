@@ -1,4 +1,4 @@
-// Copyright 2013-2019, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2019, 2021-2022 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -15,6 +15,7 @@
 #include "globals.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
+#include "syzygy/src/tbprobe.h"
 #endif
 #include <algorithm>
 #include <cctype>
@@ -1495,43 +1496,45 @@ static int testTB()
 {
    struct Case
    {
-       Case(const std::string &s, score_t res, const std::string &mvs):
-           fen(s), moves(mvs), result(res)
+       Case(const std::string &s, score_t res, unsigned distance_zero, const std::string &mvs):
+           fen(s), moves(mvs), dtz(distance_zero), result(res)
          {
          }
        std::string fen, moves;
+       unsigned dtz;
        score_t result;
    };
 
+   // Note: 7-man test cases depend on KQRBvKRB, KRPPvKRP and KRBNvKQN
    static std::array<Case,17> cases = {
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,70,
            "Nd6+"),
-       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,
+       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,0,
            "Qf4+, Kf7, Ke7, Kg7, Qg5, Qg7, Qf8, Qg6, Qh5, Qh3, Qh1, Qh8"),
-       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE,"Ne4"),
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE,
+       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE,106,"Ne4"),
+       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE,105,
             "c4, Kc7, Kd7, Kd8"),
-       Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,
+       Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,11,
             "Ra8, Rb8"),
-       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,
+       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,1,
             "Nc1#, Nc3#"),
-       Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,
+       Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,47,
             "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
-       Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,"exf6"),
-       Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,
+       Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,0,"exf6"),
+       Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,1,
             "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R"),
-       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",Constants::MATE,""),
-       Case("7k/8/6Q1/p7/P7/3K4/8/8 b - - 0 1",0,""), // stalemate
-       Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0, "Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
-       Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,
+       Case("7k/8/6Q1/p7/P7/3K4/8/8 b - - 0 1",0,0,""), // stalemate
+       Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0,0,"Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
+       Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,1,
             "Rg6, Kc6, Rh4, Kc5, d6, Ra4, dxe6, Re4, Rg3, Rc4"),
        // en-passant as only capture
-       Case("5K1k/3R4/8/8/6Pp/7P/8/8 b - g3 0 1",-Constants::TABLEBASE_WIN,
+       Case("5K1k/3R4/8/8/6Pp/7P/8/8 b - g3 0 1",-Constants::TABLEBASE_WIN,1,
             "hxg3"),
-       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,
+       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,7,
             "Kd2, Ke2, Rd8"),
-       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,"Qd8+"),
-       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,"Kd2, Ke2, Rd8")
+       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,138,"Qd8+"),
+       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,7,"Kd2, Ke2, Rd8"),
+       Case("qn4N1/6R1/3K4/8/B2k4/8/8/8 w - - 0 1",-SyzygyTb::CURSED_SCORE,1034,"Nf6, Rg4, Ke7")
       };
 
    int errs = 0;
@@ -1574,9 +1577,10 @@ static int testTB()
       MoveSet moves;
       score_t score;
       int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
+      int dtz;
       if (men > globals::EGTBMenCount) {
           continue;
-      } else if (SyzygyTb::probe_root(board,false,score,moves)>=0) {
+      } else if ((dtz=SyzygyTb::probe_root(board,false,score,moves))>=0) {
          if (score != it->result) {
             std::cerr << "testTB: case " << caseid << " expected ";
             Scoring::printScore(it->result,std::cerr);
@@ -1584,6 +1588,12 @@ static int testTB()
             Scoring::printScore(score,std::cerr);
             std::cerr << std::endl;
             ++errs;
+         }
+         // verify DTZ is correct
+         if (unsigned(dtz) != it->dtz) {
+             std::cerr << "testTB, case " << caseid << " incorrect DTZ, expected " \
+                       << it->dtz << ", got " << dtz << std::endl;
+             ++errs;
          }
          std::stringstream s(it->moves);
          char movechars[10];
