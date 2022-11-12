@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020-2021 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020-2022 by Jon Dart.
 // All Rights Reserved.
 
 #include "notation.h"
@@ -18,7 +18,6 @@ static void UCIMoveImage(const Move &move, std::ostream &image) {
         image << FileImage(DestSquare(move));
         image << RankImage(DestSquare(move));
         if (TypeOfMove(move) == Promotion) {
-            assert(PromoteTo(move)<16);
             image << (char)tolower(PieceImage(PromoteTo(move)));
         }
     }
