@@ -14,12 +14,12 @@ extern "C" {
 #include <libproc.h>
 };
 #elif !defined (_MSC_VER)
-// assume Unix-line system
+// assume POSIX system
 extern "C" {
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits.h>
-};
+}
 #endif
 
 #ifdef SYZYGY_TBS

@@ -3,7 +3,7 @@
 #include "search.h"
 
 ChessInterface::Iterator::value_type ChessInterface::Iterator::empty_val(nnue::InvalidSquare,
-                                                                         nnue::EmptyPiece);;
+                                                                         nnue::EmptyPiece);
 
 nnue::Network::AccumulatorType &ChessInterface::getAccumulator() const
     noexcept {
