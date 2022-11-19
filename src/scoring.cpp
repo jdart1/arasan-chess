@@ -2402,7 +2402,7 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    else {
       nnval = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
    }
-   return nnval + node->accum.getPSQValue()/nnue::FV_SCALE;
+   return nnval;
 }
 #endif
 
