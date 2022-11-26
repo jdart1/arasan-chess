@@ -1,6 +1,6 @@
 [submodule "src/syzygy"]
 	path = src/syzygy
-	url = https://github.com/jdart1/Fathom
+	url = https://github.com/srogatch/Fathom.git
         ignore = dirty
 [submodule "tools/stats"]
 	path = tools/stats

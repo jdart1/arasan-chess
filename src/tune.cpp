@@ -24,6 +24,10 @@ static const score_t KING_COVER_RANGE = score_t(0.35*Params::PAWN_VALUE);
 static const score_t KING_ATTACK_COVER_BOOST_RANGE = Params::KING_ATTACK_FACTOR_RESOLUTION*30;
 
 // Non-const scoring parameters, modifiable by tuner
+// C++17 doesn't require out-of-header definitions
+// for const members, see https://en.cppreference.com/w/cpp/language/static
+// C++20 throws an error in such cases.
+#if __cplusplus < 202002L
 score_t Params::PAWN_VALUE_MIDGAME;
 score_t Params::PAWN_VALUE_ENDGAME;
 score_t Params::KNIGHT_VALUE_MIDGAME;
@@ -141,6 +145,7 @@ score_t Params::ROOK_MOBILITY[2][15];
 score_t Params::QUEEN_MOBILITY[2][24];
 score_t Params::KING_MOBILITY_ENDGAME[5];
 score_t Params::PAWN_STORM[2][4][5];
+#endif // __cplusplus
 
 int Tune::numTuningParams() const
 {
