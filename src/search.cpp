@@ -2693,7 +2693,8 @@ score_t Search::search()
         // increment. Decrease reduction somewhat when material
         // is low.
         const int lowMat = board.getMaterial(board.sideToMove()).materialLevel() <= 3;
-        int nu_depth = depth - 4*DEPTH_INCREMENT + (lowMat ? DEPTH_INCREMENT/2 : 0) - depth/(4+2*lowMat) - std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/(2*Params::PAWN_VALUE)));
+        int nu_depth = depth - 4*DEPTH_INCREMENT + (lowMat ? DEPTH_INCREMENT/2 : 0) - depth/(4+4*lowMat) -
+            std::min<int>(3*DEPTH_INCREMENT,int(DEPTH_INCREMENT*(node->eval-node->beta)/(2*Params::PAWN_VALUE)));
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
             node->last_move = NullMove;
