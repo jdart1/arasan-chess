@@ -102,7 +102,7 @@ if(AVX2 OR AVX512)
         add_compile_options(-mavx2 -mfma)
     endif()
     add_compile_definitions(AVX2)
-endif(AVX2)
+endif(AVX2 OR AVX512)
 
 if(AVX512)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -178,11 +178,11 @@ chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.h
+notation.cpp notation.h options.cpp options.h params.h params.cpp
 scoring.cpp scoring.h searchc.cpp searchc.h
 search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
 syzygy.cpp syzygy.h tbconfig.h threadc.cpp
-threadc.h threadp.cpp threadp.h tune.h tune.cpp tuner.cpp types.h ${EXTRA_SRC})
+threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
 
 add_executable (pgnselect EXCLUDE_FROM_ALL util/pgnselect.cpp ${UTIL_SRC})
 
