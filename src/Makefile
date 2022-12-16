@@ -84,6 +84,8 @@ POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
 AVX512_FLAGS := -DAVX512 -mavx512bw
+else ifeq ("$(ARCH)","arm64")
+NEON_FLAGS := -DSIMD -DNEON
 endif
 
 ifdef BUILD_TYPE
@@ -98,8 +100,10 @@ else ifeq ("$(BUILD_TYPE)","avx2-bmi2")
 FLAGS := $(FLAGS)  $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
 else ifeq ("$(BUILD_TYPE)","avx512")
 FLAGS := $(FLAGS)  $(POPCNT_FLAGS) $(AVX512_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS)
+else ifeq ("$(BUILD_TYPE)","neon")
+FLAGS := $(FLAGS) $(NEON_FLAGS)
 else
-$(error unrecognized BUILD_TYPE: should be one of: old modern avx2 avx2-bmi2 avx512)
+$(error unrecognized BUILD_TYPE: should be one of: old modern avx2 avx2-bmi2 avx512 neon)
 endif
 endif
 else

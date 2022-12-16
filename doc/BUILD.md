@@ -82,6 +82,7 @@ Supported instruction sets at present are:
 - avx2 (assumes availabiity of AVX2 instruction set, plus "modern" instructions)
 - avx2-bmi2 (assumes avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
 - avx512 (assumes AVX512, plus avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
+- neon (for ARM processors)
 
 The BUILD_TYPE variable can be used to specify the desired instruction
 set for the compilation: this works not just with the chess engine, but with
@@ -92,7 +93,7 @@ make BUILD_TYPE=avx2 utils
 will build the utilities with AVX2 support.
 
 Note: the instruction sets supported via BUILD_TYPE will only work on
-x86 or x86_64 CPUs that support these instructions, and the non-default settings
+CPUs that support these instructions, and the non-default settings
 work best with a 64-bit build.
 
 If necessary, you can specify the compiler by passing the CC variable
