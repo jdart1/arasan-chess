@@ -1,4 +1,4 @@
-// Copyright 1997-2018, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2021, 2022 by Jon Dart. All Rights Reserved.
 //
 #include "tester.h"
 #include "chessio.h"
@@ -216,18 +216,18 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
     for (i = 0; i < testTotals.solution_times.size(); i++) {
         char digits[15];
         if (i == 0) {
-            sprintf(digits,"% 4d |       ",i);
+            snprintf(digits,15,"% 4d |       ",i);
             std::cout << std::endl << digits;
         }
         else if ((i+1) % 10 == 0) {
-            sprintf(digits,"% 4d |",(i+1)/10);
+            snprintf(digits,15,"% 4d |",(i+1)/10);
             std::cout << std::endl << digits;
         }
         if (testTotals.solution_times[i] == -1) {
             std::cout << "  ***  ";
         }
         else {
-            sprintf(digits,"%6.2f ",testTotals.solution_times[i]/1000.0);
+            snprintf(digits,15,"%6.2f ",testTotals.solution_times[i]/1000.0);
             std::cout << digits;
             score += (float)time_limit/1000.0 - testTotals.solution_times[i]/1000.0;
         }
