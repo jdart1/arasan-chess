@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2010-2013, 2015-2020 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2008, 2010-2013, 2015-2020, 2022 by Jon Dart.  All Rights Reserved.
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
@@ -395,7 +395,7 @@ class Bitboard
 
     FORCEINLINE Square lastOne() const {
 #ifdef __cpp_lib_bitops
-      int zeros = countl_zero<uint64_t>(data);
+      int zeros = std::countl_zero<uint64_t>(data);
       return zeros==64 ? InvalidSquare : 63-zeros;
 #else
 #ifdef _64BIT

@@ -205,7 +205,7 @@ uint8_t BookEntry::computeWeight() const
    if (rec != book::NO_RECOMMEND) {
       return rec*book::MAX_WEIGHT/100;
    }
-   else if (moveEval != book::NO_RECOMMEND) {
+   else if (moveEval != NO_MOVE_EVAL) {
       return MoveEvalValues[moveEval];
    }
    else if (eval != NO_POSITION_EVAL) {

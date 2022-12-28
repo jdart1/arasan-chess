@@ -137,7 +137,7 @@ static void saveGame(ThreadData &td, const std::string &result, std::ofstream &f
     char dateStr[15];
     time_t tm = time(NULL);
     struct tm *t = localtime(&tm);
-    sprintf(dateStr, "%4d.%02d.%02d", t->tm_year + 1900, t->tm_mon + 1,
+    snprintf(dateStr, 15, "%4d.%02d.%02d", t->tm_year + 1900, t->tm_mon + 1,
             t->tm_mday);
     headers.push_back(ChessIO::Header("Date", dateStr));
     headers.push_back(ChessIO::Header("Round", "?"));

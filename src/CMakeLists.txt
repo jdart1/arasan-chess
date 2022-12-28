@@ -26,6 +26,7 @@ option(MODERN "Use modern instructions" OFF)
 option(AVX2 "Use AVX2 instructions" OFF)
 option(AVX512 "Use AVX512 instructions" OFF)
 option(BMI2 "Use BMI2 instructions" OFF)
+option(NEON "Use ARM NEON instructions" OFF)
 option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
 option(UNIT_TESTS "unit tests run on startup" OFF)
 option(NNUE "Neural network support" ON)
@@ -53,6 +54,7 @@ endif(NUMA)
 
 if(UNIT_TESTS)
     list(APPEND EXTRA_SRC unit.h unit.cpp)
+    add_compile_definitions(UNIT_TESTS)
 endif(UNIT_TESTS)
 
 if(SYZYGY_TBS)
@@ -64,7 +66,6 @@ if(SYZYGY_TBS)
 endif(SYZYGY_TBS)
 
 if(NNUE)
-# SIMD only works on Intel/AMD architectures at present
     add_compile_definitions(NNUE)
     set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
     include_directories(${NNUE_DIR})
@@ -102,7 +103,7 @@ if(AVX2 OR AVX512)
         add_compile_options(-mavx2 -mfma)
     endif()
     add_compile_definitions(AVX2)
-endif(AVX2)
+endif(AVX2 OR AVX512)
 
 if(AVX512)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -124,7 +125,11 @@ endif()
 endif()
 endif()
 
-if (AVX512)
+if(NEON)
+    add_compile_definitions(SIMD)
+    add_compile_definitions(NEON)
+    set(EXE_NAME ${EXE_NAME}-neon)
+elseif (AVX512)
      set(EXE_NAME ${EXE_NAME}-avx512)
 elseif (AVX2)
      set(EXE_NAME ${EXE_NAME}-avx2)
@@ -178,11 +183,11 @@ chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h log.cpp log.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.h
+notation.cpp notation.h options.cpp options.h params.h params.cpp
 scoring.cpp scoring.h searchc.cpp searchc.h
 search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
 syzygy.cpp syzygy.h tbconfig.h threadc.cpp
-threadc.h threadp.cpp threadp.h tune.h tune.cpp tuner.cpp types.h ${EXTRA_SRC})
+threadc.h threadp.cpp threadp.h types.h ${EXTRA_SRC})
 
 add_executable (pgnselect EXCLUDE_FROM_ALL util/pgnselect.cpp ${UTIL_SRC})
 
