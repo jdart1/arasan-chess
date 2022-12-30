@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021-2022 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -12,11 +12,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <iostream> // for debugging
 
 //#define _TRACE
 
 #ifdef _TRACE
+#include <iostream> // for debugging
 #include "notation.h"
 #endif
 
@@ -81,11 +81,15 @@ Move BookReader::pick(const Board &b) {
    // Compute the best move. We use a modified version of Thompson
    // sampling. Rewards for each move are based on a random (Dirichlet
    // distribution) sample drawn from the win/loss/draw statistics.
-   // This is modified by any explicit weight, a frequency bonus,
+   // This is modified by any explicit weight, a frequency adjustment,
    // and an additional random factor.
    //
    double maxReward = -1e9;
    Move bestMove = NullMove;
+   int totalCount = 0;
+   for (const book::DataEntry &info : rawMoves) {
+       totalCount += info.win + info.loss + info.draw;
+   }
    for (const book::DataEntry &info : rawMoves) {
 #ifdef _TRACE
       Notation::image(b,move_list[info.index],Notation::OutputFormat::SAN,std::cout);
@@ -102,20 +106,17 @@ Move BookReader::pick(const Board &b) {
       std::cout << " reward=" << reward;
 #endif
       if (info.weight != book::NO_RECOMMEND) {
-          // boost reward according to explicit weight
+          // boost or reduce reward according to explicit weight
           const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
           reward = reward*(1.0+(2*(weightAdjust-0.5)*globals::options.book.weighting)/100);
-#ifdef _TRACE
-          std::cout << " weightAdjust=" << weightAdjust << " new reward=" << reward;
-#endif
       }
-      // add a small bonus for very frequent moves. Note: moves
-      // with weights below neutral get less of a frequency bonus.
-      double reduce = 1.0 - ((1.0-std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT))*globals::options.book.weighting)/100;
-      reward += 0.1*log10(double(info.count()))*reduce*globals::options.book.frequency/100;
+      // add a bonus for very frequent moves, penalty for less
+      // frequent.
+      double freqAdjust = log10(double(info.win + info.loss + info.draw)/totalCount + 0.5)*2*globals::options.book.frequency/100;
 #ifdef _TRACE
-      std::cout << " after freq bonus: " << reward;
+      std::cout << " frequency: " << freqAdjust;
 #endif
+      reward += freqAdjust;
       // add a random amount based on randomness parameter
       std::normal_distribution<double> dist(0,0.002*globals::options.book.random);
       double rand = dist(engine);
@@ -246,29 +247,19 @@ double BookReader::sample_dirichlet(const std::array<double,OUTCOMES> &counts, s
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results)
 {
-   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/40.0);
-
    unsigned minCount = 0;
    if (globals::options.search.strength < 100) {
       minCount = (uint32_t)1<<((100-globals::options.search.strength)/10);
    }
-   unsigned maxCount = 0;
-   for (const book::DataEntry &info : results) {
-      unsigned count = info.count();
-      if (count > maxCount) maxCount = count;
-   }
    // In reduced-strength mode, "dumb down" the opening book by
-   // omitting moves with low counts. Also apply a relative
-   // frequency test based on the book frequency option. Don't remove
-   // moves from the "steering" book unless they have zero weight
-   // ("don't play" moves).
+   // omitting moves with low counts. Also remove moves with zero
+   // weights. Do not remove low-frequency moves that are in the
+   // "steering book" with a manual weight.
    auto new_end = std::remove_if(results.begin(),results.end(),
                                  [&](const book::DataEntry &info) -> bool {
-                                    return
-                                       info.weight == 0 || (info.weight == book::NO_RECOMMEND &&
-                                       (info.count() < minCount ||
-                                        double(info.count())/maxCount <= freqThreshold));
-                                 });
+                                     return
+                                         info.weight == 0 || (info.weight == book::NO_RECOMMEND && info.count() < minCount);
+                                         });
    if (results.end() != new_end) {
       results.erase(new_end,results.end());
    }
