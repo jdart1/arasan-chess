@@ -247,19 +247,29 @@ double BookReader::sample_dirichlet(const std::array<double,OUTCOMES> &counts, s
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results)
 {
+   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/40.0);
+
    unsigned minCount = 0;
    if (globals::options.search.strength < 100) {
       minCount = (uint32_t)1<<((100-globals::options.search.strength)/10);
    }
+   unsigned maxCount = 0;
+   for (const book::DataEntry &info : results) {
+      unsigned count = info.count();
+      if (count > maxCount) maxCount = count;
+   }
    // In reduced-strength mode, "dumb down" the opening book by
-   // omitting moves with low counts. Also remove moves with zero
-   // weights. Do not remove low-frequency moves that are in the
-   // "steering book" with a manual weight.
+   // omitting moves with low counts. Also apply a relative
+   // frequency test based on the book frequency option. Don't remove
+   // moves from the "steering" book unless they have zero weight
+   // ("don't play" moves).
    auto new_end = std::remove_if(results.begin(),results.end(),
                                  [&](const book::DataEntry &info) -> bool {
-                                     return
-                                         info.weight == 0 || (info.weight == book::NO_RECOMMEND && info.count() < minCount);
-                                         });
+                                    return
+                                       info.weight == 0 || (info.weight == book::NO_RECOMMEND &&
+                                       (info.count() < minCount ||
+                                        double(info.count())/maxCount <= freqThreshold));
+                                 });
    if (results.end() != new_end) {
       results.erase(new_end,results.end());
    }
