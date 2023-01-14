@@ -108,6 +108,8 @@ static struct SelfPlayOptions {
     unsigned semiRandomizeInterval = 15;
     bool skipNonQuiet = true;
     OutputFormat format = OutputFormat::Bin;
+    bool verbose = false;
+    unsigned verboseReportingInterval = 10000000;
 } sp_options;
 
 struct ThreadData {
@@ -377,6 +379,7 @@ static void selfplay(ThreadData &td) {
         1, sp_options.randomizeInterval);
     std::uniform_int_distribution<unsigned> rand2_dist(
         1, sp_options.semiRandomizeInterval);
+    auto startTime = getCurrentTime();
     while (posCounter < sp_options.posCount) {
         if (sp_options.saveGames) {
             td.gameMoves.removeAll();
@@ -535,6 +538,13 @@ static void selfplay(ThreadData &td) {
         }
         for (const OutputData &data : output) {
             if (posCounter++ >= sp_options.posCount) break;
+            if (posCounter % sp_options.verboseReportingInterval == 0) {
+                auto elapsedTime = getElapsedTime(startTime,getCurrentTime())/1000;
+                std::cout << posCounter << " positions (" <<
+                    (posCounter*100)/sp_options.posCount << "% done)," <<
+                    " elapsed time: " << elapsedTime << " sec., positions/second: " <<
+                    posCounter/elapsedTime << std::endl;
+            }
             if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
                 std::string resultStr;
                 if (result == Result::WhiteWin)
@@ -575,8 +585,8 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-a (append)][-c cores] [-n positions] [-o output file] [-m output " \
-                 "every m positions] [-f output format (bin or epd)] [-g filename (save games)] [-d depth]"
+    std::cerr << "selfplay [-a (append)] [-d depth] [-v (verbose)] [-c cores] [-n positions] [-o output file]"  << std::endl;
+    std::cerr << "         [-m output every m positions] [-f output format (bin or epd)] [-g filename (save games)]" \
               << std::endl;
 }
 
@@ -717,6 +727,8 @@ int CDECL main(int argc, char **argv) {
             }
         } else if (strcmp(argv[arg], "-p") == 0) {
             globals::options.search.pureNNUE = 1;
+        } else if (strcmp(argv[arg], "-v") == 0) {
+            sp_options.verbose = true;
         } else {
             usage();
             return -1;
