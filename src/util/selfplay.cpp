@@ -257,11 +257,11 @@ class binEncoder {
         uint16_t data = 0;
         switch (TypeOfMove(move)) {
         case KCastle:
-            to = (side == White) ? chess::A1 : chess::H1;
+            to = (side == White) ? chess::H1 : chess::H8;
             data |= 3 << 14;
             break;
         case QCastle:
-            to = (side == White) ? chess::A1 : chess::H1;
+            to = (side == White) ? chess::A1 : chess::A8;
             data |= 3 << 14;
             break;
         case Promotion:
