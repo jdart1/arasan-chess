@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <mutex>
 #include <random>
@@ -540,10 +541,14 @@ static void selfplay(ThreadData &td) {
             if (posCounter++ >= sp_options.posCount) break;
             if (posCounter % sp_options.verboseReportingInterval == 0) {
                 auto elapsedTime = getElapsedTime(startTime,getCurrentTime())/1000;
+                std::ios_base::fmtflags original_flags = std::cout.flags();
+                std::cout.setf(std::ios::fixed);
+                std::cout << std::setprecision(3);
                 std::cout << posCounter << " positions (" <<
                     (posCounter*100)/sp_options.posCount << "% done)," <<
                     " elapsed time: " << elapsedTime << " sec., positions/second: " <<
-                    posCounter/elapsedTime << std::endl;
+                    posCounter/elapsedTime << std::flush << std::endl;
+                std::cout.flags(original_flags);
             }
             if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
                 std::string resultStr;
