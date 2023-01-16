@@ -43,8 +43,8 @@ class SelfPlayHashTable {
 
     bool check_and_replace_hash(hash_t new_hash) {
         size_t index = new_hash & (HASH_TABLE_FOR_UNIQUENESS_SIZE - 1);
-        hash_t &h = (*used_hashes)[index];
         std::unique_lock<std::mutex> lock(mtx);
+        hash_t &h = (*used_hashes)[index];
         if (h == new_hash) {
             return true;
         } else {
@@ -110,7 +110,7 @@ static struct SelfPlayOptions {
     bool skipNonQuiet = true;
     OutputFormat format = OutputFormat::Bin;
     bool verbose = false;
-    unsigned verboseReportingInterval = 10000000;
+    unsigned verboseReportingInterval = 1000000;
 } sp_options;
 
 struct ThreadData {
@@ -468,9 +468,6 @@ static void selfplay(ThreadData &td) {
                     else
                         zero_score_count = 0;
                 }
-                // std::cout << board << " ";
-                // MoveImage(m,std::cout);
-                // std::cout << std::endl;
                 assert(IsNull(m) || legalMove(board, m));
             }
             if (stats.state == Resigns || stats.state == Checkmate) {
@@ -542,10 +539,8 @@ static void selfplay(ThreadData &td) {
             if (posCounter % sp_options.verboseReportingInterval == 0) {
                 auto elapsedTime = getElapsedTime(startTime,getCurrentTime())/1000;
                 std::ios_base::fmtflags original_flags = std::cout.flags();
-                std::cout.setf(std::ios::fixed);
-                std::cout << std::setprecision(3);
-                std::cout << posCounter << " positions (" <<
-                    (posCounter*100)/sp_options.posCount << "% done)," <<
+                std::cout << std::setprecision(2) << posCounter << " positions (" <<
+                    (posCounter*100.0)/sp_options.posCount << "% done)," <<
                     " elapsed time: " << elapsedTime << " sec., positions/second: " <<
                     posCounter/elapsedTime << std::flush << std::endl;
                 std::cout.flags(original_flags);
