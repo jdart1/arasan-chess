@@ -236,7 +236,7 @@ class RootMoveGenerator : public MoveGenerator
          return index < batch_count;
       }
 
-      void reorder(Move pvMove, score_t pvScore, int depth, bool initial = false);
+      void reorder(Move pvMove, score_t pvScore, int depth, bool initial);
 
       void reorderByScore();
 
