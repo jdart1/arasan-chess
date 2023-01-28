@@ -62,7 +62,7 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
       }
       moveList.erase(moveList.begin()+j,moveList.end());
    }
-   reorder(pvMove,0,true);
+   reorder(pvMove,0,0,true);
 #ifdef _TRACE
    if (master) {
       std::cout << "root moves:" << std::endl;
