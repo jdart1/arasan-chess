@@ -1,4 +1,4 @@
-// Copyright 1994-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2023 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -358,8 +358,8 @@ public:
         int time_limit,
         int xtra_time,
         int ply_limit,
-        int background,
-        int isUCI,
+        bool background,
+        bool isUCI,
         Statistics &stat_buf,
         TalkLevel t,
         const MoveSet &exclude,
@@ -371,8 +371,8 @@ public:
         int time_limit,
         int xtra_time,
         int ply_limit,
-        int background,
-        int isUCI,
+        bool background,
+        bool isUCI,
         Statistics &stats,
         TalkLevel t);
 
@@ -582,7 +582,7 @@ private:
     unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
         unsigned max_depth);
 
-    int uci;
+    bool uci;
     int age;
     TalkLevel talkLevel;
     // time limit is nominal time limit in centiseconds

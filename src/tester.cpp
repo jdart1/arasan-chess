@@ -1,4 +1,4 @@
-// Copyright 1997-2018, 2021, 2022 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2021-2023 by Jon Dart. All Rights Reserved.
 //
 #include "tester.h"
 #include "chessio.h"
@@ -130,7 +130,7 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
                 Move result = searcher->findBestMove(board,
                                   type,
                                   time_limit, 0, depth_limit,
-                                  0, 0, stats,
+                                  false, false, stats,
                                   opts.verbose ? TalkLevel::Test : TalkLevel::Silent,
                                   excludes, includes);
                 // ensure stats and search history are updated with latest results

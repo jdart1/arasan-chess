@@ -1,4 +1,4 @@
-// Copyright 1987-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2023 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -225,8 +225,8 @@ Move SearchController::findBestMove(
    int time_limit,
    int xtra_time,
    int ply_limit,
-   int background,
-   int isUCI,
+   bool background,
+   bool isUCI,
    Statistics &stat_buf,
    TalkLevel t)
 {
@@ -243,8 +243,8 @@ Move SearchController::findBestMove(
    int search_time_limit,
    int search_xtra_time,
    int search_ply_limit,
-   int isBackground,
-   int isUCI,
+   bool isBackground,
+   bool isUCI,
    Statistics &stat_buf,
    TalkLevel t,
    const MoveSet &moves_to_exclude,
