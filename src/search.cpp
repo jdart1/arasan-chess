@@ -919,13 +919,16 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     }
 #endif
     // note: retain previous best line if we do not have one here
-    if (IsNull(node->pv[0])) {
+    if (node->pv_length == 0) {
 #ifdef _TRACE
-        if (mainThread()) std::cout << globals::debugPrefix << "warning: pv is null\n";
+        if (mainThread()) std::cout << "warning: pv length is zero." << std::endl;;
 #endif
         return;
     }
-    else if (node->pv_length == 0) {
+    else if (IsNull(node->pv[0])) {
+#ifdef _TRACE
+        if (mainThread()) std::cout << "warning: pv is null." << std::endl;;
+#endif
         return;
     }
     node->best = node->pv[0];                     // ensure "best" is non-null

@@ -387,6 +387,10 @@ FORCEINLINE int IsPromotion(Move move) {
     return (TypeOfMove(move) == Promotion);
 }
 
+FORCEINLINE int IsCastling(Move move) {
+    return (TypeOfMove(move) == KCastle || TypeOfMove(move) == QCastle);
+}
+
 FORCEINLINE int IsNull(Move move) {
     return (move == NullMove);
 }
