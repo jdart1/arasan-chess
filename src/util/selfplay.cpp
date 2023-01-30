@@ -423,7 +423,7 @@ static void semiRandomMove(const Board &board,
             if (stats.state == Checkmate || stats.state == Stalemate || stats.state == Draw) {
                 break;
             }
-            if (stats.display_value >= maxScore) maxScore = stats.display_value;
+            if (stats.display_value > maxScore) maxScore = stats.display_value;
             moves[index].score = stats.display_value;
             excludes.insert(result);
         }
@@ -433,7 +433,7 @@ static void semiRandomMove(const Board &board,
             }
         }
         numCandidates = candCount;
-        mr = pick(candidates,candCount,td);
+        mr = candCount ? pick(candidates,candCount,td) : MoveResult();
     }
 }
 
@@ -587,10 +587,6 @@ static void selfplay(ThreadData &td) {
                                           false);
                 }
             } else {
-                // unexpected null move
-                if (!terminated && !adjudicated) {
-                    std::cerr << "null move from search!" << std::flush << std::endl;
-                }
                 break;
             }
         }
