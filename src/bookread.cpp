@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021-2022 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021-2023 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -103,22 +103,25 @@ Move BookReader::pick(const Board &b) {
       auto reward = (sample_dirichlet(counts)*globals::options.book.scoring)/50;
 #ifdef _TRACE
       std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw) << "]";
-      std::cout << " reward=" << reward;
+      std::cout << " reward: " << reward;
 #endif
       if (info.weight != book::NO_RECOMMEND) {
           // boost or reduce reward according to explicit weight
           const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
           reward = reward*(1.0+(2*(weightAdjust-0.5)*globals::options.book.weighting)/100);
       }
-      // add a bonus for very frequent moves, penalty for less
-      // frequent.
-      double freqAdjust = log10(double(info.win + info.loss + info.draw)/totalCount + 0.5)*2*globals::options.book.frequency/100;
+#ifdef _TRACE      
+      std::cout << " adjusted reward: " << reward;
+#endif      
+      // penalize infrequent moves
+      const double f = globals::options.book.frequency/100.0;
+      double freqAdjust = log10(double(info.win + info.loss + info.draw)/totalCount + 0.1 + (1.0-f))*1.5*f;
 #ifdef _TRACE
       std::cout << " frequency: " << freqAdjust;
 #endif
       reward += freqAdjust;
       // add a random amount based on randomness parameter
-      std::normal_distribution<double> dist(0,0.002*globals::options.book.random);
+      std::normal_distribution<double> dist(0,0.0025*globals::options.book.random);
       double rand = dist(engine);
 #ifdef _TRACE
       std::cout << " random: " << rand;
