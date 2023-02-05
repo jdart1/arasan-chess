@@ -278,11 +278,11 @@ class RootMoveGenerator : public MoveGenerator
       // successful, 0 if not
       int rank_root_moves();
 
-   protected:
-
       const std::vector <RootMove> &getMoveList() const {
           return moveList;
       }
+
+   protected:
 
       void setScore(int move_index, score_t score) noexcept {
           moveList[move_index].score = score;

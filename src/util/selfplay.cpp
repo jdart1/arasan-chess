@@ -96,6 +96,7 @@ static struct SelfPlayOptions {
     unsigned posCount = 10000000;
     unsigned depthLimit = 6;
     bool adjudicateDraw = true;
+    bool adjudicateTB = true;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationMoves = 5;
     unsigned drawAdjudicationMinPly = 100;
@@ -106,7 +107,8 @@ static struct SelfPlayOptions {
     bool randomize = true;
     unsigned randomizeRange = 10;
     unsigned randomizeInterval = 1;
-    bool useSee = true;
+    int randomTolerance = 1.25*Params::PAWN_VALUE;
+    bool useRanking = true;
     bool limitEarlyKingMoves = true;
     bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
@@ -332,14 +334,11 @@ static Move randomMove(const Board &board, RootMoveGenerator &mg, Statistics &st
         }
         return NullMove;
     }
-    std::uniform_int_distribution<unsigned> dist(0, n - 1);
+    std::vector<RootMove> ml(mg.getMoveList());
+    assert(ml.size() != 0);
+    std::uniform_int_distribution<unsigned> dist(0, ml.size()-1);
     unsigned pick = dist(td.engine);
-    Move m = NullMove;
-    int ord = 0;
-    for (unsigned i = 0; i <= pick; ++i) {
-        m = (board.checkStatus() == InCheck) ? mg.nextEvasion(ord)
-                                             : mg.nextMove(ord);
-    }
+    Move m = ml[pick].move;
     assert(!IsNull(m));
     return m;
 }
@@ -381,8 +380,10 @@ class Monitor {
 static void semiRandomMove(const Board &board,
                            SelfPlayOptions::RandomizeType type,
                            ThreadData &td, uint64_t prevNodes,
+                           StateType &state,
                            MoveResult &mr, int &numCandidates) {
     Statistics stats;
+    state = NormalState;
     if (type == SelfPlayOptions::RandomizeType::Nodes) {
         // Base the target node count on the node count for the
         // previous search, but randomize it somewhat.
@@ -408,19 +409,33 @@ static void semiRandomMove(const Board &board,
         RootMoveGenerator mg(board);
         unsigned limit = std::min<unsigned>(mg.moveCount(),MAX_MULTIPV);
         numCandidates = 0;
-        if (limit == 0) return;
+        if (limit == 0) {
+            // there are no moves, but search to get a score (loss/win/draw)
+            Move result = td.searcher->findBestMove(board,
+                                                    FixedDepth,
+                                                    Constants::INFINITE_TIME, 0, sp_options.depthLimit,
+                                                    false, false, stats,
+                                                    TalkLevel::Silent,
+                                                    excludes, includes);
+            numCandidates = 0;
+            mr.move = result;
+            mr.score = stats.display_value;
+            state = stats.state;
+            return;
+        }
         int maxScore = -Constants::MATE, candCount = 0;
         unsigned count = 0;
         MoveResult moves[MAX_MULTIPV], candidates[MAX_MULTIPV];
         for (unsigned index = 0; index < limit; ++index, ++count) {
             Move result;
             result = moves[index].move = td.searcher->findBestMove(board,
-                                                 FixedDepth,
-                                                 Constants::INFINITE_TIME, 0, sp_options.depthLimit,
-                                                 false, false, stats,
-                                                 TalkLevel::Silent,
-                                                 excludes, includes);
+                                                                   FixedDepth,
+                                                                   Constants::INFINITE_TIME, 0, sp_options.depthLimit,
+                                                                   false, false, stats,
+                                                                   TalkLevel::Silent,
+                                                                   excludes, includes);
             if (stats.state == Checkmate || stats.state == Stalemate || stats.state == Draw) {
+                state = stats.state;
                 break;
             }
             if (stats.display_value > maxScore) maxScore = stats.display_value;
@@ -452,14 +467,13 @@ static void selfplay(ThreadData &td) {
         Statistics stats;
         Board board;
         unsigned low_score_count = 0;
-        unsigned ply = 0;
         enum class Result { WhiteWin, BlackWin, Draw } result = Result::Draw;
         std::vector<OutputData> output;
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
         unsigned prevDepth = 0;
         unsigned noSemiRandom = 0;
-        for (; !adjudicated && !terminated; ++ply) {
+        for (unsigned ply = 0; !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
@@ -475,18 +489,37 @@ static void selfplay(ThreadData &td) {
                     (ply <= sp_options.maxBookPly + sp_options.randomizeRange) &&
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
                     RootMoveGenerator mg(board);
-                    if (mg.moveCount() > 1 && (sp_options.useSee || sp_options.limitEarlyKingMoves)) {
+                    if (mg.moveCount() > 1 && (sp_options.useRanking || sp_options.limitEarlyKingMoves)) {
                         Move candidates[Constants::MaxMoves], all[Constants::MaxMoves];
                         bool inCheck = board.checkStatus() == InCheck;
                         int index;
                         unsigned i = 0, j = 0;
-                        while (!IsNull(m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
-                            assert(j<Constants::MaxMoves);
-                            all[j++] = m;
-                            if (sp_options.useSee && !seeSign(board,m,0)) continue;
-                            if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
-                            assert(i<Constants::MaxMoves);
-                            candidates[i++] = m;
+                        std::vector<RootMove> mra;
+                        if (sp_options.useRanking) {
+                            searcher->rankMoves(board,2,mra);
+                            if (mg.moveCount()>=2) {
+                                int best = mra[0].score;
+                                std::remove_if(mra.begin()+1, mra.end(),
+                                                [&](const RootMove &r) -> bool {
+                                                    return r.score < best - sp_options.randomTolerance;
+                                                });
+                                unsigned count = 0;
+                                for (const RootMove &x : mra) all[count++] = x.move;
+                            }
+                            for (const RootMove &mr : mra) {
+                                const Move &m = mr.move;
+                                if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                                candidates[i++] = m;
+                            }
+                        }
+                        else {
+                            while (!IsNull(m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
+                                assert(j<Constants::MaxMoves);
+                                all[j++] = m;
+                                if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                                assert(i<Constants::MaxMoves);
+                                candidates[i++] = m;
+                            }
                         }
                         if (i) {
                             m = pick(candidates,i,td);
@@ -504,18 +537,19 @@ static void selfplay(ThreadData &td) {
                     // We have no score from a random move, so reset the
                     // adjudication counter
                     low_score_count = 0;
-                    // counter for semi-random movegen
-                    ++noSemiRandom;
                 } else if (sp_options.semiRandomize && !skipRandom &&
+                           (noSemiRandom >= sp_options.semiRandomizeInterval) &&
+                           (int(board.men()) > globals::EGTBMenCount) &&
                            ((sp_options.randomizeType != SelfPlayOptions::RandomizeType::Nodes) ||
-                            (prevNodes && prevDepth >= sp_options.depthLimit)) &&
-                           noSemiRandom >= sp_options.semiRandomizeInterval) {
+                            (prevNodes && prevDepth >= sp_options.depthLimit))) {
                     int candCount = 0;
                     MoveResult mr;
+                    StateType state;
                     semiRandomMove(board, sp_options.randomizeType, td, prevNodes,
-                                   mr, candCount);
+                                   state, mr, candCount);
                     m = mr.move;
-                    score = mr.score;
+                    stats.state = state;
+                    stats.display_value = score = mr.score;
                     prevScore = score;
                     if (score == 0)
                         ++low_score_count;
@@ -554,6 +588,18 @@ static void selfplay(ThreadData &td) {
                 stats.state = Draw;
                 result = Result::Draw;
                 adjudicated = true;
+            } else if (!terminated && sp_options.adjudicateTB && board.men()<=globals::EGTBMenCount) {
+                if (stats.display_value >= Constants::TABLEBASE_WIN) {
+                    result = (board.sideToMove() == White) ? Result::WhiteWin :
+                        Result::BlackWin;
+                } else if (stats.display_value <= -Constants::TABLEBASE_WIN) {
+                    result = (board.sideToMove() == White) ? Result::BlackWin :
+                        Result::WhiteWin;
+                } else {
+                    // draw, blessed loss, or cursed win
+                    result = Result::Draw;
+                }
+                adjudicated = true;
             }
             if (!IsNull(m)) {
                 std::string image;
@@ -562,12 +608,12 @@ static void selfplay(ThreadData &td) {
                                     image);
                 }
                 if (!(sp_options.skipNonQuiet && CaptureOrPromotion(m)) &&
+                    ply >= sp_options.minOutPly &&
+                    ply <= sp_options.maxOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
+                    !board.repCount() &&
                     !sp_hash_table.check_and_replace_hash(board.hashCode())) {
-                    if (ply >= sp_options.minOutPly &&
-                        ply <= sp_options.maxOutPly &&
-                        (dist(td.engine) % sp_options.outputPlyFrequency) ==
-                            0) {
+                    if ((dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
                         std::stringstream s;
                         BoardIO::writeFEN(board, s, 0);
                         OutputData data;
@@ -587,6 +633,10 @@ static void selfplay(ThreadData &td) {
                                           false);
                 }
             } else {
+                if (!terminated && !adjudicated) {
+                    // unexpected null move
+                    std::cerr << "null move from search!" << std::flush << std::endl;
+                }
                 break;
             }
         }

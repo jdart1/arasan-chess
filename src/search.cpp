@@ -248,7 +248,8 @@ Move SearchController::findBestMove(
    Statistics &stat_buf,
    TalkLevel t,
    const MoveSet &moves_to_exclude,
-   const MoveSet &moves_to_include)
+   const MoveSet &moves_to_include,
+   std::vector<RootMove> *moveList)
 {
     typeOfSearch = srcType;
     initialBoard = board;
@@ -439,6 +440,11 @@ Move SearchController::findBestMove(
    // Wait for all threads to complete
    pool->waitAll();
 
+   if (moveList) {
+       mg->reorderByScore();
+       std::copy(mg->getMoveList().begin(),mg->getMoveList().end(),std::back_inserter(*moveList));
+   }
+
    // We are finished with the move generator - can delete
    delete mg;
 
@@ -563,6 +569,26 @@ Move SearchController::findBestMove(
    is_searching = false;
 
    return best;
+}
+
+void SearchController::rankMoves(
+        const Board &board,
+        int ply_limit,
+        std::vector<RootMove> &mr) {
+    Statistics stats;
+    MoveSet includes,excludes;
+
+    (void) findBestMove(board,FixedDepth,
+                        Constants::INFINITE_TIME,
+                        0,
+                        ply_limit,
+                        true,
+                        false,
+                        stats,
+                        TalkLevel::Silent,
+                        includes,
+                        excludes,
+                        &mr);
 }
 
 void SearchController::setContempt(score_t c)

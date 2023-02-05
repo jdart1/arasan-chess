@@ -363,7 +363,8 @@ public:
         Statistics &stat_buf,
         TalkLevel t,
         const MoveSet &exclude,
-        const MoveSet &include);
+        const MoveSet &include,
+        std::vector<RootMove> *moveList = nullptr);
 
     Move findBestMove(
         const Board &board,
@@ -375,6 +376,13 @@ public:
         bool isUCI,
         Statistics &stats,
         TalkLevel t);
+
+    // return a list of moves and their scores
+    // ranked in descending order of score.
+    void rankMoves(
+        const Board &board,
+        int ply_limit,
+        std::vector<RootMove> &mr);
 
     uint64_t getTimeLimit() const {
         if (typeOfSearch == TimeLimit && time_limit != Constants::INFINITE_TIME) {
