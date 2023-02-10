@@ -86,10 +86,6 @@ Move BookReader::pick(const Board &b) {
    //
    double maxReward = -1e9;
    Move bestMove = NullMove;
-   int totalCount = 0;
-   for (const book::DataEntry &info : rawMoves) {
-       totalCount += info.win + info.loss + info.draw;
-   }
    for (const book::DataEntry &info : rawMoves) {
 #ifdef _TRACE
       Notation::image(b,move_list[info.index],Notation::OutputFormat::SAN,std::cout);
@@ -115,13 +111,13 @@ Move BookReader::pick(const Board &b) {
 #endif      
       // penalize infrequent moves
       const double f = globals::options.book.frequency/100.0;
-      double freqAdjust = log10(double(info.win + info.loss + info.draw)/totalCount + 0.1 + (1.0-f))*1.5*f;
+      double freqAdjust = log10(static_cast<double>(info.win + info.loss + info.draw))*0.2*f;
 #ifdef _TRACE
       std::cout << " frequency: " << freqAdjust;
 #endif
       reward += freqAdjust;
       // add a random amount based on randomness parameter
-      std::normal_distribution<double> dist(0,0.0025*globals::options.book.random);
+      std::normal_distribution<double> dist(0,0.0019*globals::options.book.random);
       double rand = dist(engine);
 #ifdef _TRACE
       std::cout << " random: " << rand;
