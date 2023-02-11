@@ -112,7 +112,8 @@ static struct SelfPlayOptions {
     bool limitEarlyKingMoves = true;
     bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
-    unsigned semiRandomizeInterval = 10;
+    unsigned semiRandomizeInterval = 21;
+    unsigned semiRandomPerGame = 5;
     int multiPVMargin = static_cast<int>(0.2*Params::PAWN_VALUE);
     bool skipNonQuiet = true;
     OutputFormat format = OutputFormat::Bin;
@@ -471,8 +472,7 @@ static void selfplay(ThreadData &td) {
         std::vector<OutputData> output;
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
-        unsigned prevDepth = 0;
-        unsigned noSemiRandom = 0;
+        unsigned noSemiRandom = 0, semiRandomCount = 0, prevDepth = 0;
         for (unsigned ply = 0; !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
@@ -539,6 +539,7 @@ static void selfplay(ThreadData &td) {
                     low_score_count = 0;
                 } else if (sp_options.semiRandomize && !skipRandom &&
                            (noSemiRandom >= sp_options.semiRandomizeInterval) &&
+                           (semiRandomCount < sp_options.semiRandomPerGame) &&
                            (int(board.men()) > globals::EGTBMenCount) &&
                            ((sp_options.randomizeType != SelfPlayOptions::RandomizeType::Nodes) ||
                             (prevNodes && prevDepth >= sp_options.depthLimit))) {
@@ -555,7 +556,10 @@ static void selfplay(ThreadData &td) {
                         ++low_score_count;
                     else
                         low_score_count = 0;
-                    if (sp_options.randomizeType == SelfPlayOptions::RandomizeType::Nodes || candCount > 1) noSemiRandom = 0;
+                    if (sp_options.randomizeType == SelfPlayOptions::RandomizeType::Nodes || candCount > 1) {
+                        noSemiRandom = 0;
+                        ++semiRandomCount;
+                    }
                 } else {
                     m = searcher->findBestMove(board, FixedDepth, Constants::INFINITE_TIME,
                                                0, // extra time
@@ -756,7 +760,7 @@ int CDECL main(int argc, char **argv) {
 
     globals::options.search.hash_table_size = 128 * 1024 * 1024;
     globals::options.book.book_enabled = true;
-    globals::options.book.frequency = 25;
+    globals::options.book.frequency = 10;
     globals::options.book.weighting = 10;
     globals::options.book.scoring = 25;
     globals::options.book.random = 50;

@@ -246,13 +246,12 @@ double BookReader::sample_dirichlet(const std::array<double,OUTCOMES> &counts, s
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results)
 {
-   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/40.0);
+   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/37.0);
 
-   unsigned minCount = 0;
+   unsigned minCount = 0, maxCount = 0;
    if (globals::options.search.strength < 100) {
       minCount = (uint32_t)1<<((100-globals::options.search.strength)/10);
    }
-   unsigned maxCount = 0;
    for (const book::DataEntry &info : results) {
       unsigned count = info.count();
       if (count > maxCount) maxCount = count;
