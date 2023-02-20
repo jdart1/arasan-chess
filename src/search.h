@@ -208,7 +208,7 @@ public:
 #endif
 
     // main entry point for top-level search; non-main threads enter here
-    Move ply0_search();
+    Move ply0_search(std::vector<RootMove> *moveList = nullptr);
 
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth,

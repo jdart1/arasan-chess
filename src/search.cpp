@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
+#include <iterator>
 
 //#define _TRACE
 
@@ -430,7 +431,7 @@ Move SearchController::findBestMove(
    // Start searching in the main thread
    NodeInfo *rootStack = new NodeInfo[Search::SearchStackSize];
    rootSearch->init(rootStack,pool->mainThread());
-   Move best = rootSearch->ply0_search();
+   Move best = rootSearch->ply0_search(moveList);
    delete [] rootStack;
    // Mark thread 0 complete.
    pool->setCompleted(0);
@@ -439,11 +440,6 @@ Move SearchController::findBestMove(
 
    // Wait for all threads to complete
    pool->waitAll();
-
-   if (moveList) {
-       mg->reorderByScore();
-       std::copy(mg->getMoveList().begin(),mg->getMoveList().end(),std::back_inserter(*moveList));
-   }
 
    // We are finished with the move generator - can delete
    delete mg;
@@ -1049,7 +1045,7 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
     }
 }
 
-Move Search::ply0_search()
+Move Search::ply0_search(std::vector<RootMove> *moveList)
 {
    node->best = NullMove;
    // Incrementally search the board to greater depths - stop when
@@ -1342,6 +1338,11 @@ Move Search::ply0_search()
          showStatus(board, node->best, false, false);
       }
    } // end depth iteration loop
+   if (mainThread() && moveList != nullptr) {
+       mg.reorderByScore();
+       std::copy(mg.getMoveList().begin(),
+                 mg.getMoveList().end(),std::back_inserter(*moveList));
+   }
    // Make sure we have an active monitor thread
    controller->pool->lock();
    if (controller->monitor_function && controller->isMonitorThread(ti->index)) {
@@ -1528,6 +1529,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         board.undoMove(move,save_state);
         if (wide) {
             mg.setScore(move_index,try_score);
+            assert(MovesEqual(mg.getMoveList()[move_index].move,move));
         }
         // We have now resolved the fail-high if there is one.
         if (try_score > node->best_score && !terminate) {

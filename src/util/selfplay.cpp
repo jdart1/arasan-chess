@@ -145,7 +145,7 @@ static void saveGame(ThreadData &td, const std::string &result, std::ofstream &f
     } else {
         headers.push_back(ChessIO::Header("Site", "?"));
     }
-    char dateStr[15];
+    char dateStr[32];
     time_t tm = time(NULL);
     struct tm *t = localtime(&tm);
     snprintf(dateStr, 15, "%4d.%02d.%02d", t->tm_year + 1900, t->tm_mon + 1,
@@ -487,6 +487,7 @@ static void selfplay(ThreadData &td) {
                     (std::abs(prevScore) >= 10*Params::PAWN_VALUE);
                 if (sp_options.randomize &&
                     (ply <= sp_options.maxBookPly + sp_options.randomizeRange) &&
+                    !board.repCount() &&
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
                     RootMoveGenerator mg(board);
                     if (mg.moveCount() > 1 && (sp_options.useRanking || sp_options.limitEarlyKingMoves)) {
@@ -497,19 +498,30 @@ static void selfplay(ThreadData &td) {
                         std::vector<RootMove> mra;
                         if (sp_options.useRanking) {
                             searcher->rankMoves(board,2,mra);
-                            if (mg.moveCount()>=2) {
-                                int best = mra[0].score;
-                                std::remove_if(mra.begin()+1, mra.end(),
-                                                [&](const RootMove &r) -> bool {
-                                                    return r.score < best - sp_options.randomTolerance;
-                                                });
-                                unsigned count = 0;
-                                for (const RootMove &x : mra) all[count++] = x.move;
+                            for (const RootMove &rm : mra) {
+                                all[j++] = rm.move;
                             }
-                            for (const RootMove &mr : mra) {
-                                const Move &m = mr.move;
-                                if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
-                                candidates[i++] = m;
+                            if (mg.moveCount()>=2) {
+                                assert(mra.size()>0);
+                                const int best = mra[0].score;
+                                auto new_end = std::remove_if(mra.begin()+1, mra.end(),
+                                                              [&](const RootMove &r) -> bool {
+                                                                  if (r.score < best - sp_options.randomTolerance) return true;
+                                                                  BoardState state(board.state);
+                                                                  board.doMove(r.move);
+                                                                  int rep = board.repCount();
+                                                                  board.undoMove(r.move, state);
+                                                                  // avoid repetitions
+                                                                  return rep>0;
+                                                              });
+                                candidates[i++] = mra[0].move;
+                                for (auto it = mra.begin()+1; it != new_end; ++it) {
+                                    assert((*it).score <= best);
+                                    assert((*it).score >= best - sp_options.randomTolerance);
+                                    if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                                    candidates[i++] = (*it).move;
+                                }
+                                assert(i);
                             }
                         }
                         else {
