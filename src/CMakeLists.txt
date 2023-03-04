@@ -79,7 +79,7 @@ else()
     set(EXE_NAME ${EXE_NAME}-32)
 endif(64BIT)
 
-if(UNIX AND NOT APPLE AND NOT WIN32)
+if(UNIX AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     add_link_options("-fuse-ld=gold")
 endif()
 
