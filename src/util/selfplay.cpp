@@ -119,6 +119,7 @@ static struct SelfPlayOptions {
     OutputFormat format = OutputFormat::Bin;
     bool verbose = false;
     unsigned verboseReportingInterval = 1000000;
+    bool checkHash = false; // use hash table to check for possible dups
 } sp_options;
 
 struct ThreadData {
@@ -628,7 +629,7 @@ static void selfplay(ThreadData &td) {
                     ply <= sp_options.maxOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
                     !board.repCount() &&
-                    !sp_hash_table.check_and_replace_hash(board.hashCode())) {
+                    (!sp_options.checkHash || !sp_hash_table.check_and_replace_hash(board.hashCode()))) {
                     if ((dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
                         std::stringstream s;
                         BoardIO::writeFEN(board, s, 0);
@@ -841,6 +842,8 @@ int CDECL main(int argc, char **argv) {
             }
             sp_options.gameFileName = argv[++arg];
             sp_options.saveGames = true;
+        } else if (strcmp(argv[arg], "-h") == 0) {
+            sp_options.checkHash = true;
         } else if (strcmp(argv[arg], "-o") == 0) {
             if (arg + 1 >= argc) {
                 std::cerr << "expected file name after -o" << std::endl;
