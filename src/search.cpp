@@ -1563,10 +1563,12 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             auto limit = controller->getTimeLimit();
             if (controller->elapsed_time < 2*limit/3) {
                 // waste some time
-                int thisWait = 0, waitTime;
+                uint64_t waitTime;
                 // sleep in increments if the wait time is long
-                while ((waitTime = (limit - controller->elapsed_time)/(4*(mg.moveCount()-move_index))) >= 50 && !terminate) {
-                    thisWait = std::min<int>(waitTime,1000);
+                while (limit >= controller->elapsed_time &&
+                      (waitTime = (limit - controller->elapsed_time)/(4*(mg.moveCount()-move_index))) >= 50 &&
+                      !terminate) {
+                    auto thisWait = std::min<uint64_t>(waitTime,1000);
                     if (mainThread() && debugOut()) {
                         std::cout << globals::debugPrefix << "index=" << move_index << " waiting for " << thisWait << " ms." << std::endl;
                     }
