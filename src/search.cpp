@@ -1835,9 +1835,9 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       node->staticEval = hashEntry.staticValue();
       hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
-      if (result == HashEntry::Valid ||
-           ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
-            (result == HashEntry::LowerBound && hashValue >= node->beta))) {
+      if (hashValue != Constants::INVALID_SCORE && (result == HashEntry::Valid ||
+                                                    ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+                                                     (result == HashEntry::LowerBound && hashValue >= node->beta)))) {
           // hash cutoff
 #ifdef _TRACE
           static constexpr char map[3] = {'E','U','L'};
