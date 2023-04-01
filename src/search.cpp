@@ -1150,8 +1150,8 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
                   std::cout << globals::debugPrefix << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << std::endl;
                }
             }
-            stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-nominalDepth-1);
-            stats.failLow = value <= lo_window  && (lo_window > nominalDepth-Constants::MATE);
+            stats.failHigh = value >= hi_window;
+            stats.failLow = value <= lo_window;
             if (stats.failLow) {
                 faillows++;
             }
@@ -1192,13 +1192,12 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
                     aspirationWindow = ASPIRATION_WINDOW[++fails];
                 }
                 if (aspirationWindow == Constants::MATE) {
-                    hi_window = Constants::MATE - nominalDepth - 1;
+                    hi_window = Constants::MATE;
                 } else {
                     if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                         aspirationWindow += 2*WIDE_WINDOW;
                     }
-                    hi_window = std::min<score_t>(Constants::MATE - nominalDepth - 1,
-                                                  lo_window + aspirationWindow);
+                    hi_window = std::min<score_t>(Constants::MATE, lo_window + aspirationWindow);
                 }
             }
             else if (stats.failLow) {
@@ -1836,8 +1835,8 @@ score_t Search::quiesce(int ply,int depth)
       node->staticEval = hashEntry.staticValue();
       hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
       if (hashValue != Constants::INVALID_SCORE && (result == HashEntry::Valid ||
-                                                    ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
-                                                     (result == HashEntry::LowerBound && hashValue >= node->beta)))) {
+           ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+            (result == HashEntry::LowerBound && hashValue >= node->beta)))) {
           // hash cutoff
 #ifdef _TRACE
           static constexpr char map[3] = {'E','U','L'};
@@ -1972,13 +1971,6 @@ score_t Search::quiesce(int ply,int depth)
            assert(0);
        }
 #endif
-       storeHash(hash,node->best,tt_depth);
-       if (node->inBounds(node->best_score)) {
-           if (!IsNull(node->best)) {
-               updatePV(board,node->best,ply);
-           }
-       }
-       return node->best_score;
    }
    else {
        // not in check
@@ -2207,16 +2199,19 @@ score_t Search::quiesce(int ply,int depth)
 #endif
            }
        }
-   search_end:
-       assert(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
-       storeHash(hash,node->best,tt_depth);
-       if (node->inBounds(node->best_score)) {
-           if (!IsNull(node->best)) {
-               updatePV(board,node->best,ply);
-           }
-       }
-       return node->best_score;
    }
+   search_end:
+   assert(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
+   // do not store upper bound mate scores
+   //   if (!(node->best_score >= Constants::MATE_RANGE) && node->best_score <= node->alpha) {
+   //       storeHash(hash,node->best,tt_depth);
+   //   }
+   if (node->inBounds(node->best_score)) {
+       if (!IsNull(node->best)) {
+           updatePV(board,node->best,ply);
+       }
+   }
+   return node->best_score;
 }
 
 void Search::storeHash(hash_t hash, Move hash_move, int depth) {
@@ -2490,6 +2485,12 @@ score_t Search::search()
         }
 #endif
         return drawScore(board);
+    }
+    else {
+        // mate distance pruning
+        score_t alpha = std::max<score_t>(node->alpha, -Constants::MATE + node->ply);
+        score_t beta = std::min<score_t>(node->beta, Constants::MATE - node->ply - 1);
+        if (alpha >= beta) return alpha;
     }
     Move hashMove = NullMove;
     using_tb = 0;
@@ -2871,8 +2872,8 @@ score_t Search::search()
 #endif
                         // store ProbCut result if there is not already a hash entry with
                         // valid score & greater depth
-                        if (!(hashHit && hashEntry.depth() >= nu_depth + DEPTH_INCREMENT &&
-                              hashValue != Constants::INVALID_SCORE)) {
+                        if (!(hashHit && (hashEntry.depth() >= nu_depth + DEPTH_INCREMENT)) &&
+                            value != -Constants::INVALID_SCORE) {
                             controller->hashTable.storeHash(board.hashCode(rep_count),
                                                             nu_depth + DEPTH_INCREMENT,
                                                             age,
