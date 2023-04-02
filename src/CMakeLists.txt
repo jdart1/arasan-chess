@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
-add_compile_definitions(ARASAN_VERSION=23.4)
+add_compile_definitions(ARASAN_VERSION=23.5)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -87,9 +87,13 @@ if (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "8
 if(NOT OLD)
     add_compile_definitions(SIMD)
     add_compile_definitions(SSE2)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-msse2)
+    endif()
+
 if(MODERN OR BMI2 OR AVX2 OR AVX512)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options( -msse4.1 -msse4.2 -mpopcnt)
+        add_compile_options(-mssse3 -msse4.1 -msse4.2 -mpopcnt)
     endif()
     add_compile_definitions(SSSE3)
     add_compile_definitions(SSE41)
