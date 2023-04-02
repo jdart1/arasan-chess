@@ -9,6 +9,7 @@ Changes in Arasan 23.5:
  8) Don't use gold linker when Clang is the compiler. Fixes #44.
  9) Fixes for hash values out of bounds (Github issue #45).
  10) Fix Unix/Mac Makefile + CMake file to use -msse2, -mssse3.
+ 11) GUI supports XXLarge board size.
 
 Changes in Arasan 23.4 (July 2022):
  1) Ignore CECP "accepted" and "rejected" input from the interface
