@@ -27,3 +27,6 @@
 13. Remove arasan.rc, just use CECP/UCI options as most programs do.
 
 14. Consider putting log and game files into a user local directory by default, instead of the install dir.
+
+15. Fix warnings from -Wshadow.
+
