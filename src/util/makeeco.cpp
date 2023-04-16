@@ -59,7 +59,6 @@ int do_eco(const std::string &eco_line, unsigned line)
 
     ColorType side = White;
     Board board;
-    int movecount = 0;
 
     // Parse the line
     std::string code, name, moves, text;
@@ -86,7 +85,6 @@ int do_eco(const std::string &eco_line, unsigned line)
                 return -1;
             }
             else {
-                ++movecount;
                 board.doMove(m);
             }
             side = OppositeColor(side);

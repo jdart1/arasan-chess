@@ -212,7 +212,6 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
     for (i = 0; i < 10; i++)
         std::cout << i << "      ";
     std::cout << std::endl;
-    double score = 0.0;
     for (i = 0; i < testTotals.solution_times.size(); i++) {
         char digits[15];
         if (i == 0) {
@@ -229,7 +228,6 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
         else {
             snprintf(digits,15,"%6.2f ",testTotals.solution_times[i]/1000.0);
             std::cout << digits;
-            score += (float)time_limit/1000.0 - testTotals.solution_times[i]/1000.0;
         }
     }
     std::cout << std::endl << std::endl << "correct : " << testTotals.total_correct << '/' <<

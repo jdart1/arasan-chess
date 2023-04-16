@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2023 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -746,10 +746,6 @@ int CDECL main(int argc, char **argv)
            int added = 0;
            vector<string> json_moves;
            string fen = be->fen;
-           int total_count = 0;
-           for (auto be = it.second; be; be = be->next) {
-               total_count += be->count();
-           }
            for (auto be = (BookEntryJson*)it.second; be != nullptr; be = (BookEntryJson*)be->next) {
                 if ((be->count() >= minFrequency) || be->first) {
                    ++added;

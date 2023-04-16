@@ -1104,7 +1104,6 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
              std::cout << " terminate=" << terminate << std::endl;
          }
          int fails = 0;
-         int faillows = 0, failhighs = 0;
          do {
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
@@ -1152,12 +1151,6 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
             }
             stats.failHigh = value >= hi_window;
             stats.failLow = value <= lo_window;
-            if (stats.failLow) {
-                faillows++;
-            }
-            else if (stats.failHigh) {
-                failhighs++;
-            }
             // store root search history entry
             if (mainThread()) {
                 controller->rootSearchHistory[iterationDepth-1] = SearchController::SearchHistory(
