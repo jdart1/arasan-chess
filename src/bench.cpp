@@ -1,4 +1,4 @@
-// Copyright 2020-2021 by Jon Dart. All Rights Reserved
+// Copyright 2020-2021, 2023 by Jon Dart. All Rights Reserved
 #include "bench.h"
 #include "globals.h"
 #include "notation.h"
@@ -93,8 +93,8 @@ void Bench::benchLine(SearchController *searcher, const std::string &epd, Bench:
         MoveSet includes, excludes;
         Move result = searcher->findBestMove(board,
                                              FixedDepth,
-                                             999999, 0, depthLimit,
-                                             0, 0, stats,
+                                             Constants::INFINITE_TIME, 0, depthLimit,
+                                             false, false, stats,
                                              verbose ? TalkLevel::Test : TalkLevel::Silent,
                                              excludes, includes);
         if (verbose) {

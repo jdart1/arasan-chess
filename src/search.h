@@ -1,4 +1,4 @@
-// Copyright 1994-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2023 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -208,7 +208,7 @@ public:
 #endif
 
     // main entry point for top-level search; non-main threads enter here
-    Move ply0_search();
+    Move ply0_search(std::vector<RootMove> *moveList = nullptr);
 
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth,
@@ -358,12 +358,13 @@ public:
         int time_limit,
         int xtra_time,
         int ply_limit,
-        int background,
-        int isUCI,
+        bool background,
+        bool isUCI,
         Statistics &stat_buf,
         TalkLevel t,
         const MoveSet &exclude,
-        const MoveSet &include);
+        const MoveSet &include,
+        std::vector<RootMove> *moveList = nullptr);
 
     Move findBestMove(
         const Board &board,
@@ -371,10 +372,17 @@ public:
         int time_limit,
         int xtra_time,
         int ply_limit,
-        int background,
-        int isUCI,
+        bool background,
+        bool isUCI,
         Statistics &stats,
         TalkLevel t);
+
+    // return a list of moves and their scores
+    // ranked in descending order of score.
+    void rankMoves(
+        const Board &board,
+        int ply_limit,
+        std::vector<RootMove> &mr);
 
     uint64_t getTimeLimit() const {
         if (typeOfSearch == TimeLimit && time_limit != Constants::INFINITE_TIME) {
@@ -582,7 +590,7 @@ private:
     unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
         unsigned max_depth);
 
-    int uci;
+    bool uci;
     int age;
     TalkLevel talkLevel;
     // time limit is nominal time limit in centiseconds

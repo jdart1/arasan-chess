@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2023 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -103,12 +103,7 @@ struct Variation {
 
 static unsigned minFrequency = 0;
 
-#ifdef __INTEL_COMPILER
-#pragma pack(push,1)
-#endif
-
-class BookEntry
-BEGIN_PACKED_STRUCT
+class BookEntry {
    public:
     BookEntry( ColorType side,
                unsigned rec, PositionEval ev,
@@ -123,7 +118,6 @@ BEGIN_PACKED_STRUCT
     unsigned rec; // explicit weight if any
     uint32_t win,loss,draw;
     uint8_t move_index;
-    uint16_t weight;
 
     uint32_t count() const
     {
@@ -133,11 +127,7 @@ BEGIN_PACKED_STRUCT
     void updateWinLoss( ColorType side, ResultType result );
 
     uint8_t computeWeight() const;
-END_PACKED_STRUCT
-
-#ifdef __INTEL_COMPILER
-#pragma pack(pop)
-#endif
+};
 
 class BookEntryJson : public BookEntry
 {
@@ -169,7 +159,7 @@ BookEntry::BookEntry( ColorType side, unsigned r, PositionEval ev,
     :next(nxt), first(first_file),
      eval(ev), moveEval(mev), rec(r),
      win(0),loss(0),draw(0),
-     move_index(mv_indx), weight(book::MAX_WEIGHT/2)
+     move_index(mv_indx)
 {
    updateWinLoss(side,result);
 }
@@ -254,7 +244,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
                                     var.eval, m.moveEval, var.result,
                                     move_index, nullptr, is_first_file);
            }
-       } catch(std::bad_alloc &ex) {
+       } catch(std::bad_alloc const &ex) {
           cerr << "out of memory!" << endl;
           exit(-1);
        }
@@ -326,7 +316,7 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
                                     var.eval, m.moveEval, var.result,
                                     move_index, be, is_first_file);
            }
-         } catch(std::bad_alloc) {
+         } catch(std::bad_alloc const &) {
             cerr << "out of memory!" << endl;
             exit(-1);
          }
@@ -756,10 +746,6 @@ int CDECL main(int argc, char **argv)
            int added = 0;
            vector<string> json_moves;
            string fen = be->fen;
-           int total_count = 0;
-           for (auto be = it.second; be; be = be->next) {
-               total_count += be->count();
-           }
            for (auto be = (BookEntryJson*)it.second; be != nullptr; be = (BookEntryJson*)be->next) {
                 if ((be->count() >= minFrequency) || be->first) {
                    ++added;

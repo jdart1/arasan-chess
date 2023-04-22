@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021-2023 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -12,11 +12,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <iostream> // for debugging
 
 //#define _TRACE
 
 #ifdef _TRACE
+#include <iostream> // for debugging
 #include "notation.h"
 #endif
 
@@ -81,7 +81,7 @@ Move BookReader::pick(const Board &b) {
    // Compute the best move. We use a modified version of Thompson
    // sampling. Rewards for each move are based on a random (Dirichlet
    // distribution) sample drawn from the win/loss/draw statistics.
-   // This is modified by any explicit weight, a frequency bonus,
+   // This is modified by any explicit weight, a frequency adjustment,
    // and an additional random factor.
    //
    double maxReward = -1e9;
@@ -99,25 +99,25 @@ Move BookReader::pick(const Board &b) {
       auto reward = (sample_dirichlet(counts)*globals::options.book.scoring)/50;
 #ifdef _TRACE
       std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw) << "]";
-      std::cout << " reward=" << reward;
+      std::cout << " reward: " << reward;
 #endif
       if (info.weight != book::NO_RECOMMEND) {
-          // boost reward according to explicit weight
+          // boost or reduce reward according to explicit weight
           const double weightAdjust = double(info.weight)/book::MAX_WEIGHT;
           reward = reward*(1.0+(2*(weightAdjust-0.5)*globals::options.book.weighting)/100);
-#ifdef _TRACE
-          std::cout << " weightAdjust=" << weightAdjust << " new reward=" << reward;
-#endif
       }
-      // add a small bonus for very frequent moves. Note: moves
-      // with weights below neutral get less of a frequency bonus.
-      double reduce = 1.0 - ((1.0-std::min<double>(1.0,2*double(info.weight)/book::MAX_WEIGHT))*globals::options.book.weighting)/100;
-      reward += 0.1*log10(double(info.count()))*reduce*globals::options.book.frequency/100;
+#ifdef _TRACE      
+      std::cout << " adjusted reward: " << reward;
+#endif      
+      // penalize infrequent moves
+      const double f = globals::options.book.frequency/100.0;
+      double freqAdjust = log10(static_cast<double>(info.win + info.loss + info.draw))*0.2*f;
 #ifdef _TRACE
-      std::cout << " after freq bonus: " << reward;
+      std::cout << " frequency: " << freqAdjust;
 #endif
+      reward += freqAdjust;
       // add a random amount based on randomness parameter
-      std::normal_distribution<double> dist(0,0.002*globals::options.book.random);
+      std::normal_distribution<double> dist(0,0.0019*globals::options.book.random);
       double rand = dist(engine);
 #ifdef _TRACE
       std::cout << " random: " << rand;
@@ -246,13 +246,12 @@ double BookReader::sample_dirichlet(const std::array<double,OUTCOMES> &counts, s
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results)
 {
-   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/40.0);
+   const double freqThreshold = pow(10.0,(globals::options.book.frequency-100.0)/37.0);
 
-   unsigned minCount = 0;
+   unsigned minCount = 0, maxCount = 0;
    if (globals::options.search.strength < 100) {
       minCount = (uint32_t)1<<((100-globals::options.search.strength)/10);
    }
-   unsigned maxCount = 0;
    for (const book::DataEntry &info : results) {
       unsigned count = info.count();
       if (count > maxCount) maxCount = count;

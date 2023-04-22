@@ -1,4 +1,4 @@
-// Copyright 1987-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2023 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
+#include <iterator>
 
 //#define _TRACE
 
@@ -225,8 +226,8 @@ Move SearchController::findBestMove(
    int time_limit,
    int xtra_time,
    int ply_limit,
-   int background,
-   int isUCI,
+   bool background,
+   bool isUCI,
    Statistics &stat_buf,
    TalkLevel t)
 {
@@ -243,12 +244,13 @@ Move SearchController::findBestMove(
    int search_time_limit,
    int search_xtra_time,
    int search_ply_limit,
-   int isBackground,
-   int isUCI,
+   bool isBackground,
+   bool isUCI,
    Statistics &stat_buf,
    TalkLevel t,
    const MoveSet &moves_to_exclude,
-   const MoveSet &moves_to_include)
+   const MoveSet &moves_to_include,
+   std::vector<RootMove> *moveList)
 {
     typeOfSearch = srcType;
     initialBoard = board;
@@ -429,7 +431,7 @@ Move SearchController::findBestMove(
    // Start searching in the main thread
    NodeInfo *rootStack = new NodeInfo[Search::SearchStackSize];
    rootSearch->init(rootStack,pool->mainThread());
-   Move best = rootSearch->ply0_search();
+   Move best = rootSearch->ply0_search(moveList);
    delete [] rootStack;
    // Mark thread 0 complete.
    pool->setCompleted(0);
@@ -563,6 +565,26 @@ Move SearchController::findBestMove(
    is_searching = false;
 
    return best;
+}
+
+void SearchController::rankMoves(
+        const Board &board,
+        int ply_limit,
+        std::vector<RootMove> &mr) {
+    Statistics stats;
+    MoveSet includes,excludes;
+
+    (void) findBestMove(board,FixedDepth,
+                        Constants::INFINITE_TIME,
+                        0,
+                        ply_limit,
+                        true,
+                        false,
+                        stats,
+                        TalkLevel::Silent,
+                        includes,
+                        excludes,
+                        &mr);
 }
 
 void SearchController::setContempt(score_t c)
@@ -919,13 +941,16 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     }
 #endif
     // note: retain previous best line if we do not have one here
-    if (IsNull(node->pv[0])) {
+    if (node->pv_length == 0) {
 #ifdef _TRACE
-        if (mainThread()) std::cout << globals::debugPrefix << "warning: pv is null\n";
+        if (mainThread()) std::cout << "warning: pv length is zero." << std::endl;;
 #endif
         return;
     }
-    else if (node->pv_length == 0) {
+    else if (IsNull(node->pv[0])) {
+#ifdef _TRACE
+        if (mainThread()) std::cout << "warning: pv is null." << std::endl;;
+#endif
         return;
     }
     node->best = node->pv[0];                     // ensure "best" is non-null
@@ -1020,7 +1045,7 @@ void Search::suboptimal(RootMoveGenerator &mg,Move &m, score_t &val) {
     }
 }
 
-Move Search::ply0_search()
+Move Search::ply0_search(std::vector<RootMove> *moveList)
 {
    node->best = NullMove;
    // Incrementally search the board to greater depths - stop when
@@ -1079,7 +1104,6 @@ Move Search::ply0_search()
              std::cout << " terminate=" << terminate << std::endl;
          }
          int fails = 0;
-         int faillows = 0, failhighs = 0;
          do {
             stats.failHigh = stats.failLow = false;
 #ifdef _TRACE
@@ -1125,14 +1149,8 @@ Move Search::ply0_search()
                   std::cout << globals::debugPrefix << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << std::endl;
                }
             }
-            stats.failHigh = value >= hi_window && (hi_window < Constants::MATE-nominalDepth-1);
-            stats.failLow = value <= lo_window  && (lo_window > nominalDepth-Constants::MATE);
-            if (stats.failLow) {
-                faillows++;
-            }
-            else if (stats.failHigh) {
-                failhighs++;
-            }
+            stats.failHigh = value >= hi_window;
+            stats.failLow = value <= lo_window;
             // store root search history entry
             if (mainThread()) {
                 controller->rootSearchHistory[iterationDepth-1] = SearchController::SearchHistory(
@@ -1167,13 +1185,12 @@ Move Search::ply0_search()
                     aspirationWindow = ASPIRATION_WINDOW[++fails];
                 }
                 if (aspirationWindow == Constants::MATE) {
-                    hi_window = Constants::MATE - nominalDepth - 1;
+                    hi_window = Constants::MATE;
                 } else {
                     if (iterationDepth <= MoveGenerator::EASY_PLIES) {
                         aspirationWindow += 2*WIDE_WINDOW;
                     }
-                    hi_window = std::min<score_t>(Constants::MATE - nominalDepth - 1,
-                                                  lo_window + aspirationWindow);
+                    hi_window = std::min<score_t>(Constants::MATE, lo_window + aspirationWindow);
                 }
             }
             else if (stats.failLow) {
@@ -1313,6 +1330,11 @@ Move Search::ply0_search()
          showStatus(board, node->best, false, false);
       }
    } // end depth iteration loop
+   if (mainThread() && moveList != nullptr) {
+       mg.reorderByScore();
+       std::copy(mg.getMoveList().begin(),
+                 mg.getMoveList().end(),std::back_inserter(*moveList));
+   }
    // Make sure we have an active monitor thread
    controller->pool->lock();
    if (controller->monitor_function && controller->isMonitorThread(ti->index)) {
@@ -1499,6 +1521,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         board.undoMove(move,save_state);
         if (wide) {
             mg.setScore(move_index,try_score);
+            assert(MovesEqual(mg.getMoveList()[move_index].move,move));
         }
         // We have now resolved the fail-high if there is one.
         if (try_score > node->best_score && !terminate) {
@@ -1532,10 +1555,12 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             auto limit = controller->getTimeLimit();
             if (controller->elapsed_time < 2*limit/3) {
                 // waste some time
-                int thisWait = 0, waitTime;
+                uint64_t waitTime;
                 // sleep in increments if the wait time is long
-                while ((waitTime = (limit - controller->elapsed_time)/(4*(mg.moveCount()-move_index))) >= 50 && !terminate) {
-                    thisWait = std::min<int>(waitTime,1000);
+                while (limit >= controller->elapsed_time &&
+                      (waitTime = (limit - controller->elapsed_time)/(4*(mg.moveCount()-move_index))) >= 50 &&
+                      !terminate) {
+                    auto thisWait = std::min<uint64_t>(waitTime,1000);
                     if (mainThread() && debugOut()) {
                         std::cout << globals::debugPrefix << "index=" << move_index << " waiting for " << thisWait << " ms." << std::endl;
                     }
@@ -1802,9 +1827,9 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       node->staticEval = hashEntry.staticValue();
       hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
-      if (result == HashEntry::Valid ||
+      if (hashValue != Constants::INVALID_SCORE && (result == HashEntry::Valid ||
            ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
-            (result == HashEntry::LowerBound && hashValue >= node->beta))) {
+            (result == HashEntry::LowerBound && hashValue >= node->beta)))) {
           // hash cutoff
 #ifdef _TRACE
           static constexpr char map[3] = {'E','U','L'};
@@ -1939,13 +1964,6 @@ score_t Search::quiesce(int ply,int depth)
            assert(0);
        }
 #endif
-       storeHash(hash,node->best,tt_depth);
-       if (node->inBounds(node->best_score)) {
-           if (!IsNull(node->best)) {
-               updatePV(board,node->best,ply);
-           }
-       }
-       return node->best_score;
    }
    else {
        // not in check
@@ -2174,16 +2192,19 @@ score_t Search::quiesce(int ply,int depth)
 #endif
            }
        }
-   search_end:
-       assert(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
-       storeHash(hash,node->best,tt_depth);
-       if (node->inBounds(node->best_score)) {
-           if (!IsNull(node->best)) {
-               updatePV(board,node->best,ply);
-           }
-       }
-       return node->best_score;
    }
+   search_end:
+   assert(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
+   // do not store upper bound mate scores
+   //   if (!(node->best_score >= Constants::MATE_RANGE) && node->best_score <= node->alpha) {
+   //       storeHash(hash,node->best,tt_depth);
+   //   }
+   if (node->inBounds(node->best_score)) {
+       if (!IsNull(node->best)) {
+           updatePV(board,node->best,ply);
+       }
+   }
+   return node->best_score;
 }
 
 void Search::storeHash(hash_t hash, Move hash_move, int depth) {
@@ -2457,6 +2478,12 @@ score_t Search::search()
         }
 #endif
         return drawScore(board);
+    }
+    else {
+        // mate distance pruning
+        score_t alpha = std::max<score_t>(node->alpha, -Constants::MATE + node->ply);
+        score_t beta = std::min<score_t>(node->beta, Constants::MATE - node->ply - 1);
+        if (alpha >= beta) return alpha;
     }
     Move hashMove = NullMove;
     using_tb = 0;
@@ -2799,8 +2826,8 @@ score_t Search::search()
                     if (mainThread()) {
                         std::cout << "Probcut: previous move illegal" << std::endl;
                     }
-                    return -Illegal;                  // previous move was illegal
 #endif
+                    return -Illegal;                  // previous move was illegal
                 }
                 else if (seeSign(board,move,needed_gain)) {
 #ifdef _TRACE
@@ -2838,8 +2865,8 @@ score_t Search::search()
 #endif
                         // store ProbCut result if there is not already a hash entry with
                         // valid score & greater depth
-                        if (!(hashHit && hashEntry.depth() >= nu_depth + DEPTH_INCREMENT &&
-                              hashValue != Constants::INVALID_SCORE)) {
+                        if (!(hashHit && (hashEntry.depth() >= nu_depth + DEPTH_INCREMENT)) &&
+                            value != -Constants::INVALID_SCORE) {
                             controller->hashTable.storeHash(board.hashCode(rep_count),
                                                             nu_depth + DEPTH_INCREMENT,
                                                             age,

@@ -1,8 +1,8 @@
 #
 # Gnu Makefile for Arasan
-# Copyright 2004-2022 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2023 by Jon Dart. All Rights Reserved.
 #
-VERSION = 23.4
+VERSION = 23.5
 
 # paths, modify as needed:
 
@@ -79,8 +79,8 @@ SMPLIB   = -lpthread
 
 POPCNT_FLAGS := -DUSE_POPCNT
 ifeq ("$(ARCH)","x86_64")
-BASIC_SIMD_FLAGS = -DSIMD -DSSE2
-POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -msse4.1 -msse4.2 -mpopcnt
+BASIC_SIMD_FLAGS = -DSIMD -DSSE2 -msse2
+POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -mssse3 -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
 AVX512_FLAGS := -DAVX512 -mavx512bw

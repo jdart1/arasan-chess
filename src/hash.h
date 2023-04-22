@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2015, 2017-2019, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015, 2017-2019, 2021, 2023 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -85,15 +85,17 @@ public:
         return hashValue;
     }
 
-    // Get value to store given scoer
+    // Get value to store given score
     static score_t scoreToHashValue(score_t score, int ply) {
         if (score == Constants::INVALID_SCORE) {
             return score;
         }
         else if (score <= -Constants::MATE_RANGE) {
+            assert(score - (ply - 1) >= -Constants::MATE);
             return score - (ply - 1);
         }
         else if (score >= Constants::MATE_RANGE) {
+            assert(score + (ply - 1) <= Constants::MATE);
             return score + (ply - 1);
         } else {
             return score;

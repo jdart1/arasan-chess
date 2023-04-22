@@ -1,4 +1,4 @@
-// Copyright 2015-2021 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2021, 2023 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -347,7 +347,7 @@ static int make_pv(ThreadData &td,const Board &board, Board &pvBoard,score_t &sc
    Statistics stats;
    (void) td.searcher->findBestMove(board,
                                     FixedDepth,
-                                    999999,
+                                    Constants::INFINITE_TIME,
                                     0,
                                     LEARNING_SEARCH_DEPTH,
                                     false,

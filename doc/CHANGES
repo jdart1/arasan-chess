@@ -1,4 +1,17 @@
-Changes in Arasan 23.4:
+Changes in Arasan 23.5:
+ 1) Fix bug that could cause over-long sequences to execute mate when mate-in-N found.
+ 2) Multiple changes and fixes to selfplay utility for generating training positions.
+ 3) Decrease null move reduction somewhat more in endgames
+ 4) Fixes to CMake file
+ 5) Fixes to build so it works with C++20 compile.
+ 6) Sync with latest Fathom and nnue changes
+ 7) Changes to book selection logic
+ 8) Don't use gold linker when Clang is the compiler. Fixes #44.
+ 9) Fixes for hash values out of bounds (Github issue #45).
+ 10) Fix Unix/Mac Makefile + CMake file to use -msse2, -mssse3.
+ 11) GUI supports XXLarge board size.
+
+Changes in Arasan 23.4 (July 2022):
  1) Ignore CECP "accepted" and "rejected" input from the interface
  2) Fixes for occasional stalls especially in UCI mode
  3) Null move condition changes. Remove razoring.
