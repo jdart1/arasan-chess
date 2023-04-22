@@ -90,30 +90,32 @@ static struct SelfPlayOptions {
     // Note: not all options are command-line settable, currently.
     enum class OutputFormat { Epd, Bin };
     enum class RandomizeType { Nodes, MultiPV };
-    unsigned minOutPly = 8;
-    unsigned maxOutPly = 400;
+    unsigned minOutPly = 16;
+    unsigned maxOutPly = 300;
     unsigned cores = 1;
     unsigned posCount = 10000000;
     unsigned depthLimit = 6;
     bool adjudicateDraw = true;
-    bool adjudicateTB = true;
+    bool adjudicate7manDraw = false;
+    bool adjudicateTB = false;
     unsigned outputPlyFrequency = 1; // output every nth move
-    unsigned drawAdjudicationMoves = 5;
+    unsigned drawAdjudicationPlies = 10;
+    unsigned TBAdjudicationPlies = 10;
     unsigned drawAdjudicationMinPly = 100;
     std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
-    unsigned maxBookPly = 3;
+    unsigned maxBookPly = 4;
     bool randomize = true;
     unsigned randomizeRange = 10;
     unsigned randomizeInterval = 1;
-    int randomTolerance = 1.25*Params::PAWN_VALUE;
+    int randomTolerance = 0.75*Params::PAWN_VALUE;
     bool useRanking = true;
     bool limitEarlyKingMoves = true;
     bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
-    unsigned semiRandomizeInterval = 21;
-    unsigned semiRandomPerGame = 5;
+    unsigned semiRandomizeInterval = 11;
+    unsigned semiRandomPerGame = 4;
     int multiPVMargin = static_cast<int>(0.2*Params::PAWN_VALUE);
     bool skipNonQuiet = true;
     OutputFormat format = OutputFormat::Bin;
@@ -468,13 +470,13 @@ static void selfplay(ThreadData &td) {
         bool adjudicated = false, terminated = false;
         Statistics stats;
         Board board;
-        unsigned low_score_count = 0;
+        unsigned low_score_count = 0, tb_score_count = 0;
         enum class Result { WhiteWin, BlackWin, Draw } result = Result::Draw;
         std::vector<OutputData> output;
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
         unsigned noSemiRandom = 0, semiRandomCount = 0, prevDepth = 0;
-        for (unsigned ply = 0; !adjudicated && !terminated; ++ply) {
+        for (unsigned ply = 0; ply <= sp_options.maxOutPly && !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
@@ -598,14 +600,17 @@ static void selfplay(ThreadData &td) {
             } else if (stats.state == Draw || stats.state == Stalemate) {
                 terminated = true;
                 result = Result::Draw;
-            } else if (!terminated && sp_options.adjudicateDraw &&
+            } else if (!terminated &&
+                       (sp_options.adjudicateDraw ||
+                        (sp_options.adjudicate7manDraw && board.men() <= 7)) &&
                        ply >= sp_options.drawAdjudicationMinPly &&
-                       low_score_count >= sp_options.drawAdjudicationMoves) {
+                       low_score_count >= sp_options.drawAdjudicationPlies) {
                 // adjudicate draw
                 stats.state = Draw;
                 result = Result::Draw;
                 adjudicated = true;
-            } else if (!terminated && sp_options.adjudicateTB && board.men()<=globals::EGTBMenCount) {
+            } else if (!terminated && sp_options.adjudicateTB && board.men()<=globals::EGTBMenCount &&
+                       ++tb_score_count >= sp_options.TBAdjudicationPlies) {
                 if (stats.display_value >= Constants::TABLEBASE_WIN) {
                     result = (board.sideToMove() == White) ? Result::WhiteWin :
                         Result::BlackWin;
@@ -626,7 +631,6 @@ static void selfplay(ThreadData &td) {
                 }
                 if (!(sp_options.skipNonQuiet && CaptureOrPromotion(m)) &&
                     ply >= sp_options.minOutPly &&
-                    ply <= sp_options.maxOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
                     !board.repCount() &&
                     (!sp_options.checkHash || !sp_hash_table.check_and_replace_hash(board.hashCode()))) {
@@ -773,9 +777,9 @@ int CDECL main(int argc, char **argv) {
 
     globals::options.search.hash_table_size = 128 * 1024 * 1024;
     globals::options.book.book_enabled = true;
-    globals::options.book.frequency = 10;
-    globals::options.book.weighting = 10;
-    globals::options.book.scoring = 25;
+    globals::options.book.frequency = 20;
+    globals::options.book.weighting = 20;
+    globals::options.book.scoring = 20;
     globals::options.book.random = 50;
     globals::options.learning.position_learning = false;
     globals::options.search.can_resign = true;
