@@ -46,7 +46,7 @@ private:
     enum class PendingStatus { Nothing, GameEnd, Move };
 
     bool popPending(std::string &cmd) {
-        std::unique_lock<std::mutex> inputMtx;
+        std::unique_lock<std::mutex> lock(inputMtx);
         if (pending.empty()) {
             return false;
         }
