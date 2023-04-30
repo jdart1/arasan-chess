@@ -2208,6 +2208,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 Scoring::printScore(s->evalu8NNUE(board),std::cout);
                 std::cout << std::endl;
 #endif                
+                std::cout << "non-NNUE score: ";
                 Scoring::printScore(s->evalu8(board),std::cout);
                 std::cout << std::endl;
                 board.flip();
@@ -2217,6 +2218,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 Scoring::printScore(s->evalu8NNUE(board),std::cout);
                 std::cout << std::endl;
 #endif                
+                std::cout << "non-NNUE score: ";
                 Scoring::printScore(s->evalu8(board),std::cout);
                 delete s;
                 std::cout << std::endl;

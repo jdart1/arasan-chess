@@ -1,4 +1,4 @@
-// Copyright 1994-2002, 2004, 2008-2009, 2014, 2017, 2021 by Jon Dart.
+// Copyright 1994-2002, 2004, 2008-2009, 2014, 2017, 2021, 2023 by Jon Dart.
 // All Rights Reserved.
 
 #include "learn.h"
@@ -42,13 +42,13 @@ void learn(const Board &board, int rep_count) {
             diff1 = std::abs(last_score - prev.score());
 #endif
             if (globals::theLog->current() >= 5) {
-                const LogEntry &prev =
+                const LogEntry &prev2 =
                     (*globals::theLog)[globals::theLog->current() - 5];
-                if (!prev.fromBook()) {
+                if (!prev2.fromBook()) {
 #ifdef TUNE
-                    diff2 = fabs(last_score - prev.score());
+                    diff2 = fabs(last_score - prev2.score());
 #else
-                    diff2 = std::abs(last_score - prev.score());
+                    diff2 = std::abs(last_score - prev2.score());
 #endif
                 }
             }

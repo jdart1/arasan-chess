@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021 by Jon Dart.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023 by Jon Dart.
 // All Rights Reserved.
 
 #include "types.h"
@@ -225,8 +225,8 @@ public:
    Square getDirectionalAttack(Square sq, int dir, ColorType side) const;
 
    // Return all squares attacked by pawns of color "side".
-   Bitboard allPawnAttacks(ColorType side) const {
-       return allPawnAttacks(side,pawn_bits[side]);
+   Bitboard allPawnAttacks(ColorType c) const {
+       return allPawnAttacks(side,pawn_bits[c]);
    }
 
    // Return all squares attacked by pawns on the specified bit board
@@ -237,18 +237,18 @@ public:
    }
 
    // Get rook attacks considering same-side rook/queen as "transparent"
-   const Bitboard rookAttacks(Square sq,ColorType side) const;
+   const Bitboard rookAttacks(Square sq, ColorType c) const;
 
    FORCEINLINE const Bitboard bishopAttacks(Square sq) const {
      return Attacks::bishopAttacks(sq,allOccupied);
    }
 
    // get bishop attacks considering same-side queen as "transparent"
-   const Bitboard bishopAttacks(Square sq,ColorType side) const;
+   const Bitboard bishopAttacks(Square sq, ColorType c) const;
 
    FORCEINLINE const Bitboard queenAttacks(Square sq) const {
-     return Attacks::rookAttacks(sq,allOccupied) |
-         Attacks::bishopAttacks(sq,allOccupied);
+     return Attacks::rookAttacks(sq, allOccupied) |
+         Attacks::bishopAttacks(sq, allOccupied);
    }
 
    FORCEINLINE Bitboard fileAttacks(Square sq) const {
@@ -307,7 +307,7 @@ public:
 
    // True if moving from 'source' to 'dest' uncovers an attack by 'side' on
    // 'target'
-   int discoversAttack(Square source, Square dest, Square target, ColorType side) const;
+   int discoversAttack(Square source, Square dest, Square target, ColorType c) const;
 
    // Return true if moving a piece from "source" to "dest" would be
    // prohibited due to a pin

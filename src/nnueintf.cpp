@@ -1,4 +1,4 @@
-// Copyright 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2022 by Jon Dart. All Rights Reserved.
 #include "nnueintf.h"
 #include "search.h"
 

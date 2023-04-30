@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020-2022 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2009, 2013, 2017-8, 2020-2023 by Jon Dart.
 // All Rights Reserved.
 
 #include "notation.h"
@@ -196,9 +196,9 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
        return parseCastling(side, img);
     } else if (format == InputFormat::WB) {
        if (img.length() < 4) return NullMove;
-       Square start = SquareValue(img.substr(0,2));
+       start = SquareValue(img.substr(0,2));
        if (!OnBoard(start)) return NullMove;
-       Square dest = SquareValue(img.substr(2,2));
+       dest = SquareValue(img.substr(2,2));
        if (!OnBoard(dest)) return NullMove;
        PieceType promotion = Empty;
        if (img.length() > 4) {

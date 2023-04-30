@@ -42,7 +42,7 @@ public:
         setEffectiveHash(0,Constants::INVALID_SCORE);
     }
 
-    HashEntry(hash_t hash, score_t val, score_t staticValue, int depth,
+    HashEntry(hash_t hash, score_t value, score_t staticValue, int depth,
               ValueType type, unsigned age, uint8_t flags = 0,
               Move bestMove = NullMove) {
         assert(depth+2 >= 0 && depth+2 < 256);
@@ -52,7 +52,7 @@ public:
         contents.start = (uint8_t) StartSquare(bestMove);
         contents.dest = (uint8_t) DestSquare(bestMove);
         contents.promotion = (uint8_t) PromoteTo(bestMove);
-        contents.value = stored_score_t(val);
+        contents.value = stored_score_t(value);
         setEffectiveHash(hash,staticValue);
     }
 
