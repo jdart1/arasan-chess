@@ -1116,7 +1116,7 @@ static int testMoveGen()
           };
     };
 
-    static const std::array<Case,7> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
+    static const std::array<Case,8> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
                                                    "Qxf6 Qg7 Kh7",
                                                    "Qxf6 Qg7 Kh7",
                                                    "Qxf6 Qg7 Kh7",
@@ -1150,7 +1150,8 @@ static int testMoveGen()
              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5",
              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5 Kg6",
              "Qxd5",
-             "Qxd5 e4+")
+             "Qxd5 e4+"),
+        Case("1r2r3/8/4pP1B/ppp2p1R/n4k2/5B1P/P3PP2/6K1 b - - 0 33","Ke5","Ke5","Ke5","Ke5")
     };
 
     struct MoveKey
