@@ -85,7 +85,7 @@ public:
        return state.castleStatus[c];
    }
 
-   void setCastleStatus( CastleType t, ColorType side );
+   void setCastleStatus( CastleType t, ColorType c );
 
    // True if either side can castle
    bool castlingPossible() const
@@ -200,7 +200,7 @@ public:
    int wouldAttack(Move m,Square target) const;
 
    // Return "TRUE" if any piece of color "side" attacks "sq".
-   int anyAttacks(Square sq, ColorType side) const;
+   int anyAttacks(Square sq, ColorType c) const;
 
    inline int inCheck() const {
       return anyAttacks(kingSquare(sideToMove()),oppositeSide());
@@ -208,29 +208,29 @@ public:
 
    // Return "TRUE" if any piece of color "side" attacks "sq".
    // Also set "source" with the bit location of the attack piece.
-   int anyAttacks(Square sq, ColorType side, Bitboard &source) const;
+   int anyAttacks(Square sq, ColorType c, Bitboard &source) const;
 
    // Return a bitboard of all squares attacked by 'side'
-   Bitboard allAttacks(ColorType side) const;
+   Bitboard allAttacks(ColorType c) const;
 
    // Return a bit vector of all pieces of color "side" that attack "sq".
-   Bitboard calcAttacks(Square sq, ColorType side) const;
+   Bitboard calcAttacks(Square sq, ColorType c) const;
 
-   // Return a bit vector of all pieces of color "side" that can move to
+   // Return a bit vector of all pieces of color "c" that can move to
    // unoccupied "sq".
-   Bitboard calcBlocks(Square sq, ColorType side) const;
+   Bitboard calcBlocks(Square sq, ColorType c) const;
 
    // Return location of a piece of color "side" that attacks "square" in
    // direction "dir" (InvalidSquare if no such piece).
-   Square getDirectionalAttack(Square sq, int dir, ColorType side) const;
+   Square getDirectionalAttack(Square sq, int dir, ColorType c) const;
 
    // Return all squares attacked by pawns of color "side".
    Bitboard allPawnAttacks(ColorType c) const {
-       return allPawnAttacks(side,pawn_bits[c]);
+       return allPawnAttacks(c, pawn_bits[c]);
    }
 
    // Return all squares attacked by pawns on the specified bit board
-   Bitboard allPawnAttacks(ColorType side, Bitboard pawns) const;
+   Bitboard allPawnAttacks(ColorType c, Bitboard pawns) const;
 
    FORCEINLINE const Bitboard rookAttacks(Square sq) const {
      return Attacks::rookAttacks(sq,allOccupied);
@@ -458,11 +458,11 @@ private:
      return 0;
    }
 
-   int discAttackDiag(Square sq, Square ksq, ColorType side) const;
+   int discAttackDiag(Square sq, Square ksq, ColorType c) const;
 
-   int discAttackRankFile(Square sq, Square ksq, ColorType side) const;
+   int discAttackRankFile(Square sq, Square ksq, ColorType c) const;
 
-   int discAttack(Square sq, Square ksq, ColorType side) const;
+   int discAttack(Square sq, Square ksq, ColorType c) const;
 
 };
 

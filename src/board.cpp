@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2021, 2023 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -145,11 +145,11 @@ void Board::setSecondaryVars()
    pawnHashCodeB = BoardHash::pawnHash(*this,Black);
 }
 
-void Board::setCastleStatus( CastleType t, ColorType side )
+void Board::setCastleStatus( CastleType t, ColorType c )
 {
-   CastleType old = castleStatus(side);
-   state.castleStatus[side] = t;
-   if (side == White) {
+   CastleType old = castleStatus(c);
+   state.castleStatus[c] = t;
+   if (c == White) {
       state.hashCode ^= w_castle_status[old];
       state.hashCode ^= w_castle_status[t];
    }
@@ -1454,71 +1454,71 @@ int Board::wouldAttack(Move m,Square target) const {
   return attacks.isSet(target);
 }
 
-int Board::anyAttacks(const Square sq, ColorType side) const
+int Board::anyAttacks(const Square sq, ColorType c) const
 {
    if (sq == InvalidSquare)
       return 0;
-   if (TEST_MASK(Attacks::pawn_attacks[sq][side],pawn_bits[side])) return 1;
-   if (TEST_MASK(Attacks::knight_attacks[sq],knight_bits[side])) return 1;
-   if (Attacks::king_attacks[sq].isSet(kingSquare(side))) return 1;
-   if (TEST_MASK(rook_bits[side] | queen_bits[side],rookAttacks(sq))) return 1;
-   if (TEST_MASK(bishop_bits[side] | queen_bits[side],bishopAttacks(sq))) return 1;
+   if (TEST_MASK(Attacks::pawn_attacks[sq][c],pawn_bits[c])) return 1;
+   if (TEST_MASK(Attacks::knight_attacks[sq],knight_bits[c])) return 1;
+   if (Attacks::king_attacks[sq].isSet(kingSquare(c))) return 1;
+   if (TEST_MASK(rook_bits[c] | queen_bits[c],rookAttacks(sq))) return 1;
+   if (TEST_MASK(bishop_bits[c] | queen_bits[c],bishopAttacks(sq))) return 1;
    return 0;
 }
 
-int Board::anyAttacks(Square sq, ColorType side, Bitboard &source) const
+int Board::anyAttacks(Square sq, ColorType c, Bitboard &source) const
 {
    if (sq == InvalidSquare)
       return 0;
-   source = Bitboard(Attacks::pawn_attacks[sq][side] & pawn_bits[side]);
+   source = Bitboard(Attacks::pawn_attacks[sq][c] & pawn_bits[c]);
    if (!source.isClear()) return 1;
-   source = Bitboard(Attacks::knight_attacks[sq] & knight_bits[side]);
+   source = Bitboard(Attacks::knight_attacks[sq] & knight_bits[c]);
    if (!source.isClear()) return 1;
-   source = Bitboard((uint64_t)Attacks::king_attacks[sq] & (1ULL<<kingSquare(side)));
+   source = Bitboard((uint64_t)Attacks::king_attacks[sq] & (1ULL<<kingSquare(c)));
    if (!source.isClear()) return 1;
-   source = Bitboard((rook_bits[side] | queen_bits[side]) & rookAttacks(sq));
+   source = Bitboard((rook_bits[c] | queen_bits[c]) & rookAttacks(sq));
    if (!source.isClear()) return 1;
-   source = Bitboard((bishop_bits[side] | queen_bits[side]) & bishopAttacks(sq));
+   source = Bitboard((bishop_bits[c] | queen_bits[c]) & bishopAttacks(sq));
    return !source.isClear();
 }
 
-Bitboard Board::allAttacks(ColorType side) const
+Bitboard Board::allAttacks(ColorType c) const
 {
    Square sq;
-   Bitboard ret(allPawnAttacks(side));
-   Bitboard knights(knight_bits[side]);
+   Bitboard ret(allPawnAttacks(c));
+   Bitboard knights(knight_bits[c]);
    while (knights.iterate(sq)) ret |= Attacks::knight_attacks[sq];
-   Bitboard bishops(bishop_bits[side]);
+   Bitboard bishops(bishop_bits[c]);
    while (bishops.iterate(sq)) ret |= bishopAttacks(sq);
-   Bitboard rooks(rook_bits[side]);
+   Bitboard rooks(rook_bits[c]);
    while (rooks.iterate(sq)) ret |= rookAttacks(sq);
-   Bitboard queens(queen_bits[side]);
+   Bitboard queens(queen_bits[c]);
    while (queens.iterate(sq)) ret |= queenAttacks(sq);
-   return ret | Attacks::king_attacks[kingSquare(side)];
+   return ret | Attacks::king_attacks[kingSquare(c)];
 }
 
-Bitboard Board::calcAttacks(Square sq, ColorType side) const
+Bitboard Board::calcAttacks(Square sq, ColorType c) const
 {
    assert(sq != InvalidSquare);
 
    Bitboard retval;
 
-   retval |= (Attacks::pawn_attacks[sq][side] & pawn_bits[side]);
-   retval |= (Attacks::knight_attacks[sq] & knight_bits[side]);
-   retval |= (Attacks::king_attacks[sq] & ((uint64_t)1<<kingSquare(side)));
-   retval |= (rookAttacks(sq) & (rook_bits[side] | queen_bits[side]));
-   retval |= (bishopAttacks(sq) & (bishop_bits[side] | queen_bits[side]));
+   retval |= (Attacks::pawn_attacks[sq][c] & pawn_bits[c]);
+   retval |= (Attacks::knight_attacks[sq] & knight_bits[c]);
+   retval |= (Attacks::king_attacks[sq] & ((uint64_t)1<<kingSquare(c)));
+   retval |= (rookAttacks(sq) & (rook_bits[c] | queen_bits[c]));
+   retval |= (bishopAttacks(sq) & (bishop_bits[c] | queen_bits[c]));
 
    return retval;
 }
 
-Bitboard Board::calcBlocks(Square sq, ColorType side) const
+Bitboard Board::calcBlocks(Square sq, ColorType c) const
 {
    assert(sq != InvalidSquare);
 
    Bitboard retval;
 
-   if (side == Black)
+   if (c == Black)
    {
        Square origin = sq-8;
        if (OnBoard(origin) && contents[origin] == BlackPawn)
@@ -1537,22 +1537,22 @@ Bitboard Board::calcBlocks(Square sq, ColorType side) const
           retval.set(origin + 8);
    }
 
-   retval |= (Attacks::knight_attacks[sq] & knight_bits[side]);
-   retval |= (rookAttacks(sq) & (rook_bits[side] | queen_bits[side]));
-   retval |= (bishopAttacks(sq) & (bishop_bits[side] | queen_bits[side]));
+   retval |= (Attacks::knight_attacks[sq] & knight_bits[c]);
+   retval |= (rookAttacks(sq) & (rook_bits[c] | queen_bits[c]));
+   retval |= (bishopAttacks(sq) & (bishop_bits[c] | queen_bits[c]));
 
    return retval;
 }
 
 
-Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
+Square Board::getDirectionalAttack(Square sq, int dir, ColorType c) const {
    Square attacker;
    switch (dir)
    {
    case 1:
       attacker = Bitboard(rankAttacksRight(sq) & allOccupied).firstOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(rook_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(rook_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1562,7 +1562,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case -1:
       attacker = Bitboard(rankAttacksLeft(sq) & allOccupied).lastOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(rook_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(rook_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1572,7 +1572,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case 8:
       attacker = Bitboard(fileAttacksUp(sq) & allOccupied).firstOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(rook_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(rook_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1582,7 +1582,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case -8:
       attacker = Bitboard(fileAttacksDown(sq) & allOccupied).lastOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(rook_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(rook_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1592,7 +1592,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case 7:
       attacker = Bitboard(diagAttacksA8Upper(sq) & allOccupied).lastOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(bishop_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(bishop_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1602,7 +1602,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case -7:
       attacker = Bitboard(diagAttacksA8Lower(sq) & allOccupied).firstOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(bishop_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(bishop_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1612,7 +1612,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case 9:
       attacker = Bitboard(diagAttacksA1Upper(sq) & allOccupied).firstOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(bishop_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(bishop_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1622,7 +1622,7 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    case -9:
       attacker = Bitboard(diagAttacksA1Lower(sq) & allOccupied).lastOne();
       if (attacker == InvalidSquare ||
-          (!Bitboard(bishop_bits[side] | queen_bits[side]).isSet(attacker))) {
+          (!Bitboard(bishop_bits[c] | queen_bits[c]).isSet(attacker))) {
          return InvalidSquare;
       }
       else {
@@ -1634,9 +1634,9 @@ Square Board::getDirectionalAttack(Square sq, int dir, ColorType side) const {
    }
 }
 
-Bitboard Board::allPawnAttacks(ColorType side, Bitboard pawns) const
+Bitboard Board::allPawnAttacks(ColorType c, Bitboard pawns) const
 {
-   if (side == Black)
+   if (c == Black)
    {
       Bitboard pawns2(pawns);
       pawns.shr(7);
@@ -1656,19 +1656,19 @@ Bitboard Board::allPawnAttacks(ColorType side, Bitboard pawns) const
    }
 }
 
-const Bitboard Board::rookAttacks(Square sq,ColorType side) const {
+const Bitboard Board::rookAttacks(Square sq,ColorType c) const {
    Board &b = (Board&)*this;
-   b.allOccupied &= ~(rook_bits[side] | queen_bits[side]);
+   b.allOccupied &= ~(rook_bits[c] | queen_bits[c]);
    Bitboard attacks(rookAttacks(sq));
-   b.allOccupied |= (rook_bits[side] | queen_bits[side]);
+   b.allOccupied |= (rook_bits[c] | queen_bits[c]);
    return attacks;
 }
 
-const Bitboard Board::bishopAttacks(Square sq,ColorType side) const {
+const Bitboard Board::bishopAttacks(Square sq,ColorType c) const {
    Board &b = (Board&)*this;
-   b.allOccupied &= ~(queen_bits[side] | bishop_bits[side]);
+   b.allOccupied &= ~(queen_bits[c] | bishop_bits[c]);
    Bitboard attacks(bishopAttacks(sq));
-   b.allOccupied |= (queen_bits[side] | bishop_bits[side]);
+   b.allOccupied |= (queen_bits[c] | bishop_bits[c]);
    return attacks;
 }
 
@@ -1964,7 +1964,7 @@ int Board::wasLegal(Move lastMove, bool evasion) const {
 
 // True if moving from 'source' to 'dest' uncovers an attack by 'side' on
 // 'target'
-int Board::discoversAttack(Square source, Square dest, Square target, ColorType side) const
+int Board::discoversAttack(Square source, Square dest, Square target, ColorType c) const
 {
    assert(OnBoard(source));
    assert(OnBoard(dest));
@@ -1978,7 +1978,7 @@ int Board::discoversAttack(Square source, Square dest, Square target, ColorType 
    if (std::abs(dir) == std::abs(dir2) ||
        (Attacks::betweenSquares[source][target] & allOccupied)) return 0;
 
-   Square attackSq = getDirectionalAttack(source,-dir,side);
+   Square attackSq = getDirectionalAttack(source,-dir,c);
    if (attackSq != InvalidSquare ) {
       // pinned if path is clear from attackSq to source
       return Bitboard(Attacks::betweenSquares[attackSq][source] & allOccupied).isClear();
@@ -1998,11 +1998,11 @@ int Board::repCount(int target) const noexcept
     if (entries <= 0) return 0;
     hash_t to_match = hashCode();
     int count = 0;
-    for (hash_t *repList=repListHead-3;
+    for (hash_t *r=repListHead-3;
        entries>=0;
-       repList-=2,entries-=2)
+       r-=2,entries-=2)
     {
-      if (*repList == to_match)
+      if (*r == to_match)
       {
          count++;
          if (count >= target)
@@ -2021,10 +2021,10 @@ bool Board::anyRep() const noexcept
    // hash codes cannot match:
    if (entries < 3) return 0;
    std::unordered_set<hash_t> codes;
-   for (hash_t *repList=repListHead-1;
+   for (hash_t *r=repListHead-1;
       entries>0;
-      repList--,entries--) {
-      if (!codes.emplace(*repList).second) {
+      r--,entries--) {
+      if (!codes.emplace(*r).second) {
          return 1;
       }
    }
@@ -2161,10 +2161,10 @@ std::ostream & operator << (std::ostream &o, const Board &board)
    return o;
 }
 
-int Board::discAttackDiag(Square sq, Square ksq, ColorType side) const {
+int Board::discAttackDiag(Square sq, Square ksq, ColorType c) const {
     Bitboard mask(Attacks::diag_mask[ksq]);
     if (mask.isSet(sq)) {
-        Bitboard attackers((bishop_bits[side] | queen_bits[side]) & mask);
+        Bitboard attackers((bishop_bits[c] | queen_bits[c]) & mask);
         Square attacker;
         while (attackers.iterate(attacker)) {
             if (clear(attacker,ksq)) {
@@ -2175,10 +2175,10 @@ int Board::discAttackDiag(Square sq, Square ksq, ColorType side) const {
     return 0;
 }
 
-int Board::discAttackRankFile(Square sq, Square ksq, ColorType side) const {
+int Board::discAttackRankFile(Square sq, Square ksq, ColorType c) const {
     Bitboard mask(Attacks::rank_file_mask[ksq]);
     if (mask.isSet(sq)) {
-        Bitboard attackers((rook_bits[side] | queen_bits[side]) & mask);
+        Bitboard attackers((rook_bits[c] | queen_bits[c]) & mask);
         Square attacker;
         while (attackers.iterate(attacker)) {
             if (clear(attacker,ksq)) {
@@ -2189,7 +2189,7 @@ int Board::discAttackRankFile(Square sq, Square ksq, ColorType side) const {
     return 0;
 }
 
-int Board::discAttack(Square sq, Square ksq, ColorType side) const {
-    return discAttackRankFile(sq, ksq, side) ||
-        discAttackDiag(sq,ksq,side);
+int Board::discAttack(Square sq, Square ksq, ColorType c) const {
+    return discAttackRankFile(sq, ksq, c) ||
+        discAttackDiag(sq,ksq,c);
 }
