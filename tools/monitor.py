@@ -107,7 +107,7 @@ def main(argv = None):
 
     class Options:
         number = 25000
-        poll = 180
+        poll = 90
         elo = False
 
     options = Options()

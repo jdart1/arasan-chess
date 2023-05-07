@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright 2020 by Jon Dart. All Rights Reserved.
+# Copyright 2020, 2023 by Jon Dart. All Rights Reserved.
 # Released under the MIT license: see doc/license.txt
 #
-import json, os, sys
+import argparse, json, os, sys
 from executor.ssh.client import RemoteCommand
 
 # Sets up a match using multiple machine resources
@@ -13,9 +13,21 @@ from executor.ssh.client import RemoteCommand
 # equalling nominal time control. Equivalent to 1-core performance
 # on a Xeon 2690v3.
 NPS_BASE = 1.33
-# command to run matches on a single machine, local or remote
 REMOTE_MATCH_DIR = "/home/jdart/chess/cutechess-cli"
+# command to run matches on a single machine, local or remote
+# arguments to match command: base engine (in cutechess config file), test engine, games, tc, cores
 REMOTE_MATCH_CMD = "/home/jdart/chess/cutechess-cli/match-sprt"
+
+DEFAULT_BASE_ENGINE="Arasan-Base"
+DEFAULT_TEST_ENGINE="Arasan-Test"
+
+class Options:
+   base_engine = DEFAULT_BASE_ENGINE
+   test_engine = DEFAULT_TEST_ENGINE
+   games = 20000
+   time_control = "1:0+0.8"
+
+options = Options()
 
 def scaleTime(timeStr,factor):
     if (timeStr.find(':')==-1):
@@ -41,14 +53,17 @@ def scaleTC(tc,factor):
 
 def main(argv = None):
     
-    global NPS_BASE, REMOTE_MATCH_CMD, REMOTE_MATCH_DIR
+    global options, NPS_BASE, REMOTE_MATCH_CMD, REMOTE_MATCH_DIR
 
     if argv is None:
         argv = sys.argv[1:]
 
-    if (len(argv) < 2):
-        print("syntax: match <time control> <games>",file=sys.stderr)
-        exit(1)
+    parser = argparse.ArgumentParser(description="run matches across multiple machines")
+    parser.add_argument("-b", "--base_engine", type=str,help="engine to compare against")
+    parser.add_argument("-g", "--games", type=int,help="max number of games to play")
+    parser.add_argument("-t", "--test_engine", type=str,help="engine to test")
+    parser.add_argument("-tc", "--time_control", type=str, help="nominal time control")
+    parser.parse_args(namespace=options)
 
     try:
         with open('machines.json', 'r') as machineFile:
@@ -66,9 +81,6 @@ def main(argv = None):
         print("failed to parse machine file",file=sys.stderr)
         exit(1)
 
-    games = argv[0]
-    tc = argv[1]
-
     # start the matches
     for machine in machineList:
         try:
@@ -80,15 +92,16 @@ def main(argv = None):
             continue
         # Parse and scale time control
         factor = float(NPS_BASE)/nps
-        new_tc = scaleTC(tc,factor)
+        new_tc = scaleTC(options.time_control, factor)
         # execute the remote or local match script
+        cmd_string = ""
         try:
-            cmd = REMOTE_MATCH_CMD + ' ' + str(games) + ' ' + new_tc + ' ' + str(cores)
+            cmd_string = REMOTE_MATCH_CMD + ' ' + options.base_engine + ' ' + options.test_engine + ' ' + str(options.games) + ' ' + new_tc + ' ' + str(cores)
             print("starting : host=%s tc=%s" % (host,new_tc))
-            cmd = RemoteCommand(host,cmd,capture=True,directory=REMOTE_MATCH_DIR)
+            cmd = RemoteCommand(host,cmd_string,capture=True,directory=REMOTE_MATCH_DIR)
             cmd.start()
         except:
-            print("error starting command " + cmd,file=sys.stderr)
+            print("error starting command " + cmd_string,file=sys.stderr)
             traceback.print_tb(tb, limit=None, file=None)
             return 2
 
