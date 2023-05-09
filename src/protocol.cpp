@@ -542,8 +542,8 @@ void Protocol::save_game() {
    if (doTrace) std::cout << debugPrefix << "out of save_game" << std::endl;
 }
 
-void Protocol::move_image(const Board &board, Move m, std::ostream &buf, bool uci) {
-    Notation::image(board,m,uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::WB,buf);
+void Protocol::move_image(const Board &board, Move m, std::ostream &buf, bool is_uci) {
+    Notation::image(board,m,is_uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::WB,buf);
 }
 
 void Protocol::uciOut(int depth, score_t score, time_t time,

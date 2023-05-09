@@ -223,17 +223,18 @@ void SearchController::terminateNow() {
 Move SearchController::findBestMove(
    const Board &board,
    SearchType srcType,
-   int time_limit,
-   int xtra_time,
-   int ply_limit,
-   bool background,
+   int search_time_limit,
+   int search_xtra_time,
+   int search_ply_limit,
+   bool isBackground,
    bool isUCI,
    Statistics &stat_buf,
    TalkLevel t)
 {
     MoveSet excludes, includes;
-    Move result = findBestMove(board,srcType,time_limit,xtra_time,ply_limit,
-                               background, isUCI, stat_buf, t, excludes, includes);
+    Move result = findBestMove(board, srcType, search_time_limit, search_xtra_time,
+                               search_ply_limit, isBackground, isUCI, stat_buf, t,
+                               excludes, includes);
     return result;
 }
 
@@ -569,18 +570,18 @@ Move SearchController::findBestMove(
 
 void SearchController::rankMoves(
         const Board &board,
-        int ply_limit,
+        int search_ply_limit,
         std::vector<RootMove> &mr) {
-    Statistics stats;
+    Statistics s;
     MoveSet includes,excludes;
 
     (void) findBestMove(board,FixedDepth,
                         Constants::INFINITE_TIME,
                         0,
-                        ply_limit,
+                        search_ply_limit,
                         true,
                         false,
-                        stats,
+                        s,
                         TalkLevel::Silent,
                         includes,
                         excludes,
@@ -595,8 +596,8 @@ void SearchController::setContempt(score_t c)
     pool->forEachSearch<&Search::setContemptFromController>();
 }
 
-void SearchController::setThreadCount(int threads) {
-   pool->resize(threads);
+void SearchController::setThreadCount(int count) {
+   pool->resize(count);
 }
 
 void SearchController::clearHashTables()
@@ -803,7 +804,7 @@ int Search::checkTime() {
     return val;
 }
 
-void Search::showStatus(const Board &board, Move best, bool faillow,
+void Search::showStatus(const Board &b, Move best, bool faillow,
 bool failhigh)
 {
     int ply = stats.depth;
@@ -820,7 +821,7 @@ bool failhigh)
             std::cout << " --";
         }
         else if (best != NullMove) {
-            Notation::image(board, best, Notation::OutputFormat::SAN,std::cout);
+            Notation::image(b, best, Notation::OutputFormat::SAN,std::cout);
             if (failhigh) std::cout << '!';
         }
         std::cout << '\t';
@@ -836,12 +837,12 @@ bool failhigh)
     }
 }
 
-score_t Search::drawScore(const Board & board) const {
-    return controller->drawScore(board,&stats);
+score_t Search::drawScore(const Board & b) const {
+    return controller->drawScore(b, &stats);
 }
 
 #ifdef SYZYGY_TBS
-score_t Search::tbScoreAdjust(const Board &board,
+score_t Search::tbScoreAdjust(const Board &b,
                     score_t value,int tb_hit,score_t tb_score) const
 {
 #ifdef _TRACE
@@ -859,7 +860,7 @@ score_t Search::tbScoreAdjust(const Board &board,
           output = tb_score;
       }
       else if (tb_score == 0 || std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
-         output = drawScore(board);
+         output = drawScore(b);
       }
       else if (tb_score == -Constants::TABLEBASE_WIN) {
          // loss
@@ -923,7 +924,7 @@ void Search::setTalkLevelFromController() {
    talkLevel = controller->talkLevel;
 }
 
-void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth,
+void Search::updateStats(const Board &b, NodeInfo *node, int iteration_depth,
                          score_t score)
 {
     assert(stats.multipv_count < Statistics::MAX_PV);
@@ -934,7 +935,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     // Correct if necessary the display value, used for score
     // output and resign decisions, based on the tb information:
     if (stats.tb_value != Constants::INVALID_SCORE) {
-       stats.display_value = tbScoreAdjust(board,
+       stats.display_value = tbScoreAdjust(b,
                                            stats.value,
                                            1,
                                            stats.tb_value);
@@ -955,7 +956,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
     }
     node->best = node->pv[0];                     // ensure "best" is non-null
     assert(!IsNull(node->best));
-    Board board_copy(board);
+    Board board_copy(b);
     stats.best_line[0] = NullMove;
     int i = 0;
     stats.best_line_image.clear();
@@ -985,7 +986,7 @@ void Search::updateStats(const Board &board, NodeInfo *node, int iteration_depth
           // (for pondering)
           HashEntry entry;
           HashEntry::ValueType result =
-              controller->hashTable.searchHash(board_copy.hashCode(board.repCount(2)),
+              controller->hashTable.searchHash(board_copy.hashCode(b.repCount(2)),
                                                age,
                                                iteration_depth,entry);
           if (result != HashEntry::NoHit) {
@@ -2979,8 +2980,8 @@ score_t Search::search()
 #ifdef NNUE
                 node->clearNNUEState();
 #endif
-                score_t result = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
-                if (result < nu_beta) {
+                score_t singularResult = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
+                if (singularResult < nu_beta) {
 #ifdef _TRACE
                     if (mainThread()) {
                         indent(ply); std::cout << "singular extension" << std::endl;
@@ -3005,8 +3006,8 @@ score_t Search::search()
 #ifdef NON_SINGULAR_PRUNING
                 }
                 else if (hashValue >= node->beta) {
-                    result = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,hashMove);
-                    if (result >= node->beta) {
+                    score_t score = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,hashMove);
+                    if (score >= node->beta) {
                         // Another pruning idea from Stockfish: prune if the search is >= beta
                         // (note however current Stockfish reduces rather than prunes)
 #ifdef _TRACE

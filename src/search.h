@@ -316,8 +316,8 @@ protected:
 
     score_t evalu8(const Board &board);
 
-    bool maxDepth(const NodeInfo *node) const noexcept {
-        return node->ply >= Constants::MaxPly-1;
+    bool maxDepth(const NodeInfo *n) const noexcept {
+        return n->ply >= Constants::MaxPly-1;
     }
 
     SearchController *controller;
@@ -494,7 +494,7 @@ public:
 
     Hash hashTable;
 
-    score_t drawScore(const Board &board, const Statistics *stats = nullptr) {
+    score_t drawScore(const Board &board, const Statistics *s = nullptr) {
       // if we know the opponent's rating (which will be the case if playing
       // on ICC in xboard mode), or if the user has set a contempt value
       // (in UCI mode), factor that into the draw score - a draw against
@@ -502,7 +502,7 @@ public:
       // Add semi-random component to score to avoid 3-move rep blindness
       // (idea from Stockfish)
       score_t score = 0;
-      if (stats) score += (stats->num_nodes % 2) - 1;
+      if (s) score += (s->num_nodes % 2) - 1;
       if (contempt) {
          if (board.sideToMove() == computerSide)
             score -= contempt;

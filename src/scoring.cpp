@@ -1,4 +1,4 @@
-// Copyright 1994-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021, 2023 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -126,7 +126,7 @@ template<ColorType side> void Scoring::initProximity(Square i) {
 }
 
 void Scoring::initBitboards() {
-   int i, r;
+    int i, r, x;
 
    for(i = 0; i < 64; i++) {
       initProximity<White>(i);
@@ -183,7 +183,6 @@ void Scoring::initBitboards() {
       }
    }
 
-   int x;
    for(x = 1; x < 8; x++) {
       for(int y = x - 1; y >= 0; y--) left_side_mask[x] |= Attacks::file_mask[y];
    }
@@ -199,7 +198,7 @@ void Scoring::initBitboards() {
    uint8_t right_mask[8];
    uint8_t left_mask[8];
    last_bit[0] = 0;
-   for(int i = 1; i < 256; i++) {
+   for(i = 1; i < 256; i++) {
       Bitboard b(i);
       first_bit[i] = b.firstOne();
       for(int j = 7; j >= 0; j--) {
@@ -210,7 +209,7 @@ void Scoring::initBitboards() {
       }
    }
 
-   for(int i = 0; i < 8; i++) {
+   for(i = 0; i < 8; i++) {
       near_left[i] = near_right[i] = 0;
       right_mask[i] = left_mask[i] = 0;
       if (i > 0) near_left[i] |= 1 << (i - 1);
@@ -237,7 +236,7 @@ void Scoring::initBitboards() {
    // outside passed pawn table (like Crafty). first index is
    // passed pawn mask, 2nd is all pawn mask
    memset(is_outside, '\0', 256 * 256);
-   for(int i = 1; i < 256; i++) {
+   for(i = 1; i < 256; i++) {
       int first_passer, last_passer;
 
       first_passer = first_bit[(int) i];
@@ -428,7 +427,6 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
         break;
     }
     if (ourmat.materialLevel() < 16) {
-        const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
         if (pieceDiff > 0) {
             // encourage trading pieces but not pawns.
             score_t adj = 0;
@@ -561,9 +559,9 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       }
       else {
          pawn = pawns.firstOne();
-         const int rank = Rank(pawn,side);
-         assert(rank >= 2);
-         const int rank_dist = std::min<int>(3,rank - 2);
+         const int prank = Rank(pawn,side);
+         assert(prank >= 2);
+         const int rank_dist = std::min<int>(3,prank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
          counts[rank_dist][f]++;
@@ -1208,7 +1206,6 @@ void Scoring::positionalScore(const Board &board,
          if (minorProx>2) minorProx -= (minorProx-2)/2;
          int rookProx = Bitboard(nearKing & board.rook_bits[oside]).bitCountOpt();
          Bitboard qbits(board.queen_bits[oside]);
-         Square sq;
          int queenProx = 0;
          while (qbits.iterate(sq)) {
             queenProx += 4-distance(okp,sq);
@@ -1310,7 +1307,6 @@ void Scoring::threatScore(const Board &board,
         pawns.shl8();
         // exclude promotions
         pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
-        Square sq;
         Bitboard pawns2(pawns & Attacks::rank_mask[1]);
         while (pawns2.iterate(sq)) {
             if (board[sq+8] == EmptyPiece)
@@ -1322,7 +1318,6 @@ void Scoring::threatScore(const Board &board,
         pawns.shr8();
         // exclude promotions
         pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
-        Square sq;
         Bitboard pawns2(pawns & Attacks::rank_mask[6]);
         while (pawns2.iterate(sq)) {
             if (board[sq-8] == EmptyPiece)

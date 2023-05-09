@@ -96,7 +96,7 @@ private:
     void do_help();
 
     // Format and output a move in the right format (UCI/Winboard)
-    void move_image(const Board &board, Move m, std::ostream &buf, bool uci);
+    void move_image(const Board &board, Move m, std::ostream &buf, bool is_uci);
 
     // output status for UCI ("info" output)
     void uciOut(int depth, score_t score, time_t time,

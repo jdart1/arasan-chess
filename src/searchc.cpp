@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2017-2021 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2017-2021, 2023 by Jon Dart. All Rights Reserved.
 
 #include "searchc.h"
 #include "search.h"
@@ -116,7 +116,7 @@ void SearchContext::updateMove(const Board &board, NodeInfo *node, Move m,
                    b, HISTORY_DIVISOR, positive);
         }
         if (node->ply > 1) {
-            Move lastMove = (node - 2)->last_move;
+            lastMove = (node - 2)->last_move;
             if (!IsNull(lastMove)) {
                 update((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(
                            lastMove)][PieceMoved(m)][DestSquare(m)],

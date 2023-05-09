@@ -200,7 +200,7 @@ Move Notation::value(const Board & board, ColorType side, InputFormat format, co
        if (!OnBoard(start)) return NullMove;
        dest = SquareValue(img.substr(2,2));
        if (!OnBoard(dest)) return NullMove;
-       PieceType promotion = Empty;
+       promotion = Empty;
        if (img.length() > 4) {
           promotion = PieceCharValue(toupper(img[4]));
        }
