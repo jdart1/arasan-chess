@@ -2200,7 +2200,9 @@ score_t Search::quiesce(int ply,int depth)
    //   if (!(node->best_score >= Constants::MATE_RANGE) && node->best_score <= node->alpha) {
    //       storeHash(hash,node->best,tt_depth);
    //   }
-   if (node->inBounds(node->best_score)) {
+
+   // Update PV only at the first level of quiesce()
+   if (depth == 0 && node->inBounds(node->best_score)) {
        if (!IsNull(node->best)) {
            updatePV(board,node->best,ply);
        }
