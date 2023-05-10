@@ -521,7 +521,7 @@ static void selfplay(ThreadData &td) {
                                 for (auto it = mra.begin()+1; it != new_end; ++it) {
                                     assert((*it).score <= best);
                                     assert((*it).score >= best - sp_options.randomTolerance);
-                                    if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                                    if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
                                     candidates[i++] = (*it).move;
                                 }
                                 assert(i);
@@ -531,7 +531,7 @@ static void selfplay(ThreadData &td) {
                             while (!IsNull(m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
                                 assert(j<Constants::MaxMoves);
                                 all[j++] = m;
-                                if (!inCheck && !IsCastling(m) &&& sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
+                                if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves && PieceMoved(m) == King) continue;
                                 assert(i<Constants::MaxMoves);
                                 candidates[i++] = m;
                             }
