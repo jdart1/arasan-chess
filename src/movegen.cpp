@@ -1,4 +1,4 @@
-// Copyright 1994-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2023 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -26,11 +26,11 @@ static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
    std::swap(scores[i],scores[j]);
 }
 
-RootMoveGenerator::RootMoveGenerator(const Board &board,
+RootMoveGenerator::RootMoveGenerator(const Board &b,
                                      SearchContext *s,
                                      Move pvMove,
                                      int trace)
-    : MoveGenerator(board,s,nullptr,0,pvMove,trace),
+    : MoveGenerator(b,s,nullptr,0,pvMove,trace),
      excluded(0)
 {
    batch = moves;
@@ -40,10 +40,10 @@ RootMoveGenerator::RootMoveGenerator(const Board &board,
       moveList.push_back(me);
    }
    int j = batch_count;
-   if (board.checkStatus() != InCheck) {
+   if (b.checkStatus() != InCheck) {
       // exclude illegal moves
-      const BoardState state(board.state);
-      Board tmp(board);
+      const BoardState state(b.state);
+      Board tmp(b);
       j = 0;
       for (int i=0; i<batch_count; i++) {
          Move move = moveList[i].move;
@@ -157,11 +157,11 @@ void RootMoveGenerator::reorderByScore() {
       );
 }
 
-void RootMoveGenerator::exclude(const MoveSet &excluded)
+void RootMoveGenerator::exclude(const MoveSet &to_exclude)
 {
    for (int i = 0; i < batch_count; i++) {
       ClearUsed(moveList[i].move);
-      if (excluded.find(moveList[i].move) != excluded.end()) {
+      if (to_exclude.find(moveList[i].move) != to_exclude.end()) {
          SetUsed(moveList[i].move);
       }
    }
@@ -273,10 +273,11 @@ Move MoveGenerator::nextEvasion(int &ord) {
 }
 
 
-int MoveGenerator::getBatch(Move *&batch,int &index)
+int MoveGenerator::getBatch(Move *&moveList, int &idx)
 {
    int numMoves  = 0;
-   batch = moves;
+   // by default, moves are generated into the class's moves array
+   moveList = moves;
    while(numMoves == 0 && phase<LOSERS_PHASE) {
       phase++;
 #ifdef _TRACE
@@ -297,7 +298,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   std::cout << std::endl;
                }
 #endif
-               index = 0;
+               idx = 0;
                numMoves = 1;
             }
             break;
@@ -306,7 +307,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
          {
             numMoves = mg::generateCaptures(board,moves,ply==0);
             mg::initialSortCaptures(moves,numMoves);
-            index = 0;
+            idx = 0;
             break;
          }
          case KILLER1_PHASE:
@@ -317,7 +318,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                if (validMove(board,killer1)) {
                   SetPhase(killer1,KILLER1_PHASE);
                   moves[numMoves++] = killer1;
-                  index = 0;
+                  idx = 0;
                }
             }
          }
@@ -329,7 +330,7 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                if (validMove(board,killer2)) {
                   SetPhase(killer2,KILLER2_PHASE);
                   moves[numMoves++] = killer2;
-                  index = 0;
+                  idx = 0;
                }
             }
          }
@@ -369,16 +370,17 @@ int MoveGenerator::getBatch(Move *&batch,int &index)
                   mg::sortMoves(moves,scores,numMoves);
                }
             }
-            index = 0;
+            idx = 0;
             break;
          }
          case LOSERS_PHASE:
          {
             if (losers_count) {
-               batch = losers;
+                // losers were previously stored into separate array, point to that
+                moveList = losers;
             }
             numMoves = losers_count;
-            index = 0;
+            idx = 0;
             break;
          }
          default:
@@ -408,22 +410,22 @@ MoveGenerator::MoveGenerator( const Board &ABoard,
 {
 }
 
-unsigned MoveGenerator::generateAllMoves(Move *moves,int repeatable)
+unsigned MoveGenerator::generateAllMoves(Move *moveList,int repeatable)
 {
    unsigned numMoves  = 0;
    if (board.checkStatus() == InCheck) {
        info.init(board);
-       numMoves = mg::generateEvasions(board, info, moves);
+       numMoves = mg::generateEvasions(board, info, moveList);
    }
    else {
-      numMoves += mg::generateCaptures(board,moves+numMoves,ply==0);
-      numMoves += mg::generateNonCaptures(board,moves+numMoves);
+      numMoves += mg::generateCaptures(board,moveList+numMoves,ply==0);
+      numMoves += mg::generateNonCaptures(board,moveList+numMoves);
    }
    if (repeatable) {
       int scores[Constants::MaxMoves];
       for (unsigned i = 0; i < numMoves; i++) {
-         scores[i] = (int)StartSquare(moves[i]) + (int)(DestSquare(moves[i]) << 7);
-         switch (PromoteTo(moves[i])) {
+         scores[i] = (int)StartSquare(moveList[i]) + (int)(DestSquare(moveList[i]) << 7);
+         switch (PromoteTo(moveList[i])) {
             case Queen:
                scores[i] &= 0xB000;
                break;
@@ -437,7 +439,7 @@ unsigned MoveGenerator::generateAllMoves(Move *moves,int repeatable)
                break;
          }
       }
-      mg::sortMoves(moves, scores, numMoves);
+      mg::sortMoves(moveList, scores, numMoves);
    }
    return numMoves;
 }
@@ -529,7 +531,7 @@ unsigned mg::generateNonCaptures(const Board &board, Move *moves)
             Empty, QCastle);
    }
    // non-pawn moves:
-   Square start,dest;
+   Square start, dest;
    Bitboard dests;
    Bitboard knights(board.knight_bits[side]);
    while (knights.iterate(start)) {
@@ -548,7 +550,7 @@ unsigned mg::generateNonCaptures(const Board &board, Move *moves)
    }
    Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
    while (bishops.iterate(start)) {
-      Bitboard dests(board.bishopAttacks(start) & ~board.allOccupied);
+      dests = (board.bishopAttacks(start) & ~board.allOccupied);
       while (dests.iterate(dest)) {
          moves[numMoves++] =
             CreateMove(start,dest,TypeOfPiece(board[start]));
@@ -556,7 +558,7 @@ unsigned mg::generateNonCaptures(const Board &board, Move *moves)
    }
    Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
    while (rooks.iterate(start)) {
-      Bitboard dests(board.rookAttacks(start) & ~board.allOccupied);
+      dests = (board.rookAttacks(start) & ~board.allOccupied);
       while (dests.iterate(dest)) {
           moves[numMoves++] =
             CreateMove(start,dest,TypeOfPiece(board[start]));
@@ -778,7 +780,6 @@ unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotio
    Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
    while (bishops.iterate(start)) {
       Bitboard dests(board.bishopAttacks(start) & targets);
-      Square dest;
       while (dests.iterate(dest)) {
          moves[numMoves++] =
            CreateMove(start,dest,TypeOfPiece(board[start]),TypeOfPiece(board[dest]));
@@ -787,7 +788,6 @@ unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotio
    Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
    while (rooks.iterate(start)) {
       Bitboard dests(board.rookAttacks(start) & targets);
-      Square dest;
       while (dests.iterate(dest)) {
           moves[numMoves++] =
              CreateMove(start,dest,

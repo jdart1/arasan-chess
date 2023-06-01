@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2021, 2023 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -132,18 +132,18 @@ class MoveGenerator
       // Generate the next check evasion, NullMove if none left
       virtual Move nextEvasion(int &order);
 
-      // fill array "moves" with moves, starting at "index", returns
-      // # of moves (0 if no more). This tries to generate moves in stages,
-      // so it should be called repeatedly until the return value is zero.
+      // fill array "moveList" with moves. Returns # of moves (0 if no more).
+      // This tries to generate moves in stages, so it should be called
+      // repeatedly until the return value is zero.
       //
       // The moves returned are generally "pseudo-legal", i.e. they may
-      // involve moves into check.  However, if the side to move is in
+      // involve moves into check. However, if the side to move is in
       // check, then all moves returned are strictly legal.
       //
-      unsigned generateAllMoves(Move *moves,int repeatable);
+      unsigned generateAllMoves(Move *moveList, int repeatable);
 
       // Return a list of the moves that may be used to escape
-      // check.  Unlike the regular move generation routine, all
+      // check. Unlike the regular move generation routine, all
       // moves are checked for legality.
       //
       unsigned generateEvasions(Move * moves);
@@ -177,7 +177,9 @@ class MoveGenerator
 
    protected:
 
-      int getBatch(Move *&batch,int &index);
+      // Incrementally generate a batch of moves, update "idx" with the count
+      // of moves generated, plus return a pointer to the moves.
+      int getBatch(Move *&moveList, int &idx);
 
       const Board &board;
       SearchContext *context;

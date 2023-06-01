@@ -1,4 +1,4 @@
-// Copyright 2013-2019, 2021-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 2013-2019, 2021-2023 by Jon Dart.  All Rights Reserved.
 
 // Unit tests for Arasan
 
@@ -1174,7 +1174,7 @@ static int testMoveGen()
             ++errs;
         }
         else {
-            std::array<std::vector<MoveKey>,4> correct;
+            std::array<std::vector<MoveKey>,4> expected;
 
             auto parseMoves = [&casenum, &board, &errs] (const std::string &moves, std::vector<MoveKey> &out) {
                 std::stringstream s(moves);
@@ -1192,12 +1192,12 @@ static int testMoveGen()
             };
 
             for (int i = 0; i < 4; i++) {
-                parseMoves(c.moves[i],correct[i]);
+                parseMoves(c.moves[i],expected[i]);
             }
             auto doMg = [&casenum, &board, &errs] (MoveGenerator &mg, std::vector<MoveKey> &correct, MgType type)
                 {
-                    for (auto &c : correct) {
-                        c.generated = false;
+                    for (auto &x : correct) {
+                        x.generated = false;
                     }
                     Move gen;
                     int order = 0;
@@ -1269,15 +1269,15 @@ static int testMoveGen()
 
             RootMoveGenerator rmg(board);
 
-            doMg(rmg,correct[0],Root);
+            doMg(rmg,expected[0],Root);
 
             MoveGenerator mg(board,nullptr,nullptr,1);
 
-            doMg(mg,correct[1],Standard);
+            doMg(mg,expected[1],Standard);
 
-            doMg(mg,correct[2],QsNoCheck);
+            doMg(mg,expected[2],QsNoCheck);
 
-            doMg(mg,correct[3],QsCheck);
+            doMg(mg,expected[3],QsCheck);
         }
     }
     return errs;
@@ -1566,8 +1566,7 @@ static int testTB()
       if (std::regex_match(it->fen,match,count_pattern)) {
           auto pos = it->fen.find_last_of('-');
           if (pos != std::string::npos) {
-              auto it = match.begin()+1;
-              std::stringstream s(*it);
+              std::stringstream s(*(match.begin()+1));
               int hmc;
               s >> hmc;
               if (!s.bad()) {
