@@ -1,5 +1,5 @@
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2022 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2023 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
@@ -43,7 +43,7 @@ private:
     static const char * UCI_DEBUG_PREFIX;
     static const char * CECP_DEBUG_PREFIX;
 
-    enum class PendingStatus { Nothing, GameEnd, Move };
+    enum class PendingStatus { Nothing, GameEnd, UserMove };
 
     bool popPending(std::string &cmd) {
         std::unique_lock<std::mutex> lock(inputMtx);
@@ -72,9 +72,6 @@ private:
     // Check for user move, resign or result in pending stack.
     // If found, return status and do not dequeue command.
     PendingStatus check_pending(Board &board);
-
-    // handle Winboard "level" command
-    void parseLevel(const std::string &cmd, int &moves, float &minutes, int &incr);
 
     // respond to a Winboard "ping" command
     void sendPong(const std::string &arg);

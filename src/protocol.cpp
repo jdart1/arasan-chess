@@ -1,4 +1,4 @@
-// Copyright 1997-2022 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2023 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -43,6 +43,64 @@ using namespace std::placeholders;
 
 const char * Protocol::UCI_DEBUG_PREFIX = "info ";
 const char * Protocol::CECP_DEBUG_PREFIX = "# ";
+
+// handle CECP "level" command. Return true if parsed ok, false if error.
+static bool parseLevel(const std::string &cmd, int &moveCount, float &minutes, int &incr)
+{
+    // not exact for decimal values, so must still check for validity
+    const auto pattern = std::regex("^(\\d+)\\s+(\\d+)(\\:([\\d\\.]+))?\\s+([\\d\\.]+)$");
+
+    std::smatch match;
+    std::string movesStr, minutesStr, secondsStr, incStr;
+    if (std::regex_match(cmd,match,pattern)) {
+        // first result is the whole string matched
+        auto it = match.begin()+1;
+        movesStr = *it++;
+        minutesStr = *it++;
+        if (match.size() > 4) {
+            it++; // outer group
+            secondsStr = *it++; // inner group has seconds
+        }
+        incStr = *it;
+    } else {
+        return false;
+    }
+
+    float time1, time2, floatincr;
+
+    std::stringstream nums(minutesStr);
+    nums >> time1;
+    if (nums.bad()) {
+       return false;
+    }
+    else if (secondsStr.size()) {
+        std::stringstream nums2(secondsStr);
+        nums2 >> time2;
+        if (nums2.bad()) {
+            return false;
+        } else {
+            minutes = time1 + time2/60;
+        }
+    } else {
+        minutes = time1;
+    }
+    std::stringstream movesStream(movesStr);
+    movesStream >> moveCount;
+    if (movesStream.bad()) {
+        return false;
+    }
+
+    std::stringstream incStream(incStr);
+    incStream >> floatincr;
+    if (incStream.bad()) {
+        return false;
+    } else {
+        // Winboard increment is in seconds, convert to our
+        // internal value (milliseconds).
+        incr = int(1000*floatincr);
+    }
+    return true;
+}
 
 Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set, bool memory_set)
     : verbose(false),
@@ -236,7 +294,7 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
             }
             else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
                 if (doTrace) std::cout << debugPrefix << "move in pending stack" << std::endl;
-                retVal = PendingStatus::Move;
+                retVal = PendingStatus::UserMove;
                 break;
             }
             else {
@@ -252,66 +310,6 @@ Protocol::PendingStatus Protocol::check_pending(Board &board) {
         do_command(cmd,board);
     }
     return retVal;
-}
-
-void Protocol::parseLevel(const std::string &cmd, int &moves, float &minutes, int &incr)
-{
-    // not exact for decimal values, so must still check for validity
-    const auto pattern = std::regex("^(\\d+)\\s+(\\d+)(\\:([\\d\\.]+))?\\s+([\\d\\.]+)$");
-
-    std::smatch match;
-    std::string movesStr, minutesStr, secondsStr, incStr;
-    if (std::regex_match(cmd,match,pattern)) {
-        // first result is the whole string matched
-        auto it = match.begin()+1;
-        movesStr = *it++;
-        minutesStr = *it++;
-        if (match.size() > 4) {
-            it++; // outer group
-            secondsStr = *it++; // inner group has seconds
-        }
-        incStr = *it;
-    } else {
-        std::cerr << "error parsing level command." << std::endl;
-        return;
-    }
-
-    float time1, time2, floatincr;
-
-    std::stringstream nums(minutesStr);
-    nums >> time1;
-    if (nums.bad()) {
-       std::cerr << "error in time field" << std::endl;
-       return;
-    }
-    else if (secondsStr.size()) {
-        std::stringstream nums2(secondsStr);
-        nums2 >> time2;
-        if (nums2.bad()) {
-            std::cerr << "error in time field" << std::endl;
-            return;
-        } else {
-            minutes = time1 + time2/60;
-        }
-    } else {
-        minutes = time1;
-    }
-    std::stringstream movesStream(movesStr);
-    movesStream >> moves;
-    if (movesStream.bad()) {
-        std::cerr << "error in move field" << std::endl;
-        return;
-    }
-
-    std::stringstream incStream(incStr);
-    incStream >> floatincr;
-    if (incStream.bad()) {
-        std::cerr << "error in increment field" << std::endl;
-    } else {
-        // Winboard increment is in seconds, convert to our
-        // internal value (milliseconds).
-        incr = int(1000*floatincr);
-    }
 }
 
 void Protocol::sendPong(const std::string &arg)
@@ -2535,7 +2533,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if (cmd == "depth") {
     }
     else if (cmd_word == "level") {
-        parseLevel(cmd_args, moves, minutes, incr);
+        if (!parseLevel(cmd_args, moves, minutes, incr)) {
+            std::cout << debugPrefix << "failed to parse 'level' command" << std::endl;
+        }
         srctype = TimeLimit;
     }
     else if (cmd_word == "st") {
