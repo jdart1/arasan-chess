@@ -39,28 +39,40 @@ static bool regularize = false;
 
 enum class OptimMethod { AdaGrad, ADAM, Adaptive };
 
-static OptimMethod method = OptimMethod::ADAM;
+enum class Objective {
+   Msq, Log, MsqLog
+};
 
-static int iterations = 2;
-
-static int cores = 1;
-
-static std::string out_file_name="params.cpp";
-
-static std::string x0_file_name="x0";
-
-static std::string pos_file_name = "games.fen";
-
-static std::ifstream pos_file;
-
-static bool verbose = false;
-static bool validate = false;
-static bool recalc = false;
-static bool test = false;
-
-static int pv_recalc_interval = 16;
+static struct TunerOptions {
+    TunerOptions() : iterations(2), cores(1),
+                out_file_name("params.cpp"),
+                x0_file_name("x0"),
+                pos_file_name("games.fen"),
+                verbose(false),
+                validate(false),
+                recalc(false),
+                test(false),
+                pv_recalc_interval(16),
+                method(OptimMethod::ADAM),
+                obj(Objective::Msq) {
+    }
+    int iterations;
+    int cores;
+    std::string out_file_name;
+    std::string x0_file_name;
+    std::string pos_file_name;
+    bool verbose;
+    bool validate;
+    bool recalc;
+    bool test;
+    int pv_recalc_interval;
+    OptimMethod method;
+    Objective obj;
+} opts;
 
 static double lambda = 6E-5;
+
+    static std::ifstream pos_file;
 
 static const int MAX_PV_LENGTH = 256;
 static const int MAX_CORES = 64;
@@ -82,12 +94,6 @@ static const double ADAPTIVE_STEP_FACTOR1 = 1.025;
 static const double ADAPTIVE_STEP_FACTOR2 = 0.5;
 
 static const char *RESULT_KEY = "c2";
-
-enum class Objective {
-   Msq, Log, MsqLog
-};
-
-static Objective obj = Objective::Msq;
 
 static std::atomic<int> phase2_game_index;
 
@@ -275,7 +281,7 @@ static double computeErrorTexel(double value, double result, const ColorType sid
 
    double err = 0.0;
 
-   switch(obj) {
+   switch(opts.obj) {
    case Objective::Msq:
       err = (predict-result)*(predict-result);
       break;
@@ -297,7 +303,7 @@ static double computeTexelDeriv(double value, double result, const ColorType sid
 
     double deriv = 0.0;
 
-    switch(obj) {
+    switch(opts.obj) {
     case Objective::Msq: {
         double p = exp(PARAM1*value);
         deriv = -2*PARAM1*p*((result-1)*p + result)/(Params::PAWN_VALUE*pow(p+1,3.0));
@@ -560,7 +566,6 @@ static void adjustMaterialScore(const Board &board, ColorType side,
         break;
     }
     if (ourmat.materialLevel() < 16) {
-        const int pieceDiff = ourmat.materialLevel() - oppmat.materialLevel();
         if (pieceDiff > 0) {
             // encourage trading pieces but not pawns.
             grads[Tune::TRADE_DOWN1] += inc*(4-ourmat.materialLevel()/4);
@@ -737,7 +742,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, std::vect
    unsigned kingAttackCount = 0;
    const Bitboard opponent_pawn_attacks(board.allPawnAttacks(oside));
    const Bitboard our_pawn_attacks(board.allPawnAttacks(side));
-   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
+   const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!opts.validate);
    const Scoring::PawnHashEntry::PawnData ourPawnData = pawn_entr.pawnData(side);
    const Scoring::PawnHashEntry::PawnData oppPawnData = pawn_entr.pawnData(oside);
    const Material &ourmat = board.getMaterial(side);
@@ -815,7 +820,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, std::vect
    s.calcCover(board,OppositeColor(side),oppKpe);
    s.calcStorm(board,OppositeColor(side),oppKpe,our_pawn_attacks);
    const score_t oppCover = oppKpe.cover;
-   Bitboard minorAttacks, rookAttacks;
+   //   Bitboard minorAttacks, rookAttacks;
    std::array<int,8> attackTypes;
    for (int i = 0; i < 8; i++) attackTypes[i] = 0;
 
@@ -986,7 +991,7 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, std::vect
       if (TEST_MASK(board.pawn_bits[side], Attacks::rank_mask[Rank(sq, White) - 1])) {
          Bitboard atcks(board.rankAttacks(sq) & board.pawn_bits[side]);
          Square pawnsq;
-         int i = 0;
+         i = 0;
          while(atcks.iterate(pawnsq)) {
             if (!TEST_MASK(Attacks::pawn_attacks[pawnsq][side], board.pawn_bits[side])) // not protected by pawn
             ++i;
@@ -994,7 +999,6 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, std::vect
          grads[Tune::SIDE_PROTECTED_PAWN] += tune_params.scale(inc*i,Tune::SIDE_PROTECTED_PAWN,mLevel);
       }
       if (!deep_endgame) {
-         Bitboard rattacks2(board.rookAttacks(sq, side));
          Bitboard kattacks(rattacks2 & nearKing);
          if (kattacks) {
              int boost = std::max<int>(0,Bitboard(kattacks & Scoring::kingNearProximity[okp]).bitCountOpt()-1);
@@ -1108,7 +1112,6 @@ static void calc_deriv(Scoring &s, const Board &board, ColorType side, std::vect
          if (minorProx>2) minorProx -= (minorProx-2)/2;
          int rookProx = Bitboard(nearKing & board.rook_bits[oside]).bitCountOpt();
          Bitboard qbits(board.queen_bits[oside]);
-         Square sq;
          int queenProx = 0;
          while (qbits.iterate(sq)) {
             queenProx += 4-Scoring::distance(okp,sq);
@@ -1268,7 +1271,6 @@ static void calc_threat_deriv(const Board &board,ColorType side, std::vector<dou
        pawns.shl8();
        // exclude promotions
        pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
-       Square sq;
        Bitboard pawns2(pawns & Attacks::rank_mask[1]);
        while (pawns2.iterate(sq)) {
            if (board[sq+8] == EmptyPiece)
@@ -1280,7 +1282,6 @@ static void calc_threat_deriv(const Board &board,ColorType side, std::vector<dou
        pawns.shr8();
        // exclude promotions
        pawns &= ~(board.allOccupied | Attacks::rank_mask[0]);
-       Square sq;
        Bitboard pawns2(pawns & Attacks::rank_mask[6]);
        while (pawns2.iterate(sq)) {
            if (board[sq-8] == EmptyPiece)
@@ -1308,7 +1309,7 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, std:
 {
     const int mLevel = board.getMaterial(OppositeColor(side)).materialLevel();
     const ColorType oside = OppositeColor(side);
-    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!validate);
+    const Scoring::PawnHashEntry &pawn_entr = s.pawnEntry(board,!opts.validate);
     const Scoring::PawnDetail *pds = pawn_entr.pawnData(side).details;
     int pawns = board.pawn_bits[side].bitCount();
     for (int i = 0; i < pawns; i++) {
@@ -1528,7 +1529,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
 #ifdef _TRACE
    std::cout << "game position " << board << std::endl;
 #endif
-   double record_value = s.evalu8(board,!validate);
+   double record_value = s.evalu8(board,!opts.validate);
 
    if (fabs(record_value) > 30.0*Params::PAWN_VALUE) {
        // invalid record - score is too high
@@ -1543,7 +1544,7 @@ static void calc_derivative(Scoring &s, Parse2Data &data, const Board &board, do
    update_deriv_vector(s, board, data.grads, dT);
    data.target += func_value;
    data.count++;
-   if (validate) {
+   if (opts.validate) {
       validateGradient(s, board, record_value);
    }
    return;
@@ -1558,7 +1559,7 @@ static void parse2(ThreadData &td, Parse2Data &data)
       // obtain the next available posiion from the std::vector
       size_t next = (size_t)phase2_game_index.fetch_add(1);
       if (next >= max) break;
-      if (verbose) std::cout << "game " << next << " thread " << td.index << std::endl;
+      if (opts.verbose) std::cout << "game " << next << " thread " << td.index << std::endl;
       PosInfo *p = positions[next];
       Board board;
       std::stringstream pos(p->position);
@@ -1566,7 +1567,6 @@ static void parse2(ThreadData &td, Parse2Data &data)
       calc_derivative(*s, data, board, p->result);
    }
    delete s;
-//   if (verbose) std::cout << "thread " << td.index << " complete.";
 }
 
 static void adjust_params(Parse2Data &data0, std::vector<double> &historical_gradient,
@@ -1590,12 +1590,11 @@ static void adjust_params(Parse2Data &data0, std::vector<double> &historical_gra
       }
       if (dv != 0.0 && p.tunable) {
          score_t istep = 1;
-         if (method == OptimMethod::AdaGrad) {
+         if (opts.method == OptimMethod::AdaGrad) {
             historical_gradient[i] += dv*dv;
             double adjusted_grad  = dv/(ADAGRAD_FUDGE_FACTOR+sqrt(historical_gradient[i]));
-            double istep = ADAGRAD_STEP_SIZE*adjusted_grad;
-            val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - istep));
-         } else if (method == OptimMethod::ADAM) {
+            val = std::max<score_t>(0.0,std::min<score_t>(1.0,val - ADAGRAD_STEP_SIZE*adjusted_grad));
+         } else if (opts.method == OptimMethod::ADAM) {
             m[i] = ADAM_BETA1*m[i] + (1.0-ADAM_BETA1)*dv;
             v[i] = ADAM_BETA2*v[i] + (1.0-ADAM_BETA2)*dv*dv;
             double m_hat = m[i]/(1.0-pow(ADAM_BETA1,iterations));
@@ -1659,10 +1658,10 @@ static void threadp(ThreadData *td)
    td->searcher->clearHashTables();
    // perform work based on phase
    if (td->phase == Phase1) {
-      if (verbose) std::cout << "starting phase 1, thread " << td->index << std::endl;
+      if (opts.verbose) std::cout << "starting phase 1, thread " << td->index << std::endl;
       parse1(*td,data1[td->index]);
    } else {
-      if (verbose) std::cout << "starting phase 2, thread " << td->index << std::endl;
+      if (opts.verbose) std::cout << "starting phase 2, thread " << td->index << std::endl;
       parse2(*td,data2[td->index]);
    }
    delete td->searcher;
@@ -1677,7 +1676,7 @@ static void initThreads()
       return;
    }
 #endif
-   for (int i = 1; i <= cores; i++) {
+   for (int i = 1; i <= opts.cores; i++) {
       threadDatas[i].index = i;
       threadDatas[i].searcher = nullptr;
       threadDatas[i].phase = Phase1;
@@ -1686,16 +1685,16 @@ static void initThreads()
 
 static void launch_threads()
 {
-   if (verbose) std::cout << "launch_threads" << std::endl;
-   for (int i = 1; i <= cores; i++) {
+   if (opts.verbose) std::cout << "launch_threads" << std::endl;
+   for (int i = 1; i <= opts.cores; i++) {
       threads[i] = std::thread(threadp,&threadDatas[i]);
-      if (verbose) std::cout << "thread " << i << " created." << std::endl;
+      if (opts.verbose) std::cout << "thread " << i << " created." << std::endl;
    }
    // wait for all searchers done
-   for (int i = 1; i <= cores; i++) {
+   for (int i = 1; i <= opts.cores; i++) {
       threads[i].join();
    }
-   if (verbose) std::cout << "all searchers done" << std::endl;
+   if (opts.verbose) std::cout << "all searchers done" << std::endl;
 }
 
 static void learn_parse(Phase p, int cores)
@@ -1707,10 +1706,10 @@ static void learn_parse(Phase p, int cores)
    if (p == Phase1) std::cout << positions.size() << " positions read." << std::endl;
 }
 
-static void output_solution(const std::string &cmd, double obj)
+static void output_solution(const std::string &cmd, double final_obj)
 {
    tune_params.applyParams();
-   std::ofstream param_out(out_file_name.c_str(),std::ios::out | std::ios::trunc);
+   std::ofstream param_out(opts.out_file_name.c_str(),std::ios::out | std::ios::trunc);
 
    time_t curr_time;
    char buffer[256];
@@ -1720,15 +1719,15 @@ static void output_solution(const std::string &cmd, double obj)
    std::string timestr(buffer);
    std::stringstream comment;
    comment << "Generated " << timestr << " by " << cmd << std::endl;
-   if (obj != 0) {
-      comment << "// Final objective value: " << obj << std::endl;
+   if (final_obj != 0) {
+      comment << "// Final objective value: " << final_obj << std::endl;
    }
    Params::write(param_out,comment.str());
    param_out << std::endl;
    if (param_out.bad() || param_out.fail()) {
       std::cerr << "error writing .cpp output file" << std::endl;
    }
-   std::ofstream x0_out(x0_file_name.c_str(),std::ios::out | std::ios::trunc);
+   std::ofstream x0_out(opts.x0_file_name.c_str(),std::ios::out | std::ios::trunc);
    tune_params.writeX0(x0_out);
    if (x0_out.bad() || x0_out.fail()) {
       std::cerr << "error writing parameters output file" << std::endl;
@@ -1748,37 +1747,37 @@ static void learn()
    std::vector<double> v(tune_params.numTuningParams(),0.0);
    std::vector<double> prev_gradient(tune_params.numTuningParams(),0.0);
    std::vector<double> step_sizes(tune_params.numTuningParams(),0.0);
-   for (int iter = 1; iter <= iterations; iter++) {
-      if (!test) std::cout << "iteration " << iter << std::endl;
+   for (int iter = 1; iter <= opts.iterations; iter++) {
+      if (!opts.test) std::cout << "iteration " << iter << std::endl;
       tune_params.applyParams();
-      for (int i = 0; i <= cores; i++) {
+      for (int i = 0; i <= opts.cores; i++) {
          data1[i].clear();
          data2[i].clear();
       }
       if (iter == 1 ||
-          (recalc && ((iter-1) % pv_recalc_interval) == 0)) {
-         if (verbose) std::cout << "(re)calculating PVs" << std::endl;
+          (opts.recalc && ((iter-1) % opts.pv_recalc_interval) == 0)) {
+         if (opts.verbose) std::cout << "(re)calculating PVs" << std::endl;
          // clean up data from previous pass
          while (!positions.empty()) {
             delete positions.back();
             positions.pop_back();
          }
          stringMem.clear();
-         learn_parse(Phase1, cores);
+         learn_parse(Phase1, opts.cores);
          // sum results over workers into 1st data element
-         for (int i = 1; i <= cores; i++) {
+         for (int i = 1; i <= opts.cores; i++) {
             data1[0].target += data1[i].target;
          }
          data1[0].target /= positions.size();
-         if (test) {
+         if (opts.test) {
             std::cout << "objective=" << data1[0].target << std::endl;
             break;
          }
-         if (verbose) {
+         if (opts.verbose) {
             std::cout << "target=" << data1[0].target << " penalty=" << calc_penalty() << std::endl;
          }
          data1[0].target += calc_penalty();
-         if (verbose) {
+         if (opts.verbose) {
             std::cout << "pass 1 objective = " << data1[0].target << std::endl;
          }
          // rewind position file
@@ -1786,9 +1785,9 @@ static void learn()
          pos_file.seekg(0,std::ios::beg);
       }
       phase2_game_index = 0;
-      learn_parse(Phase2, cores);
+      learn_parse(Phase2, opts.cores);
       // sum results over workers into 1st data element
-      for (int i = 1; i <= cores; i++) {
+      for (int i = 1; i <= opts.cores; i++) {
          data2[0].target += data2[i].target;
          data2[0].count += data2[i].count;
          for (int j = 0; j < tune_params.numTuningParams(); j++) {
@@ -1843,7 +1842,7 @@ int CDECL main(int argc, char **argv)
        }
        else if (strcmp(argv[arg],"-f")==0) {
           ++arg;
-          out_file_name = argv[arg];
+          opts.out_file_name = argv[arg];
        }
        else if (strcmp(argv[arg],"-i")==0) {
           ++arg;
@@ -1862,24 +1861,24 @@ int CDECL main(int argc, char **argv)
        }
        else if (strcmp(argv[arg],"-x")==0) {
           ++arg;
-          x0_file_name = argv[arg];
+          opts.x0_file_name = argv[arg];
        }
        else if (strcmp(argv[arg],"-n")==0) {
           ++arg;
-          iterations = atoi(argv[arg]);
+          opts.iterations = atoi(argv[arg]);
        }
        else if (strcmp(argv[arg],"-c")==0) {
           ++arg;
-          cores = atoi(argv[arg]);
+          opts.cores = atoi(argv[arg]);
        }
        else if (strcmp(argv[arg],"-t")==0) {
-          test = true;
+          opts.test = true;
        }
        else if (strcmp(argv[arg],"-v")==0) {
-          verbose = true;
+          opts.verbose = true;
        }
        else if (strcmp(argv[arg],"-V")==0) {
-          validate = true;
+          opts.validate = true;
        }
        else if (strcmp(argv[arg],"-o")==0) {
           ++arg;
@@ -1888,11 +1887,11 @@ int CDECL main(int argc, char **argv)
              exit(-1);
           }
           if (strcmp(argv[arg],"adagrad") == 0)
-             method = OptimMethod::AdaGrad;
+             opts.method = OptimMethod::AdaGrad;
           else if (strcmp(argv[arg],"adam") == 0)
-             method = OptimMethod::ADAM;
+             opts.method = OptimMethod::ADAM;
           else if (strcmp(argv[arg],"adaptive") == 0)
-             method = OptimMethod::Adaptive;
+             opts.method = OptimMethod::Adaptive;
           else {
              std::cerr << "invalid optimization type: specify one of: ";
              std::cerr << "adagrad, adam or adaptive." << std::endl;
@@ -1906,11 +1905,11 @@ int CDECL main(int argc, char **argv)
              exit(-1);
           }
           if (strcmp(argv[arg],"msq") == 0)
-             obj = Objective::Msq;
+             opts.obj = Objective::Msq;
           else if (strcmp(argv[arg],"log") == 0)
-             obj = Objective::Log;
+             opts.obj = Objective::Log;
           else if (strcmp(argv[arg],"msqlog") == 0)
-             obj = Objective::Msq;
+             opts.obj = Objective::Msq;
           else {
              std::cerr << "invalid objective type: specify one of: ";
              std::cerr << "log, msq, or msqlog" << std::endl;
@@ -1918,12 +1917,12 @@ int CDECL main(int argc, char **argv)
           }
        }
        else if (strcmp(argv[arg],"-R")==0) {
-          recalc = true;
+          opts.recalc = true;
           if (arg >= argc) {
              std::cerr << "expected integer after -R" << std::endl;
              exit(-1);
           }
-          pv_recalc_interval = atoi(argv[++arg]);
+          opts.pv_recalc_interval = atoi(argv[++arg]);
        } else {
           std::cerr << "invalid option: " << argv[arg] << std::endl;
           usage();
@@ -1931,7 +1930,7 @@ int CDECL main(int argc, char **argv)
        }
     }
 
-    if (test && write_sol) {
+    if (opts.test && write_sol) {
        std::cerr << "error: -d and -t not compatible" << std::endl;
        usage();
        exit(-1);
@@ -1942,7 +1941,7 @@ int CDECL main(int argc, char **argv)
       exit(0);
     }
 
-    if (validate && cores > 1) {
+    if (opts.validate && opts.cores > 1) {
        std::cerr << "error: validation (-V) does not work with multiple threads" << std::endl;
        exit(-1);
     }
@@ -1974,14 +1973,14 @@ int CDECL main(int argc, char **argv)
 #ifdef SYZYGY_TBS
     globals::options.search.use_tablebases = false;
 #endif
-    pos_file_name = argv[arg];
+    opts.pos_file_name = argv[arg];
 
-    if (verbose) std::cout << "game file: " << pos_file_name << std::endl;
+    if (opts.verbose) std::cout << "game file: " << opts.pos_file_name << std::endl;
 
-    pos_file.open(pos_file_name.c_str());
+    pos_file.open(opts.pos_file_name.c_str());
 
     if (pos_file.fail()) {
-       std::cerr << "failed to open file " << pos_file_name << std::endl;
+       std::cerr << "failed to open file " << opts.pos_file_name << std::endl;
        exit(-1);
     }
 
