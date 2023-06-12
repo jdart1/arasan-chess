@@ -102,6 +102,31 @@ static bool parseLevel(const std::string &cmd, int &moveCount, float &minutes, i
     return true;
 }
 
+static Move text_to_move(const Board &board, const std::string &input) {
+    // Try SAN
+    Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,input);
+    if (!IsNull(m)) return m;
+    if (input.length() >= 4 && isalpha(input[0]) && isdigit(input[1]) &&
+        isalpha(input[2]) && isdigit(input[3])) {
+        // This appears to be "old" coordinate style notation, used in
+        // Winboard before 4.2
+        return Notation::value(board,board.sideToMove(),Notation::InputFormat::WB,input);
+    } else {
+        return NullMove;
+    }
+}
+
+    // split a command line into a verb (cmd_word) and arguments (cmd_args)
+static void split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args) {
+   size_t space = cmd.find_first_of(' ');
+   cmd_word = cmd.substr(0,space);
+   cmd_args = cmd.substr(cmd_word.length());
+   size_t start = cmd_args.find_first_not_of(' ');
+   if (start != std::string::npos) {
+      cmd_args.erase(0,start);
+   }
+}
+
 Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set, bool memory_set)
     : verbose(false),
       post(false),
@@ -207,30 +232,6 @@ void Protocol::poll(bool &polling_terminated)
     }
 }
 
-void Protocol::split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args) {
-   size_t space = cmd.find_first_of(' ');
-   cmd_word = cmd.substr(0,space);
-   cmd_args = cmd.substr(cmd_word.length());
-   size_t start = cmd_args.find_first_not_of(' ');
-   if (start != std::string::npos) {
-      cmd_args.erase(0,start);
-   }
-}
-
-Move Protocol::text_to_move(const Board &board, const std::string &input) {
-   // Try SAN
-   Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::SAN,input);
-   if (!IsNull(m)) return m;
-   if (input.length() >= 4 && isalpha(input[0]) && isdigit(input[1]) &&
-       isalpha(input[2]) && isdigit(input[3])) {
-      // This appears to be "old" coordinate style notation, used in
-      // Winboard before 4.2
-       return Notation::value(board,board.sideToMove(),Notation::InputFormat::WB,input);
-   } else {
-      return NullMove;
-   }
-}
-
 Move Protocol::get_move(const std::string &cmd_word, const std::string &cmd_args) {
     std::string move;
     if (cmd_word == "usermove") {
@@ -333,19 +334,15 @@ void Protocol::process_st_command(const std::string &cmd_args)
    time_limit = int(time_limit_sec * 1000 - std::min<int>(int(time_limit_sec*100),100));
 }
 
-score_t Protocol::contemptFromRatings(int computer_rating,int opponent_rating) {
-   const int rdiff = computer_rating-opponent_rating;
-   return static_cast<score_t>(4*Params::PAWN_VALUE*(1.0/(1.0+exp(-rdiff/400.0)) - 0.5));
-}
-
-int Protocol::getIncrUCI(const ColorType side) {
-    return side == White ? winc : binc;
+int Protocol::getIncrUCI(const ColorType c) {
+    return c == White ? winc : binc;
 }
 
 bool Protocol::accept_draw(Board &board) {
    if (doTrace)
       std::cout << debugPrefix << "in accept_draw" << std::endl;
    // Code to handle draw offers.
+   const ColorType mySide = computer_plays_white ? White : Black;
    int rating_diff = opponent_rating - computer_rating;
    // ignore draw if we have just started searching
    if (last_score == Constants::MATE) {
@@ -353,14 +350,13 @@ bool Protocol::accept_draw(Board &board) {
    }
    // If it's a 0-increment game and the opponent has < 1 minute,
    // and we have more time, decline
-   int inc = uci ? getIncrUCI(board.oppositeSide()) : incr;
+   int inc = uci ? getIncrUCI(OppositeColor(mySide)) : incr;
    if (!computer && inc == 0 && opp_time < 6000 && time_left > opp_time) {
       return false;
    }
    // See if we do not have enough material to mate
-   const ColorType side = computer_plays_white ? White : Black;
-   const Material &ourmat = board.getMaterial(side);
-   const Material &oppmat = board.getMaterial(OppositeColor(side));
+   const Material &ourmat = board.getMaterial(mySide);
+   const Material &oppmat = board.getMaterial(OppositeColor(mySide));
    if (ourmat.noPawns() && (ourmat.kingOnly() || ourmat.infobits() == Material::KB ||
                             ourmat.infobits() == Material::KN)) {
       // We don't have mating material
@@ -380,28 +376,28 @@ bool Protocol::accept_draw(Board &board) {
 #ifdef SYZYGY_TBS
    const Material &wMat = board.getMaterial(White);
    const Material &bMat = board.getMaterial(Black);
-   if(globals::options.search.use_tablebases &&
-      wMat.men() + bMat.men() <= globals::EGTBMenCount) {
-      if (doTrace)
-         std::cout << debugPrefix << "checking tablebases .." << std::endl;
-      // accept a draw when the tablebases say it's a draw
-      score_t tbscore;
-      if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
-         if (doTrace) {
-            std::cout << debugPrefix << "tablebase score says draw" << std::endl;
-         }
-         return true;
-      }
+   if (globals::options.search.use_tablebases &&
+       wMat.men() + bMat.men() <= globals::EGTBMenCount) {
+       if (doTrace)
+           std::cout << debugPrefix << "checking tablebases .." << std::endl;
+       // accept a draw when the tablebases say it's a draw
+       score_t tbscore;
+       if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
+           if (doTrace) {
+               std::cout << debugPrefix << "tablebase score says draw" << std::endl;
+           }
+           return true;
+       }
    }
 #endif
    if (opponent_rating == 0)
-      return false;
+       return false;
    // accept a draw if our score is negative .. how much negative
    // depends on opponent rating.
    if (doTrace)
       std::cout << debugPrefix << "checking draw score .." << std::endl;
    ColorType tmp = board.sideToMove();
-   board.setSideToMove(side);
+   board.setSideToMove(mySide);
    score_t draw_score = searcher->drawScore(board);
    board.setSideToMove(tmp);
    const score_t threshold = Params::PAWN_VALUE/4;
@@ -570,16 +566,15 @@ uint64_t nodes, uint64_t tb_hits, const std::string &best_line_image, int multip
 }
 
 
-void Protocol::uciOut(const Statistics &stats) {
-   uciOut(stats.depth,stats.display_value,searcher->getElapsedTime(),
-      stats.num_nodes,stats.tb_hits,
-      stats.best_line_image,0);
+void Protocol::uciOut(const Statistics &s) {
+   uciOut(s.depth,s.display_value,searcher->getElapsedTime(),
+      s.num_nodes,stats.tb_hits,
+      s.best_line_image,0);
 }
 
-
-void Protocol::post_output(const Statistics &stats) {
-   last_score = stats.value;
-   score_t score = stats.display_value;
+void Protocol::post_output(const Statistics &s) {
+   last_score = s.value;
+   score_t score = s.display_value;
    if (score == Constants::INVALID_SCORE) {
       return; // no valid score yet
    }
@@ -587,30 +582,30 @@ void Protocol::post_output(const Statistics &stats) {
        if (uci) {
            if (globals::options.search.multipv > 1) {
                // output stats only when multipv array has been filled
-               if (stats.multipv_count == stats.multipv_limit) {
-                   for (unsigned i = 0; i < stats.multipv_limit; i++) {
-                       uciOut(stats.multi_pvs[i].depth,
-                              stats.multi_pvs[i].display_value,
+               if (s.multipv_count == s.multipv_limit) {
+                   for (unsigned i = 0; i < s.multipv_limit; i++) {
+                       uciOut(s.multi_pvs[i].depth,
+                              s.multi_pvs[i].display_value,
                               searcher->getElapsedTime(),
-                              stats.num_nodes,
-                              stats.tb_hits,
-                              stats.multi_pvs[i].best_line_image,
+                              s.num_nodes,
+                              s.tb_hits,
+                              s.multi_pvs[i].best_line_image,
                               i+1);
                    }
                }
            }
            else {
-               uciOut(stats);
+               uciOut(s);
            }
        }
    }
    else if (post) {
        // "post" output for Winboard
-       std::cout << stats.depth << ' ' <<
+       std::cout << s.depth << ' ' <<
            static_cast<int>((score*100)/Params::PAWN_VALUE) << ' ' <<
            searcher->getElapsedTime()/10 << ' ' <<
-           stats.num_nodes << ' ' <<
-           stats.best_line_image << std::endl << (std::flush);
+           s.num_nodes << ' ' <<
+           s.best_line_image << std::endl << (std::flush);
    }
 }
 
@@ -864,14 +859,14 @@ bool Protocol::monitor(SearchController *s, const Statistics &) {
     return exit;
 }
 
-void Protocol::edit_mode_cmds(Board &board,ColorType &side,const std::string &cmd)
+void Protocol::edit_mode_cmds(Board &board,ColorType &c,const std::string &cmd)
 {
     std::unordered_set<char> pieces({'P','N','B','R','Q','K','p','n','b','r','q','k'});
     if (cmd == "white") {
-       side = White;
+       c = White;
     }
     else if (cmd == "black") {
-       side = Black;
+       c = Black;
     }
     else if (cmd == "#") {
        for (int i = 0; i < 64; i++) {
@@ -879,7 +874,7 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &side,const std::string &cm
        }
     }
     else if (cmd == "c") {
-       side = OppositeColor(side);
+       c = OppositeColor(side);
     }
     else if (cmd == ".") {
        editMode = false;
@@ -912,9 +907,8 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &side,const std::string &cm
     }
     else {
        if (cmd.length()>0 && pieces.count(cmd[0])) {
-          char c = tolower(cmd[0]);
           Piece p = EmptyPiece;
-          switch (c) {
+          switch (tolower(cmd[0])) {
           case 'p':
              p = MakePiece(Pawn,side);
              break;
@@ -946,14 +940,14 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &side,const std::string &cm
     }
 }
 
-void Protocol::calcTimes(bool pondering, ColorType side, timeMgmt::Times &times) 
+void Protocol::calcTimes(bool pondering, ColorType c, timeMgmt::Times &times)
 {
     if (srctype == FixedTime) {
         times.time_target = time_limit;
         times.extra_time = 0;
     } else if (uci) {
         timeMgmt::calcTimeLimitUCI(movestogo,
-                                   getIncrUCI(side),
+                                   getIncrUCI(c),
                                    time_left,
                                    pondering,
                                    ics,
@@ -967,7 +961,7 @@ void Protocol::calcTimes(bool pondering, ColorType side, timeMgmt::Times &times)
     }
 }
 
-void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
+void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool isUCI)
 {
     ponder_status = PonderStatus::None;
     ponder_move = NullMove;
@@ -979,8 +973,8 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
        MoveImage(predicted_reply,std::cout);
        std::cout << std::endl;
     }
-    if (uci || (!IsNull(move) && !IsNull(predicted_reply))) {
-        if (!uci) {
+    if (isUCI || (!IsNull(move) && !IsNull(predicted_reply))) {
+        if (!isUCI) {
             predicted_move = predicted_reply;
             // We have already set up the ponder board with the board
             // position after our last move. Now make the move we predicted.
@@ -1010,24 +1004,24 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         ponder_status = PonderStatus::Pending;
         if (srctype == FixedDepth) {
             ponder_move = searcher->findBestMove(
-                uci ? *main_board : *ponder_board,
+                isUCI ? *main_board : *ponder_board,
                 srctype,
                 0,
                 0,
-                ply_limit, true, uci,
+                ply_limit, true, isUCI,
                 ponder_stats,
                 (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
         else {
             time_target = last_time_target = Constants::INFINITE_TIME;
             ponder_move = searcher->findBestMove(
-                uci ? *main_board : *ponder_board,
+                isUCI ? *main_board : *ponder_board,
                 FixedTime,
                 time_target,
                 0,            /* extra time allowed */
                 Constants::MaxPly,           /* ply limit */
                 true,         /* background */
-                uci,
+                isUCI,
                 ponder_stats,
                 (doTrace) ? TalkLevel::Debug : TalkLevel::Silent);
         }
@@ -1036,7 +1030,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
         }
         // Ensure "ping" response is set if ping was received while
         // searching:
-        if (!uci) {
+        if (!isUCI) {
             if (doTrace) {
                 std::cout << debugPrefix << "handling pending commands" << std::endl;
             }
@@ -1058,7 +1052,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
     last_computer_move = ponder_move;
     last_computer_stats = ponder_stats;
     // Clean up the global move array, if we got no ponder hit.
-    if (!uci && globals::gameMoves->num_moves() > 0 && globals::gameMoves->last().wasPonder()) {
+    if (!isUCI && globals::gameMoves->num_moves() > 0 && globals::gameMoves->last().wasPonder()) {
         globals::gameMoves->remove_move();
     }
     if (doTrace) {
@@ -1069,8 +1063,8 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool uci)
     }
 }
 
-Move Protocol::search(SearchController *searcher, Board &board,
-                   const MoveSet &movesToSearch, Statistics &stats, bool infinite)
+Move Protocol::search(Board &board,
+                      const MoveSet &movesToSearch, Statistics &s, bool infinite)
 {
     last_stats.clear();
     last_score = Constants::MATE;
@@ -1078,18 +1072,18 @@ Move Protocol::search(SearchController *searcher, Board &board,
     if (doTrace) std::cout << debugPrefix << "in search()" << std::endl;
 
     Move move = NullMove;
-    stats.fromBook = false;
+    s.fromBook = false;
     // Note: not clear what the semantics should be when "searchmoves"
     // is specified and using "own book." Currently we force a search
     // in this case and ignore the book moves.
     if (!infinite && globals::options.book.book_enabled && movesToSearch.empty()) {
         move = globals::openingBook.pick(board);
-        if (!IsNull(move)) stats.fromBook = true;
+        if (!IsNull(move)) s.fromBook = true;
     }
 
     if (IsNull(move)) {
         // no book move
-        stats.clear();
+        s.clear();
         TalkLevel level = TalkLevel::Silent;
         if (verbose && !uci) {
            level = TalkLevel::Test;
@@ -1104,7 +1098,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 0,
                 0,
                 ply_limit, false, uci,
-                stats,
+                s,
                 level,
                 excludes,
                 movesToSearch);
@@ -1125,7 +1119,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
                 times.time_target,
                 times.extra_time,
                 Constants::MaxPly, false, uci,
-                stats,
+                s,
                 level,
                 excludes,
                 movesToSearch);
@@ -1135,7 +1129,7 @@ Move Protocol::search(SearchController *searcher, Board &board,
             MoveImage(move,std::cout);
             std::cout << std::endl;
         }
-        last_stats = stats;
+        last_stats = s;
     }
     else {
         if (ics || uci) {
@@ -1144,59 +1138,57 @@ Move Protocol::search(SearchController *searcher, Board &board,
             if (globals::options.book.book_enabled) {
                moveCount = globals::openingBook.book_moves(board,choices);
             }
-            std::stringstream s;
-            s << "book moves (";
+            std::stringstream out;
+            out << "book moves (";
             for (int i=0;i<moveCount;i++) {
-                Notation::image(board,choices[i],Notation::OutputFormat::SAN,s);
+                Notation::image(board,choices[i],Notation::OutputFormat::SAN,out);
                 if (i < moveCount-1)
-                    s << ", ";
+                    out << ", ";
             }
-            s << "), choosing ";
-            Notation::image(board,move,Notation::OutputFormat::SAN,s);
+            out << "), choosing ";
+            Notation::image(board,move,Notation::OutputFormat::SAN,out);
             if (uci) {
-                std::cout << "info string " << s.str() << std::endl;
+                std::cout << "info string " << out.str() << std::endl;
             }
             if (ics) {
                 if (computer)
-                    std::cout << "tellics kibitz " << s.str() << std::endl;
+                    std::cout << "tellics kibitz " << out.str() << std::endl;
                 else
-                    std::cout << "tellics whisper " << s.str() << std::endl;
+                    std::cout << "tellics whisper " << out.str() << std::endl;
             }
         }
-        stats.clear();
+        s.clear();
     }
     last_computer_move = move;
-    last_computer_stats = stats;
+    last_computer_stats = s;
     return move;
 }
 
-int Protocol::isDraw(const Board &board, Statistics &last_stats, std::string &reason) {
+// return true if current board position is a draw by the
+// rules of chess. If so, also set the "reason"
+static bool isDraw(const Board &board, const Statistics &last_stats, std::string &reason) {
    if (last_stats.state == Stalemate) {
-       if (doTrace) std::cout << debugPrefix << "stalemate" << std::endl;
        reason = "Stalemate";
-       return 1;
+       return true;
    }
    else if (last_stats.value < Constants::MATE-1 &&
             board.state.moveCount >= 100) {
-       // Note: do not count as draw if we have checkmated opponent!
-       if (doTrace) std::cout << debugPrefix << "50 move draw" << std::endl;
+       // Note: do not count as draw if last move delivered checkmate!
        reason = "50 move draw";
-       return 1;
+       return true;
    }
    else if (board.materialDraw()) {
-       if (doTrace) std::cout << debugPrefix << "material draw" << std::endl;
        reason = "Insufficient material";
-       return 1;
+       return true;
    }
    else if (board.repetitionDraw()) {
-       if (doTrace) std::cout << debugPrefix << "repetition draw" << std::endl;
        reason = "Repetition";
-       return 1;
+       return true;
    }
-   else if (stats.state == Draw) {
-       return 1;
+   else if (last_stats.state == Draw) {
+       return true;
    }
-   return 0;
+   return false;
 }
 
 static void kibitz(SearchController *searcher, bool computer, Statistics &last_stats, bool multithread) {
@@ -1228,17 +1220,16 @@ static void kibitz(SearchController *searcher, bool computer, Statistics &last_s
     std::cout << s.str() << std::endl;
 }
 
-void Protocol::send_move(Board &board, Move &move, Statistics
-                         &stats) {
+void Protocol::send_move(Board &board, Move &move, Statistics &s) {
     // In case of multi-pv, make sure the high-scoring move is
     // sent as best move.
-    if (stats.multipv_limit > 1) {
-        move = stats.multi_pvs[0].best;
+    if (s.multipv_limit > 1) {
+        move = s.multi_pvs[0].best;
     }
     last_move = move;
-    last_stats = stats;
+    last_stats = s;
     ColorType sideToMove = board.sideToMove();
-    if (stats.state == Terminated) {
+    if (s.state == Terminated) {
         // A ponder search was interrupted because Winboard set the
         // game result. We should not send a move or try to set the result.
         return;
@@ -1248,7 +1239,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
         // on time
         if (srctype == TimeLimit && incr == 0 && opp_time < 2000) {
             // reset flag - we're not resigning
-            stats.end_of_game = game_end = false;
+            s.end_of_game = game_end = false;
         }
         else {
             if (computer_plays_white) {
@@ -1296,16 +1287,16 @@ void Protocol::send_move(Board &board, Move &move, Statistics
 
             if (uci) {
                 std::cout << "bestmove " << movebuf.str();
-                if (!easy && !IsNull(stats.best_line[1])) {
+                if (!easy && !IsNull(s.best_line[1])) {
                     std::stringstream ponderbuf;
 #ifdef _DEBUG
-                    BoardState s(board.state);
+                    BoardState bs(board.state);
                     board.doMove(move);
                     // ensure ponder move is legal
-                    assert(legalMove(board,stats.best_line[1]));
-                    board.undoMove(move,s);
+                    assert(legalMove(board,s.best_line[1]));
+                    board.undoMove(move,bs);
 #endif
-                    move_image(board,stats.best_line[1],ponderbuf,uci);
+                    move_image(board,s.best_line[1],ponderbuf,uci);
                     std::cout << " ponder " << ponderbuf.str();
                 }
                 std::cout << std::endl << (std::flush);
@@ -1325,7 +1316,13 @@ void Protocol::send_move(Board &board, Move &move, Statistics
                     // "offer draw" and then send the move (formerly
                     // we would send the move then send the result,
                     // which is incorrect).
+#ifdef _TRACE
+                    std::cout << debugPrefix << "draw predicted after move";
+                    if (reason.length()) std::cout << " (" << reason << ")";
+                    std::cout << std::endl;
+#endif
                     std::cout << "offer draw" << std::endl;
+
                 }
                 if (xboard42) {
                     std::cout << "move " << movebuf.str() << std::endl;
@@ -1345,7 +1342,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics
             if (doTrace) std::cout << debugPrefix << "warning : move is null" << std::endl;
         }
         if (ics && ((srctype == FixedDepth && searcher->getElapsedTime() >= 250) || time_target >= 250) &&
-            stats.display_value != Constants::INVALID_SCORE) {
+            s.display_value != Constants::INVALID_SCORE) {
             kibitz(searcher,computer,last_stats,globals::options.search.ncpus>1);
         }
     }
@@ -1397,7 +1394,7 @@ void Protocol::processCmdInWaitState(const std::string &cmd) {
     }
 }
 
-Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &stats)
+Move Protocol::analysisSearch(const Board &board)
 {
     last_stats.clear();
     last_score = Constants::MATE;
@@ -1406,13 +1403,13 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
     if (doTrace) {
         std::cout << debugPrefix << "entering analysis search" << std::endl;
     }
-    Move move = searcher.findBestMove(board,
-                                      FixedTime,
-                                      Constants::INFINITE_TIME,
-                                      0,
-                                      Constants::MaxPly, false, uci,
-                                      stats,
-                                      TalkLevel::Whisper);
+    Move move = searcher->findBestMove(board,
+                                       FixedTime,
+                                       Constants::INFINITE_TIME,
+                                       0,
+                                       Constants::MaxPly, false, uci,
+                                       stats,
+                                       TalkLevel::Whisper);
     if (doTrace) {
         std::cout << debugPrefix << "search done : move = ";
         MoveImage(move,std::cout);
@@ -1427,10 +1424,10 @@ Move Protocol::analyze(SearchController &searcher, Board &board, Statistics &sta
 
 void Protocol::doHint() {
     // try book move first
-    std::vector<Move> moves;
+    std::vector<Move> bookMoves;
     unsigned count = 0;
     if (globals::options.book.book_enabled) {
-        count = globals::openingBook.book_moves(*main_board,moves);
+        count = globals::openingBook.book_moves(*main_board,bookMoves);
     }
     if (count > 0) {
         if (count == 1)
@@ -1438,7 +1435,7 @@ void Protocol::doHint() {
         else
             std::cout << "Book moves: ";
         for (unsigned i = 0; i<count; i++) {
-            Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,std::cout);
+            Notation::image(*main_board,bookMoves[i],Notation::OutputFormat::SAN,std::cout);
             if (i<count-1) std::cout << ' ';
         }
         std::cout << std::endl;
@@ -1450,13 +1447,13 @@ void Protocol::doHint() {
         if (img.length()) {
             std::string::const_iterator it = img.begin();
             while (it != img.end() && !isspace(*it)) it++;
-            std::string last_move;
+            std::string hint;
             if (it != img.end()) {
                 it++;
-                while (it != img.end() && !isspace(*it)) last_move += *it++;
+                while (it != img.end() && !isspace(*it)) hint += *it++;
             }
-            if (last_move.length()) {
-                std::cout << "Hint: " << last_move << std::endl;
+            if (hint.length()) {
+                std::cout << "Hint: " << hint << std::endl;
                 return;
             }
         }
@@ -1483,11 +1480,11 @@ void Protocol::doHint() {
     }
 }
 
-void Protocol::analyze_output(const Statistics &stats) {
+void Protocol::analyze_output(const Statistics &s) {
     std::cout << "stat01: " <<
         searcher->getElapsedTime() << " " << stats.num_nodes << " " <<
-        stats.depth << " " <<
-        stats.mvleft << " " << stats.mvtot << std::endl;
+        s.depth << " " <<
+        s.mvleft << " " << s.mvtot << std::endl;
 }
 
 void Protocol::analyze(Board &board)
@@ -1495,7 +1492,7 @@ void Protocol::analyze(Board &board)
     if (doTrace) std::cout << debugPrefix << "entering analysis mode" << std::endl;
     while (analyzeMode) {
         Board previous(board);
-        analyze(*searcher,board,stats);
+        analysisSearch(board);
         if (doTrace) std::cout << debugPrefix << "analysis mode: out of search" << std::endl;
         // Process commands received while searching; exit loop
         // if "quit" seen.
@@ -1663,7 +1660,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
     } else if (name == "NNUE File") {
         Options::setOption<std::string>(value,globals::options.search.nnueFile);
         globals::nnueInitDone = false; // force re-init
-#endif        
+#endif
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
        int tmp = globals::options.search.set_processor_affinity;
@@ -1713,7 +1710,7 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
     std::vector<ChessIO::Header> hdrs(20);
     long first;
     ChessIO::collect_headers(file,hdrs,first);
-    ColorType side = White;
+    ColorType stm = White; // side to move
     for (;;) {
         std::string num;
         ChessIO::Token tok = ChessIO::get_next_token(file);
@@ -1724,7 +1721,7 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
         }
         else if (tok.type == ChessIO::GameMove) {
             // parse the move
-            Move m = Notation::value(board,side,Notation::InputFormat::SAN,tok.val);
+            Move m = Notation::value(board,stm,Notation::InputFormat::SAN,tok.val);
             if (IsNull(m) ||
                 !legalMove(board,StartSquare(m),
                            DestSquare(m))) {
@@ -1741,7 +1738,7 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
                 globals::gameMoves->add_move(board,previous_state,m,image.c_str(),false);
                 board.doMove(m);
             }
-            side = OppositeColor(side);
+            stm = OppositeColor(stm);
         }
         else if (tok.type == ChessIO::Result) {
             break;
@@ -2205,7 +2202,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 std::cout << "NNUE score: ";
                 Scoring::printScore(s->evalu8NNUE(board),std::cout);
                 std::cout << std::endl;
-#endif                
+#endif
                 std::cout << "non-NNUE score: ";
                 Scoring::printScore(s->evalu8(board),std::cout);
                 std::cout << std::endl;
@@ -2215,7 +2212,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 std::cout << "NNUE score: ";
                 Scoring::printScore(s->evalu8NNUE(board),std::cout);
                 std::cout << std::endl;
-#endif                
+#endif
                 std::cout << "non-NNUE score: ";
                 Scoring::printScore(s->evalu8(board),std::cout);
                 delete s;
@@ -2361,11 +2358,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 std::unique_lock<std::mutex> lock(inputMtx);
                 std::vector<std::string> newPending(pending);
                 uciWaitState = true;
-                for (const std::string &cmd : pending) {
-                    if (cmd == "stop" || cmd == "ponderhit") {
+                for (const std::string &pendingCmd : pending) {
+                    if (pendingCmd == "stop" || pendingCmd == "ponderhit") {
                         uciWaitState = false;
                     } else {
-                        newPending.push_back(cmd);
+                        newPending.push_back(pendingCmd);
                     }
                 }
                 pending = newPending;
@@ -2387,7 +2384,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 startTime = getCurrentTime();
                 std::cout << debugPrefix << "starting search" << (std::flush) << std::endl;
             }
-            best_move = search(searcher,board,movesToSearch,stats,infinite);
+            best_move = search(board,movesToSearch,stats,infinite);
             if (doTrace) {
                 std::cout << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (std::flush) << std::endl;
             }
@@ -2509,12 +2506,12 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         doHint();
     }
     else if (cmd == "bk") {
-        // list book moves
-	std::vector<Move> moves;
+        // This is a non-standard command used by the Arasan GUI to list book moves
+	std::vector<Move> bookMoves;
         unsigned count = 0;
         globals::delayedInit(); // to allow "bk" before "new"
         if (globals::options.book.book_enabled) {
-            count = globals::openingBook.book_moves(*main_board,moves);
+            count = globals::openingBook.book_moves(*main_board,bookMoves);
         }
         if (count == 0) {
             std::cout << '\t' << "No book moves for this position." << std::endl
@@ -2524,7 +2521,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             std::cout << " book moves:" << std::endl;
             for (unsigned i = 0; i<count; i++) {
                 std::cout << '\t';
-                Notation::image(*main_board,moves[i],Notation::OutputFormat::SAN,std::cout);
+                Notation::image(*main_board,bookMoves[i],Notation::OutputFormat::SAN,std::cout);
                 std::cout << std::endl;
             }
             std::cout << std::endl;
@@ -2639,7 +2636,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         // "white" and "black" commands.
         computer_plays_white = board.sideToMove() == White;
         MoveSet movesToSearch;
-        Move reply = search(searcher,board,movesToSearch,stats,false);
+        Move reply = search(board,movesToSearch,stats,false);
         if (!forceMode) {
             send_move(board,reply,stats);
         }
@@ -2666,7 +2663,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::stringstream args(cmd_args);
         args >> computer_rating;
         args >> opponent_rating;
-        score_t contempt = contemptFromRatings(computer_rating,opponent_rating);
+        const int rdiff = computer_rating-opponent_rating;
+        score_t contempt = static_cast<score_t>(4*Params::PAWN_VALUE*(1.0/(1.0+exp(-rdiff/400.0)) - 0.5));
         if (doTrace) {
             std::cout << debugPrefix << "contempt (calculated from ratings) = ";
             Scoring::printScore(contempt,std::cout);
@@ -2812,7 +2810,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   predicted_move = ponder_move = NullMove;
                   ponder_status = PonderStatus::None;
                   MoveSet movesToSearch;
-                  reply = search(searcher,board,movesToSearch,stats,false);
+                  reply = search(board,movesToSearch,stats,false);
                   // Note: we may know the game has ended here before
                   // we get confirmation from Winboard. So be sure
                   // we set the global game_end flag here so that we won't

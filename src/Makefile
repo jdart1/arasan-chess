@@ -193,7 +193,7 @@ LLVM_PROFDATA = llvm-profdata
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
-FLAGS := -std=c++17 -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
+FLAGS := -std=c++17 -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifndef DEBUG
 # use LTO only if no PGO
 ifdef PGO
@@ -235,7 +235,7 @@ GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
-FLAGS := -Wall -Wextra -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
+FLAGS := -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifneq "$(GCC11)" "1"
 # c++17 support must be enabled explicitly
 FLAGS := $(FLAGS) -std=c++17

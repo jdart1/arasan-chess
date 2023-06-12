@@ -586,9 +586,9 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       }
       else {
          pawn = pawns.lastOne();
-         const int rank = Rank(pawn,side);
-         assert(rank >= 2);
-         const int rank_dist = std::min<int>(3,rank - 2);
+         const int r = Rank(pawn,side);
+         assert(r >= 2);
+         const int rank_dist = std::min<int>(3,r - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
 #ifdef TUNE
          counts[rank_dist][f]++;

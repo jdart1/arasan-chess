@@ -55,12 +55,6 @@ private:
         return true;
     }
 
-    // split a command line into a verb (cmd_word) and arguments (cmd_args)
-    void split_cmd(const std::string &cmd, std::string &cmd_word, std::string &cmd_args);
-
-    // Convert move text to Move type
-    Move text_to_move(const Board &board, const std::string &input);
-
     // Parse move input (may be preceded by "usermove" or may just be
     // move text)
     Move get_move(const std::string &cmd_word, const std::string &cmd_args);
@@ -79,12 +73,8 @@ private:
     // handle "st" (time control) from Winboard
     void process_st_command(const std::string &cmd_args);
 
-    // In Winboard mode, on the chess server, compute a contempt value
-    // from ratings
-    score_t contemptFromRatings(int computer_rating,int opponent_rating);
-
-    // return the UCI increment for "side"
-    int getIncrUCI(const ColorType side);
+    // return the UCI increment for color "c"
+    int getIncrUCI(const ColorType c);
 
     // determine whether or not to accept a draw offer
     bool accept_draw(Board &board);
@@ -118,18 +108,13 @@ private:
     // handle commands in edit mode (Winboard protocol)
     void edit_mode_cmds(Board &board,ColorType &side,const std::string &cmd);
 
-    void calcTimes(bool pondering, ColorType side, timeMgmt::Times &times);
+    void calcTimes(bool pondering, ColorType c, timeMgmt::Times &times);
 
     // do a ponder search
-    void ponder(Board &board, Move move, Move predicted_reply, bool uci);
+    void ponder(Board &board, Move move, Move predicted_reply, bool isUCI);
 
     // foreground search using the current board position.
-    Move search(SearchController *searcher, Board &board,
-                const MoveSet &movesToSearch, Statistics &stats, bool infinite);
-
-    // return true if current board position is a draw by the
-    // rules of chess. If so, also set the "reason" std::string
-    int isDraw(const Board &board, Statistics &last_stats, std::string &reason);
+    Move search(Board &board, const MoveSet &movesToSearch, Statistics &stats, bool infinite);
 
     // Send a move to the UI
     void send_move(Board &board, Move &move, Statistics &);
@@ -137,14 +122,14 @@ private:
     // handle a command when we are halted waiting for more UCI input
     void processCmdInWaitState(const std::string &cmd);
 
-    // Find best move using the current board position.
-    Move analyze(SearchController &searcher, Board &board, Statistics &stats);
+    // Find best move in analysis mode using the supplied board position.
+    Move analysisSearch(const Board &board);
 
     // Handle the "hint" command (issued by the Arasan GUI)
     void doHint();
 
     // output search status ("stat01", for Winboard)
-    void analyze_output(const Statistics &stats);
+    void analyze_output(const Statistics &);
 
     // Winboard analyze mode
     void analyze(Board &board);

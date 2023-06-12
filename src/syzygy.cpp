@@ -1,4 +1,4 @@
-// Copyright 2016, 2018-2019, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019, 2021, 2023 by Jon Dart. All Rights Reserved.
 #include "syzygy.h"
 #include "constant.h"
 #include "bitboard.h"
@@ -124,10 +124,10 @@ int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, 
 
         }
         std::sort(rootMoves.begin(),rootMoves.end(),
-             [](const RootMove &a, const RootMove &b)
+             [](const RootMove &m1, const RootMove &m2)
              {
-                 return a.tbRank == b.tbRank ? (a.tbScore > b.tbScore) :
-                     (a.tbRank > b.tbRank);
+                 return m1.tbRank == m2.tbRank ? (m1.tbScore > m2.tbScore) :
+                     (m1.tbRank > m2.tbRank);
              }
         );
         return 1;

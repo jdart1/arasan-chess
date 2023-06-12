@@ -211,9 +211,7 @@ public:
     Move ply0_search(std::vector<RootMove> *moveList = nullptr);
 
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
-                        int iteration_depth,
-                        int depth,
-                        const MoveSet &exclude);
+                        int iteration_depth, int depth, const MoveSet &exclude);
 
     bool mainThread() const {
        return ti->index == 0;
@@ -256,11 +254,7 @@ protected:
     int updateRootMove(const Board &board,
                        NodeInfo *node, Move move, score_t score, int move_index);
 
-    int updateMove(NodeInfo* myNode, Move move, score_t score, int ply);
-
     void updatePV(const Board &, Move m, int ply);
-
-    void updatePV(const Board &board,NodeInfo *node,NodeInfo *fromNode,Move move, int ply);
 
     int checkTime();
 
@@ -309,7 +303,7 @@ protected:
 
     void setTalkLevelFromController();
 
-    void updateStats(const Board &, NodeInfo *node,int iteration_depth,
+    void updateStats(const Board &, NodeInfo *node, int iteration_depth,
 		     score_t score);
 
     void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
