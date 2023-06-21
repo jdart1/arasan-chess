@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2016-2019 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016-2019, 2021, 2023 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
@@ -50,18 +50,6 @@ public:
     // update a single move's history
     void updateMove(const Board &board, NodeInfo *node, Move m, bool positive, bool continuationOnly);
 
-    template<class T>
-    using PieceToArray = std::array<std::array<T, 64>, 16>;
-
-    template<class T>
-    using PieceTypeToArray = std::array<std::array<T, 64>, 8>;
-
-    template<class T>
-    using PieceTypeToMatrix = PieceTypeToArray< PieceTypeToArray<T> >;
-
-    template<class T>
-    using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
-
     Move getCounterMove(const Board &board, Move prev) const {
         ColorType oside = board.oppositeSide();
         return IsNull(prev) ? NullMove : (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)];
@@ -81,6 +69,18 @@ public:
     int getFuHistory(NodeInfo *node, Move move) const noexcept;
 
 private:
+
+    template<class T>
+    using PieceToArray = std::array<std::array<T, 64>, 16>;
+
+    template<class T>
+    using PieceTypeToArray = std::array<std::array<T, 64>, 8>;
+
+    template<class T>
+    using PieceTypeToMatrix = PieceTypeToArray< PieceTypeToArray<T> >;
+
+    template<class T>
+    using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
 
     Move killers1[Constants::MaxPly+2];
     Move killers2[Constants::MaxPly+2];
