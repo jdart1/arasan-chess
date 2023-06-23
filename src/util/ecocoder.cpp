@@ -1,4 +1,4 @@
-// Copyright 1996, 2013, 2014, 2017, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1996, 2013, 2014, 2017, 2021, 2023 by Jon Dart.  All Rights Reserved.
 
 // Utility to add ECO codes to PGN game files.
 
@@ -26,11 +26,9 @@ extern "C"
 #include <ctype.h>
 #include <vector>
 
-using namespace std;
-
 static void show_usage()
 {
-   cerr << "Usage: ecocoder pgn_file" << endl;
+   std::cerr << "Usage: ecocoder pgn_file" << std::endl;
 }
 
 
@@ -58,17 +56,17 @@ int CDECL main(int argc, char **argv)
    }
    else
    {
-      ifstream pgn_file( argv[arg], ios::in | ios::binary);
+      std::ifstream pgn_file( argv[arg], std::ios::in | std::ios::binary);
       int c;
       ColorType side;
-      string result, white, black;
+      std::string result, white, black;
       if (!pgn_file.good()) {
-         cerr << "could not open file " << argv[arg] << endl;
+         std::cerr << "could not open file " << argv[arg] << std::endl;
          exit(-1);
       }
       else
       {
-         vector<ChessIO::Header> hdrs;
+         std::vector<ChessIO::Header> hdrs;
          while (!pgn_file.eof())
          {
             long first;
@@ -99,7 +97,7 @@ int CDECL main(int argc, char **argv)
             bool exit = false;
             while (ok && !exit) {
                ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
-               string num;
+               std::string num;
                switch (tok.type) {
                case ChessIO::Eof: {
                   exit = true;
@@ -126,13 +124,13 @@ int CDECL main(int argc, char **argv)
                       !legalMove(board,StartSquare(m),
                                  DestSquare(m))) {
                      // echo to both stdout and stderr
-                     cerr << "Illegal move: " << tok.val << endl;
-                     cout << "Illegal move: " << tok.val << endl;
+                     std::cerr << "Illegal move: " << tok.val << std::endl;
+                     std::cout << "Illegal move: " << tok.val << std::endl;
                      ok = false;
                   }
                   else {
                      BoardState bs = board.state;
-                     string img;
+                     std::string img;
                      // convert to SAN
                      Notation::image(board,m,Notation::OutputFormat::SAN,img);
                      moves.add_move(board,bs,m,img,false);
@@ -152,7 +150,7 @@ int CDECL main(int argc, char **argv)
                      exit = true;
                      break;
                   }
-                  cerr << "Unrecognized text: " << tok.val << endl;
+                  std::cerr << "Unrecognized text: " << tok.val << std::endl;
                   break;
                }
                case ChessIO::Comment: {
@@ -165,7 +163,7 @@ int CDECL main(int argc, char **argv)
                   break;
                }
                case ChessIO::OpenVar:
-                   cerr << "Warning: variations not supported" << endl;
+                   std::cerr << "Warning: variations not supported" << std::endl;
                    done = true;
                default:
                    break;
@@ -173,10 +171,10 @@ int CDECL main(int argc, char **argv)
                } // end switch
             }
             // output header
-            string ecoC = "";
+            std::string ecoC = "";
             int found = ChessIO::get_header(hdrs,"ECO",ecoC);
             if (!found) {
-               string name;
+               std::string name;
                eco.classify(moves,ecoC,name);
                if (ecoC != "") {
                   ChessIO::Header ecoHeader("ECO",ecoC.c_str());
@@ -184,7 +182,7 @@ int CDECL main(int argc, char **argv)
                }
             }
             else if (ecoC == "") {
-               string name;
+               std::string name;
                eco.classify(moves,ecoC,name);
                if (ecoC != "") {
                   ChessIO::Header ecoHeader("ECO",ecoC.c_str());
@@ -197,7 +195,7 @@ int CDECL main(int argc, char **argv)
                   }
                }
             }
-            if (moves.num_moves()>0) ChessIO::store_pgn(cout,moves,result,hdrs);
+            if (moves.num_moves()>0) ChessIO::store_pgn(std::cout,moves,result,hdrs);
          }
          pgn_file.close();
       }

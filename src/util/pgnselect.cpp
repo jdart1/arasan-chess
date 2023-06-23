@@ -1,4 +1,4 @@
-// Copyright 2016, 2017, 2019-2021 by Jon Dart.  All Rights Reserved.
+// Copyright 2016, 2017, 2019-2021, 2023 by Jon Dart.  All Rights Reserved.
 
 // Utility to extract selected positions from PGN files into an EPD file.
 
@@ -29,8 +29,6 @@ extern "C"
 #include <unordered_map>
 #include <vector>
 
-using namespace std;
-
 static struct SelectOptions
 {
    unsigned minPly;
@@ -59,19 +57,19 @@ static struct SelectOptions
 
 static std::mt19937_64 random_engine;
 
-static unordered_map<hash_t,double> *positions;
+static std::unordered_map<hash_t,double> *positions;
 
 static const int SEARCH_DEPTH = 12;
 
 static void show_usage()
 {
-   cerr << "Usage: pgnselect [options] pgn_file" << endl;
-   cerr << "Options:" << endl;
-   cerr << "-d <int> - min ply distance between samples" << endl;
-   cerr << "-max <int> - max ply to sample" << endl;
-   cerr << "-min <int> - min ply to sample" << endl;
-   cerr << "-n <int> - samples per game" << endl;
-   cerr << "-r - insert random moves" << endl;
+   std::cerr << "Usage: pgnselect [options] pgn_file" << std::endl;
+   std::cerr << "Options:" << std::endl;
+   std::cerr << "-d <int> - min ply distance between samples" << std::endl;
+   std::cerr << "-max <int> - max ply to sample" << std::endl;
+   std::cerr << "-min <int> - min ply to sample" << std::endl;
+   std::cerr << "-n <int> - samples per game" << std::endl;
+   std::cerr << "-r - insert random moves" << std::endl;
 }
 
 static int score(SearchController *searcher,const Board &board,
@@ -100,7 +98,7 @@ static bool exclude(const Board &board) {
         Scoring::theoreticalDraw(board);
 }
 
-static bool ok_to_sample(const Board &board, SearchController *searcher, Statistics &stats, string &fen) 
+static bool ok_to_sample(const Board &board, SearchController *searcher, Statistics &stats, std::string &fen) 
 {
     // omit KPK and drawn positions
     if (exclude(board)) {
@@ -132,7 +130,7 @@ static bool ok_to_sample(const Board &board, SearchController *searcher, Statist
                     }
                 }
                 // update FEN to reflect quiet position
-                stringstream s;
+                std::stringstream s;
                 BoardIO::writeFEN(tmp,s,0);
                 fen = s.str();
             }
@@ -141,44 +139,44 @@ static bool ok_to_sample(const Board &board, SearchController *searcher, Statist
     return true;
 }
 
-static void sample(vector<string> &positions,SearchController *searcher, Statistics &stats) 
+static void sample(std::vector<std::string> &game_positions, SearchController *searcher, Statistics &stats) 
 {
-    const int count = int(positions.size());
+    const int count = static_cast<int>(game_positions.size());
     if (count <= 0) return;
     const unsigned sampleTarget = std::min<unsigned>(selOptions.samplesPerGame,count/selOptions.minSampleDistance);
     std::uniform_int_distribution<unsigned> dist(0,unsigned(count-1));
-    vector<unsigned> sampled;
+    std::vector<unsigned> sampled;
     for (unsigned i = 0; i < selOptions.maxRetries && sampled.size() < sampleTarget; i++) {
         unsigned idx = dist(random_engine);
         // verify idx is not wihin minSampleDistance of an existing
         // sample
         bool close = false;
-        for (const unsigned &i : sampled) {
-            if (static_cast<unsigned>(std::abs(static_cast<int>(i)-static_cast<int>(idx))) < selOptions.minSampleDistance) {
+        for (const unsigned &j : sampled) {
+            if (static_cast<unsigned>(std::abs(static_cast<int>(j)-static_cast<int>(idx))) < selOptions.minSampleDistance) {
                 close = true;
                 continue;
             }
         }
         if (close) continue; // re-sample
-        string fen(positions[idx]);
+        std::string fen(game_positions[idx]);
         Board board;
         (void)BoardIO::readFEN(board,fen);
         if (selOptions.randomMoves) {
             RootMoveGenerator mg(board);
             Move allmoves[Constants::MaxMoves];
             Move move;
-            int count = 0;
-            while (!IsNull(move = mg.nextMove(count))) {
-                allmoves[count++] = move;
+            int n = 0;
+            while (!IsNull(move = mg.nextMove(n))) {
+                allmoves[n++] = move;
             }
-            if (count > 1) {
-                std::uniform_int_distribution<unsigned> move_dist(0,unsigned(count-1));
+            if (n > 1) {
+                std::uniform_int_distribution<unsigned> move_dist(0,unsigned(n-1));
                 Move randomMove = allmoves[move_dist(random_engine)];
                 board.doMove(randomMove);
             }
         }
         if (ok_to_sample(board,searcher,stats,fen)) {
-            cout << fen << endl;
+            std::cout << fen << std::endl;
             sampled.push_back(idx);
         }
     }
@@ -200,7 +198,7 @@ int CDECL main(int argc, char **argv)
 
    random_engine.seed(getRandomSeed());
 
-   positions = new unordered_map<hash_t, double>();
+   positions = new std::unordered_map<hash_t, double>();
 
    Board board;
 
@@ -212,17 +210,17 @@ int CDECL main(int argc, char **argv)
    else
    {
       int arg = 1;
-      auto processInt = [&arg, &argc, &argv](unsigned &opt, const string &name) {
+      auto processInt = [&arg, &argc, &argv](unsigned &opt, const std::string &name) {
          if (++arg < argc) {
-            stringstream s(argv[arg]);
+            std::stringstream s(argv[arg]);
             s >> opt;
             if (s.bad() || s.fail()) {
-               cerr << "expected number after -" << name << endl;
+               std::cerr << "expected number after -" << name << std::endl;
                exit(-1);
             }
          }
          else {
-            cerr << "expected number after -" << name << endl;
+            std::cerr << "expected number after -" << name << std::endl;
             exit(-1);
          }
       };
@@ -261,18 +259,18 @@ int CDECL main(int argc, char **argv)
       // This ensures PVs are not terminated by a hash hit
       globals::options.search.hash_table_size = 0;
 
-      ifstream pgn_file(argv[arg], ios::in);
+      std::ifstream pgn_file(argv[arg], std::ios::in);
       ColorType side;
-      string result, white, black;
+      std::string result, white, black;
       if (!pgn_file.good()) {
-         cerr << "could not open file " << argv[arg] << endl;
+         std::cerr << "could not open file " << argv[arg] << std::endl;
          exit(-1);
       }
       else
       {
-         vector<ChessIO::Header> hdrs;
+         std::vector<ChessIO::Header> hdrs;
          bool quit = false;
-         vector<string> positions;
+         std::vector<std::string> game_positions;
          while (!quit && !pgn_file.eof()) {
             long first;
             MoveArray moves;
@@ -280,14 +278,14 @@ int CDECL main(int argc, char **argv)
             side = White;
             if (!pgn_file.good()) {
                if (pgn_file.bad() || pgn_file.fail()) {
-                  cerr << "read error" << endl;
+                  std::cerr << "read error" << std::endl;
                   quit = true;
                }
             }
             else {
                pgn_file.ignore('[');
                if (!pgn_file.good()) {
-                  if (!pgn_file.eof()) cerr << "read error" << endl;
+                  if (!pgn_file.eof()) std::cerr << "read error" << std::endl;
                   quit = true;
                }
                else {
@@ -302,10 +300,10 @@ int CDECL main(int argc, char **argv)
             bool done = false;
             bool exit = false;
             unsigned ply = 0;
-            positions.clear();
+            game_positions.clear();
             while (ok && !exit) {
                ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
-               string num;
+               std::string num;
                switch (tok.type) {
                case ChessIO::Eof: {
                   exit = true;
@@ -331,21 +329,21 @@ int CDECL main(int argc, char **argv)
                   if (IsNull(m) ||
                       !legalMove(board, StartSquare(m),
                                  DestSquare(m))) {
-                     cerr << "Illegal move: " << tok.val << endl;
+                     std::cerr << "Illegal move: " << tok.val << std::endl;
                      ok = false;
                   }
                   else {
                      BoardState bs = board.state;
-                     string img;
+                     std::string img;
                      // convert to SAN
                      Notation::image(board, m, Notation::OutputFormat::SAN, img);
                      moves.add_move(board, bs, m, img, false);
                      board.doMove(m);
                      if (++ply>=selOptions.minPly) {
                          if (ply<selOptions.maxPly) {
-                             stringstream s;
+                             std::stringstream s;
                              BoardIO::writeFEN(board,s,0);
-                             positions.push_back(s.str());
+                             game_positions.push_back(s.str());
                          }
                      }
                   }
@@ -363,7 +361,7 @@ int CDECL main(int argc, char **argv)
                      exit = true;
                      break;
                   }
-                  cerr << "Unrecognized text: " << tok.val << endl;
+                  std::cerr << "Unrecognized text: " << tok.val << std::endl;
                   break;
                }
                case ChessIO::Comment: {
@@ -380,7 +378,7 @@ int CDECL main(int argc, char **argv)
                } // end switch
             } // end of game
             if (ply >= selOptions.minGamePly) {
-               sample(positions,searcher,stats);
+               sample(game_positions,searcher,stats);
             }
          }
 
