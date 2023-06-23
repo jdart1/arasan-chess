@@ -1,4 +1,4 @@
-// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019, 2021 by Jon Dart
+// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019, 2021, 2023 by Jon Dart
 
 #include "bitboard.h"
 
@@ -95,15 +95,13 @@ void Bitboard::init()
    }
 #endif
    for (i = 0; i < 256; i++) {
-     int mask = 128;
      int msb = 7;
      msbTable[i] = 0;
-     while (mask > 0) {
-       if (i & mask) {
+     for (int m = 128; m > 0; m >>= 1, msb--) {
+       if (i & m) {
          msbTable[i] = msb;
          break;
        }
-       mask >>=1; msb--;
      }
    }
    done_init++;
