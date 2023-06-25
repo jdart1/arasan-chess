@@ -43,7 +43,7 @@ static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 #ifdef RAZORING
 static const int RAZOR_DEPTH = DEPTH_INCREMENT;
 #endif
-static const int SEE_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
+static const int SEE_PRUNING_DEPTH = 7*DEPTH_INCREMENT;
 static const int CHECK_EXTENSION = DEPTH_INCREMENT;
 static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
@@ -970,7 +970,8 @@ static score_t razorMargin(int depth)
 static score_t seePruningMargin(int depth, bool quiet)
 {
     int p = depth/DEPTH_INCREMENT;
-    return quiet ? -p*Params::PAWN_VALUE : -p*p*int(0.2*Params::PAWN_VALUE);
+    return quiet ? -p*static_cast<int>(0.75*Params::PAWN_VALUE) :
+        -p*p*static_cast<int>(0.2*Params::PAWN_VALUE);
 }
 
 void Search::setVariablesFromController() {
@@ -1513,7 +1514,6 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
 #endif
         CheckStatusType in_check_after_move = board.wouldCheck(move);
-        node->swap = Constants::INVALID_SCORE;
         // calculate extensions/reductions. No pruning at ply 0.
         int extension = extend(board, node, in_check_after_move, move);
         int newDepth = depth - DEPTH_INCREMENT + extension;
@@ -2320,23 +2320,23 @@ void Search::storeHash(hash_t hash, Move hash_move, int depth) {
    }
 }
 
-int Search::prune(const Board &b,
-                  NodeInfo *n,
-                  CheckStatusType in_check_after_move,
-                  int moveIndex,
-                  int improving,
-                  Move m) {
+bool Search::prune(const Board &b,
+                   NodeInfo *n,
+                   CheckStatusType in_check_after_move,
+                   int moveIndex,
+                   int improving,
+                   Move m) {
     assert(n->swap == Constants::INVALID_SCORE);
     assert(n->ply > 0);
     if (n->num_legal &&
         b.checkStatus() == NotInCheck &&
         n->best_score > -Constants::MATE_RANGE) {
-        const bool quiet = !CaptureOrPromotion(m);
+        const bool quiet = !CaptureOrPromotion(m) && in_check_after_move != InCheck;
         int depth = n->depth;
         // for pruning decisions, use modified depth but not the same as
-        // LMR depth (idea from Laser)
+        // regular reduced search depth (idea from Laser)
         const int pruneDepth = quiet ? depth - lmr(n,depth,moveIndex) : depth;
-        if (in_check_after_move != InCheck && quiet && b.getMaterial(b.sideToMove()).hasPieces()) {
+        if (quiet && b.getMaterial(b.sideToMove()).hasPieces()) {
             // do not use pruneDepth for LMP
             if (GetPhase(m) >= MoveGenerator::HISTORY_PHASE &&
                 moveIndex > lmpCount(depth,improving)) {
@@ -2348,7 +2348,7 @@ int Search::prune(const Board &b,
                     indent(n->ply); std::cout << "LMP: pruned" << std::endl;
                 }
 #endif
-                return 1;
+                return true;
             }
             // History pruning.
             if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
@@ -2362,7 +2362,7 @@ int Search::prune(const Board &b,
 #ifdef SEARCH_STATS
                 ++stats.history_pruning;
 #endif
-                return 1;
+                return true;
             }
             // futility pruning, enabled at low depths. Do not prune
             // moves with good history.
@@ -2383,24 +2383,14 @@ int Search::prune(const Board &b,
                         indent(n->ply); std::cout << "futility: pruned" << std::endl;
                     }
 #endif
-                    return 1;
+                    return true;
                 }
             }
         }
-        // SEE pruning. Losing captures and checks and ms that put pieces en prise
+        // SEE pruning. Losing captures and checks and moves that put pieces en prise
         // are pruned at low depths.
-        if (pruneDepth <= SEE_PRUNING_DEPTH &&
-            //    extend <= 0 &&
-            n->ply > 0 &&
-            GetPhase(m) > MoveGenerator::WINNING_CAPTURE_PHASE) {
-            const score_t margin = seePruningMargin(pruneDepth,quiet);
-            bool seePrune;
-            if (margin >= -Params::PAWN_VALUE/3 && n->swap != Constants::INVALID_SCORE) {
-                seePrune = !n->swap;
-            } else {
-                seePrune = !seeSign(b,m,margin);
-            }
-            if (seePrune) {
+        if (pruneDepth <= SEE_PRUNING_DEPTH && GetPhase(m) > MoveGenerator::WINNING_CAPTURE_PHASE) {
+            if (!seeSign(b,m,seePruningMargin(pruneDepth,quiet))) {
 #ifdef SEARCH_STATS
                 ++stats.see_pruning;
 #endif
@@ -2409,11 +2399,11 @@ int Search::prune(const Board &b,
                     indent(n->ply); std::cout << "SEE: pruned" << std::endl;
                 }
 #endif
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
 int Search::extend(const Board &b,
@@ -3137,7 +3127,6 @@ score_t Search::search()
             }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int extension = 0, reduction = 0, newDepth = depth - DEPTH_INCREMENT;
-            node->swap = Constants::INVALID_SCORE;
             if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
                 extension = DEPTH_INCREMENT;
                 newDepth += extension;

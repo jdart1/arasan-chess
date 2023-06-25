@@ -44,8 +44,7 @@ struct NodeInfo {
                  best_count(0),
 #endif
                  ply(0),
-                 depth(0),
-                 swap(Constants::INVALID_SCORE)
+                 depth(0)
         {
         }
     score_t best_score;
@@ -65,7 +64,6 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
-    score_t swap;
 #ifdef NNUE
     nnue::Network::AccumulatorType accum;
     std::array<DirtyState, 3> dirty;
@@ -230,12 +228,12 @@ protected:
     enum SearchFlags { IID=1, VERIFY=2, EXACT=4, PROBCUT=8 };
 
     // Return true if move can be pruned (not called at root)
-    int prune(const Board &board,
-              NodeInfo *node,
-              CheckStatusType in_check_after_move,
-              int moveIndex,
-              int improving,
-              Move move);
+    bool prune(const Board &board,
+               NodeInfo *node,
+               CheckStatusType in_check_after_move,
+               int moveIndex,
+               int improving,
+               Move move);
 
     int extend(const Board &board,
                NodeInfo *node,
