@@ -47,8 +47,15 @@ public:
 
     void updateStats(const Board &, NodeInfo *node);
 
+    int captureHistoryScore(const Board &b, Move m) const noexcept {
+        return (*captureHistory)[b[StartSquare(m)]][DestSquare(m)][Capture(m)];
+    }
+
     // update a single move's history
     void updateMove(const Board &board, NodeInfo *node, Move m, bool positive, bool continuationOnly);
+
+    // update capture history
+    void updateCaptureHistory(const Board &board, int depth, Move m, bool positive);
 
     Move getCounterMove(const Board &board, Move prev) const {
         ColorType oside = board.oppositeSide();
@@ -82,6 +89,9 @@ private:
     template<class T>
     using ButterflyArray = std::array<std::array<std::array<T, 64>, 64>, 2>;
 
+    // indexed by piece moved, square (to), type of piece captured
+    using CaptureHistoryArray = std::array<std::array<std::array<int, 8>, 64>, 16>;
+
     Move killers1[Constants::MaxPly+2];
     Move killers2[Constants::MaxPly+2];
 
@@ -91,7 +101,7 @@ private:
 
     PieceTypeToMatrix<int> *counterMoveHistory, *fuMoveHistory;
 
-    int bonus(int depth) const noexcept;
+    CaptureHistoryArray *captureHistory;
 
     void update(int &val, int bonus, int divisor, bool is_best);
 };

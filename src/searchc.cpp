@@ -5,11 +5,27 @@
 
 #include <cassert>
 
+static constexpr int MAX_HISTORY_DEPTH = 17;
+static constexpr int HISTORY_DIVISOR = 448;
+static constexpr int MAX_CAPTURE_HISTORY_DEPTH = 8;
+static constexpr int CAPTURE_HISTORY_DIVISOR = 2048;
+
+static int bonus(int depth) {
+    const int d = depth / DEPTH_INCREMENT;
+    return d <= MAX_HISTORY_DEPTH ? d * d + 5 * d - 2 : 0;
+}
+
+static int captureBonus(int depth) {
+    const int d = depth / DEPTH_INCREMENT;
+    return d <= MAX_CAPTURE_HISTORY_DEPTH ? d*256 : 0;
+}
+
 SearchContext::SearchContext() {
     history = new ButterflyArray<int>();
     counterMoves = new PieceToArray<Move>();
     counterMoveHistory = new PieceTypeToMatrix<int>();
     fuMoveHistory = new PieceTypeToMatrix<int>();
+    captureHistory = new CaptureHistoryArray();
     clear();
 }
 
@@ -18,15 +34,18 @@ SearchContext::~SearchContext() {
     delete counterMoves;
     delete counterMoveHistory;
     delete fuMoveHistory;
+    delete captureHistory;
 }
 
 void SearchContext::clear() {
     clearKiller();
     for (int side = 0; side < 2; side++)
         for (int i = 0; i < 64; i++) {
-            for (int j = 0; j < 64; j++) {
-                (*history)[side][i][j] = 0;
-            }
+            (*history)[side][i].fill(0);
+        }
+    for (int p = 0; p < 16; p++)
+        for (int sq = 0; sq < 64; sq++) {
+            (*captureHistory)[p][sq].fill(0);
         }
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 64; j++) {
@@ -36,11 +55,10 @@ void SearchContext::clear() {
     // clear counter move history
     for (int i = 0; i < 8; i++)
         for (int j = 0; j < 64; j++)
-            for (int k = 0; k < 8; k++)
-                for (int l = 0; l < 64; l++) {
-                    (*counterMoveHistory)[i][j][k][l] = 0;
-                    (*fuMoveHistory)[i][j][k][l] = 0;
-                }
+            for (int k = 0; k < 8; k++) {
+                (*counterMoveHistory)[i][j][k].fill(0);
+                (*fuMoveHistory)[i][j][k].fill(0);
+            }
 }
 
 void SearchContext::clearKiller() {
@@ -66,14 +84,6 @@ int SearchContext::scoreForOrdering(Move m, NodeInfo *node,
     return score;
 }
 
-static constexpr int MAX_HISTORY_DEPTH = 17;
-static constexpr int HISTORY_DIVISOR = 448;
-
-int SearchContext::bonus(int depth) const noexcept {
-    const int d = depth / DEPTH_INCREMENT;
-    return d <= MAX_HISTORY_DEPTH ? d * d + 5 * d - 2 : 0;
-}
-
 void SearchContext::update(int &val, int bonus, int divisor, bool is_best) {
     val -= val * bonus / divisor;
     if (is_best)
@@ -87,13 +97,19 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node) {
     assert(!IsNull(node->best));
     assert(OnBoard(StartSquare(node->best)) && OnBoard(DestSquare(node->best)));
     assert(node->num_quiets < Constants::MaxMoves);
-    // Do not update on fail high of 1st quiet and low depth (idea from
-    // Ethereal).
-    if (node->num_quiets == 1 && node->depth <= 3 * DEPTH_INCREMENT)
-        return;
-    for (int i = 0; i < node->num_quiets; i++) {
-        const Move m = node->quiets[i];
-        updateMove(board,node,m,MovesEqual(m,node->best),false);
+    if (CaptureOrPromotion(node->best)) {
+        for (int i = 0; i < node->num_captures; i++) {
+            updateMove(board,node,node->captures[i],MovesEqual(node->captures[i],node->best),false);
+        }
+    } else {
+        // Do not update on fail high of 1st quiet and low depth (idea from
+        // Ethereal).
+        if (node->num_quiets == 1 && node->depth <= 3 * DEPTH_INCREMENT)
+            return;
+        for (int i = 0; i < node->num_quiets; i++) {
+            const Move m = node->quiets[i];
+            updateMove(board,node,m,MovesEqual(m,node->best),false);
+        }
     }
 }
 
@@ -124,6 +140,12 @@ void SearchContext::updateMove(const Board &board, NodeInfo *node, Move m,
             }
         }
     }
+}
+
+void SearchContext::updateCaptureHistory(const Board &board, int depth, Move m, bool positive) {
+    update((*captureHistory)[board[StartSquare(m)]][DestSquare(m)][Capture(m)],
+            captureBonus(depth),
+            CAPTURE_HISTORY_DIVISOR, positive);
 }
 
 int SearchContext::getCmHistory(NodeInfo *node, Move move) const noexcept {

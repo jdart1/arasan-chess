@@ -34,6 +34,12 @@ struct Params  {
         return 8*Gain(move) - SEE_PIECE_VALUES[PieceMoved(move)];
     }
 
+    static FORCEINLINE score_t maxValue(Move move) {
+        return (TypeOfMove(move) == Promotion) ?
+            SEE_PIECE_VALUES[Capture(move)] + SEE_PIECE_VALUES[PromoteTo(move)] - SEE_PIECE_VALUES[Pawn] :
+            SEE_PIECE_VALUES[Capture(move)];
+    }
+
     static PARAM_MOD PAWN_VALUE_MIDGAME;
     static PARAM_MOD PAWN_VALUE_ENDGAME;
     static PARAM_MOD KNIGHT_VALUE_MIDGAME;

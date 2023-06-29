@@ -51,6 +51,7 @@ struct NodeInfo {
     score_t alpha, beta;
     int cutoff;
     int num_quiets;
+    int num_captures;
     int num_legal;
     int flags;
     Move best;
@@ -60,6 +61,7 @@ struct NodeInfo {
     Move pv[Constants::MaxPly];
     int pv_length;
     Move quiets[Constants::MaxMoves];
+    Move captures[Constants::MaxCaptures];
 #ifdef MOVE_ORDER_STATS
     int best_count;
 #endif

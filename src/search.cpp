@@ -39,6 +39,7 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
 static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
+static constexpr int CAPTURE_FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
 static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 #ifdef RAZORING
 static const int RAZOR_DEPTH = DEPTH_INCREMENT;
@@ -91,6 +92,10 @@ static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::
 static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params::PAWN_VALUE);
 
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
+
+static constexpr score_t CAPTURE_FUTILITY_MARGIN_BASE = static_cast<score_t>(2.0*Params::PAWN_VALUE);
+
+static constexpr score_t CAPTURE_FUTILITY_MARGIN_SLOPE = static_cast<score_t>(2.5*Params::PAWN_VALUE);
 
 static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
 
@@ -942,9 +947,13 @@ score_t Search::tbScoreAdjust(const Board &b,
 }
 #endif
 
+template <bool quiet>
 static score_t futilityMargin(int depth)
 {
-    return FUTILITY_MARGIN_BASE + std::max<int>(depth/DEPTH_INCREMENT,1)*FUTILITY_MARGIN_SLOPE;
+    if (quiet)
+      return FUTILITY_MARGIN_BASE + std::max<int>(depth/DEPTH_INCREMENT,1)*FUTILITY_MARGIN_SLOPE;
+    else
+      return CAPTURE_FUTILITY_MARGIN_BASE + (depth/DEPTH_INCREMENT)*CAPTURE_FUTILITY_MARGIN_SLOPE;
 }
 
 #ifdef STATIC_NULL_PRUNING
@@ -1476,7 +1485,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->pv[0] = NullMove;
     node->pv_length = 0;
     node->cutoff = 0;
-    node->num_quiets = node->num_legal = 0;
+    node->num_quiets = node->num_captures = node->num_legal = 0;
     node->alpha = alpha;
     node->beta = beta;
     node->best_score = node->alpha;
@@ -1498,7 +1507,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             continue;     // skip move
         }
         node->last_move = move;
-        if (!CaptureOrPromotion(move)) {
+        if (CaptureOrPromotion(move)) {
+            node->captures[node->num_captures++] = move;
+        }
+        else {
             node->quiets[node->num_quiets++] = move;
         }
         node->num_legal++; // all generated moves are legal at ply 0
@@ -1662,9 +1674,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             node->best_score = drawScore(board);
         }
     }
-    else if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
-             board.checkStatus() != InCheck) {
-        context.setKiller(node->best, node->ply);
+    else if (!IsNull(node->best) && board.checkStatus() != InCheck) {
+        if (!CaptureOrPromotion(node->best)) {
+            context.setKiller(node->best, node->ply);
+        }
         context.updateStats(board, node);
     }
 #ifdef MOVE_ORDER_STATS
@@ -2330,13 +2343,14 @@ bool Search::prune(const Board &b,
     assert(n->ply > 0);
     if (n->num_legal &&
         b.checkStatus() == NotInCheck &&
+        b.getMaterial(b.sideToMove()).hasPieces() &&
         n->best_score > -Constants::MATE_RANGE) {
         const bool quiet = !CaptureOrPromotion(m) && in_check_after_move != InCheck;
         int depth = n->depth;
         // for pruning decisions, use modified depth but not the same as
         // regular reduced search depth (idea from Laser)
         const int pruneDepth = quiet ? depth - lmr(n,depth,moveIndex) : depth;
-        if (quiet && b.getMaterial(b.sideToMove()).hasPieces()) {
+        if (quiet) {
             // do not use pruneDepth for LMP
             if (GetPhase(m) >= MoveGenerator::HISTORY_PHASE &&
                 moveIndex > lmpCount(depth,improving)) {
@@ -2370,7 +2384,7 @@ bool Search::prune(const Board &b,
                 FUTILITY_HISTORY_THRESHOLD[improving]){
                 // Threshold was formerly increased with the move index
                 // but this tests worse now.
-                score_t threshold = n->alpha - futilityMargin(pruneDepth);
+                score_t threshold = n->alpha - futilityMargin<true>(pruneDepth);
                 if (n->eval == Constants::INVALID_SCORE) {
                     n->eval = n->staticEval = evalu8(b);
                 }
@@ -2381,6 +2395,26 @@ bool Search::prune(const Board &b,
 #ifdef _TRACE
                     if (mainThread()) {
                         indent(n->ply); std::cout << "futility: pruned" << std::endl;
+                    }
+#endif
+                    return true;
+                }
+            }
+        } else {
+            if (pruneDepth <= CAPTURE_FUTILITY_DEPTH) {
+                if (n->eval == Constants::INVALID_SCORE) {
+                    n->eval = n->staticEval = evalu8(b);
+                }
+                score_t threshold = n->alpha - futilityMargin<false>(pruneDepth) -
+                    Params::maxValue(m) -
+                    context.captureHistoryScore(b, m);
+                if (n->eval < threshold) {
+#ifdef SEARCH_STATS
+                    ++stats.futility_pruning;
+#endif
+#ifdef _TRACE
+                    if (mainThread()) {
+                        indent(n->ply); std::cout << "futility (captures): pruned" << std::endl;
                     }
 #endif
                     return true;
@@ -2620,13 +2654,18 @@ score_t Search::search()
                 traceHash(result == HashEntry::LowerBound ? 'L' : 'U',node,hashValue,hashEntry);
               }
 #endif
-              if (!IsNull(hashMove) && !CaptureOrPromotion(hashMove)) {
-                  if (hashValue >= node->beta) {
-                      context.setKiller(hashMove,node->ply);
+              if (!IsNull(hashMove)) {
+                  if (CaptureOrPromotion(hashMove)) {
+                      context.updateCaptureHistory(board,depth,hashMove,hashValue >= node->beta);
                   }
-                  // history bonus for hash move generated beta cutoff,
-                  // penalty for hash move below alpha
-                  context.updateMove(board,node,hashMove,hashValue >= node->beta,hashValue <= node->alpha);
+                  else {
+                      if (hashValue >= node->beta) {
+                          context.setKiller(hashMove,node->ply);
+                      }
+                      // history bonus for hash move generated beta cutoff,
+                      // penalty for hash move below alpha
+                      context.updateMove(board,node,hashMove,hashValue >= node->beta,hashValue <= node->alpha);
+                  }
               }
               if (node->ply > 0 && (node-1)->num_legal <= 2 && !IsNull(node->last_move) && !CaptureOrPromotion(node->last_move)) {
                   context.updateMove(board,node-1,(node-1)->last_move,false,true);
@@ -3144,7 +3183,7 @@ score_t Search::search()
             }
             board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
-                  assert(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
+               assert(board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
 #ifdef _TRACE
                if (mainThread()) {
                   indent(ply); std::cout << "Illegal move!" << std::endl;
@@ -3187,9 +3226,9 @@ score_t Search::search()
 #endif
                // re-search with no reduction
                if (newDepth > 0)
-                  try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
+                  try_score=-search(-hibound, -node->best_score, ply+1, newDepth);
                else
-                  try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
+                  try_score=-quiesce(-hibound,-node->best_score, ply+1, 0);
             }
             if (try_score > node->best_score && hibound < node->beta && !terminate) {
                // widen window
@@ -3203,9 +3242,9 @@ score_t Search::search()
                }
 #endif
                if (newDepth > 0)
-                 try_score=-search(-hibound, -node->best_score,ply+1,newDepth);
+                  try_score=-search(-hibound, -node->best_score, ply+1, newDepth);
                else
-                 try_score=-quiesce(-hibound,-node->best_score,ply+1,0);
+                  try_score=-quiesce(-hibound,-node->best_score, ply+1, 0);
             }
             board.undoMove(move,state);
 #ifdef _TRACE
@@ -3272,13 +3311,14 @@ score_t Search::search()
             }
         }
     }
-    if (!IsNull(node->best) && !CaptureOrPromotion(node->best) &&
-        board.checkStatus() != InCheck) {
-        context.setKiller(node->best, node->ply);
-        if (node->ply > 0) {
-            context.setCounterMove(board,(node-1)->last_move,node->best);
+    if (!IsNull(node->best) && board.checkStatus() != InCheck) {
+        if (!CaptureOrPromotion(node->best)) {
+            context.setKiller(node->best, node->ply);
+            if (node->ply > 0) {
+                context.setCounterMove(board,(node-1)->last_move,node->best);
+            }
         }
-        context.updateStats(board,node);
+        context.updateStats(board, node);
     }
 
     // don't insert into the hash table if we are terminating - we may
