@@ -2339,7 +2339,6 @@ bool Search::prune(const Board &b,
                    int moveIndex,
                    int improving,
                    Move m) {
-    assert(n->swap == Constants::INVALID_SCORE);
     assert(n->ply > 0);
     if (n->num_legal &&
         b.checkStatus() == NotInCheck &&
