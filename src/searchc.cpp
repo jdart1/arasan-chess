@@ -98,6 +98,7 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node) {
     assert(OnBoard(StartSquare(node->best)) && OnBoard(DestSquare(node->best)));
     assert(node->num_quiets < Constants::MaxMoves);
     if (CaptureOrPromotion(node->best)) {
+        assert(node->num_captures<Constants::MaxCaptures);
         for (int i = 0; i < node->num_captures; i++) {
             updateMove(board,node,node->captures[i],MovesEqual(node->captures[i],node->best),false);
         }

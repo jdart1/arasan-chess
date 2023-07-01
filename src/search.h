@@ -32,6 +32,7 @@ struct NodeInfo {
                  beta(Constants::INVALID_SCORE),
                  cutoff(0),
                  num_quiets(0),
+                 num_captures(0),
                  num_legal(0),
                  flags(0),
                  best(NullMove),

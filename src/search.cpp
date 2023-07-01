@@ -1508,9 +1508,11 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
         node->last_move = move;
         if (CaptureOrPromotion(move)) {
+            assert(node->num_captures<Constants::MaxCaptures);
             node->captures[node->num_captures++] = move;
         }
         else {
+            assert(node->num_quiets<Constants::MaxMoves);
             node->quiets[node->num_quiets++] = move;
         }
         node->num_legal++; // all generated moves are legal at ply 0
