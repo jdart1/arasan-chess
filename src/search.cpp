@@ -28,7 +28,7 @@ static const int ASPIRATION_WINDOW[] =
      (int)(3.0*Params::PAWN_VALUE),
      (int)(6.0*Params::PAWN_VALUE),
       Constants::MATE};
-static const int ASPIRATION_WINDOW_STEPS = 6;
+static constexpr int ASPIRATION_WINDOW_STEPS = 6;
 
 #define STATIC_NULL_PRUNING
 //#define RAZORING
@@ -36,25 +36,25 @@ static const int ASPIRATION_WINDOW_STEPS = 6;
 #define MULTICUT
 #define NON_SINGULAR_PRUNING
 
-static const int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
-static const int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
-static const int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
+static constexpr int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
+static constexpr int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
+static constexpr int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
 static constexpr int CAPTURE_FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
-static const int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
+static constexpr int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
 #ifdef RAZORING
-static const int RAZOR_DEPTH = DEPTH_INCREMENT;
+static constexpr int RAZOR_DEPTH = DEPTH_INCREMENT;
 #endif
-static const int SEE_PRUNING_DEPTH = 7*DEPTH_INCREMENT;
-static const int CHECK_EXTENSION = DEPTH_INCREMENT;
-static const int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
-static const int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
+static constexpr int SEE_PRUNING_DEPTH = 7*DEPTH_INCREMENT;
+static constexpr int CHECK_EXTENSION = DEPTH_INCREMENT;
+static constexpr int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
+static constexpr int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
 #ifdef SINGULAR_EXTENSION
-static const int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
+static constexpr int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 #endif
-static const int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
+static constexpr int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
 static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
-static const int LMR_DEPTH = 3*DEPTH_INCREMENT;
+static constexpr int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
 // These tables are for the strength reduction feature:
@@ -79,9 +79,9 @@ static int singularSearchDepth(int depth)
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 
-static const int LMP_DEPTH=13;
+static constexpr int LMP_DEPTH=13;
 
-static const int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
+static constexpr int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
                                           {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
 #ifdef RAZORING
@@ -107,13 +107,13 @@ static const score_t QSEARCH_SEE_PRUNE_MARGIN = static_cast<score_t>(1.25*Params
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
-static const int NODE_ACCUM_THRESHOLD = 16;
+static constexpr int NODE_ACCUM_THRESHOLD = 16;
 
 #ifdef SMP_STATS
-static const int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
+static constexpr int SAMPLE_INTERVAL = 10000/NODE_ACCUM_THRESHOLD;
 #endif
 
-static const int Illegal = Constants::INVALID_SCORE;
+static constexpr int Illegal = Constants::INVALID_SCORE;
 
 static void setCheckStatus(Board &board, CheckStatusType s)
 {
@@ -538,7 +538,7 @@ Move SearchController::findBestMove(
    }
 
    // search done (all threads), set status and report statistics
-   static const int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
+   static constexpr int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
    if (!uci && !stats->end_of_game && globals::options.search.can_resign) {
@@ -2408,7 +2408,7 @@ bool Search::prune(const Board &b,
                 }
                 score_t threshold = n->alpha - futilityMargin<false>(pruneDepth) -
                     Params::maxValue(m) -
-                    context.captureHistoryScore(b, m);
+                    context.captureHistoryScore(b, m)/2;
                 if (n->eval < threshold) {
 #ifdef SEARCH_STATS
                     ++stats.futility_pruning;
