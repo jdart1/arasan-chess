@@ -379,30 +379,6 @@ public:
         int ply_limit,
         std::vector<RootMove> &mr);
 
-    uint64_t getTimeLimit() const {
-        if (typeOfSearch == TimeLimit && time_limit != Constants::INFINITE_TIME) {
-            // time boost/decrease based on search history:
-            int64_t extension = bonus_time;
-            if (fail_low_root_extend) {
-                // presently failing low, allow up to max extra time
-                extension += int64_t(xtra_time);
-            }
-            else if (fail_high_root || fail_high_root_extend) {
-                // extend time for fail high, but less than for
-                // failing low
-                extension += int64_t(xtra_time)/2;
-            }
-            extension = std::max<int64_t>(-int64_t(time_target),std::min<int64_t>(int64_t(xtra_time),extension));
-            return uint64_t(int64_t(time_target) + extension);
-        } else {
-            return time_limit;
-        }
-    }
-
-    uint64_t getMaxTime() const {
-        return time_target + xtra_time;
-    }
-
     void terminateNow();
 
     // Set a "post" function that will be called from the
@@ -532,19 +508,6 @@ public:
       return pool->totalHits();
    }
 
-   // Adjust time usage after root fail high or fail low. A temporary
-   // time extension is done to allow resolution of the fail high/low.
-   // Called from main thread.
-   void outOfBoundsTimeAdjust();
-
-   // Calculate the time adjustment after a root search iteration has
-   // completed (possibly with one or more fail high/fail lows).
-   // Called from main thread.
-   void historyBasedTimeAdjust(const Statistics &stats);
-
-   // Apply search history factors to adjust time control
-   void applySearchHistoryFactors();
-
    bool mainThreadCompleted() const noexcept {
        return pool->isCompleted(0);
    }
@@ -572,6 +535,26 @@ public:
    }
 
 private:
+
+   // Adjust time usage after root fail high or fail low. A temporary
+   // time extension is done to allow resolution of the fail high/low.
+   // Called from main thread.
+   void outOfBoundsTimeAdjust();
+
+   // Calculate the time adjustment after a root search iteration has
+   // completed (possibly with one or more fail high/fail lows).
+   // Called from main thread.
+   void historyBasedTimeAdjust(const Statistics &stats);
+
+   // Apply search history factors to adjust time control
+   void applySearchHistoryFactors();
+
+    // compute time limit based on current search state
+    uint64_t getTimeLimit() const noexcept;
+
+    uint64_t getMaxTime() const {
+        return time_target + xtra_time;
+    }
 
     // pointer to function, called to output status during
     // a search.

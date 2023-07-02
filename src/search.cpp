@@ -794,6 +794,26 @@ void SearchController::applySearchHistoryFactors() {
     }
 }
 
+uint64_t SearchController::getTimeLimit() const noexcept {
+    if (typeOfSearch == TimeLimit && time_limit != Constants::INFINITE_TIME) {
+        // time boost/decrease based on search history:
+        int64_t extension = bonus_time;
+        if (fail_low_root_extend) {
+            // presently failing low, allow up to max extra time
+            extension += int64_t(xtra_time);
+        }
+        else if (fail_high_root || fail_high_root_extend) {
+            // extend time for fail high, but less than for
+            // failing low
+            extension += int64_t(xtra_time)/2;
+        }
+        extension = std::max<int64_t>(-int64_t(time_target),std::min<int64_t>(int64_t(xtra_time),extension));
+        return uint64_t(int64_t(time_target) + extension);
+    } else {
+        return time_limit;
+    }
+}
+
 Search::Search(SearchController *c, ThreadInfo *threadInfo)
    :controller(c),
     iterationDepth(0),
