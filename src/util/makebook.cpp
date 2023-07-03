@@ -104,10 +104,10 @@ static unsigned minFrequency = 0;
 class BookEntry {
    public:
     BookEntry( ColorType side,
-               unsigned rec, PositionEval ev,
+               unsigned recommend, PositionEval ev,
                MoveEval mev, ResultType result,
                uint8_t mv_indx,
-               BookEntry *nxt, bool first);
+               BookEntry *nxt, bool isFirst);
 
     BookEntry *next;
     bool first;
@@ -131,12 +131,12 @@ class BookEntryJson : public BookEntry
 {
    public:
     BookEntryJson( Board b, ColorType side,
-               unsigned rec, PositionEval ev,
+               unsigned recomend, PositionEval ev,
                MoveEval mev, ResultType result,
                uint8_t idx,
                const std::string &move,
-               BookEntryJson *nxt, bool first) :
-        BookEntry(side, rec, ev, mev, result, idx, nxt, first)
+               BookEntryJson *nxt, bool isFirst) :
+        BookEntry(side, recomend, ev, mev, result, idx, nxt, isFirst)
         {
             strncpy(movestr,move.c_str(),8);
             std::stringstream s;
@@ -150,12 +150,12 @@ class BookEntryJson : public BookEntry
 
 };
 
-BookEntry::BookEntry( ColorType side, unsigned r, PositionEval ev,
+BookEntry::BookEntry( ColorType side, unsigned recommend, PositionEval ev,
                        MoveEval mev,
                        ResultType result, uint8_t mv_indx,
-                       BookEntry *nxt, bool first_file)
-    :next(nxt), first(first_file),
-     eval(ev), moveEval(mev), rec(r),
+                       BookEntry *nxt, bool isFirst)
+    :next(nxt), first(isFirst),
+     eval(ev), moveEval(mev), rec(recommend),
      win(0),loss(0),draw(0),
      move_index(mv_indx)
 {

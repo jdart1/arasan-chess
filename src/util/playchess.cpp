@@ -152,10 +152,10 @@ int CDECL main(int argc, char **argv)
 
                      }
                      else if (valid) {
-                        std::string result;
-                        Notation::image(board,m,Notation::OutputFormat::SAN,result);
+                        std::string moveStr;
+                        Notation::image(board,m,Notation::OutputFormat::SAN,moveStr);
                         BoardState bs = board.state;
-                        moves.add_move(board,bs,m,result,false);
+                        moves.add_move(board,bs,m,moveStr,false);
 
                         board.doMove(m);
                      }
