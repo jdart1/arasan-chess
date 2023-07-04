@@ -139,6 +139,7 @@ interface program is always in charge of resignation.
 Only effective if "Can resign" is set true. Value is in centipawns
 (1/100 pawn) and is negative. So for example -500 means resign when
 down 5 pawns in score value.
+- OwnBook - true to enable Arasan's native opening book, false to disable.
 - Favor frequent book moves - value from 0 to 100, default 50. Higher values
 favor selecting more frequent moves in the Arasan book.
 - Favor best book moves - value from 0 to 100, default 50. Higher values

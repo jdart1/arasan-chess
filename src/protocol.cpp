@@ -1638,7 +1638,9 @@ void Protocol::processWinboardOptions(const std::string &args) {
     if (doTrace) {
         std::cout << debugPrefix << "setting option " << name << "=" << value << std::endl;
     }
-    if (name == "Favor frequent book moves") {
+    if (name == "OwnBook") {
+        Options::setOption<bool>(value,globals::options.book.book_enabled);
+    } else if (name == "Favor frequent book moves") {
         Options::setOption<unsigned>(value,globals::options.book.frequency);
     } else if (name == "Favor high-weighted book moves") {
         Options::setOption<unsigned>(value,globals::options.book.weighting);
@@ -1804,7 +1806,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
            " min 0 max 64" << std::endl;
 #endif
         std::cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << std::endl;
-        std::cout << "option name OwnBook type check default true" << std::endl;
+        std::cout << "option name OwnBook type check default " << (globals::options.book.book_enabled ? "true" : "false") << std::endl;
         std::cout << "option name Favor frequent book moves type spin default " <<
             globals::options.book.frequency << " min 0 max 100" << std::endl;
         std::cout << "option name Favor best book moves type spin default " <<
@@ -2460,6 +2462,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         std::cout << " egt=\"syzygy\"";
 #endif
+        std::cout << " option=\"OwnBook -check " <<
+            globals::options.book.book_enabled << "\"";
         std::cout << " option=\"Favor frequent book moves -spin " <<
             globals::options.book.frequency << " 1 100\"";
         std::cout << " option=\"Favor best book moves -spin " <<
