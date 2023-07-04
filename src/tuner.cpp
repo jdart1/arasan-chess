@@ -458,7 +458,7 @@ static void parse1(ThreadData &td, Parse1Data &pdata)
                  positions.push_back(new PosInfo(fen.str(),result));
              }
          }
-      } catch(std::bad_alloc) {
+      } catch(std::bad_alloc &) {
          std::cerr << "out of memory" << std::endl;
          exit(-1);
       }
@@ -1650,7 +1650,7 @@ static void threadp(ThreadData *td)
    // allocate controller in the thread
    try {
       td->searcher = new SearchController();
-   } catch(std::bad_alloc) {
+   } catch(std::bad_alloc &) {
       std::cerr << "out of memory, thread " << td->index << std::endl;
       return;
    }
