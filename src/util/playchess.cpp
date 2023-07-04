@@ -1,4 +1,4 @@
-// Copyright 2010, 2011, 2012, 2017, 2020-2021 by Jon Dart. All Rights Reserved.
+// Copyright 2010, 2011, 2012, 2017, 2020-2021, 2023 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "notation.h"
 #include "legal.h"
