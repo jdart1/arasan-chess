@@ -405,7 +405,7 @@ public:
 
    static const int RepListSize = 1024;
 
-   ALIGN_VAR(16) Piece contents[64];
+   alignas(16) Piece contents[64];
    Square kingPos[2];
    Material material[2];
 

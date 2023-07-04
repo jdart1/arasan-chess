@@ -1,4 +1,4 @@
-// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020-2021 Jon Dart. All Rights Reserved.
+// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020-2021, 2023 Jon Dart. All Rights Reserved.
 
 #include "hash.h"
 #include "constant.h"
@@ -6,14 +6,7 @@
 #include "legal.h"
 #include "learn.h"
 #include "scoring.h"
-extern "C"
-{
-#if !defined(_MAC) && !defined(__clang__) && !defined(__FreeBSD__)
-#include <malloc.h>
-#endif
-#include <memory.h>
-#include <stddef.h>
-}
+#include <cstdlib>
 
 Hash::Hash() {
    hashTable = nullptr;
@@ -42,9 +35,10 @@ void Hash::initHash(size_t bytes)
       hashSize = 1ULL << hashPower;
       hashMask = (uint64_t)(hashSize-1);
       size_t hashSizePlus = hashSize + MaxRehash;
-      ALIGNED_MALLOC(hashTable,
-         HashEntry,
-         sizeof(HashEntry)*hashSizePlus,128);
+      // round up to ensure allocated size is multiple of alignment
+      hashSizePlus += MEMORY_ALIGNMENT - (hashSizePlus % MEMORY_ALIGNMENT);
+      hashTable = reinterpret_cast<HashEntry*>(std::aligned_alloc(MEMORY_ALIGNMENT,
+                                                                  sizeof(HashEntry)*hashSizePlus));
       if (hashTable == nullptr) {
           std::cerr << "hash table allocation failed!" << std::endl;
           hashSize = 0;
@@ -63,7 +57,7 @@ void Hash::resizeHash(size_t bytes)
 
 void Hash::freeHash()
 {
-   ALIGNED_FREE(hashTable);
+   std::free(hashTable);
    hash_init_done = 0;
 }
 

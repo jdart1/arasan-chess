@@ -1,4 +1,4 @@
-// Copyright 1993-2009, 2012-2014, 2016-2019, 2021 by Jon Dart.
+// Copyright 1993-2009, 2012-2014, 2016-2019, 2021, 2023 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _TYPES_H
@@ -98,56 +98,27 @@ inline uint64_t getRandomSeed() {
 #define CDECL
 #endif
 
+constexpr size_t MEMORY_ALIGNMENT = 128;
+
 #ifdef _MSC_VER
 
-#define CACHE_ALIGN __declspec(align(128))
+#define CACHE_ALIGN __declspec(align(MEMORY_ALIGNMENT))
 #define FORCEINLINE __forceinline
-#define ALIGNED_MALLOC(ptr, type, size, alignment) ptr = (type*)_aligned_malloc(size, alignment)
-#define ALIGNED_FREE(ptr) _aligned_free(ptr)
 
 #elif defined(_MAC)
 
-#define CACHE_ALIGN __attribute__ ((aligned (128)))
+#define CACHE_ALIGN __attribute__ ((aligned (MEMORY_ALIGNMENT)))
 #define FORCEINLINE __inline
-#define ALIGNED_MALLOC(ptr, type, size, alignment) ptr = (type*)malloc(size)
-#define ALIGNED_FREE(ptr) free(ptr)
 
 #elif defined(__MINGW32__)
 
-#define CACHE_ALIGN __attribute__ ((aligned (128)))
+#define CACHE_ALIGN __attribute__ ((aligned (MEMORY_ALIGNMENT)))
 //#define FORCEINLINE __inline
-#define ALIGNED_MALLOC(ptr, type, size, alignment) ptr = (type*)__mingw_aligned_malloc(size, alignment)
-#define ALIGNED_FREE(ptr) __mingw_aligned_free(ptr)
 
 #else // Linux/GCC
-#define CACHE_ALIGN __attribute__ ((aligned (128)))
+#define CACHE_ALIGN __attribute__ ((aligned (MEMORY_ALIGNMENT)))
 #define FORCEINLINE __inline
-#if defined(__CYGWIN__) || (defined(__sun) && defined(__SVR4))
-// no posix_memalign
-#define ALIGNED_MALLOC(ptr, type, size, alignment) ptr = (type*)memalign(alignment,size)
-#else
-#define ALIGNED_MALLOC(ptr, type, size, alignment) if (posix_memalign((void**)&ptr, alignment, size)) { \
-                                                                        ptr = nullptr; \
-                                                       }
-#endif
-// POSIX says aligned memory can be freed with free()
-#define ALIGNED_FREE(ptr) free(ptr)
 
-#endif
-
-#ifdef _WIN64
-         #define ALIGN_POINTER(ptr,x) ((void*)((DWORD_PTR)ptr+x & (DWORD_PTR)~(x-1)))
-#elif defined(_WIN32)
-         #define ALIGN_POINTER(ptr,x) ((void*)((int)ptr+x & (int)~(x-1)))
-#elif defined(__LP64__)
-         #define ALIGN_POINTER(ptr,x) ((void*)((uintptr_t)ptr+x & (uintptr_t)~(x-1)))
-#else
-         #define ALIGN_POINTER(ptr,x) ((void*)((int)ptr+x & (int)~(x-1)))
-#endif
-#ifdef _MSC_VER
-#define ALIGN_VAR(n) __declspec(align(n))
-#else
-#define ALIGN_VAR(n)
 #endif
 
 #if _BYTE_ORDER == _BIG_ENDIAN
