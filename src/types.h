@@ -104,7 +104,7 @@ constexpr size_t MEMORY_ALIGNMENT = 128;
 extern "C" {
    #include <malloc.h>
 };
-#define ALIGNED_MALLOC(alignment,size) _aligned_malloc(alignment,size)
+#define ALIGNED_MALLOC(alignment,size) _aligned_malloc(size,alignment)
 #define ALIGNED_FREE(ptr) _aligned_free(ptr)
 #else
 #include <cstdlib>
