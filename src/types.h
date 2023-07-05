@@ -101,6 +101,18 @@ inline uint64_t getRandomSeed() {
 constexpr size_t MEMORY_ALIGNMENT = 128;
 
 #ifdef _MSC_VER
+extern "C" {
+   #include <malloc.h>
+};
+#define ALIGNED_MALLOC(alignment,size) _aligned_malloc(alignment,size)
+#define ALIGNED_FREE(ptr) _aligned_free(ptr)
+#else
+#include <cstdlib>
+#define ALIGNED_MALLOC(alignment,size) std::aligned_alloc(alignment,size)
+#define ALIGNED_FREE(ptr) std::free(ptr)
+#endif
+
+#ifdef _MSC_VER
 
 #define CACHE_ALIGN __declspec(align(MEMORY_ALIGNMENT))
 #define FORCEINLINE __forceinline

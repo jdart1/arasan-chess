@@ -37,8 +37,8 @@ void Hash::initHash(size_t bytes)
       size_t hashSizePlus = hashSize + MaxRehash;
       // round up to ensure allocated size is multiple of alignment
       hashSizePlus += MEMORY_ALIGNMENT - (hashSizePlus % MEMORY_ALIGNMENT);
-      hashTable = reinterpret_cast<HashEntry*>(std::aligned_alloc(MEMORY_ALIGNMENT,
-                                                                  sizeof(HashEntry)*hashSizePlus));
+      hashTable = reinterpret_cast<HashEntry*>(ALIGNED_MALLOC(MEMORY_ALIGNMENT,
+                                                              sizeof(HashEntry)*hashSizePlus));
       if (hashTable == nullptr) {
           std::cerr << "hash table allocation failed!" << std::endl;
           hashSize = 0;
@@ -57,7 +57,7 @@ void Hash::resizeHash(size_t bytes)
 
 void Hash::freeHash()
 {
-   std::free(hashTable);
+   ALIGNED_FREE(hashTable);
    hash_init_done = 0;
 }
 
