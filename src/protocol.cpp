@@ -2388,7 +2388,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
             best_move = search(board,movesToSearch,stats,infinite);
             if (doTrace) {
-                std::cout << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (std::flush) << std::endl;
+                std::cout << debugPrefix << "done searching, elapsed time=" << getElapsedTime(startTime,getCurrentTime()) << ", stopped=" << (int)searcher->wasStopped() << (std::flush) << std::endl;
             }
             if (infinite && !searcher->wasStopped()) {
                 // ensure we send some info in analysis mode:
