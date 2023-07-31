@@ -961,20 +961,21 @@ void Protocol::calcTimes(bool pondering, ColorType c, timeMgmt::Times &times)
     }
 }
 
-void Protocol::ponder(Board &board, Move move, Move predicted_reply, bool isUCI)
+template<bool isUCI>
+void Protocol::ponder(Board &board, Move move, Move predicted_reply)
 {
     ponder_status = PonderStatus::None;
     ponder_move = NullMove;
     ponder_stats.clear();
-    if (doTrace) {
-       std::cout << debugPrefix << "in ponder(), move = ";
-       MoveImage(move,std::cout);
-       std::cout << " predicted reply = ";
-       MoveImage(predicted_reply,std::cout);
-       std::cout << std::endl;
-    }
     if (isUCI || (!IsNull(move) && !IsNull(predicted_reply))) {
         if (!isUCI) {
+            if (doTrace) {
+                std::cout << debugPrefix << "in ponder(), move = ";
+                MoveImage(move,std::cout);
+                std::cout << " predicted reply = ";
+                MoveImage(predicted_reply,std::cout);
+                std::cout << std::endl;
+            }
             predicted_move = predicted_reply;
             // We have already set up the ponder board with the board
             // position after our last move. Now make the move we predicted.
@@ -2328,7 +2329,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         // "go:"
         globals::delayedInit();
         if (do_ponder) {
-            ponder(board,NullMove,NullMove,1);
+            ponder<true>(board,NullMove,NullMove);
             // We should not send the move unless we have received a
             // "ponderhit" command, in which case we were pondering the
             // right move. If pondering completes early, we must wait
@@ -2755,7 +2756,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
 #endif
     }
-    else {
+    else if (!uci) {
         // see if it could be a move
         std::string movetext;
         if (cmd_word == "usermove") {
@@ -2843,7 +2844,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                if ((result = check_pending(board)) != PendingStatus::Nothing) {
                    return true;
                }
-               ponder(board,reply,stats.best_line[1],uci);
+               ponder<false>(board,reply,stats.best_line[1]);
                // check again for game-ending commands before we process
                // ponder result
                if (check_pending(board) == PendingStatus::GameEnd) {

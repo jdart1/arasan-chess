@@ -111,7 +111,8 @@ private:
     void calcTimes(bool pondering, ColorType c, timeMgmt::Times &times);
 
     // do a ponder search
-    void ponder(Board &board, Move move, Move predicted_reply, bool isUCI);
+    template<bool isUCI>
+    void ponder(Board &board, Move move, Move predicted_reply);
 
     // foreground search using the current board position.
     Move search(Board &board, const MoveSet &movesToSearch, Statistics &stats, bool infinite);
