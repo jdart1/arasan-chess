@@ -1,4 +1,12 @@
-Changes in Arasan 23.5:
+Changes in Arasan 24.0:
+ 1) New network architecture based on "Stockfish version 4" structure
+ 2) Cleanup shadow warnings + other misc. code cleanup.
+ 3) Multiple fixes/updates to selfplay utility
+ 4) Implement capture history and futility pruning for capture moves
+ 5) Fix #50. Add an OwnBook option to CECP options.
+ 6) Updates to test tools
+
+Changes in Arasan 23.5 (April 2023):
  1) Fix bug that could cause over-long sequences to execute mate when mate-in-N found.
  2) Multiple changes and fixes to selfplay utility for generating training positions.
  3) Decrease null move reduction somewhat more in endgames
