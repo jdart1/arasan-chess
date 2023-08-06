@@ -20,7 +20,7 @@ pushd ..
 7z u -tzip -orelease %1 doc\programr.html doc\style_pg.css
 7z u -tzip -orelease %1 doc\TODO doc\CHANGES doc\BUILD.md
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd
-7z u -tzip -orelease %1 tests\arasan21.epd tests\pet.epd tests\prof
+7z u -tzip -orelease %1 tests\arasan2023.epd tests\pet.epd tests\prof
 7z u -tzip -orelease %1 tests\eet.epd
 7z u -tzip -orelease %1 tests\wacnew.epd tests\lapuce2.epd
 7z u -tzip -orelease %1 tests\lapuce2.doc tests\iq4.epd tests\prof.epd
