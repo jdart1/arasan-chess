@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018, 2021  by Jon Dart.
+// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018, 2021, 2023  by Jon Dart.
 // All Rights Reserved.
 
 #include "chessio.h"
@@ -269,7 +269,7 @@ int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves,const std::string &
     } else {
         buf << ' ' << result;
     }
-    ofile << buf.str() << std::endl;
+    ofile << buf.str() << std::endl << std::endl;
     if (!ofile) {
         return 0;
     }
