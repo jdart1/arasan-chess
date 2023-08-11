@@ -41,7 +41,7 @@
 
 using namespace std::placeholders;
 
-const char * Protocol::UCI_DEBUG_PREFIX = "info ";
+const char * Protocol::UCI_DEBUG_PREFIX = "info string";
 const char * Protocol::CECP_DEBUG_PREFIX = "# ";
 
 // handle CECP "level" command. Return true if parsed ok, false if error.
@@ -633,10 +633,8 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
             // continue the search in non-ponder mode
             if (srctype != FixedDepth) {
                 if (doTrace) {
-                    std::stringstream s;
-                    s << debugPrefix << "time_limit=" << time_limit << " movestogo=" <<
-                        movestogo << " time_left=" << time_left << " opp_time=" << opp_time << '\0';
-                    std::cout << s.str() << std::endl << (std::flush);
+                    std::cout << debugPrefix << "time_limit=" << time_limit << " movestogo=" <<
+                        movestogo << " time_left=" << time_left << " opp_time=" << opp_time << std::endl;
                 }
                 // Compute how much longer we must search
                 timeMgmt::Times times;
@@ -1149,7 +1147,7 @@ Move Protocol::search(Board &board,
             out << "), choosing ";
             Notation::image(board,move,Notation::OutputFormat::SAN,out);
             if (uci) {
-                std::cout << "info string " << out.str() << std::endl;
+                std::cout << UCI_DEBUG_PREFIX << out.str() << std::endl;
             }
             if (ics) {
                 if (computer)
@@ -1604,17 +1602,13 @@ void Protocol::setTuningParam(const std::string &name, const std::string &value)
          globals::tune_params.applyParams();
       }
       else {
-         if (uci) std::cout << "info ";
-         else std::cout << "#";
-         std::cout << "Warning: invalid value for option " <<
+         std::cout << debugPrefix << "Warning: invalid value for option " <<
             name << ": " << value << std::endl;
          return;
       }
    }
    else {
-      if (uci) std::cout << "info ";
-      else std::cout << "#";
-      std::cout << "Warning: invalid option name \"" <<
+       std::cout << debugPrefix << "Warning: invalid option name \"" <<
             name << "\"" << std::endl;
    }
 }
@@ -1862,7 +1856,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 int size;
                 buf >> size;
                 if (buf.bad()) {
-                    std::cout << "info problem setting hash size to " << buf.str() << std::endl;
+                    std::cout << debugPrefix << "problem setting hash size to " << buf.str() << std::endl;
                 }
                 else {
                     globals::options.search.hash_table_size = (size_t)size*1024L*1024L;
@@ -1880,7 +1874,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             int uciContempt;
             buf >> uciContempt;
             if (buf.bad()) {
-               std::cout << "info problem setting contempt value" << std::endl;
+               std::cout << debugPrefix << "problem setting contempt value" << std::endl;
             }
             else if (uciContempt < -200 || uciContempt > 200) {
                std::cout << "invalid contempt value, must be >=-200, <= 200 centipawns" << std::endl;
@@ -1983,7 +1977,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
 #else
         else {
-           std::cout << "info error: invalid option name \"" << name << "\"" << std::endl;
+           std::cout << debugPrefix << "error: invalid option name \"" << name << "\"" << std::endl;
         }
 #endif
         searcher->updateSearchOptions();
