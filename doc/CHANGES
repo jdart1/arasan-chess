@@ -5,6 +5,7 @@ Changes in Arasan 24.0:
  4) Implement capture history and futility pruning for capture moves
  5) Fix #50. Add an OwnBook option to CECP options.
  6) Updates to test tools
+ 7) Fixes to engine debug output, fix problem with Shredder UI
 
 Changes in Arasan 23.5 (April 2023):
  1) Fix bug that could cause over-long sequences to execute mate when mate-in-N found.
