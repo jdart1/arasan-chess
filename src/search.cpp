@@ -1463,6 +1463,9 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
            stats.best_line[1] = NullMove;
            Notation::image(board,best,
                            controller->uci ? Notation::OutputFormat::UCI : Notation::OutputFormat::SAN,stats.best_line_image);
+           if (mainThread()) {
+              controller->updateGlobalStats(stats);
+           }
       }
    }
    return node->best;
