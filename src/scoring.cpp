@@ -1943,8 +1943,10 @@ int Scoring::specialCaseEndgame(const Board &board,
    if (oppMaterial.kingOnly()) {
       // code for some special-case endgames, pawn or piece vs bare King
       const ColorType oside = OppositeColor(side);
+      const score_t winBonus = Params::PAWN_VALUE_ENDGAME/2;
       if (ourMaterial.infobits() == Material::KBN) {
          // KBNK endgame, special case.
+         scores.end += Params::KNIGHT_VALUE_ENDGAME + Params::BISHOP_VALUE_ENDGAME + winBonus;
          Square oppkp = board.kingSquare(oside);
          Bitboard bishops(board.bishop_bits[side]);
          Square sq = bishops.firstOne();
@@ -1962,6 +1964,7 @@ int Scoring::specialCaseEndgame(const Board &board,
          scores.end += kingDistanceScore(board);
          return 1;
       } else if (ourMaterial.infobits() == Material::KR) {
+         scores.end += Params::ROOK_VALUE_ENDGAME + winBonus;
          // keep the kings close
          scores.end += kingDistanceScore(board);
          Square oppkp = board.kingSquare(oside);
@@ -1985,6 +1988,7 @@ int Scoring::specialCaseEndgame(const Board &board,
          }
          return 1;
       } else if (ourMaterial.infobits() == Material::KQ) {
+         scores.end += Params::QUEEN_VALUE_ENDGAME + winBonus;
          // keep the kings close
          scores.end += kingDistanceScore(board);
          Square oppkp = board.kingSquare(oside);

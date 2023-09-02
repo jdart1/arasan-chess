@@ -1429,6 +1429,23 @@ static void calc_pawns_deriv(Scoring &s, const Board &board,ColorType side, std:
     }
 }
 
+static bool special_case_endgame_deriv(const Material &mat, std::vector<double> &grads, double inc) {
+    if (mat.infobits() == Material::KBN) {
+        grads[Params::KNIGHT_VALUE_ENDGAME] += inc;
+        grads[Params::BISHOP_VALUE_ENDGAME] += inc;
+        return true;
+    }
+    else if (mat.infobits() == Material::KR) {
+        grads[Params::ROOK_VALUE_ENDGAME] += inc;
+        return true;
+    }
+    else if (mat.infobits() == Material::KQ) {
+        grads[Params::QUEEN_VALUE_ENDGAME] += inc;
+        return true;
+    }
+    return false;
+}
+
 // Updates a std::vector where each entry corresponds to a tunable
 // parameter. The update is based on a particular board position and
 // side and consists for each parameter the contribution of
@@ -1445,17 +1462,11 @@ static void update_deriv_vector(Scoring &s, const Board &board, std::vector<doub
     const Material &bMat = board.getMaterial(Black);
     // Check for special case endgames - these have special
     // non-tunable evaluators.
-    if (wMat.kingOnly() && (
-            bMat.infobits() == Material::KBN ||
-            bMat.infobits() == Material::KR ||
-            bMat.infobits() == Material::KQ)) {
-            return;
+    if (bMat.kingOnly() && special_case_endgame_deriv(wMat,grads,inc)) {
+        return;
     }
-    if (bMat.kingOnly() && (
-            wMat.infobits() == Material::KBN ||
-            wMat.infobits() == Material::KR ||
-            wMat.infobits() == Material::KQ)) {
-            return;
+    else if (wMat.kingOnly() && special_case_endgame_deriv(bMat,grads,-inc)) {
+        return;
     }
     calc_deriv(s,board,White,grads,inc,atcks);
     calc_deriv(s,board,Black,grads,-inc,atcks);
