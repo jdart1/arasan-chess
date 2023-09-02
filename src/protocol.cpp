@@ -41,7 +41,7 @@
 
 using namespace std::placeholders;
 
-const char * Protocol::UCI_DEBUG_PREFIX = "info string";
+const char * Protocol::UCI_DEBUG_PREFIX = "info string ";
 const char * Protocol::CECP_DEBUG_PREFIX = "# ";
 
 // handle CECP "level" command. Return true if parsed ok, false if error.
