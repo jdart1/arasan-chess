@@ -134,7 +134,7 @@ static int lmr(NodeInfo *node, int depth, int moveIndex) {
     return LMR_REDUCTION[node->PV()][depth/DEPTH_INCREMENT][std::min<int>(63,moveIndex)];
 }
 
-static void updatePV([[maybe_unused]] const Board &board, NodeInfo *node, NodeInfo *fromNode, Move move, int ply)
+static void updatePV([[maybe_unused]] const Board &board, NodeInfo *node, NodeInfo *fromNode, Move move, int ply, [[maybe_unused]] bool mainThread)
 {
     node->pv[ply] = move;
     if (fromNode->pv_length) {
@@ -144,7 +144,7 @@ static void updatePV([[maybe_unused]] const Board &board, NodeInfo *node, NodeIn
     node->pv_length = fromNode->pv_length+1;
 #if defined(_DEBUG) || defined(_TRACE)
 #ifdef _TRACE
-    if (mainThread() && node->pv_length>0) {
+    if (mainThread && node->pv_length>0) {
         indent(ply); std::cout << "PV: ";
     }
 #endif
@@ -152,7 +152,7 @@ static void updatePV([[maybe_unused]] const Board &board, NodeInfo *node, NodeIn
     for (int i = ply; i < node->pv_length+ply; i++) {
         assert(i<Constants::MaxPly);
 #ifdef _TRACE
-        if (mainThread()) {
+        if (mainThread) {
             MoveImage(node->pv[i],std::cout);
             std::cout << ' ';
         }
@@ -161,7 +161,7 @@ static void updatePV([[maybe_unused]] const Board &board, NodeInfo *node, NodeIn
         board_copy.doMove(node->pv[i]);
     }
 #ifdef _TRACE
-    if (mainThread() && node->pv_length>0) {
+    if (mainThread && node->pv_length>0) {
         std::cout << std::endl;
     }
 #endif
@@ -169,7 +169,7 @@ static void updatePV([[maybe_unused]] const Board &board, NodeInfo *node, NodeIn
 }
 
 // record a new best move, return non-zero if cutoff occurs
-static int updateMove(const Board &board, NodeInfo *node, Move move, score_t score, int ply)
+static int updateMove(const Board &board, NodeInfo *node, Move move, score_t score, int ply, [[maybe_unused]] bool mainThread)
 {
    int cutoff = 0;
    node->best_score = score;
@@ -179,7 +179,7 @@ static int updateMove(const Board &board, NodeInfo *node, Move move, score_t sco
 #endif
    if (score >= node->beta) {
 #ifdef _TRACE
-      if (mainThread()) {
+      if (mainThread) {
          indent(ply); std::cout << "beta cutoff" << std::endl;
       }
 #endif
@@ -188,7 +188,7 @@ static int updateMove(const Board &board, NodeInfo *node, Move move, score_t sco
    }
    else {
       node->best_score = score;
-      ::updatePV(board,node,(node+1),move,ply);
+      ::updatePV(board,node,(node+1),move,ply,mainThread);
    }
    return cutoff;
 }
@@ -833,7 +833,7 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
 
 void Search::updatePV(const Board &b, Move m, int ply)
 {
-    ::updatePV(b, node, (node+1), m, ply);
+    ::updatePV(b, node, (node+1), m, ply, mainThread());
 }
 
 int Search::checkTime() {
@@ -3288,7 +3288,7 @@ score_t Search::search()
                break;
             }
             if (try_score > node->best_score) {
-                if (updateMove(board,node,move,try_score,ply)) {
+                if (updateMove(board,node,move,try_score,ply,mainThread())) {
                    // cutoff
                    break;
                 }
@@ -3442,7 +3442,7 @@ int Search::updateRootMove(const Board &b,
          }
          return 1;  // signal cutoff
       }
-      ::updatePV(b,n,(n+1),move,0);
+      ::updatePV(b,n,(n+1),move,0,mainThread());
       updateStats(b, n, iterationDepth,
                   n->best_score);
       if (mainThread() && srcOpts.multipv == 1) {
