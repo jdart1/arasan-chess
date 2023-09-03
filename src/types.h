@@ -106,6 +106,17 @@ extern "C" {
 };
 #define ALIGNED_MALLOC(alignment,size) _aligned_malloc(size,alignment)
 #define ALIGNED_FREE(ptr) _aligned_free(ptr)
+#elif defined(_MAC) && ((_LIBCPP_STD_VER <= 14) || !defined(_LIBCPP_HAS_ALIGNED_ALLOC))
+// older Mac libc++ lacks std::aligned_alloc
+extern "C" {
+    #include <stdlib.h>
+};
+inline static void *ALIGNED_MALLOC(size_t alignment, size_t size) {
+    void *memptr;
+    if (posix_memalign(&memptr,alignment,size)) perror("posix_memalign failed");
+    return memptr;
+}
+#define ALIGNED_FREE(ptr) free(ptr)
 #else
 #include <cstdlib>
 #define ALIGNED_MALLOC(alignment,size) std::aligned_alloc(alignment,size)
