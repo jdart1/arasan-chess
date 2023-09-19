@@ -252,7 +252,7 @@ class RootMoveGenerator : public MoveGenerator
       void exclude(const MoveSet &excluded);
 
       // restrict moves we will search
-      void filter(const MoveSet &include);
+      void filter(const MoveSet &include, const MoveSet &exclude);
 
       void exclude(Move);
 

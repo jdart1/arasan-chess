@@ -1,4 +1,4 @@
-// Copyright 1994-2017, 2019, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017, 2019, 2021, 2023 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -425,6 +425,10 @@ RootMove(Move m, score_t s, score_t r, score_t ts) :
     move(m), score(s), tbRank(r), tbScore(ts)
     {
     }
+
+    RootMove() : move(NullMove), score(0), tbRank(0), tbScore(0) {
+    }
+    
 };
 
 typedef std::vector<RootMove> RootMoveList;

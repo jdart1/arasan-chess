@@ -18,7 +18,7 @@
 
 extern const int Direction[2];
 
-const int MoveGenerator::EASY_PLIES = 3;
+const int MoveGenerator::EASY_PLIES = 4;
 
 static FORCEINLINE void swap( Move moves[], int scores[], int i, int j)
 {
@@ -167,22 +167,25 @@ void RootMoveGenerator::exclude(const MoveSet &to_exclude)
    }
 }
 
-void RootMoveGenerator::filter(const MoveSet &include)
+void RootMoveGenerator::filter(const MoveSet &include, const MoveSet &exclude)
 {
    excluded = 0;
    score_t top_rank = batch_count == 0 ? 0 : moveList[0].tbRank;
    for (unsigned i = 0; i < unsigned(batch_count); i++) {
       Move m = moveList[i].move;
       int rank = moveList[i].tbRank;
-       bool exclude;
-      if (include.size()) {
+      bool excludeIt;
+      if (exclude.find(m) != exclude.end()) {
+          excludeIt = true;
+      }
+      else if (include.size()) {
           // Exclude moves not in include set
-          exclude = include.find(m) == include.end();
+          excludeIt = include.find(m) == include.end();
       } else {
           // Exclude inferior ranked tb moves
-          exclude = rank < top_rank;
+          excludeIt = rank < top_rank;
       }
-      if (exclude) {
+      if (excludeIt) {
           // Exclude move. Note: use the Excluded flag, since the Used flag
           // is reset each iteration
           SetExcluded(moveList[i].move);

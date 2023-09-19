@@ -307,8 +307,6 @@ protected:
     void updateStats(const Board &, NodeInfo *node, int iteration_depth,
 		     score_t score);
 
-    void suboptimal(RootMoveGenerator &mg, Move &m, score_t &val);
-
     score_t evalu8(const Board &board);
 
     bool maxDepth(const NodeInfo *n) const noexcept {
@@ -333,6 +331,7 @@ protected:
     score_t contempt;
     int age;
     TalkLevel talkLevel; // copy of controller's talkLevel
+    std::vector<RootMove> rootMoves;
     std::mt19937_64 random_engine;
 };
 
@@ -370,14 +369,15 @@ public:
         bool background,
         bool isUCI,
         Statistics &stats,
-        TalkLevel t);
+        TalkLevel t,
+        std::vector<RootMove> *moveList = nullptr);
 
     // return a list of moves and their scores
     // ranked in descending order of score.
     void rankMoves(
         const Board &board,
         int ply_limit,
-        std::vector<RootMove> &mr);
+        std::vector<RootMove> &moveList);
 
     void terminateNow();
 
@@ -498,7 +498,12 @@ public:
 
    void updateGlobalStats(const Statistics &);
 
-   Statistics * getBestThreadStats(bool trace) const;
+   struct BestThreadResults {
+       Statistics *bestStats;
+       Search *bestSearch;
+   };
+
+   void getBestThreadStats(BestThreadResults &best, bool trace) const;
 
    uint64_t totalNodes() const {
       return pool->totalNodes();
@@ -567,6 +572,8 @@ private:
 
     unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
         unsigned max_depth);
+
+    void suboptimal(Statistics *bestStats,const Search *bestSearch);
 
     bool uci;
     int age;
