@@ -438,7 +438,7 @@ void Scoring::adjustMaterialScore(const Board &board, ColorType side, Scores &sc
 }
 
 
-void Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side, Scores &scores) const
+void Scoring::adjustMaterialScoreNoPawns(const Board &board, ColorType side, Scores &scores) const
 {
     // pawnless endgames. Generally drawish in many cases.
     const Material &ourmat = board.getMaterial(side);
@@ -527,6 +527,14 @@ void Scoring::adjustMaterialScoreNoPawns( const Board &board, ColorType side, Sc
        // draw
        score -= (Params::QUEEN_VALUE_ENDGAME + Params::ROOK_VALUE_ENDGAME - oppmat.knightCount()*Params::KNIGHT_VALUE_ENDGAME -
                  oppmat.bishopCount()*Params::BISHOP_VALUE_ENDGAME);
+    }
+    else if (ourmat.infobits() == Material::KRB && oppmat.infobits() == Material::KR) {
+       // can be won in some cases, difficult to defend
+        score -= Params::BISHOP_VALUE_ENDGAME/2;
+    }
+    else if (ourmat.infobits() == Material::KRN && oppmat.infobits() == Material::KR) {
+       // draw in almost all cases
+       score -= Params::KNIGHT_VALUE_ENDGAME;
     }
     scores.any += score;
 }
@@ -1012,7 +1020,7 @@ void Scoring::positionalScore(const Board &board,
             const int r = Rank(sq, side);
             if (r == 7 && (Rank(okp,side) == 8 || (board.pawn_bits[oside] & Attacks::rank7mask[side]))) {
 #ifdef EVAL_DEBUG
-               Scores tmp(scores);
+               tmp = scores;
 #endif
                scores.mid += PARAM(ROOK_ON_7TH_MID);
                scores.end += PARAM(ROOK_ON_7TH_END);

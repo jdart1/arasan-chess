@@ -1,4 +1,4 @@
-// Copyright 1992-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2021, 2023 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -176,11 +176,7 @@ class Scoring
       :mid(0), end(0), any(0)
       {
       }
-      Scores(const Scores &s)
-      :mid(s.mid),end(s.end),any(s.any) {
-      }
-      score_t mid, end, any;
-      score_t blend(int materialLevel ) {
+      score_t blend(int materialLevel) {
         return any + mid*Params::MATERIAL_SCALE[materialLevel]/128 +
           end*(128-Params::MATERIAL_SCALE[materialLevel])/128;
       }
@@ -191,6 +187,7 @@ class Scoring
       int operator != (const Scores &s) const {
         return s.mid != mid || s.end != end || s.any != any;
       }
+      score_t mid, end, any;
     };
 
     template <ColorType side>
