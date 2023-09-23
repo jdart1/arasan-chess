@@ -414,7 +414,7 @@ struct MoveCmp
 
 typedef std::unordered_set<Move,MoveHash,MoveCmp> MoveSet;
 
-struct RootMove 
+struct RootMove
 {
     Move move;
     score_t score;
@@ -428,7 +428,7 @@ RootMove(Move m, score_t s, score_t r, score_t ts) :
 
     RootMove() : move(NullMove), score(0), tbRank(0), tbScore(0) {
     }
-    
+
 };
 
 typedef std::vector<RootMove> RootMoveList;
