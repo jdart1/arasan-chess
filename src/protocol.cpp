@@ -2767,6 +2767,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
         Move move;
         if ((move = text_to_move(board,movetext)) != NullMove) {
+            // We have received a move outside a search, so not while pondering
             if (game_end) {
                 if (forceMode)
                     game_end = false;
