@@ -542,8 +542,8 @@ Move SearchController::findBestMove(
        // In reduced-strength mode, sometimes play a suboptimal move
        if (globals::options.search.strength < 100) {
            suboptimal(res.bestStats,res.bestSearch);
-           best = res.bestStats->best_line[0];
        }
+       best = res.bestStats->best_line[0];
        updateGlobalStats(*res.bestStats);
    } else {
        updateGlobalStats(rootSearch->stats);
@@ -1784,7 +1784,6 @@ void SearchController::getBestThreadStats(BestThreadResults &res, bool trace) co
                 bestSearch = pool->data[thread]->work;
                 bestStats = &threadStats;
             }
-
         }
     }
     res.bestSearch = bestSearch;
