@@ -24,11 +24,13 @@ class Options
          weighting(100),
          scoring(50),
          random(50),
-         book_enabled(true)
+         book_enabled(true),
+         book_path("")
     { }
 
     unsigned frequency, weighting, scoring, random;
     bool book_enabled;
+    std::string book_path;
   } book;
 
   struct SearchOptions {
