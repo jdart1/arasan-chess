@@ -1802,6 +1802,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #endif
         std::cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << std::endl;
         std::cout << "option name OwnBook type check default " << (globals::options.book.book_enabled ? "true" : "false") << std::endl;
+        std::cout << "option name BookPath type string default " << (globals::options.book.book_path == "" ? "book.bin" : globals::options.book.book_path) << std::endl;
         std::cout << "option name Favor frequent book moves type spin default " <<
             globals::options.book.frequency << " min 0 max 100" << std::endl;
         std::cout << "option name Favor best book moves type spin default " <<
@@ -1901,6 +1902,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #endif
         else if (uciOptionCompare(name,"OwnBook")) {
             Options::setOption<bool>(value, globals::options.book.book_enabled);
+        }
+        else if (uciOptionCompare(name,"BookPath")) {
+            Options::setOption<std::string>(value,globals::options.book.book_path);
         }
         else if (uciOptionCompare(name,"Favor frequent book moves")) {
             Options::setOption<unsigned>(value,globals::options.book.frequency);

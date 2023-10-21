@@ -224,8 +224,13 @@ void globals::delayedInit(bool verbose) {
 #endif
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
-        if (openingBook.open(derivePath(DEFAULT_BOOK_NAME).c_str()) && verbose) {
+        if (options.book.book_path == "") {
+            options.book.book_path = derivePath(DEFAULT_BOOK_NAME);
+        }
+        if (openingBook.open(options.book.book_path.c_str()) && verbose) {
             std::cout << debugPrefix << "warning: opening book not found or invalid" << std::endl;
+        } else if (verbose) {
+            std::cout << debugPrefix << "loaded opening book from file " << options.book.book_path << std::endl;
         }
     }
 }

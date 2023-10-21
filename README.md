@@ -105,6 +105,8 @@ be specified, separated by ':'.
 Default is 1.
 - OwnBook - true or false. True to enable use of the Arasan book (book.bin)
 if installed. Default is true.
+- BookPath - path to the Arasan book. Default is book.bin in the same
+directory as the Arasan engine executable.
 - Favor frequent book moves - value from 0 to 100, default 50. Higher values
 favor selecting more frequent moves in the Arasan book.
 - Favor best book moves - value from 0 to 100, default 50. Higher values
