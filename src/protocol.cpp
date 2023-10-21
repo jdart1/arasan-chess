@@ -1635,6 +1635,11 @@ void Protocol::processWinboardOptions(const std::string &args) {
     }
     if (name == "OwnBook") {
         Options::setOption<bool>(value,globals::options.book.book_enabled);
+    } else if (name == "BookPath") {
+        Options::setOption<std::string>(value,globals::options.book.book_path);
+        // force close of current book, opening of new one:
+        globals::openingBook.close();
+        delayedInit();
     } else if (name == "Favor frequent book moves") {
         Options::setOption<unsigned>(value,globals::options.book.frequency);
     } else if (name == "Favor high-weighted book moves") {
@@ -1905,6 +1910,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"BookPath")) {
             Options::setOption<std::string>(value,globals::options.book.book_path);
+            // force close of current book, opening of new one:
+            globals::openingBook.close();
+            delayedInit();
         }
         else if (uciOptionCompare(name,"Favor frequent book moves")) {
             Options::setOption<unsigned>(value,globals::options.book.frequency);
@@ -2463,6 +2471,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #endif
         std::cout << " option=\"OwnBook -check " <<
             globals::options.book.book_enabled << "\"";
+        std::cout << " option=\"BookPath -string " <<
+            globals::options.book.book_path << "\"";
         std::cout << " option=\"Favor frequent book moves -spin " <<
             globals::options.book.frequency << " 1 100\"";
         std::cout << " option=\"Favor best book moves -spin " <<
