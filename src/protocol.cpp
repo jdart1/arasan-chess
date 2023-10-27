@@ -1639,7 +1639,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
         Options::setOption<std::string>(value,globals::options.book.book_path);
         // force close of current book, opening of new one:
         globals::openingBook.close();
-        delayedInit();
+        globals::delayedInit();
     } else if (name == "Favor frequent book moves") {
         Options::setOption<unsigned>(value,globals::options.book.frequency);
     } else if (name == "Favor high-weighted book moves") {
@@ -1912,7 +1912,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             Options::setOption<std::string>(value,globals::options.book.book_path);
             // force close of current book, opening of new one:
             globals::openingBook.close();
-            delayedInit();
+            globals::delayedInit();
         }
         else if (uciOptionCompare(name,"Favor frequent book moves")) {
             Options::setOption<unsigned>(value,globals::options.book.frequency);
