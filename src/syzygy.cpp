@@ -53,7 +53,7 @@ int SyzygyTb::initTB(const std::string &path)
       return TB_LARGEST;
 }
 
-int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveList &rootMoves)
+int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveGenerator::RootMoveList &rootMoves)
 {
 
     // Fathom move list
@@ -117,14 +117,14 @@ int SyzygyTb::rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, 
             Move m = CreateMove(b,TB_MOVE_FROM(tbMove.move),
                                   TB_MOVE_TO(tbMove.move),
                                   getPromotion(TB_MOVE_PROMOTES(tbMove.move)));
-            rootMoves.push_back(RootMove(m,
-                                         0,
-                                         tbMove.tbRank,
-                                         tbMove.tbScore));
-
+            rootMoves.push_back(RootMoveGenerator::RootMove(m,
+                                                            0,
+                                                            tbMove.tbRank,
+                                                            tbMove.tbScore));
         }
         std::sort(rootMoves.begin(),rootMoves.end(),
-             [](const RootMove &m1, const RootMove &m2)
+                  [](const RootMoveGenerator::RootMove &m1,
+                     const RootMoveGenerator::RootMove &m2)
              {
                  return m1.tbRank == m2.tbRank ? (m1.tbScore > m2.tbScore) :
                      (m1.tbRank > m2.tbRank);

@@ -209,7 +209,7 @@ public:
 #endif
 
     // main entry point for top-level search; non-main threads enter here
-    Move ply0_search(std::vector<RootMove> *moveList = nullptr);
+    Move ply0_search(RootMoveGenerator::RootMoveList *moveList = nullptr);
 
     score_t ply0_search(RootMoveGenerator &, score_t alpha, score_t beta,
                         int iteration_depth, int depth, const MoveSet &exclude);
@@ -331,7 +331,7 @@ protected:
     score_t contempt;
     int age;
     TalkLevel talkLevel; // copy of controller's talkLevel
-    std::vector<RootMove> rootMoves;
+    RootMoveGenerator::RootMoveList rootMoves; // root move list up until wide window limit
     std::mt19937_64 random_engine;
 };
 
@@ -358,7 +358,7 @@ public:
         TalkLevel t,
         const MoveSet &exclude,
         const MoveSet &include,
-        std::vector<RootMove> *moveList = nullptr);
+        RootMoveGenerator::RootMoveList *moveList = nullptr);
 
     Move findBestMove(
         const Board &board,
@@ -370,14 +370,14 @@ public:
         bool isUCI,
         Statistics &stats,
         TalkLevel t,
-        std::vector<RootMove> *moveList = nullptr);
+        RootMoveGenerator::RootMoveList *moveList = nullptr);
 
     // return a list of moves and their scores
     // ranked in descending order of score.
     void rankMoves(
         const Board &board,
         int ply_limit,
-        std::vector<RootMove> &moveList);
+        RootMoveGenerator::RootMoveList &moveList);
 
     void terminateNow();
 

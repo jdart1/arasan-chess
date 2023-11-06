@@ -18,7 +18,6 @@
 #include <cstddef>
 #include <iomanip>
 #include <iterator>
-
 //#define _TRACE
 
 static const int ASPIRATION_WINDOW[] =
@@ -57,13 +56,10 @@ static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
 static constexpr int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
-// These tables are for the strength reduction feature:
-static constexpr int STRENGTH_DEPTH_LIMITS[100] = {
-    1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,
-    2,3,3,3,3,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,
-    6,6,6,6,6,7,7,7,7,7,7,8,8,8,9,9,10,10,11,11,
-    12,12,13,13,14,14,15,16,16,17,18,19,19,20,21,22,23,24,24,25,
-    26,28,29,30,31,32,33,35,36,36,36,36,36,36,36,37,37,37,37,37};
+// Depth limits for the strength reduction feature:
+static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
+    1,1,1,1,1,1,1,2,2,3,3,3,4,5,6,7,7,8,9,9,
+    9,9,9,9,9,9,10,10,10,11,11,11,12,12,13,13,13,14,16,20};
 
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
@@ -82,7 +78,7 @@ static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
 static constexpr int LMP_DEPTH=13;
 
 static constexpr int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
-                                          {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
+                                              {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
 
 #ifdef RAZORING
 static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.75*Params::PAWN_VALUE);
@@ -239,7 +235,6 @@ SearchController::SearchController()
       , samples(0), threads(0)
 #endif
 {
-
 #ifdef SMP_STATS
     sample_counter = SAMPLE_INTERVAL;
 #endif
@@ -294,7 +289,7 @@ Move SearchController::findBestMove(
    bool isUCI,
    Statistics &stat_buf,
    TalkLevel t,
-   std::vector<RootMove> *moveList)
+   RootMoveGenerator::RootMoveList *moveList)
 {
     MoveSet excludes, includes;
     Move result = findBestMove(board, srcType, search_time_limit, search_xtra_time,
@@ -316,7 +311,7 @@ Move SearchController::findBestMove(
    TalkLevel t,
    const MoveSet &moves_to_exclude,
    const MoveSet &moves_to_include,
-   std::vector<RootMove> *moveList)
+   RootMoveGenerator::RootMoveList *moveList)
 {
     typeOfSearch = srcType;
     initialBoard = board;
@@ -421,7 +416,7 @@ Move SearchController::findBestMove(
    // Implement strength reduction if enabled. But do not reduce
    // strength in analysis mode.
    if (globals::options.search.strength < 100 && (background || time_target != Constants::INFINITE_TIME)) {
-      int new_ply_limit = STRENGTH_DEPTH_LIMITS[globals::options.search.strength];
+      int new_ply_limit = STRENGTH_DEPTH_LIMITS[(2*globals::options.search.strength)/5];
       if (debugOut()) {
           std::cout << globals::debugPrefix << "strength=" << globals::options.search.strength << " ply limit=" <<
               new_ply_limit << std::endl;
@@ -473,31 +468,11 @@ Move SearchController::findBestMove(
        }
    }
 #endif
-   // Limit moves searched if strength reduction enabled
-   const int &strength = globals::options.search.strength;
-   std::uniform_int_distribution dist(0,100);
-   static constexpr int exclude_threshold[20] = { 50, 47, 45, 42, 40, 30, 20, 12, 8, 7, 5, 4, 4, 3, 3, 2, 1, 0, 0, 0 };
-   if (mg->moveCount() > 1 && strength < 50 && dist(rootSearch->random_engine)<=exclude_threshold[(strength*2)/5]) {
-       // fraction of moves to exclude
-       static constexpr double limits[20] = { 0.66, 0.64, 0.625, 0.58, 0.53, 0.37, 0.20, 0.14, 0.08, 0.08, 0.08, 0.06, 0.05, 0.05, 0.04, 0.03, 0.02, 0.01, 0, 0 };
-       int limit = static_cast<int>(limits[(2*strength)/5]*mg->moveCount());
-       bool allow_zero = dist(rootSearch->random_engine) < std::max<int>(0,(25-strength));
-       std::uniform_int_distribution dist2(allow_zero ? 0 : 1, mg->moveCount()-1);
-       if (debugOut()) {
-           std::cout << globals::debugPrefix << "exclude limit=" << limit << std::endl;
-       }
-       for (int i = 0; i < limit; i++) {
-           exclude.emplace(mg->getMoveList()[dist2(rootSearch->random_engine)].move);
-       }
-       if (debugOut() && exclude.size()) {
-           std::cout << globals::debugPrefix << exclude.size() << " move(s) excluded, " << mg->moveCount() - static_cast<int>(exclude.size()) << " remaining." << std::endl;
-       }
-   }
    // set up move generator to obey include and exclude lists
    mg->filter(include,exclude);
 #ifdef _TRACE
    std::cout << "filtered root moves:";
-   for (const RootMove &m : mg->getMoveList()) {
+   for (const RootMoveGenerator::RootMove &m : mg->getMoveList()) {
        if (!(Flags(m.move) & Excluded)) {
            std::cout << ' ';
            Notation::image(board,m.move,Notation::OutputFormat::SAN,std::cout);
@@ -662,7 +637,7 @@ Move SearchController::findBestMove(
 void SearchController::rankMoves(
         const Board &board,
         int search_ply_limit,
-        std::vector<RootMove> &moveList) {
+        RootMoveGenerator::RootMoveList &moveList) {
     Statistics s;
     MoveSet includes,excludes;
 
@@ -1129,10 +1104,9 @@ void Search::updateStats(const Board &b, NodeInfo *n, int iteration_depth,
     stats.best_line_image = sstr.str();
 }
 
-Move Search::ply0_search(std::vector<RootMove> *moveList)
+Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
 {
    node->best = NullMove;
-   rootMoves.clear();
    // Incrementally search the board to greater depths - stop when
    // ply limit, time limit, interrupt, or a terminating condition
    // is reached.
@@ -1366,6 +1340,13 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
                 */
             }
             stats.completedDepth = iterationDepth;
+            if (srcOpts.multipv == 1 && static_cast<int>(iterationDepth) <= MoveGenerator::EASY_PLIES) {
+                // save ranked moves
+                mg.reorderByScore();
+                rootMoves.clear();
+                std::copy(mg.getMoveList().begin(),
+                          mg.getMoveList().end(),std::back_inserter(rootMoves));
+            }
             if (srcOpts.multipv > 1) {
                // Accumulate multiple pvs until we are ready to output
                // them.
@@ -1418,6 +1399,7 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
    } // end depth iteration loop
    if (mainThread() && moveList != nullptr) {
        mg.reorderByScore();
+       moveList->clear();
        std::copy(mg.getMoveList().begin(),
                  mg.getMoveList().end(),std::back_inserter(*moveList));
    }
@@ -1440,12 +1422,6 @@ Move Search::ply0_search(std::vector<RootMove> *moveList)
        std::cout << globals::debugPrefix << "out of search loop, move= ";
        MoveImage(node->best,std::cout);
        std::cout << std::endl << std::flush;
-   }
-   if (static_cast<int>(stats.completedDepth) <= MoveGenerator::EASY_PLIES) {
-       // save ranked moves
-       mg.reorderByScore();
-       std::copy(mg.getMoveList().begin(),
-                 mg.getMoveList().end(),std::back_inserter(rootMoves));
    }
    return node->best;
 }
@@ -1823,53 +1799,79 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
 }
 
 void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearch) {
-    // We don't have accurate move scores for plies past EASY_PLIES
-    const std::vector<RootMove> &rootMoves = bestSearch->rootMoves;
     const int &strength = globals::options.search.strength;
-    if (mg->moveCount() < 2 || strength >= 50 ||
-        static_cast<int>(bestStats->completedDepth) > MoveGenerator::EASY_PLIES) {
+    if (mg->moveCount() < 2) {
         return;
     }
+    const RootMoveGenerator::RootMoveList &rootMoves = bestSearch->rootMoves;
     auto &random_engine = rootSearch->random_engine;
     std::uniform_int_distribution<int> dist(0,100);
-    RootMove substitute;
-    const int x = 50-strength;
+    RootMoveGenerator::RootMove substitute;
     const int n = rootMoves.size();
+    assert(n);
+    const int r  = dist(random_engine);
     score_t best = rootMoves[0].score;
-    static constexpr double means[20] = {2.9, 2.39, 1.75, 1.5, 1.25, 1.0, 0.75, 0.6, 0.55, 0.50, 0.40, 0.27, 0.15, 0.10, 0.05,
-                                         0.05, 0.05, 0.05, 0.05, 0 };
-    double mean = Params::PAWN_VALUE*means[(2*strength)/5];
-    if (mean >= 0.0) {
-        double sd = mean/2;
+    Move bestMove = rootMoves[0].move;
+    static constexpr double tolerances[40] = {12.3, 11.8, 11.3, 10.4, 9.5, 8.9, 8.4, 7.7, 7.0, 5.9, 4.35, 3.1, 3.5, 3.25, 3.0, 2.0, 2.2, 2.1, 2.0, 1.9,
+                                              1.7, 1.71, 1.66, 1.6, 1.53, 1.47, 1.44, 1.35, 1.28, 1.19, 1.1, 1.08, 1.03, 0.96, 0.88, 0.82, 0.85, 0.82, 0.79, 0.75 };
+    const score_t tolerance = static_cast<score_t>(Params::PAWN_VALUE*tolerances[(2*strength)/5]);
+    static constexpr int probs[40] = {73,70,65,61,59,52,49,46,42,34,32,29,27,26,26,26,25,25,23,20,
+                                      18,17,17,16,15,15,15,14,13,13,13,12,11,10,9,8,8,8,6,5};
+    int p = probs[(2*strength)/5];
+    if (p == 0 || tolerance == 0) return;
+    int y = std::max<int>(0,(25-strength)/4) + std::max<int>(0,(10-strength)/4) +
+            (strength <= 50 ? std::max<int>(0,(60-strength)/7) : 0);
+    if (best >= Constants::MATE-1 || CaptureOrPromotion(bestMove) || initialBoard.checkStatus() == InCheck) {
+        p -= static_cast<int>((p*(16-y))/32);
+    }
+    int start;
+    std::string strategy;
+    if (r < p/4 + y/2) {
+        start = std::max<int>(0,n-5);
+        strategy = "bottom";
+    } else if (r < p/2 + y/2) {
+        start = n/2;
+        strategy = "middle";
+    } else if (r < p) {
+        start = 1;
+        strategy = "top";
+    } else {
+        return;
+    }
+    std::vector<int> candidates;
+    if (debugOut()) {
+        std::cout << globals::debugPrefix << "suboptimal: r=" << r << " p=" << p << " tolerance=" << tolerance << " strategy=" << strategy << std::endl;
+    }
+    for (int i = start; i < std::min<int>(n-1,start+5); ++i) {
+        const RootMoveGenerator::RootMove &rm = rootMoves[i];
         if (debugOut()) {
-            std::cout << globals::debugPrefix << "mean=" << mean << " sd=" << sd << std::endl;
+            std::string move_image;
+            Notation::image(initialBoard,rm.move,Notation::OutputFormat::SAN,move_image);
+            std::cout << globals::debugPrefix << "suboptimal: move = " << move_image << ", diff = " << best-rm.score << std::endl;
         }
-        std::normal_distribution dist2(mean,sd);
-        score_t tolerance = static_cast<score_t>(std::fabs(dist2(random_engine)));
-        // pick a move from the start of the move list, but not the first
-        for (int i = 1; i < std::min<int>(5,n)-1; i++) {
-            const RootMove &rm = rootMoves[i];
-            const Move move = rm.move;
-            if (IsExcluded(move)) continue;
-            const score_t score = rm.score;
-            if (debugOut()) {
-                std::cout << globals::debugPrefix <<
-                    "suboptimal: diff=" << best - score << " tolerance=" << tolerance << std::endl;
-            }
-            if (best - score > tolerance) break;
-            if (dist(random_engine) < 1 + (x*x)/40) {
-                if (debugOut()) {
-                    std::cout << globals::debugPrefix << "suboptimal: choosing move at index=" << i << std::endl;
-                }
-                substitute = RootMove(move,score,0,0);
-                break;
-            }
-        }
+        // when strength < 50, sometimes allow moves worse than the tolerance value
+        if (r >= 2*y && (best - rm.score > tolerance)) break;
+        candidates.push_back(i);
+    }
+    if (debugOut()) {
+        std::cout << globals::debugPrefix << "suboptimal: " << candidates.size() << " candidate(s)" << std::endl;
+    }
+    if (candidates.size() == 0) return;
+    else if (candidates.size() == 1) substitute = rootMoves[candidates[0]];
+    else {
+        std::uniform_int_distribution<int> pick(0,candidates.size()-1);
+        substitute = rootMoves[candidates[pick(random_engine)]];
     }
     if (!IsNull(substitute.move)) {
-         bestStats->best_line[0] = substitute.move;
-         Notation::image(initialBoard,substitute.move,Notation::OutputFormat::SAN,bestStats->best_line_image);
-         bestStats->display_value = bestStats->value = substitute.score;
+        bestStats->best_line[0] = substitute.move;
+        bestStats->best_line[1] = NullMove;
+        std::string move_image;
+        Notation::image(initialBoard,substitute.move,Notation::OutputFormat::SAN,move_image);
+        bestStats->best_line_image = move_image;
+        bestStats->display_value = bestStats->value = substitute.score;
+        if (debugOut()) {
+            std::cout << globals::debugPrefix << "selected suboptimal move " << move_image << std::endl;
+        }
     }
 }
 
@@ -3494,6 +3496,7 @@ int Search::updateRootMove(const Board &b,
 // particular thread. This is called from the thread in which the
 // search will execute.
 void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
+    
     this->board = controller->initialBoard;
     node = nodeStack;
     assert(node);

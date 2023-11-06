@@ -1,8 +1,8 @@
-// Copyright 2016, 2018-2019, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2016, 2018-2019, 2021, 2023 by Jon Dart. All Rights Reserved.
 #ifndef _SYZYGY_H_
 #define _SYZYGY_H_
 
-#include "board.h"
+#include "search.h"
 
 // Support for Syzygy tablebases. Interfaces between Arasan
 // datatypes and the "Fathom" probing code by Roland de Man.
@@ -27,7 +27,7 @@ struct SyzygyTb {
 
     // Probe the tablebases and return a score and rank for each root move.
     // Returns 1 on success, 0 if not all probes succeeded.
-    static int rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveList &rootMoves);
+    static int rank_root_moves(const Board &b, bool hasRepeated, bool useRule50, RootMoveGenerator::RootMoveList &rootMoves);
 
     // Probe the wdl tablebases (not at root).
     // Return 1 if score was obtained,

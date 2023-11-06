@@ -16,7 +16,7 @@ class Options
  public:
 
     static constexpr int MIN_RATING = 1000;
-    static constexpr int MAX_RATING = 3300;
+    static constexpr int MAX_RATING = 3450;
 
   struct BookOptions {
     BookOptions()

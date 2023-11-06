@@ -204,6 +204,24 @@ class RootMoveGenerator : public MoveGenerator
    friend class SearchController;
 
    public:
+      struct RootMove
+      {
+          Move move;
+          score_t score;
+          score_t tbRank;
+          score_t tbScore;
+
+          RootMove(Move m, score_t s, score_t r, score_t ts) :
+               move(m), score(s), tbRank(r), tbScore(ts)
+          {
+          }
+
+          RootMove() : move(NullMove), score(0), tbRank(0), tbScore(0) {
+          }
+      };
+      
+      using RootMoveList = std::vector <RootMove>;
+
       RootMoveGenerator(const Board &board,
          SearchContext *context = nullptr,
          Move pvMove = NullMove,
@@ -280,7 +298,7 @@ class RootMoveGenerator : public MoveGenerator
       // successful, 0 if not
       int rank_root_moves();
 
-      const std::vector <RootMove> &getMoveList() const {
+      const RootMoveList& getMoveList() const {
           return moveList;
       }
 
@@ -295,7 +313,7 @@ class RootMoveGenerator : public MoveGenerator
       }
 
    private:
-      std::vector<RootMove> moveList;
+      RootMoveList moveList;
       int excluded;
 
 };
