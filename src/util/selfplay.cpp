@@ -903,7 +903,6 @@ int CDECL main(int argc, char **argv) {
         }
     }
     if (sp_options.maxBookPly > 0 && !globals::openingBook.is_open()) {
-        std::cerr << "warning: opening book not found or could not be opened." << std::endl;
         sp_options.maxBookPly = 0;
     }
 
