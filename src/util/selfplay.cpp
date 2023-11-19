@@ -338,7 +338,7 @@ static Move randomMove(const Board &board, RootMoveGenerator &mg, Statistics &st
         }
         return NullMove;
     }
-    std::vector<RootMove> ml(mg.getMoveList());
+    RootMoveGenerator::RootMoveList ml(mg.getMoveList());
     assert(ml.size() != 0);
     std::uniform_int_distribution<unsigned> dist(0, ml.size()-1);
     unsigned pick = dist(td.engine);
@@ -498,17 +498,17 @@ static void selfplay(ThreadData &td) {
                         bool inCheck = board.checkStatus() == InCheck;
                         int index;
                         unsigned i = 0, j = 0;
-                        std::vector<RootMove> mra;
+                        RootMoveGenerator::RootMoveList mra;
                         if (sp_options.useRanking) {
                             searcher->rankMoves(board,2,mra);
-                            for (const RootMove &rm : mra) {
+                            for (const RootMoveGenerator::RootMove &rm : mra) {
                                 all[j++] = rm.move;
                             }
                             if (mg.moveCount()>=2) {
                                 assert(mra.size()>0);
                                 const int best = mra[0].score;
                                 auto new_end = std::remove_if(mra.begin()+1, mra.end(),
-                                                              [&](const RootMove &r) -> bool {
+                                                              [&](const RootMoveGenerator::RootMove &r) -> bool {
                                                                   if (r.score < best - sp_options.randomTolerance) return true;
                                                                   BoardState state(board.state);
                                                                   board.doMove(r.move);
