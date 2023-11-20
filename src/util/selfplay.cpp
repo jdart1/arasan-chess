@@ -784,6 +784,8 @@ int CDECL main(int argc, char **argv) {
     globals::options.learning.position_learning = false;
     globals::options.search.can_resign = true;
     globals::options.search.resign_threshold = -Params::PAWN_VALUE*30;
+    globals::options.search.widePlies = 0;
+    globals::options.search.wideWindow = 0;
 
     if (!globals::initGlobals(false)) {
         globals::cleanupGlobals();

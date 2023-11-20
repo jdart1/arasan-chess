@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2019, 2021-2022 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2019, 2021-2023 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -54,13 +54,13 @@ class Options
    bool pureNNUE;
    std::string nnueFile;
 #endif
-   int easy_plies; // do wide search for "easy move" detection
-   int easy_threshold; // wide search width in centipawns
 #ifdef NUMA
    bool set_processor_affinity; // lock threads to processors
 #endif
    int move_overhead; // in milliseconds
    int minimum_search_time; // in milliseconds
+   int widePlies; // do wide search for this number of plies
+   score_t wideWindow; // score range for wide window search
   } search;
 
    struct LearningOptions {

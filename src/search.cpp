@@ -47,7 +47,6 @@ static constexpr int SEE_PRUNING_DEPTH = 7*DEPTH_INCREMENT;
 static constexpr int CHECK_EXTENSION = DEPTH_INCREMENT;
 static constexpr int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static constexpr int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
-static const score_t WIDE_WINDOW = 10*Params::PAWN_VALUE;
 #ifdef SINGULAR_EXTENSION
 static constexpr int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
 #endif
@@ -744,7 +743,7 @@ void SearchController::historyBasedTimeAdjust(const Statistics &s) {
     // score seems stable and is not dropping. Note: we calculate the
     // adjustment even if in a ponder search, so we can apply it later
     // if a ponder hit occurs.
-    if (int(s.depth) > MoveGenerator::EASY_PLIES+6) {
+    if (int(s.depth) > globals::options.search.widePlies+6) {
         // Look back over the past few iterations
         Move pv = s.best_line[0];
         double pvChangeFactor = 0.0;
@@ -1145,9 +1144,9 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
          if (iterationDepth <= 1) {
             lo_window = -Constants::MATE;
             hi_window = Constants::MATE;
-         } else if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-            lo_window = std::max<score_t>(-Constants::MATE,value - WIDE_WINDOW);
-            hi_window = std::min<score_t>(Constants::MATE,value + WIDE_WINDOW + aspirationWindow/2);
+         } else if (iterationDepth <= srcOpts.widePlies) {
+            lo_window = std::max<score_t>(-Constants::MATE,value - srcOpts.wideWindow - aspirationWindow/2);
+            hi_window = std::min<score_t>(Constants::MATE,value + srcOpts.wideWindow + aspirationWindow/2);
          } else {
             lo_window = std::max<score_t>(-Constants::MATE,value - aspirationWindow/2);
             hi_window = std::min<score_t>(Constants::MATE,value + aspirationWindow/2);
@@ -1247,8 +1246,8 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
                 if (aspirationWindow == Constants::MATE) {
                     hi_window = Constants::MATE;
                 } else {
-                    if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-                        aspirationWindow += 2*WIDE_WINDOW;
+                    if (iterationDepth <= globals::options.search.widePlies) {
+                        aspirationWindow += 2*globals::options.search.wideWindow;
                     }
                     hi_window = std::min<score_t>(Constants::MATE, lo_window + aspirationWindow);
                 }
@@ -1292,8 +1291,8 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
                     // will never fail low and not get a pv.
                     lo_window = 1-Constants::MATE;
                 } else {
-                    if (iterationDepth <= MoveGenerator::EASY_PLIES) {
-                        aspirationWindow += 2*WIDE_WINDOW;
+                    if (iterationDepth <= globals::options.search.widePlies) {
+                        aspirationWindow += 2*globals::options.search.wideWindow;
                     }
                     lo_window = std::max<score_t>(nominalDepth-Constants::MATE,hi_window - aspirationWindow);
                 }
@@ -1340,7 +1339,7 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
                 */
             }
             stats.completedDepth = iterationDepth;
-            if (srcOpts.multipv == 1 && static_cast<int>(iterationDepth) <= MoveGenerator::EASY_PLIES) {
+            if (srcOpts.multipv == 1 && static_cast<int>(iterationDepth) <= globals::options.search.widePlies) {
                 // save ranked moves
                 mg.reorderByScore();
                 rootMoves.clear();
@@ -1439,7 +1438,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 
     int in_check = 0;
 
-    const bool wide = iteration_depth <= MoveGenerator::EASY_PLIES;
+    const bool wide = iteration_depth <= srcOpts.widePlies;
 
     in_check = (board.checkStatus() == InCheck);
     BoardState save_state = board.state;

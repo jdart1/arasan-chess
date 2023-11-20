@@ -1975,7 +1975,7 @@ int CDECL main(int argc, char **argv)
     }
 
     globals::options.search.hash_table_size = 0;
-    globals::options.search.easy_plies = 0;
+    globals::options.search.widePlies = 0;
 #ifdef NNUE
     globals::options.search.useNNUE = false;
 #endif

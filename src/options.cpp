@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019, 2021, 2023 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <ctype.h>
@@ -31,11 +31,12 @@ Options::SearchOptions::SearchOptions()
 #ifdef NNUE
       useNNUE(true), pureNNUE(false), nnueFile(""),
 #endif
-      easy_plies(3), easy_threshold(200), // centipawns
 #ifdef NUMA
       set_processor_affinity(false),
 #endif
-      move_overhead(15), minimum_search_time(10) {
+      move_overhead(15),
+      minimum_search_time(10),
+      widePlies(4), wideWindow(10*Params::PAWN_VALUE) {
 }
 
 template <class T>
