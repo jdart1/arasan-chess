@@ -105,10 +105,10 @@ static struct SelfPlayOptions {
     std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
-    unsigned maxBookPly = 4;
+    unsigned maxBookPly = 6;
     bool randomize = true;
-    unsigned randomizeRange = 10;
-    unsigned randomizeInterval = 1;
+    unsigned randomizeRange = 8;
+    unsigned randomizeInterval = 2;
     int randomTolerance = 0.75*Params::PAWN_VALUE;
     bool useRanking = true;
     bool limitEarlyKingMoves = true;
@@ -784,8 +784,8 @@ int CDECL main(int argc, char **argv) {
     globals::options.learning.position_learning = false;
     globals::options.search.can_resign = true;
     globals::options.search.resign_threshold = -Params::PAWN_VALUE*30;
-    globals::options.search.widePlies = 0;
-    globals::options.search.wideWindow = 0;
+    globals::options.search.widePlies = 1;
+    globals::options.search.wideWindow = 3*Params::PAWN_VALUE;
 
     if (!globals::initGlobals(false)) {
         globals::cleanupGlobals();
