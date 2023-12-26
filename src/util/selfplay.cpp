@@ -343,7 +343,6 @@ static Move randomMove(const Board &board, RootMoveGenerator &mg, Statistics &st
     std::uniform_int_distribution<unsigned> dist(0, ml.size()-1);
     unsigned pick = dist(td.engine);
     Move m = ml[pick].move;
-    assert(!IsNull(m));
     return m;
 }
 
@@ -490,7 +489,6 @@ static void selfplay(ThreadData &td) {
                     (std::abs(prevScore) >= 10*Params::PAWN_VALUE);
                 if (sp_options.randomize &&
                     (ply <= sp_options.maxBookPly + sp_options.randomizeRange) &&
-                    !board.repCount() &&
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
                     RootMoveGenerator mg(board);
                     if (mg.moveCount() > 1 && (sp_options.useRanking || sp_options.limitEarlyKingMoves)) {
@@ -592,6 +590,7 @@ static void selfplay(ThreadData &td) {
                     ++noSemiRandom;
                 }
                 assert(IsNull(m) || legalMove(board, m));
+                assert(!IsNull(m) || stats.state != NormalState);
             }
             if (stats.state == Resigns || stats.state == Checkmate) {
                 result = board.sideToMove() == White ? Result::BlackWin
@@ -624,6 +623,7 @@ static void selfplay(ThreadData &td) {
                 adjudicated = true;
             }
             if (!IsNull(m)) {
+                assert(validMove(board,m));
                 std::string image;
                 if (sp_options.saveGames) {
                     Notation::image(board, m, Notation::OutputFormat::SAN,
@@ -632,7 +632,7 @@ static void selfplay(ThreadData &td) {
                 if (!(sp_options.skipNonQuiet && CaptureOrPromotion(m)) &&
                     ply >= sp_options.minOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
-                    !board.repCount() &&
+                    !board.repCount(1) &&
                     (!sp_options.checkHash || !sp_hash_table.check_and_replace_hash(board.hashCode()))) {
                     if ((dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
                         std::stringstream s;
