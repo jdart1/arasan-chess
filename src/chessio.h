@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2013, 2017, 2021 by Jon Dart. All Rights Reserved
+// Copyright 1996-2008, 2013, 2017, 2021, 2024 by Jon Dart. All Rights Reserved
 #ifndef __CHESSIO_H__
 #define __CHESSIO_H__
 
@@ -56,8 +56,17 @@ public:
 
     // get a specific header out of a collection of headers (returned
     // from collect_headers)
-    static int get_header(const std::vector<Header> &hdrs,
-                          const std::string &key, std::string &val);
+    static bool get_header(const std::vector<Header> &hdrs,
+                           const std::string &key, std::string &val);
+
+    // remove a header, return true if removed
+    static bool remove_header(std::vector<Header> &hdrs,
+                              const std::string &key);
+
+    // replace a header, if present
+    static void replace_header(std::vector<Header> &hdrs,
+                               const std::string &key,
+                               const std::string &val);
 
     // read an EPD record from a stream, return 1 if ok, 0 if EOF
     static int readEPDRecord(std::istream &ifs, Board &board, EPDRecord &out);
