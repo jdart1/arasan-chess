@@ -2057,7 +2057,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     }
     else if (cmd_word == "bench") {
        Bench b;
-       Bench::Results res = b.bench(true);
+       Bench::Results res = b.bench();
        std::cout << res;
     }
     else if (cmd_word == "test") {
