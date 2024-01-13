@@ -1,4 +1,4 @@
-// Copyright 1994-2023 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2024 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -149,7 +149,7 @@ void RootMoveGenerator::reorderByScore() {
    for (auto it : moveList) {
       ClearUsed(it.move);
    }
-   std::sort(moveList.begin(),moveList.end(),
+   std::stable_sort(moveList.begin(),moveList.end(),
              [](const RootMove &a, const RootMove &b)
              {
                 return a.score > b.score;
