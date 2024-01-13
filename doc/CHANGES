@@ -1,4 +1,15 @@
-Changes in Arasan 24.0:
+Changes in Arasan 24.1 (January 2024):
+ 1) Fix scoring for special case endgames (classical eval).
+ 2) Add HCE scoring for KRN vs KR and KRB vs KR.
+ 3) Fixes/tuning for strength reduction feature.
+ 4) Add option to override opening book path.
+ 5) Multiple fixes and updates to selfplay utility.
+ 6) Updated network, trained on approx. 4.7B self-play games.
+ 7) SIMD optimizations in NNUE feature transformer (significant
+ performance increase, especially for Mac M1/M2 and AVX512).
+ 8) Bug fixes in NNUE code.
+
+Changes in Arasan 24.0 (August 2023):
  1) New network architecture based on "Stockfish version 4" structure
  2) Cleanup shadow warnings + other misc. code cleanup.
  3) Multiple fixes/updates to selfplay utility

@@ -1,11 +1,11 @@
-Arasan 24.0 test results, 64-bit AVX2 build, 5-man Syzygy tbs
+Arasan 24.1 test results, 64-bit AVX2 build, 5-man Syzygy tbs
 Hardware: i7-6700k @ 4GHz (4 cores), 8GB hash, xUbuntu x64
 
-arasan2023         60 seconds/move	168/200
-ecmgcp             10 seconds/move      167/183
-iq4                10 seconds/move      165/183
-wacnew             10 seconds/move      293/300
-pet                60 seconds/move      45/48
-eet                60 seconds/move      91/100
-bt2630             900 seconds/move     28/30	rating = 2570
-lapuce2            600 seconds/move     33/35	rating = 2890
+arasan2023         170/200
+ecmgcp             164/183
+iq4                162/183
+wacnew             291/300
+pet                43/48
+eet                93/100
+bt2630             29/30	rating = 2600
+lapuce2            34/35	rating = 2920

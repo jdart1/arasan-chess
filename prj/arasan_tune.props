@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <ARASAN_VERSION>24.0</ARASAN_VERSION>
+    <ARASAN_VERSION>24.1</ARASAN_VERSION>
     <ARASAN_FEATURES>SMP;SMP_STATS;USE_INTRINSICS;TUNE</ARASAN_FEATURES>
   </PropertyGroup>
   <PropertyGroup />

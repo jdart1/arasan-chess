@@ -2,7 +2,7 @@
 
 Arasan is a chess engine, that is, a console-based program that plays the game of chess.
 
-By itself, it has no graphical interface, but can be used together with interface programs such as [Winboard and xboard](https://www.gnu.org/software/xboard/). Arasan also has its own Windows-only GUI (separate code base, distributed with the Windows releases, not hosted on Github).
+By itself, it has no graphical interface, but can be used together with interface programs such as [Winboard and xboard](https://www.gnu.org/software/xboard/). There is a separate Windows-only GUI for Arasan distributed with the Windows releases: it is not hosted on Github.
 
 For communicating with a chess interface, Arasan supports either the standard [CECP](http://home.hccnet.nl/h.g.muller/engine-intf.html) protocol (version 2) or the [UCI](https://www.chessprogramming.org/Chess_Engine_Communication_Protocol) protocol. CECP is the native protocol used by Winboard and xboard. UCI-compatible chess interfaces include ChessBase and Fritz. [Arena](http://www.playwitharena.de/), a free interface, supports both protocols.
 
