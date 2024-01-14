@@ -190,7 +190,7 @@ AR      = ar
 
 LLVM_PROFDATA = llvm-profdata
 
-PROF_GEN = -fprofile-generate=$(PROF_DATA)
+PROF_GEN = -fprofile-generate=$(PROF_DATA) -mllvm -enable-name-compression=false
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
 FLAGS := -std=c++17 -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
@@ -318,12 +318,14 @@ $(BUILD)/%.o: $(UTIL)/%.cpp
 $(TUNE_BUILD)/%.o: %.cpp
 	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS)  $(NNUE_FLAGS) $(TUNE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 
-$(PROFILE)/%.o: %.cpp
 ifeq ($(PASS),1)
-	$(CPP) $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
+CPP_PROF_FLAGS := $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 else
-	$(CPP) $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
+CPP_PROF_FLAGS := $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 endif
+
+$(PROFILE)/%.o: %.cpp
+	$(CPP) $(CPP_PROF_FLAGS) -c -o $@ $<
 
 profiled: dirs
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
@@ -333,18 +335,17 @@ ifdef CLANG
 endif
 	@$(MAKE) PASS=2 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
 
-TB_SOURCES=
-TB_OBJS=
-TB_LIBS=
-
 ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
-TB_TUNE_OBJS := $(TB_OBJS) $(TUNE_BUILD)/syzygy.o $(TUNE_BUILD)/tbprobe.o
-TB_OBJS := $(TB_OBJS) $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
+TB_TUNE_OBJS := $(TUNE_BUILD)/syzygy.o $(TUNE_BUILD)/tbprobe.o
+TB_OBJS := $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
+TB_PROFILE_OBJS := $(PROFILE)/syzygy.o $(PROFILE)/tbprobe.o
 STB_FLAGS := -x c++
 $(BUILD)/%.o: $(STB)/%.c
 	$(CC)  $(FLAGS) $(STB_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 
+$(PROFILE)/%.o: $(STB)/%.c
+	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) -c $< -o $@
 
 $(TUNE_BUILD)/%.o: $(STB)/%.c
 	$(CC)  $(FLAGS) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
@@ -402,15 +403,15 @@ PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
 SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES)
 
-ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_OBJS) $(NUMA_PROFILE_OBJS) $(TB_LIBS)
-ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS) $(TB_LIBS)
-MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
-SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS) $(TB_LIBS)
+ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
+ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
+MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 	cd $(BUILD) && $(LD) $(CXXFLAGS)  $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
