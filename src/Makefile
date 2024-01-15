@@ -190,7 +190,9 @@ AR      = ar
 
 LLVM_PROFDATA = llvm-profdata
 
-PROF_GEN = -fprofile-generate=$(PROF_DATA) -mllvm -enable-name-compression=false
+PROF_GEN = -fprofile-generate=$(PROF_DATA)
+# extra flags for compile only (not link):
+PROF_GEN_EXTRA = -mllvm -enable-name-compression=false
 PROF_USE = -fprofile-use=$(PROF_DATA)
 
 FLAGS := -std=c++17 -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
@@ -285,7 +287,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.o
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
-	rm -f $(PROF_DATA)/*.dyn $(PROF_DATA)/*.profraw $(PROF_DATA)/*.profdata
+	rm -f $(PROF_DATA)/*.*
 	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder selfplay
 
 dirs:
@@ -319,13 +321,13 @@ $(TUNE_BUILD)/%.o: %.cpp
 	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS)  $(NNUE_FLAGS) $(TUNE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 
 ifeq ($(PASS),1)
-CPP_PROF_FLAGS := $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
+CPP_PROF_FLAGS := $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS)
 else
-CPP_PROF_FLAGS := $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
+CPP_PROF_FLAGS := $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS)
 endif
 
 $(PROFILE)/%.o: %.cpp
-	$(CPP) $(CPP_PROF_FLAGS) -c -o $@ $<
+	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) -c -o $@ $<
 
 profiled: dirs
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
@@ -345,7 +347,7 @@ $(BUILD)/%.o: $(STB)/%.c
 	$(CC)  $(FLAGS) $(STB_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(PROFILE)/%.o: $(STB)/%.c
-	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) -c $< -o $@
+	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) -c $< -o $@
 
 $(TUNE_BUILD)/%.o: $(STB)/%.c
 	$(CC)  $(FLAGS) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
