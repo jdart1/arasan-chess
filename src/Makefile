@@ -327,7 +327,7 @@ CPP_PROF_FLAGS := $(PROF_USE) $(OPT) $(LTO) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE
 endif
 
 $(PROFILE)/%.o: %.cpp
-	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) -c -o $@ $<
+	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
 
 profiled: dirs
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
@@ -347,7 +347,7 @@ $(BUILD)/%.o: $(STB)/%.c
 	$(CC)  $(FLAGS) $(STB_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(PROFILE)/%.o: $(STB)/%.c
-	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) -c $< -o $@
+	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c $< -o $@
 
 $(TUNE_BUILD)/%.o: $(STB)/%.c
 	$(CC)  $(FLAGS) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
@@ -416,25 +416,25 @@ PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_O
 SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS)  $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(MAKEECO_OBJS) $(DEBUG) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEECO_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/ecocoder:  $(ECOCODER_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(ECOCODER_OBJS) $(DEBUG) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(ECOCODER_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(PGNSELECT_OBJS) $(DEBUG) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PGNSELECT_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/$(TUNER):  $(TUNER_OBJS)
-	cd $(TUNE_BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
@@ -444,16 +444,16 @@ endif
 
 ifeq ($(PASS),1)
 $(PROFILE)/arasanx:  $(ARASANX_PROFILE_OBJS)
-	cd $(PROFILE) && $(LD) $(PROF_GEN) $(ARASANX_PROFILE_OBJS) $(DEBUG) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(PROFILE) && $(LD) $(PROF_GEN) $(ARASANX_PROFILE_OBJS) $(DEBUG) $(CXXFLAGS) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
 else
 ifeq ($(PASS),2)
 $(EXPORT)/$(ARASANX):  $(ARASANX_PROFILE_OBJS)
-	cd $(PROFILE) && $(LD) $(PROF_USE) $(OPT) $(LTO) $(ARASANX_PROFILE_OBJS) $(DEBUG) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(PROFILE) && $(LD) $(PROF_USE) $(OPT) $(LTO) $(ARASANX_PROFILE_OBJS) $(DEBUG) $(CXXFLAGS) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
 	cp $(PROFILE)/arasanx $(EXPORT)/$(ARASANX)
 else
 # non-PGO build
 $(EXPORT)/$(ARASANX):  $(ARASANX_OBJS)
-	cd $(BUILD) && $(LD) $(CXXFLAGS) $(LDFLAGS) $(LTO) $(ARASANX_OBJS) $(DEBUG) -o $(EXPORT)/$(ARASANX) -lstdc++ $(LIBS) $(SMPLIB)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(ARASANX_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/$(ARASANX) -lstdc++ $(LIBS) $(SMPLIB)
 endif
 endif
 
