@@ -201,6 +201,8 @@ simulate a Linux environment under Windows. Use the Linux source
 package for building with Cygwin or [MSYS2](https://www.msys2.org/). I
 do not currently recommend or support [MingW](http://mingw.org/).
 
+Cygwin builds with AVX2 do not work due to a <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54412">known GCC bug</a>.
+
 # CMake
 
 There is a CMakeLists.txt file in the source directory, for building
