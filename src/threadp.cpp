@@ -1,4 +1,4 @@
-// Copyright 2005-2010, 2012, 2013, 2016-2019, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2010, 2012, 2013, 2016-2019, 2021, 2024 by Jon Dart. All Rights Reserved.
 
 #include "threadp.h"
 #include "search.h"
@@ -158,13 +158,11 @@ void ThreadInfo::start() {
 
 ThreadInfo::ThreadInfo(ThreadPool *p, unsigned i)
  : state(Starting),
+   work(nullptr),
+   pool(p),
 #ifdef _WIN32
    thread_id(nullptr),
-   work(nullptr),
-#else
-   work(nullptr),
 #endif
-   pool(p),
    index(i)
 {
 #ifdef _THREAD_TRACE
