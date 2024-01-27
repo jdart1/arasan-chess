@@ -133,7 +133,9 @@ SMP=/MT /DSMP /DSMP_STATS
 TUNE_FLAGS=-DTUNE
 
 LD=link
+!Ifndef CL
 CL=cl
+!Endif
 
 # Visual Studio compile flags
 CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W2 $(TRACE) $(SMP)
