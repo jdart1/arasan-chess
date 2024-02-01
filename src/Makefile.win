@@ -9,6 +9,7 @@ TARGET = win64
 
 # Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
+#PLATFORM=NT
 
 #TRACE=/D_TRACE
 #DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
@@ -20,7 +21,7 @@ UTIL=util
 SYZYGY_TBS = 1
 
 # location of SYZYGY tablebase code
-STB = syzygy\src
+STB=syzygy\src
 
 # enable NUMA support
 #NUMA=1
@@ -43,6 +44,7 @@ AVX512_FLAGS= -DAVX512
 !If "$(BUILD_TYPE)" == "old"
 !Else
 CFLAGS = $(CFLAGS) $(BASIC_SIMD_FLAGS)
+!Endif
 !If "$(BUILD_TYPE)" == "modern"
 CFLAGS = $(CFLAGS) $(POPCNT_FLAGS)
 !Else If "$(BUILD_TYPE)" == "avx2"
@@ -53,7 +55,6 @@ CFLAGS = $(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) /arch:AVX2
 CFLAGS = $(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) $(AVX512_FLAGS) /arch:AVX512
 !Else
 # TBD: would like to fail here, not clear how in NMAKE
-!Endif
 !Endif
 !Else
 # default - no BUILD_TYPE defined
