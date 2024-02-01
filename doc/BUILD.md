@@ -155,6 +155,10 @@ The default with no BUILD_TYPE set is a very generic executable that
 does not assume any advanced instruction set, but does assume SSE2,
 available on all x86 processors since about 2000.
 
+"clang-cl" is now supported for compilation on Windows with nmake.
+Add `CC=clang-cl` to the nmake command line to enable use of this
+compiler.
+
 Release binaries from a build are placed in the
 "\<target>\Release" directory, where <target> is "win32" or "win64",
 while the debug objects and binaries are put into "\<target>\Debug".

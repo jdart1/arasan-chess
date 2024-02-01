@@ -20,7 +20,7 @@ UTIL=util
 SYZYGY_TBS = 1
 
 # location of SYZYGY tablebase code
-STB=syzygy/src
+STB = syzygy\src
 
 # enable NUMA support
 #NUMA=1
@@ -32,27 +32,25 @@ NNUE=1
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
 
-CFLAGS = /std:c++17
-
 # build flags for different instruction sets
 BASIC_SIMD_FLAGS = -DSIMD -DSSE2
-POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE4.1
-BMI2_FLAGS = -DBMI2 $(POPCNT_FLAGS)
-AVX2_FLAGS = -DAVX2
-AVX512_FLAGS = -DAVX512
+POPCNT_FLAGS = -DUSE_POPCNT -DSSSE3 -DSSE41
+BMI2_FLAGS= -DBMI2 $(POPCNT_FLAGS)
+AVX2_FLAGS= -DAVX2
+AVX512_FLAGS= -DAVX512
 
 !IfDef BUILD_TYPE
 !If "$(BUILD_TYPE)" == "old"
 !Else
 CFLAGS = $(CFLAGS) $(BASIC_SIMD_FLAGS)
 !If "$(BUILD_TYPE)" == "modern"
-CFLAGS=$(CFLAGS) $(POPCNT_FLAGS)
+CFLAGS = $(CFLAGS) $(POPCNT_FLAGS)
 !Else If "$(BUILD_TYPE)" == "avx2"
-CFLAGS=$(CFLAGS)  $(POPCNT_FLAGS) $(AVX2_FLAGS) /arch:AVX2
+CFLAGS = $(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) /arch:AVX2
 !Else If "$(BUILD_TYPE)" == "avx2-bmi2"
-CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) /arch:AVX2
+CFLAGS = $(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) /arch:AVX2
 !Else If "$(BUILD_TYPE)" == "avx512"
-CFLAGS=$(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) $(AVX512_FLAGS) /arch:AVX512
+CFLAGS = $(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) $(AVX512_FLAGS) /arch:AVX512
 !Else
 # TBD: would like to fail here, not clear how in NMAKE
 !Endif
@@ -132,33 +130,84 @@ SMP=/MT /DSMP /DSMP_STATS
 
 TUNE_FLAGS=-DTUNE
 
+!Ifndef CC
+CC = cl
+!Endif
 LD=link
-!Ifndef CL
-CL=cl
+
+# Linker flags
+LDFLAGS  = $(LDFLAGS) kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) /nologo /incremental:no $(LINKOPT) /stack:4000000 /version:$(LINK_VERSION)
+!If "$(PLATFORM)" == "XP"
+!If "$(TARGET)" == "win64"
+LDFLAGS = $(LDFLAGS) /subsystem:console,5.02
+!Else
+LDFLAGS = $(LDFLAGS) /subsystem:console,5.01
+!Endif
+!Else
+LDFLAGS = $(LDFLAGS) /subsystem:console
 !Endif
 
-# Visual Studio compile flags
+# compile flags
 CFLAGS = $(CFLAGS) $(ARCH) /GA /GF /EHsc /D_CONSOLE /D_CRT_SECURE_NO_DEPRECATE /GF /DNOMINMAX /W2 $(TRACE) $(SMP)
+# optimizations
 !Ifndef DEBUG
 !If "$(TARGET)"=="win64"
 !If "$(PLATFORM)" == "XP"
-OPT  = /Ox /Gr /Gy /GS- /GL /DNDEBUG
+OPT  = /Ox /Gr /Gy /GS- /DNDEBUG
 !Else
-OPT  = /Ox /Gr /Gy /Oi /GS- /GL /DUSE_INTRINSICS /DNDEBUG
+OPT  = /Ox /Gr /Gy /Oi /GS- /DUSE_INTRINSICS /DNDEBUG
 !Endif
 LINKOPT = /LTCG /OPT:REF,ICF
 !Else
-OPT  = /Ox /Gr /Gy /GS- /GL /DUSE_INTRINSICS /DNDEBUG
+OPT  = /Ox /Gr /Gy /GS- /DUSE_INTRINSICS /DNDEBUG
 LINKOPT = /LTCG /OPT:REF
 !Endif
 !Endif
-LD_FLAGS =
+
+!If "$(CC)" == "icx-cl"
+CFLAGS = $(CFLAGS) /Qstd=c++17
+PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT)
+LD = xilink
+PROF_GEN_LD = $(LD)
+!Ifndef DEBUG
+LTO = /Qipo
+!Endif
+!Else
+!If "$(CC)" == "clang-cl"
+CFLAGS = $(CFLAGS) /std:c++17
+PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-generate=$(PROFDATA)
+PROF_USE_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-use=$(PROFDATA)\default.profdata
+# first link
+PROF_LINK_FLAGS = -fprofile-generate=$(PROFDATA)
+# final link
+PROF_LINK_FLAGS2 = -fprofile-use=$(PROFDATA)default.profdata
+PROF_GEN_LD = $(CC)
+PROF_USE_LD = $(CC)
+!Ifndef DEBUG
+LTO = -flto
+!Endif
+LD = lld-link
+!Else
+# MSVC
+CFLAGS = $(CFLAGS) /std:c++17
+!Ifndef DEBUG
+LTO = /GL
+!Endif
+PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) $(LTO)
+PROF_LINK_FLAGS = /LTCG /GENPROFILE /pgd:$(PROFILE)\arasanx.pgd
+LD = link
+PROF_GEN_LD = $(LD)
+!Endif
+!Endif
+
 TB_FLAGS = $(CFLAGS) $(DEBUG) $(SMP) /Gr /O1 /GS- /I$(TB) /I.
 TB_PROFILE_FLAGS = $(TB_FLAGS)
-PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT)
 PROF_RUN_FLAGS = -H 64M $(PROF_RUN_SMP)
-PROF_LINK_FLAGS = /LTCG /GENPROFILE /pgd:$(PROFILE)\arasanx.pgd
-PROF_GEN_LD = link
+!Ifdef PASS2
+PROF_FLAGS=$(PROF_USE_FLAGS)
+!Else
+PROF_FLAGS=$(PROF_GEN_FLAGS)
+!Endif
 
 default: dirs $(BUILD)\$(ARASANX).exe
 
@@ -169,34 +218,22 @@ tuning: dirs $(BUILD)\tuner.exe
 utils: dirs $(BUILD)\pgnselect.exe $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
 
 !IfDef SYZYGY_TBS
-CFLAGS=$(CFLAGS) -I. -DSYZYGY_TBS
-STB_FLAGS = /TP -I. $(CFLAGS)
+CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
+STB_FLAGS = /TP /I. $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(TUNE_BUILD)\syzygy.obj $(TUNE_BUILD)\tbprobe.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
 $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
-	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+	$(CC) $(STB_FLAGS) $(OPT) $(LTO) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(TUNE_BUILD)\tbprobe.obj: $(STB)\tbprobe.c
-	$(CL) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+	$(CF) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
-	$(CL) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
 !IfDef NNUE
 NNUE_OBJS = $(BUILD)\nnueintf.obj
 NNUE_PROFILE_OBJS = $(PROFILE)\nnueintf.obj
-!Endif
-
-# Linker flags
-LDFLAGS  = kernel32.lib user32.lib winmm.lib $(NUMA_LIBS) $(LD_FLAGS) /nologo /incremental:no /opt:ref /stack:4000000 /version:$(LINK_VERSION)
-!If "$(PLATFORM)" == "XP"
-!If "$(TARGET)" == "win64"
-LDFLAGS = $(LDFLAGS) /subsystem:console,5.02
-!Else
-LDFLAGS = $(LDFLAGS) /subsystem:console,5.01
-!Endif
-!Else
-LDFLAGS = $(LDFLAGS) /subsystem:console
 !Endif
 
 ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
@@ -272,16 +309,16 @@ PLAYCHESS_OBJS = $(BUILD)\playchess.obj $(UTIL_OBJS)
 SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /c /Fo$@ $<
+    $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /c /Fo$@ $<
 
 {$(UTIL)}.cpp{$(BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) -I. /c /Fo$@ $<
+    $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /I. /c /Fo$@ $<
 
 {}.cpp{$(TUNE_BUILD)}.obj:
-    $(CL) $(OPT) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
+    $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
 
 {}.cpp{$(PROFILE)}.obj:
-    $(CL) $(PROF_GEN_FLAGS) /c /Fo$@ $<
+    $(CC) $(PROF_FLAGS) /c /Fo$@ $<
 
 $(BUILD)\makebook.exe:  $(MAKEBOOK_OBJS)
         $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\makebook.exe
@@ -310,18 +347,44 @@ $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
 $(BUILD)\epdfilter.exe: dirs $(EPDFILTER_OBJS)
         $(LD) $(EPDFILTER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\epdfilter.exe
 
-$(PROFILE)\$(ARASANX).exe:  $(ARASANX_PROFILE_OBJS)
+$(PROFILE)\$(ARASANX).exe: $(ARASANX_PROFILE_OBJS)
+!If "$(CC)"=="clang-cl"
+!Ifdef PASS2
+   $(PROF_USE_LD) $(PROF_LINK_FLAGS2) $(ARASANX_PROFILE_OBJS) -o$(BUILD)\$(ARASANX).exe /link $(LDFLAGS)
+!Else
+    $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(ARASANX_PROFILE_OBJS) -o$(PROFILE)\$(ARASANX).exe /link $(LDFLAGS)
+!Endif
+!Else
+#MSVC
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(PROFILE)\$(ARASANX).exe
+!Endif
 
 profile-run: dirs
-    del $(PROFDATA)\*.pgc
+    del /q $(PROFDATA)\*.*
     $(PROFILE)\$(ARASANX) $(PROF_RUN_FLAGS) bench
 
+!If "$(CC)" == "clang-cl"
+profile-optimized: profile-pass2 $(ARASANX_PROFILE_OBJS)
+
+!Ifdef BUILD_TYPE
+profile-pass2: pass2-prepare
+   $(MAKE) PASS2=1 BUILD_TYPE=$(BUILD_TYPE) CC=$(CC) profile
+!Else
+profile-pass2: pass2-prepare
+   $(MAKE) PASS2=1 CC=$(CC) profile profile-optimized
+!Endif
+
+pass2-prepare:
+   llvm-profdata merge -output=$(PROFDATA)/default.profdata $(PROFDATA)/default_*profraw
+   del /q $(PROFILE)\*.obj
+
+!Else
 profile-optimized: $(ARASANX_PROFILE_OBJS)
     copy /y $(PROFILE)\*.pgc $(PGO_BUILD)
     copy /y $(PROFILE)\*.pgd $(PGO_BUILD)
     copy /y $(PROFILE)\*.obj $(PGO_BUILD)
     $(LD) /LTCG /USEPROFILE /pgd:$(PGO_BUILD)\arasanx.pgd $(LDFLAGS) $(ARASANX_PROFILE_OBJS) /out:$(BUILD)\$(ARASANX).exe
+!Endif
 
 profile-build: dirs profile profile-run profile-optimized
 
