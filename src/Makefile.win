@@ -9,11 +9,11 @@ TARGET = win64
 
 # Set PLATFORM=XP for a Windows XP compatible build
 PLATFORM=MODERN
-#PLATFORM=NT
+#PLATFORM=XP
 
 #TRACE=/D_TRACE
 #DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
-#LDDEBUG=/DEBUG
+DEBUG=/Zi
 BUILD_ROOT=..
 UTIL=util
 
@@ -86,6 +86,7 @@ HWLOC=$(HWLOC32)
 
 !Ifdef DEBUG
 DEST_DIR=debug
+LDFLAGS=$(LDFLAGS) /DEBUG
 !Else
 DEST_DIR=release
 !Endif
@@ -322,7 +323,7 @@ SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS)
     $(CC) $(PROF_FLAGS) /c /Fo$@ $<
 
 $(BUILD)\makebook.exe:  $(MAKEBOOK_OBJS)
-        $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\makebook.exe
+        $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\makebook.exe
 
 $(BUILD)\makeeco.exe:  $(MAKEECO_OBJS)
         $(LD) $(MAKEECO_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\makeeco.exe
@@ -331,22 +332,19 @@ $(BUILD)\ecocoder.exe:  $(ECOCODER_OBJS)
         $(LD) $(ECOCODER_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\ecocoder.exe
 
 $(BUILD)\$(ARASANX).exe:  dirs $(ARASANX_OBJS)
-        $(LD) $(ARASANX_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\$(ARASANX).exe
+        $(LD) $(ARASANX_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\$(ARASANX).exe
 
 $(BUILD)\tuner.exe:  dirs $(TUNER_OBJS)
-        $(LD) $(TUNER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\tuner.exe
+        $(LD) $(TUNER_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\tuner.exe
 
 $(BUILD)\pgnselect.exe: dirs $(PGNSELECT_OBJS)
-        $(LD) $(PGNSELECT_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\pgnselect.exe
+        $(LD) $(PGNSELECT_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\pgnselect.exe
 
 $(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
-        $(LD) $(PLAYCHESS_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\playchess.exe
+        $(LD) $(PLAYCHESS_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\playchess.exe
 
 $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
-        $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\selfplay.exe
-
-$(BUILD)\epdfilter.exe: dirs $(EPDFILTER_OBJS)
-        $(LD) $(EPDFILTER_OBJS) $(LINKOPT) $(LDFLAGS) $(LDDEBUG) /out:$(BUILD)\epdfilter.exe
+        $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\selfplay.exe
 
 $(PROFILE)\$(ARASANX).exe: $(ARASANX_PROFILE_OBJS)
 !If "$(CC)"=="clang-cl"
