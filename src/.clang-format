@@ -1,0 +1,5 @@
+# We'll use defaults from the LLVM style, but with 4 columns indentation.
+BasedOnStyle: LLVM
+ColumnLimit:     100
+IndentWidth: 4
+UseTab: Never
