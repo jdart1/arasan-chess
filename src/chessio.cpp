@@ -9,24 +9,15 @@
 #include <algorithm>
 #include <cstring>
 #include <iomanip>
+#include <regex>
 #include <sstream>
+#include <unordered_set>
 
-#define PGN_MARGIN 70
-#define MAX_TAG 255
-#define MAX_VAL 255
+static constexpr unsigned PGN_MARGIN = 70;
+
+static std::unordered_set<std::string> RESULTS = {"0-1", "1-0", "1/2-1/2"};
 
 // This module handles reading and writing board and game info.
-
-static int skip_space(std::istream &game_file) {
-    int c = EOF;
-    while (!game_file.eof()) {
-        c = game_file.get();
-        if (!isspace(c) && (c != '\n')) {
-            break;
-        }
-    }
-    return c;
-}
 
 void ChessIO::get_game_description(const std::vector<Header> &hdrs, std::string &descr, long id) {
     std::stringstream s;
@@ -60,16 +51,12 @@ void ChessIO::get_game_description(const std::vector<Header> &hdrs, std::string 
     descr = s.str();
 }
 
-int ChessIO::scan_pgn(std::istream &game_file, std::vector<std::string> &contents) {
-    Board board;
-    int c;
-
-    while (game_file.good() && !game_file.eof()) {
-        // Collect the header:
+int ChessIO::PGNReader::scanPGN(std::vector<std::string> &contents) {
+    while (stream.good() && !stream.eof()) {
         long first;
         std::vector<Header> hdrs;
         std::string eventStr;
-        collect_headers(game_file, hdrs, first);
+        collectHeaders(hdrs, first);
         if (get_header(hdrs, "Event", eventStr)) {
             // We have the headers, munge them into a single-line game
             // description. Append the index to the game so the GUI
@@ -79,16 +66,21 @@ int ChessIO::scan_pgn(std::istream &game_file, std::vector<std::string> &content
             get_game_description(hdrs, descr, first);
             contents.push_back(descr);
         }
-        hdrs.clear();
-
-        while (game_file.good() && !game_file.eof()) {
-            if ((c = game_file.get()) == '[') {
-                game_file.putback(c);
-                break;
-            }
-        }
     }
     return 1;
+}
+
+bool ChessIO::PGNReader::getline(std::string &line) {
+    if (!buffer.empty()) {
+        line = buffer.front();
+        buffer.pop();
+        return 1;
+    } else {
+        if (stream.eof())
+            return false;
+        std::getline(stream, line);
+        return stream.good();
+    }
 }
 
 bool ChessIO::get_header(const std::vector<Header> &hdrs, const std::string &key,
@@ -290,7 +282,7 @@ int ChessIO::readEPDRecord(std::istream &ifs, Board &board, EPDRecord &rec) {
 
 void ChessIO::writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &rec) {
     BoardIO::writeFEN(board, ofs, 0);
-    for (unsigned i = 0; i < rec.getSize(); i++) {
+    for (size_t i = 0; i < rec.getSize(); i++) {
         std::string key, val;
         (void)rec.getData(i, key, val);
         ofs << ' ' << key << ' ' << val << ';';
@@ -298,174 +290,116 @@ void ChessIO::writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &r
     ofs << std::endl;
 }
 
-void ChessIO::collect_headers(std::istream &game_file, std::vector<Header> &hdrs, long &first) {
-    first = -1L;
-    int c;
-    bool firstTag = true;
-    while (!game_file.eof()) {
-        char tag[MAX_TAG + 1];
-        char val[MAX_VAL + 1];
-        c = skip_space(game_file);
-        if (c != '[') {
-            game_file.putback(c);
+int ChessIO::PGNReader::collectHeaders(std::vector<Header> &hdrs, long &first) {
+    first = static_cast<long>(stream.tellg()) - 1;
+    bool foundHeader = false;
+    std::string line;
+    while (getline(line)) {
+        std::smatch match;
+        std::string tag, value;
+        if (std::regex_match(line, match, HeaderPattern)) {
+            foundHeader = true;
+            auto it = match.begin() + 1;
+            if (it != match.end())
+                tag = *it++;
+            if (it != match.end())
+                value = *it;
+            hdrs.push_back(Header(tag, value));
+        } else if (foundHeader &&
+                   (line.empty() || std::all_of(line.begin(), line.end(), isspace))) {
             break;
         } else {
-            if (first == -1)
-                first = (long)game_file.tellg() - 1;
-            int t = 0;
-            while (!game_file.eof()) {
-                c = game_file.get();
-                if (!isspace(c) && c != '"' && t < MAX_TAG)
-                    tag[t++] = c;
-                else
-                    break;
-            }
-            tag[t] = '\0';
-            if (firstTag) {
-                if (strcmp(tag, "vent") == 0) {
-                    // It appears that there is a bug in std::ifstream.
-                    // Calling tellg (above) sometimes causes
-                    // a missing char when the next read occurs.
-                    // So we get a partial tag. This is a workaround.
-                    strcpy(tag, "Event");
-                }
-            }
-            firstTag = false;
-            if (isspace(c)) {
-                c = skip_space(game_file);
-            }
-            val[0] = '\0';
-            if (c == '"') {
-                int v = 0;
-                while (!game_file.eof()) {
-                    c = game_file.get();
-                    if (c != '"' && v < MAX_VAL)
-                        val[v++] = c;
-                    else
-                        break;
-                }
-                val[v] = '\0';
-            }
-            hdrs.push_back(Header(tag, val));
-            while (!game_file.eof() && c != ']')
-                c = game_file.get();
+            first = static_cast<long>(stream.tellg()) - 1;
         }
     }
+    return foundHeader;
 }
 
-ChessIO::Token ChessIO::get_next_token(std::istream &game_file) {
+void ChessIO::TokenReader::getTextToNextDelim(std::string &s) {
+    auto delim = buf.find_first_of(" \t()", index);
+    auto end = (delim == std::string::npos) ? buf.end() : buf.begin() + delim;
+    for (auto it = buf.begin() + index; it != end; ++it)
+        s += *it;
+    index += s.size();
+}
+
+ChessIO::TokenReader::TokenReader(ChessIO::PGNReader &f)
+    : file(f), index(0), CastlePattern("^([0O]\\-[0O](\\-[0O])?).*$"),
+      MovePattern("^([a-zA-z1-8\\-\\+=]+).*$"), DigitsPattern("^((\\d+)?\\.*)$") {}
+
+ChessIO::Token ChessIO::TokenReader::nextToken() {
     TokenType tok = Unknown;
-    int c = EOF;
+    int c;
     std::string value;
-    while (!game_file.eof()) {
-        c = game_file.get();
-        if (!isspace(c))
-            break;
-    }
+    while ((c = get()) != EOF && isspace(c))
+        ;
     if (c == EOF) {
-        return Token(Eof, value);
+        tok = Eof;
     } else if (c == '[') {
-        // Not expected within a game since we should have already
-        // read the headers. Probably the start of the next game.
-        game_file.putback(c);
-        return Token(Eof, value);
+        // not expected within a PGN body, must be header of the
+        // next game
+        file.putback(buf);
+        index = 0;
+        tok = Eof;
     } else if (c == '{') {
         value += c;
-        while (game_file.good() && c != '}') {
-            c = game_file.get();
-            if (c == EOF)
-                break;
+        while ((c = get()) != EOF) {
             value += c;
+            if (c == '}')
+                break;
         }
-        return Token(Comment, value);
+        tok = Comment;
     } else if (c == '(') {
-        value += '(';
-        return Token(OpenVar, value);
+        value = '(';
+        tok = OpenVar;
     } else if (c == ')') {
-        value += ')';
-        return Token(CloseVar, value);
+        value = ')';
+        tok = CloseVar;
     } else if (c == '$') {
         value += c;
-        while (game_file.good()) {
-            c = game_file.get();
-            if (!game_file.good()) {
-                break;
-            } else if (!isdigit(c)) {
-                game_file.putback(c);
-                break;
-            }
-            value += c;
-        }
-        return Token(NAG, value);
-    } else if (c == '.') {
-        value += c;
-        if (!game_file.eof() && game_file.good()) {
-            c = game_file.get();
-            if (c == '.') {
-                value += c;
-                tok = BlackMove;
-            } else {
-                game_file.putback(c);
-            }
+        std::string s;
+        getTextToNextDelim(s);
+        std::smatch match;
+        if (std::regex_match(s, match, DigitsPattern)) {
+            tok = NAG;
+            value += *(match.begin() + 1);
         }
     } else if (isdigit(c)) {
-        // peek at next char.
-        int nextc = game_file.get();
-        if (c == '0') {
-            if (nextc == '-') {
-                // some so-called PGN files have 0-0 or 0-0-0 for
-                // castling.  To handle this, we need to peek ahead
-                // one more character.
-                int nextc2 = game_file.peek();
-                if (toupper(nextc2) == 'O' || nextc2 == '0') {
-                    // castling, we presume
-                    value += c;
-                    c = nextc;
-                    while (game_file.good() &&
-                           (c == '-' || c == '0' || toupper(c) == 'O' || c == '+')) {
-                        value += c;
-                        c = game_file.get();
-                    }
-                    game_file.putback(c);
-                    return Token(GameMove, value);
-                }
-            }
-        }
-        if (nextc == '-' || nextc == '/') { // assume result
-            value += c;
-            c = nextc;
-            while (!game_file.eof() && game_file.good() && !isspace(c)) {
-                value += c;
-                c = game_file.get();
-            }
+        value += c;
+        std::string s;
+        getTextToNextDelim(s);
+        value += s;
+        std::smatch match;
+        if (std::regex_match(value, match, CastlePattern)) {
+            tok = GameMove;
+        } else if ((value.size() > 1) && (RESULTS.find(value) != RESULTS.end())) {
+            // result string
             tok = Result;
-        } else {
-            // Assume we have a move number.
-            value += c;
-            c = nextc;
-            while (game_file.good() && isdigit(c)) {
-                value += c;
-                c = game_file.get();
+            Token tok2 = nextToken();
+            if (tok2.type == Comment) {
+                value += ' ' + tok2.val;
             }
-            if (game_file.good() && c == '.') {
-                value += c;
-            } else {
-                game_file.putback(c);
-            }
+        } else if (std::regex_match(value, match, DigitsPattern)) {
             tok = Number;
         }
     } else if (isalpha(c)) {
-        while (game_file.good() && (isalnum(c) || c == '-' || c == '=' || (c == '+'))) {
-            value += c;
-            c = game_file.get();
+        value += c;
+        std::string s;
+        std::smatch match;
+        getTextToNextDelim(s);
+        if (std::regex_match(s, match, MovePattern)) {
+            value += *(match.begin() + 1);
+            tok = GameMove;
         }
-        game_file.putback(c);
-        tok = GameMove;
     } else if (c == '#') { // "Checkmate"
         value += c;
         tok = Ignore;
     } else if (c == '*') {
         value += c;
+        Token tok2 = nextToken();
+        if (tok2.type == Comment) {
+            value += ' ' + tok2.val;
+        }
         tok = Result;
     } else {
         value += c;

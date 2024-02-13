@@ -1,4 +1,4 @@
-// Copyright 2010, 2011, 2012, 2017, 2020-2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 2010, 2011, 2012, 2017, 2020-2021, 2023-2024 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "notation.h"
 #include "legal.h"
@@ -98,7 +98,6 @@ int CDECL main(int argc, char **argv)
       Statistics stats;
       for (;arg < argc;arg++) {
          std::ifstream pgn_file( argv[arg], std::ios::in);
-         int c;
          ColorType side;
          std::string result, white, black;
          if (!pgn_file.good()) {
@@ -107,34 +106,24 @@ int CDECL main(int argc, char **argv)
          }
          else {
             std::vector<ChessIO::Header> hdrs;
-
+            ChessIO::PGNReader pgnReader(pgn_file);
             Board board;
             while (!pgn_file.eof()) {
-
+               hdrs.clear();
                long first;
+               pgnReader.collectHeaders(hdrs,first);
                MoveArray moves;
                board.reset();
                side = White;
-               while (pgn_file.good() && (c = pgn_file.get()) != EOF) {
-                  if (c=='[') {
-                     pgn_file.putback(c);
-                     break;
-                  }
-               }
-               if (pgn_file.eof()) break;
-               hdrs.clear();
-               ChessIO::collect_headers(pgn_file,hdrs,first);
-
                float last_score = -1;
                int valid = 1;
                int var = 0;
+               ChessIO::TokenReader tokenReader(pgnReader);
                bool done = false;
                while (!done) {
-                  ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
+                  ChessIO::Token tok = tokenReader.nextToken();
+                  if (tok.type == ChessIO::Eof) break;
                   switch(tok.type) {
-                  case ChessIO::Eof:
-                     done = true;
-                     break;
                   case ChessIO::Number:
                      continue;
                   case ChessIO::GameMove: {
@@ -162,16 +151,16 @@ int CDECL main(int argc, char **argv)
                      side = OppositeColor(side);
                      break;
                   }
-                  case ChessIO::Unknown:
-                     if (strcmp(tok.val.c_str(),"(") == 0)
-                        ++var;
-                     else if (strcmp(tok.val.c_str(),")")==0) {
-                        --var;   
-                     } else {
-                        std::cerr << "Unrecognized text: " << tok.val << std::endl;
-                        valid = 0;
-                     }
+                  case ChessIO::OpenVar:
+                     ++var;
                      break;
+                  case ChessIO::CloseVar:
+                      --var;
+                      break;;
+                  case ChessIO::Unknown:
+                      std::cerr << "Unrecognized text: " << tok.val << std::endl;
+                      valid = 0;
+                      break;
                   case ChessIO::Comment:
                      break;
                   case ChessIO::Result: {
@@ -199,6 +188,7 @@ int CDECL main(int argc, char **argv)
                      }
                      if (board.sideToMove() != White) last_score = -last_score;
                      done = true;
+                     break;
                   }
                   default:   
                      break;
@@ -255,7 +245,6 @@ int CDECL main(int argc, char **argv)
 
                ChessIO::store_pgn(std::cout, moves, result, hdrs);
             }
-            pgn_file.close();
          }
       }
    }

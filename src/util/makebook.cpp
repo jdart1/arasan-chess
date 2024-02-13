@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2023 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2024 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -249,8 +249,8 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
       (*hashTable)[board.hashCode()] = new_entry;
 #ifdef _TRACE
       std::cout << "inserting position: " <<
-         " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
-         Bitboard(board.hashCode()).lovalue() << (dec) <<
+         " h:" << std::hex << Bitboard(board.hashCode()).hivalue() <<
+         Bitboard(board.hashCode()).lovalue() << std::dec <<
          " index = " << (int)move_index << " from bk = " << (int)is_first_file <<
           " pos. eval=" << (int)var.eval << " moveEval=" << (int)m.moveEval << " recommend=" << (int)recommend << std::endl;
 #endif
@@ -279,8 +279,8 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
          }
 #ifdef _TRACE
          std::cout << "updating: " <<
-            " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
-            Bitboard(board.hashCode()).lovalue() << (dec) <<
+            " h:" << std::hex << Bitboard(board.hashCode()).hivalue() <<
+            Bitboard(board.hashCode()).lovalue() << std::dec <<
             " index = " << (int)move_index <<
             " first = " << (int)is_first_file <<
             " win=" << p->win <<
@@ -296,8 +296,8 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
          // Position is in hashtable, but not with this move.
 #ifdef _TRACE
          std::cout << "inserting move: " <<
-            " h:" << (hex) << Bitboard(board.hashCode()).hivalue() <<
-            Bitboard(board.hashCode()).lovalue() << (dec) <<
+            " h:" << std::hex << Bitboard(board.hashCode()).hivalue() <<
+            Bitboard(board.hashCode()).lovalue() << std::dec <<
             " index = " << (int)move_index << " first = " << (int)is_first_file <<
              " pos. eval =" << (int)var.eval << " move eval=" << (int)m.moveEval << " recommend=" << (int)recommend << std::endl;
 #endif
@@ -345,7 +345,7 @@ static void processVar(const Variation &var, bool first) {
     // only after seeing the whole variation, because we want the
     // end of line eval or result, if any).
 #ifdef _TRACE
-    std::cout << "process var: board=" << var.save << " hash=" << (hex) << var.save.hashCode() << (dec) << " eval=";
+    std::cout << "process var: board=" << var.save << " hash=" << std::hex << var.save.hashCode() << std::dec << " eval=";
     if (var.eval == NO_POSITION_EVAL) {
         std::cout << "none";
     } else {
@@ -373,21 +373,14 @@ static int do_pgn(std::ifstream &infile, const std::string &book_name, bool firs
    std::vector<ChessIO::Header> hdrs;
    long games = 0L;
    ColorType side = White;
+   ChessIO::PGNReader pgnReader(infile);
    while (!infile.eof() && infile.good()) {
       long first;
       side = White;
       ResultType last_result = UnknownResult;
       hdrs.clear();
-      int c;
-      // skip to start of next header (handles cases where
-      // comment follows end of previous game).
-      while (infile.good() && (c = infile.get()) != EOF) {
-         if (c=='[') {
-            infile.putback(c);
-            break;
-         }
-      }
-      ChessIO::collect_headers(infile,hdrs,first);
+      pgnReader.collectHeaders(hdrs,first);
+      if (hdrs.size() == 0) break;
       ++games;
 #ifdef _TRACE
       std::cout << "game " << games << std::endl;
@@ -405,9 +398,10 @@ static int do_pgn(std::ifstream &infile, const std::string &book_name, bool firs
       const auto weightRegex = std::regex("^weight:([\\d]+).*$");
 
       Board p1,p2;
+      ChessIO::TokenReader tokenReader(pgnReader);
       for (;;) {
          std::string num;
-         ChessIO::Token tok = ChessIO::get_next_token(infile);
+         ChessIO::Token tok = tokenReader.nextToken();
          if (tok.type == ChessIO::Eof)
             break;
          else if (tok.type == ChessIO::OpenVar) {
@@ -710,7 +704,7 @@ int CDECL main(int argc, char **argv)
        for (const auto &it : *hashTable) {
            // Note: it.first is the hash code
 #ifdef _TRACE
-           std::cout << "h:" << (hex) << it.first << (dec) << std::endl;
+           std::cout << "h:" << std::hex << it.first << std::dec << std::endl;
 #endif
            int added = 0;
            for (auto be = (BookEntry*)it.second; be != nullptr; be = be->next) {
@@ -739,7 +733,7 @@ int CDECL main(int argc, char **argv)
            BookEntryJson* be = (BookEntryJson*)it.second;
            // Note: it.first is the hash code
 #ifdef _TRACE
-           std::cout << "h:" << (hex) << it.first << (dec) << std::endl;
+           std::cout << "h:" << std::hex << it.first << std::dec << std::endl;
 #endif
            int added = 0;
            std::vector<std::string> json_moves;

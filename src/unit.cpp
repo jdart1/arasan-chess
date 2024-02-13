@@ -371,28 +371,29 @@ static int testNotation() {
 }
 
 static int testPGN() {
-    static const std::string pgn_test = "[Event \"?\"]"
-"[Site \"chessclub.com\"]"
-"[Date \"2013.12.16\"]"
-"[Round \"?\"]"
-"[White \"?\"]"
-"[Black \"?\"]"
-"[Result \"*\"]"
-"[ECO \"B08\"]"
-"[WhiteElo \"2527\"]"
-"[BlackElo \"2558\"]"
-""
-"1. d4 g6 2. e4 Bg7 3. Nc3 c6 4. Nf3 d6 5. Be2 Nf6 6. O-O O-O 7. a4 a5 (7..."
-"Nbd7 $1 8. h3 e5 9. dxe5 dxe5 10. Qd6 Re8 11. Bc4 Bf8 12. Qd3 h6 13. Rd1 Qc7"
-"14. Qe3 Nc5 15. b3 b6 16. Ba3 Kg7 17. b4 Ne6 18. Rdb1 Bb7 19. a5 b5 20. Bxe6"
-"Rxe6 21. Bc1 Kg8 22. a6 Bc8 23. Ne1 Re8 24. Qf3 Nd7 25. Nd3 Nb8 26. Nc5 Nd7 27."
-"Nd3 Nb8 28. Nc5 Nd7 29. Nd3 {1/2-1/2 (29) Saglione,E (2547)-Ludgate,A (2515)"
-"ICCF 2010}) 8. h3 Na6 9. Bf4 *";
+    static const std::string pgn_test = "[Event \"?\"]\n"
+"[Site \"chessclub.com\"]\n"
+"[Date \"2013.12.16\"]\n"
+"[Round \"?\"]\n"
+"[White \"?\"]\n"
+"[Black \"?\"]\n"
+"[Result \"*\"]\n"
+"[ECO \"B08\"]\n"
+"[WhiteElo \"2527\"]\n"
+"[BlackElo \"2558\"]\n"
+"\n"
+"1. d4 g6 2. e4 Bg7 3. Nc3 c6 4. Nf3 d6 5. Be2 Nf6 6. O-O O-O 7. a4 a5 (7...\n"
+"Nbd7 $1 8. h3 e5 9. dxe5 dxe5 10. Qd6 Re8 11. Bc4 Bf8 12. Qd3 h6 13. Rd1 Qc7\n"
+"14. Qe3 Nc5 15. b3 b6 16. Ba3 Kg7 17. b4 Ne6 18. Rdb1 Bb7 19. a5 b5 20. Bxe6\n"
+"Rxe6 21. Bc1 Kg8 22. a6 Bc8 23. Ne1 Re8 24. Qf3 Nd7 25. Nd3 Nb8 26. Nc5 Nd7 27.\n"
+"Nd3 Nb8 28. Nc5 Nd7 29. Nd3 {1/2-1/2 (29) Saglione,E (2547)-Ludgate,A (2515)\n"
+"ICCF 2010}) 8. h3 Na6 9. Bf4 *\n";
 
       std::stringstream infile(pgn_test);
       long first;
       std::vector <ChessIO::Header>hdrs;
-      ChessIO::collect_headers(infile,hdrs,first);
+      ChessIO::PGNReader file(infile);
+      file.collectHeaders(hdrs,first);
       int errs = 0;
       if (hdrs.size() != 10) {
          ++errs;
@@ -410,9 +411,9 @@ static int testPGN() {
 
       int var = 0;
       int seen = 0;
+      ChessIO::TokenReader reader(file);
       for (;;) {
-         std::string num;
-         ChessIO::Token tok = ChessIO::get_next_token(infile);
+         ChessIO::Token tok = reader.nextToken();
          if (tok.type == ChessIO::OpenVar) {
              seen |= 1;
              ++var;

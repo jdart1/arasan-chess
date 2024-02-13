@@ -1,4 +1,4 @@
-// Copyright 2016, 2017, 2019-2021, 2023 by Jon Dart.  All Rights Reserved.
+// Copyright 2016, 2017, 2019-2021, 2023-2024 by Jon Dart.  All Rights Reserved.
 
 // Utility to extract selected positions from PGN files into an EPD file.
 
@@ -271,59 +271,30 @@ int CDECL main(int argc, char **argv)
          std::vector<ChessIO::Header> hdrs;
          bool quit = false;
          std::vector<std::string> game_positions;
+         ChessIO::PGNReader pgnReader(pgn_file);
          while (!quit && !pgn_file.eof()) {
             long first;
             MoveArray moves;
             board.reset();
             side = White;
-            if (!pgn_file.good()) {
-               if (pgn_file.bad() || pgn_file.fail()) {
-                  std::cerr << "read error" << std::endl;
-                  quit = true;
-               }
-            }
-            else {
-               pgn_file.ignore('[');
-               if (!pgn_file.good()) {
-                  if (!pgn_file.eof()) std::cerr << "read error" << std::endl;
-                  quit = true;
-               }
-               else {
-                  pgn_file.putback('[');
-               }
-            }
-            if (quit) break;
             hdrs.clear();
-            ChessIO::collect_headers(pgn_file, hdrs, first);
+            pgnReader.collectHeaders(hdrs, first);
             if (!hdrs.size()) continue;
             bool ok = true;
             bool done = false;
-            bool exit = false;
             unsigned ply = 0;
             game_positions.clear();
-            while (ok && !exit) {
-               ChessIO::Token tok = ChessIO::get_next_token(pgn_file);
+            ChessIO::TokenReader tokenReader(pgnReader);
+            while (ok && !done) {
+               ChessIO::Token tok = tokenReader.nextToken();
+               if (tok.type == ChessIO::Eof) break;
                std::string num;
                switch (tok.type) {
-               case ChessIO::Eof: {
-                  exit = true;
-                  break;
-               }
                case ChessIO::Number: {
                   num = tok.val;
                   break;
                }
                case ChessIO::GameMove: {
-                  if (done) {
-                     // we should not have moves after the result
-                     // if it looks like a tag, push it back
-                     if (tok.val.size() && tok.val[0] == '[') {
-                        for (int i = (int)tok.val.size() - 1; i >= 0; --i)
-                           pgn_file.putback(tok.val[0]);
-                     }
-                     exit = true;
-                     break;
-                  }
                   // parse the move
                   Move m = Notation::value(board, side, Notation::InputFormat::SAN, tok.val);
                   if (IsNull(m) ||
@@ -351,16 +322,6 @@ int CDECL main(int argc, char **argv)
                   break;
                }
                case ChessIO::Unknown: {
-                  if (done) {
-                     // ignore unknown text after result
-                     // if it looks like a tag, push it back
-                     if (tok.val.size() && tok.val[0] == '[') {
-                        for (int i = (int)tok.val.size() - 1; i >= 0; --i)
-                           pgn_file.putback(tok.val[0]);
-                     }
-                     exit = true;
-                     break;
-                  }
                   std::cerr << "Unrecognized text: " << tok.val << std::endl;
                   break;
                }

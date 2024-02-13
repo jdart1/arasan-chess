@@ -1711,11 +1711,13 @@ uint64_t Protocol::perft(Board &board, int depth) {
 void Protocol::loadgame(Board &board, std::ifstream &file) {
     std::vector<ChessIO::Header> hdrs(20);
     long first;
-    ChessIO::collect_headers(file,hdrs,first);
     ColorType stm = White; // side to move
+    ChessIO::PGNReader pgnReader(file);
+    pgnReader.collectHeaders(hdrs,first);
+    ChessIO::TokenReader tokenReader(pgnReader);
     for (;;) {
         std::string num;
-        ChessIO::Token tok = ChessIO::get_next_token(file);
+        ChessIO::Token tok = tokenReader.nextToken();
         if (tok.type == ChessIO::Eof)
             break;
         else if (tok.type == ChessIO::Number) {
