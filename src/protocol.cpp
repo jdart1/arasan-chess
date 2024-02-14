@@ -253,10 +253,11 @@ Move Protocol::get_move(const std::string &cmd_word, const std::string &cmd_args
 bool Protocol::do_all_pending(Board &board)
 {
     bool retVal = true;
-    if (doTrace) std::cout << debugPrefix << "in do_all_pending" << std::endl;
+    bool debug = debugPrefix.size() > 0;
+    if (doTrace && debug) std::cout << debugPrefix << "in do_all_pending" << std::endl;
     std::string cmd;
     while (!globals::polling_terminated && popPending(cmd)) {
-        if (doTrace) {
+        if (doTrace && debug) {
             std::cout << debugPrefix << "pending command(a): " << cmd << std::endl;
         }
         if (uciWaitState) {
@@ -268,7 +269,7 @@ bool Protocol::do_all_pending(Board &board)
             break;
         }
     }
-    if (doTrace) {
+    if (doTrace && debug) {
         std::cout << debugPrefix << "out of do_all_pending, list size=" << pending.size() << std::endl;
     }
     return retVal;
@@ -1770,7 +1771,7 @@ bool Protocol::uciOptionCompare(const std::string &a, const std::string &b) {
 }
 
 bool Protocol::do_command(const std::string &cmd, Board &board) {
-    if (doTrace) {
+    if (doTrace && debugPrefix.size() > 0) {
         std::cout << debugPrefix << "do_command: " << cmd << std::endl;
     }
     if (doTrace && uci) {
