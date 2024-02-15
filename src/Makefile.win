@@ -13,7 +13,6 @@ PLATFORM=MODERN
 
 #TRACE=/D_TRACE
 #DEBUG=/Zi -D_DEBUG -DUNIT_TESTS
-DEBUG=/Zi
 BUILD_ROOT=..
 UTIL=util
 
@@ -177,6 +176,10 @@ LTO = /Qipo
 !Else
 !If "$(CC)" == "clang-cl"
 CFLAGS = $(CFLAGS) /std:c++17
+!If "$(BUILD_TYPE)" == "modern"
+# needed to indicate CPU has POPCNT support
+CFLAGS = $(CFLAGS) -march=nehalem
+!Endif
 PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-generate=$(PROFDATA)
 PROF_USE_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-use=$(PROFDATA)\default.profdata
 # first link
