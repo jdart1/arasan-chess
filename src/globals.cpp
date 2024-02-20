@@ -1,4 +1,4 @@
-// Copyright 1996-2012, 2014, 2016-2019, 2021-2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2012, 2014, 2016-2019, 2021-2024 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -13,22 +13,22 @@
 extern "C" {
 #include <libproc.h>
 };
-#elif !defined (_MSC_VER)
+#elif !defined(_MSC_VER)
 // assume POSIX system
 extern "C" {
+#include <limits.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <limits.h>
 }
 #endif
+
+#include <cstdlib>
+#include <filesystem>
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
 
-bool globals::tb_init_done()
-{
-   return tb_init;
-}
+bool globals::tb_init_done() { return tb_init; }
 int globals::EGTBMenCount = 0;
 #endif
 
@@ -42,7 +42,6 @@ MoveArray *globals::gameMoves;
 Options globals::options;
 BookReader globals::openingBook;
 Log *globals::theLog = nullptr;
-std::string globals::learnFileName;
 
 std::mutex globals::input_lock;
 
@@ -59,13 +58,17 @@ nnue::Network globals::network;
 bool globals::nnueInitDone = false;
 #endif
 
-static const char * LEARN_FILE_NAME = "arasan.lrn";
+#ifdef _WIN32
+static const char *LEARN_FILE_NAME = "arasan.lrn";
+#else
+static const char *LEARN_FILE_NAME = ".arasan.lrn";
+#endif
 
-static const char * DEFAULT_BOOK_NAME = "book.bin";
+static const char *DEFAULT_BOOK_NAME = "book.bin";
 
-static const char * RC_FILE_NAME = "arasan.rc";
+static const char *RC_FILE_NAME = "arasan.rc";
 
-const size_t globals::LINUX_STACK_SIZE = 4*1024*1024;
+const size_t globals::LINUX_STACK_SIZE = 4 * 1024 * 1024;
 
 #ifdef NNUE
 static bool absolutePath(const std::string &fileName) {
@@ -73,7 +76,7 @@ static bool absolutePath(const std::string &fileName) {
     auto pos = fileName.find(':');
     if (pos == std::string::npos) {
         pos = 0;
-    } else if (pos+1 < fileName.size()) {
+    } else if (pos + 1 < fileName.size()) {
         ++pos;
     }
 #else
@@ -91,92 +94,121 @@ static bool absolutePath(const std::string &fileName) {
 // This function returns the full path of the executable, the finding
 // of which is OS-dependent
 //
-static void getExecutablePath(std::string &path)
-{
+static void getExecutablePath(std::string &path) {
     path = "";
 #ifdef _WIN32
     TCHAR szPath[MAX_PATH];
-    if(GetModuleFileName(NULL,szPath,MAX_PATH)) {
+    if (GetModuleFileName(NULL, szPath, MAX_PATH)) {
         path = std::string(szPath);
     }
 #elif defined(_MAC)
     char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
     pathbuf[0] = '\0';
-    int ret = proc_pidpath (getpid(), pathbuf, sizeof(pathbuf));
-    if ( ret > 0 ) {
+    int ret = proc_pidpath(getpid(), pathbuf, sizeof(pathbuf));
+    if (ret > 0) {
         path = std::string(pathbuf);
     }
 #else
-    char result[ PATH_MAX ];
+    char result[PATH_MAX];
     result[0] = '\0';
-    ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
-    path = std::string( result, (count > 0) ? count : 0 );
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    path = std::string(result, (count > 0) ? count : 0);
 #endif
 }
-
 
 std::string globals::derivePath(const std::string &fileName) {
     std::string path;
     getExecutablePath(path);
-    return derivePath(path,fileName);
+    return derivePath(path, fileName);
 }
 
 std::string globals::derivePath(const std::string &base, const std::string &fileName) {
     std::string result(base);
     size_t pos;
-    pos = result.rfind(PATH_CHAR,std::string::npos);
+    pos = result.rfind(PATH_CHAR, std::string::npos);
     if (pos == std::string::npos) {
-      return fileName;
-    }
-    else {
-      return result.substr(0,pos+1) + fileName;
+        return fileName;
+    } else {
+        return result.substr(0, pos + 1) + fileName;
     }
 }
 
 int globals::initGlobals(bool initLog) {
-   gameMoves = new MoveArray();
-   polling_terminated = false;
-   if (initLog) {
-       theLog = new Log();
-       theLog->clear();
-       theLog->write_header();
-   }
-   return 1;
+    gameMoves = new MoveArray();
+    polling_terminated = false;
+    if (initLog) {
+        theLog = new Log();
+        theLog->clear();
+        theLog->write_header();
+    }
+    return 1;
 }
 
 #ifdef NNUE
 int globals::loadNetwork(const std::string &fname) {
-   std::ifstream in(fname, std::ios_base::in | std::ios_base::binary);
-   in >> network;
-   if (!in.good()) {
-       return 0;
-   }
-   return 1;
+    std::ifstream in(fname, std::ios_base::in | std::ios_base::binary);
+    in >> network;
+    if (!in.good()) {
+        return 0;
+    }
+    return 1;
 }
 #endif
 
 void CDECL globals::cleanupGlobals(void) {
-   openingBook.close();
-   delete gameMoves;
-   delete theLog;
-   Scoring::cleanup();
-   Bitboard::cleanup();
-   Board::cleanup();
+    openingBook.close();
+    delete gameMoves;
+    delete theLog;
+    Scoring::cleanup();
+    Bitboard::cleanup();
+    Board::cleanup();
 }
 
 void globals::initOptions() {
     std::string rcPath(derivePath(RC_FILE_NAME));
     // try to read arasan.rc file
     options.init(rcPath);
-#ifndef _WIN32
-    // Also read .rc from the user's HOME,
-    // if there is one.
-    if (getenv("HOME")) {
-       rcPath = derivePath(getenv("HOME"),RC_FILE_NAME);
-       options.init(rcPath);
-    }
+#ifdef _WIN32
+    const char *homeDirEnv = "USERPROFILE";
+    const char *appDirEnv = "APPDATA";
+#else
+    const char *homeDirEnv = "HOME";
+    const char *appDirEnv = "HOME";
 #endif
-    learnFileName = derivePath(LEARN_FILE_NAME);
+    std::string userDir, appDir;
+    if (std::getenv(homeDirEnv)) {
+        userDir = std::getenv(homeDirEnv);
+    } else {
+        std::cerr << "warning: could not obtain home directory location" << std::endl;
+    }
+    if (std::getenv(appDirEnv)) {
+#ifdef _WIN32
+        appDir = std::getenv(appDirEnv);
+        appDir += "\\Arasan";
+        if (!std::filesystem::exists(appDir)) {
+            std::error_code ec;
+            std::filesystem::create_directory(appDir, ec);
+            if (ec.value() != 0) {
+                std::cerr << "failed to create application data directory: " << ec.message()
+                          << std::endl;
+            }
+        }
+#else
+        appDir = getenv(appDirEnv);
+#endif
+    } else {
+        std::cerr << "warning: could not obtain application data directory location" << std::endl;
+    }
+    // Also attempt to read .rc from the user's home directory.
+    // If present, this overrides the file at the install location.
+    if (userDir.size()) {
+        std::string userRcFile(".");
+        userRcFile += RC_FILE_NAME;
+        options.init(derivePath(userDir + PATH_CHAR, userRcFile));
+    }
+    if (appDir.size()) {
+        options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
+    }
 }
 
 void globals::delayedInit(bool verbose) {
@@ -185,7 +217,7 @@ void globals::delayedInit(bool verbose) {
         EGTBMenCount = 0;
         std::string path;
         if (options.search.syzygy_path == "") {
-            options.search.syzygy_path=derivePath("syzygy");
+            options.search.syzygy_path = derivePath("syzygy");
         }
         path = options.search.syzygy_path;
         EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
@@ -193,10 +225,13 @@ void globals::delayedInit(bool verbose) {
         if (verbose) {
             if (EGTBMenCount) {
                 std::stringstream msg;
-                msg << debugPrefix << "found " << EGTBMenCount << "-man Syzygy tablebases in directory " << path << std::endl;
+                msg << debugPrefix << "found " << EGTBMenCount
+                    << "-man Syzygy tablebases in directory " << path << std::endl;
                 std::cout << msg.str();
             } else {
-                std::cout << debugPrefix << "warning: no Syzygy tablebases found, path may be missing or invalid" << std::endl;
+                std::cout << debugPrefix
+                          << "warning: no Syzygy tablebases found, path may be missing or invalid"
+                          << std::endl;
             }
         }
     }
@@ -205,9 +240,8 @@ void globals::delayedInit(bool verbose) {
     if (options.search.useNNUE && !nnueInitDone) {
         if (options.search.nnueFile.size()) {
             const std::string &nnuePath = options.search.nnueFile;
-            nnueInitDone = loadNetwork(absolutePath(nnuePath) ?
-                                       nnuePath.c_str() :
-                                       derivePath(nnuePath));
+            nnueInitDone =
+                loadNetwork(absolutePath(nnuePath) ? nnuePath.c_str() : derivePath(nnuePath));
             if (verbose) {
                 if (nnueInitDone) {
                     std::cout << debugPrefix << "loaded network from file ";
@@ -216,9 +250,9 @@ void globals::delayedInit(bool verbose) {
                 }
                 std::cout << nnuePath << std::endl;
             }
-        }
-        else if (verbose) {
-            std::cout << debugPrefix << "warning: no NNUE file path was set, network not loaded" << std::endl;
+        } else if (verbose) {
+            std::cout << debugPrefix << "warning: no NNUE file path was set, network not loaded"
+                      << std::endl;
         }
     }
 #endif
@@ -230,18 +264,18 @@ void globals::delayedInit(bool verbose) {
         if (openingBook.open(options.book.book_path.c_str()) && verbose) {
             std::cout << debugPrefix << "warning: opening book not found or invalid" << std::endl;
         } else if (verbose) {
-            std::cout << debugPrefix << "loaded opening book from file " << options.book.book_path << std::endl;
+            std::cout << debugPrefix << "loaded opening book from file " << options.book.book_path
+                      << std::endl;
         }
     }
 }
 
 void globals::unloadTb() {
 #ifdef SYZYGY_TBS
-   if (tb_init_done()) {
-      // Note: Syzygy code will free any existing memory if
-      // initialized more than once. So no need to do anything here.
-      tb_init = false;
-   }
+    if (tb_init_done()) {
+        // Note: Syzygy code will free any existing memory if
+        // initialized more than once. So no need to do anything here.
+        tb_init = false;
+    }
 #endif
 }
-

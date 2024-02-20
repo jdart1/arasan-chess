@@ -1,16 +1,16 @@
-// Copyright 1994-2005, 2014-2016, 2021 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2005, 2014-2016, 2021, 2024 by Jon Dart.  All Rights Reserved.
 
 #ifndef _GLOBALS_H
 #define _GLOBALS_H
 
 // global variables
 
-#include "types.h"
-#include "options.h"
-#include "log.h"
 #include "bookread.h"
+#include "log.h"
 #include "movearr.h"
+#include "options.h"
 #include "threadc.h"
+#include "types.h"
 #ifdef TUNE
 #include "tune.h"
 #endif
@@ -18,15 +18,14 @@
 #include "nnue/nnue.h"
 #endif
 
-#include <string>
 #include <mutex>
+#include <string>
 
 namespace globals {
 
 extern Options options;
 extern MoveArray *gameMoves;
 
-extern std::string learnFileName;
 extern int EGTBMenCount;
 extern BookReader openingBook;
 extern Log *theLog;
@@ -80,6 +79,6 @@ extern void delayedInit(bool verbose = true);
 // Attempt to unload the tablebases (if in use),
 extern void unloadTb();
 
-}
+} // namespace globals
 
 #endif

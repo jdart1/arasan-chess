@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2019, 2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019, 2021, 2023-2024 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <ctype.h>
@@ -34,14 +34,12 @@ Options::SearchOptions::SearchOptions()
 #ifdef NUMA
       set_processor_affinity(false),
 #endif
-      move_overhead(15),
-      minimum_search_time(10),
-      widePlies(4), wideWindow(10*Params::PAWN_VALUE) {
+      move_overhead(15), minimum_search_time(10), widePlies(4),
+      wideWindow(10 * Params::PAWN_VALUE) {
 }
 
 template <class T>
-int Options::setOption(const std::string &name, const std::string &valueString,
-                       T &value) {
+int Options::setOption(const std::string &name, const std::string &valueString, T &value) {
     if (!Options::setOption<T>(valueString, value)) {
         std::cerr << "warning: invalid value for option " << name << std::endl;
         return 0;
@@ -53,8 +51,8 @@ static void set_strength_option(const std::string &name, int &value,
                                 const std::string &valueString) {
     int tmp = value;
     if (sscanf(valueString.c_str(), "%d", &tmp) != 1 || tmp < 0 || tmp > 100) {
-        std::cerr << "warning: invalid value for option " << name
-             << " (expected integer 0..100)" << std::endl;
+        std::cerr << "warning: invalid value for option " << name << " (expected integer 0..100)"
+                  << std::endl;
         return;
     }
     value = tmp;
@@ -97,20 +95,16 @@ void Options::set_option(const std::string &name, const std::string &value) {
         setOption<bool>(name, value, book.book_enabled);
     } else if (name == "book.frequency") {
         setOption<unsigned>(name, value, book.frequency);
-        book.frequency =
-            std::min<unsigned>(100, std::max<unsigned>(0, book.frequency));
+        book.frequency = std::min<unsigned>(100, std::max<unsigned>(0, book.frequency));
     } else if (name == "book.weighting") {
         setOption<unsigned>(name, value, book.weighting);
-        book.weighting =
-            std::min<unsigned>(100, std::max<unsigned>(0, book.weighting));
+        book.weighting = std::min<unsigned>(100, std::max<unsigned>(0, book.weighting));
     } else if (name == "book.scoring") {
         setOption<unsigned>(name, value, book.scoring);
-        book.scoring =
-            std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
+        book.scoring = std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
     } else if (name == "book.random") {
         setOption<unsigned>(name, value, book.random);
-        book.scoring =
-            std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
+        book.scoring = std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
     } else if (name == "learning.position_learning") {
         setOption<bool>(name, value, learning.position_learning);
     } else if (name == "learning.position_learning.threshold") {
@@ -166,7 +160,6 @@ void Options::set_option(const std::string &name, const std::string &value) {
 }
 
 int Options::init(const std::string &fileName) {
-
     std::ifstream infile(fileName.c_str());
     if (!infile.good()) {
         return -1;
@@ -176,12 +169,14 @@ int Options::init(const std::string &fileName) {
     std::string name, value, line;
     unsigned count = 0;
     while (infile.good() && !infile.eof()) {
-           getline(infile, line);
+        getline(infile, line);
         ++count;
-        if (!line.empty() && line[0] == '#') continue;
-        if (line.empty()) continue;
-        if (std::regex_match(line,match,pattern)) {
-            auto it = match.begin()+1;
+        if (!line.empty() && line[0] == '#')
+            continue;
+        if (line.empty())
+            continue;
+        if (std::regex_match(line, match, pattern)) {
+            auto it = match.begin() + 1;
             name = *it++;
             value = *it;
             set_option(name, value);

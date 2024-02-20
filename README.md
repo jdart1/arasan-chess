@@ -76,12 +76,13 @@ run the bench command (for performance reporting) and then exit.
 ## Option file (arasan.rc)
 
 Many aspects of Arasan's behavior can be modified by changing the
-arasan.rc file that is installed in the program directory. See comments
-in this file for details. If you do change it, I recommend retaining a
-backup copy so you can restore the default settings if you make a mistake
-or later decide you don't like your changes. You don't have to use
-this file to configure Arasan. Most of the options in it can also be
-set from a GUI that understands the UCI or CECP protocol, although there
+arasan.rc file. This file is installed in the program directory.
+If present, Arasan will also read an arasan.rc file (.arasan.rc on
+MacOS/Linux) that is in the user's home directory, the contents of
+which will overwrite the one that is in the program directory.
+
+You don't have to use this file to configure Arasan. Most of the options
+in it can also be set from a GUI that understands the UCI or CECP protocol, although there
 are some settings that are only in the arasan.rc file presently.
 
 ## UCI Options
