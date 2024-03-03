@@ -250,8 +250,7 @@ $(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
-$(BUILD)\movearr.obj $(BUILD)\log.obj \
-$(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
+$(BUILD)\movearr.obj $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
@@ -266,7 +265,7 @@ $(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\see.obj \
 $(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\notation.obj \
 $(TUNE_BUILD)\options.obj $(TUNE_BUILD)\bitprobe.obj \
 $(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
-$(TUNE_BUILD)\log.obj $(TUNE_BUILD)\search.obj $(TUNE_BUILD)\searchc.obj \
+$(TUNE_BUILD)\search.obj $(TUNE_BUILD)\searchc.obj \
 $(TUNE_BUILD)\movegen.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\calctime.obj \
 $(TUNE_BUILD)\eco.obj $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\legal.obj \
 $(TUNE_BUILD)\stats.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\learn.obj \
@@ -281,8 +280,7 @@ $(PROFILE)\params.obj $(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
 $(PROFILE)\see.obj $(PROFILE)\globals.obj $(PROFILE)\search.obj \
 $(PROFILE)\notation.obj $(PROFILE)\hash.obj $(PROFILE)\stats.obj \
 $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
-$(PROFILE)\movearr.obj $(PROFILE)\log.obj \
-$(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
+$(PROFILE)\movearr.obj $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
 $(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\bench.obj \
 $(PROFILE)\threadp.obj $(PROFILE)\threadc.obj \
@@ -295,7 +293,7 @@ $(BUILD)\epdrec.obj $(BUILD)\bhash.obj \
 $(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\see.obj \
 $(BUILD)\movearr.obj $(BUILD)\notation.obj $(BUILD)\options.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\log.obj $(BUILD)\movegen.obj $(BUILD)\calctime.obj \
+$(BUILD)\movegen.obj $(BUILD)\calctime.obj \
 $(BUILD)\eco.obj $(BUILD)\ecodata.obj \
 $(BUILD)\legal.obj $(BUILD)\stats.obj $(BUILD)\threadp.obj \
 $(BUILD)\threadc.obj $(BUILD)\search.obj $(BUILD)\searchc.obj \

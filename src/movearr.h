@@ -1,127 +1,104 @@
-// Copyright 1997-2002, 2008, 2012, 2017, 2021 by Jon Dart. All Rights Reserved.a
+// Copyright 1997-2002, 2008, 2012, 2017, 2021, 2024 by Jon Dart. All Rights Reserved.a
 //
 #ifndef _MOVE_ARRAY_H
 #define _MOVE_ARRAY_H
 
 #include "board.h"
+#include "stats.h"
 
 #include <cassert>
 #include <string>
 #include <vector>
 
-class MoveRecord
-{
+struct MoveRecord {
     // holds info on a move made during the game or during a search
     // operation.
 
-public:
-
     MoveRecord()
-        : my_move(NullMove),my_hashcode((hash_t)0ULL), my_ponder(false) {
-    }
+        : hashcode((hash_t)0ULL), move(NullMove), ponder(false), fromBook(false), score(0),
+          depth(0) {}
 
     // "board" is the board position after the move.
-    MoveRecord(const Board &board, const BoardState &previous_state,
-               const Move &move, const std::string &image, bool ponder);
+    MoveRecord(const Board &board, const Move m,
+               const std::string &img, bool was_ponder, bool from_book, score_t s, unsigned d);
 
-    const Move &move() const {
-        return my_move;
-    }
+    MoveRecord(const Board &board, const Move &m,
+               const std::string &img, const Statistics *stats, bool was_ponder);
 
-    hash_t hashcode() const {
-        return my_hashcode;
-    }
+    virtual ~MoveRecord() = default;
 
-    const BoardState &state() const {
-        return my_state;
-    }
+    bool operator<(const MoveRecord &mr) const { return hashcode < mr.hashcode; }
 
-    bool operator < (const MoveRecord &mr) const {
-        return my_hashcode < mr.my_hashcode;
-    }
+    int operator==(const MoveRecord &mr) const { return hashcode == mr.hashcode; }
 
-    int operator == ( const MoveRecord &l ) const {
-        return my_hashcode == l.my_hashcode;
-    }
+    int operator!=(const MoveRecord &mr) const { return hashcode != mr.hashcode; }
 
-    int operator != ( const MoveRecord &l ) const {
-        return my_hashcode != l.my_hashcode;
-    }
+    bool wasPonder() const { return ponder; }
 
-    const std::string & image () const {
-        return my_image;
-    }
-
-    bool wasPonder() const {
-        return my_ponder;
-    }
-
-private:
-
-    Move my_move;
-    hash_t my_hashcode;
-    BoardState my_state;
-    std::string my_image;
-    bool my_ponder; // true if move was added provisionally during a ponder operation
+    std::string fen;
+    hash_t hashcode;
+    Move move;
+    std::string image;
+    bool ponder; // true if move was added provisionally during a ponder operation
+    bool fromBook;
+    score_t score;
+    unsigned depth;
 };
 
-class MoveArray
-{
+class MoveArray : public std::vector<MoveRecord> {
     // Maintains a list of moves made in the game so far or in
     // the search process.
 
-public:
+  public:
+    MoveArray() : gameResult("*") {}
 
-    MoveArray() {
+    // add a move to the Move_Array. "board" is the position before making the move
+    void add_move(const Board &board, Move m, const std::string &img, bool was_ponder,
+                  bool from_book, score_t s = 0, int d = 0) {
+        push_back(MoveRecord(board, m, img, was_ponder, from_book, s, d));
     }
 
-    // add a move to the Move_Array. "board" is the position after the
-    // move is made.
-    void add_move( const Board &board, const BoardState &previous_state,
-                   const Move &emove, const std::string &image, bool ponder );
+    void add_move(const Board &board, Move m, const std::string &img, const Statistics *stats = nullptr, bool was_ponder = false) {
+        push_back(MoveRecord(board, m, img, stats, was_ponder));
+    }
 
     // remove the most recently added move to the Move_Array.
-    void remove_move();
+    void remove_last() {
+        if (size() > 0) {
+            pop_back();
+        }
+    }
 
     // return the total number of half-moves in the game:
-    unsigned num_moves() const {
-        return (unsigned)entries.size();
-    }
+    unsigned num_moves() const { return (unsigned)size(); }
 
     unsigned num_moves(const ColorType side) const;
 
     // return the nth move in the Move_Array.  0 <= n <= num_moves - 1.
-    const Move &move( unsigned n ) const {
-        assert(n<num_moves());
-        return entries[n].move();
+    const Move &move(unsigned n) const {
+        assert(n < num_moves());
+        return (*this)[n].move;
     }
 
-    const MoveRecord &operator [](size_t index) const {
-        return entries[index];
+    // true if the specified board position results from a legal move
+    // made from the last entered position in the array.
+    bool derivesFromLast(const Board &b);
+
+    const std::string &getResult() const noexcept {
+        return gameResult;
     }
 
-    void append(const MoveRecord &m) {
-        entries.push_back(m);
+    void setResult(const std::string &result) noexcept {
+        gameResult = result;
     }
 
-    void removeAll() {
-        entries.clear();
+    void reset() {
+        clear();
+        gameResult = "*";
     }
-
-    const MoveRecord &last() const {
-        assert(num_moves());
-        return entries.back();
-    }
-
-    void truncate(unsigned size) {
-        entries.resize(size);
-    }
-
+    
 private:
-
-    std::vector<MoveRecord> entries;
-
+    std::string gameResult;
 };
 
 #endif
-

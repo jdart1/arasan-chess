@@ -67,7 +67,7 @@ class Options {
     } learning;
 
     // Constructor, sets default options
-    Options() : log_enabled(false), log_append(false), store_games(true) {}
+    Options() : store_games(true) {}
 
     template <class T> static int setOption(const std::string &value, T &dest) {
         bool ok;
@@ -104,8 +104,6 @@ class Options {
     // sets options based on a .rc file
     int init(const std::string &optionsFile);
 
-    bool log_enabled;
-    bool log_append;
     bool store_games;
     std::string log_pathname;
     std::string game_pathname;

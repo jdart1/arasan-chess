@@ -144,7 +144,7 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
                 std::cout << "\tscore: ";
                 Scoring::printScore(stats.display_value,std::cout);
                 std::cout <<  '\t';
-                globals::gameMoves->removeAll();
+                globals::gameMoves->reset();
 
                 if (IsNull(result)) break;
                 testTotals.total_time += searcher->getElapsedTime();

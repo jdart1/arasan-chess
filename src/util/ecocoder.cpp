@@ -38,7 +38,7 @@ int CDECL main(int argc, char **argv) {
     Board::init();
     Attacks::init();
     Scoring::init();
-    if (!globals::initGlobals(false)) {
+    if (!globals::initGlobals()) {
         globals::cleanupGlobals();
         exit(-1);
     }
@@ -104,11 +104,10 @@ int CDECL main(int argc, char **argv) {
                         std::cout << "Illegal move: " << tok.val << std::endl;
                         ok = false;
                     } else {
-                        BoardState bs = board.state;
                         std::string img;
                         // convert to SAN
                         Notation::image(board, m, Notation::OutputFormat::SAN, img);
-                        moves.add_move(board, bs, m, img, false);
+                        moves.add_move(board, m, img);
                         board.doMove(m);
                     }
                     break;

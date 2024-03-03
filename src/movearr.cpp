@@ -1,32 +1,42 @@
-// Copyright 1997-2002, 2008, 2012, 2017, 2021 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2002, 2008, 2012, 2017, 2021, 2024 by Jon Dart. All Rights Reserved.
 //
 #include "movearr.h"
-#include "types.h"
+#include "boardio.h"
+#include "movegen.h"
 
-MoveRecord::MoveRecord(const Board &board, const BoardState &previous_state,
-                       const Move &move, const std::string &image, bool ponder)
-  : my_move(move),my_hashcode(board.state.hashCode),my_state(previous_state),
-    my_image(image), my_ponder(ponder)
-{
+#include <sstream>
+
+MoveRecord::MoveRecord(const Board &board, const Move m,
+                       const std::string &img, bool was_ponder, bool from_book, score_t s, unsigned d)
+    : hashcode(board.state.hashCode), move(m), image(img),
+      ponder(was_ponder), fromBook(from_book), score(s), depth(d) {
+    std::stringstream buf;
+    BoardIO::writeFEN(board, buf, 0);
+    fen = buf.str();
 }
 
-void MoveArray::add_move( const Board &board, 
-                          const BoardState &previous_state, const Move &move,
-                          const std::string &image, bool ponder) {
-    MoveRecord entry( board, previous_state, move, image, ponder );
-    append(entry);
+MoveRecord::MoveRecord(const Board &board, const Move &m, const std::string &img,
+                       const Statistics *stats, bool was_ponder)
+    : MoveRecord(board, m, img, was_ponder, stats == nullptr ? false : stats->fromBook,
+                 stats == nullptr ? 0 : stats->display_value,
+                 stats == nullptr ? 0 : stats->completedDepth.load()) {
 }
 
-void MoveArray::remove_move() {
-    if (entries.size() > 0) {
-        entries.pop_back();
+bool MoveArray::derivesFromLast(const Board &b) {
+    if (size() == 0)
+        return false;
+    const MoveRecord &last = (*this)[size() - 1];
+    Board base;
+    if (BoardIO::readFEN(base, last.fen)) {
+        RootMoveGenerator mg(base);
+        for (const auto &rm : mg.getMoveList()) {
+            BoardState state(base.state);
+            base.doMove(rm.move);
+            if (base.hashCode() == b.hashCode()) {
+                return true;
+            }
+            base.undoMove(rm.move, state);
+        }
     }
+    return false;
 }
-
-unsigned MoveArray::num_moves(const ColorType side) const {
-    if (side == White)
-        return num_moves() ? num_moves()/2 + 1 : 0;
-    else
-        return num_moves() ? (num_moves()-1)/2 : 0;
-}
-

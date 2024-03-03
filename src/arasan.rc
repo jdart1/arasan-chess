@@ -1,17 +1,5 @@
 # Arasan runtime configuration file
 #
-# True to keep a log file, false for no logging.
-log.enabled=false
-#
-# Location of the log file. The default is "arasan.log", kept in the
-# same directory as the Arasan executable. Note: under Linux, the
-# log directory must have write permission.
-#log.pathname= 
-#
-# True to append to the log file (if it already exists), rather than
-# overwriting it.
-log.append=true
-#
 # True to store all games played to a file (in PGN format). Not supported
 # under UCI.
 store_games=true
@@ -47,7 +35,6 @@ book.random=50
 # Learning
 #
 # True to enable storage & use of position values, false to disable
-# (Not available in UCI mode)
 learning.position_learning=true
 #
 # Search parameters

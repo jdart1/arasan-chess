@@ -6,7 +6,6 @@
 // global variables
 
 #include "bookread.h"
-#include "log.h"
 #include "movearr.h"
 #include "options.h"
 #include "threadc.h"
@@ -24,11 +23,12 @@
 namespace globals {
 
 extern Options options;
+
 extern MoveArray *gameMoves;
 
 extern int EGTBMenCount;
+
 extern BookReader openingBook;
-extern Log *theLog;
 
 extern std::mutex input_lock;
 
@@ -65,7 +65,7 @@ extern std::string derivePath(const std::string &base, const std::string &fileNa
 
 extern int loadNetwork(const std::string &filename);
 
-extern int initGlobals(bool initLog = true);
+extern int initGlobals();
 
 extern void CDECL cleanupGlobals(void);
 

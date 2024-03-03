@@ -367,7 +367,7 @@ bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
+search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC) $(UNIT_TEST_SRC)
 
@@ -377,7 +377,7 @@ chess.cpp attacks.cpp \
 bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp log.cpp search.cpp \
+bookread.cpp bookwrit.cpp search.cpp \
 searchc.cpp movegen.cpp learn.cpp \
 hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
@@ -389,7 +389,7 @@ bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 params.cpp scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
-log.cpp search.cpp searchc.cpp learn.cpp \
+search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
 legal.cpp stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
 

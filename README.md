@@ -116,6 +116,8 @@ favor selecting better scoring moves in the Arasan book.
 favor selecting moves with positive manually set weights in the Arasan book.
 - Randomize book moves - value from 0 to 100, default 50. Higher values
 favor selecting moves with a greater degree of randomness.
+- Position learning - true to enable position learning (storing
+key position results in a file and later retrieving them).
 - UCI_LimitStrength - true or false, default false. True to limit the engine
 playing strength.
 - UCI_Elo - desired playing strength, settable from Elo 1000 to Elo 2600. This is

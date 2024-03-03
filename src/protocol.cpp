@@ -1,4 +1,4 @@
-// Copyright 1997-2023 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2024 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -12,7 +12,6 @@
 #include "globals.h"
 #include "learn.h"
 #include "legal.h"
-#include "log.h"
 #include "movearr.h"
 #include "movegen.h"
 #include "notation.h"
@@ -169,6 +168,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       srctype(TimeLimit),
       time_limit(Constants::INFINITE_TIME),
       ply_limit(Constants::MaxPly),
+      lastAdded(0),
       uci(false),
       movestogo(0),
       ponderhit(false),
@@ -527,8 +527,7 @@ void Protocol::save_game() {
           timestr = timec.str();
       }
       headers.push_back(ChessIO::Header("TimeControl",timestr));
-      std::string result;
-      globals::theLog->getResultAsString(result);
+      std::string result = globals::gameMoves->getResult();
       ChessIO::store_pgn(*game_file, *globals::gameMoves,
          computer_plays_white ? White : Black,
          result,
@@ -561,9 +560,6 @@ uint64_t nodes, uint64_t tb_hits, const std::string &best_line_image, int multip
       s << best_line_image;
    }
    std::cout << s.str() << std::endl;
-   if (doTrace) {
-      globals::theLog->write(s.str().c_str()); globals::theLog->write_eol();
-   }
 }
 
 
@@ -979,7 +975,6 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply)
             // We have already set up the ponder board with the board
             // position after our last move. Now make the move we predicted.
             //
-            BoardState previous_state = ponder_board->state;
             assert(legalMove(*ponder_board,predicted_reply));
             ponder_board->doMove(predicted_reply);
             //
@@ -988,7 +983,7 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply)
             // though, that in case of a ponder miss we must later
             // remove this move.
             //
-            globals::gameMoves->add_move(board,previous_state,predicted_reply,"",true);
+            globals::gameMoves->add_move(board,predicted_reply,"",true,false);
         }
         time_target = Constants::INFINITE_TIME;
         // in reduced strength mode, limit the ponder search time
@@ -1052,8 +1047,8 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply)
     last_computer_move = ponder_move;
     last_computer_stats = ponder_stats;
     // Clean up the global move array, if we got no ponder hit.
-    if (!isUCI && globals::gameMoves->num_moves() > 0 && globals::gameMoves->last().wasPonder()) {
-        globals::gameMoves->remove_move();
+    if (!isUCI && globals::gameMoves->num_moves() > 0 && globals::gameMoves->back().wasPonder()) {
+        globals::gameMoves->remove_last();
     }
     if (doTrace) {
         std::cout << debugPrefix << "ponder move = ";
@@ -1243,11 +1238,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
         }
         else {
             if (computer_plays_white) {
-                globals::theLog->setResult("0-1 {White resigns}");
+                globals::gameMoves->setResult("0-1 {White resigns}");
                 std::cout << "0-1 {White resigns}" << std::endl;
             }
             else {
-                globals::theLog->setResult("1-0 {Black resigns}");
+                globals::gameMoves->setResult("1-0 {Black resigns}");
                 std::cout << "1-0 {Black resigns}" << std::endl;
             }
             game_end = true;
@@ -1279,9 +1274,6 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
             std::stringstream img;
             Notation::image(board,last_move,Notation::OutputFormat::SAN,img);
             last_move_image = img.str();
-            globals::theLog->add_move(board,last_move,last_move_image,&last_stats,searcher->getElapsedTime(),true);
-            // Perform learning (if enabled):
-            learn(board,board.repCount());
             std::stringstream movebuf;
             move_image(board,last_move,movebuf,uci);
 
@@ -1297,18 +1289,23 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
                     board.undoMove(move,bs);
 #endif
                     move_image(board,s.best_line[1],ponderbuf,uci);
-                    std::cout << " ponder " << ponderbuf.str();
+                    std::cout << " ponder " << ponderbuf.str() << std::endl;
+                    globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
+                    // Perform learning (if enabled):
+                    learn(board,*globals::gameMoves,doTrace,debugPrefix);
                 }
-                std::cout << std::endl << (std::flush);
+                else {
+                    std::cout << std::endl;
+                }
             }
             else { // Winboard
+                globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
+                // Perform learning (if enabled):
+                learn(board,*globals::gameMoves,doTrace,debugPrefix);
                 // Execute the move and prepare to ponder.
-                BoardState previous_state = board.state;
+                BoardState previous_state(board.state);
                 board.doMove(last_move);
-                globals::gameMoves->add_move(board,previous_state,last_move,last_move_image,false);
-
                 *ponder_board = board;
-
                 std::string reason;
                 if (isDraw(board,last_stats,reason)) {
                     // It will be a draw after we move (by rule).
@@ -1353,11 +1350,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
         if (last_stats.value >= Constants::MATE-1) {
             if (doTrace) std::cout << debugPrefix << "last_score = mate" << std::endl;
             if (sideToMove == White) {
-                globals::theLog->setResult("1-0");
+                globals::gameMoves->setResult("1-0");
                 std::cout << "1-0 {White mates}" << std::endl;
             }
             else {
-                globals::theLog->setResult("0-1");
+                globals::gameMoves->setResult("0-1");
                 std::cout << "0-1 {Black mates}" << std::endl;
             }
             game_end = true;
@@ -1365,11 +1362,11 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
         else if (last_stats.state == Checkmate) {
             if (doTrace) std::cout << debugPrefix << "state = Checkmate" << std::endl;
             if (sideToMove == White) {
-                globals::theLog->setResult("0-1");
+                globals::gameMoves->setResult("0-1");
                 std::cout << "0-1 {Black mates}" << std::endl;
             }
             else {
-                globals::theLog->setResult("1-0");
+                globals::gameMoves->setResult("1-0");
                 std::cout << "1-0 {White mates}" << std::endl;
             }
             game_end = true;
@@ -1546,21 +1543,16 @@ void Protocol::analyze(Board &board)
 
 void Protocol::undo( Board &board)
 {
-    if (globals::theLog->current() < 1) return;             // ignore "undo"
-
-    board.undoMove((*globals::theLog)[globals::theLog->current()-1].move(),
-        (*globals::theLog)[globals::theLog->current()-1].state());
-    globals::theLog->back_up();
-    globals::gameMoves->remove_move();
+    if (globals::gameMoves->size() < 2) return;             // ignore "undo"
+    const MoveRecord &mr = (*globals::gameMoves)[globals::gameMoves->size()-2];
+    if (!BoardIO::readFEN(board,mr.fen)) {
+        // invalid FEN (should not happen)
+        return;
+    }
+    globals::gameMoves->remove_last();
     last_stats.clear();
-    if (globals::theLog->current()) {
-        last_move = (*globals::theLog)[globals::theLog->current()-1].move();
-        last_move_image = (*globals::theLog)[globals::theLog->current()-1].image();
-    }
-    else {
-        last_move = NullMove;
-        last_move_image.clear();
-    }
+    last_move = mr.move;
+    last_move_image = mr.image;
     // In case we have backed up from the end of the game, reset
     // the "game end" flag.
     game_end = false;
@@ -1578,14 +1570,13 @@ void Protocol::execute_move(Board &board,Move m)
     std::stringstream img;
     Notation::image(board,m,Notation::OutputFormat::SAN,img);
     last_move_image = img.str();
-    globals::theLog->add_move(board,m,last_move_image,nullptr,searcher->getElapsedTime(),true);
-    BoardState previous_state = board.state;
-    board.doMove(m);
-    // If our last move added was the pondering move, replace it
-    if (globals::gameMoves->num_moves() > 0 && globals::gameMoves->last().wasPonder()) {
-        globals::gameMoves->remove_move();
+    // If our last move added was the pondering move, remove it - then it will be
+    // replaced by result from the ponder search.
+    if (globals::gameMoves->num_moves() > 0 && globals::gameMoves->back().wasPonder()) {
+        globals::gameMoves->remove_last();
     }
-    globals::gameMoves->add_move(board,previous_state,m,last_move_image,false);
+    globals::gameMoves->add_move(board,m,last_move_image,nullptr,false);
+    board.doMove(m);
 }
 
 #ifdef TUNE
@@ -1734,13 +1725,12 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
                 break;
             }
             else {
-                BoardState previous_state = board.state;
                 std::string image;
                 // Don't use the current move string as the input
                 // parser is forgiving and will accept incorrect
-                // SAN. Convert it here to the correct form:
+                // SAN. Convert it here to strict SAN.
                 Notation::image(board,m,Notation::OutputFormat::SAN,image);
-                globals::gameMoves->add_move(board,previous_state,m,image.c_str(),false);
+                globals::gameMoves->add_move(board,m,image,nullptr,false);
                 board.doMove(m);
             }
             stm = OppositeColor(stm);
@@ -1774,17 +1764,12 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     if (doTrace && debugPrefix.size() > 0) {
         std::cout << debugPrefix << "do_command: " << cmd << std::endl;
     }
-    if (doTrace && uci) {
-        globals::theLog->write(cmd.c_str()); globals::theLog->write_eol();
-    }
     std::string cmd_word, cmd_args;
     split_cmd(cmd, cmd_word, cmd_args);
     if (cmd == "uci") {
         uci = true;
         globals::debugPrefix = UCI_DEBUG_PREFIX;
         verbose = true; // TBD: fixed for now
-        // Learning is disabled because we don't have full game history w/ scores
-        globals::options.learning.position_learning = 0;
         std::cout << "id name " << "Arasan " << Arasan_Version;
         std::cout << std::endl;
         std::cout << "id author Jon Dart" << std::endl;
@@ -1822,6 +1807,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name Threads type spin default " <<
             globals::options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << std::endl;
+        std::cout << " option name Position learning type check default " <<
+            (globals::options.learning.position_learning ? "true" : "false") << std::endl;
         std::cout << "option name UCI_LimitStrength type check default false" << std::endl;
         std::cout << "option name UCI_Elo type spin default " << globals::options.getRating(globals::options.search.strength) <<
             " min " << Options::MIN_RATING << " max " << Options::MAX_RATING << std::endl;
@@ -2007,19 +1994,22 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     }
     else if (uci && cmd_word == "position") {
         ponder_move = NullMove;
-        if (cmd_args.substr(0,8) == "startpos") {
-            board.reset();
-            globals::gameMoves->removeAll();
-        }
-        else if (cmd_args.substr(0,3) == "fen") {
+        lastAdded = 0;
+        if (cmd_args.substr(0,3) == "fen" || cmd_args.substr(0,8) == "startpos") {
             std::string fen;
-            int valid = 0;
-            if (cmd_args.length() > 3) {
-                fen = cmd_args.substr(3);
-                valid = BoardIO::readFEN(board, fen);
+            if (cmd_args.substr(0,8) == "startpos") {
+                board.reset();
+                BoardIO::writeFEN(board,fen,0);
             }
-            if (!valid) {
-                if (doTrace) std::cout << debugPrefix << "warning: invalid fen!" << std::endl;
+            else {
+                int valid = 0;
+                if (cmd_args.length() > 3) {
+                    fen = cmd_args.substr(3);
+                    valid = BoardIO::readFEN(board, fen);
+                }
+                if (!valid) {
+                    if (doTrace) std::cout << debugPrefix << "warning: invalid fen!" << std::endl;
+                }
             }
             // clear some global vars
             stats.clear();
@@ -2027,22 +2017,51 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             last_stats.clear();
             last_move = NullMove;
             last_move_image.clear();
-            globals::gameMoves->removeAll();
+            if (globals::gameMoves->size() && fen != globals::gameMoves->front().fen) {
+                // The fen position does not match the starting FEN for the move array.
+                // Assume this is a new game, or some other situation like a takeback,
+                // or analysis of a previous move, and clear the array.
+                if (doTrace) {
+                    std::cout << debugPrefix << "old fen = " << globals::gameMoves->front().fen << " new fen = " <<
+                        fen << ", resetting array" << std::endl;
+                }
+                globals::gameMoves->reset();
+            }
             predicted_move = NullMove;
             ponder_status = PonderStatus::None;
         }
         size_t movepos = cmd_args.find("moves");
         if (movepos != std::string::npos) {
             std::stringstream s(cmd_args.substr(movepos+5));
-            std::istream_iterator<std::string> it(s);
             std::istream_iterator<std::string> eos;
-            while (it != eos) {
-                std::string move(*it++);
+            auto game_it = globals::gameMoves->begin();
+            std::istream_iterator<std::string> it(s);
+            bool adding = false;
+            // read moves. stringstream iterator reads space-separated strings.
+            for (; it != eos; ++it, ++game_it) {
+                std::string move(*it);
                 Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::UCI,move);
                 if (!IsNull(m)) {
-                   BoardState previous_state = board.state;
-                   board.doMove(m);
-                   globals::gameMoves->add_move(board,previous_state,m,"",false);
+                    std::string move_img, current_fen;
+                    Notation::image(board,m,Notation::OutputFormat::SAN,move_img);
+                    BoardIO::writeFEN(board,current_fen,0);
+                    // If the current move list has a position matching this new
+                    // move sequence, leave that record intact. Otherwise,
+                    // truncate the move array and start adding moves.
+                    if (!adding && (game_it == globals::gameMoves->end() || current_fen != game_it->fen)) {
+                        adding = true;
+                        globals::gameMoves->resize(game_it - globals::gameMoves->begin());
+                    }
+                    if (adding) {
+                         if (doTrace) {
+                             std::cout << debugPrefix << "adding ";
+                             MoveImage(m,std::cout);
+                             std::cout << " at position " << game_it - globals::gameMoves->begin() << std::endl;
+                         }
+                         globals::gameMoves->add_move(board,m,move_img,nullptr,false);
+                    }
+                    ++lastAdded;
+                    board.doMove(m);
                 }
             }
         }
@@ -2246,6 +2265,14 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::istream_iterator<std::string> it(ss);
         std::istream_iterator<std::string> eos;
         MoveSet movesToSearch;
+        if (lastAdded != globals::gameMoves->size()) {
+            // if we backed up and now are less far from the root
+            // position, then truncate the global move array
+            globals::gameMoves->resize(lastAdded);
+            if (doTrace) {
+                std::cout << debugPrefix << "truncated move array to " << lastAdded << std::endl;
+            }
+        }
         while (it != eos) {
             option = *it++;
             if (option == "wtime") {
@@ -2434,9 +2461,6 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         // internally in UCI mode also.
         if (!analyzeMode) save_game();
         board.reset();
-        bool wasEmpty = globals::theLog->num_moves() == 0;
-        globals::theLog->clear();
-        if (!uci && !wasEmpty) globals::theLog->write_header();
         computer_plays_white = false;
         // Note: "new" does not reset analyze mode
         forceMode = false;
@@ -2446,9 +2470,10 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         stats.clear();
         ponder_stats.clear();
         last_stats.clear();
+        lastAdded = 0;
         last_move = NullMove;
         last_move_image.clear();
-        globals::gameMoves->removeAll();
+        globals::gameMoves->reset();
         predicted_move = NullMove;
         ponder_status = PonderStatus::None;
         start_fen.clear();
@@ -2581,10 +2606,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     }
     else if (cmd_word == "result") {
         // Game has ended
-        globals::theLog->setResult(cmd_args.c_str());
+        globals::gameMoves->setResult(cmd_args);
         save_game();
         game_end = true;
-        globals::gameMoves->removeAll();
         // Note: xboard may not send "new" before starting a new
         // game, at least in offline mode (-cp). To be safe,
         // execute "new" now, so we are ready for another game.
@@ -2601,12 +2625,13 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     }
     else if (cmd == "resign") {
         // our opponent has resigned
-        std::cout << debugPrefix << "setting log result" << std::endl;
         if (computer_plays_white)
-            globals::theLog->setResult("0-1");
+            globals::gameMoves->setResult("0-1");
         else
-            globals::theLog->setResult("1-0");
-        std::cout << debugPrefix << "set log result" << std::endl;
+            globals::gameMoves->setResult("1-0");
+        if (doTrace) {
+            std::cout << debugPrefix << "setting game result to " << globals::gameMoves->getResult() << std::endl;
+        }
     }
     else if (cmd == "draw") {
         // "draw" command. Requires winboard 3.6 or higher.

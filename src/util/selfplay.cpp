@@ -464,7 +464,7 @@ static void selfplay(ThreadData &td) {
     auto startTime = getCurrentTime();
     while (posCounter < sp_options.posCount) {
         if (sp_options.saveGames) {
-            td.gameMoves.removeAll();
+            td.gameMoves.reset();
         }
         bool adjudicated = false, terminated = false;
         Statistics stats;
@@ -647,11 +647,9 @@ static void selfplay(ThreadData &td) {
                         output.push_back(data);
                     }
                 }
-                BoardState previousState(board.state);
                 board.doMove(m);
                 if (sp_options.saveGames) {
-                    td.gameMoves.add_move(board, previousState, m, image,
-                                          false);
+                    td.gameMoves.add_move(board, m, image);
                 }
             } else {
                 if (!terminated && !adjudicated) {
@@ -787,7 +785,7 @@ int CDECL main(int argc, char **argv) {
     globals::options.search.widePlies = 1;
     globals::options.search.wideWindow = 3*Params::PAWN_VALUE;
 
-    if (!globals::initGlobals(false)) {
+    if (!globals::initGlobals()) {
         globals::cleanupGlobals();
         exit(-1);
     }

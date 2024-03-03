@@ -81,13 +81,7 @@ void Options::setMemoryOption(size_t &value, const std::string &valueString) {
 }
 
 void Options::set_option(const std::string &name, const std::string &value) {
-    if (name == "log.enabled") {
-        setOption<bool>(name, value, log_enabled);
-    } else if (name == "log.append") {
-        setOption<bool>(name, value, log_append);
-    } else if (name == "log.pathName") {
-        log_pathname = value;
-    } else if (name == "store_games") {
+    if (name == "store_games") {
         setOption<bool>(name, value, store_games);
     } else if (name == "game_pathname") {
         game_pathname = value;

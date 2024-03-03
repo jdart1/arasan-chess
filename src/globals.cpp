@@ -41,7 +41,6 @@ static constexpr char PATH_CHAR = '/';
 MoveArray *globals::gameMoves;
 Options globals::options;
 BookReader globals::openingBook;
-Log *globals::theLog = nullptr;
 
 std::mutex globals::input_lock;
 
@@ -133,14 +132,9 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     }
 }
 
-int globals::initGlobals(bool initLog) {
-    gameMoves = new MoveArray();
-    polling_terminated = false;
-    if (initLog) {
-        theLog = new Log();
-        theLog->clear();
-        theLog->write_header();
-    }
+int globals::initGlobals() {
+    globals::gameMoves = new MoveArray();
+    globals::polling_terminated = false;
     return 1;
 }
 
@@ -158,7 +152,6 @@ int globals::loadNetwork(const std::string &fname) {
 void CDECL globals::cleanupGlobals(void) {
     openingBook.close();
     delete gameMoves;
-    delete theLog;
     Scoring::cleanup();
     Bitboard::cleanup();
     Board::cleanup();

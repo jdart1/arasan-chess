@@ -220,7 +220,7 @@ int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const std::string 
         if (i % 2 == 0) {
             numbuf << (i / 2) + 1 << ". ";
         }
-        const int image_size = (int)e.image().length();
+        const int image_size = (int)e.image.size();
         if ((int)buf.tellp() + image_size + numbuf.str().length() + 1 >= PGN_MARGIN) {
             ofile << buf.str() << std::endl;
             buf.str("");
@@ -228,7 +228,7 @@ int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const std::string 
         if (buf.tellp() != (std::streampos)0) {
             buf << ' ';
         }
-        buf << numbuf.str() << e.image();
+        buf << numbuf.str() << e.image;
     }
     if ((int)buf.tellp() + result.length() + 1 >= PGN_MARGIN) {
         ofile << buf.str() << std::endl;

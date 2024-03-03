@@ -35,13 +35,13 @@ int CDECL main(int argc, char **argv)
    Scoring::init();
    Search::init();
    globals::options.search.hash_table_size = 64*1024*1024;
-   if (!globals::initGlobals(false)) {
+   if (!globals::initGlobals()) {
        globals::cleanupGlobals();
        exit(-1);
    }
    atexit(globals::cleanupGlobals);
-   globals::options.book.book_enabled = globals::options.log_enabled = 0;
-   globals::delayedInit(false);
+   globals::options.book.book_enabled = false;
+   globals::delayedInit();
    if (globals::EGTBMenCount) {
       std::cerr << "Initialized tablebases" << std::endl;
    }
@@ -143,9 +143,7 @@ int CDECL main(int argc, char **argv)
                      else if (valid) {
                         std::string moveStr;
                         Notation::image(board,m,Notation::OutputFormat::SAN,moveStr);
-                        BoardState bs = board.state;
-                        moves.add_move(board,bs,m,moveStr,false);
-
+                        moves.add_move(board,m,moveStr);
                         board.doMove(m);
                      }
                      side = OppositeColor(side);

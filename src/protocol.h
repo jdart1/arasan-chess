@@ -1,5 +1,5 @@
 // Handles Winboard/xboard/UCI protocol.
-// Copyright 1997-2023 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2024 by Jon Dart. All Rights Reserved.
 //
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
@@ -222,7 +222,7 @@ private:
     int time_limit;
     int ply_limit;
     std::string start_fen;
-
+    size_t lastAdded;
     bool uci;
     int movestogo;
     bool ponderhit;
