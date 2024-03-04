@@ -202,6 +202,10 @@ void globals::initOptions() {
     if (appDir.size()) {
         options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
     }
+    // if path not set in the .rc file, set a default here
+    if (options.book.book_path == "") {
+        options.book.book_path = derivePath(DEFAULT_BOOK_NAME);
+    }
 }
 
 void globals::delayedInit(bool verbose) {
@@ -251,9 +255,6 @@ void globals::delayedInit(bool verbose) {
 #endif
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
-        if (options.book.book_path == "") {
-            options.book.book_path = derivePath(DEFAULT_BOOK_NAME);
-        }
         if (openingBook.open(options.book.book_path.c_str()) && verbose) {
             std::cout << debugPrefix << "warning: opening book not found or invalid" << std::endl;
         } else if (verbose) {

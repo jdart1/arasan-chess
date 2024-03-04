@@ -118,6 +118,7 @@ favor selecting moves with positive manually set weights in the Arasan book.
 favor selecting moves with a greater degree of randomness.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
+- Learn file name - name & location of the file to store position learning data
 - UCI_LimitStrength - true or false, default false. True to limit the engine
 playing strength.
 - UCI_Elo - desired playing strength, settable from Elo 1000 to Elo 2600. This is
@@ -157,6 +158,7 @@ favor selecting moves with positive manually set weights in the Arasan book.
 favor selecting moves with a greater degree of randomness.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
+- Learn file name - name & location of the file to store position learning data
 - Strength - search strength, settable on a scale of 0 (weakest) to 100 (strongest)
 - Set processor affinity - for NUMA builds only. If set true, binds threads to
 cores.

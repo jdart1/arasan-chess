@@ -1807,8 +1807,10 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name Threads type spin default " <<
             globals::options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << std::endl;
-        std::cout << " option name Position learning type check default " <<
+        std::cout << "option name Position learning type check default " <<
             (globals::options.learning.position_learning ? "true" : "false") << std::endl;
+        std::cout << "option name Learning file name type string default " <<
+            globals::options.learning.learn_file_name << std::endl;
         std::cout << "option name UCI_LimitStrength type check default false" << std::endl;
         std::cout << "option name UCI_Elo type spin default " << globals::options.getRating(globals::options.search.strength) <<
             " min " << Options::MIN_RATING << " max " << Options::MAX_RATING << std::endl;
@@ -2515,6 +2517,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.search.resign_threshold << " -1000 0" << "\"";
         std::cout << " option=\"Position learning -check " <<
             globals::options.learning.position_learning << "\"";
+        std::cout << " option=\"Learn file name -string " <<
+            globals::options.learning.learn_file_name << "\"";
         // strength option (new for 14.2)
         std::cout << " option=\"Strength -spin " << globals::options.search.strength << " 0 100\"";
 #ifdef NNUE
