@@ -1303,7 +1303,6 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
                 // Perform learning (if enabled):
                 learn(board,*globals::gameMoves,doTrace,debugPrefix);
                 // Execute the move and prepare to ponder.
-                BoardState previous_state(board.state);
                 board.doMove(last_move);
                 *ponder_board = board;
                 std::string reason;
