@@ -469,17 +469,22 @@ Move SearchController::findBestMove(
 #endif
    // set up move generator to obey include and exclude lists
    mg->filter(include,exclude);
-#ifdef _TRACE
-   std::cout << "filtered root moves:";
+   std::stringstream s;
+   s << "filtered root moves:";
    for (const RootMoveGenerator::RootMove &m : mg->getMoveList()) {
        if (!(Flags(m.move) & Excluded)) {
-           std::cout << ' ';
-           Notation::image(board,m.move,Notation::OutputFormat::SAN,std::cout);
+           s << ' ';
+           Notation::image(board,m.move,Notation::OutputFormat::SAN,s);
        }
    }
-   std::cout << std::endl;
+#ifdef _TRACE
+   std::cout << s.str() << std::endl;
 #endif
-
+#ifdef SYZYGY_TBS
+   if (debugOut() && tb_hit) {
+       std::cout << globals::debugPrefix << s.str() << std::endl;
+   }
+#endif
    if (value == Constants::INVALID_SCORE) {
       value = 0;
    }
