@@ -2610,7 +2610,6 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if (cmd_word == "result") {
         // Game has ended
         globals::gameMoves->setResult(cmd_args);
-        save_game();
         game_end = true;
         // Note: xboard may not send "new" before starting a new
         // game, at least in offline mode (-cp). To be safe,
