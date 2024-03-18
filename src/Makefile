@@ -197,13 +197,8 @@ PROF_USE = -fprofile-use=$(PROF_DATA)
 
 FLAGS := -std=c++17 -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifndef DEBUG
-# use LTO only if no PGO
-ifdef PGO
-LTO :=
-else
 LTO := -flto
-endif
-OPT     = -O3 $(LTO) -fno-rtti -DNDEBUG
+OPT     = -O3 -fno-rtti -DNDEBUG
 LDFLAGS := $(LDFLAGS) $(OPT)
 ifeq ($(findstring darwin,$(OSTYPE)),)
 ifeq ($(findstring cygwin,$(OSTYPE)),)
@@ -251,7 +246,8 @@ endif
 endif
 endif
 ifndef DEBUG
-OPT	= -Ofast -flto -fno-rtti -fno-enforce-eh-specs -DNDEBUG
+OPT	:= -Ofast -fno-rtti -fno-enforce-eh-specs -DNDEBUG
+LTO     := -flto
 LDFLAGS := $(LDFLAGS) $(OPT)
 endif
 else
