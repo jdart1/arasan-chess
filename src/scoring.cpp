@@ -1395,7 +1395,6 @@ void Scoring::calcPawnData(const Board &board,
       int backward = 0;
       int passed = 0;
       int weak = 0;
-      int doubled = 0;
       int isolated;
       Bitboard doubles;
 
@@ -1445,7 +1444,6 @@ void Scoring::calcPawnData(const Board &board,
             entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][fileIndex];
             entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][fileIndex];
          }
-         doubled++;
       }
 
       if (isolated && !passed) {
