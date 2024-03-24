@@ -1,3 +1,17 @@
+Changes in Arasan 24.2 (March 2024):
+ 1) Various Makefile fixes/enhancements, including support for compilation on
+ Windows with clang-cl
+ 2) Performance improvements to PGN reading code
+ 3) Remove log file support
+ 4) Make position learning work in UCI mode, make default learning file
+ location a writeable directory
+ 5) Add option to set learn file location
+ 6) Read arasan.rc from the home directory on Windows, if present.
+ 7) Re-organize NNUE SIMD code for feature transformer, make it work properly
+ when accumulator width is not an exact multiple of the register count
+ 8) In CECP mode, ignore moves received after game end
+ 9) Build executables with clang
+
 Changes in Arasan 24.1 (January 2024):
  1) Fix scoring for special case endgames (classical eval).
  2) Add HCE scoring for KRN vs KR and KRB vs KR.

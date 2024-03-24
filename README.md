@@ -77,9 +77,14 @@ run the bench command (for performance reporting) and then exit.
 
 Many aspects of Arasan's behavior can be modified by changing the
 arasan.rc file. This file is installed in the program directory.
-If present, Arasan will also read an arasan.rc file (.arasan.rc on
-MacOS/Linux) that is in the user's home directory, the contents of
-which will overwrite the one that is in the program directory.
+If present, Arasan will also read a file that in the user's home
+directory:
+
+- on Windows, from arasan.rc
+- on MacOS or Linux, from .arasan.rc
+
+The contents of these files will overwrite the one that is in the
+program directory.
 
 You don't have to use this file to configure Arasan. Most of the options
 in it can also be set from a GUI that understands the UCI or CECP protocol, although there

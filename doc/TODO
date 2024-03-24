@@ -16,14 +16,10 @@
 
 8. Windows GUI badly needs a rewrite, better graphics.
 
-9. Make logging work properly under UCI.
+9. Code cleanup: most of HCE is no longer used so could be removed, as could tuning support.
 
-10. Implement position learning in UCI mode.
+10. Remove arasan.rc, just use CECP/UCI options as most programs do.
 
-11. Code cleanup: most of HCE is no longer used so could be removed, as could tuning support.
 
-12. Remove arasan.rc, just use CECP/UCI options as most programs do.
-
-13. Consider putting log and game files into a user local directory by default, instead of the install dir.
 
 
