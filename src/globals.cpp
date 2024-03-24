@@ -195,12 +195,12 @@ void globals::initOptions() {
     // Also attempt to read .rc from the user's home directory.
     // If present, this overrides the file at the install location.
     if (userDir.size()) {
-#ifdef _WIN32        
+#ifdef _WIN32
         std::string userRcfile(RC_FILE_NAME);
-#else        
+#else
         std::string userRcFile(".");
         userRcFile += RC_FILE_NAME;
-#endif        
+#endif
         options.init(derivePath(userDir + PATH_CHAR, userRcFile));
     }
     if (appDir.size()) {
