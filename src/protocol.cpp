@@ -781,7 +781,7 @@ bool Protocol::processPendingInSearch(SearchController *controller, const std::s
                 std::cout << debugPrefix << "cmd in search not processed: " << cmd << " (expected move)";
             }
             return false;
-        } else {
+        } else if (!game_end) {
             last_move = rmove;
             if (doTrace) {
                 std::cout << debugPrefix << "predicted move = ";
