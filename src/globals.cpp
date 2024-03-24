@@ -196,7 +196,7 @@ void globals::initOptions() {
     // If present, this overrides the file at the install location.
     if (userDir.size()) {
 #ifdef _WIN32
-        std::string userRcfile(RC_FILE_NAME);
+        std::string userRcFile(RC_FILE_NAME);
 #else
         std::string userRcFile(".");
         userRcFile += RC_FILE_NAME;
