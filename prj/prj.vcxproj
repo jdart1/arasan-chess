@@ -681,7 +681,6 @@
     </ClCompile>
     <ClCompile Include="..\src\learn.cpp" />
     <ClCompile Include="..\src\legal.cpp" />
-    <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\material.cpp" />
     <ClCompile Include="..\src\movearr.cpp" />
     <ClCompile Include="..\src\movegen.cpp" />
