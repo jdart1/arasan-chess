@@ -976,14 +976,14 @@ void Protocol::ponder(Board &board, Move move, Move predicted_reply)
             // position after our last move. Now make the move we predicted.
             //
             assert(legalMove(*ponder_board,predicted_reply));
-            ponder_board->doMove(predicted_reply);
             //
-            // We must also add this move to the global move list,
+            // We must add this move to the global move list,
             // otherwise repetition detection will be broken. Note,
             // though, that in case of a ponder miss we must later
             // remove this move.
             //
             globals::gameMoves->add_move(board,predicted_reply,"",true,false);
+            ponder_board->doMove(predicted_reply);
         }
         time_target = Constants::INFINITE_TIME;
         // in reduced strength mode, limit the ponder search time
@@ -1280,7 +1280,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
             if (uci) {
                 std::cout << "bestmove " << movebuf.str();
                 if (!easy && !IsNull(s.best_line[1])) {
-                    std::stringstream ponderbuf;
+                    globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
 #ifdef _DEBUG
                     BoardState bs(board.state);
                     board.doMove(move);
@@ -1288,9 +1288,9 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
                     assert(legalMove(board,s.best_line[1]));
                     board.undoMove(move,bs);
 #endif
+                    std::stringstream ponderbuf;
                     move_image(board,s.best_line[1],ponderbuf,uci);
                     std::cout << " ponder " << ponderbuf.str() << std::endl;
-                    globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
                     // Perform learning (if enabled):
                     learn(board,*globals::gameMoves,doTrace,debugPrefix);
                 }

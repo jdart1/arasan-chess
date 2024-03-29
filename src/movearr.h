@@ -18,12 +18,12 @@ struct MoveRecord {
         : hashcode((hash_t)0ULL), move(NullMove), ponder(false), fromBook(false), score(0),
           depth(0) {}
 
-    // "board" is the board position after the move.
-    MoveRecord(const Board &board, const Move m,
-               const std::string &img, bool was_ponder, bool from_book, score_t s, unsigned d);
+    // "board" is the board position before the move.
+    MoveRecord(const Board &board, const Move m, const std::string &img, bool was_ponder,
+               bool from_book, score_t s, unsigned d);
 
-    MoveRecord(const Board &board, const Move &m,
-               const std::string &img, const Statistics *stats, bool was_ponder);
+    MoveRecord(const Board &board, const Move &m, const std::string &img, const Statistics *stats,
+               bool was_ponder);
 
     virtual ~MoveRecord() = default;
 
@@ -58,7 +58,8 @@ class MoveArray : public std::vector<MoveRecord> {
         push_back(MoveRecord(board, m, img, was_ponder, from_book, s, d));
     }
 
-    void add_move(const Board &board, Move m, const std::string &img, const Statistics *stats = nullptr, bool was_ponder = false) {
+    void add_move(const Board &board, Move m, const std::string &img,
+                  const Statistics *stats = nullptr, bool was_ponder = false) {
         push_back(MoveRecord(board, m, img, stats, was_ponder));
     }
 
@@ -80,24 +81,16 @@ class MoveArray : public std::vector<MoveRecord> {
         return (*this)[n].move;
     }
 
-    // true if the specified board position results from a legal move
-    // made from the last entered position in the array.
-    bool derivesFromLast(const Board &b);
+    const std::string &getResult() const noexcept { return gameResult; }
 
-    const std::string &getResult() const noexcept {
-        return gameResult;
-    }
-
-    void setResult(const std::string &result) noexcept {
-        gameResult = result;
-    }
+    void setResult(const std::string &result) noexcept { gameResult = result; }
 
     void reset() {
         clear();
         gameResult = "*";
     }
-    
-private:
+
+  private:
     std::string gameResult;
 };
 

@@ -22,21 +22,3 @@ MoveRecord::MoveRecord(const Board &board, const Move &m, const std::string &img
                  stats == nullptr ? 0 : stats->completedDepth.load()) {
 }
 
-bool MoveArray::derivesFromLast(const Board &b) {
-    if (size() == 0)
-        return false;
-    const MoveRecord &last = (*this)[size() - 1];
-    Board base;
-    if (BoardIO::readFEN(base, last.fen)) {
-        RootMoveGenerator mg(base);
-        for (const auto &rm : mg.getMoveList()) {
-            BoardState state(base.state);
-            base.doMove(rm.move);
-            if (base.hashCode() == b.hashCode()) {
-                return true;
-            }
-            base.undoMove(rm.move, state);
-        }
-    }
-    return false;
-}
