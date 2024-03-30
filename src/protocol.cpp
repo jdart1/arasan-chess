@@ -2043,6 +2043,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 std::string move(*it);
                 Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::UCI,move);
                 if (!IsNull(m)) {
+                    // Arena can send invalid move sequences in some situations
+                    if (!validMove(board,m)) {
+                        std::cout << debugPrefix << "warning: invalid move received: " << move << ", ignoring" << std::endl;
+                        break;
+                    }
                     std::string move_img, current_fen;
                     Notation::image(board,m,Notation::OutputFormat::SAN,move_img);
                     BoardIO::writeFEN(board,current_fen,0);
