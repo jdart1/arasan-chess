@@ -480,7 +480,7 @@ static void selfplay(ThreadData &td) {
             Move m = NullMove;
             if (ply < sp_options.maxBookPly) {
                 std::unique_lock<std::mutex> lock(bookLock);
-                m = globals::openingBook.pick(board);
+                m = globals::openingBook.pick(board, false);
             }
             score_t score = 0;
             if (IsNull(m)) {

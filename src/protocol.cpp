@@ -1072,7 +1072,7 @@ Move Protocol::search(Board &board,
     // is specified and using "own book." Currently we force a search
     // in this case and ignore the book moves.
     if (!infinite && globals::options.book.book_enabled && movesToSearch.empty()) {
-        move = globals::openingBook.pick(board);
+        move = globals::openingBook.pick(board, doTrace);
         if (!IsNull(move)) s.fromBook = true;
     }
 
@@ -2264,8 +2264,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if (uci && cmd_word == "go") {
         std::string option;
         srctype = TimeLimit;
-        bool do_ponder = false;
         movestogo = 0;
+        bool do_ponder = false;
         bool infinite = false;
         std::stringstream ss(cmd_args);
         std::istream_iterator<std::string> it(ss);
