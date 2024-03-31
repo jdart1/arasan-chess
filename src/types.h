@@ -169,7 +169,7 @@ FORCEINLINE uint16_t swapEndian16(const uint8_t *input) {
 // So we must deal with Intel support with #ifdefs in the code.
 #define BEGIN_PACKED_STRUCT {
 #define END_PACKED_STRUCT };
-#elif defined (_MSC_VER)
+#elif defined (_MSC_VER) && !defined(__clang__)
 #define BEGIN_PACKED_STRUCT \
 { \
 __pragma(pack(push,1))
@@ -180,7 +180,7 @@ __pragma(pack(pop)) \
 #define BEGIN_PACKED_STRUCT {
 #define END_PACKED_STRUCT \
 } \
-__attribute__((__packed__));
+__attribute__((packed));
 #endif
 
 #endif
