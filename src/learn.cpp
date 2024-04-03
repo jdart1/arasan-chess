@@ -11,8 +11,8 @@
 // max ply for position learning
 static constexpr unsigned POSITION_MAX_PLY = 60;
 
-void learn(const Board &board, const MoveArray &moves, bool doTrace,
-           const std::string debugPrefix) {
+void learn(const Board &board, const MoveArray &moves, bool doTrace) 
+{
     // Do position learning. If our score has dropped or
     // jumped recently, append an entry to the position learning file.
 
@@ -71,7 +71,7 @@ void learn(const Board &board, const MoveArray &moves, bool doTrace,
                 str << "learning position, fen = " << last_entry.fen << " score = ";
                 Scoring::printScore(last_score, str);
                 str << " depth = " << last_depth;
-                std::cout << debugPrefix << str.str() << std::endl;
+                std::cout << globals::debugPrefix << str.str() << std::endl;
             }
         }
     }

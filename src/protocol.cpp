@@ -1292,7 +1292,9 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
                     move_image(board,s.best_line[1],ponderbuf,uci);
                     std::cout << " ponder " << ponderbuf.str() << std::endl;
                     // Perform learning (if enabled):
-                    learn(board,*globals::gameMoves,doTrace,debugPrefix);
+                    if (!forceMode && !analyzeMode) {
+                        learn(board,*globals::gameMoves,doTrace);
+                    }
                 }
                 else {
                     std::cout << std::endl;
@@ -1301,7 +1303,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
             else { // Winboard
                 globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
                 // Perform learning (if enabled):
-                learn(board,*globals::gameMoves,doTrace,debugPrefix);
+                learn(board,*globals::gameMoves,doTrace);
                 // Execute the move and prepare to ponder.
                 board.doMove(last_move);
                 *ponder_board = board;
@@ -1495,7 +1497,7 @@ void Protocol::analyze(Board &board)
         if (!do_all_pending(board)) {
             break;
         }
-        while (board == previous && analyzeMode) {
+        while (board.hashCode() == previous.hashCode() && analyzeMode) {
             // The user has given us no new position to search. We probably
             // got here because the search has terminated early, due to
             // forced move, forced mate, tablebase hit, or hitting the max
@@ -1504,20 +1506,20 @@ void Protocol::analyze(Board &board)
             if (!input.readInput(pending, inputMtx)) {
                 break;
             }
-            while (true) {
-                std::string cmd, cmd_word, cmd_arg;
-                if (!popPending(cmd)) break;
+            std::string cmd;
+            while (popPending(cmd)) {
+                std::string cmd_word, cmd_arg;
                 split_cmd(cmd,cmd_word,cmd_arg);
-#ifdef _TRACE
-                std::cout << debugPrefix << "processing cmd in analysis mode: " << cmd << std::endl;
-#endif
+                if (doTrace) {
+                    std::cout << debugPrefix << "processing cmd in analysis mode: " << cmd << std::endl;
+                }
                 if (cmd == "undo" || cmd == "setboard") {
                     do_command(cmd,board);
                 }
                 // Technically "quit" is not supposed to be the way
                 // to exit analysis mode but we allow it.
                 else if (cmd == "exit" || cmd == "quit") {
-                    analyzeMode = 0;
+                    analyzeMode = false;
                 }
                 else if (cmd == "bk") {
                     do_command(cmd,board);
@@ -1527,8 +1529,11 @@ void Protocol::analyze(Board &board)
                 }
                 else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
                     Move m = get_move(cmd_word, cmd_arg);
-                    if (!IsNull(m)) {
-                        board.doMove(m);
+                    if (!IsNull(m) && legalMove(board, m)) {
+                        execute_move(board, m);
+                    } else if (doTrace) {
+                        std::cout << globals::debugPrefix <<
+                            "illegal or unparseable move received in analysis mode" << std::endl;
                     }
                 }
                 else if (cmd == ".") {
@@ -1542,13 +1547,16 @@ void Protocol::analyze(Board &board)
 
 void Protocol::undo( Board &board)
 {
-    if (globals::gameMoves->size() < 2) return;             // ignore "undo"
-    const MoveRecord &mr = (*globals::gameMoves)[globals::gameMoves->size()-2];
+    if (globals::gameMoves->getCurrent() < 2) return; // ignore "undo"
+    const MoveRecord &mr = globals::gameMoves->at(globals::gameMoves->getCurrent()-2);
     if (!BoardIO::readFEN(board,mr.fen)) {
         // invalid FEN (should not happen)
         return;
     }
-    globals::gameMoves->remove_last();
+    // We do not actually remove the move from the array, because we
+    // could be in force or analyze mode, in which we might later
+    // go forward again through the game.
+    globals::gameMoves->back_up();
     last_stats.clear();
     last_move = mr.move;
     last_move_image = mr.image;
@@ -2669,11 +2677,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
        editMode = true;
     }
     else if (cmd == "analyze") {
-        analyzeMode = 1;
+        analyzeMode = true;
         analyze(board);
     }
     else if (cmd == "exit") {
-        if (analyzeMode) analyzeMode = 0;
+        analyzeMode = false;
     }
     else if (cmd == ".") {
         analyze_output(stats);
@@ -2815,7 +2823,15 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             std::cout << debugPrefix << "move text = " << movetext << std::endl;
         }
         Move move;
-        if ((move = text_to_move(board,movetext)) != NullMove) {
+        if ((move = text_to_move(board,movetext)) == NullMove) {
+            if (doTrace) {
+                std::cout << debugPrefix << "failed to parse move" << std::endl;
+                std::cout << debugPrefix << "board = ";
+                BoardIO::writeFEN(board,std::cout,false);
+                std::cout << std::endl;
+            }
+        }
+        else {
             // We have received a move outside a search, so not while pondering
             if (game_end) {
                 if (forceMode)
@@ -2830,10 +2846,6 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
             // make the move on the board
             execute_move(board,move);
-            if (analyzeMode) {
-               // re-enter analysis loop
-               analyze(board);
-            }
             Move reply;
             if (!forceMode && !analyzeMode) {
                // determine what to do with the pondering result, if

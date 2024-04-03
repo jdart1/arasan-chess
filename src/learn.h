@@ -10,8 +10,7 @@
 
 // If conditions are met, update the learning file. Call after a move has been added to the move
 // array.
-extern void learn(const Board &board, const MoveArray &moves, bool doTrace,
-                  const std::string debugPrefix);
+extern void learn(const Board &board, const MoveArray &moves, bool doTrace);
 
 struct LearnRecord {
     hash_t hashcode;

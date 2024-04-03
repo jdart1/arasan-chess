@@ -50,24 +50,29 @@ class MoveArray : public std::vector<MoveRecord> {
     // the search process.
 
   public:
-    MoveArray() : gameResult("*") {}
+    MoveArray() : gameResult("*"), current(0) {}
 
     // add a move to the Move_Array. "board" is the position before making the move
     void add_move(const Board &board, Move m, const std::string &img, bool was_ponder,
                   bool from_book, score_t s = 0, int d = 0) {
-        push_back(MoveRecord(board, m, img, was_ponder, from_book, s, d));
+        add(MoveRecord(board, m, img, was_ponder, from_book, s, d));
     }
 
     void add_move(const Board &board, Move m, const std::string &img,
                   const Statistics *stats = nullptr, bool was_ponder = false) {
-        push_back(MoveRecord(board, m, img, stats, was_ponder));
+        add(MoveRecord(board, m, img, stats, was_ponder));
     }
 
-    // remove the most recently added move to the Move_Array.
-    void remove_last() {
-        if (size() > 0) {
-            pop_back();
+    // move to an earlier point in the array
+    void back_up() {
+        if (current) {
+            --current;
         }
+    }
+
+    void remove_last() {
+        pop_back();
+        back_up();
     }
 
     // return the total number of half-moves in the game:
@@ -90,8 +95,15 @@ class MoveArray : public std::vector<MoveRecord> {
         gameResult = "*";
     }
 
+    size_t getCurrent() const noexcept { return current; }
+
+    void setCurrent(size_t curr) noexcept { current = curr; }
+
   private:
+    void add(const MoveRecord &mr);
+
     std::string gameResult;
+    size_t current;
 };
 
 #endif
