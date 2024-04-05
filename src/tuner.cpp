@@ -1,4 +1,4 @@
-// Copyright 2015-2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 2015-2021, 2023, 2024 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "notation.h"
@@ -1979,7 +1979,6 @@ int CDECL main(int argc, char **argv)
 #ifdef NNUE
     globals::options.search.useNNUE = false;
 #endif
-    globals::options.book.book_enabled = globals::options.log_enabled = false;
     globals::options.learning.position_learning = false;
 #ifdef SYZYGY_TBS
     globals::options.search.use_tablebases = false;
