@@ -2,7 +2,7 @@
 # Gnu Makefile for Arasan
 # Copyright 2004-2024 by Jon Dart. All Rights Reserved.
 #
-VERSION = 24.1
+VERSION = 24.2
 
 # paths, modify as needed:
 
@@ -85,6 +85,8 @@ BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
 AVX512_FLAGS := -DAVX512 -mavx512bw
 else ifeq ("$(ARCH)","arm64")
+NEON_FLAGS := -DSIMD -DNEON
+else ifeq ("$(ARCH)","aarch64")
 NEON_FLAGS := -DSIMD -DNEON
 endif
 
