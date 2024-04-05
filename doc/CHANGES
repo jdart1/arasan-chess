@@ -9,8 +9,10 @@ Changes in Arasan 24.2 (March 2024):
  6) Read arasan.rc from the home directory on Windows, if present.
  7) Re-organize NNUE SIMD code for feature transformer, make it work properly
  when accumulator width is not an exact multiple of the register count
- 8) In CECP mode, ignore moves received after game end
+ 8) Protocol fixes: in UCI mode, ignore illegal moves sent from interface
+ (Arena can do this). Ignore move sent after game end in CECP mode.
  9) Build executables with clang
+ 10) Support compilation on ARM Linux with GCC (aarch64 architecture)
 
 Changes in Arasan 24.1 (January 2024):
  1) Fix scoring for special case endgames (classical eval).
