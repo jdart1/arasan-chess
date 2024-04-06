@@ -372,7 +372,7 @@ profile-pass2: pass2-prepare
    $(MAKE) PASS2=1 BUILD_TYPE=$(BUILD_TYPE) CC=$(CC) profile
 !Else
 profile-pass2: pass2-prepare
-   $(MAKE) PASS2=1 CC=$(CC) profile profile-optimized
+   $(MAKE) PASS2=1 CC=$(CC) profile
 !Endif
 
 pass2-prepare:
