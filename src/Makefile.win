@@ -180,17 +180,18 @@ CFLAGS = $(CFLAGS) /std:c++17
 # needed to indicate CPU has POPCNT support
 CFLAGS = $(CFLAGS) -march=nehalem
 !Endif
-PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-generate=$(PROFDATA)
-PROF_USE_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-use=$(PROFDATA)\default.profdata
-# first link
-PROF_LINK_FLAGS = -fprofile-generate=$(PROFDATA)
-# final link
-PROF_LINK_FLAGS2 = -fprofile-use=$(PROFDATA)default.profdata
-PROF_GEN_LD = $(CC)
-PROF_USE_LD = $(CC)
 !Ifndef DEBUG
 LTO = -flto
 !Endif
+PROF_GEN_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) -fprofile-generate=$(PROFDATA)
+PROF_USE_FLAGS = $(CFLAGS) $(NNUE_FLAGS) $(OPT) $(LTO) -fprofile-use=$(PROFDATA)\default.profdata
+# first link
+PROF_LINK_FLAGS = -fprofile-generate=$(PROFDATA)
+# final link
+#PROF_LINK_FLAGS2 = -fprofile-use=$(PROFDATA)default.profdata
+PROF_GEN_LD = $(CC)
+# must use lld-link because LTO is enabled
+PROF_USE_LD = lld-link
 LD = lld-link
 !Else
 # MSVC
@@ -350,7 +351,7 @@ $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
 $(PROFILE)\$(ARASANX).exe: $(ARASANX_PROFILE_OBJS)
 !If "$(CC)"=="clang-cl"
 !Ifdef PASS2
-   $(PROF_USE_LD) $(PROF_LINK_FLAGS2) $(ARASANX_PROFILE_OBJS) -o$(BUILD)\$(ARASANX).exe /link $(LDFLAGS)
+   $(PROF_USE_LD) $(PROF_LINK_FLAGS2) $(ARASANX_PROFILE_OBJS) /out:$(BUILD)\$(ARASANX).exe $(LDFLAGS)
 !Else
     $(PROF_GEN_LD) $(PROF_LINK_FLAGS) $(ARASANX_PROFILE_OBJS) -o$(PROFILE)\$(ARASANX).exe /link $(LDFLAGS)
 !Endif
