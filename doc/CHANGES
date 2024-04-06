@@ -1,4 +1,4 @@
-Changes in Arasan 24.2 (March 2024):
+Changes in Arasan 24.2 (April 2024):
  1) Various Makefile fixes/enhancements, including support for compilation on
  Windows with clang-cl
  2) Performance improvements to PGN reading code
