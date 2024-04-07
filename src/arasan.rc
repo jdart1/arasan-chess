@@ -35,7 +35,7 @@ book.random=50
 # Learning
 #
 # True to enable storage & use of position values, false to disable
-learning.position_learning=true
+learning.position_learning=false
 #
 # Search parameters
 #

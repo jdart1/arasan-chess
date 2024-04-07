@@ -57,7 +57,7 @@ class Options {
 
     struct LearningOptions {
         LearningOptions()
-            : position_learning(true), position_learning_threshold(33),
+            : position_learning(false), position_learning_threshold(33),
               position_learning_horizon(5), position_learning_minDepth(7) {}
         bool position_learning;
         int position_learning_threshold;

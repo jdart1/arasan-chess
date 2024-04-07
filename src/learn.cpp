@@ -8,9 +8,6 @@
 #include <cstddef>
 #include <sstream>
 
-// max ply for position learning
-static constexpr unsigned POSITION_MAX_PLY = 60;
-
 void learn(const Board &board, const MoveArray &moves, bool doTrace) 
 {
     // Do position learning. If our score has dropped or
@@ -19,7 +16,7 @@ void learn(const Board &board, const MoveArray &moves, bool doTrace)
     const MoveRecord &last_entry = moves.back();
     if (!globals::options.learning.position_learning ||
         globals::options.search.strength < 50 ||
-        moves.size() < 3 || moves.size() >= POSITION_MAX_PLY) {
+        moves.size() < 3) {
         return;
     }
     score_t last_score = last_entry.score;
