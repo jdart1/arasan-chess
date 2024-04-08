@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 24.0</title>
+<title>Arasan Programmer's Guide - version 24.2</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 24.0</h1>
+<h1>Arasan Programmer's Guide - version 24.2</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -161,15 +161,18 @@ the book.bin file.</p>
 
 <p>Arasan has positional learning (a.k.a "permanent brain"). It is
 basically a persisent hashtable. If a search returns an unexpectedly
-high or low score, the position and its score are stored in a text file
-called arasan.lrn, which is located in the same directory as the
-Arasan executable. When the next game is started, stored positions
+high or low score, the position and its score are stored in a text file.
+The text file name and location are configurable, but by default:</p>
+<ul>  
+  <li>on Windows it is called arasan.lrn and is in the user's APPDATA directory,
+    Arasan subdirectory</li>
+  <li>on Linux/MacOS, it is called .arasan.lrn, and is located in the user's
+    home directory</li>
+ </ul>
+When the next game is started, stored positions
 from this file are read into memory and stored in the hash table,
 enabling the program to detect danger or opportunity sooner
 than it did previously.</p>
-
-<p>Arasan learning does not work in UCI mode at present, for several
-reasons.</p>
 
 
 <h2>ECO Recognizer</h2>
