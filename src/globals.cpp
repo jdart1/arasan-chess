@@ -23,7 +23,9 @@ extern "C" {
 #endif
 
 #include <cstdlib>
+#ifdef _WIN32
 #include <filesystem>
+#endif
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
