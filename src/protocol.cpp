@@ -1104,8 +1104,6 @@ Move Protocol::search(Board &board,
                 times.time_target = Constants::INFINITE_TIME;
                 times.extra_time = 0;
             } else {
-                if (doTrace) std::cout << debugPrefix << " time_limit=" << time_limit << " movestogo=" <<
-                                 movestogo << std::endl;
                 calcTimes(false,board.sideToMove(),times);
             }
             time_target = last_time_target = times.time_target;
@@ -2043,11 +2041,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         if (movepos != std::string::npos) {
             std::stringstream s(cmd_args.substr(movepos+5));
             std::istream_iterator<std::string> eos;
-            auto game_it = globals::gameMoves->begin();
+            size_t moveIndex = 0;
             std::istream_iterator<std::string> it(s);
             bool adding = false;
             // read moves. stringstream iterator reads space-separated strings.
-            for (; it != eos; ++it, ++game_it) {
+            for (; it != eos; ++it, ++moveIndex) {
                 std::string move(*it);
                 Move m = Notation::value(board,board.sideToMove(),Notation::InputFormat::UCI,move);
                 if (!IsNull(m)) {
@@ -2062,15 +2060,15 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                     // If the current move list has a position matching this new
                     // move sequence, leave that record intact. Otherwise,
                     // truncate the move array and start adding moves.
-                    if (!adding && (game_it == globals::gameMoves->end() || current_fen != game_it->fen)) {
+                    if (!adding && (moveIndex == globals::gameMoves->size() || current_fen != (*globals::gameMoves)[moveIndex].fen)) {
                         adding = true;
-                        globals::gameMoves->resize(game_it - globals::gameMoves->begin());
+                        globals::gameMoves->resize(moveIndex);
                     }
                     if (adding) {
                          if (doTrace) {
                              std::cout << debugPrefix << "adding ";
                              MoveImage(m,std::cout);
-                             std::cout << " at position " << game_it - globals::gameMoves->begin() << std::endl;
+                             std::cout << " at position " << moveIndex << std::endl;
                          }
                          globals::gameMoves->add_move(board,m,move_img,nullptr,false);
                     }
