@@ -1,3 +1,8 @@
+Changes in Arasan 24.2.1 (April 2024):
+ 1) Fix issue #57: loss on time in tournaments
+ 2) Increase default move overhead
+ 3) Programmer's Guide update
+
 Changes in Arasan 24.2 (April 2024):
  1) Various Makefile fixes/enhancements, including support for compilation on
  Windows with clang-cl
