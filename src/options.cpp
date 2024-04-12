@@ -34,7 +34,7 @@ Options::SearchOptions::SearchOptions()
 #ifdef NUMA
       set_processor_affinity(false),
 #endif
-      move_overhead(15), minimum_search_time(10), widePlies(4),
+      move_overhead(30), minimum_search_time(10), widePlies(4),
       wideWindow(10 * Params::PAWN_VALUE) {
 }
 
