@@ -1278,7 +1278,6 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
             if (uci) {
                 std::cout << "bestmove " << movebuf.str();
                 if (!easy && !IsNull(s.best_line[1])) {
-                    globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
 #ifdef _DEBUG
                     BoardState bs(board.state);
                     board.doMove(move);
@@ -1289,14 +1288,13 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
                     std::stringstream ponderbuf;
                     move_image(board,s.best_line[1],ponderbuf,uci);
                     std::cout << " ponder " << ponderbuf.str() << std::endl;
-                    // Perform learning (if enabled):
-                    if (!forceMode && !analyzeMode) {
-                        learn(board,*globals::gameMoves,doTrace);
-                    }
                 }
                 else {
                     std::cout << std::endl;
                 }
+                globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
+                // Perform learning (if enabled):
+                learn(board,*globals::gameMoves,doTrace);
             }
             else { // Winboard
                 globals::gameMoves->add_move(board,last_move,last_move_image,&last_stats,false);
