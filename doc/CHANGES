@@ -1,3 +1,6 @@
+Changes in Arasan 24.2.2 (April 2024):
+ 1) Fix learning in UCI mode with ponder off
+
 Changes in Arasan 24.2.1 (April 2024):
  1) Fix issue #57: loss on time in tournaments
  2) Increase default move overhead
