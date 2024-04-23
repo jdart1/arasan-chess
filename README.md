@@ -113,14 +113,8 @@ Default is 1.
 if installed. Default is true.
 - BookPath - path to the Arasan book. Default is book.bin in the same
 directory as the Arasan engine executable.
-- Favor frequent book moves - value from 0 to 100, default 50. Higher values
-favor selecting more frequent moves in the Arasan book.
-- Favor best book moves - value from 0 to 100, default 50. Higher values
-favor selecting better scoring moves in the Arasan book.
-- Favor high-weighted book moves - value from 0 to 100, default 100. Higher values
-favor selecting moves with positive manually set weights in the Arasan book.
-- Randomize book moves - value from 0 to 100, default 50. Higher values
-favor selecting moves with a greater degree of randomness.
+- Opening book variety - value from 0 to 100, default 50. Higher values
+produce more variety in book move selection.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
 - Learn file name - name & location of the file to store position learning data
@@ -153,14 +147,8 @@ down 5 pawns in score value.
 - OwnBook - true to enable Arasan's native opening book, false to disable.
 - BookPath - path to the Arasan book. Default is book.bin in the same
 directory as the Arasan engine executable.
-- Favor frequent book moves - value from 0 to 100, default 50. Higher values
-favor selecting more frequent moves in the Arasan book.
-- Favor best book moves - value from 0 to 100, default 50. Higher values
-favor selecting better scoring moves in the Arasan book.
-- Favor high-weighted book moves - value from 0 to 100, default 100. Higher values
-favor selecting moves with positive manually set weights in the Arasan book.
-- Randomize book moves - value from 0 to 100, default 50. Higher values
-favor selecting moves with a greater degree of randomness.
+- Opening book variety - value from 0 to 100, default 50. Higher values
+produce more variety in book move selection.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
 - Learn file name - name & location of the file to store position learning data

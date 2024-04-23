@@ -35,6 +35,9 @@ class BookReader {
     // Returns number of moves found.
     unsigned book_moves(const Board &b, std::vector<Move> &results);
 
+    // set the desired variety in move selection (0 - less variety, 100 (max) - more variety)
+    void setVariety(unsigned variety);
+
   protected:
     static constexpr unsigned OUTCOMES = 3;
 
@@ -53,9 +56,19 @@ class BookReader {
         return 1.0 / (1.0 + exp(-0.75 * contempt / Params::PAWN_VALUE));
     }
 
+    unsigned effectiveWeight(unsigned weight);
+
+    // These options are used internally and are set according to the "variety"
+    // setting. They are not directly exposed to interfaces.
+    struct BookSelectionOptions {
+        BookSelectionOptions() :
+            frequency(50), weighting(100), scoring(50), random(50) {
+        }
+        unsigned frequency, weighting, scoring, random;
+    } bookSelectionOptions;
+
     std::ifstream book_file;
     book::BookHeader hdr;
-
     std::mt19937_64 engine;
 };
 

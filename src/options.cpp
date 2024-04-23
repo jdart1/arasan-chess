@@ -87,18 +87,9 @@ void Options::set_option(const std::string &name, const std::string &value) {
         game_pathname = value;
     } else if (name == "book.book_enabled") {
         setOption<bool>(name, value, book.book_enabled);
-    } else if (name == "book.frequency") {
-        setOption<unsigned>(name, value, book.frequency);
-        book.frequency = std::min<unsigned>(100, std::max<unsigned>(0, book.frequency));
-    } else if (name == "book.weighting") {
-        setOption<unsigned>(name, value, book.weighting);
-        book.weighting = std::min<unsigned>(100, std::max<unsigned>(0, book.weighting));
-    } else if (name == "book.scoring") {
-        setOption<unsigned>(name, value, book.scoring);
-        book.scoring = std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
-    } else if (name == "book.random") {
-        setOption<unsigned>(name, value, book.random);
-        book.scoring = std::min<unsigned>(100, std::max<unsigned>(0, book.scoring));
+    } else if (name == "book.variety") {
+        setOption<unsigned>(name, value, book.variety);
+        globals::openingBook.setVariety(std::min<unsigned>(100,std::max<unsigned>(0, book.variety)));
     } else if (name == "learning.position_learning") {
         setOption<bool>(name, value, learning.position_learning);
     } else if (name == "learning.position_learning.threshold") {

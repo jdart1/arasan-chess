@@ -13,24 +13,9 @@ store_games=true
 # Set this option false to disable the opening book
 book.book_enabled=true
 #
-# Book frequency factor (0-100).
-# Higher frequency numbers cause the book to focus more on frequently
-# played moves.
-book.frequency=50
-#
-# Book weighting factor (0-100).
-# Higher numbers cause the book to steer more strongly towards moves
-# that have high manually configured weights.
-book.weighting=100
-#
-# Book scoring factor (0-100).
-# Higher numbers cause the book to steer more strongly towards moves
-# that have high scores (based on win/loss/draw history).
-book.scoring=50
-#
-# Book random factor (0-100).
-# Higher values cause more randomness in move selection.
-book.random=50
+# Opening book variety (0-100).
+# Higher values produce more variety in book move selection.
+book.variety=50
 #
 # Learning
 #

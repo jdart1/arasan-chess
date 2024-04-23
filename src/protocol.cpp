@@ -1635,14 +1635,8 @@ void Protocol::processWinboardOptions(const std::string &args) {
         // force close of current book, opening of new one:
         globals::openingBook.close();
         globals::delayedInit();
-    } else if (name == "Favor frequent book moves") {
-        Options::setOption<unsigned>(value,globals::options.book.frequency);
-    } else if (name == "Favor high-weighted book moves") {
-        Options::setOption<unsigned>(value,globals::options.book.weighting);
-    } else if (name == "Favor best book moves") {
-        Options::setOption<unsigned>(value,globals::options.book.scoring);
-    } else if (name == "Randomize book moves") {
-        Options::setOption<unsigned>(value,globals::options.book.random);
+    } else if (name == "Opening book variety") {
+        Options::setOption<unsigned>(value,globals::options.book.variety);
     } else if (name == "Can resign") {
         Options::setOption<bool>(value,globals::options.search.can_resign);
     } else if (name == "Resign threshold") {
@@ -1799,14 +1793,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << std::endl;
         std::cout << "option name OwnBook type check default " << (globals::options.book.book_enabled ? "true" : "false") << std::endl;
         std::cout << "option name BookPath type string default " << (globals::options.book.book_path == "" ? "book.bin" : globals::options.book.book_path) << std::endl;
-        std::cout << "option name Favor frequent book moves type spin default " <<
-            globals::options.book.frequency << " min 0 max 100" << std::endl;
-        std::cout << "option name Favor best book moves type spin default " <<
-            globals::options.book.scoring << " min 0 max 100" << std::endl;
-        std::cout << "option name Favor high-weighted book moves type spin default " <<
-            globals::options.book.weighting << " min 0 max 100" << std::endl;
-        std::cout << "option name Randomize book moves type spin default " <<
-            globals::options.book.random << " min 0 max 100" << std::endl;
+        std::cout << "option name Opening book variety type spin default " <<
+            globals::options.book.variety << " min 0 max 100" << std::endl;
         std::cout << "option name Threads type spin default " <<
             globals::options.search.ncpus << " min 1 max " <<
             Constants::MaxCPUs << std::endl;
@@ -1909,17 +1897,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::openingBook.close();
             globals::delayedInit();
         }
-        else if (uciOptionCompare(name,"Favor frequent book moves")) {
-            Options::setOption<unsigned>(value,globals::options.book.frequency);
-        }
-        else if (uciOptionCompare(name,"Favor best book moves")) {
-            Options::setOption<unsigned>(value,globals::options.book.scoring);
-        }
-        else if (uciOptionCompare(name,"Favor high-weighted book moves")) {
-            Options::setOption<unsigned>(value,globals::options.book.weighting);
-        }
-        else if (uciOptionCompare(name,"Randomize book moves")) {
-            Options::setOption<unsigned>(value,globals::options.book.random);
+        else if (uciOptionCompare(name,"Opening book variety")) {
+            Options::setOption<unsigned>(value,globals::options.book.variety);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,globals::options.search.multipv);
@@ -2511,14 +2490,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.book.book_enabled << "\"";
         std::cout << " option=\"BookPath -string " <<
             globals::options.book.book_path << "\"";
-        std::cout << " option=\"Favor frequent book moves -spin " <<
-            globals::options.book.frequency << " 1 100\"";
-        std::cout << " option=\"Favor best book moves -spin " <<
-            globals::options.book.scoring << " 1 100\"";
-        std::cout << " option=\"Favor high-weighted book moves -spin " <<
-            globals::options.book.weighting << " 1 100\"";
-        std::cout << " option=\"Randomize book moves -spin " <<
-            globals::options.book.random << " 1 100\"";
+        std::cout << " option=\"Opening book variety -spin " <<
+            globals::options.book.variety << " 0 100\"";
         std::cout << " option=\"Can resign -check " <<
             globals::options.search.can_resign << "\"";
         std::cout << " option=\"Resign threshold -spin " <<

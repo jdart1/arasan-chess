@@ -775,10 +775,7 @@ int CDECL main(int argc, char **argv) {
 
     globals::options.search.hash_table_size = 128 * 1024 * 1024;
     globals::options.book.book_enabled = true;
-    globals::options.book.frequency = 20;
-    globals::options.book.weighting = 20;
-    globals::options.book.scoring = 20;
-    globals::options.book.random = 50;
+    globals::options.book.variety = 75;
     globals::options.learning.position_learning = false;
     globals::options.search.can_resign = true;
     globals::options.search.resign_threshold = -Params::PAWN_VALUE*30;

@@ -92,7 +92,7 @@ Move BookReader::pick(const Board &b, bool trace) {
         counts[2] = info.draw;
         // compute a sample based on the count distribution and
         // calculate its reward
-        auto reward = (sample_dirichlet(counts) * globals::options.book.scoring) / 50;
+        auto reward = (sample_dirichlet(counts) * bookSelectionOptions.scoring) / 50;
         if (trace) {
 
             std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw)
@@ -101,20 +101,20 @@ Move BookReader::pick(const Board &b, bool trace) {
         }
         if (info.weight != book::NO_RECOMMEND) {
             // boost or reduce reward according to explicit weight
-            const double weightAdjust = double(info.weight) / book::MAX_WEIGHT;
+            const double adjustedWeight = static_cast<double>(effectiveWeight(info.weight)) / book::MAX_WEIGHT;
             reward =
-                reward * (1.0 + (2 * (weightAdjust - 0.5) * globals::options.book.weighting) / 100);
+                reward * (1.0 + (2 * (adjustedWeight - 0.5) / 100));
         }
         if (trace)
             std::cout << " adjusted reward: " << reward;
         // penalize infrequent moves
-        const double f = globals::options.book.frequency / 100.0;
+        const double f = bookSelectionOptions.frequency / 100.0;
         double freqAdjust = log10(static_cast<double>(info.win + info.loss + info.draw)) * 0.2 * f;
         if (trace)
             std::cout << " frequency: " << freqAdjust;
         reward += freqAdjust;
         // add a random amount based on randomness parameter
-        std::normal_distribution<double> dist(0, 0.0019 * globals::options.book.random);
+        std::normal_distribution<double> dist(0, 0.0019 * bookSelectionOptions.random);
         double rand = dist(engine);
         if (trace)
             std::cout << " random: " << rand;
@@ -241,7 +241,7 @@ double BookReader::sample_dirichlet(const std::array<double, OUTCOMES> &counts, 
 }
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
-    const double freqThreshold = pow(10.0, (globals::options.book.frequency - 100.0) / 37.0);
+    const double freqThreshold = pow(10.0, (bookSelectionOptions.frequency - 100.0) / 37.0);
 
     unsigned minCount = 0, maxCount = 0;
     if (globals::options.search.strength < 100) {
@@ -259,11 +259,26 @@ void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
     // ("don't play" moves).
     auto new_end =
         std::remove_if(results.begin(), results.end(), [&](const book::DataEntry &info) -> bool {
-            return info.weight == 0 ||
+            return effectiveWeight(info.weight) == 0 ||
                    (info.weight == book::NO_RECOMMEND &&
                     (info.count() < minCount || double(info.count()) / maxCount <= freqThreshold));
         });
     if (results.end() != new_end) {
         results.erase(new_end, results.end());
     }
+}
+
+void BookReader::setVariety(unsigned variety) {
+    assert(variety >= 0 && variety <= 100);
+    bookSelectionOptions.frequency = 100-variety;
+    bookSelectionOptions.weighting = std::min<unsigned>(0,2*(50-variety));
+    bookSelectionOptions.scoring = 100-variety;
+    bookSelectionOptions.random = variety;
+}
+
+// compute the effective weight, taking into account the book selection options
+unsigned BookReader::effectiveWeight(unsigned weight) {
+    unsigned x = static_cast<unsigned>(std::max(0,static_cast<int>(bookSelectionOptions.weighting)-50));
+    assert(x>=0 && x<=50);
+    return x + ((100-2*x)*weight)/100;
 }
