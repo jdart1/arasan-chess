@@ -122,9 +122,9 @@ TESTS = ..\tests
 
 # SMP flags. Note: we don't support a non-SMP build any more.
 !Ifdef DEBUG
-SMP=/MTd /DSMP /DSMP_STATS
+SMP=/MTd /DSMP_STATS
 !Else
-SMP=/MT /DSMP /DSMP_STATS
+SMP=/MT /DSMP_STATS
 !Endif
 # Do not run profile multithreaded - fails on current VC++ versions
 #PROF_RUN_SMP=-c 2

@@ -73,8 +73,8 @@ OSTYPE       := $(UNAME)
 endif
 ARCH         := $(shell uname -m)
 
-# SMP flags (note: we do not support a non-SMP build anymore)
-SMPFLAGS = -DSMP -DSMP_STATS -DUSE_INTRINSICS
+# SMP flags
+SMPFLAGS =  -DSMP_STATS
 SMPLIB   = -lpthread
 
 POPCNT_FLAGS := -DUSE_POPCNT

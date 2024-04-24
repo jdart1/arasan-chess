@@ -33,7 +33,7 @@ option(NNUE "Neural network support" ON)
 
 set(EXE_NAME arasanx)
 
-add_compile_definitions(SMP SMP_STATS USE_INTRINSICS)
+add_compile_definitions(SMP_STATS USE_INTRINSICS)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_compile_definitions(_DEBUG)
