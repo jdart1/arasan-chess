@@ -155,19 +155,27 @@ TUNER := tuner
 
 ifeq ("$(CC)","icc")
 # Intel C++ compiler
-CPP     = icc
-LD      = icc
-AR      = xiar
-FLAGS  := $(FLAGS) -std=c++17 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
-ifndef DEBUG
-OPT     = -O3 -fno-rtti -DNDEBUG
-GTB_OPT := -O3 -fno-rtti -DNDEBUG
+INTEL := 1
+else
+ifeq ("$(CC)","icpx")
+CLANG := 1
+ONEAPI := 1
+endif
 endif
 
+ifdef INTEL
+CPP     := $(CC)
+LD      := $(CC)
+AR      := xiar
+FLAGS  := $(FLAGS) -std=c++17 -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM
 PROF_GEN = -prof-gen -prof-dir $(PROF_DATA)
 PROF_USE = -prof-use -ip -prof-dir $(PROF_DATA)
+ifndef DEBUG
+OPT     = -O3 -fno-rtti -DNDEBUG
+endif
 
 else
+# not Intel
 
 ifneq (,$(findstring clang,$(CC)))
 CLANG := 1
@@ -176,11 +184,6 @@ else
 CC_VERSION := $(shell $(CC) -v  2>&1 >/dev/null | cat)
 ifneq (,$(findstring clang,$(CC_VERSION)))
 CLANG := 1
-else
-ifneq (,$(findstring oneAPI,$(CC_VERSION)))
-# new Intel compiler, based on clang
-CLANG := 1
-endif
 endif
 endif
 
@@ -190,12 +193,23 @@ CPP     := $(CC)
 LD      := $(CC)
 AR      = ar
 
-LLVM_PROFDATA = llvm-profdata
+LLVM_PROFDATA ?= llvm-profdata
+LLVM_PROFGEN ?= llvm-profgen
 
+ifdef CSSPGO
+ifdef ONEAPI
+PROF_GEN = -fprofile-sample-generate
+PROF_USE = -fprofile-sample-use=$(PROF_DATA)/arasanx.freq.prof
+else
+PROF_GEN = -fpseudo-probe-for-profiling
+PROF_USE = -fprofile-sample-use=$(PROF_DATA)/arasanx.freq.prof
+endif
+else
 PROF_GEN = -fprofile-generate=$(PROF_DATA)
 # extra flags for compile only (not link):
 PROF_GEN_EXTRA = -mllvm -enable-name-compression=false
 PROF_USE = -fprofile-use=$(PROF_DATA)
+endif
 
 FLAGS := -std=c++17 -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 ifndef DEBUG
@@ -285,6 +299,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.o
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
+	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROF_DATA)/*.*
 	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder selfplay
 
@@ -331,7 +346,11 @@ profiled: dirs
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile-run
 ifdef CLANG
+ifdef CSSPGO
+	$(LLVM_PROFGEN) --perfdata $(PROF_DATA)/arasanx.perf.data --binary $(PROFILE)/arasanx --output $(PROF_DATA)/arasanx.freq.prof
+else
 	$(LLVM_PROFDATA) merge -output=$(PROF_DATA)/default.profdata $(PROF_DATA)/default_*profraw
+endif
 endif
 	@$(MAKE) PASS=2 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
 
@@ -456,9 +475,15 @@ endif
 endif
 
 profile-run:
+ifdef CSSPGO
+	perf record -o $(PROF_DATA)/arasanx.perf.data -b -c 100003 -e br_inst_retired.near_taken:uppp -- $(PROFILE)/arasanx $(PROFILE_RUN_FLAGS) bench
+	rm $(PROFILE)/*.o
+	rm -f $(EXPORT)/arasanx
+else
 	$(PROFILE)/arasanx $(PGO_RUN_FLAGS) bench
 	rm $(PROFILE)/*.o
 	rm -f $(PROFILE)/arasanx $(EXPORT)/arasanx
+endif
 
 .PHONY: all clean dirs profile bmi2 profile-run install release
 
