@@ -278,7 +278,8 @@ void BookReader::setVariety(unsigned variety) {
 
 // compute the effective weight, taking into account the book selection options
 unsigned BookReader::effectiveWeight(unsigned weight) {
-    unsigned x = static_cast<unsigned>(std::max(0,static_cast<int>(bookSelectionOptions.weighting)-50));
-    assert(x>=0 && x<=50);
-    return x + ((100-2*x)*weight)/100;
+    unsigned x = 2*static_cast<unsigned>(std::max(0,static_cast<int>(bookSelectionOptions.weighting)-50));
+    assert(x>=0 && x<=100);
+    unsigned newWeight = x + ((100-x)*weight)/100;
+    return (weight == 0) ? newWeight/2 : weight;
 }
