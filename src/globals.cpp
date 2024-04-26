@@ -16,12 +16,13 @@ extern "C" {
 #elif !defined(_MSC_VER)
 // assume POSIX system
 extern "C" {
+#include <errno.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <unistd.h>
 }
 #endif
-
+#include <cstring>
 #include <cstdlib>
 #ifdef _WIN32
 #include <filesystem>
@@ -251,7 +252,11 @@ void globals::delayedInit(bool verbose) {
                 } else {
                     std::cout << debugPrefix << "warning: failed to load network file ";
                 }
-                std::cout << nnuePath << std::endl;
+                std::cout << nnuePath;
+                if (!nnueInitDone) {
+                    std::cout << ": " << strerror(errno);
+                }
+                std::cout << std::endl;
             }
         } else if (verbose) {
             std::cout << debugPrefix << "warning: no NNUE file path was set, network not loaded"
