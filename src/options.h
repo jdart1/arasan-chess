@@ -16,9 +16,7 @@ class Options {
     static constexpr int MAX_RATING = 3450;
 
     struct BookOptions {
-        BookOptions()
-            : variety(50), book_enabled(true),
-              book_path("") {}
+        BookOptions();
 
         unsigned variety;
         bool book_enabled;

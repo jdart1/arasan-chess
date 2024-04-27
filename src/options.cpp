@@ -38,6 +38,10 @@ Options::SearchOptions::SearchOptions()
       wideWindow(10 * Params::PAWN_VALUE) {
 }
 
+Options::BookOptions::BookOptions() : variety(50), book_enabled(true), book_path("") {
+    globals::openingBook.setVariety(50);
+}
+
 template <class T>
 int Options::setOption(const std::string &name, const std::string &valueString, T &value) {
     if (!Options::setOption<T>(valueString, value)) {

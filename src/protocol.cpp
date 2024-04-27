@@ -1637,6 +1637,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
         globals::delayedInit();
     } else if (name == "Opening book variety") {
         Options::setOption<unsigned>(value,globals::options.book.variety);
+        globals::openingBook.setVariety(globals::options.book.variety);
     } else if (name == "Can resign") {
         Options::setOption<bool>(value,globals::options.search.can_resign);
     } else if (name == "Resign threshold") {
@@ -1899,6 +1900,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
         else if (uciOptionCompare(name,"Opening book variety")) {
             Options::setOption<unsigned>(value,globals::options.book.variety);
+            globals::openingBook.setVariety(globals::options.book.variety);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,globals::options.search.multipv);

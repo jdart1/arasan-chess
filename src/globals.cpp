@@ -42,8 +42,8 @@ static constexpr char PATH_CHAR = '/';
 #endif
 
 MoveArray *globals::gameMoves;
-Options globals::options;
 BookReader globals::openingBook;
+Options globals::options;
 
 std::mutex globals::input_lock;
 

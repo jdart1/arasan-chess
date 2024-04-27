@@ -241,8 +241,9 @@ double BookReader::sample_dirichlet(const std::array<double, OUTCOMES> &counts, 
 }
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
-    const double freqThreshold = pow(10.0, (bookSelectionOptions.frequency - 100.0) / 37.0);
-
+    double x = bookSelectionOptions.frequency - 100.0;
+    double y = std::min<double>(0.0, bookSelectionOptions.frequency - 50.0);
+    const double freqThreshold = pow(10.0, (x + y) / 37.0);
     unsigned minCount = 0, maxCount = 0;
     if (globals::options.search.strength < 100) {
         minCount = (uint32_t)1 << ((100 - globals::options.search.strength) / 10);
@@ -271,14 +272,14 @@ void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
 void BookReader::setVariety(unsigned variety) {
     assert(variety >= 0 && variety <= 100);
     bookSelectionOptions.frequency = 100-variety;
-    bookSelectionOptions.weighting = std::min<unsigned>(0,2*(50-variety));
+    bookSelectionOptions.weighting = std::min<unsigned>(100,200-2*variety);
     bookSelectionOptions.scoring = 100-variety;
     bookSelectionOptions.random = variety;
 }
 
 // compute the effective weight, taking into account the book selection options
 unsigned BookReader::effectiveWeight(unsigned weight) {
-    unsigned x = 2*static_cast<unsigned>(std::max(0,static_cast<int>(bookSelectionOptions.weighting)-50));
+    unsigned x = 2*static_cast<unsigned>(std::max<int>(0,50-bookSelectionOptions.weighting));
     assert(x>=0 && x<=100);
     unsigned newWeight = x + ((100-x)*weight)/100;
     return (weight == 0) ? newWeight/2 : weight;
