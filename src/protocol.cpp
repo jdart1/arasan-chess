@@ -1635,7 +1635,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
         // force close of current book, opening of new one:
         globals::openingBook.close();
         globals::delayedInit();
-    } else if (name == "Opening book variety") {
+    } else if (name == "Book variety") {
         Options::setOption<unsigned>(value,globals::options.book.variety);
         globals::openingBook.setVariety(globals::options.book.variety);
     } else if (name == "Can resign") {
@@ -1794,7 +1794,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << std::endl;
         std::cout << "option name OwnBook type check default " << (globals::options.book.book_enabled ? "true" : "false") << std::endl;
         std::cout << "option name BookPath type string default " << (globals::options.book.book_path == "" ? "book.bin" : globals::options.book.book_path) << std::endl;
-        std::cout << "option name Opening book variety type spin default " <<
+        std::cout << "option name Book variety type spin default " <<
             globals::options.book.variety << " min 0 max 100" << std::endl;
         std::cout << "option name Threads type spin default " <<
             globals::options.search.ncpus << " min 1 max " <<
@@ -1898,7 +1898,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::openingBook.close();
             globals::delayedInit();
         }
-        else if (uciOptionCompare(name,"Opening book variety")) {
+        else if (uciOptionCompare(name,"Book variety")) {
             Options::setOption<unsigned>(value,globals::options.book.variety);
             globals::openingBook.setVariety(globals::options.book.variety);
         }
@@ -2492,7 +2492,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.book.book_enabled << "\"";
         std::cout << " option=\"BookPath -string " <<
             globals::options.book.book_path << "\"";
-        std::cout << " option=\"Opening book variety -spin " <<
+        std::cout << " option=\"Book variety -spin " <<
             globals::options.book.variety << " 0 100\"";
         std::cout << " option=\"Can resign -check " <<
             globals::options.search.can_resign << "\"";

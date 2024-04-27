@@ -113,14 +113,14 @@ Default is 1.
 if installed. Default is true.
 - BookPath - path to the Arasan book. Default is book.bin in the same
 directory as the Arasan engine executable.
-- Opening book variety - value from 0 to 100, default 50. Higher values
+- Book variety - value from 0 to 100, default 50. Higher values
 produce more variety in book move selection.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
 - Learn file name - name & location of the file to store position learning data
 - UCI_LimitStrength - true or false, default false. True to limit the engine
 playing strength.
-- UCI_Elo - desired playing strength, settable from Elo 1000 to Elo 2600. This is
+- UCI_Elo - desired playing strength, settable from Elo 1000 to Elo 3450. This is
 only effective if UCI_LimitStrength is set true.
 - Set processor affinity - for NUMA builds only. If set true, binds threads to
 cores.
@@ -147,7 +147,7 @@ down 5 pawns in score value.
 - OwnBook - true to enable Arasan's native opening book, false to disable.
 - BookPath - path to the Arasan book. Default is book.bin in the same
 directory as the Arasan engine executable.
-- Opening book variety - value from 0 to 100, default 50. Higher values
+- Book variety - value from 0 to 100, default 50. Higher values
 produce more variety in book move selection.
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
