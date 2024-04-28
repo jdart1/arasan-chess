@@ -97,13 +97,13 @@ Move BookReader::pick(const Board &b, bool trace) {
 
             std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw)
                       << "]";
+            std::cout << " weight: " << static_cast<int>(info.weight);
             std::cout << " reward: " << reward;
         }
         if (info.weight != book::NO_RECOMMEND) {
             // boost or reduce reward according to explicit weight
-            const double adjustedWeight = static_cast<double>(effectiveWeight(info.weight)) / book::MAX_WEIGHT;
-            reward =
-                reward * (1.0 + (2 * (adjustedWeight - 0.5) / 100));
+            const double adjustedWeight = static_cast<double>(effectiveWeight(info.weight));
+            reward *= (1.0 + 2 * (adjustedWeight - 0.5)) / book::MAX_WEIGHT;
         }
         if (trace)
             std::cout << " adjusted reward: " << reward;
