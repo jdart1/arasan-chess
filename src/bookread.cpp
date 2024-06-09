@@ -270,7 +270,7 @@ void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
 }
 
 void BookReader::setVariety(unsigned variety) {
-    assert(variety >= 0 && variety <= 100);
+    assert(variety <= 100);
     bookSelectionOptions.frequency = 100-variety;
     bookSelectionOptions.weighting = std::min<unsigned>(100,200-2*variety);
     bookSelectionOptions.scoring = 100-variety;
@@ -280,7 +280,7 @@ void BookReader::setVariety(unsigned variety) {
 // compute the effective weight, taking into account the book selection options
 unsigned BookReader::effectiveWeight(unsigned weight) {
     unsigned x = 2*static_cast<unsigned>(std::max<int>(0,50-bookSelectionOptions.weighting));
-    assert(x>=0 && x<=100);
+    assert(x<=100);
     unsigned newWeight = x + ((100-x)*weight)/100;
     return (weight == 0) ? newWeight/2 : weight;
 }
