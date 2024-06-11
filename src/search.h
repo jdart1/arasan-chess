@@ -1,4 +1,4 @@
-// Copyright 1994-2023 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2024 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -561,6 +561,8 @@ private:
         return time_target + xtra_time;
     }
 
+    int computeTimeCheckInterval(uint64_t num_nodes) const noexcept;
+
     // pointer to function, called to output status during
     // a search.
     PostFunction post_function;
@@ -597,6 +599,8 @@ private:
     SearchType typeOfSearch;
     int time_check_counter;
     int timeCheckInterval;
+    float timeCheckFactor;
+    uint64_t last_time_check;
 #ifdef SMP_STATS
     int sample_counter;
 #endif

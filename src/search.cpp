@@ -212,6 +212,9 @@ SearchController::SearchController()
       stopped(false),
       typeOfSearch(TimeLimit),
       time_check_counter(0),
+      timeCheckInterval(1000),
+      timeCheckFactor(1.0),
+      last_time_check(0),
 #ifdef SMP_STATS
       sample_counter(0),
 #endif
@@ -352,6 +355,8 @@ Move SearchController::findBestMove(
           timeCheckInterval = 2048/NODE_ACCUM_THRESHOLD;
        }
     }
+    timeCheckFactor = 1.0;
+    last_time_check = 0;
     tb_probe_in_search = true;
     computerSide = board.sideToMove();
 
@@ -854,24 +859,23 @@ int Search::checkTime() {
     }
 
     CLOCK_TYPE current_time = getCurrentTime();
-    controller->elapsed_time = getElapsedTime(controller->startTime,current_time);
+    uint64_t elapsed_time = getElapsedTime(controller->startTime,current_time);
+    uint64_t last_time_check = controller->last_time_check;
+    controller->last_time_check = controller->elapsed_time = elapsed_time;
 
     // Do not allow time-based termination if the search has not
     // completed even one iteration, since we may be failing low and
     // have no move
-    if (controller->stats->completedDepth > 0) {
-       if (controller->typeOfSearch == FixedTime) {
-          if (controller->elapsed_time >= controller->time_target) {
-             return 1;
-          }
+    if (controller->stats->completedDepth > 0 && (controller->typeOfSearch == FixedTime ||
+                                                  controller->typeOfSearch == TimeLimit)) {
+       const uint64_t limit = controller->typeOfSearch == FixedTime ? controller->time_target : controller->getTimeLimit();
+       if (elapsed_time >= limit) {
+           return 1;
        }
-       else if (controller->typeOfSearch == TimeLimit) {
-          if (controller->elapsed_time > controller->getTimeLimit()) {
-             if (debugOut()) {
-                std::cout << globals::debugPrefix << "terminating, max time reached" << std::endl;
-             }
-             return 1;
-          }
+       // If we are not checking time often enough, adjust down the time check interval
+       if (last_time_check > 0 && elapsed_time >= 100 && (elapsed_time - last_time_check) > limit / 10) {
+           controller->timeCheckFactor *= std::max(0.5, 1.0 - 3*static_cast<float>(elapsed_time - last_time_check)/limit);
+           controller->timeCheckInterval = controller->computeTimeCheckInterval(stats.num_nodes);
        }
     }
 
@@ -1204,15 +1208,6 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
                 controller->terminateNow();
                 break;
             }
-            if (controller->elapsed_time > 200) {
-               controller->timeCheckInterval = int((20L*stats.num_nodes)/(controller->elapsed_time*NODE_ACCUM_THRESHOLD));
-               if ((int)controller->time_limit - (int)controller->elapsed_time < 100) {
-                  controller->timeCheckInterval /= 2;
-               }
-               if (mainThread() && debugOut()) {
-                  std::cout << globals::debugPrefix << "time check interval=" << controller->timeCheckInterval << " elapsed_time=" << controller->elapsed_time << " target=" << controller->getTimeLimit() << std::endl;
-               }
-            }
             stats.failHigh = value >= hi_window;
             stats.failLow = value <= lo_window;
             // store root search history entry
@@ -1313,8 +1308,15 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
                 }
             }
          } while (!terminate && (stats.failLow || stats.failHigh));
+         // set time check interval based on NPS
+         if (controller->elapsed_time > 100) {
+             controller->timeCheckInterval = controller->computeTimeCheckInterval(stats.num_nodes);
+         }
+         if (debugOut() && !terminate && mainThread() && controller->elapsed_time > 100) {
+             std::cout << globals::debugPrefix << "elapsed time=" << controller->elapsed_time << " time check interval=" <<
+                 controller->timeCheckInterval << std::endl;
+         }
          // Search value should now be in bounds (unless we are terminating)
-
          // Check for forced move, but only at depth 2 (so we get a
          // ponder move if possible).
          // Do not terminate here if a resign score is returned
@@ -1877,6 +1879,10 @@ void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
             std::cout << globals::debugPrefix << "selected suboptimal move " << move_image << std::endl;
         }
     }
+}
+
+int SearchController::computeTimeCheckInterval(uint64_t num_nodes) const noexcept {
+    return static_cast<int>((20L*num_nodes*timeCheckFactor)/(elapsed_time*NODE_ACCUM_THRESHOLD));
 }
 
 #ifdef _TRACE
