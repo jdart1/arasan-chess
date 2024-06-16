@@ -40,13 +40,18 @@ to pull these dependencies into your your source tree:
 
 `git submodule update --init --recursive`
 
-Arasan now requires a modern compiler with at least C++-17 support.
+Arasan now requires a modern compiler with at least C++-17 support. Clang is the
+recommended compiler (can use clang-cl on Windows). Clang compiles are measurably faster, due
+to better code generation, especially in the NNUE code.
 
-Limited testing has been done on other OSs and architectures other
-than x86 and amd64. However, the code is designed to be portable.
-In particular, there is support for big-endian architectures.
+
+The primary architectures supported and tested are x86, x86_64, and ARM.
+However, the code is designed to be portable. In particular, there is support
+for big-endian architectures.
 
 # Building on Linux or Mac
+
+32-bit Linux distros are not supported.
 
 There is a makefile in the src directory.
 
@@ -67,10 +72,10 @@ The following targets are defined in the makefile:
 - release: builds the release tarball
 - install: installs the chess engine on the system (requires root or sudo)
 
-By default the Makefile will build a "generic" executable that will be
+By default, the Makefile will build a "generic" x86_64 executable that will be
 relatively slow but run on practically all systems except very old
 ones. This generic compile currently assumes SSE2 support at least is
-present, for an x86 or x86_64 architecture.
+present.
 
 The Makefile supports compilation for other instruction sets by specifying
 the BUILD_TYPE variable.
@@ -92,28 +97,26 @@ make BUILD_TYPE=avx2 utils
 
 will build the utilities with AVX2 support.
 
-Note: the instruction sets supported via BUILD_TYPE will only work on
-CPUs that support these instructions, and the non-default settings
-work best with a 64-bit build.
-
-If necessary, you can specify the compiler by passing the CC variable
+You can specify the compiler by passing the CC variable
 on the command line, and CXXFLAGS can also be used to pass additional
-flags. So for example to make an build of Arasan using gcc-10
+compliation flags. So, for example, to make an build of Arasan using gcc-10
 with c++20 support, do:
 
 make CC=gcc-10 CXXFLAGS=-std=c++20
+
+As noted earlier, clang is recommended for best perfomance.
 
 Defining NUMA in the Makefile will build a version that has support
 for NUMA (Non-Uniform Memory Access) machines. NUMA support relies
 on the hwloc library version 2.0 or higher. Note: you must have a
 compatible hwloc library in the library search path at runtime.
 
-The Arasan engine binary is named "arasanx-32" or "arasanx-64," followed
+The Arasan engine binary is named "arasanx-64," followed
 by the instruction set selected at build time (if specified), so for example:
 "arasanx-64-avx2-bmi2."  "-numa" is added for a NUMA
 build.
 
-Note: "make release" will build the release tarball and place it in the
+"make release" will build the release tarball and place it in the
 release subdirectory. This target uses a Python tool git-archive-all
 (https://github.com/Kentzo/git-archive-all), which needs to be
 installed and its path set in the Makefile (or passed to it in the
@@ -127,12 +130,14 @@ variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive," so
 
 ## Recommended build method
 
-I recommend building the engine with MSVC and NMAKE, using the supplied makefile
+I recommend building the engine from the command line with NMAKE, using the supplied makefile
 (named "Makefile" in the Windows source zip, or "Makefile.win" in the
 github repo). This is the most reliable and tested method. Visual
 Studio Community Edition is free for use on open-source projects and
 includes the needed command-line tools. You need a recent version with C++ 17
-support.
+support. As mentioned above, use of clang-cl (can be installed along with MSVC)
+is recommended for best performance; this can be specified by including `CC=clang-cl`
+on the command line.
 
 The following targets are defined in the makefile:
 
@@ -147,17 +152,15 @@ by setting the BUILD_TYPE variable. For example:
 `make BUILD_TYPE=avx2` will build a version of the program with AVX2
 support. Current build types supported are:
 
-- modern (implies: sse3, sse4, sse4.1, popcnt)
-- avx2 (includes "modern" instruction sets)
-- avx512 (includes "avx2" and "modern" instruction sets)
+- old (assumes no SIMD instructions, not even SSE2)
+- modern (implies support for: POPCNT, SSSE3, SSE4.1)
+- avx2 (assumes availabiity of AVX2 instruction set, plus "modern" instructions)
+- avx2-bmi2 (assumes avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
+- avx512 (assumes AVX512, plus avaiability of AVX2 and BMI2 instruction sets, plus "modern" instructions)
 
 The default with no BUILD_TYPE set is a very generic executable that
 does not assume any advanced instruction set, but does assume SSE2,
 available on all x86 processors since about 2000.
-
-"clang-cl" is now supported for compilation on Windows with nmake.
-Add `CC=clang-cl` to the nmake command line to enable use of this
-compiler.
 
 Release binaries from a build are placed in the
 "\<target>\Release" directory, where <target> is "win32" or "win64",
