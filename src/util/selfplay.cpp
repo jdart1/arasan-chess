@@ -1,4 +1,4 @@
-// Copyright 2021-2023 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2024 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "chessio.h"
@@ -553,7 +553,8 @@ static void selfplay(ThreadData &td) {
                 } else if (sp_options.semiRandomize && !skipRandom &&
                            (noSemiRandom >= sp_options.semiRandomizeInterval) &&
                            (semiRandomCount < sp_options.semiRandomPerGame) &&
-                           (int(board.men()) > globals::EGTBMenCount) &&
+                           //(int(board.men()) > globals::EGTBMenCount) &&
+                           !board.materialDraw() &&
                            ((sp_options.randomizeType != SelfPlayOptions::RandomizeType::Nodes) ||
                             (prevNodes && prevDepth >= sp_options.depthLimit))) {
                     int candCount = 0;
