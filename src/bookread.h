@@ -56,7 +56,7 @@ class BookReader {
         return 1.0 / (1.0 + exp(-0.75 * contempt / Params::PAWN_VALUE));
     }
 
-    unsigned effectiveWeight(unsigned weight);
+    unsigned effectiveWeight(unsigned weight) const noexcept;
 
     // These options are used internally and are set according to the "variety"
     // setting. They are not directly exposed to interfaces.
