@@ -1,4 +1,4 @@
-// Copyright 1987-2023 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2024 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -1577,10 +1577,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #ifdef _TRACE
         if (mainThread()) {
             std::cout << globals::debugPrefix << "0. ";
-            std::cout << move_index << ' ';
             MoveImage(move,std::cout);
-            std::cout << ' ' << try_score;
-            std::cout << std::endl;
+            std::cout << " (" << move_index << "//" << mg.moveCount() << ") ";
+            std::cout << try_score << std::endl;
         }
 #endif
         board.undoMove(move,save_state);
