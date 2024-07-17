@@ -600,7 +600,7 @@ private:
     int time_check_counter;
     int timeCheckInterval;
     float timeCheckFactor;
-    uint64_t last_time_check;
+    std::atomic<uint64_t> last_time_check;
 #ifdef SMP_STATS
     int sample_counter;
 #endif
@@ -643,7 +643,7 @@ private:
     score_t initialValue;
     RootMoveGenerator *mg;
 
-    uint64_t elapsed_time; // in milliseconds
+    std::atomic<uint64_t> elapsed_time; // in milliseconds
     std::array <unsigned, Constants::MaxPly> search_counts;
     std::mutex search_count_mtx;
 

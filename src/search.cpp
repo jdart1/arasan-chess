@@ -859,9 +859,8 @@ int Search::checkTime() {
     }
 
     CLOCK_TYPE current_time = getCurrentTime();
-    uint64_t elapsed_time = getElapsedTime(controller->startTime,current_time);
-    uint64_t last_time_check = controller->last_time_check;
-    controller->last_time_check = controller->elapsed_time = elapsed_time;
+    uint64_t elapsed_time = controller->elapsed_time.exchange(getElapsedTime(controller->startTime,current_time));
+    uint64_t last_time_check = controller->last_time_check.exchange(elapsed_time);
 
     // Do not allow time-based termination if the search has not
     // completed even one iteration, since we may be failing low and
