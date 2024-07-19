@@ -20,7 +20,6 @@ extern "C" {
 #include <limits.h>
 #include <unistd.h>
 #include <sys/resource.h>
-#include <sys/types.h>
 }
 #endif
 #include <cstring>
@@ -139,7 +138,7 @@ std::string globals::derivePath(const std::string &base, const std::string &file
 int globals::initGlobals() {
 #ifndef _WIN32
     struct rlimit rl;
-    const rlim_t STACK_MAX = static_cast<rlim_t>(globals::LINUX_STACK_SIZE);
+    const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
     auto result = getrlimit(RLIMIT_STACK, &rl);
     if (result == 0)
     {

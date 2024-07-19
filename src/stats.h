@@ -1,4 +1,4 @@
- // Copyright 1994-2009, 2012-2018, 2020 by Jon Dart. All Rights Reserved.
+ // Copyright 1994-2009, 2012-2018, 2020-2021, 2024 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
@@ -31,8 +31,8 @@ struct Statistics
    unsigned depth;
    std::atomic<unsigned> completedDepth;
 
-   unsigned multipv_count; // only for UCI
-   unsigned multipv_limit; // only for UCI
+   unsigned multipv_count;
+   std::atomic<unsigned> multipv_limit;
    std::atomic<bool> failHigh, failLow;
    int mvtot; // total root moves
    int mvleft; // moves left to analyze at current depth

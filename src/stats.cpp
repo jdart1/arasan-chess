@@ -28,7 +28,7 @@ Statistics::Statistics(const Statistics &s)
       fromBook = s.fromBook;
       complete = s.complete;
       multipv_count = s.multipv_count;
-      multipv_limit = s.multipv_limit;
+      multipv_limit = s.multipv_limit.load();
       failHigh = s.failHigh.load();
       failLow = s.failLow.load();
       int i = 0;
@@ -90,7 +90,7 @@ Statistics & Statistics::operator = (const Statistics &s)
       fromBook = s.fromBook;
       complete = s.complete;
       multipv_count = s.multipv_count;
-      multipv_limit = s.multipv_limit;
+      multipv_limit = s.multipv_limit.load();
       failHigh = s.failHigh.load();
       failLow = s.failLow.load();
       int i = 0;

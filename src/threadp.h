@@ -59,11 +59,22 @@ public:
    void resize(unsigned n);
 
    template <void (Search::*fn)()>
-      void forEachSearch() {
+   void forEachSearch() {
       std::unique_lock<std::mutex> lock(poolLock);
       for (unsigned i = 0; i < nThreads; i++) {
           if (data[i] && data[i]->work) {
               std::mem_fn(fn)(data[i]->work);
+          }
+      }
+   }
+
+   // with int argument
+   template <void (Search::*fn)(int param)>
+   void forEachSearch(int param) {
+      std::unique_lock<std::mutex> lock(poolLock);
+      for (unsigned i = 0; i < nThreads; i++) {
+          if (data[i] && data[i]->work) {
+              std::mem_fn(fn)(data[i]->work,param);
           }
       }
    }

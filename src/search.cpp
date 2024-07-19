@@ -227,6 +227,7 @@ SearchController::SearchController()
       tb_root_hits(0),
       tb_probe_in_search(true),
       monitorThread(0),
+      srcOpts(globals::options.search),
 #ifdef SYZYGY_TBS
       tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
 #endif
@@ -241,7 +242,6 @@ SearchController::SearchController()
     sample_counter = SAMPLE_INTERVAL;
 #endif
     pool = new ThreadPool(this,globals::options.search.ncpus);
-
     ThreadInfo *ti = pool->mainThread();
     ti->state = ThreadInfo::Working;
     hashTable.initHash((size_t)(globals::options.search.hash_table_size));
@@ -442,10 +442,9 @@ Move SearchController::findBestMove(
    score_t value = Constants::INVALID_SCORE;
 #ifdef SYZYGY_TBS
    tb_hit = 0;
-   updateSearchOptions();
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
-   if (globals::options.search.use_tablebases) {
+   if (srcOpts.use_tablebases) {
        // Lock because the following calls is not thread-safe. In normal use
        // we don't need to worry about this, but it is possible there are
        // two concurrent SearchController instances in a program, in which case
@@ -463,7 +462,6 @@ Move SearchController::findBestMove(
            stats->tb_value = tb_score;
            // do not probe in the search
            tb_probe_in_search = false;
-           updateSearchOptions();
            if (debugOut()) {
                std::cout << globals::debugPrefix << board << " root tb hit, score=";
                Scoring::printScore(tb_score,std::cout);
@@ -520,7 +518,7 @@ Move SearchController::findBestMove(
            (int)stats->failLow;
        std::cout << " pv=" << rootSearch->stats.best_line_image << std::endl;
    }
-   if (globals::options.search.multipv == 1) {
+   if (srcOpts.multipv == 1) {
        BestThreadResults res;
        getBestThreadStats(res,debugOut());
        // In reduced-strength mode, sometimes play a suboptimal move
@@ -691,11 +689,28 @@ void SearchController::clearStopFlags() {
 }
 
 void SearchController::updateSearchOptions() {
+    srcOpts = globals::options.search;
     // pool size is part of search options and may have changed,
     // so adjust that first:
     pool->resize(globals::options.search.ncpus);
     // update each search thread's local copy of the options:
     pool->forEachSearch<&Search::setSearchOptions>();
+}
+
+void SearchController::updateTBOptions() {
+#ifdef SYZYGY_TBS
+    srcOpts.use_tablebases = globals::options.search.use_tablebases;
+    srcOpts.syzygy_path = globals::options.search.syzygy_path;
+    srcOpts.syzygy_50_move_rule = globals::options.search.syzygy_50_move_rule;
+    srcOpts.syzygy_probe_depth = globals::options.search.syzygy_probe_depth;
+    pool->forEachSearch<&Search::updateTBOptions>();
+#endif
+}
+
+void SearchController::setMultiPV(int multipv_count) {
+    srcOpts.multipv = multipv_count;
+    // update each search thread's local copy of the options:
+    pool->forEachSearch<&Search::setMultiPV>(multipv_count);
 }
 
 void SearchController::setTalkLevel(TalkLevel t) {
@@ -840,7 +855,6 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     talkLevel(c->getTalkLevel())
 {
     // Note: context was cleared in its constructor
-    setSearchOptions();
     random_engine.seed(getRandomSeed());
 }
 
@@ -1123,14 +1137,14 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
    // Initialize this thread's move generator from the controller's,
    // which will have the ranked, sorted, filtered move list.
    RootMoveGenerator mg(*(controller->mg),&context);
-   stats.multipv_limit = std::min<int>(mg.moveCount(),globals::options.search.multipv);
    iterationDepth = 0;
    for (int nominalDepth = 1;(iterationDepth = controller->nextSearchDepth(iterationDepth,ti->index,
-                                                       controller->ply_limit)) <= controller->ply_limit &&
+            controller->ply_limit)) <= controller->ply_limit &&
             !terminate; ++nominalDepth) {
       MoveSet excluded(controller->exclude);
       for (stats.multipv_count = 0;
-           stats.multipv_count < stats.multipv_limit && !terminate;
+           stats.multipv_count < (stats.multipv_limit = std::min<int>(mg.moveCount(),srcOpts.multipv))
+                                  && !terminate;
            stats.multipv_count++) {
          score_t lo_window, hi_window;
          score_t aspirationWindow = ASPIRATION_WINDOW[0];
@@ -1325,7 +1339,7 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
              !(controller->background || (controller->typeOfSearch == FixedTime && controller->time_target == Constants::INFINITE_TIME)) &&
              mg.moveCount() == 1 &&
              iterationDepth >= 2 &&
-             !(srcOpts.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
+             !(globals::options.search.can_resign && stats.display_value <= srcOpts.resign_threshold)) {
              if (mainThread() && debugOut()) {
                  std::cout << globals::debugPrefix << "single legal move, terminating" << std::endl;
              }
@@ -2647,7 +2661,7 @@ score_t Search::search()
     if (srcOpts.use_tablebases) {
         using_tb = board.men() <= globals::EGTBMenCount &&
             controller->tb_probe_in_search &&
-            node->depth/DEPTH_INCREMENT >= globals::options.search.syzygy_probe_depth;
+            node->depth/DEPTH_INCREMENT >= srcOpts.syzygy_probe_depth;
     }
 #endif
     HashEntry hashEntry;
@@ -3513,7 +3527,8 @@ void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
     node->ply = 0;
     // depth will be set later
     stats.clear();
-
+    // propagate options from controller to this search instance
+    srcOpts = controller->srcOpts;
 #ifdef SYZYGY_TBS
     // Propagate tb value from controller to stats
     stats.tb_value = controller->tb_score;

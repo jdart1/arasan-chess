@@ -37,7 +37,7 @@ class Options {
         int syzygy_probe_depth;
 #endif
         int strength; // 0 .. 100
-        int multipv;  // for UCI only
+        int multipv;
         int ncpus;
 #ifdef NNUE
         bool useNNUE;

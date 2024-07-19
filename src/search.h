@@ -201,6 +201,20 @@ public:
     // forces a reload of that cache from the global options:
     void setSearchOptions();
 
+    // override global options setting
+    void setMultiPV(int multipv_count) {
+        srcOpts.multipv = multipv_count;
+    }
+
+    void updateTBOptions() {
+#ifdef SYZYGY_TBS
+        srcOpts.use_tablebases = globals::options.search.use_tablebases;
+        srcOpts.syzygy_path = globals::options.search.syzygy_path;
+        srcOpts.syzygy_50_move_rule = globals::options.search.syzygy_50_move_rule;
+        srcOpts.syzygy_probe_depth = globals::options.search.syzygy_probe_depth;
+#endif
+    }
+
     score_t drawScore(const Board &board) const;
 
 #ifdef TUNE
@@ -416,6 +430,8 @@ public:
 
     void updateSearchOptions();
 
+    void updateTBOptions();
+
     void setBackground(bool b) {
         background = b;
     }
@@ -539,6 +555,9 @@ public:
       return talkLevel == TalkLevel::Debug;
    }
 
+   // override global options setting for MultiPV
+   void setMultiPV(int limit);
+
 private:
 
    // Adjust time usage after root fail high or fail low. A temporary
@@ -617,6 +636,8 @@ private:
 
     MoveSet include;
     MoveSet exclude;
+
+    Options::SearchOptions srcOpts;
 
     struct SearchHistory
     {

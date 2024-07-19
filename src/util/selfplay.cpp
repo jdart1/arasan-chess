@@ -8,6 +8,7 @@
 #include "notation.h"
 #include "scoring.h"
 #include "search.h"
+#include <array>
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -106,7 +107,7 @@ static struct SelfPlayOptions {
     std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
-    unsigned maxBookPly = 8;
+    unsigned maxBookPly = 7;
     bool randomize = true;
     unsigned randomizeRange = 8;
     unsigned randomizeInterval = 2;
@@ -117,6 +118,7 @@ static struct SelfPlayOptions {
     RandomizeType randomizeType = RandomizeType::MultiPV;
     unsigned semiRandomizeInterval = 11;
     unsigned semiRandomPerGame = 4;
+    unsigned multipv_limit = 4;
     int multiPVMargin = static_cast<int>(0.2 * Params::PAWN_VALUE);
     bool skipNonQuiet = true;
     OutputFormat format = OutputFormat::Bin;
@@ -314,32 +316,9 @@ class binEncoder {
     }
 };
 
-static Move randomMove(const Board &board, RootMoveGenerator &mg, Statistics &stats,
-                       ThreadData &td) {
-    unsigned n = mg.moveCount();
-    if (n == 0) {
-        if (board.isLegalDraw()) {
-            stats.state = Draw;
-            stats.display_value = 0;
-        } else if (board.checkStatus() == InCheck) {
-            stats.state = Checkmate;
-            stats.display_value = -Constants::MATE;
-        } else {
-            stats.state = Stalemate;
-            stats.display_value = 0;
-        }
-        return NullMove;
-    }
-    RootMoveGenerator::RootMoveList ml(mg.getMoveList());
-    assert(ml.size() != 0);
-    std::uniform_int_distribution<unsigned> dist(0, ml.size() - 1);
-    unsigned pick = dist(td.engine);
-    Move m = ml[pick].move;
-    return m;
-}
-
 struct MoveResult {
     MoveResult() : move(NullMove), score(0) {}
+    MoveResult(const Move &m, int s): move(m), score(s) {}
     Move move;
     int score;
 };
@@ -356,6 +335,85 @@ static MoveResult pick(const MoveResult *moves, unsigned count, ThreadData &td) 
     std::uniform_int_distribution<unsigned> dist(0, count - 1);
     int select = dist(td.engine);
     return moves[select];
+}
+
+static Move randomMove(Board &board, SearchController *searcher, Statistics &stats, ThreadData &td) {
+    RootMoveGenerator mg(board);
+    Move m = NullMove;
+    if (mg.moveCount() == 0) {
+        if (board.isLegalDraw()) {
+            stats.state = Draw;
+            stats.display_value = 0;
+        } else if (board.checkStatus() == InCheck) {
+            stats.state = Checkmate;
+            stats.display_value = -Constants::MATE;
+        } else {
+            stats.state = Stalemate;
+            stats.display_value = 0;
+        }
+        return NullMove;
+    }
+    if (mg.moveCount() > 1 && (sp_options.useRanking || sp_options.limitEarlyKingMoves)) {
+        Move candidates[Constants::MaxMoves], all[Constants::MaxMoves];
+        bool inCheck = board.checkStatus() == InCheck;
+        int index;
+        unsigned i = 0, j = 0;
+        if (sp_options.useRanking) {
+            for (const RootMoveGenerator::RootMove &rm : mg.getMoveList()) {
+                all[j++] = rm.move;
+            }
+            if (mg.moveCount() >= 2) {
+                RootMoveGenerator::RootMoveList mra;
+                searcher->rankMoves(board, 2, mra);
+                if (mra.size()) { // size may be zero in case of checkmate, statemate, etc.
+                    const int best = mra[0].score;
+                    auto new_end = std::remove_if(mra.begin() + 1, mra.end(),
+                                                  [&](const RootMoveGenerator::RootMove &r) -> bool {
+                                                      if (r.score < best - sp_options.randomTolerance)
+                                                          return true;
+                                                      BoardState state(board.state);
+                                                      board.doMove(r.move);
+                                                      int rep = board.repCount();
+                                                      board.undoMove(r.move, state);
+                                                      // avoid repetitions
+                                                      return rep > 0;
+                                                  });
+                    candidates[i++] = mra[0].move;
+                    for (auto it = mra.begin() + 1; it != new_end; ++it) {
+                        assert((*it).score <= best);
+                        assert((*it).score >= best - sp_options.randomTolerance);
+                        if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves &&
+                            PieceMoved(m) == King)
+                            continue;
+                        candidates[i++] = (*it).move;
+                    }
+                    assert(i);
+                }
+            }
+        } else {
+            while (!IsNull(m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
+                assert(j < Constants::MaxMoves);
+                all[j++] = m;
+                if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves &&
+                    PieceMoved(m) == King)
+                    continue;
+                assert(i < Constants::MaxMoves);
+                candidates[i++] = m;
+            }
+        }
+        if (i) {
+            m = pick(candidates, i, td);
+        } else {
+            m = pick(all, j, td);
+        }
+    } else {
+        RootMoveGenerator::RootMoveList ml(mg.getMoveList());
+        assert(ml.size() != 0);
+        std::uniform_int_distribution<unsigned> dist(0, ml.size() - 1);
+        unsigned pick = dist(td.engine);
+        m = ml[pick].move;
+    }
+    return m;
 }
 
 class Monitor {
@@ -378,6 +436,7 @@ static void semiRandomMove(const Board &board, SelfPlayOptions::RandomizeType ty
     Statistics stats;
     state = NormalState;
     if (type == SelfPlayOptions::RandomizeType::Nodes) {
+        // TBD: this doesn't work reliably
         // Base the target node count on the node count for the
         // previous search, but randomize it somewhat.
         std::uniform_int_distribution<uint64_t> node_dist(uint64_t(0.7 * prevNodes),
@@ -394,48 +453,28 @@ static void semiRandomMove(const Board &board, SelfPlayOptions::RandomizeType ty
         td.searcher->registerMonitorFunction(oldMonitor);
         mr.score = stats.display_value;
     } else { // multiPV
-        // We don't actually use the multipv option here because it
-        // is global, and we only want multipv for this thread. So
-        // we do multiple searches
-        MoveSet includes, excludes;
-        RootMoveGenerator mg(board);
-        unsigned limit = std::min<unsigned>(mg.moveCount(), MAX_MULTIPV);
         numCandidates = 0;
-        if (limit == 0) {
-            // there are no moves, but search to get a score (loss/win/draw)
-            Move result = td.searcher->findBestMove(board, FixedDepth, Constants::INFINITE_TIME, 0,
-                                                    sp_options.depthLimit, false, false, stats,
-                                                    TalkLevel::Silent, excludes, includes);
-            numCandidates = 0;
-            mr.move = result;
-            mr.score = stats.display_value;
+        td.searcher->setMultiPV(sp_options.multipv_limit);
+        (void) td.searcher->findBestMove(
+            board, FixedDepth, Constants::INFINITE_TIME, 0, sp_options.depthLimit,
+            false, false, stats, TalkLevel::Silent);
+        td.searcher->setMultiPV(1);
+        if (stats.multipv_count == 0) {
+            // no moves, could be checkmate/stalemate
             state = stats.state;
+            mr = MoveResult();
             return;
         }
-        int maxScore = -Constants::MATE, candCount = 0;
-        unsigned count = 0;
-        MoveResult moves[MAX_MULTIPV], candidates[MAX_MULTIPV];
-        for (unsigned index = 0; index < limit; ++index, ++count) {
-            Move result;
-            result = moves[index].move = td.searcher->findBestMove(
-                board, FixedDepth, Constants::INFINITE_TIME, 0, sp_options.depthLimit, false, false,
-                stats, TalkLevel::Silent, excludes, includes);
-            if (stats.state == Checkmate || stats.state == Stalemate || stats.state == Draw) {
-                state = stats.state;
-                break;
-            }
-            if (stats.display_value > maxScore)
-                maxScore = stats.display_value;
-            moves[index].score = stats.display_value;
-            excludes.insert(result);
-        }
-        for (unsigned index = 0; index < count; ++index) {
-            if (maxScore - moves[index].score <= sp_options.multiPVMargin) {
-                candidates[candCount++] = moves[index];
+        // results are ranked in descending order by score
+        int maxScore = stats.multi_pvs[0].display_value;
+        MoveResult candidates[MAX_MULTIPV];
+        for (size_t i = 0; i < stats.multipv_count; ++i) {
+            const Statistics::MultiPVEntry &entry = stats.multi_pvs[i];
+            if (!IsNull(entry.best) && (maxScore - entry.display_value) <= sp_options.multiPVMargin) {
+                candidates[numCandidates++] = MoveResult(entry.best,entry.display_value);
             }
         }
-        numCandidates = candCount;
-        mr = candCount ? pick(candidates, candCount, td) : MoveResult();
+        mr = numCandidates ? pick(candidates, numCandidates, td) : MoveResult();
     }
 }
 
@@ -457,12 +496,16 @@ static void selfplay(ThreadData &td) {
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
         unsigned noSemiRandom = 0, semiRandomCount = 0, prevDepth = 0;
+        unsigned bookMoves = sp_options.maxBookPly;
         for (unsigned ply = 0; ply <= sp_options.maxOutPly && !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
-            if (ply < sp_options.maxBookPly) {
+            if (ply <= sp_options.maxBookPly) {
                 std::unique_lock<std::mutex> lock(bookLock);
                 m = globals::openingBook.pick(board, false);
+                if (IsNull(m)) {
+                    bookMoves = ply;
+                }
             }
             score_t score = 0;
             if (IsNull(m)) {
@@ -470,67 +513,10 @@ static void selfplay(ThreadData &td) {
                 bool skipRandom = (int(board.men()) <= globals::EGTBMenCount) ||
                                   (std::abs(prevScore) >= 10 * Params::PAWN_VALUE);
                 if (sp_options.randomize &&
-                    (ply <= sp_options.maxBookPly + sp_options.randomizeRange) &&
+                    (ply > bookMoves) &&
+                    (ply <= bookMoves + sp_options.randomizeRange) &&
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
-                    RootMoveGenerator mg(board);
-                    if (mg.moveCount() > 1 &&
-                        (sp_options.useRanking || sp_options.limitEarlyKingMoves)) {
-                        Move candidates[Constants::MaxMoves], all[Constants::MaxMoves];
-                        bool inCheck = board.checkStatus() == InCheck;
-                        int index;
-                        unsigned i = 0, j = 0;
-                        RootMoveGenerator::RootMoveList mra;
-                        if (sp_options.useRanking) {
-                            searcher->rankMoves(board, 2, mra);
-                            for (const RootMoveGenerator::RootMove &rm : mra) {
-                                all[j++] = rm.move;
-                            }
-                            if (mg.moveCount() >= 2) {
-                                assert(mra.size() > 0);
-                                const int best = mra[0].score;
-                                auto new_end = std::remove_if(
-                                    mra.begin() + 1, mra.end(),
-                                    [&](const RootMoveGenerator::RootMove &r) -> bool {
-                                        if (r.score < best - sp_options.randomTolerance)
-                                            return true;
-                                        BoardState state(board.state);
-                                        board.doMove(r.move);
-                                        int rep = board.repCount();
-                                        board.undoMove(r.move, state);
-                                        // avoid repetitions
-                                        return rep > 0;
-                                    });
-                                candidates[i++] = mra[0].move;
-                                for (auto it = mra.begin() + 1; it != new_end; ++it) {
-                                    assert((*it).score <= best);
-                                    assert((*it).score >= best - sp_options.randomTolerance);
-                                    if (!inCheck && !IsCastling(m) &&
-                                        sp_options.limitEarlyKingMoves && PieceMoved(m) == King)
-                                        continue;
-                                    candidates[i++] = (*it).move;
-                                }
-                                assert(i);
-                            }
-                        } else {
-                            while (!IsNull(
-                                m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
-                                assert(j < Constants::MaxMoves);
-                                all[j++] = m;
-                                if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves &&
-                                    PieceMoved(m) == King)
-                                    continue;
-                                assert(i < Constants::MaxMoves);
-                                candidates[i++] = m;
-                            }
-                        }
-                        if (i) {
-                            m = pick(candidates, i, td);
-                        } else {
-                            m = pick(all, j, td);
-                        }
-                    } else {
-                        m = randomMove(board, mg, stats, td);
-                    }
+                    m = randomMove(board, searcher, stats, td);
                     // TBD: we don't associate any prior FENS with the current
                     // game result after a random move. Stockfish though does do
                     // this.
@@ -539,7 +525,8 @@ static void selfplay(ThreadData &td) {
                     // adjudication counter
                     low_score_count = 0;
                 } else if (sp_options.semiRandomize && !skipRandom &&
-                           (noSemiRandom >= sp_options.semiRandomizeInterval) &&
+                           (ply > bookMoves + sp_options.randomizeRange) &&
+                           (semiRandomCount == 0 || noSemiRandom >= sp_options.semiRandomizeInterval) &&
                            (semiRandomCount < sp_options.semiRandomPerGame) &&
                            (int(board.men()) > globals::EGTBMenCount) &&
                            ((sp_options.randomizeType != SelfPlayOptions::RandomizeType::Nodes) ||
@@ -768,15 +755,6 @@ int CDECL main(int argc, char **argv) {
     Scoring::init();
     Search::init();
 
-    globals::options.search.hash_table_size = 128 * 1024 * 1024;
-    globals::options.book.book_enabled = true;
-    globals::options.book.variety = 80;
-    globals::options.learning.position_learning = false;
-    globals::options.search.can_resign = true;
-    globals::options.search.resign_threshold = -Params::PAWN_VALUE * 30;
-    globals::options.search.widePlies = 1;
-    globals::options.search.wideWindow = 3 * Params::PAWN_VALUE;
-
     if (!globals::initGlobals()) {
         globals::cleanupGlobals();
         exit(-1);
@@ -786,6 +764,16 @@ int CDECL main(int argc, char **argv) {
     if (!globals::EGTBMenCount) {
         std::cerr << "warning: no tablebases found." << std::endl;
     }
+
+    // set after init so .rc values are overridden
+    globals::options.search.hash_table_size = 128 * 1024 * 1024;
+    globals::options.book.book_enabled = true;
+    globals::options.book.variety = 75;
+    globals::options.learning.position_learning = false;
+    globals::options.search.can_resign = true;
+    globals::options.search.resign_threshold = -Params::PAWN_VALUE * 30;
+    globals::options.search.widePlies = 2;
+    globals::options.search.wideWindow = 3 * Params::PAWN_VALUE;
 
     int arg = 1;
     bool append = false;

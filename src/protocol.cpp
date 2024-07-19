@@ -1876,17 +1876,21 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         else if (uciOptionCompare(name,"Use tablebases")) {
            Options::setOption<bool>(value, globals::options.search.use_tablebases);
+           searcher->updateTBOptions();
         }
         else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
            globals::unloadTb();
            globals::options.search.syzygy_path = value;
            globals::options.search.use_tablebases = true;
+           searcher->updateTBOptions();
         }
         else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
             Options::setOption<bool>(value, globals::options.search.syzygy_50_move_rule);
+            searcher->updateTBOptions();
         }
         else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
            Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
+           searcher->updateTBOptions();
         }
 #endif
         else if (uciOptionCompare(name,"OwnBook")) {
@@ -1909,6 +1913,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             // our option counts the # of lines to show, so we set it to
             // 1 in this case.
             if (globals::options.search.multipv == 0) globals::options.search.multipv = 1;
+            // This value is cached in the searcher, so need to update there
+            searcher->setMultiPV(globals::options.search.multipv);
             stats.multipv_count = 0;
             // migrate current stats to 1st Multi-PV table entry:
             stats.multi_pvs[0] =
@@ -2773,6 +2779,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         // egtpath commands from Winboard.
         globals::options.search.use_tablebases = 1;
         globals::options.search.syzygy_path = path;
+        searcher->updateTBOptions();
         if (doTrace) {
            std::cout << debugPrefix << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
         }
