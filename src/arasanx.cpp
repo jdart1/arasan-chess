@@ -1,5 +1,5 @@
 // Main module for Arasan chess engine.
-// Copyright 1997-2018, 2020-2022 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2020-2021, 2024 by Jon Dart. All Rights Reserved.
 //
 
 #include "types.h"
@@ -20,7 +20,6 @@ extern "C"
 #include <signal.h>
 #ifndef _WIN32
 #include <time.h>
-#include <sys/resource.h>
 #endif
 }
 
@@ -46,25 +45,6 @@ int CDECL main(int argc, char **argv) {
         exit(-1);
     }
     atexit(globals::cleanupGlobals);
-
-#ifndef _WIN32
-    struct rlimit rl;
-    const rlim_t STACK_MAX = static_cast<rlim_t>(globals::LINUX_STACK_SIZE);
-    auto result = getrlimit(RLIMIT_STACK, &rl);
-    if (result == 0)
-    {
-        if (rl.rlim_cur < STACK_MAX)
-        {
-            rl.rlim_cur = STACK_MAX;
-            result = setrlimit(RLIMIT_STACK, &rl);
-            if (result)
-            {
-                std::cerr << "failed to increase stack size" << std::endl;
-                exit(-1);
-            }
-        }
-    }
-#endif
 
     Board board;
     int arg = 1;

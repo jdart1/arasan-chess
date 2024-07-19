@@ -18,8 +18,9 @@ extern "C" {
 extern "C" {
 #include <errno.h>
 #include <limits.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <sys/resource.h>
+#include <sys/types.h>
 }
 #endif
 #include <cstring>
@@ -136,6 +137,24 @@ std::string globals::derivePath(const std::string &base, const std::string &file
 }
 
 int globals::initGlobals() {
+#ifndef _WIN32
+    struct rlimit rl;
+    const rlim_t STACK_MAX = static_cast<rlim_t>(globals::LINUX_STACK_SIZE);
+    auto result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0)
+    {
+        if (rl.rlim_cur < STACK_MAX)
+        {
+            rl.rlim_cur = STACK_MAX;
+            result = setrlimit(RLIMIT_STACK, &rl);
+            if (result)
+            {
+                std::cerr << "failed to increase stack size" << std::endl;
+                exit(-1);
+            }
+        }
+    }
+#endif
     globals::gameMoves = new MoveArray();
     globals::polling_terminated = false;
     return 1;
