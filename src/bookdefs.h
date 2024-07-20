@@ -1,4 +1,4 @@
-// Copyright 1996-2014, 2018 by Jon Dart.  All Rights Reserved
+// Copyright 1996-2014, 2018, 2024 by Jon Dart.  All Rights Reserved
 #ifndef __BOOKDEFS_H__
 #define __BOOKDEFS_H__
 
@@ -18,6 +18,7 @@ const uint16_t NO_NEXT = 65535;
 const uint16_t INVALID_INDEX = 65535;
 const uint8_t NO_RECOMMEND = 255;
 const uint8_t MAX_WEIGHT = 254;
+const uint8_t MID_WEIGHT = MAX_WEIGHT / 2;
 
 #ifdef __INTEL_COMPILER
 #pragma pack(push,1)

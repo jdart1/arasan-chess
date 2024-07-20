@@ -93,17 +93,16 @@ Move BookReader::pick(const Board &b, bool trace) {
         // compute a sample based on the count distribution and
         // calculate its reward
         auto reward = (sample_dirichlet(counts) * bookSelectionOptions.scoring) / 50;
-        if (trace) {
-
-            std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw)
-                      << "]";
-            std::cout << " reward: " << reward;
-        }
         unsigned weight;
         if (info.weight == book::NO_RECOMMEND)
-            weight = book::MAX_WEIGHT / 2;
+            weight = book::MID_WEIGHT;
         else
             weight = info.weight;
+        if (trace) {
+            std::cout << " WLD=[" << int(info.win) << "," << int(info.loss) << "," << int(info.draw)
+                      << "]";
+            std::cout << " weight: " << static_cast<unsigned>(info.weight) << " reward: " << reward;
+        }
         // boost or reduce weight according to book weighting factor
         const unsigned adjustedWeight = effectiveWeight(weight);
         reward *= (2.0 * adjustedWeight) / book::MAX_WEIGHT;
@@ -113,8 +112,9 @@ Move BookReader::pick(const Board &b, bool trace) {
         // penalize infrequent moves
         const double f = bookSelectionOptions.frequency / 100.0;
         double freqAdjust = log10(static_cast<double>(info.win + info.loss + info.draw)) * 0.2 * f;
-        if (trace)
+        if (trace) {
             std::cout << " frequency: " << freqAdjust;
+        }
         reward += freqAdjust;
         // add a random amount based on randomness parameter
         std::normal_distribution<double> dist(0, 0.02 + 0.005 * std::pow(bookSelectionOptions.random,0.7));
@@ -260,11 +260,12 @@ void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
     // omitting moves with low counts. Also apply a relative
     // frequency test based on the book frequency option. Don't remove
     // moves from the "steering" book unless they have zero weight
-    // ("don't play" moves).
+    // ("don't play" moves) or a less than middling weight and low
+    // frequency.
     auto new_end =
         std::remove_if(results.begin(), results.end(), [&](const book::DataEntry &info) -> bool {
             return (info.weight != book::NO_RECOMMEND && effectiveWeight(info.weight) == 0) ||
-                   (info.weight == book::NO_RECOMMEND &&
+                   ((info.weight == book::NO_RECOMMEND || info.weight < book::MID_WEIGHT) &&
                     (info.count() < minCount || double(info.count()) / maxCount <= freqThreshold));
         });
     if (results.end() != new_end) {
