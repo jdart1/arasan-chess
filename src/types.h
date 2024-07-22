@@ -1,4 +1,4 @@
-// Copyright 1993-2009, 2012-2014, 2016-2019, 2021, 2023 by Jon Dart.
+// Copyright 1993-2009, 2012-2014, 2016-2019, 2021, 2023-2024 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _TYPES_H
@@ -33,13 +33,8 @@ typedef uint64_t hash_t;
 
 typedef std::chrono::high_resolution_clock::time_point CLOCK_TYPE;
 
-#ifdef TUNE
-typedef double score_t;
-typedef float stored_score_t;
-#else
 typedef int score_t;
 typedef uint32_t stored_score_t;
-#endif
 
 // Define this here since Bitboard class depends on it
 typedef int Square;

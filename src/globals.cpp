@@ -52,9 +52,6 @@ std::mutex globals::syzygy_lock;
 #endif
 bool globals::polling_terminated;
 std::string globals::debugPrefix;
-#ifdef TUNE
-Tune globals::tune_params;
-#endif
 #ifdef NNUE
 nnue::Network globals::network;
 bool globals::nnueInitDone = false;

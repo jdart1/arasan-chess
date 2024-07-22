@@ -32,19 +32,11 @@ void learn(const Board &board, const MoveArray &moves, bool doTrace)
     if (out_of_book >= 3 && out_of_book <= 20) {
         score_t diff1 = 0, diff2 = 0;
         const MoveRecord &prev = moves[moves.size() - 3];
-#ifdef TUNE
-        diff1 = fabs(last_score - prev.score);
-#else
         diff1 = std::abs(last_score - prev.score);
-#endif
         if (moves.size() >= 5) {
             const MoveRecord &prev2 = moves[moves.size() - 5];
             if (!prev2.fromBook) {
-#ifdef TUNE
-                diff2 = fabs(last_score - prev2.score);
-#else
                 diff2 = std::abs(last_score - prev2.score);
-#endif
             }
         }
         int score_threshold = globals::options.learning.position_learning_threshold;

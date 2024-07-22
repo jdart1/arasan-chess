@@ -144,12 +144,6 @@ private:
     // make a move on the board, add to log and search history
     void execute_move(Board &board,Move m);
 
-#ifdef TUNE
-    // Set a tuning parameter passed on the command line (used for
-    // CLOP for example).
-    void setTuningParam(const std::string &name, const std::string &value);
-#endif
-
     // Process options for Winboard
     void processWinboardOptions(const std::string &args);
 

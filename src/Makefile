@@ -10,8 +10,6 @@ VERSION = 24.2.2
 SRC = ../src
 # location of .o files
 BUILD	= ../build
-# location of .o files for tuning program
-TUNE_BUILD	= ../tune_build
 # location for executables and binary book files
 EXPORT  = ../bin
 # location for profile-generating executables
@@ -35,7 +33,7 @@ HWLOC=/usr/local
 #
 # directory for utility programs
 UTIL = util
-# compile with NNUE support (except for tuner)
+# compile with NNUE support
 NNUE = 1
 
 # default network
@@ -52,7 +50,6 @@ ifdef NUMA
 FLAGS := $(FLAGS) -DNUMA -I$(HWLOC)/include
 NUMA_OBJS=$(BUILD)/topo.o
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
-NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.o
 endif
 ifdef SYZYGY_TBS
 FLAGS := $(FLAGS) -DSYZYGY_TBS
@@ -115,8 +112,6 @@ endif
 
 PGO_RUN_FLAGS = -H 64M
 
-TUNE_FLAGS := -DTUNE
-
 IN_GIT := $(shell git rev-parse --is-inside-work-tree)
 ifeq ("$(IN_GIT)","true")
 ARASAN_VERSION ?= $(shell git describe --tags --always)
@@ -150,8 +145,6 @@ ifdef BUILD_TYPE
 ARASANX := $(ARASANX)-$(BUILD_TYPE)
 endif
 endif
-
-TUNER := tuner
 
 ifeq ("$(CC)","icc")
 # Intel C++ compiler
@@ -288,24 +281,20 @@ endif
 
 default: dirs $(EXPORT)/$(ARASANX)
 
-tuning: dirs $(EXPORT)/$(TUNER)
-
-utils: dirs $(EXPORT)/pgnselect $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
+utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
 $(EXPORT)/selfplay
 
 clean: dirs
 	rm -f $(BUILD)/*.o
-	rm -f $(TUNE_BUILD)/*.o
 	rm -f $(PROFILE)/*.o
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* tuner* makeeco makebook playchess pgnselect ecocoder selfplay
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay
 
 dirs:
 	mkdir -p $(BUILD)
-	mkdir -p $(TUNE_BUILD)
 	mkdir -p $(EXPORT)
 	mkdir -p $(PROFILE)
 	mkdir -p $(PROF_DATA)
@@ -330,9 +319,6 @@ $(BUILD)/%.o: %.cpp
 $(BUILD)/%.o: $(UTIL)/%.cpp
 	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 
-$(TUNE_BUILD)/%.o: %.cpp
-	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS)  $(NNUE_FLAGS) $(TUNE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
-
 ifeq ($(PASS),1)
 CPP_PROF_FLAGS := $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS)
 else
@@ -356,7 +342,6 @@ endif
 
 ifdef SYZYGY_TBS
 TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
-TB_TUNE_OBJS := $(TUNE_BUILD)/syzygy.o $(TUNE_BUILD)/tbprobe.o
 TB_OBJS := $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
 TB_PROFILE_OBJS := $(PROFILE)/syzygy.o $(PROFILE)/tbprobe.o
 STB_FLAGS := -x c++
@@ -366,8 +351,6 @@ $(BUILD)/%.o: $(STB)/%.c
 $(PROFILE)/%.o: $(STB)/%.c
 	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c $< -o $@
 
-$(TUNE_BUILD)/%.o: $(STB)/%.c
-	$(CC)  $(FLAGS) $(STB_FLAGS) $(TUNE_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 endif
 
 ifeq ("$(findstring UNIT_TESTS,$(DEBUG))","UNIT_TESTS")
@@ -388,17 +371,6 @@ search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
 stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC) $(UNIT_TEST_SRC)
 
-TUNER_SOURCES = tuner.cpp tune.cpp globals.cpp  \
-board.cpp boardio.cpp material.cpp \
-chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
-scoring.cpp see.cpp \
-movearr.cpp notation.cpp options.cpp bitprobe.cpp \
-bookread.cpp bookwrit.cpp search.cpp \
-searchc.cpp movegen.cpp learn.cpp \
-hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
-
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -416,19 +388,15 @@ MAKEECO_SOURCES = makeeco.cpp $(UTIL_SOURCES)
 
 ECOCODER_SOURCES = ecocoder.cpp $(UTIL_SOURCES)
 
-PGNSELECT_SOURCES = pgnselect.cpp $(UTIL_SOURCES)
-
 PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
 SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES)
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-TUNER_OBJS    = $(patsubst %.cpp, $(TUNE_BUILD)/%.o, $(TUNER_SOURCES)) $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-PGNSELECT_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PGNSELECT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
@@ -441,17 +409,11 @@ $(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 $(EXPORT)/ecocoder:  $(ECOCODER_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(ECOCODER_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/ecocoder -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/pgnselect:  $(PGNSELECT_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PGNSELECT_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/pgnselect -lstdc++ $(LIBS) $(SMPLIB)
-
 $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(PLAYCHESS_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/playchess -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
-
-$(EXPORT)/$(TUNER):  $(TUNER_OBJS)
-	cd $(TUNE_BUILD) && $(LD) $(LDFLAGS) $(OPT) $(TUNER_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/$(TUNER) -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx

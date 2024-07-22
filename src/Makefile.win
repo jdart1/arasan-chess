@@ -91,7 +91,6 @@ DEST_DIR=release
 !Endif
 
 BUILD = $(BUILD_ROOT)\$(TARGET)\$(DEST_DIR)
-TUNE_BUILD = $(BUILD_ROOT)\$(TARGET)\$(DEST_DIR)-tune
 PROFILE = $(BUILD_ROOT)\$(TARGET)\profile
 PROFDATA = $(BUILD_ROOT)\$(TARGET)\profdata
 PGO_BUILD = $(BUILD_ROOT)\$(TARGET)\pgo_build
@@ -107,7 +106,6 @@ CFLAGS=$(CFLAGS) /DNUMA /I$(HWLOC)/include
 NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
-NUMA_TUNE_OBJS=$(TUNE_BUILD)/topo.obj
 !Endif
 !IfDef NNUE
 NNUE_FLAGS=/DNNUE /Innue
@@ -128,8 +126,6 @@ SMP=/MT /DSMP_STATS
 !Endif
 # Do not run profile multithreaded - fails on current VC++ versions
 #PROF_RUN_SMP=-c 2
-
-TUNE_FLAGS=-DTUNE
 
 !Ifndef CC
 CC = cl
@@ -219,21 +215,16 @@ default: dirs $(BUILD)\$(ARASANX).exe
 
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
-tuning: dirs $(BUILD)\tuner.exe
-
-utils: dirs $(BUILD)\pgnselect.exe $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
+utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
 
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
 STB_FLAGS = /TP /I. $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
-TB_TUNE_OBJS = $(TB_TUNE_OBJS) $(TUNE_BUILD)\syzygy.obj $(TUNE_BUILD)\tbprobe.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
 $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CC) $(STB_FLAGS) $(OPT) $(LTO) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
-$(TUNE_BUILD)\tbprobe.obj: $(STB)\tbprobe.c
-	$(CF) $(STB_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
@@ -256,21 +247,6 @@ $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj \
 $(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(BUILD)\unit.obj $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
-
-TUNER_OBJS = $(TUNE_BUILD)\tuner.obj $(TUNE_BUILD)\tune.obj \
-$(TUNE_BUILD)\globals.obj  \
-$(TUNE_BUILD)\board.obj $(TUNE_BUILD)\boardio.obj $(TUNE_BUILD)\material.obj \
-$(TUNE_BUILD)\chess.obj $(TUNE_BUILD)\attacks.obj $(TUNE_BUILD)\bitboard.obj \
-$(TUNE_BUILD)\chessio.obj $(TUNE_BUILD)\epdrec.obj $(TUNE_BUILD)\bhash.obj  \
-$(TUNE_BUILD)\scoring.obj $(TUNE_BUILD)\see.obj \
-$(TUNE_BUILD)\movearr.obj $(TUNE_BUILD)\notation.obj \
-$(TUNE_BUILD)\options.obj $(TUNE_BUILD)\bitprobe.obj \
-$(TUNE_BUILD)\bookread.obj $(TUNE_BUILD)\bookwrit.obj \
-$(TUNE_BUILD)\search.obj $(TUNE_BUILD)\searchc.obj \
-$(TUNE_BUILD)\movegen.obj $(TUNE_BUILD)\hash.obj $(TUNE_BUILD)\calctime.obj \
-$(TUNE_BUILD)\eco.obj $(TUNE_BUILD)\ecodata.obj $(TUNE_BUILD)\legal.obj \
-$(TUNE_BUILD)\stats.obj $(TUNE_BUILD)\threadp.obj $(TUNE_BUILD)\learn.obj \
-$(TUNE_BUILD)\threadc.obj $(TB_TUNE_OBJS) $(NUMA_TUNE_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj $(PROFILE)\tester.obj \
 $(PROFILE)\protocol.obj $(PROFILE)\input.obj \
@@ -306,8 +282,6 @@ MAKEECO_OBJS = $(BUILD)\makeeco.obj $(UTIL_OBJS)
 
 ECOCODER_OBJS = $(BUILD)\ecocoder.obj $(UTIL_OBJS)
 
-PGNSELECT_OBJS = $(BUILD)\pgnselect.obj $(UTIL_OBJS)
-
 PLAYCHESS_OBJS = $(BUILD)\playchess.obj $(UTIL_OBJS)
 
 SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS)
@@ -317,9 +291,6 @@ SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS)
 
 {$(UTIL)}.cpp{$(BUILD)}.obj:
     $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /I. /c /Fo$@ $<
-
-{}.cpp{$(TUNE_BUILD)}.obj:
-    $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(TUNE_FLAGS) /c /Fo$@ $<
 
 {}.cpp{$(PROFILE)}.obj:
     $(CC) $(PROF_FLAGS) /c /Fo$@ $<
@@ -335,12 +306,6 @@ $(BUILD)\ecocoder.exe:  $(ECOCODER_OBJS)
 
 $(BUILD)\$(ARASANX).exe:  dirs $(ARASANX_OBJS)
         $(LD) $(ARASANX_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\$(ARASANX).exe
-
-$(BUILD)\tuner.exe:  dirs $(TUNER_OBJS)
-        $(LD) $(TUNER_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\tuner.exe
-
-$(BUILD)\pgnselect.exe: dirs $(PGNSELECT_OBJS)
-        $(LD) $(PGNSELECT_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\pgnselect.exe
 
 $(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
         $(LD) $(PLAYCHESS_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\playchess.exe
@@ -402,9 +367,6 @@ $(PROFILE):
 $(BUILD):
 	md $(BUILD)
 
-$(BUILD)-tune:
-	md $(BUILD)-tune
-
 $(PROFDATA):
 	md $(PROFDATA)
 
@@ -416,8 +378,6 @@ $(RELEASE):
 
 clean: dirs
 	del $(BUILD)\*.obj
-	del $(TUNE_BUILD)\*.obj
-	del $(TUNE_BUILD)\*.asm
 	del $(BUILD)\*.exe
 	del $(BUILD)\*.asm
 	del $(PROFILE)\*.asm
@@ -428,4 +388,4 @@ clean: dirs
 	del /q $(RELEASE)\*.*
 	del /q $(PGO_BUILD)\*.*
 
-dirs: $(BUILD) $(TUNE_BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(RELEASE)
+dirs: $(BUILD) $(PROFILE) $(PROFDATA) $(PGO_BUILD) $(RELEASE)

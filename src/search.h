@@ -217,11 +217,6 @@ public:
 
     score_t drawScore(const Board &board) const;
 
-#ifdef TUNE
-    static const int LEARNING_SEARCH_WINDOW;
-    static double func( double x );
-#endif
-
     // main entry point for top-level search; non-main threads enter here
     Move ply0_search(RootMoveGenerator::RootMoveList *moveList = nullptr);
 

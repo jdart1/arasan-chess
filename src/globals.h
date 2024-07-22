@@ -10,9 +10,6 @@
 #include "options.h"
 #include "threadc.h"
 #include "types.h"
-#ifdef TUNE
-#include "tune.h"
-#endif
 #ifdef NNUE
 #include "nnue/nnue.h"
 #endif
@@ -34,9 +31,6 @@ extern std::mutex input_lock;
 
 #ifdef SYZYGY_TBS
 extern std::mutex syzygy_lock;
-#endif
-#ifdef TUNE
-extern Tune tune_params;
 #endif
 #ifdef NNUE
 extern nnue::Network network;

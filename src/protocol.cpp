@@ -21,9 +21,6 @@
 #endif
 #include "tester.h"
 #include "threadp.h"
-#ifdef TUNE
-#include "tune.h"
-#endif
 #ifdef UNIT_TESTS
 #include "unit.h"
 #endif
@@ -1582,33 +1579,6 @@ void Protocol::execute_move(Board &board,Move m)
     board.doMove(m);
 }
 
-#ifdef TUNE
-void Protocol::setTuningParam(const std::string &name, const std::string &value)
-{
-   // set named parameters that are in the tuning set
-   int index = globals::tune_params.findParamByName(name);
-   if (index > 0) {
-      std::stringstream buf(value);
-      int tmp;
-      buf >> tmp;
-      if (!buf.bad() && !buf.fail()) {
-         globals::tune_params[index].current = tmp;
-         // apply params to Scoring module
-         globals::tune_params.applyParams();
-      }
-      else {
-         std::cout << debugPrefix << "Warning: invalid value for option " <<
-            name << ": " << value << std::endl;
-         return;
-      }
-   }
-   else {
-       std::cout << debugPrefix << "Warning: invalid option name \"" <<
-            name << "\"" << std::endl;
-   }
-}
-#endif
-
 void Protocol::processWinboardOptions(const std::string &args) {
     std::string name, value;
     size_t eq = args.find("=");
@@ -1665,15 +1635,9 @@ void Protocol::processWinboardOptions(const std::string &args) {
     else if (name == "Move overhead") {
         Options::setOption<int>(value,globals::options.search.move_overhead);
     }
-#ifdef TUNE
-    else {
-       setTuningParam(name,value);
-    }
-#else
     else {
        std::cout << debugPrefix << "Warning: invalid option name \"" << name << "\"" << std::endl;
    }
-#endif
    searcher->updateSearchOptions();
 }
 
@@ -1965,15 +1929,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         else if (uciOptionCompare(name,"Move overhead")) {
            Options::setOption<int>(value,globals::options.search.move_overhead);
         }
-#ifdef TUNE
-        else {
-           setTuningParam(name,value);
-        }
-#else
         else {
            std::cout << debugPrefix << "error: invalid option name \"" << name << "\"" << std::endl;
         }
-#endif
         searcher->updateSearchOptions();
     }
     else if (uci && cmd == "ucinewgame") {
@@ -2476,9 +2434,6 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         start_fen.clear();
         globals::delayedInit();
         searcher->clearHashTables();
-#ifdef TUNE
-        globals::tune_params.applyParams();
-#endif
         if (!analyzeMode && ics) {
            std::cout << "kib Hello from Arasan " << Arasan_Version << std::endl;
         }

@@ -1,4 +1,4 @@
-// Copyright 1994-2021, 2023 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021, 2023-2024 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -7,10 +7,6 @@
 #include "globals.h"
 #include "material.h"
 #include "movegen.h"
-#ifdef TUNE
-#include "tune.h"
-#include <ctime>
-#endif
 #ifdef NNUE
 #include "nnueintf.h"
 #include "search.h" // for NodeInfo
@@ -306,9 +302,6 @@ void Scoring::initBitboards() {
 
 void Scoring::init() {
    initBitboards();
-#ifdef TUNE
-   globals::tune_params.applyParams();
-#endif
 }
 
 void Scoring::cleanup() {
@@ -539,11 +532,7 @@ void Scoring::adjustMaterialScoreNoPawns(const Board &board, ColorType side, Sco
     scores.any += score;
 }
 
-#ifdef TUNE
-score_t Scoring::calcCover(const Board &board, ColorType side, int file, int rank, int (&counts)[6][4]) {
-#else
 score_t Scoring::calcCover(const Board &board, ColorType side, int file, int rank) {
-#endif
    Square sq, pawn;
    score_t cover = PARAM(KING_COVER_BASE);
    if (rank > 2) return cover;
@@ -554,15 +543,9 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       if (!pawns) {
          if (FileOpen(board, file)) {
             cover += PARAM(KING_COVER)[5][f];
-#ifdef TUNE
-            counts[5][f]++;
-#endif
          }
          else {
             cover += PARAM(KING_COVER)[4][f];
-#ifdef TUNE
-            counts[4][f]++;
-#endif
          }
       }
       else {
@@ -571,9 +554,6 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
          assert(prank >= 2);
          const int rank_dist = std::min<int>(3,prank - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
-#ifdef TUNE
-         counts[rank_dist][f]++;
-#endif
       }
    }
    else {
@@ -581,15 +561,9 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
       if (!pawns) {
          if (FileOpen(board, file)) {
             cover += PARAM(KING_COVER)[5][f];
-#ifdef TUNE
-            counts[5][f]++;
-#endif
          }
          else {
             cover += PARAM(KING_COVER)[4][f];
-#ifdef TUNE
-            counts[4][f]++;
-#endif
          }
       }
       else {
@@ -598,48 +572,29 @@ score_t Scoring::calcCover(const Board &board, ColorType side, int file, int ran
          assert(r >= 2);
          const int rank_dist = std::min<int>(3,r - 2);
          cover += PARAM(KING_COVER)[rank_dist][f];
-#ifdef TUNE
-         counts[rank_dist][f]++;
-#endif
       }
    }
    return cover;
 }
 
 // Calculate a king cover score
-#ifdef TUNE
-score_t Scoring::calcCover(const Board &board, ColorType side, Square kp, int (&counts)[6][4]) {
-#else
 score_t Scoring::calcCover(const Board &board, ColorType side, Square kp) {
-#endif
    score_t cover = 0;
    int kpfile = File(kp);
    int rank = Rank(kp, side);
    if (kpfile > 5) {
       for(int i = 6; i <= 8; i++) {
-#ifdef TUNE
-         cover += calcCover(board, side, i, rank, counts);
-#else
          cover += calcCover(board, side, i, rank);
-#endif
       }
    }
    else if (kpfile < 4) {
       for(int i = 1; i <= 3; i++) {
-#ifdef TUNE
-         cover += calcCover(board, side, i, rank, counts);
-#else
          cover += calcCover(board, side, i, rank);
-#endif
       }
    }
    else {
       for(int i = kpfile - 1; i <= kpfile + 1; i++) {
-#ifdef TUNE
-         cover += calcCover(board, side, i, rank, counts);
-#else
          cover += calcCover(board, side, i, rank);
-#endif
       }
    }
    cover = std::min<score_t>(0, cover);
@@ -648,12 +603,6 @@ score_t Scoring::calcCover(const Board &board, ColorType side, Square kp) {
 
 void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &coverEntry) {
    Square kp = board.kingSquare(side);
-
-#ifdef TUNE
-   for (int i = 0; i < 6; i++)
-      for (int j = 0; j < 4; j++)
-         coverEntry.counts[i][j] = 0.0F;
-#endif
 
    // discourage shuttling the king between G1/H1 by
    // treating these the same
@@ -666,90 +615,33 @@ void Scoring::calcCover(const Board &board, ColorType side, KingPawnHashEntry &c
       if (kp == chess::A8) kp = chess::B8;
    }
 
-#ifdef TUNE
-   int king_cover[6][4], kside_cover[6][4], qside_cover[6][4];
-   for (int i = 0; i < 6; i++) {
-      for (int j = 0; j < 4; j++) {
-         king_cover[i][j] = kside_cover[i][j] = qside_cover[i][j] = 0;
-      }
-   }
-   score_t cover = calcCover(board, side, kp, king_cover);
-#else
    score_t cover = calcCover(board, side, kp);
-#endif
    switch(board.castleStatus(side))
    {
    case CanCastleEitherSide:
       {
-#ifdef TUNE
-         score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8, kside_cover);
-         score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8, qside_cover);
-#else
          score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8);
          score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8);
-#endif
          coverEntry.cover = (cover * 2) / 3 + std::min<score_t>(k_cover, q_cover) / 3;
-#ifdef TUNE
-         for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 4; j++) {
-               coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
-               (k_cover < q_cover ?
-                float(kside_cover[i][j])/3 :
-                float(qside_cover[i][j])/3);
-            }
-         }
-#endif
          break;
       }
 
    case CanCastleKSide:
       {
-#ifdef TUNE
-         score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8, kside_cover);
-#else
          score_t k_cover = calcCover (board, side, side == White ? chess::G1 : chess::G8);
-#endif
          coverEntry.cover = (cover * 2) / 3 + k_cover / 3;
-#ifdef TUNE
-         for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 4; j++) {
-               coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
-               float(kside_cover[i][j])/3;
-            }
-
-         }
-#endif
          break;
       }
 
    case CanCastleQSide:
       {
-#ifdef TUNE
-         score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8, qside_cover);
-#else
          score_t q_cover = calcCover (board, side, side == White ? chess::B1 : chess::B8);
-#endif
          coverEntry.cover = (cover * 2) / 3 + q_cover / 3;
-#ifdef TUNE
-         for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 4; j++) {
-               coverEntry.counts[i][j] = 2*float(king_cover[i][j])/3 +
-               float(qside_cover[i][j])/3;
-            }
-         }
-#endif
          break;
       }
 
    default:
       coverEntry.cover = cover;
-#ifdef TUNE
-      for (int i = 0; i < 6; i++) {
-         for (int j = 0; j < 4; j++) {
-            coverEntry.counts[i][j] = float(king_cover[i][j]);
-         }
-      }
-#endif
       break;
    }
 }
@@ -773,13 +665,6 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
     if (kfile == 8) kfile = 7;
     coverEntry.storm = 0;
     const int pawn_attack_count = Bitboard(oppPawnAttacks & kingPawnProximity[side][0][ksq]).bitCount();
-#ifdef TUNE
-    for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 4; j++)
-            for (int k = 0; k < 5; k++)
-                coverEntry.storm_counts[i][j][k] = 0;
-    coverEntry.pawn_attack_count = pawn_attack_count;
-#endif
     coverEntry.pawn_attacks = PARAM(PAWN_ATTACK_FACTOR)*pawn_attack_count;
     for (int file = std::max<int>(1,kfile-1); file <= std::min<int>(8,kfile+1); file++) {
         // find nearest enemy pawn at or above King
@@ -795,9 +680,6 @@ void Scoring::calcStorm(const Board &board, ColorType side, KingPawnHashEntry &c
                 coverEntry.storm += PARAM(PAWN_STORM)[blocked][folded_file][opp_dist];
 #ifdef PAWN_DEBUG
                 std::cout << "storm: " << ColorImage(side) << " " << SquareImage(opp_pawn) << " blocked=" << blocked << std::endl;
-#endif
-#ifdef TUNE
-                coverEntry.storm_counts[blocked][folded_file][opp_dist]++;
 #endif
             }
         }
@@ -1233,11 +1115,7 @@ void Scoring::positionalScore(const Board &board,
       std::cout << " index=" << index << std::endl;
       std::cout << " pin_count=" << pin_count << std::endl;
 #endif
-#ifdef TUNE
-      score_t kattack = kingAttackSigmoid(index);
-#else
       score_t kattack = PARAM(KING_ATTACK_SCALE)[std::min<int>(Params::KING_ATTACK_SCALE_SIZE-1,index)];
-#endif
 #ifdef ATTACK_DEBUG
       std::cout << "scaled king attack score=  " << kattack << std::endl;
 #endif
@@ -1363,19 +1241,8 @@ void Scoring::calcPawnData(const Board &board,
    Bitboard bi(board.pawn_bits[side]);
    Bitboard potentialPlus, potentialMinus;
    Square sq;
-#ifdef TUNE
-   int count = 0;
-#endif
    while(bi.iterate(sq))
    {
-#ifdef TUNE
-      PawnDetails &details = entr.details;
-      details[count].sq = sq;
-      details[count].flags = 0;
-      details[count].space_weight = 0;
-      assert(count<8);
-      PawnDetail &td = details[count++];
-#endif
 #ifdef PAWN_DEBUG
       int mid_tmp = entr.midgame_score;
       int end_tmp = entr.endgame_score;
@@ -1431,16 +1298,10 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
             std::cout << " tripled";
 #endif
-#ifdef TUNE
-            td.flags |= PawnDetail::TRIPLED;
-#endif
             entr.midgame_score += PARAM(TRIPLED_PAWNS)[Midgame][fileIndex];
             entr.endgame_score += PARAM(TRIPLED_PAWNS)[Endgame][fileIndex];
          }
          else {
-#ifdef TUNE
-            td.flags |= PawnDetail::DOUBLED;
-#endif
             entr.midgame_score += PARAM(DOUBLED_PAWNS)[Midgame][fileIndex];
             entr.endgame_score += PARAM(DOUBLED_PAWNS)[Endgame][fileIndex];
          }
@@ -1451,9 +1312,6 @@ void Scoring::calcPawnData(const Board &board,
          entr.endgame_score += PARAM(ISOLATED_PAWN)[Endgame][fileIndex];
 #ifdef PAWN_DEBUG
          std::cout << " isolated";
-#endif
-#ifdef TUNE
-         td.flags |= PawnDetail::ISOLATED;
 #endif
       }
       else if (rank < 6 && backward) {
@@ -1498,9 +1356,6 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
                   std::cout << " weak";
 #endif
-#ifdef TUNE
-                  td.flags |= PawnDetail::WEAK;
-#endif
                   entr.midgame_score += PARAM(WEAK_PAWN_MID);
                   entr.endgame_score += PARAM(WEAK_PAWN_END);
                   weak++;
@@ -1524,9 +1379,6 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
          std::cout << " passed";
 #endif
-#ifdef TUNE
-         td.flags |= PawnDetail::PASSED;
-#endif
          int f = Params::foldFile(file);
          entr.midgame_score += PARAM(PASSED_PAWN)[Midgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[f]/64;
          entr.endgame_score += PARAM(PASSED_PAWN)[Endgame][rank]*PARAM(PASSED_PAWN_FILE_ADJUST)[f]/64;
@@ -1548,9 +1400,6 @@ void Scoring::calcPawnData(const Board &board,
 #ifdef PAWN_DEBUG
          std::cout << " space=" << space*PARAM(SPACE);
 #endif
-#ifdef TUNE
-         td.space_weight += space;
-#endif
          entr.midgame_score += space*PARAM(SPACE);
          entr.endgame_score += space*PARAM(SPACE);
       }
@@ -1569,26 +1418,10 @@ void Scoring::calcPawnData(const Board &board,
          if (File(sq) != 8 && entr.passers.isSet(sq+1)) {
             cp_score.mid += PARAM(CONNECTED_PASSER)[Midgame][Rank(sq, side)];
             cp_score.end += PARAM(CONNECTED_PASSER)[Endgame][Rank(sq, side)];
-#ifdef TUNE
-            for (int i = 0; i < count; i++) {
-               if (entr.details[i].sq == sq) {
-                  entr.details[i].flags |= PawnDetail::CONNECTED_PASSER;
-                  break;
-               }
-            }
-#endif
          }
          else if (TEST_MASK(Attacks::pawn_attacks[sq][side],entr.passers)) {
             cp_score.mid += PARAM(ADJACENT_PASSER)[Midgame][Rank(sq, side)];
             cp_score.end += PARAM(ADJACENT_PASSER)[Endgame][Rank(sq, side)];
-#ifdef TUNE
-            for (int i = 0; i < count; i++) {
-               if (entr.details[i].sq == sq) {
-                  entr.details[i].flags |= PawnDetail::ADJACENT_PASSER;
-                  break;
-               }
-            }
-#endif
          }
       }
       entr.midgame_score += cp_score.mid;
@@ -1606,9 +1439,6 @@ void Scoring::calcPawnData(const Board &board,
    int tmp = entr.midgame_score;
 #endif
    entr.midgame_score += PARAM(PAWN_CENTER_SCORE_MID) * centerCalc.bitCount();
-#ifdef TUNE
-   entr.center_pawn_factor = centerCalc.bitCount();
-#endif
 #ifdef PAWN_DEBUG
    if (entr.midgame_score - tmp) {
       std::cout << "pawn center score (" << ColorImage(side) << ") :" << entr.midgame_score - tmp << std::endl;
@@ -1766,11 +1596,7 @@ score_t Scoring::evalu8(const Board &board, bool useCache) {
    }
 
 #ifdef _DEBUG
-#ifdef TUNE
-   if (fabs(score) >= Constants::MATE) {
-#else
    if (std::abs(score) >= Constants::MATE) {
-#endif
       std::cout << board << std::endl;
       assert(0);
    }
@@ -2409,149 +2235,6 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    }
    return nnval;
 }
-#endif
 
-#ifdef TUNE
-#include "tune.h"
-
-score_t Scoring::kingAttackSigmoid(score_t weight) const
-{
-    return PARAM(KING_ATTACK_SCALE_BIAS) +
-        PARAM(KING_ATTACK_SCALE_MAX)/(1+exp(-PARAM(KING_ATTACK_SCALE_FACTOR)*(weight-PARAM(KING_ATTACK_SCALE_INFLECT))/1000.0));
-}
-
-static void print_array(std::ostream & o,score_t arr[], int size, int add_semi = 1)
-{
-   o << "{";
-   score_t *p = arr;
-   for (int i = 0; i < size; i++) {
-      if (i) o << ", ";
-      o << std::round(*p++);
-   }
-   o << "}";
-   if (add_semi) o << ";" << std::endl;
-}
-
-static void print_array(std::ostream & o,score_t mid[], score_t end[], int size)
-{
-   o << "{";
-   print_array(o,mid,size,0);
-   o << ", ";
-   print_array(o,end,size,0);
-   o << "};" << std::endl;
-}
-
-void Params::write(std::ostream &o, const std::string &comment)
-{
-   time_t rawtime;
-   struct tm * tminfo;
-   time (&rawtime);
-   tminfo = localtime (&rawtime);
-   o << "// Copyright 2015-" << tminfo->tm_year+1900 << " by Jon Dart. All Rights Reserved." << std::endl;
-   o << "// This is a generated file. Do not edit." << std::endl;
-   o << "// " << comment << std::endl;
-   o << "//" << std::endl;
-   o << std::endl << "#include \"params.h\"" << std::endl;
-   o << std::endl;
-   o << "const int Params::KN_VS_PAWN_ADJUST[3] = ";
-   print_array(o,Params::KN_VS_PAWN_ADJUST,3);
-   o << "const int Params::KING_COVER[6][4] = {";
-   for (int i = 0; i < 6; i++) {
-      print_array(o,Params::KING_COVER[i],4,0);
-      if (i<5) o << "," << std::endl;
-   }
-   o << "};" << std::endl;
-   for (int i = Tune::PAWN_VALUE_MIDGAME; i <= Tune::QUEEN_VALUE_ENDGAME; i++) {
-      o << "const int Params::";
-      for (auto it : globals::tune_params[i].name) {
-         o << (char)toupper((int)it);
-      }
-      o << " = " << std::round(globals::tune_params[i].current) << ";" << std::endl;
-   }
-   int start = Tune::KING_COVER_BASE;
-   for (int i = start; i < start+globals::tune_params.paramArraySize(); i++) {
-      o << "const int Params::";
-      for (auto it : globals::tune_params[i].name) {
-         o << (char)toupper((int)it);
-      }
-      o << " = " << std::round(globals::tune_params[i].current) << ";" << std::endl;
-   }
-   o << "const int Params::KING_OPP_PASSER_DISTANCE[6] = ";
-   print_array(o,Params::KING_OPP_PASSER_DISTANCE,6);
-   o << "const int Params::KING_POSITION_LOW_MATERIAL[3] =";
-   print_array(o,Params::KING_POSITION_LOW_MATERIAL,3);
-   o << "const int Params::KING_ATTACK_SCALE[Params::KING_ATTACK_SCALE_SIZE] = ";
-   print_array(o,Params::KING_ATTACK_SCALE,Params::KING_ATTACK_SCALE_SIZE);
-   o << "const int Params::OWN_PIECE_KING_PROXIMITY_MULT[16] = ";
-   print_array(o,Params::OWN_PIECE_KING_PROXIMITY_MULT,16);
-   o << "const int Params::PASSED_PAWN[2][8] = ";
-   print_array(o,Params::PASSED_PAWN[0], Params::PASSED_PAWN[1], 8);
-   o << "const int Params::PASSED_PAWN_FILE_ADJUST[4] = ";
-   print_array(o,Params::PASSED_PAWN_FILE_ADJUST,4);
-   o << "const int Params::CONNECTED_PASSER[2][8] = ";
-   print_array(o,Params::CONNECTED_PASSER[0], Params::CONNECTED_PASSER[1], 8);
-   o << "const int Params::ADJACENT_PASSER[2][8] = ";
-   print_array(o,Params::ADJACENT_PASSER[0], Params::ADJACENT_PASSER[1], 8);
-   o << "const int Params::QUEENING_PATH_CLEAR[2][6] = ";
-   print_array(o,Params::QUEENING_PATH_CLEAR[0], Params::QUEENING_PATH_CLEAR[1], 6);
-   o << "const int Params::PP_OWN_PIECE_BLOCK[2][3] = ";
-   print_array(o,Params::PP_OWN_PIECE_BLOCK[0], Params::PP_OWN_PIECE_BLOCK[1], 3);
-   o << "const int Params::PP_OPP_PIECE_BLOCK[2][3] = ";
-   print_array(o,Params::PP_OPP_PIECE_BLOCK[0], Params::PP_OPP_PIECE_BLOCK[1], 3);
-   o << "const int Params::QUEENING_PATH_CONTROL[2][3] = ";
-   print_array(o,Params::QUEENING_PATH_CONTROL[0], Params::QUEENING_PATH_CONTROL[1], 3);
-   o << "const int Params::QUEENING_PATH_OPP_CONTROL[2][3] = ";
-   print_array(o,Params::QUEENING_PATH_OPP_CONTROL[0], Params::QUEENING_PATH_OPP_CONTROL[1], 3);
-   o << "const int Params::DOUBLED_PAWNS[2][8] = ";
-   print_array(o,Params::DOUBLED_PAWNS[0], Params::DOUBLED_PAWNS[1], 8);
-   o << "const int Params::TRIPLED_PAWNS[2][8] = ";
-   print_array(o,Params::TRIPLED_PAWNS[0], Params::TRIPLED_PAWNS[1], 8);
-   o << "const int Params::ISOLATED_PAWN[2][8] = ";
-   print_array(o,Params:: ISOLATED_PAWN[0], Params::ISOLATED_PAWN[1], 8);
-   o << std::endl;
-   o << "const int Params::THREAT_BY_PAWN[2][5] = ";
-   print_array(o,Params::THREAT_BY_PAWN[0],Params::THREAT_BY_PAWN[1],5);
-   o << "const int Params::THREAT_BY_KNIGHT[2][5] = ";
-   print_array(o,Params::THREAT_BY_KNIGHT[0],Params::THREAT_BY_KNIGHT[1],5);
-   o << "const int Params::THREAT_BY_BISHOP[2][5] = ";
-   print_array(o,Params::THREAT_BY_BISHOP[0],Params::THREAT_BY_BISHOP[1],5);
-   o << "const int Params::THREAT_BY_ROOK[2][5] = ";
-   print_array(o,Params::THREAT_BY_ROOK[0],Params::THREAT_BY_ROOK[1],5);
-   o << "const int Params::KNIGHT_PST[2][64] = ";
-   print_array(o,Params::KNIGHT_PST[0],Params::KNIGHT_PST[1],64);
-   o << "const int Params::BISHOP_PST[2][64] = ";
-   print_array(o,Params::BISHOP_PST[0],Params::BISHOP_PST[1],64);
-   o << "const int Params::ROOK_PST[2][64] = ";
-   print_array(o,Params::ROOK_PST[0],Params::ROOK_PST[1],64);
-   o << "const int Params::QUEEN_PST[2][64] = ";
-   print_array(o,Params::QUEEN_PST[0],Params::QUEEN_PST[1],64);
-   o << "const int Params::KING_PST[2][64] = ";
-   print_array(o,Params::KING_PST[0],Params::KING_PST[1],64);
-   o << "const int Params::KNIGHT_MOBILITY[9] = ";
-   print_array(o,Params::KNIGHT_MOBILITY,9);
-   o << "const int Params::BISHOP_MOBILITY[15] = ";
-   print_array(o,Params::BISHOP_MOBILITY,15);
-   o << "const int Params::ROOK_MOBILITY[2][15] = ";
-   print_array(o,Params::ROOK_MOBILITY[0],Params::ROOK_MOBILITY[1],15);
-   o << "const int Params::QUEEN_MOBILITY[2][24] = ";
-   print_array(o,Params::QUEEN_MOBILITY[0],Params::QUEEN_MOBILITY[1],24);
-   o << "const int Params::KING_MOBILITY_ENDGAME[5] = ";
-   print_array(o,Params::KING_MOBILITY_ENDGAME,5);
-   o << "const int Params::KNIGHT_OUTPOST[2][2] = ";
-   print_array(o,Params::KNIGHT_OUTPOST[0],Params::KNIGHT_OUTPOST[1],2);
-   o << "const int Params::BISHOP_OUTPOST[2][2] = ";
-   print_array(o,Params::BISHOP_OUTPOST[0],Params::BISHOP_OUTPOST[1],2);
-   o << "const int Params::PAWN_STORM[2][4][5] = {";
-   for (int b = 0; b < 2; b++) {
-       o << '{';
-       for (int f = 0; f < 4; f++) {
-           print_array(o,Params::PAWN_STORM[b][f],5,0);
-           if (f < 3) o << ',';
-       }
-       o << '}';
-       if (b < 1) o << ',';
-   }
-   o << "};" << std::endl;
-}
 
 #endif

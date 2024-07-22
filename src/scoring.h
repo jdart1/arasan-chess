@@ -1,4 +1,4 @@
-// Copyright 1992-2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2021, 2023-2024 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -8,9 +8,6 @@
 #include "attacks.h"
 #include "params.h"
 
-#ifdef TUNE
-#include <array>
-#endif
 #ifdef NNUE
 struct NodeInfo;
 #endif
@@ -75,28 +72,7 @@ class Scoring
       return (Attacks::pawn_attacks[sq][side] & board.pawn_bits[side]).bitCountOpt();
     }
 
-#ifdef TUNE
-    struct PawnDetail {
-      static const int PASSED=1;
-      static const int POTENTIAL_PASSER=2;
-      static const int CONNECTED_PASSER=4;
-      static const int ADJACENT_PASSER=8;
-      static const int BACKWARD=16;
-      static const int DOUBLED=32;
-      static const int TRIPLED=64;
-      static const int WEAK=128;
-      static const int ISOLATED=256;
-      uint16_t flags;
-      uint8_t space_weight;
-      Square sq;
-    };
-
-    typedef PawnDetail PawnDetails[8];
-
-    static const int PAWN_HASH_SIZE = 8096;
-#else
     static const int PAWN_HASH_SIZE = 16384;
-#endif
     static const int KING_PAWN_HASH_SIZE = 8132;
 
     static CACHE_ALIGN Bitboard kingProximity[2][64];
@@ -115,17 +91,9 @@ class Scoring
            uint8_t pawn_file_mask;
            uint8_t passer_file_mask;
            uint8_t pad;
-#ifdef TUNE
-           score_t endgame_score, midgame_score;
-#else
            int32_t endgame_score, midgame_score;
-#endif
   	   int w_square_pawns,b_square_pawns;
            int outside;
-#ifdef TUNE
-         int center_pawn_factor;
-         PawnDetail details[8];
-#endif
        } wPawnData, bPawnData;
 
        const PawnData &pawnData(ColorType side) const {
@@ -135,18 +103,8 @@ class Scoring
 
     struct KingPawnHashEntry {
        hash_t hc;
-#ifdef TUNE
-       score_t cover;
-       score_t storm;
-       score_t pawn_attacks;
-       score_t king_endgame_position;
-       float counts[6][4];
-       int pawn_attack_count;
-       int storm_counts[2][4][5];
-#else
        int32_t cover, storm, pawn_attacks;
        int32_t king_endgame_position;
-#endif
     };
 
     KingPawnHashEntry kingPawnHashTable[2][KING_PAWN_HASH_SIZE];
@@ -165,10 +123,6 @@ class Scoring
     void calcCover(const Board &board, ColorType side, KingPawnHashEntry &cover);
 
     void calcStorm(const Board &board, ColorType side, KingPawnHashEntry &cover, const Bitboard &oppPawnAttacks);
-
-#ifdef TUNE
-    score_t kingAttackSigmoid(score_t weight) const;
-#endif
 
     // The scores for opening, middlegame and endgame
     struct Scores {
@@ -238,18 +192,10 @@ class Scoring
                      const AttackInfo &ai,
                      Scores &scores);
 
-#ifdef TUNE
-    static score_t calcCover(const Board &board, ColorType side, int file, int rank, int (&counts)[6][4]);
-#else
     static score_t calcCover(const Board &board, ColorType side, int file, int rank);
-#endif
 
     // Compute king cover for King on square 'kp' of color 'side'
-#ifdef TUNE
-    static score_t calcCover(const Board &board, ColorType side, Square kp, int (&counts)[6][4]);
-#else
     static score_t calcCover(const Board &board, ColorType side, Square kp);
-#endif
 
     void calcPawnData(const Board &board, ColorType side,
 			   PawnHashEntry::PawnData &entr);

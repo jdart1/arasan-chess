@@ -9,7 +9,6 @@ following other console programs:
 - ecococder - adds ECO codes to a PGN file
 - pgnfilter - samples PGN files, writes EPD records to stdout
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
-- tuner - automatically tunes scoring parameters
 - selfplay - generates positions for NNUE tuning
 
 Following is a sketch of the Arasan source directory tree:
@@ -91,7 +90,7 @@ Supported instruction sets at present are:
 
 The BUILD_TYPE variable can be used to specify the desired instruction
 set for the compilation: this works not just with the chess engine, but with
-the tuner and utiliies, also. For example:
+the utiliies, also. For example:
 
 make BUILD_TYPE=avx2 utils
 
@@ -143,7 +142,6 @@ The following targets are defined in the makefile:
 
 - default: builds just the chess engine
 - profiled: build the chess engine using PGO
-- tuning: builds the parameter tuning program
 - utils: builds utility programs including "makebook"
 - release: builds the release zip file for Windows
 
