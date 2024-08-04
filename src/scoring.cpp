@@ -2227,14 +2227,15 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
           }
           assert(0);
       }
-#endif
+      nnval = score1;
+#else
       nnval = static_cast<score_t>(globals::network.evaluate(node->accum,bucket));
+#endif
    }
    else {
       nnval = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
    }
-   return nnval;
+   return std::clamp(nnval, -Constants::MATE + (node->ply - 1), Constants::MATE - (node->ply - 1));
 }
-
 
 #endif
