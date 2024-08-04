@@ -7,7 +7,6 @@ following other console programs:
 - makebook - builds binary opening book files from text (PGN) files
 - makeeco - builds ecodata.cpp from from "eco" text file
 - ecococder - adds ECO codes to a PGN file
-- pgnfilter - samples PGN files, writes EPD records to stdout
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
 - selfplay - generates positions for NNUE tuning
 
