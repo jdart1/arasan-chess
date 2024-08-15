@@ -99,6 +99,7 @@ static struct SelfPlayOptions {
     bool adjudicateDraw = true;
     bool adjudicate7manDraw = false;
     bool adjudicateTB = true;
+    int adjudicateTBMen = 3; // don't adjudicate with more men so low-mat configs are included
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
     unsigned TBAdjudicationPlies = 10;
@@ -584,7 +585,8 @@ static void selfplay(ThreadData &td) {
                     stats.state = Draw;
                     result = Result::Draw;
                     adjudicated = true;
-                } else if (sp_options.adjudicateTB && board.men() <= globals::EGTBMenCount &&
+                } else if (sp_options.adjudicateTB && board.men() <=
+                           std::min<int>(sp_options.adjudicateTBMen,globals::EGTBMenCount) &&
                            ++tb_score_count >= sp_options.TBAdjudicationPlies) {
                     if (stats.display_value >= Constants::TABLEBASE_WIN) {
                         result =
