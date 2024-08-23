@@ -52,7 +52,6 @@ struct Params  {
     static const score_t QR_ADJUST_ENDGAME;
     static const score_t Q_VS_3MINORS_MIDGAME;
     static const score_t Q_VS_3MINORS_ENDGAME;
-    static const score_t CASTLING[6];
     static const score_t KING_COVER[6][4];
     static const score_t KING_COVER_BASE;
     static const score_t KING_DISTANCE_BASIS;
