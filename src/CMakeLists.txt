@@ -187,7 +187,7 @@ add_executable (ecocoder EXCLUDE_FROM_ALL util/ecocoder.cpp ${UTIL_SRC})
 
 add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp ${UTIL_SRC})
 
-add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC})
+add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/binformat.cpp)
 
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
 target_link_libraries(playchess PRIVATE Threads::Threads)
