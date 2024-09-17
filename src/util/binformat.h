@@ -21,8 +21,6 @@ public:
     // TBD: other formats
     enum class Format {StockfishBin};
 
-    static bool writeBin(const PositionData &pos, int resultVal, std::ostream &out);
-
     template<Format fmt>
     inline static bool write(const PositionData &pos, int resultVal, std::ostream &out) {
         switch(fmt) {
@@ -35,8 +33,20 @@ public:
     }
 
     template<Format fmt>
-    static bool read(std::istream &in, PositionData &pos);
+    inline static bool read(std::istream &in, int &result, PositionData &pos) {
+        switch(fmt) {
+        case Format::StockfishBin:
+            return readBin(in, result, pos);
+        default:
+            assert(0);
+            return false;
+        }
+    }
 
+private:
+    static bool writeBin(const PositionData &pos, int resultVal, std::ostream &out);
+
+    static bool readBin(std::istream &in, int &result, PositionData &pos);
 };
 
 #endif
