@@ -17,9 +17,12 @@
 #include "syzygy.h"
 #include "syzygy/src/tbprobe.h"
 #endif
+#include "util/binformat.h"
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <iostream>
+#include <list>
 #include <regex>
 #include <set>
 #include <string>
@@ -1649,6 +1652,84 @@ static int testTB()
 }
 #endif
 
+static int testBinIO() {
+    int errs = 0;
+    struct Data {
+        Data(const std::string &f, const std::string &m)
+            : fen(f) {
+            Board board;
+            if (!BoardIO::readFEN(board,f)) {
+                std::cerr << "warning: FEN not parsed" << std::endl;
+            }
+            stm = board.sideToMove();
+            move = Notation::value(board, board.sideToMove(),
+                                Notation::InputFormat::SAN,
+                                m, true);
+            if (IsNull(move)) std::cerr << "warning: move not parsed" << std::endl;
+        }
+        Data() : fen(""), stm(White), move(NullMove) {
+        }
+        std::string fen;
+        ColorType stm;
+        Move move;
+    };
+
+    std::list<Data> datas = {Data("rnb1k2r/ppq1nppp/4p3/2ppP3/3P2Q1/P1P5/2P2PPP/R1B1KBNR w KQkq -","Qxg7"),
+        Data("r2qk3/1b6/p1pbp1rp/1p2Pp1n/2pP2pP/2N3P1/PPQ2P2/R3RBK1 w q f6","exf6"),
+        Data("rn2k2r/pb2bp2/2p1p2p/1p2Pq2/P1pQ3P/2N3B1/1P3PP1/3RKB1R b Kkq -","c5"),
+        Data("r1bqk2r/pp2bppp/2n1p3/3n4/3P4/2NB1N2/PP3PPP/R1BQK2R w KQkq -","O-O"),
+        Data("r1bqk2r/pp1pppbp/2n2np1/8/2BNP3/2N1B3/PPP2PPP/R2QK2R b KQkq -","O-O"),
+        Data("r2q1rk1/pp1bppbp/2np1np1/8/2BNP3/2N1BP2/PPPQ2PP/R3K2R w KQ -","O-O-O"),
+        Data("r3kb1r/pp1b1pp1/1q2p2p/8/4B3/2P2N2/PP2QPPP/2KR3R b kq -","O-O-O"),
+        Data("8/3pkp1P/p3p2q/5p2/5P2/5K2/8/8 w - -","h8=Q"),
+        Data("8/3pkp1P/p3p2q/5p2/5P2/5K2/8/8 w - -","h8=N")
+    };
+
+    int count = 0;
+    for (const auto &data : datas) {
+        BinFormats::PositionData pos;
+        pos.fen = data.fen;
+        pos.move = data.move;
+        pos.score = 0;
+        pos.ply = 9;
+        if (count == 8) // include case with high move count
+            pos.move50Count = 100;
+        else
+            pos.move50Count = 10;
+        pos.stm = data.stm;
+#if defined(__MINGW32__) || defined(__MINGW64__) || (defined(__APPLE__) && defined(__MACH__))
+        std::string tmp_name("XXXXXX");
+#else
+        std::string tmp_name(std::tmpnam(nullptr));
+#endif
+        std::ofstream outfile(tmp_name, std::ios::binary | std::ios::trunc);
+        static const int results[3] = {0, -1, 1};
+        int resultVal = results[count % 3];
+        ++count;
+        if (!BinFormats::write<BinFormats::Format::StockfishBin>(pos, resultVal, outfile)) {
+            std::cerr << "write error in testBinIO" << std::endl;
+            ++errs;
+        }
+        outfile.close();
+        // Now read from file
+        BinFormats::PositionData readData;
+        std::ifstream infile(tmp_name, std::ios::binary);
+        int readResult;
+        if (!BinFormats::read<BinFormats::Format::StockfishBin>(infile, readResult, readData)) {
+            std::cerr << "read error in testBinIO" << std::endl;
+            ++errs;
+        }
+        errs += readResult != resultVal;
+        errs += readData.fen != pos.fen;
+        errs += !MovesEqual(readData.move,pos.move); 
+        errs += readData.score != pos.score;
+        errs += readData.move50Count != pos.move50Count;
+        errs += readData.ply != pos.ply;
+        std::remove(tmp_name.c_str());
+    }
+    return errs;
+}
+
 int doUnit() {
 
    int errs = 0;
@@ -1669,6 +1750,7 @@ int doUnit() {
    errs += testPerft();
    errs += testSearch();
    errs += testOptions();
+   errs += testBinIO();
 #ifdef NNUE
    errs += testNNUE();
 #endif
