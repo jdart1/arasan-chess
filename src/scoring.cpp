@@ -2235,7 +2235,8 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    else {
       nnval = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
    }
-   return std::clamp(nnval, -Constants::MATE + (node->ply - 1), Constants::MATE - (node->ply - 1));
+   int ply = node ? node->ply : 0;
+   return std::clamp(nnval, -Constants::MATE + (ply - 1), Constants::MATE - (ply - 1));
 }
 
 #endif
