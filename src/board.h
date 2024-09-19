@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023 by Jon Dart.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023-2024 by Jon Dart.
 // All Rights Reserved.
 
 #include "types.h"
@@ -163,6 +163,10 @@ public:
 
    int operator == ( const Board &b ) {
        return state.hashCode == b.hashCode();
+   }
+
+   int operator != ( const Board &b ) {
+       return state.hashCode != b.hashCode();
    }
 
    // set a bitmap of squares that lie in a straight line between
