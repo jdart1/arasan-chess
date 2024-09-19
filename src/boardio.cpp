@@ -197,24 +197,23 @@ void BoardIO::writeFEN(const Board &board, std::ostream &o, bool addMoveInfo) {
         o << " b";
 
     // used in I/O of castling data:
-    const bool kcastle[6] = {true, true, false, false, false, false};
-    const bool qcastle[6] = {true, false, true, false, false, false};
+    constexpr bool kcastle[4] = {true, true, false, false};
+    constexpr bool qcastle[4] = {true, false, true, false};
 
-    // note : unfortunately FEN doesn't allow recording if castling
-    // has taken place, only whether or not it is possible.
-    CastleType wcs = board.castleStatus(White);
-    CastleType bcs = board.castleStatus(Black);
+    int wcs = static_cast<int>(board.castleStatus(White));
+    int bcs = static_cast<int>(board.castleStatus(Black));
     o << ' ';
-    if (!kcastle[(int)wcs] && !qcastle[(int)bcs])
+    assert(wcs >= 0 && wcs <= 3 && bcs >=0 && wcs <=3);
+    if (wcs == 3 && bcs == 3) {
         o << '-';
-    else {
-        if (kcastle[(int)wcs])
+    } else {
+        if (kcastle[wcs])
             o << 'K';
-        if (qcastle[(int)wcs])
+        if (qcastle[wcs])
             o << 'Q';
-        if (kcastle[(int)bcs])
+        if (kcastle[bcs])
             o << 'k';
-        if (qcastle[(int)bcs])
+        if (qcastle[bcs])
             o << 'q';
     }
     o << ' ';
