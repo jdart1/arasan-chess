@@ -277,12 +277,12 @@ bool BinFormats::writeBin(const BinFormats::PositionData &data, int result, std:
 bool BinFormats::readBin(std::istream &in, int &result, PositionData &out) {
     PackedPosition posData;
     size_t count = 0;
-    for (; count < 32 && !in.bad(); ++count) {
+    for (; count < 32 && !in.fail(); ++count) {
         posData[count] = read_little_endian<uint8_t>(in);
     }
-    assert(count == 32);
-    if (in.bad())
+    if (in.fail())
         return false;
+    assert(count == 32);
     int pos = 0;
     unsigned stm, whiteKing, blackKing;
     Board board;
@@ -330,17 +330,21 @@ bool BinFormats::readBin(std::istream &in, int &result, PositionData &out) {
     uint16_t encodedMove, ply;
     int8_t res;
     deserialize<int16_t>(in, score);
-    if (in.bad())
+    if (in.fail())
         return false;
     deserialize<uint16_t>(in, encodedMove);
-    if (in.bad())
+    if (in.fail())
         return false;
     deserialize<uint16_t>(in, ply);
-    if (in.bad())
+    if (in.fail())
         return false;
     deserialize<int8_t>(in, res);
-    if (in.bad())
+    if (in.fail())
         return false;
+    // read and discard the padding byte
+    uint8_t padding;
+    deserialize<uint8_t>(in, padding);
+    assert(in.eof() || in.tellg() % 40 == 0);
     out.score = static_cast<score_t>(score);
     decode_move(encodedMove, board, out.move);
     out.ply = static_cast<unsigned>(ply);

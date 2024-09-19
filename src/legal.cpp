@@ -110,7 +110,7 @@ int legalMove(const Board &board, Square start,
 {
    // do a little basic sanity checking:
   if (!OnBoard(start) || !OnBoard(dest) || IsEmptyPiece(board[start])) {
-      std::cout << "fails sanity" << std::endl;
+      //std::cout << "fails sanity" << std::endl;
       return 0;
   }
 

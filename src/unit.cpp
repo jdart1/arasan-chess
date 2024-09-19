@@ -1685,48 +1685,60 @@ static int testBinIO() {
         Data("8/3pkp1P/p3p2q/5p2/5P2/5K2/8/8 w - -","h8=N")
     };
 
-    int count = 0;
+    constexpr size_t cases = 9;
+
+    assert(cases == datas.size());
+
+#if defined(__MINGW32__) || defined(__MINGW64__) || (defined(__APPLE__) && defined(__MACH__))
+    std::string tmp_name("XXXXXX");
+#else
+    std::string tmp_name(std::tmpnam(nullptr));
+#endif
+    std::ofstream outfile(tmp_name, std::ios::binary | std::ios::trunc);
+    alignas(64) BinFormats::PositionData posList[cases];
+    unsigned count = 0;
+    // write data
+    static const int results[3] = {0, -1, 1};
     for (const auto &data : datas) {
-        BinFormats::PositionData pos;
+        if (count >= cases) break;
+        BinFormats::PositionData &pos = posList[count];
         pos.fen = data.fen;
         pos.move = data.move;
         pos.score = 0;
         pos.ply = 9;
-        if (count == 8) // include case with high move count
+        if (count == cases-1) // include case with high move count
             pos.move50Count = 100;
         else
             pos.move50Count = 10;
         pos.stm = data.stm;
-#if defined(__MINGW32__) || defined(__MINGW64__) || (defined(__APPLE__) && defined(__MACH__))
-        std::string tmp_name("XXXXXX");
-#else
-        std::string tmp_name(std::tmpnam(nullptr));
-#endif
-        std::ofstream outfile(tmp_name, std::ios::binary | std::ios::trunc);
-        static const int results[3] = {0, -1, 1};
         int resultVal = results[count % 3];
-        ++count;
         if (!BinFormats::write<BinFormats::Format::StockfishBin>(pos, resultVal, outfile)) {
             std::cerr << "write error in testBinIO" << std::endl;
             ++errs;
         }
-        outfile.close();
-        // Now read from file
-        BinFormats::PositionData readData;
-        std::ifstream infile(tmp_name, std::ios::binary);
-        int readResult;
-        if (!BinFormats::read<BinFormats::Format::StockfishBin>(infile, readResult, readData)) {
-            std::cerr << "read error in testBinIO" << std::endl;
-            ++errs;
-        }
+        ++count;
+    }
+    outfile.close();
+    std::ifstream infile(tmp_name, std::ios::binary);
+    // Now read from file
+    count = 0;
+    BinFormats::PositionData readData;
+    int readResult;
+    while (count < cases && BinFormats::read<BinFormats::Format::StockfishBin>(infile, readResult, readData)) {
+        const BinFormats::PositionData &pos = posList[count];
+        int resultVal = results[count % 3];
+        int old_errs = errs;
         errs += readResult != resultVal;
         errs += readData.fen != pos.fen;
         errs += !MovesEqual(readData.move,pos.move); 
         errs += readData.score != pos.score;
         errs += readData.move50Count != pos.move50Count;
         errs += readData.ply != pos.ply;
-        std::remove(tmp_name.c_str());
+        if (old_errs != errs) std::cerr << "error in testBinIO, case " << count << std::endl;
+        ++count;
     }
+    infile.close();
+    std::remove(tmp_name.c_str());
     return errs;
 }
 
