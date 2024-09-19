@@ -9,6 +9,7 @@ following other console programs:
 - ecococder - adds ECO codes to a PGN file
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
 - selfplay - generates positions for NNUE tuning
+- checkbin - checks for errors in NNUE training files
 
 Following is a sketch of the Arasan source directory tree:
 

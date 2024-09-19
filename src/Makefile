@@ -282,7 +282,7 @@ endif
 default: dirs $(EXPORT)/$(ARASANX)
 
 utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
-$(EXPORT)/selfplay
+$(EXPORT)/selfplay $(EXPORT)/checkbin
 
 clean: dirs
 	rm -f $(BUILD)/*.o
@@ -291,7 +291,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay checkbin
 
 dirs:
 	mkdir -p $(BUILD)
@@ -354,10 +354,10 @@ $(PROFILE)/%.o: $(STB)/%.c
 endif
 
 ifeq ("$(findstring UNIT_TESTS,$(DEBUG))","UNIT_TESTS")
-UNIT_TEST_SRC:=unit.cpp
+UNIT_TEST_SRC:=unit.cpp binformat.cpp
 endif
 ifeq ("$(findstring UNIT_TESTS,$(CXXFLAGS))","UNIT_TESTS")
-UNIT_TEST_SRC:=unit.cpp
+UNIT_TEST_SRC:=unit.cpp binformat.cpp
 endif
 
 ARASANX_SOURCES = arasanx.cpp tester.cpp bench.cpp protocol.cpp \
@@ -392,6 +392,8 @@ PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
 SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) binformat.cpp
 
+CHECKBIN_SOURCES = checkbin.cpp $(UTIL_SOURCES) binformat.cpp
+
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
@@ -399,6 +401,7 @@ MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS)
 ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+CHECKBIN_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(CHECKBIN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
@@ -414,6 +417,9 @@ $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
+
+$(EXPORT)/checkbin:  $(CHECKBIN_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(CHECKBIN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/checkbin -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
