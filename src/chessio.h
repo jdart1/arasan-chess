@@ -57,14 +57,14 @@ class ChessIO {
 
         virtual ~PGNReader() = default;
 
-        // collect headers from the file, return nonzero if found
+        // collect headers from the file, return true if found
         // and also return the file offset of the first header.
-        int collectHeaders(std::vector<Header> &hdrs, long &first);
+        bool collectHeaders(std::vector<Header> &hdrs, long &first);
 
         // scan a PGN file, fill "contents" with strings.  Each string contains
         // a descriptive 1-line header followed by a tab and the file offset
         // of the game in decimal digits.
-        int scanPGN(std::vector<std::string> &contents);
+        bool scanPGN(std::vector<std::string> &contents);
 
         // get line from file, return false if EOL or error
         bool getline(std::string &line);
@@ -105,14 +105,14 @@ class ChessIO {
     };
 
     // Store a PGN file with the specified headers
-    static int store_pgn(std::ostream &ofs, MoveArray &moves, const ColorType computer_side,
-                         const std::string &result, std::vector<Header> &headers);
+    static bool store_pgn(std::ostream &ofs, MoveArray &moves, const ColorType computer_side,
+                          const std::string &result, std::vector<Header> &headers);
 
-    static int store_pgn(std::ostream &ofs, MoveArray &moves, const std::string &result,
-                         std::vector<Header> &headers);
+    static bool store_pgn(std::ostream &ofs, MoveArray &moves, const std::string &result,
+                          std::vector<Header> &headers);
 
-    static int load_fen(std::istream &ifs, Board &board);
-    static int store_fen(std::ostream &ofs, const Board &board);
+    static bool load_fen(std::istream &ifs, Board &board);
+    static bool store_fen(std::ostream &ofs, const Board &board);
 
     // read a PGN game header from the file.
     static void collect_headers(std::istream &game_file, std::vector<Header> &hdrs, long &first);
@@ -129,8 +129,8 @@ class ChessIO {
     static void replace_header(std::vector<Header> &hdrs, const std::string &key,
                                const std::string &val);
 
-    // read an EPD record from a stream, return 1 if ok, 0 if EOF
-    static int readEPDRecord(std::istream &ifs, Board &board, EPDRecord &out);
+    // read an EPD record from a stream, return true if OK
+    static bool readEPDRecord(std::istream &ifs, Board &board, EPDRecord &out);
 
     // write an EPD record
     static void writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &rec);

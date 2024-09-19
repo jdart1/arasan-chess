@@ -51,7 +51,7 @@ void ChessIO::get_game_description(const std::vector<Header> &hdrs, std::string 
     descr = s.str();
 }
 
-int ChessIO::PGNReader::scanPGN(std::vector<std::string> &contents) {
+bool ChessIO::PGNReader::scanPGN(std::vector<std::string> &contents) {
     while (stream.good() && !stream.eof()) {
         long first;
         std::vector<Header> hdrs;
@@ -67,7 +67,7 @@ int ChessIO::PGNReader::scanPGN(std::vector<std::string> &contents) {
             contents.push_back(descr);
         }
     }
-    return 1;
+    return stream.good();
 }
 
 bool ChessIO::PGNReader::getline(std::string &line) {
@@ -113,19 +113,19 @@ void ChessIO::add_header(std::vector<Header> &hdrs, const std::string &key,
     hdrs.push_back(Header(key, val));
 }
 
-int ChessIO::load_fen(std::istream &ifs, Board &board) {
+bool ChessIO::load_fen(std::istream &ifs, Board &board) {
     ifs >> board;
     board.state.moveCount = 0;
     return ifs.good();
 }
 
-int ChessIO::store_fen(std::ostream &ofile, const Board &board) {
+bool ChessIO::store_fen(std::ostream &ofile, const Board &board) {
     ofile << board << std::endl;
     return ofile.good();
 }
 
-int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const ColorType computer_side,
-                       const std::string &result, std::vector<Header> &headers) {
+bool ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const ColorType computer_side,
+                        const std::string &result, std::vector<Header> &headers) {
     // Write standard PGN header.
 
     std::string gameResult = result;
@@ -203,8 +203,8 @@ int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const ColorType co
     return store_pgn(ofile, moves, longResult, newHeaders);
 }
 
-int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const std::string &result,
-                       std::vector<Header> &headers) {
+bool ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const std::string &result,
+                        std::vector<Header> &headers) {
     for (auto it = headers.begin(); it != headers.end(); it++) {
         Header p = *it;
         ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << std::endl;
@@ -238,23 +238,20 @@ int ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const std::string 
         buf << ' ' << result;
     }
     ofile << buf.str() << std::endl << std::endl;
-    if (!ofile) {
-        return 0;
-    }
-    return 1;
+    return (bool)ofile;
 }
 
-int ChessIO::readEPDRecord(std::istream &ifs, Board &board, EPDRecord &rec) {
+bool ChessIO::readEPDRecord(std::istream &ifs, Board &board, EPDRecord &rec) {
     rec.clear();
     // read FEN description
     ifs >> board;
     if (ifs.eof())
-        return 0;
+        return false;
     if (!ifs.good()) {
         rec.setError("Bad EPD record: FEN board description missing or invalid");
         ifs.clear();
         ifs.ignore(4096, '\n');
-        return 1;
+        return true;
     }
     // read EPD commands
     std::string commands, command;
@@ -277,7 +274,7 @@ int ChessIO::readEPDRecord(std::istream &ifs, Board &board, EPDRecord &rec) {
             val += *it++;
         rec.add(cmd, val);
     }
-    return 1;
+    return true;
 }
 
 void ChessIO::writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &rec) {
@@ -290,7 +287,7 @@ void ChessIO::writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &r
     ofs << std::endl;
 }
 
-int ChessIO::PGNReader::collectHeaders(std::vector<Header> &hdrs, long &first) {
+bool ChessIO::PGNReader::collectHeaders(std::vector<Header> &hdrs, long &first) {
     first = static_cast<long>(stream.tellg()) - 1;
     bool foundHeader = false;
     std::string line;
