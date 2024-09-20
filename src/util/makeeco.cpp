@@ -78,8 +78,7 @@ int do_eco(const std::string &eco_line, unsigned line)
             if (isdigit(text[0])) continue;
             // parse the move
             Move m = Notation::value(board,side,Notation::InputFormat::SAN,text);
-            if (IsNull(m) ||
-                !legalMove(board,StartSquare(m),DestSquare(m)))
+            if (IsNull(m) || !legalMove(board,m))
             {
                 std::cerr << "Illegal or invalid move: " << text << std::endl;
                 return -1;

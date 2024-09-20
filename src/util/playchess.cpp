@@ -132,8 +132,7 @@ int CDECL main(int argc, char **argv)
                      Move m;
                      m = Notation::value(board,board.sideToMove(),
                                          Notation::InputFormat::SAN,tok.val);
-                     if (IsNull(m) ||
-                         !legalMove(board,StartSquare(m), DestSquare(m))) {
+                     if (IsNull(m) || !legalMove(board,m)) {
                         // echo to both stdout and stderr
                         std::cerr << "Illegal move: " << tok.val << std::endl;
                         std::cout << "Illegal move: " << tok.val << std::endl;

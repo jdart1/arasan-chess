@@ -1680,9 +1680,7 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
         else if (tok.type == ChessIO::GameMove) {
             // parse the move
             Move m = Notation::value(board,stm,Notation::InputFormat::SAN,tok.val);
-            if (IsNull(m) ||
-                !legalMove(board,StartSquare(m),
-                           DestSquare(m))) {
+            if (IsNull(m) || !legalMove(board,m)) {
                 std::cerr << "Illegal move" << std::endl;
                 break;
             }
