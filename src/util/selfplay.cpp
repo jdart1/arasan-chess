@@ -454,7 +454,7 @@ static void selfplay(ThreadData &td) {
                 if (sp_options.saveGames) {
                     Notation::image(board, m, Notation::OutputFormat::SAN, image);
                 }
-                if (!(sp_options.skipNonQuiet && CaptureOrPromotion(m)) &&
+                if (!(sp_options.skipNonQuiet && (CaptureOrPromotion(m) || board.checkStatus() == InCheck)) &&
                     ply >= sp_options.minOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
                     !board.repCount(1) &&
