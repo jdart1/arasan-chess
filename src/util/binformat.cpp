@@ -5,6 +5,8 @@
 #include "chessio.h"
 #include "stdendian.h"
 #include <array>
+#include <sstream>
+#include <unordered_map>
 
 using PackedPosition = std::array<uint8_t, 32>;
 
@@ -130,8 +132,7 @@ static unsigned decode_piece(const PackedPosition &in, Piece &p, unsigned pos) {
         if (code == 0 && bits == 1) { // empty piece
             found = true;
             break;
-        }
-        else if (bits == 4) {
+        } else if (bits == 4) {
             // note: Kings are not encoded this way
             for (unsigned pieceCode = 0; pieceCode <= 5; ++pieceCode) {
                 if (HUFFMAN_TABLE[pieceCode] == code) {
@@ -167,15 +168,19 @@ static void decode_move(uint16_t encodedMove, const Board &board, Move &m) {
     Square to = static_cast<Square>(encodedMove & 0b111111);
     Square from = static_cast<Square>((encodedMove >> 6) & 0b111111);
     PieceType promotion = Empty;
-    if (TypeOfPiece(board[from]) == Pawn && Rank(to,board.sideToMove()) == 8) {
+    if (TypeOfPiece(board[from]) == Pawn && Rank(to, board.sideToMove()) == 8) {
         promotion = static_cast<PieceType>(((encodedMove >> 12) & 0x3) + 2);
-    } 
+    }
     if (TypeOfPiece(board[from]) == King) {
         // Stockfish encodes castling differently
-        if (from == chess::E1 && to == chess::H1) to = chess::G1;
-        else if (from == chess::E1 && to == chess::A1) to = chess::C1;
-        else if (from == chess::E8 && to == chess::H8) to = chess::G8;
-        else if (from == chess::E8 && to == chess::A8) to = chess::C8;
+        if (from == chess::E1 && to == chess::H1)
+            to = chess::G1;
+        else if (from == chess::E1 && to == chess::A1)
+            to = chess::C1;
+        else if (from == chess::E8 && to == chess::H8)
+            to = chess::G8;
+        else if (from == chess::E8 && to == chess::A8)
+            to = chess::C8;
     }
     m = CreateMove(board, from, to, promotion);
 }
@@ -193,6 +198,11 @@ template <typename T> static void serialize(std::ostream &o, const T &data) {
     }
     case 4: {
         uint32_t out = swapEndian32(reinterpret_cast<const uint32_t *>(&data));
+        o.write((char *)(&out), sizeof(T));
+        break;
+    }
+    case 8: {
+        uint64_t out = swapEndian64(reinterpret_cast<const uint64_t *>(&data));
         o.write((char *)(&out), sizeof(T));
         break;
     }
@@ -217,10 +227,32 @@ template <typename T> static void deserialize(std::istream &in, T &data) {
         data = swapEndian32(reinterpret_cast<const T *>(&data));
         break;
     }
+    case 8: {
+        data = swapEndian64(reinterpret_cast<const T *>(&data));
+        break;
+    }
     default:
-        std::cerr << "unsuppored size for .bin seralization" << std::endl;
+        std::cerr << "unsupported size for .bin seralization" << std::endl;
         break;
     } // end switch
+}
+
+static const std::array<std::string,3> format_names = {"bin", "marlin", "bullet"};
+
+bool BinFormats::fromString(const std::string &s, Format &format) {
+    size_t i = 0;
+    for (const std::string &name : format_names) {
+        if (name == s) {
+            format = static_cast<BinFormats::Format>(i);
+            return true;
+        }
+        ++i;
+    }
+    return false;
+}
+
+std::string BinFormats::toString(const BinFormats::Format fmt) {
+    return format_names[static_cast<int>(fmt)];
 }
 
 bool BinFormats::writeBin(const BinFormats::PositionData &data, int result, std::ostream &out) {
@@ -235,12 +267,10 @@ bool BinFormats::writeBin(const BinFormats::PositionData &data, int result, std:
     pos = encode_bits(posData, board.kingSquare(Black), 6, pos);
     // Encode board (minus Kings)
     pos = encode_board(posData, board, pos);
-    CastleType wcs = board.castleStatus(White);
-    CastleType bcs = board.castleStatus(Black);
-    pos = encode_bit(posData, wcs == CanCastleKSide || wcs == CanCastleEitherSide, pos);
-    pos = encode_bit(posData, wcs == CanCastleQSide || wcs == CanCastleEitherSide, pos);
-    pos = encode_bit(posData, bcs == CanCastleKSide || bcs == CanCastleEitherSide, pos);
-    pos = encode_bit(posData, bcs == CanCastleQSide || bcs == CanCastleEitherSide, pos);
+    pos = encode_bit(posData, board.canCastleKSide(White), pos);
+    pos = encode_bit(posData, board.canCastleQSide(White), pos);
+    pos = encode_bit(posData, board.canCastleKSide(Black), pos);
+    pos = encode_bit(posData, board.canCastleQSide(Black), pos);
     Square epsq = board.enPassantSq();
     if (epsq == InvalidSquare) {
         ++pos;
@@ -265,6 +295,7 @@ bool BinFormats::writeBin(const BinFormats::PositionData &data, int result, std:
     serialize<int16_t>(out, static_cast<int16_t>((data.score)));
     serialize<uint16_t>(out, encode_move(board.sideToMove(), data.move));
     serialize<uint16_t>(out, static_cast<uint16_t>(data.ply));
+    // result is from White perspective
     serialize<int8_t>(out, static_cast<int8_t>(result));
     serialize<uint8_t>(out, static_cast<uint8_t>(0xff));
     if (out.bad()) {
@@ -350,7 +381,115 @@ bool BinFormats::readBin(std::istream &in, int &result, PositionData &out) {
     out.ply = static_cast<unsigned>(ply);
     result = static_cast<int>(res);
     std::stringstream s;
-    BoardIO::writeFEN(board,s,false);
+    BoardIO::writeFEN(board, s, false);
     out.fen = s.str();
     return true;
+}
+
+bool BinFormats::writeMarlin(const BinFormats::PositionData &data, int result, std::ostream &out) {
+    Board board;
+    if (!BoardIO::readFEN(board, data.fen)) {
+        std::cerr << "bad fen" << std::endl;
+        return false;
+    }
+    serialize<uint64_t>(out, board.allOccupied.data);
+    std::array<uint8_t, 16> pos;
+    pos.fill(0);
+    unsigned idx = 0;
+    Bitboard occ(board.allOccupied);
+    Square sq;
+    while ((sq = occ.lastOne()) != InvalidSquare) {
+        const Piece p = board[sq];
+        assert(TypeOfPiece(p) != Empty);
+        unsigned pieceCode = static_cast<unsigned>(TypeOfPiece(p) - 1);
+        // This allows encoding castling status.
+        static constexpr unsigned UnMovedRook = 6;
+        if (TypeOfPiece(p) == Rook) {
+            if (ColorOfPiece(p) == White) {
+                if (((sq == chess::A1) && board.canCastleQSide(White)) ||
+                    ((sq == chess::H1) && board.canCastleKSide(White))) {
+                    pieceCode = UnMovedRook;
+                }
+            } else {
+                if (((sq == chess::A8) && board.canCastleQSide(Black)) ||
+                    ((sq == chess::H8) && board.canCastleKSide(Black))) {
+                    pieceCode = UnMovedRook;
+                }
+            }
+        }
+        pos[idx / 2] |= (pieceCode | (static_cast<unsigned>(ColorOfPiece(p)) << 3))
+                        << (4 * (idx & 1));
+        occ.clear(sq);
+        ++idx;
+    }
+    out.write(reinterpret_cast<const char *>(pos.data()), 16);
+    Square epsq = board.state.enPassantSq;
+    Square target = 0;
+    if (epsq != InvalidSquare) {
+        target = (board.sideToMove() == White) ? epsq + 8 : epsq - 8;
+    }
+    // encode enpassant + side to move
+    out << static_cast<uint8_t>((static_cast<unsigned>(target) & 0b111111) |
+                                static_cast<unsigned>(board.sideToMove() << 7));
+    serialize<uint8_t>(out, board.state.moveCount);
+    serialize<uint16_t>(out, static_cast<uint16_t>(2 * (data.ply / 2)));
+    // score and result from White's perspective
+    serialize<int16_t>(
+        out, static_cast<int16_t>(board.sideToMove() == White ? data.score : -data.score));
+    serialize<uint8_t>(out, static_cast<uint8_t>(result + 1));
+    // add extra byte
+    out << static_cast<uint8_t>(0);
+    return !out.fail();
+}
+
+bool BinFormats::writeBullet(const BinFormats::PositionData &data, int result, std::ostream &out) {
+    Board board;
+    if (!BoardIO::readFEN(board, data.fen)) {
+        std::cerr << "bad fen" << std::endl;
+        return false;
+    }
+    // see bulletformat/src/chess.rs
+    Bitboard occ(board.allOccupied);
+    Square sq, ksq = InvalidSquare, opp_ksq = InvalidSquare;
+    unsigned idx = 0;
+    std::array<uint8_t, 16> pos;
+    pos.fill(0);
+    std::unordered_map<Square, unsigned> pieces;
+    Bitboard newOcc;
+    while ((sq = occ.lastOne()) != InvalidSquare) {
+        occ.clear(sq);
+        unsigned pieceCode = static_cast<unsigned>(board[sq]) - 1;
+        if (board.sideToMove() == Black) {
+            pieceCode ^= 8;
+            sq ^= 56;
+        }
+        if (pieceCode == 5) {
+            ksq = sq;
+        } else if (pieceCode == 13) {
+            opp_ksq = sq ^ 56;
+        }
+        pieces[sq] = pieceCode;
+        newOcc.set(sq);
+        ++idx;
+    }
+    assert(ksq != InvalidSquare && opp_ksq != InvalidSquare);
+    serialize<uint64_t>(out, newOcc);
+    idx = 0;
+    // pack position with modified piece codes
+    while ((sq = newOcc.firstOne()) != InvalidSquare) {
+        newOcc.clear(sq);
+        unsigned pieceCode = pieces[sq];
+        pos[idx / 2] |= (pieceCode << (4 * (idx & 1)));
+        ++idx;
+    }
+    out.write(reinterpret_cast<const char *>(pos.data()), 16);
+    serialize<int16_t>(
+        out, static_cast<int16_t>(board.sideToMove() == White ? data.score : -data.score));
+    serialize<uint8_t>(out, static_cast<uint8_t>(result + 1));
+    serialize<uint8_t>(out, static_cast<uint8_t>(ksq));
+    serialize<uint8_t>(out, static_cast<uint8_t>(opp_ksq));
+    // add extra bytes
+    static char extra[3] = {0, 0, 0};
+    out.write(extra, 3);
+    return !out.fail();
 }

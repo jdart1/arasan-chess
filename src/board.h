@@ -99,6 +99,20 @@ public:
       return castleStatus(side)<3;
    }
 
+   // True if side can castle king side
+   bool canCastleKSide(ColorType) const
+   {
+      return castleStatus(side) == CanCastleKSide ||
+          castleStatus(side) == CanCastleEitherSide;
+   }
+
+   // True if side can castle queen side
+   bool canCastleQSide(ColorType) const
+   {
+      return castleStatus(side) == CanCastleQSide ||
+          castleStatus(side) == CanCastleEitherSide;
+   }
+
    // side to move
    ColorType sideToMove() const  {
      return side;

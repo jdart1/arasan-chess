@@ -81,7 +81,6 @@ static constexpr int MAX_MULTIPV = 4;
 
 static struct SelfPlayOptions {
     // Note: not all options are command-line settable, currently.
-    enum class OutputFormat { Epd, Bin };
     enum class RandomizeType { Nodes, MultiPV };
     unsigned minOutPly = 16;
     unsigned maxOutPly = 300;
@@ -114,7 +113,7 @@ static struct SelfPlayOptions {
     unsigned multipv_limit = 4;
     int multiPVMargin = static_cast<int>(0.2 * Params::PAWN_VALUE);
     bool skipNonQuiet = true;
-    OutputFormat format = OutputFormat::Bin;
+    BinFormats::Format format = BinFormats::Format::StockfishBin;
     bool verbose = false;
     unsigned verboseReportingInterval = 1000000;
     bool checkHash = false; // use hash table to check for possible dups
@@ -508,30 +507,34 @@ static void selfplay(ThreadData &td) {
                           << std::endl;
                 std::cout.flags(original_flags);
             }
-            if (sp_options.format == SelfPlayOptions::OutputFormat::Epd) {
-                std::string resultStr;
-                if (result == Result::WhiteWin)
-                    resultStr = "1.0";
-                else if (result == Result::BlackWin)
-                    resultStr = "0.0";
-                else
-                    resultStr = "0.5";
-                std::unique_lock<std::mutex> lock(outputLock);
-                *pos_out_file << data.fen << ' ' << RESULT_TAG << " \"" << resultStr << "\";"
-                              << std::endl;
-            } else {
-                int resultVal; // result from side to move POV
-                if (result == Result::WhiteWin)
-                    resultVal = data.stm == White ? 1 : -1;
-                else if (result == Result::BlackWin)
-                    resultVal = data.stm == Black ? 1 : -1;
-                else
-                    resultVal = 0;
-                std::unique_lock<std::mutex> lock(outputLock);
-                if (!BinFormats::write<BinFormats::Format::StockfishBin>(data, resultVal, *pos_out_file)) {
-                    std::cerr << "write error" << std::endl;
-                    break;
-                }
+            int resultVal; // result from side to move POV
+            if (result == Result::WhiteWin)
+                resultVal = data.stm == White ? 1 : -1;
+            else if (result == Result::BlackWin)
+                resultVal = data.stm == Black ? 1 : -1;
+            else
+                resultVal = 0;
+            std::unique_lock<std::mutex> lock(outputLock);
+            bool writeResult = false;
+            switch(sp_options.format) {
+            case BinFormats::Format::StockfishBin:
+                writeResult = BinFormats::write<BinFormats::Format::StockfishBin>(data, resultVal,
+                                                                       *pos_out_file);
+                break;
+            case BinFormats::Format::Marlin:
+                writeResult = BinFormats::write<BinFormats::Format::Marlin>(data, resultVal,
+                                                                       *pos_out_file);
+                break;
+            case BinFormats::Format::Bullet:
+                writeResult = BinFormats::write<BinFormats::Format::Bullet>(data, resultVal,
+                                                                       *pos_out_file);
+                break;
+            default:
+                break;
+            }
+            if (!writeResult) {
+                std::cerr << "write error" << std::endl;
+                break;
             }
         }
     }
@@ -551,10 +554,8 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-a (append)] [-d depth] [-v (verbose)] [-c cores] [-n positions] [-o "
-                 "output file]"
-              << std::endl;
-    std::cerr << "         [-m output every m positions] [-f output format (bin or epd)] [-g "
+    std::cerr << "selfplay [-a (append)] [-d depth] [-v (verbose)] [-c cores] [-n positions]" << std::endl;
+    std::cerr << "         [-m output every m positions] [-f output format] [-g "
                  "filename (save games)]"
               << std::endl;
 }
@@ -660,16 +661,12 @@ int CDECL main(int argc, char **argv) {
             }
         } else if (strcmp(argv[arg], "-f") == 0) {
             if (arg + 1 >= argc) {
-                std::cerr << "expected bin or epd after -f" << std::endl;
+                std::cerr << "expected format name after -f" << std::endl;
                 return -1;
             }
             std::string fmt(argv[++arg]);
-            if (fmt == "bin")
-                sp_options.format = SelfPlayOptions::OutputFormat::Bin;
-            else if (fmt == "epd")
-                sp_options.format = SelfPlayOptions::OutputFormat::Epd;
-            else {
-                std::cerr << "expected bin or epd after -f" << std::endl;
+            if (!BinFormats::fromString(fmt,sp_options.format)) {
+                std::cerr << "unrecognized format after -f" << std::endl;
                 return -1;
             }
         } else if (strcmp(argv[arg], "-g") == 0) {
@@ -709,15 +706,12 @@ int CDECL main(int argc, char **argv) {
     }
 
     if (sp_options.posFileName == "") {
-        sp_options.posFileName = sp_options.format == SelfPlayOptions::OutputFormat::Bin
+        sp_options.posFileName = (sp_options.format == BinFormats::Format::StockfishBin)
                                      ? "positions.bin"
-                                     : "positions.epd";
+            : "positions." + BinFormats::toString(sp_options.format);
     }
 
-    std::ios_base::openmode flags = std::ios::out;
-    if (sp_options.format == SelfPlayOptions::OutputFormat::Bin) {
-        flags = flags | std::ios::binary;
-    }
+    std::ios_base::openmode flags = std::ios::out | std::ios::binary;
     if (append) {
         flags = flags | std::ios::app;
     }
