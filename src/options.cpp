@@ -29,7 +29,12 @@ Options::SearchOptions::SearchOptions()
 #endif
       strength(100), multipv(1), ncpus(1),
 #ifdef NNUE
-      useNNUE(true), pureNNUE(false), nnueFile(""),
+      useNNUE(true), pureNNUE(false),
+#ifdef DEFAULT_NETWORK
+      nnueFile(MAKE_STR(DEFAULT_NETWORK)),
+#else
+      nnueFile(""),
+#endif
 #endif
 #ifdef NUMA
       set_processor_affinity(false),

@@ -28,6 +28,11 @@ STB=syzygy\src
 # enable NNUE support
 NNUE=1
 
+!Ifndef NETWORK
+# default network
+NETWORK=arasan-d9-SFv4-20231228.nnue
+!Endif
+
 # location of hwloc library (needed if NUMA enabled)
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
@@ -107,8 +112,9 @@ NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 !Endif
+
 !IfDef NNUE
-NNUE_FLAGS=/DNNUE /Innue
+NNUE_FLAGS=/DNNUE /Innue /DNETWORK=$(NETWORK)
 !Endif
 
 !Ifdef ARASAN_VERSION

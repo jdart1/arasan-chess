@@ -37,7 +37,7 @@ UTIL = util
 NNUE = 1
 
 # default network
-NETWORK=arasan-d9-SFv4-20231228.nnue
+NETWORK ?= arasan-d9-SFv4-20231228.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
@@ -55,7 +55,7 @@ ifdef SYZYGY_TBS
 FLAGS := $(FLAGS) -DSYZYGY_TBS
 endif
 ifdef NNUE
-NNUE_FLAGS := -DNNUE -Innue
+NNUE_FLAGS := -DNNUE -Innue -DDEFAULT_NETWORK=$(NETWORK)
 NNUE_SRC := nnueintf.cpp
 endif
 
