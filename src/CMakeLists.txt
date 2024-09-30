@@ -30,6 +30,7 @@ option(NEON "Use ARM NEON instructions" OFF)
 option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
 option(UNIT_TESTS "unit tests run on startup" OFF)
 option(NNUE "Neural network support" ON)
+set(NETWORK arasan-d9-SFv4-20231228.nnue CACHE STRING "default network file name")
 
 set(EXE_NAME arasanx)
 
@@ -67,6 +68,7 @@ endif(SYZYGY_TBS)
 
 if(NNUE)
     add_compile_definitions(NNUE)
+    add_compile_definitions(NETWORK=${NETWORK})
     set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
     include_directories(${NNUE_DIR})
     list(APPEND EXTRA_SRC nnueintf.cpp)
@@ -189,16 +191,22 @@ add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp ${UTIL_SRC})
 
 add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/binformat.cpp)
 
+add_executable (checkbin EXCLUDE_FROM_ALL util/checkbin.cpp ${UTIL_SRC} util/binformat.cpp)
+
+add_executable (convertbin EXCLUDE_FROM_ALL util/convertbin.cpp ${UTIL_SRC} util/binformat.cpp)
+
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
 target_link_libraries(playchess PRIVATE Threads::Threads)
 target_link_libraries(makeeco PRIVATE Threads::Threads)
 target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
+target_link_libraries(checkbin PRIVATE Threads::Threads)
+target_link_libraries(convertbin PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay checkbin convertbin PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 
-add_dependencies(utils playchess makeeco ecocoder makebook selfplay)
+add_dependencies(utils playchess makeeco ecocoder makebook selfplay checkbin convertbin)
 
