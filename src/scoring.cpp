@@ -2207,7 +2207,7 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    Position p(board,node);
    ChessInterface intf(&p);
    score_t nnval;
-   const unsigned bucket = nnue::Evaluator<ChessInterface>::getBucket(intf);
+   const unsigned bucket = nnue::Evaluator<ChessInterface>::getOutputBucket(intf);
    if (node) {
       nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::White);
       nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::Black);
@@ -2229,7 +2229,8 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
       }
       nnval = score1;
 #else
-      nnval = static_cast<score_t>(globals::network.evaluate(node->accum,bucket));
+      nnval = static_cast<score_t>(globals::network.evaluate(node->accum,
+                                                             board.sideToMove() == White ? nnue::White : nnue::Black, bucket));
 #endif
    }
    else {
