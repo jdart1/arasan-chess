@@ -37,7 +37,7 @@ UTIL = util
 NNUE = 1
 
 # default network
-NETWORK ?= arasan-d9-SFv4-20231228.nnue
+NETWORK ?= arasanv3-d9-20241002.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
