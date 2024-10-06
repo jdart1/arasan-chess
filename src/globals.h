@@ -57,9 +57,9 @@ extern const size_t LINUX_STACK_SIZE;
 extern std::string derivePath(const std::string &fileName);
 extern std::string derivePath(const std::string &base, const std::string &fileName);
 
-extern int loadNetwork(const std::string &filename);
+extern bool loadNetwork(const std::string &filename, bool verbose);
 
-extern int initGlobals();
+extern bool initGlobals();
 
 extern void CDECL cleanupGlobals(void);
 

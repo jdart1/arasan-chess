@@ -132,7 +132,7 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     }
 }
 
-int globals::initGlobals() {
+bool globals::initGlobals() {
 #ifndef _WIN32
     struct rlimit rl;
     const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
@@ -153,17 +153,27 @@ int globals::initGlobals() {
 #endif
     globals::gameMoves = new MoveArray();
     globals::polling_terminated = false;
-    return 1;
+    return true;
 }
 
 #ifdef NNUE
-int globals::loadNetwork(const std::string &fname) {
+bool globals::loadNetwork(const std::string &fname, bool verbose) {
     std::ifstream in(fname, std::ios_base::in | std::ios_base::binary);
-    in >> network;
-    if (!in.good()) {
-        return 0;
+    if (in.fail()) {
+        if (verbose) {
+            std::cout << "warning: failed to open network file " << fname << ": " <<
+                strerror(errno) << std::endl;
+        }
+        return false;
     }
-    return 1;
+    in >> network;
+    if (in.fail()) {
+        if (verbose) std::cout << "warning: failure reading network file " << fname << std::endl;
+        return false;
+    } else {
+        if (verbose) std::cout << "loaded network from file " << fname << std::endl;
+        return true;
+    }
 }
 #endif
 
@@ -260,19 +270,7 @@ void globals::delayedInit(bool verbose) {
         if (options.search.nnueFile.size()) {
             const std::string &nnuePath = options.search.nnueFile;
             nnueInitDone =
-                loadNetwork(absolutePath(nnuePath) ? nnuePath.c_str() : derivePath(nnuePath));
-            if (verbose) {
-                if (nnueInitDone) {
-                    std::cout << debugPrefix << "loaded network from file ";
-                } else {
-                    std::cout << debugPrefix << "warning: failed to load network file ";
-                }
-                std::cout << nnuePath;
-                if (!nnueInitDone) {
-                    std::cout << ": " << strerror(errno);
-                }
-                std::cout << std::endl;
-            }
+                loadNetwork(absolutePath(nnuePath) ? nnuePath.c_str() : derivePath(nnuePath), verbose);
         } else if (verbose) {
             std::cout << debugPrefix << "warning: no NNUE file path was set, network not loaded"
                       << std::endl;
