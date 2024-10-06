@@ -2214,7 +2214,7 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
 #ifdef _DEBUG
       assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Lower) == nnue::AccumulatorState::Computed);
       assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Upper) == nnue::AccumulatorState::Computed);
-      score_t score1 = static_cast<score_t>(globals::network.evaluate(intf.getAccumulator(),bucket));
+      score_t score1 = static_cast<score_t>(globals::network.evaluate(intf.getAccumulator(),intf.sideToMove(),bucket));
       score_t score2 = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
       if (score1 != score2) {
           std::cout << board << std::endl;
