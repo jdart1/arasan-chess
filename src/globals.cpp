@@ -150,10 +150,23 @@ bool globals::initGlobals() {
     return true;
 }
 
-bool globals::loadNetwork(const std::string &fname) {
+bool globals::loadNetwork(const std::string &fname, bool verbose) {
     std::ifstream in(fname, std::ios_base::in | std::ios_base::binary);
+    if (in.fail()) {
+        if (verbose) {
+            std::cout << "warning: failed to open network file " << fname << ": " <<
+                strerror(errno) << std::endl;
+        }
+        return false;
+    }
     in >> network;
-    return !in.fail();
+    if (in.fail()) {
+        if (verbose) std::cout << "warning: failure reading network file " << fname << std::endl;
+        return false;
+    } else {
+        if (verbose) std::cout << "loaded network from file " << fname << std::endl;
+        return true;
+    }
 }
 
 void CDECL globals::cleanupGlobals(void) {
@@ -234,19 +247,7 @@ void globals::delayedInit(bool verbose) {
         if (options.search.nnueFile.size()) {
             const std::string &nnuePath = options.search.nnueFile;
             nnueInitDone =
-                loadNetwork(absolutePath(nnuePath) ? nnuePath.c_str() : derivePath(nnuePath));
-            if (verbose) {
-                if (nnueInitDone) {
-                    std::cout << debugPrefix << "loaded network from file ";
-                } else {
-                    std::cout << debugPrefix << "error: failed to load network file ";
-                }
-                std::cout << nnuePath;
-                if (!nnueInitDone) {
-                    std::cout << ": " << strerror(errno);
-                }
-                std::cout << std::endl;
-            }
+                loadNetwork(absolutePath(nnuePath) ? nnuePath.c_str() : derivePath(nnuePath), verbose);
         } else if (verbose) {
             std::cout << debugPrefix << "error: no NNUE file path was set, network not loaded"
                       << std::endl;
