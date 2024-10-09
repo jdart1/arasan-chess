@@ -626,7 +626,9 @@ int CDECL main(int argc, char **argv) {
     globals::options.search.widePlies = 2;
     globals::options.search.wideWindow = 3 * Params::PAWN_VALUE;
 
-    // re-int book if needed
+    // update book to use new variety setting
+    globals::openingBook.setVariety(globals::options.book.variety);
+    // re-init book if needed
     globals::delayedInit();
 
     int arg = 1;
