@@ -11,6 +11,7 @@
 #include "search.h"
 #include <array>
 #include <cstdio>
+#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -21,7 +22,6 @@
 #include <vector>
 #ifndef _MSC_VER
 extern "C" {
-#include <time.h>
 #include <unistd.h>
 }
 #endif
@@ -33,8 +33,6 @@ using namespace std::placeholders;
 // Utility to generate training positions from Arasan self-play games
 
 static ECO ecoCoder;
-
-static const char *RESULT_TAG = "c2";
 
 class SelfPlayHashTable {
 
@@ -143,11 +141,11 @@ static void saveGame(ThreadData &td, const std::string &result, std::ofstream &f
     } else {
         headers.push_back(ChessIO::Header("Site", "?"));
     }
-    char dateStr[32];
-    time_t tm = time(NULL);
-    struct tm *t = localtime(&tm);
-    snprintf(dateStr, 15, "%4d.%02d.%02d", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday);
-    headers.push_back(ChessIO::Header("Date", dateStr));
+    std::time_t tm = std::time(NULL);
+    std::tm *t = std::localtime(&tm);
+    std::stringstream dateStr;
+    dateStr << std::put_time(t, "%Y.%m.%d");
+    headers.push_back(ChessIO::Header("Date", dateStr.str()));
     headers.push_back(ChessIO::Header("Round", "?"));
     std::stringstream s;
     s << "Arasan " << Arasan_Version;
