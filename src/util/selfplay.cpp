@@ -462,7 +462,7 @@ static void selfplay(ThreadData &td) {
                         BoardIO::writeFEN(board, s, 0);
                         BinFormats::PositionData data;
                         data.fen = s.str();
-                        data.score = score;
+                        data.score = score; // stm POV
                         data.ply = ply;
                         data.move = m;
                         data.stm = board.sideToMove();
@@ -505,15 +505,17 @@ static void selfplay(ThreadData &td) {
                           << std::endl;
                 std::cout.flags(original_flags);
             }
-            int resultVal; // result from side to move POV
-            if (result == Result::WhiteWin)
-                resultVal = data.stm == White ? 1 : -1;
-            else if (result == Result::BlackWin)
-                resultVal = data.stm == Black ? 1 : -1;
-            else
-                resultVal = 0;
+            int resultVal = 0; // result from White POV
+            if (result == Result::WhiteWin) {
+                resultVal = 1;
+            }
+            else if (result == Result::BlackWin) {
+                resultVal = -1;
+            }
             std::unique_lock<std::mutex> lock(outputLock);
             bool writeResult = false;
+            //int16_t whiteScore = data.stm == White ? data.score : -data.score;
+            //std::cout << data.fen << " | " << whiteScore << " | " << (resultVal+1)/2.0 << std::endl;
             switch(sp_options.format) {
             case BinFormats::Format::StockfishBin:
                 writeResult = BinFormats::write<BinFormats::Format::StockfishBin>(data, resultVal,

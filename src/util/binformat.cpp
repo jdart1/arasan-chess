@@ -459,14 +459,14 @@ bool BinFormats::writeBullet(const BinFormats::PositionData &data, int result, s
     while ((sq = occ.lastOne()) != InvalidSquare) {
         occ.clear(sq);
         unsigned pieceCode = static_cast<unsigned>(board[sq]) - 1;
-        if (board.sideToMove() == Black) {
+        if (data.stm == Black) {
             pieceCode ^= 8;
-            sq ^= 56;
+            sq ^= 0x38;
         }
         if (pieceCode == 5) {
             ksq = sq;
         } else if (pieceCode == 13) {
-            opp_ksq = sq ^ 56;
+            opp_ksq = sq ^ 0x38;
         }
         pieces[sq] = pieceCode;
         newOcc.set(sq);
@@ -483,8 +483,10 @@ bool BinFormats::writeBullet(const BinFormats::PositionData &data, int result, s
         ++idx;
     }
     out.write(reinterpret_cast<const char *>(pos.data()), 16);
-    serialize<int16_t>(
-        out, static_cast<int16_t>(board.sideToMove() == White ? data.score : -data.score));
+    // score is stm relative
+    serialize<int16_t>(out, static_cast<int16_t>(data.score));
+    // result is stm relative
+    if (data.stm == Black) result = -result;
     serialize<uint8_t>(out, static_cast<uint8_t>(result + 1));
     serialize<uint8_t>(out, static_cast<uint8_t>(ksq));
     serialize<uint8_t>(out, static_cast<uint8_t>(opp_ksq));
