@@ -1598,7 +1598,13 @@ void Protocol::processWinboardOptions(const std::string &args) {
     if (doTrace) {
         std::cout << debugPrefix << "setting option " << name << "=" << value << std::endl;
     }
-    if (name == "OwnBook") {
+    if (name == "SyzygyUse50MoveRule") {
+        Options::setOption<bool>(value,globals::options.search.syzygy_50_move_rule);
+    }
+    else if (name == "SyzygyProbeDepth") {
+        Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
+    }
+    else if (name == "OwnBook") {
         Options::setOption<bool>(value,globals::options.book.book_enabled);
     } else if (name == "BookPath") {
         Options::setOption<std::string>(value,globals::options.book.book_path);
@@ -2447,6 +2453,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #ifdef SYZYGY_TBS
         std::cout << " egt=\"syzygy\"";
 #endif
+        std::cout << " option=\"SyzygyUse50MoveRule -check " << globals::options.search.syzygy_50_move_rule << "\"";
+        std::cout << " option=\"SyzygyProbeDepth -spin " <<
+            globals::options.search.syzygy_probe_depth << " 0 64" << "\"";
         std::cout << " option=\"OwnBook -check " <<
             globals::options.book.book_enabled << "\"";
         std::cout << " option=\"BookPath -string " <<

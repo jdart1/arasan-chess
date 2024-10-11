@@ -135,9 +135,12 @@ The defaults for many of these options are the values set in the arasan.rc file.
 
 ## CECP options
 
-Besides the standard option-setting commands such as "memory," the following additional
-option settings are available in CECP mode:
+Besides the standard option-setting commands such as "memory" and "egtpath,"
+the following additional option settings are available in CECP mode:
 
+- SyzygyUses50MoveRule - true to observe the 50 move draw rule when probing
+tablebases; false to have tablebase probes ignore the rule. Default is true.
+- SyzygyProbeDepth - maximum depth to probe tablebases. Default is 4.
 - Can resign - sets whether or not the engine can resign a game. Note: under UCI, the
 interface program is always in charge of resignation.
 - Resign threshold - sets how bad the score must be before resignation.
