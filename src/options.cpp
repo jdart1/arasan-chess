@@ -21,7 +21,7 @@ std::string Options::tbPath() const { return search.syzygy_path; }
 #endif
 
 Options::SearchOptions::SearchOptions()
-    : checks_in_qsearch(1), hash_table_size(32 * 1024 * 1024), can_resign(true),
+    : hash_table_size(32 * 1024 * 1024), can_resign(true),
       resign_threshold(-500),
 #ifdef SYZYGY_TBS
       use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
@@ -103,8 +103,6 @@ void Options::set_option(const std::string &name, const std::string &value) {
         }
     } else if (name == "learning.position_learning.minDepth") {
         setOption<int>(name, value, learning.position_learning_minDepth);
-    } else if (name == "search.checks_in_qsearch") {
-        setOption<int>(name, value, search.checks_in_qsearch);
     } else if (name == "search.can_resign") {
         setOption<bool>(name, value, search.can_resign);
     } else if (name == "search.resign_threshold") {

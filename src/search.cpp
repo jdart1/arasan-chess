@@ -55,6 +55,7 @@ static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
 static constexpr int LMR_DEPTH = 3*DEPTH_INCREMENT;
 static constexpr double LMR_BASE[2] = {0.5, 0.3};
 static constexpr double LMR_DIV[2] = {1.8,2.25};
+static constexpr int CHECKS_IN_QSEARCH = 1;
 // Depth limits for the strength reduction feature:
 static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
     1,1,1,1,1,1,1,2,2,3,3,3,4,5,6,7,7,8,9,9,
@@ -1963,7 +1964,7 @@ score_t Search::quiesce(int ply,int depth)
    // Like Stockfish, only distinguish depths with checks vs depth without
    int tt_depth;
    const int inCheck = board.checkStatus((node-1)->last_move)==InCheck;
-   if (inCheck || depth >= 1-srcOpts.checks_in_qsearch) {
+   if (inCheck || depth >= 1-CHECKS_IN_QSEARCH) {
       tt_depth = HashEntry::QSEARCH_CHECK_DEPTH;
    }
    else {
@@ -2274,8 +2275,8 @@ score_t Search::quiesce(int ply,int depth)
            }
 #endif
        }
-       // Do checks in qsearch
-       if (depth >= 1-srcOpts.checks_in_qsearch) {
+       // Do checks in qsearch, if enabled
+       if (depth >= 1-CHECKS_IN_QSEARCH) {
            QSearchCheckGenerator mg(board,disc);
            Move m;
            while (!IsNull(m = mg.nextCheck())) {

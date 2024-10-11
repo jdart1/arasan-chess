@@ -26,7 +26,6 @@ class Options {
     struct SearchOptions {
         SearchOptions();
 
-        int checks_in_qsearch;
         size_t hash_table_size;
         bool can_resign;
         int resign_threshold;
