@@ -25,9 +25,6 @@ STB=syzygy\src
 # enable NUMA support
 #NUMA=1
 
-# enable NNUE support
-NNUE=1
-
 # location of hwloc library (needed if NUMA enabled)
 HWLOC64=E:\chess\hwloc-win64-build-2.0.4
 HWLOC32=E:\chess\hwloc-win32-build-2.0.4
@@ -107,9 +104,7 @@ NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 !Endif
-!IfDef NNUE
-NNUE_FLAGS=/DNNUE /Innue
-!Endif
+NNUE_FLAGS=/Innue
 
 !Ifdef ARASAN_VERSION
 CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)
@@ -229,10 +224,8 @@ $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
-!IfDef NNUE
 NNUE_OBJS = $(BUILD)\nnueintf.obj
 NNUE_PROFILE_OBJS = $(PROFILE)\nnueintf.obj
-!Endif
 
 ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
 $(BUILD)\protocol.obj $(BUILD)\input.obj \

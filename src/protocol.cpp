@@ -1622,13 +1622,9 @@ void Protocol::processWinboardOptions(const std::string &args) {
         Options::setOption<bool>(value,globals::options.learning.position_learning);
     } else if (name == "Strength") {
         Options::setOption<int>(value,globals::options.search.strength);
-#ifdef NNUE
-    } else if (name == "Use NNUE") {
-        Options::setOption<bool>(value,globals::options.search.useNNUE);
     } else if (name == "NNUE File") {
         Options::setOption<std::string>(value,globals::options.search.nnueFile);
         globals::nnueInitDone = false; // force re-init
-#endif
 #ifdef NUMA
     } else if (name == "Set processor affinity") {
        int tmp = globals::options.search.set_processor_affinity;
@@ -1774,10 +1770,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name UCI_LimitStrength type check default false" << std::endl;
         std::cout << "option name UCI_Elo type spin default " << globals::options.getRating(globals::options.search.strength) <<
             " min " << Options::MIN_RATING << " max " << Options::MAX_RATING << std::endl;
-#ifdef NNUE
-        std::cout << "option name Use NNUE type check default " << (globals::options.search.useNNUE ? "true" : "false") << std::endl;
         std::cout << "option name NNUE file type string default " << globals::options.search.nnueFile << std::endl;
-#endif
 #ifdef NUMA
         std::cout << "option name Set processor affinity type check default " <<
            (globals::options.search.set_processor_affinity ? "true" : "false") << std::endl;
@@ -1912,15 +1905,10 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                }
             }
 	}
-#ifdef NNUE
-        else if (uciOptionCompare(name,"Use NNUE")) {
-           Options::setOption<bool>(value, globals::options.search.useNNUE);
-	}
         else if (uciOptionCompare(name,"NNUE file")) {
            Options::setOption<std::string>(value,globals::options.search.nnueFile);
            globals::nnueInitDone = false; // force re-init
 	}
-#endif
 #ifdef NUMA
         else if (uciOptionCompare(name,"Set processor affinity")) {
            int tmp = globals::options.search.set_processor_affinity;
@@ -2188,21 +2176,17 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 Scoring *s = new Scoring();
                 s->init();
                 std::cout << board << std::endl;
-#ifdef NNUE
                 std::cout << "NNUE score: ";
                 Scoring::printScore(s->evalu8NNUE(board),std::cout);
                 std::cout << std::endl;
-#endif
                 std::cout << "non-NNUE score: ";
                 Scoring::printScore(s->evalu8(board),std::cout);
                 std::cout << std::endl;
                 board.flip();
                 std::cout << board << std::endl;
-#ifdef NNUE
                 std::cout << "NNUE score: ";
                 Scoring::printScore(s->evalu8NNUE(board),std::cout);
                 std::cout << std::endl;
-#endif
                 std::cout << "non-NNUE score: ";
                 Scoring::printScore(s->evalu8(board),std::cout);
                 delete s;
@@ -2472,10 +2456,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.learning.learn_file_name << "\"";
         // strength option (new for 14.2)
         std::cout << " option=\"Strength -spin " << globals::options.search.strength << " 0 100\"";
-#ifdef NNUE
-        std::cout << " option=\"Use NNUE -check " << globals::options.search.useNNUE << "\"";
         std::cout << " option=\"NNUE file -string " << globals::options.search.nnueFile << "\"";
-#endif
 #ifdef NUMA
         std::cout << " option=\"Set processor affinity -check " <<
             globals::options.search.set_processor_affinity << "\"" << std::endl;

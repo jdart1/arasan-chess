@@ -7,10 +7,8 @@
 #include "globals.h"
 #include "material.h"
 #include "movegen.h"
-#ifdef NNUE
 #include "nnueintf.h"
 #include "search.h" // for NodeInfo
-#endif
 #include <cassert>
 #include <cstddef>
 #include <algorithm>
@@ -2202,7 +2200,6 @@ void Scoring::clearHashTables() {
    }
 }
 
-#ifdef NNUE
 score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    Position p(board,node);
    ChessInterface intf(&p);
@@ -2239,4 +2236,3 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
    return std::clamp(nnval, -Constants::MATE + (ply - 1), Constants::MATE - (ply - 1));
 }
 
-#endif

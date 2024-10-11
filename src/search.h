@@ -10,10 +10,8 @@
 #include "movegen.h"
 #include "threadp.h"
 #include "globals.h"
-#ifdef NNUE
 #include "nnueintf.h"
 #include "options.h"
-#endif
 extern "C" {
 #include <memory.h>
 #include <time.h>
@@ -67,11 +65,9 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
-#ifdef NNUE
     nnue::Network::AccumulatorType accum;
     std::array<DirtyState, 3> dirty;
     unsigned dirty_num;
-#endif
 
     int PV() const {
         return (beta > alpha+1);
@@ -80,15 +76,15 @@ struct NodeInfo {
     int inBounds(score_t score) const {
         return score > alpha && score < beta;
     }
+
     int newBest(score_t score) const {
         return score > best_score && score < beta;
     }
-#ifdef NNUE
+
     void clearNNUEState() {
         accum.setEmpty();
         dirty_num = 0;
     }
-#endif
 };
 
 // Helper class to save/restore key node parameters

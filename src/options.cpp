@@ -28,9 +28,7 @@ Options::SearchOptions::SearchOptions()
       syzygy_probe_depth(4),
 #endif
       strength(100), multipv(1), ncpus(1),
-#ifdef NNUE
-      useNNUE(true), pureNNUE(false), nnueFile(""),
-#endif
+      pureNNUE(false), nnueFile(""),
 #ifdef NUMA
       set_processor_affinity(false),
 #endif
@@ -125,14 +123,9 @@ void Options::set_option(const std::string &name, const std::string &value) {
         set_strength_option(name, search.strength, value);
     } else if (name == "search.ncpus") {
         setOption<int>(name, value, search.ncpus);
-    }
-#ifdef NNUE
-    else if (name == "search.useNNUE") {
-        setOption<bool>(name, value, search.useNNUE);
     } else if (name == "search.nnueFile") {
         search.nnueFile = value;
     }
-#endif
 #ifdef NUMA
     else if (name == "search.set_processor_affinity") {
         setOption<bool>(name, value, search.set_processor_affinity);

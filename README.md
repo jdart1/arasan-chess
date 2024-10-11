@@ -127,7 +127,6 @@ cores.
 - Move overhead - value settable from 0 to 1000. This is a value in milliseconds
 that will be subtraced from the time available to make a move. It helps Arasan
 account for network or interface delays in calculating its time usage.
-- Use NNUE - use neural network evaluation. True or false.
 - NNUE File - the name of the neural network file to load. Currently assumed to be
 in the same directory as the Arasan engine executable.
 
@@ -161,7 +160,6 @@ cores.
 - Move overhead - value settable from 0 to 1000. This is a value in milliseconds
 that will be subtraced from the time available to make a move. It helps Arasan
 account for network or interface delays in calculating its time usage.
-- Use NNUE - use neural network evaluation. True or false.
 - NNUE File - the name of the neural network file to load. Currently assumed to be
 in the same directory as the Arasan engine executable.
 

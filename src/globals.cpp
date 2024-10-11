@@ -52,10 +52,8 @@ std::mutex globals::syzygy_lock;
 #endif
 bool globals::polling_terminated;
 std::string globals::debugPrefix;
-#ifdef NNUE
 nnue::Network globals::network;
 bool globals::nnueInitDone = false;
-#endif
 
 #ifdef _WIN32
 static const char *LEARN_FILE_NAME = "arasan.lrn";
@@ -69,7 +67,6 @@ static const char *RC_FILE_NAME = "arasan.rc";
 
 const size_t globals::LINUX_STACK_SIZE = 4 * 1024 * 1024;
 
-#ifdef NNUE
 static bool absolutePath(const std::string &fileName) {
 #ifdef _WIN32
     auto pos = fileName.find(':');
@@ -83,7 +80,6 @@ static bool absolutePath(const std::string &fileName) {
 #endif
     return pos >= fileName.size() || fileName[pos] == PATH_CHAR;
 }
-#endif
 
 // Note argv[0] is the name of the command used to execute the
 // program. If the program was not executed from the directory
@@ -132,7 +128,7 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     }
 }
 
-int globals::initGlobals() {
+bool globals::initGlobals() {
 #ifndef _WIN32
     struct rlimit rl;
     const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
@@ -153,19 +149,14 @@ int globals::initGlobals() {
 #endif
     globals::gameMoves = new MoveArray();
     globals::polling_terminated = false;
-    return 1;
+    return true;
 }
 
-#ifdef NNUE
-int globals::loadNetwork(const std::string &fname) {
+bool globals::loadNetwork(const std::string &fname) {
     std::ifstream in(fname, std::ios_base::in | std::ios_base::binary);
     in >> network;
-    if (!in.good()) {
-        return 0;
-    }
-    return 1;
+    return !in.fail();
 }
-#endif
 
 void CDECL globals::cleanupGlobals(void) {
     openingBook.close();
@@ -255,8 +246,7 @@ void globals::delayedInit(bool verbose) {
         }
     }
 #endif
-#ifdef NNUE
-    if (options.search.useNNUE && !nnueInitDone) {
+    if (!nnueInitDone) {
         if (options.search.nnueFile.size()) {
             const std::string &nnuePath = options.search.nnueFile;
             nnueInitDone =
@@ -265,7 +255,7 @@ void globals::delayedInit(bool verbose) {
                 if (nnueInitDone) {
                     std::cout << debugPrefix << "loaded network from file ";
                 } else {
-                    std::cout << debugPrefix << "warning: failed to load network file ";
+                    std::cout << debugPrefix << "error: failed to load network file ";
                 }
                 std::cout << nnuePath;
                 if (!nnueInitDone) {
@@ -274,11 +264,15 @@ void globals::delayedInit(bool verbose) {
                 std::cout << std::endl;
             }
         } else if (verbose) {
-            std::cout << debugPrefix << "warning: no NNUE file path was set, network not loaded"
+            std::cout << debugPrefix << "error: no NNUE file path was set, network not loaded"
                       << std::endl;
         }
+        if (!nnueInitDone) {
+            // This is now a fatal error
+            std::cerr << "failed to load network, terminating." << std::endl;
+            exit(-1);
+        }
     }
-#endif
     // also initialize the book here
     if (options.book.book_enabled && !openingBook.is_open()) {
         if (openingBook.open(options.book.book_path.c_str()) && verbose) {

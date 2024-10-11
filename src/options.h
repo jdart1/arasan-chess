@@ -38,11 +38,8 @@ class Options {
         int strength; // 0 .. 100
         int multipv;
         int ncpus;
-#ifdef NNUE
-        bool useNNUE;
         bool pureNNUE;
         std::string nnueFile;
-#endif
 #ifdef NUMA
         bool set_processor_affinity; // lock threads to processors
 #endif

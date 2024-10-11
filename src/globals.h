@@ -10,9 +10,7 @@
 #include "options.h"
 #include "threadc.h"
 #include "types.h"
-#ifdef NNUE
 #include "nnue/nnue.h"
-#endif
 
 #include <mutex>
 #include <string>
@@ -32,10 +30,8 @@ extern std::mutex input_lock;
 #ifdef SYZYGY_TBS
 extern std::mutex syzygy_lock;
 #endif
-#ifdef NNUE
 extern nnue::Network network;
 extern bool nnueInitDone;
-#endif
 extern bool polling_terminated;
 extern std::string debugPrefix;
 
@@ -57,9 +53,9 @@ extern const size_t LINUX_STACK_SIZE;
 extern std::string derivePath(const std::string &fileName);
 extern std::string derivePath(const std::string &base, const std::string &fileName);
 
-extern int loadNetwork(const std::string &filename);
+extern bool loadNetwork(const std::string &filename);
 
-extern int initGlobals();
+extern bool initGlobals();
 
 extern void CDECL cleanupGlobals(void);
 

@@ -2858,9 +2858,7 @@ score_t Search::search()
     if (pruneOk && depth <= RAZOR_DEPTH && board.getMaterial(board.sideToMove()).hasPieces()) {
         assert(node->eval != Constants::INVALID_SCORE);
         if (node->eval < node->beta - razorMargin(depth)) {
-#ifdef NNUE
             (node+1)->clearNNUEState();
-#endif
             score_t v = quiesce(node->alpha,node->beta,ply+1,0);
 #ifdef _TRACE
             if (mainThread()) {
@@ -2938,10 +2936,8 @@ score_t Search::search()
                        indent(ply); std::cout << "verifying null move" << std::endl;
                     }
 #endif
-#ifdef NNUE
                     // entering a new node w/o a move, so reset next node state
                     (node+1)->clearNNUEState();
-#endif
                     nscore = search(node->beta-1, node->beta, ply+1, nu_depth, VERIFY);
                     if (nscore == -Illegal) {
 #ifdef _TRACE
@@ -3072,9 +3068,7 @@ score_t Search::search()
         }
 #endif
         // Call search routine at lower depth to get a 1st move to try.
-#ifdef NNUE
         (node+1)->clearNNUEState();
-#endif
         //
         // Note: we do not push down the node stack because we want this
         // search to have all the same parameters (including ply) as the
@@ -3152,9 +3146,7 @@ score_t Search::search()
 #endif
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
-#ifdef NNUE
                 node->clearNNUEState();
-#endif
                 score_t singularResult = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
                 if (singularResult < nu_beta) {
 #ifdef _TRACE
@@ -3551,20 +3543,16 @@ void Search::setSearchOptions() {
 
 score_t Search::evalu8(const Board &b) {
 	score_t score;
-#ifdef NNUE
     const Material &ourMat = b.getMaterial(b.sideToMove());
     const Material &oppMat = b.getMaterial(b.oppositeSide());
     //bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
     const bool useClassical = !srcOpts.pureNNUE &&
         (//imbalance ||
          ourMat.men() + oppMat.men() <= 7);
-    if (!useClassical && globals::options.search.useNNUE && globals::nnueInitDone) {
+    if (!useClassical && globals::nnueInitDone) {
         score = scoring.evalu8NNUE(b,node);
     } else {
         score = scoring.evalu8(b);
     }
-#else
-    score = scoring.evalu8(b);
-#endif
    return score;
 }

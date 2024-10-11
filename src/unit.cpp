@@ -1440,7 +1440,6 @@ static int testSearch()
    return errs;
 }
 
-#ifdef NNUE
 static int testNNUE() {
     int errs = 0;
     // NNUE code has its own tests, but here we test state update in doMove/undoMove
@@ -1479,7 +1478,6 @@ static int testNNUE() {
     delete [] nodes;
     return errs;
 }
-#endif
 
 static int testOptions() {
     Options opts;
@@ -1763,9 +1761,7 @@ int doUnit() {
    errs += testSearch();
    errs += testOptions();
    errs += testBinIO();
-#ifdef NNUE
    errs += testNNUE();
-#endif
 #ifdef SYZYGY_TBS
    errs += testTB();
 #endif

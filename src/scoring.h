@@ -8,9 +8,7 @@
 #include "attacks.h"
 #include "params.h"
 
-#ifdef NNUE
 struct NodeInfo;
-#endif
 
 #include <iostream>
 
@@ -33,11 +31,9 @@ class Scoring
     // evaluate "board" from the perspective of the side to move.
     score_t evalu8( const Board &board, bool useCache = true );
 
-#ifdef NNUE
     // evaluate using the nnue. If set the node pointer is used to
     // enable incremental evaluation
     score_t evalu8NNUE(const Board &board, NodeInfo *node = nullptr);
-#endif      
 
     // checks for draw by repetition (returning repetition count) +
     // other draw situations. It is intended to be called from the

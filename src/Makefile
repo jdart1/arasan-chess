@@ -33,8 +33,6 @@ HWLOC=/usr/local
 #
 # directory for utility programs
 UTIL = util
-# compile with NNUE support
-NNUE = 1
 
 # default network
 NETWORK=arasan-d9-SFv4-20231228.nnue
@@ -54,10 +52,8 @@ endif
 ifdef SYZYGY_TBS
 FLAGS := $(FLAGS) -DSYZYGY_TBS
 endif
-ifdef NNUE
-NNUE_FLAGS := -DNNUE -Innue
+NNUE_FLAGS := -Innue
 NNUE_SRC := nnueintf.cpp
-endif
 
 #PROF     = -pg
 #DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
