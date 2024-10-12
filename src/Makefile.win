@@ -104,7 +104,11 @@ NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 !Endif
-NNUE_FLAGS=/Innue
+!Ifndef NETWORK
+# default network
+NETWORK=arasan-d9-SFv4-20231228.nnue
+!Endif
+NNUE_FLAGS=/Innue /DNETWORK=$(NETWORK)
 
 !Ifdef ARASAN_VERSION
 CFLAGS=$(CFLAGS) -DARASAN_VERSION=$(ARASAN_VERSION)

@@ -95,18 +95,10 @@ class Options {
 
     std::string tbPath() const;
 
-    // sets options based on a .rc file
-    int init(const std::string &optionsFile);
-
     bool store_games;
     std::string log_pathname;
     std::string game_pathname;
 
-  private:
-    void set_option(const std::string &name, const std::string &value);
-
-    template <class T>
-    int setOption(const std::string &name, const std::string &valueString, T &val);
 };
 
 #endif

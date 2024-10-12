@@ -63,8 +63,6 @@ static const char *LEARN_FILE_NAME = ".arasan.lrn";
 
 static const char *DEFAULT_BOOK_NAME = "book.bin";
 
-static const char *RC_FILE_NAME = "arasan.rc";
-
 const size_t globals::LINUX_STACK_SIZE = 4 * 1024 * 1024;
 
 static bool absolutePath(const std::string &fileName) {
@@ -167,9 +165,6 @@ void CDECL globals::cleanupGlobals(void) {
 }
 
 void globals::initOptions() {
-    std::string rcPath(derivePath(RC_FILE_NAME));
-    // try to read arasan.rc file
-    options.init(rcPath);
 #ifdef _WIN32
     const char *homeDirEnv = "USERPROFILE";
     const char *appDirEnv = "APPDATA";
@@ -201,21 +196,10 @@ void globals::initOptions() {
     } else {
         std::cerr << "warning: could not obtain application data directory location" << std::endl;
     }
-    // Also attempt to read .rc from the user's home directory.
-    // If present, this overrides the file at the install location.
-    if (userDir.size()) {
-#ifdef _WIN32
-        std::string userRcFile(RC_FILE_NAME);
-#else
-        std::string userRcFile(".");
-        userRcFile += RC_FILE_NAME;
-#endif
-        options.init(derivePath(userDir + PATH_CHAR, userRcFile));
-    }
     if (appDir.size()) {
         options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
     }
-    // if path not set in the .rc file, set a default here
+    // set a default path to the book
     if (options.book.book_path == "") {
         options.book.book_path = derivePath(DEFAULT_BOOK_NAME);
     }
