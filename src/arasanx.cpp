@@ -90,7 +90,19 @@ int CDECL main(int argc, char **argv) {
                                          argv[arg]);
                 break;
             case 't':
-                trace = true;
+#ifdef SYZYGY_TBS
+                if (strcmp(argv[arg],"-tbpath")==0) {
+                    if (++arg >= argc) {
+                        std::cerr << "Expected path after -tbpath" << std::endl;
+                    } else {
+                        globals::options.search.syzygy_path = argv[arg];
+                        globals::options.search.use_tablebases = true;
+                    }
+                } else
+#endif
+                if (strcmp(argv[arg],"-t")==0) {
+                    trace = true;
+                }
                 break;
             default:
                 std::cerr << "Warning: unknown option: " << argv[arg]+1 <<

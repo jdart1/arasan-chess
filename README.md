@@ -63,6 +63,10 @@ enable debug output, you also need to use the "-debugMode true" switch
 if using xboard/Winboard, or the "debug=true" option if using Arasan
 as a UCI engine. You normally shouldn't need to turn this on.
 
+- -tbpath: specifies the Syzygy tablepath path and enables use of
+tablebases. Under Windows, path components should be separated by ';',
+while under Linux or MacOS, they should be separated by ":".
+
 - -ics: outputs additional info when playing on a chess server.
 
 If the word "bench" is specified on the command line, then Arasan will
