@@ -514,8 +514,6 @@ static void selfplay(ThreadData &td) {
             }
             std::unique_lock<std::mutex> lock(outputLock);
             bool writeResult = false;
-            //int16_t whiteScore = data.stm == White ? data.score : -data.score;
-            //std::cout << data.fen << " | " << whiteScore << " | " << (resultVal+1)/2.0 << std::endl;
             switch(sp_options.format) {
             case BinFormats::Format::StockfishBin:
                 writeResult = BinFormats::write<BinFormats::Format::StockfishBin>(data, resultVal,
@@ -527,6 +525,10 @@ static void selfplay(ThreadData &td) {
                 break;
             case BinFormats::Format::Bullet:
                 writeResult = BinFormats::write<BinFormats::Format::Bullet>(data, resultVal,
+                                                                       *pos_out_file);
+                break;
+            case BinFormats::Format::Epd:
+                writeResult = BinFormats::write<BinFormats::Format::Epd>(data, resultVal,
                                                                        *pos_out_file);
                 break;
             default:
