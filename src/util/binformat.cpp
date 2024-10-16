@@ -237,7 +237,7 @@ template <typename T> static void deserialize(std::istream &in, T &data) {
     } // end switch
 }
 
-static const std::array<std::string,4> format_names = {"bin", "marlin", "bullet", "epd"};
+static const std::array<std::string,4> format_names = {"bin", "marlin", "bullet", "text"};
 
 bool BinFormats::fromString(const std::string &s, Format &format) {
     size_t i = 0;
@@ -496,7 +496,7 @@ bool BinFormats::writeBullet(const BinFormats::PositionData &data, int result, s
     return !out.fail();
 }
 
-bool BinFormats::writeEpd(const BinFormats::PositionData &data, int result, std::ostream &out) {
+bool BinFormats::writeText(const BinFormats::PositionData &data, int result, std::ostream &out) {
     int16_t whiteScore = data.stm == White ? data.score : -data.score;
     out << data.fen << " | " << whiteScore << " | " << (result+1)/2.0 << std::endl;
     return true;

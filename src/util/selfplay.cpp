@@ -527,8 +527,8 @@ static void selfplay(ThreadData &td) {
                 writeResult = BinFormats::write<BinFormats::Format::Bullet>(data, resultVal,
                                                                        *pos_out_file);
                 break;
-            case BinFormats::Format::Epd:
-                writeResult = BinFormats::write<BinFormats::Format::Epd>(data, resultVal,
+            case BinFormats::Format::Text:
+                writeResult = BinFormats::write<BinFormats::Format::Text>(data, resultVal,
                                                                        *pos_out_file);
                 break;
             default:

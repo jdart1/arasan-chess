@@ -19,8 +19,8 @@ public:
     };
 
     // "Bullet" is the "ChessBoard" format used in https://github.com/jw1912/bulletformat
-    // "Epd" is the bullet epd format (FEN | score | result)
-    enum class Format {StockfishBin, Marlin, Bullet, Epd};
+    // "Text" is the bullet text format (FEN | score | result)
+    enum class Format {StockfishBin, Marlin, Bullet, Text};
 
     static bool fromString(const std::string &str, Format &fmt);
 
@@ -36,8 +36,8 @@ public:
             return writeMarlin(pos, resultVal, out);
         case Format::Bullet:
             return writeBullet(pos, resultVal, out);
-        case Format::Epd:
-            return writeEpd(pos, resultVal, out);
+        case Format::Text:
+            return writeText(pos, resultVal, out);
         default:
             assert(0);
             return false;
@@ -65,7 +65,7 @@ private:
 
     static bool writeBullet(const PositionData &pos, int result, std::ostream &out);
 
-    static bool writeEpd(const PositionData &pos, int result, std::ostream &out);
+    static bool writeText(const PositionData &pos, int result, std::ostream &out);
 };
 
 #endif
