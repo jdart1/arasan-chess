@@ -1375,7 +1375,7 @@ static int testSearch()
        score_t score;
    };
 
-   static std::array<Case,8> cases = {
+   static std::array<Case,10> cases = {
        // Euwe-Alekhine, Amsterdam 1934 (sacrifice to draw)
        Case("2Q2r1k/3n2pp/p7/4p1B1/P1Q5/2N5/2q2nPP/R5K1 b - - bm Nh3+",0),
        // "Ragozin-Botvinnik, 1936 (mate in 3)
@@ -1388,7 +1388,11 @@ static int testSearch()
        Case("8/7k/3p4/3B2Q1/p7/P7/1K4PP/5q2 b - - bm Qf6+;",0), // stalemate, not at root
        Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // draw
        // Evans-Browne, USA 1971 (discovered attack)
-       Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE)
+       Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
+       // WCSAC #69
+       Case("5rk1/1ppb4/p1pb4/6q1/3P1p1r/2P1R2P/PP1BQ1P1/5RKN w - - bm Rg3",Constants::INVALID_SCORE),
+       // Tal-Averkin, 41st URS-ch Moscow 1973
+       Case("8/8/4np2/4pk1p/RNr4P/P3KP2/1P6/8 w - - bm Nd5;",Constants::INVALID_SCORE)
    };
 
    static const int DEPTH=10;
@@ -1728,7 +1732,7 @@ static int testBinIO() {
         int old_errs = errs;
         errs += readResult != resultVal;
         errs += readData.fen != pos.fen;
-        errs += !MovesEqual(readData.move,pos.move); 
+        errs += !MovesEqual(readData.move,pos.move);
         errs += readData.score != pos.score;
         errs += readData.move50Count != pos.move50Count;
         errs += readData.ply != pos.ply;
