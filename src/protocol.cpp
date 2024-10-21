@@ -445,7 +445,7 @@ void Protocol::do_help() {
    std::cout << "white:           set computer to play White" << std::endl;
    std::cout << "test <file> <-t seconds> <-x # moves> <-v> <-o outfile>: "<< std::endl;
    std::cout << "   - run an EPD testsuite" << std::endl;
-   std::cout << "eval <file>:     evaluate a FEN position." << std::endl;
+   std::cout << "eval:            evaluate current position." << std::endl;
    std::cout << "perft <depth>:   compute perft value for a given depth" << std::endl;
 }
 
@@ -2122,62 +2122,51 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
        }
     }
     else if (cmd_word == "eval") {
-        std::string filename;
-        if (cmd_args.length()) {
-            filename = cmd_args;
-            std::ifstream pos_file( filename.c_str(), std::ios::in);
-            pos_file >> board;
-            if (!pos_file.good()) {
-                std::cout << "File not found, or bad format." << std::endl;
-            }
-            else {
-                globals::delayedInit();
+        globals::delayedInit();
 #ifdef SYZYGY_TBS
-                score_t tbscore;
-                if (globals::options.search.use_tablebases) {
-                   MoveSet rootMoves;
-                   if (SyzygyTb::probe_root(board,board.anyRep(),tbscore,rootMoves) >= 0) {
-                      std::cout << "score = ";
-                      if (tbscore == -SyzygyTb::CURSED_SCORE)
-                         std::cout << "draw (Cursed Loss)";
-                      else if (tbscore == -SyzygyTb::CURSED_SCORE)
-                         std::cout << "draw (Cursed Win)";
-                      else
-                         Scoring::printScore(tbscore,std::cout);
-                      std::cout << " (from Syzygy tablebases)" << std::endl;
-                   }
-                }
-#endif
-                score_t score;
-                if ((score = Scoring::tryBitbase(board))!= Constants::INVALID_SCORE) {
-                    std::cout << "bitbase score=";
-                    Scoring::printScore(score,std::cout);
-                    std::cout << std::endl;
-                }
-                Scoring::init();
-                if (board.isLegalDraw()) {
-                     std::cout << "position evaluates to draw (statically)" << std::endl;
-                }
-                Scoring *s = new Scoring();
-                s->init();
-                std::cout << board << std::endl;
-                std::cout << "NNUE score: ";
-                Scoring::printScore(s->evalu8NNUE(board),std::cout);
-                std::cout << std::endl;
-                std::cout << "non-NNUE score: ";
-                Scoring::printScore(s->evalu8(board),std::cout);
-                std::cout << std::endl;
-                board.flip();
-                std::cout << board << std::endl;
-                std::cout << "NNUE score: ";
-                Scoring::printScore(s->evalu8NNUE(board),std::cout);
-                std::cout << std::endl;
-                std::cout << "non-NNUE score: ";
-                Scoring::printScore(s->evalu8(board),std::cout);
-                delete s;
-                std::cout << std::endl;
+        score_t tbscore;
+        if (globals::options.search.use_tablebases) {
+            MoveSet rootMoves;
+            if (SyzygyTb::probe_root(board, board.anyRep(), tbscore, rootMoves) >= 0) {
+                std::cout << "score = ";
+                if (tbscore == -SyzygyTb::CURSED_SCORE)
+                    std::cout << "draw (Cursed Loss)";
+                else if (tbscore == -SyzygyTb::CURSED_SCORE)
+                    std::cout << "draw (Cursed Win)";
+                else
+                    Scoring::printScore(tbscore, std::cout);
+                std::cout << " (from Syzygy tablebases)" << std::endl;
             }
         }
+#endif
+        score_t score;
+        if ((score = Scoring::tryBitbase(board)) != Constants::INVALID_SCORE) {
+            std::cout << "bitbase score=";
+            Scoring::printScore(score, std::cout);
+            std::cout << std::endl;
+        }
+        Scoring::init();
+        if (board.isLegalDraw()) {
+            std::cout << "position evaluates to draw (statically)" << std::endl;
+        }
+        Scoring *s = new Scoring();
+        s->init();
+        std::cout << board << std::endl;
+        std::cout << "NNUE score: ";
+        Scoring::printScore(s->evalu8NNUE(board), std::cout);
+        std::cout << std::endl;
+        std::cout << "non-NNUE score: ";
+        Scoring::printScore(s->evalu8(board), std::cout);
+        std::cout << std::endl;
+        board.flip();
+        std::cout << board << std::endl;
+        std::cout << "NNUE score: ";
+        Scoring::printScore(s->evalu8NNUE(board), std::cout);
+        std::cout << std::endl;
+        std::cout << "non-NNUE score: ";
+        Scoring::printScore(s->evalu8(board), std::cout);
+        delete s;
+        std::cout << std::endl;
     }
     else if (uci && cmd == "stop") {
         searcher->stop();
