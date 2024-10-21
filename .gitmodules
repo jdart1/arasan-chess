@@ -9,3 +9,6 @@
 [submodule "src/nnue"]
 	path = src/nnue
 	url = https://github.com/jdart1/nnue.git
+        branch = test
+[submodule "nnue"]
+	branch = test
