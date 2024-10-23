@@ -84,11 +84,13 @@ static struct SelfPlayOptions {
     unsigned maxOutPly = 300;
     unsigned cores = 1;
     unsigned posCount = 10000000;
-    unsigned depthLimit = 6;
+    unsigned depthLimit = 9;
     bool adjudicateDraw = true;
     bool adjudicate7manDraw = false;
     bool adjudicateTB = true;
     int adjudicateTBMen = 3; // don't adjudicate with more men so low-mat configs are included
+    score_t adjudicateWinScore = 30*Params::PAWN_VALUE;
+    unsigned adjudicateWinPlies = 3;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
     unsigned TBAdjudicationPlies = 10;
@@ -335,7 +337,7 @@ static void selfplay(ThreadData &td) {
         bool adjudicated = false, terminated = false;
         Statistics stats;
         Board board;
-        unsigned low_score_count = 0, tb_score_count = 0;
+        unsigned low_score_count = 0, tb_score_count = 0, high_score_count = 0;
         enum class Result { WhiteWin, BlackWin, Draw } result = Result::Draw;
         std::vector<BinFormats::PositionData> output;
         uint64_t prevNodes = 0ULL;
@@ -409,6 +411,16 @@ static void selfplay(ThreadData &td) {
                     else
                         low_score_count = 0;
                     ++noSemiRandom;
+                    if (score >= sp_options.adjudicateWinScore)
+                        ++high_score_count;
+                    else
+                        high_score_count = 0;
+                    // adjudicate wins but not for low material - TB adjudication
+                    // rules will apply to thoose
+                    if (high_score_count >= sp_options.adjudicateWinPlies &&
+                        (!sp_options.adjudicateTB || board.men() > 7)) {
+                        adjudicated = true;
+                    }
                 }
                 assert(IsNull(m) || legalMove(board, m));
                 assert(!IsNull(m) || stats.state != NormalState);
