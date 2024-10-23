@@ -123,7 +123,7 @@ static void split_cmd(const std::string &cmd, std::string &cmd_word, std::string
    }
 }
 
-Protocol::Protocol(const Board &board, bool traceOn, bool icsMode)
+Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set, bool memory_set)
     : verbose(false),
       post(false),
       searcher(nullptr),
@@ -170,6 +170,8 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode)
       movestogo(0),
       ponderhit(false),
       uciWaitState(false),
+      cpusSet(cpus_set),
+      memorySet(memory_set),
       debugPrefix(globals::debugPrefix)
 {
     ecoCoder = new ECO();
@@ -1798,23 +1800,27 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
         }
         if (uciOptionCompare(name,"Hash")) {
-            size_t old = globals::options.search.hash_table_size;
-            // size is in megabytes
-            std::stringstream buf(value);
-            int size;
-            buf >> size;
-            if (buf.bad()) {
-                std::cout << debugPrefix << "problem setting hash size to " << buf.str()
-                          << std::endl;
-            } else {
-                globals::options.search.hash_table_size = (size_t)size * 1024L * 1024L;
-                if (old != globals::options.search.hash_table_size) {
-                    searcher->resizeHash(globals::options.search.hash_table_size);
+            if (!memorySet) {
+                size_t old = globals::options.search.hash_table_size;
+                // size is in megabytes
+                std::stringstream buf(value);
+                int size;
+                buf >> size;
+                if (buf.bad()) {
+                    std::cout << debugPrefix << "problem setting hash size to " << buf.str() << std::endl;
+                }
+                else {
+                    globals::options.search.hash_table_size = (size_t)size*1024L*1024L;
+                    if (old != globals::options.search.hash_table_size) {
+                       searcher->resizeHash(globals::options.search.hash_table_size);
+                    }
                 }
             }
-        } else if (uciOptionCompare(name, "Ponder")) {
+        }
+        else if (uciOptionCompare(name,"Ponder")) {
             easy = !(value == "true");
-        } else if (uciOptionCompare(name, "Contempt")) {
+        }
+        else if (uciOptionCompare(name,"Contempt")) {
             std::stringstream buf(value);
             int uciContempt;
             buf >> uciContempt;
@@ -1829,33 +1835,39 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
         }
 #ifdef SYZYGY_TBS
-        else if (uciOptionCompare(name, "Use tablebases")) {
+        else if (uciOptionCompare(name,"Use tablebases")) {
            Options::setOption<bool>(value, globals::options.search.use_tablebases);
            searcher->updateTBOptions();
-        } else if (uciOptionCompare(name, "SyzygyTbPath") && validTbPath(value)) {
-            globals::unloadTb();
-            globals::options.search.syzygy_path = value;
-            globals::options.search.use_tablebases = true;
-            searcher->updateTBOptions();
-        } else if (uciOptionCompare(name, "SyzygyUse50MoveRule")) {
+        }
+        else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
+           globals::unloadTb();
+           globals::options.search.syzygy_path = value;
+           globals::options.search.use_tablebases = true;
+           searcher->updateTBOptions();
+        }
+        else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
             Options::setOption<bool>(value, globals::options.search.syzygy_50_move_rule);
             searcher->updateTBOptions();
-        } else if (uciOptionCompare(name, "SyzygyProbeDepth")) {
-            Options::setOption<int>(value, globals::options.search.syzygy_probe_depth);
-            searcher->updateTBOptions();
+        }
+        else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
+           Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
+           searcher->updateTBOptions();
         }
 #endif
-        else if (uciOptionCompare(name, "OwnBook")) {
+        else if (uciOptionCompare(name,"OwnBook")) {
             Options::setOption<bool>(value, globals::options.book.book_enabled);
-        } else if (uciOptionCompare(name, "BookPath")) {
+        }
+        else if (uciOptionCompare(name,"BookPath")) {
             Options::setOption<std::string>(value,globals::options.book.book_path);
             // force close of current book, opening of new one:
             globals::openingBook.close();
             globals::delayedInit();
-        } else if (uciOptionCompare(name, "Book variety")) {
+        }
+        else if (uciOptionCompare(name,"Book variety")) {
             Options::setOption<unsigned>(value,globals::options.book.variety);
             globals::openingBook.setVariety(globals::options.book.variety);
-        } else if (uciOptionCompare(name, "MultiPV")) {
+        }
+        else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,globals::options.search.multipv);
             globals::options.search.multipv = std::min<int>(Statistics::MAX_PV,globals::options.search.multipv);
             // GUIs (Shredder at least) send 0 to turn multi-pv off: but
@@ -1868,13 +1880,15 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             // migrate current stats to 1st Multi-PV table entry:
             stats.multi_pvs[0] =
                 Statistics::MultiPVEntry(stats);
-        } else if (uciOptionCompare(name, "Threads")) {
+        }
+        else if (uciOptionCompare(name,"Threads")) {
             int threads = globals::options.search.ncpus;
             if (Options::setOption<int>(value,threads) && threads >0 && threads <= Constants::MaxCPUs) {
                 globals::options.search.ncpus = threads;
                 searcher->setThreadCount(globals::options.search.ncpus);
             }
-        } else if (uciOptionCompare(name, "UCI_LimitStrength")) {
+        }
+        else if (uciOptionCompare(name,"UCI_LimitStrength")) {
             Options::setOption<bool>(value, uciStrengthOpts.limitStrength);
             if (uciStrengthOpts.limitStrength) {
                globals::options.setRating(uciStrengthOpts.elo);
@@ -1882,7 +1896,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                // reset to full strength
                globals::options.setRating(Options::MAX_RATING);
             }
-        } else if (uciOptionCompare(name, "UCI_Elo")) {
+        } else if (uciOptionCompare(name,"UCI_Elo")) {
             int rating;
             if (Options::setOption<int>(value,rating)) {
                uciStrengthOpts.elo = rating;
@@ -1890,12 +1904,13 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   globals::options.setRating(rating);
                }
             }
-        } else if (uciOptionCompare(name, "NNUE file")) {
-            Options::setOption<std::string>(value, globals::options.search.nnueFile);
-            globals::nnueInitDone = false; // force re-init
-        }
+	}
+        else if (uciOptionCompare(name,"NNUE file")) {
+           Options::setOption<std::string>(value,globals::options.search.nnueFile);
+           globals::nnueInitDone = false; // force re-init
+	}
 #ifdef NUMA
-        else if (uciOptionCompare(name, "Set processor affinity")) {
+        else if (uciOptionCompare(name,"Set processor affinity")) {
            int tmp = globals::options.search.set_processor_affinity;
            Options::setOption<bool>(value, globals::options.search.set_processor_affinity;
            if (tmp != globals::options.search.set_processor_affinity) {
@@ -1903,11 +1918,11 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
            }
         }
 #endif
-        else if (uciOptionCompare(name, "Move overhead")) {
+        else if (uciOptionCompare(name,"Move overhead")) {
            Options::setOption<int>(value,globals::options.search.move_overhead);
-        } else {
-            std::cout << debugPrefix << "error: invalid option name \"" << name << "\""
-                      << std::endl;
+        }
+        else {
+           std::cout << debugPrefix << "error: invalid option name \"" << name << "\"" << std::endl;
         }
         searcher->updateSearchOptions();
     }
@@ -2630,39 +2645,48 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         processWinboardOptions(cmd_args);
     }
     else if (cmd_word == "cores") {
-        // set number of threads
-        std::stringstream ss(cmd_args);
-        if ((ss >> globals::options.search.ncpus).fail()) {
-            std::cerr << "invalid value following 'cores'" << std::endl;
-        } else {
-            if (doTrace) {
-                std::cout << debugPrefix << "setting cores to " << globals::options.search.ncpus
-                          << std::endl;
-            }
-            globals::options.search.ncpus =
-                std::min<int>(globals::options.search.ncpus, Constants::MaxCPUs);
-            searcher->updateSearchOptions();
-            searcher->setThreadCount(globals::options.search.ncpus);
+        // Setting -c on the Arasan command line takes precedence over
+        // what the GUI sets
+        if (!cpusSet) {
+           // set number of threads
+           std::stringstream ss(cmd_args);
+           if((ss >> globals::options.search.ncpus).fail()) {
+               std::cerr << "invalid value following 'cores'" << std::endl;
+           } else {
+              if (doTrace) {
+                 std::cout << debugPrefix << "setting cores to " << globals::options.search.ncpus << std::endl;
+              }
+              globals::options.search.ncpus = std::min<int>(globals::options.search.ncpus,Constants::MaxCPUs);
+              searcher->updateSearchOptions();
+              searcher->setThreadCount(globals::options.search.ncpus);
+           }
         }
-    } else if (cmd_word == "memory") {
-        // set memory size in MB
-        std::stringstream ss(cmd_args);
-        uint64_t mbs;
-        ss >> mbs;
-        if (ss.fail() || ss.bad()) {
-            std::cout << debugPrefix << "invalid value following 'memory'" << std::endl;
-        } else {
-            size_t mb_size = mbs * 1024L * 1024L;
-            if (doTrace) {
-                std::cout << debugPrefix << "setting hash size to " << mb_size << " bytes "
-                          << std::endl
-                          << (std::flush);
-            }
-            globals::options.search.hash_table_size = mb_size;
-            searcher->updateSearchOptions();
-            searcher->resizeHash(globals::options.search.hash_table_size);
+    }
+    else if (cmd_word == "memory") {
+        // Setting -H on the Arasan command line takes precedence over
+        // what the GUI sets
+        if (!memorySet) {
+            // set memory size in MB
+            std::stringstream ss(cmd_args);
+            uint64_t mbs;
+            ss >> mbs;
+            if (ss.fail() || ss.bad()) {
+               std::cout << debugPrefix << "invalid value following 'memory'" << std::endl;
+            } else {
+               size_t mb_size = mbs*1024L*1024L;
+               if (doTrace) {
+                   std::cout << debugPrefix << "setting hash size to " << mb_size << " bytes " << std::endl << (std::flush);
+               }
+               globals::options.search.hash_table_size = mb_size;
+               searcher->updateSearchOptions();
+               searcher->resizeHash(globals::options.search.hash_table_size);
+           }
         }
-    } else if (cmd_word == "egtpath") {
+        else {
+            std::cout << debugPrefix << "warning: memory command ignored due to -H on command line" << std::endl;
+        }
+    }
+    else if  (cmd_word == "egtpath") {
         size_t space = cmd_args.find_first_of(' ');
         std::string type = cmd_args.substr(0,space);
         std::transform(type.begin(), type.end(), type.begin(), ::tolower);
@@ -2692,7 +2716,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
            std::cout << debugPrefix << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
         }
 #endif
-    } else if (!uci) {
+    }
+    else if (!uci) {
         // see if it could be a move
         std::string movetext;
         if (cmd_word == "usermove") {

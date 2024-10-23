@@ -49,7 +49,7 @@ int CDECL main(int argc, char **argv) {
     Board board;
     int arg = 1;
 
-    bool ics = false, trace = false;
+    bool ics = false, trace = false, cpusSet = false, memorySet = false;
 
     if (argc > 1) {
         while (arg < argc && *(argv[arg]) == '-') {
@@ -58,6 +58,7 @@ int CDECL main(int argc, char **argv) {
             case 'c':
                 ++arg;
                 globals::options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
+                cpusSet = true;
                 if (globals::options.search.ncpus<=0) {
                     std::cerr << "-c parameter must be >=1" << std::endl;
                     exit(-1);
@@ -88,6 +89,7 @@ int CDECL main(int argc, char **argv) {
                 ++arg;
                 Options::setMemoryOption(globals::options.search.hash_table_size,
                                          argv[arg]);
+                memorySet = true;
                 break;
             case 't':
 #ifdef SYZYGY_TBS
@@ -124,7 +126,7 @@ int CDECL main(int argc, char **argv) {
         }
     }
 
-    Protocol *p = new Protocol(board,trace,ics);
+    Protocol *p = new Protocol(board,trace,ics,cpusSet,memorySet);
 
 #ifdef UNIT_TESTS
     globals::delayedInit(); // ensure all init is done including TBs, network

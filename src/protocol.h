@@ -17,7 +17,7 @@
 class Protocol {
 
 public:
-    Protocol(const Board &,bool traceOn, bool icsMode);
+    Protocol(const Board &,bool traceOn, bool icsMode, bool cpus_set, bool memory_set);
 
     virtual ~Protocol();
 
@@ -223,6 +223,8 @@ private:
     // set true if waiting for "ponderhit" or "stop"
     bool uciWaitState;
     std::string test_file;
+    bool cpusSet; // true if cmd line specifies -c
+    bool memorySet; // true if cmd line specifies -H
     std::string &debugPrefix;
     std::mutex inputMtx;
 
