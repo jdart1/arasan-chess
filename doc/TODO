@@ -18,7 +18,7 @@
 
 9. Code cleanup: most of HCE is no longer used so could be removed, as could tuning support.
 
-
+10. Remove arasan.rc, just use CECP/UCI options as most programs do.
 
 
 

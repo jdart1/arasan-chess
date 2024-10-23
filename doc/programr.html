@@ -71,7 +71,7 @@ This file can be annotated using standard PGN comments and Numeric
 Annotation Glyphs (NAGs). A file with such annotations is supplied
 with the Arasan source and is named "basic.pgn".</p>
 
-<p>In the annotated PGN file, an explict weight can be specified by
+<p>In the annotated PGN file, an explict weight can be specified by 
 putting a comment with the string "weight: " followed by a numeric value
 after a move. Weights are between 0 and 100. A weight of 0
 means that the computer will never play the move, but will respond to
@@ -103,22 +103,33 @@ on Thompson sampling - see references):</p>
     <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
     <li>Perform the Thompson sampling step: take a random sample from the prior distribution of win/loss/draw statistics for each move. The sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics.</li>
     <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all book moves.</li>
-    <li>Adjust the bonus score based on any manual weight or annotations in the "steering" book.</li>
-    <li>A bonus is given based on the log of the move frequency.</li>
-    <li>Add a further normally distributed random factor to the score.</li>
+    <li>Adjust the bonus score based on any manual weight or annotations in the "steering" book (the amount is tunable).</li>
+    <li>A bonus is given based on the log of the move frequency (in an amount depending on the book frequency option).</li>
+    <li>Add a further normally distributed random factor to the score, in an amount based on the "book.random" parameter.</li>
     <li>Pick the move with the highest score.</li>
-  </ol>
+</ol>
+<p>There are four options (settable in arasan.rc) that control the move selection:</p>
+<ul>
+<li>book.frequency controls the threshold for dropping infrequent moves (step 1 above) and
+the frequency bonus (in step 5).
+It is set on a scale of 0-100, with 0 allowing more infrequent moves and 100 selecting
+only the most frequent moves.</li>
+<li>book.scoring controls the standard deviation for the random sample in step 2. 
+The higher this is the more tolerant the program will be of book moves whose actual
+statistics are poor. It is set on a scale of 0-100, with 0 being most tolerant of
+worse moves and 100 selecting the best move always.</li>
+<li>book.weighting controls the degree to which manually-configured weights influence
+the move selection (step 4). It is on a scale of 0-100, with 0 causing the manual weights to
+have the least effect and 100 causing them to have the maximum effect.</li>
+<li>book.random controls the amount of randomness added to computed move scores (step 6),
+on a scale of 0 to 100. Smaller values inject less randomness (although there
+will still be some random variation due to the Thompson sampling step in move selection).
+</li>  
+</ul>
 <p>
-  The threshold for dropping moves in step 1 and the degree of adjustment in steps 4-6 can be controlled via a "Book variety"
-  option, settable via CECP or UCI commands. This controls how varied the opening book selection will be.
-  A value of 0 leads the program to play a narrow range of best lines, while a value of 100 will include a much wider variety of opening moves,
-  including some that would be avoided at lower variety settings. The default variety setting is 50, which plays strong moves with
-  some variety in the selection, but generally will avoid very uncommon or inferior lines.
-</p>
-
 Arasan comes with a book that was built from a combination of a fairly
 small hand-tuned book file (basic.pgn) and a fairly large collection
-of high-quality human and computer games. There are over 850,000 moves
+of high-quality human and computer games. There are over 750,000 moves
 in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
@@ -152,7 +163,7 @@ the book.bin file.</p>
 basically a persisent hashtable. If a search returns an unexpectedly
 high or low score, the position and its score are stored in a text file.
 The text file name and location are configurable, but by default:</p>
-<ul>
+<ul>  
   <li>on Windows it is called arasan.lrn and is in the user's APPDATA directory,
     Arasan subdirectory</li>
   <li>on Linux/MacOS, it is called .arasan.lrn, and is located in the user's
@@ -215,7 +226,7 @@ will show up in the debug log if Winboard is started with the
 "info" output and will for example be recorded by cutechess-cli if the
 -debug option is specified.</p>
 
-<p>The chess engine supports a couple of commands to aid with testing.
+<p>The chess engine supports a couple of commands to aid with testing. 
 The "eval" command followed by a filename will read the file (assumed
 to be in FEN format) and output the static evaluation of the position.
 If the EVAL_DEBUG and/or PAWN_DEBUG defines are uncommented in
@@ -423,10 +434,10 @@ calls to SEE, which is expensive.</li>
 non-capture, non-promoting move that is valid in the current board
 context and previously caused beta cutoff at the current ply. Killer moves are indexed by piece type and dest square.</li>
 
-<li>At this point all non-capturing moves are generated.
+<li>At this point all non-capturing moves are generated. 
 The previous move is used to probe the "refutation table". This
 is a simple replace-always table that holds moves that have refuted
-another move (by causing the search to fail high).
+another move (by causing the search to fail high). 
 Refutations are indexed by the previous move that
 was made by the opponent.
 If the move
@@ -463,9 +474,9 @@ But another side-effect of the wide window is that we obtain scores for
 all moves and Arasan will sort the moves for the next iteration based
 on these scores.</p>
 <p>After the "wide window" part of the search is over, the next iteration
-is searched putting the best move from the last iteration first. If
+is searched putting the best move from the last iteration first. If 
 another move then becomes best, it replaces the previous best move
-and all other moves are shifted down, so that
+and all other moves are shifted down, so that 
 their ordering from the previous iteration is retained in
 the next iteration.</p>
 
@@ -497,7 +508,7 @@ implements the alpha-beta search algorithm. The search proceeds one
 ply (half move, i.e. move by one side) at a time. That is, first a
 one-ply search is done, then a two-ply search, then three, etc. until
 either the maximum ply limit has been reached or the time control has
-been exceeded. Each search uses the results of the preceeding search.
+been exceeded. Each search uses the results of the preceeding search. 
 The variable "iterationDepth" holds the current nominal ply depth for
 the search. However, the presence of search extensions means that
 some nodes may be searched to a greater depth than this.</p>
@@ -538,7 +549,7 @@ but may hold an upper or lower bound that can be used to narrow the
 alpha-beta window.</p>
 
 <p>If the hash table lookup didn't produce an exact value or narrow the
-bounds enough to cause cutoff, then we may also try the endgame
+bounds enough to cause cutoff, then we may also try the endgame 
 tablebases, if they are installed and enabled, and if material is
 reduced enough that they can give an exact score.</p>
 
@@ -689,7 +700,7 @@ considering. But moves with good history scores are not pruned.</p>
 <p>
 Futility pruning is applied at relatively low search
 depths before the quiescence search and during the quiescence search.
-First the program computes an optimistic score for the
+First the program computes an optimistic score for the 
 move and adds a margin that varies based on search depth; the sum is
 then compared against alpha and the move is pruned if the optimistic
 score + margin is still below alpha.</p>
@@ -804,9 +815,10 @@ cleared after each search: instead, it is kept full, but old entries
 (from the previous search) are considered candidates for replacement.</p>
 
 <p>The size of the main hashtable defaults to 64 Megabytes, but can
-  be overridden with -H switch, followed by a size (such as '256M') or
-  through Standard Winboard or UCI option commands given at runtime.
-</p>
+be overridden with -H switch, followed by a size (such as '256M'), or
+by modifying the arasan.rc parameter file. Standard Winboard or
+UCI option commands can also be used to alter the hash table size at
+runtime.</p>
 
 <p>Because multiple threads can be reading and writing the hash table,
 a "lockless hashing" technique is used to prevent conflicts (as done

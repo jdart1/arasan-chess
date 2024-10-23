@@ -35,7 +35,7 @@ HWLOC=/usr/local
 UTIL = util
 
 # default network
-NETWORK ?= arasan-d9-SFv4-20231228.nnue
+NETWORK=arasan-d9-SFv4-20231228.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
@@ -52,7 +52,7 @@ endif
 ifdef SYZYGY_TBS
 FLAGS := $(FLAGS) -DSYZYGY_TBS
 endif
-NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
+NNUE_FLAGS := -Innue
 NNUE_SRC := nnueintf.cpp
 
 #PROF     = -pg
@@ -306,6 +306,7 @@ install: default
 	cp ../network/$(NETWORK) $(INSTALL)/arasan-$(VERSION)
 	chmod 755 $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 	ln -s $(INSTALL)/arasan-$(VERSION)/$(ARASANX) $(INSTALL)/arasan-$(VERSION)/arasanx
+	cp $(SRC)/arasan.rc $(INSTALL)/arasan-$(VERSION)
 	chmod u+s $(INSTALL)/arasan-$(VERSION)/$(ARASANX)
 
 $(BUILD)/%.o: %.cpp

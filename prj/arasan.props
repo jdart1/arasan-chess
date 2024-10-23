@@ -2,10 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <ARASAN_VERSION>24.2</ARASAN_VERSION>
+    <ARASAN_VERSION>24.2.1</ARASAN_VERSION>
     <ARASAN_FEATURES>NNUE;SIMD;SSE2;SYZYGY_TBS;USE_INTRINSICS;SMP;SMP_STATS</ARASAN_FEATURES>
     <ARASAN_LINK_VERSION>24.2</ARASAN_LINK_VERSION>
-    <NETWORK>arasan-d9-SFv4-20231228.nnue</NETWORK>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
@@ -22,10 +21,6 @@
     </BuildMacro>
     <BuildMacro Include="ARASAN_LINK_VERSION">
       <Value>$(ARASAN_LINK_VERSION)</Value>
-    </BuildMacro>
-    <BuildMacro Include="NETWORK">
-      <Value>$(NETWORK)</Value>
-      <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>
 </Project>
