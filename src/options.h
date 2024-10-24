@@ -96,7 +96,7 @@ class Options {
     std::string tbPath() const;
 
     // sets options based on a .rc file
-    int init(const std::string &optionsFile);
+    bool init(const std::string &optionsFile);
 
     bool store_games;
     std::string log_pathname;

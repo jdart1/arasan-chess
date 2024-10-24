@@ -28,7 +28,7 @@ Options::SearchOptions::SearchOptions()
       syzygy_probe_depth(4),
 #endif
       strength(100), multipv(1), ncpus(1),
-      pureNNUE(false), nnueFile(""),
+      pureNNUE(false), nnueFile(MAKE_STR(NETWORK)),
 #ifdef NUMA
       set_processor_affinity(false),
 #endif
@@ -139,10 +139,10 @@ void Options::set_option(const std::string &name, const std::string &value) {
         std::cerr << "warning: unrecognized option name: " << name << std::endl;
 }
 
-int Options::init(const std::string &fileName) {
+bool Options::init(const std::string &fileName) {
     std::ifstream infile(fileName.c_str());
     if (!infile.good()) {
-        return -1;
+        return false;
     }
     const auto pattern = std::regex("^([^\\s]+)=([^\\s]+([^\\s]+\\w+)*?)\\s*$");
     std::smatch match;
@@ -164,5 +164,5 @@ int Options::init(const std::string &fileName) {
             std::cerr << "warning: could not parse .rc line " << count << std::endl;
         }
     }
-    return 0;
+    return true;
 }

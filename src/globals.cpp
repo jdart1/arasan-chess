@@ -179,10 +179,18 @@ void CDECL globals::cleanupGlobals(void) {
     Board::cleanup();
 }
 
-void globals::initOptions() {
-    std::string rcPath(derivePath(RC_FILE_NAME));
-    // try to read arasan.rc file
-    options.init(rcPath);
+bool globals::initOptions(bool autoLoadRC, const char *rcPath) {
+    if (autoLoadRC) {
+        const std::string stdRcPath(derivePath(RC_FILE_NAME));
+        // try to read arasan.rc file
+        // failure to read is not an error: .rc file is optional
+        options.init(stdRcPath);
+    } else if (rcPath != nullptr) {
+        if (!options.init(rcPath)) { // explicit path was given so fail on error
+            std::cerr << "failed to load options from " << rcPath << std::endl;
+            return false;
+        }
+    }
 #ifdef _WIN32
     const char *homeDirEnv = "USERPROFILE";
     const char *appDirEnv = "APPDATA";
@@ -216,22 +224,24 @@ void globals::initOptions() {
     }
     // Also attempt to read .rc from the user's home directory.
     // If present, this overrides the file at the install location.
-    if (userDir.size()) {
+    if (autoLoadRC && userDir.size()) {
 #ifdef _WIN32
         std::string userRcFile(RC_FILE_NAME);
 #else
         std::string userRcFile(".");
         userRcFile += RC_FILE_NAME;
 #endif
+        // failure to read is not an error: .rc file is optional
         options.init(derivePath(userDir + PATH_CHAR, userRcFile));
     }
     if (appDir.size()) {
         options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
     }
-    // if path not set in the .rc file, set a default here
+    // if book path not set in the .rc file, set a default here
     if (options.book.book_path == "") {
         options.book.book_path = derivePath(DEFAULT_BOOK_NAME);
     }
+    return true;
 }
 
 void globals::delayedInit(bool verbose) {

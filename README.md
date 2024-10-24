@@ -51,12 +51,15 @@ or higher: see https://www.open-mpi.org/software/hwloc/v2.0/.
 
 Arasanx recognizes the following command-line options:
 
+- -a auto-loads the options from an arasan.rc file in the program directory (if present),
+and aslso (if present) from an arasan.rc in the user's home directory.
+
 - -H: specifies the hash table size in bytes ('K', 'M', or 'G' can be used to indicate
 kilobytes, megabyates or gigabytes). 
 
 - -c: specifies the number of threads to use (default is 1).
 
-- -f: specifies a position file (FEN) to load on startup
+- -r: specifies an option file (arasan.rc) to load on startup.
 
 - -t: shows some debugging output in the UI window or log file. To
 enable debug output, you also need to use the "-debugMode true" switch
@@ -79,9 +82,9 @@ run the bench command (for performance reporting) and then exit.
 
 ## Option file (arasan.rc)
 
-Many aspects of Arasan's behavior can be modified by changing the
-arasan.rc file. This file is installed in the program directory.
-If present, Arasan will also read a file that in the user's home
+Formerly Arasan would auto-load options from an arasan.rc file.
+The engine would look for this file in the program's directory,
+and if present, Arasan will also read a file from the user's home
 directory:
 
 - on Windows, from arasan.rc
@@ -90,9 +93,24 @@ directory:
 The contents of these files will overwrite the one that is in the
 program directory.
 
-You don't have to use this file to configure Arasan. Most of the options
-in it can also be set from a GUI that understands the UCI or CECP protocol, although there
-are some settings that are only in the arasan.rc file presently.
+This behavior has now changed. Now, by default, no options file is read
+and the program's options are entirely controlled by UCI or CECP commands.
+
+To get the older behavior of auto-loading the .rc file, you can specify
+the -a flag on the command line. Alternatively the -r flag with a
+filename will read the options from the specified filename.
+
+Option files are primarily useful for configuring Arasan when running
+it from the command line or from command-line tools. Generally, chess
+engine interfaces (especially GUIs such as Fritz or xboard) will have
+their own means of setting options, and they may set default options
+that differ from anything in an options file. Their settings override
+anything in an arasan.rc file. Therefore, using an option file with an
+engine GUI is not recommended, and that is why it is now disabled by
+default in the chess engine.
+
+At present, Arasan utility programs still use the older method of auto-loading
+.rc files.
 
 ## UCI Options
 

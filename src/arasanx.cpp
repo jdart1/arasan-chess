@@ -34,50 +34,30 @@ int CDECL main(int argc, char **argv) {
     std::cout.rdbuf()->pubsetbuf(NULL, 0);
     std::cin.rdbuf()->pubsetbuf(NULL, 0);
 
-    Bitboard::init();
-    Board::init();
-    globals::initOptions();
-    Attacks::init();
-    Scoring::init();
-    Search::init();
-    if (!globals::initGlobals()) {
-        globals::cleanupGlobals();
-        exit(-1);
-    }
-    atexit(globals::cleanupGlobals);
-
-    Board board;
+    char *rcName = nullptr;
+    bool ics = false, trace = false, cpusSet = false, memorySet = false, autoLoadRC = false;
     int arg = 1;
-
-    bool ics = false, trace = false, cpusSet = false, memorySet = false;
 
     if (argc > 1) {
         while (arg < argc && *(argv[arg]) == '-') {
             char c = *(argv[arg]+1);
             switch (c) {
+            case 'a':
+                autoLoadRC = true;
+                break;
             case 'c':
+                if (arg >= argc) {
+                    std::cerr << "expected number after -c" << std::endl;
+                    return -1;
+                }
                 ++arg;
                 globals::options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
                 cpusSet = true;
                 if (globals::options.search.ncpus<=0) {
                     std::cerr << "-c parameter must be >=1" << std::endl;
-                    exit(-1);
-                }
-                break;
-            case 'f':
-            {
-                ++arg;
-                std::cout << "loading " << argv[arg] << std::endl;
-                std::ifstream pos_file( argv[arg], std::ios::in);
-                if (pos_file.good()) {
-                    pos_file >> board;
-                }
-                else {
-                    std::cerr << "file not found: " << argv[arg] << std::endl;
                     return -1;
                 }
                 break;
-            }
             case 'i':
                 if (strcmp(argv[arg]+1,"ics")==0)
                     ics = true;
@@ -91,17 +71,16 @@ int CDECL main(int argc, char **argv) {
                                          argv[arg]);
                 memorySet = true;
                 break;
+            case 'r':
+                ++arg;
+                if (arg >= argc) {
+                    std::cerr << "expected filename after -r" << std::endl;
+                    return -1;
+                } else {
+                    rcName = argv[arg];
+                }
+                break;
             case 't':
-#ifdef SYZYGY_TBS
-                if (strcmp(argv[arg],"-tbpath")==0) {
-                    if (++arg >= argc) {
-                        std::cerr << "Expected path after -tbpath" << std::endl;
-                    } else {
-                        globals::options.search.syzygy_path = argv[arg];
-                        globals::options.search.use_tablebases = true;
-                    }
-                } else
-#endif
                 if (strcmp(argv[arg],"-t")==0) {
                     trace = true;
                 }
@@ -114,6 +93,25 @@ int CDECL main(int argc, char **argv) {
             ++arg;
         }
     }
+
+    if (autoLoadRC && rcName != nullptr) {
+        std::cerr << "-a and -r options are incompatible.";
+        return -1;
+    }
+
+    Bitboard::init();
+    Board::init();
+    // do not auto load the .rc file
+    if (!globals::initOptions(autoLoadRC, rcName)) return -1;
+    Attacks::init();
+    Scoring::init();
+    Search::init();
+    if (!globals::initGlobals()) {
+        globals::cleanupGlobals();
+        exit(-1);
+    }
+    atexit(globals::cleanupGlobals);
+
     if (arg < argc) {
         if (strcmp(argv[arg],"bench") == 0) {
             Bench b;
@@ -126,6 +124,7 @@ int CDECL main(int argc, char **argv) {
         }
     }
 
+    Board board;
     Protocol *p = new Protocol(board,trace,ics,cpusSet,memorySet);
 
 #ifdef UNIT_TESTS

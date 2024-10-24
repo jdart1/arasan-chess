@@ -59,7 +59,10 @@ extern bool initGlobals();
 
 extern void CDECL cleanupGlobals(void);
 
-extern void initOptions();
+// If autoLoadRC is true, read the .rc file from the default path(s).
+// If autoLoadRC is false and a non-null rcPath is specified, load the .rc
+// file from that path.
+extern bool initOptions(bool autoLoadRC = true, const char *rcPath = nullptr);
 
 // Perform actions that need to be done before a game but after
 // program startup (chiefly ones that depend on runtime options
