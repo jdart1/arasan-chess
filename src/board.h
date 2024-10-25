@@ -100,17 +100,17 @@ public:
    }
 
    // True if side can castle king side
-   bool canCastleKSide(ColorType) const
+   bool canCastleKSide(ColorType c) const
    {
-      return castleStatus(side) == CanCastleKSide ||
-          castleStatus(side) == CanCastleEitherSide;
+      return castleStatus(c) == CanCastleKSide ||
+          castleStatus(c) == CanCastleEitherSide;
    }
 
    // True if side can castle queen side
-   bool canCastleQSide(ColorType) const
+   bool canCastleQSide(ColorType c) const
    {
-      return castleStatus(side) == CanCastleQSide ||
-          castleStatus(side) == CanCastleEitherSide;
+      return castleStatus(c) == CanCastleQSide ||
+          castleStatus(c) == CanCastleEitherSide;
    }
 
    // side to move
