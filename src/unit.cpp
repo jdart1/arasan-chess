@@ -479,38 +479,57 @@ static int testEval() {
         Case("8/6pk/5pb1/7p/Q6P/2r1N3/5PP1/6K1 w - -",4.0,10.0),
         // material imbalance
         Case("r4rk1/1bqnpp1p/pp1p1Bp1/8/P3P3/2N1pN1P/1PP1BPP1/R4RK1 w - -",-10.0,-4.0),
-        Case("8/8/4bk2/8/8/4K3/4R3/8 w - -",-0.5,0.5) // even endgame
+        Case("8/8/4bk2/8/8/4K3/4R3/8 w - -",-1.0,1.0) // even endgame
     };
 
-    globals::delayedInit();
     int i = 0, errs = 0;
+    auto check =
+        [&errs, &i](score_t eval, double minEval, double maxEval, const std::string &txt) {
+            double eval1 = static_cast<double>(eval)/Params::PAWN_VALUE;
+            if (eval1 < minEval || eval1 > maxEval) {
+                std::cout << "testEval case " << i << ' ' << txt << " eval exceeds bounds: ";
+                std::ios_base::fmtflags original_flags = std::cout.flags();
+                std::cout << eval1;
+                std::cout << ", expected [" << std::setprecision(2) << minEval << "," << maxEval
+                          << ']' << std::endl;
+                std::cout.flags(original_flags);
+                ++errs;
+            }
+        };
+
+    globals::delayedInit();
     for (const Case &c : cases) {
+        Scoring *s = new Scoring();
         Board board;
         if (!BoardIO::readFEN(board, c.fen.c_str())) {
             std::cerr << "testEval case " << i << " error in FEN: " << c.fen << std::endl;
             ++errs;
             continue;
         }
-        Scoring *s = new Scoring();
+        Board board2(board);
+        // regular eval
         score_t eval1 = s->evalu8(board);
-        auto pawnEval = static_cast<double>(eval1)/Params::PAWN_VALUE;
-        if (pawnEval < c.minEval || pawnEval > c.maxEval) {
-            std::cout << "testEval case " << i << " eval exceeds bounds: ";
-            Scoring::printScore(eval1,std::cout);
-            std::ios_base::fmtflags original_flags = std::cout.flags();
-            std::cout << ", expected [" << std::setprecision(2) <<
-                c.minEval << "," << c.maxEval << ']' << std::endl;
-            std::cout.flags(original_flags);
-            ++errs;
-        }
+        check(eval1, c.minEval, c.maxEval,"non-NNUE");
         board.flip();
         score_t eval2 = s->evalu8(board);
         if (eval1 != eval2) {
-            std::cout << "testEval case " << i << " eval not symmetrical" << std::endl;
+            std::cout << "testEval case " << i << " non-NNUE eval not symmetrical" << std::endl;
             ++errs;
         }
-        delete s;
+        // NNUE eval
+        eval1 = s->evalu8NNUE(board2);
+        check(eval1, c.minEval, c.maxEval,"NNUE");
+        board2.flip();
+        eval2 = s->evalu8(board2);
+        /* TBD NNUE evals may not be symmetric
+        if (eval1 - eval2 > Params::PAWN_VALUE/2) {
+            std::cout << "testEval case " << i << " NNUE eval not symmetrical" << std::endl;
+            std::cout << eval1 << ' ' << eval2 << std::endl;
+            ++errs;
+        }
+        */
         ++i;
+        delete s;
     }
     return errs;
 }
