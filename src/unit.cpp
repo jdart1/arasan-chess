@@ -1363,7 +1363,7 @@ static int testSearch()
        score_t score;
    };
 
-   static std::array<Case,10> cases = {
+   static std::array<Case,9> cases = {
        // Euwe-Alekhine, Amsterdam 1934 (sacrifice to draw)
        Case("2Q2r1k/3n2pp/p7/4p1B1/P1Q5/2N5/2q2nPP/R5K1 b - - bm Nh3+",0),
        // "Ragozin-Botvinnik, 1936 (mate in 3)
@@ -1377,10 +1377,9 @@ static int testSearch()
        Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // draw
        // Evans-Browne, USA 1971 (discovered attack)
        Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
-       // Shirov-Carlsen, Titled Tues early (7) 21.05.2024
-       Case("r3k2r/1bq2pp1/p3p3/8/PN1B2n1/2PB1Nbp/1P2Q3/3R1RK1 b kq - bm Bf2+",Constants::INVALID_SCORE),
-       // Tal-Averkin, 41st URS-ch Moscow 1973
-       Case("8/8/4np2/4pk1p/RNr4P/P3KP2/1P6/8 w - - bm Nd5;",Constants::INVALID_SCORE)
+       // sac into winning endgame
+       // Deac-Carlsen, Titled Tues late blitz 12.09.2023
+       Case("8/5p2/4r1k1/6p1/2R1P1K1/8/8/8 b - - bm Rxe4+",Constants::INVALID_SCORE),
    };
 
    static const int DEPTH=10;
