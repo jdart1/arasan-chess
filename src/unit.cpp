@@ -468,14 +468,17 @@ static int testEval() {
         }
     };
 
-    static const std::array<Case,5> cases = {
+    static const std::array<Case,6> cases = {
         Case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
              -0.5,0.5),
         Case("5rk1/1ppb4/p1pb4/6q1/3PRp1r/2P4P/PP1BQ1P1/5RKN b - -",
              -1.0,1.0),
         Case("3Q4/P4k2/7p/8/1rP1pn1p/1PKn3B/6P1/8 b - -", // advanced passer
              -8.0,-2.0),
+        // material imbalance
         Case("8/6pk/5pb1/7p/Q6P/2r1N3/5PP1/6K1 w - -",4.0,10.0),
+        // material imbalance
+        Case("r4rk1/1bqnpp1p/pp1p1Bp1/8/P3P3/2N1pN1P/1PP1BPP1/R4RK1 w - -",-10.0,-4.0),
         Case("8/8/4bk2/8/8/4K3/4R3/8 w - -",-0.5,0.5) // even endgame
     };
 
@@ -1374,8 +1377,8 @@ static int testSearch()
        Case("R1Q5/5kp1/p3np1p/1p3B2/6P1/PP1P3P/6PK/4q3 b - - bm Qe5+;",0), // draw
        // Evans-Browne, USA 1971 (discovered attack)
        Case("3R4/p5pk/1p5p/3N4/8/nP2P2P/3r2PK/8 w - - bm Nf6+",Constants::INVALID_SCORE),
-       // WCSAC #69
-       Case("5rk1/1ppb4/p1pb4/6q1/3P1p1r/2P1R2P/PP1BQ1P1/5RKN w - - bm Rg3",Constants::INVALID_SCORE),
+       // Shirov-Carlsen, Titled Tues early (7) 21.05.2024
+       Case("r3k2r/1bq2pp1/p3p3/8/PN1B2n1/2PB1Nbp/1P2Q3/3R1RK1 b kq - bm Bf2+",Constants::INVALID_SCORE),
        // Tal-Averkin, 41st URS-ch Moscow 1973
        Case("8/8/4np2/4pk1p/RNr4P/P3KP2/1P6/8 w - - bm Nd5;",Constants::INVALID_SCORE)
    };
