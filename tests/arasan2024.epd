@@ -14,7 +14,7 @@ r2q3r/1p1bbQ2/4p1Bk/3pP3/1n1P1P1p/pP6/Pn4PP/R1B1R1K1 w - - bm g4; id "arasan2024
 r4rk1/1b1n1pb1/3p2p1/1p1Pq1Bp/2p1P3/2P2RNP/1PBQ2P1/5R1K w - - bm Nf5; id "arasan2024.14"; c0 "Tal-Spassky, Tilburg 1980";
 2kr2r1/ppq1bp1p/4pn2/2p1n1pb/4P1P1/2P2N1P/PPBNQP2/R1B1R1K1 b - - bm Nfxg4; id "arasan2024.15"; c0 "Stockfish 4-Houdini 3, 2013 (Rybka forum)";
 8/3r4/pr1Pk1p1/8/7P/6P1/3R3K/5R2 w - - bm Re2+; id "arasan2024.16"; c0 "Aldiga (Brainfish 091016)-Knight-king (Komodo 10 64-bit), playchess.com 2016";
-2r4k/2P3pp/6n1/1p1B4/1B1N1p2/P6b/5q2/1K1RR3 b - - bm h6; id "arasan2024.17"; c0 "caissa-x - ArasanX", lichess.org 2024";
+2r4k/2P3pp/6n1/1p1B4/1B1N1p2/P6b/5q2/1K1RR3 b - - bm h6; id "arasan2024.17"; c0 "caissa-x - ArasanX, lichess.org 2024";
 r1q2rk1/ppnbbpp1/n4P1p/4P3/3p4/2N1B1PP/PP4BK/R2Q1R2 w - - bm Bxh6; id "arasan2024.18"; c0 "Shirazi-Guichard, Malakoff op 2009";
 1R6/5p1k/4bPpp/3pN3/2pP1P1P/2r5/6PK/8 w - - bm h5; id "arasan2024.19"; c0 "Carlsen-Aronian, Elista candidates (m/5) 2007";
 3q1rk1/pr1b1p1p/1bp2p2/2ppP3/8/2P1BN2/PPQ3PP/R4RK1 w - - bm Bh6; id "arasan2024.20"; c0 "Shredder-Rybka, WCCC 2006";
