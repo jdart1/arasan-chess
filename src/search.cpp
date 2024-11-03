@@ -1593,7 +1593,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         if (mainThread()) {
             std::cout << globals::debugPrefix << "0. ";
             MoveImage(move,std::cout);
-            std::cout << " (" << move_index << "//" << mg.moveCount() << ") ";
+            std::cout << " (" << move_index << '/' << mg.moveCount() << ") ";
             std::cout << try_score << std::endl;
         }
 #endif
