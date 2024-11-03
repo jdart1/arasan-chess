@@ -127,7 +127,7 @@ mean the opponent is lower rated, so a draw should be avoided.
 - SyzygyUses50MoveRule - true to observe the 50 move draw rule when probing
 tablebases; false to have tablebase probes ignore the rule. Default is true.
 - SyzygyProbeDepth - maximum depth to probe tablebases. Default is 4.
-- SyzygyTbPath - path to the Syzygy tablebases. Multiple directories can
+- SyzygyPath - path to the Syzygy tablebases. Multiple directories can
 be specified, separated by ':'.
 - MultiPV - followed by a number. Number of distinct best lines to display.
 Default is 1.

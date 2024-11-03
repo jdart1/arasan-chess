@@ -1748,7 +1748,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name Use tablebases type check default ";
         if (globals::options.search.use_tablebases) std::cout << "true"; else std::cout << "false";
         std::cout << std::endl;
-        std::cout << "option name SyzygyTbPath type string default " <<
+        std::cout << "option name SyzygyPath type string default " <<
             globals::options.search.syzygy_path << std::endl;
         std::cout << "option name SyzygyUse50MoveRule type check default true" << std::endl;
         std::cout << "option name SyzygyProbeDepth type spin default " <<
@@ -1839,7 +1839,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
            Options::setOption<bool>(value, globals::options.search.use_tablebases);
            searcher->updateTBOptions();
         }
-        else if (uciOptionCompare(name,"SyzygyTbPath") && validTbPath(value)) {
+        else if (uciOptionCompare(name,"SyzygyPath") && validTbPath(value)) {
            globals::unloadTb();
            globals::options.search.syzygy_path = value;
            globals::options.search.use_tablebases = true;
