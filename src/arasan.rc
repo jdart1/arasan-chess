@@ -55,6 +55,8 @@ search.use_tablebases=true
 # under the directory where Arasan is installed.
 #search.syzygy_path=/home/jdart/chess/syzygy
 #
-# Location of the NNUE network file, relative to the Arasan
-# executable location
-search.nnueFile=arasan-d9-SFv4-20231228.nnue
+# Location of the NNUE network file. If no path, this is
+# relative to the executable location. There is normally
+# no need to set this: Arasan executables are compiled
+# with a suitable default network name.
+#search.nnueFile=
