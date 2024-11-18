@@ -52,7 +52,7 @@ or higher: see https://www.open-mpi.org/software/hwloc/v2.0/.
 Arasanx recognizes the following command-line options:
 
 - -a auto-loads the options from an arasan.rc file in the program directory (if present),
-and aslso (if present) from an arasan.rc in the user's home directory.
+and also (if present) from an arasan.rc in the user's home directory.
 
 - -H: specifies the hash table size in bytes ('K', 'M', or 'G' can be used to indicate
 kilobytes, megabyates or gigabytes). 
@@ -65,10 +65,6 @@ kilobytes, megabyates or gigabytes).
 enable debug output, you also need to use the "-debugMode true" switch
 if using xboard/Winboard, or the "debug=true" option if using Arasan
 as a UCI engine. You normally shouldn't need to turn this on.
-
-- -tbpath: specifies the Syzygy tablepath path and enables use of
-tablebases. Under Windows, path components should be separated by ';',
-while under Linux or MacOS, they should be separated by ":".
 
 - -ics: outputs additional info when playing on a chess server.
 
