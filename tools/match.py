@@ -4,8 +4,9 @@
 # Copyright 2020, 2023 by Jon Dart. All Rights Reserved.
 # Released under the MIT license: see doc/license.txt
 #
-import argparse, json, os, sys
+import argparse, json, os, shlex, sys
 from executor.ssh.client import RemoteCommand
+from subprocess import Popen, PIPE, call
 
 # Sets up a match using multiple machine resources
 
@@ -91,15 +92,18 @@ def main(argv = None):
             print("warning: expected hostname, nps and cores for machine, not found",file=sys.stderr)
             continue
         # Parse and scale time control
-        factor = float(NPS_BASE)/nps
+        factor = float(NPS_BASE)/(nps/810000.0)
         new_tc = scaleTC(options.time_control, factor)
         # execute the remote or local match script
         cmd_string = ""
         try:
             cmd_string = REMOTE_MATCH_CMD + ' ' + options.base_engine + ' ' + options.test_engine + ' ' + str(options.games) + ' ' + new_tc + ' ' + str(cores)
             print("starting : host=%s tc=%s" % (host,new_tc))
-            cmd = RemoteCommand(host,cmd_string,capture=True,directory=REMOTE_MATCH_DIR)
-            cmd.start()
+            if host == 'localhost':
+               process = Popen(shlex.split(cmd_string), shell=True, cwd=REMOTE_MATCH_DIR)
+            else:
+               cmd = RemoteCommand(host,cmd_string,capture=True,directory=REMOTE_MATCH_DIR)
+               cmd.start()
         except:
             print("error starting command " + cmd_string,file=sys.stderr)
             traceback.print_tb(tb, limit=None, file=None)
