@@ -1,4 +1,4 @@
-// Copyright 1994-2008, 2012, 2013, 2017-2018, 2020-2021 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2008, 2012, 2013, 2017-2018, 2020-2021, 2024 by Jon Dart. All Rights Reserved.
 
 #include "stats.h"
 #include "notation.h"
@@ -48,6 +48,7 @@ Statistics::Statistics(const Statistics &s)
       reg_nodes = s.reg_nodes;
       moves_searched = s.moves_searched;
       futility_pruning = s.futility_pruning;
+      futility_pruning_caps = s.futility_pruning_caps;
       static_null_pruning = s.static_null_pruning;
       null_cuts = s.null_cuts;
       razored = s.razored;
@@ -110,6 +111,7 @@ Statistics & Statistics::operator = (const Statistics &s)
       reg_nodes = s.reg_nodes;
       moves_searched = s.moves_searched;
       futility_pruning = s.futility_pruning;
+      futility_pruning_caps = s.futility_pruning_caps;
       static_null_pruning = s.static_null_pruning;
       null_cuts = s.null_cuts;
       razored = s.razored;
@@ -144,12 +146,11 @@ void Statistics::clear()
    multipv_limit = 1;
    num_nodes = (uint64_t)0;
 #ifdef SEARCH_STATS
-   num_qnodes = reg_nodes = moves_searched = static_null_pruning =
-       razored = reduced = singular_searches = (uint64_t)0;
-   hash_hits = hash_searches = futility_pruning = null_cuts = (uint64_t)0;
+   num_qnodes = reg_nodes = moves_searched = static_null_pruning = razored = reduced =
+       singular_searches = (uint64_t)0;
+   hash_hits = hash_searches = futility_pruning = futility_pruning_caps = null_cuts = (uint64_t)0;
    history_pruning = lmp = see_pruning = (uint64_t)0;
-   check_extensions = capture_extensions =
-     pawn_extensions = singular_extensions = 0L;
+   check_extensions = capture_extensions = pawn_extensions = singular_extensions = 0L;
    multicut = non_singular_pruning = 0L;
 #endif
    tb_probes = tb_hits = (uint64_t)0;

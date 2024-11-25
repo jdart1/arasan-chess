@@ -44,6 +44,7 @@ struct Statistics
    uint64_t reg_nodes;
    uint64_t moves_searched; // in regular search
    uint64_t futility_pruning;
+   uint64_t futility_pruning_caps;
    uint64_t static_null_pruning;
    uint64_t null_cuts;
    uint64_t razored;

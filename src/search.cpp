@@ -617,10 +617,11 @@ Move SearchController::findBestMove(
       std::cout << ' ' << stats->non_singular_pruning << " (" << std::setprecision(2) << 100.0*stats->non_singular_pruning/stats->reg_nodes << "%) non-singular pruning" << std::endl;
       std::cout << "search pruning: " << std::endl;
       std::cout << ' ' << stats->futility_pruning << " (" << std::setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "%) futility" << std::endl;
+      std::cout << ' ' << stats->futility_pruning_caps << " (" << std::setprecision(2) << 100.0*stats->futility_pruning_caps/stats->moves_searched << "%) futility (captures)" << std::endl;
       std::cout << ' ' << stats->history_pruning << " (" << std::setprecision(2) << 100.0*stats->history_pruning/stats->moves_searched << "%) history" << std::endl;
       std::cout << ' ' << stats->lmp << " (" << std::setprecision(2) << 100.0*stats->lmp/stats->moves_searched << "%) lmp" << std::endl;
       std::cout << ' ' << stats->see_pruning << " (" << std::setprecision(2) << 100.0*stats->see_pruning/stats->moves_searched << "%) SEE" << std::endl;
-      std::cout << ' ' << stats->reduced << "( " << std::setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << std::endl;
+      std::cout << ' ' << stats->reduced << " (" << std::setprecision(2) << 100.0*stats->reduced/stats->moves_searched << "%) reduced" << std::endl;
       std::cout << "extensions: " <<
           stats->check_extensions << " (" << 100.0*stats->check_extensions/stats->moves_searched << "%) check, " <<
           stats->capture_extensions << " (" << 100.0*stats->capture_extensions/stats->moves_searched << "%) capture, " <<
@@ -1709,11 +1710,12 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
     stats->num_nodes = 0ULL;
 #ifdef SEARCH_STATS
     stats->num_qnodes = stats->reg_nodes = stats->moves_searched = stats->static_null_pruning =
-       stats->razored = stats->reduced = (uint64_t)0;
-    stats->hash_hits = stats->hash_searches = stats->futility_pruning = stats->null_cuts = (uint64_t)0;
-    stats->history_pruning = stats->lmp = stats->see_pruning = (uint64_t)0;
-    stats->check_extensions = stats->capture_extensions =
-    stats->pawn_extensions = stats->singular_extensions = 0L;
+        stats->razored = stats->reduced = (uint64_t)0;
+    stats->hash_hits = stats->hash_searches = stats->futility_pruning =
+        stats->futility_pruning_caps = (uint64_t)0;
+    stats->history_pruning = stats->lmp = stats->see_pruning = stats->null_cuts = (uint64_t)0;
+    stats->check_extensions = stats->capture_extensions = stats->pawn_extensions =
+        stats->singular_extensions = 0L;
 #endif
 #ifdef MOVE_ORDER_STATS
     stats->move_order_count = 0;
@@ -1736,6 +1738,7 @@ void SearchController::updateGlobalStats(const Statistics &mainStats) {
        stats->reg_nodes += s.reg_nodes;
        stats->moves_searched += s.moves_searched;
        stats->futility_pruning += s.futility_pruning;
+       stats->futility_pruning_caps += s.futility_pruning_caps;
        stats->static_null_pruning += s.static_null_pruning;
        stats->null_cuts += s.null_cuts;
        stats->razored += s.razored;
@@ -2491,7 +2494,7 @@ bool Search::prune(const Board &b,
                     context.captureHistoryScore(b, m)/2;
                 if (n->eval < threshold) {
 #ifdef SEARCH_STATS
-                    ++stats.futility_pruning;
+                    ++stats.futility_pruning_caps;
 #endif
 #ifdef _TRACE
                     if (mainThread()) {
