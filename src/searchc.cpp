@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2011, 2017-2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2011, 2017-2021, 2023-2024 by Jon Dart. All Rights Reserved.
 
 #include "searchc.h"
 #include "search.h"
@@ -6,13 +6,13 @@
 #include <cassert>
 
 static constexpr int MAX_HISTORY_DEPTH = 17;
-static constexpr int HISTORY_DIVISOR = 448;
+static constexpr int HISTORY_DIVISOR = 2048;
 static constexpr int MAX_CAPTURE_HISTORY_DEPTH = 8;
 static constexpr int CAPTURE_HISTORY_DIVISOR = 2048;
 
 static int bonus(int depth) {
     const int d = depth / DEPTH_INCREMENT;
-    return d <= MAX_HISTORY_DEPTH ? d * d + 5 * d - 2 : 0;
+    return d <= MAX_HISTORY_DEPTH ? 5 * d * d + 25 * d - 10 : 0;
 }
 
 static int captureBonus(int depth) {
@@ -67,8 +67,8 @@ void SearchContext::clearKiller() {
     }
 }
 
-int SearchContext::scoreForOrdering(Move m, NodeInfo *node,
-                                    ColorType side) const noexcept {
+int SearchContext::historyScore(Move m, const NodeInfo *node,
+                                ColorType side) const noexcept {
     int score = (*history)[side][StartSquare(m)][DestSquare(m)];
     if (node->ply > 0 && !IsNull((node - 1)->last_move)) {
         Move prevMove = (node - 1)->last_move;
@@ -92,7 +92,7 @@ void SearchContext::update(int &val, int bonus, int divisor, bool is_best) {
         val -= bonus;
 }
 
-void SearchContext::updateStats(const Board &board, NodeInfo *node) {
+void SearchContext::updateStats(const Board &board, const NodeInfo *node) {
     // sanity checks
     assert(!IsNull(node->best));
     assert(OnBoard(StartSquare(node->best)) && OnBoard(DestSquare(node->best)));
@@ -100,7 +100,8 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node) {
     if (CaptureOrPromotion(node->best)) {
         assert(node->num_captures<Constants::MaxCaptures);
         for (int i = 0; i < node->num_captures; i++) {
-            updateMove(board,node,node->captures[i],MovesEqual(node->captures[i],node->best),false);
+            const Move m = node->captures[i];
+            updateNonQuietMove(board, node, m, MovesEqual(m, node->best));
         }
     } else {
         // Do not update on fail high of 1st quiet and low depth (idea from
@@ -109,13 +110,13 @@ void SearchContext::updateStats(const Board &board, NodeInfo *node) {
             return;
         for (int i = 0; i < node->num_quiets; i++) {
             const Move m = node->quiets[i];
-            updateMove(board,node,m,MovesEqual(m,node->best),false);
+            updateQuietMove(board, node, m, MovesEqual(m,node->best), false);
         }
     }
 }
 
-void SearchContext::updateMove(const Board &board, NodeInfo *node, Move m,
-                               bool positive, bool continuationOnly) {
+void SearchContext::updateQuietMove(const Board &board, const NodeInfo *node, Move m,
+                                    bool positive, bool continuationOnly) {
     const int b = bonus(node->depth);
     if (!continuationOnly) {
         update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)], b,
@@ -143,9 +144,9 @@ void SearchContext::updateMove(const Board &board, NodeInfo *node, Move m,
     }
 }
 
-void SearchContext::updateCaptureHistory(const Board &board, int depth, Move m, bool positive) {
+void SearchContext::updateNonQuietMove(const Board &board, const NodeInfo *node, Move m, bool positive) {
     update((*captureHistory)[board[StartSquare(m)]][DestSquare(m)][Capture(m)],
-            captureBonus(depth),
+            captureBonus(node->depth),
             CAPTURE_HISTORY_DIVISOR, positive);
 }
 

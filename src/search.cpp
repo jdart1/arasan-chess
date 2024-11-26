@@ -37,9 +37,11 @@ static constexpr int ASPIRATION_WINDOW_STEPS = 6;
 
 static constexpr int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
 static constexpr int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
-static constexpr int FUTILITY_HISTORY_THRESHOLD[2] = {500, 250};
+static constexpr int FUTILITY_HISTORY_THRESHOLD[2] = {2000, 1000};
 static constexpr int CAPTURE_FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
-static constexpr int HISTORY_PRUNING_THRESHOLD[2] = {0, 0};
+static constexpr int CAPTURE_FUTILITY_HISTORY_DIVISOR = 65;
+static constexpr int HISTORY_PRUNING_THRESHOLD[2] = {-250, -250};
+static constexpr int HISTORY_REDUCTION_DIVISOR = 2200;
 #ifdef RAZORING
 static constexpr int RAZOR_DEPTH = DEPTH_INCREMENT;
 #endif
@@ -2449,6 +2451,7 @@ bool Search::prune(const Board &b,
                 return true;
             }
             // History pruning.
+            const int hist = context.historyScore(m, n, board.sideToMove());
             if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
                 context.getCmHistory(n,m)<HISTORY_PRUNING_THRESHOLD[improving] &&
                 context.getFuHistory(n,m)<HISTORY_PRUNING_THRESHOLD[improving]) {
@@ -2464,7 +2467,7 @@ bool Search::prune(const Board &b,
             }
             // futility pruning, enabled at low depths. Do not prune
             // moves with good history.
-            if (pruneDepth <= FUTILITY_DEPTH && context.scoreForOrdering(m,n,b.sideToMove())<
+            if (pruneDepth <= FUTILITY_DEPTH && hist <
                 FUTILITY_HISTORY_THRESHOLD[improving]){
                 // Threshold was formerly increased with the move index
                 // but this tests worse now.
@@ -2489,10 +2492,10 @@ bool Search::prune(const Board &b,
                 if (n->eval == Constants::INVALID_SCORE) {
                     n->eval = n->staticEval = evalu8(b);
                 }
-                score_t threshold = n->alpha - futilityMargin<false>(pruneDepth) -
-                    Params::maxValue(m) -
-                    context.captureHistoryScore(b, m)/2;
-                if (n->eval < threshold) {
+                score_t margin = futilityMargin<false>(pruneDepth) +
+                    Params::maxValue(m) +
+                    context.captureHistoryScore(b, m) / CAPTURE_FUTILITY_HISTORY_DIVISOR;
+                if (n->eval + margin < node->alpha) {
 #ifdef SEARCH_STATS
                     ++stats.futility_pruning_caps;
 #endif
@@ -2582,7 +2585,11 @@ int Search::reduce(const Board &b,
                     reduction -= DEPTH_INCREMENT;
                 }
                 // reduce less for good history
-                reduction -= std::max<int>(-2*DEPTH_INCREMENT,std::min<int>(2*DEPTH_INCREMENT,DEPTH_INCREMENT*context.scoreForOrdering(move,n,board.sideToMove())/512));
+                reduction -= std::max<int>(
+                    -2 * DEPTH_INCREMENT,
+                    std::min<int>(2 * DEPTH_INCREMENT,
+                                  DEPTH_INCREMENT *
+                                      context.historyScore(move, n, board.sideToMove()) / HISTORY_REDUCTION_DIVISOR));
             }
         }
     }
@@ -2740,7 +2747,7 @@ score_t Search::search()
 #endif
               if (!IsNull(hashMove)) {
                   if (CaptureOrPromotion(hashMove)) {
-                      context.updateCaptureHistory(board,depth,hashMove,hashValue >= node->beta);
+                      context.updateNonQuietMove(board, node, hashMove, hashValue >= node->beta);
                   }
                   else {
                       if (hashValue >= node->beta) {
@@ -2748,11 +2755,11 @@ score_t Search::search()
                       }
                       // history bonus for hash move generated beta cutoff,
                       // penalty for hash move below alpha
-                      context.updateMove(board,node,hashMove,hashValue >= node->beta,hashValue <= node->alpha);
+                      context.updateQuietMove(board, node, hashMove, hashValue >= node->beta, hashValue <= node->alpha);
                   }
               }
               if (node->ply > 0 && (node-1)->num_legal <= 2 && !IsNull(node->last_move) && !CaptureOrPromotion(node->last_move)) {
-                  context.updateMove(board,node-1,(node-1)->last_move,false,true);
+                  context.updateQuietMove(board, node-1, (node-1)->last_move, false, true);
               }
               return hashValue;
           }

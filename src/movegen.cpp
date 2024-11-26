@@ -366,7 +366,7 @@ int MoveGenerator::getBatch(Move *&moveList, int &idx)
                      SetPhase(moves[i],COUNTER_MOVE_PHASE);
                   }
                   else if (context && node) {
-                     scores[i] = context->scoreForOrdering(moves[i],node,board.sideToMove());
+                     scores[i] = context->historyScore(moves[i],node,board.sideToMove());
                   }
                }
                if (numMoves > 1) {

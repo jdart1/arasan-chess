@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2016-2019, 2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016-2019, 2021, 2023-2024 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
@@ -43,19 +43,18 @@ public:
         k1 = killers1[ply]; k2 = killers2[ply];
     }
 
-    int scoreForOrdering (Move m, NodeInfo *, ColorType side) const noexcept;
+    int historyScore(Move m, const NodeInfo *, ColorType side) const noexcept;
 
-    void updateStats(const Board &, NodeInfo *node);
+    void updateStats(const Board &, const NodeInfo *node);
 
     int captureHistoryScore(const Board &b, Move m) const noexcept {
         return (*captureHistory)[b[StartSquare(m)]][DestSquare(m)][Capture(m)];
     }
 
     // update a single move's history
-    void updateMove(const Board &board, NodeInfo *node, Move m, bool positive, bool continuationOnly);
+    void updateQuietMove(const Board &board, const NodeInfo *node, Move m, bool positive, bool continuationOnly);
 
-    // update capture history
-    void updateCaptureHistory(const Board &board, int depth, Move m, bool positive);
+    void updateNonQuietMove(const Board &board, const NodeInfo *node, Move m, bool positive);
 
     Move getCounterMove(const Board &board, Move prev) const {
         ColorType oside = board.oppositeSide();
