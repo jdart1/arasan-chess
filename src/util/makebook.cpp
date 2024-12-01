@@ -145,7 +145,7 @@ class BookEntryJson : public BookEntry
         }
 
 
-    char movestr[8];
+    char movestr[9];
     std::string fen;
 
 };
