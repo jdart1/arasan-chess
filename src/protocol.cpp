@@ -16,6 +16,7 @@
 #include "movegen.h"
 #include "notation.h"
 #include "scoring.h"
+#include "tunable.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
@@ -1777,6 +1778,15 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #endif
         std::cout << "option name Move overhead type spin default " <<
             30 << " min 0 max 1000" << std::endl;
+#ifdef TUNE
+        // support for tuning via UCI parameters.
+        for (const auto &p : Tunable::tunables) {
+            const std::string &name = p.first;
+            const Tunable *t = p.second;
+            std::cout << "option name " << name << " type spin default " << t->default_value << " min " <<
+                t->min_value << " max " << t->max_value << std::endl;
+        }
+#endif
         std::cout << "uciok" << std::endl;
         return true;
     }
@@ -1921,9 +1931,29 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         else if (uciOptionCompare(name,"Move overhead")) {
            Options::setOption<int>(value,globals::options.search.move_overhead);
         }
+#ifdef TUNE
+        else {
+            auto &extras = Tunable::tunables;
+            auto it = extras.find(name);
+            if (it == extras.end()) {
+                std::cout << debugPrefix << "error: invalid option name \"" << name << "\"" << std::endl;
+            }
+            else {
+                // currently only ints supported
+                int tmp = 0;
+                if (Options::setOption<int>(value, tmp)) {
+                    it->second->setCurrent(tmp);
+                }
+                else {
+                    std::cout << debugPrefix << "failed to update extra option \"" << name << "\"" << std::endl;
+                }
+            }
+        }
+#else
         else {
            std::cout << debugPrefix << "error: invalid option name \"" << name << "\"" << std::endl;
         }
+#endif
         searcher->updateSearchOptions();
     }
     else if (uci && cmd == "ucinewgame") {

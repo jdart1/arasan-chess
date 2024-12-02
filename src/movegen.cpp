@@ -203,78 +203,109 @@ void RootMoveGenerator::exclude(Move exclude) {
    }
 }
 
-Move MoveGenerator::nextEvasion(int &ord) {
-   if (batch_count==0) {
-     if (phase == START_PHASE) {
-        ++phase;
-        if (!IsNull(hashMove)) {
-           ord = order++;
-           assert(ord<Constants::MaxMoves);
-           SetPhase(hashMove,HASH_MOVE_PHASE);
-           return hashMove;
+Move MoveGenerator::nextMove(int &ord) {
+    if (index >= batch_count) {
+        if ((batch_count = getBatch(batch, index)) == 0)
+            return NullMove;
+    }
+    if (phase == WINNING_CAPTURE_PHASE) {
+        // We previously only checked MVV_LVA, now also check see() if
+        // necessary to see if the move is really winning
+        while (index < batch_count) {
+            Move &move = batch[index++];
+            if (MovesEqual(move, hashMove)) {
+                // already did this one
+                continue;
+            }
+            if (seeSign(board, move, 0)) {
+                SetPhase(move, WINNING_CAPTURE_PHASE);
+                ord = order++;
+                assert(ord < Constants::MaxMoves);
+                return move;
+            } else {
+                SetPhase(move, LOSERS_PHASE);
+                assert(losers_count < Constants::MaxCaptures);
+                losers[losers_count++] = move;
+            }
         }
-        ++phase;
-     }
-     info.init(board);
-     batch_count = mg::generateEvasions(board, info, moves);
-     if (batch_count == 0) {
-        return NullMove;
-     }
-     else if (batch_count > 1) {
-       int scores[Constants::MaxCaptures];
-       assert(batch_count < Constants::MaxCaptures);
-       int poscaps = 0, negcaps = 0;
-       for (int i = 0; i < batch_count; i++) {
-          if (MovesEqual(moves[i],hashMove)) {
-             // make this the 1st move
-             scores[i] = Constants::MATE;
-             SetPhase(moves[i],HASH_MOVE_PHASE);
-             if (i) swap(moves,scores,0,i);
-             ++poscaps;
-             // bump index so we will skip this move
-             ++index;
-             continue;
-          }
-          if (CaptureOrPromotion(moves[i])) {
-             score_t gain = Params::Gain(moves[i]);
-             score_t pieceVal = Params::SEE_PIECE_VALUES[PieceMoved(moves[i])];
-             scores[i] = int(Params::MVV_LVA(moves[i]));
-             if (gain-pieceVal > 0 || (scores[i] = (int)see(board,moves[i])) >= 0) {
-                ++poscaps;
-                SetPhase(moves[i],WINNING_CAPTURE_PHASE);
-                if (i > poscaps) {
-                   // move positive captures to front of list
-                   swap(moves,scores,i,poscaps);
-                }
-             } else {
-                SetPhase(moves[i],LOSERS_PHASE);
-                ++negcaps;
-             }
-          } else {
-             SetPhase(moves[i],HISTORY_PHASE);
-             scores[i] = 0;
-          }
-       }
-       if (poscaps > 1) {
-          mg::sortMoves(moves,scores,negcaps ? batch_count : poscaps);
-       } else if (negcaps) {
-          mg::sortMoves(moves,scores,batch_count);
-       }
-     }
-     else if (MovesEqual(moves[0],hashMove)) {
-        // sole evasion move is the hash move
-        index++;
-     }
-   }
-   if (index < batch_count) {
-      ord = order++;
-      assert(ord<Constants::MaxMoves);
-      return moves[index++];
-   }
-   else
-      return NullMove;
+        // no winning captures, do next phase
+        return nextMove(ord);
+    }
+    ord = order++;
+    assert(ord < Constants::MaxMoves);
+    return batch[index++];
 }
 
+Move MoveGenerator::nextEvasion(int &ord) {
+    if (batch_count == 0) {
+        if (phase == START_PHASE) {
+            ++phase;
+            if (!IsNull(hashMove)) {
+                ord = order++;
+                assert(ord < Constants::MaxMoves);
+                SetPhase(hashMove, HASH_MOVE_PHASE);
+                return hashMove;
+            }
+            ++phase;
+        }
+        info.init(board);
+        batch_count = mg::generateEvasions(board, info, moves);
+        if (batch_count == 0) {
+            return NullMove;
+        } else if (batch_count > 1) {
+            int scores[Constants::MaxCaptures];
+            assert(batch_count < Constants::MaxCaptures);
+            int poscaps = 0, negcaps = 0;
+            for (int i = 0; i < batch_count; i++) {
+                if (MovesEqual(moves[i], hashMove)) {
+                    // make this the 1st move
+                    scores[i] = Constants::MATE;
+                    SetPhase(moves[i], HASH_MOVE_PHASE);
+                    if (i)
+                        swap(moves, scores, 0, i);
+                    ++poscaps;
+                    // bump index so we will skip this move
+                    ++index;
+                    continue;
+                }
+                if (CaptureOrPromotion(moves[i])) {
+                    score_t gain = Params::Gain(moves[i]);
+                    score_t pieceVal = Params::SEE_PIECE_VALUES[PieceMoved(moves[i])];
+                    scores[i] = int(Params::MVV_LVA(moves[i]));
+                    if (gain - pieceVal > 0 || (scores[i] = (int)see(board, moves[i])) >= 0) {
+                        ++poscaps;
+                        SetPhase(moves[i], WINNING_CAPTURE_PHASE);
+                        if (i > poscaps) {
+                            // move positive captures to front of list
+                            swap(moves, scores, i, poscaps);
+                        }
+                    } else {
+                        SetPhase(moves[i], LOSERS_PHASE);
+                        ++negcaps;
+                    }
+                    if (context) scores[i] += context->captureHistoryScoreForOrdering(board, moves[i]);
+                } else {
+                    SetPhase(moves[i], HISTORY_PHASE);
+                    scores[i] = 0;
+                }
+            }
+            if (poscaps > 1) {
+                mg::sortMoves(moves, scores, negcaps ? batch_count : poscaps);
+            } else if (negcaps) {
+                mg::sortMoves(moves, scores, batch_count);
+            }
+        } else if (MovesEqual(moves[0], hashMove)) {
+            // sole evasion move is the hash move
+            index++;
+        }
+    }
+    if (index < batch_count) {
+        ord = order++;
+        assert(ord < Constants::MaxMoves);
+        return moves[index++];
+    } else
+        return NullMove;
+}
 
 int MoveGenerator::getBatch(Move *&moveList, int &idx)
 {
@@ -309,7 +340,7 @@ int MoveGenerator::getBatch(Move *&moveList, int &idx)
          case WINNING_CAPTURE_PHASE:
          {
             numMoves = mg::generateCaptures(board,moves,ply==0);
-            mg::initialSortCaptures(moves,numMoves);
+            mg::initialSortCaptures(board, moves, numMoves, context);
             idx = 0;
             break;
          }
@@ -993,12 +1024,13 @@ void mg::sortMoves(Move moves[], int scores[], unsigned n) {
     }
 }
 
-void mg::initialSortCaptures (Move *moves,unsigned captures) {
+void mg::initialSortCaptures(const Board &board, Move *moves, unsigned captures, SearchContext *context) {
    if (captures > 1) {
       int scores[Constants::MaxCaptures];
       assert(captures < Constants::MaxCaptures);
       for (unsigned i = 0; i < captures; i++) {
           scores[i] = int(Params::MVV_LVA(moves[i]));
+          if (context) scores[i] += context->captureHistoryScoreForOrdering(board, moves[i]);
       }
       sortMoves(moves,scores,captures);
    }

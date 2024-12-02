@@ -68,7 +68,7 @@ namespace mg {
     extern unsigned generateEvasions(const Board &board, const EvasionInfo &info, Move * moves);
     extern unsigned generateEvasions(const Board &board, const EvasionInfo &info, Move * moves, const Bitboard &mask);
 
-    extern void initialSortCaptures(Move *moves, unsigned captures);
+    extern void initialSortCaptures(const Board &board, Move *moves, unsigned captures, SearchContext *context = nullptr);
 
     extern void sortMoves(Move moves[], int scores[], unsigned n);
 }
@@ -91,43 +91,11 @@ class MoveGenerator
          Move pvMove = NullMove,
          int trace = 0);
 
+      virtual ~MoveGenerator() = default;
+
       // Generate the next move, in sorted order, NullMove if none left
       // "ord" is updated with the index of the move.
-      virtual Move nextMove(int &ord) {
-         if (index >= batch_count) {
-            if ((batch_count = getBatch(batch,index)) == 0)
-               return NullMove;
-         }
-         if (phase == WINNING_CAPTURE_PHASE) {
-             // We previously only checked MVV_LVA, now also check see() if
-             // necessary to see if the move is really winning
-             while (index < batch_count) {
-                 Move &move = batch[index++];
-                 if (MovesEqual(move,hashMove)) {
-                     // already did this one
-                     continue;
-                 }
-                 if (seeSign(board,move,0)) {
-                     SetPhase(move,WINNING_CAPTURE_PHASE);
-                     ord = order++;
-                     assert(ord<Constants::MaxMoves);
-                     return move;
-                 } else {
-                     SetPhase(move,LOSERS_PHASE);
-                     assert(losers_count < Constants::MaxCaptures);
-                     losers[losers_count++] = move;
-                 }
-             }
-             // no winning captures, do next phase
-             return nextMove(ord);
-         }
-         ord = order++;
-         assert(ord<Constants::MaxMoves);
-         return batch[index++];
-      }
-
-      virtual ~MoveGenerator() {
-      }
+      virtual Move nextMove(int &ord);
 
       // Generate the next check evasion, NullMove if none left
       virtual Move nextEvasion(int &order);
@@ -347,7 +315,7 @@ public:
             ++phase;
             moveCount = mg::generateCaptures(board, moves, false, targets);
             assert(moveCount <= Constants::MaxCaptures);
-            mg::initialSortCaptures(moves, moveCount);
+            mg::initialSortCaptures(board, moves, moveCount);
         }
         while (index < moveCount) {
             const Move &move = moves[index++];
@@ -420,7 +388,7 @@ public:
                 moveCount = mg::generateCaptures(board, moves, false, targets);
             }
             assert(moveCount <= Constants::MaxCaptures);
-            mg::initialSortCaptures(moves, moveCount);
+            mg::initialSortCaptures(board, moves, moveCount);
         }
         while (index < moveCount) {
             const Move &move = moves[index++];

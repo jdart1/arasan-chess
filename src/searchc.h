@@ -47,21 +47,23 @@ public:
 
     void updateStats(const Board &, const NodeInfo *node);
 
-    int captureHistoryScore(const Board &b, Move m) const noexcept {
+    inline int captureHistoryScore(const Board &b, Move m) const noexcept {
         return (*captureHistory)[b[StartSquare(m)]][DestSquare(m)][Capture(m)];
     }
+
+    int captureHistoryScoreForOrdering(const Board &b, Move m) const noexcept;
 
     // update a single move's history
     void updateQuietMove(const Board &board, const NodeInfo *node, Move m, bool positive, bool continuationOnly);
 
     void updateNonQuietMove(const Board &board, const NodeInfo *node, Move m, bool positive);
 
-    Move getCounterMove(const Board &board, Move prev) const {
+    inline Move getCounterMove(const Board &board, Move prev) const {
         ColorType oside = board.oppositeSide();
         return IsNull(prev) ? NullMove : (*counterMoves)[MakePiece(PieceMoved(prev),oside)][DestSquare(prev)];
     }
 
-    void setCounterMove(const Board &board, Move prev, Move counter) {
+    inline void setCounterMove(const Board &board, Move prev, Move counter) {
         if (!IsNull(prev)) {
             ColorType oside = board.oppositeSide();
             (*counterMoves)[MakePiece(PieceMoved(prev), oside)][DestSquare(prev)] = counter;

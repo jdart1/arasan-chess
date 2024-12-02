@@ -52,6 +52,9 @@ endif
 ifdef SYZYGY_TBS
 FLAGS := $(FLAGS) -DSYZYGY_TBS
 endif
+ifdef TUNE
+FLAGS := $(FLAGS) -DTUNE
+endif
 NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
 NNUE_SRC := nnueintf.cpp
 

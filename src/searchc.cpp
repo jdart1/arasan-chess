@@ -2,22 +2,38 @@
 
 #include "searchc.h"
 #include "search.h"
+#include "tunable.h"
 
 #include <cassert>
 
-static constexpr int MAX_HISTORY_DEPTH = 17;
+TUNABLE(MAX_HISTORY_DEPTH,17,8,20);
+TUNABLE(HISTORY_BASE,-10,-150,150);
+TUNABLE(HISTORY_SLOPE,25,0,600);
+TUNABLE(HISTORY_SLOPE2,5,0,15);
+TUNABLE(MAX_CAPTURE_HISTORY_DEPTH,10,4,20);
+TUNABLE(CAPTURE_HISTORY_BASE,-129,-150,150);
+TUNABLE(CAPTURE_HISTORY_SLOPE,440,0,600);
+TUNABLE(CAPTURE_HISTORY_SLOPE2,4,0,15);
+TUNABLE(CAPTURE_HISTORY_ORDERING_DIVISOR,111,1,128);
+
+// not tunable
 static constexpr int HISTORY_DIVISOR = 2048;
-static constexpr int MAX_CAPTURE_HISTORY_DEPTH = 8;
 static constexpr int CAPTURE_HISTORY_DIVISOR = 2048;
 
 static int bonus(int depth) {
-    const int d = depth / DEPTH_INCREMENT;
-    return d <= MAX_HISTORY_DEPTH ? 5 * d * d + 25 * d - 10 : 0;
+    const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
+    if (d > MAX_HISTORY_DEPTH)
+        return 0;
+    else
+        return HISTORY_BASE + HISTORY_SLOPE*d + HISTORY_SLOPE2*d*d;
 }
 
 static int captureBonus(int depth) {
-    const int d = depth / DEPTH_INCREMENT;
-    return d <= MAX_CAPTURE_HISTORY_DEPTH ? d*256 : 0;
+    const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
+    if (d > MAX_CAPTURE_HISTORY_DEPTH)
+        return 0;
+    else
+        return CAPTURE_HISTORY_BASE + CAPTURE_HISTORY_SLOPE*d + CAPTURE_HISTORY_SLOPE2*d*d;
 }
 
 SearchContext::SearchContext() {
@@ -166,4 +182,8 @@ int SearchContext::getFuHistory(NodeInfo *node, Move move) const noexcept {
     Move prev((node - 2)->last_move);
     return (*fuMoveHistory)[PieceMoved(prev)][DestSquare(prev)]
                            [PieceMoved(move)][DestSquare(move)];
+}
+
+int SearchContext::captureHistoryScoreForOrdering(const Board &b, Move m) const noexcept {
+    return captureHistoryScore(b, m) / CAPTURE_HISTORY_ORDERING_DIVISOR;
 }
