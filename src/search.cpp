@@ -7,6 +7,7 @@
 #include "hash.h"
 #include "protocol.h"
 #include "see.h"
+#include "tunable.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
@@ -35,28 +36,34 @@ static constexpr int ASPIRATION_WINDOW_STEPS = 6;
 #define MULTICUT
 #define NON_SINGULAR_PRUNING
 
-static constexpr int IID_DEPTH[2] = {6*DEPTH_INCREMENT,8*DEPTH_INCREMENT};
-static constexpr int FUTILITY_DEPTH = 8*DEPTH_INCREMENT;
-static constexpr int FUTILITY_HISTORY_THRESHOLD[2] = {2000, 1000};
-static constexpr int CAPTURE_FUTILITY_DEPTH = 5*DEPTH_INCREMENT;
-static constexpr int CAPTURE_FUTILITY_HISTORY_DIVISOR = 65;
-static constexpr int HISTORY_PRUNING_THRESHOLD[2] = {-250, -250};
-static constexpr int HISTORY_REDUCTION_DIVISOR = 2200;
+TUNABLE(IID_DEPTH_NON_PV, 6*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(IID_DEPTH_PV, 8*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(FUTILITY_DEPTH, 8*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(FUTILITY_HISTORY_THRESHOLD_IMP, 1000, 500, 4000);
+TUNABLE(FUTILITY_HISTORY_THRESHOLD_NON_IMP, 2000, 500, 4000);
+TUNABLE(CAPTURE_FUTILITY_DEPTH, 5*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 8*DEPTH_INCREMENT);
+TUNABLE(CAPTURE_FUTILITY_HISTORY_DIVISOR, 65, 20, 200);
+TUNABLE(HISTORY_PRUNING_THRESHOLD_IMP, -250, -1000, 0);
+TUNABLE(HISTORY_PRUNING_THRESHOLD_NON_IMP, -250, -1000, 0);
+TUNABLE(HISTORY_REDUCTION_DIVISOR, 2200, 500, 4000);
 #ifdef RAZORING
-static constexpr int RAZOR_DEPTH = DEPTH_INCREMENT;
+TUNABLE(RAZOR_DEPTH, DEPTH_INCREMENT, 0, 2*DEPTH_INCREMENT);
 #endif
-static constexpr int SEE_PRUNING_DEPTH = 7*DEPTH_INCREMENT;
+TUNABLE(SEE_PRUNING_DEPTH, 7*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
 static constexpr int CHECK_EXTENSION = DEPTH_INCREMENT;
 static constexpr int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static constexpr int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
-static constexpr int SINGULAR_EXTENSION_DEPTH = 8*DEPTH_INCREMENT;
+TUNABLE(SINGULAR_EXTENSION_DEPTH, 8*DEPTH_INCREMENT, 6*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
 #endif
-static constexpr int PROBCUT_DEPTH = 5*DEPTH_INCREMENT;
-static const score_t PROBCUT_MARGIN = score_t(1.25*Params::PAWN_VALUE);
-static constexpr int LMR_DEPTH = 3*DEPTH_INCREMENT;
-static constexpr double LMR_BASE[2] = {0.5, 0.3};
-static constexpr double LMR_DIV[2] = {1.8,2.25};
+TUNABLE(PROBCUT_DEPTH, 5*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 8*DEPTH_INCREMENT);
+TUNABLE(PROBCUT_MARGIN, static_cast<int>(1.25*Params::PAWN_VALUE), static_cast<int>(0.75*Params::PAWN_VALUE),
+        static_cast<int>(1.75*Params::PAWN_VALUE));
+TUNABLE(LMR_DEPTH, 3*DEPTH_INCREMENT, DEPTH_INCREMENT, 4*DEPTH_INCREMENT);
+TUNABLE(LMR_BASE_NON_PV, 50, 0, 100);
+TUNABLE(LMR_BASE_PV, 30, 0, 100);
+TUNABLE(LMR_DIV_NON_PV, 180, 100, 360);
+TUNABLE(LMR_DIV_PV, 225, 100, 360);
 static constexpr int CHECKS_IN_QSEARCH = 1;
 // Depth limits for the strength reduction feature:
 static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
@@ -76,32 +83,41 @@ static int singularSearchDepth(int depth)
 #endif
 
 static int CACHE_ALIGN LMR_REDUCTION[2][64][64];
+static int LMP_MOVE_COUNT[2][16];
 
-static constexpr int LMP_DEPTH=13;
-
-static constexpr int LMP_MOVE_COUNT[2][16] = {{0, 2, 4, 7, 10, 16, 22, 30, 38, 49, 60, 73, 87, 102, 119, 140},
-                                              {0, 4, 7, 12, 18, 26, 35, 46, 59, 73, 88, 105, 124, 145, 168}};
+TUNABLE(LMP_BASE_IMP, 4, 0, 6);
+TUNABLE(LMP_BASE_NON_IMP, 2, 0, 4);
+TUNABLE(LMP_DEPTH, 9, 8, 15);
+TUNABLE(LMP_EXP_IMP, 204, 120, 230);
+TUNABLE(LMP_EXP_NON_IMP, 195, 120, 230);
+TUNABLE(LMP_SLOPE_IMP, 75, 10, 150);
+TUNABLE(LMP_SLOPE_NON_IMP, 70, 10, 150);
 
 #ifdef RAZORING
 static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.75*Params::PAWN_VALUE);
 static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::PAWN_VALUE);
 #endif
-
 static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params::PAWN_VALUE);
-
 static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
-
 static constexpr score_t CAPTURE_FUTILITY_MARGIN_BASE = static_cast<score_t>(2.0*Params::PAWN_VALUE);
-
 static constexpr score_t CAPTURE_FUTILITY_MARGIN_SLOPE = static_cast<score_t>(2.5*Params::PAWN_VALUE);
-
 static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
-
 static constexpr score_t STATIC_NULL_MARGIN[2] = {static_cast<score_t>(0.75*Params::PAWN_VALUE),
     static_cast<score_t>(0.5*Params::PAWN_VALUE)};
-
 static const score_t QSEARCH_FUTILITY_PRUNE_MARGIN = static_cast<score_t>(1.4*Params::PAWN_VALUE);
 static const score_t QSEARCH_SEE_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+
+static inline int IIDDepth(bool pv) {
+    return pv ? IID_DEPTH_PV : IID_DEPTH_NON_PV;
+}
+
+static inline int futilityHistoryThreshold(bool improving) {
+    return improving ? FUTILITY_HISTORY_THRESHOLD_IMP : FUTILITY_HISTORY_THRESHOLD_NON_IMP;
+}
+
+static inline int historyPruningThreshold(bool improving) {
+    return improving ? HISTORY_PRUNING_THRESHOLD_IMP : HISTORY_PRUNING_THRESHOLD_NON_IMP;
+}
 
 // global vars are updated only once this many nodes (to minimize
 // thread contention for global memory):
@@ -259,13 +275,20 @@ void Search::init() {
     for (int d = 0; d < 64; d++) {
         for (int moves = 0; moves < 64; moves++) {
             for (int p = 0; p < 2; p++) {
+                float lmr_div = (p ? LMR_DIV_PV : LMR_DIV_NON_PV)/100.0;
+                float lmr_base = (p ? LMR_BASE_PV : LMR_BASE_NON_PV)/100.0;
                 LMR_REDUCTION[p][d][moves] = 0;
                 if (d > 0 && moves > 0) {
-                    const double reduction = LMR_BASE[p] + log(d) * log(moves) / LMR_DIV[p];
+                    const double reduction = lmr_base + (log(d) * log(moves)) / lmr_div;
                     LMR_REDUCTION[p][d][moves] = static_cast<int>(DEPTH_INCREMENT*floor(2*reduction+0.5)/2);
                 }
             }
         }
+    }
+    for (int d = 0; d <= LMP_DEPTH; d++) {
+        LMP_MOVE_COUNT[0][d] = std::round(LMP_BASE_NON_IMP + LMP_SLOPE_NON_IMP * std::pow(d, LMP_EXP_NON_IMP/100.0)/100.0);
+        LMP_MOVE_COUNT[1][d] = std::round(LMP_BASE_IMP + LMP_SLOPE_IMP * std::pow(d, LMP_EXP_IMP/100.0)/100.0);
+        //        std::cout << LMP_MOVE_COUNT[0][d] << ' ' << LMP_MOVE_COUNT[1][d] << std::endl;
     }
 /*
     for (int i = 3; i < 64; i++) {
@@ -2453,8 +2476,8 @@ bool Search::prune(const Board &b,
             // History pruning.
             const int hist = context.historyScore(m, n, board.sideToMove());
             if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
-                context.getCmHistory(n,m)<HISTORY_PRUNING_THRESHOLD[improving] &&
-                context.getFuHistory(n,m)<HISTORY_PRUNING_THRESHOLD[improving]) {
+                context.getCmHistory(n,m) < historyPruningThreshold(improving) &&
+                context.getFuHistory(n,m) < historyPruningThreshold(improving)) {
 #ifdef _TRACE
                 if (mainThread()) {
                     indent(n->ply); std::cout << "history: pruned" << std::endl;
@@ -2467,8 +2490,7 @@ bool Search::prune(const Board &b,
             }
             // futility pruning, enabled at low depths. Do not prune
             // moves with good history.
-            if (pruneDepth <= FUTILITY_DEPTH && hist <
-                FUTILITY_HISTORY_THRESHOLD[improving]){
+            if (pruneDepth <= FUTILITY_DEPTH && hist < futilityHistoryThreshold(improving)) {
                 // Threshold was formerly increased with the move index
                 // but this tests worse now.
                 score_t threshold = n->alpha - futilityMargin<true>(pruneDepth);
@@ -2570,7 +2592,7 @@ int Search::reduce(const Board &b,
     const bool quiet = !CaptureOrPromotion(move);
 
     // See if we do late move reduction.
-    if (depth >= LMR_DEPTH && moveIndex >= 1+2*n->PV() && (quiet || moveIndex > lmpCount(depth,improving))) {
+    if (depth >= LMR_DEPTH && moveIndex >= 1+2*n->PV() && (quiet|| moveIndex > lmpCount(depth,improving))) {
        reduction += lmr(n,depth,moveIndex);
         if (!quiet) {
             reduction -= DEPTH_INCREMENT;
@@ -3068,9 +3090,9 @@ score_t Search::search()
     // Use "internal iterative deepening" to get an initial move to try if
     // there is no hash move .. an idea from Crafty (previously used by
     // Hitech).
-    if (IsNull(hashMove) && depth >= IID_DEPTH[node->PV()]) {
+    if (IsNull(hashMove) && depth >= IIDDepth(node->PV())) {
         // reduced depth for search
-        const int d = depth - IID_DEPTH[node->PV()] + DEPTH_INCREMENT;
+        const int d = depth - IIDDepth(node->PV()) + DEPTH_INCREMENT;
 #ifdef _TRACE
         if (mainThread()) {
             indent(ply); std::cout << "== start IID, depth = " << d

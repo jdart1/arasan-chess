@@ -1947,6 +1947,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                 else {
                     std::cout << debugPrefix << "failed to update extra option \"" << name << "\"" << std::endl;
                 }
+                Search::init();
             }
         }
 #else
