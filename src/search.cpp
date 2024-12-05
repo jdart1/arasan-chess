@@ -94,18 +94,35 @@ TUNABLE(LMP_SLOPE_IMP, 75, 10, 150);
 TUNABLE(LMP_SLOPE_NON_IMP, 70, 10, 150);
 
 #ifdef RAZORING
-static constexpr score_t RAZOR_MARGIN = static_cast<score_t>(2.75*Params::PAWN_VALUE);
-static constexpr score_t RAZOR_MARGIN_SLOPE = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+TUNABLE(RAZOR_MARGIN, static_cast<score_t>(2.75*Params::PAWN_VALUE),
+        static_cast<int>(1.5*Params::PAWN_VALUE),
+        static_cast<int>(3.5*Params::PAWN_VALUE));
+TUNABLE(RAZOR_MARGIN_SLOPE, static_cast<score_t>(1.25*Params::PAWN_VALUE),
+        static_cast<int>(0.75*Params::PAWN_VALUE),
+        static_cast<int>(2.0*Params::PAWN_VALUE));
 #endif
-static constexpr score_t FUTILITY_MARGIN_BASE = static_cast<score_t>(0.25*Params::PAWN_VALUE);
-static constexpr score_t FUTILITY_MARGIN_SLOPE = static_cast<score_t>(0.95*Params::PAWN_VALUE);
-static constexpr score_t CAPTURE_FUTILITY_MARGIN_BASE = static_cast<score_t>(2.0*Params::PAWN_VALUE);
-static constexpr score_t CAPTURE_FUTILITY_MARGIN_SLOPE = static_cast<score_t>(2.5*Params::PAWN_VALUE);
-static constexpr int STATIC_NULL_PRUNING_DEPTH = 5*DEPTH_INCREMENT;
-static constexpr score_t STATIC_NULL_MARGIN[2] = {static_cast<score_t>(0.75*Params::PAWN_VALUE),
-    static_cast<score_t>(0.5*Params::PAWN_VALUE)};
-static const score_t QSEARCH_FUTILITY_PRUNE_MARGIN = static_cast<score_t>(1.4*Params::PAWN_VALUE);
-static const score_t QSEARCH_SEE_PRUNE_MARGIN = static_cast<score_t>(1.25*Params::PAWN_VALUE);
+TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.25*Params::PAWN_VALUE), 0,
+        static_cast<int>(0.75*Params::PAWN_VALUE));
+TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.95*Params::PAWN_VALUE),
+        static_cast<int>(0.5*Params::PAWN_VALUE),
+        static_cast<int>(1.5*Params::PAWN_VALUE));
+TUNABLE(CAPTURE_FUTILITY_MARGIN_BASE, static_cast<int>(2.0*Params::PAWN_VALUE), 0,
+        static_cast<int>(3.5*Params::PAWN_VALUE));
+TUNABLE(CAPTURE_FUTILITY_MARGIN_SLOPE, static_cast<int>(2.5*Params::PAWN_VALUE),
+        static_cast<int>(1.0*Params::PAWN_VALUE),
+        static_cast<int>(3.5*Params::PAWN_VALUE));
+TUNABLE(STATIC_NULL_PRUNING_DEPTH, 6*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(STATIC_NULL_MARGIN_MIN,static_cast<int>(0.25*Params::PAWN_VALUE), 0,
+        static_cast<int>(1.0*Params::PAWN_VALUE));
+TUNABLE(STATIC_NULL_MARGIN_SLOPE,static_cast<int>(0.75*Params::PAWN_VALUE),
+        static_cast<int>(0.25*Params::PAWN_VALUE),
+        static_cast<int>(1.225*Params::PAWN_VALUE));
+TUNABLE(QSEARCH_FUTILITY_PRUNE_MARGIN, static_cast<int>(1.4*Params::PAWN_VALUE),
+        static_cast<int>(0.9*Params::PAWN_VALUE),
+        static_cast<int>(2.0*Params::PAWN_VALUE));
+TUNABLE(QSEARCH_SEE_PRUNE_MARGIN, static_cast<int>(1.25*Params::PAWN_VALUE),
+        static_cast<int>(0.5*Params::PAWN_VALUE),
+        static_cast<int>(2.0*Params::PAWN_VALUE));
 
 static inline int IIDDepth(bool pv) {
     return pv ? IID_DEPTH_PV : IID_DEPTH_NON_PV;
@@ -1031,7 +1048,9 @@ static score_t futilityMargin(int depth)
 #ifdef STATIC_NULL_PRUNING
 static score_t staticNullPruningMargin(int depth, int improving)
 {
-    return STATIC_NULL_MARGIN[improving]*std::max<int>(1,depth/DEPTH_INCREMENT);
+    // formula similar to Obsidian
+    int d = depth / DEPTH_INCREMENT - improving;
+    return std::max<int>(STATIC_NULL_MARGIN_MIN, STATIC_NULL_MARGIN_SLOPE * d);
 }
 #endif
 
@@ -2865,13 +2884,13 @@ score_t Search::search()
     context.clearKillers(node->ply+1);
 
 #ifdef STATIC_NULL_PRUNING
-    // static null pruning, aka reverse futility pruning,
-    // as in Protector, Texel, etc.
-    if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH) {
+    // Static null pruning, aka reverse futility pruning,
+    // as in Protector, Texel, etc. Positions with very good
+    // eval are pruned.
+    if (pruneOk && depth <= STATIC_NULL_PRUNING_DEPTH && node->eval < Constants::TABLEBASE_WIN) {
         const score_t margin = staticNullPruningMargin(depth, improving);
-        const score_t threshold = node->beta + margin;
         assert(node->eval != Constants::INVALID_SCORE);
-        if (node->eval >= threshold && node->eval < Constants::MATE_RANGE) {
+        if (node->eval >= node->beta + margin) {
 #ifdef _TRACE
            if (mainThread()) {
               indent(ply); std::cout << "static null pruned" << std::endl;
@@ -2880,7 +2899,7 @@ score_t Search::search()
 #ifdef SEARCH_STATS
            ++stats.static_null_pruning;
 #endif
-           return node->eval - margin;
+           return (node->eval + node->beta)/2;
        }
     }
 #endif
