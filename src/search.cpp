@@ -292,8 +292,8 @@ void Search::init() {
     for (int d = 0; d < 64; d++) {
         for (int moves = 0; moves < 64; moves++) {
             for (int p = 0; p < 2; p++) {
-                float lmr_div = (p ? LMR_DIV_PV : LMR_DIV_NON_PV)/100.0;
-                float lmr_base = (p ? LMR_BASE_PV : LMR_BASE_NON_PV)/100.0;
+                auto lmr_div = (p ? LMR_DIV_PV : LMR_DIV_NON_PV)/100.0;
+                auto lmr_base = (p ? LMR_BASE_PV : LMR_BASE_NON_PV)/100.0;
                 LMR_REDUCTION[p][d][moves] = 0;
                 if (d > 0 && moves > 0) {
                     const double reduction = lmr_base + (log(d) * log(moves)) / lmr_div;
@@ -303,8 +303,8 @@ void Search::init() {
         }
     }
     for (int d = 0; d <= LMP_DEPTH; d++) {
-        LMP_MOVE_COUNT[0][d] = std::round(LMP_BASE_NON_IMP + LMP_SLOPE_NON_IMP * std::pow(d, LMP_EXP_NON_IMP/100.0)/100.0);
-        LMP_MOVE_COUNT[1][d] = std::round(LMP_BASE_IMP + LMP_SLOPE_IMP * std::pow(d, LMP_EXP_IMP/100.0)/100.0);
+        LMP_MOVE_COUNT[0][d] = static_cast<int>(std::round(LMP_BASE_NON_IMP + LMP_SLOPE_NON_IMP * std::pow(d, LMP_EXP_NON_IMP/100.0)/100.0));
+        LMP_MOVE_COUNT[1][d] = static_cast<int>(std::round(LMP_BASE_IMP + LMP_SLOPE_IMP * std::pow(d, LMP_EXP_IMP/100.0)/100.0));
         //        std::cout << LMP_MOVE_COUNT[0][d] << ' ' << LMP_MOVE_COUNT[1][d] << std::endl;
     }
 /*
@@ -931,7 +931,7 @@ int Search::checkTime() {
        }
        // If we are not checking time often enough, adjust down the time check interval
        if (last_time_check > 0 && elapsed_time >= 100 && (elapsed_time - last_time_check) > limit / 10) {
-           controller->timeCheckFactor *= std::max(0.5, 1.0 - 3*static_cast<float>(elapsed_time - last_time_check)/limit);
+           controller->timeCheckFactor *= std::max(0.5, 1.0 - 3*static_cast<double>(elapsed_time - last_time_check)/limit);
            controller->timeCheckInterval = controller->computeTimeCheckInterval(stats.num_nodes);
        }
     }
