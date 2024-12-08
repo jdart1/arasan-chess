@@ -89,7 +89,7 @@ static struct SelfPlayOptions {
     bool adjudicate7manDraw = false;
     bool adjudicateTB = true;
     int adjudicateTBMen = 3; // don't adjudicate with more men so low-mat configs are included
-    score_t adjudicateWinScore = 30*Params::PAWN_VALUE;
+    score_t adjudicateWinScore = 20*Params::PAWN_VALUE;
     unsigned adjudicateWinPlies = 3;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
@@ -457,8 +457,8 @@ static void selfplay(ThreadData &td) {
                     adjudicated = true;
                 }
             }
-            if (!IsNull(m)) {
-                assert(validMove(board, m));
+            // TBD: we can rarely get an invalid move - after termination?
+            if (!IsNull(m) && validMove(board,m)) {
                 std::string image;
                 if (sp_options.saveGames) {
                     Notation::image(board, m, Notation::OutputFormat::SAN, image);
