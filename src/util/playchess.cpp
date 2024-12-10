@@ -116,7 +116,7 @@ int CDECL main(int argc, char **argv)
                board.reset();
                side = White;
                float last_score = -1;
-               int valid = 1;
+               bool valid = true;
                int var = 0;
                ChessIO::TokenReader tokenReader(pgnReader);
                bool done = false;
@@ -136,7 +136,7 @@ int CDECL main(int argc, char **argv)
                         // echo to both stdout and stderr
                         std::cerr << "Illegal move: " << tok.val << std::endl;
                         std::cout << "Illegal move: " << tok.val << std::endl;
-                        valid = 0;
+                        valid = false;
 
                      }
                      else if (valid) {
@@ -156,7 +156,7 @@ int CDECL main(int argc, char **argv)
                       break;;
                   case ChessIO::Unknown:
                       std::cerr << "Unrecognized text: " << tok.val << std::endl;
-                      valid = 0;
+                      valid = false;
                       break;
                   case ChessIO::Comment:
                      break;
