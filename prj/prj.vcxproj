@@ -810,14 +810,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\unit.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">true</ExcludedFromBuild>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">WIN32;_CONSOLE;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">WIN32;_CONSOLE;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\src\util\makebook.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>

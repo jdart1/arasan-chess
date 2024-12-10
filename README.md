@@ -2,9 +2,19 @@
 
 Arasan is a chess engine, that is, a console-based program that plays the game of chess.
 
-By itself, it has no graphical interface, but can be used together with interface programs such as [Winboard and xboard](https://www.gnu.org/software/xboard/). There is a separate Windows-only GUI for Arasan distributed with the Windows releases: it is not hosted on Github.
+The chess engine by itself has no graphical interface, but can be used together
+with external interface programs such as [Winboard and
+xboard](https://www.gnu.org/software/xboard/). This repository also contains source for a
+Windows-only GUI for Arasan, in the "gui" subdirectory.
 
-For communicating with a chess interface, Arasan supports either the standard [CECP](http://home.hccnet.nl/h.g.muller/engine-intf.html) protocol (version 2) or the [UCI](https://www.chessprogramming.org/Chess_Engine_Communication_Protocol) protocol. CECP is the native protocol used by Winboard and xboard. UCI-compatible chess interfaces include ChessBase and Fritz. [Arena](http://www.playwitharena.de/), a free interface, supports both protocols.
+For communicating with a chess interface, Arasan supports either the
+standard [CECP](http://home.hccnet.nl/h.g.muller/engine-intf.html)
+protocol (version 2) or the
+[UCI](https://www.chessprogramming.org/Chess_Engine_Communication_Protocol)
+protocol. CECP is the native protocol used by Winboard and
+xboard. UCI-compatible chess interfaces include ChessBase and
+Fritz. [Arena](http://www.playwitharena.de/), a free interface,
+supports both protocols.
 
 Arasan is multi-platform (Windows, Linux, Mac OS, Unix) and supports multi-threading for higher performance.
 
@@ -12,7 +22,7 @@ Arasan is multi-platform (Windows, Linux, Mac OS, Unix) and supports multi-threa
 
 Copyright 1994-2024 by Jon Dart. All Rights Reserved.
 
-Arasan is licensed under the MIT License. See the LICENSE file.
+Arasan is licensed under the MIT License. See the LICENSE file. Note: this includes some special terms related to the GUI.
 
 ## Program variants
 

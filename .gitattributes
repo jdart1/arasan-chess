@@ -9,11 +9,15 @@
 # Declare files that will always have CRLF line endings on checkout.
 Makefile.win text eol=crlf
 release.bat text eol=crlf
-prj.sln text eol=crlf
-prj.vcxproj text eol=crlf
-arasan.props text eol=crlf
-arasan_tune.props text eol=crlf
+gui/* text eol=crlf
+gui/install/* text eol=crlf
+gui/res/GUI.RC2 text eol=crlf
+prj/* text eol=crlf
 
 # Denote all files that are truly binary and should not be modified.
 *.doc binary
 *.nnue binary
+*.TTF binary
+*.ZIP binary
+*.ICO binary
+*.BMP binary

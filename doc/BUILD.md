@@ -10,6 +10,7 @@ following other console programs:
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
 - selfplay - generates positions for NNUE tuning
 - checkbin - checks for errors in NNUE training files
+- convertbin - converts between Stockfish bin and bullet NNUE training formats
 
 Following is a sketch of the Arasan source directory tree:
 
@@ -42,7 +43,6 @@ to pull these dependencies into your your source tree:
 Arasan now requires a modern compiler with at least C++-17 support. Clang is the
 recommended compiler (can use clang-cl on Windows). Clang compiles are measurably faster, due
 to better code generation, especially in the NNUE code.
-
 
 The primary architectures supported and tested are x86, x86_64, and ARM.
 However, the code is designed to be portable. In particular, there is support
@@ -129,14 +129,15 @@ variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive," so
 
 ## Recommended build method
 
-I recommend building the engine from the command line with NMAKE, using the supplied makefile
-(named "Makefile" in the Windows source zip, or "Makefile.win" in the
-github repo). This is the most reliable and tested method. Visual
-Studio Community Edition is free for use on open-source projects and
-includes the needed command-line tools. You need a recent version with C++ 17
-support. As mentioned above, use of clang-cl (can be installed along with MSVC)
-is recommended for best performance; this can be specified by including `CC=clang-cl`
-on the command line.
+I recommend building the engine from the command line with NMAKE,
+using the supplied makefile (named "Makefile" in the Windows source
+zip, or "Makefile.win" in the github repo). This is the most reliable
+and tested method. Visual Studio Community Edition is free for use on
+open-source projects and includes the needed command-line tools. You
+need a recent version with C++ 17 support. As mentioned above, use of
+clang-cl (can be installed along with MSVC) is recommended for best
+performance; this can be specified by including `CC=clang-cl` on the
+command line.
 
 The following targets are defined in the makefile:
 
@@ -169,14 +170,14 @@ Makefile to select TARGET=win32 and run the same build commands.
 
 ## Windows XP compatibility
 
-To make a XP-compatible build, edit the Makefile to set PLATFORM=XP.
+To make a Windows XP-compatible build, edit the Makefile to set PLATFORM=XP.
 This requires installation of the Windows SDK version 7.1A. You can
 obtain this by running (or re-running, if needed) the Visual Studio
-2019 installer and selecting "MSVC v140 - VS2015 C++ Build tools"
-(not included by default). (Note Windows NT compilation support is
-deprecated and will be removed by Microsoft eventually. Note also
-I no longer have a functioning XP machine and so compatibility of
-current builds of Arasan is not tested).
+installer and selecting "MSVC v140 - VS2015 C++ Build tools" (not
+included by default). (Note Windows XP compilation support is
+deprecated and will be removed by Microsoft eventually. Note also I no
+longer have a functioning XP machine and so compatibility of current
+builds of Arasan is not tested.)
 
 ## Building the engine with Visual Studio
 
@@ -188,20 +189,20 @@ less maintained/tested than the NMAKE Makefile.
 
 ## Building the Arasan Windows GUI
 
-Source for Arasan's native Windows GUI is included in the Windows source archives
-downloadable from [arasanchess.org](https://www.arasanchess.org).
-
 To build the GUI, use the Visual C++ solution file in the "gui"
 subdirectory. (The command-line Makefile does not build the GUI). You
 will need a version of Visual Studio that includes
 the required MFC libraries. The Community Edition should work.
-By default the GUI solution file produces a XP-compatible build,
-so it requires the Windows SDK 7.1A to be installed. The Visual
+By default the GUI solution file produces a Windows XP-compatible build,
+and so it requires the Windows SDK 7.1A to be installed. The Visual
 Studio installer can add this, but it is not installed by default.
+
+The Arasan GUI installer was built with InnoSetup: see the gui/install
+directory for further details.
 
 ## Cygwin/MSYS
 
-Arasan can also be built using the Cygwin development tools, which
+The Arasan engine can also be built using the Cygwin development tools, which
 simulate a Linux environment under Windows. Use the Linux source
 package for building with Cygwin or [MSYS2](https://www.msys2.org/). I
 do not currently recommend or support [MingW](http://mingw.org/).
