@@ -43,6 +43,7 @@ static constexpr char PATH_CHAR = '/';
 
 MoveArray *globals::gameMoves;
 BookReader globals::openingBook;
+std::ofstream globals::game_file;
 Options globals::options;
 
 std::mutex globals::input_lock;
@@ -172,11 +173,12 @@ bool globals::loadNetwork(const std::string &fname, bool verbose) {
 }
 
 void CDECL globals::cleanupGlobals(void) {
-    openingBook.close();
+    if (openingBook.is_open()) openingBook.close();
     delete gameMoves;
     Scoring::cleanup();
     Bitboard::cleanup();
     Board::cleanup();
+    if (game_file.is_open()) game_file.close();
 }
 
 bool globals::initOptions(bool autoLoadRC, const char *rcPath) {
@@ -244,6 +246,21 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath) {
     return true;
 }
 
+void globals::initGameFile() {
+    if (globals::options.games.store_games && !game_file.is_open()) {
+        std::string pathname;
+        if (globals::options.games.game_pathname == "") {
+            pathname = globals::derivePath("games.pgn");
+        } else {
+            pathname = globals::options.games.game_pathname;
+        }
+        game_file.open(pathname.c_str(), std::ios::out | std::ios::app);
+        if (!game_file.good()) {
+            std::cerr << "# warning: cannot open game file. Games will not be saved." << std::endl;
+        }
+    }
+}
+
 void globals::delayedInit(bool verbose) {
 #ifdef SYZYGY_TBS
     if (options.search.use_tablebases && !globals::tb_init_done()) {
@@ -293,6 +310,7 @@ void globals::delayedInit(bool verbose) {
                       << std::endl;
         }
     }
+    initGameFile();
 }
 
 void globals::unloadTb() {

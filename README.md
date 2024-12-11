@@ -179,6 +179,9 @@ down 5 pawns in score value.
 directory as the Arasan engine executable.
 - Book variety - value from 0 to 100, default 50. Higher values
 produce more variety in book move selection.
+- Store games - true to store games that are played.
+- Game pathname - specifies the path + filename for game storage. Default is "games.pgn"
+in the Arasan executable directory (must be writeable).
 - Position learning - true to enable position learning (storing
 key position results in a file and later retrieving them).
 - Learn file name - name & location of the file to store position learning data

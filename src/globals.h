@@ -12,6 +12,7 @@
 #include "types.h"
 #include "nnue/nnue.h"
 
+#include <fstream>
 #include <mutex>
 #include <string>
 
@@ -24,6 +25,8 @@ extern MoveArray *gameMoves;
 extern int EGTBMenCount;
 
 extern BookReader openingBook;
+
+extern std::ofstream game_file;
 
 extern std::mutex input_lock;
 
@@ -56,6 +59,8 @@ extern std::string derivePath(const std::string &base, const std::string &fileNa
 extern bool loadNetwork(const std::string &filename, bool verbose);
 
 extern bool initGlobals();
+
+extern void initGameFile();
 
 extern void CDECL cleanupGlobals(void);
 

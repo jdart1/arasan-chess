@@ -176,8 +176,6 @@ private:
     std::string last_move_image;
     Move last_computer_move;
     Statistics last_computer_stats;
-    std::string game_pathname;
-    std::ofstream *game_file;
     int time_left;
     int opp_time;
     float minutes;

@@ -41,12 +41,12 @@ Options::BookOptions::BookOptions() : variety(50), book_enabled(true), book_path
 }
 
 template <class T>
-int Options::setOption(const std::string &name, const std::string &valueString, T &value) {
+bool Options::setOption(const std::string &name, const std::string &valueString, T &value) {
     if (!Options::setOption<T>(valueString, value)) {
         std::cerr << "warning: invalid value for option " << name << std::endl;
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 static void set_strength_option(const std::string &name, int &value,
@@ -84,9 +84,9 @@ void Options::setMemoryOption(size_t &value, const std::string &valueString) {
 
 void Options::set_option(const std::string &name, const std::string &value) {
     if (name == "store_games") {
-        setOption<bool>(name, value, store_games);
+        setOption<bool>(name, value, games.store_games);
     } else if (name == "game_pathname") {
-        game_pathname = value;
+        games.game_pathname = value;
     } else if (name == "book.book_enabled") {
         setOption<bool>(name, value, book.book_enabled);
     } else if (name == "book.variety") {

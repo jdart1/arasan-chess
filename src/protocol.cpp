@@ -15,6 +15,7 @@
 #include "movearr.h"
 #include "movegen.h"
 #include "notation.h"
+#include "options.h"
 #include "scoring.h"
 #include "tunable.h"
 #ifdef SYZYGY_TBS
@@ -125,75 +126,22 @@ static void split_cmd(const std::string &cmd, std::string &cmd_word, std::string
 }
 
 Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set, bool memory_set)
-    : verbose(false),
-      post(false),
-      searcher(nullptr),
-      last_move(NullMove),
-      last_move_image("(null)"),
-      last_computer_move(NullMove),
-      game_file(nullptr),
-      time_left(0),
-      opp_time(0),
-      minutes(5.0),
-      incr(0),
-      winc(0),
-      binc(0),
-      computer(false),
-      computer_plays_white(false),
-      ics(icsMode),
-      forceMode(false),
-      analyzeMode(false),
-      editMode(false),
-      side(White),
-      moves(0),
-      ponder_board(new Board()),
-      main_board(new Board(board)),
-      ponder_status(PonderStatus::None),
-      predicted_move(NullMove),
-      ponder_move(NullMove),
-      best_move(NullMove),
-      time_target(0),
-      last_time_target(Constants::INFINITE_TIME),
-      computer_rating(0),
-      opponent_rating(0),
-      doTrace(traceOn),
-      easy(false),
-      game_end(false),
-      result_pending(false),
-      last_score(Constants::MATE),
-      ecoCoder(nullptr),
-      xboard42(false),
-      srctype(TimeLimit),
-      time_limit(Constants::INFINITE_TIME),
-      ply_limit(Constants::MaxPly),
-      lastAdded(0),
-      uci(false),
-      movestogo(0),
-      ponderhit(false),
-      uciWaitState(false),
-      cpusSet(cpus_set),
-      memorySet(memory_set),
-      debugPrefix(globals::debugPrefix)
-{
+    : verbose(false), post(false), searcher(nullptr), last_move(NullMove),
+      last_move_image("(null)"), last_computer_move(NullMove), time_left(0), opp_time(0),
+      minutes(5.0), incr(0), winc(0), binc(0), computer(false), computer_plays_white(false),
+      ics(icsMode), forceMode(false), analyzeMode(false), editMode(false), side(White), moves(0),
+      ponder_board(new Board()), main_board(new Board(board)), ponder_status(PonderStatus::None),
+      predicted_move(NullMove), ponder_move(NullMove), best_move(NullMove), time_target(0),
+      last_time_target(Constants::INFINITE_TIME), computer_rating(0), opponent_rating(0),
+      doTrace(traceOn), easy(false), game_end(false), result_pending(false),
+      last_score(Constants::MATE), ecoCoder(nullptr), xboard42(false), srctype(TimeLimit),
+      time_limit(Constants::INFINITE_TIME), ply_limit(Constants::MaxPly), lastAdded(0), uci(false),
+      movestogo(0), ponderhit(false), uciWaitState(false), cpusSet(cpus_set), memorySet(memory_set),
+      debugPrefix(globals::debugPrefix) {
     ecoCoder = new ECO();
     searcher = new SearchController();
     searcher->registerPostFunction(std::bind(&Protocol::post_output,this,_1));
     searcher->registerMonitorFunction(std::bind(&Protocol::monitor,this,_1,_2));
-
-    if (globals::options.store_games) {
-        if (globals::options.game_pathname == "") {
-            game_pathname = globals::derivePath("games.pgn");
-        }
-        else {
-            game_pathname = globals::options.game_pathname;
-        }
-        game_file = new std::ofstream(game_pathname.c_str(),std::ios::out | std::ios::app);
-        if (!game_file->good()) {
-            std::cerr << "Warning: cannot open game file. Games will not be saved." << std::endl;
-            delete game_file;
-            game_file = nullptr;
-        }
-    }
 }
 
 Protocol::~Protocol()
@@ -202,11 +150,6 @@ Protocol::~Protocol()
     delete ponder_board;
     delete ecoCoder;
     delete searcher;
-
-    if (game_file) {
-        game_file->close();
-        delete game_file;
-    }
 }
 
 // Read from input, outside of the search
@@ -457,11 +400,11 @@ void Protocol::save_game() {
    if (uci) return;                               // not supported
    if (doTrace) std::cout << debugPrefix << "in save_game" << std::endl;
    if (doTrace) std::cout << debugPrefix << "game_moves=" << globals::gameMoves->num_moves() << std::endl;
-   if (globals::gameMoves->num_moves() == 0 || !globals::options.store_games) {
+   if (globals::gameMoves->num_moves() == 0 || !globals::options.games.store_games) {
       if (doTrace) std::cout << debugPrefix << "out of save_game" << std::endl;
       return;
    }
-   if (game_file) {
+   if (globals::game_file.is_open()) {
       std::vector<ChessIO::Header> headers;
       std::string opening_name, eco;
       if (ecoCoder) {
@@ -526,7 +469,7 @@ void Protocol::save_game() {
       }
       headers.push_back(ChessIO::Header("TimeControl",timestr));
       std::string result = globals::gameMoves->getResult();
-      ChessIO::store_pgn(*game_file, *globals::gameMoves,
+      ChessIO::store_pgn(globals::game_file, *globals::gameMoves,
          computer_plays_white ? White : Black,
          result,
          headers);
@@ -1615,6 +1558,16 @@ void Protocol::processWinboardOptions(const std::string &args) {
     } else if (name == "Book variety") {
         Options::setOption<unsigned>(value,globals::options.book.variety);
         globals::openingBook.setVariety(globals::options.book.variety);
+    } else if (name == "Store games") {
+        Options::setOption<bool>(value,globals::options.games.store_games);
+        if (!globals::options.games.store_games && globals::game_file.is_open()) {
+            globals::game_file.close();
+        }
+        globals::initGameFile();
+    } else if (name == "Game pathname") {
+        Options::setOption<std::string>(value,globals::options.games.game_pathname);
+        if (globals::game_file.is_open()) globals::game_file.close();
+        globals::initGameFile();
     } else if (name == "Can resign") {
         Options::setOption<bool>(value,globals::options.search.can_resign);
     } else if (name == "Resign threshold") {
@@ -2470,6 +2423,10 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.search.can_resign << "\"";
         std::cout << " option=\"Resign threshold -spin " <<
             globals::options.search.resign_threshold << " -1000 0" << "\"";
+        std::cout << " option=\"Store games -check " <<
+            globals::options.games.store_games << "\"";
+        std::cout << " option=\"Game pathname -string " <<
+            globals::options.games.game_pathname << "\"";
         std::cout << " option=\"Position learning -check " <<
             globals::options.learning.position_learning << "\"";
         std::cout << " option=\"Learn file name -string " <<

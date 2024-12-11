@@ -60,24 +60,38 @@ class Options {
         std::string learn_file_name;
     } learning;
 
-    // Constructor, sets default options
-    Options() : store_games(true) {}
+    // Game storage (only under CECP)
+    struct Games {
+        Games() : store_games(false), game_pathname("") {}
+        bool store_games;
+        std::string game_pathname;
+    } games;
 
-    template <class T> static int setOption(const std::string &value, T &dest) {
-        bool ok;
+    Options() = default;
+
+    template <class T> static bool setOption(const std::string &value, T &dest) {
         if constexpr (std::is_same<bool, T>::value) {
-            ok = value == "true" || value == "false";
-            if (ok)
+            // CECP wants value to be 0 or 1; UCI uses true or false.
+            // We accept either one here.
+            if (value == "true" || value == "false") {
                 dest = value == "true";
+                return true;
+            } else if (value == "0" || value == "1") {
+                dest = value == "1";
+                return true;
+            } else {
+                return false;
+            }
         } else {
             std::stringstream buf(value);
             T tmp;
             buf >> tmp;
-            ok = !buf.bad() && !buf.fail();
-            if (ok)
+            if (!buf.bad() && !buf.fail()) {
                 dest = tmp;
+                return true;
+            } else
+                return false;
         }
-        return ok;
     }
 
     void setRating(int rating) { search.strength = getStrength(rating); }
@@ -98,15 +112,11 @@ class Options {
     // sets options based on a .rc file
     bool init(const std::string &optionsFile);
 
-    bool store_games;
-    std::string log_pathname;
-    std::string game_pathname;
-
   private:
     void set_option(const std::string &name, const std::string &value);
 
     template <class T>
-    int setOption(const std::string &name, const std::string &valueString, T &val);
+    bool setOption(const std::string &name, const std::string &valueString, T &val);
 };
 
 #endif
