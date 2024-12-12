@@ -254,7 +254,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);NOMINMAX;$(ARASAN_FEATURES);WIN32;_USING_V110_SDK71_;NTDDI_VERSION=0x05010300;_WIN32_WINNT=0x0501;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);NETWORK=$(NETWORK);NOMINMAX;$(ARASAN_FEATURES);WIN32;_USING_V110_SDK71_;NTDDI_VERSION=0x05010300;_WIN32_WINNT=0x0501;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -287,7 +287,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);NOMINMAX;$(ARASAN_FEATURES);_64BIT;_WIN64;NDEBUG;NTDDI_VERSION=0x05010300;_WIN32_WINNT=0x0501;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);NETWORK=$(NETWORK);NOMINMAX;$(ARASAN_FEATURES);_64BIT;_WIN64;NDEBUG;NTDDI_VERSION=0x05010300;_WIN32_WINNT=0x0501;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
