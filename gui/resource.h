@@ -78,6 +78,9 @@
 #define IDD_BOOK_VARIETY_LABEL          1085
 #define IDC_BOOK_VARIETY_EDIT           1086
 #define IDC_BOOK_VARIETY_SPIN           1087
+#define IDC_SAVE_GAMES_CHECK            1088
+#define IDC_GAME_PATHNAME_LABEL         1089
+#define IDC_GAME_PATHNAME_EDIT          1090
 #define ID_MAKEUSERMOVE                 32790
 #define ID_LOSSONTIME                   32791
 #define ID_ENGINE_REPLY                 32792

@@ -1175,6 +1175,8 @@ void ArasanGuiView::OnOptionsPreferences()
    int strength = guiOptions->strength();
    int bookVariety = guiOptions->bookVariety();
    CString tbPath = guiOptions->tbPath();
+   BOOL saveGames = guiOptions->saveGames();
+   CString gamePathname = guiOptions->gamePathname();
    if (dlg.DoModal() == IDOK) {
       dlg.save();
       if (guiOptions->can_resign() != canResign) {
@@ -1225,6 +1227,15 @@ void ArasanGuiView::OnOptionsPreferences()
          buf += "\n";
          writeToEngine(buf.c_str());
       }
+      if (guiOptions->saveGames() != saveGames ||
+          guiOptions->gamePathname() != gamePathname) {
+          stringstream s;
+          if (guiOptions->saveGames()) {
+              s << "option Game pathname=" << guiOptions->gamePathname() << endl;
+          }
+          s << "option Store games=" << guiOptions->saveGames() << endl;
+          writeToEngine(s.str().c_str());
+      }
    }
 }
 
@@ -1266,7 +1277,10 @@ void ArasanGuiView::OnUpdateOptionsAppearance(CCmdUI* pCmdUI)
 
 void ArasanGuiView::OnUpdateBoardColors(CCmdUI* pCmdUI)
 {
-   pCmdUI->Enable(disp == NULL ? FALSE : !disp->is_mono());
+    if (disp == NULL)
+        pCmdUI->Enable(FALSE);
+    else
+        pCmdUI->Enable(!disp->is_mono());
 }
 
 

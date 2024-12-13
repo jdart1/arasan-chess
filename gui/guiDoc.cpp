@@ -267,23 +267,12 @@ void ArasanGuiDoc::sendNew()
       }
       s << "option Strength=" << guiOptions->strength() << endl;
       s << "option Book variety=" << guiOptions->bookVariety() << endl;
-      s << "option Can resign=";
-      if (guiOptions->can_resign())
-          s << "true";
-      else
-          s << "false";
+      s << "option Can resign=" << guiOptions->can_resign() << endl;
+      s << "option Position learning=" << guiOptions->position_learning() << endl;
+      s << "option Store games=" << guiOptions->saveGames() << endl;
+      s << "option Game pathname=" << guiOptions->gamePathname() << endl;
       s << endl;
-      s << "option Position learning=";
-      if (guiOptions->position_learning())
-          s << "true";
-      else
-          s << "false";
-      s << endl;
-      if (guiOptions->think_when_idle()) 
-          s << "hard";
-      else
-          s << "easy";
-      s << endl;
+
       writeToEngine(s.str().c_str());
 
       // We may get incoming stuff from the engine, including a move,
@@ -291,9 +280,8 @@ void ArasanGuiDoc::sendNew()
       // time it's executed. So use the "ping" mechanism to enable
       // us to reject extra commands.
       ++lastPing;
-      GeneralPreferences gprefs;
-      guiOptions->getGeneralPreferences(gprefs);
-      if (gprefs.think_when_idle)
+
+      if (guiOptions->think_when_idle())
          writeToEngine("new\nhard\n");
       else
          writeToEngine("new\neasy\n");

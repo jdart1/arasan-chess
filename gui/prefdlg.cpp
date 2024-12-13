@@ -17,16 +17,6 @@
 PreferenceDialog::PreferenceDialog(CWnd* pParent /*=NULL*/)
 : CDialog(PreferenceDialog::IDD, pParent)
 {
-   //{{AFX_DATA_INIT(PreferenceDialog)
-   m_AutoSizeHashTable = FALSE;
-   m_HashSize = 0;
-   m_Ponder = FALSE;
-   m_BeepOnError = FALSE;
-   m_ShowCoord = FALSE;
-   m_BeepAfterMove = FALSE;
-   m_CanResign = FALSE;
-   m_PositionLearning = FALSE;
-   //}}AFX_DATA_INIT
    m_AutoSizeHashTable = guiOptions->auto_size_hash_table();
    m_HashSize = guiOptions->hash_table_size();
    m_Ponder = guiOptions->think_when_idle();
@@ -38,6 +28,8 @@ PreferenceDialog::PreferenceDialog(CWnd* pParent /*=NULL*/)
    m_Strength = guiOptions->strength();
    m_TbPath = guiOptions->tbPath();
    m_BookVariety = guiOptions->bookVariety();
+   m_SaveGames = guiOptions->saveGames();
+   m_GamePathname = guiOptions->gamePathname();
 }
 
 
@@ -66,6 +58,9 @@ void PreferenceDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_BOOK_VARIETY_EDIT, m_BookVarietyEdit);
     DDX_Control(pDX, IDC_BOOK_VARIETY_SPIN, m_BookVarietySpin);
     DDX_Text(pDX, IDC_BOOK_VARIETY_EDIT, m_BookVariety);
+    DDX_Check(pDX, IDC_SAVE_GAMES_CHECK, m_SaveGames);
+    DDX_Control(pDX, IDC_GAME_PATHNAME_EDIT, m_GamePathnameEdit);
+    DDX_Text(pDX, IDC_GAME_PATHNAME_EDIT, m_GamePathname);
     //}}AFX_DATA_MAP
 }
 
@@ -93,6 +88,8 @@ void PreferenceDialog::save()
    prefs.strength = m_Strength;
    prefs.tbPath = m_TbPath;
    prefs.bookVariety = m_BookVariety;
+   prefs.saveGames = m_SaveGames;
+   prefs.gamePathname = m_GamePathname;
    guiOptions->setGeneralPreferences(prefs);
 }
 
@@ -143,3 +140,4 @@ void PreferenceDialog::OnHelp()
 {
    ::HtmlHelp(NULL, AfxGetApp()->m_pszHelpFilePath ,HH_HELP_CONTEXT, DIALOG_HELP_INDEX );
 }
+

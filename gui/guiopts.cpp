@@ -119,23 +119,25 @@ void GuiOptions::save()
    app->WriteProfileInt("Preferences","Strength",gprefs.strength);
    app->WriteProfileString("Preferences","TbPath",gprefs.tbPath);
    app->WriteProfileInt("Preferences","Book Variety",gprefs.bookVariety);
+   app->WriteProfileString("Preferences","Game Pathname",gprefs.gamePathname);
+   app->WriteProfileString("Preferences","Save Games",boolString(gprefs.saveGames));
 }
 
 
 int calc_hash_size()
 {
-   // Size the hash table according to how much memory we have.
-   static int sizes[12]= {
-      997, 1997, 3001, 4003, 4999, 6007, 6997, 8003,
-      10007, 12007, 15013, 18103
-   };
+    // Size the hash table according to how much memory we have.
+    static int sizes[12] = {
+       997, 1997, 3001, 4003, 4999, 6007, 6997, 8003,
+       10007, 12007, 15013, 18103
+    };
 
-   DWORD memSize = GlobalCompact(0);
-   int i;
-   for (i = 0; i < 11; i++)
-      if (16*((long)sizes[i]) > memSize/16)
-         break;
-   return 32L*sizes[i]/1000;
+    DWORD memSize = GlobalCompact(0);
+    int i;
+    for (i = 0; i < 12; i++)
+        if (16 * ((long)sizes[i]) > memSize / 16)
+            break;
+    return sizes[i];
 }
 
 
@@ -166,7 +168,9 @@ app(guiApp)
    gprefs.strength = app->GetProfileInt("Preferences","Strength",100);
    gprefs.tbPath = app->GetProfileString("Preferences","TbPath","");
    gprefs.bookVariety = app->GetProfileInt("Preferences","Book Variety",50);
-
+   opt_str = app->GetProfileString("Preferences","Save Games","False");
+   gprefs.saveGames = opt_str == "True";
+   gprefs.gamePathname = app->GetProfileString("Preferences","Game Pathname","");
    opt_str = app->GetProfileString("Appearance","Force Mono","False");
    appr.forceMono = (opt_str == "True") ? TRUE : FALSE;
 

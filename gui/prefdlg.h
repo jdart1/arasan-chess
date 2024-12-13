@@ -41,6 +41,9 @@ class PreferenceDialog : public CDialog
       UINT m_BookVariety;
       CEdit m_BookVarietyEdit;
       CSpinButtonCtrl m_BookVarietySpin;
+      BOOL m_SaveGames;
+      CEdit m_GamePathnameEdit;
+      CString m_GamePathname;
       //}}AFX_DATA
 
       // Overrides
@@ -64,6 +67,8 @@ class PreferenceDialog : public CDialog
       afx_msg void OnHelp();
       //}}AFX_MSG
       DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnStnClickedTbPathLabel2();
 };
 
 //{{AFX_INSERT_LOCATION}}

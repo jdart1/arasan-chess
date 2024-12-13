@@ -23,6 +23,8 @@ struct GeneralPreferences
    int strength;
    CString tbPath;
    int bookVariety;
+   BOOL saveGames;
+   CString gamePathname;
 };
 
 class GuiOptions
@@ -105,6 +107,14 @@ class GuiOptions
 
       void setTbPath(const CString &path) {
         gprefs.tbPath = path;
+      }
+
+      BOOL saveGames() const {
+        return gprefs.saveGames;
+      }
+
+      const CString &gamePathname() const {
+        return gprefs.gamePathname;
       }
 
       void getGeneralPreferences(GeneralPreferences &prefs) {

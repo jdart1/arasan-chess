@@ -19,22 +19,21 @@
 
 <A NAME="d162k6"></A><H1>Preferences</H1>
 
-<P>The following options can be set in the Options dialog:</P>
+<P>The following options can be set in the Preferences dialog:</P>
 <P><B>Beep after Move:</B> If set, makes a sound every time a move is made by the program.</P>
 <P><B>Beep on Error:</B> If set, makes a sound when the user attempts to make an illegal move, or some other error occurs. </P>
 <P><B>Think when Idle:</B> If set, Arasan will "think" on its opponent's time.  This may enable it to search deeper when it is the computer's turn to move. Other chess programs often call this feature "pondering".</P>
 <P><B>Computer can Resign:</B> If set, Arasan will resign when it is about to lose or in a very bad position. If unchecked, Arasan will never resign.</P>
-<P><B>Hash table size:</B>Arasan maintains a hash table, which is a storage area that holds information on positions previously visited in the search.  If the same position is visited twice (which may happen because of a transposition of moves), then information about that position is retrieved from the hash table and it may be possible to avoid searching that position again.</P>
+<P><B>Hash table size:</B> Arasan maintains a hash table, which is a storage area that holds information on positions previously visited in the search. This can speed up calculations during a search.</P>
+<P>If you check the "Auto" box, Arasan will calculate how large the hash table should be.  It will leave some free memory for Windows to use for other programs.</P>
 <P>
-Normally it is advantageous to have the hash table be as large as possible, with the restriction that you don't want it so large that Windows can't fit it into available memory.</P>
-<P>
-If you check the "Auto" box, Arasan will calculate how large the hash table should be.  It will leave some free memory for Windows to use for other programs.</P>
-<P>
-If you want to override this calculation, uncheck the "Auto" box and enter a number into the "Hash Table Size" edit field, which will then be enabled.  The number you enter is the size of the hash table in megabytes. Note: if you are currently playing a game, changing the hash table size takes effect only when the next game is started.</P>
+If you want to override this calculation, uncheck the "Auto" box and enter a number into the "Hash Table Size" edit field, The number you enter will be the size of the hash table in megabytes. Note: if you are currently playing a game, changing the hash table size takes effect only when the next game is started.</P>
 <P><B>Processor Cores Used:</B> The Arasan chess engine can use more than one processor core, if you are running on hardware that supports that. Use this option to change the number of cores that the engine uses. For best results, do not set it higher than the number of physical cores on your system (the Windows System Information dialog can show you this - for example if it says you have a Quad Core system, that is 4 cores).</P>
 <P><B>Playing Strength:</B> This can be used to alter the playing strength of the program. Setting it to 100 (the default) causes Arasan to play at full strength. Setting it to zero causes it to play at minimal strength (about 1000 ELO).</P>
 <P><B>Book Variety:</B> This controls the randomness of moves chosen from the opening book. Higher values will cause only the best moves to be played and exclude weaker lines. Lower values will chose from a wider range of possible moves, including some that may be sub-optimial or (at low settings) even blunders. Default value is 50.</P>
-<P><B>Tablebase Path:</B>Arasan can optionally make use of tablebases. Tablebases enable lookup of the best move for a given position. They are only effective in endgames in which there are a small number of pieces and/or pawns.</P>
-<P>Arasan does not come with any tablebases installed. If you want to use tablebasese, you will need to download them or use a program to generate them. You will also need to set the path to the tablebases (use the Options dialog, available under the Options menu, to do this). Note that if multiple directories are specified, you should use ";" to separate them.</P>
+<P><B>Tablebase Path:</B> Arasan can optionally make use of tablebases. Tablebases enable lookup of the best move for a given position. They are only effective in endgames in which there are a small number of pieces and/or pawns. Note that if multiple directories are specified, you should use ";" to separate them.</P>
+<P>Arasan does not come with any tablebases installed. If you want to use tablebasese, you will need to download them or use a program to generate them.</P>
+<P><B>Store Games:</B> Appends all games played within the GUI to a file.</P>
+<P><B>Game Pathname:</B> The full filename and path of the file to which games will be stored (if the Store Games option is set). This must not be blank. The file need not already exist, but its path must be valid.</P>
 </BODY>
 </HTML>
