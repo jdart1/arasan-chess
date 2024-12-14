@@ -206,6 +206,9 @@ bool Protocol::do_all_pending(Board &board)
             processCmdInWaitState(cmd);
         }
         else if (!do_command(cmd,board)) {
+            if (doTrace && debug) {
+                std::cout << "command \"" << cmd << "\" returned false" << std::endl;
+            }
             retVal = false;
             break;
         }
@@ -2403,8 +2406,10 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if (cmd == "random" || cmd_word == "variant") {
         // ignore
     }
-    else if (cmd_word == "protover") {
+    else if (cmd_word == "xboard") {
         globals::debugPrefix = CECP_DEBUG_PREFIX;
+    }
+    else if (cmd_word == "protover") {
         // new in Winboard 4.2
         std::cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
 #ifdef SYZYGY_TBS
