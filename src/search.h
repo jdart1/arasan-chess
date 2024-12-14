@@ -585,7 +585,9 @@ private:
     unsigned nextSearchDepth(unsigned current_depth, unsigned thread_id,
         unsigned max_depth);
 
-    void suboptimal(Statistics *bestStats,const Search *bestSearch);
+    // possibly pick a suboptimal move (for strength reduction feaure).
+    // If one was selected, return true.
+    bool suboptimal(Statistics *bestStats,const Search *bestSearch);
 
     bool uci;
     int age;

@@ -561,12 +561,13 @@ Move SearchController::findBestMove(
            (int)stats->failLow;
        std::cout << " pv=" << rootSearch->stats.best_line_image << std::endl;
    }
+   bool subOpt = false;
    if (srcOpts.multipv == 1) {
        BestThreadResults res;
        getBestThreadStats(res,debugOut());
        // In reduced-strength mode, sometimes play a suboptimal move
        if (globals::options.search.strength < 100) {
-           suboptimal(res.bestStats,res.bestSearch);
+           subOpt = suboptimal(res.bestStats,res.bestSearch);
        }
        best = res.bestStats->best_line[0];
        updateGlobalStats(*res.bestStats);
@@ -593,7 +594,10 @@ Move SearchController::findBestMove(
    static constexpr int end_of_game[] = {0, 1, 0, 1, 1, 1, 1};
    StateType &state = stats->state;
    stats->end_of_game = end_of_game[(int)stats->state];
-   if (!uci && !stats->end_of_game && globals::options.search.can_resign) {
+   // Don't resign if we selected a suboptimal move: allow it to be
+   // played. If it is really bad, we will resign after the next
+   // search.
+   if (!uci && !stats->end_of_game && globals::options.search.can_resign && !subOpt) {
       const Material &ourMat = board.getMaterial(board.sideToMove());
       const Material &oppMat = board.getMaterial(board.oppositeSide());
       if (stats->display_value != Constants::INVALID_SCORE &&
@@ -615,6 +619,9 @@ Move SearchController::findBestMove(
           && (stats->display_value != -Constants::TABLEBASE_WIN || tb_dtz < 30)
 #endif
          ) {
+         if (debugOut()) {
+             std::cout << globals::debugPrefix << "resigning game (low score)" << std::endl;
+         }
          state = Resigns;
          stats->end_of_game = true;
       }
@@ -1864,10 +1871,10 @@ unsigned SearchController::nextSearchDepth(unsigned current_depth, unsigned thre
     return d;
 }
 
-void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearch) {
+bool SearchController::suboptimal(Statistics *bestStats, const Search *bestSearch) {
     const int &strength = globals::options.search.strength;
     if (mg->moveCount() < 2) {
-        return;
+        return false;
     }
     const RootMoveGenerator::RootMoveList &rootMoves = bestSearch->rootMoves;
     auto &random_engine = rootSearch->random_engine;
@@ -1884,7 +1891,7 @@ void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
     static constexpr int probs[40] = {73,70,65,61,59,52,49,46,42,34,32,29,27,26,26,26,25,25,23,20,
                                       18,17,17,16,15,15,15,14,13,13,13,12,11,10,9,8,8,8,6,5};
     int p = probs[(2*strength)/5];
-    if (p == 0 || tolerance == 0) return;
+    if (p == 0 || tolerance == 0) return false;
     int y = std::max<int>(0,(25-strength)/4) + std::max<int>(0,(10-strength)/4) +
             (strength <= 50 ? std::max<int>(0,(60-strength)/7) : 0);
     if (best >= Constants::MATE-1 || CaptureOrPromotion(bestMove) || initialBoard.checkStatus() == InCheck) {
@@ -1902,7 +1909,7 @@ void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
         start = 1;
         strategy = "top";
     } else {
-        return;
+        return false;
     }
     std::vector<int> candidates;
     if (debugOut()) {
@@ -1922,13 +1929,15 @@ void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
     if (debugOut()) {
         std::cout << globals::debugPrefix << "suboptimal: " << candidates.size() << " candidate(s)" << std::endl;
     }
-    if (candidates.size() == 0) return;
+    if (candidates.size() == 0) return false;
     else if (candidates.size() == 1) substitute = rootMoves[candidates[0]];
     else {
         std::uniform_int_distribution<int> pick(0,candidates.size()-1);
         substitute = rootMoves[candidates[pick(random_engine)]];
     }
-    if (!IsNull(substitute.move)) {
+    if (IsNull(substitute.move) || MovesEqual(substitute.move,bestStats->best_line[0])) {
+        return false;
+    } else {
         bestStats->best_line[0] = substitute.move;
         bestStats->best_line[1] = NullMove;
         std::string move_image;
@@ -1938,6 +1947,7 @@ void SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
         if (debugOut()) {
             std::cout << globals::debugPrefix << "selected suboptimal move " << move_image << std::endl;
         }
+        return true;
     }
 }
 
