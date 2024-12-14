@@ -123,15 +123,15 @@ BOOL ArasanGuiApp::InitInstance()
     // Wait for the engine to start up.
     while (!engineReady()) WaitForSingleObject(m_searchThread,2000);
 
+    // Send the init string to the engine:
+    init();
+
     // The one and only window has been initialized, so show and update it.
     //m_pMainWnd->ShowWindow(SW_SHOW);
     //m_pMainWnd->UpdateWindow();
     OnFileNew();
 
     theView = getView();
-
-    // Send the init string to the engine:
-    init();
 
     // send time control string to engine:
     Search_Limit_Options options = guiOptions->get_src_limits();
@@ -166,8 +166,7 @@ void ArasanGuiApp::init()
 {
     // The engine communication thread calls back to here
     // once the link is set up.
-    writeToEngine("protover 2");
-    getDoc()->sendNew();
+    writeToEngine("xboard\nprotover 2");
     writeToEngine("post");
 }
 
