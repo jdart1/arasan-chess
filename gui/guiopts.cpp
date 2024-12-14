@@ -134,10 +134,10 @@ int calc_hash_size()
 
     DWORD memSize = GlobalCompact(0);
     int i;
-    for (i = 0; i < 12; i++)
+    for (i = 0; i < 11; i++)
         if (16 * ((long)sizes[i]) > memSize / 16)
             break;
-    return sizes[i];
+    return 32L * sizes[i] / 1000;
 }
 
 
