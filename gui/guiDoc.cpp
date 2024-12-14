@@ -196,10 +196,8 @@ void ArasanGuiDoc::undoMove()
       cout << " side = " <<
          ColorImage(currentBoard.sideToMove()) << endl;
    }
-   // apply a sanity check - move record side to move has to
-   // match current board side to move
-   // apply a sanity check - move record side to move has to
-   // match side to move in board previous to the the current one.
+   // apply a sanity check - move record side to move (the previous
+   // position) has to match opposite side to move in the current board.
    const ColorType sideToMove = currentBoard.oppositeSide();
    const ColorType recSideToMove = BoardHash::sideToMove(rec.hashcode);
    if (sideToMove != recSideToMove) {
