@@ -1,4 +1,4 @@
-// Copyright 2021 by Jon Dart. All Rights Reserved.
+// Copyright 2021, 2024 by Jon Dart. All Rights Reserved.
 //
 #include "input.h"
 #include "globals.h"
@@ -131,10 +131,8 @@ bool Input::readInput(std::vector<std::string> &cmds, std::mutex &mtx)
         if (cmd.length()) {
             std::unique_lock<std::mutex> lock(mtx);
             cmds.push_back(cmd);
-            return true;
-        } else {
-            return false;
         }
+        return true;
     } else {
         return false;
     }
