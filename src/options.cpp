@@ -106,7 +106,8 @@ void Options::set_option(const std::string &name, const std::string &value) {
     } else if (name == "search.resign_threshold") {
         setOption<int>(name, value, search.resign_threshold);
     } else if (name == "search.hash_table_size") {
-        setMemoryOption(search.hash_table_size, value);
+        // command line option takes precedence
+        if (!memorySet) setMemoryOption(search.hash_table_size, value);
     }
 #ifdef SYZYGY_TBS
     else if (name == "search.use_tablebases") {
@@ -122,7 +123,8 @@ void Options::set_option(const std::string &name, const std::string &value) {
     else if (name == "search.strength") {
         set_strength_option(name, search.strength, value);
     } else if (name == "search.ncpus") {
-        setOption<int>(name, value, search.ncpus);
+        // command line option takes precdedence
+        if (!cpusSet) setOption<int>(name, value, search.ncpus);
     } else if (name == "search.nnueFile") {
         search.nnueFile = value;
     }
@@ -139,7 +141,9 @@ void Options::set_option(const std::string &name, const std::string &value) {
         std::cerr << "warning: unrecognized option name: " << name << std::endl;
 }
 
-bool Options::init(const std::string &fileName) {
+bool Options::init(const std::string &fileName, bool memSet, bool cpuSet) {
+    memorySet = memSet;
+    cpusSet = cpuSet;
     std::ifstream infile(fileName.c_str());
     if (!infile.good()) {
         return false;

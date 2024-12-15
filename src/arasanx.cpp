@@ -102,7 +102,7 @@ int CDECL main(int argc, char **argv) {
     Bitboard::init();
     Board::init();
     // do not auto load the .rc file
-    if (!globals::initOptions(autoLoadRC, rcName)) return -1;
+    if (!globals::initOptions(autoLoadRC, rcName, memorySet, cpusSet)) return -1;
     Attacks::init();
     Scoring::init();
     Search::init();

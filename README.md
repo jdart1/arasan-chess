@@ -81,7 +81,7 @@ as a UCI engine. You normally shouldn't need to turn this on.
 Note: when using Arasan with a GUI or other interface program, usually
 hash size and thread count are set in the interface. But the -H and -c
 switches, if specified on the arasanx command line, take precedence
-over those passed to Arasan via a GUI.
+over those passed to Arasan via a GUI, or via the arasan.rc file.
 
 If the word "bench" is specified on the command line, then Arasan will
 run the bench command (for performance reporting) and then exit.

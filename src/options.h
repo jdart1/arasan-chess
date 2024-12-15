@@ -67,7 +67,8 @@ class Options {
         std::string game_pathname;
     } games;
 
-    Options() = default;
+    Options() : memorySet(false), cpusSet(false) {
+    }
 
     template <class T> static bool setOption(const std::string &value, T &dest) {
         if constexpr (std::is_same<bool, T>::value) {
@@ -110,13 +111,15 @@ class Options {
     std::string tbPath() const;
 
     // sets options based on a .rc file
-    bool init(const std::string &optionsFile);
+    bool init(const std::string &optionsFile, bool memorySet = false, bool cpusSet = false);
 
   private:
     void set_option(const std::string &name, const std::string &value);
 
     template <class T>
     bool setOption(const std::string &name, const std::string &valueString, T &val);
+
+    bool memorySet, cpusSet;
 };
 
 #endif

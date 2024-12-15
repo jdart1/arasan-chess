@@ -181,12 +181,13 @@ void CDECL globals::cleanupGlobals(void) {
     if (game_file.is_open()) game_file.close();
 }
 
-bool globals::initOptions(bool autoLoadRC, const char *rcPath) {
+bool globals::initOptions(bool autoLoadRC, const char *rcPath,
+                          bool memorySet, bool cpusSet) {
     if (autoLoadRC) {
         const std::string stdRcPath(derivePath(RC_FILE_NAME));
         // try to read arasan.rc file
         // failure to read is not an error: .rc file is optional
-        options.init(stdRcPath);
+        options.init(stdRcPath, memorySet, cpusSet);
     } else if (rcPath != nullptr) {
         if (!options.init(rcPath)) { // explicit path was given so fail on error
             std::cerr << "failed to load options from " << rcPath << std::endl;
@@ -234,7 +235,7 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath) {
         userRcFile += RC_FILE_NAME;
 #endif
         // failure to read is not an error: .rc file is optional
-        options.init(derivePath(userDir + PATH_CHAR, userRcFile));
+        options.init(derivePath(userDir + PATH_CHAR, userRcFile), memorySet, cpusSet);
     }
     if (appDir.size()) {
         options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
