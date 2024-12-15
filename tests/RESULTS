@@ -1,11 +1,10 @@
-Arasan 24.2 test results, 64-bit AVX2 build, 5-man Syzygy tbs
-Hardware: i7-6700k @ 4GHz (4 cores), 8GB hash, xUbuntu x64
+Arasan 25.0 test results, 64-bit AVX2 build, 6-man Syzygy tbs
+Hardware: AMD Ryzen Threadripper PRO 3945WX (4 cores), 4GB hash, xUbuntu x64
 
-arasan2023         168/200
-ecmgcp             164/183
-iq4                165/183
-wacnew             292/300
-pet                41/48
-eet                94/100
-bt2630             29/30	rating = 2600
-lapuce2            33/35	rating = 2890
+arasan2024      10 sec/move     147/200
+ecmgcp          10 sec/move     160/183
+iq4             10 sec/move     160/183
+pet             60 sec/move     43/48
+eet             60 sec/move     95/100
+bt2630          900 sec/move    27/30	rating = 2540
+lapuce2         600 sec/move    32/35	rating = 2860

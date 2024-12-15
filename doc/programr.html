@@ -2,12 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Arasan Programmer's Guide - version 24.2</title>
+<title>Arasan Programmer's Guide - version 25.0</title>
 <meta name="description" content="technical information about the Arasan chess program, for programmers"/>
 <link rel="stylesheet" href="style_pg.css" type="text/css"/>
 </head>
 <body>
-<h1>Arasan Programmer's Guide - version 24.2</h1>
+<h1>Arasan Programmer's Guide - version 25.0</h1>
 <p>by Jon Dart</p>
 <br/>
 <p>Arasan is a chess program.</p>
@@ -25,11 +25,9 @@ available; it communicates with the chess engine using a pipe.</p>
 <p>Arasan is written in C++. Versions before 6.0 ran only on Windows. In
 version 6.0 and higher, the Arasan chess engine supports both Windows
 (32- or 64-bit versions) and other platforms such as Linux, but the
-Arasan GUI is still Windows-only. If you are not on Windows, you need
-to use a program such as xboard to view the chessboard and play games
-with Arasan. You can get xboard from <href="http://savannah.gnu.org/projects/xboard">http://savannah.gnu.org/projects/xboard</a> and many other locations.</p>
+Arasan GUI is still Windows-only.</p>
 
-<p>Arasan has mostly been tested on Intel & AMD processors but the code
+<p>Arasan has mostly been tested on Intel & AMD processors, but the code
 is designed to be portable to other processors (there is some assembly
 code in bitboard.h, but that is not used unless you compile with
 -DUSE_ASM).</p>
@@ -159,7 +157,8 @@ the book.bin file.</p>
 
 <h2>Learning</h2>
 
-<p>Arasan has positional learning (a.k.a "permanent brain"). It is
+<p>Arasan has positional learning (a.k.a "permanent brain"). This feature
+is off by default, but can be enabled via CECP or UCI options. It is
 basically a persisent hashtable. If a search returns an unexpectedly
 high or low score, the position and its score are stored in a text file.
 The text file name and location are configurable, but by default:</p>
@@ -208,6 +207,14 @@ the eco file. If the number becomes large enough, however, the
 current method of building a data structure and compiling it into
 Arasan might have to be changed.</p>
 
+<h2>Parameter tuning</h2>
+
+<p>If compiled with TUNE=1 passed to the Makefile, or with -DTUNE in the
+compiler flags, Arasan enables parameter tuning by an external program,
+by presenting the internal tunable parameters as UCI options. Currently
+only integer-valued parameters are supported. One program that can use
+such options for tuning is <a href="https://github.com/jdart1/Lakas">Lakas</a>.
+</p>
 
 <h2>Testing support</h2>
 
@@ -837,9 +844,10 @@ allocated on a per-thread basis (each thread has its own tables).</p>
 <h3>Position Scoring</h3>
 
 Arasan as of version 23.0 has both a "classical" evaluation function for
-chess positions and a neural network evaluation function. By default, both
-are used: the neural network for most positions,
-and the classical eval positions in the late endgame.</p>
+chess positions and a neural network evaluation function. As of version 25.0,
+the NNUE evaluation is always enabled and the program will fail on startup if
+the network file is not found or not loaded correctly. Arasan still uses its
+own hand-crafted "classical" evaluation, but now only in the late endgame.</p>
 <p>The following text describes the classical evaluation function.</p>
 <p>There are roughly five main components to the positional score used by Arasan:</p>
 <ol>
@@ -957,21 +965,18 @@ is largely in a submodule, the source of which is at <a href="https://github.com
                                                         target="_blank">https://github.com/jdart1/nnue</a>.
 NNUE evaluation for chess was first introduced in Stockfish, whose implementation
 of it was contributed to the
-Stockfish project by Hisayori Noda aka Nodchip. Arasan's current implementation is
+Stockfish project by Hisayori Noda aka Nodchip. Arasan 24.0's current implementation is
 compatible with the <a href="https://github.com/official-stockfish/Stockfish/commit/cb9c2594fcedc881ae8f8bfbfdf130cf89840e4c", target="_blank">SFNNv4</a>
-  network architecture used in Stockfish 15.</p>
-<p>Tuning was performed using a <a href="https://github.com/jdart1/nnue-pytorch/tree/SFv4", target="_blank">slightly modified version
-of the nnue-pytorch tuner</a> (back-porting some later changes into the SFNNv4 tuning code). Initial weights were
-tuned based on 1.5B positions from Arasan selfplay games (generated from the "selfplay" utility program). This was followed by two rounds of reinforcement training, each time using
-about 3.6B selfplay positions.</p>
-<p>The actual network data is loaded at runtime from a file. (Unlike Stockfish and some other programs,
-Arasan does not embed the network data in the program executable.)</p>
+  network architecture used in Stockfish 15. Version 25.0 introduces a new, similar architecture,
+consisting of a horizionally mirrored feature transformer with 9 King buckets, followed by a hidden layer with 8 buckets based on material level.</p>
+<p>Tuning was performed using the <a href="https://github.com/jdart1/bullet", target="_blank">Bullet tuner</a> using a combination of  positions from Arasan selfplay games (generated from the "selfplay" utility program) and Lc0 training data.
+<p>The actual network data is loaded at runtime from a file. Unlike Stockfish and some other programs,
+Arasan does not embed the network data in the program executable. The default file name is part of the executable.</p>
 
 <h2>Multi-threading</h2>
 
 <p>Arasan version 9 and above have support for using more than one
-thread during
-searching, enabling it to make use of multi-processor machines and
+thread during searching, enabling it to make use of multi-processor machines and
 multi-core CPUs. Version 10.0 was the first version to have this fully
 implemented.</p>
 
@@ -1039,7 +1044,6 @@ version uses TrueType fonts. Several chess fonts are included in the
 program distribution. The original font archives, which include
 copyright and usage information, can be found in the fonts subdirectory
 of the Arasan source distribution.</p>
-
 
 <h2>Support</h2>
 

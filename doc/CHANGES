@@ -1,3 +1,25 @@
+Changes in Arasan 25.0 (Dec. 2024):
+ 1) Use a single "Book variety" option to control move selection from the book
+ 2) Some changes to move selection logic
+ 3) Fix Intel oneAPI compiler support. Add support for CSSPGO with Intel/clang.
+ 4) Fixes/updates to selfplay utility. Support output in the format used by bullet.
+ 5) Add SyzygyUse50MoveRule and SyzygyProbeDepth options for CECP
+ 6) Make NNUE usage non-optional. Fail on startup if network cannot be loaded.
+ 7) arasan.rc is no longer loaded by the engine, by default. Auto-loading (the
+ prior behavior) can be enabled via the -a command-line option, or use -r to
+ select a specific file.
+ 8) Make eval command evaluate current position, like Stockfish
+ 9) Change SyzygyTbPath option to SyzygyPath, for conformity to Stockfish
+    and most other engines
+ 10) New network architecture and network
+ 11) Changes to history score computation
+ 12) Use capture history for move ordering
+ 13) Implement a parameter tuning framework for search parameters, tune some
+ using Lakas (https://github.com/jdart1/Lakas)
+ 14) Changes to static null pruning, adjust margins
+ 15) Windows GUI sources are now included in the repo
+ 16) GUI can set some options formerly only settable via arasan.rc
+
 Changes in Arasan 24.2.2 (April 2024):
  1) Fix learning in UCI mode with ponder off
 

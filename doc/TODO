@@ -4,9 +4,9 @@
 
 3. implement UCI_Opponent
 
-4. change reduction/pruning based on node type - does not work so far.
+4. Change reduction/pruning based on node type - does not work so far.
 
-5. Book learning. Dropout expansion? Implement aa sytem for learning from self-play games.
+5. Book learning. Dropout expansion? Implement a system for learning from self-play games.
 
 6. Further LazySMP improvements:
    a. see http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
@@ -16,9 +16,12 @@
 
 8. Windows GUI badly needs a rewrite, better graphics.
 
-9. Code cleanup: most of HCE is no longer used so could be removed, as could tuning support.
+9. Code cleanup: most of HCE is no longer used, so could be removed.
 
-10. Remove arasan.rc, just use CECP/UCI options as most programs do.
+10. Experiment with different, possibly deeper, networks.
+
+11. Further parameter tuning.
+
 
 
 

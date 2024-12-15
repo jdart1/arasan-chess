@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
-add_compile_definitions(ARASAN_VERSION=24.2.2)
+add_compile_definitions(ARASAN_VERSION=25.0)
+set(NETWORK arasanv3-20241109.nnue CACHE STRING "default network file name")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -29,7 +30,6 @@ option(BMI2 "Use BMI2 instructions" OFF)
 option(NEON "Use ARM NEON instructions" OFF)
 option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
 option(UNIT_TESTS "unit tests run on startup" OFF)
-set(NETWORK arasan-d9-SFv4-20231228.nnue CACHE STRING "default network file name")
 
 set(EXE_NAME arasanx)
 
