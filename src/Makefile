@@ -329,7 +329,7 @@ $(PROFILE)/%.o: %.cpp
 	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
 
 profiled: dirs
-	ln -s ../network/*.nnue $(PROFILE)
+	ln -s -f ../network/*.nnue $(PROFILE)
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile-run
 ifdef CLANG
