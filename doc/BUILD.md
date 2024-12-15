@@ -27,9 +27,10 @@ arasan
     prj     - Visual C++ project file and build directories (Windows)
 ```
 
-Note: the source codes for Windows and Linux are identical, except
-that there are different format Makefiles, one for Windows nmake and
-one for GNU make.
+Note: the source codes for Windows and Linux are identical, although
+some parts are only applicable to one platform (notably the GUI), and
+there are two different Makefiles, one for Windows NMAKE (Makefile.win) and
+one for GNU make (Makefile).
 
 Syzygy tablebase support is enabled by default.
 
@@ -137,14 +138,13 @@ variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive," so
 ## Recommended build method
 
 I recommend building the engine from the command line with NMAKE,
-using the supplied makefile (named "Makefile" in the Windows source
-zip, or "Makefile.win" in the github repo). This is the most reliable
-and tested method. Visual Studio Community Edition is free for use on
-open-source projects and includes the needed command-line tools. You
-need a recent version with C++ 17 support. As mentioned above, use of
-clang-cl (can be installed along with MSVC) is recommended for best
-performance; this can be specified by including `CC=clang-cl` on the
-command line.
+using the Makefile.win makefile (run with "nmake -f Makefile.win).
+This is the most reliable and tested method. Visual Studio Community
+Edition is free for use on open-source projects and includes the
+needed command-line tools. You need a recent version with C++ 17
+support. As mentioned above, use of clang-cl (can be installed along
+with MSVC) is recommended for best performance; this can be specified
+by including `CC=clang-cl` on the command line.
 
 The following targets are defined in the makefile:
 
