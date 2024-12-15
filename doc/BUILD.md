@@ -103,7 +103,14 @@ with c++20 support, do:
 
 make CC=gcc-10 CXXFLAGS=-std=c++20
 
-As noted earlier, clang is recommended for best perfomance.
+As noted earlier, clang is recommended for best perfomance. For PGO,
+a compatible version of "llvm-profdata," from the clang bin directory,
+must be present in the PATH: this may not be the case for a default
+clang install.
+
+Program execution for PGO runs in the "profile" subdirectory, and
+-a is passed to the program, allowing options such as tablebase
+use to be set via an arasan.rc file in that directory, if desired.
 
 Defining NUMA in the Makefile will build a version that has support
 for NUMA (Non-Uniform Memory Access) machines. NUMA support relies

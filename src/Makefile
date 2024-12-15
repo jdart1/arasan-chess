@@ -109,7 +109,7 @@ else
 FLAGS := $(FLAGS) $(BASIC_SIMD_FLAGS)
 endif
 
-PGO_RUN_FLAGS = -H 64M
+PGO_RUN_FLAGS = -H 64M -a
 
 IN_GIT := $(shell git rev-parse --is-inside-work-tree)
 ifeq ("$(IN_GIT)","true")
@@ -289,6 +289,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.gcda
 	rm -f $(PROFILE)/*.gcno
 	rm -f $(PROFILE)/*.dyn
+	rm -f $(PROFILE)/*.nnue
 	rm -f $(PROF_DATA)/*.*
 	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay checkbin
 
@@ -328,6 +329,7 @@ $(PROFILE)/%.o: %.cpp
 	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
 
 profiled: dirs
+	ln -s ../network/*.nnue $(PROFILE)
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile-run
 ifdef CLANG
