@@ -20,7 +20,7 @@ pushd ..
 7z u -tzip -orelease %1 doc\programr.html doc\style_pg.css
 7z u -tzip -orelease %1 doc\TODO doc\CHANGES doc\BUILD.md
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd
-7z u -tzip -orelease %1 tests\arasan2023.epd tests\pet.epd tests\prof
+7z u -tzip -orelease %1 tests\arasan2024.epd tests\pet.epd tests\prof
 7z u -tzip -orelease %1 tests\eet.epd
 7z u -tzip -orelease %1 tests\wacnew.epd tests\lapuce2.epd
 7z u -tzip -orelease %1 tests\lapuce2.doc tests\iq4.epd tests\prof.epd
@@ -30,5 +30,4 @@ pushd ..
 7z u -tzip -orelease %1 gui\help\*.*
 7z u -tzip -orelease %1 gui\help\html\*.*
 7z u -tzip -orelease %1 gui\install\arasan.iss gui\install\readme.txt
-7z u -tzip -orelease %1 network\arasan-d9-SFv4-20231228.nnue
-
+7z u -tzip -orelease %1 network\arasanv3-20241109.nnue
