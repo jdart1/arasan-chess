@@ -4,6 +4,7 @@
 #ifndef _BENCH_H
 #define _BENCH_H
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 
