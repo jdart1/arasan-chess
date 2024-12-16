@@ -29,8 +29,8 @@ arasan
 
 Note: the source codes for Windows and Linux are identical, although
 some parts are only applicable to one platform (notably the GUI), and
-there are two different Makefiles, one for Windows NMAKE (Makefile.win) and
-one for GNU make (Makefile).
+there are different Makefiles for the two platforms, one for Windows
+NMAKE (Makefile.win) and one for GNU make (Makefile).
 
 Syzygy tablebase support is enabled by default.
 
@@ -138,7 +138,8 @@ variable GIT_ARCHIVE_ALL_PATH). And that tool calls "git archive," so
 ## Recommended build method
 
 I recommend building the engine from the command line with NMAKE,
-using the Makefile.win makefile (run with "nmake -f Makefile.win).
+using the Makefile in the Windows source distribution (Makefile.win
+in the repo).
 This is the most reliable and tested method. Visual Studio Community
 Edition is free for use on open-source projects and includes the
 needed command-line tools. You need a recent version with C++ 17
@@ -152,6 +153,9 @@ The following targets are defined in the makefile:
 - profiled: build the chess engine using PGO
 - utils: builds utility programs including "makebook"
 - release: builds the release zip file for Windows
+
+Profiled builds will require that you have the network file copied into
+the target profile directory (win64\profile or win32\profile).
 
 As with the Linux Makefile, you can select the target instruction set
 by setting the BUILD_TYPE variable. For example:
