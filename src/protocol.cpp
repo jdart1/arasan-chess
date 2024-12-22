@@ -472,10 +472,12 @@ void Protocol::save_game() {
       }
       headers.push_back(ChessIO::Header("TimeControl",timestr));
       std::string result = globals::gameMoves->getResult();
-      ChessIO::store_pgn(globals::game_file, *globals::gameMoves,
-         computer_plays_white ? White : Black,
-         result,
-         headers);
+      if (!(ChessIO::store_pgn(globals::game_file, *globals::gameMoves,
+                               computer_plays_white ? White : Black, result, headers))) {
+          if (doTrace) {
+              std::cout << debugPrefix << "error in save_game: " << strerror(errno) << std::endl;
+          }
+      }
    }
    if (doTrace) std::cout << debugPrefix << "out of save_game" << std::endl;
 }
