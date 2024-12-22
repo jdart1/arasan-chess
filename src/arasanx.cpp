@@ -38,60 +38,56 @@ int CDECL main(int argc, char **argv) {
     bool ics = false, trace = false, cpusSet = false, memorySet = false, autoLoadRC = false;
     int arg = 1;
 
-    if (argc > 1) {
-        while (arg < argc && *(argv[arg]) == '-') {
-            char c = *(argv[arg]+1);
-            switch (c) {
-            case 'a':
-                autoLoadRC = true;
-                break;
-            case 'c':
-                if (arg >= argc) {
-                    std::cerr << "expected number after -c" << std::endl;
-                    return -1;
-                }
-                ++arg;
-                globals::options.search.ncpus = std::min<int>(Constants::MaxCPUs,atol(argv[arg]));
-                cpusSet = true;
-                if (globals::options.search.ncpus<=0) {
-                    std::cerr << "-c parameter must be >=1" << std::endl;
-                    return -1;
-                }
-                break;
-            case 'i':
-                if (strcmp(argv[arg]+1,"ics")==0)
-                    ics = true;
-                else {
-                    std::cerr << "Warning: unknown option: " << argv[arg]+1 << std::endl;
-                }
-                break;
-            case 'H':
-                ++arg;
-                Options::setMemoryOption(globals::options.search.hash_table_size,
-                                         argv[arg]);
-                memorySet = true;
-                break;
-            case 'r':
-                ++arg;
-                if (arg >= argc) {
-                    std::cerr << "expected filename after -r" << std::endl;
-                    return -1;
-                } else {
-                    rcName = argv[arg];
-                }
-                break;
-            case 't':
-                if (strcmp(argv[arg],"-t")==0) {
-                    trace = true;
-                }
-                break;
-            default:
-                std::cerr << "Warning: unknown option: " << argv[arg]+1 <<
-                    std::endl;
-                break;
+    while (arg < argc && *(argv[arg]) == '-') {
+        char c = *(argv[arg] + 1);
+        switch (c) {
+        case 'a':
+            autoLoadRC = true;
+            break;
+        case 'c':
+            if (arg >= argc) {
+                std::cerr << "expected number after -c" << std::endl;
+                return -1;
             }
             ++arg;
+            globals::options.search.ncpus = std::min<int>(Constants::MaxCPUs, atol(argv[arg]));
+            cpusSet = true;
+            if (globals::options.search.ncpus <= 0) {
+                std::cerr << "-c parameter must be >=1" << std::endl;
+                return -1;
+            }
+            break;
+        case 'i':
+            if (strcmp(argv[arg] + 1, "ics") == 0)
+                ics = true;
+            else {
+                std::cerr << "Warning: unknown option: " << argv[arg] + 1 << std::endl;
+            }
+            break;
+        case 'H':
+            ++arg;
+            Options::setMemoryOption(globals::options.search.hash_table_size, argv[arg]);
+            memorySet = true;
+            break;
+        case 'r':
+            ++arg;
+            if (arg >= argc) {
+                std::cerr << "expected filename after -r" << std::endl;
+                return -1;
+            } else {
+                rcName = argv[arg];
+            }
+            break;
+        case 't':
+            if (strcmp(argv[arg], "-t") == 0) {
+                trace = true;
+            }
+            break;
+        default:
+            std::cerr << "Warning: unknown option: " << argv[arg] + 1 << std::endl;
+            break;
         }
+        ++arg;
     }
 
     if (autoLoadRC && rcName != nullptr) {
