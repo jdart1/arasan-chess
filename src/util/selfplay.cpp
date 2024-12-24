@@ -338,7 +338,7 @@ static void selfplay(ThreadData &td) {
         Statistics stats;
         Board board;
         unsigned low_score_count = 0, tb_score_count = 0, high_score_count = 0;
-        enum class Result { WhiteWin, BlackWin, Draw } result = Result::Draw;
+        enum class Result { WhiteWin, BlackWin, Draw, Unknown } result = Result::Unknown;
         std::vector<BinFormats::PositionData> output;
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
@@ -457,8 +457,14 @@ static void selfplay(ThreadData &td) {
                     adjudicated = true;
                 }
             }
-            // TBD: we can rarely get an invalid move - after termination?
-            if (!IsNull(m) && validMove(board,m)) {
+            if (!IsNull(m)) {
+                // TBD: we can rarely get an invalid move - after termination?
+                if (!validMove(board,m)) {
+                    std::cerr << "warning: invalid move from search: ";
+                    MoveImage(m,std::cerr);
+                    std::cerr << std::endl;
+                    break;
+                }
                 std::string image;
                 if (sp_options.saveGames) {
                     Notation::image(board, m, Notation::OutputFormat::SAN, image);
@@ -493,6 +499,9 @@ static void selfplay(ThreadData &td) {
                 }
                 break;
             }
+        }
+        if (result == Result::Unknown) {
+            continue;
         }
         if (sp_options.saveGames) {
             std::string resultStr;
