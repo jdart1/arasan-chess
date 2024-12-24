@@ -881,20 +881,12 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &c,const std::string &cmd)
     }
 }
 
-void Protocol::calcTimes(bool pondering, ColorType c, timeMgmt::Times &times)
-{
+void Protocol::calcTimes(bool pondering, [[maybe_unused]] ColorType c, timeMgmt::Times &times) {
     if (srctype == FixedTime) {
         times.time_target = time_limit;
         times.extra_time = 0;
-    } else if (uci) {
-        timeMgmt::calcTimeLimitUCI(movestogo,
-                                   getIncrUCI(c),
-                                   time_left,
-                                   pondering,
-                                   ics,
-                                   times);
     } else {
-        timeMgmt::calcTimeLimit(moves, incr, time_left, pondering, ics, times);
+        timeMgmt::calcTimeLimit(moves, incr, time_left, opp_time, pondering, times);
     }
     if (doTrace) {
         std::cout << debugPrefix << "time_target = " << times.time_target << std::endl;
@@ -902,9 +894,7 @@ void Protocol::calcTimes(bool pondering, ColorType c, timeMgmt::Times &times)
     }
 }
 
-template<bool isUCI>
-void Protocol::ponder(Board &board, Move move, Move predicted_reply)
-{
+template <bool isUCI> void Protocol::ponder(Board &board, Move move, Move predicted_reply) {
     ponder_status = PonderStatus::None;
     ponder_move = NullMove;
     ponder_stats.clear();
