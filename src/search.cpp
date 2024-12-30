@@ -66,10 +66,10 @@ TUNABLE(LMR_DIV_NON_PV, 180, 100, 360);
 TUNABLE(LMR_DIV_PV, 225, 100, 360);
 TUNABLE(NULL_MOVE_BASE_REDUCTION, 3, 3, 4);
 TUNABLE(NULL_MOVE_DEPTH_DIVISOR, 3, 3, 6);
-TUNABLE(NULL_MOVE_LOW_MAT_EXTENSION, 3, 0, 8);
-TUNABLE(NULL_MOVE_DEPTH_DIVISOR_LOW_MAT, 1, 0, 6);
-TUNABLE(NULL_MOVE_EVAL_FACTOR, 227, 200, 600);
-TUNABLE(NULL_MOVE_MAX_EVAL_REDUCTION, 2, 2, 5);
+TUNABLE(NULL_MOVE_LOW_MAT_EXTENSION, 3, 0, 4);
+TUNABLE(NULL_MOVE_DEPTH_DIVISOR_LOW_MAT, 3, 0, 6);
+TUNABLE(NULL_MOVE_EVAL_FACTOR, 350, 160, 600);
+TUNABLE(NULL_MOVE_MAX_EVAL_REDUCTION, 3, 2, 5);
 static constexpr int CHECKS_IN_QSEARCH = 1;
 // Depth limits for the strength reduction feature:
 static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
@@ -2964,9 +2964,9 @@ score_t Search::search()
         int nu_depth = depth - NULL_MOVE_BASE_REDUCTION*DEPTH_INCREMENT -
             depth/(NULL_MOVE_DEPTH_DIVISOR + lowMat*NULL_MOVE_DEPTH_DIVISOR_LOW_MAT) -
             std::min<int>(NULL_MOVE_MAX_EVAL_REDUCTION*DEPTH_INCREMENT,
-            int(DEPTH_INCREMENT*(node->eval-node->beta)/(NULL_MOVE_EVAL_FACTOR*Params::PAWN_VALUE/512)));
+            int(DEPTH_INCREMENT*(node->eval-node->beta)/(NULL_MOVE_EVAL_FACTOR*Params::PAWN_VALUE/256)));
         if (lowMat) {
-            nu_depth += DEPTH_INCREMENT*NULL_MOVE_LOW_MAT_EXTENSION / 8;
+            nu_depth += DEPTH_INCREMENT*NULL_MOVE_LOW_MAT_EXTENSION / 4;
         }
         // Skip null move if likely to be futile according to hash info
         if (!hashHit || !hashEntry.avoidNull(nu_depth,node->beta)) {
