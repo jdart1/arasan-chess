@@ -92,8 +92,7 @@ have the following meaning in the context of "makebook:"</p>
 <p>Glyphs can also be used to assign an evaluation to the end of an
 opening line and if so this evaluation modifies the weighting of
 moves along that line.</p>
-<p>Formerly relative book weights were stored in the book file. Now
-generally they are not: except for special first PGN file, move records
+<p>Formerly relative book weights were stored in the book file. Now generally they are not: except for special first PGN file, move records
 only store the win/loss/draw statistics for the move. Book move weights can effectively vary at runtime, within a range.</p>
 <p>Book move selection can be controlled by a "Book variety" option that can be set via UCI or CECP options, or by a line starting with
   "search.book_variety" in the arasan.rc file. The variety option can vary from 0 to 100. Low values will cause the program to
@@ -101,7 +100,7 @@ only store the win/loss/draw statistics for the move. Book move weights can effe
   Higher variety values will allow a wider range of moves to be displayed, including those that have poor statistics or low
   manually set weights. Note that high variety settings (>50) may negatively affect program strength, as inferior moves will be
   played more often.</a>
-Book move selection logic (see bookread.cpp), is as follows (based partly
+Book move selection logic (see bookread.cpp) is as follows (based partly
 on Thompson sampling - see references):</p>
   <ol>
     <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
