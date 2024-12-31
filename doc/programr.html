@@ -94,40 +94,30 @@ opening line and if so this evaluation modifies the weighting of
 moves along that line.</p>
 <p>Formerly relative book weights were stored in the book file. Now
 generally they are not: except for special first PGN file, move records
-only store the win/loss/draw statistics for the move. Some selection
-logic is applied at runtime (see bookread.cpp), as follows (based partly
+only store the win/loss/draw statistics for the move. Book move weights can effectively vary at runtime, within a range.</p>
+<p>Book move selection can be controlled by a "Book variety" option that can be set via UCI or CECP options, or by a line starting with
+  "search.book_variety" in the arasan.rc file. The variety option can vary from 0 to 100. Low values will cause the program to
+  tend to play main lines, and more strongly prefer moves that have good statistics or high manual weights in the book files.
+  Higher variety values will allow a wider range of moves to be displayed, including those that have poor statistics or low
+  manually set weights. Note that high variety settings (>50) may negatively affect program strength, as inferior moves will be
+  played more often.</a>
+Book move selection logic (see bookread.cpp), is as follows (based partly
 on Thompson sampling - see references):</p>
   <ol>
     <li>Drop, based on a tunable parameter, very infrequent moves out of the book move set. Also drop moves that were set manually to "don't play" (zero weight).</li>
     <li>Perform the Thompson sampling step: take a random sample from the prior distribution of win/loss/draw statistics for each move. The sample gives a win/loss/draw combination that is similar to, but may randomly differ from the actual win/loss/draw statistics.</li>
     <li>Taking into account contempt, compute a result score (wins + contempt factor*draws/total games) for all book moves.</li>
-    <li>Adjust the bonus score based on any manual weight or annotations in the "steering" book (the amount is tunable).</li>
-    <li>A bonus is given based on the log of the move frequency (in an amount depending on the book frequency option).</li>
-    <li>Add a further normally distributed random factor to the score, in an amount based on the "book.random" parameter.</li>
+    <li>Adjust the bonus score based on any manual weight or annotations in the "steering" book.</li>
+    <li>A further bonus is given based on the log of the move frequency (in an amount depending on the book variety option).</li>
+    <li>Add a further normally distributed random factor to the score, in an amount based on the book variety option (higher variety values will product more randomness).</li>
     <li>Pick the move with the highest score.</li>
 </ol>
-<p>There are four options (settable in arasan.rc) that control the move selection:</p>
-<ul>
-<li>book.frequency controls the threshold for dropping infrequent moves (step 1 above) and
-the frequency bonus (in step 5).
-It is set on a scale of 0-100, with 0 allowing more infrequent moves and 100 selecting
-only the most frequent moves.</li>
-<li>book.scoring controls the standard deviation for the random sample in step 2. 
-The higher this is the more tolerant the program will be of book moves whose actual
-statistics are poor. It is set on a scale of 0-100, with 0 being most tolerant of
-worse moves and 100 selecting the best move always.</li>
-<li>book.weighting controls the degree to which manually-configured weights influence
-the move selection (step 4). It is on a scale of 0-100, with 0 causing the manual weights to
-have the least effect and 100 causing them to have the maximum effect.</li>
-<li>book.random controls the amount of randomness added to computed move scores (step 6),
-on a scale of 0 to 100. Smaller values inject less randomness (although there
-will still be some random variation due to the Thompson sampling step in move selection).
-</li>  
+</li>
 </ul>
 <p>
 Arasan comes with a book that was built from a combination of a fairly
 small hand-tuned book file (basic.pgn) and a fairly large collection
-of high-quality human and computer games. There are over 750,000 moves
+of high-quality human and computer games. There are over 800,000 moves
 in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
