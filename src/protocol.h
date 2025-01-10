@@ -153,10 +153,10 @@ private:
     // Set the board position from a file
     void loadgame(Board &board, std::ifstream &file);
 
-#ifdef SYZYGY_TBS
-    // Validate a TB path sent from the UI (UCI)
-    bool validTbPath(const std::string &path);
-#endif
+//#ifdef SYZYGY_TBS
+//    // Validate a TB path sent from the UI (UCI)
+//    bool validTbPath(const std::string &path);
+//#endif
 
     // Case-insensitive compare for UCI options
     bool uciOptionCompare(const std::string &a, const std::string &b);

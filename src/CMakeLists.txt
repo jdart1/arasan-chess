@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # options
-option(SYZYGY_TBS "Syzygy tablebase support" ON)
+# option(SYZYGY_TBS "Syzygy tablebase support" ON)
 option(64BIT "64-bit target" ON)
 option(OLD "Use no SIMD instructions" OFF)
 option(MODERN "Use modern instructions" OFF)
@@ -57,6 +57,7 @@ if(UNIT_TESTS)
     add_compile_definitions(UNIT_TESTS)
 endif(UNIT_TESTS)
 
+#[[
 if(SYZYGY_TBS)
     add_compile_definitions(SYZYGY_TBS)
     set(STB ${CMAKE_CURRENT_SOURCE_DIR}/syzygy/src)
@@ -64,6 +65,8 @@ if(SYZYGY_TBS)
     list(APPEND EXTRA_SRC ${STB}/tbprobe.c ${STB}/tbprobe.h)
     SET_SOURCE_FILES_PROPERTIES(${STB}/tbprobe.c PROPERTIES LANGUAGE CXX )
 endif(SYZYGY_TBS)
+]]
+
 
 add_compile_definitions(NETWORK=${NETWORK})
 set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)

@@ -30,9 +30,9 @@ extern std::ofstream game_file;
 
 extern std::mutex input_lock;
 
-#ifdef SYZYGY_TBS
-extern std::mutex syzygy_lock;
-#endif
+//#ifdef SYZYGY_TBS
+//extern std::mutex syzygy_lock;
+//#endif
 extern nnue::Network network;
 extern bool nnueInitDone;
 extern bool polling_terminated;

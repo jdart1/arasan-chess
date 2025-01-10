@@ -203,12 +203,12 @@ public:
     }
 
     void updateTBOptions() {
-#ifdef SYZYGY_TBS
-        srcOpts.use_tablebases = globals::options.search.use_tablebases;
-        srcOpts.syzygy_path = globals::options.search.syzygy_path;
-        srcOpts.syzygy_50_move_rule = globals::options.search.syzygy_50_move_rule;
-        srcOpts.syzygy_probe_depth = globals::options.search.syzygy_probe_depth;
-#endif
+//#ifdef SYZYGY_TBS
+//        srcOpts.use_tablebases = globals::options.search.use_tablebases;
+//        srcOpts.syzygy_path = globals::options.search.syzygy_path;
+//        srcOpts.syzygy_50_move_rule = globals::options.search.syzygy_50_move_rule;
+//        srcOpts.syzygy_probe_depth = globals::options.search.syzygy_probe_depth;
+//#endif
     }
 
     score_t drawScore(const Board &board) const;
@@ -648,10 +648,10 @@ private:
 
     std::array<SearchHistory,Constants::MaxPly> rootSearchHistory;
 
-#ifdef SYZYGY_TBS
-    int tb_hit, tb_dtz;
-    score_t tb_score;
-#endif
+//#ifdef SYZYGY_TBS
+//    int tb_hit, tb_dtz;
+//    score_t tb_score;
+//#endif
 
     Board initialBoard;
     score_t initialValue;

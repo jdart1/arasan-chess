@@ -29,12 +29,12 @@ class Options {
         size_t hash_table_size;
         bool can_resign;
         int resign_threshold;
-#ifdef SYZYGY_TBS
-        bool use_tablebases;
-        std::string syzygy_path;
-        bool syzygy_50_move_rule;
-        int syzygy_probe_depth;
-#endif
+//#ifdef SYZYGY_TBS
+//        bool use_tablebases;
+//        std::string syzygy_path;
+//        bool syzygy_50_move_rule;
+//        int syzygy_probe_depth;
+//#endif
         int strength; // 0 .. 100
         int multipv;
         int ncpus;

@@ -80,6 +80,7 @@ void Board::init() {
 
 void Board::cleanup() {
    free(reinterpret_cast<void*>(initialBoard));
+    initialBoard = NULL;
 }
 
 void Board::setSecondaryVars()
@@ -195,7 +196,7 @@ Board &Board::operator = (const Board &b)
       memcpy(&contents,&b.contents,(uint8_t*)repList-(uint8_t*)&contents);
       // Copy the repetition table
       int rep_entries = (int)(b.repListHead - b.repList);
-      if (rep_entries) {
+       if (rep_entries && rep_entries > 0) {
           memcpy(repList,b.repList,sizeof(hash_t)*rep_entries);
       }
       repListHead = repList + rep_entries;

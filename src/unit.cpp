@@ -13,10 +13,10 @@
 #include "scoring.h"
 #include "search.h"
 #include "globals.h"
-#ifdef SYZYGY_TBS
-#include "syzygy.h"
-#include "syzygy/src/tbprobe.h"
-#endif
+//#ifdef SYZYGY_TBS
+//#include "syzygy.h"
+//#include "syzygy/src/tbprobe.h"
+//#endif
 #include "util/binformat.h"
 #include <algorithm>
 #include <cctype>
@@ -616,10 +616,10 @@ static int testDrawEval() {
         "8/8/8/5k1P/3K4/8/4B2P/8 w - - 0 1" // KBPP too far
     };
     int errs = 0;
-#ifdef SYZYGY_TBS
-    int tmp = globals::options.search.use_tablebases;
-    globals::options.search.use_tablebases = 0;
-#endif
+//#ifdef SYZYGY_TBS
+//    int tmp = globals::options.search.use_tablebases;
+//    globals::options.search.use_tablebases = 0;
+//#endif
     for (int i = 0; i < DRAW_CASES; i++) {
         Board board;
         if (!BoardIO::readFEN(board, draw_cases[i].fen.c_str())) {
@@ -652,9 +652,9 @@ static int testDrawEval() {
         }
 	delete s;
     }
-#ifdef SYZYGY_TBS
-    globals::options.search.use_tablebases = tmp;
-#endif
+//#ifdef SYZYGY_TBS
+//    globals::options.search.use_tablebases = tmp;
+//#endif
     return errs;
 }
 
@@ -1504,161 +1504,161 @@ static int testOptions() {
     return errs;
 }
 
-#ifdef SYZYGY_TBS
-static int testTB()
-{
-   struct Case
-   {
-       Case(const std::string &s, score_t res, unsigned distance_zero, const std::string &mvs):
-           fen(s), moves(mvs), dtz(distance_zero), result(res)
-         {
-         }
-       std::string fen, moves;
-       unsigned dtz;
-       score_t result;
-   };
-
-   // Note: 7-man test cases depend on KQRBvKRB, KRPPvKRP and KRBNvKQN
-   static std::array<Case,17> cases = {
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,70,
-           "Nd6+"),
-       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,0,
-           "Qf4+, Kf7, Ke7, Kg7, Qg5, Qg7, Qf8, Qg6, Qh5, Qh3, Qh1, Qh8"),
-       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE,106,"Ne4"),
-       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE,105,
-            "c4, Kc7, Kd7, Kd8"),
-       Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,11,
-            "Ra8, Rb8"),
-       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,1,
-            "Nc1#, Nc3#"),
-       Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,47,
-            "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
-       Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,0,"exf6"),
-       Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,1,
-            "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R"),
-       Case("7k/8/6Q1/p7/P7/3K4/8/8 b - - 0 1",0,0,""), // stalemate
-       Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0,0,"Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
-       Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,1,
-            "Rg6, Kc6, Rh4, Kc5, d6, Ra4, dxe6, Re4, Rg3, Rc4"),
-       // en-passant as only capture
-       Case("5K1k/3R4/8/8/6Pp/7P/8/8 b - g3 0 1",-Constants::TABLEBASE_WIN,1,
-            "hxg3"),
-       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,7,
-            "Kd2, Ke2, Rd8"),
-       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,138,"Qd8+"),
-       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,7,"Kd2, Ke2, Rd8"),
-       Case("qn4N1/6R1/3K4/8/B2k4/8/8/8 w - - 0 1",-SyzygyTb::CURSED_SCORE,1034,"Nf6, Rg4, Ke7")
-      };
-
-   int errs = 0;
-   globals::delayedInit();
-   if (globals::EGTBMenCount < 5) {
-      std::cerr << "TB tests skipped: no 5-man TBs found" << std::endl;
-      return 0;
-   }
-   if (globals::EGTBMenCount < 6) {
-      std::cerr << "6-man TB tests skipped: no 6-man TBs found" << std::endl;
-   }
-   if (globals::EGTBMenCount < 7) {
-      std::cerr << "7-man TB tests skipped: no 7-man TBs found" << std::endl;
-   }
-   int caseid = 0;
-   int temp = globals::options.search.syzygy_50_move_rule;
-   globals::options.search.syzygy_50_move_rule = 1;
-   const auto count_pattern = std::regex("^.* (\\d+)\\s(\\d+)$");
-   for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
-      Board board;
-      if (!BoardIO::readFEN(board, it->fen.c_str())) {
-         std::cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << std::endl;
-         ++errs;
-         continue;
-      }
-      // set half-move count from FEN
-      std::smatch match;
-      if (std::regex_match(it->fen,match,count_pattern)) {
-          auto pos = it->fen.find_last_of('-');
-          if (pos != std::string::npos) {
-              std::stringstream s(*(match.begin()+1));
-              int hmc;
-              s >> hmc;
-              if (!s.bad()) {
-                  board.state.moveCount = hmc;
-              }
-          }
-      }
-      MoveSet moves;
-      score_t score;
-      int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
-      int dtz;
-      if (men > globals::EGTBMenCount) {
-          continue;
-      } else if ((dtz=SyzygyTb::probe_root(board,false,score,moves))>=0) {
-         if (score != it->result) {
-            std::cerr << "testTB: case " << caseid << " expected ";
-            Scoring::printScore(it->result,std::cerr);
-            std::cerr << ", got ";
-            Scoring::printScore(score,std::cerr);
-            std::cerr << std::endl;
-            ++errs;
-         }
-         // verify DTZ is correct
-         if (unsigned(dtz) != it->dtz) {
-             std::cerr << "testTB, case " << caseid << " incorrect DTZ, expected " \
-                       << it->dtz << ", got " << dtz << std::endl;
-             ++errs;
-         }
-         std::stringstream s(it->moves);
-         char movechars[10];
-         std::string movestr;
-         MoveSet goodmoves;
-         while (s.getline(movechars, 10, ',')) {
-             movestr = movechars;
-             movestr = movestr.erase(0 , movestr.find_first_not_of(' '));
-             movestr = movestr.erase(movestr.find_last_not_of(' ') + 1);
-             Move m = Notation::value(board,board.sideToMove(),
-                                      Notation::InputFormat::SAN,
-                                      movestr,true);
-             goodmoves.insert(m);
-         }
-         if (goodmoves != moves) {
-             std::cerr << "testTB: case " << caseid << ": set mismatch" << std::endl;
-             std::cerr << "expected: ";
-             for (const auto &m : goodmoves) {
-                 MoveImage(m,std::cerr);
-                 std::cerr << ' ';
-             }
-             std::cerr << std::endl << "got: ";
-             for (const auto &m : moves) {
-                 MoveImage(m,std::cerr);
-                 std::cerr << ' ';
-             }
-             std::cerr << std::endl;
-             ++errs;
-         }
-      } else {
-         std::cerr << "testTB: case " << caseid << " no result from TBs" << std::endl;
-         ++errs;
-      }
-      // ensure move count is zero otherwise probe_wdl will fail
-      board.state.moveCount = 0;
-      if (SyzygyTb::probe_wdl(board,score,true)) {
-         if (score != it->result) {
-            std::cerr << "testTB: case " << caseid << " expected WDL score ";
-            Scoring::printScore(it->result,std::cerr);
-            std::cerr << ", got ";
-            Scoring::printScore(score,std::cerr);
-            std::cerr << std::endl;
-            ++errs;
-          }
-      } else {
-          std::cerr << "testTB: case " << caseid << ": WDL probe failed." << std::endl;
-          ++errs;
-      }
-   }
-   globals::options.search.syzygy_50_move_rule = temp;
-   return errs;
-}
-#endif
+//#ifdef SYZYGY_TBS
+//static int testTB()
+//{
+//   struct Case
+//   {
+//       Case(const std::string &s, score_t res, unsigned distance_zero, const std::string &mvs):
+//           fen(s), moves(mvs), dtz(distance_zero), result(res)
+//         {
+//         }
+//       std::string fen, moves;
+//       unsigned dtz;
+//       score_t result;
+//   };
+//
+//   // Note: 7-man test cases depend on KQRBvKRB, KRPPvKRP and KRBNvKQN
+//   static std::array<Case,17> cases = {
+//       Case("K1k5/8/8/2p5/4N3/8/8/N7 w - - 0 1",Constants::TABLEBASE_WIN,70,
+//           "Nd6+"),
+//       Case("8/8/5k1q/8/3K4/8/2Q5/4B3 b - - 0 1",0,0,
+//           "Qf4+, Kf7, Ke7, Kg7, Qg5, Qg7, Qf8, Qg6, Qh5, Qh3, Qh1, Qh8"),
+//       Case("K1k5/8/8/2p3N1/8/8/8/N7 w - - 0 1",SyzygyTb::CURSED_SCORE,106,"Ne4"),
+//       Case("K1k5/8/8/2p5/4N3/8/8/N7 b - - 0 1",-SyzygyTb::CURSED_SCORE,105,
+//            "c4, Kc7, Kd7, Kd8"),
+//       Case("5r2/8/5kp1/3K4/8/6R1/8/8 b - - 0 1",Constants::TABLEBASE_WIN,11,
+//            "Ra8, Rb8"),
+//       Case("8/8/8/8/8/8/kBK1N3/8 w - - 99 222",Constants::TABLEBASE_WIN,1,
+//            "Nc1#, Nc3#"),
+//       Case("5K2/6Q1/8/8/8/8/2kr4/8 w - - 0 1",Constants::TABLEBASE_WIN,47,
+//            "Ke7, Ke8, Kg8, Qa1, Qg1, Qg3, Qg4, Qe5, Qg5, Qf6, Qg6, Qh6, Qa7, Qb7, Qc7, Qe7, Qf7, Qh7"),
+//       Case("8/7n/6k1/4Pp2/4K3/8/8/8 w - f6 0 2",0,0,"exf6"),
+//       Case("8/1KP1b3/4k3/8/4P3/8/8/8 w - - 0 1",Constants::TABLEBASE_WIN,1,
+//            "e5, Kc6, Ka6, Ka7, Ka8, Kb6, c8=Q+, c8=R"),
+//       Case("7k/8/6Q1/p7/P7/3K4/8/8 b - - 0 1",0,0,""), // stalemate
+//       Case("8/4r2k/3R4/8/5P2/5K2/5P2/8 b - - 0 46",0,0,"Kg7, Kg8, Kh8, Re1, Ra7, Rb7, Rc7, Rf7, Rg7, Re8"),
+//       Case("2k5/8/7b/1K1Pp3/6R1/8/8/8 w - e6 0 80",Constants::TABLEBASE_WIN,1,
+//            "Rg6, Kc6, Rh4, Kc5, d6, Ra4, dxe6, Re4, Rg3, Rc4"),
+//       // en-passant as only capture
+//       Case("5K1k/3R4/8/8/6Pp/7P/8/8 b - g3 0 1",-Constants::TABLEBASE_WIN,1,
+//            "hxg3"),
+//       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,7,
+//            "Kd2, Ke2, Rd8"),
+//       Case("7q/8/8/8/6B1/3K4/5kr1/6RQ b - - 0 1",SyzygyTb::CURSED_SCORE,138,"Qd8+"),
+//       Case("8/5r2/4k3/4p3/1PP5/8/8/3RK3 w - - 0 1",Constants::TABLEBASE_WIN,7,"Kd2, Ke2, Rd8"),
+//       Case("qn4N1/6R1/3K4/8/B2k4/8/8/8 w - - 0 1",-SyzygyTb::CURSED_SCORE,1034,"Nf6, Rg4, Ke7")
+//      };
+//
+//   int errs = 0;
+//   globals::delayedInit();
+//   if (globals::EGTBMenCount < 5) {
+//      std::cerr << "TB tests skipped: no 5-man TBs found" << std::endl;
+//      return 0;
+//   }
+//   if (globals::EGTBMenCount < 6) {
+//      std::cerr << "6-man TB tests skipped: no 6-man TBs found" << std::endl;
+//   }
+//   if (globals::EGTBMenCount < 7) {
+//      std::cerr << "7-man TB tests skipped: no 7-man TBs found" << std::endl;
+//   }
+//   int caseid = 0;
+//   int temp = globals::options.search.syzygy_50_move_rule;
+//   globals::options.search.syzygy_50_move_rule = 1;
+//   const auto count_pattern = std::regex("^.* (\\d+)\\s(\\d+)$");
+//   for (auto it = cases.begin(); it != cases.end(); it++, caseid++) {
+//      Board board;
+//      if (!BoardIO::readFEN(board, it->fen.c_str())) {
+//         std::cerr << "testTB: error in test case " << caseid << " error in FEN: " << it->fen << std::endl;
+//         ++errs;
+//         continue;
+//      }
+//      // set half-move count from FEN
+//      std::smatch match;
+//      if (std::regex_match(it->fen,match,count_pattern)) {
+//          auto pos = it->fen.find_last_of('-');
+//          if (pos != std::string::npos) {
+//              std::stringstream s(*(match.begin()+1));
+//              int hmc;
+//              s >> hmc;
+//              if (!s.bad()) {
+//                  board.state.moveCount = hmc;
+//              }
+//          }
+//      }
+//      MoveSet moves;
+//      score_t score;
+//      int men = board.getMaterial(Black).men() + board.getMaterial(White).men();
+//      int dtz;
+//      if (men > globals::EGTBMenCount) {
+//          continue;
+//      } else if ((dtz=SyzygyTb::probe_root(board,false,score,moves))>=0) {
+//         if (score != it->result) {
+//            std::cerr << "testTB: case " << caseid << " expected ";
+//            Scoring::printScore(it->result,std::cerr);
+//            std::cerr << ", got ";
+//            Scoring::printScore(score,std::cerr);
+//            std::cerr << std::endl;
+//            ++errs;
+//         }
+//         // verify DTZ is correct
+//         if (unsigned(dtz) != it->dtz) {
+//             std::cerr << "testTB, case " << caseid << " incorrect DTZ, expected " \
+//                       << it->dtz << ", got " << dtz << std::endl;
+//             ++errs;
+//         }
+//         std::stringstream s(it->moves);
+//         char movechars[10];
+//         std::string movestr;
+//         MoveSet goodmoves;
+//         while (s.getline(movechars, 10, ',')) {
+//             movestr = movechars;
+//             movestr = movestr.erase(0 , movestr.find_first_not_of(' '));
+//             movestr = movestr.erase(movestr.find_last_not_of(' ') + 1);
+//             Move m = Notation::value(board,board.sideToMove(),
+//                                      Notation::InputFormat::SAN,
+//                                      movestr,true);
+//             goodmoves.insert(m);
+//         }
+//         if (goodmoves != moves) {
+//             std::cerr << "testTB: case " << caseid << ": set mismatch" << std::endl;
+//             std::cerr << "expected: ";
+//             for (const auto &m : goodmoves) {
+//                 MoveImage(m,std::cerr);
+//                 std::cerr << ' ';
+//             }
+//             std::cerr << std::endl << "got: ";
+//             for (const auto &m : moves) {
+//                 MoveImage(m,std::cerr);
+//                 std::cerr << ' ';
+//             }
+//             std::cerr << std::endl;
+//             ++errs;
+//         }
+//      } else {
+//         std::cerr << "testTB: case " << caseid << " no result from TBs" << std::endl;
+//         ++errs;
+//      }
+//      // ensure move count is zero otherwise probe_wdl will fail
+//      board.state.moveCount = 0;
+//      if (SyzygyTb::probe_wdl(board,score,true)) {
+//         if (score != it->result) {
+//            std::cerr << "testTB: case " << caseid << " expected WDL score ";
+//            Scoring::printScore(it->result,std::cerr);
+//            std::cerr << ", got ";
+//            Scoring::printScore(score,std::cerr);
+//            std::cerr << std::endl;
+//            ++errs;
+//          }
+//      } else {
+//          std::cerr << "testTB: case " << caseid << ": WDL probe failed." << std::endl;
+//          ++errs;
+//      }
+//   }
+//   globals::options.search.syzygy_50_move_rule = temp;
+//   return errs;
+//}
+//#endif
 
 static int testBinIO() {
     int errs = 0;
@@ -1772,8 +1772,8 @@ int doUnit() {
    errs += testOptions();
    errs += testBinIO();
    errs += testNNUE();
-#ifdef SYZYGY_TBS
-   errs += testTB();
-#endif
+//#ifdef SYZYGY_TBS
+//   errs += testTB();
+//#endif
    return errs;
 }

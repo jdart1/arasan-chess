@@ -8,9 +8,9 @@
 #include "protocol.h"
 #include "see.h"
 #include "tunable.h"
-#ifdef SYZYGY_TBS
-#include "syzygy.h"
-#endif
+//#ifdef SYZYGY_TBS
+//#include "syzygy.h"
+//#endif
 #include "legal.h"
 #include "trace.h"
 
@@ -270,9 +270,9 @@ SearchController::SearchController()
       tb_probe_in_search(true),
       monitorThread(0),
       srcOpts(globals::options.search),
-#ifdef SYZYGY_TBS
-      tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
-#endif
+//#ifdef SYZYGY_TBS
+//      tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
+//#endif
       initialValue(Constants::INVALID_SCORE),
       mg(NULL),
       elapsed_time(0)
@@ -489,36 +489,36 @@ Move SearchController::findBestMove(
    time_check_counter = timeCheckInterval;
 
    score_t value = Constants::INVALID_SCORE;
-#ifdef SYZYGY_TBS
-   tb_hit = 0;
-   tb_score = Constants::INVALID_SCORE;
-   tb_root_probes = tb_root_hits = 0;
-   if (srcOpts.use_tablebases) {
-       // Lock because the following calls is not thread-safe. In normal use
-       // we don't need to worry about this, but it is possible there are
-       // two concurrent SearchController instances in a program, in which case
-       // it matters.
-       {
-           std::unique_lock<std::mutex> lock(globals::syzygy_lock);
-           tb_hit = mg->rank_root_moves();
-       }
-       if (tb_hit) {
-           tb_root_probes += mg->moveCount();
-           tb_root_hits += mg->moveCount();
-           tb_score = mg->getMoveList()[0].tbScore;
-           // Store the tb value but do not use it set the search score - search values are based
-           // on DTM not DTZ.
-           stats->tb_value = tb_score;
-           // do not probe in the search
-           tb_probe_in_search = false;
-           if (debugOut()) {
-               std::cout << globals::debugPrefix << board << " root tb hit, score=";
-               Scoring::printScore(tb_score,std::cout);
-               std::cout << std::endl;
-           }
-       }
-   }
-#endif
+//#ifdef SYZYGY_TBS
+//   tb_hit = 0;
+//   tb_score = Constants::INVALID_SCORE;
+//   tb_root_probes = tb_root_hits = 0;
+//   if (srcOpts.use_tablebases) {
+//       // Lock because the following calls is not thread-safe. In normal use
+//       // we don't need to worry about this, but it is possible there are
+//       // two concurrent SearchController instances in a program, in which case
+//       // it matters.
+//       {
+//           std::unique_lock<std::mutex> lock(globals::syzygy_lock);
+//           tb_hit = mg->rank_root_moves();
+//       }
+//       if (tb_hit) {
+//           tb_root_probes += mg->moveCount();
+//           tb_root_hits += mg->moveCount();
+//           tb_score = mg->getMoveList()[0].tbScore;
+//           // Store the tb value but do not use it set the search score - search values are based
+//           // on DTM not DTZ.
+//           stats->tb_value = tb_score;
+//           // do not probe in the search
+//           tb_probe_in_search = false;
+//           if (debugOut()) {
+//               std::cout << globals::debugPrefix << board << " root tb hit, score=";
+//               Scoring::printScore(tb_score,std::cout);
+//               std::cout << std::endl;
+//           }
+//       }
+//   }
+//#endif
    // set up move generator to obey include and exclude lists
    mg->filter(include,exclude);
    std::stringstream s;
@@ -532,11 +532,11 @@ Move SearchController::findBestMove(
 #ifdef _TRACE
    std::cout << s.str() << std::endl;
 #endif
-#ifdef SYZYGY_TBS
-   if (debugOut() && tb_hit) {
-       std::cout << globals::debugPrefix << s.str() << std::endl;
-   }
-#endif
+//#ifdef SYZYGY_TBS
+//   if (debugOut() && tb_hit) {
+//       std::cout << globals::debugPrefix << s.str() << std::endl;
+//   }
+//#endif
    if (value == Constants::INVALID_SCORE) {
       value = 0;
    }
@@ -618,12 +618,12 @@ Move SearchController::findBestMove(
             !ourMat.hasPawns() && !oppMat.hasPawns() &&
             (oppMat.pieceBits() == Material::KR ||
              oppMat.pieceBits() == Material::KQ))
-#ifdef SYZYGY_TBS
-          // Don't resign a tb lost position with large dtz,
-          // unless we have a mate score, because the opponent can err
-          // if not using TBs.
-          && (stats->display_value != -Constants::TABLEBASE_WIN || tb_dtz < 30)
-#endif
+//#ifdef SYZYGY_TBS
+//          // Don't resign a tb lost position with large dtz,
+//          // unless we have a mate score, because the opponent can err
+//          // if not using TBs.
+//          && (stats->display_value != -Constants::TABLEBASE_WIN || tb_dtz < 30)
+//#endif
          ) {
          if (debugOut()) {
              std::cout << globals::debugPrefix << "resigning game (low score)" << std::endl;
@@ -755,13 +755,13 @@ void SearchController::updateSearchOptions() {
 }
 
 void SearchController::updateTBOptions() {
-#ifdef SYZYGY_TBS
-    srcOpts.use_tablebases = globals::options.search.use_tablebases;
-    srcOpts.syzygy_path = globals::options.search.syzygy_path;
-    srcOpts.syzygy_50_move_rule = globals::options.search.syzygy_50_move_rule;
-    srcOpts.syzygy_probe_depth = globals::options.search.syzygy_probe_depth;
-    pool->forEachSearch<&Search::updateTBOptions>();
-#endif
+//#ifdef SYZYGY_TBS
+//    srcOpts.use_tablebases = globals::options.search.use_tablebases;
+//    srcOpts.syzygy_path = globals::options.search.syzygy_path;
+//    srcOpts.syzygy_50_move_rule = globals::options.search.syzygy_50_move_rule;
+//    srcOpts.syzygy_probe_depth = globals::options.search.syzygy_probe_depth;
+//    pool->forEachSearch<&Search::updateTBOptions>();
+//#endif
 }
 
 void SearchController::setMultiPV(int multipv_count) {
@@ -1012,42 +1012,42 @@ score_t Search::drawScore(const Board & b) const {
     return controller->drawScore(b, &stats);
 }
 
-#ifdef SYZYGY_TBS
-score_t Search::tbScoreAdjust(const Board &b,
-                    score_t value,int tb_hit,score_t tb_score) const
-{
-#ifdef _TRACE
-   if (mainThread()) {
-      std::cout << "tb score adjust: input=";
-      Scoring::printScore(tb_score,std::cout);
-      std::cout << std::endl;
-   }
-#endif
-   score_t output = value;
-   if (tb_hit && !Scoring::mateScore(value)) {
-      // If a Syzygy tablebase hit set the score based on that. But
-      // don't override a mate score found with search.
-      if (tb_score == Constants::TABLEBASE_WIN) {
-          output = tb_score;
-      }
-      else if (tb_score == 0 || std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
-         output = drawScore(b);
-      }
-      else if (tb_score == -Constants::TABLEBASE_WIN) {
-         // loss
-         output = -Constants::TABLEBASE_WIN;
-      }
-   }
-#ifdef _TRACE
-   if (mainThread()) {
-      std::cout << "tb score adjust: output=";
-      Scoring::printScore(output,std::cout);
-      std::cout << std::endl;
-   }
-#endif
-   return output;
-}
-#endif
+//#ifdef SYZYGY_TBS
+//score_t Search::tbScoreAdjust(const Board &b,
+//                    score_t value,int tb_hit,score_t tb_score) const
+//{
+//#ifdef _TRACE
+//   if (mainThread()) {
+//      std::cout << "tb score adjust: input=";
+//      Scoring::printScore(tb_score,std::cout);
+//      std::cout << std::endl;
+//   }
+//#endif
+//   score_t output = value;
+//   if (tb_hit && !Scoring::mateScore(value)) {
+//      // If a Syzygy tablebase hit set the score based on that. But
+//      // don't override a mate score found with search.
+//      if (tb_score == Constants::TABLEBASE_WIN) {
+//          output = tb_score;
+//      }
+//      else if (tb_score == 0 || std::abs(tb_score) == SyzygyTb::CURSED_SCORE) {
+//         output = drawScore(b);
+//      }
+//      else if (tb_score == -Constants::TABLEBASE_WIN) {
+//         // loss
+//         output = -Constants::TABLEBASE_WIN;
+//      }
+//   }
+//#ifdef _TRACE
+//   if (mainThread()) {
+//      std::cout << "tb score adjust: output=";
+//      Scoring::printScore(output,std::cout);
+//      std::cout << std::endl;
+//   }
+//#endif
+//   return output;
+//}
+//#endif
 
 template <bool quiet>
 static score_t futilityMargin(int depth)
@@ -1109,16 +1109,16 @@ void Search::updateStats(const Board &b, NodeInfo *n, int iteration_depth,
     stats.value = score;
     stats.depth = iteration_depth;
     stats.display_value = stats.value;
-#ifdef SYZYGY_TBS
-    // Correct if necessary the display value, used for score
-    // output and resign decisions, based on the tb information:
-    if (stats.tb_value != Constants::INVALID_SCORE) {
-       stats.display_value = tbScoreAdjust(b,
-                                           stats.value,
-                                           1,
-                                           stats.tb_value);
-    }
-#endif
+//#ifdef SYZYGY_TBS
+//    // Correct if necessary the display value, used for score
+//    // output and resign decisions, based on the tb information:
+//    if (stats.tb_value != Constants::INVALID_SCORE) {
+//       stats.display_value = tbScoreAdjust(b,
+//                                           stats.value,
+//                                           1,
+//                                           stats.tb_value);
+//    }
+//#endif
     // note: retain previous best line if we do not have one here
     if (n->pv_length == 0) {
 #ifdef _TRACE
@@ -2725,13 +2725,13 @@ score_t Search::search()
     }
     Move hashMove = NullMove;
     using_tb = 0;
-#ifdef SYZYGY_TBS
-    if (srcOpts.use_tablebases) {
-        using_tb = board.men() <= globals::EGTBMenCount &&
-            controller->tb_probe_in_search &&
-            node->depth/DEPTH_INCREMENT >= srcOpts.syzygy_probe_depth;
-    }
-#endif
+//#ifdef SYZYGY_TBS
+//    if (srcOpts.use_tablebases) {
+//        using_tb = board.men() <= globals::EGTBMenCount &&
+//            controller->tb_probe_in_search &&
+//            node->depth/DEPTH_INCREMENT >= srcOpts.syzygy_probe_depth;
+//    }
+//#endif
     HashEntry hashEntry;
     HashEntry::ValueType result;
     bool hashHit = false;
@@ -2822,35 +2822,35 @@ score_t Search::search()
           }
         }
     }
-#ifdef SYZYGY_TBS
-    if (using_tb && rep_count==0 && !(node->flags & IID) && board.state.moveCount == 0 && !board.castlingPossible()) {
-       stats.tb_probes++;
-       score_t tb_score;
-       int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
-       if (tb_hit) {
-            stats.tb_hits++;
-#ifdef _TRACE
-            if (mainThread()) {
-                indent(ply); std::cout << "EGTB hit: score " << tb_score << std::endl;
-            }
-#endif
-            // Put it in with a large depth so we will not
-            // overwrite - this entry is "exact" at all
-            // search depths, so effectively its depth is infinite.
-            controller->hashTable.storeHash(board.hashCode(rep_count),
-                (Constants::MaxPly-1)*DEPTH_INCREMENT,
-                age,
-                HashEntry::Valid,
-                HashEntry::scoreToHashValue(tb_score,node->ply),
-                Constants::INVALID_SCORE,
-                HashEntry::TB_MASK,
-                NullMove);
-            node->best_score = tb_score;               // unadjusted score
-            node->flags |= EXACT;
-            return node->best_score;
-        }
-    }
-#endif
+//#ifdef SYZYGY_TBS
+//    if (using_tb && rep_count==0 && !(node->flags & IID) && board.state.moveCount == 0 && !board.castlingPossible()) {
+//       stats.tb_probes++;
+//       score_t tb_score;
+//       int tb_hit = SyzygyTb::probe_wdl(board, tb_score, srcOpts.syzygy_50_move_rule != 0);
+//       if (tb_hit) {
+//            stats.tb_hits++;
+//#ifdef _TRACE
+//            if (mainThread()) {
+//                indent(ply); std::cout << "EGTB hit: score " << tb_score << std::endl;
+//            }
+//#endif
+//            // Put it in with a large depth so we will not
+//            // overwrite - this entry is "exact" at all
+//            // search depths, so effectively its depth is infinite.
+//            controller->hashTable.storeHash(board.hashCode(rep_count),
+//                (Constants::MaxPly-1)*DEPTH_INCREMENT,
+//                age,
+//                HashEntry::Valid,
+//                HashEntry::scoreToHashValue(tb_score,node->ply),
+//                Constants::INVALID_SCORE,
+//                HashEntry::TB_MASK,
+//                NullMove);
+//            node->best_score = tb_score;               // unadjusted score
+//            node->flags |= EXACT;
+//            return node->best_score;
+//        }
+//    }
+//#endif
     // At this point we need to know if we are in check or not.
     int in_check =
         (board.checkStatus((node-1)->last_move) == InCheck);
@@ -3594,10 +3594,10 @@ void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
     stats.clear();
     // propagate options from controller to this search instance
     srcOpts = controller->srcOpts;
-#ifdef SYZYGY_TBS
-    // Propagate tb value from controller to stats
-    stats.tb_value = controller->tb_score;
-#endif
+//#ifdef SYZYGY_TBS
+//    // Propagate tb value from controller to stats
+//    stats.tb_value = controller->tb_score;
+//#endif
 
     // Clear killer since the side to move may have been different
     // in the previous use of this class.

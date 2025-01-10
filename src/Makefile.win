@@ -17,7 +17,7 @@ BUILD_ROOT=..
 UTIL=util
 
 # set to enable compliation with Syzygy tablebase support
-SYZYGY_TBS = 1
+# SYZYGY_TBS = 1
 
 # location of SYZYGY tablebase code
 STB=syzygy\src
@@ -220,17 +220,17 @@ profile: dirs $(PROFILE)\$(ARASANX).exe
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe \
 $(BUILD)\checkbin.exe $(BUILD)\convertbin.exe
 
-!IfDef SYZYGY_TBS
-CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
-STB_FLAGS = /TP /I. $(CFLAGS)
-STB_PROFILE_FLAGS = $(STB_FLAGS)
-TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
-TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
-$(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
-	$(CC) $(STB_FLAGS) $(OPT) $(LTO) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
-$(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
-	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
-!Endif
+#!IfDef SYZYGY_TBS
+#CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
+#STB_FLAGS = /TP /I. $(CFLAGS)
+#STB_PROFILE_FLAGS = $(STB_FLAGS)
+#TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
+#TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
+#$(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
+#	$(CC) $(STB_FLAGS) $(OPT) $(LTO) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+#$(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
+#	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
+#!Endif
 NNUE_OBJS = $(BUILD)\nnueintf.obj
 NNUE_PROFILE_OBJS = $(PROFILE)\nnueintf.obj
 

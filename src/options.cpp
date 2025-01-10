@@ -16,17 +16,17 @@
 #include <cmath>
 #include <regex>
 
-#ifdef SYZYGY_TBS
-std::string Options::tbPath() const { return search.syzygy_path; }
-#endif
+//#ifdef SYZYGY_TBS
+//std::string Options::tbPath() const { return search.syzygy_path; }
+//#endif
 
 Options::SearchOptions::SearchOptions()
     : hash_table_size(32 * 1024 * 1024), can_resign(true),
       resign_threshold(-500),
-#ifdef SYZYGY_TBS
-      use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
-      syzygy_probe_depth(4),
-#endif
+//#ifdef SYZYGY_TBS
+//      use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
+//      syzygy_probe_depth(4),
+//#endif
       strength(100), multipv(1), ncpus(1),
       pureNNUE(false), nnueFile(MAKE_STR(NETWORK)),
 #ifdef NUMA
@@ -109,17 +109,17 @@ void Options::set_option(const std::string &name, const std::string &value) {
         // command line option takes precedence
         if (!memorySet) setMemoryOption(search.hash_table_size, value);
     }
-#ifdef SYZYGY_TBS
-    else if (name == "search.use_tablebases") {
-        setOption<bool>(name, value, search.use_tablebases);
-    } else if (name == "search.syzygy_path") {
-        search.syzygy_path = value;
-    } else if (name == "search.syzygy_50_move_rule") {
-        setOption<bool>(name, value, search.syzygy_50_move_rule);
-    } else if (name == "search.syzygy_probe_depth") {
-        setOption<int>(name, value, search.syzygy_probe_depth);
-    }
-#endif
+//#ifdef SYZYGY_TBS
+//    else if (name == "search.use_tablebases") {
+//        setOption<bool>(name, value, search.use_tablebases);
+//    } else if (name == "search.syzygy_path") {
+//        search.syzygy_path = value;
+//    } else if (name == "search.syzygy_50_move_rule") {
+//        setOption<bool>(name, value, search.syzygy_50_move_rule);
+//    } else if (name == "search.syzygy_probe_depth") {
+//        setOption<int>(name, value, search.syzygy_probe_depth);
+//    }
+//#endif
     else if (name == "search.strength") {
         set_strength_option(name, search.strength, value);
     } else if (name == "search.ncpus") {

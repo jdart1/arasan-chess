@@ -18,9 +18,9 @@
 #include "options.h"
 #include "scoring.h"
 #include "tunable.h"
-#ifdef SYZYGY_TBS
-#include "syzygy.h"
-#endif
+//#ifdef SYZYGY_TBS
+//#include "syzygy.h"
+//#endif
 #include "tester.h"
 #include "threadp.h"
 #ifdef UNIT_TESTS
@@ -318,23 +318,23 @@ bool Protocol::accept_draw(Board &board) {
          std::cout << debugPrefix << "pawnless ending, accept draw" << std::endl;
       return true;
    }
-#ifdef SYZYGY_TBS
-   const Material &wMat = board.getMaterial(White);
-   const Material &bMat = board.getMaterial(Black);
-   if (globals::options.search.use_tablebases &&
-       wMat.men() + bMat.men() <= globals::EGTBMenCount) {
-       if (doTrace)
-           std::cout << debugPrefix << "checking tablebases .." << std::endl;
-       // accept a draw when the tablebases say it's a draw
-       score_t tbscore;
-       if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
-           if (doTrace) {
-               std::cout << debugPrefix << "tablebase score says draw" << std::endl;
-           }
-           return true;
-       }
-   }
-#endif
+//#ifdef SYZYGY_TBS
+//   const Material &wMat = board.getMaterial(White);
+//   const Material &bMat = board.getMaterial(Black);
+//   if (globals::options.search.use_tablebases &&
+//       wMat.men() + bMat.men() <= globals::EGTBMenCount) {
+//       if (doTrace)
+//           std::cout << debugPrefix << "checking tablebases .." << std::endl;
+//       // accept a draw when the tablebases say it's a draw
+//       score_t tbscore;
+//       if (SyzygyTb::probe_wdl(board,tbscore,true) && std::abs(tbscore) <= SyzygyTb::CURSED_SCORE) {
+//           if (doTrace) {
+//               std::cout << debugPrefix << "tablebase score says draw" << std::endl;
+//           }
+//           return true;
+//       }
+//   }
+//#endif
    if (opponent_rating == 0)
        return false;
    // accept a draw if our score is negative .. how much negative
@@ -1537,13 +1537,15 @@ void Protocol::processWinboardOptions(const std::string &args) {
     if (doTrace) {
         std::cout << debugPrefix << "setting option " << name << "=" << value << std::endl;
     }
-    if (name == "SyzygyUse50MoveRule") {
-        Options::setOption<bool>(value,globals::options.search.syzygy_50_move_rule);
-    }
-    else if (name == "SyzygyProbeDepth") {
-        Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
-    }
-    else if (name == "OwnBook") {
+//    if (name == "SyzygyUse50MoveRule") {
+//        Options::setOption<bool>(value,globals::options.search.syzygy_50_move_rule);
+//    }
+//    else if (name == "SyzygyProbeDepth") {
+//        Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
+//    }
+//    else
+//        
+    if (name == "OwnBook") {
         Options::setOption<bool>(value,globals::options.book.book_enabled);
     } else if (name == "BookPath") {
         Options::setOption<std::string>(value,globals::options.book.book_path);
@@ -1653,12 +1655,12 @@ void Protocol::loadgame(Board &board, std::ifstream &file) {
 }
 
 
-#ifdef SYZYGY_TBS
-bool Protocol::validTbPath(const std::string &path) {
-   // Shredder at least sets path to "<empty>" for tb types that are disabled
-   return path != "" && path != "<empty>";
-}
-#endif
+//#ifdef SYZYGY_TBS
+//bool Protocol::validTbPath(const std::string &path) {
+//   // Shredder at least sets path to "<empty>" for tb types that are disabled
+//   return path != "" && path != "<empty>";
+//}
+//#endif
 
 bool Protocol::uciOptionCompare(const std::string &a, const std::string &b) {
    if (a.length() != b.length()) {
@@ -1693,17 +1695,17 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #endif
         std::cout << "option name Ponder type check default true" << std::endl;
         std::cout << "option name Contempt type spin default 0 min -200 max 200" << std::endl;
-#ifdef SYZYGY_TBS
-        std::cout << "option name Use tablebases type check default ";
-        if (globals::options.search.use_tablebases) std::cout << "true"; else std::cout << "false";
-        std::cout << std::endl;
-        std::cout << "option name SyzygyPath type string default " <<
-            globals::options.search.syzygy_path << std::endl;
-        std::cout << "option name SyzygyUse50MoveRule type check default true" << std::endl;
-        std::cout << "option name SyzygyProbeDepth type spin default " <<
-            globals::options.search.syzygy_probe_depth <<
-           " min 0 max 64" << std::endl;
-#endif
+//#ifdef SYZYGY_TBS
+//        std::cout << "option name Use tablebases type check default ";
+//        if (globals::options.search.use_tablebases) std::cout << "true"; else std::cout << "false";
+//        std::cout << std::endl;
+//        std::cout << "option name SyzygyPath type string default " <<
+//            globals::options.search.syzygy_path << std::endl;
+//        std::cout << "option name SyzygyUse50MoveRule type check default true" << std::endl;
+//        std::cout << "option name SyzygyProbeDepth type spin default " <<
+//            globals::options.search.syzygy_probe_depth <<
+//           " min 0 max 64" << std::endl;
+//#endif
         std::cout << "option name MultiPV type spin default 1 min 1 max " << Statistics::MAX_PV << std::endl;
         std::cout << "option name OwnBook type check default " << (globals::options.book.book_enabled ? "true" : "false") << std::endl;
         std::cout << "option name BookPath type string default " << (globals::options.book.book_path == "" ? "book.bin" : globals::options.book.book_path) << std::endl;
@@ -1792,26 +1794,26 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                searcher->setContempt(uciContempt);
             }
         }
-#ifdef SYZYGY_TBS
-        else if (uciOptionCompare(name,"Use tablebases")) {
-           Options::setOption<bool>(value, globals::options.search.use_tablebases);
-           searcher->updateTBOptions();
-        }
-        else if (uciOptionCompare(name,"SyzygyPath") && validTbPath(value)) {
-           globals::unloadTb();
-           globals::options.search.syzygy_path = value;
-           globals::options.search.use_tablebases = true;
-           searcher->updateTBOptions();
-        }
-        else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
-            Options::setOption<bool>(value, globals::options.search.syzygy_50_move_rule);
-            searcher->updateTBOptions();
-        }
-        else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
-           Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
-           searcher->updateTBOptions();
-        }
-#endif
+//#ifdef SYZYGY_TBS
+//        else if (uciOptionCompare(name,"Use tablebases")) {
+//           Options::setOption<bool>(value, globals::options.search.use_tablebases);
+//           searcher->updateTBOptions();
+//        }
+//        else if (uciOptionCompare(name,"SyzygyPath") && validTbPath(value)) {
+//           globals::unloadTb();
+//           globals::options.search.syzygy_path = value;
+//           globals::options.search.use_tablebases = true;
+//           searcher->updateTBOptions();
+//        }
+//        else if (uciOptionCompare(name,"SyzygyUse50MoveRule")) {
+//            Options::setOption<bool>(value, globals::options.search.syzygy_50_move_rule);
+//            searcher->updateTBOptions();
+//        }
+//        else if (uciOptionCompare(name,"SyzygyProbeDepth")) {
+//           Options::setOption<int>(value,globals::options.search.syzygy_probe_depth);
+//           searcher->updateTBOptions();
+//        }
+//#endif
         else if (uciOptionCompare(name,"OwnBook")) {
             Options::setOption<bool>(value, globals::options.book.book_enabled);
         }
@@ -2117,22 +2119,22 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     }
     else if (cmd_word == "eval") {
         globals::delayedInit();
-#ifdef SYZYGY_TBS
-        score_t tbscore;
-        if (globals::options.search.use_tablebases) {
-            MoveSet rootMoves;
-            if (SyzygyTb::probe_root(board, board.anyRep(), tbscore, rootMoves) >= 0) {
-                std::cout << "score = ";
-                if (tbscore == -SyzygyTb::CURSED_SCORE)
-                    std::cout << "draw (Cursed Loss)";
-                else if (tbscore == -SyzygyTb::CURSED_SCORE)
-                    std::cout << "draw (Cursed Win)";
-                else
-                    Scoring::printScore(tbscore, std::cout);
-                std::cout << " (from Syzygy tablebases)" << std::endl;
-            }
-        }
-#endif
+//#ifdef SYZYGY_TBS
+//        score_t tbscore;
+//        if (globals::options.search.use_tablebases) {
+//            MoveSet rootMoves;
+//            if (SyzygyTb::probe_root(board, board.anyRep(), tbscore, rootMoves) >= 0) {
+//                std::cout << "score = ";
+//                if (tbscore == -SyzygyTb::CURSED_SCORE)
+//                    std::cout << "draw (Cursed Loss)";
+//                else if (tbscore == -SyzygyTb::CURSED_SCORE)
+//                    std::cout << "draw (Cursed Win)";
+//                else
+//                    Scoring::printScore(tbscore, std::cout);
+//                std::cout << " (from Syzygy tablebases)" << std::endl;
+//            }
+//        }
+//#endif
         score_t score;
         if ((score = Scoring::tryBitbase(board)) != Constants::INVALID_SCORE) {
             std::cout << "bitbase score=";
@@ -2404,12 +2406,12 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if (cmd_word == "protover") {
         // new in Winboard 4.2
         std::cout << "feature name=1 setboard=1 san=1 usermove=1 ping=1 ics=1 playother=0 sigint=0 colors=0 analyze=1 debug=1 memory=1 smp=1 variants=\"normal\"";
-#ifdef SYZYGY_TBS
-        std::cout << " egt=\"syzygy\"";
-#endif
-        std::cout << " option=\"SyzygyUse50MoveRule -check " << globals::options.search.syzygy_50_move_rule << "\"";
-        std::cout << " option=\"SyzygyProbeDepth -spin " <<
-            globals::options.search.syzygy_probe_depth << " 0 64" << "\"";
+//#ifdef SYZYGY_TBS
+//        std::cout << " egt=\"syzygy\"";
+//#endif
+//        std::cout << " option=\"SyzygyUse50MoveRule -check " << globals::options.search.syzygy_50_move_rule << "\"";
+//        std::cout << " option=\"SyzygyProbeDepth -spin " <<
+//            globals::options.search.syzygy_probe_depth << " 0 64" << "\"";
         std::cout << " option=\"OwnBook -check " <<
             globals::options.book.book_enabled << "\"";
         std::cout << " option=\"BookPath -string " <<
@@ -2684,23 +2686,23 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         // path may be in Unix format. Convert.
         std::replace(path.begin(), path.end(), '/', '\\');
 #endif
-#ifdef SYZYGY_TBS
-        // Unload existing tb set if in use and if path has changed
-        if (globals::options.tbPath() != path) {
-           if (doTrace) std::cout << debugPrefix << "unloading tablebases" << std::endl;
-           globals::unloadTb();
-        }
-        // Set the tablebase globals::options. But do not initialize the
-        // tablebases here. Defer until globals::delayedInit is called again.
-        // One reason to do this is that we may receive multiple
-        // egtpath commands from Winboard.
-        globals::options.search.use_tablebases = 1;
-        globals::options.search.syzygy_path = path;
-        searcher->updateTBOptions();
-        if (doTrace) {
-           std::cout << debugPrefix << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
-        }
-#endif
+//#ifdef SYZYGY_TBS
+//        // Unload existing tb set if in use and if path has changed
+//        if (globals::options.tbPath() != path) {
+//           if (doTrace) std::cout << debugPrefix << "unloading tablebases" << std::endl;
+//           globals::unloadTb();
+//        }
+//        // Set the tablebase globals::options. But do not initialize the
+//        // tablebases here. Defer until globals::delayedInit is called again.
+//        // One reason to do this is that we may receive multiple
+//        // egtpath commands from Winboard.
+//        globals::options.search.use_tablebases = 1;
+//        globals::options.search.syzygy_path = path;
+//        searcher->updateTBOptions();
+//        if (doTrace) {
+//           std::cout << debugPrefix << "setting Syzygy tb path to " << globals::options.search.syzygy_path << std::endl;
+//        }
+//#endif
     }
     else if (!uci) {
         // see if it could be a move

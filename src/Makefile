@@ -41,7 +41,7 @@ NETWORK ?= arasanv3-20241109.nnue
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
 
 # set to enable compliation with Syzygy tablebase support
-SYZYGY_TBS := 1
+# SYZYGY_TBS := 1
 
 FLAGS := -I .
 ifdef NUMA
@@ -49,9 +49,10 @@ FLAGS := $(FLAGS) -DNUMA -I$(HWLOC)/include
 NUMA_OBJS=$(BUILD)/topo.o
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.o
 endif
-ifdef SYZYGY_TBS
-FLAGS := $(FLAGS) -DSYZYGY_TBS
-endif
+#
+#ifdef SYZYGY_TBS
+#FLAGS := $(FLAGS) -DSYZYGY_TBS
+#endif
 ifdef TUNE
 FLAGS := $(FLAGS) -DTUNE
 endif
@@ -341,18 +342,18 @@ endif
 endif
 	@$(MAKE) PASS=2 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
 
-ifdef SYZYGY_TBS
-TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
-TB_OBJS := $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
-TB_PROFILE_OBJS := $(PROFILE)/syzygy.o $(PROFILE)/tbprobe.o
-STB_FLAGS := -x c++
-$(BUILD)/%.o: $(STB)/%.c
-	$(CC)  $(FLAGS) $(STB_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
-
-$(PROFILE)/%.o: $(STB)/%.c
-	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c $< -o $@
-
-endif
+#ifdef SYZYGY_TBS
+#TB_SOURCES := $(TB_SOURCES) syzygy.cpp $(STB)/tbprobe.c
+#TB_OBJS := $(BUILD)/syzygy.o $(BUILD)/tbprobe.o
+#TB_PROFILE_OBJS := $(PROFILE)/syzygy.o $(PROFILE)/tbprobe.o
+#STB_FLAGS := -x c++
+#$(BUILD)/%.o: $(STB)/%.c
+#	$(CC)  $(FLAGS) $(STB_FLAGS) $(OPT) $(DEBUG) $(CXXFLAGS) -c $< -o $@
+#
+#$(PROFILE)/%.o: $(STB)/%.c
+#	$(CC) $(STB_FLAGS) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c $< -o $@
+#
+#endif
 
 ifeq ("$(findstring UNIT_TESTS,$(DEBUG))","UNIT_TESTS")
 UNIT_TEST_SRC:=unit.cpp binformat.cpp

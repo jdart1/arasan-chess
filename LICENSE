@@ -7,7 +7,8 @@
 Arasan chess engine software, including the contents of the src, book,
 doc, prj, and tests directories of the software archive, is
 distributed under the following License:
- 
+
+Copyright 2025 by Amir Zucker
 Copyright 1994-2024 by Jon Dart
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -31,17 +32,3 @@ Copyright 1994-2024 by Jon Dart
  SOFTWARE.
 
 -----------------------------------------------------------------------------
-Notes regarding the GUI:
-
-The Arasan Windows user interface, the source of which is in the "gui"
-directory, is also under this license, with the exception of the
-"fonts" subdirectory. The fonts, which are loaded at runtime, are
-copyrighted, and use of those outside of official Arasan releases will
-require a suitable license from the copyright owner(s).
-
-Official binaries of the Arasan Windows GUI installer, which includes
-the fonts, may be freely distributed, provided that:
-
-1. It is distributed in unmodified form.
-2. No more than a nominal fee is charged for copying or media.
-

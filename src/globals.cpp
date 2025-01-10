@@ -4,9 +4,9 @@
 #include "hash.h"
 #include "scoring.h"
 #include "search.h"
-#ifdef SYZYGY_TBS
-#include "syzygy.h"
-#endif
+//#ifdef SYZYGY_TBS
+//#include "syzygy.h"
+//#endif
 #include "bitbase.cpp"
 
 #ifdef _MAC
@@ -28,12 +28,12 @@ extern "C" {
 #include <filesystem>
 #endif
 
-#ifdef SYZYGY_TBS
-static bool tb_init = false;
-
-bool globals::tb_init_done() { return tb_init; }
-int globals::EGTBMenCount = 0;
-#endif
+//#ifdef SYZYGY_TBS
+//static bool tb_init = false;
+//
+//bool globals::tb_init_done() { return tb_init; }
+//int globals::EGTBMenCount = 0;
+//#endif
 
 #ifdef _WIN32
 static constexpr char PATH_CHAR = '\\';
@@ -48,9 +48,9 @@ Options globals::options;
 
 std::mutex globals::input_lock;
 
-#ifdef SYZYGY_TBS
-std::mutex globals::syzygy_lock;
-#endif
+//#ifdef SYZYGY_TBS
+//std::mutex globals::syzygy_lock;
+//#endif
 bool globals::polling_terminated;
 std::string globals::debugPrefix;
 nnue::Network globals::network;
@@ -109,6 +109,11 @@ static void getExecutablePath(std::string &path) {
     result[0] = '\0';
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
     path = std::string(result, (count > 0) ? count : 0);
+#if defined(__APPLE__)
+    if (path.empty() && getenv("XCTestBundlePath") == nullptr) {
+        path = std::getenv("HOME");
+    }
+#endif
 #endif
 }
 
@@ -125,12 +130,18 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     if (pos == std::string::npos) {
         return fileName;
     } else {
+#if defined(__APPLE__)
+    if (getenv("XCTestBundlePath") == nullptr) {
+        return result + "/" + fileName;
+    }
+#endif
         return result.substr(0, pos + 1) + fileName;
     }
 }
 
 bool globals::initGlobals() {
-#ifndef _WIN32
+    //Does not work on iOS/VisionOS/macOS
+#if (!defined(_WIN32) && !defined(__APPLE__))
     struct rlimit rl;
     const rlim_t STACK_MAX = static_cast<rlim_t>(LINUX_STACK_SIZE);
     auto result = getrlimit(RLIMIT_STACK, &rl);
@@ -143,7 +154,7 @@ bool globals::initGlobals() {
             if (result)
             {
                 std::cerr << "failed to increase stack size" << std::endl;
-                exit(-1);
+                return false;
             }
         }
     }
@@ -228,7 +239,7 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath,
     // Also attempt to read .rc from the user's home directory.
     // If present, this overrides the file at the install location.
     if (autoLoadRC && userDir.size()) {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
         std::string userRcFile(RC_FILE_NAME);
 #else
         std::string userRcFile(".");
@@ -263,35 +274,42 @@ void globals::initGameFile() {
 }
 
 void globals::delayedInit(bool verbose) {
-#ifdef SYZYGY_TBS
-    if (options.search.use_tablebases && !globals::tb_init_done()) {
-        EGTBMenCount = 0;
-        std::string path;
-        if (options.search.syzygy_path == "") {
-            options.search.syzygy_path = derivePath("syzygy");
-        }
-        path = options.search.syzygy_path;
-        EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
-        tb_init = true;
-        if (verbose) {
-            if (EGTBMenCount) {
-                std::stringstream msg;
-                msg << debugPrefix << "found " << EGTBMenCount
-                    << "-man Syzygy tablebases in directory " << path << std::endl;
-                std::cout << msg.str();
-            } else {
-                std::cout << debugPrefix
-                          << "warning: no Syzygy tablebases found, path may be missing or invalid"
-                          << std::endl;
-            }
-        }
-    }
-#endif
+//#ifdef SYZYGY_TBS
+//    if (options.search.use_tablebases && !globals::tb_init_done()) {
+//        EGTBMenCount = 0;
+//        std::string path;
+//        if (options.search.syzygy_path == "") {
+//            options.search.syzygy_path = derivePath("syzygy");
+//        }
+//        path = options.search.syzygy_path;
+//        EGTBMenCount = SyzygyTb::initTB(options.search.syzygy_path);
+//        tb_init = true;
+//        if (verbose) {
+//            if (EGTBMenCount) {
+//                std::stringstream msg;
+//                msg << debugPrefix << "found " << EGTBMenCount
+//                    << "-man Syzygy tablebases in directory " << path << std::endl;
+//                std::cout << msg.str();
+//            } else {
+//                std::cout << debugPrefix
+//                          << "warning: no Syzygy tablebases found, path may be missing or invalid"
+//                          << std::endl;
+//            }
+//        }
+//    }
+//#endif
     if (!nnueInitDone) {
         if (options.search.nnueFile.size()) {
-            const std::string &nnuePath = options.search.nnueFile;
-            nnueInitDone =
-                loadNetwork(absolutePath(nnuePath) ? nnuePath.c_str() : derivePath(nnuePath), verbose);
+            const std::string &nnueFile = options.search.nnueFile;
+            const std::string &nnuePath = absolutePath(nnueFile) ? nnueFile.c_str() : derivePath(nnueFile);
+            
+            nnueInitDone = loadNetwork(nnuePath, verbose);
+            
+            if (!nnueInitDone) {
+                std::string home = std::getenv("HOME");
+                const std::string nnueFullPath = home + "/" + nnueFile;
+                nnueInitDone = loadNetwork(nnueFullPath, verbose);
+            }
         } else if (verbose) {
             std::cout << debugPrefix << "error: no NNUE file path was set, network not loaded"
                       << std::endl;
@@ -299,7 +317,8 @@ void globals::delayedInit(bool verbose) {
         if (!nnueInitDone) {
             // This is now a fatal error
             std::cerr << "failed to load network, terminating." << std::endl;
-            exit(-1);
+            globals::cleanupGlobals();
+            return;
         }
     }
     // also initialize the book here
@@ -315,11 +334,11 @@ void globals::delayedInit(bool verbose) {
 }
 
 void globals::unloadTb() {
-#ifdef SYZYGY_TBS
-    if (tb_init_done()) {
-        // Note: Syzygy code will free any existing memory if
-        // initialized more than once. So no need to do anything here.
-        tb_init = false;
-    }
-#endif
+//#ifdef SYZYGY_TBS
+//    if (tb_init_done()) {
+//        // Note: Syzygy code will free any existing memory if
+//        // initialized more than once. So no need to do anything here.
+//        tb_init = false;
+//    }
+//#endif
 }

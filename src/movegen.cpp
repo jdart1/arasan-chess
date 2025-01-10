@@ -5,7 +5,7 @@
 #include "globals.h"
 #include "search.h"
 #include "legal.h"
-#include "syzygy.h"
+//#include "syzygy.h"
 #include "trace.h"
 
 #include <cstddef>
@@ -501,26 +501,26 @@ uint64_t RootMoveGenerator::perft(Board &b, int depth) {
 
 int RootMoveGenerator::rank_root_moves()
 {
-#ifdef SYZYGY_TBS
-    const Material &wMat = board.getMaterial(White);
-    const Material &bMat = board.getMaterial(Black);
-    int tb_pieces = wMat.men() + bMat.men();
-    int tb_hit = 0;
-    if (tb_pieces <= globals::EGTBMenCount && !board.castlingPossible()) {
-        tb_hit = SyzygyTb::rank_root_moves(board,
-                                           board.anyRep(),
-                                           globals::options.search.syzygy_50_move_rule,
-                                           moveList);
-    }
-    if (tb_hit) {
-        // Sort moves on descending rank returned by Fathom
-        std::stable_sort(moveList.begin(),moveList.end(),
-                         [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
-    }
-    return tb_hit;
-#else
+//#ifdef SYZYGY_TBS
+//    const Material &wMat = board.getMaterial(White);
+//    const Material &bMat = board.getMaterial(Black);
+//    int tb_pieces = wMat.men() + bMat.men();
+//    int tb_hit = 0;
+//    if (tb_pieces <= globals::EGTBMenCount && !board.castlingPossible()) {
+//        tb_hit = SyzygyTb::rank_root_moves(board,
+//                                           board.anyRep(),
+//                                           globals::options.search.syzygy_50_move_rule,
+//                                           moveList);
+//    }
+//    if (tb_hit) {
+//        // Sort moves on descending rank returned by Fathom
+//        std::stable_sort(moveList.begin(),moveList.end(),
+//                         [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
+//    }
+//    return tb_hit;
+//#else
     return 0;
-#endif
+//#endif
 }
 
 unsigned mg::generateNonCaptures(const Board &board, Move *moves)
