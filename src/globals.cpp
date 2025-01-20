@@ -28,6 +28,11 @@ extern "C" {
 #include <filesystem>
 #endif
 
+#ifdef __APPLE__
+#include <CoreFoundation/CFBundle.h>
+#include <CoreFoundation/CFString.h>
+#endif
+
 //#ifdef SYZYGY_TBS
 //static bool tb_init = false;
 //
@@ -104,16 +109,38 @@ static void getExecutablePath(std::string &path) {
     if (ret > 0) {
         path = std::string(pathbuf);
     }
+#elif defined(__APPLE__)
+    //get main app bundle or test bundle if we are running xctests.
+    if (path.empty()) {
+        if (getenv("XCTestBundlePath") != nullptr) {
+            std::string env = getenv("XCTestBundlePath");
+            
+            for (const auto & entry : std::filesystem::directory_iterator(env)) {
+                if (entry.path().extension() == ".bundle") {
+                    path = entry.path().string() + "/";
+                    return;
+                }
+            }
+        } else {
+            CFBundleRef mainBundle = CFBundleGetMainBundle();
+            CFURLRef bundleUrl = CFBundleCopyBundleURL(mainBundle);
+            
+            if (bundleUrl != nullptr) {
+                CFStringRef bundleStringRef = CFURLGetString(bundleUrl);
+                std::string temp = CFStringGetCStringPtr(bundleStringRef, kCFStringEncodingUTF8);
+                std::string replaceFileURI = "file://";
+                
+                path = temp.replace(0, replaceFileURI.size(), "");
+                
+                CFRelease(bundleUrl);
+            }
+        }
+    }
 #else
     char result[PATH_MAX];
     result[0] = '\0';
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
     path = std::string(result, (count > 0) ? count : 0);
-#if defined(__APPLE__)
-    if (path.empty() && getenv("XCTestBundlePath") == nullptr) {
-        path = std::getenv("HOME");
-    }
-#endif
 #endif
 }
 
@@ -132,7 +159,7 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     } else {
 #if defined(__APPLE__)
     if (getenv("XCTestBundlePath") == nullptr) {
-        return result + "/" + fileName;
+        return result + fileName;
     }
 #endif
         return result.substr(0, pos + 1) + fileName;
@@ -213,6 +240,9 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath,
     const char *appDirEnv = "HOME";
 #endif
     std::string userDir, appDir;
+#if __APPLE__
+    getExecutablePath(appDir);
+#else
     if (std::getenv(homeDirEnv)) {
         userDir = std::getenv(homeDirEnv);
     } else {
@@ -236,6 +266,8 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath,
     } else {
         std::cerr << "warning: could not obtain application data directory location" << std::endl;
     }
+#endif
+
     // Also attempt to read .rc from the user's home directory.
     // If present, this overrides the file at the install location.
     if (autoLoadRC && userDir.size()) {
@@ -249,7 +281,11 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath,
         options.init(derivePath(userDir + PATH_CHAR, userRcFile), memorySet, cpusSet);
     }
     if (appDir.size()) {
+#if __APPLE__
+        options.learning.learn_file_name = derivePath(appDir, LEARN_FILE_NAME);
+#else
         options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
+#endif
     }
     // if book path not set in the .rc file, set a default here
     if (options.book.book_path == "") {
