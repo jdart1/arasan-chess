@@ -201,12 +201,15 @@ if that file is present.
 
 Arasan now supports chess evaluation utilizing a neural network. The
 neural network file is external to the program and is loaded at
-runtime. The file name for the network can be specified using UCI or
-CECP options, or by setting the `search.nnueFile` option in the
-arasan.rc file. There is a default network filename set there. In the
-options, if no directory path is part of the option or a relative path
-is used, the file is assumed to be in or relative to the same
-directory as the Arasan executable.
+runtime. Arasan builds embed the name of a compatible network
+file, assumed to be in the same location as the executable.
+
+A different network file name can be specified using UCI or CECP
+options, or by setting the `search.nnueFile` option in the arasan.rc
+file, but normally you should not need these settings. In the options,
+if no directory path is part of the option or a relative path is used,
+the file is assumed to be in or relative to the same directory as the
+Arasan executable.
 
 ## Tablebases
 
