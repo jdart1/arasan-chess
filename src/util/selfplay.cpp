@@ -99,14 +99,13 @@ static struct SelfPlayOptions {
     std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
-    unsigned maxBookPly = 7;
+    unsigned maxBookPly = 0;
     bool randomize = true;
-    unsigned randomizeRange = 8;
-    unsigned randomizeInterval = 2;
-    int randomTolerance = 0.75 * Params::PAWN_VALUE;
-    bool useRanking = true;
+    unsigned randomizeRange = 14;
+    unsigned randomizeInterval = 1;
+    int randomTolerance = 0.75*Params::PAWN_VALUE;
     bool limitEarlyKingMoves = true;
-    bool semiRandomize = true;
+    bool semiRandomize = false;
     RandomizeType randomizeType = RandomizeType::MultiPV;
     unsigned semiRandomizeInterval = 11;
     unsigned semiRandomPerGame = 4;
@@ -170,7 +169,7 @@ struct MoveResult {
     int score;
 };
 
-static Move pick(const Move *moves, unsigned count, ThreadData &td) {
+static Move pick(const std::array<Move,Constants::MaxMoves> &moves, unsigned count, ThreadData &td) {
     assert(count);
     std::uniform_int_distribution<unsigned> dist(0, count - 1);
     int select = dist(td.engine);
@@ -184,9 +183,8 @@ static MoveResult pick(const MoveResult *moves, unsigned count, ThreadData &td) 
     return moves[select];
 }
 
-static Move randomMove(Board &board, SearchController *searcher, Statistics &stats, ThreadData &td) {
+static Move randomMove(Board &board, Statistics &stats, ThreadData &td) {
     RootMoveGenerator mg(board);
-    Move m = NullMove;
     if (mg.moveCount() == 0) {
         if (board.isLegalDraw()) {
             stats.state = Draw;
@@ -200,67 +198,30 @@ static Move randomMove(Board &board, SearchController *searcher, Statistics &sta
         }
         return NullMove;
     }
-    if (mg.moveCount() > 1 && (sp_options.useRanking || sp_options.limitEarlyKingMoves)) {
-        Move candidates[Constants::MaxMoves], all[Constants::MaxMoves];
-        bool inCheck = board.checkStatus() == InCheck;
-        int index;
-        unsigned i = 0, j = 0;
-        if (sp_options.useRanking) {
-            for (const RootMoveGenerator::RootMove &rm : mg.getMoveList()) {
-                all[j++] = rm.move;
-            }
-            if (mg.moveCount() >= 2) {
-                RootMoveGenerator::RootMoveList mra;
-                searcher->rankMoves(board, 2, mra);
-                if (mra.size()) { // size may be zero in case of checkmate, statemate, etc.
-                    const int best = mra[0].score;
-                    auto new_end = std::remove_if(mra.begin() + 1, mra.end(),
-                                                  [&](const RootMoveGenerator::RootMove &r) -> bool {
-                                                      if (r.score < best - sp_options.randomTolerance)
-                                                          return true;
-                                                      BoardState state(board.state);
-                                                      board.doMove(r.move);
-                                                      int rep = board.repCount();
-                                                      board.undoMove(r.move, state);
-                                                      // avoid repetitions
-                                                      return rep > 0;
-                                                  });
-                    candidates[i++] = mra[0].move;
-                    for (auto it = mra.begin() + 1; it != new_end; ++it) {
-                        assert((*it).score <= best);
-                        assert((*it).score >= best - sp_options.randomTolerance);
-                        if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves &&
-                            PieceMoved(m) == King)
-                            continue;
-                        candidates[i++] = (*it).move;
-                    }
-                    assert(i);
-                }
-            }
-        } else {
-            while (!IsNull(m = (inCheck ? mg.nextEvasion(index) : mg.nextMove(index)))) {
-                assert(j < Constants::MaxMoves);
-                all[j++] = m;
-                if (!inCheck && !IsCastling(m) && sp_options.limitEarlyKingMoves &&
-                    PieceMoved(m) == King)
-                    continue;
-                assert(i < Constants::MaxMoves);
-                candidates[i++] = m;
-            }
-        }
-        if (i) {
-            m = pick(candidates, i, td);
-        } else {
-            m = pick(all, j, td);
-        }
-    } else {
-        RootMoveGenerator::RootMoveList ml(mg.getMoveList());
-        assert(ml.size() != 0);
-        std::uniform_int_distribution<unsigned> dist(0, ml.size() - 1);
-        unsigned pick = dist(td.engine);
-        m = ml[pick].move;
+    std::array<Move, Constants::MaxMoves> candidates;
+    const bool inCheck = board.checkStatus() == InCheck;
+    unsigned i = 0;
+    RootMoveGenerator::RootMoveList rmg;
+    rmg.assign(mg.getMoveList().begin(), mg.getMoveList().end());
+    auto new_end =
+        std::remove_if(rmg.begin(), rmg.end(), [&](const RootMoveGenerator::RootMove &r) -> bool {
+            BoardState state(board.state);
+            board.doMove(r.move);
+            int rep = board.repCount();
+            board.undoMove(r.move, state);
+            // avoid repetitions, losing moves and early king moves
+            return IsCastling(r.move) ? false : (seeSign(board, r.move, -sp_options.randomTolerance) == 0 || rep > 0 ||
+                    (!inCheck && sp_options.limitEarlyKingMoves &&
+                     PieceMoved(r.move) == King));
+        });
+    for (auto it = rmg.begin(); it != new_end; it++) {
+        candidates[i++] = (*it).move;
     }
-    return m;
+    if (i) {
+        return pick(candidates, i, td);
+    } else { // no moves match criteria
+        return NullMove;
+    }
 }
 
 class Monitor {
@@ -347,7 +308,7 @@ static void selfplay(ThreadData &td) {
         for (unsigned ply = 0; ply <= sp_options.maxOutPly && !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
-            if (ply <= sp_options.maxBookPly) {
+            if (sp_options.maxBookPly && ply < sp_options.maxBookPly) {
                 std::unique_lock<std::mutex> lock(bookLock);
                 m = globals::openingBook.pick(board, false);
                 if (IsNull(m)) {
@@ -360,10 +321,10 @@ static void selfplay(ThreadData &td) {
                 bool skipRandom = (int(board.men()) <= globals::EGTBMenCount) ||
                                   (std::abs(prevScore) >= 10 * Params::PAWN_VALUE);
                 if (sp_options.randomize &&
-                    (ply > bookMoves) &&
-                    (ply <= bookMoves + sp_options.randomizeRange) &&
+                    (ply >= bookMoves) &&
+                    (ply < bookMoves + sp_options.randomizeRange) &&
                     rand_dist(td.engine) == sp_options.randomizeInterval) {
-                    m = randomMove(board, searcher, stats, td);
+                    m = randomMove(board, stats, td);
                     // TBD: we don't associate any prior FENS with the current
                     // game result after a random move. Stockfish though does do
                     // this.
@@ -457,8 +418,9 @@ static void selfplay(ThreadData &td) {
                     adjudicated = true;
                 }
             }
-            if (!IsNull(m)) {
-                // TBD: we can rarely get an invalid move - after termination?
+            if (IsNull(m)) {
+                break;
+            } else {
                 if (!validMove(board,m)) {
                     std::cerr << "warning: invalid move from search: ";
                     MoveImage(m,std::cerr);
@@ -492,12 +454,6 @@ static void selfplay(ThreadData &td) {
                 if (sp_options.saveGames) {
                     td.gameMoves.add_move(board, m, image);
                 }
-            } else {
-                if (!terminated && !adjudicated) {
-                    // unexpected null move
-                    std::cerr << "null move from search!" << std::flush << std::endl;
-                }
-                break;
             }
         }
         if (result == Result::Unknown) {
