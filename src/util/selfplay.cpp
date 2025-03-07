@@ -1,4 +1,4 @@
-// Copyright 2021-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "binformat.h"
@@ -75,7 +75,7 @@ static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
 static std::atomic<unsigned> posCounter(0);
 
-static constexpr int MAX_MULTIPV = 4;
+static constexpr int MAX_MULTIPV = 10;
 
 static struct SelfPlayOptions {
     // Note: not all options are command-line settable, currently.
@@ -101,14 +101,14 @@ static struct SelfPlayOptions {
     bool saveGames = false;
     unsigned maxBookPly = 0;
     bool randomize = true;
-    unsigned randomizeRange = 14;
+    unsigned randomizeRange = 2;
     unsigned randomizeInterval = 1;
     int randomTolerance = 0.75*Params::PAWN_VALUE;
     bool limitEarlyKingMoves = true;
-    bool semiRandomize = false;
+    bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
-    unsigned semiRandomizeInterval = 11;
-    unsigned semiRandomPerGame = 4;
+    unsigned semiRandomizeInterval = 1;
+    unsigned semiRandomPerGame = 12;
     unsigned multipv_limit = 4;
     int multiPVMargin = static_cast<int>(0.2 * Params::PAWN_VALUE);
     bool skipNonQuiet = true;
@@ -169,7 +169,8 @@ struct MoveResult {
     int score;
 };
 
-static Move pick(const std::array<Move,Constants::MaxMoves> &moves, unsigned count, ThreadData &td) {
+template <size_t size>
+static Move pick(const std::array<Move,size> &moves, unsigned count, ThreadData &td) {
     assert(count);
     std::uniform_int_distribution<unsigned> dist(0, count - 1);
     int select = dist(td.engine);
@@ -181,6 +182,28 @@ static MoveResult pick(const MoveResult *moves, unsigned count, ThreadData &td) 
     std::uniform_int_distribution<unsigned> dist(0, count - 1);
     int select = dist(td.engine);
     return moves[select];
+}
+
+static const Bitboard center(1ULL<<chess::D4 | 1ULL<<chess::E4 | 1ULL<<chess::D5 | 1ULL<<chess::E5);
+
+static Bitboard centerAttacks(const Board &board, PieceType p, Square sq) {
+    assert(board[sq] != EmptyPiece);
+    ColorType c = PieceColor(board[sq]);
+    switch (p) {
+    case Pawn:
+        return Attacks::pawn_attacks[sq][c] & center;
+    case Knight:
+        return Attacks::knight_attacks[sq] & center;
+    case Bishop:
+        return Attacks::bishopAttacks(sq,center);
+    case Rook:
+        return Attacks::rookAttacks(sq,center);
+    case Queen:
+        return Attacks::queenAttacks(sq,center);
+    case King:
+    default:
+        return Bitboard(0);
+    }
 }
 
 static Move randomMove(Board &board, Statistics &stats, ThreadData &td) {
@@ -198,11 +221,12 @@ static Move randomMove(Board &board, Statistics &stats, ThreadData &td) {
         }
         return NullMove;
     }
-    std::array<Move, Constants::MaxMoves> candidates;
+    std::array<Move, Constants::MaxMoves*2> candidates;
     const bool inCheck = board.checkStatus() == InCheck;
     unsigned i = 0;
     RootMoveGenerator::RootMoveList rmg;
     rmg.assign(mg.getMoveList().begin(), mg.getMoveList().end());
+    // collect moves that attack center
     auto new_end =
         std::remove_if(rmg.begin(), rmg.end(), [&](const RootMoveGenerator::RootMove &r) -> bool {
             BoardState state(board.state);
@@ -215,10 +239,16 @@ static Move randomMove(Board &board, Statistics &stats, ThreadData &td) {
                      PieceMoved(r.move) == King));
         });
     for (auto it = rmg.begin(); it != new_end; it++) {
-        candidates[i++] = (*it).move;
+        Move m = (*it).move;
+        candidates[i++] = m;
+        if (centerAttacks(board,PieceMoved(m),DestSquare(m))) {
+            candidates[i++] = m;
+            candidates[i++] = m;
+            candidates[i++] = m;
+        }
     }
     if (i) {
-        return pick(candidates, i, td);
+        return pick<Constants::MaxMoves*2>(candidates, i, td);
     } else { // no moves match criteria
         return NullMove;
     }
