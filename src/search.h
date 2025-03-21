@@ -1,4 +1,4 @@
-// Copyright 1994-2024 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2025 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H
@@ -10,7 +10,7 @@
 #include "movegen.h"
 #include "threadp.h"
 #include "globals.h"
-#include "nnueintf.h"
+#include "evaluate.h"
 #include "options.h"
 extern "C" {
 #include <memory.h>
@@ -43,7 +43,8 @@ struct NodeInfo {
                  best_count(0),
 #endif
                  ply(0),
-                 depth(0)
+                 depth(0),
+                 stm(White)
         {
         }
     score_t best_score;
@@ -65,9 +66,12 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
+    // variables needed for NNUE evaluation:
     nnue::Network::AccumulatorType accum;
-    std::array<DirtyState, 3> dirty;
+    std::array<nnue::DirtyState, 3> dirty;
     unsigned dirty_num;
+    ColorType stm;
+    Square kingSquare[2];
 
     int PV() const {
         return (beta > alpha+1);
@@ -81,10 +85,6 @@ struct NodeInfo {
         return score > best_score && score < beta;
     }
 
-    void clearNNUEState() {
-        accum.setEmpty();
-        dirty_num = 0;
-    }
 };
 
 // Helper class to save/restore key node parameters
@@ -316,6 +316,16 @@ protected:
 
     bool maxDepth(const NodeInfo *n) const noexcept {
         return n->ply >= Constants::MaxPly-1;
+    }
+
+    // called when preparing a recursive search w/o a move,
+    // for example IID
+    void clearNNUEState(NodeInfo *n) {
+        (n+1)->accum.setEmpty();
+        (n+1)->dirty_num = 0;
+        (n+1)->stm = n->stm;
+        (n+1)->kingSquare[White] = n->kingSquare[White];
+        (n+1)->kingSquare[Black] = n->kingSquare[Black];
     }
 
     SearchController *controller;

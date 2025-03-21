@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
 add_compile_definitions(ARASAN_VERSION=25.0)
-set(NETWORK arasanv3-20241109.nnue CACHE STRING "default network file name")
+set(NETWORK arasanv4-20250308.nnue CACHE STRING "default network file name")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -68,7 +68,7 @@ endif(SYZYGY_TBS)
 add_compile_definitions(NETWORK=${NETWORK})
 set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
 include_directories(${NNUE_DIR})
-list(APPEND EXTRA_SRC nnueintf.cpp)
+list(APPEND EXTRA_SRC evaluate.cpp)
 
 if(64BIT)
     set(EXE_NAME ${EXE_NAME}-64)
@@ -187,9 +187,7 @@ add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp ${UTIL_SRC})
 
 add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/binformat.cpp)
 
-add_executable (checkbin EXCLUDE_FROM_ALL util/checkbin.cpp ${UTIL_SRC} util/binformat.cpp)
-
-add_executable (convertbin EXCLUDE_FROM_ALL util/convertbin.cpp ${UTIL_SRC} util/binformat.cpp)
+add_executable (post_process_nn EXCLUDE_FROM_ALL util/post_process_nn.cpp ${UTIL_SRC})
 
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
 target_link_libraries(playchess PRIVATE Threads::Threads)
@@ -197,12 +195,11 @@ target_link_libraries(makeeco PRIVATE Threads::Threads)
 target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
-target_link_libraries(checkbin PRIVATE Threads::Threads)
-target_link_libraries(convertbin PRIVATE Threads::Threads)
+target_link_libraries(post_process_nn PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay checkbin convertbin PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay post_process_nn PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 
-add_dependencies(utils playchess makeeco ecocoder makebook selfplay checkbin convertbin)
+add_dependencies(utils playchess makeeco ecocoder makebook selfplay post_process_nn)
 

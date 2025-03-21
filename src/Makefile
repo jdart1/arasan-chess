@@ -1,6 +1,6 @@
 #
 # Gnu Makefile for Arasan
-# Copyright 2004-2024 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2025 by Jon Dart. All Rights Reserved.
 #
 VERSION = 25.0
 
@@ -35,7 +35,7 @@ HWLOC=/usr/local
 UTIL = util
 
 # default network
-NETWORK ?= arasanv3-20241109.nnue
+NETWORK ?= arasanv4-20250308.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
@@ -56,7 +56,6 @@ ifdef TUNE
 FLAGS := $(FLAGS) -DTUNE
 endif
 NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
-NNUE_SRC := nnueintf.cpp
 
 #PROF     = -pg
 #DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
@@ -281,7 +280,7 @@ endif
 default: dirs $(EXPORT)/$(ARASANX)
 
 utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
-$(EXPORT)/selfplay $(EXPORT)/checkbin $(EXPORT)/convertbin
+$(EXPORT)/selfplay $(EXPORT)/post_process_nn
 
 clean: dirs
 	rm -f $(BUILD)/*.o
@@ -328,6 +327,9 @@ endif
 $(PROFILE)/%.o: %.cpp
 	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
 
+$(PROFILE)/%.o: nnue/%.cpp
+	$(CC) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
+
 profiled: dirs
 	ln -s -f ../network/*.nnue $(PROFILE)
 	@$(MAKE) PASS=1 BUILD_TYPE=$(BUILD_TYPE) PGO=1 profile
@@ -370,7 +372,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC) $(UNIT_TEST_SRC)
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp $(UNIT_TEST_SRC)
 
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -381,7 +383,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp $(NNUE_SRC)
+legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp $(UTIL_SOURCES)
 
@@ -393,9 +395,7 @@ PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
 SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) binformat.cpp
 
-CHECKBIN_SOURCES = checkbin.cpp $(UTIL_SOURCES) binformat.cpp
-
-CONVERTBIN_SOURCES = convertbin.cpp $(UTIL_SOURCES) binformat.cpp
+POST_PROCESS_NN_SOURCES = post_process_nn.cpp $(UTIL_SOURCES)
 
 ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
@@ -404,8 +404,7 @@ MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS)
 ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-CHECKBIN_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(CHECKBIN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-CONVERTBIN_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(CONVERTBIN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+POST_PROCESS_NN_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(POST_PROCESS_NN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
@@ -422,11 +421,8 @@ $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/checkbin:  $(CHECKBIN_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(CHECKBIN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/checkbin -lstdc++ $(LIBS) $(SMPLIB)
-
-$(EXPORT)/convertbin:  $(CONVERTBIN_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(CONVERTBIN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/convertbin -lstdc++ $(LIBS) $(SMPLIB)
+$(EXPORT)/post_process_nn:  $(POST_PROCESS_NN_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(POST_PROCESS_NN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/post_process_nn -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx

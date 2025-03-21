@@ -1,4 +1,4 @@
-// Copyright 1987-2024 by Jon Dart.  All Rights Reserved.
+// Copyright 1987-2025 by Jon Dart.  All Rights Reserved.
 
 #include "search.h"
 #include "globals.h"
@@ -1552,6 +1552,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->depth = depth;
     node->excluded = NullMove;
     node->eval = Constants::INVALID_SCORE;
+    node->stm = board.sideToMove();
+    node->kingSquare[White] = board.kingSquare(White);
+    node->kingSquare[Black] = board.kingSquare(Black);
 
     int move_index = 0;
     score_t hibound = beta;
@@ -2925,7 +2928,7 @@ score_t Search::search()
     if (pruneOk && depth <= RAZOR_DEPTH && board.getMaterial(board.sideToMove()).hasPieces()) {
         assert(node->eval != Constants::INVALID_SCORE);
         if (node->eval < node->beta - razorMargin(depth)) {
-            (node+1)->clearNNUEState();
+            clearNNUEState(node);
             score_t v = quiesce(node->alpha,node->beta,ply+1,0);
 #ifdef _TRACE
             if (mainThread()) {
@@ -3009,7 +3012,7 @@ score_t Search::search()
                     }
 #endif
                     // entering a new node w/o a move, so reset next node state
-                    (node+1)->clearNNUEState();
+                    clearNNUEState(node);
                     nscore = search(node->beta-1, node->beta, ply+1, nu_depth, VERIFY);
                     if (nscore == -Illegal) {
 #ifdef _TRACE
@@ -3140,7 +3143,7 @@ score_t Search::search()
         }
 #endif
         // Call search routine at lower depth to get a 1st move to try.
-        (node+1)->clearNNUEState();
+        clearNNUEState(node);
         //
         // Note: we do not push down the node stack because we want this
         // search to have all the same parameters (including ply) as the
@@ -3218,7 +3221,7 @@ score_t Search::search()
 #endif
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
-                node->clearNNUEState();
+                clearNNUEState(node);
                 score_t singularResult = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
                 if (singularResult < nu_beta) {
 #ifdef _TRACE

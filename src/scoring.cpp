@@ -7,7 +7,7 @@
 #include "globals.h"
 #include "material.h"
 #include "movegen.h"
-#include "nnueintf.h"
+#include "nnue.h"
 #include "search.h" // for NodeInfo
 #include <cassert>
 #include <cstddef>
@@ -2201,42 +2201,43 @@ void Scoring::clearHashTables() {
 }
 
 score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
-   Position p(board,node);
-   ChessInterface intf(&p);
-   score_t nnval;
-   const unsigned bucket = nnue::Evaluator<ChessInterface>::getOutputBucket(intf);
-   if (node) {
-      nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::White);
-      nnue::Evaluator<ChessInterface>::updateAccum(globals::network,intf,nnue::Black);
+    score_t nnval;
+    const unsigned bucket = nnue::Evaluator::getOutputBucket(board);
+    if (node) {
+        nnue::Evaluator::updateAccum(globals::network, board, node, White);
+        nnue::Evaluator::updateAccum(globals::network, board, node, Black);
 #ifdef _DEBUG
-      assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Lower) == nnue::AccumulatorState::Computed);
-      assert(intf.getAccumulator().getState(nnue::AccumulatorHalf::Upper) == nnue::AccumulatorState::Computed);
-      score_t score1 = static_cast<score_t>(globals::network.evaluate(
-          node->accum, board.sideToMove() == White ? nnue::White : nnue::Black, bucket));
-      score_t score2 = static_cast<score_t>(
-          nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network, intf));
-      if (score1 != score2) {
-          std::cout << board << std::endl;
-          NodeInfo *n = node;
-          while (n->ply) {
-              --n;
-              std::cout << n->ply << " ";
-              MoveImage(n->last_move,std::cout);
-              std::cout << std::endl;
-          }
-          assert(0);
-      }
-      nnval = score1;
+        assert(node->accum.getState(nnue::AccumulatorHalf::Lower) ==
+               nnue::AccumulatorState::Computed);
+        assert(node->accum.getState(nnue::AccumulatorHalf::Upper) ==
+               nnue::AccumulatorState::Computed);
+        score_t score1 = static_cast<score_t>(
+            globals::network.evaluate(node->accum, board.sideToMove(), bucket));
+        // non-incremental eval:
+        score_t score2 =
+            static_cast<score_t>(nnue::Evaluator::fullEvaluate(globals::network, board));
+        if (score1 != score2) {
+            std::cout << board << std::endl;
+            NodeInfo *n = node;
+            while (n->ply) {
+                --n;
+                std::cout << "king positions " << n->kingSquare[White] << ' ' << n->kingSquare[Black] << std::endl;
+                std::cout << n->ply << " ";
+                MoveImage(n->last_move, std::cout);
+                std::cout << std::endl;
+            }
+            assert(0);
+        }
+        nnval = score1;
 #else
-      nnval = static_cast<score_t>(globals::network.evaluate(node->accum,
-                                                             board.sideToMove() == White ? nnue::White : nnue::Black,
-                                                             bucket));
+        nnval = static_cast<score_t>(
+            globals::network.evaluate(node->accum, board.sideToMove(), bucket));
 #endif
-   }
-   else {
-      nnval = static_cast<score_t>(nnue::Evaluator<ChessInterface>::fullEvaluate(globals::network,intf));
-   }
-   int ply = node ? node->ply : 0;
-   return std::clamp(nnval, -Constants::MATE + (ply - 1), Constants::MATE - (ply - 1));
+    } else {
+        nnval = static_cast<score_t>(
+            nnue::Evaluator::fullEvaluate(globals::network, board));
+    }
+    int ply = node ? node->ply : 0;
+    return std::clamp(nnval, -Constants::MATE + (ply - 1), Constants::MATE - (ply - 1));
 }
 

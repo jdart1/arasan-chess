@@ -1,0 +1,45 @@
+// Copyright 2024-2025 by Jon Dart. All Rights Reserved
+#ifndef _NETWORK_PARAMS
+#define _NETWORK_PARAMS
+
+struct NetworkParams {
+
+static constexpr unsigned KING_BUCKETS = 9;
+
+static constexpr unsigned OUTPUT_BUCKETS = 8;
+
+static constexpr unsigned BUCKET_DIVISOR = (32 + OUTPUT_BUCKETS - 1) / OUTPUT_BUCKETS;
+
+static constexpr unsigned HIDDEN_WIDTH = 1536;
+
+// input quantization, i.e. 0..1 in float domain is
+// 0 .. NETWORK_QA in integer domain.
+static constexpr int NETWORK_QA = 255;
+// weight quantization, i.e. resolution of the weights. Weight of 1 in
+// integer domain has NETWORK_QB levels
+static constexpr int NETWORK_QB = 64;
+// network output value is multiplied by this to obtain position score
+static constexpr int OUTPUT_SCALE = 400;
+
+// clang-format off
+static constexpr unsigned KING_BUCKETS_MAP[] = {
+    0, 1, 2, 3, 3, 2, 1, 0,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    6, 6, 7, 7, 7, 7, 6, 6,
+    6, 6, 7, 7, 7, 7, 6, 6,
+    8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8};
+// clang-format on
+
+static inline unsigned getOutputBucket(unsigned pieceCount) {
+    return (pieceCount - 2) / BUCKET_DIVISOR;
+}
+
+// version of the network
+static constexpr uint32_t NN_VERSION = 0x7c802d9au;
+
+};
+
+#endif

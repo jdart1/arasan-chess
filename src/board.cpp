@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017-2021, 2023 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2021, 2023, 2025 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"
@@ -8,12 +8,12 @@
 #include "bhash.h"
 #include "movegen.h"
 #include "search.h"
-#include "nnueintf.h"
 #include <memory.h>
 #include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <unordered_set>
@@ -174,33 +174,30 @@ Board::Board()
    reset();
 }
 
-Board::Board(const Board &b)
-{
-   // Copy all contents except the repetition list
-   memcpy(&contents,&b.contents,(uint8_t*)repList-(uint8_t*)&contents);
-   // Copy the repetition table
-   int rep_entries = (int)(b.repListHead - b.repList);
-   assert(rep_entries>=0 && rep_entries<RepListSize);
-   if (rep_entries) {
-     memcpy(repList,b.repList,sizeof(hash_t)*rep_entries);
-   }
-   repListHead = repList + rep_entries;
+Board::Board(const Board &b) {
+    // Copy all contents except the repetition list
+    std::memcpy(&contents, &b.contents, (uint8_t *)repList - (uint8_t *)&contents);
+    // Copy the repetition table
+    int rep_entries = (int)(b.repListHead - b.repList);
+    assert(rep_entries >= 0 && rep_entries < RepListSize);
+    if (rep_entries) {
+        std::memcpy(repList, b.repList, sizeof(hash_t) * rep_entries);
+    }
+    repListHead = repList + rep_entries;
 }
 
-Board &Board::operator = (const Board &b)
-{
-   if (&b != this)
-   {
-      // Copy all contents except the repetition list
-      memcpy(&contents,&b.contents,(uint8_t*)repList-(uint8_t*)&contents);
-      // Copy the repetition table
-      int rep_entries = (int)(b.repListHead - b.repList);
-      if (rep_entries) {
-          memcpy(repList,b.repList,sizeof(hash_t)*rep_entries);
-      }
-      repListHead = repList + rep_entries;
-   }
-   return *this;
+Board &Board::operator=(const Board &b) {
+    if (&b != this) {
+        // Copy all contents except the repetition list
+        memcpy(&contents, &b.contents, (uint8_t *)repList - (uint8_t *)&contents);
+        // Copy the repetition table
+        int rep_entries = (int)(b.repListHead - b.repList);
+        if (rep_entries) {
+            memcpy(repList, b.repList, sizeof(hash_t) * rep_entries);
+        }
+        repListHead = repList + rep_entries;
+    }
+    return *this;
 }
 
 Board::~Board()
@@ -282,6 +279,8 @@ void Board::doNull(NodeInfo *node)
    if (node) {
       (node+1)->dirty_num = 0;
       (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+      (node+1)->stm = side;
+      std::memcpy((node+1)->kingSquare,node->kingSquare,sizeof(Square)*2);
    }
    assert(repListHead-repList < (int)RepListSize);
    assert(state.hashCode == BoardHash::hashCode(*this));
@@ -297,6 +296,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
    if (node) {
        (node+1)->dirty_num = 0;
        (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+       (node+1)->stm = OppositeColor(node->stm);
+       std::memcpy((node+1)->kingSquare,node->kingSquare,sizeof(Square)*2);
    }
    if (state.enPassantSq != InvalidSquare)
    {
@@ -353,12 +354,9 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          setAll(White,newrooksq);
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
-                                             static_cast<nnue::Square>(newkp),
-                                             nnue::WhiteKing);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::WhiteRook);
+             (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, WhiteKing);
+             (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, WhiteRook);
+             (node+1)->kingSquare[White] = newkp;
          }
       }
       else if (moveType == QCastle)
@@ -391,12 +389,9 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          setAll(White,newrooksq);
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
-                                             static_cast<nnue::Square>(newkp),
-                                             nnue::WhiteKing);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::WhiteRook);
+             (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, WhiteKing);
+             (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, WhiteRook);
+             (node+1)->kingSquare[White] = newkp;
          }
       }
       else // not castling
@@ -408,9 +403,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          Piece capture = contents[dest]; // what we captured
          if (node && moveType != Promotion) {
              (node+1)->dirty_num = 1;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(start),
-                                             static_cast<nnue::Square>(dest),
-                                             static_cast<nnue::Piece>(MakePiece(PieceMoved(move),White)));
+             (node+1)->dirty[0] = nnue::DirtyState(start,dest,MakePiece(PieceMoved(move),White));
          }
          switch (TypeOfPiece(contents[StartSquare(move)])) {
          case Empty: break;
@@ -456,12 +449,10 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                   break;
                }
                if (node) {
-                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(start),
-                                                                     nnue::InvalidSquare,
-                                                                     nnue::WhitePawn);
-                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(nnue::InvalidSquare,
-                                                                     static_cast<nnue::Square>(dest),
-                                                                     static_cast<nnue::Piece>(MakePiece(PromoteTo(move),White)));
+                   (node + 1)->dirty[(node + 1)->dirty_num++] =
+                       nnue::DirtyState(start, InvalidSquare, WhitePawn);
+                   (node + 1)->dirty[(node + 1)->dirty_num++] =
+                       nnue::DirtyState(InvalidSquare, dest, MakePiece(PromoteTo(move), White));
                }
                break;
             default:
@@ -520,14 +511,14 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             state.hashCode ^= w_castle_status[(int)castleStatus(White)];
             state.hashCode ^= w_castle_status[(int)CantCastleEitherSide];
             state.castleStatus[White] = CantCastleEitherSide;
+            if (node) (node+1)->kingSquare[White] = dest;
             break;
          }
          contents[start] = EmptyPiece;
          if (capture != EmptyPiece)
          {
             if (node) {
-              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::InvalidSquare,
-                                                                  static_cast<nnue::Piece>(capture));
+                (node+1)->dirty[(node+1)->dirty_num++] = nnue::DirtyState(target, InvalidSquare, capture);
             }
             state.moveCount = 0;
             assert(target != InvalidSquare);
@@ -615,12 +606,9 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          setAll(Black,newrooksq);
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
-                                             static_cast<nnue::Square>(newkp),
-                                             nnue::BlackKing);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::BlackRook);
+             (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, BlackKing);
+             (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, BlackRook);
+             (node+1)->kingSquare[Black] = newkp;
          }
       }
       else if (moveType == QCastle)
@@ -653,12 +641,9 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          setAll(Black,newrooksq);
          if (node) {
              (node+1)->dirty_num = 2;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(kp),
-                                             static_cast<nnue::Square>(newkp),
-                                             nnue::BlackKing);
-             (node+1)->dirty[1] = DirtyState(static_cast<nnue::Square>(oldrooksq),
-                                             static_cast<nnue::Square>(newrooksq),
-                                             nnue::BlackRook);
+             (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, BlackKing);
+             (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, BlackRook);
+             (node+1)->kingSquare[Black] = newkp;
          }
       }
       else // not castling
@@ -670,9 +655,9 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          Piece capture = contents[dest]; // what we captured
          if (node && moveType != Promotion) {
              (node+1)->dirty_num = 1;
-             (node+1)->dirty[0] = DirtyState(static_cast<nnue::Square>(start),
-                                             static_cast<nnue::Square>(dest),
-                                             static_cast<nnue::Piece>(MakePiece(PieceMoved(move),Black)));
+             (node+1)->dirty[0] = nnue::DirtyState(start,
+                                             dest,
+                                             MakePiece(PieceMoved(move),Black));
          }
          switch (TypeOfPiece(contents[StartSquare(move)])) {
          case Empty: break;
@@ -718,12 +703,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                   break;
                }
                if (node) {
-                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(start),
-                                                                     nnue::InvalidSquare,
-                                                                     nnue::BlackPawn);
-                 (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(nnue::InvalidSquare,
-                                                                     static_cast<nnue::Square>(dest),
-                                                                     static_cast<nnue::Piece>(MakePiece(PromoteTo(move),Black)));
+                   (node+1)->dirty[(node+1)->dirty_num++] = nnue::DirtyState(start, InvalidSquare, BlackPawn);
+                   (node+1)->dirty[(node+1)->dirty_num++] = nnue::DirtyState(InvalidSquare, dest, MakePiece(PromoteTo(move),Black));
                }
                break;
             default:
@@ -782,14 +763,14 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             state.hashCode ^= b_castle_status[(int)castleStatus(Black)];
             state.hashCode ^= b_castle_status[(int)CantCastleEitherSide];
             state.castleStatus[Black] = CantCastleEitherSide;
+            if (node) (node+1)->kingSquare[Black] = dest;
             break;
          }
          contents[start] = EmptyPiece;
          if (capture != EmptyPiece)
          {
             if (node) {
-              (node+1)->dirty[(node+1)->dirty_num++] = DirtyState(static_cast<nnue::Square>(target),nnue::InvalidSquare,
-                                                                  static_cast<nnue::Piece>(capture));
+                (node+1)->dirty[(node+1)->dirty_num++] = nnue::DirtyState(target, InvalidSquare, capture);
             }
             state.moveCount = 0;
             assert(OnBoard(target));

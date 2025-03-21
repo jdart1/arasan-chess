@@ -601,11 +601,11 @@
     <ClInclude Include="..\src\chess.h" />
     <ClInclude Include="..\src\constant.h" />
     <ClInclude Include="..\src\debug.h" />
+    <ClInclude Include="..\src\evaluate.h" />
     <ClInclude Include="..\src\hash.h" />
     <ClInclude Include="..\src\input.h" />
     <ClInclude Include="..\src\material.h" />
     <ClInclude Include="..\src\movegen.h" />
-    <ClInclude Include="..\src\nnueintf.h" />
     <ClInclude Include="..\src\nnue\nnue.h" />
     <ClInclude Include="..\src\searchc.h" />
     <ClInclude Include="..\src\see.h" />
@@ -646,6 +646,7 @@
     <ClCompile Include="..\src\eco.cpp" />
     <ClCompile Include="..\src\ecodata.cpp" />
     <ClCompile Include="..\src\epdrec.cpp" />
+    <ClCompile Include="..\src\evaluate.cpp" />
     <ClCompile Include="..\src\globals.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">Disabled</Optimization>
@@ -684,12 +685,6 @@
     <ClCompile Include="..\src\material.cpp" />
     <ClCompile Include="..\src\movearr.cpp" />
     <ClCompile Include="..\src\movegen.cpp" />
-    <ClCompile Include="..\src\nnueintf.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\notation.cpp" />
     <ClCompile Include="..\src\options.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">_64BIT;_CONSOLE;NOMINMAX;_DEBUG;WIN64;_WINDOWS;SMP;SMP_STATS;_CRT_SECURE_NO_DEPRECATE;USE_INTRINSICS;SYZYGY_TBS;ARASAN_VERSION=22.3;%(PreprocessorDefinitions)</PreprocessorDefinitions>

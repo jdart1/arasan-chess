@@ -9,8 +9,7 @@ following other console programs:
 - ecococder - adds ECO codes to a PGN file
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
 - selfplay - generates positions for NNUE tuning
-- checkbin - checks for errors in NNUE training files
-- convertbin - converts between Stockfish bin and bullet NNUE training formats
+- post_process_nn - converts quantised network file from bullet to Arasan format
 
 Following is a sketch of the Arasan source directory tree:
 

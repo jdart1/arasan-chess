@@ -1,5 +1,5 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
-# Copyright 2004-2024 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2025 by Jon Dart. All Rights Reserved.
 #
 VERSION=25.0
 LINK_VERSION=25.0
@@ -110,7 +110,7 @@ NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 !Endif
-NETWORK = arasanv3-20241109.nnue
+NETWORK = arasanv4-20250308.nnue
 NNUE_FLAGS=/Innue -DNETWORK=$(NETWORK)
 
 !Ifdef ARASAN_VERSION
@@ -218,7 +218,7 @@ default: dirs $(BUILD)\$(ARASANX).exe
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe \
-$(BUILD)\checkbin.exe $(BUILD)\convertbin.exe
+$(BUILD)\post_process_nn.exe
 
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
@@ -231,8 +231,8 @@ $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
-NNUE_OBJS = $(BUILD)\nnueintf.obj
-NNUE_PROFILE_OBJS = $(PROFILE)\nnueintf.obj
+NNUE_OBJS = $(BUILD)\evaluate.obj
+NNUE_PROFILE_OBJS = $(PROFILE)\evaluate.obj
 
 ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
 $(BUILD)\protocol.obj $(BUILD)\input.obj \
@@ -287,9 +287,7 @@ PLAYCHESS_OBJS = $(BUILD)\playchess.obj $(UTIL_OBJS)
 
 SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS) $(BUILD)\binformat.obj
 
-CHECKBIN_OBJS = $(BUILD)\checkbin.obj $(UTIL_OBJS) $(BUILD)\binformat.obj
-
-CONVERTBIN_OBJS = $(BUILD)\convertbin.obj $(UTIL_OBJS) $(BUILD)\binformat.obj
+POST_PROCESS_NN_OBJS = $(BUILD)\post_process_nn.obj $(UTIL_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
     $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /c /Fo$@ $<
@@ -318,11 +316,8 @@ $(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
 $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
         $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\selfplay.exe
 
-$(BUILD)\checkbin.exe: dirs $(CHECKBIN_OBJS)
-        $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\checkbin.exe
-
-$(BUILD)\convertbin.exe: dirs $(CONVERTBIN_OBJS)
-        $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\convertbin.exe
+$(BUILD)\post_process_nn.exe: dirs $(POST_PROCESS_NN_OBJS)
+        $(LD) $(POST_PROCESS_NN_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\post_process_nn.exe
 
 $(PROFILE)\$(ARASANX).exe: $(ARASANX_PROFILE_OBJS)
 !If "$(CC)"=="clang-cl"

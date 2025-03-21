@@ -6,6 +6,3 @@
 	path = tools/stats
 	url = https://www.github.com/jdart1/stats
         ignore = dirty
-[submodule "src/nnue"]
-	path = src/nnue
-	url = https://github.com/jdart1/nnue.git
