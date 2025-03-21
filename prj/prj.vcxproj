@@ -166,7 +166,7 @@
     <OutDir>..\win32\Release\</OutDir>
     <IntDir>..\win32\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)..\src;$(WindowsSdk_71A_IncludePath);$(VC_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <TargetName>arasanx-32</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">
@@ -174,35 +174,35 @@
     <OutDir>..\win64\release\</OutDir>
     <IntDir>..\win64\release\</IntDir>
     <TargetName>arasanx-64</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath);nnue;syzygy\src</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">
     <OutDir>..\win32\debug\</OutDir>
     <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
     <TargetName>arasanx-32</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(WindowsSdk_71A_IncludePath);$(VC_IncludePath);$(WindowsSDK_IncludePath);nnue;syzygy\src</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">
     <OutDir>..\win32\debug\</OutDir>
     <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
     <TargetName>tuner</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">
     <OutDir>..\win32\debug\</OutDir>
     <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
     <TargetName>tuner</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">
     <LinkIncremental />
     <TargetName>arasanx-64</TargetName>
     <OutDir>..\win64\Debug\</OutDir>
     <IntDir>..\win64\Debug\</IntDir>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath);nnue;syzygy\src</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <SourcePath>$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">
@@ -211,6 +211,7 @@
     <OutDir>..\win64\Debug\</OutDir>
     <IntDir>..\win64\tuner-Debug\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">
     <LinkIncremental />
@@ -219,32 +220,33 @@
     <IntDir>..\win64\tuner-Debug\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableCppCoreCheck>true</EnableCppCoreCheck>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">
     <OutDir>..\win32\debug\</OutDir>
     <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">
     <OutDir>..\win32\debug\</OutDir>
     <IntDir>..\win32\debug\</IntDir>
     <LinkIncremental />
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">
     <LinkIncremental />
     <OutDir>..\win64\debug\</OutDir>
     <IntDir>..\win64\debug\</IntDir>
     <TargetName>makebook</TargetName>
-    <IncludePath>$(ProjectDir)..\src;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">
     <LinkIncremental />
     <OutDir>..\win64\debug\</OutDir>
     <IntDir>..\win64\debug\</IntDir>
     <TargetName>pgnselect</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">
     <ClCompile>
@@ -263,8 +265,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <CallingConvention>FastCall</CallingConvention>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -300,8 +301,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -325,8 +325,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -350,8 +349,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -376,8 +374,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -403,8 +400,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>false</ShowIncludes>
@@ -433,8 +429,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ShowIncludes>false</ShowIncludes>
@@ -464,8 +459,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <OmitFramePointers>true</OmitFramePointers>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -492,8 +486,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UndefinePreprocessorDefinitions>SYZYGY_TBS</UndefinePreprocessorDefinitions>
     </ClCompile>
@@ -520,8 +513,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>SYZYGY_TBS</UndefinePreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -547,8 +539,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>false</ShowIncludes>
@@ -576,8 +567,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue;..\src\syzygy\src</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>false</ShowIncludes>
@@ -606,7 +596,14 @@
     <ClInclude Include="..\src\input.h" />
     <ClInclude Include="..\src\material.h" />
     <ClInclude Include="..\src\movegen.h" />
+    <ClInclude Include="..\src\nnue\accum.h" />
+    <ClInclude Include="..\src\nnue\accumv2.h" />
+    <ClInclude Include="..\src\nnue\network.h" />
+    <ClInclude Include="..\src\nnue\nndefs.h" />
+    <ClInclude Include="..\src\nnue\nnparams.h" />
     <ClInclude Include="..\src\nnue\nnue.h" />
+    <ClInclude Include="..\src\nnue\simd.h" />
+    <ClInclude Include="..\src\nnue\util.h" />
     <ClInclude Include="..\src\searchc.h" />
     <ClInclude Include="..\src\see.h" />
     <ClInclude Include="..\src\tbconfig.h" />
@@ -751,13 +748,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\syzygy\src\tbprobe.c">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">..\..</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">..\..</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">..\..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">..\src</AdditionalIncludeDirectories>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|x64'">true</ExcludedFromBuild>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">..\src</AdditionalIncludeDirectories>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">true</WholeProgramOptimization>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">CompileAsCpp</CompileAs>
@@ -778,6 +774,14 @@
       </UndefinePreprocessorDefinitions>
       <UndefinePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">SYZYGY_TBS</UndefinePreprocessorDefinitions>
       <UndefinePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">SYZYGY_TBS</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|Win32'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|Win32'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Release|Win32'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Tuner_Debug|Win32'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|Win32'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Pgnselect_Debug|x64'">..\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='ArasanX_Debug|x64'">..\src</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\src\tester.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Makebook_Debug|x64'">true</ExcludedFromBuild>
