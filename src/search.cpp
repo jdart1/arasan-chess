@@ -19,7 +19,7 @@
 #include <cstddef>
 #include <iomanip>
 #include <iterator>
-//#define _TRACE
+//#define SEARCH_TRACE
 
 static const int ASPIRATION_WINDOW[] =
     {(int)(0.375*Params::PAWN_VALUE),

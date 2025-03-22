@@ -207,14 +207,15 @@ such options for tuning is <a href="https://github.com/jdart1/Lakas">Lakas</a>.
 
 <h2>Testing support</h2>
 
-<p>Arasan includes several features to aid debugging. If you compile the
-source for debugging (with -D_DEBUG), checks are inserted for accessing
-arrays past their boundaries, as well as some other sanity checks. If
-any of these checks fail, an error box will be displayed with the
-assertion that failed.</p>
+<p>Arasan includes several features to aid debugging. The code contains
+  asserts that will be triggerd if compiled in debug mode (-g for gcc/clang,
+  /Zi for Windows). If you also compile the
+  source with -D_DEBUG, some additional runtime checks are performed and
+  will trigger asserts if they fail.</p>
 
 <p>At runtime, adding the "-t" (trace) flag to the arasanx executable will
-cause it to output trace messages detailing its nternal operations. Trace
+  cause it to output trace messages detailing its operations, including
+  commands received from and sent to the interface. Trace
 messages are formatted approprately depending on
 the protocol (UCI or winboard). For Winboard, these messages
 will show up in the debug log if Winboard is started with the
@@ -222,14 +223,10 @@ will show up in the debug log if Winboard is started with the
 "info" output and will for example be recorded by cutechess-cli if the
 -debug option is specified.</p>
 
-<p>The chess engine supports a couple of commands to aid with testing. 
-The "eval" command followed by a filename will read the file (assumed
-to be in FEN format) and output the static evaluation of the position.
-If the EVAL_DEBUG and/or PAWN_DEBUG defines are uncommented in
-scoring.cpp, then you can see detailed output of the scoring components.</p>
-
-<p>The "test" command followed by the name of a test suite file in EPD
-format will do a search on each position in the file and output the
+<p>The chess engine supports a couple of non-standard commands to aid with testing.
+The "eval" command will evaluate the current position and output its static evaluation.</P>
+The "test" command followed by the name of a test suite file in EPD
+format, do a search on each position in the file, and output the
 results to stdout.  Additional switches can be added after the
 filename:</p>
 <ul>
@@ -241,10 +238,12 @@ filename:</p>
 <li>-o &lt;file&gt; stores test output in "file".</li>
 </ul>
 <p>Either -d or -t must be included as one of the options.</p>
-<p>If the search module is compiled with -D_TRACE, arasanx will print
+<p>If the search module is compiled with -DSEARCH_TRACE, arasanx will print
 out copious information about the search process when it is run (if
 running multi-threaded, only the main thread is traced). See
-search.cpp to see what information is output and where it comes from.</p>
+search.cpp to see what information is output and where it comes from. If compiled
+with NNUE_TRACE, the engine will enable detailed tracing of the NNUE evaluation. Note:
+output from these traces can be very large if a deep search is performed.</p>
 
 <h3>Test Suites</h3>
 
@@ -810,11 +809,13 @@ than existing entries, or entries that came from an earlier search
 cleared after each search: instead, it is kept full, but old entries
 (from the previous search) are considered candidates for replacement.</p>
 
-<p>The size of the main hashtable defaults to 64 Megabytes, but can
-be overridden with -H switch, followed by a size (such as '256M'), or
-by modifying the arasan.rc parameter file. Standard Winboard or
+<p>The size of the main hashtable defaults to 64 Megabytes. Standard Winboard or
 UCI option commands can also be used to alter the hash table size at
-runtime.</p>
+runtime. UCI or Winboard settings can
+be overridden with the -H switch on the arasanx command line, followed by a size (such as '256M').
+(The arasan.rc also can set the hash table size, but this
+is not recommended).
+</p>
 
 <p>Because multiple threads can be reading and writing the hash table,
 a "lockless hashing" technique is used to prevent conflicts (as done
@@ -950,15 +951,21 @@ well, even without tablebases.</p>
 <p>Arasan 23.0 introduces support for a <a href="https://www.chessprogramming.org/NNUE" target="_blank">
 Efficiently Updatable Neural Network (NNUE)</a>
 that performs evaluation of chess positions. Arasan's implementation of this
-is largely in a submodule, the source of which is at <a href="https://github.com/jdart1/nnue"
-                                                        target="_blank">https://github.com/jdart1/nnue</a>.
-NNUE evaluation for chess was first introduced in Stockfish, whose implementation
+was originally in a submodule, the source of which is at <a href="https://github.com/jdart1/nnue"
+                                                        target="_blank">https://github.com/jdart1/nnue>.
+But starting with commit 2ef5d79, the NNUE source has been incorporated into the Arasan source tree.</p>
+
+<p>NNUE evaluation for chess was first introduced in Stockfish, whose implementation
 of it was contributed to the
-Stockfish project by Hisayori Noda aka Nodchip. Arasan 24.0's current implementation is
+Stockfish project by Hisayori Noda aka Nodchip. Arasan 24.0's implementation is
 compatible with the <a href="https://github.com/official-stockfish/Stockfish/commit/cb9c2594fcedc881ae8f8bfbfdf130cf89840e4c", target="_blank">SFNNv4</a>
-  network architecture used in Stockfish 15. Version 25.0 introduces a new, similar architecture,
+  network architecture used in Stockfish 15. Version 25.0 introduces a new simpler architecture,
 consisting of a horizionally mirrored feature transformer with 9 King buckets, followed by a hidden layer with 8 buckets based on material level.</p>
 <p>Tuning was performed using the <a href="https://github.com/jdart1/bullet", target="_blank">Bullet tuner</a> using a combination of  positions from Arasan selfplay games (generated from the "selfplay" utility program) and Lc0 training data.
+<p>The output from bullet must be post-processed to be readable by Arasan (currently, a version
+number is prepended to the file, which is checked at runtime). There is a utility program,
+"post_process_nn," in the source that can perform this. It takes two arguments: the first is the
+output file from bullet (quantised.bin), and the second is the desired output filename.</p>
 <p>The actual network data is loaded at runtime from a file. Unlike Stockfish and some other programs,
 Arasan does not embed the network data in the program executable. The default file name is part of the executable.</p>
 
