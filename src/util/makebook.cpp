@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2024 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2025 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -40,9 +40,12 @@ ResultType tmp_result;
 // number of pages in the book.
 static unsigned indexPages = 1;                    // default
 // max ply depth processed for PGN games
-static int maxPly = 70;
 static bool verbose = false;
 static OutputType output_type = OutputType::Binary;
+static unsigned maxPly = 70;
+// do not use indirectly computed position evaluations (by
+// using the ends of lines and minimaxing) below this ply.
+static constexpr unsigned POSITION_EVAL_MIN_PLY = 10;
 
 enum MoveEval {NO_MOVE_EVAL,
                BLUNDER_MOVE,POOR_MOVE,QUESTIONABLE_MOVE,NEUTRAL_EVAL,
@@ -103,7 +106,7 @@ static unsigned minFrequency = 0;
 
 class BookEntry {
    public:
-    BookEntry( ColorType side,
+    BookEntry( ColorType side, unsigned ply,
                unsigned recommend, PositionEval ev,
                MoveEval mev, ResultType result,
                uint8_t mv_indx,
@@ -111,6 +114,7 @@ class BookEntry {
 
     BookEntry *next;
     bool first;
+    unsigned ply;
     PositionEval eval;
     MoveEval moveEval;
     unsigned rec; // explicit weight if any
@@ -127,65 +131,47 @@ class BookEntry {
     uint8_t computeWeight() const;
 };
 
-class BookEntryJson : public BookEntry
-{
-   public:
-    BookEntryJson( Board b, ColorType side,
-               unsigned recomend, PositionEval ev,
-               MoveEval mev, ResultType result,
-               uint8_t idx,
-               const std::string &move,
-               BookEntryJson *nxt, bool isFirst) :
-        BookEntry(side, recomend, ev, mev, result, idx, nxt, isFirst)
-        {
-            strncpy(movestr,move.c_str(),8);
-            std::stringstream s;
-            BoardIO::writeFEN(b,s,1);
-            fen = s.str();
-        }
-
+class BookEntryJson : public BookEntry {
+  public:
+    BookEntryJson(Board b, unsigned ply, ColorType side, unsigned recomend, PositionEval ev,
+                  MoveEval mev, ResultType result, uint8_t idx, const std::string &move,
+                  BookEntryJson *nxt, bool isFirst)
+        : BookEntry(side, ply, recomend, ev, mev, result, idx, nxt, isFirst) {
+        strncpy(movestr, move.c_str(), 8);
+        std::stringstream s;
+        BoardIO::writeFEN(b, s, 1);
+        fen = s.str();
+    }
 
     char movestr[9];
     std::string fen;
-
 };
 
-BookEntry::BookEntry( ColorType side, unsigned recommend, PositionEval ev,
-                       MoveEval mev,
-                       ResultType result, uint8_t mv_indx,
-                       BookEntry *nxt, bool isFirst)
-    :next(nxt), first(isFirst),
-     eval(ev), moveEval(mev), rec(recommend),
-     win(0),loss(0),draw(0),
-     move_index(mv_indx)
-{
-   updateWinLoss(side,result);
+BookEntry::BookEntry(ColorType side, unsigned p /*ply*/, unsigned recommend, PositionEval ev,
+                     MoveEval mev, ResultType result, uint8_t mv_indx, BookEntry *nxt, bool isFirst)
+    : next(nxt), first(isFirst), ply(p), eval(ev), moveEval(mev), rec(recommend), win(0), loss(0),
+      draw(0), move_index(mv_indx) {
+    updateWinLoss(side, result);
 }
 
-void BookEntry::updateWinLoss( ColorType side, ResultType result )
-{
-   if (side == White) {
-      if (result == White_Win) {
-         ++win;
-      }
-      else if (result == Black_Win) {
-         ++loss;
-      }
-      else {
-         ++draw;
-      }
-   }
-   else {
-      if (result == Black_Win) {
-         ++win;
-      }
-      else if (result == White_Win) {
-         ++loss;
-      }
-      else {
-         ++draw;
-      }
-   }
+void BookEntry::updateWinLoss(ColorType side, ResultType result) {
+    if (side == White) {
+        if (result == White_Win) {
+            ++win;
+        } else if (result == Black_Win) {
+            ++loss;
+        } else {
+            ++draw;
+        }
+    } else {
+        if (result == Black_Win) {
+            ++win;
+        } else if (result == White_Win) {
+            ++loss;
+        } else {
+            ++draw;
+        }
+    }
 }
 
 uint8_t BookEntry::computeWeight() const
@@ -196,7 +182,7 @@ uint8_t BookEntry::computeWeight() const
    else if (moveEval != NO_MOVE_EVAL) {
       return MoveEvalValues[moveEval];
    }
-   else if (eval != NO_POSITION_EVAL) {
+   else if (eval != NO_POSITION_EVAL && ply >= POSITION_EVAL_MIN_PLY) {
       int w = int(book::MAX_WEIGHT)/2;
       int intEval = (int)eval - (int)EQUAL_POSITION;
       int wmod = int(w*(1.0+intEval/4.0));
@@ -211,7 +197,7 @@ static std::unordered_map <uint64_t, BookEntry *>* hashTable = nullptr;
 
 // Add move to our in-memory data structure
 static void
-add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
+add_move(const Board & board, unsigned ply, const MoveListEntry &m, bool is_first_file,
          const Variation &var)
 {
 #ifdef _TRACE
@@ -234,11 +220,11 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
            if (output_type == OutputType::Json) {
                std::string movestr;
                Notation::image(board,m.move,Notation::OutputFormat::SAN,movestr);
-               new_entry = new BookEntryJson(board, board.sideToMove(), recommend,
+               new_entry = new BookEntryJson(board, ply, board.sideToMove(), recommend,
                                     var.eval, m.moveEval, var.result,
                                     move_index, movestr, nullptr, is_first_file);
            } else {
-               new_entry = new BookEntry(board.sideToMove(), recommend,
+               new_entry = new BookEntry(board.sideToMove(), ply, recommend,
                                     var.eval, m.moveEval, var.result,
                                     move_index, nullptr, is_first_file);
            }
@@ -306,11 +292,11 @@ add_move(const Board & board, const MoveListEntry &m, bool is_first_file,
            if (output_type == OutputType::Json) {
                std::string movestr;
                Notation::image(board,m.move,Notation::OutputFormat::SAN,movestr);
-               new_entry = new BookEntryJson(board, board.sideToMove(), recommend,
+               new_entry = new BookEntryJson(board, ply, board.sideToMove(), recommend,
                                              var.eval, m.moveEval, var.result,
                                              move_index, movestr, (BookEntryJson*)be, is_first_file);
            } else {
-               new_entry = new BookEntry(board.sideToMove(), recommend,
+               new_entry = new BookEntry(board.sideToMove(), ply, recommend,
                                     var.eval, m.moveEval, var.result,
                                     move_index, be, is_first_file);
            }
@@ -356,11 +342,11 @@ static void processVar(const Variation &var, bool first) {
     if (var.moves.size()) {
         Board board(var.save);
         std::vector<MoveListEntry>::const_iterator it = var.moves.begin();
-        int ply = var.move_num*2;
+        unsigned ply = var.move_num*2;
         while (it != var.moves.end()) {
             const MoveListEntry &m = *it++;
             if (ply < maxPly || first) {
-                add_move(board, m, first, var);
+                add_move(board, ply, m, first, var);
             }
             ++ply;
             board.doMove(m.move);
