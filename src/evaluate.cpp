@@ -94,6 +94,17 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
     if (node->accum.getState(half) == AccumulatorState::Computed) {
         // nothing to do: can happen if we revist a node because we widened the search window
         return;
+    } else if (node->ply != 0 && IsNull((node - 1)->last_move) && (node - 1)->num_legal) {
+        AccumulatorHalf sourceHalf = (half == AccumulatorHalf::Lower ?
+                                      AccumulatorHalf::Upper :
+                                      AccumulatorHalf::Lower);
+        // Previous move was a null move. Since only the side to move has changed,
+        // we can just swap the accumulator halves.
+        if ((node - 1)->accum.getState(sourceHalf) == AccumulatorState::Computed) {
+            node->accum.copy_half(targetHalf, (node - 1)->accum, sourceHalf);
+            node->accum.setState(targetHalf, AccumulatorState::Computed);
+            return;
+        }
     }
     int gain = board.allOccupied.bitCount();
     bool incrementalOk = true;

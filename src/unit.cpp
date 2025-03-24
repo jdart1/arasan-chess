@@ -1567,6 +1567,7 @@ static int testNNUE() {
                 std::cout << "could not parse move " << moveStr << std::endl;
                 return 1;
             }
+            target->last_move = m;
             board.doMove(m,target);
             ++target;
             target->ply = ++ply;
@@ -1583,6 +1584,9 @@ static int testNNUE() {
     Scoring s;
     // test after null move
     board.doNull(node);
+    (node+1)->num_legal = 1; // needed for evaluate logic
+    (node+1)->ply = 1; // needed for evaluate logic
+    node->last_move = NullMove;
     score_t endScore = s.evalu8NNUE(board,node+1);
     int tmp = errs;
     errs += endScore != s.evalu8NNUE(board);

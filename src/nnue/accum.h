@@ -47,7 +47,13 @@ class Accumulator {
                    AccumulatorHalf sourceHalf) {
         const OutputType *in = source._accum[halfToIndex(sourceHalf)];
         OutputType *out = _accum[halfToIndex(half)];
+#ifdef SIMD
+        simd::vec_copy<size,OutputType>(in,out);
+#else
+        const OutputType *in = source._accum[halfToIndex(sourceHalf)];
+        OutputType *out = _accum[halfToIndex(half)];
         std::memcpy(out, in, sizeof(OutputType) * size);
+#endif
     }
 
     // Update half of the accumulator (does not use SIMD)
