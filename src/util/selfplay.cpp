@@ -109,8 +109,8 @@ static struct SelfPlayOptions {
     RandomizeType randomizeType = RandomizeType::MultiPV;
     unsigned semiRandomizeInterval = 1;
     unsigned semiRandomPerGame = 12;
-    unsigned multipv_limit = 4;
-    int multiPVMargin = static_cast<int>(0.2 * Params::PAWN_VALUE);
+    unsigned multipv_limit = 8;
+    int multiPVMargin = static_cast<int>(0.35 * Params::PAWN_VALUE);
     bool skipNonQuiet = true;
     BinFormats::Format format = BinFormats::Format::StockfishBin;
     bool verbose = false;
@@ -186,20 +186,22 @@ static MoveResult pick(const MoveResult *moves, unsigned count, ThreadData &td) 
 
 static const Bitboard center(1ULL<<chess::D4 | 1ULL<<chess::E4 | 1ULL<<chess::D5 | 1ULL<<chess::E5);
 
-static Bitboard centerAttacks(const Board &board, PieceType p, Square sq) {
-    assert(board[sq] != EmptyPiece);
-    ColorType c = PieceColor(board[sq]);
-    switch (p) {
+static Bitboard centerAttacks(const Board &board, Move m) {
+    Square start = StartSquare(m);
+    Square dest = DestSquare(m);
+    assert(board[start] != EmptyPiece);
+    ColorType c = PieceColor(board[start]);
+    switch (PieceMoved(m)) {
     case Pawn:
-        return Attacks::pawn_attacks[sq][c] & center;
+        return Attacks::pawn_attacks[dest][c] & center;
     case Knight:
-        return Attacks::knight_attacks[sq] & center;
+        return Attacks::knight_attacks[dest] & center;
     case Bishop:
-        return Attacks::bishopAttacks(sq,center);
+        return Attacks::bishopAttacks(dest,center);
     case Rook:
-        return Attacks::rookAttacks(sq,center);
+        return Attacks::rookAttacks(dest,center);
     case Queen:
-        return Attacks::queenAttacks(sq,center);
+        return Attacks::queenAttacks(dest,center);
     case King:
     default:
         return Bitboard(0);
@@ -241,7 +243,7 @@ static Move randomMove(Board &board, Statistics &stats, ThreadData &td) {
     for (auto it = rmg.begin(); it != new_end; it++) {
         Move m = (*it).move;
         candidates[i++] = m;
-        if (centerAttacks(board,PieceMoved(m),DestSquare(m))) {
+        if (centerAttacks(board,m)) {
             candidates[i++] = m;
             candidates[i++] = m;
             candidates[i++] = m;
