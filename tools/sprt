@@ -1,0 +1,1 @@
+python3 match.py -g 8000 -tc 1:0+0.8 </dev/null >&match.log &disown

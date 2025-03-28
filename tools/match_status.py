@@ -7,8 +7,8 @@ import re, os, os.path, sys, time
 
 # checks status of cutechess match on a host
 
-# Cutechess bin directory
-cutechess_cli_path = '/home/jdart/chess/cutechess-cli'
+# Fastchess bin directory
+cutechess_cli_path = '/home/jdart/chess/fastchess'
 
 # Log file
 log_file_name = 'match.log'
@@ -50,7 +50,7 @@ def main(argv = None):
         exit(-1)
 
     #Finished game 14 (Arasan-Base vs XboardEngine): 1-0 {Black resigns}
-    pat=re.compile("^Finished game ([0-9]+) \(.+\): ([0-9-\/]+) {(.*)}")
+    pat=re.compile(r"^Finished game ([0-9]+) \(.+\): ([0-9-\/]+) {(.*)}")
 
     results = []
     for i in range(MAX_RESULTS):

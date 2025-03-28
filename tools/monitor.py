@@ -18,13 +18,14 @@ from stats import sprt, LLRcalc, stat_util
 SHELL='/bin/bash'
 
 # command to execute ssh
-SSH_CMD = 'ssh -i /home/jdart/.ssh/id_rsa'
+#SSH_CMD = 'ssh -i /home/jdart/.ssh/id_rsa'
+SSH_CMD = 'ssh'
 
 # script to call to get status
 MATCH_STATUS_SCRIPT = 'python3 /home/jdart/tools/match_status.py'
 
 # script to stop matches
-STOP_SCRIPT = '/home/jdart/tools/stop-all'
+STOP_SCRIPT = '/home/jdart/tools/stop'
 
 class Monitor:
 
@@ -45,6 +46,19 @@ class Monitor:
                scores[i] = scores[i] + int(chunk)
                i = i + 1
         proc.wait()
+
+    def stop_all(self,machines):
+        for host in machines:
+            print("stopping " + host['hostname'])
+            global STOP_SCRIPT
+            if (host == 'localhost'):
+                cmd = ""
+            else:
+                cmd = SSH_CMD + ' -f ' + host['hostname'] + ' '
+
+            proc = Popen(cmd + STOP_SCRIPT, stdout=PIPE, shell=True)
+            status_stdout = proc.communicate()[0]
+            proc.wait()
 
     def run(self,machines,limit,poll_interval,elo_run):
         global STOP_SCRIPT
@@ -99,7 +113,7 @@ class Monitor:
                     print("result=" + result)
             if ((len(result)>0) or (limit > 0 and games >= limit)):
                 break
-        subprocess.call(STOP_SCRIPT,shell=True)
+        self.stop_all(machines)
 
 def main(argv = None):
     if argv is None:

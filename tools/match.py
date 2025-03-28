@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright 2020, 2023 by Jon Dart. All Rights Reserved.
+# Copyright 2020, 2023, 2025 by Jon Dart. All Rights Reserved.
 # Released under the MIT license: see doc/license.txt
 #
 import argparse, json, os, shlex, sys
-from executor.ssh.client import RemoteCommand
+from executor.ssh.client import RemoteCommand, RemoteCommandPool
 from subprocess import Popen, PIPE, call
 
 # Sets up a match using multiple machine resources
@@ -14,13 +14,15 @@ from subprocess import Popen, PIPE, call
 # equalling nominal time control. Equivalent to 1-core performance
 # on a Xeon 2690v3.
 NPS_BASE = 1.33
-REMOTE_MATCH_DIR = "/home/jdart/chess/cutechess-cli"
+REMOTE_MATCH_DIR = "/home/jdart/chess/fastchess"
 # command to run matches on a single machine, local or remote
 # arguments to match command: base engine (in cutechess config file), test engine, games, tc, cores
-REMOTE_MATCH_CMD = "/home/jdart/chess/cutechess-cli/match-sprt"
+REMOTE_MATCH_CMD = "/home/jdart/chess/fastchess/match-sprt"
 
 DEFAULT_BASE_ENGINE="Arasan-Base"
 DEFAULT_TEST_ENGINE="Arasan-Test"
+
+MAX_HOSTS=10
 
 class Options:
    base_engine = DEFAULT_BASE_ENGINE
@@ -53,8 +55,7 @@ def scaleTC(tc,factor):
     return scaleTime(start,factor) + '+' + scaleTime(inc,factor)
 
 def main(argv = None):
-    
-    global options, NPS_BASE, REMOTE_MATCH_CMD, REMOTE_MATCH_DIR
+    global options, NPS_BASE, REMOTE_MATCH_CMD, REMOTE_MATCH_DIR, MAX_HOSTS
 
     if argv is None:
         argv = sys.argv[1:]
@@ -83,6 +84,12 @@ def main(argv = None):
         exit(1)
 
     # start the matches
+    pool_opts = dict(
+        concurrency=MAX_HOSTS,
+        delay_checks=True,
+    )
+    # Create a command pool.
+    pool = RemoteCommandPool(**pool_opts)
     for machine in machineList:
         try:
             host = machine['hostname']
@@ -102,12 +109,12 @@ def main(argv = None):
             if host == 'localhost':
                process = Popen(shlex.split(cmd_string), shell=True, cwd=REMOTE_MATCH_DIR)
             else:
-               cmd = RemoteCommand(host,cmd_string,capture=True,directory=REMOTE_MATCH_DIR)
-               cmd.start()
+               pool.add(identifier=host,command=RemoteCommand(host,cmd_string,capture=True,directory=REMOTE_MATCH_DIR))
         except:
             print("error starting command " + cmd_string,file=sys.stderr)
             traceback.print_tb(tb, limit=None, file=None)
             return 2
+    pool.run()
 
 if __name__ == "__main__":
     sys.exit(main())
