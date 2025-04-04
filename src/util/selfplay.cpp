@@ -708,8 +708,6 @@ int CDECL main(int argc, char **argv) {
                 std::cerr << "error: expected number after -m" << std::endl;
                 return -1;
             }
-        } else if (strcmp(argv[arg], "-p") == 0) {
-            globals::options.search.pureNNUE = 1;
         } else if (strcmp(argv[arg], "-v") == 0) {
             sp_options.verbose = true;
         } else {

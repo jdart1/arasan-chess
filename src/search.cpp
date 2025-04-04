@@ -3617,17 +3617,11 @@ void Search::setSearchOptions() {
 }
 
 score_t Search::evalu8(const Board &b) {
-	score_t score;
-    const Material &ourMat = b.getMaterial(b.sideToMove());
-    const Material &oppMat = b.getMaterial(b.oppositeSide());
-    //bool imbalance = std::abs(int(ourMat.materialLevel()) - int(oppMat.materialLevel()))>10;
-    const bool useClassical = !srcOpts.pureNNUE &&
-        (//imbalance ||
-         ourMat.men() + oppMat.men() <= 7);
-    if (!useClassical && globals::nnueInitDone) {
-        score = scoring.evalu8NNUE(b,node);
-    } else {
-        score = scoring.evalu8(b);
+    score_t score =  Scoring::tryBitbase(b);
+    if (score != Constants::INVALID_SCORE) {
+        return score == 0 ? drawScore(b) : score;
     }
-   return score;
+    else {
+        return scoring.evalu8NNUE(b, node);
+    }
 }

@@ -28,7 +28,7 @@ Options::SearchOptions::SearchOptions()
       syzygy_probe_depth(4),
 #endif
       strength(100), multipv(1), ncpus(1),
-      pureNNUE(false), nnueFile(MAKE_STR(NETWORK)),
+      nnueFile(MAKE_STR(NETWORK)),
 #ifdef NUMA
       set_processor_affinity(false),
 #endif
