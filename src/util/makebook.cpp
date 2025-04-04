@@ -46,6 +46,9 @@ static unsigned maxPly = 70;
 // do not use indirectly computed position evaluations (by
 // using the ends of lines and minimaxing) below this ply.
 static constexpr unsigned POSITION_EVAL_MIN_PLY = 10;
+// also do not use indirectly computed position evaluations
+// on positions that have >= this number of occurances.
+static constexpr unsigned POSITION_EVAL_MAX_POSITIONS = 100;
 
 enum MoveEval {NO_MOVE_EVAL,
                BLUNDER_MOVE,POOR_MOVE,QUESTIONABLE_MOVE,NEUTRAL_EVAL,
@@ -182,7 +185,8 @@ uint8_t BookEntry::computeWeight() const
    else if (moveEval != NO_MOVE_EVAL) {
       return MoveEvalValues[moveEval];
    }
-   else if (eval != NO_POSITION_EVAL && ply >= POSITION_EVAL_MIN_PLY) {
+   else if (eval != NO_POSITION_EVAL && ply >= POSITION_EVAL_MIN_PLY &&
+            count() <= POSITION_EVAL_MAX_POSITIONS) {
       int w = int(book::MAX_WEIGHT)/2;
       int intEval = (int)eval - (int)EQUAL_POSITION;
       int wmod = int(w*(1.0+intEval/4.0));
