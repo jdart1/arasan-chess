@@ -1,4 +1,4 @@
-// Copyright 1997-2024 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2025 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -313,7 +313,7 @@ bool Protocol::accept_draw(Board &board) {
    // our score is way positive
    if (ourmat.noPawns() && oppmat.noPawns() &&
        ourmat.materialLevel() <= 5 &&
-      last_score < Params::PAWN_VALUE) {
+      last_score < Scoring::PAWN_VALUE) {
       if (doTrace)
          std::cout << debugPrefix << "pawnless ending, accept draw" << std::endl;
       return true;
@@ -345,7 +345,7 @@ bool Protocol::accept_draw(Board &board) {
    board.setSideToMove(mySide);
    score_t draw_score = searcher->drawScore(board);
    board.setSideToMove(tmp);
-   const score_t threshold = Params::PAWN_VALUE/4;
+   const score_t threshold = Scoring::PAWN_VALUE/4;
    if (doTrace) {
       std::cout << debugPrefix << "rating_diff = " << rating_diff << std::endl;
       std::cout << debugPrefix << "draw_score = " << draw_score << std::endl;
@@ -545,7 +545,7 @@ void Protocol::post_output(const Statistics &s) {
    else if (post) {
        // "post" output for Winboard
        std::cout << s.depth << ' ' <<
-           static_cast<int>((score*100)/Params::PAWN_VALUE) << ' ' <<
+           static_cast<int>((score*100)/Scoring::PAWN_VALUE) << ' ' <<
            searcher->getElapsedTime()/10 << ' ' <<
            s.num_nodes << ' ' <<
            s.best_line_image << std::endl << (std::flush);
@@ -2607,7 +2607,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         args >> computer_rating;
         args >> opponent_rating;
         const int rdiff = computer_rating-opponent_rating;
-        score_t contempt = static_cast<score_t>(4*Params::PAWN_VALUE*(1.0/(1.0+exp(-rdiff/400.0)) - 0.5));
+        score_t contempt = static_cast<score_t>(4*Scoring::PAWN_VALUE*(1.0/(1.0+exp(-rdiff/400.0)) - 0.5));
         if (doTrace) {
             std::cout << debugPrefix << "contempt (calculated from ratings) = ";
             Scoring::printScore(contempt,std::cout);

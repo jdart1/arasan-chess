@@ -5,7 +5,6 @@
 
 #include "board.h"
 #include "constant.h"
-#include "params.h"
 #include "see.h"
 
 #include <algorithm>

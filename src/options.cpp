@@ -10,7 +10,7 @@
 
 #include "constant.h"
 #include "globals.h"
-#include "params.h"
+#include "scoring.h"
 
 #include <cctype>
 #include <cmath>
@@ -33,7 +33,7 @@ Options::SearchOptions::SearchOptions()
       set_processor_affinity(false),
 #endif
       move_overhead(30), minimum_search_time(10), widePlies(4),
-      wideWindow(10 * Params::PAWN_VALUE) {
+      wideWindow(10 * Scoring::PAWN_VALUE) {
 }
 
 Options::BookOptions::BookOptions() : variety(50), book_enabled(true), book_path("") {

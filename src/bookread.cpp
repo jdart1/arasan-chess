@@ -7,7 +7,6 @@
 #include "globals.h"
 #include "movegen.h"
 #include "notation.h"
-#include "params.h"
 
 #include <algorithm>
 #include <cassert>

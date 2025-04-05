@@ -1,4 +1,4 @@
-// Copyright 1994-2021, 2023-2024 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021, 2023-2025 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -18,14 +18,6 @@
 //#define PAWN_DEBUG
 //#define EVAL_DEBUG
 //#define ATTACK_DEBUG
-
-const score_t Params::SEE_PIECE_VALUES[7] = {0,
-                                             Params::PAWN_VALUE,
-                                             score_t(4.3 * Params::PAWN_VALUE),
-                                             score_t(4.3 * Params::PAWN_VALUE),
-                                             score_t(6.0 * Params::PAWN_VALUE),
-                                             score_t(12.0 * Params::PAWN_VALUE),
-                                             score_t(32 * Params::PAWN_VALUE)};
 
 int Scoring::distance(Square sq1, Square sq2) {
     int rankdist = std::abs(sq1 / 8 - sq2 / 8);
@@ -148,7 +140,7 @@ void Scoring::printScore(score_t score, std::ostream &str) {
         if (score >= 0)
             str << '+';
         std::ios_base::fmtflags original_flags = str.flags();
-        str << std::fixed << std::setprecision(2) << (score * 1.0) / double(Params::PAWN_VALUE);
+        str << std::fixed << std::setprecision(2) << (score * 1.0) / double(PAWN_VALUE);
         str.flags(original_flags);
     }
 }
@@ -159,7 +151,7 @@ void Scoring::printScoreUCI(score_t score, std::ostream &str) {
     } else if (score >= Constants::MATE_RANGE) {
         str << "mate " << int(Constants::MATE - score + 1) / 2;
     } else
-        str << "cp " << int(score * 100) / Params::PAWN_VALUE;
+        str << "cp " << int(score * 100) / PAWN_VALUE;
 }
 
 score_t Scoring::tryBitbase(const Board &board) {

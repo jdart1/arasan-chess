@@ -1,4 +1,4 @@
-// Copyright 1992-2021, 2023-2024 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2021, 2023-2025 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -6,7 +6,6 @@
 #include "attacks.h"
 #include "board.h"
 #include "hash.h"
-#include "params.h"
 
 struct NodeInfo;
 
@@ -52,6 +51,31 @@ class Scoring {
 
     template <ColorType side> static int KBPDraw(const Board &board);
 
+    static constexpr score_t PAWN_VALUE = (score_t)128; // midgame pawn value
+
+    static constexpr score_t SEE_PIECE_VALUES[7] = {0,
+                                                    PAWN_VALUE,
+                                                    score_t(4.3 * PAWN_VALUE),
+                                                    score_t(4.3 * PAWN_VALUE),
+                                                    score_t(6.0 * PAWN_VALUE),
+                                                    score_t(12.0 * PAWN_VALUE),
+                                                    score_t(32 * PAWN_VALUE)};
+
+    static FORCEINLINE score_t Gain(Move move) {
+        return (TypeOfMove(move) == Promotion) ?
+                SEE_PIECE_VALUES[Capture(move)] + SEE_PIECE_VALUES[PromoteTo(move)] - SEE_PIECE_VALUES[Pawn] :
+                SEE_PIECE_VALUES[Capture(move)];
+    }
+
+    static FORCEINLINE score_t MVV_LVA(Move move) {
+        return 8*Gain(move) - SEE_PIECE_VALUES[PieceMoved(move)];
+    }
+
+    static FORCEINLINE score_t maxValue(Move move) {
+        return (TypeOfMove(move) == Promotion) ?
+            SEE_PIECE_VALUES[Capture(move)] + SEE_PIECE_VALUES[PromoteTo(move)] - SEE_PIECE_VALUES[Pawn] :
+            SEE_PIECE_VALUES[Capture(move)];
+    }
   private:
     template <ColorType side> static bool theoreticalDraw(const Board &board);
 

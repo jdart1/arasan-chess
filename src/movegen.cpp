@@ -1,10 +1,11 @@
-// Copyright 1994-2024 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2025 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
 #include "globals.h"
 #include "search.h"
 #include "legal.h"
+#include "scoring.h"
 #include "syzygy.h"
 #include "trace.h"
 
@@ -102,7 +103,7 @@ void RootMoveGenerator::reorder(Move pvMove, score_t pvScore, int depth, bool in
               // sort winning captures first
               if (MovesEqual(m.move,pvMove)) {
                  SetPhase(m.move,HASH_MOVE_PHASE);
-                 m.score = int(Params::PAWN_VALUE*100);
+                 m.score = int(Scoring::PAWN_VALUE*100);
               } else if (CaptureOrPromotion(m.move)) {
                  int est;
                  if ((est = (int)see(board,m.move)) >= 0) {
@@ -269,9 +270,9 @@ Move MoveGenerator::nextEvasion(int &ord) {
                     continue;
                 }
                 if (CaptureOrPromotion(moves[i])) {
-                    score_t gain = Params::Gain(moves[i]);
-                    score_t pieceVal = Params::SEE_PIECE_VALUES[PieceMoved(moves[i])];
-                    scores[i] = int(Params::MVV_LVA(moves[i]));
+                    score_t gain = Scoring::Gain(moves[i]);
+                    score_t pieceVal = Scoring::SEE_PIECE_VALUES[PieceMoved(moves[i])];
+                    scores[i] = int(Scoring::MVV_LVA(moves[i]));
                     if (gain - pieceVal > 0 || (scores[i] = (int)see(board, moves[i])) >= 0) {
                         ++poscaps;
                         SetPhase(moves[i], WINNING_CAPTURE_PHASE);
@@ -1029,7 +1030,7 @@ void mg::initialSortCaptures(const Board &board, Move *moves, unsigned captures,
       int scores[Constants::MaxCaptures];
       assert(captures < Constants::MaxCaptures);
       for (unsigned i = 0; i < captures; i++) {
-          scores[i] = int(Params::MVV_LVA(moves[i]));
+          scores[i] = int(Scoring::MVV_LVA(moves[i]));
           if (context) scores[i] += context->captureHistoryScoreForOrdering(board, moves[i]);
       }
       sortMoves(moves,scores,captures);

@@ -4,7 +4,6 @@
 #define _MATERIAL_H
 
 #include "chess.h"
-#include "params.h"
 
 #include <cassert>
 

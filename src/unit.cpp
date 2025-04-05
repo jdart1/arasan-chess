@@ -486,7 +486,7 @@ static int testEval() {
     int i = 0, errs = 0;
     auto check =
         [&errs, &i](score_t eval, double minEval, double maxEval, const std::string &txt) {
-            double eval1 = static_cast<double>(eval)/Params::PAWN_VALUE;
+            double eval1 = static_cast<double>(eval)/Scoring::PAWN_VALUE;
             if (eval1 < minEval || eval1 > maxEval) {
                 std::cout << "testEval case " << i << ' ' << txt << " eval exceeds bounds: ";
                 std::ios_base::fmtflags original_flags = std::cout.flags();
@@ -523,7 +523,7 @@ static int testEval() {
         board2.flip();
         eval2 = s->evalu8(board2);
         /* TBD NNUE evals may not be symmetric
-        if (eval1 - eval2 > Params::PAWN_VALUE/2) {
+        if (eval1 - eval2 > Scoring::PAWN_VALUE/2) {
             std::cout << "testEval case " << i << " NNUE eval not symmetrical" << std::endl;
             std::cout << eval1 << ' ' << eval2 << std::endl;
             ++errs;
@@ -866,7 +866,7 @@ static int testHash() {
         std::cerr << "testHash: error in FEN: " << fen1 << std::endl;
         ++errs;
     }
-    hashTable.storeHash(board.hashCode(),1,1,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::Valid,score_t(0.1*Scoring::PAWN_VALUE),score_t(0.2*Scoring::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
 
     HashEntry he;
@@ -890,11 +890,11 @@ static int testHash() {
           ++errs;
           std::cerr << "testHash case 1: invalid age" << std::endl;
        }
-       if (he.getValue() != score_t(0.1*Params::PAWN_VALUE)) {
+       if (he.getValue() != score_t(0.1*Scoring::PAWN_VALUE)) {
           ++errs;
           std::cerr << "testHash case 1: invalid value" << std::endl;
        }
-       if (he.staticValue() != score_t(0.2*Params::PAWN_VALUE)) {
+       if (he.staticValue() != score_t(0.2*Scoring::PAWN_VALUE)) {
           ++errs;
           std::cerr << "testHash case 1: invalid static value" << std::endl;
        }
@@ -906,7 +906,7 @@ static int testHash() {
     }
 
     // replace the entry with one of higher depth
-    hashTable.storeHash(board.hashCode(),2,1,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
+    hashTable.storeHash(board.hashCode(),2,1,HashEntry::Valid,score_t(0.1*Scoring::PAWN_VALUE),score_t(0.2*Scoring::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
 
     val = hashTable.searchHash(board.hashCode(), 1, 1, he);
@@ -926,7 +926,7 @@ static int testHash() {
     }
 
     // replace the entry with same depth, diff age - should replace
-    hashTable.storeHash(board.hashCode(),2,2,HashEntry::Valid,score_t(0.1*Params::PAWN_VALUE),score_t(0.2*Params::PAWN_VALUE),
+    hashTable.storeHash(board.hashCode(),2,2,HashEntry::Valid,score_t(0.1*Scoring::PAWN_VALUE),score_t(0.2*Scoring::PAWN_VALUE),
                         0, CreateMove(chess::D1,chess::B3,Queen));
     // search should update age
     val = hashTable.searchHash(board.hashCode(), 1, 3, he);
@@ -950,7 +950,7 @@ static int testHash() {
         ++errs;
     }
 
-    hashTable.storeHash(board.hashCode(),1,1,HashEntry::LowerBound,score_t(-0.1*Params::PAWN_VALUE),Constants::INVALID_SCORE,0, NullMove);
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::LowerBound,score_t(-0.1*Scoring::PAWN_VALUE),Constants::INVALID_SCORE,0, NullMove);
 
     HashEntry he2;
 
@@ -983,7 +983,7 @@ static int testHash() {
 
     m = CreateMove(board,chess::D7,chess::C8,Queen);
 
-    hashTable.storeHash(board.hashCode(),1,1,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Constants::INVALID_SCORE,0,m);
+    hashTable.storeHash(board.hashCode(),1,1,HashEntry::UpperBound,score_t(2.0*Scoring::PAWN_VALUE),Constants::INVALID_SCORE,0,m);
 
     HashEntry he3;
 
@@ -1022,7 +1022,9 @@ static int testHash() {
     }
 
     m = CreateMove(board,chess::G1,chess::H2,King);
-    hashTable.storeHash(board.hashCode(),1,10,HashEntry::UpperBound,score_t(2.0*Params::PAWN_VALUE),Constants::INVALID_SCORE,HashEntry::LEARNED_MASK,m);
+    hashTable.storeHash(board.hashCode(), 1, 10, HashEntry::UpperBound,
+                        score_t(2.0 * Scoring::PAWN_VALUE), Constants::INVALID_SCORE,
+                        HashEntry::LEARNED_MASK, m);
 
     HashEntry he4;
     val = hashTable.searchHash(board.hashCode(), -1, 10, he4);

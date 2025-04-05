@@ -73,22 +73,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);..\src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x86</LibraryPath>
     <TargetName>arasan</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);..\src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x86</LibraryPath>
     <TargetName>arasan</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\src</ExternalIncludePath>
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);..\src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);..\src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -98,6 +98,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -117,6 +118,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <CallingConvention>FastCall</CallingConvention>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -145,6 +147,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;NOMINMAX;_WIN32_WINNT=0x0502;_CRT_SECURE_NO_DEPRECATE;USE_INTRINSICS;_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -159,6 +162,7 @@
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;NOMINMAX;_WIN32_WINNT=0x0502;_CRT_SECURE_NO_DEPRECATE;USE_INTRINSICS;_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\nnue</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -198,6 +202,7 @@
     <ClCompile Include="..\src\ecodata.cpp" />
     <ClCompile Include="..\src\ecoinfo.cpp" />
     <ClCompile Include="..\src\epdrec.cpp" />
+    <ClCompile Include="..\src\evaluate.cpp" />
     <ClCompile Include="..\src\globals.cpp" />
     <ClCompile Include="..\src\hash.cpp" />
     <ClCompile Include="..\src\learn.cpp" />
@@ -205,10 +210,8 @@
     <ClCompile Include="..\src\material.cpp" />
     <ClCompile Include="..\src\movearr.cpp" />
     <ClCompile Include="..\src\movegen.cpp" />
-    <ClCompile Include="..\src\nnueintf.cpp" />
     <ClCompile Include="..\src\notation.cpp" />
     <ClCompile Include="..\src\options.cpp" />
-    <ClCompile Include="..\src\params.cpp" />
     <ClCompile Include="..\src\protocol.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -289,6 +292,7 @@
     <ClInclude Include="..\src\ecodata.h" />
     <ClInclude Include="..\src\ecoinfo.h" />
     <ClInclude Include="..\src\epdrec.h" />
+    <ClInclude Include="..\src\evaluate.h" />
     <ClInclude Include="..\src\globals.h" />
     <ClInclude Include="..\src\hash.h" />
     <ClInclude Include="..\src\learn.h" />
@@ -297,10 +301,8 @@
     <ClInclude Include="..\src\material.h" />
     <ClInclude Include="..\src\movearr.h" />
     <ClInclude Include="..\src\movegen.h" />
-    <ClInclude Include="..\src\nnueintf.h" />
     <ClInclude Include="..\src\notation.h" />
     <ClInclude Include="..\src\options.h" />
-    <ClInclude Include="..\src\params.h" />
     <ClInclude Include="..\src\protocol.h" />
     <ClInclude Include="..\src\scoring.h" />
     <ClInclude Include="..\src\search.h" />

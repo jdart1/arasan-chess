@@ -186,7 +186,7 @@ int CDECL main(int argc, char **argv) {
                                     false, /* UCI */
                                     stats, TalkLevel::Silent);
 
-                                last_score = float(stats.display_value) / Params::PAWN_VALUE;
+                                last_score = float(stats.display_value) / Scoring::PAWN_VALUE;
                             }
                             if (board.sideToMove() != White)
                                 last_score = -last_score;

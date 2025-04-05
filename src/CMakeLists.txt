@@ -157,7 +157,7 @@ eco.cpp ecodata.cpp ecodata.h eco.h ecoinfo.cpp ecoinfo.h epdrec.cpp
 epdrec.h globals.cpp globals.h hash.cpp hash.h learn.cpp learn.h
 legal.cpp legal.h material.cpp material.h movearr.cpp
 movearr.h movegen.cpp movegen.h notation.cpp notation.h options.cpp
-options.h params.cpp params.h protocol.cpp protocol.h scoring.cpp
+options.h protocol.cpp protocol.h scoring.cpp
 scoring.h searchc.cpp searchc.h search.cpp search.h see.cpp see.h
 stats.cpp stats.h stdendian.h syzygy.cpp syzygy.h tbconfig.h
 tester.cpp tester.h threadc.cpp threadc.h threadp.cpp threadp.h
@@ -171,7 +171,7 @@ chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
 ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
-notation.cpp notation.h options.cpp options.h params.h params.cpp
+notation.cpp notation.h options.cpp options.h
 scoring.cpp scoring.h searchc.cpp searchc.h
 search.cpp search.h see.cpp see.h stats.cpp stats.h stdendian.h
 syzygy.cpp syzygy.h tbconfig.h threadc.cpp

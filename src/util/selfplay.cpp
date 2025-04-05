@@ -89,7 +89,7 @@ static struct SelfPlayOptions {
     bool adjudicate7manDraw = false;
     bool adjudicateTB = true;
     int adjudicateTBMen = 3; // don't adjudicate with more men so low-mat configs are included
-    score_t adjudicateWinScore = 20*Params::PAWN_VALUE;
+    score_t adjudicateWinScore = 20*Scoring::PAWN_VALUE;
     unsigned adjudicateWinPlies = 3;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
@@ -103,14 +103,14 @@ static struct SelfPlayOptions {
     bool randomize = true;
     unsigned randomizeRange = 2;
     unsigned randomizeInterval = 1;
-    int randomTolerance = 0.75*Params::PAWN_VALUE;
+    int randomTolerance = 0.75*Scoring::PAWN_VALUE;
     bool limitEarlyKingMoves = true;
     bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
     unsigned semiRandomizeInterval = 1;
     unsigned semiRandomPerGame = 12;
     unsigned multipv_limit = 8;
-    int multiPVMargin = static_cast<int>(0.35 * Params::PAWN_VALUE);
+    int multiPVMargin = static_cast<int>(0.35 * Scoring::PAWN_VALUE);
     bool skipNonQuiet = true;
     BinFormats::Format format = BinFormats::Format::StockfishBin;
     bool verbose = false;
@@ -351,7 +351,7 @@ static void selfplay(ThreadData &td) {
             if (IsNull(m)) {
                 // Don't randomize if in TB range or if score very large
                 bool skipRandom = (int(board.men()) <= globals::EGTBMenCount) ||
-                                  (std::abs(prevScore) >= 10 * Params::PAWN_VALUE);
+                                  (std::abs(prevScore) >= 10 * Scoring::PAWN_VALUE);
                 if (sp_options.randomize &&
                     (ply >= bookMoves) &&
                     (ply < bookMoves + sp_options.randomizeRange) &&
@@ -634,9 +634,9 @@ int CDECL main(int argc, char **argv) {
     globals::options.book.variety = 75;
     globals::options.learning.position_learning = false;
     globals::options.search.can_resign = true;
-    globals::options.search.resign_threshold = -Params::PAWN_VALUE * 30;
+    globals::options.search.resign_threshold = -Scoring::PAWN_VALUE * 30;
     globals::options.search.widePlies = 2;
-    globals::options.search.wideWindow = 3 * Params::PAWN_VALUE;
+    globals::options.search.wideWindow = 3 * Scoring::PAWN_VALUE;
 
     // update book to use new variety setting
     globals::openingBook.setVariety(globals::options.book.variety);

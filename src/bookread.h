@@ -1,4 +1,4 @@
-// Copyright 1992, 1995, 2013, 2014, 2017-2019, 2021, 2024 by Jon Dart.
+// Copyright 1992, 1995, 2013, 2014, 2017-2019, 2021, 2024-2025 by Jon Dart.
 // All Rights Reserved.
 
 #ifndef _BOOK_READER_H
@@ -7,6 +7,7 @@
 #include "board.h"
 #include "bookdefs.h"
 #include "hash.h"
+#include "scoring.h"
 #include <array>
 #include <fstream>
 #include <random>
@@ -53,7 +54,7 @@ class BookReader {
     void filterByFreq(std::vector<book::DataEntry> &);
 
     double contemptFactor(score_t contempt) const noexcept {
-        return 1.0 / (1.0 + exp(-0.75 * contempt / Params::PAWN_VALUE));
+        return 1.0 / (1.0 + exp(-0.75 * contempt / Scoring::PAWN_VALUE));
     }
 
     unsigned effectiveWeight(unsigned weight) const noexcept;

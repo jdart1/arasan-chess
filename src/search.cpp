@@ -6,6 +6,7 @@
 #include "movegen.h"
 #include "hash.h"
 #include "protocol.h"
+#include "scoring.h"
 #include "see.h"
 #include "tunable.h"
 #ifdef SYZYGY_TBS
@@ -22,11 +23,11 @@
 //#define SEARCH_TRACE
 
 static const int ASPIRATION_WINDOW[] =
-    {(int)(0.375*Params::PAWN_VALUE),
-     (int)(0.75*Params::PAWN_VALUE),
-     (int)(1.5*Params::PAWN_VALUE),
-     (int)(3.0*Params::PAWN_VALUE),
-     (int)(6.0*Params::PAWN_VALUE),
+    {(int)(0.375*Scoring::PAWN_VALUE),
+     (int)(0.75*Scoring::PAWN_VALUE),
+     (int)(1.5*Scoring::PAWN_VALUE),
+     (int)(3.0*Scoring::PAWN_VALUE),
+     (int)(6.0*Scoring::PAWN_VALUE),
       Constants::MATE};
 static constexpr int ASPIRATION_WINDOW_STEPS = 6;
 
@@ -57,8 +58,8 @@ static constexpr int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 TUNABLE(SINGULAR_EXTENSION_DEPTH, 8*DEPTH_INCREMENT, 6*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
 #endif
 TUNABLE(PROBCUT_DEPTH, 5*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 8*DEPTH_INCREMENT);
-TUNABLE(PROBCUT_MARGIN, static_cast<int>(1.25*Params::PAWN_VALUE), static_cast<int>(0.75*Params::PAWN_VALUE),
-        static_cast<int>(1.75*Params::PAWN_VALUE));
+TUNABLE(PROBCUT_MARGIN, static_cast<int>(1.25*Scoring::PAWN_VALUE), static_cast<int>(0.75*Scoring::PAWN_VALUE),
+        static_cast<int>(1.75*Scoring::PAWN_VALUE));
 TUNABLE(LMR_DEPTH, 3*DEPTH_INCREMENT, DEPTH_INCREMENT, 4*DEPTH_INCREMENT);
 TUNABLE(LMR_BASE_NON_PV, 50, 0, 100);
 TUNABLE(LMR_BASE_PV, 30, 0, 100);
@@ -79,7 +80,7 @@ static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
 #ifdef SINGULAR_EXTENSION
 static score_t singularExtensionMargin(int depth)
 {
-    return (Params::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
+    return (Scoring::PAWN_VALUE*depth)/(64*DEPTH_INCREMENT);
 }
 
 static int singularSearchDepth(int depth)
@@ -100,35 +101,35 @@ TUNABLE(LMP_SLOPE_IMP, 75, 10, 150);
 TUNABLE(LMP_SLOPE_NON_IMP, 70, 10, 150);
 
 #ifdef RAZORING
-TUNABLE(RAZOR_MARGIN, static_cast<score_t>(2.75*Params::PAWN_VALUE),
-        static_cast<int>(1.5*Params::PAWN_VALUE),
-        static_cast<int>(3.5*Params::PAWN_VALUE));
-TUNABLE(RAZOR_MARGIN_SLOPE, static_cast<score_t>(1.25*Params::PAWN_VALUE),
-        static_cast<int>(0.75*Params::PAWN_VALUE),
-        static_cast<int>(2.0*Params::PAWN_VALUE));
+TUNABLE(RAZOR_MARGIN, static_cast<score_t>(2.75*Scoring::PAWN_VALUE),
+        static_cast<int>(1.5*Scoring::PAWN_VALUE),
+        static_cast<int>(3.5*Scoring::PAWN_VALUE));
+TUNABLE(RAZOR_MARGIN_SLOPE, static_cast<score_t>(1.25*Scoring::PAWN_VALUE),
+        static_cast<int>(0.75*Scoring::PAWN_VALUE),
+        static_cast<int>(2.0*Scoring::PAWN_VALUE));
 #endif
-TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.25*Params::PAWN_VALUE), 0,
-        static_cast<int>(0.75*Params::PAWN_VALUE));
-TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.95*Params::PAWN_VALUE),
-        static_cast<int>(0.5*Params::PAWN_VALUE),
-        static_cast<int>(1.5*Params::PAWN_VALUE));
-TUNABLE(CAPTURE_FUTILITY_MARGIN_BASE, static_cast<int>(2.0*Params::PAWN_VALUE), 0,
-        static_cast<int>(3.5*Params::PAWN_VALUE));
-TUNABLE(CAPTURE_FUTILITY_MARGIN_SLOPE, static_cast<int>(2.5*Params::PAWN_VALUE),
-        static_cast<int>(1.0*Params::PAWN_VALUE),
-        static_cast<int>(3.5*Params::PAWN_VALUE));
+TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.25*Scoring::PAWN_VALUE), 0,
+        static_cast<int>(0.75*Scoring::PAWN_VALUE));
+TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.95*Scoring::PAWN_VALUE),
+        static_cast<int>(0.5*Scoring::PAWN_VALUE),
+        static_cast<int>(1.5*Scoring::PAWN_VALUE));
+TUNABLE(CAPTURE_FUTILITY_MARGIN_BASE, static_cast<int>(2.0*Scoring::PAWN_VALUE), 0,
+        static_cast<int>(3.5*Scoring::PAWN_VALUE));
+TUNABLE(CAPTURE_FUTILITY_MARGIN_SLOPE, static_cast<int>(2.5*Scoring::PAWN_VALUE),
+        static_cast<int>(1.0*Scoring::PAWN_VALUE),
+        static_cast<int>(3.5*Scoring::PAWN_VALUE));
 TUNABLE(STATIC_NULL_PRUNING_DEPTH, 6*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
-TUNABLE(STATIC_NULL_MARGIN_MIN,static_cast<int>(0.25*Params::PAWN_VALUE), 0,
-        static_cast<int>(1.0*Params::PAWN_VALUE));
-TUNABLE(STATIC_NULL_MARGIN_SLOPE,static_cast<int>(0.75*Params::PAWN_VALUE),
-        static_cast<int>(0.25*Params::PAWN_VALUE),
-        static_cast<int>(1.225*Params::PAWN_VALUE));
-TUNABLE(QSEARCH_FUTILITY_PRUNE_MARGIN, static_cast<int>(1.4*Params::PAWN_VALUE),
-        static_cast<int>(0.9*Params::PAWN_VALUE),
-        static_cast<int>(2.0*Params::PAWN_VALUE));
-TUNABLE(QSEARCH_SEE_PRUNE_MARGIN, static_cast<int>(1.25*Params::PAWN_VALUE),
-        static_cast<int>(0.5*Params::PAWN_VALUE),
-        static_cast<int>(2.0*Params::PAWN_VALUE));
+TUNABLE(STATIC_NULL_MARGIN_MIN,static_cast<int>(0.25*Scoring::PAWN_VALUE), 0,
+        static_cast<int>(1.0*Scoring::PAWN_VALUE));
+TUNABLE(STATIC_NULL_MARGIN_SLOPE,static_cast<int>(0.75*Scoring::PAWN_VALUE),
+        static_cast<int>(0.25*Scoring::PAWN_VALUE),
+        static_cast<int>(1.225*Scoring::PAWN_VALUE));
+TUNABLE(QSEARCH_FUTILITY_PRUNE_MARGIN, static_cast<int>(1.4*Scoring::PAWN_VALUE),
+        static_cast<int>(0.9*Scoring::PAWN_VALUE),
+        static_cast<int>(2.0*Scoring::PAWN_VALUE));
+TUNABLE(QSEARCH_SEE_PRUNE_MARGIN, static_cast<int>(1.25*Scoring::PAWN_VALUE),
+        static_cast<int>(0.5*Scoring::PAWN_VALUE),
+        static_cast<int>(2.0*Scoring::PAWN_VALUE));
 
 static inline int IIDDepth(bool pv) {
     return pv ? IID_DEPTH_PV : IID_DEPTH_NON_PV;
@@ -607,7 +608,7 @@ Move SearchController::findBestMove(
       const Material &ourMat = board.getMaterial(board.sideToMove());
       const Material &oppMat = board.getMaterial(board.oppositeSide());
       if (stats->display_value != Constants::INVALID_SCORE &&
-          (100*stats->display_value)/Params::PAWN_VALUE <= globals::options.search.resign_threshold &&
+          (100*stats->display_value)/Scoring::PAWN_VALUE <= globals::options.search.resign_threshold &&
           // don't resign KBN or KBB vs K unless near mate
           !(stats->display_value > -Constants::MATE &&
             ourMat.kingOnly () && !oppMat.hasPawns() &&
@@ -842,8 +843,8 @@ void SearchController::historyBasedTimeAdjust(const Statistics &s) {
             }
             pv = rootSearchHistory[depth].pv;
         }
-        score_t score_diff = std::max<score_t>(0,max_score-score-score_t(0.1*Params::PAWN_VALUE));
-        double scoreChange = std::max<double>(0.0,score_diff/(1.0*Params::PAWN_VALUE));
+        score_t score_diff = std::max<score_t>(0,max_score-score-score_t(0.1*Scoring::PAWN_VALUE));
+        double scoreChange = std::max<double>(0.0,score_diff/(1.0*Scoring::PAWN_VALUE));
         searchHistoryBoostFactor = std::min<double>(1.0,0.25*pvChangeFactor + scoreChange*(1.5 + 0.25*pvChangeFactor));
         searchHistoryReductionFactor = 0.0;
         if (searchHistoryBoostFactor > maxBoostFactor) {
@@ -1083,8 +1084,8 @@ static score_t razorMargin(int depth)
 static score_t seePruningMargin(int depth, bool quiet)
 {
     int p = depth/DEPTH_INCREMENT;
-    return quiet ? -p*static_cast<int>(0.75*Params::PAWN_VALUE) :
-        -p*p*static_cast<int>(0.2*Params::PAWN_VALUE);
+    return quiet ? -p*static_cast<int>(0.75*Scoring::PAWN_VALUE) :
+        -p*p*static_cast<int>(0.2*Scoring::PAWN_VALUE);
 }
 
 void Search::setVariablesFromController() {
@@ -1896,7 +1897,7 @@ bool SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
     Move bestMove = rootMoves[0].move;
     static constexpr double tolerances[40] = {12.3, 11.8, 11.3, 10.4, 9.5, 8.9, 8.4, 7.7, 7.0, 5.9, 4.35, 3.1, 3.5, 3.25, 3.0, 2.0, 2.2, 2.1, 2.0, 1.9,
                                               1.7, 1.71, 1.66, 1.6, 1.53, 1.47, 1.44, 1.35, 1.28, 1.19, 1.1, 1.08, 1.03, 0.96, 0.88, 0.82, 0.85, 0.82, 0.79, 0.75 };
-    const score_t tolerance = static_cast<score_t>(Params::PAWN_VALUE*tolerances[(2*strength)/5]);
+    const score_t tolerance = static_cast<score_t>(Scoring::PAWN_VALUE*tolerances[(2*strength)/5]);
     static constexpr int probs[40] = {73,70,65,61,59,52,49,46,42,34,32,29,27,26,26,26,25,25,23,20,
                                       18,17,17,16,15,15,15,14,13,13,13,12,11,10,9,8,8,8,6,5};
     int p = probs[(2*strength)/5];
@@ -2078,7 +2079,7 @@ score_t Search::quiesce(int ply,int depth)
           } else {
               if (!
                   (CaptureOrPromotion(hashMove) ||
-                   ((node->eval >= node->alpha - 2*Params::PAWN_VALUE) &&
+                   ((node->eval >= node->alpha - 2*Scoring::PAWN_VALUE) &&
                     board.wouldCheck(hashMove)))) {
                  hashMove = NullMove;
               }
@@ -2276,7 +2277,7 @@ score_t Search::quiesce(int ply,int depth)
                node->beta > -Constants::TABLEBASE_WIN) {
                // Futility pruning
                if ((Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1) &&
-                   (Params::Gain(move) + QSEARCH_FUTILITY_PRUNE_MARGIN + node->staticEval < node->best_score) &&
+                   (Scoring::Gain(move) + QSEARCH_FUTILITY_PRUNE_MARGIN + node->staticEval < node->best_score) &&
                    !board.wouldCheck(move)) {
 #ifdef SEARCH_TRACE
                    if (mainThread()) {
@@ -2553,7 +2554,7 @@ bool Search::prune(const Board &b,
                     n->eval = n->staticEval = evalu8(b);
                 }
                 score_t margin = futilityMargin<false>(pruneDepth) +
-                    Params::maxValue(m) +
+                    Scoring::maxValue(m) +
                     context.captureHistoryScore(b, m) / CAPTURE_FUTILITY_HISTORY_DIVISOR;
                 if (n->eval + margin < node->alpha) {
 #ifdef SEARCH_STATS
@@ -2957,7 +2958,7 @@ score_t Search::search()
         IsNull(node->excluded) &&
         node->eval >= node->beta &&
         node->eval >= node->staticEval &&
-        ((node->staticEval >= node->beta - int(0.25*Params::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
+        ((node->staticEval >= node->beta - int(0.25*Scoring::PAWN_VALUE) * (depth / DEPTH_INCREMENT - 6)) || (depth >= 12*DEPTH_INCREMENT)) &&
         !Scoring::mateScore(node->alpha) &&
         board.state.moveCount <= 98) {
         // Fixed reduction + some depth- and score-dependent
@@ -2967,7 +2968,7 @@ score_t Search::search()
         int nu_depth = depth - NULL_MOVE_BASE_REDUCTION*DEPTH_INCREMENT -
             depth/(NULL_MOVE_DEPTH_DIVISOR + lowMat*NULL_MOVE_DEPTH_DIVISOR_LOW_MAT) -
             std::min<int>(NULL_MOVE_MAX_EVAL_REDUCTION*DEPTH_INCREMENT,
-            int(DEPTH_INCREMENT*(node->eval-node->beta)/(NULL_MOVE_EVAL_FACTOR*Params::PAWN_VALUE/256)));
+            int(DEPTH_INCREMENT*(node->eval-node->beta)/(NULL_MOVE_EVAL_FACTOR*Scoring::PAWN_VALUE/256)));
         if (lowMat) {
             nu_depth += DEPTH_INCREMENT*NULL_MOVE_LOW_MAT_EXTENSION / 4;
         }

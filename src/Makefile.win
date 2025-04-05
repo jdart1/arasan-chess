@@ -239,7 +239,7 @@ $(BUILD)\protocol.obj $(BUILD)\input.obj \
 $(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
-$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
+$(BUILD)\scoring.obj $(BUILD)\searchc.obj \
 $(BUILD)\see.obj $(BUILD)\globals.obj $(BUILD)\search.obj \
 $(BUILD)\notation.obj $(BUILD)\hash.obj $(BUILD)\stats.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
@@ -254,7 +254,7 @@ $(PROFILE)\protocol.obj $(PROFILE)\input.obj \
 $(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \
-$(PROFILE)\params.obj $(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
+$(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
 $(PROFILE)\see.obj $(PROFILE)\globals.obj $(PROFILE)\search.obj \
 $(PROFILE)\notation.obj $(PROFILE)\hash.obj $(PROFILE)\stats.obj \
 $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
@@ -268,7 +268,7 @@ UTIL_OBJS = $(BUILD)\globals.obj $(BUILD)\board.obj \
 $(BUILD)\boardio.obj $(BUILD)\material.obj $(BUILD)\chess.obj \
 $(BUILD)\attacks.obj $(BUILD)\bitboard.obj $(BUILD)\chessio.obj \
 $(BUILD)\epdrec.obj $(BUILD)\bhash.obj \
-$(BUILD)\params.obj $(BUILD)\scoring.obj $(BUILD)\see.obj \
+$(BUILD)\scoring.obj $(BUILD)\see.obj \
 $(BUILD)\movearr.obj $(BUILD)\notation.obj $(BUILD)\options.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\movegen.obj $(BUILD)\calctime.obj \
