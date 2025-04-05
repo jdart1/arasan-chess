@@ -616,7 +616,6 @@ int CDECL main(int argc, char **argv) {
     Board::init();
     globals::initOptions();
     Attacks::init();
-    Scoring::init();
     Search::init();
 
     if (!globals::initGlobals()) {

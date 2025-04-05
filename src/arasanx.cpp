@@ -100,7 +100,6 @@ int CDECL main(int argc, char **argv) {
     // do not auto load the .rc file
     if (!globals::initOptions(autoLoadRC, rcName, memorySet, cpusSet)) return -1;
     Attacks::init();
-    Scoring::init();
     Search::init();
     if (!globals::initGlobals()) {
         globals::cleanupGlobals();

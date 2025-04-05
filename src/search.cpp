@@ -3608,7 +3608,6 @@ void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
 }
 
 void Search::clearHashTables() {
-   scoring.clearHashTables();
    context.clear();
 }
 

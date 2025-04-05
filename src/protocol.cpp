@@ -2139,26 +2139,19 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             Scoring::printScore(score, std::cout);
             std::cout << std::endl;
         }
-        Scoring::init();
         if (board.isLegalDraw()) {
             std::cout << "position evaluates to draw (statically)" << std::endl;
         }
         Scoring *s = new Scoring();
-        s->init();
         std::cout << board << std::endl;
         std::cout << "NNUE score: ";
         Scoring::printScore(s->evalu8NNUE(board), std::cout);
-        std::cout << std::endl;
-        std::cout << "non-NNUE score: ";
-        Scoring::printScore(s->evalu8(board), std::cout);
         std::cout << std::endl;
         board.flip();
         std::cout << board << std::endl;
         std::cout << "NNUE score: ";
         Scoring::printScore(s->evalu8NNUE(board), std::cout);
         std::cout << std::endl;
-        std::cout << "non-NNUE score: ";
-        Scoring::printScore(s->evalu8(board), std::cout);
         delete s;
         std::cout << std::endl;
     }

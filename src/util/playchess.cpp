@@ -1,4 +1,4 @@
-// Copyright 2010, 2011, 2012, 2017, 2020-2021, 2023-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2010, 2011, 2012, 2017, 2020-2021, 2023-2025 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "chessio.h"
 #include "globals.h"
@@ -32,7 +32,6 @@ int CDECL main(int argc, char **argv) {
     Board::init();
     globals::initOptions();
     Attacks::init();
-    Scoring::init();
     Search::init();
     globals::options.search.hash_table_size = 64 * 1024 * 1024;
     if (!globals::initGlobals()) {

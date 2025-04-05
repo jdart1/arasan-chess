@@ -1,4 +1,4 @@
-// Copyright 1995, 2007, 2008, 2012-2014, 2021, 2024 by Jon Dart
+// Copyright 1995, 2007, 2008, 2012-2014, 2021, 2024-2025 by Jon Dart
 // Stand-alone console executable to build "ecodata.cpp" file
 // from "eco" text file.
 
@@ -120,7 +120,6 @@ int CDECL main(int argc, char **argv)
    Board::init();
    globals::initOptions();
    Attacks::init();
-   Scoring::init();
    if (!globals::initGlobals()) {
        globals::cleanupGlobals();
        exit(-1);

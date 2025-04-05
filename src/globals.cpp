@@ -1,4 +1,4 @@
-// Copyright 1996-2012, 2014, 2016-2019, 2021-2024 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2012, 2014, 2016-2019, 2021-2025 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -175,7 +175,6 @@ bool globals::loadNetwork(const std::string &fname, bool verbose) {
 void CDECL globals::cleanupGlobals(void) {
     if (openingBook.is_open()) openingBook.close();
     delete gameMoves;
-    Scoring::cleanup();
     Bitboard::cleanup();
     Board::cleanup();
     if (game_file.is_open()) game_file.close();
