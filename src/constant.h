@@ -15,7 +15,7 @@ enum {INVALID_SCORE = -MATE-1};
 enum {MaxMoves = 220};
 enum {MaxCaptures = 40};
 enum {MaxChecks = 40};
-enum {MaxCPUs = 256};
+enum {MaxCPUs = 512};
 
 static constexpr int INFINITE_TIME = 100000000;
 
