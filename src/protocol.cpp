@@ -881,12 +881,13 @@ void Protocol::edit_mode_cmds(Board &board,ColorType &c,const std::string &cmd)
     }
 }
 
-void Protocol::calcTimes(bool pondering, [[maybe_unused]] ColorType c, timeMgmt::Times &times) {
+void Protocol::calcTimes(bool pondering, ColorType c, timeMgmt::Times &times) {
     if (srctype == FixedTime) {
         times.time_target = time_limit;
         times.extra_time = 0;
     } else {
-        timeMgmt::calcTimeLimit(moves, incr, time_left, opp_time, pondering, times);
+        timeMgmt::calcTimeLimit(moves, uci ? getIncrUCI(c) : incr, time_left, opp_time, pondering,
+                                times);
     }
     if (doTrace) {
         std::cout << debugPrefix << "time_target = " << times.time_target << std::endl;

@@ -1,4 +1,4 @@
-// Copyright 1997, 1998, 1999, 2012-2013, 2017-2021, 2024 by Jon Dart. All Rights Reserved.
+// Copyright 1997, 1998, 1999, 2012-2013, 2017-2021, 2024-2025 by Jon Dart. All Rights Reserved.
 #include "calctime.h"
 #include "globals.h"
 
@@ -60,7 +60,7 @@ void timeMgmt::calcTimeLimit(int moves, int incr, int time_left, int opp_time, b
             extra *= time_left/500;
         }
     } else if (incr > 0 && time_left < time_target*EXTRA_TIME_FACTOR_INC) {
-        extra = std::max<int>(0,int(-EXTRA_TIME_MULT*time_target + 2*(EXTRA_TIME_MULT/EXTRA_TIME_FACTOR_INC)*time_left));
+        extra = std::max<int>(0,static_cast<int>(-EXTRA_TIME_MULT*time_target + 2*(EXTRA_TIME_MULT/EXTRA_TIME_FACTOR_INC)*time_left));
     } else {
         extra = static_cast<int>(EXTRA_TIME_MULT*time_target);
     }
