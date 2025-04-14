@@ -1,3 +1,14 @@
+Changes in Arasan 25.1 (April 2024):
+ 1) Fixes for time management in zero-increment games
+ 2) Changes to null move reduction formula
+ 3) New network with L1=1536
+ 4) Move NNUE code into the main source tree
+ 5) Use pure NNUE eval, no more HCE
+ 6) Changes to book selection logic
+ 7) Updates to selfplay utility
+ 8) Update match tools to use fastchess instead of cutechess-cli
+ 9) increase MaxCPUs to 512 (for TCEC)
+
 Changes in Arasan 25.0 (Dec. 2024):
  1) Use a single "Book variety" option to control move selection from the book
  2) Some changes to move selection logic

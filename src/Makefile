@@ -2,7 +2,7 @@
 # Gnu Makefile for Arasan
 # Copyright 2004-2025 by Jon Dart. All Rights Reserved.
 #
-VERSION = 25.0
+VERSION = 25.1
 
 # paths, modify as needed:
 
