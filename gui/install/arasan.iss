@@ -1,11 +1,11 @@
 [Setup]
 AppName=Arasan
-AppVerName=Arasan 25.0
-DefaultDirName={commonpf}\Arasan\25.0
-DefaultGroupName=Arasan 25.0
-AppCopyright=Copyright 1994-2024 by Jon Dart. All Rights Reserved.
+AppVerName=Arasan 25.1
+DefaultDirName={commonpf}\Arasan\25.1
+DefaultGroupName=Arasan 25.1
+AppCopyright=Copyright 1994-2025 by Jon Dart. All Rights Reserved.
 Compression=bzip
-OutputBaseFilename=arasan25.0
+OutputBaseFilename=arasan25.1
 OutputDir=gui\install
 SourceDir=..\..
 UsePreviousAppDir=no
@@ -40,7 +40,7 @@ Source: "gui\fonts\mayafont.ttf"; DestDir: "{commonfonts}"; Components: GUI; Fon
 Source: "gui\fonts\chessmar.ttf"; DestDir: "{commonfonts}"; Components: GUI; FontInstall: "Chess Marroquin"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "gui\fonts\tt_usual.ttf"; DestDir: "{commonfonts}"; Components: GUI; FontInstall: "Chess Usual"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "win32\release\arasanx-32.exe"; DestDir: "{app}"; Components: engine
-Source: "network\arasanv3-20241109.nnue"; DestDir: "{app}"; Components: engine
+Source: "network\arasanv4-20250504.nnue"; DestDir: "{app}"; Components: engine
 Source: "book\book.bin"; DestDir: "{app}"; Components: book
 Source: "LICENSE"; DestDir: "{app}"; Components: engine;
 
