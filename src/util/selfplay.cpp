@@ -73,7 +73,7 @@ std::mutex outputLock, bookLock;
 
 static std::ofstream *game_out_file = nullptr, *pos_out_file = nullptr;
 
-static std::atomic<unsigned> posCounter(0);
+static std::atomic<unsigned> posCounter(0), wins(0), losses(0), draws(0);
 
 static constexpr int MAX_MULTIPV = 10;
 
@@ -103,14 +103,14 @@ static struct SelfPlayOptions {
     bool randomize = true;
     unsigned randomizeRange = 2;
     unsigned randomizeInterval = 1;
-    int randomTolerance = 0.75*Scoring::PAWN_VALUE;
+    int randomTolerance = 0.5*Scoring::PAWN_VALUE;
     bool limitEarlyKingMoves = true;
     bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
     unsigned semiRandomizeInterval = 1;
-    unsigned semiRandomPerGame = 12;
+    unsigned semiRandomPerGame = 13;
     unsigned multipv_limit = 8;
-    int multiPVMargin = static_cast<int>(0.35 * Scoring::PAWN_VALUE);
+    int multiPVMargin = static_cast<int>(0.3 * Scoring::PAWN_VALUE);
     bool skipNonQuiet = true;
     BinFormats::Format format = BinFormats::Format::StockfishBin;
     bool verbose = false;
@@ -491,15 +491,19 @@ static void selfplay(ThreadData &td) {
         if (result == Result::Unknown) {
             continue;
         }
+        static const std::string resultStrs[] = {"1-0", "0-1", "1/2-1/2"};
+        int i = 0;
+        if (result == Result::WhiteWin) {
+            ++wins;
+        } else if (result == Result::BlackWin) {
+            i = 1;
+            ++losses;
+        } else {
+            i = 2;
+            ++draws;
+        }
         if (sp_options.saveGames) {
-            std::string resultStr;
-            if (result == Result::WhiteWin)
-                resultStr = "1-0";
-            else if (result == Result::BlackWin)
-                resultStr = "0-1";
-            else
-                resultStr = "1/2-1/2";
-            saveGame(td, resultStr, *game_out_file);
+            saveGame(td, resultStrs[i], *game_out_file);
         }
         for (const BinFormats::PositionData &data : output) {
             if (posCounter++ >= sp_options.posCount)
@@ -743,6 +747,9 @@ int CDECL main(int argc, char **argv) {
 
     init_threads();
     launch_threads();
+
+    std::cout << "White wins: " << wins << " Black wins: " << losses << " Draws: " << draws <<
+        " draw percentage: " << std::setprecision(4) << draws*100.0/(draws + losses + wins) << "%" << std::endl;
 
     delete pos_out_file;
     delete game_out_file;
