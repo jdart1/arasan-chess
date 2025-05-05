@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
 add_compile_definitions(ARASAN_VERSION=25.1)
-set(NETWORK arasanv4-20250308.nnue CACHE STRING "default network file name")
+set(NETWORK arasanv4-20250504.nnue CACHE STRING "default network file name")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
