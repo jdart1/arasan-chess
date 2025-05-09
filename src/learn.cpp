@@ -1,4 +1,4 @@
-// Copyright 1994-2002, 2004, 2008-2009, 2014, 2017, 2021, 2023-2024 by Jon Dart.
+// Copyright 1994-2002, 2004, 2008-2009, 2014, 2017, 2021, 2023-2025 by Jon Dart.
 // All Rights Reserved.
 
 #include "learn.h"
@@ -51,16 +51,28 @@ void learn(const Board &board, const MoveArray &moves, bool doTrace)
             MoveImage(last_entry.move, s);
             s << '\n';
             std::ofstream log;
-            log.open(globals::options.learning.learn_file_name.c_str(),
+            log.open(globals::options.learning.file_name.c_str(),
                      std::ios_base::out | std::ios_base::app);
-            log << s.str();
-            log.close();
-            if (doTrace) {
-                std::stringstream str;
-                str << "learning position, fen = " << last_entry.fen << " score = ";
-                Scoring::printScore(last_score, str);
-                str << " depth = " << last_depth;
-                std::cout << globals::debugPrefix << str.str() << std::endl;
+            if (log.bad()) {
+                std::cout << globals::debugPrefix << "warning: failure to open learn file " <<
+                    globals::options.learning.file_name << std::endl;
+            }
+            else {
+                log << s.str();
+                if (log.bad()) {
+                    std::cout << globals::debugPrefix << "warning: write failure on learn file " <<
+                        globals::options.learning.file_name << std::endl;
+                    log.close();
+                    return;
+                }
+                log.close();
+                if (doTrace) {
+                    std::stringstream str;
+                    str << "learning position, fen = " << last_entry.fen << " score = ";
+                    Scoring::printScore(last_score, str);
+                    str << " depth = " << last_depth;
+                    std::cout << globals::debugPrefix << str.str() << std::endl;
+                }
             }
         }
     }

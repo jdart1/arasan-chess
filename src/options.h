@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2019, 2021-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2019, 2021-2025 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -56,7 +56,7 @@ class Options {
         int position_learning_threshold;
         int position_learning_horizon;
         int position_learning_minDepth;
-        std::string learn_file_name;
+        std::string file_name;
     } learning;
 
     // Game storage (only under CECP)

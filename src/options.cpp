@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2019, 2021, 2023-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019, 2021, 2023-2025 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <ctype.h>
@@ -101,6 +101,8 @@ void Options::set_option(const std::string &name, const std::string &value) {
         }
     } else if (name == "learning.position_learning.minDepth") {
         setOption<int>(name, value, learning.position_learning_minDepth);
+    } else if (name == "learning.file_name") {
+        setOption<std::string>(name, value, learning.file_name);
     } else if (name == "search.can_resign") {
         setOption<bool>(name, value, search.can_resign);
     } else if (name == "search.resign_threshold") {

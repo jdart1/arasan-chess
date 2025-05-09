@@ -237,7 +237,7 @@ bool globals::initOptions(bool autoLoadRC, const char *rcPath,
         options.init(derivePath(userDir + PATH_CHAR, userRcFile), memorySet, cpusSet);
     }
     if (appDir.size()) {
-        options.learning.learn_file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
+        options.learning.file_name = derivePath(appDir + PATH_CHAR, LEARN_FILE_NAME);
     }
     // if book path not set in the .rc file, set a default here
     if (options.book.book_path == "") {
