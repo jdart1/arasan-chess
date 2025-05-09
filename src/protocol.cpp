@@ -2414,7 +2414,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             globals::options.search.syzygy_probe_depth << " 0 64" << "\"";
         std::cout << " option=\"OwnBook -check " <<
             globals::options.book.book_enabled << "\"";
-        std::cout << " option=\"BookPath -string " <<
+        std::cout << " option=\"BookPath -path " <<
             globals::options.book.book_path << "\"";
         std::cout << " option=\"Book variety -spin " <<
             globals::options.book.variety << " 0 100\"";
