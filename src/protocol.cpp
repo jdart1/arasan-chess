@@ -1571,7 +1571,7 @@ void Protocol::processWinboardOptions(const std::string &args) {
     } else if (name == "Position learning") {
         Options::setOption<bool>(value,globals::options.learning.position_learning);
     } else if (name == "Learning file") {
-        Options::setOption<std::string>(value,globals::options.learning.learn_file_name);
+        Options::setOption<std::string>(value,globals::options.learning.file_name);
     } else if (name == "Strength") {
         Options::setOption<int>(value,globals::options.search.strength);
     } else if (name == "NNUE File") {
@@ -1718,7 +1718,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << "option name Position learning type check default " <<
             (globals::options.learning.position_learning ? "true" : "false") << std::endl;
         std::cout << "option name Learning file type string default " <<
-            globals::options.learning.learn_file_name << std::endl;
+            globals::options.learning.file_name << std::endl;
         std::cout << "option name UCI_LimitStrength type check default false" << std::endl;
         std::cout << "option name UCI_Elo type spin default " << globals::options.getRating(globals::options.search.strength) <<
             " min " << Options::MIN_RATING << " max " << Options::MAX_RATING << std::endl;
@@ -1832,7 +1832,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             Options::setOption<bool>(value,globals::options.learning.position_learning);
         }
         else if (uciOptionCompare(name,"Learning file")) {
-            Options::setOption<std::string>(value,globals::options.learning.learn_file_name);
+            Options::setOption<std::string>(value,globals::options.learning.file_name);
         }
         else if (uciOptionCompare(name,"MultiPV")) {
             Options::setOption<int>(value,globals::options.search.multipv);
@@ -2429,7 +2429,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         std::cout << " option=\"Position learning -check " <<
             globals::options.learning.position_learning << "\"";
         std::cout << " option=\"Learning file -string " <<
-            globals::options.learning.learn_file_name << "\"";
+            globals::options.learning.file_name << "\"";
         // strength option (new for 14.2)
         std::cout << " option=\"Strength -spin " << globals::options.search.strength << " 0 100\"";
         std::cout << " option=\"NNUE file -string " << globals::options.search.nnueFile << "\"";

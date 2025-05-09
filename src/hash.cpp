@@ -1,4 +1,4 @@
-// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020-2021, 2023-2024 Jon Dart. All Rights Reserved.
+// Copyright 1999-2005, 2011, 2012, 2014-2017, 2020-2021, 2023-2025 Jon Dart. All Rights Reserved.
 
 #include "hash.h"
 #include "constant.h"
@@ -81,7 +81,7 @@ void Hash::loadLearnInfo()
 {
    if (hashSize && globals::options.learning.position_learning) {
       std::ifstream plog;
-      plog.open(globals::options.learning.learn_file_name.c_str(),std::ios_base::in);
+      plog.open(globals::options.learning.file_name.c_str(),std::ios_base::in);
       while (plog.good() && !plog.eof()) {
          LearnRecord rec;
          if (getLearnRecord(plog,rec)) {
