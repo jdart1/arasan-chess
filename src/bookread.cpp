@@ -1,4 +1,4 @@
-// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021-2024 by Jon Dart.
+// Copyright 1993-1999, 2005, 2009, 2012-2014, 2017-2019, 2021-2025 by Jon Dart.
 // All Rights Reserved.
 
 #include "bookread.h"
@@ -243,9 +243,10 @@ double BookReader::sample_dirichlet(const std::array<double, OUTCOMES> &counts, 
 }
 
 void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
-    double x = bookSelectionOptions.frequency - 100.0;
-    double y = std::min<double>(0.0, bookSelectionOptions.frequency - 50.0);
-    const double freqThreshold = pow(10.0, (x + y) / 37.0);
+    double x = 100 - bookSelectionOptions.frequency;
+    double y = std::max<double>(0.0, x - 50.0);
+    double z = (x + y) / 10;
+    const double freqThreshold = 0.5 / (1.0 + (2*z*z));
     unsigned minCount = 0, maxCount = 0;
     if (globals::options.search.strength < 100) {
         minCount = (uint32_t)1 << ((100 - globals::options.search.strength) / 10);
@@ -265,7 +266,7 @@ void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
         std::remove_if(results.begin(), results.end(), [&](const book::DataEntry &info) -> bool {
             return (info.weight != book::NO_RECOMMEND && effectiveWeight(info.weight) == 0) ||
                    ((info.weight == book::NO_RECOMMEND || info.weight < book::MID_WEIGHT) &&
-                    (info.count() < minCount || double(info.count()) / maxCount <= freqThreshold));
+                    (info.count() < minCount || double(info.count()) / maxCount < freqThreshold));
         });
     if (results.end() != new_end) {
         results.erase(new_end, results.end());
