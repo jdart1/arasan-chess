@@ -53,7 +53,7 @@ class ChessIO {
 
       public:
         PGNReader(std::istream &s)
-            : stream(s), HeaderPattern("^\\s*\\[([^\\s]+)\\s+\"([^\"]*)\"\\]$") {}
+            : stream(s), HeaderPattern("^\\s*\\[([^\\s]+)\\s+\"([^\"]*)\"\\][\\s\\r\\n]*$") {}
 
         virtual ~PGNReader() = default;
 
