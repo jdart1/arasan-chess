@@ -130,6 +130,7 @@
 #define IDS_ENGINE_ACCESS_DENIED        32914
 #define IDS_WHITE                       32915
 #define IDS_BLACK                       32916
+#define IDS_INVALID_PGN                 32917
 #define ID_INDICATOR_PLYLABEL           61447
 #define ID_INDICATOR_PLY                61448
 #define ID_INDICATOR_SCORELABEL         61449

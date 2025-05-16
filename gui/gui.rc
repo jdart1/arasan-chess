@@ -613,6 +613,7 @@ BEGIN
     IDS_UNKNOWN_FILE_TYPE   "Unknown file type: %1"
     IDS_INVALID_BOARD       "File %1 does not contain a valid %2 position description."
     IDS_INVALID_FEN         "Invalid FEN position specified in PGN file"
+    IDS_INVALID_PGN         "Invalid PGN file"
     IDS_ILLEGAL_MOVE        "Illegal or ambiguous move: %1"
     IDS_UNREC_TEXT          "Unrecognized text %1 in PGN file"
     IDS_LETTER_COORDS       "ABCDEFGH"

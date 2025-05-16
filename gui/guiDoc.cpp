@@ -117,7 +117,7 @@ void ArasanGuiDoc::updateBoard(const Move m)
 
 void ArasanGuiDoc::goToMove(int index)
 {
-   ASSERT(index >= 0 && index < moveList.num_moves());
+   ASSERT(index >= 0 && index <= moveList.num_moves());
    if (index == currentMove) {
       return;
    }
@@ -127,14 +127,18 @@ void ArasanGuiDoc::goToMove(int index)
    // needs to have the previous game context. So we force
    // the engine to step back/forward through the moves:
    if (index > currentMove) {
+      Move m;
       do {
-         const MoveRecord &rec = moveList[++currentMove];
+         const MoveRecord &rec = moveList[currentMove++];
          BoardIO::readFEN(currentBoard, rec.fen);
          std::stringstream cmd;
          cmd << "usermove ";
-		 Notation::image(currentBoard,rec.move,Notation::OutputFormat::SAN,cmd);
+         m = rec.move;
+		 Notation::image(currentBoard,m,Notation::OutputFormat::SAN,cmd);
          writeToEngine(cmd.str().c_str());
       } while (index != currentMove);
+      // perform the last move
+      currentBoard.doMove(m);
    }
    else {
       while (index != currentMove) {
@@ -334,7 +338,13 @@ BOOL ArasanGuiDoc::load_pgn(Board &board,ifstream &game_file, DWORD offset,
    long first;
    {
        ChessIO::PGNReader rdr(game_file);
-       rdr.collectHeaders(hdrs, first);
+       if (!rdr.collectHeaders(hdrs, first)) {
+           CString msg;
+           msg.LoadString(IDS_INVALID_PGN);
+           ::MessageBox(NULL, (LPCSTR)msg, "", MB_OK);
+           unlock();
+           return FALSE;
+       }
    }
 
    // See if the file contained a "FEN" tag.
