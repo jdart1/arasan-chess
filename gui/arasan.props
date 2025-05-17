@@ -5,7 +5,11 @@
     <ARASAN_VERSION>25.1</ARASAN_VERSION>
   </PropertyGroup>
   <PropertyGroup />
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>ARASAN_VERSION=$(ARASAN_VERSION);_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="ARASAN_VERSION">
       <Value>$(ARASAN_VERSION)</Value>
