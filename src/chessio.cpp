@@ -313,7 +313,7 @@ bool ChessIO::PGNReader::collectHeaders(std::vector<Header> &hdrs, long &first) 
 }
 
 void ChessIO::TokenReader::getTextToNextDelim(std::string &s) {
-    auto delim = buf.find_first_of(" \t()", index);
+    auto delim = buf.find_first_of(" \t()\r\n", index);
     auto end = (delim == std::string::npos) ? buf.end() : buf.begin() + delim;
     for (auto it = buf.begin() + index; it != end; ++it)
         s += *it;
