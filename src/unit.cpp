@@ -547,7 +547,6 @@ static int testBitbases() {
     };
 
     int errs = 0;
-    Scoring *s = new Scoring();
     Board board;
     for (int i = 0; i<CASES; i++) {
         if (!BoardIO::readFEN(board, cases[i].fen.c_str())) {
