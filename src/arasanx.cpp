@@ -110,7 +110,8 @@ int CDECL main(int argc, char **argv) {
     if (arg < argc) {
         if (strcmp(argv[arg],"bench") == 0) {
             Bench b;
-            Bench::Results res = b.bench(true);
+            globals::delayedInit();
+            Bench::Results res = b.bench();
             std::cout << res;
             return 0;
         } else {
