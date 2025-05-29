@@ -285,9 +285,9 @@ void BookReader::setVariety(unsigned variety) {
 unsigned BookReader::effectiveWeight(unsigned weight) const noexcept {
     // weight is 0..book::MAX_WEIGHT
     // weighting factor is 0 .. 100
-    int mid = static_cast<int>(book::MAX_WEIGHT) / 2;
+    const int mid = static_cast<int>(book::MID_WEIGHT);
     int x = static_cast<int>(weight) - mid;
-    // don't allow weighting to go to zero
+    // don't allow weighting factor to go to zero
     int w = 3 * static_cast<int>(bookSelectionOptions.weighting) / 4 + 25;
     return mid + (x * w) / 100;
 }
