@@ -1,4 +1,4 @@
-// Copyright 1994-2017, 2019, 2021, 2023 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2017, 2019, 2021, 2023, 2025 by Jon Dart.  All Rights Reserved.
 
 #ifndef _CHESS_H
 #define _CHESS_H
@@ -15,6 +15,10 @@ class Board;
 // basic types
 
 enum ColorType {White,Black};
+
+static constexpr unsigned N_COLORS = 2;
+
+static constexpr ColorType colors[] = {White, Black};
 
 FORCEINLINE ColorType OppositeColor( ColorType color )
 {
@@ -181,6 +185,8 @@ enum Piece {
 extern bool validPiece(Piece p);
 
 enum PieceType { Empty, Pawn, Knight, Bishop, Rook, Queen, King };
+
+static constexpr unsigned N_PIECES = 6;
 
 extern const int _sliders[16];
 extern const Piece _pieces[8][2];

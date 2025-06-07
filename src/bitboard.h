@@ -1,8 +1,13 @@
-// Copyright 1996-2008, 2010-2013, 2015-2020, 2022 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2008, 2010-2013, 2015-2020, 2022, 2025 by Jon Dart.  All Rights Reserved.
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
+#ifdef SIMD
+#include "nnue/simd.h"
+#endif
 #include "types.h"
+
+#include <cstring>
 #include <iostream>
 #ifdef __cpp_lib_bitops
 #include <bit>
@@ -482,7 +487,6 @@ class Bitboard
 #endif
     }
 
-
     FORCEINLINE int iterate(Square &sq) {
         if (!data) {
             return 0;
@@ -497,6 +501,19 @@ class Bitboard
     static void init();
 
     static void cleanup();
+
+template <unsigned count>
+static void bulkCopy(const Bitboard *src, Bitboard *dest) {
+    constexpr size_t bytes = count * sizeof(Bitboard);
+#ifdef SIMD
+    if constexpr (((8 * bytes) >= simd::simdWidth) && (( 8 * bytes) % simd::simdWidth == 0)) {
+        simd::vec_copy<count, Bitboard>(src, dest);
+        return;
+    }
+#else
+    std::memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<const void *>(src), bytes);
+#endif
+}
 
     static CACHE_ALIGN int MagicTable32[32];
 #if defined(_64BIT)

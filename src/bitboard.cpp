@@ -1,4 +1,4 @@
-// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019, 2021, 2023 by Jon Dart
+// Copyright 1994, 1996, 2005, 2008, 2013, 2016, 2019, 2021, 2023, 2025 by Jon Dart
 
 #include "bitboard.h"
 
@@ -116,5 +116,4 @@ std::ostream & operator << (std::ostream &o, const Bitboard &b)
    o << (std::hex) << b.data << (std::dec);
    return o;
 }
-
 

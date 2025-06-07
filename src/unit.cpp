@@ -501,8 +501,9 @@ static int testEval() {
         };
 
     globals::delayedInit();
+    Scoring *s = new Scoring();
     for (const Case &c : cases) {
-        Scoring *s = new Scoring();
+        s->clear();
         Board board;
         if (!BoardIO::readFEN(board, c.fen.c_str())) {
             std::cerr << "testEval case " << i << " error in FEN: " << c.fen << std::endl;
@@ -517,8 +518,8 @@ static int testEval() {
         score_t eval2 = s->evalu8NNUE(board2);
         check(eval2, c.minEval, c.maxEval,"NNUE");
         ++i;
-        delete s;
     }
+    delete s;
     return errs;
 }
 
@@ -1540,14 +1541,16 @@ static int testNNUE() {
             return 1;
         }
         Scoring s;
-        node->accum.setState(nnue::AccumulatorState::Empty);
+        s.clear();
+        NodeInfo *target = node;
         node->ply = 0;
         node->stm = board.sideToMove();
-        node->kingSquare[White] = board.kingSquare(White);
-        node->kingSquare[Black] = board.kingSquare(Black);
-        // make sure starting position has an eval
+        node->dirty_num = 0;
+        node->kingPos[White] = board.kingSquare(White);
+        node->kingPos[Black] = board.kingSquare(Black);
+        node->accum.setEmpty();
+        // make sure starting position has an evaluated accumulator
         s.evalu8NNUE(board,node);
-        NodeInfo *target = node;
         int ply = 0;
         for (const auto &moveStr : c.moves) {
             Move m = Notation::value(board, board.sideToMove(), Notation::InputFormat::SAN,
@@ -1571,13 +1574,24 @@ static int testNNUE() {
     }
     board = start;
     Scoring s;
+    s.clear();
     // test after null move
-    board.doNull(node);
-    (node+1)->num_legal = 1; // needed for evaluate logic
-    (node+1)->ply = 1; // needed for evaluate logic
+    node->ply = 0;
+    node->stm = board.sideToMove();
+    node->dirty_num = 0;
+    node->kingPos[White] = board.kingSquare(White);
+    node->kingPos[Black] = board.kingSquare(Black);
+    node->accum.setEmpty();
     node->last_move = NullMove;
+    node->num_legal = 1; // needed for evaluate logic
+    // ensure starting node has evaluated accumulator
+    s.evalu8NNUE(board,node);
+    board.doNull(node);
+    (node+1)->ply = 1; // needed for evaluate logic
+    // do incremental eval
     score_t endScore = s.evalu8NNUE(board,node+1);
     int tmp = errs;
+    // compare with full eval
     errs += endScore != s.evalu8NNUE(board);
     if (errs-tmp) std::cerr << "error in testNNUE - null move" << std::endl;
     delete [] node;

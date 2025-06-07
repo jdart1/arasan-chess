@@ -26,6 +26,11 @@ public:
         return sq ^ (static_cast<int>(perspective) * 56);
     }
 
+    inline static unsigned getKingBucket(ColorType kside, Square kp) {
+        kp = relativeSquare(kside, kp);
+        return kingBucketsMap[kp];
+    }
+
     inline static IndexType getIndex(ColorType kside, Square kp /* kside King */, Piece p, Square sq) {
         assert(p != EmptyPiece);
         if (File(kp) >= chess::EFILE) {
@@ -33,8 +38,7 @@ public:
             sq ^= 7;
         }
         sq = relativeSquare(kside, sq);
-        kp = relativeSquare(kside, kp);
-        IndexType idx = static_cast<IndexType>(kingBucketsMap[kp] * 12 * 64 +
+        IndexType idx = static_cast<IndexType>(getKingBucket(kside, kp) * 12 * 64 +
                                                pieceTypeMap[kside != ColorOfPiece(p)][p] * 64 +
                                                sq);
         assert(idx < inputSize);
@@ -51,12 +55,14 @@ public:
 #else
         output.init_half(half, this->_biases);
         for (auto it = indices.begin(); it != indices.end() && *it != LAST_INDEX; ++it) {
+            /*
 #ifdef NNUE_TRACE
             std::cout << "index " << *it << " adding weights ";
             for (size_t i = 0; i < 20; ++i)
                 std::cout << this->_weights[*it][i] << ' ';
             std::cout << "to side " << (half == AccumulatorHalf::Lower ? 0 : 1) << std::endl;
 #endif
+            */
             output.add_half(half, this->_weights[*it]);
         }
 #endif
@@ -71,7 +77,9 @@ public:
         simd::update<OutputType,WeightType,inputSize,outputSize>(source.getOutput(sourceHalf),target.data(targetHalf),_weights,
                                                                  added.data(), added_count, removed.data(), removed_count);
 #else
-        target.copy_half(targetHalf,source,sourceHalf);
+        if (&target != &source) {
+            target.copy_half(targetHalf,source,sourceHalf);
+        }
         updateAccum(added,removed,added_count,removed_count,targetHalf,target);
 #endif
     }

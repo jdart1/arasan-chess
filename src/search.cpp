@@ -232,53 +232,26 @@ static int updateMove(const Board &board, NodeInfo *node, Move move, score_t sco
 }
 
 SearchController::SearchController()
-    :
-      post_function(nullptr),
-      monitor_function(nullptr),
-      uci(false),
-      age(1),
-      talkLevel(TalkLevel::Silent),
-      time_limit(0),
-      time_target(0),
-      xtra_time(0),
-      bonus_time(0),
-      fail_high_root_extend(false),
-      fail_low_root_extend(false),
-      fail_high_root(false),
-      searchHistoryBoostFactor(0.0),
-      searchHistoryReductionFactor(0.0),
-      maxBoostFactor(-1.0),
-      maxBoostDepth(0),
-      ply_limit(0),
-      background(false),
-      is_searching(false),
-      stopped(false),
-      typeOfSearch(TimeLimit),
-      time_check_counter(0),
-      timeCheckInterval(1000),
-      timeCheckFactor(1.0),
+    : post_function(nullptr), monitor_function(nullptr), uci(false), age(1),
+      talkLevel(TalkLevel::Silent), time_limit(0), time_target(0), xtra_time(0), bonus_time(0),
+      fail_high_root_extend(false), fail_low_root_extend(false), fail_high_root(false),
+      searchHistoryBoostFactor(0.0), searchHistoryReductionFactor(0.0), maxBoostFactor(-1.0),
+      maxBoostDepth(0), ply_limit(0), background(false), is_searching(false), stopped(false),
+      typeOfSearch(TimeLimit), time_check_counter(0), timeCheckInterval(1000), timeCheckFactor(1.0),
       last_time_check(0),
 #ifdef SMP_STATS
       sample_counter(0),
 #endif
-      stats(NULL),
-      computerSide(White),
-      contempt(0),
-      pool(nullptr),
-      rootSearch(nullptr),
-      tb_root_probes(0),
-      tb_root_hits(0),
-      tb_probe_in_search(true),
-      monitorThread(0),
+      stats(NULL), computerSide(White), contempt(0), pool(nullptr), rootSearch(nullptr),
+      tb_root_probes(0), tb_root_hits(0), tb_probe_in_search(true), monitorThread(0),
       srcOpts(globals::options.search),
 #ifdef SYZYGY_TBS
       tb_hit(0), tb_dtz(0), tb_score(Constants::INVALID_SCORE),
 #endif
-      initialValue(Constants::INVALID_SCORE),
-      mg(NULL),
-      elapsed_time(0)
+      initialValue(Constants::INVALID_SCORE), mg(NULL), elapsed_time(0)
 #ifdef SMP_STATS
-      , samples(0), threads(0)
+      ,
+      samples(0), threads(0)
 #endif
 {
 #ifdef SMP_STATS
@@ -1537,7 +1510,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     mg.exclude(exclude);
 
     //
-    // Search the next ply
+    // Initialize the top of the node stack
     //
     node->pv[0] = NullMove;
     node->pv_length = 0;
@@ -1554,8 +1527,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->excluded = NullMove;
     node->eval = Constants::INVALID_SCORE;
     node->stm = board.sideToMove();
-    node->kingSquare[White] = board.kingSquare(White);
-    node->kingSquare[Black] = board.kingSquare(Black);
+    node->dirty_num = 0;
+    node->kingPos[White] = board.kingSquare(White);
+    node->kingPos[Black] = board.kingSquare(Black);
+    node->accum.setEmpty();
 
     int move_index = 0;
     score_t hibound = beta;
@@ -3594,6 +3569,7 @@ void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
     node->ply = 0;
     // depth will be set later
     stats.clear();
+    scoring.clear();
     // propagate options from controller to this search instance
     srcOpts = controller->srcOpts;
 #ifdef SYZYGY_TBS
@@ -3608,6 +3584,7 @@ void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
 
 void Search::clearHashTables() {
    context.clear();
+   scoring.clear();
 }
 
 void Search::setSearchOptions() {

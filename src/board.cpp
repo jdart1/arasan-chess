@@ -31,55 +31,10 @@ const hash_t rep_codes[3] =
     0xd4767986f0ab49a7ULL
 };
 
-static Board *initialBoard = nullptr;
-
-void Board::setupInitialBoard() {
-   initialBoard = (Board*)malloc(sizeof(Board));
-   static PieceType pieces[] =
-   {
-      Rook,
-      Knight,
-      Bishop,
-      Queen,
-      King,
-      Bishop,
-      Knight,
-      Rook
-   };
-
-   initialBoard->side = White;
-   initialBoard->state.checkStatus = CheckUnknown;
-   for (int i=0;i<64;i++)
-   {
-      const Square sq(i);
-      if (Rank<White>(sq) == 1)
-         initialBoard->contents[sq] = MakeWhitePiece( pieces[File(sq)-1]);
-      else if (Rank<Black>(sq) == 1)
-         initialBoard->contents[sq] = MakeBlackPiece( pieces[File(sq)-1]);
-      else if (Rank<White>(sq) == 2)
-         initialBoard->contents[sq] = WhitePawn;
-      else if (Rank<Black>(sq) == 2)
-         initialBoard->contents[sq] = BlackPawn;
-      else
-         initialBoard->contents[sq] = EmptyPiece;
-   }
-   initialBoard->state.enPassantSq = InvalidSquare;
-   initialBoard->state.castleStatus[White] = initialBoard->state.castleStatus[Black] = CanCastleEitherSide;
-   initialBoard->state.moveCount = 0;
-   initialBoard->state.movesFromNull = 0;
-   initialBoard->repListHead = initialBoard->repList;
-   initialBoard->setSecondaryVars();
-   *(initialBoard->repListHead)++ = initialBoard->hashCode();
-}
-
 void Board::init() {
-   if (!initialBoard) {
-       setupInitialBoard();
-   }
 }
 
 void Board::cleanup() {
-   free(reinterpret_cast<void*>(initialBoard));
 }
 
 void Board::setSecondaryVars()
@@ -98,6 +53,8 @@ void Board::setSecondaryVars()
    rook_bits[Black].clear();
    queen_bits[White].clear();
    queen_bits[Black].clear();
+   king_bits[White].clear();
+   king_bits[Black].clear();
    occupied[White].clear();
    occupied[Black].clear();
    allOccupied.clear();
@@ -138,6 +95,8 @@ void Board::setSecondaryVars()
          }
       }
    }
+   king_bits[White].set(kingPos[White]);
+   king_bits[Black].set(kingPos[Black]);
    state.hashCode = BoardHash::hashCode(*this);
    pawnHashCodeW = BoardHash::pawnHash(*this,White);
    pawnHashCodeB = BoardHash::pawnHash(*this,Black);
@@ -160,8 +119,26 @@ void Board::setCastleStatus( CastleType t, ColorType c )
 
 void Board::reset()
 {
-   assert(initialBoard);
-   *this = *initialBoard;
+    static constexpr Piece initialContents[64] = {
+           WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing, WhiteBishop, WhiteKnight, WhiteRook,
+           WhitePawn, WhitePawn, WhitePawn, WhitePawn, WhitePawn, WhitePawn, WhitePawn, WhitePawn,
+           EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece,
+           EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece,
+           EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece,
+           EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece, EmptyPiece,
+           BlackPawn, BlackPawn, BlackPawn, BlackPawn, BlackPawn, BlackPawn, BlackPawn, BlackPawn,
+           BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRook };
+
+   side = White;
+   state.checkStatus = CheckUnknown;
+   std::memcpy(reinterpret_cast<void*>(&contents),reinterpret_cast<const void*>(&initialContents),sizeof(Piece)*64);
+   state.enPassantSq = InvalidSquare;
+   state.castleStatus[White] = state.castleStatus[Black] = CanCastleEitherSide;
+   state.moveCount = 0;
+   state.movesFromNull = 0;
+   repListHead = repList;
+   setSecondaryVars();
+   *(repListHead)++ = hashCode();
 }
 
 void Board::makeEmpty() {
@@ -271,16 +248,17 @@ void Board::doNull(NodeInfo *node)
    {
        state.hashCode ^= ep_codes[state.enPassantSq];
        state.hashCode ^= ep_codes[0];
+       state.enPassantSq = InvalidSquare;
    }
-   state.enPassantSq = InvalidSquare;
    side = oppositeSide();
    state.hashCode = BoardHash::setSideToMove(state.hashCode,side);
    *repListHead++ = state.hashCode;
    if (node) {
       (node+1)->dirty_num = 0;
-      (node+1)->accum.setState(nnue::AccumulatorState::Empty);
+      (node+1)->accum.setEmpty();
       (node+1)->stm = side;
-      std::memcpy((node+1)->kingSquare,node->kingSquare,sizeof(Square)*2);
+      (node+1)->kingPos[White] = kingPos[White];
+      (node+1)->kingPos[Black] = kingPos[Black];
    }
    assert(repListHead-repList < (int)RepListSize);
    assert(state.hashCode == BoardHash::hashCode(*this));
@@ -288,17 +266,11 @@ void Board::doNull(NodeInfo *node)
 
 void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
 {
-   assert(!IsNull(move));
+  assert(!IsNull(move));
    assert(state.hashCode == BoardHash::hashCode(*this));
    state.checkStatus = CheckUnknown;
    ++state.moveCount;
    ++state.movesFromNull;
-   if (node) {
-       (node+1)->dirty_num = 0;
-       (node+1)->accum.setState(nnue::AccumulatorState::Empty);
-       (node+1)->stm = OppositeColor(node->stm);
-       std::memcpy((node+1)->kingSquare,node->kingSquare,sizeof(Square)*2);
-   }
    if (state.enPassantSq != InvalidSquare)
    {
        state.hashCode ^= ep_codes[state.enPassantSq];
@@ -306,6 +278,10 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
    }
    Square old_epsq = state.enPassantSq;
    state.enPassantSq = InvalidSquare;
+   if (node) {
+      (node+1)->dirty_num = 0;
+      (node+1)->accum.setEmpty();
+   }
 
    assert(PieceMoved(move) != Empty);
 
@@ -339,6 +315,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
 
          const int newkp = kp + 2;
          kingPos[White] = newkp;
+         king_bits[White].clear(kp);
+         king_bits[White].set(newkp);
          state.castleStatus[White] = CantCastleEitherSide;
          // find old square of rook
          Square oldrooksq = kp + 3;
@@ -356,7 +334,6 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
              (node+1)->dirty_num = 2;
              (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, WhiteKing);
              (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, WhiteRook);
-             (node+1)->kingSquare[White] = newkp;
          }
       }
       else if (moveType == QCastle)
@@ -374,6 +351,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
 
          const int newkp = kp - 2;
          kingPos[White] = newkp;
+         king_bits[White].clear(kp);
+         king_bits[White].set(newkp);
          state.castleStatus[White] = CantCastleEitherSide;
          // find old square of rook
          Square oldrooksq = kp - 4;
@@ -391,7 +370,6 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
              (node+1)->dirty_num = 2;
              (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, WhiteKing);
              (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, WhiteRook);
-             (node+1)->kingSquare[White] = newkp;
          }
       }
       else // not castling
@@ -508,10 +486,11 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             Xor(state.hashCode, dest, WhiteKing );
             contents[dest] = WhiteKing;
             kingPos[White] = dest;
+            king_bits[White].clear(start);
+            king_bits[White].set(dest);
             state.hashCode ^= w_castle_status[(int)castleStatus(White)];
             state.hashCode ^= w_castle_status[(int)CantCastleEitherSide];
             state.castleStatus[White] = CantCastleEitherSide;
-            if (node) (node+1)->kingSquare[White] = dest;
             break;
          }
          contents[start] = EmptyPiece;
@@ -591,6 +570,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
 
          const int newkp = kp + 2;
          kingPos[Black] = newkp;
+         king_bits[Black].clear(kp);
+         king_bits[Black].set(newkp);
          state.castleStatus[Black] = CantCastleEitherSide;
          // find old square of rook
          Square oldrooksq = kp + 3;
@@ -608,7 +589,6 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
              (node+1)->dirty_num = 2;
              (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, BlackKing);
              (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, BlackRook);
-             (node+1)->kingSquare[Black] = newkp;
          }
       }
       else if (moveType == QCastle)
@@ -626,6 +606,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
 
          const int newkp = kp - 2;
          kingPos[Black] = newkp;
+         king_bits[Black].clear(kp);
+         king_bits[Black].set(newkp);
          state.castleStatus[Black] = CantCastleEitherSide;
          // find old square of rook
          Square oldrooksq = kp - 4;
@@ -643,7 +625,6 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
              (node+1)->dirty_num = 2;
              (node+1)->dirty[0] = nnue::DirtyState(kp, newkp, BlackKing);
              (node+1)->dirty[1] = nnue::DirtyState(oldrooksq, newrooksq, BlackRook);
-             (node+1)->kingSquare[Black] = newkp;
          }
       }
       else // not castling
@@ -760,10 +741,11 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             Xor(state.hashCode, dest, BlackKing );
             contents[dest] = BlackKing;
             kingPos[Black] = dest;
+            king_bits[Black].clear(start);
+            king_bits[Black].set(dest);
             state.hashCode ^= b_castle_status[(int)castleStatus(Black)];
             state.hashCode ^= b_castle_status[(int)CantCastleEitherSide];
             state.castleStatus[Black] = CantCastleEitherSide;
-            if (node) (node+1)->kingSquare[Black] = dest;
             break;
          }
          contents[start] = EmptyPiece;
@@ -829,10 +811,13 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
    state.hashCode = BoardHash::setSideToMove(state.hashCode,oppositeSide());
    *repListHead++ = state.hashCode;
    //assert(pawn_hash(White) == BoardHash::pawnHash(*this),White);
-   assert(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
    side = oppositeSide();
-   assert(getMaterial(sideToMove()).pawnCount() == (int)pawn_bits[side].bitCount());
    allOccupied = occupied[White] | occupied[Black];
+   if (node) {
+       (node+1)->stm = side;
+       (node+1)->kingPos[White] = kingPos[White];
+       (node+1)->kingPos[Black] = kingPos[Black];
+   }
    assert(state.hashCode == BoardHash::hashCode(*this));
 #if defined(_DEBUG) && defined(FULL_DEBUG)
    // verify correct updating of bitmaps:
@@ -1078,6 +1063,8 @@ void Board::undoCastling(Square kp, Square oldkingsq, Square newrooksq,
    contents[newrooksq] = EmptyPiece;
    contents[oldkingsq] = MakePiece(King,side);
    kingPos[side] = oldkingsq;
+   king_bits[side].clear(kp);
+   king_bits[side].set(oldkingsq);
    rook_bits[side].set(oldrooksq);
    rook_bits[side].clear(newrooksq);
 
@@ -1187,6 +1174,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
             break;
          case King:
             kingPos[White] = start;
+            king_bits[White].clear(dest);
+            king_bits[White].set(start);
             break;
          default:
             break;
@@ -1223,6 +1212,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
                break;
             case King:
                kingPos[Black] = target;
+               king_bits[Black].set(target);
                material[Black].addPiece(King);
                break;
             default:
@@ -1310,6 +1300,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
             break;
          case King:
             kingPos[Black] = start;
+            king_bits[Black].clear(dest);
+            king_bits[Black].set(start);
             break;
          default:
             break;
@@ -1323,7 +1315,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
             switch (Capture(move))
             {
             case Pawn:
-                           assert(!pawn_bits[White].isSet(target));
+               assert(!pawn_bits[White].isSet(target));
                pawn_bits[White].set(target);
                Xor(pawnHashCodeW,target,WhitePawn);
                material[White].addPawn();
@@ -1346,6 +1338,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
                break;
             case King:
                kingPos[White] = target;
+               king_bits[White].set(target);
                material[White].addPiece(King);
                break;
             default:
@@ -1362,6 +1355,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
    --repListHead;
    allOccupied = Bitboard(occupied[White] | occupied[Black]);
    assert(state.hashCode == BoardHash::hashCode(*this));
+   assert(king_bits[White].bitCount() == 1);
+   assert(king_bits[Black].bitCount() == 1);
 #if defined(_DEBUG) && defined(FULL_DEBUG)
    // verify correct updating of bitmaps:
    Board copy = *this;

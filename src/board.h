@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023-2024 by Jon Dart.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023-2025 by Jon Dart.
 // All Rights Reserved.
 
 #include "types.h"
@@ -10,6 +10,14 @@
 #include "bitboard.h"
 #include "attacks.h"
 #include "material.h"
+#ifdef SIMD
+#include "simd.h"
+#endif
+namespace nnue {
+    #include "nndefs.h"
+}
+#include <array>
+#include <functional>
 
 struct NodeInfo;
 
@@ -23,6 +31,8 @@ enum CastleType { CanCastleEitherSide,
                   CantCastleEitherSide};
 
 enum CheckStatusType { NotInCheck, InCheck, CheckUnknown };
+
+using Occupancies = Bitboard[6][2];
 
 struct BoardState {
    hash_t hashCode;
@@ -423,7 +433,7 @@ public:
 
    static const int RepListSize = 1024;
 
-   alignas(16) Piece contents[64];
+   alignas(nnue::DEFAULT_ALIGN) Piece contents[64];
    Square kingPos[2];
    Material material[2];
 
@@ -432,11 +442,14 @@ public:
    BoardState state;
    hash_t pawnHashCodeW, pawnHashCodeB;
 
-   Bitboard pawn_bits[2];
+   // We assume these arrays are contiguous
+   alignas(nnue::DEFAULT_ALIGN) Bitboard pawn_bits[2];
    Bitboard knight_bits[2];
    Bitboard bishop_bits[2];
    Bitboard rook_bits[2];
    Bitboard queen_bits[2];
+   Bitboard king_bits[2];
+
    Bitboard occupied[2];
    Bitboard allOccupied;
 

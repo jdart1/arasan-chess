@@ -15,16 +15,6 @@
 #include <cstddef>
 #include <iomanip>
 
-//#define PAWN_DEBUG
-//#define EVAL_DEBUG
-//#define ATTACK_DEBUG
-
-int Scoring::distance(Square sq1, Square sq2) {
-    int rankdist = std::abs(sq1 / 8 - sq2 / 8);
-    int filedist = std::abs((sq1 % 8) - (sq2 % 8));
-    return std::max<int>(rankdist, filedist);
-}
-
 template <ColorType side> int Scoring::KBPDraw(const Board &board) {
     Square qsq = InvalidSquare;
     int pfile;
@@ -181,10 +171,10 @@ score_t Scoring::tryBitbase(const Board &board) {
 
 score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
     score_t nnval;
-    const unsigned bucket = nnue::Evaluator::getOutputBucket(board);
+    const unsigned bucket = evaluator.getOutputBucket(board);
     if (node) {
-        nnue::Evaluator::updateAccum(globals::network, board, node, White);
-        nnue::Evaluator::updateAccum(globals::network, board, node, Black);
+        evaluator.updateAccum(globals::network, board, node, White);
+        evaluator.updateAccum(globals::network, board, node, Black);
 #ifdef _DEBUG
         assert(node->accum.getState(nnue::AccumulatorHalf::Lower) ==
                nnue::AccumulatorState::Computed);
@@ -194,18 +184,9 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
             globals::network.evaluate(node->accum, board.sideToMove(), bucket));
         // non-incremental eval:
         score_t score2 =
-            static_cast<score_t>(nnue::Evaluator::fullEvaluate(globals::network, board));
+            static_cast<score_t>(evaluator.fullEvaluate(globals::network, board));
         if (score1 != score2) {
             std::cout << board << std::endl;
-            NodeInfo *n = node;
-            while (n->ply) {
-                --n;
-                std::cout << "king positions " << n->kingSquare[White] << ' '
-                          << n->kingSquare[Black] << std::endl;
-                std::cout << n->ply << " ";
-                MoveImage(n->last_move, std::cout);
-                std::cout << std::endl;
-            }
             assert(0);
         }
         nnval = score1;
@@ -214,7 +195,7 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
             globals::network.evaluate(node->accum, board.sideToMove(), bucket));
 #endif
     } else {
-        nnval = static_cast<score_t>(nnue::Evaluator::fullEvaluate(globals::network, board));
+        nnval = static_cast<score_t>(evaluator.fullEvaluate(globals::network, board));
     }
     int ply = node ? node->ply : 0;
     return std::clamp(nnval, -Constants::MATE + (ply - 1), Constants::MATE - (ply - 1));

@@ -6,6 +6,7 @@
 #include "attacks.h"
 #include "board.h"
 #include "hash.h"
+#include "evaluate.h"
 
 struct NodeInfo;
 
@@ -15,9 +16,16 @@ class Scoring {
     // This class does static evaluation of chess positions.
 
   public:
+    // Note: constructor does not initialize cache, allowing for
+    // delayed initialization in a thread
     Scoring() = default;
 
     ~Scoring() = default;
+
+    // Clear internal state (currently, finny tables)
+    void clear() {
+        evaluator.clearCache();
+    }
 
     // evaluate using the nnue. If set the node pointer is used to
     // enable incremental evaluation
@@ -46,8 +54,6 @@ class Scoring {
 
     // Try to return a score based on bitbases, INVALID_SCORE if not found
     static score_t tryBitbase(const Board &board);
-
-    static int distance(Square sq1, Square sq);
 
     template <ColorType side> static int KBPDraw(const Board &board);
 
@@ -80,6 +86,9 @@ class Scoring {
     template <ColorType side> static bool theoreticalDraw(const Board &board);
 
     static void initBitboards();
+
+    nnue::Evaluator evaluator;
+
 };
 
 #endif

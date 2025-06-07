@@ -10,6 +10,10 @@ extern "C" {
 #endif
 }
 
+#include <cassert>
+#include <cstdint>
+#include <cstring>
+
 // fix for clang compile
 #ifndef _MM_PERM_BADC
 #define _MM_PERM_BADC 0x4E

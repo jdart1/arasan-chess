@@ -66,12 +66,12 @@ struct NodeInfo {
     int best_count;
 #endif
     int ply, depth;
-    // variables needed for NNUE evaluation:
+    // variables needed for incremental NNUE evaluation:
     nnue::Network::AccumulatorType accum;
     std::array<nnue::DirtyState, 3> dirty;
     unsigned dirty_num;
     ColorType stm;
-    Square kingSquare[2];
+    Square kingPos[2];
 
     int PV() const {
         return (beta > alpha+1);
@@ -85,6 +85,9 @@ struct NodeInfo {
         return score > best_score && score < beta;
     }
 
+    Square kingSquare(ColorType side) const noexcept {
+        return kingPos[side];
+    }
 };
 
 // Helper class to save/restore key node parameters
@@ -278,7 +281,7 @@ protected:
         node->flags = flags;
         node->excluded = exclude;
         node->best = NullMove;
-        node->num_quiets = node->num_legal = 0;
+        node->num_quiets = node->num_captures = node->num_legal = 0;
         node->ply = ply;
         node->depth = depth;
         node->cutoff = 0;
@@ -324,8 +327,8 @@ protected:
         (n+1)->accum.setEmpty();
         (n+1)->dirty_num = 0;
         (n+1)->stm = n->stm;
-        (n+1)->kingSquare[White] = n->kingSquare[White];
-        (n+1)->kingSquare[Black] = n->kingSquare[Black];
+        (n+1)->kingPos[White] = n->kingPos[White];
+        (n+1)->kingPos[Black] = n->kingPos[Black];
     }
 
     SearchController *controller;

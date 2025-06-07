@@ -21,7 +21,8 @@ class Network {
     static constexpr size_t FeatureXformerRows = 12 * NetworkParams::KING_BUCKETS * 64;
 
     using OutputType = int32_t;
-    using FeatureXformer = ArasanV3Feature<uint16_t, int16_t, int16_t, int16_t, FeatureXformerRows,
+    using XformerBiasType = int16_t;
+    using FeatureXformer = ArasanV3Feature<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
         NetworkParams::HIDDEN_WIDTH, NetworkParams::KING_BUCKETS_MAP>;
     using AccumulatorType = FeatureXformer::AccumulatorType;
     using AccumulatorOutputType = int16_t;
