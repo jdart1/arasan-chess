@@ -446,9 +446,9 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
     constexpr size_t bits = size * 8 * sizeof(DataType);
     static_assert(bits >= 128 && (bits % 128) == 0);
 #ifdef AVX512
-    size_t chunk = 512;
+    size_t width = 512;
 #elif defined(AVX2)
-    size_t chunk = 256;
+    size_t width = 256;
 #else
     size_t width = 128;
 #endif
