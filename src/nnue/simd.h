@@ -453,6 +453,7 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
     size_t width = 128;
 #endif
     size_t remaining = bits;
+    unsigned incr = 0;
     while (remaining) {
         width = std::min<size_t>(width,remaining);
         switch(width) {
@@ -463,6 +464,8 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
             for (size_t i = 0; i < remaining / 512; ++i) {
                 outp[i] = _mm512_load_si512(inp + i);
             }
+            incr = sizeof(DataType) * remaining / 512;
+            remaining = remaining % 512;
             break;
         }
 #endif
@@ -473,6 +476,8 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
             for (size_t i = 0; i < remaining / 256; ++i) {
                 outp[i] = _mm256_load_si256(inp + i);
             }
+            incr = sizeof(DataType) * remaining / 256;
+            remaining = remaining % 256;
             break;
         }
 #endif
@@ -483,6 +488,7 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
             for (size_t i = 0; i < remaining / 128; ++i) {
                 outp[i] = _mm_load_si128(inp + i);
             }
+            remaining = remaining % 128;
             break;
         }
 #endif
@@ -493,16 +499,15 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
             for (size_t i = 0; i < remaining / 128; ++i) {
                 outp[i] = vld1q_s64(reinterpret_cast<const int64_t *>(inp + i));
             }
+            remaining = remaining % 128;
+            break;
         }
 #endif
         default:
             assert(0);
         } // switch
-        if (remaining % width) {
-            input += sizeof(DataType) * (remaining / width);
-            output += sizeof(DataType) * (remaining / width);
-        }
-        remaining = remaining % width;
+        input += incr;
+        output += incr;
         width /= 2;
     }
 }
