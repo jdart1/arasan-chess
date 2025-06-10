@@ -506,7 +506,7 @@ template <unsigned count>
 static void bulkCopy(const Bitboard *src, Bitboard *dest) {
     constexpr size_t bytes = count * sizeof(Bitboard);
 #ifdef SIMD
-    if constexpr (((8 * bytes) >= simd::simdWidth) && (( 8 * bytes) % simd::simdWidth == 0)) {
+    if constexpr (((8 * bytes) >= 128) && (8 * bytes) % 128 == 0) {
         simd::vec_copy<count, Bitboard>(src, dest);
         return;
     }

@@ -6,6 +6,22 @@
 #include "search.h"
 
 #include <algorithm>
+#include <array>
+#include <cassert>
+#include <iostream>
+
+#ifdef NNUE_TRACE
+static void printIndices(const nnue::IndexArray &indices) {
+    unsigned i = 0;
+    unsigned index;
+    while ((index  = indices[i++]) != nnue::LAST_INDEX) {
+        assert(i<nnue::MAX_INDICES);
+        if (i != 1) std::cout << ' ';
+        std::cout << index;
+    }
+    std::cout << std::endl;
+}
+#endif
 
 #define USE_FINNY
 
@@ -250,9 +266,9 @@ void nnue::Evaluator::finnyUpdate(const nnue::Network &network, const Board &boa
     add[added_count] = remove[removed_count] = LAST_INDEX;
 #ifdef NNUE_TRACE
     std::cout << "adding:" << std::endl;
-    nnue::printIndices(add);
+    printIndices(add);
     std::cout << "removing:" << std::endl;
-    nnue::printIndices(remove);
+    printIndices(remove);
 #endif
 
     // update the cache entry's accumulator, based on the index diffs. We always use the lower half
