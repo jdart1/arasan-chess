@@ -1,4 +1,4 @@
-// Copyright 2021-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
 #ifndef NNUE_SIMD_H
 #define NNUE_SIMD_H
 
@@ -10,6 +10,7 @@ extern "C" {
 #endif
 }
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -441,81 +442,69 @@ inline void dotProductnxn(const uint8_t *input, const int8_t weights[outputSize]
 #endif
 }
 
-enum class Instr {INSTR_AVX512, INSTR_AVX2, INSTR_SSE2, INSTR_NEON};
-
-template <Instr instr, typename T> inline void vec_copy(const T *input, T *output, size_t bits) {
-    switch (instr) {
-#ifdef AVX512
-    case Instr::INSTR_AVX512: {
-        const __m512i *inp = reinterpret_cast<const __m512i *>(input);
-        __m512i *outp = reinterpret_cast<__m512i *>(output);
-        for (size_t i = 0; i < bits/512; ++i) {
-            outp[i] = _mm512_load_si512(inp + i);
-        }
-        break;
-    }
-#endif
-#ifdef AVX2
-    case Instr::INSTR_AVX2: {
-        const __m256i *inp = reinterpret_cast<const __m256i *>(input);
-        __m256i *outp = reinterpret_cast<__m256i *>(output);
-        for (size_t i = 0; i < bits/256; ++i) {
-            outp[i] = _mm256_load_si256(inp + i);
-        }
-        break;
-    }
-#endif
-#if defined(SSE2) || defined(SSE3)
-    case Instr::INSTR_SSE2: {
-        const __m128i *inp = reinterpret_cast<const __m128i *>(input);
-        __m128i *outp = reinterpret_cast<__m128i *>(output);
-        for (size_t i = 0; i < bits/128; ++i) {
-            outp[i] = _mm_load_si128(inp + i);
-        }
-        break;
-    }
-#endif
-#ifdef NEON
-    case Instr::INSTR_NEON: {
-        const int16x8_t *inp = reinterpret_cast<const int16x8_t *>(input);
-        int16x8_t *outp = reinterpret_cast<int16x8_t *>(output);
-        for (size_t i = 0; i < bits/128; ++i) {
-            outp[i] = vld1q_s64(reinterpret_cast<const int64_t *>(inp + i));
-        }
-    }
-#endif
-    default: assert(0);
-    }
-}
-
-template <size_t size, typename DataType> inline void vec_copy(const DataType *in, DataType *out) {
+template <size_t size, typename DataType> inline void vec_copy(const DataType *input, DataType *output) {
     constexpr size_t bits = size * 8 * sizeof(DataType);
     static_assert(bits >= 128 && (bits % 128) == 0);
-    size_t remaining = bits;
 #ifdef AVX512
-    if (bits >= 512) {
-        vec_copy<Instr::INSTR_AVX512, DataType>(in, out, bits);
-        in += sizeof(DataType)*(bits/512);
-        out += sizeof(DataType)*(bits/512);
-        remaining = remaining % 512;
-    }
+    size_t chunk = 512;
+#elif defined(AVX2)
+    size_t chunk = 256;
+#else
+    size_t width = 128;
+#endif
+    size_t remaining = bits;
+    while (remaining) {
+        width = std::min<size_t>(width,remaining);
+        switch(width) {
+#ifdef AVX512
+        case 512: {
+            const __m512i *inp = reinterpret_cast<const __m512i *>(input);
+            __m512i *outp = reinterpret_cast<__m512i *>(output);
+            for (size_t i = 0; i < remaining / 512; ++i) {
+                outp[i] = _mm512_load_si512(inp + i);
+            }
+            break;
+        }
 #endif
 #ifdef AVX2
-    if (remaining >= 256) {
-        vec_copy<Instr::INSTR_AVX2, DataType>(in, out, remaining);
-        in += sizeof(DataType)*(remaining/256);
-        out += sizeof(DataType)*(remaining/256);
-        remaining = remaining % 256;
-    }
+        case 256: {
+            const __m256i *inp = reinterpret_cast<const __m256i *>(input);
+            __m256i *outp = reinterpret_cast<__m256i *>(output);
+            for (size_t i = 0; i < remaining / 256; ++i) {
+                outp[i] = _mm256_load_si256(inp + i);
+            }
+            break;
+        }
 #endif
-#if defined(SS2) || defined(SSE3)
-    if (remaining) {
-        vec_copy<Instr::INSTR_AVX2, DataType>(in, out, remaining);
-    }
+#if defined(SSE2) || defined(SSE3)
+        case 128: {
+            const __m128i *inp = reinterpret_cast<const __m128i *>(input);
+            __m128i *outp = reinterpret_cast<__m128i *>(output);
+            for (size_t i = 0; i < remaining / 128; ++i) {
+                outp[i] = _mm_load_si128(inp + i);
+            }
+            break;
+        }
 #endif
 #ifdef NEON
-    vec_copy<Instr::INSTR_NEON, DataType(in, out, bits);
+        case 128: {
+            const int16x8_t *inp = reinterpret_cast<const int16x8_t *>(input);
+            int16x8_t *outp = reinterpret_cast<int16x8_t *>(output);
+            for (size_t i = 0; i < remaining / 128; ++i) {
+                outp[i] = vld1q_s64(reinterpret_cast<const int64_t *>(inp + i));
+            }
+        }
 #endif
+        default:
+            assert(0);
+        } // switch
+        if (remaining % width) {
+            input += sizeof(DataType) * (remaining / width);
+            output += sizeof(DataType) * (remaining / width);
+        }
+        remaining = remaining % width;
+        width /= 2;
+    }
 }
 
 template <typename vec_type, typename AccumType, typename WeightType, typename BiasType,
