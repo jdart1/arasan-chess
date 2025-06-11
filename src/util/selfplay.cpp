@@ -108,7 +108,7 @@ static struct SelfPlayOptions {
     bool semiRandomize = true;
     RandomizeType randomizeType = RandomizeType::MultiPV;
     unsigned semiRandomizeInterval = 1;
-    unsigned semiRandomPerGame = 13;
+    unsigned semiRandomPerGame = 14;
     unsigned multipv_limit = 8;
     int multiPVMargin = static_cast<int>(0.3 * Scoring::PAWN_VALUE);
     bool skipNonQuiet = true;
