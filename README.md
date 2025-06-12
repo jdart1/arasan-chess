@@ -233,7 +233,6 @@ the [Programmer's Guide](https://arasanchess.org/programr.shtml) for additional 
 Arasan relies on the following other projects, also authored by or modified by Jon Dart:
 
 - [Fathom](https://github.com/jdart1/Fathom), Syzygy tablebase probing code (fork of [basil00/Fathom](https://github.com/basil00/Fathom))
-- [nnue](https://github.com/jdart1/nnue), Chess neural network reading code
 - [stats](https://www.github.com/jdart1/stats), Python module for SPRT computation (derived from [glinscott/fishtest](https://github.com/glinscott/fishtest))
 
 ## Additional information
