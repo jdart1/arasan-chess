@@ -21,8 +21,8 @@ struct DirtyState {
 };
 
 struct FinnyEntry {
-    alignas(64) Occupancies occupancies;
-    alignas(64) Network::AccumulatorType acc;
+    alignas(nnue::DEFAULT_ALIGN) Occupancies occupancies;
+    alignas(nnue::DEFAULT_ALIGN) Network::AccumulatorType acc;
 };
 
 // indices: color, king bucket, mirrored (king file >=4)

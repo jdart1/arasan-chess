@@ -1,3 +1,4 @@
+
 // Copyright 2021-2025 by Jon Dart. All Rights Reserved.
 #ifndef NNUE_SIMD_H
 #define NNUE_SIMD_H
@@ -9,6 +10,8 @@ extern "C" {
 #include <immintrin.h>
 #endif
 }
+
+#include "../types.h"
 
 #include <algorithm>
 #include <cassert>
@@ -442,9 +445,20 @@ inline void dotProductnxn(const uint8_t *input, const int8_t weights[outputSize]
 #endif
 }
 
-template <size_t size, typename DataType> inline void vec_copy(const DataType *input, DataType *output) {
+template <size_t size, typename DataType> FORCEINLINE void vec_copy(const DataType *input, DataType *output) {
     constexpr size_t bits = size * 8 * sizeof(DataType);
     static_assert(bits >= 128 && (bits % 128) == 0);
+    if constexpr (bits >= simdWidth && bits % simdWidth == 0) {
+        const vec_t *inp = reinterpret_cast<const vec_t *>(input);
+        vec_t *outp = reinterpret_cast<vec_t *>(output);
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
+#pragma GCC unroll 8
+#endif
+        for (size_t i = 0; i < bits / simdWidth; ++i) {
+            outp[i] = vec_load(inp + i);
+        }
+        return;
+    }
 #ifdef AVX512
     size_t width = 512;
 #elif defined(AVX2)
@@ -515,7 +529,7 @@ template <size_t size, typename DataType> inline void vec_copy(const DataType *i
 template <typename vec_type, typename AccumType, typename WeightType, typename BiasType,
           size_t inputSize /* features */, size_t outputSize /* accumulator size */,
           size_t regCount, size_t regWidth, size_t iterations, typename operations>
-inline void
+FORCEINLINE void
 fullUpdateLoopNeon(AccumType *target, const WeightType (*weights)[inputSize][outputSize],
                    const BiasType (*biases)[outputSize], const unsigned *indices, size_t &offset) {
     static_assert(outputSize * sizeof(AccumType) * 8 >= simdWidth,
