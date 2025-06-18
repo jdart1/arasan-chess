@@ -459,13 +459,7 @@ template <size_t size, typename DataType> FORCEINLINE void vec_copy(const DataTy
         }
         return;
     }
-#ifdef AVX512
-    size_t width = 512;
-#elif defined(AVX2)
-    size_t width = 256;
-#else
-    size_t width = 128;
-#endif
+    size_t width = simdWidth;
     size_t remaining = bits;
     unsigned incr = 0;
     while (remaining) {
