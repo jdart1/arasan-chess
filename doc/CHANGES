@@ -1,3 +1,18 @@
+Changs in Arasan 25.2 (June 2025):
+ 1) Updated network, trained with 12B positions, using factorization and cosine LR scheduler
+ 2) Training script and training log commited to repo, along with the network
+ 3) Some changes to selfplay utility. Outputs W/L/D statistics now.
+ 4) Fixes to non-SIMD build
+ 5) Fixes for AVX512 build
+ 6) Use -DSIMD, -DSSE2 for GUI build
+ 7) Fixes for position learning. Rename "Learning file name" option to "Learning file."
+ 8) use -path for xboard BookPath option
+ 9) Fixes for loading/storing PGN files from the GUI
+ 10) Fixes for setting ARASAN_VERSION macro in the build
+ 11) Fix "bench" command so if given on the command line, it does complete initialization
+ 12) Implement finny tables to speed up eval
+ 13) Changes to book selection logic. Book will play a wider variety of moves by default.
+ 
 Changes in Arasan 25.1 (May 2025):
  1) Fixes for time management in zero-increment games
  2) Changes to null move reduction formula
