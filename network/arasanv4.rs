@@ -1,40 +1,43 @@
-// Bullet training script for Arasan network
-use bullet_lib::{
-    nn::{optimiser, Activation},
+ use bullet_lib::{
+    game::{
+        inputs::{get_num_buckets, ChessBucketsMirrored},
+        outputs::MaterialCount,
+    },
+    nn::{optimiser, InitSettings, Shape},
     trainer::{
-        default::{
-            inputs, loader, outputs,
-            testing::{Engine, EngineType, GameRunnerPath, OpeningBook, TestSettings, TimeControl, UciOption},
-            Loss, TrainerBuilder,
-        },
+        save::SavedFormat,
+        NetworkTrainer,
         schedule::{lr, wdl, TrainingSchedule, TrainingSteps},
         settings::LocalSettings,
     },
-};
-
-use std::{
-    path::PathBuf,
-    path::Path,
-    process::Command,
-    io,
+    default::{
+        inputs, loader, outputs,
+        Loss, TrainerBuilder,
+    },
+    value::{loader::DirectSequentialDataLoader, ValueTrainerBuilder},
 };
 
 macro_rules! net_id {
     () => {
-        "arasan2"
+        "arasan3"
     };
 }
 
 const NET_ID: &str = net_id!();
 
 fn main() {
+    const NUM_INPUT_BUCKETS: usize = 9;
+    const NUM_OUTPUT_BUCKETS: usize = 8;
+    const L1: usize = 1536;
+    const INITIAL_LR: f32 = 0.001;
+    let FINAL_LR = INITIAL_LR * 0.4f32.powi(4);
+    const SUPERBATCHES: usize = 240;
+    
     #[rustfmt::skip]
-    let mut trainer = TrainerBuilder::default()
-        .quantisations(&[255, 64])
-//        .optimiser(optimiser::AdamW)
-        .optimiser(optimiser::Ranger)
-        .loss_fn(Loss::SigmoidMSE)
-        .input(inputs::ChessBucketsMirrored::new([
+    let mut trainer = ValueTrainerBuilder::default()
+        .dual_perspective()
+        .optimiser(optimiser::AdamW)
+        .inputs(inputs::ChessBucketsMirrored::new([
             0, 1, 2, 3,
             4, 4, 5, 5,
             6, 6, 7, 7,
@@ -43,12 +46,44 @@ fn main() {
             8, 8, 8, 8,
             8, 8, 8, 8,
             8, 8, 8, 8]))
-        .output_buckets(outputs::MaterialCount::<8>)
-        .feature_transformer(1536)
-        .activate(Activation::SCReLU)
-        .disallow_transpose_in_quantised_network()
-        .add_layer(1)
-        .build();
+        .output_buckets(MaterialCount::<NUM_OUTPUT_BUCKETS>)
+        .save_format(&[
+            // merge in the factoriser weights
+            SavedFormat::id("l0w")
+                .add_transform(|builder, _, mut weights| {
+                    let factoriser = builder.get_weights("l0f").get_dense_vals().unwrap();
+                    let expanded = factoriser.repeat(NUM_INPUT_BUCKETS);
+
+                    for (i, &j) in weights.iter_mut().zip(expanded.iter()) {
+                        *i += j;
+                    }
+
+                    weights
+                })
+                .quantise::<i16>(255),
+            SavedFormat::id("l0b").quantise::<i16>(255),
+            SavedFormat::id("l1w").quantise::<i16>(64),
+            SavedFormat::id("l1b").quantise::<i16>(255 * 64),
+        ])
+        .loss_fn(|output, target| output.sigmoid().squared_error(target))
+        .build(|builder, stm_inputs, ntm_inputs, output_buckets| {
+            // input layer factoriser
+            let l0f = builder.new_weights("l0f", Shape::new(L1, 768), InitSettings::Zeroed);
+            let expanded_factoriser = l0f.repeat(NUM_INPUT_BUCKETS);
+
+            // input layer weights
+            let mut l0 = builder.new_affine("l0", 768 * NUM_INPUT_BUCKETS, L1);
+            l0.weights = l0.weights + expanded_factoriser;
+
+            // output layer weights
+            let l1 = builder.new_affine("l1", 2 * L1, NUM_OUTPUT_BUCKETS);
+
+            // inference
+            let stm_hidden = l0.forward(stm_inputs).screlu();
+            let ntm_hidden = l0.forward(ntm_inputs).screlu();
+            let hidden_layer = stm_hidden.concat(ntm_hidden);
+            l1.forward(hidden_layer).select(output_buckets)
+        });
 
     let schedule = TrainingSchedule {
         net_id: NET_ID.to_string(),
@@ -57,144 +92,34 @@ fn main() {
             batch_size: 16_384,
             batches_per_superbatch: 6104,
             start_superbatch: 1,
-            end_superbatch: 240,
+            end_superbatch: SUPERBATCHES,
         },
         wdl_scheduler: wdl::ConstantWDL { value: 0.0 },
-        //lr_scheduler: lr::ExponentialDecayLR { initial_lr: 0.001, final_lr: 0.0001, final_superbatch: 240 },
-        lr_scheduler: lr::StepLR { start: 0.0015, gamma: 0.45, step: 60 },
+        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: FINAL_LR, final_superbatch: SUPERBATCHES },
+//        lr_scheduler: lr::StepLR { start: 0.0015, gamma: 0.45, step: 60 },
         save_rate: 60,
     };
 
-//    let optimiser_params = optimiser::AdamWParams::default();
-    let optimiser_params = optimiser::RangerParams::default();
-//        optimiser::AdamWParams { decay: 0.01, beta1: 0.9, beta2: 0.999, min_weight: -1.98, max_weight: 1.98 };
-//        optimiser::RangerParams { decay: 0.01, beta1: 0.99, beta2: 0.999, min_weight: -1.98, max_weight: 1.98, alpha: 0.5, k: 6 };
-
+    let optimiser_params = optimiser::AdamWParams::default();
     trainer.set_optimiser_params(optimiser_params);
+    let stricter_clipping = optimiser::AdamWParams { max_weight: 0.99, min_weight: -0.99, ..Default::default() };
+    trainer.optimiser_mut().set_params_for_weight("l0w", stricter_clipping);
+    trainer.optimiser_mut().set_params_for_weight("l0f", stricter_clipping);
 
-    let settings = LocalSettings { threads: 8,
-       //test_set: Option::Some(TestDataset.new("/data2/bullet/sep2024/validationdata/val1.bullet",20)),
-       test_set: None,
-       output_directory: "checkpoints", batch_queue_size: 512 };
+    let settings = LocalSettings { threads: 8, test_set: None, output_directory: "checkpoints", batch_queue_size: 512 };
 
     let data_loader = loader::DirectSequentialDataLoader::new(&[
-        "/data2/bullet/apr2025/trainingdata/pos-shuffled.bullet",
-        "/data2/lc0/feb2025/pos-shuffled.bullet",
+        "/data2/bullet/feb2025/pos-shuffled.bullet",
+        "/data2/bullet/mar2025/pos-shuffled.bullet",
+        "/data2/bullet/apr2025/pos-shuffled.bullet",
+        "/data2/bullet/jun2025/pos-shuffled.bullet",
         "/data2/lc0/feb2025-2/pos-shuffled.bullet",
+        "/data2/lc0/jun2025/pos-shuffled.bullet",
         "/data2/bullet/oct2024/lc0/lc0-test80-oct1-10-shuffled.bullet",
         "/data2/bullet/oct2024/lc0/lc0-test80-oct10-20-shuffled.bullet",
         "/data2/bullet/oct2024/lc0/lc0-test80-oct20-31-shuffled.bullet",
         "/data2/bullet/oct2024/lc0/lc0-test80-oct31-nov3-shuffled.bullet",
         ]);
-
-    pub struct ArasanEngine;
-
-    impl EngineType for ArasanEngine {
-      fn build(&self, inp_path: &str, out_path: &str, net: Option<&str>) -> Result<(), String> {
-          let mut submodule = Command::new("git");
-
-          submodule.current_dir(inp_path).
-             args(["submodule","update","--init","--recursive"]).
-             output().
-             expect("failed to execute git submodule");
-
-          // Link network files to base directory, so default network is found
-          Command::new("bash").current_dir(inp_path).arg("-c").arg("ln -s network/*.nnue .").spawn().expect("ln failed");
-
-          let mut build_base = Command::new("make");
-
-          // Arasan makefile is in src subdir
-          let path : PathBuf = [inp_path, "src"].iter().collect();
-
-          // out path is relative to repo dir, but we will cd one level lower, so correct here
-          let out_path2 : PathBuf = ["..", out_path].iter().collect();
-          let out_path_str = out_path2.to_str().unwrap();
-
-          build_base.current_dir(path).arg(format!("EXE={out_path_str}")).arg("CC=clang").arg("BUILD_TYPE=avx2");
-
-          if net.is_some() {
-              // we only need the base name - Arasan will expect it to be in the same dir as the exe.
-              let net_name = Path::new(net.unwrap()).file_name().unwrap().to_str().unwrap();
-              build_base.arg(format!("NETWORK={}", net_name));
-          }
-
-          match build_base.output() {
-              io::Result::Err(err) => Err(format!("Failed to build engine: {err}!")),
-              io::Result::Ok(out) => {
-                  if out.status.success() {
-                      Ok(())
-                  } else {
-                      println!("{}", String::from_utf8(out.stdout).unwrap());
-                      Err(String::from("Failed to build engine!"))
-                  }
-              }
-          }
-       }
-
-       fn bench(&self, path: &str) -> Result<usize, String> {
-          println!("running bench on exe path {path}");
-          let mut bench_cmd = Command::new(path);
-
-          let output = bench_cmd.arg("bench").output().expect("Failed to run bench on engine!");
-
-          assert!(output.status.success(), "Failed to run bench on engine!");
-
-          let out = String::from_utf8(output.stdout).expect("Could not parse bench output!");
-
-          let split = out.split_whitespace();
-
-          let mut bench = None;
-
-          let mut idx : u32 = 0;
-          let mut target : u32 = 10000000;
-          for word in split {
-               if word == "Nodes" {
-                  target = idx + 2;
-              }
-              if idx == target {
-                 bench = word.parse().ok();
-                 break;
-              }
-              idx = idx + 1;
-          }
-
-          if let Some(bench) = bench {
-              Ok(bench)
-          } else {
-              Err(String::from("Failed to run bench!"))
-          }
-       }
-    }
-
-    let base_engine = Engine {
-        repo: "https://github.com/jdart1/arasan-chess",
-        branch: "v3",
-        bench: None,
-        net_path: None,
-        uci_options: vec![UciOption("Hash", "16")],
-        engine_type: ArasanEngine,
-    };
-
-    let dev_engine = Engine {
-        repo: "https://github.com/jdart1/arasan-chess",
-        branch: "v3",
-        bench: None,
-        net_path: None,
-        uci_options: vec![UciOption("Hash", "16")],
-        engine_type: ArasanEngine,
-    };
-
-    let _testing = TestSettings {
-        test_rate: 20,
-        out_dir: concat!("../../nets/", net_id!()),
-        gamerunner_path: GameRunnerPath::CuteChess("/home/jdart/chess/cutechess-cli/cutechess-cli"),
-        book_path: OpeningBook::Pgn("/home/jdart/chess/books/8moves_v3.pgn"),
-        num_game_pairs: 2000,
-        concurrency: 6,
-        time_control: TimeControl::FixedNodes(25_000),
-        base_engine,
-        dev_engine,
-    };
 
     trainer.run(&schedule, &settings, &data_loader);
 

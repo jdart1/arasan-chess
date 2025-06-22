@@ -35,7 +35,7 @@ HWLOC=/usr/local
 UTIL = util
 
 # default network
-NETWORK ?= arasanv4-20250504.nnue
+NETWORK ?= arasanv4-20250621.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
