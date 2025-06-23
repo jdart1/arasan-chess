@@ -281,7 +281,7 @@ void ChessIO::writeEPDRecord(std::ostream &ofs, Board &board, const EPDRecord &r
     BoardIO::writeFEN(board, ofs, 0);
     for (size_t i = 0; i < rec.getSize(); i++) {
         std::string key, val;
-        (void)rec.getData(i, key, val);
+        (void)rec.getData(static_cast<int>(i), key, val);
         ofs << ' ' << key << ' ' << val << ';';
     }
     ofs << std::endl;

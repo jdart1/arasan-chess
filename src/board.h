@@ -11,10 +11,10 @@
 #include "attacks.h"
 #include "material.h"
 #ifdef SIMD
-#include "simd.h"
+#include "nnue/simd.h"
 #endif
 namespace nnue {
-    #include "nndefs.h"
+    #include "nnue/nndefs.h"
 }
 #include <array>
 #include <functional>

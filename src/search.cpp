@@ -918,7 +918,7 @@ int Search::checkTime() {
        }
        // If we are not checking time often enough, adjust down the time check interval
        if (last_time_check > 0 && elapsed_time >= 100 && (elapsed_time - last_time_check) > limit / 10) {
-           controller->timeCheckFactor *= std::max(0.5, 1.0 - 3*static_cast<double>(elapsed_time - last_time_check)/limit);
+           controller->timeCheckFactor *= std::max(0.5F, 1.0F - 3*static_cast<float>(elapsed_time - last_time_check)/limit);
            controller->timeCheckInterval = controller->computeTimeCheckInterval(stats.num_nodes);
        }
     }
@@ -1865,7 +1865,7 @@ bool SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
     auto &random_engine = rootSearch->random_engine;
     std::uniform_int_distribution<int> dist(0,100);
     RootMoveGenerator::RootMove substitute;
-    const int n = rootMoves.size();
+    const int n = static_cast<int>(rootMoves.size());
     assert(n);
     const int r  = dist(random_engine);
     score_t best = rootMoves[0].score;
@@ -1917,7 +1917,7 @@ bool SearchController::suboptimal(Statistics *bestStats, const Search *bestSearc
     if (candidates.size() == 0) return false;
     else if (candidates.size() == 1) substitute = rootMoves[candidates[0]];
     else {
-        std::uniform_int_distribution<int> pick(0,candidates.size()-1);
+        std::uniform_int_distribution<int> pick(0,static_cast<int>(candidates.size())-1);
         substitute = rootMoves[candidates[pick(random_engine)]];
     }
     if (IsNull(substitute.move) || MovesEqual(substitute.move,bestStats->best_line[0])) {
