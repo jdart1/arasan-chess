@@ -13,18 +13,22 @@
 </OBJECT>
 
 <A NAME="d162t2"></A><H1>What's New?</H1>
-This is Arasan 25.1, released in May, 2025.<BR/><BR/>
-Changes in Arasan 25.1:<BR/>
+<p>This is Arasan 25.2, released in June, 2025.</p>
+Changes in Arasan 25.2:
 <ol>
-<li>Fixes for time management in zero-increment games</li>
-<li>Changes to null move reduction formula</li>
-<li>New network with L1=1536</li>
-<li>Move NNUE code into the main source tree</li>
-<li>Use pure NNUE eval, no more HCE</li>
-<li>Changes to book selection logic</li>
-<li>Updates to selfplay utility</li>
-<li>Update match tools to use fastchess instead of cutechess-cli</li>
-<li>increase MaxCPUs to 512 (for TCEC)</li>
+<li>Updated network, trained with 12B positions, using factorization and cosine LR scheduler</li>
+<li>Training script and training log commited to repo, along with the network</li>
+<li>Some changes to selfplay utility. Outputs W/L/D statistics now.</li>
+<li>Fixes to non-SIMD build</li>
+<li>Fixes for AVX512 build</li>
+<li>Use -DSIMD, -DSSE2 for GUI build</li>
+<li>Fixes for position learning. Rename "Learning file name" option to "Learning file."</li>
+<li>use -path for xboard BookPath option</li>
+<li>Fixes for loading/storing PGN files from the GUI</li>
+<li>Fixes for setting ARASAN_VERSION macro in the build</li>
+<li>Fix "bench" command so if given on the command line, it does complete initialization</li>
+<li>Implement finny tables to speed up eval</li>
+<li>Changes to book selection logic. Book will play a wider variety of moves by default.</li>
 </ol>
 </BODY>
 </HTML>
