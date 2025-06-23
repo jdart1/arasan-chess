@@ -157,7 +157,7 @@ class Bitboard
         data ^= b.data;
     }
 
-    int FORCEINLINE isSet(int n) const
+    bool FORCEINLINE isSet(int n) const
     {
 #if defined(_WIN64) & defined(USE_INTRINSICS)
         return _bittest64((int64_t*)&data,n);
@@ -168,7 +168,7 @@ class Bitboard
 #endif
     }
 
-    int FORCEINLINE isClear()const {
+    bool FORCEINLINE isClear()const {
         return (data == (uint64_t)0);
     }
 
@@ -253,12 +253,12 @@ class Bitboard
 #endif
     }
 
-    int operator == (const Bitboard &b) const
+    bool operator == (const Bitboard &b) const
     {
        return b.data == data;
     }
 
-    int operator != (const Bitboard &b) const
+    bool operator != (const Bitboard &b) const
     {
        return b.data != data;
     }
