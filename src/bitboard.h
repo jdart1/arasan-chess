@@ -542,9 +542,4 @@ static void bulkCopy(const Bitboard *src, Bitboard *dest) {
     }
 };
 
-inline int TEST_MASK(const Bitboard &b1,const Bitboard &b2) {
-  return (uint64_t)(b1 & b2) != (uint64_t)0;
-}
-
-
 #endif

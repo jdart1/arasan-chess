@@ -1,4 +1,4 @@
-// Copyright 1997, 2008, 2021, 2024 by Jon Dart.  All Rights Reserved.
+// Copyright 1997, 2008, 2021, 2024-2025 by Jon Dart.  All Rights Reserved.
 
 #include "boardio.h"
 #include "attacks.h"
@@ -143,8 +143,8 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
         Square ep_candidate = SquareValue(sqbuf) - (8 * Direction[board.sideToMove()]);
         // only actually set the e.p. square on the board if an en-passant capture
         // is truly possible:
-        if (TEST_MASK(Attacks::ep_mask[File(ep_candidate) - 1][(int)board.oppositeSide()],
-                      board.pawn_bits[board.sideToMove()])) {
+        if (Attacks::ep_mask[File(ep_candidate) - 1][(int)board.oppositeSide()] &
+            board.pawn_bits[board.sideToMove()]) {
             board.state.enPassantSq = ep_candidate;
             // re-calc hash code since ep has changed
             board.state.hashCode = BoardHash::hashCode(board);
