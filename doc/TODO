@@ -12,17 +12,13 @@
    a. see http://www.tckerrigan.com/Chess/Parallel_Search/Simplified_ABDADA/
    b. improve thread depth distribution logic, see: http://talkchess.com/forum3/viewtopic.php?f=7&t=68154. - done, needs more testing though.
 
-7. for NUMA: consider memory striping for hash. Rebind memory on thread resize.
+7. revist NUMA support. This code has not been updated/tested for a while.
+Consider memory striping for hash. Rebind memory on thread resize.
 
 8. Windows GUI badly needs a rewrite, better graphics.
 
-9. Code cleanup: most of HCE is no longer used, so could be removed.
+9. UCI "go" command with fixed node count is not supported at present.
 
 10. Experiment with different, possibly deeper, networks.
 
 11. Further parameter tuning.
-
-
-
-
-
