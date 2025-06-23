@@ -27,10 +27,9 @@ template <ColorType side> int Scoring::KBPDraw(const Board &board) {
     }
 
     if (qsq != InvalidSquare) {
-
         // pawn(s) only on Rook file
-        if (!TEST_MASK(board.bishop_bits[side],
-                       SquareColor(qsq) == White ? Board::white_squares : Board::black_squares)) {
+        if (!(board.bishop_bits[side] &
+              (SquareColor(qsq) == White ? Board::white_squares : Board::black_squares))) {
 
             // wrong color Bishop
             Square okp = board.kingSquare(OppositeColor(side));
@@ -72,7 +71,7 @@ template <ColorType side> bool Scoring::theoreticalDraw(const Board &board) {
     // Check for K + P vs rook pawn
     if (mat1.infobits() == Material::KP && mat2.kingOnly()) {
         Bitboard rook_pawn_mask(Attacks::file_mask[0] | Attacks::file_mask[7]);
-        if (TEST_MASK(rook_pawn_mask, board.pawn_bits[side])) {
+        if (rook_pawn_mask &  board.pawn_bits[side]) {
             Square kp = board.kingSquare(side);
             Square kp2 = board.kingSquare(OppositeColor(side));
             Square psq = (board.pawn_bits[side].firstOne());

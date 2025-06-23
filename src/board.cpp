@@ -441,7 +441,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                contents[dest] = WhitePawn;
                if (dest - start == 16) // 2-square pawn advance
                {
-                  if (TEST_MASK(Attacks::ep_mask[File(dest)-1][(int)White],pawn_bits[Black])) {
+                  if (Attacks::ep_mask[File(dest)-1][(int)White] & pawn_bits[Black]) {
                     state.enPassantSq = dest;
                     state.hashCode ^= ep_codes[0];
                     state.hashCode ^= ep_codes[dest];
@@ -696,7 +696,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                contents[dest] = BlackPawn;
                if (start - dest == 16) // 2-square pawn advance
                {
-                  if (TEST_MASK(Attacks::ep_mask[File(dest)-1][(int)Black],pawn_bits[White])) {
+                  if (Attacks::ep_mask[File(dest)-1][(int)Black] & pawn_bits[White]) {
                     state.enPassantSq = dest;
                     state.hashCode ^= ep_codes[0];
                     state.hashCode ^= ep_codes[dest];
@@ -900,7 +900,7 @@ hash_t Board::hashCode( Move move ) const
                Xor(newHash, dest, WhitePawn );
                if (start - dest == 16) // 2-square pawn advance
                {
-                  if (TEST_MASK(Attacks::ep_mask[File(dest)-1][(int)White],pawn_bits[Black])) {
+                  if (Attacks::ep_mask[File(dest)-1][(int)White] & pawn_bits[Black]) {
                     newHash ^= ep_codes[0];
                     newHash ^= ep_codes[dest];
                   }
@@ -997,7 +997,7 @@ hash_t Board::hashCode( Move move ) const
                Xor(newHash, dest, BlackPawn );
                if (dest - start == 16) // 2-square pawn advance
                {
-                  if (TEST_MASK(Attacks::ep_mask[File(dest)-1][(int)Black],pawn_bits[White])) {
+                  if (Attacks::ep_mask[File(dest)-1][(int)Black] & pawn_bits[White]) {
                     newHash ^= ep_codes[0];
                     newHash ^= ep_codes[dest];
                   }
@@ -1408,11 +1408,11 @@ int Board::anyAttacks(const Square sq, ColorType c) const
 {
    if (sq == InvalidSquare)
       return 0;
-   if (TEST_MASK(Attacks::pawn_attacks[sq][c],pawn_bits[c])) return 1;
-   if (TEST_MASK(Attacks::knight_attacks[sq],knight_bits[c])) return 1;
+   if (Attacks::pawn_attacks[sq][c] & pawn_bits[c]) return 1;
+   if (Attacks::knight_attacks[sq] & knight_bits[c]) return 1;
    if (Attacks::king_attacks[sq].isSet(kingSquare(c))) return 1;
-   if (TEST_MASK(rook_bits[c] | queen_bits[c],rookAttacks(sq))) return 1;
-   if (TEST_MASK(bishop_bits[c] | queen_bits[c],bishopAttacks(sq))) return 1;
+   if ((rook_bits[c] | queen_bits[c]) & rookAttacks(sq)) return 1;
+   if ((bishop_bits[c] | queen_bits[c]) & bishopAttacks(sq)) return 1;
    return 0;
 }
 
@@ -2035,10 +2035,10 @@ bool Board::materialDraw() const noexcept {
         }
         else if (mat1.infobits() == Material::KB && mat2.infobits() == Material::KB) {
             // drawn if same-color bishops
-            if (TEST_MASK(bishop_bits[White],black_squares))
-                return TEST_MASK(bishop_bits[Black],black_squares);
-            else if (TEST_MASK(bishop_bits[White],white_squares))
-                return TEST_MASK(bishop_bits[Black],white_squares);
+            if (bishop_bits[White] & black_squares)
+                return bishop_bits[Black] & black_squares;
+            else if (bishop_bits[White] &white_squares)
+                return bishop_bits[Black] & white_squares;
         }
     }
     return false;
