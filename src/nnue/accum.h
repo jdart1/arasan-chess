@@ -1,4 +1,4 @@
-// Copyright 2021-2024 by Jon Dart. All Rigths Reserved.
+// Copyright 2021-2025 by Jon Dart. All Rigths Reserved.
 #ifndef _NNUE_ACCUM_H
 #define _NNUE_ACCUM_H
 
@@ -32,14 +32,12 @@ class Accumulator {
         const OutputType *in = data;
         OutputType *out = _accum[halfToIndex(half)];
 #ifdef SIMD
-        if constexpr (size*16 % simd::simdWidth == 0 && sizeof(BiasType) == sizeof(OutputType) && sizeof(OutputType)==2) {
-            simd::vec_copy<size,OutputType>(in,out);
-        }
-        else
-#endif
+        simd::vec_copy<size,OutputType>(in,out);
+#else
         for (size_t i = 0; i < size; ++i) {
             *out++ = static_cast<OutputType>(*in++);
         }
+#endif
     }
 
     void copy_half(AccumulatorHalf half,
