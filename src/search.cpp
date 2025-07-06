@@ -1268,6 +1268,8 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
             // Show status (if main thread) and adjust aspiration
             // window as needed
             if (stats.failHigh) {
+                // we should not have already widened the window to the max
+                assert(hi_window < Constants::MATE);
                 if (mainThread()) {
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
@@ -1299,6 +1301,8 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
                 }
             }
             else if (stats.failLow) {
+                // we should not have already widened the window to the max
+                assert(lo_window > 1-Constants::MATE);
                 if (mainThread()) {
                     if (stats.multipv_limit == 1) {
                         showStatus(board, node->best, stats.failLow, stats.failHigh);
