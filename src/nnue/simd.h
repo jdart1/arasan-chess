@@ -1,4 +1,3 @@
-
 // Copyright 2021-2025 by Jon Dart. All Rights Reserved.
 #ifndef NNUE_SIMD_H
 #define NNUE_SIMD_H
@@ -451,7 +450,8 @@ template <size_t size, typename DataType> FORCEINLINE void vec_copy(const DataTy
     if constexpr (bits >= simdWidth && bits % simdWidth == 0) {
         const vec_t *inp = reinterpret_cast<const vec_t *>(input);
         vec_t *outp = reinterpret_cast<vec_t *>(output);
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
+// old Apple clang does not support this
+#if !defined(_MSC_VER) && !defined(__MINGW32__) && !(defined(_MAC) && defined(__x86_64__))
 #pragma GCC unroll 8
 #endif
         for (size_t i = 0; i < bits / simdWidth; ++i) {
