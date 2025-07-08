@@ -105,6 +105,7 @@ static void getExecutablePath(std::string &path) {
         path = std::string(pathbuf);
     }
 #else
+    // Assumes Linux. TBD: support for other platforms.
     char result[PATH_MAX];
     result[0] = '\0';
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
