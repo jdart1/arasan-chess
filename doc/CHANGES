@@ -1,4 +1,4 @@
-Changs in Arasan 25.2 (June 2025):
+Changs in Arasan 25.2 (July 2025):
  1) Updated network, trained with 12B positions, using factorization and cosine LR scheduler
  2) Training script and training log commited to repo, along with the network
  3) Some changes to selfplay utility. Outputs W/L/D statistics now.
