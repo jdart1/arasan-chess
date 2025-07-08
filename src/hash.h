@@ -130,7 +130,7 @@ class HashEntry {
     hash_t getEffectiveHash() const noexcept { return (hc ^ val) & HASH_MASK; }
 
     void setEffectiveHash(hash_t hash, score_t static_score) {
-        hc = ((hash ^ val) & HASH_MASK) | (uint16_t)static_score;
+        hc = ((hash ^ val) & HASH_MASK) | static_cast<uint16_t>(static_score);
     }
 
   protected:
@@ -183,7 +183,7 @@ class Hash {
     HashEntry::ValueType searchHash(hash_t hashCode, int depth, unsigned age, HashEntry &he) {
         if (!hashSize)
             return HashEntry::NoHit;
-        int probe = (int)(hashCode & hashMask);
+        int probe = static_cast<int>(hashCode & hashMask);
 
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = nullptr;
@@ -279,7 +279,7 @@ class Hash {
     HashEntry *hashTable;
     size_t hashSize, hashFree;
     hash_t hashMask;
-    static const int MaxRehash = 4;
+    static constexpr int MaxRehash = 4;
     int hash_init_done;
 };
 

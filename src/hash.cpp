@@ -34,7 +34,7 @@ void Hash::initHash(size_t bytes)
           }
       }
       hashSize = 1ULL << hashPower;
-      hashMask = (uint64_t)(hashSize-1);
+      hashMask = static_cast<uint64_t>(hashSize-1);
       size_t hashSizePlus = hashSize + MaxRehash;
       // round up to ensure allocated size is multiple of alignment
       hashSizePlus += MEMORY_ALIGNMENT - (hashSizePlus % MEMORY_ALIGNMENT);
