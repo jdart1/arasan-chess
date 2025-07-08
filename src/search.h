@@ -258,8 +258,6 @@ protected:
                int newDepth,
                Move move);
 
-    void storeHash(hash_t hash, Move hash_move, int depth);
-
     int updateRootMove(const Board &board,
                        NodeInfo *node, Move move, score_t score, int move_index);
 

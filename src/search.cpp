@@ -2414,53 +2414,6 @@ score_t Search::quiesce(int ply,int depth)
    return node->best_score;
 }
 
-void Search::storeHash(hash_t hash, Move hash_move, int depth) {
-   // don't insert into the hash table if we are terminating - we may
-   // not have an accurate score.
-   if (!terminate) {
-      // store the position in the hash table, if there's room
-      score_t value = node->best_score;
-      HashEntry::ValueType val_type;
-      if (value <= node->alpha) {
-         val_type = HashEntry::UpperBound;
-         // We don't have a "best" move, because all moves
-         // caused alpha cutoff.  But if there was a hash
-         // move or an initial move produced by internal
-         // interative deepening, save it in the hash table
-         // so it will be tried first next time around.
-         node->best = hash_move;
-      }
-      else if (value >= node->beta) {
-         val_type = HashEntry::LowerBound;
-      }
-      else {
-         val_type = HashEntry::Valid;
-      }
-#ifdef SEARCH_TRACE
-      static const char type_chars[5] =
-         { 'E', 'U', 'L', 'X', 'X' };
-      if (mainThread()) {
-         indent(node->ply);
-         std::cout << "storing type=" << type_chars[val_type] <<
-            " ply=" << node->ply << " depth=" << depth << " value=";
-         Scoring::printScore(value,std::cout);
-         std::cout << " move=";
-         MoveImage(node->best,std::cout);
-         std::cout << std::endl;
-      }
-#endif
-      // Note: adjust mate scores to reflect current ply.
-      controller->hashTable.storeHash(hash,
-                                      depth,
-                                      age,
-                                      val_type,
-                                      HashEntry::scoreToHashValue(value,node->ply),
-                                      node->staticEval,
-                                      0,
-                                      node->best);
-   }
-}
-
 bool Search::prune(const Board &b,
                    NodeInfo *n,
                    CheckStatusType in_check_after_move,
